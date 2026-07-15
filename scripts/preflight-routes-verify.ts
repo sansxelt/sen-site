@@ -162,13 +162,22 @@ const sitemapSrc = readFileSync("app/sitemap.ts", "utf8");
 ok("sitemap does NOT advertise the retired /r/check or /r/sample samples", !sitemapSrc.includes('page("/r/check"') && !sitemapSrc.includes('page("/r/sample"'));
 const rCheck = readFileSync("app/r/check/page.tsx", "utf8");
 const rSample = readFileSync("app/r/sample/page.tsx", "utf8");
-ok("the retired /r/check + /r/sample samples are noindex", /index:\s*false/.test(rCheck) && /index:\s*false/.test(rSample));
+// The retired shared-report SAMPLES now REDIRECT to the current product story (stronger than noindex: they
+// render no retired positioning at all) and stay noindex.
+ok("the retired /r/check + /r/sample samples redirect to the current product + are noindex",
+  /redirect\("\/how-it-works"\)/.test(rCheck) && /redirect\("\/how-it-works"\)/.test(rSample)
+  && /index:\s*false/.test(rCheck) && /index:\s*false/.test(rSample));
 const proxySrc2 = readFileSync("proxy.ts", "utf8");
 ok("proxy redirects ALL retired /v/* to home (catch-all, after the legal vanity paths)", /path === "\/v" \|\| path\.startsWith\("\/v\/"\)/.test(proxySrc2));
 const rToken = readFileSync("app/r/[token]/page.tsx", "utf8");
 const rcToken = readFileSync("app/r/c/[token]/page.tsx", "utf8");
-ok("shared report CTAs point at the current product (/free-report), not the retired /new or /app/checks/new",
-  !rToken.includes("app.vraelis.com/new") && !rcToken.includes('href="/app/checks/new"') && rToken.includes("/free-report") && rcToken.includes("/free-report"));
+// The retired per-token shared reports (human-eval /r/[token] and checker /r/c/[token]) now REDIRECT to the
+// current product and render NO retired report body, so no retired positioning (judgments / Decision Package
+// / AI output check) or retired CTA (/new, /app/checks/new) can reach the public.
+ok("retired per-token shared reports redirect to the current product, rendering no retired body/CTA",
+  /redirect\("\/how-it-works"\)/.test(rToken) && /redirect\("\/how-it-works"\)/.test(rcToken)
+  && !rToken.includes("app.vraelis.com/new") && !rcToken.includes('href="/app/checks/new"')
+  && !/getSharedReport|ReportBody|Decision Package/.test(rToken) && !/getSharedCheck|CheckReport/.test(rcToken));
 
 // ── Static: the guard sends logged-out deep links to sign-in with an app-host callback ──
 const guard = readFileSync("lib/v-preflight-guard.ts", "utf8");

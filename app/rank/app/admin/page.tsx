@@ -65,8 +65,8 @@ export default function AdminPage() {
       <div className="phead">
         <div>
           <p className="eyebrow">Admin</p>
-          <h1 className="display">Vote review</h1>
-          <p>Suspicious votes are filtered automatically. Review and override here. Last 7 days.</p>
+          <h1 className="display">Review queue</h1>
+          <p>Suspicious activity is filtered automatically. Review and override here. Last 7 days.</p>
         </div>
       </div>
 

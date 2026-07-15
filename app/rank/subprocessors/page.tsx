@@ -31,7 +31,7 @@ export default function SubprocessorsPage() {
       eyebrow="Legal"
       title="Subprocessors"
       updated="Updated July 2026"
-      intro="The third-party services Vraelis relies on to run the product. Content you submit for a check is sent to the AI model provider; if you launch a human validation, it is also shown to real people who evaluate it."
+      intro="The third-party services Vraelis relies on to run the product. Verification runs against your connected application use our hosting and browser-execution infrastructure, and any AI assessment is sent to the AI model provider."
     >
       <div style={{ overflowX: "auto", margin: "6px 0 8px" }}>
         <table style={{ borderCollapse: "collapse", width: "100%", minWidth: 560 }}>

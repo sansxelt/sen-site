@@ -17,25 +17,25 @@ export default function TermsPage() {
       <P>These terms cover your use of Vraelis at vraelis.com. By creating an account or using the product, you agree to them. If you do not agree, do not use the service.</P>
 
       <H>What Vraelis provides</H>
-      <P>Vraelis is a quality gate for AI-generated output. You submit output your app or model produced and Vraelis returns a structured check:</P>
+      <P>Vraelis is production validation for AI-built systems. You connect an application, define what it must do in production, and Vraelis returns a structured result:</P>
       <Ul items={[
-        "An AI assessment: per-criterion scores, a recommended version, and line-level flags with suggested fixes.",
-        "Optional validation on real people, to see how human judgment compares (a calibration layer).",
-        "Credits, plans, and a developer API with keys, webhooks, and data exports.",
+        "A Production Pass: your requirements executed against your exact build and environment, with the evidence captured from each run.",
+        "A truthful production decision and the issues found, tracked across releases.",
+        "Plans, an account balance, and a developer API with keys, webhooks, and data exports.",
       ]} />
 
       <H>Accounts</H>
       <P>You are responsible for your account and for keeping access to it secure. Provide accurate information when you sign up, and do not misuse the service or let others misuse it through your account. Accounts are for one person or organization; do not create multiple accounts to obtain additional free allowances.</P>
 
       <H>Your content</H>
-      <P>You are responsible for the content you submit, check, validate, or share, and you must have the right to use it. You grant Vraelis a limited license to process that content to provide the service, which includes sending it to our subprocessors (for example, the AI model provider that runs a check, and, if you launch a human validation, the real people who evaluate it). Do not submit content that is illegal, infringing, deceptive, or abusive, and do not submit regulated or highly sensitive personal data you are not permitted to share.</P>
+      <P>You are responsible for the applications, requirements, and content you connect, verify, or share, and you must have the right to use them and to authorize Vraelis to test them. You grant Vraelis a limited license to process that content to provide the service, which includes sending it to our subprocessors (for example, our hosting and browser-execution infrastructure that runs a verification, and the AI model provider that produces an AI assessment). Do not submit content that is illegal, infringing, deceptive, or abusive, and do not submit regulated or highly sensitive personal data you are not permitted to share.</P>
 
-      <H>Credits and payments</H>
+      <H>Balance and payments</H>
       <P>Your account balance funds Production Passes, which are charged when they execute. New accounts start with a free promotional pass allowance, which has no cash value. Payments are processed by Stripe. If a pass cannot start, or no flow executes, the hold is returned to your account automatically.</P>
       <P>Subscriptions renew automatically until cancelled, and you can cancel anytime from the app; access continues until the end of the current billing period. Prices, packs, plans, and limits may change over time. Our <Link href="/refunds" style={acc}>Refund and Cancellation policy</Link> explains what is and is not refundable.</P>
 
       <H>How to read a check</H>
-      <P><strong style={strong}>A Vraelis check is an AI assessment. It is informational and directional, not a guarantee, a certification, or professional, legal, or financial advice.</strong> Scores and the recommended version are computed from the model&apos;s evaluation; human validation is directional signal from real people completing evaluation tasks, not vetted experts. You are solely responsible for the decisions you make and for anything you choose to ship. Do not rely on a check as the sole basis for a decision, and do not present a Vraelis result as a guarantee of quality, safety, performance, or any business outcome.</P>
+      <P><strong style={strong}>A Vraelis result is evidence from a verification run. It is informational and directional, not a guarantee, a certification, or professional, legal, or financial advice.</strong> A production decision reflects how your exact build behaved against the requirements you defined, under the scenarios that were run; it does not certify that a system is bug-free, safe, or universally production-ready. You are solely responsible for the decisions you make and for anything you choose to ship. Do not rely on a Vraelis result as the sole basis for a decision, and do not present it as a guarantee of quality, safety, performance, or any business outcome.</P>
 
       <H>API keys, webhooks, and exports</H>
       <P>API access is available on the Scale plan. API keys are secrets, and you are responsible for keeping them secure. Webhook events are signed so you can verify them. Handle exported data responsibly. Abuse, scraping, excessive requests, or attempts to bypass rate limits or entitlements may be throttled or blocked.</P>
@@ -43,7 +43,7 @@ export default function TermsPage() {
       <H>Prohibited use</H>
       <Ul items={[
         "Fraud, spam, or deceptive use.",
-        "Bot or automated abuse, signal manipulation, or duplicate-participation abuse of human validation.",
+        "Bot or automated abuse, or attempts to manipulate verification results.",
         "Creating multiple or alias accounts to farm free allowances.",
         "Scraping, probing, or attacking the service, or attempting to bypass rate limits or plan entitlements.",
         "Submitting infringing, illegal, or regulated content you are not permitted to share.",

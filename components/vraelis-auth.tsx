@@ -161,7 +161,7 @@ export function VraelisSignIn({
           {mode === "signup" ? <>Create your <span className="em">account</span>.</> : <>Access your <span className="em">account</span>.</>}
         </h1>
         <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.55 }}>
-          {mode === "signup" ? "Start testing with real people. 25 free credits." : "Sign in to your tests, credits, and reports."}
+          {mode === "signup" ? "Connect an AI-built system and verify it before production." : "Sign in to your applications, verification runs, evidence, and reports."}
         </p>
       </div>
 

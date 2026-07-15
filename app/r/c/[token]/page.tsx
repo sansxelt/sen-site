@@ -1,89 +1,21 @@
 import type { Metadata } from "next";
-import { cache } from "react";
-import Link from "next/link";
-import { ogMeta } from "@/lib/og-meta";
-import { getSharedCheck } from "@/lib/v-checks";
-import { CheckReport } from "@/app/rank/app/legacy/checks/[id]/check-report";
+import { redirect } from "next/navigation";
 
-// Never cache: sharing is revocable, so a turned-off link must stop resolving immediately
-// rather than serve a stale render from the full-route cache.
-export const dynamic = "force-dynamic";
-
-// generateMetadata and the page body both need the check; cache() collapses them to a
-// single DB read per request (force-dynamic means no route cache to absorb the second).
-const loadShared = cache((token: string) => getSharedCheck(token));
-
-// Public, read-only AI output check report, shared by its owner. Viewable WITHOUT an
-// account, but ONLY when the owner has explicitly enabled sharing, getSharedCheck is
-// gated on (unguessable token AND share_enabled AND status=complete) and returns no owner
-// identity. Deliberately noindex: this is user content meant for direct sharing, not search.
-
-const OUTPUT_LABELS: Record<string, string> = {
-  support_reply: "Support reply", onboarding: "Onboarding", marketing_copy: "Marketing copy",
-  agent_action: "Agent action", other: "Output",
-};
-
-export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
-  const { token } = await params;
-  const check = await loadShared(token);
-  if (!check) {
-    return ogMeta({ title: "Shared AI output check", description: "This shared AI output check is no longer available.", path: `/r/c/${token}`, index: false });
-  }
-  const label = OUTPUT_LABELS[check.output_type] ?? "Output";
-  const title = check.title || `${label} check`;
-  const rec = check.result.recommendation
-    || `An AI output check on a ${label.toLowerCase()}: per-criterion scores, the version to ship, and line-level flags with fixes.`;
-  return ogMeta({ title: `${title} | checked by Vraelis`, description: rec.slice(0, 200), path: `/r/c/${token}`, index: false });
+// Public shared-report viewer for the RETIRED AI-output-checker product ("AI output check", per-criterion
+// scores, the version to ship). The current Vraelis product does not share via /r/c/ — those links came only
+// from the retired checker. Rather than render retired positioning to the public (and leak it into social
+// previews), any /r/c/<token> link now redirects to the current product story. Existing bookmarked links
+// resolve cleanly instead of showing a retired check report. noindex; neutral on-brand preview.
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: "Vraelis",
+    description: "Production validation for AI-built systems.",
+    robots: { index: false, follow: false },
+    openGraph: { title: "Vraelis", description: "Production validation for AI-built systems.", images: ["https://vraelis.com/og?v=2"] },
+    twitter: { card: "summary_large_image", title: "Vraelis", description: "Production validation for AI-built systems.", images: ["https://vraelis.com/og?v=2"] },
+  };
 }
 
-function TopBar({ pill }: { pill: string }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 22 }}>
-      <Link href="/" style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 18, color: "var(--fg-1)", textDecoration: "none", letterSpacing: "-0.01em" }}>Vraelis</Link>
-      <span className="pill" style={{ fontSize: 10, color: "var(--fg-4)" }}>{pill}</span>
-    </div>
-  );
-}
-
-export default async function SharedCheck({ params }: { params: Promise<{ token: string }> }) {
-  const { token } = await params;
-  const check = await loadShared(token);
-
-  if (!check) {
-    return (
-      <div style={{ minHeight: "100vh", background: "var(--bg-2)" }}>
-        <div className="wrap" style={{ maxWidth: 640, paddingTop: "clamp(28px, 4vw, 52px)", paddingBottom: 72 }}>
-          <TopBar pill="Shared report" />
-          <div className="empty">
-            <div className="empty__icon">∅</div>
-            <h3>This report isn&apos;t available</h3>
-            <p>The link may have been turned off by its owner, or it never existed.</p>
-            <Link href="/free-report" className="btn">Verify your app with Vraelis</Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div style={{ minHeight: "100vh", background: "var(--bg-2)" }}>
-      <div className="wrap" style={{ maxWidth: 820, paddingTop: "clamp(28px, 4vw, 52px)", paddingBottom: 72 }}>
-        <TopBar pill="Shared report | checked by Vraelis" />
-
-        <CheckReport result={check.result} title={check.title} createdAt={check.created_at} />
-
-        {/* CTA, the loop: a shared report sends its viewer to the CURRENT product (Production Pass). */}
-        <div style={{ textAlign: "center", marginTop: 40, paddingTop: 28, borderTop: "1px solid var(--line-1)" }}>
-          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, color: "var(--fg-1)", marginBottom: 6 }}>Verify your AI-built app before you launch</div>
-          <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.6, margin: "0 auto 16px", maxWidth: 440 }}>
-            Vraelis runs your app&apos;s critical user journeys in a real browser and returns a launch decision with the evidence behind it. Your first Production Pass is free.
-          </p>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
-            <Link href="/free-report" className="btn btn--lg">Run your first Production Pass, free <span aria-hidden>→</span></Link>
-            <Link href="/how-it-works" className="btn btn--ghost btn--lg">How it works</Link>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+export default function SharedCheckRedirect() {
+  redirect("/how-it-works");
 }

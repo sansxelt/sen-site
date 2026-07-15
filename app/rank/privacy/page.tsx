@@ -12,29 +12,29 @@ export default function PrivacyPage() {
   return (
     <LegalShell eyebrow="Legal" title="Privacy" updated="Updated June 2026">
       <H>Overview</H>
-      <P>Vraelis is human QA for AI output: you submit options, real people evaluate them, and you get a decision report. This page explains how data is handled when you use the website, app, evaluation flow, API, webhooks, exports, and public reports at vraelis.com. We have kept it plain and specific to what the product actually does.</P>
+      <P>Vraelis is production validation for AI-built systems: you connect an application, define what it must do in production, and Vraelis runs those requirements against your exact build and environment and captures the evidence. This page explains how data is handled when you use the website, app, verification runs, API, webhooks, exports, and shared reports at vraelis.com. We have kept it plain and specific to what the product actually does.</P>
 
       <H>Data we collect</H>
       <Ul items={[
         "Account details: your name, email, and which sign-in provider you used (email, Google, or GitHub).",
-        "Tests you create: titles, categories, settings, and the candidate outputs you upload or link.",
-        "Evaluation data: the judgments, rankings, and comments collected on your evaluations, and the report results generated from them.",
-        "Public report settings, including whether sharing is on and the share token for a public link.",
+        "Applications you connect: names, deployment URLs, environment and build metadata, and the production requirements and verification flows you define.",
+        "Verification data: the runs Vraelis executes against your application, the evidence they capture, and the results and launch decisions generated from them.",
+        "Shared report settings, including whether sharing is on and the share token for a shared link.",
         "API key metadata: a key's name, prefix, scopes, created date, and last-used time. The full key is shown once at creation and stored only as a hash.",
         "Webhook endpoint URLs and delivery logs, including status, timestamps, and response or error details.",
-        "Credit, plan, billing, and subscription records, and checkout and payment status.",
+        "Plan, balance, billing, and subscription records, and checkout and payment status.",
         "Support and contact messages you send us.",
         "Usage, security, and abuse-prevention logs.",
-        "Hashed IP and device signals used to detect duplicate or automated participation. We do not show raw IP or device data in reports.",
+        "Hashed IP and device signals used to detect automated abuse. We do not show raw IP or device data in reports.",
       ]} />
 
       <H>How we use data</H>
       <Ul items={[
         "Operate the product and your account.",
-        "Run evaluations, collect human judgments, and filter low-quality responses.",
+        "Run verification against your connected applications and capture the resulting evidence.",
         "Generate reports and enable sharing, exports, webhooks, and the API.",
-        "Manage credits, plans, billing, and checkout.",
-        "Prevent spam, duplicate participation, fraud, and abuse.",
+        "Manage plans, balance, billing, and checkout.",
+        "Prevent spam, fraud, and abuse.",
         "Keep the service reliable and secure.",
         "Respond to support, privacy, and account requests.",
       ]} />
@@ -71,8 +71,8 @@ export default function PrivacyPage() {
       <H>California privacy notice</H>
       <P>If you are a California resident, this section describes how Vraelis handles personal information. We are a small product and may not meet the thresholds that trigger every California privacy obligation, but we want to be transparent.</P>
       <Ul items={[
-        "Categories of personal information we collect: identifiers such as name and email; account and authentication data; commercial information such as credits, plans, and billing or payment status; internet and usage activity such as evaluation activity and logs; and limited inferences used only for signal quality and abuse detection.",
-        "Purposes: to operate the product, run evaluations, generate reports, manage billing, prevent abuse, and provide support.",
+        "Categories of personal information we collect: identifiers such as name and email; account and authentication data; commercial information such as plan, balance, and billing or payment status; internet and usage activity such as verification activity and logs; and limited inferences used only for abuse detection.",
+        "Purposes: to operate the product, run verification, generate reports, manage billing, prevent abuse, and provide support.",
         "Sources: directly from you, automatically as you use the product, and from your sign-in and payment providers.",
         "Service providers and third parties: hosting, database, authentication, payments (Stripe), email, and security or logging providers, used to operate the service.",
         "Rights that may apply: to know or access the personal information we hold, to request deletion, to request correction, to opt out where applicable, to limit the use of sensitive information where applicable, and to not be discriminated against for exercising these rights.",
@@ -83,7 +83,7 @@ export default function PrivacyPage() {
       <H>EU, EEA, and UK privacy rights</H>
       <P>If you are in the EU, EEA, or UK, this section describes your privacy rights. It is a plain explanation of how we handle your data and how to reach us, not a claim of full regulatory compliance.</P>
       <P>Controller and contact: Vraelis, reachable at <a href="mailto:privacy@vraelis.com" style={{ color: "var(--acc-deep)" }}>privacy@vraelis.com</a>.</P>
-      <P>We process data to provide creative evaluation, reports, the API, webhooks, exports, billing, and support, and to keep the service secure. In plain terms, the lawful bases we rely on are:</P>
+      <P>We process data to provide production verification, reports, the API, webhooks, exports, billing, and support, and to keep the service secure. In plain terms, the lawful bases we rely on are:</P>
       <Ul items={[
         "Contract, to provide the service you sign up for.",
         "Legitimate interests, to secure the product and prevent abuse.",
