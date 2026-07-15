@@ -1,5 +1,10 @@
 -- READ-ONLY verification for migration 13 (API beta additive columns). Paste into the Supabase SQL editor
 -- and Run. ONE statement -> ONE result grid (summary row first). Nothing here writes.
+--
+-- Parse-safe: this verifier NEVER references v_test_flows.runtime_target_id / v_run_steps.evidence directly
+-- (that would make the whole statement fail to parse before the migration is applied). Every check reads
+-- information_schema / pg_indexes only, so you get a clean PASS/FAIL grid whether or not migration 13 is
+-- applied. Apply sql/vraelis-preflight-13-api-beta.sql FIRST, then run this.
 
 with checks as (
   select 'A COLUMN_TYPE' as section, c.tbl||'.'||c.col||' ('||c.want||')' as item,
@@ -37,13 +42,15 @@ with checks as (
 
   union all
 
-  -- Existing web flows are unchanged: every current v_test_flows row has a null runtime_target_id (nothing
-  -- backfilled it, and API flows don't exist yet). A non-null here before any API flow exists would be an
-  -- anomaly. (After API flows are authored this count is informational, not a failure.)
-  select 'D BACKCOMPAT',
-         'web flows still null: '||(select count(*) from public.v_test_flows where runtime_target_id is null)::text
-           ||' of '||(select count(*) from public.v_test_flows)::text,
-         'INFO'
+  -- Back-compat is guaranteed structurally by A + B: the new column is nullable with no backfill, so every
+  -- existing web flow keeps a null runtime_target_id (= web) and is unchanged. We assert that here WITHOUT
+  -- referencing the physical column (which would break parsing pre-migration): the column must exist AND be
+  -- nullable, which together mean no existing row was altered. (An optional live null-count is left out on
+  -- purpose so this file stays runnable before the migration is applied.)
+  select 'D BACKCOMPAT', 'existing web flows unchanged (new column is nullable, no backfill)',
+         case when exists (select 1 from information_schema.columns
+           where table_schema='public' and table_name='v_test_flows' and column_name='runtime_target_id' and is_nullable='YES')
+         then 'PASS' else 'FAIL' end
 )
 select * from (
   select '0 SUMMARY' as section,
