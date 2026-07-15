@@ -11,6 +11,8 @@ import { listRunsForApp, issuesResolvedByRun } from "@/lib/preflight/runs-db";
 import { unverifiedNewerDeployment } from "@/lib/preflight/deployments-db";
 import { pickHealthRun, isLaunchHealthCandidate } from "@/lib/preflight/target-url";
 import { listAllIssues, listRepairs } from "@/lib/preflight/overview-db";
+import { apiBetaVisible } from "@/lib/preflight/api-beta-gate";
+import { getApiStatus } from "@/lib/preflight/runtime/platform-status";
 import { AppTabs } from "./app-tabs";
 import { LaunchPassButton } from "./launch-button";
 import { PassPreview } from "./contract/pass-preview";
@@ -129,11 +131,15 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
     );
   }
 
-  const [contract, runs, openIssues, repairs] = await Promise.all([
+  // API beta: show the tab + an INDEPENDENT API status only for an enabled account. webOnly scopes the web
+  // blocker list so an API-runtime issue never appears as a web launch blocker.
+  const apiVisible = await apiBetaVisible(owner);
+  const [contract, runs, openIssues, repairs, apiStatus] = await Promise.all([
     getContract(owner, id),
     listRunsForApp(owner, id),
-    listAllIssues(owner, { status: "open", applicationId: id }),
+    listAllIssues(owner, { status: "open", applicationId: id, webOnly: true }),
     listRepairs(owner),
+    apiVisible ? getApiStatus(owner, id) : Promise.resolve(null),
   ]);
   let reqs: ContractRequirement[] = [];
   let flows: TestFlow[] = [];
@@ -251,13 +257,28 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
         {builderLabel ? <span className="pill" style={{ fontSize: 10.5 }}>{builderLabel}</span> : null}
       </div>
 
-      <AppTabs appId={id} active="overview" />
+      <AppTabs appId={id} active="overview" showApiTab={apiVisible} />
 
       {/* ── COMMAND CENTER: the primary operating strip — verdict + the ONE dominant next action + the
           true-facts ribbon. The detailed sections below support it; they never repeat the verdict. ── */}
       <div style={{ marginTop: 8, marginBottom: 22 }}>
         <CommandCenter appId={id} verdict={verdict} subline={subParts.length > 0 ? `${subParts.join(". ")}.` : null} tone={hero} action={cmdAction} ribbon={cmdRibbon} launchFlowIds={cmdLaunchFlowIds} />
       </div>
+
+      {/* ── INDEPENDENT PLATFORM STATUS (API beta): web and API are shown as SEPARATE truths, never one
+          scalar. The web verdict above is unchanged; this adds an API line only for an enabled account. ── */}
+      {apiStatus && (
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 22 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", border: "1px solid var(--line-2)", borderRadius: 10, background: "var(--bg-1)" }}>
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0.4, color: "var(--fg-4)" }}>WEB</span>
+            <span style={{ fontSize: 13.5, fontWeight: 700, color: "var(--fg-2)" }}>{verdict}</span>
+          </div>
+          <Link href={`/applications/${id}/api-runtime`} style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", border: "1px solid var(--line-2)", borderRadius: 10, background: "var(--bg-1)" }}>
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0.4, color: "var(--fg-4)" }}>API</span>
+            <span style={{ fontSize: 13.5, fontWeight: 700, color: apiStatus.verdict === "READY" ? "var(--ok)" : apiStatus.verdict === "BLOCKED" ? "var(--err)" : apiStatus.verdict === "REPAIR VERIFIED" ? "var(--acc)" : "var(--fg-3)" }}>{apiStatus.hasTarget ? apiStatus.verdict : "NOT SET UP"}</span>
+          </Link>
+        </div>
+      )}
 
       {/* ── NEW DEPLOYMENT UNVERIFIED (S4): above the verdict, never replacing it. The health decision
           below stays pinned to the deployment that was actually tested; this banner only says a newer,

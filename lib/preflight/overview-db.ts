@@ -61,13 +61,17 @@ export type IssueRow = {
 
 const SEVERITY_RANK: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
 
-export async function listAllIssues(owner: string, opts: { status?: "open" | "resolved"; applicationId?: string; limit?: number } = {}): Promise<IssueRow[]> {
+export async function listAllIssues(owner: string, opts: { status?: "open" | "resolved"; applicationId?: string; limit?: number; webOnly?: boolean } = {}): Promise<IssueRow[]> {
   if (!isDatabaseConfigured()) return [];
   let q = db().from("v_issues")
     .select("id, application_id, severity, category, title, status, first_seen_run, last_seen_run, resolved_run, flow_id, created_at")
     .eq("user_id", norm(owner)).order("created_at", { ascending: false }).limit(opts.limit ?? 100);
   if (opts.status) q = q.eq("status", opts.status);
   if (opts.applicationId) q = q.eq("application_id", opts.applicationId);
+  // webOnly scopes to WEB issues (runtime_target_id IS NULL): an API-runtime issue (which carries an api
+  // target id, migration 12/13) must never surface as a web launch blocker. Default is unfiltered (every
+  // existing caller keeps today's behavior); the web overview passes webOnly:true.
+  if (opts.webOnly) q = q.is("runtime_target_id", null);
   const { data, error } = await q;
   if (error || !data) return [];
   const rows = data as Record<string, unknown>[];
@@ -131,7 +135,10 @@ export async function overviewCounts(owner: string): Promise<OverviewCounts> {
     try { const { count: c, error } = await q; return error ? 0 : (c ?? 0); } catch { return 0; }
   };
   const [openCriticalIssues, runningPasses, verifiedRepairs] = await Promise.all([
-    count(db().from("v_issues").select("id", { count: "exact", head: true }).eq("user_id", uid).eq("status", "open").in("severity", ["critical", "high"])),
+    // Web-scoped (runtime_target_id IS NULL): API-runtime issues are shown in the API status, never counted
+    // into the web/overall open-critical badge. If the column isn't migrated yet, the filter is a no-op on a
+    // table where every row's runtime_target_id is null anyway, so existing counts are unchanged.
+    count(db().from("v_issues").select("id", { count: "exact", head: true }).eq("user_id", uid).eq("status", "open").in("severity", ["critical", "high"]).is("runtime_target_id", null)),
     count(db().from("v_preflight_runs").select("id", { count: "exact", head: true }).eq("user_id", uid).in("state", ["queued", "discovering", "running", "analyzing"])),
     count(db().from("v_repairs").select("id", { count: "exact", head: true }).eq("user_id", uid).eq("status", "verified")),
   ]);

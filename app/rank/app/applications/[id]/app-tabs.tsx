@@ -15,11 +15,17 @@ const TABS: { key: string; label: string; path: string }[] = [
   { key: "settings", label: "Settings", path: "/settings" },
 ];
 
-export function AppTabs({ appId, active }: { appId: string; active: string }) {
+// The API tab is appended ONLY when the caller passes showApiTab (computed server-side from the API-beta
+// gate). It is never in the DOM for a non-enabled account — hiding is not the security boundary (the routes
+// 404), but the tab is genuinely absent so no hint of the beta leaks.
+const API_TAB = { key: "api", label: "API", path: "/api-runtime" };
+
+export function AppTabs({ appId, active, showApiTab }: { appId: string; active: string; showApiTab?: boolean }) {
+  const tabs = showApiTab ? [...TABS, API_TAB] : TABS;
   return (
     <nav aria-label="Application sections"
       style={{ display: "flex", gap: 2, borderBottom: "1px solid var(--line-1)", marginTop: 22, marginBottom: 20, overflowX: "auto" }}>
-      {TABS.map((t) => {
+      {tabs.map((t) => {
         const isActive = t.key === active;
         return (
           <Link key={t.key} href={`/applications/${appId}${t.path}`}
