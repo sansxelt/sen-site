@@ -217,15 +217,29 @@ function tsFilesUnder(dir: string): string[] {
   return out;
 }
 {
+  // Exactly TWO governed AI entry points are permitted (Multi-Platform Program, founder-approved):
+  //   1. discover-synthesis.ts — the original pinned-model discovery synthesis.
+  //   2. agent/agent-client.ts — the governed agent client (flag-gated VRAELIS_AGENT, cost-governor
+  //      metered, governor-pause-gated). Every agent goes THROUGH it; nothing else may touch the SDK.
+  const ALLOWED_AI_CLIENTS = ["discover-synthesis.ts", "agent/agent-client.ts"];
   const roots = ["lib/preflight", "app/api/preflight", "worker/preflight", "app/rank/app/applications"];
   const offenders: string[] = [];
   for (const root of roots) {
     for (const f of tsFilesUnder(root)) {
       const src = stripComments(read(f));
-      if ((/new Anthropic\(/.test(src) || src.includes("@anthropic-ai/sdk")) && !f.replace(/\\/g, "/").endsWith("discover-synthesis.ts")) offenders.push(f);
+      const norm = f.replace(/\\/g, "/");
+      if ((/new Anthropic\(/.test(src) || src.includes("@anthropic-ai/sdk")) && !ALLOWED_AI_CLIENTS.some((a) => norm.endsWith(a))) offenders.push(f);
     }
   }
-  ok("the ONLY AI client in the preflight stack is discover-synthesis", offenders.length === 0, offenders.join(", "));
+  ok("the ONLY AI clients in the preflight stack are discover-synthesis + the governed agent-client", offenders.length === 0, offenders.join(", "));
+
+  // The second allowlisted client is only acceptable BECAUSE it is governed — prove the governance is
+  // still present in the file, so the allowlist can never rot into an ungoverned loophole.
+  const agentSrc = stripComments(read("lib/preflight/agent/agent-client.ts"));
+  ok("agent-client is flag-gated (VRAELIS_AGENT === \"1\", default OFF)", agentSrc.includes('process.env.VRAELIS_AGENT === "1"'));
+  ok("agent-client meters every call through the cost governor (recordProviderCost aiTokens)", /recordProviderCost\(\{ owner:[\s\S]*?aiTokens/.test(agentSrc));
+  ok("agent-client respects the governor pause before spending", agentSrc.includes("isRunsGovernorPaused()"));
+  ok("agent-client never embeds a key literal", !/sk-ant-/.test(agentSrc));
 }
 
 // ── Static: provenance lands in the EXISTING columns; manual adds record manual ──
