@@ -21,7 +21,14 @@ export default async function SignInLayout({ children }: { children: ReactNode }
         <div className="grid-faint" style={{ opacity: 0.5 }} aria-hidden />
         <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", minHeight: "100dvh" }}>
           <SignInHeader />
-          <div style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "flex-start", padding: "clamp(20px, 4vh, 44px) var(--gutter) 56px" }}>
+          {/* The card is vertically centred in the space below the header. This column is its own scroll
+              container: flex:1 + minHeight:0 lets it take the leftover height and actually scroll (a flex child
+              won't scroll without minHeight:0), and overflowY:auto means a tall form — create-account with Terms,
+              OAuth, and the name/email/password fields — that exceeds the viewport scrolls from the top instead
+              of being clipped. When the form fits, justify-content:center centres it in the leftover space; the
+              symmetric block-padding keeps a minimum breathing gap so a just-barely-fitting form never kisses
+              the edges. */}
+          <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", justifyContent: "safe center", alignItems: "center", overflowY: "auto", padding: "clamp(20px, 4vh, 44px) var(--gutter)" }}>
             {children}
           </div>
         </div>
