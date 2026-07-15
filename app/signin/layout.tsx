@@ -21,7 +21,7 @@ export default async function SignInLayout({ children }: { children: ReactNode }
         <div className="grid-faint" style={{ opacity: 0.5 }} aria-hidden />
         <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", minHeight: "100dvh" }}>
           <SignInHeader />
-          <div style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "flex-start", padding: "clamp(24px, 5vh, 64px) var(--gutter) 64px" }}>
+          <div style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "flex-start", padding: "clamp(20px, 4vh, 44px) var(--gutter) 56px" }}>
             {children}
           </div>
         </div>

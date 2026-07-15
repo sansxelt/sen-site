@@ -43,16 +43,16 @@ export default async function SignInPage({
   // opens in create-account mode instead of a "Welcome back" sign-in screen.
   if (vraelis) {
     const modeParam = Array.isArray(params.mode) ? params.mode[0] : params.mode;
+    // The (vraelis) signin layout already owns the full surface: min-height,
+    // hero glow + grid, the transparent-until-scroll header, and a top-anchored
+    // centred content column. This page just drops the form into that column —
+    // it must NOT re-wrap it in its own 100svh + big top padding, or the two
+    // full-height wrappers stack and push the whole card ~96px down the page.
     return (
-      <div style={{ position: "relative", overflow: "hidden", minHeight: "100svh", padding: "clamp(56px, 8vw, 96px) 20px clamp(40px, 8vw, 80px)" }}>
-        <div className="glow glow--soft" />
-        <div style={{ position: "relative", width: "100%", display: "flex", justifyContent: "center" }}>
-          <VraelisSignIn
-            callbackUrl={getSafeRedirectPath(callbackUrl ?? "/app")}
-            initialMode={modeParam === "signup" ? "signup" : "signin"}
-          />
-        </div>
-      </div>
+      <VraelisSignIn
+        callbackUrl={getSafeRedirectPath(callbackUrl ?? "/app")}
+        initialMode={modeParam === "signup" ? "signup" : "signin"}
+      />
     );
   }
 
