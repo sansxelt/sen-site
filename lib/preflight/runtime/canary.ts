@@ -22,8 +22,8 @@ import { runApiFlow, API_CAPABILITIES, type ApiStep, type ApiFetch } from "./api
 import { decideRuntime } from "./decide";
 import type { Decision, FailureClass, FlowResult, StepObservation } from "./core";
 
-export type CanaryPhase = "broken" | "repair" | "fixed" | "capability" | "infra" | "cancel";
-export const CANARY_PHASES: readonly CanaryPhase[] = ["broken", "repair", "fixed", "capability", "infra", "cancel"];
+export type CanaryPhase = "broken" | "repair" | "fixed" | "capability" | "infra" | "ssrf_block" | "cancel";
+export const CANARY_PHASES: readonly CanaryPhase[] = ["broken", "repair", "fixed", "capability", "infra", "ssrf_block", "cancel"];
 export const CANARY_ADAPTER_VERSION = API_CAPABILITIES.version;   // "api-1"
 export const CANARY_CONTRACT_VERSION = 1;
 export const CANARY_APP_NAME = "API Canary (internal)";
@@ -173,7 +173,16 @@ const PHASE_CONFIG: Record<Exclude<CanaryPhase, "cancel">, { flows: CanaryFlow[]
   fixed: { flows: CANARY_FLOWS, mode: "fixed" },
   capability: { flows: [CAPABILITY_PROBE], mode: "fixed" },
   infra: { flows: CANARY_FLOWS.filter((f) => f.id === "health"), mode: "fixed" },
+  ssrf_block: { flows: CANARY_FLOWS.filter((f) => f.id === "health"), mode: "fixed" },
 };
+
+// The infra phase targets a publicly-routable-LOOKING but guaranteed-unroutable IP (RFC 5737 TEST-NET-1):
+// it passes the SSRF allowlist (a real public address) but no host ever answers, so the CONNECTION fails ->
+// a genuine transport-unreachable event -> infra_failure. The ssrf_block phase targets a non-resolving host
+// that trips safeFetch's DNS/allowlist guard -> transport:"blocked" -> indeterminate (a security signal,
+// never free infra). Two DISTINCT failure paths, each proven separately on the deployed system.
+const INFRA_UNREACHABLE_BASE = "https://192.0.2.1";              // TEST-NET-1: public-form, never responds -> connect fails
+const SSRF_BLOCK_BASE = "https://canary-unreachable.invalid";    // non-resolving -> safeFetch guard rejects
 
 export async function runCanaryPhase(deps: CanaryDeps, phase: CanaryPhase): Promise<CanaryPhaseResult> {
   const appId = await deps.store.ensureApp(deps.owner);
@@ -198,8 +207,10 @@ export async function runCanaryPhase(deps: CanaryDeps, phase: CanaryPhase): Prom
   }
 
   const cfg = PHASE_CONFIG[phase];
-  // The infra phase targets an unreachable host — a TRANSPORT failure, distinct from any product signal.
-  const baseUrl = phase === "infra" ? "https://canary-unreachable.invalid" : deps.fixtureBase(cfg.mode);
+  const baseUrl =
+    phase === "infra" ? INFRA_UNREACHABLE_BASE :
+    phase === "ssrf_block" ? SSRF_BLOCK_BASE :
+    deps.fixtureBase(cfg.mode);
 
   // Count real requests so "fails before billing" is provable (capability phase must show zero).
   let apiRequests = 0;

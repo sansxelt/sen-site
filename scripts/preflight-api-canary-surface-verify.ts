@@ -27,11 +27,13 @@ const clock = () => (now += 7);
 const FIXTURE_ORIGIN = "https://canary.rehearsal.test";
 const fixtureFetcher: ApiFetch = async (url, init) => {
   const u = new URL(url);
-  // Mirror the LIVE route's fetcher: an unreachable host throws a transportKind-tagged error so the canary
-  // classifies it as infra (not a bare string the classifier would have to parse).
+  // Mirror the LIVE route's fetcher (safeFetch + isBlockedFetchError tagging): the TEST-NET infra target
+  // resolves-as-public but never answers -> transport:"unreachable" (infra); the non-resolving ssrf target
+  // trips the safe-fetch guard -> transport:"blocked" (indeterminate). Any other non-fixture host defaults
+  // to unreachable.
   if (u.origin !== FIXTURE_ORIGIN) {
     const e = new Error("blocked") as Error & { transportKind?: string };
-    e.transportKind = "unreachable";
+    e.transportKind = u.hostname.endsWith(".invalid") ? "blocked" : "unreachable";
     throw e;
   }
   const m = /^\/api\/canary-fixture\/([a-z_]+)(\/.*)?$/.exec(u.pathname);
@@ -124,13 +126,23 @@ async function main() {
   ok("no issue lineage from a policy-blocked flow", cap.issues.opened.length === 0);
   ok("decision reflects review, not a product verdict", cap.decision === "needs_review", String(cap.decision));
 
-  console.log("\n── INFRA: unreachable host -> INFRASTRUCTURE FAILURE, never a counterfeit BLOCKED ──");
+  console.log("\n── INFRA: genuine transport-unreachable (TEST-NET) -> INFRASTRUCTURE FAILURE, never BLOCKED ──");
   const infra = (results.infra = await runCanaryPhase(deps, "infra"));
   ok("decision is INFRA_FAILURE", infra.decision === "infra_failure", String(infra.decision));
   ok("failure class is infra", infra.failureClass === "infra");
   ok("NOT product BLOCKED", infra.decision !== "blocked");
   ok("no issue rows from an infra run", infra.issues.opened.length === 0);
   ok("no usage recorded for transport-failed requests", infra.ledgerRows === 0);
+
+  console.log("\n── SSRF_BLOCK: safe-fetch guard rejection -> INDETERMINATE (security signal), never free infra ──");
+  const ssrf = (results.ssrf_block = await runCanaryPhase(deps, "ssrf_block"));
+  ok("decision is NEEDS_REVIEW (indeterminate)", ssrf.decision === "needs_review", String(ssrf.decision));
+  ok("failure class is INDETERMINATE, not infra (an SSRF block is a security signal)", ssrf.failureClass === "indeterminate");
+  ok("NOT product BLOCKED", ssrf.decision !== "blocked");
+  ok("NOT silently absolved as free infra (failureClass !== 'infra')", ssrf.failureClass !== "infra");
+  ok("no usage recorded for a blocked request", ssrf.ledgerRows === 0);
+  ok("the failing step is tagged transport:'blocked' (structural, not string-matched)",
+    ssrf.evidence[0]?.steps.some((s) => s.transport === "blocked") ?? false);
 
   console.log("\n── CANCEL: a cancelled run settles with no decision row and no usage ──");
   const cancel = (results.cancel = await runCanaryPhase(deps, "cancel"));
