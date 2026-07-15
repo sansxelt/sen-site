@@ -538,9 +538,14 @@ summary::-webkit-details-marker { display: none; }
 .seg button {
   border: none; background: transparent; cursor: pointer; padding: 8px 18px; border-radius: var(--r-circle);
   font-family: var(--font-display); font-weight: 500; font-size: 14px; color: var(--fg-3);
+  /* Center the label in its own box: the display face has tall internal leading, so without an explicit
+     line-height + flex centering the text sits low in the pill and the focus ring reads as offset. */
+  display: inline-flex; align-items: center; justify-content: center; line-height: 1;
   transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
 }
 .seg button.on { background: var(--bg-1); color: var(--fg-1); box-shadow: var(--shadow-sm); }
+/* The pill toggle: keep the focus ring hugging the rounded pill instead of a low, offset square. */
+.seg button:focus-visible { outline-offset: -2px; }
 .seg__save { font-family: var(--font-code); font-size: 11px; color: var(--acc-deep); margin-left: 6px; }
 
 /* ─── Pricing card ─── */
