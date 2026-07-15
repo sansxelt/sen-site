@@ -234,8 +234,8 @@ ok("version history renders id-free metadata (version, short hash, author, date)
 ok("versioned-vs-empty states stay distinct (No versions recorded yet only when the store is ready)",
   page.includes("No versions recorded yet") && page.includes("snapshotStoreReady("));
 ok("missing recommended context section with real gaps", page.includes("Missing recommended context") && page.includes("No source connection"));
-ok("owner-gated server component (requirePreflightOwner + getApplication)",
-  page.includes("requirePreflightOwner(") && page.includes("getApplication("));
+ok("owner/member-gated server component (requirePreflightAppAccess or requirePreflightOwner, + getApplication)",
+  (page.includes("requirePreflightAppAccess(") || page.includes("requirePreflightOwner(")) && page.includes("getApplication("));
 ok("all twelve source kinds are labeled", ["prompt", "prd", "requirements", "readme", "risks", "roles", "summary", "goal", "workflows", "data", "auth_expect", "billing_expect"].every((k) => new RegExp(`${k}: "`).test(page)));
 ok("no em dash, no middle dot, no emoji in the tab copy",
   !page.includes("—") && !page.includes("·") && !/[\u{1F300}-\u{1FAFF}]/u.test(page));

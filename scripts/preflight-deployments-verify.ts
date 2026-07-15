@@ -239,11 +239,13 @@ console.log("\n── deployments route static ──");
 const ROUTE = "app/api/preflight/apps/[id]/deployments/route.ts";
 const routeRaw = read(ROUTE);
 const route = stripComments(routeRaw);
-ok("route gates on preflightEnabled + auth() + preflightDbReady + getApplication ownership",
-  route.includes("preflightEnabled()") && /\bauth\s*\(\s*\)/.test(route)
-  && route.includes("preflightDbReady()") && route.includes("getApplication("));
+// The route now resolves ownership through the canonical team gate gatePreflightApp (which itself enforces
+// preflightEnabled + auth + preflightDbReady + applicationAccess -> the app OWNER + role), instead of the
+// four calls inline. Accept the gate as the ownership entry point; still require it and a role-gated write.
+ok("route gates ownership via gatePreflightApp (flag + auth + db-ready + access) or the legacy inline gates",
+  route.includes("gatePreflightApp(") || (route.includes("preflightEnabled()") && /\bauth\s*\(\s*\)/.test(route) && route.includes("preflightDbReady()") && route.includes("getApplication(")));
 ok("ownership gate precedes the write (recordDeployment)",
-  route.indexOf("getApplication(") !== -1 && route.indexOf("getApplication(") < route.indexOf("recordDeployment("));
+  route.indexOf("gatePreflightApp(") !== -1 && route.indexOf("gatePreflightApp(") < route.indexOf("recordDeployment("));
 ok("manual recording posts source 'manual'", route.includes('source: "manual"'));
 ok("GET lists via the owner-scoped listDeployments", route.includes("listDeployments(g.owner, g.appId)"));
 ok("unapplied migration 8 answers an actionable 503 naming the sql file, never a fake success",
@@ -266,8 +268,8 @@ ok("comparison renders previous verified against current with the pure diff",
   && tab.includes("compareDeployments(previous, current)"));
 ok("current verification status is honest: matched decided pass or Unverified, never invented",
   tab.includes("verifyingRun") && tab.includes(">Unverified</span>"));
-ok("owner-gated server component (requirePreflightOwner + getApplication)",
-  tab.includes("requirePreflightOwner(") && tab.includes("getApplication("));
+ok("owner/member-gated server component (requirePreflightAppAccess or requirePreflightOwner, + getApplication)",
+  (tab.includes("requirePreflightAppAccess(") || tab.includes("requirePreflightOwner(")) && tab.includes("getApplication("));
 
 // ── Design rules: no em dash, no middle dot, no emoji in any S4 surface ──
 console.log("\n── design rules ──");
