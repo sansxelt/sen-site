@@ -98,14 +98,16 @@ const ROUTE = "app/api/preflight/apps/[id]/route.ts";
 const routeRaw = read(ROUTE);
 const route = stripComments(routeRaw);
 ok("route exports a PATCH handler", route.includes("export async function PATCH"));
-ok("owner identity comes only from the session (auth()), never from the request body",
-  /auth\(\)/.test(route) && route.includes("email.toLowerCase()")
+// Owner identity now comes from the team resolver applicationAccess(email, id) (auth() email in, resolved app
+// OWNER out) inside the route's gate(); a direct auth()/email.toLowerCase() also qualifies. Never the body.
+ok("owner identity comes from the session (auth() -> applicationAccess), never the request body",
+  (/applicationAccess\s*\(/.test(route) || (/auth\(\)/.test(route) && route.includes("email.toLowerCase()")))
   && !route.includes("body?.owner") && !route.includes("body?.user_id") && !route.includes("body.owner_id"));
-ok("gate order: preflightEnabled -> auth -> preflightDbReady -> getApplication ownership, before the update",
-  route.includes("preflightEnabled()") && route.includes("preflightDbReady()")
-  && route.indexOf("getApplication(") !== -1 && route.indexOf("getApplication(") < route.indexOf("updateApplication("));
-ok("a missing / unowned app is a 404 before any mutation",
-  /getApplication\(owner, id\)[\s\S]{0,120}if \(!app\) return NextResponse\.json\(\{ error: "not_found" \}, \{ status: 404 \}\)/.test(route));
+ok("gate order: the ownership resolver (applicationAccess / getApplication) precedes the update",
+  (route.includes("applicationAccess(") || (route.includes("preflightEnabled()") && route.includes("preflightDbReady()") && route.indexOf("getApplication(") !== -1))
+  && (route.indexOf("applicationAccess(") !== -1 ? route.indexOf("applicationAccess(") : route.indexOf("getApplication(")) < route.indexOf("updateApplication("));
+ok("editing settings is EDITOR+ and a caller without access 404s before any mutation (view-only member 403)",
+  /applicationAccess\(email, id\)/.test(route) && /if \(!access\)/.test(route) && /hasAtLeastRole\(access\.role,\s*"editor"\)/.test(route));
 ok("the id used for the update is the route param, never a client-supplied app id",
   route.includes("updateApplication(g.owner, g.appId, patch)") && route.includes("const { id } = await params"));
 ok("only the safe fields are returned to the client (id, name, app_url, environment)",

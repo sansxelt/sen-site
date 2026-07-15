@@ -134,9 +134,15 @@ const VERIFY = "app/api/preflight/apps/[id]/connections/[connId]/verify/route.ts
 const routes = { [COLLECTION]: afterImports(stripComments(read(COLLECTION))), [SINGLE]: afterImports(stripComments(read(SINGLE))), [VERIFY]: afterImports(stripComments(read(VERIFY))) };
 
 for (const [file, code] of Object.entries(routes)) {
-  ok(`${file}: owner identity comes only from auth()`, /\bauth\s*\(\s*\)/.test(code) && !code.includes("owner_id") && !/body[^;\n]*(email|owner)/i.test(code));
-  ok(`${file}: application ownership (getApplication) precedes every write`, (() => {
-    const gate = code.indexOf("getApplication(");
+  // Owner identity now comes from the canonical team gate gatePreflightApp (which calls auth() itself and
+  // resolves the app OWNER + role), OR a direct auth() call. Either way it must never be taken from the body.
+  ok(`${file}: owner identity comes from auth()/gatePreflightApp, never the request body`,
+    (/\bauth\s*\(\s*\)/.test(code) || /\bgatePreflightApp\s*\(/.test(code)) && !code.includes("owner_id") && !/body[^;\n]*(email|owner)/i.test(code));
+  ok(`${file}: the ownership gate (gatePreflightApp or getApplication) precedes every write`, (() => {
+    // The route resolves ownership via gatePreflightApp (preferred) or a direct getApplication call.
+    const g1 = code.indexOf("gatePreflightApp(");
+    const g2 = code.indexOf("getApplication(");
+    const gate = g1 !== -1 ? g1 : g2;
     if (gate === -1) return false;
     return ["addConnection(", "updateConnectionMeta(", "removeConnection(", "recordConnectionCheck(", "logEvent("]
       .every((w) => { const i = code.indexOf(w); return i === -1 || i > gate; });
@@ -195,7 +201,7 @@ console.log("\n── management UI static ──");
 const tabs = read("app/rank/app/applications/[id]/app-tabs.tsx");
 ok("app tabs include Connections -> /settings/connections", tabs.includes('"/settings/connections"') && tabs.includes('label: "Connections"'));
 const page = read("app/rank/app/applications/[id]/settings/connections/page.tsx");
-ok("management page is owner-gated (requirePreflightOwner + getApplication)", page.includes("requirePreflightOwner(") && page.includes("getApplication("));
+ok("management page is owner/member-gated (requirePreflightAppAccess or requirePreflightOwner, + getApplication)", (page.includes("requirePreflightAppAccess(") || page.includes("requirePreflightOwner(")) && page.includes("getApplication("));
 ok("management page renders the audit history from v_events (last 10)", page.includes("recentConnectionEvents(") && page.includes("Connection activity"));
 ok("management page has an honest empty state for the audit trail", page.includes("No connection activity recorded yet"));
 const mgr = read("app/rank/app/applications/[id]/settings/connections/connections-manager.tsx");
