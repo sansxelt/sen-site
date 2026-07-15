@@ -11,6 +11,7 @@ import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { getRunArtifactPath } from "@/lib/preflight/runs-db";
 import { signedArtifactUrl } from "@/lib/preflight/artifacts";
 import { applicationAccessForRun } from "@/lib/preflight/team-access";
+import { hasAtLeastRole } from "@/lib/v-workspace";
 
 export const runtime = "nodejs";
 
@@ -20,11 +21,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ runId: 
   if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
   const { runId, artifactId } = await params;
 
-  // Evidence (screenshot/trace) is part of the run report — any member with access to the shared app may
-  // view it (viewer+). Resolve the run's app owner; getRunArtifactPath stays owner-scoped so the artifact
-  // path is always the app owner's.
+  // Evidence (screenshot / Playwright trace) is a private app internal — a trace captures full DOM, network,
+  // and page state of the app under test. A VIEWER+ member of the shared app may fetch it; a client_viewer
+  // (report-only) and any non-member get a uniform 404, matching every other viewer+ read. Resolve the run's
+  // app owner + role; getRunArtifactPath stays owner-scoped so the path is always the app owner's.
   const access = await applicationAccessForRun(email, runId);
-  if (!access) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  if (!access || !hasAtLeastRole(access.role, "viewer")) return NextResponse.json({ error: "not_found" }, { status: 404 });
   const path = await getRunArtifactPath(access.owner, runId, artifactId);
   if (!path) return NextResponse.json({ error: "not_found" }, { status: 404 });
 

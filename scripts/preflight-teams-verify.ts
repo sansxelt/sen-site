@@ -122,8 +122,27 @@ function wiringTests() {
   ok("api-runs resolves owner via gateApiRuntimeApp + sets owner = g.owner", apiRun.includes("gateApiRuntimeApp") && /const owner = g\.owner;/.test(apiRun));
   ok("api-runs no longer keys billing to the raw caller (apiBetaOwner removed as the owner source)", !/const owner = await apiBetaOwner\(\)/.test(apiRun));
 
+  console.log("\n── run-scoped READ routes exclude client_viewer (regression: adversarial finding) ──");
+  // These read routes resolve access via applicationAccessForRun (NOT gatePreflightApp, which would exclude
+  // client_viewer automatically), so they MUST add an explicit hasAtLeastRole(access.role, "viewer") gate —
+  // otherwise a report-only client_viewer member reads the full run report / downloads Playwright traces.
+  // A viewer+ read via the shared gatePreflightApp already excludes client_viewer, so only the hand-rolled
+  // run-scoped reads need this explicit check.
+  const RUN_READS = [
+    "app/api/preflight/runs/[runId]/route.ts",
+    "app/api/preflight/runs/[runId]/artifacts/[artifactId]/route.ts",
+  ];
+  for (const f of RUN_READS) {
+    const src = readFileSync(f, "utf8");
+    // Must resolve via applicationAccessForRun AND gate the role rung at viewer (which excludes client_viewer).
+    const gated = /applicationAccessForRun\(/.test(src) && /hasAtLeastRole\(access\.role,\s*"viewer"\)/.test(src);
+    ok(`${f.split("/").slice(-2).join("/")} excludes client_viewer (hasAtLeastRole viewer)`, gated, "missing the viewer role gate — client_viewer would read app internals");
+  }
+
   console.log("\n── degradation: the resolver is null-safe for empty inputs (no crash pre-migration) ──");
   ok("resolveAccessDecision with owner==caller still resolves regardless of workspace state", resolveAccessDecision("a@b.com", "a@b.com", null, null)?.role === "owner");
+  // Directly assert the role model that the two routes above rely on.
+  ok("a client_viewer FAILS hasAtLeastRole(viewer) — the property the run-read gate depends on", hasAtLeastRole("client_viewer", "viewer") === false);
 }
 
 function run() {
