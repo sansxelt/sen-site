@@ -5,9 +5,9 @@ import { TwoUserDemo } from "./_components/two-user-demo";
 
 export const metadata = {
   ...ogMeta({
-    title: "Productionization for AI-built SaaS",
+    title: "Production validation for AI-built systems",
     description:
-      "AI built the product. Vraelis finishes the engineering. Connect your AI-built app and Vraelis runs it like production, in a real browser, as two real users, against the database, auth, and billing underneath, then returns a launch decision with the exact blockers to fix.",
+      "Vraelis validates how AI-built systems behave before production. It turns production requirements into executable checks, runs them against exact builds and environments, and captures the evidence teams need to ship with confidence. Web verification is live; API verification is in private beta.",
     path: "/",
   }),
   title: { absolute: "Vraelis" },
@@ -22,27 +22,29 @@ function Icon({ d, size = 18 }: { d: string; size?: number }) {
   );
 }
 const ICONS = {
-  connect: "M9 12a3 3 0 0 0 3 3h1a3 3 0 0 0 0-6M15 12a3 3 0 0 0-3-3h-1a3 3 0 0 0 0 6M7 7l-2 2a4 4 0 0 0 0 6M17 17l2-2a4 4 0 0 0 0-6",
-  graph: "M5 5h5v5H5zM14 14h5v5h-5zM7.5 10v2a2 2 0 0 0 2 2h3M16.5 14v-2a2 2 0 0 0-2-2h-3",
-  browser: "M3 5h18v14H3zM3 9h18M6.5 7h.01M9 7h.01",
-  users: "M16 20v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 20v-2a4 4 0 0 0-3-3.87M16 2.13A4 4 0 0 1 16 10",
-  shield: "M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z M9 12l2 2 4-4",
-  database: "M12 3c4.4 0 8 1.3 8 3s-3.6 3-8 3-8-1.3-8-3 3.6-3 8-3zM4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3",
-  card: "M3 6h18v12H3zM3 10h18M7 15h4",
-  flag: "M4 21V4M4 4h13l-2 4 2 4H4",
-  wrench: "M14.7 6.3a4 4 0 0 0-5.4 5.4l-6 6a1.5 1.5 0 0 0 2.1 2.1l6-6a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.1-2.1z",
-  deploy: "M12 15V3m0 0l-4 4m4-4l4 4M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4",
+  contract: "M8 4h8l2 2v14H6V4zM9 9h6M9 13h6M9 17h4",
+  build: "M4 7l8-4 8 4-8 4-8-4zM4 7v10l8 4 8-4V7M12 11v10",
+  execute: "M5 4l14 8-14 8V4z",
   eye: "M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z",
-  refresh: "M21 12a9 9 0 1 1-3-6.7M21 4v5h-5",
+  shield: "M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z M9 12l2 2 4-4",
+  history: "M3 12a9 9 0 1 0 3-6.7M3 5v5h5M12 8v4l3 2",
   lock: "M6 10V7a6 6 0 0 1 12 0v3M5 10h14v11H5zM12 15v2",
-  bolt: "M13 2 4 14h7l-2 8 9-12h-7l2-8z",
+  key: "M14 7a4 4 0 1 1-3.9 5H7v3H4v-3a1 1 0 0 1 1-1h5.1A4 4 0 0 1 14 7zM17 9h.01",
+  database: "M12 3c4.4 0 8 1.3 8 3s-3.6 3-8 3-8-1.3-8-3 3.6-3 8-3zM4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3",
+  api: "M9 12a3 3 0 0 0 3 3h1a3 3 0 0 0 0-6M15 12a3 3 0 0 0-3-3h-1a3 3 0 0 0 0 6M7 7l-2 2a4 4 0 0 0 0 6M17 17l2-2a4 4 0 0 0 0-6",
+  flow: "M5 6h6M5 12h14M5 18h9M17 4l2 2-2 2M13 16l2 2-2 2",
+  transitions: "M4 12h10m0 0l-3-3m3 3l-3 3M20 6v12",
+  recover: "M4 4v6h6M4 10a8 8 0 1 1 2 8",
+  device: "M7 4h10v16H7zM10 4V2h4v2M9 20h6",
 };
 
-// The three launch-decision states. Self-contained colors that read on the cream background.
+// The production-decision outcomes. READY is the normal outcome; these are results the system returns,
+// not the definition of the product.
 const STATUS = {
-  ready:   { label: "READY",        fg: "var(--acc-deep)", bg: "var(--acc-soft)", line: "var(--acc-line)" },
-  review:  { label: "NEEDS REVIEW", fg: "#B45309",         bg: "#FEF6E7",         line: "#F3DFB0" },
-  blocked: { label: "BLOCKED",      fg: "#C0392B",         bg: "#FBEBEA",         line: "#F0C7C2" },
+  ready:   { label: "READY",          fg: "var(--acc-deep)", bg: "var(--acc-soft)", line: "var(--acc-line)" },
+  review:  { label: "NEEDS REVIEW",   fg: "#B45309",         bg: "#FEF6E7",         line: "#F3DFB0" },
+  blocked: { label: "BLOCKED",        fg: "#C0392B",         bg: "#FBEBEA",         line: "#F0C7C2" },
+  repair:  { label: "REPAIR VERIFIED",fg: "var(--acc-deep)", bg: "var(--acc-soft)", line: "var(--acc-line)" },
 } as const;
 type StatusKey = keyof typeof STATUS;
 
@@ -51,43 +53,42 @@ function StatusPill({ s }: { s: StatusKey }) {
   return <span className="pill" style={{ background: c.bg, color: c.fg, borderColor: c.line, fontFamily: "var(--font-code)", letterSpacing: "0.06em" }}>{c.label}</span>;
 }
 
-// ── The failure system: what AI-built SaaS ships broken ──
-const FAILURES: { t: string; d: string; i: string }[] = [
-  { t: "Fake completion", d: "The screen says saved. Nothing was written. A refresh proves the record was never real.", i: ICONS.refresh },
-  { t: "Broken ownership", d: "One user can open, read, or change another user's data by guessing an id.", i: ICONS.lock },
-  { t: "Demo-only infrastructure", d: "State lives in memory or localStorage and disappears on the next deploy.", i: ICONS.database },
-  { t: "Billing mismatch", d: "Checkout shows success while no subscription, entitlement, or charge exists.", i: ICONS.card },
-  { t: "Fragile deployment", d: "It works on the machine that built it and breaks on a clean production build.", i: ICONS.deploy },
-  { t: "Operational blindness", d: "When it fails for a real user, nothing tells you it failed.", i: ICONS.eye },
+// ── What Vraelis validates: behavior categories, not a runtime list ──
+const VALIDATES: { t: string; d: string; i: string; soon?: boolean }[] = [
+  { t: "Authentication & identity", d: "Sign-in, sessions, and identity hold under real conditions, not just on the happy path.", i: ICONS.lock },
+  { t: "Authorization & permissions", d: "The right roles can act, and the wrong ones are refused. Access boundaries are enforced, not assumed.", i: ICONS.key },
+  { t: "Data creation & persistence", d: "What the product says it saved is actually there after a refresh, a new session, and a later request.", i: ICONS.database },
+  { t: "APIs & integrations", d: "Endpoints, chained requests, statuses, values, schemas, and idempotency behave the way the contract requires.", i: ICONS.api },
+  { t: "Critical user & system workflows", d: "The journeys that matter run end to end, across services and state transitions.", i: ICONS.flow },
+  { t: "Build & configuration behavior", d: "Behavior is tied to the exact build, environment, and configuration, so a clean production build is what gets verified.", i: ICONS.build },
+  { t: "Cross-service state transitions", d: "State moves correctly between services and stays consistent, not just correct on one screen.", i: ICONS.transitions },
+  { t: "Recovery & failure handling", d: "The system degrades and recovers the way it is required to when something goes wrong.", i: ICONS.recover },
+  { t: "SDK & connected-device telemetry", d: "Roadmap: signed execution checkpoints and telemetry from instrumented apps, edge systems, and devices.", i: ICONS.device, soon: true },
 ];
 
-// ── Connect to launch decision ──
+// ── The core loop: how it works ──
 const STEPS: { k: string; t: string; d: string; i: string }[] = [
-  { k: "01", t: "Connect your app", d: "Point Vraelis at your deployed app and paste the prompt you built it from. Optionally connect GitHub, Vercel, Supabase, and Stripe.", i: ICONS.connect },
-  { k: "02", t: "Map the production graph", d: "Vraelis discovers what the product promises and links each promise across the stack: routes, database, auth, and billing.", i: ICONS.graph },
-  { k: "03", t: "Approve the contract", d: "You review an editable Production Contract, what the app must do, and approve the critical flows before anything runs.", i: ICONS.flag },
-  { k: "04", t: "Run it like production", d: "A real isolated browser runs the approved flows as two separate users, capturing deterministic evidence: screenshots, console, network.", i: ICONS.browser },
-  { k: "05", t: "Get the Production Pass", d: "One launch decision, READY, NEEDS REVIEW, or BLOCKED, with every blocker, its evidence, and exact reproduction steps.", i: ICONS.shield },
-  { k: "06", t: "Repair with proof", d: "Each blocker ships with a fix prompt for your builder. Fix it, rerun the exact failed check, and watch the regression close.", i: ICONS.wrench },
+  { k: "01", t: "Define what must work", d: "Capture the production requirements the system has to keep — the promises that matter before it ships.", i: ICONS.contract },
+  { k: "02", t: "Bind the exact build & environment", d: "Every check is tied to a specific build, deployment, environment, role, and configuration — the exact thing under verification.", i: ICONS.build },
+  { k: "03", t: "Execute approved verification flows", d: "Vraelis runs the approved flows against the real system in controlled execution, capturing what actually happens.", i: ICONS.execute },
+  { k: "04", t: "Capture observed evidence", d: "Factual evidence at every step: what was expected, what was observed, and the record that proves it.", i: ICONS.eye },
+  { k: "05", t: "Receive a production decision", d: "One truthful decision you can act on — READY, BLOCKED, NEEDS REVIEW, or REPAIR VERIFIED — with the evidence behind it.", i: ICONS.shield },
+  { k: "06", t: "Preserve history across releases", d: "Every result is remembered, so you can see how behavior held — or changed — across future builds and deployments.", i: ICONS.history },
 ];
 
-const LAYERS = ["Build prompt", "Routes", "Database", "Row security", "Auth & sessions", "Stripe & entitlements", "Env & secrets", "Browser flows", "Deploys", "Incidents"];
+// ── Evidence is bound to exactness ──
+const EVIDENCE_BINDS = ["Exact build or deployment", "Runtime target", "Environment", "User role", "Contract version", "Configuration", "Execution steps", "Expected vs observed"];
+const EVIDENCE_KINDS = ["Browser screenshots", "HTTP transactions", "Logs", "Assertions", "Execution timing", "Issue lineage", "SDK / device checkpoints (roadmap)"];
 
-const ISSUE_TYPES = ["Fake success", "Persistence failure", "Session failure", "Cross-account access", "Stale UI", "Duplicate action"];
-
-const IS_THINGS = [
-  "A production readiness system for AI-built apps: it verifies the whole stack and returns one launch decision.",
-  "Real evidence: deterministic browser observations, screenshots, and repro steps, never an AI opinion dressed up as proof.",
-  "Repair with proof: a fix prompt, an exact rerun on a preview, and a closed regression you can see.",
+// ── What Vraelis is not ──
+const IS_NOT = [
+  "A website scanner",
+  "A generic AI audit",
+  "A prompt wrapper",
+  "A screenshot generator",
+  "A test-script recorder",
+  "An autonomous coding agent",
 ];
-const IS_NOT_THINGS = [
-  "A testing dashboard or a bug list you still have to triage and trust.",
-  "A guarantee: it is a readiness assessment, not a promise of outcomes.",
-  "A code writer: in V1 it proposes fixes and proves them, it does not modify or deploy your code on its own.",
-];
-
-// The signature two-user proof timeline now lives in
-// _components/two-user-demo.tsx as an interactive client component.
 
 export default function VraelisLanding() {
   return (
@@ -97,41 +98,42 @@ export default function VraelisLanding() {
         <div className="glow glow--bleed" />
         <div className="grid-faint" style={{ opacity: 0.55 }} />
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(48px, 7vw, 96px)", paddingBottom: "clamp(40px, 5vw, 68px)", textAlign: "center" }}>
-          <p className="eyebrow rise" data-d="1" style={{ justifyContent: "center" }}>Productionization for AI-built SaaS</p>
-          <h1 className="display rise" data-d="2" style={{ fontSize: "clamp(2.4rem, 5.4vw, 4.2rem)", margin: "0 auto 22px", maxWidth: 900, lineHeight: 1.04, textWrap: "balance" }}>
-            <span style={{ color: "var(--fg-3)" }}>AI built the product.</span><br />
-            Vraelis <span className="em">finishes the engineering</span>.
+          <p className="eyebrow rise" data-d="1" style={{ justifyContent: "center" }}>Production validation for AI-built systems</p>
+          <h1 className="display rise" data-d="2" style={{ fontSize: "clamp(2.4rem, 5.4vw, 4.2rem)", margin: "0 auto 22px", maxWidth: 940, lineHeight: 1.04, textWrap: "balance" }}>
+            Know how your system will behave <span className="em">before it reaches production</span>.
           </h1>
-          <p className="rise" data-d="3" style={{ fontSize: "clamp(1.08rem, 1.45vw, 1.3rem)", color: "var(--fg-2)", maxWidth: 720, margin: "0 auto 26px", lineHeight: 1.55 }}>
-            Your AI shipped something that looks done. Vraelis runs it like production, in a real browser, as two real users, against the database, auth, and billing underneath, then hands you a launch decision and the exact blockers to fix.
+          <p className="rise" data-d="3" style={{ fontSize: "clamp(1.08rem, 1.45vw, 1.3rem)", color: "var(--fg-2)", maxWidth: 740, margin: "0 auto 26px", lineHeight: 1.55 }}>
+            Vraelis turns production requirements into executable checks, runs them against exact builds and environments, and captures the evidence teams need to ship with confidence.
           </p>
           <div className="rise" data-d="4" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Get early access <span aria-hidden>→</span></Link>
+            <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Validate a system <span aria-hidden>→</span></Link>
             <Link href="/how-it-works" className="btn btn--ghost btn--lg">See how it works</Link>
           </div>
-          <p className="rise" data-d="4" style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-4)", margin: "14px 0 0" }}>Test-only. No real charges, nothing deleted. You approve every flow before it runs.</p>
+          <p className="rise" data-d="4" style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-4)", margin: "14px 0 0", maxWidth: 640, marginLeft: "auto", marginRight: "auto", lineHeight: 1.55 }}>
+            Web verification is live. API verification is available in private beta. Mobile, desktop, SDK, and connected-device runtimes are expanding from the same verification architecture.
+          </p>
 
-          {/* Signature artifact: the Production Pass, a launch decision, not a dashboard.
-              Interactive demonstration: pick a build state and watch the pass run. */}
+          {/* Signature artifact: a production decision, tied to an exact build, with evidence.
+              Interactive demonstration: the normal outcome is READY; switch to see a failure detected. */}
           <div className="rise" data-d="5" style={{ position: "relative", maxWidth: 880, margin: "clamp(24px, 3vw, 40px) auto 0" }}>
             <PassDemo />
           </div>
         </div>
       </section>
 
-      {/* ── The gap: the failure system ── */}
+      {/* ── What Vraelis validates ── */}
       <section className="section">
         <div className="wrap">
           <div className="sec-head">
-            <p className="eyebrow">Why AI-built SaaS breaks</p>
-            <h2 className="display">It looks done. <span className="em">Production disagrees.</span></h2>
-            <p>AI is fluent at the happy path and the demo. The engineering that makes software survive real users, its state, its boundaries, its money, is exactly what gets skipped. These are the failures Vraelis is built to catch, and none of them show up in a screenshot.</p>
+            <p className="eyebrow">What Vraelis validates</p>
+            <h2 className="display">The behavior that <span className="em">has to hold</span> in production.</h2>
+            <p>Vraelis works from explicit requirements, not generic AI opinions. It verifies how a system actually behaves — across identity, access, data, integrations, and the workflows that matter — and ties every result to the exact build it ran against.</p>
           </div>
           <div className="tile-grid cols-3">
-            {FAILURES.map((f) => (
-              <div key={f.t} className="acard" style={{ gap: 8 }}>
+            {VALIDATES.map((f) => (
+              <div key={f.t} className="acard" style={{ gap: 8, opacity: f.soon ? 0.72 : 1 }}>
                 <div className="acard__icon"><Icon d={f.i} /></div>
-                <div className="acard__t">{f.t}</div>
+                <div className="acard__t">{f.t}{f.soon && <span className="pill" style={{ marginLeft: 8, fontSize: 10, background: "var(--bg-2)", color: "var(--fg-4)", borderColor: "var(--line-2)", fontFamily: "var(--font-code)" }}>ROADMAP</span>}</div>
                 <div className="acard__d">{f.d}</div>
               </div>
             ))}
@@ -139,31 +141,13 @@ export default function VraelisLanding() {
         </div>
       </section>
 
-      {/* ── Two-user proof: the signature differentiator ── */}
-      <section className="section" style={{ background: "var(--bg-2)" }}>
-        <div className="wrap">
-          <div style={{ display: "grid", gridTemplateColumns: "minmax(0,0.92fr) minmax(0,1.08fr)", gap: "clamp(28px, 4vw, 60px)", alignItems: "center" }} className="cols-stack">
-            <div>
-              <p className="eyebrow">The test AI never runs on itself</p>
-              <h2 className="display" style={{ fontSize: "clamp(1.85rem, 3.3vw, 2.7rem)", marginBottom: 16 }}>Does it <span className="em">keep the data</span>? Does it <span className="em">keep it private</span>?</h2>
-              <p className="lead-copy" style={{ marginBottom: 20 }}>The most common lie in an AI-built app is a success message with nothing behind it, and the most dangerous is one user reaching another user&apos;s data. Vraelis proves both the only way that counts: two real users, in real sessions, in a real browser.</p>
-              <div className="chips">
-                {ISSUE_TYPES.map((t) => <span key={t} className="chip">{t}</span>)}
-              </div>
-              <p style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 16, lineHeight: 1.55 }}>State integrity is a first-class check, not a side effect. Vraelis asks whether apparent success survives a refresh, a new session, and a second user.</p>
-            </div>
-            <TwoUserDemo />
-          </div>
-        </div>
-      </section>
-
-      {/* ── How it works ── */}
-      <section id="how" className="section">
+      {/* ── How it works: the core loop ── */}
+      <section id="how" className="section" style={{ background: "var(--bg-2)" }}>
         <div className="wrap">
           <div className="sec-head">
             <p className="eyebrow">How it works</p>
-            <h2 className="display">From <span className="em">connected app</span> to <span className="em">launch decision</span>.</h2>
-            <p>You approve what runs, Vraelis runs it like production, and you get one answer you can act on. No test scripts to write, no dashboard to interpret.</p>
+            <h2 className="display">Requirements to a <span className="em">production decision</span> — with evidence.</h2>
+            <p>You define what must work and approve what runs. Vraelis executes it against the exact build, captures what actually happened, and returns one truthful decision — then remembers it across every release that follows.</p>
           </div>
           <div className="tile-grid cols-2">
             {STEPS.map((s) => (
@@ -182,58 +166,89 @@ export default function VraelisLanding() {
         </div>
       </section>
 
-      {/* ── The production graph: the whole stack ── */}
-      <section className="section" style={{ background: "var(--bg-2)" }}>
+      {/* ── Execution & evidence ── */}
+      <section className="section">
         <div className="wrap">
           <div className="sec-head">
-            <p className="eyebrow">The production graph</p>
-            <h2 className="display">We check the <span className="em">whole stack</span>, not just the screen.</h2>
-            <p>A test that only clicks buttons misses the database write that never happened and the row another tenant can read. Vraelis links every promise the product makes to the layer that has to keep it, so a green screen with a broken backend does not pass.</p>
+            <p className="eyebrow">Execution & evidence</p>
+            <h2 className="display">Proof tied to the <span className="em">exact thing</span> you shipped.</h2>
+            <p>A green screen is not proof. Vraelis produces factual evidence bound to the precise build, environment, role, and configuration it ran against — so a decision means something you can defend, not an opinion dressed up as one.</p>
           </div>
-          <div className="chips" style={{ justifyContent: "center", marginBottom: 22 }}>
-            {LAYERS.map((l) => <span key={l} className="chip">{l}</span>)}
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "clamp(18px, 3vw, 36px)" }} className="cols-2">
+            <div className="card" style={{ background: "var(--bg-2)" }}>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 12 }}>Every result is bound to</div>
+              <div className="chips">{EVIDENCE_BINDS.map((x) => <span key={x} className="chip">{x}</span>)}</div>
+            </div>
+            <div className="card" style={{ background: "var(--bg-2)" }}>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Evidence may include</div>
+              <div className="chips">{EVIDENCE_KINDS.map((x) => <span key={x} className="chip">{x}</span>)}</div>
+            </div>
           </div>
-          <div className="tile-grid cols-3">
-            {[
-              ["Promise", "What the product claims", "Vraelis reads the build prompt and the app to learn what each flow is supposed to do."],
-              ["Layer", "Where it has to hold", "Each promise is traced to the route, database write, ownership rule, or charge that backs it."],
-              ["Proof", "Whether it actually held", "A real browser run confirms the promise end to end, with evidence at every layer it touched."],
-            ].map(([k, t, d]) => (
-              <div key={k} className="acard" style={{ gap: 6 }}>
-                <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--acc-deep)" }}>{k}</div>
-                <div className="acard__t">{t}</div>
-                <div className="acard__d">{d}</div>
-              </div>
-            ))}
+
+          {/* One concrete example of a behavioral check, demoted from "the whole product" to an illustration. */}
+          <div style={{ marginTop: "clamp(32px, 4vw, 56px)", display: "grid", gridTemplateColumns: "minmax(0,0.92fr) minmax(0,1.08fr)", gap: "clamp(28px, 4vw, 60px)", alignItems: "center" }} className="cols-stack">
+            <div>
+              <p className="eyebrow">One example</p>
+              <h3 className="display" style={{ fontSize: "clamp(1.5rem, 2.6vw, 2.1rem)", marginBottom: 14 }}>Does the data <span className="em">persist</span>, and stay <span className="em">private</span>?</h3>
+              <p className="lead-copy" style={{ marginBottom: 16 }}>Whether apparent success survives a refresh and a new session, and whether one user can reach another&apos;s data, is one thing Vraelis checks with real execution — not a claim taken on faith. It is one behavior among many, captured as factual evidence.</p>
+            </div>
+            <TwoUserDemo />
           </div>
         </div>
       </section>
 
-      {/* ── Repair with proof ── */}
+      {/* ── Decisions: outcomes, not the product ── */}
+      <section className="section" style={{ background: "var(--bg-2)" }}>
+        <div className="wrap">
+          <div className="sec-head sec-head--center">
+            <p className="eyebrow">The decision</p>
+            <h2 className="display">One truthful outcome, <span className="em">tied to evidence</span>.</h2>
+            <p>A run returns a decision you can act on. READY is the normal result when the system does what it must. Failure detection is one capability, not the definition.</p>
+          </div>
+          <div className="tile-grid cols-2" style={{ maxWidth: 900, margin: "0 auto" }}>
+            {([
+              { s: "ready" as StatusKey, d: "The complete approved production contract passed." },
+              { s: "blocked" as StatusKey, d: "Critical required behavior genuinely failed." },
+              { s: "review" as StatusKey, d: "The result could not be determined reliably." },
+              { s: "repair" as StatusKey, d: "A known issue passed against a later build — without claiming full coverage." },
+            ]).map((c) => (
+              <div key={c.s} className="acard" style={{ gap: 10, borderColor: STATUS[c.s].line, flexDirection: "row", alignItems: "flex-start" }}>
+                <StatusPill s={c.s} />
+                <div className="acard__d" style={{ marginTop: 2 }}>{c.d}</div>
+              </div>
+            ))}
+          </div>
+          <p style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-4)", textAlign: "center", marginTop: 18, maxWidth: 640, marginLeft: "auto", marginRight: "auto", lineHeight: 1.55 }}>
+            REPAIR VERIFIED appears only when a known issue is rerun against a later build and that specific issue now passes. No one has to manufacture a failure to use Vraelis.
+          </p>
+        </div>
+      </section>
+
+      {/* ── Across releases: a system of record ── */}
       <section className="section">
         <div className="wrap">
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "clamp(28px, 4vw, 56px)", alignItems: "center" }} className="cols-stack">
             <div>
-              <p className="eyebrow">Repair, then prove it</p>
-              <h2 className="display" style={{ fontSize: "clamp(1.85rem, 3.3vw, 2.7rem)", marginBottom: 16 }}>A fix you can <span className="em">trust went in</span>.</h2>
-              <p className="lead-copy" style={{ marginBottom: 20 }}>Vraelis does not hand you a bug list and walk away. Every blocker ships with a builder-specific fix prompt. When you push the fix, Vraelis reruns the exact failed check on a preview, confirms the regression is closed, and can open the pull request.</p>
+              <p className="eyebrow">Across releases</p>
+              <h2 className="display" style={{ fontSize: "clamp(1.85rem, 3.3vw, 2.7rem)", marginBottom: 16 }}>A persistent <span className="em">system of record</span>, not a one-time report.</h2>
+              <p className="lead-copy" style={{ marginBottom: 20 }}>Production behavior is not a single moment. Vraelis remembers what was required, which exact version was tested, what failed, when an issue first appeared, whether it recurred, whether a later build fixed it, and which runtimes remain unverified.</p>
               <div className="card card--acc" style={{ padding: 14 }}>
-                <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 6 }}>You stay in control</div>
-                <p style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.55, margin: 0 }}>Vraelis does not modify your code or deploy on its own. It proposes the fix and proves it worked. The decision to ship stays yours.</p>
+                <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 6 }}>Continuity across builds</div>
+                <p style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.55, margin: 0 }}>An issue keeps its lineage across releases — so a repaired build proves the exact issue closed, and a regression is caught the moment it returns.</p>
               </div>
             </div>
             <div className="win" style={{ boxShadow: "var(--shadow-lg)" }}>
-              <div className="win__bar"><span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 13, color: "var(--fg-2)" }}>Repair loop</span><span className="pill" style={{ marginLeft: "auto", background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>Regression closed</span></div>
+              <div className="win__bar"><span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 13, color: "var(--fg-2)" }}>Release history</span><span className="pill" style={{ marginLeft: "auto", background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>Tracked</span></div>
               <div style={{ padding: "clamp(18px,2.4vw,26px)", display: "grid", gap: 12 }}>
                 {[
-                  ["Fix prompt", "A builder-specific prompt that describes the exact blocker and the change."],
-                  ["Preview deploy", "You push the fix; Vraelis picks up the preview build."],
-                  ["Rerun the exact check", "Only the failed flow reruns, on the same steps, in a real browser."],
-                  ["Regression closed", "The blocker is confirmed gone, with fresh evidence."],
-                  ["Open the PR", "Vraelis can open the pull request with the run attached."],
+                  ["Required", "The production contract this build was verified against."],
+                  ["Exact version", "The specific build, deployment, and environment under test."],
+                  ["Outcome", "The decision that build received, with its evidence."],
+                  ["Issue lineage", "When an issue appeared, whether it recurred, when it closed."],
+                  ["Unverified", "Which runtimes and requirements have not yet been proven."],
                 ].map(([t, d], i, arr) => (
                   <div key={t} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                    <span style={{ flex: "none", width: 26, height: 26, borderRadius: 8, background: i === arr.length - 1 ? "var(--acc-soft)" : "var(--bg-2)", border: `1px solid ${i === arr.length - 1 ? "var(--acc-line)" : "var(--line-2)"}`, color: "var(--acc-deep)", display: "grid", placeItems: "center", fontFamily: "var(--font-code)", fontSize: 12, fontWeight: 600 }}>{i + 1}</span>
+                    <span style={{ flex: "none", width: 26, height: 26, borderRadius: 8, background: i === arr.length - 1 ? "var(--bg-2)" : "var(--acc-soft)", border: `1px solid ${i === arr.length - 1 ? "var(--line-2)" : "var(--acc-line)"}`, color: i === arr.length - 1 ? "var(--fg-4)" : "var(--acc-deep)", display: "grid", placeItems: "center", fontFamily: "var(--font-code)", fontSize: 12, fontWeight: 600 }}>{i + 1}</span>
                     <div><div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14, color: "var(--fg-1)" }}>{t}</div><div style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5 }}>{d}</div></div>
                   </div>
                 ))}
@@ -243,79 +258,76 @@ export default function VraelisLanding() {
         </div>
       </section>
 
-      {/* ── The Production Pass: the output ── */}
-      <section className="section" style={{ background: "var(--bg-2)" }}>
-        <div className="wrap">
-          <div className="sec-head sec-head--center">
-            <p className="eyebrow">The output</p>
-            <h2 className="display">A <span className="em">launch decision</span>, not a dashboard.</h2>
-            <p>Every run ends in one answer you can act on. Not a wall of charts, not a score to interpret. READY to launch, NEEDS REVIEW, or BLOCKED, each with the reason and the evidence behind it.</p>
-          </div>
-          <div className="tile-grid cols-3" style={{ maxWidth: 900, margin: "0 auto" }}>
-            {([
-              { s: "ready" as StatusKey, t: "Ship it", d: "Every critical flow held across the stack. Launch with the evidence attached." },
-              { s: "review" as StatusKey, t: "Look before you ship", d: "A non-critical flow needs a human call. Vraelis shows exactly what and why." },
-              { s: "blocked" as StatusKey, t: "Do not launch yet", d: "A critical promise failed in production conditions. Fix it and rerun to green." },
-            ]).map((c) => (
-              <div key={c.s} className="acard" style={{ gap: 10, borderColor: STATUS[c.s].line }}>
-                <StatusPill s={c.s} />
-                <div className="acard__t">{c.t}</div>
-                <div className="acard__d">{c.d}</div>
-              </div>
-            ))}
-          </div>
-          <p style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-4)", textAlign: "center", marginTop: 18 }}>Delivered in the app, by API, or as a gate in CI.</p>
-        </div>
-      </section>
-
-      {/* ── Is / is not: own the category, honestly ── */}
-      <section className="section">
-        <div className="wrap">
-          <div className="sec-head">
-            <p className="eyebrow">What Vraelis is</p>
-            <h2 className="display">Production readiness, <span className="em">not another test tool</span>.</h2>
-            <p>Testing tools find bugs and hand you a list. Vraelis verifies the whole stack the way production will and returns a decision, with the proof and the path to green.</p>
-          </div>
-          <div className="card" style={{ background: "var(--bg-2)", borderRadius: "var(--r-xl)" }}>
-            <div className="cols-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "clamp(18px, 3vw, 36px)" }}>
-              <div>
-                <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 10 }}>Vraelis is</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>{IS_THINGS.map((x) => <div key={x} style={{ display: "flex", gap: 9, fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5 }}><span style={{ color: "var(--acc)", marginTop: 1 }}>✓</span>{x}</div>)}</div>
-              </div>
-              <div>
-                <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 10 }}>Vraelis is not</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>{IS_NOT_THINGS.map((x) => <div key={x} style={{ display: "flex", gap: 9, fontSize: 13.5, color: "var(--fg-4)", lineHeight: 1.5 }}><span style={{ color: "var(--fg-5)", marginTop: 1 }}>✕</span>{x}</div>)}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Where we are: honest status ── */}
+      {/* ── Runtime coverage: honest, separated ── */}
       <section className="section" style={{ background: "var(--bg-2)" }}>
         <div className="wrap">
           <div className="sec-head">
-            <p className="eyebrow">Where we are</p>
-            <h2 className="display">Shipping the <span className="em">first pillar</span> now.</h2>
-            <p>Vraelis Browser Verification, the real-browser preflight that runs your critical flows as two users and returns a launch decision, is the piece we are putting in front of first builders. The deeper cross-layer connections build out from there. We will be straight about what is live and what is next.</p>
+            <p className="eyebrow">Runtime coverage</p>
+            <h2 className="display">One verification architecture, <span className="em">expanding across runtimes</span>.</h2>
+            <p>Vraelis starts with web and APIs and is designed to extend across apps, SDKs, edge systems, and connected devices — the same requirements, execution, and evidence model, applied to more of where software actually runs. We are explicit about what is live and what is direction.</p>
           </div>
-          <div className="tile-grid cols-2">
+          <div className="tile-grid cols-3">
             <div className="card">
-              <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 12 }}>Live in early access</div>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 12 }}>Available</div>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 }}>
-                {["Real-browser verification of your approved flows", "Two-user state and isolation proof", "The Production Pass launch decision with evidence"].map((x) => (
-                  <li key={x} style={{ display: "flex", gap: 10, fontSize: 14, color: "var(--fg-2)", alignItems: "flex-start" }}><span style={{ color: "var(--acc)", marginTop: 1 }}>✓</span>{x}</li>
-                ))}
+                <li style={{ display: "flex", gap: 10, fontSize: 14, color: "var(--fg-2)", alignItems: "flex-start" }}><span style={{ color: "var(--acc)", marginTop: 1 }}>✓</span>Web — live and proven</li>
               </ul>
             </div>
             <div className="card" style={{ background: "var(--bg-1)" }}>
-              <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Rolling in</div>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "#B45309", marginBottom: 12 }}>Private beta</div>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 }}>
-                {["Connections for GitHub, Vercel, Supabase, and Stripe", "Repair pull requests with the rerun attached", "Continuous guard on every deploy"].map((x) => (
-                  <li key={x} style={{ display: "flex", gap: 10, fontSize: 14, color: "var(--fg-3)", alignItems: "flex-start" }}><span style={{ color: "var(--fg-5)", marginTop: 1 }}>○</span>{x}</li>
+                <li style={{ display: "flex", gap: 10, fontSize: 14, color: "var(--fg-2)", alignItems: "flex-start" }}><span style={{ color: "#B45309", marginTop: 1 }}>◑</span>APIs — engine live-proven; customer experience in private beta</li>
+              </ul>
+            </div>
+            <div className="card" style={{ background: "var(--bg-1)" }}>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Platform direction</div>
+              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8 }}>
+                {["Mobile applications", "Desktop applications", "SDK-instrumented systems", "Simulators", "Edge & connected devices", "Physical-AI systems"].map((x) => (
+                  <li key={x} style={{ display: "flex", gap: 10, fontSize: 13.5, color: "var(--fg-3)", alignItems: "flex-start" }}><span style={{ color: "var(--fg-5)", marginTop: 1 }}>○</span>{x}</li>
                 ))}
               </ul>
             </div>
+          </div>
+          <p style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-4)", textAlign: "center", marginTop: 18 }}>Platform-direction runtimes are not yet available to purchase or run. Each unlocks only after it is proven.</p>
+        </div>
+      </section>
+
+      {/* ── Physical AI / connected systems ── */}
+      <section className="section">
+        <div className="wrap">
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "clamp(28px, 4vw, 56px)", alignItems: "center" }} className="cols-stack">
+            <div>
+              <p className="eyebrow">Connected & physical systems</p>
+              <h2 className="display" style={{ fontSize: "clamp(1.85rem, 3.3vw, 2.7rem)", marginBottom: 16 }}>Physical AI is <span className="em">more than a model</span>.</h2>
+              <p className="lead-copy" style={{ marginBottom: 18 }}>It includes cloud services, APIs, SDKs, firmware, configurations, devices, telemetry, and real-world outcomes. Vraelis is being designed to bind those components to defined production requirements and execution evidence — so behavior can be verified where a browser or a single HTTP request cannot reach.</p>
+              <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.55 }}>Vraelis verifies defined behavior and production requirements with evidence. It does not certify safety or guarantee a system is harmless.</p>
+            </div>
+            <div className="card" style={{ background: "var(--bg-2)" }}>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>The future system identity binds</div>
+              <div className="chips">
+                {["Product", "Runtime target", "Software build", "Model version", "Firmware version", "SDK version", "Configuration", "Device or simulator", "Environment", "Verification scenario"].map((x) => <span key={x} className="chip">{x}</span>)}
+              </div>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: "16px 0 12px" }}>Evidence may eventually include</div>
+              <div className="chips">
+                {["Telemetry", "Sensor state", "Command receipt", "Model output", "State transitions", "Actuator outcome", "Latency", "Safety-stop behavior", "Recovery behavior", "Simulator video", "Signed checkpoints"].map((x) => <span key={x} className="chip">{x}</span>)}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Differentiation ── */}
+      <section className="section" style={{ background: "var(--bg-2)" }}>
+        <div className="wrap">
+          <div className="sec-head">
+            <p className="eyebrow">What Vraelis is</p>
+            <h2 className="display">A system for <span className="em">proving production behavior</span>.</h2>
+            <p>Vraelis connects requirements, builds, execution, evidence, issues, and production history into one truthful decision. It is not a lighter-weight version of any of these:</p>
+          </div>
+          <div className="chips" style={{ justifyContent: "center" }}>
+            {IS_NOT.map((x) => (
+              <span key={x} className="chip" style={{ color: "var(--fg-4)", textDecoration: "line-through", textDecorationColor: "var(--line-3)" }}>{x}</span>
+            ))}
           </div>
         </div>
       </section>
@@ -324,11 +336,11 @@ export default function VraelisLanding() {
       <section className="section cta-band" style={{ borderBottom: "none" }}>
         <div className="glow glow--soft" />
         <div className="wrap" style={{ maxWidth: 720, textAlign: "center" }}>
-          <h2 className="display" style={{ fontSize: "clamp(2.1rem, 4.4vw, 3.4rem)", marginBottom: 18 }}>Stop shipping <span className="em">demos as products</span>.</h2>
-          <p className="lead-copy" style={{ margin: "0 auto 28px", textAlign: "center" }}>Connect your AI-built app and get a launch decision before your users find the blockers. Test-only, you approve every flow, and early access is open.</p>
+          <h2 className="display" style={{ fontSize: "clamp(2.1rem, 4.4vw, 3.4rem)", marginBottom: 18 }}>Prove how your system behaves <span className="em">before production</span>.</h2>
+          <p className="lead-copy" style={{ margin: "0 auto 28px", textAlign: "center" }}>Define what must work, run it against the exact build, and get evidence and a truthful decision. Web verification is live; API verification is in private beta.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Get early access <span aria-hidden>→</span></Link>
-            <Link href="/how-it-works" className="btn btn--ghost btn--lg">See how it works</Link>
+            <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Validate a web application <span aria-hidden>→</span></Link>
+            <Link href="/contact?topic=api-beta" className="btn btn--ghost btn--lg">Request API beta access</Link>
           </div>
         </div>
       </section>

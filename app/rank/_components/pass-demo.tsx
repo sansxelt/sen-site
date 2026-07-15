@@ -24,14 +24,16 @@ function Pill({ tone, text }: { tone: ToneKey; text: string }) {
   );
 }
 
-// The three known flows every mode runs, in order.
+// The approved requirements a run verifies, in order. The same requirements run in every scenario — a
+// scenario just reflects what the system actually did against a given build.
 const FLOWS = [
-  { name: "Create a project", expect: "Submit the form, see the new project appear." },
-  { name: "Data survives refresh", expect: "Reload the page. The project must still be there." },
-  { name: "Mobile action reachable", expect: "At phone width, the primary action must be on screen." },
+  { name: "A record persists", expect: "Create it, then confirm it is still there on a fresh read." },
+  { name: "Access stays private", expect: "Another user must not be able to reach it." },
+  { name: "The core action holds", expect: "The primary workflow completes end to end." },
 ] as const;
 
-type ModeKey = "broken" | "afterFix" | "fixed";
+// Scenarios, not a mandatory repair sequence. READY is the default. Customers never manufacture a failure.
+type ModeKey = "passed" | "failed" | "newBuild";
 type FlowResult = { ok: boolean; note: string; repaired?: boolean };
 type Mode = {
   key: ModeKey;
@@ -42,51 +44,51 @@ type Mode = {
 
 const MODES: Mode[] = [
   {
-    key: "broken",
-    label: "Broken build",
+    key: "passed",
+    label: "All requirements passed",
     results: [
-      { ok: true, note: "The project appears and the screen confirms it." },
-      { ok: false, note: "Gone after reload. Saved to memory, never written to the database." },
-      { ok: false, note: "The primary action renders off screen at phone width." },
-    ],
-    verdict: {
-      tone: "blocked",
-      pill: "BLOCKED",
-      title: "Not ready to launch",
-      count: "2 launch blockers",
-      line: "On a real run, each blocker arrives with a screenshot, console and network detail, and exact reproduction steps.",
-    },
-  },
-  {
-    key: "afterFix",
-    label: "After first fix",
-    results: [
-      { ok: true, note: "The project appears and the screen confirms it." },
-      { ok: true, repaired: true, note: "The project survives the reload. The write reaches the database now." },
-      { ok: false, note: "The primary action still renders off screen at phone width." },
-    ],
-    verdict: {
-      tone: "blocked",
-      pill: "BLOCKED",
-      title: "Not ready to launch",
-      count: "1 launch blocker",
-      line: "Vraelis reran exactly the failed flow and confirmed the repair. One blocker left.",
-    },
-  },
-  {
-    key: "fixed",
-    label: "Fully fixed",
-    results: [
-      { ok: true, note: "The project appears and the screen confirms it." },
-      { ok: true, note: "The project survives the reload. The write reaches the database." },
-      { ok: true, note: "The primary action is visible and tappable at phone width." },
+      { ok: true, note: "Created and confirmed present on a fresh read." },
+      { ok: true, note: "A second user is correctly refused access." },
+      { ok: true, note: "The core workflow completes end to end." },
     ],
     verdict: {
       tone: "ready",
       pill: "READY",
-      title: "Cleared to launch",
-      count: "3 of 3 flows held",
-      line: "Every approved flow held. On a real run this verdict carries the browser evidence behind it.",
+      title: "The system behaves as required",
+      count: "3 of 3 requirements held",
+      line: "The complete approved contract passed. On a real run this decision carries the evidence behind it — tied to the exact build.",
+    },
+  },
+  {
+    key: "failed",
+    label: "Critical behavior failed",
+    results: [
+      { ok: true, note: "Created and confirmed present on a fresh read." },
+      { ok: false, note: "A second user could reach data that should be private." },
+      { ok: true, note: "The core workflow completes end to end." },
+    ],
+    verdict: {
+      tone: "blocked",
+      pill: "BLOCKED",
+      title: "Critical required behavior failed",
+      count: "1 critical requirement failed",
+      line: "A critical promise did not hold. On a real run the failure arrives with factual evidence and exact reproduction steps.",
+    },
+  },
+  {
+    key: "newBuild",
+    label: "New build under review",
+    results: [
+      { ok: true, note: "Created and confirmed present on a fresh read." },
+      { ok: true, repaired: true, note: "A previously-failed requirement now passes on this build." },
+      { ok: true, note: "The core workflow completes end to end." },
+    ],
+    verdict: {
+      tone: "ready",
+      pill: "REPAIR VERIFIED",
+      title: "A known issue closed on this build",
+      count: "Targeted rerun",
+      line: "A known issue was rerun against a later build and now passes — without claiming full coverage. The issue keeps its lineage across releases.",
     },
   },
 ];
@@ -111,7 +113,7 @@ const CSS = `
 // Stage machine: 0 = all queued, 1..3 = flow (stage - 1) is running and
 // earlier flows are done, 4 = all done and the verdict is in.
 export function PassDemo() {
-  const [mode, setMode] = useState<ModeKey>("broken");
+  const [mode, setMode] = useState<ModeKey>("passed"); // READY is the normal default
   const [stage, setStage] = useState(4); // first paint shows a resolved pass; runs animate on click
   const [runId, setRunId] = useState(0); // 0 = never run, so nothing animates on load
   const timers = useRef<number[]>([]);
@@ -169,7 +171,7 @@ export function PassDemo() {
               );
             })}
           </div>
-          <span style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-5)" }} aria-live="polite">{running ? "Pass in progress\u2026" : "Pick a build state, watch the pass run."}</span>
+          <span style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-5)" }} aria-live="polite">{running ? "Verification in progress\u2026" : "Pick a scenario, watch the verification run."}</span>
         </div>
 
         <div style={{ display: "grid", gap: 10 }}>
@@ -244,7 +246,7 @@ export function PassDemo() {
         </div>
 
         <div style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)", marginTop: 14, lineHeight: 1.55 }}>
-          A scripted demonstration of the verdict. The real pass runs your approved flows in a real browser and attaches screenshots, console output, and reproduction steps.
+          A scripted demonstration of the decision. A real run executes your approved requirements against the exact build and attaches factual evidence — expected versus observed, tied to the runtime it ran on.
         </div>
       </div>
     </div>
