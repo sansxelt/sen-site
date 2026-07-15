@@ -263,6 +263,22 @@ export async function accessibleOwners(callerEmail: string | null | undefined): 
   }
 }
 
+// The WORKSPACE IDs the caller is an active member of (excludes revoked/pending). This is the precise scope
+// for "apps shared into a workspace I belong to" — narrower and safer than accessibleOwners: an owner may own
+// multiple workspaces, and the caller must only see apps in the SPECIFIC workspace(s) they joined, not every
+// app that owner has elsewhere. Returns [] pre-migration / for a solo user with no shared memberships.
+export async function memberWorkspaceIds(callerEmail: string | null | undefined): Promise<string[]> {
+  if (!callerEmail || !isDatabaseConfigured()) return [];
+  try {
+    const { data, error } = await db().from("v_workspace_members" as never)
+      .select("workspace_id").eq("email", norm(callerEmail)).eq("status", "active");
+    if (error) return [];
+    return ((data as unknown as { workspace_id: string }[]) ?? []).map((r) => r.workspace_id);
+  } catch {
+    return [];
+  }
+}
+
 // The application ids VISIBLE to the caller inside a specific workspace they belong to (for a workspace-scoped
 // dashboard view). Returns [] when not a member or pre-migration. Read-only; ownership of each app is still
 // its own user_id. Not used by the default personal dashboard (that uses accessibleOwners) — this is for an

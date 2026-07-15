@@ -10,7 +10,7 @@ import { logEvent } from "./v-events";
 import { unsafeHttpsUrlReason } from "./safe-fetch";
 import { canonicalDeploymentUrl } from "./preflight/deployments-db";
 import { apiTargetIdsForOwner, webRuntimeFilter } from "./preflight/runtime/targets-db";
-import { accessibleOwners } from "./preflight/team-access";
+import { memberWorkspaceIds } from "./preflight/team-access";
 import type { FlowStep } from "./preflight/flow-steps";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
@@ -63,29 +63,30 @@ export async function listApplications(userId: string): Promise<Application[]> {
   return (data as Application[]) ?? [];
 }
 
-// TEAM: applications VISIBLE to a caller — their own PLUS apps shared into any workspace they're an active
-// member of. Owner-scoped rows keep their own user_id; the caller's role on a shared app is resolved per-app
-// where needed (this list only needs the rows). Deduped by app id. For a solo user with no shared
-// memberships this returns EXACTLY listApplications(email) (identical set + order), so the dashboard is
-// unchanged. Degrades to the caller's own apps when the workspace tables are absent.
+// TEAM: applications VISIBLE to a caller — their OWN apps (user_id = self) PLUS apps SHARED INTO A SPECIFIC
+// WORKSPACE the caller is an active member of (workspace_id IN their member workspaces). Scoping shared apps
+// by WORKSPACE (not by owner) is the precise, non-leaky boundary: an owner may own several workspaces, and the
+// caller must only see apps in the workspace(s) they actually joined — never every app that owner has
+// elsewhere. Deduped by app id. For a solo user with no shared memberships this returns EXACTLY
+// listApplications(self) (identical set + order). Degrades to the caller's own apps when the workspace tables
+// are absent.
 export async function listApplicationsForMember(email: string): Promise<Application[]> {
   if (!isDatabaseConfigured()) return [];
-  const owners = await accessibleOwners(email); // [self] alone for a solo user / pre-migration
   const self = norm(email);
-  // Fast path: no shared workspaces -> exactly today's single-owner query.
-  if (owners.length <= 1) return listApplications(self);
-  // Union: every app owned by any accessible owner, minus the internal canary app. workspace_id is not
-  // required to be set for the caller's OWN apps (they're included via owner==self); shared apps are included
-  // because their owner is in `owners` (the caller is a member of that owner's workspace).
+  const own = await listApplications(self); // the caller's own apps (unchanged, always visible)
+  const memberWsIds = await memberWorkspaceIds(email); // workspaces the caller actively belongs to
+  // A caller's personal workspace is in this set too, but its apps are already in `own` — so filtering to
+  // NON-owned apps in these workspaces yields only genuinely-shared apps. No shared memberships -> just own.
+  if (memberWsIds.length === 0) return own;
   const { data, error } = await db().from("v_applications").select("*")
-    .in("user_id", owners).neq("app_url", INTERNAL_CANARY_APP_URL).order("created_at", { ascending: false });
-  if (error) return listApplications(self); // fall back to own apps on any error
-  const rows = (data as Application[]) ?? [];
-  // A shared app is only visible if the caller is actually a member of ITS workspace — `owners` already
-  // encodes that (an owner is in the set only because the caller is a member of that owner's workspace), and
-  // an owner==self app is always visible. No extra per-row check needed.
-  const seen = new Set<string>();
-  return rows.filter((r) => (seen.has(r.id) ? false : (seen.add(r.id), true)));
+    .in("workspace_id", memberWsIds).neq("user_id", self) // shared INTO my workspaces, owned by someone else
+    .neq("app_url", INTERNAL_CANARY_APP_URL).order("created_at", { ascending: false });
+  if (error) return own; // fall back to own apps on any error
+  const shared = (data as Application[]) ?? [];
+  const seen = new Set(own.map((a) => a.id));
+  const merged = [...own];
+  for (const a of shared) if (!seen.has(a.id)) { seen.add(a.id); merged.push(a); }
+  return merged;
 }
 
 // latestRunByApp across MULTIPLE owners (for the member dashboard): groups the app ids by their owner and
