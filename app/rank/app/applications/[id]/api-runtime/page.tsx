@@ -8,7 +8,9 @@ import { listConnections } from "@/lib/preflight/connections-db";
 import { AppTabs } from "../app-tabs";
 import { ApiWorkspace } from "./api-workspace";
 
-export const metadata: Metadata = { title: "API verification" };
+// No descriptive static metadata: the title is exported before the server component runs its gate, so a
+// descriptive title would leak the page's purpose to a non-enabled/unauthenticated request. Keep it generic.
+export const metadata: Metadata = { title: "Vraelis" };
 export const dynamic = "force-dynamic";
 
 export default async function ApiRuntimePage({ params }: { params: Promise<{ id: string }> }) {
