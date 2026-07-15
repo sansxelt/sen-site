@@ -8,7 +8,7 @@ import { isAdmin } from "@/lib/v-entitlements";
 import { resolveWorkspaceSelection, workspaceProjectSummaries } from "@/lib/v-workspace";
 import { getDomainAccessForEmail } from "@/lib/v-organization";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
-import { listApplications, latestRunByApp, type Application, type RunSummary } from "@/lib/v-applications";
+import { listApplicationsForMember, latestRunByAppForApps, type Application, type RunSummary } from "@/lib/v-applications";
 import { listAllRuns, listAllIssues, overviewCounts, type PassRow, type IssueRow } from "@/lib/preflight/overview-db";
 import { WorkspaceMemberView } from "./_workspace/workspace-member-view";
 import { DecisionMark } from "@/app/rank/_components/icons";
@@ -100,12 +100,15 @@ export default async function Dashboard() {
   const preflightReady = await preflightDbReady();
   const [bal, plan, domainAccess, apps, counts, recentPasses, openIssues] = await Promise.all([
     balance(email), getPlan(email), getDomainAccessForEmail(email),
-    preflightReady ? listApplications(owner) : Promise.resolve([] as Application[]),
+    // App GRID includes shared apps (the caller's own + any workspace they belong to). The aggregate counts,
+    // recent passes, and open issues below stay scoped to the caller's OWN activity (a teammate's shared-app
+    // detail lives on the app pages + the applications list) — never showing MORE than the caller may see.
+    preflightReady ? listApplicationsForMember(email) : Promise.resolve([] as Application[]),
     preflightReady ? overviewCounts(owner) : Promise.resolve({ openCriticalIssues: 0, runningPasses: 0, verifiedRepairs: 0 }),
     preflightReady ? listAllRuns(owner, 5) : Promise.resolve([] as PassRow[]),
     preflightReady ? listAllIssues(owner, { status: "open", limit: 5 }) : Promise.resolve([] as IssueRow[]),
   ]);
-  const latest = apps.length ? await latestRunByApp(owner, apps.map((a) => a.id)) : {};
+  const latest = apps.length ? await latestRunByAppForApps(apps) : {};
   const planName = plan === "free" ? "Free" : plan.charAt(0).toUpperCase() + plan.slice(1);
 
   const readyCount = apps.filter((a) => latest[a.id]?.decision === "ready").length;

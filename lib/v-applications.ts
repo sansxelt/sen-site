@@ -10,6 +10,7 @@ import { logEvent } from "./v-events";
 import { unsafeHttpsUrlReason } from "./safe-fetch";
 import { canonicalDeploymentUrl } from "./preflight/deployments-db";
 import { apiTargetIdsForOwner, webRuntimeFilter } from "./preflight/runtime/targets-db";
+import { accessibleOwners } from "./preflight/team-access";
 import type { FlowStep } from "./preflight/flow-steps";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
@@ -60,6 +61,51 @@ export async function listApplications(userId: string): Promise<Application[]> {
   const { data, error } = await db().from("v_applications").select("*").eq("user_id", norm(userId)).neq("app_url", INTERNAL_CANARY_APP_URL).order("created_at", { ascending: false });
   if (error) return []; // table not migrated yet, or transient — the shell renders an empty state
   return (data as Application[]) ?? [];
+}
+
+// TEAM: applications VISIBLE to a caller — their own PLUS apps shared into any workspace they're an active
+// member of. Owner-scoped rows keep their own user_id; the caller's role on a shared app is resolved per-app
+// where needed (this list only needs the rows). Deduped by app id. For a solo user with no shared
+// memberships this returns EXACTLY listApplications(email) (identical set + order), so the dashboard is
+// unchanged. Degrades to the caller's own apps when the workspace tables are absent.
+export async function listApplicationsForMember(email: string): Promise<Application[]> {
+  if (!isDatabaseConfigured()) return [];
+  const owners = await accessibleOwners(email); // [self] alone for a solo user / pre-migration
+  const self = norm(email);
+  // Fast path: no shared workspaces -> exactly today's single-owner query.
+  if (owners.length <= 1) return listApplications(self);
+  // Union: every app owned by any accessible owner, minus the internal canary app. workspace_id is not
+  // required to be set for the caller's OWN apps (they're included via owner==self); shared apps are included
+  // because their owner is in `owners` (the caller is a member of that owner's workspace).
+  const { data, error } = await db().from("v_applications").select("*")
+    .in("user_id", owners).neq("app_url", INTERNAL_CANARY_APP_URL).order("created_at", { ascending: false });
+  if (error) return listApplications(self); // fall back to own apps on any error
+  const rows = (data as Application[]) ?? [];
+  // A shared app is only visible if the caller is actually a member of ITS workspace — `owners` already
+  // encodes that (an owner is in the set only because the caller is a member of that owner's workspace), and
+  // an owner==self app is always visible. No extra per-row check needed.
+  const seen = new Set<string>();
+  return rows.filter((r) => (seen.has(r.id) ? false : (seen.add(r.id), true)));
+}
+
+// latestRunByApp across MULTIPLE owners (for the member dashboard): groups the app ids by their owner and
+// runs the per-owner webRuntimeFilter query for each, merging the results. Each owner's api-target exclusion
+// is computed for THAT owner (never cross-contaminated), which is exactly the metering-leak guard. For a
+// single owner this is one query, identical to latestRunByApp.
+export async function latestRunByAppForApps(apps: Application[]): Promise<Record<string, RunSummary>> {
+  if (!isDatabaseConfigured() || !apps.length) return {};
+  const byOwner = new Map<string, string[]>();
+  for (const a of apps) {
+    const o = norm(a.user_id);
+    if (!byOwner.has(o)) byOwner.set(o, []);
+    byOwner.get(o)!.push(a.id);
+  }
+  const out: Record<string, RunSummary> = {};
+  for (const [owner, ids] of byOwner) {
+    const partial = await latestRunByApp(owner, ids); // per-owner filter -> no cross-member api-target leak
+    Object.assign(out, partial);
+  }
+  return out;
 }
 
 // The owner's INTERNAL app ids (today: the founder API-canary app) — customer web reads exclude runs/issues

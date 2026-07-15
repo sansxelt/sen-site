@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { requirePreflightOwner } from "@/lib/v-preflight-guard";
+import { requirePreflightAppAccess } from "@/lib/v-preflight-guard";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { getApplication } from "@/lib/v-applications";
 import { getRun, type RunFlow, type RunStep, type RunIssue } from "@/lib/preflight/runs-db";
@@ -435,7 +435,7 @@ function FlowBlock({ flow, displayName, screenshotIds, runId, showShots }: { flo
 // report: verdict hero first, launch blockers as full stories with the evidence large, then a quiet timeline.
 export default async function RunReportPage({ params }: { params: Promise<{ id: string; runId: string }> }) {
   const { id, runId } = await params;
-  const owner = await requirePreflightOwner(`/applications/${id}/passes/${runId}`);
+  const owner = (await requirePreflightAppAccess(id, `/applications/${id}/passes/${runId}`))?.owner ?? "";
   if (!(await preflightDbReady())) return <SetupRequired />;
 
   const [detail, internal, app, meta] = await Promise.all([

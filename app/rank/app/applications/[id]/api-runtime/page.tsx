@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { requirePreflightOwner } from "@/lib/v-preflight-guard";
+import { requirePreflightAppAccess } from "@/lib/v-preflight-guard";
 import { apiBetaVisible } from "@/lib/preflight/api-beta-gate";
 import { getApplication } from "@/lib/v-applications";
 import { getApiTarget, getLatestApiBuild, listApiFlows } from "@/lib/preflight/runtime/targets-db";
@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ApiRuntimePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const owner = await requirePreflightOwner(`/applications/${id}/api-runtime`);
+  const owner = (await requirePreflightAppAccess(id, `/applications/${id}/api-runtime`))?.owner ?? "";
   // The API beta is invisible to non-enabled accounts: same "does not exist" posture as the routes.
   if (!(await apiBetaVisible(owner))) notFound();
 

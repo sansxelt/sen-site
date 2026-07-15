@@ -3,7 +3,8 @@ import Link from "next/link";
 import { requirePreflightOwner } from "@/lib/v-preflight-guard";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "./setup-required";
-import { listApplications, latestRunByApp, type Application, type RunSummary } from "@/lib/v-applications";
+import { listApplicationsForMember, latestRunByAppForApps, type Application, type RunSummary } from "@/lib/v-applications";
+import { activateInvitesForEmail } from "@/lib/v-workspace";
 import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "Applications" };
@@ -88,10 +89,15 @@ function AppCard({ app, run }: { app: Application; run: RunSummary | undefined }
 // degrades to an empty state when the data layer has nothing (or the tables aren't migrated yet). No browser
 // execution or discovery lives here — a run is a later phase.
 export default async function ApplicationsPage() {
-  const owner = await requirePreflightOwner("/applications");
+  const caller = await requirePreflightOwner("/applications");
+  // A token-less (email-match) invite activates on first Preflight visit so a newly-invited teammate sees
+  // their shared apps here immediately. Idempotent + best-effort.
+  await activateInvitesForEmail(caller);
   if (!(await preflightDbReady())) return <SetupRequired />;
-  const apps = await listApplications(owner);
-  const latest = await latestRunByApp(owner, apps.map((a) => a.id));
+  // TEAM: the caller's OWN apps + any shared into workspaces they belong to. For a solo user this is exactly
+  // their own apps (identical to before). Runs are resolved per-owner so no cross-member metering leak.
+  const apps = await listApplicationsForMember(caller);
+  const latest = await latestRunByAppForApps(apps);
 
   const readyCount = apps.filter((a) => latest[a.id]?.decision === "ready").length;
   const blockedCount = apps.filter((a) => latest[a.id]?.decision === "blocked").length;

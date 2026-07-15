@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { requirePreflightOwner } from "@/lib/v-preflight-guard";
+import { requirePreflightAppAccess } from "@/lib/v-preflight-guard";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "../../setup-required";
 import { getApplication, type RunSummary } from "@/lib/v-applications";
@@ -63,7 +63,7 @@ function RunRow({ appId, r }: { appId: string; r: RunSummary }) {
 // empty state, so nothing here is ever fabricated.
 export default async function AppRunsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const owner = await requirePreflightOwner("/applications/" + id);
+  const owner = (await requirePreflightAppAccess(id, "/applications/" + id))?.owner ?? "";
   if (!(await preflightDbReady())) return <SetupRequired />;
 
   const app = await getApplication(owner, id);

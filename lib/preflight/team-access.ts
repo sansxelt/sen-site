@@ -21,7 +21,7 @@ import { auth } from "../../auth";
 import { preflightEnabled, apiRuntimeEnabled } from "../v-preflight-flags";
 import { apiRuntimeBetaAllowed } from "../v-entitlements";
 import { preflightDbReady } from "./db-ready";
-import { hasAtLeastRole, membershipFor, type Role } from "../v-workspace";
+import { hasAtLeastRole, membershipFor, getOrCreatePersonalWorkspace, type Role } from "../v-workspace";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
 function db() { return getSupabaseAdminClient(); }
@@ -84,6 +84,31 @@ export async function applicationAccess(callerEmail: string | null | undefined, 
 export async function accessibleAppOwner(callerEmail: string | null | undefined, appId: string): Promise<string | null> {
   const a = await applicationAccess(callerEmail, appId);
   return a ? a.owner : null;
+}
+
+// Resolve the app's WORKSPACE for a member-management action: returns { owner, workspaceId, role } when the
+// caller may MANAGE members (owner/admin), else null. Ensures the owner has a personal workspace and heals an
+// app whose workspace_id is still NULL (pre-migration) by attaching it to the owner's personal workspace, so
+// the FIRST teammate can be invited even before the founder runs migration 14. The invite itself is done by
+// the caller (owner or admin) against this workspace via lib/v-workspace inviteMember.
+export async function applicationWorkspaceForManage(callerEmail: string | null | undefined, appId: string): Promise<{ owner: string; workspaceId: string; role: Role } | null> {
+  const access = await applicationAccess(callerEmail, appId);
+  if (!access) return null;
+  if (!hasAtLeastRole(access.role, "admin")) return null; // only owner/admin manage members
+  const meta = await appOwnerAndWorkspace(appId);
+  if (!meta) return null;
+  let workspaceId = meta.workspaceId;
+  if (!workspaceId) {
+    // Heal: attach the app to the OWNER's personal workspace (create it if needed). Best-effort — on any
+    // failure (pre-migration workspace tables) we return null and the UI shows "team accounts unavailable".
+    const ws = await getOrCreatePersonalWorkspace(meta.owner);
+    if (!ws) return null;
+    try {
+      await db().from("v_applications").update({ workspace_id: ws.id } as never).eq("id", appId).eq("user_id", meta.owner);
+    } catch { /* the app row update failed; the invite would target a workspace the app isn't in — refuse */ return null; }
+    workspaceId = ws.id;
+  }
+  return { owner: meta.owner, workspaceId, role: access.role };
 }
 
 // ── Shared route gate ────────────────────────────────────────────────────────────────────────────────────

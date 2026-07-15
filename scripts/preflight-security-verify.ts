@@ -143,12 +143,17 @@ console.log("── ownership: data-layer functions filter eq(\"user_id\") or ar
     const fns = exportedAsyncFunctions(read(t.file));
     ok(`${t.file}: parser found exported async functions incl. ${t.canary}`, fns.length > 0 && fns.some((f) => f.name === t.canary), `${fns.length} functions`);
     for (const f of fns) {
-      // Real ownership mechanisms, in order of directness: an eq("user_id") filter; an ownsContract()-style
-      // owner guard before the write; an INSERT that stamps user_id from the caller (rows are born owned);
-      // delegation to another owner-scoped function; or a documented transitive-ownership comment.
+      // Real ownership mechanisms, in order of directness: an eq("user_id") filter; an in("user_id", ...)
+      // filter over a RESOLVED owner set (the team member-visible union — each owner is in the set only
+      // because the caller is a member of that owner's workspace, resolved by accessibleOwners); an
+      // ownsContract()-style owner guard before the write; an INSERT that stamps user_id from the caller
+      // (rows are born owned); delegation to another owner-scoped function (listApplications / latestRunByApp /
+      // accessibleOwners); or a documented transitive-ownership comment.
       const owned = f.body.includes('eq("user_id"') || f.body.includes("eq('user_id'")
+        || f.body.includes('in("user_id"') || f.body.includes("in('user_id'")
         || /ownsContract\(/.test(f.body)
         || /user_id:\s*(uid|owner|norm\()/.test(f.body)
+        || /accessibleOwners\(|listApplications\(|latestRunByApp\(/.test(f.body)
         || /transitive|owner-scoped/i.test(f.body);
       ok(`${t.file}: ${f.name}() filters eq("user_id") or documents transitive ownership`, owned);
     }
@@ -159,8 +164,12 @@ console.log("── ownership: data-layer functions filter eq(\"user_id\") or ar
 console.log("\n── routes: auth() + ownership-scoped loader before any mutation ──");
 {
   // The named loaders plus requestRunCancel/getRunArtifactPath, whose eq("user_id") scoping is proven by
-  // section 1 (they are the owner-checked entry points of the cancel and artifacts routes).
-  const LOADER = /\b(getApplication|getRunInternal|getContractById|contractStatusForRequirement|getRun|getRunArtifactPath|requestRunCancel)\s*\(/;
+  // section 1 (they are the owner-checked entry points of the cancel and artifacts routes). The TEAM resolvers
+  // (gatePreflightApp / gateApiRuntimeApp / applicationAccess / applicationAccessFor{Run,Contract,Requirement,
+  // Flow} / applicationWorkspaceForManage) are the canonical ownership entry points now: each resolves the app
+  // OWNER (the data-plane key) from the app row + workspace membership and returns null -> 404 for a non-member,
+  // exactly like getApplication did. Accept them as ownership loaders.
+  const LOADER = /\b(getApplication|getRunInternal|getContractById|contractStatusForRequirement|getRun|getRunArtifactPath|requestRunCancel|gatePreflightApp|gateApiRuntimeApp|applicationAccess|applicationAccessForRun|applicationAccessForContract|applicationAccessForRequirement|applicationAccessForFlow|applicationWorkspaceForManage)\s*\(/;
   const MUTATION = /(\.(insert|update|upsert|delete)\s*\(|\b(createRun|createDiscovery|setParentRun|persistIssues)\s*\()/;
 
   const routeDir = path.join(ROOT, "app", "api", "preflight");
@@ -175,10 +184,11 @@ console.log("\n── routes: auth() + ownership-scoped loader before any mutati
   walk(routeDir);
   ok("app/api/preflight: route files found", routes.length >= 10, `${routes.length} route files`);
 
-  // The API-beta routes authenticate through the canonical apiBetaOwner() gate (which itself calls auth() +
-  // enforces the account allowlist — verified separately below), instead of calling auth() inline. Accept
-  // that as a valid authenticated entry point; anything else must still call auth() directly.
-  const AUTH_ENTRY = /\bauth\s*\(\s*\)|\bapiBetaOwner\s*\(\s*\)/;
+  // Routes authenticate either by calling auth() inline, or through a canonical gate that calls auth() itself:
+  // the legacy apiBetaOwner() gate, or the TEAM gates gatePreflightApp / gateApiRuntimeApp (both do
+  // flag -> auth -> db-ready -> access -> role), or the applicationAccessFor* resolvers (auth is done inline
+  // then delegated). Accept any of these as a valid authenticated entry point.
+  const AUTH_ENTRY = /\bauth\s*\(\s*\)|\bapiBetaOwner\s*\(\s*\)|\bgatePreflightApp\s*\(|\bgateApiRuntimeApp\s*\(|\bapplicationWorkspaceForManage\s*\(/;
   for (const r of routes.sort()) {
     const raw = read(r);
     const src = stripComments(raw);

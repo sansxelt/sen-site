@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { requirePreflightOwner } from "@/lib/v-preflight-guard";
+import { requirePreflightAppAccess } from "@/lib/v-preflight-guard";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "../setup-required";
 import {
@@ -114,17 +114,20 @@ function RunRow({ appId, r }: { appId: string; r: RunSummary }) {
 // tables exist, so this renders honest empty states with no fake runs, scores, or blockers.
 export default async function ApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const owner = await requirePreflightOwner("/applications/" + id);
+  // Team-aware: resolves the caller to the app OWNER (data-plane key) + role — the owner or an active
+  // workspace member. `owner` flows into every owner-scoped read below unchanged.
+  const access = await requirePreflightAppAccess(id, "/applications/" + id);
   if (!(await preflightDbReady())) return <SetupRequired />;
 
-  const app = await getApplication(owner, id);
-  if (!app) {
+  const owner = access?.owner ?? "";
+  const app = access ? await getApplication(owner, id) : null;
+  if (!access || !app) {
     return (
       <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
         <div className="empty">
           <EmptyIcon d={I.slash} />
           <h3>Application not found</h3>
-          <p>This application doesn&apos;t exist, or it belongs to another account.</p>
+          <p>This application doesn&apos;t exist, or you don&apos;t have access to it.</p>
           <Link href="/applications" className="btn">Back to applications</Link>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { requirePreflightOwner } from "@/lib/v-preflight-guard";
+import { requirePreflightAppAccess } from "@/lib/v-preflight-guard";
 import {
   getApplication, getContract, getApprovedContract, listRequirements, listFlows,
   type ContractRequirement, type ProductionContract, type TestFlow, type Severity,
@@ -182,7 +182,7 @@ function ApprovedContract({ appId, contract, reqs, flows }: { appId: string; con
 
 export default async function ContractPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const owner = await requirePreflightOwner(`/applications/${id}/contract`);
+  const owner = (await requirePreflightAppAccess(id, `/applications/${id}/contract`))?.owner ?? "";
 
   const app = await getApplication(owner, id);
   if (!app) {
