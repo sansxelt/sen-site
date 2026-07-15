@@ -543,8 +543,10 @@ summary::-webkit-details-marker { display: none; }
   display: inline-flex; align-items: center; justify-content: center; line-height: 1;
   transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
 }
-.seg button.on { background: var(--bg-1); color: var(--fg-1); box-shadow: var(--shadow-sm); }
-/* The pill toggle: keep the focus ring hugging the rounded pill instead of a low, offset square. */
+/* The active pill: a soft even shadow (not a downward drop that makes the pill read bottom-heavy / low in
+   the track), nudged up 1px so it sits optically centred rather than sinking to the bottom of the track. */
+.seg button.on { background: var(--bg-1); color: var(--fg-1); box-shadow: 0 0 0 1px rgba(28,27,24,0.04), 0 2px 5px -2px rgba(28,27,24,0.16); transform: translateY(-1px); }
+/* Keep the focus ring hugging the rounded pill instead of a low, offset square. */
 .seg button:focus-visible { outline-offset: -2px; }
 .seg__save { font-family: var(--font-code); font-size: 11px; color: var(--acc-deep); margin-left: 6px; }
 
