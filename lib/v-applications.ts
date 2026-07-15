@@ -48,11 +48,27 @@ export type RunSummary = {
 export type NewApplication = { name: string; appUrl: string; builder?: string; repo?: string; sourcePrompt?: string; ownershipConfirmed: boolean; workspaceId?: string | null };
 
 // ── Applications ──
+// The machine-marker app_url of the internal founder API-canary app (lib/preflight/runtime/canary.ts
+// CANARY_APP_URL). It is a real v_applications row created on the founder's account when the canary runs, but
+// it is INTERNAL scaffolding and must never appear in the customer applications list, cards, or counts. We
+// exclude it by its exact marker URL (no human app carries it). Kept as a local literal to avoid importing
+// the founder-only canary module into the core web data layer.
+const INTERNAL_CANARY_APP_URL = "https://internal.vraelis.local/__api-canary__";
+
 export async function listApplications(userId: string): Promise<Application[]> {
   if (!isDatabaseConfigured()) return [];
-  const { data, error } = await db().from("v_applications").select("*").eq("user_id", norm(userId)).order("created_at", { ascending: false });
+  const { data, error } = await db().from("v_applications").select("*").eq("user_id", norm(userId)).neq("app_url", INTERNAL_CANARY_APP_URL).order("created_at", { ascending: false });
   if (error) return []; // table not migrated yet, or transient — the shell renders an empty state
   return (data as Application[]) ?? [];
+}
+
+// The owner's INTERNAL app ids (today: the founder API-canary app) — customer web reads exclude runs/issues
+// belonging to these so internal scaffolding never appears in the customer dashboard/passes/blockers. Empty
+// for a normal customer account.
+export async function internalAppIdsForOwner(userId: string): Promise<string[]> {
+  if (!isDatabaseConfigured()) return [];
+  const { data } = await db().from("v_applications").select("id").eq("user_id", norm(userId)).eq("app_url", INTERNAL_CANARY_APP_URL);
+  return ((data as { id: string }[] | null) ?? []).map((r) => r.id);
 }
 
 export async function getApplication(userId: string, id: string): Promise<Application | null> {

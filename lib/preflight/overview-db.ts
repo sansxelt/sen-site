@@ -5,6 +5,7 @@
 // NEVER returns a storage path, provider session id, lease field, or billing internal.
 import { getSupabaseAdminClient, isDatabaseConfigured } from "../supabase-admin";
 import { apiTargetIdsForOwner, webRuntimeFilter } from "./runtime/targets-db";
+import { internalAppIdsForOwner } from "../v-applications";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
 function db() { return getSupabaseAdminClient(); }
@@ -34,10 +35,14 @@ export type PassRow = {
 export async function listAllRuns(owner: string, limit = 50): Promise<PassRow[]> {
   if (!isDatabaseConfigured()) return [];
   const filter = webRuntimeFilter(await apiTargetIdsForOwner(owner));
+  const internalApps = await internalAppIdsForOwner(owner);
   let q = db().from("v_preflight_runs")
     .select("id, application_id, state, decision, summary, deployment_url, created_at, completed_at")
     .eq("user_id", norm(owner));
   if (filter) q = q.or(filter);
+  // Also exclude runs on the internal canary app (e.g. its seeded web-baseline run), so no internal pass
+  // shows in the customer Production Passes list.
+  if (internalApps.length) q = q.not("application_id", "in", `(${internalApps.join(",")})`);
   const { data, error } = await q.order("created_at", { ascending: false }).limit(limit);
   if (error || !data) return [];
   const rows = data as Record<string, unknown>[];
@@ -81,6 +86,9 @@ export async function listAllIssues(owner: string, opts: { status?: "open" | "re
   if (opts.webOnly) {
     const filter = webRuntimeFilter(await apiTargetIdsForOwner(owner));
     if (filter) q = q.or(filter);
+    // Also exclude internal-canary app issues from the customer web blocker list.
+    const internalApps = await internalAppIdsForOwner(owner);
+    if (internalApps.length) q = q.not("application_id", "in", `(${internalApps.join(",")})`);
   }
   const { data, error } = await q;
   if (error || !data) return [];
@@ -144,10 +152,16 @@ export async function overviewCounts(owner: string): Promise<OverviewCounts> {
   const count = async (q: PromiseLike<{ count: number | null; error: unknown }>) => {
     try { const { count: c, error } = await q; return error ? 0 : (c ?? 0); } catch { return 0; }
   };
-  // Web-scoped: keep NULL/web-target rows, exclude the owner's api-kind targets, so API issues/runs never
-  // inflate the web badges.
+  // Web-scoped: keep NULL/web-target rows, exclude the owner's api-kind targets AND internal-app rows, so
+  // neither API runs/issues nor internal-canary scaffolding inflate the web badges.
   const filter = webRuntimeFilter(await apiTargetIdsForOwner(owner));
-  const web = (q: { or: (e: string) => unknown }) => filter ? (q.or(filter) as typeof q) : q;
+  const internalApps = await internalAppIdsForOwner(owner);
+  const web = (q: { or: (e: string) => unknown; not: (c: string, o: string, v: string) => unknown }) => {
+    let out = q;
+    if (filter) out = out.or(filter) as typeof out;
+    if (internalApps.length) out = out.not("application_id", "in", `(${internalApps.join(",")})`) as typeof out;
+    return out;
+  };
   const [openCriticalIssues, runningPasses, verifiedRepairs] = await Promise.all([
     count(web(db().from("v_issues").select("id", { count: "exact", head: true }).eq("user_id", uid).eq("status", "open").in("severity", ["critical", "high"])) as never),
     count(web(db().from("v_preflight_runs").select("id", { count: "exact", head: true }).eq("user_id", uid).in("state", ["queued", "discovering", "running", "analyzing"])) as never),
