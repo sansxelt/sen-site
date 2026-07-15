@@ -4,6 +4,7 @@
 // [] / 0 when the tables are unmigrated or a read fails, so no page ever fabricates data. Server-only.
 // NEVER returns a storage path, provider session id, lease field, or billing internal.
 import { getSupabaseAdminClient, isDatabaseConfigured } from "../supabase-admin";
+import { apiTargetIdsForOwner, webRuntimeFilter } from "./runtime/targets-db";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
 function db() { return getSupabaseAdminClient(); }
@@ -27,13 +28,17 @@ export type PassRow = {
   flowsTotal: number; flowsPassed: number; criticalTotal: number; criticalPassed: number;
 };
 
-// WEB Production Passes only (runtime_target_id IS NULL). An API-runtime run must never appear in the web
-// passes list; API runs are shown in the API surface. Migration 12 added the column, so the filter is valid.
+// WEB Production Passes only — EXCLUDE the owner's api-kind targets (a web run is null-or-web-target; the
+// migration-12 optional UPDATE may have set historical web runs non-null, so we exclude api targets rather
+// than require NULL). API runs are shown in the API surface, never in the web passes list.
 export async function listAllRuns(owner: string, limit = 50): Promise<PassRow[]> {
   if (!isDatabaseConfigured()) return [];
-  const { data, error } = await db().from("v_preflight_runs")
+  const filter = webRuntimeFilter(await apiTargetIdsForOwner(owner));
+  let q = db().from("v_preflight_runs")
     .select("id, application_id, state, decision, summary, deployment_url, created_at, completed_at")
-    .eq("user_id", norm(owner)).is("runtime_target_id", null).order("created_at", { ascending: false }).limit(limit);
+    .eq("user_id", norm(owner));
+  if (filter) q = q.or(filter);
+  const { data, error } = await q.order("created_at", { ascending: false }).limit(limit);
   if (error || !data) return [];
   const rows = data as Record<string, unknown>[];
   const names = await appNames(owner, rows.map((r) => String(r.application_id ?? "")));
@@ -70,10 +75,13 @@ export async function listAllIssues(owner: string, opts: { status?: "open" | "re
     .eq("user_id", norm(owner)).order("created_at", { ascending: false }).limit(opts.limit ?? 100);
   if (opts.status) q = q.eq("status", opts.status);
   if (opts.applicationId) q = q.eq("application_id", opts.applicationId);
-  // webOnly scopes to WEB issues (runtime_target_id IS NULL): an API-runtime issue (which carries an api
-  // target id, migration 12/13) must never surface as a web launch blocker. Default is unfiltered (every
-  // existing caller keeps today's behavior); the web overview passes webOnly:true.
-  if (opts.webOnly) q = q.is("runtime_target_id", null);
+  // webOnly EXCLUDES api-kind targets so an API-runtime issue never surfaces as a web launch blocker. (A web
+  // issue is null-or-web-target; the migration-12 optional UPDATE may have set historical web issues non-null,
+  // so we exclude api targets rather than require NULL.) Default off — existing callers keep today's behavior.
+  if (opts.webOnly) {
+    const filter = webRuntimeFilter(await apiTargetIdsForOwner(owner));
+    if (filter) q = q.or(filter);
+  }
   const { data, error } = await q;
   if (error || !data) return [];
   const rows = data as Record<string, unknown>[];
@@ -136,12 +144,13 @@ export async function overviewCounts(owner: string): Promise<OverviewCounts> {
   const count = async (q: PromiseLike<{ count: number | null; error: unknown }>) => {
     try { const { count: c, error } = await q; return error ? 0 : (c ?? 0); } catch { return 0; }
   };
+  // Web-scoped: keep NULL/web-target rows, exclude the owner's api-kind targets, so API issues/runs never
+  // inflate the web badges.
+  const filter = webRuntimeFilter(await apiTargetIdsForOwner(owner));
+  const web = (q: { or: (e: string) => unknown }) => filter ? (q.or(filter) as typeof q) : q;
   const [openCriticalIssues, runningPasses, verifiedRepairs] = await Promise.all([
-    // Web-scoped (runtime_target_id IS NULL): API-runtime issues are shown in the API status, never counted
-    // into the web/overall open-critical badge. If the column isn't migrated yet, the filter is a no-op on a
-    // table where every row's runtime_target_id is null anyway, so existing counts are unchanged.
-    count(db().from("v_issues").select("id", { count: "exact", head: true }).eq("user_id", uid).eq("status", "open").in("severity", ["critical", "high"]).is("runtime_target_id", null)),
-    count(db().from("v_preflight_runs").select("id", { count: "exact", head: true }).eq("user_id", uid).in("state", ["queued", "discovering", "running", "analyzing"])),
+    count(web(db().from("v_issues").select("id", { count: "exact", head: true }).eq("user_id", uid).eq("status", "open").in("severity", ["critical", "high"])) as never),
+    count(web(db().from("v_preflight_runs").select("id", { count: "exact", head: true }).eq("user_id", uid).in("state", ["queued", "discovering", "running", "analyzing"])) as never),
     count(db().from("v_repairs").select("id", { count: "exact", head: true }).eq("user_id", uid).eq("status", "verified")),
   ]);
   return { openCriticalIssues, runningPasses, verifiedRepairs };

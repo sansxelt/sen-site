@@ -3,7 +3,7 @@
 // tables (v_runtime_targets, v_builds); never touches web rows. Degrades to null/empty if the tables aren't
 // migrated yet. No canary import: this is the customer path.
 
-import { getSupabaseAdminClient } from "../../supabase-admin";
+import { getSupabaseAdminClient, isDatabaseConfigured } from "../../supabase-admin";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
 function db() { return getSupabaseAdminClient(); }
@@ -36,6 +36,25 @@ export async function createApiTarget(owner: string, appId: string, input: { env
     .select("id,application_id,user_id,kind,label,environment").single();
   if (error || !data) return { ok: false, reason: "Could not create the API target." };
   return { ok: true, target: data as ApiRuntimeTarget };
+}
+
+// The owner's API-kind runtime target ids. Web run-reads use this to EXCLUDE API runs, rather than requiring
+// runtime_target_id IS NULL — because the migration-12 optional correlation UPDATE links historical WEB runs
+// to their (non-null) web target, so "IS NULL" would wrongly drop legitimate web runs. Excluding the api
+// targets keeps null-and-web-target runs and drops only api runs. Empty list -> caller applies no filter.
+export async function apiTargetIdsForOwner(owner: string): Promise<string[]> {
+  if (!isDatabaseConfigured()) return [];
+  const { data } = await db().from("v_runtime_targets").select("id").eq("user_id", norm(owner)).eq("kind", "api");
+  return ((data as { id: string }[] | null) ?? []).map((r) => r.id);
+}
+
+// The PostgREST .or() expression that keeps WEB runs and drops API runs, given the owner's api target ids.
+// CRITICAL: a bare `runtime_target_id.not.in.(...)` EXCLUDES NULL rows too (SQL NOT IN with NULL is not TRUE),
+// which would silently drop web runs with a null target. So we OR in an explicit `is.null`. Returns null when
+// there are no api targets (caller applies no filter — nothing to exclude).
+export function webRuntimeFilter(apiTargetIds: string[]): string | null {
+  if (apiTargetIds.length === 0) return null;
+  return `runtime_target_id.is.null,runtime_target_id.not.in.(${apiTargetIds.join(",")})`;
 }
 
 // Double-launch guard: an existing terminal run for this (owner, submission_id) means a concurrent/replayed

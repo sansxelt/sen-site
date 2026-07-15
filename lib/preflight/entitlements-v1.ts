@@ -17,6 +17,7 @@ import {
   monthlyWindow, FREE_TIER, PLAN_CATALOG_V1, type PlanV1,
 } from "./pass-pricing";
 import { resolveCanonicalCluster, activeFreeGrantOverride } from "./free-grant-cluster";
+import { apiTargetIdsForOwner, webRuntimeFilter } from "./runtime/targets-db";
 import { isBillingFrozen } from "./billing-freeze";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
@@ -148,10 +149,14 @@ type RunRow = { id: string; state: string; failure_code: string | null; flow_uni
 
 async function loadRuns(owner: string, startIso?: string, endIso?: string): Promise<RunRow[]> {
   if (!isDatabaseConfigured()) return [];
-  // WEB runs only (runtime_target_id IS NULL). Web billing/metering must not count an API-runtime run: an API
-  // run must neither burn the web free pass nor consume the web metered allowance (it is billed on its own).
+  // WEB runs only — EXCLUDE the owner's api-kind targets. Web billing/metering must not count an API run: it
+  // must neither burn the web free pass nor consume the web metered allowance (it is billed on its own). A web
+  // run is null-or-web-target; the migration-12 optional UPDATE may have set historical web runs non-null, so
+  // we exclude api targets rather than require NULL (which would wrongly drop correlated web runs).
+  const filter = webRuntimeFilter(await apiTargetIdsForOwner(owner));
   let q = db().from("v_preflight_runs" as never)
-    .select("id, state, failure_code, flow_units, flow_ids").eq("user_id", norm(owner)).is("runtime_target_id", null);
+    .select("id, state, failure_code, flow_units, flow_ids").eq("user_id", norm(owner));
+  if (filter) q = (q as { or: (e: string) => typeof q }).or(filter);
   if (startIso) q = q.gte("created_at", startIso);
   if (endIso) q = q.lt("created_at", endIso);
   const { data, error } = await q.limit(1000);
@@ -166,10 +171,14 @@ async function loadRuns(owner: string, startIso?: string, endIso?: string): Prom
 async function loadRunsForOwners(owners: string[]): Promise<{ rows: RunRow[]; ok: boolean }> {
   if (!isDatabaseConfigured() || owners.length === 0) return { rows: [], ok: false };
   const uids = owners.map(norm);
-  // WEB runs only: the lifetime free pass is a WEB entitlement. An API-runtime run must not count as "used",
-  // so a customer's API run can never burn the web free pass their web launch depends on.
-  const { data, error } = await db().from("v_preflight_runs" as never)
-    .select("id, state, failure_code, flow_units, flow_ids").in("user_id", uids).is("runtime_target_id", null).limit(1000);
+  // WEB runs only: the lifetime free pass is a WEB entitlement. EXCLUDE every cluster owner's api-kind targets
+  // so a customer's API run can never count as "used" and burn the web free pass their web launch depends on.
+  const apiIdSets = await Promise.all(owners.map((o) => apiTargetIdsForOwner(o)));
+  const filter = webRuntimeFilter([...new Set(apiIdSets.flat())]);
+  let q = db().from("v_preflight_runs" as never)
+    .select("id, state, failure_code, flow_units, flow_ids").in("user_id", uids);
+  if (filter) q = (q as { or: (e: string) => typeof q }).or(filter);
+  const { data, error } = await q.limit(1000);
   if (error) return { rows: [], ok: false };
   return { rows: (data as unknown as RunRow[]) ?? [], ok: true };
 }

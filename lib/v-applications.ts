@@ -9,6 +9,7 @@ import { pickHealthRun } from "./preflight/target-url";
 import { logEvent } from "./v-events";
 import { unsafeHttpsUrlReason } from "./safe-fetch";
 import { canonicalDeploymentUrl } from "./preflight/deployments-db";
+import { apiTargetIdsForOwner, webRuntimeFilter } from "./preflight/runtime/targets-db";
 import type { FlowStep } from "./preflight/flow-steps";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
@@ -387,19 +388,26 @@ export async function deleteFlow(userId: string, flowId: string): Promise<{ ok: 
   return { ok: true };
 }
 
-// WEB runs only. runtime_target_id IS NULL is a web run (migration 12/13); an API-runtime run carries the app's
-// api target id and must NEVER be read into a web list or the web health decision. This is the single guard
-// that keeps an API decision from becoming the app's web verdict.
+// WEB runs only — EXCLUDE the owner's api-kind runtime targets. (A web run has a NULL or web-target
+// runtime_target_id; the migration-12 optional correlation UPDATE may have set historical web runs to their
+// non-null web target, so we must exclude api targets rather than require NULL.) This keeps an API run's
+// decision from ever becoming the app's web verdict.
 export async function listRuns(userId: string, applicationId: string, limit = 20): Promise<RunSummary[]> {
   if (!isDatabaseConfigured()) return [];
-  const { data } = await db().from("v_preflight_runs").select("id,application_id,state,decision,summary,deployment_url,commit_sha,created_at,completed_at").eq("user_id", norm(userId)).eq("application_id", applicationId).is("runtime_target_id", null).order("created_at", { ascending: false }).limit(limit);
+  const filter = webRuntimeFilter(await apiTargetIdsForOwner(userId));
+  let q = db().from("v_preflight_runs").select("id,application_id,state,decision,summary,deployment_url,commit_sha,created_at,completed_at").eq("user_id", norm(userId)).eq("application_id", applicationId);
+  if (filter) q = q.or(filter);
+  const { data } = await q.order("created_at", { ascending: false }).limit(limit);
   return (data as RunSummary[]) ?? [];
 }
 
 // Latest run per application, for dashboard status chips. One query, grouped in memory. WEB runs only.
 export async function latestRunByApp(userId: string, appIds: string[]): Promise<Record<string, RunSummary>> {
   if (!isDatabaseConfigured() || !appIds.length) return {};
-  const { data } = await db().from("v_preflight_runs").select("id,application_id,state,decision,summary,deployment_url,commit_sha,created_at,completed_at").eq("user_id", norm(userId)).in("application_id", appIds).is("runtime_target_id", null).order("created_at", { ascending: false });
+  const filter = webRuntimeFilter(await apiTargetIdsForOwner(userId));
+  let q = db().from("v_preflight_runs").select("id,application_id,state,decision,summary,deployment_url,commit_sha,created_at,completed_at").eq("user_id", norm(userId)).in("application_id", appIds);
+  if (filter) q = q.or(filter);
+  const { data } = await q.order("created_at", { ascending: false });
   // Application HEALTH comes from pickHealthRun, never "newest terminal row": the newest ACTIVE run still
   // surfaces as in-progress, but a failed / invalidated run (e.g. a harness target_mismatch) can never
   // displace the newest VALID completed decision.
