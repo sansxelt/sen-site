@@ -7,7 +7,7 @@ export const metadata = {
   ...ogMeta({
     title: "Production validation for AI-built systems",
     description:
-      "Vraelis validates how AI-built systems behave before production. It turns production requirements into executable checks, runs them against exact builds and environments, and captures the evidence teams need to ship with confidence. Web verification is live; API verification is in private beta.",
+      "Vraelis validates how AI-built systems behave before production. It turns production requirements into executable checks, runs them against exact builds and environments, and captures the evidence teams need to ship with confidence. Web and API verification are live.",
     path: "/",
   }),
   title: { absolute: "Vraelis" },
@@ -110,7 +110,7 @@ export default function VraelisLanding() {
             <Link href="/how-it-works" className="btn btn--ghost btn--lg">See how it works</Link>
           </div>
           <p className="rise" data-d="4" style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-4)", margin: "14px 0 0", maxWidth: 640, marginLeft: "auto", marginRight: "auto", lineHeight: 1.55 }}>
-            Web verification is live. API verification is available in private beta. Mobile, desktop, SDK, and connected-device runtimes are expanding from the same verification architecture.
+            Web and API verification are live. Mobile, desktop, SDK, and connected-device runtimes are expanding from the same verification architecture.
           </p>
 
           {/* Signature artifact: a production decision, tied to an exact build, with evidence.
@@ -258,28 +258,29 @@ export default function VraelisLanding() {
         </div>
       </section>
 
-      {/* ── Runtime coverage: one compact current-support panel ── */}
+      {/* ── Runtime coverage: compact status tiles ── */}
       <section className="section" style={{ background: "var(--bg-2)" }}>
         <div className="wrap">
           <div className="sec-head">
             <p className="eyebrow">Runtime coverage</p>
-            <h2 className="display">Built for every runtime where <span className="em">AI systems operate</span>.</h2>
-            <p>Vraelis currently validates web applications, with API verification available in private beta. The same architecture is designed to extend across mobile, desktop, SDK-instrumented systems, simulators, and connected devices.</p>
+            <h2 className="display">Validate every part of your <span className="em">AI system</span>.</h2>
+            <p style={{ fontSize: "clamp(1.05rem, 1.5vw, 1.2rem)", color: "var(--fg-2)", marginBottom: 10 }}>One platform, expanding across every runtime.</p>
+            <p>Vraelis validates web applications and APIs today. Its shared verification architecture is designed to extend across mobile, desktop, SDK-instrumented systems, simulators, robotics, and connected devices.</p>
           </div>
-          <div className="card" style={{ maxWidth: 720, margin: "0 auto", padding: "clamp(20px, 2.6vw, 30px)" }}>
-            <div style={{ display: "grid", gap: 4 }}>
-              {[
-                { mark: "✓", markColor: "var(--acc)", label: "Web", status: "Available now", statusColor: "var(--acc-deep)" },
-                { mark: "◐", markColor: "#B45309", label: "APIs", status: "Private beta", statusColor: "#B45309" },
-                { mark: "→", markColor: "var(--fg-4)", label: "Mobile, desktop, SDKs & connected systems", status: "Expanding next", statusColor: "var(--fg-4)" },
-              ].map((r, i, arr) => (
-                <div key={r.label} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 4px", borderBottom: i === arr.length - 1 ? "none" : "1px solid var(--line-1)" }}>
-                  <span aria-hidden style={{ flex: "none", width: 22, textAlign: "center", fontSize: 16, color: r.markColor, fontFamily: "var(--font-code)" }}>{r.mark}</span>
-                  <span style={{ flex: 1, minWidth: 0, fontSize: 15, color: "var(--fg-1)", fontWeight: 600 }}>{r.label}</span>
-                  <span className="pill" style={{ flex: "none", fontFamily: "var(--font-code)", fontSize: 11, letterSpacing: "0.04em", color: r.statusColor, background: "var(--bg-2)", borderColor: "var(--line-2)", whiteSpace: "nowrap" }}>{r.status}</span>
+          <div className="tile-grid cols-3" style={{ maxWidth: 960, margin: "0 auto" }}>
+            {[
+              { mark: "✓", markColor: "var(--acc)", tag: "WEB", tagColor: "var(--acc-deep)", status: "Available now" },
+              { mark: "✓", markColor: "var(--acc)", tag: "APIs", tagColor: "var(--acc-deep)", status: "Available now" },
+              { mark: "→", markColor: "var(--fg-4)", tag: "MORE RUNTIMES", tagColor: "var(--fg-4)", status: "Mobile, desktop, SDKs, simulators and connected systems" },
+            ].map((r) => (
+              <div key={r.tag} className="card" style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span aria-hidden style={{ fontSize: 17, color: r.markColor, fontFamily: "var(--font-code)", lineHeight: 1 }}>{r.mark}</span>
+                  <span style={{ fontFamily: "var(--font-code)", fontSize: 12, letterSpacing: "0.08em", fontWeight: 600, color: r.tagColor }}>{r.tag}</span>
                 </div>
-              ))}
-            </div>
+                <div style={{ fontSize: 14, color: "var(--fg-2)", lineHeight: 1.45 }}>{r.status}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -329,10 +330,10 @@ export default function VraelisLanding() {
         <div className="glow glow--soft" />
         <div className="wrap" style={{ maxWidth: 720, textAlign: "center" }}>
           <h2 className="display" style={{ fontSize: "clamp(2.1rem, 4.4vw, 3.4rem)", marginBottom: 18 }}>Prove how your system behaves <span className="em">before production</span>.</h2>
-          <p className="lead-copy" style={{ margin: "0 auto 28px", textAlign: "center" }}>Define what must work, run it against the exact build, and get evidence and a truthful decision. Web verification is live; API verification is in private beta.</p>
+          <p className="lead-copy" style={{ margin: "0 auto 28px", textAlign: "center" }}>Define what must work, run it against the exact build, and get evidence and a truthful decision. Web and API verification are live.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Validate a web application <span aria-hidden>→</span></Link>
-            <Link href="/contact?topic=api-beta" className="btn btn--ghost btn--lg">Request API beta access</Link>
+            <Link href="/how-it-works" className="btn btn--ghost btn--lg">See how it works</Link>
           </div>
         </div>
       </section>

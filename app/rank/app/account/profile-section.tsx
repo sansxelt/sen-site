@@ -213,8 +213,7 @@ export function ProfileSection({ email, initialDisplayName, planBadge }: { email
           <div style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 3 }}>Your sign-in identity. It cannot be changed here.</div>
 
           <div style={{ marginTop: 18, borderTop: "1px solid var(--line-1)", paddingTop: 12 }}>
-            <div style={{ fontSize: 13, color: "var(--fg-4)", lineHeight: 1.7 }}>Timezone: coming with team accounts.</div>
-            <div style={{ fontSize: 13, color: "var(--fg-4)", lineHeight: 1.7 }}>Notification preferences: coming with team accounts.</div>
+            <div style={{ fontSize: 13, color: "var(--fg-4)", lineHeight: 1.7 }}>Timezone and notification preferences aren&apos;t configurable yet.</div>
           </div>
         </div>
 
