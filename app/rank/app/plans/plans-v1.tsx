@@ -120,13 +120,17 @@ export default function PlansV1({ initialCycle = "monthly" }: { initialCycle?: C
                 {p.name}{isCurrent && <span className="badge-now">Current plan</span>}
               </div>
               {cycle === "monthly" ? (
-                <div className="price__amt">{usdFromCents(p.monthlyCents)}<small>/mo</small></div>
+                <>
+                  <div className="price__amt">{usdFromCents(p.monthlyCents)}<small>/mo</small></div>
+                  <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600 }}>Billed monthly</div>
+                </>
               ) : (
-                <div className="price__amt">{usdFromCents(p.yearlyCents)}<small>/yr</small></div>
+                // Yearly: headline the monthly-effective price, with the annual total shown clearly below.
+                <>
+                  <div className="price__amt">{effectiveMonthlyUsd(p.yearlyCents)}<small>/mo</small></div>
+                  <div style={{ fontSize: 14, color: "var(--fg-2)", fontWeight: 600, marginTop: 2 }}>{usdFromCents(p.yearlyCents)} billed yearly</div>
+                </>
               )}
-              <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600 }}>
-                {cycle === "monthly" ? "Billed monthly" : `${effectiveMonthlyUsd(p.yearlyCents)}/mo effective`}
-              </div>
               <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>{PLAN_BLURBS[p.key]}</div>
               <ul className="price__feat">
                 {planFeatures(p).map((f) => <li key={f}>{f}</li>)}

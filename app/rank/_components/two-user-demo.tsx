@@ -81,7 +81,7 @@ export function TwoUserDemo() {
                 <div style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 500 }}>{r.act}</div>
                 <div style={{ fontSize: 12, color: "var(--fg-4)" }}>{r.expect}</div>
               </div>
-              <span aria-hidden style={{ flex: "none", width: 22, height: 22, borderRadius: "50%", display: "grid", placeItems: "center", fontSize: 12, fontWeight: 700, color: r.ok ? "var(--acc-deep)" : "#C0392B", background: r.ok ? "var(--acc-soft)" : "#FBEBEA", border: `1px solid ${r.ok ? "var(--acc-line)" : "#F0C7C2"}` }}>{r.ok ? "✓" : "✕"}</span>
+              <span aria-hidden style={{ flex: "none", width: 22, height: 22, borderRadius: "50%", display: "grid", placeItems: "center", fontSize: 12, fontWeight: 700, lineHeight: 1, paddingTop: 1, color: r.ok ? "var(--acc-deep)" : "#C0392B", background: r.ok ? "var(--acc-soft)" : "#FBEBEA", border: `1px solid ${r.ok ? "var(--acc-line)" : "#F0C7C2"}` }}>{r.ok ? "✓" : "✕"}</span>
             </div>
           );
         })}

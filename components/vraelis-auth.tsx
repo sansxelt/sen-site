@@ -155,9 +155,9 @@ export function VraelisSignIn({
 
   return (
     <div style={{ width: "min(440px, 100%)", margin: "0 auto" }}>
-      <div style={{ textAlign: "center", marginBottom: 24 }}>
-        <a href="/" style={{ textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.035em", display: "inline-block", marginBottom: 16 }}>Vraelis</a>
-        <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3.6vw, 2.4rem)", marginBottom: 10 }}>
+      <div style={{ textAlign: "center", marginBottom: 18 }}>
+        <a href="/" style={{ textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.035em", display: "inline-block", marginBottom: 10 }}>Vraelis</a>
+        <h1 className="display" style={{ fontSize: "clamp(1.6rem, 3.4vw, 2.2rem)", marginBottom: 8 }}>
           {mode === "signup" ? <>Create your <span className="em">account</span>.</> : <>Access your <span className="em">account</span>.</>}
         </h1>
         <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.55 }}>
@@ -165,9 +165,9 @@ export function VraelisSignIn({
         </p>
       </div>
 
-      <div className="card" style={{ padding: "22px 24px 26px", borderRadius: "var(--r-xl)", boxShadow: "var(--shadow-lg)" }}>
+      <div className="card" style={{ padding: "20px 24px 24px", borderRadius: "var(--r-xl)", boxShadow: "var(--shadow-lg)" }}>
         {/* mode toggle */}
-        <div className="seg" style={{ display: "flex", width: "100%", marginBottom: 20 }}>
+        <div className="seg" style={{ display: "flex", width: "100%", marginBottom: 16 }}>
           {(["signin", "signup"] as AuthMode[]).map((m) => (
             <button key={m} type="button" onClick={() => { setMode(m); setStatus(null); }} className={mode === m ? "on" : ""} style={{ flex: 1 }}>
               {m === "signin" ? "Sign in" : "Create account"}
@@ -210,7 +210,7 @@ export function VraelisSignIn({
         </div>
 
         {/* divider */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "20px 0 18px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "16px 0 14px" }}>
           <span style={{ flex: 1, height: 1, background: "var(--line-1)" }} />
           <span style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", letterSpacing: "0.04em" }}>or with email</span>
           <span style={{ flex: 1, height: 1, background: "var(--line-1)" }} />
@@ -239,8 +239,8 @@ export function VraelisSignIn({
         {status && <div style={statusStyle(status.tone)}>{status.message}</div>}
       </div>
 
-      <p style={{ textAlign: "center", marginTop: 18, fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-5)" }}>
-        No card required. Cancel anytime.
+      <p style={{ textAlign: "center", marginTop: 16, fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-5)" }}>
+        Free to start. No card required.
       </p>
     </div>
   );

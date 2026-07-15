@@ -187,7 +187,7 @@ export function PassDemo() {
             return (
               <div key={f.name} style={{ display: "flex", alignItems: "center", gap: 13, padding: "13px 15px", borderRadius: 12, background: "var(--bg-2)", border: "1px solid var(--line-1)" }}>
                 {phase === "done" ? (
-                  <span key={`m${runId}-${i}`} className={runId > 0 ? "pd-pop" : undefined} aria-hidden style={{ ...markBase, color: r.ok ? "var(--acc-deep)" : TONES.blocked.fg, background: r.ok ? "var(--acc-soft)" : TONES.blocked.bg, border: `1px solid ${r.ok ? "var(--acc-line)" : TONES.blocked.line}` }}>
+                  <span key={`m${runId}-${i}`} className={runId > 0 ? "pd-pop" : undefined} aria-hidden style={{ ...markBase, color: r.ok ? "var(--acc-deep)" : TONES.blocked.fg, background: r.ok ? "var(--acc-soft)" : TONES.blocked.bg, border: `1px solid ${r.ok ? "var(--acc-line)" : TONES.blocked.line}`, lineHeight: 1, paddingTop: 1 }}>
                     {r.ok ? "✓" : "✕"}
                   </span>
                 ) : phase === "running" ? (

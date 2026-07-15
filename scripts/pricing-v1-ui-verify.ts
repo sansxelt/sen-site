@@ -49,10 +49,13 @@ for (const surface of ["pricing", "plans"]) {
   const m = renders[`${surface} monthly`], y = renders[`${surface} yearly`];
   ok(`${surface}: monthly renders $49 / $149 / $399`,
     m.includes("$49<small>/mo") && m.includes("$149<small>/mo") && m.includes("$399<small>/mo"));
-  ok(`${surface}: yearly renders $490 / $1,490 / $3,990 totals`,
-    y.includes("$490<small>/yr") && y.includes("$1,490<small>/yr") && y.includes("$3,990<small>/yr"));
-  ok(`${surface}: yearly shows effective monthly ($41 example) and the Save 17% label`,
-    y.includes("$41/mo effective") && y.includes("Save 17%") && !y.includes("2 months free"));
+  // Yearly leads with the lower monthly-effective price as the headline (converts better) and shows the real
+  // annual total clearly beneath it — the customer always sees exactly what they're charged, no fine print.
+  ok(`${surface}: yearly headlines the effective monthly price ($41/$124/$333)`,
+    y.includes("$41<small>/mo") && y.includes("$124<small>/mo") && y.includes("$333<small>/mo"));
+  ok(`${surface}: yearly shows the annual total clearly ($490 / $1,490 / $3,990 billed yearly) + Save 17%`,
+    y.includes("$490 billed yearly") && y.includes("$1,490 billed yearly") && y.includes("$3,990 billed yearly")
+    && y.includes("Save 17%") && !y.includes("2 months free"));
   ok(`${surface}: monthly/yearly segmented toggle present`,
     m.includes(`class="seg"`) && m.includes(">Monthly<") && m.includes("Yearly"));
   ok(`${surface}: free tier is $0, one lifetime pass, 3 flows, 1 application, no card`,

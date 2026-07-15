@@ -1,6 +1,7 @@
 ﻿import type { ReactNode } from "react";
 import { ZoneShell } from "@/components/zone-shell";
 import { isVraelisRequest } from "@/lib/site-host";
+import { SignInHeader } from "./signin-header";
 
 // /signin gets the zone-aware shell on sansxel hosts (workshop /
 // platform chrome). On vraelis it skips that entirely — the root
@@ -10,47 +11,20 @@ import { isVraelisRequest } from "@/lib/site-host";
 export default async function SignInLayout({ children }: { children: ReactNode }) {
   if (await isVraelisRequest()) {
     return (
-      <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
-        <div style={{ position: "sticky", top: 0, zIndex: 50 }}>
-          <div style={{ padding: "20px var(--gutter)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, background: "rgba(250, 248, 244, 0.86)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: "1px solid var(--line-1)" }}>
-          <a
-            href="/"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              fontFamily: "var(--font-display)",
-              fontSize: 20,
-              fontWeight: 700,
-              letterSpacing: "-0.04em",
-              lineHeight: 1,
-              color: "var(--fg-1)",
-              textDecoration: "none",
-            }}
-          >
-            Vraelis
-          </a>
-          <a
-            href="/"
-            style={{
-              display: "flex",
-              width: "fit-content",
-              alignItems: "center",
-              gap: 7,
-              fontSize: 14,
-              fontWeight: 500,
-              color: "var(--fg-2)",
-              textDecoration: "none",
-              border: "1px solid var(--line-3)",
-              borderRadius: 999,
-              padding: "8px 16px",
-              whiteSpace: "nowrap",
-            }}
-          >
-            <span aria-hidden>←</span> Back to site
-          </a>
+      // Homepage-style surface: a transparent-until-scroll bar over the hero glow + faint grid, which bleed
+      // up behind it. The content column SCROLLS (min-height, not fixed 100dvh grid) and is top-padded rather
+      // than vertically centered, so a tall form — the create-account panel with Terms, Google, GitHub, and
+      // the email fields — is always fully reachable without being clipped at the bottom of the viewport.
+      <div style={{ position: "relative", minHeight: "100dvh", overflow: "clip" }}>
+        {/* atmosphere: same bloom + hairline grid the homepage hero uses, bleeding up behind the bar */}
+        <div className="glow glow--bleed" aria-hidden />
+        <div className="grid-faint" style={{ opacity: 0.5 }} aria-hidden />
+        <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", minHeight: "100dvh" }}>
+          <SignInHeader />
+          <div style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "flex-start", padding: "clamp(24px, 5vh, 64px) var(--gutter) 64px" }}>
+            {children}
           </div>
         </div>
-        <div style={{ flex: 1, display: "grid", placeItems: "center" }}>{children}</div>
       </div>
     );
   }

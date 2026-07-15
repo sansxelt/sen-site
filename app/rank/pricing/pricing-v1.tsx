@@ -88,13 +88,21 @@ export default function PricingV1({ initialCycle = "monthly" }: { initialCycle?:
               <div key={p.key} className={p.key === "pro_v1" ? "price price--hot" : "price"}>
                 <div className="price__name">{p.name}</div>
                 {cycle === "monthly" ? (
-                  <div className="price__amt">{usdFromCents(p.monthlyCents)}<small>/mo</small></div>
+                  <>
+                    <div className="price__amt">{usdFromCents(p.monthlyCents)}<small>/mo</small></div>
+                    <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600 }}>Billed monthly</div>
+                  </>
                 ) : (
-                  <div className="price__amt">{usdFromCents(p.yearlyCents)}<small>/yr</small></div>
+                  // Yearly: lead with the lower monthly-effective price (it converts better), and show the
+                  // real annual total the customer is charged clearly beneath it — big enough that they know
+                  // exactly what they're buying, never a fine-print gotcha.
+                  <>
+                    <div className="price__amt">{effectiveMonthlyUsd(p.yearlyCents)}<small>/mo</small></div>
+                    <div style={{ fontSize: 14, color: "var(--fg-2)", fontWeight: 600, marginTop: 2 }}>
+                      {usdFromCents(p.yearlyCents)} billed yearly
+                    </div>
+                  </>
                 )}
-                <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600 }}>
-                  {cycle === "monthly" ? "Billed monthly" : `${effectiveMonthlyUsd(p.yearlyCents)}/mo effective`}
-                </div>
                 <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>{PLAN_BLURBS[p.key]}</div>
                 <ul className="price__feat">
                   {planFeatures(p).map((f) => <li key={f}>{f}</li>)}
