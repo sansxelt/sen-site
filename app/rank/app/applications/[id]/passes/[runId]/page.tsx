@@ -541,15 +541,19 @@ export default async function RunReportPage({ params }: { params: Promise<{ id: 
           </div>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 22 }}>
-            {terminal ? (
-              run.decision === "repair_verified"
-                ? <RerunButton appId={id} runId={runId} scope="critical" label="Run full critical verification" />
-                : <RerunButton appId={id} runId={runId} scope={hasFailures ? "failed" : "all"} label={hasFailures ? "Rerun failed flows" : "Run again"} />
-            ) : (
-              // Non-terminal run: let the owner stop it (stuck/queued or mis-launched). The worker aborts
-              // cooperatively and its terminal-failure path refunds the hold when no flow executed.
-              <CancelRunButton appId={id} runId={runId} />
-            )}
+            {/* Rerun/cancel mutate the run (server gates rerun + cancel at editor+); hide them for read-only
+                members. The "Back to application" link stays, so the row is never empty. */}
+            {caps.canLaunch ? (
+              terminal ? (
+                run.decision === "repair_verified"
+                  ? <RerunButton appId={id} runId={runId} scope="critical" label="Run full critical verification" />
+                  : <RerunButton appId={id} runId={runId} scope={hasFailures ? "failed" : "all"} label={hasFailures ? "Rerun failed flows" : "Run again"} />
+              ) : (
+                // Non-terminal run: let the owner stop it (stuck/queued or mis-launched). The worker aborts
+                // cooperatively and its terminal-failure path refunds the hold when no flow executed.
+                <CancelRunButton appId={id} runId={runId} />
+              )
+            ) : null}
             <Link href={`/applications/${id}`} className="btn btn--ghost">Back to application</Link>
           </div>
 

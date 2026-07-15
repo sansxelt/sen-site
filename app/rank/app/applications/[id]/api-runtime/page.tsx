@@ -41,6 +41,8 @@ export default async function ApiRuntimePage({ params }: { params: Promise<{ id:
       <AppTabs appId={id} active="api" showApiTab />
       <ApiWorkspace
         appId={id}
+        canEdit={caps.canEditContract}
+        canLaunch={caps.canLaunch}
         initial={{
           target: target ? { id: target.id, label: target.label, environment: target.environment } : null,
           build: build ? { baseUrl: build.base_url, version: build.version } : null,

@@ -249,7 +249,7 @@ export default async function AppDeploymentsPage({ params }: { params: Promise<{
         <div style={{ marginBottom: 20 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
             <div style={{ ...headLbl, display: "flex", alignItems: "center", gap: 7 }}><Ic d={I.deploy} size={13} sw={2} />Recorded deployments ({recorded.length})</div>
-            <RecordDeploymentForm appId={id} />
+            {caps.canManageDeployments ? <RecordDeploymentForm appId={id} /> : null}
           </div>
           {recorded.length ? (
             <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", overflow: "hidden" }}>

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requirePreflightAppAccess } from "@/lib/v-preflight-guard";
-import { capabilities } from "@/lib/preflight/role-capabilities";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "../../setup-required";
 import { getApplication, type RunSummary } from "@/lib/v-applications";
@@ -66,7 +65,6 @@ export default async function AppRunsPage({ params }: { params: Promise<{ id: st
   const { id } = await params;
   const access = await requirePreflightAppAccess(id, "/applications/" + id);
   const owner = access?.owner ?? "";
-  const caps = capabilities(access?.role);
   if (!(await preflightDbReady())) return <SetupRequired />;
 
   const app = await getApplication(owner, id);

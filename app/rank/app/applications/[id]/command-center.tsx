@@ -18,7 +18,7 @@ const RIBBON_COLOR: Record<RibbonFact["tone"], string> = {
 };
 
 export function CommandCenter({
-  appId, verdict, subline, tone, action, ribbon, launchFlowIds,
+  appId, verdict, subline, tone, action, ribbon, launchFlowIds, canLaunch, canEditContract,
 }: {
   appId: string;
   verdict: string;            // READY / BLOCKED / NEEDS REVIEW / REPAIR VERIFIED / IN PROGRESS / NOT TESTED
@@ -27,10 +27,18 @@ export function CommandCenter({
   action: NextAction;
   ribbon: RibbonFact[];
   launchFlowIds: string[];    // the flow ids a LAUNCH action queues (already resolved eligible|critical)
+  canLaunch: boolean;         // EDITOR+ : may run/rerun a pass (mirrors the /runs server min-role)
+  canEditContract: boolean;   // EDITOR+ : may author/approve the contract (mirrors the contract server min-role)
 }) {
   const isQuiet = action.tone === "quiet";
   // A launch action renders the REAL launch control (posts /runs) — never a link to a page that can't run.
   const isLaunch = !!action.launch && launchFlowIds.length > 0;
+  // An author-CTA is a NAVIGATE action into the contract editor (author/review/add-flows). A read-only
+  // member can't use that editor, so we degrade it to an honest note instead of linking them into it.
+  const isAuthorCTA = !action.launch && action.href.endsWith("/contract");
+  // A read-only member gets NO mutating affordance: launches are hidden, author-CTAs degrade to a note.
+  // View/inspect/review NAVIGATE actions (to a report or running pass) stay for everyone.
+  const showReadOnlyNote = (isLaunch && !canLaunch) || (isAuthorCTA && !canEditContract);
   return (
     <section
       aria-label="Launch decision and next action"
@@ -44,22 +52,32 @@ export function CommandCenter({
           {subline ? <p style={{ fontSize: 14.5, color: "var(--fg-1)", lineHeight: 1.5, margin: "10px 0 0", maxWidth: "52ch" }}>{subline}</p> : null}
         </div>
 
-        {/* The ONE dominant next action. A quiet (healthy) state uses a ghost button so it doesn't shout. */}
+        {/* The ONE dominant next action. A quiet (healthy) state uses a ghost button so it doesn't shout.
+            A read-only member sees an honest view-only note in this column instead of a control they
+            can't use — the verdict + ribbon still read exactly the same. */}
         <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6, maxWidth: 320 }}>
           <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.09em", textTransform: "uppercase", color: tone.fg, opacity: 0.7 }}>Next</div>
-          {isLaunch ? (
-            <LaunchPassButton appId={appId} flowIds={launchFlowIds} label={action.label} ghost={isQuiet} />
+          {showReadOnlyNote ? (
+            <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.5, margin: "2px 0 0" }}>
+              View-only access — ask an editor to {isLaunch ? "run a pass" : "update the contract"}.
+            </p>
           ) : (
-            <Link
-              href={action.href}
-              className={isQuiet ? "btn btn--ghost" : "btn btn--lg"}
-              style={{ display: "inline-flex", alignItems: "center", gap: 9, whiteSpace: "nowrap" }}
-            >
-              {action.label}
-              <span aria-hidden style={{ display: "inline-flex" }}><Ic d={I.back} size={15} sw={2.2} style={{ transform: "scaleX(-1)" }} /></span>
-            </Link>
+            <>
+              {isLaunch ? (
+                <LaunchPassButton appId={appId} flowIds={launchFlowIds} label={action.label} ghost={isQuiet} />
+              ) : (
+                <Link
+                  href={action.href}
+                  className={isQuiet ? "btn btn--ghost" : "btn btn--lg"}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 9, whiteSpace: "nowrap" }}
+                >
+                  {action.label}
+                  <span aria-hidden style={{ display: "inline-flex" }}><Ic d={I.back} size={15} sw={2.2} style={{ transform: "scaleX(-1)" }} /></span>
+                </Link>
+              )}
+              <p style={{ fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.45, margin: "2px 0 0" }}>{action.why}</p>
+            </>
           )}
-          <p style={{ fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.45, margin: "2px 0 0" }}>{action.why}</p>
         </div>
       </div>
 

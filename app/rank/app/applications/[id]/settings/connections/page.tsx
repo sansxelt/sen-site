@@ -66,7 +66,7 @@ export default async function AppConnectionsPage({ params }: { params: Promise<{
         coming and is never presented as working before it exists.
       </p>
 
-      <ConnectionsManager appId={id} connections={connections} />
+      <ConnectionsManager appId={id} connections={connections} canManage={caps.canManageConnections} />
 
       {/* ── Audit history: the last 10 connection events for this application ─────────────────────────── */}
       <section aria-label="Connection activity" style={{ borderTop: "1px solid var(--line-1)", paddingTop: 22, marginTop: 26 }}>

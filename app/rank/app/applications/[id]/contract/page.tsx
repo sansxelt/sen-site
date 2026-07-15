@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requirePreflightAppAccess } from "@/lib/v-preflight-guard";
-import { capabilities } from "@/lib/preflight/role-capabilities";
+import { capabilities, readOnlyReason } from "@/lib/preflight/role-capabilities";
 import {
   getApplication, getContract, getApprovedContract, listRequirements, listFlows,
   type ContractRequirement, type ProductionContract, type TestFlow, type Severity,
@@ -72,7 +72,9 @@ function SevPill({ severity }: { severity: Severity }) {
 
 // Read-only view of an APPROVED contract. One card (the coverage summary), then a flat full-width list of
 // requirement rows separated by hairlines: text, severity, humanized category, provenance, flow coverage.
-function ApprovedContract({ appId, contract, reqs, flows }: { appId: string; contract: ProductionContract; reqs: ContractRequirement[]; flows: TestFlow[] }) {
+// `canEdit` (caps.canEditContract, EDITOR+) gates the two mutating/editor-only affordances: the
+// "Create new draft" button and the launch-priced Pass preview. Read-only members see the record only.
+function ApprovedContract({ appId, contract, reqs, flows, canEdit }: { appId: string; contract: ProductionContract; reqs: ContractRequirement[]; flows: TestFlow[]; canEdit: boolean }) {
   // "Approved flows" = the flows a run would actually execute: enabled, and review_state approved (the
   // column defaults to approved and may be absent before the Phase-2 migration).
   const approvedFlows = flows.filter((f) => f.enabled && ((f.review_state ?? "approved") === "approved"));
@@ -99,10 +101,10 @@ function ApprovedContract({ appId, contract, reqs, flows }: { appId: string; con
             {contract.approved_at ? (
               <>Approved <span title={when(contract.approved_at)}>{timeAgo(contract.approved_at)}</span>. </>
             ) : null}
-            This contract is locked. Create a new draft to make changes.
+            This contract is locked. {canEdit ? "Create a new draft to make changes." : "It cannot be changed."}
           </p>
         </div>
-        <NewDraftButton appId={appId} />
+        {canEdit ? <NewDraftButton appId={appId} /> : null}
       </div>
 
       {/* requirement rows (flat, hairline-separated; no nested cards) */}
@@ -171,12 +173,92 @@ function ApprovedContract({ appId, contract, reqs, flows }: { appId: string; con
       </section>
 
       {/* Pass preview — what a Production Pass over the approved flows would cost / deduct, priced by the
-          same gate as launch. Only shown when there are approved flows to run. */}
-      {approvedFlows.length > 0 ? (
+          same gate as launch. Editor-only (it previews the launch charge); read-only members don't see it.
+          Only shown when there are approved flows to run. */}
+      {canEdit && approvedFlows.length > 0 ? (
         <section style={{ marginTop: 28 }}>
           <PassPreview appId={appId} flowIds={approvedFlows.map((f) => f.id)} />
         </section>
       ) : null}
+    </div>
+  );
+}
+
+// Read-only view of a DRAFT contract for members who cannot edit (viewer + client_viewer). The DRAFT editor
+// (ContractEditor) is entirely mutating — add/edit/delete requirements + flows, Approve — so read-only members
+// must never mount it. Instead they see the same requirement + flow record the approved view renders, with an
+// honest "draft, view-only" header (no coverage/approve/edit affordances, no Pass preview). The server already
+// 403s their mutations; this keeps the read content intact without offering any control.
+function DraftReadOnly({ reqs, flows, reason }: { reqs: ContractRequirement[]; flows: TestFlow[]; reason: string | null }) {
+  return (
+    <div>
+      <div className="card" style={{ padding: "clamp(16px, 2.2vw, 22px)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
+          <span className="pill" style={{ color: "var(--fg-3)", borderColor: "var(--line-2)", background: "var(--bg-2)", fontSize: 11 }}>Draft</span>
+          <span style={smallLabel}>View only</span>
+        </div>
+        <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16.5, color: "var(--fg-1)", lineHeight: 1.4 }}>
+          This contract is still a draft.
+        </div>
+        <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.55, margin: "6px 0 0" }}>
+          {reason ?? "You have view-only access to this application. Ask an editor or the owner to make changes."}
+        </p>
+      </div>
+
+      {/* requirement rows (read-only, matches the approved renderer) */}
+      <section style={{ marginTop: 28 }}>
+        <div style={{ ...smallLabel, marginBottom: 4 }}>Requirements ({reqs.length})</div>
+        {reqs.length === 0 ? (
+          <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55, margin: "10px 0 0" }}>
+            This draft has no requirements yet.
+          </p>
+        ) : (
+          <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+            {reqs.map((r, idx) => (
+              <li key={r.id} style={{ padding: "16px 0", borderTop: idx > 0 ? "1px solid var(--line-1)" : "none", opacity: r.enabled ? 1 : 0.55 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 7 }}>
+                  <SevPill severity={r.severity} />
+                  <span style={{ fontSize: 12, color: "var(--fg-4)" }}>{categoryLabel(r.category)}</span>
+                  <ProvenanceChip source={r.source} origin={r.origin} />
+                  {!r.enabled ? <span style={smallLabel}>Disabled, not tested</span> : null}
+                </div>
+                <div style={{ fontSize: 14.5, color: "var(--fg-1)", lineHeight: 1.55, wordBreak: "break-word" }}>{r.requirement}</div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/* flow rows (read-only, matches the approved renderer) */}
+      <section style={{ marginTop: 28 }}>
+        <div style={{ ...smallLabel, marginBottom: 4 }}>Test flows ({flows.length})</div>
+        {flows.length === 0 ? (
+          <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55, margin: "10px 0 0" }}>
+            This draft has no flows yet.
+          </p>
+        ) : (
+          <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+            {flows.map((f, idx) => {
+              const auth = flowRequiresAuth((f.steps as { action: string }[]) ?? []);
+              const steps = Array.isArray(f.steps) ? f.steps.length : 0;
+              return (
+                <li key={f.id} style={{ padding: "14px 0", borderTop: idx > 0 ? "1px solid var(--line-1)" : "none", opacity: f.enabled ? 1 : 0.55 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 6 }}>
+                    <span className="pill" style={{ color: auth ? "var(--acc-deep)" : "var(--fg-4)", borderColor: auth ? "var(--acc-line)" : "var(--line-2)", background: auth ? "var(--acc-soft)" : "var(--bg-2)", display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11 }}>
+                      <Ic d={auth ? I.lock : I.user} size={12} sw={1.9} /> {f.role || (auth ? "Authenticated" : "Unauthenticated")}
+                    </span>
+                    <span style={{ fontSize: 12, color: "var(--fg-4)" }}>{SEVERITY_LABELS[(f.priority as Severity) ?? "important"]}</span>
+                    <span style={{ fontSize: 12, color: "var(--fg-4)" }}>{steps} step{steps === 1 ? "" : "s"}</span>
+                    {!f.enabled ? <span style={smallLabel}>Disabled, not run</span> : null}
+                  </div>
+                  <div style={{ fontSize: 14.5, color: "var(--fg-1)", lineHeight: 1.55, wordBreak: "break-word" }}>{f.name}</div>
+                  {f.goal ? <div style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5, marginTop: 3 }}>{f.goal}</div> : null}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }
@@ -237,9 +319,13 @@ export default async function ContractPage({ params }: { params: Promise<{ id: s
 
       {contract ? (
         contract.status === "approved" ? (
-          <ApprovedContract appId={id} contract={contract} reqs={reqs} flows={flows} />
-        ) : (
+          <ApprovedContract appId={id} contract={contract} reqs={reqs} flows={flows} canEdit={caps.canEditContract} />
+        ) : caps.canEditContract ? (
+          // DRAFT + editor: the full mutating editor (add/edit/delete reqs + flows, Approve).
           <ContractEditor contractId={contract.id} initial={reqs} status={contract.status} flows={flows} roles={roles} />
+        ) : (
+          // DRAFT + read-only member: never mount the mutating editor; show the record read-only.
+          <DraftReadOnly reqs={reqs} flows={flows} reason={readOnlyReason(caps.role)} />
         )
       ) : (
         <div className="card" style={{ padding: "clamp(18px, 2.6vw, 26px)" }}>

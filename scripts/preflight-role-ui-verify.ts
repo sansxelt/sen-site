@@ -95,10 +95,59 @@ console.log("\n── UI affordance gating (structural) ──");
   for (const p of pages) {
     ok(`${p.split("/").slice(-2).join("/")} derives capabilities from the resolved role`, /capabilities\(access\?\.role\)/.test(read(p)) || /capabilities\(/.test(read(p)));
   }
-  // The delete control must be gated at ADMIN (canDeleteApplication), never at editor.
-  const settings = read("app/rank/app/applications/[id]/settings/page.tsx");
-  ok("settings gates Delete on canDeleteApplication (admin), and EditApplicationForm on canEditSettings (editor)",
-    /canDeleteApplication/.test(settings) && /canEditSettings/.test(settings));
+  // ── Per-surface: the exact affordance is gated on the exact flag (structural regression) ──
+  const app = (p: string) => read(`app/rank/app/applications/[id]/${p}`);
+
+  // OVERVIEW + CommandCenter: launch gated on canLaunch, and the CommandCenter receives canLaunch.
+  const overview = app("page.tsx");
+  ok("overview passes canLaunch to CommandCenter", /CommandCenter[\s\S]{0,400}canLaunch=\{caps\.canLaunch\}/.test(overview));
+  ok("overview gates its inline LaunchPassButton on caps.canLaunch", /caps\.canLaunch[\s\S]{0,400}LaunchPassButton/.test(overview) || /LaunchPassButton[\s\S]{0,400}caps\.canLaunch/.test(overview));
+  const cc = app("command-center.tsx");
+  ok("CommandCenter takes a canLaunch prop and shows a read-only note instead of the launch button",
+    /canLaunch\s*:\s*boolean/.test(cc) && /showReadOnlyNote|View-only/.test(cc));
+  ok("CommandCenter still renders LaunchPassButton on the CAN-launch path (not removed for actors)", cc.includes("LaunchPassButton"));
+
+  // SETTINGS: EditApplicationForm gated on canEditSettings (editor), Delete on canDeleteApplication (admin).
+  const settings = app("settings/page.tsx");
+  ok("settings gates EditApplicationForm on caps.canEditSettings with a read-only facts replacement",
+    /caps\.canEditSettings\s*\?[\s\S]{0,600}EditApplicationForm/.test(settings) && /Application settings[\s\S]{0,400}<KV/.test(settings));
+  ok("settings gates DeleteApplication on caps.canDeleteApplication (admin, NOT editor)",
+    /caps\.canDeleteApplication\s*\?\s*<DeleteApplication/.test(settings));
+
+  // CONNECTIONS: manager receives canManage; renders a read-only variant when false.
+  const connPage = app("settings/connections/page.tsx");
+  const connMgr = app("settings/connections/connections-manager.tsx");
+  ok("connections page passes caps.canManageConnections into ConnectionsManager", /ConnectionsManager[\s\S]{0,200}canManage=\{caps\.canManageConnections\}/.test(connPage));
+  ok("ConnectionsManager renders a read-only variant when !canManage", /!canManage\s*\)?\s*return\s*<ReadOnlyConnections|!canManage[\s\S]{0,120}ReadOnly/.test(connMgr));
+
+  // DEPLOYMENTS: RecordDeploymentForm gated on canManageDeployments.
+  const deploys = app("deployments/page.tsx");
+  ok("deployments gates RecordDeploymentForm on caps.canManageDeployments", /caps\.canManageDeployments[\s\S]{0,200}RecordDeploymentForm/.test(deploys));
+
+  // PASS REPORT: rerun/cancel gated on canLaunch; CopyButton (clipboard) NOT gated.
+  const report = app("passes/[runId]/page.tsx");
+  ok("pass report gates RerunButton/CancelRunButton on caps.canLaunch", /caps\.canLaunch\s*\?[\s\S]{0,500}(RerunButton|CancelRunButton)/.test(report));
+  ok("pass report does NOT gate the CopyButton (clipboard is read-only, stays for everyone)",
+    report.includes("<CopyButton") && !/caps\.\w+\s*(&&|\?)[\s\S]{0,80}<CopyButton/.test(report));
+
+  // CONTRACT: ContractEditor only for editors; a read-only member gets a read-only list; NewDraftButton gated.
+  const contract = app("contract/page.tsx");
+  ok("contract mounts ContractEditor only when caps.canEditContract, else a read-only list",
+    /caps\.canEditContract\s*\?[\s\S]{0,200}<ContractEditor/.test(contract) && /DraftReadOnly|read-only/i.test(contract));
+  ok("contract gates NewDraftButton behind canEdit (editor)", /canEdit\s*\?\s*<NewDraftButton/.test(contract));
+
+  // API RUNTIME: ApiWorkspace receives canEdit + canLaunch; renders read-only facts when !canEdit.
+  const apiPage = app("api-runtime/page.tsx");
+  const apiWs = app("api-runtime/api-workspace.tsx");
+  ok("api-runtime passes caps.canEditContract + caps.canLaunch into ApiWorkspace",
+    /canEdit=\{caps\.canEditContract\}/.test(apiPage) && /canLaunch=\{caps\.canLaunch\}/.test(apiPage));
+  ok("ApiWorkspace gates its editors on canEdit and its run on canLaunch",
+    /canEdit\s*:\s*boolean/.test(apiWs) && /canLaunch\s*:\s*boolean/.test(apiWs) && /\{canEdit\s*(&&|\?)/.test(apiWs) && /\{?!?canLaunch/.test(apiWs));
+
+  // The read-only pages carry NO mutating affordance AND no leftover unused caps (they were cleaned).
+  for (const ro of ["context/page.tsx", "issues/page.tsx", "passes/page.tsx", "repairs/page.tsx"]) {
+    ok(`${ro.split("/")[0]} is read-only: no launch/edit/delete control + no stray caps`, !/caps\./.test(app(ro)));
+  }
 }
 
 console.log(`\n${pass}/${pass + fail} passed`);

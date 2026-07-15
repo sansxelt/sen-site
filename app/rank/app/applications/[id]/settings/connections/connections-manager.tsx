@@ -72,7 +72,99 @@ function TestAccountForm({ initialLabel, initialScope, submitLabel, busy, onSubm
   );
 }
 
-export function ConnectionsManager({ appId, connections }: { appId: string; connections: SafeConnection[] }) {
+// A read-only card: identical facts to the interactive card (kind, state, metadata, "used for", never
+// accesses, connected/last-checked), but NO action row, editor, or message state. Rendered for members
+// without canManageConnections (viewer / client_viewer), whose mutations the server would 403 anyway.
+function ReadOnlyCard({ c }: { c: SafeConnection }) {
+  const isTestAccount = c.provider === "test_account";
+  const m = strMeta(c.meta);
+  const state = connectionState(c.provider, c.status);
+  const summary = isTestAccount ? null : metaSummary(c.provider, c.meta);
+  const note = typeof c.meta.last_check_note === "string" ? c.meta.last_check_note : "";
+  return (
+    <div key={c.id} className="card" style={{ padding: 16, display: "grid", gap: 9, alignContent: "start" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <Mark text={PROVIDER_MARK[c.provider] ?? "code"} />
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14.5, color: "var(--fg-1)" }}>
+              {isTestAccount ? (m.label || "Test account") : (PROVIDER_LABELS[c.provider] ?? c.provider)}
+            </span>
+            <span className="pill" style={{ fontSize: 9.5, flex: "none" }}>{PROVIDER_GROUP[c.provider] ?? "Connection"}</span>
+          </div>
+        </div>
+        <StatePill state={state} />
+      </div>
+
+      {isTestAccount ? (
+        <div style={{ display: "grid", gap: 4 }}>
+          {m.username_mask ? <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-2)", wordBreak: "break-all" }}>{m.username_mask}</div> : null}
+          <div style={{ fontSize: 12, color: "var(--fg-3)", lineHeight: 1.5 }}>Scope: {m.scope || "signed-in flows only"}</div>
+        </div>
+      ) : summary ? (
+        <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-2)", wordBreak: "break-all" }}>{summary}</div>
+      ) : (
+        <div style={{ fontSize: 12, color: "var(--fg-4)" }}>No metadata recorded</div>
+      )}
+
+      <div style={{ fontSize: 12, color: "var(--fg-3)", lineHeight: 1.55 }}>
+        <span style={{ color: "var(--fg-4)" }}>Used by Vraelis for:</span> {featureUse(c.provider)}
+      </div>
+      <div style={{ fontSize: 12, color: "var(--fg-3)", lineHeight: 1.55 }}>
+        <span style={{ color: "var(--fg-4)" }}>Data Vraelis never accesses:</span> {neverAccesses(c.provider)}
+      </div>
+      <div style={{ fontSize: 11.5, color: "var(--fg-4)" }}>
+        Connected {whenUtc(c.created_at)}{c.last_verified_at ? `, last checked ${whenUtc(c.last_verified_at)}` : ", never checked"}
+      </div>
+      {note ? <div style={{ fontSize: 11.5, color: "var(--fg-4)" }}>Last check: {note}</div> : null}
+    </div>
+  );
+}
+
+// The read-only variant of the whole surface: the same two grids (connections, test accounts) as facts,
+// with a muted view-only note and NO "Add connection" section. The page still renders the audit history
+// below this component for everyone.
+function ReadOnlyConnections({ connections }: { connections: SafeConnection[] }) {
+  const testAccounts = connections.filter((c) => c.provider === "test_account");
+  const others = connections.filter((c) => c.provider !== "test_account");
+  return (
+    <div style={{ display: "grid", gap: 26 }}>
+      <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: 0, lineHeight: 1.5 }}>
+        View-only: you can see every connection this application has, but adding, editing, verifying, or
+        removing connections is limited to editors and the owner.
+      </p>
+      <section aria-label="Connections">
+        <div style={{ ...headLbl, marginBottom: 10 }}>Connections ({others.length})</div>
+        {others.length ? (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 12 }}>
+            {others.map((c) => <ReadOnlyCard key={c.id} c={c} />)}
+          </div>
+        ) : (
+          <p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>
+            No connections recorded. Passes run with only the application URL until an editor adds source,
+            deployment, data, or service context.
+          </p>
+        )}
+      </section>
+
+      <section aria-label="Test accounts">
+        <div style={{ ...headLbl, marginBottom: 10 }}>Test accounts ({testAccounts.length})</div>
+        {testAccounts.length ? (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 12 }}>
+            {testAccounts.map((c) => <ReadOnlyCard key={c.id} c={c} />)}
+          </div>
+        ) : (
+          <p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>
+            No test accounts on file. An encrypted test account is what will unlock signed-in flows when
+            authenticated passes ship.
+          </p>
+        )}
+      </section>
+    </div>
+  );
+}
+
+export function ConnectionsManager({ appId, connections, canManage = true }: { appId: string; connections: SafeConnection[]; canManage?: boolean }) {
   const router = useRouter();
   const [editing, setEditing] = useState<string | null>(null);       // connection id with an open editor
   const [confirming, setConfirming] = useState<string | null>(null); // connection id awaiting disconnect confirm
@@ -258,6 +350,10 @@ export function ConnectionsManager({ appId, connections }: { appId: string; conn
       </div>
     );
   }
+
+  // Read-only members (viewer / client_viewer) see the facts, never the mutation surface. The server
+  // gates connections + secrets + verify at editor+, so this mirrors that exactly.
+  if (!canManage) return <ReadOnlyConnections connections={connections} />;
 
   const testAccounts = connections.filter((c) => c.provider === "test_account");
   const others = connections.filter((c) => c.provider !== "test_account");

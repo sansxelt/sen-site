@@ -38,7 +38,7 @@ function verdictTone(v: string): React.CSSProperties {
   return { color: map[v] ?? "var(--fg-3)", fontWeight: 700 };
 }
 
-export function ApiWorkspace({ appId, initial }: { appId: string; initial: Initial }) {
+export function ApiWorkspace({ appId, initial, canEdit, canLaunch }: { appId: string; initial: Initial; canEdit: boolean; canLaunch: boolean }) {
   const base = `/api/preflight/apps/${appId}`;
   const [target, setTarget] = useState<Target>(initial.target);
   const [build, setBuild] = useState<Build>(initial.build);
@@ -130,62 +130,85 @@ export function ApiWorkspace({ appId, initial }: { appId: string; initial: Initi
       <section style={card}>
         <h2 style={h2}>API target</h2>
         <p style={{ color: "var(--fg-3)", fontSize: 13, marginTop: 0 }}>The API you want Vraelis to verify.</p>
-        <div style={{ display: "grid", gap: 12, gridTemplateColumns: "1fr 1fr" }}>
-          <div><label style={label}>Environment</label>
-            <select value={envInput} onChange={(e) => setEnvInput(e.target.value)} style={input}>
-              <option value="production">Production</option><option value="staging">Staging</option><option value="preview">Preview</option>
-            </select>
+        {canEdit ? (
+          <>
+            <div style={{ display: "grid", gap: 12, gridTemplateColumns: "1fr 1fr" }}>
+              <div><label style={label}>Environment</label>
+                <select value={envInput} onChange={(e) => setEnvInput(e.target.value)} style={input}>
+                  <option value="production">Production</option><option value="staging">Staging</option><option value="preview">Preview</option>
+                </select>
+              </div>
+              <div><label style={label}>Version (optional)</label><input style={input} value={versionInput} onChange={(e) => setVersionInput(e.target.value)} placeholder="v2.3.1 or a commit" /></div>
+              <div style={{ gridColumn: "1 / -1" }}><label style={label}>API base URL</label><input style={input} value={baseUrlInput} onChange={(e) => setBaseUrlInput(e.target.value)} placeholder="https://api.yourapp.com" /></div>
+            </div>
+            <div style={{ marginTop: 12 }}><button style={btnPrimary} disabled={busy === "target"} onClick={saveTarget}>{target ? "Update target" : "Create API target"}</button></div>
+          </>
+        ) : target ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 13.5, color: "var(--fg-2)" }}>
+            <div><span style={{ color: "var(--fg-4)" }}>Target:</span> <strong>{target.label}</strong></div>
+            <div><span style={{ color: "var(--fg-4)" }}>Environment:</span> {target.environment ?? "—"}</div>
+            <div><span style={{ color: "var(--fg-4)" }}>Base URL:</span> {build?.baseUrl ?? "—"}</div>
+            <div><span style={{ color: "var(--fg-4)" }}>Version:</span> {build?.version ?? "—"}</div>
           </div>
-          <div><label style={label}>Version (optional)</label><input style={input} value={versionInput} onChange={(e) => setVersionInput(e.target.value)} placeholder="v2.3.1 or a commit" /></div>
-          <div style={{ gridColumn: "1 / -1" }}><label style={label}>API base URL</label><input style={input} value={baseUrlInput} onChange={(e) => setBaseUrlInput(e.target.value)} placeholder="https://api.yourapp.com" /></div>
-        </div>
-        <div style={{ marginTop: 12 }}><button style={btnPrimary} disabled={busy === "target"} onClick={saveTarget}>{target ? "Update target" : "Create API target"}</button></div>
+        ) : (
+          <p style={{ color: "var(--fg-4)", fontSize: 13 }}>No API target has been configured yet.</p>
+        )}
       </section>
 
       {/* 2. Credentials */}
       <section style={card}>
         <h2 style={h2}>Credentials</h2>
         <p style={{ color: "var(--fg-3)", fontSize: 13, marginTop: 0 }}>Saved securely. You reference a credential by name in a flow and never see its value again.</p>
-        {creds.length > 0 && (
+        {creds.length > 0 ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
             {creds.map((c) => (
               <div key={c.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 10px", border: "1px solid var(--line-1)", borderRadius: 8 }}>
                 <span style={{ fontSize: 13.5 }}><strong>{c.label}</strong> <span style={{ color: "var(--fg-4)" }}>· {c.scheme} · {c.secretMask}</span></span>
-                <button style={{ ...btn, padding: "4px 10px", fontSize: 12 }} onClick={() => removeCred(c.id)}>Remove</button>
+                {canEdit && <button style={{ ...btn, padding: "4px 10px", fontSize: 12 }} onClick={() => removeCred(c.id)}>Remove</button>}
               </div>
             ))}
           </div>
+        ) : !canEdit && (
+          <p style={{ color: "var(--fg-4)", fontSize: 13, marginBottom: 0 }}>No credentials have been saved.</p>
         )}
-        <div style={{ display: "grid", gap: 10, gridTemplateColumns: "1fr 1fr 140px" }}>
-          <input style={input} value={credLabel} onChange={(e) => setCredLabel(e.target.value)} placeholder="Name (e.g. API token)" />
-          <input style={input} type="password" value={credSecret} onChange={(e) => setCredSecret(e.target.value)} placeholder="Value (hidden)" />
-          <select value={credScheme} onChange={(e) => setCredScheme(e.target.value)} style={input}><option value="bearer">Bearer token</option><option value="api_key">API key</option><option value="basic">Basic</option></select>
-        </div>
-        <div style={{ marginTop: 10 }}><button style={btn} disabled={busy === "cred" || !credLabel || !credSecret} onClick={addCred}>Save credential</button></div>
+        {canEdit && (
+          <>
+            <div style={{ display: "grid", gap: 10, gridTemplateColumns: "1fr 1fr 140px" }}>
+              <input style={input} value={credLabel} onChange={(e) => setCredLabel(e.target.value)} placeholder="Name (e.g. API token)" />
+              <input style={input} type="password" value={credSecret} onChange={(e) => setCredSecret(e.target.value)} placeholder="Value (hidden)" />
+              <select value={credScheme} onChange={(e) => setCredScheme(e.target.value)} style={input}><option value="bearer">Bearer token</option><option value="api_key">API key</option><option value="basic">Basic</option></select>
+            </div>
+            <div style={{ marginTop: 10 }}><button style={btn} disabled={busy === "cred" || !credLabel || !credSecret} onClick={addCred}>Save credential</button></div>
+          </>
+        )}
       </section>
 
       {/* 3. Flows */}
       <section style={card}>
         <h2 style={h2}>Flows</h2>
         <p style={{ color: "var(--fg-3)", fontSize: 13, marginTop: 0 }}>Each flow is a short sequence of checks against your API.</p>
-        {flows.length > 0 && (
+        {flows.length > 0 ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
             {flows.map((f) => (
               <div key={f.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", border: "1px solid var(--line-1)", borderRadius: 8 }}>
-                <input type="checkbox" checked={selected.includes(f.id)} onChange={(e) => setSelected((s) => e.target.checked ? [...s, f.id] : s.filter((x) => x !== f.id))} />
+                {canLaunch && <input type="checkbox" checked={selected.includes(f.id)} onChange={(e) => setSelected((s) => e.target.checked ? [...s, f.id] : s.filter((x) => x !== f.id))} />}
                 <span style={{ fontSize: 13.5, flex: 1 }}><strong>{f.name}</strong> <span style={{ color: "var(--fg-4)" }}>· {f.priority} · {f.steps.length} steps</span></span>
-                <button style={{ ...btn, padding: "4px 10px", fontSize: 12 }} onClick={() => deleteFlow(f.id)}>Delete</button>
+                {canEdit && <button style={{ ...btn, padding: "4px 10px", fontSize: 12 }} onClick={() => deleteFlow(f.id)}>Delete</button>}
               </div>
             ))}
           </div>
+        ) : !canEdit && (
+          <p style={{ color: "var(--fg-4)", fontSize: 13, marginBottom: 0 }}>No flows have been defined.</p>
         )}
-        <FlowBuilder creds={creds} actions={ACTIONS} onSave={addFlow} busy={busy === "flow"} />
+        {canEdit && <FlowBuilder creds={creds} actions={ACTIONS} onSave={addFlow} busy={busy === "flow"} />}
       </section>
 
       {/* 4. Preview + launch */}
       <section style={card}>
         <h2 style={h2}>Launch</h2>
-        {preview ? (
+        {!canLaunch ? (
+          <p style={{ color: "var(--fg-4)", fontSize: 13 }}>You have view-only access. Ask an editor or the owner to run verification.</p>
+        ) : preview ? (
           <div>
             <div style={{ fontSize: 13.5, color: "var(--fg-2)", marginBottom: 8 }}>
               <div>Target: {target?.label ?? "—"} · {target?.environment ?? "—"}{build?.version ? ` · ${build.version}` : ""}</div>

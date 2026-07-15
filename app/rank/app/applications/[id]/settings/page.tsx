@@ -128,11 +128,26 @@ export default async function AppSettingsPage({ params }: { params: Promise<{ id
 
       <AppTabs appId={id} active="settings" />
 
-      {/* ── Edit application (owner-editable core settings) ─────────────────────────────────────────── */}
-      <EditApplicationForm
-        appId={id}
-        initial={{ name: app.name, appUrl: app.app_url, environment: extras.environment ?? "", description: currentDescription }}
-      />
+      {/* ── Edit application (EDITOR+); read-only members see the same fields as a facts card ─────────── */}
+      {caps.canEditSettings ? (
+        <EditApplicationForm
+          appId={id}
+          initial={{ name: app.name, appUrl: app.app_url, environment: extras.environment ?? "", description: currentDescription }}
+        />
+      ) : (
+        <div className="card" style={{ padding: "clamp(18px, 2.4vw, 24px)" }}>
+          <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16.5, color: "var(--fg-1)", margin: 0 }}>Application settings</h2>
+          <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.55, margin: "8px 0 0", maxWidth: 640 }}>
+            View-only. Ask an editor or the owner to change these settings.
+          </p>
+          <div style={{ display: "grid", gap: 11, marginTop: 16 }}>
+            <KV k="Name" v={app.name} />
+            <KV k="Deployment target URL" v={app.app_url} />
+            <KV k="Environment" v={envLabel} />
+            <KV k="Description" v={currentDescription || null} />
+          </div>
+        </div>
+      )}
 
       {/* ── Application details (read-only facts the form does not own) ──────────────────────────────── */}
       <div className="card" style={{ padding: "clamp(18px, 2.4vw, 24px)", marginTop: 18 }}>
@@ -233,8 +248,8 @@ export default async function AppSettingsPage({ params }: { params: Promise<{ id
         )}
       </section>
 
-      {/* ── Deletion (owner-scoped, typed-confirmation, wired to the DELETE route) ────────────────────── */}
-      <DeleteApplication appId={id} appName={app.name} />
+      {/* ── Deletion (ADMIN+ only; its own card at the bottom, so hidden entirely for non-admins) ──────── */}
+      {caps.canDeleteApplication ? <DeleteApplication appId={id} appName={app.name} /> : null}
     </div>
   );
 }

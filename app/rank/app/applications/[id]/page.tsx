@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requirePreflightAppAccess } from "@/lib/v-preflight-guard";
+import { capabilities } from "@/lib/preflight/role-capabilities";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "../setup-required";
 import {
@@ -119,6 +120,9 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
   const access = await requirePreflightAppAccess(id, "/applications/" + id);
   if (!(await preflightDbReady())) return <SetupRequired />;
 
+  // Affordance capabilities for this member (UX only; the server routes independently enforce the same
+  // policy). Read-only members (viewer + client_viewer) see the READ content but no launch/author controls.
+  const caps = capabilities(access?.role);
   const owner = access?.owner ?? "";
   const app = access ? await getApplication(owner, id) : null;
   if (!access || !app) {
@@ -265,7 +269,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
       {/* ── COMMAND CENTER: the primary operating strip — verdict + the ONE dominant next action + the
           true-facts ribbon. The detailed sections below support it; they never repeat the verdict. ── */}
       <div style={{ marginTop: 8, marginBottom: 22 }}>
-        <CommandCenter appId={id} verdict={verdict} subline={subParts.length > 0 ? `${subParts.join(". ")}.` : null} tone={hero} action={cmdAction} ribbon={cmdRibbon} launchFlowIds={cmdLaunchFlowIds} />
+        <CommandCenter appId={id} verdict={verdict} subline={subParts.length > 0 ? `${subParts.join(". ")}.` : null} tone={hero} action={cmdAction} ribbon={cmdRibbon} launchFlowIds={cmdLaunchFlowIds} canLaunch={caps.canLaunch} canEditContract={caps.canEditContract} />
       </div>
 
       {/* ── INDEPENDENT PLATFORM STATUS (API beta): web and API are shown as SEPARATE truths, never one
@@ -308,13 +312,17 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
               ))}
             </ul>
           ) : null}
-          <div style={{ marginTop: 12 }}>
-            {eligibleFlowIds.length > 0
-              ? <LaunchPassButton appId={id} flowIds={eligibleFlowIds} label="Run Production Pass" />
-              : <Link href={`/applications/${id}/contract`} className="btn">
-                  {reqCount === 0 ? "Author your Production Contract" : contractApproved ? "Add flows to your contract" : "Review Production Contract"}
-                </Link>}
-          </div>
+          {/* Action is EDITOR+ (launch, or an author/review CTA into the contract editor). A read-only
+              member keeps the informational banner above but sees no action here. */}
+          {caps.canLaunch ? (
+            <div style={{ marginTop: 12 }}>
+              {eligibleFlowIds.length > 0
+                ? <LaunchPassButton appId={id} flowIds={eligibleFlowIds} label="Run Production Pass" />
+                : <Link href={`/applications/${id}/contract`} className="btn">
+                    {reqCount === 0 ? "Author your Production Contract" : contractApproved ? "Add flows to your contract" : "Review Production Contract"}
+                  </Link>}
+            </div>
+          ) : null}
         </section>
       ) : null}
 
@@ -348,7 +356,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
 
       {/* Cost + readiness for the NEXT pass (HF1/HF2): the gate-parity price and sign-in readiness, shown
           where a pass can be launched. Hidden while a run is active (it is about the next launch). */}
-      {contractApproved && !latestActive && (decision === "repair_verified" ? criticalEligibleIds.length > 0 : eligibleFlowIds.length > 0) ? (
+      {caps.canLaunch && contractApproved && !latestActive && (decision === "repair_verified" ? criticalEligibleIds.length > 0 : eligibleFlowIds.length > 0) ? (
         <div style={{ maxWidth: 420 }}>
           <PassPreview appId={id} flowIds={decision === "repair_verified" ? criticalEligibleIds : eligibleFlowIds} />
         </div>
