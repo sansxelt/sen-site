@@ -7,7 +7,7 @@ export const metadata = {
   ...ogMeta({
     title: "Production validation for AI-built systems",
     description:
-      "Vraelis validates how AI-built systems behave before production. It turns production requirements into executable checks, runs them against exact builds and environments, and captures the evidence teams need to ship with confidence. Web and API verification are live.",
+      "Vraelis validates how AI-built systems behave before production. It turns production requirements into executable checks, runs them against exact builds and environments, and captures the evidence teams need before they ship. Web and API verification are live.",
     path: "/",
   }),
   title: { absolute: "Vraelis" },
@@ -68,12 +68,12 @@ const VALIDATES: { t: string; d: string; i: string; soon?: boolean }[] = [
 
 // ── The core loop: how it works ──
 const STEPS: { k: string; t: string; d: string; i: string }[] = [
-  { k: "01", t: "Define what must work", d: "Capture the production requirements the system has to keep — the promises that matter before it ships.", i: ICONS.contract },
-  { k: "02", t: "Bind the exact build & environment", d: "Every check is tied to a specific build, deployment, environment, role, and configuration — the exact thing under verification.", i: ICONS.build },
+  { k: "01", t: "Define what must work", d: "Capture the production requirements the system has to keep: the promises that matter before it ships.", i: ICONS.contract },
+  { k: "02", t: "Bind the exact build & environment", d: "Every check is tied to a specific build, deployment, environment, role, and configuration: the exact thing under verification.", i: ICONS.build },
   { k: "03", t: "Execute approved verification flows", d: "Vraelis runs the approved flows against the real system in controlled execution, capturing what actually happens.", i: ICONS.execute },
   { k: "04", t: "Capture observed evidence", d: "Factual evidence at every step: what was expected, what was observed, and the record that proves it.", i: ICONS.eye },
-  { k: "05", t: "Receive a production decision", d: "One truthful decision you can act on — READY, BLOCKED, NEEDS REVIEW, or REPAIR VERIFIED — with the evidence behind it.", i: ICONS.shield },
-  { k: "06", t: "Preserve history across releases", d: "Every result is remembered, so you can see how behavior held — or changed — across future builds and deployments.", i: ICONS.history },
+  { k: "05", t: "Receive a production decision", d: "One truthful decision you can act on (READY, BLOCKED, NEEDS REVIEW, or REPAIR VERIFIED), with the evidence behind it.", i: ICONS.shield },
+  { k: "06", t: "Preserve history across releases", d: "Every result is remembered, so you can see how behavior held, or changed, across future builds and deployments.", i: ICONS.history },
 ];
 
 // ── Evidence is bound to exactness ──
@@ -103,7 +103,7 @@ export default function VraelisLanding() {
             Know how your system will behave <span className="em">before it reaches production</span>.
           </h1>
           <p className="rise" data-d="3" style={{ fontSize: "clamp(1.08rem, 1.45vw, 1.3rem)", color: "var(--fg-2)", maxWidth: 740, margin: "0 auto 26px", lineHeight: 1.55 }}>
-            Vraelis turns production requirements into executable checks, runs them against exact builds and environments, and captures the evidence teams need to ship with confidence.
+            Vraelis turns production requirements into executable checks, runs them against exact builds and environments, and captures the evidence teams need before they ship.
           </p>
           <div className="rise" data-d="4" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Validate a system <span aria-hidden>→</span></Link>
@@ -127,7 +127,7 @@ export default function VraelisLanding() {
           <div className="sec-head">
             <p className="eyebrow">What Vraelis validates</p>
             <h2 className="display">The behavior that <span className="em">has to hold</span> in production.</h2>
-            <p>Vraelis works from explicit requirements, not generic AI opinions. It verifies how a system actually behaves — across identity, access, data, integrations, and the workflows that matter — and ties every result to the exact build it ran against.</p>
+            <p>Vraelis works from explicit requirements, not generic AI opinions. It verifies how a system actually behaves, across identity, access, data, integrations, and the workflows that matter, and ties every result to the exact build it ran against.</p>
           </div>
           <div className="tile-grid cols-3">
             {VALIDATES.map((f) => (
@@ -146,8 +146,8 @@ export default function VraelisLanding() {
         <div className="wrap">
           <div className="sec-head">
             <p className="eyebrow">How it works</p>
-            <h2 className="display">Requirements to a <span className="em">production decision</span> — with evidence.</h2>
-            <p>You define what must work and approve what runs. Vraelis executes it against the exact build, captures what actually happened, and returns one truthful decision — then remembers it across every release that follows.</p>
+            <h2 className="display">Requirements to a <span className="em">production decision</span>, with evidence.</h2>
+            <p>You define what must work and approve what runs. Vraelis executes it against the exact build, captures what actually happened, and returns one truthful decision, then remembers it across every release that follows.</p>
           </div>
           <div className="tile-grid cols-2">
             {STEPS.map((s) => (
@@ -172,7 +172,7 @@ export default function VraelisLanding() {
           <div className="sec-head">
             <p className="eyebrow">Execution & evidence</p>
             <h2 className="display">Proof tied to the <span className="em">exact thing</span> you shipped.</h2>
-            <p>A green screen is not proof. Vraelis produces factual evidence bound to the precise build, environment, role, and configuration it ran against — so a decision means something you can defend, not an opinion dressed up as one.</p>
+            <p>A green screen is not proof. Vraelis produces factual evidence bound to the precise build, environment, role, and configuration it ran against, so a decision means something you can defend, not an opinion dressed up as one.</p>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "clamp(18px, 3vw, 36px)" }} className="cols-2">
             <div className="card" style={{ background: "var(--bg-2)" }}>
@@ -190,7 +190,7 @@ export default function VraelisLanding() {
             <div>
               <p className="eyebrow">One example</p>
               <h3 className="display" style={{ fontSize: "clamp(1.5rem, 2.6vw, 2.1rem)", marginBottom: 14 }}>Does the data <span className="em">persist</span>, and stay <span className="em">private</span>?</h3>
-              <p className="lead-copy" style={{ marginBottom: 16 }}>Whether apparent success survives a refresh and a new session, and whether one user can reach another&apos;s data, is one thing Vraelis checks with real execution — not a claim taken on faith. It is one behavior among many, captured as factual evidence.</p>
+              <p className="lead-copy" style={{ marginBottom: 16 }}>Whether apparent success survives a refresh and a new session, and whether one user can reach another&apos;s data, is one thing Vraelis checks with real execution, not a claim taken on faith. It is one behavior among many, captured as factual evidence.</p>
             </div>
             <TwoUserDemo />
           </div>
@@ -210,7 +210,7 @@ export default function VraelisLanding() {
               { s: "ready" as StatusKey, d: "The complete approved production contract passed." },
               { s: "blocked" as StatusKey, d: "Critical required behavior genuinely failed." },
               { s: "review" as StatusKey, d: "The result could not be determined reliably." },
-              { s: "repair" as StatusKey, d: "A known issue passed against a later build — without claiming full coverage." },
+              { s: "repair" as StatusKey, d: "A known issue passed against a later build, without claiming full coverage." },
             ]).map((c) => (
               <div key={c.s} className="acard" style={{ gap: 10, borderColor: STATUS[c.s].line, flexDirection: "row", alignItems: "flex-start" }}>
                 <StatusPill s={c.s} />
@@ -234,7 +234,7 @@ export default function VraelisLanding() {
               <p className="lead-copy" style={{ marginBottom: 20 }}>Production behavior is not a single moment. Vraelis remembers what was required, which exact version was tested, what failed, when an issue first appeared, whether it recurred, whether a later build fixed it, and which runtimes remain unverified.</p>
               <div className="card card--acc" style={{ padding: 14 }}>
                 <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 6 }}>Continuity across builds</div>
-                <p style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.55, margin: 0 }}>An issue keeps its lineage across releases — so a repaired build proves the exact issue closed, and a regression is caught the moment it returns.</p>
+                <p style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.55, margin: 0 }}>An issue keeps its lineage across releases, so a repaired build proves the exact issue closed, and a regression is caught the moment it returns.</p>
               </div>
             </div>
             <div className="win" style={{ boxShadow: "var(--shadow-lg)" }}>
@@ -264,7 +264,7 @@ export default function VraelisLanding() {
           <div className="sec-head">
             <p className="eyebrow">Runtime coverage</p>
             <h2 className="display">Validate every part of your <span className="em">AI system</span>.</h2>
-            <p style={{ fontSize: "clamp(1.05rem, 1.5vw, 1.2rem)", color: "var(--fg-2)", marginBottom: 10 }}>One platform, expanding across every runtime.</p>
+            <p style={{ fontSize: "clamp(1.05rem, 1.5vw, 1.2rem)", color: "var(--fg-2)", marginBottom: 10 }}>Web and APIs today, on an architecture built to reach further.</p>
             <p>Vraelis validates web applications and APIs today. Its shared verification architecture is designed to extend across mobile, desktop, SDK-instrumented systems, simulators, robotics, and connected devices.</p>
           </div>
           <div className="tile-grid cols-3" style={{ maxWidth: 960, margin: "0 auto" }}>
@@ -292,7 +292,7 @@ export default function VraelisLanding() {
             <div>
               <p className="eyebrow">Connected & physical systems</p>
               <h2 className="display" style={{ fontSize: "clamp(1.85rem, 3.3vw, 2.7rem)", marginBottom: 16 }}>Physical AI is <span className="em">more than a model</span>.</h2>
-              <p className="lead-copy" style={{ marginBottom: 18 }}>It includes cloud services, APIs, SDKs, firmware, configurations, devices, telemetry, and real-world outcomes. Vraelis is being designed to bind those components to defined production requirements and execution evidence — so behavior can be verified where a browser or a single HTTP request cannot reach.</p>
+              <p className="lead-copy" style={{ marginBottom: 18 }}>It includes cloud services, APIs, SDKs, firmware, configurations, devices, telemetry, and real-world outcomes. Vraelis is being designed to bind those components to defined production requirements and execution evidence, so behavior can be verified where a browser or a single HTTP request cannot reach.</p>
               <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.55 }}>Vraelis verifies defined behavior and production requirements with evidence. It does not certify safety or guarantee a system is harmless.</p>
             </div>
             <div className="card" style={{ background: "var(--bg-2)" }}>

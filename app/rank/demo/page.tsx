@@ -181,7 +181,7 @@ export default function Demo() {
           <div className="sec-head">
             <p className="eyebrow">Steps 06 and 07</p>
             <h2 className="display">A fix prompt, then a <span className="em">verified rerun</span>.</h2>
-            <p>You don&apos;t get a lecture, you get a prompt. Every blocker ships with a fix prompt written for the tool that built the app. Paste it into your builder, push the fix, and Vraelis reruns the exact checks that failed.</p>
+            <p>Every blocker ships with a fix prompt written for the tool that built the app, not just a description of what broke. Paste it into your builder, push the fix, and Vraelis reruns the exact checks that failed.</p>
           </div>
 
           <div className="tile-grid cols-2">

@@ -4,7 +4,7 @@ import { H, P, Ul, LegalShell } from "../_components/legal-ui";
 
 export const metadata = ogMeta({
   title: "Terms",
-  description: "The terms for using Vraelis: what it provides, credits and payments, how to read AI-check results, refunds, warranties, liability, and governing law.",
+  description: "The terms for using Vraelis: what it provides, credits and payments, how to read a Production Pass result, refunds, warranties, liability, and governing law.",
   path: "/terms",
 });
 
@@ -34,7 +34,7 @@ export default function TermsPage() {
       <P>Your account balance funds Production Passes, which are charged when they execute. New accounts start with a free promotional pass allowance, which has no cash value. Payments are processed by Stripe. If a pass cannot start, or no flow executes, the hold is returned to your account automatically.</P>
       <P>Subscriptions renew automatically until cancelled, and you can cancel anytime from the app; access continues until the end of the current billing period. Prices, packs, plans, and limits may change over time. Our <Link href="/refunds" style={acc}>Refund and Cancellation policy</Link> explains what is and is not refundable.</P>
 
-      <H>How to read a check</H>
+      <H>How to read a Production Pass result</H>
       <P><strong style={strong}>A Vraelis result is evidence from a verification run. It is informational and directional, not a guarantee, a certification, or professional, legal, or financial advice.</strong> A production decision reflects how your exact build behaved against the requirements you defined, under the scenarios that were run; it does not certify that a system is bug-free, safe, or universally production-ready. You are solely responsible for the decisions you make and for anything you choose to ship. Do not rely on a Vraelis result as the sole basis for a decision, and do not present it as a guarantee of quality, safety, performance, or any business outcome.</P>
 
       <H>API keys, webhooks, and exports</H>

@@ -235,7 +235,7 @@ export function ApiWorkspace({ appId, initial, canEdit, canLaunch }: { appId: st
           <div style={{ fontSize: 20, ...verdictTone(run.verdict), marginBottom: 12 }}>{run.verdict}</div>
           {run.flows.map((f, fi) => (
             <div key={fi} style={{ borderTop: "1px solid var(--line-1)", paddingTop: 10, marginTop: 10 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 600, color: f.state === "passed" ? "var(--ok)" : f.state === "failed" ? "var(--err)" : "var(--fg-3)" }}>{f.name} — {f.state}</div>
+              <div style={{ fontSize: 13.5, fontWeight: 600, color: f.state === "passed" ? "var(--ok)" : f.state === "failed" ? "var(--err)" : "var(--fg-3)" }}>{f.name}: {f.state}</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 6 }}>
                 {f.steps.map((s, si) => (
                   <div key={si} style={{ fontSize: 12.5, color: "var(--fg-3)", display: "flex", gap: 8, alignItems: "baseline" }}>

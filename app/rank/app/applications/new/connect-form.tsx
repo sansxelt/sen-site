@@ -264,7 +264,7 @@ export default function ConnectWorkspace() {
     }
     if (failed.length) {
       setAccounts(failed.map((f) => f.account));
-      setErr(`Application connected, but ${failed.length} test account${failed.length === 1 ? " was" : "s were"} NOT stored (${failed.map((f) => `"${f.account.label}": ${f.why}`).join("; ")}). They are still here — fix the cause and press Retry, or continue without them.`);
+      setErr(`Application connected, but ${failed.length} test account${failed.length === 1 ? " was" : "s were"} NOT stored (${failed.map((f) => `"${f.account.label}": ${f.why}`).join("; ")}). They are still here. Fix the cause and press Retry, or continue without them.`);
       setBusy(false);
       return;
     }

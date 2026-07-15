@@ -96,10 +96,9 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
   );
 }
 
-function Footer({ humanEval }: { humanEval: boolean }) {
+function Footer() {
   const col = { display: "flex", flexDirection: "column", gap: 10 } as const;
   const productLinks: [string, string][] = [["/how-it-works", "How it works"], ["/pricing", "Pricing"], ["/enterprise", "Enterprise"], ["/signin?callbackUrl=%2Fapp", "Get early access"]];
-  if (humanEval) productLinks.push(["/vote", "Evaluate & Earn"]);
   const a = { color: "var(--fg-3)", textDecoration: "none", fontSize: 13.5 } as const;
   const head = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 4 } as const;
   const Col = ({ title, links }: { title: string; links: [string, string][] }) => (
@@ -132,7 +131,7 @@ function Footer({ humanEval }: { humanEval: boolean }) {
           </div>
         </div>
         <Col title="Product" links={productLinks} />
-        <Col title="Developers" links={[["/developers", "Developers"], ["/api", "API keys"], ["/api", "Webhooks"], ["/developers", "Data exports"]]} />
+        <Col title="Developers" links={[["/developers", "Developer overview"], ["/developers#ci-gate", "CI gate"], ["/signin?callbackUrl=%2Fapi", "API & webhooks"]]} />
         <Col title="Account" links={[["/app", "Dashboard"], ["/account", "Account"], ["/billing", "Billing"], ["/signin", "Sign in"]]} />
         <Col title="Legal" links={[["/enterprise", "Enterprise & security"], ["/privacy", "Privacy"], ["/terms", "Terms"], ["/refunds", "Refunds"], ["/data-rights", "Data rights"], ["/subprocessors", "Subprocessors"], ["/trademark", "Trademark"], ["/contact", "Contact"]]} />
       </div>
@@ -232,7 +231,7 @@ function AppTopbar({ email }: { email: string | null }) {
                 24x24 path, which is why it looked off-center before). */}
             <Link
               href="/credits"
-              title={`${balanceLabel} credits — buy more`}
+              title={`${balanceLabel} credits, buy more`}
               aria-label={`Credit balance: ${balanceLabel} credits`}
               style={{ display: "inline-flex", alignItems: "center", gap: 7, height: 34, padding: "0 14px", borderRadius: 99, border: "1px solid var(--line-2)", background: "var(--bg-1)", boxShadow: "var(--shadow-sm)", textDecoration: "none", color: "var(--fg-1)", fontSize: 12.5, fontWeight: 600, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", flex: "none" }}
             >
@@ -379,7 +378,7 @@ export function RankShell({ signedIn = false, email = null, humanEval = false, a
       <style dangerouslySetInnerHTML={{ __html: SHELL_UI_CSS }} />
       <div style={{ position: "sticky", top: 0, zIndex: 50 }}><PublicNav signedIn={signedIn} /></div>
       {children}
-      <Footer humanEval={humanEval} />
+      <Footer />
     </div>
   );
 }

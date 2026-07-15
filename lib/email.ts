@@ -304,7 +304,7 @@ export function supportHtml(opts: {
   // every field is escaped before interpolation. Without this, HTML in
   // subject/message would render as markup inside ops' mail client.
   const safeSubject = escapeHtml(opts.subject);
-  const safeName    = escapeHtml(opts.name || "—");
+  const safeName    = escapeHtml(opts.name || "(no name)");
   const safeEmail   = escapeHtml(opts.email);
   const safeMessage = escapeHtml(opts.message);
   const safeChannel = opts.channel ? escapeHtml(opts.channel) : "";
@@ -985,7 +985,7 @@ export function inviteHtml(opts: Omit<InviteEmail, "to">) {
   const roleLabel = INVITE_ROLE_LABEL[opts.role] ?? escapeHtml(opts.role);
   const clientSafe = opts.role === "client_viewer";
   const access = clientSafe
-    ? "You'll have client-safe access to this team's shared reports — read-only, with no access to private workspace controls."
+    ? "You'll have client-safe access to this team's shared reports: read-only, with no access to private workspace controls."
     : isProject
       ? `You'll have ${roleLabel} access to this team's applications and reports.`
       : `You'll join this workspace as ${roleLabel}.`;
@@ -996,7 +996,7 @@ export function inviteHtml(opts: Omit<InviteEmail, "to">) {
     <p style="${BODY_STYLE}">Vraelis verifies AI-built applications before launch: real-browser runs against your exact build, the evidence, and a launch decision.</p>
     <a href="${opts.acceptUrl}" class="vrl-btn" style="${BTN_STYLE}">${isProject ? "View project" : "Accept invite"}</a>
     <div style="${HR_STYLE}"></div>
-    <p style="${META_STYLE}">Sign in with <strong style="color:#0a0a0a;">this email address</strong> to access the ${isProject ? "project" : "workspace"} — your invite activates automatically.</p>
+    <p style="${META_STYLE}">Sign in with <strong style="color:#0a0a0a;">this email address</strong> to access the ${isProject ? "project" : "workspace"}. Your invite activates automatically.</p>
     <div style="${NOTE_STYLE}">If you were not expecting this invite, you can ignore this email.</div>
   `);
 }

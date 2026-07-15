@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { ogMeta } from "@/lib/og-meta";
-import { PLAN_CATALOG } from "@/lib/v-plans";
+import { PLAN_CATALOG_V1 } from "@/lib/preflight/pass-pricing";
+import { usdFromCents } from "@/lib/preflight/pass-pricing-format";
+
+const PLAN_BLURBS: Record<string, string> = {
+  builder_v1: "For one product moving steadily toward launch.",
+  pro_v1: "For teams launching continuously across applications.",
+  scale_v1: "For agencies and platforms verifying at volume.",
+};
 
 // Enterprise and security hub. Governs preflight runs across an organization: roles and workspaces, verified
 // domains, OIDC single sign-on, audit-ready run records, and sanitized exports. Honest about what is live:
@@ -143,15 +150,15 @@ export default function EnterprisePage() {
         <div className="sec-head" style={{ marginBottom: 24 }}>
           <p className="eyebrow">Plans</p>
           <h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)" }}>Recurring plans for standing access.</h2>
-          <p>The front door is a free run. These recurring plans are for teams that want monthly credits and standing API access. Some tiers are still rolling out, so talk to us and we will set you up.</p>
+          <p>The front door is a free run. These recurring plans are for teams that verify continuously, priced by the run in Production Passes. Some tiers are still rolling out, so talk to us and we will set you up.</p>
         </div>
-        <div className="tile-grid cols-4">
-          {PLAN_CATALOG.map((p) => (
-            <div key={p.plan} className="price">
+        <div className="tile-grid cols-3">
+          {PLAN_CATALOG_V1.map((p) => (
+            <div key={p.key} className="price">
               <div className="price__name">{p.name}</div>
-              <div className="price__amt">${p.price.monthly}<small>/mo</small></div>
-              <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, marginTop: 6 }}>{p.monthlyCredits.toLocaleString()} credits / mo</div>
-              <div style={{ fontSize: 13, color: "var(--fg-3)" }}>{p.blurb}</div>
+              <div className="price__amt">{usdFromCents(p.monthlyCents)}<small>/mo</small></div>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, marginTop: 6 }}>{p.passesPerMonth} Production Passes / mo</div>
+              <div style={{ fontSize: 13, color: "var(--fg-3)" }}>{PLAN_BLURBS[p.key]}</div>
               <Link className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href="/contact">Talk to us</Link>
             </div>
           ))}

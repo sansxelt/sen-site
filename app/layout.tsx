@@ -85,7 +85,7 @@ const vraelisMetadata: Metadata = {
     template: "%s | Vraelis",
   },
   description:
-    "Vraelis validates how AI-built systems behave before production. It turns production requirements into executable checks, runs them against exact builds and environments, and captures the evidence teams need to ship with confidence. Web and API verification are live.",
+    "Vraelis validates how AI-built systems behave before production. It turns production requirements into executable checks, runs them against exact builds and environments, and captures the evidence teams need before they ship. Web and API verification are live.",
   alternates: { canonical: "https://vraelis.com" },
   icons: { icon: "/vraelis/mark.jpg" },
   openGraph: {
@@ -93,7 +93,7 @@ const vraelisMetadata: Metadata = {
     url: "https://vraelis.com",
     siteName: "Vraelis",
     title: "Production validation for AI-built systems",
-    description: "Know how your system will behave before it reaches production. Vraelis turns production requirements into executable checks, runs them against exact builds and environments, and captures the evidence to ship with confidence.",
+    description: "Know how your system will behave before it reaches production. Vraelis turns production requirements into executable checks, runs them against exact builds and environments, and captures the evidence to make the call before you ship.",
     images: [{ url: "/og?v=2", width: 1200, height: 630, alt: "Vraelis" }],
   },
   twitter: {
@@ -145,7 +145,7 @@ export default async function RootLayout({
           {/* ?v bust: bump on every CSS change so browsers don't serve a
               stale cached stylesheet (the static file URL is otherwise fixed). */}
           <link rel="stylesheet" href="/vraelis/tokens.css?v=20" />
-          <link rel="stylesheet" href="/vraelis/styles.css?v=38" />
+          <link rel="stylesheet" href="/vraelis/styles.css?v=39" />
           {children}
         </body>
       </html>

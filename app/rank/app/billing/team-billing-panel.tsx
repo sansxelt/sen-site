@@ -72,7 +72,7 @@ export function TeamBillingPanel({ workspaceName, billing, canManage = true }: {
                 <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "10px 13px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", flexWrap: "wrap" }}>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 13, color: "var(--fg-1)", fontWeight: 500 }}>{dateLabel(inv.date)} | {money(inv.status === "paid" ? inv.amountPaid : inv.amountDue, inv.currency)}</div>
-                    <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 1 }}>{INV_STATUS[inv.status] ?? inv.status}{inv.periodStart && inv.periodEnd ? ` | ${dateLabel(inv.periodStart)}–${dateLabel(inv.periodEnd)}` : ""}</div>
+                    <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 1 }}>{INV_STATUS[inv.status] ?? inv.status}{inv.periodStart && inv.periodEnd ? ` | ${dateLabel(inv.periodStart)} to ${dateLabel(inv.periodEnd)}` : ""}</div>
                   </div>
                   {inv.hostedUrl ? <button onClick={() => openInvoice(inv)} className="btn btn--ghost" style={{ padding: "5px 11px", fontSize: 12 }}>View invoice</button> : null}
                 </div>

@@ -56,7 +56,7 @@ const MODES: Mode[] = [
       pill: "READY",
       title: "The system behaves as required",
       count: "3 of 3 requirements held",
-      line: "The complete approved contract passed. On a real run this decision carries the evidence behind it — tied to the exact build.",
+      line: "The complete approved contract passed. On a real run this decision carries the evidence behind it, tied to the exact build.",
     },
   },
   {
@@ -88,7 +88,7 @@ const MODES: Mode[] = [
       pill: "REPAIR VERIFIED",
       title: "A known issue closed on this build",
       count: "Targeted rerun",
-      line: "A known issue was rerun against a later build and now passes — without claiming full coverage. The issue keeps its lineage across releases.",
+      line: "A known issue was rerun against a later build and now passes, without claiming full coverage. The issue keeps its lineage across releases.",
     },
   },
 ];
@@ -246,7 +246,7 @@ export function PassDemo() {
         </div>
 
         <div style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)", marginTop: 14, lineHeight: 1.55 }}>
-          A scripted demonstration of the decision. A real run executes your approved requirements against the exact build and attaches factual evidence — expected versus observed, tied to the runtime it ran on.
+          A scripted demonstration of the decision. A real run executes your approved requirements against the exact build and attaches factual evidence: expected versus observed, tied to the runtime it ran on.
         </div>
       </div>
     </div>

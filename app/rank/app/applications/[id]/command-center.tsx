@@ -59,7 +59,7 @@ export function CommandCenter({
           <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.09em", textTransform: "uppercase", color: tone.fg, opacity: 0.7 }}>Next</div>
           {showReadOnlyNote ? (
             <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.5, margin: "2px 0 0" }}>
-              View-only access — ask an editor to {isLaunch ? "run a pass" : "update the contract"}.
+              View-only access. Ask an editor to {isLaunch ? "run a pass" : "update the contract"}.
             </p>
           ) : (
             <>
