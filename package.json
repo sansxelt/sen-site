@@ -58,7 +58,8 @@
     "free:grant:test": "tsx scripts/preflight-free-grant-dedup-verify.ts",
     "dispute:dedupe:test": "tsx scripts/preflight-dispute-dedupe-verify.ts",
     "cost:governor:test": "tsx scripts/preflight-cost-governor-verify.ts",
-    "teams:test": "tsx scripts/preflight-teams-verify.ts"
+    "teams:test": "tsx scripts/preflight-teams-verify.ts",
+    "role:ui:test": "tsx scripts/preflight-role-ui-verify.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
