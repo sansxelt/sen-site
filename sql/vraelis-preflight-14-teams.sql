@@ -29,16 +29,20 @@ create index if not exists v_applications_workspace_idx on public.v_applications
 --    do not already carry a workspace_id, and only when the owner actually has a personal workspace; apps
 --    whose owner has no workspace yet stay NULL and are healed lazily by the app on next visit. Idempotent:
 --    re-running changes nothing once every app is attached.
+-- Correlated scalar subquery form (portable + always valid in an UPDATE, unlike an UPDATE ... FROM LATERAL
+-- that references the target table): for each app with a NULL workspace_id whose owner has at least one
+-- workspace, set workspace_id to that owner's OLDEST workspace. The outer WHERE EXISTS guard means an app
+-- whose owner has NO workspace is left untouched (stays NULL, healed lazily), rather than set to NULL.
 update public.v_applications a
-set workspace_id = ws.id
-from lateral (
+set workspace_id = (
   select w.id
   from public.v_workspaces w
   where w.owner_user_id = a.user_id
   order by w.created_at asc
   limit 1
-) ws
-where a.workspace_id is null;
+)
+where a.workspace_id is null
+  and exists (select 1 from public.v_workspaces w2 where w2.owner_user_id = a.user_id);
 
 -- No other Preflight table gains a column: runs / issues / contracts / flows / connections / deployments are
 -- all reachable via application_id -> v_applications.workspace_id, and billing stays keyed to the owner's
