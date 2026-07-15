@@ -258,37 +258,29 @@ export default function VraelisLanding() {
         </div>
       </section>
 
-      {/* ── Runtime coverage: honest, separated ── */}
+      {/* ── Runtime coverage: one compact current-support panel ── */}
       <section className="section" style={{ background: "var(--bg-2)" }}>
         <div className="wrap">
           <div className="sec-head">
             <p className="eyebrow">Runtime coverage</p>
-            <h2 className="display">One verification architecture, <span className="em">expanding across runtimes</span>.</h2>
-            <p>Vraelis starts with web and APIs and is designed to extend across apps, SDKs, edge systems, and connected devices — the same requirements, execution, and evidence model, applied to more of where software actually runs. We are explicit about what is live and what is direction.</p>
+            <h2 className="display">Built for every runtime where <span className="em">AI systems operate</span>.</h2>
+            <p>Vraelis currently validates web applications, with API verification available in private beta. The same architecture is designed to extend across mobile, desktop, SDK-instrumented systems, simulators, and connected devices.</p>
           </div>
-          <div className="tile-grid cols-3">
-            <div className="card">
-              <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 12 }}>Available</div>
-              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 }}>
-                <li style={{ display: "flex", gap: 10, fontSize: 14, color: "var(--fg-2)", alignItems: "flex-start" }}><span style={{ color: "var(--acc)", marginTop: 1 }}>✓</span>Web — live and proven</li>
-              </ul>
-            </div>
-            <div className="card" style={{ background: "var(--bg-1)" }}>
-              <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "#B45309", marginBottom: 12 }}>Private beta</div>
-              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 }}>
-                <li style={{ display: "flex", gap: 10, fontSize: 14, color: "var(--fg-2)", alignItems: "flex-start" }}><span style={{ color: "#B45309", marginTop: 1 }}>◑</span>APIs — engine live-proven; customer experience in private beta</li>
-              </ul>
-            </div>
-            <div className="card" style={{ background: "var(--bg-1)" }}>
-              <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Platform direction</div>
-              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8 }}>
-                {["Mobile applications", "Desktop applications", "SDK-instrumented systems", "Simulators", "Edge & connected devices", "Physical-AI systems"].map((x) => (
-                  <li key={x} style={{ display: "flex", gap: 10, fontSize: 13.5, color: "var(--fg-3)", alignItems: "flex-start" }}><span style={{ color: "var(--fg-5)", marginTop: 1 }}>○</span>{x}</li>
-                ))}
-              </ul>
+          <div className="card" style={{ maxWidth: 720, margin: "0 auto", padding: "clamp(20px, 2.6vw, 30px)" }}>
+            <div style={{ display: "grid", gap: 4 }}>
+              {[
+                { mark: "✓", markColor: "var(--acc)", label: "Web", status: "Available now", statusColor: "var(--acc-deep)" },
+                { mark: "◐", markColor: "#B45309", label: "APIs", status: "Private beta", statusColor: "#B45309" },
+                { mark: "→", markColor: "var(--fg-4)", label: "Mobile, desktop, SDKs & connected systems", status: "Expanding next", statusColor: "var(--fg-4)" },
+              ].map((r, i, arr) => (
+                <div key={r.label} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 4px", borderBottom: i === arr.length - 1 ? "none" : "1px solid var(--line-1)" }}>
+                  <span aria-hidden style={{ flex: "none", width: 22, textAlign: "center", fontSize: 16, color: r.markColor, fontFamily: "var(--font-code)" }}>{r.mark}</span>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 15, color: "var(--fg-1)", fontWeight: 600 }}>{r.label}</span>
+                  <span className="pill" style={{ flex: "none", fontFamily: "var(--font-code)", fontSize: 11, letterSpacing: "0.04em", color: r.statusColor, background: "var(--bg-2)", borderColor: "var(--line-2)", whiteSpace: "nowrap" }}>{r.status}</span>
+                </div>
+              ))}
             </div>
           </div>
-          <p style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-4)", textAlign: "center", marginTop: 18 }}>Platform-direction runtimes are not yet available to purchase or run. Each unlocks only after it is proven.</p>
         </div>
       </section>
 
