@@ -8,6 +8,8 @@ import {
   validateApiSteps, mapToApiStep, apiFlowRequiresAuth, apiFlowCredentials,
   API_FLOW_ACTIONS, API_ACTION_LABELS, MAX_API_STEPS, type ApiFlowStep, type ResolvedCredential,
 } from "../lib/preflight/runtime/api-steps";
+import { executeApiRun, type ApiRunStore, type SecretResolver, type ApiCustomerFlow } from "../lib/preflight/runtime/api-executor";
+import type { ApiFetch } from "../lib/preflight/runtime/api-adapter";
 import { readFileSync } from "node:fs";
 
 let pass = 0, fail = 0;
@@ -99,8 +101,107 @@ function main() {
   // restore
   if (prevAllow === undefined) delete process.env.VRAELIS_API_RUNTIME_BETA; else process.env.VRAELIS_API_RUNTIME_BETA = prevAllow;
   if (prevEnabled === undefined) delete process.env.VRAELIS_API_RUNTIME_BETA_ENABLED; else process.env.VRAELIS_API_RUNTIME_BETA_ENABLED = prevEnabled;
+}
 
+// ── executor: inline run -> terminal-state persistence, no-leak, refund logic (offline) ──────────────
+async function executorTests() {
+  const SECRET = "sk_live_customertoken12345678";   // a recognized shape, so we can assert it never persists
+  let clockT = 1_752_000_000_000; const clock = () => (clockT += 5);
+
+  // In-memory store recording everything for assertions.
+  function memStore() {
+    let seq = 0; const id = (p: string) => `${p}_${++seq}`;
+    const runs: Record<string, unknown>[] = [], decisions: Record<string, unknown>[] = [], stepRows: Record<string, unknown>[] = [];
+    const issues: { id: string; category: string | null; status: string }[] = [], ledger: Record<string, unknown>[] = [];
+    const store: ApiRunStore = {
+      async insertTerminalRun(r) { const row = { id: id("run"), ...r }; runs.push(row); return row.id; },
+      async insertStepRows(runId, flows) { stepRows.push({ runId, flows }); },
+      async insertDecision(r) { const row = { id: id("dec"), ...r }; decisions.push(row); return row.id; },
+      async openIssues() { return issues.filter((i) => i.status === "open"); },
+      async openIssue(r) { const row = { id: id("iss"), category: r.category, status: "open" }; issues.push(row); return row.id; },
+      async resolveIssue(iid) { const i = issues.find((x) => x.id === iid); if (i) i.status = "resolved"; },
+      async continueIssue() {},
+      async recordUsage(owner, runId) { ledger.push({ runId }); },
+    };
+    return { store, runs, decisions, stepRows, issues, ledger };
+  }
+  const resolver: SecretResolver = (label) => label === "API token" ? { secretRef: "conn_9", scheme: "bearer", value: SECRET } : null;
+
+  // A fixture fetcher: BROKEN mode 404s the read-back; FIXED persists. Echoes the token in a header + body so
+  // the leak scan has something real to catch (the adapter must redact it).
+  function fixture(mode: "broken" | "fixed"): ApiFetch {
+    return async (url, init) => {
+      const u = new URL(url);
+      const path = u.pathname;
+      if (path.endsWith("/login")) return { status: 200, headers: {}, text: JSON.stringify({ token: SECRET }) };
+      if (path.endsWith("/projects") && init.method === "POST") return { status: 201, headers: {}, text: JSON.stringify({ id: "p1", persisted: mode === "fixed" }) };
+      if (/\/projects\/p1/.test(path)) return mode === "broken" ? { status: 404, headers: {}, text: JSON.stringify({ error: "nf" }) } : { status: 200, headers: {}, text: JSON.stringify({ id: "p1", persisted: true }) };
+      return { status: 404, headers: {}, text: "" };
+    };
+  }
+
+  const flow: ApiCustomerFlow = {
+    id: "flow_persist", name: "Projects persist", critical: true,
+    steps: [
+      { action: "sign_in", credentialLabel: "API token" },
+      { action: "add_header", name: "Idempotency-Key", value: "k1" },
+      { action: "call", method: "POST", path: "/projects", body: '{"name":"x"}' },
+      { action: "expect_status", status: 201 },
+      { action: "save_value", field: "$.id", into: "PID" },
+      { action: "confirm_saved", path: "/projects/p1", field: "persisted", value: "true" },
+    ],
+  };
+
+  console.log("\n── executor BROKEN: a real persistence failure -> BLOCKED, terminal-state, issue opened, billed ──");
+  const m1 = memStore();
+  const broken = await executeApiRun({ owner: "c@x.com", appId: "app1", targetId: "tgt1", buildId: "b1", baseUrl: "https://api.customer.test", flows: [flow], fullCoverage: true, creditsHeld: 1500, submissionId: "s1", fetcher: fixture("broken"), resolveSecret: resolver, store: m1.store, clock });
+  ok("decision BLOCKED", broken.decision === "blocked", String(broken.decision));
+  ok("run inserted TERMINAL (completed), never queued", m1.runs[0]?.state === "completed");
+  ok("an issue was opened", broken.issues.opened.length === 1);
+  ok("productive work -> hold KEPT (charged)", broken.chargedFullHold === true);
+  ok("exactly one usage ledger row", m1.ledger.length === 1);
+  ok("leak scan clean (token never in persisted evidence/summary)", broken.leakScan === "clean");
+  ok("the raw secret is NOT in any persisted row",
+    ![...m1.runs, ...m1.decisions, ...m1.stepRows].some((r) => JSON.stringify(r).includes(SECRET)));
+
+  console.log("\n── executor FIXED: full pass -> READY ──");
+  const m2 = memStore();
+  const fixed = await executeApiRun({ owner: "c@x.com", appId: "app1", targetId: "tgt1", buildId: "b1", baseUrl: "https://api.customer.test", flows: [flow], fullCoverage: true, creditsHeld: 1500, submissionId: "s2", fetcher: fixture("fixed"), resolveSecret: resolver, store: m2.store, clock });
+  ok("decision READY", fixed.decision === "ready", String(fixed.decision));
+  ok("no issue opened on a clean pass", fixed.issues.opened.length === 0);
+
+  console.log("\n── executor REPAIR: partial coverage never mints READY ──");
+  const m3 = memStore();
+  const repair = await executeApiRun({ owner: "c@x.com", appId: "app1", targetId: "tgt1", buildId: "b1", baseUrl: "https://api.customer.test", flows: [flow], fullCoverage: false, creditsHeld: 1500, submissionId: "s3", fetcher: fixture("fixed"), resolveSecret: resolver, store: m3.store, clock });
+  ok("decision REPAIR_VERIFIED (partial coverage)", repair.decision === "repair_verified", String(repair.decision));
+
+  console.log("\n── executor MISSING CREDENTIAL: no requests, REFUND, no bill ──");
+  const m4 = memStore();
+  const noCred = await executeApiRun({ owner: "c@x.com", appId: "app1", targetId: "tgt1", buildId: "b1", baseUrl: "https://api.customer.test", flows: [flow], fullCoverage: true, creditsHeld: 1500, submissionId: "s4", fetcher: fixture("fixed"), resolveSecret: () => null, store: m4.store, clock });
+  ok("zero requests made (flow couldn't resolve its credential)", noCred.apiRequests === 0);
+  ok("hold NOT kept -> route must REFUND", noCred.chargedFullHold === false);
+  ok("no usage ledger row", m4.ledger.length === 0);
+  ok("still terminal-state (never queued)", m4.runs[0]?.state === "completed");
+
+  console.log("\n── executor INFRA: unreachable transport -> infra_failure, refund, no bill, no issue ──");
+  const m5 = memStore();
+  const infraFetcher: ApiFetch = async () => { const e = new Error("blocked") as Error & { transportKind?: string }; e.transportKind = "unreachable"; throw e; };
+  const infra = await executeApiRun({ owner: "c@x.com", appId: "app1", targetId: "tgt1", buildId: "b1", baseUrl: "https://192.0.2.1", flows: [flow], fullCoverage: true, creditsHeld: 1500, submissionId: "s5", fetcher: infraFetcher, resolveSecret: resolver, store: m5.store, clock });
+  ok("decision infra_failure", infra.decision === "infra_failure", String(infra.decision));
+  ok("failureClass infra", infra.failureClass === "infra");
+  ok("hold NOT kept (infra costs nothing) -> REFUND", infra.chargedFullHold === false);
+  ok("no usage, no issue", m5.ledger.length === 0 && infra.issues.opened.length === 0);
+  ok("run state failed (not a product BLOCKED)", m5.runs[0]?.state === "failed" && infra.decision !== "blocked");
+
+  console.log("\n── executor source containment: imports engine primitives, NOT canary ──");
+  const src = readFileSync("lib/preflight/runtime/api-executor.ts", "utf8");
+  ok("api-executor imports api-adapter + decide, NOT canary", /from "\.\/api-adapter"/.test(src) && /from "\.\/decide"/.test(src) && !/from "\.\/canary"/.test(src));
+}
+
+async function run() {
+  main();
+  await executorTests();
   console.log(`\n${pass}/${pass + fail} passed`);
   if (fail > 0) process.exit(1);
 }
-main();
+run();
