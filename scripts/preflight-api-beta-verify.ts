@@ -24,18 +24,29 @@ const FORBIDDEN = ["http_request", "http_auth", "assert_status", "assert_json", 
   "canary", "fixture", "blocked_by_policy", "transportReason", "CANARY_PASSWORD", "api-canary", "indeterminate"];
 
 function main() {
-  console.log("── the account gate (fail-closed, default OFF) ──");
-  const prevAllow = process.env.VRAELIS_API_RUNTIME_BETA, prevEnabled = process.env.VRAELIS_API_RUNTIME_BETA_ENABLED;
-  delete process.env.VRAELIS_API_RUNTIME_BETA; delete process.env.VRAELIS_API_RUNTIME_BETA_ENABLED;
-  ok("apiRuntimeBetaAllowed is FALSE with no allowlist env", apiRuntimeBetaAllowed("a@b.com") === false);
-  ok("apiRuntimeEnabled is FALSE with no env", apiRuntimeEnabled() === false);
-  ok("apiRuntimeBetaAllowed is FALSE for null/empty email", apiRuntimeBetaAllowed(null) === false && apiRuntimeBetaAllowed("") === false);
+  console.log("── the account gate (generally available by default; allowlist restricts; kill switch disables) ──");
+  const prevAllow = process.env.VRAELIS_API_RUNTIME_BETA, prevEnabled = process.env.VRAELIS_API_RUNTIME_BETA_ENABLED, prevDisabled = process.env.VRAELIS_API_RUNTIME_DISABLED;
+  const prevInternal = process.env.VRAELIS_PREFLIGHT_INTERNAL_ONLY, prevPubEnabled = process.env.VRAELIS_PREFLIGHT_ENABLED;
+  delete process.env.VRAELIS_API_RUNTIME_BETA; delete process.env.VRAELIS_API_RUNTIME_BETA_ENABLED; delete process.env.VRAELIS_API_RUNTIME_DISABLED;
+  // DEFAULT-OPEN: with no allowlist, any signed-in account is allowed.
+  ok("apiRuntimeBetaAllowed is TRUE with no allowlist env (generally available)", apiRuntimeBetaAllowed("a@b.com") === true);
+  ok("apiRuntimeBetaAllowed is STILL false for null/empty email (must be signed in)", apiRuntimeBetaAllowed(null) === false && apiRuntimeBetaAllowed("") === false);
+  // apiRuntimeEnabled tracks Preflight-enabled by default (no dedicated enable env needed).
+  delete process.env.VRAELIS_PREFLIGHT_INTERNAL_ONLY; delete process.env.VRAELIS_PREFLIGHT_ENABLED;
+  ok("apiRuntimeEnabled is FALSE when Preflight itself is off", apiRuntimeEnabled() === false);
+  process.env.VRAELIS_PREFLIGHT_INTERNAL_ONLY = "1";
+  ok("apiRuntimeEnabled is TRUE once Preflight is enabled (no separate enable env)", apiRuntimeEnabled() === true);
+  // KILL SWITCH wins over everything.
+  process.env.VRAELIS_API_RUNTIME_DISABLED = "1";
+  ok("VRAELIS_API_RUNTIME_DISABLED=1 forces the surface OFF (kill switch)", apiRuntimeEnabled() === false);
+  delete process.env.VRAELIS_API_RUNTIME_DISABLED;
+  // ALLOWLIST as a RESTRICTION: when set, only those emails pass; others are rejected.
   process.env.VRAELIS_API_RUNTIME_BETA = "Steve@x.com , amy@y.com";
   ok("allowlisted email matches (case-insensitive, trimmed)", apiRuntimeBetaAllowed("steve@x.com") === true && apiRuntimeBetaAllowed("  AMY@y.com ") === true);
-  ok("a NON-allowlisted email is rejected", apiRuntimeBetaAllowed("mallory@x.com") === false);
+  ok("with an allowlist set, a NON-allowlisted email is rejected", apiRuntimeBetaAllowed("mallory@x.com") === false);
   ok("a SUBSTRING of an allowlisted email is rejected (eve !~ steve)", apiRuntimeBetaAllowed("eve@x.com") === false);
   process.env.VRAELIS_API_RUNTIME_BETA_ENABLED = "1";
-  ok("apiRuntimeEnabled true only at =1", apiRuntimeEnabled() === true);
+  ok("legacy VRAELIS_API_RUNTIME_BETA_ENABLED=1 still force-enables the surface", apiRuntimeEnabled() === true);
 
   console.log("\n── the customer vocabulary contains NO internal names or fixture terms ──");
   const actionsBlob = JSON.stringify([...API_FLOW_ACTIONS, ...Object.values(API_ACTION_LABELS)]).toLowerCase();
@@ -135,6 +146,9 @@ function main() {
   // restore
   if (prevAllow === undefined) delete process.env.VRAELIS_API_RUNTIME_BETA; else process.env.VRAELIS_API_RUNTIME_BETA = prevAllow;
   if (prevEnabled === undefined) delete process.env.VRAELIS_API_RUNTIME_BETA_ENABLED; else process.env.VRAELIS_API_RUNTIME_BETA_ENABLED = prevEnabled;
+  if (prevDisabled === undefined) delete process.env.VRAELIS_API_RUNTIME_DISABLED; else process.env.VRAELIS_API_RUNTIME_DISABLED = prevDisabled;
+  if (prevInternal === undefined) delete process.env.VRAELIS_PREFLIGHT_INTERNAL_ONLY; else process.env.VRAELIS_PREFLIGHT_INTERNAL_ONLY = prevInternal;
+  if (prevPubEnabled === undefined) delete process.env.VRAELIS_PREFLIGHT_ENABLED; else process.env.VRAELIS_PREFLIGHT_ENABLED = prevPubEnabled;
 }
 
 // ── executor: inline run -> terminal-state persistence, no-leak, refund logic (offline) ──────────────

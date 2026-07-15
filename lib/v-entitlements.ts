@@ -48,15 +48,17 @@ export function apiAccessAllowed(plan: string | null | undefined, email: string)
   return allow.includes((email || "").trim().toLowerCase());
 }
 
-// API RUNTIME BETA — account-level allowlist for the customer-facing API verification product (distinct
-// from the Rank `.api` entitlement above, which gates the older programmatic API). The API runtime engine is
-// live-proven but gated to selected accounts during beta. Same fail-closed pattern as apiAccessAllowed /
-// isAdmin: an account is enabled ONLY if its lowercased email is in VRAELIS_API_RUNTIME_BETA (comma-
-// separated). Default OFF for everyone — no env, no access. Enforce server-side at every API-target route +
-// page, exactly as preflightEnabled() is enforced.
+// API RUNTIME access — which accounts may use the customer-facing API verification product (distinct from
+// the Rank `.api` entitlement above, which gates the older programmatic API). The API runtime engine is
+// live and generally available: by DEFAULT every signed-in account is allowed. The optional allowlist
+// VRAELIS_API_RUNTIME_BETA (comma-separated emails) is now a *restriction* — if it is set, access is
+// narrowed to only those emails; if it is empty/unset, all signed-in accounts have access. This lets us
+// re-restrict instantly without a deploy while keeping the surface open by default. Combined with the
+// apiRuntimeEnabled() kill switch, the surface is fail-OPEN for enabled accounts but instantly closable.
 export function apiRuntimeBetaAllowed(email: string | null | undefined): boolean {
   if (!email) return false;
   const allow = (process.env.VRAELIS_API_RUNTIME_BETA || "").toLowerCase().split(",").map((s) => s.trim()).filter(Boolean);
+  if (allow.length === 0) return true; // no allowlist configured -> generally available to any signed-in account
   return allow.includes(email.trim().toLowerCase());
 }
 

@@ -1,10 +1,12 @@
-// The single canonical gate for EVERY API-beta customer surface (routes + pages). Both conditions required,
-// fail-closed, and the failure is INDISTINGUISHABLE from "this surface does not exist":
-//   1. VRAELIS_API_RUNTIME_BETA_ENABLED=1  (the surface is deployed/on at all)   -> apiRuntimeEnabled()
-//   2. the signed-in email is in VRAELIS_API_RUNTIME_BETA                        -> apiRuntimeBetaAllowed()
-// A non-enabled account NEVER learns the beta exists: routes return a bare 404, pages notFound(), the tab is
-// absent from the DOM. Never a 401/403 (that would confirm the surface exists), never an error body that
-// hints at a private beta.
+// The single canonical gate for EVERY API-runtime customer surface (routes + pages). The API runtime is a
+// LIVE, generally-available product: by default it is on for every signed-in Preflight account. Two
+// conditions still gate access, and a denial remains INDISTINGUISHABLE from "this surface does not exist":
+//   1. apiRuntimeEnabled()          — the surface is on (default: yes wherever Preflight is enabled; the
+//                                      VRAELIS_API_RUNTIME_DISABLED kill switch flips it off instantly).
+//   2. apiRuntimeBetaAllowed(email) — this account may use it (default: any signed-in account; the optional
+//                                      VRAELIS_API_RUNTIME_BETA allowlist can narrow it back down if needed).
+// When either is false the surface behaves as if absent: routes return a bare 404, pages notFound(), the tab
+// is absent from the DOM. Never a 401/403 (that would confirm the surface exists), never an error body.
 
 import { auth } from "@/auth";
 import { apiRuntimeEnabled } from "@/lib/v-preflight-flags";
