@@ -72,17 +72,20 @@ async function main(): Promise<void> {
   }
 
   // ─────────────────────────────────────────────────────────────────────────────────────────────────────
-  // SCENARIO 3 — a fresh (unused) free pass does NOT silently make a targeted rerun cheaper-than-priced, and
-  // the rerun stays PAYG $3 once the pass is spent. This guards requirement 2: we did not "accidentally" make
-  // reruns free — the ONLY free rerun is the one that consumes an unused lifetime pass (unchanged behavior).
+  // SCENARIO 3 — the lifetime free pass covers a FRESH FULL PASS ONLY, never a targeted rerun. A rerun is
+  // ALWAYS PAYG ($3 x selected, capped) whether the pass is unused or spent, so it can never consume/waste the
+  // one lifetime pass. (The gate-level regression is locked in preflight-entitlements-verify.ts.)
   // ─────────────────────────────────────────────────────────────────────────────────────────────────────
-  console.log("\n── Scenario 3: fresh free pass does not cover a targeted rerun as a $0 discount ──");
+  console.log("\n── Scenario 3: a targeted rerun is always PAYG, never covered by the free pass ──");
   {
-    // With the pass UNUSED, a rerun consumes the free pass exactly like a fresh pass (existing behavior) —
-    // it is 'free', not a $0-priced PAYG rerun. This documents the one legitimate free path.
-    const unused = decidePassGate({ plan: null, unitsUsedInWindow: 0, freePassUsed: true, selectedFlows: 2, rerun: true });
+    // With the pass still UNUSED, a rerun is STILL PAYG (the invariant): it must not burn the free pass.
+    const unusedRerun = decidePassGate({ plan: null, unitsUsedInWindow: 0, freePassUsed: false, selectedFlows: 2, rerun: true });
+    ok("rerun with an UNUSED free pass is PAYG $6 (2 x $3), NEVER 'free' (must not consume the lifetime pass)",
+      unusedRerun.mode === "payg" && unusedRerun.ok && unusedRerun.cents === rerunPriceCents(2) && unusedRerun.cents === 600);
+    // And once the pass is spent, a rerun is likewise PAYG at the same price.
+    const spentRerun = decidePassGate({ plan: null, unitsUsedInWindow: 0, freePassUsed: true, selectedFlows: 2, rerun: true });
     ok("with the free pass SPENT, a 2-flow rerun is PAYG $6 (2 x $3), never free",
-      unused.mode === "payg" && unused.ok && unused.cents === rerunPriceCents(2) && unused.cents === 600);
+      spentRerun.mode === "payg" && spentRerun.ok && spentRerun.cents === rerunPriceCents(2) && spentRerun.cents === 600);
     // The rerun price is $3/flow, capped at the comparable full pass — a 10-flow rerun is capped, never $30+.
     const big = decidePassGate({ plan: null, unitsUsedInWindow: 0, freePassUsed: true, selectedFlows: 10, rerun: true });
     ok("a large PAYG rerun is capped at the comparable full pass (never exceeds a fresh pass)",

@@ -513,16 +513,17 @@ export default async function RunReportPage({ params }: { params: Promise<{ id: 
     : Math.max(1, flows.length);
   let rerunPriceNote: string | null = null;
   if (passPricingEnabled() && caps.canLaunch && terminal) {
+    // gatePassLaunch({ rerun: true }) can NEVER return mode 'free' — the lifetime free pass covers a fresh
+    // full pass only, so a targeted rerun is always PAYG (or metered on a subscription), never free. There is
+    // therefore no 'free' branch here by construction.
     const gate = await gatePassLaunch(owner, rerunSelectedCount, { rerun: true });
-    if (gate.mode === "free") {
-      rerunPriceNote = "Covered by your lifetime free Production Pass. Later reruns are $3 per failed flow.";
-    } else if (gate.mode === "subscription") {
+    if (gate.mode === "subscription") {
       rerunPriceNote = gate.ok
         ? `Included on your plan. A rerun meters only the ${rerunSelectedCount} selected flow${rerunSelectedCount === 1 ? "" : "s"}.`
         : gate.message;
     } else if (gate.mode === "payg") {
       // The authoritative PAYG rerun price: $3 per selected failed flow, capped at the comparable pass. Stated
-      // up front so a targeted rerun always reads as PAYG — the free pass covers a fresh full pass, not this.
+      // up front so a targeted rerun always reads as PAYG. The free pass covers a fresh full pass, not this.
       rerunPriceNote = `Targeted rerun: ${usdFromCents(gate.cents)} (${usdFromCents(rerunPriceCents(1))} per failed flow), charged when you launch. Not covered by the free pass.`;
     } else if (gate.mode === "frozen") {
       rerunPriceNote = gate.message;

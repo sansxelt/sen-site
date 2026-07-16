@@ -86,6 +86,36 @@ async function main(): Promise<void> {
     const g = decidePassGate({ plan: null, unitsUsedInWindow: 0, freePassUsed: false, selectedFlows: 4 });
     ok("4 flows exceeds the free pass -> PAYG at the pass price", g.mode === "payg" && g.ok && g.cents === passPriceCents(4));
   }
+
+  // ── INVARIANT (billing-bug regression): the lifetime free pass is for a FRESH FULL PASS ONLY. A targeted
+  //    rerun is ALWAYS PAYG ($3 x selected, capped) and can NEVER consume/waste the unused free pass, even
+  //    when the pass is still unused and the selection fits the free flow cap. Previously decidePassGate
+  //    returned mode 'free' for a rerun with an unused pass (line: free branch ran before the rerun flag),
+  //    letting a rerun burn the one lifetime pass. The fix gates `rerun` out of the free branch.
+  {
+    const g = decidePassGate({ plan: null, unitsUsedInWindow: 0, freePassUsed: false, selectedFlows: 1, rerun: true });
+    ok("REGRESSION: rerun with an UNUSED free pass (1 flow) is PAYG $3, NEVER 'free'",
+      g.mode === "payg" && g.ok && g.cents === rerunPriceCents(1) && g.cents === 300, `got mode=${g.mode}`);
+  }
+  {
+    const g = decidePassGate({ plan: null, unitsUsedInWindow: 0, freePassUsed: false, selectedFlows: 3, rerun: true });
+    ok("REGRESSION: rerun with an UNUSED free pass, at the free flow cap (3), is still PAYG, NEVER 'free'",
+      g.mode === "payg" && g.ok && g.cents === rerunPriceCents(3) && g.cents === 900, `got mode=${g.mode}`);
+  }
+  {
+    // The fresh full pass is UNAFFECTED: an unused pass within the cap is still 'free' when it is NOT a rerun.
+    const fresh = decidePassGate({ plan: null, unitsUsedInWindow: 0, freePassUsed: false, selectedFlows: 3 });
+    const rerun = decidePassGate({ plan: null, unitsUsedInWindow: 0, freePassUsed: false, selectedFlows: 3, rerun: true });
+    ok("the free pass STILL covers a fresh full pass (only the rerun path is excluded from 'free')",
+      fresh.mode === "free" && rerun.mode === "payg");
+  }
+  {
+    // An unreliable free-pass read must NOT flag a rerun as 'unverified' — a rerun is PAYG on merit, so the
+    // read reliability is irrelevant to it (only fresh passes carry the "couldn't verify" note).
+    const g = decidePassGate({ plan: null, unitsUsedInWindow: 0, freePassUsed: false, selectedFlows: 1, rerun: true, freePassReliable: false });
+    ok("rerun is PAYG regardless of free-pass read reliability, and is never flagged unverified",
+      g.mode === "payg" && g.ok && !("unverified" in g && g.unverified) && g.cents === rerunPriceCents(1));
+  }
   {
     const g = decidePassGate({ plan: null, unitsUsedInWindow: 0, freePassUsed: true, selectedFlows: 3 });
     ok("free pass used -> PAYG ($15 base)", g.mode === "payg" && g.ok && g.cents === 1500);

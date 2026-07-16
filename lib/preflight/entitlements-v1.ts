@@ -103,10 +103,16 @@ export function decidePassGate(input: {
     }
     return { mode: "subscription", ok: true, plan: input.plan, unitsAfter: gate.unitsAfter };
   }
-  if (!input.freePassUsed && input.selectedFlows <= FREE_TIER.flowsPerPass) return { mode: "free", ok: true };
+  // The lifetime free pass covers a FRESH FULL PASS ONLY — never a targeted rerun. A rerun is always PAYG at
+  // rerunPriceCents ($3 x selected failed flows, capped at the comparable full pass), regardless of whether the
+  // free pass is still unused, so a rerun can never consume (or waste) the one lifetime pass. Gating `rerun`
+  // out of the free branch is the single fix: both run routes read this decision, so the rerun route's
+  // free-claim branch simply never triggers for a rerun.
+  if (!input.rerun && !input.freePassUsed && input.selectedFlows <= FREE_TIER.flowsPerPass) return { mode: "free", ok: true };
   const cents = input.rerun ? rerunPriceCents(input.selectedFlows) : passPriceCents(input.selectedFlows);
-  // unverified only when the pass was "used" due to an UNRELIABLE read (not a genuine consumption).
-  const unverified = input.freePassReliable === false && input.selectedFlows <= FREE_TIER.flowsPerPass;
+  // unverified only when a FRESH PASS was "used" due to an UNRELIABLE read (not a genuine consumption). Never
+  // for a rerun: a rerun is PAYG on merit (free pass doesn't apply), so an unreliable read changes nothing.
+  const unverified = !input.rerun && input.freePassReliable === false && input.selectedFlows <= FREE_TIER.flowsPerPass;
   return unverified ? { mode: "payg", ok: true, cents, unverified: true } : { mode: "payg", ok: true, cents };
 }
 
