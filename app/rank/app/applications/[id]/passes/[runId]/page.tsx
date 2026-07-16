@@ -518,7 +518,7 @@ export default async function RunReportPage({ params }: { params: Promise<{ id: 
       rerunPriceNote = "Covered by your lifetime free Production Pass. Later reruns are $3 per failed flow.";
     } else if (gate.mode === "subscription") {
       rerunPriceNote = gate.ok
-        ? `Included on your plan — a rerun meters only the ${rerunSelectedCount} selected flow${rerunSelectedCount === 1 ? "" : "s"}.`
+        ? `Included on your plan. A rerun meters only the ${rerunSelectedCount} selected flow${rerunSelectedCount === 1 ? "" : "s"}.`
         : gate.message;
     } else if (gate.mode === "payg") {
       // The authoritative PAYG rerun price: $3 per selected failed flow, capped at the comparable pass. Stated
