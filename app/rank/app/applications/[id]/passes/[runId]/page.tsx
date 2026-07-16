@@ -14,6 +14,9 @@ import { CancelRunButton } from "./cancel-run-button";
 import { CopyButton } from "./copy-button";
 import { AutoRefresh } from "./auto-refresh";
 import { Ic, I, EmptyIcon } from "@/app/rank/_components/icons";
+import { passPricingEnabled, rerunPriceCents } from "@/lib/preflight/pass-pricing";
+import { usdFromCents } from "@/lib/preflight/pass-pricing-format";
+import { gatePassLaunch } from "@/lib/preflight/entitlements-v1";
 
 export const metadata: Metadata = { title: "Preflight run" };
 
@@ -498,6 +501,34 @@ export default async function RunReportPage({ params }: { params: Promise<{ id: 
   const heroLine = verdictLine(run.decision, run.state, run.summary, criticalIssueCount, terminal, progressHeadline, run.failure_code);
   const summaryLine = flowsSummary(run.summary);
 
+  // The pre-click cost line for the rerun, rendered INSIDE the RerunButton card so it is always attached to
+  // the button (never a floating detached error). The note reflects the SAME gatePassLaunch({rerun:true})
+  // decision the rerun route enforces, so it can never diverge from the actual charge. Existing entitlement
+  // behavior is preserved verbatim: a rerun consumes an UNUSED lifetime free pass (mode 'free'); otherwise it
+  // is PAYG at $3 per selected failed flow (rerunPriceCents), and a subscription meters only the selected
+  // flows. Under legacy pricing (flag off) the credit path is authoritative, so no dollar figure is asserted.
+  const rerunSelectedCount =
+    run.decision === "repair_verified" ? Math.max(1, run.summary ? num(run.summary.critical_total) : 1)
+    : hasFailures ? Math.max(1, flows.filter((f) => f.state === "failed" || f.state === "blocked").length)
+    : Math.max(1, flows.length);
+  let rerunPriceNote: string | null = null;
+  if (passPricingEnabled() && caps.canLaunch && terminal) {
+    const gate = await gatePassLaunch(owner, rerunSelectedCount, { rerun: true });
+    if (gate.mode === "free") {
+      rerunPriceNote = "Covered by your lifetime free Production Pass. Later reruns are $3 per failed flow.";
+    } else if (gate.mode === "subscription") {
+      rerunPriceNote = gate.ok
+        ? `Included on your plan — a rerun meters only the ${rerunSelectedCount} selected flow${rerunSelectedCount === 1 ? "" : "s"}.`
+        : gate.message;
+    } else if (gate.mode === "payg") {
+      // The authoritative PAYG rerun price: $3 per selected failed flow, capped at the comparable pass. Stated
+      // up front so a targeted rerun always reads as PAYG — the free pass covers a fresh full pass, not this.
+      rerunPriceNote = `Targeted rerun: ${usdFromCents(gate.cents)} (${usdFromCents(rerunPriceCents(1))} per failed flow), charged when you launch. Not covered by the free pass.`;
+    } else if (gate.mode === "frozen") {
+      rerunPriceNote = gate.message;
+    }
+  }
+
   // Flows whose screenshots already appear as evidence on a blocker above; the timeline does not repeat them.
   // A blocker that cannot be mapped to a flow shows no screenshots itself — that flow's screenshots stay in
   // the timeline instead. Never fabricated either way.
@@ -540,21 +571,23 @@ export default async function RunReportPage({ params }: { params: Promise<{ id: 
             {active ? <span>Updates automatically</span> : null}
           </div>
 
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 22 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 22, alignItems: "flex-start" }}>
             {/* Rerun/cancel mutate the run (server gates rerun + cancel at editor+); hide them for read-only
-                members. The "Back to application" link stays, so the row is never empty. */}
+                members. The "Back to application" link stays, so the row is never empty. The rerun action is
+                a self-contained card (button + its price/error note bound together) so the PAYG cost line can
+                never wrap into a floating detached error beside the "Back" link. */}
             {caps.canLaunch ? (
               terminal ? (
                 run.decision === "repair_verified"
-                  ? <RerunButton appId={id} runId={runId} scope="critical" label="Run full critical verification" />
-                  : <RerunButton appId={id} runId={runId} scope={hasFailures ? "failed" : "all"} label={hasFailures ? "Rerun failed flows" : "Run again"} />
+                  ? <RerunButton appId={id} runId={runId} scope="critical" label="Run full critical verification" priceNote={rerunPriceNote} />
+                  : <RerunButton appId={id} runId={runId} scope={hasFailures ? "failed" : "all"} label={hasFailures ? "Rerun failed flows" : "Run again"} priceNote={rerunPriceNote} />
               ) : (
                 // Non-terminal run: let the owner stop it (stuck/queued or mis-launched). The worker aborts
                 // cooperatively and its terminal-failure path refunds the hold when no flow executed.
                 <CancelRunButton appId={id} runId={runId} />
               )
             ) : null}
-            <Link href={`/applications/${id}`} className="btn btn--ghost">Back to application</Link>
+            <Link href={`/applications/${id}`} className="btn btn--ghost" style={{ alignSelf: "center" }}>Back to application</Link>
           </div>
 
           {/* Tested deployment (S4): the exact deployment identity this decision applies to. Every field

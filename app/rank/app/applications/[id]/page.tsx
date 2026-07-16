@@ -354,12 +354,33 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
         </section>
       ) : null}
 
-      {/* Cost + readiness for the NEXT pass (HF1/HF2): the gate-parity price and sign-in readiness, shown
-          where a pass can be launched. Hidden while a run is active (it is about the next launch). */}
-      {caps.canLaunch && contractApproved && !latestActive && (decision === "repair_verified" ? criticalEligibleIds.length > 0 : eligibleFlowIds.length > 0) ? (
-        <div style={{ maxWidth: 420 }}>
-          <PassPreview appId={id} flowIds={decision === "repair_verified" ? criticalEligibleIds : eligibleFlowIds} />
-        </div>
+      {/* Launch a fresh full pass — ALWAYS reachable here whenever the app is launchable (approved contract,
+          eligible flows, no active run, editor+), independent of the verdict or whether a newer deployment
+          exists. The Command Center's ONE dominant action can be "Inspect blocker" when BLOCKED, so a
+          free-pass-eligible owner must still have a real launch control on the Overview — this is it. The
+          PassPreview beside it shows the gate-parity price (e.g. "Included" for the lifetime free pass, or the
+          PAYG dollars), so the button and its true cost always appear together. Reruns are NOT launched here —
+          those stay PAYG on the pass report; a fresh full pass is what the free pass covers.
+          Hidden only when a newer-deployment banner already renders its own launch control (no double button);
+          in every other state — including BLOCKED with no newer deployment — this is the launch affordance. */}
+      {caps.canLaunch && contractApproved && !latestActive && !newerDeploy && (decision === "repair_verified" ? criticalEligibleIds.length > 0 : eligibleFlowIds.length > 0) ? (
+        <section aria-label="Launch a Production Pass" style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", gap: "clamp(12px, 2vw, 20px)" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start" }}>
+            <LaunchPassButton
+              appId={id}
+              flowIds={decision === "repair_verified" ? criticalEligibleIds : eligibleFlowIds}
+              label={decision === "repair_verified" ? "Run full critical verification" : "Run a Production Pass"}
+            />
+            <p style={{ fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.45, margin: 0, maxWidth: 320 }}>
+              {decision === "repair_verified"
+                ? "Run every critical flow to earn a full launch decision."
+                : "Runs a fresh full Production Pass against the current deployment."}
+            </p>
+          </div>
+          <div style={{ maxWidth: 420, flex: "1 1 300px" }}>
+            <PassPreview appId={id} flowIds={decision === "repair_verified" ? criticalEligibleIds : eligibleFlowIds} />
+          </div>
+        </section>
       ) : null}
 
       {/* ── Open blockers: what stands between this app and READY ────────────────────────────────────── */}

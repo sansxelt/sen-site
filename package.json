@@ -41,6 +41,7 @@
     "preflight:repair-decision": "tsx scripts/preflight-repair-decision.ts",
     "routes:test": "tsx scripts/preflight-routes-verify.ts",
     "command:center:test": "tsx scripts/preflight-command-center-verify.ts",
+    "launch:affordance:test": "tsx scripts/preflight-launch-affordance-verify.ts",
     "api:runtime:test": "tsx scripts/preflight-api-runtime-verify.ts",
     "runtime:model:test": "tsx scripts/preflight-runtime-model-verify.ts",
     "web:characterization:test": "tsx scripts/preflight-web-characterization-verify.ts",
