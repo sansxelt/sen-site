@@ -47,8 +47,21 @@ export function SignOutButton({ className = "btn btn--ghost", label = "Sign out"
 }
 
 function Brand({ href }: { href: string }) {
+  // When the logo already points at the page you're on, don't fire a full navigation
+  // (which reloads and jumps you nowhere) — smooth-scroll back to the top instead.
+  // Compared against the BROWSER url (window.location.pathname), not usePathname(), because
+  // the vraelis host rewrites clean paths onto /rank/* internally, so the two never match.
+  const onClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return; // let new-tab / modified clicks through
+    const here = window.location.pathname.replace(/\/$/, "") || "/";
+    const target = href.replace(/\/$/, "") || "/";
+    if (here === target) {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
   return (
-    <Link href={href} style={{ display: "inline-flex", alignItems: "center", textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.035em", lineHeight: 1 }}>Vraelis</Link>
+    <Link href={href} onClick={onClick} style={{ display: "inline-flex", alignItems: "center", textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.035em", lineHeight: 1 }}>Vraelis</Link>
   );
 }
 
