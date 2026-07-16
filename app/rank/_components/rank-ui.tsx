@@ -61,7 +61,7 @@ function Brand({ href }: { href: string }) {
     }
   };
   return (
-    <Link href={href} onClick={onClick} style={{ display: "inline-flex", alignItems: "center", textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.035em", lineHeight: 1 }}>Vraelis</Link>
+    <Link href={href} onClick={onClick} style={{ display: "inline-flex", alignItems: "center", minHeight: 24, textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.035em", lineHeight: 1 }}>Vraelis</Link>
   );
 }
 
@@ -85,7 +85,7 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
     fetch("/api/auth/session").then((r) => r.json()).then((s) => { if (s?.user?.email) setAuthed(true); }).catch(() => {});
   }, [authed]);
 
-  const link = { fontSize: 15.5, color: "var(--fg-2)", textDecoration: "none", whiteSpace: "nowrap", fontWeight: 500 } as const;
+  const link = { fontSize: 15.5, color: "var(--fg-2)", textDecoration: "none", whiteSpace: "nowrap", fontWeight: 500, display: "inline-flex", alignItems: "center", minHeight: 24 } as const;
   return (
     <nav style={{ position: "relative", display: "flex", alignItems: "center", gap: 18, padding: "15px var(--gutter)", background: scrolled ? "rgba(250,248,244,0.82)" : "transparent", backdropFilter: scrolled ? "blur(14px)" : "none", WebkitBackdropFilter: scrolled ? "blur(14px)" : "none", borderBottom: `1px solid ${scrolled ? "var(--line-1)" : "transparent"}`, transition: "border-color .25s ease, background .25s ease" }}>
       <Brand href="/" />
@@ -110,9 +110,11 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
 }
 
 function Footer() {
-  const col = { display: "flex", flexDirection: "column", gap: 10 } as const;
+  const col = { display: "flex", flexDirection: "column", gap: 6 } as const;
   const productLinks: [string, string][] = [["/how-it-works", "How it works"], ["/pricing", "Pricing"], ["/enterprise", "Enterprise"], ["/signin?callbackUrl=%2Fapp", "Get early access"]];
-  const a = { color: "var(--fg-3)", textDecoration: "none", fontSize: 13.5 } as const;
+  // minHeight + inline-flex gives each footer link a >=24px touch target (the text stays put; the hit area
+  // grows vertically). Paired with the tighter col gap above so total row rhythm is unchanged.
+  const a = { color: "var(--fg-3)", textDecoration: "none", fontSize: 13.5, display: "inline-flex", alignItems: "center", minHeight: 24 } as const;
   const head = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 4 } as const;
   const Col = ({ title, links }: { title: string; links: [string, string][] }) => (
     <div style={col}><div style={head}>{title}</div>

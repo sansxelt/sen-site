@@ -541,7 +541,7 @@ summary::-webkit-details-marker { display: none; }
   /* Center the label in its own box: the display face has tall internal leading, so without an explicit
      line-height + flex centering the text sits low in the pill and the focus ring reads as offset. */
   display: inline-flex; align-items: center; justify-content: center; line-height: 1;
-  padding: 8px 18px;
+  padding: 8px 18px; min-height: 24px; box-sizing: border-box;
   transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
 }
 /* The active pill is geometrically centred in the track (equal gap above/below). Its shadow must radiate
