@@ -68,13 +68,13 @@ function Brand({ href }: { href: string }) {
   );
 }
 
-// The brand mark: a gapped ring + solid core (the Vraelis symbol). Rendered inline as SVG so it is
-// crisp at any size and inherits the accent green. Used in the header lockup beside the wordmark.
+// The brand mark: a gapped ring + solid core (the Vraelis symbol). Monochrome — inherits the wordmark's
+// ink color so the lockup reads as one unit. Rendered inline as SVG so it is crisp at any size.
 function VraelisMark({ size = 22 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 2048 2048" aria-hidden style={{ display: "block", flex: "none", color: "var(--acc-deep)" }}>
-      <path d="M 1613.215 1181.880 A 610 610 0 1 1 1613.215 866.120" fill="none" stroke="currentColor" strokeWidth="230" strokeLinecap="round" />
-      <circle cx="1024" cy="1024" r="200" fill="currentColor" />
+    <svg width={size} height={size} viewBox="0 0 2048 2048" aria-hidden style={{ display: "block", flex: "none", color: "var(--fg-1)" }}>
+      <path d="M 1613.215 1181.880 A 610 610 0 1 1 1613.215 866.120" fill="none" stroke="currentColor" strokeWidth="220" strokeLinecap="round" />
+      <circle cx="1024" cy="1024" r="190" fill="currentColor" />
     </svg>
   );
 }

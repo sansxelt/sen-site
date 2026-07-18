@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-// iOS home-screen icon (180x180): the Vraelis mark in white on a deep-green tile — high contrast,
+// iOS home-screen icon (180x180): the Vraelis mark in white on an ink tile — monochrome, high contrast,
 // reads clearly as an app icon. iOS rounds the corners itself, so a full-bleed tile is correct.
 export const size = { width: 180, height: 180 };
 export const contentType = "image/png";
@@ -12,7 +12,7 @@ export default function AppleIcon() {
         style={{
           width: "100%",
           height: "100%",
-          background: "#0A7B54",
+          background: "#141310",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -23,10 +23,10 @@ export default function AppleIcon() {
             d="M 1613.215 1181.880 A 610 610 0 1 1 1613.215 866.120"
             fill="none"
             stroke="#FFFFFF"
-            strokeWidth="230"
+            strokeWidth="220"
             strokeLinecap="round"
           />
-          <circle cx="1024" cy="1024" r="200" fill="#FFFFFF" />
+          <circle cx="1024" cy="1024" r="190" fill="#FFFFFF" />
         </svg>
       </div>
     ),
