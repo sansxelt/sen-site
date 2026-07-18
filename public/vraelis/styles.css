@@ -551,6 +551,16 @@ summary::-webkit-details-marker { display: none; }
 /* Keep the focus ring hugging the rounded pill instead of a low, offset square. */
 .seg button:focus-visible { outline-offset: -2px; }
 .seg__save { font-family: var(--font-code); font-size: 11px; color: var(--acc-deep); margin-left: 6px; }
+/* The pass-demo scenario toggle carries long labels ("All requirements passed", "Critical behavior failed",
+   "New build under review"). As a fixed inline-flex pill these overflow and clip on a phone. On narrow screens
+   the .pd-seg variant becomes a full-width vertical stack (rounded rectangle, not a circle) so every label fits;
+   at wider widths it keeps the inherited horizontal pill. The generic .seg (short Monthly/Yearly labels) is
+   untouched. */
+.pd-seg { max-width: 100%; }
+@media (max-width: 640px) {
+  .pd-seg { display: flex; flex-direction: column; width: 100%; align-items: stretch; border-radius: var(--r-lg); gap: 4px; }
+  .pd-seg button { width: 100%; justify-content: flex-start; border-radius: var(--r-md); padding: 11px 14px; white-space: normal; text-align: left; }
+}
 
 /* ─── Pricing card ─── */
 .price {
