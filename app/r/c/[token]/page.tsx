@@ -11,8 +11,8 @@ export async function generateMetadata(): Promise<Metadata> {
     title: "Vraelis",
     description: "Production validation for AI-built systems.",
     robots: { index: false, follow: false },
-    openGraph: { title: "Vraelis", description: "Production validation for AI-built systems.", images: ["https://vraelis.com/og?v=2"] },
-    twitter: { card: "summary_large_image", title: "Vraelis", description: "Production validation for AI-built systems.", images: ["https://vraelis.com/og?v=2"] },
+    openGraph: { title: "Vraelis", description: "Production validation for AI-built systems.", images: ["https://vraelis.com/og?v=3"] },
+    twitter: { card: "summary_large_image", title: "Vraelis", description: "Production validation for AI-built systems.", images: ["https://vraelis.com/og?v=3"] },
   };
 }
 

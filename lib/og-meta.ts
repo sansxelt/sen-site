@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 // It does NOT force a platform that already cached the PAGE to re-scrape: X and others key
 // their card cache on the PAGE URL, so to refresh an already-shared card you version the
 // PAGE URL (e.g. /r/check?v=2) or use a platform's re-scrape tool where one exists.
-const OG_IMAGE_URL = "/og?v=2";
+const OG_IMAGE_URL = "/og?v=3";
 const OG_IMAGE = { url: OG_IMAGE_URL, width: 1200, height: 630, alt: "Vraelis" };
 
 export function ogMeta({ title, description, path = "/", index = true, image }: { title: string; description: string; path?: string; index?: boolean; image?: string }): Metadata {

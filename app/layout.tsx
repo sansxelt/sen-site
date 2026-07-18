@@ -94,13 +94,13 @@ const vraelisMetadata: Metadata = {
     siteName: "Vraelis",
     title: "Production validation for AI-built systems",
     description: "Know how your system will behave before it reaches production. Vraelis turns production requirements into executable checks, runs them against exact builds and environments, and captures the evidence to make the call before you ship.",
-    images: [{ url: "/og?v=2", width: 1200, height: 630, alt: "Vraelis" }],
+    images: [{ url: "/og?v=3", width: 1200, height: 630, alt: "Vraelis" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Production validation for AI-built systems",
     description: "Know how your system will behave before it reaches production. Requirements to a truthful production decision, tied to exact builds and real evidence.",
-    images: ["/og?v=2"],
+    images: ["/og?v=3"],
   },
   robots: { index: true, follow: true },
 };
