@@ -146,8 +146,8 @@ export default function VraelisLanding() {
         <div className="wrap">
           <div className="sec-head">
             <p className="eyebrow">How it works</p>
-            <h2 className="display">Requirements to a <span className="em">production decision</span>, with evidence.</h2>
-            <p>You define what must work and approve what runs. Vraelis executes it against the exact build, captures what actually happened, and returns one truthful decision, then remembers it across every release that follows.</p>
+            <h2 className="display">A repeatable process, not a <span className="em">one-time check</span>.</h2>
+            <p>You define what must work and approve what runs. Vraelis executes it against the exact build, captures what actually happened, and returns one truthful decision, then remembers it across every release that follows. The same discipline runs on every build, so a passing result means the same thing today as it does three releases from now.</p>
           </div>
           <div className="tile-grid cols-2">
             {STEPS.map((s) => (
