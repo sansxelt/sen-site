@@ -7,7 +7,7 @@ export const metadata = {
   ...ogMeta({
     title: "Production validation for AI-built systems",
     description:
-      "Vraelis validates how AI-built systems behave before production. It turns production requirements into executable checks, runs them against exact builds and environments, and captures the evidence teams need before they ship. Web and API verification are live.",
+      "AI can build it. That is not proof it works in production. Vraelis takes the behavior a system is required to hold, runs it against the exact build in a real environment, and returns one truthful decision backed by evidence. Web and API verification are live.",
     path: "/",
   }),
   title: { absolute: "Vraelis" },
@@ -99,11 +99,11 @@ export default function VraelisLanding() {
         <div className="grid-faint" style={{ opacity: 0.55 }} />
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(48px, 7vw, 96px)", paddingBottom: "clamp(40px, 5vw, 68px)", textAlign: "center" }}>
           <p className="eyebrow rise" data-d="1" style={{ justifyContent: "center" }}>Production validation for AI-built systems</p>
-          <h1 className="display rise" data-d="2" style={{ fontSize: "clamp(2.4rem, 5.4vw, 4.2rem)", margin: "0 auto 22px", maxWidth: 940, lineHeight: 1.04, textWrap: "balance" }}>
-            Know how your system will behave <span className="em">before it reaches production</span>.
+          <h1 className="display rise" data-d="2" style={{ fontSize: "clamp(2.4rem, 5.4vw, 4.2rem)", margin: "0 auto 22px", maxWidth: 960, lineHeight: 1.04, textWrap: "balance" }}>
+            AI can build it. That is not proof it <span className="em">works in production</span>.
           </h1>
-          <p className="rise" data-d="3" style={{ fontSize: "clamp(1.08rem, 1.45vw, 1.3rem)", color: "var(--fg-2)", maxWidth: 740, margin: "0 auto 26px", lineHeight: 1.55 }}>
-            Vraelis turns production requirements into executable checks, runs them against exact builds and environments, and captures the evidence teams need before they ship.
+          <p className="rise" data-d="3" style={{ fontSize: "clamp(1.08rem, 1.45vw, 1.3rem)", color: "var(--fg-2)", maxWidth: 760, margin: "0 auto 26px", lineHeight: 1.55 }}>
+            Vraelis takes the behavior a system is required to hold, runs it against the exact build in a real environment, and returns one truthful decision backed by evidence. Not a green checkmark. Proof of how it actually behaved.
           </p>
           <div className="rise" data-d="4" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Validate a system <span aria-hidden>→</span></Link>
@@ -290,9 +290,9 @@ export default function VraelisLanding() {
         <div className="wrap">
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "clamp(28px, 4vw, 56px)", alignItems: "center" }} className="cols-stack">
             <div>
-              <p className="eyebrow">Connected & physical systems</p>
-              <h2 className="display" style={{ fontSize: "clamp(1.85rem, 3.3vw, 2.7rem)", marginBottom: 16 }}>Physical AI is <span className="em">more than a model</span>.</h2>
-              <p className="lead-copy" style={{ marginBottom: 18 }}>It includes cloud services, APIs, SDKs, firmware, configurations, devices, telemetry, and real-world outcomes. Vraelis is being designed to bind those components to defined production requirements and execution evidence, so behavior can be verified where a browser or a single HTTP request cannot reach.</p>
+              <p className="eyebrow">Where the same approach extends</p>
+              <h2 className="display" style={{ fontSize: "clamp(1.85rem, 3.3vw, 2.7rem)", marginBottom: 16 }}>Some systems a browser <span className="em">can&apos;t reach</span>.</h2>
+              <p className="lead-copy" style={{ marginBottom: 18 }}>A physical or connected system is more than a model: cloud services, APIs, SDKs, firmware, configuration, devices, telemetry, and real-world outcomes. The same method, bind defined requirements to an exact build and prove behavior with execution evidence, extends to those components, where a browser or a single request cannot reach. This is the direction the architecture is built for, not a capability offered today.</p>
               <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.55 }}>Vraelis verifies defined behavior and production requirements with evidence. It does not certify safety or guarantee a system is harmless.</p>
             </div>
             <div className="card" style={{ background: "var(--bg-2)" }}>
@@ -329,8 +329,8 @@ export default function VraelisLanding() {
       <section className="section cta-band" style={{ borderBottom: "none" }}>
         <div className="glow glow--soft" />
         <div className="wrap" style={{ maxWidth: 720, textAlign: "center" }}>
-          <h2 className="display" style={{ fontSize: "clamp(2.1rem, 4.4vw, 3.4rem)", marginBottom: 18 }}>Prove how your system behaves <span className="em">before production</span>.</h2>
-          <p className="lead-copy" style={{ margin: "0 auto 28px", textAlign: "center" }}>Define what must work, run it against the exact build, and get evidence and a truthful decision. Web and API verification are live.</p>
+          <h2 className="display" style={{ fontSize: "clamp(2.1rem, 4.4vw, 3.4rem)", marginBottom: 18 }}>Find out how it behaves <span className="em">before your users do</span>.</h2>
+          <p className="lead-copy" style={{ margin: "0 auto 28px", textAlign: "center" }}>Define the behavior that has to hold, run it against the exact build, and get a truthful decision backed by evidence. Web and API verification are live.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Validate a web application <span aria-hidden>→</span></Link>
             <Link href="/how-it-works" className="btn btn--ghost btn--lg">See how it works</Link>
