@@ -87,7 +87,9 @@ const vraelisMetadata: Metadata = {
   description:
     "Vraelis validates how AI-built systems behave before production. It turns production requirements into executable checks, runs them against exact builds and environments, and captures the evidence teams need before they ship. Web and API verification are live.",
   alternates: { canonical: "https://vraelis.com" },
-  icons: { icon: "/vraelis/mark.jpg" },
+  // Favicon + apple icon come from app/icon.tsx and app/apple-icon.tsx (the Vraelis mark), auto-detected
+  // by Next and served at hashed URLs so the tab icon cache-busts on change. Do NOT set `icons` here —
+  // a manual path overrides that convention and pins a stale non-hashed file.
   // No og:image on the homepage on purpose: LinkedIn hard-caches a domain's OG image and would not let
   // go of a stale headline render across several ?v bumps. A text-only card (title + description + url)
   // sidesteps that entirely and always shows the current copy. The dynamic /og card still exists for
