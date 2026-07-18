@@ -88,19 +88,21 @@ const vraelisMetadata: Metadata = {
     "Vraelis validates how AI-built systems behave before production. It turns production requirements into executable checks, runs them against exact builds and environments, and captures the evidence teams need before they ship. Web and API verification are live.",
   alternates: { canonical: "https://vraelis.com" },
   icons: { icon: "/vraelis/mark.jpg" },
+  // No og:image on the homepage on purpose: LinkedIn hard-caches a domain's OG image and would not let
+  // go of a stale headline render across several ?v bumps. A text-only card (title + description + url)
+  // sidesteps that entirely and always shows the current copy. The dynamic /og card still exists for
+  // pages/surfaces that want it; the homepage just does not advertise one.
   openGraph: {
     type: "website",
     url: "https://vraelis.com",
     siteName: "Vraelis",
-    title: "Production validation for AI-built systems",
-    description: "Know how your system will behave before it reaches production. Vraelis turns production requirements into executable checks, runs them against exact builds and environments, and captures the evidence to make the call before you ship.",
-    images: [{ url: "/og?v=4", width: 1200, height: 630, alt: "Vraelis" }],
+    title: "AI can build it. Vraelis proves it works.",
+    description: "AI can build it. That is not proof it works in production. Vraelis takes the behavior a system is required to hold, runs it against the exact build in a real environment, and returns one truthful decision backed by evidence. Web and API verification are live.",
   },
   twitter: {
-    card: "summary_large_image",
-    title: "Production validation for AI-built systems",
-    description: "Know how your system will behave before it reaches production. Requirements to a truthful production decision, tied to exact builds and real evidence.",
-    images: ["/og?v=4"],
+    card: "summary",
+    title: "AI can build it. Vraelis proves it works.",
+    description: "AI can build it. That is not proof it works in production. Vraelis runs the behavior a system is required to hold against the exact build, and returns one truthful decision backed by evidence. Web and API live.",
   },
   robots: { index: true, follow: true },
 };

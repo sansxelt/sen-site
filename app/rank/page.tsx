@@ -5,10 +5,13 @@ import { TwoUserDemo } from "./_components/two-user-demo";
 
 export const metadata = {
   ...ogMeta({
-    title: "Production validation for AI-built systems",
+    title: "AI can build it. Vraelis proves it works.",
     description:
       "AI can build it. That is not proof it works in production. Vraelis takes the behavior a system is required to hold, runs it against the exact build in a real environment, and returns one truthful decision backed by evidence. Web and API verification are live.",
     path: "/",
+    // Text-only card: LinkedIn froze on a stale OG image across several ?v bumps, so the homepage
+    // advertises no image and shows the current title + description instead.
+    noImage: true,
   }),
   title: { absolute: "Vraelis" },
 };
