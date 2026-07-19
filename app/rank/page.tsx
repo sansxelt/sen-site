@@ -102,7 +102,7 @@ export default function VraelisLanding() {
       <section style={{ position: "relative" }}>
         <div className="glow glow--bleed" />
         <div className="grid-faint" style={{ opacity: 0.55 }} />
-        <div className="wrap hero-grid" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(44px, 6vw, 84px)", paddingBottom: "clamp(40px, 5vw, 68px)" }}>
+        <div className="wrap hero-grid" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(32px, 4vw, 56px)", paddingBottom: "clamp(32px, 4vw, 52px)" }}>
           <div className="hero-copy">
             <p className="eyebrow rise" data-d="1">Production validation for AI-built systems</p>
             <h1 className="display rise" data-d="2" style={{ fontSize: "clamp(2.3rem, 4.4vw, 3.7rem)", margin: "0 0 20px", lineHeight: 1.05, textWrap: "balance" }}>
