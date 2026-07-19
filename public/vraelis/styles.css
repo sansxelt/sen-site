@@ -99,8 +99,11 @@ body { font-weight: 400; }
    centering would strand the copy in the middle and leave a dead zone below it). The demo caps
    its own width so it never runs flush to the viewport edge. Stacks to one centered column below
    960px. */
-.hero-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: clamp(28px, 4vw, 56px); align-items: center; }
-.hero-copy { min-width: 0; }
+.hero-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: clamp(28px, 4vw, 56px); align-items: start; }
+/* Top-aligned so the copy NEVER reflows when the demo animates (a centered copy re-centers every
+   time the demo's height changes, which reads as a jump). A fixed top-nudge sits the copy pleasantly
+   below the demo's header rather than dead-flush to it. */
+.hero-copy { min-width: 0; padding-top: clamp(16px, 3.5vw, 52px); }
 .hero-demo { min-width: 0; max-width: 460px; justify-self: end; width: 100%; }
 @media (max-width: 960px) {
   .hero-grid { grid-template-columns: 1fr; text-align: center; }

@@ -158,7 +158,7 @@ export function PassDemo() {
       </div>
 
       <div style={{ padding: "clamp(18px,2.6vw,28px)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 16 }}>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
           <div className="seg pd-seg">
             {MODES.map((x) => {
               const active = x.key === mode;
@@ -171,8 +171,8 @@ export function PassDemo() {
               );
             })}
           </div>
-          <span style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-5)" }} aria-live="polite">{running ? "Verification in progress\u2026" : "Pick a scenario, watch the verification run."}</span>
         </div>
+        <p style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-5)", textAlign: "center", margin: "0 0 16px" }} aria-live="polite">{running ? "Verification in progress\u2026" : "Pick a scenario, watch the verification run."}</p>
 
         <div style={{ display: "grid", gap: 10 }}>
           {FLOWS.map((f, i) => {
@@ -216,8 +216,9 @@ export function PassDemo() {
           })}
         </div>
 
-        {/* Verdict slab. Space is reserved so the window does not jump while the pass runs. */}
-        <div style={{ marginTop: 14, minHeight: 118 }} aria-live="polite">
+        {/* Verdict slab. Height is reserved to the tallest verdict (the repair-verified one wraps its
+            title to two lines) so the window does not resize between scenarios or while a pass runs. */}
+        <div style={{ marginTop: 14, minHeight: 150 }} aria-live="polite">
           {done ? (
             <div
               key={`v${runId}-${mode}`}
