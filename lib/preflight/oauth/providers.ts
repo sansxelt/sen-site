@@ -62,14 +62,9 @@ export function providerConfigured(p: OAuthProvider): boolean {
   return !!process.env[p.clientIdEnv] && !!process.env[p.clientSecretEnv];
 }
 
-// The fixed, non-app-scoped callback path per provider. Registered verbatim as the OAuth app's redirect
-// URI; the appId travels in signed state, NOT here, so one registered URI serves every application.
+// The single, fixed callback path per provider — registered verbatim as the OAuth app's ONE redirect URI.
+// It serves BOTH the per-app and account-level flows; the signed state (appId present or not) selects which,
+// so one registered URI is enough even for providers (GitHub) that allow only one callback URL.
 export function callbackPath(kind: string): string {
   return `/api/preflight/apps/oauth/callback/${kind}`;
-}
-
-// The account-level callback path (no app scope at all — connect once for the whole account). A separate
-// registered redirect URI from callbackPath so the two flows never collide.
-export function accountCallbackPath(kind: string): string {
-  return `/api/preflight/connections/oauth/callback/${kind}`;
 }

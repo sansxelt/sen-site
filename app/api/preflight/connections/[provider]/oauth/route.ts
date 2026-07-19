@@ -12,7 +12,7 @@ import { auth } from "@/auth";
 import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { vaultConfigured } from "@/lib/preflight/secret-vault";
-import { resolveOAuthProvider, providerConfigured, accountCallbackPath } from "@/lib/preflight/oauth/providers";
+import { resolveOAuthProvider, providerConfigured, callbackPath } from "@/lib/preflight/oauth/providers";
 import { signOAuthState, newNonce } from "@/lib/preflight/oauth/state";
 
 export const runtime = "nodejs";
@@ -43,7 +43,9 @@ export async function GET(req: Request, ctx: { params: Promise<{ provider: strin
 
   const nonce = newNonce();
   const state = signOAuthState({ owner, provider, nonce }); // no appId => account-level state
-  const redirectUri = `${baseUrl(req)}${accountCallbackPath(provider)}`;
+  // Same registered callback URL as the per-app flow; the unified callback branches on state.appId. Providers
+  // like GitHub allow only one callback URL, so both flows must share it.
+  const redirectUri = `${baseUrl(req)}${callbackPath(provider)}`;
 
   const authUrl = new URL(p.authorizeUrl);
   authUrl.searchParams.set("client_id", process.env[p.clientIdEnv] as string);
