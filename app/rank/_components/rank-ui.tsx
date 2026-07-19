@@ -35,6 +35,7 @@ const APP_NAV: { group: string; items: { href: string; label: string; d: string 
     { href: "/team", label: "Team", d: I.user },
     { href: "/organization", label: "Organization", d: I.building },
     { href: "/api", label: "API & Webhooks", d: I.code },
+    { href: "/connections", label: "Connections", d: I.key },
     { href: "/plans", label: "Plans", d: I.layers },
     { href: "/credits", label: "Credits", d: I.coin },
     { href: "/billing", label: "Billing", d: I.card },

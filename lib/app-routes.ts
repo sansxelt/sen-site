@@ -8,7 +8,7 @@
 // the retired-sansxel redirect list, so the product check must always run first.
 export const APP_ROOTS = [
   "applications", "passes", "issues", "repairs", "deployments", "activity",
-  "team", "organization", "api", "plans", "credits", "billing", "account", "checkout",
+  "team", "organization", "api", "connections", "plans", "credits", "billing", "account", "checkout",
   "data", "data-quality", "projects", "shared", "sandbox", "legacy", "admin", "tests", "new", "_workspace",
 ] as const;
 

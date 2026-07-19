@@ -50,7 +50,10 @@ export async function GET(req: Request, ctx: { params: Promise<{ provider: strin
   // 1. verify + decode state
   const state = stateRaw ? verifyOAuthState(stateRaw, { expectedProvider: provider }) : null;
   if (!state) return backGeneric(req, provider, "bad_state");
-  const { appId, owner: stateOwner } = state;
+  // This is the PER-APP callback: state must carry an appId (an account-level state has none and belongs to
+  // the account callback route). Reject a mismatched state rather than proceed without an app scope.
+  if (!state.appId) return backGeneric(req, provider, "bad_state");
+  const { appId, owner: stateOwner } = state as { appId: string; owner: string };
 
   if (providerError) return back(req, appId, `oauth=error&provider=${provider}&reason=denied`);
   if (!code) return back(req, appId, `oauth=error&provider=${provider}&reason=no_code`);

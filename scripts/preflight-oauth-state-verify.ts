@@ -50,5 +50,15 @@ ok("two states from the same payload differ (fresh nonce/expiry each mint)",
   signOAuthState(payload) !== signOAuthState(payload) || true); // expiry may collide within a ms; nonce is the real entropy — assert nonce uniqueness instead:
 ok("newNonce is unique per call", newNonce() !== newNonce());
 
+// Account-level state: no appId (4-part). Round-trips with appId undefined; per-app state (5-part) still
+// returns its appId. The two forms must not be confusable.
+const acctToken = signOAuthState({ owner: "owner@example.com", provider: "github", nonce });
+ok("account-level state (no appId) round-trips with appId undefined",
+  (() => { const v = verifyOAuthState(acctToken); return !!v && v.appId === undefined && v.owner === "owner@example.com" && v.provider === "github" && v.nonce === nonce; })());
+ok("per-app state still carries its appId (5-part)", verifyOAuthState(token)?.appId === "app-123");
+ok("account state provider-pin still enforced", verifyOAuthState(acctToken, { expectedProvider: "vercel" }) === null);
+ok("a tampered account body is rejected",
+  (() => { const [, mac] = acctToken.split("."); const forged = Buffer.from("attacker@evil.com|github|" + nonce + "|" + (Date.now() + 60000), "utf8").toString("base64url"); return verifyOAuthState(`${forged}.${mac}`) === null; })());
+
 console.log(`\n${pass}/${pass + fail} passed`);
 if (fail > 0) process.exit(1);

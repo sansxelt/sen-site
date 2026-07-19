@@ -18,11 +18,15 @@ function getSecret(): string {
   return secret;
 }
 
-type StatePayload = { appId: string; owner: string; provider: string; nonce: string };
+// appId is OPTIONAL: an ACCOUNT-level connect signs owner|provider|nonce|expires (4 parts); a per-app
+// connect signs appId|owner|provider|nonce|expires (5 parts). verifyOAuthState accepts either and returns
+// appId only when it was present.
+type StatePayload = { appId?: string; owner: string; provider: string; nonce: string };
 
 // Fields are joined with a delimiter that can't appear in an appId/owner/provider (they're ids/emails/kinds).
 function canonical(p: StatePayload, expires: number): string {
-  return [p.appId, p.owner.trim().toLowerCase(), p.provider, p.nonce, String(expires)].join("|");
+  const tail = [p.owner.trim().toLowerCase(), p.provider, p.nonce, String(expires)];
+  return (p.appId ? [p.appId, ...tail] : tail).join("|");
 }
 
 function b64url(s: string): string {
@@ -56,8 +60,10 @@ export function verifyOAuthState(token: string, opts?: { expectedProvider?: stri
   let body: string;
   try { body = unb64url(bodyB64); } catch { return null; }
   const parts = body.split("|");
-  if (parts.length !== 5) return null;
-  const [appId, owner, provider, nonce, expiresStr] = parts;
+  // 5 parts = per-app (appId first); 4 parts = account-level (no appId).
+  if (parts.length !== 5 && parts.length !== 4) return null;
+  const appId = parts.length === 5 ? parts[0] : undefined;
+  const [owner, provider, nonce, expiresStr] = parts.slice(parts.length === 5 ? 1 : 0);
   const expires = Number(expiresStr);
   if (!Number.isFinite(expires) || expires < Date.now()) return null;
 

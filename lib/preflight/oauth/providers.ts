@@ -67,3 +67,9 @@ export function providerConfigured(p: OAuthProvider): boolean {
 export function callbackPath(kind: string): string {
   return `/api/preflight/apps/oauth/callback/${kind}`;
 }
+
+// The account-level callback path (no app scope at all — connect once for the whole account). A separate
+// registered redirect URI from callbackPath so the two flows never collide.
+export function accountCallbackPath(kind: string): string {
+  return `/api/preflight/connections/oauth/callback/${kind}`;
+}
