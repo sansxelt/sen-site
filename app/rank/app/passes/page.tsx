@@ -6,7 +6,7 @@ import { SetupRequired } from "../applications/setup-required";
 import { listAllRuns, type PassRow } from "@/lib/preflight/overview-db";
 import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
 
-export const metadata: Metadata = { title: "Production Passes" };
+export const metadata: Metadata = { title: "Verification" };
 
 // Relative "3m ago / 4h ago / Jul 2". Server component, rendered once per request, so a wall-clock
 // relative time carries no hydration-mismatch risk.
@@ -125,9 +125,9 @@ export default async function PassesPage() {
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 24 }}>
         <div>
           <p className="eyebrow">Vraelis Preflight</p>
-          <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "6px 0 10px" }}>Production Passes</h1>
+          <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "6px 0 10px" }}>Verification</h1>
           <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.6, margin: 0, maxWidth: 560 }}>
-            Every preflight run across your applications, newest first, grouped by the launch decision it produced.
+            Every verification run across your applications, newest first, grouped by the launch decision it produced.
           </p>
         </div>
         <Link href="/applications/new" className="btn" style={{ flex: "none" }}>+ Connect app</Link>
@@ -136,8 +136,8 @@ export default async function PassesPage() {
       {passes.length === 0 ? (
         <div className="empty">
           <EmptyIcon d={I.shield} />
-          <h3>No Production Passes yet</h3>
-          <p>Connect an application and run its critical flows in a real browser to get a launch decision.</p>
+          <h3>Nothing verified yet</h3>
+          <p>Connect an application and run a verification in a real browser to get a launch decision.</p>
           <Link href="/applications/new" className="btn">Connect an app</Link>
         </div>
       ) : (

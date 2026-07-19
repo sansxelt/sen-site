@@ -44,12 +44,12 @@ async function main(): Promise<void> {
     // and no `decision === 'ready'` restriction. Its only decision use is the repair-verified flow-set choice.
     ok("the launch section's gate contains no decision-based exclusion (BLOCKED is not filtered out)",
       !/!latestActive && !newerDeploy[^?]*decision\s*[!=]==\s*["']blocked["']/.test(src));
-    // Its label is a FRESH full pass, not a rerun.
-    ok("the launch section launches a fresh full pass (label 'Run a Production Pass' / full critical verification)",
-      src.includes('"Run a Production Pass"') && src.includes('aria-label="Launch a Production Pass"'));
+    // Its label is a FRESH full pass, not a rerun (validation-led copy: "Verify this deployment").
+    ok("the launch section launches a fresh full pass (label 'Verify this deployment' / full critical verification)",
+      src.includes('"Verify this deployment"') && src.includes('aria-label="Verify this deployment"'));
     // The PassPreview (the price/"Included" card) rides ALONGSIDE the button so cost + control appear together.
     ok("the launch section pairs the button with a PassPreview so the free-pass price shows with the control",
-      /aria-label="Launch a Production Pass"[\s\S]{0,1200}PassPreview/.test(src));
+      /aria-label="Verify this deployment"[\s\S]{0,1200}PassPreview/.test(src));
   }
 
   // ─────────────────────────────────────────────────────────────────────────────────────────────────────

@@ -17,8 +17,19 @@ import { Mark, ComingLater, PROVIDER_MARK } from "../../../_connections/brand";
 import { GithubForm, TwoFieldForm, input, lab, help, type Conn } from "../../../_connections/forms";
 import {
   PROVIDER_LABELS, PROVIDER_GROUP, MANUAL_ADD_KINDS, MANUAL_FIELDS, COMING_LATER_PROVIDERS,
-  connectionState, stateLabel, featureUse, neverAccesses, metaSummary, whenUtc, type ConnectionState,
+  connectionState, stateLabel, featureUse, neverAccesses, metaSummary, whenUtc, isStoredNotYetUsed, type ConnectionState,
 } from "@/lib/preflight/connection-display";
+
+// A quiet, honest chip for a connection whose metadata is saved but which no verification step reads
+// yet. It keeps a connected-but-inert integration from reading as if it were feeding a pass.
+function StoredNotUsedChip({ provider }: { provider: string }) {
+  if (!isStoredNotYetUsed(provider)) return null;
+  return (
+    <span className="pill" style={{ fontSize: 9.5, flex: "none", color: "var(--fg-4)", background: "var(--bg-2)", borderColor: "var(--line-2)" }}>
+      Stored, not yet used in verification
+    </span>
+  );
+}
 import type { SafeConnection } from "@/lib/preflight/connections-db";
 
 const STATE_PILL: Record<string, { color: string; bg: string; bd: string }> = {
@@ -91,6 +102,7 @@ function ReadOnlyCard({ c }: { c: SafeConnection }) {
               {isTestAccount ? (m.label || "Test account") : (PROVIDER_LABELS[c.provider] ?? c.provider)}
             </span>
             <span className="pill" style={{ fontSize: 9.5, flex: "none" }}>{PROVIDER_GROUP[c.provider] ?? "Connection"}</span>
+            {!isTestAccount ? <StoredNotUsedChip provider={c.provider} /> : null}
           </div>
         </div>
         <StatePill state={state} />
@@ -284,6 +296,7 @@ export function ConnectionsManager({ appId, connections, canManage = true }: { a
                 {isTestAccount ? (m.label || "Test account") : (PROVIDER_LABELS[c.provider] ?? c.provider)}
               </span>
               <span className="pill" style={{ fontSize: 9.5, flex: "none" }}>{PROVIDER_GROUP[c.provider] ?? "Connection"}</span>
+              {!isTestAccount ? <StoredNotUsedChip provider={c.provider} /> : null}
             </div>
           </div>
           <StatePill state={state} />

@@ -22,8 +22,8 @@ export function v1Blurb(plan: PlanV1): string {
 
 export function v1Included(plan: PlanV1, cycle: V1Cycle): string[] {
   return [
-    `${plan.passesPerMonth} Production Passes per month`,
-    `Up to ${plan.flowsPerPass} flows per pass`,
+    `Validate ${plan.passesPerMonth} launches a month (${plan.passesPerMonth} Production Passes)`,
+    `Up to ${plan.flowsPerPass} flows verified per run`,
     plan.maxApplications === null ? "No cap on connected applications" : `${plan.maxApplications} connected applications`,
     "Real-browser evidence with screenshots on every pass",
     "Linked repair verification",

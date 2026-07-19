@@ -46,15 +46,15 @@ export function nextAction(s: CommandState): NextAction {
   }
   // 2. Requirements exist but the contract is still a draft: review + approve.
   if (!s.contractApproved) {
-    return { label: "Review Production Contract", href: `${app}/contract`, why: "Approve the contract to lock in what a pass verifies.", tone: "primary" };
+    return { label: "Review Production Contract", href: `${app}/contract`, why: "Approve the contract to lock in what this app must do before it goes live.", tone: "primary" };
   }
   // 3. Approved contract but no runnable flows: author the journeys.
   if (s.eligibleFlowCount === 0) {
-    return { label: "Add flows to your contract", href: `${app}/contract`, why: "A pass runs approved flows; add at least one to launch.", tone: "primary" };
+    return { label: "Add flows to your contract", href: `${app}/contract`, why: "Flows are the journeys Vraelis walks to prove each requirement holds; add at least one.", tone: "primary" };
   }
   // 4. A pass is running: the next thing is to watch it.
   if (s.runActive && s.latestRunId) {
-    return { label: "View running pass", href: `${app}/passes/${s.latestRunId}`, why: "A Production Pass is running now.", tone: "primary" };
+    return { label: "View running pass", href: `${app}/passes/${s.latestRunId}`, why: "Verification is running now.", tone: "primary" };
   }
   // 5. Blocked: inspect the blocker (the single most urgent state).
   if (s.decision === "blocked" && s.latestRunId) {
@@ -73,12 +73,12 @@ export function nextAction(s: CommandState): NextAction {
   if (s.decision === "needs_review" && s.latestRunId) {
     return { label: "Review the report", href: `${app}/passes/${s.latestRunId}`, why: "The last pass needs your review.", tone: "primary" };
   }
-  // 9. READY and nothing pending: the app is in good shape; a new pass is available but not urgent.
+  // 9. READY and nothing pending: the app is in good shape; a new run is available but not urgent.
   if (s.decision === "ready") {
-    return { label: "Run a new pass", href: `${app}`, why: "This deployment is verified. Run again after your next change.", tone: "quiet", launch: { flowIds: "eligible" } };
+    return { label: "Re-verify", href: `${app}`, why: "This deployment is verified. Run it again after your next change.", tone: "quiet", launch: { flowIds: "eligible" } };
   }
-  // 10. Approved contract with runnable flows and no prior decision: the first launch. LAUNCHES the pass.
-  return { label: "Run a Production Pass", href: `${app}`, why: "Launch a pass to get a launch decision with evidence.", tone: "primary", launch: { flowIds: "eligible" } };
+  // 10. Approved contract with runnable flows and no prior decision: the first run. LAUNCHES the pass.
+  return { label: "Verify this deployment", href: `${app}`, why: "Run a Production Pass to see if this deployment is ready: a launch decision with evidence.", tone: "primary", launch: { flowIds: "eligible" } };
 }
 
 // The ribbon: only-true state facts, in a fixed reading order (deployment identity -> verification ->

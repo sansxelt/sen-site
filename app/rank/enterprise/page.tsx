@@ -157,7 +157,7 @@ export default function EnterprisePage() {
             <div key={p.key} className="price">
               <div className="price__name">{p.name}</div>
               <div className="price__amt">{usdFromCents(p.monthlyCents)}<small>/mo</small></div>
-              <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, marginTop: 6 }}>{p.passesPerMonth} Production Passes / mo</div>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, marginTop: 6 }}>Validate {p.passesPerMonth} launches / mo</div>
               <div style={{ fontSize: 13, color: "var(--fg-3)" }}>{PLAN_BLURBS[p.key]}</div>
               <Link className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href="/contact">Talk to us</Link>
             </div>

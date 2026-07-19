@@ -164,7 +164,7 @@ export default async function Dashboard() {
         <div className="stat"><div className="stat__l">Ready</div><div className="stat__v tnum" style={{ color: readyCount ? "var(--acc-deep)" : undefined }}>{readyCount}</div><div className="stat__s">cleared to launch</div></div>
         <div className="stat"><div className="stat__l">Blocked</div><div className="stat__v tnum" style={{ color: blockedCount ? "#C0392B" : undefined }}>{blockedCount}</div><div className="stat__s">not ready yet</div></div>
         <div className="stat"><div className="stat__l">Open blockers</div><div className="stat__v tnum" style={{ color: counts.openCriticalIssues ? "#C0392B" : undefined }}>{counts.openCriticalIssues}</div><div className="stat__s"><Link href="/issues" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>View issues →</Link></div></div>
-        <div className="stat"><div className="stat__l">Passes running</div><div className="stat__v tnum">{counts.runningPasses}</div><div className="stat__s"><Link href="/passes" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>View passes →</Link></div></div>
+        <div className="stat"><div className="stat__l">Verifying now</div><div className="stat__v tnum">{counts.runningPasses}</div><div className="stat__s"><Link href="/passes" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>View results →</Link></div></div>
         <div className="stat"><div className="stat__l">Credits</div><div className="stat__v tnum">{bal.toLocaleString()}</div><div className="stat__s"><Link href="/credits" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Buy more →</Link></div></div>
       </div>
 
@@ -180,17 +180,17 @@ export default async function Dashboard() {
         </>
       ) : (
         <div style={{ position: "relative", overflow: "hidden", borderRadius: "var(--r-xl)", border: "1px solid var(--acc-line)", background: "var(--bg-1)", padding: "clamp(24px, 3.5vw, 38px)", marginBottom: 22, boxShadow: "var(--shadow-md)" }}>
-          <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 8 }}>Your first Production Pass is free</div>
-          <h2 className="display" style={{ fontSize: "clamp(1.4rem, 3vw, 2rem)", marginBottom: 8 }}>Run your first preflight.</h2>
+          <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 8 }}>Your first verification is free</div>
+          <h2 className="display" style={{ fontSize: "clamp(1.4rem, 3vw, 2rem)", marginBottom: 8 }}>Verify your first app.</h2>
           <p style={{ fontSize: 15, lineHeight: 1.55, maxWidth: 560, color: "var(--fg-2)", marginBottom: 18 }}>Connect your deployed app, approve the critical flows, and Vraelis drives it in a real browser as two real users. You get one launch decision and the exact blockers behind it.</p>
           <div className="card" style={{ background: "var(--bg-2)", marginBottom: 18 }}>
-            <div style={headLbl}>How a preflight works</div>
+            <div style={headLbl}>How verification works</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {([
                 ["Connect your app", "Your deployed URL and the prompt you built it from"],
                 ["Approve the Production Contract", "What the app must do, so Vraelis tests only what you sign off on"],
                 ["Run it like production", "A real browser runs your flows as two users and captures evidence"],
-                ["Get the Production Pass", "READY, NEEDS REVIEW, or BLOCKED, with repro steps and screenshots"],
+                ["Get your launch decision", "READY, NEEDS REVIEW, or BLOCKED, with repro steps and screenshots"],
                 ["Repair with proof", "A fix prompt for your builder, then a rerun that confirms it is closed"],
               ] as [string, string][]).map(([label, sub], i) => (
                 <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
@@ -228,8 +228,8 @@ export default async function Dashboard() {
       {recentPasses.length > 0 && (
         <>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-            <div style={{ ...headLbl, marginBottom: 0 }}>Recent Production Passes</div>
-            <Link href="/passes" style={{ fontSize: 13, color: "var(--acc-deep)", textDecoration: "none" }}>All passes →</Link>
+            <div style={{ ...headLbl, marginBottom: 0 }}>Recent verifications</div>
+            <Link href="/passes" style={{ fontSize: 13, color: "var(--acc-deep)", textDecoration: "none" }}>All results →</Link>
           </div>
           <div style={{ display: "grid", gap: 8 }}>
             {recentPasses.map((p) => {

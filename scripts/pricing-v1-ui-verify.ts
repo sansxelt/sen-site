@@ -60,10 +60,13 @@ for (const surface of ["pricing", "plans"]) {
     m.includes(`class="seg"`) && m.includes(">Monthly<") && m.includes("Yearly"));
   ok(`${surface}: free tier is $0, one lifetime pass, 3 flows, 1 application, no card`,
     m.includes("$0") && m.includes("One lifetime Production Pass") && m.includes("Up to 3 critical flows") && m.includes("1 application") && m.includes("No card required"));
+  // Reframe (2026-07): the pass figures are unchanged, but the lead bullet now reads outcome-first
+  // ("Validate N launches a month (N Production Passes)") and flows are "verified per run". The figures
+  // (10/40/150 passes, 5/10/20 flows, 2/10/∞ apps) must still render on both surfaces.
   ok(`${surface}: approved plan limits render (passes/flows/applications)`,
-    m.includes("10 Production Passes per month") && m.includes("Up to 5 flows per pass") && m.includes("2 connected applications")
-    && m.includes("40 Production Passes per month") && m.includes("Up to 10 flows per pass") && m.includes("10 connected applications")
-    && m.includes("150 Production Passes per month") && m.includes("Up to 20 flows per pass") && m.includes("No cap on connected applications"));
+    m.includes("Validate 10 launches a month (10 Production Passes)") && m.includes("Up to 5 flows verified per run") && m.includes("2 connected applications")
+    && m.includes("Validate 40 launches a month (40 Production Passes)") && m.includes("Up to 10 flows verified per run") && m.includes("10 connected applications")
+    && m.includes("Validate 150 launches a month (150 Production Passes)") && m.includes("Up to 20 flows verified per run") && m.includes("No cap on connected applications"));
   ok(`${surface}: PAYG band: $15 per pass, 5 flows included, $3 extra flow, capped $3 reruns, no subscription`,
     m.includes("$15 per Production Pass") && m.includes("5 flows included, $3 per additional flow")
     && m.includes("Targeted reruns cost $3 per selected failed flow and never more than a comparable full pass")

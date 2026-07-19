@@ -25,7 +25,7 @@ const APP_NAV: { group: string; items: { href: string; label: string; d: string 
   { group: "Product", items: [
     { href: "/app", label: "Overview", d: I.grid },
     { href: "/applications", label: "Applications", d: I.layers },
-    { href: "/passes", label: "Production Passes", d: I.shield },
+    { href: "/passes", label: "Verification", d: I.shield },
     { href: "/issues", label: "Issues", d: I.alert },
     { href: "/repairs", label: "Repairs", d: I.wrench },
     { href: "/deployments", label: "Deployments", d: I.deploy },

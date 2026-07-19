@@ -46,11 +46,11 @@ ok("newer unverified deployment -> Verify this deployment (LAUNCHES eligible)",
 ok("needs review -> Review the report (NAVIGATE, no launch)",
   (() => { const a = nextAction(base({ decision: "needs_review", latestRunId: "run9" })); return a.label === "Review the report" && !a.launch; })());
 
-ok("ready, nothing pending -> quiet 'Run a new pass' (LAUNCHES eligible)",
-  (() => { const a = nextAction(base({ decision: "ready" })); return a.label === "Run a new pass" && a.tone === "quiet" && a.launch?.flowIds === "eligible"; })());
+ok("ready, nothing pending -> quiet 'Re-verify' (LAUNCHES eligible)",
+  (() => { const a = nextAction(base({ decision: "ready" })); return a.label === "Re-verify" && a.tone === "quiet" && a.launch?.flowIds === "eligible"; })());
 
-ok("approved + flows + no prior decision -> Run a Production Pass (LAUNCHES, primary)",
-  (() => { const a = nextAction(base({ decision: null })); return a.label === "Run a Production Pass" && a.tone === "primary" && a.launch?.flowIds === "eligible"; })());
+ok("approved + flows + no prior decision -> Verify this deployment (LAUNCHES, primary)",
+  (() => { const a = nextAction(base({ decision: null })); return a.label === "Verify this deployment" && a.tone === "primary" && a.launch?.flowIds === "eligible"; })());
 
 // The critical fix (stranded launch): every launch action carries a launch descriptor so the UI renders a
 // real launch control, and every NAVIGATE action does NOT (it links somewhere that performs it).

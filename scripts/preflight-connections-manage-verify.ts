@@ -7,7 +7,7 @@
 import { readFileSync } from "node:fs";
 import {
   connectionState, stateLabel, STATE_LABELS, featureUse, neverAccesses, metaSummary, whenUtc,
-  MANUAL_ADD_KINDS, MANUAL_FIELDS, COMING_LATER_PROVIDERS,
+  MANUAL_ADD_KINDS, MANUAL_FIELDS, COMING_LATER_PROVIDERS, isStoredNotYetUsed, STORED_NOT_YET_USED,
 } from "../lib/preflight/connection-display";
 import { planHealthCheck, healthStatusFromHttp, CHECK_NOTES, CHECK_TIMEOUT_MS } from "../lib/preflight/connection-health";
 import { sanitizeConnectionMeta, canonicalMeta, CONNECTION_KINDS } from "../lib/preflight/connections-db";
@@ -87,6 +87,20 @@ ok("supabase never-accesses: no database credentials, no rows", neverAccesses("s
 ok("stripe never-accesses: no live keys, no card data", neverAccesses("stripe_test").includes("No live keys") && neverAccesses("stripe_test").includes("no card data"));
 ok("test account never-accesses: sealed, never displayed", neverAccesses("test_account").includes("sealed") && neverAccesses("test_account").includes("never displayed"));
 ok("test-account feature use is honest about authenticated flows coming later", featureUse("test_account").toLowerCase().includes("coming"));
+
+// Integration honesty: a stored-but-inert connection must SAY it is not yet read during verification,
+// and a wired one (supabase/stripe/sentry seed requirements; deploy providers set the URL) must NOT.
+ok("custom_auth / webhook / openapi are flagged stored-not-yet-used",
+  isStoredNotYetUsed("custom_auth") && isStoredNotYetUsed("webhook") && isStoredNotYetUsed("openapi"));
+ok("their feature-use line says not yet read during verification (no overstated consumer)",
+  ["custom_auth", "webhook", "openapi"].every((p) => /not yet read during verification/i.test(featureUse(p))));
+ok("wired providers are NOT flagged stored-not-yet-used",
+  ["supabase", "stripe_test", "sentry", "github", "vercel", "custom_deploy", "test_account"].every((p) => !isStoredNotYetUsed(p)));
+ok("wired discovery providers name a real seeded requirement (never 'not yet')",
+  /seeds/i.test(featureUse("supabase")) && /seeds/i.test(featureUse("stripe_test")) && /seeds/i.test(featureUse("sentry"))
+  && !/not yet/i.test(featureUse("supabase")) && !/not yet/i.test(featureUse("stripe_test")) && !/not yet/i.test(featureUse("sentry")));
+ok("the stored-not-yet-used set is exactly those three (no silent scope creep)",
+  STORED_NOT_YET_USED.size === 3);
 ok("metaSummary renders safe one-liners", metaSummary("github", { repo: "a/b", branch: "main" }) === "a/b @ main" && metaSummary("webhook", {}) === null);
 ok("whenUtc renders a stable UTC stamp", whenUtc("2026-07-02T14:31:00.000Z") === "2026-07-02 14:31 UTC" && whenUtc(null) === "");
 ok("the Add affordance offers exactly the 8 manual kinds (test accounts go through the sealed route)",

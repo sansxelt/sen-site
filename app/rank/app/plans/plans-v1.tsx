@@ -25,8 +25,8 @@ const PLAN_BLURBS: Record<PlanV1["key"], string> = {
 
 function planFeatures(p: PlanV1): string[] {
   return [
-    `${p.passesPerMonth} Production Passes per month`,
-    `Up to ${p.flowsPerPass} flows per pass`,
+    `Validate ${p.passesPerMonth} launches a month (${p.passesPerMonth} Production Passes)`,
+    `Up to ${p.flowsPerPass} flows verified per run`,
     p.maxApplications === null ? "No cap on connected applications" : `${p.maxApplications} connected applications`,
     "Real-browser evidence with screenshots",
     "Linked repair verification",

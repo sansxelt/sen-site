@@ -47,21 +47,33 @@ export const PROVIDER_GROUP: Record<string, string> = {
 };
 
 // Which Vraelis features actually use each connection today. Truthful only: nothing here claims a
-// capability that is not built (authenticated flows are honestly labeled as coming).
+// capability that is not built. A provider is "wired" when a live consumer reads it — deployment
+// identity for the URL under test, or a discovery signal that seeds requirements (see
+// CONNECTION_SIGNAL_REQUIREMENTS in discover-synthesis.ts). The rest are STORED_NOT_YET_USED: the
+// metadata is saved, but no verification step consumes it yet, and we say exactly that.
 export const FEATURE_USE: Record<string, string> = {
-  github: "Deployment identity and Production Contract context.",
-  custom_deploy: "Deployment identity and Production Contract context.",
+  github: "Deployment identity and naming context for the Production Contract.",
+  custom_deploy: "Deployment identity for the URL under test.",
   vercel: "Deployment identity for the URL under test.",
-  supabase: "Persistence reasoning in passes.",
-  custom_auth: "Authentication context for the Production Contract.",
-  stripe_test: "Billing-flow requirements in the Production Contract.",
-  sentry: "Failure cross-checks against error tracking.",
-  webhook: "The side-effect risk model.",
-  openapi: "Service context for the Production Contract.",
+  supabase: "Seeds a persistence requirement (created data survives a refresh and a new session).",
+  stripe_test: "Seeds a billing-flow requirement verified in Stripe test mode.",
+  sentry: "Seeds a reliability requirement (core flows complete without unhandled errors).",
+  custom_auth: "Stored as application context. Not yet read during verification.",
+  webhook: "Stored as application context. Not yet read during verification.",
+  openapi: "Stored as application context. Not yet read during verification.",
   test_account: "Authenticated signed-in flows (coming later; credentials stay sealed until then).",
 };
 export function featureUse(provider: string): string {
   return FEATURE_USE[provider] ?? "Recorded as application context.";
+}
+
+// Providers whose metadata is saved but which no verification step consumes yet. The card renders a
+// quiet "Stored, not yet used in verification" chip for these so a connected-but-inert integration
+// never reads as if it were actively feeding a pass. Kept in sync with the honest FEATURE_USE copy
+// above; if a live consumer is wired later, remove the provider here and update its FEATURE_USE line.
+export const STORED_NOT_YET_USED = new Set<string>(["custom_auth", "webhook", "openapi"]);
+export function isStoredNotYetUsed(provider: string): boolean {
+  return STORED_NOT_YET_USED.has(provider);
 }
 
 // The "Data Vraelis never accesses" line, per provider. This is a promise, so it is written down once.

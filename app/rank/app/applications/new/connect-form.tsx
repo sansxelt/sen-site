@@ -375,7 +375,7 @@ export default function ConnectWorkspace() {
             <ComingLater names={["Firebase", "Postgres", "Clerk", "Auth0", "Better Auth"]} />
           </Section>
 
-          <Section n={5} title="Billing and services" sub="The services the app depends on. Even metadata alone sharpens the contract and the risk model.">
+          <Section n={5} title="Billing and services" sub="The services the app depends on. Stripe test mode seeds a billing requirement; the rest are recorded as context for now.">
             <div style={{ display: "grid", gap: 10 }}>
               <ConnCard mark="stripe" title="Stripe test mode" purpose="Marks that checkout runs on Stripe test mode. Never enter a secret key here." badge="recommended"
                 connected={!!stripeTest} summary={stripeTest ? `Test mode${stripeTest.account_label ? `, ${stripeTest.account_label}` : ""}` : undefined}
@@ -474,7 +474,7 @@ function WebhookList({ webhooks, onChange, open, onToggle }: { webhooks: string[
   const [draft, setDraft] = useState("");
   const ok = /^https:\/\/.+\..+/.test(draft.trim());
   return (
-    <ConnCard mark="webhook" title="Webhook endpoints" purpose="Endpoints the app calls out to, so side effects are part of the risk model." badge="optional"
+    <ConnCard mark="webhook" title="Webhook endpoints" purpose="Endpoints the app calls out to. Recorded as context; not yet read during verification." badge="optional"
       connected={webhooks.length > 0} summary={`${webhooks.length} endpoint${webhooks.length === 1 ? "" : "s"} recorded`}
       open={open} onToggle={onToggle} onDisconnect={webhooks.length ? () => onChange([]) : undefined}>
       <div style={{ display: "grid", gap: 8 }}>

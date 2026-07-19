@@ -205,7 +205,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
   if (latest && !latestActive && critTotal > 0) subParts.push(`${critPassed} of ${critTotal} critical flows passed`);
   if (decision === "repair_verified") subParts.push("Full critical verification is still required before this deployment can be marked READY");
   if (latestActive) subParts.push("A Production Pass is running right now");
-  if (!latest) subParts.push("No Production Pass has run against this application yet");
+  if (!latest) subParts.push("This app hasn't been verified yet");
 
   // Full-verification selection for a repair-verified state: every eligible critical flow.
   const criticalEligibleIds = flows
@@ -364,17 +364,17 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
           Hidden only when a newer-deployment banner already renders its own launch control (no double button);
           in every other state — including BLOCKED with no newer deployment — this is the launch affordance. */}
       {caps.canLaunch && contractApproved && !latestActive && !newerDeploy && (decision === "repair_verified" ? criticalEligibleIds.length > 0 : eligibleFlowIds.length > 0) ? (
-        <section aria-label="Launch a Production Pass" style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", gap: "clamp(12px, 2vw, 20px)" }}>
+        <section aria-label="Verify this deployment" style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", gap: "clamp(12px, 2vw, 20px)" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start" }}>
             <LaunchPassButton
               appId={id}
               flowIds={decision === "repair_verified" ? criticalEligibleIds : eligibleFlowIds}
-              label={decision === "repair_verified" ? "Run full critical verification" : "Run a Production Pass"}
+              label={decision === "repair_verified" ? "Run full critical verification" : "Verify this deployment"}
             />
             <p style={{ fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.45, margin: 0, maxWidth: 320 }}>
               {decision === "repair_verified"
                 ? "Run every critical flow to earn a full launch decision."
-                : "Runs a fresh full Production Pass against the current deployment."}
+                : "Runs a full Production Pass against the current deployment and returns a launch decision with evidence."}
             </p>
           </div>
           <div style={{ maxWidth: 420, flex: "1 1 300px" }}>
@@ -403,18 +403,18 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
         </section>
       ) : null}
 
-      {/* ── Latest Production Passes ──────────────────────────────────────────────────────────────────── */}
-      <section style={sectionStyle} aria-label="Latest Production Passes">
+      {/* ── Verification history ──────────────────────────────────────────────────────────────────── */}
+      <section style={sectionStyle} aria-label="Verification history">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
-          <div style={{ ...headLbl, display: "flex", alignItems: "center", gap: 7 }}><Ic d={I.shield} size={13} sw={2} />Latest Production Passes</div>
-          {runs.length > 0 ? <Link href={`/applications/${id}/passes`} style={{ fontSize: 13, color: "var(--acc-deep)", textDecoration: "none" }}>All passes →</Link> : null}
+          <div style={{ ...headLbl, display: "flex", alignItems: "center", gap: 7 }}><Ic d={I.shield} size={13} sw={2} />Verification history</div>
+          {runs.length > 0 ? <Link href={`/applications/${id}/passes`} style={{ fontSize: 13, color: "var(--acc-deep)", textDecoration: "none" }}>Full history →</Link> : null}
         </div>
         {runs.length ? (
           <div style={{ display: "grid", gap: 8 }}>
             {runs.slice(0, 5).map((r) => <RunRow key={r.id} appId={app.id} r={r} />)}
           </div>
         ) : (
-          <p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>No Production Passes yet. Once one finishes, its launch decision and evidence show here.</p>
+          <p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>Not verified yet. Once a run finishes, its launch decision and the evidence behind it show here.</p>
         )}
       </section>
 
