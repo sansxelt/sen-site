@@ -22,6 +22,7 @@ import { hasAtLeastRole } from "@/lib/v-workspace";
 import { getSetupExtras } from "@/lib/preflight/setup-read";
 import { evaluateAuthReadiness, anyAuthenticated, type PreviewFlow } from "@/lib/preflight/auth-preflight";
 import { unsafeHttpsUrlReason } from "@/lib/safe-fetch";
+import { linkedVercelDeploymentUrl } from "@/lib/preflight/oauth/vercel-deploy";
 import { hold, refund } from "@/lib/v-credits";
 import { createRun, ownerActiveRunCount, ownerRunsToday } from "@/lib/preflight/runs-db";
 import { estimateRunCredits } from "@/lib/preflight/flow-selection";
@@ -128,9 +129,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "flow_not_approved", message: "One or more selected flows are not enabled and approved." }, { status: 400 });
   }
 
-  // Deployment target: an explicit preview URL, else the connected app URL. Cheap pre-navigation SSRF guard
-  // (https, no private/loopback host); the browser layer re-validates + DNS-pins before any navigation.
-  const rawUrl = typeof body?.deployment_url === "string" ? body.deployment_url : (typeof body?.deploymentUrl === "string" ? body.deploymentUrl : app.app_url);
+  // Deployment target, in priority: an explicit preview URL from the request; else the LIVE Vercel
+  // production URL when the app is linked to a Vercel account connection (the first place an OAuth token
+  // changes what a run does — no stale hand-entered URL); else the stored connected app URL. The Vercel
+  // resolution is fail-soft: any gap returns null and we fall through to app.app_url.
+  const explicitUrl = typeof body?.deployment_url === "string" ? body.deployment_url : (typeof body?.deploymentUrl === "string" ? body.deploymentUrl : "");
+  let rawUrl = explicitUrl.trim();
+  if (!rawUrl) {
+    const liveVercel = await linkedVercelDeploymentUrl(owner, id).catch(() => null);
+    rawUrl = liveVercel || app.app_url || "";
+  }
   const deploymentUrl = (rawUrl || "").trim();
   if (unsafeHttpsUrlReason(deploymentUrl)) {
     return NextResponse.json({ error: "invalid_url", message: "Provide a public https deployment URL." }, { status: 400 });

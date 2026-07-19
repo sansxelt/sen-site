@@ -10,6 +10,8 @@
 // real consumer to point at.
 import { safeFetch } from "../../safe-fetch";
 import { freshAccountToken } from "./refresh";
+import { resolveAppConnection } from "../connection-links-db";
+import { openAccountToken } from "../account-connections-db";
 
 const VERCEL_API = "https://api.vercel.com";
 
@@ -39,4 +41,21 @@ export async function resolveVercelProductionUrl(
   } catch {
     return null;
   }
+}
+
+// The run-route consumer: if an application is LINKED to a Vercel account connection with a project selected,
+// resolve the live current production URL from the token; else null (caller falls back to the stored/entered
+// URL). This is the first place an account OAuth token actually changes what a run does. Fail-soft: any gap
+// (no link, no project, no token, API error) returns null and never blocks a run.
+export async function linkedVercelDeploymentUrl(owner: string, applicationId: string): Promise<string | null> {
+  const link = await resolveAppConnection(owner, applicationId, "vercel");
+  if (!link) return null;
+  const project = typeof link.selection.project === "string" ? link.selection.project : "";
+  if (!project) return null;
+  // teamId is stored on the account connection's meta.account or the link selection when team-scoped.
+  const teamId = typeof link.selection.teamId === "string" ? link.selection.teamId : undefined;
+  // The token must exist for the linked account connection.
+  const tok = await openAccountToken(owner, { connectionId: link.accountConnectionId });
+  if (!tok) return null;
+  return resolveVercelProductionUrl(owner, project, teamId ? { teamId } : undefined);
 }

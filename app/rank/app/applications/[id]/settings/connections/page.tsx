@@ -6,8 +6,11 @@ import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "../../../setup-required";
 import { getApplication } from "@/lib/v-applications";
 import { listConnections } from "@/lib/preflight/connections-db";
+import { listAccountConnections } from "@/lib/preflight/account-connections-db";
+import { listAppLinks } from "@/lib/preflight/connection-links-db";
 import { recentConnectionEvents } from "@/lib/v-events";
 import { AppTabs } from "../../app-tabs";
+import { AppConnectionLinks } from "./app-connection-links";
 import { I, EmptyIcon } from "@/app/rank/_components/icons";
 import { PROVIDER_LABELS, CONNECTION_EVENT_LABELS, whenUtc } from "@/lib/preflight/connection-display";
 import { ConnectionsManager } from "./connections-manager";
@@ -39,9 +42,11 @@ export default async function AppConnectionsPage({ params }: { params: Promise<{
     );
   }
 
-  const [connections, events] = await Promise.all([
+  const [connections, events, accountConns, appLinks] = await Promise.all([
     listConnections(owner, id),
     recentConnectionEvents(owner, id, 10),
+    listAccountConnections(owner),
+    listAppLinks(owner, id),
   ]);
 
   return (
@@ -61,10 +66,15 @@ export default async function AppConnectionsPage({ params }: { params: Promise<{
       <AppTabs appId={id} active="connections" />
 
       <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.6, margin: "0 0 22px", maxWidth: 680 }}>
-        What Vraelis knows about this application&apos;s source, deployment, data, and services, and exactly
-        what each connection is used for. All current connections are manual metadata; provider OAuth is
-        coming and is never presented as working before it exists.
+        What Vraelis knows about this application&apos;s source, deployment, data, and services. Providers are
+        authorized once on your account&apos;s <Link href="/connections" style={{ color: "var(--acc-deep)" }}>Connections</Link> page,
+        then this app selects which repo or project to use. Manual metadata connections are also available below.
       </p>
+
+      {accountConns.length > 0 ? (
+        <AppConnectionLinks appId={id} accountConnections={accountConns.map((c) => ({ id: c.id, provider: c.provider, label: (c.meta.account as string) || c.provider }))}
+          links={appLinks.map((l) => ({ provider: l.provider, accountConnectionId: l.accountConnectionId, selection: l.selection }))} canManage={caps.canManageConnections} />
+      ) : null}
 
       <ConnectionsManager appId={id} connections={connections} canManage={caps.canManageConnections} />
 
