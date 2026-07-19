@@ -16,6 +16,7 @@ body { margin: 0; overflow-x: clip; max-width: 100%; }
   --font-display: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   --r-xs: 8px;
   --r-sm: 11px;
+  --r-md: 13px;
 
   /* surfaces */
   --bg-0: #FAF8F4;   /* warm paper floor */
@@ -76,6 +77,8 @@ body { font-weight: 400; }
 }
 .btn:hover  { background: var(--acc-deep); border-color: var(--acc-deep); color: var(--fg-on-accent); }
 .btn:active { background: var(--acc-deep); }
+.btn:disabled, .btn[disabled], .btn[aria-disabled="true"] { opacity: .55; cursor: not-allowed; }
+.btn:disabled:hover, .btn[disabled]:hover, .btn[aria-disabled="true"]:hover { background: var(--acc); border-color: var(--acc); }
 .btn--ghost {
   background: var(--bg-1);
   border: 1px solid var(--line-3);
@@ -667,13 +670,13 @@ summary::-webkit-details-marker { display: none; }
 @media (max-width: 900px) { .foot-grid { grid-template-columns: 1.4fr 1fr 1fr; row-gap: 32px; } }
 @media (max-width: 560px) { .foot-grid { grid-template-columns: 1fr 1fr; } }
 
-/* ─── Global scale ─── the whole Vraelis surface (marketing + app) renders ~20%
-   smaller on desktop: the density the design was judged best at (the "75% zoom
-   looks right" note). The signed-out marketing shell (.rank-root--site) goes a
-   further 10% (0.8 x 0.9 = 0.72) so the front page hero + live demo land in one
-   viewport for every visitor (the "90% should be global" note). Phones keep 1:1
-   so touch targets and text stay readable. */
+/* Global scale renders 1:1. An earlier zoom:0.8 / 0.72 hack shrank the whole
+   surface on desktop to fit the hero + demo in one viewport, but it made the
+   product read as zoomed-out on a normal display and desynced sticky offsets,
+   focus rings, and every hand-tuned px value. The demo sitting just below the
+   fold is the right trade. --shell-zoom stays 1 so anything keyed to it is a
+   no-op. */
 @media (min-width: 768px) {
-  .rank-root { zoom: 0.8; --shell-zoom: 0.8; }
-  .rank-root--site { zoom: 0.72; --shell-zoom: 0.72; }
+  .rank-root { --shell-zoom: 1; }
+  .rank-root--site { --shell-zoom: 1; }
 }

@@ -18,35 +18,25 @@ export default async function VerifiedPage({
   const signInHref = getSignInPath(email ? `/account?email=${encodeURIComponent(email)}` : "/account");
 
   return (
-    <div className="mx-auto max-w-lg px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-16 lg:px-8 lg:pt-10 lg:pb-24">
-      <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-10">
-        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-300">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+    <div style={{ maxWidth: 520, margin: "0 auto", padding: "clamp(24px, 4vw, 40px) clamp(16px, 4vw, 24px) 80px" }}>
+      <div className="card" style={{ padding: "clamp(24px, 4vw, 40px)" }}>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 7, borderRadius: 999, border: "1px solid var(--acc-line)", background: "var(--acc-soft)", color: "var(--acc-deep)", padding: "4px 11px", fontSize: 12, fontWeight: 600 }}>
+          <span style={{ width: 6, height: 6, borderRadius: 999, background: "var(--acc)", flex: "none" }} />
           Email verified
-        </div>
-        <h1 className="mt-5 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+        </span>
+        <h1 style={{ marginTop: 18, fontSize: 26, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--fg-1)", lineHeight: 1.15 }}>
           You&apos;re in.
         </h1>
-        <p className="mt-3 text-sm leading-6 text-neutral-300">
-          Your Vraelis account{email && <> ({<span className="text-white">{email}</span>})</>} is active. Sign in with the password you chose during signup and you&apos;re ready to go.
+        <p style={{ marginTop: 12, fontSize: 14.5, lineHeight: 1.6, color: "var(--fg-3)" }}>
+          Your Vraelis account{email && <> (<span style={{ color: "var(--fg-1)", fontWeight: 600 }}>{email}</span>)</>} is active. Sign in with the password you chose during signup and you&apos;re ready to go.
         </p>
 
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          <Link
-            href={signInHref}
-            className="VRAELIS-white-button flex-1 rounded-2xl bg-white px-5 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
-          >
-            Sign in
-          </Link>
-          <Link
-            href="/pricing"
-            className="flex-1 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-center text-sm font-medium text-white transition hover:bg-white/10"
-          >
-            See pricing
-          </Link>
+        <div style={{ marginTop: 24, display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <Link href={signInHref} className="btn" style={{ flex: 1, minWidth: 130 }}>Sign in</Link>
+          <Link href="/pricing" className="btn btn--ghost" style={{ flex: 1, minWidth: 120 }}>See pricing</Link>
         </div>
 
-        <p className="mt-6 border-t border-white/10 pt-6 text-xs text-neutral-500">
+        <p style={{ marginTop: 24, borderTop: "1px solid var(--line-2)", paddingTop: 20, fontSize: 12.5, lineHeight: 1.5, color: "var(--fg-4)" }}>
           You&apos;ll also get a welcome email from hello@vraelis.com with getting-started tips.
         </p>
       </div>

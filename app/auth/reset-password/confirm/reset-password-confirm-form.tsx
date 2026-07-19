@@ -1,15 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useState, type CSSProperties, type FormEvent } from "react";
 
 type StatusTone = "error" | "success";
 type Status = { message: string; tone: StatusTone };
 
-function statusClasses(tone: StatusTone) {
-  return tone === "success"
-    ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-100"
-    : "border-rose-400/20 bg-rose-400/10 text-rose-100";
+const inputStyle: CSSProperties = {
+  width: "100%", marginTop: 8, padding: "12px 14px", borderRadius: "var(--r-sm)",
+  border: "1px solid var(--line-2)", background: "var(--bg-1)", fontSize: 14.5, color: "var(--fg-1)", outline: "none",
+};
+const backLink: CSSProperties = { marginTop: 20, display: "inline-block", fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none" };
+
+function statusStyle(tone: StatusTone): CSSProperties {
+  const c = tone === "success"
+    ? { bg: "var(--acc-soft)", border: "var(--acc-line)", color: "var(--acc-deep)" }
+    : { bg: "rgba(178,58,58,0.08)", border: "rgba(178,58,58,0.25)", color: "#9F2D2D" };
+  return { borderRadius: "var(--r-sm)", border: `1px solid ${c.border}`, background: c.bg, color: c.color, padding: "10px 14px", fontSize: 13.5 };
 }
 
 export function ResetPasswordConfirmForm({ token }: { token: string }) {
@@ -20,14 +27,11 @@ export function ResetPasswordConfirmForm({ token }: { token: string }) {
 
   if (!token) {
     return (
-      <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-8">
-        <p className="text-sm leading-6 text-neutral-200">
+      <div className="card" style={{ padding: "clamp(22px, 4vw, 32px)" }}>
+        <p style={{ fontSize: 14, lineHeight: 1.6, color: "var(--fg-3)", margin: 0 }}>
           This reset link is invalid or missing. Request a new one below.
         </p>
-        <Link
-          href="/auth/reset-password"
-          className="mt-5 inline-block text-sm text-neutral-200 transition hover:text-white"
-        >
+        <Link href="/auth/reset-password" style={backLink}>
           Request a new link
         </Link>
       </div>
@@ -36,20 +40,17 @@ export function ResetPasswordConfirmForm({ token }: { token: string }) {
 
   if (done) {
     return (
-      <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-8">
-        <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-200">
+      <div className="card" style={{ padding: "clamp(22px, 4vw, 32px)" }}>
+        <p style={{ fontFamily: "var(--font-code)", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.14em", color: "var(--fg-4)", margin: 0 }}>
           All done
-        </div>
-        <h2 className="mt-3 text-xl font-semibold text-white">
+        </p>
+        <h2 style={{ marginTop: 10, fontSize: 20, fontWeight: 700, color: "var(--fg-1)" }}>
           Password updated.
         </h2>
-        <p className="mt-3 text-sm leading-6 text-neutral-200">
+        <p style={{ marginTop: 12, fontSize: 14, lineHeight: 1.6, color: "var(--fg-3)" }}>
           Your password has been changed. Sign in with your new credentials.
         </p>
-        <Link
-          href="/signin"
-          className="VRAELIS-white-button mt-6 inline-block rounded-2xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:opacity-90"
-        >
+        <Link href="/signin" className="btn" style={{ marginTop: 22, display: "inline-block" }}>
           Sign in
         </Link>
       </div>
@@ -89,10 +90,10 @@ export function ResetPasswordConfirmForm({ token }: { token: string }) {
   }
 
   return (
-    <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-8">
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="card" style={{ padding: "clamp(22px, 4vw, 32px)" }}>
+      <form onSubmit={handleSubmit} style={{ display: "grid", gap: 16 }}>
         <div>
-          <label className="block text-sm font-medium text-white">
+          <label style={{ display: "block", fontSize: 13.5, fontWeight: 600, color: "var(--fg-2)" }}>
             New password
           </label>
           <input
@@ -103,31 +104,18 @@ export function ResetPasswordConfirmForm({ token }: { token: string }) {
             minLength={8}
             disabled={loading}
             placeholder="At least 8 characters"
-            className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-300 focus:border-white/25 disabled:cursor-not-allowed disabled:opacity-60"
+            style={inputStyle}
           />
         </div>
 
-        {status && (
-          <div
-            className={`rounded-2xl border px-4 py-3 text-sm ${statusClasses(status.tone)}`}
-          >
-            {status.message}
-          </div>
-        )}
+        {status && <div style={statusStyle(status.tone)}>{status.message}</div>}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="VRAELIS-white-button w-full rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed"
-        >
+        <button type="submit" disabled={loading} className="btn" style={{ width: "100%", opacity: loading ? 0.6 : 1 }}>
           {loading ? "Saving..." : "Set new password"}
         </button>
       </form>
 
-      <Link
-        href="/auth/reset-password"
-        className="mt-5 inline-block text-sm text-neutral-200 transition hover:text-white"
-      >
+      <Link href="/auth/reset-password" style={backLink}>
         ← Request a new link
       </Link>
     </div>

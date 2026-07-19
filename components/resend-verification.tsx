@@ -1,6 +1,17 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, type CSSProperties, type FormEvent } from "react";
+
+const inputStyle: CSSProperties = {
+  width: "100%",
+  padding: "12px 14px",
+  borderRadius: "var(--r-sm)",
+  border: "1px solid var(--line-2)",
+  background: "var(--bg-1)",
+  fontSize: 14,
+  color: "var(--fg-1)",
+  outline: "none",
+};
 
 export function ResendVerification({ defaultEmail = "" }: { defaultEmail?: string }) {
   const [email,   setEmail]   = useState(defaultEmail);
@@ -35,8 +46,8 @@ export function ResendVerification({ defaultEmail = "" }: { defaultEmail?: strin
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-5 space-y-3">
-      <label className="block text-xs font-medium uppercase tracking-[0.15em] text-neutral-400">
+    <form onSubmit={handleSubmit} style={{ marginTop: 16, display: "grid", gap: 12 }}>
+      <label style={{ fontFamily: "var(--font-code)", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--fg-4)" }}>
         Your email
       </label>
       <input
@@ -45,17 +56,16 @@ export function ResendVerification({ defaultEmail = "" }: { defaultEmail?: strin
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="you@example.com"
-        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-600 focus:border-white/25"
+        style={inputStyle}
       />
 
       {message && (
-        <div
-          className={`rounded-xl border p-3 text-xs leading-relaxed ${
-            status === "error"
-              ? "border-rose-400/20 bg-rose-400/5 text-rose-200"
-              : "border-emerald-400/20 bg-emerald-400/5 text-emerald-200"
-          }`}
-        >
+        <div style={{
+          borderRadius: "var(--r-sm)", border: "1px solid", padding: "10px 12px", fontSize: 12.5, lineHeight: 1.5,
+          ...(status === "error"
+            ? { borderColor: "rgba(178,58,58,0.25)", background: "rgba(178,58,58,0.08)", color: "#9F2D2D" }
+            : { borderColor: "var(--acc-line)", background: "var(--acc-soft)", color: "var(--acc-deep)" }),
+        }}>
           {message}
         </div>
       )}
@@ -63,7 +73,8 @@ export function ResendVerification({ defaultEmail = "" }: { defaultEmail?: strin
       <button
         type="submit"
         disabled={status === "loading" || status === "sent"}
-        className="VRAELIS-white-button w-full rounded-xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+        className="btn"
+        style={{ width: "100%", opacity: status === "loading" || status === "sent" ? 0.6 : 1 }}
       >
         {status === "loading" ? "Sending…"
         : status === "sent"    ? "Sent, check your inbox"

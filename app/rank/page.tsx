@@ -106,11 +106,11 @@ export default function VraelisLanding() {
             AI can build it. That is not proof it <span className="em">works in production</span>.
           </h1>
           <p className="rise" data-d="3" style={{ fontSize: "clamp(1.08rem, 1.45vw, 1.3rem)", color: "var(--fg-2)", maxWidth: 760, margin: "0 auto 26px", lineHeight: 1.55 }}>
-            Vraelis takes the behavior a system is required to hold, runs it against the exact build in a real environment, and returns one truthful decision backed by evidence. Not a green checkmark. Proof of how it actually behaved.
+            Vraelis takes the behavior a system is required to hold, runs it against the exact build in a real environment, and returns one truthful decision backed by evidence of how it actually behaved. Not a guess, and not a test that only proves the test passed.
           </p>
-          <div className="rise" data-d="4" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+          <div className="rise" data-d="4" style={{ display: "flex", gap: 14, justifyContent: "center", alignItems: "center", flexWrap: "wrap" }}>
             <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Validate a system <span aria-hidden>→</span></Link>
-            <Link href="/how-it-works" className="btn btn--ghost btn--lg">See how it works</Link>
+            <Link href="/how-it-works" style={{ fontSize: 15, fontWeight: 600, color: "var(--fg-2)", textDecoration: "none", textUnderlineOffset: 4, borderBottom: "1px solid var(--line-3)", paddingBottom: 2 }}>See how it works</Link>
           </div>
           <p className="rise" data-d="4" style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-4)", margin: "14px 0 0", maxWidth: 640, marginLeft: "auto", marginRight: "auto", lineHeight: 1.55 }}>
             Web and API verification are live. Mobile, desktop, SDK, and connected-device runtimes are expanding from the same verification architecture.
@@ -129,7 +129,7 @@ export default function VraelisLanding() {
         <div className="wrap">
           <div className="sec-head">
             <p className="eyebrow">What Vraelis validates</p>
-            <h2 className="display">The behavior that <span className="em">has to hold</span> in production.</h2>
+            <h2 className="display">The behavior that has to hold in production.</h2>
             <p>Vraelis works from explicit requirements, not generic AI opinions. It verifies how a system actually behaves, across identity, access, data, integrations, and the workflows that matter, and ties every result to the exact build it ran against.</p>
           </div>
           <div className="tile-grid cols-3">
@@ -149,7 +149,7 @@ export default function VraelisLanding() {
         <div className="wrap">
           <div className="sec-head">
             <p className="eyebrow">How it works</p>
-            <h2 className="display">A repeatable process, not a <span className="em">one-time check</span>.</h2>
+            <h2 className="display">A repeatable process, not a one-time check.</h2>
             <p>You define what must work and approve what runs. Vraelis executes it against the exact build, captures what actually happened, and returns one truthful decision, then remembers it across every release that follows. The same discipline runs on every build, so a passing result means the same thing today as it does three releases from now.</p>
           </div>
           <div className="tile-grid cols-2">
@@ -174,7 +174,7 @@ export default function VraelisLanding() {
         <div className="wrap">
           <div className="sec-head">
             <p className="eyebrow">Execution & evidence</p>
-            <h2 className="display">Proof tied to the <span className="em">exact thing</span> you shipped.</h2>
+            <h2 className="display">Proof tied to the exact thing you shipped.</h2>
             <p>A green screen is not proof. Vraelis produces factual evidence bound to the precise build, environment, role, and configuration it ran against, so a decision means something you can defend, not an opinion dressed up as one.</p>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "clamp(18px, 3vw, 36px)" }} className="cols-2">
@@ -192,7 +192,7 @@ export default function VraelisLanding() {
           <div style={{ marginTop: "clamp(32px, 4vw, 56px)", display: "grid", gridTemplateColumns: "minmax(0,0.92fr) minmax(0,1.08fr)", gap: "clamp(28px, 4vw, 60px)", alignItems: "center" }} className="cols-stack">
             <div>
               <p className="eyebrow">One example</p>
-              <h3 className="display" style={{ fontSize: "clamp(1.5rem, 2.6vw, 2.1rem)", marginBottom: 14 }}>Does the data <span className="em">persist</span>, and stay <span className="em">private</span>?</h3>
+              <h3 className="display" style={{ fontSize: "clamp(1.5rem, 2.6vw, 2.1rem)", marginBottom: 14 }}>Does the data persist, and stay private?</h3>
               <p className="lead-copy" style={{ marginBottom: 16 }}>Whether apparent success survives a refresh and a new session, and whether one user can reach another&apos;s data, is one thing Vraelis checks with real execution, not a claim taken on faith. It is one behavior among many, captured as factual evidence.</p>
             </div>
             <TwoUserDemo />
@@ -205,7 +205,7 @@ export default function VraelisLanding() {
         <div className="wrap">
           <div className="sec-head sec-head--center">
             <p className="eyebrow">The decision</p>
-            <h2 className="display">One truthful outcome, <span className="em">tied to evidence</span>.</h2>
+            <h2 className="display">One truthful outcome, tied to evidence.</h2>
             <p>A run returns a decision you can act on. READY is the normal result when the system does what it must. Failure detection is one capability, not the definition.</p>
           </div>
           <div className="tile-grid cols-2" style={{ maxWidth: 900, margin: "0 auto" }}>
@@ -233,7 +233,7 @@ export default function VraelisLanding() {
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "clamp(28px, 4vw, 56px)", alignItems: "center" }} className="cols-stack">
             <div>
               <p className="eyebrow">Across releases</p>
-              <h2 className="display" style={{ fontSize: "clamp(1.85rem, 3.3vw, 2.7rem)", marginBottom: 16 }}>A persistent <span className="em">system of record</span>, not a one-time report.</h2>
+              <h2 className="display" style={{ fontSize: "clamp(1.85rem, 3.3vw, 2.7rem)", marginBottom: 16 }}>A persistent system of record, not a one-time report.</h2>
               <p className="lead-copy" style={{ marginBottom: 20 }}>Production behavior is not a single moment. Vraelis remembers what was required, which exact version was tested, what failed, when an issue first appeared, whether it recurred, whether a later build fixed it, and which runtimes remain unverified.</p>
               <div className="card card--acc" style={{ padding: 14 }}>
                 <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 6 }}>Continuity across builds</div>
@@ -266,7 +266,7 @@ export default function VraelisLanding() {
         <div className="wrap">
           <div className="sec-head">
             <p className="eyebrow">Runtime coverage</p>
-            <h2 className="display">Validate every part of your <span className="em">AI system</span>.</h2>
+            <h2 className="display">Validate every part of your AI system.</h2>
             <p style={{ fontSize: "clamp(1.05rem, 1.5vw, 1.2rem)", color: "var(--fg-2)", marginBottom: 10 }}>Web and APIs today, on an architecture built to reach further.</p>
             <p>Vraelis validates web applications and APIs today. Its shared verification architecture is designed to extend across mobile, desktop, SDK-instrumented systems, simulators, robotics, and connected devices.</p>
           </div>
@@ -294,7 +294,7 @@ export default function VraelisLanding() {
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "clamp(28px, 4vw, 56px)", alignItems: "center" }} className="cols-stack">
             <div>
               <p className="eyebrow">Where the same approach extends</p>
-              <h2 className="display" style={{ fontSize: "clamp(1.85rem, 3.3vw, 2.7rem)", marginBottom: 16 }}>Some systems a browser <span className="em">can&apos;t reach</span>.</h2>
+              <h2 className="display" style={{ fontSize: "clamp(1.85rem, 3.3vw, 2.7rem)", marginBottom: 16 }}>Some systems a browser can&apos;t reach.</h2>
               <p className="lead-copy" style={{ marginBottom: 18 }}>A physical or connected system is more than a model: cloud services, APIs, SDKs, firmware, configuration, devices, telemetry, and real-world outcomes. The same method, bind defined requirements to an exact build and prove behavior with execution evidence, extends to those components, where a browser or a single request cannot reach. This is the direction the architecture is built for, not a capability offered today.</p>
               <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.55 }}>Vraelis verifies defined behavior and production requirements with evidence. It does not certify safety or guarantee a system is harmless.</p>
             </div>
@@ -317,12 +317,14 @@ export default function VraelisLanding() {
         <div className="wrap">
           <div className="sec-head">
             <p className="eyebrow">What Vraelis is</p>
-            <h2 className="display">A system for <span className="em">proving production behavior</span>.</h2>
+            <h2 className="display">A system for proving production behavior.</h2>
             <p>Vraelis connects requirements, builds, execution, evidence, issues, and production history into one truthful decision. It is not a lighter-weight version of any of these:</p>
           </div>
           <div className="chips" style={{ justifyContent: "center" }}>
             {IS_NOT.map((x) => (
-              <span key={x} className="chip" style={{ color: "var(--fg-4)", textDecoration: "line-through", textDecorationColor: "var(--line-3)" }}>{x}</span>
+              <span key={x} className="chip" style={{ color: "var(--fg-3)", display: "inline-flex", alignItems: "center", gap: 7 }}>
+                <span aria-hidden style={{ color: "var(--fg-4)", fontSize: 11, lineHeight: 1 }}>✕</span>{x}
+              </span>
             ))}
           </div>
         </div>

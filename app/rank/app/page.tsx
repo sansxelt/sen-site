@@ -50,7 +50,8 @@ function decisionStyle(run: { decision: string | null; state: string } | null | 
     case "needs_review": return { label: "Needs review", color: "#B45309", bg: "#FEF6E7", border: "#F3DFB0" };
     case "blocked": return { label: "Blocked", color: "#C0392B", bg: "#FBEBEA", border: "#F0C7C2" };
     default:
-      if (isActiveRun(run)) return { label: "In progress", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
+      // In-progress must NOT reuse the success green, or a running first pass reads as already passed.
+      if (isActiveRun(run)) return { label: "In progress", color: "var(--fg-3)", bg: "var(--bg-2)", border: "var(--line-2)" };
       return { label: "Not tested", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };
   }
 }

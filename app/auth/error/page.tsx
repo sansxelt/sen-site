@@ -35,35 +35,29 @@ export default async function AuthErrorPage({
     "We couldn't finish that sign-in. Please try again.";
 
   return (
-    <section className="mx-auto max-w-3xl px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-16 lg:px-8 lg:pt-10 lg:pb-24">
-        <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-10">
-          <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
-            Auth Error
+    <section style={{ maxWidth: 560, margin: "0 auto", padding: "clamp(24px, 4vw, 40px) clamp(16px, 4vw, 24px) 80px" }}>
+      <div className="card" style={{ padding: "clamp(24px, 4vw, 40px)" }}>
+        <p style={{ fontFamily: "var(--font-code)", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.14em", color: "var(--fg-4)", margin: 0 }}>
+          Auth error
+        </p>
+        <h1 style={{ marginTop: 10, fontSize: 28, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--fg-1)", lineHeight: 1.15 }}>
+          Sign-in hit a snag.
+        </h1>
+        <p style={{ marginTop: 14, fontSize: 15, lineHeight: 1.6, color: "var(--fg-2)" }}>{message}</p>
+        {error && (
+          <div style={{ marginTop: 16, borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-2)", padding: "10px 14px", fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-3)" }}>
+            Error code: {error}
           </div>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-            Sign-in hit a snag.
-          </h1>
-          <p className="mt-5 text-base leading-7 text-neutral-200">{message}</p>
-          {error && (
-            <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-neutral-200">
-              Error code: {error}
-            </div>
-          )}
-          <div className="mt-6 grid gap-3 sm:flex sm:flex-wrap">
-            <Link
-              href={getSignInPath("/account")}
-              className="VRAELIS-white-button rounded-2xl bg-white px-5 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
-            >
-              Try again
-            </Link>
-            <Link
-              href="/contact"
-              className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-center text-sm font-medium text-white transition hover:bg-white/10"
-            >
-              Contact support
-            </Link>
-          </div>
+        )}
+        <div style={{ marginTop: 24, display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <Link href={getSignInPath("/account")} className="btn">
+            Try again
+          </Link>
+          <Link href="/contact" className="btn btn--ghost">
+            Contact support
+          </Link>
         </div>
+      </div>
     </section>
   );
 }

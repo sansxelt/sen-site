@@ -37,32 +37,22 @@ export default async function ConfirmSignupPage({
 
   if (!valid) {
     return (
-      <div className="mx-auto max-w-lg px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-16 lg:px-8 lg:pt-10 lg:pb-24">
-        <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-10">
-          <div className="inline-flex items-center gap-2 rounded-full border border-amber-300/30 bg-amber-300/[0.08] px-3 py-1 text-xs font-medium text-amber-200">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-300" />
+      <div style={{ maxWidth: 520, margin: "0 auto", padding: "clamp(24px, 4vw, 40px) clamp(16px, 4vw, 24px) 80px" }}>
+        <div className="card" style={{ padding: "clamp(24px, 4vw, 40px)" }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 7, borderRadius: 999, border: "1px solid rgba(194,104,12,0.25)", background: "rgba(194,104,12,0.08)", color: "#C2680C", padding: "4px 11px", fontSize: 12, fontWeight: 600 }}>
+            <span style={{ width: 6, height: 6, borderRadius: 999, background: "#C2680C", flex: "none" }} />
             Link expired or invalid
-          </div>
-          <h1 className="mt-5 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+          </span>
+          <h1 style={{ marginTop: 18, fontSize: 26, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--fg-1)", lineHeight: 1.15 }}>
             This signup link is no longer valid.
           </h1>
-          <p className="mt-3 text-sm leading-6 text-neutral-300">
+          <p style={{ marginTop: 12, fontSize: 14.5, lineHeight: 1.6, color: "var(--fg-3)" }}>
             Links from the sign-in bounce are short-lived for security.
             Head back to sign in and try again, it takes about ten seconds.
           </p>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Link
-              href="/signin"
-              className="VRAELIS-white-button flex-1 rounded-2xl bg-white px-5 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
-            >
-              Back to sign in
-            </Link>
-            <Link
-              href="/"
-              className="flex-1 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-center text-sm font-medium text-white transition hover:bg-white/10"
-            >
-              Home
-            </Link>
+          <div style={{ marginTop: 24, display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <Link href="/signin" className="btn">Back to sign in</Link>
+            <Link href="/" className="btn btn--ghost">Home</Link>
           </div>
         </div>
       </div>
@@ -72,21 +62,21 @@ export default async function ConfirmSignupPage({
   const providerLabel = PROVIDER_LABEL[provider] ?? provider;
 
   return (
-    <div className="mx-auto max-w-lg px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-16 lg:px-8 lg:pt-10 lg:pb-24">
-      <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-10">
-        <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-300">
+    <div style={{ maxWidth: 520, margin: "0 auto", padding: "clamp(24px, 4vw, 40px) clamp(16px, 4vw, 24px) 80px" }}>
+      <div className="card" style={{ padding: "clamp(24px, 4vw, 40px)" }}>
+        <span style={{ fontFamily: "var(--font-code)", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.14em", color: "var(--fg-4)" }}>
           New account
-        </div>
-        <h1 className="mt-5 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+        </span>
+        <h1 style={{ marginTop: 12, fontSize: 26, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--fg-1)", lineHeight: 1.15 }}>
           Create a Vraelis account?
         </h1>
-        <p className="mt-3 text-sm leading-6 text-neutral-300">
-          You just signed in with <span className="font-medium text-white">{providerLabel}</span> as{" "}
-          <span className="font-medium text-white">{email}</span>, and no Vraelis
+        <p style={{ marginTop: 12, fontSize: 14.5, lineHeight: 1.6, color: "var(--fg-3)" }}>
+          You just signed in with <span style={{ fontWeight: 600, color: "var(--fg-1)" }}>{providerLabel}</span> as{" "}
+          <span style={{ fontWeight: 600, color: "var(--fg-1)" }}>{email}</span>, and no Vraelis
           account exists for that address yet. Creating one is a one-time step.
         </p>
 
-        <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-4 text-xs leading-6 text-neutral-400">
+        <div style={{ marginTop: 20, borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-2)", padding: 16, fontSize: 12.5, lineHeight: 1.6, color: "var(--fg-3)" }}>
           If you previously deleted this account, creating it again will start
           fresh, your old data isn&apos;t restored.
         </div>
@@ -98,7 +88,7 @@ export default async function ConfirmSignupPage({
           token={token}
         />
 
-        <p className="mt-6 border-t border-white/10 pt-6 text-xs leading-5 text-neutral-500">
+        <p style={{ marginTop: 24, borderTop: "1px solid var(--line-2)", paddingTop: 20, fontSize: 12.5, lineHeight: 1.5, color: "var(--fg-4)" }}>
           Didn&apos;t mean to do this? Pick Cancel below, no account is created
           until you confirm.
         </p>

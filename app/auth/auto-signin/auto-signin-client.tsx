@@ -60,14 +60,14 @@ export function AutoSigninClient({
 
   return (
     <>
-      <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-300">
-        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 7, borderRadius: 999, border: "1px solid var(--acc-line)", background: "var(--acc-soft)", color: "var(--acc-deep)", padding: "4px 11px", fontSize: 12, fontWeight: 600 }}>
+        <span style={{ width: 6, height: 6, borderRadius: 999, background: "var(--acc)", flex: "none" }} />
         Email verified
-      </div>
-      <h1 className="mt-5 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+      </span>
+      <h1 style={{ marginTop: 18, fontSize: 26, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--fg-1)", lineHeight: 1.15 }}>
         Signing you in…
       </h1>
-      <p className="mt-3 text-sm leading-6 text-neutral-300">
+      <p style={{ marginTop: 12, fontSize: 14.5, lineHeight: 1.6, color: "var(--fg-3)" }}>
         One moment, setting up your session so you land straight in your workspace.
       </p>
     </>

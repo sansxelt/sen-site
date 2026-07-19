@@ -160,7 +160,9 @@ export default function ConnectWorkspace() {
         if (d.github) setGithub(d.github); if (d.vercel) setVercel(d.vercel); if (d.customDeploy) setCustomDeploy(d.customDeploy);
         if (d.supabase) setSupabase(d.supabase); if (d.customAuth) setCustomAuth(d.customAuth);
         if (d.stripeTest) setStripeTest(d.stripeTest); if (d.sentry) setSentry(d.sentry);
-        if (Array.isArray(d.webhooks)) setWebhooks(d.webhooks); if (Array.isArray(d.sources)) setSources(d.sources);
+        if (Array.isArray(d.webhooks)) setWebhooks(d.webhooks);
+        if (Array.isArray(d.sources)) setSources(d.sources.filter((s: unknown): s is { kind: string; name: string; content: string; added: number } =>
+          !!s && typeof s === "object" && typeof (s as { content?: unknown }).content === "string"));
         if (d.domains) setDomains(d.domains); if (d.permits) setPermits((p) => ({ ...p, ...d.permits }));
         setDraftNote("Draft restored. Test accounts are never saved in drafts, re-add them before connecting.");
       } catch { /* a corrupt draft is ignored */ }
@@ -610,7 +612,7 @@ function ProductDefinition({ sources, onAdd, onRemove, readTextFile, promptAdded
                   <span style={{ fontWeight: 600, fontSize: 13, color: "var(--fg-1)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</span>
                   <span className="pill" style={{ fontSize: 9.5, color: "var(--fg-4)", background: "var(--bg-2)", borderColor: "var(--line-2)" }}>{KIND_LABELS[s.kind] ?? s.kind}</span>
                 </div>
-                <div style={{ fontSize: 11.5, color: "var(--fg-4)", marginTop: 2 }}>Added {agoLabel(s.added)}, {charLabel(s.content.length)}</div>
+                <div style={{ fontSize: 11.5, color: "var(--fg-4)", marginTop: 2 }}>Added {agoLabel(s.added)}, {charLabel((s.content ?? "").length)}</div>
               </div>
               <button type="button" className="btn btn--ghost" style={{ padding: "4px 10px", fontSize: 11.5, flex: "none" }} onClick={() => editSource(i)}>Edit</button>
               <button type="button" className="btn btn--ghost" style={{ padding: "4px 10px", fontSize: 11.5, flex: "none" }} onClick={() => onRemove(i)}>Remove</button>

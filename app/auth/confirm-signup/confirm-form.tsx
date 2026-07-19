@@ -49,27 +49,17 @@ export function ConfirmSignupForm({ email, provider, name, token }: Props) {
 
   return (
     <>
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-        <button
-          type="button"
-          onClick={handleCreate}
-          disabled={busy}
-          className="VRAELIS-white-button flex-1 rounded-2xl bg-white px-5 py-3 text-center text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-        >
+      <div style={{ marginTop: 22, display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <button type="button" onClick={handleCreate} disabled={busy} className="btn" style={{ flex: 1, minWidth: 140, opacity: busy ? 0.6 : 1 }}>
           {busy ? "Creating…" : "Create account"}
         </button>
-        <button
-          type="button"
-          onClick={handleCancel}
-          disabled={busy}
-          className="flex-1 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-center text-sm font-medium text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
-        >
+        <button type="button" onClick={handleCancel} disabled={busy} className="btn btn--ghost" style={{ flex: 1, minWidth: 120, opacity: busy ? 0.6 : 1 }}>
           Cancel
         </button>
       </div>
 
       {error && (
-        <div className="mt-4 rounded-2xl border border-rose-400/30 bg-rose-400/[0.08] px-4 py-3 text-xs leading-5 text-rose-200">
+        <div style={{ marginTop: 16, borderRadius: "var(--r-sm)", border: "1px solid rgba(178,58,58,0.25)", background: "rgba(178,58,58,0.08)", color: "#9F2D2D", padding: "10px 14px", fontSize: 12.5, lineHeight: 1.5 }}>
           {error}
         </div>
       )}

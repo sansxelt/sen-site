@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 // Pricing leads with the outcome (a Production Pass), not a tier ladder. Early-access pricing: a pass is
-// priced as a unit ($10 base, five flows included, $2 per additional flow), never per seat and never in
+// priced as a unit ($10 base, five flows included, $3 per additional flow), never per seat and never in
 // microscopic per-flow credits. Monthly plans (Pro/Scale) are deliberately NOT rendered until their
 // functionality and billing exist; do not add subscription checkout here to match a mock. Team seat prices
 // come live from Stripe via /api/v/team/pricing.
@@ -63,7 +63,7 @@ export default function PricingPage() {
               <div className="price__name">Pay as you go</div>
               <div className="price__amt">$10<small>/Production Pass</small></div>
               <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, marginTop: 6 }}>Includes up to 5 approved critical flows</div>
-              <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>$2 per additional approved flow. You only pay for passes that actually execute.</div>
+              <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>$3 per additional approved flow. You only pay for passes that actually execute.</div>
               <ul className="price__feat">
                 <li>Real-browser execution, screenshots, and reproduction steps</li>
                 <li>Linked failed-flow reruns after each fix</li>

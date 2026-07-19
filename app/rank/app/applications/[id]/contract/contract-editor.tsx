@@ -171,10 +171,29 @@ export function ContractEditor({ contractId, appId, initial, status, flows, role
     }
   }
 
-  // Manual re-run of discovery (crawl the app again + re-synthesize). Fire-and-forget: the route returns
-  // 202 immediately and runs in the background; we refresh so new suggestions appear as they land.
+  // Manual re-run of discovery (crawl the app again + re-synthesize). The route returns 202 immediately and
+  // runs in the background (~up to 2 min); we poll the status endpoint until it finishes, then refresh so
+  // the new suggestions render. busyDiscover stays true for the whole poll so the button reads "Analyzing…".
   const [busyDiscover, setBusyDiscover] = useState(false);
   const [discoverNote, setDiscoverNote] = useState<string | null>(null);
+  const TERMINAL_DISCOVERY = ["completed", "partial", "failed", "cancelled", "none"];
+  async function pollDiscovery() {
+    // Poll status every 3s for up to 2 min; refresh on terminal (or timeout so late suggestions still land).
+    for (let i = 0; i < 40; i++) {
+      await new Promise((r) => setTimeout(r, 3000));
+      try {
+        const res = await fetch(`/api/preflight/apps/${encodeURIComponent(appId)}/discovery`, { cache: "no-store" });
+        if (!res.ok) continue;
+        const j = await res.json().catch(() => ({}));
+        if (typeof j?.state === "string" && TERMINAL_DISCOVERY.includes(j.state)) {
+          setDiscoverNote(j.state === "failed" ? "Discovery could not read your app this time. You can try again or add requirements manually." : null);
+          router.refresh();
+          return;
+        }
+      } catch { /* transient poll error, keep trying */ }
+    }
+    router.refresh(); // timed out waiting; refresh anyway in case suggestions landed
+  }
   async function rerunDiscovery() {
     if (busyDiscover) return;
     setBusyDiscover(true); setDiscoverNote(null); setMsg(null);
@@ -183,8 +202,13 @@ export function ContractEditor({ contractId, appId, initial, status, flows, role
       const res = await fetch(`/api/preflight/apps/${encodeURIComponent(appId)}/discover`, {
         method: "POST", headers: { "content-type": "application/json", "Idempotency-Key": key }, body: JSON.stringify({ submission_id: key }),
       });
-      if (res.status === 202 || res.ok) { setDiscoverNote("Analyzing your app… suggestions will appear here shortly. Refresh in a moment."); setTimeout(() => router.refresh(), 8000); }
-      else { const j = await res.json().catch(() => ({})); setDiscoverNote(res.status === 429 ? "Discovery is rate-limited. Try again in a bit." : (typeof j?.error === "string" ? "Could not start discovery." : "Could not start discovery.")); }
+      if (res.status === 202 || res.ok || res.status === 409) {
+        // 409 = a discovery is already running for this app; poll it either way.
+        setDiscoverNote("Analyzing your app… suggestions will appear here as they land.");
+        await pollDiscovery();
+      } else {
+        setDiscoverNote(res.status === 429 ? "Discovery is rate-limited. Try again in a bit." : "Could not start discovery.");
+      }
     } catch { setDiscoverNote("Network error. Discovery was not started."); }
     finally { setBusyDiscover(false); }
   }

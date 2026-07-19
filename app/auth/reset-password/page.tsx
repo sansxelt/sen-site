@@ -8,22 +8,19 @@ export const metadata: Metadata = {
 
 export default function ResetPasswordPage() {
   return (
-    <section className="mx-auto max-w-5xl px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-16 lg:px-8 lg:pt-10 lg:pb-24">
-        <div className="mx-auto max-w-md">
-          <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
-            Account Access
-          </div>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white">
-            Reset your password.
-          </h1>
-          <p className="mt-4 text-sm leading-7 text-neutral-200">
-            Enter your account email and we will send you a reset link if an
-            email-based account exists.
-          </p>
-          <div className="mt-8">
-            <ResetPasswordForm />
-          </div>
-        </div>
+    <section style={{ maxWidth: 480, margin: "0 auto", padding: "clamp(24px, 4vw, 40px) clamp(16px, 4vw, 24px) 80px" }}>
+      <p style={{ fontFamily: "var(--font-code)", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.14em", color: "var(--fg-4)", margin: 0 }}>
+        Account access
+      </p>
+      <h1 style={{ marginTop: 10, fontSize: 28, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--fg-1)", lineHeight: 1.15 }}>
+        Reset your password.
+      </h1>
+      <p style={{ marginTop: 12, fontSize: 14.5, lineHeight: 1.6, color: "var(--fg-3)" }}>
+        Enter your account email and we will send you a reset link if an email-based account exists.
+      </p>
+      <div style={{ marginTop: 26 }}>
+        <ResetPasswordForm />
+      </div>
     </section>
   );
 }

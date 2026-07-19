@@ -1,16 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useState, type CSSProperties, type FormEvent } from "react";
 
 type StatusTone = "error" | "success";
 type Status = { message: string; tone: StatusTone };
 
-function statusClasses(tone: StatusTone) {
-  return tone === "success"
-    ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-100"
-    : "border-rose-400/20 bg-rose-400/10 text-rose-100";
+const inputStyle: CSSProperties = {
+  width: "100%",
+  marginTop: 8,
+  padding: "12px 14px",
+  borderRadius: "var(--r-sm)",
+  border: "1px solid var(--line-2)",
+  background: "var(--bg-1)",
+  fontSize: 14.5,
+  color: "var(--fg-1)",
+  outline: "none",
+};
+
+function statusStyle(tone: StatusTone): CSSProperties {
+  const c = tone === "success"
+    ? { bg: "var(--acc-soft)", border: "var(--acc-line)", color: "var(--acc-deep)" }
+    : { bg: "rgba(178,58,58,0.08)", border: "rgba(178,58,58,0.25)", color: "#9F2D2D" };
+  return { borderRadius: "var(--r-sm)", border: `1px solid ${c.border}`, background: c.bg, color: c.color, padding: "10px 14px", fontSize: 13.5 };
 }
+
+const backLink: CSSProperties = { marginTop: 20, display: "inline-block", fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none" };
 
 export function ResetPasswordForm() {
   const [email, setEmail] = useState("");
@@ -52,22 +67,19 @@ export function ResetPasswordForm() {
 
   if (sent) {
     return (
-      <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-8">
-        <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-200">
+      <div className="card" style={{ padding: "clamp(22px, 4vw, 32px)" }}>
+        <p style={{ fontFamily: "var(--font-code)", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.14em", color: "var(--fg-4)", margin: 0 }}>
           Check your inbox
-        </div>
-        <h2 className="mt-3 text-xl font-semibold text-white">
+        </p>
+        <h2 style={{ marginTop: 10, fontSize: 20, fontWeight: 700, color: "var(--fg-1)" }}>
           Reset link sent.
         </h2>
-        <p className="mt-3 text-sm leading-6 text-neutral-200">
+        <p style={{ marginTop: 12, fontSize: 14, lineHeight: 1.6, color: "var(--fg-3)" }}>
           If an email-based account exists for{" "}
-          <span className="text-white">{email}</span>, you will receive a reset
+          <span style={{ color: "var(--fg-1)", fontWeight: 600 }}>{email}</span>, you will receive a reset
           link shortly. It expires in one hour.
         </p>
-        <Link
-          href="/signin"
-          className="mt-6 inline-block text-sm text-neutral-200 transition hover:text-white"
-        >
+        <Link href="/signin" style={backLink}>
           ← Back to sign in
         </Link>
       </div>
@@ -75,10 +87,10 @@ export function ResetPasswordForm() {
   }
 
   return (
-    <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-8">
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="card" style={{ padding: "clamp(22px, 4vw, 32px)" }}>
+      <form onSubmit={handleSubmit} style={{ display: "grid", gap: 16 }}>
         <div>
-          <label className="block text-sm font-medium text-white">
+          <label style={{ display: "block", fontSize: 13.5, fontWeight: 600, color: "var(--fg-2)" }}>
             Email address
           </label>
           <input
@@ -88,31 +100,18 @@ export function ResetPasswordForm() {
             required
             disabled={loading}
             placeholder="you@example.com"
-            className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-300 focus:border-white/25 disabled:cursor-not-allowed disabled:opacity-60"
+            style={inputStyle}
           />
         </div>
 
-        {status && (
-          <div
-            className={`rounded-2xl border px-4 py-3 text-sm ${statusClasses(status.tone)}`}
-          >
-            {status.message}
-          </div>
-        )}
+        {status && <div style={statusStyle(status.tone)}>{status.message}</div>}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="VRAELIS-white-button w-full rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed"
-        >
+        <button type="submit" disabled={loading} className="btn" style={{ width: "100%", opacity: loading ? 0.6 : 1 }}>
           {loading ? "Sending..." : "Send reset link"}
         </button>
       </form>
 
-      <Link
-        href="/signin"
-        className="mt-5 inline-block text-sm text-neutral-200 transition hover:text-white"
-      >
+      <Link href="/signin" style={backLink}>
         ← Back to sign in
       </Link>
     </div>

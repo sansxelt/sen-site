@@ -64,10 +64,10 @@ export function SignupWaitingPoller() {
   }, []);
 
   return (
-    <div className="mt-5 inline-flex items-center gap-2 text-xs text-neutral-500">
+    <div style={{ marginTop: 18, display: "inline-flex", alignItems: "center", gap: 9, fontSize: 12.5, color: "var(--fg-3)" }}>
       <span className="relative flex h-2 w-2">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/60" />
-        <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full" style={{ background: "var(--acc)", opacity: 0.55 }} />
+        <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: "var(--acc)" }} />
       </span>
       {status === "waiting"
         ? "Waiting for you to click the link, you'll be signed in automatically."

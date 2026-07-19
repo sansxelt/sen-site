@@ -111,12 +111,18 @@ export default async function PassesPage() {
   const blocked = passes.filter((p) => p.decision === "blocked");
   const needsReview = passes.filter((p) => p.decision === "needs_review");
   const ready = passes.filter((p) => p.decision === "ready");
+  const repairVerified = passes.filter((p) => p.decision === "repair_verified");
+  // Terminal runs that never produced a decision (crashed / cancelled) — bucket them so a failed first
+  // pass is never silently dropped from the list.
+  const didNotComplete = passes.filter((p) => !p.decision && !isRunning(p) && (p.state === "failed" || p.state === "cancelled"));
 
   const sections = [
     { label: "Running", rows: running },
     { label: "Blocked", rows: blocked },
     { label: "Needs review", rows: needsReview },
     { label: "Ready", rows: ready },
+    { label: "Repair verified", rows: repairVerified },
+    { label: "Didn't complete", rows: didNotComplete },
   ].filter((s) => s.rows.length > 0);
 
   return (
@@ -148,6 +154,8 @@ export default async function PassesPage() {
             <StatChip label="Blocked" value={blocked.length} color={blocked.length ? "#C0392B" : undefined} />
             <StatChip label="Needs review" value={needsReview.length} color={needsReview.length ? "#B45309" : undefined} />
             <StatChip label="Ready" value={ready.length} color={ready.length ? "var(--acc-deep)" : undefined} />
+            {repairVerified.length > 0 && <StatChip label="Repair verified" value={repairVerified.length} color="var(--acc-deep)" />}
+            {didNotComplete.length > 0 && <StatChip label="Didn't complete" value={didNotComplete.length} color="var(--fg-4)" />}
           </div>
 
           {sections.map((s) => <PassSection key={s.label} label={s.label} rows={s.rows} />)}
