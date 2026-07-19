@@ -19,7 +19,6 @@ import {
   PROVIDER_LABELS, PROVIDER_GROUP, MANUAL_ADD_KINDS, MANUAL_FIELDS, COMING_LATER_PROVIDERS,
   connectionState, stateLabel, featureUse, neverAccesses, metaSummary, whenUtc, isStoredNotYetUsed, type ConnectionState,
 } from "@/lib/preflight/connection-display";
-import { OAUTH_PROVIDER_KINDS } from "@/lib/preflight/oauth/providers";
 
 // Human-readable OAuth callback outcomes (?oauth=connected|error&provider=&reason=). Reasons map to the
 // exact failure codes the callback route emits; anything unknown falls back to a generic line.
@@ -442,13 +441,13 @@ export function ConnectionsManager({ appId, connections, canManage = true }: { a
           Authorize a provider on its own site. Vraelis receives a read-only access token, sealed with
           AES-256-GCM, never a password. You can disconnect any time.
         </p>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 22 }}>
-          {OAUTH_PROVIDER_KINDS.map((kind) => (
-            <a key={kind} href={`/api/preflight/apps/${encodeURIComponent(appId)}/connections/${kind}/oauth`}
-              className="btn" style={{ padding: "9px 16px", fontSize: 13.5, textDecoration: "none" }}>
-              Connect {PROVIDER_LABELS[kind] ?? kind}
-            </a>
-          ))}
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", marginBottom: 22 }}>
+          <a href="/connections" className="btn" style={{ padding: "9px 16px", fontSize: 13.5, textDecoration: "none" }}>
+            Connect an account
+          </a>
+          <span style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5 }}>
+            Providers are connected once at the account level, then used across all your apps.
+          </span>
         </div>
 
         <div style={{ ...headLbl, marginBottom: 4 }}>Or add manually</div>
