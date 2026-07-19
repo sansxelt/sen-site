@@ -95,16 +95,22 @@ body { font-weight: 400; }
 
 /* Hero: asymmetric two-column (copy | live demo) so the proof-object sits beside the claim,
    above the fold. Copy takes the larger share; the demo column can shrink (min-width:0) so its
-   card never forces overflow. Stacks to a single centered column below 960px. */
-.hero-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); gap: clamp(28px, 4vw, 64px); align-items: center; }
-.hero-copy { min-width: 0; }
-.hero-demo { min-width: 0; }
+   card never forces overflow. Columns are top-aligned (the demo is taller than the copy, so
+   centering would strand the copy in the middle and leave a dead zone below it). The demo caps
+   its own width so it never runs flush to the viewport edge. Stacks to one centered column below
+   960px. */
+.hero-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: clamp(28px, 4vw, 56px); align-items: start; }
+.hero-copy { min-width: 0; padding-top: clamp(8px, 2vw, 28px); }
+.hero-demo { min-width: 0; max-width: 460px; justify-self: end; width: 100%; }
 @media (max-width: 960px) {
   .hero-grid { grid-template-columns: 1fr; text-align: center; }
+  .hero-copy { padding-top: 0; }
   .hero-copy p, .hero-copy .eyebrow { margin-inline: auto; }
   .hero-copy .eyebrow { justify-content: center; }
   .hero-copy > div[data-d="4"] { justify-content: center; }
-  .hero-demo { max-width: 560px; margin: clamp(20px, 4vw, 32px) auto 0; width: 100%; }
+  .hero-demo { max-width: 520px; justify-self: center; margin: clamp(20px, 4vw, 32px) auto 0; }
+  /* On the narrow single column the scenario toggle wraps instead of scroll-clipping. */
+  .pd-seg { flex-wrap: wrap; }
 }
 /* App pages (account, lead detail) — dashboard density, not landing-page
    scale: content starts near the nav and cards stay compact. */

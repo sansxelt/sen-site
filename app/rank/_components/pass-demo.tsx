@@ -45,7 +45,7 @@ type Mode = {
 const MODES: Mode[] = [
   {
     key: "passed",
-    label: "All requirements passed",
+    label: "All passed",
     results: [
       { ok: true, note: "Created and confirmed present on a fresh read." },
       { ok: true, note: "A second user is correctly refused access." },
@@ -61,7 +61,7 @@ const MODES: Mode[] = [
   },
   {
     key: "failed",
-    label: "Critical behavior failed",
+    label: "Critical failure",
     results: [
       { ok: true, note: "Created and confirmed present on a fresh read." },
       { ok: false, note: "A second user could reach data that should be private." },
@@ -77,7 +77,7 @@ const MODES: Mode[] = [
   },
   {
     key: "newBuild",
-    label: "New build under review",
+    label: "Under review",
     results: [
       { ok: true, note: "Created and confirmed present on a fresh read." },
       { ok: true, repaired: true, note: "A previously-failed requirement now passes on this build." },
@@ -104,9 +104,9 @@ const CSS = `
 .pd-pop { animation: pd-pop 240ms cubic-bezier(0.22, 0.61, 0.36, 1) both; }
 @keyframes pd-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 .pd-pulse { animation: pd-pulse 0.9s ease-in-out infinite; }
-.pd-seg { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.pd-seg { max-width: 100%; flex-wrap: wrap; }
 .pd-seg::-webkit-scrollbar { display: none; }
-.pd-seg button { padding: 8px 15px; font-size: 14px; white-space: nowrap; }
+.pd-seg button { padding: 8px 13px; font-size: 13.5px; white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { .pd-in, .pd-pop, .pd-pulse { animation: none; } }
 `;
 
