@@ -58,8 +58,13 @@ export async function GET(req: Request, ctx: { params: Promise<{ provider: strin
   if (!code) return err("no_code");
 
   // nonce cookie double-check
+  // Nonce cookie is belt-and-suspenders, NOT the gate: the signed HMAC state (tamper-proof, carries owner +
+  // expiry) plus the owner re-check below is what actually authorizes this. If the cookie IS present it must
+  // match (catches a swapped state); if it's ABSENT we continue, because a multi-hop provider flow (Vercel's
+  // integration install bounces through several redirects) can legitimately drop a SameSite=Lax cookie on the
+  // return leg, and hard-failing there rejects a perfectly valid, signed, owner-verified authorization.
   const cookieNonce = (await cookies()).get(cookieName)?.value;
-  if (!cookieNonce || cookieNonce !== state.nonce) return err("state_mismatch");
+  if (cookieNonce && cookieNonce !== state.nonce) return err("state_mismatch");
 
   // Flow-specific authorization, re-established from the live session against the signed state.
   let sealOwner: string;

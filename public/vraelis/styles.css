@@ -371,6 +371,15 @@ summary::-webkit-details-marker { display: none; }
   .vra-nav-secondary { display: none !important; }
   .vra-nav-burger { display: inline-flex !important; }
 }
+/* Signed-in app top bar on phones: the row (logo + plan pill + credits pill + Connect app + avatar) is
+   wider than a ~390px screen, so it used to overflow and cut off. Drop the at-a-glance pills (both are one
+   tap away in the sidebar: Plans / Credits) and shrink the Connect button to its "+" so the bar always fits
+   with the account menu reachable. */
+@media (max-width: 640px) {
+  .vra-app-pills { display: none !important; }
+  .vra-app-connect { padding: 9px 13px !important; }
+  .vra-app-connect__label { display: none; }
+}
 @media (max-width: 720px) {
   .cols-2, .cols-3, .cols-4 { grid-template-columns: 1fr; }
   .metric { border-right: none; border-bottom: 1px solid var(--line-1); }

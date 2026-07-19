@@ -229,7 +229,7 @@ function AppTopbar({ email }: { email: string | null }) {
             with a properly-centered coin + exact balance -> /credits. Hidden until /api/v/me resolves so it
             never flashes a wrong number. Both share height/radius/shadow so they read as one status set. */}
         {planLabel !== null && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div className="vra-app-pills" style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {/* Plan pill — full plan name. Teal tint from the confirmed brand accent tokens
                 (--accent-dim / --accent-border, defined in globals.css). Explicit emerald text
                 (#0A7B54, the brand green the stylesheet itself names) so it stays legible on the
@@ -256,7 +256,9 @@ function AppTopbar({ email }: { email: string | null }) {
             </Link>
           </div>
         )}
-        <Link href="/applications/new" className="btn" style={{ padding: "9px 16px" }}>+ Connect app</Link>
+        <Link href="/applications/new" className="btn vra-app-connect" style={{ padding: "9px 16px" }} aria-label="Connect app">
+          +<span className="vra-app-connect__label"> Connect app</span>
+        </Link>
         <button onClick={() => setMenu((v) => !v)} aria-label="Account" style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px 6px 6px", borderRadius: 99, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", boxShadow: "var(--shadow-sm)" }}>
           {avatar ? (
             // eslint-disable-next-line @next/next/no-img-element
