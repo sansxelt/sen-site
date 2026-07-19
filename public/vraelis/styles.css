@@ -689,12 +689,12 @@ summary::-webkit-details-marker { display: none; }
 @media (max-width: 900px) { .foot-grid { grid-template-columns: 1.4fr 1fr 1fr; row-gap: 32px; } }
 @media (max-width: 560px) { .foot-grid { grid-template-columns: 1fr 1fr; } }
 
-/* Global desktop scale: the density the design was judged best at. Both the app and
-   marketing shells render at 0.9 so a visitor at their normal 100% browser zoom sees
-   the denser look the founder judged best (equivalent to the earlier 0.72 shell viewed
-   at 125% browser zoom). Phones stay 1:1 so touch targets and text stay readable.
-   (Revisit if it reads too small on a given display.) */
+/* Global desktop scale: the density the design was judged best at. Both shells render
+   at 0.99 (essentially 1:1) so a visitor at their normal 100% browser zoom sees the
+   size the founder judged best (0.9 shell viewed at ~110% browser zoom). Phones stay
+   1:1 so touch targets and text stay readable. (Revisit if it reads too big/small on a
+   given display.) */
 @media (min-width: 768px) {
-  .rank-root { zoom: 0.9; --shell-zoom: 0.9; }
-  .rank-root--site { zoom: 0.9; --shell-zoom: 0.9; }
+  .rank-root { zoom: 0.99; --shell-zoom: 0.99; }
+  .rank-root--site { zoom: 0.99; --shell-zoom: 0.99; }
 }
