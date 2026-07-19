@@ -149,7 +149,7 @@ export default async function RootLayout({
           {/* ?v bust: bump on every CSS change so browsers don't serve a
               stale cached stylesheet (the static file URL is otherwise fixed). */}
           <link rel="stylesheet" href="/vraelis/tokens.css?v=20" />
-          <link rel="stylesheet" href="/vraelis/styles.css?v=43" />
+          <link rel="stylesheet" href="/vraelis/styles.css?v=44" />
           {children}
         </body>
       </html>

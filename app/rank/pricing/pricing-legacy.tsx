@@ -57,7 +57,7 @@ export default function PricingPage() {
                 <li>Real-browser execution with screenshot evidence</li>
                 <li>A BLOCKED, REPAIR VERIFIED, or READY decision</li>
               </ul>
-              <Link className="btn" style={{ marginTop: "auto", justifyContent: "center" }} href={earlyAccess}>Get early access</Link>
+              <Link className="btn" style={{ marginTop: "auto", justifyContent: "center" }} href={earlyAccess}>Start a Production Pass</Link>
             </div>
             <div className="price price--hot">
               <div className="price__name">Pay as you go</div>
@@ -69,7 +69,7 @@ export default function PricingPage() {
                 <li>Linked failed-flow reruns after each fix</li>
                 <li>Results stay with the application, never a seat charge</li>
               </ul>
-              <Link className="btn" style={{ marginTop: "auto", justifyContent: "center" }} href={earlyAccess}>Get early access</Link>
+              <Link className="btn" style={{ marginTop: "auto", justifyContent: "center" }} href={earlyAccess}>Start a Production Pass</Link>
             </div>
           </div>
 

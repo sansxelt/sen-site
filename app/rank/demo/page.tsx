@@ -84,7 +84,7 @@ export default function Demo() {
             Every artifact below is an illustrative example, not a live account.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 26 }}>
-            <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Get early access <span aria-hidden>→</span></Link>
+            <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Validate a system <span aria-hidden>→</span></Link>
             <Link href="/how-it-works" className="btn btn--ghost btn--lg">How it works</Link>
           </div>
         </div>
@@ -257,7 +257,7 @@ export default function Demo() {
           <h2 className="display" style={{ fontSize: "clamp(1.9rem, 3.6vw, 2.8rem)", marginBottom: 16 }}>AI built the product. <span className="em">Vraelis finishes the engineering.</span></h2>
           <p className="lead-copy" style={{ margin: "0 auto 26px", textAlign: "center" }}>Connect your app and get this walkthrough with real evidence on your own flows.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Get early access <span aria-hidden>→</span></Link>
+            <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Validate a system <span aria-hidden>→</span></Link>
             <Link href="/how-it-works" className="btn btn--ghost btn--lg">How it works</Link>
           </div>
         </div>

@@ -81,7 +81,7 @@ export default function PricingV1({ initialCycle = "monthly" }: { initialCycle?:
                 <li>Real-browser evidence with screenshots</li>
                 <li>A full BLOCKED, REPAIR VERIFIED, or READY decision</li>
               </ul>
-              <Link className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href={earlyAccess}>Get early access</Link>
+              <Link className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href={earlyAccess}>Start a Production Pass</Link>
             </div>
 
             {PLAN_CATALOG_V1.map((p) => (

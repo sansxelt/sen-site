@@ -55,7 +55,7 @@ export default function FreeReportPage() {
             Your first Production Pass is free. Connect your AI-built app, approve its critical flows, and Vraelis runs them in a real browser, then returns a launch decision with the evidence behind it.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 26 }}>
-            <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Get early access <span aria-hidden>→</span></Link>
+            <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Validate a system <span aria-hidden>→</span></Link>
             <Link href="/how-it-works" className="btn btn--ghost btn--lg">See how it works</Link>
           </div>
         </div>
@@ -97,7 +97,7 @@ export default function FreeReportPage() {
           <h2 className="display" style={{ fontSize: "clamp(1.9rem, 3.6vw, 2.8rem)", marginBottom: 16 }}>Find the blockers <span className="em">before your users do</span>.</h2>
           <p className="lead-copy" style={{ margin: "0 auto 26px", textAlign: "center" }}>Sign in, connect your app, and run your first Production Pass free.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Get early access <span aria-hidden>→</span></Link>
+            <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Validate a system <span aria-hidden>→</span></Link>
             <Link href="/how-it-works" className="btn btn--ghost btn--lg">See how it works</Link>
           </div>
           <p style={{ fontSize: 12.5, color: "var(--fg-5)", marginTop: 18, lineHeight: 1.6 }}>

@@ -69,7 +69,7 @@ export default function HowItWorks() {
             No test scripts to write and no dashboard to babysit. You define what must work and approve what runs; Vraelis executes it against the exact build, captures the evidence, and returns one truthful production decision, with the reasons behind it.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 26 }}>
-            <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Get early access <span aria-hidden>→</span></Link>
+            <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Validate a system <span aria-hidden>→</span></Link>
             <Link href="/pricing" className="btn btn--ghost btn--lg">View pricing</Link>
           </div>
         </div>
@@ -178,7 +178,7 @@ export default function HowItWorks() {
           <h2 className="display" style={{ fontSize: "clamp(1.9rem, 3.6vw, 2.8rem)", marginBottom: 16 }}>See it run on <span className="em">your app</span>.</h2>
           <p className="lead-copy" style={{ margin: "0 auto 26px", textAlign: "center" }}>Connect your AI-built app and get a launch decision before your users find the blockers.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Get early access <span aria-hidden>→</span></Link>
+            <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Validate a system <span aria-hidden>→</span></Link>
             <Link href="/pricing" className="btn btn--ghost btn--lg">View pricing</Link>
             <Link href="/developers" className="btn btn--ghost btn--lg">Developers</Link>
           </div>

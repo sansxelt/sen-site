@@ -96,29 +96,33 @@ const IS_NOT = [
 export default function VraelisLanding() {
   return (
     <>
-      {/* ── Hero ── */}
+      {/* ── Hero ── asymmetric: the claim on the left, the proof-object (a real production
+          decision, live) on the right so the demo lands with the copy, above the fold. Stacks on
+          mobile. */}
       <section style={{ position: "relative" }}>
         <div className="glow glow--bleed" />
         <div className="grid-faint" style={{ opacity: 0.55 }} />
-        <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(48px, 7vw, 96px)", paddingBottom: "clamp(40px, 5vw, 68px)", textAlign: "center" }}>
-          <p className="eyebrow rise" data-d="1" style={{ justifyContent: "center" }}>Production validation for AI-built systems</p>
-          <h1 className="display rise" data-d="2" style={{ fontSize: "clamp(2.4rem, 5.4vw, 4.2rem)", margin: "0 auto 22px", maxWidth: 960, lineHeight: 1.04, textWrap: "balance" }}>
-            AI can build it. That is not proof it <span className="em">works in production</span>.
-          </h1>
-          <p className="rise" data-d="3" style={{ fontSize: "clamp(1.08rem, 1.45vw, 1.3rem)", color: "var(--fg-2)", maxWidth: 760, margin: "0 auto 26px", lineHeight: 1.55 }}>
-            Vraelis takes the behavior a system is required to hold, runs it against the exact build in a real environment, and returns one truthful decision backed by evidence of how it actually behaved. Not a guess, and not a test that only proves the test passed.
-          </p>
-          <div className="rise" data-d="4" style={{ display: "flex", gap: 14, justifyContent: "center", alignItems: "center", flexWrap: "wrap" }}>
-            <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Validate a system <span aria-hidden>→</span></Link>
-            <Link href="/how-it-works" style={{ fontSize: 15, fontWeight: 600, color: "var(--fg-2)", textDecoration: "none", textUnderlineOffset: 4, borderBottom: "1px solid var(--line-3)", paddingBottom: 2 }}>See how it works</Link>
+        <div className="wrap hero-grid" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(44px, 6vw, 84px)", paddingBottom: "clamp(40px, 5vw, 68px)" }}>
+          <div className="hero-copy">
+            <p className="eyebrow rise" data-d="1">Production validation for AI-built systems</p>
+            <h1 className="display rise" data-d="2" style={{ fontSize: "clamp(2.3rem, 4.4vw, 3.7rem)", margin: "0 0 20px", lineHeight: 1.05, textWrap: "balance" }}>
+              AI can build it. That is not proof it <span className="em">works in production</span>.
+            </h1>
+            <p className="rise" data-d="3" style={{ fontSize: "clamp(1.05rem, 1.3vw, 1.22rem)", color: "var(--fg-2)", maxWidth: 560, margin: "0 0 26px", lineHeight: 1.55 }}>
+              Vraelis takes the behavior a system is required to hold, runs it against the exact build in a real environment, and returns one truthful decision backed by evidence of how it actually behaved. Not a guess, and not a test that only proves the test passed.
+            </p>
+            <div className="rise" data-d="4" style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
+              <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Validate a system <span aria-hidden>→</span></Link>
+              <Link href="/how-it-works" style={{ fontSize: 15, fontWeight: 600, color: "var(--fg-2)", textDecoration: "none", textUnderlineOffset: 4, borderBottom: "1px solid var(--line-3)", paddingBottom: 2 }}>See how it works</Link>
+            </div>
+            <p className="rise" data-d="4" style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-4)", margin: "16px 0 0", maxWidth: 500, lineHeight: 1.55 }}>
+              Web and API verification are live. Mobile, desktop, SDK, and connected-device runtimes are expanding from the same verification architecture.
+            </p>
           </div>
-          <p className="rise" data-d="4" style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-4)", margin: "14px 0 0", maxWidth: 640, marginLeft: "auto", marginRight: "auto", lineHeight: 1.55 }}>
-            Web and API verification are live. Mobile, desktop, SDK, and connected-device runtimes are expanding from the same verification architecture.
-          </p>
 
           {/* Signature artifact: a production decision, tied to an exact build, with evidence.
               Interactive demonstration: the normal outcome is READY; switch to see a failure detected. */}
-          <div className="rise" data-d="5" style={{ position: "relative", maxWidth: 880, margin: "clamp(24px, 3vw, 40px) auto 0" }}>
+          <div className="hero-demo rise" data-d="5" style={{ position: "relative", minWidth: 0 }}>
             <PassDemo />
           </div>
         </div>
