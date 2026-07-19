@@ -44,9 +44,11 @@ const GITHUB: OAuthProvider = {
   identity: { url: "https://api.github.com/user", field: "login" },
 };
 
-// VERCEL — OAuth via a Vercel Integration. Scopes are configured on the integration (read projects +
-// deployments). Long-lived token; the callback carries teamId/configurationId to resolve projects later.
-// This is the first provider whose token gets a real consumer (deployment-URL auto-fill).
+// VERCEL — GATED until its integration OAuth flow is finished. Vercel Integration OAuth is NOT standard
+// OAuth: the install/authorize flow lives at vercel.com/integrations/<slug>/new and the redirect + config
+// model differ (the "app ID is invalid" error came from treating it as standard OAuth). Kept in the registry
+// but gated by VERCEL_OAUTH_ENABLED so it never renders a broken Connect button until the flow is built
+// correctly. Token exchange (api.vercel.com/v2/oauth/access_token) is correct and stays.
 const VERCEL: OAuthProvider = {
   kind: "vercel", label: "Vercel",
   authorizeUrl: "https://vercel.com/oauth/authorize",
@@ -56,6 +58,7 @@ const VERCEL: OAuthProvider = {
   tokenExchangeAccept: "application/json", refreshable: false,
   identity: { url: "https://api.vercel.com/v2/user", field: "username" },
   persistCallbackParams: ["teamId", "configurationId"],
+  gatedByEnv: "VERCEL_OAUTH_ENABLED", // OFF until the integration OAuth flow is finished + tested
 };
 
 // SENTRY — OAuth via a Sentry Integration. Tokens expire (~8h) and DO refresh, so this is where the
@@ -72,11 +75,14 @@ const SENTRY: OAuthProvider = {
 // STRIPE — Stripe Connect (Standard) OAuth, read-only, test-mode. Uses Stripe's own OAuth endpoints and
 // returns a connected-account id (stripe_user_id) rather than a classic refreshable token — the grant IS
 // the account. Reuses the existing STRIPE_SECRET_KEY as the exchange secret (no new secret env).
+// Stripe requires the read_write scope value unless your account is explicitly approved for read_only Connect
+// (a support request). We request read_write to work on any account, but Vraelis only ever READS — no write
+// endpoint is ever called. Test-mode only.
 const STRIPE: OAuthProvider = {
   kind: "stripe_test", label: "Stripe test mode",
   authorizeUrl: "https://connect.stripe.com/oauth/authorize",
   tokenUrl: "https://connect.stripe.com/oauth/token",
-  scopes: "read_only",
+  scopes: "read_write",
   clientIdEnv: "STRIPE_CONNECT_CLIENT_ID", clientSecretEnv: "STRIPE_SECRET_KEY",
   tokenExchangeAccept: "application/json", refreshable: false,
   persistCallbackParams: ["stripe_user_id"],
