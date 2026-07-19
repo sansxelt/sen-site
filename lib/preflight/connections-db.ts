@@ -230,6 +230,91 @@ export async function addApiCredential(owner: string, applicationId: string, inp
   return { id: (data as { id: string }).id, secretMask };
 }
 
+// Display labels for OAuth-connected providers (kept local to avoid a cycle with connection-display).
+const OAUTH_LABEL: Record<string, string> = {
+  github: "GitHub", vercel: "Vercel", supabase: "Supabase", stripe_test: "Stripe test mode", sentry: "Sentry",
+};
+
+// Store (or re-store) an OAuth token for a provider connection. The access/refresh token pair is sealed in
+// encrypted_ref exactly like test-account credentials; meta carries only NON-secret display + refresh
+// bookkeeping (a mask, scopes, an expiry so refresh-needed is computable without opening the blob, an
+// account label). One OAuth connection per (application, provider): a re-connect UPDATEs the existing row
+// (re-seals) rather than creating a duplicate. meta is built directly (bypasses sanitizeConnectionMeta,
+// like addTestAccount / addApiCredential).
+export async function addOAuthConnection(
+  owner: string,
+  applicationId: string,
+  provider: string,
+  input: { accessToken: string; refreshToken?: string; scope?: string; expiresIn?: number; account?: string },
+): Promise<{ id: string } | { error: string }> {
+  if (!isDatabaseConfigured()) return { error: "unavailable" };
+  if (!vaultConfigured()) return { error: "vault_unconfigured" };
+  if (!(CONNECTION_KINDS as readonly string[]).includes(provider) || provider === "test_account") return { error: "unknown_provider" };
+  if (!(await ownsApplication(owner, applicationId))) return { error: "not_found" };
+  const accessToken = (input.accessToken || "").trim();
+  if (!accessToken) return { error: "credentials_required" };
+
+  const sealed = sealSecret({
+    access_token: accessToken,
+    ...(input.refreshToken ? { refresh_token: input.refreshToken } : {}),
+  });
+  const scopes = (input.scope || "").split(/[\s,]+/).map((s) => s.trim()).filter(Boolean).slice(0, 40);
+  const meta: Record<string, unknown> = {
+    label: input.account ? `${OAUTH_LABEL[provider] ?? provider} (${input.account})` : (OAUTH_LABEL[provider] ?? provider),
+    token_mask: maskSecretValue(accessToken),
+    oauth: true,
+    scopes,
+    ...(typeof input.expiresIn === "number" && input.expiresIn > 0
+      ? { expires_at: new Date(Date.now() + input.expiresIn * 1000).toISOString() }
+      : {}),
+    ...(input.account ? { account: input.account.slice(0, 120) } : {}),
+  };
+
+  // Upsert: if an OAuth row for this (app, provider) exists, re-seal it; else insert.
+  const { data: existing } = await db().from("v_app_connections").select("id, meta")
+    .eq("user_id", norm(owner)).eq("application_id", applicationId).eq("provider", provider).maybeSingle();
+  const existingRow = existing as { id: string; meta?: { oauth?: boolean } } | null;
+
+  if (existingRow?.id) {
+    const { error } = await db().from("v_app_connections")
+      .update({ status: "connected", encrypted_ref: sealed, meta, last_verified_at: new Date().toISOString() } as never)
+      .eq("user_id", norm(owner)).eq("application_id", applicationId).eq("id", existingRow.id);
+    if (error) return { error: "unavailable" };
+    return { id: existingRow.id };
+  }
+
+  const { data, error } = await db().from("v_app_connections").insert({
+    application_id: applicationId, user_id: norm(owner), provider,
+    status: "connected", encrypted_ref: sealed, meta,
+  } as never).select("id").single();
+  if (error || !data) return { error: "unavailable" };
+  return { id: (data as { id: string }).id };
+}
+
+// EXECUTOR/VERIFY-ONLY: open a stored OAuth token for a provider connection. Owner+app+id scoped. Returns
+// the sealed token pair plus the non-secret expiry so a consumer can decide whether to refresh. Never call
+// from a web route that could echo the token to a client.
+export async function openOAuthToken(
+  owner: string,
+  applicationId: string,
+  connectionId: string,
+): Promise<{ accessToken: string; refreshToken?: string; expiresAt?: string; provider: string } | null> {
+  if (!isDatabaseConfigured()) return null;
+  const { data } = await db().from("v_app_connections").select("encrypted_ref, provider, meta")
+    .eq("user_id", norm(owner)).eq("application_id", applicationId).eq("id", connectionId).maybeSingle();
+  const row = data as { encrypted_ref?: string; provider?: string; meta?: { oauth?: boolean; expires_at?: string } } | null;
+  if (!row?.encrypted_ref || row.meta?.oauth !== true) return null;
+  const opened = openSecret(row.encrypted_ref);
+  const accessToken = String(opened.access_token ?? "");
+  if (!accessToken) return null;
+  return {
+    accessToken,
+    ...(opened.refresh_token ? { refreshToken: String(opened.refresh_token) } : {}),
+    ...(row.meta?.expires_at ? { expiresAt: row.meta.expires_at } : {}),
+    provider: String(row.provider ?? ""),
+  };
+}
+
 // EXECUTOR-ONLY: open an API credential's sealed secret + its scheme for a real request. Owner-scoped. Never
 // call from a route that could echo the value; the executor injects it into the adapter's in-memory map only.
 export async function openApiCredential(owner: string, applicationId: string, connectionId: string): Promise<{ secret: string; scheme: "bearer" | "api_key" | "basic"; headerName?: string } | null> {

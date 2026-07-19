@@ -34,6 +34,11 @@ ok("manual kind + connected -> Connected manually (no OAuth pretense)",
   connectionState("github", "connected") === "connected_manually" && stateLabel(connectionState("github", "connected")) === "Connected manually");
 ok("test_account + connected -> Connected (a credential Vraelis actually holds)",
   connectionState("test_account", "connected") === "connected" && stateLabel("connected") === "Connected");
+// OAuth: a row with meta.oauth === true holds a real token, so it renders "Connected", NOT "Connected manually".
+ok("OAuth github (meta.oauth) + connected -> Connected (a real held token, not manual)",
+  connectionState("github", "connected", { oauth: true }) === "connected" && stateLabel("connected") === "Connected");
+ok("github WITHOUT the oauth flag stays 'Connected manually' (no OAuth pretense)",
+  connectionState("github", "connected", {}) === "connected_manually" && connectionState("github", "connected", null) === "connected_manually");
 ok("status error -> Verification failed", connectionState("supabase", "error") === "verification_failed" && stateLabel("verification_failed") === "Verification failed");
 ok("pending / unknown -> Needs attention (honest, never optimistic)",
   connectionState("webhook", "pending") === "needs_attention" && connectionState("github", "") === "needs_attention" && connectionState("sentry", "weird") === "needs_attention");

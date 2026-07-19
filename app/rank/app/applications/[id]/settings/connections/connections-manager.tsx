@@ -12,13 +12,28 @@
 // what did and did not happen.
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Mark, ComingLater, PROVIDER_MARK } from "../../../_connections/brand";
 import { GithubForm, TwoFieldForm, input, lab, help, type Conn } from "../../../_connections/forms";
 import {
   PROVIDER_LABELS, PROVIDER_GROUP, MANUAL_ADD_KINDS, MANUAL_FIELDS, COMING_LATER_PROVIDERS,
   connectionState, stateLabel, featureUse, neverAccesses, metaSummary, whenUtc, isStoredNotYetUsed, type ConnectionState,
 } from "@/lib/preflight/connection-display";
+import { OAUTH_PROVIDER_KINDS } from "@/lib/preflight/oauth/providers";
+
+// Human-readable OAuth callback outcomes (?oauth=connected|error&provider=&reason=). Reasons map to the
+// exact failure codes the callback route emits; anything unknown falls back to a generic line.
+const OAUTH_REASONS: Record<string, string> = {
+  denied: "You cancelled the authorization, or the provider declined it.",
+  server_misconfigured: "This provider isn't configured yet on our side. Nothing was connected.",
+  bad_state: "The authorization link expired or was tampered with. Try connecting again.",
+  state_mismatch: "The authorization couldn't be verified in this browser. Try connecting again.",
+  forbidden: "You need editor access on this application to connect an account.",
+  owner_mismatch: "That authorization didn't match this application. Nothing was connected.",
+  exchange_failed: "The provider didn't complete the token exchange. Try again in a moment.",
+  vault_unconfigured: "Secure storage isn't configured, so the token couldn't be sealed.",
+  no_code: "The provider didn't return an authorization code. Try connecting again.",
+};
 
 // A quiet, honest chip for a connection whose metadata is saved but which no verification step reads
 // yet. It keeps a connected-but-inert integration from reading as if it were feeding a pass.
@@ -89,7 +104,7 @@ function TestAccountForm({ initialLabel, initialScope, submitLabel, busy, onSubm
 function ReadOnlyCard({ c }: { c: SafeConnection }) {
   const isTestAccount = c.provider === "test_account";
   const m = strMeta(c.meta);
-  const state = connectionState(c.provider, c.status);
+  const state = connectionState(c.provider, c.status, c.meta as { oauth?: boolean });
   const summary = isTestAccount ? null : metaSummary(c.provider, c.meta);
   const note = typeof c.meta.last_check_note === "string" ? c.meta.last_check_note : "";
   return (
@@ -178,6 +193,17 @@ function ReadOnlyConnections({ connections }: { connections: SafeConnection[] })
 
 export function ConnectionsManager({ appId, connections, canManage = true }: { appId: string; connections: SafeConnection[]; canManage?: boolean }) {
   const router = useRouter();
+  const search = useSearchParams();
+  // OAuth callback outcome (?oauth=connected|error&provider=&reason=), rendered as a one-time banner.
+  const oauthResult = (() => {
+    const o = search.get("oauth");
+    if (o !== "connected" && o !== "error") return null;
+    const provider = search.get("provider") || "";
+    const label = PROVIDER_LABELS[provider] ?? provider;
+    if (o === "connected") return { ok: true, text: `${label} connected. Its token is sealed and ready.` };
+    const reason = search.get("reason") || "";
+    return { ok: false, text: `Could not connect ${label}. ${OAUTH_REASONS[reason] ?? "Please try again."}` };
+  })();
   const [editing, setEditing] = useState<string | null>(null);       // connection id with an open editor
   const [confirming, setConfirming] = useState<string | null>(null); // connection id awaiting disconnect confirm
   const [busy, setBusy] = useState<string | null>(null);             // "<id>:<action>" while a request runs
@@ -281,7 +307,7 @@ export function ConnectionsManager({ appId, connections, canManage = true }: { a
   function card(c: SafeConnection) {
     const isTestAccount = c.provider === "test_account";
     const m = strMeta(c.meta);
-    const state = connectionState(c.provider, c.status);
+    const state = connectionState(c.provider, c.status, c.meta as { oauth?: boolean });
     const summary = isTestAccount ? null : metaSummary(c.provider, c.meta);
     const note = typeof c.meta.last_check_note === "string" ? c.meta.last_check_note : "";
     const msg = msgs[c.id];
@@ -374,6 +400,14 @@ export function ConnectionsManager({ appId, connections, canManage = true }: { a
 
   return (
     <div style={{ display: "grid", gap: 26 }}>
+      {oauthResult ? (
+        <div role={oauthResult.ok ? "status" : "alert"} style={{
+          borderRadius: "var(--r-sm)", padding: "11px 15px", fontSize: 13.5, lineHeight: 1.5,
+          border: `1px solid ${oauthResult.ok ? "var(--acc-line)" : "rgba(178,58,58,0.25)"}`,
+          background: oauthResult.ok ? "var(--acc-soft)" : "rgba(178,58,58,0.08)",
+          color: oauthResult.ok ? "var(--acc-deep)" : "#9F2D2D",
+        }}>{oauthResult.text}</div>
+      ) : null}
       <section aria-label="Connections">
         <div style={{ ...headLbl, marginBottom: 10 }}>Connections ({others.length})</div>
         {others.length ? (
@@ -402,8 +436,23 @@ export function ConnectionsManager({ appId, connections, canManage = true }: { a
         )}
       </section>
 
-      <section aria-label="Add connection" style={{ borderTop: "1px solid var(--line-1)", paddingTop: 22 }}>
-        <div style={{ ...headLbl, marginBottom: 4 }}>Add connection</div>
+      <section aria-label="Connect an account" style={{ borderTop: "1px solid var(--line-1)", paddingTop: 22 }}>
+        <div style={{ ...headLbl, marginBottom: 4 }}>Connect an account</div>
+        <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, margin: "0 0 12px", maxWidth: 640 }}>
+          Authorize a provider on its own site. Vraelis receives a read-only access token, sealed with
+          AES-256-GCM, never a password. You can disconnect any time.
+        </p>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 22 }}>
+          {OAUTH_PROVIDER_KINDS.map((kind) => (
+            <a key={kind} href={`/api/preflight/apps/${encodeURIComponent(appId)}/connections/${kind}/oauth`}
+              className="btn btn--ghost" style={{ padding: "8px 14px", fontSize: 13, display: "inline-flex", alignItems: "center", gap: 9, textDecoration: "none" }}>
+              <Mark text={PROVIDER_MARK[kind] ?? "code"} />
+              Connect {PROVIDER_LABELS[kind] ?? kind}
+            </a>
+          ))}
+        </div>
+
+        <div style={{ ...headLbl, marginBottom: 4 }}>Or add manually</div>
         <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, margin: "0 0 12px", maxWidth: 640 }}>
           Manual connections carry metadata only; never enter a password or key in them. Test-account
           credentials are the single exception and are sealed with AES-256-GCM.

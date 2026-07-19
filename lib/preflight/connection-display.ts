@@ -15,13 +15,15 @@ export type ConnectionState =
   | "revoked"              // terminal: row deleted, ciphertext destroyed (never rendered)
   | "disconnected";        // terminal: row deleted (never rendered)
 
-// status column (pending | connected | error) + provider -> the state a card renders.
-export function connectionState(provider: string, status: string): ConnectionState {
+// status column (pending | connected | error) + provider (+ meta) -> the state a card renders. A connection
+// backed by a real held credential (a sealed test_account, or an OAuth token where meta.oauth === true)
+// renders "Connected"; owner-entered metadata renders "Connected manually" so the card never overstates.
+export function connectionState(provider: string, status: string, meta?: { oauth?: boolean } | null): ConnectionState {
   const s = (status || "").trim().toLowerCase();
   if (s === "revoked") return "revoked";
   if (s === "disconnected") return "disconnected";
   if (s === "error") return "verification_failed";
-  if (s === "connected") return provider === "test_account" ? "connected" : "connected_manually";
+  if (s === "connected") return (provider === "test_account" || meta?.oauth === true) ? "connected" : "connected_manually";
   return "needs_attention"; // pending / unknown: honest, never optimistic
 }
 
