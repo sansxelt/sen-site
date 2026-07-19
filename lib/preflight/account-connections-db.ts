@@ -32,7 +32,7 @@ export type AccountConnection = {
 };
 
 const OAUTH_LABEL: Record<string, string> = {
-  github: "GitHub", vercel: "Vercel", supabase: "Supabase", stripe_test: "Stripe test mode", sentry: "Sentry",
+  github: "GitHub", vercel: "Vercel", supabase: "Supabase", stripe_test: "Stripe", sentry: "Sentry",
 };
 
 // List the caller's account-level connections (safe metadata only). [] when the DB is unconfigured or the

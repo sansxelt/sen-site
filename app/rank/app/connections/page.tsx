@@ -10,7 +10,7 @@ import { useSearchParams } from "next/navigation";
 import { I, EmptyIcon } from "@/app/rank/_components/icons";
 
 const PROVIDER_LABELS: Record<string, string> = {
-  github: "GitHub", vercel: "Vercel", supabase: "Supabase", stripe_test: "Stripe test mode", sentry: "Sentry",
+  github: "GitHub", vercel: "Vercel", supabase: "Supabase", stripe_test: "Stripe", sentry: "Sentry",
 };
 
 const OAUTH_REASONS: Record<string, string> = {

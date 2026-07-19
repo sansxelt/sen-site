@@ -12,7 +12,7 @@ type AccountConn = { id: string; provider: string; label: string };
 type Link = { provider: string; accountConnectionId: string; selection: Record<string, unknown> };
 
 const PROVIDER_LABELS: Record<string, string> = {
-  github: "GitHub", vercel: "Vercel", supabase: "Supabase", stripe_test: "Stripe test mode", sentry: "Sentry",
+  github: "GitHub", vercel: "Vercel", supabase: "Supabase", stripe_test: "Stripe", sentry: "Sentry",
 };
 // The per-app selection field each provider needs (empty = link-only, no selection).
 const SELECTION_FIELD: Record<string, { key: string; label: string; placeholder: string } | null> = {

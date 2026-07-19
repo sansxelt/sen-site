@@ -232,7 +232,7 @@ export async function addApiCredential(owner: string, applicationId: string, inp
 
 // Display labels for OAuth-connected providers (kept local to avoid a cycle with connection-display).
 const OAUTH_LABEL: Record<string, string> = {
-  github: "GitHub", vercel: "Vercel", supabase: "Supabase", stripe_test: "Stripe test mode", sentry: "Sentry",
+  github: "GitHub", vercel: "Vercel", supabase: "Supabase", stripe_test: "Stripe", sentry: "Sentry",
 };
 
 // Store (or re-store) an OAuth token for a provider connection. The access/refresh token pair is sealed in

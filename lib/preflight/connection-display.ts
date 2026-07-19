@@ -39,7 +39,7 @@ export function stateLabel(state: ConnectionState): string { return STATE_LABELS
 
 export const PROVIDER_LABELS: Record<string, string> = {
   github: "GitHub", vercel: "Vercel", custom_deploy: "Custom deployment",
-  supabase: "Supabase", custom_auth: "Custom auth", stripe_test: "Stripe test mode",
+  supabase: "Supabase", custom_auth: "Custom auth", stripe_test: "Stripe",
   sentry: "Sentry", openapi: "OpenAPI", webhook: "Webhook", test_account: "Test account",
 };
 export const PROVIDER_GROUP: Record<string, string> = {

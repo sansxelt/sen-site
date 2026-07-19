@@ -88,7 +88,7 @@ const SENTRY: OAuthProvider = {
 // (a support request). We request read_write to work on any account, but Vraelis only ever READS — no write
 // endpoint is ever called. Test-mode only.
 const STRIPE: OAuthProvider = {
-  kind: "stripe_test", label: "Stripe test mode",
+  kind: "stripe_test", label: "Stripe",
   authorizeUrl: "https://connect.stripe.com/oauth/authorize",
   tokenUrl: "https://connect.stripe.com/oauth/token",
   scopes: "read_write",
