@@ -10,7 +10,7 @@
 import { NextResponse } from "next/server";
 import { gatePreflightApp, gateReasonResponse } from "@/lib/preflight/team-access";
 import { vaultConfigured } from "@/lib/preflight/secret-vault";
-import { resolveOAuthProvider, providerAvailable, callbackPath } from "@/lib/preflight/oauth/providers";
+import { resolveOAuthProvider, providerAvailable, callbackPath, buildAuthorizeUrl } from "@/lib/preflight/oauth/providers";
 import { signOAuthState, newNonce } from "@/lib/preflight/oauth/state";
 
 export const runtime = "nodejs";
@@ -43,15 +43,10 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string; pro
   const nonce = newNonce();
   const state = signOAuthState({ appId, owner, provider, nonce });
   const redirectUri = `${baseUrl(req)}${callbackPath(provider)}`;
+  const authUrl = buildAuthorizeUrl(p, { state, redirectUri });
+  if (!authUrl) return backToConnections(req, appId, `oauth=error&provider=${provider}&reason=server_misconfigured`);
 
-  const authUrl = new URL(p.authorizeUrl);
-  authUrl.searchParams.set("client_id", process.env[p.clientIdEnv] as string);
-  authUrl.searchParams.set("redirect_uri", redirectUri);
-  authUrl.searchParams.set("scope", p.scopes);
-  authUrl.searchParams.set("state", state);
-  authUrl.searchParams.set("response_type", "code");
-
-  const res = NextResponse.redirect(authUrl.toString(), 302);
+  const res = NextResponse.redirect(authUrl, 302);
   // Nonce cookie: a belt-and-suspenders match the callback re-checks against the signed state's nonce.
   res.cookies.set(`vr_oauth_${provider}`, nonce, {
     httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 600,

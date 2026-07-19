@@ -30,6 +30,13 @@ export type OAuthProvider = {
   // written "no database credentials" promise). A gated provider never renders a Connect button and its
   // routes fail closed unless the flag is set.
   gatedByEnv?: string;
+  // How the authorize URL is built. "standard" appends client_id/redirect_uri/scope/state/response_type
+  // (GitHub/Sentry/Stripe/Supabase). "install" is Vercel's integration model: send the user to
+  // vercel.com/integrations/<slug>/new?state=<state>; Vercel already knows the redirect + config and appends
+  // code/configurationId/teamId on the way back, so we DON'T send client_id/scope/redirect_uri here.
+  authorizeStyle?: "standard" | "install";
+  // For "install" style: the env var holding the integration slug used to build the install URL.
+  installSlugEnv?: string;
 };
 
 // GITHUB — OAuth-app token: no expiry, no refresh, JSON exchange when Accept: application/json is sent.
@@ -51,14 +58,16 @@ const GITHUB: OAuthProvider = {
 // correctly. Token exchange (api.vercel.com/v2/oauth/access_token) is correct and stays.
 const VERCEL: OAuthProvider = {
   kind: "vercel", label: "Vercel",
-  authorizeUrl: "https://vercel.com/oauth/authorize",
+  authorizeUrl: "https://vercel.com/integrations", // + /<slug>/new, built by buildAuthorizeUrl (install style)
   tokenUrl: "https://api.vercel.com/v2/oauth/access_token",
   scopes: "",
   clientIdEnv: "VERCEL_CLIENT_ID", clientSecretEnv: "VERCEL_CLIENT_SECRET",
   tokenExchangeAccept: "application/json", refreshable: false,
-  identity: { url: "https://api.vercel.com/v2/user", field: "username" },
+  identity: { url: "https://api.vercel.com/v2/user", field: "user.username" },
   persistCallbackParams: ["teamId", "configurationId"],
-  gatedByEnv: "VERCEL_OAUTH_ENABLED", // OFF until the integration OAuth flow is finished + tested
+  authorizeStyle: "install",
+  installSlugEnv: "VERCEL_INTEGRATION_SLUG",
+  gatedByEnv: "VERCEL_OAUTH_ENABLED", // needs creds AND the slug; on when VERCEL_OAUTH_ENABLED=1
 };
 
 // SENTRY — OAuth via a Sentry Integration. Tokens expire (~8h) and DO refresh, so this is where the
@@ -135,4 +144,26 @@ export function providerAvailable(p: OAuthProvider): boolean {
 // It serves BOTH the per-app and account-level flows; the signed state (appId present or not) selects which.
 export function callbackPath(kind: string): string {
   return `/api/preflight/apps/oauth/callback/${kind}`;
+}
+
+// Build the provider's authorize URL to redirect the user to. Two styles:
+//  - "install" (Vercel): vercel.com/integrations/<slug>/new?state=<state>. The redirect URL + scopes live on
+//    the Integration Console, so we send ONLY state; Vercel appends code/configurationId/teamId on return.
+//    Returns null if the slug env is missing (caller fails closed with server_misconfigured).
+//  - "standard" (default): appends client_id + redirect_uri + scope + state + response_type.
+export function buildAuthorizeUrl(p: OAuthProvider, opts: { state: string; redirectUri: string }): string | null {
+  if (p.authorizeStyle === "install") {
+    const slug = p.installSlugEnv ? process.env[p.installSlugEnv] : undefined;
+    if (!slug) return null;
+    const u = new URL(`https://vercel.com/integrations/${slug}/new`);
+    u.searchParams.set("state", opts.state);
+    return u.toString();
+  }
+  const u = new URL(p.authorizeUrl);
+  u.searchParams.set("client_id", process.env[p.clientIdEnv] as string);
+  u.searchParams.set("redirect_uri", opts.redirectUri);
+  if (p.scopes) u.searchParams.set("scope", p.scopes);
+  u.searchParams.set("state", opts.state);
+  u.searchParams.set("response_type", "code");
+  return u.toString();
 }

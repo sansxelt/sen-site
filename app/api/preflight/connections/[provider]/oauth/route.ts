@@ -12,7 +12,7 @@ import { auth } from "@/auth";
 import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { vaultConfigured } from "@/lib/preflight/secret-vault";
-import { resolveOAuthProvider, providerAvailable, callbackPath } from "@/lib/preflight/oauth/providers";
+import { resolveOAuthProvider, providerAvailable, callbackPath, buildAuthorizeUrl } from "@/lib/preflight/oauth/providers";
 import { signOAuthState, newNonce } from "@/lib/preflight/oauth/state";
 
 export const runtime = "nodejs";
@@ -43,18 +43,12 @@ export async function GET(req: Request, ctx: { params: Promise<{ provider: strin
 
   const nonce = newNonce();
   const state = signOAuthState({ owner, provider, nonce }); // no appId => account-level state
-  // Same registered callback URL as the per-app flow; the unified callback branches on state.appId. Providers
-  // like GitHub allow only one callback URL, so both flows must share it.
+  // Same registered callback URL as the per-app flow; the unified callback branches on state.appId.
   const redirectUri = `${baseUrl(req)}${callbackPath(provider)}`;
+  const authUrl = buildAuthorizeUrl(p, { state, redirectUri });
+  if (!authUrl) return backToConnections(req, `oauth=error&provider=${provider}&reason=server_misconfigured`);
 
-  const authUrl = new URL(p.authorizeUrl);
-  authUrl.searchParams.set("client_id", process.env[p.clientIdEnv] as string);
-  authUrl.searchParams.set("redirect_uri", redirectUri);
-  authUrl.searchParams.set("scope", p.scopes);
-  authUrl.searchParams.set("state", state);
-  authUrl.searchParams.set("response_type", "code");
-
-  const res = NextResponse.redirect(authUrl.toString(), 302);
+  const res = NextResponse.redirect(authUrl, 302);
   res.cookies.set(`vr_oauth_acct_${provider}`, nonce, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 600 });
   return res;
 }

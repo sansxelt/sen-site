@@ -111,7 +111,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ provider: strin
       const idRes = await safeFetch(p.identity.url, { headers: { authorization: `Bearer ${tok.access_token}`, accept: "application/json", "user-agent": "vraelis" } });
       if (idRes.ok) {
         const j = (await idRes.json().catch(() => ({}))) as Record<string, unknown>;
-        const v = j[p.identity.field];
+        // identity.field may be a dot-path (Vercel returns { user: { username } }).
+        const v = p.identity.field.split(".").reduce<unknown>((acc, k) => (acc && typeof acc === "object" ? (acc as Record<string, unknown>)[k] : undefined), j);
         if (typeof v === "string") account = v;
       }
     } catch { /* label is optional */ }
