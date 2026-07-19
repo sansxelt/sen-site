@@ -442,11 +442,10 @@ export function ConnectionsManager({ appId, connections, canManage = true }: { a
           Authorize a provider on its own site. Vraelis receives a read-only access token, sealed with
           AES-256-GCM, never a password. You can disconnect any time.
         </p>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 22 }}>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 22 }}>
           {OAUTH_PROVIDER_KINDS.map((kind) => (
             <a key={kind} href={`/api/preflight/apps/${encodeURIComponent(appId)}/connections/${kind}/oauth`}
-              className="btn btn--ghost" style={{ padding: "8px 14px", fontSize: 13, display: "inline-flex", alignItems: "center", gap: 9, textDecoration: "none" }}>
-              <Mark text={PROVIDER_MARK[kind] ?? "code"} />
+              className="btn" style={{ padding: "9px 16px", fontSize: 13.5, textDecoration: "none" }}>
               Connect {PROVIDER_LABELS[kind] ?? kind}
             </a>
           ))}

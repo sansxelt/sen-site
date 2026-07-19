@@ -351,7 +351,10 @@ export default function ConnectWorkspace() {
                 <TwoFieldForm fields={[["provider_name", "Provider", "Railway / Netlify / Fly / other"], ["branch", "Branch (optional)", "main"], ["commit", "Commit SHA (optional)", "40 hex characters"]]} value={customDeploy} onSave={(v) => { setCustomDeploy(v); setOpenCard(null); }} requiredKey="provider_name" />
               </ConnCard>
             </div>
-            <ComingLater names={["GitHub OAuth", "Vercel OAuth", "Railway", "Netlify"]} />
+            <p style={{ fontSize: 12, color: "var(--fg-4)", margin: "10px 0 0", lineHeight: 1.5 }}>
+              Prefer to authorize with a token instead of pasting metadata? Connect GitHub with read-only OAuth on the Connections tab once this application is set up.
+            </p>
+            <ComingLater names={["Vercel OAuth", "Railway", "Netlify"]} />
           </Section>
 
           <Section n={3} title="Product definition" sub="What the app is supposed to do. A short summary is enough to start; every source strengthens the Production Contract Vraelis derives.">
