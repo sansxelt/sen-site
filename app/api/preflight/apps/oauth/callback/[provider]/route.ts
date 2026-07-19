@@ -26,14 +26,44 @@ function baseUrl(req: Request): string {
   const proto = req.headers.get("x-forwarded-proto") || (host.startsWith("localhost") ? "http" : "https");
   return `${proto}://${host}`;
 }
+// POPUP MODE: when the flow was opened in a window.open (the initiate route set vr_oauth_popup), the user
+// never sees this tab — so instead of a 302 into a full page, return a minimal document that posts the
+// outcome to the opener and closes itself. The opener refreshes its list in place. Falls back to a normal
+// redirect if there is no opener (e.g. the popup was blocked and it became a same-tab navigation).
+function popupClose(req: Request, path: string, params: string): NextResponse {
+  const origin = baseUrl(req);
+  const target = `${origin}${path}?${params}`;
+  const payload = JSON.stringify({ source: "vraelis-oauth", params });
+  const html = `<!doctype html><meta charset="utf-8"><title>Finishing…</title>
+<body style="font:14px system-ui;padding:24px;color:#4a463f">Finishing up…
+<script>
+(function(){
+  try {
+    if (window.opener && !window.opener.closed) {
+      window.opener.postMessage(${payload}, ${JSON.stringify(origin)});
+      window.close();
+      return;
+    }
+  } catch (e) {}
+  window.location.replace(${JSON.stringify(target)});
+})();
+</script></body>`;
+  const res = new NextResponse(html, { status: 200, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
+  res.cookies.delete("vr_oauth_popup");
+  return res;
+}
+
 // Redirect back to the surface the flow came from: an app's Connections tab (per-app) or the account
-// Connections page (account).
-function backTo(req: Request, appId: string | undefined, params: string): NextResponse {
+// Connections page (account). In popup mode this closes the popup and messages the opener instead.
+function backTo(req: Request, appId: string | undefined, params: string, popup = false): NextResponse {
   const path = appId ? `/applications/${appId}/settings/connections` : `/connections`;
+  if (popup) return popupClose(req, path, params);
   return NextResponse.redirect(`${baseUrl(req)}${path}?${params}`, 302);
 }
-function backGeneric(req: Request, provider: string, reason: string): NextResponse {
-  return NextResponse.redirect(`${baseUrl(req)}/connections?oauth=error&provider=${provider}&reason=${reason}`, 302);
+function backGeneric(req: Request, provider: string, reason: string, popup = false): NextResponse {
+  const params = `oauth=error&provider=${provider}&reason=${reason}`;
+  if (popup) return popupClose(req, "/connections", params);
+  return NextResponse.redirect(`${baseUrl(req)}/connections?${params}`, 302);
 }
 
 export async function GET(req: Request, ctx: { params: Promise<{ provider: string }> }) {
@@ -43,16 +73,20 @@ export async function GET(req: Request, ctx: { params: Promise<{ provider: strin
   const stateRaw = url.searchParams.get("state");
   const providerError = url.searchParams.get("error");
 
+  // Popup mode was recorded by the initiate route; every exit path below closes the popup instead of
+  // redirecting a tab the user never sees.
+  const popup = (await cookies()).get("vr_oauth_popup")?.value === "1";
+
   const p = resolveOAuthProvider(provider);
-  if (!p) return backGeneric(req, provider, "unknown_provider");
+  if (!p) return backGeneric(req, provider, "unknown_provider", popup);
 
   // verify + decode state; appId presence selects the flow.
   const state = stateRaw ? verifyOAuthState(stateRaw, { expectedProvider: provider }) : null;
-  if (!state) return backGeneric(req, provider, "bad_state");
+  if (!state) return backGeneric(req, provider, "bad_state", popup);
   const appId = state.appId; // undefined => account-level
   const cookieName = appId ? `vr_oauth_${provider}` : `vr_oauth_acct_${provider}`;
 
-  const err = (reason: string) => backTo(req, appId, `oauth=error&provider=${provider}&reason=${reason}`);
+  const err = (reason: string) => backTo(req, appId, `oauth=error&provider=${provider}&reason=${reason}`, popup);
 
   if (providerError) return err("denied");
   if (!code) return err("no_code");
@@ -147,7 +181,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ provider: strin
     : await addAccountOAuthConnection(sealOwner, provider, input);
   if ("error" in saved) return err(saved.error);
 
-  const res = backTo(req, appId, `oauth=connected&provider=${provider}`);
+  const res = backTo(req, appId, `oauth=connected&provider=${provider}`, popup);
   res.cookies.delete(cookieName);
   return res;
 }

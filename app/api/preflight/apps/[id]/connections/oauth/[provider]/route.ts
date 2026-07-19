@@ -51,5 +51,9 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string; pro
   res.cookies.set(`vr_oauth_${provider}`, nonce, {
     httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 600,
   });
+  // Popup mode: the callback closes the popup and messages the opener instead of redirecting.
+  if (new URL(req.url).searchParams.get("popup") === "1") {
+    res.cookies.set("vr_oauth_popup", "1", { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 600 });
+  }
   return res;
 }

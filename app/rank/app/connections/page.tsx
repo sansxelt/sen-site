@@ -71,6 +71,40 @@ export default function ConnectionsPage() {
   }
   useEffect(() => { void load(); }, []);
 
+  // Result of a popup authorization. The callback page posts {source:"vraelis-oauth", params} to this
+  // window and closes itself; we render the same banner as the redirect flow and refresh the list in place,
+  // so the user never leaves this page. Origin is checked before trusting the message.
+  useEffect(() => {
+    function onMessage(e: MessageEvent) {
+      if (e.origin !== window.location.origin) return;
+      const data = e.data as { source?: string; params?: string } | null;
+      if (!data || data.source !== "vraelis-oauth" || typeof data.params !== "string") return;
+      const q = new URLSearchParams(data.params);
+      const provider = q.get("provider") || "";
+      const label = PROVIDER_LABELS[provider] ?? provider;
+      if (q.get("oauth") === "connected") {
+        setMsg({ ok: true, text: `${label} connected for your account. Every application can now use it.` });
+      } else {
+        setMsg({ ok: false, text: `Could not connect ${label}. ${OAUTH_REASONS[q.get("reason") || ""] ?? "Please try again."}` });
+      }
+      void load();
+    }
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
+
+  // Open the provider authorization in a popup so the user stays on this page. If the browser blocks it,
+  // fall back to a normal same-tab navigation (the callback handles both).
+  function connect(kind: string) {
+    const url = `/api/preflight/connections/${encodeURIComponent(kind)}/oauth?popup=1`;
+    const w = 620, h = 760;
+    const left = window.screenX + Math.max(0, (window.outerWidth - w) / 2);
+    const top = window.screenY + Math.max(0, (window.outerHeight - h) / 3);
+    const win = window.open(url, "vraelis-oauth", `width=${w},height=${h},left=${left},top=${top}`);
+    if (!win) window.location.href = `/api/preflight/connections/${encodeURIComponent(kind)}/oauth`;
+    else win.focus();
+  }
+
   async function revoke(id: string, label: string) {
     if (busy) return;
     setBusy(id); setMsg(null);
@@ -124,7 +158,7 @@ export default function ConnectionsPage() {
                   {busy === c.id ? "Disconnecting…" : "Disconnect"}
                 </button>
               ) : (
-                <a href={`/api/preflight/connections/${kind}/oauth`} className="btn" style={{ flex: "none", textDecoration: "none" }}>Connect {label}</a>
+                <button type="button" className="btn" style={{ flex: "none" }} onClick={() => connect(kind)}>Connect {label}</button>
               )}
             </div>
           );

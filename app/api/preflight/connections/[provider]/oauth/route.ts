@@ -50,5 +50,10 @@ export async function GET(req: Request, ctx: { params: Promise<{ provider: strin
 
   const res = NextResponse.redirect(authUrl, 302);
   res.cookies.set(`vr_oauth_acct_${provider}`, nonce, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 600 });
+  // Popup mode: the connections page opened this in a window.open. Remember it so the callback closes the
+  // popup and messages the opener instead of redirecting a full page the user never sees.
+  if (new URL(req.url).searchParams.get("popup") === "1") {
+    res.cookies.set("vr_oauth_popup", "1", { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 600 });
+  }
   return res;
 }
