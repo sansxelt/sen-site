@@ -30,6 +30,42 @@ export function FlowsSection({ contractId, initial, roles }: { contractId: strin
   const [flows, setFlows] = useState<TestFlow[]>(initial);
   const [editing, setEditing] = useState<TestFlow | "new" | null>(null);
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  const [busyReview, setBusyReview] = useState(false);
+
+  const isSuggested = (f: TestFlow) => (f.review_state ?? "approved") === "suggested";
+  const suggestedFlows = flows.filter(isSuggested);
+  const confirmedFlows = flows.filter((f) => !isSuggested(f));
+
+  async function reviewFlow(f: TestFlow, review: "approve" | "reject") {
+    setMsg(null);
+    if (review === "approve") setFlows((xs) => xs.map((x) => (x.id === f.id ? { ...x, review_state: "approved", enabled: true } : x)));
+    else setFlows((xs) => xs.filter((x) => x.id !== f.id));
+    try {
+      const r = await fetch("/api/preflight/flows", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: f.id, review }) });
+      if (!r.ok) throw new Error("review_failed");
+    } catch {
+      setFlows(initialOrRestore(f, review));
+      setMsg({ kind: "err", text: `Could not ${review} that flow. It was restored.` });
+    }
+  }
+  // Restore helper: on failure, put the suggested flow back as it was.
+  function initialOrRestore(f: TestFlow, review: "approve" | "reject"): TestFlow[] {
+    return review === "approve"
+      ? flows.map((x) => (x.id === f.id ? { ...x, review_state: "suggested", enabled: f.enabled } : x))
+      : flows.some((x) => x.id === f.id) ? flows : [...flows, f];
+  }
+
+  async function approveAllFlows() {
+    if (busyReview || suggestedFlows.length === 0) return;
+    setBusyReview(true); setMsg(null);
+    const ids = suggestedFlows.map((s) => s.id);
+    setFlows((xs) => xs.map((x) => (ids.includes(x.id) ? { ...x, review_state: "approved", enabled: true } : x)));
+    const results = await Promise.all(ids.map((id) => fetch("/api/preflight/flows", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, review: "approve" }) }).then((r) => r.ok).catch(() => false)));
+    const failed = ids.filter((_, i) => !results[i]);
+    if (failed.length) { setFlows((xs) => xs.map((x) => (failed.includes(x.id) ? { ...x, review_state: "suggested" } : x))); setMsg({ kind: "err", text: `Approved ${ids.length - failed.length} of ${ids.length} flows. Some could not be saved.` }); }
+    else setMsg({ kind: "ok", text: `Approved ${ids.length} suggested flow${ids.length === 1 ? "" : "s"}.` });
+    setBusyReview(false);
+  }
 
   function upsert(f: TestFlow) {
     setFlows((xs) => (xs.some((x) => x.id === f.id) ? xs.map((x) => (x.id === f.id ? f : x)) : [...xs, f]));
@@ -79,15 +115,44 @@ export function FlowsSection({ contractId, initial, roles }: { contractId: strin
         ) : null}
       </div>
 
-      {flows.length === 0 && editing === null ? (
+      {confirmedFlows.length === 0 && suggestedFlows.length === 0 && editing === null ? (
         <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55, margin: "6px 0 0" }}>
           No flows yet. Add one to describe a journey Vraelis should test before you launch.
         </p>
       ) : null}
 
-      {flows.length > 0 ? (
+      {/* SUGGESTED flows (from discovery) — review block above the confirmed list */}
+      {suggestedFlows.length > 0 ? (
+        <div style={{ border: "1px solid var(--acc-line)", borderRadius: "var(--r-md)", background: "var(--acc-soft)", padding: "14px 16px", margin: "4px 0 14px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 8 }}>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 650, fontSize: 13.5, color: "var(--fg-1)" }}>Vraelis suggested {suggestedFlows.length} flow{suggestedFlows.length === 1 ? "" : "s"} to test</div>
+            <button type="button" className="btn" onClick={approveAllFlows} disabled={busyReview} style={{ flex: "none", padding: "6px 12px", fontSize: 12.5, opacity: busyReview ? 0.6 : 1 }}>{busyReview ? "Approving…" : "Approve all"}</button>
+          </div>
+          <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+            {suggestedFlows.map((f, idx) => (
+              <li key={f.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "11px 0", borderTop: idx > 0 ? "1px solid var(--acc-line)" : "none" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 3 }}>
+                    <span className="pill" style={{ color: "var(--acc-deep)", borderColor: "var(--acc-line)", background: "var(--bg-1)", fontSize: 10.5, fontFamily: "var(--font-mono)", letterSpacing: "0.05em", textTransform: "uppercase" }}>Suggested</span>
+                    <RoleChip flow={f} />
+                    <span style={{ fontSize: 11.5, color: "var(--fg-4)" }}>{stepCount(f)} step{stepCount(f) === 1 ? "" : "s"}</span>
+                  </div>
+                  <div style={{ fontSize: 14, color: "var(--fg-1)", lineHeight: 1.5, wordBreak: "break-word" }}>{f.name}</div>
+                  {f.goal ? <div style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5, marginTop: 2 }}>{f.goal}</div> : null}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 4, flex: "none" }}>
+                  <button type="button" className="btn btn--ghost" onClick={() => reviewFlow(f, "approve")} aria-label={`Approve flow: ${f.name}`} style={{ padding: "6px 12px", fontSize: 12.5 }}>Keep</button>
+                  <button type="button" onClick={() => reviewFlow(f, "reject")} aria-label={`Reject flow: ${f.name}`} style={{ padding: "6px 10px", fontSize: 12.5, background: "none", border: "none", color: "var(--fg-4)", cursor: "pointer" }}>Reject</button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {confirmedFlows.length > 0 ? (
         <ul style={{ listStyle: "none", margin: "0 0 4px", padding: 0 }}>
-          {flows.map((f, idx) => (
+          {confirmedFlows.map((f, idx) => (
             <li key={f.id} style={{ display: "flex", alignItems: "flex-start", gap: 14, padding: "14px 0", borderTop: idx > 0 ? "1px solid var(--line-1)" : "none" }}>
               <input
                 type="checkbox"

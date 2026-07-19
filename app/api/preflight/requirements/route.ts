@@ -85,10 +85,14 @@ export async function PATCH(req: Request) {
   if (!hasAtLeastRole(access.role, "editor")) return forbidden();
   const email = access.owner;
   if ((await contractStatusForRequirement(email, id)) === "approved") return approvedImmutable();
+  // review: "approve" folds a discovery suggestion into the contract (approved + enabled); "reject" marks it
+  // rejected + disabled (sticky — a future discovery re-run won't resurface it). Any other patch is a normal edit.
+  const reviewState = body?.review === "approve" ? "approved" : body?.review === "reject" ? "rejected" : undefined;
   const ok = await updateRequirement(email, id, {
     enabled: typeof body?.enabled === "boolean" ? body.enabled : undefined,
     severity: sev(body?.severity),
     requirement: typeof body?.requirement === "string" ? body.requirement : undefined,
+    reviewState,
   });
   return ok ? NextResponse.json({ ok: true }) : NextResponse.json({ error: "update_failed" }, { status: 400 });
 }

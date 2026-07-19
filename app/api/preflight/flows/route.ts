@@ -144,6 +144,7 @@ export async function PATCH(req: Request) {
     derivedRole = flowRoles(v.steps)[0] ?? null;
   }
 
+  const reviewState = body?.review === "approve" ? "approved" : body?.review === "reject" ? "rejected" : undefined;
   const r = await updateFlow(email, id, {
     name: typeof body?.name === "string" ? body.name : undefined,
     goal: body?.goal !== undefined ? (typeof body.goal === "string" ? body.goal : null) : undefined,
@@ -151,6 +152,7 @@ export async function PATCH(req: Request) {
     priority: sev(body?.priority),
     enabled: typeof body?.enabled === "boolean" ? body.enabled : undefined,
     steps,
+    reviewState,
   });
   if ("error" in r) {
     if (r.error === "contract_approved") return approvedImmutable();

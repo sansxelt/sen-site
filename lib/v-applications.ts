@@ -30,9 +30,14 @@ export type ProductionContract = {
 export type ContractRequirement = {
   id: string; contract_id: string; category: string; requirement: string; severity: Severity; enabled: boolean;
   source: string | null; confidence: number | null; role: string | null; area: string | null; approved: boolean; order_index: number;
-  // Phase-2 additive column (sql/vraelis-preflight-2-discovery.sql); absent until that migration runs.
+  // Phase-2 additive columns (sql/vraelis-preflight-2-discovery.sql); absent until that migration runs.
   // "inference" marks a requirement Vraelis proposed from a presence signal rather than observed evidence.
   origin?: string | null;
+  // review_state: "suggested" (from discovery, awaiting the user's decision) | "approved" | "rejected".
+  // Manual/pre-discovery rows default to "approved". `stale` marks a suggestion no longer observed on re-run
+  // (kept, never deleted). These drive the suggestion-review UI; listRequirements select("*") already returns them.
+  review_state?: string | null; stale?: boolean | null; reasoning_summary?: string | null;
+  discovery_version_last_suggested?: number | null;
 };
 export type TestFlow = {
   id: string; contract_id: string; name: string; goal: string | null; role: string | null; start_path: string | null;
@@ -307,14 +312,25 @@ export async function addRequirement(userId: string, contractId: string, input: 
   return (data as unknown as ContractRequirement) ?? null;
 }
 
-// Owner-scoped patch of a requirement (toggle enabled, change severity, edit text). Marks it approved so
-// a later AI regeneration never silently overwrites a user-touched requirement.
-export async function updateRequirement(userId: string, id: string, patch: { enabled?: boolean; severity?: Severity; requirement?: string }): Promise<boolean> {
+// Owner-scoped patch of a requirement (toggle enabled, change severity, edit text, or accept/reject a
+// discovery suggestion). Any content edit marks the row user_modified + review_state 'approved' so a later
+// discovery regeneration never silently overwrites a user-touched requirement (the merge planner preserves
+// origin==='user'/user_modified/approved rows). A 'reject' sets review_state 'rejected', which the merge
+// planner treats as sticky: a future discovery re-run will not resurrect it.
+export async function updateRequirement(
+  userId: string,
+  id: string,
+  patch: { enabled?: boolean; severity?: Severity; requirement?: string; reviewState?: "approved" | "rejected" },
+): Promise<boolean> {
   if (!isDatabaseConfigured()) return false;
   const fields: Record<string, unknown> = { approved: true };
   if (typeof patch.enabled === "boolean") fields.enabled = patch.enabled;
   if (patch.severity) fields.severity = patch.severity;
-  if (typeof patch.requirement === "string") fields.requirement = patch.requirement.trim().slice(0, 400);
+  if (typeof patch.requirement === "string") { fields.requirement = patch.requirement.trim().slice(0, 400); fields.user_modified = true; }
+  // Accept a suggestion -> approved + enabled; reject -> rejected + disabled (so a rejected suggestion can
+  // never count toward an approvable contract). Absent reviewState leaves the column untouched (legacy edit).
+  if (patch.reviewState === "approved") { fields.review_state = "approved"; if (typeof patch.enabled !== "boolean") fields.enabled = true; }
+  else if (patch.reviewState === "rejected") { fields.review_state = "rejected"; fields.enabled = false; }
   const { error } = await db().from("v_contract_requirements").update(fields as never).eq("user_id", norm(userId)).eq("id", id);
   return !error;
 }
@@ -363,6 +379,9 @@ export type FlowPatch = {
   priority?: Severity;
   enabled?: boolean;
   requirementIds?: string[];
+  // Accept/reject a discovery-suggested flow. "approved" folds it into the contract (enabled); "rejected"
+  // disables it and is sticky across re-runs. Absent leaves review_state untouched (legacy edit).
+  reviewState?: "approved" | "rejected";
 };
 export type FlowMutationError = { error: "contract_approved" | "not_found" | "invalid" | "unavailable" };
 
@@ -431,6 +450,11 @@ export async function updateFlow(userId: string, flowId: string, patch: FlowPatc
   if (patch.priority) fields.priority = patch.priority;
   if (typeof patch.enabled === "boolean") fields.enabled = patch.enabled;
   if (patch.requirementIds !== undefined) fields.requirement_ids = Array.isArray(patch.requirementIds) ? patch.requirementIds.slice(0, 200) : [];
+  // Accept a suggested flow -> approved + enabled; reject -> rejected + disabled (never counts toward coverage,
+  // and the merge planner keeps it rejected on a future discovery re-run). A content edit marks user_modified.
+  if (patch.reviewState === "approved") { fields.review_state = "approved"; if (typeof patch.enabled !== "boolean") fields.enabled = true; }
+  else if (patch.reviewState === "rejected") { fields.review_state = "rejected"; fields.enabled = false; }
+  if (patch.name !== undefined || patch.goal !== undefined || patch.steps !== undefined) fields.user_modified = true;
   if (!Object.keys(fields).length) return { ok: true };
 
   const { error } = await db().from("v_test_flows").update(fields as never).eq("user_id", uid).eq("id", flowId);

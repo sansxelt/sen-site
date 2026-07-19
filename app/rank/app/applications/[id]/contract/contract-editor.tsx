@@ -31,7 +31,7 @@ function SevPill({ severity }: { severity: Severity }) {
   );
 }
 
-export function ContractEditor({ contractId, initial, status, flows, roles }: { contractId: string; initial: ContractRequirement[]; status: "draft" | "approved"; flows: TestFlow[]; roles: string[] }) {
+export function ContractEditor({ contractId, appId, initial, status, flows, roles, discoveryState }: { contractId: string; appId: string; initial: ContractRequirement[]; status: "draft" | "approved"; flows: TestFlow[]; roles: string[]; discoveryState?: string | null }) {
   const router = useRouter();
   const [reqs, setReqs] = useState<ContractRequirement[]>(initial);
   const [contractStatus, setContractStatus] = useState<"draft" | "approved">(status);
@@ -42,27 +42,63 @@ export function ContractEditor({ contractId, initial, status, flows, roles }: { 
 
   const enabledCount = reqs.filter((r) => r.enabled).length;
 
-  // Group by category, preserving first-seen order. A newly added row is prepended to `reqs`, so its
-  // category floats to the top and the new requirement sits first within it.
+  // Group the CONFIRMED requirements by category (suggestions render in their own review section above).
+  // A newly added row is prepended to `reqs`, so its category floats to the top.
   const grouped = useMemo(() => {
     const m = new Map<string, ContractRequirement[]>();
     for (const r of reqs) {
+      if ((r.review_state ?? "approved") === "suggested") continue;
       const k = r.category || "general";
       const arr = m.get(k);
       if (arr) arr.push(r); else m.set(k, [r]);
     }
     return [...m.entries()];
   }, [reqs]);
+  const confirmedCount = reqs.filter((r) => (r.review_state ?? "approved") !== "suggested").length;
 
   function patchLocal(id: string, patch: Partial<ContractRequirement>) {
     setReqs((xs) => xs.map((x) => (x.id === id ? { ...x, ...patch } : x)));
   }
 
-  async function sendPatch(body: { id: string; enabled?: boolean; severity?: Severity; requirement?: string }): Promise<boolean> {
+  async function sendPatch(body: { id: string; enabled?: boolean; severity?: Severity; requirement?: string; review?: "approve" | "reject" }): Promise<boolean> {
     try {
       const r = await fetch("/api/preflight/requirements", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
       return r.ok;
     } catch { return false; }
+  }
+
+  // Discovery suggestions: rows Vraelis proposed from crawling the app (review_state 'suggested'). They sit in
+  // a review section above the confirmed requirements — Approve folds one into the contract, Reject drops it
+  // (sticky: a future re-run won't resurface it). "Approve all" accepts every suggestion at once.
+  const isSuggested = (r: ContractRequirement) => (r.review_state ?? "approved") === "suggested";
+  const suggestions = reqs.filter(isSuggested);
+  const [busyReview, setBusyReview] = useState(false);
+
+  async function approveSuggestion(r: ContractRequirement) {
+    setMsg(null);
+    patchLocal(r.id, { review_state: "approved", enabled: true }); // optimistic: moves it into confirmed
+    const ok = await sendPatch({ id: r.id, review: "approve" });
+    if (!ok) { patchLocal(r.id, { review_state: "suggested", enabled: r.enabled }); setMsg({ kind: "err", text: "Could not approve that suggestion. Try again." }); }
+  }
+
+  async function rejectSuggestion(r: ContractRequirement) {
+    const snapshot = reqs;
+    setMsg(null);
+    setReqs((xs) => xs.filter((x) => x.id !== r.id)); // optimistic: drop from view
+    const ok = await sendPatch({ id: r.id, review: "reject" });
+    if (!ok) { setReqs(snapshot); setMsg({ kind: "err", text: "Could not reject that suggestion. It was restored." }); }
+  }
+
+  async function approveAllSuggestions() {
+    if (busyReview || suggestions.length === 0) return;
+    setBusyReview(true); setMsg(null);
+    const ids = suggestions.map((s) => s.id);
+    setReqs((xs) => xs.map((x) => (ids.includes(x.id) ? { ...x, review_state: "approved", enabled: true } : x))); // optimistic
+    const results = await Promise.all(ids.map((id) => sendPatch({ id, review: "approve" })));
+    const failed = ids.filter((_, i) => !results[i]);
+    if (failed.length) { setReqs((xs) => xs.map((x) => (failed.includes(x.id) ? { ...x, review_state: "suggested" } : x))); setMsg({ kind: "err", text: `Approved ${ids.length - failed.length} of ${ids.length}. Some could not be saved, try again.` }); }
+    else setMsg({ kind: "ok", text: `Approved ${ids.length} suggested requirement${ids.length === 1 ? "" : "s"}. Review the flows below, then approve the contract.` });
+    setBusyReview(false);
   }
 
   // Inline text edit (HF3): the requirement wording is editable on a DRAFT contract. The PATCH route +
@@ -135,6 +171,24 @@ export function ContractEditor({ contractId, initial, status, flows, roles }: { 
     }
   }
 
+  // Manual re-run of discovery (crawl the app again + re-synthesize). Fire-and-forget: the route returns
+  // 202 immediately and runs in the background; we refresh so new suggestions appear as they land.
+  const [busyDiscover, setBusyDiscover] = useState(false);
+  const [discoverNote, setDiscoverNote] = useState<string | null>(null);
+  async function rerunDiscovery() {
+    if (busyDiscover) return;
+    setBusyDiscover(true); setDiscoverNote(null); setMsg(null);
+    try {
+      const key = `rerun-${contractId}-${Date.now()}`;
+      const res = await fetch(`/api/preflight/apps/${encodeURIComponent(appId)}/discover`, {
+        method: "POST", headers: { "content-type": "application/json", "Idempotency-Key": key }, body: JSON.stringify({ submission_id: key }),
+      });
+      if (res.status === 202 || res.ok) { setDiscoverNote("Analyzing your app… suggestions will appear here shortly. Refresh in a moment."); setTimeout(() => router.refresh(), 8000); }
+      else { const j = await res.json().catch(() => ({})); setDiscoverNote(res.status === 429 ? "Discovery is rate-limited. Try again in a bit." : (typeof j?.error === "string" ? "Could not start discovery." : "Could not start discovery.")); }
+    } catch { setDiscoverNote("Network error. Discovery was not started."); }
+    finally { setBusyDiscover(false); }
+  }
+
   async function approve() {
     if (busyApprove || enabledCount === 0 || contractStatus === "approved") return;
     setBusyApprove(true); setMsg(null);
@@ -160,15 +214,67 @@ export function ContractEditor({ contractId, initial, status, flows, roles }: { 
     }
   }
 
+  const discoveryRunning = !!discoveryState && !["completed", "partial", "failed", "cancelled", "none"].includes(discoveryState);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {/* requirement groups, or the empty state */}
-      {reqs.length === 0 ? (
+      {/* ANALYZING banner: discovery is crawling the app + proposing requirements right now. */}
+      {discoveryRunning ? (
+        <div className="card" style={{ padding: "clamp(16px, 2.2vw, 22px)", borderColor: "var(--acc-line)", background: "var(--acc-soft)", display: "flex", alignItems: "center", gap: 12 }}>
+          <span aria-hidden className="skel" style={{ width: 18, height: 18, borderRadius: "50%", flex: "none" }} />
+          <div>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14.5, color: "var(--fg-1)" }}>Analyzing your app…</div>
+            <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "2px 0 0", lineHeight: 1.5 }}>Vraelis is reading your app and proposing the requirements and flows it should verify. This takes a moment. Refresh to see them appear.</p>
+          </div>
+          <button type="button" className="btn btn--ghost" onClick={() => router.refresh()} style={{ marginLeft: "auto", flex: "none", padding: "7px 14px", fontSize: 13 }}>Refresh</button>
+        </div>
+      ) : null}
+
+      {/* SUGGESTIONS review: discovery-proposed requirements awaiting the user's decision. */}
+      {suggestions.length > 0 ? (
+        <div className="card" style={{ padding: "clamp(16px, 2.2vw, 22px)", borderColor: "var(--acc-line)" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
+            <div>
+              <div style={{ fontFamily: "var(--font-display)", fontWeight: 650, fontSize: 15, color: "var(--fg-1)" }}>Vraelis suggested {suggestions.length} requirement{suggestions.length === 1 ? "" : "s"}</div>
+              <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: "2px 0 0", lineHeight: 1.5 }}>Proposed from your app. Approve the ones that matter, reject the rest. Rejected ones won&apos;t come back.</p>
+            </div>
+            <button type="button" className="btn" onClick={approveAllSuggestions} disabled={busyReview} style={{ flex: "none", opacity: busyReview ? 0.6 : 1 }}>{busyReview ? "Approving…" : "Approve all"}</button>
+          </div>
+          <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+            {suggestions.map((r, idx) => (
+              <li key={r.id} style={{ display: "flex", alignItems: "flex-start", gap: 14, padding: "13px 0", borderTop: idx > 0 ? "1px solid var(--line-1)" : "none" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
+                    <span className="pill" style={{ color: "var(--acc-deep)", borderColor: "var(--acc-line)", background: "var(--acc-soft)", fontSize: 10.5, fontFamily: "var(--font-mono)", letterSpacing: "0.05em", textTransform: "uppercase" }}>Suggested</span>
+                    <SevPill severity={r.severity} />
+                    <ProvenanceChip source={r.source} origin={r.origin} />
+                  </div>
+                  <div style={{ fontSize: 14, color: "var(--fg-1)", lineHeight: 1.5, wordBreak: "break-word" }}>{r.requirement}</div>
+                  {r.reasoning_summary ? <div style={{ fontSize: 12, color: "var(--fg-4)", lineHeight: 1.5, marginTop: 4 }}>{r.reasoning_summary}</div> : null}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 4, flex: "none" }}>
+                  <button type="button" className="btn btn--ghost" onClick={() => approveSuggestion(r)} aria-label={`Approve: ${r.requirement}`} style={{ padding: "6px 12px", fontSize: 12.5 }}>Keep</button>
+                  <button type="button" onClick={() => rejectSuggestion(r)} aria-label={`Reject: ${r.requirement}`} style={{ padding: "6px 10px", fontSize: 12.5, background: "none", border: "none", color: "var(--fg-4)", cursor: "pointer" }}>Reject</button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {/* CONFIRMED requirement groups, or the empty state (only when nothing suggested + not analyzing) */}
+      {confirmedCount === 0 && suggestions.length === 0 ? (
         <div className="card" style={{ padding: "clamp(18px, 2.6vw, 26px)" }}>
-          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15.5, color: "var(--fg-1)", marginBottom: 4 }}>No requirements yet.</div>
-          <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55, margin: 0 }}>
-            Add the promises this app must keep, or discovery will suggest them in a later release.
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15.5, color: "var(--fg-1)", marginBottom: 4 }}>{discoveryRunning ? "Suggestions on the way." : "No requirements yet."}</div>
+          <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55, margin: "0 0 12px" }}>
+            {discoveryRunning
+              ? "Vraelis is analyzing your app and will suggest requirements to review here."
+              : "Add the promises this app must keep, or re-run discovery to have Vraelis suggest them from your app."}
           </p>
+          {!discoveryRunning ? (
+            <button type="button" className="btn btn--ghost" onClick={rerunDiscovery} disabled={busyDiscover}>{busyDiscover ? "Starting…" : "Suggest requirements from my app"}</button>
+          ) : null}
+          {discoverNote ? <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "10px 0 0", lineHeight: 1.5 }}>{discoverNote}</p> : null}
         </div>
       ) : (
         grouped.map(([cat, items]) => (
@@ -227,7 +333,13 @@ export function ContractEditor({ contractId, initial, status, flows, roles }: { 
 
       {/* add a requirement */}
       <div className="card" style={{ padding: "clamp(16px, 2.2vw, 22px)" }}>
-        <div style={catHead}>Add a requirement</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 2 }}>
+          <div style={catHead}>Add a requirement</div>
+          {!discoveryRunning ? (
+            <button type="button" className="btn btn--ghost" onClick={rerunDiscovery} disabled={busyDiscover} style={{ padding: "6px 12px", fontSize: 12.5 }}>{busyDiscover ? "Analyzing…" : "Suggest from my app"}</button>
+          ) : null}
+        </div>
+        {discoverNote ? <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "0 0 10px", lineHeight: 1.5 }}>{discoverNote}</p> : null}
         <div style={{ display: "grid", gap: 12 }}>
           <div>
             <label style={lab} htmlFor="req-text">Requirement</label>

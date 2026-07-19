@@ -6,9 +6,12 @@
 // DNS pinning happen later, before any navigation.
 
 import { NextResponse } from "next/server";
+import { after } from "next/server";
 import { auth } from "@/auth";
 import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { createApplication, deleteApplication } from "@/lib/v-applications";
+import { createDiscovery, getActiveDiscovery } from "@/lib/preflight/discovery-db";
+import { runDiscovery } from "@/lib/preflight/discover-run";
 import { addConnection, applySetupExtras, normalizeBoundaries, normalizeContextSources, CONNECTION_KINDS } from "@/lib/preflight/connections-db";
 import { snapshotIfChanged } from "@/lib/preflight/context-snapshots";
 import { passPricingEnabled } from "@/lib/preflight/pass-pricing";
@@ -86,6 +89,21 @@ export async function POST(req: Request) {
   // returns null while migration 7 is unapplied, and the try/catch guarantees a connect NEVER fails
   // because context versioning could not run. The application above is already created and usable.
   try { await snapshotIfChanged(email, appId, "owner"); } catch { /* connect stands; context stays unversioned */ }
+
+  // Auto-run discovery on connect: crawl the app + synthesize suggested requirements/flows into the draft
+  // contract, so the user lands on a contract that fills itself in instead of a blank page. Fire-and-forget
+  // via after() (returns immediately). Fail-soft: no LLM key -> deterministic connection-signal suggestions
+  // only; a crawl/synthesis error fails THIS discovery run and never touches the app or the connect response.
+  // getActiveDiscovery guards the (rare) retry race; createDiscovery's DB unique index is the real backstop.
+  after(async () => {
+    try {
+      if (await getActiveDiscovery(email, appId)) return;
+      const created = await createDiscovery(email, appId);
+      if (created) await runDiscovery(email, appId, created);
+    } catch (e) {
+      console.error(`[preflight] auto-discovery on connect failed for ${appId}:`, (e as Error)?.message);
+    }
+  });
 
   return NextResponse.json({ id: appId });
 }

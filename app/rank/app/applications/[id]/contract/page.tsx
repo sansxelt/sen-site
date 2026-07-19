@@ -7,6 +7,7 @@ import {
   type ContractRequirement, type ProductionContract, type TestFlow, type Severity,
 } from "@/lib/v-applications";
 import { listConnections } from "@/lib/preflight/connections-db";
+import { getLatestDiscovery } from "@/lib/preflight/discovery-db";
 import { flowRequiresAuth } from "@/lib/preflight/flow-steps";
 import { ContractEditor } from "./contract-editor";
 import { NewDraftButton } from "./new-draft-button";
@@ -289,6 +290,8 @@ export default async function ContractPage({ params }: { params: Promise<{ id: s
   // read-only. Roles come from the app's connected test accounts (the set a sign-in step may target).
   const flows = contract ? await listFlows(owner, contract.id) : [];
   const roles = contract?.status === "draft" ? await testAccountRoles(owner, id) : [];
+  // Discovery status for the draft editor's "analyzing…" banner (auto-run fires on app-create).
+  const discovery = contract?.status === "draft" ? await getLatestDiscovery(owner, id) : null;
   // For a draft REVISION (v2+), find the approved version that runs still verify against, so the page can
   // say so honestly (the run-launch route targets the latest approved contract, not the draft).
   const prevApproved = contract && contract.status === "draft" && contract.version > 1
@@ -322,7 +325,7 @@ export default async function ContractPage({ params }: { params: Promise<{ id: s
           <ApprovedContract appId={id} contract={contract} reqs={reqs} flows={flows} canEdit={caps.canEditContract} />
         ) : caps.canEditContract ? (
           // DRAFT + editor: the full mutating editor (add/edit/delete reqs + flows, Approve).
-          <ContractEditor contractId={contract.id} initial={reqs} status={contract.status} flows={flows} roles={roles} />
+          <ContractEditor contractId={contract.id} appId={id} initial={reqs} status={contract.status} flows={flows} roles={roles} discoveryState={discovery?.state ?? null} />
         ) : (
           // DRAFT + read-only member: never mount the mutating editor; show the record read-only.
           <DraftReadOnly reqs={reqs} flows={flows} reason={readOnlyReason(caps.role)} />
