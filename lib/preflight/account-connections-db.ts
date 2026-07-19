@@ -99,6 +99,35 @@ export async function addAccountOAuthConnection(
   return { id: (data as { id: string }).id };
 }
 
+// Re-seal a refreshed token pair for an existing account connection (used by the refresh path when a
+// short-lived token expires). Owner+provider scoped UPDATE of encrypted_ref + meta.expires_at. Never
+// creates a row; a missing connection returns false.
+export async function updateAccountOAuthTokens(
+  owner: string,
+  provider: string,
+  input: { accessToken: string; refreshToken?: string; expiresIn?: number; scope?: string },
+): Promise<boolean> {
+  if (!isDatabaseConfigured() || !vaultConfigured()) return false;
+  const accessToken = (input.accessToken || "").trim();
+  if (!accessToken) return false;
+  const sealed = sealSecret({
+    access_token: accessToken,
+    ...(input.refreshToken ? { refresh_token: input.refreshToken } : {}),
+  });
+  // Merge the fresh mask/expiry/scopes into meta without touching the label/account.
+  const { data: cur } = await db().from("v_account_connections").select("meta")
+    .eq("user_id", norm(owner)).eq("provider", provider).maybeSingle();
+  const meta = { ...(((cur as { meta?: Record<string, unknown> } | null)?.meta) ?? {}) } as Record<string, unknown>;
+  meta.token_mask = maskSecretValue(accessToken);
+  meta.oauth = true;
+  if (typeof input.expiresIn === "number" && input.expiresIn > 0) meta.expires_at = new Date(Date.now() + input.expiresIn * 1000).toISOString();
+  if (input.scope) meta.scopes = input.scope.split(/[\s,]+/).map((s) => s.trim()).filter(Boolean).slice(0, 40);
+  const { data, error } = await db().from("v_account_connections")
+    .update({ encrypted_ref: sealed, meta, last_verified_at: new Date().toISOString() } as never)
+    .eq("user_id", norm(owner)).eq("provider", provider).select("id");
+  return !error && Array.isArray(data) && data.length > 0;
+}
+
 // Revoke an account connection (deletes the row + ciphertext; its per-app links cascade away). Returns true
 // only when a row was actually removed (a zero-row delete is not a real revoke).
 export async function removeAccountConnection(owner: string, connectionId: string): Promise<boolean> {

@@ -1,8 +1,8 @@
-// Connection-OAuth provider registry. ONE static config per provider; the initiate/callback routes and
-// the vault writers are generic and read everything they need from here. This is the ONLY file that
-// differs per provider — adding Vercel/Sentry/Stripe/Supabase later is a new entry, not new plumbing.
+// Connection-OAuth provider registry. ONE static config per provider; the initiate/callback routes and the
+// vault writers are generic and read everything they need from here. This is the ONLY file that differs per
+// provider — the plumbing (routes, state, vault, refresh) is shared.
 //
-// This is CONNECTION OAuth (authorize a provider to read a user's data, token stored per application),
+// This is CONNECTION OAuth (authorize a provider to read a user's data, token stored at the account level),
 // deliberately separate from SIGN-IN OAuth (auth.ts, AUTH_GITHUB_*). Different app, different callback,
 // different scopes, different env vars.
 
@@ -12,59 +12,121 @@ export type OAuthProvider = {
   label: string;
   authorizeUrl: string;
   tokenUrl: string;
-  scopes: string;                       // space-delimited, provider-specific
+  scopes: string;                       // space-delimited, provider-specific (empty = configured on the provider's integration, e.g. Vercel)
   clientIdEnv: string;                  // env var holding the OAuth app client id
   clientSecretEnv: string;              // env var holding the OAuth app client secret
-  // GitHub returns form-encoded unless you send Accept: application/json; most others are JSON.
+  // Token exchange response format. GitHub/Sentry return JSON when asked (Accept header); Vercel/Stripe
+  // return form-encoded or their own JSON. We always POST form-encoded; this is the Accept we send.
   tokenExchangeAccept: "application/json";
-  // Tokens that expire + issue a refresh token need the refresh path (Sentry ~8h, Supabase ~1d).
-  // GitHub OAuth-app + Stripe Connect tokens don't refresh.
+  // Tokens that expire + issue a refresh token need the refresh path (Sentry ~8h, Supabase ~1d). GitHub
+  // OAuth-app + Vercel + Stripe Connect tokens are long-lived / don't refresh.
   refreshable: boolean;
-  // Optional identity endpoint to label the connected account (e.g. GitHub /user -> login). Purely for
-  // display; never required for the connection to succeed.
+  // Optional identity endpoint to label the connected account (e.g. GitHub /user -> login). Display only.
   identity?: { url: string; field: string };
+  // Extra params the provider returns on the callback that must be persisted in meta to be useful later
+  // (Vercel: teamId/configurationId to resolve projects; Stripe: stripe_user_id, the connected account).
+  persistCallbackParams?: string[];
+  // Gated behind an env flag until a product decision is made (Supabase: its scope is broader than the
+  // written "no database credentials" promise). A gated provider never renders a Connect button and its
+  // routes fail closed unless the flag is set.
+  gatedByEnv?: string;
 };
 
-// GITHUB — Phase 1. Simplest token model: OAuth-app tokens don't expire, no refresh, JSON exchange when
-// Accept: application/json is sent. Read-only scope to honor the "no code write access" promise.
+// GITHUB — OAuth-app token: no expiry, no refresh, JSON exchange when Accept: application/json is sent.
+// Read-only scope honors the "no code write access" promise.
 const GITHUB: OAuthProvider = {
-  kind: "github",
-  label: "GitHub",
+  kind: "github", label: "GitHub",
   authorizeUrl: "https://github.com/login/oauth/authorize",
   tokenUrl: "https://github.com/login/oauth/access_token",
   scopes: "read:user public_repo",
-  clientIdEnv: "GITHUB_CONNECT_CLIENT_ID",
-  clientSecretEnv: "GITHUB_CONNECT_CLIENT_SECRET",
-  tokenExchangeAccept: "application/json",
-  refreshable: false,
+  clientIdEnv: "GITHUB_CONNECT_CLIENT_ID", clientSecretEnv: "GITHUB_CONNECT_CLIENT_SECRET",
+  tokenExchangeAccept: "application/json", refreshable: false,
   identity: { url: "https://api.github.com/user", field: "login" },
 };
 
-// The registry. Phase 2+ providers (vercel, sentry, stripe, supabase) are added here as their OAuth apps
-// are registered and their consumers wired — see the OAuth blueprint for the order and per-provider quirks.
-const REGISTRY: Record<string, OAuthProvider> = {
-  github: GITHUB,
+// VERCEL — OAuth via a Vercel Integration. Scopes are configured on the integration (read projects +
+// deployments). Long-lived token; the callback carries teamId/configurationId to resolve projects later.
+// This is the first provider whose token gets a real consumer (deployment-URL auto-fill).
+const VERCEL: OAuthProvider = {
+  kind: "vercel", label: "Vercel",
+  authorizeUrl: "https://vercel.com/oauth/authorize",
+  tokenUrl: "https://api.vercel.com/v2/oauth/access_token",
+  scopes: "",
+  clientIdEnv: "VERCEL_CLIENT_ID", clientSecretEnv: "VERCEL_CLIENT_SECRET",
+  tokenExchangeAccept: "application/json", refreshable: false,
+  identity: { url: "https://api.vercel.com/v2/user", field: "username" },
+  persistCallbackParams: ["teamId", "configurationId"],
 };
 
-// Providers offered as a "Connect with X" button in the UI (only those with configured credentials render
-// live — see providerConfigured). Kept as an ordered list for stable UI.
-export const OAUTH_PROVIDER_KINDS = ["github"] as const;
+// SENTRY — OAuth via a Sentry Integration. Tokens expire (~8h) and DO refresh, so this is where the
+// refresh-and-reseal path first matters. Read-only issue/event scopes for the reliability signal.
+const SENTRY: OAuthProvider = {
+  kind: "sentry", label: "Sentry",
+  authorizeUrl: "https://sentry.io/oauth/authorize/",
+  tokenUrl: "https://sentry.io/oauth/token/",
+  scopes: "org:read project:read event:read",
+  clientIdEnv: "SENTRY_CLIENT_ID", clientSecretEnv: "SENTRY_CLIENT_SECRET",
+  tokenExchangeAccept: "application/json", refreshable: true,
+};
+
+// STRIPE — Stripe Connect (Standard) OAuth, read-only, test-mode. Uses Stripe's own OAuth endpoints and
+// returns a connected-account id (stripe_user_id) rather than a classic refreshable token — the grant IS
+// the account. Reuses the existing STRIPE_SECRET_KEY as the exchange secret (no new secret env).
+const STRIPE: OAuthProvider = {
+  kind: "stripe_test", label: "Stripe test mode",
+  authorizeUrl: "https://connect.stripe.com/oauth/authorize",
+  tokenUrl: "https://connect.stripe.com/oauth/token",
+  scopes: "read_only",
+  clientIdEnv: "STRIPE_CONNECT_CLIENT_ID", clientSecretEnv: "STRIPE_SECRET_KEY",
+  tokenExchangeAccept: "application/json", refreshable: false,
+  persistCallbackParams: ["stripe_user_id"],
+};
+
+// SUPABASE — OAuth with PKCE, management-API scopes (read projects/orgs). GATED: this scope is broader than
+// the written "No database credentials, no rows" promise, so it stays behind SUPABASE_OAUTH_ENABLED until the
+// scope is approved and the NEVER_ACCESSES.supabase copy is rewritten. Tokens expire (~1d) and refresh.
+const SUPABASE: OAuthProvider = {
+  kind: "supabase", label: "Supabase",
+  authorizeUrl: "https://api.supabase.com/v1/oauth/authorize",
+  tokenUrl: "https://api.supabase.com/v1/oauth/token",
+  scopes: "",
+  clientIdEnv: "SUPABASE_OAUTH_CLIENT_ID", clientSecretEnv: "SUPABASE_OAUTH_CLIENT_SECRET",
+  tokenExchangeAccept: "application/json", refreshable: true,
+  gatedByEnv: "SUPABASE_OAUTH_ENABLED",
+};
+
+const REGISTRY: Record<string, OAuthProvider> = {
+  github: GITHUB, vercel: VERCEL, sentry: SENTRY, stripe_test: STRIPE, supabase: SUPABASE,
+};
+
+// Display order for the "Connect" buttons. A provider only renders when its credentials are present AND it
+// isn't gated off (see providerAvailable), so listing all here is safe — unconfigured ones simply hide.
+export const OAUTH_PROVIDER_KINDS = ["github", "vercel", "sentry", "stripe_test", "supabase"] as const;
 
 // Resolve a provider by kind; null on an unknown/unregistered kind (routes fail closed on null).
 export function resolveOAuthProvider(kind: string): OAuthProvider | null {
   return REGISTRY[kind] ?? null;
 }
 
-// A provider is only usable when its OAuth app credentials are present in the environment. Missing
-// credentials => the button is hidden and the initiate route 302s back with a server_misconfigured reason,
-// never a half-broken redirect to the provider.
+// A provider's OAuth app credentials are present in the environment.
 export function providerConfigured(p: OAuthProvider): boolean {
   return !!process.env[p.clientIdEnv] && !!process.env[p.clientSecretEnv];
 }
 
+// A gated provider is only available when its gate flag is explicitly enabled (Supabase, until its broader
+// scope is approved). Non-gated providers are always available once configured.
+export function providerGateOpen(p: OAuthProvider): boolean {
+  return !p.gatedByEnv || process.env[p.gatedByEnv] === "1";
+}
+
+// The provider can be offered/used right now: configured AND not gated off. The UI shows a Connect button
+// only for available providers; the routes fail closed for anything else.
+export function providerAvailable(p: OAuthProvider): boolean {
+  return providerConfigured(p) && providerGateOpen(p);
+}
+
 // The single, fixed callback path per provider — registered verbatim as the OAuth app's ONE redirect URI.
-// It serves BOTH the per-app and account-level flows; the signed state (appId present or not) selects which,
-// so one registered URI is enough even for providers (GitHub) that allow only one callback URL.
+// It serves BOTH the per-app and account-level flows; the signed state (appId present or not) selects which.
 export function callbackPath(kind: string): string {
   return `/api/preflight/apps/oauth/callback/${kind}`;
 }

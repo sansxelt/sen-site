@@ -13,7 +13,7 @@ import { auth } from "@/auth";
 import { safeFetch } from "@/lib/safe-fetch";
 import { gatePreflightApp } from "@/lib/preflight/team-access";
 import { vaultConfigured } from "@/lib/preflight/secret-vault";
-import { resolveOAuthProvider, providerConfigured, callbackPath } from "@/lib/preflight/oauth/providers";
+import { resolveOAuthProvider, providerAvailable, callbackPath } from "@/lib/preflight/oauth/providers";
 import { verifyOAuthState } from "@/lib/preflight/oauth/state";
 import { addOAuthConnection } from "@/lib/preflight/connections-db";
 import { addAccountOAuthConnection } from "@/lib/preflight/account-connections-db";
@@ -77,7 +77,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ provider: strin
     sealOwner = caller;
   }
   if (!vaultConfigured()) return err("vault_unconfigured");
-  if (!providerConfigured(p)) return err("server_misconfigured");
+  if (!providerAvailable(p)) return err("server_misconfigured");
 
   // exchange code -> token
   const redirectUri = `${baseUrl(req)}${callbackPath(provider)}`;
@@ -116,6 +116,17 @@ export async function GET(req: Request, ctx: { params: Promise<{ provider: strin
       }
     } catch { /* label is optional */ }
   }
+
+  // Provider-specific callback/token params to persist (Vercel teamId/configurationId; Stripe
+  // stripe_user_id). Read from BOTH the callback URL and the token response; used as the account label when
+  // there is no identity endpoint (e.g. Stripe's connected-account id becomes the label).
+  const tokenObj = tok as unknown as Record<string, unknown>;
+  const persisted: Record<string, string> = {};
+  for (const key of p.persistCallbackParams ?? []) {
+    const v = url.searchParams.get(key) ?? (typeof tokenObj[key] === "string" ? (tokenObj[key] as string) : undefined);
+    if (v) persisted[key] = v;
+  }
+  if (!account) account = persisted.stripe_user_id ?? persisted.teamId ?? undefined;
 
   // seal: account token or per-app connection, depending on the flow.
   const input = {

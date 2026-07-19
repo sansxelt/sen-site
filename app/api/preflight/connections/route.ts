@@ -8,6 +8,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { listAccountConnections, removeAccountConnection } from "@/lib/preflight/account-connections-db";
+import { OAUTH_PROVIDER_KINDS, resolveOAuthProvider, providerAvailable } from "@/lib/preflight/oauth/providers";
 
 export const runtime = "nodejs";
 
@@ -21,7 +22,13 @@ export async function GET() {
   const o = await owner();
   if (!o) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const connections = await listAccountConnections(o);
-  return NextResponse.json({ connections });
+  // Which providers can be offered right now (configured + not gated). Availability is server-side (env),
+  // so the client can't compute it — we hand it the list.
+  const available = OAUTH_PROVIDER_KINDS.filter((k) => {
+    const p = resolveOAuthProvider(k);
+    return p && providerAvailable(p);
+  });
+  return NextResponse.json({ connections, available });
 }
 
 export async function DELETE(req: Request) {

@@ -8,7 +8,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { I, EmptyIcon } from "@/app/rank/_components/icons";
-import { OAUTH_PROVIDER_KINDS } from "@/lib/preflight/oauth/providers";
 
 const PROVIDER_LABELS: Record<string, string> = {
   github: "GitHub", vercel: "Vercel", supabase: "Supabase", stripe_test: "Stripe test mode", sentry: "Sentry",
@@ -32,6 +31,11 @@ type AccountConnection = {
   last_verified_at: string | null; created_at: string;
 };
 
+// Providers we KNOW may support account OAuth. Which ones actually render a Connect button is decided
+// server-side (configured env + not gated) and returned as `available`; a connected provider always shows
+// even if newly gated.
+const KNOWN_OAUTH = ["github", "vercel", "sentry", "stripe_test", "supabase"] as const;
+
 const eyebrow = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 } as const;
 
 function whenUtc(iso: string | null | undefined): string {
@@ -42,6 +46,7 @@ function whenUtc(iso: string | null | undefined): string {
 export default function ConnectionsPage() {
   const search = useSearchParams();
   const [conns, setConns] = useState<AccountConnection[] | null>(null);
+  const [available, setAvailable] = useState<string[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
@@ -61,6 +66,7 @@ export default function ConnectionsPage() {
       if (!res.ok) { setConns([]); return; }
       const j = await res.json();
       setConns(Array.isArray(j.connections) ? j.connections : []);
+      setAvailable(Array.isArray(j.available) ? j.available : []);
     } catch { setConns([]); }
   }
   useEffect(() => { void load(); }, []);
@@ -97,7 +103,7 @@ export default function ConnectionsPage() {
       ) : null}
 
       <div style={{ display: "grid", gap: 12 }}>
-        {OAUTH_PROVIDER_KINDS.map((kind) => {
+        {KNOWN_OAUTH.filter((kind) => byProvider.has(kind) || available.includes(kind)).map((kind) => {
           const c = byProvider.get(kind);
           const label = PROVIDER_LABELS[kind] ?? kind;
           return (

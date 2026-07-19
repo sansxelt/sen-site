@@ -10,7 +10,7 @@
 import { NextResponse } from "next/server";
 import { gatePreflightApp, gateReasonResponse } from "@/lib/preflight/team-access";
 import { vaultConfigured } from "@/lib/preflight/secret-vault";
-import { resolveOAuthProvider, providerConfigured, callbackPath } from "@/lib/preflight/oauth/providers";
+import { resolveOAuthProvider, providerAvailable, callbackPath } from "@/lib/preflight/oauth/providers";
 import { signOAuthState, newNonce } from "@/lib/preflight/oauth/state";
 
 export const runtime = "nodejs";
@@ -38,7 +38,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string; pro
   const p = resolveOAuthProvider(provider);
   if (!p) return NextResponse.json({ error: "unknown_provider" }, { status: 404 });
   if (!vaultConfigured()) return NextResponse.json({ error: "vault_unconfigured" }, { status: 503 });
-  if (!providerConfigured(p)) return backToConnections(req, appId, `oauth=error&provider=${provider}&reason=server_misconfigured`);
+  if (!providerAvailable(p)) return backToConnections(req, appId, `oauth=error&provider=${provider}&reason=server_misconfigured`);
 
   const nonce = newNonce();
   const state = signOAuthState({ appId, owner, provider, nonce });
