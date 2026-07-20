@@ -1,0 +1,99 @@
+// Outbound webhook delivery: when a verification run finalizes, POST the launch decision to the webhook
+// endpoints an application has connected. This is the first OUTPUT connection — every other connection tells
+// Vraelis about the app; this one tells the owner's systems what Vraelis found.
+//
+// Safety rules, all non-negotiable because the destination URL is USER-SUPPLIED:
+//   - safeFetch only (https, public IPs, DNS-pinned) so a webhook URL can never be used to reach an internal
+//     address; the SSRF guard is the whole reason this doesn't use plain fetch
+//   - the payload carries ONLY owner-safe facts: decision, counts, ids, a report link. Never a provider
+//     session id, storage path, signed URL, token, credential, lease or billing field
+//   - signed with HMAC-SHA256 so a receiver can verify the call really came from Vraelis
+//   - hard timeout, and completely fail-soft: a dead endpoint must never affect a completed run
+import { createHmac } from "crypto";
+import { safeFetch, unsafeHttpsUrlReason } from "../safe-fetch";
+
+const TIMEOUT_MS = 8000;
+const MAX_ENDPOINTS = 5; // a run notifies at most this many endpoints
+
+export type VerificationWebhookPayload = {
+  event: "verification.completed";
+  run_id: string;
+  application_id: string;
+  decision: string;                 // ready | blocked | needs_review | repair_verified
+  flows_total: number;
+  flows_passed: number;
+  deployment_url: string | null;
+  completed_at: string;             // ISO
+  report_url: string | null;
+};
+
+// Sign the exact bytes we send, so a receiver can recompute over the raw body. Returns null when no signing
+// key is configured (the delivery still goes out, just unsigned — the receiver can fall back to a secret path).
+function sign(body: string, timestamp: string): string | null {
+  const key = process.env.VRAELIS_SECRET_KEY;
+  if (!key) return null;
+  return createHmac("sha256", key).update(`${timestamp}.${body}`).digest("hex");
+}
+
+// Deliver one payload to one endpoint. Never throws; returns whether it was accepted (2xx).
+export async function deliverWebhook(url: string, payload: VerificationWebhookPayload): Promise<boolean> {
+  // Re-validate at send time: the URL was checked when stored, but storage and delivery are far apart.
+  if (unsafeHttpsUrlReason(url)) return false;
+  const body = JSON.stringify(payload);
+  const timestamp = String(Date.now());
+  const signature = sign(body, timestamp);
+  try {
+    const res = await safeFetch(url, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "user-agent": "vraelis-webhook/1",
+        "x-vraelis-event": payload.event,
+        "x-vraelis-timestamp": timestamp,
+        ...(signature ? { "x-vraelis-signature": `sha256=${signature}` } : {}),
+      },
+      body,
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    return res.ok;
+  } catch {
+    return false; // unreachable, blocked, timed out — never surfaces to the run
+  }
+}
+
+// Deliver to every endpoint for a run. Fail-soft and bounded; returns how many accepted.
+export async function dispatchVerificationWebhooks(
+  urls: string[],
+  payload: VerificationWebhookPayload,
+): Promise<number> {
+  const targets = Array.from(new Set(urls.filter((u) => typeof u === "string" && u.trim()))).slice(0, MAX_ENDPOINTS);
+  if (!targets.length) return 0;
+  const results = await Promise.all(targets.map((u) => deliverWebhook(u.trim(), payload)));
+  return results.filter(Boolean).length;
+}
+
+// Build the owner-safe payload. Kept pure + exported so it can be asserted in tests: anything not listed here
+// must never reach a third-party endpoint.
+export function buildVerificationPayload(input: {
+  runId: string;
+  applicationId: string;
+  decision: string;
+  flowsTotal: number;
+  flowsPassed: number;
+  deploymentUrl?: string | null;
+  appBaseUrl?: string | null;
+}): VerificationWebhookPayload {
+  return {
+    event: "verification.completed",
+    run_id: input.runId,
+    application_id: input.applicationId,
+    decision: input.decision,
+    flows_total: input.flowsTotal,
+    flows_passed: input.flowsPassed,
+    deployment_url: input.deploymentUrl ?? null,
+    completed_at: new Date().toISOString(),
+    report_url: input.appBaseUrl
+      ? `${input.appBaseUrl}/applications/${input.applicationId}/passes/${input.runId}`
+      : null,
+  };
+}

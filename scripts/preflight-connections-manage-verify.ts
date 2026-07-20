@@ -95,17 +95,22 @@ ok("test-account feature use is honest about authenticated flows coming later", 
 
 // Integration honesty: a stored-but-inert connection must SAY it is not yet read during verification,
 // and a wired one (supabase/stripe/sentry seed requirements; deploy providers set the URL) must NOT.
-ok("custom_auth / webhook / openapi are flagged stored-not-yet-used",
-  isStoredNotYetUsed("custom_auth") && isStoredNotYetUsed("webhook") && isStoredNotYetUsed("openapi"));
+ok("custom_auth / openapi are flagged stored-not-yet-used",
+  isStoredNotYetUsed("custom_auth") && isStoredNotYetUsed("openapi"));
 ok("their feature-use line says not yet read during verification (no overstated consumer)",
-  ["custom_auth", "webhook", "openapi"].every((p) => /not yet read during verification/i.test(featureUse(p))));
+  ["custom_auth", "openapi"].every((p) => /not yet read during verification/i.test(featureUse(p))));
+// webhook GRADUATED: it now receives the launch decision when a run finalizes, so it must no longer claim
+// to be inert, and its line must describe the real delivery.
+ok("webhook is NO LONGER stored-not-yet-used (it receives the decision now)", !isStoredNotYetUsed("webhook"));
+ok("webhook's feature-use line describes the real delivery, not inertness",
+  /launch decision/i.test(featureUse("webhook")) && !/not yet read/i.test(featureUse("webhook")));
 ok("wired providers are NOT flagged stored-not-yet-used",
   ["supabase", "stripe_test", "sentry", "github", "vercel", "custom_deploy", "test_account"].every((p) => !isStoredNotYetUsed(p)));
 ok("wired discovery providers name a real seeded requirement (never 'not yet')",
   /seeds/i.test(featureUse("supabase")) && /seeds/i.test(featureUse("stripe_test")) && /seeds/i.test(featureUse("sentry"))
   && !/not yet/i.test(featureUse("supabase")) && !/not yet/i.test(featureUse("stripe_test")) && !/not yet/i.test(featureUse("sentry")));
-ok("the stored-not-yet-used set is exactly those three (no silent scope creep)",
-  STORED_NOT_YET_USED.size === 3);
+ok("the stored-not-yet-used set is exactly those two (no silent scope creep)",
+  STORED_NOT_YET_USED.size === 2);
 ok("metaSummary renders safe one-liners", metaSummary("github", { repo: "a/b", branch: "main" }) === "a/b @ main" && metaSummary("webhook", {}) === null);
 ok("whenUtc renders a stable UTC stamp", whenUtc("2026-07-02T14:31:00.000Z") === "2026-07-02 14:31 UTC" && whenUtc(null) === "");
 ok("the Add affordance offers exactly the 8 manual kinds (test accounts go through the sealed route)",

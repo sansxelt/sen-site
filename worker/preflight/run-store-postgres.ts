@@ -11,7 +11,8 @@ import { normalizeBoundaries, type TestBoundaries } from "../../lib/preflight/bo
 import { planFlowSelection } from "../../lib/preflight/flow-selection";
 import { issuesFromRun, planReconcile, type Issue, type OpenIssueRef, type ReconcileFlow } from "../../lib/preflight/issues";
 import { DETERMINISTIC_AUTH_FAILURE } from "./auth-executor";
-import { redactString } from "./redaction";
+import { redactString, log } from "./redaction";
+import { buildVerificationPayload, dispatchVerificationWebhooks } from "../../lib/preflight/webhook-dispatch";
 
 // Provider/infrastructure failure codes that feed the per-account circuit breaker (blocker 3): a burst of
 // these is the refund/infra loop. This set MUST stay in sync with every code classifyProviderError()
@@ -234,6 +235,39 @@ export class PostgresRunStore implements RunStore {
     // ceiling toward true spend. Both rows SUM (conservative OVER-count is the safe direction for a
     // ceiling — it trips earlier, never later, than reality). Best-effort; never strands the completed run.
     try { await this.recordRealProviderCost(runId); } catch (e) { console.warn(`preflight cost record (${runId}):`, (e as Error).message); }
+    // Notify the application's connected webhook endpoints with the launch decision (the one OUTPUT
+    // connection). Best-effort and last: a slow or dead endpoint must never affect a completed run.
+    try { await this.dispatchWebhooks(runId, decision); } catch (e) { console.warn(`preflight webhook (${runId}):`, (e as Error).message); }
+  }
+
+  // POST the decision to every webhook connection on this run's application. Owner-scoped; payload is
+  // owner-safe facts only (see webhook-dispatch). Silent no-op when the app has no webhook connection.
+  private async dispatchWebhooks(runId: string, decision: RunDecision): Promise<void> {
+    const { data: runRow } = await this.s.from("v_preflight_runs")
+      .select("user_id, application_id, deployment_url").eq("id", runId).maybeSingle();
+    const run = runRow as { user_id?: string; application_id?: string; deployment_url?: string } | null;
+    if (!run?.user_id || !run.application_id) return;
+
+    const { data: conns } = await this.s.from("v_app_connections")
+      .select("meta").eq("user_id", run.user_id).eq("application_id", run.application_id).eq("provider", "webhook");
+    const urls = ((conns as { meta?: { url?: string } }[] | null) ?? [])
+      .map((c) => c.meta?.url).filter((u): u is string => typeof u === "string" && !!u.trim());
+    if (!urls.length) return;
+
+    // Flow counts for the payload (deterministic, already persisted).
+    const { data: flows } = await this.s.from("v_flow_runs").select("state").eq("run_id", runId);
+    const rows = (flows as { state?: string }[] | null) ?? [];
+    const payload = buildVerificationPayload({
+      runId,
+      applicationId: run.application_id,
+      decision,
+      flowsTotal: rows.length,
+      flowsPassed: rows.filter((r) => r.state === "passed").length,
+      deploymentUrl: run.deployment_url ?? null,
+      appBaseUrl: process.env.VRAELIS_APP_BASE_URL || "https://app.vraelis.com",
+    });
+    const delivered = await dispatchVerificationWebhooks(urls, payload);
+    log({ run_id: runId, application_id: run.application_id, event: "webhooks_dispatched", result: `${delivered}/${urls.length}` });
   }
 
   // Sum the actual executed step durations for a run (real browser time) and record a provider-cost row.

@@ -61,7 +61,7 @@ export const FEATURE_USE: Record<string, string> = {
   stripe_test: "Seeds a billing-flow requirement verified in Stripe test mode.",
   sentry: "Seeds a reliability requirement (core flows complete without unhandled errors).",
   custom_auth: "Stored as application context. Not yet read during verification.",
-  webhook: "Stored as application context. Not yet read during verification.",
+  webhook: "Receives the launch decision when a verification run finishes (signed POST).",
   openapi: "Stored as application context. Not yet read during verification.",
   test_account: "Authenticated signed-in flows (coming later; credentials stay sealed until then).",
 };
@@ -73,7 +73,7 @@ export function featureUse(provider: string): string {
 // quiet "Stored, not yet used in verification" chip for these so a connected-but-inert integration
 // never reads as if it were actively feeding a pass. Kept in sync with the honest FEATURE_USE copy
 // above; if a live consumer is wired later, remove the provider here and update its FEATURE_USE line.
-export const STORED_NOT_YET_USED = new Set<string>(["custom_auth", "webhook", "openapi"]);
+export const STORED_NOT_YET_USED = new Set<string>(["custom_auth", "openapi"]);
 export function isStoredNotYetUsed(provider: string): boolean {
   return STORED_NOT_YET_USED.has(provider);
 }
