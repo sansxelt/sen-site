@@ -47,6 +47,8 @@ export default function ConnectionsPage() {
   const search = useSearchParams();
   const [conns, setConns] = useState<AccountConnection[] | null>(null);
   const [available, setAvailable] = useState<string[]>([]);
+  const [redirectOnly, setRedirectOnly] = useState<string[]>([]);
+  const [connecting, setConnecting] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
@@ -67,6 +69,7 @@ export default function ConnectionsPage() {
       const j = await res.json();
       setConns(Array.isArray(j.connections) ? j.connections : []);
       setAvailable(Array.isArray(j.available) ? j.available : []);
+      setRedirectOnly(Array.isArray(j.redirectOnly) ? j.redirectOnly : []);
     } catch { setConns([]); }
   }
   useEffect(() => { void load(); }, []);
@@ -87,22 +90,33 @@ export default function ConnectionsPage() {
       } else {
         setMsg({ ok: false, text: `Could not connect ${label}. ${OAUTH_REASONS[q.get("reason") || ""] ?? "Please try again."}` });
       }
+      setConnecting(null);
       void load();
     }
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
   }, []);
 
-  // Open the provider authorization in a popup so the user stays on this page. If the browser blocks it,
-  // fall back to a normal same-tab navigation (the callback handles both).
+  // Start an authorization. Most providers open in a popup so the user stays on this page; providers whose
+  // flow needs the full window (Vercel's multi-step install) navigate normally. If a popup is blocked we
+  // fall back to navigation too — the callback handles both.
   function connect(kind: string) {
-    const url = `/api/preflight/connections/${encodeURIComponent(kind)}/oauth?popup=1`;
+    const base = `/api/preflight/connections/${encodeURIComponent(kind)}/oauth`;
+    if (redirectOnly.includes(kind)) { window.location.href = base; return; }
+
     const w = 620, h = 760;
     const left = window.screenX + Math.max(0, (window.outerWidth - w) / 2);
     const top = window.screenY + Math.max(0, (window.outerHeight - h) / 3);
-    const win = window.open(url, "vraelis-oauth", `width=${w},height=${h},left=${left},top=${top}`);
-    if (!win) window.location.href = `/api/preflight/connections/${encodeURIComponent(kind)}/oauth`;
-    else win.focus();
+    const win = window.open(`${base}?popup=1`, "vraelis-oauth", `width=${w},height=${h},left=${left},top=${top}`);
+    if (!win) { window.location.href = base; return; }
+    win.focus();
+    // Show progress on the button: an already-authorized provider (GitHub) completes almost instantly, so
+    // without this the popup flashes and it's unclear anything happened. Cleared by the result message, or
+    // when the popup closes without one (user dismissed it).
+    setConnecting(kind);
+    const poll = setInterval(() => {
+      if (win.closed) { clearInterval(poll); setConnecting((c) => (c === kind ? null : c)); void load(); }
+    }, 500);
   }
 
   async function revoke(id: string, label: string) {
@@ -152,13 +166,22 @@ export default function ConnectionsPage() {
                     ? `${c.meta.account ? `${c.meta.account}, ` : ""}token ${c.meta.token_mask ?? "sealed"}${c.created_at ? `, connected ${whenUtc(c.created_at)}` : ""}`
                     : "Not connected. Authorize once and every application can use it."}
                 </div>
+                {/* What was actually granted — so "read-only" is verifiable, not just claimed. */}
+                {c && Array.isArray(c.meta.scopes) && c.meta.scopes.length > 0 ? (
+                  <div style={{ fontSize: 11.5, color: "var(--fg-5)", marginTop: 3, lineHeight: 1.5, wordBreak: "break-word" }}>
+                    Access: {c.meta.scopes.join(", ")}
+                  </div>
+                ) : null}
               </div>
               {c ? (
                 <button type="button" className="btn btn--ghost" disabled={busy === c.id} style={{ flex: "none", opacity: busy === c.id ? 0.6 : 1 }} onClick={() => void revoke(c.id, label)}>
                   {busy === c.id ? "Disconnecting…" : "Disconnect"}
                 </button>
               ) : (
-                <button type="button" className="btn" style={{ flex: "none" }} onClick={() => connect(kind)}>Connect {label}</button>
+                <button type="button" className="btn" style={{ flex: "none", opacity: connecting === kind ? 0.6 : 1 }}
+                  disabled={connecting === kind} onClick={() => connect(kind)}>
+                  {connecting === kind ? "Connecting…" : `Connect ${label}`}
+                </button>
               )}
             </div>
           );

@@ -28,7 +28,9 @@ export async function GET() {
     const p = resolveOAuthProvider(k);
     return p && providerAvailable(p);
   });
-  return NextResponse.json({ connections, available });
+  // Providers whose authorization needs the full window rather than a popup (Vercel's multi-step install).
+  const redirectOnly = available.filter((k) => resolveOAuthProvider(k)?.authorizeWindow === "redirect");
+  return NextResponse.json({ connections, available, redirectOnly });
 }
 
 export async function DELETE(req: Request) {

@@ -44,6 +44,12 @@ process.env.SUPABASE_OAUTH_CLIENT_ID = "x"; process.env.SUPABASE_OAUTH_CLIENT_SE
 delete process.env.SUPABASE_OAUTH_ENABLED;
 ok("configured BUT gated => not available (Supabase safety)", providerAvailable(supabase) === false);
 
+// Vercel's multi-step install needs the full window; everything else authorizes in a popup.
+ok("vercel authorizes via full-page redirect; others default to popup",
+  resolveOAuthProvider("vercel")?.authorizeWindow === "redirect" &&
+  resolveOAuthProvider("github")?.authorizeWindow === undefined &&
+  resolveOAuthProvider("stripe_test")?.authorizeWindow === undefined);
+
 // One shared callback path per provider (the same URL serves per-app + account).
 ok("callback path is the shared /apps/oauth/callback/<kind>", callbackPath("vercel") === "/api/preflight/apps/oauth/callback/vercel");
 
