@@ -58,9 +58,10 @@ export function StealthScreen() {
         const begun = await post({ step: "begin" });
         if (cancelled || attempt !== generation || !begun?.ok || !begun.token) { reset(); return; }
 
-        // Wait out the three seconds. The server checks this independently; the delay here is only so the
-        // request is not made before it can possibly succeed.
-        await new Promise((r) => { timer = setTimeout(r, 3200); });
+        // Wait four seconds. The server independently refuses anything under its own floor, so this timer
+        // is not the security boundary; it just avoids asking before the answer could possibly be yes.
+        // Same duration on desktop and mobile, so the gesture feels identical once the entry differs.
+        await new Promise((r) => { timer = setTimeout(r, 4200); });
         if (cancelled || attempt !== generation) return;
 
         const done = await post({ step: "complete", token: begun.token });
@@ -111,12 +112,45 @@ export function StealthScreen() {
       if (ORDER.includes(e.key)) reset();
     }
 
+    // MOBILE: there are no modifier keys, so the gesture is eight taps, then the same four-second wait.
+    // Eight is high enough that no idle tapping reaches it, and the same anti-spam rule applies: a ninth
+    // tap during the wait abandons the attempt. Taps must be reasonably paced; a burst faster than a person
+    // taps is treated as spam and resets.
+    const TAPS_NEEDED = 8;
+    const MIN_TAP_GAP_MS = 60;   // below this is a synthetic burst, not a finger
+    const MAX_TAP_GAP_MS = 1200; // a long pause means they stopped, so start over
+    let taps = 0;
+    let lastTap = 0;
+
+    function onTap(e: PointerEvent) {
+      if (e.pointerType === "mouse") return; // desktop uses the keyboard gesture
+
+      if (armed) {
+        // Same rule as the keyboard: tapping again during the wait cancels the whole thing.
+        taps = 0;
+        reset();
+        return;
+      }
+
+      const now = e.timeStamp;
+      const gap = now - lastTap;
+      lastTap = now;
+      // Too fast is a burst, too slow means they moved on. Either way this tap starts a fresh count.
+      if (taps > 0 && (gap < MIN_TAP_GAP_MS || gap > MAX_TAP_GAP_MS)) { taps = 1; return; }
+
+      taps += 1;
+      if (taps > TAPS_NEEDED) { taps = 0; reset(); return; }
+      if (taps === TAPS_NEEDED) { taps = 0; void run(); }
+    }
+
     window.addEventListener("keydown", onDown);
     window.addEventListener("keyup", onUp);
+    window.addEventListener("pointerdown", onTap);
     return () => {
       cancelled = true;
       window.removeEventListener("keydown", onDown);
       window.removeEventListener("keyup", onUp);
+      window.removeEventListener("pointerdown", onTap);
       if (timer) clearTimeout(timer);
     };
   }, []);
