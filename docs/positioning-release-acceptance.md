@@ -135,15 +135,44 @@ Ask, without describing Vraelis first:
 6. Would a shareable verification report have mattered?
 7. Would you run it again on the next release?
 
-### Threshold
+### Two gates, kept separate
+
+Mixing these was a mistake in the first draft. "Three failures the owner did not already know about" is
+evidence the ENGINE works, and the seeded benchmarks already test that properly. Making it a demand
+threshold would kill the thesis if five well-built apps happened to be clean, which says nothing about
+whether their owners value release evidence.
+
+**DEMAND gate. This is the one that decides.**
 
 - At least **5** completed runs on consenting applications
-- At least **3** real failures the owner did not already know about
-- At least **3** owners ask to rerun on a later release
-- At least **1** pays
+- At least **3** owners ask to use it again on a later release
+- At least **1** pays for another release
 
 **Enthusiasm is not signal.** "That's cool" from someone who will not connect an application means no. The
 threshold is a second run and a payment.
+
+**PRODUCT evidence. Recorded, never a gate here.**
+
+- Failures found that the owner did not already know about
+- False alarms
+- Setup time, from URL to first valid run
+- Whether the report changed a release decision
+
+That last one is the most interesting number nobody measures. A run that finds nothing but makes someone
+ship with confidence is still doing work.
+
+### Running the pilots
+
+**Grant credits by hand.** The free tier is one lifetime pass at three flows, and a real delivery contract
+exceeds that immediately, so every pilot would otherwise hit a paywall mid-experiment. That would be
+measuring the on-ramp, not the demand. Use the same manual grant as the demo account
+(`sql/vraelis-demo-credits.sql`).
+
+**Do not redesign pricing around five free trials.** Whether they pay later is the question; what the first
+run costs is a detail to settle afterwards.
+
+Run them concierge-style. Sit with the owner, connect it yourself, watch what they do with the result. The
+behaviour is the data; the compliments are not.
 
 ### If it fails
 
@@ -156,6 +185,22 @@ plainly rather than re-framed a fourth time.
 
 > Vraelis verifies AI-built releases before another person has to trust them.
 
-The larger vision is unchanged and merely sequenced behind it: client web applications, then release
-verification for teams, then an API inside the builders themselves, then other runtimes, then physical and
-autonomous systems. It was never deleted. It was missing a first buyer.
+The larger vision is unchanged and merely sequenced behind it. Agencies are the first buyer, not the
+permanent identity, and the site should never start looking like agency-management software.
+
+1. **Release acceptance.** Verify AI-built web applications before delivery. (Here.)
+2. **Outcome verification.** Confirm a whole workflow succeeded across the browser, the payment provider,
+   the database, and the messaging that follows it, rather than checking one surface. This is what
+   `benchmark-outcome-chain-v2.md` measures.
+3. **Embedded.** The builders call it themselves after every generated release. The primitive reduces to
+   one instruction: *verify this outcome*.
+4. **Autonomous systems.** An agent should not be able to say "done" on its own word. It should have to
+   produce evidence that the outcome happened.
+5. **Physical.** A command was sent, the device received it, the state changed, the sensor agrees, and the
+   downstream system updated.
+
+The through-line, and the reason this can grow rather than saturate: **AI will produce and operate more
+systems than any human can personally inspect, and every autonomous action creates something that has to be
+independently checked before someone relies on it.** Demand scales with AI usage rather than against it.
+
+None of that is a plan yet. It is the direction stage 1 has to earn.

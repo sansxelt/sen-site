@@ -68,7 +68,7 @@ const TRUST_CONTROLS: [string, string, string][] = [
   ["Domain provisioning", "Governed join / approval", "/organization"],
   ["Team roles", "Access per member", "/team"],
   ["Billing admins", "Billing without ownership", "/billing"],
-  ["Client-safe sharing", "Read-only report access", "/team"],
+  ["Client viewer access", "Read-only report access", "/team"],
   ["API & webhooks", "Keys & signed deliveries", "/api"],
 ];
 

@@ -23,19 +23,22 @@ const PROTECTS: [string, string][] = [
   ["Run workflows", "Preflight runs go through a governed pipeline with an audit trail, not an open box anyone can trigger against anything."],
   ["Application ownership", "Every connected app carries an explicit owner and an I own or authorized this confirmation before a run can touch it."],
   ["Organization access", "Organizations sit above workspaces with roles, admins, and membership governance, so access maps to who should have it."],
-  ["Client-safe reports", "Share a read-only launch report by token. Private controls, costs, internals, and raw evidence never travel with it."],
+  // Was: "Share a read-only launch report by token." That is not built. A client viewer role exists and is
+  // real; sending a run report to someone with no account, by link, is not. Do not restore the old wording
+  // until that ships.
+  ["Client viewer access", "Invite someone as a read-only client viewer, scoped to reports rather than settings, costs, or raw evidence. Sharing a report by public link, with no account, is not built yet."],
   ["SSO and domain-based access", "OIDC single sign-on and verified-domain provisioning bind access to identities your organization already controls."],
   ["Billing and admin boundaries", "Billing admins manage payment without owning data or members. Ownership transfer is a deliberate, guarded action."],
   ["Audit activity", "Member, domain, SSO, billing-admin, ownership, and confirmation-round changes are recorded as a safe, reviewable trail."],
 ];
 
 const CONTROLS: string[] = [
-  "Organizations and workspaces", "Project-level access", "Client-safe report sharing", "Role-based access (admin / editor / viewer / client)",
+  "Organizations and workspaces", "Project-level access", "Role-based access (admin / editor / viewer / client)",
   "Billing-admin separation", "Ownership-transfer controls", "Tokenized, expiring invites", "Verified organization domains",
   "Domain-based provisioning (governed)", "OIDC single sign-on", "Periodic domain re-verification", "Read-only audit activity", "Sanitized audit export (CSV / JSON)",
 ];
 
-const ENTERPRISE_PERKS = ["Unlimited runs", "Organization governance and audit export", "OIDC SSO and verified domains", "Client-safe sharing and billing admins"];
+const ENTERPRISE_PERKS = ["Unlimited runs", "Organization governance and audit export", "OIDC SSO and verified domains", "Client viewer access and billing admins"];
 
 const Section = ({ children, bg }: { children: React.ReactNode; bg?: boolean }) => (
   <section className="section" style={bg ? { background: "var(--bg-2)" } : undefined}>
@@ -83,7 +86,7 @@ export default function EnterprisePage() {
         <div className="sec-head" style={{ marginBottom: 24 }}>
           <p className="eyebrow">Governance controls</p>
           <h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)" }}>Controls that exist today.</h2>
-          <p>The access, identity, and sharing controls a team can use to run preflight responsibly across an organization.</p>
+          <p>The access and identity controls a team can use to run preflight responsibly across an organization.</p>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
           {CONTROLS.map((c) => <span key={c} className="chip">{c}</span>)}

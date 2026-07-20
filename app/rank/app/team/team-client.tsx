@@ -153,7 +153,9 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
       <div className="card" style={{ marginBottom: 18, background: "var(--bg-2)" }}>
         <div style={cardHead}>Built for governed production verification</div>
         <ul style={{ margin: "10px 0 0", padding: 0, listStyle: "none", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "8px 18px" }}>
-          {["Role-based workspace access", "Client-safe report sharing", "Workspace activity log", "Billing admin separation", "Secure, expiring invite links", "Project-level access control", "Signed webhooks & API keys", "Ownership transfer with audit"].map((g) => (
+          {/* "Client-safe report sharing" removed: a client VIEWER ROLE exists, but sending a report by
+              link to someone with no account does not. Same false claim was on /enterprise. */}
+          {["Role-based workspace access", "Client viewer role", "Workspace activity log", "Billing admin separation", "Secure, expiring invite links", "Project-level access control", "Signed webhooks & API keys", "Ownership transfer with audit"].map((g) => (
             <li key={g} style={{ fontSize: 13, color: "var(--fg-2)", display: "flex", gap: 8, alignItems: "center" }}><span aria-hidden style={{ display: "inline-flex", color: "var(--acc-deep)", flex: "none" }}><Ic d={I.check} size={12} sw={2.4} /></span>{g}</li>
           ))}
         </ul>
