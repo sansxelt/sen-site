@@ -28,9 +28,15 @@ export async function GET() {
     const p = resolveOAuthProvider(k);
     return p && providerAvailable(p);
   });
-  // Providers whose authorization needs the full window rather than a popup (Vercel's multi-step install).
+  // Providers whose authorization needs the full window rather than a popup, and any that want a larger
+  // popup than the default (Vercel's multi-step install).
   const redirectOnly = available.filter((k) => resolveOAuthProvider(k)?.authorizeWindow === "redirect");
-  return NextResponse.json({ connections, available, redirectOnly });
+  const popupSizes: Record<string, { w: number; h: number }> = {};
+  for (const k of available) {
+    const size = resolveOAuthProvider(k)?.popupSize;
+    if (size) popupSizes[k] = size;
+  }
+  return NextResponse.json({ connections, available, redirectOnly, popupSizes });
 }
 
 export async function DELETE(req: Request) {

@@ -37,10 +37,12 @@ export type OAuthProvider = {
   authorizeStyle?: "standard" | "install";
   // For "install" style: the env var holding the integration slug used to build the install URL.
   installSlugEnv?: string;
-  // How the user should be sent to the provider. "popup" (default) keeps them on the page. "redirect" is for
-  // providers whose authorization is a multi-step flow that needs the full window — Vercel's integration
-  // install asks for team, project scope, and permissions, which is cramped and easy to mis-click in a popup.
+  // How the user should be sent to the provider. "popup" (default) keeps them on the page; "redirect" takes
+  // the full window for flows that genuinely need it.
   authorizeWindow?: "popup" | "redirect";
+  // Popup dimensions when a provider's authorization needs more room than the default 620x760 (Vercel's
+  // integration install is multi-step: team -> project access -> permissions).
+  popupSize?: { w: number; h: number };
 };
 
 // GITHUB — OAuth-app token: no expiry, no refresh, JSON exchange when Accept: application/json is sent.
@@ -71,8 +73,8 @@ const VERCEL: OAuthProvider = {
   persistCallbackParams: ["teamId", "configurationId"],
   authorizeStyle: "install",
   installSlugEnv: "VERCEL_INTEGRATION_SLUG",
-  // Full-page: the install flow (team -> project access -> permissions) needs room, not a 620px popup.
-  authorizeWindow: "redirect",
+  // Popup, but a large one: the install flow (team -> project access -> permissions) needs real room.
+  popupSize: { w: 980, h: 900 },
   gatedByEnv: "VERCEL_OAUTH_ENABLED", // needs creds AND the slug; on when VERCEL_OAUTH_ENABLED=1
 };
 

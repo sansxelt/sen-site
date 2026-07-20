@@ -48,6 +48,7 @@ export default function ConnectionsPage() {
   const [conns, setConns] = useState<AccountConnection[] | null>(null);
   const [available, setAvailable] = useState<string[]>([]);
   const [redirectOnly, setRedirectOnly] = useState<string[]>([]);
+  const [popupSizes, setPopupSizes] = useState<Record<string, { w: number; h: number }>>({});
   const [connecting, setConnecting] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -70,6 +71,7 @@ export default function ConnectionsPage() {
       setConns(Array.isArray(j.connections) ? j.connections : []);
       setAvailable(Array.isArray(j.available) ? j.available : []);
       setRedirectOnly(Array.isArray(j.redirectOnly) ? j.redirectOnly : []);
+      setPopupSizes(j.popupSizes && typeof j.popupSizes === "object" ? j.popupSizes : {});
     } catch { setConns([]); }
   }
   useEffect(() => { void load(); }, []);
@@ -104,7 +106,11 @@ export default function ConnectionsPage() {
     const base = `/api/preflight/connections/${encodeURIComponent(kind)}/oauth`;
     if (redirectOnly.includes(kind)) { window.location.href = base; return; }
 
-    const w = 620, h = 760;
+    // Providers with a multi-step authorization (Vercel's install) ask for a bigger window; clamp to the
+    // screen so a large popup never opens off-screen on a laptop.
+    const want = popupSizes[kind] ?? { w: 620, h: 760 };
+    const w = Math.min(want.w, Math.max(420, window.screen.availWidth - 80));
+    const h = Math.min(want.h, Math.max(520, window.screen.availHeight - 120));
     const left = window.screenX + Math.max(0, (window.outerWidth - w) / 2);
     const top = window.screenY + Math.max(0, (window.outerHeight - h) / 3);
     const win = window.open(`${base}?popup=1`, "vraelis-oauth", `width=${w},height=${h},left=${left},top=${top}`);
