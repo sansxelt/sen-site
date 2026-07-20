@@ -30,7 +30,7 @@ const FLOWS = [
   // Concrete flows, not abstractions. "A record persists" makes a reader translate; "sign up, create
   // something, come back tomorrow, it is still there" is the thing they have actually worried about.
   { name: "A new account keeps its data", expect: "Sign up, create something, return in a fresh session, and it is still there." },
-  { name: "A second account is denied", expect: "Another signed-in user must not be able to open it." },
+  { name: "A second account is denied access", expect: "Another signed-in user must not be able to open it." },
   { name: "Checkout grants access", expect: "Pay in test mode, then confirm the account actually gained the paid feature." },
 ] as const;
 
@@ -60,7 +60,7 @@ const MODES: Mode[] = [
       // the whole product; what actually happened is that the approved flows passed.
       title: "All approved flows passed",
       count: "3 of 3 requirements held",
-      line: "The complete approved contract passed. On a real run this decision carries the evidence behind it, tied to the exact build.",
+      line: "Every approved flow completed. A real run carries the screenshots and step-level evidence behind this decision, tied to the exact deployment it ran against.",
     },
   },
   {
