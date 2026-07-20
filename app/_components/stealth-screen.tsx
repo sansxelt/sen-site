@@ -10,25 +10,24 @@
 // This component is the ONLY thing the server renders while stealth is on, so nothing of the real site is
 // in the HTML or the RSC payload until the cookie exists.
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 export function StealthScreen() {
-  const [opening, setOpening] = useState(false);
-
   useEffect(() => {
     // THE GESTURE: press Control, then Shift, then Alt, in that order. While holding all three, press Enter
-    // three times. Then wait three seconds; letting go of the keys is fine.
+    // four times. Then wait three seconds; letting go of the keys is fine. The screen never reacts.
     //
     // The three seconds are enforced by the SERVER, not by the timer here (see lib/stealth.ts). A gesture
     // has to be interpreted by client code, so it can never be secret the way a passphrase can. Making the
     // wait real server-side is what stops someone reading this file and simply replaying the two calls.
-    const ENTERS_NEEDED = 3;
+    const ENTERS_NEEDED = 4;
     const ORDER = ["Control", "Shift", "Alt"];
 
     let held: string[] = [];   // modifiers in the order they went down
     let enters = 0;
     let armed = false;         // handshake started; waiting out the three seconds
     let cancelled = false;
+    let generation = 0;        // bumped on every reset, so an abandoned attempt can never finish
     let timer: ReturnType<typeof setTimeout> | undefined;
 
     const orderOk = () => held.length === ORDER.length && held.every((k, i) => k === ORDER[i]);
@@ -37,6 +36,7 @@ export function StealthScreen() {
       held = [];
       enters = 0;
       armed = false;
+      generation += 1; // invalidates any attempt already in flight
       if (timer) clearTimeout(timer);
     }
 
@@ -51,35 +51,43 @@ export function StealthScreen() {
 
     async function run() {
       armed = true;
-      setOpening(true); // the copy changes, so a correct gesture is acknowledged without naming itself
+      const attempt = ++generation; // a cancelled attempt must not unlock later if its fetch is still open
+      // NOTHING changes on screen while this runs. The page must never acknowledge a correct gesture: a
+      // "waiting…" state would tell anyone probing that they had the first half right.
       try {
         const begun = await post({ step: "begin" });
-        if (cancelled || !begun?.ok || !begun.token) { reset(); setOpening(false); return; }
+        if (cancelled || attempt !== generation || !begun?.ok || !begun.token) { reset(); return; }
 
         // Wait out the three seconds. The server checks this independently; the delay here is only so the
         // request is not made before it can possibly succeed.
         await new Promise((r) => { timer = setTimeout(r, 3200); });
-        if (cancelled) return;
+        if (cancelled || attempt !== generation) return;
 
         const done = await post({ step: "complete", token: begun.token });
-        if (cancelled) return;
+        if (cancelled || attempt !== generation) return;
         if (done?.ok) {
           // Full reload, not a router refresh: the server must re-render the real layout from scratch now
-          // that the signed cookie exists.
+          // that the signed cookie exists. This is the first and only visible change.
           location.reload();
           return;
         }
         reset();
-        setOpening(false);
       } catch {
         // Offline or blocked: stay closed and silent. A failed attempt must never look like a hint.
         reset();
-        setOpening(false);
       }
     }
 
     function onDown(e: KeyboardEvent) {
-      if (armed) return; // already waiting; further keys are ignored rather than restarting anything
+      const isEnterKey = e.key === "Enter" || e.code === "Enter" || e.code === "NumpadEnter";
+
+      if (armed) {
+        // Anti-spam: once the wait has started, another Enter abandons the whole attempt. Someone who knows
+        // the gesture presses it four times and stops; someone hammering the key does not get in, and gets
+        // no feedback telling them to stop either.
+        if (isEnterKey) { e.preventDefault(); reset(); }
+        return;
+      }
 
       if (ORDER.includes(e.key)) {
         // Record each modifier once, in the order it was pressed. Held keys repeat; ignore the repeats.
@@ -87,19 +95,18 @@ export function StealthScreen() {
         return;
       }
 
-      const isEnter = e.key === "Enter" || e.code === "Enter" || e.code === "NumpadEnter";
-      if (!isEnter || !orderOk() || !(e.ctrlKey && e.shiftKey && e.altKey)) { reset(); return; }
-      if (e.repeat) return; // holding Enter down is not three presses
+      if (!isEnterKey || !orderOk() || !(e.ctrlKey && e.shiftKey && e.altKey)) { reset(); return; }
+      if (e.repeat) return; // leaning on Enter is not four presses
 
       e.preventDefault();
       enters += 1;
-      if (enters > ENTERS_NEEDED) { reset(); return; } // mashing past three is not the gesture
+      if (enters > ENTERS_NEEDED) { reset(); return; } // mashing past four is not the gesture
       if (enters === ENTERS_NEEDED) void run();
     }
 
     function onUp(e: KeyboardEvent) {
-      // Once the handshake is running they are told they can let go, so releasing must not cancel it.
-      // Before that, releasing a modifier abandons the attempt.
+      // Once the wait has started, releasing must not cancel it: the gesture is designed to be finished with
+      // the keys let go. Before that, releasing a modifier abandons the attempt.
       if (armed) return;
       if (ORDER.includes(e.key)) reset();
     }
@@ -140,7 +147,7 @@ export function StealthScreen() {
         </h1>
 
         <p className="vst-body vst-in vst-d2">
-          {opening ? "Opening…" : "Not public yet. If you were meant to be here, you already know the way in."}
+          Not public yet. If you were meant to be here, you already know the way in.
         </p>
       </div>
     </main>

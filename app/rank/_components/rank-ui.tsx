@@ -62,7 +62,7 @@ function Brand({ href }: { href: string }) {
     }
   };
   return (
-    <Link href={href} onClick={onClick} style={{ display: "inline-flex", alignItems: "center", minHeight: 24, textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.035em", lineHeight: 1 }}>Vraelis</Link>
+    <Link href={href} onClick={onClick} className="vra-brand" style={{ display: "inline-flex", alignItems: "center", minHeight: 24, textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.035em", lineHeight: 1 }}>Vraelis</Link>
   );
 }
 
@@ -369,6 +369,12 @@ const SHELL_UI_CSS = "@keyframes vraTextIn{from{opacity:0;transform:translateY(1
   // (clamp up to 40px), which felt like dead space under the topbar; override it once
   // here (a stylesheet !important beats the inline value) so all /app pages match.
   + ".rank-root .app-main>.wrap{padding-top:clamp(12px,1.6vw,20px)!important}"
+  // The wordmark is ONE component, but the two shells render at different zooms (0.89 in the app, 0.99 on
+  // the site), so an identical 21px renders ~10% smaller in the app and the logo visibly changes size when
+  // you cross between them. Scale it back up inside the app by exactly the ratio between the two zooms, so
+  // both read at the same optical size. !important because Brand carries an inline font-size.
+  // If either zoom in styles.css changes, update the ratio here: it is site-zoom / app-zoom.
+  + ".rank-root:not(.rank-root--site) .vra-brand{font-size:calc(21px * (0.99 / 0.89))!important}"
   + "@media (prefers-reduced-motion:reduce){.rank-root .eyebrow,.rank-root .display,.rank-root .lead-copy{animation:none}.rank-root .btn:active,.rank-root a.card:hover,.rank-root a.card:active,.rank-root a.acard:hover,.rank-root a.acard:active{transform:none}}";
 
 export function RankShell({ signedIn = false, email = null, humanEval = false, appHost = false, children }: { signedIn?: boolean; email?: string | null; humanEval?: boolean; appHost?: boolean; children: ReactNode }) {
