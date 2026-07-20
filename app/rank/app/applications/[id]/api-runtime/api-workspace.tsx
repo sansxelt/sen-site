@@ -232,7 +232,16 @@ export function ApiWorkspace({ appId, initial, canEdit, canLaunch }: { appId: st
       {run && (
         <section style={card}>
           <h2 style={h2}>Result</h2>
-          <div style={{ fontSize: 20, ...verdictTone(run.verdict), marginBottom: 12 }}>{run.verdict}</div>
+          {/* Beta chip sits ON the verdict, not in a footnote. API checking works and passes our own tests,
+              but no outside customer has run their API through it, so it must not read at the same
+              confidence as the browser verdict on the same screen. */}
+          <div style={{ fontSize: 20, ...verdictTone(run.verdict), marginBottom: 4, display: "flex", alignItems: "center", gap: 9, flexWrap: "wrap" }}>
+            {run.verdict}
+            <span className="pill" style={{ fontSize: 9.5, background: "var(--bg-2)", color: "var(--fg-4)", borderColor: "var(--line-2)", fontFamily: "var(--font-code)", letterSpacing: "0.06em" }}>BETA</span>
+          </div>
+          <div style={{ fontSize: 12, color: "var(--fg-4)", marginBottom: 12, lineHeight: 1.5 }}>
+            API checking is new. Treat this as a signal to look at, not a gate to release on.
+          </div>
           {run.flows.map((f, fi) => (
             <div key={fi} style={{ borderTop: "1px solid var(--line-1)", paddingTop: 10, marginTop: 10 }}>
               <div style={{ fontSize: 13.5, fontWeight: 600, color: f.state === "passed" ? "var(--ok)" : f.state === "failed" ? "var(--err)" : "var(--fg-3)" }}>{f.name}: {f.state}</div>

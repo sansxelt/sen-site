@@ -482,6 +482,10 @@ export class PostgresRunStore implements RunStore {
         user_id: userId, application_id: applicationId, run_id: runId, flow_id: reg.flowId,
         severity: issue.severity, category: issue.category, title: issue.title,
         expected: issue.expected, observed: issue.observed, repro: issue.repro,
+        // The deterministic hedge goes in the existing INTERPRETATION column, which the report already
+        // renders under "Possible cause (interpretation)". The title stays observational; the guess lives
+        // here, where it is visibly labelled as one. An AI cause, when there is one, overwrites this.
+        likely_cause: issue.possible_explanation,
         evidence: { ...issue.evidence, requirement_refs: issue.requirement_refs },
         status: "open", first_seen_run: runId, last_seen_run: runId,
       } as never);

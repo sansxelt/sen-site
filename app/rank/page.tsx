@@ -57,16 +57,19 @@ function StatusPill({ s }: { s: StatusKey }) {
 }
 
 // ── What Vraelis validates: behavior categories, not a runtime list ──
-const VALIDATES: { t: string; d: string; i: string; soon?: boolean }[] = [
-  { t: "Authentication & identity", d: "Sign-in, sessions, and identity hold under real conditions, not just on the happy path.", i: ICONS.lock },
-  { t: "Authorization & permissions", d: "The right roles can act, and the wrong ones are refused. Access boundaries are enforced, not assumed.", i: ICONS.key },
-  { t: "Data creation & persistence", d: "What the product says it saved is actually there after a refresh, a new session, and a later request.", i: ICONS.database },
-  { t: "APIs & integrations", d: "Endpoints, chained requests, statuses, values, schemas, and idempotency behave the way the contract requires.", i: ICONS.api },
-  { t: "Critical user & system workflows", d: "The journeys that matter run end to end, across services and state transitions.", i: ICONS.flow },
-  { t: "Build & configuration behavior", d: "Behavior is tied to the exact build, environment, and configuration, so a clean production build is what gets verified.", i: ICONS.build },
-  { t: "Cross-service state transitions", d: "State moves correctly between services and stays consistent, not just correct on one screen.", i: ICONS.transitions },
-  { t: "Recovery & failure handling", d: "The system degrades and recovers the way it is required to when something goes wrong.", i: ICONS.recover },
-  { t: "SDK & connected-device telemetry", d: "Roadmap: signed execution checkpoints and telemetry from instrumented apps, edge systems, and devices.", i: ICONS.device, soon: true },
+// Every row carries its real maturity. `tag` is the honest label: absent means it runs today in the browser
+// flow you approve; BETA means it works but has not been exercised by an outside customer; ROADMAP means it
+// is not built. A row is never left untagged just because code exists for it.
+const VALIDATES: { t: string; d: string; i: string; tag?: "BETA" | "ROADMAP" }[] = [
+  { t: "Authentication & identity", d: "Sign-in and sessions hold across a refresh and a new session, in the flows you approve.", i: ICONS.lock },
+  { t: "Authorization & permissions", d: "In flows that use two roles, the one that should be refused is refused. Scoped to the paths you approve, not a full permission audit.", i: ICONS.key },
+  { t: "Data creation & persistence", d: "What the product says it saved is still visible after a refresh, a new session, and a later request.", i: ICONS.database },
+  { t: "APIs & integrations", d: "Endpoints, chained requests, statuses, values and schemas checked against your contract. Works today; no outside customer has run it end to end yet.", i: ICONS.api, tag: "BETA" },
+  { t: "Critical user & system workflows", d: "The journeys that matter run end to end in a real browser against your deployment.", i: ICONS.flow },
+  { t: "Build & configuration behavior", d: "A run is pinned to the exact deployment and environment it ran against, so a result is never carried forward to a build that was not checked.", i: ICONS.build },
+  { t: "Cross-service state transitions", d: "Roadmap: following state as it moves between services, rather than checking it on one screen.", i: ICONS.transitions, tag: "ROADMAP" },
+  { t: "Recovery & failure handling", d: "Roadmap: driving a system into failure and checking how it degrades and recovers.", i: ICONS.recover, tag: "ROADMAP" },
+  { t: "SDK & connected-device telemetry", d: "Roadmap: signed execution checkpoints and telemetry from instrumented apps, edge systems, and devices.", i: ICONS.device, tag: "ROADMAP" },
 ];
 
 // ── The core loop: how it works ──
@@ -138,9 +141,9 @@ export default function VraelisLanding() {
           </div>
           <div className="tile-grid cols-3">
             {VALIDATES.map((f) => (
-              <div key={f.t} className="acard" style={{ gap: 8, opacity: f.soon ? 0.72 : 1 }}>
+              <div key={f.t} className="acard" style={{ gap: 8, opacity: f.tag === "ROADMAP" ? 0.72 : 1 }}>
                 <div className="acard__icon"><Icon d={f.i} /></div>
-                <div className="acard__t">{f.t}{f.soon && <span className="pill" style={{ marginLeft: 8, fontSize: 10, background: "var(--bg-2)", color: "var(--fg-4)", borderColor: "var(--line-2)", fontFamily: "var(--font-code)" }}>ROADMAP</span>}</div>
+                <div className="acard__t">{f.t}{f.tag && <span className="pill" style={{ marginLeft: 8, fontSize: 10, background: "var(--bg-2)", color: "var(--fg-4)", borderColor: "var(--line-2)", fontFamily: "var(--font-code)" }}>{f.tag}</span>}</div>
                 <div className="acard__d">{f.d}</div>
               </div>
             ))}
