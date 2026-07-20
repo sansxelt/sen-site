@@ -10,6 +10,7 @@ import { refund } from "../../lib/v-credits";
 import { normalizeBoundaries, type TestBoundaries } from "../../lib/preflight/boundaries";
 import { planFlowSelection } from "../../lib/preflight/flow-selection";
 import { issuesFromRun, planReconcile, type Issue, type OpenIssueRef, type ReconcileFlow } from "../../lib/preflight/issues";
+import { buildRepairPrompt } from "../../lib/preflight/repair-prompt";
 import { DETERMINISTIC_AUTH_FAILURE } from "./auth-executor";
 import { redactString, log } from "./redaction";
 import { buildVerificationPayload, dispatchVerificationWebhooks } from "../../lib/preflight/webhook-dispatch";
@@ -35,6 +36,9 @@ type RunSettlementRow = {
   user_id?: string | null; application_id?: string | null; contract_id?: string | null;
   credits_held?: number | null; cost_reservation_id?: string | null;
   state?: string | null; attempts?: number | null; max_attempts?: number | null;
+  // Read for the repair prompt: a failure handed to a coding agent has to name the deployment it was seen
+  // on, or the agent cannot tell which environment to reason about.
+  deployment_url?: string | null;
 };
 
 // Internal escape hatch for staging/internal runs: skip every ledger charge/refund (still warns). Honored
@@ -328,7 +332,7 @@ export class PostgresRunStore implements RunStore {
   // ── settlement helpers ───────────────────────────────────────────────────────────────────────────
   private async loadRunSettlement(runId: string): Promise<RunSettlementRow | null> {
     const { data } = await this.s.from("v_preflight_runs")
-      .select("user_id,application_id,contract_id,credits_held,cost_reservation_id,state,attempts,max_attempts")
+      .select("user_id,application_id,contract_id,deployment_url,credits_held,cost_reservation_id,state,attempts,max_attempts")
       .eq("id", runId).maybeSingle();
     return (data as RunSettlementRow | null) ?? null;
   }
@@ -472,6 +476,9 @@ export class PostgresRunStore implements RunStore {
       if (!issue) continue;
       await this.s.from("v_issues").update({
         last_seen_run: runId, observed: issue.observed, expected: issue.expected, repro: issue.repro,
+        // Refreshed with THIS run's evidence: a still-failing issue should hand over the latest console and
+        // network detail, not the transcript of the first time it broke.
+        repair_prompt: buildRepairPrompt(issue, { deploymentUrl: run.deployment_url ?? null }),
         evidence: { ...issue.evidence, requirement_refs: issue.requirement_refs }, severity: issue.severity,
       } as never).eq("user_id", userId).eq("id", cont.id);
     }
@@ -486,6 +493,10 @@ export class PostgresRunStore implements RunStore {
         // renders under "Possible cause (interpretation)". The title stays observational; the guess lives
         // here, where it is visibly labelled as one. An AI cause, when there is one, overwrites this.
         likely_cause: issue.possible_explanation,
+        // The paste-ready handover to whatever built the app. Deterministic, built only from what this run
+        // observed. Until now this column was written by nothing, so the report's copy button never
+        // appeared and a failure ended with the owner on their own.
+        repair_prompt: buildRepairPrompt(issue, { deploymentUrl: run.deployment_url ?? null }),
         evidence: { ...issue.evidence, requirement_refs: issue.requirement_refs },
         status: "open", first_seen_run: runId, last_seen_run: runId,
       } as never);

@@ -83,8 +83,8 @@ export default function FreeReportPage() {
             </div>
             <div className="acard" style={{ gap: 10 }}>
               <div className="acard__icon"><Icon d={I.wrench} /></div>
-              <div className="acard__t">Fix prompts for your builder</div>
-              <div className="acard__d">Each blocker ships with a repair prompt written for the tool that built your app. Paste it in, push the fix, and rerun the exact failed check.</div>
+              <div className="acard__t">A prompt you can paste straight in</div>
+              <div className="acard__d">Each blocker comes with what was expected, what happened, the steps to reproduce it, and the console and network detail, written as a prompt for whatever built your app. Paste it in, push the fix, and rerun the exact failed check.</div>
             </div>
           </div>
         </div>
