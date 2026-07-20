@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { MARK_PATH, MARK_VIEWBOX } from "@/lib/brand-mark";
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
@@ -11,7 +12,7 @@ function Frame({ children }: { children: ReactNode }) {
   return (
     <div className="rank-root">
       <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px var(--gutter)", borderBottom: "1px solid var(--line-1)", background: "rgba(250,248,244,0.9)" }}>
-        <a href="https://vraelis.com" style={{ textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.035em" }}>Vraelis</a>
+        <a href="https://vraelis.com" style={{ display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.035em" }}><svg width="18" height="18" viewBox={MARK_VIEWBOX} aria-hidden style={{ flex: "none", display: "block" }}><path d={MARK_PATH} fill="currentColor" /></svg>Vraelis</a>
         <a href="/app" className="btn btn--ghost">Open Vraelis</a>
       </nav>
       <div className="wrap" style={{ maxWidth: 560, paddingTop: "clamp(40px, 8vw, 90px)", paddingBottom: 80, textAlign: "center" }}>{children}</div>

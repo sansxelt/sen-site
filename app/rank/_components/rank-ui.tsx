@@ -10,6 +10,7 @@ import { isAppPath } from "@/lib/app-routes";
 // The product-wide drawn icon set (one language, no glyph characters). Kept in its own
 // server-safe module so app pages can render the same icons without a client boundary.
 import { Ic, I } from "./icons";
+import { MARK_PATH, MARK_VIEWBOX } from "@/lib/brand-mark";
 
 const PUBLIC_LINKS = [
   { href: "/how-it-works", label: "How it works" },
@@ -69,8 +70,15 @@ function Brand({ href }: { href: string }) {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
+  // Mark + wordmark. The mark carries the brand at sizes where type cannot (tab, home screen, avatar), so
+  // it belongs beside the name here too, or the header is the one place the mark never appears.
   return (
-    <Link href={href} onClick={onClick} className="vra-brand" style={{ display: "inline-flex", alignItems: "center", minHeight: 24, textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.035em", lineHeight: 1 }}>Vraelis</Link>
+    <Link href={href} onClick={onClick} className="vra-brand" style={{ display: "inline-flex", alignItems: "center", gap: 9, minHeight: 24, textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.035em", lineHeight: 1 }}>
+      <svg width="19" height="19" viewBox={MARK_VIEWBOX} aria-hidden style={{ flex: "none", display: "block" }}>
+        <path d={MARK_PATH} fill="currentColor" />
+      </svg>
+      Vraelis
+    </Link>
   );
 }
 

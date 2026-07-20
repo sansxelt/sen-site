@@ -30,7 +30,7 @@ export function GET() {
       >
         {/* wordmark */}
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <div style={{ width: "22px", height: "22px", borderRadius: "50%", background: "#16C081" }} />
+          <svg width="30" height="30" viewBox="0 0 24 24"><path d="M5 5 H19 V19 H13 V11 H5 Z" fill="#16C081" /></svg>
           <div style={{ display: "flex", fontSize: "40px", fontWeight: 700, letterSpacing: "-0.02em" }}>Vraelis</div>
         </div>
 

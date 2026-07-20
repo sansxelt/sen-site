@@ -1,8 +1,16 @@
 import { ImageResponse } from "next/og";
+import { MARK_PATH, MARK_VIEWBOX } from "@/lib/brand-mark";
 
-// Favicon: the Vraelis mark (gapped ring + solid core), monochrome ink on a cream tile. Uses the BOLD
-// weight (thick ring + large core) so the shape survives at 16px in a browser tab — a thin stroke
-// disappears at favicon size. Rendered with next/og; served at a hashed URL (auto cache-bust on change).
+// Favicon: the Vraelis mark in white on an ink tile, matching the icon as designed.
+//
+// A full-bleed tile rather than the mark alone, because a lone glyph on a transparent background vanishes
+// against dark browser chrome and the silhouette then differs per theme. Every edge of the mark is
+// axis-aligned, so it stays crisp at 16px instead of turning to mush the way a thin stroke does at
+// favicon size.
+//
+// Drawn from lib/brand-mark rather than a PNG: one definition shared with the iOS icon, the site header
+// and the OG card, and a few hundred bytes instead of the 694KB source file. Served at a hashed URL, so
+// the tab icon cache-busts whenever this changes.
 export const size = { width: 32, height: 32 };
 export const contentType = "image/png";
 
@@ -13,21 +21,14 @@ export default function Icon() {
         style={{
           width: "100%",
           height: "100%",
-          background: "#FAF8F4",
+          background: "#141310",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
         }}
       >
-        <svg width="31" height="31" viewBox="0 0 2048 2048">
-          <path
-            d="M 1613.215 1181.880 A 610 610 0 1 1 1613.215 866.120"
-            fill="none"
-            stroke="#141310"
-            strokeWidth="340"
-            strokeLinecap="round"
-          />
-          <circle cx="1024" cy="1024" r="250" fill="#141310" />
+        <svg width="26" height="26" viewBox={MARK_VIEWBOX}>
+          <path d={MARK_PATH} fill="#FFFFFF" />
         </svg>
       </div>
     ),

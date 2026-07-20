@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { MARK_PATH, MARK_VIEWBOX } from "@/lib/brand-mark";
 
 // Auth round-trip shell for /auth/* (verify-email, confirm-signup, verified, reset-password, error,
 // auto-signin).
@@ -33,9 +34,12 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           style={{
             fontFamily: "var(--font-display)", fontSize: 21, fontWeight: 700,
             letterSpacing: "-0.035em", lineHeight: 1,
-            color: "var(--fg-1)", textDecoration: "none",
+            color: "var(--fg-1)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8,
           }}
         >
+          <svg width="18" height="18" viewBox={MARK_VIEWBOX} aria-hidden style={{ flex: "none", display: "block" }}>
+            <path d={MARK_PATH} fill="currentColor" />
+          </svg>
           Vraelis
         </Link>
         <Link href="/" style={{ fontSize: 13, color: "var(--fg-3)", textDecoration: "none" }}>
