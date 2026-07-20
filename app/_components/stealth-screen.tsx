@@ -4,35 +4,85 @@
 // oversized numeral: here the headline IS the composition. An earlier version put a redacted line above it
 // and the mark competed with the one sentence that carries the page, so it went.
 //
-// The unlock is Ctrl+Shift+I, chosen by the founder. See the note in stealth.ts about what this is and is
-// not: a curtain, never access control.
+// The unlock sequence lives ONLY on the server (see lib/stealth.ts). This file never contains it.
 //
 // This component is the ONLY thing the server renders while stealth is on, so nothing of the real site is
 // in the HTML or the RSC payload until the cookie exists.
 
 import { useEffect, useState } from "react";
-import { STEALTH_COOKIE, STEALTH_VALUE } from "@/lib/stealth";
 
 export function StealthScreen() {
   const [opening, setOpening] = useState(false);
 
   useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      // Ctrl+Shift+I (the founder's pick) or Ctrl+Shift+U as a fallback, because on Chrome the first also
-      // opens DevTools at the browser level and cannot be prevented from a page.
-      const combo = (e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "I" || e.key === "i" || e.key === "U" || e.key === "u");
-      if (!combo) return;
-      e.preventDefault();
-      // Session-length cookie: closing the browser re-arms the curtain, which is the behaviour you want for
-      // a laptop that gets opened in front of other people.
-      document.cookie = `${STEALTH_COOKIE}=${STEALTH_VALUE}; path=/; max-age=86400; samesite=lax${location.protocol === "https:" ? "; secure" : ""}`;
-      setOpening(true);
-      // Full reload, not a router refresh: the server must re-render the real layout from scratch now that
-      // the cookie exists.
-      location.reload();
+    // This listener does NOT know the unlock sequence, on purpose. It buffers the letters typed while
+    // Ctrl+Shift+Alt is held and asks the server whether the buffer is right. Everything below is visible in
+    // DevTools and none of it is the answer.
+    //
+    // Modifiers matter for a second reason: holding Alt keeps this off Chrome's Ctrl+Shift+I, which opens
+    // DevTools at the browser level and cannot be prevented from a page.
+    const MAX_LEN = 8;
+    const RESET_MS = 4000;
+    let buffer = "";
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let checking = false;
+    let cancelled = false;
+
+    function reset() {
+      buffer = "";
+      if (timer) clearTimeout(timer);
     }
+
+    async function check() {
+      if (checking) return;
+      checking = true;
+      try {
+        const res = await fetch("/api/stealth/unlock", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ seq: buffer }),
+        });
+        const j = (await res.json().catch(() => null)) as { ok?: boolean } | null;
+        if (cancelled) return;
+        if (j?.ok) {
+          reset();
+          setOpening(true);
+          // Full reload, not a router refresh: the server must re-render the real layout from scratch now
+          // that the signed cookie exists.
+          location.reload();
+        }
+      } catch {
+        // Offline or blocked: stay closed and silent. A failed check must never look like a hint.
+      } finally {
+        checking = false;
+      }
+    }
+
+    function onKey(e: KeyboardEvent) {
+      // Modifier keys fire their own keydown events. Ignore them, or pressing Shift mid-sequence would
+      // discard a buffer that was going fine.
+      if (e.key === "Control" || e.key === "Shift" || e.key === "Alt" || e.key === "Meta") return;
+      if (!(e.ctrlKey && e.shiftKey && e.altKey)) { reset(); return; }
+
+      // Prefer e.code: with Alt held, some layouts report a composed or dead character in e.key while the
+      // physical key stays stable. Case never matters either way.
+      const code = e.code.toLowerCase();
+      const letter = code.startsWith("key") ? code.slice(3) : e.key.toLowerCase();
+      if (letter.length !== 1 || letter < "a" || letter > "z") { reset(); return; }
+
+      e.preventDefault();
+      buffer = (buffer + letter).slice(-MAX_LEN);
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(reset, RESET_MS);
+      void check();
+    }
+
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("keydown", onKey);
+      if (timer) clearTimeout(timer);
+    };
   }, []);
 
   return (

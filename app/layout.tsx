@@ -17,7 +17,7 @@ import { RevealOnScroll } from "../components/reveal-on-scroll";
 import { InflightBackToChat } from "../components/inflight-back-to-chat";
 import { isVraelisRequest } from "../lib/site-host";
 import { cookies } from "next/headers";
-import { stealthConfigured, STEALTH_COOKIE, STEALTH_VALUE } from "../lib/stealth";
+import { stealthConfigured, verifyStealthCookie, STEALTH_COOKIE } from "../lib/stealth";
 import { StealthScreen } from "./_components/stealth-screen";
 
 const BASE = "https://www.vraelis.com";
@@ -133,8 +133,9 @@ export default async function RootLayout({
 }>) {
   // STEALTH: checked before anything else and returned before `children` is touched, so while the curtain
   // is down the real tree is never rendered and never reaches the browser in any form. Cheap cookie read;
-  // no session lookup, no DB.
-  if (stealthConfigured() && (await cookies()).get(STEALTH_COOKIE)?.value !== STEALTH_VALUE) {
+  // no session lookup, no DB. The cookie is HMAC-verified rather than string-compared, so one typed into a
+  // cookie editor does not open anything.
+  if (stealthConfigured() && !verifyStealthCookie((await cookies()).get(STEALTH_COOKIE)?.value)) {
     return (
       <html lang="en" data-theme="light" style={{ colorScheme: "light", background: "#FAF8F4" }} className={`${GeistSans.variable} ${GeistMono.variable} h-full`}>
         <body className="min-h-full" style={{ background: "#FAF8F4" }}>
