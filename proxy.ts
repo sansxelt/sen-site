@@ -81,6 +81,10 @@ export default function proxy(req: NextRequest) {
   //     CRITICAL: "/api/<anything>" is the real API namespace (NextAuth, preflight routes) and must never
   //     be redirected or rewritten — only the EXACT "/api" path is the product's API & Webhooks page.
   if (path.startsWith("/api/")) return NextResponse.next();
+  // Reviewer entrance: a clean /yc?k=<code> onto the route handler that opens the stealth curtain. A
+  // handler rather than a page, because handlers skip layouts and the stealth gate lives in the root
+  // layout. Rewritten (not redirected) so the code never bounces through a visible URL.
+  if (path === "/yc") return go(req, "/api/yc", "rewrite");
   if (isProd && (path === "/app" || path.startsWith("/app/"))) {
     return goAbs(req, `https://app.vraelis.com${legacyToNew(path)}`);
   }
