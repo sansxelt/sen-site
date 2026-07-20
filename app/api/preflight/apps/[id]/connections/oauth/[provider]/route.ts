@@ -12,6 +12,7 @@ import { gatePreflightApp, gateReasonResponse } from "@/lib/preflight/team-acces
 import { vaultConfigured } from "@/lib/preflight/secret-vault";
 import { resolveOAuthProvider, providerAvailable, callbackPath, buildAuthorizeUrl } from "@/lib/preflight/oauth/providers";
 import { signOAuthState, newNonce } from "@/lib/preflight/oauth/state";
+import { createCodeVerifier, codeChallengeS256, pkceCookieName } from "@/lib/preflight/oauth/pkce";
 
 export const runtime = "nodejs";
 
@@ -43,7 +44,9 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string; pro
   const nonce = newNonce();
   const state = signOAuthState({ appId, owner, provider, nonce });
   const redirectUri = `${baseUrl(req)}${callbackPath(provider)}`;
-  const authUrl = buildAuthorizeUrl(p, { state, redirectUri });
+  // PKCE providers: only the S256 hash goes to the provider; the verifier stays in an httpOnly cookie.
+  const verifier = p.pkce ? createCodeVerifier() : null;
+  const authUrl = buildAuthorizeUrl(p, { state, redirectUri, codeChallenge: verifier ? codeChallengeS256(verifier) : undefined });
   if (!authUrl) return backToConnections(req, appId, `oauth=error&provider=${provider}&reason=server_misconfigured`);
 
   const res = NextResponse.redirect(authUrl, 302);
@@ -51,6 +54,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string; pro
   res.cookies.set(`vr_oauth_${provider}`, nonce, {
     httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 600,
   });
+  if (verifier) res.cookies.set(pkceCookieName(provider), verifier, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 600 });
   // Popup mode: the callback closes the popup and messages the opener instead of redirecting.
   if (new URL(req.url).searchParams.get("popup") === "1") {
     res.cookies.set("vr_oauth_popup", "1", { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 600 });

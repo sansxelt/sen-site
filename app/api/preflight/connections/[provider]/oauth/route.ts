@@ -14,6 +14,7 @@ import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { vaultConfigured } from "@/lib/preflight/secret-vault";
 import { resolveOAuthProvider, providerAvailable, callbackPath, buildAuthorizeUrl } from "@/lib/preflight/oauth/providers";
 import { signOAuthState, newNonce } from "@/lib/preflight/oauth/state";
+import { createCodeVerifier, codeChallengeS256, pkceCookieName } from "@/lib/preflight/oauth/pkce";
 
 export const runtime = "nodejs";
 
@@ -45,11 +46,15 @@ export async function GET(req: Request, ctx: { params: Promise<{ provider: strin
   const state = signOAuthState({ owner, provider, nonce }); // no appId => account-level state
   // Same registered callback URL as the per-app flow; the unified callback branches on state.appId.
   const redirectUri = `${baseUrl(req)}${callbackPath(provider)}`;
-  const authUrl = buildAuthorizeUrl(p, { state, redirectUri });
+  // PKCE providers: only the S256 hash goes to the provider. The verifier stays in an httpOnly cookie so an
+  // intercepted authorization code cannot be exchanged by anyone but this browser.
+  const verifier = p.pkce ? createCodeVerifier() : null;
+  const authUrl = buildAuthorizeUrl(p, { state, redirectUri, codeChallenge: verifier ? codeChallengeS256(verifier) : undefined });
   if (!authUrl) return backToConnections(req, `oauth=error&provider=${provider}&reason=server_misconfigured`);
 
   const res = NextResponse.redirect(authUrl, 302);
   res.cookies.set(`vr_oauth_acct_${provider}`, nonce, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 600 });
+  if (verifier) res.cookies.set(pkceCookieName(provider), verifier, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 600 });
   // Popup mode: the connections page opened this in a window.open. Remember it so the callback closes the
   // popup and messages the opener instead of redirecting a full page the user never sees.
   if (new URL(req.url).searchParams.get("popup") === "1") {

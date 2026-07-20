@@ -15,6 +15,7 @@ import { gatePreflightApp } from "@/lib/preflight/team-access";
 import { vaultConfigured } from "@/lib/preflight/secret-vault";
 import { resolveOAuthProvider, providerAvailable, callbackPath } from "@/lib/preflight/oauth/providers";
 import { verifyOAuthState } from "@/lib/preflight/oauth/state";
+import { pkceCookieName } from "@/lib/preflight/oauth/pkce";
 import { addOAuthConnection } from "@/lib/preflight/connections-db";
 import { addAccountOAuthConnection } from "@/lib/preflight/account-connections-db";
 
@@ -99,13 +100,20 @@ export async function GET(req: Request, ctx: { params: Promise<{ provider: strin
   const p = resolveOAuthProvider(provider);
   if (!p) return backGeneric(req, provider, "unknown_provider", popup);
 
+  // A PKCE verifier is single-use. Clear it on EVERY exit from here on, success or failure, so a stale
+  // verifier can never be paired with a later intercepted code.
+  const exit = (res: NextResponse): NextResponse => {
+    if (p.pkce) res.cookies.delete(pkceCookieName(provider));
+    return res;
+  };
+
   // verify + decode state; appId presence selects the flow.
   const state = stateRaw ? verifyOAuthState(stateRaw, { expectedProvider: provider }) : null;
-  if (!state) return backGeneric(req, provider, "bad_state", popup);
+  if (!state) return exit(backGeneric(req, provider, "bad_state", popup));
   const appId = state.appId; // undefined => account-level
   const cookieName = appId ? `vr_oauth_${provider}` : `vr_oauth_acct_${provider}`;
 
-  const err = (reason: string) => backTo(req, appId, `oauth=error&provider=${provider}&reason=${reason}`, popup);
+  const err = (reason: string) => exit(backTo(req, appId, `oauth=error&provider=${provider}&reason=${reason}`, popup));
 
   if (providerError) return err("denied");
   if (!code) return err("no_code");
@@ -141,6 +149,11 @@ export async function GET(req: Request, ctx: { params: Promise<{ provider: strin
   const redirectUri = `${baseUrl(req)}${callbackPath(provider)}`;
   type TokenResponse = { access_token?: string; refresh_token?: string; scope?: string; expires_in?: number };
   let token: TokenResponse | null = null;
+  // PKCE: the verifier proves this exchange comes from the browser that started the flow. Unlike the nonce
+  // cookie above this one IS a hard gate — without it the provider rejects the exchange anyway, and silently
+  // proceeding without it would be exactly the downgrade PKCE exists to prevent.
+  const codeVerifier = p.pkce ? (await cookies()).get(pkceCookieName(provider))?.value : undefined;
+  if (p.pkce && !codeVerifier) return err("pkce_verifier_missing");
   try {
     const body = new URLSearchParams({
       client_id: process.env[p.clientIdEnv] as string,
@@ -148,6 +161,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ provider: strin
       code,
       redirect_uri: redirectUri,
       grant_type: "authorization_code",
+      ...(codeVerifier ? { code_verifier: codeVerifier } : {}),
     });
     const res = await safeFetch(p.tokenUrl, {
       method: "POST",
@@ -200,7 +214,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ provider: strin
     : await addAccountOAuthConnection(sealOwner, provider, input);
   if ("error" in saved) return err(saved.error);
 
-  const res = backTo(req, appId, `oauth=connected&provider=${provider}`, popup);
+  const res = exit(backTo(req, appId, `oauth=connected&provider=${provider}`, popup));
   res.cookies.delete(cookieName);
   return res;
 }

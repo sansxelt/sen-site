@@ -5,6 +5,7 @@
 // This is CONNECTION OAuth (authorize a provider to read a user's data, token stored at the account level),
 // deliberately separate from SIGN-IN OAuth (auth.ts, AUTH_GITHUB_*). Different app, different callback,
 // different scopes, different env vars.
+import { PKCE_METHOD } from "./pkce";
 
 export type OAuthProvider = {
   // The connection kind (must be a CONNECTION_KINDS value so the row provider column is valid).
@@ -43,6 +44,10 @@ export type OAuthProvider = {
   // Popup dimensions when a provider's authorization needs more room than the default 620x760 (Vercel's
   // integration install is multi-step: team -> project access -> permissions).
   popupSize?: { w: number; h: number };
+  // Requires PKCE (RFC 7636): the authorize URL carries code_challenge (S256 of a secret verifier) and the
+  // token exchange must send the matching code_verifier. Supabase mandates it. The verifier NEVER goes to the
+  // provider in the authorize step — it's held in an httpOnly cookie until the exchange.
+  pkce?: boolean;
 };
 
 // GITHUB — OAuth-app token: no expiry, no refresh, JSON exchange when Accept: application/json is sent.
@@ -105,9 +110,10 @@ const STRIPE: OAuthProvider = {
   persistCallbackParams: ["stripe_user_id"],
 };
 
-// SUPABASE — OAuth with PKCE, management-API scopes (read projects/orgs). GATED: this scope is broader than
-// the written "No database credentials, no rows" promise, so it stays behind SUPABASE_OAUTH_ENABLED until the
-// scope is approved and the NEVER_ACCESSES.supabase copy is rewritten. Tokens expire (~1d) and refresh.
+// SUPABASE — OAuth with PKCE (the only provider that mandates it), management-API scopes. Tokens expire
+// (~1d) and refresh, which the refresh path handles. Still GATED behind SUPABASE_OAUTH_ENABLED: connecting
+// grants Vraelis management-API READ access to the user's Supabase org/projects, which is genuinely broader
+// than a stored project URL, so it stays opt-in and the connection copy says exactly what it can reach.
 const SUPABASE: OAuthProvider = {
   kind: "supabase", label: "Supabase",
   authorizeUrl: "https://api.supabase.com/v1/oauth/authorize",
@@ -115,6 +121,7 @@ const SUPABASE: OAuthProvider = {
   scopes: "",
   clientIdEnv: "SUPABASE_OAUTH_CLIENT_ID", clientSecretEnv: "SUPABASE_OAUTH_CLIENT_SECRET",
   tokenExchangeAccept: "application/json", refreshable: true,
+  pkce: true,
   gatedByEnv: "SUPABASE_OAUTH_ENABLED",
 };
 
@@ -159,7 +166,12 @@ export function callbackPath(kind: string): string {
 //    the Integration Console, so we send ONLY state; Vercel appends code/configurationId/teamId on return.
 //    Returns null if the slug env is missing (caller fails closed with server_misconfigured).
 //  - "standard" (default): appends client_id + redirect_uri + scope + state + response_type.
-export function buildAuthorizeUrl(p: OAuthProvider, opts: { state: string; redirectUri: string }): string | null {
+// PKCE providers additionally carry code_challenge (the S256 hash); the verifier itself stays in an httpOnly
+// cookie and is only revealed at token exchange. A pkce provider with no challenge supplied fails closed.
+export function buildAuthorizeUrl(
+  p: OAuthProvider,
+  opts: { state: string; redirectUri: string; codeChallenge?: string },
+): string | null {
   if (p.authorizeStyle === "install") {
     const slug = p.installSlugEnv ? process.env[p.installSlugEnv] : undefined;
     if (!slug) return null;
@@ -167,11 +179,16 @@ export function buildAuthorizeUrl(p: OAuthProvider, opts: { state: string; redir
     u.searchParams.set("state", opts.state);
     return u.toString();
   }
+  if (p.pkce && !opts.codeChallenge) return null; // never downgrade a PKCE provider to a bare code flow
   const u = new URL(p.authorizeUrl);
   u.searchParams.set("client_id", process.env[p.clientIdEnv] as string);
   u.searchParams.set("redirect_uri", opts.redirectUri);
   if (p.scopes) u.searchParams.set("scope", p.scopes);
   u.searchParams.set("state", opts.state);
   u.searchParams.set("response_type", "code");
+  if (p.pkce && opts.codeChallenge) {
+    u.searchParams.set("code_challenge", opts.codeChallenge);
+    u.searchParams.set("code_challenge_method", PKCE_METHOD);
+  }
   return u.toString();
 }

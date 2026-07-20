@@ -66,7 +66,19 @@ export const FEATURE_USE: Record<string, string> = {
   openapi: "Stored as application context. Not yet read during verification.",
   test_account: "Authenticated signed-in flows (coming later; credentials stay sealed until then).",
 };
-export function featureUse(provider: string): string {
+// Some providers can be connected two ways, and the two ways reach different amounts of data. Pasting a
+// Supabase project URL is metadata; authorizing Supabase over OAuth hands Vraelis a management-API token.
+// Describing both with one line would understate the second, so the OAuth variant is written separately and
+// selected off meta.oauth. Only providers whose OAuth reach differs need an entry here.
+const FEATURE_USE_OAUTH: Record<string, string> = {
+  supabase: "Reads your project list over the Supabase Management API to identify the project under test, and seeds a persistence requirement (created data survives a refresh and a new session).",
+};
+const NEVER_ACCESSES_OAUTH: Record<string, string> = {
+  supabase: "No database password, no direct database connection, no table rows. The token is read-only against the Management API and can be revoked from your Supabase account at any time.",
+};
+
+export function featureUse(provider: string, meta?: { oauth?: boolean } | null): string {
+  if (meta?.oauth === true && FEATURE_USE_OAUTH[provider]) return FEATURE_USE_OAUTH[provider];
   return FEATURE_USE[provider] ?? "Recorded as application context.";
 }
 
@@ -84,7 +96,7 @@ export const NEVER_ACCESSES: Record<string, string> = {
   github: "No code write access; repository metadata only today.",
   vercel: "No Vercel tokens; project and deployment metadata only.",
   custom_deploy: "No provider credentials; deployment metadata only.",
-  supabase: "No database credentials, no rows; the project URL only.",
+  supabase: "No database credentials, no rows; the project URL only.", // manual connection; see NEVER_ACCESSES_OAUTH for the authorized one
   custom_auth: "No credentials; descriptive metadata only.",
   stripe_test: "No live keys, no card data; a test-mode label only.",
   sentry: "No Sentry auth tokens; the DSN is a public identifier.",
@@ -93,7 +105,8 @@ export const NEVER_ACCESSES: Record<string, string> = {
   openapi: "No API keys; schema metadata only.",
   test_account: "Credentials are sealed with AES-256-GCM and never displayed, logged, or screenshotted.",
 };
-export function neverAccesses(provider: string): string {
+export function neverAccesses(provider: string, meta?: { oauth?: boolean } | null): string {
+  if (meta?.oauth === true && NEVER_ACCESSES_OAUTH[provider]) return NEVER_ACCESSES_OAUTH[provider];
   return NEVER_ACCESSES[provider] ?? "Only the metadata shown on this card.";
 }
 

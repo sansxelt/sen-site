@@ -134,10 +134,10 @@ function ReadOnlyCard({ c }: { c: SafeConnection }) {
       )}
 
       <div style={{ fontSize: 12, color: "var(--fg-3)", lineHeight: 1.55 }}>
-        <span style={{ color: "var(--fg-4)" }}>Used by Vraelis for:</span> {featureUse(c.provider)}
+        <span style={{ color: "var(--fg-4)" }}>Used by Vraelis for:</span> {featureUse(c.provider, c.meta as { oauth?: boolean } | null)}
       </div>
       <div style={{ fontSize: 12, color: "var(--fg-3)", lineHeight: 1.55 }}>
-        <span style={{ color: "var(--fg-4)" }}>Data Vraelis never accesses:</span> {neverAccesses(c.provider)}
+        <span style={{ color: "var(--fg-4)" }}>Data Vraelis never accesses:</span> {neverAccesses(c.provider, c.meta as { oauth?: boolean } | null)}
       </div>
       <div style={{ fontSize: 11.5, color: "var(--fg-4)" }}>
         Connected {whenUtc(c.created_at)}{c.last_verified_at ? `, last checked ${whenUtc(c.last_verified_at)}` : ", never checked"}
@@ -339,10 +339,10 @@ export function ConnectionsManager({ appId, connections, canManage = true }: { a
         )}
 
         <div style={{ fontSize: 12, color: "var(--fg-3)", lineHeight: 1.55 }}>
-          <span style={{ color: "var(--fg-4)" }}>Used by Vraelis for:</span> {featureUse(c.provider)}
+          <span style={{ color: "var(--fg-4)" }}>Used by Vraelis for:</span> {featureUse(c.provider, c.meta as { oauth?: boolean } | null)}
         </div>
         <div style={{ fontSize: 12, color: "var(--fg-3)", lineHeight: 1.55 }}>
-          <span style={{ color: "var(--fg-4)" }}>Data Vraelis never accesses:</span> {neverAccesses(c.provider)}
+          <span style={{ color: "var(--fg-4)" }}>Data Vraelis never accesses:</span> {neverAccesses(c.provider, c.meta as { oauth?: boolean } | null)}
         </div>
         <div style={{ fontSize: 11.5, color: "var(--fg-4)" }}>
           Connected {whenUtc(c.created_at)}{c.last_verified_at ? `, last checked ${whenUtc(c.last_verified_at)}` : ", never checked"}

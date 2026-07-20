@@ -111,6 +111,22 @@ ok("wired discovery providers name a real seeded requirement (never 'not yet')",
   && !/not yet/i.test(featureUse("supabase")) && !/not yet/i.test(featureUse("stripe_test")) && !/not yet/i.test(featureUse("sentry")));
 ok("the stored-not-yet-used set is exactly those two (no silent scope creep)",
   STORED_NOT_YET_USED.size === 2);
+
+// Supabase reaches further over OAuth (a Management API token) than pasted metadata (a URL). The promise
+// copy has to change WITH the connection, or the authorized card would carry the metadata-only promise.
+ok("supabase OAuth gets its OWN never-accesses line, different from the manual one",
+  neverAccesses("supabase", { oauth: true }) !== neverAccesses("supabase"));
+ok("the supabase OAuth promise is specific about what the token cannot reach",
+  /no database password/i.test(neverAccesses("supabase", { oauth: true }))
+  && /no table rows/i.test(neverAccesses("supabase", { oauth: true }))
+  && /revoke/i.test(neverAccesses("supabase", { oauth: true })));
+ok("the supabase OAuth promise does NOT claim we only hold the project URL",
+  !/the project url only/i.test(neverAccesses("supabase", { oauth: true })));
+ok("the supabase OAuth feature-use names the Management API read it actually performs",
+  /management api/i.test(featureUse("supabase", { oauth: true })));
+ok("providers with no OAuth variant fall through to the single line either way",
+  neverAccesses("github", { oauth: true }) === neverAccesses("github")
+  && featureUse("webhook", { oauth: true }) === featureUse("webhook"));
 ok("metaSummary renders safe one-liners", metaSummary("github", { repo: "a/b", branch: "main" }) === "a/b @ main" && metaSummary("webhook", {}) === null);
 ok("whenUtc renders a stable UTC stamp", whenUtc("2026-07-02T14:31:00.000Z") === "2026-07-02 14:31 UTC" && whenUtc(null) === "");
 ok("the Add affordance offers exactly the 9 manual kinds (test accounts go through the sealed route)",
