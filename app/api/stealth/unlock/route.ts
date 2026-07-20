@@ -1,28 +1,28 @@
-// POST /api/stealth/unlock  { seq: string }  ->  { ok: boolean }
+// POST /api/stealth/unlock
+//   { step: "begin" }                  -> { ok: true, token }   starts the three-second wait
+//   { step: "complete", token }        -> { ok: true }          sets the unlock cookie, if the wait elapsed
 //
-// The server half of the stealth curtain. The client never knows the sequence; it sends what was typed and
-// this route decides. That is the whole point: the secret stays out of the browser bundle, and because the
-// check happens here it can be rate limited, which is what actually stops a brute force. A short sequence
-// checked in the browser could be guessed offline in milliseconds.
+// The server half of the stealth curtain. The gesture itself lives in the browser and cannot be secret, so
+// this route makes the WAIT real instead: the second call is refused unless at least three seconds have
+// passed since the first, proven by a signed timestamp the client cannot forge. Skipping the gesture and
+// replaying the calls therefore costs exactly as much time as performing it, and the attempt limiter caps
+// how many of those anyone gets.
 //
-// On success it sets an httpOnly, HMAC-signed cookie. httpOnly keeps page scripts from reading it; the
-// signature keeps anyone from fabricating one in a cookie editor.
-//
-// Fails closed and says as little as possible: every rejection is the same shape, so nothing here reveals
-// how close an attempt was, or how long the sequence is.
+// Fails closed and says as little as possible: every rejection is the same shape, so nothing reveals which
+// step failed or how close an attempt was.
 import { NextResponse } from "next/server";
 import {
-  stealthConfigured, sequenceMatches, signStealthCookie, STEALTH_COOKIE, STEALTH_COOKIE_MAX_AGE,
+  stealthConfigured, signHandshake, handshakeSatisfied,
+  signStealthCookie, STEALTH_COOKIE, STEALTH_COOKIE_MAX_AGE,
 } from "@/lib/stealth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // Per-instance attempt budget. Serverless spreads requests across instances so this is a speed bump rather
-// than a wall, but combined with the fixed delay below it takes scripted guessing from thousands per second
-// to a rate where a small key space still holds up.
+// than a wall; combined with the enforced three-second wait it makes scripted guessing pointless.
 const WINDOW_MS = 60_000;
-const MAX_ATTEMPTS = 12;
+const MAX_ATTEMPTS = 20; // two calls per real unlock, so this is ~10 genuine attempts a minute
 const attempts = new Map<string, { n: number; resetAt: number }>();
 
 function tooMany(ip: string): boolean {
@@ -46,12 +46,17 @@ export async function POST(req: Request) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
   if (tooMany(ip)) return deny();
 
-  // A fixed delay on every attempt, right or wrong. Constant so it never signals correctness by timing.
-  await new Promise((r) => setTimeout(r, 250));
+  const body = (await req.json().catch(() => null)) as { step?: unknown; token?: unknown } | null;
+  const step = typeof body?.step === "string" ? body.step : "";
 
-  const body = (await req.json().catch(() => null)) as { seq?: unknown } | null;
-  const seq = typeof body?.seq === "string" ? body.seq : "";
-  if (!seq || seq.length > 64 || !sequenceMatches(seq)) return deny();
+  if (step === "begin") {
+    return NextResponse.json({ ok: true, token: signHandshake() }, { headers: { "cache-control": "no-store" } });
+  }
+
+  if (step !== "complete") return deny();
+
+  const token = typeof body?.token === "string" ? body.token : "";
+  if (!token || token.length > 128 || !handshakeSatisfied(token)) return deny();
 
   const res = NextResponse.json({ ok: true }, { headers: { "cache-control": "no-store" } });
   res.cookies.set(STEALTH_COOKIE, signStealthCookie(), {

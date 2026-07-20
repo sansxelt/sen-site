@@ -4,7 +4,8 @@
 // oversized numeral: here the headline IS the composition. An earlier version put a redacted line above it
 // and the mark competed with the one sentence that carries the page, so it went.
 //
-// The unlock sequence lives ONLY on the server (see lib/stealth.ts). This file never contains it.
+// The unlock gesture is below. It cannot be hidden (client code has to interpret keystrokes), so what
+// protects it is the server-enforced three-second wait and the attempt limiter. See lib/stealth.ts.
 //
 // This component is the ONLY thing the server renders while stealth is on, so nothing of the real site is
 // in the HTML or the RSC payload until the cookie exists.
@@ -15,72 +16,100 @@ export function StealthScreen() {
   const [opening, setOpening] = useState(false);
 
   useEffect(() => {
-    // This listener does NOT know the unlock sequence, on purpose. It buffers the letters typed while
-    // Ctrl+Shift+Alt is held and asks the server whether the buffer is right. Everything below is visible in
-    // DevTools and none of it is the answer.
+    // THE GESTURE: press Control, then Shift, then Alt, in that order. While holding all three, press Enter
+    // three times. Then wait three seconds; letting go of the keys is fine.
     //
-    // Modifiers matter for a second reason: holding Alt keeps this off Chrome's Ctrl+Shift+I, which opens
-    // DevTools at the browser level and cannot be prevented from a page.
-    const MAX_LEN = 8;
-    const RESET_MS = 4000;
-    let buffer = "";
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    let checking = false;
+    // The three seconds are enforced by the SERVER, not by the timer here (see lib/stealth.ts). A gesture
+    // has to be interpreted by client code, so it can never be secret the way a passphrase can. Making the
+    // wait real server-side is what stops someone reading this file and simply replaying the two calls.
+    const ENTERS_NEEDED = 3;
+    const ORDER = ["Control", "Shift", "Alt"];
+
+    let held: string[] = [];   // modifiers in the order they went down
+    let enters = 0;
+    let armed = false;         // handshake started; waiting out the three seconds
     let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const orderOk = () => held.length === ORDER.length && held.every((k, i) => k === ORDER[i]);
 
     function reset() {
-      buffer = "";
+      held = [];
+      enters = 0;
+      armed = false;
       if (timer) clearTimeout(timer);
     }
 
-    async function check() {
-      if (checking) return;
-      checking = true;
+    async function post(payload: Record<string, unknown>) {
+      const res = await fetch("/api/stealth/unlock", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      return (await res.json().catch(() => null)) as { ok?: boolean; token?: string } | null;
+    }
+
+    async function run() {
+      armed = true;
+      setOpening(true); // the copy changes, so a correct gesture is acknowledged without naming itself
       try {
-        const res = await fetch("/api/stealth/unlock", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ seq: buffer }),
-        });
-        const j = (await res.json().catch(() => null)) as { ok?: boolean } | null;
+        const begun = await post({ step: "begin" });
+        if (cancelled || !begun?.ok || !begun.token) { reset(); setOpening(false); return; }
+
+        // Wait out the three seconds. The server checks this independently; the delay here is only so the
+        // request is not made before it can possibly succeed.
+        await new Promise((r) => { timer = setTimeout(r, 3200); });
         if (cancelled) return;
-        if (j?.ok) {
-          reset();
-          setOpening(true);
+
+        const done = await post({ step: "complete", token: begun.token });
+        if (cancelled) return;
+        if (done?.ok) {
           // Full reload, not a router refresh: the server must re-render the real layout from scratch now
           // that the signed cookie exists.
           location.reload();
+          return;
         }
+        reset();
+        setOpening(false);
       } catch {
-        // Offline or blocked: stay closed and silent. A failed check must never look like a hint.
-      } finally {
-        checking = false;
+        // Offline or blocked: stay closed and silent. A failed attempt must never look like a hint.
+        reset();
+        setOpening(false);
       }
     }
 
-    function onKey(e: KeyboardEvent) {
-      // Modifier keys fire their own keydown events. Ignore them, or pressing Shift mid-sequence would
-      // discard a buffer that was going fine.
-      if (e.key === "Control" || e.key === "Shift" || e.key === "Alt" || e.key === "Meta") return;
-      if (!(e.ctrlKey && e.shiftKey && e.altKey)) { reset(); return; }
+    function onDown(e: KeyboardEvent) {
+      if (armed) return; // already waiting; further keys are ignored rather than restarting anything
 
-      // Prefer e.code: with Alt held, some layouts report a composed or dead character in e.key while the
-      // physical key stays stable. Case never matters either way.
-      const code = e.code.toLowerCase();
-      const letter = code.startsWith("key") ? code.slice(3) : e.key.toLowerCase();
-      if (letter.length !== 1 || letter < "a" || letter > "z") { reset(); return; }
+      if (ORDER.includes(e.key)) {
+        // Record each modifier once, in the order it was pressed. Held keys repeat; ignore the repeats.
+        if (!held.includes(e.key)) held.push(e.key);
+        return;
+      }
+
+      const isEnter = e.key === "Enter" || e.code === "Enter" || e.code === "NumpadEnter";
+      if (!isEnter || !orderOk() || !(e.ctrlKey && e.shiftKey && e.altKey)) { reset(); return; }
+      if (e.repeat) return; // holding Enter down is not three presses
 
       e.preventDefault();
-      buffer = (buffer + letter).slice(-MAX_LEN);
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(reset, RESET_MS);
-      void check();
+      enters += 1;
+      if (enters > ENTERS_NEEDED) { reset(); return; } // mashing past three is not the gesture
+      if (enters === ENTERS_NEEDED) void run();
     }
 
-    window.addEventListener("keydown", onKey);
+    function onUp(e: KeyboardEvent) {
+      // Once the handshake is running they are told they can let go, so releasing must not cancel it.
+      // Before that, releasing a modifier abandons the attempt.
+      if (armed) return;
+      if (ORDER.includes(e.key)) reset();
+    }
+
+    window.addEventListener("keydown", onDown);
+    window.addEventListener("keyup", onUp);
     return () => {
       cancelled = true;
-      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keydown", onDown);
+      window.removeEventListener("keyup", onUp);
       if (timer) clearTimeout(timer);
     };
   }, []);
