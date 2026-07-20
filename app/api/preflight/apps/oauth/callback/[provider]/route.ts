@@ -26,26 +26,45 @@ function baseUrl(req: Request): string {
   const proto = req.headers.get("x-forwarded-proto") || (host.startsWith("localhost") ? "http" : "https");
   return `${proto}://${host}`;
 }
-// POPUP MODE: when the flow was opened in a window.open (the initiate route set vr_oauth_popup), the user
-// never sees this tab — so instead of a 302 into a full page, return a minimal document that posts the
-// outcome to the opener and closes itself. The opener refreshes its list in place. Falls back to a normal
-// redirect if there is no opener (e.g. the popup was blocked and it became a same-tab navigation).
+// POPUP MODE: when the flow was opened via window.open (the initiate route set vr_oauth_popup), the user
+// never sees this tab — so instead of a 302 into a page they won't look at, return a minimal document that
+// hands the outcome back and closes itself.
+//
+// It reports the result over BOTH channels, because window.opener is NOT reliable here: a provider in the
+// navigation chain that sends Cross-Origin-Opener-Policy (Vercel does) permanently severs window.opener, so
+// postMessage alone silently fails and the popup would strand itself. BroadcastChannel is same-origin and
+// unaffected by COOP, so it gets through either way; localStorage is the last-resort ping for browsers
+// without BroadcastChannel. Then it tries to close. If the browser refuses to close a window it no longer
+// considers script-opened (another COOP side effect), we show a plain "you can close this" instead of
+// silently navigating — the parent has already been told and updated.
 function popupClose(req: Request, path: string, params: string): NextResponse {
   const origin = baseUrl(req);
   const target = `${origin}${path}?${params}`;
   const payload = JSON.stringify({ source: "vraelis-oauth", params });
   const html = `<!doctype html><meta charset="utf-8"><title>Finishing…</title>
-<body style="font:14px system-ui;padding:24px;color:#4a463f">Finishing up…
+<body style="font:14px system-ui;padding:32px;color:#4a463f;text-align:center">
+<p id="m">Finishing up…</p>
 <script>
 (function(){
-  try {
-    if (window.opener && !window.opener.closed) {
-      window.opener.postMessage(${payload}, ${JSON.stringify(origin)});
-      window.close();
-      return;
+  var msg = ${payload};
+  // 1. BroadcastChannel: survives COOP severing window.opener (Vercel's install chain does this).
+  try { var bc = new BroadcastChannel("vraelis-oauth"); bc.postMessage(msg); bc.close(); } catch (e) {}
+  // 2. opener.postMessage: works when the opener link is intact (GitHub, Stripe).
+  try { if (window.opener && !window.opener.closed) window.opener.postMessage(msg, ${JSON.stringify(origin)}); } catch (e) {}
+  // 3. localStorage ping: fallback for anything without BroadcastChannel.
+  try { localStorage.setItem("vraelis-oauth", JSON.stringify({ params: msg.params, t: Date.now() })); } catch (e) {}
+
+  try { window.close(); } catch (e) {}
+  // If we're still here, the browser wouldn't close us. Tell the user plainly rather than navigating.
+  setTimeout(function(){
+    if (!window.closed) {
+      document.getElementById("m").textContent = "All set. You can close this window.";
+      var a = document.createElement("a");
+      a.href = ${JSON.stringify(target)}; a.textContent = "Back to Connections";
+      a.style.cssText = "display:inline-block;margin-top:12px;color:#0A7B54";
+      document.body.appendChild(a);
     }
-  } catch (e) {}
-  window.location.replace(${JSON.stringify(target)});
+  }, 400);
 })();
 </script></body>`;
   const res = new NextResponse(html, { status: 200, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });

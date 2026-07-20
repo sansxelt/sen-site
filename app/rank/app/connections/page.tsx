@@ -76,15 +76,16 @@ export default function ConnectionsPage() {
   }
   useEffect(() => { void load(); }, []);
 
-  // Result of a popup authorization. The callback page posts {source:"vraelis-oauth", params} to this
-  // window and closes itself; we render the same banner as the redirect flow and refresh the list in place,
-  // so the user never leaves this page. Origin is checked before trusting the message.
+  // Result of a popup authorization, rendered as the same banner as the redirect flow with the list
+  // refreshed in place. We listen on THREE channels because window.opener is not reliable: a provider that
+  // sends Cross-Origin-Opener-Policy (Vercel's install does) severs it, so postMessage never arrives.
+  // BroadcastChannel is same-origin and unaffected; the storage event is the last-resort fallback.
   useEffect(() => {
-    function onMessage(e: MessageEvent) {
-      if (e.origin !== window.location.origin) return;
-      const data = e.data as { source?: string; params?: string } | null;
-      if (!data || data.source !== "vraelis-oauth" || typeof data.params !== "string") return;
-      const q = new URLSearchParams(data.params);
+    let done = false;
+    function apply(params: string) {
+      if (done) return;
+      done = true;
+      const q = new URLSearchParams(params);
       const provider = q.get("provider") || "";
       const label = PROVIDER_LABELS[provider] ?? provider;
       if (q.get("oauth") === "connected") {
@@ -94,9 +95,36 @@ export default function ConnectionsPage() {
       }
       setConnecting(null);
       void load();
+      setTimeout(() => { done = false; }, 1000); // allow a later connect in the same session
     }
+
+    function onMessage(e: MessageEvent) {
+      if (e.origin !== window.location.origin) return;
+      const data = e.data as { source?: string; params?: string } | null;
+      if (!data || data.source !== "vraelis-oauth" || typeof data.params !== "string") return;
+      apply(data.params);
+    }
+    function onStorage(e: StorageEvent) {
+      if (e.key !== "vraelis-oauth" || !e.newValue) return;
+      try { const v = JSON.parse(e.newValue) as { params?: string }; if (typeof v.params === "string") apply(v.params); } catch { /* ignore */ }
+    }
+
+    let bc: BroadcastChannel | null = null;
+    try {
+      bc = new BroadcastChannel("vraelis-oauth");
+      bc.onmessage = (e) => {
+        const data = e.data as { source?: string; params?: string } | null;
+        if (data && data.source === "vraelis-oauth" && typeof data.params === "string") apply(data.params);
+      };
+    } catch { /* no BroadcastChannel: the other two channels cover it */ }
+
     window.addEventListener("message", onMessage);
-    return () => window.removeEventListener("message", onMessage);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener("message", onMessage);
+      window.removeEventListener("storage", onStorage);
+      try { bc?.close(); } catch { /* ignore */ }
+    };
   }, []);
 
   // Start an authorization. Most providers open in a popup so the user stays on this page; providers whose
