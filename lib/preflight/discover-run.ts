@@ -17,6 +17,7 @@ import {
 } from "./discover-synthesis";
 import { planMerge, fingerprint, type Suggestion } from "./contract-merge";
 import { listConnections } from "./connections-db";
+import { listAppLinks } from "./connection-links-db";
 import { readContextSources } from "./setup-read";
 import {
   createDiscovery, setDiscoveryState, persistDiscoverySnapshot, failDiscovery,
@@ -53,11 +54,18 @@ export async function runDiscovery(owner: string, appId: string, existing?: { id
 
     // S7 context-aware synthesis inputs: the owner's product-definition sources (by kind) and the
     // connection presence signals ride into the prompt. Both reads degrade to empty on any miss.
-    const [contextSources, connections] = await Promise.all([
+    const [contextSources, connections, links] = await Promise.all([
       readContextSources(owner, appId),
       listConnections(owner, appId),
+      listAppLinks(owner, appId).catch(() => []),
     ]);
-    const providers = Array.from(new Set(connections.map((c) => c.provider)));
+    // A provider counts as present if this app has its OWN connection row OR is linked to an account-level
+    // one. Without the links half, an owner who authorized Supabase once for the whole account and pointed
+    // this app at it would look, to discovery, like an app with no database at all.
+    const providers = Array.from(new Set([
+      ...connections.map((c) => c.provider),
+      ...links.map((l) => l.provider),
+    ]));
     const context: SynthContext = {
       sources: contextSources.map((s) => ({ kind: s.kind, content: s.content })),
       connections: providers,

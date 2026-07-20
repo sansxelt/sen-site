@@ -5,20 +5,27 @@
 // token stays at the account level; only the pointer + selection live here. A linked Vercel project makes a
 // run resolve the LIVE production URL instead of a stored one.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type AccountConn = { id: string; provider: string; label: string };
 type Link = { provider: string; accountConnectionId: string; selection: Record<string, unknown> };
+type Option = { value: string; label: string };
+
+// The per-app selection field each provider needs (null = link-only, no selection).
+// A provider with an `optionsUrl` renders a picker fed by that connection's own token instead of a text
+// box: a Supabase project ref is an opaque string nobody can type from memory, so asking for it by hand
+// would be a guessing game with a silent failure at run time.
+type SelectionField = { key: string; label: string; placeholder?: string; optionsUrl?: string };
 
 const PROVIDER_LABELS: Record<string, string> = {
   github: "GitHub", vercel: "Vercel", supabase: "Supabase", stripe_test: "Stripe", sentry: "Sentry",
 };
-// The per-app selection field each provider needs (empty = link-only, no selection).
-const SELECTION_FIELD: Record<string, { key: string; label: string; placeholder: string } | null> = {
+const SELECTION_FIELD: Record<string, SelectionField | null> = {
   vercel: { key: "project", label: "Vercel project", placeholder: "my-app" },
   github: { key: "repo", label: "Repository", placeholder: "owner/name" },
-  supabase: null, stripe_test: null, sentry: null,
+  supabase: { key: "project_ref", label: "Supabase project", optionsUrl: "/api/preflight/connections/supabase/projects" },
+  stripe_test: null, sentry: null,
 };
 
 const headLbl = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--fg-4)" };
@@ -53,6 +60,26 @@ function LinkRow({ conn, link, base, canManage, onDone }: {
   const [err, setErr] = useState<string | null>(null);
   const label = PROVIDER_LABELS[conn.provider] ?? conn.provider;
 
+  // Picker providers load their options from the connection's own token. Loading and empty are distinct
+  // states: "still fetching" and "this account has no projects" need different words on screen.
+  const optionsUrl = field?.optionsUrl;
+  const selectId = `link-sel-${conn.id}`;
+  const [options, setOptions] = useState<Option[] | null>(null);
+  useEffect(() => {
+    if (!optionsUrl || !canManage) return;
+    let live = true;
+    fetch(optionsUrl)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: { projects?: { ref?: string; name?: string }[] } | null) => {
+        if (!live) return;
+        setOptions((j?.projects ?? [])
+          .filter((p): p is { ref: string; name?: string } => typeof p.ref === "string" && !!p.ref)
+          .map((p) => ({ value: p.ref, label: p.name || p.ref })));
+      })
+      .catch(() => { if (live) setOptions([]); });
+    return () => { live = false; };
+  }, [optionsUrl, canManage]);
+
   async function save() {
     setBusy(true); setErr(null);
     try {
@@ -77,7 +104,21 @@ function LinkRow({ conn, link, base, canManage, onDone }: {
         <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14, color: "var(--fg-1)" }}>{label}</div>
         <div style={{ fontSize: 11.5, color: "var(--fg-4)" }}>{conn.label !== conn.provider ? conn.label : "account connection"}</div>
       </div>
-      {field ? (
+      {field && optionsUrl ? (
+        <div style={{ flex: "1 1 200px", minWidth: 0 }}>
+          <label htmlFor={selectId} style={{ fontSize: 11, color: "var(--fg-4)" }}>{field.label}</label>
+          {options && options.length === 0 ? (
+            <div style={{ fontSize: 12.5, color: "var(--fg-4)", padding: "9px 0" }}>
+              No projects on this connection yet. Create one in Supabase, then reload.
+            </div>
+          ) : (
+            <select id={selectId} value={sel} onChange={(e) => setSel(e.target.value)} disabled={!canManage || busy || !options} style={input}>
+              <option value="">{options ? "Choose a project" : "Loading projects…"}</option>
+              {(options ?? []).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          )}
+        </div>
+      ) : field ? (
         <div style={{ flex: "1 1 200px", minWidth: 0 }}>
           <label style={{ fontSize: 11, color: "var(--fg-4)" }}>{field.label}</label>
           <input value={sel} onChange={(e) => setSel(e.target.value)} placeholder={field.placeholder} disabled={!canManage || busy} style={input} />

@@ -26,19 +26,27 @@ export async function listSupabaseProjects(owner: string): Promise<SupabaseProje
       headers: { authorization: `Bearer ${token}`, accept: "application/json", "user-agent": "vraelis" },
     });
     if (!res.ok) return [];
-    const j = (await res.json().catch(() => null)) as { id?: string; name?: string; region?: string }[] | null;
-    if (!Array.isArray(j)) return [];
-    return j
-      .filter((p) => typeof p.id === "string" && p.id)
-      .map((p) => ({
-        ref: p.id as string,
-        name: typeof p.name === "string" ? p.name : (p.id as string),
-        url: `https://${p.id}.supabase.co`,
-        ...(typeof p.region === "string" ? { region: p.region } : {}),
-      }));
+    return mapSupabaseProjects(await res.json().catch(() => null));
   } catch {
     return [];
   }
+}
+
+// Pure shaping of the Management API response, split out so it can be tested without a token or a network.
+// A project ref becomes a hostname, so anything that isn't a plain ref is DROPPED rather than interpolated:
+// a ref carrying a dot or a slash would build a URL pointing at a host we never intended.
+const PROJECT_REF_RE = /^[a-z0-9]{8,}$/i;
+export function mapSupabaseProjects(raw: unknown): SupabaseProject[] {
+  if (!Array.isArray(raw)) return [];
+  return (raw as { id?: unknown; name?: unknown; region?: unknown }[])
+    .filter((p): p is { id: string; name?: unknown; region?: unknown } =>
+      typeof p?.id === "string" && PROJECT_REF_RE.test(p.id))
+    .map((p) => ({
+      ref: p.id,
+      name: typeof p.name === "string" && p.name.trim() ? p.name.trim() : p.id,
+      url: `https://${p.id}.supabase.co`,
+      ...(typeof p.region === "string" ? { region: p.region } : {}),
+    }));
 }
 
 // The run-route consumer: if an application is LINKED to a Supabase account connection with a project ref

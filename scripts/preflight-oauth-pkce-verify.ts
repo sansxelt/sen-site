@@ -1,4 +1,5 @@
-// Tests for PKCE (lib/preflight/oauth/pkce.ts) and its wiring into the authorize URL.
+// Tests for PKCE (lib/preflight/oauth/pkce.ts), its wiring into the authorize URL, and the pure half of
+// the Supabase Management API reader.
 //
 // PKCE exists so an intercepted authorization code is useless without the verifier. The invariants that
 // actually protect that: the verifier is high-entropy and never repeats, the challenge is a real S256 hash
@@ -7,6 +8,7 @@
 
 import { createCodeVerifier, codeChallengeS256, pkceCookieName, PKCE_METHOD } from "../lib/preflight/oauth/pkce";
 import { resolveOAuthProvider, buildAuthorizeUrl, type OAuthProvider } from "../lib/preflight/oauth/providers";
+import { mapSupabaseProjects } from "../lib/preflight/oauth/supabase-project";
 import { createHash } from "crypto";
 
 let pass = 0, fail = 0;
@@ -58,6 +60,25 @@ const ghUrl = buildAuthorizeUrl(gh, { state: "s", redirectUri: "https://app.vrae
 ok("a non-PKCE provider still builds without a challenge", typeof ghUrl === "string");
 ok("a non-PKCE authorize url carries no challenge params",
   !new URL(ghUrl as string).searchParams.has("code_challenge") && !new URL(ghUrl as string).searchParams.has("code_challenge_method"));
+
+// ── Supabase project shaping (pure half of the Management API reader) ──
+// A project ref becomes a HOSTNAME, so a malformed ref is a URL-forging vector, not a cosmetic problem.
+const projects = mapSupabaseProjects([
+  { id: "abcdefghijklmnop", name: "Production" },
+  { id: "qrstuvwxyz123456" },                        // no name -> falls back to the ref
+  { id: "evil.example.com/x", name: "Forged host" }, // a ref that would forge a hostname
+  { id: "short", name: "Too short" },
+  { id: 42, name: "Not a string" },
+  null,
+]);
+ok("well-formed projects survive with a name", projects[0]?.ref === "abcdefghijklmnop" && projects[0]?.name === "Production");
+ok("a nameless project falls back to its ref as the label", projects[1]?.name === "qrstuvwxyz123456");
+ok("the project url is built from the ref on supabase.co", projects[0]?.url === "https://abcdefghijklmnop.supabase.co");
+ok("a ref that would forge a hostname is DROPPED, never interpolated",
+  projects.every((p) => !p.url.includes("evil.example.com")) && projects.every((p) => new URL(p.url).hostname.endsWith(".supabase.co")));
+ok("malformed and non-string refs are dropped", projects.length === 2);
+ok("a non-array response yields an empty list, never a throw",
+  mapSupabaseProjects(null).length === 0 && mapSupabaseProjects({ projects: [] }).length === 0);
 
 console.log(`\n${pass}/${pass + fail} passed`);
 if (fail > 0) process.exit(1);
