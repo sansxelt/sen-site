@@ -1,0 +1,125 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Vraelis end card</title>
+<!--
+  End card for the demo / founder video. Open in a browser, press R to replay, and screen-record the window.
+  Nothing here ships: it is a recording surface, not a product route.
+
+  The mark is the WORDMARK, because that is what Vraelis actually has. No invented symbol.
+
+  The motion is the product's own metaphor: a line passes across the name the way a run passes across an
+  app, and the name resolves behind it. It reads as "checked" without a tick, a shield, or any of the other
+  QA cliches.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FAF8F4;        /* the site's warm paper */
+    --ink:#171512;
+    --muted:#6B6459;
+    --acc:#0A7B54;       /* brand emerald */
+    --acc-soft:#E8FBF6;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Geist", system-ui, sans-serif;
+    display:grid; place-items:center; overflow:hidden;
+    cursor:none;
+  }
+
+  /* Same faint grid + bloom the site uses, so the card sits in the same world as the product. */
+  .grid{
+    position:fixed; inset:0; pointer-events:none; opacity:.5;
+    background-image:linear-gradient(var(--ink) 1px, transparent 1px), linear-gradient(90deg, var(--ink) 1px, transparent 1px);
+    background-size:64px 64px; mask-image:radial-gradient(circle at 50% 45%, #000 0%, transparent 72%);
+    opacity:.045;
+  }
+  .bloom{
+    position:fixed; left:50%; top:46%; width:1100px; height:1100px; transform:translate(-50%,-50%);
+    pointer-events:none; background:radial-gradient(circle, rgba(10,123,84,.13) 0%, rgba(10,123,84,.05) 38%, transparent 68%);
+    animation:breathe 9s ease-in-out infinite;
+  }
+  @keyframes breathe{ 0%,100%{ opacity:.55; transform:translate(-50%,-50%) scale(1); } 50%{ opacity:.9; transform:translate(-50%,-50%) scale(1.06); } }
+
+  .stack{ position:relative; text-align:center; }
+
+  /* The name. Clipped by a wipe so the sweep appears to reveal it. */
+  .mark{
+    position:relative; display:inline-block;
+    font-size:clamp(72px, 11vw, 168px); font-weight:700; letter-spacing:-.045em; line-height:1;
+    clip-path:inset(0 100% 0 0);
+    animation:reveal 1.05s cubic-bezier(.22,.61,.36,1) .45s forwards;
+  }
+  @keyframes reveal{ to{ clip-path:inset(0 0 0 0); } }
+
+  /* The scan line: travels across, slightly ahead of the reveal, then fades. */
+  .scan{
+    position:absolute; top:-6%; bottom:-6%; width:3px; left:0;
+    background:linear-gradient(180deg, transparent, var(--acc) 12%, var(--acc) 88%, transparent);
+    box-shadow:0 0 18px 3px rgba(10,123,84,.45);
+    opacity:0;
+    animation:sweep 1.15s cubic-bezier(.22,.61,.36,1) .4s forwards;
+  }
+  @keyframes sweep{
+    0%{ left:0; opacity:0; }
+    8%{ opacity:1; }
+    88%{ opacity:1; }
+    100%{ left:100%; opacity:0; }
+  }
+
+  /* The rule underneath settles last, like a result landing. */
+  .rule{
+    height:4px; width:0; margin:26px auto 0; border-radius:2px; background:var(--acc);
+    animation:rule .7s cubic-bezier(.22,.61,.36,1) 1.35s forwards;
+  }
+  @keyframes rule{ to{ width:132px; } }
+
+  .line{
+    margin-top:22px; font-size:clamp(15px, 1.5vw, 21px); color:var(--muted); letter-spacing:-.01em;
+    opacity:0; animation:rise .6s cubic-bezier(.22,.61,.36,1) 1.6s forwards;
+  }
+  .line em{ font-family:"Instrument Serif", Georgia, serif; font-style:italic; color:var(--ink); }
+
+  .url{
+    margin-top:30px; font-size:clamp(13px, 1.1vw, 16px); letter-spacing:.14em; text-transform:uppercase;
+    color:var(--acc); opacity:0; animation:rise .6s cubic-bezier(.22,.61,.36,1) 1.95s forwards;
+  }
+  @keyframes rise{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:none; } }
+
+  .hint{ position:fixed; bottom:18px; left:0; right:0; text-align:center; font-size:12px; color:#B9B2A6; }
+
+  @media (prefers-reduced-motion: reduce){
+    .mark,.scan,.rule,.line,.url,.bloom{ animation:none !important; }
+    .mark{ clip-path:none; } .rule{ width:132px; } .line,.url{ opacity:1; } .scan{ display:none; }
+  }
+</style>
+
+<div class="grid"></div>
+<div class="bloom"></div>
+
+<div class="stack" id="stack">
+  <div style="position:relative; display:inline-block;">
+    <span class="mark">Vraelis</span>
+    <span class="scan"></span>
+  </div>
+  <div class="rule"></div>
+  <p class="line">AI can build it. <em>Nobody checked it.</em></p>
+  <p class="url">vraelis.com</p>
+</div>
+
+<p class="hint">press R to replay</p>
+
+<script>
+  // Replay without reloading, so you can line up a recording and fire it on cue.
+  addEventListener("keydown", (e) => {
+    if (e.key.toLowerCase() !== "r") return;
+    const s = document.getElementById("stack");
+    const clone = s.cloneNode(true);
+    s.replaceWith(clone);
+    clone.id = "stack";
+  });
+</script>
