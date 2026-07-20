@@ -23,21 +23,31 @@ where not exists (
   where user_id = 'demo@vraelis.com' and ext_ref = 'yc-demo-grant-fall-2026'
 );
 
--- 2) Plan. Only needed when VRAELIS_PASS_PRICING=1, where the free tier is ONE lifetime pass capped at
---    three flows (lib/preflight/entitlements-v1.ts -> gatePassLaunch). One run may well be enough for a
---    reviewer; grant a paid tier only if you want them to be able to run repeatedly.
---    Leave this commented unless you have checked that flag.
--- insert into v_subscriptions (user_id, plan, status, updated_at)
--- values ('demo@vraelis.com', 'builder_v1', 'active', now())
--- on conflict (user_id) do update
---   set plan = excluded.plan, status = excluded.status, updated_at = now();
+-- 2) CENTS. Required when VRAELIS_PASS_PRICING=1, which is the live configuration.
+--
+--    The credit grant above is NOT enough on its own, and this is easy to get wrong. Balance is computed
+--    PER UNIT (lib/v-credits.ts -> liveRows filters on unit), and the ledger's unit column defaults to
+--    'credit'. A pass is priced in CENTS, so credit rows are invisible to it: the account can show a
+--    healthy credit balance and still be told to add funds.
+--
+--    Why a pass is charged at all: the free tier is ONE lifetime pass capped at three flows
+--    (lib/preflight/entitlements-v1.ts -> gatePassLaunch). A four-flow contract exceeds it and routes to
+--    pay-as-you-go, which is $15 for four flows.
+--
+--    5000 cents = $50, roughly three four-flow passes: one for the demo run, and headroom for a reviewer
+--    to run one of their own.
+insert into v_credit_ledger (user_id, delta, reason, bucket, ext_ref, expires_at, unit)
+select 'demo@vraelis.com', 5000, 'yc_reviewer_demo_grant', 'purchased', 'yc-demo-cents-fall-2026', null, 'cent'
+where not exists (
+  select 1 from v_credit_ledger
+  where user_id = 'demo@vraelis.com' and ext_ref = 'yc-demo-cents-fall-2026'
+);
 
--- Confirm the balance.
-select user_id, sum(delta) as balance
+-- Confirm both balances, PER UNIT. A single summed number hides exactly the bug above.
+select coalesce(unit, 'credit') as unit, sum(delta) as balance
 from v_credit_ledger
 where user_id = 'demo@vraelis.com'
-group by user_id;
+group by coalesce(unit, 'credit');
 
 -- REVOKE after the batch:
--- delete from v_credit_ledger where ext_ref = 'yc-demo-grant-fall-2026';
--- delete from v_subscriptions where user_id = 'demo@vraelis.com';
+-- delete from v_credit_ledger where ext_ref in ('yc-demo-grant-fall-2026', 'yc-demo-cents-fall-2026');
