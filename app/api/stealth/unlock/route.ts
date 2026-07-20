@@ -13,7 +13,7 @@
 import { NextResponse } from "next/server";
 import {
   stealthConfigured, signHandshake, handshakeSatisfied,
-  signStealthCookie, STEALTH_COOKIE, STEALTH_COOKIE_MAX_AGE,
+  signStealthCookie, stealthCookieOptions, STEALTH_COOKIE,
 } from "@/lib/stealth";
 
 export const runtime = "nodejs";
@@ -59,12 +59,7 @@ export async function POST(req: Request) {
   if (!token || token.length > 128 || !handshakeSatisfied(token)) return deny();
 
   const res = NextResponse.json({ ok: true }, { headers: { "cache-control": "no-store" } });
-  res.cookies.set(STEALTH_COOKIE, signStealthCookie(), {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: STEALTH_COOKIE_MAX_AGE,
-  });
+  // Scoped to .vraelis.com: the gesture must unlock both hosts, not just the one it was performed on.
+  res.cookies.set(STEALTH_COOKIE, signStealthCookie(), stealthCookieOptions(req.headers.get("x-forwarded-host") || req.headers.get("host")));
   return res;
 }

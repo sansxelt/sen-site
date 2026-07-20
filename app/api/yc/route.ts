@@ -13,7 +13,7 @@
 // signed cookie the gesture does, with the same expiry, so a reviewer gets no more access than you do.
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
-import { stealthConfigured, signStealthCookie, STEALTH_COOKIE, STEALTH_COOKIE_MAX_AGE } from "@/lib/stealth";
+import { stealthConfigured, signStealthCookie, stealthCookieOptions, STEALTH_COOKIE } from "@/lib/stealth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,12 +36,7 @@ export async function GET(req: Request) {
   // are indistinguishable, so this never confirms that a valid code exists.
   if (!stealthConfigured() || !codeMatches(url.searchParams.get("k") ?? "")) return home;
 
-  home.cookies.set(STEALTH_COOKIE, signStealthCookie(), {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: STEALTH_COOKIE_MAX_AGE,
-  });
+  // Scoped to .vraelis.com so one click opens the marketing site AND the product subdomain.
+  home.cookies.set(STEALTH_COOKIE, signStealthCookie(), stealthCookieOptions(req.headers.get("x-forwarded-host") || req.headers.get("host")));
   return home;
 }

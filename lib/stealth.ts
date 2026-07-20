@@ -94,3 +94,25 @@ export function verifyStealthCookie(raw: string | undefined, now = Date.now()): 
 }
 
 export const STEALTH_COOKIE_MAX_AGE = Math.floor(TTL_MS / 1000);
+
+// Cookie options for the unlock, shared by the gesture and the reviewer entrance.
+//
+// The domain matters: the site is two hosts (vraelis.com and app.vraelis.com) and BOTH render through the
+// root layout, so both are curtained. A host-only cookie would unlock the marketing site and leave the
+// product still behind the curtain, which is the half that anyone actually wants to see. Scoping to
+// ".vraelis.com" covers both in one grant.
+//
+// Only in production: on localhost there is no such domain, and setting one there makes the browser drop
+// the cookie silently, which looks exactly like the unlock not working.
+export function stealthCookieOptions(host: string | null | undefined) {
+  const h = (host ?? "").toLowerCase().split(":")[0];
+  const shared = h === "vraelis.com" || h.endsWith(".vraelis.com");
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge: STEALTH_COOKIE_MAX_AGE,
+    ...(shared ? { domain: ".vraelis.com" } : {}),
+  };
+}
