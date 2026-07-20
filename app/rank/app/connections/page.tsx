@@ -8,6 +8,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { I, EmptyIcon } from "@/app/rank/_components/icons";
+import { PROVIDER_LABELS as ALL_PROVIDER_LABELS, featureUse } from "@/lib/preflight/connection-display";
 
 const PROVIDER_LABELS: Record<string, string> = {
   github: "GitHub", vercel: "Vercel", supabase: "Supabase", stripe_test: "Stripe", sentry: "Sentry",
@@ -35,6 +36,15 @@ type AccountConnection = {
 // server-side (configured env + not gated) and returned as `available`; a connected provider always shows
 // even if newly gated.
 const KNOWN_OAUTH = ["github", "vercel", "sentry", "stripe_test", "supabase"] as const;
+
+// Connections that exist but are NOT account-level OAuth: they are set per application, because each one is
+// a value that differs between apps (a channel, an endpoint, a host) rather than an account you authorize
+// once. Listed here because this page is named "Connections", and a reader who came looking for Slack and
+// saw four OAuth cards would fairly conclude we do not support it. The page was understating the product.
+// Labels and descriptions come from connection-display, the one place the honest per-provider copy lives.
+// Writing fresh blurbs here would let this page drift into claiming more than the cards do, which is exactly
+// how "stored, not yet used in verification" quietly turns into an advertised feature.
+const PER_APP_KINDS = ["slack", "webhook", "custom_deploy", "custom_auth", "openapi", "test_account"] as const;
 
 const eyebrow = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 } as const;
 
@@ -236,6 +246,28 @@ export default function ConnectionsPage() {
           <span>Nothing connected yet. Connecting a provider here makes it available to all of your applications.</span>
         </div>
       ) : null}
+
+      {/* The other half of the surface. These are not buttons: they are set on an application, so sending
+          someone to a Connect button here would land them somewhere they cannot finish. */}
+      <section aria-labelledby="per-app-heading" style={{ marginTop: 40 }}>
+        <h2 id="per-app-heading" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, color: "var(--fg-1)", margin: 0 }}>
+          Set on each application
+        </h2>
+        <p style={{ fontSize: 13, color: "var(--fg-4)", margin: "6px 0 14px", lineHeight: 1.6, maxWidth: 620 }}>
+          These differ between applications, so they live on an application&rsquo;s Connections tab rather than here.
+          Open any application and choose Settings, then Connections.
+        </p>
+        <div style={{ display: "grid", gap: 8, gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))" }}>
+          {PER_APP_KINDS.map((kind) => (
+            <div key={kind} className="card" style={{ padding: "12px 14px", borderColor: "var(--line-2)" }}>
+              <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 13.5, color: "var(--fg-1)" }}>
+                {ALL_PROVIDER_LABELS[kind] ?? kind}
+              </div>
+              <div style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 2, lineHeight: 1.5 }}>{featureUse(kind)}</div>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
