@@ -5,7 +5,7 @@
 // own repo/project selection. This page manages the account tokens only — the per-app selection lives on
 // each application's Connections tab.
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { I, EmptyIcon } from "@/app/rank/_components/icons";
 
@@ -52,6 +52,10 @@ export default function ConnectionsPage() {
   const [connecting, setConnecting] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  // The popup we opened. Held so THIS page can close it once the result arrives: a provider that sends
+  // Cross-Origin-Opener-Policy (Vercel) leaves the popup unable to close itself, but the opener keeps that
+  // ability, so the window that opened it has to do the closing.
+  const popupRef = useRef<Window | null>(null);
 
   // OAuth callback banner (?oauth=connected|error&provider=&reason=).
   useEffect(() => {
@@ -85,6 +89,9 @@ export default function ConnectionsPage() {
     function apply(params: string) {
       if (done) return;
       done = true;
+      // Close the popup from here. It already tried to close itself and may have been refused.
+      try { popupRef.current?.close(); } catch { /* already gone */ }
+      popupRef.current = null;
       const q = new URLSearchParams(params);
       const provider = q.get("provider") || "";
       const label = PROVIDER_LABELS[provider] ?? provider;
@@ -143,6 +150,7 @@ export default function ConnectionsPage() {
     const top = window.screenY + Math.max(0, (window.outerHeight - h) / 3);
     const win = window.open(`${base}?popup=1`, "vraelis-oauth", `width=${w},height=${h},left=${left},top=${top}`);
     if (!win) { window.location.href = base; return; }
+    popupRef.current = win;
     win.focus();
     // Show progress on the button: an already-authorized provider (GitHub) completes almost instantly, so
     // without this the popup flashes and it's unclear anything happened. Cleared by the result message, or
