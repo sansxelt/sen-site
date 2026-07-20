@@ -187,8 +187,14 @@ console.log("\n── routes: auth() + ownership-scoped loader before any mutati
   // Routes authenticate either by calling auth() inline, or through a canonical gate that calls auth() itself:
   // the legacy apiBetaOwner() gate, or the TEAM gates gatePreflightApp / gateApiRuntimeApp (both do
   // flag -> auth -> db-ready -> access -> role), or the applicationAccessFor* resolvers (auth is done inline
-  // then delegated). Accept any of these as a valid authenticated entry point.
-  const AUTH_ENTRY = /\bauth\s*\(\s*\)|\bapiBetaOwner\s*\(\s*\)|\bgatePreflightApp\s*\(|\bgateApiRuntimeApp\s*\(|\bapplicationWorkspaceForManage\s*\(/;
+  // then delegated), or resolvePrincipal() (session OR API key, then the same access gates). Accept any of
+  // these as a valid authenticated entry point.
+  //
+  // resolvePrincipal is the entry point for the endpoints a machine can call. It is not a weaker check: it
+  // calls auth() itself when no key is present, and when a key IS present it verifies the key, enforces the
+  // endpoint's scope, and hands back only an email that the route then runs through the unchanged access
+  // gates. Its own guarantees are proved in scripts/preflight-api-key-access-verify.ts.
+  const AUTH_ENTRY = /\bauth\s*\(\s*\)|\bapiBetaOwner\s*\(\s*\)|\bgatePreflightApp\s*\(|\bgateApiRuntimeApp\s*\(|\bapplicationWorkspaceForManage\s*\(|\bresolvePrincipal\s*\(/;
   for (const r of routes.sort()) {
     const raw = read(r);
     const src = stripComments(raw);

@@ -5,7 +5,7 @@
 // any lease / billing field (see getRun's enumerated SELECTs). Artifacts (screenshots, traces) are fetched
 // separately through the owner-checked artifacts route, which mints a fresh short-TTL signed URL.
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { resolvePrincipal, PREFLIGHT_SCOPES } from "@/lib/preflight/api-principal";
 import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { getRun } from "@/lib/preflight/runs-db";
 import { applicationAccessForRun } from "@/lib/preflight/team-access";
@@ -13,10 +13,13 @@ import { hasAtLeastRole } from "@/lib/v-workspace";
 
 export const runtime = "nodejs";
 
-export async function GET(_req: Request, { params }: { params: Promise<{ runId: string }> }) {
+export async function GET(req: Request, { params }: { params: Promise<{ runId: string }> }) {
   if (!preflightEnabled()) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const email = (await auth())?.user?.email;
-  if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
+  // Session OR API key. applicationAccessForRun below is unchanged, so a key reads exactly the runs its
+  // owner can read and gets the same uniform 404 otherwise.
+  const p = await resolvePrincipal(req, PREFLIGHT_SCOPES.runRead);
+  if (!p.ok) return p.res;
+  const email = p.principal.email;
   const { runId } = await params;
 
   // A run report is a READ shared with the app's workspace (VIEWER+). Resolve the run's app owner + caller

@@ -21,8 +21,12 @@ export async function POST(req: Request) {
   if (!apiAccessAllowed(await getPlan(email), email)) {
     return NextResponse.json({ error: "plan_required", need: "scale" }, { status: 403 });
   }
-  const name = String((await req.json().catch(() => ({})))?.name || "").trim().slice(0, 40);
-  const k = await generateApiKey(email, name);
+  const body = await req.json().catch(() => ({}));
+  const name = String(body?.name || "").trim().slice(0, 40);
+  // Scopes are chosen at creation and never widened afterwards; to change what a key can do you revoke it
+  // and mint a new one. sanitizeScopes drops anything not on the grantable list, so an unrecognized scope
+  // silently narrows the key rather than granting something undefined.
+  const k = await generateApiKey(email, name, body?.scopes);
   if (!k) return NextResponse.json({ error: "create_failed" }, { status: 500 });
   return NextResponse.json(k); // { key, prefix } — the raw key is shown to the user once
 }

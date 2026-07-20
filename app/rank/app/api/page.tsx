@@ -39,6 +39,16 @@ curl https://vraelis.com/api/preflight/runs/RUN_ID -H "X-Api-Key: YOUR_KEY"
 # Anything but "ready" should stop the deploy. Evidence (screenshots, traces) is
 # fetched separately through a short-lived, owner-checked signed URL.`;
 
+// The three Preflight access levels a key can be created with, and the scopes each one grants. Named by
+// what the holder can DO, not by the scope strings, because that is the question someone is actually
+// answering when they mint a key.
+type PreflightAccess = "none" | "read" | "launch";
+const PREFLIGHT_ACCESS: { id: PreflightAccess; label: string; hint: string; scopes: string[] }[] = [
+  { id: "none", label: "No Preflight access", hint: "Tests and credits only. The safe default.", scopes: [] },
+  { id: "read", label: "Read reports", hint: "Price a pass and read run reports. Cannot launch a run or spend anything.", scopes: ["preflight:preview", "preflight:run:read"] },
+  { id: "launch", label: "Launch runs", hint: "Everything above, plus launching a Production Pass. This key can spend your credits.", scopes: ["preflight:preview", "preflight:run:read", "preflight:run:create"] },
+];
+
 export default function ApiKeysPage() {
   const [keys, setKeys] = useState<Key[]>([]);
   const [fresh, setFresh] = useState<string>("");
@@ -47,6 +57,10 @@ export default function ApiKeysPage() {
   const [copied, setCopied] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [keyName, setKeyName] = useState("");
+  // What a new key may do with Preflight. Least privilege by default: a key gets nothing here unless it is
+  // asked for, and the level that can spend money is a separate, deliberate choice. Scopes are fixed at
+  // creation, so changing a key's access means revoking it and minting a new one.
+  const [preflightAccess, setPreflightAccess] = useState<PreflightAccess>("none");
   const [u, setU] = useState<Usage | null>(null);
 
   async function load() {
@@ -60,9 +74,13 @@ export default function ApiKeysPage() {
   async function create() {
     setBusy(true); setFresh(""); setErr("");
     try {
-      const r = await fetch("/api/v/keys", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: keyName.trim() }) });
+      const extra = PREFLIGHT_ACCESS.find((a) => a.id === preflightAccess)?.scopes ?? [];
+      const r = await fetch("/api/v/keys", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: keyName.trim(), scopes: ["tests:write", "tests:read", "credits:read", ...extra] }),
+      });
       const j = await r.json();
-      if (j.key) { setFresh(j.key); setKeyName(""); load(); }
+      if (j.key) { setFresh(j.key); setKeyName(""); setPreflightAccess("none"); load(); }
       else if (j.error === "plan_required") setErr("The public API is a Scale plan feature. Upgrade to generate keys.");
       else setErr("Couldn't create a key. Try again.");
     } finally { setBusy(false); }
@@ -92,6 +110,18 @@ export default function ApiKeysPage() {
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <input value={keyName} onChange={(e) => setKeyName(e.target.value)} placeholder="Name it, e.g. Production or Zapier" maxLength={40} onKeyDown={(e) => { if (e.key === "Enter" && !busy) create(); }} style={{ flex: 1, minWidth: 220, padding: "11px 14px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, outline: "none" }} />
             <button onClick={create} disabled={busy} className="btn" style={{ opacity: busy ? 0.6 : 1 }}>{busy ? "Creating…" : "Create key"}</button>
+          </div>
+          <div style={{ display: "grid", gap: 6, marginTop: 12 }}>
+            <span style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>Preflight access</span>
+            {PREFLIGHT_ACCESS.map((a) => (
+              <label key={a.id} style={{ display: "flex", gap: 9, alignItems: "flex-start", padding: "9px 11px", border: `1px solid ${preflightAccess === a.id ? "var(--acc-line)" : "var(--line-2)"}`, background: preflightAccess === a.id ? "var(--acc-soft)" : "transparent", borderRadius: "var(--r-sm)", cursor: "pointer" }}>
+                <input type="radio" name="preflight-access" checked={preflightAccess === a.id} onChange={() => setPreflightAccess(a.id)} style={{ marginTop: 3 }} />
+                <span>
+                  <span style={{ display: "block", fontSize: 13.5, color: "var(--fg-1)" }}>{a.label}</span>
+                  <span style={{ display: "block", fontSize: 12.5, color: "var(--fg-4)" }}>{a.hint}</span>
+                </span>
+              </label>
+            ))}
           </div>
           <span className="hint">Name your keys so you can tell them apart. The full key is shown once at creation. Keep keys server-side only, and rotate or revoke a key if it&apos;s ever exposed. <Link href="/developers" style={{ color: "var(--acc-deep)" }}>Developer docs →</Link></span>
         </div>

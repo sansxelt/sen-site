@@ -121,9 +121,12 @@ export async function applicationWorkspaceForManage(callerEmail: string | null |
 export type GateReason = "disabled" | "signin" | "setup" | "not_found" | "forbidden";
 export type GateResult = { ok: true; owner: string; role: Role; level: "owner" | "workspace"; actor: string } | { ok: false; reason: GateReason };
 
-export async function gatePreflightApp(appId: string, minRole: Exclude<Role, "client_viewer"> = "viewer"): Promise<GateResult> {
+// `actorEmail` lets an already-resolved principal (an API key, see lib/preflight/api-principal.ts) reuse
+// this gate verbatim instead of a parallel one. Everything after the identity line is shared, which is the
+// point: a key must never reach an application through a different authorization path than a browser would.
+export async function gatePreflightApp(appId: string, minRole: Exclude<Role, "client_viewer"> = "viewer", actorEmail?: string): Promise<GateResult> {
   if (!preflightEnabled()) return { ok: false, reason: "disabled" };
-  const email = (await auth())?.user?.email;
+  const email = actorEmail ?? (await auth())?.user?.email;
   if (!email) return { ok: false, reason: "signin" };
   if (!(await preflightDbReady())) return { ok: false, reason: "setup" };
   const access = await applicationAccess(email, appId);

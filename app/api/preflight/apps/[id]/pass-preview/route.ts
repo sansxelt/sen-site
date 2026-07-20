@@ -18,6 +18,7 @@ import { gatePassLaunch } from "@/lib/preflight/entitlements-v1";
 import { evaluateAuthReadiness, anyAuthenticated, type PreviewFlow } from "@/lib/preflight/auth-preflight";
 import { getSetupExtras } from "@/lib/preflight/setup-read";
 import { gatePreflightApp, gateReasonResponse } from "@/lib/preflight/team-access";
+import { resolvePrincipal, PREFLIGHT_SCOPES } from "@/lib/preflight/api-principal";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,7 +27,11 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
   const { id } = await ctx.params;
   // Previewing a pass is a READ (viewer+). owner = app owner, so the previewed price/allowance is the
   // OWNER's (a launch by any editor charges the owner) — consistent with the launch route.
-  const g = await gatePreflightApp(id, "viewer");
+  // Session OR API key. The principal only supplies the acting email; the gate below is the same one the
+  // browser path uses, so a key can never see an application its owner could not.
+  const p = await resolvePrincipal(req, PREFLIGHT_SCOPES.preview);
+  if (!p.ok) return p.res;
+  const g = await gatePreflightApp(id, "viewer", p.principal.email);
   if (!g.ok) return gateReasonResponse(g.reason);
   const owner = g.owner;
 

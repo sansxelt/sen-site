@@ -10,6 +10,8 @@
 //      failure) must not occupy the submission key forever — a legitimate replacement is allowed. Only a
 //      run that is still in flight or completed with a valid result blocks a duplicate submission.
 
+import { createHash } from "node:crypto";
+
 export type FlowSelectionPlan = { ok: true; ids: string[] } | { ok: false; reason: string };
 
 // Validate a run row's stored selection against the run's approved contract snapshot (the ids of the
@@ -62,6 +64,38 @@ export function dedupBlocksReplacement(state: string): boolean {
 // run is traceable back to the submission it supersedes.
 export function submissionIdForAttempt(base: string, attempt: number): string {
   return attempt === 0 ? base : `${base}-r${attempt + 1}`;
+}
+
+// ── Idempotency key, bound to the payload ────────────────────────────────────────────────────────────────
+// A stored submission id is "<keyFingerprint>#<payloadFingerprint>", where the key half identifies the
+// caller's Idempotency-Key (scoped to owner+application, so two tenants can pick the same key) and the
+// payload half identifies WHAT was requested. Both halves are hashed rather than interpolated: a caller's
+// key is arbitrary text, and a raw '#' or a LIKE wildcard inside it would let one key's prefix reach into
+// another's. Hex cannot.
+//
+// The point of the payload half is that a key alone is not enough. Reusing one key with a different body
+// would otherwise return the FIRST run, so an agent believes its new flow selection ran when it did not.
+// Same key + same payload is a genuine retry and returns the original run; same key + different payload is
+// refused loudly.
+function sha(v: string): string { return createHash("sha256").update(v).digest("hex"); }
+
+export function keyFingerprint(owner: string, applicationId: string, clientKey: string): string {
+  return sha(`${owner.trim().toLowerCase()} ${applicationId} ${clientKey}`).slice(0, 24);
+}
+
+export function payloadFingerprint(input: { applicationId: string; deploymentUrl: string; flowIds: string[] }): string {
+  return sha(JSON.stringify({ app: input.applicationId, url: input.deploymentUrl, flows: [...input.flowIds].sort() })).slice(0, 16);
+}
+
+export function buildSubmissionId(keyFp: string, payloadFp: string): string {
+  return `${keyFp}#${payloadFp}`;
+}
+
+// Read the payload half back out, tolerating submissionIdForAttempt's "-rN" replacement suffix — a
+// replacement run supersedes the same submission, so it must still count as the SAME payload, not a reuse
+// conflict. Returns "" for a legacy submission id minted before payload binding existed.
+export function submissionPayloadOf(submissionId: string): string {
+  return submissionId.split("#")[1]?.replace(/-r\d+$/, "") ?? "";
 }
 
 // The flat per-run credit hold, derived from the SAME selected-flow set that is stored on the run and

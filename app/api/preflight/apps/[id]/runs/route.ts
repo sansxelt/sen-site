@@ -5,15 +5,20 @@
 // No Playwright, no provider secrets, no signed URLs are ever touched here. Everything is owner-scoped; the
 // signed-in email is the only owner; nothing from the client body is trusted as an owner.
 //
-// Gates, in order: preflight flag (404) -> kill switch (503) -> auth (401) -> ownership (404) -> DB migrated
-// (503) -> contract APPROVED (400) -> >=1 selected flow (400) -> every selected flow enabled+approved (400)
-// -> safe https deployment URL (400) -> per-owner concurrency cap (429) -> per-owner DAILY cap (429) ->
-// submission id / idempotency key (400) -> credit hold (402). Only after the hold succeeds do we insert the
-// queued run; a unique-submission collision returns the existing run (409) and releases this attempt's hold.
+// Gates, in order: preflight flag (404) -> kill switch (503) -> auth, session OR api key, with the
+// preflight:run:create scope (401/403) -> ownership (404) -> role (403) -> DB migrated (503) -> contract
+// APPROVED (400) -> >=1 selected flow (400) -> every selected flow enabled+approved (400) -> safe https
+// deployment URL (400) -> per-owner concurrency cap (429) -> per-owner DAILY cap (429) -> submission id /
+// idempotency key (400) -> that key not already used for a DIFFERENT payload (409) -> credit hold (402).
+// Only after the hold succeeds do we insert the queued run; a unique-submission collision returns the
+// existing run (409) and releases this attempt's hold.
+//
+// An API key is only a second way to name the acting email. Every gate below it is the same code the
+// browser path runs, so a key can never spend more or reach further than its owner can in the app.
 
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
-import { auth } from "@/auth";
+import { resolvePrincipal, logKeyUsage, PREFLIGHT_SCOPES } from "@/lib/preflight/api-principal";
 import { preflightEnabled, runsDisabled } from "@/lib/v-preflight-flags";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { getApplication, getApprovedContract, listFlows } from "@/lib/v-applications";
@@ -24,8 +29,8 @@ import { evaluateAuthReadiness, anyAuthenticated, type PreviewFlow } from "@/lib
 import { unsafeHttpsUrlReason } from "@/lib/safe-fetch";
 import { linkedVercelDeploymentUrl } from "@/lib/preflight/oauth/vercel-deploy";
 import { hold, refund } from "@/lib/v-credits";
-import { createRun, ownerActiveRunCount, ownerRunsToday } from "@/lib/preflight/runs-db";
-import { estimateRunCredits } from "@/lib/preflight/flow-selection";
+import { createRun, ownerActiveRunCount, ownerRunsToday, runWithSameKeyDifferentPayload } from "@/lib/preflight/runs-db";
+import { estimateRunCredits, keyFingerprint, payloadFingerprint, buildSubmissionId } from "@/lib/preflight/flow-selection";
 import { passPricingEnabled, passPriceCents } from "@/lib/preflight/pass-pricing";
 import { gatePassLaunch, recordRunPassUsage } from "@/lib/preflight/entitlements-v1";
 import { resolveCanonicalCluster, consumeFreeGrantOverride, recordFreeGrantRisk, hashRiskSignal, claimFreePass, attachRunToClaim, releaseFreePass } from "@/lib/preflight/free-grant-cluster";
@@ -64,8 +69,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (await globalActiveRunsAtCap()) {
     return NextResponse.json({ error: "runs_busy", message: "Vraelis is at capacity right now. Please try again in a moment." }, { status: 503 });
   }
-  const email = (await auth())?.user?.email;
-  if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
+  // Session OR API key. The principal supplies ONLY the acting email; every gate below (team access,
+  // entitlements, credit hold, quotas, cost governor, concurrency) is the unchanged session-path code, so a
+  // key can never spend more, reach further, or bypass a limit its owner is subject to in the browser.
+  const p = await resolvePrincipal(req, PREFLIGHT_SCOPES.runCreate);
+  if (!p.ok) return p.res;
+  const email = p.principal.email;
   const { id } = await params;
 
   // TEAM ACCESS: resolve the caller to the app's OWNER (the data-plane key) + the caller's role. Access is
@@ -178,10 +187,29 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "daily_limit", message: "Daily run limit reached. Try again tomorrow or contact support." }, { status: 429 });
   }
 
-  // Idempotency: an Idempotency-Key header or a submission_id in the body; one run per submission.
-  const submissionId = (req.headers.get("idempotency-key") || (typeof body?.submission_id === "string" ? body.submission_id : "")).slice(0, 100);
-  if (!submissionId) {
+  // Idempotency: an Idempotency-Key header or a submission_id in the body; one run per submission, enforced
+  // by unique (user_id, submission_id). A retry after a timeout therefore returns the original run instead
+  // of launching a second browser and taking a second hold — the failure mode that matters most now that
+  // agents and CI, which retry automatically, can call this.
+  const clientKey = (req.headers.get("idempotency-key") || (typeof body?.submission_id === "string" ? body.submission_id : "")).slice(0, 100);
+  if (!clientKey) {
     return NextResponse.json({ error: "submission_id_required", message: "Send an Idempotency-Key header or a submission_id." }, { status: 400 });
+  }
+
+  // PAYLOAD BINDING. The stored id carries a fingerprint of WHAT was requested alongside the caller's key,
+  // so a genuine retry matches exactly and a key reused for a different request is refused rather than
+  // answered with an earlier run's result. Both halves are pure functions (flow-selection.ts), so the rule
+  // is testable without a database.
+  const keyFp = keyFingerprint(owner, id, clientKey);
+  const submissionId = buildSubmissionId(keyFp, payloadFingerprint({ applicationId: id, deploymentUrl, flowIds }));
+  const conflicting = await runWithSameKeyDifferentPayload(owner, keyFp, submissionId);
+  if (conflicting) {
+    await logKeyUsage(p.principal, { endpoint: "POST /api/preflight/apps/{id}/runs", status: 409, applicationId: id, runId: conflicting, creditsReserved: 0, creditsCharged: 0 });
+    return NextResponse.json({
+      error: "idempotency_key_reused",
+      message: "That Idempotency-Key was already used for a different request. Use a new key, or resend the original request exactly.",
+      runId: conflicting,
+    }, { status: 409 });
   }
 
   // Billing reservation. Keyed by a FRESH id per attempt so an idempotent replay or a lost unique-submission
@@ -277,6 +305,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     // and its free claim (the existing run already owns the pass) and point the caller at the existing run.
     if (heldReservationId) await refund(owner, reservationId, creditsHeld);
     if (freeClaimCanonical) await releaseFreePass(owner, freeClaimCanonical);
+    await logKeyUsage(p.principal, { endpoint: `POST /api/preflight/apps/{id}/runs`, status: 409, applicationId: id, runId: created.runId, creditsReserved: 0, creditsCharged: 0 });
     return NextResponse.json({ error: "run_exists", runId: created.runId, status: "queued" }, { status: 409 });
   }
 
@@ -316,6 +345,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   await recordProviderAttempt(owner, created.runId, "session");
   await recordProviderCost({ owner, runId: created.runId, browserbaseSeconds: created.flowCount * 60, estimatedCents: estimateProviderCents({ browserbaseSeconds: created.flowCount * 60 }) });
   await maybeTripGlobalBudget();
+
+  // Key audit: what this key did, on what, for how much. Never the key itself. No-op for session calls.
+  await logKeyUsage(p.principal, {
+    endpoint: `POST /api/preflight/apps/{id}/runs`, status: 200,
+    applicationId: id, runId: created.runId, creditsReserved: creditsHeld, creditsCharged: 0,
+  });
 
   return NextResponse.json({ runId: created.runId, status: "queued", flowCount: created.flowCount });
 }

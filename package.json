@@ -60,7 +60,8 @@
     "dispute:dedupe:test": "tsx scripts/preflight-dispute-dedupe-verify.ts",
     "cost:governor:test": "tsx scripts/preflight-cost-governor-verify.ts",
     "teams:test": "tsx scripts/preflight-teams-verify.ts",
-    "role:ui:test": "tsx scripts/preflight-role-ui-verify.ts"
+    "role:ui:test": "tsx scripts/preflight-role-ui-verify.ts",
+    "apikey:access:test": "tsx scripts/preflight-api-key-access-verify.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",

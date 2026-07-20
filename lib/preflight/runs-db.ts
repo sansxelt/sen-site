@@ -9,7 +9,7 @@
 // cooperative mutations the owner is allowed to make (request cancel; mint a signed artifact URL).
 import { getSupabaseAdminClient, isDatabaseConfigured } from "../supabase-admin";
 import { listRuns, listFlows, type RunSummary } from "../v-applications";
-import { dedupBlocksReplacement, submissionIdForAttempt } from "./flow-selection";
+import { dedupBlocksReplacement, submissionIdForAttempt, submissionPayloadOf } from "./flow-selection";
 import { snapshotIfChanged } from "./context-snapshots";
 import { deploymentForRun } from "./deployments-db";
 import type { Issue } from "./issues";
@@ -371,4 +371,28 @@ export async function persistIssues(owner: string, runId: string, appId: string,
   }));
   const { error } = await db().from("v_issues").insert(rows as never);
   if (error && process.env.NODE_ENV !== "production") console.error("persistIssues:", error.message);
+}
+
+// Idempotency-key reuse check. A stored submission_id is "<keyFingerprint>#<payloadFingerprint>", optionally
+// carrying createRun's "-rN" replacement suffix when an earlier attempt on the same id was cancelled. A row
+// whose key half matches but whose PAYLOAD half does not means the caller reused one key for a different
+// request. Answering that with the original run would tell an agent its new selection ran when it did not,
+// so the route refuses it. Returns the conflicting run id, or null when the key is unused or correctly
+// retried. Both fingerprints are hex, so the LIKE prefix carries no wildcards.
+export async function runWithSameKeyDifferentPayload(
+  owner: string,
+  keyFingerprint: string,
+  expectedSubmissionId: string,
+): Promise<string | null> {
+  if (!isDatabaseConfigured()) return null;
+  const payloadOf = (id: string) => id.split("#")[1]?.replace(/-rd+$/, "") ?? "";
+  const expected = payloadOf(expectedSubmissionId);
+  const { data } = await db().from("v_preflight_runs")
+    .select("id, submission_id")
+    .eq("user_id", norm(owner))
+    .like("submission_id", `${keyFingerprint}#%`)
+    .limit(10);
+  const rows = (data as { id: string; submission_id: string }[] | null) ?? [];
+  const clash = rows.find((r) => submissionPayloadOf(String(r.submission_id)) !== expected);
+  return clash ? String(clash.id) : null;
 }

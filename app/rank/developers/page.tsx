@@ -109,6 +109,17 @@ export default function DevelopersPage() {
             <h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)" }}>Block the deploy when a critical flow fails.</h2>
             <p>When your preview build goes live, queue a preflight run against it, wait for the launch decision, and stop the release on anything but READY. One job, real evidence, no dashboard to watch.</p>
           </div>
+          {/*
+            NOT AVAILABLE YET, and the page has to say so. API-key auth for these endpoints is built and
+            typechecked, but it has not been run end to end against the production deployment with a real
+            key. Copying this workflow today would fail in someone's pipeline. Remove this notice only after
+            a real key has queued and read a run in production; until then it stays, regardless of how
+            finished the code looks.
+          */}
+          <div style={{ border: "1px solid var(--line-1)", borderRadius: 8, padding: "11px 13px", marginBottom: 18, display: "flex", gap: 10, alignItems: "baseline" }}>
+            <span style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", whiteSpace: "nowrap" }}>Not available yet</span>
+            <span style={{ fontSize: 13.5, color: "var(--fg-3)" }}>This workflow does not run today. It is here to show the shape we are building toward. Do not copy it into a pipeline; it will fail.</span>
+          </div>
           <div style={{ display: "grid", gap: 18 }}>
             <div>
               <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>1  GitHub Action</div>
@@ -119,7 +130,7 @@ export default function DevelopersPage() {
               <Code label="node">{GATE_NODE}</Code>
             </div>
           </div>
-          <p style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)", margin: "14px 0 0" }}>Illustrative shape. The exact request and response envelope opens in the signed-in console with early access.</p>
+          <p style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)", margin: "14px 0 0" }}>Illustrative shape, not a working recipe. The exact request and response envelope opens in the signed-in console with early access.</p>
         </div>
       </section>
 

@@ -9,12 +9,35 @@ function hash(k: string): string { return createHash("sha256").update(k).digest(
 
 export type ApiKeyRow = { id: string; prefix: string; scopes: string[]; last_used: string | null; created_at: string; name?: string | null };
 
-export async function generateApiKey(userId: string, name?: string): Promise<{ key: string; prefix: string } | null> {
+// The scopes a key may be granted at creation, and the only strings the API route will accept. A scope not
+// on this list is dropped rather than stored, so a typo or a hostile body can never mint a key carrying a
+// permission the product does not define.
+//
+// Preflight scopes are OPT-IN and are never added implicitly. preflight:run:create is the one that spends
+// money, which is why it is separable from the two read scopes: a CI job that only polls, or a dashboard
+// that only prices a pass, should hold a key that cannot launch a run.
+export const GRANTABLE_SCOPES = [
+  "tests:write", "tests:read", "credits:read",
+  "preflight:preview", "preflight:run:read", "preflight:run:create",
+] as const;
+
+// What a key gets when the caller asks for nothing. Unchanged from the column default the table has always
+// carried, so existing behavior and existing keys are untouched.
+export const DEFAULT_SCOPES = ["tests:write", "tests:read", "credits:read"] as const;
+
+export function sanitizeScopes(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [...DEFAULT_SCOPES];
+  const allowed = new Set<string>(GRANTABLE_SCOPES);
+  const out = Array.from(new Set(raw.filter((s): s is string => typeof s === "string" && allowed.has(s))));
+  return out.length ? out : [...DEFAULT_SCOPES];
+}
+
+export async function generateApiKey(userId: string, name?: string, scopes?: string[]): Promise<{ key: string; prefix: string } | null> {
   if (!userId || !isDatabaseConfigured()) return null;
   const raw = "vr_live_" + randomBytes(24).toString("hex");
   const prefix = raw.slice(0, 16);
   const s = getSupabaseAdminClient();
-  const base = { user_id: norm(userId), key_hash: hash(raw), prefix };
+  const base = { user_id: norm(userId), key_hash: hash(raw), prefix, scopes: sanitizeScopes(scopes) };
   const clean = (name || "").trim().slice(0, 40);
   let { error } = await s.from("v_api_keys" as never).insert((clean ? { ...base, name: clean } : base) as never);
   // The name column may not exist until the migration runs; fall back to an
@@ -25,7 +48,7 @@ export async function generateApiKey(userId: string, name?: string): Promise<{ k
   return { key: raw, prefix };
 }
 
-export async function verifyApiKey(key: string): Promise<{ userId: string; scopes: string[]; prefix: string } | null> {
+export async function verifyApiKey(key: string): Promise<{ userId: string; scopes: string[]; prefix: string; id: string } | null> {
   if (!key || !isDatabaseConfigured()) return null;
   const s = getSupabaseAdminClient();
   // prefix is the public, non-secret identifier (already shown in the UI) — used
@@ -39,7 +62,7 @@ export async function verifyApiKey(key: string): Promise<{ userId: string; scope
   if (Date.now() - lastMs > 60_000) {
     await s.from("v_api_keys" as never).update({ last_used: new Date().toISOString() } as never).eq("id", r.id);
   }
-  return { userId: r.user_id, scopes: r.scopes ?? [], prefix: r.prefix };
+  return { userId: r.user_id, scopes: r.scopes ?? [], prefix: r.prefix, id: r.id };
 }
 
 export async function listApiKeys(userId: string): Promise<ApiKeyRow[]> {
