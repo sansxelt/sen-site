@@ -27,6 +27,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // (removed /r/check and /r/sample — retired AI-checker + human-eval samples; not the current product)
     // (removed /guides and /guides/[slug] — retired "AI output QA" content section for the old checker
     //  product; those routes now redirect to /how-it-works and must not be advertised for indexing)
+    page("/limitations", 0.7),
     page("/free-report", 0.7),
     page("/contact", 0.5),
     page("/signin", 0.4, "yearly"),

@@ -1,86 +1,21 @@
 ﻿import type { Metadata } from "next";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
-import { Inter_Tight } from "next/font/google";
 import "./globals.css";
 
-const interTight = Inter_Tight({
-  subsets: ["latin"],
-  variable: "--font-inter-tight",
-  weight: ["300", "400", "500", "600", "700"],
-  display: "swap",
-});
-import { auth } from "../auth";
-import { CommandPalette } from "../components/command-palette";
-import { CopilotBar } from "../components/copilot-bar";
-import { RevealOnScroll } from "../components/reveal-on-scroll";
-import { InflightBackToChat } from "../components/inflight-back-to-chat";
-import { isVraelisRequest } from "../lib/site-host";
 import { cookies } from "next/headers";
 import { stealthConfigured, verifyStealthCookie, STEALTH_COOKIE } from "../lib/stealth";
 import { StealthScreen } from "./_components/stealth-screen";
 
-const BASE = "https://www.vraelis.com";
-
-const sansxelMetadata: Metadata = {
-  metadataBase: new URL(BASE),
-  title: {
-    default: "Vraelis, AI with persistent project memory",
-    template: "%s | Vraelis",
-  },
-  description:
-    "Stop re-explaining yourself to AI. Every chatbot forgets you between sessions. Vraelis remembers your projects, your context, your goals. Every session picks up where the last one left off.",
-  keywords: [
-    "Vraelis",
-    "Vraelis ai",
-    "ai with memory",
-    "persistent memory ai",
-    "ai project memory",
-    "ai workshop",
-    "ai for makers",
-    "ai for indie devs",
-    "ai for creators",
-    "ai chat with voice",
-    "ai with web search",
-    "multimodal ai",
-  ],
-  authors: [{ name: "Vraelis", url: BASE }],
-  creator: "Vraelis",
-  publisher: "Vraelis",
-  alternates: { canonical: BASE },
-  openGraph: {
-    type: "website",
-    locale: "en_US",
-    url: BASE,
-    siteName: "Vraelis",
-    title: "Stop re-explaining yourself to AI.",
-    description:
-      "Every chatbot forgets you between sessions. Vraelis remembers your projects, your context, your goals. Every session picks up where the last one left off.",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Vraelis" }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Stop re-explaining yourself to AI.",
-    description:
-      "Vraelis remembers your projects, context, and goals. Every session picks up where the last one left off.",
-    images: ["/og-image.png"],
-    creator: "@vraelis",
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: { index: true, follow: true, "max-snippet": -1, "max-image-preview": "large" },
-  },
-  // Note: app/icon.png and app/apple-icon.png are auto-detected by
-  // Next.js 16 and served at hashed URLs (e.g. /icon?abc123) so the
-  // browser cache busts on every change. Manually overriding `icons`
-  // here forces a non-hashed /icon.png path and breaks that, leave
-  // it unset and let the file convention do its job.
-};
-
-// Vraelis is a separate brand served from this same project (split by
-// host in proxy.ts). Its metadata must NOT inherit the sansxel title
-// template / OG, so it's resolved per request.
+// There used to be a second brand here (an AI-memory chatbot) with its own metadata and JSON-LD, selected
+// per request. isVraelisRequest() has returned a constant true for a long time, so none of it was ever
+// served: it was unreachable code that described a different company under this name. Removed rather than
+// rewritten, because dead metadata is a landmine that only goes off when someone flips a flag and
+// accidentally tells search engines Vraelis is a chatbot.
+//
+// Note: app/icon.png and app/apple-icon.png are auto-detected by Next.js 16 and served at hashed URLs
+// (e.g. /icon?abc123) so the browser cache busts on every change. Manually overriding `icons` here would
+// force a non-hashed path and break that; leave it unset and let the file convention do its job.
 const vraelisMetadata: Metadata = {
   metadataBase: new URL("https://vraelis.com"),
   title: {
@@ -88,7 +23,7 @@ const vraelisMetadata: Metadata = {
     template: "%s | Vraelis",
   },
   description:
-    "Vraelis validates how AI-built systems behave before production. It turns production requirements into executable checks, runs them against exact builds and environments, and captures the evidence teams need before they ship. Web and API verification are live.",
+    "AI can build it. Nobody checked it. Vraelis runs the flows you approve in a real browser against your deployed application and shows what held and what broke, with the evidence. Web checking is live; API checking is in beta.",
   alternates: { canonical: "https://vraelis.com" },
   // Favicon + apple icon come from app/icon.tsx and app/apple-icon.tsx (the Vraelis mark), auto-detected
   // by Next and served at hashed URLs so the tab icon cache-busts on change. Do NOT set `icons` here —
@@ -101,13 +36,13 @@ const vraelisMetadata: Metadata = {
     type: "website",
     url: "https://vraelis.com",
     siteName: "Vraelis",
-    title: "AI can build it. Vraelis proves it works.",
-    description: "AI can build it. That is not proof it works in production. Vraelis takes the behavior a system is required to hold, runs it against the exact build in a real environment, and returns one truthful decision backed by evidence. Web and API verification are live.",
+    title: "AI can build it. Nobody checked it.",
+    description: "AI can build it. Nobody checked it. Vraelis runs the flows you approve in a real browser against your deployed application and shows what held and what broke, with the evidence. Web checking is live; API checking is in beta.",
   },
   twitter: {
     card: "summary",
-    title: "AI can build it. Vraelis proves it works.",
-    description: "AI can build it. That is not proof it works in production. Vraelis runs the behavior a system is required to hold against the exact build, and returns one truthful decision backed by evidence. Web and API live.",
+    title: "AI can build it. Nobody checked it.",
+    description: "AI can build it. Nobody checked it. Vraelis runs the flows you approve in a real browser against your deployed application and shows what held and what broke, with the evidence. Web checking is live; API checking is in beta.",
   },
   robots: { index: true, follow: true },
 };
@@ -123,7 +58,7 @@ export async function generateMetadata(): Promise<Metadata> {
       robots: { index: false, follow: false },
     };
   }
-  return (await isVraelisRequest()) ? vraelisMetadata : sansxelMetadata;
+  return vraelisMetadata;
 }
 
 export default async function RootLayout({
@@ -147,15 +82,11 @@ export default async function RootLayout({
     );
   }
 
-  const [session, vraelis] = await Promise.all([auth(), isVraelisRequest()]);
-  const signedIn = Boolean(session?.user?.email);
-
-  // Vraelis owns its own light theme + chrome (nav/footer come from the
-  // (vraelis) layout). Render a minimal shell with no sansxel overlays,
-  // no dark body bg, and no sansxel JSON-LD so its stylesheet controls
-  // the page entirely.
-  if (vraelis) {
-    return (
+  // One brand, one shell. Vraelis owns its own light theme and chrome (nav/footer come from the route
+  // group layouts), so this renders a minimal document and lets the stylesheets control the page. The
+  // second, dark shell that used to live below carried JSON-LD describing an AI-memory chatbot and was
+  // unreachable; it is gone rather than maintained.
+  return (
       <html
         lang="en"
         data-theme="light"
@@ -182,50 +113,6 @@ export default async function RootLayout({
           {children}
         </body>
       </html>
-    );
-  }
-
-  return (
-    <html
-      lang="en"
-      data-theme="dark"
-      style={{ colorScheme: "dark" }}
-      className={`${GeistSans.variable} ${GeistMono.variable} ${interTight.variable} h-full antialiased`}
-    >
-      <body className="flex min-h-full flex-col bg-background font-sans text-neutral-100">
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "SoftwareApplication",
-              name: "Vraelis",
-              url: "https://www.vraelis.com",
-              applicationCategory: "ProductivityApplication",
-              operatingSystem: "Windows, macOS",
-              description:
-                "AI with persistent project memory. Vraelis remembers your projects, context, and goals; every session picks up where the last one left off. Chat, voice, drag-drop, image generation, live web search, all in one workspace.",
-              offers: {
-                "@type": "AggregateOffer",
-                lowPrice: "0",
-                highPrice: "500",
-                priceCurrency: "USD",
-                offerCount: "6",
-              },
-              creator: {
-                "@type": "Organization",
-                name: "Vraelis",
-                url: "https://www.vraelis.com",
-              },
-            }),
-          }}
-        />
-        {children}
-        <InflightBackToChat />
-        <CommandPalette />
-        <CopilotBar signedIn={signedIn} />
-        <RevealOnScroll />
-      </body>
-    </html>
   );
 }
+
