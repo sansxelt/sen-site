@@ -56,15 +56,18 @@ export function StealthScreen() {
       <div className="vst-bloom" aria-hidden />
 
       <div className="wrap vst-stack">
-        <h1 className="display vst-bars" aria-label="Vraelis is in stealth">
-          <span aria-hidden>&#9608;</span>
-          <span aria-hidden className="em vst-mid">&#9608;</span>
-          <span aria-hidden>&#9608;</span>
-        </h1>
+        {/* A redacted line: the shape of a sentence with the words struck out. Real elements rather than
+            block characters, so the proportions are controlled and nothing collides with the heading. */}
+        <div className="vst-redact" aria-hidden>
+          <i style={{ width: "20%", animationDelay: "0ms" }} />
+          <i style={{ width: "29%", animationDelay: "70ms" }} className="vst-mid" />
+          <i style={{ width: "11%", animationDelay: "140ms" }} />
+          <i style={{ width: "21%", animationDelay: "210ms" }} />
+        </div>
 
-        <h2 className="vst-head vst-in vst-d1">
+        <h1 className="vst-head vst-in vst-d1">
           Vraelis is in <span className="em">stealth</span>.
-        </h2>
+        </h1>
 
         <p className="vst-body vst-in vst-d2">
           {opening ? "Opening…" : "Not public yet. If you were meant to be here, you already know the way in."}
@@ -77,18 +80,24 @@ export function StealthScreen() {
 const ST_CSS = `
 .vst-stack{ position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; max-width:680px; margin:0 auto; }
 
-.vst-bars{
-  font-family:var(--font-display);
-  font-size:clamp(4rem, 17vw, 13rem);
-  line-height:.82;
-  letter-spacing:.02em;
-  font-weight:600;
-  color:var(--fg-1);
-  margin:0;
-  opacity:.92;
-  animation:vst-fade .8s var(--ease-out) both, vst-float 8s var(--ease-out) 900ms infinite;
+/* The redacted line. Bars are sized as a share of one measure so the composition holds at every width. */
+/* nowrap on purpose: a redaction is ONE struck-out line. Let it wrap and it reads as a bar chart.
+   Widths are percentages of the container and are kept well under 100% so the gaps always fit. */
+.vst-redact{
+  display:flex; align-items:center; justify-content:center; flex-wrap:nowrap;
+  gap:clamp(7px, .9vw, 12px);
+  width:min(430px, 78vw);
+  margin:0 auto clamp(20px, 2.6vw, 30px);
 }
-.vst-mid{ color:var(--acc-deep); display:inline-block; animation:vst-drift 8s var(--ease-out) infinite; }
+.vst-redact i{
+  display:block;
+  height:clamp(17px, 2.1vw, 26px);
+  border-radius:3px;
+  background:var(--fg-1);
+  opacity:.86;
+  animation:vst-bar .55s var(--ease-out) both;
+}
+.vst-redact i.vst-mid{ background:var(--acc-deep); opacity:1; }
 
 .vst-head{
   font-family:var(--font-display);
@@ -115,14 +124,19 @@ const ST_CSS = `
 .vst-d2{ animation-delay:200ms; }
 
 @keyframes vst-rise{ from{ opacity:0; transform:translateY(14px); } to{ opacity:1; transform:none; } }
-@keyframes vst-fade{ from{ opacity:0; } to{ opacity:.92; } }
-@keyframes vst-float{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-10px); } }
-@keyframes vst-drift{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-5px); } }
+/* Bars wipe in from the left, the way a redaction is drawn over text. */
+@keyframes vst-bar{ from{ opacity:0; transform:scaleX(.2); } to{ opacity:.86; transform:none; } }
+/* The accent bar holds full opacity; the "both" fill mode would otherwise pin it to the .86 above. */
+@keyframes vst-bar-em{ from{ opacity:0; transform:scaleX(.2); } to{ opacity:1; transform:none; } }
+.vst-redact i.vst-mid{ animation-name:vst-bar-em; }
 @keyframes vst-breathe{ 0%,100%{ opacity:.45; transform:translate(-50%,-50%) scale(1); } 50%{ opacity:.8; transform:translate(-50%,-50%) scale(1.07); } }
 
+.vst-redact i{ transform-origin:left center; }
+
 @media (prefers-reduced-motion: reduce){
-  .vst-bars, .vst-mid, .vst-in, .vst-bloom{ animation:none !important; }
+  .vst-redact i, .vst-in, .vst-bloom{ animation:none !important; }
   .vst-in{ opacity:1; transform:none; }
-  .vst-bars{ opacity:.92; }
+  .vst-redact i{ opacity:.86; transform:none; }
+  .vst-redact i.vst-mid{ opacity:1; }
 }
 `;
