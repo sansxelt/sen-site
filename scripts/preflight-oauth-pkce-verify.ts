@@ -9,6 +9,7 @@
 import { createCodeVerifier, codeChallengeS256, pkceCookieName, PKCE_METHOD } from "../lib/preflight/oauth/pkce";
 import { resolveOAuthProvider, buildAuthorizeUrl, type OAuthProvider } from "../lib/preflight/oauth/providers";
 import { mapSupabaseProjects } from "../lib/preflight/oauth/supabase-project";
+import { vercelHandoffUrl } from "../lib/preflight/oauth/handoff";
 import { createHash } from "crypto";
 
 let pass = 0, fail = 0;
@@ -79,6 +80,20 @@ ok("a ref that would forge a hostname is DROPPED, never interpolated",
 ok("malformed and non-string refs are dropped", projects.length === 2);
 ok("a non-array response yields an empty list, never a throw",
   mapSupabaseProjects(null).length === 0 && mapSupabaseProjects({ projects: [] }).length === 0);
+
+// ── Vercel popup hand-off (open-redirect guard) ──
+// `next` is a query param on our own callback, so it is attacker-supplied. Anything that is not https on
+// vercel.com must be refused outright, never patched up.
+ok("a real vercel completion url is accepted",
+  vercelHandoffUrl("https://vercel.com/integrations/complete?configurationId=abc") === "https://vercel.com/integrations/complete?configurationId=abc");
+ok("a vercel subdomain is accepted", vercelHandoffUrl("https://api.vercel.com/x") !== null);
+ok("http is refused", vercelHandoffUrl("http://vercel.com/x") === null);
+ok("a look-alike suffix domain is refused", vercelHandoffUrl("https://notvercel.com/x") === null);
+ok("a domain that merely starts with vercel.com is refused", vercelHandoffUrl("https://vercel.com.evil.test/x") === null);
+ok("an unrelated host is refused", vercelHandoffUrl("https://evil.test/phish") === null);
+ok("javascript: is refused", vercelHandoffUrl("javascript:alert(1)") === null);
+ok("a relative path is refused (not an absolute url)", vercelHandoffUrl("/applications") === null);
+ok("null and empty are refused", vercelHandoffUrl(null) === null && vercelHandoffUrl("") === null);
 
 console.log(`\n${pass}/${pass + fail} passed`);
 if (fail > 0) process.exit(1);

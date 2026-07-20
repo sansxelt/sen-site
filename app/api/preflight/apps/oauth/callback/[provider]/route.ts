@@ -16,6 +16,7 @@ import { vaultConfigured } from "@/lib/preflight/secret-vault";
 import { resolveOAuthProvider, providerAvailable, callbackPath, clientId, clientSecret } from "@/lib/preflight/oauth/providers";
 import { verifyOAuthState } from "@/lib/preflight/oauth/state";
 import { pkceCookieName } from "@/lib/preflight/oauth/pkce";
+import { vercelHandoffUrl } from "@/lib/preflight/oauth/handoff";
 import { addOAuthConnection } from "@/lib/preflight/connections-db";
 import { addAccountOAuthConnection } from "@/lib/preflight/account-connections-db";
 
@@ -38,7 +39,7 @@ function baseUrl(req: Request): string {
 // without BroadcastChannel. Then it tries to close. If the browser refuses to close a window it no longer
 // considers script-opened (another COOP side effect), we show a plain "you can close this" instead of
 // silently navigating — the parent has already been told and updated.
-function popupClose(req: Request, path: string, params: string): NextResponse {
+function popupClose(req: Request, path: string, params: string, handoff?: string | null): NextResponse {
   const origin = baseUrl(req);
   const target = `${origin}${path}?${params}`;
   const payload = JSON.stringify({ source: "vraelis-oauth", params });
@@ -55,6 +56,11 @@ function popupClose(req: Request, path: string, params: string): NextResponse {
   // 3. localStorage ping: fallback for anything without BroadcastChannel.
   try { localStorage.setItem("vraelis-oauth", JSON.stringify({ params: msg.params, t: Date.now() })); } catch (e) {}
 
+  // 4. Hand back to the provider (Vercel) if it gave us a completion URL. The parent has ALREADY been told
+  // above, so this is purely about closing the window, and the provider's own page can do it when we can't.
+  var handoff = ${JSON.stringify(handoff ?? null)};
+  if (handoff) { window.location.replace(handoff); return; }
+
   try { window.close(); } catch (e) {}
   // If we're still here, the browser wouldn't close us. Tell the user plainly rather than navigating.
   setTimeout(function(){
@@ -68,16 +74,26 @@ function popupClose(req: Request, path: string, params: string): NextResponse {
   }, 400);
 })();
 </script></body>`;
-  const res = new NextResponse(html, { status: 200, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
+  const res = new NextResponse(html, {
+    status: 200,
+    headers: {
+      "content-type": "text/html; charset=utf-8",
+      "cache-control": "no-store",
+      // Explicit, per Vercel's integration requirements: never sever our own opener, so the dashboard can
+      // detect the popup closing. This is the default, but stating it keeps a future global COOP header
+      // from silently breaking every popup flow.
+      "cross-origin-opener-policy": "unsafe-none",
+    },
+  });
   res.cookies.delete("vr_oauth_popup");
   return res;
 }
 
 // Redirect back to the surface the flow came from: an app's Connections tab (per-app) or the account
 // Connections page (account). In popup mode this closes the popup and messages the opener instead.
-function backTo(req: Request, appId: string | undefined, params: string, popup = false): NextResponse {
+function backTo(req: Request, appId: string | undefined, params: string, popup = false, handoff?: string | null): NextResponse {
   const path = appId ? `/applications/${appId}/settings/connections` : `/connections`;
-  if (popup) return popupClose(req, path, params);
+  if (popup) return popupClose(req, path, params, handoff);
   return NextResponse.redirect(`${baseUrl(req)}${path}?${params}`, 302);
 }
 function backGeneric(req: Request, provider: string, reason: string, popup = false): NextResponse {
@@ -214,7 +230,10 @@ export async function GET(req: Request, ctx: { params: Promise<{ provider: strin
     : await addAccountOAuthConnection(sealOwner, provider, input);
   if ("error" in saved) return err(saved.error);
 
-  const res = exit(backTo(req, appId, `oauth=connected&provider=${provider}`, popup));
+  // Hand the popup back to the provider ONLY on success. On failure we keep the user on our own page with
+  // the reason, rather than bouncing them into the provider's "all done" UI after something went wrong.
+  const handoff = vercelHandoffUrl(url.searchParams.get("next"));
+  const res = exit(backTo(req, appId, `oauth=connected&provider=${provider}`, popup, handoff));
   res.cookies.delete(cookieName);
   return res;
 }
