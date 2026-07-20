@@ -701,12 +701,15 @@ summary::-webkit-details-marker { display: none; }
 @media (max-width: 900px) { .foot-grid { grid-template-columns: 1.4fr 1fr 1fr; row-gap: 32px; } }
 @media (max-width: 560px) { .foot-grid { grid-template-columns: 1fr 1fr; } }
 
-/* Global desktop scale: the density the design was judged best at. Both shells render
-   at 0.99 (essentially 1:1) so a visitor at their normal 100% browser zoom sees the
-   size the founder judged best (0.9 shell viewed at ~110% browser zoom). Phones stay
-   1:1 so touch targets and text stay readable. (Revisit if it reads too big/small on a
-   given display.) */
+/* Global desktop scale: the density each shell was judged best at, expressed so a visitor at their normal
+   100% browser zoom sees exactly what the founder saw. The two shells differ on purpose.
+
+   Marketing site: 0.99, essentially 1:1. Judged at a 0.9 shell viewed at ~110% browser zoom.
+   App: 0.89. Judged at the 0.99 shell viewed at 90% browser zoom, so 0.99 x 0.90 = 0.891. The app is dense
+   (sidebar, top bar, tables) and wants more on screen at once; the marketing page wants presence.
+
+   Phones stay 1:1 so touch targets and text stay readable. */
 @media (min-width: 768px) {
-  .rank-root { zoom: 0.99; --shell-zoom: 0.99; }
+  .rank-root { zoom: 0.89; --shell-zoom: 0.89; }
   .rank-root--site { zoom: 0.99; --shell-zoom: 0.99; }
 }

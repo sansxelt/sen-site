@@ -16,6 +16,9 @@ import { CopilotBar } from "../components/copilot-bar";
 import { RevealOnScroll } from "../components/reveal-on-scroll";
 import { InflightBackToChat } from "../components/inflight-back-to-chat";
 import { isVraelisRequest } from "../lib/site-host";
+import { cookies } from "next/headers";
+import { stealthConfigured, STEALTH_COOKIE, STEALTH_VALUE } from "../lib/stealth";
+import { StealthScreen } from "./_components/stealth-screen";
 
 const BASE = "https://www.vraelis.com";
 
@@ -110,6 +113,16 @@ const vraelisMetadata: Metadata = {
 };
 
 export async function generateMetadata(): Promise<Metadata> {
+  // In stealth the only page that exists is the curtain, so tell crawlers not to index it. Otherwise the
+  // first thing search engines learn about the domain is a page that says nothing, and that impression
+  // outlives the launch.
+  if (stealthConfigured()) {
+    return {
+      title: "Vraelis",
+      description: "Vraelis is in stealth.",
+      robots: { index: false, follow: false },
+    };
+  }
   return (await isVraelisRequest()) ? vraelisMetadata : sansxelMetadata;
 }
 
@@ -118,6 +131,21 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // STEALTH: checked before anything else and returned before `children` is touched, so while the curtain
+  // is down the real tree is never rendered and never reaches the browser in any form. Cheap cookie read;
+  // no session lookup, no DB.
+  if (stealthConfigured() && (await cookies()).get(STEALTH_COOKIE)?.value !== STEALTH_VALUE) {
+    return (
+      <html lang="en" data-theme="light" style={{ colorScheme: "light", background: "#FAF8F4" }} className={`${GeistSans.variable} ${GeistMono.variable} h-full`}>
+        <body className="min-h-full" style={{ background: "#FAF8F4" }}>
+          <link rel="stylesheet" href="/vraelis/tokens.css?v=20" />
+          <link rel="stylesheet" href="/vraelis/styles.css?v=51" />
+          <StealthScreen />
+        </body>
+      </html>
+    );
+  }
+
   const [session, vraelis] = await Promise.all([auth(), isVraelisRequest()]);
   const signedIn = Boolean(session?.user?.email);
 
@@ -149,7 +177,7 @@ export default async function RootLayout({
           {/* ?v bust: bump on every CSS change so browsers don't serve a
               stale cached stylesheet (the static file URL is otherwise fixed). */}
           <link rel="stylesheet" href="/vraelis/tokens.css?v=20" />
-          <link rel="stylesheet" href="/vraelis/styles.css?v=50" />
+          <link rel="stylesheet" href="/vraelis/styles.css?v=51" />
           {children}
         </body>
       </html>
