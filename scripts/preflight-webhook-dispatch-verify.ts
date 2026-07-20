@@ -4,7 +4,7 @@
 // No network: unreachable hosts are expected to fail closed.
 
 process.env.VRAELIS_SECRET_KEY = process.env.VRAELIS_SECRET_KEY || "a".repeat(64);
-import { buildVerificationPayload, deliverWebhook, dispatchVerificationWebhooks } from "../lib/preflight/webhook-dispatch";
+import { buildVerificationPayload, deliverWebhook, dispatchVerificationWebhooks, buildSlackMessage } from "../lib/preflight/webhook-dispatch";
 
 let pass = 0, fail = 0;
 function ok(name: string, cond: boolean) {
@@ -37,6 +37,19 @@ ok("serialized payload leaks no secret-shaped keys",
 ok("payload key set is exactly the owner-safe allowlist",
   JSON.stringify(Object.keys(payload).sort()) === JSON.stringify(
     ["application_id", "completed_at", "decision", "deployment_url", "event", "flows_passed", "flows_total", "report_url", "run_id"]));
+
+// Slack gets Slack's own message shape (a raw JSON payload would render as gibberish in a channel), but
+// carries exactly the same owner-safe facts — never anything extra.
+const slack = buildSlackMessage(payload);
+ok("slack message has a text fallback naming the decision",
+  typeof slack.text === "string" && (slack.text as string).includes("BLOCKED") && (slack.text as string).includes("2/3"));
+ok("slack message uses blocks with the deployment + report link",
+  Array.isArray(slack.blocks) && JSON.stringify(slack.blocks).includes("demo.example.com") &&
+  JSON.stringify(slack.blocks).includes("/passes/run-1"));
+ok("slack message leaks no secret-shaped keys",
+  !/(access_token|refresh_token|encrypted_ref|storage_path|provider_session_id)/i.test(JSON.stringify(slack)));
+ok("an unknown decision still renders (no crash, label falls back)",
+  typeof buildSlackMessage({ ...payload, decision: "weird_new_state" }).text === "string");
 
 // Delivery is fail-soft + SSRF-guarded: private/loopback/non-https targets are refused, never attempted.
 (async () => {

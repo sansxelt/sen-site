@@ -248,8 +248,10 @@ export class PostgresRunStore implements RunStore {
     const run = runRow as { user_id?: string; application_id?: string; deployment_url?: string } | null;
     if (!run?.user_id || !run.application_id) return;
 
+    // Both notification kinds carry a destination URL in meta.url: a generic endpoint (signed JSON) and a
+    // Slack incoming webhook (Slack message format). deliverWebhook picks the format per URL.
     const { data: conns } = await this.s.from("v_app_connections")
-      .select("meta").eq("user_id", run.user_id).eq("application_id", run.application_id).eq("provider", "webhook");
+      .select("meta").eq("user_id", run.user_id).eq("application_id", run.application_id).in("provider", ["webhook", "slack"]);
     const urls = ((conns as { meta?: { url?: string } }[] | null) ?? [])
       .map((c) => c.meta?.url).filter((u): u is string => typeof u === "string" && !!u.trim());
     if (!urls.length) return;

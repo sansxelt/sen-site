@@ -40,12 +40,12 @@ export function stateLabel(state: ConnectionState): string { return STATE_LABELS
 export const PROVIDER_LABELS: Record<string, string> = {
   github: "GitHub", vercel: "Vercel", custom_deploy: "Custom deployment",
   supabase: "Supabase", custom_auth: "Custom auth", stripe_test: "Stripe",
-  sentry: "Sentry", openapi: "OpenAPI", webhook: "Webhook", test_account: "Test account",
+  sentry: "Sentry", openapi: "OpenAPI", webhook: "Webhook", slack: "Slack", test_account: "Test account",
 };
 export const PROVIDER_GROUP: Record<string, string> = {
   github: "Source", vercel: "Deployment", custom_deploy: "Deployment",
   supabase: "Data", custom_auth: "Auth", stripe_test: "Billing",
-  sentry: "Monitoring", openapi: "Services", webhook: "Services", test_account: "Credentials",
+  sentry: "Monitoring", openapi: "Services", webhook: "Services", slack: "Notifications", test_account: "Credentials",
 };
 
 // Which Vraelis features actually use each connection today. Truthful only: nothing here claims a
@@ -62,6 +62,7 @@ export const FEATURE_USE: Record<string, string> = {
   sentry: "Seeds a reliability requirement (core flows complete without unhandled errors).",
   custom_auth: "Stored as application context. Not yet read during verification.",
   webhook: "Receives the launch decision when a verification run finishes (signed POST).",
+  slack: "Posts the launch decision to your Slack channel when a verification run finishes.",
   openapi: "Stored as application context. Not yet read during verification.",
   test_account: "Authenticated signed-in flows (coming later; credentials stay sealed until then).",
 };
@@ -88,6 +89,7 @@ export const NEVER_ACCESSES: Record<string, string> = {
   stripe_test: "No live keys, no card data; a test-mode label only.",
   sentry: "No Sentry auth tokens; the DSN is a public identifier.",
   webhook: "No signing secrets; the endpoint URL only.",
+  slack: "No Slack workspace access; the incoming-webhook URL you paste, used only to post run results.",
   openapi: "No API keys; schema metadata only.",
   test_account: "Credentials are sealed with AES-256-GCM and never displayed, logged, or screenshotted.",
 };
@@ -98,7 +100,7 @@ export function neverAccesses(provider: string): string {
 // The manual kinds the management surface offers for "Add connection" (same set the connect workspace
 // offers). test_account is deliberately absent: sealed credentials go through the secrets route only.
 export const MANUAL_ADD_KINDS = [
-  "github", "vercel", "custom_deploy", "supabase", "custom_auth", "stripe_test", "sentry", "webhook",
+  "github", "vercel", "custom_deploy", "supabase", "custom_auth", "stripe_test", "sentry", "webhook", "slack",
 ] as const;
 
 // Field definitions for the manual metadata forms (add + edit share these). github uses its own
@@ -111,6 +113,7 @@ export const MANUAL_FIELDS: Record<string, { fields: [string, string, string][];
   stripe_test: { fields: [["account_label", "Account label (optional)", "e.g. Acme test account"]] },
   sentry: { fields: [["dsn", "DSN", "https://examplePublicKey@o0.ingest.sentry.io/0"]], requiredKey: "dsn" },
   webhook: { fields: [["url", "Endpoint URL", "https://hooks.example.com/orders"]], requiredKey: "url" },
+  slack: { fields: [["url", "Slack incoming webhook URL", "https://hooks.slack.com/services/T000/B000/xxxx"], ["channel", "Channel label (optional)", "#launches"]], requiredKey: "url" },
 };
 
 // Providers that exist in the world but not in the product yet. Rendered as compact chips only,
@@ -146,6 +149,7 @@ export function metaSummary(provider: string, meta: Record<string, unknown>): st
     case "stripe_test": return s("account_label") ? `Test mode, ${s("account_label")}` : "Test mode";
     case "sentry": return s("dsn") ? hostnameOf(s("dsn")) : null;
     case "webhook": return s("url") || null;
+    case "slack": return s("channel") || (s("url") ? "Incoming webhook" : null);
     case "openapi": return s("name") || null;
     default: return null;
   }

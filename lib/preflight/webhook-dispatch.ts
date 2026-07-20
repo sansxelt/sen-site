@@ -35,8 +35,58 @@ function sign(body: string, timestamp: string): string | null {
   return createHmac("sha256", key).update(`${timestamp}.${body}`).digest("hex");
 }
 
-// Deliver one payload to one endpoint. Never throws; returns whether it was accepted (2xx).
+// Slack incoming webhooks take Slack's own message shape, not our JSON, so a Slack endpoint gets a formatted
+// message instead of the raw payload. Same owner-safe facts, just rendered for humans in a channel.
+const DECISION_TEXT: Record<string, { emoji: string; label: string }> = {
+  ready: { emoji: ":white_check_mark:", label: "READY" },
+  blocked: { emoji: ":no_entry:", label: "BLOCKED" },
+  needs_review: { emoji: ":warning:", label: "NEEDS REVIEW" },
+  repair_verified: { emoji: ":wrench:", label: "REPAIR VERIFIED" },
+};
+export function buildSlackMessage(p: VerificationWebhookPayload): Record<string, unknown> {
+  const d = DECISION_TEXT[p.decision] ?? { emoji: ":grey_question:", label: p.decision.toUpperCase() };
+  const lines = [
+    `*${d.label}* — ${p.flows_passed}/${p.flows_total} flows passed`,
+    p.deployment_url ? `<${p.deployment_url}|${p.deployment_url}>` : null,
+  ].filter(Boolean).join("\n");
+  return {
+    text: `${d.emoji} Vraelis: ${d.label} (${p.flows_passed}/${p.flows_total} flows)`,
+    blocks: [
+      { type: "section", text: { type: "mrkdwn", text: `${d.emoji} ${lines}` } },
+      ...(p.report_url
+        ? [{ type: "context", elements: [{ type: "mrkdwn", text: `<${p.report_url}|View the evidence>` }] }]
+        : []),
+    ],
+  };
+}
+
+function isSlackEndpoint(url: string): boolean {
+  try { return new URL(url).hostname.endsWith("hooks.slack.com"); } catch { return false; }
+}
+
+// Deliver one payload to one endpoint. Never throws; returns whether it was accepted (2xx). A Slack incoming
+// webhook gets Slack's message format; everything else gets the signed JSON payload.
 export async function deliverWebhook(url: string, payload: VerificationWebhookPayload): Promise<boolean> {
+  if (isSlackEndpoint(url)) return deliverSlack(url, payload);
+  return deliverJson(url, payload);
+}
+
+async function deliverSlack(url: string, payload: VerificationWebhookPayload): Promise<boolean> {
+  if (unsafeHttpsUrlReason(url)) return false;
+  try {
+    const res = await safeFetch(url, {
+      method: "POST",
+      headers: { "content-type": "application/json", "user-agent": "vraelis-webhook/1" },
+      body: JSON.stringify(buildSlackMessage(payload)),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function deliverJson(url: string, payload: VerificationWebhookPayload): Promise<boolean> {
   // Re-validate at send time: the URL was checked when stored, but storage and delivery are far apart.
   if (unsafeHttpsUrlReason(url)) return false;
   const body = JSON.stringify(payload);

@@ -113,8 +113,8 @@ ok("the stored-not-yet-used set is exactly those two (no silent scope creep)",
   STORED_NOT_YET_USED.size === 2);
 ok("metaSummary renders safe one-liners", metaSummary("github", { repo: "a/b", branch: "main" }) === "a/b @ main" && metaSummary("webhook", {}) === null);
 ok("whenUtc renders a stable UTC stamp", whenUtc("2026-07-02T14:31:00.000Z") === "2026-07-02 14:31 UTC" && whenUtc(null) === "");
-ok("the Add affordance offers exactly the 8 manual kinds (test accounts go through the sealed route)",
-  MANUAL_ADD_KINDS.length === 8 && !(MANUAL_ADD_KINDS as readonly string[]).includes("test_account") && (MANUAL_ADD_KINDS as readonly string[]).every((k) => k === "github" || !!MANUAL_FIELDS[k]));
+ok("the Add affordance offers exactly the 9 manual kinds (test accounts go through the sealed route)",
+  MANUAL_ADD_KINDS.length === 9 && !(MANUAL_ADD_KINDS as readonly string[]).includes("test_account") && (MANUAL_ADD_KINDS as readonly string[]).every((k) => k === "github" || !!MANUAL_FIELDS[k]));
 ok("coming-later list has no manual kind in it", COMING_LATER_PROVIDERS.every((n) => !(MANUAL_ADD_KINDS as readonly string[]).includes(n.toLowerCase())));
 
 // ── Static: connections-db holds the security lines ──
