@@ -49,9 +49,9 @@ const MODES: Mode[] = [
     key: "passed",
     label: "All passed",
     results: [
-      { ok: true, note: "Created and confirmed present on a fresh read." },
-      { ok: true, note: "A second user is correctly refused access." },
-      { ok: true, note: "The core workflow completes end to end." },
+      { ok: true, note: "Created, then still present in a brand new session." },
+      { ok: true, note: "A second signed-in user was refused." },
+      { ok: true, note: "Paid in test mode, and the account gained the paid feature." },
     ],
     verdict: {
       tone: "ready",
@@ -67,25 +67,30 @@ const MODES: Mode[] = [
     key: "failed",
     label: "Critical failure",
     results: [
-      { ok: true, note: "Created and confirmed present on a fresh read." },
-      { ok: false, note: "A second user could reach data that should be private." },
-      { ok: true, note: "The core workflow completes end to end." },
+      // Fails on checkout -> entitlement on purpose. That is the outcome-chain break the whole pitch is
+      // about, and the one a component checker structurally cannot see: the page loaded, the payment
+      // succeeded, the database is up, and the customer still got nothing.
+      { ok: true, note: "Created, then still present in a brand new session." },
+      { ok: true, note: "A second signed-in user was refused." },
+      { ok: false, note: "Payment completed. The account never gained the paid feature." },
     ],
     verdict: {
       tone: "blocked",
       pill: "BLOCKED",
-      title: "Critical required behavior failed",
+      title: "A customer paid and got nothing",
       count: "1 critical requirement failed",
-      line: "A critical promise did not hold. On a real run the failure arrives with factual evidence and exact reproduction steps.",
+      line: "The checkout page loaded, the payment went through, and the account still shows the free plan. Every piece reported success. On a real run this arrives with the screenshot, the failing step, and steps to reproduce it.",
     },
   },
   {
     key: "newBuild",
     label: "Under review",
     results: [
-      { ok: true, note: "Created and confirmed present on a fresh read." },
-      { ok: true, repaired: true, note: "A previously-failed requirement now passes on this build." },
-      { ok: true, note: "The core workflow completes end to end." },
+      // Repairs the flow that actually failed above, so the three scenarios read as one story across
+      // builds rather than three unrelated screenshots.
+      { ok: true, note: "Created, then still present in a brand new session." },
+      { ok: true, note: "A second signed-in user was refused." },
+      { ok: true, repaired: true, note: "Paid in test mode, and this time access was granted." },
     ],
     verdict: {
       tone: "ready",
