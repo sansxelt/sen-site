@@ -8,7 +8,7 @@
 // never leaves this module.
 import { safeFetch } from "../../safe-fetch";
 import { openAccountToken, updateAccountOAuthTokens } from "../account-connections-db";
-import { resolveOAuthProvider } from "./providers";
+import { resolveOAuthProvider, clientId as readClientId, clientSecret as readClientSecret } from "./providers";
 
 // Refresh if the token expires within this window (or is already past it), so a consumer never starts work
 // with a token about to die mid-request.
@@ -30,8 +30,8 @@ export async function freshAccountToken(owner: string, provider: string): Promis
   // Not refreshable, or nothing to refresh with, or still valid => use the stored token as-is.
   if (!p?.refreshable || !current.refreshToken || !expiredOrSoon(current.expiresAt)) return current.accessToken;
 
-  const clientId = process.env[p.clientIdEnv];
-  const clientSecret = process.env[p.clientSecretEnv];
+  const clientId = readClientId(p);
+  const clientSecret = readClientSecret(p);
   if (!clientId || !clientSecret) return current.accessToken; // can't refresh; fall back to the (maybe stale) token
 
   try {

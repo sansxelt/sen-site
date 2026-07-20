@@ -13,7 +13,7 @@ import { auth } from "@/auth";
 import { safeFetch } from "@/lib/safe-fetch";
 import { gatePreflightApp } from "@/lib/preflight/team-access";
 import { vaultConfigured } from "@/lib/preflight/secret-vault";
-import { resolveOAuthProvider, providerAvailable, callbackPath } from "@/lib/preflight/oauth/providers";
+import { resolveOAuthProvider, providerAvailable, callbackPath, clientId, clientSecret } from "@/lib/preflight/oauth/providers";
 import { verifyOAuthState } from "@/lib/preflight/oauth/state";
 import { pkceCookieName } from "@/lib/preflight/oauth/pkce";
 import { addOAuthConnection } from "@/lib/preflight/connections-db";
@@ -156,8 +156,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ provider: strin
   if (p.pkce && !codeVerifier) return err("pkce_verifier_missing");
   try {
     const body = new URLSearchParams({
-      client_id: process.env[p.clientIdEnv] as string,
-      client_secret: process.env[p.clientSecretEnv] as string,
+      client_id: clientId(p),
+      client_secret: clientSecret(p),
       code,
       redirect_uri: redirectUri,
       grant_type: "authorization_code",

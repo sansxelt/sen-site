@@ -138,15 +138,27 @@ export function resolveOAuthProvider(kind: string): OAuthProvider | null {
   return REGISTRY[kind] ?? null;
 }
 
+// Credential reads, ALWAYS trimmed. Every one of these values arrives by someone copying it out of a
+// provider dashboard and pasting it into a hosting env field, and that paste routinely carries a trailing
+// newline or space. Providers compare client ids literally, so an untrimmed value fails with a message
+// ("unrecognized client_id") that points at the value being wrong rather than at the invisible character
+// after it — hours of chasing a correct-looking credential. Read env credentials through these, never raw.
+export function clientId(p: OAuthProvider): string {
+  return (process.env[p.clientIdEnv] ?? "").trim();
+}
+export function clientSecret(p: OAuthProvider): string {
+  return (process.env[p.clientSecretEnv] ?? "").trim();
+}
+
 // A provider's OAuth app credentials are present in the environment.
 export function providerConfigured(p: OAuthProvider): boolean {
-  return !!process.env[p.clientIdEnv] && !!process.env[p.clientSecretEnv];
+  return !!clientId(p) && !!clientSecret(p);
 }
 
 // A gated provider is only available when its gate flag is explicitly enabled (Supabase, until its broader
 // scope is approved). Non-gated providers are always available once configured.
 export function providerGateOpen(p: OAuthProvider): boolean {
-  return !p.gatedByEnv || process.env[p.gatedByEnv] === "1";
+  return !p.gatedByEnv || (process.env[p.gatedByEnv] ?? "").trim() === "1"; // trimmed: a pasted "1\n" is still on
 }
 
 // The provider can be offered/used right now: configured AND not gated off. The UI shows a Connect button
@@ -173,7 +185,7 @@ export function buildAuthorizeUrl(
   opts: { state: string; redirectUri: string; codeChallenge?: string },
 ): string | null {
   if (p.authorizeStyle === "install") {
-    const slug = p.installSlugEnv ? process.env[p.installSlugEnv] : undefined;
+    const slug = p.installSlugEnv ? (process.env[p.installSlugEnv] ?? "").trim() : undefined;
     if (!slug) return null;
     const u = new URL(`https://vercel.com/integrations/${slug}/new`);
     u.searchParams.set("state", opts.state);
@@ -181,7 +193,7 @@ export function buildAuthorizeUrl(
   }
   if (p.pkce && !opts.codeChallenge) return null; // never downgrade a PKCE provider to a bare code flow
   const u = new URL(p.authorizeUrl);
-  u.searchParams.set("client_id", process.env[p.clientIdEnv] as string);
+  u.searchParams.set("client_id", clientId(p));
   u.searchParams.set("redirect_uri", opts.redirectUri);
   if (p.scopes) u.searchParams.set("scope", p.scopes);
   u.searchParams.set("state", opts.state);
