@@ -103,7 +103,7 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
       </div>
       <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 16 }}>
         <Link href={authed ? "/app" : "/signin?callbackUrl=%2Fapp"} className="vra-nav-secondary" style={link}>{authed ? "Dashboard" : "Sign in"}</Link>
-        <Link href={authed ? "/app" : "/signin?callbackUrl=%2Fapp"} className="btn">{authed ? "Open app" : "Validate a system"}</Link>
+        <Link href={authed ? "/app" : "/signin?callbackUrl=%2Fapp"} className="btn">{authed ? "Open app" : "Check your application"}</Link>
         <button aria-label="Menu" onClick={() => setOpen((v) => !v)} className="vra-nav-burger" style={{ display: "none", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: 11, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", color: "var(--fg-1)" }}>
           <Ic d={open ? I.x : I.menu} size={18} sw={2} />
         </button>
@@ -122,7 +122,7 @@ function Footer() {
   const col = { display: "flex", flexDirection: "column", gap: 6 } as const;
   // Limitations sits in Product, not Legal, on purpose: it is a description of what the thing does, and
   // burying it under legal reads like a disclaimer somebody was made to write.
-  const productLinks: [string, string][] = [["/how-it-works", "How it works"], ["/limitations", "Limitations"], ["/pricing", "Pricing"], ["/enterprise", "Enterprise"], ["/signin?callbackUrl=%2Fapp", "Validate a system"]];
+  const productLinks: [string, string][] = [["/how-it-works", "How it works"], ["/limitations", "Limitations"], ["/pricing", "Pricing"], ["/enterprise", "Enterprise"], ["/signin?callbackUrl=%2Fapp", "Check your application"]];
   // minHeight + inline-flex gives each footer link a >=24px touch target (the text stays put; the hit area
   // grows vertically). Paired with the tighter col gap above so total row rhythm is unchanged.
   const a = { color: "var(--fg-3)", textDecoration: "none", fontSize: 13.5, display: "inline-flex", alignItems: "center", minHeight: 24 } as const;

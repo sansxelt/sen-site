@@ -53,7 +53,7 @@ export default function EnterprisePage() {
           <h1 className="display" style={{ fontSize: "clamp(2rem, 4.4vw, 3rem)", marginBottom: 16 }}>Govern production readiness across your organization.</h1>
           <p className="lead-copy" style={{ margin: "0 auto 26px", maxWidth: 680 }}>Vraelis runs your AI-built apps like production before they ship. Enterprise teams govern who can connect apps and launch runs, verify organization domains, and keep audit-ready records of every run and decision. It is production infrastructure, not a dashboard.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Validate a system</Link>
+            <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Check your application</Link>
             <Link href="/developers" className="btn btn--ghost btn--lg">View developer platform</Link>
           </div>
         </div>
@@ -190,7 +190,7 @@ export default function EnterprisePage() {
         <div className="wrap" style={{ maxWidth: 720, textAlign: "center" }}>
           <h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)", marginBottom: 18 }}>A launch decision you can defend, before you ship.</h2>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Validate a system</Link>
+            <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Check your application</Link>
             <Link href="/developers" className="btn btn--ghost btn--lg">View developer platform</Link>
             <Link href="/contact" className="btn btn--ghost btn--lg">Contact us about enterprise SSO</Link>
           </div>

@@ -95,7 +95,7 @@ export default function DevelopersPage() {
           </p>
           <p style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: "0 auto 22px" }}>queue a run against the preview build, then block the release when a critical flow fails</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Validate a system <span aria-hidden>→</span></Link>
+            <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Check your application <span aria-hidden>→</span></Link>
             <Link href="/how-it-works" className="btn btn--ghost btn--lg">How it works</Link>
           </div>
         </div>
@@ -170,7 +170,7 @@ export default function DevelopersPage() {
           <p className="lead-copy" style={{ marginBottom: 14 }}>The run and report data plane is real: a Postgres-backed queue, a worker that drives an isolated browser, and private, owner-scoped evidence. API-key triggers and CI gating are opening in early access, and the deeper connections for GitHub, Vercel, Supabase, and Stripe build out from there.</p>
           <p style={{ fontSize: 13, color: "var(--fg-4)", lineHeight: 1.6 }}>We will not document an endpoint we have not shipped. When a surface is live, it appears in the signed-in console with a real example you can run.</p>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 18 }}>
-            <Link href="/signin?callbackUrl=%2Fapp" className="btn">Validate a system</Link>
+            <Link href="/signin?callbackUrl=%2Fapp" className="btn">Check your application</Link>
             <Link href="/enterprise" className="btn btn--ghost">Enterprise and security</Link>
           </div>
         </div>

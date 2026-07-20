@@ -107,15 +107,15 @@ export default function VraelisLanding() {
         <div className="grid-faint" style={{ opacity: 0.55 }} />
         <div className="wrap hero-grid" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(32px, 4vw, 56px)", paddingBottom: "clamp(32px, 4vw, 52px)" }}>
           <div className="hero-copy">
-            <p className="eyebrow rise" data-d="1">Production validation for AI-built systems</p>
+            <p className="eyebrow rise" data-d="1">Verification for AI-built applications</p>
             <h1 className="display rise" data-d="2" style={{ fontSize: "clamp(2.3rem, 4.4vw, 3.7rem)", margin: "0 0 20px", lineHeight: 1.05, textWrap: "balance" }}>
               AI can build it. <span className="em">Nobody checked it</span>.
             </h1>
             <p className="rise" data-d="3" style={{ fontSize: "clamp(1.05rem, 1.3vw, 1.22rem)", color: "var(--fg-2)", maxWidth: 560, margin: "0 0 26px", lineHeight: 1.55 }}>
-              Vraelis is what checks now. It runs the flows you approve in a real browser against your deployed application, and shows what held and what broke, with the evidence from every step.
+              Vraelis is what checks now. It reads your deployed application, proposes the flows that matter, and runs the ones you approve in a real browser against the app your users actually receive. No SDK, no test files, nothing added to your codebase.
             </p>
             <div className="rise" data-d="4" style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
-              <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Validate a system <span aria-hidden>→</span></Link>
+              <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Check your application <span aria-hidden>→</span></Link>
               <Link href="/how-it-works" style={{ fontSize: 15, fontWeight: 600, color: "var(--fg-2)", textDecoration: "none", textUnderlineOffset: 4, borderBottom: "1px solid var(--line-3)", paddingBottom: 2 }}>See how it works</Link>
             </div>
             <p className="rise" data-d="4" style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-4)", margin: "16px 0 0", maxWidth: 500, lineHeight: 1.55 }}>

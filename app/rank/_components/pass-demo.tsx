@@ -27,9 +27,11 @@ function Pill({ tone, text }: { tone: ToneKey; text: string }) {
 // The approved requirements a run verifies, in order. The same requirements run in every scenario — a
 // scenario just reflects what the system actually did against a given build.
 const FLOWS = [
-  { name: "A record persists", expect: "Create it, then confirm it is still there on a fresh read." },
-  { name: "Access stays private", expect: "Another user must not be able to reach it." },
-  { name: "The core action holds", expect: "The primary workflow completes end to end." },
+  // Concrete flows, not abstractions. "A record persists" makes a reader translate; "sign up, create
+  // something, come back tomorrow, it is still there" is the thing they have actually worried about.
+  { name: "A new account keeps its data", expect: "Sign up, create something, return in a fresh session, and it is still there." },
+  { name: "A second account is denied", expect: "Another signed-in user must not be able to open it." },
+  { name: "Checkout grants access", expect: "Pay in test mode, then confirm the account actually gained the paid feature." },
 ] as const;
 
 // Scenarios, not a mandatory repair sequence. READY is the default. Customers never manufacture a failure.
@@ -54,7 +56,9 @@ const MODES: Mode[] = [
     verdict: {
       tone: "ready",
       pill: "READY",
-      title: "The system behaves as required",
+      // Scoped, not app-wide. A giant green "the system behaves as required" reads as a guarantee about
+      // the whole product; what actually happened is that the approved flows passed.
+      title: "All approved flows passed",
       count: "3 of 3 requirements held",
       line: "The complete approved contract passed. On a real run this decision carries the evidence behind it, tied to the exact build.",
     },
@@ -150,7 +154,7 @@ export function PassDemo() {
     <div className="win" style={{ textAlign: "left", boxShadow: "var(--shadow-lg)" }}>
       <style>{CSS}</style>
       <div className="win__bar">
-        <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15.5, color: "var(--fg-2)" }}>Production Pass</span>
+        <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15.5, color: "var(--fg-2)" }}>Verification run</span>
         <span style={{ fontFamily: "var(--font-code)", fontSize: 11.5, letterSpacing: "0.05em", color: "var(--fg-5)", marginLeft: 9 }}>interactive demonstration</span>
         <span style={{ marginLeft: "auto" }} aria-live="polite">
           {done ? <Pill tone={m.verdict.tone} text={m.verdict.pill} /> : <Pill tone="running" text="RUNNING" />}

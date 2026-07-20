@@ -166,7 +166,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
           <p style={{ fontSize: 14, color: "var(--fg-3)", lineHeight: 1.6, margin: "0 auto 18px", maxWidth: 460 }}>
             Your {guide.outputType.replace(/_/g, " ")} lives inside an app. Vraelis runs that app like production and tells you what blocks the launch, with the evidence to prove it. Your first Production Pass is free.
           </p>
-          <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Validate a system <span aria-hidden>→</span></Link>
+          <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Check your application <span aria-hidden>→</span></Link>
         </section>
       </article>
     </>
