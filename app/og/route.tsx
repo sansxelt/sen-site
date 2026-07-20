@@ -37,17 +37,17 @@ export function GET() {
         {/* headline + subline — matches the site hero voice */}
         <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
           <div style={{ display: "flex", fontSize: "72px", fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1.02, maxWidth: "1040px" }}>
-            AI can build it. That is not proof it works in production.
+            AI can build it. Nobody checked it.
           </div>
           <div style={{ display: "flex", width: "132px", height: "6px", borderRadius: "3px", background: "#16C081" }} />
           <div style={{ display: "flex", fontSize: "36px", fontWeight: 500, color: "rgba(255,255,255,0.66)", letterSpacing: "-0.01em", maxWidth: "1000px", lineHeight: 1.25 }}>
-            The behavior you require, run against the exact build, with evidence.
+            Vraelis runs the flows you approve against your deployed app, and shows what broke.
           </div>
         </div>
 
         {/* footer */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "24px", color: "rgba(255,255,255,0.42)" }}>
-          <div style={{ display: "flex" }}>Production verification for AI-built systems.</div>
+          <div style={{ display: "flex" }}>Checks that AI-built software actually works.</div>
           <div style={{ display: "flex" }}>vraelis.com</div>
         </div>
       </div>

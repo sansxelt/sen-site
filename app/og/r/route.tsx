@@ -32,8 +32,8 @@ function Card({ eyebrow, title, verdict }: { eyebrow: string; title: string; ver
 const brandCard = () => (
   <Card
     eyebrow="Vraelis"
-    title="Know how your system will behave before it reaches production."
-    verdict="Requirements, executed against your exact build, with evidence."
+    title="AI can build it. Nobody checked it."
+    verdict="The flows you approve, run against your deployed app, with evidence."
   />
 );
 

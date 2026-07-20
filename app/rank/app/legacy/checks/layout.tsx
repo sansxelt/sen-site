@@ -13,7 +13,7 @@ export default function LegacyChecksLayout({ children }: { children: React.React
         <p className="eyebrow" style={{ justifyContent: "center" }}>Retired feature</p>
         <h1 className="display" style={{ fontSize: "clamp(1.5rem, 3vw, 2.1rem)", margin: "8px 0 12px" }}>The AI output checker has been retired.</h1>
         <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.6, maxWidth: 460, margin: "0 auto 20px" }}>
-          Vraelis is now the production layer for AI-built software. Connect your app and run a Production Pass to get a launch decision with real browser evidence. Your past check data has not been deleted; contact us if you need an export.
+          Vraelis now checks AI-built web applications. Connect your app and run a check to see which of your approved flows held, with real browser evidence. Your past check data has not been deleted; contact us if you need an export.
         </p>
         <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
           <Link href="/applications/new" className="btn">Connect an app</Link>

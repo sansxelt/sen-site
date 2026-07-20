@@ -78,7 +78,7 @@ const STEPS: { k: string; t: string; d: string; i: string }[] = [
   { k: "02", t: "Bind the exact build & environment", d: "Every check is tied to a specific build, deployment, environment, role, and configuration: the exact thing under verification.", i: ICONS.build },
   { k: "03", t: "Execute approved verification flows", d: "Vraelis runs the approved flows against the real system in controlled execution, capturing what actually happens.", i: ICONS.execute },
   { k: "04", t: "Capture observed evidence", d: "Factual evidence at every step: what was expected, what was observed, and the record that proves it.", i: ICONS.eye },
-  { k: "05", t: "Receive a production decision", d: "One truthful decision you can act on (READY, BLOCKED, NEEDS REVIEW, or REPAIR VERIFIED), with the evidence behind it.", i: ICONS.shield },
+  { k: "05", t: "Receive a production decision", d: "One decision you can act on (READY, BLOCKED, NEEDS REVIEW, or REPAIR VERIFIED), scoped to the flows that ran, with the evidence behind it.", i: ICONS.shield },
   { k: "06", t: "Preserve history across releases", d: "Every result is remembered, so you can see how behavior held, or changed, across future builds and deployments.", i: ICONS.history },
 ];
 
@@ -157,7 +157,7 @@ export default function VraelisLanding() {
           <div className="sec-head">
             <p className="eyebrow">How it works</p>
             <h2 className="display">A repeatable process, not a one-time check.</h2>
-            <p>You define what must work and approve what runs. Vraelis executes it against the exact build, captures what actually happened, and returns one truthful decision, then remembers it across every release that follows. The same discipline runs on every build, so a passing result means the same thing today as it does three releases from now.</p>
+            <p>You define what must work and approve what runs. Vraelis executes it against the exact build, captures what actually happened, and returns one decision, then remembers it across every release that follows. The same flows run on every build, so results stay comparable release to release.</p>
           </div>
           <div className="tile-grid cols-2">
             {STEPS.map((s) => (
@@ -325,7 +325,7 @@ export default function VraelisLanding() {
           <div className="sec-head">
             <p className="eyebrow">What Vraelis is</p>
             <h2 className="display">A system for proving production behavior.</h2>
-            <p>Vraelis connects requirements, builds, execution, evidence, issues, and production history into one truthful decision. It is not a lighter-weight version of any of these:</p>
+            <p>Vraelis connects requirements, builds, execution, evidence, issues, and history into one decision. It is not a lighter-weight version of any of these:</p>
           </div>
           <div className="chips" style={{ justifyContent: "center" }}>
             {IS_NOT.map((x) => (
@@ -342,7 +342,7 @@ export default function VraelisLanding() {
         <div className="glow glow--soft" />
         <div className="wrap" style={{ maxWidth: 720, textAlign: "center" }}>
           <h2 className="display" style={{ fontSize: "clamp(2.1rem, 4.4vw, 3.4rem)", marginBottom: 18 }}>Find out how it behaves <span className="em">before your users do</span>.</h2>
-          <p className="lead-copy" style={{ margin: "0 auto 28px", textAlign: "center" }}>Define the behavior that has to hold, run it against the exact build, and get a truthful decision backed by evidence. Web and API verification are live.</p>
+          <p className="lead-copy" style={{ margin: "0 auto 28px", textAlign: "center" }}>Define the behavior that has to hold, run it against the exact build, and get a decision backed by evidence. Web checking is live; API checking is in beta.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Validate a web application <span aria-hidden>→</span></Link>
             <Link href="/how-it-works" className="btn btn--ghost btn--lg">See how it works</Link>
