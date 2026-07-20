@@ -10,6 +10,7 @@ import { getDomainAccessForEmail } from "@/lib/v-organization";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { listApplicationsForMember, latestRunByAppForApps, type Application, type RunSummary } from "@/lib/v-applications";
 import { listAllRuns, listAllIssues, overviewCounts, type PassRow, type IssueRow } from "@/lib/preflight/overview-db";
+import { getDisplayName } from "@/lib/v-account-profile";
 import { WorkspaceMemberView } from "./_workspace/workspace-member-view";
 import { DecisionMark } from "@/app/rank/_components/icons";
 
@@ -83,7 +84,7 @@ export default async function Dashboard() {
           <p className="eyebrow" style={{ justifyContent: "center" }}>Workspace</p>
           <h1 className="display" style={{ fontSize: "clamp(1.9rem, 4vw, 2.8rem)", marginBottom: 14 }}>Finish the engineering <span className="em">AI left behind</span>.</h1>
           <p className="lead-copy" style={{ margin: "0 auto 26px" }}>Sign in to connect your AI-built app and get a launch decision before your users find the blockers.</p>
-          <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Continue with Google</Link>
+          <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Sign in</Link>
         </div>
       </section>
     );
@@ -106,7 +107,7 @@ export default async function Dashboard() {
 
   const owner = email.toLowerCase();
   const preflightReady = await preflightDbReady();
-  const [bal, plan, domainAccess, apps, counts, recentPasses, openIssues] = await Promise.all([
+  const [bal, plan, domainAccess, apps, counts, recentPasses, openIssues, displayName] = await Promise.all([
     balance(email), getPlan(email), getDomainAccessForEmail(email),
     // App GRID includes shared apps (the caller's own + any workspace they belong to). The aggregate counts,
     // recent passes, and open issues below stay scoped to the caller's OWN activity (a teammate's shared-app
@@ -115,6 +116,7 @@ export default async function Dashboard() {
     preflightReady ? overviewCounts(owner) : Promise.resolve({ openCriticalIssues: 0, runningPasses: 0, verifiedRepairs: 0 }),
     preflightReady ? listAllRuns(owner, 5) : Promise.resolve([] as PassRow[]),
     preflightReady ? listAllIssues(owner, { status: "open", limit: 5 }) : Promise.resolve([] as IssueRow[]),
+    getDisplayName(email),
   ]);
   const latest = apps.length ? await latestRunByAppForApps(apps) : {};
   const planName = plan === "free" ? "Free" : plan.charAt(0).toUpperCase() + plan.slice(1);
@@ -128,7 +130,9 @@ export default async function Dashboard() {
       <div className="phead">
         <div>
           <p className="eyebrow">Vraelis Preflight</p>
-          <h1 className="display">Welcome back</h1>
+          {/* Greet the person. The display name is set on the account page and, until now, rendered
+              nowhere in the product. */}
+          <h1 className="display">Welcome back{displayName ? `, ${displayName}` : ""}</h1>
         </div>
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
           <span className="badge-now">{planName} plan</span>

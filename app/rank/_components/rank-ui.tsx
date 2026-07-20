@@ -43,8 +43,16 @@ const APP_NAV: { group: string; items: { href: string; label: string; d: string 
   ] },
 ];
 
+// Signing out of the product must land on the MARKETING site, not on app.vraelis.com. A bare "/" keeps you
+// on the app subdomain, which after sign-out is a stub page with a single sign-in button and no way back to
+// anything. Cross-host, so it has to be absolute; on localhost there is no second host, so "/" is correct.
+function signOutTarget(): string {
+  if (typeof window === "undefined") return "/";
+  return window.location.hostname === "app.vraelis.com" ? "https://vraelis.com" : "/";
+}
+
 export function SignOutButton({ className = "btn btn--ghost", label = "Sign out" }: { className?: string; label?: string }) {
-  return <button onClick={() => signOut({ callbackUrl: "/" })} className={className}>{label}</button>;
+  return <button onClick={() => signOut({ callbackUrl: signOutTarget() })} className={className}>{label}</button>;
 }
 
 function Brand({ href }: { href: string }) {
@@ -283,7 +291,7 @@ function AppTopbar({ email }: { email: string | null }) {
             {ACCOUNT_MENU_FOOT.map((l) => (
               <Link key={l.href} href={l.href} style={item}><span style={itemIcon}><Ic d={l.d} size={15} sw={1.8} /></span>{l.label}</Link>
             ))}
-            <button onClick={() => signOut({ callbackUrl: "/" })} style={{ ...item, width: "100%", textAlign: "left", color: "var(--err)", background: "transparent", border: "none", cursor: "pointer", fontFamily: "inherit" }}>
+            <button onClick={() => signOut({ callbackUrl: signOutTarget() })} style={{ ...item, width: "100%", textAlign: "left", color: "var(--err)", background: "transparent", border: "none", cursor: "pointer", fontFamily: "inherit" }}>
               <span style={{ ...itemIcon, color: "var(--err)" }}><Ic d={I.signout} size={15} sw={1.8} /></span>Sign out
             </button>
           </div>
@@ -344,7 +352,7 @@ function AppSidebar({ humanEval }: { humanEval: boolean }) {
       ))}
       <div className="app-side__foot" style={{ marginTop: "auto", position: "sticky", bottom: 0, background: "var(--bg-0)", paddingTop: 12, paddingBottom: 4, borderTop: "1px solid var(--line-1)" }}>
         <a href="https://vraelis.com" className="slink" style={{ color: "var(--fg-3)" }}><span className="slink__i"><Ic d={I.back} /></span>Back to site</a>
-        <button onClick={() => signOut({ callbackUrl: "/" })} className="slink" style={{ color: "var(--fg-3)", width: "100%", background: "none", border: "none", cursor: "pointer", textAlign: "left", fontFamily: "inherit", fontSize: 15.5, fontWeight: 500 }}><span className="slink__i"><Ic d={I.signout} /></span>Sign out</button>
+        <button onClick={() => signOut({ callbackUrl: signOutTarget() })} className="slink" style={{ color: "var(--fg-3)", width: "100%", background: "none", border: "none", cursor: "pointer", textAlign: "left", fontFamily: "inherit", fontSize: 15.5, fontWeight: 500 }}><span className="slink__i"><Ic d={I.signout} /></span>Sign out</button>
       </div>
     </aside>
   );
