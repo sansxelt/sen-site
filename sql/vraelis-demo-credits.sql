@@ -11,11 +11,17 @@
 -- catch. The demo run has to be a real one, launched from the UI. This file only removes the reason a
 -- reviewer could not launch it.
 
--- 1) Credits. v_credit_ledger is APPEND-ONLY: balance is the sum of deltas, so this adds rather than sets.
---    ext_ref makes it idempotent, so re-running this file never double-grants.
+-- 1) Credits. v_credit_ledger is APPEND-ONLY: balance is the sum of deltas, so this ADDS rather than sets.
+--    Idempotency uses "where not exists" rather than ON CONFLICT on purpose. The unique index here is
+--    composite (v_ledger_extref_uidx over user_id, reason, ext_ref), so ON CONFLICT (ext_ref) has no
+--    matching constraint and fails with 42P10. Guarding with a subquery works whatever the index shape is,
+--    which matters for a file that gets run by hand against production.
 insert into v_credit_ledger (user_id, delta, reason, bucket, ext_ref, expires_at)
-values ('demo@vraelis.com', 200, 'yc_reviewer_demo_grant', 'purchased', 'yc-demo-grant-fall-2026', null)
-on conflict (ext_ref) do nothing;
+select 'demo@vraelis.com', 200, 'yc_reviewer_demo_grant', 'purchased', 'yc-demo-grant-fall-2026', null
+where not exists (
+  select 1 from v_credit_ledger
+  where user_id = 'demo@vraelis.com' and ext_ref = 'yc-demo-grant-fall-2026'
+);
 
 -- 2) Plan. Only needed when VRAELIS_PASS_PRICING=1, where the free tier is ONE lifetime pass capped at
 --    three flows (lib/preflight/entitlements-v1.ts -> gatePassLaunch). One run may well be enough for a
