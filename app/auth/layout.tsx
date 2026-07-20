@@ -1,10 +1,51 @@
 import type { ReactNode } from "react";
-import { ZoneShell } from "@/components/zone-shell";
+import Link from "next/link";
 
-// All /auth/* pages (verify-email, confirm-signup, error,
-// reset-password, verified, auto-signin) inherit the zone-aware
-// shell so the auth round-trip stays in the user's current zone
-// visually.
+// Auth round-trip shell for /auth/* (verify-email, confirm-signup, verified, reset-password, error,
+// auto-signin).
+//
+// These used to render inside ZoneShell, a pinned DARK surface with a lowercase "vraelis." wordmark. That
+// shell predates the light Vraelis theme: /signin was moved onto its own light surface and these pages were
+// not, so signing up walked you from a cream sign-in screen onto a near-black confirmation screen with a
+// different wordmark, in the middle of the flow. It read like a different product.
+//
+// ZoneShell is deliberately left alone rather than flipped to light: /checkout still depends on its dark
+// surface and carries hardcoded dark Tailwind classes that would go invisible on a light ground. The pages
+// here are already token-based (var(--fg-*), var(--bg-*), var(--line-*)), so they render correctly on the
+// cream theme with no per-page changes.
 export default function AuthLayout({ children }: { children: ReactNode }) {
-  return <ZoneShell>{children}</ZoneShell>;
+  return (
+    <div style={{ minHeight: "100svh", background: "var(--bg-0)", color: "var(--fg-1)" }}>
+      <header
+        style={{
+          position: "sticky", top: 0, zIndex: 40,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          height: 64, padding: "0 clamp(20px, 4vw, 64px)",
+          background: "rgba(250,248,244,0.88)",
+          backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+          borderBottom: "1px solid var(--line-1)",
+        }}
+      >
+        {/* Same wordmark treatment as the rest of the site. The old shell used a lowercase "vraelis." with a
+            green period, which appears nowhere else and made this screen look like another company. */}
+        <Link
+          href="/"
+          style={{
+            fontFamily: "var(--font-display)", fontSize: 21, fontWeight: 700,
+            letterSpacing: "-0.035em", lineHeight: 1,
+            color: "var(--fg-1)", textDecoration: "none",
+          }}
+        >
+          Vraelis
+        </Link>
+        <Link href="/" style={{ fontSize: 13, color: "var(--fg-3)", textDecoration: "none" }}>
+          &larr; Back to site
+        </Link>
+      </header>
+
+      <main style={{ display: "flex", justifyContent: "center", padding: "clamp(28px, 6vw, 72px) var(--gutter) 80px" }}>
+        <div style={{ width: "100%", maxWidth: 560 }}>{children}</div>
+      </main>
+    </div>
+  );
 }
