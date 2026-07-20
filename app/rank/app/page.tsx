@@ -162,7 +162,7 @@ export default async function Dashboard() {
       {/* overview stats: the production posture, at a glance */}
       <div className="tile-grid cols-3" style={{ marginBottom: 24 }}>
         <div className="stat"><div className="stat__l">Applications</div><div className="stat__v tnum">{apps.length}</div><div className="stat__s"><Link href="/applications" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Open all →</Link></div></div>
-        <div className="stat"><div className="stat__l">Ready</div><div className="stat__v tnum" style={{ color: readyCount ? "var(--acc-deep)" : undefined }}>{readyCount}</div><div className="stat__s">cleared to launch</div></div>
+        <div className="stat"><div className="stat__l">Ready</div><div className="stat__v tnum" style={{ color: readyCount ? "var(--acc-deep)" : undefined }}>{readyCount}</div><div className="stat__s">passed their last check</div></div>
         <div className="stat"><div className="stat__l">Blocked</div><div className="stat__v tnum" style={{ color: blockedCount ? "#C0392B" : undefined }}>{blockedCount}</div><div className="stat__s">not ready yet</div></div>
         <div className="stat"><div className="stat__l">Open blockers</div><div className="stat__v tnum" style={{ color: counts.openCriticalIssues ? "#C0392B" : undefined }}>{counts.openCriticalIssues}</div><div className="stat__s"><Link href="/issues" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>View issues →</Link></div></div>
         <div className="stat"><div className="stat__l">Verifying now</div><div className="stat__v tnum">{counts.runningPasses}</div><div className="stat__s"><Link href="/passes" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>View results →</Link></div></div>

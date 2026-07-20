@@ -129,7 +129,7 @@ export function ApiWorkspace({ appId, initial, canEdit, canLaunch }: { appId: st
       {/* 1. Target + build identity */}
       <section style={card}>
         <h2 style={h2}>API target</h2>
-        <p style={{ color: "var(--fg-3)", fontSize: 13, marginTop: 0 }}>The API you want Vraelis to verify.</p>
+        <p style={{ color: "var(--fg-3)", fontSize: 13, marginTop: 0 }}>The API you want Vraelis to check.</p>
         {canEdit ? (
           <>
             <div style={{ display: "grid", gap: 12, gridTemplateColumns: "1fr 1fr" }}>

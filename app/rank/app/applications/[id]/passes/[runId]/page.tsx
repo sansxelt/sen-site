@@ -142,17 +142,21 @@ const FAILURE_LINE: Record<string, string> = {
 // The plain-English verdict sentence under the big decision word. Counts come straight from the run
 // summary (or the deterministic issues) — nothing invented.
 function verdictLine(decision: string | null, state: string, summary: Record<string, unknown>, criticalIssueCount: number, terminal: boolean, progress: string, failureCode: string | null): string {
-  if (decision === "ready") return "Every critical flow held. This deployment is cleared to launch.";
+  // Scope, not clearance: a run covers the flows in the approved contract and says nothing about the rest
+  // of the app. "Cleared to launch" claimed an authority no run can carry.
+  if (decision === "ready") return "Every critical flow in your contract passed on this deployment.";
   if (decision === "repair_verified") {
     // A targeted rerun proved its selected repair on this target; it did NOT run the other critical flows,
     // so it never certifies the deployment. Honest copy: verified repair, readiness still pending.
     const n = num(summary.selected_total) || num(summary.flows_total) || 1;
-    return `${n} selected flow${n === 1 ? "" : "s"} passed. The reported blocker${n === 1 ? " is" : "s are"} resolved. Full critical verification is still required before this deployment can be marked READY.`;
+    // "No longer reproduced" is what a rerun shows. "Resolved" claims the defect is fixed, which one
+    // passing run cannot establish.
+    return `${n} selected flow${n === 1 ? "" : "s"} passed. The reported blocker${n === 1 ? " was" : "s were"} not reproduced. Full critical verification is still required before this deployment can be marked READY.`;
   }
   if (decision === "needs_review") {
     const pb = num(summary.policy_blocked);
     if (pb > 0) return `${pb} flow${pb === 1 ? "" : "s"} could not run: your test boundaries do not permit an action they require. Widen the boundaries and run again.`;
-    return "Nearly there. A non-critical flow needs a human call.";
+    return "A non-critical flow needs your review.";
   }
   if (decision === "blocked") {
     const n = Math.max(0, num(summary.critical_total) - num(summary.critical_passed)) || criticalIssueCount;
@@ -648,7 +652,7 @@ export default async function RunReportPage({ params }: { params: Promise<{ id: 
           <div style={{ border: "1px solid var(--line-1)", borderLeft: "4px solid var(--acc-line)", borderRadius: "var(--r-md)", background: "var(--bg-1)", padding: "16px 20px" }}>
             <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--fg-1)", display: "flex", alignItems: "center", gap: 8 }}>
               <span aria-hidden style={{ display: "inline-flex", color: "var(--acc-deep)" }}><Ic d={I.check} size={15} sw={2.2} /></span>
-              No launch blockers
+              No blockers in the flows that ran
             </div>
             <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55, margin: "4px 0 0" }}>Every critical flow passed against this deployment.</p>
           </div>

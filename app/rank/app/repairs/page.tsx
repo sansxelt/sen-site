@@ -114,7 +114,7 @@ export default async function RepairsPage() {
         <p className="eyebrow">Vraelis Preflight</p>
         <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "6px 0 10px" }}>Repairs</h1>
         <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.6, margin: 0, maxWidth: 620 }}>
-          A repair is a fix prompt for your builder plus the rerun that proves the blocker is closed. Vraelis does not modify your code in V1.
+          A repair is a fix prompt for your builder plus the rerun that shows whether the blocker still reproduces. Vraelis does not modify your code in V1.
         </p>
       </div>
 
@@ -122,7 +122,7 @@ export default async function RepairsPage() {
         <div className="empty">
           <EmptyIcon d={I.wrench} />
           <h3>No verified repairs yet</h3>
-          <p>Open a blocker from a Production Pass to get repair guidance. When you push a fix, Vraelis reruns the exact failed check and records the verification here.</p>
+          <p>Open a blocker from a Production Pass to get repair guidance. When you push a fix, Vraelis reruns the exact failed check and records the result here.</p>
           <Link href="/issues" className="btn">View issues</Link>
         </div>
       ) : (

@@ -244,7 +244,7 @@ export default function Demo() {
               <Illustrative />
             </div>
             <p style={{ fontSize: 15, color: "var(--fg-2)", lineHeight: 1.65, margin: 0 }}>
-              Every critical flow held. The same evidence that blocked the launch is now the record that it is safe to ship, and the next Production Pass starts from a known-good baseline.
+              Every critical flow in the contract held. The same evidence that blocked the launch is now the record that those flows passed on this build, and the next Production Pass starts from that baseline.
             </p>
           </div>
         </div>

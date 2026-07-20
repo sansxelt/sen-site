@@ -270,7 +270,7 @@ export default function VraelisLanding() {
         <div className="wrap">
           <div className="sec-head">
             <p className="eyebrow">Runtime coverage</p>
-            <h2 className="display">Validate every part of your AI system.</h2>
+            <h2 className="display">What Vraelis checks today.</h2>
             <p style={{ fontSize: "clamp(1.05rem, 1.5vw, 1.2rem)", color: "var(--fg-2)", marginBottom: 10 }}>Web and APIs today, on an architecture built to reach further.</p>
             <p>Vraelis validates web applications and APIs today. Its shared verification architecture is designed to extend across mobile, desktop, SDK-instrumented systems, simulators, robotics, and connected devices.</p>
           </div>

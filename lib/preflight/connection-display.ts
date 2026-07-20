@@ -64,7 +64,9 @@ export const FEATURE_USE: Record<string, string> = {
   webhook: "Receives the launch decision when a verification run finishes (signed POST).",
   slack: "Posts the launch decision to your Slack channel when a verification run finishes.",
   openapi: "Stored as application context. Not yet read during verification.",
-  test_account: "Authenticated signed-in flows (coming later; credentials stay sealed until then).",
+  // This said "coming later" while worker/preflight/execute-run.ts has been signing in with these
+  // credentials for real. Understating a shipped capability is the same defect as overstating one.
+  test_account: "Signing in as this role inside your approved flows. Credentials stay sealed and are never displayed, logged, or screenshotted.",
 };
 // Some providers can be connected two ways, and the two ways reach different amounts of data. Pasting a
 // Supabase project URL is metadata; authorizing Supabase over OAuth hands Vraelis a management-API token.

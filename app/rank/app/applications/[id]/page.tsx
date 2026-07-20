@@ -347,7 +347,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
               The previous launch health stands until full verification completes. */}
           {repairIsSeparate && latestRepair ? (
             <p style={{ fontSize: 13.5, fontWeight: 600, color: "var(--acc-deep)", margin: "12px 0 0", lineHeight: 1.55 }}>
-              Latest repair: {repairResolvedTitles.length ? `${repairResolvedTitles.join(", ")} verified as resolved` : "the selected flows passed and their blockers are verified as resolved"}.{" "}
+              Latest repair: {repairResolvedTitles.length ? `${repairResolvedTitles.join(", ")} not reproduced on rerun` : "the selected flows passed and their blockers were not reproduced"}.{" "}
               <Link href={`/applications/${id}/passes/${latestRepair.id}`} style={{ color: "var(--acc-deep)" }}>View repair report</Link>
             </p>
           ) : null}

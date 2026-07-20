@@ -112,7 +112,9 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
 
 function Footer() {
   const col = { display: "flex", flexDirection: "column", gap: 6 } as const;
-  const productLinks: [string, string][] = [["/how-it-works", "How it works"], ["/pricing", "Pricing"], ["/enterprise", "Enterprise"], ["/signin?callbackUrl=%2Fapp", "Validate a system"]];
+  // Limitations sits in Product, not Legal, on purpose: it is a description of what the thing does, and
+  // burying it under legal reads like a disclaimer somebody was made to write.
+  const productLinks: [string, string][] = [["/how-it-works", "How it works"], ["/limitations", "Limitations"], ["/pricing", "Pricing"], ["/enterprise", "Enterprise"], ["/signin?callbackUrl=%2Fapp", "Validate a system"]];
   // minHeight + inline-flex gives each footer link a >=24px touch target (the text stays put; the hit area
   // grows vertically). Paired with the tighter col gap above so total row rhythm is unchanged.
   const a = { color: "var(--fg-3)", textDecoration: "none", fontSize: 13.5, display: "inline-flex", alignItems: "center", minHeight: 24 } as const;

@@ -112,7 +112,7 @@ export default function EnterprisePage() {
             ["OIDC secrets encrypted", "An organization's OIDC client secret is encrypted at rest (AES-256-GCM) and never returned to the client or logged."],
             ["DNS tokens hashed", "Domain verification stores only the SHA-256 of the DNS TXT token. The raw token is shown once and never persisted."],
             ["Private run evidence", "Screenshots and traces live in a private bucket. No public URL is ever produced, and reads go through short-lived, owner-authorized signed URLs."],
-            ["Test-only runs", "Preflight runs drive the app in test mode. Stripe stays in test mode, and nothing is charged, deleted, or emailed to real users."],
+            ["You choose what a run can reach", "Point runs at a preview or staging deployment and keep Stripe in test mode. Vraelis drives the app from the outside, so a run can touch whatever that environment touches."],
             ["Payments via Stripe", "Card data is processed securely by Stripe. Vraelis never sees card numbers. Your billing overview stays in Vraelis."],
           ].map(([t, d]) => (
             <div key={t} className="acard">

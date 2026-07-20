@@ -105,7 +105,7 @@ export function FlowsSection({ contractId, initial, roles }: { contractId: strin
         <div>
           <div style={catHead}>Test flows</div>
           <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5, margin: 0, maxWidth: 520 }}>
-            The journeys Vraelis runs in a real browser to prove this app keeps its promises. A flow can sign in by role, act, and verify the result.
+            The journeys Vraelis runs in a real browser to check whether this app keeps the promises you approved. A flow can sign in by role, act, and verify the result.
           </p>
         </div>
         {editing === null ? (

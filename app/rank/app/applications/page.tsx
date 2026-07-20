@@ -111,7 +111,7 @@ export default async function ApplicationsPage() {
           <p className="eyebrow">Vraelis Preflight</p>
           <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "6px 0 10px" }}>Applications</h1>
           <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.6, margin: 0, maxWidth: 560 }}>
-            Connect an AI-built app and Vraelis finds the launch blockers before your users do.
+            Connect an AI-built app and Vraelis looks for launch blockers in the flows you approve, before your users hit them.
           </p>
         </div>
         <Link href="/applications/new" className="btn" style={{ flex: "none" }}>Connect an app <span aria-hidden>→</span></Link>
@@ -121,7 +121,7 @@ export default async function ApplicationsPage() {
         <div className="empty">
           <EmptyIcon d={I.layers} />
           <h3>No applications yet</h3>
-          <p>A preflight walks your live app the way a user would, then reports the critical flows that break before your users hit them. Connect your first app to begin.</p>
+          <p>A preflight walks your live app the way a user would, then reports which of your approved critical flows broke. Connect your first app to begin.</p>
           <Link href="/applications/new" className="btn">Connect an app</Link>
         </div>
       ) : (

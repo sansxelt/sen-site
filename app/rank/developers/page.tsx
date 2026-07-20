@@ -148,9 +148,9 @@ export default function DevelopersPage() {
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "clamp(24px, 4vw, 48px)", alignItems: "start" }} className="cols-stack">
             <div>
               <p className="eyebrow">Private by construction</p>
-              <h2 className="display" style={{ fontSize: "clamp(1.5rem, 2.6vw, 2rem)", marginBottom: 12 }}>Evidence that never leaks.</h2>
+              <h2 className="display" style={{ fontSize: "clamp(1.5rem, 2.6vw, 2rem)", marginBottom: 12 }}>Evidence stays scoped to your account.</h2>
               <p className="lead-copy" style={{ marginBottom: 12 }}>Screenshots and traces live in a private bucket. There is no public URL. A request for an artifact is owner-checked against the run, then answered with a short-lived signed URL that expires in minutes. API keys are server-side secrets, shown once and stored only as a hash.</p>
-              <p style={{ fontSize: 13, color: "var(--fg-4)", lineHeight: 1.6 }}>Runs are test-only. Stripe stays in test mode, and nothing is charged, deleted, or emailed to your real users.</p>
+              <p style={{ fontSize: 13, color: "var(--fg-4)", lineHeight: 1.6 }}>You choose what a run can reach. Point it at a preview or staging deployment and keep Stripe in test mode. Vraelis drives your app from the outside, so a run can touch whatever that environment touches.</p>
             </div>
             <div>
               <p className="eyebrow">Deterministic and explainable</p>

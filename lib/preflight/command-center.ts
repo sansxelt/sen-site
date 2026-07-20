@@ -50,7 +50,7 @@ export function nextAction(s: CommandState): NextAction {
   }
   // 3. Approved contract but no runnable flows: author the journeys.
   if (s.eligibleFlowCount === 0) {
-    return { label: "Add flows to your contract", href: `${app}/contract`, why: "Flows are the journeys Vraelis walks to prove each requirement holds; add at least one.", tone: "primary" };
+    return { label: "Add flows to your contract", href: `${app}/contract`, why: "Flows are the journeys Vraelis walks to check each requirement; add at least one.", tone: "primary" };
   }
   // 4. A pass is running: the next thing is to watch it.
   if (s.runActive && s.latestRunId) {
@@ -75,7 +75,7 @@ export function nextAction(s: CommandState): NextAction {
   }
   // 9. READY and nothing pending: the app is in good shape; a new run is available but not urgent.
   if (s.decision === "ready") {
-    return { label: "Re-verify", href: `${app}`, why: "This deployment is verified. Run it again after your next change.", tone: "quiet", launch: { flowIds: "eligible" } };
+    return { label: "Re-verify", href: `${app}`, why: "The flows in your contract passed on this deployment. Run it again after your next change.", tone: "quiet", launch: { flowIds: "eligible" } };
   }
   // 10. Approved contract with runnable flows and no prior decision: the first run. LAUNCHES the pass.
   return { label: "Verify this deployment", href: `${app}`, why: "Run a Production Pass to see if this deployment is ready: a launch decision with evidence.", tone: "primary", launch: { flowIds: "eligible" } };
@@ -91,7 +91,7 @@ export function stateRibbon(s: CommandState): RibbonFact[] {
   if (s.deploymentLabel) out.push({ key: "deploy", text: s.deploymentLabel, tone: "muted" });
   // Verification status of the CURRENT deployment.
   if (s.newerUnverifiedDeploy) out.push({ key: "verif", text: "newer deploy unverified", tone: "warn" });
-  else if (s.decision === "ready") out.push({ key: "verif", text: "verified", tone: "good" });
+  else if (s.decision === "ready") out.push({ key: "verif", text: "contract flows passed", tone: "good" });
   else if (s.decision === null && !s.runActive) out.push({ key: "verif", text: "not tested", tone: "muted" });
   if (s.blockerCount > 0) out.push({ key: "block", text: `${s.blockerCount} blocker${s.blockerCount === 1 ? "" : "s"}`, tone: "bad" });
   if (s.repairPendingFullVerify) out.push({ key: "repair", text: "repair awaiting full verification", tone: "warn" });

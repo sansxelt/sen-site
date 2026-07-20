@@ -101,7 +101,7 @@ export default function FreeReportPage() {
             <Link href="/how-it-works" className="btn btn--ghost btn--lg">See how it works</Link>
           </div>
           <p style={{ fontSize: 12.5, color: "var(--fg-5)", marginTop: 18, lineHeight: 1.6 }}>
-            Vraelis is in early access. You approve every flow before anything runs, and runs are test-only: no real charges, and nothing gets deleted.
+            Vraelis is in early access. You approve every flow before anything runs, and you choose the environment it runs against. Point it at a preview or staging deployment with Stripe in test mode.
           </p>
         </div>
       </section>

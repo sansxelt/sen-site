@@ -91,7 +91,11 @@ ok("github never-accesses: metadata only, no code write access", neverAccesses("
 ok("supabase never-accesses: no database credentials, no rows", neverAccesses("supabase").includes("No database credentials") && neverAccesses("supabase").includes("no rows"));
 ok("stripe never-accesses: no live keys, no card data", neverAccesses("stripe_test").includes("No live keys") && neverAccesses("stripe_test").includes("no card data"));
 ok("test account never-accesses: sealed, never displayed", neverAccesses("test_account").includes("sealed") && neverAccesses("test_account").includes("never displayed"));
-ok("test-account feature use is honest about authenticated flows coming later", featureUse("test_account").toLowerCase().includes("coming"));
+// Signed-in flows DO run (worker/preflight/execute-run.ts calls signInAs), so the old assertion here was
+// pinning copy that understated a shipped capability. What must stay true is the sealed-credential promise.
+ok("test-account feature use describes the signing-in that actually happens, and keeps the sealed promise",
+  /sign(ing)? in/i.test(featureUse("test_account")) && /sealed/i.test(featureUse("test_account"))
+  && !/coming later/i.test(featureUse("test_account")));
 
 // Integration honesty: a stored-but-inert connection must SAY it is not yet read during verification,
 // and a wired one (supabase/stripe/sentry seed requirements; deploy providers set the URL) must NOT.
