@@ -83,8 +83,19 @@ export function keyFingerprint(owner: string, applicationId: string, clientKey: 
   return sha(`${owner.trim().toLowerCase()} ${applicationId} ${clientKey}`).slice(0, 24);
 }
 
+// CANONICAL BY CONSTRUCTION. The caller's JSON never reaches this hash: the route extracts the fields it
+// acts on and this function rebuilds them in a fixed key order, so a body with reordered keys, or one using
+// the deployment_url spelling instead of deploymentUrl, hashes identically. Flow ids are deduplicated and
+// sorted for the same reason, since selecting the same flows in a different order is the same request.
+//
+// The fields hashed here are exactly the fields that change WHAT EXECUTES: which application, against which
+// URL, running which flows. That is deliberate, not an oversight. Hashing the whole body would break a
+// legitimate retry from a client that added a harmless field, and hashing less would let a changed request
+// pass as a replay. preflight-api-key-access-verify.ts asserts the run route consumes no OTHER meaningful
+// body field, so adding one later without extending this fingerprint fails the suite.
 export function payloadFingerprint(input: { applicationId: string; deploymentUrl: string; flowIds: string[] }): string {
-  return sha(JSON.stringify({ app: input.applicationId, url: input.deploymentUrl, flows: [...input.flowIds].sort() })).slice(0, 16);
+  const flows = Array.from(new Set(input.flowIds)).sort();
+  return sha(JSON.stringify({ app: input.applicationId, url: input.deploymentUrl, flows })).slice(0, 16);
 }
 
 export function buildSubmissionId(keyFp: string, payloadFp: string): string {

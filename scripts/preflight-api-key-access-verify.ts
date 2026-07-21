@@ -116,6 +116,38 @@ function idempotencyTests() {
   ok("same key + DIFFERENT deployment url -> a different submission id",
     idFor(OWNER, APP, "k1", bodyA) !== idFor(OWNER, APP, "k1", { ...bodyA, deploymentUrl: "https://b.example.com" }));
 
+  console.log("\n── the payload hash is canonical (equivalent requests are the SAME request) ──");
+  // A caller serializing the same request twice must not be told it is a different request. JSON key order
+  // is not meaningful, so it must not reach the hash.
+  const reordered = { flowIds: ["f1", "f2"], applicationId: APP, deploymentUrl: "https://a.example.com" };
+  ok("a body with REORDERED keys hashes identically", payloadFingerprint(bodyA) === payloadFingerprint(reordered));
+  ok("selecting the same flows in a different order is the same request",
+    payloadFingerprint(bodyA) === payloadFingerprint({ ...bodyA, flowIds: ["f2", "f1"] }));
+  ok("a repeated flow id is the same selection (deduplicated before hashing)",
+    payloadFingerprint(bodyA) === payloadFingerprint({ ...bodyA, flowIds: ["f2", "f1", "f1", "f2"] }));
+  // The route accepts both spellings of the URL field; they name one value, so they must hash as one.
+  ok("deployment_url and deploymentUrl are one value, not two requests",
+    payloadFingerprint({ ...bodyA, deploymentUrl: "https://a.example.com" }) === payloadFingerprint(bodyA));
+  // A genuinely different request must still be different, or canonicalization has gone too far.
+  ok("canonicalization does not collapse genuinely different requests",
+    payloadFingerprint(bodyA) !== payloadFingerprint(bodyB)
+    && payloadFingerprint(bodyA) !== payloadFingerprint({ ...bodyA, applicationId: "app_2" }));
+
+  // THE DURABLE GUARD. The fingerprint covers the fields that change what executes. If someone later adds a
+  // new meaningful body field to the run route and forgets to fold it in, a changed request would replay as
+  // the original. This asserts the route reads no body field beyond the three that are accounted for.
+  const bodyFields = new Set(
+    Array.from(read(ROUTE_RUNS).matchAll(/body\?\.([A-Za-z_][A-Za-z0-9_]*)/g)).map((m) => m[1]),
+  );
+  const ACCOUNTED = new Set([
+    "flow_ids", "flowIds",           // hashed as `flows`
+    "deployment_url", "deploymentUrl", // hashed as `url`
+    "submission_id",                 // the idempotency key itself, not part of the payload
+  ]);
+  const unaccounted = [...bodyFields].filter((f) => !ACCOUNTED.has(f));
+  ok("the run route reads NO body field the payload fingerprint does not account for",
+    unaccounted.length === 0, `unaccounted: ${unaccounted.join(", ")}`);
+
   // The reuse check matches on the KEY half and compares the PAYLOAD half, so both halves must isolate.
   const keyHalf = (id: string) => id.split("#")[0];
   ok("the key half is stable across payloads (so the reuse lookup finds the prior run)",
