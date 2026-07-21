@@ -88,7 +88,21 @@ async function lifecycleV1() {
   const badKey = await call("POST", "/v1/verifications", { key: "vr_live_deadbeefdeadbeefdeadbeef", body: { deployment_url: url, claim } });
   ok("an unknown key is refused", badKey.status === 401, `got ${badKey.status}: ${badKey.raw.slice(0, 160)}`);
   const badBody = await call("POST", "/v1/verifications", { body: { deployment_url: url } });
-  ok("a missing claim is a validation error, not a charge", badBody.status === 400, `got ${badBody.status}`);
+  // This is also the first call that reaches the scope check with the REAL key: the three above deliberately
+  // use no key or a fake one. The route order is flag check, then resolvePrincipal, then body validation, so
+  // a 403 lands BEFORE the body is ever looked at, and the only 403 the resolver returns is
+  // insufficient_scope. That means the key is wrong, not the request, and it should say so rather than
+  // making someone reason backwards through the route to work it out.
+  if (badBody.status === 403) {
+    ok("the key is allowed to launch runs", false,
+      "403 insufficient_scope: this key is missing preflight:run:create.\n"
+      + '      Revoke it, then create a new key with Preflight access set to "Launch runs".\n'
+      + `      server said: ${badBody.raw.slice(0, 200)}`);
+    console.log("\n  STOPPING: nothing below this can pass with a key that cannot launch a run.");
+    return;
+  }
+  ok("a missing claim is a validation error, not a charge", badBody.status === 400,
+    `got ${badBody.status}: ${badBody.raw.slice(0, 200)}`);
 
   if (!APPROVED) {
     console.log("\n  STOP. The next step runs a real verification and charges the account.");
