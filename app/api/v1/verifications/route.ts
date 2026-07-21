@@ -26,7 +26,8 @@ import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { unsafeHttpsUrlReason } from "@/lib/safe-fetch";
 import { laneApplication, synthesizeClaim, prepareVerification } from "@/lib/preflight/verification-lane";
 import { runIdentity } from "@/lib/preflight/runs-db";
-import { getContractById } from "@/lib/v-applications";
+import { getContractById, listRequirements } from "@/lib/v-applications";
+import { reserve, markLaunched, markFailed, verificationFingerprint } from "@/lib/preflight/verification-idempotency";
 import { apiError, requestId } from "../_lib";
 import { toVerificationId, canonicalClaim } from "./_shared";
 
@@ -58,11 +59,52 @@ export async function POST(req: Request) {
     return apiError("validation_error", "claim needs to describe an outcome, for example what a user does and what should be true afterwards.", 400, rid);
   }
 
+  // IDEMPOTENCY, DECIDED BEFORE ANY WORK. Synthesis is a model call and a contract write; a retry must not
+  // pay for either. The reservation is atomic (a unique row per owner+key), so two simultaneous identical
+  // requests cannot both begin synthesis: one owns execution, the rest resolve to its result.
+  //
+  // Only an "owned" reservation proceeds. Everything else returns here, before laneApplication, synthesis,
+  // contract creation, the run, the hold, or the charge. "unavailable" means migration 17 is not applied
+  // yet; the code falls through to the post-hoc reconciliation still in place below, which is correct for
+  // charges just wasteful on retries.
+  const idemKey = req.headers.get("idempotency-key");
+  let ownsReservation = false;
+  if (idemKey) {
+    const fp = verificationFingerprint(deploymentUrl, claim);
+    const r = await reserve(p.principal.email, idemKey, fp);
+    if (r.outcome === "replay") {
+      // An identical request already launched. Return the ORIGINAL verification with no synthesis, contract,
+      // run, hold, or charge. Requirements are read from the existing contract so the response shape matches.
+      const idn = await runIdentity(p.principal.email, r.runId);
+      const reqs = idn?.contractId
+        ? (await listRequirements(p.principal.email, idn.contractId)).filter((x) => x.enabled).map((x) => x.requirement)
+        : [];
+      await logKeyUsage(p.principal, { endpoint: "POST /v1/verifications", status: 200, runId: r.runId });
+      const vid = toVerificationId(r.runId);
+      return Response.json({ verification_id: vid, state: "running", status_url: `/v1/verifications/${vid}`, claim, requirements: reqs, human_reviewed: false }, { status: 200, headers: { "X-Request-Id": rid } });
+    }
+    if (r.outcome === "conflict") {
+      await logKeyUsage(p.principal, { endpoint: "POST /v1/verifications", status: 409 });
+      return Response.json({ error: { code: "idempotency_key_reused", message: "That idempotency key was already used for a different verification. Use a new key, or resend the original request exactly.", request_id: rid } }, { status: 409, headers: { "X-Request-Id": rid } });
+    }
+    if (r.outcome === "pending") {
+      // A concurrent identical request is already synthesizing. Do NOT start a second one; tell the caller to
+      // retry, and the retry will resolve to the same verification once it launches.
+      return Response.json({ error: { code: "verification_in_progress", message: "An identical verification is already being prepared. Retry in a moment.", request_id: rid } }, { status: 409, headers: { "X-Request-Id": rid, "Retry-After": "3" } });
+    }
+    ownsReservation = r.outcome === "owned";
+  }
+
+  // From here we may do work. If we own the reservation, any early failure must release it (mark it failed so
+  // a later retry can resume) rather than leaving the key stuck pending forever.
+  const releaseOnFailure = async () => { if (ownsReservation && idemKey) await markFailed(p.principal.email, idemKey); };
+
   const app = await laneApplication(p.principal.email, deploymentUrl);
-  if ("error" in app) return apiError("internal_error", app.message, app.status, rid);
+  if ("error" in app) { await releaseOnFailure(); return apiError("internal_error", app.message, app.status, rid); }
 
   const synth = await synthesizeClaim(deploymentUrl, claim);
   if ("error" in synth) {
+    await releaseOnFailure();
     await logKeyUsage(p.principal, { endpoint: "POST /v1/verifications", status: synth.status, applicationId: app.id });
     return Response.json(
       { error: { code: synth.error, message: synth.message, request_id: rid } },
@@ -72,6 +114,7 @@ export async function POST(req: Request) {
 
   const prepared = await prepareVerification(p.principal.email, app, claim, synth);
   if ("error" in prepared) {
+    await releaseOnFailure();
     await logKeyUsage(p.principal, { endpoint: "POST /v1/verifications", status: prepared.status, applicationId: app.id });
     return Response.json(
       { error: { code: prepared.error, message: prepared.message, request_id: rid } },
@@ -142,11 +185,17 @@ export async function POST(req: Request) {
   // its own status and message rather than flattened. An agent branching on key_daily_ceiling must still
   // see key_daily_ceiling.
   if (!launched.ok || !result?.runId) {
+    // The launch was refused after we owned the reservation. Release it so the key is reclaimable rather than
+    // stuck pending: the caller can fix the cause (add balance, wait out a pause) and retry the same key.
+    await releaseOnFailure();
     return Response.json(
       { error: { code: result?.error ?? "internal_error", message: result?.message ?? "The verification could not be started.", request_id: rid } },
       { status: launched.status, headers: { "X-Request-Id": rid } },
     );
   }
+
+  // Launched. Record the run on the reservation so an identical retry replays it without doing any work.
+  if (ownsReservation && idemKey) await markLaunched(p.principal.email, idemKey, result.runId);
 
   const verificationId = toVerificationId(result.runId);
   await logKeyUsage(p.principal, {
