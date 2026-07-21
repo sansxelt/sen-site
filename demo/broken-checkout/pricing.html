@@ -37,7 +37,10 @@
         <li>Version history</li>
         <li>Export to Markdown and PDF</li>
       </ul>
-      <p><a class="btn" href="/checkout.html">Upgrade to Pro</a></p>
+      <!-- A REAL button, not a link styled as one. The first verification run timed out here: the flow
+           looked for a "button" and this was an <a>, so a role=button locator matched nothing. It still
+           navigates to checkout; the entitlement bug is untouched and lives in checkout.html. -->
+      <p><button class="btn" type="button" onclick="location.href='/checkout.html'">Upgrade to Pro</button></p>
     </div>
   </div>
 
