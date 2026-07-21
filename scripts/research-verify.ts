@@ -52,5 +52,38 @@ const CLAIMS = [/follows the (complete )?result across/i, /verifies (payments|em
 ok("no published article claims multi-system verification as shipped",
   !pub.some((a) => a.body.some((b) => b.t !== "list" && b.t !== "code" && CLAIMS.some((r) => r.test((b as { text: string }).text)))));
 
+// ── The homepage claim audit ─────────────────────────────────────────────────────────────────────────────
+// The homepage is where overclaiming is most tempting and most costly. Vraelis sells independent
+// verification of completion claims, so a homepage that overstates its own coverage is the exact failure it
+// sells against. These assertions make that structural rather than something someone has to remember.
+{
+  console.log("\n── the homepage claims only what exists ──");
+  // Comments are stripped first: the file documents this rule in prose, and the rule must not read as a claim.
+  const raw = readFileSync("app/rank/page.tsx", "utf8");
+  const copy = raw.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+
+  const FORBIDDEN: [RegExp, string][] = [
+    [/\bMCP\b/, "MCP is not shipped"],
+    [/GitHub Check/i, "GitHub Checks are not built"],
+    [/deployment hook/i, "deployment hooks are not built"],
+    [/\bmobile\b/i, "mobile execution does not exist"],
+    [/\bdesktop\b/i, "desktop execution does not exist"],
+    [/physical (system|device)/i, "physical systems are not supported"],
+    [/follows the (complete )?result across/i, "multi-system tracing is direction, not capability"],
+  ];
+  for (const [re, why] of FORBIDDEN) {
+    ok(`homepage does not claim: ${why}`, !re.test(copy));
+  }
+
+  // The wedge has to be stated on the page, not implied. "Outcomes" invites the reader to assume any system.
+  ok("homepage states the web-application wedge explicitly", /Starting with deployed web applications/.test(copy));
+  // The repair boundary: Vraelis decides, the agent fixes. Losing this line turns an honest claim into
+  // "Vraelis fixes your code", which it does not do.
+  ok("homepage states that Vraelis does not edit code", /does not edit your code/i.test(copy));
+  // Machine-derived requirements must be disclosed wherever they are shown.
+  ok("homepage discloses that derived requirements are not human reviewed", /Not human reviewed/i.test(copy));
+  ok("no em dashes in homepage copy", !raw.includes("—"));
+}
+
 console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);
