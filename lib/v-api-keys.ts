@@ -41,7 +41,7 @@ export function sanitizeCeilingCents(raw: unknown): number | null {
   return Math.min(Math.floor(n), 1_000_000); // $10,000/day, well above any real use; a typo cannot mint a blank cheque
 }
 
-export async function generateApiKey(userId: string, name?: string, scopes?: string[], dailyCeilingCents?: unknown): Promise<{ key: string; prefix: string } | null> {
+export async function generateApiKey(userId: string, name?: string, scopes?: string[], dailyCeilingCents?: unknown): Promise<{ key: string; prefix: string; scopes: string[]; dailyCeilingCents: number | null } | null> {
   if (!userId || !isDatabaseConfigured()) return null;
   const raw = "vr_live_" + randomBytes(24).toString("hex");
   const prefix = raw.slice(0, 16);
@@ -65,7 +65,10 @@ export async function generateApiKey(userId: string, name?: string, scopes?: str
   if (error && clean) ({ error } = await s.from("v_api_keys" as never).insert(base as never));
   if (error) { console.error("generateApiKey:", error.message); return null; }
   await logEvent({ userId: norm(userId), eventType: "api_key_created", actorType: "owner", source: "app", metadata: { prefix, name: clean || null } });
-  return { key: raw, prefix };
+  // Report what was ACTUALLY persisted, not what was asked for. A key whose scopes silently differ from the
+  // request is invisible until it fails at the first real call, which is exactly how two keys were minted
+  // without preflight:run:create and nobody could tell why. The caller can now see it at creation time.
+  return { key: raw, prefix, scopes: base.scopes, dailyCeilingCents: ceiling };
 }
 
 export async function verifyApiKey(key: string): Promise<{ userId: string; scopes: string[]; prefix: string; id: string; dailyCeilingCents: number | null } | null> {

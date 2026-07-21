@@ -52,6 +52,9 @@ const PREFLIGHT_ACCESS: { id: PreflightAccess; label: string; hint: string; scop
 export default function ApiKeysPage() {
   const [keys, setKeys] = useState<Key[]>([]);
   const [fresh, setFresh] = useState<string>("");
+  // What the server reports it ACTUALLY persisted. Shown beside the key so a wrongly scoped key is visible
+  // at creation instead of at its first real call.
+  const [freshGrant, setFreshGrant] = useState<{ scopes: string[]; dailyCeilingCents: number | null } | null>(null);
   const [err, setErr] = useState<string>("");
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -86,7 +89,11 @@ export default function ApiKeysPage() {
         }),
       });
       const j = await r.json();
-      if (j.key) { setFresh(j.key); setKeyName(""); setPreflightAccess("none"); setDailyLimit(""); load(); }
+      if (j.key) {
+        setFresh(j.key);
+        setFreshGrant({ scopes: j.scopes ?? [], dailyCeilingCents: j.dailyCeilingCents ?? null });
+        setKeyName(""); setPreflightAccess("none"); setDailyLimit(""); load();
+      }
       else if (j.error === "plan_required") setErr("The public API is a Scale plan feature. Upgrade to generate keys.");
       else setErr("Couldn't create a key. Try again.");
     } finally { setBusy(false); }
@@ -177,6 +184,31 @@ export default function ApiKeysPage() {
             <code style={{ flex: 1, fontFamily: "var(--font-code)", fontSize: 13, color: "var(--fg-1)", wordBreak: "break-all", background: "var(--bg-1)", border: "1px solid var(--line-2)", borderRadius: "var(--r-xs)", padding: "10px 12px" }}>{fresh}</code>
             <button onClick={() => { navigator.clipboard?.writeText(fresh); setCopied(true); setTimeout(() => setCopied(false), 1400); }} className="btn btn--ghost" style={{ whiteSpace: "nowrap" }}>{copied ? "Copied ✓" : "Copy"}</button>
           </div>
+          {/*
+            What the server ACTUALLY granted, read back from the create response rather than echoed from the
+            request. Two keys were minted without preflight:run:create and there was no way to tell until the
+            first real API call failed with a 403, which is a long way from the decision that caused it.
+            A key that cannot do what you asked for should say so here, while you are still looking at it.
+          */}
+          {freshGrant && (
+            <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--acc-line)" }}>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 6 }}>This key can</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+                {freshGrant.scopes.map((s) => (
+                  <span key={s} style={{ fontFamily: "var(--font-code)", fontSize: 11, padding: "3px 8px", borderRadius: 999, border: "1px solid var(--line-2)", background: "var(--bg-1)", color: s.startsWith("preflight:") ? "var(--acc-deep)" : "var(--fg-4)" }}>{s}</span>
+                ))}
+              </div>
+              {freshGrant.scopes.includes("preflight:run:create") ? (
+                <p style={{ margin: 0, fontSize: 12.5, color: "var(--fg-3)" }}>
+                  It can launch verifications{freshGrant.dailyCeilingCents ? `, up to $${(freshGrant.dailyCeilingCents / 100).toFixed(2)} per day` : ", with no daily spend limit"}.
+                </p>
+              ) : (
+                <p style={{ margin: 0, fontSize: 12.5, color: "#B45309" }}>
+                  This key cannot launch verifications. To give it that, revoke it and create a new one with Preflight access set to &ldquo;Launch runs&rdquo;.
+                </p>
+              )}
+            </div>
+          )}
         </div>
       )}
 

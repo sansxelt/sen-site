@@ -62,5 +62,34 @@ ok("cancellation is described as stopping watching, not stopping the run", /stil
 // A network blip is not a verdict.
 ok("a retryable read failure does not end the poll", /if \(!r\.error\.retryable\) return r;/.test(code));
 
+console.log("\n── stopping is honest everywhere it appears, not just in the client ──");
+// Stopping the poll ends WATCHING. The run is already paid for and the worker keeps going, so any UI that
+// says "cancel" is telling the user their money was returned when it was not. This holds until real
+// server-side cancellation exists; when it does, this assertion is what should be revisited first.
+{
+  const surfaces: string[] = [];
+  const scan = (dir: string) => {
+    for (const e of readdirSync(dir)) {
+      const p = path.join(dir, e);
+      if (statSync(p).isDirectory()) scan(p);
+      else if (/\.tsx?$/.test(e)) surfaces.push(p);
+    }
+  };
+  scan("app/rank/app");
+  scan("lib");
+
+  const offenders = surfaces.filter((f) => {
+    const src = readFileSync(f, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+    return /cancel\s+verification/i.test(src);
+  });
+  ok('no surface says "cancel verification" (the run is not cancelled)', offenders.length === 0, offenders.join(", "));
+
+  // And the honest wording has to actually exist in the client's own message.
+  const stopMsg = readFileSync("lib/verification-client.ts", "utf8");
+  ok("the stop message says the verification continues running", /Stopped watching[\s\S]{0,80}still running/.test(stopMsg));
+  ok("the stop message points the user back to Verifications, not into a dead end",
+    /Verifications|still running/.test(stopMsg));
+}
+
 console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

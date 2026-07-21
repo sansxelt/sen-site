@@ -223,7 +223,7 @@ export async function pollVerification(
   let lastError: ClientError | null = null;
 
   while (Date.now() < deadline) {
-    if (opts.signal?.aborted) return { ok: false, error: { code: "cancelled", message: "Stopped watching this verification. It is still running.", retryable: false } };
+    if (opts.signal?.aborted) return { ok: false, error: { code: "cancelled", message: "Stopped watching. The verification is still running and stays available under Verifications.", retryable: false } };
 
     const r = await getVerification(id, { signal: opts.signal });
     if (r.ok) {
