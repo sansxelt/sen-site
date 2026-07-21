@@ -55,6 +55,13 @@ export default function proxy(req: NextRequest) {
   const isAppHost = host === "app.vraelis.com" || host.startsWith("app.localhost");
   const isProd = host.endsWith("vraelis.com");
 
+  // 00) The PUBLIC API namespace. /v1/* is the versioned surface machines call; it is served by the route
+  //     handlers under /api/v1/*. Rewritten rather than redirected so a client never has to follow a hop
+  //     (an agent, a CI runner, or curl -X POST without -L would silently lose its body on a 307/308).
+  //     Runs before the host split because the public API answers identically on either host: a caller
+  //     should never have to know which hostname the dashboard happens to live on.
+  if (path === "/v1" || path.startsWith("/v1/")) return go(req, "/api" + path, "rewrite");
+
   // 0) app.vraelis.com: ONLY the signed-in product, at clean paths (no /app prefix).
   //    Auth pages live on the main host; API routes serve both hosts unchanged.
   if (isAppHost) {

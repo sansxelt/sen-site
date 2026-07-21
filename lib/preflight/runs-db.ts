@@ -408,3 +408,14 @@ export async function runWithSameKeyDifferentPayload(
   const clash = rows.find((r) => submissionPayloadOf(String(r.submission_id)) !== expected);
   return clash ? String(clash.id) : null;
 }
+
+// The contract a run was launched against, owner-scoped. The run report itself deliberately does not carry
+// a contract id (it is internal plumbing, not owner-safe evidence), but the public verification surface
+// needs it to echo back the CLAIM the run was testing, which lives on the contract as its source prompt.
+// Returns null when unmigrated, not found, or not this owner's.
+export async function runContractId(owner: string, runId: string): Promise<string | null> {
+  if (!isDatabaseConfigured()) return null;
+  const { data } = await db().from("v_preflight_runs")
+    .select("contract_id").eq("user_id", norm(owner)).eq("id", runId).maybeSingle();
+  return (data as { contract_id?: string } | null)?.contract_id ?? null;
+}

@@ -62,7 +62,8 @@
     "teams:test": "tsx scripts/preflight-teams-verify.ts",
     "role:ui:test": "tsx scripts/preflight-role-ui-verify.ts",
     "apikey:access:test": "tsx scripts/preflight-api-key-access-verify.ts",
-    "apikey:lifecycle": "tsx scripts/preflight-api-key-lifecycle.ts"
+    "apikey:lifecycle": "tsx scripts/preflight-api-key-lifecycle.ts",
+    "verifications:test": "tsx scripts/preflight-verifications-verify.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
