@@ -28,7 +28,9 @@
      floor, because it is read for state rather than for prose. */
   --a-text: #14140F;
   --a-text-2: #4A4A43;
-  --a-text-muted: #7C7C73;
+  /* Solved for 4.5:1 against BOTH the ground and a raised surface, not chosen by eye. The obvious softer
+     grey measured 3.87:1 on the ground, which reads fine in a swatch and fails for anyone who needs it. */
+  --a-text-muted: #707067;
 
   /* ── Structure ───────────────────────────────────────────────────────────────────────────────────────
      Borders explain structure and nothing else. Quiet is the default; active is only for a focused or
@@ -48,7 +50,9 @@
      as "broken". */
   --a-verified: #2F5D50;
   --a-failed: #A8452A;
-  --a-blocked: #8A7B4F;
+  /* Blocked also has to be READABLE, not only distinct from failure. The first value cleared the hue test
+     and missed the contrast one at 4.18:1. */
+  --a-blocked: #7E6F43;
 
   --a-focus: #2F5D50;
   --a-shadow: 0 1px 2px rgba(20, 20, 15, 0.04), 0 8px 24px -12px rgba(20, 20, 15, 0.10);
@@ -62,7 +66,7 @@
   --c-raised: #232829;
   --c-text: #F2F1EC;
   --c-text-2: #B4B7B2;
-  --c-text-muted: #7E837F;
+  --c-text-muted: #8A8F8B;
   --c-border: #2C3132;
   --c-border-active: #3E4544;
 
