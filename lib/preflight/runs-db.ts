@@ -257,6 +257,8 @@ export type CreateRunInput = {
   applicationId: string; contractId: string; contractVersion: number | null;
   deploymentUrl: string; submissionId: string; flowIds: string[];
   creditsHeld: number; reservationId: string | null;
+  /** Which API key launched this run, for the per-key spend ceiling and audit. Null for a browser session. */
+  apiKeyId?: string | null;
 };
 export type CreateRunResult =
   | { runId: string; flowCount: number }
@@ -299,6 +301,11 @@ export async function createRun(owner: string, input: CreateRunInput): Promise<C
   // Pin the deployment identity this run tests (S4), the same best-effort way: deploymentForRun records
   // (or dedupes onto) the v_deployments row for the run's target URL, warning clearly while migration 8
   // is missing, and the insert carries deployment_id only when a row id was actually obtained.
+  // api_key_id is additive (migration 16) and follows the SAME best-effort pin pattern as context and
+  // deployment: carried only when present, dropped on a column-missing error, never failing the launch.
+  // A run that loses its key attribution is a weaker audit trail, not a broken run.
+  let pinApiKey = !!input.apiKeyId;
+
   let deploymentId: string | null = null;
   try { deploymentId = await deploymentForRun(uid, input.applicationId, input.deploymentUrl); } catch { deploymentId = null; }
   let pinDeployment = deploymentId !== null;
@@ -312,19 +319,24 @@ export async function createRun(owner: string, input: CreateRunInput): Promise<C
       credits_held: input.creditsHeld, cost_reservation_id: input.reservationId,
     };
     const rowFor = () => {
-      const row = pinContext ? { ...baseRow, context_snapshot_id: contextSnapshotId } : baseRow;
-      return pinDeployment ? { ...row, deployment_id: deploymentId } : row;
+      let row: Record<string, unknown> = pinContext ? { ...baseRow, context_snapshot_id: contextSnapshotId } : baseRow;
+      if (pinDeployment) row = { ...row, deployment_id: deploymentId };
+      if (pinApiKey) row = { ...row, api_key_id: input.apiKeyId };
+      return row;
     };
     let { data, error } = await db().from("v_preflight_runs").insert(rowFor() as never).select("id").single();
     // ONE combined retry path for BOTH additive pin columns (context_snapshot_id, migration 7;
     // deployment_id, migration 8). A missing column fails the whole insert atomically (nothing was
     // written), so re-inserting the SAME submission id after dropping the named pin can never create a
     // duplicate run. At most one retry per pin; the run itself must always queue.
-    while (error && (pinContext || pinDeployment)) {
+    while (error && (pinContext || pinDeployment || pinApiKey)) {
       const msg = (error as { message?: string }).message ?? "";
       if (pinContext && /context_snapshot_id/i.test(msg)) {
         console.warn("createRun: v_preflight_runs.context_snapshot_id is missing. Apply sql/vraelis-preflight-7-context-snapshots.sql (migration 7). Run queued without a context pin.");
         pinContext = false;
+      } else if (pinApiKey && /api_key_id/i.test(msg)) {
+        console.warn("createRun: v_preflight_runs.api_key_id is missing. Apply sql/vraelis-preflight-16-key-spend-ceiling.sql (migration 16). Run queued without key attribution.");
+        pinApiKey = false;
       } else if (pinDeployment && /deployment_id/i.test(msg)) {
         console.warn("createRun: v_preflight_runs.deployment_id is missing. Apply sql/vraelis-preflight-8-deployments.sql (migration 8). Run queued without a deployment pin.");
         pinDeployment = false;

@@ -61,6 +61,8 @@ export default function ApiKeysPage() {
   // asked for, and the level that can spend money is a separate, deliberate choice. Scopes are fixed at
   // creation, so changing a key's access means revoking it and minting a new one.
   const [preflightAccess, setPreflightAccess] = useState<PreflightAccess>("none");
+  // Optional daily spend limit for this key, in whole dollars. Empty means no limit.
+  const [dailyLimit, setDailyLimit] = useState("");
   const [u, setU] = useState<Usage | null>(null);
 
   async function load() {
@@ -77,10 +79,14 @@ export default function ApiKeysPage() {
       const extra = PREFLIGHT_ACCESS.find((a) => a.id === preflightAccess)?.scopes ?? [];
       const r = await fetch("/api/v/keys", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: keyName.trim(), scopes: ["tests:write", "tests:read", "credits:read", ...extra] }),
+        body: JSON.stringify({
+          name: keyName.trim(),
+          scopes: ["tests:write", "tests:read", "credits:read", ...extra],
+          daily_ceiling_cents: Number(dailyLimit) > 0 ? Math.round(Number(dailyLimit) * 100) : undefined,
+        }),
       });
       const j = await r.json();
-      if (j.key) { setFresh(j.key); setKeyName(""); setPreflightAccess("none"); load(); }
+      if (j.key) { setFresh(j.key); setKeyName(""); setPreflightAccess("none"); setDailyLimit(""); load(); }
       else if (j.error === "plan_required") setErr("The public API is a Scale plan feature. Upgrade to generate keys.");
       else setErr("Couldn't create a key. Try again.");
     } finally { setBusy(false); }
@@ -123,6 +129,22 @@ export default function ApiKeysPage() {
               </label>
             ))}
           </div>
+          {/*
+            Only meaningful for a key that can launch runs. An agent in a retry loop is the reason this
+            exists, so it is offered at the moment you decide to hand a credential that power, not buried in
+            a settings page you would visit afterwards.
+          */}
+          {preflightAccess === "launch" && (
+            <div style={{ display: "grid", gap: 6, marginTop: 12 }}>
+              <span style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>Daily spend limit</span>
+              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                <span style={{ fontSize: 14, color: "var(--fg-3)" }}>$</span>
+                <input value={dailyLimit} onChange={(e) => setDailyLimit(e.target.value.replace(/[^0-9.]/g, ""))} inputMode="decimal" placeholder="No limit" style={{ width: 120, padding: "9px 11px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, outline: "none" }} />
+                <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>per day, resets at midnight UTC</span>
+              </div>
+              <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>Caps what this one key can spend, on top of your account limits. Leave empty for no key limit. It can only ever lower what the key can spend, never raise it.</span>
+            </div>
+          )}
           <span className="hint">Name your keys so you can tell them apart. The full key is shown once at creation. Keep keys server-side only, and rotate or revoke a key if it&apos;s ever exposed. <Link href="/developers" style={{ color: "var(--acc-deep)" }}>Developer docs →</Link></span>
         </div>
       </div>

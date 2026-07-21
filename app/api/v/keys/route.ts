@@ -26,7 +26,10 @@ export async function POST(req: Request) {
   // Scopes are chosen at creation and never widened afterwards; to change what a key can do you revoke it
   // and mint a new one. sanitizeScopes drops anything not on the grantable list, so an unrecognized scope
   // silently narrows the key rather than granting something undefined.
-  const k = await generateApiKey(email, name, body?.scopes);
+  // A daily ceiling is optional and only ever narrows what the key can spend. generateApiKey REFUSES to
+  // mint a key when a ceiling was asked for but the column is missing, rather than quietly creating an
+  // unbounded one.
+  const k = await generateApiKey(email, name, body?.scopes, body?.daily_ceiling_cents);
   if (!k) return NextResponse.json({ error: "create_failed" }, { status: 500 });
   return NextResponse.json(k); // { key, prefix } — the raw key is shown to the user once
 }

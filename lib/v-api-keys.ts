@@ -32,29 +32,57 @@ export function sanitizeScopes(raw: unknown): string[] {
   return out.length ? out : [...DEFAULT_SCOPES];
 }
 
-export async function generateApiKey(userId: string, name?: string, scopes?: string[]): Promise<{ key: string; prefix: string } | null> {
+// A key's daily spend ceiling, in cents. null means no ceiling. Anything not a positive finite number is
+// treated as no ceiling rather than as zero, because a 0 ceiling would be a key that authenticates but can
+// never spend, which is what withholding preflight:run:create already expresses more clearly.
+export function sanitizeCeilingCents(raw: unknown): number | null {
+  const n = typeof raw === "number" ? raw : Number(raw);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return Math.min(Math.floor(n), 1_000_000); // $10,000/day, well above any real use; a typo cannot mint a blank cheque
+}
+
+export async function generateApiKey(userId: string, name?: string, scopes?: string[], dailyCeilingCents?: unknown): Promise<{ key: string; prefix: string } | null> {
   if (!userId || !isDatabaseConfigured()) return null;
   const raw = "vr_live_" + randomBytes(24).toString("hex");
   const prefix = raw.slice(0, 16);
   const s = getSupabaseAdminClient();
   const base = { user_id: norm(userId), key_hash: hash(raw), prefix, scopes: sanitizeScopes(scopes) };
   const clean = (name || "").trim().slice(0, 40);
-  let { error } = await s.from("v_api_keys" as never).insert((clean ? { ...base, name: clean } : base) as never);
-  // The name column may not exist until the migration runs; fall back to an
-  // unnamed key so key creation never breaks.
+  const ceiling = sanitizeCeilingCents(dailyCeilingCents);
+  const withName = clean ? { ...base, name: clean } : base;
+  const full = ceiling === null ? withName : { ...withName, daily_ceiling_cents: ceiling };
+  let { error } = await s.from("v_api_keys" as never).insert(full as never);
+  // Both `name` and `daily_ceiling_cents` (migration 16) are additive columns. Fall back through them so a
+  // deploy that lands before its migration still mints usable keys.
+  //
+  // The fallback DROPS the ceiling, which means a key the owner asked to bound would be created unbounded.
+  // That is the wrong way to fail for a spend control, so this refuses instead: a key that silently ignores
+  // the limit you set for it is worse than no key at all.
+  if (error && ceiling !== null) {
+    console.error("generateApiKey: daily_ceiling_cents is missing — apply sql/vraelis-preflight-16-key-spend-ceiling.sql. Refusing to mint an UNBOUNDED key when a ceiling was requested.");
+    return null;
+  }
   if (error && clean) ({ error } = await s.from("v_api_keys" as never).insert(base as never));
   if (error) { console.error("generateApiKey:", error.message); return null; }
   await logEvent({ userId: norm(userId), eventType: "api_key_created", actorType: "owner", source: "app", metadata: { prefix, name: clean || null } });
   return { key: raw, prefix };
 }
 
-export async function verifyApiKey(key: string): Promise<{ userId: string; scopes: string[]; prefix: string; id: string } | null> {
+export async function verifyApiKey(key: string): Promise<{ userId: string; scopes: string[]; prefix: string; id: string; dailyCeilingCents: number | null } | null> {
   if (!key || !isDatabaseConfigured()) return null;
   const s = getSupabaseAdminClient();
   // prefix is the public, non-secret identifier (already shown in the UI) — used
   // to attribute API usage per key. NEVER selects key_hash.
-  const { data } = await s.from("v_api_keys" as never).select("user_id,scopes,id,prefix,last_used").eq("key_hash", hash(key)).maybeSingle();
-  const r = data as unknown as { user_id: string; scopes: string[]; id: string; prefix: string; last_used: string | null } | null;
+  //
+  // daily_ceiling_cents is additive (migration 16). Selecting a column that does not exist yet is an ERROR,
+  // not an empty field, and this is the authentication path: getting that wrong would reject EVERY key on a
+  // deploy that landed before the migration. So the ceiling is requested optimistically and the query falls
+  // back to the pre-migration column set, which reads as "no ceiling" — exactly today's behavior.
+  const cols = "user_id,scopes,id,prefix,last_used";
+  const first = await s.from("v_api_keys" as never).select(`${cols},daily_ceiling_cents`).eq("key_hash", hash(key)).maybeSingle();
+  let data = first.data;
+  if (first.error) ({ data } = await s.from("v_api_keys" as never).select(cols).eq("key_hash", hash(key)).maybeSingle());
+  const r = data as unknown as { user_id: string; scopes: string[]; id: string; prefix: string; last_used: string | null; daily_ceiling_cents?: number | null } | null;
   if (!r) return null;
   // Throttle the last_used write to ~once/min per key: a burst on one key otherwise hammers
   // this single row with an UPDATE per request (lock contention). Best-effort; never blocks auth.
@@ -62,7 +90,7 @@ export async function verifyApiKey(key: string): Promise<{ userId: string; scope
   if (Date.now() - lastMs > 60_000) {
     await s.from("v_api_keys" as never).update({ last_used: new Date().toISOString() } as never).eq("id", r.id);
   }
-  return { userId: r.user_id, scopes: r.scopes ?? [], prefix: r.prefix, id: r.id };
+  return { userId: r.user_id, scopes: r.scopes ?? [], prefix: r.prefix, id: r.id, dailyCeilingCents: r.daily_ceiling_cents ?? null };
 }
 
 export async function listApiKeys(userId: string): Promise<ApiKeyRow[]> {

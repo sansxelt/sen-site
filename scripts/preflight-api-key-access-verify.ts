@@ -22,7 +22,8 @@ import {
   PREFLIGHT_SCOPES,
   type PreflightScope,
 } from "../lib/preflight/api-principal";
-import { GRANTABLE_SCOPES, DEFAULT_SCOPES, sanitizeScopes } from "../lib/v-api-keys";
+import { GRANTABLE_SCOPES, DEFAULT_SCOPES, sanitizeScopes, sanitizeCeilingCents } from "../lib/v-api-keys";
+import { keyCeilingRefusal } from "../lib/preflight/key-spend";
 import {
   keyFingerprint,
   payloadFingerprint,
@@ -90,6 +91,60 @@ function scopeTests() {
   ok("the console offers a Preflight access choice at creation", /Preflight access/.test(ui));
   ok("the console defaults to NO preflight access", /useState<PreflightAccess>\("none"\)/.test(ui));
   ok("the console warns that a launch key can spend credits", /can spend your credits/.test(ui));
+}
+
+// ── per-key daily spend ceiling ──────────────────────────────────────────────────────────────────────────
+// The guard that exists because an agent in a retry loop is not the same threat as a person clicking Launch.
+// The owner-level caps cannot tell them apart; a ceiling on the credential can.
+async function ceilingTests() {
+  console.log("\n── a key's daily ceiling only ever narrows ──");
+  ok("a ceiling is a positive number of cents", sanitizeCeilingCents(1500) === 1500);
+  ok("a fractional cent is floored, never rounded up into more spend", sanitizeCeilingCents(1500.9) === 1500);
+  // Zero would be a key that authenticates but can never spend. That is what withholding the run:create
+  // scope already says, more clearly, so 0 means "no ceiling" rather than a second way to say the same thing.
+  ok("zero and negatives mean NO ceiling, not a zero-spend key",
+    sanitizeCeilingCents(0) === null && sanitizeCeilingCents(-5) === null);
+  ok("junk means no ceiling rather than an accidental limit",
+    sanitizeCeilingCents("abc") === null && sanitizeCeilingCents(undefined) === null && sanitizeCeilingCents(NaN) === null);
+  ok("a typo cannot mint a blank cheque (ceiling is bounded)", sanitizeCeilingCents(9_999_999_999) === 1_000_000);
+
+  console.log("\n── the ceiling's failure posture ──");
+  // No ceiling and no key (a browser session) must be entirely unaffected, including when the ledger is
+  // unreadable. A session caller has no credential to bound.
+  ok("a session caller is never touched by the ceiling",
+    (await keyCeilingRefusal({ id: null, dailyCeilingCents: null }, 1500)) === null);
+  ok("a key with no ceiling is never refused", (await keyCeilingRefusal({ id: "k1", dailyCeilingCents: null }, 1500)) === null);
+
+  // This suite runs with no database configured, so the spend read returns null. A key the owner
+  // deliberately bounded must NOT have that bound silently lifted by a transient read failure, which is the
+  // opposite of the velocity cap's fail-open posture and intentionally so.
+  const blind = await keyCeilingRefusal({ id: "k1", dailyCeilingCents: 5000 }, 1500);
+  ok("a bounded key FAILS CLOSED when the spend ledger cannot be read", blind !== null);
+  ok("the fail-closed refusal is a retryable 503, not a permanent denial",
+    blind?.status === 503 && blind?.error === "key_ceiling_unavailable");
+  ok("the refusal explains that nothing was started (no stranded hold)",
+    !!blind && /not started/i.test(blind.message));
+
+  console.log("\n── the ceiling is wired where it cannot strand money ──");
+  const runsSrc = read(ROUTE_RUNS);
+  ok("the run route enforces the key ceiling", /keyCeilingRefusal\(/.test(runsSrc));
+  // Order is the whole point: a ceiling checked after the hold would refuse the run while the money stayed
+  // reserved.
+  ok("the ceiling is checked BEFORE any credit hold is taken",
+    runsSrc.indexOf("keyCeilingRefusal") < runsSrc.indexOf("await hold("));
+  ok("the ceiling is checked AFTER the owner-level gates (it narrows, never replaces)",
+    runsSrc.indexOf("checkAccountVelocity") < runsSrc.indexOf("keyCeilingRefusal"));
+  ok("the run records which key launched it (so tomorrow's ceiling is enforceable)",
+    /apiKeyId: p\.principal\.keyId/.test(runsSrc));
+  ok("a ceiling refusal is logged to the key audit", /status: refusal\.status/.test(runsSrc));
+
+  console.log("\n── minting a bounded key never silently produces an unbounded one ──");
+  const keysLib = read("lib/v-api-keys.ts");
+  ok("key creation refuses rather than dropping a requested ceiling",
+    /Refusing to mint an UNBOUNDED key/.test(keysLib));
+  // The authentication path must survive a deploy that lands before its migration, or every key breaks.
+  ok("verifyApiKey falls back when the ceiling column is not migrated yet",
+    /if \(first\.error\)/.test(keysLib) && /daily_ceiling_cents/.test(keysLib));
 }
 
 // ── idempotency, bound to the payload ────────────────────────────────────────────────────────────────────
@@ -278,8 +333,9 @@ function wiringTests() {
   ok("the label tells the reader not to copy it", /will fail/.test(dev));
 }
 
-function main() {
+async function main() {
   scopeTests();
+  await ceilingTests();
   idempotencyTests();
   wiringTests();
   console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);

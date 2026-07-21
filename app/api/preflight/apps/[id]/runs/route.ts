@@ -35,6 +35,7 @@ import { passPricingEnabled, passPriceCents } from "@/lib/preflight/pass-pricing
 import { gatePassLaunch, recordRunPassUsage } from "@/lib/preflight/entitlements-v1";
 import { resolveCanonicalCluster, consumeFreeGrantOverride, recordFreeGrantRisk, hashRiskSignal, claimFreePass, attachRunToClaim, releaseFreePass } from "@/lib/preflight/free-grant-cluster";
 import { isRunsGovernorPaused, globalActiveRunsAtCap, checkAccountVelocity, recordProviderAttempt, recordProviderCost, maybeTripGlobalBudget, estimateProviderCents } from "@/lib/preflight/cost-governor";
+import { keyCeilingRefusal } from "@/lib/preflight/key-spend";
 import { logEvent } from "@/lib/v-events";
 
 export const runtime = "nodejs";
@@ -220,6 +221,20 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const reservationId = randomUUID();
   let creditsHeld = 0;
   let heldReservationId: string | null = null;
+  // PER-KEY DAILY CEILING. Checked before any hold, so a refusal never leaves money reserved. This only
+  // ever NARROWS: it runs in addition to every owner-level gate below, never instead of one, so a key can
+  // spend less than its owner could and never more. A session caller has no ceiling and skips this entirely.
+  {
+    const refusal = await keyCeilingRefusal(
+      { id: p.principal.keyId, dailyCeilingCents: p.principal.dailyCeilingCents },
+      passPricingEnabled() ? passPriceCents(flowIds.length) : estCredits,
+    );
+    if (refusal) {
+      await logKeyUsage(p.principal, { endpoint: "POST /api/preflight/apps/{id}/runs", status: refusal.status, applicationId: id, creditsReserved: 0, creditsCharged: 0 });
+      return NextResponse.json({ error: refusal.error, message: refusal.message }, { status: refusal.status, headers: { "Retry-After": String(refusal.retryAfterSec) } });
+    }
+  }
+
   let paygHeldCents: number | null = null;
   let usedFreePass = false; // true when this launch consumed the lifetime free pass (gate mode 'free')
   let freeClaimCanonical: string | null = null; // set when we WON the atomic free-pass claim (release on insert failure)
@@ -289,6 +304,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const created = await createRun(owner, {
     applicationId: id, contractId: contract.id, contractVersion: contract.version,
     deploymentUrl, submissionId, flowIds, creditsHeld, reservationId: heldReservationId,
+    // Attribute the run to the launching key, so the per-key ceiling is enforceable tomorrow and the audit
+    // trail can answer "which credential launched this". Null for a browser session.
+    apiKeyId: p.principal.keyId,
   });
 
   if (!created) {

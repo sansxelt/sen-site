@@ -31,6 +31,8 @@ export type Principal = {
   keyPrefix: string | null;
   /** Row id of the key, for attributing usage to one key across renames. Null for sessions. */
   keyId: string | null;
+  /** This key own daily spend ceiling in cents, or null for no ceiling. Never raises an owner limit. */
+  dailyCeilingCents: number | null;
 };
 
 export type PrincipalResult =
@@ -76,12 +78,12 @@ export async function resolvePrincipal(req: Request, requiredScope: PreflightSco
     if (!verified.scopes.includes(requiredScope)) {
       return { ok: false, res: deny(403, "insufficient_scope", `This key is missing the ${requiredScope} scope.`) };
     }
-    return { ok: true, principal: { email: verified.userId, via: "api_key", keyPrefix: verified.prefix, keyId: verified.id } };
+    return { ok: true, principal: { email: verified.userId, via: "api_key", keyPrefix: verified.prefix, keyId: verified.id, dailyCeilingCents: verified.dailyCeilingCents } };
   }
 
   const email = (await auth())?.user?.email;
   if (!email) return { ok: false, res: deny(401, "signin_required", "Sign in, or send an API key in the x-api-key header.") };
-  return { ok: true, principal: { email, via: "session", keyPrefix: null, keyId: null } };
+  return { ok: true, principal: { email, via: "session", keyPrefix: null, keyId: null, dailyCeilingCents: null } };
 }
 
 /**
