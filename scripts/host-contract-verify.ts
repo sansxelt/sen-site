@@ -105,7 +105,26 @@ for (const [root, file] of [
   ok("no pure black is used", !/#000\b|#000000/i.test(authRules));
   // Blocked must not be coloured as a failure: it is the honest third answer, not a broken run, and
   // colouring it red would teach people to read "no verdict" as "something went wrong".
-  ok("blocked is not styled as a failure", /--a-blocked: #8A7B4F/.test(authCss) && /--a-failed: #A8452A/.test(authCss));
+  //
+  // Asserted as a PROPERTY rather than a literal hex, because the values legitimately move when contrast is
+  // corrected (they already did once). What must not change is that blocked and failed stay distinguishable
+  // and that blocked is not a red.
+  const hueOf = (hex: string) => {
+    const h = hex.replace("#", "");
+    const r = parseInt(h.slice(0, 2), 16) / 255, g = parseInt(h.slice(2, 4), 16) / 255, b = parseInt(h.slice(4, 6), 16) / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+    if (d === 0) return 0;
+    const deg = max === r ? 60 * (((g - b) / d) % 6) : max === g ? 60 * ((b - r) / d + 2) : 60 * ((r - g) / d + 4);
+    return (deg + 360) % 360;
+  };
+  const grab = (name: string) => (authCss.match(new RegExp(`--${name}:\\s*(#[0-9a-fA-F]{6})`)) ?? [])[1] ?? "";
+  for (const scope of ["a", "c"]) {
+    const blocked = grab(`${scope}-blocked`), failed = grab(`${scope}-failed`);
+    ok(`${scope === "a" ? "shell" : "console"}: blocked and failed are different colours`, !!blocked && !!failed && blocked !== failed);
+    // Reds sit near 0 and 360. Blocked should read amber/olive, well away from that.
+    const hb = hueOf(blocked);
+    ok(`${scope === "a" ? "shell" : "console"}: blocked is not a red`, hb > 30 && hb < 90, `hue ${hb.toFixed(0)}deg`);
+  }
   // The deep public green fails contrast on charcoal, so the console carries a lifted variant of the hue.
   ok("the console uses a lifted accent that survives the dark ground", /--c-accent: #7FBFA8/.test(authCss));
   // Browser focus rings vanish against charcoal, so both grounds define their own.
