@@ -170,7 +170,29 @@ console.log("\n── routes: auth() + ownership-scoped loader before any mutati
   // OWNER (the data-plane key) from the app row + workspace membership and returns null -> 404 for a non-member,
   // exactly like getApplication did. Accept them as ownership loaders.
   const LOADER = /\b(getApplication|getRunInternal|getContractById|contractStatusForRequirement|getRun|getRunArtifactPath|requestRunCancel|gatePreflightApp|gateApiRuntimeApp|applicationAccess|applicationAccessForRun|applicationAccessForContract|applicationAccessForRequirement|applicationAccessForFlow|applicationWorkspaceForManage)\s*\(/;
-  const MUTATION = /(\.(insert|update|upsert|delete)\s*\(|\b(createRun|createDiscovery|setParentRun|persistIssues)\s*\()/;
+  // A MUTATION is a write to TENANT DATA. Two corrections over the naive pattern, both found by this check
+  // failing on routes that were in fact correct:
+  //
+  //   1. res.cookies.delete(...) is not a mutation. It clears a cookie on the caller's own browser, owns
+  //      nothing, and reads no tenant row. Counting it made the OAuth callback look like it mutated before
+  //      it authorized, when the cookie clear simply appears earlier in the file than the gate.
+  //   2. The named connection writers ARE mutations and were missing, so the callback's real write (sealing
+  //      a provider token) was not being ordered against its gate at all. Adding them makes this check
+  //      strictly stronger than before, not weaker.
+  const MUTATION = /((?<!cookies)\.(insert|update|upsert|delete)\s*\(|\b(createRun|createDiscovery|setParentRun|persistIssues|addOAuthConnection|addAccountOAuthConnection)\s*\()/;
+
+  // Dynamic segments come in two kinds, and only one of them names something a tenant owns.
+  //
+  //   [id], [runId], [contractId], ... are TENANT-OWNED resource ids. The caller supplies them, so the route
+  //   must load them through an ownership-scoped loader before trusting them. This is the check that stops
+  //   one account from reading another's application by guessing an id.
+  //
+  //   [provider] is an ENUM: "github", "vercel", "supabase". It is not owned by anyone, it is resolved
+  //   against a fixed allowlist, and an unknown value 404s. There is no row to ownership-check. Demanding a
+  //   loader here was asking for a guard against a threat that does not exist on these routes, and the
+  //   correct guard, the allowlist plus an owner taken from the session rather than the URL, is asserted
+  //   below instead.
+  const ENUM_SEGMENTS = new Set(["[provider]"]);
 
   const routeDir = path.join(ROOT, "app", "api", "preflight");
   const routes: string[] = [];
@@ -206,7 +228,23 @@ console.log("\n── routes: auth() + ownership-scoped loader before any mutati
     const code = src.slice(bodyStart);
     const loaderIdx = code.search(LOADER);
     const mutIdx = code.search(MUTATION);
-    ok(`${r}: dynamic route calls an ownership-scoped loader`, loaderIdx !== -1);
+
+    // Which kind of dynamic route is this? A route whose segments are ALL enums owns no caller-supplied
+    // resource id, so it gets the allowlist rule; anything with a tenant-owned segment gets the loader rule.
+    const segments = r.match(/\[[^\]]+\]/g) ?? [];
+    if (segments.every((s) => ENUM_SEGMENTS.has(s))) {
+      // The segment must be resolved against the fixed provider allowlist, so an unknown value 404s rather
+      // than flowing into a URL, a cookie name, or a table lookup.
+      ok(`${r}: enum segment is resolved against the provider allowlist`, /\bresolveOAuthProvider\s*\(/.test(code));
+      // And the identity must never come from the URL. The owner is the session caller (or the owner sealed
+      // into a signed, HMAC-verified state), never anything derived from the path.
+      ok(`${r}: the owner comes from the session or signed state, never the URL segment`,
+        (/\bauth\s*\(\s*\)/.test(code) || /\bverifyOAuthState\s*\(/.test(code))
+        && !/\b(owner|userId|user_id)\s*=\s*[^;\n]*\bprovider\b/.test(code));
+    } else {
+      ok(`${r}: dynamic route calls an ownership-scoped loader`, loaderIdx !== -1);
+    }
+
     if (mutIdx !== -1) {
       ok(`${r}: ownership loader precedes the first mutation`, loaderIdx !== -1 && loaderIdx < mutIdx);
     } else {
