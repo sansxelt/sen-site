@@ -1,0 +1,114 @@
+/* ──────────────────────────────────────────────────────────────────────────────────────────────────────
+   VRAELIS — AUTHENTICATED token layer
+   Scoped to [data-surface="app"]. Loaded only inside the authenticated layout.
+
+   ONE BRAND, TWO CONTEXTS. vraelis.com stays open and explanatory; the authenticated product is the same
+   brand held tighter: more operational, more compact, more deliberate. It is NOT a second design system and
+   it is NOT dark. Painting every page black would make Vraelis look like a generic developer dashboard, a
+   security console, or a crypto terminal, and would cost the brand more than it bought.
+
+   The darkness is a PRODUCT DEVICE, not an identity. Exactly one surface is dark: the verification console,
+   where the engine actually enters the interface. Everything around it stays warm-neutral, so the console
+   reads as an instrument sitting inside a calm control plane rather than as the theme of the application.
+
+   Nothing here leaks to the public site. These variables only resolve inside the scope below, so a public
+   page rendering the same component gets the untouched public tokens.
+   ────────────────────────────────────────────────────────────────────────────────────────────────────── */
+
+[data-surface="app"] {
+  /* ── Ground and surfaces ──────────────────────────────────────────────────────────────────────────────
+     Slightly cooler and a shade denser than the public ground. The public site breathes; the product is a
+     working surface, so the separation between layers is tighter and does more work per pixel. */
+  --a-ground: #F7F5F1;
+  --a-raised: #FFFFFF;
+  --a-elevated: #FFFFFF;
+
+  /* ── Type ────────────────────────────────────────────────────────────────────────────────────────────
+     Near-black rather than the public warm brown-black: an operational surface wants a firmer contrast
+     floor, because it is read for state rather than for prose. */
+  --a-text: #14140F;
+  --a-text-2: #4A4A43;
+  --a-text-muted: #7C7C73;
+
+  /* ── Structure ───────────────────────────────────────────────────────────────────────────────────────
+     Borders explain structure and nothing else. Quiet is the default; active is only for a focused or
+     selected boundary, never for decoration. */
+  --a-border: #E5E1D8;
+  --a-border-active: #C9C3B4;
+
+  /* ── Signal ──────────────────────────────────────────────────────────────────────────────────────────
+     The Vraelis green stays the single brand signal, held back so it means something when it appears. */
+  --a-accent: #2F5D50;
+  --a-accent-soft: #EDF2EF;
+  --a-accent-line: #CBDBD4;
+
+  /* ── Decision states ─────────────────────────────────────────────────────────────────────────────────
+     Three, matching the public decision vocabulary exactly. Blocked is deliberately NOT red: it is the
+     honest third answer, not a failure, and colouring it like one would train people to read "no verdict"
+     as "broken". */
+  --a-verified: #2F5D50;
+  --a-failed: #A8452A;
+  --a-blocked: #8A7B4F;
+
+  --a-focus: #2F5D50;
+  --a-shadow: 0 1px 2px rgba(20, 20, 15, 0.04), 0 8px 24px -12px rgba(20, 20, 15, 0.10);
+
+  /* ── THE VERIFICATION CONSOLE ────────────────────────────────────────────────────────────────────────
+     The one dark surface. Deep charcoal with a green undertone rather than pure black, so it reads as
+     part of this brand and not as a terminal dropped into the page. Pure #000 is avoided on every layer:
+     the tonal separation between ground, surface and raised is what creates depth without borders. */
+  --c-ground: #16191A;
+  --c-surface: #1C2021;
+  --c-raised: #232829;
+  --c-text: #F2F1EC;
+  --c-text-2: #B4B7B2;
+  --c-text-muted: #7E837F;
+  --c-border: #2C3132;
+  --c-border-active: #3E4544;
+
+  /* On charcoal the deep public green goes muddy and fails contrast, so the console carries a lifted
+     variant of the same hue. Same signal, legible ground. */
+  --c-accent: #7FBFA8;
+  --c-accent-soft: rgba(127, 191, 168, 0.10);
+  --c-verified: #7FBFA8;
+  --c-failed: #E0876A;
+  --c-blocked: #C9B27B;
+}
+
+/* The console itself. A single class so no page hardcodes a dark background, which is how a theme device
+   turns into scattered colour values nobody can change later. */
+[data-surface="app"] .vconsole {
+  background: var(--c-ground);
+  color: var(--c-text);
+  border: 1px solid var(--c-border);
+  border-radius: 14px;
+  /* Depth rather than outline: the console should sit above the page, not be drawn onto it. */
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 18px 48px -24px rgba(20, 24, 25, 0.55);
+}
+[data-surface="app"] .vconsole ::selection { background: rgba(127, 191, 168, 0.28); }
+
+/* Inputs inside the console read as instrument fields: quiet until focused, then unmistakably active. */
+[data-surface="app"] .vconsole-field {
+  background: var(--c-surface);
+  color: var(--c-text);
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  font: inherit;
+  outline: none;
+  transition: border-color 140ms ease, background 140ms ease;
+}
+[data-surface="app"] .vconsole-field::placeholder { color: var(--c-text-muted); }
+[data-surface="app"] .vconsole-field:hover { border-color: var(--c-border-active); }
+[data-surface="app"] .vconsole-field:focus {
+  border-color: var(--c-accent);
+  background: var(--c-raised);
+  box-shadow: 0 0 0 3px var(--c-accent-soft);
+}
+
+/* Keyboard focus must be visible on both grounds. Browser defaults disappear against charcoal. */
+[data-surface="app"] :focus-visible { outline: 2px solid var(--a-focus); outline-offset: 2px; }
+[data-surface="app"] .vconsole :focus-visible { outline-color: var(--c-accent); }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-surface="app"] .vconsole-field { transition: none; }
+}

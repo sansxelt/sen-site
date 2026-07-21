@@ -69,5 +69,50 @@ for (const [root, file] of [
   ok(`/${root} still routes and still has a page`, isAppPath(`/${root}`) && existsSync(file));
 }
 
+// ── The theme boundary ───────────────────────────────────────────────────────────────────────────────────
+// One brand, two contexts. The authenticated token layer must not reach a public document, and the public
+// tokens must not be what the product resolves. The boundary is a single attribute, which is what makes this
+// checkable at all rather than a matter of remembering.
+{
+  console.log("\n── the authenticated theme is scoped, and does not leak ──");
+  const authCss = readFileSync("public/vraelis/authenticated.css", "utf8");
+  const publicTokens = readFileSync("public/vraelis/tokens.css", "utf8");
+  const layout = readFileSync("app/rank/app/layout.tsx", "utf8");
+
+  // Every rule must be scoped. An unscoped :root here would redefine the public palette for the whole
+  // document the moment the sheet loads.
+  const selectors = authCss.split("}")
+    .map((b) => b.split("{")[0].trim())
+    .filter((s) => s && !s.startsWith("/*") && !s.startsWith("@") && !s.includes("*/"));
+  const unscoped = selectors.filter((s) => !s.includes('data-surface="app"'));
+  ok("every authenticated rule is scoped to the app surface", unscoped.length === 0, unscoped.join(" | "));
+  ok("the authenticated sheet never redefines :root", !/^\s*:root\s*\{/m.test(authCss));
+  ok("authenticated tokens do not appear in the public token file", !/--a-ground|--c-ground|--a-accent/.test(publicTokens));
+
+  ok("the authenticated layout establishes the surface attribute", /data-surface="app"/.test(layout));
+  ok("the authenticated stylesheet loads only in the authenticated layout", /authenticated\.css/.test(layout));
+  ok("the public layout does not load the authenticated stylesheet",
+    !readFileSync("app/rank/layout.tsx", "utf8").includes("authenticated.css"));
+
+  console.log("\n── the dark console is a device, not the theme ──");
+  // Exactly one surface is dark. If a page hardcodes a dark background, the device has become an identity
+  // and the warm control plane it is meant to sit inside has quietly disappeared.
+  ok("the console ground is a token, not a hardcoded colour", /--c-ground:/.test(authCss));
+  ok("the console is reachable as one class", /\.vconsole\s*\{/.test(authCss));
+  // Pure black on every layer flattens depth and reads as a terminal rather than as this brand.
+  // Comments are stripped first: the sheet explains this rule in prose, and the prose must not fail it.
+  const authRules = authCss.replace(/\/\*[\s\S]*?\*\//g, "");
+  ok("no pure black is used", !/#000\b|#000000/i.test(authRules));
+  // Blocked must not be coloured as a failure: it is the honest third answer, not a broken run, and
+  // colouring it red would teach people to read "no verdict" as "something went wrong".
+  ok("blocked is not styled as a failure", /--a-blocked: #8A7B4F/.test(authCss) && /--a-failed: #A8452A/.test(authCss));
+  // The deep public green fails contrast on charcoal, so the console carries a lifted variant of the hue.
+  ok("the console uses a lifted accent that survives the dark ground", /--c-accent: #7FBFA8/.test(authCss));
+  // Browser focus rings vanish against charcoal, so both grounds define their own.
+  ok("keyboard focus is defined on both grounds",
+    /:focus-visible \{ outline: 2px solid var\(--a-focus\)/.test(authCss) && /\.vconsole :focus-visible/.test(authCss));
+  ok("reduced motion is respected", /prefers-reduced-motion/.test(authCss));
+}
+
 console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);
