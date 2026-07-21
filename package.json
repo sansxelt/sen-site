@@ -64,7 +64,8 @@
     "apikey:access:test": "tsx scripts/preflight-api-key-access-verify.ts",
     "apikey:lifecycle": "tsx scripts/preflight-api-key-lifecycle.ts",
     "verifications:test": "tsx scripts/preflight-verifications-verify.ts",
-    "cli:test": "node scripts/cli-verify-test.mjs"
+    "cli:test": "node scripts/cli-verify-test.mjs",
+    "research:test": "tsx scripts/research-verify.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",

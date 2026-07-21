@@ -11,10 +11,15 @@ import { isAppPath } from "@/lib/app-routes";
 // server-safe module so app pages can render the same icons without a client boundary.
 import { Ic, I } from "./icons";
 
+// Research sits between Developers and Enterprise for now. The fuller restructure toward
+// Product / Developers / Research / Pricing belongs with the verification-first redesign
+// (docs/verification-first-redesign.md), which is deliberately gated on the first real end-to-end run.
+// Adding one entry now does not commit the nav to a shape the product has not earned yet.
 const PUBLIC_LINKS = [
   { href: "/how-it-works", label: "How it works" },
   { href: "/pricing", label: "Pricing" },
   { href: "/developers", label: "Developers" },
+  { href: "/research", label: "Research" },
   { href: "/enterprise", label: "Enterprise" },
 ];
 
@@ -159,7 +164,7 @@ function Footer() {
           </div>
         </div>
         <Col title="Product" links={productLinks} />
-        <Col title="Developers" links={[["/developers", "Developer overview"], ["/developers#ci-gate", "CI gate"], ["/signin?callbackUrl=%2Fapi", "API & webhooks"]]} />
+        <Col title="Developers" links={[["/developers", "Developer overview"], ["/developers#ci-gate", "CI gate"], ["/research", "Research"], ["/signin?callbackUrl=%2Fapi", "API & webhooks"]]} />
         <Col title="Account" links={[["/app", "Dashboard"], ["/account", "Account"], ["/billing", "Billing"], ["/signin", "Sign in"]]} />
         <Col title="Legal" links={[["/enterprise", "Enterprise & security"], ["/privacy", "Privacy"], ["/terms", "Terms"], ["/refunds", "Refunds"], ["/data-rights", "Data rights"], ["/subprocessors", "Subprocessors"], ["/trademark", "Trademark"], ["/contact", "Contact"]]} />
       </div>
