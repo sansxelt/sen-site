@@ -69,9 +69,104 @@ function assertNoKeyLeak(label: string, r: Res) {
   ok(`${label}: response does not echo the key's secret tail`, !(tail.length > 8 && r.raw.includes(tail)));
 }
 
+// ── PHASE ONE, /v1 FLAVOUR: the same lifecycle through the public product ────────────────────────────────
+// Needs no application id: the verification lane creates and reuses its own. This proves strictly more than
+// the app-scoped flavour (it exercises the key path AND the claim-to-contract pipeline AND the delegation
+// to the runs route), so prefer it unless you specifically want to test a hand-built application.
+async function lifecycleV1() {
+  const claim = process.env.VRAELIS_CLAIM
+    || "A visitor can reach the site and load the main page without an error.";
+  const url = process.env.VRAELIS_TARGET_URL || "";
+  if (!url) { console.error("Set VRAELIS_TARGET_URL to the deployment you want verified."); return; }
+
+  step("STEP 0  the key is rejected where it must be, before anything is spent");
+  const inQuery = await call("POST", `/v1/verifications?api_key=${encodeURIComponent(KEY)}`, { key: null, body: { deployment_url: url, claim } });
+  ok("a key in the query string is refused", inQuery.status === 400 && inQuery.body?.error === "api_key_in_query",
+    `got ${inQuery.status}: ${inQuery.raw.slice(0, 200)}`);
+  const noKey = await call("POST", "/v1/verifications", { key: null, body: { deployment_url: url, claim } });
+  ok("no key and no session is refused", noKey.status === 401, `got ${noKey.status}`);
+  const badKey = await call("POST", "/v1/verifications", { key: "vr_live_deadbeefdeadbeefdeadbeef", body: { deployment_url: url, claim } });
+  ok("an unknown key is refused", badKey.status === 401, `got ${badKey.status}: ${badKey.raw.slice(0, 160)}`);
+  const badBody = await call("POST", "/v1/verifications", { body: { deployment_url: url } });
+  ok("a missing claim is a validation error, not a charge", badBody.status === 400, `got ${badBody.status}`);
+
+  if (!APPROVED) {
+    console.log("\n  STOP. The next step runs a real verification and charges the account.");
+    console.log(`  Claim: ${claim}`);
+    console.log("  Re-run with --i-approve-the-charge to continue.");
+    return;
+  }
+
+  step("STEP 2+3  start a verification from a claim");
+  const idem = `lifecycle-v1-${Date.now()}`;
+  const started = await call("POST", "/v1/verifications", { body: { deployment_url: url, claim }, idem });
+  ok("the verification starts", started.status === 202 && !!started.body?.verification_id,
+    `got ${started.status}: ${started.raw.slice(0, 400)}`);
+  assertNoKeyLeak("create", started);
+  const vid: string = started.body?.verification_id;
+  if (!vid) return;
+  console.log(`      verification: ${vid}`);
+
+  // The disclosure that makes an auto-approved contract safe to act on.
+  const reqs: string[] = started.body?.requirements ?? [];
+  ok("the response echoes the requirements derived from the claim", reqs.length > 0,
+    "without these the caller cannot tell whether the claim was understood");
+  ok("the response states that no human reviewed them", started.body?.human_reviewed === false);
+  for (const r of reqs) console.log(`      · ${r}`);
+
+  step("STEP 4  the same key and the SAME claim does not start a second verification");
+  const replay = await call("POST", "/v1/verifications", { body: { deployment_url: url, claim }, idem });
+  ok("an identical retry returns the SAME verification, or refuses to duplicate it",
+    replay.body?.verification_id === vid || replay.status === 409,
+    `got ${replay.status}: ${replay.raw.slice(0, 300)}`);
+
+  step("STEP 5  the same key with a DIFFERENT claim is refused");
+  const reuse = await call("POST", "/v1/verifications", { body: { deployment_url: url, claim: `${claim} And billing is never charged twice.` }, idem });
+  ok("a reused idempotency key with a changed request does not silently return the first verification",
+    reuse.body?.verification_id !== vid, `got ${reuse.status}: ${reuse.raw.slice(0, 300)}`);
+
+  step("STEP 6  poll until the verdict");
+  const deadline = Date.now() + 15 * 60_000;
+  let final: Res | null = null;
+  while (Date.now() < deadline) {
+    await new Promise((r) => setTimeout(r, 10_000));
+    const poll = await call("GET", `/v1/verifications/${vid}`);
+    if (poll.status !== 200) { console.log(`      poll -> ${poll.status}: ${poll.raw.slice(0, 200)}`); break; }
+    console.log(`      state: ${poll.body?.state}`);
+    if (poll.body?.state === "completed") { final = poll; break; }
+  }
+  ok("a verdict was reached within 15 minutes", !!final);
+  if (!final) return;
+  assertNoKeyLeak("verdict", final);
+
+  step("STEP 7  the decision, the evidence, and the repair prompt");
+  const decision = final.body?.decision;
+  ok("the verdict is one of the three public decisions",
+    ["verified", "failed", "blocked"].includes(decision), `got ${JSON.stringify(decision)}`);
+  console.log(`      decision: ${decision}`);
+  ok("the verdict echoes the claim it tested", typeof final.body?.claim === "string");
+  if (decision === "failed") {
+    ok("a failure carries evidence", (final.body?.failures ?? []).length > 0);
+    ok("a failure carries a repair prompt", typeof final.body?.repair_prompt === "string" && final.body.repair_prompt.length > 40);
+    console.log(`      repair prompt (first 300):\n      ${String(final.body.repair_prompt).slice(0, 300).replace(/\n/g, "\n      ")}`);
+  } else {
+    console.log(`      The claim did not fail, so the repair prompt was not exercised.`);
+    console.log(`      That is a PASS for the lifecycle but NOT proof the repair path works.`);
+    console.log(`      Re-run against a deployment with a KNOWN broken flow to cover it.`);
+  }
+
+  step("STEP 8  revoke, then run phase two");
+  console.log("      Revoke this key in the console (/app/api), then run:");
+  console.log("        npx tsx scripts/preflight-api-key-lifecycle.ts --after-revoke");
+  step("STEP 10  confirm no key material reached the logs");
+  console.log(`      Grep Vercel, the worker, and v_events for the part AFTER ${KEY.slice(0, 16)}`);
+}
+
 function requireEnv(): boolean {
+  const needsApp = !process.env.VRAELIS_TARGET_URL;
   const missing = [
-    ["VRAELIS_BASE_URL", BASE], ["VRAELIS_API_KEY", KEY], ["VRAELIS_APP_ID", APP],
+    ["VRAELIS_BASE_URL", BASE], ["VRAELIS_API_KEY", KEY],
+    ...(needsApp ? [["VRAELIS_APP_ID", APP]] as [string, string][] : []),
   ].filter(([, v]) => !v).map(([k]) => k);
   if (missing.length) { console.error(`Missing environment: ${missing.join(", ")}`); return false; }
   if (!/^https:\/\//.test(BASE)) { console.error("VRAELIS_BASE_URL must be https. This proof is about production."); return false; }
@@ -225,6 +320,7 @@ async function main() {
   console.log(`Vraelis API-key lifecycle proof against ${BASE}`);
   console.log(`Application: ${APP}    Key: ${KEY.slice(0, 16)}...\n`);
   if (AFTER_REVOKE) await afterRevoke();
+  else if (process.env.VRAELIS_TARGET_URL) await lifecycleV1();
   else await lifecycle();
   console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);
   process.exit(fail === 0 ? 0 : 1);
