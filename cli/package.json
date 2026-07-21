@@ -1,0 +1,11 @@
+{
+  "name": "vraelis",
+  "version": "0.1.0",
+  "description": "Verify that a claimed outcome is actually true, in a real browser.",
+  "bin": { "vraelis": "./vraelis.mjs" },
+  "type": "module",
+  "files": ["vraelis.mjs", "README.md"],
+  "engines": { "node": ">=18" },
+  "license": "UNLICENSED",
+  "private": true
+}
