@@ -43,7 +43,7 @@ const APP_NAV: { group: string; items: { href: string; label: string; d: string 
     { href: "/verifications", label: "Verifications", d: I.shield },
     { href: "/systems", label: "Systems", d: I.layers },
     { href: "/connections", label: "Connections", d: I.key },
-    { href: "/api", label: "Developers", d: I.code },
+    { href: "/developers", label: "Developers", d: I.code },
   ] },
   { group: "Settings", items: [
     { href: "/account", label: "Account", d: I.user },
@@ -64,6 +64,7 @@ const NAV_ALIASES: Record<string, string> = {
   "/deployments": "/systems",
   "/activity": "/app",
   "/billing": "/plans",
+  "/api": "/developers",
 };
 
 // Signing out of the product must land on the MARKETING site, not on app.vraelis.com. A bare "/" keeps you

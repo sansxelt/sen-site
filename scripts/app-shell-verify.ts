@@ -76,12 +76,15 @@ const EXPECT: [string, string][] = [
   ["/issues", "/verifications"],
   ["/billing", "/plans"],
   ["/activity", "/app"],
+  // /api is the OLD name for the authenticated developer console, which now lives at /developers. It is an
+  // alias like the rest, not a pass-through, and the page itself still resolves.
+  ["/api", "/developers"],
 ];
 for (const [from, to] of EXPECT) {
   ok(`${from} highlights ${to}`, resolve(from) === to, `got ${resolve(from)}`);
 }
 // A current URL must pass through untouched, or the alias table would hijack live navigation.
-for (const p of ["/systems", "/verifications", "/connections", "/api", "/account"]) {
+for (const p of ["/systems", "/verifications", "/connections", "/developers", "/account"]) {
   ok(`${p} is not rewritten by the alias table`, resolve(p) === p);
 }
 

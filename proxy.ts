@@ -76,6 +76,18 @@ export default function proxy(req: NextRequest) {
     // target /passes never matches legacyRunsPath, so this cannot loop; runs BEFORE the product rewrite.
     const appHostRuns = legacyRunsPath(path);
     if (appHostRuns) return goAbs(req, `https://app.vraelis.com${appHostRuns}`);
+    // /developers means two different things, on purpose, and the host is what decides which.
+    //
+    //   vraelis.com/developers      public documentation, no sign-in, indexable
+    //   app.vraelis.com/developers  the authenticated console: keys, scopes, ceilings, usage
+    //
+    // It deliberately is NOT in APP_ROOTS. isAppPath is host-agnostic and the MAIN host uses it to bounce
+    // product paths over to the app subdomain, so adding "developers" there would redirect the public
+    // documentation to app.vraelis.com and put a sign-in wall in front of the page whose entire job is to
+    // be readable before you have an account.
+    if (path === "/developers" || path.startsWith("/developers/")) {
+      return go(req, "/rank/app/developers" + path.slice("/developers".length), "rewrite");
+    }
     if (path === "/" || isAppPath(path)) {
       return go(req, "/rank/app" + (path === "/" ? "" : path), "rewrite"); // the product itself
     }

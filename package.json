@@ -67,7 +67,8 @@
     "cli:test": "node scripts/cli-verify-test.mjs",
     "research:test": "tsx scripts/research-verify.ts",
     "claims:test": "tsx scripts/research-verify.ts",
-    "shell:test": "tsx scripts/app-shell-verify.ts"
+    "shell:test": "tsx scripts/app-shell-verify.ts",
+    "host:test": "tsx scripts/host-contract-verify.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
