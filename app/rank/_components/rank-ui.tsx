@@ -26,27 +26,45 @@ const PUBLIC_LINKS = [
 // The signed-in product: Vraelis is the production layer for AI-built software. The legacy AI-output checker
 // is deliberately NOT here (it lives flag-gated at /legacy/checks); Projects / Analytics / Data quality
 // belonged to that product and are out of the primary navigation with it.
+// The product is ONE action, "verify this outcome", and the navigation should say that rather than listing
+// six internal systems as equals. Passes, runs, contracts, issues and reports are lifecycle stages INSIDE a
+// verification; putting them in the sidebar asked every user to learn the internal architecture before they
+// could do anything.
+//
+// Nothing below was deleted. /applications, /passes, /issues, /repairs, /deployments, /activity, /credits,
+// /billing and /plans all still resolve, and the pages they render are unchanged. This is a visible
+// hierarchy change, not a backend rewrite, so an existing workflow or bookmark keeps working.
+//
+// API keys sit under Developers rather than being duplicated in Settings: it is one page, and two sidebar
+// entries pointing at the same destination is how a menu starts lying about how much is in it.
 const APP_NAV: { group: string; items: { href: string; label: string; d: string }[] }[] = [
   { group: "Product", items: [
-    { href: "/app", label: "Overview", d: I.grid },
-    { href: "/applications", label: "Applications", d: I.layers },
-    { href: "/passes", label: "Verification", d: I.shield },
-    { href: "/issues", label: "Issues", d: I.alert },
-    { href: "/repairs", label: "Repairs", d: I.wrench },
-    { href: "/deployments", label: "Deployments", d: I.deploy },
-    { href: "/activity", label: "Activity", d: I.clock },
+    { href: "/app", label: "Home", d: I.grid },
+    { href: "/verifications", label: "Verifications", d: I.shield },
+    { href: "/systems", label: "Systems", d: I.layers },
+    { href: "/connections", label: "Connections", d: I.key },
+    { href: "/api", label: "Developers", d: I.code },
   ] },
   { group: "Settings", items: [
+    { href: "/account", label: "Account", d: I.user },
     { href: "/team", label: "Team", d: I.user },
     { href: "/organization", label: "Organization", d: I.building },
-    { href: "/api", label: "API & Webhooks", d: I.code },
-    { href: "/connections", label: "Connections", d: I.key },
-    { href: "/plans", label: "Plans", d: I.layers },
-    { href: "/credits", label: "Credits", d: I.coin },
-    { href: "/billing", label: "Billing", d: I.card },
-    { href: "/account", label: "Account", d: I.user },
+    { href: "/credits", label: "Usage & credits", d: I.coin },
+    { href: "/plans", label: "Plans & billing", d: I.card },
   ] },
 ];
+
+// Old destinations that are no longer in the sidebar but must still light up the right nav item when
+// visited directly, so a bookmarked URL does not land you in a shell with nothing selected.
+const NAV_ALIASES: Record<string, string> = {
+  "/applications": "/systems",
+  "/passes": "/verifications",
+  "/issues": "/verifications",
+  "/repairs": "/verifications",
+  "/deployments": "/systems",
+  "/activity": "/app",
+  "/billing": "/plans",
+};
 
 // Signing out of the product must land on the MARKETING site, not on app.vraelis.com. A bare "/" keeps you
 // on the app subdomain, which after sign-out is a stub page with a single sign-in button and no way back to
@@ -341,7 +359,13 @@ function WorkspaceSwitcher() {
 
 function AppSidebar({ humanEval }: { humanEval: boolean }) {
   const pathname = usePathname() || "";
-  const active = (href: string) => href === "/app" ? (pathname === "/app" || pathname === "/") : (pathname === href || pathname.startsWith(href + "/"));
+  // A retired destination still has to light up the item that replaced it, or a bookmarked /applications URL
+  // renders the shell with nothing selected and the user cannot tell where they are.
+  const aliasRoot = Object.keys(NAV_ALIASES).find((old) => pathname === old || pathname.startsWith(old + "/"));
+  const effective = aliasRoot ? NAV_ALIASES[aliasRoot] : pathname;
+  const active = (href: string) => href === "/app"
+    ? (effective === "/app" || effective === "/")
+    : (effective === href || effective.startsWith(href + "/"));
   // Human-eval ingress ("Evaluate & Earn" -> /vote) is hidden unless the flag is on.
   const nav = APP_NAV.map((g) => ({ ...g, items: g.items.filter((it) => humanEval || it.href !== "/vote") }));
   return (

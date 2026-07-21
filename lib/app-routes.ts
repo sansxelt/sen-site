@@ -7,6 +7,10 @@
 // AFTER the public renames (apps->applications, audit->activity, api-keys->api). "account" also appears in
 // the retired-sansxel redirect list, so the product check must always run first.
 export const APP_ROOTS = [
+  // The product vocabulary. "systems" and "verifications" are the canonical URLs; "applications" and
+  // "passes" name the same pages under the older words and stay routable so existing links keep working.
+  // A root missing here still builds, but never rewrites on app.vraelis.com, so it 404s only in production.
+  "systems", "verifications",
   "applications", "passes", "issues", "repairs", "deployments", "activity",
   "team", "organization", "api", "connections", "plans", "credits", "billing", "account", "checkout",
   "data", "data-quality", "projects", "shared", "sandbox", "legacy", "admin", "tests", "new", "_workspace",
