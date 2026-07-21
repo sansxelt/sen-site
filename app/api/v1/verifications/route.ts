@@ -25,8 +25,10 @@ import { resolvePrincipal, logKeyUsage, PREFLIGHT_SCOPES } from "@/lib/preflight
 import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { unsafeHttpsUrlReason } from "@/lib/safe-fetch";
 import { laneApplication, synthesizeClaim, prepareVerification } from "@/lib/preflight/verification-lane";
+import { runIdentity } from "@/lib/preflight/runs-db";
+import { getContractById } from "@/lib/v-applications";
 import { apiError, requestId } from "../_lib";
-import { toVerificationId } from "./_shared";
+import { toVerificationId, canonicalClaim } from "./_shared";
 
 export const runtime = "nodejs";
 export const maxDuration = 300; // crawl + synthesis before the launch; well inside the worker's own budget
@@ -97,10 +99,49 @@ export async function POST(req: Request) {
   const launched = await launchRun(forwarded, { params: Promise.resolve({ id: prepared.applicationId }) });
   const result = await launched.json().catch(() => null) as { runId?: string; error?: string; message?: string } | null;
 
-  // Every refusal the runs route can produce (paused, over a cap, over the key ceiling, out of balance) is
-  // passed through with its own status and message rather than being flattened. An agent branching on
-  // key_daily_ceiling must still see key_daily_ceiling.
-  if (!result?.runId) {
+  // IDEMPOTENCY RECONCILIATION. /v1 must respect the launch VERDICT, not merely whether a runId came back.
+  //
+  // The runs route dedupes on an idempotency key bound to the payload, and a 409 conflict still carries the
+  // conflicting runId. An earlier version checked only `result.runId` and so treated that 409 as success:
+  // a caller who reused a key with a CHANGED claim got a 202 with the FIRST verification's id and believed
+  // their new claim was running. That is precisely the confident-wrong-answer this product exists to catch,
+  // reintroduced at the seam. Found by the first real production run.
+  //
+  // The runs route cannot tell an identical retry from a changed request on this path, because the
+  // verification lane mints fresh flow ids per call, so the payload fingerprint never repeats and EVERY
+  // reuse looks like a changed payload. /v1 can tell, because it holds the caller's inputs: compare the
+  // claim (and URL) the conflicting run actually tested.
+  if (launched.status === 409 && result?.runId) {
+    const idn = await runIdentity(p.principal.email, result.runId);
+    const priorClaim = idn?.contractId ? (await getContractById(p.principal.email, idn.contractId))?.source_prompt : null;
+    const sameRequest = !!idn
+      && canonicalClaim(priorClaim) === canonicalClaim(claim)
+      && idn.deploymentUrl === deploymentUrl;
+    if (sameRequest) {
+      // A genuine retry: same key, same claim, same deployment. Return the ORIGINAL verification rather than
+      // starting or charging a second one. This is the double-click / lost-response case working correctly.
+      await logKeyUsage(p.principal, { endpoint: "POST /v1/verifications", status: 200, applicationId: prepared.applicationId, runId: result.runId });
+      return Response.json({
+        verification_id: toVerificationId(result.runId),
+        state: "running",
+        status_url: `/v1/verifications/${toVerificationId(result.runId)}`,
+        claim,
+        requirements: prepared.requirements,
+        human_reviewed: false,
+      }, { status: 200, headers: { "X-Request-Id": rid } });
+    }
+    // Same key, DIFFERENT request. Refuse loudly rather than answering with the earlier run.
+    await logKeyUsage(p.principal, { endpoint: "POST /v1/verifications", status: 409, applicationId: prepared.applicationId });
+    return Response.json(
+      { error: { code: "idempotency_key_reused", message: "That idempotency key was already used for a different verification. Use a new key, or resend the original request exactly.", request_id: rid } },
+      { status: 409, headers: { "X-Request-Id": rid } },
+    );
+  }
+
+  // Every other refusal (paused, over a cap, over the key ceiling, out of balance) is passed through with
+  // its own status and message rather than flattened. An agent branching on key_daily_ceiling must still
+  // see key_daily_ceiling.
+  if (!launched.ok || !result?.runId) {
     return Response.json(
       { error: { code: result?.error ?? "internal_error", message: result?.message ?? "The verification could not be started.", request_id: rid } },
       { status: launched.status, headers: { "X-Request-Id": rid } },

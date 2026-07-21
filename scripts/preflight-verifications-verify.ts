@@ -135,11 +135,40 @@ function disclosureTests() {
   ok("/v1/* is rewritten to the handlers, not redirected", /path\.startsWith\("\/v1\/"\)[\s\S]{0,80}"rewrite"/.test(proxy));
 }
 
+// ── idempotency reconciliation at the /v1 seam ──────────────────────────────────────────────────────────
+// The first real production run found that /v1 treated a 409 conflict from the runs route as success,
+// because the 409 carries a runId and the check was only "is there a runId". A caller who reused an
+// idempotency key with a CHANGED claim got a 202 with the FIRST verification's id. These lock the fix.
+import { canonicalClaim } from "../app/api/v1/verifications/_shared";
+
+function reconciliationTests() {
+  console.log("\n── canonical claim decides same-vs-different request ──");
+  ok("whitespace-only differences are the SAME claim",
+    canonicalClaim("A user  can\n pay ") === canonicalClaim("A user can pay"));
+  ok("a changed claim is DIFFERENT", canonicalClaim("A user can pay") !== canonicalClaim("A user can pay twice"));
+  ok("an appended sentence is DIFFERENT (the STEP 5 case)",
+    canonicalClaim("Pro access is granted") !== canonicalClaim("Pro access is granted And billing is never charged twice."));
+  ok("empty and null canonicalize the same", canonicalClaim(null) === canonicalClaim(""));
+
+  console.log("\n── the route respects the launch verdict, not just the presence of a runId ──");
+  const src = read(ROUTE_CREATE);
+  ok("a 409 from the runs route is handled explicitly", /launched\.status === 409 && result\?\.runId/.test(src));
+  ok("a reused key with the SAME claim returns the ORIGINAL verification at status 200",
+    /sameRequest[\s\S]{0,400}status: 200/.test(src));
+  ok("a reused key with a DIFFERENT claim is refused as idempotency_key_reused",
+    /idempotency_key_reused[\s\S]{0,220}status: 409/.test(src));
+  // The old bug: success was inferred from a runId alone. Success must now gate on the HTTP result too.
+  ok("success now requires an ok status, not merely a runId", /if \(!launched\.ok \|\| !result\?\.runId\)/.test(src));
+  ok("the sameRequest check compares BOTH the claim and the deployment url",
+    /canonicalClaim\(priorClaim\) === canonicalClaim\(claim\)[\s\S]{0,140}idn\.deploymentUrl === deploymentUrl/.test(src));
+}
+
 function main() {
   idTests();
   decisionTests();
   delegationTests();
   disclosureTests();
+  reconciliationTests();
   console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);
   process.exit(fail === 0 ? 0 : 1);
 }

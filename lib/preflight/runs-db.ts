@@ -419,3 +419,16 @@ export async function runContractId(owner: string, runId: string): Promise<strin
     .select("contract_id").eq("user_id", norm(owner)).eq("id", runId).maybeSingle();
   return (data as { contract_id?: string } | null)?.contract_id ?? null;
 }
+
+// A run's identity for idempotency reconciliation at the /v1 layer: which contract it tested and which URL.
+// The public verification surface needs both to answer "is this reused idempotency key the SAME request as
+// the run it collided with, or a different one?" — which the runs route itself cannot answer, because the
+// verification lane mints fresh flow ids per call so the runs-route payload fingerprint never repeats.
+export async function runIdentity(owner: string, runId: string): Promise<{ contractId: string | null; deploymentUrl: string | null } | null> {
+  if (!isDatabaseConfigured()) return null;
+  const { data } = await db().from("v_preflight_runs")
+    .select("contract_id, deployment_url").eq("user_id", norm(owner)).eq("id", runId).maybeSingle();
+  const r = data as { contract_id?: string; deployment_url?: string } | null;
+  if (!r) return null;
+  return { contractId: r.contract_id ?? null, deploymentUrl: r.deployment_url ?? null };
+}

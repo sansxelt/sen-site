@@ -8,6 +8,13 @@ const PREFIX = "vrf_";
 
 export function toVerificationId(runId: string): string { return `${PREFIX}${runId}`; }
 
+// Canonical form of a claim, used to decide whether a reused idempotency key names the SAME request. Trim
+// and collapse internal whitespace, nothing more: two submissions that differ only in spacing are the same
+// outcome, and anything else is a different claim that must not be answered with an earlier run's result.
+export function canonicalClaim(raw: string | null | undefined): string {
+  return (raw ?? "").trim().replace(/\s+/g, " ");
+}
+
 /** Null when the id is not a verification id at all, so a caller cannot probe run ids through this surface. */
 export function toRunId(verificationId: string): string | null {
   if (!verificationId.startsWith(PREFIX)) return null;
