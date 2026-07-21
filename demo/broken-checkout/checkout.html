@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Checkout — Lumen Notes</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="bar">
+  <a class="brand" href="/">Lumen<span>Notes</span></a>
+  <nav>
+    <a href="/pricing.html">Pricing</a>
+    <a href="/account.html">Account</a>
+  </nav>
+</header>
+
+<main class="wrap">
+  <h1>Checkout</h1>
+  <p class="lede">Lumen Notes Pro, $20 per month. Cancel any time.</p>
+
+  <form class="card" id="pay">
+    <h2>Payment details</h2>
+    <label for="email">Email</label>
+    <input id="email" name="email" type="email" value="demo@example.com" required>
+
+    <label for="card">Card number</label>
+    <input id="card" name="card" inputmode="numeric" value="4242 4242 4242 4242" required>
+
+    <label for="exp">Expiry</label>
+    <input id="exp" name="exp" value="12/30" required>
+
+    <label for="cvc">CVC</label>
+    <input id="cvc" name="cvc" inputmode="numeric" value="123" required>
+
+    <p style="margin-top:20px">
+      <button class="btn btn--lg" type="submit">Pay $20 and start Pro</button>
+    </p>
+  </form>
+</main>
+
+<footer class="foot">
+  <p>Lumen Notes is a fixture app used to demonstrate Vraelis. Nothing here is real and no payment is taken.</p>
+</footer>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────────────────────────────
+// THE BUG. This is the whole point of the fixture, and it is the single most common way a vibe-coded
+// checkout ships broken: the PAYMENT path works perfectly and the ENTITLEMENT is never granted.
+//
+// The payment is recorded (ln_paid=1) and the user is sent to a success page that congratulates them.
+// Everything they can see says it worked. But the account page reads `ln_plan`, and nothing here ever
+// writes it, so they stay on Free.
+//
+// Why this is the right bug to demonstrate with: no page errors, no console exception, no failed request,
+// and a 200 on everything. Clicking through it as a human feels correct, because the only place the truth
+// shows up is a DIFFERENT page than the one that confirms success. Unit tests pass, because the payment
+// function does exactly what it says. It is invisible to everything except actually completing the journey
+// and then checking the outcome, which is what Vraelis does.
+//
+// THE FIX is one line, marked below.
+// ─────────────────────────────────────────────────────────────────────────────────────────────────────
+document.getElementById("pay").addEventListener("submit", function (e) {
+  e.preventDefault();
+
+  // Record that the payment succeeded. This part is correct.
+  document.cookie = "ln_paid=1; path=/; max-age=86400";
+
+  // THE FIX: uncomment the next line so the purchase actually grants the plan it was for.
+  // document.cookie = "ln_plan=pro; path=/; max-age=86400";
+
+  window.location.href = "/success.html";
+});
+</script>
+</body>
+</html>

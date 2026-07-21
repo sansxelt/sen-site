@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in — Lumen Notes</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="bar">
+  <a class="brand" href="/">Lumen<span>Notes</span></a>
+  <nav>
+    <a href="/pricing.html">Pricing</a>
+    <a href="/account.html">Account</a>
+  </nav>
+</header>
+
+<main class="wrap">
+  <h1>Sign in</h1>
+  <!-- Signing in again is part of the claim ("and still has it after signing in again") because entitlement
+       bugs often only surface on a fresh session. Here the plan was never granted at all, so it fails both
+       before and after; this page exists so the full claim is actually exercisable end to end. -->
+  <form class="card" id="signin">
+    <label for="su-email">Email</label>
+    <input id="su-email" name="email" type="email" value="demo@example.com" required>
+    <label for="su-pass">Password</label>
+    <input id="su-pass" name="password" type="password" value="hunter2" required>
+    <p style="margin-top:20px"><button class="btn btn--lg" type="submit">Sign in</button></p>
+  </form>
+</main>
+
+<footer class="foot">
+  <p>Lumen Notes is a fixture app used to demonstrate Vraelis. Nothing here is real and no payment is taken.</p>
+</footer>
+
+<script>
+document.getElementById("signin").addEventListener("submit", function (e) {
+  e.preventDefault();
+  document.cookie = "ln_user=demo@example.com; path=/; max-age=86400";
+  window.location.href = "/account.html";
+});
+</script>
+</body>
+</html>
