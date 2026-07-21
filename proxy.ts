@@ -13,6 +13,10 @@ const CLEAN_EXACT: Record<string, string> = {
   "/pricing": "/rank/pricing",
   "/free-report": "/rank/free-report",
   "/developers": "/rank/developers",
+  "/research": "/rank/research",
+  // Was UNMAPPED and 404ing in production while the homepage and every article linked to it. The page has
+  // existed for a long time; nothing surfaces an unmapped route until someone clicks the link.
+  "/limitations": "/rank/limitations",
   "/privacy": "/rank/privacy",
   "/terms": "/rank/terms",
   "/data-rights": "/rank/data-rights",
@@ -176,6 +180,9 @@ export default function proxy(req: NextRequest) {
     if (path === "/app" || path.startsWith("/app/")) target = "/rank" + path;
     else if (path === "/vote" || path.startsWith("/vote/")) target = "/rank" + path;
     else if (path === "/guides" || path.startsWith("/guides/")) target = "/rank" + path; // programmatic QA guides
+    // Research articles live at /research/<slug>, so the section needs the PREFIX form as well as the exact
+    // entry above. A section with only an exact mapping serves its index and 404s every article under it.
+    else if (path.startsWith("/research/")) target = "/rank" + path;
   }
   if (target) return go(req, target, "rewrite");
 

@@ -8,7 +8,7 @@
 // while 404ing or leaking a sign-in wall in production. The APP_ROOTS omission caught during the navigation
 // work was exactly this shape, and it reached a commit.
 import { readFileSync } from "node:fs";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { isAppPath, APP_ROOTS } from "../lib/app-routes";
 
 let pass = 0, fail = 0;
@@ -39,6 +39,35 @@ ok("the app host rewrites /developers to the authenticated console",
   /path === "\/developers"[\s\S]{0,200}rank\/app\/developers/.test(proxy));
 ok("that rewrite precedes the marketing bounce (order decides which page you get)",
   proxy.indexOf('rank/app/developers') < proxy.indexOf("marketing never renders here"));
+
+console.log("\n── every public page is actually reachable ──");
+// A page under app/rank/ only serves if the proxy maps its clean path to /rank/<path>. Nothing enforces
+// that at build time: the page compiles, renders locally through the dev fallthrough, and 404s in
+// production. /research shipped exactly that way, was deployed, and was dead on arrival.
+{
+  const cleanExact = new Set(
+    [...proxy.matchAll(/"(\/[a-z0-9-]*)":\s*"\/rank[^"]*"/g)].map((m) => m[1]),
+  );
+  const prefixed = [...proxy.matchAll(/path\.startsWith\("(\/[a-z0-9-]+)\/"\)\)\s*target = "\/rank"/g)].map((m) => m[1]);
+
+  // Every directory directly under app/rank/ that has a page is a public route.
+  const pages = readdirSync("app/rank", { withFileTypes: true })
+    .filter((d) => d.isDirectory() && !d.name.startsWith("_") && d.name !== "app")
+    .filter((d) => existsSync(`app/rank/${d.name}/page.tsx`))
+    .map((d) => `/${d.name}`);
+
+  // A page is reachable three legitimate ways: an exact map, a prefix rule, or a deliberate redirect
+  // somewhere else. Only "none of the above" is a bug.
+  const redirected = [...proxy.matchAll(/path === "(\/[a-z0-9-]+)"\) return go\(req, "\/[a-z0-9-]+", "redirect"\)/g)].map((m) => m[1]);
+  const exactPrefixed = [...proxy.matchAll(/path === "(\/[a-z0-9-]+)" \|\| path\.startsWith/g)].map((m) => m[1]);
+  for (const p of pages) {
+    const reachable = cleanExact.has(p) || prefixed.includes(p) || exactPrefixed.includes(p) || redirected.includes(p);
+    ok(`${p} is reachable in production`, reachable, "no exact map, no prefix rule, no redirect: this 404s on vraelis.com only");
+  }
+  // A section with dynamic children needs the prefix form too, or the index works and every article 404s.
+  ok("/research articles are reachable, not just the index", prefixed.includes("/research"),
+    "needs a startsWith(\"/research/\") rule");
+}
 
 console.log("\n── cross-host redirects preserve the query string ──");
 // A dropped query silently breaks ?callbackUrl, ?oauth=, and every share link with parameters.
