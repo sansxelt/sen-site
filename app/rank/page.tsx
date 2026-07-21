@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { ogMeta } from "@/lib/og-meta";
-import { PassDemo } from "./_components/pass-demo";
+import { VerificationTimeline } from "./_components/verification-timeline";
 import { TwoUserDemo } from "./_components/two-user-demo";
 
 export const metadata = {
   ...ogMeta({
-    title: "AI can build it. Nobody checked it.",
+    title: "AI says it is done. Vraelis proves it.",
     description:
-      "AI can build it. Nobody checked it. Vraelis runs the flows you approve in a real browser against your deployed application and shows what held and what broke, with the evidence. Web checking is live; API checking is in beta.",
+      "Give Vraelis a deployed application and the outcome that should be true. It independently derives what must be checked, verifies the live result, and returns the evidence behind its decision. Starting with deployed web applications.",
     path: "/",
     // Text-only card: LinkedIn froze on a stale OG image across several ?v bumps, so the homepage
     // advertises no image and shows the current title + description instead.
@@ -107,26 +107,29 @@ export default function VraelisLanding() {
         <div className="grid-faint" style={{ opacity: 0.55 }} />
         <div className="wrap hero-grid" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(32px, 4vw, 56px)", paddingBottom: "clamp(32px, 4vw, 52px)" }}>
           <div className="hero-copy">
-            <p className="eyebrow rise" data-d="1">Verification for AI-built applications</p>
+            <p className="eyebrow rise" data-d="1">The independent verification layer for work performed by AI</p>
             <h1 className="display rise" data-d="2" style={{ fontSize: "clamp(2.3rem, 4.4vw, 3.7rem)", margin: "0 0 20px", lineHeight: 1.05, textWrap: "balance" }}>
-              AI can build it. <span className="em">Nobody checked it</span>.
+              AI says it&rsquo;s done. <span className="em">Vraelis proves it</span>.
             </h1>
             <p className="rise" data-d="3" style={{ fontSize: "clamp(1.05rem, 1.3vw, 1.22rem)", color: "var(--fg-2)", maxWidth: 560, margin: "0 0 26px", lineHeight: 1.55 }}>
-              Vraelis is what checks now. It reads your deployed application, proposes the flows that matter, and runs the ones you approve in a real browser against the app your users actually receive. No SDK, no test files, nothing added to your codebase.
+              Give Vraelis a deployed application and the outcome that should be true. It independently derives what must be checked, verifies the live result, and returns the evidence behind its decision.
             </p>
             <div className="rise" data-d="4" style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
-              <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Check your application <span aria-hidden>→</span></Link>
-              <Link href="/how-it-works" style={{ fontSize: 15, fontWeight: 600, color: "var(--fg-2)", textDecoration: "none", textUnderlineOffset: 4, borderBottom: "1px solid var(--line-3)", paddingBottom: 2 }}>See how it works</Link>
+              <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Verify an outcome <span aria-hidden>→</span></Link>
+              <Link href="/developers" style={{ fontSize: 15, fontWeight: 600, color: "var(--fg-2)", textDecoration: "none", textUnderlineOffset: 4, borderBottom: "1px solid var(--line-3)", paddingBottom: 2 }}>View the API</Link>
             </div>
+            {/* The honesty line. A page that promises to verify "outcomes" invites the reader to assume any
+                system, and only deployed web applications work today. Said in the hero rather than a footnote,
+                because the assumption forms in the hero. */}
             <p className="rise" data-d="4" style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-4)", margin: "16px 0 0", maxWidth: 500, lineHeight: 1.55 }}>
-              Web checking is live. API checking is in beta. You approve every flow before anything runs.
+              Starting with deployed web applications.
             </p>
           </div>
 
-          {/* Signature artifact: a production decision, tied to an exact build, with evidence.
-              Interactive demonstration: the normal outcome is READY; switch to see a failure detected. */}
+          {/* The main visual is the LOOP, not a dashboard. A screenshot shows what the software looks like;
+              this shows what it does, which is the part nobody has a mental model for yet. */}
           <div className="hero-demo rise" data-d="5" style={{ position: "relative", minWidth: 0 }}>
-            <PassDemo />
+            <VerificationTimeline />
           </div>
         </div>
       </section>
