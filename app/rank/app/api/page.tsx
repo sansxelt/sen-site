@@ -152,7 +152,7 @@ export default function ApiKeysPage() {
               <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>Caps what this one key can spend, on top of your account limits. Leave empty for no key limit. It can only ever lower what the key can spend, never raise it.</span>
             </div>
           )}
-          <span className="hint">Name your keys so you can tell them apart. The full key is shown once at creation. Keep keys server-side only, and rotate or revoke a key if it&apos;s ever exposed. <Link href="/developers" style={{ color: "var(--acc-deep)" }}>Developer docs →</Link></span>
+          <span className="hint">Name your keys so you can tell them apart. The full key is shown once at creation. Keep keys server-side only, and rotate or revoke a key if it&apos;s ever exposed. <a href="https://vraelis.com/developers" style={{ color: "var(--acc-deep)" }}>Developer docs →</a></span>
         </div>
       </div>
 
@@ -162,12 +162,15 @@ export default function ApiKeysPage() {
           <div style={{ flex: "1 1 320px", minWidth: 0 }}>
             <div style={cardHead}>Gate your deploys from CI</div>
             <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 12px" }}>Queue a Production Pass against a preview build, wait for the launch decision, and stop the release on anything but READY. One job, real-browser evidence, no dashboard to watch.</p>
-            <Link href="/developers" className="btn">See the CI gate →</Link>
+            <a href="#ci-gate" className="btn">See the CI gate →</a>
           </div>
         </div>
+        {/* "Developer overview" is the PUBLIC docs on the apex host; the host decides which /developers you get
+            (see proxy.ts), so this must be an absolute cross-host link, not a relative one that would just
+            reload this console. "Webhook signing" and the CI gate are on THIS page (ids below), so they anchor. */}
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 14 }}>
-          <Link href="/developers" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Developer overview</Link>
-          <Link href="/developers#webhooks" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Webhook signing</Link>
+          <a href="https://vraelis.com/developers" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Developer overview</a>
+          <a href="#webhooks" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Webhook signing</a>
         </div>
       </div>
 
@@ -311,15 +314,16 @@ export default function ApiKeysPage() {
         </div>
       )}
 
-      {/* docs */}
-      <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12, marginTop: 28 }}>Quickstart</div>
+      {/* docs. id="ci-gate" is the target of the "See the CI gate" button above: the CURL below IS the CI
+          integration (queue a Production Pass, poll it, stop the deploy on anything but READY). */}
+      <div id="ci-gate" style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12, marginTop: 28, scrollMarginTop: 80 }}>Quickstart: gate a deploy from CI</div>
       <div className="codebar"><i /><i /><i /><span>shell</span></div>
       <pre className="codeblock"><code>{CURL}</code></pre>
       <p style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-5)", marginTop: 14, lineHeight: 1.6 }}>
         Production Passes triggered over the API draw on the same account balance as the web app. Auth via <code style={{ color: "var(--fg-3)" }}>X-Api-Key</code> or <code style={{ color: "var(--fg-3)" }}>Authorization: Bearer</code>.
       </p>
 
-      <div id="webhooks"><WebhooksSection /></div>
+      <div id="webhooks" style={{ scrollMarginTop: 80 }}><WebhooksSection /></div>
     </div>
   );
 }

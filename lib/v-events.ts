@@ -184,21 +184,27 @@ export async function apiUsage(userId: string): Promise<ApiUsage> {
   try {
     const s = getSupabaseAdminClient();
     const uid = userId.trim().toLowerCase();
-    const base = () => s.from("v_events" as never).select("*", { count: "exact", head: true }).eq("user_id", uid).eq("event_type", "api_request_made");
+    // Count BOTH request event types. /api/v1 calls log "api_request_made"; the preflight surface (queue a
+    // Production Pass, poll it, price a pass) logs "api_key_used". Both are API calls a key made and both
+    // carry metadata.prefix — counting only the first hid every Production Pass a key launched from its usage.
+    const TYPES = ["api_request_made", "api_key_used"];
+    const base = () => s.from("v_events" as never).select("*", { count: "exact", head: true }).eq("user_id", uid).in("event_type", TYPES as never);
     const cut = (ms: number) => new Date(Date.now() - ms).toISOString();
     const [tot, d1, d7, recent] = await Promise.all([
       base(),
       base().gte("created_at", cut(24 * 3600e3)),
       base().gte("created_at", cut(7 * 24 * 3600e3)),
-      s.from("v_events" as never).select("metadata,created_at").eq("user_id", uid).eq("event_type", "api_request_made").order("created_at", { ascending: false }).limit(2000),
+      s.from("v_events" as never).select("route,metadata,created_at").eq("user_id", uid).in("event_type", TYPES as never).order("created_at", { ascending: false }).limit(2000),
     ]);
     if (tot.error) return empty;
-    const rows = (recent.data as unknown as { metadata: Record<string, unknown>; created_at: string }[]) ?? [];
+    const rows = (recent.data as unknown as { route: string | null; metadata: Record<string, unknown>; created_at: string }[]) ?? [];
     const epMap: Record<string, { endpoint: string; method: string; count: number }> = {};
     const byPrefix: Record<string, number> = {};
     for (const r of rows) {
       const m = r.metadata || {};
-      const ep = String(m.endpoint ?? "other"); const method = String(m.method ?? "");
+      // api_key_used carries the endpoint in the `route` column, not metadata.endpoint. Fall back to it so
+      // preflight calls group by their real endpoint instead of collapsing into "other".
+      const ep = String(m.endpoint ?? r.route ?? "other"); const method = String(m.method ?? "");
       const k = `${method} ${ep}`;
       (epMap[k] ??= { endpoint: ep, method, count: 0 }).count++;
       if (m.prefix) byPrefix[String(m.prefix)] = (byPrefix[String(m.prefix)] ?? 0) + 1;
