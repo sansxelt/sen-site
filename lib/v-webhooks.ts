@@ -1,16 +1,18 @@
-// Vraelis webhooks — push test.completed events to API customers. The customer
-// then pulls full results from the export endpoints. Payloads NEVER include owner
-// email/user_id, API keys, billing, or raw ip/device data. Owner-scoped CRUD.
+// Vraelis webhooks — push verification.completed events to the owner's account-level
+// endpoints. Signed (HMAC-SHA256), retry-queued, and owner-safe: the payload carries
+// only the verification decision + flow counts + ids + a report link (the identical
+// owner-safe shape built by buildVerificationPayload in lib/preflight/webhook-dispatch).
+// NEVER owner email/user_id, API keys, billing, or raw ip/device data. Owner-scoped CRUD.
+// Delivery fires from the run finalizer (worker/preflight/run-store-postgres.ts), the
+// same source as the per-app connection webhooks; both carry the same owner-safe payload.
 
 import crypto from "crypto";
 import net from "net";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { isPrivateIp, safeFetch } from "./safe-fetch";
-import { getTestWithOptions, getReport, OPTION_LETTERS, type VTest } from "./v-db";
 import { logEvent } from "./v-events";
-import { buildDecisionPackage, SAMPLE_DECISION_PACKAGE } from "./v-decision-package";
+import type { VerificationWebhookPayload } from "./preflight/webhook-dispatch";
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://vraelis.com";
 const MAX_ENDPOINTS = 10;
 const DELIVERY_TIMEOUT_MS = 6000;
 const MAX_ATTEMPTS = 5;
@@ -150,37 +152,6 @@ export async function listDeliveries(userId: string, endpointId: string): Promis
   return (data as unknown as DeliveryRow[]) ?? [];
 }
 
-// ── Payload (no private fields) ──
-async function buildCompletedPayload(test: VTest, results: unknown, deliveryId: string) {
-  const r = results as { total?: number; filtered?: number; winner_option_id?: string | null; ranked?: { id: string; position: number; pct: number }[] } | null;
-  const winnerRow = r?.winner_option_id ? (r.ranked ?? []).find((x) => x.id === r.winner_option_id) : null;
-  // Compact, safe Decision Package (recommendation, confidence, signal/audience/source
-  // summary). No URLs, tokens, answers, or secrets.
-  const decision_package = await buildDecisionPackage(test.id, "webhook").catch(() => null);
-  return {
-    event: "test.completed",
-    delivery_id: deliveryId,
-    created_at: new Date().toISOString(),
-    test: {
-      id: test.id,
-      title: test.title,
-      status: "completed",
-      completed_at: test.completed_at,
-      votes_valid: r?.total ?? test.votes_valid,
-      votes_filtered: r?.filtered ?? 0,
-      winner: winnerRow ? { option: OPTION_LETTERS[winnerRow.position], pct: winnerRow.pct } : null,
-      inconclusive: !!r && !r.winner_option_id,
-    },
-    decision_package,
-    links: {
-      report_url: `${SITE}/tests/${test.id}/report`,
-      public_report_url: test.share_enabled && test.share_token ? `${SITE}/r/${test.share_token}` : null,
-      export_json: `${SITE}/api/v1/tests/${test.id}/export?format=json`,
-      export_csv: `${SITE}/api/v1/tests/${test.id}/export?format=csv`,
-    },
-  };
-}
-
 async function post(url: string, secret: string, event: string, deliveryId: string, payload: unknown): Promise<{ ok: boolean; status: number | null; error: string | null }> {
   const body = JSON.stringify(payload);
   const ts = Math.floor(Date.now() / 1000).toString();
@@ -206,30 +177,31 @@ async function post(url: string, secret: string, event: string, deliveryId: stri
   }
 }
 
-// Fired when a test completes. Never throws. Idempotent per (endpoint, test).
-export async function deliverTestCompleted(testId: string): Promise<void> {
+// Fired when a verification finalizes: deliver the owner-safe verification.completed
+// payload to the owner's account-level webhook endpoints (signed + retry-queued).
+// Never throws. Idempotent per (endpoint, run) via the unique (endpoint_id, test_id,
+// event) delivery row — the nullable test_id column holds the run id (uuid, no FK).
+// event_types is not filtered here: verification.completed is now the only event, and
+// legacy endpoints default to the '{test.completed}' subscription that no longer fires.
+export async function deliverVerificationCompleted(userId: string, payload: VerificationWebhookPayload): Promise<void> {
   try {
     if (!isDatabaseConfigured()) return;
-    const td = await getTestWithOptions(testId);
-    if (!td) return;
-    const test = td.test;
+    const runId = payload.run_id;
     const s = getSupabaseAdminClient();
-    const { data: eps } = await s.from("v_webhook_endpoints" as never).select("id,url,secret").eq("user_id", norm(test.user_id)).eq("enabled", true).contains("event_types", ["test.completed"]);
+    const { data: eps } = await s.from("v_webhook_endpoints" as never).select("id,url,secret").eq("user_id", norm(userId)).eq("enabled", true);
     const endpoints = (eps as unknown as { id: string; url: string; secret: string }[]) ?? [];
     if (!endpoints.length) return;
-    const report = await getReport(testId);
-    const results = report?.results ?? null;
 
     await Promise.allSettled(endpoints.map(async (ep) => {
-      // Claim a delivery row (unique endpoint+test+event) — dedupes double-fires.
-      const { data: del, error } = await s.from("v_webhook_deliveries" as never).insert({ endpoint_id: ep.id, test_id: testId, event: "test.completed", status: "pending" } as never).select("id").single();
+      // Claim a delivery row (unique endpoint+run+event) — dedupes double-fires.
+      const { data: del, error } = await s.from("v_webhook_deliveries" as never).insert({ endpoint_id: ep.id, test_id: runId, event: "verification.completed", status: "pending" } as never).select("id").single();
       if (error || !del) return; // already delivered (unique conflict) or insert failed
       const deliveryId = (del as unknown as { id: string }).id;
       if (webhookUrlError(ep.url)) { await s.from("v_webhook_deliveries" as never).update({ status: "failed", error: "unsafe_url", attempts: 1 } as never).eq("id", deliveryId); return; }
-      const payload = await buildCompletedPayload(test, results, deliveryId);
-      const res = await post(ep.url, ep.secret, "test.completed", deliveryId, payload);
-      await s.from("v_webhook_deliveries" as never).update({ status: res.ok ? "success" : "failed", response_status: res.status, error: res.error, attempts: 1, payload, delivered_at: res.ok ? new Date().toISOString() : null } as never).eq("id", deliveryId);
-      await logEvent({ userId: test.user_id, testId, eventType: res.ok ? "webhook_delivered" : "webhook_failed", actorType: "webhook", source: "webhook", metadata: { endpoint_id: ep.id, delivery_id: deliveryId, status_code: res.status, attempt: 1, event: "test.completed" } });
+      const body = { ...payload, delivery_id: deliveryId };
+      const res = await post(ep.url, ep.secret, "verification.completed", deliveryId, body);
+      await s.from("v_webhook_deliveries" as never).update({ status: res.ok ? "success" : "failed", response_status: res.status, error: res.error, attempts: 1, payload: body, delivered_at: res.ok ? new Date().toISOString() : null } as never).eq("id", deliveryId);
+      await logEvent({ userId, testId: null, eventType: res.ok ? "webhook_delivered" : "webhook_failed", actorType: "webhook", source: "webhook", metadata: { endpoint_id: ep.id, delivery_id: deliveryId, status_code: res.status, attempt: 1, event: "verification.completed", run_id: runId } });
       if (res.ok) await s.from("v_webhook_endpoints" as never).update({ last_success_at: new Date().toISOString(), failure_count: 0 } as never).eq("id", ep.id);
       else {
         await s.from("v_webhook_endpoints" as never).update({ last_failure_at: new Date().toISOString() } as never).eq("id", ep.id);
@@ -239,7 +211,7 @@ export async function deliverTestCompleted(testId: string): Promise<void> {
       }
     }));
   } catch (e) {
-    console.error("deliverTestCompleted:", e);
+    console.error("deliverVerificationCompleted:", e);
   }
 }
 
@@ -322,13 +294,14 @@ export async function sendTestEvent(userId: string, endpointId: string): Promise
   if (webhookUrlError(ep.url)) return { ok: false, error: "unsafe_url" };
   const deliveryId = crypto.randomUUID();
   const payload = {
-    event: "test.completed", delivery_id: deliveryId, created_at: new Date().toISOString(), test_event: true, mode: "sandbox" as const,
-    test: { id: "sandbox_example", title: "Sandbox example", status: "completed", completed_at: new Date().toISOString(), votes_valid: 120, votes_filtered: 11, winner: { option: "B", pct: 67 }, inconclusive: false },
-    decision_package: SAMPLE_DECISION_PACKAGE,
-    links: { report_url: `${SITE}/tests/sandbox_example/report`, public_report_url: null, export_json: `${SITE}/api/v1/tests/sandbox_example/export?format=json`, export_csv: `${SITE}/api/v1/tests/sandbox_example/export?format=csv` },
+    event: "verification.completed" as const, delivery_id: deliveryId, test_event: true,
+    run_id: "sample_run", application_id: "sample_app", decision: "ready",
+    flows_total: 5, flows_passed: 5, deployment_url: "https://demo.example.com",
+    completed_at: new Date().toISOString(),
+    report_url: "https://app.vraelis.com/applications/sample_app/passes/sample_run",
   };
-  const res = await post(ep.url, ep.secret, "test.completed", deliveryId, payload);
-  await s.from("v_webhook_deliveries" as never).insert({ endpoint_id: endpointId, test_id: null, event: "test.completed", status: res.ok ? "success" : "failed", response_status: res.status, error: res.error, attempts: 1, payload, delivered_at: res.ok ? new Date().toISOString() : null } as never);
+  const res = await post(ep.url, ep.secret, "verification.completed", deliveryId, payload);
+  await s.from("v_webhook_deliveries" as never).insert({ endpoint_id: endpointId, test_id: null, event: "verification.completed", status: res.ok ? "success" : "failed", response_status: res.status, error: res.error, attempts: 1, payload, delivered_at: res.ok ? new Date().toISOString() : null } as never);
   await logEvent({ userId: norm(userId), eventType: "webhook_test_sent", actorType: "owner", source: "app", metadata: { endpoint_id: endpointId, status_code: res.status ?? null } });
   return { ok: res.ok, status: res.status, error: res.error ?? undefined };
 }

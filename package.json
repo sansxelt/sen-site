@@ -79,7 +79,9 @@
     "client:test": "tsx scripts/verification-client-verify.ts",
     "contrast:test": "tsx scripts/contrast-verify.ts",
     "idempotency:test": "tsx scripts/verification-idempotency-verify.ts",
-    "email:test": "tsx scripts/email-embeds-verify.ts"
+    "email:test": "tsx scripts/email-embeds-verify.ts",
+    "webhooks:test": "tsx scripts/preflight-webhook-dispatch-verify.ts",
+    "webhooks:decoupled:test": "tsx scripts/preflight-webhook-decoupling-verify.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",

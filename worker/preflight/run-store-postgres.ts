@@ -14,6 +14,7 @@ import { buildRepairPrompt } from "../../lib/preflight/repair-prompt";
 import { DETERMINISTIC_AUTH_FAILURE } from "./auth-executor";
 import { redactString, log } from "./redaction";
 import { buildVerificationPayload, dispatchVerificationWebhooks } from "../../lib/preflight/webhook-dispatch";
+import { deliverVerificationCompleted, runWebhookRetries } from "../../lib/v-webhooks";
 
 // Provider/infrastructure failure codes that feed the per-account circuit breaker (blocker 3): a burst of
 // these is the refund/infra loop. This set MUST stay in sync with every code classifyProviderError()
@@ -252,15 +253,9 @@ export class PostgresRunStore implements RunStore {
     const run = runRow as { user_id?: string; application_id?: string; deployment_url?: string } | null;
     if (!run?.user_id || !run.application_id) return;
 
-    // Both notification kinds carry a destination URL in meta.url: a generic endpoint (signed JSON) and a
-    // Slack incoming webhook (Slack message format). deliverWebhook picks the format per URL.
-    const { data: conns } = await this.s.from("v_app_connections")
-      .select("meta").eq("user_id", run.user_id).eq("application_id", run.application_id).in("provider", ["webhook", "slack"]);
-    const urls = ((conns as { meta?: { url?: string } }[] | null) ?? [])
-      .map((c) => c.meta?.url).filter((u): u is string => typeof u === "string" && !!u.trim());
-    if (!urls.length) return;
-
-    // Flow counts for the payload (deterministic, already persisted).
+    // Owner-safe payload: decision + flow counts + ids + report link (flow counts are
+    // deterministic and already persisted). The SAME payload feeds both delivery
+    // channels below, so a receiver sees an identical verification.completed event.
     const { data: flows } = await this.s.from("v_flow_runs").select("state").eq("run_id", runId);
     const rows = (flows as { state?: string }[] | null) ?? [];
     const payload = buildVerificationPayload({
@@ -272,8 +267,25 @@ export class PostgresRunStore implements RunStore {
       deploymentUrl: run.deployment_url ?? null,
       appBaseUrl: process.env.VRAELIS_APP_BASE_URL || "https://app.vraelis.com",
     });
-    const delivered = await dispatchVerificationWebhooks(urls, payload);
-    log({ run_id: runId, application_id: run.application_id, event: "webhooks_dispatched", result: `${delivered}/${urls.length}` });
+
+    // (1) Per-app connection endpoints (a webhook/slack connection on THIS application).
+    // Both kinds carry a destination URL in meta.url; deliverWebhook picks JSON vs Slack.
+    const { data: conns } = await this.s.from("v_app_connections")
+      .select("meta").eq("user_id", run.user_id).eq("application_id", run.application_id).in("provider", ["webhook", "slack"]);
+    const urls = ((conns as { meta?: { url?: string } }[] | null) ?? [])
+      .map((c) => c.meta?.url).filter((u): u is string => typeof u === "string" && !!u.trim());
+    if (urls.length) {
+      const delivered = await dispatchVerificationWebhooks(urls, payload);
+      log({ run_id: runId, application_id: run.application_id, event: "webhooks_dispatched", result: `${delivered}/${urls.length}` });
+    }
+
+    // (2) Account-level developer webhook endpoints (the owner's API-console webhooks):
+    // signed + retry-queued via lib/v-webhooks. Fail-soft and last: a dead endpoint or a
+    // pre-migration retry column must never affect the completed run.
+    try {
+      await deliverVerificationCompleted(run.user_id, payload);
+      await runWebhookRetries(20);
+    } catch (e) { console.warn(`preflight account webhook (${runId}):`, (e as Error).message); }
   }
 
   // Sum the actual executed step durations for a run (real browser time) and record a provider-cost row.

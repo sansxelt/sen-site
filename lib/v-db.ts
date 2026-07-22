@@ -331,20 +331,6 @@ export async function completeTest(testId: string): Promise<void> {
       winner: winnerId ? (LETTERS[ranked.find((r) => r.id === winnerId)?.position ?? 0] ?? null) : null,
     },
   });
-
-  // Push test.completed webhooks — after the HTTP response when possible (so the
-  // completing vote isn't blocked), else best-effort awaited. Never affects
-  // completion. Delivery is idempotent (unique per endpoint/test/event).
-  try {
-    const ns = (await import("next/server")) as { after?: (cb: () => unknown) => void };
-    const { deliverTestCompleted, runWebhookRetries } = await import("./v-webhooks");
-    // Deliver this test's event, then opportunistically flush any due retries — on
-    // an active platform this gives near-real-time retry recovery without a frequent
-    // cron (Hobby caps crons at daily; the daily sweep is the backstop).
-    const work = async () => { await deliverTestCompleted(testId).catch(() => {}); await runWebhookRetries(20).catch(() => {}); };
-    if (ns.after) ns.after(work);
-    else await work();
-  } catch { /* webhooks must never affect completion */ }
 }
 
 // Atomic test launch — quota + balance check + create + options + escrow hold in
