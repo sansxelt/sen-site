@@ -64,6 +64,25 @@ const REAL_RUN_REQS = [
 ];
 ok("a strong requirement passes even when a broader one sits beside it (the real run's set)",
   checkClaimCoverage(FIXTURE_CLAIM, REAL_RUN_REQS).ok);
+// Identity phrasing the deterministic gate must recognize, or the correction loop false-blocks a valid fix.
+// These are the exact shapes the first production dry-run surfaced: an intervening word before the identity
+// noun, and the plural verb "signs back in".
+ok('identity is credited with an intervening word ("same customer identity")',
+  checkClaimCoverage(FIXTURE_CLAIM, [
+    "The account shows Pro after upgrading",
+    "Pro persists for the same customer identity across sign out and sign in",
+  ]).ok);
+ok('identity is credited with the plural verb ("customer signs back in")',
+  checkClaimCoverage(FIXTURE_CLAIM, [
+    "The account shows Pro after upgrading",
+    "Pro is retained when the customer signs back in",
+  ]).ok);
+// The bar is not lowered: an unrelated "same" and a plain "sign in" (no back / no again) do NOT carry identity.
+ok('identity is NOT credited by an unrelated "same" or a plain sign-in',
+  !checkClaimCoverage(FIXTURE_CLAIM, [
+    "The account shows Pro after upgrading and still shows Pro on reload",
+    "Users sign in with email and password at the same time each day",
+  ]).covered.includes("identity"));
 
 console.log("\n── EXECUTION COVERAGE: a runnable flow must actually prove it ──");
 // The complete journey: pay, check the account shows Pro, sign out, sign back in, check Pro again.

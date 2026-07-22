@@ -32,7 +32,13 @@ const VALUE_LEXICON = [
   "Owner", "Member", "Granted", "Revoked", "Subscribed", "Unsubscribed", "Locked", "Unlocked",
 ];
 const PERSISTENCE_RE = /\b(retain|retains|retained|persist|persists|persisted|remain|remains|remained|still|keeps?|kept|reload|refresh|returning)\b|\bafter (signing|sign|logging|log)(\s+back)?\s+in\b|\bsigning in again\b|\bacross (new )?sessions?\b/i;
-const IDENTITY_RE = /\bsame (account|credentials?|user|email|login|identity)\b|\bsign(?:ing)?(\s+back)?\s+in again\b|\bsign(?:ing)?\s+back\s+in\b|\blog(?:ging)?\s+back\s+in\b/i;
+// Same-identity signals. Must recognize natural phrasing without lowering the bar: a requirement still has to
+// NAME a same-identity condition. Two shapes qualify — "same <identity noun>" (allowing ONE intervening word,
+// so "same customer identity" counts, but not an unrelated "at the same time the user…"), and a sign/log
+// back-in / in-again phrase in any tense (sign, signs, signed, signing). Missing either of these was a real
+// false block: a corrected requirement that said "the same customer identity" and an original one that said
+// "customer signs back in" were both rejected only because of verb tense and one intervening word.
+const IDENTITY_RE = /\bsame\s+(?:\w+\s+)?(accounts?|credentials?|users?|customers?|emails?|logins?|identit(?:y|ies)|persons?|people)\b|\b(?:sign|log)(?:s|ed|ing)?\s+back\s+in\b|\b(?:sign|log)(?:s|ed|ing)?\s+in\s+again\b/i;
 const ACTION_RE = /\b(upgrade|pays?|paid|purchase|checkout|check out|subscribe|buy|sign in|log in|sign out|log out|cancel|delete|create|save|submit|reset|change|grant|enable|disable|approve|receive)\b/i;
 
 export function analyzeClaim(claim: string): ClaimAnalysis {
@@ -100,7 +106,7 @@ export function checkClaimCoverage(claim: string, requirements: string[]): Cover
   }
 
   if (a.identity) {
-    const idc = reqs.some((r) => IDENTITY_RE.test(r) || /same (account|user|credential|identity)/i.test(r));
+    const idc = reqs.some((r) => IDENTITY_RE.test(r));
     if (idc) covered.push("identity"); else missing.push("The claim ties the outcome to the same identity, but no requirement carries that condition.");
   }
 
