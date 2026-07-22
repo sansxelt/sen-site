@@ -24,7 +24,7 @@ import {
 import { checkClaimCoverage, checkExecutionCoverage, claimObligations, coverageGaps, type Coverage } from "./coverage";
 import {
   defaultRequirementCorrector, defaultFlowCorrector, defaultRecrawler, discoveryCovers, focusPaths,
-  type RequirementCorrector, type FlowCorrector, type Recrawler,
+  type RequirementCorrector, type FlowCorrector, type Recrawler, type FlowCorrectionStatus,
 } from "./coverage-correction";
 
 export type Correctors = {
@@ -51,9 +51,14 @@ export type CoverageResolution = {
   requirementCorrectionAttempted: boolean;
   flowCorrectionAttempted: boolean;
   recrawlAttempted: boolean;
-  /** Diagnostics for the flow-correction stage: how many flows the model proposed, and why any were dropped
-   *  by the designer validator. Lets an operator tell "produced nothing usable" from "still insufficient". */
+  /** Diagnostics for the flow-correction stage, precise enough to name the exact failure boundary.
+   *  status: where the model attempt landed (call failed / no content / parse failed / zero flows / ok, or
+   *  not_run when the stage never ran, no_result when the corrector returned nothing at all).
+   *  candidates: flows the model proposed. accepted: how many passed the designer validator. rejected: why
+   *  each dropped. The original/final flow counts are on originalPlan/plan. */
+  flowCorrectionStatus: FlowCorrectionStatus | "not_run" | "no_result";
   flowCorrectionCandidates: number;
+  flowCorrectionAccepted: number;
   flowCorrectionRejected: { name: string; reason: string }[];
   /** The obligations still unproven when Blocked; empty when ready. */
   remainingObligations: string[];
@@ -92,7 +97,9 @@ export async function resolveCoverage(
   let requirementCorrectionAttempted = false;
   let flowCorrectionAttempted = false;
   let recrawlAttempted = false;
+  let flowCorrectionStatus: FlowCorrectionStatus | "not_run" | "no_result" = "not_run";
   let flowCorrectionCandidates = 0;
+  let flowCorrectionAccepted = 0;
   let flowCorrectionRejected: { name: string; reason: string }[] = [];
 
   // ── Stage 1: claim coverage, then AT MOST ONE requirement correction ──────────────────────────────────
@@ -113,7 +120,7 @@ export async function resolveCoverage(
       // (requirement correction does not touch flows) for the response, not used as a gate.
       return blocked(originalPlan, plan, claimBefore, claimAfter,
         checkExecutionCoverage(claim, plan.flows),
-        { requirementCorrectionAttempted, flowCorrectionAttempted, recrawlAttempted, flowCorrectionCandidates, flowCorrectionRejected },
+        { requirementCorrectionAttempted, flowCorrectionAttempted, recrawlAttempted, flowCorrectionStatus, flowCorrectionCandidates, flowCorrectionAccepted, flowCorrectionRejected },
         "claim_coverage_incomplete_after_correction", claimAfter.missing);
     }
   }
@@ -133,7 +140,9 @@ export async function resolveCoverage(
       claim, requirements: planRequirementTexts(plan), flows: plan.flows, obligations,
       missing: executionBefore.missing, pages: workingPages,
     });
+    flowCorrectionStatus = fc ? fc.status : "no_result";
     flowCorrectionCandidates = fc?.candidates ?? 0;
+    flowCorrectionAccepted = fc?.flows.length ?? 0;
     flowCorrectionRejected = fc?.rejected ?? [];
     const correctedFlows = fc?.flows ?? [];
     if (correctedFlows.length) {
@@ -144,7 +153,7 @@ export async function resolveCoverage(
     executionAfter = checkExecutionCoverage(claim, plan.flows);
     if (!executionAfter.ok) {
       return blocked(originalPlan, plan, claimBefore, claimAfter, executionAfter,
-        { requirementCorrectionAttempted, flowCorrectionAttempted, recrawlAttempted, flowCorrectionCandidates, flowCorrectionRejected },
+        { requirementCorrectionAttempted, flowCorrectionAttempted, recrawlAttempted, flowCorrectionStatus, flowCorrectionCandidates, flowCorrectionAccepted, flowCorrectionRejected },
         "execution_coverage_incomplete_after_correction", executionAfter.missing);
     }
   }
@@ -154,7 +163,7 @@ export async function resolveCoverage(
     originalPlan, plan,
     claimBefore, claimAfter, executionBefore, executionAfter,
     requirementCorrectionAttempted, flowCorrectionAttempted, recrawlAttempted,
-    flowCorrectionCandidates, flowCorrectionRejected,
+    flowCorrectionStatus, flowCorrectionCandidates, flowCorrectionAccepted, flowCorrectionRejected,
     remainingObligations: [],
     readyToLaunch: true,
     blockedReason: null,
@@ -166,7 +175,8 @@ function blocked(
   claimBefore: Coverage, claimAfter: Coverage, executionAfter: Coverage,
   attempts: {
     requirementCorrectionAttempted: boolean; flowCorrectionAttempted: boolean; recrawlAttempted: boolean;
-    flowCorrectionCandidates: number; flowCorrectionRejected: { name: string; reason: string }[];
+    flowCorrectionStatus: FlowCorrectionStatus | "not_run" | "no_result";
+    flowCorrectionCandidates: number; flowCorrectionAccepted: number; flowCorrectionRejected: { name: string; reason: string }[];
   },
   reason: string, remaining: string[],
 ): CoverageResolution {

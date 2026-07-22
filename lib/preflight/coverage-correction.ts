@@ -45,11 +45,17 @@ export type FlowCorrectorInput = {
   missing: string[];
   pages: PageSnapshot[];
 };
-// The flow corrector reports not just the accepted flows but how many the model PROPOSED and why any were
-// dropped by the designer validator. That distinction is what tells an operator whether a block was "the
-// model produced nothing usable" versus "the model produced a plan that still does not prove the claim" —
-// otherwise a discarded correction looks identical to no correction at all.
-export type FlowCorrectionResult = { flows: PlanFlow[]; candidates: number; rejected: { name: string; reason: string }[] };
+// The flow corrector reports the EXACT boundary at which correction did or did not succeed, so a block is
+// never ambiguous. status names where it landed; candidates/flows/rejected quantify it. Without this a
+// discarded correction, a model that returned nothing, and a model call that failed all look identical.
+//
+//   model_call_failed  the API call threw (network, timeout, 4xx)
+//   no_content         the call returned but produced no structured output
+//   parse_failed       structured output was returned but did not parse to the schema
+//   zero_flows         parsed cleanly, but the model proposed zero flows
+//   ok                 the model proposed >= 1 flow; see candidates vs flows for how many survived validation
+export type FlowCorrectionStatus = "model_call_failed" | "no_content" | "parse_failed" | "zero_flows" | "ok";
+export type FlowCorrectionResult = { status: FlowCorrectionStatus; flows: PlanFlow[]; candidates: number; rejected: { name: string; reason: string }[] };
 export type FlowCorrector = (input: FlowCorrectorInput) => Promise<FlowCorrectionResult | null>;
 
 export type Recrawler = (deploymentUrl: string, focusPaths: string[], existing: PageSnapshot[]) => Promise<PageSnapshot[]>;
@@ -215,14 +221,27 @@ export const defaultFlowCorrector: FlowCorrector = async ({ claim, requirements,
     `- Express signing in as a plain fill + click on the visible form. Never put a password, card number, or security code in a fill value; treat such forms as pre-filled and click the submit control directly.\n` +
     `- Targets are the visible accessible names (a button's label, a heading), never CSS or XPath. Set unused string fields to "".\n` +
     `- For a persistence guarantee, ONE flow must: perform the action, assert the exact outcome where it is read, ${obligations.identity ? "sign out, sign back in with the same account, " : "reload, "}then assert the exact outcome AGAIN. Keep that whole journey in a single flow.`;
+  // Classify the outcome at each boundary. The API call and the schema-parse are separated so a network/timeout
+  // failure is never confused with a model that returned unparseable content. Nothing here changes what the
+  // model is asked or how flows are validated — it only records where the attempt landed.
+  const empty = (status: FlowCorrectionStatus): FlowCorrectionResult => ({ status, flows: [], candidates: 0, rejected: [] });
+  let res;
   try {
     const client = new Anthropic({ apiKey: API_KEY, timeout: 50_000, maxRetries: 0 });
-    const res = await client.messages.parse({ model: model(), max_tokens: 3000, temperature: 0, messages: [{ role: "user", content: prompt }], output_config: { format: zodOutputFormat(CorrectedFlows) } });
-    const raw = res.parsed_output?.flows ?? [];
-    const { flows, rejected } = validateCorrectedFlows(raw);
-    if (rejected.length) console.error("flow correction dropped flows:", JSON.stringify(rejected));
-    return { flows, candidates: raw.length, rejected };
-  } catch (e) { console.error("flow correction failed:", (e as Error).message); return null; }
+    res = await client.messages.parse({ model: model(), max_tokens: 3000, temperature: 0, messages: [{ role: "user", content: prompt }], output_config: { format: zodOutputFormat(CorrectedFlows) } });
+  } catch (e) {
+    // An Anthropic API error is a transport/model failure; anything else thrown by parse() is a schema-parse
+    // failure (the model returned content that did not match the required shape).
+    const isApi = e instanceof Anthropic.APIError;
+    console.error(`flow correction ${isApi ? "model call failed" : "parse failed"}:`, (e as Error).message);
+    return empty(isApi ? "model_call_failed" : "parse_failed");
+  }
+  if (!res.parsed_output) return empty("no_content");
+  const raw = res.parsed_output.flows ?? [];
+  if (!raw.length) return empty("zero_flows");
+  const validated = validateCorrectedFlows(raw);
+  if (validated.rejected.length) console.error("flow correction dropped flows:", JSON.stringify(validated.rejected));
+  return { status: "ok", flows: validated.flows, candidates: raw.length, rejected: validated.rejected };
 };
 
 // Validate model-proposed flows through the designer validator (the resolver's authority over "executable"),

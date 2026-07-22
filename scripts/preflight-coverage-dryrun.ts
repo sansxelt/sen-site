@@ -85,12 +85,30 @@ async function main(): Promise<boolean> {
   console.log(`flow correction attempted:        ${body?.flow_correction_attempted}`);
   if (body?.flow_correction) {
     const fcd = body.flow_correction;
-    console.log(`  flows the model proposed:       ${fcd.candidates}`);
-    console.log(`  flows that passed validation:   ${fcd.accepted}`);
+    console.log(`  status:                         ${fcd.status}`);
+    console.log(`  original flow count:            ${fcd.original_flow_count}`);
+    console.log(`  candidate flow count (model):   ${fcd.candidate_flow_count}`);
+    console.log(`  accepted flow count (valid):    ${fcd.accepted_flow_count}`);
+    console.log(`  final flow count (in plan):     ${fcd.final_flow_count}`);
     if (fcd.rejected?.length) {
       console.log("  flows dropped by the validator:");
       for (const rj of fcd.rejected) console.log(`    - ${rj.name}: ${rj.reason}`);
     }
+    // Map the diagnostic to the ONE explicit failure boundary, so there is no ambiguity about what happened.
+    const boundary = (() => {
+      const acc = fcd.accepted_flow_count, cand = fcd.candidate_flow_count;
+      if (fcd.status === "model_call_failed") return "MODEL CALL FAILED (transport/timeout/4xx)";
+      if (fcd.status === "no_result") return "CORRECTOR RETURNED NOTHING (no result object)";
+      if (fcd.status === "no_content") return "MODEL RETURNED NO CONTENT";
+      if (fcd.status === "parse_failed") return "MODEL RETURNED CONTENT BUT PARSING FAILED";
+      if (fcd.status === "zero_flows") return "MODEL PARSED OK WITH ZERO FLOWS";
+      if (cand > 0 && acc === 0) return "CANDIDATE FLOWS PRODUCED BUT ALL REJECTED BY VALIDATION";
+      if (acc > 0 && fcd.final_flow_count === fcd.original_flow_count) return "FLOWS ACCEPTED BUT NOT INSTALLED (should not happen)";
+      if (acc > 0 && cov.execution_after && !cov.execution_after.ok) return "FLOWS ACCEPTED AND INSTALLED BUT EXECUTION COVERAGE STILL FAILED";
+      if (acc > 0 && cov.execution_after?.ok) return "FLOWS ACCEPTED, INSTALLED, EXECUTION COVERAGE PASSED";
+      return "unclassified";
+    })();
+    console.log(`  >> FAILURE BOUNDARY: ${boundary}`);
   }
 
   if (body?.requirement_correction_attempted || body?.flow_correction_attempted) {
