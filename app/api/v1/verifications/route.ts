@@ -67,6 +67,16 @@ function coverageTelemetry(claim: string, r: CoverageResolution, diagnostic: boo
     blocked_reason: r.blockedReason,
     gaps: resolutionGaps(r),
     repair_prompt: r.readyToLaunch ? null : repairPrompt(claim, { claim: r.claimAfter, execution: r.executionAfter, readyToLaunch: false }),
+    // Why flow correction did or did not help: how many flows the model proposed, how many survived the
+    // designer validator, and the reason each was dropped. Diagnostic-only — an operator asks for it when a
+    // block is surprising; the default response stays about the decision, not the engine's internals.
+    ...(diagnostic ? {
+      flow_correction: {
+        candidates: r.flowCorrectionCandidates,
+        accepted: r.plan.flows.length,
+        rejected: r.flowCorrectionRejected,
+      },
+    } : {}),
   };
 }
 

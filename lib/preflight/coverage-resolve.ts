@@ -19,7 +19,7 @@ import type { Synthesis } from "./discover-synthesis";
 import type { PageSnapshot } from "./discover-extract";
 import {
   projectPlan, planRequirementTexts,
-  type PlannedVerification, type PlanRequirement, type PlanFlow,
+  type PlannedVerification, type PlanRequirement,
 } from "./verification-lane";
 import { checkClaimCoverage, checkExecutionCoverage, claimObligations, coverageGaps, type Coverage } from "./coverage";
 import {
@@ -51,6 +51,10 @@ export type CoverageResolution = {
   requirementCorrectionAttempted: boolean;
   flowCorrectionAttempted: boolean;
   recrawlAttempted: boolean;
+  /** Diagnostics for the flow-correction stage: how many flows the model proposed, and why any were dropped
+   *  by the designer validator. Lets an operator tell "produced nothing usable" from "still insufficient". */
+  flowCorrectionCandidates: number;
+  flowCorrectionRejected: { name: string; reason: string }[];
   /** The obligations still unproven when Blocked; empty when ready. */
   remainingObligations: string[];
   /** True only when BOTH deterministic gates pass. A paid run may begin only then. */
@@ -88,6 +92,8 @@ export async function resolveCoverage(
   let requirementCorrectionAttempted = false;
   let flowCorrectionAttempted = false;
   let recrawlAttempted = false;
+  let flowCorrectionCandidates = 0;
+  let flowCorrectionRejected: { name: string; reason: string }[] = [];
 
   // ── Stage 1: claim coverage, then AT MOST ONE requirement correction ──────────────────────────────────
   const claimBefore = checkClaimCoverage(claim, planRequirementTexts(plan));
@@ -107,7 +113,7 @@ export async function resolveCoverage(
       // (requirement correction does not touch flows) for the response, not used as a gate.
       return blocked(originalPlan, plan, claimBefore, claimAfter,
         checkExecutionCoverage(claim, plan.flows),
-        { requirementCorrectionAttempted, flowCorrectionAttempted, recrawlAttempted },
+        { requirementCorrectionAttempted, flowCorrectionAttempted, recrawlAttempted, flowCorrectionCandidates, flowCorrectionRejected },
         "claim_coverage_incomplete_after_correction", claimAfter.missing);
     }
   }
@@ -123,19 +129,22 @@ export async function resolveCoverage(
       workingPages = await correctors.recrawl(deploymentUrl, focusPaths(pages, obligations), pages);
     }
     flowCorrectionAttempted = true;
-    const corrected = await correctors.correctFlows({
+    const fc = await correctors.correctFlows({
       claim, requirements: planRequirementTexts(plan), flows: plan.flows, obligations,
       missing: executionBefore.missing, pages: workingPages,
     });
-    if (corrected && corrected.length) {
+    flowCorrectionCandidates = fc?.candidates ?? 0;
+    flowCorrectionRejected = fc?.rejected ?? [];
+    const correctedFlows = fc?.flows ?? [];
+    if (correctedFlows.length) {
       // The corrected set IS the repaired execution plan; it replaces the weak flows rather than sitting
       // beside them. Coverage below decides whether it is now sufficient.
-      plan = { ...plan, flows: corrected as PlanFlow[] };
+      plan = { ...plan, flows: correctedFlows };
     }
     executionAfter = checkExecutionCoverage(claim, plan.flows);
     if (!executionAfter.ok) {
       return blocked(originalPlan, plan, claimBefore, claimAfter, executionAfter,
-        { requirementCorrectionAttempted, flowCorrectionAttempted, recrawlAttempted },
+        { requirementCorrectionAttempted, flowCorrectionAttempted, recrawlAttempted, flowCorrectionCandidates, flowCorrectionRejected },
         "execution_coverage_incomplete_after_correction", executionAfter.missing);
     }
   }
@@ -145,6 +154,7 @@ export async function resolveCoverage(
     originalPlan, plan,
     claimBefore, claimAfter, executionBefore, executionAfter,
     requirementCorrectionAttempted, flowCorrectionAttempted, recrawlAttempted,
+    flowCorrectionCandidates, flowCorrectionRejected,
     remainingObligations: [],
     readyToLaunch: true,
     blockedReason: null,
@@ -154,7 +164,10 @@ export async function resolveCoverage(
 function blocked(
   originalPlan: PlannedVerification, plan: PlannedVerification,
   claimBefore: Coverage, claimAfter: Coverage, executionAfter: Coverage,
-  attempts: { requirementCorrectionAttempted: boolean; flowCorrectionAttempted: boolean; recrawlAttempted: boolean },
+  attempts: {
+    requirementCorrectionAttempted: boolean; flowCorrectionAttempted: boolean; recrawlAttempted: boolean;
+    flowCorrectionCandidates: number; flowCorrectionRejected: { name: string; reason: string }[];
+  },
   reason: string, remaining: string[],
 ): CoverageResolution {
   return {

@@ -81,7 +81,7 @@ function fakes(opts: {
   const calls = { req: 0, flow: 0, recrawl: 0 };
   const correctors: Correctors = {
     correctRequirements: async () => { calls.req++; return opts.reqOut ?? null; },
-    correctFlows: async () => { calls.flow++; return opts.flowOut ?? null; },
+    correctFlows: async () => { calls.flow++; return opts.flowOut ? { flows: opts.flowOut, candidates: opts.flowOut.length, rejected: [] } : null; },
     recrawl: async (_u, _p, existing) => { calls.recrawl++; return opts.recrawlOut ?? existing; },
   };
   return { correctors, calls };

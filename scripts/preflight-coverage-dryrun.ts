@@ -36,10 +36,14 @@ async function main(): Promise<boolean> {
   console.log(`Claim:  ${CLAIM}`);
   console.log(`Target: ${URL_}\n`);
 
+  // Diagnostic mode on by default: this is an operator tool, and when a plan is Blocked we want to see WHY
+  // flow correction did or did not help (how many flows the model proposed, how many survived validation, and
+  // the reason each was dropped). Set VRAELIS_DIAGNOSTIC=0 for the lean response.
+  const diagnostic = process.env.VRAELIS_DIAGNOSTIC !== "0";
   const r = await fetch(`${BASE}/v1/verifications`, {
     method: "POST",
     headers: { "content-type": "application/json", "x-api-key": KEY },
-    body: JSON.stringify({ deployment_url: URL_, claim: CLAIM, dry_run: true }),
+    body: JSON.stringify({ deployment_url: URL_, claim: CLAIM, dry_run: true, diagnostic }),
   });
   const raw = await r.text();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -79,6 +83,15 @@ async function main(): Promise<boolean> {
   console.log(`requirement correction attempted: ${body?.requirement_correction_attempted}`);
   console.log(`targeted recrawl attempted:       ${body?.recrawl_attempted}`);
   console.log(`flow correction attempted:        ${body?.flow_correction_attempted}`);
+  if (body?.flow_correction) {
+    const fcd = body.flow_correction;
+    console.log(`  flows the model proposed:       ${fcd.candidates}`);
+    console.log(`  flows that passed validation:   ${fcd.accepted}`);
+    if (fcd.rejected?.length) {
+      console.log("  flows dropped by the validator:");
+      for (const rj of fcd.rejected) console.log(`    - ${rj.name}: ${rj.reason}`);
+    }
+  }
 
   if (body?.requirement_correction_attempted || body?.flow_correction_attempted) {
     console.log("\n── corrected plan ──");

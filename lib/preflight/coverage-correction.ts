@@ -45,7 +45,12 @@ export type FlowCorrectorInput = {
   missing: string[];
   pages: PageSnapshot[];
 };
-export type FlowCorrector = (input: FlowCorrectorInput) => Promise<PlanFlow[] | null>;
+// The flow corrector reports not just the accepted flows but how many the model PROPOSED and why any were
+// dropped by the designer validator. That distinction is what tells an operator whether a block was "the
+// model produced nothing usable" versus "the model produced a plan that still does not prove the claim" —
+// otherwise a discarded correction looks identical to no correction at all.
+export type FlowCorrectionResult = { flows: PlanFlow[]; candidates: number; rejected: { name: string; reason: string }[] };
+export type FlowCorrector = (input: FlowCorrectorInput) => Promise<FlowCorrectionResult | null>;
 
 export type Recrawler = (deploymentUrl: string, focusPaths: string[], existing: PageSnapshot[]) => Promise<PageSnapshot[]>;
 
@@ -204,22 +209,26 @@ export const defaultFlowCorrector: FlowCorrector = async ({ claim, requirements,
     const client = new Anthropic({ apiKey: API_KEY, timeout: 50_000, maxRetries: 0 });
     const res = await client.messages.parse({ model: model(), max_tokens: 3000, temperature: 0, messages: [{ role: "user", content: prompt }], output_config: { format: zodOutputFormat(CorrectedFlows) } });
     const raw = res.parsed_output?.flows ?? [];
-    return validateCorrectedFlows(raw);
+    const { flows, rejected } = validateCorrectedFlows(raw);
+    if (rejected.length) console.error("flow correction dropped flows:", JSON.stringify(rejected));
+    return { flows, candidates: raw.length, rejected };
   } catch (e) { console.error("flow correction failed:", (e as Error).message); return null; }
 };
 
-// Validate model-proposed flows through the designer validator (the resolver's authority over "executable").
-// Exported so a test can prove the corrected fixture flow validates without a model call. Roles a flow may
-// sign into are drawn from the flows themselves, matching projectPlan's rule.
+// Validate model-proposed flows through the designer validator (the resolver's authority over "executable"),
+// keeping the reason each dropped flow failed. Exported so a test can prove the corrected fixture flow
+// validates without a model call. Roles a flow may sign into are drawn from the flows themselves, matching
+// projectPlan's rule.
 export function validateCorrectedFlows(
   raw: { name: string; goal: string; role: string; auth_required: boolean; priority: "critical" | "important" | "informational"; steps: { action: string; target: string; value: string; expect: string }[] }[],
-): PlanFlow[] {
+): { flows: PlanFlow[]; rejected: { name: string; reason: string }[] } {
   const roles = Array.from(new Set(raw.map((f) => (f.role || "").trim()).filter(Boolean)));
-  const out: PlanFlow[] = [];
+  const flows: PlanFlow[] = [];
+  const rejected: { name: string; reason: string }[] = [];
   for (const f of raw.slice(0, 20)) {
     const steps = validateSteps(f.steps, { rolesAvailable: roles });
-    if (!steps.ok) continue;
-    out.push({ name: f.name, goal: f.goal, role: f.auth_required ? (f.role || null) : null, steps: steps.steps, priority: f.priority });
+    if (!steps.ok) { rejected.push({ name: f.name || "(unnamed)", reason: steps.reason }); continue; }
+    flows.push({ name: f.name, goal: f.goal, role: f.auth_required ? (f.role || null) : null, steps: steps.steps, priority: f.priority });
   }
-  return out;
+  return { flows, rejected };
 }
