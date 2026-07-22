@@ -50,8 +50,14 @@ async function main(): Promise<boolean> {
 
   console.log(`Claim:  ${CLAIM}`);
   console.log(`Target: ${URL_}\n`);
-  console.log("Launching a paid verification...");
-  const started = await req("POST", "/v1/verifications", { deployment_url: URL_, claim: CLAIM });
+  // When VRAELIS_REVIEWED_PLAN_ID is set, execute that EXACT approved plan (no re-synthesis). The server
+  // refuses unless it is approved, unexpired, unconsumed, and the deployment + claim still match.
+  const reviewedPlanId = (process.env.VRAELIS_REVIEWED_PLAN_ID || "").trim();
+  const body = reviewedPlanId
+    ? { deployment_url: URL_, claim: CLAIM, reviewed_plan_id: reviewedPlanId }
+    : { deployment_url: URL_, claim: CLAIM };
+  console.log(reviewedPlanId ? `Launching the APPROVED reviewed plan ${reviewedPlanId}...` : "Launching a paid verification...");
+  const started = await req("POST", "/v1/verifications", body);
 
   if (started.status === 402) {
     console.error(`\nInsufficient balance (402): ${started.json?.error?.message ?? started.raw.slice(0, 300)}`);
