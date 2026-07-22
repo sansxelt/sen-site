@@ -15,6 +15,81 @@
 // that is the deployment's answer to report, not ours to presume.
 export {};
 
+import { classifyStep, analyzeClaim, type StepLite } from "../lib/preflight/coverage";
+
+// ── Human review of the installed journey ───────────────────────────────────────────────────────────────
+// Prints the final corrected flow in execution order so a person can confirm it PROVES the claim (reaches
+// checkout, asserts the exact value, signs out, signs back in with the same account, asserts the exact value
+// again) rather than merely touching plausible pages. Credential material is never printed: fill VALUES are
+// replaced with a safe placeholder, and navigate destinations are stripped of any query string.
+
+// A fill value is never shown. Name the field by its role so the reviewer knows what would be typed, without
+// the secret itself.
+function safeFillNote(target: string): string {
+  const f = target.toLowerCase();
+  if (/pass|secret|token|cvv|card|ssn|security/.test(f)) return "«stored test account password»";
+  if (/email|e-mail|user|login|account/.test(f)) return "«stored test account email»";
+  return "«supplied value (hidden)»";
+}
+// Destinations are app paths; strip any query string so a token in a URL is never printed.
+function safeDest(t: string): string { return (t || "").split("?")[0] || "/"; }
+
+function printInstalledJourney(flows: { name?: string; steps_detail?: StepLite[] }[], claim: string) {
+  const value = (analyzeClaim(claim).namedValues[0] || "").toLowerCase(); // e.g. "pro"
+  const assertsValue = (s: StepLite) => s.action.startsWith("assert") && `${s.target ?? ""} ${s.expect ?? ""}`.toLowerCase().includes(value);
+  const looksSuccess = (s: StepLite) => s.action.startsWith("assert") && /success|successful|thank|complete|confirmed/i.test(`${s.target ?? ""} ${s.expect ?? ""}`);
+
+  for (const f of flows) {
+    const steps = f.steps_detail ?? [];
+    if (!steps.length) continue;
+    const kinds = steps.map(classifyStep);
+    const lastPurchase = kinds.lastIndexOf("purchase");
+    const firstSignout = kinds.indexOf("signout");
+    const firstSignin = kinds.indexOf("signin");
+
+    console.log(`\n── installed journey: ${f.name ?? "(unnamed)"} (${steps.length} steps, execution order) ──`);
+    const weak: number[] = [];
+    steps.forEach((s, i) => {
+      const n = i + 1;
+      const kind = kinds[i];
+      // Obligation this step covers, derived from what it does and where it sits in the journey.
+      let obligation = "-";
+      if (kind === "purchase") obligation = i <= (kinds.indexOf("purchase")) ? "reach the Pro purchase path" : "complete checkout";
+      else if (looksSuccess(s)) obligation = "confirm checkout success";
+      else if (kind === "assert" && assertsValue(s)) obligation = firstSignin !== -1 && i > firstSignin ? `assert exact "${value}" retained after signing back in` : `assert exact "${value}" granted after checkout`;
+      else if (kind === "assert") { obligation = "WEAK: generic assertion (not the exact value)"; weak.push(n); }
+      else if (kind === "signout") obligation = "sign out (session boundary)";
+      else if (kind === "signin") obligation = "sign back in with the same account";
+      else if (kind === "navigate") obligation = /account|profile|settings/i.test(safeDest(s.target ?? "")) ? "open the account page" : "navigation";
+      else if (s.action === "fill") obligation = "enter a form field";
+
+      const identity = (kind === "signin" || kind === "signout" || s.action === "reset_context") ? "CHANGES identity/session"
+        : s.action === "refresh" ? "reloads session" : "-";
+
+      const dest = s.action === "navigate" ? `dest=${safeDest(s.target ?? "")}`
+        : s.action === "fill" ? `field="${s.target ?? ""}" value=${safeFillNote(s.target ?? "")}`
+        : s.target ? `target="${s.target}"` : "";
+      const expect = s.expect ? ` expect="${s.expect}"` : "";
+      console.log(`  ${String(n).padStart(2, "0")}  ${s.action.padEnd(12)} ${dest}${expect}`);
+      console.log(`      obligation: ${obligation}    identity: ${identity}`);
+    });
+
+    // The 9-point "must visibly prove" checklist, computed deterministically from the steps.
+    const check = (label: string, ok: boolean) => console.log(`  [${ok ? "YES" : "NO "}] ${label}`);
+    console.log("\n  proves:");
+    check("reaches the Pro purchase path", kinds.includes("purchase"));
+    check("completes checkout (a second purchase/pay action)", kinds.filter((k) => k === "purchase").length >= 2);
+    check("confirms checkout success", steps.some(looksSuccess));
+    check("opens the account page after checkout", steps.some((s, i) => s.action === "navigate" && /account/i.test(safeDest(s.target ?? "")) && i > lastPurchase && lastPurchase !== -1));
+    check(`asserts exact "${value}" after checkout (before sign-out)`, steps.some((s, i) => assertsValue(s) && i > lastPurchase && (firstSignin === -1 || i < firstSignin)));
+    check("signs out", firstSignout !== -1);
+    check("signs back in", firstSignin !== -1 && (firstSignout === -1 || firstSignin > firstSignout));
+    check("opens the account page again after signing in", steps.some((s, i) => s.action === "navigate" && /account/i.test(safeDest(s.target ?? "")) && firstSignin !== -1 && i > firstSignin));
+    check(`asserts exact "${value}" again after signing back in`, steps.some((s, i) => assertsValue(s) && firstSignin !== -1 && i > firstSignin));
+    if (weak.length) console.log(`  ⚠ WEAK assertions at step(s) ${weak.join(", ")}: not the exact "${value}" value — review before spending.`);
+  }
+}
+
 const BASE = (process.env.VRAELIS_BASE_URL || "").replace(/\/+$/, "");
 const KEY = process.env.VRAELIS_API_KEY || "";
 const URL_ = process.env.VRAELIS_TARGET_URL || "";
@@ -125,6 +200,17 @@ async function main(): Promise<boolean> {
     console.log("remaining obligations:");
     for (const g of body?.remaining_obligations ?? []) console.log(`  - ${g}`);
     console.log("\nrepair_prompt:\n" + (body?.repair_prompt ?? ""));
+  }
+
+  // The final human review before any paid run: print the INSTALLED flow step by step so a person can confirm
+  // it proves the claim end to end. Requires diagnostic mode (default on), which returns steps_detail.
+  const hasSteps = (body?.flows ?? []).some((f: { steps_detail?: unknown[] }) => (f.steps_detail?.length ?? 0) > 0);
+  if (hasSteps) {
+    console.log("\n════ FINAL REVIEW: the exact journey a paid run would execute ════");
+    printInstalledJourney(body.flows, CLAIM);
+    console.log("\nThis is a review only. No pass has been spent. Authorize the paid run only if every point above reads YES with no weak assertions.");
+  } else {
+    console.log("\n(no step detail returned — re-run with VRAELIS_DIAGNOSTIC unset or =1 to inspect the journey)");
   }
 
   console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);
