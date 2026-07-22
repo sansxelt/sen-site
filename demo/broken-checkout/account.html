@@ -37,13 +37,22 @@
 </footer>
 
 <script>
-// The account page is the only place the truth is visible. It reads ln_plan, which the checkout never
-// writes, so a customer who paid still sees Free here. Note that it does NOT read ln_paid: the payment
-// record and the entitlement are separate facts, and only one of them was ever set.
-function hasCookie(pair) {
-  return document.cookie.split("; ").some(function (c) { return c === pair; });
+// The plan is a property of the ACCOUNT, resolved on every load, so it survives a fresh session. Two things
+// can establish it: the entitlement just granted at checkout (ln_plan), OR the signed-in identity's stored
+// subscription (ln_session, looked up against the accounts that hold Pro). A customer who paid is Pro whether
+// they are still in the checkout session or have signed out and back in tomorrow.
+//
+// The SECOND fix, and the second bug Vraelis caught: storing Pro only in the checkout cookie made it vanish
+// the instant the session reset. Persistence across sign-out/sign-in requires the entitlement to live with
+// the identity, not in a cookie the sign-out wipes.
+function cookie(name) {
+  var hit = document.cookie.split("; ").find(function (c) { return c.indexOf(name + "=") === 0; });
+  return hit ? hit.slice(name.length + 1) : null;
 }
-if (hasCookie("ln_plan=pro")) {
+var proAccounts = { "demo@example.com": true }; // the account record: who holds an active Pro subscription
+var session = cookie("ln_session");
+var isPro = cookie("ln_plan") === "pro" || (session !== null && proAccounts[session] === true);
+if (isPro) {
   var plan = document.getElementById("plan");
   plan.textContent = "Pro";
   plan.className = "status status--pro";

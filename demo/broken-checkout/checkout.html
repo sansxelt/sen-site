@@ -66,8 +66,8 @@ document.getElementById("pay").addEventListener("submit", function (e) {
   // Record that the payment succeeded. This part is correct.
   document.cookie = "ln_paid=1; path=/; max-age=86400";
 
-  // THE FIX: uncomment the next line so the purchase actually grants the plan it was for.
-  // document.cookie = "ln_plan=pro; path=/; max-age=86400";
+  // THE FIX (applied): the purchase now grants the plan it was for, so the account shows Pro.
+  document.cookie = "ln_plan=pro; path=/; max-age=86400";
 
   window.location.href = "/success.html";
 });
