@@ -24,18 +24,53 @@ export type Issue = {
   status: "open";
 };
 
-const READABLE: Record<string, (t?: string, v?: string) => string> = {
+const READABLE: Record<string, (t?: string, v?: string, e?: string) => string> = {
   navigate: (t) => `Open ${t ?? "the page"}`,
   click: (t) => `Click ${t ?? "the control"}`,
   fill: (t, v) => `Enter ${v ? `"${v}"` : "a value"} in ${t ?? "the field"}`,
   refresh: () => "Refresh the page",
+  // assert_text checks a VALUE, so it must read as the value, not the label. "Confirm the plan shows Pro",
+  // never "Confirm the text Plan appears" (which reads as absent even when the label Plan is plainly visible).
   assert_visible: (t) => `Confirm ${t ?? "the expected content"} is visible`,
-  assert_text: (t) => `Confirm the text ${t ?? ""} appears`,
-  assert_url: (t) => `Confirm the URL is ${t ?? ""}`,
+  assert_text: (t, _v, e) => (e ? `Confirm ${t ?? "the page"} shows "${e}"` : `Confirm the text "${t ?? ""}" appears`),
+  assert_url: (t, _v, e) => `Confirm the page is ${e ?? t ?? ""}`,
+  verify_authenticated: () => "Confirm the account is signed in",
+  verify_unauthorized: () => "Confirm the account is signed out",
+  sign_in_as: (t) => `Sign in as ${t ?? "the test account"}`,
+  sign_out: () => "Sign out",
+  reset_context: () => "Sign out and clear the session",
+  switch_role: (t) => `Switch to ${t ?? "another role"}`,
   screenshot: () => "Capture a screenshot",
 };
 const readable = (s: { action: string; target?: string; value?: string; expect?: string }) =>
-  (READABLE[s.action] ?? ((t?: string) => `${s.action} ${t ?? ""}`.trim()))(s.target ?? s.expect, s.value);
+  (READABLE[s.action] ?? ((t?: string) => `${s.action} ${t ?? ""}`.trim()))(s.target ?? s.expect, s.value, s.expect);
+
+// The one-line EXPECTED, phrased as the outcome the assertion required, from the AUTHORED step (which carries
+// the expected value; the observation does not).
+function expectedFor(s: { action: string; target?: string; expect?: string }, flowName: string): string {
+  if (s.action === "assert_text") return `Expected ${s.target ? `${s.target} to show` : "the page to show"} "${s.expect ?? ""}"`;
+  if (s.action === "assert_visible") return `Expected "${s.target ?? s.expect ?? ""}" to be visible`;
+  if (s.action === "assert_url") return `Expected the page to be ${s.expect ?? s.target ?? ""}`;
+  if (s.action === "verify_authenticated") return "Expected the account to be signed in";
+  if (s.action === "verify_unauthorized") return "Expected the account to be signed out";
+  return `Expected "${readable(s)}" to succeed, in ${flowName}`;
+}
+
+// The one-line OBSERVED, translated from the worker's machine detail into what a reader can act on. Uses the
+// authored step's expected value so "text_absent" becomes "\"Pro\" was not present", not a raw code.
+function observedFor(s: { action: string; target?: string; expect?: string }, detail: string, url?: string): string {
+  const d = (detail || "").trim();
+  const at = url ? ` (at ${url})` : "";
+  const map: Record<string, string> = {
+    text_absent: `"${s.expect ?? ""}" was not present`,
+    text_present_pagewide: `"${s.expect ?? ""}" appeared somewhere on the page, but not where it was checked`,
+    assert_target_not_found: `the element to check (${s.target ?? "the target"}) was not found`,
+    assert_text_no_expected_text: "no expected text was given for the check",
+    not_visible: `"${s.target ?? s.expect ?? ""}" was not visible`,
+    url_mismatch: `the page was not ${s.expect ?? s.target ?? "the expected route"}`,
+  };
+  return `${map[d] ?? (d || "the step did not complete")}${at}`;
+}
 
 // A flow only counts as multi-user/multi-session if its STEPS say so. This is the gate that stops a flow
 // merely NAMED "Authorize payment" from being filed as a cross-account finding: the words in a name are the
@@ -52,7 +87,13 @@ function classify(flow: FlowSpec, steps: StepObservation[], failedIdx: number): 
   const failed = steps[failedIdx];
   const priorRefresh = steps.slice(0, failedIdx).some((s) => s.action === "refresh");
   const isAssert = failed?.action?.startsWith("assert");
+  // A success was CONFIRMED earlier in this flow (a passed success/confirmation assertion), yet a later value
+  // check failed: the classic broken outcome behind a green screen. This is the checkout entitlement shape,
+  // payment says done, the account never shows the plan.
+  const priorSuccess = steps.slice(0, failedIdx).some((s) =>
+    s.ok && s.action?.startsWith("assert") && /success|complete|active|thank|confirmed|paid|received|processed/i.test(`${s.target ?? ""} ${s.detail ?? ""}`));
   if (isAssert && priorRefresh) return name.includes("sign") || name.includes("session") || name.includes("auth") ? "session_failure" : "persistence_failure";
+  if (isAssert && priorSuccess) return "fake_success";
   if (isAssert && /created|success|toast/.test(`${failed?.detail} ${name}`)) return "fake_success";
   // Tightened: "nav" and "overlay" used to land any navigation flow in the mobile bucket.
   if (/mobile|viewport|responsive/.test(name)) return "mobile_blocker";
@@ -118,13 +159,16 @@ export function issuesFromRun(results: FlowResult[], flows: FlowSpec[], flowRequ
     const failed = r.steps[failedIdx];
     const category = classify(flow, r.steps, failedIdx);
     const severity: IssueSeverity = flow.priority === "critical" ? "critical" : flow.priority === "important" ? "high" : "medium";
+    // The AUTHORED step carries the expected value; the observation does not. Use it for expected/observed so
+    // the finding reads as the outcome ("Expected the plan to show Pro"), not the label ("Expected: Plan").
+    const stepSpec = flow.steps[failedIdx] ?? { action: failed?.action ?? "", target: failed?.target };
     out.push({
       severity, category,
       title: CATEGORY_TITLE[category] ?? `${flow.name} did not complete`,
       possible_explanation: CATEGORY_EXPLANATION[category] ?? null,
       requirement_refs: flowRequirementRefs[r.flowId] ?? [],
-      expected: failed?.action?.startsWith("assert") ? `Expected: ${failed.target ?? failed.detail}` : `Step "${failed ? readable({ action: failed.action, target: failed.target }) : flow.name}" should succeed`,
-      observed: failed ? `${failed.detail}${failed.url ? ` (at ${failed.url})` : ""}` : "The flow did not complete",
+      expected: failed ? expectedFor(stepSpec, flow.name) : `Expected the flow "${flow.name}" to complete`,
+      observed: failed ? observedFor(stepSpec, failed.detail ?? "", failed.url) : "The flow did not complete",
       repro: flow.steps.map((s, i) => `${i + 1}. ${readable(s)}`),
       evidence: { failed_step_index: failedIdx, failed_action: failed?.action ?? "unknown", console_errors: r.evidence?.consoleErrors ?? [], network_failures: r.evidence?.networkFailures ?? [], current_url: failed?.url },
       status: "open",
