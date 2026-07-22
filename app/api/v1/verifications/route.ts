@@ -21,7 +21,7 @@
 // A verification IS a run. verification_id is vrf_<runId>, so there is no second table to keep in sync with
 // run state and no way for the two to disagree.
 import { POST as launchRun } from "@/app/api/preflight/apps/[id]/runs/route";
-import { resolvePrincipal, logKeyUsage, PREFLIGHT_SCOPES } from "@/lib/preflight/api-principal";
+import { resolvePrincipal, logKeyUsage, PREFLIGHT_SCOPES, type Principal } from "@/lib/preflight/api-principal";
 import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { unsafeHttpsUrlReason } from "@/lib/safe-fetch";
 import { laneApplication, synthesizeClaim, prepareVerification, laneRoles } from "@/lib/preflight/verification-lane";
@@ -30,6 +30,9 @@ import { resolveCoverage, resolutionGaps, type CoverageResolution } from "@/lib/
 import { runIdentity } from "@/lib/preflight/runs-db";
 import { getContractById, listRequirements } from "@/lib/v-applications";
 import { reserve, markLaunched, markFailed, verificationFingerprint } from "@/lib/preflight/verification-idempotency";
+import { evaluateForExecution } from "@/lib/preflight/reviewed-plan";
+import { mintReviewedPlan, getReviewedPlan, consumeReviewedPlan, markReviewedPlanRun, releaseReviewedPlan } from "@/lib/preflight/reviewed-plan-db";
+import { createHash } from "crypto";
 import { apiError, requestId } from "../_lib";
 import { toVerificationId, canonicalClaim } from "./_shared";
 
@@ -37,6 +40,9 @@ export const runtime = "nodejs";
 export const maxDuration = 300; // crawl + synthesis + at most two bounded corrections; inside the worker budget
 
 const MAX_CLAIM = 2000;
+// How long a minted reviewed plan stays approvable and runnable. Long enough to review and deploy, short
+// enough that an approval cannot be run against a build that has since moved on.
+const REVIEWED_PLAN_TTL_MS = 60 * 60 * 1000; // 60 minutes
 
 // The coverage telemetry every /v1 response shares: what the plan was, what the bounded correction did to it,
 // and the deterministic verdict at each stage. It carries NO internal pass ids, contract revision ids, or
@@ -141,13 +147,38 @@ export async function POST(req: Request) {
     }
     const resolution = await resolveCoverage(deploymentUrl, claim, s.synth, s.pages, { rolesAvailable: await laneRoles(p.principal.email) });
     if (ownsDry && idemKey) await markFailed(p.principal.email, idemKey); // dry run launched nothing; release the key
+
+    // Mint an immutable REVIEWED PLAN when (and only when) the plan actually passes the gate. This is the exact
+    // artifact a human/agent then approves and a paid run consumes verbatim — no re-synthesis. Additive: it is
+    // returned alongside the usual telemetry, and if the table is not migrated yet mintReviewedPlan returns
+    // null and the response simply carries no handle.
+    let reviewed: { id: string; expiresAt: string } | null = null;
+    if (resolution.readyToLaunch) {
+      const discoveryHash = createHash("sha256").update(JSON.stringify(s.pages ?? [])).digest("hex").slice(0, 32);
+      reviewed = await mintReviewedPlan({
+        owner: p.principal.email, deploymentUrl, claim, plan: resolution.plan, discoveryHash,
+        coverage: { claim_after: resolution.claimAfter, execution_after: resolution.executionAfter, ready: resolution.readyToLaunch },
+        ttlMs: REVIEWED_PLAN_TTL_MS, nowMs: Date.now(),
+      });
+    }
     await logKeyUsage(p.principal, { endpoint: "POST /v1/verifications (dry_run)", status: 200 });
     return Response.json({
       dry_run: true,
       claim,
       ...coverageTelemetry(claim, resolution, diagnostic),
       human_reviewed: false,
+      // The reviewed-plan handle to approve, then submit to a paid run. Present only when the plan is launchable.
+      ...(reviewed ? { reviewed_plan_id: reviewed.id, reviewed_plan_expires_at: reviewed.expiresAt, approval_required: true } : {}),
     }, { status: 200, headers: { "X-Request-Id": rid } });
+  }
+
+  // REVIEWED-PLAN EXECUTION. When the caller submits a reviewed_plan_id, run that EXACT approved plan: no
+  // synthesis, no correction, no recrawl, no different contract revision. Approval is a required, separate
+  // event — possessing the id is not approval — and consumption is atomic and once-only. This is the whole
+  // point of the reviewed-plan contract: production executes precisely what was reviewed.
+  const reviewedPlanId = String((body as Record<string, unknown>)?.reviewed_plan_id ?? "").trim();
+  if (reviewedPlanId) {
+    return executeReviewedPlan(req, rid, p.principal, deploymentUrl, claim, reviewedPlanId);
   }
 
   // IDEMPOTENCY, DECIDED BEFORE ANY WORK. Synthesis is a model call and a contract write; a retry must not
@@ -333,5 +364,84 @@ export async function POST(req: Request) {
     requirements: prepared.requirements,
     // No human approved this contract. Said plainly, on every response, rather than buried in documentation.
     human_reviewed: false,
+  }, { status: 202, headers: { "X-Request-Id": rid } });
+}
+
+// Execute an APPROVED reviewed plan verbatim. The invariant this function protects: between here and the run,
+// nothing is synthesized, corrected, recrawled, or substituted — production runs exactly the requirements and
+// flows that were reviewed and approved. Every refusal returns before laneApplication, the contract write, the
+// run, the hold, or the charge.
+async function executeReviewedPlan(req: Request, rid: string, principal: Principal, deploymentUrl: string, claim: string, reviewedPlanId: string): Promise<Response> {
+  const err = (code: string, status: number, message: string) =>
+    Response.json({ error: { code, message, request_id: rid } }, { status, headers: { "X-Request-Id": rid } });
+
+  const stored = await getReviewedPlan(principal.email, reviewedPlanId);
+  if (!stored) {
+    await logKeyUsage(principal, { endpoint: "POST /v1/verifications (reviewed)", status: 404 });
+    return err("reviewed_plan_not_found", 404, "No reviewed plan with that id.");
+  }
+
+  // The full business gate (tenant, integrity, approval, expiry, consumption, deployment/claim drift,
+  // credentials, coverage) as one pure, tested decision.
+  const verdict = evaluateForExecution(stored, {
+    owner: principal.email, deploymentUrl, claim, availableRoles: await laneRoles(principal.email), nowMs: Date.now(),
+  });
+  if (!verdict.ok) {
+    await logKeyUsage(principal, { endpoint: "POST /v1/verifications (reviewed)", status: verdict.status });
+    return err(verdict.code, verdict.status, verdict.message);
+  }
+
+  // Atomic reserve: exactly one execution flips an approved plan to consuming. A loser here raced with another
+  // execution of the same handle.
+  const claimed = await consumeReviewedPlan(principal.email, reviewedPlanId, Date.now());
+  if (!claimed.ok) {
+    await logKeyUsage(principal, { endpoint: "POST /v1/verifications (reviewed)", status: claimed.status });
+    return err(claimed.code, claimed.status, claimed.message);
+  }
+  // Any failure from here must release the reservation so the SAME approved plan can be retried once the cause
+  // is fixed (e.g. balance added), rather than being burned by a refusal that never launched.
+  const release = () => releaseReviewedPlan(principal.email, reviewedPlanId, Date.now());
+
+  const app = await laneApplication(principal.email, deploymentUrl);
+  if ("error" in app) { await release(); return apiError("internal_error", app.message, app.status, rid); }
+
+  // Write and launch the EXACT stored plan. prepareVerification takes a given plan and never synthesizes.
+  const prepared = await prepareVerification(principal.email, app, claim, stored.plan);
+  if ("error" in prepared) {
+    await release();
+    await logKeyUsage(principal, { endpoint: "POST /v1/verifications (reviewed)", status: prepared.status, applicationId: app.id });
+    return err(prepared.error, prepared.status, prepared.message);
+  }
+
+  const forwarded = new Request(new URL(`/api/preflight/apps/${prepared.applicationId}/runs`, req.url), {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-api-key": req.headers.get("x-api-key") ?? "", "idempotency-key": `rvp:${reviewedPlanId}` },
+    body: JSON.stringify({ deployment_url: deploymentUrl, flow_ids: prepared.flowIds }),
+  });
+  const launched = await launchRun(forwarded, { params: Promise.resolve({ id: prepared.applicationId }) });
+  const result = await launched.json().catch(() => null) as { runId?: string; error?: string; message?: string } | null;
+
+  if (!launched.ok || !result?.runId) {
+    await release();
+    return Response.json(
+      { error: { code: result?.error ?? "internal_error", message: result?.message ?? "The verification could not be started.", request_id: rid } },
+      { status: launched.status, headers: { "X-Request-Id": rid } },
+    );
+  }
+
+  // Launched. Finalize consumption (once), so the plan can never run again.
+  await markReviewedPlanRun(principal.email, reviewedPlanId, result.runId, Date.now());
+  const verificationId = toVerificationId(result.runId);
+  await logKeyUsage(principal, { endpoint: "POST /v1/verifications (reviewed)", status: 200, applicationId: prepared.applicationId, runId: result.runId });
+
+  return Response.json({
+    verification_id: verificationId,
+    state: "running",
+    status_url: `/v1/verifications/${verificationId}`,
+    claim,
+    requirements: prepared.requirements,
+    reviewed_plan_id: reviewedPlanId,
+    // This run executed a plan that was explicitly reviewed and approved.
+    human_reviewed: true,
   }, { status: 202, headers: { "X-Request-Id": rid } });
 }
