@@ -33,7 +33,7 @@ import {
 import { crawl } from "./discover-crawl";
 import { makeSafeFetcher } from "./crawl-fetch";
 import { synthesize, synthesisConfigured, type Synthesis } from "./discover-synthesis";
-import { validateSteps } from "./flow-steps";
+import { validateSteps, type FlowStep } from "./flow-steps";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
 function db() { return getSupabaseAdminClient(); }
@@ -114,6 +114,37 @@ export type PreparedVerification = {
   requirements: string[];
 };
 
+// A flow exactly as it would be written and run: the storage-shaped steps plus the metadata the run needs.
+// priority is the synthesis severity label (critical/high/...), tied to the synth type so the two cannot drift.
+export type PlanFlow = { name: string; goal: string; role: string | null; steps: FlowStep[]; priority: Synthesis["flows"][number]["priority"] };
+
+// The requirements and flows a verification WOULD write and approve, with nothing launched and nothing
+// stored. This is what the coverage gate inspects, so the gate judges precisely what a paid run would
+// execute rather than a looser or stricter version of it. PURE: the same synthesis always projects the same
+// plan, which is what lets the gate be a deterministic, testable spend decision.
+export type PlannedVerification = { requirements: string[]; flows: PlanFlow[] };
+
+export function projectPlan(synth: Synthesis): PlannedVerification {
+  const requirements: string[] = [];
+  for (const r of synth.requirements.slice(0, 40)) {
+    const text = (r.text || "").trim();
+    if (text) requirements.push(text);
+  }
+  // Roles a flow may sign into are drawn from the synthesis itself (a flow that declares role "admin" makes
+  // "admin" available to sign_in_as). Same derivation prepareVerification uses, so validation matches.
+  const roles = Array.from(new Set(synth.flows.map((f) => (f.role || "").trim()).filter(Boolean)));
+  const flows: PlanFlow[] = [];
+  for (const f of synth.flows.slice(0, 20)) {
+    const steps = validateSteps(f.steps, { rolesAvailable: roles });
+    if (!steps.ok) continue; // a flow the designer validator rejects would never run; it is not part of the plan
+    flows.push({
+      name: f.name, goal: f.goal, role: f.auth_required ? (f.role || null) : null,
+      steps: steps.steps, priority: f.priority,
+    });
+  }
+  return { requirements, flows };
+}
+
 /**
  * Write the claim into a fresh contract with approved, enabled flows, then freeze it.
  *
@@ -148,14 +179,20 @@ export async function prepareVerification(
   }
   const contractId = String((inserted as unknown as { id: string }).id);
 
+  // Write exactly the plan the coverage gate approved. projectPlan is the single source of truth for which
+  // requirements and flows a verification carries, so the gate and the run can never disagree about what was
+  // checked. The synth's per-requirement category/severity are re-read here because the plan carries only the
+  // text (all the gate needs); requirement order is preserved so category lines up by index.
+  const plan = projectPlan(synth);
+  const synthReqByText = new Map(synth.requirements.map((r) => [(r.text || "").trim(), r]));
+
   // Requirements first: approveContract refuses a contract with no enabled requirement, and a flow's
   // requirement_refs are only meaningful once the requirements exist. addRequirement inserts
   // enabled + approved, which is the auto-approval decision made explicit.
   const requirements: string[] = [];
-  for (const r of synth.requirements.slice(0, 40)) {
-    const text = (r.text || "").trim();
-    if (!text) continue;
-    const added = await addRequirement(uid, contractId, { requirement: text, category: r.category, severity: r.severity });
+  for (const text of plan.requirements) {
+    const meta = synthReqByText.get(text);
+    const added = await addRequirement(uid, contractId, { requirement: text, category: meta?.category, severity: meta?.severity });
     if (added) requirements.push(text);
   }
   if (!requirements.length) {
@@ -166,16 +203,12 @@ export async function prepareVerification(
     };
   }
 
-  // Then flows. Steps go through the SAME validator the dashboard uses, so a model that emits an unusable
-  // step is rejected here rather than failing inside a browser the caller already paid for.
-  const roles = Array.from(new Set(synth.flows.map((f) => (f.role || "").trim()).filter(Boolean)));
+  // Then flows, already validated by projectPlan (the SAME designer validator the dashboard uses), so a model
+  // that emits an unusable step was dropped before we ever reached a browser the caller paid for.
   const flowIds: string[] = [];
-  for (const f of synth.flows.slice(0, 20)) {
-    const steps = validateSteps(f.steps, { rolesAvailable: roles });
-    if (!steps.ok) continue;
+  for (const f of plan.flows) {
     const added = await addFlow(uid, contractId, {
-      name: f.name, goal: f.goal, role: f.auth_required ? (f.role || null) : null,
-      steps: steps.steps, priority: f.priority,
+      name: f.name, goal: f.goal, role: f.role, steps: f.steps, priority: f.priority,
     });
     if (added && !("error" in added)) flowIds.push(added.id);
   }

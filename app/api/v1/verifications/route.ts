@@ -24,7 +24,8 @@ import { POST as launchRun } from "@/app/api/preflight/apps/[id]/runs/route";
 import { resolvePrincipal, logKeyUsage, PREFLIGHT_SCOPES } from "@/lib/preflight/api-principal";
 import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { unsafeHttpsUrlReason } from "@/lib/safe-fetch";
-import { laneApplication, synthesizeClaim, prepareVerification } from "@/lib/preflight/verification-lane";
+import { laneApplication, synthesizeClaim, prepareVerification, projectPlan } from "@/lib/preflight/verification-lane";
+import { coverageReport, coverageGaps, repairPrompt } from "@/lib/preflight/coverage";
 import { runIdentity } from "@/lib/preflight/runs-db";
 import { getContractById, listRequirements } from "@/lib/v-applications";
 import { reserve, markLaunched, markFailed, verificationFingerprint } from "@/lib/preflight/verification-idempotency";
@@ -57,6 +58,34 @@ export async function POST(req: Request) {
   // A claim short enough to be a single word cannot describe an outcome, and the model would invent one.
   if (claim.length < 12) {
     return apiError("validation_error", "claim needs to describe an outcome, for example what a user does and what should be true afterwards.", 400, rid);
+  }
+
+  const dryRun = (body as Record<string, unknown>)?.dry_run === true;
+
+  // DRY RUN. Synthesis + the coverage gate, and nothing else: no idempotency reservation, no application, no
+  // contract, no browser, no hold, no charge. This is how a caller or a CI step asks "is this claim provable
+  // against this build?" before spending. It runs the exact projection a real verification would, so
+  // would_launch here is the same decision the pre-run gate would make on a paid request.
+  if (dryRun) {
+    const synth = await synthesizeClaim(deploymentUrl, claim);
+    if ("error" in synth) {
+      await logKeyUsage(p.principal, { endpoint: "POST /v1/verifications (dry_run)", status: synth.status });
+      return Response.json({ error: { code: synth.error, message: synth.message, request_id: rid } }, { status: synth.status, headers: { "X-Request-Id": rid } });
+    }
+    const plan = projectPlan(synth);
+    const report = coverageReport(claim, plan.requirements, plan.flows);
+    await logKeyUsage(p.principal, { endpoint: "POST /v1/verifications (dry_run)", status: 200 });
+    return Response.json({
+      dry_run: true,
+      claim,
+      requirements: plan.requirements,
+      flows: plan.flows.map((f) => ({ name: f.name, goal: f.goal, steps: f.steps.length })),
+      coverage: { claim: report.claim, execution: report.execution, ready_to_launch: report.readyToLaunch },
+      would_launch: report.readyToLaunch,
+      gaps: coverageGaps(report),
+      repair_prompt: report.readyToLaunch ? null : repairPrompt(claim, report),
+      human_reviewed: false,
+    }, { status: 200, headers: { "X-Request-Id": rid } });
   }
 
   // IDEMPOTENCY, DECIDED BEFORE ANY WORK. Synthesis is a model call and a contract write; a retry must not
@@ -110,6 +139,31 @@ export async function POST(req: Request) {
       { error: { code: synth.error, message: synth.message, request_id: rid } },
       { status: synth.status, headers: { "X-Request-Id": rid } },
     );
+  }
+
+  // THE PRE-RUN GATE. Two deterministic checks, both of which must pass before a browser is launched or a
+  // pass is held: did the requirements PRESERVE the claim, and does a runnable flow actually PROVE it. The
+  // first real production run passed the first check and failed the second, spent a pass, and returned a
+  // verdict from a journey that never exercised the guarantee. This is where that cannot happen again.
+  //
+  // A block here is NOT a run that came back blocked; no run happened. It is Vraelis declining to spend on a
+  // test that could not prove the claim, and it costs the caller nothing. The reservation is released so a
+  // corrected retry can reuse the key, and the gaps + a concrete repair prompt are returned so the caller
+  // (or the agent that built the app) knows exactly what to change.
+  const plan = projectPlan(synth);
+  const coverage = coverageReport(claim, plan.requirements, plan.flows);
+  if (!coverage.readyToLaunch) {
+    await releaseOnFailure();
+    await logKeyUsage(p.principal, { endpoint: "POST /v1/verifications", status: 422, applicationId: app.id });
+    return Response.json({
+      error: {
+        code: "claim_not_provable",
+        message: "Vraelis understood this claim but could not build a test that would prove it, so no run was started and nothing was charged. See gaps and repair_prompt.",
+        request_id: rid,
+      },
+      gaps: coverageGaps(coverage),
+      repair_prompt: repairPrompt(claim, coverage),
+    }, { status: 422, headers: { "X-Request-Id": rid } });
   }
 
   const prepared = await prepareVerification(p.principal.email, app, claim, synth);
