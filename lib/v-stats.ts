@@ -172,24 +172,6 @@ export function dirichletTopProbs(
   };
 }
 
-// ── Kish effective sample size: (Σw)² / Σw². Always ≤ N. This is how reputation
-// weighting is prevented from inflating confidence. ──
-export function kishEffectiveN(weights: number[]): number {
-  let s = 0, s2 = 0;
-  for (const w of weights) { s += w; s2 += w * w; }
-  return s2 > 0 ? (s * s) / s2 : 0;
-}
-
-// ── Reputation weight for one voter: shrink their reliability toward the pool mean
-// (Beta prior, strength alpha), then bound it so weighting NUDGES, never swings.
-// A voter with no history gets weight 1 (neutral). ──
-export function reputationWeight(valid: number, rejected: number, poolMean: number, alpha = 5): number {
-  const seen = valid + rejected;
-  if (seen <= 0 || poolMean <= 0) return 1;
-  const reliability = (valid + alpha * poolMean) / (seen + alpha);
-  return Math.min(1.5, Math.max(0.5, reliability / poolMean));
-}
-
 // ── Consensus concentration: P(two random raters chose the same option) = Σ pᵢ².
 // The honest "how much do people agree" read for a single-decision run (NOT
 // Krippendorff's alpha, which needs repeated items — that's Phase 2). ──
