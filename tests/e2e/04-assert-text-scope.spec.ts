@@ -30,12 +30,13 @@ const ACCOUNT_PRO = `<!doctype html><meta charset="utf-8"><body>
   </div>
 </body>`;
 
-// Mirror the worker's assert_text exactly: locate the element the target names, read ITS text, check the
-// expected value is within it.
+// Mirror the worker's assert_text exactly: locate the element the target names, check the value in its own
+// text OR its immediate container (so a "Plan" heading beside "Current plan: Pro" resolves correctly).
 async function scopedAssert(page: import("@playwright/test").Page, target: string, expected: string): Promise<boolean> {
   const loc = page.getByText(target).first();
   if ((await loc.count()) === 0) return false;
-  return textPresentInScope(await loc.innerText(), expected);
+  if (textPresentInScope(await loc.innerText(), expected)) return true;
+  return textPresentInScope(await loc.locator("xpath=..").innerText().catch(() => ""), expected);
 }
 // The OLD behavior: page-wide presence of the expected text.
 async function pageWideAssert(page: import("@playwright/test").Page, expected: string): Promise<boolean> {
@@ -49,6 +50,16 @@ test.describe("assert_text scoping discriminates entitlement", () => {
 
     await page.setContent(ACCOUNT_PRO);
     expect(await scopedAssert(page, "Current plan", "Pro")).toBe(true);  // the plan is Pro
+  });
+
+  test("target 'Plan' (the heading the model picks) also discriminates via its container", async ({ page }) => {
+    // The heading's own text is just "Plan"; its container card holds "Current plan: <value>". The sibling
+    // "Get Pro" upsell card is NOT in that container, so Free stays false.
+    await page.setContent(ACCOUNT_FREE);
+    expect(await scopedAssert(page, "Plan", "Pro")).toBe(false);
+
+    await page.setContent(ACCOUNT_PRO);
+    expect(await scopedAssert(page, "Plan", "Pro")).toBe(true);
   });
 
   test("the OLD page-wide match FALSE-PASSES: it passes on Free too", async ({ page }) => {

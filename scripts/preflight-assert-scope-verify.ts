@@ -41,7 +41,8 @@ import("node:fs").then((fs) => {
   const src = fs.readFileSync("worker/preflight/providers/browserbase.ts", "utf8");
   const block = src.slice(src.indexOf('case "assert_text"'), src.indexOf('case "assert_url"'));
   ok("assert_text uses the target to locate the element", /getByText\(target\)/.test(block));
-  ok("assert_text checks the value within the target scope, not page-wide", /textPresentInScope\(scope, want\)/.test(block));
+  ok("assert_text checks the value within the target scope, not page-wide", /textPresentInScope\(ownText, want\)/.test(block));
+  ok("assert_text falls back to the target's immediate container (label/heading beside the value)", /xpath=\.\./.test(block) && /textPresentInScope\(parentText, want\)/.test(block));
   ok("a page-wide fallback exists ONLY when no target is named", /if \(!target\)/.test(block) && /text_present_pagewide/.test(block));
 
   console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);

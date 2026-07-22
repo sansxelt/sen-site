@@ -43,7 +43,7 @@ type PWPage = {
   on: (ev: string, cb: (a: unknown) => void) => void;
   context: () => PWContext; evaluate?: (fn: string) => Promise<unknown>;
 };
-type PWLocator = { first: () => PWLocator; click: (o?: unknown) => Promise<void>; fill: (v: string, o?: unknown) => Promise<void>; selectOption: (v: string) => Promise<unknown>; check: (o?: unknown) => Promise<void>; uncheck: (o?: unknown) => Promise<void>; waitFor: (o?: unknown) => Promise<void>; isVisible: () => Promise<boolean>; textContent: () => Promise<string | null>; innerText: () => Promise<string>; count: () => Promise<number> };
+type PWLocator = { first: () => PWLocator; locator: (s: string) => PWLocator; click: (o?: unknown) => Promise<void>; fill: (v: string, o?: unknown) => Promise<void>; selectOption: (v: string) => Promise<unknown>; check: (o?: unknown) => Promise<void>; uncheck: (o?: unknown) => Promise<void>; waitFor: (o?: unknown) => Promise<void>; isVisible: () => Promise<boolean>; textContent: () => Promise<string | null>; innerText: () => Promise<string>; count: () => Promise<number> };
 
 // Resolve a semantic target ("Create project") to a best-effort accessible locator, recording candidates.
 function resolve(page: PWPage, target: string): { locator: PWLocator; candidates: string[]; selected: string } {
@@ -195,8 +195,15 @@ export class PlaywrightPreflightPage implements PreflightPage {
           }
           const loc = this.page.getByText(target).first();
           if ((await loc.count().catch(() => 0)) === 0) return base(false, "assert_target_not_found");
-          const scope = (await loc.innerText().catch(() => "")) || "";
-          const ok = textPresentInScope(scope, want);
+          // Check the value in the target element's own text first. If the target is a LABEL or heading beside
+          // the value (e.g. a "Plan" heading next to "Current plan: Pro"), also check its IMMEDIATE container —
+          // which holds the value but not unrelated sections, so a sibling "Get Pro" upsell card stays excluded.
+          const ownText = (await loc.innerText().catch(() => "")) || "";
+          let ok = textPresentInScope(ownText, want);
+          if (!ok) {
+            const parentText = (await loc.locator("xpath=..").innerText().catch(() => "")) || "";
+            ok = textPresentInScope(parentText, want);
+          }
           return base(ok, ok ? "text_present" : "text_absent");
         }
         case "assert_url": { const ok = this.page.url().includes(step.expect || ""); return base(ok, ok ? "url_match" : "url_mismatch"); }
