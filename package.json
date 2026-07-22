@@ -24,6 +24,7 @@
     "preflight:limits:test": "tsx scripts/preflight-limits-verify.ts",
     "preflight:security:test": "tsx scripts/preflight-security-verify.ts",
     "preflight:coverage:test": "tsx scripts/preflight-coverage-verify.ts",
+    "preflight:coverage:dryrun": "tsx scripts/preflight-coverage-dryrun.ts",
     "outreach": "tsx scripts/outreach.ts",
     "desktop:dev": "npm --prefix desktop run tauri dev",
     "desktop:build": "npm --prefix desktop run tauri build",
