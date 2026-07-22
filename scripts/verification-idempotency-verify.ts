@@ -74,11 +74,27 @@ ok("a concurrent duplicate is told to retry rather than starting a second synthe
 ok("only an OWNED reservation proceeds to work", /ownsReservation = r\.outcome === "owned"/.test(src));
 
 console.log("\n── a failed reservation is released, never left stuck ──");
-ok("synthesis failure releases the reservation", /if \("error" in synth\) \{\s*await releaseOnFailure\(\)/.test(src));
+ok("synthesis failure releases the reservation", /if \("error" in s\) \{\s*await releaseOnFailure\(\)/.test(src));
 ok("contract-prep failure releases the reservation", /if \("error" in prepared\) \{\s*await releaseOnFailure\(\)/.test(src));
 ok("a refused launch releases the reservation", /if \(!launched\.ok \|\| !result\?\.runId\) \{[\s\S]{0,400}await releaseOnFailure\(\)/.test(src));
 ok("releaseOnFailure marks the key failed (reclaimable), not deleted or left pending", /markFailed\(p\.principal\.email, idemKey\)/.test(src));
 ok("a successful launch records the run so a retry replays it", /if \(ownsReservation && idemKey\) await markLaunched/.test(src));
+
+console.log("\n── dry run is idempotent too, and never launches, holds, or charges ──");
+// The dry-run block runs synthesis + the bounded correction loop, all of which cost money to Vraelis. A
+// changed claim under the same key must be refused BEFORE any of that, exactly like the launch path.
+const dryStart = src.indexOf("if (dryRun) {");
+const dryEnd = src.indexOf("IDEMPOTENCY, DECIDED BEFORE ANY WORK");
+const dryBlock = dryStart !== -1 && dryEnd > dryStart ? src.slice(dryStart, dryEnd) : "";
+const dAt = (needle: string) => dryBlock.indexOf(needle);
+ok("the dry-run block was found", dryBlock.length > 0);
+ok("dry run reserves BEFORE synthesis (a changed payload is refused before any model or crawl work)",
+  dAt("await reserve(") !== -1 && dAt("await reserve(") < dAt("await synthesizeClaim("));
+ok("a changed payload returns 409 before correction work", /r\.outcome === "conflict"[\s\S]{0,300}status: 409/.test(dryBlock));
+ok("a concurrent duplicate dry run is told to retry", /r\.outcome === "pending"[\s\S]{0,300}verification_in_progress/.test(dryBlock));
+ok("dry run NEVER launches a browser run", !dryBlock.includes("launchRun("));
+ok("dry run NEVER writes a contract", !dryBlock.includes("prepareVerification("));
+ok("dry run releases the key afterwards (it launched nothing)", /ownsDry && idemKey\) await markFailed/.test(dryBlock));
 
 console.log("\n── the reservation is atomic and tenant scoped ──");
 const lib = readFileSync("lib/preflight/verification-idempotency.ts", "utf8");

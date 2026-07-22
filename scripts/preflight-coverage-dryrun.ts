@@ -54,24 +54,45 @@ async function main(): Promise<boolean> {
     return fail === 0 && r.status < 500;
   }
 
+  const cov = body?.coverage ?? {};
   ok("the response is marked dry_run", body?.dry_run === true);
   ok("nothing launched: there is no verification_id", body?.verification_id == null);
   ok("a coverage verdict came back", typeof body?.would_launch === "boolean");
-  ok("claim coverage is reported", body?.coverage?.claim && typeof body.coverage.claim.ok === "boolean");
-  ok("execution coverage is reported", body?.coverage?.execution && typeof body.coverage.execution.ok === "boolean");
-  ok("would_launch equals both gates passing", body?.would_launch === (body?.coverage?.claim?.ok && body?.coverage?.execution?.ok));
-  ok("a blocked plan carries a repair prompt; a ready plan does not",
-    body?.would_launch ? body?.repair_prompt == null : typeof body?.repair_prompt === "string" && body.repair_prompt.length > 0);
+  ok("claim coverage is reported before and after correction", cov.claim_before && cov.claim_after && typeof cov.claim_after.ok === "boolean");
+  ok("execution coverage is reported before and after correction", cov.execution_before && cov.execution_after && typeof cov.execution_after.ok === "boolean");
+  ok("would_launch equals BOTH gates passing after correction", body?.would_launch === (cov.claim_after?.ok && cov.execution_after?.ok));
+  ok("correction telemetry is present", typeof body?.requirement_correction_attempted === "boolean" && typeof body?.flow_correction_attempted === "boolean" && typeof body?.recrawl_attempted === "boolean");
+  ok("a blocked plan carries a repair prompt and remaining obligations; a ready plan does not",
+    body?.would_launch
+      ? (body?.repair_prompt == null && (body?.remaining_obligations?.length ?? 0) === 0)
+      : (typeof body?.repair_prompt === "string" && body.repair_prompt.length > 0 && (body?.remaining_obligations?.length ?? 0) > 0));
 
-  console.log("\n── what the deployment would do with this claim ──");
-  console.log(`would_launch:        ${body?.would_launch}`);
-  console.log(`requirements (${body?.requirements?.length ?? 0}):`);
-  for (const req of body?.requirements ?? []) console.log(`  - ${req}`);
-  console.log(`flows (${body?.flows?.length ?? 0}):`);
-  for (const f of body?.flows ?? []) console.log(`  - ${f.name} (${f.steps} steps): ${f.goal}`);
-  if (!body?.coverage?.claim?.ok || !body?.coverage?.execution?.ok) {
-    console.log("gaps:");
-    for (const g of body?.gaps ?? []) console.log(`  - ${g}`);
+  const fmtFlows = (fs: { name: string; goal: string; steps: number }[]) => (fs ?? []).map((f) => `  - ${f.name} (${f.steps} steps): ${f.goal}`).join("\n") || "  (none)";
+  console.log("\n── original plan (from synthesis, before correction) ──");
+  console.log(`requirements (${body?.original_requirements?.length ?? 0}):`);
+  for (const req of body?.original_requirements ?? []) console.log(`  - ${req}`);
+  console.log(`flows:\n${fmtFlows(body?.original_flows)}`);
+  console.log(`claim coverage:     ${cov.claim_before?.ok ? "PASS" : "FAIL"}`);
+  console.log(`execution coverage: ${cov.execution_before?.ok ? "PASS" : "FAIL"}`);
+
+  console.log("\n── bounded correction ──");
+  console.log(`requirement correction attempted: ${body?.requirement_correction_attempted}`);
+  console.log(`targeted recrawl attempted:       ${body?.recrawl_attempted}`);
+  console.log(`flow correction attempted:        ${body?.flow_correction_attempted}`);
+
+  if (body?.requirement_correction_attempted || body?.flow_correction_attempted) {
+    console.log("\n── corrected plan ──");
+    if (body?.corrected_requirements) { console.log(`requirements (${body.corrected_requirements.length}):`); for (const req of body.corrected_requirements) console.log(`  - ${req}`); }
+    if (body?.corrected_flows) console.log(`flows:\n${fmtFlows(body.corrected_flows)}`);
+    console.log(`claim coverage:     ${cov.claim_after?.ok ? "PASS" : "FAIL"}`);
+    console.log(`execution coverage: ${cov.execution_after?.ok ? "PASS" : "FAIL"}`);
+  }
+
+  console.log(`\nwould_launch:  ${body?.would_launch}`);
+  if (!body?.would_launch) {
+    console.log(`blocked_reason: ${body?.blocked_reason}`);
+    console.log("remaining obligations:");
+    for (const g of body?.remaining_obligations ?? []) console.log(`  - ${g}`);
     console.log("\nrepair_prompt:\n" + (body?.repair_prompt ?? ""));
   }
 

@@ -28,11 +28,12 @@
 import { getSupabaseAdminClient, isDatabaseConfigured } from "../supabase-admin";
 import {
   listApplications, createApplication, addRequirement, addFlow, approveContract,
-  type Application,
+  type Application, type Severity,
 } from "../v-applications";
 import { crawl } from "./discover-crawl";
 import { makeSafeFetcher } from "./crawl-fetch";
 import { synthesize, synthesisConfigured, type Synthesis } from "./discover-synthesis";
+import type { PageSnapshot } from "./discover-extract";
 import { validateSteps, type FlowStep } from "./flow-steps";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
@@ -79,7 +80,12 @@ export async function laneApplication(owner: string, deploymentUrl: string): Pro
  * The claim is passed as the build prompt, which is the same input a human's original build prompt occupies
  * during discovery, so the synthesis model is being used exactly as it already is rather than in a new mode.
  */
-export async function synthesizeClaim(deploymentUrl: string, claim: string): Promise<Synthesis | LaneFailure> {
+// The pages are returned alongside the synthesis because the coverage correction loop needs the SAME
+// discovery synthesis saw: flow correction repairs an execution plan against the reachable pages and
+// controls, and re-crawling from scratch would both cost time and risk seeing a different app.
+export type SynthesisResult = { synth: Synthesis; pages: PageSnapshot[] };
+
+export async function synthesizeClaim(deploymentUrl: string, claim: string): Promise<SynthesisResult | LaneFailure> {
   if (!synthesisConfigured()) {
     return { error: "synthesis_unavailable", message: "Claim analysis is not configured on this deployment.", status: 503 };
   }
@@ -102,7 +108,7 @@ export async function synthesizeClaim(deploymentUrl: string, claim: string): Pro
       status: 422,
     };
   }
-  return synth;
+  return { synth, pages: snapshot.pages };
 }
 
 export type PreparedVerification = {
@@ -114,21 +120,25 @@ export type PreparedVerification = {
   requirements: string[];
 };
 
+// A requirement exactly as it would be written: the checkable text plus the metadata the contract stores.
+export type PlanRequirement = { text: string; category: string; severity: Severity };
+
 // A flow exactly as it would be written and run: the storage-shaped steps plus the metadata the run needs.
-// priority is the synthesis severity label (critical/high/...), tied to the synth type so the two cannot drift.
+// priority is the synthesis severity label (critical/important/...), tied to the synth type so the two cannot drift.
 export type PlanFlow = { name: string; goal: string; role: string | null; steps: FlowStep[]; priority: Synthesis["flows"][number]["priority"] };
 
 // The requirements and flows a verification WOULD write and approve, with nothing launched and nothing
 // stored. This is what the coverage gate inspects, so the gate judges precisely what a paid run would
-// execute rather than a looser or stricter version of it. PURE: the same synthesis always projects the same
-// plan, which is what lets the gate be a deterministic, testable spend decision.
-export type PlannedVerification = { requirements: string[]; flows: PlanFlow[] };
+// execute rather than a looser or stricter version of it. projectPlan is PURE (the same synthesis always
+// projects the same plan); the correction loop may replace this plan with a stronger one, but whatever plan
+// reaches prepareVerification is exactly what runs.
+export type PlannedVerification = { requirements: PlanRequirement[]; flows: PlanFlow[] };
 
 export function projectPlan(synth: Synthesis): PlannedVerification {
-  const requirements: string[] = [];
+  const requirements: PlanRequirement[] = [];
   for (const r of synth.requirements.slice(0, 40)) {
     const text = (r.text || "").trim();
-    if (text) requirements.push(text);
+    if (text) requirements.push({ text, category: r.category || "correctness", severity: r.severity });
   }
   // Roles a flow may sign into are drawn from the synthesis itself (a flow that declares role "admin" makes
   // "admin" available to sign_in_as). Same derivation prepareVerification uses, so validation matches.
@@ -145,8 +155,18 @@ export function projectPlan(synth: Synthesis): PlannedVerification {
   return { requirements, flows };
 }
 
+/** The requirement texts of a plan, for the deterministic coverage checks (which read strings). */
+export function planRequirementTexts(plan: PlannedVerification): string[] {
+  return plan.requirements.map((r) => r.text);
+}
+
 /**
- * Write the claim into a fresh contract with approved, enabled flows, then freeze it.
+ * Write a RESOLVED plan into a fresh contract with approved, enabled flows, then freeze it.
+ *
+ * The plan passed in is whatever survived the coverage gate: either projectPlan(synth) unchanged, or a
+ * stronger plan the correction loop produced. prepareVerification writes exactly that plan and nothing else,
+ * so what runs is exactly what the deterministic gate judged sufficient. It does not re-derive or re-validate
+ * the plan; the resolver already validated every corrected flow through the same designer validator.
  *
  * A new contract per verification, rather than appending to one: an approved contract is immutable, so a
  * second claim could not add its flows to the first claim's contract even if we wanted it to. A fresh
@@ -154,7 +174,7 @@ export function projectPlan(synth: Synthesis): PlannedVerification {
  * what the response echoes back.
  */
 export async function prepareVerification(
-  owner: string, app: Application, claim: string, synth: Synthesis,
+  owner: string, app: Application, claim: string, plan: PlannedVerification,
 ): Promise<PreparedVerification | LaneFailure> {
   const uid = norm(owner);
 
@@ -179,21 +199,16 @@ export async function prepareVerification(
   }
   const contractId = String((inserted as unknown as { id: string }).id);
 
-  // Write exactly the plan the coverage gate approved. projectPlan is the single source of truth for which
-  // requirements and flows a verification carries, so the gate and the run can never disagree about what was
-  // checked. The synth's per-requirement category/severity are re-read here because the plan carries only the
-  // text (all the gate needs); requirement order is preserved so category lines up by index.
-  const plan = projectPlan(synth);
-  const synthReqByText = new Map(synth.requirements.map((r) => [(r.text || "").trim(), r]));
+  // Write exactly the resolved plan. It is the single source of truth for what this verification carries, so
+  // the gate and the run can never disagree about what was checked.
 
   // Requirements first: approveContract refuses a contract with no enabled requirement, and a flow's
   // requirement_refs are only meaningful once the requirements exist. addRequirement inserts
   // enabled + approved, which is the auto-approval decision made explicit.
   const requirements: string[] = [];
-  for (const text of plan.requirements) {
-    const meta = synthReqByText.get(text);
-    const added = await addRequirement(uid, contractId, { requirement: text, category: meta?.category, severity: meta?.severity });
-    if (added) requirements.push(text);
+  for (const r of plan.requirements) {
+    const added = await addRequirement(uid, contractId, { requirement: r.text, category: r.category, severity: r.severity });
+    if (added) requirements.push(r.text);
   }
   if (!requirements.length) {
     return {
@@ -203,8 +218,9 @@ export async function prepareVerification(
     };
   }
 
-  // Then flows, already validated by projectPlan (the SAME designer validator the dashboard uses), so a model
-  // that emits an unusable step was dropped before we ever reached a browser the caller paid for.
+  // Then flows. Every flow here already passed the SAME designer validator the dashboard uses (projectPlan for
+  // the original plan, the resolver for any corrected flow), so a model that emitted an unusable step was
+  // dropped before we ever reached a browser the caller paid for.
   const flowIds: string[] = [];
   for (const f of plan.flows) {
     const added = await addFlow(uid, contractId, {

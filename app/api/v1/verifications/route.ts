@@ -24,8 +24,9 @@ import { POST as launchRun } from "@/app/api/preflight/apps/[id]/runs/route";
 import { resolvePrincipal, logKeyUsage, PREFLIGHT_SCOPES } from "@/lib/preflight/api-principal";
 import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { unsafeHttpsUrlReason } from "@/lib/safe-fetch";
-import { laneApplication, synthesizeClaim, prepareVerification, projectPlan } from "@/lib/preflight/verification-lane";
-import { coverageReport, coverageGaps, repairPrompt } from "@/lib/preflight/coverage";
+import { laneApplication, synthesizeClaim, prepareVerification } from "@/lib/preflight/verification-lane";
+import { repairPrompt } from "@/lib/preflight/coverage";
+import { resolveCoverage, resolutionGaps, type CoverageResolution } from "@/lib/preflight/coverage-resolve";
 import { runIdentity } from "@/lib/preflight/runs-db";
 import { getContractById, listRequirements } from "@/lib/v-applications";
 import { reserve, markLaunched, markFailed, verificationFingerprint } from "@/lib/preflight/verification-idempotency";
@@ -33,9 +34,41 @@ import { apiError, requestId } from "../_lib";
 import { toVerificationId, canonicalClaim } from "./_shared";
 
 export const runtime = "nodejs";
-export const maxDuration = 300; // crawl + synthesis before the launch; well inside the worker's own budget
+export const maxDuration = 300; // crawl + synthesis + at most two bounded corrections; inside the worker budget
 
 const MAX_CLAIM = 2000;
+
+// The coverage telemetry every /v1 response shares: what the plan was, what the bounded correction did to it,
+// and the deterministic verdict at each stage. It carries NO internal pass ids, contract revision ids, or
+// settlement fields — those are engine internals a caller must not couple to. Flow steps are shown as a count
+// unless diagnostic mode is explicitly requested. `would_launch`/`blocked_reason` come straight from the
+// deterministic resolver: the model never sets them.
+function coverageTelemetry(claim: string, r: CoverageResolution, diagnostic: boolean) {
+  const flowView = (flows: CoverageResolution["plan"]["flows"]) =>
+    flows.map((f) => diagnostic
+      ? { name: f.name, goal: f.goal, steps: f.steps.length, steps_detail: f.steps }
+      : { name: f.name, goal: f.goal, steps: f.steps.length });
+  return {
+    requirements: r.plan.requirements.map((x) => x.text),
+    flows: flowView(r.plan.flows),
+    original_requirements: r.originalPlan.requirements.map((x) => x.text),
+    corrected_requirements: r.requirementCorrectionAttempted ? r.plan.requirements.map((x) => x.text) : null,
+    original_flows: flowView(r.originalPlan.flows),
+    corrected_flows: r.flowCorrectionAttempted ? flowView(r.plan.flows) : null,
+    coverage: {
+      claim_before: r.claimBefore, claim_after: r.claimAfter,
+      execution_before: r.executionBefore, execution_after: r.executionAfter,
+    },
+    requirement_correction_attempted: r.requirementCorrectionAttempted,
+    flow_correction_attempted: r.flowCorrectionAttempted,
+    recrawl_attempted: r.recrawlAttempted,
+    remaining_obligations: r.remainingObligations,
+    would_launch: r.readyToLaunch,
+    blocked_reason: r.blockedReason,
+    gaps: resolutionGaps(r),
+    repair_prompt: r.readyToLaunch ? null : repairPrompt(claim, { claim: r.claimAfter, execution: r.executionAfter, readyToLaunch: false }),
+  };
+}
 
 export async function POST(req: Request) {
   const rid = requestId();
@@ -61,29 +94,44 @@ export async function POST(req: Request) {
   }
 
   const dryRun = (body as Record<string, unknown>)?.dry_run === true;
+  const diagnostic = (body as Record<string, unknown>)?.diagnostic === true;
 
-  // DRY RUN. Synthesis + the coverage gate, and nothing else: no idempotency reservation, no application, no
-  // contract, no browser, no hold, no charge. This is how a caller or a CI step asks "is this claim provable
-  // against this build?" before spending. It runs the exact projection a real verification would, so
-  // would_launch here is the same decision the pre-run gate would make on a paid request.
+  // DRY RUN. Synthesis + the bounded correction loop + the coverage gate, and nothing else: no browser, no
+  // contract, no hold, no charge. This is how a caller or a CI step asks "is this claim provable against this
+  // build, even after Vraelis tries to repair the plan?" before spending. would_launch here is the same
+  // deterministic verdict the pre-run gate would reach on a paid request.
   if (dryRun) {
-    const synth = await synthesizeClaim(deploymentUrl, claim);
-    if ("error" in synth) {
-      await logKeyUsage(p.principal, { endpoint: "POST /v1/verifications (dry_run)", status: synth.status });
-      return Response.json({ error: { code: synth.error, message: synth.message, request_id: rid } }, { status: synth.status, headers: { "X-Request-Id": rid } });
+    // Dry-run idempotency: a changed claim under the same key must be refused BEFORE any model or crawl work.
+    // The reservation is the same payload-bound one the launch path uses, so it enforces that guarantee here
+    // too. A dry run never launches, so we release the key afterward (mark it failed = reclaimable), leaving
+    // it usable for the real verification later.
+    const idemKey = req.headers.get("idempotency-key");
+    let ownsDry = false;
+    if (idemKey) {
+      const r = await reserve(p.principal.email, idemKey, verificationFingerprint(deploymentUrl, claim));
+      if (r.outcome === "conflict") {
+        await logKeyUsage(p.principal, { endpoint: "POST /v1/verifications (dry_run)", status: 409 });
+        return Response.json({ error: { code: "idempotency_key_reused", message: "That idempotency key was already used for a different verification. Use a new key, or resend the original request exactly.", request_id: rid } }, { status: 409, headers: { "X-Request-Id": rid } });
+      }
+      if (r.outcome === "pending") {
+        return Response.json({ error: { code: "verification_in_progress", message: "An identical request is already being prepared. Retry in a moment.", request_id: rid } }, { status: 409, headers: { "X-Request-Id": rid, "Retry-After": "3" } });
+      }
+      ownsDry = r.outcome === "owned";
     }
-    const plan = projectPlan(synth);
-    const report = coverageReport(claim, plan.requirements, plan.flows);
+
+    const s = await synthesizeClaim(deploymentUrl, claim);
+    if ("error" in s) {
+      if (ownsDry && idemKey) await markFailed(p.principal.email, idemKey);
+      await logKeyUsage(p.principal, { endpoint: "POST /v1/verifications (dry_run)", status: s.status });
+      return Response.json({ error: { code: s.error, message: s.message, request_id: rid } }, { status: s.status, headers: { "X-Request-Id": rid } });
+    }
+    const resolution = await resolveCoverage(deploymentUrl, claim, s.synth, s.pages);
+    if (ownsDry && idemKey) await markFailed(p.principal.email, idemKey); // dry run launched nothing; release the key
     await logKeyUsage(p.principal, { endpoint: "POST /v1/verifications (dry_run)", status: 200 });
     return Response.json({
       dry_run: true,
       claim,
-      requirements: plan.requirements,
-      flows: plan.flows.map((f) => ({ name: f.name, goal: f.goal, steps: f.steps.length })),
-      coverage: { claim: report.claim, execution: report.execution, ready_to_launch: report.readyToLaunch },
-      would_launch: report.readyToLaunch,
-      gaps: coverageGaps(report),
-      repair_prompt: report.readyToLaunch ? null : repairPrompt(claim, report),
+      ...coverageTelemetry(claim, resolution, diagnostic),
       human_reviewed: false,
     }, { status: 200, headers: { "X-Request-Id": rid } });
   }
@@ -131,42 +179,46 @@ export async function POST(req: Request) {
   const app = await laneApplication(p.principal.email, deploymentUrl);
   if ("error" in app) { await releaseOnFailure(); return apiError("internal_error", app.message, app.status, rid); }
 
-  const synth = await synthesizeClaim(deploymentUrl, claim);
-  if ("error" in synth) {
+  const s = await synthesizeClaim(deploymentUrl, claim);
+  if ("error" in s) {
     await releaseOnFailure();
-    await logKeyUsage(p.principal, { endpoint: "POST /v1/verifications", status: synth.status, applicationId: app.id });
+    await logKeyUsage(p.principal, { endpoint: "POST /v1/verifications", status: s.status, applicationId: app.id });
     return Response.json(
-      { error: { code: synth.error, message: synth.message, request_id: rid } },
-      { status: synth.status, headers: { "X-Request-Id": rid } },
+      { error: { code: s.error, message: s.message, request_id: rid } },
+      { status: s.status, headers: { "X-Request-Id": rid } },
     );
   }
 
-  // THE PRE-RUN GATE. Two deterministic checks, both of which must pass before a browser is launched or a
-  // pass is held: did the requirements PRESERVE the claim, and does a runnable flow actually PROVE it. The
-  // first real production run passed the first check and failed the second, spent a pass, and returned a
+  // THE PRE-RUN GATE, with the bounded correction loop. Two deterministic checks must both pass before a
+  // browser is launched or a pass is held: did the requirements PRESERVE the claim, and does a runnable flow
+  // actually PROVE it. When either fails, the loop tries at most one requirement correction and at most one
+  // flow correction to close the gap — the model PROPOSES a stronger plan, the deterministic validators DECIDE
+  // whether it is now sufficient. Whatever plan comes back either passes both gates or is Blocked.
+  //
+  // The first real production run passed the first check, failed the second, spent a pass, and returned a
   // verdict from a journey that never exercised the guarantee. This is where that cannot happen again.
   //
   // A block here is NOT a run that came back blocked; no run happened. It is Vraelis declining to spend on a
   // test that could not prove the claim, and it costs the caller nothing. The reservation is released so a
-  // corrected retry can reuse the key, and the gaps + a concrete repair prompt are returned so the caller
-  // (or the agent that built the app) knows exactly what to change.
-  const plan = projectPlan(synth);
-  const coverage = coverageReport(claim, plan.requirements, plan.flows);
-  if (!coverage.readyToLaunch) {
+  // corrected retry can reuse the key, and the telemetry (what correction did, what is still missing, a repair
+  // prompt) is returned so the caller — or the agent that built the app — knows exactly what to change.
+  const resolution = await resolveCoverage(deploymentUrl, claim, s.synth, s.pages);
+  if (!resolution.readyToLaunch) {
     await releaseOnFailure();
     await logKeyUsage(p.principal, { endpoint: "POST /v1/verifications", status: 422, applicationId: app.id });
     return Response.json({
       error: {
         code: "claim_not_provable",
-        message: "Vraelis understood this claim but could not build a test that would prove it, so no run was started and nothing was charged. See gaps and repair_prompt.",
+        message: "Vraelis understood this claim but could not build a test that would prove it, even after trying to repair the plan, so no run was started and nothing was charged. See remaining_obligations and repair_prompt.",
         request_id: rid,
       },
-      gaps: coverageGaps(coverage),
-      repair_prompt: repairPrompt(claim, coverage),
+      ...coverageTelemetry(claim, resolution, diagnostic),
     }, { status: 422, headers: { "X-Request-Id": rid } });
   }
 
-  const prepared = await prepareVerification(p.principal.email, app, claim, synth);
+  // Both gates pass. Write and launch the RESOLVED plan (the corrected one when correction ran), so the run
+  // executes exactly what the gate judged sufficient.
+  const prepared = await prepareVerification(p.principal.email, app, claim, resolution.plan);
   if ("error" in prepared) {
     await releaseOnFailure();
     await logKeyUsage(p.principal, { endpoint: "POST /v1/verifications", status: prepared.status, applicationId: app.id });

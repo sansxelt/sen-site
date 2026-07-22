@@ -50,6 +50,28 @@ export function analyzeClaim(claim: string): ClaimAnalysis {
   };
 }
 
+// A richer, still-deterministic breakdown of the claim, used ONLY to brief the correction model — never to
+// decide sufficiency. The deciders (checkClaimCoverage / checkExecutionCoverage) remain the sole authority on
+// whether a proposal is enough. Actor and action are best-effort surface reads: hints for the model, not
+// facts the gate relies on.
+export type ClaimObligations = ClaimAnalysis & {
+  /** Who performs the action ("a customer", "an admin"). Best-effort; falls back to "a user". */
+  actor: string;
+  /** The action that should produce the outcome ("upgrade", "pay", "change"). Null when none is detected. */
+  action: string | null;
+};
+
+export function claimObligations(claim: string): ClaimObligations {
+  const a = analyzeClaim(claim);
+  const actorMatch = claim.match(/\b(?:a|an|the)\s+([a-z][a-z]{2,20})\b(?=\s+(?:can|who|must|is\s+able|should|gets?|receives?|changes?|pays?|upgrades?))/i);
+  const actionMatch = claim.match(ACTION_RE);
+  return {
+    ...a,
+    actor: actorMatch ? `a ${actorMatch[1].toLowerCase()}` : "a user",
+    action: actionMatch ? actionMatch[0].toLowerCase() : null,
+  };
+}
+
 // ── Claim coverage: do the REQUIREMENTS preserve the claim's obligations? ─────────────────────────────────
 //
 // Evaluated across the WHOLE requirement set, not per requirement: one broad supporting requirement does not
