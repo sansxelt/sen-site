@@ -37,11 +37,11 @@ export function GET() {
         {/* headline + subline — matches the site hero voice */}
         <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
           <div style={{ display: "flex", fontSize: "72px", fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1.02, maxWidth: "1040px" }}>
-            AI can build it. Nobody checked it.
+            AI says it&rsquo;s done. Vraelis proves it.
           </div>
           <div style={{ display: "flex", width: "132px", height: "6px", borderRadius: "3px", background: "#16C081" }} />
           <div style={{ display: "flex", fontSize: "36px", fontWeight: 500, color: "rgba(255,255,255,0.66)", letterSpacing: "-0.01em", maxWidth: "1000px", lineHeight: 1.25 }}>
-            Vraelis runs the flows you approve against your deployed app, and shows what broke.
+            Give Vraelis a deployed app and the outcome that should be true. Get back an evidence-backed decision.
           </div>
         </div>
 

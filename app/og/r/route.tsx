@@ -22,7 +22,7 @@ function Card({ eyebrow, title, verdict }: { eyebrow: string; title: string; ver
         <div style={{ display: "flex", fontSize: 40, fontWeight: 700, color: "rgba(255,255,255,0.85)" }}>{verdict}</div>
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 22, color: "rgba(255,255,255,0.6)" }}>
-        <div style={{ display: "flex" }}>Production validation for AI-built systems.</div>
+        <div style={{ display: "flex" }}>The independent verification layer for work performed by AI.</div>
         <div style={{ display: "flex" }}>vraelis.com</div>
       </div>
     </div>
@@ -32,8 +32,8 @@ function Card({ eyebrow, title, verdict }: { eyebrow: string; title: string; ver
 const brandCard = () => (
   <Card
     eyebrow="Vraelis"
-    title="AI can build it. Nobody checked it."
-    verdict="The flows you approve, run against your deployed app, with evidence."
+    title="AI says it is done. Vraelis proves it."
+    verdict="A claimed outcome in, an evidence-backed decision out."
   />
 );
 

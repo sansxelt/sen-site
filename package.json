@@ -71,7 +71,8 @@
     "host:test": "tsx scripts/host-contract-verify.ts",
     "client:test": "tsx scripts/verification-client-verify.ts",
     "contrast:test": "tsx scripts/contrast-verify.ts",
-    "idempotency:test": "tsx scripts/verification-idempotency-verify.ts"
+    "idempotency:test": "tsx scripts/verification-idempotency-verify.ts",
+    "email:test": "tsx scripts/email-embeds-verify.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",

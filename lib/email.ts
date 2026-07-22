@@ -113,7 +113,7 @@ function baseHtml(content: string) {
         <!-- ── Brand header ──────────────────────────────────── -->
         <tr><td style="padding:0 4px 20px;">
           <span style="font-size:18px;font-weight:700;color:#0a0a0a;letter-spacing:-0.02em;">Vraelis</span>
-          <span style="margin-left:10px;font-size:11px;font-weight:500;color:#737373;letter-spacing:0.06em;text-transform:uppercase;">Production verification for AI-built software.</span>
+          <span style="margin-left:10px;font-size:11px;font-weight:500;color:#737373;letter-spacing:0.06em;text-transform:uppercase;">The independent verification layer for work performed by AI.</span>
         </td></tr>
 
         <!-- ── Message card ──────────────────────────────────── -->
@@ -210,14 +210,14 @@ export function welcomeHtml(name?: string) {
   return baseHtml(`
     <p style="${KICKER_STYLE}">Welcome to Vraelis</p>
     <h1 class="vrl-h1" style="${H1_STYLE}">Your account is live.</h1>
-    <p style="${BODY_STYLE}">${greeting} your Vraelis account is set up, with your first Production Pass included. Vraelis is the production layer for AI-built software: connect your AI-built app and Vraelis runs it like production, in a real browser, then hands you a launch decision with the exact blockers to fix before your users find them.</p>
-    <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">Your first Production Pass:</strong></p>
+    <p style="${BODY_STYLE}">${greeting} your Vraelis account is set up, with your first verification included. Vraelis is the independent verification layer for work performed by AI: give it a deployed app and the outcome that should be true, and it checks the live result in a real browser, then returns the evidence behind its decision.</p>
+    <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">Your first verification:</strong></p>
     <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
-      <li>Connect your deployed app and the prompt you built it from.</li>
-      <li>Approve the critical flows it must get right.</li>
-      <li>Get READY, NEEDS REVIEW, or BLOCKED, with evidence and repro steps.</li>
+      <li>Give Vraelis your deployed app and the outcome that should be true.</li>
+      <li>It derives what must be checked and runs it in a real browser.</li>
+      <li>Get verified, failed, or blocked, with evidence and a repair prompt.</li>
     </ul>
-    <a href="https://app.vraelis.com/applications/new" class="vrl-btn" style="${BTN_STYLE}">Connect your app</a>
+    <a href="https://app.vraelis.com/app" class="vrl-btn" style="${BTN_STYLE}">Verify an outcome</a>
     <span class="vrl-btn-spacer">&nbsp;</span>
     <a href="https://vraelis.com/how-it-works" class="vrl-btn" style="${BTN_LIGHT}">How it works</a>
     <div style="${NOTE_STYLE}">
@@ -347,16 +347,16 @@ export async function sendWelcomeEmail(email: string, name?: string) {
 }
 
 // Activation nudge: sent once by the lifecycle cron (lib/v-lifecycle.ts) to accounts that signed up but
-// haven't run their first Production Pass. One job: get them to run their first pass.
+// haven't run their first verification. One job: get them to run their first one.
 function checkActivationHtml(): string {
-  const run = "https://app.vraelis.com/applications";
+  const run = "https://app.vraelis.com/app";
   const learn = "https://vraelis.com/how-it-works";
   return `<!doctype html><html><body style="margin:0;background:#FAF8F4;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#1a1a1a">
     <div style="max-width:520px;margin:0 auto;padding:32px 24px">
       <div style="font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:20px;color:#0d5c46;margin-bottom:24px">Vraelis</div>
-      <h1 style="font-size:22px;line-height:1.3;margin:0 0 12px">Your first Production Pass is waiting.</h1>
-      <p style="font-size:15px;line-height:1.6;color:#42484f;margin:0 0 20px">You signed up but haven't run a Production Pass yet. Connect your AI-built app, approve its critical flows, and Vraelis runs them in a real browser, then hands you a launch decision with the exact blockers to fix before your users find them.</p>
-      <a href="${run}" style="display:inline-block;background:#0d5c46;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:13px 26px;border-radius:10px">Run your first Production Pass</a>
+      <h1 style="font-size:22px;line-height:1.3;margin:0 0 12px">Your first verification is waiting.</h1>
+      <p style="font-size:15px;line-height:1.6;color:#42484f;margin:0 0 20px">You signed up but haven't run a verification yet. Give Vraelis your deployed app and the outcome that should be true, and it checks the live result in a real browser, then returns the evidence behind its decision.</p>
+      <a href="${run}" style="display:inline-block;background:#0d5c46;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:13px 26px;border-radius:10px">Verify an outcome</a>
       <p style="font-size:13px;line-height:1.6;color:#8a8f96;margin:24px 0 0">Want to see how it works first? <a href="${learn}" style="color:#0d5c46">vraelis.com/how-it-works</a></p>
       <p style="font-size:12px;line-height:1.5;color:#a0a4aa;margin:24px 0 0">You're getting this because you created a Vraelis account. If you'd rather not get product nudges, just reply and we'll stop.</p>
     </div></body></html>`;
@@ -371,7 +371,7 @@ export async function sendCheckActivationEmail(email: string) {
       from:    fromAccount,
       replyTo: "help@vraelis.com",
       to:      email,
-      subject: "Run your first Production Pass on Vraelis",
+      subject: "Verify your first outcome on Vraelis",
       html:    checkActivationHtml(),
     });
   } catch (error) {
@@ -381,20 +381,20 @@ export async function sendCheckActivationEmail(email: string) {
 
 function lowCreditsHtml(remaining: number): string {
   const plans = "https://app.vraelis.com/plans";
-  const run = "https://app.vraelis.com/applications";
+  const run = "https://app.vraelis.com/app";
   const out = remaining <= 0;
   const left = remaining === 1 ? "1 credit" : `${remaining} credits`;
   const headline = out ? "Your included balance is used up." : `You're down to ${left}.`;
   const lead = out
-    ? "You've used your included Vraelis balance, which means you've been catching launch blockers before your users ever saw them. To keep going, add balance or pick a plan."
-    : `You've been running Vraelis on what your AI ships, and your included balance is almost gone (${left} left). To keep gating your launches, add balance or pick a plan.`;
+    ? "You've used your included Vraelis balance, which means you've been catching failures before your users ever saw them. To keep going, add balance or pick a plan."
+    : `You've been running Vraelis on what your AI ships, and your included balance is almost gone (${left} left). To keep verifying your releases, add balance or pick a plan.`;
   return `<!doctype html><html><body style="margin:0;background:#FAF8F4;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#1a1a1a">
     <div style="max-width:520px;margin:0 auto;padding:32px 24px">
       <div style="font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:20px;color:#0d5c46;margin-bottom:24px">Vraelis</div>
       <h1 style="font-size:22px;line-height:1.3;margin:0 0 12px">${headline}</h1>
-      <p style="font-size:15px;line-height:1.6;color:#42484f;margin:0 0 20px">${lead} Vraelis is priced by the run, not the seat: every Production Pass includes real-browser execution, evidence, and an explainable launch decision.</p>
+      <p style="font-size:15px;line-height:1.6;color:#42484f;margin:0 0 20px">${lead} Vraelis is priced by the verification, not the seat: every verification includes real-browser execution, evidence, and an explainable decision.</p>
       <a href="${plans}" style="display:inline-block;background:#0d5c46;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:13px 26px;border-radius:10px">See plans</a>
-      ${out ? "" : `<p style="font-size:13px;line-height:1.6;color:#8a8f96;margin:24px 0 0">Still have balance left? <a href="${run}" style="color:#0d5c46">Run a pass now</a>.</p>`}
+      ${out ? "" : `<p style="font-size:13px;line-height:1.6;color:#8a8f96;margin:24px 0 0">Still have balance left? <a href="${run}" style="color:#0d5c46">Verify an outcome</a>.</p>`}
       <p style="font-size:12px;line-height:1.5;color:#a0a4aa;margin:24px 0 0">You're getting this because you have a Vraelis account. If you'd rather not get product nudges, just reply and we'll stop.</p>
     </div></body></html>`;
 }
@@ -417,13 +417,13 @@ export async function sendLowCreditsEmail(email: string, remaining: number) {
 }
 
 function winbackHtml(remaining: number): string {
-  const run = "https://app.vraelis.com/applications";
+  const run = "https://app.vraelis.com/app";
   return `<!doctype html><html><body style="margin:0;background:#FAF8F4;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#1a1a1a">
     <div style="max-width:520px;margin:0 auto;padding:32px 24px">
       <div style="font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:20px;color:#0d5c46;margin-bottom:24px">Vraelis</div>
       <h1 style="font-size:22px;line-height:1.3;margin:0 0 12px">You still have Vraelis balance waiting.</h1>
-      <p style="font-size:15px;line-height:1.6;color:#42484f;margin:0 0 20px">You tried Vraelis a while back, then things went quiet. Your account balance is still here. Next time your AI ships something users will touch, run a Production Pass first: a real browser walks your critical flows and hands you a launch decision with the exact blockers to fix.</p>
-      <a href="${run}" style="display:inline-block;background:#0d5c46;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:13px 26px;border-radius:10px">Run a Production Pass</a>
+      <p style="font-size:15px;line-height:1.6;color:#42484f;margin:0 0 20px">You tried Vraelis a while back, then things went quiet. Your account balance is still here. Next time your AI ships something users will touch, run a verification first: give Vraelis the outcome that should be true and it checks the live result in a real browser, with evidence and a repair prompt.</p>
+      <a href="${run}" style="display:inline-block;background:#0d5c46;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:13px 26px;border-radius:10px">Verify an outcome</a>
       <p style="font-size:12px;line-height:1.5;color:#a0a4aa;margin:24px 0 0">You're getting this because you have a Vraelis account. If you'd rather not get product nudges, just reply and we'll stop.</p>
     </div></body></html>`;
 }
@@ -676,7 +676,7 @@ export function subscriptionCancellationScheduledHtml(name: string, planName: st
     <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
       <li>You keep every paid feature until <strong style="color:#0a0a0a;">${endsOn}</strong>.</li>
       <li>On that date, your account drops to the Free plan automatically. Nothing is deleted, just the paid features pause.</li>
-      <li>All your applications, past Production Passes, reports, and API keys stay exactly where they are.</li>
+      <li>All your systems, past verifications, results, and API keys stay exactly where they are.</li>
     </ul>
 
     <a href="https://app.vraelis.com/billing" class="vrl-btn" style="${BTN_STYLE}">Resume subscription</a>
@@ -694,8 +694,8 @@ export function subscriptionEndedHtml(name: string, planName: string) {
     <p style="${BODY_STYLE}">${greeting} your paid period is over and your account is now on the Free plan. This could be because you scheduled a cancellation that just hit, or because payment retries ran out after a failed charge.</p>
     <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">Here&apos;s what changes:</strong></p>
     <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
-      <li><strong style="color:#0a0a0a;">Kept:</strong> your account, applications, past Production Passes and reports, and profile settings, all intact.</li>
-      <li><strong style="color:#0a0a0a;">Paused:</strong> paid-plan features (higher monthly Production Pass volume, more connected applications, and team seats).</li>
+      <li><strong style="color:#0a0a0a;">Kept:</strong> your account, systems, past verifications and results, and profile settings, all intact.</li>
+      <li><strong style="color:#0a0a0a;">Paused:</strong> paid-plan features (higher monthly verification volume, more connected systems, and team seats).</li>
       <li><strong style="color:#0a0a0a;">Charges:</strong> nothing further will be charged unless you pick a plan again.</li>
     </ul>
     <a href="https://vraelis.com/pricing" class="vrl-btn" style="${BTN_STYLE}">Pick a plan again</a>
@@ -993,7 +993,7 @@ export function inviteHtml(opts: Omit<InviteEmail, "to">) {
     <p style="${KICKER_STYLE}">${isProject ? "Project invite" : "Workspace invite"}</p>
     <h1 class="vrl-h1" style="${H1_STYLE}">You were invited to ${isProject ? "review " : ""}${context}.</h1>
     <p style="${BODY_STYLE}">You&apos;ve been invited to ${isProject ? "review" : "join"} <strong style="color:#0a0a0a;">${context}</strong> as <strong style="color:#0a0a0a;">${roleLabel}</strong>. ${access}</p>
-    <p style="${BODY_STYLE}">Vraelis verifies AI-built applications before launch: real-browser runs against your exact build, the evidence, and a launch decision.</p>
+    <p style="${BODY_STYLE}">Vraelis independently verifies AI-built applications: give it a deployed app and the outcome that should be true, it checks the live result in a real browser and returns the evidence behind its decision.</p>
     <a href="${opts.acceptUrl}" class="vrl-btn" style="${BTN_STYLE}">${isProject ? "View project" : "Accept invite"}</a>
     <div style="${HR_STYLE}"></div>
     <p style="${META_STYLE}">Sign in with <strong style="color:#0a0a0a;">this email address</strong> to access the ${isProject ? "project" : "workspace"}. Your invite activates automatically.</p>
