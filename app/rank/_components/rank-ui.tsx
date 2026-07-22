@@ -358,7 +358,7 @@ function WorkspaceSwitcher() {
   );
 }
 
-function AppSidebar({ humanEval }: { humanEval: boolean }) {
+function AppSidebar() {
   const pathname = usePathname() || "";
   // A retired destination still has to light up the item that replaced it, or a bookmarked /applications URL
   // renders the shell with nothing selected and the user cannot tell where they are.
@@ -367,8 +367,7 @@ function AppSidebar({ humanEval }: { humanEval: boolean }) {
   const active = (href: string) => href === "/app"
     ? (effective === "/app" || effective === "/")
     : (effective === href || effective.startsWith(href + "/"));
-  // Human-eval ingress ("Evaluate & Earn" -> /vote) is hidden unless the flag is on.
-  const nav = APP_NAV.map((g) => ({ ...g, items: g.items.filter((it) => humanEval || it.href !== "/vote") }));
+  const nav = APP_NAV;
   return (
     <aside className="app-side">
       <WorkspaceSwitcher />
@@ -419,7 +418,7 @@ const SHELL_UI_CSS = "@keyframes vraTextIn{from{opacity:0;transform:translateY(1
   + ".rank-root:not(.rank-root--site) .vra-brand{font-size:calc(21px * (0.99 / 0.89))!important}"
   + "@media (prefers-reduced-motion:reduce){.rank-root .eyebrow,.rank-root .display,.rank-root .lead-copy{animation:none}.rank-root .btn:active,.rank-root a.card:hover,.rank-root a.card:active,.rank-root a.acard:hover,.rank-root a.acard:active{transform:none}}";
 
-export function RankShell({ signedIn = false, email = null, humanEval = false, appHost = false, children }: { signedIn?: boolean; email?: string | null; humanEval?: boolean; appHost?: boolean; children: ReactNode }) {
+export function RankShell({ signedIn = false, email = null, appHost = false, children }: { signedIn?: boolean; email?: string | null; appHost?: boolean; children: ReactNode }) {
   const pathname = usePathname() || "";
   // The product answers on the legacy /app prefix (localhost dev) AND the clean subdomain paths
   // (/applications, /passes, ...). On app.vraelis.com the overview is served at "/" — the pathname
@@ -440,7 +439,7 @@ export function RankShell({ signedIn = false, email = null, humanEval = false, a
         <style dangerouslySetInnerHTML={{ __html: SHELL_UI_CSS }} />
         <div style={{ position: "sticky", top: 0, zIndex: 50 }}><AppTopbar email={email} /></div>
         <div className="app-shell">
-          <AppSidebar humanEval={humanEval} />
+          <AppSidebar />
           <main className="app-main">{children}</main>
         </div>
       </div>

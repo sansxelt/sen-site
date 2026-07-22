@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { headers } from "next/headers";
 import { auth } from "@/auth";
-import { humanEvalEnabled } from "@/lib/v-entitlements";
 import { RankShell } from "./_components/rank-ui";
 
 // Pin the whole signed-in app shell to per-request rendering. auth() reads headers() (a request-time
@@ -19,5 +18,5 @@ export default async function RankLayout({ children }: { children: ReactNode }) 
   // so the pathname alone can't tell the shell it's inside the app; pass the host down.
   const host = ((await headers()).get("host") || "").toLowerCase();
   const appHost = host === "app.vraelis.com" || host.startsWith("app.localhost");
-  return <RankShell signedIn={Boolean(email)} email={email} humanEval={humanEvalEnabled()} appHost={appHost}>{children}</RankShell>;
+  return <RankShell signedIn={Boolean(email)} email={email} appHost={appHost}>{children}</RankShell>;
 }

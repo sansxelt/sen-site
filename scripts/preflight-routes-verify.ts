@@ -2,7 +2,7 @@
 // legacy->clean path mapping, the isAppPath product check, and static source checks that the
 // renamed routes actually propagated (no stale /app/apps nav links, shell + guard + proxy + email
 // wired to the new single source of truth). Pure unit tests + static checks; no DB, no network.
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { legacyToNew, isAppPath, appHostUrl, legacyRunsPath } from "../lib/app-routes";
 
@@ -156,8 +156,15 @@ ok("app/rank/app/page.tsx pins force-dynamic (no session-less prerender of the d
 
 // ── Static: no prospect-reachable surface points at the RETIRED products (checker /r/check, Rank
 //    /r/sample, /new). The current product entry is /free-report or /how-it-works. ──
-const guideDetail = readFileSync("app/rank/guides/[slug]/page.tsx", "utf8");
-ok("guide detail CTA points at the current product, not the retired /r/check", !guideDetail.includes('href="/r/check"') && guideDetail.includes("/free-report"));
+// /guides was the retired "AI output QA" content section (removed in Phase 3.06). It has no source
+// route anymore; the contract that replaced the page is: the proxy redirects every /guides* link to
+// the current product story, and robots keeps it out of the index. Asserted from the live contract,
+// never by reading the deleted page.
+ok("the retired /guides route is gone from source", !existsSync("app/rank/guides"));
+const proxyGuides = readFileSync("proxy.ts", "utf8");
+ok("proxy intercepts retired /guides and /guides/* links", /path === "\/guides" \|\| path\.startsWith\("\/guides\/"\)/.test(proxyGuides));
+ok("proxy redirects the retired guides section to the current product story", proxyGuides.includes('go(req, "/how-it-works", "redirect")'));
+ok("robots keeps /guides out of the index", readFileSync("app/robots.ts", "utf8").includes('"/guides"'));
 const sitemapSrc = readFileSync("app/sitemap.ts", "utf8");
 ok("sitemap does NOT advertise the retired /r/check or /r/sample samples", !sitemapSrc.includes('page("/r/check"') && !sitemapSrc.includes('page("/r/sample"'));
 const rCheck = readFileSync("app/r/check/page.tsx", "utf8");
