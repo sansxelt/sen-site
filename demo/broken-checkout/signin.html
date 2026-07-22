@@ -36,7 +36,11 @@
 <script>
 document.getElementById("signin").addEventListener("submit", function (e) {
   e.preventDefault();
-  document.cookie = "ln_user=demo@example.com; path=/; max-age=86400";
+  // A real session cookie establishes who is signed in. (It is named ln_session, the way real apps name
+  // session cookies, so the signed-in state is observable — the old ln_user name was not a recognizable
+  // session and made "did the sign-in succeed" ambiguous from the outside.) This is the ONLY thing sign-in
+  // does; the entitlement bug lives entirely in checkout.html and account.html and is unaffected by this.
+  document.cookie = "ln_session=demo@example.com; path=/; max-age=86400";
   window.location.href = "/account.html";
 });
 </script>
