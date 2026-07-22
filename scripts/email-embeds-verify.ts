@@ -66,6 +66,12 @@ ok("the root-layout default meta is updated (the site-wide embed fallback)",
   !RETIRED_HEADLINE.test(rootLayout) && /Vraelis proves it/.test(rootLayout));
 // The OG image version must bump when the card changes, or platforms serve the cached old render.
 ok("the OG image cache version was bumped past v4", /\/og\?v=([5-9]|\d\d)/.test(readFileSync("lib/og-meta.ts", "utf8")));
+// The official 50-character company description must appear in the card and the site meta, so link previews
+// and search snippets say the one sanctioned thing.
+const OFFICIAL_DESC = "Verifies software built with AI actually works";
+ok("the OG card carries the official description", ogMain.includes(OFFICIAL_DESC));
+ok("the root-layout meta leads with the official description", rootLayout.includes(OFFICIAL_DESC));
+ok("the official description fits the 50-character limit", OFFICIAL_DESC.length <= 50, `${OFFICIAL_DESC.length} chars`);
 
 console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

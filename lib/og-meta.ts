@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 // It does NOT force a platform that already cached the PAGE to re-scrape: X and others key
 // their card cache on the PAGE URL, so to refresh an already-shared card you version the
 // PAGE URL (e.g. /r/check?v=2) or use a platform's re-scrape tool where one exists.
-const OG_IMAGE_URL = "/og?v=5";
+const OG_IMAGE_URL = "/og?v=6";
 const OG_IMAGE = { url: OG_IMAGE_URL, width: 1200, height: 630, alt: "Vraelis" };
 
 // noImage: emit a TEXT-ONLY card (no og:image, twitter card 'summary'). Used on the homepage because

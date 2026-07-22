@@ -23,7 +23,7 @@ const vraelisMetadata: Metadata = {
     template: "%s | Vraelis",
   },
   description:
-    "AI says it is done. Vraelis proves it. Give Vraelis a deployed app and the outcome that should be true, and it independently verifies the live result in a real browser, then returns the evidence behind its decision. Starting with deployed web applications.",
+    "Verifies software built with AI actually works. Give Vraelis a deployed app and the outcome that should be true, and it independently checks the live result in a real browser, then returns the evidence behind its decision. Starting with deployed web applications.",
   alternates: { canonical: "https://vraelis.com" },
   // Favicon + apple icon come from app/icon.tsx and app/apple-icon.tsx (the Vraelis mark), auto-detected
   // by Next and served at hashed URLs so the tab icon cache-busts on change. Do NOT set `icons` here —
@@ -37,12 +37,12 @@ const vraelisMetadata: Metadata = {
     url: "https://vraelis.com",
     siteName: "Vraelis",
     title: "AI says it is done. Vraelis proves it.",
-    description: "AI says it is done. Vraelis proves it. Give Vraelis a deployed app and the outcome that should be true, and it independently verifies the live result in a real browser, then returns the evidence behind its decision. Starting with deployed web applications.",
+    description: "Verifies software built with AI actually works. Give Vraelis a deployed app and the outcome that should be true, and it independently checks the live result in a real browser, then returns the evidence behind its decision. Starting with deployed web applications.",
   },
   twitter: {
     card: "summary",
     title: "AI says it is done. Vraelis proves it.",
-    description: "AI says it is done. Vraelis proves it. Give Vraelis a deployed app and the outcome that should be true, and it independently verifies the live result in a real browser, then returns the evidence behind its decision. Starting with deployed web applications.",
+    description: "Verifies software built with AI actually works. Give Vraelis a deployed app and the outcome that should be true, and it independently checks the live result in a real browser, then returns the evidence behind its decision. Starting with deployed web applications.",
   },
   robots: { index: true, follow: true },
 };

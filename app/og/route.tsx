@@ -41,7 +41,7 @@ export function GET() {
           </div>
           <div style={{ display: "flex", width: "132px", height: "6px", borderRadius: "3px", background: "#16C081" }} />
           <div style={{ display: "flex", fontSize: "36px", fontWeight: 500, color: "rgba(255,255,255,0.66)", letterSpacing: "-0.01em", maxWidth: "1000px", lineHeight: 1.25 }}>
-            Give Vraelis a deployed app and the outcome that should be true. Get back an evidence-backed decision.
+            Verifies software built with AI actually works.
           </div>
         </div>
 

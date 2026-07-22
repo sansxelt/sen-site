@@ -33,7 +33,7 @@ const brandCard = () => (
   <Card
     eyebrow="Vraelis"
     title="AI says it is done. Vraelis proves it."
-    verdict="A claimed outcome in, an evidence-backed decision out."
+    verdict="Verifies software built with AI actually works."
   />
 );
 
