@@ -9,6 +9,7 @@
 // action allowlist with sanitized console/network capture. Downloads/permissions are restricted.
 import type { BrowserProvider, BrowserSession, CreateBrowserSessionInput, PreflightPage, Step, StepObservation } from "../types";
 import { safePath, redactString } from "../redaction";
+import { textPresentInScope } from "../assert-scope";
 import { createBrowserbaseSession, releaseBrowserbaseSession } from "./browserbase-api";
 
 // Playwright is a worker-only dep imported via a VARIABLE module name so tsc does not resolve it until it is
@@ -42,7 +43,7 @@ type PWPage = {
   on: (ev: string, cb: (a: unknown) => void) => void;
   context: () => PWContext; evaluate?: (fn: string) => Promise<unknown>;
 };
-type PWLocator = { first: () => PWLocator; click: (o?: unknown) => Promise<void>; fill: (v: string, o?: unknown) => Promise<void>; selectOption: (v: string) => Promise<unknown>; check: (o?: unknown) => Promise<void>; uncheck: (o?: unknown) => Promise<void>; waitFor: (o?: unknown) => Promise<void>; isVisible: () => Promise<boolean>; textContent: () => Promise<string | null>; count: () => Promise<number> };
+type PWLocator = { first: () => PWLocator; click: (o?: unknown) => Promise<void>; fill: (v: string, o?: unknown) => Promise<void>; selectOption: (v: string) => Promise<unknown>; check: (o?: unknown) => Promise<void>; uncheck: (o?: unknown) => Promise<void>; waitFor: (o?: unknown) => Promise<void>; isVisible: () => Promise<boolean>; textContent: () => Promise<string | null>; innerText: () => Promise<string>; count: () => Promise<number> };
 
 // Resolve a semantic target ("Create project") to a best-effort accessible locator, recording candidates.
 function resolve(page: PWPage, target: string): { locator: PWLocator; candidates: string[]; selected: string } {
@@ -179,7 +180,25 @@ export class PlaywrightPreflightPage implements PreflightPage {
         case "press": await this.page.keyboard.press(step.value || step.target || "Enter"); return base(true, "pressed");
         case "wait_for": await this.page.getByText(step.target || step.expect || "").first().waitFor({ timeout: step.timeoutMs ?? 10000 }); return base(true, "appeared");
         case "assert_visible": { const vis = await this.page.getByText(step.expect || step.target || "").first().isVisible().catch(() => false); return base(vis, vis ? "visible" : "not_visible"); }
-        case "assert_text": { const n = await this.page.getByText(step.expect || "").count().catch(() => 0); return base(n > 0, n > 0 ? "text_present" : "text_absent"); }
+        case "assert_text": {
+          // SCOPED assertion: the expected value must appear inside the element the TARGET names, not anywhere
+          // on the page. A page-wide match lets marketing copy ("Get Pro") satisfy "the plan value is Pro",
+          // which is a false pass — the assertion could not tell a Free account from a Pro one.
+          const want = (step.expect || "").trim();
+          if (!want) return base(false, "assert_text_no_expected_text");
+          const target = (step.target || "").trim();
+          if (!target) {
+            // No target named: fall back to page-wide presence. The flow validator discourages this exact
+            // shape (it requires a target), so this only runs for legacy/handwritten steps.
+            const n = await this.page.getByText(want).count().catch(() => 0);
+            return base(n > 0, n > 0 ? "text_present_pagewide" : "text_absent");
+          }
+          const loc = this.page.getByText(target).first();
+          if ((await loc.count().catch(() => 0)) === 0) return base(false, "assert_target_not_found");
+          const scope = (await loc.innerText().catch(() => "")) || "";
+          const ok = textPresentInScope(scope, want);
+          return base(ok, ok ? "text_present" : "text_absent");
+        }
         case "assert_url": { const ok = this.page.url().includes(step.expect || ""); return base(ok, ok ? "url_match" : "url_mismatch"); }
         case "screenshot": { await this.page.screenshot({ fullPage: false }); return base(true, "screenshot"); }
         case "new_context": return base(true, "new_context_requested"); // handled at the session layer
