@@ -56,11 +56,19 @@ export type Recrawler = (deploymentUrl: string, focusPaths: string[], existing: 
 
 // ── Deterministic discovery helpers (no model) ────────────────────────────────────────────────────────────
 
-// A compact, bounded page view for the correction prompt: the controls and destinations a flow can use.
+// Reduce a URL or href to a same-origin PATH. The step validator rejects an absolute URL in a navigate or
+// assert_url target (the worker rebases every navigate onto the run's approved origin), so the prompt must
+// show the model paths, not full URLs, or it copies a full URL and the whole flow is dropped.
+function toPath(u: string): string {
+  try { return new URL(u).pathname || "/"; } catch { return u.startsWith("/") ? u : `/${u}`; }
+}
+
+// A compact, bounded page view for the correction prompt: the controls and destinations a flow can use. Pages
+// and nav links are shown as PATHS, matching what a navigate step's target must be.
 function describePages(pages: PageSnapshot[]): string {
   return pages.slice(0, 14).map((p) => {
-    const forms = p.forms.map((f) => `${f.method} ${f.action} [${f.inputs.map((i) => `${i.name}:${i.type}`).join(",")}] (${f.submitLabels.join("/")})`).join("; ");
-    return `PAGE ${p.url}\n  title: ${p.title}\n  headings: ${p.headings.slice(0, 8).join(" | ")}\n  nav: ${p.navLinks.slice(0, 14).map((l) => `${l.label}->${l.href}`).join(", ")}\n  buttons: ${p.buttons.slice(0, 14).join(", ")}\n  ctas: ${p.ctas.slice(0, 14).join(", ")}\n  forms: ${forms}\n  indicators: ${p.indicators.join(", ")}`;
+    const forms = p.forms.map((f) => `${f.method} ${toPath(f.action)} [${f.inputs.map((i) => `${i.name}:${i.type}`).join(",")}] (${f.submitLabels.join("/")})`).join("; ");
+    return `PAGE ${toPath(p.url)}\n  title: ${p.title}\n  headings: ${p.headings.slice(0, 8).join(" | ")}\n  nav: ${p.navLinks.slice(0, 14).map((l) => `${l.label}->${toPath(l.href)}`).join(", ")}\n  buttons: ${p.buttons.slice(0, 14).join(", ")}\n  ctas: ${p.ctas.slice(0, 14).join(", ")}\n  forms: ${forms}\n  indicators: ${p.indicators.join(", ")}`;
   }).join("\n\n").slice(0, 12000);
 }
 
@@ -202,6 +210,8 @@ export const defaultFlowCorrector: FlowCorrector = async ({ claim, requirements,
     `REACHABLE PAGES AND CONTROLS:\n${describePages(pages)}\n\n` +
     `RULES:\n` +
     `- Steps use ONLY: navigate, click, fill, assert_visible, assert_text, assert_url, refresh. No select/check/press/wait_for/screenshot; a flow using one is discarded.\n` +
+    `- navigate and assert_url targets are a PATH ON THIS APP ONLY (e.g. /account.html), taken from the PAGE lines below. Never a full https:// URL and never another site; a flow with an absolute-URL target is discarded.\n` +
+    `- assert_text needs BOTH a target (where to look) and the exact expected text. assert_visible and click need a target. fill needs a target and a value. Leave a field "" only when the action does not use it.\n` +
     `- Express signing in as a plain fill + click on the visible form. Never put a password, card number, or security code in a fill value; treat such forms as pre-filled and click the submit control directly.\n` +
     `- Targets are the visible accessible names (a button's label, a heading), never CSS or XPath. Set unused string fields to "".\n` +
     `- For a persistence guarantee, ONE flow must: perform the action, assert the exact outcome where it is read, ${obligations.identity ? "sign out, sign back in with the same account, " : "reload, "}then assert the exact outcome AGAIN. Keep that whole journey in a single flow.`;
