@@ -52,5 +52,41 @@ ok("a run whose STATE is 'failed' -> public 'blocked' -> exit 2, never 0", (() =
   return pub === "blocked" && g.action === "exit" && g.code === 2;
 })());
 
+// ── The enumerated contract, stated directly (public decision -> exit code) ───────────────────────────────
+ok("PUBLIC verified -> exit 0", (() => { const g = ciGate("verified"); return g.action === "exit" && g.code === 0; })());
+ok("PUBLIC failed -> exit 1", (() => { const g = ciGate("failed"); return g.action === "exit" && g.code === 1; })());
+ok("PUBLIC blocked -> exit 2", (() => { const g = ciGate("blocked"); return g.action === "exit" && g.code === 2; })());
+ok("unknown decision -> exit 3", (() => { const g = ciGate("frobnicated"); return g.action === "exit" && g.code === 3; })());
+ok("running with no decision -> continue polling", ciGate(null).action === "wait");
+
+// A COMPLETED run with NO final decision must not slip through as a pass. toPublicDecision returns the honest
+// third answer (blocked), and the gate exits 2 -- never 0. This is the "completed state without a final
+// decision cannot exit 0" case, distinct from the ones where a decision string was fed in directly.
+ok("completed run, NO internal decision -> public 'blocked' -> exit 2 (never 0)", (() => {
+  const pub = toPublicDecision("completed", null);
+  const g = ciGate(pub);
+  return pub === "blocked" && g.action === "exit" && g.code === 2;
+})());
+ok("completed run, empty internal decision -> public 'blocked' -> exit 2", (() => {
+  const pub = toPublicDecision("completed", "");
+  const g = ciGate(pub);
+  return pub === "blocked" && g.action === "exit" && g.code === 2;
+})());
+
+// The two "blocked" are different verdicts and MUST land on different exit codes. Internal 'blocked' is a
+// confirmed failure (public failed, exit 1); public 'blocked' is "no verdict reached" (exit 2). The public
+// contract only ever exposes the latter meaning of the word.
+ok("internal 'blocked' (confirmed failure) and public 'blocked' (no verdict) do NOT share an exit code", (() => {
+  const internalBlockedExit = ciGate(toPublicDecision("completed", "blocked")); // -> failed -> 1
+  const publicBlockedExit = ciGate(toPublicDecision("completed", "needs_review")); // -> blocked -> 2
+  return internalBlockedExit.action === "exit" && internalBlockedExit.code === 1
+    && publicBlockedExit.action === "exit" && publicBlockedExit.code === 2;
+})());
+ok("needs_review -> public 'blocked' -> exit 2", (() => {
+  const pub = toPublicDecision("completed", "needs_review");
+  const g = ciGate(pub);
+  return pub === "blocked" && g.action === "exit" && g.code === 2;
+})());
+
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);
