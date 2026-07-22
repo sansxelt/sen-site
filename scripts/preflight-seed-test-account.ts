@@ -19,6 +19,12 @@
 // For any other app, pass real credentials via env; they are sealed and never echoed.
 export {};
 
+// Load .env.local (and .env) into process.env BEFORE anything reads it, exactly like the other DB scripts.
+// supabase-admin reads env lazily, so this runs early enough; without it the script sees no Supabase config
+// even when the deployment is fully configured, which reads as "Supabase not there".
+import { loadEnvConfig } from "@next/env";
+loadEnvConfig(process.cwd());
+
 import { listApplications } from "../lib/v-applications";
 import { LANE_BUILDER } from "../lib/preflight/verification-lane";
 import { addTestAccount, listConnections } from "../lib/preflight/connections-db";
@@ -30,9 +36,19 @@ const ROLE = (process.env.VRAELIS_SEED_ROLE || "customer").trim();
 const USER = process.env.VRAELIS_SEED_USER || "demo@example.com";
 const PASS = process.env.VRAELIS_SEED_PASS || "hunter2";
 
+function present(name: string): boolean { return !!(process.env[name] || "").trim(); }
+
 async function main(): Promise<boolean> {
-  if (!isDatabaseConfigured()) { console.error("Database is not configured (Supabase service-role env missing)."); return false; }
-  if (!vaultConfigured()) { console.error("VRAELIS_SECRET_KEY is not set to a 64-hex vault key; refusing to store anything weaker."); return false; }
+  if (!isDatabaseConfigured()) {
+    const haveUrl = present("SUPABASE_URL") || present("NEXT_PUBLIC_SUPABASE_URL");
+    const haveKey = present("SUPABASE_SERVICE_ROLE_KEY");
+    console.error("Database is not configured for THIS process. Loaded .env.local, but still missing:");
+    if (!haveUrl) console.error("  - SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL)");
+    if (!haveKey) console.error("  - SUPABASE_SERVICE_ROLE_KEY");
+    console.error("Ensure these are in .env.local (run: vercel env pull .env.local), then re-run from the project root.");
+    return false;
+  }
+  if (!vaultConfigured()) { console.error("VRAELIS_SECRET_KEY is not set to a 64-hex vault key (add it to .env.local); refusing to store anything weaker."); return false; }
   if (!OWNER) { console.error("Set VRAELIS_SEED_OWNER to the account email that owns the lane app."); return false; }
 
   const app = (await listApplications(OWNER)).find((a) => a.builder === LANE_BUILDER);
