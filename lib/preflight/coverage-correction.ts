@@ -230,8 +230,18 @@ export const defaultFlowCorrector: FlowCorrector = async ({ claim, requirements,
     `- A fill step MUST carry a concrete NON-EMPTY value; a fill with an empty value is rejected and discards the whole flow. If you have no real value to type — a password or secret you must not enter, or a field the form already pre-fills — do NOT emit a fill for it. Sign in by CLICKING the submit button directly (assume the form is pre-filled in test mode); fill only fields where you are supplying a real value you were given. Never put a password, card number, or security code in a fill value.\n` +
     `- Targets are the visible accessible names (a button's label, a heading), never CSS or XPath. Set unused string fields to "".\n` +
     `- ${signInRule}\n` +
-    `- Assert the outcome with assert_text: a concrete target (the account's plan element) and expect EXACTLY "${val}". A generic assert_visible of the word does not count; the assertion must be on the account page, not a pricing or marketing page.\n` +
-    `- For a persistence guarantee, ONE flow must: reach the purchase, submit payment, observe checkout success, open the account, assert exact "${val}", ${obligations.identity ? "explicitly sign out (reset_context), sign back in via the rule above, " : "reload, "}open the account again, then assert exact "${val}" AGAIN. Keep that whole journey in a single flow.`;
+    `- Assert the outcome with assert_text: a concrete target (the account's plan element, e.g. the "Plan" value) and expect EXACTLY "${val}" — not a sentence containing it. A generic assert_visible of the word does NOT count, and it must be read on the account page.\n` +
+    `- Build EXACTLY this ordered journey as ONE flow, using the reachable pages below. Every assertion must be preceded by a navigate to the page it is read on.\n` +
+    (obligations.persistence && obligations.identity
+      ? `    1. navigate to the purchase page, then click the control that STARTS checkout.\n` +
+        `    2. on the CHECKOUT page, click the PAYMENT submit button (its label, e.g. "Pay ...") — this is a DIFFERENT control from step 1; do not skip it.\n` +
+        `    3. assert the checkout success result (assert_visible on the success text).\n` +
+        `    4. navigate to the account page, THEN assert_text the plan element expects EXACTLY "${val}".\n` +
+        `    5. sign out with the reset_context action. There may be NO visible "Sign out" button — navigating to a sign-in page is NOT a sign out; use reset_context.\n` +
+        `    6. ${role ? `navigate to the sign-in page, then sign_in_as "${role}", then verify_authenticated.` : `navigate to the sign-in page and sign in (see the sign-in rule above).`}\n` +
+        `    7. navigate to the account page AGAIN, THEN assert_text the plan element expects EXACTLY "${val}".\n`
+      : `    reach the action, then navigate to the surface where the outcome is read and assert_text it expects EXACTLY "${val}"; ${obligations.persistence ? `then reload and assert exact "${val}" AGAIN on that surface.` : "."}\n`) +
+    `Keep the whole journey in a single flow, in this order.`;
   // Classify the outcome at each boundary. The API call and the schema-parse are separated so a network/timeout
   // failure is never confused with a model that returned unparseable content. Nothing here changes what the
   // model is asked or how flows are validated — it only records where the attempt landed.
