@@ -217,8 +217,8 @@ export const defaultFlowCorrector: FlowCorrector = async ({ claim, requirements,
     `RULES:\n` +
     `- Steps use ONLY: navigate, click, fill, assert_visible, assert_text, assert_url, refresh. No select/check/press/wait_for/screenshot; a flow using one is discarded.\n` +
     `- navigate and assert_url targets are a PATH ON THIS APP ONLY (e.g. /account.html), taken from the PAGE lines below. Never a full https:// URL and never another site; a flow with an absolute-URL target is discarded.\n` +
-    `- assert_text needs BOTH a target (where to look) and the exact expected text. assert_visible and click need a target. fill needs a target and a value. Leave a field "" only when the action does not use it.\n` +
-    `- Express signing in as a plain fill + click on the visible form. Never put a password, card number, or security code in a fill value; treat such forms as pre-filled and click the submit control directly.\n` +
+    `- assert_text needs BOTH a target (where to look) and the exact expected text. assert_visible and click need a target. Leave a field "" only when the action does not use it.\n` +
+    `- A fill step MUST carry a concrete NON-EMPTY value; a fill with an empty value is rejected and discards the whole flow. If you have no real value to type — a password or secret you must not enter, or a field the form already pre-fills — do NOT emit a fill for it. Sign in by CLICKING the submit button directly (assume the form is pre-filled in test mode); fill only fields where you are supplying a real value you were given. Never put a password, card number, or security code in a fill value.\n` +
     `- Targets are the visible accessible names (a button's label, a heading), never CSS or XPath. Set unused string fields to "".\n` +
     `- For a persistence guarantee, ONE flow must: perform the action, assert the exact outcome where it is read, ${obligations.identity ? "sign out, sign back in with the same account, " : "reload, "}then assert the exact outcome AGAIN. Keep that whole journey in a single flow.`;
   // Classify the outcome at each boundary. The API call and the schema-parse are separated so a network/timeout
