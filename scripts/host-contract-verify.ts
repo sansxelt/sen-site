@@ -185,9 +185,8 @@ console.log("\n── retired product surfaces are not reachable or indexable �
   ok("robots.ts disallows /vote", /disallow:[\s\S]{0,160}"\/vote"/.test(robots));
   ok("robots.ts disallows /guides", /disallow:[\s\S]{0,160}"\/guides"/.test(robots));
 
-  // The retired sansxel (site) group has a noindex backstop, not just the proxy redirect.
-  const siteLayout = readFileSync("app/(site)/layout.tsx", "utf8");
-  ok("the (site) group layout sets noindex as a backstop", /robots:\s*\{\s*index:\s*false/.test(siteLayout));
+  // The retired sansxel (site) group (AR lens, voice, workshop, learn) is removed from the build entirely.
+  ok("the retired sansxel (site) route group is removed", !existsSync("app/(site)"));
 
   // Research (current content) is now advertised in the sitemap; the app checkout success gap is repointed.
   const sitemap = readFileSync("app/sitemap.ts", "utf8");
