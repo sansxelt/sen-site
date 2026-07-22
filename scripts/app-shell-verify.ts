@@ -88,5 +88,22 @@ for (const p of ["/systems", "/verifications", "/connections", "/developers", "/
   ok(`${p} is not rewritten by the alias table`, resolve(p) === p);
 }
 
+console.log("\n── /developers: public docs on the marketing host, console in the app shell ──");
+// The one product path deliberately out of APP_ROOTS: the same clean path is public documentation on
+// vraelis.com and the authenticated console on app.vraelis.com. If it were in APP_ROOTS, isAppPath would be
+// true everywhere and the public docs would be dragged behind the app shell (and, in the proxy, behind the
+// sign-in wall). So it must NOT be a routable app path...
+ok("/developers is NOT in APP_ROOTS (keeps the public docs public)", !(APP_ROOTS as readonly string[]).includes("developers"));
+ok("isAppPath(/developers) is false (host-agnostic check must not claim it)", !isAppPath("/developers"));
+// ...but on the app host the shell must still promote it into the app chrome, or the console renders with no
+// left panel. The promotion is host-gated (appHost) so the marketing host is unaffected.
+const shellDecision = ui.slice(ui.indexOf("const consolePath"), ui.indexOf("if (inApp)"));
+ok("the shell treats /developers as a console path", /consolePath = pathname === "\/developers"/.test(shellDecision));
+ok("the console promotion is gated on the app host, not global",
+  /appHost && \(pathname === "\/" \|\| consolePath\)/.test(shellDecision));
+// Both the public docs page and the authenticated console page exist (the proxy routes by host to each).
+ok("the public developers docs page exists", existsSync("app/rank/developers/page.tsx"));
+ok("the authenticated developers console page exists", existsSync("app/rank/app/developers/page.tsx"));
+
 console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

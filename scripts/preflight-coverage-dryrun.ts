@@ -79,4 +79,6 @@ async function main(): Promise<boolean> {
   return fail === 0;
 }
 
-main().then((okAll) => process.exit(okAll ? 0 : 1)).catch((e) => { console.error(e); process.exit(1); });
+// Set exitCode and let the event loop drain rather than process.exit(), which on Windows can abort with a
+// libuv assertion (!(handle->flags & UV_HANDLE_CLOSING)) when a keep-alive fetch socket is still closing.
+main().then((okAll) => { process.exitCode = okAll ? 0 : 1; }).catch((e) => { console.error(e); process.exitCode = 1; });

@@ -424,7 +424,15 @@ export function RankShell({ signedIn = false, email = null, humanEval = false, a
   // The product answers on the legacy /app prefix (localhost dev) AND the clean subdomain paths
   // (/applications, /passes, ...). On app.vraelis.com the overview is served at "/" — the pathname
   // can't distinguish it from the marketing home, so the server layout passes the host down.
-  const inApp = isAppPath(pathname) || (appHost && pathname === "/");
+  //
+  // /developers is the ONE product path deliberately kept out of APP_ROOTS: the same clean path is public,
+  // indexable documentation on vraelis.com and the authenticated console on app.vraelis.com (proxy.ts picks
+  // by host). isAppPath is host-agnostic, so it must NOT claim /developers — that would drag the public docs
+  // into the app shell too. The host is what tells them apart: on the app host, /developers is the console
+  // and renders inside the shell with the left panel like every other product page; on the marketing host it
+  // stays public chrome. Same reasoning as "/" above.
+  const consolePath = pathname === "/developers" || pathname.startsWith("/developers/");
+  const inApp = isAppPath(pathname) || (appHost && (pathname === "/" || consolePath));
 
   if (inApp) {
     return (
