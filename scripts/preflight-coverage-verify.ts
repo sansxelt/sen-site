@@ -109,6 +109,18 @@ const completeViaRole = [flow(
 )];
 ok("the complete journey with sign_in_as (sealed test account) passes", checkExecutionCoverage(FIXTURE_CLAIM, completeViaRole).ok);
 
+// The robust journey the corrector should now prefer: pay, go straight to the account, assert the exact value.
+// It never asserts a success screen (which the crawler cannot see and the model would otherwise guess at), and
+// it must PASS — proving entitlement is the contract; the success screen is optional.
+const noSuccessScreen = [flow(
+  nav("/"), click("Upgrade to Pro"), click("Pay $20 and start Pro"),
+  nav("/account"), assertText("Current plan", "Pro"),
+  reset(),
+  nav("/signin"), fill("Email", "demo@example.com"), fill("Password", "test-pass-123"), click("Sign in"),
+  nav("/account"), assertText("Current plan", "Pro"),
+)];
+ok("a journey that skips the success screen but proves entitlement passes (success is optional)", checkExecutionCoverage(FIXTURE_CLAIM, noSuccessScreen).ok);
+
 // Weak execution 1: stops at the checkout success page. Vraelis' actual first run effectively did this.
 const stopsAtCheckout = [flow(
   nav("/"), click("Upgrade to Pro"), click("Pay $20 and start Pro"), assertVisible("Payment successful"),
@@ -220,7 +232,7 @@ console.log("\n── REGRESSION: the exact two flows the false-positive dry run
   )];
   const c = checkExecutionCoverage(FIXTURE_CLAIM, weakInstalled);
   ok("regression B (the installed 11-step flow) fails execution coverage", !c.ok);
-  ok("regression B is rejected for missing checkout success", c.missing.some((m) => /success/i.test(m)));
+  ok("regression B is rejected for missing payment submit", c.missing.some((m) => /submits payment|completes checkout/i.test(m)));
   ok("regression B is rejected for missing exact account assertion", c.missing.some((m) => /exact "Pro"/i.test(m)));
   ok("regression B is rejected for missing explicit sign out", c.missing.some((m) => /sign out/i.test(m)));
   ok("regression B is rejected for missing credentialed sign-in", c.missing.some((m) => /stored credentials/i.test(m)));

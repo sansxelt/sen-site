@@ -225,7 +225,11 @@ function flowChecklist(steps: StepLite[], value: string, shape: { purchase: bool
   if (shape.purchase) {
     seq("reaches the purchase surface/control", isPurchaseReach);
     seq("submits payment (completes checkout)", isPurchaseSubmit);
-    seq("observes a checkout success result", isSuccessAssert);
+    // OPTIONAL. The proof is the entitlement assertion on the account, not a success screen. A success page is
+    // often reached by a post-submit redirect the crawler never sees, so REQUIRING a success assertion forces
+    // the model to guess on-page text ("checkout success") that may not exist, which fails a WORKING app. It
+    // is credited when present (and it is what makes a fake_success finding legible), but never required.
+    seq("observes a checkout success result", isSuccessAssert, false);
   } else {
     // Non-purchase state change (e.g. an admin grant): the producing action is the first click/fill/auth step.
     seq("performs the action that should produce the outcome", (s) => ["click", "fill", "sign_in_as", "switch_role"].includes(A(s)));

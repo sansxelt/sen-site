@@ -235,8 +235,8 @@ export const defaultFlowCorrector: FlowCorrector = async ({ claim, requirements,
     (obligations.persistence && obligations.identity
       ? `    1. navigate to the purchase page, then click the control that STARTS checkout.\n` +
         `    2. on the CHECKOUT page, click the PAYMENT submit button (its label, e.g. "Pay ...") — this is a DIFFERENT control from step 1; do not skip it.\n` +
-        `    3. assert the checkout success result (assert_visible on the success text).\n` +
-        `    4. navigate to the account page, THEN assert_text the plan element expects EXACTLY "${val}".\n` +
+        `    3. after paying, navigate to the account page. Do NOT add a success-screen assertion unless you can assert text that ACTUALLY appears on a page shown above; never invent a phrase like "checkout success". The proof is the account plan, not a success screen.\n` +
+        `    4. on the account page, assert_text the plan element expects EXACTLY "${val}".\n` +
         `    5. sign out with the reset_context action. There may be NO visible "Sign out" button — navigating to a sign-in page is NOT a sign out; use reset_context.\n` +
         `    6. ${role ? `navigate to the sign-in page, then sign_in_as "${role}", then verify_authenticated.` : `navigate to the sign-in page and sign in (see the sign-in rule above).`}\n` +
         `    7. navigate to the account page AGAIN, THEN assert_text the plan element expects EXACTLY "${val}".\n`
