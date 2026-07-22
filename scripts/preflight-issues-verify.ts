@@ -56,5 +56,55 @@ ok("expected names the VALUE Pro, not the label Plan", /"Pro"/.test(pay?.expecte
 ok("observed says the value was not present, not a raw code", /"Pro" was not present/.test(pay?.observed ?? "") && !/text_absent/.test(pay?.observed ?? ""));
 ok("repro reads the value, Confirm Plan shows Pro", (pay?.repro ?? []).some((r) => r.includes('Confirm Plan shows "Pro"')));
 
+// ── Persistence vs authorization must stay distinct (regression for the "across" -> cross_account mislabel) ──
+// The vrf_3fad10f5 shape: Pro is asserted after checkout (passes), the session is reset, the SAME account
+// signs back in, and the second plan assertion fails. The flow name contains "across", which must NOT be read
+// as "cross" -> access restriction. This is a retention failure for one identity.
+const retainFlow: FlowSpec = { flowId: "f-retain", name: "Upgrade to Pro and verify Pro persists across sign out and sign back in", priority: "critical", destructiveAllowed: false, maxMs: 60000, steps: [
+  { action: "navigate", target: "/pricing.html" }, { action: "click", target: "Get Pro" }, { action: "click", target: "Pay" },
+  { action: "navigate", target: "/account.html" }, { action: "assert_text", target: "Plan", expect: "Pro" },
+  { action: "reset_context" }, { action: "navigate", target: "/signin.html" }, { action: "sign_in_as", target: "customer" },
+  { action: "verify_authenticated" }, { action: "navigate", target: "/account.html" }, { action: "assert_text", target: "Plan", expect: "Pro" },
+] };
+const retainResult: FlowResult = { flowId: "f-retain", state: "failed", steps: [
+  step("navigate", true), step("click", true), step("click", true),
+  step("navigate", true), step("assert_text", true, { target: "Plan" }),
+  step("reset_context", true), step("navigate", true), step("sign_in_as", true),
+  step("verify_authenticated", true), step("navigate", true),
+  step("assert_text", false, { target: "Plan", detail: "text_absent" }),
+], evidence: { consoleErrors: [], networkFailures: [] } };
+const retain = issuesFromRun([retainResult], [retainFlow], { "f-retain": ["Pro status must be retained for the same customer identity across sign-out and sign-in sessions"] })[0];
+ok("persistence across sign-in -> retention_failure", retain?.category === "retention_failure");
+ok("retention is NOT an access-restriction finding", retain?.category !== "cross_account" && retain?.category !== "authorization_failure");
+ok("retention title names signing back in, not access restriction", retain?.title === "Expected access did not persist after signing back in");
+ok("retention expected/observed still name the value Pro", /"Pro"/.test(retain?.expected ?? "") && /"Pro" was not present/.test(retain?.observed ?? ""));
+
+// A GENUINE access-restriction failure must still classify as one, so the two never collapse together:
+// a free account reaches an admin-only surface (negative assertion fails).
+const authzFlow: FlowSpec = { flowId: "f-authz", name: "A free account must not access Pro-only admin settings", priority: "critical", destructiveAllowed: false, maxMs: 60000, steps: [
+  { action: "navigate", target: "/signin.html" }, { action: "sign_in_as", target: "freeuser" },
+  { action: "navigate", target: "/admin.html" }, { action: "verify_unauthorized", target: "admin" },
+] };
+const authzResult: FlowResult = { flowId: "f-authz", state: "failed", steps: [
+  step("navigate", true), step("sign_in_as", true), step("navigate", true),
+  step("verify_unauthorized", false, { detail: "was_authorized" }),
+], evidence: { consoleErrors: [], networkFailures: [] } };
+const authz = issuesFromRun([authzResult], [authzFlow], { "f-authz": ["Pro-only admin settings must be restricted; a free account must not access them"] })[0];
+ok("restriction obligation + negative assert -> authorization_failure", authz?.category === "authorization_failure");
+ok("authorization stays distinct from retention", authz?.category !== "retention_failure");
+
+// Two DISTINCT actors + a restriction obligation -> cross_account (not retention, despite the re-sign-in).
+const crossFlow: FlowSpec = { flowId: "f-cross", name: "One customer must not see another customer's notebooks", priority: "critical", destructiveAllowed: false, maxMs: 60000, steps: [
+  { action: "sign_in_as", target: "alice" }, { action: "navigate", target: "/n/42" }, { action: "new_context" },
+  { action: "sign_in_as", target: "bob" }, { action: "navigate", target: "/n/42" }, { action: "assert_visible", target: "Alice private note" },
+] };
+const crossResult: FlowResult = { flowId: "f-cross", state: "failed", steps: [
+  step("sign_in_as", true), step("navigate", true), step("new_context", true),
+  step("sign_in_as", true), step("navigate", true), step("assert_visible", false, { detail: "unexpectedly_visible" }),
+], evidence: { consoleErrors: [], networkFailures: [] } };
+const cross = issuesFromRun([crossResult], [crossFlow], { "f-cross": ["A customer must not access another customer's notebooks"] })[0];
+ok("two distinct actors + restriction obligation -> cross_account", cross?.category === "cross_account");
+ok("cross_account is not misread as retention despite the second sign-in", cross?.category !== "retention_failure");
+
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);

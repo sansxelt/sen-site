@@ -109,7 +109,7 @@ async function main(): Promise<boolean> {
   if (final?.repair_prompt) {
     console.log("\nRepair prompt (feed this to the builder):\n" + final.repair_prompt);
   }
-  console.log(`\nExpected on this fixture: FAILED — payment succeeds but the Pro entitlement is never granted or retained.`);
+  console.log(`\nGuarantee checked: ${CLAIM}`);
   return true;
 }
 

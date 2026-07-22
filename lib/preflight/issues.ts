@@ -5,7 +5,7 @@
 import type { FlowResult, FlowSpec, StepObservation } from "../../worker/preflight/types";
 
 export type IssueCategory =
-  | "persistence_failure" | "session_failure" | "cross_account" | "fake_success" | "stale_ui"
+  | "persistence_failure" | "session_failure" | "retention_failure" | "cross_account" | "fake_success" | "stale_ui"
   | "duplicate_action" | "authorization_failure" | "mobile_blocker" | "navigation_failure" | "functional_failure";
 export type IssueSeverity = "critical" | "high" | "medium" | "low";
 
@@ -82,25 +82,51 @@ function hasMultiActorStructure(flow: FlowSpec): boolean {
 // Classify a failed step within its flow into a first-class category. The category is an INFERENCE used for
 // grouping and for issue identity across reruns. It is deliberately allowed to be approximate, because
 // nothing user-facing states a cause based on it (see CATEGORY_TITLE below, which is purely observational).
-function classify(flow: FlowSpec, steps: StepObservation[], failedIdx: number): IssueCategory {
+function classify(flow: FlowSpec, steps: StepObservation[], failedIdx: number, requirements: string[] = []): IssueCategory {
   const name = `${flow.name}`.toLowerCase();
+  const reqText = requirements.join("  ").toLowerCase();
   const failed = steps[failedIdx];
-  const priorRefresh = steps.slice(0, failedIdx).some((s) => s.action === "refresh");
+  const before = steps.slice(0, failedIdx);
+  const priorRefresh = before.some((s) => s.action === "refresh");
   const isAssert = failed?.action?.startsWith("assert");
   // A success was CONFIRMED earlier in this flow (a passed success/confirmation assertion), yet a later value
   // check failed: the classic broken outcome behind a green screen. This is the checkout entitlement shape,
   // payment says done, the account never shows the plan.
-  const priorSuccess = steps.slice(0, failedIdx).some((s) =>
+  const priorSuccess = before.some((s) =>
     s.ok && s.action?.startsWith("assert") && /success|complete|active|thank|confirmed|paid|received|processed/i.test(`${s.target ?? ""} ${s.detail ?? ""}`));
+
+  // A sign-OUT (session reset) FOLLOWED by signing back in, both before the failed step: the flow crossed an
+  // identity/session boundary and is checking that a guarantee is RETAINED for the same account. "across
+  // sessions" / "after signing back in" is a PERSISTENCE question, never an access-restriction one — and it
+  // is decided from the boundary the steps actually crossed, not from the presence of sign_in_as alone.
+  const signedOutAt = before.findIndex((s) => s.action === "reset_context" || s.action === "new_context");
+  const signedBackIn = signedOutAt !== -1 && before.slice(signedOutAt + 1).some((s) => s.action === "sign_in_as" || s.action === "fill" || s.action === "click");
+  // Retention means the SAME identity signed back in. Two DISTINCT sign-in identities is a second actor (a
+  // cross-account shape), not a re-auth of one account, so it must not be read as retention.
+  const signInTargets = new Set((flow.steps ?? []).filter((s) => s.action === "sign_in_as").map((s) => `${s.target ?? ""}`.trim().toLowerCase()).filter(Boolean));
+  const twoActors = signInTargets.size >= 2;
+  const reauthBoundary = signedOutAt !== -1 && signedBackIn && !twoActors;
+
+  // An access-restriction obligation is stated by the failed REQUIREMENT (or flow name): access that must be
+  // denied, restricted, or held to one identity. This is what a cross-account/authorization finding must be
+  // grounded in — not a keyword accident like "cross" living inside "across".
+  const restrictionObligation = /restrict|denied|\bdeny\b|forbidden|unauthori[sz]|must not (see|access|be able|reach)|only [a-z ]*(can|may) (see|access|view)|other (user|account|customer|tenant)|another (user|account|customer|tenant)/.test(`${name}  ${reqText}`);
+  const negativeAssert = failed?.action === "verify_unauthorized";
+
   if (isAssert && priorRefresh) return name.includes("sign") || name.includes("session") || name.includes("auth") ? "session_failure" : "persistence_failure";
   if (isAssert && priorSuccess) return "fake_success";
   if (isAssert && /created|success|toast/.test(`${failed?.detail} ${name}`)) return "fake_success";
+  // Positive value/content assertion that failed after a sign-out + sign-in: the guarantee did not survive
+  // re-authentication. Sits BEFORE any access-restriction classification, so a persistence flow that happens
+  // to sign in again can never be mislabelled as an access-restriction check.
+  if (isAssert && reauthBoundary && !negativeAssert && !restrictionObligation) return "retention_failure";
   // Tightened: "nav" and "overlay" used to land any navigation flow in the mobile bucket.
   if (/mobile|viewport|responsive/.test(name)) return "mobile_blocker";
-  // Tightened: the NAME may suggest a multi-actor flow, but the STEPS have to actually contain a second
-  // context or a role switch. Without that, a run never had two actors and cannot have seen one reach the
-  // other's data, whatever the flow is called.
-  if (/another user|cross|other account|authoriz/.test(name) && hasMultiActorStructure(flow)) return "cross_account";
+  // Access restriction requires BOTH a genuine restriction obligation AND the structure to have tested it (a
+  // second actor, or a negative "should be denied/signed out" assertion). Neither the substring "cross" nor
+  // the mere presence of sign_in_as qualifies.
+  if (restrictionObligation && negativeAssert) return "authorization_failure";
+  if (restrictionObligation && hasMultiActorStructure(flow)) return "cross_account";
   if (failed?.action === "navigate") return "navigation_failure";
   if (/duplicate|double/.test(name)) return "duplicate_action";
   return "functional_failure";
@@ -118,6 +144,7 @@ function classify(flow: FlowSpec, steps: StepObservation[], failedIdx: number): 
 const CATEGORY_TITLE: Partial<Record<IssueCategory, string>> = {
   persistence_failure: "Expected content was not visible after a refresh",
   session_failure: "The signed-in state was not visible after a refresh",
+  retention_failure: "Expected access did not persist after signing back in",
   fake_success: "A success message appeared, but the expected result was not visible afterwards",
   cross_account: "An access-restriction check did not complete as expected",
   mobile_blocker: "A step failed at a mobile viewport",
@@ -133,6 +160,7 @@ const CATEGORY_TITLE: Partial<Record<IssueCategory, string>> = {
 const CATEGORY_EXPLANATION: Partial<Record<IssueCategory, string>> = {
   persistence_failure: "The data created earlier in the flow may not have been saved.",
   session_failure: "The session may not be surviving a page load.",
+  retention_failure: "The account may return to its prior state after signing out and back in; the entitlement may not be tied to the identity.",
   fake_success: "The success message may be shown before the change is durable.",
   cross_account: "An access rule may not be applied on this path. This has not been confirmed.",
   mobile_blocker: "A control may be covered or off-screen at this viewport.",
@@ -157,7 +185,7 @@ export function issuesFromRun(results: FlowResult[], flows: FlowSpec[], flowRequ
     const flow = byId.get(r.flowId); if (!flow) continue;
     const failedIdx = Math.max(0, r.steps.findIndex((s) => !s.ok));
     const failed = r.steps[failedIdx];
-    const category = classify(flow, r.steps, failedIdx);
+    const category = classify(flow, r.steps, failedIdx, flowRequirementRefs[r.flowId] ?? []);
     const severity: IssueSeverity = flow.priority === "critical" ? "critical" : flow.priority === "important" ? "high" : "medium";
     // The AUTHORED step carries the expected value; the observation does not. Use it for expected/observed so
     // the finding reads as the outcome ("Expected the plan to show Pro"), not the label ("Expected: Plan").
