@@ -43,8 +43,6 @@ function printInstalledJourney(flows: { name?: string; steps_detail?: StepLite[]
     const steps = f.steps_detail ?? [];
     if (!steps.length) continue;
     const kinds = steps.map(classifyStep);
-    const lastPurchase = kinds.lastIndexOf("purchase");
-    const firstSignout = kinds.indexOf("signout");
     const firstSignin = kinds.indexOf("signin");
 
     console.log(`\n── installed journey: ${f.name ?? "(unnamed)"} (${steps.length} steps, execution order) ──`);
@@ -74,19 +72,9 @@ function printInstalledJourney(flows: { name?: string; steps_detail?: StepLite[]
       console.log(`      obligation: ${obligation}    identity: ${identity}`);
     });
 
-    // The 9-point "must visibly prove" checklist, computed deterministically from the steps.
-    const check = (label: string, ok: boolean) => console.log(`  [${ok ? "YES" : "NO "}] ${label}`);
-    console.log("\n  proves:");
-    check("reaches the Pro purchase path", kinds.includes("purchase"));
-    check("completes checkout (a second purchase/pay action)", kinds.filter((k) => k === "purchase").length >= 2);
-    check("confirms checkout success", steps.some(looksSuccess));
-    check("opens the account page after checkout", steps.some((s, i) => s.action === "navigate" && /account/i.test(safeDest(s.target ?? "")) && i > lastPurchase && lastPurchase !== -1));
-    check(`asserts exact "${value}" after checkout (before sign-out)`, steps.some((s, i) => assertsValue(s) && i > lastPurchase && (firstSignin === -1 || i < firstSignin)));
-    check("signs out", firstSignout !== -1);
-    check("signs back in", firstSignin !== -1 && (firstSignout === -1 || firstSignin > firstSignout));
-    check("opens the account page again after signing in", steps.some((s, i) => s.action === "navigate" && /account/i.test(safeDest(s.target ?? "")) && firstSignin !== -1 && i > firstSignin));
-    check(`asserts exact "${value}" again after signing back in`, steps.some((s, i) => assertsValue(s) && firstSignin !== -1 && i > firstSignin));
-    if (weak.length) console.log(`  ⚠ WEAK assertions at step(s) ${weak.join(", ")}: not the exact "${value}" value — review before spending.`);
+    // The authoritative YES/NO checklist is the VALIDATOR's (rendered by the caller from execution coverage).
+    // Here we only flag generic-text assertions of the value, since those are the classic false-positive.
+    if (weak.length) console.log(`  ⚠ step(s) ${weak.join(", ")} assert "${value}" as generic visible text, not the exact account-plan value.`);
   }
 }
 
@@ -202,19 +190,34 @@ async function main(): Promise<boolean> {
     console.log("\nrepair_prompt:\n" + (body?.repair_prompt ?? ""));
   }
 
-  // The final human review before any paid run: print the INSTALLED flow step by step so a person can confirm
-  // it proves the claim end to end. Requires diagnostic mode (default on), which returns steps_detail.
+  // The final human review before any paid run: print the INSTALLED flow step by step, then the AUTHORITATIVE
+  // execution-coverage checklist (from the production validator, not re-derived here). Requires diagnostic
+  // mode (default on), which returns steps_detail.
   const hasSteps = (body?.flows ?? []).some((f: { steps_detail?: unknown[] }) => (f.steps_detail?.length ?? 0) > 0);
   if (hasSteps) {
     console.log("\n════ FINAL REVIEW: the exact journey a paid run would execute ════");
     printInstalledJourney(body.flows, CLAIM);
-    console.log("\nThis is a review only. No pass has been spent. Authorize the paid run only if every point above reads YES with no weak assertions.");
-  } else {
-    console.log("\n(no step detail returned — re-run with VRAELIS_DIAGNOSTIC unset or =1 to inspect the journey)");
   }
+  // The validator's own checklist is the authority; the script only renders it.
+  const checklist: { label: string; ok: boolean; required: boolean; weak?: boolean }[] = cov.execution_after?.checklist ?? [];
+  if (checklist.length) {
+    console.log("\n── execution contract checklist (from the production validator) ──");
+    for (const c of checklist) {
+      const mark = c.weak ? "WEAK" : c.ok ? "YES " : "NO  ";
+      console.log(`  [${mark}] ${c.required ? "" : "(optional) "}${c.label}`);
+    }
+  }
+  const journeyReady = body?.would_launch === true && !checklist.some((c) => (c.required && !c.ok) || c.weak);
 
-  console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);
-  return fail === 0;
+  // SCRIPT integrity (did the dry run itself behave) is SEPARATE from JOURNEY readiness (is the plan good
+  // enough to spend on). Never collapse them into a single ALL PASS: a clean script run on a plan that does
+  // not prove the claim must not read as success.
+  console.log("");
+  console.log(`SCRIPT CHECKS: ${fail === 0 ? "PASS" : "FAIL"}  (${pass} passed, ${fail} failed)`);
+  console.log(`JOURNEY REVIEW: ${journeyReady ? "READY — would_launch true" : "FAIL — would_launch false"}`);
+  if (!journeyReady) console.log("Do NOT authorize a paid run: the plan does not yet prove the claim end to end.");
+  else console.log("The journey proves the claim end to end. A paid run may be authorized (expect a legitimate failure on this broken fixture).");
+  return fail === 0 && journeyReady;
 }
 
 // Set exitCode and let the event loop drain rather than process.exit(), which on Windows can abort with a

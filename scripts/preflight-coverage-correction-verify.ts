@@ -52,14 +52,18 @@ const READ_ONLY_FLOWS = [
   { name: "View pricing", steps: [step("navigate", "/pricing"), step("assert_visible", "Pro plan")] },
   { name: "View account", steps: [step("navigate", "/account"), step("assert_visible", "Current plan")] },
 ];
-// The complete journey: pay, assert Pro on the account, sign out, sign back in, assert Pro again — in ONE flow.
+// The complete journey satisfying the full ordered contract, in ONE flow: reach purchase, submit payment,
+// observe success, open the account, assert exact Pro, explicit sign out (reset), credentialed sign in
+// (email -> password -> submit), open the account again, assert exact Pro again.
 const COMPLETE_JOURNEY: PlanFlow[] = [{
   name: "Upgrade and verify Pro persists", goal: "Pro survives a fresh sign-in", role: null, priority: "critical",
   steps: ([
     step("navigate", "/"), step("click", "Upgrade to Pro"), step("click", "Pay $20 and start Pro"),
-    step("navigate", "/account"), step("assert_text", "plan", "", "Pro"),
-    step("click", "Sign out"), step("navigate", "/signin"), step("fill", "Email", "demo@example.com"), step("click", "Sign in"),
-    step("navigate", "/account"), step("assert_text", "plan", "", "Pro"),
+    step("assert_visible", "Payment successful"),
+    step("navigate", "/account"), step("assert_text", "Current plan", "", "Pro"),
+    step("reset_context"),
+    step("navigate", "/signin"), step("fill", "Email", "demo@example.com"), step("fill", "Password", "test-pass-123"), step("click", "Sign in"),
+    step("navigate", "/account"), step("assert_text", "Current plan", "", "Pro"),
   ] as RawStep[]).map((s) => ({ action: s.action, target: s.target, value: s.value, expect: s.expect } as FlowStep)),
 }];
 // A flow correction that still does NOT prove persistence (asserts Pro after checkout, never after sign-in).
@@ -180,9 +184,10 @@ async function main() {
     ok("corrected flow reaches checkout (a purchase action)", kinds.some((k) => /click:.*(upgrade|pay)/.test(k)));
     const proAsserts = f.steps.map((s, i) => ({ i, s })).filter(({ s }) => s.action.startsWith("assert") && (s.expect || "").toLowerCase() === "pro");
     ok("corrected flow asserts the exact plan is Pro (twice)", proAsserts.length >= 2);
-    const signout = f.steps.findIndex((s) => /sign out/i.test(s.target || ""));
-    const signin = f.steps.findIndex((s) => s.action === "click" && /sign in/i.test(s.target || ""));
-    ok("corrected flow signs out then back in with the same account", signout !== -1 && signin > signout);
+    const signout = f.steps.findIndex((s) => s.action === "reset_context" || s.action === "sign_out" || /sign out/i.test(s.target || ""));
+    const signin = f.steps.findIndex((s) => (s.action === "click" && /sign in/i.test(s.target || "")) || s.action === "sign_in_as");
+    ok("corrected flow signs out (reset) then back in with credentials", signout !== -1 && signin > signout);
+    ok("the flow fills a password before submitting sign-in", f.steps.some((s) => s.action === "fill" && /password/i.test(s.target || "")));
     ok("the final Pro assertion comes AFTER signing back in", proAsserts[proAsserts.length - 1].i > signin);
     ok("the corrected dry run would launch", r.readyToLaunch && r.blockedReason === null);
   }

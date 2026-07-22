@@ -83,7 +83,11 @@ export function claimObligations(claim: string): ClaimObligations {
 // Evaluated across the WHOLE requirement set, not per requirement: one broad supporting requirement does not
 // fail the set, but an obligation absent from EVERY requirement does.
 
-export type Coverage = { ok: boolean; missing: string[]; covered: string[] };
+// One line of the execution contract: a milestone the flow must contain, in order. `weak` marks an item that
+// is present in form but too loose to count (e.g. a generic visible-text assertion instead of an exact value).
+export type ChecklistItem = { label: string; ok: boolean; required: boolean; weak?: boolean };
+
+export type Coverage = { ok: boolean; missing: string[]; covered: string[]; checklist?: ChecklistItem[] };
 
 export function checkClaimCoverage(claim: string, requirements: string[]): Coverage {
   const a = analyzeClaim(claim);
@@ -124,9 +128,9 @@ const SIGNOUT_RE = /\b(sign|log)\s*out\b/i;
 const SIGNIN_RE = /\b(sign|log)\s*in\b/i;
 const PURCHASE_RE = /\b(pay|checkout|check out|buy|purchase|upgrade|subscribe|complete (the )?(order|purchase|payment))\b/i;
 
-// Classify a step by what it DOES, reading intent from the action and the target text. Plain journeys express
-// sign-in and payment as clicks/navigations, not semantic primitives, so the target text is where the intent
-// lives.
+// Classify a step by what it DOES, reading intent from the action and the target text. Kept for the correction
+// prompts and the journey printer; the execution CONTRACT below uses finer predicates, because "there is a
+// sign-in somewhere" is not the same as "credentials were filled then submitted, in order".
 export function classifyStep(s: StepLite): StepKind {
   const action = (s.action || "").toLowerCase();
   const target = `${s.target ?? ""} ${s.value ?? ""}`;
@@ -140,74 +144,163 @@ export function classifyStep(s: StepLite): StepKind {
   return "action";
 }
 
-// Does an assertion step check for the named value? Only asserts count: a navigate or click TO something
-// named "Pro" is not proof the state IS Pro.
-function assertsValue(s: StepLite, value: string): boolean {
-  if (classifyStep(s) !== "assert") return false;
-  const hay = `${s.target ?? ""} ${s.expect ?? ""} ${s.value ?? ""}`.toLowerCase();
-  return hay.includes(value.toLowerCase());
+// ── Execution CONTRACT predicates (fine-grained, order-aware) ─────────────────────────────────────────────
+// The former validator asked three loose questions and passed flows that never proved the guarantee. The
+// contract below encodes what a purchase-and-persistence claim ACTUALLY requires, as an ordered sequence of
+// milestones, and refuses anything that only touches plausible pages.
+
+const A = (s: StepLite) => (s.action || "").toLowerCase();
+const TGT = (s: StepLite) => `${s.target ?? ""}`.toLowerCase();
+const VAL = (s: StepLite) => `${s.value ?? ""}`;
+const EXP = (s: StepLite) => `${s.expect ?? ""}`;
+
+const PURCHASE_REACH_RE = /\b(upgrade|get pro|see pro|see plans|view plans|choose|select|buy|pricing)\b/i;
+const PURCHASE_SUBMIT_RE = /\b(pay|complete (the )?(order|purchase|payment)|place order|submit payment|start pro|confirm (payment|purchase|order)|check ?out)\b/i;
+const SUCCESS_RE = /\b(payment )?success(ful)?\b|\bthank you\b|\bpayment received\b|\border confirmed\b|\bsubscription is active\b|\bnow active\b|\bpayment complete\b/i;
+const ACCOUNT_SURFACE_RE = /\b(account|dashboard|profile|settings|billing)\b|\/account/i;
+const EMAIL_FIELD_RE = /\b(e-?mail|username|user name|login)\b/i;
+const PASSWORD_FIELD_RE = /\b(password|passcode|pass ?word|passphrase)\b/i;
+
+// An ENTITLEMENT assertion, strictly: an assert_text with a concrete target and an expected value EXACTLY equal
+// to the claimed value. A generic assert_visible of the word, or a descriptive sentence that merely contains
+// it ("Plan section displays Pro"), does not count — those are static-copy matches, not a state check.
+function isExactEntitlementAssert(s: StepLite, value: string): boolean {
+  return A(s) === "assert_text" && !!TGT(s).trim() && EXP(s).trim().toLowerCase() === value.toLowerCase();
+}
+const isPurchaseReach = (s: StepLite) => A(s) === "click" && PURCHASE_REACH_RE.test(TGT(s));
+const isPurchaseSubmit = (s: StepLite) => A(s) === "click" && PURCHASE_SUBMIT_RE.test(TGT(s));
+const isSuccessAssert = (s: StepLite) => A(s).startsWith("assert") && SUCCESS_RE.test(`${TGT(s)} ${EXP(s).toLowerCase()}`);
+const isAccountNav = (s: StepLite) => A(s) === "navigate" && ACCOUNT_SURFACE_RE.test(TGT(s));
+// An explicit sign out: the session-clearing primitive, the semantic sign-out action, or a real "Sign out"
+// control. Navigating to a sign-in PAGE is explicitly NOT a sign out.
+const isSignout = (s: StepLite) => A(s) === "reset_context" || A(s) === "sign_out" || (A(s) === "click" && SIGNOUT_RE.test(TGT(s)));
+const isEmailFill = (s: StepLite) => A(s) === "fill" && EMAIL_FIELD_RE.test(TGT(s)) && !!VAL(s).trim();
+const isPasswordFill = (s: StepLite) => A(s) === "fill" && PASSWORD_FIELD_RE.test(TGT(s)) && !!VAL(s).trim();
+const isSigninSubmit = (s: StepLite) => (A(s) === "click" && SIGNIN_RE.test(TGT(s))) || A(s) === "verify_authenticated";
+
+// A CREDENTIALED sign-in proving the same identity was used. Two secret-safe shapes qualify:
+//   (a) sign_in_as / switch_role  — references a sealed test account; the worker fills the stored credentials.
+//   (b) fill email -> fill password -> submit, IN THAT ORDER — the flow supplies the identity it chose.
+// Clicking a submit button on a pre-filled form is NOT sufficient: the app chose the identity, not the test.
+// Returns the index AFTER the sign-in sequence, or -1.
+function credentialedSigninEnd(steps: StepLite[], from: number): number {
+  for (let i = from; i < steps.length; i++) {
+    if (A(steps[i]) === "sign_in_as" || A(steps[i]) === "switch_role") return i + 1;
+  }
+  const ie = steps.findIndex((s, i) => i >= from && isEmailFill(s));
+  if (ie === -1) return -1;
+  const ip = steps.findIndex((s, i) => i > ie && isPasswordFill(s));
+  if (ip === -1) return -1;
+  const is = steps.findIndex((s, i) => i > ip && isSigninSubmit(s));
+  return is === -1 ? -1 : is + 1;
+}
+
+// The first exact entitlement assertion at/after `from` whose most-recent preceding navigate is an account
+// surface — static-copy protection: the value must be read on the authenticated account page, not on a
+// pricing or marketing page that merely prints the word.
+function exactEntitlementOnAccount(steps: StepLite[], from: number, value: string): number {
+  for (let i = from; i < steps.length; i++) {
+    if (!isExactEntitlementAssert(steps[i], value)) continue;
+    let lastNav = -1;
+    for (let j = i - 1; j >= 0; j--) { if (A(steps[j]) === "navigate") { lastNav = j; break; } }
+    if (lastNav !== -1 && isAccountNav(steps[lastNav])) return i;
+  }
+  return -1;
+}
+
+// Build the ordered execution checklist for ONE flow, given the claim shape. Every required item must be
+// present AND in order; a later milestone is only credited after the previous one's position.
+function flowChecklist(steps: StepLite[], value: string, shape: { purchase: boolean; persistence: boolean; identity: boolean }): ChecklistItem[] {
+  const items: ChecklistItem[] = [];
+  let cur = 0;
+  const seq = (label: string, pred: (s: StepLite) => boolean, required = true) => {
+    let idx = -1;
+    for (let i = cur; i < steps.length; i++) if (pred(steps[i])) { idx = i; break; }
+    const ok = idx !== -1;
+    if (ok) cur = idx + 1;
+    items.push({ label, ok, required });
+    return idx;
+  };
+
+  if (shape.purchase) {
+    seq("reaches the purchase surface/control", isPurchaseReach);
+    seq("submits payment (completes checkout)", isPurchaseSubmit);
+    seq("observes a checkout success result", isSuccessAssert);
+  } else {
+    // Non-purchase state change (e.g. an admin grant): the producing action is the first click/fill/auth step.
+    seq("performs the action that should produce the outcome", (s) => ["click", "fill", "sign_in_as", "switch_role"].includes(A(s)));
+  }
+
+  // First exact entitlement assertion, on the account surface, after everything above.
+  {
+    const idx = exactEntitlementOnAccount(steps, cur, value);
+    const ok = idx !== -1;
+    if (ok) cur = idx + 1;
+    items.push({ label: `asserts the exact "${value}" value on the account surface after the action`, ok, required: true });
+    // Flag a weak near-miss: the value is "asserted" but only as generic visible text, not an exact assert_text.
+    if (!ok && steps.some((s) => A(s) === "assert_visible" && TGT(s).includes(value.toLowerCase()))) {
+      items.push({ label: `(the "${value}" check present is a generic visible-text assertion, not an exact account-plan assertion)`, ok: false, required: false, weak: true });
+    }
+  }
+
+  if (shape.persistence && shape.identity) {
+    seq("performs an explicit sign out", isSignout);
+    // Credentialed sign-in (compound, order-checked).
+    const end = credentialedSigninEnd(steps, cur);
+    const ok = end !== -1;
+    if (ok) cur = end;
+    items.push({ label: "signs back in with stored credentials (same account), not a bare submit click", ok, required: true });
+    const idx2 = exactEntitlementOnAccount(steps, cur, value);
+    items.push({ label: `asserts the exact "${value}" value AGAIN on the account surface after signing back in`, ok: idx2 !== -1, required: true });
+  } else if (shape.persistence) {
+    // Persistence without identity: a reload is the boundary.
+    seq("reloads the page (persistence boundary)", (s) => A(s) === "refresh");
+    const idx2 = exactEntitlementOnAccount(steps, cur, value);
+    items.push({ label: `asserts the exact "${value}" value AGAIN after reloading`, ok: idx2 !== -1, required: true });
+  }
+
+  return items;
+}
+
+// A value-less persistence claim (a changed email, a created record): no lexicon value to assert exactly, so
+// the contract is lighter — the flow must assert SOMETHING after the persistence boundary.
+function valuelessPersistenceChecklist(steps: StepLite[]): ChecklistItem[] {
+  const boundaryIdx = steps.findIndex((s) => classifyStep(s) === "signin" || A(s) === "refresh");
+  const ok = boundaryIdx !== -1 && steps.some((s, i) => i > boundaryIdx && A(s).startsWith("assert"));
+  return [{ label: "asserts the persisted state after signing back in or reloading", ok, required: true }];
 }
 
 export function checkExecutionCoverage(claim: string, flows: FlowLite[]): Coverage {
   const a = analyzeClaim(claim);
-  const missing: string[] = [];
-  const covered: string[] = [];
 
-  // Nothing runnable at all.
   if (!flows.length || flows.every((f) => !f.steps?.length)) {
-    return { ok: false, missing: ["No runnable flow was produced, so nothing can prove the claim."], covered: [] };
+    return { ok: false, missing: ["No runnable flow was produced, so nothing can prove the claim."], covered: [], checklist: [] };
   }
 
-  for (const v of a.namedValues) {
-    // 1) SOME flow asserts the value at all (not merely navigates or clicks something named for it).
-    const assertedAnywhere = flows.some((f) => f.steps.some((s) => assertsValue(s, v)));
-    if (!assertedAnywhere) {
-      missing.push(`No flow ASSERTS the "${v}" state; a plan that only navigates to or clicks "${v}" never checks the outcome is true.`);
-      continue; // the stronger checks below are moot without any assertion of the value
-    }
+  const purchase = a.hasAction && /\b(upgrade|pay|paid|purchase|checkout|check out|buy|subscribe)\b/i.test(claim);
+  const value = a.namedValues[0] || "";
 
-    // 2) The value is asserted AFTER an action in the same flow. A confirmation before or without the action
-    //    (a checkout success page) does not prove the account received the value.
-    const assertedAfterAction = flows.some((f) => {
-      const kinds = f.steps.map(classifyStep);
-      const actionIdx = kinds.findIndex((k) => k === "purchase" || k === "action");
-      const assertIdx = f.steps.findIndex((s) => assertsValue(s, v));
-      return actionIdx !== -1 && assertIdx > actionIdx;
-    });
-    if (!assertedAfterAction) {
-      missing.push(`The "${v}" state is never asserted AFTER the action that should produce it (a plan that stops at a success page proves nothing about the account).`);
-    }
+  // Choose the contract by claim shape, then score EVERY flow against it and keep the strongest (the flow that
+  // satisfies the most required milestones). Coverage passes only if that flow satisfies ALL required ones.
+  const buildFor = (steps: StepLite[]): ChecklistItem[] =>
+    value ? flowChecklist(steps, value, { purchase, persistence: a.persistence, identity: a.identity })
+          : valuelessPersistenceChecklist(steps);
 
-    // 3) Persistence: the value is asserted AFTER a persistence boundary (a sign-in OR a reload), so it
-    //    survives a fresh session, not just the moment right after the action.
-    if (a.persistence) {
-      const persisted = flows.some((f) => hasAssertAfterBoundary(f, (s) => assertsValue(s, v)));
-      if (!persisted) {
-        missing.push(`The "${v}" state is never asserted AFTER signing back in or reloading, so persistence (which the claim requires) is not proven.`);
-      }
-    }
+  let best: ChecklistItem[] = [];
+  let bestScore = -1;
+  for (const f of flows) {
+    const cl = buildFor(f.steps);
+    const score = cl.filter((c) => c.required && c.ok).length;
+    if (score > bestScore) { bestScore = score; best = cl; }
   }
 
-  // Persistence claims whose value is DYNAMIC (a changed email, a created record) carry no lexicon value, so
-  // the per-value checks above never fire. They still must assert SOMETHING after the boundary, or "it
-  // remained" is unproven.
-  if (a.persistence && a.namedValues.length === 0) {
-    const proven = flows.some((f) => hasAssertAfterBoundary(f, (s) => classifyStep(s) === "assert"));
-    if (!proven) {
-      missing.push("The claim requires the state to persist, but no flow asserts anything after signing back in or reloading.");
-    }
-  }
-
-  if (a.namedValues.length) covered.push("value-assertions");
-  return { ok: missing.length === 0, missing, covered };
-}
-
-// A persistence boundary is a sign-in or a reload. Returns true when SOME step matching `assert` occurs after
-// the first such boundary in a flow.
-function hasAssertAfterBoundary(f: FlowLite, matches: (s: StepLite) => boolean): boolean {
-  const boundaryIdx = f.steps.findIndex((s) => classifyStep(s) === "signin" || (s.action || "").toLowerCase() === "refresh");
-  if (boundaryIdx === -1) return false;
-  return f.steps.some((s, i) => i > boundaryIdx && matches(s));
+  const missing = best.filter((c) => c.required && !c.ok).map((c) => c.label);
+  // A weak item (present-but-loose) is a failure too: it means the value was "checked" in a way that does not
+  // prove entitlement. Surface it so the reason is legible.
+  for (const w of best.filter((c) => c.weak)) missing.push(w.label);
+  const ok = missing.length === 0 && best.every((c) => !c.required || c.ok);
+  const covered = best.filter((c) => c.required && c.ok).map((c) => c.label);
+  return { ok, missing, covered, checklist: best };
 }
 
 // ── The combined pre-run gate ────────────────────────────────────────────────────────────────────────────
