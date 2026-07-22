@@ -15,6 +15,7 @@
 //
 // Pure unit tests + static source checks; no DB, no network, no browser. Run: npx tsx scripts/preflight-flow-authoring-verify.ts
 import { readFileSync } from "node:fs";
+import { buildSynthesisPrompt } from "../lib/preflight/discover-synthesis";
 import {
   validateSteps, flowRequiresAuth, flowRoles, FLOW_ACTIONS, MAX_STEPS, ACTION_LABELS,
   type FlowStep,
@@ -52,6 +53,19 @@ ok("no raw Playwright actions leak into the authorable set (no select/press/new_
   !(["select", "press", "check", "uncheck", "wait_for", "new_context", "screenshot", "wait"] as string[]).some((a) => (FLOW_ACTIONS as readonly string[]).includes(a)));
 ok("every authorable action has an owner-facing label (no raw enum leaks in the UI)",
   FLOW_ACTIONS.every((a) => typeof ACTION_LABELS[a] === "string" && ACTION_LABELS[a].length > 0 && ACTION_LABELS[a] !== a));
+
+// The synthesis PROMPT advertises an action vocabulary to the model. If it names an action validateSteps
+// does NOT accept, every flow that uses it is discarded, and a real claim becomes "not testable" for a
+// reason nobody can see from the outside. A prompt/validator mismatch on select/press/wait_for/screenshot
+// did exactly this the first time a real claim ran through /v1. This is the cross-check that was missing.
+{
+  const prompt = buildSynthesisPrompt([], "test build prompt", { sources: [], connections: [] });
+  const m = prompt.match(/use ONLY these actions:\s*([^.]+)\./i);
+  const advertised = (m?.[1] ?? "").split(",").map((s) => s.trim()).filter((s) => /^[a-z_]+$/.test(s));
+  ok("the synthesis prompt lists its action vocabulary", advertised.length >= 5, advertised.join(","));
+  const phantom = advertised.filter((a) => !(FLOW_ACTIONS as readonly string[]).includes(a));
+  ok("every action the synthesis prompt advertises is accepted by validateSteps", phantom.length === 0, `phantom: ${phantom.join(", ")}`);
+}
 
 // Each action accepted with its correct fields.
 ok("navigate: relative target accepted", assertValid([{ action: "navigate", target: "/dashboard" }])[0].target === "/dashboard");
