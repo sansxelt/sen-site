@@ -24,7 +24,7 @@ import { POST as launchRun } from "@/app/api/preflight/apps/[id]/runs/route";
 import { resolvePrincipal, logKeyUsage, PREFLIGHT_SCOPES } from "@/lib/preflight/api-principal";
 import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { unsafeHttpsUrlReason } from "@/lib/safe-fetch";
-import { laneApplication, synthesizeClaim, prepareVerification } from "@/lib/preflight/verification-lane";
+import { laneApplication, synthesizeClaim, prepareVerification, laneRoles } from "@/lib/preflight/verification-lane";
 import { repairPrompt } from "@/lib/preflight/coverage";
 import { resolveCoverage, resolutionGaps, type CoverageResolution } from "@/lib/preflight/coverage-resolve";
 import { runIdentity } from "@/lib/preflight/runs-db";
@@ -139,7 +139,7 @@ export async function POST(req: Request) {
       await logKeyUsage(p.principal, { endpoint: "POST /v1/verifications (dry_run)", status: s.status });
       return Response.json({ error: { code: s.error, message: s.message, request_id: rid } }, { status: s.status, headers: { "X-Request-Id": rid } });
     }
-    const resolution = await resolveCoverage(deploymentUrl, claim, s.synth, s.pages);
+    const resolution = await resolveCoverage(deploymentUrl, claim, s.synth, s.pages, { rolesAvailable: await laneRoles(p.principal.email) });
     if (ownsDry && idemKey) await markFailed(p.principal.email, idemKey); // dry run launched nothing; release the key
     await logKeyUsage(p.principal, { endpoint: "POST /v1/verifications (dry_run)", status: 200 });
     return Response.json({
@@ -216,7 +216,7 @@ export async function POST(req: Request) {
   // test that could not prove the claim, and it costs the caller nothing. The reservation is released so a
   // corrected retry can reuse the key, and the telemetry (what correction did, what is still missing, a repair
   // prompt) is returned so the caller — or the agent that built the app — knows exactly what to change.
-  const resolution = await resolveCoverage(deploymentUrl, claim, s.synth, s.pages);
+  const resolution = await resolveCoverage(deploymentUrl, claim, s.synth, s.pages, { rolesAvailable: await laneRoles(p.principal.email) });
   if (!resolution.readyToLaunch) {
     await releaseOnFailure();
     await logKeyUsage(p.principal, { endpoint: "POST /v1/verifications", status: 422, applicationId: app.id });

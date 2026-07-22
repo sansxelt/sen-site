@@ -6,6 +6,7 @@
 // after correction" or Blocked. Every corrector here is a FAKE that returns canned proposals and counts its
 // calls, so the whole loop is exercised with no model, no network, and fully deterministic assertions.
 import { resolveCoverage, type Correctors } from "../lib/preflight/coverage-resolve";
+import { validateCorrectedFlows } from "../lib/preflight/coverage-correction";
 import type { Synthesis } from "../lib/preflight/discover-synthesis";
 import type { PageSnapshot } from "../lib/preflight/discover-extract";
 import type { PlanRequirement, PlanFlow } from "../lib/preflight/verification-lane";
@@ -190,6 +191,29 @@ async function main() {
     ok("the flow fills a password before submitting sign-in", f.steps.some((s) => s.action === "fill" && /password/i.test(s.target || "")));
     ok("the final Pro assertion comes AFTER signing back in", proAsserts[proAsserts.length - 1].i > signin);
     ok("the corrected dry run would launch", r.readyToLaunch && r.blockedReason === null);
+  }
+
+  section("sign_in_as validates ONLY against a configured test-account role");
+  {
+    // The model proposes a flow that signs in via a sealed test account. It is executable only when the role
+    // is actually configured on the app; a self-declared role the app does not have must be dropped.
+    const raw = [{
+      name: "Sign in as customer", goal: "prove identity", role: "customer", auth_required: true,
+      priority: "critical" as const,
+      steps: [
+        { action: "navigate", target: "/signin", value: "", expect: "" },
+        { action: "sign_in_as", target: "customer", value: "", expect: "" },
+        { action: "verify_authenticated", target: "", value: "", expect: "" },
+      ],
+    }];
+    ok("with role 'customer' configured, the sign_in_as flow validates", validateCorrectedFlows(raw, ["customer"]).flows.length === 1);
+    // A sign_in_as target that is neither configured NOR self-declared by the flow is dropped.
+    const ghost = [{
+      name: "Sign in as ghost", goal: "x", role: "", auth_required: true, priority: "critical" as const,
+      steps: [{ action: "sign_in_as", target: "ghost", value: "", expect: "" }],
+    }];
+    const r = validateCorrectedFlows(ghost, []);
+    ok("a sign_in_as to an unconfigured role is rejected", r.flows.length === 0 && r.rejected.length === 1);
   }
 
   console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);

@@ -26,6 +26,7 @@
     "preflight:coverage:test": "tsx scripts/preflight-coverage-verify.ts",
     "preflight:coverage:correction": "tsx scripts/preflight-coverage-correction-verify.ts",
     "preflight:coverage:dryrun": "tsx scripts/preflight-coverage-dryrun.ts",
+    "preflight:seed-test-account": "tsx scripts/preflight-seed-test-account.ts",
     "outreach": "tsx scripts/outreach.ts",
     "desktop:dev": "npm --prefix desktop run tauri dev",
     "desktop:build": "npm --prefix desktop run tauri build",

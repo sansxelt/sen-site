@@ -44,6 +44,8 @@ export type FlowCorrectorInput = {
   /** The exact uncovered requirement obligations from checkExecutionCoverage. */
   missing: string[];
   pages: PageSnapshot[];
+  /** Sealed test-account roles configured on the app (e.g. ["customer"]); a flow signs in via sign_in_as. */
+  rolesAvailable: string[];
 };
 // The flow corrector reports the EXACT boundary at which correction did or did not succeed, so a block is
 // never ambiguous. status names where it landed; candidates/flows/rejected quantify it. Without this a
@@ -199,10 +201,17 @@ const CorrectedFlows = z.object({
 // The model must return executable steps, not a reworded description. The resolver validates every returned
 // flow through the SAME designer step validator the dashboard uses, drops any that don't validate, then
 // re-runs execution coverage — which decides sufficiency. The model never decides would_launch.
-export const defaultFlowCorrector: FlowCorrector = async ({ claim, requirements, flows, obligations, missing, pages }) => {
+export const defaultFlowCorrector: FlowCorrector = async ({ claim, requirements, flows, obligations, missing, pages, rolesAvailable }) => {
   const API_KEY = apiKey();
   if (!API_KEY) return null;
   const val = obligations.namedValues[0] || "the expected value";
+  const role = rolesAvailable[0];
+  // How the flow must prove the SAME identity. With a sealed test account, sign_in_as is the ONLY secret-safe
+  // way — the worker fills the stored credentials; the flow never types an email or password. Without one, the
+  // flow can only fill visible non-secret fields, which cannot prove identity for a password-protected app.
+  const signInRule = role
+    ? `To sign back in as the SAME account, use the auth actions: navigate to the sign-in page, then "sign_in_as" with target "${role}", then "verify_authenticated". The worker fills the sealed test-account credentials for role "${role}" — do NOT emit any fill for email or password, and never type a credential. Available roles: ${rolesAvailable.join(", ")}.`
+    : `Sign back in by filling the visible email field with a real value and clicking submit. Never type a password; if the form needs one you cannot supply safely, this claim cannot be proven without a configured test account.`;
   const prompt =
     `An execution plan for an already-built app does not actually PROVE the claim. Repair it: return runnable ` +
     `browser flow(s) whose steps carry a browser all the way through the guarantee and ASSERT the outcome where ` +
@@ -220,7 +229,9 @@ export const defaultFlowCorrector: FlowCorrector = async ({ claim, requirements,
     `- assert_text needs BOTH a target (where to look) and the exact expected text. assert_visible and click need a target. Leave a field "" only when the action does not use it.\n` +
     `- A fill step MUST carry a concrete NON-EMPTY value; a fill with an empty value is rejected and discards the whole flow. If you have no real value to type — a password or secret you must not enter, or a field the form already pre-fills — do NOT emit a fill for it. Sign in by CLICKING the submit button directly (assume the form is pre-filled in test mode); fill only fields where you are supplying a real value you were given. Never put a password, card number, or security code in a fill value.\n` +
     `- Targets are the visible accessible names (a button's label, a heading), never CSS or XPath. Set unused string fields to "".\n` +
-    `- For a persistence guarantee, ONE flow must: perform the action, assert the exact outcome where it is read, ${obligations.identity ? "sign out, sign back in with the same account, " : "reload, "}then assert the exact outcome AGAIN. Keep that whole journey in a single flow.`;
+    `- ${signInRule}\n` +
+    `- Assert the outcome with assert_text: a concrete target (the account's plan element) and expect EXACTLY "${val}". A generic assert_visible of the word does not count; the assertion must be on the account page, not a pricing or marketing page.\n` +
+    `- For a persistence guarantee, ONE flow must: reach the purchase, submit payment, observe checkout success, open the account, assert exact "${val}", ${obligations.identity ? "explicitly sign out (reset_context), sign back in via the rule above, " : "reload, "}open the account again, then assert exact "${val}" AGAIN. Keep that whole journey in a single flow.`;
   // Classify the outcome at each boundary. The API call and the schema-parse are separated so a network/timeout
   // failure is never confused with a model that returned unparseable content. Nothing here changes what the
   // model is asked or how flows are validated — it only records where the attempt landed.
@@ -239,7 +250,7 @@ export const defaultFlowCorrector: FlowCorrector = async ({ claim, requirements,
   if (!res.parsed_output) return empty("no_content");
   const raw = res.parsed_output.flows ?? [];
   if (!raw.length) return empty("zero_flows");
-  const validated = validateCorrectedFlows(raw);
+  const validated = validateCorrectedFlows(raw, rolesAvailable);
   if (validated.rejected.length) console.error("flow correction dropped flows:", JSON.stringify(validated.rejected));
   return { status: "ok", flows: validated.flows, candidates: raw.length, rejected: validated.rejected };
 };
@@ -250,8 +261,10 @@ export const defaultFlowCorrector: FlowCorrector = async ({ claim, requirements,
 // projectPlan's rule.
 export function validateCorrectedFlows(
   raw: { name: string; goal: string; role: string; auth_required: boolean; priority: "critical" | "important" | "informational"; steps: { action: string; target: string; value: string; expect: string }[] }[],
+  rolesAvailable: string[] = [],
 ): { flows: PlanFlow[]; rejected: { name: string; reason: string }[] } {
-  const roles = Array.from(new Set(raw.map((f) => (f.role || "").trim()).filter(Boolean)));
+  // A sign_in_as target is valid if it names a CONFIGURED role, not merely one the flow declared for itself.
+  const roles = Array.from(new Set([...rolesAvailable, ...raw.map((f) => (f.role || "").trim())].filter(Boolean)));
   const flows: PlanFlow[] = [];
   const rejected: { name: string; reason: string }[] = [];
   for (const f of raw.slice(0, 20)) {

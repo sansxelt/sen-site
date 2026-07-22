@@ -87,9 +87,10 @@ export async function resolveCoverage(
   claim: string,
   synth: Synthesis,
   pages: PageSnapshot[],
-  opts?: { correctors?: Partial<Correctors> },
+  opts?: { correctors?: Partial<Correctors>; rolesAvailable?: string[] },
 ): Promise<CoverageResolution> {
   const correctors: Correctors = { ...DEFAULT_CORRECTORS, ...(opts?.correctors ?? {}) };
+  const rolesAvailable = opts?.rolesAvailable ?? [];
   const obligations = claimObligations(claim);
   const originalPlan = projectPlan(synth);
 
@@ -138,7 +139,7 @@ export async function resolveCoverage(
     flowCorrectionAttempted = true;
     const fc = await correctors.correctFlows({
       claim, requirements: planRequirementTexts(plan), flows: plan.flows, obligations,
-      missing: executionBefore.missing, pages: workingPages,
+      missing: executionBefore.missing, pages: workingPages, rolesAvailable,
     });
     flowCorrectionStatus = fc ? fc.status : "no_result";
     flowCorrectionCandidates = fc?.candidates ?? 0;

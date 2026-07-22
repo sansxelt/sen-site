@@ -32,6 +32,7 @@ import {
 } from "../v-applications";
 import { crawl } from "./discover-crawl";
 import { makeSafeFetcher } from "./crawl-fetch";
+import { listConnections } from "./connections-db";
 import { synthesize, synthesisConfigured, type Synthesis } from "./discover-synthesis";
 import type { PageSnapshot } from "./discover-extract";
 import { validateSteps, type FlowStep } from "./flow-steps";
@@ -72,6 +73,26 @@ export async function laneApplication(owner: string, deploymentUrl: string): Pro
   });
   if (!created.ok) return { error: created.error, message: "Could not prepare the verification workspace.", status: 400 };
   return created.application;
+}
+
+/**
+ * The sealed test-account roles configured on this owner's lane application (the `customer` role, etc.).
+ *
+ * A flow proves "the SAME account signed back in" with `sign_in_as <role>`, which the worker executes by
+ * filling the sealed credentials it decrypts at run time — the email and password never enter synthesis, the
+ * flow, a log, or a diagnostic. This returns the role LABELS only (never a credential) so the corrector can
+ * offer sign_in_as and the step validator can accept it.
+ */
+export async function laneRoles(owner: string): Promise<string[]> {
+  if (!isDatabaseConfigured()) return [];
+  const app = (await listApplications(owner)).find((a) => a.builder === LANE_BUILDER);
+  if (!app) return [];
+  const conns = await listConnections(owner, app.id);
+  const roles = conns
+    .filter((c) => c.provider === "test_account")
+    .map((c) => String((c.meta as Record<string, unknown>).role || (c.meta as Record<string, unknown>).label || "").trim())
+    .filter(Boolean);
+  return Array.from(new Set(roles));
 }
 
 /**
