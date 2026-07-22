@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { isAppPath, legacyToNew, legacyRunsPath, firstSegment } from "./lib/app-routes";
+import { isAppPath, legacyToNew, legacyRunsPath } from "./lib/app-routes";
 
 // vraelis.com: Vraelis Rank. Clean public paths map onto the internal /rank
 // route group; /rank/* bounce back to their clean alias so /rank never shows.
@@ -159,6 +159,14 @@ export default function proxy(req: NextRequest) {
     return go(req, "/how-it-works", "redirect");
   }
 
+  // 2a') Human evaluation is a RETIRED product (different buyer, workflow, vocabulary, data model). /vote was
+  // its last surface still rendered and indexable ("you're the judge… Decision Packages"), so it is the one
+  // real public leak the audit found. Send it home to the current product. The vote page also carries a
+  // noindex backstop (app/rank/vote/layout.tsx) in case this redirect is ever bypassed.
+  if (path === "/vote" || path.startsWith("/vote/")) {
+    return go(req, "/", "redirect");
+  }
+
   // 2b) Retired sansxel "Vraelis AI" surface (the old marketing + app: glasses
   // hero, product, platform, learn, chat, account, pay, …). vraelis.com is
   // Vraelis Rank now, and `/` already serves Rank, so these stray routes just
@@ -178,7 +186,6 @@ export default function proxy(req: NextRequest) {
   let target = CLEAN_EXACT[path];
   if (!target) {
     if (path === "/app" || path.startsWith("/app/")) target = "/rank" + path;
-    else if (path === "/vote" || path.startsWith("/vote/")) target = "/rank" + path;
     else if (path === "/guides" || path.startsWith("/guides/")) target = "/rank" + path; // programmatic QA guides
     // Research articles live at /research/<slug>, so the section needs the PREFIX form as well as the exact
     // entry above. A section with only an exact mapping serves its index and 404s every article under it.

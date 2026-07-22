@@ -13,7 +13,7 @@ const acc = { color: "var(--acc-deep)" };
 // Named subprocessors. Keep this in sync with the vendors the product actually calls; it's
 // what B2B/enterprise buyers and a customer DPA reference.
 const SUBS: { name: string; purpose: string; data: string; region: string }[] = [
-  { name: "Anthropic", purpose: "AI model that runs each check", data: "The output you submit for a check", region: "United States" },
+  { name: "Anthropic", purpose: "AI model that runs each verification", data: "The deployment and claim you submit for a verification", region: "United States" },
   { name: "Supabase", purpose: "Database, storage, and authentication", data: "Account, checks, credits, content", region: "United States" },
   { name: "Vercel", purpose: "Application hosting and delivery", data: "Request and app traffic", region: "United States / global edge" },
   { name: "Cloudflare", purpose: "DNS, CDN, and DDoS protection", data: "Request metadata", region: "Global edge" },

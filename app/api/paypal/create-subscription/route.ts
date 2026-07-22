@@ -55,8 +55,11 @@ export async function POST(request: Request) {
     const subscription = await createPaypalSubscription({
       planId,
       userEmail: email,
-      returnUrl: `${APP_URL}/checkout/success?plan=${planKey}&cycle=${cycle}&provider=paypal`,
-      cancelUrl: `${APP_URL}/checkout?plan=${planKey}&cycle=${cycle}&paypal=canceled`,
+      // Subscription checkouts return to /billing/success (the live app route, same as Stripe via
+      // lib/return-urls.ts). The old /checkout/success was the retired dark-theme page that 404s on the app
+      // host (checkout is an APP_ROOT, so /checkout/success rewrites to a non-existent /rank/app path).
+      returnUrl: `${APP_URL}/billing/success?plan=${planKey}&cycle=${cycle}&provider=paypal`,
+      cancelUrl: `${APP_URL}/billing/cancelled?plan=${planKey}&cycle=${cycle}&paypal=canceled`,
       // custom_id lets the webhook match back to our user + plan without
       // needing an extra lookup.
       customId: JSON.stringify({ email, planKey, cycle }),

@@ -47,7 +47,7 @@ export default function PrivacyPage() {
         "Public reports are optional and off by default.",
         "The report owner can turn public sharing on or off at any time.",
         "A public report is read-only.",
-        "A public report does not expose your account email, billing data, API key secrets, raw participant identities, raw IP or device data, or private owner fields.",
+        "A public report does not expose your account email, billing data, API key secrets, raw identities of anyone involved in a run, raw IP or device data, or private owner fields.",
       ]} />
 
       <H>API keys and webhooks</H>

@@ -162,5 +162,46 @@ for (const [root, file] of [
   ok("reduced motion is respected", /prefers-reduced-motion/.test(authCss));
 }
 
+console.log("\n── retired product surfaces are not reachable or indexable ──");
+{
+  // /vote was the one retired human-eval page still rendered and indexable. It must now redirect home and
+  // NOT be rewritten into the rank tree.
+  ok("/vote redirects home (retired human evaluation)", /path === "\/vote"[\s\S]{0,80}"\/", "redirect"/.test(proxy));
+  ok("/vote is no longer rewritten to render", !/\/vote"[\s\S]{0,40}target = "\/rank"/.test(proxy));
+
+  // The dead-product legal pages (SMS lead-agent, desktop early-access) are removed from the build entirely.
+  for (const p of ["app/(vraelis)/v/privacy", "app/(vraelis)/v/terms", "app/(vraelis)/v/refunds", "app/(site)/privacy", "app/(site)/terms"]) {
+    ok(`removed dead-product legal page: ${p}`, !existsSync(`${p}/page.tsx`));
+  }
+  // The retired Decision Package public schema is gone.
+  ok("retired Decision Package public schema removed", !existsSync("public/schemas/decision-package-v2.json"));
+  // Stray root HTML snapshots (old sansxel/lead-agent) are gone.
+  for (const f of ["how.html", "pricing.html", "dashboard.html", "automates.html", "index.html"]) {
+    ok(`removed stray root snapshot: ${f}`, !existsSync(f));
+  }
+
+  // robots disallows the retired crawl surfaces.
+  const robots = readFileSync("app/robots.ts", "utf8");
+  ok("robots.ts disallows /vote", /disallow:[\s\S]{0,160}"\/vote"/.test(robots));
+  ok("robots.ts disallows /guides", /disallow:[\s\S]{0,160}"\/guides"/.test(robots));
+
+  // The retired sansxel (site) group has a noindex backstop, not just the proxy redirect.
+  const siteLayout = readFileSync("app/(site)/layout.tsx", "utf8");
+  ok("the (site) group layout sets noindex as a backstop", /robots:\s*\{\s*index:\s*false/.test(siteLayout));
+
+  // Research (current content) is now advertised in the sitemap; the app checkout success gap is repointed.
+  const sitemap = readFileSync("app/sitemap.ts", "utf8");
+  ok("sitemap includes /research and its published articles", /page\("\/research"/.test(sitemap) && /publishedArticles\(\)/.test(sitemap));
+  const paypal = readFileSync("app/api/paypal/create-subscription/route.ts", "utf8");
+  ok("PayPal subscription returns to the live /billing/success (not the dead /checkout/success)",
+    /returnUrl:[\s\S]{0,60}\/billing\/success/.test(paypal) && !/returnUrl:[\s\S]{0,60}\/checkout\/success/.test(paypal));
+
+  // The live legal pages no longer carry retired human-eval vocabulary.
+  const privacy = readFileSync("app/rank/privacy/page.tsx", "utf8");
+  ok("live privacy page no longer says 'participant'", !/participant/i.test(privacy));
+  const subs = readFileSync("app/rank/subprocessors/page.tsx", "utf8");
+  ok("subprocessors says 'verification', not 'check'", /each verification/.test(subs) && !/runs each check/.test(subs));
+}
+
 console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);
