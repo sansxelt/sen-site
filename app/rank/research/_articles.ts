@@ -225,13 +225,51 @@ const ARTICLES: Article[] = [
     slug: "from-failure-to-verified-repair",
     title: "From failure to verified repair",
     summary:
-      "The full loop: a claim, a discovered failure, evidence returned, a repair, a new deployment, and a second verdict.",
+      "A controlled production demonstration: a claim, a discovered failure, evidence returned, an incomplete repair that Vraelis rejected, and only then a verified one.",
     category: "Case studies",
-    date: "2026-07-21",
+    date: "2026-07-22",
     author: "Vraelis",
-    published: false,
+    published: true,
     body: [
-      { t: "note", text: "Unpublished until the loop has actually run end to end in production. This article is meant to show real evidence, a real repair prompt, and a real second verdict. Writing it from imagined output would make the most load-bearing article in the section the least trustworthy one." },
+      { t: "note", text: "This is a controlled production demonstration, not a customer story. We built a small notes app on purpose to carry a common bug, deployed it, and ran real paid verifications against it. Every verdict and every piece of evidence below is from an actual run. The app is ours; no external customer is involved." },
+
+      { t: "p", text: "The most common way a vibe-coded feature ships broken is not a crash. It is a success screen that is telling the truth about the payment and lying about the outcome. The checkout works, the receipt appears, and the thing you paid for was never granted. Nothing errors, every request returns 200, and clicking through it as a human feels correct, because the only place the truth shows up is a different page than the one that confirmed success." },
+
+      { t: "h2", text: "The guarantee" },
+      { t: "p", text: "We gave Vraelis one claim to prove against the deployed build, in plain language, the way a founder would state it." },
+      { t: "quote", text: "A customer can upgrade to Pro, receive access immediately, and retain Pro after signing out and signing back in." },
+      { t: "p", text: "Vraelis derived what that guarantee actually requires, planned a real browser journey to exercise it, and ran it against the live deployment. No test was authored by hand." },
+
+      { t: "h2", text: "The app said it worked" },
+      { t: "p", text: "The checkout recorded the payment and sent the customer to a page that read Payment successful, your Pro subscription is active. Every signal a person sees said it worked. But the account page, the one place the entitlement is actually read, still showed Free." },
+
+      { t: "h2", text: "First verdict: Failed, with evidence" },
+      { t: "p", text: "Vraelis completed the purchase, opened the account as the same customer, and checked the plan. It did not take the success screen as proof." },
+      { t: "code", label: "evidence", text: "Expected Plan to show \"Pro\"\n\"Pro\" was not present\nWhere it failed: after checkout, on the account page" },
+      { t: "p", text: "That is the whole bug, caught from the outside, as a user would hit it: payment recorded, entitlement never granted. Vraelis returned Failed and a repair prompt describing the symptom, not a guessed cause." },
+
+      { t: "h2", text: "The incomplete repair" },
+      { t: "p", text: "The fix looked obvious: grant Pro at checkout. That made immediate access work. A weaker testing product would have passed it there and moved on. So we re-ran the same guarantee against the new deployment." },
+      { t: "p", text: "It failed again, and this is the important part. The second run did not stop at the checkout. It confirmed Pro was granted, then signed out, signed back in as the same customer, and checked the account once more." },
+      { t: "code", label: "evidence", text: "Step: after signing out and signing back in\nExpected Plan to show \"Pro\"\n\"Pro\" was not present" },
+      { t: "p", text: "Pro had been written into a session that the sign-out cleared. It survived until the customer came back, and then it was gone. The guarantee said retain Pro after signing back in, and the app did not. Vraelis caught that the first repair was incomplete." },
+
+      { t: "h2", text: "The complete repair" },
+      { t: "p", text: "The real fix was to tie the entitlement to the account identity, not to a session cookie, so it is loaded on every visit and survives a fresh sign-in. We deployed that, and ran the guarantee a third time." },
+      { t: "h2", text: "Verified" },
+      { t: "p", text: "The third run granted Pro at checkout, confirmed it on the account, signed out, signed back in as the same customer, and confirmed Pro again. It returned Verified, with evidence for each step. The guarantee held, end to end, against the deployed build." },
+
+      { t: "h2", text: "The earlier records did not change" },
+      { t: "p", text: "This is the property that makes the loop worth trusting. The two Failed verdicts are permanent records. The repair did not edit them into a pass. Verified is a new, separate record, linked to the ones before it. The history reads exactly as it happened: a failure, an incomplete fix that was rejected, and then a verified one. Nothing was rewritten to look cleaner in hindsight." },
+      { t: "list", items: [
+        "Missing entitlement detected, and reported with evidence.",
+        "Incomplete repair rejected, because Pro did not persist after signing back in.",
+        "Complete repair independently verified, as a new record, with the earlier failures left intact.",
+      ] },
+
+      { t: "p", text: "That is the loop: an outcome you can state in a sentence, a decision backed by what the browser actually did, and a history you cannot quietly launder. The bug in this demonstration was planted on purpose, but it is the exact shape of the ones that ship for real, and it is invisible to unit tests, to a green success page, and to a human clicking through in a hurry." },
+
+      { t: "note", text: "Separately, during this work Vraelis once returned a Failed verdict that was not an application bug but a limitation in how the plan was generated, a success check that looked for text the page did not use. That was a tooling correction, not a defect in the app, and it is recorded honestly in the audit history as such. It is not counted among the three records above." },
     ],
   },
 ];
