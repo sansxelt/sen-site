@@ -11,54 +11,58 @@ export const metadata = ogMeta({
 // Illustrative CI gate. The endpoint shape is real (queue a run, poll it, read the decision); the exact
 // request/response envelope lives in the signed-in console as early access opens. Backtick-free inside the
 // template-literal consts so they sit safely in these strings.
-const GATE_YML = `# .github/workflows/preflight.yml
-name: Vraelis Preflight
+const GATE_YML = `# .github/workflows/verify.yml
+name: Vraelis Verification
 on: [deployment_status]
 jobs:
-  preflight:
+  verify:
     if: github.event.deployment_status.state == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
-      - run: node scripts/preflight-gate.mjs
+      - run: node scripts/verify-gate.mjs
         env:
           VRAELIS_API_KEY: \${{ secrets.VRAELIS_API_KEY }}
-          VRAELIS_APP_ID: \${{ vars.VRAELIS_APP_ID }}
+          VRAELIS_CLAIM: \${{ vars.VRAELIS_CLAIM }}
           PREVIEW_URL: \${{ github.event.deployment_status.target_url }}`;
 
-const GATE_NODE = `// scripts/preflight-gate.mjs -- block the deploy when a critical flow fails
+const GATE_NODE = `// scripts/verify-gate.mjs -- ship only when the deployed build keeps its promise.
 import { randomUUID } from "node:crypto";
 
-const API = "https://vraelis.com/api/preflight";
-const app = process.env.VRAELIS_APP_ID;
+const API = "https://vraelis.com/api/v1/verifications";
 const headers = {
   "content-type": "application/json",
   "x-api-key": process.env.VRAELIS_API_KEY,
   "idempotency-key": randomUUID(),
 };
 
-// 1. Queue a preflight run against the preview build.
-const { runId } = await fetch(API + "/apps/" + app + "/runs", {
+// 1. Create a verification against the preview build.
+const created = await fetch(API, {
   method: "POST", headers,
-  body: JSON.stringify({ deployment_url: process.env.PREVIEW_URL, flows: "critical" }),
-}).then((r) => r.json());
+  body: JSON.stringify({ deployment_url: process.env.PREVIEW_URL, claim: process.env.VRAELIS_CLAIM }),
+});
+if (!created.ok) { console.error("Vraelis request failed: " + created.status); process.exit(3); } // transport/config error
+const { verification_id } = await created.json();
 
-// 2. Poll until the run finishes.
-let report;
-do {
+// 2. Poll until a DECISION lands. While the run is going, decision is null; keep polling.
+let decision = null, out;
+for (let i = 0; i < 120 && decision === null; i++) {
   await new Promise((r) => setTimeout(r, 5000));
-  report = await fetch(API + "/runs/" + runId, { headers }).then((r) => r.json());
-} while (!["completed", "failed"].includes(report.run.state));
-
-// 3. Gate: anything but READY stops the release.
-if (report.run.decision !== "ready") {
-  console.error("Preflight " + report.run.decision + ": " + (report.run.summary.blockers || 0) + " blocker(s)");
-  report.issues.forEach((i) => console.error("  " + i.severity + ": " + i.title));
-  process.exit(1);
+  const res = await fetch(API + "/" + verification_id, { headers });
+  if (!res.ok) { console.error("Vraelis request failed: " + res.status); process.exit(3); }
+  out = await res.json();
+  decision = out.decision; // "verified" | "failed" | "blocked" | null
 }
-console.log("Preflight READY");`;
+
+// 3. Gate on the DECISION, never the run state. A finished run is not a pass; only "verified" ships.
+switch (decision) {
+  case "verified": console.log("Verified"); process.exit(0);
+  case "failed": console.error("Failed: the claim did not hold"); (out.failures || []).forEach((f) => console.error("  " + f.title)); process.exit(1);
+  case "blocked": console.error("Blocked: no verdict was reached"); process.exit(2);
+  default: console.error("No decision within the polling window"); process.exit(3);
+}`;
 
 function Code({ children, label = "shell" }: { children: string; label?: string }) {
   return (
@@ -70,7 +74,7 @@ function Code({ children, label = "shell" }: { children: string; label?: string 
 }
 
 const RETURNS: [string, string][] = [
-  ["The decision", "READY, NEEDS REVIEW, or BLOCKED, from one explainable rule, never a numeric score."],
+  ["The decision", "verified, failed, or blocked, from one explainable rule, never a numeric score."],
   ["Per-flow results", "Each approved flow with its pass or fail state and the step where it broke."],
   ["Issues with repro", "Each blocker with its requirement, expected and observed behavior, and exact reproduction steps."],
   ["Deterministic evidence", "Screenshots, step timelines, and sanitized console and network activity."],
@@ -107,7 +111,7 @@ export default function DevelopersPage() {
           <div className="sec-head" style={{ marginBottom: 20 }}>
             <p className="eyebrow">The CI gate</p>
             <h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)" }}>Block the deploy when a critical flow fails.</h2>
-            <p>When your preview build goes live, queue a preflight run against it, wait for the launch decision, and stop the release on anything but READY. One job, real evidence, no dashboard to watch.</p>
+            <p>When your preview build goes live, launch a verification against it, wait for the decision, and ship only when it is Verified. Failed and Blocked stop the release; a run that merely finished is not a pass. One job, real evidence, no dashboard to watch.</p>
           </div>
           {/*
             NOT AVAILABLE YET, and the page has to say so. API-key auth for these endpoints is built and

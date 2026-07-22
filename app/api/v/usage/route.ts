@@ -6,7 +6,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { getPlan } from "@/lib/v-db";
 import { apiAccessAllowed } from "@/lib/v-entitlements";
-import { apiUsage, recentDevEvents } from "@/lib/v-events";
+import { apiUsage, apiRequestCountsByPrefix, recentDevEvents } from "@/lib/v-events";
+import { listApiKeys } from "@/lib/v-api-keys";
 import { webhookStats } from "@/lib/v-webhooks";
 
 export const runtime = "nodejs";
@@ -16,12 +17,18 @@ export async function GET() {
   const email = session?.user?.email;
   if (!email) return NextResponse.json({ signedIn: false });
 
-  const [plan, usage, webhook, recent] = await Promise.all([
+  const [plan, usage, webhook, recent, keys] = await Promise.all([
     getPlan(email),
     apiUsage(email),
     webhookStats(email),
     recentDevEvents(email, 12),
+    listApiKeys(email),
   ]);
+
+  // Replace the sampled per-key breakdown with EXACT all-time counts for this owner's actual keys, so the
+  // per-key number the console shows is a true total (not "N of the last 2000 events"). The aggregate totals
+  // in `usage` are already exact count() queries; only byPrefix was a sample.
+  usage.byPrefix = await apiRequestCountsByPrefix(email, keys.map((k) => k.prefix));
 
   return NextResponse.json({
     signedIn: true,

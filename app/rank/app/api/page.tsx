@@ -15,29 +15,31 @@ type Usage = {
 };
 
 const ENDPOINT_LABEL: Record<string, string> = {
-  "runs.create": "Queue a Production Pass", "runs.get": "Get a run", "tests.create": "Queue a Production Pass",
+  "runs.create": "Launch a verification", "runs.get": "Get a run", "tests.create": "Launch a verification",
   "tests.get": "Get a run", "tests.export": "Export results", credits: "Check balance", other: "Other",
 };
 const DEV_EVENT_LABEL: Record<string, string> = {
   api_request_made: "API request", export_downloaded: "Export downloaded", webhook_delivered: "Webhook delivered",
-  webhook_failed: "Webhook failed", test_launched: "Production Pass queued", preflight_run_queued: "Production Pass queued", api_key_created: "API key created",
+  webhook_failed: "Webhook failed", test_launched: "Verification launched", preflight_run_queued: "Verification launched", api_key_created: "API key created",
 };
 const shortDate = (s: string | null) => { if (!s) return "-"; try { return new Date(s).toLocaleDateString("en-US", { month: "short", day: "numeric" }); } catch { return "-"; } };
 
-const CURL = `# Queue a Production Pass against a build, then read the launch decision.
-curl -X POST https://vraelis.com/api/preflight/apps/APP_ID/runs \\
+const CURL = `# 1. Create a verification: does the deployed build actually keep this promise?
+curl -X POST https://vraelis.com/api/v1/verifications \\
   -H "X-Api-Key: YOUR_KEY" -H "Content-Type: application/json" \\
   -H "Idempotency-Key: $(uuidgen)" \\
-  -d '{ "deployment_url": "https://your-preview.example.com", "flows": "critical" }'
-# -> { "runId": "run_...", "status": "queued" }
+  -d '{ "deployment_url": "https://your-preview.example.com",
+        "claim": "A customer can upgrade to Pro and still have it after signing back in" }'
+# -> { "verification_id": "vrf_...", "state": "running" }
 
-# Poll the run until it finishes, then gate your release on the decision.
-curl https://vraelis.com/api/preflight/runs/RUN_ID -H "X-Api-Key: YOUR_KEY"
-# -> { "run": { "state": "completed", "decision": "ready", "summary": {...} },
-#      "issues": [ { "severity": "critical", "title": "...", "repro": "..." } ] }
+# 2. Poll until a DECISION lands. While it is running the decision is null; keep polling.
+curl https://vraelis.com/api/v1/verifications/VERIFICATION_ID -H "X-Api-Key: YOUR_KEY"
+# -> { "state": "completed", "decision": "failed", "failures": [ { "title": "...", "reproduce": "..." } ] }
 
-# Anything but "ready" should stop the deploy. Evidence (screenshots, traces) is
-# fetched separately through a short-lived, owner-checked signed URL.`;
+# 3. Gate on the DECISION, never the run state:
+#      verified -> exit 0  (ship)     failed -> exit 1  (stop)     blocked -> exit 2  (stop)
+#    A finished run is NOT a pass. "state":"completed" with "decision":"failed" must STOP the deploy.
+#    Evidence (screenshots, traces) is fetched separately through a short-lived, owner-checked signed URL.`;
 
 // The three Preflight access levels a key can be created with, and the scopes each one grants. Named by
 // what the holder can DO, not by the scope strings, because that is the question someone is actually
@@ -46,7 +48,7 @@ type PreflightAccess = "none" | "read" | "launch";
 const PREFLIGHT_ACCESS: { id: PreflightAccess; label: string; hint: string; scopes: string[] }[] = [
   { id: "none", label: "No Preflight access", hint: "Tests and credits only. The safe default.", scopes: [] },
   { id: "read", label: "Read reports", hint: "Price a pass and read run reports. Cannot launch a run or spend anything.", scopes: ["preflight:preview", "preflight:run:read"] },
-  { id: "launch", label: "Launch runs", hint: "Everything above, plus launching a Production Pass. This key can spend your credits.", scopes: ["preflight:preview", "preflight:run:read", "preflight:run:create"] },
+  { id: "launch", label: "Launch runs", hint: "Everything above, plus launching a verification. This key can spend your credits.", scopes: ["preflight:preview", "preflight:run:read", "preflight:run:create"] },
 ];
 
 export default function ApiKeysPage() {
@@ -67,6 +69,8 @@ export default function ApiKeysPage() {
   // Optional daily spend limit for this key, in whole dollars. Empty means no limit.
   const [dailyLimit, setDailyLimit] = useState("");
   const [u, setU] = useState<Usage | null>(null);
+  // Which key's usage detail is expanded. Click a key to see its own request count and facts.
+  const [openKey, setOpenKey] = useState<string | null>(null);
 
   async function load() {
     const r = await fetch("/api/v/keys");
@@ -112,7 +116,7 @@ export default function ApiKeysPage() {
         <div>
           <p className="eyebrow">Developers</p>
           <h1 className="display">API &amp; webhooks</h1>
-          <p>API keys and signed webhooks for your Vraelis integration. Trigger Production Passes from CI, gate the deploy on the launch decision, and read the evidence back; usage analytics and webhook reliability are below.</p>
+          <p>API keys and signed webhooks for your Vraelis integration. Launch verifications from CI, gate the deploy on the decision, and read the evidence back; usage analytics and webhook reliability are below.</p>
         </div>
       </div>
 
@@ -156,12 +160,12 @@ export default function ApiKeysPage() {
         </div>
       </div>
 
-      {/* Integrate from CI: trigger a Production Pass and gate the deploy on the decision. */}
+      {/* Integrate from CI: launch a verification and gate the deploy on the decision. */}
       <div className="card" style={{ marginBottom: 24 }}>
         <div style={{ display: "flex", gap: 14, alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap" }}>
           <div style={{ flex: "1 1 320px", minWidth: 0 }}>
             <div style={cardHead}>Gate your deploys from CI</div>
-            <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 12px" }}>Queue a Production Pass against a preview build, wait for the launch decision, and stop the release on anything but READY. One job, real-browser evidence, no dashboard to watch.</p>
+            <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 12px" }}>Launch a verification against a preview build, wait for the decision, and ship only when it is Verified. Failed and Blocked stop the release; a run that merely finished is not a pass. One job, real-browser evidence, no dashboard to watch.</p>
             <a href="#ci-gate" className="btn">See the CI gate →</a>
           </div>
         </div>
@@ -226,19 +230,41 @@ export default function ApiKeysPage() {
       )}
       {keys.length > 0 && (
         <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-lg)", overflow: "hidden", background: "var(--bg-1)", marginBottom: 28, boxShadow: "var(--shadow-sm)" }}>
-          {keys.map((k, i) => (
-            <div key={k.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "14px 18px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)" }}>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: "var(--fg-1)" }}>{k.name || "Untitled key"}</span>
-                  <code style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-4)" }}>{k.prefix}…</code>
-                </div>
-                <div style={{ fontSize: 11.5, color: "var(--fg-4)", marginTop: 4 }}>Created {new Date(k.created_at).toLocaleDateString()}, {k.last_used ? `last used ${new Date(k.last_used).toLocaleDateString()}` : "never used"}{u?.usage?.byPrefix?.[k.prefix] ? `, ${u.usage.byPrefix[k.prefix].toLocaleString()} request${u.usage.byPrefix[k.prefix] === 1 ? "" : "s"}` : ""}</div>
-                {k.scopes?.length ? <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-5)", marginTop: 3 }}>{k.scopes.join("  ")}</div> : null}
+          {keys.map((k, i) => {
+            const reqs = u?.usage?.byPrefix?.[k.prefix] ?? 0;
+            const open = openKey === k.id;
+            const fmt = (s: string | null) => (s ? new Date(s).toLocaleDateString() : null);
+            return (
+            <div key={k.id} style={{ borderTop: i === 0 ? "none" : "1px solid var(--line-1)" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "14px 18px" }}>
+                {/* The whole row is the toggle: click a key to open its usage detail. */}
+                <button onClick={() => setOpenKey(open ? null : k.id)} aria-expanded={open} style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: "var(--fg-1)" }}>{k.name || "Untitled key"}</span>
+                    <code style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-4)" }}>{k.prefix}…</code>
+                    <span aria-hidden style={{ display: "inline-block", transition: "transform 120ms", transform: open ? "rotate(90deg)" : "none", color: "var(--fg-5)", fontSize: 11 }}>▸</span>
+                  </div>
+                  <div style={{ fontSize: 11.5, color: "var(--fg-4)", marginTop: 4 }}>Created {fmt(k.created_at)}, {k.last_used ? `last used ${fmt(k.last_used)}` : "never used"}{reqs ? `, ${reqs.toLocaleString()} request${reqs === 1 ? "" : "s"}` : ""}</div>
+                  {k.scopes?.length ? <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-5)", marginTop: 3 }}>{k.scopes.join("  ")}</div> : null}
+                </button>
+                <button onClick={() => revoke(k.id)} className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5, gap: 6 }}><Ic d={I.slash} size={12} sw={2.2} />Revoke</button>
               </div>
-              <button onClick={() => revoke(k.id)} className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5, gap: 6 }}><Ic d={I.slash} size={12} sw={2.2} />Revoke</button>
+              {open && (
+                <div style={{ padding: "0 18px 16px" }}>
+                  <div style={{ display: "flex", gap: 28, flexWrap: "wrap", padding: "12px 14px", background: "var(--bg-2)", borderRadius: "var(--r-sm)", border: "1px solid var(--line-1)" }}>
+                    {[["Requests (all time)", reqs.toLocaleString()], ["Last request", k.last_used ? fmt(k.last_used)! : "Never used"], ["Created", fmt(k.created_at)!]].map(([l, v]) => (
+                      <div key={l} style={{ minWidth: 0 }}>
+                        <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-5)" }}>{l}</div>
+                        <div style={{ fontSize: 17, fontWeight: 600, color: "var(--fg-1)", marginTop: 3 }}>{v}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p style={{ fontSize: 11, color: "var(--fg-5)", margin: "8px 2px 0" }}>Counts every call this key made, including verifications launched from CI. {reqs === 0 ? "This key has not been used yet." : null}</p>
+                </div>
+              )}
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -282,7 +308,7 @@ export default function ApiKeysPage() {
                   <div className="stat"><div className="stat__l">Last delivery</div><div className="stat__v tnum" style={{ fontSize: 20 }}>{shortDate(u.webhook.lastAt)}</div></div>
                 </div>
               ) : (
-                <div className="empty" style={{ marginBottom: 14 }}><EmptyIcon d={I.swap} /><h3>No webhooks yet</h3><p>Add an endpoint below to receive a signed run.completed event the moment a Production Pass finishes. Delivery success, failures, and retries show here.</p></div>
+                <div className="empty" style={{ marginBottom: 14 }}><EmptyIcon d={I.swap} /><h3>No webhooks yet</h3><p>Add an endpoint below to receive a signed run.completed event the moment a verification finishes. Delivery success, failures, and retries show here.</p></div>
               )}
             </>
           )}
@@ -315,12 +341,12 @@ export default function ApiKeysPage() {
       )}
 
       {/* docs. id="ci-gate" is the target of the "See the CI gate" button above: the CURL below IS the CI
-          integration (queue a Production Pass, poll it, stop the deploy on anything but READY). */}
+          integration (launch a verification, poll for the decision, ship only when it is Verified). */}
       <div id="ci-gate" style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12, marginTop: 28, scrollMarginTop: 80 }}>Quickstart: gate a deploy from CI</div>
       <div className="codebar"><i /><i /><i /><span>shell</span></div>
       <pre className="codeblock"><code>{CURL}</code></pre>
       <p style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-5)", marginTop: 14, lineHeight: 1.6 }}>
-        Production Passes triggered over the API draw on the same account balance as the web app. Auth via <code style={{ color: "var(--fg-3)" }}>X-Api-Key</code> or <code style={{ color: "var(--fg-3)" }}>Authorization: Bearer</code>.
+        Verifications launched over the API draw on the same account balance as the web app. Auth via <code style={{ color: "var(--fg-3)" }}>X-Api-Key</code> or <code style={{ color: "var(--fg-3)" }}>Authorization: Bearer</code>.
       </p>
 
       <div id="webhooks" style={{ scrollMarginTop: 80 }}><WebhooksSection /></div>

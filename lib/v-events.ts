@@ -218,6 +218,27 @@ export async function apiUsage(userId: string): Promise<ApiUsage> {
   } catch { return empty; }
 }
 
+// EXACT all-time request count per key prefix. The byPrefix map in apiUsage() is derived from a recent
+// sample (the last 2000 events), so it can undercount a busy key; this counts each key's events directly with
+// an indexed count() query. One query per key, and a user has a handful of keys, so it stays cheap while
+// giving a number that can honestly be labelled all-time. Counts BOTH request event types, same as apiUsage.
+export async function apiRequestCountsByPrefix(userId: string, prefixes: string[]): Promise<Record<string, number>> {
+  const out: Record<string, number> = {};
+  if (!userId || !isDatabaseConfigured() || prefixes.length === 0) return out;
+  try {
+    const s = getSupabaseAdminClient();
+    const uid = userId.trim().toLowerCase();
+    const TYPES = ["api_request_made", "api_key_used"];
+    await Promise.all(prefixes.filter(Boolean).map(async (p) => {
+      const { count, error } = await s.from("v_events" as never)
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", uid).in("event_type", TYPES as never).eq("metadata->>prefix", p);
+      if (!error) out[p] = count ?? 0;
+    }));
+    return out;
+  } catch { return out; }
+}
+
 // Recent developer-relevant events for an owner (API, exports, webhooks, launches).
 export async function recentDevEvents(userId: string, limit = 12): Promise<EventRow[]> {
   if (!userId || !isDatabaseConfigured()) return [];
