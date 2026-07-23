@@ -47,7 +47,7 @@ curl https://vraelis.com/api/v1/verifications/VERIFICATION_ID -H "X-Api-Key: YOU
 type PreflightAccess = "none" | "read" | "launch";
 const PREFLIGHT_ACCESS: { id: PreflightAccess; label: string; hint: string; scopes: string[] }[] = [
   { id: "none", label: "No Preflight access", hint: "Tests and credits only. The safe default.", scopes: [] },
-  { id: "read", label: "Read reports", hint: "Price a pass and read run reports. Cannot launch a run or spend anything.", scopes: ["preflight:preview", "preflight:run:read"] },
+  { id: "read", label: "Read reports", hint: "Price a verification and read run reports. Cannot launch a run or spend anything.", scopes: ["preflight:preview", "preflight:run:read"] },
   { id: "launch", label: "Launch runs", hint: "Everything above, plus launching a verification. This key can spend your credits.", scopes: ["preflight:preview", "preflight:run:read", "preflight:run:create"] },
 ];
 
@@ -308,7 +308,7 @@ export default function ApiKeysPage() {
                   <div className="stat"><div className="stat__l">Last delivery</div><div className="stat__v tnum" style={{ fontSize: 20 }}>{shortDate(u.webhook.lastAt)}</div></div>
                 </div>
               ) : (
-                <div className="empty" style={{ marginBottom: 14 }}><EmptyIcon d={I.swap} /><h3>No webhooks yet</h3><p>Add an endpoint below to receive a signed run.completed event the moment a verification finishes. Delivery success, failures, and retries show here.</p></div>
+                <div className="empty" style={{ marginBottom: 14 }}><EmptyIcon d={I.swap} /><h3>No webhooks yet</h3><p>Add an endpoint below to receive a signed verification.completed event the moment a verification finishes. Delivery success, failures, and retries show here.</p></div>
               )}
             </>
           )}

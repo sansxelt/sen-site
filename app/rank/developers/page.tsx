@@ -76,7 +76,7 @@ function Code({ children, label = "shell" }: { children: string; label?: string 
 const RETURNS: [string, string][] = [
   ["The decision", "verified, failed, or blocked, from one explainable rule, never a numeric score."],
   ["Per-flow results", "Each approved flow with its pass or fail state and the step where it broke."],
-  ["Issues with repro", "Each blocker with its requirement, expected and observed behavior, and exact reproduction steps."],
+  ["Issues with repro", "Each critical failure with its requirement, expected and observed behavior, and exact reproduction steps."],
   ["Deterministic evidence", "Screenshots, step timelines, and sanitized console and network activity."],
   ["Private artifacts", "Screenshots and traces live in a private bucket, reached only by a short-lived signed URL."],
   ["A rerun diff", "After a fix, the same failed check reruns and reports whether the regression is closed."],
@@ -97,7 +97,7 @@ export default function DevelopersPage() {
           <p className="lead-copy" style={{ margin: "0 auto 16px", textAlign: "center", maxWidth: 720 }}>
             Trigger a real-browser preflight from CI, gate the deploy on the launch decision, and pull structured evidence back. The decision is explainable, the evidence is deterministic, and every artifact stays private behind a short-lived signed URL.
           </p>
-          <p style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: "0 auto 22px" }}>queue a run against the preview build, then block the release when a critical flow fails</p>
+          <p style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: "0 auto 22px" }}>queue a run against the preview build, then stop the release when a critical flow fails</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Check your application <span aria-hidden>→</span></Link>
             <Link href="/how-it-works" className="btn btn--ghost btn--lg">How it works</Link>
@@ -110,7 +110,7 @@ export default function DevelopersPage() {
         <div className="wrap" style={{ maxWidth: 820 }}>
           <div className="sec-head" style={{ marginBottom: 20 }}>
             <p className="eyebrow">The CI gate</p>
-            <h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)" }}>Block the deploy when a critical flow fails.</h2>
+            <h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)" }}>Stop the deploy when a critical flow fails.</h2>
             <p>When your preview build goes live, launch a verification against it, wait for the decision, and ship only when it is Verified. Failed and Blocked stop the release; a run that merely finished is not a pass. One job, real evidence, no dashboard to watch.</p>
           </div>
           {/*
@@ -142,7 +142,7 @@ export default function DevelopersPage() {
       <section className="section">
         <div className="wrap">
           <div className="sec-head">
-            <p className="eyebrow">The Production Pass, as data</p>
+            <p className="eyebrow">The verification, as data</p>
             <h2 className="display">One run, one <span className="em">structured decision</span>.</h2>
             <p>Every run returns the same shape, whether you read it in the app, over the API, or in CI. It is built for a machine to act on, not a human to interpret.</p>
           </div>
@@ -170,7 +170,7 @@ export default function DevelopersPage() {
             <div>
               <p className="eyebrow">Deterministic and explainable</p>
               <h2 className="display" style={{ fontSize: "clamp(1.5rem, 2.6vw, 2rem)", marginBottom: 12 }}>A gate you can trust.</h2>
-              <p className="lead-copy" style={{ marginBottom: 12 }}>The pass or fail of every flow is what the browser actually did, not a model&apos;s opinion. The launch decision follows one rule you can read: any critical flow that fails blocks the launch. When Vraelis suggests a cause, it is labeled as interpretation and never counts as the gate.</p>
+              <p className="lead-copy" style={{ marginBottom: 12 }}>The pass or fail of every flow is what the browser actually did, not a model&apos;s opinion. The launch decision follows one rule you can read: any critical flow that fails means the verification is Failed. When Vraelis suggests a cause, it is labeled as interpretation and never counts as the gate.</p>
               <Link href="/how-it-works" className="btn btn--ghost" style={{ fontSize: 12.5 }}>See the decision rule →</Link>
             </div>
           </div>

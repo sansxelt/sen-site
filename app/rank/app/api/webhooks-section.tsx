@@ -63,7 +63,7 @@ export function WebhooksSection() {
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 6 }}>
         <h2 className="display" style={{ fontSize: "clamp(1.4rem, 2.4vw, 1.8rem)" }}>Webhooks</h2>
       </div>
-      <p className="lead-copy" style={{ marginBottom: 18 }}>Get a signed <code style={{ fontFamily: "var(--font-code, monospace)", fontSize: 13 }}>test.completed</code> event pushed to your app the moment a test fills. Then pull results from the export endpoint. <Link href="/developers#webhooks" style={{ color: "var(--acc-deep)" }}>Docs →</Link></p>
+      <p className="lead-copy" style={{ marginBottom: 18 }}>Get a signed <code style={{ fontFamily: "var(--font-code, monospace)", fontSize: 13 }}>verification.completed</code> event pushed to your app the moment a verification finishes. Then pull results from the export endpoint. <Link href="/developers#webhooks" style={{ color: "var(--acc-deep)" }}>Docs →</Link></p>
 
       {fresh && (
         <div className="card" style={{ marginBottom: 18, borderColor: "var(--acc-line)", background: "var(--acc-soft)" }}>
