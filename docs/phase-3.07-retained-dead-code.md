@@ -1,82 +1,48 @@
-# Phase 3.07 — retained dead code (deferred to the v-db / v-workspace extraction pass)
+# Phase 3.07 retained dead code — EXTRACTION COMPLETE
 
-Phase 3.07 **fully retired the human-evaluation ("Vraelis Rank") product**: every public
-route, authenticated route, API, webhook behavior, feature flag, navigation entry, and
-background job that reached human evaluation is gone (proven by `npm run human-eval-retired:test`).
+The v-db / v-workspace extraction this file used to defer has been **executed** (three
+commits: the v-workspace excision, the v-db excision + `v-intelligence`/`v-analytics`
+deletion, and this final lib sweep). The retired human-evaluation cluster is gone:
 
-It **did not** delete every historical line of evaluation code. Removing the last cluster
-requires surgery on two *shared, current-product* modules (`lib/v-db.ts`, `lib/v-workspace.ts`),
-which was **deliberately deferred** — see [the follow-up pass](#follow-up-pass) below. This file
-documents exactly what remains, why, and the proof that it is unreachable at runtime.
+- `lib/v-db.ts` now contains **only** the current billing/subscription/ledger half
+  (`ensureProfile`, `getPlan`, `recordPackPurchase`, `setSubscription`,
+  `getSubscription`, `recordInvoiceGrant`, `listRecentLedger`, `VSubscription`).
+- `lib/v-workspace.ts` lost the dead `sharedProjectView` cluster (`SharedEval`,
+  `projectSharedEvals`, `SharedProjectView`, `sharedProjectView`) and its
+  `getReport`/`v-intelligence`/`v-analytics` imports. All teams/orgs/membership/
+  invites/roles/transfer machinery is untouched.
+- All seven cluster libraries are deleted: `v-stats`, `v-ai`, `v-themes`,
+  `v-intelligence`, `v-analytics`, `v-content-policy`, `v-sources`.
 
-Historical DB rows and `sql/*` migrations are intentionally preserved — this was a **code**
-retirement, not a data deletion.
+Historical DB rows and `sql/*` migrations remain intentionally preserved — this was a
+**code** retirement, not a data deletion. `npm run human-eval-retired:test` remains the
+standing unreachability gate.
 
-## Retained libraries (7) — dead, kept only because the two shared modules' retired halves import them
+## Corrections found by the pre-extraction verification (why the old map was not followed verbatim)
 
-| Library | Kept because it is imported by | It imports |
-|---|---|---|
-| `lib/v-stats.ts` | `v-intelligence` | (leaf math) |
-| `lib/v-ai.ts` | `v-db` (retired half — `ReportAnalysis` type) | — |
-| `lib/v-themes.ts` | `v-db` (retired half — `ReportTheme` type) | `v-content-policy` |
-| `lib/v-intelligence.ts` | `v-analytics`, `v-workspace` (retired half) | `v-stats` |
-| `lib/v-analytics.ts` | `v-workspace` (retired half) | `v-sources`, `v-intelligence` |
-| `lib/v-content-policy.ts` | `v-themes` | — |
-| `lib/v-sources.ts` | `v-analytics` | — |
+1. **`recordPackPurchase` is LIVE** and was missing from the old map's current-half
+   list — the Stripe webhook loads it via *dynamic* import
+   (`app/api/stripe/webhook/route.ts`), so deleting it would have passed type-check and
+   failed only at runtime. It is kept.
+2. **The old map's v-workspace "retired half" was wrong on 2 of 3 entries**:
+   `resolveWorkspaceSelection` (team page, billing page, `GET /api/v/workspace/available`)
+   and `workspaceProjectSummaries` (team page non-owner branch) are LIVE and kept.
+   Only `sharedProjectView` was dead.
+3. The v-db retired half was **~26 exports, not 6** — the extra twenty
+   (`createTest`…`dataInsights`, `OPTION_LETTERS`, the `VTest`/`VOption`/`VReport`
+   types) were only internally consistent removed as one unit.
 
-These seven form a **closed cluster**: they reference only each other and the two retained
-modules' retired halves. No file under `app/api/preflight/**`, `app/api/v1/verifications/**`,
-`lib/preflight/**`, or `worker/preflight/**` imports any of them.
+## Known remaining oddities (documented, deliberately NOT removed in this pass)
 
-## Retained functions inside the two shared modules
-
-`lib/v-db.ts` and `lib/v-workspace.ts` are **kept** — their *current* halves are load-bearing for
-the live product — but each carries a dead "retired half" that will be excised in the follow-up.
-
-### `lib/v-db.ts` — retired half (dead)
-`getTestWithOptions` (L106), `recordJudgment` (L195), `completeTest` (L231), `launchTest` (L339),
-`recordVote` (L392), `getReport` (L437). These are the Rank test / vote / report path; they import
-`v-ai` and `v-themes`. In Phase 3.07 the reputation-weighting was stripped from `completeTest` and
-its `test.completed` webhook trigger removed (Sections A + B), leaving them inert.
-
-**Current half — KEPT and depended on (do NOT touch in the follow-up):** `getPlan`,
-`setSubscription`, `getSubscription`, `recordInvoiceGrant`, `listRecentLedger`, `ensureProfile`
-(billing / subscription / ledger — used by `app/api/preflight/apps`, `app/api/v/usage`,
-`lib/preflight/entitlements-v1`, `lib/v-subscriptions`, `lib/v-api-usage`).
-
-### `lib/v-workspace.ts` — retired half (dead)
-`resolveWorkspaceSelection` (L415), `workspaceProjectSummaries` (L438), `sharedProjectView` (L633).
-The eval-project sharing path; the only current→`v-intelligence`/`v-analytics` edges. Their callers
-(the `page.tsx` humanEval block + the retired `projects`/`data`/`shared` routes) were removed in 3.07.
-
-**Current half — KEPT and depended on:** `hasAtLeastRole`, `membershipFor`,
-`getOrCreatePersonalWorkspace` and the teams/roles machinery (used across preflight + `v1/verifications`).
-
-## Proof it is runtime-unreachable
-
-1. The cluster's only entry points from outside were the retired **routes / APIs / flag** (vote,
-   test, check, screening, project, sandbox, data surfaces + the `humanEval` gate). **All deleted
-   in Section C.**
-2. Every caller chain into the dead `v-db`/`v-workspace` functions is severed: `completeTest` ←
-   `recordVote` ← the vote routes (gone); `getReport`/`getTestWithOptions` ← report/tests routes
-   (gone); the workspace-eval functions ← the `page.tsx` humanEval block (removed).
-3. `scripts/preflight-human-eval-retired-verify.ts` **point 7** asserts, on every commit, that the
-   current verification stack (`app/api/preflight`, `app/api/v1/verifications`, `lib/preflight`,
-   `worker/preflight`) imports **none** of the seven dead libs and calls **none** of the dead
-   report/vote functions. It is wired as `npm run human-eval-retired:test`.
-
-## Follow-up pass
-
-**Name:** "v-db / v-workspace extraction — delete the retained evaluation cluster."
-**Precondition:** its own green baseline + a dedicated review (this touches the 46KB shared `v-db`
-billing module and the shared `v-workspace` teams module — the highest-risk edit in the cleanup).
-**Steps:**
-1. Split `lib/v-db.ts`: remove the retired half (the six functions above + the `v-ai`/`v-themes`
-   imports), keeping the billing/subscription/ledger half exactly.
-2. Excise `lib/v-workspace.ts`'s three retired functions + the `v-intelligence`/`v-analytics` imports.
-3. The seven libs (`v-stats`, `v-ai`, `v-themes`, `v-intelligence`, `v-analytics`, `v-content-policy`,
-   `v-sources`) then reach zero importers — delete them (empirical loop, same as 3.07 Section C).
-4. Re-run the full kept suite + `human-eval-retired:test` + a production build + a fresh-checkout proof.
-
-This is naturally adjacent to Phase 3.08 ("remove remaining dead API namespaces") but is a distinct,
-separately-reviewed unit — **not** part of 3.07.
+- `lib/v-workspace.ts` still carries zero-caller orphans kept to stay surgical:
+  `reportAccessRole`, the project-member management set (`listProjectMembers`,
+  `inviteProjectMember`, `resendProjectInvite`, `changeProjectMemberRole`,
+  `revokeProjectMember`, `managedProjectMeta` and related role helpers/constants).
+  Candidates for a later sweep, none imports retired code.
+- `workspaceProjectSummaries` is a Rank-data remnant on a **live** surface: it reads
+  `v_tests.votes_valid` and renders eval rollups on `/rank/app/team`. Retiring it means
+  editing the live team page — a separate reviewed change (Phase 4+ UI work).
+- Pre-existing dead links: the live team UI and accepted project invites still point at
+  `/shared/projects/{id}`, deleted in 3.07 (404s today). A team-page fix belongs to the
+  UI reframe, not this extraction.
+- `lib/v-db.ts`'s header still says "Vraelis Rank" — terminology sweep is Phase 4.
