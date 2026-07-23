@@ -55,7 +55,8 @@ ok("an escapeHtml helper exists and is used widely", (email.match(/escapeHtml\(/
 console.log("\n── links point at the right host ──");
 // App actions belong on app.vraelis.com; public/marketing on vraelis.com. A verify CTA that points at the
 // marketing host would dump a signed-in user out of the product.
-ok("the verify CTA points at the app host", /https:\/\/app\.vraelis\.com\/app/.test(email));
+ok("the verify CTA points at the app host root (no legacy /app suffix)",
+  /https:\/\/app\.vraelis\.com"/.test(email) && !/https:\/\/app\.vraelis\.com\/app(\/|")/.test(email));
 ok("public references point at the marketing host", /https:\/\/vraelis\.com\/(how-it-works|pricing|privacy|terms)/.test(email));
 
 console.log("\n── social embeds carry the current headline, not the retired one ──");

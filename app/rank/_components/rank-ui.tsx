@@ -24,8 +24,8 @@ const PUBLIC_LINKS = [
 ];
 
 // The signed-in product: Vraelis is the production layer for AI-built software. The legacy AI-output checker
-// is deliberately NOT here (it lives flag-gated at /legacy/checks); Projects / Analytics / Data quality
-// belonged to that product and are out of the primary navigation with it.
+// is retired and deleted (old /app/checks links redirect home); Projects / Analytics / Data quality
+// belonged to that product and left with it.
 // The product is ONE action, "verify this outcome", and the navigation should say that rather than listing
 // six internal systems as equals. Passes, runs, contracts, issues and reports are lifecycle stages INSIDE a
 // verification; putting them in the sidebar asked every user to learn the internal architecture before they

@@ -226,8 +226,8 @@ if (fail > 0) process.exit(1);
   const proxySrc = require("node:fs").readFileSync("proxy.ts", "utf8");
   ok("main host passes /api/* through untouched (NextAuth + preflight API must never redirect)",
     proxySrc.indexOf('path.startsWith("/api/")') < proxySrc.indexOf("isAppPath(path) && !path.startsWith"));
-  ok("retired checker links survive: /app/checks/* -> /legacy/checks/*",
-    legacyToNew("/app/checks/abc") === "/legacy/checks/abc" && legacyToNew("/app/checks") === "/legacy/checks");
+  ok("retired checker links land home: /app/checks[/*] -> / (the checker surface is deleted)",
+    legacyToNew("/app/checks/abc") === "/" && legacyToNew("/app/checks") === "/");
 }
 console.log(`\n${pass}/${pass + fail} passed (final)`);
 process.exit(fail ? 1 : 0);

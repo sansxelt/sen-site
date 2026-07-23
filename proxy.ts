@@ -161,8 +161,8 @@ export default function proxy(req: NextRequest) {
 
   // 2a') Human evaluation is a RETIRED product (different buyer, workflow, vocabulary, data model). /vote was
   // its last surface still rendered and indexable ("you're the judge… Decision Packages"), so it is the one
-  // real public leak the audit found. Send it home to the current product. The vote page also carries a
-  // noindex backstop (app/rank/vote/layout.tsx) in case this redirect is ever bypassed.
+  // real public leak the audit found. Send it home to the current product. The vote pages themselves were
+  // deleted in the retirement (app/rank/vote is gone); this redirect is what keeps old links off a 404.
   if (path === "/vote" || path.startsWith("/vote/")) {
     return go(req, "/", "redirect");
   }
@@ -176,10 +176,11 @@ export default function proxy(req: NextRequest) {
     return go(req, "/", "redirect");
   }
 
-  // 2c) Legacy AI-output checker: the checker moved out of the primary product to /app/legacy/checks
-  // (flag-gated there). Every historical /app/checks link (emails, bookmarks, share pages) redirects in.
+  // 2c) Legacy AI-output checker: RETIRED and deleted (the flag-gated /app/legacy/checks surface is gone).
+  // Every historical /app/checks link (emails, bookmarks, share pages) redirects home like the other
+  // retired products above.
   if (path === "/app/checks" || path.startsWith("/app/checks/")) {
-    return go(req, "/app/legacy/checks" + path.slice("/app/checks".length), "redirect");
+    return go(req, "/", "redirect");
   }
 
   // 3) Clean public paths -> internal /rank routes (rewrite; URL stays clean).

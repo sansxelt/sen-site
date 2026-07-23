@@ -1,13 +1,12 @@
 import { redirect } from "next/navigation";
 
-export default function LegacySignInPage({
+export default async function LegacySignInPage({
   searchParams,
 }: {
-  searchParams: Record<string, string | string[] | undefined>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const callbackUrl = Array.isArray(searchParams.callbackUrl)
-    ? searchParams.callbackUrl[0]
-    : searchParams.callbackUrl;
+  const { callbackUrl: raw } = await searchParams;
+  const callbackUrl = Array.isArray(raw) ? raw[0] : raw;
 
   const target = callbackUrl
     ? `/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`

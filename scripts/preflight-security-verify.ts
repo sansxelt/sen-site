@@ -10,7 +10,7 @@
 //                   never touches storage_path in code.
 //   4. SSRF       — unsafeHttpsUrlReason gates the runs route, the rerun route, and the smoke script.
 //   5. INTERNAL   — seed/rerun drivers hard-require PREFLIGHT_SEED_RUN=1 + check PREFLIGHT_SEED_ALLOW_PROD;
-//                   the legacy checker is flag-gated; the worker Docker build context excludes .env files.
+//                   the retired legacy checker stays deleted; the worker Docker build context excludes .env files.
 //   6. SECRETS    — the worker redaction SECRET_KEY regex covers the sensitive key families, and no file
 //                   under worker/preflight passes process.env values into console logging.
 //
@@ -292,8 +292,8 @@ console.log("\n── ssrf: unsafeHttpsUrlReason called at each navigation entry
   }
 }
 
-// ══ 5. INTERNAL TOOLS — seed drivers, legacy checker, worker image ══════════════════════════════════════
-console.log("\n── internal tools: opt-in env gates + prod safeguard + flag gate + docker context hygiene ──");
+// ══ 5. INTERNAL TOOLS — seed drivers, retired checker, worker image ═════════════════════════════════════
+console.log("\n── internal tools: opt-in env gates + prod safeguard + retired checker gone + docker context hygiene ──");
 {
   for (const f of ["scripts/preflight-seed-run.ts", "scripts/preflight-fixture-rerun.ts"]) {
     const src = stripComments(read(f));
@@ -301,8 +301,7 @@ console.log("\n── internal tools: opt-in env gates + prod safeguard + flag g
     ok(`${f}: checks PREFLIGHT_SEED_ALLOW_PROD before touching a production runtime`, /process\.env\.PREFLIGHT_SEED_ALLOW_PROD\s*!==\s*"1"/.test(src));
   }
 
-  const layout = "app/rank/app/legacy/checks/layout.tsx";
-  ok(`${layout}: gates on legacyCheckerEnabled()`, /if\s*\(\s*legacyCheckerEnabled\s*\(\s*\)\s*\)/.test(stripComments(read(layout))));
+  ok("legacy checker removed (app/rank/app/legacy gone)", !existsSync(path.join(ROOT, "app/rank/app/legacy")));
 
   // The worker Dockerfile builds with the REPO ROOT as its context (railway.toml dockerfilePath +
   // Dockerfile "COPY . ." from the root), so the root .dockerignore is the one that applies.

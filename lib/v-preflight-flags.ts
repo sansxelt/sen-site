@@ -1,12 +1,11 @@
-// Feature flags for the Vraelis Preflight pivot (production layer for AI-built software). The old
-// AI-output checker keeps working; Preflight ships dark until each phase is verified. Server flags gate
-// route ACCESS (the real security boundary); the NEXT_PUBLIC_ flag only controls nav VISIBILITY so
-// internal testers can see the surface without exposing it publicly.
+// Feature flags for the Vraelis Preflight pivot (production layer for AI-built software). Preflight ships
+// dark until each phase is verified. Server flags gate route ACCESS (the real security boundary); the
+// NEXT_PUBLIC_ flag only controls nav VISIBILITY so internal testers can see the surface without exposing
+// it publicly. (The old AI-output checker and its VRAELIS_LEGACY_CHECKER_ENABLED flag are retired.)
 //
 //   VRAELIS_PREFLIGHT_ENABLED=1          publicly enabled (later phases)
 //   VRAELIS_PREFLIGHT_INTERNAL_ONLY=1    internal-only (owner/allowlist) — Phase 1 default
 //   NEXT_PUBLIC_VRAELIS_PREFLIGHT=1      show the Applications nav item (client-readable)
-//   VRAELIS_LEGACY_CHECKER_ENABLED       (default on) keep the AI-output checker visible
 //   VRAELIS_RUNS_DISABLED=1              kill switch: pause NEW runs only (routes 503); history stays visible
 
 const on = (v: string | undefined) => v === "1" || v === "true";
@@ -18,12 +17,6 @@ export function preflightEnabled(): boolean {
 }
 export function preflightInternalOnly(): boolean {
   return on(process.env.VRAELIS_PREFLIGHT_INTERNAL_ONLY) && !on(process.env.VRAELIS_PREFLIGHT_ENABLED);
-}
-
-// The legacy AI-output checker stays available unless explicitly turned off (so the pivot never breaks
-// the shipping product mid-development).
-export function legacyCheckerEnabled(): boolean {
-  return process.env.VRAELIS_LEGACY_CHECKER_ENABLED !== "0";
 }
 
 // API RUNTIME surface flag. The API-runtime customer surface is a LIVE, generally-available product: it is

@@ -217,7 +217,7 @@ export function welcomeHtml(name?: string) {
       <li>It derives what must be checked and runs it in a real browser.</li>
       <li>Get verified, failed, or blocked, with evidence and a repair prompt.</li>
     </ul>
-    <a href="https://app.vraelis.com/app" class="vrl-btn" style="${BTN_STYLE}">Verify an outcome</a>
+    <a href="https://app.vraelis.com" class="vrl-btn" style="${BTN_STYLE}">Verify an outcome</a>
     <span class="vrl-btn-spacer">&nbsp;</span>
     <a href="https://vraelis.com/how-it-works" class="vrl-btn" style="${BTN_LIGHT}">How it works</a>
     <div style="${NOTE_STYLE}">
@@ -349,7 +349,7 @@ export async function sendWelcomeEmail(email: string, name?: string) {
 // Activation nudge: sent once by the lifecycle cron (lib/v-lifecycle.ts) to accounts that signed up but
 // haven't run their first verification. One job: get them to run their first one.
 function checkActivationHtml(): string {
-  const run = "https://app.vraelis.com/app";
+  const run = "https://app.vraelis.com";
   const learn = "https://vraelis.com/how-it-works";
   return `<!doctype html><html><body style="margin:0;background:#FAF8F4;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#1a1a1a">
     <div style="max-width:520px;margin:0 auto;padding:32px 24px">
@@ -381,7 +381,7 @@ export async function sendCheckActivationEmail(email: string) {
 
 function lowCreditsHtml(remaining: number): string {
   const plans = "https://app.vraelis.com/plans";
-  const run = "https://app.vraelis.com/app";
+  const run = "https://app.vraelis.com";
   const out = remaining <= 0;
   const left = remaining === 1 ? "1 credit" : `${remaining} credits`;
   const headline = out ? "Your included balance is used up." : `You're down to ${left}.`;
@@ -417,7 +417,7 @@ export async function sendLowCreditsEmail(email: string, remaining: number) {
 }
 
 function winbackHtml(remaining: number): string {
-  const run = "https://app.vraelis.com/app";
+  const run = "https://app.vraelis.com";
   return `<!doctype html><html><body style="margin:0;background:#FAF8F4;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#1a1a1a">
     <div style="max-width:520px;margin:0 auto;padding:32px 24px">
       <div style="font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:20px;color:#0d5c46;margin-bottom:24px">Vraelis</div>

@@ -10,10 +10,12 @@ export const APP_ROOTS = [
   // The product vocabulary. "systems" and "verifications" are the canonical URLs; "applications" and
   // "passes" name the same pages under the older words and stay routable so existing links keep working.
   // A root missing here still builds, but never rewrites on app.vraelis.com, so it 404s only in production.
+  // Every entry must map to a real directory under app/rank/app/ — a ghost root only routes into a 404.
+  // (/developers is deliberately absent: it is public docs on the marketing host; see proxy.ts.)
   "systems", "verifications",
   "applications", "passes", "issues", "repairs", "deployments", "activity",
   "team", "organization", "api", "connections", "plans", "credits", "billing", "account", "checkout",
-  "data", "data-quality", "projects", "shared", "sandbox", "legacy", "admin", "tests", "new", "_workspace",
+  "admin", "new",
 ] as const;
 
 const ROOT_SET = new Set<string>(APP_ROOTS);
@@ -41,7 +43,7 @@ export function legacyToNew(pathname: string): string {
   if (!pathname.startsWith("/app/")) return pathname;
   const rest = pathname.slice("/app".length); // "/apps/..."
   const segs = rest.split("/"); // ["", "apps", "<id>", "runs", "<run>"]
-  if (segs[1] === "checks") return "/legacy/checks" + segs.slice(2).map((s) => "/" + s).join(""); // retired checker
+  if (segs[1] === "checks") return "/"; // retired checker (deleted) — old links land home
   if (segs[1] === "apps") {
     segs[1] = "applications";
     if (segs[3] === "runs") segs[3] = "passes";

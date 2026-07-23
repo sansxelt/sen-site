@@ -17,26 +17,19 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 31536000, // 1 year
   },
-  // /features and /function were merged into /product. Permanent
-  // redirects so old links + indexed pages land on the canonical
-  // route without a 404.
-  // The embeddable vote widget must be framable on any external site.
-  async headers() {
-    return [
-      { source: "/embed/:path*", headers: [{ key: "Content-Security-Policy", value: "frame-ancestors *" }] },
-    ];
-  },
+  // Routes from retired product generations. Their old destinations (/product, /account/plan, /whisper,
+  // /chat) are retired too, so every source goes straight home in ONE permanent hop instead of bouncing
+  // through a retired intermediate that the proxy would then redirect home anyway.
   async redirects() {
     return [
-      { source: "/features", destination: "/product", permanent: true },
-      { source: "/function", destination: "/product", permanent: true },
-      { source: "/account/billing", destination: "/account/plan", permanent: true },
-      { source: "/audio", destination: "/whisper", permanent: true },
-      // Legacy route redirects ( /app is now the Flip tool — handled by proxy.ts )
-      { source: "/platform-soon", destination: "/chat", permanent: false },
-      { source: "/platform-soon/:path*", destination: "/chat", permanent: false },
-      { source: "/platform", destination: "/chat", permanent: false },
-      { source: "/platform/:path*", destination: "/chat", permanent: false },
+      { source: "/features", destination: "/", permanent: true },
+      { source: "/function", destination: "/", permanent: true },
+      { source: "/account/billing", destination: "/", permanent: true },
+      { source: "/audio", destination: "/", permanent: true },
+      { source: "/platform-soon", destination: "/", permanent: true },
+      { source: "/platform-soon/:path*", destination: "/", permanent: true },
+      { source: "/platform", destination: "/", permanent: true },
+      { source: "/platform/:path*", destination: "/", permanent: true },
     ];
   },
 };

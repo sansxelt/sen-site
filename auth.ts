@@ -231,8 +231,7 @@ const authResult = NextAuth((req: NextRequest | undefined) => {
     },
     authorized({ auth, request }) {
       const { pathname, search } = request.nextUrl;
-      const requiresAuth =
-        pathname.startsWith("/account") || pathname.startsWith("/api/account");
+      const requiresAuth = pathname.startsWith("/account");
 
       if (!requiresAuth) {
         return true;
