@@ -58,16 +58,12 @@ for (const surface of ["pricing", "plans"]) {
     && y.includes("Save 17%") && !y.includes("2 months free"));
   ok(`${surface}: monthly/yearly segmented toggle present`,
     m.includes(`class="seg"`) && m.includes(">Monthly<") && m.includes("Yearly"));
-  // Phase 4 terminology migration: the public pricing surface now reads "verification(s)"; the
-  // signed-in plans surface keeps "Production Pass(es)" until its own migration group lands. Each
-  // surface's copy is asserted verbatim at full strictness.
-  const isMigrated = surface === "pricing";
-  const freeLead = isMigrated ? "One lifetime free verification" : "One lifetime Production Pass";
-  const unitPlural = isMigrated ? "verifications" : "Production Passes";
-  const paygUnit = isMigrated ? "$15 per verification" : "$15 per Production Pass";
-  const rerunCap = isMigrated
-    ? "Targeted reruns cost $3 per selected failed flow and never more than a comparable full verification"
-    : "Targeted reruns cost $3 per selected failed flow and never more than a comparable full pass";
+  // Phase 4 terminology migration: both the public pricing surface and the signed-in plans surface
+  // now read "verification(s)". Each surface's copy is asserted verbatim at full strictness.
+  const freeLead = "One lifetime free verification";
+  const unitPlural = "verifications";
+  const paygUnit = "$15 per verification";
+  const rerunCap = "Targeted reruns cost $3 per selected failed flow and never more than a comparable full verification";
   ok(`${surface}: free tier is $0, one lifetime free unit, 3 flows, 1 application, no card`,
     m.includes("$0") && m.includes(freeLead) && m.includes("Up to 3 critical flows") && m.includes("1 application") && m.includes("No card required"));
   // Reframe (2026-07): the pass figures are unchanged, but the lead bullet now reads outcome-first

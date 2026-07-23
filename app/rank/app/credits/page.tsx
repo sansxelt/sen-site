@@ -8,9 +8,9 @@ const RECOMMENDED = [9, 39, 99, 299, 999];
 const MIN = 5, DEFAULT_MAX = 999999, RATE = 10;
 
 const RULES: [string, string][] = [
-  ["Pays for validation runs", "Your balance covers verifying your app before it ships. Each verification run (a Production Pass) draws from it and settles only when it actually executes."],
+  ["Pays for validation runs", "Your balance covers verifying your app before it ships. Each verification draws from it and settles only when it actually executes."],
   ["Nothing ran, nothing charged", "If a run cannot start or no flow executes, the hold is returned automatically."],
-  ["Early access pricing", "Per-run pricing ($10 per Production Pass, 5 flows included) is rolling out. Your balance keeps its full purchase value through the change."],
+  ["Early access pricing", "Per-verification pricing ($10 per verification, 5 flows included) is rolling out. Your balance keeps its full purchase value through the change."],
   ["Larger volumes", "Invoicing is available for teams that need more than a single top-up."],
 ];
 
@@ -54,7 +54,7 @@ export default function CreditsPage() {
         <div>
           <p className="eyebrow">Credits</p>
           <h1 className="display">Top up credits</h1>
-          <p>Your balance pays for validating your AI-built app before it ships. Each verification run (a Production Pass) draws from it and only settles when it actually executes. Per-run pricing is rolling out; your balance keeps its full purchase value through the change.</p>
+          <p>Your balance pays for validating your AI-built app before it ships. Each verification draws from it and only settles when it actually executes. Per-verification pricing is rolling out; your balance keeps its full purchase value through the change.</p>
         </div>
       </div>
 

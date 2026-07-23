@@ -134,7 +134,7 @@ export default async function BillingPage() {
           <p style={{ fontSize: 13.5, color: cancelAtEnd ? "var(--money)" : pastDue ? "var(--err)" : "var(--fg-3)", marginTop: 4, marginBottom: 0 }}>{statusLine}</p>
           {v1Plan ? (
             <p style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 6, marginBottom: 0, lineHeight: 1.5 }}>
-              Validate {v1Plan.passesPerMonth} launches a month ({v1Plan.passesPerMonth} Production Passes), up to {v1Plan.flowsPerPass} flows verified per run{v1Plan.maxApplications === null ? "" : `, ${v1Plan.maxApplications} connected applications`}.
+              Includes {v1Plan.passesPerMonth} verifications a month, up to {v1Plan.flowsPerPass} flows verified per run{v1Plan.maxApplications === null ? "" : `, ${v1Plan.maxApplications} connected applications`}.
             </p>
           ) : null}
         </div>

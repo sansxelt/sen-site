@@ -52,12 +52,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ runId: 
   if (!preflightEnabled()) return NextResponse.json({ error: "not_found" }, { status: 404 });
   // Kill switch: pauses NEW runs only. Reports, history, and the worker's already-claimed work are untouched.
   if (runsDisabled()) {
-    return NextResponse.json({ error: "runs_paused", message: "New Production Passes are temporarily paused. Existing reports remain available." }, { status: 503 });
+    return NextResponse.json({ error: "runs_paused", message: "New verifications are temporarily paused. Existing reports remain available." }, { status: 503 });
   }
   // Cost-governor auto-pause (blocker 3): DB-durable, survives redeploys. Same behavior as the env kill
   // switch — new runs paused, reports untouched. Checked BEFORE billing.
   if (await isRunsGovernorPaused()) {
-    return NextResponse.json({ error: "runs_paused", message: "New Production Passes are temporarily paused. Existing reports remain available." }, { status: 503 });
+    return NextResponse.json({ error: "runs_paused", message: "New verifications are temporarily paused. Existing reports remain available." }, { status: 503 });
   }
   // Global in-flight brake (blocker 3, Finding 2): bounds how far a burst can outrun the cost auto-pause.
   if (await globalActiveRunsAtCap()) {
@@ -73,7 +73,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ runId: 
   const access = await applicationAccessForRun(email, parentRunId);
   if (!access) return NextResponse.json({ error: "not_found" }, { status: 404 });
   if (!hasAtLeastRole(access.role, "editor")) {
-    return NextResponse.json({ error: "forbidden", message: "You have view-only access to this application. Ask an editor or the owner to re-run a Production Pass." }, { status: 403 });
+    return NextResponse.json({ error: "forbidden", message: "You have view-only access to this application. Ask an editor or the owner to re-run a verification." }, { status: 403 });
   }
   const owner = access.owner;
 

@@ -58,13 +58,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (!preflightEnabled()) return NextResponse.json({ error: "not_found" }, { status: 404 });
   // Kill switch: pauses NEW runs only. Reports, history, and the worker's already-claimed work are untouched.
   if (runsDisabled()) {
-    return NextResponse.json({ error: "runs_paused", message: "New Production Passes are temporarily paused. Existing reports remain available." }, { status: 503 });
+    return NextResponse.json({ error: "runs_paused", message: "New verifications are temporarily paused. Existing reports remain available." }, { status: 503 });
   }
   // Cost governor auto-pause (blocker 3): DB-durable, survives redeploys. Trips when the global provider
   // -cost ceiling ($/hour or $/day) is reached; reset is operator-only. Same customer-facing behavior as
   // the env kill switch: NEW runs paused, reports/history untouched. Checked BEFORE billing.
   if (await isRunsGovernorPaused()) {
-    return NextResponse.json({ error: "runs_paused", message: "New Production Passes are temporarily paused. Existing reports remain available." }, { status: 503 });
+    return NextResponse.json({ error: "runs_paused", message: "New verifications are temporarily paused. Existing reports remain available." }, { status: 503 });
   }
   // Global in-flight brake (blocker 3, Finding 2): bounds how far a burst can outrun the cost auto-pause.
   if (await globalActiveRunsAtCap()) {
@@ -90,7 +90,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   // Launching a paid run is an EDITOR+ action. A viewer/client_viewer is a real member but read-only, so a
   // forbidden here is honest (they already know the app exists). Non-members never reach this — they 404 above.
   if (!hasAtLeastRole(access.role, "editor")) {
-    return NextResponse.json({ error: "forbidden", message: "You have view-only access to this application. Ask an editor or the owner to launch a Production Pass." }, { status: 403 });
+    return NextResponse.json({ error: "forbidden", message: "You have view-only access to this application. Ask an editor or the owner to run a verification." }, { status: 403 });
   }
 
   // Per-account velocity cap + circuit breaker (blocker 3): stops the refund/infra loop (a fast
@@ -278,7 +278,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           // The free pass was lost to a concurrent launch and the owner cannot cover the paid price. No
           // claim was won here (only 'already_claimed' reaches this with gate.mode==='free'), so nothing
           // to release.
-          return NextResponse.json({ error: "insufficient_balance", message: `This Production Pass costs $${(cents / 100).toFixed(2)}. Add balance to launch it.` }, { status: 402 });
+          return NextResponse.json({ error: "insufficient_balance", message: `This verification costs $${(cents / 100).toFixed(2)}. Add balance to run it.` }, { status: 402 });
         }
         // credits_held carries the held amount in the hold's OWN unit (cents here), so the worker's
         // unchanged settlement — refund credits_held via the reservation — settles cent holds too.

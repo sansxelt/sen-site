@@ -13,15 +13,15 @@ export const metadata: Metadata = { title: "Checkout" };
 const PLAN_VALUE: Record<string, string[]> = {
   starter: [
     "150 credits every month",
-    "Production Passes with a launch decision",
-    "Screenshots and repro steps on every blocker",
+    "Verifications with a launch decision",
+    "Screenshots and repro steps on every failure",
     "Reruns that verify your repairs",
-    "Shareable pass reports",
+    "Shareable verification reports",
     "Cancel anytime, no lock-in",
   ],
   creator: [
     "500 credits every month",
-    "Full pass reports: decision, blockers, evidence",
+    "Full verification reports: decision, failures, evidence",
     "Issue history across runs",
     "Shareable reports + JSON / CSV exports",
     "Reruns that verify your repairs",
@@ -29,7 +29,7 @@ const PLAN_VALUE: Record<string, string[]> = {
   ],
   pro: [
     "2,000 credits every month",
-    "Client-ready pass reports",
+    "Client-ready verification reports",
     "Exports + webhooks to automate your workflow",
     "API run triggers (early access)",
     "Priority routing",
@@ -69,7 +69,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
     ? v1Included(v1Plan, cycle)
     : plan
     ? PLAN_VALUE[plan.plan] ?? [`${plan.monthlyCredits.toLocaleString()} credits every month`, "Credits refresh each billing cycle", "Cancel anytime, no lock-in"]
-    : ["Your balance funds Production Passes during early access", "Nothing ran, nothing charged: unused holds refund automatically", "Balance keeps its full purchase value as per-pass pricing rolls out"];
+    : ["Your balance funds verifications during early access", "Nothing ran, nothing charged: unused holds refund automatically", "Balance keeps its full purchase value as per-verification pricing rolls out"];
 
   return (
     <section className="section" style={{ borderBottom: "none", paddingTop: "clamp(20px, 3vw, 40px)", paddingBottom: "clamp(56px, 7vw, 96px)" }}>
@@ -80,8 +80,8 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
           <div>
             <p className="eyebrow">Checkout</p>
             <h1 className="display" style={{ fontSize: "clamp(1.9rem, 3.4vw, 2.6rem)" }}>{title}</h1>
-            {plan ? <p style={{ fontSize: 14.5, color: "var(--fg-3)", marginTop: 6, marginBottom: 0, lineHeight: 1.5 }}>{plan.blurb} Run your AI-built app like production and get a launch decision with the exact blockers to fix, with evidence you can act on, share, and export.</p> : null}
-            {v1Plan ? <p style={{ fontSize: 14.5, color: "var(--fg-3)", marginTop: 6, marginBottom: 0, lineHeight: 1.5 }}>{v1Blurb(v1Plan)} Run your AI-built app like production and get a launch decision with the exact blockers to fix, with evidence you can act on and share.</p> : null}
+            {plan ? <p style={{ fontSize: 14.5, color: "var(--fg-3)", marginTop: 6, marginBottom: 0, lineHeight: 1.5 }}>{plan.blurb} Run your AI-built app like production and get a launch decision with the exact failures to fix, with evidence you can act on, share, and export.</p> : null}
+            {v1Plan ? <p style={{ fontSize: 14.5, color: "var(--fg-3)", marginTop: 6, marginBottom: 0, lineHeight: 1.5 }}>{v1Blurb(v1Plan)} Run your AI-built app like production and get a launch decision with the exact failures to fix, with evidence you can act on and share.</p> : null}
             {plan ? <PlanPrice plan={plan.plan} cycle={cycle} /> : null}
             {v1Plan ? <PlanPriceV1 plan={v1Plan} cycle={cycle} /> : null}
 

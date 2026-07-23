@@ -44,7 +44,7 @@ export async function POST(req: Request) {
           unit_amount: amountDollars * 100,
           product_data: {
             name: "Vraelis Credits",
-            description: `${credits.toLocaleString()} credits, funds Vraelis Production Passes`,
+            description: `${credits.toLocaleString()} credits, funds Vraelis verifications`,
           },
         },
       }],

@@ -53,10 +53,10 @@ ok("pricing metadata no longer sells judgments or credit packs", !pricingMeta.in
 const plans = read("app/rank/app/plans/plans-legacy.tsx");
 ok("signed-in plans: future Pro/Scale render as a disabled preview, no subscription checkout",
   plans.includes("Not available yet") && !plans.includes("checkout?plan="));
-ok("signed-in plans show the per-pass model", plans.includes("$10") && plans.includes("Production Pass"));
+ok("signed-in plans show the per-verification model", plans.includes("$10") && plans.includes("$10<small>/verification</small>"));
 
 const credits = read("app/rank/app/credits/page.tsx");
-ok("credits page frames the balance as early access funding passes", credits.toLowerCase().includes("early access") && credits.includes("Production Pass"));
+ok("credits page frames the balance as early access funding verifications", credits.toLowerCase().includes("early access") && credits.includes("$10 per verification"));
 ok("credits page keeps the honest refund rule", credits.includes("Nothing ran, nothing charged"));
 
 console.log(`\n${pass}/${pass + fail} passed`);
