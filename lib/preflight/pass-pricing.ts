@@ -85,11 +85,11 @@ export type PassGate =
 
 export function canRunPass(plan: PlanV1, unitsUsedInWindow: number, selectedFlows: number): PassGate {
   if (selectedFlows > plan.flowsPerPass) {
-    return { ok: false, error: "flow_cap", message: `${plan.name} includes up to ${plan.flowsPerPass} flows per pass. Reduce the selection or upgrade.` };
+    return { ok: false, error: "flow_cap", message: `${plan.name} includes up to ${plan.flowsPerPass} flows per verification. Reduce the selection or upgrade.` };
   }
   const budget = flowUnitsPerMonth(plan);
   if (unitsUsedInWindow + selectedFlows > budget) {
-    return { ok: false, error: "allowance_exhausted", message: `This month's allowance is used up (${plan.passesPerMonth} passes of ${plan.flowsPerPass} flows). It resets at your next subscription month, or you can run pay-as-you-go passes.` };
+    return { ok: false, error: "allowance_exhausted", message: `This month's allowance is used up (${plan.passesPerMonth} verifications of ${plan.flowsPerPass} flows). It resets at your next subscription month, or you can run pay-as-you-go verifications.` };
   }
   return { ok: true, unitsAfter: unitsUsedInWindow + selectedFlows };
 }

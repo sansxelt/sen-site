@@ -38,7 +38,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
   // Resolve the SAME contract the launch path uses (latest APPROVED, never the draft).
   const contract = await getApprovedContract(owner, id);
   if (!contract || contract.status !== "approved") {
-    return NextResponse.json({ error: "contract_not_approved", message: "Approve the Production Contract to preview a pass." }, { status: 400 });
+    return NextResponse.json({ error: "contract_not_approved", message: "Approve the Production Contract to preview a verification." }, { status: 400 });
   }
 
   // Requested flow ids (csv). Count only the flows that are ELIGIBLE right now (enabled + approved) —
