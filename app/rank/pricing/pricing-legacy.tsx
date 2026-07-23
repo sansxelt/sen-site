@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-// Pricing leads with the outcome (a Production Pass), not a tier ladder. Early-access pricing: a pass is
+// Pricing leads with the outcome (a verification), not a tier ladder. Early-access pricing: a verification is
 // priced as a unit ($10 base, five flows included, $3 per additional flow), never per seat and never in
 // microscopic per-flow credits. Monthly plans (Pro/Scale) are deliberately NOT rendered until their
 // functionality and billing exist; do not add subscription checkout here to match a mock. Team seat prices

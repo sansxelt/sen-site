@@ -147,7 +147,7 @@ export default function HowItWorks() {
         </div>
       </section>
 
-      {/* Production Pass output */}
+      {/* Verification output */}
       <section className="section" style={{ background: "var(--bg-2)" }}>
         <div className="wrap">
           <div className="sec-head sec-head--center">

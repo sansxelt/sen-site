@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { ogMeta } from "@/lib/og-meta";
 
-// Public entry point for the free Production Pass. New accounts start with free
-// credits; this page explains what one pass returns and routes into sign-in.
+// Public entry point for the free verification. New accounts start with free
+// credits; this page explains what one verification returns and routes into sign-in.
 // Marketing pattern mirrors /how-it-works (glow + grid hero, acard tiles, CTA row).
 export const metadata = ogMeta({
   title: "Your first verification is free",

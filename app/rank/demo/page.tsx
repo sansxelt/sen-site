@@ -8,7 +8,7 @@ export const metadata = ogMeta({
   path: "/demo",
 });
 
-// Public walkthrough of the Production Pass workflow. Every artifact rendered here is an
+// Public walkthrough of the verification workflow. Every artifact rendered here is an
 // illustrative example (and labeled as such), not a live account or a real run.
 
 function Icon({ d, size = 20 }: { d: string; size?: number }) {
@@ -230,7 +230,7 @@ export default function Demo() {
         </div>
       </section>
 
-      {/* Step 08: READY */}
+      {/* Step 08: Verified */}
       <section className="section" style={{ background: "var(--bg-2)" }}>
         <div className="wrap">
           <div className="sec-head sec-head--center">
