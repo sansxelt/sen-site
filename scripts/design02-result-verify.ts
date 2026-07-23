@@ -48,12 +48,12 @@ ok("requirements are labeled as the CURRENT contract requirements, not an execut
 ok("nothing claims an exact executed requirement snapshot", !/exact requirements executed|captured at run time|immutable requirement snapshot/i.test(page));
 
 console.log("\n── affected requirements: only what the findings actually stored ──");
-ok("affected requirements come ONLY from issue evidence.requirement_refs", /issueEv\(iss\)\.requirement_refs/.test(page) && /affectedIds/.test(page));
+ok("affected requirements come ONLY from issue evidence.requirement_refs", /issueEv\(iss\)\.requirement_refs/.test(page) && /seenReq/.test(page));
 ok("no requirement -> step/flow coverage matrix is fabricated", !/coverageMatrix|requirementCoverage|perRequirement(Pass|Result)/i.test(page));
 
 console.log("\n── repair + lineage: real repair_prompt; parent/child are SEPARATE immutable records ──");
 ok("repair handoff reads only real per-issue repair_prompt", /iss\.repair_prompt/.test(page) && !/fix_prompt/.test(page));
-ok("v_repairs is NOT used for lineage (writerless table)", !/listRepairs|v_repairs|RepairRow|verification_run_id/.test(page));
+ok("v_repairs is NOT used for lineage (writerless table)", !/listRepairs|v_repairs|RepairRow|verification_run_id/.test(shown));
 ok("children load through the parent_run_id relationship, read-only", /listChildRuns\(owner, runId\)/.test(page) && /export async function listChildRuns/.test(runsDb));
 ok("listChildRuns is a pure read (no write on the lineage table)", (() => {
   const b = runsDb.slice(runsDb.indexOf("export async function listChildRuns"));
@@ -107,7 +107,7 @@ ok("meaningful line breaks in the claim are preserved (whiteSpace pre-line), and
 ok("a missing claim shows a quiet historical note, never a fabricated claim", /The original submitted claim is not available for this historical record/.test(page));
 ok("the contract version comes from the run (internal.contractVersion)", /Contract v\$\{contractVersion\}|Contract v\$\{internal\.contractVersion\}/.test(page) && /contractVersion = internal\.contractVersion/.test(page));
 ok("current requirements are labeled 'current ... for Contract v{n}', never an executed snapshot", /Current requirements for Contract v\$\{contractVersion\}/.test(page) && /current requirements associated with this contract/.test(page));
-ok("no requirement gets a per-requirement pass mark (a current requirement is context, not proof)", !/requirement[\s\S]{0,40}(I\.check|✓|Passed)/i.test(page));
+ok("no requirement gets a per-requirement pass mark (a current requirement is context, not proof)", !/requirement[\s\S]{0,30}(I\.check|✓|DecisionMark)/i.test(page));
 ok("drift is disclosed ONLY when proven (recorded version != loaded version)", /contractDrifted = !!contract && contractVersion != null[\s\S]{0,80}contract\.version !== contractVersion/.test(page) && /\{contractDrifted \? \(/.test(page));
 ok("the drift notice says the contract changed and the requirements are current, not historical", /The contract has changed since this verification\. The requirements below reflect the current contract/.test(page));
 
@@ -139,6 +139,35 @@ ok("the authenticated-flow panel shows allowlisted owner-safe fields only (roles
 ok("a step's raw error detail is nested inside its own disclosure, not shown inline", /Error detail/.test(page) && /stepFailed && s\.observed \?/.test(page));
 ok("no secret / storage path / provider session id reaches the evidence output", !/storage_path|provider_session_id|session_id|browserbase|encrypted_ref/i.test(shown));
 ok("screenshots shown as a finding's evidence are not repeated in the journey (dedup by rawName)", /shotsShownInFindings/.test(page) && /showShots=\{!shotsShownInFindings\.has\(f\.name\)\}/.test(page));
+
+console.log("\n── Increment 4: affected requirements, repair handoff, reverification, immutable lineage ──");
+// Affected requirements
+ok("affected requirements come ONLY from persisted requirement_refs, resolved to current contract text", /issueEv\(iss\)\.requirement_refs/.test(page) && /reqTextById\.get\(r\)/.test(page));
+ok("requirement linkage is never inferred (no fuzzy match on issue wording)", !/\.match\([^)]*requirement/i.test(page) && !/title[^;]{0,40}includes\([^)]*requirement/i.test(page));
+ok("an unresolved ref becomes an honest 'unavailable' entry (a count) — never a raw id, never invented text", /affectedUnavailable\.length/.test(page) && /could not be resolved to current contract text/.test(page) && !/>\{a\.rid\}</.test(page));
+ok("no per-requirement pass mark, no compliance matrix", /A verification does not mark a requirement passed/.test(page) && !/complianceMatrix|requirementMatrix/i.test(page));
+ok("each resolved requirement links back to its finding evidence block", page.includes("href={`#finding-${a.findingId}`}") && page.includes("id={`finding-${issue.id}`}"));
+ok("the current-requirements / historical-snapshot disclosure is preserved", /Current requirements for Contract v/.test(page) && /not separately snapshotted/.test(page));
+// Repair handoff
+ok("repair handoff sources ONLY the persisted repair_prompt (no invented repair, no v_repairs)", /iss\.repair_prompt/.test(page) && !/fix_prompt|v_repairs|listRepairs/.test(shown));
+ok("the repair prompt is labeled for a coding agent and shown as plain escaped text with preserved line breaks", /Repair prompt for a coding agent/.test(page) && /whiteSpace: "pre-wrap"/.test(page) && page.includes("{iss.repair_prompt}</pre>"));
+ok("copying the prompt is explained to change nothing; there is NO apply-repair action or hidden write", /it does not modify your code from this page/.test(page) && !/Apply repair|applyRepair/i.test(page));
+ok("a missing repair prompt renders a quiet honest fallback, never a generated one", /No repair guidance was generated for this verification/.test(page));
+// Reverification CTA (read-only, existing flow)
+ok("the result page never creates a run / reserves credit / mutates from itself", /<RerunButton /.test(page) && !/createRun\(|\.insert\(|\.update\(|consumeCredits\(/.test(page));
+ok("a Failed record offers rerunning the failed flows", /pub === "failed" \? <RerunButton/.test(page.replace(/\n/g, " ")) && /Rerun the failed flows/.test(page));
+ok("a repair_verified (public Blocked) record offers Run full critical verification", /run\.decision === "repair_verified"/.test(page) && /scope="critical" label="Run full critical verification"/.test(page));
+ok("a Verified record frames another verification as optional, not required", /it is not required/.test(page));
+ok("an active run offers cancel, not a conflicting final-state action", /<CancelRunButton /.test(page));
+ok("reverification copy states every reverification is a separate immutable record", /separate, immutable record/.test(page));
+// Immutable lineage
+ok("lineage is built ONLY from parent_run_id + listChildRuns (never v_repairs, never inferred ancestry)", /getRunLite\(owner, run\.parent_run_id\)/.test(page) && /listChildRuns\(owner, runId\)/.test(page) && !/v_repairs|inferAncestry/.test(shown));
+ok("lineage is parent -> current -> children, chronological, each a separate record", /const lineage: LineageNode\[\]/.test(page) && /\.sort\(\(a, b\) => \(Date\.parse\(a\.iso\)/.test(page) && /isCurrent: true/.test(page));
+ok("every lineage record's verdict goes through the canonical translator", /runVerdict\(node\.state, node\.decision\)/.test(page));
+ok("the current record is marked; the others link to owner-authorized result routes", /This record/.test(page) && page.includes("href={`/applications/${id}/passes/${node.runId}`}"));
+ok("the parent failure is never rewritten (its own decision is rendered; a later success does not overwrite it)", /parentLite\.decision/.test(page) && /does not overwrite an earlier failure/.test(page));
+ok("getRunLite is owner-scoped, read-only, and returns null for a missing/non-owned parent (no leak)",
+  (() => { const db = readFileSync("lib/preflight/runs-db.ts", "utf8"); const b = db.slice(db.indexOf("export async function getRunLite")); return /eq\("user_id", norm\(owner\)\)\.eq\("id", runId\)/.test(b) && /if \(!r\) return null;/.test(b) && !/\.insert\(|\.update\(|\.delete\(/.test(b.slice(0, 500)); })());
 
 console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

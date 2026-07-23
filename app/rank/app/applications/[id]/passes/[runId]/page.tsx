@@ -5,7 +5,7 @@ import { requirePreflightAppAccess } from "@/lib/v-preflight-guard";
 import { capabilities } from "@/lib/preflight/role-capabilities";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { getApplication, getContractById, listRequirements, type ContractRequirement } from "@/lib/v-applications";
-import { getRun, runContractId, listChildRuns, type RunFlow, type RunStep, type RunIssue, type ChildRun } from "@/lib/preflight/runs-db";
+import { getRun, runContractId, listChildRuns, getRunLite, type RunFlow, type RunStep, type RunIssue, type ChildRun } from "@/lib/preflight/runs-db";
 import { getRunInternal, listFlowRunMeta, type FlowRunMeta } from "@/lib/preflight/run-report-db";
 import { runVersionPins, getDeployment, deploymentStoreReady } from "@/lib/preflight/deployments-db";
 import { getSnapshot } from "@/lib/preflight/context-snapshots";
@@ -272,7 +272,7 @@ function FindingEvidence({ issue, index, flowName, screenshotIds, runId }: { iss
   const observed = humanObserved(issue) || "The flow did not complete.";
   const hasTechnical = Boolean(issue.observed) || consoleErrors.length > 0 || networkFailures.length > 0 || requirementRefs.length > 0;
   return (
-    <div style={{ border: "1px solid var(--line-2)", borderLeft: `3px solid ${sevColor}`, borderRadius: "var(--r-md, 10px)", background: "var(--bg-1)", padding: "clamp(16px, 2.4vw, 22px)" }}>
+    <div id={`finding-${issue.id}`} style={{ border: "1px solid var(--line-2)", borderLeft: `3px solid ${sevColor}`, borderRadius: "var(--r-md, 10px)", background: "var(--bg-1)", padding: "clamp(16px, 2.4vw, 22px)", scrollMarginTop: "16px" }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "clamp(15px, 1.7vw, 17px)", lineHeight: 1.35, color: "var(--fg-1)", margin: 0, flex: "1 1 280px", minWidth: 0, wordBreak: "break-word" }}>{index + 1}. {issue.title}</h3>
         <div style={{ display: "flex", gap: 6, flex: "none", flexWrap: "wrap" }}>
@@ -402,12 +402,15 @@ export default async function VerificationResultPage({ params }: { params: Promi
   // Second wave: the contract behind the run's claim/requirements, and the PINNED historical version rows.
   // Missing ids resolve to null (never substituted with a latest/current object).
   const pins = await runVersionPins(owner, runId);
-  const [contract, requirements, deployment, contextSnap, deploymentsReady] = await Promise.all([
+  const [contract, requirements, deployment, contextSnap, deploymentsReady, parentLite] = await Promise.all([
     contractId ? getContractById(owner, contractId) : Promise.resolve(null),
     contractId ? listRequirements(owner, contractId) : Promise.resolve([] as ContractRequirement[]),
     pins.deploymentId ? getDeployment(owner, pins.deploymentId) : Promise.resolve(null),
     pins.contextSnapshotId ? getSnapshot(owner, pins.contextSnapshotId) : Promise.resolve(null),
     deploymentStoreReady(owner),
+    // The parent record (read-only, owner-scoped): null if missing/deleted/non-owned, so the lineage never
+    // leaks another tenant's run and never rewrites the parent.
+    run.parent_run_id ? getRunLite(owner, run.parent_run_id) : Promise.resolve(null),
   ]);
 
   // ── derived, nothing invented ──
@@ -442,15 +445,24 @@ export default async function VerificationResultPage({ params }: { params: Promi
   const screenshotCount = meta.reduce((s, m) => s + m.screenshotIds.length, 0);
   const issueEv = (iss: RunIssue) => (iss.evidence && typeof iss.evidence === "object" ? iss.evidence : {}) as Record<string, unknown>;
 
-  // Affected requirements: ONLY the requirement_refs the worker stamped on FAILED-flow issues, resolved to
-  // text via the contract's current requirements. There is NO requirement->step/flow coverage matrix, so none
-  // is built. Unresolved refs are dropped from the readable list (never shown as raw UUIDs here).
+  // Affected requirements: ONLY the requirement_refs the worker actually stamped on findings, resolved to the
+  // CURRENT contract text and linked back to the finding that raised each. There is NO requirement->step/flow
+  // coverage matrix, so none is built and a run never marks a requirement passed. Refs are deduped in stable
+  // first-seen order; an unresolved ref becomes a restrained "unavailable" entry, never a raw UUID or invented
+  // text.
   const reqTextById = new Map<string, string>();
   for (const r of requirements) reqTextById.set(r.id, r.requirement);
-  const affectedIds = new Set<string>();
-  for (const iss of issues) { const refs = issueEv(iss).requirement_refs; if (Array.isArray(refs)) for (const r of refs) if (typeof r === "string") affectedIds.add(r); }
-  const affectedRequirements = [...affectedIds].map((rid) => reqTextById.get(rid)).filter((t): t is string => !!t);
-  const affectedUnresolved = [...affectedIds].filter((rid) => !reqTextById.has(rid)).length;
+  const affected: { rid: string; text: string | null; findingIndex: number; findingId: string }[] = [];
+  const seenReq = new Set<string>();
+  issues.forEach((iss, idx) => {
+    const refs = issueEv(iss).requirement_refs;
+    if (Array.isArray(refs)) for (const r of refs) if (typeof r === "string" && !seenReq.has(r)) {
+      seenReq.add(r);
+      affected.push({ rid: r, text: reqTextById.get(r) ?? null, findingIndex: idx, findingId: iss.id });
+    }
+  });
+  const affectedResolved = affected.filter((a) => a.text);
+  const affectedUnavailable = affected.filter((a) => !a.text);
 
   // Repair handoff: the findings that carry a REAL per-issue repair_prompt (no invented repair object).
   const repairIssues = issues.filter((iss) => typeof iss.repair_prompt === "string" && iss.repair_prompt.trim().length > 0);
@@ -469,6 +481,25 @@ export default async function VerificationResultPage({ params }: { params: Promi
     else if (gate.mode === "payg") rerunPriceNote = `Targeted rerun: ${usdFromCents(gate.cents)} (${usdFromCents(rerunPriceCents(1))} per failed flow), charged when you launch. Not covered by the free verification.`;
     else if (gate.mode === "frozen") rerunPriceNote = gate.message;
   }
+
+  // Immutable lineage: parent (if any) -> this record -> direct children, each a SEPARATE persisted run. Built
+  // only from parent_run_id + listChildRuns (never v_repairs, never inferred ancestry), ordered chronologically
+  // by real timestamps. A later child never rewrites the parent; each row shows its OWN public decision.
+  type LineageNode = { runId: string; state: string; decision: string | null; iso: string; isCurrent: boolean };
+  const lineage: LineageNode[] = [
+    ...(parentLite ? [{ runId: parentLite.id, state: parentLite.state, decision: parentLite.decision, iso: parentLite.completed_at || parentLite.created_at, isCurrent: false }] : []),
+    { runId, state: run.state, decision: run.decision, iso: run.completed_at || run.created_at, isCurrent: true },
+    ...children.map((c) => ({ runId: c.id, state: c.state, decision: c.decision, iso: c.completed_at || c.created_at, isCurrent: false })),
+  ].sort((a, b) => (Date.parse(a.iso) || 0) - (Date.parse(b.iso) || 0));
+
+  // The reverification intro is scoped to the public conclusion — honest about what a reverification does and
+  // does not mean. Verified frames another run as OPTIONAL; repair_verified points at full critical coverage.
+  const reverifyIntro =
+    pub === "failed" ? "This deployment failed verification. Rerun the failed flows to check a repair. Every reverification is a separate, immutable record."
+    : run.decision === "repair_verified" ? "A full critical verification is still required before Vraelis can return Verified. Running it produces a separate, immutable record; this one is unchanged."
+    : pub === "blocked" ? "Vraelis could not reach a reliable conclusion. Running again produces a separate, immutable record."
+    : pub === "verified" ? "This verification passed on the tested deployment. You can run another independent verification at any time; it is not required, and it produces a separate record."
+    : "";
 
   const deployEnvLabel = deployment?.environment ? (ENV_LABELS[deployment.environment] ?? null) : null;
   const deployProviderLabel = deployment?.provider ? (DEPLOY_PROVIDER_LABELS[deployment.provider] ?? deployment.provider) : null;
@@ -619,74 +650,103 @@ export default async function VerificationResultPage({ params }: { params: Promi
           )}
         </Section>
 
-        {/* ── 06 AFFECTED REQUIREMENTS — ONLY requirement refs the findings actually stored (failed flows); no
-              coverage matrix is fabricated. ── */}
+        {/* ── 06 AFFECTED REQUIREMENTS — ONLY the requirement refs the findings actually stored, resolved to the
+              CURRENT contract text and linked back to the finding that raised each. No coverage matrix, no pass
+              marks; an unresolved ref becomes an honest "unavailable" entry, never a raw id or invented text. ── */}
         <Section n="06" title="Affected requirements" aria="Affected requirements">
-          {affectedRequirements.length === 0 && affectedUnresolved === 0 ? (
+          {affected.length === 0 ? (
             <Empty>No specific requirements were flagged by the findings on this verification.</Empty>
           ) : (
             <>
-              {affectedRequirements.length > 0 ? (
-                <ul style={{ margin: 0, padding: "0 0 0 18px", display: "grid", gap: 5 }}>
-                  {affectedRequirements.map((t, i) => <li key={i} style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5, wordBreak: "break-word" }}>{t}</li>)}
+              <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>
+                {contractVersion != null ? `Current requirements for Contract v${contractVersion} that a finding referenced. ` : ""}A verification does not mark a requirement passed; these are the ones its findings pointed at.
+              </p>
+              {affectedResolved.length > 0 ? (
+                <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 8 }}>
+                  {affectedResolved.map((a) => (
+                    <li key={a.rid} style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap", borderLeft: "2px solid var(--line-3)", paddingLeft: 12 }}>
+                      <span style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5, flex: "1 1 auto", minWidth: 0, wordBreak: "break-word" }}>{a.text}</span>
+                      <a href={`#finding-${a.findingId}`} style={{ fontSize: 12.5, color: "var(--acc-deep)", flex: "none", textDecoration: "none" }}>See finding {a.findingIndex + 1}</a>
+                    </li>
+                  ))}
                 </ul>
               ) : null}
-              {affectedUnresolved > 0 ? <Empty>{affectedUnresolved} referenced requirement{affectedUnresolved === 1 ? "" : "s"} could not be resolved to current contract text.</Empty> : null}
+              {affectedUnavailable.length > 0 ? (
+                <Empty>{affectedUnavailable.length} referenced requirement{affectedUnavailable.length === 1 ? "" : "s"} could not be resolved to current contract text. It may have been removed or renamed since this verification.</Empty>
+              ) : null}
             </>
           )}
         </Section>
 
-        {/* ── 07 REPAIR HANDOFF — the REAL per-finding repair_prompt only (no invented repair object). The copy
-              control is read-only (clipboard), so it is available to every role. Grouping/polish lands later. ── */}
+        {/* ── 07 REPAIR HANDOFF — the REAL per-finding repair_prompt only: instructions for a coding agent, shown
+              as plain (React-escaped) text with its line breaks preserved and a copy control. Copying it changes
+              nothing; Vraelis verifies a repair, it never modifies the application from this page. No apply
+              action, no raw failure_message, no secret. A quiet honest fallback when there is none. ── */}
         <Section n="07" title="Repair handoff" aria="Repair handoff">
           {repairIssues.length === 0 ? (
             <Empty>No repair guidance was generated for this verification.</Empty>
           ) : (
-            <div style={{ display: "grid", gap: 10 }}>
-              {repairIssues.map((iss) => (
-                <div key={iss.id} style={{ display: "grid", gap: 8, border: "1px solid var(--line-2)", borderRadius: "var(--r-md, 10px)", background: "var(--bg-1)", padding: "12px 14px" }}>
-                  <div style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 500, wordBreak: "break-word" }}>{iss.title}</div>
-                  <CopyButton text={iss.repair_prompt as string} />
-                </div>
-              ))}
-            </div>
+            <>
+              <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>Each prompt describes the observed failure and the requested repair for a coding agent. Copying it does not change your application; Vraelis verifies a repair, it does not modify your code from this page.</p>
+              <div style={{ display: "grid", gap: 12 }}>
+                {repairIssues.map((iss) => (
+                  <div key={iss.id} style={{ display: "grid", gap: 8, border: "1px solid var(--line-2)", borderRadius: "var(--r-md, 10px)", background: "var(--bg-1)", padding: "12px 14px" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={label}>Repair prompt for a coding agent</div>
+                        <div style={{ fontSize: 13, color: "var(--fg-2)", marginTop: 2, wordBreak: "break-word" }}>{iss.title}</div>
+                      </div>
+                      <CopyButton text={iss.repair_prompt as string} />
+                    </div>
+                    <pre style={{ margin: 0, fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.55, whiteSpace: "pre-wrap", wordBreak: "break-word", background: "var(--bg-2)", border: "1px solid var(--line-2)", borderRadius: 8, padding: "10px 12px", maxHeight: 340, overflow: "auto" }}>{iss.repair_prompt}</pre>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </Section>
 
-        {/* ── 08 REVERIFICATION — parent + child lineage; a later verification is a SEPARATE record. The existing
-              rerun/cancel action stays structurally present (not redesigned). ── */}
+        {/* ── 08 REVERIFICATION — a read-only CTA into the EXISTING rerun/cancel flow (the page itself never
+              creates a run, reserves credit, or mutates state), plus the immutable lineage: parent -> this
+              record -> children, each a SEPARATE persisted run rendered through the canonical translator. A
+              later success never rewrites an earlier failure. ── */}
         <Section n="08" title="Reverification" aria="Reverification">
-          {run.parent_run_id ? (
-            <p style={{ ...metaText, margin: 0 }}>
-              This is a reverification of an <Link href={`/applications/${id}/passes/${run.parent_run_id}`} style={{ color: "var(--acc-deep)" }}>earlier verification</Link>.
-              {run.selected_flow_ids?.length ? ` Targeted rerun: ${run.selected_flow_ids.length} flow${run.selected_flow_ids.length === 1 ? "" : "s"} selected.` : ""}
-              {" "}That earlier record is unchanged.
-            </p>
-          ) : null}
-          {children.length > 0 ? (
-            <div style={{ display: "grid", gap: 6 }}>
-              <div style={{ ...metaText, color: "var(--fg-4)" }}>{children.length} later reverification{children.length === 1 ? "" : "s"} (each a separate record):</div>
-              {children.map((c: ChildRun) => {
-                const cv = runVerdict(c.state, c.decision);
-                return (
-                  <Link key={c.id} href={`/applications/${id}/passes/${c.id}`} style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", color: "inherit", textDecoration: "none", border: "1px solid var(--line-2)", borderRadius: "var(--r-md, 10px)", background: "var(--bg-1)", padding: "9px 13px" }}>
-                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-4)", flex: "none" }}>#{shortId(c.id)}</span>
-                    <span style={{ fontSize: 12.5, color: "var(--fg-4)", flex: "1 1 auto" }} title={when(c.completed_at || c.created_at)}>{ago(c.completed_at || c.created_at)}</span>
-                    <Chip tone={cv.tone} label={cv.label} />
-                  </Link>
-                );
-              })}
-            </div>
-          ) : null}
+          {reverifyIntro ? <p style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.55, margin: 0, maxWidth: "64ch", wordBreak: "break-word" }}>{reverifyIntro}</p> : null}
           {caps.canLaunch ? (
-            <div style={{ marginTop: 4 }}>
+            <div>
               {terminal ? (
                 run.decision === "repair_verified"
                   ? <RerunButton appId={id} runId={runId} scope="critical" label="Run full critical verification" priceNote={rerunPriceNote} />
-                  : <RerunButton appId={id} runId={runId} scope={hasFailures ? "failed" : "all"} label={hasFailures ? "Rerun failed flows" : "Run again"} priceNote={rerunPriceNote} />
+                  : pub === "failed" ? <RerunButton appId={id} runId={runId} scope={hasFailures ? "failed" : "all"} label="Rerun the failed flows" priceNote={rerunPriceNote} />
+                  : <RerunButton appId={id} runId={runId} scope={hasFailures ? "failed" : "all"} label="Run another verification" priceNote={rerunPriceNote} />
               ) : (
                 <CancelRunButton appId={id} runId={runId} />
               )}
+            </div>
+          ) : null}
+
+          {/* Immutable lineage — only shown when there is a parent or a child (a lone record needs no timeline). */}
+          {lineage.length > 1 ? (
+            <div style={{ marginTop: 6, display: "grid", gap: 8 }}>
+              <div style={label}>Verification history</div>
+              <div style={{ display: "grid", gap: 6 }}>
+                {lineage.map((node) => {
+                  const nv = runVerdict(node.state, node.decision);
+                  const inner = (
+                    <>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-4)", flex: "none" }}>#{shortId(node.runId)}</span>
+                      {node.isCurrent ? <span style={{ fontSize: 12, color: "var(--fg-3)", fontWeight: 600, flex: "none" }}>This record</span> : null}
+                      <span style={{ fontSize: 12.5, color: "var(--fg-4)", flex: "1 1 auto" }} title={when(node.iso)}>{ago(node.iso)}</span>
+                      <Chip tone={nv.tone} label={nv.label} />
+                    </>
+                  );
+                  const rowStyle = { display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" as const, border: "1px solid var(--line-2)", borderRadius: "var(--r-md, 10px)", padding: "9px 13px", background: node.isCurrent ? "var(--bg-2)" : "var(--bg-1)" };
+                  return node.isCurrent
+                    ? <div key={node.runId} style={{ ...rowStyle, outline: "1px solid var(--acc-line)" }}>{inner}</div>
+                    : <Link key={node.runId} href={`/applications/${id}/passes/${node.runId}`} style={{ ...rowStyle, color: "inherit", textDecoration: "none" }}>{inner}</Link>;
+                })}
+              </div>
+              <Empty>Every verification is a separate, immutable record. A later success does not overwrite an earlier failure, and a targeted repair check passing is not the same as a full Verified.</Empty>
             </div>
           ) : null}
         </Section>

@@ -451,3 +451,16 @@ export async function listChildRuns(owner: string, parentRunId: string): Promise
     }));
   } catch { return []; }
 }
+
+// A single run's lite summary (state, decision, timestamps) for lineage — READ-ONLY, owner-scoped, same shape
+// as a child. Returns null for a missing or non-owned run, so a parent that belongs to another tenant (or was
+// deleted) never leaks its existence and the lineage simply omits it.
+export async function getRunLite(owner: string, runId: string): Promise<ChildRun | null> {
+  if (!isDatabaseConfigured()) return null;
+  const { data } = await db().from("v_preflight_runs")
+    .select("id, state, decision, created_at, completed_at")
+    .eq("user_id", norm(owner)).eq("id", runId).maybeSingle();
+  const r = data as Record<string, unknown> | null;
+  if (!r) return null;
+  return { id: String(r.id), state: String(r.state ?? ""), decision: (r.decision as string) ?? null, created_at: String(r.created_at ?? ""), completed_at: (r.completed_at as string) ?? null };
+}
