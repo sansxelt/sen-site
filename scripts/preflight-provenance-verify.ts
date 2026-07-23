@@ -217,11 +217,13 @@ function tsFilesUnder(dir: string): string[] {
   return out;
 }
 {
-  // Exactly TWO governed AI entry points are permitted (Multi-Platform Program, founder-approved):
+  // Exactly THREE governed AI entry points are permitted:
   //   1. discover-synthesis.ts — the original pinned-model discovery synthesis.
   //   2. agent/agent-client.ts — the governed agent client (flag-gated VRAELIS_AGENT, cost-governor
   //      metered, governor-pause-gated). Every agent goes THROUGH it; nothing else may touch the SDK.
-  const ALLOWED_AI_CLIENTS = ["discover-synthesis.ts", "agent/agent-client.ts"];
+  //   3. coverage-correction.ts — the bounded correction loop (the model PROPOSES a stronger plan; the
+  //      deterministic validators DECIDE). Same key/model discipline as synthesis; assertions below.
+  const ALLOWED_AI_CLIENTS = ["discover-synthesis.ts", "agent/agent-client.ts", "coverage-correction.ts"];
   const roots = ["lib/preflight", "app/api/preflight", "worker/preflight", "app/rank/app/applications"];
   const offenders: string[] = [];
   for (const root of roots) {
@@ -240,6 +242,25 @@ function tsFilesUnder(dir: string): string[] {
   ok("agent-client meters every call through the cost governor (recordProviderCost aiTokens)", /recordProviderCost\(\{ owner:[\s\S]*?aiTokens/.test(agentSrc));
   ok("agent-client respects the governor pause before spending", agentSrc.includes("isRunsGovernorPaused()"));
   ok("agent-client never embeds a key literal", !/sk-ant-/.test(agentSrc));
+
+  // The third allowlisted client is the bounded correction loop — acceptable BECAUSE it follows the same
+  // pinned/deterministic/fail-soft discipline as synthesis: same lazy key resolution, the evaluator-pinned
+  // model, temperature 0 on every call, one bounded attempt per correction (maxRetries: 0), and a missing
+  // key or failed call degrades to "no correction" instead of an error. Prove each property in-file so the
+  // allowlist can never rot into an ungoverned loophole.
+  const corrSrc = stripComments(read("lib/preflight/coverage-correction.ts"));
+  const corrParseCalls = (corrSrc.match(/client\.messages\.parse\(/g) ?? []).length;
+  ok("coverage-correction pins the model with the evaluator env override",
+    corrSrc.includes('process.env.VRAELIS_EVAL_MODEL || "claude-sonnet-4-6"'));
+  ok("coverage-correction is deterministic: every model call is temperature 0",
+    corrParseCalls > 0 && corrParseCalls === (corrSrc.match(/temperature: 0/g) ?? []).length);
+  ok("coverage-correction: no key -> no client, the correction simply does not run",
+    /if \(!API_KEY\) return/.test(corrSrc));
+  ok("coverage-correction is bounded: one attempt per correction (maxRetries: 0 on every client)",
+    (corrSrc.match(/new Anthropic\(/g) ?? []).length === (corrSrc.match(/maxRetries: 0/g) ?? []).length);
+  ok("coverage-correction fails soft: a failed model call becomes a typed no-correction result",
+    corrSrc.includes('"model_call_failed"') && /catch \(e\) \{[\s\S]*?return null; \}/.test(corrSrc));
+  ok("coverage-correction never embeds a key literal", !/sk-ant-/.test(corrSrc));
 }
 
 // ── Static: provenance lands in the EXISTING columns; manual adds record manual ──
