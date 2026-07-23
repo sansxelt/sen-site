@@ -13,16 +13,30 @@ const ok = (n: string, c: boolean, d = "") => {
 };
 
 const pub = publishedArticles();
-const DRAFT = "from-failure-to-verified-repair";
+
+// The case study went live deliberately (commit 8e16fd52, "Publish the case study") once the repair loop
+// had run end to end in production. The gate now asserts the CURRENT intended state: published and
+// visible. If it ever silently drops out of the index again, that is a regression this catches.
+const CASE_STUDY = "from-failure-to-verified-repair";
+
+// Drafts are discovered structurally from the registry source rather than hardcoded by slug, so the gate
+// keeps enforcing draft invisibility even when the set of drafts changes (vacuously when there are none).
+// Each article literal states `slug` before `published`, so the lazy match pairs them per entry.
+const registrySrc = readFileSync("app/rank/research/_articles.ts", "utf8");
+const draftSlugs = [...registrySrc.matchAll(/slug:\s*"([^"]+)"[\s\S]*?published:\s*(true|false)/g)]
+  .filter((m) => m[2] === "false").map((m) => m[1]);
 
 console.log("── the publishing gate ──");
 ok("some articles are published", pub.length >= 3, `${pub.length}`);
-ok("the unpublished case study is NOT in the index", !pub.some((a) => a.slug === DRAFT));
-ok("its direct URL returns nothing (indistinguishable from missing)", articleBySlug(DRAFT) === null);
+ok("the case study is published and in the index", pub.some((a) => a.slug === CASE_STUDY));
+ok("the case study's direct URL resolves", articleBySlug(CASE_STUDY) !== null);
+ok("no draft appears in the index", draftSlugs.every((s) => !pub.some((a) => a.slug === s)), draftSlugs.join(", "));
+ok("a draft's direct URL returns nothing (indistinguishable from missing)",
+  draftSlugs.every((s) => articleBySlug(s) === null));
 ok("a published slug resolves", !!articleBySlug("what-is-outcome-verification"));
 ok("an unknown slug returns null", articleBySlug("nope") === null);
 ok("related never surfaces an unpublished article",
-  pub.every((a) => relatedArticles(a.slug, 5).every((r) => r.slug !== DRAFT)));
+  pub.every((a) => relatedArticles(a.slug, 5).every((r) => !draftSlugs.includes(r.slug))));
 ok("related never returns the article itself",
   pub.every((a) => relatedArticles(a.slug, 5).every((r) => r.slug !== a.slug)));
 

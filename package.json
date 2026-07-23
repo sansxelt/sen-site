@@ -83,7 +83,8 @@
     "webhooks:test": "tsx scripts/preflight-webhook-dispatch-verify.ts",
     "webhooks:decoupled:test": "tsx scripts/preflight-webhook-decoupling-verify.ts",
     "account:test": "tsx scripts/preflight-account-deletion-verify.ts",
-    "human-eval-retired:test": "tsx scripts/preflight-human-eval-retired-verify.ts"
+    "human-eval-retired:test": "tsx scripts/preflight-human-eval-retired-verify.ts",
+    "terminology:test": "tsx scripts/terminology-verify.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
