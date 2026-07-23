@@ -259,6 +259,8 @@ export type CreateRunInput = {
   creditsHeld: number; reservationId: string | null;
   /** Which API key launched this run, for the per-key spend ceiling and audit. Null for a browser session. */
   apiKeyId?: string | null;
+  /** The guarantee this run verifies, if any (migration 19). Null for a plain verification. */
+  guaranteeId?: string | null;
 };
 export type CreateRunResult =
   | { runId: string; flowCount: number }
@@ -305,6 +307,10 @@ export async function createRun(owner: string, input: CreateRunInput): Promise<C
   // deployment: carried only when present, dropped on a column-missing error, never failing the launch.
   // A run that loses its key attribution is a weaker audit trail, not a broken run.
   let pinApiKey = !!input.apiKeyId;
+  // guarantee_id is additive (migration 19) and follows the SAME best-effort pin pattern: carried only when
+  // present, dropped on a column-missing error, never failing the launch. A run that loses its guarantee link
+  // is a weaker map, not a broken run.
+  let pinGuarantee = !!input.guaranteeId;
 
   let deploymentId: string | null = null;
   try { deploymentId = await deploymentForRun(uid, input.applicationId, input.deploymentUrl); } catch { deploymentId = null; }
@@ -322,6 +328,7 @@ export async function createRun(owner: string, input: CreateRunInput): Promise<C
       let row: Record<string, unknown> = pinContext ? { ...baseRow, context_snapshot_id: contextSnapshotId } : baseRow;
       if (pinDeployment) row = { ...row, deployment_id: deploymentId };
       if (pinApiKey) row = { ...row, api_key_id: input.apiKeyId };
+      if (pinGuarantee) row = { ...row, guarantee_id: input.guaranteeId };
       return row;
     };
     let { data, error } = await db().from("v_preflight_runs").insert(rowFor() as never).select("id").single();
@@ -329,7 +336,7 @@ export async function createRun(owner: string, input: CreateRunInput): Promise<C
     // deployment_id, migration 8). A missing column fails the whole insert atomically (nothing was
     // written), so re-inserting the SAME submission id after dropping the named pin can never create a
     // duplicate run. At most one retry per pin; the run itself must always queue.
-    while (error && (pinContext || pinDeployment || pinApiKey)) {
+    while (error && (pinContext || pinDeployment || pinApiKey || pinGuarantee)) {
       const msg = (error as { message?: string }).message ?? "";
       if (pinContext && /context_snapshot_id/i.test(msg)) {
         console.warn("createRun: v_preflight_runs.context_snapshot_id is missing. Apply sql/vraelis-preflight-7-context-snapshots.sql (migration 7). Run queued without a context pin.");
@@ -340,6 +347,9 @@ export async function createRun(owner: string, input: CreateRunInput): Promise<C
       } else if (pinDeployment && /deployment_id/i.test(msg)) {
         console.warn("createRun: v_preflight_runs.deployment_id is missing. Apply sql/vraelis-preflight-8-deployments.sql (migration 8). Run queued without a deployment pin.");
         pinDeployment = false;
+      } else if (pinGuarantee && /guarantee_id/i.test(msg)) {
+        console.warn("createRun: v_preflight_runs.guarantee_id is missing. Apply sql/vraelis-preflight-19-guarantees.sql (migration 19). Run queued without a guarantee link.");
+        pinGuarantee = false;
       } else break;
       ({ data, error } = await db().from("v_preflight_runs").insert(rowFor() as never).select("id").single());
     }

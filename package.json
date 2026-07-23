@@ -69,6 +69,8 @@
     "apikey:access:test": "tsx scripts/preflight-api-key-access-verify.ts",
     "apikey:lifecycle": "tsx scripts/preflight-api-key-lifecycle.ts",
     "verifications:test": "tsx scripts/preflight-verifications-verify.ts",
+    "guarantees:test": "tsx scripts/preflight-verify-migration-19.ts",
+    "guarantee:logic:test": "tsx scripts/preflight-guarantee-logic-verify.ts",
     "cli:test": "node scripts/cli-verify-test.mjs",
     "research:test": "tsx scripts/research-verify.ts",
     "claims:test": "tsx scripts/research-verify.ts",
