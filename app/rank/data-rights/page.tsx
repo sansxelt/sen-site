@@ -22,17 +22,16 @@ export default function DataRightsPage() {
 
       <H>Self-serve controls</H>
       <Ul items={[
-        "Disable a public report link from that report's controls.",
         "Delete API keys you no longer use.",
         "Remove webhook endpoints you have added.",
-        "Export any completed report as JSON or CSV.",
+        "Export your governance activity as sanitized CSV or JSON from the activity page.",
+        "Fetch verification results as JSON through the API, where your plan includes API access.",
       ]} />
 
       <H>How requests are handled</H>
       <Ul items={[
         "Requests are reviewed manually. Account deletion is not instant.",
         "Some billing, security, and legal records may be retained where required.",
-        "Public report links may be disabled while a deletion request is processed.",
         "Raw IP and device data is never shown in reports or exports.",
       ]} />
       <P>This is an honest description of our process, not a claim of automated regulatory compliance. See the <Link href="/privacy" style={{ color: "var(--acc-deep)" }}>Privacy</Link> page for what we collect and why.</P>

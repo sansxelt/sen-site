@@ -10,6 +10,7 @@ import { isVraelisRequest } from "@/lib/site-host";
 export const metadata: Metadata = {
   title: "Access",
   description: "Sign in or create your account.",
+  alternates: { canonical: "https://vraelis.com/signin" },
 };
 
 export default async function SignInPage({

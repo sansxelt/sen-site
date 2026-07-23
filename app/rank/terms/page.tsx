@@ -4,7 +4,7 @@ import { H, P, Ul, LegalShell } from "../_components/legal-ui";
 
 export const metadata = ogMeta({
   title: "Terms",
-  description: "The terms for using Vraelis: what it provides, credits and payments, how to read a verification result, refunds, warranties, liability, and governing law.",
+  description: "The terms for using Vraelis: what it provides, balance and payments, how to read a verification result, refunds, warranties, liability, and governing law.",
   path: "/terms",
 });
 

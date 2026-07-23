@@ -12,14 +12,14 @@ export default function PrivacyPage() {
   return (
     <LegalShell eyebrow="Legal" title="Privacy" updated="Updated June 2026">
       <H>Overview</H>
-      <P>Vraelis is production validation for AI-built systems: you connect an application, define what it must do in production, and Vraelis runs those requirements against your exact build and environment and captures the evidence. This page explains how data is handled when you use the website, app, verification runs, API, webhooks, exports, and shared reports at vraelis.com. We have kept it plain and specific to what the product actually does.</P>
+      <P>Vraelis is production validation for AI-built systems: you connect an application, define what it must do in production, and Vraelis runs those requirements against your exact build and environment and captures the evidence. This page explains how data is handled when you use the website, app, verification runs, API, webhooks, and exports at vraelis.com. We have kept it plain and specific to what the product actually does.</P>
 
       <H>Data we collect</H>
       <Ul items={[
         "Account details: your name, email, and which sign-in provider you used (email, Google, or GitHub).",
         "Applications you connect: names, deployment URLs, environment and build metadata, and the production requirements and verification flows you define.",
+        "Connection data for integrations you link (provider metadata and OAuth tokens), and test-account sign-in credentials you provide for verification runs, stored encrypted (AES-256-GCM) and used only to execute your verifications.",
         "Verification data: the runs Vraelis executes against your application, the evidence they capture, and the results and launch decisions generated from them.",
-        "Shared report settings, including whether sharing is on and the share token for a shared link.",
         "API key metadata: a key's name, prefix, scopes, created date, and last-used time. The full key is shown once at creation and stored only as a hash.",
         "Webhook endpoint URLs and delivery logs, including status, timestamps, and response or error details.",
         "Plan, balance, billing, and subscription records, and checkout and payment status.",
@@ -32,7 +32,7 @@ export default function PrivacyPage() {
       <Ul items={[
         "Operate the product and your account.",
         "Run verification against your connected applications and capture the resulting evidence.",
-        "Generate reports and enable sharing, exports, webhooks, and the API.",
+        "Generate reports and enable exports, webhooks, and the API.",
         "Manage plans, balance, billing, and checkout.",
         "Prevent spam, fraud, and abuse.",
         "Keep the service reliable and secure.",
@@ -42,13 +42,8 @@ export default function PrivacyPage() {
       <H>Payments</H>
       <P>Payments are processed by Stripe. Vraelis does not store full card numbers. We may retain billing records where needed for accounting, fraud prevention, or legal reasons.</P>
 
-      <H>Public reports</H>
-      <Ul items={[
-        "Public reports are optional and off by default.",
-        "The report owner can turn public sharing on or off at any time.",
-        "A public report is read-only.",
-        "A public report does not expose your account email, billing data, API key secrets, raw identities of anyone involved in a run, raw IP or device data, or private owner fields.",
-      ]} />
+      <H>Report access</H>
+      <P>Reports are private to your account and team. There are no public report links. A workspace can grant a read-only client-viewer role, which can see reports but cannot change anything or reach private workspace controls. A report never exposes your account email, billing data, API key secrets, raw IP or device data, or private owner fields.</P>
 
       <H>API keys and webhooks</H>
       <Ul items={[
@@ -94,8 +89,7 @@ export default function PrivacyPage() {
 
       <H>Retention</H>
       <Ul items={[
-        "Account, test, and report data is kept while your account is active, unless you delete it or ask support to handle a request.",
-        "Public report links can be disabled by the owner at any time.",
+        "Account, verification, and report data is kept while your account is active, unless you delete it or ask support to handle a request.",
         "API keys can be deleted, and webhook endpoints can be removed.",
         "Billing records may be kept where required for accounting, fraud prevention, or legal reasons.",
         "Security and abuse logs may be kept for a limited period to protect the service.",

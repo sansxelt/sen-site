@@ -36,7 +36,7 @@ function StatusPill({ s }: { s: StatusKey }) {
 }
 
 const STEPS: { k: string; t: string; d: string; i: string }[] = [
-  { k: "01", t: "Connect your app", d: "Give Vraelis your deployed URL and the prompt you built the app from. Connect GitHub, Vercel, Supabase, or Stripe when you want it to reach past the browser into the code, the database, and billing.", i: I.connect },
+  { k: "01", t: "Connect your app", d: "Give Vraelis your deployed URL and the prompt you built the app from. Connect GitHub, Vercel, Supabase, or Stripe to give the plan setup and context; the evidence comes from what the real browser observes.", i: I.connect },
   { k: "02", t: "Map the production graph", d: "Vraelis reads the app and the prompt to learn what it promises, then links each promise to the layer that has to keep it: a route, a database write, an ownership rule, a charge.", i: I.graph },
   { k: "03", t: "Approve the Production Contract", d: "You get an editable contract of what the app must do. Nothing runs until you approve the critical flows, so Vraelis tests only what you signed off on.", i: I.flag },
   { k: "04", t: "Run it like production", d: "A real isolated browser runs your approved flows as two separate users. Every step is a deterministic observation of what was clicked, what rendered, and what the network and console did. No model guesses here.", i: I.browser },

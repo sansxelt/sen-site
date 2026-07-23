@@ -1,4 +1,9 @@
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
+
+// Authenticated product pages are private — never indexed. Without this every page under
+// /rank/app inherits the root layout's index:true.
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 // The authenticated theme boundary.
 //
