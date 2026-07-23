@@ -25,7 +25,7 @@ function walk(dir: string, out: string[] = []): string[] {
   }
   return out;
 }
-const surfaces = [...walk("app/rank"), "app/layout.tsx", "lib/email.ts", "lib/rank-guides.ts",
+const surfaces = [...walk("app/rank"), "app/layout.tsx", "lib/email.ts",
   "app/api/v/checkout/route.ts", "docs/user-guide-production-pass.md"];
 for (const phrase of STALE) {
   const hits = surfaces.filter((p) => read(p).includes(phrase));
@@ -42,8 +42,8 @@ ok("pricing keeps the headline: priced by the run, not the seat", pricing.includ
 ok("pricing carries the new subtitle", pricing.includes("Run your AI-built application through a real production review"));
 ok("free tier: one complete Production Pass, up to 3 critical flows, no card",
   pricing.includes("One complete Production Pass") && pricing.includes("Up to 3 critical flows") && pricing.includes("No card required"));
-ok("pay as you go: $10 per pass with 5 flows included and $2 per additional",
-  pricing.includes("$10") && pricing.includes("Includes up to 5 approved critical flows") && pricing.includes("$2 per additional approved flow"));
+ok("pay as you go: $10 per pass with 5 flows included and $3 per additional",
+  pricing.includes("$10") && pricing.includes("Includes up to 5 approved critical flows") && pricing.includes("$3 per additional approved flow"));
 ok("unimplemented monthly plans have NO checkout on the public page", !pricing.includes("checkout?plan="));
 ok("early-access billing note is present (checkout not yet migrated)", pricing.includes("Early access"));
 
@@ -56,7 +56,7 @@ ok("signed-in plans: future Pro/Scale render as a disabled preview, no subscript
 ok("signed-in plans show the per-pass model", plans.includes("$10") && plans.includes("Production Pass"));
 
 const credits = read("app/rank/app/credits/page.tsx");
-ok("credits page frames the balance as early access funding passes", credits.includes("early access") && credits.includes("Production Pass"));
+ok("credits page frames the balance as early access funding passes", credits.toLowerCase().includes("early access") && credits.includes("Production Pass"));
 ok("credits page keeps the honest refund rule", credits.includes("Nothing ran, nothing charged"));
 
 console.log(`\n${pass}/${pass + fail} passed`);

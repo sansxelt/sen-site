@@ -37,18 +37,25 @@ ok("requests are same-origin relative", /fetch\(path/.test(code) && /"\/v1\/veri
 ok("session credentials are sent (the browser acts as the person, not a key)", /credentials: "same-origin"/.test(code));
 
 // Every authenticated surface must reach the API THROUGH this file. A component fetching /v1 directly is
-// how the mapping, the idempotency and the decision handling start to diverge.
+// how the mapping, the idempotency and the decision handling start to diverge. Documentation may SHOW the
+// endpoint (the developer console renders a curl quickstart for external CI callers — absolute host,
+// X-Api-Key); what a component must never do is FETCH it. So the scan flags a fetch targeting
+// /v1/verifications, not the substring wherever it appears.
 const appDir = "app/rank/app";
 const offenders: string[] = [];
+const FETCHES_V1 = /fetch\(\s*[`"']\/(?:api\/)?v1\/verifications/;
 const walk = (dir: string) => {
   for (const e of readdirSync(dir)) {
     const p = path.join(dir, e);
     if (statSync(p).isDirectory()) walk(p);
-    else if (/\.tsx?$/.test(e) && readFileSync(p, "utf8").includes("/v1/verifications")) offenders.push(p);
+    else if (/\.tsx?$/.test(e)) {
+      const src = readFileSync(p, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+      if (FETCHES_V1.test(src)) offenders.push(p);
+    }
   }
 };
 walk(appDir);
-ok("no authenticated page calls /v1/verifications directly", offenders.length === 0, offenders.join(", "));
+ok("no authenticated page fetches /v1/verifications directly", offenders.length === 0, offenders.join(", "));
 
 console.log("\n── idempotency and decision handling are not optional ──");
 // A double-clicked submit must not pay for two identical runs.

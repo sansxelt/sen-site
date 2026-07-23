@@ -544,7 +544,7 @@ ok("static: persistFlowResult redacts step detail through redactString at the si
 ok("static: persistFlowResult redacts the evidence object through redactEvidence/redactString at the sink",
   pgSrc.includes("redactEvidence(result.evidence)") && /function redactEvidence[\s\S]{0,400}redactString\(/.test(pgSrc));
 ok("static: persistFlowResult imports redactString from the redaction module",
-  /import \{ redactString \} from "\.\/redaction"/.test(pgSrc));
+  /import \{[^}]*\bredactString\b[^}]*\} from "\.\/redaction"/.test(pgSrc));
 ok("static: the sink scrubs auth metadata VALUE-level (redactAuthValues), NOT key-drop redactObject (keeps credentialState)",
   pgSrc.includes("function redactAuthValues") && pgSrc.includes("observed.auth = redactAuthValues(") && !/redactObject\(/.test(pgSrc));
 
