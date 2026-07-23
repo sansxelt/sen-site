@@ -305,7 +305,6 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
               <div key={p.project_id} className="card">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
                   <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15 }}>{p.project_name}</div>
-                  <Link href={`/projects/${p.project_id}`} style={{ fontSize: 12.5, color: "var(--acc-deep)", textDecoration: "none" }}>Manage project access →</Link>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column" }}>
                   {p.members.map((m, i) => (
@@ -327,13 +326,13 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
           <div style={cardHead}>Projects shared with you</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 18 }}>
             {ctx.sharedProjects.map((p) => (
-              <Link key={p.project_id} href={`/shared/projects/${p.project_id}`} className="card" style={{ textDecoration: "none", color: "inherit", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <div key={p.project_id} className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                 <div>
                   <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15 }}>{p.name}</div>
                   <div style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 2 }}>{p.workspace_name} | {p.evaluations.length} report{p.evaluations.length === 1 ? "" : "s"} | project access</div>
                 </div>
-                <span style={{ display: "flex", alignItems: "center", gap: 8 }}><RolePill role={p.role} /><span style={{ fontSize: 12.5, color: "var(--acc-deep)" }}>Open →</span></span>
-              </Link>
+                <RolePill role={p.role} />
+              </div>
             ))}
           </div>
         </>
@@ -355,10 +354,10 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column" }}>
                     {w.evaluations.map((e, i) => (
-                      <Link key={e.test_id} href={`/shared/${e.test_id}`} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "9px 0", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", textDecoration: "none", color: "var(--fg-1)" }}>
+                      <div key={e.test_id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "9px 0", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", color: "var(--fg-1)" }}>
                         <span style={{ fontSize: 13.5 }}>{e.title}</span>
-                        <span style={{ fontSize: 11.5, color: "var(--acc-deep)" }}>{e.status === "complete" ? "View report →" : e.status}</span>
-                      </Link>
+                        <span style={{ fontSize: 11.5, color: "var(--fg-4)" }}>{e.status}</span>
+                      </div>
                     ))}
                   </div>
                 )}

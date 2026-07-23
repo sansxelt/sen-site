@@ -480,7 +480,7 @@ export async function inviteProjectMember(actorEmail: string, projectId: string,
   await logEvent({ userId: actor, eventType: "project_member_invited", actorType: "owner", source: "app", metadata: { project_id: projectId, workspace_id: meta?.workspace_id ?? null, role } });
   const token = await mintInviteToken("v_project_members", (inserted as unknown as { id: string }).id);
   if (token) await logEvent({ userId: actor, eventType: "invite_token_created", actorType: "owner", source: "app", metadata: { invite_type: "project", project_id: projectId, workspace_id: meta?.workspace_id ?? null, role } });
-  const email = await dispatchInvite(actor, { type: "project", to: invitee, projectName: meta?.name, role, acceptUrl: inviteAcceptUrl(token, "/shared/projects/" + projectId), project_id: projectId, workspace_id: meta?.workspace_id ?? null });
+  const email = await dispatchInvite(actor, { type: "project", to: invitee, projectName: meta?.name, role, acceptUrl: inviteAcceptUrl(token, "/team"), project_id: projectId, workspace_id: meta?.workspace_id ?? null });
   return { ok: true, email };
 }
 
@@ -519,7 +519,7 @@ export async function resendProjectInvite(actorEmail: string, memberId: string):
   await logEvent({ userId: actor, eventType: "project_invite_resent", actorType: "owner", source: "app", metadata: { project_id: m.project_id, workspace_id: meta?.workspace_id ?? null, role: m.role } });
   const token = await mintInviteToken("v_project_members", memberId);
   if (token) await logEvent({ userId: actor, eventType: "invite_token_created", actorType: "owner", source: "app", metadata: { invite_type: "project", project_id: m.project_id, workspace_id: meta?.workspace_id ?? null, role: m.role } });
-  const email = await dispatchInvite(actor, { type: "project", to: m.email, projectName: meta?.name, role: m.role, acceptUrl: inviteAcceptUrl(token, "/shared/projects/" + m.project_id), project_id: m.project_id, workspace_id: meta?.workspace_id ?? null });
+  const email = await dispatchInvite(actor, { type: "project", to: m.email, projectName: meta?.name, role: m.role, acceptUrl: inviteAcceptUrl(token, "/team"), project_id: m.project_id, workspace_id: meta?.workspace_id ?? null });
   return { ok: true, email };
 }
 
@@ -613,7 +613,7 @@ async function lookupInviteByToken(token: string): Promise<InviteLookup | null> 
     const p = pm as unknown as { id: string; project_id: string; workspace_id: string | null; email: string; role: Role; status: string; invite_expires_at: string | null } | null;
     if (p) {
       const meta = await projectMeta(p.project_id);
-      return { table: "v_project_members", type: "project", id: p.id, email: p.email, role: p.role, status: p.status, expires: p.invite_expires_at, project_id: p.project_id, workspace_id: p.workspace_id, contextName: meta?.name ?? "this project", redirect: `/shared/projects/${p.project_id}` };
+      return { table: "v_project_members", type: "project", id: p.id, email: p.email, role: p.role, status: p.status, expires: p.invite_expires_at, project_id: p.project_id, workspace_id: p.workspace_id, contextName: meta?.name ?? "this project", redirect: "/team" };
     }
     return null;
   } catch { return null; }

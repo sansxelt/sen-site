@@ -87,7 +87,7 @@ export function topupMaxDollars(): number {
   return STRIPE_MAX_SINGLE_CHARGE_DOLLARS;
 }
 
-// Admin access (vote review). VRAELIS_ADMIN = comma-separated emails.
+// Admin access (data requests + audit review). VRAELIS_ADMIN = comma-separated emails.
 export function isAdmin(email: string | null | undefined): boolean {
   if (!email) return false;
   const allow = (process.env.VRAELIS_ADMIN || "").toLowerCase().split(",").map((s) => s.trim()).filter(Boolean);

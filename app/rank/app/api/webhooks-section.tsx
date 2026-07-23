@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { Ic, I } from "@/app/rank/_components/icons";
 
 type Hook = { id: string; url: string; enabled: boolean; failure_count: number; last_success_at: string | null; last_failure_at: string | null };
@@ -63,7 +62,7 @@ export function WebhooksSection() {
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 6 }}>
         <h2 className="display" style={{ fontSize: "clamp(1.4rem, 2.4vw, 1.8rem)" }}>Webhooks</h2>
       </div>
-      <p className="lead-copy" style={{ marginBottom: 18 }}>Get a signed <code style={{ fontFamily: "var(--font-code, monospace)", fontSize: 13 }}>verification.completed</code> event pushed to your app the moment a verification finishes. Then pull results from the export endpoint. <Link href="/developers#webhooks" style={{ color: "var(--acc-deep)" }}>Docs →</Link></p>
+      <p className="lead-copy" style={{ marginBottom: 18 }}>Get a signed <code style={{ fontFamily: "var(--font-code, monospace)", fontSize: 13 }}>verification.completed</code> event pushed to your app the moment a verification finishes. Then pull results from the export endpoint. <a href="https://vraelis.com/developers" style={{ color: "var(--acc-deep)" }}>Docs →</a></p>
 
       {fresh && (
         <div className="card" style={{ marginBottom: 18, borderColor: "var(--acc-line)", background: "var(--acc-soft)" }}>

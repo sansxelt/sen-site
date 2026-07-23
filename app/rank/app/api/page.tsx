@@ -46,7 +46,7 @@ curl https://vraelis.com/api/v1/verifications/VERIFICATION_ID -H "X-Api-Key: YOU
 // answering when they mint a key.
 type PreflightAccess = "none" | "read" | "launch";
 const PREFLIGHT_ACCESS: { id: PreflightAccess; label: string; hint: string; scopes: string[] }[] = [
-  { id: "none", label: "No Preflight access", hint: "Tests and credits only. The safe default.", scopes: [] },
+  { id: "none", label: "No Preflight access", hint: "Verifications and credits only. The safe default.", scopes: [] },
   { id: "read", label: "Read reports", hint: "Price a verification and read run reports. Cannot launch a run or spend anything.", scopes: ["preflight:preview", "preflight:run:read"] },
   { id: "launch", label: "Launch runs", hint: "Everything above, plus launching a verification. This key can spend your credits.", scopes: ["preflight:preview", "preflight:run:read", "preflight:run:create"] },
 ];

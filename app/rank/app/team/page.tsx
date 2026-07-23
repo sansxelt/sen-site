@@ -52,7 +52,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
                 <p>Ask the owner of {selected.name} to share a project with you. Client-safe reports appear here the moment they do.</p>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>{summary.projects.map((p) => <a key={p.id} href={`/shared/projects/${p.id}`} className="card" style={{ textDecoration: "none", color: "inherit", display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ fontWeight: 600 }}>{p.name}</span><span style={{ fontSize: 12, color: "var(--acc-deep)" }}>View reports →</span></a>)}</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>{summary.projects.map((p) => <div key={p.id} className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ fontWeight: 600 }}>{p.name}</span><span style={{ fontSize: 12, color: "var(--fg-4)" }}>Shared project</span></div>)}</div>
             )}
           </>
         ) : (
