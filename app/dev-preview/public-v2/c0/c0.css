@@ -1,0 +1,116 @@
+/* Design 05 Phase 0C — first-viewport direction studies.
+   Brand world: Vraelis as a "Bureau of Proof" — a premium trust institution that issues an evidence-backed
+   VERDICT on AI-built software. A bright, confident, authored public surface (NOT cream template, NOT dark
+   dev-tool) with a contained dark PROOF CHAMBER where the technical checking happens, EXHIBITS of real
+   evidence, and the verdict rendered as an official SEAL/STAMP (the ownable brand device). Deep authoritative
+   colour used in large blocks; the product story fills the viewport at large scale. */
+
+.c0 {
+  --paper: #F7F4EC;
+  --paper-2: #FEFDFB;
+  --ink: #17140D;
+  --ink-2: #4C4638;
+  --ink-3: #7A7361;
+  --line: rgba(23,20,13,0.14);
+  --line-2: rgba(23,20,13,0.22);
+  --green: #0C6A46;       /* institutional trust / verified */
+  --green-deep: #084A31;
+  --green-bright: #17A46B;
+  --red: #B03122;         /* rejected / failed */
+  --red-deep: #8A2417;
+  --gold: #A9803A;        /* seal / foil */
+  --chamber: #14130E;     /* the dark proof chamber (warm near-black) */
+  --chamber-2: #1E1C15;
+  --chamber-ink: #F1EEE4;
+  --chamber-ink-2: #A69E8A;
+  --disp: var(--font-display), -apple-system, system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--disp);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+.c0 *, .c0 *::before, .c0 *::after { box-sizing: border-box; }
+.c0 :focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+
+/* wordmark strip (minimal — the product story is the hero, not the nav) */
+.c0-top { display: flex; align-items: center; justify-content: space-between; height: 58px; }
+.c0-brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 650; font-size: 17px; letter-spacing: -0.01em; color: var(--ink); text-decoration: none; }
+.c0-brand .est { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); padding-left: 12px; border-left: 1px solid var(--line); margin-left: 4px; }
+.c0-top-cta { display: inline-flex; align-items: center; gap: 8px; padding: 9px 17px; border-radius: 999px; background: var(--ink); color: var(--paper-2); font-size: 13.5px; font-weight: 550; text-decoration: none; }
+
+/* small caps institutional label */
+.c0-label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); }
+.c0-label--green { color: var(--green); }
+.c0-label--red { color: var(--red); }
+
+/* the thesis */
+.c0-thesis { font-family: var(--disp); font-weight: 700; letter-spacing: -0.04em; line-height: 0.94; color: var(--ink); margin: 0; text-wrap: balance; }
+.c0-thesis .g { color: var(--green); }
+.c0-sub { color: var(--ink-2); line-height: 1.4; text-wrap: pretty; }
+
+/* the business requirement, as a formal clause */
+.c0-clause { border: 1px solid var(--line-2); border-radius: 4px; background: var(--paper-2); box-shadow: 0 1px 0 rgba(23,20,13,0.05), 0 22px 50px -30px rgba(23,20,13,0.28); }
+.c0-clause-h { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-bottom: 1px solid var(--line); }
+.c0-clause-ref { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--ink-3); }
+.c0-clause-src { margin-left: auto; font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+.c0-clause-body { padding: 20px 20px 22px; }
+.c0-requirement { font-family: var(--disp); font-weight: 600; letter-spacing: -0.02em; line-height: 1.18; color: var(--ink); }
+
+/* invariant chips — the breadth of business promises Vraelis proves */
+.c0-invariants { display: flex; flex-wrap: wrap; gap: 8px; }
+.c0-inv { display: inline-flex; align-items: center; gap: 8px; padding: 7px 13px; border: 1px solid var(--line); border-radius: 999px; font-size: 12.5px; color: var(--ink-2); background: var(--paper-2); }
+.c0-inv .t { width: 5px; height: 5px; border-radius: 50%; background: var(--green); }
+.c0-inv--active { border-color: var(--ink); color: var(--ink); font-weight: 550; }
+
+/* the dark proof chamber */
+.c0-chamber { background: radial-gradient(120% 90% at 20% 0%, #201E15, var(--chamber)); color: var(--chamber-ink); border-radius: 6px; box-shadow: 0 40px 90px -40px rgba(23,20,13,0.6); position: relative; overflow: hidden; }
+.c0-chamber::after { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(rgba(241,238,228,0.028) 1px, transparent 1px); background-size: 100% 30px; opacity: 0.6; }
+.c0-chamber-h { display: flex; align-items: center; gap: 10px; padding: 13px 20px; border-bottom: 1px solid rgba(241,238,228,0.1); font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--chamber-ink-2); }
+.c0-chamber-h .live { width: 7px; height: 7px; border-radius: 50%; background: var(--green-bright); box-shadow: 0 0 10px rgba(23,164,107,0.7); }
+.c0-oblig { display: grid; gap: 1px; }
+.c0-ob { display: grid; grid-template-columns: 26px 1fr auto; gap: 12px; align-items: center; padding: 11px 20px; }
+.c0-ob .mk { width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid rgba(241,238,228,0.25); color: var(--chamber-ink-2); }
+.c0-ob--pass .mk { border-color: var(--green-bright); color: var(--green-bright); background: rgba(23,164,107,0.12); }
+.c0-ob--fail .mk { border-color: var(--red); background: var(--red); color: #fff; }
+.c0-ob .tx { font-size: 14.5px; color: var(--chamber-ink); letter-spacing: -0.005em; }
+.c0-ob--fail .tx { font-weight: 600; }
+.c0-ob .st { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--chamber-ink-2); }
+.c0-ob--pass .st { color: var(--green-bright); }
+.c0-ob--fail .st { color: #FF7D6E; }
+.c0-ob--fail { background: linear-gradient(90deg, rgba(176,49,34,0.14), transparent); }
+
+/* exhibit — a piece of evidence, presented with weight */
+.c0-exhibit { border: 1px solid var(--line-2); border-radius: 4px; background: var(--paper-2); overflow: hidden; }
+.c0-exhibit-h { display: flex; align-items: center; gap: 8px; padding: 9px 13px; background: var(--paper); border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
+.c0-exhibit-b { padding: 14px 15px; }
+.c0-eo-k { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
+.c0-eo-v { font-family: var(--disp); font-weight: 500; letter-spacing: -0.01em; line-height: 1.2; margin-top: 8px; }
+.c0-eo-v--exp { color: var(--ink); }
+.c0-eo-v--obs { color: var(--red); }
+.c0-eo-v--ok { color: var(--green); }
+
+/* the verdict tag / banner in the bright world */
+.c0-verdict { display: inline-flex; align-items: center; gap: 12px; }
+.c0-verdict-word { font-family: var(--disp); font-weight: 700; letter-spacing: -0.03em; line-height: 0.9; }
+.c0-verdict--rejected .c0-verdict-word { color: var(--red); }
+.c0-verdict--verified .c0-verdict-word { color: var(--green); }
+.c0-verdict-note { font-size: 13px; color: var(--ink-2); max-width: 22ch; line-height: 1.35; }
+
+/* primary action */
+.c0-cta { display: inline-flex; align-items: center; gap: 9px; padding: 14px 24px; border-radius: 999px; background: var(--green); color: #fff; font-size: 15px; font-weight: 600; text-decoration: none; letter-spacing: -0.01em; }
+.c0-cta--ink { background: var(--ink); }
+.c0-cta--ghost { background: transparent; color: var(--ink); border: 1px solid var(--line-2); }
+
+.c0-tag { position: fixed; left: 14px; bottom: 14px; z-index: 9; font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; color: var(--ink-3); background: var(--paper-2); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; }
+
+/* mobile: stack the concept grids (inline grid-template-columns need !important to override) */
+@media (max-width: 680px) {
+  .c0-cols { grid-template-columns: 1fr !important; }
+  .c0-hide-m { display: none !important; }
+  .c0-top .est { display: none; }
+  .c0-thesis { font-size: clamp(2.1rem, 9vw, 3.1rem) !important; }
+  .c0-top-cta { padding: 8px 14px; font-size: 12.5px; }
+}
