@@ -1,0 +1,135 @@
+/* Design 05 Phase 0D — the Proof Arena. A cinematic storyboard: an AI-built app is put on trial against a
+   business invariant, using REAL product surfaces as the actors. Not a landing page, not a dashboard — a
+   dimensional stage. The signature is THE BREACH: a real screen reaching across a tenant boundary.
+   World: warm graphite void + directional stage light; the product surfaces are bright, real, and at depth;
+   Vraelis's own energy is a live emerald; a violation is hot vermilion; the invariant is a fixed luminous law. */
+
+.sb {
+  --void: #14110B;
+  --void-2: #0B0906;
+  --ink-hi: #F4EFE3;
+  --ink-mid: #B9B1A0;
+  --ink-lo: #736C5C;
+  --surface: #FCFBF8;      /* real product UI light surface */
+  --surface-2: #F1EEE7;
+  --surface-ink: #1B1710;
+  --surface-ink-2: #6A6355;
+  --surface-line: rgba(27,23,16,0.12);
+  --orgA: #3E63DD;         /* Organization A identity colour */
+  --orgB: #C6792B;         /* Organization B identity colour */
+  --vr: #16E08C;           /* Vraelis live energy */
+  --vr-deep: #0B8E58;
+  --vr-glow: rgba(22,224,140,0.55);
+  --breach: #FF4438;       /* a violation */
+  --breach-glow: rgba(255,68,56,0.6);
+  --law: #EBC777;          /* the invariant, inscribed */
+  --disp: var(--font-display), -apple-system, system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+
+  position: relative;
+  min-height: 100vh;
+  color: var(--ink-hi);
+  font-family: var(--disp);
+  background:
+    radial-gradient(120% 80% at 50% -8%, rgba(255,240,214,0.10), transparent 46%),
+    radial-gradient(90% 70% at 84% 108%, rgba(22,224,140,0.06), transparent 55%),
+    linear-gradient(180deg, #1A1610, var(--void) 40%, var(--void-2));
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+.sb *, .sb *::before, .sb *::after { box-sizing: border-box; }
+.sb :focus-visible { outline: 2px solid var(--vr); outline-offset: 3px; }
+.sb-frame { position: relative; width: 100%; min-height: 100vh; padding: clamp(22px,3.4vw,46px) clamp(24px,4vw,64px); }
+/* faint volumetric dust so the void has depth, not flatness */
+.sb::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background-image: radial-gradient(1px 1px at 20% 30%, rgba(244,239,227,0.10), transparent), radial-gradient(1px 1px at 70% 60%, rgba(244,239,227,0.07), transparent), radial-gradient(1px 1px at 45% 80%, rgba(22,224,140,0.10), transparent), radial-gradient(1px 1px at 88% 22%, rgba(244,239,227,0.06), transparent);
+  background-size: 240px 240px, 320px 320px, 280px 280px, 200px 200px; opacity: 0.7; }
+
+.sb-top { position: relative; z-index: 5; display: flex; align-items: center; justify-content: space-between; }
+.sb-brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; font-size: 16px; color: var(--ink-hi); }
+.sb-frameid { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-lo); }
+
+.sb-eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-lo); }
+.sb-eyebrow .v { color: var(--vr); }
+.sb-thesis { font-family: var(--disp); font-weight: 720; letter-spacing: -0.04em; line-height: 0.92; color: var(--ink-hi); margin: 0; text-wrap: balance; }
+.sb-thesis .v { color: var(--vr); text-shadow: 0 0 40px var(--vr-glow); }
+.sb-say { font-size: clamp(15px,1.5vw,19px); color: var(--ink-mid); line-height: 1.4; text-wrap: pretty; }
+
+/* ── the invariant, as a fixed luminous law inscribed across the scene ── */
+.sb-invariant { position: relative; display: inline-flex; flex-direction: column; gap: 8px; padding: 16px 22px; border-left: 2px solid var(--law); }
+.sb-invariant::before { content: ""; position: absolute; left: -2px; top: 0; bottom: 0; width: 2px; background: var(--law); box-shadow: 0 0 16px rgba(235,199,119,0.5); }
+.sb-invariant .k { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--law); }
+.sb-invariant .t { font-family: var(--disp); font-weight: 550; font-size: clamp(17px,1.7vw,24px); letter-spacing: -0.015em; line-height: 1.18; color: var(--ink-hi); max-width: 30ch; }
+
+/* ── the AI change packet — a tangible release object ── */
+.sb-packet { position: relative; display: inline-block; border-radius: 12px; background: linear-gradient(160deg, #2A251A, #17130C); border: 1px solid rgba(244,239,227,0.14); box-shadow: 0 30px 70px -34px rgba(0,0,0,0.9), inset 0 1px 0 rgba(244,239,227,0.06); padding: 15px 18px; min-width: 260px; }
+.sb-packet::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: 12px 0 0 12px; background: linear-gradient(var(--vr), var(--vr-deep)); box-shadow: 0 0 16px var(--vr-glow); }
+.sb-packet .h { display: flex; align-items: center; gap: 9px; font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.08em; color: var(--ink-lo); }
+.sb-packet .agent { color: var(--vr); }
+.sb-packet .claim { font-family: var(--disp); font-weight: 600; font-size: 16px; letter-spacing: -0.01em; color: var(--ink-hi); margin-top: 9px; }
+.sb-packet--repair::after { background: linear-gradient(var(--law), #B9902F); box-shadow: 0 0 16px rgba(235,199,119,0.5); }
+
+/* ── identity token — a fresh challenge identity Vraelis spawns ── */
+.sb-id { display: inline-flex; align-items: center; gap: 9px; padding: 7px 13px 7px 8px; border-radius: 999px; background: rgba(244,239,227,0.04); border: 1px solid rgba(244,239,227,0.14); }
+.sb-id .av { width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; font-weight: 600; color: #fff; }
+.sb-id .nm { font-size: 13px; font-weight: 550; color: var(--ink-hi); }
+.sb-id .og { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; color: var(--ink-lo); }
+
+/* ── ORG WORLD — a real product surface (the actor) ── */
+.sb-world { width: 100%; border-radius: 12px; background: var(--surface); color: var(--surface-ink); overflow: hidden; box-shadow: 0 50px 100px -40px rgba(0,0,0,0.85), 0 0 0 1px rgba(244,239,227,0.06); }
+.sb-world-bar { display: flex; align-items: center; gap: 10px; padding: 11px 15px; border-bottom: 1px solid var(--surface-line); background: var(--surface-2); }
+.sb-world-badge { width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-family: var(--mono); font-size: 12px; font-weight: 700; }
+.sb-world-name { font-weight: 650; font-size: 14px; color: var(--surface-ink); }
+.sb-world-user { margin-left: auto; display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--surface-ink-2); }
+.sb-world-user .av { width: 20px; height: 20px; border-radius: 50%; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; font-family: var(--mono); }
+.sb-world-body { padding: 6px 0; }
+.sb-row { display: grid; grid-template-columns: 20px 1fr auto; gap: 12px; align-items: center; padding: 10px 16px; border-bottom: 1px solid rgba(27,23,16,0.06); }
+.sb-row .ic { width: 8px; height: 8px; border-radius: 2px; }
+.sb-row .nm { font-size: 13.5px; color: var(--surface-ink); font-weight: 500; }
+.sb-row .own { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.04em; color: var(--surface-ink-2); }
+.sb-row--foreign { background: linear-gradient(90deg, rgba(255,68,56,0.14), rgba(255,68,56,0.04)); box-shadow: inset 2px 0 0 var(--breach); }
+.sb-row--foreign .nm { color: var(--breach); font-weight: 650; }
+.sb-row--foreign .own { color: var(--breach); font-weight: 600; }
+.sb-world-foot { padding: 9px 16px; font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.04em; color: var(--surface-ink-2); border-top: 1px solid var(--surface-line); }
+
+/* ── the tenant boundary — the line that must hold ── */
+.sb-boundary { position: relative; }
+.sb-boundary-line { position: absolute; background: repeating-linear-gradient(180deg, rgba(235,199,119,0.7) 0 8px, transparent 8px 16px); box-shadow: 0 0 14px rgba(235,199,119,0.35); }
+.sb-boundary-line--broken { background: repeating-linear-gradient(180deg, var(--breach) 0 8px, transparent 8px 16px); box-shadow: 0 0 20px var(--breach-glow); }
+
+/* ── verdict moment ── */
+.sb-verdict { font-family: var(--disp); font-weight: 720; letter-spacing: -0.035em; line-height: 0.9; }
+.sb-verdict--rej { color: var(--breach); text-shadow: 0 0 50px var(--breach-glow); }
+.sb-verdict--ok { color: var(--vr); text-shadow: 0 0 50px var(--vr-glow); }
+.sb-verdict-note { font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em; color: var(--ink-mid); }
+
+/* ── preserved proof records (dimensional stack) ── */
+.sb-record { border-radius: 8px; padding: 13px 16px; background: linear-gradient(160deg, #211C13, #14100A); border: 1px solid rgba(244,239,227,0.12); display: flex; flex-direction: column; gap: 6px; }
+.sb-record[data-v="rejected"] { box-shadow: inset 3px 0 0 var(--breach); }
+.sb-record[data-v="verified"] { box-shadow: inset 3px 0 0 var(--vr); }
+.sb-record .rn { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; color: var(--ink-lo); }
+.sb-record .rl { font-size: 13px; font-weight: 600; color: var(--ink-hi); }
+.sb-record .rv { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; }
+.sb-record[data-v="rejected"] .rv { color: #FF7368; }
+.sb-record[data-v="verified"] .rv { color: var(--vr); }
+
+/* utility */
+.sb-cta { display: inline-flex; align-items: center; gap: 9px; padding: 13px 22px; border-radius: 10px; background: var(--vr); color: #05231A; font-size: 15px; font-weight: 650; text-decoration: none; box-shadow: 0 0 40px -8px var(--vr-glow); }
+.sb-cta--ghost { background: transparent; color: var(--ink-hi); border: 1px solid rgba(244,239,227,0.22); box-shadow: none; }
+.sb-tag { position: fixed; left: 14px; bottom: 14px; z-index: 20; font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; color: var(--ink-lo); background: rgba(11,9,6,0.85); border: 1px solid rgba(244,239,227,0.14); border-radius: 6px; padding: 6px 10px; }
+.sb-cap { position: relative; z-index: 5; }
+
+/* mobile: stack scenes, bring the floating product surfaces into the flow, cap type */
+@media (max-width: 680px) {
+  .sb-frame { padding: 18px 16px 40px; }
+  .sb-scene { grid-template-columns: 1fr !important; gap: 22px !important; margin-top: 22px !important; }
+  .sb-thesis { font-size: clamp(1.85rem, 8.4vw, 2.6rem) !important; }
+  .sb-verdict { font-size: clamp(2.4rem, 12vw, 3.2rem) !important; }
+  .sb-float {
+    position: static !important; width: 100% !important; inset: auto !important;
+    transform: none !important; filter: none !important; opacity: 1 !important; margin-top: 18px;
+  }
+  .sb-float-hide-m { display: none !important; }
+  .sb-hero-copy { max-width: 100% !important; margin-top: 40px !important; }
+  .sb-lineage-m { position: static !important; left: auto !important; right: auto !important; bottom: auto !important; grid-template-columns: 1fr !important; margin-top: 26px; }
+}
