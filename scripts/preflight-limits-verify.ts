@@ -93,7 +93,7 @@ for (const [name, file] of [
   // (path updated after the shell rename: apps/[id]/runs/[runId] -> applications/[id]/passes/[runId])
   const src = read("app", "rank", "app", "applications", "[id]", "passes", "[runId]", "page.tsx");
   ok("report page has a FAILURE_LINE map covering the classifier codes", ["provider_auth_failed", "provider_quota", "provider_capacity", "provider_unavailable", "infra_misconfigured", "session_timeout"].every((c) => src.includes(c)));
-  ok("report page keeps the generic line for unknown/absent codes", src.includes("This run stopped before it reached a decision."));
+  ok("report page keeps the generic line for unknown/absent codes", src.includes("This verification stopped before it reached a conclusion."));
 }
 
 // ── static: the launch button no longer guesses a price (cost comes from the gate-parity PassPreview) ──

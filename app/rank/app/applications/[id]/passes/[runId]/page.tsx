@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { requirePreflightAppAccess } from "@/lib/v-preflight-guard";
 import { capabilities } from "@/lib/preflight/role-capabilities";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
-import { getApplication } from "@/lib/v-applications";
-import { getRun, type RunFlow, type RunStep, type RunIssue } from "@/lib/preflight/runs-db";
+import { getApplication, getContractById, listRequirements, type ContractRequirement } from "@/lib/v-applications";
+import { getRun, runContractId, listChildRuns, type RunFlow, type RunIssue, type ChildRun } from "@/lib/preflight/runs-db";
 import { getRunInternal, listFlowRunMeta, type FlowRunMeta } from "@/lib/preflight/run-report-db";
 import { runVersionPins, getDeployment, deploymentStoreReady } from "@/lib/preflight/deployments-db";
 import { getSnapshot } from "@/lib/preflight/context-snapshots";
+import { runVerdict, isActiveRun, runningStage, type Tone as ToneKey } from "@/lib/preflight/home-verdict";
 import { SetupRequired } from "../../../setup-required";
 import { RerunButton } from "./rerun-button";
 import { CancelRunButton } from "./cancel-run-button";
@@ -18,7 +20,8 @@ import { passPricingEnabled, rerunPriceCents } from "@/lib/preflight/pass-pricin
 import { usdFromCents } from "@/lib/preflight/pass-pricing-format";
 import { gatePassLaunch } from "@/lib/preflight/entitlements-v1";
 
-export const metadata: Metadata = { title: "Preflight run" };
+// Design 02 — the Verification Result page. VISIBLE product language is "Verification", never "Pass".
+export const metadata: Metadata = { title: "Verification" };
 
 // ── formatting helpers (server-rendered; stable) ──
 function num(v: unknown): number { return typeof v === "number" ? v : Number(v) || 0; }
@@ -31,93 +34,38 @@ function ago(iso: string): string {
   const h = Math.floor(m / 60); if (h < 24) return `${h} hour${h === 1 ? "" : "s"} ago`;
   const d = Math.floor(h / 24); return `${d} day${d === 1 ? "" : "s"} ago`;
 }
+function shortId(v: string): string { return v.length > 12 ? `${v.slice(0, 8)}…${v.slice(-4)}` : v; }
 
-// Decision + status tones (the shared decision palette: ready / needs_review / blocked / muted).
-type Tone = { label: string; color: string; bg: string; border: string };
-const TONE_READY = { color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
-// REPAIR VERIFIED is POSITIVE but PROVISIONAL — verified, yet not launch-cleared. It must read distinctly
-// from the solid READY green at a glance (founder: keep REPAIR VERIFIED visibly distinct from READY), so it
-// uses the teal accent TINT rather than the full ready green.
-const TONE_REPAIR = { color: "#0A7B54", bg: "var(--accent-dim, #E8FBF6)", border: "var(--accent-border, #B7EFE4)" };
-const TONE_REVIEW = { color: "#B45309", bg: "#FEF6E7", border: "#F3DFB0" };
-const TONE_BLOCKED = { color: "#C0392B", bg: "#FBEBEA", border: "#F0C7C2" };
-const TONE_MUTED = { color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };
-
-// The verdict tone. A run with no decision that ended anyway is labeled by its real terminal state,
-// never left saying IN PROGRESS.
-function runTone(decision: string | null, state: string): Tone {
-  if (decision === "ready") return { label: "VERIFIED", ...TONE_READY };
-  if (decision === "repair_verified") return { label: "VERIFIED", ...TONE_REPAIR };
-  if (decision === "needs_review") return { label: "BLOCKED", ...TONE_REVIEW };
-  if (decision === "blocked") return { label: "FAILED", ...TONE_BLOCKED };
-  if (state === "cancelled") return { label: "CANCELLED", ...TONE_MUTED };
-  if (state === "failed") return { label: "INCOMPLETE", ...TONE_MUTED };
-  return { label: "IN PROGRESS", ...TONE_MUTED };
-}
-
-function flowTone(state: string): Tone {
-  if (state === "passed") return { label: "Passed", ...TONE_READY };
-  if (state === "failed") return { label: "Failed", ...TONE_BLOCKED };
-  if (state === "blocked") return { label: "Blocked", ...TONE_BLOCKED };
-  // A boundary refusal, never an application failure: muted, not red.
-  if (state === "blocked_by_policy") return { label: "Blocked by policy", ...TONE_MUTED };
-  // A worker/config auth failure (missing/revoked credential, vault, MFA/CAPTCHA): also not an app failure.
-  if (state === "auth_config_failed") return { label: "Auth not available", ...TONE_MUTED };
-  if (state === "running") return { label: "Running", ...TONE_REVIEW };
-  if (state === "skipped") return { label: "Skipped", ...TONE_MUTED };
-  const label = state ? state.charAt(0).toUpperCase() + state.slice(1) : "Pending";
-  return { label, ...TONE_MUTED };
-}
-
-// The auth-failure classifications told as owner-safe sentences. auth_rejected_by_app is NOT here: it is a
-// normal application defect (a broken login) and surfaces as a standard failed flow / launch blocker.
-const AUTH_FAILURE_LINE: Record<string, string> = {
-  invalid_or_revoked_credential: "The test account for this role is missing or was revoked. Add or re-add it under Connections, then run again.",
-  login_ui_not_found: "No sign-in screen was found where this flow expected one. Check the flow's start path.",
-  credential_field_not_found: "The sign-in form's fields could not be located. The login page may have changed.",
-  mfa_required: "This account requires multi-factor authentication. Vraelis will not bypass it. Set up a test account without MFA, or a session that skips it.",
-  captcha_encountered: "A CAPTCHA or bot check blocked sign-in. Vraelis will not bypass it. Allowlist the test runner or use a checkpoint that skips it.",
-  worker_vault_failure: "Vraelis could not decrypt this application's test credentials. This is on our side, not your deployment. Nothing was charged.",
-  provider_infra_failure: "The browser provider failed during sign-in. This is on our side, not your deployment.",
-  boundary_blocked: "An action this flow needed was refused by your test boundaries. Widen the boundaries and run again.",
+// ── the ONE decision vocabulary, shared with Home (lib/preflight/home-verdict). It renders only the public
+// Verified / Failed / Blocked (repair_verified -> Verified, a proven repair) plus the honest non-conclusions
+// In progress / Not yet verified. It never exposes an internal decision string, and it uses the approved
+// warm-neutral tokens — no retired teal. This page implements NO second decision mapping. ──
+const TONE: Record<ToneKey, { color: string; bg: string; border: string }> = {
+  verified: { color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" },
+  failed: { color: "var(--a-failed, #A8452A)", bg: "#F6ECE7", border: "#E7CFC5" },
+  blocked: { color: "var(--a-blocked, #7E6F43)", bg: "#F2ECDD", border: "#E4D9BE" },
+  progress: { color: "var(--fg-3)", bg: "var(--bg-2)", border: "var(--line-2)" },
+  unproven: { color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" },
 };
 
-const SEV_COLOR: Record<string, string> = { critical: "#C0392B", high: "#B45309", medium: "var(--fg-3)", low: "var(--fg-4)" };
+// Per-flow status label for the execution journey (reuses the same tone palette).
+function flowStatus(state: string): { label: string; tone: ToneKey } {
+  if (state === "passed") return { label: "Passed", tone: "verified" };
+  if (state === "failed" || state === "blocked") return { label: state === "failed" ? "Failed" : "Blocked", tone: "failed" };
+  if (state === "blocked_by_policy") return { label: "Blocked by policy", tone: "unproven" };
+  if (state === "auth_config_failed") return { label: "Auth not available", tone: "unproven" };
+  if (state === "running") return { label: "Running", tone: "progress" };
+  if (state === "skipped") return { label: "Skipped", tone: "unproven" };
+  return { label: state ? state.charAt(0).toUpperCase() + state.slice(1) : "Pending", tone: "unproven" };
+}
+
+const SEV_COLOR: Record<string, string> = { critical: "var(--a-failed, #A8452A)", high: "#B45309", medium: "var(--fg-3)", low: "var(--fg-4)" };
 const SEV_LABEL: Record<string, string> = { critical: "Critical", high: "High", medium: "Medium", low: "Low" };
 const ENV_LABELS: Record<string, string> = { preview: "Preview", staging: "Staging", production: "Production" };
 const DEPLOY_PROVIDER_LABELS: Record<string, string> = { vercel: "Vercel", railway: "Railway", netlify: "Netlify", custom: "Custom" };
-const CATEGORY_LABEL: Record<string, string> = {
-  persistence_failure: "Persistence", session_failure: "Session", cross_account: "Authorization",
-  fake_success: "Fake success", stale_ui: "Stale UI", duplicate_action: "Duplicate action",
-  authorization_failure: "Authorization", mobile_blocker: "Mobile", navigation_failure: "Navigation", functional_failure: "Functional",
-};
-function catLabel(c: string | null): string { return c ? (CATEGORY_LABEL[c] ?? c.replace(/_/g, " ")) : "Issue"; }
 
-function stepText(action: string | null, target: string | null): string {
-  const t = (target ?? "").trim();
-  switch (action) {
-    case "navigate": return `Open ${t || "the page"}`;
-    case "click": return `Click ${t || "the control"}`;
-    case "fill": return `Fill ${t || "the field"}`;
-    case "select": return `Select ${t || "an option"}`;
-    case "check": return `Check ${t || "the box"}`;
-    case "uncheck": return `Uncheck ${t || "the box"}`;
-    case "press": return `Press ${t || "a key"}`;
-    case "wait_for": return `Wait for ${t || "the element"}`;
-    case "assert_visible": return `Confirm ${t || "the content"} is visible`;
-    case "assert_text": return `Confirm the text ${t}`.trim();
-    case "assert_url": return `Confirm the URL ${t}`.trim();
-    case "refresh": return "Refresh the page";
-    case "new_context": return "Open a fresh session";
-    case "screenshot": return "Capture a screenshot";
-    default: return `${action ?? "Step"}${t ? ` ${t}` : ""}`;
-  }
-}
-
-// Coarse, owner-safe failure codes (worker/preflight/provider-errors.ts) told as user sentences. An unknown
-// or absent code keeps the generic line; a raw provider message never reaches this page. The "nothing was
-// charged" claim is safe for these codes: they are thrown at session creation, before any flow ran, and the
-// worker refunds the full hold on a terminal failure where no flow executed.
+// Coarse, owner-safe failure sentences (worker/preflight/provider-errors.ts). An unknown/absent code keeps the
+// generic line; a raw provider message never reaches this page.
 const FAILURE_LINE: Record<string, string> = {
   provider_auth_failed: "Browser provider authorization failed. Nothing was charged for flows that never ran.",
   provider_quota: "The browser usage allowance was exhausted. Nothing was charged for flows that never ran.",
@@ -127,9 +75,7 @@ const FAILURE_LINE: Record<string, string> = {
   session_timeout: "The browser session timed out before the run could finish.",
   target_mismatch: "The run harness did not honor this run's target URL, so the result was invalidated. This was on our side, not your deployment. Nothing was charged.",
   flow_selection_invalid: "This run's flow selection was missing or invalid, so no browser was started. This was on our side, not your deployment. Nothing was charged.",
-  blocked_by_policy: "Vraelis did not run these flows: your test boundaries do not permit an action they require. Widen the boundaries on the application's Connections/Settings and run again. Nothing was charged for flows that never ran.",
-  // Worker-config auth failures (S6): a role-requiring run that could not authenticate. Never an application
-  // blocker; refunded because no application work ran.
+  blocked_by_policy: "Vraelis did not run these flows: your test boundaries do not permit an action they require. Widen the boundaries and run again. Nothing was charged for flows that never ran.",
   worker_vault_failure: "Vraelis could not decrypt this application's test credentials, so no flow ran. This was on our side, not your deployment. Nothing was charged.",
   invalid_or_revoked_credential: "The test account needed to sign in is missing or was revoked, so no authenticated flow ran. Add it under Connections and run again. Nothing was charged.",
   login_ui_not_found: "Vraelis could not find a sign-in screen where these flows expected one, so nothing ran. Check the flow start path. Nothing was charged.",
@@ -139,40 +85,30 @@ const FAILURE_LINE: Record<string, string> = {
   provider_infra_failure: "The browser provider failed during sign-in. This was on our side, not your deployment. Nothing was charged.",
 };
 
-// The plain-English verdict sentence under the big decision word. Counts come straight from the run
-// summary (or the deterministic issues) — nothing invented.
-function verdictLine(decision: string | null, state: string, summary: Record<string, unknown>, criticalIssueCount: number, terminal: boolean, progress: string, failureCode: string | null): string {
-  // Scope, not clearance: a run covers the flows in the approved contract and says nothing about the rest
-  // of the app. "Cleared to launch" claimed an authority no run can carry.
-  if (decision === "ready") return "Every critical flow in your contract passed on this deployment.";
+// The plain-English "why" sentence. Counts come straight from the run summary — nothing invented.
+function whyLine(decision: string | null, state: string, summary: Record<string, unknown>, criticalIssueCount: number, terminal: boolean, failureCode: string | null): string {
+  if (decision === "ready") return "Every critical flow in this verification passed on the tested deployment.";
   if (decision === "repair_verified") {
-    // A targeted rerun proved its selected repair on this target; it did NOT run the other critical flows,
-    // so it never certifies the deployment. Honest copy: verified repair, readiness still pending.
     const n = num(summary.selected_total) || num(summary.flows_total) || 1;
-    // "No longer reproduced" is what a rerun shows. "Resolved" claims the defect is fixed, which one
-    // passing run cannot establish.
     return `${n} selected flow${n === 1 ? "" : "s"} passed. The reported failure${n === 1 ? " was" : "s were"} not reproduced. Full critical verification is still required before this deployment can be marked Verified.`;
   }
   if (decision === "needs_review") {
     const pb = num(summary.policy_blocked);
     if (pb > 0) return `${pb} flow${pb === 1 ? "" : "s"} could not run: your test boundaries do not permit an action they require. Widen the boundaries and run again.`;
-    return "A non-critical flow needs your review.";
+    return "A non-critical flow needs your review before a reliable conclusion can be reached.";
   }
   if (decision === "blocked") {
     const n = Math.max(0, num(summary.critical_total) - num(summary.critical_passed)) || criticalIssueCount;
-    return n > 0
-      ? `This deployment failed verification. ${n} critical flow${n === 1 ? "" : "s"} failed.`
-      : "This deployment failed verification.";
+    return n > 0 ? `The claim did not hold. ${n} critical flow${n === 1 ? "" : "s"} failed on the tested deployment.` : "The claim did not hold on the tested deployment.";
   }
   if (terminal) {
-    if (state === "cancelled") return "This run was cancelled before it finished.";
-    if (state === "failed") return (failureCode && FAILURE_LINE[failureCode]) || "This run stopped before it reached a decision.";
-    return "This run finished without a launch decision.";
+    if (state === "cancelled") return "This verification was cancelled before it finished, so no conclusion was reached.";
+    if (state === "failed") return (failureCode && FAILURE_LINE[failureCode]) || "This verification stopped before it reached a conclusion.";
+    return "This verification finished without reaching a conclusion.";
   }
-  return progress;
+  return "";
 }
 
-// Quiet context line: "1 of 3 critical flows passed". Null when nothing has been recorded.
 function flowsSummary(summary: Record<string, unknown>): string | null {
   const ct = num(summary.critical_total), cp = num(summary.critical_passed);
   const ft = num(summary.flows_total), fp = num(summary.flows_passed);
@@ -181,285 +117,63 @@ function flowsSummary(summary: Record<string, unknown>): string | null {
   return null;
 }
 
-// A human "what happened" sentence for a blocker, derived from the failed step the deterministic
-// evidence already points at. The raw technical detail string stays inside the technical details element.
-function humanObserved(issue: RunIssue): string {
-  const ev = (issue.evidence && typeof issue.evidence === "object" ? issue.evidence : {}) as Record<string, unknown>;
-  const repro = Array.isArray(issue.repro) ? (issue.repro as unknown[]).filter((x): x is string => typeof x === "string") : [];
-  const idx = typeof ev.failed_step_index === "number" ? ev.failed_step_index : -1;
-  const stepLine = idx >= 0 && typeof repro[idx] === "string" ? repro[idx].replace(/^\d+\.\s*/, "").trim() : "";
-  if (stepLine) return `The flow stopped at step ${idx + 1}: "${stepLine}".`;
-  const action = typeof ev.failed_action === "string" && ev.failed_action && ev.failed_action !== "unknown" ? ev.failed_action.replace(/_/g, " ") : "";
-  if (action) return `The flow stopped at the "${action}" step.`;
-  return "The flow did not complete.";
-}
-
-// v_flow_runs.name falls back to the test flow id when the contract name could not be resolved; never
-// put an id in a sentence.
+// v_flow_runs.name falls back to the flow id when the contract name is unresolved; never put an id in prose.
 function looksLikeId(name: string): boolean { return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(name.trim()); }
 
-const labelStyle = { fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: 0 } as const;
-const techLine = { fontSize: 12.5, color: "var(--fg-3)", wordBreak: "break-all", lineHeight: 1.5 } as const;
-const sectionHeading = { fontFamily: "var(--font-display)", fontWeight: 650, fontSize: "clamp(1.3rem, 2.4vw, 1.65rem)", color: "var(--fg-1)", margin: 0 } as const;
-const quietHeading = { fontFamily: "var(--font-display)", fontWeight: 650, fontSize: "clamp(1.05rem, 1.8vw, 1.25rem)", color: "var(--fg-1)", margin: 0 } as const;
+const label = { fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: 0 } as const;
+const h2Style = { fontFamily: "var(--font-display)", fontWeight: 650, fontSize: "clamp(1.15rem, 2vw, 1.4rem)", color: "var(--fg-1)", margin: 0 } as const;
+const metaText = { fontSize: 13, color: "var(--fg-3)" } as const;
 
-function Pill({ tone, size = 10.5 }: { tone: Tone; size?: number }) {
-  return <span className="pill" style={{ fontSize: size, color: tone.color, background: tone.bg, borderColor: tone.border, flex: "none" }}>{tone.label}</span>;
+function Chip({ tone, label: text, size = 10.5 }: { tone: ToneKey; label: string; size?: number }) {
+  const t = TONE[tone];
+  return <span className="pill" style={{ fontSize: size, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: t.color, background: t.bg, borderColor: t.border, flex: "none" }}>{text}</span>;
 }
 
-// Evidence screenshots, large. Every image loads through the owner-checked artifacts route — never a
-// storage path — and links to the same route full-size.
-function ScreenshotGrid({ runId, ids, min = 320 }: { runId: string; ids: string[]; min?: number }) {
-  if (!ids.length) return null;
+// Each locked section: a labelled region with an ordered h2. Sections that have no data render their own quiet
+// empty state (never a crash, never a placeholder heading). This establishes the hierarchy + data ownership;
+// the rich per-section treatment lands in later increments.
+function Section({ n, title, aria, children }: { n: string; title: string; aria: string; children: ReactNode }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fit, minmax(min(${min}px, 100%), 1fr))`, gap: 14 }}>
-      {ids.map((sid) => (
-        <figure key={sid} style={{ margin: 0, minWidth: 0 }}>
-          <a href={`/api/preflight/runs/${runId}/artifacts/${sid}`} target="_blank" rel="noopener noreferrer" style={{ display: "block" }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`/api/preflight/runs/${runId}/artifacts/${sid}`} alt="Screenshot from this run" loading="lazy" style={{ display: "block", width: "100%", maxWidth: "100%", height: "auto", border: "1px solid var(--line-2)", borderRadius: 10 }} />
-          </a>
-          <figcaption style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 6 }}>Screenshot from this run</figcaption>
-        </figure>
-      ))}
-    </div>
-  );
-}
-
-// One launch blocker told as a full story: plain-English title, what Vraelis did, expected vs observed
-// in prose, the evidence large, how to reproduce, the repair prompt. Raw technical strings (the observed
-// detail, console errors, network failures) live ONLY inside the collapsed technical details element.
-function BlockerStory({ issue, index, flowName, screenshotIds, runId }: { issue: RunIssue; index: number; flowName: string | null; screenshotIds: string[]; runId: string }) {
-  const ev = (issue.evidence && typeof issue.evidence === "object" ? issue.evidence : {}) as Record<string, unknown>;
-  const consoleErrors = Array.isArray(ev.console_errors) ? (ev.console_errors as unknown[]).filter((x): x is string => typeof x === "string") : [];
-  const networkFailures = Array.isArray(ev.network_failures) ? (ev.network_failures as { method?: string; path?: string; status?: number }[]) : [];
-  const requirementRefs = Array.isArray(ev.requirement_refs) ? (ev.requirement_refs as unknown[]).filter((x): x is string => typeof x === "string") : [];
-  const repro = Array.isArray(issue.repro) ? (issue.repro as unknown[]).filter((x): x is string => typeof x === "string") : [];
-  const sevColor = SEV_COLOR[issue.severity] ?? "var(--fg-3)";
-  const expected = (issue.expected ?? "").replace(/^Expected:\s*/i, "").trim();
-  const observed = humanObserved(issue);
-  const hasTechnical = Boolean(issue.observed) || consoleErrors.length > 0 || networkFailures.length > 0 || requirementRefs.length > 0;
-
-  return (
-    <section className="card" style={{ padding: "clamp(22px, 3vw, 32px)", borderLeft: `4px solid ${sevColor}` }}>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-        <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 650, fontSize: "clamp(19px, 2vw, 21px)", lineHeight: 1.35, color: "var(--fg-1)", margin: 0, flex: "1 1 300px", minWidth: 0, wordBreak: "break-word" }}>
-          {index + 1}. {issue.title}
-        </h3>
-        <div style={{ display: "flex", gap: 7, flex: "none", flexWrap: "wrap" }}>
-          <span className="pill" style={{ fontSize: 10.5, color: sevColor, borderColor: "var(--line-2)", background: "var(--bg-2)" }}>{SEV_LABEL[issue.severity] ?? issue.severity}</span>
-          <span className="pill" style={{ fontSize: 10.5, color: "var(--fg-3)", borderColor: "var(--line-2)", background: "var(--bg-2)" }}>{catLabel(issue.category)}</span>
-          {/* Issue lineage: is this NEW here or RECURRING from an earlier run? Backed by first_seen_run. */}
-          {issue.first_seen_run && issue.first_seen_run !== runId ? (
-            <span className="pill" style={{ fontSize: 10.5, color: "#B45309", borderColor: "#F3DFB0", background: "#FEF6E7" }} title="This issue was first detected in an earlier run">Recurring</span>
-          ) : (
-            <span className="pill" style={{ fontSize: 10.5, color: "var(--fg-4)", borderColor: "var(--line-2)", background: "var(--bg-2)" }} title="First detected in this run">First seen here</span>
-          )}
-        </div>
+    <section aria-label={aria} style={{ borderTop: "1px solid var(--line-2)", paddingTop: 22, display: "grid", gap: 12 }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-5)", fontWeight: 600 }}>{n}</span>
+        <h2 style={h2Style}>{title}</h2>
       </div>
-
-      {flowName ? (
-        <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.5, margin: "8px 0 0" }}>
-          Vraelis hit this while running the &quot;{flowName}&quot; flow in a real browser.
-          {issue.first_seen_run && issue.first_seen_run !== runId ? " It was first seen in an earlier run and is still present." : ""}
-        </p>
-      ) : null}
-
-      <div style={{ display: "grid", gap: 14, marginTop: 18 }}>
-        {expected ? (
-          <div>
-            <div style={labelStyle}>Expected</div>
-            <p style={{ fontSize: 14.5, color: "var(--fg-2)", lineHeight: 1.55, margin: "5px 0 0" }}>{expected}</p>
-          </div>
-        ) : null}
-        <div>
-          <div style={labelStyle}>Observed</div>
-          <p style={{ fontSize: 14.5, color: "var(--fg-2)", lineHeight: 1.55, margin: "5px 0 0" }}>{observed}</p>
-        </div>
-      </div>
-
-      {screenshotIds.length ? (
-        <div style={{ marginTop: 20 }}>
-          <div style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 6 }}><Ic d={I.camera} size={13} sw={2} />Evidence</div>
-          <div style={{ marginTop: 8 }}>
-            <ScreenshotGrid runId={runId} ids={screenshotIds} />
-          </div>
-        </div>
-      ) : null}
-
-      {repro.length ? (
-        <div style={{ marginTop: 20 }}>
-          <div style={labelStyle}>How to reproduce</div>
-          <ol style={{ margin: "8px 0 0", padding: "0 0 0 18px", display: "grid", gap: 5 }}>
-            {repro.map((r, i) => <li key={i} style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5 }}>{r.replace(/^\d+\.\s*/, "")}</li>)}
-          </ol>
-        </div>
-      ) : null}
-
-      {issue.likely_cause ? (
-        <div style={{ marginTop: 20, borderLeft: "3px solid var(--line-2)", paddingLeft: 14 }}>
-          <div style={labelStyle}>Possible cause (interpretation)</div>
-          <p style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.55, margin: "6px 0 0" }}>{issue.likely_cause}</p>
-          {typeof issue.suggested_areas === "string" && issue.suggested_areas ? (
-            <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "6px 0 0", wordBreak: "break-word" }}>Look at: {issue.suggested_areas}</p>
-          ) : null}
-        </div>
-      ) : null}
-
-      {issue.repair_prompt ? (
-        <div style={{ marginTop: 20 }}>
-          <CopyButton text={issue.repair_prompt} />
-        </div>
-      ) : null}
-
-      {hasTechnical ? (
-        <details style={{ marginTop: 18, border: "1px solid var(--line-1)", borderRadius: 8, padding: "10px 14px" }}>
-          <summary style={{ cursor: "pointer", fontSize: 13, color: "var(--fg-4)" }}>View technical details</summary>
-          <div style={{ display: "grid", gap: 6, marginTop: 10 }}>
-            {issue.observed ? <div style={techLine}>{issue.observed}</div> : null}
-            {requirementRefs.length ? <div style={techLine}>Requirement refs: {requirementRefs.join(", ")}</div> : null}
-            {consoleErrors.slice(0, 10).map((c, i) => <div key={`c${i}`} style={techLine}>{c}</div>)}
-            {networkFailures.slice(0, 10).map((n, i) => (
-              <div key={`n${i}`} style={techLine}>{n.status ?? ""} {n.method ?? ""} {n.path ?? ""}</div>
-            ))}
-          </div>
-        </details>
-      ) : null}
+      {children}
     </section>
   );
 }
-
-// One flow in the "What ran" timeline: a flat row with name + status + step count, the full step list
-// inside a details element (open only when the flow failed). Screenshots render here only when they were
-// not already shown as evidence on a blocker above.
-function FlowBlock({ flow, displayName, screenshotIds, runId, showShots }: { flow: RunFlow; displayName: string; screenshotIds: string[]; runId: string; showShots: boolean }) {
-  const tone = flowTone(flow.state);
-  const failed = flow.state === "failed" || flow.state === "blocked";
-  const passed = flow.state === "passed";
-  // A policy-blocked flow names the permission that would let it run, straight from the refused step's
-  // recorded detail (permit_* / allowed_domains). A destructive never-rule refusal names no permit.
-  const policyBlocked = flow.state === "blocked_by_policy";
-  const permitNeeded = policyBlocked
-    ? (flow.steps.map((s) => (s.observed ?? "").match(/permit_[a-z_]+|allowed_domains/)?.[0]).find(Boolean) ?? null)
-    : null;
-  // Authenticated-flow summary (S6). Every field is owner-safe: the account LABEL (never a username), the
-  // role(s), environment, credential state, session reuse, last verified auth. No secret can appear here.
-  const auth = flow.auth;
-  const authFailLine = auth?.authFailure ? (AUTH_FAILURE_LINE[auth.authFailure] ?? null) : null;
-  const CRED_STATE_LABEL: Record<string, string> = { active: "Active", missing: "Missing", revoked: "Revoked" };
-  return (
-    <div style={{ border: "1px solid var(--line-1)", borderRadius: "var(--r-md)", background: "var(--bg-1)", padding: "12px 16px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-        {passed ? <span aria-hidden style={{ display: "inline-flex", color: "var(--acc-deep)", flex: "none" }}><Ic d={I.check} size={14} sw={2.2} /></span> : null}
-        <span style={{ fontSize: 13.5, fontWeight: failed ? 600 : 500, color: failed ? "var(--fg-1)" : "var(--fg-2)", flex: "1 1 auto", minWidth: 0, wordBreak: "break-word" }}>{displayName}</span>
-        {auth ? <span className="pill" style={{ fontSize: 10, color: "var(--fg-3)", borderColor: "var(--line-2)", background: "var(--bg-2)", flex: "none" }}>Authenticated</span> : null}
-        <Pill tone={tone} />
-        <span style={{ fontSize: 12, color: "var(--fg-5)", flex: "none" }}>{flow.steps.length} step{flow.steps.length === 1 ? "" : "s"}</span>
-      </div>
-
-      {policyBlocked ? (
-        <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, margin: "6px 0 0" }}>
-          {permitNeeded
-            ? <>Additional permission required: <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5 }}>{permitNeeded}</span></>
-            : "This flow requires an action your test boundaries do not permit."}
-        </p>
-      ) : null}
-
-      {auth ? (
-        <div style={{ marginTop: 8, border: "1px solid var(--line-1)", borderRadius: "var(--r-sm)", background: "var(--bg-2)", padding: "10px 12px" }}>
-          <div style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 6 }}><Ic d={I.lock} size={12} sw={2} />Authenticated flow</div>
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "5px 14px", marginTop: 7, fontSize: 12.5, color: "var(--fg-3)" }}>
-            {auth.roles.length ? <span>Role{auth.roles.length === 1 ? "" : "s"}: <span style={{ color: "var(--fg-2)", fontWeight: 600 }}>{auth.roles.join(", ")}</span></span> : null}
-            {auth.accountLabel ? <span>Account: {auth.accountLabel}</span> : null}
-            {auth.environment ? <span className="pill" style={{ fontSize: 10 }}>{ENV_LABELS[auth.environment] ?? auth.environment}</span> : null}
-            <span>Credential:{" "}
-              <span style={{ color: auth.credentialState === "active" ? "var(--acc-deep)" : "#B45309", fontWeight: 600 }}>
-                {CRED_STATE_LABEL[auth.credentialState] ?? auth.credentialState}
-              </span>
-            </span>
-            {auth.sessionReuse ? <span>Session reuse on</span> : null}
-            {auth.verifiedAuthAt ? <span title={when(auth.verifiedAuthAt)}>Verified {ago(auth.verifiedAuthAt)}</span> : null}
-          </div>
-          {auth.credentialState !== "active" ? (
-            <p style={{ fontSize: 12, color: "#B45309", lineHeight: 1.5, margin: "7px 0 0" }}>
-              {auth.credentialState === "revoked" ? "This role's test credential was revoked." : "No test credential is configured for this role."} Add one under Connections and run again.
-            </p>
-          ) : null}
-          {authFailLine ? (
-            <p style={{ fontSize: 12, color: "var(--fg-3)", lineHeight: 1.5, margin: "7px 0 0" }}>{authFailLine}</p>
-          ) : null}
-        </div>
-      ) : null}
-
-      {flow.steps.length ? (
-        <details open={failed} style={{ marginTop: 8 }}>
-          <summary style={{ cursor: "pointer", fontSize: 13, color: "var(--fg-4)" }}>View steps</summary>
-          <ol style={{ listStyle: "none", margin: "10px 0 0", padding: 0, display: "grid", gap: 6 }}>
-            {flow.steps.map((s: RunStep, i) => {
-              const ok = s.status === "ok";
-              const stepFailed = !ok && s.status != null && s.status !== "";
-              return (
-                <li key={i} style={{
-                  display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 10px", borderRadius: "var(--r-sm)",
-                  background: stepFailed ? "#FBEBEA" : "var(--bg-2)",
-                  border: `1px solid ${stepFailed ? "#F0C7C2" : "var(--line-1)"}`,
-                }}>
-                  <span aria-hidden style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-5)", flex: "none", marginTop: 2, width: 18, textAlign: "right" }}>{i + 1}</span>
-                  <span aria-hidden style={{ display: "inline-flex", color: ok ? "var(--acc-deep)" : stepFailed ? "#C0392B" : "var(--fg-4)", flex: "none", marginTop: 3 }}><Ic d={ok ? I.check : stepFailed ? I.x : I.dash} size={13} sw={2.4} /></span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, color: "var(--fg-1)", lineHeight: 1.45, wordBreak: "break-word" }}>{stepText(s.action, s.target)}</div>
-                    {stepFailed && s.observed ? (
-                      <details style={{ marginTop: 4 }}>
-                        <summary style={{ cursor: "pointer", fontSize: 12, color: "var(--fg-4)" }}>Error detail</summary>
-                        <div style={{ fontSize: 12, color: "var(--fg-3)", wordBreak: "break-all", lineHeight: 1.5, marginTop: 4 }}>{s.observed}</div>
-                      </details>
-                    ) : null}
-                  </div>
-                  <span style={{ fontSize: 11, color: "var(--fg-5)", flex: "none", marginTop: 2 }}>{s.ms != null ? `${s.ms} ms` : ""}</span>
-                </li>
-              );
-            })}
-          </ol>
-        </details>
-      ) : (
-        <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "8px 0 0" }}>No steps recorded for this flow.</p>
-      )}
-
-      {showShots && screenshotIds.length ? (
-        <div style={{ marginTop: 12 }}>
-          <div style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 6 }}><Ic d={I.camera} size={13} sw={2} />Evidence</div>
-          <div style={{ marginTop: 8 }}>
-            <ScreenshotGrid runId={runId} ids={screenshotIds} min={280} />
-          </div>
-        </div>
-      ) : null}
-    </div>
-  );
+function Empty({ children }: { children: ReactNode }) {
+  return <p style={{ fontSize: 13.5, color: "var(--fg-4)", lineHeight: 1.55, margin: 0 }}>{children}</p>;
 }
 
-// Preflight RUN report (server component). Flag-gated + owner-scoped: getRun / getRunInternal are user-scoped,
-// so a guessed run id 404s here. All data degrades to null/[] before the run tables exist, and nothing is
-// fabricated — no numeric score, no fake progress, no invented metrics. Reads as a production investigation
-// report: verdict hero first, launch blockers as full stories with the evidence large, then a quiet timeline.
-export default async function RunReportPage({ params }: { params: Promise<{ id: string; runId: string }> }) {
+// Verification RESULT page (server component, READ-ONLY). Owner+workspace scoped through
+// requirePreflightAppAccess; getRun / getRunInternal are user-scoped, so a guessed run id 404s and another
+// tenant's run is never confirmed to exist. The page writes nothing, recomputes no conclusion, and resolves
+// ONLY the historical objects pinned to the run (never the latest deployment/snapshot/contract).
+export default async function VerificationResultPage({ params }: { params: Promise<{ id: string; runId: string }> }) {
   const { id, runId } = await params;
   const access = await requirePreflightAppAccess(id, `/applications/${id}/passes/${runId}`);
   const owner = access?.owner ?? "";
   const caps = capabilities(access?.role);
   if (!(await preflightDbReady())) return <SetupRequired />;
 
-  const [detail, internal, app, meta] = await Promise.all([
+  // One loading wave: everything keyed only on owner+id+runId. Steps are batched inside getRun (one .in query),
+  // never per-flow. contract/requirements/pins fan out in a second wave once their ids are known.
+  const [detail, internal, app, meta, contractId, children] = await Promise.all([
     getRun(owner, runId), getRunInternal(owner, runId), getApplication(owner, id), listFlowRunMeta(owner, runId),
+    runContractId(owner, runId), listChildRuns(owner, runId),
   ]);
 
-  // Not owned / not found, or the run belongs to a different application than the URL claims.
+  // Not owned / not found, or the run belongs to a different application than the URL claims. Same 404 for
+  // "does not exist" and "not yours" — the page never reveals whether another tenant's run exists.
   if (!detail || !internal || internal.applicationId !== id) {
     return (
-      <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
+      <div className="wrap" style={{ maxWidth: 1080, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
         <div className="empty">
           <EmptyIcon d={I.slash} />
-          <h3>Run not found</h3>
-          <p>This preflight run doesn&apos;t exist, or it belongs to another account.</p>
+          <h3 style={{ ...h2Style, fontSize: "1.4rem" }}>Verification not found</h3>
+          <p>This verification does not exist, or it belongs to another account.</p>
           <Link href={`/applications/${id}`} className="btn">Back to application</Link>
         </div>
       </div>
@@ -468,243 +182,313 @@ export default async function RunReportPage({ params }: { params: Promise<{ id: 
 
   const { run, flows, issues } = detail;
 
-  // ── Tested deployment identity (S4), all best-effort: the run's pinned deployment row and context
-  // snapshot resolve when their additive migrations are applied; absent pins render nothing, and an
-  // unapplied migration 8 gets one honest line (deploymentStoreReady) instead of a placeholder.
+  // Second wave: the contract behind the run's claim/requirements, and the PINNED historical version rows.
+  // Missing ids resolve to null (never substituted with a latest/current object).
   const pins = await runVersionPins(owner, runId);
-  const [deployment, contextSnap, deploymentsReady] = await Promise.all([
+  const [contract, requirements, deployment, contextSnap, deploymentsReady] = await Promise.all([
+    contractId ? getContractById(owner, contractId) : Promise.resolve(null),
+    contractId ? listRequirements(owner, contractId) : Promise.resolve([] as ContractRequirement[]),
     pins.deploymentId ? getDeployment(owner, pins.deploymentId) : Promise.resolve(null),
     pins.contextSnapshotId ? getSnapshot(owner, pins.contextSnapshotId) : Promise.resolve(null),
     deploymentStoreReady(owner),
   ]);
-  const deployEnvLabel = deployment?.environment ? (ENV_LABELS[deployment.environment] ?? null) : null;
-  const deployProviderLabel = deployment?.provider ? (DEPLOY_PROVIDER_LABELS[deployment.provider] ?? deployment.provider) : null;
-  const deployCommit = (deployment?.commit_sha ?? run.commit_sha ?? "").slice(0, 10);
 
-  const tone = runTone(run.decision, run.state);
+  // ── derived, nothing invented ──
+  const verdict = runVerdict(run.state, run.decision);           // Verified | Failed | Blocked | In progress | Not yet verified
   const terminal = run.decision != null || ["completed", "failed", "cancelled"].includes(run.state);
-  const active = !terminal;
-  const progressHeadline = flows.length === 0
-    ? "Waiting for the first flow"
-    : `${flows.length} flow${flows.length === 1 ? "" : "s"} completed, still running`;
+  const active = isActiveRun(run) || !terminal;
+  const hasConclusion = verdict.tone === "verified" || verdict.tone === "failed" || verdict.tone === "blocked";
+  const claim = (contract?.source_prompt ?? "").trim();
+  const contractVersion = internal.contractVersion;
+  const criticalIssueCount = issues.filter((i) => i.severity === "critical").length;
+  const why = whyLine(run.decision, run.state, run.summary, criticalIssueCount, terminal, run.failure_code);
+  const summaryLine = flowsSummary(run.summary);
+  const completedIso = run.completed_at || run.created_at;
 
-  // Join per-flow display metadata (readable name + screenshots) onto getRun's id-less flows by raw name.
-  // rawName is v_flow_runs.name, which the worker sets to the test flow id — the same id v_issues.flow_id
-  // carries — so a blocker maps to its flow's meta (name + screenshots) through the same map.
   const metaByRaw = new Map<string, FlowRunMeta>();
   for (const m of meta) if (!metaByRaw.has(m.rawName)) metaByRaw.set(m.rawName, m);
-  const nameFor = (f: RunFlow) => metaByRaw.get(f.name)?.displayName || f.name;
-  const shotsFor = (f: RunFlow) => metaByRaw.get(f.name)?.screenshotIds ?? [];
-  const metaForIssue = (iss: RunIssue) => (iss.flow_id ? metaByRaw.get(iss.flow_id) : undefined);
+  const flowName = (f: RunFlow) => { const n = metaByRaw.get(f.name)?.displayName || f.name; return looksLikeId(n) ? "Flow" : n; };
 
-  const blockers = issues.filter((i) => i.severity === "critical" || i.severity === "high");
-  const otherIssues = issues.filter((i) => i.severity !== "critical" && i.severity !== "high");
-  const criticalIssueCount = issues.filter((i) => i.severity === "critical").length;
-  const hasFailures = flows.some((f) => f.state === "failed" || f.state === "blocked") || blockers.length > 0;
-  const completedIso = run.completed_at || run.created_at;
-  const heroLine = verdictLine(run.decision, run.state, run.summary, criticalIssueCount, terminal, progressHeadline, run.failure_code);
-  const summaryLine = flowsSummary(run.summary);
+  // Evidence AVAILABILITY (counts only in Increment 1; the full visual evidence experience is a later
+  // increment). All owner-safe: screenshot ids resolve through the signed artifacts route, never storage paths.
+  const screenshotCount = meta.reduce((s, m) => s + m.screenshotIds.length, 0);
+  const issueEv = (iss: RunIssue) => (iss.evidence && typeof iss.evidence === "object" ? iss.evidence : {}) as Record<string, unknown>;
+  const consoleCount = issues.reduce((s, iss) => s + (Array.isArray(issueEv(iss).console_errors) ? (issueEv(iss).console_errors as unknown[]).length : 0), 0);
+  const networkCount = issues.reduce((s, iss) => s + (Array.isArray(issueEv(iss).network_failures) ? (issueEv(iss).network_failures as unknown[]).length : 0), 0);
 
-  // The pre-click cost line for the rerun, rendered INSIDE the RerunButton card so it is always attached to
-  // the button (never a floating detached error). The note reflects the SAME gatePassLaunch({rerun:true})
-  // decision the rerun route enforces, so it can never diverge from the actual charge. Existing entitlement
-  // behavior is preserved verbatim: a rerun consumes an UNUSED lifetime free pass (mode 'free'); otherwise it
-  // is PAYG at $3 per selected failed flow (rerunPriceCents), and a subscription meters only the selected
-  // flows. Under legacy pricing (flag off) the credit path is authoritative, so no dollar figure is asserted.
+  // Affected requirements: ONLY the requirement_refs the worker stamped on FAILED-flow issues, resolved to
+  // text via the contract's current requirements. There is NO requirement->step/flow coverage matrix, so none
+  // is built. Unresolved refs are dropped from the readable list (never shown as raw UUIDs here).
+  const reqTextById = new Map<string, string>();
+  for (const r of requirements) reqTextById.set(r.id, r.requirement);
+  const affectedIds = new Set<string>();
+  for (const iss of issues) { const refs = issueEv(iss).requirement_refs; if (Array.isArray(refs)) for (const r of refs) if (typeof r === "string") affectedIds.add(r); }
+  const affectedRequirements = [...affectedIds].map((rid) => reqTextById.get(rid)).filter((t): t is string => !!t);
+  const affectedUnresolved = [...affectedIds].filter((rid) => !reqTextById.has(rid)).length;
+
+  // Repair handoff: the findings that carry a REAL per-issue repair_prompt (no invented repair object).
+  const repairIssues = issues.filter((iss) => typeof iss.repair_prompt === "string" && iss.repair_prompt.trim().length > 0);
+
+  // Reverification: existing rerun/cancel actions stay structurally present (not redesigned). The price note
+  // reflects the SAME gatePassLaunch({rerun:true}) the rerun route enforces, so it can never diverge.
+  const hasFailures = flows.some((f) => f.state === "failed" || f.state === "blocked") || issues.some((i) => i.severity === "critical" || i.severity === "high");
   const rerunSelectedCount =
     run.decision === "repair_verified" ? Math.max(1, run.summary ? num(run.summary.critical_total) : 1)
     : hasFailures ? Math.max(1, flows.filter((f) => f.state === "failed" || f.state === "blocked").length)
     : Math.max(1, flows.length);
   let rerunPriceNote: string | null = null;
   if (passPricingEnabled() && caps.canLaunch && terminal) {
-    // gatePassLaunch({ rerun: true }) can NEVER return mode 'free' — the lifetime free pass covers a fresh
-    // full pass only, so a targeted rerun is always PAYG (or metered on a subscription), never free. There is
-    // therefore no 'free' branch here by construction.
     const gate = await gatePassLaunch(owner, rerunSelectedCount, { rerun: true });
-    if (gate.mode === "subscription") {
-      rerunPriceNote = gate.ok
-        ? `Included on your plan. A rerun meters only the ${rerunSelectedCount} selected flow${rerunSelectedCount === 1 ? "" : "s"}.`
-        : gate.message;
-    } else if (gate.mode === "payg") {
-      // The authoritative PAYG rerun price: $3 per selected failed flow, capped at the comparable pass. Stated
-      // up front so a targeted rerun always reads as PAYG. The free pass covers a fresh full pass, not this.
-      rerunPriceNote = `Targeted rerun: ${usdFromCents(gate.cents)} (${usdFromCents(rerunPriceCents(1))} per failed flow), charged when you launch. Not covered by the free verification.`;
-    } else if (gate.mode === "frozen") {
-      rerunPriceNote = gate.message;
-    }
+    if (gate.mode === "subscription") rerunPriceNote = gate.ok ? `Included on your plan. A rerun meters only the ${rerunSelectedCount} selected flow${rerunSelectedCount === 1 ? "" : "s"}.` : gate.message;
+    else if (gate.mode === "payg") rerunPriceNote = `Targeted rerun: ${usdFromCents(gate.cents)} (${usdFromCents(rerunPriceCents(1))} per failed flow), charged when you launch. Not covered by the free verification.`;
+    else if (gate.mode === "frozen") rerunPriceNote = gate.message;
   }
 
-  // Flows whose screenshots already appear as evidence on a blocker above; the timeline does not repeat them.
-  // A blocker that cannot be mapped to a flow shows no screenshots itself — that flow's screenshots stay in
-  // the timeline instead. Never fabricated either way.
-  const shotsShownInBlockers = new Set<string>();
-  for (const b of blockers) {
-    const m = metaForIssue(b);
-    if (m && m.screenshotIds.length) shotsShownInBlockers.add(m.rawName);
-  }
+  const deployEnvLabel = deployment?.environment ? (ENV_LABELS[deployment.environment] ?? null) : null;
+  const deployProviderLabel = deployment?.provider ? (DEPLOY_PROVIDER_LABELS[deployment.provider] ?? deployment.provider) : null;
+  const deployCommit = (deployment?.commit_sha ?? run.commit_sha ?? "").slice(0, 10);
 
   return (
-    <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-      <nav aria-label="Breadcrumb" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 13, marginBottom: 16 }}>
-        <Link href="/applications" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Applications</Link>
+    <div className="wrap" style={{ maxWidth: 1080, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
+      <nav aria-label="Breadcrumb" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 13, marginBottom: 18 }}>
+        <Link href="/applications" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Systems</Link>
         <span aria-hidden style={{ color: "var(--fg-5)" }}>/</span>
-        <Link href={`/applications/${id}`} style={{ color: "var(--fg-4)", textDecoration: "none", maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app?.name ?? "Application"}</Link>
+        <Link href={`/applications/${id}`} style={{ color: "var(--fg-4)", textDecoration: "none", maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app?.name ?? "System"}</Link>
         <span aria-hidden style={{ color: "var(--fg-5)" }}>/</span>
-        <span style={{ color: "var(--fg-2)", fontWeight: 600 }}>Preflight run</span>
+        <span style={{ color: "var(--fg-2)", fontWeight: 600 }}>Verification</span>
       </nav>
 
-      <div style={{ display: "grid", gap: "clamp(26px, 3.5vw, 38px)", marginTop: 10 }}>
+      {/* ── 01 CONTEXT: what was checked, where, when — the head of a proof-first page (no giant verdict banner) ── */}
+      <header style={{ display: "grid", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <div style={label}>Verification</div>
+          {hasConclusion ? <Chip tone={verdict.tone} label={verdict.label} /> : (
+            <span className="pill" style={{ fontSize: 10.5, color: "var(--fg-3)", background: "var(--bg-2)", borderColor: "var(--line-2)" }}>
+              {active ? runningStage(run.state) : verdict.label}
+            </span>
+          )}
+        </div>
+        <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(1.7rem, 3.4vw, 2.3rem)", letterSpacing: "-0.02em", lineHeight: 1.08, color: "var(--fg-1)", margin: 0, wordBreak: "break-word" }}>
+          {app?.name ?? "System"}
+        </h1>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 18px", ...metaText }}>
+          {run.deployment_url ? <a href={run.deployment_url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--fg-2)", textDecoration: "none", wordBreak: "break-all" }}>{run.deployment_url}</a> : null}
+          {deployCommit ? <span>commit {deployCommit}</span> : null}
+          {deployEnvLabel ? <span>{deployEnvLabel}</span> : null}
+          {contractVersion != null ? <span>Contract v{contractVersion}</span> : null}
+          <span title={when(completedIso)}>{active ? `Started ${ago(run.created_at)}` : `Completed ${ago(completedIso)}`}</span>
+          <span style={{ fontFamily: "var(--font-mono)", color: "var(--fg-4)" }} title={`Verification ${runId}`}>#{shortId(runId)}</span>
+          {active ? <span style={{ color: "var(--fg-4)" }}>Updates automatically</span> : null}
+        </div>
+      </header>
 
-        {/* (1) VERDICT HERO: the launch decision, full width, in the decision tone */}
-        <section style={{ background: tone.bg, border: `1px solid ${tone.border}`, borderRadius: "var(--r-lg)", padding: "clamp(28px, 4vw, 44px)" }}>
-          <div style={labelStyle}>Launch decision</div>
-          <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(2.2rem, 4.5vw, 3.2rem)", lineHeight: 1.05, letterSpacing: "-0.01em", color: tone.color, marginTop: 10 }}>
-            {tone.label}
-          </div>
-          <p style={{ fontSize: 16.5, color: "var(--fg-1)", lineHeight: 1.55, margin: "14px 0 0", maxWidth: "58ch" }}>{heroLine}</p>
+      <div style={{ display: "grid", gap: "clamp(20px, 3vw, 30px)", marginTop: "clamp(20px, 3vw, 30px)" }}>
 
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 18px", marginTop: 18, fontSize: 13, color: "var(--fg-3)" }}>
-            {run.deployment_url ? (
-              <a href={run.deployment_url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--fg-2)", textDecoration: "none", wordBreak: "break-all" }}>{run.deployment_url}</a>
-            ) : null}
-            {run.commit_sha ? <span>commit {run.commit_sha.slice(0, 10)}</span> : null}
-            <span title={when(completedIso)}>{terminal ? `Completed ${ago(completedIso)}` : `Started ${ago(run.created_at)}`}</span>
-            {run.parent_run_id && run.selected_flow_ids?.length ? (
-              <span>Targeted rerun: {run.selected_flow_ids.length} flow{run.selected_flow_ids.length === 1 ? "" : "s"} selected</span>
-            ) : null}
-            {summaryLine ? <span>{summaryLine}</span> : null}
-            {active ? <span>Updates automatically</span> : null}
-          </div>
+        {/* ── 02 SUBMITTED CLAIM — the outcome this verification checked (from contract.source_prompt only; NOT a
+              stored guarantee object). Omitted cleanly when absent — never a fabricated or broken heading. ── */}
+        {claim ? (
+          <Section n="02" title="What had to be true" aria="Submitted claim">
+            <p style={{ fontSize: "clamp(15px, 1.8vw, 17px)", color: "var(--fg-1)", lineHeight: 1.55, margin: 0, maxWidth: "68ch", wordBreak: "break-word" }}>{claim}</p>
+          </Section>
+        ) : null}
 
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 22, alignItems: "flex-start" }}>
-            {/* Rerun/cancel mutate the run (server gates rerun + cancel at editor+); hide them for read-only
-                members. The "Back to application" link stays, so the row is never empty. The rerun action is
-                a self-contained card (button + its price/error note bound together) so the PAYG cost line can
-                never wrap into a floating detached error beside the "Back" link. */}
-            {caps.canLaunch ? (
-              terminal ? (
+        {/* ── 03 OUTCOME — what happened + why; the public conclusion is SUPPORTING metadata, never a banner. ── */}
+        <Section n="03" title="Outcome" aria="Outcome">
+          {active ? (
+            <Empty>{runningStage(run.state)}. The conclusion is not final yet. This page updates on its own.</Empty>
+          ) : (
+            <>
+              {why ? <p style={{ fontSize: 15, color: "var(--fg-1)", lineHeight: 1.55, margin: 0, maxWidth: "64ch" }}>{why}</p> : null}
+              <div style={{ display: "flex", alignItems: "center", gap: "6px 14px", flexWrap: "wrap", ...metaText, marginTop: 2 }}>
+                {hasConclusion ? <span>Conclusion <Chip tone={verdict.tone} label={verdict.label} /></span> : <span>{verdict.label}</span>}
+                {summaryLine ? <span>{summaryLine}</span> : null}
+                {issues.length ? <span>{issues.length} finding{issues.length === 1 ? "" : "s"}</span> : null}
+              </div>
+              {/* A summary of what was found (title + severity + lineage). The full evidence for each finding —
+                  screenshots, expected/observed, reproduction — is the evidence increment; the lineage pill
+                  (Recurring vs first-seen), backed by issue.first_seen_run, stays because it is transparency,
+                  not decoration. */}
+              {issues.length > 0 ? (
+                <div style={{ display: "grid", gap: 8, marginTop: 4 }}>
+                  {issues.map((issue) => (
+                    <div key={issue.id} style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                      <span className="pill" style={{ fontSize: 10, color: SEV_COLOR[issue.severity] ?? "var(--fg-4)", borderColor: "var(--line-2)", background: "var(--bg-2)", flex: "none" }}>{SEV_LABEL[issue.severity] ?? issue.severity}</span>
+                      <span style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5, flex: "1 1 auto", minWidth: 0, wordBreak: "break-word" }}>{issue.title}</span>
+                      {issue.first_seen_run && issue.first_seen_run !== runId
+                        ? <span className="pill" style={{ fontSize: 10, color: "#B45309", borderColor: "#F3DFB0", background: "#FEF6E7", flex: "none" }} title="This finding was first detected in an earlier verification">Recurring</span>
+                        : <span className="pill" style={{ fontSize: 10, color: "var(--fg-4)", borderColor: "var(--line-2)", background: "var(--bg-2)", flex: "none" }} title="First detected in this verification">First seen here</span>}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+              {run.decision === "repair_verified" ? (
+                <Empty>This is a targeted rerun record. It does not change the earlier verification it reran.</Empty>
+              ) : null}
+            </>
+          )}
+        </Section>
+
+        {/* ── 04 EVIDENCE — placeholder structure: real availability counts / empty states only (the full visual
+              evidence experience arrives in a later increment). Artifacts are only ever the signed route. ── */}
+        <Section n="04" title="Evidence" aria="Evidence">
+          {screenshotCount + consoleCount + networkCount + issues.length === 0 ? (
+            <Empty>{active ? "Evidence is still being collected." : "No evidence was captured for this verification."}</Empty>
+          ) : (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px", ...metaText }}>
+              {screenshotCount > 0 ? <span>{screenshotCount} screenshot{screenshotCount === 1 ? "" : "s"}</span> : null}
+              {issues.length > 0 ? <span>{issues.length} finding{issues.length === 1 ? "" : "s"}</span> : null}
+              {consoleCount > 0 ? <span>{consoleCount} console error{consoleCount === 1 ? "" : "s"}</span> : null}
+              {networkCount > 0 ? <span>{networkCount} network failure{networkCount === 1 ? "" : "s"}</span> : null}
+            </div>
+          )}
+        </Section>
+
+        {/* ── 05 EXECUTION JOURNEY — the flows that ran (skeleton: name + status + step count; the ordered step
+              timeline lands in a later increment). ── */}
+        <Section n="05" title="Execution journey" aria="Execution journey">
+          {flows.length === 0 ? (
+            <Empty>{active ? "Waiting for the first flow to run." : "No flows were recorded for this verification."}</Empty>
+          ) : (
+            <div style={{ display: "grid", gap: 8 }}>
+              {flows.map((f, i) => {
+                const st = flowStatus(f.state);
+                // A policy-blocked flow names the permission that would let it run, straight from the refused
+                // step's recorded detail — transparency the owner needs to widen a boundary, kept in the
+                // skeleton. The full step timeline is the evidence increment.
+                const permitNeeded = f.state === "blocked_by_policy"
+                  ? (f.steps.map((s) => (s.observed ?? "").match(/permit_[a-z_]+|allowed_domains/)?.[0]).find(Boolean) ?? null)
+                  : null;
+                return (
+                  <div key={`${f.name}-${i}`} style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-md, 10px)", background: "var(--bg-1)", padding: "10px 14px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 13.5, color: "var(--fg-1)", flex: "1 1 auto", minWidth: 0, wordBreak: "break-word" }}>{flowName(f)}</span>
+                      {f.auth ? <span className="pill" style={{ fontSize: 10, color: "var(--fg-3)", borderColor: "var(--line-2)", background: "var(--bg-2)" }}>Authenticated</span> : null}
+                      <Chip tone={st.tone} label={st.label} />
+                      <span style={{ fontSize: 12, color: "var(--fg-5)", flex: "none" }}>{f.steps.length} step{f.steps.length === 1 ? "" : "s"}</span>
+                    </div>
+                    {f.state === "blocked_by_policy" ? (
+                      <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, margin: "6px 0 0" }}>
+                        {permitNeeded
+                          ? <>Additional permission required: <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5 }}>{permitNeeded}</span></>
+                          : "This flow requires an action your test boundaries do not permit."}
+                      </p>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </Section>
+
+        {/* ── 06 AFFECTED REQUIREMENTS — ONLY requirement refs the findings actually stored (failed flows); no
+              coverage matrix is fabricated. ── */}
+        <Section n="06" title="Affected requirements" aria="Affected requirements">
+          {affectedRequirements.length === 0 && affectedUnresolved === 0 ? (
+            <Empty>No specific requirements were flagged by the findings on this verification.</Empty>
+          ) : (
+            <>
+              {affectedRequirements.length > 0 ? (
+                <ul style={{ margin: 0, padding: "0 0 0 18px", display: "grid", gap: 5 }}>
+                  {affectedRequirements.map((t, i) => <li key={i} style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5, wordBreak: "break-word" }}>{t}</li>)}
+                </ul>
+              ) : null}
+              {affectedUnresolved > 0 ? <Empty>{affectedUnresolved} referenced requirement{affectedUnresolved === 1 ? "" : "s"} could not be resolved to current contract text.</Empty> : null}
+            </>
+          )}
+        </Section>
+
+        {/* ── 07 REPAIR HANDOFF — the REAL per-finding repair_prompt only (no invented repair object). The copy
+              control is read-only (clipboard), so it is available to every role. Grouping/polish lands later. ── */}
+        <Section n="07" title="Repair handoff" aria="Repair handoff">
+          {repairIssues.length === 0 ? (
+            <Empty>No repair guidance was generated for this verification.</Empty>
+          ) : (
+            <div style={{ display: "grid", gap: 10 }}>
+              {repairIssues.map((iss) => (
+                <div key={iss.id} style={{ display: "grid", gap: 8, border: "1px solid var(--line-2)", borderRadius: "var(--r-md, 10px)", background: "var(--bg-1)", padding: "12px 14px" }}>
+                  <div style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 500, wordBreak: "break-word" }}>{iss.title}</div>
+                  <CopyButton text={iss.repair_prompt as string} />
+                </div>
+              ))}
+            </div>
+          )}
+        </Section>
+
+        {/* ── 08 REVERIFICATION — parent + child lineage; a later verification is a SEPARATE record. The existing
+              rerun/cancel action stays structurally present (not redesigned). ── */}
+        <Section n="08" title="Reverification" aria="Reverification">
+          {run.parent_run_id ? (
+            <p style={{ ...metaText, margin: 0 }}>
+              This is a reverification of an <Link href={`/applications/${id}/passes/${run.parent_run_id}`} style={{ color: "var(--acc-deep)" }}>earlier verification</Link>.
+              {run.selected_flow_ids?.length ? ` Targeted rerun: ${run.selected_flow_ids.length} flow${run.selected_flow_ids.length === 1 ? "" : "s"} selected.` : ""}
+              {" "}That earlier record is unchanged.
+            </p>
+          ) : null}
+          {children.length > 0 ? (
+            <div style={{ display: "grid", gap: 6 }}>
+              <div style={{ ...metaText, color: "var(--fg-4)" }}>{children.length} later reverification{children.length === 1 ? "" : "s"} (each a separate record):</div>
+              {children.map((c: ChildRun) => {
+                const cv = runVerdict(c.state, c.decision);
+                return (
+                  <Link key={c.id} href={`/applications/${id}/passes/${c.id}`} style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", color: "inherit", textDecoration: "none", border: "1px solid var(--line-2)", borderRadius: "var(--r-md, 10px)", background: "var(--bg-1)", padding: "9px 13px" }}>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-4)", flex: "none" }}>#{shortId(c.id)}</span>
+                    <span style={{ fontSize: 12.5, color: "var(--fg-4)", flex: "1 1 auto" }} title={when(c.completed_at || c.created_at)}>{ago(c.completed_at || c.created_at)}</span>
+                    <Chip tone={cv.tone} label={cv.label} />
+                  </Link>
+                );
+              })}
+            </div>
+          ) : null}
+          {caps.canLaunch ? (
+            <div style={{ marginTop: 4 }}>
+              {terminal ? (
                 run.decision === "repair_verified"
                   ? <RerunButton appId={id} runId={runId} scope="critical" label="Run full critical verification" priceNote={rerunPriceNote} />
                   : <RerunButton appId={id} runId={runId} scope={hasFailures ? "failed" : "all"} label={hasFailures ? "Rerun failed flows" : "Run again"} priceNote={rerunPriceNote} />
               ) : (
-                // Non-terminal run: let the owner stop it (stuck/queued or mis-launched). The worker aborts
-                // cooperatively and its terminal-failure path refunds the hold when no flow executed.
                 <CancelRunButton appId={id} runId={runId} />
-              )
-            ) : null}
-            <Link href={`/applications/${id}`} className="btn btn--ghost" style={{ alignSelf: "center" }}>Back to application</Link>
-          </div>
+              )}
+            </div>
+          ) : null}
+        </Section>
 
-          {/* Tested deployment (S4): the exact deployment identity this decision applies to. Every field
-              is best-effort: absent data renders nothing, never a placeholder. provider_deployment_id
-              lives ONLY inside the Technical details disclosure below, never in the normal UI. */}
-          <div style={{ marginTop: 22, border: "1px solid var(--line-2)", borderRadius: "var(--r-md)", background: "var(--bg-1)", padding: "14px 16px" }}>
-            <div style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 6 }}><Ic d={I.deploy} size={13} sw={2} />Tested deployment</div>
-            {run.deployment_url ? (
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 13, fontWeight: 600, color: "var(--fg-1)", marginTop: 8, wordBreak: "break-all" }}>{run.deployment_url}</div>
-            ) : null}
-            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "6px 16px", marginTop: 8, fontSize: 12.5, color: "var(--fg-3)" }}>
+        {/* ── 09 PROVENANCE & IMMUTABLE HISTORY — the PINNED deployment / snapshot / contract this record tested;
+              never the latest. Honest limitations, never a placeholder or a substituted newer object. ── */}
+        <Section n="09" title="Provenance" aria="Provenance and immutable history">
+          <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-md, 10px)", background: "var(--bg-1)", padding: "14px 16px", display: "grid", gap: 8 }}>
+            <div style={{ ...label, display: "flex", alignItems: "center", gap: 6 }}><Ic d={I.deploy} size={13} sw={2} />Tested deployment</div>
+            {run.deployment_url ? <div style={{ fontFamily: "var(--font-mono)", fontSize: 13, fontWeight: 600, color: "var(--fg-1)", wordBreak: "break-all" }}>{run.deployment_url}</div> : null}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px", fontSize: 12.5, color: "var(--fg-3)" }}>
               {deployEnvLabel ? <span className="pill" style={{ fontSize: 10 }}>{deployEnvLabel}</span> : null}
               {deployProviderLabel ? <span>Provider: {deployProviderLabel}</span> : null}
               {deployCommit ? <span>Commit {deployCommit}</span> : null}
               {deployment?.branch ? <span>Branch {deployment.branch}</span> : null}
               {internal.contractVersion != null ? <span>Contract v{internal.contractVersion}</span> : null}
               {contextSnap ? <span>Context v{contextSnap.version}</span> : null}
-              <span title={when(completedIso)}>{terminal ? `Executed ${when(completedIso)}` : `Started ${when(run.created_at)}`}</span>
+              <span title={when(completedIso)}>{active ? `Started ${when(run.created_at)}` : `Executed ${when(completedIso)}`}</span>
+              <span style={{ fontFamily: "var(--font-mono)", color: "var(--fg-4)" }}>#{shortId(runId)}</span>
             </div>
-            {!deploymentsReady ? (
-              <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5, margin: "8px 0 0" }}>
-                Deployment identity is not recorded yet: apply <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5 }}>sql/vraelis-preflight-8-deployments.sql</span> (migration 8).
+            {contractVersion != null && requirements.length > 0 ? (
+              <p style={{ fontSize: 12, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>
+                Requirements shown elsewhere are the current requirements for Contract v{contractVersion}. Historical requirement text was not separately snapshotted for this verification.
               </p>
             ) : null}
+            {!deploymentsReady ? (
+              <p style={{ fontSize: 12, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>
+                Deployment identity is not recorded yet: apply <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5 }}>sql/vraelis-preflight-8-deployments.sql</span> (migration 8).
+              </p>
+            ) : pins.deploymentId && !deployment ? (
+              <p style={{ fontSize: 12, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>The deployment recorded for this verification is no longer available. It is not replaced with a newer one.</p>
+            ) : null}
             {deployment?.provider_deployment_id ? (
-              <details style={{ marginTop: 10 }}>
+              <details style={{ marginTop: 2 }}>
                 <summary style={{ cursor: "pointer", fontSize: 12.5, color: "var(--fg-4)" }}>View technical details</summary>
-                <div style={{ ...techLine, marginTop: 6 }}>Provider deployment id: {deployment.provider_deployment_id}</div>
+                <div style={{ fontSize: 12.5, color: "var(--fg-3)", wordBreak: "break-all", lineHeight: 1.5, marginTop: 6 }}>Provider deployment id: {deployment.provider_deployment_id}</div>
               </details>
             ) : null}
           </div>
-        </section>
-
-        {/* (2) LAUNCH BLOCKERS as full stories, evidence large */}
-        {blockers.length ? (
-          <section style={{ display: "grid", gap: 16 }}>
-            <h2 style={{ ...sectionHeading, display: "flex", alignItems: "center", gap: 10 }}>
-              <span aria-hidden style={{ display: "inline-flex", color: "var(--fg-3)" }}><Ic d={I.alert} size={20} sw={1.8} /></span>
-              {blockers.length} failure{blockers.length === 1 ? "" : "s"}
-            </h2>
-            {blockers.map((iss, i) => {
-              const m = metaForIssue(iss);
-              const rawFlowName = m?.displayName ?? "";
-              return (
-                <BlockerStory
-                  key={iss.id}
-                  issue={iss}
-                  index={i}
-                  flowName={rawFlowName && !looksLikeId(rawFlowName) ? rawFlowName : null}
-                  screenshotIds={m?.screenshotIds ?? []}
-                  runId={runId}
-                />
-              );
-            })}
-          </section>
-        ) : terminal && run.decision === "ready" ? (
-          <div style={{ border: "1px solid var(--line-1)", borderLeft: "4px solid var(--acc-line)", borderRadius: "var(--r-md)", background: "var(--bg-1)", padding: "16px 20px" }}>
-            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--fg-1)", display: "flex", alignItems: "center", gap: 8 }}>
-              <span aria-hidden style={{ display: "inline-flex", color: "var(--acc-deep)" }}><Ic d={I.check} size={15} sw={2.2} /></span>
-              No failures in the flows that ran
-            </div>
-            <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55, margin: "4px 0 0" }}>Every critical flow passed against this deployment.</p>
-          </div>
-        ) : null}
-
-        {/* Lower-severity findings (kept, never hidden) */}
-        {otherIssues.length ? (
-          <section style={{ borderTop: "1px solid var(--line-1)", paddingTop: 22 }}>
-            <h2 style={{ ...quietHeading, display: "flex", alignItems: "center", gap: 9 }}>
-              <span aria-hidden style={{ display: "inline-flex", color: "var(--fg-4)" }}><Ic d={I.eye} size={17} sw={1.8} /></span>
-              Other findings
-            </h2>
-            <div style={{ display: "grid", gap: 10, marginTop: 14 }}>
-              {otherIssues.map((iss) => (
-                <div key={iss.id} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                  <span className="pill" style={{ fontSize: 10, color: SEV_COLOR[iss.severity] ?? "var(--fg-4)", borderColor: "var(--line-2)", background: "var(--bg-2)", flex: "none" }}>{SEV_LABEL[iss.severity] ?? iss.severity}</span>
-                  <span style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5, minWidth: 0, wordBreak: "break-word" }}>{iss.title}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        {/* (3) WHAT RAN: the quiet flow timeline */}
-        {flows.length ? (
-          <section style={{ borderTop: "1px solid var(--line-1)", paddingTop: 22, display: "grid", gap: 12 }}>
-            <h2 style={{ ...quietHeading, display: "flex", alignItems: "center", gap: 9 }}>
-              <span aria-hidden style={{ display: "inline-flex", color: "var(--fg-4)" }}><Ic d={I.list} size={17} sw={1.8} /></span>
-              What ran
-            </h2>
-            {flows.map((f, i) => (
-              <FlowBlock
-                key={`${f.name}-${i}`}
-                flow={f}
-                displayName={nameFor(f)}
-                screenshotIds={shotsFor(f)}
-                runId={runId}
-                showShots={!shotsShownInBlockers.has(f.name)}
-              />
-            ))}
-          </section>
-        ) : null}
-
-        {/* (4) Empty body for an in-progress run with nothing yet */}
-        {!blockers.length && !otherIssues.length && !flows.length ? (
-          <div style={{ border: "1px solid var(--line-1)", borderRadius: "var(--r-md)", background: "var(--bg-1)", padding: "18px 20px", display: "flex", alignItems: "flex-start", gap: 14 }}>
-            <span className="pulse" aria-hidden style={{ width: 11, height: 11, borderRadius: "50%", background: "var(--acc)", flex: "none", marginTop: 4 }} />
-            <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55, margin: 0 }}>
-              {active ? "Waiting for the first flow to run. This page updates on its own." : "This run recorded no flows."}
-            </p>
-          </div>
-        ) : null}
+          <Link href={`/applications/${id}`} className="btn btn--ghost" style={{ justifySelf: "start" }}>Back to {app?.name ?? "system"}</Link>
+        </Section>
       </div>
 
       {active ? <AutoRefresh /> : null}

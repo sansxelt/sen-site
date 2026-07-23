@@ -122,11 +122,13 @@ async function spyRun(selectedFlowIds: unknown, runId: string, deploymentUrl: st
 
   // ── C + CTA: report UX source checks (server component helpers are file-local) ──
   const report = readFileSync("app/rank/app/applications/[id]/passes/[runId]/page.tsx", "utf8");
-  ok("C: the report renders VERIFIED (provisional tone) for a repair_verified decision", report.includes('"repair_verified"') && /repair_verified"\)\s*return\s*\{\s*label:\s*"VERIFIED"/.test(report));
-  // Founder: a repair-verified VERIFIED must be visibly DISTINCT from the full-coverage VERIFIED — it uses
-  // a provisional TONE_REPAIR, not the solid TONE_READY green, on the report, the overview, and the list.
-  ok("DISTINCT: the report gives repair_verified its own TONE_REPAIR (not TONE_READY)",
-    report.includes("TONE_REPAIR") && /repair_verified"\)\s*return\s*\{\s*label:\s*"VERIFIED",\s*\.\.\.TONE_REPAIR/.test(report));
+  // Design 02 (founder): the RESULT PAGE renders repair_verified as the public Verified conclusion through the
+  // SHARED home-verdict translator (repair_verified -> Verified), using the approved Verified tokens. The
+  // retired teal is gone; a proven repair is distinguished by COPY, not colour.
+  ok("C: the report renders the public Verified conclusion for repair_verified via the shared translator",
+    report.includes("runVerdict(run.state, run.decision)") && report.includes('run.decision === "repair_verified"'));
+  ok("DISTINCT: the report distinguishes a repair_verified pass by COPY, not the retired teal tone",
+    !/TONE_REPAIR|--accent-dim|--accent-border|#0A7B54/.test(report) && /Full critical verification is still required/.test(report));
   ok("DISTINCT: the overview gives repair_verified its own TONE_REPAIR",
     (() => { const ov = readFileSync("app/rank/app/applications/[id]/page.tsx", "utf8"); return ov.includes("TONE_REPAIR") && /repair_verified"\)\s*\{\s*hero = TONE_REPAIR/.test(ov); })());
   ok("DISTINCT: the applications list gives repair_verified a non-ready tint",

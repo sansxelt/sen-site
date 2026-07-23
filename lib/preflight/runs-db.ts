@@ -432,3 +432,22 @@ export async function runIdentity(owner: string, runId: string): Promise<{ contr
   if (!r) return null;
   return { contractId: r.contract_id ?? null, deploymentUrl: r.deployment_url ?? null };
 }
+
+// Direct child reverifications/reruns: the runs whose parent_run_id points at this run (migration 3). This is
+// a READ over the existing lineage relationship, never a mutation — a reverification is a SEPARATE row, so an
+// old Failed run is never rewritten. Owner-scoped; degrades to [] before the parent_run_id column exists.
+export type ChildRun = { id: string; state: string; decision: string | null; created_at: string; completed_at: string | null };
+export async function listChildRuns(owner: string, parentRunId: string): Promise<ChildRun[]> {
+  if (!isDatabaseConfigured()) return [];
+  try {
+    const { data, error } = await db().from("v_preflight_runs")
+      .select("id, state, decision, created_at, completed_at")
+      .eq("user_id", norm(owner)).eq("parent_run_id", parentRunId)
+      .order("created_at", { ascending: true });
+    if (error || !data) return [];
+    return (data as Record<string, unknown>[]).map((r) => ({
+      id: String(r.id), state: String(r.state ?? ""), decision: (r.decision as string) ?? null,
+      created_at: String(r.created_at ?? ""), completed_at: (r.completed_at as string) ?? null,
+    }));
+  } catch { return []; }
+}
