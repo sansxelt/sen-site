@@ -131,10 +131,12 @@ async function spyRun(selectedFlowIds: unknown, runId: string, deploymentUrl: st
     report.includes("runVerdict(run.state, run.decision)") && report.includes('run.decision === "repair_verified"'));
   ok("DISTINCT: the report explains the repair_verified scope by COPY, with no retired teal tone",
     !/TONE_REPAIR|--accent-dim|--accent-border|#0A7B54/.test(report) && /full critical verification is still required/i.test(report));
-  ok("DISTINCT: the overview gives repair_verified its own TONE_REPAIR",
-    (() => { const ov = readFileSync("app/rank/app/applications/[id]/page.tsx", "utf8"); return ov.includes("TONE_REPAIR") && /repair_verified"\)\s*\{\s*hero = TONE_REPAIR/.test(ov); })());
-  ok("DISTINCT: the applications list gives repair_verified a non-ready tint",
-    (() => { const list = readFileSync("app/rank/app/applications/page.tsx", "utf8"); return /"repair_verified":[\s\S]{0,120}accent-dim/.test(list); })());
+  // The overview + list now DELEGATE to the canonical translator (no TONE_REPAIR, no teal): repair_verified is
+  // public Blocked, consistent with Home/Results/API/webhook, with the scope explained in the subline.
+  ok("CANONICAL: the overview delegates repair_verified to the public translator (Blocked, no retired teal)",
+    (() => { const ov = readFileSync("app/rank/app/applications/[id]/page.tsx", "utf8"); return !/TONE_REPAIR|--accent-dim|--accent-border|#0A7B54/.test(ov) && /toPublicDecision\(latest\?\.state \?\? "completed", decision\)/.test(ov) && /Targeted repair check passed/.test(ov); })());
+  ok("CANONICAL: the applications list delegates repair_verified to the public translator (Blocked, no teal)",
+    (() => { const list = readFileSync("app/rank/app/applications/page.tsx", "utf8"); return !/--accent-dim|--accent-border|#0A7B54/.test(list) && /toPublicDecision\(run\.state, run\.decision\)/.test(list); })());
   ok("C: the report states a full critical verification is still required", report.includes("full critical verification is still required before Vraelis can return Verified"));
   ok("CTA: the repair-verified report offers Run full critical verification", report.includes('scope="critical"') && report.includes("Run full critical verification"));
   // Evidence-first: each blocker shows its lineage (new here vs recurring from an earlier run) from the

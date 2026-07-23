@@ -65,5 +65,17 @@ ok("the result page says a full critical verification is still required", /full 
 ok("the result page keeps the parent record separate and unchanged", /The earlier verification it reran remains unchanged/.test(page));
 ok("no surface renders the internal REPAIR VERIFIED term", !/REPAIR VERIFIED/.test(page) && !/REPAIR VERIFIED/.test(rec));
 
+console.log("\n── EVERY authenticated surface renders repair_verified consistently (list, detail, Home, result) ──");
+const list = readFileSync("app/rank/app/applications/page.tsx", "utf8");
+const detail = readFileSync("app/rank/app/applications/[id]/page.tsx", "utf8");
+for (const [name, src] of [["applications list", list], ["application detail", detail], ["Home records", rec], ["result page", page]] as const) {
+  ok(`${name}: no retired teal repair treatment (no accent-dim/border, no #0A7B54, no TONE_REPAIR)`, !/--accent-dim|--accent-border|#0A7B54|TONE_REPAIR/.test(src));
+  ok(`${name}: never labels a repair_verified record "Verified"`, !/repair_verified[\s\S]{0,60}"Verified"|repair_verified[\s\S]{0,60}label: "Verified"/.test(src));
+}
+ok("the list delegates its verdict pill to the canonical translator", /toPublicDecision\(run\.state, run\.decision\)/.test(list));
+ok("the detail delegates its hero + pill to the canonical translator", /toPublicDecision\(state, decision\)/.test(detail) && /toPublicDecision\(latest\?\.state \?\? "completed", decision\)/.test(detail));
+ok("the list pill icon comes from the public decision, not the raw internal decision (no verified-repair wrench on Blocked)", /DecisionMark decision=\{st\.mark\}/.test(list) && !/DecisionMark decision=\{run\?\.decision\}/.test(list));
+ok("the detail explains the repair scope in words (targeted repair passed, full verification required)", /Targeted repair check passed\. A full critical verification is still required/.test(detail));
+
 console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

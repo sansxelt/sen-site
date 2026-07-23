@@ -9,6 +9,7 @@ import {
   type ContractRequirement, type TestFlow, type RunSummary,
 } from "@/lib/v-applications";
 import { listRunsForApp, issuesResolvedByRun } from "@/lib/preflight/runs-db";
+import { toPublicDecision } from "@/lib/preflight/public-decision";
 import { unverifiedNewerDeployment } from "@/lib/preflight/deployments-db";
 import { pickHealthRun, isLaunchHealthCandidate } from "@/lib/preflight/target-url";
 import { listAllIssues, listRepairs } from "@/lib/preflight/overview-db";
@@ -52,8 +53,6 @@ function timeAgo(iso: string | null | undefined): string {
 // The launch-decision tones. Every status carries its label in text; color never stands alone.
 type Tone = { fg: string; bg: string; line: string };
 const TONE_READY: Tone = { fg: "var(--acc-deep)", bg: "var(--acc-soft)", line: "var(--acc-line)" };
-// REPAIR VERIFIED: positive but provisional (not launch-cleared) — distinct from the solid READY green.
-const TONE_REPAIR: Tone = { fg: "#0A7B54", bg: "var(--accent-dim, #E8FBF6)", line: "var(--accent-border, #B7EFE4)" };
 const TONE_REVIEW: Tone = { fg: "#B45309", bg: "#FEF6E7", line: "#F3DFB0" };
 const TONE_BLOCKED: Tone = { fg: "#C0392B", bg: "#FBEBEA", line: "#F0C7C2" };
 const TONE_MUTED: Tone = { fg: "var(--fg-4)", bg: "var(--bg-2)", line: "var(--line-2)" };
@@ -64,12 +63,13 @@ const SEV_LABEL: Record<string, string> = { critical: "Critical", high: "High", 
 const ACTIVE_RUN_STATES = new Set(["queued", "discovering", "running", "analyzing"]);
 const isActiveRun = (r: RunSummary | null): boolean => !!r && !r.decision && ACTIVE_RUN_STATES.has(r.state);
 
-// Run decision -> pill for the pass list.
+// Run decision -> pill, delegated to the ONE canonical public-decision translator so a run reads the SAME
+// verdict here as on Home, the result page, the API, and the webhook. repair_verified is public Blocked.
 function runPill(decision: string | null, state: string): Tone & { label: string } {
-  if (decision === "ready") return { label: "Verified", ...TONE_READY };
-  if (decision === "repair_verified") return { label: "Verified", ...TONE_REPAIR };
-  if (decision === "needs_review") return { label: "Blocked", ...TONE_REVIEW };
-  if (decision === "blocked") return { label: "Failed", ...TONE_BLOCKED };
+  const pub = toPublicDecision(state, decision);
+  if (pub === "verified") return { label: "Verified", ...TONE_READY };
+  if (pub === "failed") return { label: "Failed", ...TONE_BLOCKED };
+  if (pub === "blocked") return { label: "Blocked", ...TONE_REVIEW };
   return { label: ACTIVE_RUN_STATES.has(state) ? "In progress" : "No decision", ...TONE_MUTED };
 }
 
@@ -185,16 +185,19 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
     .filter((f) => f.enabled && (((f as { review_state?: string }).review_state ?? "approved") === "approved"))
     .map((f) => f.id);
 
+  // The hero verdict is delegated to the ONE canonical public-decision translator (no per-decision switch), so
+  // this surface reads the SAME verdict as Home, the result page, the API, and the webhook. repair_verified is
+  // public BLOCKED (a targeted repair rerun did not pass the full verification scope) — the scope is explained
+  // in the subline, never dressed as a Verified success.
   let hero: Tone = TONE_MUTED;
   let verdict = "NOT TESTED";
   if (latestActive) { verdict = "IN PROGRESS"; }
-  else if (decision === "ready") { hero = TONE_READY; verdict = "VERIFIED"; }
-  // Only reachable when NO full-coverage pass exists at all (pickHealthRun's honest fallback): the repair
-  // is verified, but the application still awaits its first full verification — TONE_REPAIR keeps the
-  // provisional state visually distinct from the full-coverage green.
-  else if (decision === "repair_verified") { hero = TONE_REPAIR; verdict = "VERIFIED"; }
-  else if (decision === "needs_review") { hero = TONE_REVIEW; verdict = "BLOCKED"; }
-  else if (decision === "blocked") { hero = TONE_BLOCKED; verdict = "FAILED"; }
+  else if (decision) {
+    const pub = toPublicDecision(latest?.state ?? "completed", decision);
+    if (pub === "verified") { hero = TONE_READY; verdict = "VERIFIED"; }
+    else if (pub === "failed") { hero = TONE_BLOCKED; verdict = "FAILED"; }
+    else if (pub === "blocked") { hero = TONE_REVIEW; verdict = "BLOCKED"; }
+  }
 
   // Subline: real numbers only. Blocked leads with the open blocker count; any run with a critical-flow
   // summary states it plainly; an untested app says so.
@@ -204,7 +207,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
   const subParts: string[] = [];
   if (decision === "blocked" && blockers.length > 0) subParts.push(`${blockers.length} critical failure${blockers.length === 1 ? "" : "s"}`);
   if (latest && !latestActive && critTotal > 0) subParts.push(`${critPassed} of ${critTotal} critical flows passed`);
-  if (decision === "repair_verified") subParts.push("Full critical verification is still required before this deployment can be marked Verified");
+  if (decision === "repair_verified") subParts.push("Targeted repair check passed. A full critical verification is still required.");
   if (latestActive) subParts.push("A verification is running right now");
   if (!latest) subParts.push("This app hasn't been verified yet");
 

@@ -5,6 +5,7 @@ import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "./setup-required";
 import { listApplicationsForMember, latestRunByAppForApps, type Application, type RunSummary } from "@/lib/v-applications";
 import { activateInvitesForEmail } from "@/lib/v-workspace";
+import { toPublicDecision } from "@/lib/preflight/public-decision";
 import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "Applications" };
@@ -32,17 +33,17 @@ function timeAgo(iso: string | null | undefined): string {
 const ACTIVE_RUN_STATES = new Set(["queued", "discovering", "running", "analyzing"]);
 const isActiveRun = (run: RunSummary | null | undefined): boolean => !!run && !run.decision && ACTIVE_RUN_STATES.has(run.state);
 
-function decisionStyle(run: RunSummary | null | undefined): { label: string; color: string; bg: string; border: string } {
-  switch (run?.decision) {
-    case "ready": return { label: "Verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
-    // Positive but provisional (not launch-cleared) — visibly distinct from the solid Verified green.
-    case "repair_verified": return { label: "Verified", color: "#0A7B54", bg: "var(--accent-dim, #E8FBF6)", border: "var(--accent-border, #B7EFE4)" };
-    case "needs_review": return { label: "Blocked", color: "#c2831a", bg: "rgba(194,131,26,0.09)", border: "rgba(194,131,26,0.3)" };
-    case "blocked": return { label: "Failed", color: "var(--err)", bg: "rgba(194,84,12,0.08)", border: "rgba(194,84,12,0.28)" };
-    default:
-      if (isActiveRun(run)) return { label: "In progress", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
-      return { label: "Not tested", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };
-  }
+// Delegates to the ONE canonical public-decision translator, so a run reads the SAME verdict here as on Home,
+// the result page, the API, and the webhook. repair_verified is public Blocked (a targeted repair rerun is not
+// the full verification) — never a teal "Verified" success treatment. `mark` carries the public decision so
+// the pill icon matches the label (no verified-repair wrench on a Blocked pill).
+function decisionStyle(run: RunSummary | null | undefined): { label: string; mark?: string; color: string; bg: string; border: string } {
+  const pub = run ? toPublicDecision(run.state, run.decision) : null;
+  if (pub === "verified") return { label: "Verified", mark: "verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
+  if (pub === "failed") return { label: "Failed", mark: "failed", color: "var(--err)", bg: "rgba(194,84,12,0.08)", border: "rgba(194,84,12,0.28)" };
+  if (pub === "blocked") return { label: "Blocked", mark: "blocked", color: "#c2831a", bg: "rgba(194,131,26,0.09)", border: "rgba(194,131,26,0.3)" };
+  if (isActiveRun(run)) return { label: "In progress", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
+  return { label: "Not tested", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };
 }
 
 // summary is a loose JSON blob; read the critical-flow counters defensively and only when both are present.
@@ -75,7 +76,7 @@ function AppCard({ app, run }: { app: Application; run: RunSummary | undefined }
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, color: "var(--fg-1)", lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app.name}</div>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)", marginTop: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app.app_url}</div>
         </div>
-        <span className="pill" style={{ fontSize: 10, color: st.color, background: st.bg, borderColor: st.border, flex: "none" }}><DecisionMark decision={run?.decision} />{st.label}</span>
+        <span className="pill" style={{ fontSize: 10, color: st.color, background: st.bg, borderColor: st.border, flex: "none" }}><DecisionMark decision={st.mark} />{st.label}</span>
       </div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: "auto" }}>
         <span style={{ fontSize: 12, color: "var(--fg-4)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{metaText}</span>
