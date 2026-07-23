@@ -90,7 +90,7 @@ for (const s of ["storage_path", "provider_session_id", "session_id", "browserba
   ok(`the page never references ${s}`, !new RegExp(s, "i").test(shown));
 }
 // Header / token / cookie FORMS (not the English word "authorization", which appears in owner-safe copy).
-ok("no raw authorization header or bearer token reaches output", !/authorization\s*:|["']authorization["']|Bearer\s/i.test(shown));
+ok("no raw authorization header or bearer token reaches output", !/authorization\s*:\s|Bearer\s|x-api-key/i.test(shown));
 ok("no cookie is emitted", !/document\.cookie|set-cookie/i.test(shown));
 ok("no retired teal accent tokens are reintroduced for repair_verified", !/--accent-dim|--accent-border|#0A7B54/.test(shown));
 
@@ -114,7 +114,7 @@ ok("the drift notice says the contract changed and the requirements are current,
 console.log("\n── Increment 2: observed outcome composed honestly + scoped conclusion language ──");
 ok("the observed outcome is COMPOSED (named honestly), never a stored column", /function composeObservedOutcome\(/.test(page) && !/storedOutcome|guaranteeResultText|canonicalObservation/.test(page));
 ok("a Failed outcome prefers the safe humanObserved evidence, then the title", /humanObserved\(p\) \|\| p\.title/.test(page));
-ok("no raw failure_message is ever used for the outcome (only the coarse failure_code line)", !/failure_message/.test(page.replace(/\/\/[^\n]*/g, "")));
+ok("no raw failure_message is ever used for the outcome (only the coarse failure_code line)", !/failure_message/.test(shown));
 ok("the primary finding is chosen deterministically (severity + persisted order), never by an LLM", /function primaryIssue\(/.test(page) && /SEV_RANK/.test(page) && !/openai|\bgpt\b|anthropic|\.chat\.|generateText/i.test(shown));
 ok("Verified is scoped to the CHECKED WORKFLOW, not the whole system", /The checked workflow completed with the expected result/.test(page));
 ok("Verified never claims the app works / system proven / safe to release", !/the application works|the system is proven|safe to release|fully verified|everything passed/i.test(page.replace(/\/\/[^\n]*/g, "")));
@@ -124,6 +124,21 @@ ok("a Blocked record with no detail degrades honestly", /Detailed blocking evide
 ok("multiple findings are acknowledged as a count, not concatenated into one paragraph", /This verification recorded \{issues\.length\} findings/.test(page));
 ok("the 'why' is labeled as Vraelis's reasoning, not exposed model reasoning", /Why Vraelis reached this conclusion/.test(page) && !/chain of thought|model analysis|AI reasoning/i.test(page));
 ok("an active run announces progress in a restrained live region and shows no final conclusion", /role="status" aria-live="polite"[\s\S]{0,80}runningStage\(run\.state\)/.test(page));
+
+console.log("\n── Increment 3: evidence + execution journey (real proof, safe artifact access) ──");
+const flat = page.replace(/\n/g, " ");
+ok("screenshots load ONLY through the owner-checked signed artifacts route (no storage path in the HTML)",
+  page.includes("/api/preflight/runs/${runId}/artifacts/${sid}") && !/storage_path|createSignedUrl|signedUrl\(/.test(shown));
+ok("each finding shows Expected vs Observed in prose", page.includes("<div style={label}>Expected</div>") && page.includes("<div style={label}>Observed</div>"));
+ok("the observed sentence is DERIVED (humanObserved), never a raw failure_message", /const observed = humanObserved\(issue\)/.test(page));
+ok("raw console + network evidence live inside a collapsed technical-details element", /console_errors/.test(page) && /network_failures/.test(page) && /View technical details/.test(page));
+ok("the execution journey renders an ORDERED step timeline via stepText", /function FlowTimeline\(/.test(page) && /stepText\(s\.action, s\.target\)/.test(page));
+ok("only real per-step ms timing is shown; no derived flow wall-clock duration is invented", page.includes("${s.ms} ms") && !/flowDuration|wallClock|elapsedMs|totalMs|derived duration/i.test(shown));
+ok("the authenticated-flow panel shows allowlisted owner-safe fields only (roles / account label / credential state)",
+  /auth\.roles/.test(page) && /auth\.accountLabel/.test(page) && /auth\.credentialState/.test(page) && !/\bpassword\b|\btoken\b|\bsecret\b/i.test(shown));
+ok("a step's raw error detail is nested inside its own disclosure, not shown inline", /Error detail/.test(page) && /stepFailed && s\.observed \?/.test(page));
+ok("no secret / storage path / provider session id reaches the evidence output", !/storage_path|provider_session_id|session_id|browserbase|encrypted_ref/i.test(shown));
+ok("screenshots shown as a finding's evidence are not repeated in the journey (dedup by rawName)", /shotsShownInFindings/.test(page) && /showShots=\{!shotsShownInFindings\.has\(f\.name\)\}/.test(page));
 
 console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

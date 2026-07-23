@@ -5,7 +5,7 @@ import { requirePreflightAppAccess } from "@/lib/v-preflight-guard";
 import { capabilities } from "@/lib/preflight/role-capabilities";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { getApplication, getContractById, listRequirements, type ContractRequirement } from "@/lib/v-applications";
-import { getRun, runContractId, listChildRuns, type RunFlow, type RunIssue, type ChildRun } from "@/lib/preflight/runs-db";
+import { getRun, runContractId, listChildRuns, type RunFlow, type RunStep, type RunIssue, type ChildRun } from "@/lib/preflight/runs-db";
 import { getRunInternal, listFlowRunMeta, type FlowRunMeta } from "@/lib/preflight/run-report-db";
 import { runVersionPins, getDeployment, deploymentStoreReady } from "@/lib/preflight/deployments-db";
 import { getSnapshot } from "@/lib/preflight/context-snapshots";
@@ -194,6 +194,176 @@ function Empty({ children }: { children: ReactNode }) {
   return <p style={{ fontSize: 13.5, color: "var(--fg-4)", lineHeight: 1.55, margin: 0 }}>{children}</p>;
 }
 
+// ── Increment 3: evidence + execution journey ──
+const CATEGORY_LABEL: Record<string, string> = {
+  persistence_failure: "Persistence", session_failure: "Session", cross_account: "Authorization",
+  fake_success: "Fake success", stale_ui: "Stale UI", duplicate_action: "Duplicate action",
+  authorization_failure: "Authorization", mobile_blocker: "Mobile", navigation_failure: "Navigation", functional_failure: "Functional",
+};
+function catLabel(c: string | null): string { return c ? (CATEGORY_LABEL[c] ?? c.replace(/_/g, " ")) : "Issue"; }
+const CRED_STATE_LABEL: Record<string, string> = { active: "Active", missing: "Missing", revoked: "Revoked" };
+
+// Auth-failure classifications told as owner-safe sentences (never a raw provider/credential error).
+const AUTH_FAILURE_LINE: Record<string, string> = {
+  invalid_or_revoked_credential: "The test account for this role is missing or was revoked. Add or re-add it under Connections, then run again.",
+  login_ui_not_found: "No sign-in screen was found where this flow expected one. Check the flow's start path.",
+  credential_field_not_found: "The sign-in form's fields could not be located. The login page may have changed.",
+  mfa_required: "This account requires multi-factor authentication. Vraelis will not bypass it. Use a test account without MFA.",
+  captcha_encountered: "A CAPTCHA or bot check blocked sign-in. Vraelis will not bypass it.",
+  worker_vault_failure: "Vraelis could not decrypt this application's test credentials. This is on our side, not your deployment.",
+  provider_infra_failure: "The browser provider failed during sign-in. This is on our side, not your deployment.",
+  boundary_blocked: "An action this flow needed was refused by your test boundaries. Widen the boundaries and run again.",
+};
+
+function stepText(action: string | null, target: string | null): string {
+  const t = (target ?? "").trim();
+  switch (action) {
+    case "navigate": return `Open ${t || "the page"}`;
+    case "click": return `Click ${t || "the control"}`;
+    case "fill": return `Fill ${t || "the field"}`;
+    case "select": return `Select ${t || "an option"}`;
+    case "check": return `Check ${t || "the box"}`;
+    case "uncheck": return `Uncheck ${t || "the box"}`;
+    case "press": return `Press ${t || "a key"}`;
+    case "wait_for": return `Wait for ${t || "the element"}`;
+    case "assert_visible": return `Confirm ${t || "the content"} is visible`;
+    case "assert_text": return `Confirm the text ${t}`.trim();
+    case "assert_url": return `Confirm the URL ${t}`.trim();
+    case "refresh": return "Refresh the page";
+    case "new_context": return "Open a fresh session";
+    case "screenshot": return "Capture a screenshot";
+    default: return `${action ?? "Step"}${t ? ` ${t}` : ""}`;
+  }
+}
+
+const techLine = { fontSize: 12.5, color: "var(--fg-3)", wordBreak: "break-all" as const, lineHeight: 1.5 } as const;
+
+// Screenshots load through the owner-checked signed artifacts route ONLY (the route mints a 120s signed URL
+// server-side and authorizes the viewer). No storage path, provider session id, or raw artifact location ever
+// reaches the HTML. Absent artifacts render nothing.
+function ScreenshotGrid({ runId, ids, min = 300 }: { runId: string; ids: string[]; min?: number }) {
+  if (!ids.length) return null;
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fit, minmax(min(${min}px, 100%), 1fr))`, gap: 14 }}>
+      {ids.map((sid) => (
+        <figure key={sid} style={{ margin: 0, minWidth: 0 }}>
+          <a href={`/api/preflight/runs/${runId}/artifacts/${sid}`} target="_blank" rel="noopener noreferrer" style={{ display: "block" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`/api/preflight/runs/${runId}/artifacts/${sid}`} alt="Screenshot from this verification" loading="lazy" style={{ display: "block", width: "100%", maxWidth: "100%", height: "auto", border: "1px solid var(--line-2)", borderRadius: 10 }} />
+          </a>
+          <figcaption style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 6 }}>Screenshot from this verification</figcaption>
+        </figure>
+      ))}
+    </div>
+  );
+}
+
+// One finding as full evidence: expected vs observed in prose, the screenshots large, the reproduction steps, a
+// possible cause (interpretation), and the raw console/network/requirement-refs inside a COLLAPSED technical
+// details element. Never a raw failure_message, storage path, or session id. The repair prompt is section 07.
+function FindingEvidence({ issue, index, flowName, screenshotIds, runId }: { issue: RunIssue; index: number; flowName: string | null; screenshotIds: string[]; runId: string }) {
+  const ev = (issue.evidence && typeof issue.evidence === "object" ? issue.evidence : {}) as Record<string, unknown>;
+  const consoleErrors = Array.isArray(ev.console_errors) ? (ev.console_errors as unknown[]).filter((x): x is string => typeof x === "string") : [];
+  const networkFailures = Array.isArray(ev.network_failures) ? (ev.network_failures as { method?: string; path?: string; status?: number }[]) : [];
+  const requirementRefs = Array.isArray(ev.requirement_refs) ? (ev.requirement_refs as unknown[]).filter((x): x is string => typeof x === "string") : [];
+  const repro = Array.isArray(issue.repro) ? (issue.repro as unknown[]).filter((x): x is string => typeof x === "string") : [];
+  const sevColor = SEV_COLOR[issue.severity] ?? "var(--fg-3)";
+  const expected = (issue.expected ?? "").replace(/^Expected:\s*/i, "").trim();
+  const observed = humanObserved(issue) || "The flow did not complete.";
+  const hasTechnical = Boolean(issue.observed) || consoleErrors.length > 0 || networkFailures.length > 0 || requirementRefs.length > 0;
+  return (
+    <div style={{ border: "1px solid var(--line-2)", borderLeft: `3px solid ${sevColor}`, borderRadius: "var(--r-md, 10px)", background: "var(--bg-1)", padding: "clamp(16px, 2.4vw, 22px)" }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+        <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "clamp(15px, 1.7vw, 17px)", lineHeight: 1.35, color: "var(--fg-1)", margin: 0, flex: "1 1 280px", minWidth: 0, wordBreak: "break-word" }}>{index + 1}. {issue.title}</h3>
+        <div style={{ display: "flex", gap: 6, flex: "none", flexWrap: "wrap" }}>
+          <span className="pill" style={{ fontSize: 10, color: sevColor, borderColor: "var(--line-2)", background: "var(--bg-2)" }}>{SEV_LABEL[issue.severity] ?? issue.severity}</span>
+          <span className="pill" style={{ fontSize: 10, color: "var(--fg-3)", borderColor: "var(--line-2)", background: "var(--bg-2)" }}>{catLabel(issue.category)}</span>
+          {issue.first_seen_run && issue.first_seen_run !== runId
+            ? <span className="pill" style={{ fontSize: 10, color: "#B45309", borderColor: "#F3DFB0", background: "#FEF6E7" }} title="First detected in an earlier verification">Recurring</span>
+            : <span className="pill" style={{ fontSize: 10, color: "var(--fg-4)", borderColor: "var(--line-2)", background: "var(--bg-2)" }} title="First detected in this verification">First seen here</span>}
+        </div>
+      </div>
+      {flowName ? <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5, margin: "6px 0 0" }}>Seen while running the &quot;{flowName}&quot; flow in a real browser.</p> : null}
+      <div style={{ display: "grid", gap: 12, marginTop: 14 }}>
+        {expected ? <div><div style={label}>Expected</div><p style={{ fontSize: 14, color: "var(--fg-2)", lineHeight: 1.55, margin: "4px 0 0", wordBreak: "break-word" }}>{expected}</p></div> : null}
+        <div><div style={label}>Observed</div><p style={{ fontSize: 14, color: "var(--fg-2)", lineHeight: 1.55, margin: "4px 0 0", wordBreak: "break-word" }}>{observed}</p></div>
+      </div>
+      {screenshotIds.length ? <div style={{ marginTop: 16 }}><div style={{ ...label, display: "flex", alignItems: "center", gap: 6 }}><Ic d={I.camera} size={13} sw={2} />Evidence</div><div style={{ marginTop: 8 }}><ScreenshotGrid runId={runId} ids={screenshotIds} /></div></div> : null}
+      {repro.length ? <div style={{ marginTop: 16 }}><div style={label}>How to reproduce</div><ol style={{ margin: "8px 0 0", padding: "0 0 0 18px", display: "grid", gap: 5 }}>{repro.map((r, i) => <li key={i} style={{ fontSize: 13, color: "var(--fg-2)", lineHeight: 1.5, wordBreak: "break-word" }}>{r.replace(/^\d+\.\s*/, "")}</li>)}</ol></div> : null}
+      {issue.likely_cause ? <div style={{ marginTop: 16, borderLeft: "3px solid var(--line-2)", paddingLeft: 12 }}><div style={label}>Possible cause (interpretation)</div><p style={{ fontSize: 13, color: "var(--fg-2)", lineHeight: 1.55, margin: "6px 0 0", wordBreak: "break-word" }}>{issue.likely_cause}</p></div> : null}
+      {hasTechnical ? (
+        <details style={{ marginTop: 14, border: "1px solid var(--line-2)", borderRadius: 8, padding: "10px 14px" }}>
+          <summary style={{ cursor: "pointer", fontSize: 13, color: "var(--fg-4)" }}>View technical details</summary>
+          <div style={{ display: "grid", gap: 6, marginTop: 10 }}>
+            {issue.observed ? <div style={techLine}>{issue.observed}</div> : null}
+            {requirementRefs.length ? <div style={techLine}>Requirement refs: {requirementRefs.join(", ")}</div> : null}
+            {consoleErrors.slice(0, 10).map((c, i) => <div key={`c${i}`} style={techLine}>{c}</div>)}
+            {networkFailures.slice(0, 10).map((n, i) => <div key={`n${i}`} style={techLine}>{n.status ?? ""} {n.method ?? ""} {n.path ?? ""}</div>)}
+          </div>
+        </details>
+      ) : null}
+    </div>
+  );
+}
+
+// One flow in the execution journey: status + ordered steps (action + pass/fail + observed detail + real ms
+// timing — the ONLY real timing, never a derived wall-clock), the authenticated-flow panel (allowlisted
+// owner-safe fields only), and the policy-permit line.
+function FlowTimeline({ flow, displayName, screenshotIds, runId, showShots }: { flow: RunFlow; displayName: string; screenshotIds: string[]; runId: string; showShots: boolean }) {
+  const st = flowStatus(flow.state);
+  const failed = flow.state === "failed" || flow.state === "blocked";
+  const permitNeeded = flow.state === "blocked_by_policy" ? (flow.steps.map((s) => (s.observed ?? "").match(/permit_[a-z_]+|allowed_domains/)?.[0]).find(Boolean) ?? null) : null;
+  const auth = flow.auth;
+  const authFailLine = auth?.authFailure ? (AUTH_FAILURE_LINE[auth.authFailure] ?? null) : null;
+  return (
+    <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-md, 10px)", background: "var(--bg-1)", padding: "12px 16px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <span style={{ fontSize: 13.5, fontWeight: failed ? 600 : 500, color: failed ? "var(--fg-1)" : "var(--fg-2)", flex: "1 1 auto", minWidth: 0, wordBreak: "break-word" }}>{displayName}</span>
+        {auth ? <span className="pill" style={{ fontSize: 10, color: "var(--fg-3)", borderColor: "var(--line-2)", background: "var(--bg-2)" }}>Authenticated</span> : null}
+        <Chip tone={st.tone} label={st.label} />
+        <span style={{ fontSize: 12, color: "var(--fg-5)", flex: "none" }}>{flow.steps.length} step{flow.steps.length === 1 ? "" : "s"}</span>
+      </div>
+      {flow.state === "blocked_by_policy" ? <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, margin: "6px 0 0" }}>{permitNeeded ? <>Additional permission required: <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5 }}>{permitNeeded}</span></> : "This flow requires an action your test boundaries do not permit."}</p> : null}
+      {auth ? (
+        <div style={{ marginTop: 8, border: "1px solid var(--line-2)", borderRadius: "var(--r-sm, 8px)", background: "var(--bg-2)", padding: "10px 12px" }}>
+          <div style={{ ...label, display: "flex", alignItems: "center", gap: 6 }}><Ic d={I.lock} size={12} sw={2} />Authenticated flow</div>
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "5px 14px", marginTop: 7, fontSize: 12.5, color: "var(--fg-3)" }}>
+            {auth.roles.length ? <span>Role{auth.roles.length === 1 ? "" : "s"}: <span style={{ color: "var(--fg-2)", fontWeight: 600 }}>{auth.roles.join(", ")}</span></span> : null}
+            {auth.accountLabel ? <span>Account: {auth.accountLabel}</span> : null}
+            {auth.environment ? <span className="pill" style={{ fontSize: 10 }}>{ENV_LABELS[auth.environment] ?? auth.environment}</span> : null}
+            <span>Credential: <span style={{ color: auth.credentialState === "active" ? "var(--acc-deep)" : "#B45309", fontWeight: 600 }}>{CRED_STATE_LABEL[auth.credentialState] ?? auth.credentialState}</span></span>
+            {auth.sessionReuse ? <span>Session reuse on</span> : null}
+          </div>
+          {authFailLine ? <p style={{ fontSize: 12, color: "var(--fg-3)", lineHeight: 1.5, margin: "7px 0 0" }}>{authFailLine}</p> : null}
+        </div>
+      ) : null}
+      {flow.steps.length ? (
+        <details open={failed} style={{ marginTop: 8 }}>
+          <summary style={{ cursor: "pointer", fontSize: 13, color: "var(--fg-4)" }}>View steps</summary>
+          <ol style={{ listStyle: "none", margin: "10px 0 0", padding: 0, display: "grid", gap: 6 }}>
+            {flow.steps.map((s: RunStep, i) => {
+              const okk = s.status === "ok";
+              const stepFailed = !okk && s.status != null && s.status !== "";
+              return (
+                <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 10px", borderRadius: "var(--r-sm, 8px)", background: stepFailed ? "#F6ECE7" : "var(--bg-2)", border: `1px solid ${stepFailed ? "#E7CFC5" : "var(--line-2)"}` }}>
+                  <span aria-hidden style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-5)", flex: "none", marginTop: 2, width: 18, textAlign: "right" }}>{i + 1}</span>
+                  <span aria-hidden style={{ display: "inline-flex", color: okk ? "var(--acc-deep)" : stepFailed ? "var(--a-failed, #A8452A)" : "var(--fg-4)", flex: "none", marginTop: 3 }}><Ic d={okk ? I.check : stepFailed ? I.x : I.dash} size={13} sw={2.4} /></span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, color: "var(--fg-1)", lineHeight: 1.45, wordBreak: "break-word" }}>{stepText(s.action, s.target)}</div>
+                    {stepFailed && s.observed ? <details style={{ marginTop: 4 }}><summary style={{ cursor: "pointer", fontSize: 12, color: "var(--fg-4)" }}>Error detail</summary><div style={{ fontSize: 12, color: "var(--fg-3)", wordBreak: "break-all", lineHeight: 1.5, marginTop: 4 }}>{s.observed}</div></details> : null}
+                  </div>
+                  <span style={{ fontSize: 11, color: "var(--fg-5)", flex: "none", marginTop: 2 }}>{s.ms != null ? `${s.ms} ms` : ""}</span>
+                </li>
+              );
+            })}
+          </ol>
+        </details>
+      ) : <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "8px 0 0" }}>No steps recorded for this flow.</p>}
+      {showShots && screenshotIds.length ? <div style={{ marginTop: 12 }}><div style={{ ...label, display: "flex", alignItems: "center", gap: 6 }}><Ic d={I.camera} size={13} sw={2} />Evidence</div><div style={{ marginTop: 8 }}><ScreenshotGrid runId={runId} ids={screenshotIds} min={260} /></div></div> : null}
+    </div>
+  );
+}
+
 // Verification RESULT page (server component, READ-ONLY). Owner+workspace scoped through
 // requirePreflightAppAccess; getRun / getRunInternal are user-scoped, so a guessed run id 404s and another
 // tenant's run is never confirmed to exist. The page writes nothing, recomputes no conclusion, and resolves
@@ -258,16 +428,19 @@ export default async function VerificationResultPage({ params }: { params: Promi
   // When it cannot be proven we make no claim that the requirements changed (only the general limitation note).
   const contractDrifted = !!contract && contractVersion != null && typeof contract.version === "number" && contract.version !== contractVersion;
 
+  // Per-flow display metadata (readable name + screenshots) joined onto getRun's id-less flows by raw name.
+  // A blocker maps to its flow's meta through the same map (v_flow_runs.name == v_issues.flow_id).
   const metaByRaw = new Map<string, FlowRunMeta>();
   for (const m of meta) if (!metaByRaw.has(m.rawName)) metaByRaw.set(m.rawName, m);
   const flowName = (f: RunFlow) => { const n = metaByRaw.get(f.name)?.displayName || f.name; return looksLikeId(n) ? "Flow" : n; };
+  const shotsFor = (f: RunFlow) => metaByRaw.get(f.name)?.screenshotIds ?? [];
+  const metaForIssue = (iss: RunIssue) => (iss.flow_id ? metaByRaw.get(iss.flow_id) : undefined);
+  // Screenshots already shown as a finding's evidence are not repeated in the execution journey below.
+  const shotsShownInFindings = new Set<string>();
+  for (const iss of issues) { const m = metaForIssue(iss); if (m && m.screenshotIds.length) shotsShownInFindings.add(m.rawName); }
 
-  // Evidence AVAILABILITY (counts only in Increment 1; the full visual evidence experience is a later
-  // increment). All owner-safe: screenshot ids resolve through the signed artifacts route, never storage paths.
   const screenshotCount = meta.reduce((s, m) => s + m.screenshotIds.length, 0);
   const issueEv = (iss: RunIssue) => (iss.evidence && typeof iss.evidence === "object" ? iss.evidence : {}) as Record<string, unknown>;
-  const consoleCount = issues.reduce((s, iss) => s + (Array.isArray(issueEv(iss).console_errors) ? (issueEv(iss).console_errors as unknown[]).length : 0), 0);
-  const networkCount = issues.reduce((s, iss) => s + (Array.isArray(issueEv(iss).network_failures) ? (issueEv(iss).network_failures as unknown[]).length : 0), 0);
 
   // Affected requirements: ONLY the requirement_refs the worker stamped on FAILED-flow issues, resolved to
   // text via the contract's current requirements. There is NO requirement->step/flow coverage matrix, so none
@@ -412,54 +585,36 @@ export default async function VerificationResultPage({ params }: { params: Promi
           )}
         </Section>
 
-        {/* ── 04 EVIDENCE — placeholder structure: real availability counts / empty states only (the full visual
-              evidence experience arrives in a later increment). Artifacts are only ever the signed route. ── */}
+        {/* ── 04 EVIDENCE — the real proof for each finding: expected vs observed in prose, the screenshots large
+              (through the signed artifacts route ONLY), reproduction steps, a possible cause, and the raw
+              console/network inside a collapsed technical-details element. No storage path, session id, or raw
+              failure_message ever reaches the page. ── */}
         <Section n="04" title="Evidence" aria="Evidence">
-          {screenshotCount + consoleCount + networkCount + issues.length === 0 ? (
-            <Empty>{active ? "Evidence is still being collected." : "No evidence was captured for this verification."}</Empty>
-          ) : (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px", ...metaText }}>
-              {screenshotCount > 0 ? <span>{screenshotCount} screenshot{screenshotCount === 1 ? "" : "s"}</span> : null}
-              {issues.length > 0 ? <span>{issues.length} finding{issues.length === 1 ? "" : "s"}</span> : null}
-              {consoleCount > 0 ? <span>{consoleCount} console error{consoleCount === 1 ? "" : "s"}</span> : null}
-              {networkCount > 0 ? <span>{networkCount} network failure{networkCount === 1 ? "" : "s"}</span> : null}
+          {issues.length > 0 ? (
+            <div style={{ display: "grid", gap: 14 }}>
+              {issues.map((issue, i) => {
+                const m = metaForIssue(issue);
+                const fname = m?.displayName ?? "";
+                return <FindingEvidence key={issue.id} issue={issue} index={i} flowName={fname && !looksLikeId(fname) ? fname : null} screenshotIds={m?.screenshotIds ?? []} runId={runId} />;
+              })}
             </div>
+          ) : (
+            <Empty>{active ? "Evidence is still being collected." : screenshotCount > 0 ? `${screenshotCount} screenshot${screenshotCount === 1 ? "" : "s"} were captured; they appear in the execution journey below.` : "No evidence was captured for this verification."}</Empty>
           )}
         </Section>
 
-        {/* ── 05 EXECUTION JOURNEY — the flows that ran (skeleton: name + status + step count; the ordered step
-              timeline lands in a later increment). ── */}
+        {/* ── 05 EXECUTION JOURNEY — each flow that ran, with its ORDERED step timeline (action, pass/fail, error
+              detail, real per-step ms — the only real timing, never a derived wall-clock), the authenticated-flow
+              panel (allowlisted owner-safe fields only), and the policy-permit line. Screenshots already shown
+              as a finding's evidence are not repeated here. ── */}
         <Section n="05" title="Execution journey" aria="Execution journey">
           {flows.length === 0 ? (
             <Empty>{active ? "Waiting for the first flow to run." : "No flows were recorded for this verification."}</Empty>
           ) : (
             <div style={{ display: "grid", gap: 8 }}>
-              {flows.map((f, i) => {
-                const st = flowStatus(f.state);
-                // A policy-blocked flow names the permission that would let it run, straight from the refused
-                // step's recorded detail — transparency the owner needs to widen a boundary, kept in the
-                // skeleton. The full step timeline is the evidence increment.
-                const permitNeeded = f.state === "blocked_by_policy"
-                  ? (f.steps.map((s) => (s.observed ?? "").match(/permit_[a-z_]+|allowed_domains/)?.[0]).find(Boolean) ?? null)
-                  : null;
-                return (
-                  <div key={`${f.name}-${i}`} style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-md, 10px)", background: "var(--bg-1)", padding: "10px 14px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 13.5, color: "var(--fg-1)", flex: "1 1 auto", minWidth: 0, wordBreak: "break-word" }}>{flowName(f)}</span>
-                      {f.auth ? <span className="pill" style={{ fontSize: 10, color: "var(--fg-3)", borderColor: "var(--line-2)", background: "var(--bg-2)" }}>Authenticated</span> : null}
-                      <Chip tone={st.tone} label={st.label} />
-                      <span style={{ fontSize: 12, color: "var(--fg-5)", flex: "none" }}>{f.steps.length} step{f.steps.length === 1 ? "" : "s"}</span>
-                    </div>
-                    {f.state === "blocked_by_policy" ? (
-                      <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, margin: "6px 0 0" }}>
-                        {permitNeeded
-                          ? <>Additional permission required: <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5 }}>{permitNeeded}</span></>
-                          : "This flow requires an action your test boundaries do not permit."}
-                      </p>
-                    ) : null}
-                  </div>
-                );
-              })}
+              {flows.map((f, i) => (
+                <FlowTimeline key={`${f.name}-${i}`} flow={f} displayName={flowName(f)} screenshotIds={shotsFor(f)} runId={runId} showShots={!shotsShownInFindings.has(f.name)} />
+              ))}
             </div>
           )}
         </Section>
