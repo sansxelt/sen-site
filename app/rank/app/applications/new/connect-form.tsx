@@ -333,7 +333,7 @@ export default function ConnectWorkspace() {
             </div>
           </Section>
 
-          <Section n={2} title="Source and deployment" sub="What code, which deployment, which exact version: so a pass verifies the build you actually ship.">
+          <Section n={2} title="Source and deployment" sub="What code, which deployment, which exact version: so a verification tests the build you actually ship.">
             <div style={{ display: "grid", gap: 10 }}>
               <ConnCard mark="github" title="GitHub" purpose="Repository, branch, and commit behind this deployment." badge="recommended"
                 connected={!!github} summary={github ? `${github.repo}${github.branch ? ` @ ${github.branch}` : ""}${github.commit ? ` (${github.commit.slice(0, 10)})` : ""}` : undefined}
@@ -362,9 +362,9 @@ export default function ConnectWorkspace() {
               readTextFile={readTextFile} promptAdded={prompt.trim().length > 0} summary={productDesc} onSummaryChange={setProductDesc} />
           </Section>
 
-          <Section n={4} title="Data and authentication" sub="Where state lives and how users sign in, so passes can prove persistence and isolation.">
+          <Section n={4} title="Data and authentication" sub="Where state lives and how users sign in, so verifications can prove persistence and isolation.">
             <div style={{ display: "grid", gap: 10 }}>
-              <ConnCard mark="supabase" title="Supabase" purpose="Project metadata (no database credentials): lets passes reason about persistence." badge="recommended"
+              <ConnCard mark="supabase" title="Supabase" purpose="Project metadata (no database credentials): lets verifications reason about persistence." badge="recommended"
                 connected={!!supabase} summary={supabase ? supabase.project_url : undefined}
                 open={openCard === "supabase"} onToggle={() => setOpenCard(openCard === "supabase" ? null : "supabase")} onDisconnect={() => { setSupabase(null); setOpenCard(null); }}>
                 <TwoFieldForm fields={[["project_url", "Project URL", "https://xyzcompany.supabase.co"]]} value={supabase} onSave={(v) => { setSupabase(v); setOpenCard(null); }} requiredKey="project_url" />
@@ -405,7 +405,7 @@ export default function ConnectWorkspace() {
             <div>
               <label style={lab} htmlFor="c-domains">Allowed domains</label>
               <input id="c-domains" type="text" value={domainsValue} onChange={(e) => setDomains(e.target.value)} placeholder="app.example.com, api.example.com" style={input} />
-              <p style={help}>Comma-separated. Passes never navigate outside these hosts.</p>
+              <p style={help}>Comma-separated. Verifications never navigate outside these hosts.</p>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 8 }}>
               {([["account_creation", "Permit account creation"], ["db_writes", "Permit test database writes"], ["email", "Permit test email delivery"], ["test_purchases", "Permit test-mode purchases"], ["file_upload", "Permit file upload"]] as const).map(([k, l]) => (

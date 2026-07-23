@@ -37,10 +37,10 @@ const RUNNING_LABELS: Record<string, string> = {
 // conveyed by colour alone.
 function passStyle(p: PassRow): { label: string; color: string; bg: string; border: string } {
   switch (p.decision) {
-    case "ready": return { label: "Ready", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
-    case "repair_verified": return { label: "Repair verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
-    case "needs_review": return { label: "Needs review", color: "#B45309", bg: "#FEF6E7", border: "#F3DFB0" };
-    case "blocked": return { label: "Blocked", color: "#C0392B", bg: "#FBEBEA", border: "#F0C7C2" };
+    case "ready": return { label: "Verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
+    case "repair_verified": return { label: "Verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
+    case "needs_review": return { label: "Blocked", color: "#B45309", bg: "#FEF6E7", border: "#F3DFB0" };
+    case "blocked": return { label: "Failed", color: "#C0392B", bg: "#FBEBEA", border: "#F0C7C2" };
     default:
       return { label: RUNNING_LABELS[p.state] ?? "In progress", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };
   }
@@ -118,10 +118,10 @@ export default async function PassesPage() {
 
   const sections = [
     { label: "Running", rows: running },
-    { label: "Blocked", rows: blocked },
-    { label: "Needs review", rows: needsReview },
-    { label: "Ready", rows: ready },
-    { label: "Repair verified", rows: repairVerified },
+    { label: "Failed", rows: blocked },
+    { label: "Blocked", rows: needsReview },
+    { label: "Verified", rows: ready },
+    { label: "Verified (targeted rerun)", rows: repairVerified },
     { label: "Didn't complete", rows: didNotComplete },
   ].filter((s) => s.rows.length > 0);
 
@@ -151,10 +151,10 @@ export default async function PassesPage() {
           {/* counts */}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 24 }}>
             <StatChip label="Running" value={running.length} />
-            <StatChip label="Blocked" value={blocked.length} color={blocked.length ? "#C0392B" : undefined} />
-            <StatChip label="Needs review" value={needsReview.length} color={needsReview.length ? "#B45309" : undefined} />
-            <StatChip label="Ready" value={ready.length} color={ready.length ? "var(--acc-deep)" : undefined} />
-            {repairVerified.length > 0 && <StatChip label="Repair verified" value={repairVerified.length} color="var(--acc-deep)" />}
+            <StatChip label="Failed" value={blocked.length} color={blocked.length ? "#C0392B" : undefined} />
+            <StatChip label="Blocked" value={needsReview.length} color={needsReview.length ? "#B45309" : undefined} />
+            <StatChip label="Verified" value={ready.length} color={ready.length ? "var(--acc-deep)" : undefined} />
+            {repairVerified.length > 0 && <StatChip label="Verified (targeted rerun)" value={repairVerified.length} color="var(--acc-deep)" />}
             {didNotComplete.length > 0 && <StatChip label="Didn't complete" value={didNotComplete.length} color="var(--fg-4)" />}
           </div>
 

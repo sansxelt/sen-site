@@ -86,8 +86,8 @@ function ReadOnlyRoster({ appId, yourRole }: { appId: string; yourRole: string }
       <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.6, margin: "10px 0 0" }}>
         You have <strong style={{ color: "var(--fg-1)" }}>{yourRole}</strong> access to this application. It&apos;s
         owned and managed by your workspace owner, who invites teammates and sets each person&apos;s role.
-        {" "}Editors can author the contract and flows and launch Production Passes; viewers can read the
-        contract, passes, and reports.
+        {" "}Editors can author the contract and flows and launch verifications; viewers can read the
+        contract, verifications, and reports.
       </p>
       <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.6, margin: "12px 0 0" }}>
         Runs on this application are billed to the owner&apos;s account. To change your role or invite others,

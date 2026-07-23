@@ -43,10 +43,10 @@ export function PassPreview({ appId, flowIds }: { appId: string; flowIds?: strin
         const r = await fetch(`/api/preflight/apps/${appId}/pass-preview${qs}`);
         const j = await r.json().catch(() => null);
         if (!live) return;
-        if (!r.ok) { setErr(j?.message || "Could not price this pass."); setData(null); }
+        if (!r.ok) { setErr(j?.message || "Could not price this verification."); setData(null); }
         else { setErr(null); setData(j as Preview); }
       } catch {
-        if (live) setErr("Could not price this pass.");
+        if (live) setErr("Could not price this verification.");
       } finally {
         if (live) setLoading(false);
       }
@@ -54,8 +54,8 @@ export function PassPreview({ appId, flowIds }: { appId: string; flowIds?: strin
     return () => { live = false; };
   }, [appId, flowIds]);
 
-  if (loading) return <div style={box}><span style={lab}>Pass preview</span><p style={{ color: "var(--fg-4)", fontSize: 13, margin: "8px 0 0" }}>Pricing this pass…</p></div>;
-  if (err) return <div style={box}><span style={lab}>Pass preview</span><p style={{ color: "var(--fg-3)", fontSize: 13, margin: "8px 0 0" }}>{err}</p></div>;
+  if (loading) return <div style={box}><span style={lab}>Verification preview</span><p style={{ color: "var(--fg-4)", fontSize: 13, margin: "8px 0 0" }}>Pricing this verification…</p></div>;
+  if (err) return <div style={box}><span style={lab}>Verification preview</span><p style={{ color: "var(--fg-3)", fontSize: 13, margin: "8px 0 0" }}>{err}</p></div>;
   if (!data) return null;
 
   const { selectedCount, decision } = data;
@@ -70,17 +70,17 @@ export function PassPreview({ appId, flowIds }: { appId: string; flowIds?: strin
       // unverified: the free-pass eligibility read failed transiently and we fell back to PAYG. Honest,
       // non-permanent copy — the user is NOT told they are permanently ineligible.
       note = decision.unverified
-        ? "We couldn't verify your free-pass eligibility right now. Try again later or continue with Pay as you go."
+        ? "We couldn't verify your free verification eligibility right now. Try again later or continue with Pay as you go."
         : "Charged when you launch. No hold is placed until every readiness check passes.";
       break;
     case "free":
       headline = <span style={price}>Included</span>;
-      note = "Your one lifetime free Production Pass covers this (up to 3 flows).";
+      note = "Your one lifetime free verification covers this (up to 3 flows).";
       break;
     case "subscription":
       if (decision.ok) {
         headline = <span style={price}>Included</span>;
-        note = `On your ${decision.plan.name} plan. ${decision.unitsAfter} flow ${decision.unitsAfter === 1 ? "unit" : "units"} left this month after this pass.`;
+        note = `On your ${decision.plan.name} plan. ${decision.unitsAfter} flow ${decision.unitsAfter === 1 ? "unit" : "units"} left this month after this verification.`;
       } else {
         headline = <span style={{ ...price, color: "var(--err)" }}>Not available</span>;
         note = decision.message;
@@ -93,14 +93,14 @@ export function PassPreview({ appId, flowIds }: { appId: string; flowIds?: strin
     case "legacy":
     default:
       headline = <span style={price}>Included</span>;
-      note = "This pass runs on your current plan.";
+      note = "This verification runs on your current plan.";
       break;
   }
 
   return (
     <div style={box}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
-        <span style={lab}>Pass preview</span>
+        <span style={lab}>Verification preview</span>
         <span style={{ fontSize: 12.5, color: "var(--fg-3)" }}>{flowLabel}</span>
       </div>
       <div style={{ marginTop: 10 }}>{headline}</div>

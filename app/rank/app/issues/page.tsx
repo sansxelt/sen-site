@@ -122,7 +122,7 @@ function NoOpenIssues() {
     <div className="empty">
       <EmptyIcon d={I.alert} />
       <h3>No open issues</h3>
-      <p>Run a Production Pass and any launch blocker it finds appears here with evidence and reproduction steps.</p>
+      <p>Run a verification and any failure it finds appears here with evidence and reproduction steps.</p>
       <Link href="/applications" className="btn">Go to applications</Link>
     </div>
   );
@@ -149,7 +149,7 @@ export default async function IssuesPage() {
         <p className="eyebrow">Vraelis Preflight</p>
         <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "6px 0 10px" }}>Issues</h1>
         <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.6, margin: 0, maxWidth: 560 }}>
-          Launch blockers found by real browser runs of your app, each with the evidence to fix it.
+          Failures found by real browser runs of your app, each with the evidence to fix it.
         </p>
       </div>
 

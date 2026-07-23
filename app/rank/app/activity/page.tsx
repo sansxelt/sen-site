@@ -87,13 +87,13 @@ export default async function AuditPage() {
         <div>
           <p className="eyebrow">Trust &amp; governance</p>
           <h1 className="display">Activity</h1>
-          <p>A read-only trail of everything that happens in your workspace: Production Passes, balance, billing, team access, and governance.</p>
+          <p>A read-only trail of everything that happens in your workspace: verifications, balance, billing, team access, and governance.</p>
         </div>
         <Link href="/enterprise" className="btn btn--ghost">Trust overview →</Link>
       </div>
 
       <div className="card" style={{ background: "var(--bg-2)", marginBottom: 18 }}>
-        <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>Vraelis records your Production Pass runs, balance top-ups, exports, billing changes, team access, and governance events, organization changes, domain verification, SSO, ownership transfers. Activity never includes payment details, Stripe identifiers, invite or DNS tokens, token hashes, webhook secrets, OIDC codes, SAML assertions, or raw run evidence.</p>
+        <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>Vraelis records your verification runs, balance top-ups, exports, billing changes, team access, and governance events, organization changes, domain verification, SSO, ownership transfers. Activity never includes payment details, Stripe identifiers, invite or DNS tokens, token hashes, webhook secrets, OIDC codes, SAML assertions, or raw run evidence.</p>
       </div>
 
       {/* Export */}
@@ -118,7 +118,7 @@ export default async function AuditPage() {
       {/* Workspace activity */}
       <div style={cardHead}>Workspace activity</div>
       <EventList events={events}
-        empty="Application connections, Production Pass launches and completions, credit top-ups, exports, billing actions, invites, and role changes are recorded here as you work."
+        empty="Application connections, verification launches and completions, credit top-ups, exports, billing actions, invites, and role changes are recorded here as you work."
         action={{ href: "/applications", label: "Go to applications" }} />
 
       {/* Organization activity */}

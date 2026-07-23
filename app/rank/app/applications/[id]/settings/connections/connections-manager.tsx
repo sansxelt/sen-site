@@ -167,7 +167,7 @@ function ReadOnlyConnections({ connections }: { connections: SafeConnection[] })
           </div>
         ) : (
           <p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>
-            No connections recorded. Passes run with only the application URL until an editor adds source,
+            No connections recorded. Verifications run with only the application URL until an editor adds source,
             deployment, data, or service context.
           </p>
         )}
@@ -182,7 +182,7 @@ function ReadOnlyConnections({ connections }: { connections: SafeConnection[] })
         ) : (
           <p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>
             No test accounts on file. An encrypted test account is what will unlock signed-in flows when
-            authenticated passes ship.
+            authenticated verifications ship.
           </p>
         )}
       </section>
@@ -415,7 +415,7 @@ export function ConnectionsManager({ appId, connections, canManage = true }: { a
           </div>
         ) : (
           <p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>
-            No connections recorded. Passes run with only the application URL until you add source,
+            No connections recorded. Verifications run with only the application URL until you add source,
             deployment, data, or service context below.
           </p>
         )}
@@ -430,7 +430,7 @@ export function ConnectionsManager({ appId, connections, canManage = true }: { a
         ) : (
           <p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>
             No test accounts on file. An encrypted test account is what will unlock signed-in flows when
-            authenticated passes ship.
+            authenticated verifications ship.
           </p>
         )}
       </section>

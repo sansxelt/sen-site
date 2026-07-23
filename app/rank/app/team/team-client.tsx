@@ -26,8 +26,8 @@ const ROLE_LABEL: Record<Role, string> = { owner: "Owner", admin: "Admin", edito
 const ROLE_DESC: Record<Role, string> = {
   owner: "Full workspace control. Manages the team and owns billing.",
   admin: "Manage members and application access. See analytics and reports.",
-  editor: "Author contracts and flows, and launch Production Passes. See analytics and reports.",
-  viewer: "Read-only workspace access to applications, passes, and reports.",
+  editor: "Author contracts and flows, and launch verifications. See analytics and reports.",
+  viewer: "Read-only workspace access to applications, verifications, and reports.",
   client_viewer: "Client-safe reports only, no team, billing, API, or private internals.",
 };
 const PROJ_ROLE_LABEL: Record<ProjRole, string> = { editor: "Editor", viewer: "Viewer", client_viewer: "Client viewer" };
@@ -137,7 +137,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
         <div>
           <p className="eyebrow">Workspace</p>
           <h1 className="display">Team</h1>
-          <p>Run Production Passes with your team and share client-ready reports, without exposing private controls.</p>
+          <p>Run verifications with your team and share client-ready reports, without exposing private controls.</p>
         </div>
         <Link href="/activity" className="btn btn--ghost">Workspace activity →</Link>
       </div>

@@ -14,8 +14,8 @@ type Member = { id: string; email: string; role: string; status: string; you: bo
 // The roles an owner/admin may assign (owner is implicit and not assignable here).
 const INVITE_ROLES: { value: string; label: string; blurb: string }[] = [
   { value: "admin", label: "Admin", blurb: "Manage the team, the contract, flows, and runs." },
-  { value: "editor", label: "Editor", blurb: "Author the contract and flows, launch Production Passes." },
-  { value: "viewer", label: "Viewer", blurb: "Read the contract, passes, and reports." },
+  { value: "editor", label: "Editor", blurb: "Author the contract and flows, launch verifications." },
+  { value: "viewer", label: "Viewer", blurb: "Read the contract, verifications, and reports." },
   { value: "client_viewer", label: "Client viewer", blurb: "Read shared reports only." },
 ];
 const ROLE_LABEL: Record<string, string> = { owner: "Owner", admin: "Admin", editor: "Editor", viewer: "Viewer", client_viewer: "Client viewer" };

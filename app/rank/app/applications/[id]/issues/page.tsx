@@ -116,7 +116,7 @@ export default async function AppIssuesPage({ params }: { params: Promise<{ id: 
         <div className="empty">
           <EmptyIcon d={I.alert} />
           <h3>No issues recorded</h3>
-          <p>Issues are launch blockers found by a Production Pass, each with evidence and a repair prompt. Run a pass to see whether any of your approved flows break.</p>
+          <p>Issues are failures found by a verification, each with evidence and a repair prompt. Run a verification to see whether any of your approved flows break.</p>
           <Link href={`/applications/${id}`} className="btn">Back to overview</Link>
         </div>
       ) : (

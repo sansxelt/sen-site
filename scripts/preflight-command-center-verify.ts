@@ -31,11 +31,11 @@ ok("draft contract WITH requirements -> Review Production Contract",
 ok("approved contract but no eligible flows -> Add flows",
   nextAction(base({ eligibleFlowCount: 0 })).label === "Add flows to your contract");
 
-ok("a run is active -> View running pass",
-  nextAction(base({ runActive: true, latestRunId: "run9" })).label === "View running pass");
+ok("a run is active -> View running verification",
+  nextAction(base({ runActive: true, latestRunId: "run9" })).label === "View running verification");
 
-ok("blocked -> Inspect blocker (with the run behind it)",
-  (() => { const a = nextAction(base({ decision: "blocked", latestRunId: "run9", blockerCount: 2 })); return a.label === "Inspect blocker" && a.href.endsWith("/passes/run9"); })());
+ok("blocked -> Inspect failure (with the run behind it)",
+  (() => { const a = nextAction(base({ decision: "blocked", latestRunId: "run9", blockerCount: 2 })); return a.label === "Inspect failure" && a.href.endsWith("/passes/run9"); })());
 
 ok("repair verified, full verification owed -> Run full critical verification (LAUNCHES critical)",
   (() => { const a = nextAction(base({ repairPendingFullVerify: true, criticalEligibleCount: 1 })); return a.label === "Run full critical verification" && a.launch?.flowIds === "critical"; })());
@@ -61,19 +61,19 @@ ok("author/review/inspect/view actions are NAVIGATE (no launch descriptor)",
   !nextAction(base({ runActive: true, latestRunId: "r" })).launch);
 
 console.log("\n── priority: an EARLIER gap always wins over a later one ──");
-ok("blocked outranks newer-deploy (inspect the blocker first)",
-  nextAction(base({ decision: "blocked", latestRunId: "r", newerUnverifiedDeploy: true, blockerCount: 1 })).label === "Inspect blocker");
-ok("active run outranks blocked (watch the running pass)",
-  nextAction(base({ runActive: true, latestRunId: "r", decision: "blocked" })).label === "View running pass");
+ok("blocked outranks newer-deploy (inspect the failure first)",
+  nextAction(base({ decision: "blocked", latestRunId: "r", newerUnverifiedDeploy: true, blockerCount: 1 })).label === "Inspect failure");
+ok("active run outranks blocked (watch the running verification)",
+  nextAction(base({ runActive: true, latestRunId: "r", decision: "blocked" })).label === "View running verification");
 ok("empty contract outranks everything (earliest funnel gap)",
   nextAction(base({ contractApproved: false, requirementCount: 0, flowCount: 0, eligibleFlowCount: 0, decision: "blocked", newerUnverifiedDeploy: true })).label === "Author your Production Contract");
 
 console.log("\n── stateRibbon: only-true facts, absent ones omitted ──");
-ok("a healthy verified app shows a SHORT ribbon (deploy + verified [+ coverage/contract])",
-  (() => { const r = stateRibbon(base({ decision: "ready", criticalTotal: 3, criticalPassed: 3 })); return r.some((f) => f.key === "verif" && f.text === "verified") && !r.some((f) => f.key === "block"); })());
+ok("a healthy verified app shows a SHORT ribbon (deploy + flows-passed [+ coverage/contract])",
+  (() => { const r = stateRibbon(base({ decision: "ready", criticalTotal: 3, criticalPassed: 3 })); return r.some((f) => f.key === "verif" && f.text === "contract flows passed") && !r.some((f) => f.key === "block"); })());
 
 ok("blockers render only when > 0",
-  (() => { const r = stateRibbon(base({ decision: "blocked", blockerCount: 2 })); return r.some((f) => f.key === "block" && f.text === "2 blockers" && f.tone === "bad"); })());
+  (() => { const r = stateRibbon(base({ decision: "blocked", blockerCount: 2 })); return r.some((f) => f.key === "block" && f.text === "2 failures" && f.tone === "bad"); })());
 ok("zero blockers -> no blocker fact",
   !stateRibbon(base({ blockerCount: 0 })).some((f) => f.key === "block"));
 

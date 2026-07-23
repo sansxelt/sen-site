@@ -8,7 +8,7 @@ import { listRunsForApp } from "@/lib/preflight/runs-db";
 import { AppTabs } from "../app-tabs";
 import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
 
-export const metadata: Metadata = { title: "Production Passes" };
+export const metadata: Metadata = { title: "Verifications" };
 
 // Relative "3m ago / 4h ago / Jul 2" (server component; rendered once per request, no hydration risk).
 function timeAgo(iso: string | null | undefined): string {
@@ -31,11 +31,11 @@ type Pill = { label: string; color: string; bg: string; border: string };
 // Decision AND text carry the status together (never colour alone). A run with no decision yet reflects
 // its lifecycle state as in-progress or untested, muted.
 function runPill(decision: string | null, state: string): Pill {
-  // "Ready", matching every other surface. "Ready to ship" turned a scoped decision into a recommendation.
-  if (decision === "ready") return { label: "Ready", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
-  if (decision === "repair_verified") return { label: "Repair verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
-  if (decision === "needs_review") return { label: "Needs review", color: "#B45309", bg: "#FEF6E7", border: "#F3DFB0" };
-  if (decision === "blocked") return { label: "Blocked", color: "#C0392B", bg: "#FBEBEA", border: "#F0C7C2" };
+  // "Verified", matching every other surface: a scoped decision, never a recommendation.
+  if (decision === "ready") return { label: "Verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
+  if (decision === "repair_verified") return { label: "Verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
+  if (decision === "needs_review") return { label: "Blocked", color: "#B45309", bg: "#FEF6E7", border: "#F3DFB0" };
+  if (decision === "blocked") return { label: "Failed", color: "#C0392B", bg: "#FBEBEA", border: "#F0C7C2" };
   const active = state === "queued" || state === "discovering" || state === "running" || state === "analyzing";
   return { label: active ? "In progress" : "No decision", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };
 }
@@ -47,7 +47,7 @@ function RunRow({ appId, r }: { appId: string; r: RunSummary }) {
       style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 15px", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", textDecoration: "none" }}>
       <span aria-hidden style={{ width: 9, height: 9, borderRadius: "50%", background: p.color, flex: "none" }} />
       <div style={{ minWidth: 0, flex: 1 }}>
-        <div style={{ fontSize: 13, color: "var(--fg-2)", fontWeight: 600 }}>{timeAgo(r.created_at) || "Pass"}</div>
+        <div style={{ fontSize: 13, color: "var(--fg-2)", fontWeight: 600 }}>{timeAgo(r.created_at) || "Verification"}</div>
         {r.deployment_url ? (
           <div style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 3 }}>
             {r.deployment_url}
@@ -107,8 +107,8 @@ export default async function AppRunsPage({ params }: { params: Promise<{ id: st
       ) : (
         <div className="empty">
           <EmptyIcon d={I.shield} />
-          <h3>No passes yet</h3>
-          <p>A Production Pass walks this app in a real browser against its contract and returns a launch decision with evidence. Once one runs, it shows here.</p>
+          <h3>No verifications yet</h3>
+          <p>A verification walks this app in a real browser against its contract and returns a launch decision with evidence. Once one runs, it shows here.</p>
           <Link href={`/applications/${id}`} className="btn">Back to overview</Link>
         </div>
       )}

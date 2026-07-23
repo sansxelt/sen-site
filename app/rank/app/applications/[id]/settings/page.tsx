@@ -103,10 +103,10 @@ export default async function AppSettingsPage({ params }: { params: Promise<{ id
   // What is missing, and what each gap actually costs. Real gaps only; when nothing is missing the
   // section says exactly that instead of padding itself.
   const gaps: { what: string; why: string }[] = [];
-  if (!envLabel) gaps.push({ what: "Environment not set", why: "Passes and deployments cannot be labeled preview, staging, or production." });
-  if (!has("github") && !has("custom_deploy")) gaps.push({ what: "No source connection", why: "Without GitHub or a custom deployment record, passes cannot pin the commit and branch they verified." });
+  if (!envLabel) gaps.push({ what: "Environment not set", why: "Verifications and deployments cannot be labeled preview, staging, or production." });
+  if (!has("github") && !has("custom_deploy")) gaps.push({ what: "No source connection", why: "Without GitHub or a custom deployment record, verifications cannot pin the commit and branch they verified." });
   if (!has("vercel") && !has("custom_deploy")) gaps.push({ what: "No deployment provider", why: "Deployment metadata stays limited to the URL under test." });
-  if (testAccounts.length === 0) gaps.push({ what: "No test account", why: "Passes can only exercise signed-out flows. An encrypted test account unlocks signed-in journeys." });
+  if (testAccounts.length === 0) gaps.push({ what: "No test account", why: "Verifications can only exercise signed-out flows. An encrypted test account unlocks signed-in journeys." });
   if (extras.contextSources.length === 0) gaps.push({ what: "No product definition sources", why: "A build prompt, PRD, or requirements doc sharpens the Production Contract Vraelis derives." });
 
   return (
@@ -170,7 +170,7 @@ export default async function AppSettingsPage({ params }: { params: Promise<{ id
         <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, margin: 0, maxWidth: 640 }}>
           {connections.length
             ? `${otherConnections.length} connection${otherConnections.length === 1 ? "" : "s"} and ${testAccounts.length} test account${testAccounts.length === 1 ? "" : "s"} on file.`
-            : "No connections recorded, so passes run with only the application URL."}{" "}
+            : "No connections recorded, so verifications run with only the application URL."}{" "}
           Editing metadata, health checks, disconnecting, and the audit history live on the Connections tab.
         </p>
 
@@ -197,7 +197,7 @@ export default async function AppSettingsPage({ params }: { params: Promise<{ id
         <div style={{ ...headLbl, marginBottom: 4 }}>Test boundaries</div>
         <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, margin: "0 0 14px", maxWidth: 640 }}>
           {b
-            ? "What passes on this application are permitted to do. Set at connect time; every permit is off unless the owner turned it on."
+            ? "What verifications on this application are permitted to do. Set at connect time; every permit is off unless the owner turned it on."
             : "No boundaries were recorded for this application, so Vraelis treats every permit as off, the most conservative default."}
         </p>
         {b ? (
@@ -229,7 +229,7 @@ export default async function AppSettingsPage({ params }: { params: Promise<{ id
         {gaps.length ? (
           <>
             <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, margin: "0 0 12px", maxWidth: 640 }}>
-              Each gap below narrows what a Production Pass can verify. Add connections and test accounts
+              Each gap below narrows what a verification can cover. Add connections and test accounts
               any time from the <Link href={`/applications/${id}/settings/connections`} style={{ color: "var(--acc-deep)", fontWeight: 600 }}>Connections tab</Link>.
             </p>
             <div style={{ display: "grid", gap: 8 }}>

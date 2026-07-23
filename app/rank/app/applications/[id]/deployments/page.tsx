@@ -47,10 +47,10 @@ type Pill = { label: string; color: string; bg: string; border: string };
 
 // Decision AND text carry the status together (never colour alone).
 function verdictPill(decision: string | null, state: string): Pill {
-  if (decision === "ready") return { label: "Ready to ship", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
-  if (decision === "repair_verified") return { label: "Repair verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
-  if (decision === "needs_review") return { label: "Needs review", color: "#B45309", bg: "#FEF6E7", border: "#F3DFB0" };
-  if (decision === "blocked") return { label: "Blocked", color: "#C0392B", bg: "#FBEBEA", border: "#F0C7C2" };
+  if (decision === "ready") return { label: "Verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
+  if (decision === "repair_verified") return { label: "Verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
+  if (decision === "needs_review") return { label: "Blocked", color: "#B45309", bg: "#FEF6E7", border: "#F3DFB0" };
+  if (decision === "blocked") return { label: "Failed", color: "#C0392B", bg: "#FBEBEA", border: "#F0C7C2" };
   const active = state === "queued" || state === "discovering" || state === "running" || state === "analyzing";
   return { label: active ? "In progress" : "No decision", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };
 }
@@ -80,7 +80,7 @@ function DeploymentRow({ appId, g }: { appId: string; g: DeploymentGroup }) {
           {g.url}
         </div>
         <div style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 3 }}>
-          {g.passCount} pass{g.passCount === 1 ? "" : "es"}, latest {timeAgo(g.latest.created_at)}
+          {g.passCount} verification{g.passCount === 1 ? "" : "s"}, latest {timeAgo(g.latest.created_at)}
           {g.latest.commit_sha ? `, commit ${g.latest.commit_sha.slice(0, 10)}` : ""}
         </div>
       </div>
@@ -172,7 +172,7 @@ export default async function AppDeploymentsPage({ params }: { params: Promise<{
           <span style={{ color: "#B45309", flex: "none", marginTop: 1 }}><Ic d={I.alert} size={17} sw={1.8} /></span>
           <p style={{ fontSize: 13, color: "var(--fg-2)", lineHeight: 1.6, margin: 0 }}>
             Deployment identity is not active yet: apply <span style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>sql/vraelis-preflight-8-deployments.sql</span> (migration 8).
-            Nothing is lost; the pass history below still shows every URL your passes tested.
+            Nothing is lost; the verification history below still shows every URL your verifications tested.
           </p>
         </div>
       ) : null}
@@ -201,7 +201,7 @@ export default async function AppDeploymentsPage({ params }: { params: Promise<{
           <div style={{ marginTop: 12 }}>
             <Link href={`/applications/${id}/passes/${lastVerified.id}`}
               style={{ fontSize: 13, fontWeight: 600, color: "var(--acc-deep)", textDecoration: "none" }}>
-              View pass report →
+              View verification report →
             </Link>
           </div>
         </div>
@@ -280,7 +280,7 @@ export default async function AppDeploymentsPage({ params }: { params: Promise<{
             </div>
           ) : (
             <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0 }}>
-              No deployments recorded yet. Every new Production Pass records the deployment it tests
+              No deployments recorded yet. Every new verification records the deployment it tests
               automatically; you can also record one by hand when you ship.
             </p>
           )}
@@ -288,7 +288,7 @@ export default async function AppDeploymentsPage({ params }: { params: Promise<{
       ) : null}
 
       {/* ── Pass history by deployment URL (pre-S4 view; every URL a pass has tested) ───────────────── */}
-      <div style={{ ...headLbl, marginBottom: 12 }}>Pass history by deployment</div>
+      <div style={{ ...headLbl, marginBottom: 12 }}>Verification history by deployment</div>
       {groups.length ? (
         <div style={{ display: "grid", gap: 8 }}>
           {groups.map((g) => <DeploymentRow key={g.url} appId={id} g={g} />)}
@@ -297,16 +297,16 @@ export default async function AppDeploymentsPage({ params }: { params: Promise<{
         <div className="empty">
           <EmptyIcon d={I.deploy} />
           <h3>No deployments recorded</h3>
-          <p>Every Production Pass records the deployment URL it ran against. Run one from the overview and that deployment appears here with its verdict.</p>
-          <Link href={`/applications/${id}`} className="btn">Run a pass from the overview</Link>
+          <p>Every verification records the deployment URL it ran against. Run one from the overview and that deployment appears here with its verdict.</p>
+          <Link href={`/applications/${id}`} className="btn">Run a verification from the overview</Link>
         </div>
       )}
 
       <div className="card" style={{ marginTop: 20, padding: "clamp(16px, 2.2vw, 20px)", background: "var(--bg-2)" }}>
         <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14.5, color: "var(--fg-1)", marginBottom: 6 }}>Deployment guards are planned</div>
         <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, margin: 0 }}>
-          Automatic passes on every new deployment, with a hold on blocked verdicts, are planned but not built yet.
-          For now, this page is a history of the deployments your passes have tested.
+          Automatic verifications on every new deployment, with a hold on Failed verdicts, are planned but not built yet.
+          For now, this page is a history of the deployments your verifications have tested.
         </p>
       </div>
     </div>

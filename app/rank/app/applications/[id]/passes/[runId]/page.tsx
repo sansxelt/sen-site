@@ -46,10 +46,10 @@ const TONE_MUTED = { color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--lin
 // The verdict tone. A run with no decision that ended anyway is labeled by its real terminal state,
 // never left saying IN PROGRESS.
 function runTone(decision: string | null, state: string): Tone {
-  if (decision === "ready") return { label: "READY", ...TONE_READY };
-  if (decision === "repair_verified") return { label: "REPAIR VERIFIED", ...TONE_REPAIR };
-  if (decision === "needs_review") return { label: "NEEDS REVIEW", ...TONE_REVIEW };
-  if (decision === "blocked") return { label: "BLOCKED", ...TONE_BLOCKED };
+  if (decision === "ready") return { label: "VERIFIED", ...TONE_READY };
+  if (decision === "repair_verified") return { label: "VERIFIED", ...TONE_REPAIR };
+  if (decision === "needs_review") return { label: "BLOCKED", ...TONE_REVIEW };
+  if (decision === "blocked") return { label: "FAILED", ...TONE_BLOCKED };
   if (state === "cancelled") return { label: "CANCELLED", ...TONE_MUTED };
   if (state === "failed") return { label: "INCOMPLETE", ...TONE_MUTED };
   return { label: "IN PROGRESS", ...TONE_MUTED };
@@ -151,7 +151,7 @@ function verdictLine(decision: string | null, state: string, summary: Record<str
     const n = num(summary.selected_total) || num(summary.flows_total) || 1;
     // "No longer reproduced" is what a rerun shows. "Resolved" claims the defect is fixed, which one
     // passing run cannot establish.
-    return `${n} selected flow${n === 1 ? "" : "s"} passed. The reported blocker${n === 1 ? " was" : "s were"} not reproduced. Full critical verification is still required before this deployment can be marked READY.`;
+    return `${n} selected flow${n === 1 ? "" : "s"} passed. The reported failure${n === 1 ? " was" : "s were"} not reproduced. Full critical verification is still required before this deployment can be marked Verified.`;
   }
   if (decision === "needs_review") {
     const pb = num(summary.policy_blocked);
@@ -161,8 +161,8 @@ function verdictLine(decision: string | null, state: string, summary: Record<str
   if (decision === "blocked") {
     const n = Math.max(0, num(summary.critical_total) - num(summary.critical_passed)) || criticalIssueCount;
     return n > 0
-      ? `This deployment is not ready. ${n} critical flow${n === 1 ? "" : "s"} failed.`
-      : "This deployment is not ready.";
+      ? `This deployment failed verification. ${n} critical flow${n === 1 ? "" : "s"} failed.`
+      : "This deployment failed verification.";
   }
   if (terminal) {
     if (state === "cancelled") return "This run was cancelled before it finished.";
@@ -528,7 +528,7 @@ export default async function RunReportPage({ params }: { params: Promise<{ id: 
     } else if (gate.mode === "payg") {
       // The authoritative PAYG rerun price: $3 per selected failed flow, capped at the comparable pass. Stated
       // up front so a targeted rerun always reads as PAYG. The free pass covers a fresh full pass, not this.
-      rerunPriceNote = `Targeted rerun: ${usdFromCents(gate.cents)} (${usdFromCents(rerunPriceCents(1))} per failed flow), charged when you launch. Not covered by the free pass.`;
+      rerunPriceNote = `Targeted rerun: ${usdFromCents(gate.cents)} (${usdFromCents(rerunPriceCents(1))} per failed flow), charged when you launch. Not covered by the free verification.`;
     } else if (gate.mode === "frozen") {
       rerunPriceNote = gate.message;
     }
@@ -631,7 +631,7 @@ export default async function RunReportPage({ params }: { params: Promise<{ id: 
           <section style={{ display: "grid", gap: 16 }}>
             <h2 style={{ ...sectionHeading, display: "flex", alignItems: "center", gap: 10 }}>
               <span aria-hidden style={{ display: "inline-flex", color: "var(--fg-3)" }}><Ic d={I.alert} size={20} sw={1.8} /></span>
-              {blockers.length} launch blocker{blockers.length === 1 ? "" : "s"}
+              {blockers.length} failure{blockers.length === 1 ? "" : "s"}
             </h2>
             {blockers.map((iss, i) => {
               const m = metaForIssue(iss);
@@ -652,7 +652,7 @@ export default async function RunReportPage({ params }: { params: Promise<{ id: 
           <div style={{ border: "1px solid var(--line-1)", borderLeft: "4px solid var(--acc-line)", borderRadius: "var(--r-md)", background: "var(--bg-1)", padding: "16px 20px" }}>
             <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--fg-1)", display: "flex", alignItems: "center", gap: 8 }}>
               <span aria-hidden style={{ display: "inline-flex", color: "var(--acc-deep)" }}><Ic d={I.check} size={15} sw={2.2} /></span>
-              No blockers in the flows that ran
+              No failures in the flows that ran
             </div>
             <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55, margin: "4px 0 0" }}>Every critical flow passed against this deployment.</p>
           </div>

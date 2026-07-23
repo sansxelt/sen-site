@@ -112,7 +112,7 @@ export default async function AppRepairsPage({ params }: { params: Promise<{ id:
         <div className="empty">
           <EmptyIcon d={I.wrench} />
           <h3>No repairs yet</h3>
-          <p>When a Production Pass finds an issue, Vraelis writes a repair prompt for your AI builder. Apply it, rerun the pass, and the result is recorded here.</p>
+          <p>When a verification finds an issue, Vraelis writes a repair prompt for your AI builder. Apply it, rerun the verification, and the result is recorded here.</p>
           <Link href={`/applications/${id}/issues`} className="btn">View issues</Link>
         </div>
       )}

@@ -66,10 +66,10 @@ const isActiveRun = (r: RunSummary | null): boolean => !!r && !r.decision && ACT
 
 // Run decision -> pill for the pass list.
 function runPill(decision: string | null, state: string): Tone & { label: string } {
-  if (decision === "ready") return { label: "Ready", ...TONE_READY };
-  if (decision === "repair_verified") return { label: "Repair verified", ...TONE_READY };
-  if (decision === "needs_review") return { label: "Needs review", ...TONE_REVIEW };
-  if (decision === "blocked") return { label: "Blocked", ...TONE_BLOCKED };
+  if (decision === "ready") return { label: "Verified", ...TONE_READY };
+  if (decision === "repair_verified") return { label: "Verified", ...TONE_REPAIR };
+  if (decision === "needs_review") return { label: "Blocked", ...TONE_REVIEW };
+  if (decision === "blocked") return { label: "Failed", ...TONE_BLOCKED };
   return { label: ACTIVE_RUN_STATES.has(state) ? "In progress" : "No decision", ...TONE_MUTED };
 }
 
@@ -96,7 +96,7 @@ function RunRow({ appId, r }: { appId: string; r: RunSummary }) {
     <Link href={`/applications/${appId}/passes/${r.id}`} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", textDecoration: "none" }}>
       <span aria-hidden style={{ width: 9, height: 9, borderRadius: "50%", background: p.fg, flex: "none" }} />
       <div style={{ minWidth: 0, flex: 1 }}>
-        <div style={{ fontSize: 13, color: "var(--fg-2)", fontWeight: 600 }} title={when(r.created_at)}>{timeAgo(r.created_at) || "Pass"}</div>
+        <div style={{ fontSize: 13, color: "var(--fg-2)", fontWeight: 600 }} title={when(r.created_at)}>{timeAgo(r.created_at) || "Verification"}</div>
         {r.deployment_url ? (
           <div style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>
             {r.deployment_url}
@@ -188,12 +188,13 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
   let hero: Tone = TONE_MUTED;
   let verdict = "NOT TESTED";
   if (latestActive) { verdict = "IN PROGRESS"; }
-  else if (decision === "ready") { hero = TONE_READY; verdict = "READY"; }
+  else if (decision === "ready") { hero = TONE_READY; verdict = "VERIFIED"; }
   // Only reachable when NO full-coverage pass exists at all (pickHealthRun's honest fallback): the repair
-  // is verified, but the application still awaits its first full verification — never "READY".
-  else if (decision === "repair_verified") { hero = TONE_REPAIR; verdict = "REPAIR VERIFIED"; }
-  else if (decision === "needs_review") { hero = TONE_REVIEW; verdict = "NEEDS REVIEW"; }
-  else if (decision === "blocked") { hero = TONE_BLOCKED; verdict = "BLOCKED"; }
+  // is verified, but the application still awaits its first full verification — TONE_REPAIR keeps the
+  // provisional state visually distinct from the full-coverage green.
+  else if (decision === "repair_verified") { hero = TONE_REPAIR; verdict = "VERIFIED"; }
+  else if (decision === "needs_review") { hero = TONE_REVIEW; verdict = "BLOCKED"; }
+  else if (decision === "blocked") { hero = TONE_BLOCKED; verdict = "FAILED"; }
 
   // Subline: real numbers only. Blocked leads with the open blocker count; any run with a critical-flow
   // summary states it plainly; an untested app says so.
@@ -201,10 +202,10 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
   const critTotal = latest ? num(latest.summary?.critical_total) : 0;
   const critPassed = latest ? num(latest.summary?.critical_passed) : 0;
   const subParts: string[] = [];
-  if (decision === "blocked" && blockers.length > 0) subParts.push(`${blockers.length} critical launch blocker${blockers.length === 1 ? "" : "s"}`);
+  if (decision === "blocked" && blockers.length > 0) subParts.push(`${blockers.length} critical failure${blockers.length === 1 ? "" : "s"}`);
   if (latest && !latestActive && critTotal > 0) subParts.push(`${critPassed} of ${critTotal} critical flows passed`);
-  if (decision === "repair_verified") subParts.push("Full critical verification is still required before this deployment can be marked READY");
-  if (latestActive) subParts.push("A Production Pass is running right now");
+  if (decision === "repair_verified") subParts.push("Full critical verification is still required before this deployment can be marked Verified");
+  if (latestActive) subParts.push("A verification is running right now");
   if (!latest) subParts.push("This app hasn't been verified yet");
 
   // Full-verification selection for a repair-verified state: every eligible critical flow.
@@ -282,7 +283,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
           </div>
           <Link href={`/applications/${id}/api-runtime`} style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", border: "1px solid var(--line-2)", borderRadius: 10, background: "var(--bg-1)" }}>
             <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0.4, color: "var(--fg-4)" }}>API</span>
-            <span style={{ fontSize: 13.5, fontWeight: 700, color: apiStatus.verdict === "READY" ? "var(--ok)" : apiStatus.verdict === "BLOCKED" ? "var(--err)" : apiStatus.verdict === "REPAIR VERIFIED" ? "var(--acc)" : "var(--fg-3)" }}>{apiStatus.hasTarget ? apiStatus.verdict : "NOT SET UP"}</span>
+            <span style={{ fontSize: 13.5, fontWeight: 700, color: apiStatus.verdict === "VERIFIED" ? "var(--ok)" : apiStatus.verdict === "FAILED" ? "var(--err)" : apiStatus.verdict === "BLOCKED" ? "var(--warn)" : "var(--fg-3)" }}>{apiStatus.hasTarget ? apiStatus.verdict : "NOT SET UP"}</span>
           </Link>
         </div>
       )}
@@ -302,8 +303,8 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
           </div>
           <p style={{ fontSize: 13, color: "var(--fg-2)", lineHeight: 1.55, margin: "6px 0 0" }}>
             <span title={when(newerDeploy.deployment.detected_at)}>Recorded {timeAgo(newerDeploy.deployment.detected_at)}</span>, after the
-            last verified pass. The status below still describes the deployment that was tested;
-            a READY decision is never carried forward to an untested deployment.
+            last verification. The status below still describes the deployment that was tested;
+            a Verified decision is never carried forward to an untested deployment.
           </p>
           {newerDeploy.changes.length ? (
             <ul style={{ margin: "8px 0 0", paddingLeft: 18, display: "grid", gap: 4 }}>
@@ -317,7 +318,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
           {caps.canLaunch ? (
             <div style={{ marginTop: 12 }}>
               {eligibleFlowIds.length > 0
-                ? <LaunchPassButton appId={id} flowIds={eligibleFlowIds} label="Run Production Pass" />
+                ? <LaunchPassButton appId={id} flowIds={eligibleFlowIds} label="Run a verification" />
                 : <Link href={`/applications/${id}/contract`} className="btn">
                     {reqCount === 0 ? "Author your Production Contract" : contractApproved ? "Add flows to your contract" : "Review Production Contract"}
                   </Link>}
@@ -340,14 +341,14 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
               </span>
             </p>
             <Link href={`/applications/${id}/passes/${latest.id}`} style={{ fontSize: 13, fontWeight: 600, color: "var(--acc-deep)", textDecoration: "none", flex: "none" }}>
-              {latestActive ? "View running pass" : decision === "blocked" ? "View blockers" : decision === "needs_review" ? "View report" : "View pass report"} <span aria-hidden>→</span>
+              {latestActive ? "View running verification" : decision === "blocked" ? "View failures" : decision === "needs_review" ? "View report" : "View verification report"} <span aria-hidden>→</span>
             </Link>
           </div>
           {/* A verified targeted repair NEWER than the launch health: shown separately, never as the verdict.
               The previous launch health stands until full verification completes. */}
           {repairIsSeparate && latestRepair ? (
             <p style={{ fontSize: 13.5, fontWeight: 600, color: "var(--acc-deep)", margin: "12px 0 0", lineHeight: 1.55 }}>
-              Latest repair: {repairResolvedTitles.length ? `${repairResolvedTitles.join(", ")} not reproduced on rerun` : "the selected flows passed and their blockers were not reproduced"}.{" "}
+              Latest repair: {repairResolvedTitles.length ? `${repairResolvedTitles.join(", ")} not reproduced on rerun` : "the selected flows passed and their failures were not reproduced"}.{" "}
               <Link href={`/applications/${id}/passes/${latestRepair.id}`} style={{ color: "var(--acc-deep)" }}>View repair report</Link>
             </p>
           ) : null}
@@ -374,7 +375,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
             <p style={{ fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.45, margin: 0, maxWidth: 320 }}>
               {decision === "repair_verified"
                 ? "Run every critical flow to earn a full launch decision."
-                : "Runs a full Production Pass against the current deployment and returns a launch decision with evidence."}
+                : "Runs a full verification against the current deployment and returns a launch decision with evidence."}
             </p>
           </div>
           <div style={{ maxWidth: 420, flex: "1 1 300px" }}>
@@ -385,9 +386,9 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
 
       {/* ── Open blockers: what stands between this app and READY ────────────────────────────────────── */}
       {blockers.length > 0 && latest ? (
-        <section style={sectionStyle} aria-label="Open blockers">
+        <section style={sectionStyle} aria-label="Open failures">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
-            <div style={{ ...headLbl, display: "flex", alignItems: "center", gap: 7 }}><Ic d={I.alert} size={13} sw={2} />Open blockers ({blockers.length})</div>
+            <div style={{ ...headLbl, display: "flex", alignItems: "center", gap: 7 }}><Ic d={I.alert} size={13} sw={2} />Open failures ({blockers.length})</div>
             <Link href={`/applications/${id}/issues`} style={{ fontSize: 13, color: "var(--acc-deep)", textDecoration: "none" }}>All issues →</Link>
           </div>
           <div style={{ display: "grid", gap: 8 }}>

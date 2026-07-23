@@ -133,7 +133,7 @@ export function EditApplicationForm({ appId, initial }: { appId: string; initial
       {confirming ? (
         <div role="status" aria-live="polite" style={{ fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.6, padding: "12px 14px", borderRadius: "var(--r-sm)", background: "var(--bg-2)", border: "1px solid #F3DFB0", borderLeft: "3px solid #F3DFB0" }}>
           Changing the deployment target does not modify previous reports. The new deployment will remain
-          unverified until a Production Pass completes.
+          unverified until a verification completes.
         </div>
       ) : null}
 

@@ -38,6 +38,15 @@ function verdictTone(v: string): React.CSSProperties {
   return { color: map[v] ?? "var(--fg-3)", fontWeight: 700 };
 }
 
+// Display-layer translation of the /api-runs payload verdict (a stable internal API contract) into the
+// public decision vocabulary. Payload BLOCKED is the internal confirmed-failure decision -> "FAILED";
+// payload NEEDS REVIEW (no reliable conclusion) -> public "BLOCKED". Unknown/already-public strings
+// (NOT VERIFIED, COULD NOT COMPLETE) pass through unchanged. Keep in lockstep with verdictTone above.
+const PUBLIC_VERDICT: Record<string, string> = {
+  READY: "VERIFIED", "REPAIR VERIFIED": "VERIFIED", "NEEDS REVIEW": "BLOCKED", BLOCKED: "FAILED",
+};
+const publicVerdict = (v: string) => PUBLIC_VERDICT[v] ?? v;
+
 export function ApiWorkspace({ appId, initial, canEdit, canLaunch }: { appId: string; initial: Initial; canEdit: boolean; canLaunch: boolean }) {
   const base = `/api/preflight/apps/${appId}`;
   const [target, setTarget] = useState<Target>(initial.target);
@@ -236,7 +245,7 @@ export function ApiWorkspace({ appId, initial, canEdit, canLaunch }: { appId: st
               but no outside customer has run their API through it, so it must not read at the same
               confidence as the browser verdict on the same screen. */}
           <div style={{ fontSize: 20, ...verdictTone(run.verdict), marginBottom: 4, display: "flex", alignItems: "center", gap: 9, flexWrap: "wrap" }}>
-            {run.verdict}
+            {publicVerdict(run.verdict)}
             <span className="pill" style={{ fontSize: 9.5, background: "var(--bg-2)", color: "var(--fg-4)", borderColor: "var(--line-2)", fontFamily: "var(--font-code)", letterSpacing: "0.06em" }}>BETA</span>
           </div>
           <div style={{ fontSize: 12, color: "var(--fg-4)", marginBottom: 12, lineHeight: 1.5 }}>
@@ -269,7 +278,7 @@ export function ApiWorkspace({ appId, initial, canEdit, canLaunch }: { appId: st
             {history.map((h) => (
               <button key={h.runId} onClick={async () => { const rep = await api(`/api-runs/${h.runId}`); if (rep.ok) setRun(rep.body as never); }}
                 style={{ display: "flex", justifyContent: "space-between", padding: "7px 10px", border: "1px solid var(--line-1)", borderRadius: 8, background: "transparent", cursor: "pointer", textAlign: "left" }}>
-                <span style={{ fontSize: 13, ...verdictTone(h.verdict) }}>{h.verdict}</span>
+                <span style={{ fontSize: 13, ...verdictTone(h.verdict) }}>{publicVerdict(h.verdict)}</span>
                 <span style={{ fontSize: 12, color: "var(--fg-4)" }}>{h.createdAt ? new Date(h.createdAt).toLocaleString() : ""}</span>
               </button>
             ))}

@@ -122,16 +122,16 @@ async function spyRun(selectedFlowIds: unknown, runId: string, deploymentUrl: st
 
   // ── C + CTA: report UX source checks (server component helpers are file-local) ──
   const report = readFileSync("app/rank/app/applications/[id]/passes/[runId]/page.tsx", "utf8");
-  ok("C: the report renders REPAIR VERIFIED for a repair_verified decision", report.includes('"repair_verified"') && report.includes("REPAIR VERIFIED"));
-  // Founder: REPAIR VERIFIED must be visibly DISTINCT from READY — it uses a provisional TONE_REPAIR, not
-  // the solid TONE_READY green, on the report, the overview, and the list.
-  ok("DISTINCT: the report gives REPAIR VERIFIED its own TONE_REPAIR (not TONE_READY)",
-    report.includes("TONE_REPAIR") && /repair_verified"\)\s*return\s*\{\s*label:\s*"REPAIR VERIFIED",\s*\.\.\.TONE_REPAIR/.test(report));
-  ok("DISTINCT: the overview gives REPAIR VERIFIED its own TONE_REPAIR",
+  ok("C: the report renders VERIFIED (provisional tone) for a repair_verified decision", report.includes('"repair_verified"') && /repair_verified"\)\s*return\s*\{\s*label:\s*"VERIFIED"/.test(report));
+  // Founder: a repair-verified VERIFIED must be visibly DISTINCT from the full-coverage VERIFIED — it uses
+  // a provisional TONE_REPAIR, not the solid TONE_READY green, on the report, the overview, and the list.
+  ok("DISTINCT: the report gives repair_verified its own TONE_REPAIR (not TONE_READY)",
+    report.includes("TONE_REPAIR") && /repair_verified"\)\s*return\s*\{\s*label:\s*"VERIFIED",\s*\.\.\.TONE_REPAIR/.test(report));
+  ok("DISTINCT: the overview gives repair_verified its own TONE_REPAIR",
     (() => { const ov = readFileSync("app/rank/app/applications/[id]/page.tsx", "utf8"); return ov.includes("TONE_REPAIR") && /repair_verified"\)\s*\{\s*hero = TONE_REPAIR/.test(ov); })());
-  ok("DISTINCT: the applications list gives 'Repair verified' a non-ready tint",
+  ok("DISTINCT: the applications list gives repair_verified a non-ready tint",
     (() => { const list = readFileSync("app/rank/app/applications/page.tsx", "utf8"); return /"repair_verified":[\s\S]{0,120}accent-dim/.test(list); })());
-  ok("C: the report states full verification is still required", report.includes("Full critical verification is still required before this deployment can be marked READY"));
+  ok("C: the report states full verification is still required", report.includes("Full critical verification is still required before this deployment can be marked Verified"));
   ok("CTA: the repair-verified report offers Run full critical verification", report.includes('scope="critical"') && report.includes("Run full critical verification"));
   // Evidence-first: each blocker shows its lineage (new here vs recurring from an earlier run) from the
   // real first_seen_run field — never fabricated.

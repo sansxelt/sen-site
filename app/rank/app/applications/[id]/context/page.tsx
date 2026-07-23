@@ -163,11 +163,11 @@ export default async function AppContextPage({ params }: { params: Promise<{ id:
   // Missing recommended context: real gaps only, each with what it actually costs (same honesty style
   // as the settings page).
   const gaps: { what: string; why: string }[] = [];
-  if (!envLabel) gaps.push({ what: "Environment not set", why: "Passes and deployments cannot be labeled preview, staging, or production." });
-  if (!hasConn("github") && !hasConn("custom_deploy")) gaps.push({ what: "No source connection", why: "Without GitHub or a custom deployment record, passes cannot pin the commit and branch they verified." });
-  if (!hasConn("test_account")) gaps.push({ what: "No test account", why: "Passes can only exercise signed-out flows. An encrypted test account unlocks signed-in journeys." });
+  if (!envLabel) gaps.push({ what: "Environment not set", why: "Verifications and deployments cannot be labeled preview, staging, or production." });
+  if (!hasConn("github") && !hasConn("custom_deploy")) gaps.push({ what: "No source connection", why: "Without GitHub or a custom deployment record, verifications cannot pin the commit and branch they verified." });
+  if (!hasConn("test_account")) gaps.push({ what: "No test account", why: "Verifications can only exercise signed-out flows. An encrypted test account unlocks signed-in journeys." });
   if (docSources.length === 0) gaps.push({ what: "No product definition documents", why: "A build prompt, PRD, or requirements doc sharpens the Production Contract Vraelis derives." });
-  if (expectationSources.length === 0) gaps.push({ what: "No recorded expectations", why: "Summary, goal, workflow, data, auth, and billing expectations guide what a pass verifies first." });
+  if (expectationSources.length === 0) gaps.push({ what: "No recorded expectations", why: "Summary, goal, workflow, data, auth, and billing expectations guide what a verification checks first." });
 
   const versionUsedByContract = (snapshotId: string): number | null =>
     pinnedSnapshotId && snapshotId === pinnedSnapshotId && approvedContract ? approvedContract.version : null;
@@ -221,7 +221,7 @@ export default async function AppContextPage({ params }: { params: Promise<{ id:
           {liveAhead ? (
             <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.55, margin: "14px 0 0" }}>
               The live context below differs from this recorded version. The next context change, contract
-              approval, or pass launch records the new version automatically.
+              approval, or verification launch records the new version automatically.
             </p>
           ) : null}
         </div>
@@ -231,7 +231,7 @@ export default async function AppContextPage({ params }: { params: Promise<{ id:
           <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--fg-1)", margin: 0 }}>No versions recorded yet</h2>
           <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, margin: "8px 0 0" }}>
             A context version is recorded automatically when context changes, a contract is approved, or a
-            pass launches. The live context below is what the first version will capture.
+            verification launches. The live context below is what the first version will capture.
           </p>
         </div>
       ) : null}
@@ -280,7 +280,7 @@ export default async function AppContextPage({ params }: { params: Promise<{ id:
             {expectationSources.length ? (
               <SourceRows sources={expectationSources} />
             ) : (
-              <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0 }}>No expectations recorded. Summary, goal, workflow, data, auth, and billing expectations guide what a pass verifies first.</p>
+              <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0 }}>No expectations recorded. Summary, goal, workflow, data, auth, and billing expectations guide what a verification checks first.</p>
             )}
           </section>
 
@@ -325,7 +325,7 @@ export default async function AppContextPage({ params }: { params: Promise<{ id:
               </div>
             ) : (
               <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0 }}>
-                No connections recorded, so passes run with only the application URL. Manage them on the{" "}
+                No connections recorded, so verifications run with only the application URL. Manage them on the{" "}
                 <Link href={`/applications/${id}/settings/connections`} style={{ color: "var(--acc-deep)", fontWeight: 600 }}>Connections tab</Link>.
               </p>
             )}
@@ -341,7 +341,7 @@ export default async function AppContextPage({ params }: { params: Promise<{ id:
         {gaps.length ? (
           <>
             <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, margin: "0 0 12px", maxWidth: 640 }}>
-              Each gap below narrows what a Production Pass can verify. Every addition records a new
+              Each gap below narrows what a verification can cover. Every addition records a new
               context version automatically.
             </p>
             <div style={{ display: "grid", gap: 8 }}>

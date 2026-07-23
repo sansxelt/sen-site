@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 
 // Stable client copy for the kill switch and the daily cap; matches the server's own message strings.
 const ERROR_COPY: Record<string, string> = {
-  runs_paused: "New Production Passes are temporarily paused. Existing reports remain available.",
+  runs_paused: "New verifications are temporarily paused. Existing reports remain available.",
   daily_limit: "Daily run limit reached. Try again tomorrow or contact support.",
 };
 
@@ -33,10 +33,10 @@ export function LaunchPassButton({ appId, flowIds, label, ghost }: { appId: stri
       const j = await res.json().catch(() => ({}));
       if (res.status === 401) { router.push(`/signin?callbackUrl=${encodeURIComponent(`/applications/${appId}`)}`); return; }
       if ((res.ok || res.status === 409) && j?.runId) { router.push(`/applications/${appId}/passes/${j.runId}`); return; } // navigating away; keep busy
-      setErr((typeof j?.error === "string" && ERROR_COPY[j.error]) || (typeof j?.message === "string" ? j.message : "Could not start the pass. Try again."));
+      setErr((typeof j?.error === "string" && ERROR_COPY[j.error]) || (typeof j?.message === "string" ? j.message : "Could not start the verification. Try again."));
       setBusy(false);
     } catch {
-      setErr("Network error. The pass was not started.");
+      setErr("Network error. The verification was not started.");
       setBusy(false);
     }
   }

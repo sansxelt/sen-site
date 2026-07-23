@@ -21,7 +21,7 @@ export function CommandCenter({
   appId, verdict, subline, tone, action, ribbon, launchFlowIds, canLaunch, canEditContract,
 }: {
   appId: string;
-  verdict: string;            // READY / BLOCKED / NEEDS REVIEW / REPAIR VERIFIED / IN PROGRESS / NOT TESTED
+  verdict: string;            // VERIFIED / FAILED / BLOCKED / IN PROGRESS / NOT TESTED
   subline: string | null;     // the one honest supporting line for the verdict
   tone: Tone;
   action: NextAction;
@@ -59,7 +59,7 @@ export function CommandCenter({
           <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.09em", textTransform: "uppercase", color: tone.fg, opacity: 0.7 }}>Next</div>
           {showReadOnlyNote ? (
             <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.5, margin: "2px 0 0" }}>
-              View-only access. Ask an editor to {isLaunch ? "run a pass" : "update the contract"}.
+              View-only access. Ask an editor to {isLaunch ? "run a verification" : "update the contract"}.
             </p>
           ) : (
             <>

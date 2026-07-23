@@ -43,10 +43,10 @@ const SEV_COLOR: Record<string, string> = { critical: "#C0392B", high: "#B45309"
 
 function decisionStyle(run: { decision: string | null; state: string } | null | undefined): { label: string; color: string; bg: string; border: string } {
   switch (run?.decision) {
-    case "ready": return { label: "Ready", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
-    case "repair_verified": return { label: "Repair verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
-    case "needs_review": return { label: "Needs review", color: "#B45309", bg: "#FEF6E7", border: "#F3DFB0" };
-    case "blocked": return { label: "Blocked", color: "#C0392B", bg: "#FBEBEA", border: "#F0C7C2" };
+    case "ready": return { label: "Verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
+    case "repair_verified": return { label: "Verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
+    case "needs_review": return { label: "Blocked", color: "#B45309", bg: "#FEF6E7", border: "#F3DFB0" };
+    case "blocked": return { label: "Failed", color: "#C0392B", bg: "#FBEBEA", border: "#F0C7C2" };
     default:
       // In-progress must NOT reuse the success green, or a running first pass reads as already passed.
       if (isActiveRun(run)) return { label: "In progress", color: "var(--fg-3)", bg: "var(--bg-2)", border: "var(--line-2)" };
@@ -80,7 +80,7 @@ export default async function Dashboard() {
         <div className="wrap" style={{ maxWidth: 520, textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Workspace</p>
           <h1 className="display" style={{ fontSize: "clamp(1.9rem, 4vw, 2.8rem)", marginBottom: 14 }}>Finish the engineering <span className="em">AI left behind</span>.</h1>
-          <p className="lead-copy" style={{ margin: "0 auto 26px" }}>Sign in to connect your AI-built app and get a launch decision before your users find the blockers.</p>
+          <p className="lead-copy" style={{ margin: "0 auto 26px" }}>Sign in to connect your AI-built app and get a launch decision before your users find the failures.</p>
           <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Sign in</Link>
         </div>
       </section>
@@ -132,7 +132,7 @@ export default async function Dashboard() {
           <div style={{ maxWidth: 560 }}>
             <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 8 }}>Connect an app</div>
             <h2 className="display" style={{ fontSize: "clamp(1.4rem, 2.8vw, 2rem)", marginBottom: 8 }}>Get a launch decision, not a bug list.</h2>
-            <p style={{ fontSize: 14.5, lineHeight: 1.55, color: "var(--fg-2)", margin: 0 }}>Vraelis runs your AI-built app like production, in a real browser, as two real users, and tells you what blocks the launch with the evidence to prove it.</p>
+            <p style={{ fontSize: 14.5, lineHeight: 1.55, color: "var(--fg-2)", margin: 0 }}>Vraelis runs your AI-built app like production, in a real browser, as two real users, and tells you what failed, with the evidence to prove it.</p>
           </div>
           <span className="btn" style={{ flex: "none" }}>Connect an app <span aria-hidden>→</span></span>
         </div>
@@ -151,9 +151,9 @@ export default async function Dashboard() {
       {/* overview stats: the production posture, at a glance */}
       <div className="tile-grid cols-3" style={{ marginBottom: 24 }}>
         <div className="stat"><div className="stat__l">Applications</div><div className="stat__v tnum">{apps.length}</div><div className="stat__s"><Link href="/applications" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Open all →</Link></div></div>
-        <div className="stat"><div className="stat__l">Ready</div><div className="stat__v tnum" style={{ color: readyCount ? "var(--acc-deep)" : undefined }}>{readyCount}</div><div className="stat__s">passed their last check</div></div>
-        <div className="stat"><div className="stat__l">Blocked</div><div className="stat__v tnum" style={{ color: blockedCount ? "#C0392B" : undefined }}>{blockedCount}</div><div className="stat__s">not ready yet</div></div>
-        <div className="stat"><div className="stat__l">Open blockers</div><div className="stat__v tnum" style={{ color: counts.openCriticalIssues ? "#C0392B" : undefined }}>{counts.openCriticalIssues}</div><div className="stat__s"><Link href="/issues" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>View issues →</Link></div></div>
+        <div className="stat"><div className="stat__l">Verified</div><div className="stat__v tnum" style={{ color: readyCount ? "var(--acc-deep)" : undefined }}>{readyCount}</div><div className="stat__s">verified on their last run</div></div>
+        <div className="stat"><div className="stat__l">Failed</div><div className="stat__v tnum" style={{ color: blockedCount ? "#C0392B" : undefined }}>{blockedCount}</div><div className="stat__s">failed their last run</div></div>
+        <div className="stat"><div className="stat__l">Open failures</div><div className="stat__v tnum" style={{ color: counts.openCriticalIssues ? "#C0392B" : undefined }}>{counts.openCriticalIssues}</div><div className="stat__s"><Link href="/issues" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>View issues →</Link></div></div>
         <div className="stat"><div className="stat__l">Verifying now</div><div className="stat__v tnum">{counts.runningPasses}</div><div className="stat__s"><Link href="/passes" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>View results →</Link></div></div>
         <div className="stat"><div className="stat__l">Credits</div><div className="stat__v tnum">{bal.toLocaleString()}</div><div className="stat__s"><Link href="/credits" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Buy more →</Link></div></div>
       </div>
@@ -172,7 +172,7 @@ export default async function Dashboard() {
         <div style={{ position: "relative", overflow: "hidden", borderRadius: "var(--r-xl)", border: "1px solid var(--acc-line)", background: "var(--bg-1)", padding: "clamp(24px, 3.5vw, 38px)", marginBottom: 22, boxShadow: "var(--shadow-md)" }}>
           <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 8 }}>Your first verification is free</div>
           <h2 className="display" style={{ fontSize: "clamp(1.4rem, 3vw, 2rem)", marginBottom: 8 }}>Verify your first app.</h2>
-          <p style={{ fontSize: 15, lineHeight: 1.55, maxWidth: 560, color: "var(--fg-2)", marginBottom: 18 }}>Connect your deployed app, approve the critical flows, and Vraelis drives it in a real browser as two real users. You get one launch decision and the exact blockers behind it.</p>
+          <p style={{ fontSize: 15, lineHeight: 1.55, maxWidth: 560, color: "var(--fg-2)", marginBottom: 18 }}>Connect your deployed app, approve the critical flows, and Vraelis drives it in a real browser as two real users. You get one launch decision and the exact failures behind it.</p>
           <div className="card" style={{ background: "var(--bg-2)", marginBottom: 18 }}>
             <div style={headLbl}>How verification works</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -180,7 +180,7 @@ export default async function Dashboard() {
                 ["Connect your app", "Your deployed URL and the prompt you built it from"],
                 ["Approve the Production Contract", "What the app must do, so Vraelis tests only what you sign off on"],
                 ["Run it like production", "A real browser runs your flows as two users and captures evidence"],
-                ["Get your launch decision", "READY, NEEDS REVIEW, or BLOCKED, with repro steps and screenshots"],
+                ["Get your launch decision", "VERIFIED, FAILED, or BLOCKED, with repro steps and screenshots"],
                 ["Repair with proof", "A fix prompt for your builder, then a rerun that confirms it is closed"],
               ] as [string, string][]).map(([label, sub], i) => (
                 <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
@@ -198,7 +198,7 @@ export default async function Dashboard() {
       {blockers.length > 0 && (
         <>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-            <div style={{ ...headLbl, marginBottom: 0 }}>Open blockers ({blockers.length})</div>
+            <div style={{ ...headLbl, marginBottom: 0 }}>Open failures ({blockers.length})</div>
             <Link href="/issues" style={{ fontSize: 13, color: "var(--acc-deep)", textDecoration: "none" }}>All issues →</Link>
           </div>
           <div style={{ display: "grid", gap: 8, marginBottom: 26 }}>

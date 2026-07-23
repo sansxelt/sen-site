@@ -8,9 +8,9 @@ import { getApiTarget } from "./targets-db";
 
 function db() { return getSupabaseAdminClient(); }
 
-export type PlatformVerdict = "READY" | "BLOCKED" | "REPAIR VERIFIED" | "NEEDS REVIEW" | "NOT VERIFIED" | "COULD NOT COMPLETE";
+export type PlatformVerdict = "VERIFIED" | "FAILED" | "BLOCKED" | "NOT VERIFIED" | "COULD NOT COMPLETE";
 const DECISION_VERDICT: Record<string, PlatformVerdict> = {
-  ready: "READY", blocked: "BLOCKED", repair_verified: "REPAIR VERIFIED", needs_review: "NEEDS REVIEW",
+  ready: "VERIFIED", blocked: "FAILED", repair_verified: "VERIFIED", needs_review: "BLOCKED",
   infra_failure: "COULD NOT COMPLETE", not_verified: "NOT VERIFIED",
 };
 

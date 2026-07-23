@@ -94,8 +94,8 @@ async function main(): Promise<void> {
     const report = readCode(REPORT);
     ok("report computes the rerun note from gatePassLaunch({rerun:true}) (never a hardcoded price)",
       report.includes("gatePassLaunch(owner, rerunSelectedCount, { rerun: true })"));
-    ok("report's PAYG rerun note states it is 'Not covered by the free pass'",
-      report.includes("Not covered by the free pass"));
+    ok("report's PAYG rerun note states it is 'Not covered by the free verification'",
+      report.includes("Not covered by the free verification"));
     ok("report only asserts a dollar rerun price under passPricingEnabled()",
       /passPricingEnabled\(\)[\s\S]{0,200}gatePassLaunch/.test(report));
   }

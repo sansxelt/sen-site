@@ -34,11 +34,11 @@ const isActiveRun = (run: RunSummary | null | undefined): boolean => !!run && !r
 
 function decisionStyle(run: RunSummary | null | undefined): { label: string; color: string; bg: string; border: string } {
   switch (run?.decision) {
-    case "ready": return { label: "Ready", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
-    // Positive but provisional (not launch-cleared) — visibly distinct from the solid READY green.
-    case "repair_verified": return { label: "Repair verified", color: "#0A7B54", bg: "var(--accent-dim, #E8FBF6)", border: "var(--accent-border, #B7EFE4)" };
-    case "needs_review": return { label: "Needs review", color: "#c2831a", bg: "rgba(194,131,26,0.09)", border: "rgba(194,131,26,0.3)" };
-    case "blocked": return { label: "Blocked", color: "var(--err)", bg: "rgba(194,84,12,0.08)", border: "rgba(194,84,12,0.28)" };
+    case "ready": return { label: "Verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
+    // Positive but provisional (not launch-cleared) — visibly distinct from the solid Verified green.
+    case "repair_verified": return { label: "Verified", color: "#0A7B54", bg: "var(--accent-dim, #E8FBF6)", border: "var(--accent-border, #B7EFE4)" };
+    case "needs_review": return { label: "Blocked", color: "#c2831a", bg: "rgba(194,131,26,0.09)", border: "rgba(194,131,26,0.3)" };
+    case "blocked": return { label: "Failed", color: "var(--err)", bg: "rgba(194,84,12,0.08)", border: "rgba(194,84,12,0.28)" };
     default:
       if (isActiveRun(run)) return { label: "In progress", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
       return { label: "Not tested", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };
@@ -111,7 +111,7 @@ export default async function ApplicationsPage() {
           <p className="eyebrow">Vraelis Preflight</p>
           <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "6px 0 10px" }}>Applications</h1>
           <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.6, margin: 0, maxWidth: 560 }}>
-            Connect an AI-built app and Vraelis looks for launch blockers in the flows you approve, before your users hit them.
+            Connect an AI-built app and Vraelis looks for failures in the flows you approve, before your users hit them.
           </p>
         </div>
         <Link href="/applications/new" className="btn" style={{ flex: "none" }}>Connect an app <span aria-hidden>→</span></Link>
@@ -129,8 +129,8 @@ export default async function ApplicationsPage() {
           {/* overview */}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 24 }}>
             <StatChip label="Applications" value={apps.length} />
-            <StatChip label="Ready" value={readyCount} color={readyCount ? "var(--acc-deep)" : undefined} />
-            <StatChip label="Blocked" value={blockedCount} color={blockedCount ? "var(--err)" : undefined} />
+            <StatChip label="Verified" value={readyCount} color={readyCount ? "var(--acc-deep)" : undefined} />
+            <StatChip label="Failed" value={blockedCount} color={blockedCount ? "var(--err)" : undefined} />
             <StatChip label="Untested" value={untestedCount} />
           </div>
 

@@ -40,10 +40,10 @@ const ACTIVE_RUN_STATES = new Set(["queued", "discovering", "running", "analyzin
 
 function decisionStyle(run: PassRow): { label: string; color: string; bg: string; border: string } {
   switch (run.decision) {
-    case "ready": return { label: "Ready", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
-    case "repair_verified": return { label: "Repair verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
-    case "needs_review": return { label: "Needs review", color: "#B45309", bg: "#FEF6E7", border: "#F3DFB0" };
-    case "blocked": return { label: "Blocked", color: "#C0392B", bg: "#FBEBEA", border: "#F0C7C2" };
+    case "ready": return { label: "Verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
+    case "repair_verified": return { label: "Verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
+    case "needs_review": return { label: "Blocked", color: "#B45309", bg: "#FEF6E7", border: "#F3DFB0" };
+    case "blocked": return { label: "Failed", color: "#C0392B", bg: "#FBEBEA", border: "#F0C7C2" };
     default:
       if (ACTIVE_RUN_STATES.has(run.state)) return { label: "In progress", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };
       return { label: "No verdict", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };
@@ -69,7 +69,7 @@ function DeploymentCard({ group, envLabel, sourceLine }: { group: DeploymentGrou
   const latest = group.runs[0];
   const st = decisionStyle(latest);
   const last = timeAgo(latest.completedAt ?? latest.createdAt);
-  const countText = group.runs.length === 1 ? "1 pass" : `${group.runs.length} passes`;
+  const countText = group.runs.length === 1 ? "1 verification" : `${group.runs.length} verifications`;
   const metaParts = [latest.applicationName || null, countText, last ? `Latest ${last}` : null].filter(Boolean);
   return (
     <div className="card" style={{ display: "flex", flexDirection: "column", gap: 12, padding: 18 }}>
@@ -93,7 +93,7 @@ function DeploymentCard({ group, envLabel, sourceLine }: { group: DeploymentGrou
           href={`/applications/${latest.applicationId}/passes/${latest.id}`}
           style={{ fontSize: 13, fontWeight: 600, color: "var(--acc-deep)", display: "inline-flex", alignItems: "center", gap: 5, textDecoration: "none", flex: "none" }}
         >
-          View latest pass <span aria-hidden>→</span>
+          View latest verification <span aria-hidden>→</span>
         </Link>
       </div>
     </div>
@@ -131,7 +131,7 @@ export default async function DeploymentsPage() {
         <p className="eyebrow">Vraelis Preflight</p>
         <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "6px 0 10px" }}>Deployments</h1>
         <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.6, margin: 0, maxWidth: 560 }}>
-          The deployments your Production Passes have tested, with the latest verdict for each.
+          The deployments your verifications have tested, with the latest verdict for each.
         </p>
       </div>
 
@@ -159,7 +159,7 @@ export default async function DeploymentsPage() {
           <div style={{ marginTop: 12 }}>
             <Link href={`/applications/${lastVerified.applicationId}/passes/${lastVerified.id}`}
               style={{ fontSize: 13, fontWeight: 600, color: "var(--acc-deep)", textDecoration: "none" }}>
-              View pass report →
+              View verification report →
             </Link>
           </div>
         </div>
@@ -169,7 +169,7 @@ export default async function DeploymentsPage() {
         <div className="empty">
           <EmptyIcon d={I.deploy} />
           <h3>No deployments tested yet</h3>
-          <p>Run a Production Pass and the deployment it tests appears here with its verdict.</p>
+          <p>Run a verification and the deployment it tests appears here with its verdict.</p>
           <Link href="/applications" className="btn">Go to applications</Link>
         </div>
       ) : (
@@ -193,9 +193,9 @@ export default async function DeploymentsPage() {
           <span className="pill" style={{ fontSize: 10, color: "var(--fg-4)", background: "var(--bg-2)", borderColor: "var(--line-2)", flex: "none" }}>Planned</span>
         </div>
         <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.6, margin: 0, maxWidth: 640 }}>
-          Automated verify-on-deploy and deploy blocking are not active yet. Today, every Production Pass
+          Automated verify-on-deploy and deploy blocking are not active yet. Today, every verification
           records the exact deployment it tested, which is the history you see on this page. Guards will
-          build on that record to verify each new deploy and hold a launch when a pass comes back blocked.
+          build on that record to verify each new deploy and hold a launch when a verification comes back Failed.
         </p>
       </div>
     </div>

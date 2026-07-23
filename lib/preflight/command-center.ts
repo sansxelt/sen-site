@@ -54,16 +54,16 @@ export function nextAction(s: CommandState): NextAction {
   }
   // 4. A pass is running: the next thing is to watch it.
   if (s.runActive && s.latestRunId) {
-    return { label: "View running pass", href: `${app}/passes/${s.latestRunId}`, why: "Verification is running now.", tone: "primary" };
+    return { label: "View running verification", href: `${app}/passes/${s.latestRunId}`, why: "Verification is running now.", tone: "primary" };
   }
   // 5. Blocked: inspect the blocker (the single most urgent state).
   if (s.decision === "blocked" && s.latestRunId) {
-    return { label: "Inspect blocker", href: `${app}/passes/${s.latestRunId}`, why: s.blockerCount > 0 ? `${s.blockerCount} critical launch blocker${s.blockerCount === 1 ? "" : "s"} to resolve.` : "This deployment is blocked from launch.", tone: "primary" };
+    return { label: "Inspect failure", href: `${app}/passes/${s.latestRunId}`, why: s.blockerCount > 0 ? `${s.blockerCount} critical failure${s.blockerCount === 1 ? "" : "s"} to resolve.` : "This deployment failed verification.", tone: "primary" };
   }
   // 6. A repair was verified but the full critical verification is still owed -> earn READY. LAUNCHES the
   //    full critical suite (not a link to a page that can't run it).
   if (s.repairPendingFullVerify && s.criticalEligibleCount > 0) {
-    return { label: "Run full critical verification", href: `${app}/contract`, why: "The repair is verified; run every critical flow to earn READY.", tone: "primary", launch: { flowIds: "critical" } };
+    return { label: "Run full critical verification", href: `${app}/contract`, why: "The repair is verified; run every critical flow to earn a full Verified decision.", tone: "primary", launch: { flowIds: "critical" } };
   }
   // 7. A newer, different deployment exists that the current decision never tested. LAUNCHES a pass.
   if (s.newerUnverifiedDeploy && s.eligibleFlowCount > 0) {
@@ -71,14 +71,14 @@ export function nextAction(s: CommandState): NextAction {
   }
   // 8. Needs review: a pass finished without a clean decision -> open the report.
   if (s.decision === "needs_review" && s.latestRunId) {
-    return { label: "Review the report", href: `${app}/passes/${s.latestRunId}`, why: "The last pass needs your review.", tone: "primary" };
+    return { label: "Review the report", href: `${app}/passes/${s.latestRunId}`, why: "The last verification ended Blocked and needs your review.", tone: "primary" };
   }
   // 9. READY and nothing pending: the app is in good shape; a new run is available but not urgent.
   if (s.decision === "ready") {
     return { label: "Re-verify", href: `${app}`, why: "The flows in your contract passed on this deployment. Run it again after your next change.", tone: "quiet", launch: { flowIds: "eligible" } };
   }
   // 10. Approved contract with runnable flows and no prior decision: the first run. LAUNCHES the pass.
-  return { label: "Verify this deployment", href: `${app}`, why: "Run a Production Pass to see if this deployment is ready: a launch decision with evidence.", tone: "primary", launch: { flowIds: "eligible" } };
+  return { label: "Verify this deployment", href: `${app}`, why: "Run a verification to see if this deployment is ready: a launch decision with evidence.", tone: "primary", launch: { flowIds: "eligible" } };
 }
 
 // The ribbon: only-true state facts, in a fixed reading order (deployment identity -> verification ->
@@ -93,7 +93,7 @@ export function stateRibbon(s: CommandState): RibbonFact[] {
   if (s.newerUnverifiedDeploy) out.push({ key: "verif", text: "newer deploy unverified", tone: "warn" });
   else if (s.decision === "ready") out.push({ key: "verif", text: "contract flows passed", tone: "good" });
   else if (s.decision === null && !s.runActive) out.push({ key: "verif", text: "not tested", tone: "muted" });
-  if (s.blockerCount > 0) out.push({ key: "block", text: `${s.blockerCount} blocker${s.blockerCount === 1 ? "" : "s"}`, tone: "bad" });
+  if (s.blockerCount > 0) out.push({ key: "block", text: `${s.blockerCount} failure${s.blockerCount === 1 ? "" : "s"}`, tone: "bad" });
   if (s.repairPendingFullVerify) out.push({ key: "repair", text: "repair awaiting full verification", tone: "warn" });
   // Coverage only for a FULL-coverage pass — a targeted/partial repair run's subset counts must never be
   // shown as if the full critical suite passed.
