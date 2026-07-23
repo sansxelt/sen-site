@@ -1,11 +1,11 @@
-// Pure, React-free display logic for the authenticated Home records (Design 01 Increment 4).
-//
-// Kept out of the presentational components so it can be unit-tested against real record shapes with no Next
-// runtime. It never invents a conclusion: every label is derived from a run's persisted (state, decision).
-// The only vocabulary it emits is Verified / Failed / Blocked plus the honest non-verdicts In progress and
-// Not yet verified. It deliberately does NOT reuse the public-API toPublicDecision mapping: that answers the
-// stricter "did this single verification fully prove the claim" question and sends a proven repair to blocked,
-// whereas the operational history surface treats a verified repair as the success it is.
+// Pure, React-free DISPLAY layer over the ONE canonical public-decision translator (lib/preflight/
+// public-decision.ts). It holds NO decision logic of its own: runVerdict DELEGATES to toPublicDecision and
+// only adds presentation metadata (a display label, a tone, and the In progress / Not yet verified wording
+// for a run that has no public conclusion yet). Home and the verification result page both render through
+// this, and the public API, outbound webhooks, and CI gate render through the SAME toPublicDecision, so all
+// five surfaces share one contract and cannot drift — verified / failed / blocked, with repair_verified
+// mapping to blocked everywhere (a targeted repair rerun did not pass the full verification scope).
+import { toPublicDecision } from "./public-decision";
 
 // A run is still in flight while it has no decision and sits in one of the worker's active states.
 export const ACTIVE_RUN_STATES = new Set(["queued", "discovering", "running", "analyzing"]);
@@ -17,32 +17,26 @@ export function isActiveRun(r: { decision: string | null; state: string } | null
 export type Tone = "verified" | "failed" | "blocked" | "progress" | "unproven";
 export type Verdict = { label: string; tone: Tone };
 
-// (state, decision) -> the label for a run that EXISTS. repair_verified is a positive verdict (a targeted
-// rerun that proved a repair), so it reads Verified. needs_review reads Blocked (no reliable conclusion).
-// blocked reads Failed (a real critical failure). A completed run with an unrecognized decision (e.g. an infra
-// failure) reads Blocked; a run with no decision that is not active never reached a verdict.
+// (state, decision) -> the display verdict, delegated to the canonical translator. The three public
+// conclusions map 1:1 (verified/failed/blocked); when the translator returns null the run has no public
+// conclusion yet, which we present as In progress (worker still running) or Not yet verified (otherwise).
 export function runVerdict(state: string, decision: string | null): Verdict {
-  if (isActiveRun({ state, decision })) return { label: "In progress", tone: "progress" };
-  switch (decision) {
-    case "ready":
-    case "repair_verified":
-      return { label: "Verified", tone: "verified" };
-    case "blocked":
-      return { label: "Failed", tone: "failed" };
-    case "needs_review":
-      return { label: "Blocked", tone: "blocked" };
-    default:
-      return decision ? { label: "Blocked", tone: "blocked" } : { label: "Not yet verified", tone: "unproven" };
-  }
+  const pub = toPublicDecision(state, decision);
+  if (pub === "verified") return { label: "Verified", tone: "verified" };
+  if (pub === "failed") return { label: "Failed", tone: "failed" };
+  if (pub === "blocked") return { label: "Blocked", tone: "blocked" };
+  return isActiveRun({ state, decision }) ? { label: "In progress", tone: "progress" } : { label: "Not yet verified", tone: "unproven" };
 }
 
-// A system's proof-state, derived ONLY from its latest health run's decision. The data model has no
+// A system's proof-state, derived ONLY from its latest health run's public conclusion. The data model has no
 // "current deployment" flag, so we never claim a deployment is live or covered — only whether the system's
-// latest verification proved it. No run at all -> Not yet verified, and it needs proof.
+// latest verification reached Verified. No run at all -> Not yet verified, and it needs proof. A run that did
+// not reach Verified (failed or blocked, which includes a repair_verified partial rerun) still needs proof.
 export type SystemProof = { verdict: Verdict; needsProof: boolean };
 export function systemProof(run: { state: string; decision: string | null } | null | undefined): SystemProof {
   if (!run) return { verdict: { label: "Not yet verified", tone: "unproven" }, needsProof: true };
-  return { verdict: runVerdict(run.state, run.decision), needsProof: run.decision === "blocked" || run.decision === "needs_review" };
+  const verdict = runVerdict(run.state, run.decision);
+  return { verdict, needsProof: verdict.tone === "failed" || verdict.tone === "blocked" };
 }
 
 // Progress language derived strictly from the persisted run state; an unknown state falls back to a general

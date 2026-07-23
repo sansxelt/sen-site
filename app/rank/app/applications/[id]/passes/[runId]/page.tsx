@@ -89,8 +89,10 @@ const FAILURE_LINE: Record<string, string> = {
 function whyLine(decision: string | null, state: string, summary: Record<string, unknown>, criticalIssueCount: number, terminal: boolean, failureCode: string | null): string {
   if (decision === "ready") return "Every critical flow in this verification passed on the tested deployment.";
   if (decision === "repair_verified") {
+    // repair_verified maps to the public Blocked conclusion (one contract with the API/webhook): a targeted
+    // repair rerun proved its selected flows but did NOT cover the full verification scope. Say exactly that.
     const n = num(summary.selected_total) || num(summary.flows_total) || 1;
-    return `${n} selected flow${n === 1 ? "" : "s"} passed. The reported failure${n === 1 ? " was" : "s were"} not reproduced. Full critical verification is still required before this deployment can be marked Verified.`;
+    return `The targeted repair check passed: ${n} selected flow${n === 1 ? "" : "s"} produced the expected result. This did not cover the full verification scope, so a full critical verification is still required before Vraelis can return Verified.`;
   }
   if (decision === "needs_review") {
     const pb = num(summary.policy_blocked);
@@ -119,6 +121,51 @@ function flowsSummary(summary: Record<string, unknown>): string | null {
 
 // v_flow_runs.name falls back to the flow id when the contract name is unresolved; never put an id in prose.
 function looksLikeId(name: string): boolean { return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(name.trim()); }
+
+// The failed step told as a human sentence, derived from the deterministic evidence the issue already points
+// at — never a raw failure_message. Empty when the evidence carries no step, so the caller can fall back.
+function humanObserved(issue: RunIssue): string {
+  const ev = (issue.evidence && typeof issue.evidence === "object" ? issue.evidence : {}) as Record<string, unknown>;
+  const repro = Array.isArray(issue.repro) ? (issue.repro as unknown[]).filter((x): x is string => typeof x === "string") : [];
+  const idx = typeof ev.failed_step_index === "number" ? ev.failed_step_index : -1;
+  const stepLine = idx >= 0 && typeof repro[idx] === "string" ? repro[idx].replace(/^\d+\.\s*/, "").trim() : "";
+  return stepLine ? `The flow stopped at step ${idx + 1}: "${stepLine}".` : "";
+}
+
+// The DETERMINISTIC primary finding: critical before high before the rest, stable tiebreak on persisted order.
+// Never an LLM choice.
+const SEV_RANK: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+function primaryIssue(issues: RunIssue[]): RunIssue | null {
+  if (!issues.length) return null;
+  return [...issues].map((iss, i) => [iss, i] as const).sort((a, b) => ((SEV_RANK[a[0].severity] ?? 9) - (SEV_RANK[b[0].severity] ?? 9)) || (a[1] - b[1]))[0][0];
+}
+
+// "What actually happened" — composed from REAL persisted data along a deterministic priority. It is a
+// presentation sentence, never a stored column, and it is scoped to the CHECKED WORKFLOW, never generalized to
+// the whole system. Empty for an incomplete run (no observed outcome before one exists). Never raw
+// failure_message, never a provider error.
+function composeObservedOutcome(pub: string | null, decision: string | null, summary: Record<string, unknown>, issues: RunIssue[]): string {
+  if (pub === null) return "";
+  if (decision === "repair_verified") {
+    const n = num(summary.selected_total) || num(summary.flows_total) || 1;
+    return `The targeted repair check passed: ${n} selected flow${n === 1 ? "" : "s"} produced the expected result.`;
+  }
+  if (pub === "verified") return "The checked workflow completed with the expected result.";
+  if (pub === "failed") {
+    const p = primaryIssue(issues);                       // prefer the specific observed step, then the observational title
+    if (p) return humanObserved(p) || p.title || "The checked workflow did not produce the required result.";
+    const n = Math.max(0, num(summary.critical_total) - num(summary.critical_passed));
+    return n > 0
+      ? `${n} critical flow${n === 1 ? "" : "s"} did not produce the required result.`
+      : "The checked workflow did not produce the required result. Detailed finding evidence is unavailable for this record.";
+  }
+  // blocked (needs_review / indeterminate / cancelled / infra): NO reliable conclusion — never a confirmed failure.
+  const pb = num(summary.policy_blocked);
+  if (pb > 0) return `Vraelis could not reach a reliable conclusion: ${pb} flow${pb === 1 ? "" : "s"} could not run under your current test boundaries.`;
+  return issues.length
+    ? "Vraelis could not reach a reliable conclusion for this verification."
+    : "Vraelis could not reach a reliable conclusion. Detailed blocking evidence is unavailable for this record.";
+}
 
 const label = { fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: 0 } as const;
 const h2Style = { fontFamily: "var(--font-display)", fontWeight: 650, fontSize: "clamp(1.15rem, 2vw, 1.4rem)", color: "var(--fg-1)", margin: 0 } as const;
@@ -204,6 +251,12 @@ export default async function VerificationResultPage({ params }: { params: Promi
   const why = whyLine(run.decision, run.state, run.summary, criticalIssueCount, terminal, run.failure_code);
   const summaryLine = flowsSummary(run.summary);
   const completedIso = run.completed_at || run.created_at;
+  // The public decision (from the shared translator's tone) drives the observed-outcome composition.
+  const pub = verdict.tone === "verified" ? "verified" : verdict.tone === "failed" ? "failed" : verdict.tone === "blocked" ? "blocked" : null;
+  const observed = composeObservedOutcome(pub, run.decision, run.summary, issues);
+  // Drift is PROVEN only when the run's recorded contract_version differs from the loaded contract's version.
+  // When it cannot be proven we make no claim that the requirements changed (only the general limitation note).
+  const contractDrifted = !!contract && contractVersion != null && typeof contract.version === "number" && contract.version !== contractVersion;
 
   const metaByRaw = new Map<string, FlowRunMeta>();
   for (const m of meta) if (!metaByRaw.has(m.rawName)) metaByRaw.set(m.rawName, m);
@@ -284,30 +337,64 @@ export default async function VerificationResultPage({ params }: { params: Promi
 
       <div style={{ display: "grid", gap: "clamp(20px, 3vw, 30px)", marginTop: "clamp(20px, 3vw, 30px)" }}>
 
-        {/* ── 02 SUBMITTED CLAIM — the outcome this verification checked (from contract.source_prompt only; NOT a
-              stored guarantee object). Omitted cleanly when absent — never a fabricated or broken heading. ── */}
-        {claim ? (
+        {/* ── 02 SUBMITTED CLAIM — the outcome this verification checked. It is contract.source_prompt (the
+              SUBMITTED CLAIM behind this verification), NOT a stored guarantee object. The claim leads as plain,
+              readable text (React-escaped, no HTML/Markdown, no quote marks, no chat styling); the contract
+              identity + its CURRENT requirements sit beneath, labeled honestly (current, not an executed
+              snapshot). Omitted cleanly with a quiet note when the claim is absent. ── */}
+        {(claim || contract || requirements.length > 0) ? (
           <Section n="02" title="What had to be true" aria="Submitted claim">
-            <p style={{ fontSize: "clamp(15px, 1.8vw, 17px)", color: "var(--fg-1)", lineHeight: 1.55, margin: 0, maxWidth: "68ch", wordBreak: "break-word" }}>{claim}</p>
+            {claim ? (
+              <p style={{ fontSize: "clamp(1.05rem, 1.9vw, 1.3rem)", color: "var(--fg-1)", lineHeight: 1.5, letterSpacing: "-0.005em", margin: 0, maxWidth: "60ch", wordBreak: "break-word", whiteSpace: "pre-line" }}>{claim}</p>
+            ) : (
+              <Empty>The original submitted claim is not available for this historical record.</Empty>
+            )}
+            {(contractVersion != null || requirements.length > 0) ? (
+              <div style={{ marginTop: 6, display: "grid", gap: 8 }}>
+                <div style={label}>{contractVersion != null ? `Current requirements for Contract v${contractVersion}` : "Current contract requirements"}</div>
+                {contractDrifted ? (
+                  <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>The contract has changed since this verification. The requirements below reflect the current contract, not a historical text snapshot.</p>
+                ) : requirements.length > 0 ? (
+                  <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>These are the current requirements associated with this contract. Historical requirement text was not separately snapshotted for this verification.</p>
+                ) : null}
+                {/* Current requirement TEXT only — no per-requirement pass mark (a current requirement is context,
+                    not proof this run checked it; the requirement->finding linkage is a later increment). */}
+                {requirements.filter((r) => r.enabled).length > 0 ? (
+                  <ul style={{ margin: 0, padding: "0 0 0 18px", display: "grid", gap: 5 }}>
+                    {requirements.filter((r) => r.enabled).map((r) => (
+                      <li key={r.id} style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5, wordBreak: "break-word" }}>{r.requirement}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            ) : null}
           </Section>
         ) : null}
 
-        {/* ── 03 OUTCOME — what happened + why; the public conclusion is SUPPORTING metadata, never a banner. ── */}
+        {/* ── 03 OUTCOME — what ACTUALLY happened leads; the public conclusion is supporting metadata; a concise
+              "why" sits beneath. Scoped to the checked workflow, never generalized to the whole system. ── */}
         <Section n="03" title="Outcome" aria="Outcome">
           {active ? (
-            <Empty>{runningStage(run.state)}. The conclusion is not final yet. This page updates on its own.</Empty>
+            <p role="status" aria-live="polite" style={{ fontSize: 13.5, color: "var(--fg-4)", lineHeight: 1.55, margin: 0 }}>{runningStage(run.state)}. The conclusion is not final yet. This page updates on its own.</p>
           ) : (
             <>
-              {why ? <p style={{ fontSize: 15, color: "var(--fg-1)", lineHeight: 1.55, margin: 0, maxWidth: "64ch" }}>{why}</p> : null}
+              {observed ? <p style={{ fontSize: "clamp(15px, 1.7vw, 17px)", color: "var(--fg-1)", lineHeight: 1.55, margin: 0, maxWidth: "62ch", wordBreak: "break-word" }}>{observed}</p> : null}
               <div style={{ display: "flex", alignItems: "center", gap: "6px 14px", flexWrap: "wrap", ...metaText, marginTop: 2 }}>
-                {hasConclusion ? <span>Conclusion <Chip tone={verdict.tone} label={verdict.label} /></span> : <span>{verdict.label}</span>}
+                {hasConclusion ? <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>Conclusion <Chip tone={verdict.tone} label={verdict.label} /></span> : <span>{verdict.label}</span>}
                 {summaryLine ? <span>{summaryLine}</span> : null}
-                {issues.length ? <span>{issues.length} finding{issues.length === 1 ? "" : "s"}</span> : null}
               </div>
-              {/* A summary of what was found (title + severity + lineage). The full evidence for each finding —
-                  screenshots, expected/observed, reproduction — is the evidence increment; the lineage pill
-                  (Recurring vs first-seen), backed by issue.first_seen_run, stays because it is transparency,
-                  not decoration. */}
+              {why ? (
+                <div style={{ marginTop: 2 }}>
+                  <div style={label}>Why Vraelis reached this conclusion</div>
+                  <p style={{ fontSize: 14, color: "var(--fg-2)", lineHeight: 1.55, margin: "4px 0 0", maxWidth: "64ch", wordBreak: "break-word" }}>{why}</p>
+                </div>
+              ) : null}
+              {run.decision === "repair_verified" ? (
+                <Empty>This is a separate targeted rerun record. The earlier verification it reran remains unchanged.</Empty>
+              ) : null}
+              {issues.length > 1 ? <Empty>This verification recorded {issues.length} findings.</Empty> : null}
+              {/* A quiet enumeration (title + severity + lineage) so no real failure is hidden and the Recurring
+                  vs first-seen lineage (issue.first_seen_run) stays visible. Full per-finding evidence is later. */}
               {issues.length > 0 ? (
                 <div style={{ display: "grid", gap: 8, marginTop: 4 }}>
                   {issues.map((issue) => (
@@ -320,9 +407,6 @@ export default async function VerificationResultPage({ params }: { params: Promi
                     </div>
                   ))}
                 </div>
-              ) : null}
-              {run.decision === "repair_verified" ? (
-                <Empty>This is a targeted rerun record. It does not change the earlier verification it reran.</Empty>
               ) : null}
             </>
           )}

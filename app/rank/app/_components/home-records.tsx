@@ -25,11 +25,13 @@ const TONE: Record<Tone, { color: string; bg: string; border: string }> = {
 const headLbl: CSSProperties = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" };
 const rowLink: CSSProperties = { display: "grid", alignItems: "center", color: "inherit", textDecoration: "none" };
 
-function VerdictPill({ verdict, decision }: { verdict: Verdict; decision?: string | null }) {
+// The mark comes from the PUBLIC tone (verified/failed/blocked), never the raw internal decision — so a
+// repair_verified record (public Blocked) can't show a "verified-repair" wrench next to a Blocked label.
+function VerdictPill({ verdict }: { verdict: Verdict }) {
   const t = TONE[verdict.tone];
   return (
     <span className="pill" style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: t.color, background: t.bg, borderColor: t.border, flex: "none", display: "inline-flex", alignItems: "center", gap: 5 }}>
-      <DecisionMark decision={decision ?? undefined} />{verdict.label}
+      <DecisionMark decision={verdict.tone} />{verdict.label}
     </span>
   );
 }
@@ -161,9 +163,12 @@ export function VerificationRecordRow({ run, top }: { run: PassRow; top: boolean
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2, flexWrap: "wrap" }}>
           {meta && <span style={{ fontSize: 12, color: "var(--fg-4)" }}>{meta}</span>}
           <DeploymentReference url={run.deploymentUrl} />
+          {/* A repair_verified record reads Blocked, but that is a SCOPE limitation, not a confirmed failure:
+              the targeted repair passed and a full verification is still required. Say so, quietly. */}
+          {run.decision === "repair_verified" ? <span style={{ fontSize: 12, color: "var(--fg-4)" }}>Targeted repair passed, needs full verification</span> : null}
         </div>
       </div>
-      <VerdictPill verdict={verdict} decision={run.decision} />
+      <VerdictPill verdict={verdict} />
       <span aria-hidden style={{ color: "var(--fg-5)", flex: "none" }}>→</span>
     </Link>
   );
@@ -212,9 +217,11 @@ export function SystemsSummary({ systems, error }: { systems: SystemSummaryItem[
               aria-label={`${s.name || "System"}, latest verification: ${proof.verdict.label}`}>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 500, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name || "System"}</div>
-                {s.deploymentUrl && <div style={{ marginTop: 2 }}><DeploymentReference url={s.deploymentUrl} /></div>}
+                {s.decision === "repair_verified"
+                  ? <div style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 2 }}>Targeted repair passed, needs full verification</div>
+                  : s.deploymentUrl ? <div style={{ marginTop: 2 }}><DeploymentReference url={s.deploymentUrl} /></div> : null}
               </div>
-              <VerdictPill verdict={proof.verdict} decision={s.decision} />
+              <VerdictPill verdict={proof.verdict} />
               <span aria-hidden style={{ color: "var(--fg-5)", flex: "none" }}>→</span>
             </Link>
           );

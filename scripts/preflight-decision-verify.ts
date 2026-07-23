@@ -122,18 +122,20 @@ async function spyRun(selectedFlowIds: unknown, runId: string, deploymentUrl: st
 
   // ── C + CTA: report UX source checks (server component helpers are file-local) ──
   const report = readFileSync("app/rank/app/applications/[id]/passes/[runId]/page.tsx", "utf8");
-  // Design 02 (founder): the RESULT PAGE renders repair_verified as the public Verified conclusion through the
-  // SHARED home-verdict translator (repair_verified -> Verified), using the approved Verified tokens. The
-  // retired teal is gone; a proven repair is distinguished by COPY, not colour.
-  ok("C: the report renders the public Verified conclusion for repair_verified via the shared translator",
+  // Design 02 (founder decision "unify on external"): the RESULT PAGE renders repair_verified through the
+  // SHARED home-verdict translator, which delegates to toPublicDecision -> the public BLOCKED conclusion (a
+  // targeted repair rerun is not the full verification). No teal, no green Verified pill; the scope is
+  // explained in COPY. (The overview + applications list below still carry TONE_REPAIR — a Systems surface,
+  // reconciled when Design 03 touches them.)
+  ok("C: the report renders repair_verified through the shared translator (the public Blocked conclusion)",
     report.includes("runVerdict(run.state, run.decision)") && report.includes('run.decision === "repair_verified"'));
-  ok("DISTINCT: the report distinguishes a repair_verified pass by COPY, not the retired teal tone",
-    !/TONE_REPAIR|--accent-dim|--accent-border|#0A7B54/.test(report) && /Full critical verification is still required/.test(report));
+  ok("DISTINCT: the report explains the repair_verified scope by COPY, with no retired teal tone",
+    !/TONE_REPAIR|--accent-dim|--accent-border|#0A7B54/.test(report) && /full critical verification is still required/i.test(report));
   ok("DISTINCT: the overview gives repair_verified its own TONE_REPAIR",
     (() => { const ov = readFileSync("app/rank/app/applications/[id]/page.tsx", "utf8"); return ov.includes("TONE_REPAIR") && /repair_verified"\)\s*\{\s*hero = TONE_REPAIR/.test(ov); })());
   ok("DISTINCT: the applications list gives repair_verified a non-ready tint",
     (() => { const list = readFileSync("app/rank/app/applications/page.tsx", "utf8"); return /"repair_verified":[\s\S]{0,120}accent-dim/.test(list); })());
-  ok("C: the report states full verification is still required", report.includes("Full critical verification is still required before this deployment can be marked Verified"));
+  ok("C: the report states a full critical verification is still required", report.includes("full critical verification is still required before Vraelis can return Verified"));
   ok("CTA: the repair-verified report offers Run full critical verification", report.includes('scope="critical"') && report.includes("Run full critical verification"));
   // Evidence-first: each blocker shows its lineage (new here vs recurring from an earlier run) from the
   // real first_seen_run field — never fabricated.

@@ -74,7 +74,7 @@ for (const s of ["completed", "running", "queued", "failed", "cancelled"]) for (
   const l = runVerdict(s, d as string | null).label; if (!ALLOWED.has(l)) ok(`runVerdict(${s},${d}) is a public label`, false, l);
 }
 ok("every decision maps to a public label via the shared translator", true);
-ok("a proven repair (repair_verified) renders the public Verified conclusion", runVerdict("completed", "repair_verified").label === "Verified");
+ok("a targeted repair rerun (repair_verified) renders the public Blocked conclusion, not Verified", runVerdict("completed", "repair_verified").label === "Blocked");
 ok("the page renders the verdict label from the translator, not a raw decision string", /verdict\.label/.test(page) && !/>\{run\.decision\}/.test(page));
 ok("no internal verdict string is rendered as user text", !/>ready<|>needs_review<|>repair_verified<|Production Pass/.test(page));
 ok('visible product language is "Verification", not "Pass"', /title: "Verification"/.test(page) && !/>Preflight run<|Production Pass/.test(page));
@@ -100,6 +100,30 @@ for (const [n, aria] of [["02", "Submitted claim"], ["03", "Outcome"], ["04", "E
 }
 ok("exactly one h1 (the system subject); sections use h2", (page.match(/<h1/g) ?? []).length === 1 && /<h2/.test(page));
 ok("the conclusion is conveyed by text, not colour alone (a labelled chip)", /<Chip tone=\{verdict\.tone\} label=\{verdict\.label\}/.test(page));
+
+console.log("\n── Increment 2: submitted claim (plain text, source_prompt only, drift-honest contract) ──");
+ok("the claim renders as plain text (React-escaped; no HTML/Markdown renderer)", /\{claim\}/.test(page) && !/dangerouslySetInnerHTML/.test(page) && !/ReactMarkdown|remark|<Markdown/.test(page));
+ok("meaningful line breaks in the claim are preserved (whiteSpace pre-line), and it wraps", /whiteSpace: "pre-line"[\s\S]{0,80}\{claim\}|\{claim\}[\s\S]{0,120}whiteSpace: "pre-line"/.test(page.replace(/\n/g, " ")) || /whiteSpace: "pre-line"/.test(page));
+ok("a missing claim shows a quiet historical note, never a fabricated claim", /The original submitted claim is not available for this historical record/.test(page));
+ok("the contract version comes from the run (internal.contractVersion)", /Contract v\$\{contractVersion\}|Contract v\$\{internal\.contractVersion\}/.test(page) && /contractVersion = internal\.contractVersion/.test(page));
+ok("current requirements are labeled 'current ... for Contract v{n}', never an executed snapshot", /Current requirements for Contract v\$\{contractVersion\}/.test(page) && /current requirements associated with this contract/.test(page));
+ok("no requirement gets a per-requirement pass mark (a current requirement is context, not proof)", !/requirement[\s\S]{0,40}(I\.check|✓|Passed)/i.test(page));
+ok("drift is disclosed ONLY when proven (recorded version != loaded version)", /contractDrifted = !!contract && contractVersion != null[\s\S]{0,80}contract\.version !== contractVersion/.test(page) && /\{contractDrifted \? \(/.test(page));
+ok("the drift notice says the contract changed and the requirements are current, not historical", /The contract has changed since this verification\. The requirements below reflect the current contract/.test(page));
+
+console.log("\n── Increment 2: observed outcome composed honestly + scoped conclusion language ──");
+ok("the observed outcome is COMPOSED (named honestly), never a stored column", /function composeObservedOutcome\(/.test(page) && !/storedOutcome|guaranteeResultText|canonicalObservation/.test(page));
+ok("a Failed outcome prefers the safe humanObserved evidence, then the title", /humanObserved\(p\) \|\| p\.title/.test(page));
+ok("no raw failure_message is ever used for the outcome (only the coarse failure_code line)", !/failure_message/.test(page.replace(/\/\/[^\n]*/g, "")));
+ok("the primary finding is chosen deterministically (severity + persisted order), never by an LLM", /function primaryIssue\(/.test(page) && /SEV_RANK/.test(page) && !/openai|\bgpt\b|anthropic|\.chat\.|generateText/i.test(shown));
+ok("Verified is scoped to the CHECKED WORKFLOW, not the whole system", /The checked workflow completed with the expected result/.test(page));
+ok("Verified never claims the app works / system proven / safe to release", !/the application works|the system is proven|safe to release|fully verified|everything passed/i.test(page.replace(/\/\/[^\n]*/g, "")));
+ok("Blocked explicitly means no reliable conclusion, never a confirmed failure", /Vraelis could not reach a reliable conclusion/.test(page));
+ok("a Failed record with no issue row degrades honestly (no invented failure)", /Detailed finding evidence is unavailable for this record/.test(page));
+ok("a Blocked record with no detail degrades honestly", /Detailed blocking evidence is unavailable for this record/.test(page));
+ok("multiple findings are acknowledged as a count, not concatenated into one paragraph", /This verification recorded \{issues\.length\} findings/.test(page));
+ok("the 'why' is labeled as Vraelis's reasoning, not exposed model reasoning", /Why Vraelis reached this conclusion/.test(page) && !/chain of thought|model analysis|AI reasoning/i.test(page));
+ok("an active run announces progress in a restrained live region and shows no final conclusion", /role="status" aria-live="polite"[\s\S]{0,80}runningStage\(run\.state\)/.test(page));
 
 console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

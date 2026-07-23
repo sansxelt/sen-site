@@ -27,12 +27,13 @@ ok("no internal verdict term is in the allowed set", !["READY", "NEEDS REVIEW", 
 
 console.log("\n── the verdict mapping is faithful to the run's real (state, decision) ──");
 ok("ready -> Verified", runVerdict("completed", "ready").label === "Verified");
-ok("repair_verified -> Verified (a proven repair is a success, not blocked)", runVerdict("completed", "repair_verified").label === "Verified");
+ok("repair_verified -> Blocked (a targeted repair rerun is not the full verification; one contract with the API/webhook)", runVerdict("completed", "repair_verified").label === "Blocked");
 ok("blocked -> Failed (a real critical failure)", runVerdict("completed", "blocked").label === "Failed");
 ok("needs_review -> Blocked (no reliable conclusion)", runVerdict("completed", "needs_review").label === "Blocked");
 ok("a completed infra failure -> Blocked (not a false pass, not a false alarm)", runVerdict("completed", "infra_failure").label === "Blocked");
 ok("a running verification -> In progress, never a premature verdict", runVerdict("running", null).label === "In progress" && runVerdict("queued", null).label === "In progress");
-ok("a run that reached no decision -> Not yet verified", runVerdict("completed", null).label === "Not yet verified");
+ok("a completed run with no recognized decision -> Blocked (the canonical translator's honest third answer)", runVerdict("completed", null).label === "Blocked");
+ok("a non-terminal run with no decision -> In progress; an unknown non-terminal state -> Not yet verified", runVerdict("running", null).label === "In progress" && runVerdict("draft", null).label === "Not yet verified");
 
 console.log("\n── an unverified system is NEVER labelled Failed or Blocked ──");
 ok("a system with no verification -> Not yet verified, needs proof", systemProof(null).verdict.label === "Not yet verified" && systemProof(null).needsProof === true);
