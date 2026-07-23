@@ -295,7 +295,7 @@ export async function sendTestEvent(userId: string, endpointId: string): Promise
   const deliveryId = crypto.randomUUID();
   const payload = {
     event: "verification.completed" as const, delivery_id: deliveryId, test_event: true,
-    run_id: "sample_run", application_id: "sample_app", decision: "ready",
+    run_id: "sample_run", application_id: "sample_app", decision: "verified",
     flows_total: 5, flows_passed: 5, deployment_url: "https://demo.example.com",
     completed_at: new Date().toISOString(),
     report_url: "https://app.vraelis.com/applications/sample_app/passes/sample_run",

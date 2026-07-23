@@ -11,6 +11,7 @@
 //   - hard timeout, and completely fail-soft: a dead endpoint must never affect a completed run
 import { createHmac } from "crypto";
 import { safeFetch, unsafeHttpsUrlReason } from "../safe-fetch";
+import { toPublicDecision, type PublicDecision } from "./public-decision";
 
 const TIMEOUT_MS = 8000;
 const MAX_ENDPOINTS = 5; // a run notifies at most this many endpoints
@@ -19,7 +20,7 @@ export type VerificationWebhookPayload = {
   event: "verification.completed";
   run_id: string;
   application_id: string;
-  decision: string;                 // ready | blocked | needs_review | repair_verified
+  decision: PublicDecision;         // verified | failed | blocked — the stable PUBLIC vocabulary, NEVER an internal run decision
   flows_total: number;
   flows_passed: number;
   deployment_url: string | null;
@@ -38,10 +39,9 @@ function sign(body: string, timestamp: string): string | null {
 // Slack incoming webhooks take Slack's own message shape, not our JSON, so a Slack endpoint gets a formatted
 // message instead of the raw payload. Same owner-safe facts, just rendered for humans in a channel.
 const DECISION_TEXT: Record<string, { emoji: string; label: string }> = {
-  ready: { emoji: ":white_check_mark:", label: "READY" },
-  blocked: { emoji: ":no_entry:", label: "BLOCKED" },
-  needs_review: { emoji: ":warning:", label: "NEEDS REVIEW" },
-  repair_verified: { emoji: ":wrench:", label: "REPAIR VERIFIED" },
+  verified: { emoji: ":white_check_mark:", label: "VERIFIED" },
+  failed: { emoji: ":no_entry:", label: "FAILED" },
+  blocked: { emoji: ":warning:", label: "BLOCKED" },
 };
 export function buildSlackMessage(p: VerificationWebhookPayload): Record<string, unknown> {
   const d = DECISION_TEXT[p.decision] ?? { emoji: ":grey_question:", label: p.decision.toUpperCase() };
@@ -127,17 +127,22 @@ export async function dispatchVerificationWebhooks(
 export function buildVerificationPayload(input: {
   runId: string;
   applicationId: string;
-  decision: string;
+  decision: string | null;          // the INTERNAL run decision (ready | needs_review | blocked | repair_verified) or null
+  runState?: string;                // defaults to "completed": the webhook only fires once a run has finalized
   flowsTotal: number;
   flowsPassed: number;
   deploymentUrl?: string | null;
   appBaseUrl?: string | null;
 }): VerificationWebhookPayload {
+  // Map to the stable PUBLIC decision at this single choke point, so no internal decision word (ready /
+  // needs_review / repair_verified / internal "blocked") can ever reach a third-party endpoint. A finalized
+  // run with no verdict is "blocked" (toPublicDecision only returns null for a not-yet-final run).
+  const decision = toPublicDecision(input.runState ?? "completed", input.decision) ?? "blocked";
   return {
     event: "verification.completed",
     run_id: input.runId,
     application_id: input.applicationId,
-    decision: input.decision,
+    decision,
     flows_total: input.flowsTotal,
     flows_passed: input.flowsPassed,
     deployment_url: input.deploymentUrl ?? null,

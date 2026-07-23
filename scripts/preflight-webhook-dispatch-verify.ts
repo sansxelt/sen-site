@@ -12,16 +12,29 @@ function ok(name: string, cond: boolean) {
   else { fail++; console.log(`FAIL  ${name}`); }
 }
 
+// The builder takes the INTERNAL run decision and emits the stable PUBLIC decision (verified|failed|blocked).
+// Internal "blocked" (a confirmed critical failure) maps to public "failed".
 const payload = buildVerificationPayload({
   runId: "run-1", applicationId: "app-1", decision: "blocked",
   flowsTotal: 3, flowsPassed: 2, deploymentUrl: "https://demo.example.com",
   appBaseUrl: "https://app.vraelis.com",
 });
 
-ok("payload carries the decision + counts + ids",
-  payload.event === "verification.completed" && payload.decision === "blocked" &&
+ok("payload carries the mapped public decision + counts + ids",
+  payload.event === "verification.completed" && payload.decision === "failed" &&
   payload.flows_total === 3 && payload.flows_passed === 2 &&
   payload.run_id === "run-1" && payload.application_id === "app-1");
+
+// The PUBLIC decision vocabulary is exactly {verified, failed, blocked}; no internal run decision may leak.
+const mapDecision = (d: string | null) =>
+  buildVerificationPayload({ runId: "r", applicationId: "a", decision: d, flowsTotal: 0, flowsPassed: 0 }).decision;
+ok("internal ready -> public verified", mapDecision("ready") === "verified");
+ok("internal blocked -> public failed", mapDecision("blocked") === "failed");
+ok("internal needs_review -> public blocked", mapDecision("needs_review") === "blocked");
+ok("internal repair_verified -> public blocked (no false pass)", mapDecision("repair_verified") === "blocked");
+ok("a null decision -> public blocked", mapDecision(null) === "blocked");
+ok("no internal decision word ever leaks as the public decision",
+  ["ready", "needs_review", "repair_verified"].every((d) => !["ready", "needs_review", "repair_verified"].includes(mapDecision(d) as string)));
 
 ok("payload links to the run report", payload.report_url === "https://app.vraelis.com/applications/app-1/passes/run-1");
 ok("report_url is null when no base url is known", buildVerificationPayload({ runId: "r", applicationId: "a", decision: "ready", flowsTotal: 0, flowsPassed: 0 }).report_url === null);
@@ -42,14 +55,14 @@ ok("payload key set is exactly the owner-safe allowlist",
 // carries exactly the same owner-safe facts — never anything extra.
 const slack = buildSlackMessage(payload);
 ok("slack message has a text fallback naming the decision",
-  typeof slack.text === "string" && (slack.text as string).includes("BLOCKED") && (slack.text as string).includes("2/3"));
+  typeof slack.text === "string" && (slack.text as string).includes("FAILED") && (slack.text as string).includes("2/3"));
 ok("slack message uses blocks with the deployment + report link",
   Array.isArray(slack.blocks) && JSON.stringify(slack.blocks).includes("demo.example.com") &&
   JSON.stringify(slack.blocks).includes("/passes/run-1"));
 ok("slack message leaks no secret-shaped keys",
   !/(access_token|refresh_token|encrypted_ref|storage_path|provider_session_id)/i.test(JSON.stringify(slack)));
 ok("an unknown decision still renders (no crash, label falls back)",
-  typeof buildSlackMessage({ ...payload, decision: "weird_new_state" }).text === "string");
+  typeof buildSlackMessage({ ...payload, decision: "weird_new_state" as never }).text === "string");
 
 // Delivery is fail-soft + SSRF-guarded: private/loopback/non-https targets are refused, never attempted.
 (async () => {

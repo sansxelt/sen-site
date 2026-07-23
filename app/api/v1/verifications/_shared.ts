@@ -22,23 +22,7 @@ export function toRunId(verificationId: string): string | null {
   return raw.length ? raw : null;
 }
 
-// The public decision vocabulary. Deliberately NOT the internal decision strings: the external contract has
-// to stay stable even if internal naming moves, and a caller branching on these should never be broken by a
-// rename that was meant to be invisible.
-//
-//   verified  — the claim held, with evidence
-//   failed    — the claim did not hold, with evidence and a repair prompt
-//   blocked   — the run could not reach a verdict (the deployment could not be exercised)
-export type PublicDecision = "verified" | "failed" | "blocked";
-
-export function toPublicDecision(runState: string, decision: string | null): PublicDecision | null {
-  if (!["completed", "failed", "cancelled"].includes(runState)) return null; // still running
-  // A run that never completed cannot have verified anything, whatever it recorded on the way.
-  if (runState !== "completed") return "blocked";
-  const d = (decision ?? "").toLowerCase();
-  if (d === "ready") return "verified";
-  if (d === "blocked") return "failed";
-  // needs_review and anything unrecognized: a verdict was not reached. Reporting it as verified would be a
-  // false pass, and reporting it as failed would be a false alarm; blocked is the honest third answer.
-  return "blocked";
-}
+// The public decision vocabulary + mapping now live in lib/preflight/public-decision.ts so the worker's
+// outbound webhooks and the CI gate share ONE source of truth with this API surface. Re-exported here so
+// every existing importer of this module keeps working unchanged.
+export { toPublicDecision, type PublicDecision } from "../../../../lib/preflight/public-decision";

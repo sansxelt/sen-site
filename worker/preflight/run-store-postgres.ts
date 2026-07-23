@@ -256,7 +256,7 @@ export class PostgresRunStore implements RunStore {
     // Owner-safe payload: decision + flow counts + ids + report link (flow counts are
     // deterministic and already persisted). The SAME payload feeds both delivery
     // channels below, so a receiver sees an identical verification.completed event.
-    const { data: flows } = await this.s.from("v_flow_runs").select("state").eq("run_id", runId);
+    const { data: flows } = await this.s.from("v_flow_runs").select("state").eq("preflight_run_id", runId);
     const rows = (flows as { state?: string }[] | null) ?? [];
     const payload = buildVerificationPayload({
       runId,
