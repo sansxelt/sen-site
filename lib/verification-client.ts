@@ -75,6 +75,13 @@ const MESSAGES: Record<string, { message: string; retryable: boolean }> = {
   validation_error: { message: "Check the deployment URL and the outcome you described.", retryable: false },
   deployment_unreachable: { message: "Nothing loaded from that URL. Check it is public and serving pages.", retryable: true },
   claim_not_testable: { message: "No browser flow could be derived from that outcome. Try describing what a person does and what should be true afterwards.", retryable: false },
+  claim_not_provable: { message: "Vraelis understood this outcome but could not build a browser flow that would prove it. See what is still missing below, adjust the outcome, and review the plan again.", retryable: false },
+  reviewed_plan_not_found: { message: "That plan no longer exists. Review the outcome again to build a fresh plan.", retryable: false },
+  reviewed_plan_expired: { message: "This plan expired. Review the outcome again to build a fresh one against the current build.", retryable: false },
+  reviewed_plan_already_consumed: { message: "This plan has already been run. A reviewed plan runs exactly once. Review the outcome again to run it again.", retryable: false },
+  reviewed_plan_deployment_changed: { message: "The deployment changed since this plan was approved. Review and approve a new plan for the new deployment.", retryable: false },
+  reviewed_plan_claim_changed: { message: "The outcome changed since this plan was approved. Review and approve a new plan for the new outcome.", retryable: false },
+  reviewed_plan_coverage_regressed: { message: "This plan no longer proves the outcome. Review the outcome again to build a fresh plan.", retryable: false },
   synthesis_failed: { message: "The outcome could not be analyzed against this deployment. Try again.", retryable: true },
   synthesis_unavailable: { message: "Outcome analysis is unavailable right now.", retryable: true },
   runs_paused: { message: "New verifications are paused right now. Existing results are unaffected.", retryable: true },
@@ -242,5 +249,142 @@ export async function pollVerification(
   return {
     ok: false,
     error: lastError ?? { code: "timeout", message: "This verification is taking longer than expected. It is still running.", retryable: true },
+  };
+}
+
+// ── Reviewed-plan two-step contract ──
+//
+// The canonical safe path: mint an immutable plan (a free dry run), let a human REVIEW the exact requirements
+// and journeys it will run, EXPLICITLY approve it, then execute EXACTLY that plan. Possessing the id is not
+// approval; approval and execution are two distinct, audited events. This client mirrors that contract 1:1
+// and never regenerates a plan after approval — the composer drives it, it does not reinvent it.
+
+export type PlanFlow = { name: string; goal: string | null; steps: number };
+
+/** The persisted plan, read from the server so the UI reflects real state, never a local guess. */
+export type PlanView = {
+  reviewedPlanId: string;
+  approvalState: "pending" | "approved";
+  executionState: "unconsumed" | "consuming" | "consumed";
+  planHash: string;
+  deploymentUrl: string;
+  claim: string;
+  requirements: string[];
+  flows: PlanFlow[];
+  expiresAt: string | null;
+  approvedAt: string | null;
+  runId: string | null;
+};
+
+/** What a fresh dry run returns: either a minted, reviewable plan, or the honest reason it could not be built. */
+export type PlanDraft = {
+  reviewedPlanId: string | null; // null when the outcome is not provable (no plan minted, nothing charged)
+  wouldLaunch: boolean;
+  claim: string;
+  requirements: string[];
+  flows: PlanFlow[];
+  expiresAt: string | null;
+  blockedReason: string | null;
+  remainingObligations: string[];
+  repairPrompt: string | null;
+};
+
+function readFlows(raw: unknown): PlanFlow[] {
+  return Array.isArray(raw)
+    ? (raw as Record<string, unknown>[]).map((f) => ({
+        name: String(f.name ?? ""),
+        goal: typeof f.goal === "string" ? f.goal : null,
+        steps: typeof f.steps === "number" ? f.steps : 0,
+      }))
+    : [];
+}
+
+/**
+ * Mint a reviewed plan (a free dry run: synthesis + the coverage gate, no browser, no hold, no charge).
+ * `wouldLaunch === false` means the outcome could not be proven even after Vraelis tried to repair the plan;
+ * nothing is charged and `remainingObligations` + `repairPrompt` say what is still missing.
+ */
+export async function createReviewedPlan(input: { deploymentUrl: string; claim: string; idempotencyKey?: string }): Promise<Result<PlanDraft>> {
+  const deploymentUrl = normalizeDeploymentUrl(input.deploymentUrl);
+  const claim = normalizeClaim(input.claim);
+  if (!deploymentUrl || !claim) {
+    return { ok: false, error: { code: "validation_error", message: MESSAGES.validation_error.message, retryable: false } };
+  }
+  const { status, body } = await call("/v1/verifications", {
+    method: "POST",
+    headers: { "idempotency-key": input.idempotencyKey ?? newIdempotencyKey() },
+    body: JSON.stringify({ deployment_url: deploymentUrl, claim, dry_run: true, context: { source: "app" } }),
+  });
+  const b = (body ?? {}) as Record<string, unknown>;
+  // The gate can BLOCK (422 claim_not_provable) and still return the coverage telemetry, which is exactly the
+  // "not provable" draft the composer shows. So a 422 with that code is a value, not an error.
+  const errCode = (b.error as { code?: string } | undefined)?.code;
+  if (status >= 400 && errCode !== "claim_not_provable" && !b.would_launch) {
+    return { ok: false, error: readError(body, status) };
+  }
+  return {
+    ok: true,
+    value: {
+      reviewedPlanId: typeof b.reviewed_plan_id === "string" ? b.reviewed_plan_id : null,
+      wouldLaunch: b.would_launch === true,
+      claim,
+      requirements: Array.isArray(b.requirements) ? (b.requirements as string[]) : [],
+      flows: readFlows(b.flows),
+      expiresAt: typeof b.reviewed_plan_expires_at === "string" ? b.reviewed_plan_expires_at : null,
+      blockedReason: typeof b.blocked_reason === "string" ? b.blocked_reason : null,
+      remainingObligations: Array.isArray(b.remaining_obligations) ? (b.remaining_obligations as string[]) : [],
+      repairPrompt: typeof b.repair_prompt === "string" ? b.repair_prompt : null,
+    },
+  };
+}
+
+/** Read the persisted plan (the source of truth for approval + consumption state). */
+export async function getReviewedPlan(id: string, opts: { signal?: AbortSignal } = {}): Promise<Result<PlanView>> {
+  const { status, body } = await call(`/v1/verifications/plans/${encodeURIComponent(id)}`, { method: "GET", signal: opts.signal });
+  const b = (body ?? {}) as Record<string, unknown>;
+  if (!b.reviewed_plan_id) return { ok: false, error: readError(body, status) };
+  return {
+    ok: true,
+    value: {
+      reviewedPlanId: String(b.reviewed_plan_id),
+      approvalState: b.approval_state === "approved" ? "approved" : "pending",
+      executionState: b.execution_state === "consumed" ? "consumed" : b.execution_state === "consuming" ? "consuming" : "unconsumed",
+      planHash: typeof b.plan_hash === "string" ? b.plan_hash : "",
+      deploymentUrl: typeof b.deployment_url === "string" ? b.deployment_url : "",
+      claim: typeof b.claim === "string" ? b.claim : "",
+      requirements: Array.isArray(b.requirements) ? (b.requirements as string[]) : [],
+      flows: readFlows(b.flows),
+      expiresAt: typeof b.expires_at === "string" ? b.expires_at : null,
+      approvedAt: typeof b.approved_at === "string" ? b.approved_at : null,
+      runId: typeof b.run_id === "string" ? b.run_id : null,
+    },
+  };
+}
+
+/** Approve a plan. A distinct, audited event; idempotent (re-approving returns alreadyApproved). */
+export async function approveReviewedPlan(id: string): Promise<Result<{ approved: true; alreadyApproved: boolean }>> {
+  const { status, body } = await call(`/v1/verifications/plans/${encodeURIComponent(id)}/approve`, { method: "POST" });
+  const b = (body ?? {}) as Record<string, unknown>;
+  if (b.approval_state !== "approved") return { ok: false, error: readError(body, status) };
+  return { ok: true, value: { approved: true, alreadyApproved: b.already_approved === true } };
+}
+
+/** Execute an APPROVED plan verbatim. Consumes exactly this plan once; never re-synthesizes. */
+export async function executeReviewedPlan(input: { deploymentUrl: string; claim: string; reviewedPlanId: string }): Promise<Result<Started>> {
+  const { status, body } = await call("/v1/verifications", {
+    method: "POST",
+    headers: { "idempotency-key": `rvp:${input.reviewedPlanId}` },
+    body: JSON.stringify({ deployment_url: normalizeDeploymentUrl(input.deploymentUrl), claim: normalizeClaim(input.claim), reviewed_plan_id: input.reviewedPlanId }),
+  });
+  const b = (body ?? {}) as Record<string, unknown>;
+  if (!b.verification_id) return { ok: false, error: readError(body, status) };
+  return {
+    ok: true,
+    value: {
+      verificationId: String(b.verification_id),
+      requirements: Array.isArray(b.requirements) ? (b.requirements as string[]) : [],
+      humanReviewed: b.human_reviewed === true,
+      claim: normalizeClaim(input.claim),
+    },
   };
 }
