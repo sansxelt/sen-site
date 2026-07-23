@@ -1,5 +1,12 @@
 # Design 05 — Vraelis art direction
 
+> **Revised in Phase 0B.** The warm-paper/cream direction below was rejected (too flat, too template). The
+> flagship now lives on a **dark verification-instrument scene** (deep ink, hairline grid, monospace instrument
+> voice, no serif) where the agent's claim enters as a signal, the proof trace holds then BREAKS at the failing
+> obligation, and the verdict is the only glowing color. See `phase-0b-notes.md` for the current direction. The
+> shared principles below (verdict-quarantined color, product-as-artwork, one-idea-per-viewport, motion reflects
+> a real state change, shared conclusion language with the app, honesty-as-design) all still hold.
+
 The public site and the app are the same company seen from two distances. The **app** is operational: calm,
 evidence-dense, restrained motion, tuned for repeated use. The **public site** is cinematic: it makes the trust
 problem *felt* in ten seconds and lets the product be the spectacle. They share a brand mark, a type system, a

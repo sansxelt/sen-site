@@ -13,6 +13,7 @@ export type Conclusion = "verified" | "failed" | "running";
 export type Obligation = {
   id: string;
   short: string; // the compiled obligation, one line
+  tag: string; // a 1-2 word marker for the trace
   action: string; // what Vraelis actually does in the live product
 };
 
@@ -20,13 +21,13 @@ export const CLAIM =
   "A customer can purchase Pro, receive access, sign out, sign back in, and keep Pro.";
 
 export const OBLIGATIONS: Obligation[] = [
-  { id: "ob-1", short: "The customer begins without Pro", action: "Open the app as a fresh account and confirm the plan is Free" },
-  { id: "ob-2", short: "Payment completes", action: "Run the upgrade checkout with a sandbox card and confirm the charge succeeds" },
-  { id: "ob-3", short: "The entitlement belongs to the same account", action: "Confirm the Pro entitlement is written to the account that paid" },
-  { id: "ob-4", short: "Pro access appears after payment", action: "Confirm the account reflects Pro and a Pro-only capability is reachable" },
-  { id: "ob-5", short: "The session is destroyed", action: "Fully sign the customer out and discard the session" },
-  { id: "ob-6", short: "The customer signs in again", action: "Sign back in as the same account in a fresh session" },
-  { id: "ob-7", short: "Pro access remains", action: "Confirm Pro is still present and usable after re-authentication" },
+  { id: "ob-1", short: "The customer begins without Pro", tag: "starts Free", action: "Open the app as a fresh account and confirm the plan is Free" },
+  { id: "ob-2", short: "Payment completes", tag: "payment", action: "Run the upgrade checkout with a sandbox card and confirm the charge succeeds" },
+  { id: "ob-3", short: "The entitlement belongs to the same account", tag: "same account", action: "Confirm the Pro entitlement is written to the account that paid" },
+  { id: "ob-4", short: "Pro access appears after payment", tag: "Pro appears", action: "Confirm the account reflects Pro and a Pro-only capability is reachable" },
+  { id: "ob-5", short: "The session is destroyed", tag: "sign out", action: "Fully sign the customer out and discard the session" },
+  { id: "ob-6", short: "The customer signs in again", tag: "sign in", action: "Sign back in as the same account in a fresh session" },
+  { id: "ob-7", short: "Pro access remains", tag: "Pro persists", action: "Confirm Pro is still present and usable after re-authentication" },
 ];
 
 export type EvidenceFrame = "plan-free" | "plan-pro" | "checkout-paid";
