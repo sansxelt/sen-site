@@ -4,7 +4,7 @@ import { H, P, Ul, LegalShell } from "../_components/legal-ui";
 
 export const metadata = ogMeta({
   title: "Refunds & cancellation",
-  description: "How your balance, subscriptions, and cancellations work at Vraelis: what is refundable, how failed Production Passes are handled, and how to cancel.",
+  description: "How your balance, subscriptions, and cancellations work at Vraelis: what is refundable, how verifications that cannot run are handled, and how to cancel.",
   path: "/refunds",
 });
 
@@ -20,8 +20,8 @@ export default function RefundsPage() {
       intro="Plain terms for how your balance, subscriptions, and cancellations work. This policy is part of the Terms."
     >
       <H>Account balance</H>
-      <P>Your balance funds Production Passes: real-browser runs of your approved flows that end in a launch decision. <strong style={strong}>Purchased balance is non-refundable once bought</strong>, but it does not expire, so there is no pressure to spend it.</P>
-      <P>You are not charged for work you do not get. If a pass cannot start, or no flow executes, the hold is returned to your account automatically. Failures on our infrastructure are never billed to you.</P>
+      <P>Your balance funds verifications: real-browser runs of your approved flows that end in a launch decision. <strong style={strong}>Purchased balance is non-refundable once bought</strong>, but it does not expire, so there is no pressure to spend it.</P>
+      <P>You are not charged for work you do not get. If a verification cannot start, or no flow executes, the hold is returned to your account automatically. Failures on our infrastructure are never billed to you.</P>
 
       <H>Subscriptions</H>
       <P>Paid plans renew automatically until you cancel. <strong style={strong}>You can cancel anytime</strong> from your <Link href="/billing" style={acc}>billing settings</Link>; your plan stays active until the end of the current billing period, and you are not charged again after that. We do not provide partial or prorated refunds for the current period, and a plan&apos;s monthly included allowance that expires at the end of a cycle is not refundable.</P>

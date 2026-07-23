@@ -55,7 +55,7 @@ const MODES: Mode[] = [
     ],
     verdict: {
       tone: "ready",
-      pill: "READY",
+      pill: "VERIFIED",
       // Scoped, not app-wide. A giant green "the system behaves as required" reads as a guarantee about
       // the whole product; what actually happened is that the approved flows passed.
       title: "All approved flows passed",
@@ -76,7 +76,7 @@ const MODES: Mode[] = [
     ],
     verdict: {
       tone: "blocked",
-      pill: "BLOCKED",
+      pill: "FAILED",
       title: "A customer paid and got nothing",
       count: "1 critical requirement failed",
       line: "The checkout page loaded, the payment went through, and the account still shows the free plan. Every piece reported success. On a real run this arrives with the screenshot, the failing step, and steps to reproduce it.",
@@ -84,7 +84,7 @@ const MODES: Mode[] = [
   },
   {
     key: "newBuild",
-    label: "Under review",
+    label: "Repaired build",
     results: [
       // Repairs the flow that actually failed above, so the three scenarios read as one story across
       // builds rather than three unrelated screenshots.
@@ -94,7 +94,7 @@ const MODES: Mode[] = [
     ],
     verdict: {
       tone: "ready",
-      pill: "REPAIR VERIFIED",
+      pill: "VERIFIED",
       title: "A known issue closed on this build",
       count: "Targeted rerun",
       line: "A known issue was rerun against a later build and now passes, without claiming full coverage. The issue keeps its lineage across releases.",
@@ -215,7 +215,7 @@ export function PassDemo() {
                 <span style={{ display: "flex", alignItems: "center", gap: 8, flex: "none" }}>
                   {phase === "done" && r.repaired && (
                     <span key={`t${runId}`} className={runId > 0 ? "pd-pop" : undefined} style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--acc-deep)", background: "var(--acc-soft)", border: "1px solid var(--acc-line)", padding: "3px 8px", borderRadius: 99, whiteSpace: "nowrap" }}>
-                      Repair verified
+                      Verified
                     </span>
                   )}
                   <span style={{ fontFamily: "var(--font-code)", fontSize: 11, letterSpacing: "0.07em", textTransform: "uppercase", color: labelColor }}>{label}</span>
@@ -250,7 +250,7 @@ export function PassDemo() {
           ) : (
             <div style={{ padding: "16px 18px", borderRadius: 12, background: "var(--bg-2)", border: "1px dashed var(--line-2)" }}>
               <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 6 }}>Verdict pending</div>
-              <div style={{ fontSize: 13.5, color: "var(--fg-4)", lineHeight: 1.55 }}>The pass decides only after every approved flow has run.</div>
+              <div style={{ fontSize: 13.5, color: "var(--fg-4)", lineHeight: 1.55 }}>The verification decides only after every approved flow has run.</div>
             </div>
           )}
         </div>

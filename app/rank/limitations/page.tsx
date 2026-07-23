@@ -7,7 +7,7 @@ import { H, P, Ul, LegalShell } from "../_components/legal-ui";
 // from the shipped behaviour, never from the roadmap: if a row starts being handled, the row moves out.
 export const metadata = ogMeta({
   title: "Limitations",
-  description: "What Vraelis does not check, where a run needs help from you, and how to read a passing result. Written from what the product does today.",
+  description: "What Vraelis does not check, where a run needs help from you, and how to read a Verified result. Written from what the product does today.",
   path: "/limitations",
 });
 
@@ -23,16 +23,16 @@ export default function LimitationsPage() {
         tells you whether your software works has no business being vague about where it stops.
       </P>
 
-      <H>How to read a passing result</H>
+      <H>How to read a Verified result</H>
       <P>
-        A pass means <span style={strong}>the flows you approved ran and behaved as expected, on the
+        A Verified result means <span style={strong}>the flows you approved ran and behaved as expected, on the
         deployment you pointed at, at the time it ran</span>. That is the whole claim. It is not a statement
         about the parts of your app nobody wrote a flow for, about code paths a browser cannot reach, or
         about what happens under load or over time.
       </P>
       <Ul items={[
         "Vraelis does not certify that an application is bug-free, secure, or safe to release.",
-        "A pass covers the checked flows and the checked environment. Nothing else.",
+        "A Verified result covers the checked flows and the checked environment. Nothing else.",
         "A decision is never carried forward to a build that was not checked.",
         "Vraelis proposes requirements and flows for you to review. It does not know your product's intent on its own, and an approved list that misses something means Vraelis will miss it too.",
       ]} />

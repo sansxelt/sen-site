@@ -25,7 +25,7 @@ const PLAN_BLURBS: Record<PlanV1["key"], string> = {
 
 function planFeatures(p: PlanV1): string[] {
   return [
-    `Validate ${p.passesPerMonth} launches a month (${p.passesPerMonth} Production Passes)`,
+    `Validate ${p.passesPerMonth} launches a month (${p.passesPerMonth} verifications)`,
     `Up to ${p.flowsPerPass} flows verified per run`,
     p.maxApplications === null ? "No cap on connected applications" : `${p.maxApplications} connected applications`,
     "Real-browser evidence with screenshots",
@@ -56,7 +56,7 @@ export default function PricingV1({ initialCycle = "monthly" }: { initialCycle?:
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(44px, 6vw, 84px)", paddingBottom: "clamp(20px, 3vw, 30px)", textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Pricing</p>
           <h1 className="display" style={{ fontSize: "clamp(2.2rem, 4.6vw, 3.6rem)", marginBottom: 16 }}>Priced by the <span className="em">run</span>, not the seat.</h1>
-          <p className="lead-copy" style={{ margin: "0 auto", textAlign: "center" }}>Run your AI-built application through a real production review. Every pass includes browser execution, evidence, issue tracking, and an explainable launch decision.</p>
+          <p className="lead-copy" style={{ margin: "0 auto", textAlign: "center" }}>Run your AI-built application through a real production review. Every verification includes browser execution, evidence, issue tracking, and an explainable launch decision.</p>
         </div>
       </section>
 
@@ -73,15 +73,15 @@ export default function PricingV1({ initialCycle = "monthly" }: { initialCycle?:
             <div className="price">
               <div className="price__name">Free</div>
               <div className="price__amt">{usdFromCents(0)}</div>
-              <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600 }}>One lifetime Production Pass</div>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600 }}>One lifetime free verification</div>
               <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>See a real launch decision on your own app before paying anything. No card required.</div>
               <ul className="price__feat">
                 <li>Up to {FREE_TIER.flowsPerPass} critical flows</li>
                 <li>{FREE_TIER.maxApplications} application</li>
                 <li>Real-browser evidence with screenshots</li>
-                <li>A full BLOCKED, REPAIR VERIFIED, or READY decision</li>
+                <li>A full Verified, Failed, or Blocked decision</li>
               </ul>
-              <Link className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href={earlyAccess}>Start a Production Pass</Link>
+              <Link className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href={earlyAccess}>Run a verification</Link>
             </div>
 
             {PLAN_CATALOG_V1.map((p) => (
@@ -115,11 +115,11 @@ export default function PricingV1({ initialCycle = "monthly" }: { initialCycle?:
           <div className="card" style={{ marginTop: 22, display: "flex", flexWrap: "wrap", alignItems: "center", gap: "16px clamp(20px, 3vw, 36px)" }}>
             <div style={{ flex: "1 1 380px", minWidth: 0 }}>
               <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 6 }}>
-                Pay as you go: {usdFromCents(passPriceCents(PASS_INCLUDED_FLOWS))} per Production Pass
+                Pay as you go: {usdFromCents(passPriceCents(PASS_INCLUDED_FLOWS))} per verification
               </div>
               <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>
                 {PASS_INCLUDED_FLOWS} flows included, {usdFromCents(EXTRA_FLOW_CENTS)} per additional flow. Targeted reruns
-                cost {usdFromCents(rerunPriceCents(1))} per selected failed flow and never more than a comparable full pass.
+                cost {usdFromCents(rerunPriceCents(1))} per selected failed flow and never more than a comparable full verification.
                 No subscription required.
               </p>
             </div>

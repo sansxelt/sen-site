@@ -4,7 +4,7 @@ import { ogMeta } from "@/lib/og-meta";
 export const metadata = ogMeta({
   title: "Demo",
   description:
-    "A walkthrough of a Vraelis Production Pass: connect an AI-built app, approve the Production Contract, watch a real browser run the critical flows as two users, and follow one blocker from evidence to verified fix to READY.",
+    "A walkthrough of a Vraelis verification: connect an AI-built app, approve the Production Contract, watch a real browser run the critical flows as two users, and follow one failure from evidence to a verified fix and a Verified decision.",
   path: "/demo",
 });
 
@@ -75,10 +75,10 @@ export default function Demo() {
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(48px, 6vw, 88px)", paddingBottom: "clamp(20px, 3vw, 34px)", textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Demo</p>
           <h1 className="display" style={{ fontSize: "clamp(2.2rem, 4.6vw, 3.5rem)", marginBottom: 16, maxWidth: 880, marginInline: "auto", lineHeight: 1.05, textWrap: "balance" }}>
-            Follow one app from <span className="em">prototype</span> to <span className="em">READY</span>.
+            Follow one app from <span className="em">prototype</span> to <span className="em">Verified</span>.
           </h1>
           <p className="lead-copy" style={{ margin: "0 auto", textAlign: "center", maxWidth: 700 }}>
-            AI built the product. Vraelis finishes the engineering. This walkthrough follows a single Production Pass: the contract, the real-browser run, a blocker with evidence, the fix, and the verified rerun.
+            AI built the product. Vraelis finishes the engineering. This walkthrough follows a single verification: the contract, the real-browser run, a failure with evidence, the fix, and the verified rerun.
           </p>
           <p style={{ fontFamily: "var(--font-code)", fontSize: 11.5, letterSpacing: "0.06em", color: "var(--fg-4)", marginTop: 14 }}>
             Every artifact below is an illustrative example, not a live account.
@@ -140,13 +140,13 @@ export default function Demo() {
         <div className="wrap">
           <div className="sec-head">
             <p className="eyebrow">Steps 04 and 05</p>
-            <h2 className="display">A real browser runs it. The pass comes back <span className="em">BLOCKED</span>.</h2>
+            <h2 className="display">A real browser runs it. The verification comes back <span className="em">Failed</span>.</h2>
             <p>An isolated real browser signs up, clicks, types, and refreshes as two separate users. Every step is a recorded observation: what was clicked, what rendered, and what the network and console did. Then one decision, with the evidence behind it.</p>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", maxWidth: 720, margin: "0 auto 16px" }}>
-            <Pill tone="blocked">BLOCKED</Pill>
-            <span style={{ fontSize: 14, color: "var(--fg-2)" }}>Two of the four critical flows failed. Here is the first blocker in full.</span>
+            <Pill tone="blocked">FAILED</Pill>
+            <span style={{ fontSize: 14, color: "var(--fg-2)" }}>Two of the four critical flows failed. Here is the first failure in full.</span>
           </div>
 
           {/* Blocker artifact */}
@@ -165,12 +165,12 @@ export default function Demo() {
               <EvRow label="Repro" text="Sign in as User A, create a task, hard refresh the workspace." />
             </div>
             <p style={{ fontSize: 13, color: "var(--fg-4)", lineHeight: 1.6, marginTop: 14, marginBottom: 0 }}>
-              The full blocker ships with the step timeline, the screenshot at the moment of failure, and the network and console records.
+              The full failure record ships with the step timeline, the screenshot at the moment of failure, and the network and console records.
             </p>
           </div>
 
           <p style={{ fontSize: 14, color: "var(--fg-3)", lineHeight: 1.6, maxWidth: 720, margin: "16px auto 0" }}>
-            The second blocker from the same run: navigation breaks at phone width. Same anatomy, its category, expected and observed behavior, reproduction steps, and screenshot.
+            The second failure from the same run: navigation breaks at phone width. Same anatomy, its category, expected and observed behavior, reproduction steps, and screenshot.
           </p>
         </div>
       </section>
@@ -181,7 +181,7 @@ export default function Demo() {
           <div className="sec-head">
             <p className="eyebrow">Steps 06 and 07</p>
             <h2 className="display">A fix prompt, then a <span className="em">verified rerun</span>.</h2>
-            <p>Every blocker ships with a fix prompt written for the tool that built the app, not just a description of what broke. Paste it into your builder, push the fix, and Vraelis reruns the exact checks that failed.</p>
+            <p>Every failure ships with a fix prompt written for the tool that built the app, not just a description of what broke. Paste it into your builder, push the fix, and Vraelis reruns the exact checks that failed.</p>
           </div>
 
           <div className="tile-grid cols-2">
@@ -221,7 +221,7 @@ export default function Demo() {
                   <Pill tone="blocked">Still failing</Pill>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, paddingTop: 12, borderTop: "1px solid var(--line-2)" }}>
-                  <Pill tone="blocked">BLOCKED</Pill>
+                  <Pill tone="blocked">FAILED</Pill>
                   <span style={{ fontSize: 13, color: "var(--fg-3)" }}>One verified fix is progress, not a launch.</span>
                 </div>
               </div>
@@ -235,16 +235,16 @@ export default function Demo() {
         <div className="wrap">
           <div className="sec-head sec-head--center">
             <p className="eyebrow">Step 08</p>
-            <h2 className="display">The final rerun comes back <span className="em">READY</span>.</h2>
+            <h2 className="display">The final rerun comes back <span className="em">Verified</span>.</h2>
             <p>The phone-width fix lands, and a final rerun exercises every critical flow again. Sign up, persistence, two-user isolation, and phone-width navigation all hold.</p>
           </div>
           <div className="card card--acc" style={{ padding: "clamp(20px, 3vw, 30px)", maxWidth: 640, marginInline: "auto" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
-              <Pill tone="ready">READY</Pill>
+              <Pill tone="ready">VERIFIED</Pill>
               <Illustrative />
             </div>
             <p style={{ fontSize: 15, color: "var(--fg-2)", lineHeight: 1.65, margin: 0 }}>
-              Every critical flow in the contract held. The same evidence that blocked the launch is now the record that those flows passed on this build, and the next Production Pass starts from that baseline.
+              Every critical flow in the contract held. The same evidence behind the earlier Failed decision is now the record that those flows passed on this build, and the next verification starts from that baseline.
             </p>
           </div>
         </div>

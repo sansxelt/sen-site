@@ -5,16 +5,16 @@ import { ogMeta } from "@/lib/og-meta";
 // credits; this page explains what one pass returns and routes into sign-in.
 // Marketing pattern mirrors /how-it-works (glow + grid hero, acard tiles, CTA row).
 export const metadata = ogMeta({
-  title: "Your first Production Pass is free",
+  title: "Your first verification is free",
   description:
-    "Your first Production Pass is free. Connect your AI-built app, approve its critical flows, and get a launch decision backed by real browser evidence.",
+    "Your first verification is free. Connect your AI-built app, approve its critical flows, and get a launch decision backed by real browser evidence.",
   path: "/free-report",
 });
 
 const STATUS = {
-  ready: { label: "READY", fg: "var(--acc-deep)", bg: "var(--acc-soft)", line: "var(--acc-line)" },
-  review: { label: "NEEDS REVIEW", fg: "#B45309", bg: "#FEF6E7", line: "#F3DFB0" },
-  blocked: { label: "BLOCKED", fg: "#C0392B", bg: "#FBEBEA", line: "#F0C7C2" },
+  ready: { label: "VERIFIED", fg: "var(--acc-deep)", bg: "var(--acc-soft)", line: "var(--acc-line)" },
+  review: { label: "BLOCKED", fg: "#B45309", bg: "#FEF6E7", line: "#F3DFB0" },
+  blocked: { label: "FAILED", fg: "#C0392B", bg: "#FBEBEA", line: "#F0C7C2" },
 } as const;
 type StatusKey = keyof typeof STATUS;
 
@@ -49,10 +49,10 @@ export default function FreeReportPage() {
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(48px, 6vw, 88px)", paddingBottom: "clamp(20px, 3vw, 34px)", textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Free preflight</p>
           <h1 className="display" style={{ fontSize: "clamp(2.2rem, 4.6vw, 3.5rem)", marginBottom: 16, maxWidth: 820, marginInline: "auto", lineHeight: 1.05, textWrap: "balance" }}>
-            Your first <span className="em">Production Pass</span> is free.
+            Your first <span className="em">verification</span> is free.
           </h1>
           <p className="lead-copy" style={{ margin: "0 auto", textAlign: "center", maxWidth: 680 }}>
-            Your first Production Pass is free. Connect your AI-built app, approve its critical flows, and Vraelis runs them in a real browser, then returns a launch decision with the evidence behind it.
+            Your first verification is free. Connect your AI-built app, approve its critical flows, and Vraelis runs them in a real browser, then returns a launch decision with the evidence behind it.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 26 }}>
             <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Check your application <span aria-hidden>→</span></Link>
@@ -66,7 +66,7 @@ export default function FreeReportPage() {
         <div className="wrap">
           <div className="sec-head sec-head--center">
             <p className="eyebrow">What you get</p>
-            <h2 className="display">One pass, <span className="em">three things you can act on</span>.</h2>
+            <h2 className="display">One verification, <span className="em">three things you can act on</span>.</h2>
           </div>
           <div className="tile-grid cols-3" style={{ maxWidth: 960, margin: "0 auto" }}>
             <div className="acard" style={{ gap: 10 }}>
@@ -74,17 +74,17 @@ export default function FreeReportPage() {
                 {(["ready", "review", "blocked"] as StatusKey[]).map((s) => <StatusPill key={s} s={s} />)}
               </div>
               <div className="acard__t">A launch decision</div>
-              <div className="acard__d">One answer for the whole app: READY, NEEDS REVIEW, or BLOCKED. Any critical flow that fails blocks the launch, so the label always tells you why.</div>
+              <div className="acard__d">One answer for the whole app: Verified, Failed, or Blocked. Any critical flow that fails means a Failed decision, so the label always tells you why.</div>
             </div>
             <div className="acard" style={{ gap: 10 }}>
               <div className="acard__icon"><Icon d={I.camera} /></div>
               <div className="acard__t">Evidence, not opinions</div>
-              <div className="acard__d">Every blocker carries a screenshot and exact reproduction steps from the real browser run, so you can see the failure and replay it yourself.</div>
+              <div className="acard__d">Every failure carries a screenshot and exact reproduction steps from the real browser run, so you can see what broke and replay it yourself.</div>
             </div>
             <div className="acard" style={{ gap: 10 }}>
               <div className="acard__icon"><Icon d={I.wrench} /></div>
               <div className="acard__t">A prompt you can paste straight in</div>
-              <div className="acard__d">Each blocker comes with what was expected, what happened, the steps to reproduce it, and the console and network detail, written as a prompt for whatever built your app. Paste it in, push the fix, and rerun the exact failed check.</div>
+              <div className="acard__d">Each failure comes with what was expected, what happened, the steps to reproduce it, and the console and network detail, written as a prompt for whatever built your app. Paste it in, push the fix, and rerun the exact failed check.</div>
             </div>
           </div>
         </div>
@@ -94,8 +94,8 @@ export default function FreeReportPage() {
       <section className="section cta-band" style={{ borderBottom: "none" }}>
         <div className="glow glow--soft" />
         <div className="wrap" style={{ maxWidth: 680, textAlign: "center" }}>
-          <h2 className="display" style={{ fontSize: "clamp(1.9rem, 3.6vw, 2.8rem)", marginBottom: 16 }}>Find the blockers <span className="em">before your users do</span>.</h2>
-          <p className="lead-copy" style={{ margin: "0 auto 26px", textAlign: "center" }}>Sign in, connect your app, and run your first Production Pass free.</p>
+          <h2 className="display" style={{ fontSize: "clamp(1.9rem, 3.6vw, 2.8rem)", marginBottom: 16 }}>Find the failures <span className="em">before your users do</span>.</h2>
+          <p className="lead-copy" style={{ margin: "0 auto 26px", textAlign: "center" }}>Sign in, connect your app, and run your first verification free.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Check your application <span aria-hidden>→</span></Link>
             <Link href="/how-it-works" className="btn btn--ghost btn--lg">See how it works</Link>

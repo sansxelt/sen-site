@@ -58,18 +58,28 @@ for (const surface of ["pricing", "plans"]) {
     && y.includes("Save 17%") && !y.includes("2 months free"));
   ok(`${surface}: monthly/yearly segmented toggle present`,
     m.includes(`class="seg"`) && m.includes(">Monthly<") && m.includes("Yearly"));
-  ok(`${surface}: free tier is $0, one lifetime pass, 3 flows, 1 application, no card`,
-    m.includes("$0") && m.includes("One lifetime Production Pass") && m.includes("Up to 3 critical flows") && m.includes("1 application") && m.includes("No card required"));
+  // Phase 4 terminology migration: the public pricing surface now reads "verification(s)"; the
+  // signed-in plans surface keeps "Production Pass(es)" until its own migration group lands. Each
+  // surface's copy is asserted verbatim at full strictness.
+  const isMigrated = surface === "pricing";
+  const freeLead = isMigrated ? "One lifetime free verification" : "One lifetime Production Pass";
+  const unitPlural = isMigrated ? "verifications" : "Production Passes";
+  const paygUnit = isMigrated ? "$15 per verification" : "$15 per Production Pass";
+  const rerunCap = isMigrated
+    ? "Targeted reruns cost $3 per selected failed flow and never more than a comparable full verification"
+    : "Targeted reruns cost $3 per selected failed flow and never more than a comparable full pass";
+  ok(`${surface}: free tier is $0, one lifetime free unit, 3 flows, 1 application, no card`,
+    m.includes("$0") && m.includes(freeLead) && m.includes("Up to 3 critical flows") && m.includes("1 application") && m.includes("No card required"));
   // Reframe (2026-07): the pass figures are unchanged, but the lead bullet now reads outcome-first
-  // ("Validate N launches a month (N Production Passes)") and flows are "verified per run". The figures
-  // (10/40/150 passes, 5/10/20 flows, 2/10/∞ apps) must still render on both surfaces.
-  ok(`${surface}: approved plan limits render (passes/flows/applications)`,
-    m.includes("Validate 10 launches a month (10 Production Passes)") && m.includes("Up to 5 flows verified per run") && m.includes("2 connected applications")
-    && m.includes("Validate 40 launches a month (40 Production Passes)") && m.includes("Up to 10 flows verified per run") && m.includes("10 connected applications")
-    && m.includes("Validate 150 launches a month (150 Production Passes)") && m.includes("Up to 20 flows verified per run") && m.includes("No cap on connected applications"));
-  ok(`${surface}: PAYG band: $15 per pass, 5 flows included, $3 extra flow, capped $3 reruns, no subscription`,
-    m.includes("$15 per Production Pass") && m.includes("5 flows included, $3 per additional flow")
-    && m.includes("Targeted reruns cost $3 per selected failed flow and never more than a comparable full pass")
+  // ("Validate N launches a month (N <unit>)") and flows are "verified per run". The figures
+  // (10/40/150 runs, 5/10/20 flows, 2/10/∞ apps) must still render on both surfaces.
+  ok(`${surface}: approved plan limits render (runs/flows/applications)`,
+    m.includes(`Validate 10 launches a month (10 ${unitPlural})`) && m.includes("Up to 5 flows verified per run") && m.includes("2 connected applications")
+    && m.includes(`Validate 40 launches a month (40 ${unitPlural})`) && m.includes("Up to 10 flows verified per run") && m.includes("10 connected applications")
+    && m.includes(`Validate 150 launches a month (150 ${unitPlural})`) && m.includes("Up to 20 flows verified per run") && m.includes("No cap on connected applications"));
+  ok(`${surface}: PAYG band: $15 per run, 5 flows included, $3 extra flow, capped $3 reruns, no subscription`,
+    m.includes(paygUnit) && m.includes("5 flows included, $3 per additional flow")
+    && m.includes(rerunCap)
     && m.includes("No subscription required") && m.includes("/credits"));
   ok(`${surface}: allowance-reset and annual up-front lines present`,
     m.includes("Unused monthly allowance resets each subscription month") && m.includes("Annual plans are charged up front and release usage monthly"));

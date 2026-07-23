@@ -40,8 +40,8 @@ for (const phrase of STALE) {
 const pricing = read("app/rank/pricing/pricing-legacy.tsx");
 ok("pricing keeps the headline: priced by the run, not the seat", pricing.includes("Priced by the") && pricing.includes("not the seat"));
 ok("pricing carries the new subtitle", pricing.includes("Run your AI-built application through a real production review"));
-ok("free tier: one complete Production Pass, up to 3 critical flows, no card",
-  pricing.includes("One complete Production Pass") && pricing.includes("Up to 3 critical flows") && pricing.includes("No card required"));
+ok("free tier: one complete verification, up to 3 critical flows, no card",
+  pricing.includes("One complete verification") && pricing.includes("Up to 3 critical flows") && pricing.includes("No card required"));
 ok("pay as you go: $10 per pass with 5 flows included and $3 per additional",
   pricing.includes("$10") && pricing.includes("Includes up to 5 approved critical flows") && pricing.includes("$3 per additional approved flow"));
 ok("unimplemented monthly plans have NO checkout on the public page", !pricing.includes("checkout?plan="));

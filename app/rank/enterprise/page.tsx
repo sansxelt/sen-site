@@ -153,7 +153,7 @@ export default function EnterprisePage() {
         <div className="sec-head" style={{ marginBottom: 24 }}>
           <p className="eyebrow">Plans</p>
           <h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)" }}>Recurring plans for standing access.</h2>
-          <p>The front door is a free run. These recurring plans are for teams that verify continuously, priced by the run in Production Passes. Some tiers are still rolling out, so talk to us and we will set you up.</p>
+          <p>The front door is a free run. These recurring plans are for teams that verify continuously, priced by the run in monthly verifications. Some tiers are still rolling out, so talk to us and we will set you up.</p>
         </div>
         <div className="tile-grid cols-3">
           {PLAN_CATALOG_V1.map((p) => (
