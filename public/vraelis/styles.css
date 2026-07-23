@@ -665,18 +665,39 @@ summary::-webkit-details-marker { display: none; }
 .lbl { font-family: var(--font-display); font-weight: 500; font-size: 13.5px; color: var(--fg-2); }
 .hint { font-size: 12.5px; color: var(--fg-4); }
 
-/* ─── App nav responsive: sidebar collapses to a top strip ─── */
+/* ─── App nav responsive ───
+   Desktop + tablet keep the full fixed sidebar (dense enough for real work; the locked design has a single
+   breakpoint). Mobile (<=860) hides the sidebar and moves navigation into an accessible drawer opened from
+   the topbar hamburger — a deliberate mobile layout, not a shrunk desktop strip. */
+.app-burger { display: none; }
+.slink:focus-visible, .app-burger:focus-visible, .app-drawer-x:focus-visible {
+  outline: 2px solid var(--acc-deep); outline-offset: 2px;
+}
 @media (max-width: 860px) {
   .app-shell { grid-template-columns: 1fr; }
-  .app-side {
-    position: static; height: auto; flex-direction: row; overflow-x: auto; gap: 4px;
-    border-right: none; border-bottom: 1px solid var(--line-1); padding: 10px var(--gutter);
-    scrollbar-width: none; /* hide the forced green strip scrollbar on mobile */
+  .app-side { display: none; }
+  .app-burger {
+    display: inline-grid; place-items: center; width: 38px; height: 38px; margin-left: 4px;
+    border: 1px solid var(--line-2); border-radius: 10px; background: var(--bg-1);
+    color: var(--fg-2); cursor: pointer; flex: none;
   }
-  .app-side::-webkit-scrollbar { display: none; }
-  .app-side__group, .app-side__foot { display: none; }
-  .slink { white-space: nowrap; padding: 8px 12px; }
 }
+/* The mobile drawer: fixed overlay, focus-trapped and Escape-closable in JS. The scrim blocks pointer
+   interaction with the page behind; body scroll is locked while it is open. */
+.app-drawer-root { position: fixed; inset: 0; z-index: 200; }
+.app-drawer-scrim { position: absolute; inset: 0; background: rgba(20,20,15,0.34); backdrop-filter: blur(2px); animation: drawerFade 170ms ease both; }
+.app-drawer {
+  position: absolute; top: 0; left: 0; bottom: 0; width: min(300px, 86vw);
+  background: var(--bg-0); border-right: 1px solid var(--line-2); box-shadow: var(--shadow-lg);
+  padding: 14px 14px calc(16px + env(safe-area-inset-bottom, 0px)); overflow-y: auto;
+  display: flex; flex-direction: column; gap: 4px;
+  animation: drawerIn 200ms cubic-bezier(0.22,1,0.36,1) both;
+}
+.app-drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 2px 6px 12px; }
+.app-drawer-x { display: inline-grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--line-2); border-radius: 9px; background: var(--bg-1); color: var(--fg-3); cursor: pointer; }
+@keyframes drawerFade { from { opacity: 0 } to { opacity: 1 } }
+@keyframes drawerIn { from { transform: translateX(-100%) } to { transform: none } }
+@media (prefers-reduced-motion: reduce) { .app-drawer, .app-drawer-scrim { animation: none } }
 
 /* tighten generic grid gaps used by the redesigned pages */
 .tile-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }

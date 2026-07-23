@@ -2,7 +2,7 @@
 
 // Vraelis chrome: public nav/footer for marketing pages, and a real sidebar
 // shell for the app so the product feels like one connected SaaS surface.
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -215,6 +215,9 @@ function AppTopbar({ email }: { email: string | null }) {
   const [menu, setMenu] = useState(false);
   const pathname = usePathname() || "";
   useEffect(() => { setMenu(false); }, [pathname]);
+  const menuBtn = useRef<HTMLButtonElement>(null);
+  const menuPanel = useRef<HTMLDivElement>(null);
+  useDismiss(menu, () => setMenu(false), { panel: menuPanel, trigger: menuBtn });
   // The layout's email can be stale-null when this shell was first rendered from a public
   // (static) page and kept across client navigation; self-resolve so the signed-in account
   // is always identifiable (never "?" / "your account" for a real session).
@@ -256,6 +259,8 @@ function AppTopbar({ email }: { email: string | null }) {
   const itemIcon = { display: "inline-flex", color: "var(--fg-4)", flex: "none" } as const;
   return (
     <header style={{ display: "flex", alignItems: "center", gap: 16, height: 64, padding: "0 var(--gutter)", borderBottom: "1px solid var(--line-1)", background: "rgba(250,248,244,0.88)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+      {/* Mobile-only hamburger: opens the accessible nav drawer. Hidden at desktop/tablet widths (CSS). */}
+      <MobileNav />
       {/* in-app logo returns to the APP home (app.vraelis.com/); leaving the product entirely is the
           sidebar's "Back to site" -> https://vraelis.com. Small left nudge centers over the sidebar. */}
       <span style={{ marginLeft: 14, marginTop: 4, display: "inline-flex", alignItems: "center" }}><Brand href="/" /></span>
@@ -295,7 +300,7 @@ function AppTopbar({ email }: { email: string | null }) {
         <Link href="/applications/new" className="btn vra-app-connect" style={{ padding: "9px 16px" }} aria-label="Connect app">
           +<span className="vra-app-connect__label"> Connect app</span>
         </Link>
-        <button onClick={() => setMenu((v) => !v)} aria-label="Account" style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px 6px 6px", borderRadius: 99, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", boxShadow: "var(--shadow-sm)" }}>
+        <button ref={menuBtn} onClick={() => setMenu((v) => !v)} aria-label="Account menu" aria-haspopup="menu" aria-expanded={menu} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px 6px 6px", borderRadius: 99, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", boxShadow: "var(--shadow-sm)" }}>
           {avatar ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={avatar} alt="" aria-hidden width={26} height={26} style={{ width: 26, height: 26, borderRadius: "50%", objectFit: "cover", display: "block" }} />
@@ -305,7 +310,7 @@ function AppTopbar({ email }: { email: string | null }) {
           <span aria-hidden style={{ display: "inline-flex", color: "var(--fg-3)" }}><Ic d={I.chevron} size={12} sw={2.2} /></span>
         </button>
         {menu && (
-          <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, width: 232, background: "var(--bg-1)", border: "1px solid var(--line-2)", borderRadius: 14, boxShadow: "var(--shadow-lg)", padding: 8, zIndex: 60 }}>
+          <div ref={menuPanel} role="menu" aria-label="Account" style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, width: 232, background: "var(--bg-1)", border: "1px solid var(--line-2)", borderRadius: 14, boxShadow: "var(--shadow-lg)", padding: 8, zIndex: 60 }}>
             <div style={{ padding: "8px 10px 10px", borderBottom: "1px solid var(--line-1)", marginBottom: 6 }}>
               <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-4)" }}>Signed in</div>
               <div style={{ fontSize: 13, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>{who || "your account"}</div>
@@ -331,13 +336,16 @@ const WS_ROLE: Record<string, string> = { owner: "Owner", admin: "Admin", editor
 function WorkspaceSwitcher() {
   const [data, setData] = useState<{ available: { id: string; name: string; role: string; isPersonal: boolean }[]; selectedId: string | null } | null>(null);
   const [open, setOpen] = useState(false);
+  const wsBtn = useRef<HTMLButtonElement>(null);
+  const wsPanel = useRef<HTMLDivElement>(null);
+  useDismiss(open, () => setOpen(false), { panel: wsPanel, trigger: wsBtn });
   useEffect(() => { fetch("/api/v/workspace/available").then((r) => (r.ok ? r.json() : null)).then(setData).catch(() => {}); }, []);
   if (!data || !data.available || data.available.length <= 1) return null; // only when the user belongs to >1 workspace
   const current = data.available.find((w) => w.id === data.selectedId) || data.available[0];
   function select(id: string) { document.cookie = `vws=${id}; path=/; max-age=31536000; samesite=lax`; window.location.href = "/app"; }
   return (
     <div style={{ position: "relative", margin: "2px 0 14px" }}>
-      <button onClick={() => setOpen((o) => !o)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "9px 11px", borderRadius: 10, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", textAlign: "left" }}>
+      <button ref={wsBtn} onClick={() => setOpen((o) => !o)} aria-haspopup="menu" aria-expanded={open} aria-label={`Workspace: ${current.isPersonal ? "Personal workspace" : current.name}. Switch workspace`} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "9px 11px", borderRadius: 10, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", textAlign: "left" }}>
         <span style={{ minWidth: 0 }}>
           <span style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{current.isPersonal ? "Personal workspace" : current.name}</span>
           <span style={{ display: "block", fontFamily: "var(--font-code)", fontSize: 10, color: "var(--fg-4)", marginTop: 1 }}>{WS_ROLE[current.role] ?? current.role}</span>
@@ -345,7 +353,7 @@ function WorkspaceSwitcher() {
         <span aria-hidden style={{ display: "inline-flex", color: "var(--fg-4)" }}><Ic d={I.chevron} size={12} sw={2.2} /></span>
       </button>
       {open && (
-        <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, background: "var(--bg-1)", border: "1px solid var(--line-2)", borderRadius: 12, boxShadow: "var(--shadow-lg)", padding: 6, zIndex: 70 }}>
+        <div ref={wsPanel} role="menu" aria-label="Switch workspace" style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, background: "var(--bg-1)", border: "1px solid var(--line-2)", borderRadius: 12, boxShadow: "var(--shadow-lg)", padding: 6, zIndex: 70 }}>
           {data.available.map((w) => (
             <button key={w.id} onClick={() => select(w.id)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "8px 10px", borderRadius: 8, border: "none", background: w.id === current.id ? "var(--acc-soft)" : "transparent", cursor: "pointer", textAlign: "left" }}>
               <span style={{ minWidth: 0 }}><span style={{ display: "block", fontSize: 13, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{w.isPersonal ? "Personal workspace" : w.name}</span><span style={{ fontSize: 10.5, color: "var(--fg-4)" }}>{WS_ROLE[w.role] ?? w.role}</span></span>
@@ -358,34 +366,128 @@ function WorkspaceSwitcher() {
   );
 }
 
-function AppSidebar() {
+// One dismissal contract for every pop-open control (account menu, workspace switcher, mobile drawer):
+// Escape closes it AND returns focus to the trigger, a pointer press outside closes it, and it is a no-op
+// while closed. Keeping this in one hook means every menu behaves identically for a keyboard user.
+function useDismiss(open: boolean, close: () => void, refs: { panel: RefObject<HTMLElement | null>; trigger: RefObject<HTMLElement | null> }) {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { e.stopPropagation(); close(); refs.trigger.current?.focus(); }
+    };
+    const onDown = (e: PointerEvent) => {
+      const t = e.target as Node;
+      if (!refs.panel.current?.contains(t) && !refs.trigger.current?.contains(t)) close();
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onDown, true);
+    return () => { document.removeEventListener("keydown", onKey); document.removeEventListener("pointerdown", onDown, true); };
+  }, [open, close, refs.panel, refs.trigger]);
+}
+
+// Resolve which nav item is the current page, mapping a retired-but-still-routable URL onto the item that
+// replaced it so a bookmarked /applications never renders the shell with nothing selected.
+function useActiveNav() {
   const pathname = usePathname() || "";
-  // A retired destination still has to light up the item that replaced it, or a bookmarked /applications URL
-  // renders the shell with nothing selected and the user cannot tell where they are.
   const aliasRoot = Object.keys(NAV_ALIASES).find((old) => pathname === old || pathname.startsWith(old + "/"));
   const effective = aliasRoot ? NAV_ALIASES[aliasRoot] : pathname;
-  const active = (href: string) => href === "/app"
+  return (href: string) => href === "/app"
     ? (effective === "/app" || effective === "/")
     : (effective === href || effective.startsWith(href + "/"));
-  const nav = APP_NAV;
+}
+
+// The nav body, shared byte-for-byte between the desktop sidebar and the mobile drawer, so the two can never
+// drift. `onNavigate` lets the drawer close itself when a link is followed.
+function NavItems({ onNavigate }: { onNavigate?: () => void }) {
+  const active = useActiveNav();
   return (
-    <aside className="app-side">
-      <WorkspaceSwitcher />
-      {nav.map((g) => (
+    <>
+      {APP_NAV.map((g) => (
         <div key={g.group}>
           <div className="app-side__group">{g.group}</div>
-          {g.items.map((it) => (
-            <Link key={it.href} href={it.href} className={`slink${active(it.href) ? " on" : ""}`}>
-              <span className="slink__i"><Ic d={it.d} /></span>{it.label}
-            </Link>
-          ))}
+          {g.items.map((it) => {
+            const on = active(it.href);
+            return (
+              <Link key={it.href} href={it.href} className={`slink${on ? " on" : ""}`} aria-current={on ? "page" : undefined} onClick={onNavigate}>
+                <span className="slink__i" aria-hidden><Ic d={it.d} /></span>{it.label}
+              </Link>
+            );
+          })}
         </div>
       ))}
       <div className="app-side__foot" style={{ marginTop: "auto", position: "sticky", bottom: 0, background: "var(--bg-0)", paddingTop: 12, paddingBottom: 4, borderTop: "1px solid var(--line-1)" }}>
-        <a href="https://vraelis.com" className="slink" style={{ color: "var(--fg-3)" }}><span className="slink__i"><Ic d={I.back} /></span>Back to site</a>
-        <button onClick={() => signOut({ callbackUrl: signOutTarget() })} className="slink" style={{ color: "var(--fg-3)", width: "100%", background: "none", border: "none", cursor: "pointer", textAlign: "left", fontFamily: "inherit", fontSize: 15.5, fontWeight: 500 }}><span className="slink__i"><Ic d={I.signout} /></span>Sign out</button>
+        <a href="https://vraelis.com" className="slink" style={{ color: "var(--fg-3)" }} onClick={onNavigate}><span className="slink__i" aria-hidden><Ic d={I.back} /></span>Back to site</a>
+        <button onClick={() => signOut({ callbackUrl: signOutTarget() })} className="slink" style={{ color: "var(--fg-3)", width: "100%", background: "none", border: "none", cursor: "pointer", textAlign: "left", fontFamily: "inherit", fontSize: 15.5, fontWeight: 500 }}><span className="slink__i" aria-hidden><Ic d={I.signout} /></span>Sign out</button>
       </div>
-    </aside>
+    </>
+  );
+}
+
+function AppSidebar() {
+  return (
+    <nav className="app-side" aria-label="Primary">
+      <WorkspaceSwitcher />
+      <NavItems />
+    </nav>
+  );
+}
+
+// Accessible mobile navigation: a hamburger trigger and a slide-in drawer that traps focus while open,
+// closes on Escape / backdrop press / following a link, and returns focus to the trigger. The backdrop
+// prevents pointer interaction with the page behind it; body scroll is locked while open.
+function MobileNav() {
+  const [open, setOpen] = useState(false);
+  const pathname = usePathname() || "";
+  const trigger = useRef<HTMLButtonElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
+  const close = () => setOpen(false);
+  useDismiss(open, close, { panel, trigger });
+
+  // Route change closes the drawer (belt-and-suspenders with per-link onNavigate).
+  useEffect(() => { setOpen(false); }, [pathname]);
+
+  // Lock body scroll + move initial focus into the drawer + trap Tab within it while open.
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const focusables = () => Array.from(panel.current?.querySelectorAll<HTMLElement>(
+      'a[href],button:not([disabled]),input,[tabindex]:not([tabindex="-1"])') ?? []);
+    focusables()[0]?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      const f = focusables();
+      if (f.length === 0) return;
+      const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => { document.body.style.overflow = prev; document.removeEventListener("keydown", onKey); };
+  }, [open]);
+
+  return (
+    <>
+      <button ref={trigger} className="app-burger" aria-label="Open navigation" aria-haspopup="dialog"
+        aria-expanded={open} aria-controls="app-drawer" onClick={() => setOpen(true)}>
+        <Ic d={I.menu} size={20} sw={1.9} />
+      </button>
+      {open && (
+        <div className="app-drawer-root" role="presentation">
+          <div className="app-drawer-scrim" onClick={close} aria-hidden />
+          <div ref={panel} id="app-drawer" className="app-drawer" role="dialog" aria-modal="true" aria-label="Navigation">
+            <div className="app-drawer-head">
+              <Brand href="/" />
+              <button className="app-drawer-x" aria-label="Close navigation" onClick={() => { close(); trigger.current?.focus(); }}>
+                <Ic d="M6 6l12 12M6 18L18 6" size={18} sw={2} />
+              </button>
+            </div>
+            <WorkspaceSwitcher />
+            <NavItems onNavigate={close} />
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

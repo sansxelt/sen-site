@@ -105,5 +105,42 @@ ok("the console promotion is gated on the app host, not global",
 ok("the public developers docs page exists", existsSync("app/rank/developers/page.tsx"));
 ok("the authenticated developers console page exists", existsSync("app/rank/app/developers/page.tsx"));
 
+console.log("\n── increment 2: landmarks, current-page indication, shared nav body ──");
+ok("the sidebar is a labelled nav landmark", /<nav className="app-side" aria-label="Primary">/.test(ui));
+ok("the active nav item is announced with aria-current=page", /aria-current=\{on \? "page" : undefined\}/.test(ui));
+ok("the nav body is a single shared component (sidebar + drawer cannot drift)",
+  /function NavItems\(/.test(ui) && (ui.match(/<NavItems/g) ?? []).length >= 2);
+ok("icon-only nav icons are aria-hidden (labels carry meaning)", /slink__i" aria-hidden/.test(ui));
+
+console.log("\n── increment 2: one accessible dismissal contract for every menu ──");
+ok("useDismiss exists (Escape + outside-press close every popover)", /function useDismiss\(/.test(ui));
+ok("Escape returns focus to the trigger", /refs\.trigger\.current\?\.focus\(\)/.test(ui));
+ok("account menu: haspopup + expanded state on the trigger", /aria-haspopup="menu" aria-expanded=\{menu\}/.test(ui));
+ok("account menu: the panel is role=menu", /role="menu" aria-label="Account"/.test(ui));
+ok("account menu wires the dismissal contract", /useDismiss\(menu, \(\) => setMenu\(false\)/.test(ui));
+ok("workspace switcher: haspopup + expanded state", /aria-haspopup="menu" aria-expanded=\{open\}/.test(ui));
+ok("workspace switcher: role=menu panel + dismissal", /role="menu" aria-label="Switch workspace"/.test(ui) && /useDismiss\(open, \(\) => setOpen\(false\)/.test(ui));
+
+console.log("\n── increment 2: accessible mobile navigation drawer ──");
+ok("the mobile hamburger is rendered in the topbar", /<MobileNav \/>/.test(ui));
+ok("hamburger: labelled, haspopup=dialog, expanded state, controls the drawer",
+  /aria-label="Open navigation"/.test(ui) && /aria-haspopup="dialog"/.test(ui)
+  && /aria-expanded=\{open\}/.test(ui) && /aria-controls="app-drawer"/.test(ui));
+ok("the drawer is a modal dialog", /id="app-drawer" className="app-drawer" role="dialog" aria-modal="true"/.test(ui));
+ok("the drawer traps Tab focus within itself", /if \(e\.key !== "Tab"\) return;/.test(ui) && /first\.focus\(\)/.test(ui) && /last\.focus\(\)/.test(ui));
+ok("the drawer moves initial focus inside on open", /focusables\(\)\[0\]\?\.focus\(\)/.test(ui));
+ok("the drawer locks body scroll while open", /document\.body\.style\.overflow = "hidden"/.test(ui));
+ok("the drawer closes on backdrop press, close button, Escape, and following a link",
+  /app-drawer-scrim" onClick=\{close\}/.test(ui) && /aria-label="Close navigation"/.test(ui) && /<NavItems onNavigate=\{close\}/.test(ui));
+ok("the drawer closes on route change", /useEffect\(\(\) => \{ setOpen\(false\); \}, \[pathname\]\)/.test(ui));
+
+console.log("\n── increment 2: the mobile layout is a drawer, not a shrunk desktop strip ──");
+const css = readFileSync("public/vraelis/styles.css", "utf8");
+ok("mobile hides the sidebar (no horizontal scroll strip)", /\.app-side \{ display: none; \}/.test(css) && !/\.app-side \{[^}]*flex-direction: row/.test(css));
+ok("the hamburger is desktop-hidden, mobile-shown", /\.app-burger \{ display: none; \}/.test(css) && /\.app-burger \{\s*display: inline-grid/.test(css));
+ok("the drawer + scrim are styled", /\.app-drawer \{/.test(css) && /\.app-drawer-scrim \{/.test(css));
+ok("visible keyboard focus across the shell", /\.slink:focus-visible/.test(css) && /outline: 2px solid var\(--acc-deep\)/.test(css));
+ok("drawer motion respects prefers-reduced-motion", /prefers-reduced-motion: reduce\) \{ \.app-drawer/.test(css));
+
 console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);
