@@ -17,6 +17,7 @@ import { apiBetaVisible } from "@/lib/preflight/api-beta-gate";
 import { getApiStatus } from "@/lib/preflight/runtime/platform-status";
 import { AppTabs } from "./app-tabs";
 import { LaunchPassButton } from "./launch-button";
+import { CancelRunControl } from "./cancel-run-control";
 import { PassPreview } from "./contract/pass-preview";
 import { CommandCenter } from "./command-center";
 import { nextAction, stateRibbon, type CommandState } from "@/lib/preflight/command-center";
@@ -347,6 +348,14 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
               {latestActive ? "View running verification" : decision === "blocked" ? "View failures" : decision === "needs_review" ? "View report" : "View verification report"} <span aria-hidden>→</span>
             </Link>
           </div>
+          {/* Run controls for a LIVE run — the cancellation surface. The read-only result page links here; the
+              mutation only ever happens on this application-detail run-control surface, EDITOR+ only, behind a
+              two-step confirm. Hidden entirely once the run reaches a terminal state (latestActive is false). */}
+          {latestActive && caps.canLaunch ? (
+            <div style={{ marginTop: 12 }}>
+              <CancelRunControl appId={id} runId={latest.id} />
+            </div>
+          ) : null}
           {/* A verified targeted repair NEWER than the launch health: shown separately, never as the verdict.
               The previous launch health stands until full verification completes. */}
           {repairIsSeparate && latestRepair ? (

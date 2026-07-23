@@ -25,8 +25,13 @@ export function CopyButton({ text, label = "Copy repair prompt" }: { text: strin
   }
 
   return (
-    <button type="button" className="btn btn--ghost" onClick={copy} style={{ fontSize: 12.5, padding: "7px 13px" }}>
-      {copied ? "Copied" : label}
-    </button>
+    <>
+      <button type="button" className="btn btn--ghost" onClick={copy} style={{ fontSize: 12.5, padding: "7px 13px" }}>
+        {copied ? "Copied" : label}
+      </button>
+      {/* Announce the copy to assistive tech without moving focus (a name change on the focused button is not
+          reliably re-read by screen readers). Empty until the copy succeeds, then politely announced. */}
+      <span role="status" aria-live="polite" className="sr-only">{copied ? "Copied to clipboard" : ""}</span>
+    </>
   );
 }

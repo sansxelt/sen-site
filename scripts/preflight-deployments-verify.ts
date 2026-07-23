@@ -205,7 +205,9 @@ ok("no other S4 surface renders provider_deployment_id",
 ok("migration-8 honesty on the report: one line naming the sql file, gated on deploymentStoreReady",
   reportRaw.includes("sql/vraelis-preflight-8-deployments.sql") && reportRaw.includes("deploymentStoreReady("));
 ok("contract and context versions render only when they exist (no placeholders)",
-  reportRaw.includes("internal.contractVersion != null ?") && /\{contextSnap \? <span>Context v/.test(reportRaw));
+  // The report derives `const contractVersion = internal.contractVersion` and renders every version through
+  // that alias (`contractVersion != null ? ...`), so the conditional-render intent holds under the alias.
+  /contractVersion != null \? <span>Contract v/.test(reportRaw) && /\{contextSnap \? <span>Context v/.test(reportRaw));
 ok("context version resolves through getSnapshot, best-effort",
   reportRaw.includes("getSnapshot(owner, pins.contextSnapshotId)") && reportRaw.includes("Promise.resolve(null)"));
 

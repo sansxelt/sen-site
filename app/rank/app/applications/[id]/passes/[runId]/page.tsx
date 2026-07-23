@@ -5,7 +5,7 @@ import { requirePreflightAppAccess } from "@/lib/v-preflight-guard";
 import { capabilities } from "@/lib/preflight/role-capabilities";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { getApplication, getContractById, listRequirements, type ContractRequirement } from "@/lib/v-applications";
-import { getRun, runContractId, listChildRuns, getRunLite, type RunFlow, type RunStep, type RunIssue, type ChildRun } from "@/lib/preflight/runs-db";
+import { getRun, listChildRuns, getRunLite, type RunFlow, type RunStep, type RunIssue, type ChildRun } from "@/lib/preflight/runs-db";
 import { getRunInternal, listFlowRunMeta, type FlowRunMeta } from "@/lib/preflight/run-report-db";
 import { runVersionPins, getDeployment, deploymentStoreReady } from "@/lib/preflight/deployments-db";
 import { getSnapshot } from "@/lib/preflight/context-snapshots";
@@ -249,7 +249,10 @@ function ScreenshotGrid({ runId, ids, min = 300 }: { runId: string; ids: string[
         <figure key={sid} style={{ margin: 0, minWidth: 0 }}>
           <a href={`/api/preflight/runs/${runId}/artifacts/${sid}`} target="_blank" rel="noopener noreferrer" style={{ display: "block" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`/api/preflight/runs/${runId}/artifacts/${sid}`} alt="Screenshot from this verification" loading="lazy" style={{ display: "block", width: "100%", maxWidth: "100%", height: "auto", border: "1px solid var(--line-2)", borderRadius: 10 }} />
+            {/* Reserve the box before the bytes arrive (a fixed aspect-ratio) so scrolling past lazy-loaded
+                evidence does not shift the page; object-fit: contain keeps each screenshot's true ratio
+                (no crop, no distortion, full evidence visible) inside the reserved space. */}
+            <img src={`/api/preflight/runs/${runId}/artifacts/${sid}`} alt="Screenshot from this verification" loading="lazy" style={{ display: "block", width: "100%", maxWidth: "100%", aspectRatio: "16 / 10", objectFit: "contain", background: "var(--bg-2)", border: "1px solid var(--line-2)", borderRadius: 10 }} />
           </a>
           <figcaption style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 6 }}>Screenshot from this verification</figcaption>
         </figure>
@@ -293,7 +296,7 @@ function FindingEvidence({ issue, index, flowName, screenshotIds, runId }: { iss
       {issue.likely_cause ? <div style={{ marginTop: 16, borderLeft: "3px solid var(--line-2)", paddingLeft: 12 }}><div style={label}>Possible cause (interpretation)</div><p style={{ fontSize: 13, color: "var(--fg-2)", lineHeight: 1.55, margin: "6px 0 0", wordBreak: "break-word" }}>{issue.likely_cause}</p></div> : null}
       {hasTechnical ? (
         <details style={{ marginTop: 14, border: "1px solid var(--line-2)", borderRadius: 8, padding: "10px 14px" }}>
-          <summary style={{ cursor: "pointer", fontSize: 13, color: "var(--fg-4)" }}>View technical details</summary>
+          <summary style={{ cursor: "pointer", fontSize: 13, color: "var(--fg-4)", padding: "6px 0" }}>View technical details</summary>
           <div style={{ display: "grid", gap: 6, marginTop: 10 }}>
             {issue.observed ? <div style={techLine}>{issue.observed}</div> : null}
             {requirementRefs.length ? <div style={techLine}>Requirement refs: {requirementRefs.join(", ")}</div> : null}
@@ -328,8 +331,8 @@ function FlowTimeline({ flow, displayName, screenshotIds, runId, showShots }: { 
         <div style={{ marginTop: 8, border: "1px solid var(--line-2)", borderRadius: "var(--r-sm, 8px)", background: "var(--bg-2)", padding: "10px 12px" }}>
           <div style={{ ...label, display: "flex", alignItems: "center", gap: 6 }}><Ic d={I.lock} size={12} sw={2} />Authenticated flow</div>
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "5px 14px", marginTop: 7, fontSize: 12.5, color: "var(--fg-3)" }}>
-            {auth.roles.length ? <span>Role{auth.roles.length === 1 ? "" : "s"}: <span style={{ color: "var(--fg-2)", fontWeight: 600 }}>{auth.roles.join(", ")}</span></span> : null}
-            {auth.accountLabel ? <span>Account: {auth.accountLabel}</span> : null}
+            {auth.roles.length ? <span style={{ overflowWrap: "anywhere", minWidth: 0 }}>Role{auth.roles.length === 1 ? "" : "s"}: <span style={{ color: "var(--fg-2)", fontWeight: 600 }}>{auth.roles.join(", ")}</span></span> : null}
+            {auth.accountLabel ? <span style={{ overflowWrap: "anywhere", minWidth: 0 }}>Account: {auth.accountLabel}</span> : null}
             {auth.environment ? <span className="pill" style={{ fontSize: 10 }}>{ENV_LABELS[auth.environment] ?? auth.environment}</span> : null}
             <span>Credential: <span style={{ color: auth.credentialState === "active" ? "var(--acc-deep)" : "#B45309", fontWeight: 600 }}>{CRED_STATE_LABEL[auth.credentialState] ?? auth.credentialState}</span></span>
             {auth.sessionReuse ? <span>Session reuse on</span> : null}
@@ -339,7 +342,7 @@ function FlowTimeline({ flow, displayName, screenshotIds, runId, showShots }: { 
       ) : null}
       {flow.steps.length ? (
         <details open={failed} style={{ marginTop: 8 }}>
-          <summary style={{ cursor: "pointer", fontSize: 13, color: "var(--fg-4)" }}>View steps</summary>
+          <summary style={{ cursor: "pointer", fontSize: 13, color: "var(--fg-4)", padding: "6px 0" }}>View steps</summary>
           <ol style={{ listStyle: "none", margin: "10px 0 0", padding: 0, display: "grid", gap: 6 }}>
             {flow.steps.map((s: RunStep, i) => {
               const okk = s.status === "ok";
@@ -349,8 +352,11 @@ function FlowTimeline({ flow, displayName, screenshotIds, runId, showShots }: { 
                   <span aria-hidden style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-5)", flex: "none", marginTop: 2, width: 18, textAlign: "right" }}>{i + 1}</span>
                   <span aria-hidden style={{ display: "inline-flex", color: okk ? "var(--acc-deep)" : stepFailed ? "var(--a-failed, #A8452A)" : "var(--fg-4)", flex: "none", marginTop: 3 }}><Ic d={okk ? I.check : stepFailed ? I.x : I.dash} size={13} sw={2.4} /></span>
                   <div style={{ flex: 1, minWidth: 0 }}>
+                    {/* The pass/fail/not-run outcome is otherwise only an aria-hidden icon + background tint;
+                        this makes the per-step outcome available to assistive tech (WCAG 1.1.1 / 1.4.1). */}
+                    <span className="sr-only">{okk ? "Passed. " : stepFailed ? "Failed. " : "Not run. "}</span>
                     <div style={{ fontSize: 13, color: "var(--fg-1)", lineHeight: 1.45, wordBreak: "break-word" }}>{stepText(s.action, s.target)}</div>
-                    {stepFailed && s.observed ? <details style={{ marginTop: 4 }}><summary style={{ cursor: "pointer", fontSize: 12, color: "var(--fg-4)" }}>Error detail</summary><div style={{ fontSize: 12, color: "var(--fg-3)", wordBreak: "break-all", lineHeight: 1.5, marginTop: 4 }}>{s.observed}</div></details> : null}
+                    {stepFailed && s.observed ? <details style={{ marginTop: 4 }}><summary style={{ cursor: "pointer", fontSize: 12, color: "var(--fg-4)", padding: "4px 0" }}>Error detail</summary><div style={{ fontSize: 12, color: "var(--fg-3)", wordBreak: "break-all", lineHeight: 1.5, marginTop: 4 }}>{s.observed}</div></details> : null}
                   </div>
                   <span style={{ fontSize: 11, color: "var(--fg-5)", flex: "none", marginTop: 2 }}>{s.ms != null ? `${s.ms} ms` : ""}</span>
                 </li>
@@ -376,10 +382,11 @@ export default async function VerificationResultPage({ params }: { params: Promi
   if (!(await preflightDbReady())) return <SetupRequired />;
 
   // One loading wave: everything keyed only on owner+id+runId. Steps are batched inside getRun (one .in query),
-  // never per-flow. contract/requirements/pins fan out in a second wave once their ids are known.
-  const [detail, internal, app, meta, contractId, children] = await Promise.all([
+  // never per-flow. contract/requirements/pins fan out in a second wave once their ids are known. getRunInternal
+  // already returns the run's contract_id, so it is not read a second time here.
+  const [detail, internal, app, meta, children] = await Promise.all([
     getRun(owner, runId), getRunInternal(owner, runId), getApplication(owner, id), listFlowRunMeta(owner, runId),
-    runContractId(owner, runId), listChildRuns(owner, runId),
+    listChildRuns(owner, runId),
   ]);
 
   // Not owned / not found, or the run belongs to a different application than the URL claims. Same 404 for
@@ -389,7 +396,7 @@ export default async function VerificationResultPage({ params }: { params: Promi
       <div className="wrap" style={{ maxWidth: 1080, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
         <div className="empty">
           <EmptyIcon d={I.slash} />
-          <h3 style={{ ...h2Style, fontSize: "1.4rem" }}>Verification not found</h3>
+          <h1 style={{ ...h2Style, fontSize: "1.4rem" }}>Verification not found</h1>
           <p>This verification does not exist, or it belongs to another account.</p>
           <Link href={`/applications/${id}`} className="btn">Back to application</Link>
         </div>
@@ -403,8 +410,8 @@ export default async function VerificationResultPage({ params }: { params: Promi
   // Missing ids resolve to null (never substituted with a latest/current object).
   const pins = await runVersionPins(owner, runId);
   const [contract, requirements, deployment, contextSnap, deploymentsReady, parentLite, reviewedPlan] = await Promise.all([
-    contractId ? getContractById(owner, contractId) : Promise.resolve(null),
-    contractId ? listRequirements(owner, contractId) : Promise.resolve([] as ContractRequirement[]),
+    internal.contractId ? getContractById(owner, internal.contractId) : Promise.resolve(null),
+    internal.contractId ? listRequirements(owner, internal.contractId) : Promise.resolve([] as ContractRequirement[]),
     pins.deploymentId ? getDeployment(owner, pins.deploymentId) : Promise.resolve(null),
     pins.contextSnapshotId ? getSnapshot(owner, pins.contextSnapshotId) : Promise.resolve(null),
     deploymentStoreReady(owner),
@@ -583,7 +590,7 @@ export default async function VerificationResultPage({ params }: { params: Promi
                 {/* Current requirement TEXT only — no per-requirement pass mark (a current requirement is context,
                     not proof this run checked it; the requirement->finding linkage is a later increment). */}
                 {requirements.filter((r) => r.enabled).length > 0 ? (
-                  <ul style={{ margin: 0, padding: "0 0 0 18px", display: "grid", gap: 5 }}>
+                  <ul style={{ margin: 0, padding: "0 0 0 18px", display: "grid", gap: 5, maxWidth: "68ch" }}>
                     {requirements.filter((r) => r.enabled).map((r) => (
                       <li key={r.id} style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5, wordBreak: "break-word" }}>{r.requirement}</li>
                     ))}
@@ -684,7 +691,7 @@ export default async function VerificationResultPage({ params }: { params: Promi
                 <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 8 }}>
                   {affectedResolved.map((a) => (
                     <li key={a.rid} style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap", borderLeft: "2px solid var(--line-3)", paddingLeft: 12 }}>
-                      <span style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5, flex: "1 1 auto", minWidth: 0, wordBreak: "break-word" }}>{a.text}</span>
+                      <span style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5, flex: "1 1 auto", minWidth: 0, maxWidth: "68ch", wordBreak: "break-word" }}>{a.text}</span>
                       <a href={`#finding-${a.findingId}`} style={{ fontSize: 12.5, color: "var(--acc-deep)", flex: "none", textDecoration: "none" }}>See finding {a.findingIndex + 1}</a>
                     </li>
                   ))}
@@ -828,7 +835,7 @@ export default async function VerificationResultPage({ params }: { params: Promi
               {deployEnvLabel ? <span className="pill" style={{ fontSize: 10 }}>{deployEnvLabel}</span> : null}
               {deployProviderLabel ? <span>Provider: {deployProviderLabel}</span> : null}
               {deployCommit ? <span>Commit {deployCommit}</span> : null}
-              {deployment?.branch ? <span>Branch {deployment.branch}</span> : null}
+              {deployment?.branch ? <span style={{ overflowWrap: "anywhere", minWidth: 0 }}>Branch {deployment.branch}</span> : null}
               {contextSnap ? <span>Context v{contextSnap.version}</span> : null}
               <span title={when(completedIso)}>{active ? `Started ${when(run.created_at)}` : `Executed ${when(completedIso)}`}</span>
             </div>
@@ -839,7 +846,7 @@ export default async function VerificationResultPage({ params }: { params: Promi
             ) : null}
             {deployment?.provider_deployment_id ? (
               <details style={{ marginTop: 2 }}>
-                <summary style={{ cursor: "pointer", fontSize: 12.5, color: "var(--fg-4)" }}>View technical details</summary>
+                <summary style={{ cursor: "pointer", fontSize: 12.5, color: "var(--fg-4)", padding: "6px 0" }}>View technical details</summary>
                 <div style={{ fontSize: 12.5, color: "var(--fg-3)", wordBreak: "break-all", lineHeight: 1.5, marginTop: 6 }}>Provider deployment id: {deployment.provider_deployment_id}</div>
               </details>
             ) : null}

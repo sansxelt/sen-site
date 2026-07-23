@@ -98,7 +98,9 @@ console.log("\n── the locked hierarchy + a11y skeleton ──");
 for (const [n, aria] of [["02", "Submitted claim"], ["03", "Outcome"], ["04", "Evidence"], ["05", "Execution journey"], ["06", "Affected requirements"], ["07", "Repair handoff"], ["08", "Reverification"], ["09", "Provenance and immutable history"]] as const) {
   ok(`section ${n} (${aria}) is present as a labelled region`, new RegExp(`n="${n}"[\\s\\S]{0,80}aria="${aria}"`).test(page) || page.includes(`aria="${aria}"`));
 }
-ok("exactly one h1 (the system subject); sections use h2", (page.match(/<h1/g) ?? []).length === 1 && /<h2/.test(page));
+// Two <h1> tags exist in source but in MUTUALLY EXCLUSIVE return paths (the not-found early return and the main
+// record), so any RENDERED page has exactly one h1 and the error state no longer starts its hierarchy at h3.
+ok("each rendered state has exactly one h1 (not-found + the record); sections use h2", (page.match(/<h1/g) ?? []).length === 2 && /<h1[^>]*>Verification not found<\/h1>/.test(page) && /<h2/.test(page));
 ok("the conclusion is conveyed by text, not colour alone (a labelled chip)", /<Chip tone=\{verdict\.tone\} label=\{verdict\.label\}/.test(page));
 
 console.log("\n── Increment 2: submitted claim (plain text, source_prompt only, drift-honest contract) ──");
@@ -208,6 +210,43 @@ ok("the reviewed-plan id and plan hash are copyable identifiers when present", /
 for (const s of ["approved_by", "deployment_fp", "claim_fp", "role_refs"]) {
   ok(`no internal reviewed-plan field leaks into the page: ${s}`, !new RegExp(s).test(shown));
 }
+
+console.log("\n── Increment 6: cancellation restored on the run-control surface; result page stays read-only ──");
+const detail6 = readFileSync("app/rank/app/applications/[id]/page.tsx", "utf8");
+const cancelCtl = readFileSync("app/rank/app/applications/[id]/cancel-run-control.tsx", "utf8");
+const detailFlat = detail6.replace(/\n/g, " ");
+// The result page remains a read-only record: no cancel mutator, no cancel fetch; it only NAVIGATES to controls.
+ok("the result page still has no cancellation mutator and only navigates to controls", !/CancelRunButton|CancelRunControl/.test(page) && !/\/cancel/.test(shown) && /View run controls/.test(page));
+// The cancellation capability lives on the application-detail run-control surface, editor+ and active-only.
+ok("the detail page renders the cancel control ONLY for a genuinely active run to an editor+ member", /latestActive && caps\.canLaunch \?[\s\S]{0,140}<CancelRunControl appId=\{id\} runId=\{latest\.id\}/.test(detailFlat));
+ok("the cancel control is gated so a completed/terminal record shows none (single, latestActive-gated usage)", (detail6.match(/<CancelRunControl\b/g) ?? []).length === 1 && detail6.indexOf("latestActive && caps.canLaunch") < detail6.indexOf("<CancelRunControl"));
+// The control uses the EXISTING owner-checked route; it invents no new cancellation API and reuses no deleted file.
+ok("the control POSTs the existing owner-checked cancel route (no new API)", /fetch\(`\/api\/preflight\/runs\/\$\{encodeURIComponent\(runId\)\}\/cancel`, \{ method: "POST" \}\)/.test(cancelCtl));
+ok("the deleted result-page cancel mutator is not revived (cancel-run-button.tsx under passes/ is gone)", (() => { try { readFileSync("app/rank/app/applications/[id]/passes/[runId]/cancel-run-button.tsx", "utf8"); return false; } catch { return true; } })());
+// Two-step explicit confirm: a first click only ARMS; only a distinct Confirm mutates (never on nav/first click).
+ok("cancellation is a two-step explicit confirm (arm, then Confirm cancel) — never on first click or navigation", /setAsked\(true\)/.test(cancelCtl) && /Confirm cancel/.test(cancelCtl) && /onClick=\{cancel\}/.test(cancelCtl) && cancelCtl.indexOf("setAsked(true)") < cancelCtl.indexOf("onClick={cancel}"));
+// Pending state prevents duplicate requests.
+ok("a pending (busy) state blocks duplicate requests and disables both buttons", /if \(busy \|\| done\) return;/.test(cancelCtl) && (cancelCtl.match(/disabled=\{busy\}/g) ?? []).length >= 2);
+// Success shows a truthful resulting state + refresh; failure is announced accessibly; 401 -> sign-in; 403 explained.
+ok("success shows a truthful 'Cancellation requested' state and refreshes the server view", /setDone\(true\)/.test(cancelCtl) && /router\.refresh\(\)/.test(cancelCtl) && /Cancellation requested\. This run will stop shortly\./.test(cancelCtl));
+ok("failure is announced in an accessible live region; 401 routes to sign-in; 403 states the view-only cause", /role="status" aria-live="polite"/.test(cancelCtl) && /res\.status === 401/.test(cancelCtl) && /view-only access/.test(cancelCtl));
+
+console.log("\n── Increment 6: accessibility + responsive + performance closure (from the rendered review) ──");
+const copyBtn = readFileSync("app/rank/app/applications/[id]/passes/[runId]/copy-button.tsx", "utf8");
+// a11y: copy success is announced in a polite live region without moving focus (name-change alone is not read).
+ok("the copy button announces success via a polite sr-only live region (focus is not stolen)", /role="status" aria-live="polite" className="sr-only"/.test(copyBtn) && /Copied to clipboard/.test(copyBtn) && !/\.focus\(\)/.test(copyBtn));
+// a11y: per-step pass/fail/not-run is available non-visually, not by icon + color alone.
+ok("each execution step exposes its outcome to assistive tech, not by colour/icon alone", /<span className="sr-only">\{okk \? "Passed\. " : stepFailed \? "Failed\. " : "Not run\. "\}<\/span>/.test(page));
+// a11y: the not-found state has a single top-level h1 (no h3-first hierarchy).
+ok("the not-found state uses an h1 (no skipped heading levels)", /<h1[^>]*>Verification not found<\/h1>/.test(page));
+// a11y: disclosure toggles carry vertical padding for an adequate touch target.
+ok("disclosure summaries have vertical padding for a usable touch target", (page.match(/<summary style=\{\{ cursor: "pointer"[^}]*padding: "[46]px 0" \}\}/g) ?? []).length >= 4);
+// responsive: long unbreakable meta values (account email, branch) wrap instead of being clipped by overflow-x:clip.
+ok("free-text meta values (account, roles, branch) wrap and are never silently clipped", (page.match(/overflowWrap: "anywhere"/g) ?? []).length >= 3);
+// visual: evidence screenshots reserve their box (no layout shift) WITHOUT cropping or distorting the evidence.
+ok("evidence screenshots reserve space to avoid layout shift, without cropping the evidence", /aspectRatio: "16 \/ 10", objectFit: "contain"/.test(page));
+// perf: the run's contract row is read once (getRunInternal), not a second redundant time.
+ok("the run's contract id is read once via getRunInternal, not re-fetched", !/runContractId/.test(page) && /internal\.contractId \? getContractById\(owner, internal\.contractId\)/.test(page));
 
 console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);
