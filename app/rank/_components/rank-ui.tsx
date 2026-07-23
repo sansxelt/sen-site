@@ -299,7 +299,7 @@ function AppTopbar({ email }: { email: string | null }) {
         <Link href="/applications/new" className="btn vra-app-connect" style={{ padding: "9px 16px" }} aria-label="Connect app">
           +<span className="vra-app-connect__label"> Connect app</span>
         </Link>
-        <button ref={menuBtn} onClick={() => setMenu((v) => !v)} aria-label="Account menu" aria-haspopup="menu" aria-expanded={menu} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px 6px 6px", borderRadius: 99, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", boxShadow: "var(--shadow-sm)" }}>
+        <button ref={menuBtn} onClick={() => setMenu((v) => !v)} aria-label="Account menu" aria-expanded={menu} aria-controls="acct-menu" style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px 6px 6px", borderRadius: 99, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", boxShadow: "var(--shadow-sm)" }}>
           {avatar ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={avatar} alt="" aria-hidden width={26} height={26} style={{ width: 26, height: 26, borderRadius: "50%", objectFit: "cover", display: "block" }} />
@@ -309,7 +309,10 @@ function AppTopbar({ email }: { email: string | null }) {
           <span aria-hidden style={{ display: "inline-flex", color: "var(--fg-3)" }}><Ic d={I.chevron} size={12} sw={2.2} /></span>
         </button>
         {menu && (
-          <div ref={menuPanel} role="menu" aria-label="Account" style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, width: 232, background: "var(--bg-1)", border: "1px solid var(--line-2)", borderRadius: 14, boxShadow: "var(--shadow-lg)", padding: 8, zIndex: 60 }}>
+          // A native disclosure popover, not an ARIA menu: ordinary links + a button navigated with Tab. The
+          // trigger's aria-expanded + aria-controls describe it; the menu role and its arrow-key roving-focus
+          // contract are intentionally omitted because Tab is the real behaviour.
+          <div ref={menuPanel} id="acct-menu" style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, width: 232, background: "var(--bg-1)", border: "1px solid var(--line-2)", borderRadius: 14, boxShadow: "var(--shadow-lg)", padding: 8, zIndex: 60 }}>
             <div style={{ padding: "8px 10px 10px", borderBottom: "1px solid var(--line-1)", marginBottom: 6 }}>
               <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-4)" }}>Signed in</div>
               <div style={{ fontSize: 13, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>{who || "your account"}</div>
@@ -344,7 +347,7 @@ function WorkspaceSwitcher() {
   function select(id: string) { document.cookie = `vws=${id}; path=/; max-age=31536000; samesite=lax`; window.location.href = "/app"; }
   return (
     <div style={{ position: "relative", margin: "2px 0 14px" }}>
-      <button ref={wsBtn} onClick={() => setOpen((o) => !o)} aria-haspopup="menu" aria-expanded={open} aria-label={`Workspace: ${current.isPersonal ? "Personal workspace" : current.name}. Switch workspace`} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "9px 11px", borderRadius: 10, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", textAlign: "left" }}>
+      <button ref={wsBtn} onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls="ws-switch" aria-label={`Workspace: ${current.isPersonal ? "Personal workspace" : current.name}. Switch workspace`} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "9px 11px", borderRadius: 10, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", textAlign: "left" }}>
         <span style={{ minWidth: 0 }}>
           <span style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{current.isPersonal ? "Personal workspace" : current.name}</span>
           <span style={{ display: "block", fontFamily: "var(--font-code)", fontSize: 10, color: "var(--fg-4)", marginTop: 1 }}>{WS_ROLE[current.role] ?? current.role}</span>
@@ -352,7 +355,7 @@ function WorkspaceSwitcher() {
         <span aria-hidden style={{ display: "inline-flex", color: "var(--fg-4)" }}><Ic d={I.chevron} size={12} sw={2.2} /></span>
       </button>
       {open && (
-        <div ref={wsPanel} role="menu" aria-label="Switch workspace" style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, background: "var(--bg-1)", border: "1px solid var(--line-2)", borderRadius: 12, boxShadow: "var(--shadow-lg)", padding: 6, zIndex: 70 }}>
+        <div ref={wsPanel} id="ws-switch" style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, background: "var(--bg-1)", border: "1px solid var(--line-2)", borderRadius: 12, boxShadow: "var(--shadow-lg)", padding: 6, zIndex: 70 }}>
           {data.available.map((w) => (
             <button key={w.id} onClick={() => select(w.id)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "8px 10px", borderRadius: 8, border: "none", background: w.id === current.id ? "var(--acc-soft)" : "transparent", cursor: "pointer", textAlign: "left" }}>
               <span style={{ minWidth: 0 }}><span style={{ display: "block", fontSize: 13, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{w.isPersonal ? "Personal workspace" : w.name}</span><span style={{ fontSize: 10.5, color: "var(--fg-4)" }}>{WS_ROLE[w.role] ?? w.role}</span></span>

@@ -112,14 +112,25 @@ ok("the nav body is a single shared component (sidebar + drawer cannot drift)",
   /function NavItems\(/.test(ui) && (ui.match(/<NavItems/g) ?? []).length >= 2);
 ok("icon-only nav icons are aria-hidden (labels carry meaning)", /slink__i" aria-hidden/.test(ui));
 
-console.log("\n── increment 2: one accessible dismissal contract for every menu ──");
+console.log("\n── one accessible dismissal contract for every popover ──");
 ok("useDismiss exists (Escape + outside-press close every popover)", /function useDismiss\(/.test(ui));
 ok("Escape returns focus to the trigger", /refs\.trigger\.current\?\.focus\(\)/.test(ui));
-ok("account menu: haspopup + expanded state on the trigger", /aria-haspopup="menu" aria-expanded=\{menu\}/.test(ui));
-ok("account menu: the panel is role=menu", /role="menu" aria-label="Account"/.test(ui));
+ok("outside-press restores focus to the trigger on non-focusable space", /if \(!el\) refs\.trigger\.current\?\.focus\(\)/.test(ui));
+
+console.log("\n── account + workspace popovers use NATIVE popover semantics, not an unimplemented ARIA menu ──");
+// role=menu advertises arrow-key roving focus; these popovers navigate with Tab, so they must NOT claim it.
+// The disclosure contract is: a button trigger with aria-expanded + aria-controls pointing at the panel id.
+ok("NO role=menu / role=menuitem anywhere in the shell", !/role="menu"/.test(ui) && !/role="menuitem"/.test(ui));
+ok("NO aria-haspopup=\"menu\" anywhere (menu keyboard contract is not implemented)", !/aria-haspopup="menu"/.test(ui));
+ok("account trigger: expanded + controls the panel by id, no false menu affordance",
+  /aria-expanded=\{menu\} aria-controls="acct-menu"/.test(ui) && /id="acct-menu"/.test(ui));
 ok("account menu wires the dismissal contract", /useDismiss\(menu, \(\) => setMenu\(false\)/.test(ui));
-ok("workspace switcher: haspopup + expanded state", /aria-haspopup="menu" aria-expanded=\{open\}/.test(ui));
-ok("workspace switcher: role=menu panel + dismissal", /role="menu" aria-label="Switch workspace"/.test(ui) && /useDismiss\(open, \(\) => setOpen\(false\)/.test(ui));
+ok("workspace trigger: expanded + controls the panel by id",
+  /aria-expanded=\{open\} aria-controls="ws-switch"/.test(ui) && /id="ws-switch"/.test(ui));
+ok("workspace switcher wires the dismissal contract", /useDismiss\(open, \(\) => setOpen\(false\)/.test(ui));
+// The one place aria-haspopup is correct: the mobile drawer genuinely IS a modal dialog (role=dialog,
+// aria-modal, focus trap), so it keeps aria-haspopup="dialog".
+ok("aria-haspopup is used ONLY for the drawer, and only as dialog", (ui.match(/aria-haspopup="dialog"/g) ?? []).length === 1 && !/aria-haspopup="(menu|listbox|grid|tree)"/.test(ui));
 
 console.log("\n── increment 2: accessible mobile navigation drawer ──");
 ok("the mobile hamburger is rendered in the topbar", /<MobileNav \/>/.test(ui));
