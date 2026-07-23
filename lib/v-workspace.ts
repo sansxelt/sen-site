@@ -7,9 +7,6 @@
 import crypto from "crypto";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { logEvent } from "./v-events";
-import { getReport } from "./v-db";
-import { evaluationIntelligence } from "./v-intelligence";
-import { projectAnalytics, projectSourceQuality } from "./v-analytics";
 import { sendInviteEmail, type InviteDelivery } from "./email";
 import { allow } from "./vraelis-ratelimit";
 import { canAddPaidSeat, logSeatChange, PAID_SEAT_ROLES, hasActiveTeamBillingForTransferGuard } from "./v-team-billing";
@@ -597,51 +594,6 @@ async function sharedProjectsForEmail(email: string): Promise<SharedProject[]> {
     }
     return out;
   } catch { return []; }
-}
-
-// Client-safe per-evaluation summary (recommendation/confidence/margin/signal) —
-// derived, no private internals (no sources, screening, IPs, or owner controls).
-export type SharedEval = { test_id: string; title: string; status: string; recommended: string | null; confidence: string | null; margin: number | null; signal: string | null };
-async function projectSharedEvals(projectId: string): Promise<SharedEval[]> {
-  try {
-    const s = getSupabaseAdminClient();
-    const { data } = await s.from("v_tests" as never).select("id,title,status,votes_target,is_sandbox").eq("project_id", projectId).order("created_at", { ascending: false }).limit(200);
-    const rows = ((data as unknown as { id: string; title: string; status: string; votes_target: number; is_sandbox?: boolean }[]) ?? []).filter((t) => !t.is_sandbox);
-    const out: SharedEval[] = [];
-    for (const t of rows) {
-      if (t.status !== "complete") { out.push({ test_id: t.id, title: t.title, status: t.status, recommended: null, confidence: null, margin: null, signal: null }); continue; }
-      const rep = await getReport(t.id);
-      if (!rep) { out.push({ test_id: t.id, title: t.title, status: t.status, recommended: null, confidence: null, margin: null, signal: null }); continue; }
-      const intel = evaluationIntelligence(rep.results, t.votes_target);
-      out.push({ test_id: t.id, title: t.title, status: t.status, recommended: intel.recommendedOption ? `Option ${intel.recommendedOption}` : null, confidence: intel.confidenceLabel === "None" ? null : intel.confidenceLabel, margin: intel.marginPts, signal: intel.signalLabel });
-    }
-    return out;
-  } catch { return []; }
-}
-
-// The shared-project view. Client viewers get the client-safe report list only;
-// editor/viewer/admin/owner additionally get read-only aggregate analytics (decision
-// quality, signal quality, source quality) — computed via the project OWNER's id so
-// it reuses the verified analytics aggregation, gated by the access check above.
-export type SharedProjectView = {
-  project: { id: string; name: string; description: string | null };
-  role: Role; level: "owner" | "workspace" | "project";
-  evaluations: SharedEval[];
-  analytics: Awaited<ReturnType<typeof projectAnalytics>> | null;
-  sources: Awaited<ReturnType<typeof projectSourceQuality>> | null;
-};
-export async function sharedProjectView(email: string, projectId: string): Promise<SharedProjectView | null> {
-  const access = await getProjectAccessRole(email, projectId);
-  if (!access) return null;
-  const meta = await projectMeta(projectId);
-  if (!meta) return null;
-  const showAnalytics = access.role !== "client_viewer";
-  const [evaluations, analytics, sources] = await Promise.all([
-    projectSharedEvals(projectId),
-    showAnalytics ? projectAnalytics(meta.owner, projectId) : Promise.resolve(null),
-    showAnalytics ? projectSourceQuality(meta.owner, projectId) : Promise.resolve(null),
-  ]);
-  return { project: { id: projectId, name: meta.name, description: meta.description }, role: access.role, level: access.level, evaluations, analytics, sources };
 }
 
 // ── Tokenized invite acceptance ──
