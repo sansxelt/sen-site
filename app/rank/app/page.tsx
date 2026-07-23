@@ -99,11 +99,12 @@ export default async function Home() {
 
   return (
     <div className="wrap" style={{ maxWidth: 1080, paddingTop: "clamp(20px, 2.6vw, 32px)", paddingBottom: 80, display: "flex", flexDirection: "column", gap: 26 }}>
-      {/* Compact context line: the person and their standing, not a dashboard of tiles. */}
+      {/* Compact context line: the person and their standing, not a dashboard of tiles. This is a greeting, not
+          a heading — the composer's "What should be true?" is the page's single h1. */}
       <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
-        <h1 style={{ fontSize: 15, fontWeight: 600, color: "var(--fg-2)", margin: 0, letterSpacing: "-0.01em" }}>
+        <p style={{ fontSize: 15, fontWeight: 600, color: "var(--fg-2)", margin: 0, letterSpacing: "-0.01em" }}>
           {displayName ? `Welcome back, ${displayName}` : "Welcome back"}
-        </h1>
+        </p>
         <span style={{ flex: 1 }} />
         <span className="badge-now">{planName} plan</span>
         {isAdmin(email) && <Link href="/app/admin" style={{ fontSize: 12.5, color: "var(--fg-4)" }}>Admin</Link>}

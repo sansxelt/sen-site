@@ -25,7 +25,9 @@ type Phase =
   | { k: "plan"; plan: PlanView; bound: Bound; busy?: "approving" | "executing" }
   | { k: "running"; id: string; requirements: string[]; v: Verification | null }
   | { k: "done"; id: string; v: Verification }
-  | { k: "error"; error: ClientError; plan?: PlanView; bound?: Bound };
+  // verificationId is present ONLY when the error follows a started (paid) run — a poll timeout/blip, not a
+  // failed launch. It changes the recovery: open/keep watching the real run, never "try again" a fresh paid one.
+  | { k: "error"; error: ClientError; plan?: PlanView; bound?: Bound; verificationId?: string };
 
 const DECISION: Record<Decision, { label: string; tone: "verified" | "failed" | "blocked"; line: string }> = {
   verified: { label: "Verified", tone: "verified", line: "The claim held, with evidence." },
@@ -110,8 +112,10 @@ export function Composer({ balance }: { balance: number }) {
       onUpdate: (v) => setPhase((p) => (p.k === "running" && p.id === verificationId ? { ...p, v } : p)),
     });
     if (g !== gen.current) return;
+    // The run is already paid and running. If the poll ends without a verdict (timeout/blip/cancelled), carry
+    // the id so recovery is "open the record", never a second paid run.
     if (final.ok) setPhase({ k: "done", id: verificationId, v: final.value });
-    else setPhase({ k: "error", error: final.error });
+    else setPhase({ k: "error", error: final.error, verificationId });
   }
 
   function reset() { gen.current++; abort.current?.abort(); setPhase({ k: "compose" }); }
@@ -164,8 +168,8 @@ export function Composer({ balance }: { balance: number }) {
       )}
 
       {phase.k === "not_provable" && (
-        <div role="status" style={{ marginTop: 16, border: "1px solid #E4D9BE", borderRadius: "var(--r-lg, 14px)", overflow: "hidden", background: "#FBF7EC" }}>
-          <div style={{ padding: "13px 16px", borderBottom: "1px solid #EADFC4" }}>
+        <div role="status" style={{ marginTop: 16, border: "1px solid #E4D9BE", borderRadius: "var(--r-lg, 14px)", overflow: "hidden", background: "#F2ECDD" }}>
+          <div style={{ padding: "13px 16px", borderBottom: "1px solid #E4D9BE" }}>
             <div style={{ ...lbl, color: "var(--a-blocked, #7E6F43)" }}>Cannot prove this yet</div>
             <p style={{ margin: "6px 0 0", fontSize: 14, color: "var(--fg-1)" }}>{phase.draft.blockedReason || "Vraelis could not build a browser flow that would prove this outcome. Nothing was charged."}</p>
           </div>
@@ -174,13 +178,13 @@ export function Composer({ balance }: { balance: number }) {
               {phase.draft.remainingObligations.map((o, i) => <li key={i} style={{ marginBottom: 4 }}>{o}</li>)}
             </ul>
           )}
-          <div style={{ padding: "12px 16px", borderTop: "1px solid #EADFC4" }}>
+          <div style={{ padding: "12px 16px", borderTop: "1px solid #E4D9BE" }}>
             <button className="btn btn--ghost" onClick={() => setPhase({ k: "compose" })}>Adjust the outcome</button>
           </div>
         </div>
       )}
 
-      {phase.k === "plan" && <PlanPanel plan={phase.plan} balance={balance} busy={phase.busy} stale={stale} onApprove={approve} onExecute={execute} onReset={reset} />}
+      {phase.k === "plan" && <PlanPanel plan={phase.plan} balance={balance} busy={phase.busy} stale={stale} canReview={canReview} onReview={review} onApprove={approve} onExecute={execute} onReset={reset} />}
 
       {(phase.k === "running" || phase.k === "done") && (
         <RunPanel
@@ -192,13 +196,22 @@ export function Composer({ balance }: { balance: number }) {
       )}
 
       {phase.k === "error" && (
-        <div role="alert" style={{ marginTop: 16, padding: "13px 16px", borderRadius: "var(--r-md, 12px)", border: "1px solid #E7CFC5", background: "#F8F0EC", fontSize: 13.5, color: "var(--fg-1)" }}>
-          <div style={{ fontWeight: 600, marginBottom: 3 }}>{phase.error.code === "cancelled" ? "Stopped watching" : "That step could not be completed"}</div>
-          <div style={{ color: "var(--fg-2)", lineHeight: 1.5 }}>{phase.error.message}</div>
+        <div role="alert" style={{ marginTop: 16, padding: "13px 16px", borderRadius: "var(--r-md, 12px)", border: "1px solid #E7CFC5", background: "#F6ECE7", fontSize: 13.5, color: "var(--fg-1)" }}>
+          <div style={{ fontWeight: 600, marginBottom: 3 }}>{phase.verificationId ? "Still running" : phase.error.code === "cancelled" ? "Stopped watching" : "That step could not be completed"}</div>
+          <div style={{ color: "var(--fg-2)", lineHeight: 1.5 }}>
+            {phase.verificationId ? "This verification is already running and stays available under Verifications. It was not charged again." : phase.error.message}
+          </div>
           <div style={{ display: "flex", gap: 12, marginTop: 11, flexWrap: "wrap" }}>
-            {phase.error.code === "insufficient_balance" && <Link href="/credits" className="btn btn--ghost" style={{ padding: "7px 14px", fontSize: 13 }}>Add balance</Link>}
-            {String(phase.error.code).startsWith("reviewed_plan_") && <button className="btn btn--ghost" onClick={review} style={{ padding: "7px 14px", fontSize: 13 }} disabled={!canReview}>Review a fresh plan</button>}
-            {phase.error.retryable && phase.error.code !== "cancelled" && !String(phase.error.code).startsWith("reviewed_plan_") && <button className="btn btn--ghost" onClick={review} style={{ padding: "7px 14px", fontSize: 13 }}>Try again</button>}
+            {/* The run already started and is paid for: recover by opening it, never by launching a fresh paid run. */}
+            {phase.verificationId ? (
+              <Link href="/verifications" className="btn btn--ghost" style={{ padding: "7px 14px", fontSize: 13 }}>Open the record</Link>
+            ) : (
+              <>
+                {phase.error.code === "insufficient_balance" && <Link href="/credits" className="btn btn--ghost" style={{ padding: "7px 14px", fontSize: 13 }}>Add balance</Link>}
+                {String(phase.error.code).startsWith("reviewed_plan_") && <button className="btn btn--ghost" onClick={review} style={{ padding: "7px 14px", fontSize: 13 }} disabled={!canReview}>Review a fresh plan</button>}
+                {phase.error.retryable && phase.error.code !== "cancelled" && !String(phase.error.code).startsWith("reviewed_plan_") && <button className="btn btn--ghost" onClick={review} style={{ padding: "7px 14px", fontSize: 13 }}>Try again</button>}
+              </>
+            )}
             <button className="btn btn--ghost" onClick={reset} style={{ padding: "7px 14px", fontSize: 13 }}>Start over</button>
           </div>
         </div>
@@ -226,9 +239,9 @@ export function Composer({ balance }: { balance: number }) {
   );
 }
 
-function PlanPanel({ plan, balance, busy, stale, onApprove, onExecute, onReset }: {
-  plan: PlanView; balance: number; busy?: "approving" | "executing"; stale: boolean;
-  onApprove: () => void; onExecute: () => void; onReset: () => void;
+function PlanPanel({ plan, balance, busy, stale, canReview, onReview, onApprove, onExecute, onReset }: {
+  plan: PlanView; balance: number; busy?: "approving" | "executing"; stale: boolean; canReview: boolean;
+  onReview: () => void; onApprove: () => void; onExecute: () => void; onReset: () => void;
 }) {
   const approved = plan.approvalState === "approved";
   const consumed = plan.executionState !== "unconsumed";
@@ -279,7 +292,7 @@ function PlanPanel({ plan, balance, busy, stale, onApprove, onExecute, onReset }
 
       {stale && (
         <div role="status" style={{ margin: "0 16px 12px", padding: "10px 13px", borderRadius: 10, background: "#F2ECDD", border: "1px solid #E4D9BE", fontSize: 12.5, color: "var(--fg-1)" }}>
-          You changed the deployment or the outcome. This plan no longer matches. Review the updated plan above before approving.
+          You changed the deployment or the outcome, so this plan no longer matches. Review the updated plan before approving.
         </div>
       )}
       {!stale && expired && (
@@ -289,7 +302,14 @@ function PlanPanel({ plan, balance, busy, stale, onApprove, onExecute, onReset }
       )}
 
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", padding: "12px 16px", borderTop: "1px solid var(--line-2)" }}>
-        {!approved ? (
+        {/* A stale plan cannot be approved or run; the one clear next action is a fresh review, rendered right
+            here (not just described) so a mouse user or claim-editor is never told to click a control that
+            isn't shown. */}
+        {stale ? (
+          <button className="btn" onClick={onReview} disabled={!canReview} style={{ flex: "none", opacity: canReview ? 1 : 0.55 }}>
+            Review the updated plan <span aria-hidden>→</span>
+          </button>
+        ) : !approved ? (
           <button className="btn" onClick={onApprove} disabled={blocked} aria-busy={busy === "approving"} style={{ flex: "none", opacity: blocked ? 0.55 : 1 }}>
             {busy === "approving" ? "Approving..." : "Approve plan"}
           </button>
@@ -318,11 +338,16 @@ function RunPanel({ requirements, status, decision, onReset }: {
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderBottom: "1px solid var(--line-2)", background: "var(--bg-2)" }}>
         <span style={lbl}>Verification</span>
         <span style={{ flex: 1 }} />
-        {d ? (
-          <span className="pill" style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", ...toneStyle(d.tone) }}>{d.label}</span>
-        ) : (
-          <span aria-live="polite" style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--fg-3)", fontWeight: 500 }}><span className="cmp-dot" aria-hidden />{statusText}</span>
-        )}
+        {/* ONE persistent live region for the whole run: the settling text and the final decision replace each
+            other inside the SAME node, so the conclusion (Verified/Failed/Blocked) is announced, not swapped in
+            silently. */}
+        <span role="status" aria-live="polite" aria-atomic="true" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+          {d ? (
+            <span className="pill" style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", ...toneStyle(d.tone) }}>{d.label}</span>
+          ) : (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--fg-3)", fontWeight: 500 }}><span className="cmp-dot" aria-hidden />{statusText}</span>
+          )}
+        </span>
       </div>
       <ol style={{ listStyle: "none", margin: 0, padding: "6px 16px 12px" }}>
         {requirements.map((r, i) => (
@@ -336,7 +361,7 @@ function RunPanel({ requirements, status, decision, onReset }: {
         <div style={{ padding: "12px 16px", borderTop: "1px solid var(--line-2)", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <span style={{ fontSize: 13.5, color: "var(--fg-2)" }}>{d.line}</span>
           <span style={{ flex: 1 }} />
-          <Link href="/verifications" style={{ fontSize: 13, fontWeight: 600, color: "var(--acc-deep)" }}>Open the record →</Link>
+          <Link href="/verifications" style={{ fontSize: 13, fontWeight: 600, color: "var(--acc-deep)" }}>Open the record <span aria-hidden>→</span></Link>
           <button className="btn btn--ghost" onClick={onReset} style={{ padding: "7px 14px", fontSize: 13 }}>New verification</button>
         </div>
       )}

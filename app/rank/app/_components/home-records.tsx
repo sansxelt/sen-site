@@ -133,7 +133,7 @@ export function RunningWork({ rows, count, error }: { rows: PassRow[]; count: nu
           );
         })}
         {rows.length === 0 && count > 0 && (
-          <div style={{ padding: "13px 16px", fontSize: 13.5, color: "var(--fg-3)" }}>{count} verification{count === 1 ? "" : "s"} running. <Link href="/verifications" style={{ color: "var(--acc-deep)" }}>Watch progress →</Link></div>
+          <div style={{ padding: "13px 16px", fontSize: 13.5, color: "var(--fg-3)" }}>{count} verification{count === 1 ? "" : "s"} running. <Link href="/verifications" style={{ color: "var(--acc-deep)" }}>Watch progress <span aria-hidden>→</span></Link></div>
         )}
       </div>
       {hidden > 0 && rows.length > 0 && <div style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 6 }}>Showing the most recent. {hidden} more running.</div>}
@@ -195,17 +195,21 @@ export function SystemsSummary({ systems, error }: { systems: SystemSummaryItem[
   const needsProof = systems.filter((s) => systemProof(s.state === null ? null : { state: s.state, decision: s.decision }).needsProof).length;
   return (
     <section aria-label="Systems">
-      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10, gap: 12 }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 4, gap: 12 }}>
         <h2 style={headLbl}>Systems ({systems.length}){needsProof > 0 ? ` · ${needsProof} need proof` : ""}</h2>
         <Link href="/systems" style={{ fontSize: 13, color: "var(--acc-deep)", flex: "none" }}>Open Systems <span aria-hidden>→</span></Link>
       </div>
+      {/* The pill is the LATEST verification, not whole-system coverage: the data model has no "current
+          deployment" flag, so a passing check never means the whole system is proven. The caption frames every
+          pill that way, and the aria-label says it in words. */}
+      <p style={{ margin: "0 0 10px", fontSize: 12, color: "var(--fg-4)" }}>Each row shows the latest verification, not full coverage.</p>
       <div className="card" style={{ padding: 0, overflow: "hidden", background: "var(--bg-1)" }}>
         {systems.map((s, i) => {
           const proof = systemProof(s.state === null ? null : { state: s.state, decision: s.decision });
           return (
             <Link key={s.id} href={s.id ? `/applications/${s.id}` : "/systems"}
               style={{ ...rowLink, gridTemplateColumns: "1fr auto auto", gap: 14, padding: "12px 16px", borderTop: i ? "1px solid var(--line-2)" : "none" }}
-              aria-label={`${s.name || "System"}, ${proof.verdict.label}`}>
+              aria-label={`${s.name || "System"}, latest verification: ${proof.verdict.label}`}>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 500, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name || "System"}</div>
                 {s.deploymentUrl && <div style={{ marginTop: 2 }}><DeploymentReference url={s.deploymentUrl} /></div>}

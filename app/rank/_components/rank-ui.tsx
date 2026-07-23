@@ -271,15 +271,14 @@ function AppTopbar({ email }: { email: string | null }) {
             never flashes a wrong number. Both share height/radius/shadow so they read as one status set. */}
         {planLabel !== null && (
           <div className="vra-app-pills" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {/* Plan pill — full plan name. Teal tint from the confirmed brand accent tokens
-                (--accent-dim / --accent-border, defined in globals.css). Explicit emerald text
-                (#0A7B54, the brand green the stylesheet itself names) so it stays legible on the
-                cream top bar regardless of theme-token resolution. */}
+            {/* Plan pill — full plan name, in the warm-neutral accent tint (the same --acc-soft / --acc-line /
+                --acc-deep the composer and the rest of this shell use). The old --accent-dim / --accent-border
+                were the RETIRED teal accent (globals.css), which clashed with the emerald avatar beside it. */}
             <Link
               href="/plans"
               title={`${planLabel} plan`}
               aria-label={`Your plan: ${planLabel}`}
-              style={{ display: "inline-flex", alignItems: "center", height: 34, padding: "0 14px", borderRadius: 99, border: "1px solid var(--accent-border)", background: "var(--accent-dim)", textDecoration: "none", color: "#0A7B54", fontSize: 12.5, fontWeight: 700, letterSpacing: "0.01em", whiteSpace: "nowrap", flex: "none" }}
+              style={{ display: "inline-flex", alignItems: "center", height: 34, padding: "0 14px", borderRadius: 99, border: "1px solid var(--acc-line)", background: "var(--acc-soft)", textDecoration: "none", color: "var(--acc-deep)", fontSize: 12.5, fontWeight: 700, letterSpacing: "0.01em", whiteSpace: "nowrap", flex: "none" }}
             >
               {planLabel}
             </Link>
@@ -377,7 +376,14 @@ function useDismiss(open: boolean, close: () => void, refs: { panel: RefObject<H
     };
     const onDown = (e: PointerEvent) => {
       const t = e.target as Node;
-      if (!refs.panel.current?.contains(t) && !refs.trigger.current?.contains(t)) close();
+      if (!refs.panel.current?.contains(t) && !refs.trigger.current?.contains(t)) {
+        close();
+        // Return focus to the trigger (matching the Escape path) so it is never lost to <body> — but only when
+        // the press landed on non-focusable space; if the user clicked another control, let that control keep
+        // the focus the browser is about to give it.
+        const el = t instanceof Element ? t.closest("a,button,input,select,textarea,[tabindex]") : null;
+        if (!el) refs.trigger.current?.focus();
+      }
     };
     document.addEventListener("keydown", onKey);
     document.addEventListener("pointerdown", onDown, true);
