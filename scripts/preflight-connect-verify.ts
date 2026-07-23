@@ -99,7 +99,14 @@ ok("secrets route never echoes the password back (no password value in any respo
   !/NextResponse\.json\([^)]*\bpassword\s*:/.test(secretsRoute) && !/json\(\{[^}]*body\?*\.password/.test(secretsRoute));
 ok("secrets route returns masks only on list", secretsRoute.includes("username_mask") && !secretsRoute.includes("encrypted_ref"));
 ok("secrets route fails closed when the vault is unconfigured (503, nothing stored)", secretsRoute.includes("vault_unconfigured"));
-ok("secrets route is owner-gated before any read or write", secretsRoute.includes("getApplication(") && secretsRoute.indexOf("getApplication(") < secretsRoute.indexOf("addTestAccount("));
+// Owner-gating is now the gate()/gatePreflightApp() helper: every handler gates first, short-circuits to the
+// gate's (owner-scoped 404/403) response on failure, and runs every data-plane op on the gated owner g.owner.
+ok("secrets route is owner-gated before any read or write",
+  secretsRoute.includes("gatePreflightApp(")
+  && /if \(g instanceof NextResponse\) return g;/.test(secretsRoute)
+  && /addTestAccount\(g\.owner/.test(secretsRoute)
+  && /listConnections\(g\.owner/.test(secretsRoute)
+  && /removeConnection\(g\.owner/.test(secretsRoute));
 
 const connDb = readFileSync("lib/preflight/connections-db.ts", "utf8");
 ok("list reads NEVER select the ciphertext column",
@@ -115,8 +122,13 @@ const sharedBrand = readFileSync("app/rank/app/applications/_connections/brand.t
 const sharedForms = readFileSync("app/rank/app/applications/_connections/forms.tsx", "utf8");
 ok("UI: unbuilt integrations say Coming later (never fake active buttons)",
   ui.includes("<ComingLater") && sharedBrand.includes("Coming later") && !/function ComingLater[\s\S]*?<button/.test(sharedBrand) && !ui.includes("SoonButton"));
+// OAuth is honestly deferred: the manual form labels itself "Manual connection" (metadata only) and points
+// the user at the real post-setup authorization path (Connect GitHub on the Connections tab), never faking an
+// inline OAuth. The exact wording is not pinned; the honest deferral to the real connect path is.
 ok("UI: manual connections are labeled as manual, OAuth honestly deferred (and the shared forms actually render the connect path)",
-  sharedForms.includes("Manual connection") && sharedForms.includes("comes later") && ui.includes('from "../_connections/forms"'));
+  sharedForms.includes("Manual connection")
+  && /Connect GitHub[\s\S]{0,80}Connections tab[\s\S]{0,40}after setup/.test(sharedForms)
+  && ui.includes('from "../_connections/forms"'));
 ok("UI: credentials are masked client-side and excluded from the persisted draft payload",
   ui.includes("••••") && ui.includes("excluded from saved drafts") && !/JSON\.stringify\(\{[^}]*\baccounts\b/.test(ui));
 ok("UI: conservative boundary defaults (every permit starts false)",

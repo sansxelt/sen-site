@@ -160,10 +160,14 @@ const runsDb = stripComments(runsRaw);
 ok("createRun obtains the deployment id inside its own try/catch (a record failure never blocks a launch)",
   /try \{ deploymentId = await deploymentForRun\(uid, input\.applicationId, input\.deploymentUrl\); \} catch \{ deploymentId = null; \}/.test(runsDb));
 ok("createRun pins deployment_id ONLY when a deployment row id was actually obtained",
-  runsDb.includes("pinDeployment ? { ...row, deployment_id: deploymentId } : row")
+  // pinDeployment is exactly "a deployment id was obtained"; deployment_id is added to the row only under it.
+  runsDb.includes("let pinDeployment = deploymentId !== null;")
+  && /if \(pinDeployment\) row = \{ \.\.\.row, deployment_id: deploymentId \};/.test(runsDb)
   && runsDb.includes("pinContext ? { ...baseRow, context_snapshot_id: contextSnapshotId } : baseRow"));
-ok("ONE combined retry path handles BOTH missing pin columns (7 and 8)",
-  runsDb.includes("while (error && (pinContext || pinDeployment))")
+// ONE combined retry loop drops whichever additive pin column the DB reports missing (context 7, deployment 8,
+// and now the api-key pin). Anchored on the stable prefix so a further pin column cannot silently break this.
+ok("ONE combined retry path handles every missing pin column (context 7, deployment 8, api-key)",
+  /while \(error && \(pinContext \|\| pinDeployment/.test(runsDb)
   && /pinContext && \/context_snapshot_id\/i\.test\(msg\)/.test(runsRaw)
   && /pinDeployment && \/deployment_id\/i\.test\(msg\)/.test(runsRaw));
 ok("both column-missing warns name their migration file",
@@ -175,7 +179,7 @@ ok("no duplicate submission inserts: the run row is inserted at exactly two call
   const end = runsDb.indexOf("export async function", start + 10);
   const body = runsDb.slice(start, end === -1 ? runsDb.length : end);
   const allInserts = body.match(/\.insert\(/g) ?? [];
-  return inserts.length === 2 && allInserts.length === 2 && runsDb.includes("while (error && (pinContext || pinDeployment))");
+  return inserts.length === 2 && allInserts.length === 2 && /while \(error && \(pinContext \|\| pinDeployment/.test(runsDb);
 })());
 ok("an unknown insert error still breaks out of the retry loop (no infinite retry, no blind drop of pins)",
   /\} else break;/.test(runsDb));
@@ -225,11 +229,14 @@ ok("the VERDICT computation never reads the newer deployment (the banner cannot 
   const end = health.indexOf("const criticalEligibleIds", start);
   return start !== -1 && end > start && !health.slice(start, end).includes("newerDeploy");
 })());
-ok("banner carries the change lines and the Run Production Pass CTA (existing LaunchPassButton)", (() => {
+// The banner shows what changed and offers to run a verification on the new deployment. Its CTA now carries
+// the current Verification terminology ("Run a verification"), and the region is bounded by the real adjacent
+// section (the tested-deployment detail) — the old "Production status" hero aria-label no longer exists.
+ok("banner carries the change lines and the verification CTA (existing LaunchPassButton)", (() => {
   const banner = health.indexOf('aria-label="New deployment unverified"');
-  const hero = health.indexOf('aria-label="Production status"');
-  const region = health.slice(banner, hero);
-  return region.includes("newerDeploy.changes.map") && region.includes("<LaunchPassButton") && region.includes('label="Run Production Pass"');
+  const end = health.indexOf('aria-label="Tested deployment"', banner);
+  const region = health.slice(banner, end === -1 ? undefined : end);
+  return banner !== -1 && end > banner && region.includes("newerDeploy.changes.map") && region.includes("<LaunchPassButton") && /label="Run a verification"/.test(region);
 })());
 ok("unverifiedNewerDeployment is asked only for a decided, non-active health run",
   health.includes("latest && !latestActive && latest.decision"));
