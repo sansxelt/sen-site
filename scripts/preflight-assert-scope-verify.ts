@@ -1,7 +1,8 @@
 // The false-pass fix: an assert_text must check the expected value INSIDE the element it targets, not
-// anywhere on the page. This is the pure-logic proof (no browser); the real-DOM proof is the Playwright spec
-// tests/e2e/04-assert-text-scope.spec.ts. The two account states below are exactly what the broken-checkout
-// fixture renders: Free (plan is Free, and a "Get Pro" upsell is present) and Pro (plan is Pro).
+// anywhere on the page. This is the pure-logic proof (no browser); a companion real-DOM Playwright spec
+// lived in the retired legacy-checker e2e suite (tests/e2e, deleted). The two account states below are
+// exactly what the broken-checkout fixture renders: Free (plan is Free, and a "Get Pro" upsell is
+// present) and Pro (plan is Pro).
 import { textPresentInScope } from "../worker/preflight/assert-scope";
 
 let pass = 0, fail = 0;

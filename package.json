@@ -7,8 +7,6 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:e2e": "playwright test",
-    "test:e2e:install": "playwright install --with-deps chromium webkit",
     "preflight:verify-db": "tsx scripts/preflight-verify-db.ts",
     "preflight:verify-mig12": "tsx scripts/preflight-verify-migration-12.ts",
     "preflight:worker": "tsx worker/preflight/index.ts",
