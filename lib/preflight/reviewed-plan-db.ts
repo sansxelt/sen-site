@@ -106,6 +106,29 @@ export async function getReviewedPlanByRunId(owner: string, runId: string): Prom
   } catch { return null; }
 }
 
+// The latest LIVE (pending, unconsumed, unexpired) reviewed plan for a given claim + deployment, owner-scoped.
+// This is what makes a derived-but-not-yet-approved guarantee plan STICKY: the guarantee detail page and the
+// prepare route both look it up so a refresh (or a repeated derive) shows the SAME prepared plan instead of
+// re-synthesizing a new one. Keyed by the same fingerprints mint uses, so it finds exactly what was minted.
+export type PendingPlanView = { id: string; plan: PlannedVerification; planHash: string; claim: string; expiresAt: string };
+export async function findLivePendingPlanForClaim(owner: string, deploymentUrl: string, claim: string): Promise<PendingPlanView | null> {
+  if (!isDatabaseConfigured()) return null;
+  try {
+    const s = getSupabaseAdminClient();
+    const r = await s.from(TABLE as never).select("id, plan, plan_hash, claim, expires_at")
+      .eq("user_id", norm(owner))
+      .eq("deployment_fp", deploymentFingerprint(deploymentUrl))
+      .eq("claim_fp", claimFingerprint(claim))
+      .eq("approval_state", "pending")
+      .eq("execution_state", "unconsumed")
+      .gt("expires_at", new Date().toISOString())
+      .order("created_at", { ascending: false }).limit(1).maybeSingle();
+    const d = r.data as { id?: string; plan?: PlannedVerification; plan_hash?: string; claim?: string; expires_at?: string } | null;
+    if (!d?.id || !d.plan) return null;
+    return { id: String(d.id), plan: d.plan, planHash: String(d.plan_hash ?? ""), claim: String(d.claim ?? ""), expiresAt: String(d.expires_at ?? "") };
+  } catch { return null; }
+}
+
 // The full row for display (state, coverage, approver, timestamps) — safe fields only, owner-scoped.
 export async function getReviewedPlanView(owner: string, id: string): Promise<Row | null> {
   if (!isDatabaseConfigured() || !id) return null;

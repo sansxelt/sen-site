@@ -20,6 +20,7 @@ import { LaunchPassButton } from "./launch-button";
 import { CancelRunControl } from "./cancel-run-control";
 import { PassPreview } from "./contract/pass-preview";
 import { CommandCenter } from "./command-center";
+import { GuaranteesSection } from "./guarantees-section";
 import { nextAction, stateRibbon, type CommandState } from "@/lib/preflight/command-center";
 import { Ic, I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
 
@@ -430,6 +431,10 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
           <p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>Not verified yet. Once a run finishes, its launch decision and the evidence behind it show here.</p>
         )}
       </section>
+
+      {/* ── Guarantees: the live map of what this system depends on and whether each is currently proven.
+          The durable product object; the Production Contract below is now internal synthesis substrate. ── */}
+      <GuaranteesSection owner={owner} appId={id} canEdit={caps.canEditContract} />
 
       {/* ── Production Contract coverage ──────────────────────────────────────────────────────────────── */}
       <section style={sectionStyle} aria-label="Production Contract coverage">
