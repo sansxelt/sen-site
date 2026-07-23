@@ -44,7 +44,7 @@ ok("the claim is framed as what had to be true / submitted claim, not a guarante
 
 console.log("\n── requirements drift honesty ──");
 ok("requirements are labeled as the CURRENT contract requirements, not an executed snapshot",
-  /current requirements for Contract v/.test(page) && /not separately snapshotted/.test(page));
+  /Current requirements for Contract v/.test(page) && /not separately snapshotted/.test(page));
 ok("nothing claims an exact executed requirement snapshot", !/exact requirements executed|captured at run time|immutable requirement snapshot/i.test(page));
 
 console.log("\n── affected requirements: only what the findings actually stored ──");
@@ -158,7 +158,7 @@ ok("the result page never creates a run / reserves credit / mutates from itself"
 ok("a Failed record offers rerunning the failed flows", /pub === "failed" \? <RerunButton/.test(page.replace(/\n/g, " ")) && /Rerun the failed flows/.test(page));
 ok("a repair_verified (public Blocked) record offers Run full critical verification", /run\.decision === "repair_verified"/.test(page) && /scope="critical" label="Run full critical verification"/.test(page));
 ok("a Verified record frames another verification as optional, not required", /it is not required/.test(page));
-ok("an active run offers cancel, not a conflicting final-state action", /<CancelRunButton /.test(page));
+ok("an active run links to the run controls (navigation-only); it never cancels from this read-only page", /View run controls/.test(page) && !/CancelRunButton/.test(page));
 ok("reverification copy states every reverification is a separate immutable record", /separate, immutable record/.test(page));
 // Immutable lineage
 ok("lineage is built ONLY from parent_run_id + listChildRuns (never v_repairs, never inferred ancestry)", /getRunLite\(owner, run\.parent_run_id\)/.test(page) && /listChildRuns\(owner, runId\)/.test(page) && !/v_repairs|inferAncestry/.test(shown));
@@ -168,6 +168,46 @@ ok("the current record is marked; the others link to owner-authorized result rou
 ok("the parent failure is never rewritten (its own decision is rendered; a later success does not overwrite it)", /parentLite\.decision/.test(page) && /does not overwrite an earlier failure/.test(page));
 ok("getRunLite is owner-scoped, read-only, and returns null for a missing/non-owned parent (no leak)",
   (() => { const db = readFileSync("lib/preflight/runs-db.ts", "utf8"); const b = db.slice(db.indexOf("export async function getRunLite")); return /eq\("user_id", norm\(owner\)\)\.eq\("id", runId\)/.test(b) && /if \(!r\) return null;/.test(b) && !/\.insert\(|\.update\(|\.delete\(/.test(b.slice(0, 500)); })());
+
+console.log("\n── Increment 5: immutable provenance (identity, reviewed plan, pinned sources, honest limits) ──");
+const rpDb = readFileSync("lib/preflight/reviewed-plan-db.ts", "utf8");
+// 01 Verification record identity
+ok("the record identity block shows the run id and offers a copy control", /Verification \{shortId\(runId\)\}/.test(page) && /<CopyButton text=\{runId\} label="Copy id" \/>/.test(page));
+ok("the conclusion in the identity block goes through the shared translator (a Chip), never a recomputed verdict", /<Chip tone=\{verdict\.tone\} label=\{verdict\.label\} \/>/.test(page));
+ok("record identity shows the run's own created/completed timestamps (its real lifecycle)", /Created \{when\(run\.created_at\)\}/.test(page) && /Completed \{when\(run\.completed_at\)\}/.test(page));
+ok("the parent link, when present, points at the owner-authorized parent result route", page.includes("href={`/applications/${id}/passes/${run.parent_run_id}`}"));
+// 02 Reviewed-plan provenance — REAL persisted binding only
+ok("reviewed-plan provenance comes ONLY from the persisted run->plan binding (getReviewedPlanByRunId)", /getReviewedPlanByRunId\(owner, runId\)/.test(page) && /export async function getReviewedPlanByRunId/.test(rpDb));
+ok("the reviewed-plan reader is owner-scoped over the existing run_id column (no new table/concept)", /\.eq\("run_id", runId\)\.eq\("user_id", norm\(owner\)\)/.test(rpDb));
+ok("a legacy record with no binding falls back honestly, never fabricating an approved plan", /Reviewed-plan provenance is not available for this historical record\./.test(page) && /reviewedPlan \? \(/.test(page.replace(/\n/g, " ")));
+ok("human review is asserted ONLY from the persisted approval state, never inferred", /reviewedPlan\.approvalState === "approved" \? <span>Human review recorded<\/span>/.test(page) && !/humanReviewed = true|humanReviewed: true/.test(shown));
+ok("consumption is stated only when the binding proves it was consumed", /reviewedPlan\.executionState === "consumed" \?[\s\S]{0,120}consumed the approved reviewed plan/.test(page));
+// 03 Deployment & snapshot provenance — pinned, never latest, never leak an inaccessible one
+ok("the tested-deployment block resolves the PINNED deployment/snapshot only (already asserted pinned above)", /pins\.deploymentId \? getDeployment/.test(page) && /pins\.contextSnapshotId \? getSnapshot/.test(page));
+ok("an unavailable pinned deployment is disclosed, not silently replaced by a newer one", /no longer available[\s\S]{0,60}not replaced with a newer one/.test(page));
+// 04 Contract & requirements history — recorded vs current, drift, no false 'unchanged' on version match
+ok("contract history shows BOTH the recorded run version and the current contract version", /Recorded for this run: Contract v\{contractVersion\}/.test(page) && /Current contract: v\{contract\.version\}/.test(page));
+ok("a matching version never claims the exact historical requirement text is preserved", /a historical requirement snapshot was not separately persisted for this verification/.test(page) && !/requirements are unchanged|identical to the executed requirements|guaranteed unchanged/i.test(page));
+ok("proven drift is disclosed in the provenance ledger too (contract changed, text is current)", /The contract has changed since this verification\. The requirement text shown above is loaded from the current contract/.test(page));
+// 05 Evidence provenance — counts only, signed route, missing != pass
+ok("evidence provenance shows COUNTS derived from persisted rows, never a storage path", /const anyEvidence = issues\.length \+ flows\.length \+ stepCount/.test(page) && !/storage_path|signedUrl\(|createSignedUrl/.test(shown));
+ok("retained artifacts are described as reachable only via the owner-checked signed route", /accessible only through the owner-checked signed route/.test(page));
+ok("no retained evidence is stated honestly and is NEVER read as a pass", /No evidence was retained for this record\. That does not mean the workflow passed\./.test(page));
+// 06 Historical limitations — record-specific, not a generic disclaimer wall
+ok("historical limitations are a record-specific list built from this run's real state", /const limitations: string\[\]/.test(page) && /\{limitations\.map\(/.test(page));
+ok("a repair_verified record's limitations note the targeted-repair scope specifically", /A targeted repair check passing is not equivalent to a full critical verification\./.test(page));
+ok("limitations never undermine valid evidence with a blanket 'this proves nothing' wall", !/this result proves nothing|do not rely on any of this|none of this is trustworthy/i.test(page));
+// 07 Integrity wording — 'separate historical record', NEVER a cryptographic claim
+ok("integrity wording says the result is preserved as a separate historical record that later runs do not alter", /This result is preserved as a separate historical record\. Later verifications do not alter this conclusion\./.test(page));
+ok("integrity wording makes NO cryptographic / tamper-proof / blockchain claim", !/cryptographically immutable|tamper-proof|tamperproof|blockchain|hash-chain|hash chain|cryptographic proof|immutable ledger/i.test(shown));
+// 09 Active-run cancellation boundary — navigation only
+ok("the active-run cancel CTA is navigation-only (View run controls) and cannot cancel from the result page", /View run controls/.test(page) && !/CancelRunButton/.test(page) && !/\/cancel/.test(shown));
+// Identity copy controls exist for the durable identifiers
+ok("the reviewed-plan id and plan hash are copyable identifiers when present", /<CopyButton text=\{reviewedPlan\.id\} label="Copy plan id" \/>/.test(page) && /<CopyButton text=\{reviewedPlan\.planHash\} label="Copy hash" \/>/.test(page));
+// No sensitive provenance values
+for (const s of ["approved_by", "deployment_fp", "claim_fp", "role_refs"]) {
+  ok(`no internal reviewed-plan field leaks into the page: ${s}`, !new RegExp(s).test(shown));
+}
 
 console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

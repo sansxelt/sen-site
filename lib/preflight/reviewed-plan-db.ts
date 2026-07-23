@@ -83,6 +83,29 @@ export async function getReviewedPlan(owner: string, id: string): Promise<Stored
   return d ? toStored(d) : null;
 }
 
+// The reviewed-plan provenance for a run — the REAL persisted binding: the plan whose run_id was stamped on
+// this run at consume time. Read-only, owner-scoped, over the existing v_reviewed_plans.run_id column (no new
+// table/concept). Returns null for a run that consumed no reviewed plan (a legacy/direct run) or before
+// migration 18, so a legacy record honestly falls back rather than fabricating a binding.
+export type ReviewedPlanProvenance = { id: string; approvalState: "pending" | "approved"; approvedAt: string | null; planHash: string; executionState: "unconsumed" | "consuming" | "consumed" };
+export async function getReviewedPlanByRunId(owner: string, runId: string): Promise<ReviewedPlanProvenance | null> {
+  if (!isDatabaseConfigured() || !runId) return null;
+  try {
+    const s = getSupabaseAdminClient();
+    const r = await s.from(TABLE as never).select("id, approval_state, approved_at, plan_hash, execution_state")
+      .eq("run_id", runId).eq("user_id", norm(owner)).maybeSingle();
+    const d = r.data as { id?: string; approval_state?: string; approved_at?: string | null; plan_hash?: string; execution_state?: string } | null;
+    if (!d?.id) return null;
+    return {
+      id: String(d.id),
+      approvalState: d.approval_state === "approved" ? "approved" : "pending",
+      approvedAt: (d.approved_at as string) ?? null,
+      planHash: String(d.plan_hash ?? ""),
+      executionState: d.execution_state === "consumed" ? "consumed" : d.execution_state === "consuming" ? "consuming" : "unconsumed",
+    };
+  } catch { return null; }
+}
+
 // The full row for display (state, coverage, approver, timestamps) — safe fields only, owner-scoped.
 export async function getReviewedPlanView(owner: string, id: string): Promise<Row | null> {
   if (!isDatabaseConfigured() || !id) return null;

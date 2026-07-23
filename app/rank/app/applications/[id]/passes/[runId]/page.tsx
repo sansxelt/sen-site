@@ -9,10 +9,10 @@ import { getRun, runContractId, listChildRuns, getRunLite, type RunFlow, type Ru
 import { getRunInternal, listFlowRunMeta, type FlowRunMeta } from "@/lib/preflight/run-report-db";
 import { runVersionPins, getDeployment, deploymentStoreReady } from "@/lib/preflight/deployments-db";
 import { getSnapshot } from "@/lib/preflight/context-snapshots";
+import { getReviewedPlanByRunId } from "@/lib/preflight/reviewed-plan-db";
 import { runVerdict, isActiveRun, runningStage, type Tone as ToneKey } from "@/lib/preflight/home-verdict";
 import { SetupRequired } from "../../../setup-required";
 import { RerunButton } from "./rerun-button";
-import { CancelRunButton } from "./cancel-run-button";
 import { CopyButton } from "./copy-button";
 import { AutoRefresh } from "./auto-refresh";
 import { Ic, I, EmptyIcon } from "@/app/rank/_components/icons";
@@ -37,9 +37,9 @@ function ago(iso: string): string {
 function shortId(v: string): string { return v.length > 12 ? `${v.slice(0, 8)}…${v.slice(-4)}` : v; }
 
 // ── the ONE decision vocabulary, shared with Home (lib/preflight/home-verdict). It renders only the public
-// Verified / Failed / Blocked (repair_verified -> Verified, a proven repair) plus the honest non-conclusions
-// In progress / Not yet verified. It never exposes an internal decision string, and it uses the approved
-// warm-neutral tokens — no retired teal. This page implements NO second decision mapping. ──
+// Verified / Failed / Blocked (a targeted repair rerun maps to Blocked, not Verified) plus the honest
+// non-conclusions In progress / Not yet verified. It never exposes an internal decision string, and it uses the
+// approved warm-neutral tokens — no retired teal. This page implements NO second decision mapping. ──
 const TONE: Record<ToneKey, { color: string; bg: string; border: string }> = {
   verified: { color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" },
   failed: { color: "var(--a-failed, #A8452A)", bg: "#F6ECE7", border: "#E7CFC5" },
@@ -402,7 +402,7 @@ export default async function VerificationResultPage({ params }: { params: Promi
   // Second wave: the contract behind the run's claim/requirements, and the PINNED historical version rows.
   // Missing ids resolve to null (never substituted with a latest/current object).
   const pins = await runVersionPins(owner, runId);
-  const [contract, requirements, deployment, contextSnap, deploymentsReady, parentLite] = await Promise.all([
+  const [contract, requirements, deployment, contextSnap, deploymentsReady, parentLite, reviewedPlan] = await Promise.all([
     contractId ? getContractById(owner, contractId) : Promise.resolve(null),
     contractId ? listRequirements(owner, contractId) : Promise.resolve([] as ContractRequirement[]),
     pins.deploymentId ? getDeployment(owner, pins.deploymentId) : Promise.resolve(null),
@@ -411,6 +411,8 @@ export default async function VerificationResultPage({ params }: { params: Promi
     // The parent record (read-only, owner-scoped): null if missing/deleted/non-owned, so the lineage never
     // leaks another tenant's run and never rewrites the parent.
     run.parent_run_id ? getRunLite(owner, run.parent_run_id) : Promise.resolve(null),
+    // The reviewed plan this run consumed (the REAL persisted run_id binding), or null for a legacy/direct run.
+    getReviewedPlanByRunId(owner, runId),
   ]);
 
   // ── derived, nothing invented ──
@@ -504,6 +506,23 @@ export default async function VerificationResultPage({ params }: { params: Promi
   const deployEnvLabel = deployment?.environment ? (ENV_LABELS[deployment.environment] ?? null) : null;
   const deployProviderLabel = deployment?.provider ? (DEPLOY_PROVIDER_LABELS[deployment.provider] ?? deployment.provider) : null;
   const deployCommit = (deployment?.commit_sha ?? run.commit_sha ?? "").slice(0, 10);
+
+  // Evidence RETAINED (owner-safe counts for the provenance ledger; the artifacts themselves stay behind the
+  // signed route, never a storage path). Missing evidence is stated honestly, never read as a pass.
+  const stepCount = flows.reduce((s, f) => s + f.steps.length, 0);
+  const consoleCount = issues.reduce((s, iss) => s + (Array.isArray(issueEv(iss).console_errors) ? (issueEv(iss).console_errors as unknown[]).length : 0), 0);
+  const networkCount = issues.reduce((s, iss) => s + (Array.isArray(issueEv(iss).network_failures) ? (issueEv(iss).network_failures as unknown[]).length : 0), 0);
+  const anyEvidence = issues.length + flows.length + stepCount + screenshotCount + consoleCount + networkCount > 0;
+
+  // Record-SPECIFIC historical limitations: only the ones that genuinely apply to this run. Never a generic
+  // disclaimer wall, never undermining valid evidence.
+  const limitations: string[] = ["Vraelis observed the deployed workflow, not every behavior in the application.", "Source code was not installed, modified, or necessarily inspected."];
+  if (pub === "verified") limitations.push("Verified applies only to the checked workflow and claim, not the whole system.");
+  if (pub === "blocked" && run.decision !== "repair_verified") limitations.push("A Blocked result is not a confirmed product failure.");
+  if (run.decision === "repair_verified") limitations.push("A targeted repair check passing is not equivalent to a full critical verification.");
+  if (active) limitations.push("This run is not complete, so it has no final conclusion yet.");
+  if (contractVersion != null) limitations.push("Requirement text is loaded from the current contract; the exact historical wording was not snapshotted.");
+  if (repairIssues.length > 0) limitations.push("Repair guidance is a suggested fix, not a proven root-cause analysis.");
 
   return (
     <div className="wrap" style={{ maxWidth: 1080, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
@@ -720,7 +739,10 @@ export default async function VerificationResultPage({ params }: { params: Promi
                   : pub === "failed" ? <RerunButton appId={id} runId={runId} scope={hasFailures ? "failed" : "all"} label="Rerun the failed flows" priceNote={rerunPriceNote} />
                   : <RerunButton appId={id} runId={runId} scope={hasFailures ? "failed" : "all"} label="Run another verification" priceNote={rerunPriceNote} />
               ) : (
-                <CancelRunButton appId={id} runId={runId} />
+                // A running verification is NOT cancelled from this read-only record. This links to the run's
+                // controls in the application, where cancellation keeps its own owner-checked confirmation flow;
+                // the result page itself mutates nothing.
+                <Link href={`/applications/${id}`} className="btn btn--ghost" style={{ justifySelf: "start" }}>View run controls</Link>
               )}
             </div>
           ) : null}
@@ -751,9 +773,54 @@ export default async function VerificationResultPage({ params }: { params: Promi
           ) : null}
         </Section>
 
-        {/* ── 09 PROVENANCE & IMMUTABLE HISTORY — the PINNED deployment / snapshot / contract this record tested;
-              never the latest. Honest limitations, never a placeholder or a substituted newer object. ── */}
+        {/* ── 09 PROVENANCE & IMMUTABLE HISTORY — a compact ledger of exactly what this record IS: its identity,
+              the reviewed plan / deployment / snapshot / contract it was BOUND to (pinned, never the latest),
+              the evidence retained, and the honest limits of what it can conclude. "Immutable" here means Vraelis
+              preserves the prior result rather than rewriting it after a repair — NOT a cryptographic claim. No
+              secret, token, session id, or storage path is ever a provenance value. ── */}
         <Section n="09" title="Provenance" aria="Provenance and immutable history">
+          {/* Record identity */}
+          <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-md, 10px)", background: "var(--bg-1)", padding: "14px 16px", display: "grid", gap: 8 }}>
+            <div style={label}>This record</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 14px", alignItems: "center", fontSize: 12.5, color: "var(--fg-3)" }}>
+              <span style={{ fontFamily: "var(--font-mono)", color: "var(--fg-2)", wordBreak: "break-all", maxWidth: "100%" }} title={runId}>Verification {shortId(runId)}</span>
+              <CopyButton text={runId} label="Copy id" />
+              {hasConclusion ? <Chip tone={verdict.tone} label={verdict.label} /> : <span>{verdict.label}</span>}
+              {contractVersion != null ? <span>Contract v{contractVersion}</span> : null}
+              {run.parent_run_id ? <Link href={`/applications/${id}/passes/${run.parent_run_id}`} style={{ color: "var(--acc-deep)" }}>Parent verification →</Link> : null}
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 16px", fontSize: 12, color: "var(--fg-4)" }}>
+              <span title={when(run.created_at)}>Created {when(run.created_at)}</span>
+              {run.completed_at ? <span title={when(run.completed_at)}>Completed {when(run.completed_at)}</span> : active ? <span>In progress</span> : null}
+            </div>
+          </div>
+
+          {/* Reviewed-plan provenance — shown ONLY when the persisted run->plan binding proves it. */}
+          <div style={{ display: "grid", gap: 6 }}>
+            <div style={label}>Reviewed plan</div>
+            {reviewedPlan ? (
+              <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-md, 10px)", background: "var(--bg-1)", padding: "12px 14px", display: "grid", gap: 6 }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 14px", alignItems: "center", fontSize: 12.5, color: "var(--fg-3)" }}>
+                  <span style={{ fontFamily: "var(--font-mono)", color: "var(--fg-2)", wordBreak: "break-all" }} title={reviewedPlan.id}>Plan {shortId(reviewedPlan.id)}</span>
+                  <CopyButton text={reviewedPlan.id} label="Copy plan id" />
+                  {reviewedPlan.approvalState === "approved" ? <span style={{ color: "var(--acc-deep)", fontWeight: 600 }}>Approved</span> : <span>Pending approval</span>}
+                  {reviewedPlan.approvedAt ? <span title={when(reviewedPlan.approvedAt)}>Approved {when(reviewedPlan.approvedAt)}</span> : null}
+                  {reviewedPlan.approvalState === "approved" ? <span>Human review recorded</span> : null}
+                </div>
+                {reviewedPlan.planHash ? (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 12px", alignItems: "center", fontSize: 12, color: "var(--fg-4)" }}>
+                    <span style={{ fontFamily: "var(--font-mono)", wordBreak: "break-all" }} title={reviewedPlan.planHash}>Plan hash {shortId(reviewedPlan.planHash)}</span>
+                    <CopyButton text={reviewedPlan.planHash} label="Copy hash" />
+                  </div>
+                ) : null}
+                {reviewedPlan.executionState === "consumed" ? <p style={{ fontSize: 12, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>This verification consumed the approved reviewed plan above.</p> : null}
+              </div>
+            ) : (
+              <Empty>Reviewed-plan provenance is not available for this historical record.</Empty>
+            )}
+          </div>
+
+          {/* Tested deployment + snapshot — PINNED to the run, never the latest. */}
           <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-md, 10px)", background: "var(--bg-1)", padding: "14px 16px", display: "grid", gap: 8 }}>
             <div style={{ ...label, display: "flex", alignItems: "center", gap: 6 }}><Ic d={I.deploy} size={13} sw={2} />Tested deployment</div>
             {run.deployment_url ? <div style={{ fontFamily: "var(--font-mono)", fontSize: 13, fontWeight: 600, color: "var(--fg-1)", wordBreak: "break-all" }}>{run.deployment_url}</div> : null}
@@ -762,20 +829,11 @@ export default async function VerificationResultPage({ params }: { params: Promi
               {deployProviderLabel ? <span>Provider: {deployProviderLabel}</span> : null}
               {deployCommit ? <span>Commit {deployCommit}</span> : null}
               {deployment?.branch ? <span>Branch {deployment.branch}</span> : null}
-              {internal.contractVersion != null ? <span>Contract v{internal.contractVersion}</span> : null}
               {contextSnap ? <span>Context v{contextSnap.version}</span> : null}
               <span title={when(completedIso)}>{active ? `Started ${when(run.created_at)}` : `Executed ${when(completedIso)}`}</span>
-              <span style={{ fontFamily: "var(--font-mono)", color: "var(--fg-4)" }}>#{shortId(runId)}</span>
             </div>
-            {contractVersion != null && requirements.length > 0 ? (
-              <p style={{ fontSize: 12, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>
-                Requirements shown elsewhere are the current requirements for Contract v{contractVersion}. Historical requirement text was not separately snapshotted for this verification.
-              </p>
-            ) : null}
             {!deploymentsReady ? (
-              <p style={{ fontSize: 12, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>
-                Deployment identity is not recorded yet: apply <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5 }}>sql/vraelis-preflight-8-deployments.sql</span> (migration 8).
-              </p>
+              <p style={{ fontSize: 12, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>Deployment identity is not recorded yet: apply <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5 }}>sql/vraelis-preflight-8-deployments.sql</span> (migration 8).</p>
             ) : pins.deploymentId && !deployment ? (
               <p style={{ fontSize: 12, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>The deployment recorded for this verification is no longer available. It is not replaced with a newer one.</p>
             ) : null}
@@ -786,6 +844,52 @@ export default async function VerificationResultPage({ params }: { params: Promi
               </details>
             ) : null}
           </div>
+
+          {/* Contract & requirements history */}
+          {contractVersion != null || contract ? (
+            <div style={{ display: "grid", gap: 5 }}>
+              <div style={label}>Contract history</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px", fontSize: 12.5, color: "var(--fg-3)" }}>
+                {contractVersion != null ? <span>Recorded for this run: Contract v{contractVersion}</span> : null}
+                {contract && typeof contract.version === "number" ? <span>Current contract: v{contract.version}</span> : null}
+              </div>
+              <p style={{ fontSize: 12, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>
+                {contractDrifted
+                  ? "The contract has changed since this verification. The requirement text shown above is loaded from the current contract and may differ from the text associated with this historical run."
+                  : "Requirement text is loaded from the current contract records; a historical requirement snapshot was not separately persisted for this verification."}
+              </p>
+            </div>
+          ) : null}
+
+          {/* Evidence retained */}
+          <div style={{ display: "grid", gap: 5 }}>
+            <div style={label}>Evidence retained</div>
+            {anyEvidence ? (
+              <>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px", fontSize: 12.5, color: "var(--fg-3)" }}>
+                  {issues.length ? <span>{issues.length} finding{issues.length === 1 ? "" : "s"}</span> : null}
+                  {flows.length ? <span>{flows.length} flow{flows.length === 1 ? "" : "s"}</span> : null}
+                  {stepCount ? <span>{stepCount} step{stepCount === 1 ? "" : "s"}</span> : null}
+                  {screenshotCount ? <span>{screenshotCount} screenshot{screenshotCount === 1 ? "" : "s"}</span> : null}
+                  {consoleCount ? <span>{consoleCount} console error{consoleCount === 1 ? "" : "s"}</span> : null}
+                  {networkCount ? <span>{networkCount} network failure{networkCount === 1 ? "" : "s"}</span> : null}
+                </div>
+                <p style={{ fontSize: 12, color: "var(--fg-4)", margin: 0 }}>Screenshots and artifacts are accessible only through the owner-checked signed route.</p>
+              </>
+            ) : (
+              <Empty>{active ? "Evidence is still being collected." : "No evidence was retained for this record. That does not mean the workflow passed."}</Empty>
+            )}
+          </div>
+
+          {/* Historical limitations — only those relevant to this record */}
+          <div style={{ display: "grid", gap: 5 }}>
+            <div style={label}>What this record can and cannot conclude</div>
+            <ul style={{ margin: 0, padding: "0 0 0 18px", display: "grid", gap: 4 }}>
+              {limitations.map((l, i) => <li key={i} style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, wordBreak: "break-word" }}>{l}</li>)}
+            </ul>
+          </div>
+
+          <Empty>This result is preserved as a separate historical record. Later verifications do not alter this conclusion.</Empty>
           <Link href={`/applications/${id}`} className="btn btn--ghost" style={{ justifySelf: "start" }}>Back to {app?.name ?? "system"}</Link>
         </Section>
       </div>
