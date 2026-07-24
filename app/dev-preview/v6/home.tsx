@@ -96,7 +96,10 @@ export default function Home() {
           <div className="v6-hero__grid">
             <div className="v6-hero__copy">
               <p className="v6-eyebrow v6-reveal in">Oversight for AI software agents</p>
-              <h1 className="v6-d2xl v6-hero__h1">AI agents are taking responsibility for software.<br /><span className="v6-hero__turn">Vraelis determines what they can be trusted to do.</span></h1>
+              <h1 className="v6-d2xl v6-hero__h1">
+                <span className="v6-mask"><span className="v6-mask__in">AI agents are taking responsibility for software.</span></span>
+                <span className="v6-mask"><span className="v6-mask__in v6-hero__turn" style={{ ["--d" as string]: 1 }}>Vraelis determines what they can be trusted to do.</span></span>
+              </h1>
               <p className="v6-lead v6-hero__say">Vraelis follows software agents from assigned responsibility to trusted completion — tracking what they change, challenging unsupported claims, surfacing decisions that need a person, and preserving what the company learns.</p>
               <div className="v6-hero__cta">
                 <CTA brand lg>Open Vraelis</CTA>
