@@ -93,7 +93,7 @@ export function Flagship() {
       <div className="v4-head">
         <div className="v4-head__brand">
           <span className="v4-thesis">AI builds. <span className="em">Vraelis proves.</span></span>
-          <span className="v4-sys"><Ic d={I.layers} size={13} sw={1.9} /> {SYSTEM_NAME}<span className="v4-sys__crit">3 critical guarantees</span></span>
+          <span className="v4-sys"><Ic d={I.layers} size={13} sw={1.9} /> {SYSTEM_NAME}<span className="v4-sys__crit">3 critical guarantees</span><span className="v4-illus">Illustrative</span></span>
         </div>
         <div className="v4-controls" role="group" aria-label="Sequence controls">
           <button className="v4-ctl" onClick={togglePlay} aria-label={playing ? "Pause" : done ? "Replay" : "Play"}>
@@ -125,7 +125,7 @@ export function Flagship() {
           {/* Top: the requirement (anchor), and its verdict + who approved it. */}
           <div className="v4-stage__top">
             <div className="v4-narr">
-              <div className="v4-stage__eyebrow">Guarantee</div>
+              <div className="v4-stage__eyebrow">Northwind&rsquo;s guarantee</div>
               <Reveal at={REQUIREMENT} step={step}><h2 className="v4-req">{g.requirement}</h2></Reveal>
             </div>
             <div className="v4-verdict">
@@ -207,7 +207,8 @@ function FlagshipStyles() {
       .v4-ctl:disabled { opacity: .4; cursor: default; }
       .v4-step { font-family: var(--font-code); font-size: 11.5px; color: var(--fg-4); font-variant-numeric: tabular-nums; min-width: 32px; text-align: center; }
 
-      .v4-body { display: grid; grid-template-columns: 258px minmax(0,1fr); align-items: stretch; min-height: clamp(420px, 58vh, 560px); }
+      .v4-body { display: grid; grid-template-columns: 258px minmax(0,1fr); align-items: stretch; min-height: clamp(380px, 50vh, 500px); }
+      .v4-illus { font-family: var(--font-code); font-size: 9.5px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--fg-4); border: 1px dashed var(--line-3); border-radius: 999px; padding: 2px 8px; margin-left: 8px; }
       .v4-rail { border-right: 1px solid var(--line-2); background: var(--bg-0); padding: clamp(14px,1.8vw,20px); display: flex; flex-direction: column; gap: 8px; }
       .v4-rail__lbl { font-family: var(--font-code); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-4); margin-bottom: 4px; }
       .v4-grow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 13px; border-radius: 12px; border: 1px solid var(--line-2); background: var(--bg-1); cursor: pointer; text-align: left; transition: border-color .15s ease, background .15s ease, transform .15s ease; }
@@ -220,7 +221,7 @@ function FlagshipStyles() {
       .v4-stage__top { display: grid; grid-template-columns: minmax(0,1.25fr) minmax(0,0.85fr); gap: clamp(20px,3vw,44px); align-items: start; }
       .v4-narr { min-width: 0; }
       .v4-stage__eyebrow { font-family: var(--font-code); font-size: 10.5px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--acc-deep); margin-bottom: 12px; }
-      .v4-req { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.55rem, 3vw, 2.7rem); line-height: 1.08; letter-spacing: -0.022em; color: var(--fg-1); margin: 0; max-width: 15ch; text-wrap: balance; }
+      .v4-req { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.55rem, 3vw, 2.7rem); line-height: 1.08; letter-spacing: -0.022em; color: var(--fg-1); margin: 0; max-width: 19ch; text-wrap: balance; }
       .v4-verdict { min-width: 0; }
       .v4-status { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
       .v4-status__txt { font-size: 13px; color: var(--fg-3); line-height: 1.5; margin: 8px 0 0; }
