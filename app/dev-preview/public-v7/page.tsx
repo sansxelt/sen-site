@@ -15,6 +15,14 @@ export default function PublicV7() {
     <div className="v7-root">
       <EvidenceHero />
 
+      {/* ── Authored handoff: a continuing rule and the record language carry the proof, on a background that
+            opens from the near-black evidence field into warm paper, into the light product world ── */}
+      <section className="v7-bridge">
+        <div className="wrap v7-bridge__wrap">
+          <p className="v7-bridge__say">Two deployments, one requirement, both records kept. That preserved history is a Guarantee, and it is what the rest of Vraelis is built to create and hold.</p>
+        </div>
+      </section>
+
       {/* ── Back into the light Vraelis product world ── */}
       <section className="v7-section v7-section--product" id="product">
         <div className="wrap">
@@ -68,6 +76,14 @@ function V7PageStyles() {
       .v7-section { position: relative; }
       .v7-h2 { font-family: var(--font-display); font-weight: 600; color: var(--fg-1); letter-spacing: -0.025em; line-height: 1.08; font-size: clamp(1.7rem, 3.4vw, 2.7rem); text-wrap: balance; }
       .v7-p-kick { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-4); margin: 0 0 16px; font-family: var(--font-geist-mono), ui-monospace, monospace; }
+
+      /* ── Authored dark-to-light handoff: background opens from the evidence field into warm paper, the
+            preserved lineage carries across the boundary, a statement leads into the product ── */
+      .v7-bridge { background: linear-gradient(180deg, #0B0E15 0%, var(--bg-0) 46%); border-top: 1px solid rgba(255,255,255,0.12); padding: clamp(32px, 5vh, 60px) 0 clamp(52px, 9vh, 108px); }
+      .v7-bridge__wrap { max-width: var(--max-content); }
+      .v7-bridge__say { font-family: var(--font-display); font-weight: 500; font-size: clamp(1.3rem, 2.4vw, 2.05rem); line-height: 1.26; letter-spacing: -0.02em; color: var(--fg-1); max-width: 28ch; margin: clamp(60px, 11vh, 120px) 0 0; }
+      /* the product section follows the bridge (already light), so it needs less top air */
+      .v7-section--product { padding-top: clamp(28px, 4vh, 52px) !important; }
 
       .v7-cta-dark { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; box-sizing: border-box;
         background: var(--fg-1); color: var(--bg-1); font-family: var(--font-display); font-weight: 600; font-size: 16px; letter-spacing: -0.005em;
