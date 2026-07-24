@@ -31,21 +31,21 @@ export default function PublicV5() {
       <section style={{ position: "relative" }}>
         <div className="glow glow--bleed" />
         <div className="grid-faint" style={{ opacity: 0.5 }} />
-        <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(24px, 3.2vw, 46px)", paddingBottom: "clamp(30px, 4vw, 56px)" }}>
-          <div style={{ maxWidth: 780, marginBottom: "clamp(26px, 3.4vw, 44px)" }}>
+        <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(12px, 1.6vw, 26px)", paddingBottom: "clamp(30px, 4vw, 56px)" }}>
+          <div style={{ maxWidth: 720, marginBottom: "clamp(12px, 1.5vw, 20px)" }}>
             <p className="eyebrow rise" data-d="1">Independent proof for software built with AI</p>
-            <h1 className="display rise" data-d="2" style={{ fontSize: "clamp(2.5rem, 5.2vw, 4.5rem)", margin: "0 0 20px", lineHeight: 1.03, textWrap: "balance" }}>
+            <h1 className="display rise" data-d="2" style={{ fontSize: "clamp(2.15rem, 4vw, 3.35rem)", margin: "0 0 12px", lineHeight: 1.05, textWrap: "balance" }}>
               AI builds. <span className="em">Vraelis proves.</span>
             </h1>
-            <p className="lead-copy rise" data-d="3" style={{ fontSize: "clamp(1.08rem, 1.4vw, 1.34rem)", color: "var(--fg-2)", maxWidth: 660, margin: "0 0 26px", lineHeight: 1.5 }}>
-              Keep the requirements your company depends on outside the code, then independently verify the live software against them. The agent can change the code. It cannot change what the business requires Vraelis to prove.
+            <p className="lead-copy rise" data-d="3" style={{ fontSize: "clamp(1rem, 1.15vw, 1.15rem)", color: "var(--fg-2)", maxWidth: 616, margin: "0 0 18px", lineHeight: 1.48 }}>
+              Vraelis holds the requirements your business depends on outside the code, then proves the live software against them. The agent can change the code. It cannot change what the business requires Vraelis to prove.
             </p>
             <div className="rise" data-d="4" style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
               <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Verify an application <span aria-hidden>→</span></Link>
               <a href="#product" className="btn btn--ghost btn--lg">See a real verification</a>
             </div>
           </div>
-          <div className="rise" data-d="5"><HeroWorld /></div>
+          <HeroWorld />
         </div>
       </section>
 
