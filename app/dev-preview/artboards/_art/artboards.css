@@ -1,0 +1,235 @@
+/* ============================================================================
+   Vraelis art-direction artboards. STATIC compositions only, scoped under .ab.
+   Visual language: evidence as monument. Real proof (observed browser state, the
+   held requirement, colossal verdicts, the preserved ledger) at editorial scale
+   as an authoritative record — never a dashboard card. White-first; one contained
+   dark execution field; emerald and clay used once each, decisively.
+   ============================================================================ */
+
+.ab {
+  --paper:  #FAF8F4;   /* warm paper ground */
+  --paper-2:#F2ECE1;   /* recessed warm */
+  --ink:    #16150F;   /* monumental near-black */
+  --ink-2:  #423E36;   /* secondary */
+  --ink-3:  #6C665B;   /* meta */
+  --line:   rgba(22,21,15,0.12);
+  --line-2: rgba(22,21,15,0.22);
+  --ok:     #0A7B54;   /* emerald: Verified / proof mark */
+  --ok-ink: #075B3E;
+  --clay:   #A8452A;   /* Failed */
+  --field:  #0C111C;   /* contained dark execution field */
+  --field-2:#0A0F18;
+  --dfg:    #F3F6FB;
+  --dfg-2:  #AAB2C1;
+  --dfg-3:  #7B8394;
+  --dline:  rgba(255,255,255,0.12);
+  --dline-2:rgba(255,255,255,0.20);
+  --dok:    #4BE3AA;
+  --dclay:  #FF7C55;
+  --sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--ink);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+.ab, .ab *, .ab *::before, .ab *::after { box-sizing: border-box; }
+.ab ::selection { background: rgba(10,123,84,0.16); }
+
+/* ---- shared type ---- */
+.ab-mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.ab-kicker { font-family: var(--mono); font-size: 13px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ok); display: inline-flex; align-items: center; gap: 12px; }
+.ab-kicker::before { content: ""; width: 26px; height: 2px; background: currentColor; }
+.ab-label { font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+.ab-wordmark { font-family: var(--sans); font-weight: 700; font-size: 22px; letter-spacing: -0.035em; color: var(--ink); }
+
+/* ---- shared CTA ---- */
+.ab-cta { display: inline-flex; align-items: center; gap: 9px; font-family: var(--sans); font-weight: 600; text-decoration: none;
+  background: var(--ink); color: var(--paper); border: 1px solid var(--ink); border-radius: 6px; padding: 13px 22px; font-size: 16px;
+  transition: background .16s ease; }
+.ab-cta:hover { background: #000; }
+.ab-cta--top { padding: 9px 16px; font-size: 14px; }
+.ab-cta--lg { padding: 16px 28px; font-size: 17px; }
+
+/* ---- the frame: one full-viewport artboard ---- */
+.ab-frame { width: 100vw; min-height: 100svh; height: 100svh; background: var(--paper); position: relative; overflow: hidden; display: flex; flex-direction: column; }
+.ab-top { position: absolute; top: 0; left: 0; right: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between;
+  padding: 26px clamp(28px, 4vw, 64px); }
+
+/* mobile/desktop variant switches (each artboard authors both). !important so the toggle always beats
+   an artboard's own display value (grid/flex) regardless of source order. */
+.ab-mob { display: none; }
+@media (max-width: 640px) {
+  .ab-desk { display: none !important; }
+  .ab-mob { display: block !important; }
+}
+
+/* =====================================================================
+   GALLERY INDEX
+   ===================================================================== */
+.ab-gallery { min-height: 100svh; background: var(--paper); padding: clamp(40px,6vw,88px) clamp(28px,5vw,80px); }
+.ab-gallery h1 { font-family: var(--sans); font-weight: 600; letter-spacing: -0.03em; font-size: clamp(2rem,4vw,3.2rem); margin: 0 0 10px; color: var(--ink); }
+.ab-gallery p { color: var(--ink-2); font-size: 17px; max-width: 62ch; margin: 0 0 40px; line-height: 1.55; }
+.ab-gallery ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; max-width: 720px; }
+.ab-gallery a { display: flex; align-items: baseline; gap: 16px; text-decoration: none; color: var(--ink); border-top: 1px solid var(--line); padding: 18px 4px; }
+.ab-gallery a:hover { color: var(--ok); }
+.ab-gallery a span.n { font-family: var(--mono); font-size: 13px; color: var(--ok); }
+.ab-gallery a span.t { font-family: var(--sans); font-weight: 600; font-size: 20px; letter-spacing: -0.02em; }
+.ab-gallery a span.d { font-size: 14px; color: var(--ink-3); margin-left: auto; }
+
+/* =====================================================================
+   ARTBOARD 1 — HOMEPAGE OPENING
+   Monumental thesis meets an oversized dark evidence monument that bleeds off
+   the frame. The held requirement bridges the two worlds.
+   ===================================================================== */
+.ab1 { display: grid; grid-template-columns: 0.84fr 1.16fr; }
+.ab1__left { position: relative; z-index: 2; padding: clamp(88px,12vh,120px) clamp(34px,3.2vw,56px) clamp(36px,5vh,60px) clamp(40px,5vw,84px);
+  display: flex; flex-direction: column; justify-content: center; }
+.ab1__h1 { font-family: var(--sans); font-weight: 600; letter-spacing: -0.04em; line-height: 0.98; color: var(--ink);
+  font-size: clamp(2.6rem, 4.5vw, 4.6rem); margin: 22px 0 0; }
+.ab1__turn { color: var(--ink); }
+.ab1__say { font-size: clamp(1.05rem,1.25vw,1.3rem); line-height: 1.5; color: var(--ink-2); max-width: 40ch; margin: 30px 0 0; }
+.ab1__actions { margin-top: 40px; display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
+.ab1__honest { font-size: 13px; color: var(--ink-3); }
+
+/* the monument: dark, bleeds top/right/bottom, oversized evidence */
+.ab1__mon { position: relative; background: linear-gradient(158deg, var(--field), var(--field-2)); color: var(--dfg-2);
+  display: flex; flex-direction: column; justify-content: center; gap: clamp(26px,3.6vh,44px);
+  padding: clamp(60px,9vh,110px) clamp(52px,5.5vw,110px) clamp(60px,9vh,110px) clamp(52px,5vw,90px); }
+.ab1__mon::before { content: ""; position: absolute; inset: 0; background:
+  radial-gradient(120% 80% at 90% 8%, rgba(75,227,170,0.10), transparent 60%); pointer-events: none; }
+.ab1__reqwrap { position: relative; z-index: 1; }
+.ab1__reqlabel { display: block; color: var(--dok); margin-bottom: 14px; }
+.ab1__req { font-family: var(--sans); font-weight: 500; letter-spacing: -0.02em; line-height: 1.14; color: var(--dfg);
+  font-size: clamp(1.5rem,2.1vw,2.15rem); margin: 0; max-width: 20ch; }
+.ab1__evi { position: relative; z-index: 1; border-top: 1px solid var(--dline); padding-top: clamp(22px,3vh,34px); }
+.ab1__evihead { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+.ab1__evihead .ab-label { color: var(--dok); }
+.ab1__dep { color: var(--dfg-3); }
+/* the observed live state, at forensic scale */
+.ab1__rows { display: flex; flex-direction: column; gap: 4px; }
+.ab1__row { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; padding: 12px 0; border-bottom: 1px solid var(--dline); }
+.ab1__k { font-family: var(--mono); font-size: clamp(15px,1.1vw,18px); color: var(--dfg-2); }
+.ab1__v { font-family: var(--sans); font-weight: 600; letter-spacing: -0.02em; font-size: clamp(1.5rem,2.1vw,2.1rem); line-height: 1; color: var(--dfg-3); }
+.ab1__v--bad { color: var(--dclay); font-size: clamp(1.7rem,2.6vw,2.6rem); }
+/* the confrontation, at monumental scale — the heart of a verification */
+.ab1__punch { display: flex; flex-direction: column; gap: 6px; }
+.ab1__punch-l { display: flex; align-items: baseline; gap: 16px; font-family: var(--sans); font-weight: 600;
+  letter-spacing: -0.03em; font-size: clamp(2.2rem,3.6vw,3.6rem); line-height: 1.02; color: var(--dfg-3); }
+.ab1__punch-ok { color: var(--dfg); font-weight: 600; }
+.ab1__punch-bad { color: var(--dclay); font-weight: 600; }
+.ab1__exp { font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dfg-3); align-self: center; }
+
+/* =====================================================================
+   ARTBOARD 2 — PRODUCTION PROOF
+   The requirement dominates as the constant; FAILED and VERIFIED are colossal
+   editorial objects; the lineage reads as a before / after across deployments.
+   ===================================================================== */
+.ab2 { display: flex; flex-direction: column; padding: clamp(92px,13vh,148px) clamp(40px,5vw,84px) clamp(44px,6vh,76px); }
+.ab2__reqlabel { color: var(--ink-3); }
+.ab2__reqt { font-family: var(--sans); font-weight: 600; letter-spacing: -0.032em; line-height: 0.98; color: var(--ink);
+  font-size: clamp(2.3rem, 4.6vw, 4.4rem); margin: 18px 0 0; max-width: 22ch; }
+/* a slim two-deployment track fills the band between the requirement and the verdicts */
+.ab2__bridge { margin-top: clamp(38px,6vh,74px); display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: clamp(18px,2vw,32px); }
+.ab2__track { height: 1px; background: var(--line-2); }
+.ab2__deps { font-family: var(--mono); font-size: 14px; letter-spacing: 0.03em; color: var(--ink-3); }
+.ab2__dep-fail { color: var(--clay); } .ab2__dep-ok { color: var(--ok-ink); }
+.ab2__grid { margin-top: clamp(30px,4.5vh,56px); display: grid; grid-template-columns: 1fr 1fr; column-gap: clamp(34px,5vw,84px); position: relative; }
+/* central spine: makes the before/after explicit and gives the space intention */
+.ab2__grid::before { content: ""; position: absolute; top: 6px; bottom: 8px; left: 50%; width: 1px; background: var(--line); }
+.ab2__mv { display: flex; flex-direction: column; gap: clamp(16px,2.2vh,26px); padding-top: clamp(24px,3vh,38px);
+  border-top: 2px solid var(--line-2); }
+.ab2__mv--fail { border-top-color: rgba(168,69,42,0.55); }
+.ab2__mv--ok { border-top-color: rgba(10,123,84,0.5); }
+.ab2__beat .ab-label { display: block; }
+.ab2__say { font-family: var(--sans); font-weight: 500; letter-spacing: -0.012em; line-height: 1.28; color: var(--ink);
+  font-size: clamp(1.05rem,1.4vw,1.42rem); margin: 8px 0 0; max-width: 26ch; }
+.ab2__clay { color: var(--clay); }
+.ab2__ok { color: var(--ok-ink); }
+.ab2__verdwrap { margin-top: clamp(18px,3vh,34px); display: flex; align-items: baseline; gap: 18px; }
+.ab2__verd { font-family: var(--sans); font-weight: 600; letter-spacing: -0.045em; line-height: 0.8;
+  font-size: clamp(4.2rem, 8.6vw, 8.2rem); }
+.ab2__verd--fail { color: var(--clay); }
+.ab2__verd--ok { color: var(--ok); }
+.ab2__rec { font-family: var(--mono); font-size: 13px; letter-spacing: 0.04em; color: var(--ink-3); align-self: flex-end; padding-bottom: 12px; }
+.ab2__arrow { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); color: var(--ink-3); font-size: 22px; }
+
+/* ARTBOARD 2 — MOBILE */
+.ab2-m { padding: 82px 22px 34px; display: flex; flex-direction: column; min-height: 100svh; }
+.ab2-m__reqt { font-family: var(--sans); font-weight: 600; letter-spacing: -0.028em; line-height: 1.02; color: var(--ink); font-size: 30px; margin: 12px 0 0; }
+.ab2-m__mv { margin-top: 26px; padding-top: 18px; border-top: 2px solid var(--line-2); display: flex; flex-direction: column; gap: 12px; }
+.ab2-m__mv--fail { border-top-color: rgba(168,69,42,0.55); }
+.ab2-m__mv--ok { border-top-color: rgba(10,123,84,0.5); }
+.ab2-m__say { font-family: var(--sans); font-weight: 500; font-size: 17px; line-height: 1.3; color: var(--ink); margin: 6px 0 0; }
+.ab2-m__verdwrap { display: flex; align-items: baseline; gap: 12px; margin-top: 8px; }
+.ab2-m__verd { font-family: var(--sans); font-weight: 600; letter-spacing: -0.04em; line-height: 0.82; font-size: 62px; }
+.ab2-m__verd--fail { color: var(--clay); } .ab2-m__verd--ok { color: var(--ok); }
+.ab2-m__rec { font-family: var(--mono); font-size: 12px; color: var(--ink-3); align-self: flex-end; padding-bottom: 8px; }
+
+/* ARTBOARD 1 — MOBILE */
+.ab1-m { padding: 84px 22px 34px; display: flex; flex-direction: column; min-height: 100svh; }
+.ab1-m__h1 { font-family: var(--sans); font-weight: 600; letter-spacing: -0.035em; line-height: 1.0; font-size: 40px; margin: 18px 0 0; color: var(--ink); }
+.ab1-m__turn { color: var(--ink); }
+.ab1-m__say { font-size: 16px; line-height: 1.5; color: var(--ink-2); margin: 18px 0 0; }
+/* full-bleed dark evidence FIELD, not a card: extend past the page gutter to both screen edges */
+.ab1-m__mon { margin: 28px -22px 0; background: linear-gradient(158deg, var(--field), var(--field-2)); color: var(--dfg-2);
+  border-radius: 0; padding: 26px 22px 30px; }
+.ab1-m__reqlabel { color: var(--dok); }
+.ab1-m__req { font-family: var(--sans); font-weight: 500; letter-spacing: -0.015em; line-height: 1.18; color: var(--dfg); font-size: 21px; margin: 12px 0 0; }
+.ab1-m__evi { margin-top: 20px; border-top: 1px solid var(--dline); padding-top: 18px; }
+.ab1-m__row { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; padding: 11px 0; border-bottom: 1px solid var(--dline); }
+.ab1-m__k { font-family: var(--mono); font-size: 14px; color: var(--dfg-2); }
+.ab1-m__v { font-family: var(--sans); font-weight: 600; font-size: 26px; line-height: 1; color: var(--dfg); }
+.ab1-m__v--bad { color: var(--dclay); }
+.ab1-m__actions { margin-top: 26px; display: flex; flex-direction: column; gap: 14px; align-items: stretch; }
+.ab1-m__actions .ab-cta { justify-content: center; }
+.ab1-m__honest { font-size: 12.5px; color: var(--ink-3); text-align: center; }
+
+/* =====================================================================
+   ARTBOARD 3 — THE GUARANTEE OBJECT
+   One durable proof instrument. An emerald spine (the line the agent cannot
+   cross) ties the promise, the approval, and the record into a single object.
+   ===================================================================== */
+.ab3 { position: relative; display: grid; grid-template-columns: clamp(230px,23vw,332px) 1fr; column-gap: clamp(36px,4.2vw,78px);
+  padding: clamp(84px,12vh,130px) clamp(48px,5vw,90px) clamp(46px,6vh,78px) clamp(48px,5vw,84px); }
+
+/* the spine IS the durable object: an emerald line carrying the preserved proof history as nodes */
+.ab3__spine { position: relative; display: flex; flex-direction: column; padding-left: 28px; }
+.ab3__spine::before { content: ""; position: absolute; left: 4px; top: 7px; bottom: 7px; width: 3px; background: var(--ok); border-radius: 2px; }
+.ab3__spinelabel { color: var(--ok-ink); }
+.ab3__hist { margin-top: auto; display: flex; flex-direction: column; gap: clamp(24px,3.6vh,50px); }
+.ab3__node { position: relative; }
+.ab3__node::before { content: ""; position: absolute; left: -27.5px; top: 4px; width: 13px; height: 13px; border-radius: 999px; border: 3px solid var(--paper); }
+.ab3__node--fail::before { background: var(--clay); } .ab3__node--ok::before { background: var(--ok); }
+.ab3__node-v { display: block; font-family: var(--sans); font-weight: 600; letter-spacing: -0.015em; font-size: clamp(1.1rem,1.4vw,1.4rem); line-height: 1; }
+.ab3__node--fail .ab3__node-v { color: var(--clay); } .ab3__node--ok .ab3__node-v { color: var(--ok); }
+.ab3__node-l { display: block; font-family: var(--mono); font-size: 12px; color: var(--ink-3); margin-top: 6px; }
+
+.ab3__body { display: flex; flex-direction: column; }
+.ab3__sys { color: var(--ink-3); }
+.ab3__promise { margin: auto 0; }
+.ab3__plabel { color: var(--ink-3); }
+.ab3__req { font-family: var(--sans); font-weight: 600; letter-spacing: -0.034em; line-height: 0.98;
+  font-size: clamp(2.3rem, 4.4vw, 4.2rem); color: var(--ink); margin: 16px 0 0; max-width: 15ch; }
+.ab3__status { display: flex; align-items: baseline; gap: 18px; margin-top: clamp(22px,3vh,42px); }
+.ab3__verd { font-family: var(--sans); font-weight: 600; letter-spacing: -0.045em; line-height: 0.84;
+  font-size: clamp(2.6rem,4.8vw,4.4rem); color: var(--ok); }
+.ab3__on { color: var(--ink-3); font-size: 14px; line-height: 1.4; }
+.ab3__record { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line-2); }
+.ab3__field { padding: clamp(22px,2.6vw,30px) clamp(26px,2.4vw,40px) 0 0; }
+.ab3__field + .ab3__field { border-left: 1px solid var(--line); padding-left: clamp(26px,2.4vw,40px); }
+.ab3__fval { font-family: var(--sans); font-size: clamp(0.98rem,1.05vw,1.12rem); line-height: 1.42; color: var(--ink-2); margin: 12px 0 0; }
+.ab3__seal { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; color: var(--ok); font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; }
+.ab3__fail { color: var(--clay); font-weight: 600; } .ab3__ok { color: var(--ok); font-weight: 600; }
+
+/* ARTBOARD 3 — MOBILE */
+.ab3-m { position: relative; padding: 82px 22px 30px 34px; display: flex; flex-direction: column; min-height: 100svh; }
+.ab3-m::before { content: ""; position: absolute; left: 22px; top: 82px; bottom: 30px; width: 3px; background: var(--ok); border-radius: 2px; }
+.ab3-m__req { font-family: var(--sans); font-weight: 600; letter-spacing: -0.03em; line-height: 1.0; color: var(--ink); font-size: 33px; margin: 14px 0 0; }
+.ab3-m__status { display: flex; align-items: baseline; gap: 12px; margin: 22px 0 0; }
+.ab3-m__verd { font-family: var(--sans); font-weight: 600; letter-spacing: -0.04em; font-size: 40px; line-height: 0.9; color: var(--ok); }
+.ab3-m__on { font-family: var(--mono); font-size: 12px; color: var(--ink-3); }
+.ab3-m__record { margin-top: clamp(34px,6vh,66px); padding-top: 22px; display: flex; flex-direction: column; gap: 16px; }
+.ab3-m__spacer { flex: 1; }
+.ab3-m__field { border-top: 1px solid var(--line); padding-top: 14px; }
+.ab3-m__fval { font-size: 15px; line-height: 1.4; color: var(--ink-2); margin: 7px 0 0; }
