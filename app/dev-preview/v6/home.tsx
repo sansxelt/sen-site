@@ -5,64 +5,9 @@
 // appears deeper as one current capability, never as the whole company.
 import { Reveal, SectionHead, CTA, EditorialLink, Signal, Kicker } from "./_system/ui";
 import "./_system/home.css";
+import { Hero } from "./_system/hero";
 
 const BASE = "/dev-preview/v6";
-
-/* ---- the hero environment: a real responsibility under live oversight ---- */
-function OversightConsole() {
-  const stream: { t: string; d: string; sig?: "go" | "wait" | "stop" }[] = [
-    { t: "Plan created", d: "6 steps, touches Stripe and the billing service" },
-    { t: "Changed 7 files", d: "billing/, dashboard/, api/usage" },
-    { t: "Called the Stripe API", d: "created 1 price, 1 usage meter" },
-    { t: "Assumption flagged", d: "existing customers keep their current price", sig: "wait" },
-    { t: "Finding", d: "the usage meter is not enforced on the free plan", sig: "stop" },
-    { t: "Repair submitted", d: "re-checked against the requirement", sig: "go" },
-  ];
-  const tracking = [
-    ["What must remain true", "Existing customers are never overcharged"],
-    ["Systems affected", "Stripe, billing, dashboard"],
-    ["Evidence", "Real browser run, API trace, screenshots"],
-    ["Still uncertain", "Free-plan enforcement"],
-    ["Human decision", "Approve the new pricing before it ships"],
-  ];
-  return (
-    <div className="v6-console" data-nav-dark>
-      <div className="v6-console__bar">
-        <span className="v6-kicker" style={{ color: "var(--go-dk)" }}>● Live oversight</span>
-        <span className="v6-mono" style={{ color: "var(--g-fg-3)" }}>app.vraelis.com</span>
-      </div>
-      <div className="v6-console__grid">
-        <div className="v6-console__main">
-          <div className="v6-console__resp">
-            <Kicker>Responsibility, assigned to an agent</Kicker>
-            <p className="v6-console__task">Add usage-based billing to the customer dashboard.</p>
-          </div>
-          <div className="v6-stream">
-            {stream.map((s) => (
-              <div key={s.t} className="v6-stream__row">
-                <span className={`v6-stream__dot ${s.sig ? `is-${s.sig}` : ""}`} aria-hidden />
-                <span className="v6-stream__t">{s.t}</span>
-                <span className="v6-stream__d">{s.d}</span>
-                {s.sig ? <Signal state={s.sig}>{s.sig === "stop" ? "Finding" : s.sig === "wait" ? "Review" : "Re-checked"}</Signal> : null}
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="v6-console__side">
-          <Kicker>Vraelis is tracking</Kicker>
-          <ul className="v6-console__track">
-            {tracking.map(([k, v]) => (
-              <li key={k}><span className="v6-console__tk">{k}</span><span className="v6-console__tv">{v}</span></li>
-            ))}
-          </ul>
-          <div className="v6-console__decision">
-            <Signal state="wait">Needs a human decision</Signal>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 /* ---- the lifecycle: one continuous object that changes state ---- */
 const LIFECYCLE = [
@@ -90,26 +35,8 @@ const SURFACES = [
 export default function Home() {
   return (
     <>
-      {/* ── 1. Category open ── */}
-      <section className="v6-sec v6-hero">
-        <div className="v6-wrap v6-wrap--wide">
-          <div className="v6-hero__grid">
-            <div className="v6-hero__copy">
-              <p className="v6-eyebrow v6-reveal in">Oversight for AI software agents</p>
-              <h1 className="v6-d2xl v6-hero__h1">
-                <span className="v6-mask"><span className="v6-mask__in">AI agents are taking responsibility for software.</span></span>
-                <span className="v6-mask"><span className="v6-mask__in v6-hero__turn" style={{ ["--d" as string]: 1 }}>Vraelis determines what they can be trusted to do.</span></span>
-              </h1>
-              <p className="v6-lead v6-hero__say">Vraelis follows software agents from assigned responsibility to trusted completion, tracking what they change, challenging unsupported claims, surfacing decisions that need a person, and preserving what the company learns.</p>
-              <div className="v6-hero__cta">
-                <CTA brand lg>Open Vraelis</CTA>
-                <EditorialLink href="#how">See how oversight works</EditorialLink>
-              </div>
-            </div>
-            <Reveal media className="v6-hero__vis"><OversightConsole /></Reveal>
-          </div>
-        </div>
-      </section>
+      {/* ── 1. Responsibility in motion: one immersive environment (replaces the rejected split hero) ── */}
+      <Hero />
 
       {/* ── 2. The problem ── */}
       <section className="v6-sec v6-sec--sunk" id="how">

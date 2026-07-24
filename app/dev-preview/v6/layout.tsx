@@ -11,7 +11,7 @@ import { V6_ORIGIN } from "./_system/meta";
 export const metadata: Metadata = {
   metadataBase: new URL(V6_ORIGIN),
   title: {
-    default: "Vraelis, oversight for AI software agents",
+    default: "Vraelis | Oversight for AI software agents",
     template: "%s | Vraelis",
   },
   description:
