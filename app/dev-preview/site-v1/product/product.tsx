@@ -27,7 +27,7 @@ function Layer({ on, children }: { on: boolean; children: React.ReactNode }) {
 /* The assembling Guarantee. `active` is the furthest stage reached (it accumulates, never disassembles). */
 function AssemblingGuarantee() {
   const [active, setActive] = useState(0);
-  const stageRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const stageRefs = useRef<(HTMLLIElement | null)[]>([]);
 
   useEffect(() => {
     const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
