@@ -10,7 +10,7 @@
   /* light surfaces */
   --paper:   #F7F7F4;   /* page ground */
   --surface: #FFFFFF;   /* cards, panels */
-  --sunk:    #EFEEE9;   /* recessed / alt sections */
+  --sunk:    #E9E7DF;   /* recessed / alt sections; was #EFEEE9, only ~3.5% off --paper so zoning read as a bug */
   --ink:     #17181C;   /* headings */
   --ink-2:   #3E4046;   /* body */
   --ink-3:   #64676E;   /* secondary */
@@ -173,12 +173,16 @@
 .v6-mega__feature p { font-size: 13px; line-height: 1.5; margin: 0; }
 
 /* mobile full-screen nav */
-.v6-drawer { position: fixed; inset: 0; z-index: 90; background: var(--paper); display: flex; flex-direction: column; animation: v6DrawerIn 240ms var(--ease) both; overflow-y: auto; }
+/* --surface, not --paper: on the page ground the panel sampled the same colour as the page behind it and had
+   no layer identity. The primary actions are pinned in a footer so they never scroll out of the viewport. */
+.v6-drawer { position: fixed; inset: 0; z-index: 90; background: var(--surface); display: flex; flex-direction: column; animation: v6DrawerIn 240ms var(--ease) both; overflow: hidden; }
 @keyframes v6DrawerIn { from { opacity: 0; } to { opacity: 1; } }
-.v6-drawer__top { display: flex; align-items: center; justify-content: space-between; padding: 13px var(--gutter); border-bottom: 1px solid var(--line); }
-.v6-drawer__x { width: 40px; height: 40px; border-radius: 9px; border: 1px solid var(--line-2); background: var(--surface); color: var(--ink); display: grid; place-items: center; cursor: pointer; }
-.v6-drawer__body { padding: 8px var(--gutter) 40px; display: flex; flex-direction: column; }
-.v6-drawer__link { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; color: var(--ink); text-decoration: none; padding: 15px 2px; border-bottom: 1px solid var(--line); }
+.v6-drawer__top { display: flex; align-items: center; justify-content: space-between; padding: 13px var(--gutter); border-bottom: 1px solid var(--line); flex: none; }
+.v6-drawer__x { width: 44px; height: 44px; border-radius: 9px; border: 1px solid var(--line-2); background: var(--surface); color: var(--ink); display: grid; place-items: center; cursor: pointer; }
+.v6-drawer__body { padding: 8px var(--gutter) 28px; display: flex; flex-direction: column; flex: 1; overflow-y: auto; }
+.v6-drawer__foot { flex: none; padding: 14px var(--gutter) 18px; border-top: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; gap: 10px; }
+.v6-drawer__foot .v6-btn { justify-content: center; }
+.v6-drawer__link { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; color: var(--ink); text-decoration: none; padding: 15px 2px; border-bottom: 1px solid var(--line); min-height: 48px; display: flex; align-items: center; }
 .v6-drawer__sub { padding: 14px 2px; border-bottom: 1px solid var(--line); }
 .v6-drawer__sub-h { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-4); margin: 0 0 10px; }
 .v6-drawer__sub-links { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
@@ -208,6 +212,13 @@
   .v6-foot__brandcol { grid-column: 1 / -1; }
 }
 @media (max-width: 560px) { .v6-foot__grid { grid-template-columns: 1fr 1fr; } .v6-drawer__sub-links { grid-template-columns: 1fr; } }
+/* Touch targets: editorial links and footer links are text-height on desktop, which is under the 44px touch
+   guidance on a phone. Grow the hit area vertically without moving the text. */
+@media (max-width: 640px) {
+  .v6-elink { min-height: 44px; }
+  .v6-foot__col a { min-height: 40px; }
+  .v6-drawer__sub-links a { min-height: 40px; }
+}
 
 /* ============================================================== MOTION ===== */
 @keyframes v6PageIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }

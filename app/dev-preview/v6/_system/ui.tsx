@@ -62,7 +62,9 @@ export function PageHero({ kicker, title, lead, cta, dark = false }: {
 }) {
   return (
     <section className={`v6-sec v6-phero ${dark ? "v6-dark" : ""}`} {...(dark ? { "data-nav-dark": "" } : {})}>
-      <div className="v6-wrap v6-wrap--wide">
+      {/* v6-wrap, not --wide: the hero sat on the 1320 grid while every body section below used 1200, so the
+          page jogged 58px to the left at the first section boundary on six of seven routes. */}
+      <div className="v6-wrap">
         {kicker ? <p className="v6-eyebrow v6-phero__k">{kicker}</p> : null}
         <h1>{title}</h1>
         {lead ? <p className="v6-phero__lead">{lead}</p> : null}

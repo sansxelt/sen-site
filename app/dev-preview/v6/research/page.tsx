@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import { v6meta } from "../_system/meta";
-import { PageHero, Reveal, SectionHead, Signal, Prose, EditorialLink, Kicker } from "../_system/ui";
+import { PageHero, Reveal, SectionHead, Signal, Prose, EditorialLink, Kicker, CTA } from "../_system/ui";
 
 export const metadata = v6meta({
   title: "Research",
@@ -230,6 +230,7 @@ export default function ResearchPage() {
         kicker="Research"
         title="The methods behind trusting agent work."
         lead="Vraelis is building the practice of independent oversight for software agents. This page describes the methodology we use today and the questions we are still working through. It does not claim results we have not earned."
+        cta={<><CTA brand>Open Vraelis</CTA><EditorialLink href={`${BASE}/method`}>Read the Method</EditorialLink></>}
       />
 
       {/* Stance + index of directions */}

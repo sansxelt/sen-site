@@ -68,6 +68,7 @@ export default function SecurityPage() {
         kicker="Security"
         title="Security built around independent oversight."
         lead="Vraelis judges work that agents produce, so the party doing the work is never the party that approves it. This is how access, secrets, and evidence are handled today, and an honest account of what is not yet in place."
+        cta={<><CTA brand>Open Vraelis</CTA><EditorialLink href="#status">See system status</EditorialLink></>}
       />
 
       {/* The model */}

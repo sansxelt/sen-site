@@ -1,5 +1,5 @@
 // Typed, data-driven documentation content for design 06. The sidebar, previous/next, table of contents, and
-// per-page metadata are all generated from this array — adding a page here adds it everywhere, no manual nav.
+// per-page metadata are all generated from this array. Adding a page here adds it everywhere, no manual nav.
 export type Block =
   | { t: "p"; text: string }
   | { t: "h2"; text: string }
@@ -49,10 +49,10 @@ export const DOCS: Doc[] = [
       { t: "p", text: "Work is the top-level view of your account: every responsibility assigned to an agent, grouped by system, with its current oversight state." },
       { t: "h2", text: "States" },
       { t: "ul", items: [
-        "In progress — the agent is planning or changing code.",
-        "In review — a person needs to make a decision before it can proceed.",
-        "Finding — Vraelis found a contradiction, a missing piece of evidence, or an unsafe assumption.",
-        "Complete — the responsibility was met and independently accepted.",
+        "In progress: the agent is planning or changing code.",
+        "In review: a person needs to make a decision before it can proceed.",
+        "Finding: Vraelis found a contradiction, a missing piece of evidence, or an unsafe assumption.",
+        "Complete: the responsibility was met and independently accepted.",
       ] },
       { t: "p", text: "Each state is a link into the detail for that responsibility, where the plan, the changes, the evidence, and the decisions live." },
     ],
@@ -150,9 +150,9 @@ export const DOCS: Doc[] = [
     blocks: [
       { t: "p", text: "Completion is the decision at the end of a responsibility. It is one of three answers, and the third is the one most tools refuse to give." },
       { t: "ul", items: [
-        "Verified — the responsibility held, with the evidence to show it.",
-        "Failed — it did not, and here is what happened instead.",
-        "Blocked — no honest decision could be reached, so none is claimed.",
+        "Verified: the responsibility held, with the evidence to show it.",
+        "Failed: it did not, and here is what happened instead.",
+        "Blocked: no honest decision could be reached, so none is claimed.",
       ] },
       { t: "p", text: "Completion is accepted only when the responsibility is met, not when the agent says it is done." },
     ],

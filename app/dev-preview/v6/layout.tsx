@@ -11,11 +11,11 @@ import { V6_ORIGIN } from "./_system/meta";
 export const metadata: Metadata = {
   metadataBase: new URL(V6_ORIGIN),
   title: {
-    default: "Vraelis — Oversight for AI software agents",
-    template: "%s — Vraelis",
+    default: "Vraelis, oversight for AI software agents",
+    template: "%s | Vraelis",
   },
   description:
-    "Vraelis follows AI software agents from assigned responsibility to trusted completion — surfacing uncertainty, evidence, decisions, repairs, and what the company learns.",
+    "Vraelis follows AI software agents from assigned responsibility to trusted completion, surfacing uncertainty, evidence, decisions, repairs, and what the company learns.",
   applicationName: "Vraelis",
   category: "technology",
   keywords: [

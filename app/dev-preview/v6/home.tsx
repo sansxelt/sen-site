@@ -11,8 +11,8 @@ const BASE = "/dev-preview/v6";
 /* ---- the hero environment: a real responsibility under live oversight ---- */
 function OversightConsole() {
   const stream: { t: string; d: string; sig?: "go" | "wait" | "stop" }[] = [
-    { t: "Plan created", d: "6 steps · touches Stripe and the billing service" },
-    { t: "Changed 7 files", d: "billing/ · dashboard/ · api/usage" },
+    { t: "Plan created", d: "6 steps, touches Stripe and the billing service" },
+    { t: "Changed 7 files", d: "billing/, dashboard/, api/usage" },
     { t: "Called the Stripe API", d: "created 1 price, 1 usage meter" },
     { t: "Assumption flagged", d: "existing customers keep their current price", sig: "wait" },
     { t: "Finding", d: "the usage meter is not enforced on the free plan", sig: "stop" },
@@ -20,8 +20,8 @@ function OversightConsole() {
   ];
   const tracking = [
     ["What must remain true", "Existing customers are never overcharged"],
-    ["Systems affected", "Stripe · billing · dashboard"],
-    ["Evidence", "Real browser run · API trace · screenshots"],
+    ["Systems affected", "Stripe, billing, dashboard"],
+    ["Evidence", "Real browser run, API trace, screenshots"],
     ["Still uncertain", "Free-plan enforcement"],
     ["Human decision", "Approve the new pricing before it ships"],
   ];
@@ -34,7 +34,7 @@ function OversightConsole() {
       <div className="v6-console__grid">
         <div className="v6-console__main">
           <div className="v6-console__resp">
-            <Kicker>Responsibility · assigned to an agent</Kicker>
+            <Kicker>Responsibility, assigned to an agent</Kicker>
             <p className="v6-console__task">Add usage-based billing to the customer dashboard.</p>
           </div>
           <div className="v6-stream">
@@ -100,7 +100,7 @@ export default function Home() {
                 <span className="v6-mask"><span className="v6-mask__in">AI agents are taking responsibility for software.</span></span>
                 <span className="v6-mask"><span className="v6-mask__in v6-hero__turn" style={{ ["--d" as string]: 1 }}>Vraelis determines what they can be trusted to do.</span></span>
               </h1>
-              <p className="v6-lead v6-hero__say">Vraelis follows software agents from assigned responsibility to trusted completion — tracking what they change, challenging unsupported claims, surfacing decisions that need a person, and preserving what the company learns.</p>
+              <p className="v6-lead v6-hero__say">Vraelis follows software agents from assigned responsibility to trusted completion, tracking what they change, challenging unsupported claims, surfacing decisions that need a person, and preserving what the company learns.</p>
               <div className="v6-hero__cta">
                 <CTA brand lg>Open Vraelis</CTA>
                 <EditorialLink href="#how">See how oversight works</EditorialLink>
@@ -163,6 +163,11 @@ export default function Home() {
                 <p className="v6-surface__d">{d}</p>
               </Reveal>
             ))}
+            {/* eighth cell: the 4-column grid holds 7 surfaces, so without this the last slot rendered empty */}
+            <Reveal i={3} className="v6-surface v6-surface--cta">
+              <h3 className="v6-surface__t">See it on your own system.</h3>
+              <CTA brand>Open Vraelis</CTA>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -179,7 +184,7 @@ export default function Home() {
             </div>
             <Reveal media className="v6-verify__proof">
               <div className="v6-proof" data-nav-dark>
-                <div className="v6-proof__bar"><span className="v6-kicker" style={{ color: "var(--g-fg-3)" }}>Requirement · held outside the code</span></div>
+                <div className="v6-proof__bar"><span className="v6-kicker" style={{ color: "var(--g-fg-3)" }}>Requirement, held outside the code</span></div>
                 <p className="v6-proof__req">A paid customer keeps Pro access after signing back in.</p>
                 <div className="v6-proof__rows">
                   <div className="v6-proof__row"><span>The agent claimed</span><span className="v6-proof__v">checkout complete</span></div>
@@ -188,7 +193,7 @@ export default function Home() {
                   <div className="v6-proof__row is-bad"><span>First repair</span><span className="v6-proof__v v6-proof__v--stop">did not survive sign-in</span></div>
                   <div className="v6-proof__row is-ok"><span>Later repair</span><span className="v6-proof__v v6-proof__v--go">independently Verified</span></div>
                 </div>
-                <div className="v6-proof__foot"><Signal state="go">Verified · 72c98e</Signal><span className="v6-mono" style={{ color: "var(--g-fg-3)", fontSize: 12 }}>earlier records preserved</span></div>
+                <div className="v6-proof__foot"><Signal state="go">Verified, 72c98e</Signal><span className="v6-mono" style={{ color: "var(--g-fg-3)", fontSize: 12 }}>earlier records preserved</span></div>
               </div>
             </Reveal>
           </div>

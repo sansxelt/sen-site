@@ -4,7 +4,7 @@ import { ImageResponse } from "next/og";
 // new category statement and a responsibility -> oversight -> trusted-completion flow. No checkout, no
 // verification card, no Production Pass, no dashboard, no fake customer. Next merges this across all v6 routes.
 export const runtime = "nodejs";
-export const alt = "Vraelis — oversight for AI software agents, from assigned responsibility to trusted completion";
+export const alt = "Vraelis, oversight for AI software agents, from assigned responsibility to trusted completion";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

@@ -13,12 +13,17 @@
 .v6-console__resp { padding-bottom: 15px; border-bottom: 1px solid var(--g-line); margin-bottom: 12px; }
 .v6-console__task { font-weight: 600; font-size: clamp(1.05rem,1.35vw,1.32rem); letter-spacing: -0.012em; color: var(--g-fg); line-height: 1.2; margin: 9px 0 0; }
 .v6-stream { display: flex; flex-direction: column; }
-.v6-stream__row { display: grid; grid-template-columns: 12px auto minmax(0,1fr) auto; gap: 10px; align-items: baseline; padding: 9px 0; border-top: 1px solid var(--g-line); }
+/* Two rows at every width: the label and its signal on line one, the full detail wrapping beneath. The old
+   single-line layout ellipsised all six rows on desktop, so the hero's only media ended in "...". */
+.v6-stream__row { display: grid; grid-template-columns: 12px minmax(0,1fr) auto; column-gap: 10px; row-gap: 3px;
+  align-items: baseline; padding: 10px 0; border-top: 1px solid var(--g-line); }
 .v6-stream__row:first-child { border-top: none; }
-.v6-stream__dot { width: 7px; height: 7px; border-radius: 999px; background: var(--g-fg-3); align-self: center; }
+.v6-stream__dot { grid-row: 1; grid-column: 1; width: 7px; height: 7px; border-radius: 999px; background: var(--g-fg-3); align-self: center; }
 .v6-stream__dot.is-go { background: var(--go-dk); } .v6-stream__dot.is-wait { background: var(--wait-dk); } .v6-stream__dot.is-stop { background: var(--stop-dk); }
-.v6-stream__t { font-size: 13.5px; color: var(--g-fg); font-weight: 500; white-space: nowrap; }
-.v6-stream__d { font-family: var(--mono); font-size: 11.5px; color: var(--g-fg-3); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.v6-stream__t { grid-row: 1; grid-column: 2; font-size: 13.5px; color: var(--g-fg); font-weight: 500; }
+.v6-stream__row .v6-sig { grid-row: 1; grid-column: 3; }
+.v6-stream__d { grid-row: 2; grid-column: 2 / -1; font-family: var(--mono); font-size: 12px; line-height: 1.45;
+  color: var(--g-fg-3); min-width: 0; white-space: normal; }
 .v6-stream__row .v6-sig { transform: scale(0.86); transform-origin: right center; }
 .v6-console__side { padding: 20px; display: flex; flex-direction: column; }
 .v6-console__track { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
@@ -39,17 +44,23 @@
 .v6-versus__dot { width: 8px; height: 8px; border-radius: 999px; background: var(--g-fg-3); flex: none; }
 .v6-versus__dot.is-go { background: var(--go-dk); } .v6-versus__dot.is-wait { background: var(--wait-dk); } .v6-versus__dot.is-stop { background: var(--stop-dk); }
 
-.v6-life { margin-top: clamp(44px,5vw,68px); position: relative; display: grid; grid-template-columns: repeat(8, 1fr); }
-.v6-life__spine { position: absolute; left: 0; right: 0; top: 33px; height: 2px; background: var(--g-line-2); }
-.v6-life__node { position: relative; padding-right: clamp(8px,1vw,16px); }
+.v6-life { margin-top: clamp(44px,5vw,68px); position: relative; display: grid; grid-template-columns: repeat(8, 1fr); align-items: start; }
+/* the spine stops at the last node instead of trailing past it into empty space */
+.v6-life__spine { position: absolute; left: 0; right: calc(100% / 8 - 7px); top: 33px; height: 2px; background: var(--g-line-2); }
+.v6-life__node { position: relative; padding-right: clamp(8px,1vw,16px); display: flex; flex-direction: column; }
 .v6-life__dot { position: relative; z-index: 1; display: block; width: 14px; height: 14px; border-radius: 999px; background: var(--graphite); border: 2px solid var(--g-fg-3); margin: 26px 0 16px; }
 .v6-life__dot.is-go { border-color: var(--go-dk); background: var(--go-dk); } .v6-life__dot.is-wait { border-color: var(--wait-dk); background: var(--wait-dk); } .v6-life__dot.is-stop { border-color: var(--stop-dk); background: var(--stop-dk); }
 .v6-life__n { font-family: var(--mono); font-size: 11px; color: var(--g-fg-3); }
 .v6-life__t { font-size: clamp(0.95rem,1.15vw,1.15rem); font-weight: 600; color: var(--g-fg); letter-spacing: -0.01em; margin: 5px 0 6px; }
-.v6-life__d { font-size: 12.5px; line-height: 1.45; color: var(--g-fg-3); margin: 0; }
+/* was 12.5px in --g-fg-3 on graphite, about 4.0:1 and under the AA floor */
+.v6-life__d { font-size: 14px; line-height: 1.5; color: var(--g-fg-2); margin: 0; }
 
-.v6-surfaces { margin-top: clamp(40px,5vw,60px); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%,244px),1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
-.v6-surface { background: var(--surface); padding: clamp(22px,2.4vw,30px); }
+/* Container is the card colour, hairlines ride on the cells. Previously the container was --line and the
+   cells were opacity-0 reveal children, so the whole grid flashed as a solid grey slab while scrolling in. */
+.v6-surfaces { margin-top: clamp(40px,5vw,60px); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%,244px),1fr)); gap: 1px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.v6-surface { background: var(--surface); padding: clamp(22px,2.4vw,30px); box-shadow: 0 0 0 1px var(--line); }
+/* eighth cell closes the 4-column grid; without it position 08 rendered as a bare grey rectangle */
+.v6-surface--cta { display: flex; flex-direction: column; justify-content: center; gap: 12px; background: var(--sunk); }
 .v6-surface__k { font-family: var(--mono); font-size: 12px; color: var(--brand-ink); }
 .v6-surface__t { font-size: clamp(1.1rem,1.4vw,1.28rem); font-weight: 600; color: var(--ink); letter-spacing: -0.015em; margin: 10px 0 8px; }
 .v6-surface__d { font-size: 13.5px; line-height: 1.55; color: var(--ink-3); margin: 0; }
@@ -76,15 +87,17 @@
 .v6-memory__item { background: var(--graphite-2); padding: 14px 18px; font-size: 15px; color: var(--g-fg); display: flex; align-items: baseline; gap: 14px; }
 .v6-memory__n { color: var(--g-fg-3); font-size: 12px; font-family: var(--mono); }
 
-.v6-know { margin-top: clamp(36px,4vw,52px); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%,216px),1fr)); gap: 14px; }
-.v6-know__card { position: relative; display: block; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px; text-decoration: none; transition: border-color 160ms, transform 160ms var(--ease); }
+.v6-know { margin-top: clamp(36px,4vw,52px); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%,216px),1fr)); gap: 14px; align-items: stretch; }
+/* equal card heights: the reveal wrapper sat between the grid and the card, so the cards had ragged bottoms */
+.v6-know > .v6-reveal { height: 100%; }
+.v6-know__card { position: relative; display: block; height: 100%; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px; text-decoration: none; transition: border-color 160ms, transform 160ms var(--ease); }
 .v6-know__card:hover { border-color: var(--line-2); transform: translateY(-2px); }
 .v6-know__t { font-size: 1.12rem; font-weight: 600; color: var(--ink); letter-spacing: -0.015em; margin: 0 0 6px; }
 .v6-know__d { font-size: 13px; color: var(--ink-3); margin: 0; line-height: 1.5; max-width: 22ch; }
 .v6-know__go { position: absolute; top: 20px; right: 20px; color: var(--brand-ink); }
 
-.v6-cn { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line-2); border: 1px solid var(--line-2); border-radius: 14px; overflow: hidden; }
-.v6-cn__col { background: var(--surface); padding: clamp(22px,2.6vw,32px); }
+.v6-cn { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--surface); border: 1px solid var(--line-2); border-radius: 14px; overflow: hidden; }
+.v6-cn__col { background: var(--surface); padding: clamp(22px,2.6vw,32px); box-shadow: 0 0 0 1px var(--line-2); }
 .v6-cn__col--next { background: var(--sunk); }
 .v6-cn__h { margin: 0 0 16px; }
 .v6-cn__col ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 11px; }
@@ -101,6 +114,20 @@
   .v6-life__spine { left: 6px; right: auto; top: 6px; bottom: 6px; width: 2px; height: auto; }
   .v6-life__node { padding: 0 0 22px 32px; }
   .v6-life__dot { position: absolute; left: 0; top: 2px; margin: 0; }
+}
+
+/* Mobile recomposition of the activity stream: on desktop the detail sits inline and ellipsises, which on a
+   phone truncated it to uselessness ("re-che..."). Here the row becomes two rows, so the title and its signal
+   stay on line one and the full detail wraps underneath. */
+@media (max-width: 640px) {
+  .v6-stream__row { grid-template-columns: 12px minmax(0,1fr) auto; row-gap: 3px; }
+  .v6-stream__dot { grid-row: 1; grid-column: 1; }
+  .v6-stream__t { grid-row: 1; grid-column: 2; white-space: normal; }
+  .v6-stream__row .v6-sig { grid-row: 1; grid-column: 3; }
+  .v6-stream__d { grid-row: 2; grid-column: 2 / -1; white-space: normal; overflow: visible; text-overflow: clip;
+    font-size: 12.5px; line-height: 1.45; }
+  .v6-console__tv { font-size: 14px; }
+  .v6-console__tk { font-size: 10.5px; }
 }
 
 /* masked headline reveal (one authored hero moment; reduced-motion shows it immediately) */

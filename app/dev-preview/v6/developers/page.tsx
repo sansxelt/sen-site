@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Reveal, PageHero, SectionHead, CTA, EditorialLink, Signal } from "../_system/ui";
 import { v6meta } from "../_system/meta";
 
-// Developers (design 06). How external systems invoke the verification engine — the one capability inside
+// Developers (design 06). How external systems invoke the verification engine, the one capability inside
 // Vraelis oversight that is live and self-serve today. Every request/response shape here is copied from the
 // shipped code (app/api/v1/verifications, cli/vraelis.mjs, lib/preflight/webhook-dispatch). Nothing is
 // documented that has not shipped; the responsibility / memory / agent APIs are marked Direction, not live.
@@ -203,7 +203,7 @@ vraelis verify \\
 # 0 verified   1 failed   2 blocked or could not run
 # --repair-prompt prints only the fix package, ready to paste into a coding agent`;
 
-const GATE = `// gate.mjs — ship only on "verified". The exit code gates the deploy.
+const GATE = `// gate.mjs: ship only on "verified". The exit code gates the deploy.
 // 0 verified   1 failed   2 blocked   3 no decision reached
 import { randomUUID } from "node:crypto";
 
@@ -375,7 +375,9 @@ export default function DevelopersPage() {
               lead="The vraelis CLI wraps the same endpoint for people and pipelines. In CI it is read by an if-statement far more often than by a person, so the exit code carries the verdict and everything else is decoration."
             />
           </Reveal>
-          <div style={{ marginTop: "clamp(28px,3.4vw,44px)", display: "grid", gap: 24 }}>
+          {/* minmax(0,1fr): without an explicit track the implicit column sizes to the code block's
+              max-content and blows past the viewport on mobile (clipped by the global body overflow-x). */}
+          <div style={{ marginTop: "clamp(28px,3.4vw,44px)", display: "grid", gridTemplateColumns: "minmax(0,1fr)", gap: 24 }}>
             <Reveal><Code lang="bash" src={CLI} /></Reveal>
             <Reveal>
               <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 10 }}>
@@ -450,8 +452,8 @@ export default function DevelopersPage() {
               <p style={{ marginBottom: 14 }}><Signal state="go">Live today</Signal></p>
               <ul style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 9 }}>
                 {[
-                  "POST /api/v1/verifications — create, dry-run, or run a reviewed plan",
-                  "GET /api/v1/verifications/{id} — decision, evidence, repair prompt",
+                  "POST /api/v1/verifications, create, dry-run, or run a reviewed plan",
+                  "GET /api/v1/verifications/{id}, decision, evidence, repair prompt",
                   "Reviewed-plan approval before a paid run",
                   "The vraelis verify CLI and its CI exit codes",
                   "Signed verification.completed webhooks",

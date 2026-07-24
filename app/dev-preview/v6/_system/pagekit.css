@@ -3,7 +3,10 @@
 .v6-phero__k { color: var(--brand-ink); }
 .v6-phero h1 { font-family: var(--sans); font-weight: 600; letter-spacing: -0.03em; line-height: 1.02; color: var(--ink); font-size: clamp(2.4rem,4.4vw,3.8rem); margin: 16px 0 0; max-width: 18ch; }
 .v6-phero__lead { font-size: clamp(1.1rem,1.4vw,1.35rem); line-height: 1.5; color: var(--ink-2); margin: 22px 0 0; max-width: 58ch; }
+/* PageHero owns hero button scale, so routes cannot drift by passing or forgetting `lg` (Platform and Agents
+   rendered 50px buttons while Developers and Integrations rendered 44px). */
 .v6-phero__cta { margin-top: 30px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.v6-phero__cta .v6-btn { min-height: 50px; padding: 15px 26px; font-size: 16px; }
 .v6-dark .v6-phero__k { color: var(--go-dk); }
 
 /* prose (method, readme, docs article body) */
@@ -71,7 +74,12 @@
 .v6-clog__b p { margin: 0 0 12px; }
 
 @media (max-width: 940px) {
+  /* Content first on small screens. The sidebar previously ate ~52% of the viewport above the article, so a
+     reader landing on a docs page saw navigation and no content. */
   .v6-docs { grid-template-columns: 1fr; }
-  .v6-docs__side { position: static; max-height: none; border-bottom: 1px solid var(--line); padding-bottom: 16px; margin-bottom: 8px; }
+  .v6-docs__main { order: 1; }
+  .v6-docs__side { order: 2; position: static; max-height: none; border-top: 1px solid var(--line); border-bottom: 0;
+    padding-top: 24px; margin-top: 32px; margin-bottom: 0; }
+  .v6-docs__link { min-height: 44px; display: flex; align-items: center; }
   .v6-clog__entry { grid-template-columns: 1fr; gap: 10px; }
 }

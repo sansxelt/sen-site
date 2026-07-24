@@ -1,11 +1,10 @@
-import Link from "next/link";
-import { Reveal, SectionHead, CTA, EditorialLink, Signal, Kicker } from "../_system/ui";
+import { Reveal, PageHero, SectionHead, CTA, EditorialLink, Signal, Kicker } from "../_system/ui";
 import { v6meta } from "../_system/meta";
 
 // Integrations (design 06). Only surfaces that are actually shipped: GitHub, Vercel, Slack, API, CLI,
 // webhooks. Each description says truthfully what it does today (e.g. GitHub is read-only repository
 // metadata plus CLI-in-CI; Slack is an incoming-webhook the owner pastes). Future surfaces are grouped and
-// clearly marked Direction — no fabricated integrations, no placeholders dressed up as live.
+// clearly marked Direction, no fabricated integrations, no placeholders dressed up as live.
 
 export const metadata = v6meta({
   title: "Integrations",
@@ -67,21 +66,12 @@ const DIRECTION: [string, string][] = [
 export default function IntegrationsPage() {
   return (
     <>
-      <section className="v6-sec v6-phero">
-        <div className="v6-wrap v6-wrap--wide">
-          <p className="v6-eyebrow v6-phero__k">Integrations</p>
-          <h1 style={{ fontFamily: "var(--sans)", fontWeight: 600, letterSpacing: "-0.03em", lineHeight: 1.02, color: "var(--ink)", fontSize: "clamp(2.4rem,4.4vw,3.8rem)", margin: "16px 0 0", maxWidth: "17ch" }}>
-            Oversight meets the tools you already ship with.
-          </h1>
-          <p className="v6-phero__lead">
-            Vraelis should not live in one more tab. It plugs into where code merges, deploys, and gets talked about, so a verification decision lands in the flow you already have. Everything on this page is live today, and everything that is not yet built is labeled as such.
-          </p>
-          <div className="v6-phero__cta">
-            <CTA brand>Open Vraelis</CTA>
-            <EditorialLink href={`${BASE}/developers`}>Developer docs</EditorialLink>
-          </div>
-        </div>
-      </section>
+      <PageHero
+        kicker="Integrations"
+        title="Oversight meets the tools you already ship with."
+        lead="Vraelis should not live in one more tab. It plugs into where code merges, deploys, and gets talked about, so a verification decision lands in the flow you already have. Everything on this page is live today, and everything that is not yet built is labeled as such."
+        cta={<><CTA brand>Open Vraelis</CTA><EditorialLink href={`${BASE}/developers`}>Developer docs</EditorialLink></>}
+      />
 
       {/* ── Live integrations ── */}
       <section className="v6-sec">

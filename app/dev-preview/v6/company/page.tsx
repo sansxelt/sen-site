@@ -71,6 +71,7 @@ export default function CompanyPage() {
         kicker="Company"
         title="Independent oversight for AI software agents."
         lead="Software is increasingly planned, written, and repaired by agents. Vraelis is the independent layer that follows that work from assigned responsibility to trusted completion, so companies can hand agents real responsibility without giving up control."
+        cta={<><CTA brand>Open Vraelis</CTA><EditorialLink href="#contact">Talk to us</EditorialLink></>}
       />
 
       {/* Why we exist */}

@@ -42,7 +42,58 @@ URL, license, and local path.
 
 | Asset | Type | Source | License | Local path | Used on |
 |---|---|---|---|---|---|
-| _(none yet)_ | — | — | — | — | — |
+| _(none yet)_ | n/a | n/a | n/a | n/a | n/a |
+
+## Identified media opportunities (specified, NOT sourced or implemented)
+
+The mandatory design review found zero media across ten homepage sections and seven secondary routes, and all
+four reviewers independently judged that this reads as visually thin rather than as restraint, because the
+restraint is never paid for with scale contrast. Below are the three placements where real licensed media
+would materially raise authority. **Nothing here is sourced or implemented; this awaits founder visual
+review of the current recordings.**
+
+A standing constraint applies to all three: no screens, no robots, no server racks, no blue light, no
+"AI" abstraction. Grade everything near-black so the three signal colours stay the only chroma on the page.
+
+**1. Behind the lifecycle band (homepage, section 3, currently graphite).**
+- Subject: one identifiable physical object moving through sequential inspection and sign-off stations, for
+  example an aerospace or precision-parts inspection line.
+- Narrative purpose: this is the page's thesis section, "one responsibility followed the whole way." Physical
+  sequential inspection is the real-world answer to the same problem, so it argues the thesis instead of
+  decorating it.
+- Crop: full-bleed, wide letterbox, object entering frame left and exiting frame right.
+- Type: **scroll-linked** (scrubbed), so movement through stations maps to movement through the eight states.
+- Licence source: Pexels or Mixkit (commercial-use video), or commissioned.
+
+**2. The problem section (homepage, section 2).**
+- Subject: a metrology or calibration bench. Instruments that exist purely to check other instruments.
+- Narrative purpose: "the builder cannot be its own judge" made concrete. Independent measurement is a trade
+  that already exists; Vraelis is that trade for software.
+- Crop: tight, shallow depth of field, one instrument dominant, heavy negative space for the claim to sit in.
+- Type: **still image**.
+- Licence source: Pexels (Pexels Licence) or Poly Haven (CC0).
+
+**3. The memory section (homepage, section 7, currently graphite).**
+- Subject: a physical records archive; ordered, indexed, retained.
+- Narrative purpose: memory as accumulated, preserved record rather than a feature list. Supports "a later
+  result never overwrites an earlier one."
+- Crop: deep perspective down a run of shelving, vanishing point off-centre so the copy holds the other side.
+- Type: **still image**, possibly a very slow ambient loop.
+- Licence source: Pexels (Pexels Licence).
+
+### The competing strategy the founder must choose between
+
+The reviewers split on this and it is a genuine judgment call with cost and timeline consequences:
+
+- **Option A, documentary media** (the three placements above). Buys authority and scale contrast quickly;
+  costs sourcing, licensing, grading, and weight.
+- **Option B, authored engineering substrate, no photography at all.** A cream-on-cream measurement grid with
+  labelled ticks running full width behind the type, the responsibility interval line as the repeating
+  structural rule across every route, and one hard-numbered proof element at display scale. Buys a silhouette
+  that is unmistakably Vraelis and cannot be swapped onto another company; costs authored design time and
+  carries more risk of reading as sparse if executed timidly.
+
+They are mutually exclusive on one page. Doing neither leaves the authority gap the review identified.
 
 ## Subjects allowed / disallowed (from the brief)
 

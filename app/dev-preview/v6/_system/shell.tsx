@@ -123,8 +123,11 @@ function V6Nav() {
           {MAIN.map((l) => (
             <Link key={l.label} href={l.href} className="v6-nav__item" aria-current={pathname === l.href ? "page" : undefined}>{l.label}</Link>
           ))}
+          {/* No onFocus opener: it re-fired when the Escape handler restored focus (so Escape could never
+              close the panel), and it sprang the panel open merely by tabbing through the nav. Pointer users
+              get hover; keyboard users open it with Enter or Space on this real button. */}
           <button ref={resBtn} type="button" className="v6-nav__item" aria-expanded={menu} aria-haspopup="true"
-            onClick={() => setMenu((v) => !v)} onMouseEnter={openMenu} onFocus={openMenu}>
+            onClick={() => setMenu((v) => !v)} onMouseEnter={openMenu}>
             Resources <span className="v6-nav__caret" aria-hidden />
           </button>
           <Link href={`${BASE}/company`} className="v6-nav__item" aria-current={pathname === `${BASE}/company` ? "page" : undefined}>Company</Link>
@@ -149,7 +152,9 @@ function MobileNav({ pathname, onClose }: { pathname: string; onClose: () => voi
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const focusables = () => Array.from(panel.current?.querySelectorAll<HTMLElement>('a[href],button:not([disabled])') ?? []);
-    focusables()[0]?.focus();
+    // Focus the close button, not the first link: landing on the wordmark drew a focus ring around the logo,
+    // which read as a rendering bug when the drawer was opened by tapping.
+    (panel.current?.querySelector<HTMLElement>(".v6-drawer__x") ?? focusables()[0])?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") { onClose(); return; }
       if (e.key !== "Tab") return;
@@ -181,10 +186,10 @@ function MobileNav({ pathname, onClose }: { pathname: string; onClose: () => voi
             </div>
           </div>
         ))}
-        <div className="v6-drawer__cta">
-          <Link href={SIGNIN} className="v6-btn v6-btn--ghost" onClick={onClose}>Sign in</Link>
-          <Link href={SIGNIN} className="v6-btn v6-btn--brand" onClick={onClose}>Open Vraelis <span className="v6-arw" aria-hidden>→</span></Link>
-        </div>
+      </div>
+      <div className="v6-drawer__foot">
+        <Link href={SIGNIN} className="v6-btn v6-btn--ghost" onClick={onClose}>Sign in</Link>
+        <Link href={SIGNIN} className="v6-btn v6-btn--brand" onClick={onClose}>Open Vraelis <span className="v6-arw" aria-hidden>→</span></Link>
       </div>
     </div>
   );
