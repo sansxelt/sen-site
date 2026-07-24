@@ -6,6 +6,7 @@
 import { Reveal, SectionHead, CTA, EditorialLink, Signal, Kicker } from "./_system/ui";
 import "./_system/home.css";
 import { Hero } from "./_system/hero";
+import { ClosingScene } from "./_system/close";
 
 const BASE = "/dev-preview/v6";
 
@@ -187,20 +188,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 10. Close ── */}
-      <hr className="v6-rule" />
-      <section className="v6-sec v6-sec--tight">
-        <div className="v6-wrap" style={{ textAlign: "center", maxWidth: 760 }}>
-          <Reveal>
-            <h2 className="v6-dl" style={{ marginInline: "auto" }}>Give agents more responsibility without giving up control.</h2>
-            <p className="v6-lead" style={{ margin: "20px auto 30px", textAlign: "center" }}>Independent oversight follows the work from the moment it is assigned to the moment it can be trusted.</p>
-            <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-              <CTA brand lg>Open Vraelis</CTA>
-              <CTA href={`${BASE}/platform`} ghost lg>Explore the platform</CTA>
-            </div>
-          </Reveal>
-        </div>
-      </section>
+      {/* ── 10. Closing scene: full editorial ending that resolves the opening ── */}
+      <ClosingScene />
     </>
   );
 }
