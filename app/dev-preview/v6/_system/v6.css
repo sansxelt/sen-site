@@ -166,8 +166,12 @@
 .v6-nav__in { display: flex; align-items: center; gap: 8px; padding: 13px var(--gutter);
   background: transparent; border-bottom: 1px solid transparent;
   transition: background 260ms ease, border-color 260ms ease, backdrop-filter 260ms ease; }
-/* The page is the drama; the bar is not. Minimal blur, no saturation boost, no floating container. */
-.v6-nav[data-scrolled="true"] .v6-nav__in { background: rgba(255,255,255,0.88); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom-color: var(--line); }
+/* The page is the drama; the bar is not. Solid, on both grounds: over a white chapter a translucent bar
+   let the section's own eyebrow and headline ghost through the nav links, and over a black chapter it
+   read as a lighter grey strip. White ground gets a white bar with dark text; black ground gets a black
+   bar with white text. Nothing shows through either. */
+.v6-nav[data-scrolled="true"] .v6-nav__in { background: #FFFFFF; backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom-color: var(--line); }
+.v6-nav[data-theme="light"] .v6-nav__in { background: #FFFFFF; }
 /* Solid, and identical at scrollY 0. The ground under the bar at the top of the page IS black, so a
    translucent plate over it only ever read as a lighter grey strip sitting on the hero. */
 .v6-nav[data-theme="dark"] .v6-nav__in { background: #0A0A0B; backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom-color: transparent; }
@@ -236,8 +240,9 @@
    menu feel broken.
    ------------------------------------------------------------------------- */
 .v6-mega { position: absolute; top: 100%; left: 0; right: 0; z-index: 55; }
-.v6-mega__panel { background: #08080A; border-bottom: 1px solid rgba(255,255,255,0.13);
-  box-shadow: 0 40px 80px -40px rgba(0,0,0,0.85);
+/* No drop shadow. Over a white chapter the soft shadow spread a grey haze across the section below the
+   panel, which read as a rendering fault rather than as depth. The panel ends on a hard edge. */
+.v6-mega__panel { background: #08080A; border-bottom: 1px solid rgba(255,255,255,0.14);
   transform-origin: 50% 0; }
 .v6-mega[data-state="in"] .v6-mega__panel { animation: v6MegaIn 260ms cubic-bezier(0.22,1,0.36,1) both; }
 .v6-mega[data-state="out"] .v6-mega__panel { animation: v6MegaOut 190ms cubic-bezier(0.4,0,1,1) both; pointer-events: none; }

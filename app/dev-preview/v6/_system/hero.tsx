@@ -10,7 +10,7 @@
 // The visual is a fragment of the system graph that chapter 3 opens out in full, cropped hard by the right
 // edge of the viewport. It is deliberately unexplained: two node labels, one broken edge, no legend.
 // Positioning copy comes from _system/positioning.ts and is provisional.
-import { CTA, EditorialLink } from "./ui";
+import { CTA } from "./ui";
 import { CATEGORY, HEADLINE, SUPPORT } from "./positioning";
 import "./hero.css";
 
@@ -66,7 +66,6 @@ export function Hero() {
         <p className="v6-h__say">{SUPPORT}</p>
         <div className="v6-h__cta">
           <CTA brand lg>Open Vraelis</CTA>
-          <EditorialLink href="#gap">See what it catches</EditorialLink>
         </div>
       </div>
     </section>

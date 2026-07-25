@@ -338,6 +338,13 @@ function MobileNav({ onClose }: { onClose: () => void }) {
 
 export function RouteTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  // Navigating back to a route restored the scroll position it was left at, so returning to the homepage
+  // dropped the visitor into the middle of a chapter and scrolled up from there. Every route entry starts
+  // at the top. Deferred a frame so it runs after the new route has painted.
+  useEffect(() => {
+    const id = requestAnimationFrame(() => window.scrollTo(0, 0));
+    return () => cancelAnimationFrame(id);
+  }, [pathname]);
   return <div key={pathname} className="v6-page">{children}</div>;
 }
 

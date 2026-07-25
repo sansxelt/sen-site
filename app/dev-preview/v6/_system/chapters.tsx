@@ -198,15 +198,17 @@ export function SystemMap() {
    THE REAL CHECKOUT PROOF. The strongest concrete evidence Vraelis has, drawn
    as a single line: trust falls twice and only holds on the third run. The two
    failures stay marked on the line rather than being tidied away. */
-type Beat = { x: number; y: number; label: string; sub?: string; s?: "go" | "stop" };
+type Beat = { x: number; y: number; label: string; sub?: string; s?: "go" | "stop"; up?: boolean };
+// Labels alternate above and below their own lane so neighbours never share a baseline. At 250 units apart
+// two 20px labels on the same line overlapped, which is what made the start of the line unreadable.
 const BEATS: Beat[] = [
-  { x: 70, y: 118, label: "Checkout reported success" },
-  { x: 320, y: 118, label: "Payment succeeded" },
-  { x: 570, y: 352, label: "Pro access missing", s: "stop" },
-  { x: 820, y: 118, label: "First repair granted access" },
-  { x: 1070, y: 352, label: "Gone after signing back in", s: "stop" },
-  { x: 1320, y: 118, label: "Second repair held" },
-  { x: 1560, y: 96, label: "Verified", s: "go" },
+  { x: 70, y: 118, label: "Checkout reported success", up: true },
+  { x: 340, y: 118, label: "Payment succeeded" },
+  { x: 610, y: 352, label: "Pro access missing", s: "stop" },
+  { x: 880, y: 118, label: "First repair granted access", up: true },
+  { x: 1150, y: 352, label: "Gone after signing back in", s: "stop" },
+  { x: 1400, y: 118, label: "Second repair held" },
+  { x: 1600, y: 92, label: "Verified", s: "go", up: true },
 ];
 
 export function Proof() {
@@ -220,10 +222,10 @@ export function Proof() {
       </div>
 
       <div className="v6-pf__figure" data-i="0" data-on={seen > 0}>
-        <svg className="v6-pf__svg" viewBox="0 0 1660 432" role="img"
+        <svg className="v6-pf__svg" viewBox="0 0 1700 452" role="img"
           aria-label="A checkout run reported success and payment succeeded, but Pro access was missing. A first repair granted access, which disappeared after signing back in. A second repair held and the run verified. Both earlier failures stay on the record.">
-          <line className="v6-pf__base" x1="40" y1="118" x2="1620" y2="118" />
-          <line className="v6-pf__base" x1="40" y1="352" x2="1620" y2="352" />
+          <line className="v6-pf__base" x1="40" y1="118" x2="1660" y2="118" />
+          <line className="v6-pf__base" x1="40" y1="352" x2="1660" y2="352" />
           <text className="v6-pf__lane" x="40" y="102">ACCESS HELD</text>
           <text className="v6-pf__lane" x="40" y="382">ACCESS LOST</text>
 
@@ -235,7 +237,7 @@ export function Proof() {
               <circle cx={b.x} cy={b.y} r={b.s === "go" ? 13 : 9} />
               {/* the outer labels anchor to their own edge; centred, the first one ran off the left of the
                   figure and the last one off the right */}
-              <text x={b.x} y={b.y + (b.y > 200 ? 46 : -30)}
+              <text x={b.x} y={b.y + (b.y > 200 ? (b.up ? 46 : 74) : (b.up ? -56 : -28))}
                 textAnchor={i === 0 ? "start" : i === BEATS.length - 1 ? "end" : "middle"}>{b.label}</text>
             </g>
           ))}

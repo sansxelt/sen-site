@@ -55,17 +55,20 @@ const COLS: [string, [string, string][]][] = [
 export function SiteFooter() {
   return (
     <footer className="v6-foot2">
+      {/* Upper footer: ONE editorial handoff, not a small heading over an isolated button. The statement
+          carries the block at display scale on the left; the actions and the status sit together on the
+          right, with the status clearly subordinate to them. The lower directory below is unchanged. */}
       <div className="v6-foot2__upper">
-        <div>
-          <Link href={BASE} className="v6-foot2__mark">Vraelis</Link>
+        <div className="v6-foot2__say">
           <p className="v6-foot2__stmt">{FOOTER_STATEMENT}</p>
+          <p className="v6-foot2__sub">Written down before the work starts. Checked against the running software after it ends.</p>
         </div>
         <div className="v6-foot2__act">
           <CTA brand>Open Vraelis</CTA>
+          <Link href={`${BASE}/company#contact`} className="v6-foot2__second">Talk to the team<span className="v6-arw" aria-hidden>&rarr;</span></Link>
           <Link href={`${BASE}/security#status`} className="v6-foot2__status">
             <span className="v6-foot2__dot" aria-hidden />Verification engine operational
           </Link>
-          <Link href={`${BASE}/company#contact`} className="v6-foot2__status" style={{ color: "var(--g-fg-3)" }}>Talk to the team</Link>
         </div>
       </div>
 
