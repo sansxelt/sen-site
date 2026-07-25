@@ -184,6 +184,8 @@ function V6Nav() {
   const [preview, setPreview] = useState<Preview | null>(null);
   const closeT = useRef(0);
   const exitT = useRef(0);
+  // whichever panel is on screen: the open one, or the one still animating out
+  const shown = open ?? exiting;
 
   // Publish the real nav height as --nav-h. Chapters size themselves against it, and it changes with the
   // wordmark size and the viewport, so measuring beats a hardcoded fallback.
@@ -211,7 +213,10 @@ function V6Nav() {
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
     return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); };
-  }, [pathname]);
+    // `shown` is a dependency because the open panel covers the sample point: while a menu is open,
+    // elementFromPoint hits the panel rather than the section, so the theme has to be re-read the moment the
+    // panel unmounts. Without it the bar stayed dark over a white chapter until the next scroll event.
+  }, [pathname, shown]);
 
   const close = useCallback((i: number | null) => {
     window.clearTimeout(closeT.current);
@@ -252,11 +257,9 @@ function V6Nav() {
     return () => { document.removeEventListener("keydown", onKey); document.removeEventListener("pointerdown", onDown, true); };
   }, [open, close]);
 
-  const shown = open ?? exiting;
-
   return (
     <nav ref={navRef} className="v6-nav" data-scrolled={scrolled} data-theme={dark ? "dark" : "light"}
-      data-open={open !== null} aria-label="Primary" onMouseLeave={scheduleClose}>
+      data-open={shown !== null} aria-label="Primary" onMouseLeave={scheduleClose}>
       <div className="v6-nav__in">
         <Brand />
         <div className="v6-nav__items">
@@ -342,6 +345,9 @@ export function RouteTransition({ children }: { children: ReactNode }) {
   // dropped the visitor into the middle of a chapter and scrolled up from there. Every route entry starts
   // at the top. Deferred a frame so it runs after the new route has painted.
   useEffect(() => {
+    // Turn off the browser's own scroll restoration first: on a fresh load it restores the offset from the
+    // previous visit before React mounts, which dropped visitors into the middle of the page on arrival.
+    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
     const id = requestAnimationFrame(() => window.scrollTo(0, 0));
     return () => cancelAnimationFrame(id);
   }, [pathname]);

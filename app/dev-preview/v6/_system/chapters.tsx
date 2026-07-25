@@ -111,20 +111,34 @@ export function Gap() {
             word ran to 240px tall. */}
         <div className="v6-gap__stage">
           <div className="v6-gap__layer v6-gap__claim">
-            <p className="v6-gap__label v6-mono">The agent reported</p>
+            <p className="v6-gap__label">The agent reported</p>
             <p className="v6-gap__word">
               <span className="v6-gap__wordt">Complete.</span>
               <span className="v6-gap__strike" aria-hidden />
             </p>
           </div>
+          {/* Stage two: what the claim actually touched. It arrives as the claim gives up its authority and
+              holds while the findings come in, so the reader has something to look at during the handover
+              instead of watching one word fade. */}
+          <div className="v6-gap__layer v6-gap__sys" aria-hidden>
+            <p className="v6-gap__label">Systems the change reached</p>
+            <ul className="v6-gap__syslist">
+              {["billing-web", "checkout", "account-api"].map((t, i) => (
+                <li key={t} className="v6-mono" style={{ ["--i" as string]: i }}>{t}</li>
+              ))}
+            </ul>
+          </div>
           <div className="v6-gap__layer v6-gap__found">
-            <p className="v6-gap__label v6-mono">Vraelis found</p>
+            <p className="v6-gap__label">Vraelis found</p>
             <ul className="v6-gap__list">
               {FOUND.map((t, i) => (
                 <li key={t} style={{ ["--i" as string]: i }}>{t}</li>
               ))}
             </ul>
+          </div>
+          <div className="v6-gap__layer v6-gap__verdictwrap">
             <p className="v6-gap__verdict">Blocked.</p>
+            <p className="v6-gap__verdictsay">This release cannot be trusted yet.</p>
           </div>
         </div>
       </div>
@@ -201,14 +215,16 @@ export function SystemMap() {
 type Beat = { x: number; y: number; label: string; sub?: string; s?: "go" | "stop"; up?: boolean };
 // Labels alternate above and below their own lane so neighbours never share a baseline. At 250 units apart
 // two 20px labels on the same line overlapped, which is what made the start of the line unreadable.
+// Evenly spaced across the full width, and short enough that no two labels crowd. The earlier spacing
+// bunched the first three beats into the left third, which read as a cluster rather than a sequence.
 const BEATS: Beat[] = [
-  { x: 70, y: 118, label: "Checkout reported success", up: true },
+  { x: 80, y: 118, label: "Checkout said success", up: true },
   { x: 340, y: 118, label: "Payment succeeded" },
-  { x: 610, y: 352, label: "Pro access missing", s: "stop" },
-  { x: 880, y: 118, label: "First repair granted access", up: true },
-  { x: 1150, y: 352, label: "Gone after signing back in", s: "stop" },
-  { x: 1400, y: 118, label: "Second repair held" },
-  { x: 1600, y: 92, label: "Verified", s: "go", up: true },
+  { x: 600, y: 352, label: "Pro access missing", s: "stop" },
+  { x: 860, y: 118, label: "Repair 1 granted access", up: true },
+  { x: 1120, y: 352, label: "Lost on sign-in", s: "stop" },
+  { x: 1380, y: 118, label: "Repair 2 held" },
+  { x: 1610, y: 92, label: "Verified", s: "go", up: true },
 ];
 
 export function Proof() {
