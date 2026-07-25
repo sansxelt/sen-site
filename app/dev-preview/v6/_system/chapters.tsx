@@ -10,8 +10,7 @@
 // atmosphere rather than as a stack of modules.
 import { useEffect, useRef, useState, type RefObject } from "react";
 import Link from "next/link";
-import { CTA, EditorialLink } from "./ui";
-import { DOCS, DOC_GROUPS } from "../_content/docs";
+import { DOCS } from "../_content/docs";
 import { CHANGELOG } from "../_content/changelog";
 import "./chapters.css";
 
@@ -146,84 +145,117 @@ export function Gap() {
 }
 
 /* ══════════════════════════════════════════════════════════════ CHAPTER 3 ══
-   THE CONNECTED SYSTEM. One diagram, wider than any content container, cropped
-   by the viewport. It carries the whole workflow rather than a grid of feature
-   names, and it is the section: the type above it is four words. */
-const SPINE: [number, string][] = [
-  [370, "requirement"],
-  [640, "browser run"],
-  [910, "findings"],
-  [1180, "a person decides"],
-  [1450, "verified"],
+   THE CONNECTED OPERATING ENVIRONMENT.
+
+   ONE environment, not three cards. The whole system is drawn once, twice as wide as the viewport, and the
+   chapter pans across it as you scroll. Three regions come into focus in turn; the other two stay on screen
+   at lower contrast the entire time, so focus moves inside a space rather than replacing it.
+
+     region 0  the guarantee, held outside the code, connected to what it applies to
+     region 1  a browser run travelling through the deployed workflow
+     region 2  finding, person, repair, recheck, all returning into the same record
+   ------------------------------------------------------------------------------------------------- */
+const ACTS: [string, string][] = [
+  ["Define what must hold", "One sentence the change is not allowed to break, kept outside the code."],
+  ["Check the running system", "A real browser crosses the deployed workflow, not the source."],
+  ["Resolve what failed", "Findings, a decision, a repair, and an independent recheck, all on one record."],
 ];
-const STACK = ["your application", "the deployment", "your database", "payments"];
 
 export function SystemMap() {
-  const root = useRef<HTMLElement>(null);
-  const seen = useSeen(root, 1);
+  const wrap = useRef<HTMLDivElement>(null);
+  useScrollProgress(wrap);
   return (
-    <section className="v6-sys" data-nav-dark ref={root}>
-      <div className="v6-sys__head">
-        <p className="v6-eyebrow">The system</p>
-        <h2 className="v6-sys__h">Vraelis sees the whole workflow.</h2>
-      </div>
-      <div className="v6-sys__figure" data-i="0" data-on={seen > 0}>
-        <svg className="v6-sys__svg" viewBox="0 0 1740 588" role="img"
-          aria-label="Your application, deployment, database and payment provider feed one requirement. Vraelis runs the live software in a browser, raises findings, sends the decision to a person, and returns a verified result. Evidence from the run travels with the decision.">
-          <g className="v6-sys__edge" fill="none">
-            {/* the company's stack braces into the requirement */}
-            {[120, 220, 400, 500].map((y) => (
-              <path key={y} d={`M300 ${y} C 340 ${y}, 340 300, 370 300`} />
+    <section className="v6-cs" data-nav-dark ref={wrap}>
+      <div className="v6-cs__pin">
+        <div className="v6-cs__head">
+          <p className="v6-eyebrow">The operating environment</p>
+          <div className="v6-cs__acts">
+            {ACTS.map(([t, d], i) => (
+              <div key={t} className="v6-cs__act" style={{ ["--i" as string]: i }}>
+                <h2>{t}</h2>
+                <p>{d}</p>
+              </div>
             ))}
-            {/* the spine */}
-            {SPINE.slice(0, -1).map(([x], i) => (
-              <path key={x} d={`M${x + 230} 300 L ${SPINE[i + 1][0]} 300`}
-                className={i === 2 ? "is-wait" : i === 3 ? "is-go" : ""} />
-            ))}
-            {/* evidence travels with the decision */}
-            <path className="v6-sys__eve" d="M755 336 L 755 520 L 1295 520 L 1295 336" />
-          </g>
+          </div>
+        </div>
 
-          {STACK.map((label, i) => (
-            <g key={label} className="v6-sys__node is-stack">
-              <rect x="40" y={[90, 190, 370, 470][i]} width="260" height="60" rx="12" />
-              <text x="170" y={[125, 225, 405, 505][i]}>{label}</text>
+        <div className="v6-cs__viewport">
+          <svg className="v6-cs__scene" viewBox="0 0 2760 560" role="img"
+            aria-label="One environment. A guarantee held outside the code connects to the application, checkout and account services. A browser run crosses the deployed workflow. A finding goes to a person, a repair returns, and an independent recheck writes back to the same record.">
+            {/* the record spine: present across the whole environment, tying all three regions together */}
+            <line className="v6-cs__spine" x1="60" y1="470" x2="2700" y2="470" />
+            <text className="v6-cs__spinet" x="60" y="506">one permanent record</text>
+
+            {/* ── region 0: the guarantee, outside the code ── */}
+            <g className="v6-cs__r" data-r="0">
+              <rect className="v6-cs__guar" x="80" y="60" width="600" height="112" rx="14" />
+              <text className="v6-cs__guart" x="110" y="104">Guarantee</text>
+              <text className="v6-cs__guarb" x="110" y="142">A paying customer keeps Pro access.</text>
+              {["application", "checkout", "account-api"].map((t, i) => (
+                <g key={t}>
+                  <rect className="v6-cs__svc" x={90 + i * 200} y="286" width="176" height="62" rx="10" />
+                  <text className="v6-cs__svct" x={178 + i * 200} y="323">{t}</text>
+                  <path className="v6-cs__link" d={`M380 172 C 380 230, ${178 + i * 200} 220, ${178 + i * 200} 286`} />
+                </g>
+              ))}
+              <path className="v6-cs__drop" d="M178 348 L 178 470" />
+              <path className="v6-cs__drop" d="M378 348 L 378 470" />
+              <path className="v6-cs__drop" d="M578 348 L 578 470" />
             </g>
-          ))}
 
-          {SPINE.map(([x, label], i) => (
-            <g key={label} className={`v6-sys__node ${i === 4 ? "is-final" : ""} ${i === 2 ? "is-wait" : ""}`}>
-              <rect x={x} y="264" width="230" height="72" rx="14" />
-              <text x={x + 115} y="307">{label}</text>
+            {/* ── region 1: the browser run crossing the deployed workflow ── */}
+            <g className="v6-cs__r" data-r="1">
+              <rect className="v6-cs__plane" x="1000" y="80" width="740" height="270" rx="16" />
+              <text className="v6-cs__planet" x="1030" y="122">Browser run, live deployment</text>
+              <line className="v6-cs__planerule" x1="1000" y1="146" x2="1740" y2="146" />
+              {["open checkout", "pay", "sign out", "sign back in"].map((t, i) => (
+                <g key={t} className="v6-cs__step">
+                  <circle cx={1080 + i * 200} cy="232" r="11" />
+                  <text x={1080 + i * 200} y="278">{t}</text>
+                </g>
+              ))}
+              <path className="v6-cs__run" d="M1080 232 L 1680 232" />
+              <path className="v6-cs__drop" d="M1370 350 L 1370 470" />
             </g>
-          ))}
 
-          <text className="v6-sys__cap" x="755" y="556">evidence</text>
-          <text className="v6-sys__band" x="40" y="66">YOUR STACK</text>
-          <text className="v6-sys__band" x="370" y="240">VRAELIS</text>
-        </svg>
+            {/* ── region 2: finding, person, repair, recheck, all back onto the record ── */}
+            <g className="v6-cs__r" data-r="2">
+              <g className="v6-cs__node is-stop"><circle cx="2060" cy="140" r="13" /><text x="2060" y="106">finding</text></g>
+              <g className="v6-cs__node is-wait"><circle cx="2280" cy="212" r="13" /><text x="2280" y="180">a person decides</text></g>
+              <g className="v6-cs__node"><circle cx="2470" cy="140" r="13" /><text x="2470" y="106">repair</text></g>
+              <g className="v6-cs__node is-go"><circle cx="2650" cy="212" r="15" /><text x="2650" y="180">recheck holds</text></g>
+              <path className="v6-cs__arc" d="M2060 140 C 2160 140, 2180 212, 2280 212" />
+              <path className="v6-cs__arc" d="M2280 212 C 2380 212, 2390 140, 2470 140" />
+              <path className="v6-cs__arc" d="M2470 140 C 2560 140, 2570 212, 2650 212" />
+              <path className="v6-cs__drop" d="M2060 153 L 2060 470" />
+              <path className="v6-cs__drop" d="M2650 227 L 2650 470" />
+            </g>
+          </svg>
+        </div>
       </div>
     </section>
   );
 }
 
 /* ══════════════════════════════════════════════════════════════ CHAPTER 4 ══
-   THE REAL CHECKOUT PROOF. The strongest concrete evidence Vraelis has, drawn
-   as a single line: trust falls twice and only holds on the third run. The two
-   failures stay marked on the line rather than being tidied away. */
-type Beat = { x: number; y: number; label: string; sub?: string; s?: "go" | "stop"; up?: boolean };
-// Labels alternate above and below their own lane so neighbours never share a baseline. At 250 units apart
-// two 20px labels on the same line overlapped, which is what made the start of the line unreadable.
-// Evenly spaced across the full width, and short enough that no two labels crowd. The earlier spacing
-// bunched the first three beats into the left third, which read as a cluster rather than a sequence.
-const BEATS: Beat[] = [
-  { x: 80, y: 118, label: "Checkout said success", up: true },
-  { x: 340, y: 118, label: "Payment succeeded" },
-  { x: 600, y: 352, label: "Pro access missing", s: "stop" },
-  { x: 860, y: 118, label: "Repair 1 granted access", up: true },
-  { x: 1120, y: 352, label: "Lost on sign-in", s: "stop" },
-  { x: 1380, y: 118, label: "Repair 2 held" },
-  { x: 1610, y: 92, label: "Verified", s: "go", up: true },
+   INTERNAL PRODUCTION DEMONSTRATION, as a case file.
+
+   Two lanes, because that is the whole point: the payment lane succeeds immediately and never fails again,
+   while the entitlement lane is the one that actually carries the business guarantee. The sign-out and
+   sign-in boundary is drawn as a wall through both lanes, because that is where the first repair died.
+
+   This is an authored reconstruction. It is not a screenshot, it carries no invented run identifier and no
+   invented timestamp, and it says so on the page.
+   ------------------------------------------------------------------------------------------------- */
+type Ev = { x: number; label: string; lane: "pay" | "ent"; s?: "go" | "stop"; note?: string; up?: boolean };
+const CASE: Ev[] = [
+  { x: 150, label: "Checkout reports success", lane: "pay", up: true },
+  { x: 430, label: "Payment succeeds", lane: "pay", s: "go" },
+  { x: 400, label: "Pro access missing", lane: "ent", s: "stop" },
+  { x: 700, label: "Repair 1 grants access", lane: "ent" },
+  { x: 1180, label: "Access disappears", lane: "ent", s: "stop", note: "the first repair never survived a new session" },
+  { x: 1480, label: "Repair 2 attaches the entitlement", lane: "ent" },
+  { x: 1700, label: "Access remains", lane: "ent", s: "go" },
 ];
 
 export function Proof() {
@@ -232,193 +264,213 @@ export function Proof() {
   return (
     <section className="v6-pf" ref={root}>
       <div className="v6-pf__head">
-        <p className="v6-eyebrow">One real run</p>
-        <h2 className="v6-pf__h">Payment went through. Access did not.</h2>
+        <p className="v6-eyebrow">Internal production demonstration</p>
+        <h2 className="v6-pf__h">Payment succeeded. The guarantee did not.</h2>
+        <p className="v6-pf__guar">
+          <span>The guarantee</span>A customer who pays for Pro receives access and keeps it after signing back in.
+        </p>
       </div>
 
       <div className="v6-pf__figure" data-i="0" data-on={seen > 0}>
-        <svg className="v6-pf__svg" viewBox="0 0 1700 452" role="img"
-          aria-label="A checkout run reported success and payment succeeded, but Pro access was missing. A first repair granted access, which disappeared after signing back in. A second repair held and the run verified. Both earlier failures stay on the record.">
-          <line className="v6-pf__base" x1="40" y1="118" x2="1660" y2="118" />
-          <line className="v6-pf__base" x1="40" y1="352" x2="1660" y2="352" />
-          <text className="v6-pf__lane" x="40" y="102">ACCESS HELD</text>
-          <text className="v6-pf__lane" x="40" y="382">ACCESS LOST</text>
+        <svg className="v6-pf__svg" viewBox="0 0 1960 470" role="img"
+          aria-label="Checkout reported success and payment succeeded, but Pro access was missing. A first repair granted access, which disappeared after signing out and back in. A second repair attached the entitlement to the account and access remained. The result is Verified and both earlier failures are preserved.">
+          {/* the two systems, named, so payment and entitlement are never confused */}
+          <text className="v6-pf__lane" x="40" y="122">PAYMENT</text>
+          <text className="v6-pf__lane" x="40" y="306">ENTITLEMENT</text>
+          <line className="v6-pf__base" x1="40" y1="152" x2="1900" y2="152" />
+          <line className="v6-pf__base" x1="40" y1="336" x2="1900" y2="336" />
 
-          <polyline className="v6-pf__line"
-            points={BEATS.map((b) => `${b.x},${b.y}`).join(" ")} fill="none" />
+          {/* the payment lane holds from the moment it succeeds */}
+          <path className="v6-pf__pay" d="M150 152 L 1900 152" />
 
-          {BEATS.map((b, i) => (
-            <g key={b.label} className={`v6-pf__pt ${b.s ? `is-${b.s}` : ""}`} style={{ ["--i" as string]: i }}>
-              <circle cx={b.x} cy={b.y} r={b.s === "go" ? 13 : 9} />
-              {/* the outer labels anchor to their own edge; centred, the first one ran off the left of the
-                  figure and the last one off the right */}
-              <text x={b.x} y={b.y + (b.y > 200 ? (b.up ? 46 : 74) : (b.up ? -56 : -28))}
-                textAnchor={i === 0 ? "start" : i === BEATS.length - 1 ? "end" : "middle"}>{b.label}</text>
+          {/* the entitlement lane: missing, granted, lost at the session wall, attached, held */}
+          <path className="v6-pf__ent is-bad" d="M400 336 L 700 336" />
+          <path className="v6-pf__ent" d="M700 336 L 700 240 L 1180 240" />
+          <path className="v6-pf__ent is-bad" d="M1180 240 L 1180 336 L 1480 336" />
+          <path className="v6-pf__ent is-good" d="M1480 336 L 1480 240 L 1860 240" />
+
+          {/* the session wall: the turning point of the whole demonstration */}
+          <g className="v6-pf__wall">
+            <line x1="1180" y1="60" x2="1180" y2="410" />
+            <text x="1180" y="46">SIGN OUT, SIGN BACK IN</text>
+          </g>
+
+          {CASE.map((e, i) => (
+            <g key={e.label + i} className={`v6-pf__pt ${e.s ? `is-${e.s}` : ""}`} style={{ ["--i" as string]: i }}>
+              <circle cx={e.x} cy={e.lane === "pay" ? 152 : (i === 3 || i === 6 ? 240 : 336)} r={e.s === "go" ? 12 : 9} />
+              <text x={e.x} y={e.lane === "pay" ? (e.up ? 90 : 118) : (i === 3 || i === 6 ? 216 : 378)}
+                textAnchor={i === 0 ? "start" : "middle"}>{e.label}</text>
+              {e.note ? <text className="v6-pf__note-t" x={e.x} y={410} textAnchor="middle">{e.note}</text> : null}
             </g>
           ))}
+
+          <g className="v6-pf__final">
+            <rect x="1700" y="96" width="200" height="60" rx="12" />
+            <text x="1800" y="134">Verified</text>
+          </g>
         </svg>
       </div>
 
-      {/* Mobile redraw: the same seven beats as a vertical rail. Squeezing the chart made its labels collide. */}
-      <ol className="v6-pf__m" data-on={seen > 0}>
-        {BEATS.map((b) => (
-          <li key={b.label} className={`v6-pf__mrow ${b.s ? `is-${b.s}` : ""}`}>
-            <span className="v6-pf__mdot" aria-hidden />
-            <span className="v6-pf__mt">{b.label}</span>
-            <span className="v6-pf__ml v6-mono">{b.y > 200 ? "access lost" : "access held"}</span>
-          </li>
-        ))}
-      </ol>
-      <p className="v6-pf__note">Both failures are still on the record. A later pass never erases an earlier one.</p>
+      <p className="v6-pf__disclose">Authored reconstruction of an internal production demonstration.</p>
     </section>
   );
 }
 
 /* ══════════════════════════════════════════════════════════════ CHAPTER 5 ══
-   THE PERMANENT RECORD. The composition literally grows: each entry arrives and
-   stays, and by the end of the chapter the reader is looking at a solid block
-   that was assembled in front of them. */
-const RECORD: [string, string, ("go" | "stop" | "wait")?][] = [
-  ["Requirement", "A paid customer keeps Pro access after signing back in."],
-  ["Systems", "billing-web, checkout, account-api"],
-  ["Run 1", "Failed. Access not granted.", "stop"],
+   THE PERMANENT RECORD, as a layered ledger.
+
+   Seven sheets, filed one behind the next. Every earlier sheet stays on screen and legible at the final
+   state: they step down and to the right rather than scrolling away inside a window, so the finished stack
+   IS the argument. Nothing is hidden and nothing needs a row that says so.
+   ------------------------------------------------------------------------------------------------- */
+const LEDGER: [string, string, ("go" | "stop" | "wait")?][] = [
+  ["Guarantee", "A customer who pays for Pro keeps access after signing back in."],
+  ["Run 1", "Failed. Pro access was missing.", "stop"],
   ["Repair 1", "Access granted."],
-  ["Run 2", "Failed. Access lost on sign-in.", "stop"],
+  ["Run 2", "Failed. Access lost after signing back in.", "stop"],
   ["Decision", "Approved by a person, reason recorded.", "wait"],
-  ["Run 3", "Verified.", "go"],
+  ["Repair 2", "Entitlement attached to the account."],
+  ["Run 3", "Verified. Access held.", "go"],
 ];
 
 export function Record() {
   const root = useRef<HTMLElement>(null);
-  const seen = useSeen(root, RECORD.length);
+  const seen = useSeen(root, LEDGER.length);
   return (
     <section className="v6-rec" data-nav-dark ref={root}>
       <div className="v6-rec__head">
         <p className="v6-eyebrow">The record</p>
-        <h2 className="v6-rec__h">Nothing is overwritten.</h2>
+        <h2 className="v6-rec__h">The success does not erase how it got there.</h2>
       </div>
       <div className="v6-rec__stack">
-        {RECORD.map(([k, v, s], i) => (
-          <div key={k} className={`v6-rec__row ${s ? `is-${s}` : ""}`} data-i={i} data-on={i < seen}>
-            <span className="v6-rec__k v6-mono">{k}</span>
+        {LEDGER.map(([k, v, sg], i) => (
+          <article key={k} className={`v6-rec__sheet ${sg ? `is-${sg}` : ""}`}
+            data-i={i} data-on={i < seen} style={{ ["--i" as string]: i, zIndex: i + 1 }}>
+            <span className="v6-rec__k">{k}</span>
             <span className="v6-rec__v">{v}</span>
             <span className="v6-rec__dot" aria-hidden />
-          </div>
+          </article>
         ))}
       </div>
     </section>
   );
 }
 
-/* ══════════════════════════════════════════════════════════════ CHAPTER 6 ══
-   DISTRIBUTION AND KNOWLEDGE. Two movements separated by a lot of silence: one
-   result fanning into the stack a company already runs, then the writing behind
-   the product set as a publication rather than as cards. */
-const REACH: [string, string][] = [
-  ["Web app", "the decision and its evidence"],
-  ["API", "GET /v1/verifications/{id}"],
-  ["CLI", "one command, one exit code"],
-  ["GitHub", "a check on the pull request"],
-  ["Vercel", "the deployment it ran against"],
-  ["Slack", "the channel that owns the system"],
-  ["Webhook", "verification.completed"],
+/* ══════════════════════════════════════════════════════════ CHAPTER 6A — REACH ══
+   One result, three environments. The same object is carried through Build, Deploy and Decide, changing
+   only its form: a check, an exit code, a response body, a deployment, an event, a decision, a message.
+   ------------------------------------------------------------------------------------------------- */
+type Surface = { name: string; form: string; kind: "code" | "line" };
+const ENVS: { env: string; surfaces: Surface[] }[] = [
+  { env: "Build", surfaces: [
+    { name: "GitHub", form: "Vraelis / guarantee  ✓ passed", kind: "line" },
+    { name: "CLI", form: "$ vraelis verify  ->  exit 0", kind: "code" },
+    { name: "API", form: '{ "decision": "verified" }', kind: "code" },
+  ] },
+  { env: "Deploy", surfaces: [
+    { name: "Vercel", form: "checked against this deployment", kind: "line" },
+    { name: "Webhooks", form: "verification.completed", kind: "code" },
+  ] },
+  { env: "Decide", surfaces: [
+    { name: "Vraelis", form: "the decision, and the evidence behind it", kind: "line" },
+    { name: "Slack", form: "#billing  ·  the guarantee held", kind: "line" },
+  ] },
 ];
-const NEXT = ["IDE", "Desktop", "Browser companion", "Mobile approvals", "MCP and agent tools"];
 
 export function Reach() {
   const root = useRef<HTMLElement>(null);
-  const seen = useSeen(root, 1);
-  const y0 = 40, step = 76, endX = 660;
+  const seen = useSeen(root, ENVS.length);
   return (
     <section className="v6-rx" ref={root}>
       <div className="v6-rx__head">
         <p className="v6-eyebrow">Where it lands</p>
-        <h2 className="v6-rx__h">One result, everywhere you already work.</h2>
+        <h2 className="v6-rx__h">One result, in the form each place needs.</h2>
       </div>
 
-      <div className="v6-rx__figure" data-i="0" data-on={seen > 0}>
-        <svg className="v6-rx__svg" viewBox="0 0 1180 600" role="img"
-          aria-label={"One verified result reaches " + REACH.map((r) => r[0]).join(", ") + "."}>
-          <g className="v6-rx__edge" fill="none">
-            {REACH.map(([k], i) => (
-              <path key={k} d={`M240 300 C 450 300, 470 ${y0 + i * step}, ${endX} ${y0 + i * step}`} />
-            ))}
-          </g>
-          <g className="v6-rx__src">
-            <rect x="20" y="262" width="220" height="76" rx="14" />
-            <text className="v6-rx__srct" x="130" y="294">vrf_ff9d6c0d</text>
-            <text className="v6-rx__srcs" x="130" y="318">VERIFIED</text>
-          </g>
-          {REACH.map(([k, v], i) => (
-            <g key={k} className="v6-rx__end" style={{ ["--i" as string]: i }}>
-              <circle cx={endX} cy={y0 + i * step} r="5" />
-              <text className="v6-rx__endk" x={endX + 26} y={y0 + i * step - 2}>{k}</text>
-              <text className="v6-rx__endv" x={endX + 26} y={y0 + i * step + 20}>{v}</text>
-            </g>
-          ))}
-        </svg>
-      </div>
-
-      <ol className="v6-rx__m" data-on={seen > 0}>
-        <li className="v6-rx__msrc"><span className="v6-mono">vrf_ff9d6c0d</span><span className="v6-rx__mver v6-mono">Verified</span></li>
-        {REACH.map(([k, v]) => (
-          <li key={k} className="v6-rx__mrow"><span className="v6-rx__mk">{k}</span><span className="v6-rx__mv">{v}</span></li>
+      <div className="v6-rx__journey">
+        {ENVS.map((e, i) => (
+          <section key={e.env} className="v6-rx__env" data-i={i} data-on={i < seen}>
+            <header className="v6-rx__envh">
+              <span className="v6-rx__envn">{e.env}</span>
+              <span className="v6-rx__chip"><span className="v6-rx__chipdot" aria-hidden />the same result</span>
+            </header>
+            <div className="v6-rx__surfaces">
+              {e.surfaces.map((sf) => (
+                <div key={sf.name} className="v6-rx__surface">
+                  <span className="v6-rx__sn">{sf.name}</span>
+                  <span className={`v6-rx__sf ${sf.kind === "code" ? "is-code" : ""}`}>{sf.form}</span>
+                </div>
+              ))}
+            </div>
+          </section>
         ))}
-      </ol>
+      </div>
 
-      {/* Direction is secondary and must read that way: a ruled band under the live surfaces, not an inline
-          run of words wedged against the caption above it. */}
       <div className="v6-rx__next">
         <p className="v6-rx__nexth">Direction, not built</p>
         <ul className="v6-rx__soons">
-          {NEXT.map((n) => <li key={n}>{n}</li>)}
+          {["IDE", "Desktop", "Browser companion", "Mobile approvals", "MCP and agent tools"].map((n) => <li key={n}>{n}</li>)}
         </ul>
       </div>
     </section>
   );
 }
 
+/* ══════════════════════════════════════ CHAPTER 6B — KNOWLEDGE ══
+   A publication, not a card grid: one dominant excerpt, one documentation fragment, a dated rail, and one
+   truthful technical fragment. Every word is the real published text of the surface it links to.
+   ------------------------------------------------------------------------------------------------- */
 export function Knowledge() {
-  const groups = DOC_GROUPS.map((g) => ({ group: g, docs: DOCS.filter((d) => d.group === g) }));
-  const recent = CHANGELOG.slice(0, 2);
+  const recent = CHANGELOG.slice(0, 4);
+  const doc = DOCS.find((d) => d.slug === "completion")!;
   return (
     <section className="v6-kn">
       <div className="v6-kn__in">
         <p className="v6-eyebrow v6-kn__eyebrow">Written down</p>
 
-        <Link href={`${BASE}/method`} className="v6-kn__quote">
-          <blockquote>
-            An agent that plans, writes, and repairs the work will also tell you it is finished.
-          </blockquote>
-          <span className="v6-kn__attr">The Vraelis Method, position 3 of 8<span className="v6-arw" aria-hidden>→</span></span>
-        </Link>
+        <div className="v6-kn__grid">
+          <Link href={`${BASE}/method`} className="v6-kn__lead">
+            <p className="v6-kn__kicker">The Vraelis Method, position 3 of 8</p>
+            <blockquote>An agent that plans, writes, and repairs the work will also tell you it is finished.</blockquote>
+            <p className="v6-kn__leadp">
+              A test written inside the system inherits the same assumptions the mistake came from.
+              Independence is not something you reach by trying harder; it is structural.
+            </p>
+            <span className="v6-kn__more">Read all eight positions<span className="v6-arw" aria-hidden>→</span></span>
+          </Link>
 
-        <div className="v6-kn__idx">
-          <Link href={`${BASE}/docs`} className="v6-kn__col">
-            <span className="v6-kn__colh">Documentation</span>
-            <span className="v6-kn__colm v6-mono">{DOCS.length} pages</span>
-            <span className="v6-kn__colb">{groups.map((g) => g.group).join(". ")}.</span>
-          </Link>
-          <Link href={`${BASE}/research`} className="v6-kn__col">
-            <span className="v6-kn__colh">Research</span>
-            <span className="v6-kn__colm v6-mono">Open question</span>
-            <span className="v6-kn__colb">How to represent the edge of a check, so absence of evidence is never read as evidence of safety.</span>
-          </Link>
-          <Link href={`${BASE}/readme`} className="v6-kn__col">
-            <span className="v6-kn__colh">README</span>
-            <span className="v6-kn__colm v6-mono">Why this exists</span>
-            <span className="v6-kn__colb">Software used to be trusted because humans held the loop. That loop is changing.</span>
-          </Link>
-          <Link href={`${BASE}/changelog`} className="v6-kn__col">
-            <span className="v6-kn__colh">Changelog</span>
-            <span className="v6-kn__colm v6-mono">{recent[0].date}</span>
-            <span className="v6-kn__colb">{recent.map((c) => c.title).join(". ")}.</span>
+          <div className="v6-kn__side">
+            <Link href={`${BASE}/docs/${doc.slug}`} className="v6-kn__frag">
+              <p className="v6-kn__fragh">Documentation, {doc.group}</p>
+              <p className="v6-kn__fragt">{doc.title}</p>
+              <p className="v6-kn__fragb">{doc.summary}</p>
+            </Link>
+
+            <div className="v6-kn__code">
+              <p className="v6-kn__codeh">A decision, read back</p>
+              <pre>{`GET /v1/verifications/{id}
+
+{
+  "decision": "verified",
+  "claim": "A paid customer keeps Pro access
+            after signing back in."
+}`}</pre>
+            </div>
+          </div>
+
+          <Link href={`${BASE}/changelog`} className="v6-kn__rail">
+            <p className="v6-kn__railh">Changelog</p>
+            {recent.map((c) => (
+              <span key={c.title} className="v6-kn__rr">
+                <span className="v6-kn__rd">{c.date}</span>
+                <span className="v6-kn__rt">{c.title}</span>
+              </span>
+            ))}
           </Link>
         </div>
+
+        <Link href={`${BASE}/docs`} className="v6-kn__cta">Read the documentation<span className="v6-arw" aria-hidden>→</span></Link>
       </div>
     </section>
   );
 }
-
-/** Re-exported so home.tsx reads as the running order of the page. */
-export { CTA, EditorialLink };
