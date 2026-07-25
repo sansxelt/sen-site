@@ -5,7 +5,7 @@
 // rather than parking a card above the footer.
 import Link from "next/link";
 import { CTA, EditorialLink } from "./ui";
-import { CLOSE_TITLE, CLOSE_SAY, FOOTER_STATEMENT } from "./positioning";
+import { CLOSE_TITLE, FOOTER_STATEMENT } from "./positioning";
 import "./close.css";
 
 const BASE = "/dev-preview/v6";
@@ -15,14 +15,14 @@ const BASE = "/dev-preview/v6";
 export function ClosingScene({
   resolve = false,
   title = CLOSE_TITLE,
-  say = CLOSE_SAY,
+  say = `${FOOTER_STATEMENT} Written down before the work starts, and checked against the running software after it ends.`,
   secondaryHref = `${BASE}/platform`,
   secondaryLabel = "See the platform",
 }: {
   resolve?: boolean; title?: string; say?: string; secondaryHref?: string; secondaryLabel?: string;
 }) {
   return (
-    <section className="v6-end" data-nav-dark>
+    <section className="v6-end" data-nav-dark data-nav-theme="dark">
       <div className="v6-end__field" aria-hidden />
       <div className="v6-end__in">
         {resolve ? (
@@ -37,8 +37,9 @@ export function ClosingScene({
         <h2 className="v6-end__h">{title}</h2>
         <p className="v6-end__say">{say}</p>
         <div className="v6-end__cta">
-          <CTA brand>Open Vraelis</CTA>
+          <CTA brand lg>Open Vraelis</CTA>
           <EditorialLink href={secondaryHref}>{secondaryLabel}</EditorialLink>
+          <Link href={`${BASE}/company#contact`} className="v6-end__third">Talk to the team</Link>
         </div>
       </div>
     </section>
@@ -54,21 +55,9 @@ const COLS: [string, [string, string][]][] = [
 
 export function SiteFooter() {
   return (
-    <footer className="v6-foot2">
-      {/* Upper footer: ONE editorial handoff, not a small heading over an isolated button. The statement
-          carries the block at display scale on the left; the actions and the status sit together on the
-          right, with the status clearly subordinate to them. The lower directory below is unchanged. */}
-      <div className="v6-foot2__upper">
-        <div className="v6-foot2__say">
-          <p className="v6-foot2__stmt">{FOOTER_STATEMENT}</p>
-          <p className="v6-foot2__sub">Written down before the work starts. Checked against the running software after it ends.</p>
-        </div>
-        <div className="v6-foot2__act">
-          <CTA brand>Open Vraelis</CTA>
-          <Link href={`${BASE}/company#contact`} className="v6-foot2__second">Talk to the team<span className="v6-arw" aria-hidden>&rarr;</span></Link>
-        </div>
-      </div>
-
+    <footer className="v6-foot2" data-nav-theme="dark">
+      {/* No upper block. The closing scene above IS the ending; this footer is only the directory. Two giant
+          statements stacked at the bottom competed for the same job and the second one read as a repeat. */}
       <div className="v6-foot2__lower">
         {COLS.map(([h, links]) => (
           <div className="v6-foot2__col" key={h}>

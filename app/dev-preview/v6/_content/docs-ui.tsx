@@ -55,7 +55,7 @@ export function DocShell({ activeSlug = "", toc = [], children }: {
   }, [drawer]);
 
   return (
-    <div className="v6-docsenv" data-nav-dark data-drawer={drawer}>
+    <div className="v6-docsenv" data-nav-dark data-nav-theme="dark" data-drawer={drawer}>
       <div className={`v6-wrap v6-wrap--wide v6-docs ${toc.length ? "v6-docs--article" : ""}`}>
         <button type="button" className="v6-docs__open" onClick={() => setDrawer(true)} aria-expanded={drawer}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden><path d="M3 6h18M3 12h18M3 18h18" /></svg>

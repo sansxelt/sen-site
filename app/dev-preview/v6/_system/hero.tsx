@@ -11,7 +11,7 @@ import "./hero.css";
 
 export function Hero() {
   return (
-    <section className="v6-h" data-nav-dark>
+    <section className="v6-h" data-nav-dark data-nav-theme="dark">
       <div className="v6-h__field" aria-hidden />
       <div className="v6-h__inner">
         <p className="v6-eyebrow v6-h__eyebrow">{CATEGORY}</p>

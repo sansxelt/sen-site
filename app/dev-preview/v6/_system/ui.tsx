@@ -61,7 +61,7 @@ export function PageHero({ kicker, title, lead, cta, dark = false }: {
   kicker?: string; title: ReactNode; lead?: ReactNode; cta?: ReactNode; dark?: boolean;
 }) {
   return (
-    <section className={`v6-sec v6-phero ${dark ? "v6-dark" : ""}`} {...(dark ? { "data-nav-dark": "" } : {})}>
+    <section className={`v6-sec v6-phero ${dark ? "v6-dark" : ""}`} data-nav-theme={dark ? "dark" : "light"} {...(dark ? { "data-nav-dark": "" } : {})}>
       {/* v6-wrap, not --wide: the hero sat on the 1320 grid while every body section below used 1200, so the
           page jogged 58px to the left at the first section boundary on six of seven routes. */}
       <div className="v6-wrap">

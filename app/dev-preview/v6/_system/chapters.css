@@ -86,7 +86,20 @@
    focus in turn; the other two stay on screen the whole time at lower contrast.
    --f runs 0..2 and is the focus position, derived from --p.
    ========================================================================== */
-.v6-cs { position: relative; height: 400vh; background: var(--graphite); color: var(--g-fg-2); --p: 0; }
+/* The pan TRAVELS AND RESTS. A single linear sweep meant every region was only correctly framed for one
+   instant and cropped either side of it, so the sentence on screen described something half off-frame.
+   Three dwells, two travels:
+       p 0.00-0.12   pan 0       region 0 framed and still
+       p 0.12-0.36   pan 0 -> 0.494   travel
+       p 0.36-0.56   pan 0.494   region 1 framed and still
+       p 0.56-0.82   pan 0.494 -> 1   travel
+       p 0.82-1.00   pan 1       region 2 framed and still, before the sticky releases
+   0.494 is where region 1 sits dead centre. The visible slice is always 2760/2.55 = 1082 viewBox units
+   whatever the viewport width, because the scene is sized as a percentage of it, so that number holds at
+   every desktop width rather than only at 1440. */
+.v6-cs { position: relative; height: 440vh; background: var(--graphite); color: var(--g-fg-2); --p: 0;
+  --pan: calc(0.494 * clamp(0, calc((var(--p) - 0.12) / 0.24), 1)
+             + 0.506 * clamp(0, calc((var(--p) - 0.56) / 0.26), 1)); }
 .v6-cs__pin { position: sticky; top: 0; height: 100svh; overflow: hidden; display: grid;
   grid-template-rows: auto 1fr; gap: clamp(8px, 1.2vh, 18px);
   padding: calc(var(--nav-h, 66px) + 2vh) 0 3vh;
@@ -95,7 +108,7 @@
   margin-inline: auto; padding-inline: var(--gutter); pointer-events: none; }
 
 /* the three sentences occupy one space and hand over as focus moves */
-.v6-cs__acts { position: relative; min-height: clamp(104px, 13vh, 132px); margin-top: clamp(8px, 1.4vh, 16px); }
+.v6-cs__acts { position: relative; min-height: clamp(92px, 11.5vh, 118px); margin-top: clamp(6px, 1vh, 12px); }
 /* exactly one act is readable at a time, selected by the index the component computes */
 .v6-cs__act { position: absolute; inset: 0; opacity: 0; transform: translateY(16px);
   transition: opacity 320ms var(--ease), transform 380ms var(--ease); pointer-events: none; }
@@ -112,16 +125,29 @@
    rather than a sentence with a diagram parked below it */
 /* starts at the top of its row so the chapter is one composition, but NOT lifted into the headline:
    at -7vh the environment printed straight through the act sentence. */
-.v6-cs__viewport { overflow: hidden; align-self: center; width: 100%; margin-top: 0; }
-.v6-cs__scene { min-height: 0; }
-/* the pan is CONTINUOUS: it tracks --p directly, so the environment is always developing under the
-   reader rather than snapping between three parked positions. The act text still switches
-   discretely, which is what keeps one sentence readable at a time. */
-.v6-cs__scene { width: 300%; height: auto; display: block;
-  transform: translateX(calc(var(--p) * -66.667%)); }
+/* The environment is the section, not a strip under it: it claims the majority of the pinned height. */
+/* Flex, not grid: the scene's width is a percentage, and a grid item's percentage width resolves against
+   an auto-sized track, which is circular and collapses to auto. A flex container has a definite width, so
+   255% resolves the way it reads. */
+.v6-cs__viewport { overflow: hidden; align-self: stretch; width: 100%; margin-top: 0;
+  display: flex; align-items: center; }
+/* the pan is CONTINUOUS: it tracks --pan, so the environment is always developing under the reader
+   rather than snapping between three parked positions. The act text still switches discretely, which
+   is what keeps one sentence readable at a time.
 
-.v6-cs__spine { stroke: rgba(255,255,255,0.22); stroke-width: 1.5; stroke-dasharray: 5 7; }
-.v6-cs__spinet { fill: var(--g-fg-3); font-family: var(--sans); font-weight: 600; font-size: 17px;
+   255%, not 300%: at 300% a 2760x560 box rendered 876px tall inside a ~600px row, so the top and bottom
+   of every region were clipped away and only a horizontal band survived. At 255% with a 470-unit box the
+   whole scene fits the row AND one region still fills ~85% of the viewport width. Type and stroke weights
+   below are scaled up to compensate for the smaller magnification. */
+/* Prefixed with .v6 to outrank the `.v6 svg { max-width: 100% }` guard in v6.css. Without that, the scene
+   was capped at container width: the whole 2760-unit environment was squeezed into one viewport and the
+   pan slid that squeezed diagram sideways off the screen, which is exactly why it read as a small strip
+   with the last region hard against the right edge. */
+.v6 .v6-cs__scene { flex: none; width: 255%; max-width: none; height: auto; display: block;
+  transform: translateX(calc(var(--pan) * -60.8%)); }
+
+.v6-cs__spine { stroke: rgba(255,255,255,0.22); stroke-width: 1.8; stroke-dasharray: 5 7; }
+.v6-cs__spinet { fill: var(--g-fg-3); font-family: var(--sans); font-weight: 600; font-size: 20px;
   letter-spacing: 0.16em; text-transform: uppercase; }
 
 /* regions dim by distance from focus, but never disappear */
@@ -131,25 +157,25 @@
 .v6-cs[data-act="1"] .v6-cs__r[data-r="1"],
 .v6-cs[data-act="2"] .v6-cs__r[data-r="2"] { opacity: 1; }
 
-.v6-cs__guar { fill: rgba(255,255,255,0.07); stroke: rgba(255,255,255,0.34); stroke-width: 1.5; }
-.v6-cs__guart { fill: var(--g-fg-3); font-family: var(--sans); font-weight: 600; font-size: 17px;
+.v6-cs__guar { fill: rgba(255,255,255,0.07); stroke: rgba(255,255,255,0.34); stroke-width: 1.8; }
+.v6-cs__guart { fill: var(--g-fg-3); font-family: var(--sans); font-weight: 600; font-size: 20px;
   letter-spacing: 0.16em; text-transform: uppercase; }
-.v6-cs__guarb { fill: var(--g-fg); font-family: var(--sans); font-weight: 600; font-size: 27px; letter-spacing: -0.018em; }
-.v6-cs__svc { fill: rgba(255,255,255,0.045); stroke: rgba(255,255,255,0.24); stroke-width: 1.4; }
-.v6-cs__svct { fill: var(--g-fg-2); font-family: var(--sans); font-size: 20px; text-anchor: middle; }
-.v6-cs__link, .v6-cs__drop { stroke: rgba(255,255,255,0.28); stroke-width: 1.4; fill: none; }
+.v6-cs__guarb { fill: var(--g-fg); font-family: var(--sans); font-weight: 600; font-size: 32px; letter-spacing: -0.018em; }
+.v6-cs__svc { fill: rgba(255,255,255,0.045); stroke: rgba(255,255,255,0.24); stroke-width: 1.6; }
+.v6-cs__svct { fill: var(--g-fg-2); font-family: var(--sans); font-size: 23px; text-anchor: middle; }
+.v6-cs__link, .v6-cs__drop { stroke: rgba(255,255,255,0.28); stroke-width: 1.6; fill: none; }
 .v6-cs__drop { stroke-dasharray: 4 8; }
 
-.v6-cs__plane { fill: rgba(255,255,255,0.05); stroke: rgba(255,255,255,0.3); stroke-width: 1.5; }
-.v6-cs__planet { fill: var(--g-fg); font-family: var(--sans); font-weight: 600; font-size: 22px; letter-spacing: -0.014em; }
-.v6-cs__planerule { stroke: rgba(255,255,255,0.18); stroke-width: 1; }
-.v6-cs__run { stroke: var(--g-fg); stroke-width: 2.2; fill: none; }
-.v6-cs__step circle { fill: var(--graphite); stroke: var(--g-fg); stroke-width: 2.2; }
-.v6-cs__step text { fill: var(--g-fg-2); font-family: var(--sans); font-size: 19px; text-anchor: middle; }
+.v6-cs__plane { fill: rgba(255,255,255,0.05); stroke: rgba(255,255,255,0.3); stroke-width: 1.8; }
+.v6-cs__planet { fill: var(--g-fg); font-family: var(--sans); font-weight: 600; font-size: 26px; letter-spacing: -0.014em; }
+.v6-cs__planerule { stroke: rgba(255,255,255,0.18); stroke-width: 1.2; }
+.v6-cs__run { stroke: var(--g-fg); stroke-width: 2.6; fill: none; }
+.v6-cs__step circle { fill: var(--graphite); stroke: var(--g-fg); stroke-width: 2.6; }
+.v6-cs__step text { fill: var(--g-fg-2); font-family: var(--sans); font-size: 22px; text-anchor: middle; }
 
-.v6-cs__arc { stroke: rgba(255,255,255,0.34); stroke-width: 1.8; fill: none; }
-.v6-cs__node circle { fill: var(--graphite); stroke: var(--g-fg); stroke-width: 2.4; }
-.v6-cs__node text { fill: var(--g-fg-2); font-family: var(--sans); font-weight: 600; font-size: 20px; text-anchor: middle; }
+.v6-cs__arc { stroke: rgba(255,255,255,0.34); stroke-width: 2.1; fill: none; }
+.v6-cs__node circle { fill: var(--graphite); stroke: var(--g-fg); stroke-width: 2.8; }
+.v6-cs__node text { fill: var(--g-fg-2); font-family: var(--sans); font-weight: 600; font-size: 24px; text-anchor: middle; }
 .v6-cs__node.is-stop circle { fill: var(--stop-dk); stroke: var(--stop-dk); }
 .v6-cs__node.is-stop text { fill: var(--stop-dk); }
 .v6-cs__node.is-wait circle { fill: var(--wait-dk); stroke: var(--wait-dk); }
@@ -198,31 +224,80 @@
 .v6-pf__guar span { font-family: var(--sans); font-weight: 600; font-size: 11px; letter-spacing: 0.16em;
   text-transform: uppercase; color: var(--ink-4); flex: none; }
 
-.v6-pf__figure { margin-top: clamp(30px, 4vh, 56px); width: min(1560px, 95vw); margin-inline: auto; }
-.v6-pf__svg { width: 100%; height: auto; overflow: visible; }
-.v6-pf__base { stroke: var(--line); stroke-width: 1; stroke-dasharray: 3 7; }
-.v6-pf__lane { fill: var(--ink-4); font-family: var(--sans); font-weight: 600; font-size: 15px; letter-spacing: 0.16em; }
-.v6-pf__pay { stroke: var(--go); stroke-width: 3; fill: none; opacity: 0.55; }
-.v6-pf__ent { stroke: var(--ink); stroke-width: 3.4; fill: none; stroke-linejoin: round; }
-.v6-pf__ent.is-bad { stroke: var(--stop); }
-.v6-pf__ent.is-good { stroke: var(--go); }
-.v6-pf__wall line { stroke: var(--ink); stroke-width: 1.4; stroke-dasharray: 6 8; opacity: 0.5; }
-.v6-pf__wall text { fill: var(--ink-3); font-family: var(--sans); font-weight: 600; font-size: 15px;
-  letter-spacing: 0.15em; text-anchor: middle; }
-.v6-pf__pt circle { fill: var(--paper); stroke: var(--ink); stroke-width: 3; }
-.v6-pf__pt text { fill: var(--ink-2); font-family: var(--sans); font-weight: 500; font-size: 19px;
-  letter-spacing: -0.008em; }
-.v6-pf__pt.is-stop circle { fill: var(--stop); stroke: var(--stop); }
-.v6-pf__pt.is-stop text { fill: var(--stop-ink); font-weight: 600; }
-.v6-pf__pt.is-go circle { fill: var(--go); stroke: var(--go); }
-.v6-pf__pt.is-go text { fill: var(--go-ink); font-weight: 600; }
-.v6-pf__note-t { fill: var(--stop-ink); font-family: var(--sans); font-size: 16px; font-style: italic; }
-.v6-pf__decide { stroke: var(--go); stroke-width: 2; fill: none; stroke-dasharray: 4 6; opacity: 0.7; }
-.v6-pf__final rect { fill: rgba(11,124,85,0.10); stroke: rgba(11,124,85,0.45); stroke-width: 1.6; }
-.v6-pf__final text { fill: var(--go-ink); font-family: var(--sans); font-weight: 700; font-size: 24px;
-  letter-spacing: 0.02em; text-anchor: middle; }
-.v6-pf__pt { opacity: 0; transition: opacity 400ms var(--ease); transition-delay: calc(180ms + var(--i, 0) * 170ms); }
-.v6-pf__figure[data-on="true"] .v6-pf__pt { opacity: 1; }
+/* ---- the case file itself ----------------------------------------------------------------------
+   One document, three stacked areas: a quiet payment statement, a dominant entitlement track split by a
+   solid session wall, and a decision area held apart from both. Type is real DOM type at real sizes,
+   which is why this is not an SVG: the previous chart put 16-19px labels across 1400px of hairlines. */
+/* shares an exact left edge with the headline above it: max-wide minus the two gutters */
+.v6-pf__case { max-width: calc(var(--max-wide) - var(--gutter) * 2);
+  width: calc(100% - var(--gutter) * 2); margin: clamp(34px, 5vh, 62px) auto 0;
+  border: 1px solid var(--line); border-radius: 20px; background: var(--paper);
+  box-shadow: 0 1px 0 rgba(16,18,22,0.03), 0 22px 60px -46px rgba(16,18,22,0.4);
+  overflow: hidden; }
+
+.v6-pf__lanen { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin: 0;
+  font-family: var(--sans); font-weight: 600; font-size: 12px; letter-spacing: 0.17em;
+  text-transform: uppercase; color: var(--ink-4); }
+.v6-pf__lanen em { font-style: normal; font-weight: 500; font-size: 12px; letter-spacing: 0.02em;
+  text-transform: none; color: var(--ink-4); }
+
+/* payment: deliberately the smallest thing in the composition */
+.v6-pf__minor { padding: clamp(22px, 2.6vw, 30px) clamp(22px, 3vw, 40px);
+  border-bottom: 1px solid var(--line); background: var(--sunk); }
+.v6-pf__minors { display: flex; align-items: flex-start; gap: 12px; margin: 12px 0 0;
+  font-size: clamp(0.98rem, 1.15vw, 1.08rem); color: var(--ink-3); }
+.v6-pf__tick { flex: none; width: 10px; height: 10px; border-radius: 999px; background: var(--go);
+  margin-top: 0.5em; }
+
+/* entitlement: the dominant lane */
+.v6-pf__major { padding: clamp(26px, 3.2vw, 38px) clamp(22px, 3vw, 40px) clamp(30px, 3.6vw, 42px); }
+.v6-pf__track { list-style: none; margin: clamp(18px, 2.2vw, 26px) 0 0; padding: 0;
+  display: grid; grid-template-columns: 1fr 1fr auto 1fr 1.12fr; align-items: stretch; }
+
+.v6-pf__seg { position: relative; padding: 18px clamp(16px, 1.6vw, 24px) 4px; }
+/* the state band IS the lane: it runs edge to edge across each segment and carries the only colour */
+.v6-pf__seg::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 8px;
+  border-radius: 2px; background: var(--line-2);
+  transform: scaleX(0); transform-origin: 0 50%;
+  transition: transform 620ms var(--ease); transition-delay: calc(var(--i, 0) * 150ms); }
+.v6-pf__case[data-on="true"] .v6-pf__seg::before { transform: scaleX(1); }
+.v6-pf__seg[data-s="stop"]::before { background: var(--stop); }
+.v6-pf__seg[data-s="go"]::before   { background: var(--go); }
+.v6-pf__seg[data-s="none"]::before { background: var(--ink-4); }
+.v6-pf__seg + .v6-pf__seg::after { content: ""; position: absolute; left: 0; top: 22px; bottom: 8px;
+  border-left: 1px solid var(--line); }
+
+.v6-pf__segh { margin: 0; font-family: var(--sans); font-weight: 600; letter-spacing: -0.02em;
+  line-height: 1.16; font-size: clamp(1.12rem, 1.5vw, 1.44rem); color: var(--ink); }
+.v6-pf__seg[data-s="stop"] .v6-pf__segh { color: var(--stop-ink); }
+.v6-pf__seg[data-s="go"] .v6-pf__segh   { color: var(--go-ink); }
+.v6-pf__segd { margin: 10px 0 0; font-size: clamp(0.94rem, 1.1vw, 1.02rem); line-height: 1.45; color: var(--ink-3); }
+
+/* the session wall: a real division through the track, floor to ceiling */
+.v6-pf__wall { position: relative; display: grid; align-content: start; justify-items: center;
+  padding: 18px clamp(20px, 2.2vw, 32px) 4px; background: var(--ink); }
+.v6-pf__wall span { display: block; margin-top: 14px; font-family: var(--sans); font-weight: 600;
+  font-size: clamp(0.88rem, 1.05vw, 1.02rem); line-height: 1.34; letter-spacing: -0.01em;
+  text-align: center; color: var(--paper); }
+.v6-pf__wall::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 8px;
+  background: var(--ink); }
+
+/* the decision area: separate ground, two objects, not a plate on a label */
+.v6-pf__decide { display: grid; grid-template-columns: 1.25fr 1fr; gap: clamp(20px, 3vw, 48px);
+  align-items: center; padding: clamp(24px, 3vw, 34px) clamp(22px, 3vw, 40px);
+  border-top: 1px solid var(--line); background: var(--sunk);
+  opacity: 0; transform: translateY(14px);
+  transition: opacity 520ms var(--ease), transform 520ms var(--ease); transition-delay: 820ms; }
+.v6-pf__case[data-on="true"] .v6-pf__decide { opacity: 1; transform: none; }
+.v6-pf__dh { margin: 0; font-family: var(--sans); font-weight: 600; font-size: 12px; letter-spacing: 0.17em;
+  text-transform: uppercase; color: var(--ink-4); }
+.v6-pf__dv { margin: 12px 0 0; font-family: var(--sans); font-weight: 500; letter-spacing: -0.024em;
+  line-height: 1.15; font-size: clamp(1.2rem, 1.9vw, 1.7rem); color: var(--ink); }
+.v6-pf__dec { border-left: 1px solid var(--line); padding-left: clamp(20px, 3vw, 48px); }
+.v6-pf__verd { margin: 10px 0 0; font-family: var(--sans); font-weight: 700; letter-spacing: -0.03em;
+  line-height: 1; font-size: clamp(1.9rem, 3vw, 2.7rem); color: var(--go-ink); }
+.v6-pf__dn { margin: 10px 0 0; font-size: clamp(0.94rem, 1.1vw, 1.02rem); color: var(--ink-3); }
+
 .v6-pf__disclose { max-width: var(--max-wide); margin: clamp(24px, 3vh, 36px) auto 0; padding-inline: var(--gutter);
   font-size: 13px; color: var(--ink-4); }
 
@@ -233,32 +308,94 @@
 .v6-rec__head { max-width: 1180px; margin-inline: auto; padding-inline: var(--gutter); }
 .v6-rec__h { font-family: var(--sans); font-weight: 600; letter-spacing: -0.038em; line-height: 1.02;
   font-size: clamp(2rem, 4.6vw, 3.6rem); color: var(--g-fg); margin: clamp(14px, 2vh, 22px) 0 0; max-width: 20ch; }
-.v6-rec__stack { position: relative; max-width: 1180px; margin: clamp(40px, 6vh, 72px) auto 0;
-  padding: 0 var(--gutter) clamp(30px, 5vh, 60px); }
-.v6-rec__sheet { position: relative; display: grid; grid-template-columns: 128px minmax(0, 1fr) 12px;
-  align-items: center; gap: clamp(16px, 2.6vw, 36px);
-  margin-left: calc(var(--i) * clamp(8px, 1.3vw, 20px));
-  margin-right: calc((6 - var(--i)) * clamp(8px, 1.3vw, 20px));
-  /* a constant hairline tuck, NOT calc(--i * -6px): that grew with the index and buried the
-     sheets above the last one. */
-  margin-top: 6px;
-  padding: clamp(16px, 2.1vh, 24px) clamp(20px, 2.4vw, 30px);
-  background: #131316; border: 1px solid rgba(255,255,255,0.13); border-radius: 12px;
-  box-shadow: 0 -1px 0 rgba(255,255,255,0.05), 0 18px 34px -26px rgba(0,0,0,0.9);
-  opacity: 0; transform: translateY(26px);
-  transition: opacity 560ms var(--ease), transform 640ms var(--ease); }
-.v6-rec__sheet[data-on="true"] { opacity: 1; transform: none; }
-.v6-rec__sheet:first-child { background: #17171B; margin-top: 0; }
-.v6-rec__k { font-family: var(--sans); font-weight: 600; font-size: 11px; letter-spacing: 0.14em;
+/* ---- the archive ---------------------------------------------------------------------------------
+   Left: the guarantee, anchored, sticky, unchanging. Right: a spine with things of four different kinds
+   filed against it. The kinds are told apart by construction, not by a coloured pip on an identical row:
+   evidence has a border and a tab, a change has neither, a decision carries a signature rule, and the
+   result is the only object that is lifted, wider and green. */
+.v6-rec__arch { max-width: 1180px; margin: clamp(40px, 6vh, 74px) auto 0; padding-inline: var(--gutter);
+  display: grid; grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  gap: clamp(40px, 5.5vw, 92px); align-items: start; }
+
+.v6-rec__anchor { position: sticky; top: calc(var(--nav-h, 66px) + clamp(24px, 5vh, 56px)); }
+.v6-rec__doc { border: 1px solid var(--g-line-2); border-radius: 4px; background: #121215;
+  padding: clamp(22px, 2.4vw, 30px);
+  /* a filed document, not a card: square corners, a rule under the label, no shadow */
+  box-shadow: none; }
+.v6-rec__dock { margin: 0 0 16px; padding-bottom: 14px; border-bottom: 1px solid var(--g-line);
+  font-family: var(--sans); font-weight: 600; font-size: 12px; letter-spacing: 0.18em;
   text-transform: uppercase; color: var(--g-fg-3); }
-.v6-rec__v { font-family: var(--sans); font-weight: 500; letter-spacing: -0.016em; line-height: 1.25;
-  font-size: clamp(1rem, 1.7vw, 1.44rem); color: var(--g-fg); }
-.v6-rec__dot { width: 10px; height: 10px; border-radius: 999px; background: rgba(255,255,255,0.24); }
-.v6-rec__sheet.is-stop .v6-rec__dot { background: var(--stop-dk); }
-.v6-rec__sheet.is-wait .v6-rec__dot { background: var(--wait-dk); }
-.v6-rec__sheet.is-go .v6-rec__dot { background: var(--go-dk); }
-.v6-rec__sheet.is-go .v6-rec__v { color: var(--go-dk); }
-.v6-rec__sheet.is-go { border-color: rgba(74,222,156,0.4); }
+.v6-rec__docv { margin: 0; font-family: var(--sans); font-weight: 500; letter-spacing: -0.026em;
+  line-height: 1.2; font-size: clamp(1.3rem, 2vw, 1.75rem); color: var(--g-fg); }
+.v6-rec__meta { margin: clamp(22px, 2.6vw, 30px) 0 0; padding-top: 18px; border-top: 1px solid var(--g-line);
+  display: grid; gap: 11px; }
+.v6-rec__meta > div { display: flex; justify-content: space-between; gap: 16px; align-items: baseline; }
+.v6-rec__meta dt { margin: 0; font-family: var(--sans); font-weight: 600; font-size: 11px;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--g-fg-3); }
+.v6-rec__meta dd { margin: 0; font-size: 0.95rem; color: var(--g-fg-2); text-align: right; }
+.v6-rec__meta dd.is-go { color: var(--go-dk); font-weight: 600; }
+
+/* the spine itself */
+.v6-rec__spine { position: relative; list-style: none; margin: 0; padding: 0 0 0 clamp(26px, 3vw, 42px); }
+.v6-rec__spine::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 1px;
+  background: var(--g-line-2); }
+.v6-rec__filed { position: relative; padding-block: clamp(16px, 2vh, 24px);
+  /* --rail is how far the spine sits to the left of the filed object; --tie is the height at which this
+     particular kind of record meets the spine, so the node lands on its first line rather than at an
+     arbitrary offset that drifts between kinds. */
+  --rail: clamp(26px, 3vw, 42px);
+  --tie: calc(clamp(16px, 2vh, 24px) + 30px);
+  opacity: 0; transform: translateY(22px);
+  transition: opacity 520ms var(--ease), transform 600ms var(--ease); }
+.v6-rec__filed[data-t="change"] { --tie: calc(clamp(16px, 2vh, 24px) + 8px); }
+.v6-rec__filed[data-on="true"] { opacity: 1; transform: none; }
+/* the node on the spine: a small square for a filed record, solid and larger for the closing result */
+.v6-rec__filed::before { content: ""; position: absolute; top: var(--tie);
+  left: calc(var(--rail) * -1 - 3px); width: 7px; height: 7px;
+  background: var(--graphite); border: 1px solid var(--g-fg-3); }
+.v6-rec__filed[data-t="result"]::before { background: var(--go-dk); border-color: var(--go-dk);
+  width: 11px; height: 11px; top: calc(var(--tie) - 2px); left: calc(var(--rail) * -1 - 5px); }
+/* the tie: without it the spine and the records read as two parallel columns rather than one archive */
+.v6-rec__filed::after { content: ""; position: absolute; left: calc(var(--rail) * -1 + 4px);
+  width: calc(var(--rail) - 4px); top: calc(var(--tie) + 3px); height: 1px; background: var(--g-line-2); }
+.v6-rec__filed[data-t="result"]::after { background: rgba(74,222,156,0.42); }
+
+.v6-rec__tab { margin: 0 0 12px; display: inline-flex; align-items: baseline; gap: 12px;
+  font-family: var(--sans); font-weight: 600; font-size: 11px; letter-spacing: 0.17em;
+  text-transform: uppercase; color: var(--g-fg-3); }
+.v6-rec__tab .v6-mono { letter-spacing: 0.02em; font-size: 12px; color: var(--g-fg-2); }
+.v6-rec__fh { margin: 0; font-family: var(--sans); font-weight: 600; letter-spacing: -0.024em;
+  line-height: 1.15; font-size: clamp(1.24rem, 1.9vw, 1.62rem); color: var(--g-fg); }
+.v6-rec__fb { margin: 9px 0 0; font-size: clamp(0.96rem, 1.1vw, 1.04rem); line-height: 1.5; color: var(--g-fg-2); }
+
+/* evidence: bordered, because it is a record of what was observed */
+.v6-rec__ev { border: 1px solid var(--g-line-2); background: #121215;
+  padding: clamp(18px, 2vw, 24px) clamp(20px, 2.2vw, 28px); }
+.v6-rec__ev[data-s="stop"] { border-left: 3px solid var(--stop-dk); }
+.v6-rec__ev[data-s="stop"] .v6-rec__fh { color: var(--stop-dk); }
+
+/* a change: no card at all. It is a note filed between two records, and it reads as one. */
+.v6-rec__ch { padding-left: clamp(14px, 1.6vw, 20px); border-left: 1px solid var(--g-line);
+  max-width: 46ch; }
+.v6-rec__chn { margin: 0 0 8px; font-size: 12px; letter-spacing: 0.02em; color: var(--g-fg-3); }
+.v6-rec__ch .v6-rec__fh { font-weight: 500; font-size: clamp(1.06rem, 1.4vw, 1.24rem); color: var(--g-fg-2); }
+.v6-rec__ch .v6-rec__fb { color: var(--g-fg-3); }
+
+/* a signed decision: the only thing here with a signature rule under it */
+.v6-rec__de { border: 1px solid var(--g-line-2); background: #16161A;
+  padding: clamp(18px, 2vw, 24px) clamp(20px, 2.2vw, 28px); }
+.v6-rec__sig { margin: clamp(16px, 1.8vw, 22px) 0 0; padding-top: 13px;
+  border-top: 1px solid var(--wait-dk); font-size: 0.92rem; color: var(--wait-dk); }
+
+/* the result: the heaviest object in the archive, and the only one carrying green */
+.v6-rec__re { border: 1px solid rgba(74,222,156,0.42); background: #14181A;
+  padding: clamp(24px, 2.8vw, 34px) clamp(24px, 2.8vw, 34px);
+  margin-right: clamp(-40px, -3vw, 0px);
+  box-shadow: 0 26px 60px -44px rgba(0,0,0,0.95); }
+.v6-rec__re .v6-rec__tab { color: var(--go-dk); }
+.v6-rec__re .v6-rec__fh { font-size: clamp(1.9rem, 3.2vw, 2.7rem); font-weight: 700; letter-spacing: -0.032em;
+  color: var(--go-dk); }
+.v6-rec__re .v6-rec__fb { font-size: clamp(1rem, 1.25vw, 1.14rem); max-width: 46ch; }
 
 /* ══════════════════════════════════════════ 6A. REACH ══ */
 .v6-rx { background: var(--paper); padding-block: clamp(72px, 9vh, 124px); }
@@ -266,81 +403,207 @@
 .v6-rx__h { font-family: var(--sans); font-weight: 600; letter-spacing: -0.036em; line-height: 1;
   font-size: clamp(2rem, 4.6vw, 3.8rem); color: var(--ink); margin: clamp(14px, 2vh, 22px) 0 0;
   max-width: 17ch; text-wrap: balance; }
-.v6-rx__journey { max-width: var(--max-wide); margin: clamp(22px, 3vh, 36px) auto 0; padding-inline: var(--gutter);
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(18px, 2.4vw, 34px);
-  position: relative; }
-/* the through-line that carries the same result across all three environments */
-.v6-rx__journey::before { content: ""; position: absolute; left: var(--gutter); right: var(--gutter); top: 26px;
-  height: 1px; background: var(--line-2); }
-.v6-rx__env { position: relative; display: flex; flex-direction: column; opacity: 0; transform: translateY(20px);
-  transition: opacity 560ms var(--ease), transform 620ms var(--ease); transition-delay: calc(var(--i, 0) * 90ms); }
-.v6-rx__env[data-on="true"] { opacity: 1; transform: none; }
-.v6-rx__envh { display: flex; align-items: center; gap: 12px; padding-bottom: 16px; }
-.v6-rx__envn { font-family: var(--sans); font-weight: 600; font-size: 11px; letter-spacing: 0.16em;
-  text-transform: uppercase; color: var(--ink-4); background: var(--paper); padding-right: 12px; }
-/* the result object, identical in all three environments */
-/* the result, stated once above the journey */
-.v6-rx__object { max-width: var(--max-wide); margin: clamp(30px, 4vh, 52px) auto 0; padding-inline: var(--gutter);
-  display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
-.v6-rx__odot { width: 9px; height: 9px; border-radius: 999px; background: var(--go); flex: none; align-self: center; }
-.v6-rx__oid { font-family: var(--sans); font-weight: 600; letter-spacing: -0.018em;
-  font-size: clamp(1.06rem, 1.5vw, 1.32rem); color: var(--ink); }
-.v6-rx__osay { font-size: 14.5px; color: var(--ink-3); }
-/* the environments start and end on the same lines; the differing surface counts distribute inside,
-   so three, two and two read as different shapes rather than as a ragged column */
-.v6-rx__surfaces { border-top: 1px solid var(--line); flex: 1; display: flex; flex-direction: column;
-  justify-content: space-between; min-height: clamp(240px, 26vh, 300px); }
-.v6-rx__surface { display: flex; flex-direction: column; justify-content: center; gap: 5px;
-  flex: 1; padding: clamp(12px, 1.6vh, 18px) 0; border-bottom: 1px solid var(--line); }
-.v6-rx__sn { font-family: var(--sans); font-weight: 600; font-size: clamp(1.02rem, 1.4vw, 1.24rem);
-  color: var(--ink); letter-spacing: -0.016em; }
-.v6-rx__sf { font-size: 14px; line-height: 1.5; color: var(--ink-3); }
-.v6-rx__sf.is-code { font-family: var(--mono); font-size: 13px; color: var(--ink-2); }
-.v6-rx__next { max-width: var(--max-wide); margin: clamp(34px, 4.5vh, 60px) auto 0;
+.v6-rx__sub { max-width: 54ch; margin: clamp(16px, 2vh, 24px) 0 0;
+  font-size: clamp(1rem, 1.2vw, 1.14rem); line-height: 1.55; color: var(--ink-3); }
+
+/* ---- the flow ------------------------------------------------------------------------------------
+   A 12 column field. Every fragment is placed by hand: different spans, different rows, deliberate
+   overlaps, so the composition steps across and down instead of standing in three equal columns.
+   Stage markers are full-width rules, which is what separates this from the vertical spine used by the
+   record chapter above. */
+.v6-rx__flow { max-width: var(--max-wide); margin: clamp(30px, 4.5vh, 60px) auto 0;
+  padding-inline: var(--gutter); display: grid; grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: clamp(12px, 1.6vw, 22px); }
+
+.v6-rx__stage { grid-column: 1 / -1; margin: clamp(30px, 4vw, 52px) 0 clamp(14px, 1.8vw, 22px);
+  display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 18px; }
+.v6-rx__stage:first-of-type { margin-top: 0; }
+.v6-rx__stage span { font-family: var(--sans); font-weight: 600; font-size: 11px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--ink-4); }
+.v6-rx__stage::after { content: ""; height: 1px; background: var(--line-2); }
+
+/* every fragment shares only its reveal and its reference chip; construction is per surface */
+.v6-rx__f { position: relative; margin: 0; opacity: 0; transform: translateY(20px);
+  transition: opacity 560ms var(--ease), transform 620ms var(--ease); }
+.v6-rx__f[data-on="true"] { opacity: 1; transform: none; }
+.v6-rx__fcap { font-family: var(--sans); font-weight: 600; font-size: 11px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-4); margin-bottom: 10px; }
+.v6-rx__fcap b { font-weight: 600; letter-spacing: 0.04em; color: var(--ink-2); margin-right: 8px; }
+.v6-rx__ref { display: inline-block; font-size: 12px; letter-spacing: 0.02em; color: var(--ink-3);
+  background: var(--sunk); border: 1px solid var(--line); border-radius: 4px; padding: 2px 8px; }
+
+/* --- github check --- */
+.v6-rx__f--gh { grid-column: 1 / span 6; grid-row: 2; }
+.v6-rx__f--gh .v6-rx__fcap { font-family: var(--mono); text-transform: none; letter-spacing: 0; font-size: 12px; }
+.v6-rx__ghrow { display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 12px;
+  border: 1px solid var(--line-2); border-bottom: 0; padding: 15px 18px; background: var(--paper); }
+.v6-rx__ghrow.is-sub { border-bottom: 1px solid var(--line-2); border-top: 1px solid var(--line);
+  padding-block: 12px; background: var(--sunk); }
+.v6-rx__ghtick { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 999px;
+  background: var(--go); color: #fff; font-size: 12px; line-height: 1; }
+.v6-rx__ghrow.is-sub .v6-rx__ghtick { background: none; }
+.v6-rx__ghname { font-family: var(--sans); font-weight: 600; font-size: clamp(1rem, 1.2vw, 1.1rem); color: var(--ink); }
+.v6-rx__ghstate { font-family: var(--sans); font-weight: 600; font-size: 0.94rem; color: var(--go-ink); }
+.v6-rx__ghsay { font-size: 0.92rem; color: var(--ink-3); }
+
+/* --- cli terminal: the only dark object in the upper half, dropped below the check row it follows --- */
+/* dropped below the check row rather than overlapping it: at 7 columns wide the check row ran under
+   this block and its state and reference were both covered. */
+.v6-rx__f--cli { grid-column: 7 / span 6; grid-row: 2; align-self: end; margin-top: clamp(26px, 3.4vw, 52px); }
+.v6-rx__term { margin: 0; background: var(--graphite); border-radius: 8px; overflow: hidden;
+  padding: clamp(16px, 1.8vw, 22px);
+  font-family: var(--mono); font-size: clamp(12px, 0.92vw, 13.5px); line-height: 1.85;
+  color: var(--g-fg-2); box-shadow: 0 24px 50px -38px rgba(0,0,0,0.8); }
+/* the project sets a font-family on `code`, which beats inheritance from the `pre` and rendered
+   every transcript and response body in the sans face. font: inherit puts them back on mono. */
+.v6-rx__term code { font: inherit; white-space: pre; }
+/* what was typed reads at full strength; what the tool printed back sits behind it */
+.v6-rx__p { color: var(--g-fg-3); }
+.v6-rx__cmd { color: var(--g-fg); }
+.v6-rx__dim { color: var(--g-fg-3); }
+.v6-rx__ok { color: var(--go-dk); }
+
+/* --- api response --- */
+.v6-rx__f--api { grid-column: 2 / span 5; grid-row: 4; }
+/* a request line is a path, not a label: it must not be upper-cased */
+.v6-rx__f--api .v6-rx__fcap { text-transform: none; letter-spacing: 0.01em; font-family: var(--mono); font-size: 12px; }
+.v6-rx__json { margin: 0; border: 1px solid var(--line-2); border-radius: 6px; background: var(--sunk);
+  padding: clamp(14px, 1.6vw, 20px) clamp(16px, 1.8vw, 22px);
+  font-family: var(--mono); font-size: clamp(12px, 0.9vw, 13px); line-height: 1.8; color: var(--ink-2); }
+.v6-rx__json code { font: inherit; white-space: pre; }
+
+/* --- deployment --- */
+.v6-rx__f--dep { grid-column: 7 / span 6; grid-row: 4; margin-top: clamp(20px, 2.6vw, 40px); }
+.v6-rx__dep { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center;
+  gap: clamp(14px, 1.6vw, 20px); border: 1px solid var(--line-2); border-radius: 6px;
+  padding: clamp(16px, 1.8vw, 22px); background: var(--paper); }
+.v6-rx__mark { width: 0; height: 0; border-left: 11px solid transparent; border-right: 11px solid transparent;
+  border-bottom: 19px solid var(--ink); }
+.v6-rx__depn { margin: 0; display: flex; align-items: baseline; gap: 12px; font-family: var(--sans);
+  font-weight: 600; font-size: clamp(1rem, 1.2vw, 1.12rem); color: var(--ink); }
+.v6-rx__depn em { font-style: normal; font-weight: 600; font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-4); border: 1px solid var(--line-2); border-radius: 4px;
+  padding: 2px 7px; }
+.v6-rx__depsay { margin: 6px 0 0; font-size: 0.92rem; color: var(--ink-3); }
+
+/* --- webhook --- */
+.v6-rx__f--hook { grid-column: 1 / span 5; grid-row: 6; }
+
+/* --- the vraelis decision: the heaviest fragment, and the only one on black --- */
+.v6-rx__f--dec { grid-column: 6 / span 4; grid-row: 6; margin-top: clamp(-30px, -2.4vw, 0px);
+  background: var(--graphite); border-radius: 8px; padding: clamp(20px, 2.2vw, 28px);
+  box-shadow: 0 28px 60px -44px rgba(0,0,0,0.85); }
+.v6-rx__f--dec .v6-rx__fcap { color: var(--g-fg-3); }
+.v6-rx__decv { margin: 0; font-family: var(--sans); font-weight: 700; letter-spacing: -0.03em; line-height: 1;
+  font-size: clamp(1.7rem, 2.6vw, 2.3rem); color: var(--go-dk); }
+.v6-rx__decsay { margin: 12px 0 16px; font-size: 0.96rem; line-height: 1.5; color: var(--g-fg-2); }
+.v6-rx__f--dec .v6-rx__ref { background: rgba(255,255,255,0.06); border-color: var(--g-line-2); color: var(--g-fg-2); }
+
+/* --- slack message: crops past the field edge, so the run of surfaces reads as continuing --- */
+.v6-rx__f--slack { grid-column: 10 / span 3; grid-row: 6; margin-top: clamp(24px, 3vw, 46px);
+  margin-right: clamp(-56px, -4vw, 0px); }
+.v6-rx__msg { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px;
+  border: 1px solid var(--line-2); border-radius: 6px; padding: clamp(14px, 1.6vw, 18px); background: var(--paper); }
+.v6-rx__av { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 6px;
+  background: var(--ink); color: var(--paper); font-family: var(--sans); font-weight: 700; font-size: 14px; }
+.v6-rx__who { margin: 0; display: flex; align-items: baseline; gap: 8px; font-family: var(--sans);
+  font-weight: 600; font-size: 0.98rem; color: var(--ink); }
+.v6-rx__who em { font-style: normal; font-weight: 600; font-size: 9px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-4); background: var(--sunk); border-radius: 3px; padding: 2px 5px; }
+.v6-rx__said { margin: 6px 0 0; font-size: 0.92rem; line-height: 1.55; color: var(--ink-3); }
+.v6-rx__said .v6-rx__ref { margin-top: 4px; }
+
+/* the direction strip, restated after the flow */
+.v6-rx__next { max-width: var(--max-wide); margin: clamp(40px, 5vh, 66px) auto 0;
   padding: clamp(20px, 2.4vw, 28px) var(--gutter) 0; border-top: 1px solid var(--line);
-  display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: clamp(16px, 3vw, 44px); align-items: start; }
+  display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: clamp(16px, 3vw, 44px);
+  align-items: start; }
 .v6-rx__nexth { margin: 0; font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.14em;
   text-transform: uppercase; color: var(--ink-4); }
 .v6-rx__soons { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 28px; }
 .v6-rx__soons li { font-size: 15px; color: var(--ink-4); }
 
+.v6-rx__ill { max-width: var(--max-wide); margin: clamp(20px, 2.6vh, 30px) auto 0; padding-inline: var(--gutter);
+  font-size: 13px; color: var(--ink-4); }
+
 /* ══════════════════════════════════════ 6B. KNOWLEDGE ══ */
-.v6-kn { background: var(--sunk); padding-block: clamp(72px, 9vh, 124px); }
+/* clip, not hidden: the documentation sheet is meant to run off the right page edge */
+.v6-kn { background: var(--sunk); padding-block: clamp(72px, 9vh, 124px); overflow-x: clip; }
 .v6-kn__in { max-width: var(--max-wide); margin-inline: auto; padding-inline: var(--gutter); }
-.v6-kn__grid { margin-top: clamp(26px, 3.5vh, 44px); display: grid;
-  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 0.72fr);
-  gap: clamp(24px, 3.2vw, 52px); align-items: start; }
-.v6-kn__lead { display: block; text-decoration: none; border-top: 2px solid var(--ink);
-  padding-top: clamp(20px, 2.4vw, 28px); }
-.v6-kn__kicker { margin: 0; font-family: var(--sans); font-weight: 600; font-size: 10.5px;
-  letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-4); }
-.v6-kn__lead blockquote { margin: 16px 0 0; font-family: var(--sans); font-weight: 600; letter-spacing: -0.03em;
-  line-height: 1.08; font-size: clamp(1.6rem, 3.1vw, 2.7rem); color: var(--ink); text-wrap: balance; }
-.v6-kn__leadp { font-size: clamp(0.98rem, 1.1vw, 1.08rem); line-height: 1.6; color: var(--ink-3); margin: 18px 0 0; }
-.v6-kn__more { display: inline-flex; align-items: center; gap: 8px; margin-top: 22px; font-size: 15px;
-  font-weight: 600; color: var(--ink); }
+/* ---- the field ------------------------------------------------------------------------------------
+   Four objects, placed by hand on a 12 column field. They deliberately do not share a top line: the
+   documentation sheet breaks above it, the exhibit is slipped across the lower corner of the Method
+   sheet, and the rail runs off the right page edge. */
+.v6-kn__field { margin-top: clamp(26px, 3.5vh, 44px);
+  display: grid; grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: clamp(12px, 1.6vw, 22px); align-items: start; }
+
+/* wraps: at 320 the two tracked-out labels together are wider than the sheet and the second one was
+   clipped by the section's overflow rather than moving to its own line */
+.v6-kn__run { margin: 0; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 18px;
+  padding-bottom: 14px; border-bottom: 1px solid var(--line);
+  font-family: var(--sans); font-weight: 600; font-size: 10.5px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-4); }
+
+/* the Method sheet: a document on the grey ground, with the edge of the pages under it showing */
+.v6-kn__sheet { position: relative; z-index: 2; grid-column: 1 / span 8; grid-row: 1;
+  display: block; text-decoration: none; background: var(--paper); border: 1px solid var(--line);
+  padding: clamp(26px, 3vw, 44px) clamp(26px, 3.2vw, 48px) clamp(56px, 6vw, 92px);
+  box-shadow: 0 1px 0 rgba(16,18,22,0.04), 0 30px 70px -56px rgba(16,18,22,0.45); }
+/* two page edges, so the sheet reads as the top of something longer rather than as a card */
+.v6-kn__sheet::before, .v6-kn__sheet::after { content: ""; position: absolute; z-index: -1;
+  background: var(--paper); border: 1px solid var(--line); border-top: 0; }
+.v6-kn__sheet::before { left: 10px; right: 10px; bottom: -7px; height: 7px; }
+.v6-kn__sheet::after  { left: 21px; right: 21px; bottom: -13px; height: 6px; }
+.v6-kn__q { margin: clamp(22px, 2.6vw, 34px) 0 0; font-family: var(--sans); font-weight: 600;
+  letter-spacing: -0.034em; line-height: 1.05; font-size: clamp(1.6rem, 3.1vw, 2.85rem);
+  color: var(--ink); max-width: 18ch; text-wrap: balance; }
+.v6-kn__qp { margin: clamp(18px, 2vw, 26px) 0 0; font-size: clamp(1rem, 1.15vw, 1.1rem); line-height: 1.6;
+  color: var(--ink-3); max-width: 52ch; }
+.v6-kn__more { display: inline-flex; align-items: center; gap: 8px; margin-top: clamp(20px, 2.2vw, 28px);
+  font-size: 15px; font-weight: 600; color: var(--ink); }
 .v6-kn__more .v6-arw { transition: transform 180ms var(--ease-out); }
-.v6-kn__lead:hover .v6-arw { transform: translateX(4px); }
+.v6-kn__sheet:hover .v6-arw, .v6-kn__doc:hover .v6-arw, .v6-kn__rail:hover .v6-arw { transform: translateX(4px); }
 
-.v6-kn__side { display: flex; flex-direction: column; gap: clamp(18px, 2.4vw, 28px); }
-.v6-kn__frag { display: block; text-decoration: none; border-top: 1px solid var(--line-2); padding-top: 18px; }
-.v6-kn__fragh { margin: 0; font-family: var(--sans); font-weight: 600; font-size: 10.5px;
-  letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-4); }
-.v6-kn__fragt { margin: 10px 0 0; font-size: clamp(1.06rem, 1.4vw, 1.3rem); font-weight: 600; color: var(--ink);
-  letter-spacing: -0.018em; }
-.v6-kn__fragb { margin: 8px 0 0; font-size: 14px; line-height: 1.5; color: var(--ink-3); }
-.v6-kn__code { background: #0A0A0B; border-radius: 12px; padding: 18px 20px; overflow-x: auto; }
-.v6-kn__codeh { margin: 0 0 12px; font-family: var(--sans); font-weight: 600; font-size: 10.5px;
-  letter-spacing: 0.15em; text-transform: uppercase; color: #8E9095; }
-.v6-kn__code pre { margin: 0; font-family: var(--mono); font-size: 12px; line-height: 1.62; color: #C4C5C9;
-  white-space: pre-wrap; overflow-wrap: anywhere; }
+/* the documentation sheet: lifted above the top line, and cropped by the right page edge */
+/* one right-hand column, so the rail follows the sheet immediately instead of waiting for the second
+   grid row and leaving a 340px hole beside the Method sheet */
+.v6-kn__col { position: relative; z-index: 3; grid-column: 9 / span 4; grid-row: 1 / span 2; }
+.v6-kn__doc { position: relative; display: block;
+  margin-top: clamp(-52px, -3.4vw, -20px);
+  /* runs past the right page edge at every width: the container is centred inside the viewport,
+     so the bleed has to cover both the outer margin and the gutter. */
+  margin-right: calc(min(0px, (var(--max-wide) - 100vw) / 2) - var(--gutter) - 18px);
+  display: block; text-decoration: none; background: var(--paper); border: 1px solid var(--line);
+  padding: clamp(20px, 2.2vw, 28px) clamp(20px, 2.4vw, 30px) clamp(22px, 2.4vw, 30px);
+  box-shadow: 0 24px 54px -44px rgba(16,18,22,0.5); }
+.v6-kn__doct { margin: 16px 0 0; font-family: var(--sans); font-weight: 600; letter-spacing: -0.024em;
+  line-height: 1.14; font-size: clamp(1.2rem, 1.7vw, 1.55rem); color: var(--ink); }
+.v6-kn__docb { margin: 10px 0 0; font-size: 14.5px; line-height: 1.55; color: var(--ink-3); max-width: 30ch; }
 
-.v6-kn__rail { display: block; text-decoration: none; border-top: 1px solid var(--line-2); padding-top: 18px; }
-.v6-kn__railh { margin: 0 0 14px; font-family: var(--sans); font-weight: 600; font-size: 10.5px;
-  letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-4); }
-.v6-kn__rr { display: block; padding: 10px 0; border-bottom: 1px solid var(--line); }
-.v6-kn__rd { display: block; font-size: 11.5px; color: var(--ink-4); font-variant-numeric: tabular-nums; }
-.v6-kn__rt { display: block; font-size: 14px; line-height: 1.4; color: var(--ink); margin-top: 3px; }
+/* the exhibit: slipped across the lower corner of the Method sheet, and clearly a different artefact */
+/* Pulled up into the foot of the Method sheet. Columns 4 to 8 put its right edge on the sheet's right
+   edge and its left edge clear of the sheet's link, so the overlap is vertical and deliberate rather than
+   something sitting on top of readable text: an earlier placement covered three changelog entries, and
+   the one after that covered the sheet's own link. */
+.v6-kn__ex { position: relative; z-index: 4; grid-column: 4 / span 5; grid-row: 2;
+  align-self: start; margin: clamp(-130px, -7.5vw, -60px) 0 0;
+  background: var(--graphite); padding: clamp(18px, 2vw, 24px) clamp(20px, 2.2vw, 28px);
+  box-shadow: 0 30px 66px -46px rgba(0,0,0,0.8); }
+.v6-kn__ex figcaption { font-family: var(--sans); font-weight: 600; font-size: 10.5px;
+  letter-spacing: 0.17em; text-transform: uppercase; color: var(--g-fg-3); margin-bottom: 14px; }
+.v6-kn__ex pre { margin: 0; font-family: var(--mono); font-size: clamp(12px, 0.88vw, 12.8px);
+  line-height: 1.7; color: var(--g-fg-2); overflow-x: auto; }
+
+/* the changelog: a dated rail, not a card. Hairlines and dates, running down the right. */
+.v6-kn__rail { position: relative; margin-top: clamp(26px, 3vw, 42px); display: block; text-decoration: none; }
+.v6-kn__railh { margin: 0 0 6px; font-family: var(--sans); font-weight: 600; font-size: 10.5px;
+  letter-spacing: 0.17em; text-transform: uppercase; color: var(--ink-4); }
+.v6-kn__rl { list-style: none; margin: 0; padding: 0; }
+.v6-kn__rl li { display: grid; gap: 3px; padding: 13px 0; border-bottom: 1px solid var(--line); }
+.v6-kn__rd { font-size: 11.5px; letter-spacing: 0.02em; color: var(--ink-4); font-variant-numeric: tabular-nums; }
+.v6-kn__rt { font-size: 14.5px; line-height: 1.4; color: var(--ink); }
+
 .v6-kn__cta { display: inline-flex; align-items: center; gap: 9px; margin-top: clamp(30px, 4vh, 48px);
   font-size: 15px; font-weight: 600; color: var(--ink); text-decoration: none; min-height: 44px; }
 .v6-kn__cta .v6-arw { transition: transform 180ms var(--ease-out); }
@@ -378,24 +641,49 @@
   .v6-cs__viewport { display: none; }
   .v6-cs__m { display: grid; }
 
-  .v6-pf__figure, .v6-rx__journey { }
-  .v6-pf__figure { overflow-x: auto; padding-inline: var(--gutter); width: 100%; }
-  .v6-pf__svg { min-width: 980px; }
-
-  .v6-rx__journey { grid-template-columns: 1fr; gap: clamp(26px, 6vw, 40px); }
-  .v6-rx__journey::before { display: none; }
-  .v6-rx__env { border-top: 1px solid var(--line-2); padding-top: 18px; }
+  /* the case file stacks: the state band moves from the top of each segment to its left edge, and the
+     session wall becomes a full-width division instead of a column. */
+  .v6-pf__case { max-width: none; width: calc(100% - var(--gutter) * 2); border-radius: 16px; }
+  .v6-pf__track { grid-template-columns: minmax(0, 1fr); }
+  .v6-pf__seg { padding: 16px 0 18px 20px; }
+  .v6-pf__seg::before { left: 0; right: auto; top: 4px; bottom: 4px; height: auto; width: 8px;
+    border-radius: 4px; transform: scaleY(0); transform-origin: 50% 0; }
+  .v6-pf__case[data-on="true"] .v6-pf__seg::before { transform: scaleY(1); }
+  .v6-pf__seg + .v6-pf__seg::after { left: 20px; right: 0; top: 0; bottom: auto;
+    border-left: 0; border-top: 1px solid var(--line); }
+  .v6-pf__wall { justify-items: start; padding: 14px 18px; margin: 10px 0;
+    border-radius: 8px; grid-auto-flow: column; align-items: center; }
+  .v6-pf__wall::before { display: none; }
+  /* the break stays: without it the two clauses ran together as one word */
+  .v6-pf__wall span { margin-top: 0; text-align: left; }
+  .v6-pf__decide { grid-template-columns: 1fr; gap: 22px; }
+  .v6-pf__dec { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); padding-top: 20px; }
+  
+  /* the hand placement collapses to a single column: every fragment keeps its own construction, but
+     nothing overlaps or crops on a narrow screen. */
+  .v6-rx__flow { grid-template-columns: minmax(0, 1fr); row-gap: clamp(22px, 5vw, 32px); }
+  .v6-rx__f { grid-column: 1 / -1 !important; grid-row: auto !important;
+    margin-top: 0 !important; margin-right: 0 !important; align-self: auto; }
+  .v6-rx__stage { grid-column: 1 / -1; margin-top: clamp(26px, 7vw, 40px); }
   .v6-rx__next { grid-template-columns: 1fr; gap: 12px; }
 
-  .v6-rec__sheet { grid-template-columns: minmax(0, 1fr) 12px; row-gap: 6px;
-    margin-left: 0; margin-top: 10px; }
-  .v6-rec__k { grid-column: 1; }
-  .v6-rec__v { grid-column: 1; }
-  .v6-rec__dot { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+  /* the anchor stops being sticky and becomes the first thing you read, then the archive runs below it */
+  .v6-rec__arch { grid-template-columns: minmax(0, 1fr); gap: clamp(30px, 7vw, 46px); }
+  .v6-rec__anchor { position: static; }
+  .v6-rec__re { margin-right: 0; }
 }
 
-@media (max-width: 680px) {
-  .v6-kn__grid { grid-template-columns: 1fr; gap: 30px; }
+@media (max-width: 900px) {
+  /* the hand placement unwinds: every object keeps its own construction, nothing overlaps or crops */
+  /* minmax(0, 1fr), not 1fr: a plain 1fr track keeps an auto minimum, so at 320 the widest child
+     stretched the single column past the viewport and the section clipped it. */
+  .v6-kn__field { grid-template-columns: minmax(0, 1fr); row-gap: clamp(26px, 6vw, 40px); }
+  .v6-kn__sheet, .v6-kn__col, .v6-kn__ex {
+    grid-column: 1 / -1; grid-row: auto; margin: 0; align-self: auto; }
+  .v6-kn__doc, .v6-kn__rail { margin: 0; }
+  .v6-kn__rail { margin-top: clamp(26px, 6vw, 38px); }
+  .v6-kn__sheet { padding-bottom: clamp(30px, 6vw, 44px); }
+  .v6-kn__sheet::before, .v6-kn__sheet::after { display: none; }
 }
 
 /* ══════════════════════════════════════════════════════════ REDUCED MOTION ══ */
@@ -414,6 +702,6 @@
   .v6-cs__act { position: static; opacity: 1 !important; transform: none !important; }
   .v6-cs__viewport { display: none; }
   .v6-cs__m { display: grid; }
-  .v6-pf__pt, .v6-rec__sheet, .v6-rx__env {
+  .v6-pf__seg::before, .v6-pf__decide, .v6-rec__filed, .v6-rx__f, .v6-rx__stage {
     opacity: 1 !important; transform: none !important; transition: none !important; }
 }

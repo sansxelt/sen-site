@@ -9,8 +9,8 @@
 /* The final chapter, and the largest type on the page. Given a full viewport of its own so the page ends
    on a statement rather than on a block above a footer. */
 .v6-end { position: relative; background: var(--graphite); color: var(--g-fg-2); overflow: hidden;
-  min-height: 74svh; display: flex; align-items: center;
-  padding: clamp(84px, 11vh, 140px) 0 clamp(76px, 10vh, 120px); }
+  min-height: 82svh; display: flex; align-items: center;
+  padding: clamp(96px, 13vh, 168px) 0 clamp(88px, 12vh, 144px); }
 .v6-end__field { position: absolute; inset: 0; pointer-events: none;
   background:
     radial-gradient(1300px 780px at 74% 18%, rgba(255,255,255,0.055), transparent 70%),
@@ -27,9 +27,12 @@
 
 .v6-end__h { font-family: var(--sans); font-weight: 600; letter-spacing: -0.034em; line-height: 1.0;
   font-size: clamp(2.7rem, 7.4vw, 6.6rem); color: var(--g-fg); margin: 0; max-width: 13ch; text-wrap: balance; }
-.v6-end__say { font-size: clamp(1.06rem, 1.4vw, 1.4rem); line-height: 1.5; color: var(--g-fg-2);
-  margin: clamp(24px, 3.2vh, 40px) 0 0; max-width: 40ch; }
-.v6-end__cta { margin-top: clamp(28px, 4vh, 44px); display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+.v6-end__say { font-size: clamp(1.06rem, 1.35vw, 1.32rem); line-height: 1.5; color: var(--g-fg-2);
+  margin: clamp(24px, 3.2vh, 40px) 0 0; max-width: 56ch; }
+.v6-end__cta { margin-top: clamp(30px, 4.4vh, 48px); display: flex; align-items: center; gap: 26px; flex-wrap: wrap; }
+.v6-end__third { font-size: 15px; color: var(--g-fg-3); text-decoration: none; min-height: 32px;
+  display: inline-flex; align-items: center; }
+.v6-end__third:hover { color: var(--g-fg); }
 .v6-end .v6-btn { background: var(--g-fg); border-color: var(--g-fg); color: var(--graphite); min-height: 52px; padding: 16px 28px; font-size: 16px; }
 .v6-end .v6-btn:hover { background: #fff; border-color: #fff; }
 .v6-end .v6-elink { color: var(--g-fg); }
@@ -38,26 +41,7 @@
 
 /* ---------------------------------------------------------------- footer --- */
 .v6-foot2 { background: var(--graphite-2); color: var(--g-fg-2); border-top: 1px solid var(--g-line); }
-.v6-foot2__upper { max-width: var(--max-wide); margin-inline: auto;
-  padding: clamp(64px,8vh,110px) var(--gutter) clamp(52px,6.5vh,84px);
-  display: grid; grid-template-columns: minmax(0, 67fr) minmax(240px, 33fr); gap: clamp(32px,5vw,88px);
-  align-items: end; border-bottom: 1px solid var(--g-line); }
-/* the statement is the block, at display scale */
-.v6-foot2__stmt { font-family: var(--sans); font-weight: 600; letter-spacing: -0.032em; line-height: 1.04;
-  font-size: clamp(1.9rem, 4vw, 3.5rem); color: var(--g-fg); margin: 0; max-width: 19ch; text-wrap: balance; }
-.v6-foot2__sub { font-size: clamp(0.98rem,1.15vw,1.1rem); line-height: 1.55; color: var(--g-fg-3);
-  margin: clamp(16px,2vh,24px) 0 0; max-width: 46ch; }
-/* actions together, status subordinate beneath them */
-.v6-foot2__act { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; }
-.v6-foot2__act .v6-btn { background: var(--g-fg); border-color: var(--g-fg); color: var(--graphite);
-  min-height: 50px; padding: 15px 26px; font-size: 16px; }
-.v6-foot2__act .v6-btn:hover { background: #fff; border-color: #fff; }
-.v6-foot2__second { display: inline-flex; align-items: center; gap: 9px; font-size: 15px; font-weight: 600;
-  color: var(--g-fg); text-decoration: none; min-height: 32px; }
-.v6-foot2__second .v6-arw { transition: transform 180ms var(--ease-out); }
-.v6-foot2__second:hover .v6-arw { transform: translateX(4px); }
-
-.v6-foot2__lower { max-width: var(--max-wide); margin-inline: auto; padding: clamp(38px,5vh,58px) var(--gutter) clamp(28px,3.5vh,40px);
+.v6-foot2__lower { max-width: var(--max-wide); margin-inline: auto; padding: clamp(46px,6vh,72px) var(--gutter) clamp(28px,3.5vh,40px);
   display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: clamp(24px,3vw,52px); }
 .v6-foot2__h { font-family: var(--sans); font-size: 13px; font-weight: 600; color: var(--g-fg); margin: 0 0 16px; letter-spacing: -0.005em; }
 .v6-foot2__col { display: flex; flex-direction: column; gap: 2px; }
@@ -81,7 +65,6 @@
 }
 
 @media (max-width: 940px) {
-  .v6-foot2__upper { grid-template-columns: 1fr; gap: clamp(30px,5vw,44px); align-items: start; }
   .v6-foot2__lower { grid-template-columns: 1fr 1fr; gap: 26px 24px; }
 }
 @media (max-width: 520px) {

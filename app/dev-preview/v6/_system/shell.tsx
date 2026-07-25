@@ -169,12 +169,22 @@ function MegaShell({ index, state, preview, onPreview, onNavigate }: {
   );
 }
 
+/** Which theme the top of a route paints, known synchronously so the server-rendered bar is already right. */
+function themeAtTop(pathname: string): boolean {
+  if (pathname === BASE || pathname === BASE + "/") return true;      // the homepage opens on a black hero
+  if (pathname.startsWith(BASE + "/docs")) return true;               // the docs environment is night
+  return false;                                                        // every other route opens on a page hero
+}
+
 function V6Nav() {
   const pathname = usePathname() || "";
   const navRef = useRef<HTMLElement>(null);
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [scrolled, setScrolled] = useState(false);
-  const [dark, setDark] = useState(false);
+  // Derived during render, not in an effect. The bar used to mount light and correct itself a beat later,
+  // which showed as a white flash over the black hero on every load.
+  const [dark, setDark] = useState(() => themeAtTop(pathname));
+  const [settled, setSettled] = useState(false);
   const [drawer, setDrawer] = useState(false);
   // `open` is which menu is showing; `exiting` is the one still animating away. Keeping the outgoing panel
   // mounted for the length of its exit is the whole fix for menus that used to vanish on dismiss.
@@ -202,44 +212,31 @@ function V6Nav() {
 
   useEffect(() => {
     const nav = navRef.current;
-    // Read the ACTUAL background under the bar rather than trusting a [data-nav-dark] marker. The marker
-    // approach guessed, and it guessed wrong on the docs environment: a white bar on a near-black page.
-    // Walk up from the element under the bar to the first opaque background, measure its luminance, and let
-    // that decide. Any surface added later is handled without having to remember to tag it.
-    const luminance = (c: string) => {
-      const m = c.match(/[\d.]+/g);
-      if (!m || m.length < 3) return null;
-      if (m.length > 3 && Number(m[3]) < 0.5) return null; // effectively transparent
-      const [r, g, b] = m.slice(0, 3).map((v) => {
-        const x = Number(v) / 255;
-        return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
-      });
-      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-    };
+    // The SECTION under the bar decides, by its own declaration. Sampling a computed background picked up
+    // whatever child happened to sit under the sample point (a code block, a card) and guessed wrong.
     const onScroll = () => {
       setScrolled(window.scrollY > 4);
       if (!nav) return;
-      // While a panel is open it covers the sample point, so measuring would read the panel's own colour and
-      // feed back on itself. Hold the theme measured just before it opened.
+      // While a panel is open it covers the sample line, so hold whatever was measured before it opened.
       if (shown !== null) return;
-      const y = Math.round(nav.getBoundingClientRect().bottom) + 4;
-      let el = document.elementFromPoint(Math.round(window.innerWidth / 2), y) as HTMLElement | null;
-      let lum: number | null = null;
-      while (el && lum === null) {
-        // only a surface that spans most of the viewport counts as "the background". Without this the
-        // knowledge chapter read as dark because its small black code fragment happened to sit under the bar.
-        if (el.getBoundingClientRect().width >= window.innerWidth * 0.7) {
-          lum = luminance(getComputedStyle(el).backgroundColor);
-        }
-        el = el.parentElement;
+      const y = Math.round(nav.getBoundingClientRect().bottom) + 1;
+      const stack = document.elementsFromPoint(Math.round(window.innerWidth / 2), y) as HTMLElement[];
+      for (const el of stack) {
+        const surface = el.closest?.("[data-nav-theme]") as HTMLElement | null;
+        if (surface) { setDark(surface.dataset.navTheme === "dark"); return; }
       }
-      setDark(lum !== null && lum < 0.4);
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
     return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); };
   }, [pathname, shown]);
+
+  // Colour transitions are suppressed for the first frames so the correct initial theme never animates in.
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setSettled(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
 
   const close = useCallback((i: number | null) => {
     window.clearTimeout(closeT.current);
@@ -265,7 +262,7 @@ function V6Nav() {
 
   // close on route change (deferred so it is not a synchronous setState in the effect body)
   useEffect(() => {
-    const id = requestAnimationFrame(() => { setOpen(null); setExiting(null); setDrawer(false); });
+    const id = requestAnimationFrame(() => { setOpen(null); setExiting(null); setDrawer(false); setDark(themeAtTop(pathname)); });
     return () => cancelAnimationFrame(id);
   }, [pathname]);
 
@@ -282,7 +279,7 @@ function V6Nav() {
 
   return (
     <nav ref={navRef} className="v6-nav" data-scrolled={scrolled} data-theme={dark ? "dark" : "light"}
-      data-open={shown !== null} aria-label="Primary" onMouseLeave={scheduleClose}>
+      data-open={shown !== null} data-settled={settled} aria-label="Primary" onMouseLeave={scheduleClose}>
       <div className="v6-nav__in">
         <Brand />
         <div className="v6-nav__items">
