@@ -223,7 +223,7 @@ export function SystemMap() {
             environment rather than three sections. */}
         <ol className="v6-cs__m">
           <li className="v6-cs__mstage">
-            <p className="v6-cs__mh">Define what must hold</p>
+            <p className="v6-cs__mh">{ACTS[0][0]}</p>
             <div className="v6-cs__mguar">A paying customer keeps Pro access.</div>
             <ul className="v6-cs__mtags">
               {["application", "checkout", "account-api"].map((t) => <li key={t}>{t}</li>)}
@@ -231,7 +231,7 @@ export function SystemMap() {
             <p className="v6-cs__ms">Kept outside the code, so a change cannot quietly drop it.</p>
           </li>
           <li className="v6-cs__mstage">
-            <p className="v6-cs__mh">Check the running system</p>
+            <p className="v6-cs__mh">{ACTS[1][0]}</p>
             <ul className="v6-cs__mpath">
               {["open checkout", "pay", "sign out", "sign back in"].map((t) => <li key={t}>{t}</li>)}
             </ul>
@@ -242,7 +242,7 @@ export function SystemMap() {
             <p className="v6-cs__ms">A real browser crosses the deployed workflow, not the source.</p>
           </li>
           <li className="v6-cs__mstage">
-            <p className="v6-cs__mh">Resolve what failed</p>
+            <p className="v6-cs__mh">{ACTS[2][0]}</p>
             <ul className="v6-cs__mres">
               <li className="is-stop">finding</li>
               <li className="is-wait">a person decides</li>
@@ -278,7 +278,7 @@ const ENT: Beat[] = [
   { s: "stop", h: "Access was missing", d: "The account never received the Pro entitlement." },
   { s: "none", h: "The first repair appeared to work", d: "Access appeared only inside the session that was already open." },
   { s: "stop", h: "Signing back in broke it again", d: "The apparent fix did not survive a new session." },
-  { s: "go", h: "The second repair held", d: "The entitlement was attached to the account. Access remained after signing back in." },
+  { s: "go", h: "The second repair held", d: "A new session inherited the entitlement." },
 ];
 
 export function Proof() {
@@ -380,7 +380,7 @@ const ARCHIVE: Filed[] = [
   { t: "evidence", n: "Run 2", head: "Failed", body: "Access disappeared after signing out and back in.", s: "stop" },
   { t: "decision", head: "Human decision", body: "The second repair was approved, with the reason recorded." },
   { t: "change", n: "Repair 2", head: "Entitlement attached", body: "The entitlement was attached to the account." },
-  { t: "result", head: "Verified", body: "Access remained after signing back in." },
+  { t: "result", head: "Verified", body: "Persistence confirmed." },
 ];
 
 export function Record() {

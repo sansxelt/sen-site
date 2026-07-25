@@ -13,13 +13,15 @@
 // signed cookie the gesture does, with the same expiry, so a reviewer gets no more access than you do.
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
-import { stealthConfigured, signStealthCookie, stealthCookieOptions, STEALTH_COOKIE } from "@/lib/stealth";
+import { stealthConfigured, signStealthCookie, stealthCookieOptions, STEALTH_COOKIE, envValue } from "@/lib/stealth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function codeMatches(given: string): boolean {
-  const expected = (process.env.STEALTH_REVIEWER_CODE ?? "").trim();
+  // Same normalisation as STEALTH_MODE: a quoted .env value would otherwise make every reviewer link
+  // fail silently, and a bad code is deliberately indistinguishable from a closed entrance.
+  const expected = envValue("STEALTH_REVIEWER_CODE");
   if (!expected) return false; // unset means the entrance is closed, never open-to-all
   const a = Buffer.from(given.trim());
   const b = Buffer.from(expected);

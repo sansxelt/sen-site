@@ -379,10 +379,11 @@
 .v6-reveal--m { transform: translateY(22px) scale(0.99); } .v6-reveal--m.in { transform: none; }
 
 /* ══════════════════════════════════════════════════════ SPECTRAL REVEAL ═════
-   ONE text node. The element itself carries the real, readable, announced text; the travelling colour is
-   a ::after pseudo-element fed by data-text, so it can never be selected, copied, announced twice, or
-   picked up by page-text extraction. Everything derives from --sv (0..1), a pure function of rendered
-   scroll progress, so the pass scrubs in both directions and never restarts. */
+   The sentence exists once. .v6-spec__t is the real text and the only thing announced, extracted or
+   copied. .v6-spec__fx is an EMPTY, aria-hidden element whose ::after paints the travelling colour:
+   aria-hidden excludes its generated content from the accessibility tree, and generated content never
+   appears in innerText. Both layers share the same box so the colour registers with the letterforms.
+   Everything derives from --sv (0..1), a pure function of rendered scroll progress. */
 .v6-spec { position: relative; display: inline-block;
   --sv-in:   clamp(0, calc(var(--sv) / 0.42), 1);            /* establish: dim -> present      */
   --sv-out:  clamp(0, calc((var(--sv) - 0.42) / 0.40), 1);   /* the pass leaves by 0.82        */
@@ -391,12 +392,12 @@
   transform: translateY(calc((1 - var(--sv-in)) * 12px));
   filter: blur(calc((1 - var(--sv-in)) * 6px));
   will-change: transform, filter, opacity; }
-/* the light: a gradient three times the text width, driven across it by background-position, so colour
-   TRAVELS through the sentence. Muted violet, cool blue, cyan, restrained green, one brief warm note,
-   framed by transparency so only a moving region is ever coloured. */
-.v6-spec::after {
+.v6-spec__t { display: inline; }
+/* the decorative layer sits exactly over the real text and paints only through the letterforms */
+.v6-spec__fx { position: absolute; inset: 0; pointer-events: none; user-select: none; }
+.v6-spec__fx::after {
   content: attr(data-text);
-  position: absolute; inset: 0; pointer-events: none; user-select: none;
+  display: block;
   background-image: linear-gradient(100deg,
     transparent 6%,
     rgba(139, 118, 210, 0.9) 22%,
@@ -415,7 +416,7 @@
 @media (prefers-reduced-motion: reduce) {
   /* the final solid text, immediately: no colour travel, no blur, no partial reveal */
   .v6-spec { opacity: 1 !important; transform: none !important; filter: none !important; }
-  .v6-spec::after { display: none !important; }
+  .v6-spec__fx { display: none !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {

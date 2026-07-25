@@ -35,8 +35,21 @@ const TTL_MS = 24 * 60 * 60 * 1000; // a browser open tomorrow is still unlocked
 export const HOLD_MIN_MS = 3000;
 export const HOLD_MAX_MS = 120_000;
 
+/**
+ * Reads an environment value, stripping surrounding whitespace and ONE layer of surrounding quotes.
+ *
+ * A .env line written as KEY="1" leaves the quote characters inside the value with some loaders, so it
+ * silently reads as `"1"` and never equals `1`. That is how the curtain came to be off while the file
+ * said it was on. The same trap applies to the reviewer code, where the failure is worse: the entrance
+ * stops working and, by design, says nothing about why.
+ */
+export function envValue(name: string): string {
+  return (process.env[name] ?? "").trim().replace(/^(["'])([\s\S]*)\1$/, "$2").trim();
+}
+
 export function stealthConfigured(): boolean {
-  return (process.env.STEALTH_MODE ?? "").trim() === "1";
+  // Anything other than exactly 1 fails closed to a VISIBLE site, which is the safe direction.
+  return envValue("STEALTH_MODE") === "1";
 }
 
 function signingKey(): string {

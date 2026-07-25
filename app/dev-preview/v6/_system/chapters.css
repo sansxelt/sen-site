@@ -653,11 +653,11 @@
   /* chapter 3 stops panning and becomes three stages carrying the same record line */
   .v6-cs { height: auto; }
   .v6-cs__pin { position: static; height: auto; display: block; padding: clamp(64px, 9vw, 96px) 0; }
-  .v6-cs__acts { position: static; min-height: 0; display: grid; gap: clamp(30px, 6vw, 46px); }
-  .v6-cs__act { position: static; opacity: 1 !important; transform: none !important;
-    padding-top: 20px; border-top: 1px solid var(--g-line); }
-  .v6-cs__act h2 { font-size: clamp(1.5rem, 6.4vw, 2rem); }
-  /* the desktop scene is replaced, not scrolled */
+  /* EXACTLY ONE composition exists per breakpoint. The desktop act stack and the authored mobile stack
+     were both rendering here, so the three stage headings appeared twice: once in layout, twice in the
+     accessibility tree, and twice in extracted page text. display:none removes the inactive one from
+     layout, focus order, the accessibility tree and innerText together; opacity would not. */
+  .v6-cs__acts { display: none; }
   .v6-cs__viewport { display: none; }
   .v6-cs__m { display: grid; }
 
@@ -718,8 +718,8 @@
 
   .v6-cs { height: auto; }
   .v6-cs__pin { position: static; height: auto; display: block; padding: clamp(64px, 8vw, 100px) 0; }
-  .v6-cs__acts { position: static; min-height: 0; display: grid; gap: 34px; }
-  .v6-cs__act { position: static; opacity: 1 !important; transform: none !important; }
+  /* same rule under reduced motion: one composition, not both */
+  .v6-cs__acts { display: none; }
   .v6-cs__viewport { display: none; }
   .v6-cs__m { display: grid; }
   .v6-pf__seg::before, .v6-pf__decide, .v6-rec__filed, .v6-rx__f, .v6-rx__stage {
