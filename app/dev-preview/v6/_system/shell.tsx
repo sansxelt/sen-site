@@ -408,7 +408,63 @@ export function RouteTransition({ children }: { children: ReactNode }) {
   return <div key={pathname} className="v6-page">{children}</div>;
 }
 
+/**
+ * Browser history traversal restores the scroll position itself, and `html { scroll-behavior: smooth }`
+ * (globals.css, deliberately kept for in-page anchors) makes that restoration ANIMATE. Measured on Back
+ * from /platform: 281 distinct scroll positions over 1199ms, 335 over 1480ms from the foot of the page,
+ * with the target route already committed the whole way, so the reader watches it crawl back through the
+ * pinned chapters. The data-scroll-behavior attribute added to <html> only covers the scrolls Next itself
+ * performs; this one belongs to the browser and is untouched by it.
+ *
+ * The override therefore goes on documentElement, which is the scrolling element, and only for the length
+ * of a traversal:
+ *
+ *   arm    on the Navigation API's `navigate` event when navigationType is "traverse". That fires before
+ *          the traversal commits, which is early enough that the restoration is already instant. popstate
+ *          is the fallback where the Navigation API is missing.
+ *   disarm on the next pointer or key press. Every anchor activation is preceded by one, so the table of
+ *          contents is always smooth again by the time it is used, and on scrollend so the inline style
+ *          does not linger in the DOM.
+ *
+ * No timers, no rAF, and the restoration is never animated by hand: the browser is simply allowed to do
+ * it instantly.
+ */
+function useInstantHistoryRestore() {
+  useEffect(() => {
+    const html = document.documentElement;
+    let armed = false;
+    const arm = () => {
+      if (armed) return;
+      armed = true;
+      html.style.setProperty("scroll-behavior", "auto", "important");
+    };
+    const disarm = () => {
+      if (!armed) return;
+      armed = false;
+      html.style.removeProperty("scroll-behavior");
+    };
+    const onNavigate = (e: Event) => {
+      if ((e as Event & { navigationType?: string }).navigationType === "traverse") arm();
+    };
+    const nav = (window as Window & { navigation?: EventTarget }).navigation;
+    nav?.addEventListener("navigate", onNavigate);
+    window.addEventListener("popstate", arm);
+    window.addEventListener("scrollend", disarm);
+    window.addEventListener("pointerdown", disarm, true);
+    window.addEventListener("keydown", disarm, true);
+    return () => {
+      nav?.removeEventListener("navigate", onNavigate);
+      window.removeEventListener("popstate", arm);
+      window.removeEventListener("scrollend", disarm);
+      window.removeEventListener("pointerdown", disarm, true);
+      window.removeEventListener("keydown", disarm, true);
+      disarm();
+    };
+  }, []);
+}
+
 export function V6Shell({ children }: { children: ReactNode }) {
+  useInstantHistoryRestore();
   return (
     <div className="v6">
       {/* Nine focus stops sit in the nav before any content. Keyboard and screen-reader users get one stop to
