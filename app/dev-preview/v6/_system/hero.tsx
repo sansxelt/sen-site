@@ -22,8 +22,9 @@ export function Hero() {
         <p className="v6-h__say">{SUPPORT}</p>
         <div className="v6-h__cta">
           <CTA brand lg>Open Vraelis</CTA>
-          {/* the proof is the case file chapter, further down this same page */}
-          <EditorialLink href="#gap">See the proof</EditorialLink>
+          {/* Points at the terminal, which is the closest thing on the page to seeing it work. It used to
+              say "See the proof" and jump to #gap, which is the problem statement, not proof of anything. */}
+          <EditorialLink href="#run">Watch it run</EditorialLink>
         </div>
       </div>
     </section>

@@ -43,11 +43,11 @@
 
    Centred: the stage is a narrow measure in the middle of the viewport and every traveller is
    text-align: center, so the chapter reads as one column rather than a left-hung block. */
-/* 420vh. It was 520, which made this setup chapter the page's main focus; cutting it to 300 then made the
-   three states jump past too quickly, because the same handovers had to happen in 40 percent less scroll.
-   420 keeps it shorter than the chapters that carry the product while giving each state room to be read.
-   The middle traveller was removed earlier and its slot went with it, so there is no dead run. */
-.v6-gap { position: relative; height: 420vh; background: var(--paper); --p: 0;
+/* 560vh. This has moved twice: 520 made the setup chapter feel like the page's main focus, 300 made the
+   three states jump past, and 420 still read as too fast. The earlier problem was never the length, it was
+   a dead 25 percent slot left behind by a removed traveller. With that gone the runway is all working
+   scroll, so it can be long without feeling slow. */
+.v6-gap { position: relative; height: 360vh; background: var(--paper); --p: 0;
   --strike:  clamp(0, calc((var(--p) - 0.05) / 0.12), 1);   /* 05 -> 17      */
   --turn:    clamp(0, calc((var(--p) - 0.08) / 0.06), 1);   /* 08 -> 14      */
   --claim:   clamp(0, calc((var(--p) - 0.16) / 0.09), 1);   /* 16 -> 25 out  */
@@ -115,10 +115,10 @@
 
    Scale is the point. A condition is a full statement at display size, not a row in a list.
    ========================================================================================= */
-.v6-st { position: relative; height: 620vh; background: var(--graphite); color: var(--g-fg-2); --p: 0;
+.v6-st { position: relative; height: 430vh; background: var(--graphite); color: var(--g-fg-2); --p: 0;
   /* 0.06 to 0.86 carries the eight conditions, matching the index the component derives */
-  --ring: clamp(0, calc((var(--p) - 0.06) / 0.80), 1);
-  --done: clamp(0, calc((var(--p) - 0.86) / 0.10), 1); }
+  --ring: clamp(0, calc((var(--p) - 0.04) / 0.68), 1);
+  --done: clamp(0, calc((var(--p) - 0.72) / 0.12), 1); }
 .v6-st__pin { position: sticky; top: 0; height: 100svh; overflow: hidden;
   display: grid; grid-template-rows: auto 1fr; gap: clamp(10px, 2vh, 26px);
   padding: calc(var(--nav-h, 66px) + 3vh) var(--gutter) clamp(30px, 6vh, 64px);
@@ -146,19 +146,24 @@
   /* each segment closes over its own eighth of the ring progress */
   opacity: clamp(0, calc((var(--ring) * 8) - var(--i)), 1); }
 .v6-st__centre { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
-.v6-st__count { margin: 0; font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--g-fg-3); opacity: calc(1 - var(--done)); }
+/* the counter must be GONE before the conclusion is legible; at a plain 1-done both were half-lit in
+   the same spot and printed through each other */
+.v6-st__count { margin: 0; font-family: var(--sans); font-weight: 600; font-size: 12px;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--g-fg-3);
+  opacity: clamp(0, calc(1 - var(--done) * 3.5), 1); }
 .v6-st__count span { color: var(--g-fg); }
 .v6-st__verdict { position: absolute; inset: 0; display: grid; place-content: center; margin: 0;
   font-family: var(--sans); font-weight: 700; letter-spacing: -0.04em;
   font-size: clamp(1.5rem, 2.6vw, 2.3rem); color: var(--go-dk);
-  opacity: var(--done); transform: scale(calc(0.92 + 0.08 * var(--done))); }
+  opacity: clamp(0, calc((var(--done) - 0.35) / 0.4), 1);
+  transform: scale(calc(0.94 + 0.06 * var(--done))); }
 
 /* ---- the conditions: one at a time, at display scale ---- */
 .v6-st__list { position: relative; list-style: none; margin: 0; padding: 0; min-height: clamp(230px, 34vh, 340px); }
 .v6-st__cond { position: absolute; inset: 0; display: grid; align-content: center; gap: 12px;
-  opacity: 0; transform: translateY(22px);
-  transition: opacity 300ms var(--ease), transform 380ms var(--ease); pointer-events: none; }
+  opacity: 0; transform: translateY(26px);
+  /* longer than it was: the statements were swapping faster than they could be read */
+  transition: opacity 520ms var(--ease), transform 620ms var(--ease); pointer-events: none; }
 .v6-st[data-at="0"] .v6-st__cond:nth-child(1),
 .v6-st[data-at="1"] .v6-st__cond:nth-child(2),
 .v6-st[data-at="2"] .v6-st__cond:nth-child(3),
@@ -184,41 +189,47 @@
   .v6-st__condt { font-size: clamp(1.5rem, 6.6vw, 2.1rem); }
 }
 
-/* ═══════════════════════════════════════════════ 4. THE PRODUCT, IN THE TERMINAL ══
-   The tool is the visual. Lines resolve against continuous scroll progress via --at, so the run develops
-   with the reader rather than replaying on a timer. The three exit codes are the payoff, and Blocked is
-   given equal weight because refusing to fold it into success is the opinionated part.
+/* ═══════════════════════════════════════════════ 4. THE PRODUCT, IN A TERMINAL ══
+   A window, not a code block, and NOT a scroll chapter: the run plays itself the moment the window comes
+   into view, and replays on re-entry. The prompt at the end is a real input styled as part of the shell,
+   with no border and no box, because an input outline inside a terminal is the single thing that most
+   gives away that it is a web page.
    ============================================================================================= */
-.v6-tm { position: relative; height: 460vh; background: var(--graphite); color: var(--g-fg-2); --p: 0; }
-.v6-tm__pin { position: sticky; top: 0; height: 100svh; overflow: hidden;
-  display: grid; grid-template-rows: auto 1fr; gap: clamp(12px, 2vh, 24px);
-  padding: calc(var(--nav-h, 66px) + 3vh) var(--gutter) clamp(28px, 5vh, 56px);
-  background: radial-gradient(1300px 800px at 60% 40%, rgba(255,255,255,0.045), transparent 70%); }
-.v6-tm__head { max-width: var(--max-wide); width: 100%; margin-inline: auto; }
-.v6-tm__h { margin: clamp(12px, 1.8vh, 20px) 0 0; font-family: var(--sans); font-weight: 600;
-  letter-spacing: -0.04em; line-height: 1.02; font-size: clamp(1.9rem, 4.4vw, 3.8rem);
+.v6-tm { position: relative; background: var(--graphite); color: var(--g-fg-2);
+  padding-block: clamp(72px, 10vh, 130px); }
+.v6-tm__in { max-width: var(--max-wide); width: 100%; margin-inline: auto; padding-inline: var(--gutter); }
+.v6-tm__head { margin-bottom: clamp(22px, 3.4vh, 40px); }
+.v6-tm__h { margin: clamp(10px, 1.6vh, 18px) 0 0; font-family: var(--sans); font-weight: 600;
+  letter-spacing: -0.04em; line-height: 1.02; font-size: clamp(1.8rem, 4.2vw, 3.6rem);
   color: var(--g-fg); max-width: 18ch; text-wrap: balance; }
 
-.v6-tm__stage { max-width: var(--max-wide); width: 100%; margin-inline: auto; min-height: 0;
-  display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: clamp(16px, 2.6vh, 32px); align-content: center; }
+.v6-tm__win { display: flex; flex-direction: column; overflow: hidden;
+  height: clamp(400px, 60vh, 620px);
+  background: #08080A; border: 1px solid var(--g-line-2); border-radius: 10px;
+  box-shadow: 0 50px 110px -60px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.03) inset; }
+.v6-tm__bar { flex: none; display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center; gap: 14px; padding: 10px 14px; border-bottom: 1px solid var(--g-line);
+  background: linear-gradient(180deg, #17181B, #101113); cursor: default; }
+.v6-tm__lights { display: inline-flex; gap: 8px; }
+.v6-tm__lights i { width: 12px; height: 12px; border-radius: 999px; background: rgba(255,255,255,0.16);
+  display: grid; place-items: center; }
+.v6-tm__lights i::after { content: ""; font-family: var(--sans); font-size: 9px; line-height: 1;
+  color: rgba(0,0,0,0.7); opacity: 0; transition: opacity 140ms ease; }
+.v6-tm__bar:hover .v6-tm__lights i { background: rgba(255,255,255,0.34); }
+.v6-tm__bar:hover .v6-tm__lights i::after { opacity: 1; }
+.v6-tm__lights i.is-close::after { content: "\00d7"; }
+.v6-tm__lights i.is-min::after   { content: "\2013"; }
+.v6-tm__lights i.is-max::after   { content: "+"; }
+.v6-tm__title { font-family: var(--mono); font-size: 12px; color: var(--g-fg-3); text-align: center;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.v6-tm__grip { width: 34px; height: 10px; opacity: 0.45;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.28) 1px, transparent 1px);
+  background-size: 5px 5px; }
 
-/* the terminal: the dominant object */
-.v6-tm__term { min-height: 0; display: flex; flex-direction: column;
-  background: #08080A; border: 1px solid var(--g-line-2); border-radius: 12px; overflow: hidden;
-  box-shadow: 0 50px 110px -60px rgba(0,0,0,0.95); }
-.v6-tm__bar { display: flex; align-items: center; gap: 14px; flex: none;
-  padding: 12px 16px; border-bottom: 1px solid var(--g-line);
-  font-size: 12px; color: var(--g-fg-3); }
-.v6-tm__dots { display: inline-flex; gap: 6px; }
-.v6-tm__dots i { width: 10px; height: 10px; border-radius: 999px; background: rgba(255,255,255,0.16); }
-.v6-tm__body { margin: 0; padding: clamp(16px, 2vw, 26px); overflow: hidden; flex: 1; min-height: 0;
-  font-family: var(--mono); font-size: clamp(12px, 1.05vw, 15px); line-height: 1.95;
-  color: var(--g-fg-2); white-space: pre-wrap; word-break: break-word; }
-/* each line resolves once rendered progress passes its own --at, over a short ramp */
-.v6-tm__line { display: block;
-  --on: clamp(0, calc((var(--p) - var(--at)) / 0.05), 1);
-  opacity: calc(0.06 + 0.94 * var(--on));
-  transform: translateY(calc((1 - var(--on)) * 5px)); }
+.v6-tm__body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+  padding: clamp(14px, 1.8vw, 22px); cursor: text;
+  font-family: var(--mono); font-size: clamp(12px, 1vw, 14px); line-height: 1.85; color: var(--g-fg-2); }
+.v6-tm__line { margin: 0; white-space: pre-wrap; word-break: break-word; }
 .v6-tm__line b { color: var(--g-fg-3); font-weight: 400; }
 .v6-tm__line.is-cmd { color: var(--g-fg); }
 .v6-tm__line.is-dim { color: var(--g-fg-3); }
@@ -226,130 +237,123 @@
 .v6-tm__line.is-go { color: var(--go-dk); }
 .v6-tm__line.is-stop { color: var(--stop-dk); }
 .v6-tm__line.is-wait { color: var(--wait-dk); }
-.v6-tm__exit { color: var(--g-fg); }
+.v6-tm__caret { display: inline-block; width: 0.6em; height: 1.05em; margin-left: 1px;
+  vertical-align: text-bottom; background: var(--g-fg); animation: v6-blink 1s steps(1) infinite; }
+@keyframes v6-blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
 
-/* the three answers */
-.v6-tm__exits { flex: none; list-style: none; margin: 0; padding: 0;
+.v6-tm__prompt { display: flex; align-items: baseline; gap: 0; margin: 0; }
+.v6-tm__ps { color: var(--g-fg-3); flex: none; white-space: pre; }
+.v6-tm__in-field { flex: 1; min-width: 0; appearance: none;
+  background: transparent; border: 0; border-radius: 0; box-shadow: none; outline: none;
+  padding: 0; margin: 0; font: inherit; color: var(--g-fg); caret-color: var(--g-fg); }
+.v6-tm__in-field:focus { outline: none; box-shadow: none; }
+.v6-tm__in-field::placeholder { color: var(--g-fg-3); opacity: 0.5; }
+
+.v6-tm__exits { list-style: none; margin: clamp(20px, 3vh, 34px) 0 0; padding: 0;
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(12px, 1.8vw, 26px); }
-.v6-tm__ex { padding-top: 16px; border-top: 2px solid var(--g-line-2);
-  --on: clamp(0, calc((var(--p) - 0.88 - var(--i) * 0.03) / 0.05), 1);
-  opacity: calc(0.18 + 0.82 * var(--on)); }
+.v6-tm__ex { padding-top: 14px; border-top: 2px solid var(--g-line-2);
+  opacity: 0.25; transition: opacity 420ms var(--ease); transition-delay: calc(var(--i) * 90ms); }
+.v6-tm__exits[data-on="true"] .v6-tm__ex { opacity: 1; }
 .v6-tm__ex.is-go { border-top-color: var(--go-dk); }
 .v6-tm__ex.is-stop { border-top-color: var(--stop-dk); }
 .v6-tm__ex.is-wait { border-top-color: var(--wait-dk); }
-.v6-tm__exc { margin: 0; font-size: 12px; letter-spacing: 0.1em; color: var(--g-fg-3); }
-.v6-tm__exn { margin: 6px 0 0; font-family: var(--sans); font-weight: 600; letter-spacing: -0.026em;
-  font-size: clamp(1.15rem, 1.7vw, 1.5rem); color: var(--g-fg); }
+.v6-tm__exc { margin: 0; font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; color: var(--g-fg-3); }
+.v6-tm__exn { margin: 5px 0 0; font-family: var(--sans); font-weight: 600; letter-spacing: -0.026em;
+  font-size: clamp(1.1rem, 1.6vw, 1.45rem); color: var(--g-fg); }
 .v6-tm__ex.is-go .v6-tm__exn { color: var(--go-dk); }
 .v6-tm__ex.is-stop .v6-tm__exn { color: var(--stop-dk); }
 .v6-tm__ex.is-wait .v6-tm__exn { color: var(--wait-dk); }
-.v6-tm__exs { margin: 7px 0 0; font-size: 0.94rem; line-height: 1.5; color: var(--g-fg-2); }
+.v6-tm__exs { margin: 6px 0 0; font-size: 0.92rem; line-height: 1.5; color: var(--g-fg-2); }
 
 @media (max-width: 900px) {
-  .v6-tm { height: auto; }
-  .v6-tm__pin { position: static; height: auto; display: block; padding: clamp(64px, 10vw, 96px) var(--gutter); }
-  .v6-tm__stage { display: block; margin-top: clamp(24px, 6vw, 36px); }
+  .v6-tm__win { height: clamp(340px, 56vh, 480px); }
   .v6-tm__body { font-size: 11.5px; }
-  .v6-tm__line { opacity: 1 !important; transform: none !important; }
-  .v6-tm__exits { grid-template-columns: 1fr; gap: 20px; margin-top: clamp(24px, 6vw, 34px); }
+  .v6-tm__grip { display: none; }
+  .v6-tm__exits { grid-template-columns: 1fr; gap: 18px; }
   .v6-tm__ex { opacity: 1 !important; }
 }
+@media (prefers-reduced-motion: reduce) {
+  .v6-tm__caret { animation: none; opacity: 1; }
+  .v6-tm__ex { opacity: 1 !important; transition: none; }
+}
 
-/* ══════════════════════════════════ 5. THE PERMANENT RECORD ══
-   A stack of filed sheets. Each steps down and right, so the newest is on top
-   and every earlier one is still on screen and still legible at the end. */
-.v6-rec { background: var(--graphite); color: var(--g-fg-2); padding-block: clamp(72px, 9vh, 124px); }
-.v6-rec__head { max-width: 1180px; margin-inline: auto; padding-inline: var(--gutter); }
-.v6-rec__h { font-family: var(--sans); font-weight: 600; letter-spacing: -0.038em; line-height: 1.02;
-  font-size: clamp(2rem, 4.6vw, 3.6rem); color: var(--g-fg); margin: clamp(14px, 2vh, 22px) 0 0; max-width: 20ch; }
-/* ---- the archive ---------------------------------------------------------------------------------
-   Left: the guarantee, anchored, sticky, unchanging. Right: a spine with things of four different kinds
-   filed against it. The kinds are told apart by construction, not by a coloured pip on an identical row:
-   evidence has a border and a tab, a change has neither, a decision carries a signature rule, and the
-   result is the only object that is lifted, wider and green. */
-.v6-rec__arch { max-width: 1180px; margin: clamp(40px, 6vh, 74px) auto 0; padding-inline: var(--gutter);
-  display: grid; grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
-  gap: clamp(40px, 5.5vw, 92px); align-items: start; }
+/* ══════════════════════════ 5. THE SOFTWARE CHANGES, THE PROMISE DOES NOT ══
+   The guarantee text is fixed. The implementation line underneath it cycles as --p advances, so the
+   composition itself makes the argument: services and deployments are rewritten while the promise stays
+   put. There are no run counts and no dates anywhere; inventing usage history would be the exact
+   dishonesty this product exists to catch.
+   ===================================================================================== */
+.v6-rg { position: relative; height: 480vh; background: var(--graphite); color: var(--g-fg-2); --p: 0;
+  /* four implementation names per guarantee, cycled across the chapter */
+  --cyc: calc(var(--p) * 3.4); }
+.v6-rg__pin { position: sticky; top: 0; height: 100svh; overflow: hidden;
+  display: grid; grid-template-rows: auto 1fr auto; gap: clamp(8px, 1.4vh, 18px);
+  padding: calc(var(--nav-h, 66px) + 2.5vh) var(--gutter) clamp(18px, 3vh, 36px); }
+.v6-rg__head { max-width: var(--max-wide); width: 100%; margin-inline: auto; }
+.v6-rg__h { margin: clamp(8px, 1.4vh, 16px) 0 0; font-family: var(--sans); font-weight: 600;
+  letter-spacing: -0.04em; line-height: 1.03; font-size: clamp(1.6rem, 3.6vw, 3.1rem);
+  color: var(--g-fg); max-width: 22ch; text-wrap: balance; }
 
-.v6-rec__anchor { position: sticky; top: calc(var(--nav-h, 66px) + clamp(24px, 5vh, 56px)); }
-.v6-rec__doc { border: 1px solid var(--g-line-2); border-radius: 4px; background: #121215;
-  padding: clamp(22px, 2.4vw, 30px);
-  /* a filed document, not a card: square corners, a rule under the label, no shadow */
-  box-shadow: none; }
-.v6-rec__dock { margin: 0 0 16px; padding-bottom: 14px; border-bottom: 1px solid var(--g-line);
-  font-family: var(--sans); font-weight: 600; font-size: 12px; letter-spacing: 0.18em;
+.v6-rg__stage { max-width: var(--max-wide); width: 100%; margin-inline: auto;
+  min-height: 0; overflow: hidden; align-content: start; }
+
+.v6-rg__cols { display: grid; grid-template-columns: minmax(0, 1fr) 8rem 6.5rem 9rem;
+  gap: clamp(10px, 1.4vw, 20px); padding-bottom: 8px; border-bottom: 1px solid var(--g-line);
+  font-family: var(--sans); font-weight: 600; font-size: 10px; letter-spacing: 0.16em;
   text-transform: uppercase; color: var(--g-fg-3); }
-.v6-rec__docv { margin: 0; font-family: var(--sans); font-weight: 500; letter-spacing: -0.026em;
-  line-height: 1.2; font-size: clamp(1.3rem, 2vw, 1.75rem); color: var(--g-fg); }
-.v6-rec__meta { margin: clamp(22px, 2.6vw, 30px) 0 0; padding-top: 18px; border-top: 1px solid var(--g-line);
-  display: grid; gap: 11px; }
-.v6-rec__meta > div { display: flex; justify-content: space-between; gap: 16px; align-items: baseline; }
-.v6-rec__meta dt { margin: 0; font-family: var(--sans); font-weight: 600; font-size: 11px;
-  letter-spacing: 0.16em; text-transform: uppercase; color: var(--g-fg-3); }
-.v6-rec__meta dd { margin: 0; font-size: 0.95rem; color: var(--g-fg-2); text-align: right; }
-.v6-rec__meta dd.is-go { color: var(--go-dk); font-weight: 600; }
 
-/* the spine itself */
-.v6-rec__spine { position: relative; list-style: none; margin: 0; padding: 0 0 0 clamp(26px, 3vw, 42px); }
-.v6-rec__spine::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 1px;
-  background: var(--g-line-2); }
-.v6-rec__filed { position: relative; padding-block: clamp(16px, 2vh, 24px);
-  /* --rail is how far the spine sits to the left of the filed object; --tie is the height at which this
-     particular kind of record meets the spine, so the node lands on its first line rather than at an
-     arbitrary offset that drifts between kinds. */
-  --rail: clamp(26px, 3vw, 42px);
-  --tie: calc(clamp(16px, 2vh, 24px) + 30px);
-  opacity: 0; transform: translateY(22px);
-  transition: opacity 520ms var(--ease), transform 600ms var(--ease); }
-.v6-rec__filed[data-t="change"] { --tie: calc(clamp(16px, 2vh, 24px) + 8px); }
-.v6-rec__filed[data-on="true"] { opacity: 1; transform: none; }
-/* the node on the spine: a small square for a filed record, solid and larger for the closing result */
-.v6-rec__filed::before { content: ""; position: absolute; top: var(--tie);
-  left: calc(var(--rail) * -1 - 3px); width: 7px; height: 7px;
-  background: var(--graphite); border: 1px solid var(--g-fg-3); }
-.v6-rec__filed[data-t="result"]::before { background: var(--go-dk); border-color: var(--go-dk);
-  width: 11px; height: 11px; top: calc(var(--tie) - 2px); left: calc(var(--rail) * -1 - 5px); }
-/* the tie: without it the spine and the records read as two parallel columns rather than one archive */
-.v6-rec__filed::after { content: ""; position: absolute; left: calc(var(--rail) * -1 + 4px);
-  width: calc(var(--rail) - 4px); top: calc(var(--tie) + 3px); height: 1px; background: var(--g-line-2); }
-.v6-rec__filed[data-t="result"]::after { background: rgba(74,222,156,0.42); }
+.v6-rg__grp { margin-top: clamp(10px, 1.6vh, 18px); }
+.v6-rg__gh { margin: 0 0 4px; font-family: var(--sans); font-weight: 600; font-size: 10px;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--g-fg-3); }
 
-.v6-rec__tab { margin: 0 0 12px; display: inline-flex; align-items: baseline; gap: 12px;
-  font-family: var(--sans); font-weight: 600; font-size: 11px; letter-spacing: 0.17em;
-  text-transform: uppercase; color: var(--g-fg-3); }
-.v6-rec__tab .v6-mono { letter-spacing: 0.02em; font-size: 12px; color: var(--g-fg-2); }
-.v6-rec__fh { margin: 0; font-family: var(--sans); font-weight: 600; letter-spacing: -0.024em;
-  line-height: 1.15; font-size: clamp(1.24rem, 1.9vw, 1.62rem); color: var(--g-fg); }
-.v6-rec__fb { margin: 9px 0 0; font-size: clamp(0.96rem, 1.1vw, 1.04rem); line-height: 1.5; color: var(--g-fg-2); }
+.v6-rg__row { display: grid; grid-template-columns: minmax(0, 1fr) 8rem 6.5rem 9rem;
+  gap: clamp(10px, 1.4vw, 20px); align-items: start;
+  padding: clamp(7px, 1vh, 11px) 0; border-bottom: 1px solid var(--g-line);
+  /* each row settles in turn, so the register assembles rather than appearing at once */
+  --on: clamp(0, calc((var(--p) * 9) - var(--i) * 0.55), 1);
+  opacity: calc(0.12 + 0.88 * var(--on));
+  transform: translateY(calc((1 - var(--on)) * 10px)); }
 
-/* evidence: bordered, because it is a record of what was observed */
-.v6-rec__ev { border: 1px solid var(--g-line-2); background: #121215;
-  padding: clamp(18px, 2vw, 24px) clamp(20px, 2.2vw, 28px); }
-.v6-rec__ev[data-s="stop"] { border-left: 3px solid var(--stop-dk); }
-.v6-rec__ev[data-s="stop"] .v6-rec__fh { color: var(--stop-dk); }
+.v6-rg__t { margin: 0; font-family: var(--sans); font-weight: 500; letter-spacing: -0.018em;
+  line-height: 1.28; color: var(--g-fg); font-size: clamp(0.94rem, 1.15vw, 1.1rem); }
+/* the churn: four implementation names stacked in one slot, one visible at a time */
+.v6-rg__impl { position: relative; margin: 5px 0 0; height: 1.15em; }
+.v6-rg__im { position: absolute; left: 0; top: 0; font-family: var(--mono); font-size: 11.5px;
+  letter-spacing: 0.01em; color: var(--g-fg-3); white-space: nowrap;
+  opacity: clamp(0, calc(1 - 2.2 * abs(var(--cyc) - var(--k))), 1); }
+.v6-rg__m { margin: 0; font-size: 0.84rem; color: var(--g-fg-2); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; }
+/* the decision is told by the word and its weight, not by a coloured pip */
+.v6-rg__d { margin: 0; font-family: var(--sans); font-weight: 600; font-size: 0.88rem; white-space: nowrap; }
+.v6-rg__row[data-d="Verified"] .v6-rg__d { color: var(--go-dk); }
+.v6-rg__row[data-d="Failed"] .v6-rg__d { color: var(--stop-dk); }
+.v6-rg__row[data-d="Blocked"] .v6-rg__d { color: var(--wait-dk); }
 
-/* a change: no card at all. It is a note filed between two records, and it reads as one. */
-.v6-rec__ch { padding-left: clamp(14px, 1.6vw, 20px); border-left: 1px solid var(--g-line);
-  max-width: 46ch; }
-.v6-rec__chn { margin: 0 0 8px; font-size: 12px; letter-spacing: 0.02em; color: var(--g-fg-3); }
-.v6-rec__ch .v6-rec__fh { font-weight: 500; font-size: clamp(1.06rem, 1.4vw, 1.24rem); color: var(--g-fg-2); }
-.v6-rec__ch .v6-rec__fb { color: var(--g-fg-3); }
+.v6-rg__foot { max-width: var(--max-wide); width: 100%; margin: 0 auto; font-size: 12px;
+  line-height: 1.5; color: var(--g-fg-3); max-width: 74ch;
+  opacity: clamp(0, calc((var(--p) - 0.72) / 0.18), 1); }
 
-/* a signed decision: the only thing here with a signature rule under it */
-.v6-rec__de { border: 1px solid var(--g-line-2); background: #16161A;
-  padding: clamp(18px, 2vw, 24px) clamp(20px, 2.2vw, 28px); }
-.v6-rec__sig { margin: clamp(16px, 1.8vw, 22px) 0 0; padding-top: 13px;
-  border-top: 1px solid var(--wait-dk); font-size: 0.92rem; color: var(--wait-dk); }
-
-/* the result: the heaviest object in the archive, and the only one carrying green */
-.v6-rec__re { border: 1px solid rgba(74,222,156,0.42); background: #14181A;
-  padding: clamp(24px, 2.8vw, 34px) clamp(24px, 2.8vw, 34px);
-  margin-right: clamp(-40px, -3vw, 0px);
-  box-shadow: 0 26px 60px -44px rgba(0,0,0,0.95); }
-.v6-rec__re .v6-rec__tab { color: var(--go-dk); }
-.v6-rec__re .v6-rec__fh { font-size: clamp(1.9rem, 3.2vw, 2.7rem); font-weight: 700; letter-spacing: -0.032em;
-  color: var(--go-dk); }
-.v6-rec__re .v6-rec__fb { font-size: clamp(1rem, 1.25vw, 1.14rem); max-width: 46ch; }
+@media (max-width: 900px) {
+  .v6-rg { height: auto; }
+  .v6-rg__pin { position: static; height: auto; display: block; padding: clamp(64px, 10vw, 96px) var(--gutter); }
+  .v6-rg__stage { overflow: visible; margin-top: clamp(22px, 6vw, 32px); }
+  .v6-rg__cols { display: none; }
+  .v6-rg__row { grid-template-columns: 1fr; gap: 3px; padding: 14px 0;
+    opacity: 1 !important; transform: none !important; }
+  .v6-rg__m, .v6-rg__d { font-size: 0.8rem; }
+  .v6-rg__impl { height: auto; }
+  .v6-rg__im { position: static; opacity: 1 !important; }
+  .v6-rg__im + .v6-rg__im { display: none; }
+  .v6-rg__foot { opacity: 1 !important; margin-top: 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .v6-rg { height: auto; }
+  .v6-rg__pin { position: static; height: auto; display: block; padding: clamp(64px, 8vw, 100px) var(--gutter); }
+  .v6-rg__stage { overflow: visible; }
+  .v6-rg__row, .v6-rg__foot { opacity: 1 !important; transform: none !important; }
+  .v6-rg__im { position: static; opacity: 1 !important; }
+  .v6-rg__im + .v6-rg__im { display: none; }
+}
 
 /* ══════════════════════════════════════════ 6A. REACH ══ */
 .v6-rx { background: var(--paper); padding-block: clamp(72px, 9vh, 124px); }
@@ -661,10 +665,6 @@
   .v6-st__stage { grid-template-columns: 1fr; }
   .v6-st__list { position: static; min-height: 0; display: grid; gap: 34px; }
   .v6-st__cond { position: static; opacity: 1 !important; transform: none !important; }
-  .v6-tm { height: auto; }
-  .v6-tm__pin { position: static; height: auto; display: block; padding: clamp(64px, 8vw, 100px) var(--gutter); }
-  .v6-tm__stage { display: block; }
-  .v6-tm__line, .v6-tm__ex { opacity: 1 !important; transform: none !important; }
   .v6-pf__seg::before, .v6-pf__decide, .v6-rec__filed, .v6-rx__f, .v6-rx__stage {
     opacity: 1 !important; transform: none !important; transition: none !important; }
 }

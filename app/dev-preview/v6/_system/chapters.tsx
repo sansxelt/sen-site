@@ -195,33 +195,35 @@ export function Standard() {
 }
 
 /* ══════════════════════════════════════════════════════════════ CHAPTER 4 ══
-   THE PRODUCT, IN THE TERMINAL.
+   THE PRODUCT, IN A REAL TERMINAL.
 
-   This chapter was a five column timeline walking one guarantee through two repairs. Whatever example it
-   used, it made the product look like a bug report. Substituting a different example for the same shape
-   changed nothing.
+   NOT a scroll chapter. Everything else on this page is scrubbed by scroll, but a terminal is the one
+   thing that should not be: making someone scroll to watch a command type itself is a chore, and the run
+   is short enough to simply happen. It plays on its own, fast, the moment the window comes into view,
+   and it replays if the reader leaves and comes back.
 
-   It now shows the tool. Everything here is the real shipped contract, read from cli/vraelis.mjs and
-   app/api/v1: the command and its required flags, and the three exit codes, which are the genuinely
-   opinionated part. 0 Verified, 1 Failed, 2 Blocked, and Blocked is NOT folded into success. A release
-   gate should treat "I could not check" exactly like "I could not reach a verdict": in both cases you do
-   not know, and shipping on 2 has to be a decision the caller makes deliberately rather than one they
-   inherit from an exit code that merely looks like success.
+   The command is typed a character at a time and the output lands line by line, so it reads as someone
+   working rather than as a block of text fading in. Everything in the transcript is the shipped contract
+   from cli/vraelis.mjs and app/api/v1. The three exit codes are the payoff, with Blocked deliberately
+   kept out of success.
 
-   The terminal is the dominant object, scrubbed by scroll. No cards, no timeline, no anecdote.
+   Once the run finishes the window HANDS OVER: a live prompt appears and the reader can type. It is a
+   sandbox, so nothing is executed and nothing leaves the page. The window controls are chrome and are
+   aria-hidden, because they do nothing and must not be announced as buttons.
    ------------------------------------------------------------------------------------------------- */
-type Line = { at: number; k: "cmd" | "out" | "dim" | "go" | "stop" | "wait"; t: string };
+type LK = "cmd" | "out" | "dim" | "go" | "stop" | "wait";
+type Line = { k: LK; t: string };
+const CMD = 'vraelis verify --url https://app.example.com --claim "only authorized staff can read customer records"';
 const RUN: Line[] = [
-  { at: 0.00, k: "cmd", t: "vraelis verify --url https://app.example.com --claim \"only authorized staff can read customer records\"" },
-  { at: 0.14, k: "dim", t: "reading the claim" },
-  { at: 0.22, k: "out", t: "4 obligations derived, 1 needs a second identity" },
-  { at: 0.32, k: "dim", t: "plan minted, awaiting approval" },
-  { at: 0.40, k: "out", t: "plan approved" },
-  { at: 0.48, k: "dim", t: "opening a real browser against the deployment" },
-  { at: 0.58, k: "out", t: "signed in, opened a record, signed out, signed back in" },
-  { at: 0.68, k: "dim", t: "checking the obligation that needs a second identity" },
-  { at: 0.78, k: "stop", t: "an unauthorized account could read the record" },
-  { at: 0.86, k: "out", t: "evidence written to the record" },
+  { k: "dim", t: "reading the claim" },
+  { k: "out", t: "4 obligations derived, 1 needs a second identity" },
+  { k: "dim", t: "plan minted, awaiting approval" },
+  { k: "out", t: "plan approved" },
+  { k: "dim", t: "opening a real browser against the deployment" },
+  { k: "out", t: "signed in, opened a record, signed out, signed back in" },
+  { k: "dim", t: "checking the obligation that needs a second identity" },
+  { k: "stop", t: "an unauthorized account could read the record" },
+  { k: "out", t: "evidence written to the record" },
 ];
 const EXITS: [string, string, string, "go" | "stop" | "wait"][] = [
   ["0", "Verified", "The evidence supports the claim.", "go"],
@@ -229,141 +231,243 @@ const EXITS: [string, string, string, "go" | "stop" | "wait"][] = [
   ["2", "Blocked", "It could not be checked, which is not success.", "wait"],
 ];
 
+/** A sandbox shell. Nothing is executed, nothing leaves the page; it answers from a table. */
+function reply(raw: string): Line[] {
+  const cmd = raw.trim();
+  if (!cmd) return [];
+  const [head, ...rest] = cmd.split(/\s+/);
+  const say = (t: string, k: LK = "out"): Line[] => [{ k, t }];
+  switch (head) {
+    case "help":
+      return [
+        { k: "out", t: 'vraelis verify --url <deployment> --claim "<outcome>"' },
+        { k: "dim", t: "  --url     the deployment to verify, https and reachable" },
+        { k: "dim", t: "  --claim   what should be true, as a sentence" },
+        { k: "out", t: "exit codes  0 verified   1 failed   2 blocked" },
+        { k: "dim", t: "other: clear, whoami, pwd, ls, echo, exit" },
+      ];
+    case "vraelis":
+      if (rest[0] !== "verify") return say(`vraelis: unknown subcommand '${rest[0] ?? ""}'. try: vraelis verify`, "dim");
+      if (!cmd.includes("--url")) return say("vraelis: --url is required. try: help", "stop");
+      if (!cmd.includes("--claim")) return say("vraelis: --claim is required. try: help", "stop");
+      return [
+        { k: "dim", t: "reading the claim" },
+        { k: "out", t: "obligations derived, plan minted, awaiting approval" },
+        { k: "wait", t: "blocked: this sandbox cannot reach a deployment" },
+        { k: "dim", t: "exit 2. blocked is not success, which is the whole point." },
+      ];
+    case "whoami": return say("reader");
+    case "pwd": return say("~/acme/records-web");
+    case "ls": return say("src  tests  vraelis.config.json  package.json");
+    case "echo": return say(rest.join(" "));
+    case "exit": return say("this window is part of the page. scroll on.", "dim");
+    default: return say(`${head}: command not found`, "dim");
+  }
+}
+
 export function Product() {
-  const wrap = useRef<HTMLDivElement>(null);
-  useScrollProgress(wrap);
+  const root = useRef<HTMLElement>(null);
+  const [typed, setTyped] = useState(0);      // characters of the command typed
+  const [shown, setShown] = useState(0);      // output lines landed
+  const [done, setDone] = useState(false);
+  const [log, setLog] = useState<Line[]>([]);
+  const [val, setVal] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Plays when the window enters view and REPLAYS on re-entry, so coming back to it starts over.
+  useEffect(() => {
+    const el = root.current;
+    if (!el) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let timers: ReturnType<typeof setTimeout>[] = [];
+    const clear = () => { timers.forEach(clearTimeout); timers = []; };
+    const play = () => {
+      clear();
+      if (reduce) { setTyped(CMD.length); setShown(RUN.length); setDone(true); return; }
+      setTyped(0); setShown(0); setDone(false); setLog([]);
+      // Fast on purpose: the command types in ~0.4s and the whole run finishes inside ~1s, the way a
+      // real session looks sped up. Slower than this and it reads as a loading screen.
+      for (let i = 1; i <= CMD.length; i++) timers.push(setTimeout(() => setTyped(i), i * 4));
+      const after = CMD.length * 4 + 90;
+      RUN.forEach((_, i) => timers.push(setTimeout(() => setShown(i + 1), after + i * 55)));
+      timers.push(setTimeout(() => setDone(true), after + RUN.length * 55 + 140));
+    };
+    const io = new IntersectionObserver((es) => {
+      for (const e of es) { if (e.isIntersecting) play(); else clear(); }
+    }, { threshold: 0.4 });
+    io.observe(el);
+    return () => { io.disconnect(); clear(); };
+  }, []);
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const entered = val;
+    setVal("");
+    if (entered.trim() === "clear") { setLog([]); return; }
+    const echoed: Line = { k: "cmd", t: entered };
+    setLog((l) => [...l, echoed, ...reply(entered)].slice(-40));
+  };
+
   return (
-    <section className="v6-tm" data-nav-dark data-nav-theme="dark" ref={wrap}>
-      <div className="v6-tm__pin">
+    <section className="v6-tm" id="run" data-nav-dark data-nav-theme="dark" ref={root}>
+      <div className="v6-tm__in">
         <div className="v6-tm__head">
           <p className="v6-eyebrow">The command</p>
           <h2 className="v6-tm__h">One command. Three answers. No false green.</h2>
         </div>
 
-        <div className="v6-tm__stage">
-          <div className="v6-tm__term">
-            <header className="v6-tm__bar">
-              <span className="v6-tm__dots" aria-hidden><i /><i /><i /></span>
-              <span className="v6-mono">vraelis</span>
-            </header>
-            <pre className="v6-tm__body">
-              {RUN.map((l) => (
-                <span key={l.t} className={`v6-tm__line is-${l.k}`} style={{ ["--at" as string]: l.at }}>
-                  {l.k === "cmd" ? <b aria-hidden>$ </b> : null}{l.t}{"\n"}
-                </span>
-              ))}
-              <span className="v6-tm__line v6-tm__exit" style={{ ["--at" as string]: 0.92 }}>
-                <b aria-hidden>$ </b>echo $?{"\n"}1{"\n"}
-              </span>
-            </pre>
-          </div>
+        <div className="v6-tm__win">
+          <header className="v6-tm__bar">
+            <span className="v6-tm__lights" aria-hidden>
+              <i className="is-close" /><i className="is-min" /><i className="is-max" />
+            </span>
+            <span className="v6-tm__title">vraelis — verify — ~/acme/records-web</span>
+            <span className="v6-tm__grip" aria-hidden />
+          </header>
 
-          <ol className="v6-tm__exits">
-            {EXITS.map(([code, name, say, k], i) => (
-              <li key={code} className={`v6-tm__ex is-${k}`} style={{ ["--i" as string]: i }}>
-                <p className="v6-tm__exc v6-mono">exit {code}</p>
-                <p className="v6-tm__exn">{name}</p>
-                <p className="v6-tm__exs">{say}</p>
-              </li>
+          <div className="v6-tm__body" onClick={() => inputRef.current?.focus()}>
+            <p className="v6-tm__line is-cmd">
+              <b aria-hidden>{"$ "}</b>{CMD.slice(0, typed)}
+              {typed < CMD.length ? <span className="v6-tm__caret" aria-hidden /> : null}
+            </p>
+            {RUN.slice(0, shown).map((l) => (
+              <p key={l.t} className={`v6-tm__line is-${l.k}`}>{l.t}</p>
             ))}
-          </ol>
+            {done ? (
+              <>
+                <p className="v6-tm__line is-cmd"><b aria-hidden>{"$ "}</b>echo $?</p>
+                <p className="v6-tm__line is-cmd">1</p>
+                {log.map((l, i) => (
+                  <p key={i} className={`v6-tm__line is-${l.k}`}>
+                    {l.k === "cmd" ? <b aria-hidden>{"$ "}</b> : null}{l.t}
+                  </p>
+                ))}
+                <form className="v6-tm__prompt" onSubmit={submit}>
+                  <label className="v6-tm__ps" htmlFor="v6-tm-in" aria-hidden>{"$ "}</label>
+                  <input id="v6-tm-in" ref={inputRef} className="v6-tm__in-field" value={val}
+                    spellCheck={false} autoComplete="off" autoCapitalize="off" autoCorrect="off"
+                    aria-label="Demonstration terminal. Nothing you type is executed."
+                    placeholder={log.length ? "" : "help"}
+                    onChange={(e) => setVal(e.target.value)} />
+                </form>
+              </>
+            ) : null}
+          </div>
         </div>
+
+        <ol className="v6-tm__exits" data-on={done}>
+          {EXITS.map(([code, name, s2, k], i) => (
+            <li key={code} className={`v6-tm__ex is-${k}`} style={{ ["--i" as string]: i }}>
+              <p className="v6-tm__exc">exit {code}</p>
+              <p className="v6-tm__exn">{name}</p>
+              <p className="v6-tm__exs">{s2}</p>
+            </li>
+          ))}
+        </ol>
       </div>
     </section>
   );
 }
 
 /* ══════════════════════════════════════════════════════════════ CHAPTER 5 ══
-   THE PERMANENT RECORD, as an archive.
+   THE SOFTWARE CHANGES. THE PROMISE DOES NOT.
 
-   The previous version filed seven identical rounded rows down the page, which reads as a dashboard list
-   no matter what the rows say. An archive does not look like that: one document is anchored, everything
-   else is filed against a spine, and the KIND of each thing filed is legible before you read a word.
+   This is the hinge where the page stops being about one verification.
 
-   Four kinds, four treatments:
-     evidence    what a run observed. A bordered record with its own tab.
-     change      what was altered between runs. No card at all: a note filed against the spine.
-     decision    a person accepting something, with the signature line the other kinds do not have.
-     result      the closing entry. The heaviest object on the page, and the only one that carries green.
+   An earlier version of this chapter invented history: run totals and years like "148 runs since 2024".
+   Vraelis did not exist then, and manufacturing usage to make a page feel established is exactly the
+   dishonesty this company is supposed to be the answer to. There are no counts, no dates and no customer
+   activity anywhere in here.
 
-   The guarantee is not one of them. It sits on the left and stays there while the archive accumulates
-   beside it, because it is the thing all of this is filed against.
+   What is shown instead is the argument: eight durable business guarantees grouped by consequence, with
+   the implementation churning underneath them. The services, deployments and agents beneath each
+   guarantee keep changing as the reader scrolls. The guarantee text never moves. That IS the point, and
+   it is made by the composition rather than by a sentence claiming it.
+
+   The guarantees are illustrative and labelled as such. Decisions use only the product's real vocabulary:
+   Verified, Failed, Blocked.
    ------------------------------------------------------------------------------------------------- */
-type Filed =
-  | { t: "evidence"; n: string; head: string; body: string; s: "stop" }
-  | { t: "change"; n: string; head: string; body: string }
-  | { t: "decision"; head: string; body: string }
-  | { t: "result"; head: string; body: string };
-
-const ARCHIVE: Filed[] = [
-  { t: "evidence", n: "Run 1", head: "Failed", body: "The change shipped. Access was wrong.", s: "stop" },
-  { t: "change", n: "Repair 1", head: "Access granted", body: "Access was granted only inside the active session." },
-  { t: "evidence", n: "Run 2", head: "Failed", body: "Access disappeared after signing out and back in.", s: "stop" },
-  { t: "decision", head: "Human decision", body: "The second repair was approved, with the reason recorded." },
-  { t: "change", n: "Repair 2", head: "Permission corrected", body: "The permission was corrected on the account itself." },
-  { t: "result", head: "Verified", body: "Persistence confirmed." },
+type Dec = "Verified" | "Failed" | "Blocked";
+type G = { t: string; area: string; owner: string; d: Dec; impl: string[] };
+const GROUPS: { h: string; rows: G[] }[] = [
+  { h: "Revenue", rows: [
+    { t: "A customer who pays receives the correct plan and keeps it after signing back in.",
+      area: "Revenue", owner: "Billing", d: "Verified",
+      impl: ["checkout-v2", "billing-worker", "plan-resolver", "checkout-v3"] },
+    { t: "Cancelling a subscription stops future billing without removing access early.",
+      area: "Revenue", owner: "Billing", d: "Verified",
+      impl: ["subscriptions", "dunning-job", "subscriptions-v2", "grace-period"] },
+  ] },
+  { h: "Identity and access", rows: [
+    { t: "A deactivated employee loses access across every connected system.",
+      area: "Security", owner: "Identity", d: "Failed",
+      impl: ["directory-sync", "session-store", "sso-bridge", "directory-sync-v4"] },
+    { t: "A role change persists after a new session and cannot cross tenant boundaries.",
+      area: "Security", owner: "Identity", d: "Verified",
+      impl: ["rbac", "token-mint", "rbac-v2", "tenant-guard"] },
+  ] },
+  { h: "Customer operations", rows: [
+    { t: "A completed order reaches fulfillment exactly once.",
+      area: "Operations", owner: "Orders", d: "Verified",
+      impl: ["order-queue", "idempotency-keys", "fulfilment-api", "order-queue-v2"] },
+    { t: "A refund returns the correct amount and updates the customer's account.",
+      area: "Operations", owner: "Orders", d: "Blocked",
+      impl: ["refunds", "ledger", "refunds-v2", "ledger-reconcile"] },
+  ] },
+  { h: "Data boundaries", rows: [
+    { t: "An export contains only the requesting tenant's data.",
+      area: "Security", owner: "Data", d: "Verified",
+      impl: ["export-worker", "row-policy", "export-worker-v3", "query-guard"] },
+    { t: "Deleting an account removes access without deleting records the business must retain.",
+      area: "Compliance", owner: "Data", d: "Verified",
+      impl: ["erasure-job", "retention-policy", "erasure-job-v2", "audit-vault"] },
+  ] },
 ];
 
-export function Record() {
-  const root = useRef<HTMLElement>(null);
-  const seen = useSeen(root, ARCHIVE.length);
+export function Register() {
+  const wrap = useRef<HTMLDivElement>(null);
+  useScrollProgress(wrap);
   return (
-    <section className="v6-rec" data-nav-dark data-nav-theme="dark" ref={root}>
-      <div className="v6-rec__head">
-        <p className="v6-eyebrow">The record</p>
-        <h2 className="v6-rec__h">The success does not erase how it got there.</h2>
-      </div>
-
-      <div className="v6-rec__arch">
-        {/* the anchor: the one document everything else is filed against. A div, not an aside: a
-            complementary landmark nested inside a section is a landmark violation, and this is part of
-            the composition rather than an aside to it. */}
-        <div className="v6-rec__anchor">
-          <div className="v6-rec__doc">
-            <p className="v6-rec__dock">Guarantee</p>
-            <p className="v6-rec__docv">Only authorized staff can read customer records.</p>
-          </div>
+    <section className="v6-rg" data-nav-dark data-nav-theme="dark" ref={wrap}>
+      <div className="v6-rg__pin">
+        <div className="v6-rg__head">
+          <p className="v6-eyebrow">Illustrative business guarantees</p>
+          <h2 className="v6-rg__h">The software changes. What the business depends on does not.</h2>
         </div>
 
-        {/* the archive: a spine, and things of different kinds filed against it */}
-        <ol className="v6-rec__spine">
-          {ARCHIVE.map((f, i) => (
-            <li key={i} className="v6-rec__filed" data-t={f.t} data-i={i} data-on={i < seen}
-              style={{ ["--i" as string]: i }}>
-              {f.t === "evidence" ? (
-                <div className="v6-rec__ev" data-s={f.s}>
-                  <p className="v6-rec__tab"><span className="v6-mono">{f.n}</span>Evidence</p>
-                  <p className="v6-rec__fh">{f.head}</p>
-                  <p className="v6-rec__fb">{f.body}</p>
-                </div>
-              ) : null}
+        <div className="v6-rg__stage">
+          <div className="v6-rg__cols" aria-hidden>
+            <span>Guarantee</span><span>Business area</span><span>Owner</span><span>Current decision</span>
+          </div>
 
-              {f.t === "change" ? (
-                <div className="v6-rec__ch">
-                  <p className="v6-rec__chn v6-mono">{f.n}</p>
-                  <p className="v6-rec__fh">{f.head}</p>
-                  <p className="v6-rec__fb">{f.body}</p>
-                </div>
-              ) : null}
-
-              {f.t === "decision" ? (
-                <div className="v6-rec__de">
-                  <p className="v6-rec__tab">Signed decision</p>
-                  <p className="v6-rec__fh">{f.head}</p>
-                  <p className="v6-rec__fb">{f.body}</p>
-                </div>
-              ) : null}
-
-              {f.t === "result" ? (
-                <div className="v6-rec__re">
-                  <p className="v6-rec__tab">Result</p>
-                  <p className="v6-rec__fh">{f.head}</p>
-                  <p className="v6-rec__fb">{f.body}</p>
-                </div>
-              ) : null}
-            </li>
+          {GROUPS.map((g, gi) => (
+            <section key={g.h} className="v6-rg__grp" style={{ ["--g" as string]: gi }}>
+              <h3 className="v6-rg__gh">{g.h}</h3>
+              {g.rows.map((r, ri) => (
+                <article key={r.t} className="v6-rg__row" data-d={r.d} style={{ ["--i" as string]: gi * 2 + ri }}>
+                  <div className="v6-rg__gcell">
+                    <p className="v6-rg__t">{r.t}</p>
+                    {/* the implementation beneath the promise, cycling as the reader scrolls */}
+                    <p className="v6-rg__impl" aria-hidden>
+                      {r.impl.map((x, k) => (
+                        <span key={x} className="v6-rg__im" style={{ ["--k" as string]: k }}>{x}</span>
+                      ))}
+                    </p>
+                  </div>
+                  <p className="v6-rg__m">{r.area}</p>
+                  <p className="v6-rg__m">{r.owner}</p>
+                  <p className="v6-rg__d">{r.d}</p>
+                </article>
+              ))}
+            </section>
           ))}
-        </ol>
+        </div>
+
+        <p className="v6-rg__foot">
+          Illustrative guarantees, not customer records. What is real is the shape of the object: a
+          business outcome that keeps its own scope, ownership and decision while the systems underneath
+          it are rewritten.
+        </p>
       </div>
     </section>
   );

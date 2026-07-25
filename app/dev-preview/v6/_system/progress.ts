@@ -13,8 +13,9 @@
 //
 // Behaviour this buys, all measured rather than intended:
 //   - between wheel events the scene keeps producing intermediate frames until it settles
-//   - a fast scroll approaches the correct ABSOLUTE position (tau 32ms: 95% in ~96ms, and a half-page
-//     jump is visually settled inside ~170ms) without replaying skipped states or queueing anything
+//   - a fast scroll approaches the correct ABSOLUTE position (tau 55ms: 95% in ~165ms, still inside the
+//     settle budget) without replaying skipped states or queueing anything. 32ms tracked the wheel so
+//     tightly that the scene read as jumpy rather than smooth; 55 keeps it continuous.
 //   - reverse scrolling reverses from the exact current value, never restarts
 //   - scrollbar drags and PageDown land on the correct composition because target is always absolute
 //   - React never renders during this: the loop writes styles, not state
@@ -74,7 +75,7 @@ export function useScrollProgress(ref: RefObject<HTMLElement | null>, options?: 
         rendered = target;
       } else {
         // exponential approach: frame-rate independent, always moving toward the absolute target
-        rendered += (target - rendered) * (1 - Math.exp(-dt / 32));
+        rendered += (target - rendered) * (1 - Math.exp(-dt / 55));
         // snap when the remaining distance is invisible, so the loop can actually stop
         if (Math.abs(target - rendered) < 0.0004) rendered = target;
       }
