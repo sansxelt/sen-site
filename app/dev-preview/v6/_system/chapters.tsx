@@ -63,8 +63,9 @@ function useSeen(root: RefObject<HTMLElement | null>, total: number) {
    claim is an assertion, and an assertion is not evidence. What it cannot tell you is what the change
    reached and whether the outcomes the business depends on are still true.
 
-   The verdict is "Unverified", not "Failed". Nothing has been checked at this point in the page, so
-   claiming a failure here would be using a decision word the evidence does not support.
+   It does NOT end on a verdict. Closing on "Unverified." in display type made the chapter dwell on an
+   absence, which reads as an argument against software rather than for this product. It now ends by
+   handing off: something independent has to answer the claim, and that is what the rest of the page is.
 
    There were four states; there are now three. The middle one listed what a completion claim DOES settle
    as two small pills, which is the weakest thing a full viewport can hold: a tiny tag in an enormous
@@ -100,10 +101,8 @@ export function Gap() {
           </div>
 
           <div className="v6-gap__t v6-gap__verdictwrap">
-            <p className="v6-gap__verdict">Unverified.</p>
-            <p className="v6-gap__verdictsay">
-              Until something independent checks the running software, done is a claim about it.
-            </p>
+            <p className="v6-gap__verdict">So something independent has to answer it.</p>
+            <p className="v6-gap__verdictsay">That is the whole of what Vraelis does.</p>
           </div>
         </div>
       </div>

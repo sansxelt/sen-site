@@ -43,16 +43,18 @@
 
    Centred: the stage is a narrow measure in the middle of the viewport and every traveller is
    text-align: center, so the chapter reads as one column rather than a left-hung block. */
-.v6-gap { position: relative; height: 520vh; background: var(--paper); --p: 0;
-  --claim:   clamp(0, calc((var(--p) - 0.17) / 0.09), 1);   /* 17 -> 26 out */
-  --strike:  clamp(0, calc((var(--p) - 0.06) / 0.14), 1);   /* 06 -> 20      */
-  --turn:    clamp(0, calc((var(--p) - 0.09) / 0.07), 1);   /* 09 -> 16      */
-  --sys:     clamp(0, calc((var(--p) - 0.23) / 0.08), 1);   /* 23 -> 31 in   */
-  --sysout:  clamp(0, calc((var(--p) - 0.47) / 0.07), 1);   /* 47 -> 54 out  */
-  --found:   clamp(0, calc((var(--p) - 0.51) / 0.08), 1);   /* 51 -> 59 in   */
-  --foundout:clamp(0, calc((var(--p) - 0.75) / 0.06), 1);   /* 75 -> 81 out  */
-  --verdict: clamp(0, calc((var(--p) - 0.78) / 0.08), 1);   /* 78 -> 86 in   */
-  --settle:  clamp(0, calc((var(--p) - 0.90) / 0.10), 1);   /* 90 -> 100     */
+/* 300vh, not 520. This chapter is the SETUP, not the main event: it earns the standard that follows and
+   should not occupy more of the page than the product does. The middle traveller was removed earlier but
+   its 25 percent of the runway was left behind, which is the long dead break between the claim leaving
+   and the next statement arriving. The three states now run back to back with no empty slot. */
+.v6-gap { position: relative; height: 300vh; background: var(--paper); --p: 0;
+  --strike:  clamp(0, calc((var(--p) - 0.05) / 0.12), 1);   /* 05 -> 17      */
+  --turn:    clamp(0, calc((var(--p) - 0.08) / 0.06), 1);   /* 08 -> 14      */
+  --claim:   clamp(0, calc((var(--p) - 0.16) / 0.09), 1);   /* 16 -> 25 out  */
+  --found:   clamp(0, calc((var(--p) - 0.23) / 0.09), 1);   /* 23 -> 32 in   */
+  --foundout:clamp(0, calc((var(--p) - 0.52) / 0.07), 1);   /* 52 -> 59 out  */
+  --verdict: clamp(0, calc((var(--p) - 0.57) / 0.09), 1);   /* 57 -> 66 in   */
+  --settle:  clamp(0, calc((var(--p) - 0.80) / 0.20), 1);   /* 80 -> 100     */
 }
 .v6-gap__pin { position: sticky; top: 0; height: 100svh; overflow: hidden;
   padding: calc(var(--nav-h, 66px) + 2vh) var(--gutter) 4vh; }
@@ -76,7 +78,7 @@
   opacity: calc(var(--turn) * (1 - var(--claim))); }
 
 /* the claim: holds the centre, then rises and shrinks as it loses authority */
-.v6-gap__claim { transform: translateY(calc(-50% - var(--claim) * 60vh))
+.v6-gap__claim { transform: translateY(calc(-54% - var(--claim) * 60vh))
   scale(calc(1 - 0.38 * var(--claim))); opacity: calc(1 - var(--claim)); }
 
 /* the systems: travel up into the centre the claim vacated, then clear for the observations */
@@ -88,7 +90,7 @@
   border: 1px solid var(--line-2); border-radius: 999px; padding: 9px 20px; }
 
 /* the observations: take the centre, hold it, then lift as the verdict resolves beneath */
-.v6-gap__found { transform: translateY(calc(-50% + 13vh - var(--found) * 19vh - var(--foundout) * 62vh));
+.v6-gap__found { transform: translateY(calc(-50% + 13vh - var(--found) * 24vh - var(--foundout) * 62vh));
   opacity: calc(var(--found) * (1 - var(--foundout))); }
 .v6-gap__found .v6-gap__label { color: var(--stop-ink); }
 .v6-gap__list { list-style: none; margin: clamp(14px, 2.2vh, 26px) 0 0; padding: 0;
@@ -98,10 +100,11 @@
 /* the consequence: arrives beneath the observations and resolves */
 /* resolves just above the optical centre, matching where the observations rested, rather than sitting low
    in the lower third of the frame */
-.v6-gap__verdictwrap { transform: translateY(calc(-50% + 12vh - var(--verdict) * 20vh - var(--settle) * 1.5vh));
+.v6-gap__verdictwrap { transform: translateY(calc(-50% + 12vh - var(--verdict) * 25vh - var(--settle) * 1.5vh));
   opacity: var(--verdict); }
-.v6-gap__verdict { font-family: var(--sans); font-weight: 600; letter-spacing: -0.045em; line-height: 1;
-  font-size: clamp(2.6rem, 7vw, 5.4rem); color: var(--ink); margin: 0; }
+.v6-gap__verdict { font-family: var(--sans); font-weight: 600; letter-spacing: -0.04em; line-height: 1.02;
+  font-size: clamp(2rem, 5vw, 4rem); color: var(--ink); margin: 0; max-width: 22ch;
+  margin-inline: auto; text-wrap: balance; }
 .v6-gap__verdictsay { font-size: clamp(1.05rem, 1.5vw, 1.4rem); color: var(--ink-3); margin: 18px 0 0;
   max-width: 46ch; margin-inline: auto; }
 
