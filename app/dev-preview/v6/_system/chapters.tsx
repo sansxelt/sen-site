@@ -8,7 +8,7 @@
 //
 // Backgrounds alternate graphite / stone at every chapter boundary, so scrolling reads as changes of
 // atmosphere rather than as a stack of modules.
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { useScrollProgress, entryProgress } from "./progress";
 import { Spectral } from "./spectral";
 import Link from "next/link";
@@ -244,7 +244,7 @@ function reply(raw: string): Line[] {
         { k: "dim", t: "  --url     the deployment to verify, https and reachable" },
         { k: "dim", t: "  --claim   what should be true, as a sentence" },
         { k: "out", t: "exit codes  0 verified   1 failed   2 blocked" },
-        { k: "dim", t: "other: clear, whoami, pwd, ls, echo, exit" },
+        { k: "dim", t: "this window runs nothing: it demonstrates the shape of a real run" },
       ];
     case "vraelis":
       if (rest[0] !== "verify") return say(`vraelis: unknown subcommand '${rest[0] ?? ""}'. try: vraelis verify`, "dim");
@@ -256,12 +256,13 @@ function reply(raw: string): Line[] {
         { k: "wait", t: "blocked: this sandbox cannot reach a deployment" },
         { k: "dim", t: "exit 2. blocked is not success, which is the whole point." },
       ];
-    case "whoami": return say("reader");
-    case "pwd": return say("~/acme/records-web");
-    case "ls": return say("src  tests  vraelis.config.json  package.json");
-    case "echo": return say(rest.join(" "));
-    case "exit": return say("this window is part of the page. scroll on.", "dim");
-    default: return say(`${head}: command not found`, "dim");
+    // Anything outside the implemented set is NOT answered with invented shell output. Fabricating a
+    // filesystem or a result would be the exact thing this product exists to catch.
+    default:
+      return [
+        { k: "dim", t: `${head}: not part of this demonstration` },
+        { k: "dim", t: "implemented here: vraelis verify, help, clear" },
+      ];
   }
 }
 
@@ -274,30 +275,38 @@ export function Product() {
   const [val, setVal] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Plays when the window enters view and REPLAYS on re-entry, so coming back to it starts over.
+  // Plays ONCE, when the window is substantially visible. It does not restart because the reader moved a
+  // pixel out and back in; a replay is offered instead, as a control they choose. Reduced motion skips
+  // straight to the finished output, and the finished output stays on screen either way.
+  const played = useRef(false);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const play = useCallback(() => {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setTyped(CMD.length); setShown(RUN.length); setDone(true); return;
+    }
+    setTyped(0); setShown(0); setDone(false); setLog([]);
+    // ~3s in total. Faster than this and the phases (derive, plan, approve, execute, decide) read as
+    // decorative typing rather than a workflow anyone could follow.
+    for (let i = 1; i <= CMD.length; i++) timers.current.push(setTimeout(() => setTyped(i), i * 12));
+    const after = CMD.length * 12 + 260;
+    RUN.forEach((_, i) => timers.current.push(setTimeout(() => setShown(i + 1), after + i * 190)));
+    timers.current.push(setTimeout(() => setDone(true), after + RUN.length * 190 + 300));
+  }, []);
+
   useEffect(() => {
     const el = root.current;
     if (!el) return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let timers: ReturnType<typeof setTimeout>[] = [];
-    const clear = () => { timers.forEach(clearTimeout); timers = []; };
-    const play = () => {
-      clear();
-      if (reduce) { setTyped(CMD.length); setShown(RUN.length); setDone(true); return; }
-      setTyped(0); setShown(0); setDone(false); setLog([]);
-      // Fast on purpose: the command types in ~0.4s and the whole run finishes inside ~1s, the way a
-      // real session looks sped up. Slower than this and it reads as a loading screen.
-      for (let i = 1; i <= CMD.length; i++) timers.push(setTimeout(() => setTyped(i), i * 4));
-      const after = CMD.length * 4 + 90;
-      RUN.forEach((_, i) => timers.push(setTimeout(() => setShown(i + 1), after + i * 55)));
-      timers.push(setTimeout(() => setDone(true), after + RUN.length * 55 + 140));
-    };
     const io = new IntersectionObserver((es) => {
-      for (const e of es) { if (e.isIntersecting) play(); else clear(); }
-    }, { threshold: 0.4 });
+      for (const e of es) {
+        if (e.isIntersecting && !played.current) { played.current = true; play(); }
+      }
+    }, { threshold: 0.45 });
     io.observe(el);
-    return () => { io.disconnect(); clear(); };
-  }, []);
+    const t = timers.current;
+    return () => { io.disconnect(); t.forEach(clearTimeout); };
+  }, [play]);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -322,7 +331,7 @@ export function Product() {
               <i className="is-close" /><i className="is-min" /><i className="is-max" />
             </span>
             <span className="v6-tm__title">vraelis — verify — ~/acme/records-web</span>
-            <span className="v6-tm__grip" aria-hidden />
+            <button type="button" className="v6-tm__replay" onClick={play}>Replay</button>
           </header>
 
           <div className="v6-tm__body" onClick={() => inputRef.current?.focus()}>
@@ -590,6 +599,132 @@ export function Reach() {
       </div>
 
       <p className="v6-rx__ill">Illustrative. The surfaces are real; the identifier shown is an example.</p>
+    </section>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════ CHAPTER 7 ══
+   DIRECTION. THE ONLY UNSHIPPED CHAPTER ON THE PAGE, AND IT SAYS SO.
+
+   Chapters 1 to 6 are shipped-only on purpose: independent verification, deployed browser execution,
+   requirements and plan sufficiency, Verified / Failed / Blocked, evidence, repair handoff,
+   reverification, preserved history, and the CLI, API and integrations that genuinely exist. That is what
+   earns the right to say anything at all here.
+
+   This chapter is where the company goes, and it is labelled DIRECTION in the eyebrow, again in a visible
+   disclosure inside the chapter, and again on every future layer. It does NOT present three separate
+   future products. The compiler, the challenge to sufficiency, and the graph are three layers of one
+   system, and the page says which part of each exists today.
+
+   The honest split, taken from the implementation:
+     SHIPPED    a guarantee compiles into structured requirements and a browser plan, deterministic
+                checks decide whether that plan can prove the claim, and a plan that cannot returns
+                Blocked rather than a guess.
+     DIRECTION  the same compilation across many guarantees, a system that challenges whether the plan
+                and the evidence were sufficient, and the durable graph the two produce over years.
+
+   The visual keeps the guarantee text fixed and reveals relationships beneath it: systems shared between
+   guarantees, one deployment touching several, owners, and prior evidence still attached. It resolves
+   into a legible operational structure, not a glowing network.
+   ------------------------------------------------------------------------------------------------- */
+const LAYERS: { k: string; h: string; now: string; next: string }[] = [
+  {
+    k: "Compile",
+    h: "A business sentence becomes something provable.",
+    now: "Today a guarantee compiles into structured requirements and a browser plan, and deterministic checks decide whether that plan can actually prove the claim.",
+    next: "Across every guarantee a company holds, with the obligations and environments they share.",
+  },
+  {
+    k: "Challenge",
+    h: "The plan and the evidence are questioned, not trusted.",
+    now: "Today a plan that cannot prove the claim returns Blocked instead of a guess.",
+    next: "Varying identity, tenant and session between runs, and checking relationships that must hold, so a result cannot be passed by learning the test.",
+  },
+  {
+    k: "Accumulate",
+    h: "What the company must keep true, and everything learned proving it.",
+    now: "Today every run, decision and repair stays attached to the guarantee it belongs to.",
+    next: "Those guarantees, systems, owners, dependencies, evidence and decisions become one durable graph.",
+  },
+];
+
+export function Direction() {
+  const wrap = useRef<HTMLDivElement>(null);
+  useScrollProgress(wrap);
+  return (
+    <section className="v6-dr" data-nav-dark data-nav-theme="dark" ref={wrap}>
+      <div className="v6-dr__pin">
+        <div className="v6-dr__head">
+          <p className="v6-eyebrow v6-dr__label">Direction</p>
+          <h2 className="v6-dr__h">The operating memory of an AI-built company.</h2>
+          <p className="v6-dr__sub">
+            Today, Vraelis verifies one deployed outcome at a time. Over time, every guarantee, system,
+            owner, dependency, failure, repair and decision forms a living record of what the company must
+            keep true.
+          </p>
+        </div>
+
+        <div className="v6-dr__stage">
+          {/* the structure assembles beneath the guarantees rather than replacing them */}
+          <svg className="v6-dr__graph" viewBox="0 0 900 420" aria-hidden preserveAspectRatio="xMidYMid meet">
+            {/* guarantees, fixed */}
+            {[
+              { y: 70, a: "A paying customer keeps", b: "the plan they purchased" },
+              { y: 175, a: "A deactivated employee", b: "loses access everywhere" },
+              { y: 280, a: "An export contains only", b: "that tenant's records" },
+            ].map((g, i) => (
+              <g key={g.y} className="v6-dr__g" style={{ ["--i" as string]: i }}>
+                <rect x="24" y={g.y} width="250" height="58" rx="6" />
+                <text x="40" y={g.y + 24}>{g.a}</text>
+                <text x="40" y={g.y + 43}>{g.b}</text>
+                <line x1="24" y1={g.y + 58} x2="274" y2={g.y + 58} />
+              </g>
+            ))}
+            {/* systems, shared between guarantees */}
+            {[
+              { x: 430, y: 40, l: "billing" },
+              { x: 430, y: 160, l: "identity" },
+              { x: 430, y: 280, l: "records" },
+            ].map((n, i) => (
+              <g key={n.l} className="v6-dr__n" style={{ ["--i" as string]: i }}>
+                <rect x={n.x} y={n.y} width="130" height="46" rx="6" />
+                <text x={n.x + 65} y={n.y + 28}>{n.l}</text>
+              </g>
+            ))}
+            {/* one deployment touching several outcomes */}
+            <g className="v6-dr__dep">
+              <rect x="690" y="150" width="170" height="52" rx="6" />
+              <text x="775" y="181">one deployment</text>
+            </g>
+            {/* the relationships: drawn, not implied */}
+            {[
+              "M274 99 C 350 99, 360 63, 430 63",
+              "M274 99 C 350 99, 360 183, 430 183",
+              "M274 204 C 350 204, 360 183, 430 183",
+              "M274 309 C 350 309, 360 303, 430 303",
+              "M274 309 C 350 309, 360 183, 430 183",
+              "M560 63 C 630 63, 640 176, 690 176",
+              "M560 183 C 630 183, 640 176, 690 176",
+              "M560 303 C 630 303, 640 176, 690 176",
+            ].map((d, i) => (
+              <path key={d} className="v6-dr__edge" d={d} style={{ ["--i" as string]: i }} />
+            ))}
+          </svg>
+
+          <ol className="v6-dr__layers">
+            {LAYERS.map((l, i) => (
+              <li key={l.k} className="v6-dr__layer" style={{ ["--i" as string]: i }}>
+                <p className="v6-dr__lk">{l.k}</p>
+                <p className="v6-dr__lh">{l.h}</p>
+                <p className="v6-dr__now"><span>Today</span>{l.now}</p>
+                <p className="v6-dr__next"><span>Direction</span>{l.next}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <p className="v6-dr__disc">Direction shown here extends beyond the currently available product.</p>
+      </div>
     </section>
   );
 }

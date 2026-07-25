@@ -17,7 +17,7 @@
 // Explanation deliberately does NOT live here. /platform, /agents, /method, /research and /docs carry it.
 // The company category is unsettled and every positioning string comes from _system/positioning.ts.
 import { Hero } from "./_system/hero";
-import { Gap, Standard, Product, Register, Reach, Knowledge } from "./_system/chapters";
+import { Gap, Standard, Product, Register, Reach, Direction, Knowledge } from "./_system/chapters";
 import { ClosingScene } from "./_system/close";
 
 export default function Home() {
@@ -29,6 +29,7 @@ export default function Home() {
       <Product />
       <Register />
       <Reach />
+      <Direction />
       <Knowledge />
       <ClosingScene />
     </>

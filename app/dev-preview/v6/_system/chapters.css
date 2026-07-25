@@ -222,9 +222,14 @@
 .v6-tm__lights i.is-max::after   { content: "+"; }
 .v6-tm__title { font-family: var(--mono); font-size: 12px; color: var(--g-fg-3); text-align: center;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.v6-tm__grip { width: 34px; height: 10px; opacity: 0.45;
-  background-image: radial-gradient(circle, rgba(255,255,255,0.28) 1px, transparent 1px);
-  background-size: 5px 5px; }
+/* a real control, unlike the window buttons: it replays the run on demand, so playback never has to
+   restart itself just because the reader scrolled past and came back */
+.v6-tm__replay { appearance: none; background: none; border: 1px solid var(--g-line-2);
+  border-radius: 6px; padding: 3px 10px; font-family: var(--sans); font-weight: 600; font-size: 11px;
+  letter-spacing: 0.02em; color: var(--g-fg-3); cursor: pointer;
+  transition: color 140ms ease, border-color 140ms ease; }
+.v6-tm__replay:hover { color: var(--g-fg); border-color: var(--g-fg-3); }
+.v6-tm__replay:focus-visible { outline: 2px solid var(--g-fg); outline-offset: 2px; }
 
 .v6-tm__body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
   padding: clamp(14px, 1.8vw, 22px); cursor: text;
@@ -483,6 +488,102 @@
 
 .v6-rx__ill { max-width: var(--max-wide); margin: clamp(20px, 2.6vh, 30px) auto 0; padding-inline: var(--gutter);
   font-size: 13px; color: var(--ink-4); }
+
+/* ══════════════════════════════════════════════════ 7. DIRECTION ══
+   The only unshipped chapter on the page. Labelled in the eyebrow, on every future line, and in a
+   disclosure that stays visible inside the chapter rather than being buried in the footer.
+
+   The graph assembles from --p: guarantees first and fixed, then the systems they cross, then the edges,
+   then one deployment touching several outcomes. Hard lines and real boxes, deliberately not a glowing
+   constellation: this is an operational structure, and it should look like one.
+   ========================================================================================= */
+.v6-dr { position: relative; height: 520vh; background: var(--graphite); color: var(--g-fg-2); --p: 0;
+  --g1: clamp(0, calc((var(--p) - 0.06) / 0.14), 1);   /* the guarantees   */
+  --g2: clamp(0, calc((var(--p) - 0.22) / 0.16), 1);   /* the systems      */
+  --g3: clamp(0, calc((var(--p) - 0.38) / 0.18), 1);   /* the edges        */
+  --g4: clamp(0, calc((var(--p) - 0.56) / 0.14), 1);   /* the deployment   */
+  --g5: clamp(0, calc((var(--p) - 0.62) / 0.30), 1); } /* the layers       */
+.v6-dr__pin { position: sticky; top: 0; height: 100svh; overflow: hidden;
+  display: grid; grid-template-rows: auto 1fr auto; gap: clamp(10px, 1.6vh, 22px);
+  padding: calc(var(--nav-h, 66px) + 2.5vh) var(--gutter) clamp(18px, 3vh, 36px); }
+.v6-dr__head { max-width: var(--max-wide); width: 100%; margin-inline: auto; }
+/* the label is a state of the content, so it is allowed to carry the one colour that means "a person
+   must read this differently" */
+.v6-dr__label { color: var(--wait-dk) !important; }
+.v6-dr__h { margin: clamp(8px, 1.4vh, 16px) 0 0; font-family: var(--sans); font-weight: 600;
+  letter-spacing: -0.04em; line-height: 1.03; font-size: clamp(1.7rem, 3.8vw, 3.2rem);
+  color: var(--g-fg); max-width: 20ch; text-wrap: balance; }
+.v6-dr__sub { margin: clamp(10px, 1.4vh, 16px) 0 0; font-size: clamp(0.98rem, 1.2vw, 1.14rem);
+  line-height: 1.55; color: var(--g-fg-2); max-width: 66ch; }
+
+.v6-dr__stage { max-width: var(--max-wide); width: 100%; margin-inline: auto; min-height: 0;
+  display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: clamp(20px, 3.5vw, 56px); align-items: center; }
+
+/* ---- the graph ---- */
+.v6-dr__graph { width: 100%; height: auto; max-height: 62vh; overflow: visible; }
+.v6-dr__g rect { fill: rgba(255,255,255,0.05); stroke: var(--g-fg-3); stroke-width: 1.4;
+  opacity: clamp(0, calc((var(--g1) * 3.4) - var(--i)), 1); }
+.v6-dr__g line { stroke: var(--g-fg); stroke-width: 2;
+  opacity: clamp(0, calc((var(--g1) * 3.4) - var(--i)), 1); }
+/* the guarantee text is the fixed thing in this composition, so it reads at full strength */
+.v6-dr__g text { fill: var(--g-fg); font-family: var(--sans); font-weight: 500; font-size: 15px;
+  letter-spacing: -0.012em; opacity: clamp(0, calc((var(--g1) * 3.4) - var(--i)), 1); }
+.v6-dr__n rect { fill: rgba(255,255,255,0.03); stroke: var(--g-line-2); stroke-width: 1.2;
+  opacity: clamp(0, calc((var(--g2) * 3.4) - var(--i)), 1); }
+.v6-dr__n text { fill: var(--g-fg-2); font-family: var(--mono); font-size: 15px; text-anchor: middle;
+  opacity: clamp(0, calc((var(--g2) * 3.4) - var(--i)), 1); }
+.v6-dr__dep rect { fill: rgba(255,255,255,0.06); stroke: var(--g-fg-3); stroke-width: 1.4;
+  opacity: var(--g4); }
+.v6-dr__dep text { fill: var(--g-fg); font-family: var(--sans); font-weight: 600; font-size: 15px;
+  text-anchor: middle; opacity: var(--g4); }
+.v6-dr__edge { fill: none; stroke: rgba(255,255,255,0.32); stroke-width: 1.2;
+  stroke-dasharray: 260; stroke-dashoffset: calc(260 - clamp(0, calc((var(--g3) * 9) - var(--i)), 1) * 260); }
+
+/* ---- the three layers, each split into what ships and what does not ---- */
+.v6-dr__layers { list-style: none; margin: 0; padding: 0; display: grid; gap: clamp(14px, 2vh, 24px); }
+.v6-dr__layer { --on: clamp(0, calc((var(--g5) * 3.4) - var(--i)), 1);
+  opacity: calc(0.12 + 0.88 * var(--on));
+  transform: translateY(calc((1 - var(--on)) * 12px));
+  padding-top: 14px; border-top: 1px solid var(--g-line); }
+.v6-dr__lk { margin: 0; font-family: var(--sans); font-weight: 600; font-size: 10.5px;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--g-fg-3); }
+.v6-dr__lh { margin: 7px 0 0; font-family: var(--sans); font-weight: 600; letter-spacing: -0.026em;
+  line-height: 1.15; font-size: clamp(1.05rem, 1.6vw, 1.4rem); color: var(--g-fg); }
+.v6-dr__now, .v6-dr__next { margin: 8px 0 0; font-size: 0.9rem; line-height: 1.5; }
+.v6-dr__now { color: var(--g-fg-2); }
+.v6-dr__next { color: var(--g-fg-3); }
+/* every future line is prefixed with the word Direction, so no sentence can be read out of context */
+.v6-dr__now span, .v6-dr__next span { display: inline-block; margin-right: 9px;
+  font-family: var(--sans); font-weight: 600; font-size: 9.5px; letter-spacing: 0.14em;
+  text-transform: uppercase; border: 1px solid var(--g-line-2); border-radius: 3px; padding: 1px 6px;
+  vertical-align: 1px; }
+.v6-dr__now span { color: var(--go-dk); border-color: rgba(74,222,156,0.4); }
+.v6-dr__next span { color: var(--wait-dk); border-color: rgba(242,183,90,0.4); }
+
+.v6-dr__disc { max-width: var(--max-wide); width: 100%; margin: 0 auto; font-size: 12.5px;
+  line-height: 1.5; color: var(--wait-dk); }
+
+@media (max-width: 900px) {
+  .v6-dr { height: auto; }
+  .v6-dr__pin { position: static; height: auto; display: block; padding: clamp(64px, 10vw, 96px) var(--gutter); }
+  .v6-dr__stage { grid-template-columns: 1fr; gap: clamp(24px, 6vw, 36px); margin-top: clamp(22px, 6vw, 32px); }
+  .v6-dr__graph { max-height: none; }
+  .v6-dr__g rect, .v6-dr__g line, .v6-dr__n rect, .v6-dr__n text,
+  .v6-dr__dep rect, .v6-dr__dep text { opacity: 1 !important; }
+  .v6-dr__edge { stroke-dashoffset: 0 !important; }
+  .v6-dr__layer { opacity: 1 !important; transform: none !important; }
+  .v6-dr__disc { margin-top: 22px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .v6-dr { height: auto; }
+  .v6-dr__pin { position: static; height: auto; display: block; padding: clamp(64px, 8vw, 100px) var(--gutter); }
+  .v6-dr__stage { grid-template-columns: 1fr; }
+  .v6-dr__g rect, .v6-dr__g line, .v6-dr__n rect, .v6-dr__n text,
+  .v6-dr__dep rect, .v6-dr__dep text { opacity: 1 !important; }
+  .v6-dr__edge { stroke-dashoffset: 0 !important; }
+  .v6-dr__layer { opacity: 1 !important; transform: none !important; }
+}
 
 /* ══════════════════════════════════════ 6B. KNOWLEDGE ══ */
 /* clip, not hidden: the documentation sheet is meant to run off the right page edge */

@@ -5,7 +5,7 @@
 // One category label, one headline, one sentence, one action, on a full-height graphite field. The
 // operational landscape that used to sit in the bottom band is gone: it competed with the type and did not
 // earn the room it took. Positioning copy comes from _system/positioning.ts and is provisional.
-import { CTA, EditorialLink } from "./ui";
+import { CTA } from "./ui";
 import { CATEGORY, HEADLINE, SUPPORT } from "./positioning";
 import "./hero.css";
 
@@ -20,12 +20,9 @@ export function Hero() {
           <span className="v6-mask"><span className="v6-mask__in" style={{ animationDelay: "170ms" }}>{HEADLINE[1]}</span></span>
         </h1>
         <p className="v6-h__say">{SUPPORT}</p>
-        <div className="v6-h__cta">
-          <CTA brand lg>Open Vraelis</CTA>
-          {/* Points at the terminal, which is the closest thing on the page to seeing it work. It used to
-              say "See the proof" and jump to #gap, which is the problem statement, not proof of anything. */}
-          <EditorialLink href="#run">Watch it run</EditorialLink>
-        </div>
+        {/* One action. The secondary link has been "See the proof" and then "Watch it run"; both were a
+            second decision offered before the reader had a reason to make one. */}
+        <div className="v6-h__cta"><CTA brand lg>Open Vraelis</CTA></div>
       </div>
     </section>
   );
