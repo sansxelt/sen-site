@@ -24,27 +24,29 @@
 //   "autonomous reliability operator" / "software intent infrastructure"
 
 /** Short category label. Appears once, above the opening headline. */
-export const CATEGORY = "Control for AI-built software";
+export const CATEGORY = "Verification for AI-built software";
 
-/** The opening headline, as two clauses. The first is set back, the second carries. */
+/** The opening headline, as two clauses. The page then spends its whole length proving the second one:
+ *  the claim of done, the check against the deployed workflow, the repair that only appeared to hold, the
+ *  repair that did, the record that keeps all of it, and the decision landing where work already happens. */
 export const HEADLINE: [string, string] = [
-  "AI builds more of the software.",
-  "Vraelis keeps the company in control.",
+  "AI builds the software.",
+  "Vraelis verifies it works.",
 ];
 
 /** ONE short sentence under the headline. The opening creates scale and curiosity; proof comes later, so
- *  this line must not try to explain the product. Keep it under about 20 words. */
-export const SUPPORT = "An agent says the work is done. Vraelis decides whether that is true.";
+ *  this line must not try to explain the product, and it must not pre-state a chapter's own line. */
+export const SUPPORT = "Checked in the deployed product, against the outcome the business depends on.";
 
 /** Page title and meta description. */
-export const META_TITLE = "Vraelis | Control for AI-built software";
+export const META_TITLE = "Vraelis | AI builds the software. Vraelis verifies it works.";
 export const META_DESCRIPTION =
-  "See what AI agents changed, catch what they missed, and keep human control over what reaches production.";
+  "When an agent claims the work is done, Vraelis checks the deployed product against the outcome the business depends on, and keeps the result on the record.";
 
 /** Link-preview text, shared by Open Graph, Twitter, and the generated OG image. */
-export const OG_TITLE = "Keep control of software AI is building.";
+export const OG_TITLE = "AI builds the software. Vraelis verifies it works.";
 export const OG_DESCRIPTION =
-  "See what agents changed, catch the claims they cannot back up, and decide what is safe to ship.";
+  "The claim of done, checked in the deployed product, with every result kept on the record.";
 
 /** The three beats drawn in the OG artwork. */
 export const OG_BEATS: [string, string, string] = ["What changed", "What it missed", "What ships"];

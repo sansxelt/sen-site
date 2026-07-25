@@ -370,6 +370,49 @@
 .v6-reveal.in { opacity: 1; transform: none; }
 .v6-reveal--m { transform: translateY(22px) scale(0.99); } .v6-reveal--m.in { transform: none; }
 
+/* ══════════════════════════════════════════════════════ SPECTRAL REVEAL ═════
+   Everything derives from --sv (0..1), set by the call site as a pure function of rendered scroll
+   progress. The base is the final monochrome text; the light layer is one travelling pass of restrained
+   colour clipped to the letterforms, gone completely by --sv 0.82. */
+.v6-spec { position: relative; display: inline-block;
+  /* helper ramps, all pure functions of --sv */
+  --sv-in:   clamp(0, calc(var(--sv) / 0.42), 1);                      /* establish: dim -> present   */
+  --sv-out:  clamp(0, calc((var(--sv) - 0.42) / 0.40), 1);             /* the pass leaves by 0.82     */
+  --sv-move: clamp(0, calc((var(--sv) - 0.10) / 0.66), 1);             /* where the light is, 0.10-0.76 */
+}
+.v6-spec__base { display: inline-block;
+  opacity: calc(0.22 + 0.78 * var(--sv-in));
+  transform: translateY(calc((1 - var(--sv-in)) * 12px));
+  filter: blur(calc((1 - var(--sv-in)) * 6px));
+  will-change: transform, filter, opacity; }
+/* the light: gradient three times the text width, driven across it by background-position, so colour
+   TRAVELS through the sentence. Muted violet -> blue -> cyan -> green -> one brief warm note, framed by
+   transparency so only a moving region is ever coloured. Opacity is a bell over the middle of the pass:
+   nothing at the dim start, gone before the hold. */
+.v6-spec__light { position: absolute; inset: 0; pointer-events: none;
+  background-image: linear-gradient(100deg,
+    transparent 6%,
+    rgba(139, 118, 210, 0.9) 22%,
+    rgba(92, 132, 224, 0.95) 34%,
+    rgba(96, 196, 222, 0.95) 46%,
+    rgba(96, 190, 140, 0.9) 57%,
+    rgba(214, 178, 120, 0.75) 65%,
+    transparent 80%);
+  background-size: 300% 100%;
+  background-position: calc(100% - var(--sv-move) * 200%) 0;
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent;
+  transform: translateY(calc((1 - var(--sv-in)) * 12px));
+  filter: blur(calc((1 - var(--sv-in)) * 6px));
+  opacity: calc(min(clamp(0, calc(var(--sv) / 0.18), 1), 1 - var(--sv-out)));
+  will-change: background-position, opacity, transform; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* the final solid text, immediately: no colour travel, no blur, no partial reveal */
+  .v6-spec__base { opacity: 1 !important; transform: none !important; filter: none !important; }
+  .v6-spec__light { display: none !important; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .v6-page { animation: none !important; }
   .v6-reveal { opacity: 1 !important; transform: none !important; transition: none !important; }

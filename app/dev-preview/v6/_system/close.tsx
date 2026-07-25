@@ -3,9 +3,12 @@
 // Global closing scene and institutional footer, shared by every public route. The closing resolves the
 // responsibility introduced in the homepage opening into a settled state, so the page ends its own story
 // rather than parking a card above the footer.
+import { useRef } from "react";
 import Link from "next/link";
 import { CTA, EditorialLink } from "./ui";
 import { CLOSE_TITLE, FOOTER_STATEMENT } from "./positioning";
+import { useScrollProgress, entryProgress } from "./progress";
+import { Spectral } from "./spectral";
 import "./close.css";
 
 const BASE = "/dev-preview/v6";
@@ -21,8 +24,12 @@ export function ClosingScene({
 }: {
   resolve?: boolean; title?: string; say?: string; secondaryHref?: string; secondaryLabel?: string;
 }) {
+  // The closing statement is one of the page's few spectral reveals: --p rises continuously with the
+  // section's own entry into the viewport, so the pass scrubs with the reader in both directions.
+  const root = useRef<HTMLElement>(null);
+  useScrollProgress(root, { measure: entryProgress(0.9) });
   return (
-    <section className="v6-end" data-nav-dark data-nav-theme="dark">
+    <section className="v6-end" data-nav-dark data-nav-theme="dark" ref={root}>
       <div className="v6-end__field" aria-hidden />
       <div className="v6-end__in">
         {resolve ? (
@@ -34,7 +41,7 @@ export function ClosingScene({
             </p>
           </div>
         ) : null}
-        <h2 className="v6-end__h">{title}</h2>
+        <h2 className="v6-end__h"><Spectral sv="clamp(0, calc((var(--p) - 0.12) / 0.82), 1)">{title}</Spectral></h2>
         <p className="v6-end__say">{say}</p>
         <div className="v6-end__cta">
           <CTA brand lg>Open Vraelis</CTA>

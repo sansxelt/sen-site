@@ -9,6 +9,8 @@
 // Backgrounds alternate graphite / stone at every chapter boundary, so scrolling reads as changes of
 // atmosphere rather than as a stack of modules.
 import { useEffect, useRef, useState, type RefObject } from "react";
+import { useScrollProgress, entryProgress } from "./progress";
+import { Spectral } from "./spectral";
 import Link from "next/link";
 import { DOCS } from "../_content/docs";
 import { CHANGELOG } from "../_content/changelog";
@@ -21,45 +23,6 @@ const BASE = "/dev-preview/v6";
    wrapper's progress. Native scrolling only: nothing is captured or re-timed,
    and reduced motion resolves straight to the final phase.
    --------------------------------------------------------------------------- */
-// Continuous scroll progress, 0..1, written to the DOM as a CSS variable.
-//
-// The previous version snapped to an integer phase and let a fixed-duration CSS transition play out. Scroll
-// slowly and that looked fine; scroll quickly and the animation carried on at its own pace long after the
-// reader had moved, so the scene never matched the gesture. Progress is now driven directly by scroll
-// position: the composition is always exactly where the reader put it, at any speed, in either direction.
-//
-// The value is set on the element rather than through React state so a fast scroll does not queue a render
-// per frame. Reduced motion pins it to 1 and never listens.
-function useScrollProgress(ref: RefObject<HTMLElement | null>) {
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      el.style.setProperty("--p", "1");
-      return;
-    }
-    let raf = 0;
-    const read = () => {
-      raf = 0;
-      if (!el.offsetParent) return;
-      const r = el.getBoundingClientRect();
-      const total = r.height - window.innerHeight;
-      if (total <= 0) return;
-      const p = Math.min(1, Math.max(0, -r.top / total));
-      el.style.setProperty("--p", p.toFixed(4));
-    };
-    const onScroll = () => { if (!raf) raf = requestAnimationFrame(read); };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, [ref]);
-}
-
 /** Marks a node "seen" once and never unsets it, for compositions that accumulate. */
 function useSeen(root: RefObject<HTMLElement | null>, total: number) {
   const [seen, setSeen] = useState(0);
@@ -163,37 +126,18 @@ const ACTS: [string, string][] = [
 
 export function SystemMap() {
   const wrap = useRef<HTMLDivElement>(null);
-  useScrollProgress(wrap);
-  // The focus index is computed here rather than in CSS. Deriving it from clamp()/max() over custom
-  // properties silently failed to resolve and every act rendered at full opacity on top of the others.
   const [act, setAct] = useState(0);
-  useEffect(() => {
-    const el = wrap.current;
-    if (!el) return;
-    let raf = 0;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const read = () => {
-      raf = 0;
-      if (!el.offsetParent) return;
-      const r = el.getBoundingClientRect();
-      const total = r.height - window.innerHeight;
-      if (total <= 0) return;
-      const p = Math.min(0.9999, Math.max(0, -r.top / total));
-      // Tied to the dwells in --pan: the sentence changes at the midpoint of each travel, so it is already
-      // correct by the time the region it describes comes to rest. Reading raw --p here put the last
-      // sentence up at the moment the chapter scrolled away.
-      setAct(p < 0.24 ? 0 : p < 0.69 ? 1 : 2);
-    };
-    const onScroll = () => { if (!raf) raf = requestAnimationFrame(read); };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, []);
+  const lastAct = useRef(0);
+  // The act index derives from the same RENDERED progress that drives the pan, inside the engine's frame
+  // callback, so the sentence and the environment can never disagree. React state changes twice on the
+  // whole chapter; every frame in between is CSS only.
+  useScrollProgress(wrap, {
+    onFrame: (p) => {
+      // matches the dwell schedule in chapters.css: the sentence changes at the midpoint of each travel
+      const next = p < 0.24 ? 0 : p < 0.69 ? 1 : 2;
+      if (next !== lastAct.current) { lastAct.current = next; setAct(next); }
+    },
+  });
   return (
     <section className="v6-cs" data-nav-dark data-nav-theme="dark" data-act={act} ref={wrap}>
       <div className="v6-cs__pin">
@@ -388,7 +332,7 @@ export function Proof() {
           <div className="v6-pf__dec">
             <p className="v6-pf__dh">Decision</p>
             <p className="v6-pf__verd">Verified</p>
-            <p className="v6-pf__dn">Both earlier failures stay on the record.</p>
+            <p className="v6-pf__dn">Decided on the evidence of the third run.</p>
           </div>
         </div>
       </div>
@@ -649,8 +593,12 @@ export function Reach() {
 export function Knowledge() {
   const recent = CHANGELOG.slice(0, 5);
   const doc = DOCS.find((d) => d.slug === "completion")!;
+  // Entry progress, not a threshold: the Method statement resolves through one spectral pass as the
+  // section rises into view, scrubbing in both directions with the reader's exact scroll position.
+  const root = useRef<HTMLElement>(null);
+  useScrollProgress(root, { measure: entryProgress(0.92) });
   return (
-    <section className="v6-kn" data-nav-theme="light">
+    <section className="v6-kn" data-nav-theme="light" ref={root}>
       <div className="v6-kn__in">
         <p className="v6-eyebrow v6-kn__eyebrow">Written down</p>
 
@@ -659,7 +607,9 @@ export function Knowledge() {
           <Link href={`${BASE}/method`} className="v6-kn__sheet">
             <p className="v6-kn__run"><span>The Vraelis Method</span><span>Position 3 of 8</span></p>
             <blockquote className="v6-kn__q">
-              An agent that plans, writes, and repairs the work will also tell you it is finished.
+              <Spectral sv="clamp(0, calc((var(--p) - 0.18) / 0.78), 1)">
+                An agent that plans, writes, and repairs the work will also tell you it is finished.
+              </Spectral>
             </blockquote>
             <p className="v6-kn__qp">
               A test written inside the system inherits the same assumptions the mistake came from.
