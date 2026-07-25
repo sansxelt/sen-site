@@ -90,6 +90,11 @@ export default async function RootLayout({
       <html
         lang="en"
         data-theme="light"
+        // The site sets `html { scroll-behavior: smooth }` on purpose, for in-page anchors. Next 16 will only
+        // suppress that during its own router scroll-to-top if this attribute is present; without it the
+        // router animates the full distance instead of jumping, and it logs a warning saying so. Declaring it
+        // keeps anchors smooth and makes route transitions instant, with no custom workaround to maintain.
+        data-scroll-behavior="smooth"
         // Paint the warm-paper floor (--bg-0) inline so the canvas is cream from the
         // first frame. The Vraelis palette is set by external stylesheets loaded below
         // (and a legacy dark tokens.css loads first), so without this the bare canvas

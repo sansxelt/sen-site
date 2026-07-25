@@ -366,23 +366,44 @@ const useBeforePaint = typeof window === "undefined" ? useEffect : useLayoutEffe
 
 export function RouteTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  // Every route entry starts at the top.
+  // THE HOMEPAGE always opens at the top. Every other v6 route keeps normal scroll restoration.
   //
-  // On a client-side navigation the document never changes, so the new route mounts at the scroll offset
-  // carried over from the previous one. Returning to the homepage from the bottom of /platform mounted it
-  // at y=9435 of a 15621px page. The reset below was written as window.scrollTo(0, 0), which does NOT jump:
-  // app/globals.css sets `html { scroll-behavior: smooth }`, so it animated all the way up instead, taking
-  // 1488ms across 344 intermediate positions and dragging the reader backwards through the pinned chapters.
-  // The intended override in v6.css cannot help, because it is `.v6 *` and html is an ancestor of .v6.
+  // The homepage is ~15600px of scroll-position-driven pinned chapters, so arriving part way down it is not
+  // a small blemish: it drops the reader into the middle of a chapter. On a client-side navigation the
+  // document never changes, so the route mounts at the offset carried over from the page before it, which
+  // measured y=9435 coming back from the foot of /platform.
   //
-  // `behavior: "instant"` overrides the CSS value for this one call, so route entry is a single-frame jump
-  // while in-page anchor links keep their smooth glide.
+  // Two things this deliberately does NOT do:
+  //
+  //   It does not use window.scrollTo(0, 0). app/globals.css sets `html { scroll-behavior: smooth }` for
+  //   in-page anchors, which turns that call into an animation: 1488ms across 344 intermediate positions,
+  //   replaying the pinned chapters backwards. `behavior: "instant"` overrides the CSS for this one call
+  //   and leaves anchor links smooth.
+  //
+  //   It does not force the top on inner routes. Doing that clobbered Back on /docs, /method and /platform,
+  //   which should return the reader where they were.
+  //
+  // scrollRestoration is a browser-global that sticks to the history entry it was set on, so it is written
+  // on every pathname change rather than once: "manual" only while the homepage is the entry being forced
+  // to the top, "auto" everywhere else and on the way out, so it is never left switched off behind us.
   useBeforePaint(() => {
-    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
-    // A hash names a position the reader asked for, so it is left alone. Without this the anchor scroll
-    // started and was then pulled back to the top, and #gap never landed.
-    if (window.location.hash) return;
+    const canRestore = "scrollRestoration" in history;
+    // Exact match, not a prefix: /dev-preview/v6/platform must not be treated as the homepage.
+    const isHome = pathname === BASE || pathname === BASE + "/";
+    // A hash names a position the reader asked for. Without this guard the anchor scroll started and was
+    // then pulled back to the top, so /dev-preview/v6#gap never landed.
+    const wantsTop = isHome && !window.location.hash;
+
+    if (!wantsTop) {
+      if (canRestore) history.scrollRestoration = "auto";
+      return;
+    }
+
+    if (canRestore) history.scrollRestoration = "manual";
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+
+    // Runs once the pathname has already moved on, so this hands "auto" to the entry we are leaving for.
+    return () => { if (canRestore) history.scrollRestoration = "auto"; };
   }, [pathname]);
   return <div key={pathname} className="v6-page">{children}</div>;
 }
