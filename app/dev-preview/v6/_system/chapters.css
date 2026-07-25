@@ -16,32 +16,43 @@
 /* CONTINUOUS DEVELOPMENT, ONE STATE AT A TIME.
    --p runs 0..1 with scroll. Every traveller owns a trajectory through one shared, CENTRED space.
 
-   ONE STATE IS LEGIBLE AT A TIME. Two earlier attempts still left pairs on screen together: first all
-   four, then the observations sitting at 45% underneath a fully resolved verdict. Every state now reaches
-   zero opacity and travels out of the frame before the next one is dominant, so the chapter reads as a
-   sequence of single statements rather than a stack:
+   ONE STATE AT A TIME, AND NO CROSS-FADE. Three earlier attempts each left two states on screen at once:
+   all four together, then the observations at 45% under a resolved verdict, then a genuine cross-fade
+   where the outgoing and incoming statements were both half-transparent in the same optical space and
+   blended into mush.
 
-     0.00-0.20  the claim establishes, holds, and the strike develops
-     0.20-0.38  the claim rises, clears completely, and hands to "Complete is a claim."
-     0.30-0.44  the systems it crossed travel up into the centre
-     0.48-0.60  the systems leave entirely
-     0.54-0.68  the observations take the centre alone
-     0.72-0.84  the observations leave entirely
-     0.78-0.90  the verdict owns the frame by itself
-     0.90-1.00  resolved, with only a slow settle continuing
+   Strictly disjoint opacity was tried and was worse: it produced a dead frame at every boundary where the
+   outgoing had gone and the incoming had not arrived. SEPARATION IS SPATIAL, NOT TEMPORAL. Each outgoing
+   statement travels a full 60vh upward, clearing the viewport entirely, while the incoming one rises from
+   only ~17vh below centre. The brief opacity overlap that keeps the frame alive therefore happens with
+   the two statements more than half a viewport apart, so they can never occupy the same optical space and
+   cannot blend into each other.
+
+   The ramps are deliberately steep. A gentle fade meant the incoming statement drifted in at low opacity
+   for a long stretch, which left the frame looking thin even though nothing was blending. Each statement
+   now reaches full strength within 8 or 9 percent of the chapter.
+
+     0.00-0.17  the claim establishes and the strike develops
+     0.17-0.26  the claim rises 60vh and clears the frame
+     0.23-0.31  the systems it crossed rise into the centre
+     0.47-0.54  the systems leave upward
+     0.51-0.59  the observations take the centre
+     0.75-0.81  the observations leave upward
+     0.78-0.86  the verdict resolves
+     0.90-1.00  settled
 
    Centred: the stage is a narrow measure in the middle of the viewport and every traveller is
    text-align: center, so the chapter reads as one column rather than a left-hung block. */
 .v6-gap { position: relative; height: 520vh; background: var(--paper); --p: 0;
-  --claim:   clamp(0, calc((var(--p) - 0.20) / 0.18), 1);   /* 20 -> 38 */
-  --strike:  clamp(0, calc((var(--p) - 0.06) / 0.16), 1);   /* 06 -> 22 */
-  --turn:    clamp(0, calc((var(--p) - 0.16) / 0.12), 1);   /* 16 -> 28 */
-  --sys:     clamp(0, calc((var(--p) - 0.30) / 0.14), 1);   /* 30 -> 44 */
-  --sysout:  clamp(0, calc((var(--p) - 0.48) / 0.12), 1);   /* 48 -> 60, gone before the observations land */
-  --found:   clamp(0, calc((var(--p) - 0.54) / 0.14), 1);   /* 54 -> 68 */
-  --foundout:clamp(0, calc((var(--p) - 0.72) / 0.12), 1);   /* 72 -> 84, gone before the verdict is dominant */
-  --verdict: clamp(0, calc((var(--p) - 0.78) / 0.12), 1);   /* 78 -> 90 */
-  --settle:  clamp(0, calc((var(--p) - 0.90) / 0.10), 1);   /* 90 -> 100 */
+  --claim:   clamp(0, calc((var(--p) - 0.17) / 0.09), 1);   /* 17 -> 26 out */
+  --strike:  clamp(0, calc((var(--p) - 0.06) / 0.14), 1);   /* 06 -> 20      */
+  --turn:    clamp(0, calc((var(--p) - 0.09) / 0.07), 1);   /* 09 -> 16      */
+  --sys:     clamp(0, calc((var(--p) - 0.23) / 0.08), 1);   /* 23 -> 31 in   */
+  --sysout:  clamp(0, calc((var(--p) - 0.47) / 0.07), 1);   /* 47 -> 54 out  */
+  --found:   clamp(0, calc((var(--p) - 0.51) / 0.08), 1);   /* 51 -> 59 in   */
+  --foundout:clamp(0, calc((var(--p) - 0.75) / 0.06), 1);   /* 75 -> 81 out  */
+  --verdict: clamp(0, calc((var(--p) - 0.78) / 0.08), 1);   /* 78 -> 86 in   */
+  --settle:  clamp(0, calc((var(--p) - 0.90) / 0.10), 1);   /* 90 -> 100     */
 }
 .v6-gap__pin { position: sticky; top: 0; height: 100svh; overflow: hidden;
   padding: calc(var(--nav-h, 66px) + 2vh) var(--gutter) 4vh; }
@@ -62,11 +73,11 @@
   opacity: calc(var(--turn) * (1 - var(--claim))); }
 
 /* the claim: holds the centre, then rises and shrinks as it loses authority */
-.v6-gap__claim { transform: translateY(calc(-50% - var(--claim) * 26vh - var(--settle) * 2vh))
-  scale(calc(1 - 0.42 * var(--claim))); opacity: calc(1 - var(--claim)); }
+.v6-gap__claim { transform: translateY(calc(-50% - var(--claim) * 60vh))
+  scale(calc(1 - 0.38 * var(--claim))); opacity: calc(1 - var(--claim)); }
 
 /* the systems: travel up into the centre the claim vacated, then clear for the observations */
-.v6-gap__sys { transform: translateY(calc(38vh - var(--sys) * 40vh - var(--sysout) * 30vh));
+.v6-gap__sys { transform: translateY(calc(12vh - var(--sys) * 14vh - var(--sysout) * 62vh));
   opacity: calc(var(--sys) * (1 - var(--sysout))); }
 .v6-gap__syslist { list-style: none; margin: clamp(14px, 2vh, 22px) 0 0; padding: 0;
   display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 14px; }
@@ -74,7 +85,7 @@
   border: 1px solid var(--line-2); border-radius: 999px; padding: 9px 20px; }
 
 /* the observations: take the centre, hold it, then lift as the verdict resolves beneath */
-.v6-gap__found { transform: translateY(calc(44vh - var(--found) * 50vh - var(--foundout) * 26vh));
+.v6-gap__found { transform: translateY(calc(13vh - var(--found) * 19vh - var(--foundout) * 62vh));
   opacity: calc(var(--found) * (1 - var(--foundout))); }
 .v6-gap__found .v6-gap__label { color: var(--stop-ink); }
 .v6-gap__list { list-style: none; margin: clamp(14px, 2.2vh, 26px) 0 0; padding: 0;
@@ -84,7 +95,7 @@
 /* the consequence: arrives beneath the observations and resolves */
 /* resolves just above the optical centre, matching where the observations rested, rather than sitting low
    in the lower third of the frame */
-.v6-gap__verdictwrap { transform: translateY(calc(34vh - var(--verdict) * 42vh - var(--settle) * 1.5vh));
+.v6-gap__verdictwrap { transform: translateY(calc(12vh - var(--verdict) * 20vh - var(--settle) * 1.5vh));
   opacity: var(--verdict); }
 .v6-gap__verdict { font-family: var(--sans); font-weight: 600; letter-spacing: -0.04em; line-height: 1;
   font-size: clamp(1.9rem, 4.6vw, 3.4rem); color: var(--stop); margin: 0; }
