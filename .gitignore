@@ -73,3 +73,9 @@ scripts/apikey-audit.ts
 test-results/
 playwright-report/
 playwright/.cache/
+
+# Local design-review workspace: screenshots and screen recordings produced while verifying a
+# redesign. Evidence for a review, not source, and ~16MB per pass.
+review/
+.playwright-cli/
+.playwright/

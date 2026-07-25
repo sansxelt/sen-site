@@ -1,9 +1,14 @@
 /* ============================================================================
-   Vraelis public site, design 06. Framing: oversight for AI software agents,
-   from assigned responsibility to trusted completion. Scoped under .v6.
-   Grammar: LIGHT surfaces carry company framing, knowledge, memory, research;
-   GRAPHITE surfaces carry live agent work, execution, evidence, findings,
-   consequential decisions. A three-signal system: trusted / review / stopped.
+   Vraelis public site, design 06. Scoped under .v6.
+
+   The company category is provisional and is NOT stated here: every positioning
+   string lives in _system/positioning.ts. This file owns the visual grammar only.
+
+   Grammar: LIGHT surfaces (warm stone) carry company framing, knowledge, memory
+   and research; GRAPHITE surfaces carry runs, evidence, findings and
+   consequential decisions, and mark themselves [data-nav-dark]. Brand is indigo.
+   Colour ONLY ever carries state: green means it held, amber means a person is
+   needed, red means it failed. Nothing decorative is allowed to use them.
    ============================================================================ */
 
 .v6 {
@@ -14,7 +19,9 @@
   --ink:     #14161A;   /* deep ink headings */
   --ink-2:   #33373E;   /* body, ~11:1 on stone */
   --ink-3:   #5A5F68;   /* secondary, ~6.3:1 */
-  --ink-4:   #6E7480;   /* meta, ~4.9:1 (AA) */
+  --ink-4:   #61666F;   /* meta. 5.4:1 on paper, 4.8:1 on the sunk band. The old #6E7480 measured
+                           4.9:1 only against pure white; on the warm stone grounds it actually landed at
+                           4.27:1 (paper) and 3.77:1 (sunk), so every label, date and caption using it failed. */
   --line:    rgba(20,22,26,0.11);
   --line-2:  rgba(20,22,26,0.18);
 
@@ -79,7 +86,6 @@
 .v6-dark { background: var(--graphite); color: var(--g-fg-2); }
 .v6-dark :is(h1,h2,h3,h4) { color: var(--g-fg); }
 .v6-dark .v6-lead { color: var(--g-fg-2); }
-.v6-dark .v6-eyebrow { color: var(--go-dk); }
 .v6-dark .v6-kicker { color: var(--g-fg-3); }
 
 /* ------------------------------------------------------------ typography --- */
@@ -128,13 +134,28 @@
 .v6-sig--go   { color: var(--go-ink);   background: rgba(14,158,108,0.10); border: 1px solid rgba(14,158,108,0.26); }
 .v6-sig--wait { color: var(--wait-ink); background: rgba(183,121,31,0.10); border: 1px solid rgba(183,121,31,0.28); }
 .v6-sig--stop { color: var(--stop-ink); background: rgba(181,72,43,0.10);  border: 1px solid rgba(181,72,43,0.26); }
-.v6-dark .v6-sig--go   { color: var(--go-dk);   background: rgba(52,211,153,0.12); border-color: rgba(52,211,153,0.32); }
-.v6-dark .v6-sig--wait { color: var(--wait-dk); background: rgba(240,180,74,0.12); border-color: rgba(240,180,74,0.32); }
-.v6-dark .v6-sig--stop { color: var(--stop-dk); background: rgba(240,113,79,0.12); border-color: rgba(240,113,79,0.32); }
+/* Keyed off [data-nav-dark] as well as .v6-dark. Every graphite surface already marks itself with that
+   attribute so the nav can flip over it, which makes it the reliable signal for "this ground is dark". The
+   closing scene is graphite but carries no .v6-dark class, so its Shipped pill was rendering the light-surface
+   treatment on graphite at 2.16:1. Binding to the attribute fixes it there and for any graphite section added
+   later, without each one having to remember to opt in twice. */
+.v6-dark .v6-sig--go,   [data-nav-dark] .v6-sig--go   { color: var(--go-dk);   background: rgba(52,211,153,0.12); border-color: rgba(52,211,153,0.32); }
+.v6-dark .v6-sig--wait, [data-nav-dark] .v6-sig--wait { color: var(--wait-dk); background: rgba(240,180,74,0.12); border-color: rgba(240,180,74,0.32); }
+.v6-dark .v6-sig--stop, [data-nav-dark] .v6-sig--stop { color: var(--stop-dk); background: rgba(240,113,79,0.12); border-color: rgba(240,113,79,0.32); }
 
 /* --------------------------------------------------------------- cards ----- */
 .v6-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: clamp(20px,2.2vw,28px); }
 .v6-card--sunk { background: var(--sunk); border-color: transparent; }
+
+/* Skip link: off-canvas until it takes focus, then it lands as a real button above the nav. */
+.v6-skip { position: fixed; top: 8px; left: 8px; z-index: 100; transform: translateY(-160%);
+  background: var(--ink); color: #fff; font-family: var(--sans); font-size: 14px; font-weight: 600;
+  padding: 12px 18px; border-radius: 8px; text-decoration: none;
+  transition: transform 160ms var(--ease-out); }
+/* :focus, not :focus-visible. The link is only ever reachable by keyboard, and relying on the heuristic left
+   it parked off-canvas in testing, which is the one failure mode a skip link cannot have. */
+.v6-skip:focus { transform: none; outline: 2px solid var(--brand-dk); outline-offset: 2px; }
+.v6 main:focus { outline: none; }
 
 /* ================================================================ NAV ====== */
 .v6-nav { position: sticky; top: 0; z-index: 60; }
@@ -143,17 +164,25 @@
   transition: background 260ms ease, border-color 260ms ease, backdrop-filter 260ms ease; }
 .v6-nav[data-scrolled="true"] .v6-nav__in { background: rgba(247,247,244,0.9); backdrop-filter: blur(16px) saturate(1.3); -webkit-backdrop-filter: blur(16px) saturate(1.3); border-bottom-color: var(--line); }
 .v6-nav[data-theme="dark"] .v6-nav__in { background: rgba(15,19,25,0.78); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom-color: var(--g-line); }
-.v6-nav[data-open="true"] .v6-nav__in { background: rgba(247,247,244,0.96); backdrop-filter: blur(16px); border-bottom-color: transparent; }
-.v6-brand { font-family: var(--sans); font-weight: 700; font-size: 21px; letter-spacing: -0.035em; color: var(--ink); text-decoration: none; line-height: 1; display: inline-flex; align-items: center; padding-right: 12px; }
+.v6-nav[data-open="true"] .v6-nav__in { background: rgba(247,247,244,0.96); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom-color: transparent; }
+/* The wordmark is the largest thing in the bar by a clear margin (roughly 2x the nav links) and it is the
+   axis everything else is centred on. It never wraps and never shrinks, and the bar's own height is still set
+   by the taller button, so growing the type does not grow the header or push a link off the edge.
+   Wordmark only: no icon beside it. */
+.v6-brand { font-family: var(--sans); font-weight: 700; font-size: clamp(25px, 2.1vw, 34px);
+  letter-spacing: -0.038em; color: var(--ink); text-decoration: none; line-height: 1; white-space: nowrap;
+  display: inline-flex; align-items: center; flex: none; padding-right: 16px;
+  /* optical: "Vraelis" carries no descender, so its glyph box sits a touch high on the shared centre line */
+  transform: translateY(0.02em); }
 .v6-nav[data-theme="dark"] .v6-brand { color: var(--g-fg); }
-.v6-nav__items { display: flex; align-items: center; gap: 2px; }
+.v6-nav__items { display: flex; align-items: center; gap: 2px; min-width: 0; }
 .v6-nav__item { font-size: 14.5px; font-weight: 500; color: var(--ink-3); text-decoration: none; white-space: nowrap; background: none; border: 0; cursor: pointer; font-family: var(--sans); padding: 8px 12px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; transition: color 160ms ease, background 160ms ease; }
 .v6-nav__item:hover, .v6-nav__item[aria-current="page"], .v6-nav__item[aria-expanded="true"] { color: var(--ink); background: rgba(23,24,28,0.05); }
 .v6-nav[data-theme="dark"] .v6-nav__item { color: var(--g-fg-2); }
 .v6-nav[data-theme="dark"] .v6-nav__item:hover, .v6-nav[data-theme="dark"] .v6-nav__item[aria-expanded="true"] { color: var(--g-fg); background: rgba(255,255,255,0.07); }
 .v6-nav__caret { width: 8px; height: 8px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg) translate(-1px,-1px); opacity: 0.6; transition: transform 200ms var(--ease); }
 .v6-nav__item[aria-expanded="true"] .v6-nav__caret { transform: rotate(-135deg) translate(-1px,-1px); }
-.v6-nav__right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.v6-nav__right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex: none; }
 .v6-nav__signin { font-size: 14.5px; font-weight: 500; color: var(--ink-3); text-decoration: none; padding: 8px 12px; white-space: nowrap; }
 .v6-nav__signin:hover { color: var(--ink); }
 .v6-nav[data-theme="dark"] .v6-nav__signin { color: var(--g-fg-2); } .v6-nav[data-theme="dark"] .v6-nav__signin:hover { color: var(--g-fg); }
@@ -162,6 +191,28 @@
 .v6-nav[data-theme="dark"] .v6-btn:hover { background: #fff; border-color: #fff; }
 .v6-nav__burger { display: none; width: 40px; height: 40px; border-radius: 9px; border: 1px solid var(--line-2); background: var(--surface); color: var(--ink); align-items: center; justify-content: center; cursor: pointer; }
 .v6-nav[data-theme="dark"] .v6-nav__burger { background: rgba(255,255,255,0.06); border-color: var(--g-line); color: var(--g-fg); }
+
+/* Resources open: the bar is sitting directly on the panel's light ground, so the WHOLE bar takes the light
+   treatment regardless of which section is behind it. Previously only the background switched while the
+   foreground colours stayed on their dark-section values, so opening the menu anywhere over graphite left the
+   wordmark and every nav link invisible against the bar's own background.
+   These rules must stay BELOW the entire [data-theme="dark"] block: the two selectors have identical
+   specificity, so source order is the only thing that decides which one wins. */
+.v6-nav[data-open="true"] .v6-brand { color: var(--ink); }
+.v6-nav[data-open="true"] .v6-nav__item { color: var(--ink-3); }
+.v6-nav[data-open="true"] .v6-nav__item:hover,
+.v6-nav[data-open="true"] .v6-nav__item[aria-current="page"],
+.v6-nav[data-open="true"] .v6-nav__item[aria-expanded="true"] { color: var(--ink); background: rgba(23,24,28,0.05); }
+.v6-nav[data-open="true"] .v6-nav__signin { color: var(--ink-3); }
+.v6-nav[data-open="true"] .v6-nav__signin:hover { color: var(--ink); }
+.v6-nav[data-open="true"] .v6-btn { background: var(--brand); border-color: var(--brand); color: #fff; }
+.v6-nav[data-open="true"] .v6-btn:hover { background: var(--brand-ink); border-color: var(--brand-ink); }
+/* Focus ring is brand indigo, never a signal colour, and is stated for each bar treatment. */
+.v6-nav__item:focus-visible, .v6-nav__signin:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 8px; }
+.v6-nav[data-theme="dark"] .v6-nav__item:focus-visible,
+.v6-nav[data-theme="dark"] .v6-nav__signin:focus-visible { outline-color: var(--brand-dk); }
+.v6-nav[data-open="true"] .v6-nav__item:focus-visible,
+.v6-nav[data-open="true"] .v6-nav__signin:focus-visible { outline-color: var(--brand); }
 
 /* mega-menu */
 .v6-mega { position: absolute; top: 100%; left: 0; right: 0; z-index: 55; }
@@ -197,33 +248,24 @@
 .v6-drawer__cta { margin-top: 24px; display: flex; flex-direction: column; gap: 10px; }
 .v6-drawer__cta .v6-btn { justify-content: center; }
 
-/* ============================================================== FOOTER ===== */
-.v6-foot { border-top: 1px solid var(--line); background: var(--sunk); }
-.v6-foot__grid { display: grid; grid-template-columns: 1.5fr repeat(4, 1fr); gap: clamp(24px,2.6vw,44px); padding: clamp(48px,5vw,76px) var(--gutter) clamp(24px,2.4vw,36px); }
-.v6-foot__blurb { font-size: 13.5px; color: var(--ink-3); line-height: 1.6; max-width: 250px; margin: 14px 0 16px; }
-.v6-foot__soc { display: flex; gap: 8px; }
-.v6-foot__soc a { width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--line-2); background: var(--surface); display: grid; place-items: center; color: var(--ink-3); text-decoration: none; transition: color 150ms, border-color 150ms; }
-.v6-foot__soc a:hover { color: var(--ink); border-color: var(--ink); }
-.v6-foot__col { display: flex; flex-direction: column; gap: 8px; }
-.v6-foot__h { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-4); margin-bottom: 4px; }
-.v6-foot__col a { font-size: 13.5px; color: var(--ink-3); text-decoration: none; display: inline-flex; align-items: center; min-height: 24px; }
-.v6-foot__col a:hover { color: var(--ink); }
-.v6-foot__base { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 20px var(--gutter); border-top: 1px solid var(--line); }
-.v6-foot__base span, .v6-foot__base a { font-size: 12.5px; color: var(--ink-4); }
-.v6-foot__base a { color: var(--brand-ink); text-decoration: none; }
-
+/* The v1 footer (.v6-foot*) lived here. The institutional footer in close.css (.v6-foot2*) replaced it in
+   phase 1 and no v6 route renders the old markup any more, so these rules are deleted rather than left to
+   rot and be copied forward by mistake. */
 @media (max-width: 940px) {
   .v6-nav__items, .v6-nav__signin { display: none; }
   .v6-nav__burger { display: inline-flex; }
-  .v6-foot__grid { grid-template-columns: 1fr 1fr; }
-  .v6-foot__brandcol { grid-column: 1 / -1; }
 }
-@media (max-width: 560px) { .v6-foot__grid { grid-template-columns: 1fr 1fr; } .v6-drawer__sub-links { grid-template-columns: 1fr; } }
+@media (max-width: 560px) {
+  .v6-drawer__sub-links { grid-template-columns: 1fr; }
+  /* Keep the enlarged wordmark AND both controls on one line down to 320px: the button gives back the
+     padding rather than the wordmark giving back its size. */
+  .v6-nav .v6-btn { padding: 8px 12px; }
+  .v6-brand { padding-right: 10px; }
+}
 /* Touch targets: editorial links and footer links are text-height on desktop, which is under the 44px touch
    guidance on a phone. Grow the hit area vertically without moving the text. */
 @media (max-width: 640px) {
   .v6-elink { min-height: 44px; }
-  .v6-foot__col a { min-height: 40px; }
   .v6-drawer__sub-links a { min-height: 40px; }
 }
 

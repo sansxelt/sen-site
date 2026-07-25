@@ -73,7 +73,33 @@
 .v6-clog__b { font-size: 1rem; line-height: 1.6; color: var(--ink-2); }
 .v6-clog__b p { margin: 0 0 12px; }
 
+/* ---------------------------------------------------------------------------
+   Two-up comparison block and the card index. These started life as homepage
+   compositions; the homepage no longer uses either, but /research and /company
+   do, so they live in the shared page kit rather than in home.css.
+   --------------------------------------------------------------------------- */
+.v6-cn { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--surface); border: 1px solid var(--line-2); border-radius: 14px; overflow: hidden; }
+.v6-cn__col { background: var(--surface); padding: clamp(22px,2.6vw,32px); box-shadow: 0 0 0 1px var(--line-2); }
+.v6-cn__col--next { background: var(--sunk); }
+.v6-cn__h { margin: 0 0 16px; }
+.v6-cn__col ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 11px; }
+.v6-cn__col li { display: flex; gap: 10px; font-size: 15px; line-height: 1.45; color: var(--ink-2); }
+.v6-cn__col li::before { content: ""; flex: none; width: 6px; height: 6px; border-radius: 999px; margin-top: 8px; background: var(--brand); }
+.v6-cn__col--next li { color: var(--ink-3); }
+.v6-cn__col--next li::before { background: transparent; border: 1px solid var(--ink-4); }
+
+.v6-know { margin-top: clamp(36px,4vw,52px); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%,216px),1fr)); gap: 14px; align-items: stretch; }
+/* equal card heights: the reveal wrapper sits between the grid and the card, so without this the cards had
+   ragged bottoms */
+.v6-know > .v6-reveal { height: 100%; }
+.v6-know__card { position: relative; display: block; height: 100%; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px; text-decoration: none; transition: border-color 160ms var(--ease); }
+.v6-know__card:hover { border-color: var(--ink-4); }
+.v6-know__t { font-size: 1.12rem; font-weight: 600; color: var(--ink); letter-spacing: -0.015em; margin: 0 0 6px; }
+.v6-know__d { font-size: 13px; color: var(--ink-3); margin: 0; line-height: 1.5; max-width: 22ch; }
+.v6-know__go { position: absolute; top: 20px; right: 20px; color: var(--brand-ink); }
+
 @media (max-width: 940px) {
+  .v6-cn { grid-template-columns: 1fr; }
   /* Content first on small screens. The sidebar previously ate ~52% of the viewport above the article, so a
      reader landing on a docs page saw navigation and no content. */
   .v6-docs { grid-template-columns: 1fr; }

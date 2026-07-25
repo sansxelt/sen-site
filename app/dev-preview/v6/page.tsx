@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
 import Home from "./home";
 import { v6meta } from "./_system/meta";
+import { META_TITLE, META_DESCRIPTION, OG_TITLE, OG_DESCRIPTION } from "./_system/positioning";
 
 export const metadata: Metadata = {
+  // Positioning strings are provisional and centralized in _system/positioning.ts. Change them there.
   ...v6meta({
-    title: "Vraelis | Oversight for AI software agents",
-    description:
-      "Vraelis follows AI software agents from assigned responsibility to trusted completion, surfacing uncertainty, evidence, decisions, repairs, and what the company learns.",
+    title: META_TITLE,
+    description: META_DESCRIPTION,
     path: "/",
-    ogTitle: "Give AI agents responsibility without giving up control.",
-    ogDescription:
-      "Vraelis provides independent oversight for AI software work across planning, execution, review, repair, and trusted completion.",
+    ogTitle: OG_TITLE,
+    ogDescription: OG_DESCRIPTION,
   }),
   // Absolute so the homepage title is not suffixed by the site template (avoids a doubled "Vraelis").
-  title: { absolute: "Vraelis | Oversight for AI software agents" },
+  title: { absolute: META_TITLE },
 };
 
 export default function Page() {

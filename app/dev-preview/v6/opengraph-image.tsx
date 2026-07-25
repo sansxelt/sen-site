@@ -1,10 +1,13 @@
 import { ImageResponse } from "next/og";
+import { CATEGORY, OG_TITLE, OG_DESCRIPTION, OG_BEATS } from "./_system/positioning";
 
-// The new public link-preview image (Discord / Slack / X / LinkedIn / browser). 1200x630, graphite, with the
-// new category statement and a responsibility -> oversight -> trusted-completion flow. No checkout, no
-// verification card, no Production Pass, no dashboard, no fake customer. Next merges this across all v6 routes.
+// The public link-preview image (Discord / Slack / X / LinkedIn / browser). 1200x630, graphite. Composition,
+// colour, and layout are unchanged from phase 1. Only the text moved, and it no longer lives here: every
+// string is read from _system/positioning.ts, which is still provisional. That means the artwork cannot drift
+// out of step with the site when the category is settled, and settling it is one edit in one file.
+// No checkout, no verification card, no Production Pass, no dashboard, no fake customer.
 export const runtime = "nodejs";
-export const alt = "Vraelis | Oversight for AI software agents, from assigned responsibility to trusted completion";
+export const alt = `Vraelis. ${OG_TITLE} ${OG_DESCRIPTION}`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -35,24 +38,24 @@ export default function OG() {
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ fontSize: 40, fontWeight: 700, letterSpacing: -1.6 }}>Vraelis</div>
-          <div style={{ fontSize: 20, color: MUT, letterSpacing: 2, textTransform: "uppercase" }}>Oversight for AI software agents</div>
+          <div style={{ fontSize: 20, color: MUT, letterSpacing: 2, textTransform: "uppercase" }}>{CATEGORY}</div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 22, maxWidth: 940 }}>
           <div style={{ fontSize: 68, fontWeight: 600, lineHeight: 1.04, letterSpacing: -2.4, color: INK }}>
-            Give AI agents responsibility without giving up control.
+            {OG_TITLE}
           </div>
           <div style={{ fontSize: 27, color: MUT, lineHeight: 1.4, maxWidth: 820 }}>
-            Independent oversight across planning, execution, review, repair, and trusted completion.
+            {OG_DESCRIPTION}
           </div>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 26 }}>
-          <Node label="Assigned responsibility" tone={MUT} />
+          <Node label={OG_BEATS[0]} tone={MUT} />
           <div style={{ width: 46, height: 2, background: "rgba(255,255,255,0.22)" }} />
-          <Node label="Oversight" tone={AMBER} />
+          <Node label={OG_BEATS[1]} tone={AMBER} />
           <div style={{ width: 46, height: 2, background: "rgba(255,255,255,0.22)" }} />
-          <Node label="Trusted completion" tone={EMER} />
+          <Node label={OG_BEATS[2]} tone={EMER} />
         </div>
       </div>
     ),

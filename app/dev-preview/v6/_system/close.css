@@ -61,6 +61,17 @@
 .v6-foot2__base-in a:hover { color: var(--g-fg-2); }
 .v6-foot2__legal { display: flex; gap: 22px; flex-wrap: wrap; }
 
+/* Touch targets. These are text-height links on desktop, which is fine for a pointer and too small for a
+   thumb, so the hit area grows vertically on touch widths without moving the text. The old rules covered the
+   v1 footer's class names and therefore did nothing once this footer replaced it. */
+/* min-width too: the "X" link is a single glyph, so height alone left an 8px-wide target. */
+.v6-foot2__legal a { display: inline-flex; align-items: center; justify-content: center; min-height: 24px; min-width: 24px; }
+.v6-foot2__status { min-height: 28px; }
+@media (pointer: coarse), (max-width: 640px) {
+  .v6-foot2__legal a, .v6-foot2__status, .v6-foot2__base-in span { min-height: 44px; }
+  .v6-foot2__col a { min-height: 44px; }
+}
+
 @media (max-width: 940px) {
   .v6-foot2__upper { grid-template-columns: 1fr; gap: 28px; }
   .v6-foot2__lower { grid-template-columns: 1fr 1fr; gap: 26px 24px; }

@@ -1,137 +1,251 @@
-/* Homepage compositions for design 06. Scoped under .v6. */
-.v6-hero { padding-top: clamp(38px,5vw,76px); padding-bottom: clamp(52px,6vw,100px); }
-.v6-hero__grid { display: grid; grid-template-columns: minmax(0,0.9fr) minmax(0,1.1fr); gap: clamp(32px,4vw,66px); align-items: center; }
-.v6-hero__h1 { margin: 22px 0 0; font-size: clamp(2.3rem,4.1vw,3.7rem); }
-.v6-hero__turn { color: var(--ink-3); }
-.v6-hero__say { margin: 24px 0 0; max-width: 46ch; }
-.v6-hero__cta { margin-top: 32px; display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+/* ============================================================================
+   Homepage compositions, design 06 phase 2. Every scene below is its own
+   composition. None of them is a two-column text/interface split, none repeats
+   another's device, and colour still only ever carries state.
 
-.v6-console { background: linear-gradient(162deg, var(--graphite-3), var(--graphite)); border: 1px solid var(--g-line); border-radius: 16px; overflow: hidden; box-shadow: var(--sh-lg); color: var(--g-fg-2); }
-.v6-console__bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid var(--g-line); }
-.v6-console__grid { display: grid; grid-template-columns: 1.45fr 1fr; }
-.v6-console__main { padding: 20px; border-right: 1px solid var(--g-line); min-width: 0; }
-.v6-console__resp { padding-bottom: 15px; border-bottom: 1px solid var(--g-line); margin-bottom: 12px; }
-.v6-console__task { font-weight: 600; font-size: clamp(1.05rem,1.35vw,1.32rem); letter-spacing: -0.012em; color: var(--g-fg); line-height: 1.2; margin: 9px 0 0; }
-.v6-stream { display: flex; flex-direction: column; }
-/* Two rows at every width: the label and its signal on line one, the full detail wrapping beneath. The old
-   single-line layout ellipsised all six rows on desktop, so the hero's only media ended in "...". */
-.v6-stream__row { display: grid; grid-template-columns: 12px minmax(0,1fr) auto; column-gap: 10px; row-gap: 3px;
-  align-items: baseline; padding: 10px 0; border-top: 1px solid var(--g-line); }
-.v6-stream__row:first-child { border-top: none; }
-.v6-stream__dot { grid-row: 1; grid-column: 1; width: 7px; height: 7px; border-radius: 999px; background: var(--g-fg-3); align-self: center; }
-.v6-stream__dot.is-go { background: var(--go-dk); } .v6-stream__dot.is-wait { background: var(--wait-dk); } .v6-stream__dot.is-stop { background: var(--stop-dk); }
-.v6-stream__t { grid-row: 1; grid-column: 2; font-size: 13.5px; color: var(--g-fg); font-weight: 500; }
-.v6-stream__row .v6-sig { grid-row: 1; grid-column: 3; }
-.v6-stream__d { grid-row: 2; grid-column: 2 / -1; font-family: var(--mono); font-size: 12px; line-height: 1.45;
-  color: var(--g-fg-3); min-width: 0; white-space: normal; }
-.v6-stream__row .v6-sig { transform: scale(0.86); transform-origin: right center; }
-.v6-console__side { padding: 20px; display: flex; flex-direction: column; }
-.v6-console__track { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
-.v6-console__track li { display: flex; flex-direction: column; gap: 3px; }
-.v6-console__tk { font-family: var(--mono); font-size: 10px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--g-fg-3); }
-.v6-console__tv { font-size: 13px; color: var(--g-fg); line-height: 1.35; }
-.v6-console__decision { margin-top: auto; padding-top: 16px; }
+   Surface rhythm down the page:
+     hero graphite -> authority paper -> lifecycle graphite -> control sunk
+     -> engine paper -> distribution sunk -> memory paper -> knowledge sunk
+     -> closing graphite
+   ============================================================================ */
 
-.v6-versus { margin-top: clamp(36px,4vw,52px); display: grid; grid-template-columns: 1fr 1fr; gap: clamp(18px,2vw,28px); align-items: stretch; }
-.v6-versus__col { border-radius: 14px; padding: clamp(24px,2.6vw,34px); }
-.v6-versus__col--claim { background: var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; }
-.v6-versus__col--under { background: var(--graphite); color: var(--g-fg-2); }
-.v6-versus__col--under .v6-kicker { color: var(--g-fg-3); }
-.v6-versus__claim { font-weight: 600; font-size: clamp(1.6rem,2.6vw,2.3rem); letter-spacing: -0.02em; color: var(--ink); margin: 16px 0 auto; line-height: 1.1; }
-.v6-versus__note { font-size: 14px; color: var(--ink-3); margin: 18px 0 0; }
-.v6-versus__list { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
-.v6-versus__list li { display: flex; align-items: center; gap: 12px; font-size: 15px; color: var(--g-fg); }
-.v6-versus__dot { width: 8px; height: 8px; border-radius: 999px; background: var(--g-fg-3); flex: none; }
-.v6-versus__dot.is-go { background: var(--go-dk); } .v6-versus__dot.is-wait { background: var(--wait-dk); } .v6-versus__dot.is-stop { background: var(--stop-dk); }
+/* ═══════════════════════════════════════════════════════════════ AUTHORITY ══ */
+.v6-auth { padding-block: clamp(88px, 12vw, 168px); }
+.v6-auth__label { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-4); margin: 0; }
+.v6-auth__claim { position: relative; }
 
-.v6-life { margin-top: clamp(44px,5vw,68px); position: relative; display: grid; grid-template-columns: repeat(8, 1fr); align-items: start; }
-/* the spine stops at the last node instead of trailing past it into empty space */
-.v6-life__spine { position: absolute; left: 0; right: calc(100% / 8 - 7px); top: 33px; height: 2px; background: var(--g-line-2); }
-.v6-life__node { position: relative; padding-right: clamp(8px,1vw,16px); display: flex; flex-direction: column; }
-.v6-life__dot { position: relative; z-index: 1; display: block; width: 14px; height: 14px; border-radius: 999px; background: var(--graphite); border: 2px solid var(--g-fg-3); margin: 26px 0 16px; }
-.v6-life__dot.is-go { border-color: var(--go-dk); background: var(--go-dk); } .v6-life__dot.is-wait { border-color: var(--wait-dk); background: var(--wait-dk); } .v6-life__dot.is-stop { border-color: var(--stop-dk); background: var(--stop-dk); }
-.v6-life__n { font-family: var(--mono); font-size: 11px; color: var(--g-fg-3); }
-.v6-life__t { font-size: clamp(0.95rem,1.15vw,1.15rem); font-weight: 600; color: var(--g-fg); letter-spacing: -0.01em; margin: 5px 0 6px; }
-/* was 12.5px in --g-fg-3 on graphite, about 4.0:1 and under the AA floor */
-.v6-life__d { font-size: 14px; line-height: 1.5; color: var(--g-fg-2); margin: 0; }
+/* The claim, at the scale it was made with. The strike is a sibling of the word, not a child, so it keeps its
+   full strength while the word behind it recedes. The word only goes to 0.5, not to a whisper: it is still
+   content a person has to be able to read, and below that it drops under the large-text contrast floor. */
+.v6-auth__wordwrap { position: relative; display: inline-block; margin: clamp(10px, 1.6vw, 20px) 0 0; }
+.v6-auth__word { display: block;
+  font-family: var(--sans); font-weight: 600; letter-spacing: -0.05em; line-height: 0.9; color: var(--ink);
+  font-size: clamp(3.6rem, 13vw, 10.5rem);
+  transition: opacity 620ms var(--ease) 700ms; }
+.v6-auth__strike { position: absolute; left: -2%; right: -2%; top: 50%; height: clamp(3px, 0.5vw, 6px);
+  background: var(--stop); border-radius: 999px; transform: scaleX(0); transform-origin: 0 50%;
+  transition: transform 700ms cubic-bezier(0.65, 0, 0.2, 1) 560ms; }
+.v6-auth__claim.in .v6-auth__strike { transform: scaleX(1); }
+.v6-auth__claim.in .v6-auth__word { opacity: 0.5; }
 
-/* Container is the card colour, hairlines ride on the cells. Previously the container was --line and the
-   cells were opacity-0 reveal children, so the whole grid flashed as a solid grey slab while scrolling in. */
-.v6-surfaces { margin-top: clamp(40px,5vw,60px); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%,244px),1fr)); gap: 1px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
-.v6-surface { background: var(--surface); padding: clamp(22px,2.4vw,30px); box-shadow: 0 0 0 1px var(--line); }
-/* eighth cell closes the 4-column grid; without it position 08 rendered as a bare grey rectangle */
-.v6-surface--cta { display: flex; flex-direction: column; justify-content: center; gap: 12px; background: var(--sunk); }
-.v6-surface__k { font-family: var(--mono); font-size: 12px; color: var(--brand-ink); }
-.v6-surface__t { font-size: clamp(1.1rem,1.4vw,1.28rem); font-weight: 600; color: var(--ink); letter-spacing: -0.015em; margin: 10px 0 8px; }
-.v6-surface__d { font-size: 13.5px; line-height: 1.55; color: var(--ink-3); margin: 0; }
+.v6-auth__found { margin-top: clamp(38px, 5vw, 66px); padding-top: clamp(26px, 3vw, 40px);
+  border-top: 1px solid var(--line-2); }
+.v6-auth__list { list-style: none; margin: clamp(18px, 2.4vw, 30px) 0 0; padding: 0;
+  display: flex; flex-direction: column; gap: clamp(10px, 1.2vw, 16px); }
+.v6-auth__item { display: flex; align-items: baseline; gap: 16px; }
+.v6-auth__dot { width: 9px; height: 9px; border-radius: 999px; flex: none; align-self: center; }
+.v6-auth__dot.is-wait { background: var(--wait); } .v6-auth__dot.is-stop { background: var(--stop); }
+.v6-auth__t { font-family: var(--sans); font-weight: 500; letter-spacing: -0.018em; line-height: 1.24;
+  font-size: clamp(1.25rem, 2.5vw, 2.05rem); color: var(--ink); }
+.v6-auth__verdict { font-family: var(--sans); font-weight: 600; letter-spacing: -0.022em;
+  font-size: clamp(1.4rem, 2.9vw, 2.4rem); color: var(--stop-ink); margin: clamp(22px, 2.8vw, 34px) 0 0;
+  padding-top: clamp(18px, 2.2vw, 26px); border-top: 1px solid var(--line); }
+.v6-auth__say { font-size: clamp(1rem, 1.2vw, 1.16rem); line-height: 1.58; color: var(--ink-3);
+  margin: clamp(16px, 2vw, 24px) 0 0; max-width: 58ch; }
 
-.v6-verify { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(32px,4vw,64px); align-items: center; }
-.v6-proof { background: linear-gradient(160deg, var(--graphite-2), var(--graphite)); border: 1px solid var(--g-line); border-radius: 14px; padding: clamp(20px,2.2vw,28px); color: var(--g-fg-2); box-shadow: var(--sh-md); }
-.v6-proof__req { font-weight: 600; font-size: clamp(1.15rem,1.6vw,1.45rem); color: var(--g-fg); letter-spacing: -0.015em; line-height: 1.2; margin: 12px 0 18px; }
-.v6-proof__rows { display: flex; flex-direction: column; }
-.v6-proof__row { display: flex; justify-content: space-between; gap: 16px; padding: 11px 0; border-top: 1px solid var(--g-line); }
-.v6-proof__row:first-child { border-top: none; }
-.v6-proof__row span:first-child { color: var(--g-fg-3); font-family: var(--mono); font-size: 12.5px; }
-.v6-proof__v { color: var(--g-fg); font-weight: 500; font-size: 14px; }
-.v6-proof__v--stop { color: var(--stop-dk); } .v6-proof__v--go { color: var(--go-dk); }
-.v6-proof__foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--g-line); }
+/* ═════════════════════════════════════════════════════════ CONTROL CENTER ══ */
+.v6-cc__h { margin-top: 16px; }
+.v6-cc__lead { margin-top: 16px; }
+.v6-cc { margin-top: clamp(34px, 4vw, 54px); display: grid;
+  grid-template-columns: minmax(180px, 232px) minmax(0, 1fr); grid-template-rows: auto 1fr;
+  background: var(--graphite); border: 1px solid var(--graphite-3); border-radius: 16px; overflow: hidden;
+  box-shadow: var(--sh-lg); color: var(--g-fg-2); }
+/* Frame chrome: the environment is named and scoped, which is what turns a tab strip into a product. */
+.v6-cc__chrome { grid-column: 1 / -1; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  padding: 12px clamp(16px, 1.8vw, 22px); background: var(--graphite-3); border-bottom: 1px solid var(--g-line); }
+.v6-cc__host { font-size: 12px; color: var(--g-fg-2); }
+.v6-cc__ctx { font-size: 12px; color: var(--g-fg); background: rgba(255,255,255,0.08);
+  border: 1px solid var(--g-line-2); border-radius: 6px; padding: 3px 9px; }
+.v6-cc__count { margin-left: auto; font-size: 11px; color: var(--g-fg-3); }
+.v6-cc__rail { padding: 18px 12px; border-right: 1px solid var(--g-line); background: var(--graphite-2);
+  display: flex; flex-direction: column; gap: 1px; }
+.v6-cc__railh { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--g-fg-3);
+  margin: 0 0 8px; padding-inline: 12px; }
+.v6-cc__railh.is-soon { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--g-line); }
+.v6-cc__tab { appearance: none; border: 0; background: transparent; cursor: pointer; text-align: left;
+  font-family: var(--sans); font-size: 14.5px; font-weight: 500; color: var(--g-fg-2);
+  padding: 9px 12px; border-radius: 8px; min-height: 38px;
+  transition: color 140ms ease, background 140ms ease; }
+.v6-cc__tab:hover { color: var(--g-fg); background: rgba(255,255,255,0.05); }
+.v6-cc__tab[aria-selected="true"] { color: var(--graphite); background: var(--g-fg); font-weight: 600; }
+.v6-cc__tab.is-soon { color: var(--g-fg-3); }
+.v6-cc__tab.is-soon[aria-selected="true"] { color: var(--graphite); background: var(--g-fg-3); }
+.v6-cc__tab:focus-visible { outline: 2px solid var(--brand-dk); outline-offset: 2px; }
 
-.v6-dist { margin-top: clamp(36px,4vw,52px); display: grid; grid-template-columns: 1fr 1fr; gap: clamp(20px,3vw,44px); }
-.v6-dist__h { margin: 0 0 16px; }
-.v6-dist__chips { display: flex; flex-wrap: wrap; gap: 10px; }
-.v6-chip { font-size: 14px; font-weight: 500; color: var(--ink); background: var(--surface); border: 1px solid var(--line-2); border-radius: 999px; padding: 9px 16px; }
-.v6-chip--soon { color: var(--ink-3); border-style: dashed; }
+.v6-cc__pane { padding: clamp(20px, 2.4vw, 30px); min-width: 0; display: flex; flex-direction: column; }
+.v6-cc__pane:focus { outline: none; }
+.v6-cc__panebar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.v6-cc__panet { font-family: var(--sans); font-size: clamp(1.15rem, 1.5vw, 1.4rem); font-weight: 600;
+  letter-spacing: -0.018em; color: var(--g-fg); margin: 0; }
+.v6-cc__soon { font-size: 10px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--wait-dk);
+  border: 1px solid rgba(242,183,90,0.34); border-radius: 999px; padding: 3px 9px; }
+.v6-cc__panen { font-size: 14.5px; line-height: 1.55; color: var(--g-fg-2); margin: 10px 0 0; max-width: 56ch; }
+.v6-cc__rows { margin-top: clamp(18px, 2.2vw, 26px); border-top: 1px solid var(--g-line); }
+.v6-cc__row { display: flex; align-items: baseline; justify-content: space-between; gap: 20px;
+  padding: 11px 0; border-bottom: 1px solid var(--g-line); }
+.v6-cc__rk { font-size: 14.5px; color: var(--g-fg); min-width: 0; }
+.v6-cc__rv { font-size: 12px; color: var(--g-fg-3); text-align: right; flex: none; }
+/* Pushed to the bottom of the pane so the frame reads as a full environment rather than a short list sitting
+   in a tall empty box, and so switching areas never changes the frame's height. */
+.v6-cc__panefoot { margin-top: auto; padding-top: clamp(20px, 2.4vw, 28px); display: flex; align-items: center;
+  justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.v6-cc__foott { font-size: 13px; color: var(--g-fg-3); }
+.v6-cc__footl { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600;
+  color: var(--g-fg); text-decoration: none; min-height: 32px; }
+.v6-cc__footl .v6-arw { color: var(--brand-dk); transition: transform 180ms var(--ease-out); }
+.v6-cc__footl:hover .v6-arw { transform: translateX(3px); }
+.v6-cc__footl:focus-visible { outline: 2px solid var(--brand-dk); outline-offset: 3px; border-radius: 3px; }
 
-.v6-memory { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(30px,4vw,64px); align-items: center; }
-.v6-memory__list { display: flex; flex-direction: column; gap: 1px; background: var(--g-line); border: 1px solid var(--g-line); border-radius: 12px; overflow: hidden; }
-.v6-memory__item { background: var(--graphite-2); padding: 14px 18px; font-size: 15px; color: var(--g-fg); display: flex; align-items: baseline; gap: 14px; }
-.v6-memory__n { color: var(--g-fg-3); font-size: 12px; font-family: var(--mono); }
+/* ══════════════════════════════════════════════════════════════════ ENGINE ══ */
+.v6-eng__in { max-width: 760px; }
+.v6-eng__req { font-family: var(--sans); font-weight: 600; letter-spacing: -0.028em; line-height: 1.06;
+  font-size: clamp(1.85rem, 3.6vw, 3rem); color: var(--ink); margin: 18px 0 0; text-wrap: balance; }
+.v6-eng__note { font-size: clamp(1rem, 1.15vw, 1.1rem); line-height: 1.58; color: var(--ink-3);
+  margin: 18px 0 0; max-width: 54ch; }
+.v6-eng__run { margin-top: clamp(28px, 3.4vw, 42px); border-top: 1px solid var(--ink);
+  background: var(--surface); border-radius: 0 0 12px 12px; box-shadow: var(--sh-sm); }
+.v6-eng__row { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 20px; align-items: baseline;
+  padding: 13px clamp(14px, 1.6vw, 20px); border-bottom: 1px solid var(--line); }
+.v6-eng__row:last-child { border-bottom: 0; }
+.v6-eng__k { font-size: 11.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-4); }
+.v6-eng__v { font-size: clamp(0.95rem, 1.1vw, 1.06rem); color: var(--ink-2); line-height: 1.4; }
+.v6-eng__row.is-stop .v6-eng__v { color: var(--stop-ink); font-weight: 500; }
+.v6-eng__row.is-go { background: rgba(11,124,85,0.05); }
+.v6-eng__row.is-go .v6-eng__v { color: var(--go-ink); font-weight: 600; }
+.v6-eng__foot { margin-top: clamp(24px, 2.8vw, 34px); }
 
-.v6-know { margin-top: clamp(36px,4vw,52px); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%,216px),1fr)); gap: 14px; align-items: stretch; }
-/* equal card heights: the reveal wrapper sat between the grid and the card, so the cards had ragged bottoms */
-.v6-know > .v6-reveal { height: 100%; }
-.v6-know__card { position: relative; display: block; height: 100%; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px; text-decoration: none; transition: border-color 160ms, transform 160ms var(--ease); }
-.v6-know__card:hover { border-color: var(--line-2); transform: translateY(-2px); }
-.v6-know__t { font-size: 1.12rem; font-weight: 600; color: var(--ink); letter-spacing: -0.015em; margin: 0 0 6px; }
-.v6-know__d { font-size: 13px; color: var(--ink-3); margin: 0; line-height: 1.5; max-width: 22ch; }
-.v6-know__go { position: absolute; top: 20px; right: 20px; color: var(--brand-ink); }
+/* ════════════════════════════════════════════════════════════ DISTRIBUTION ══ */
+.v6-dist__h { margin-top: 16px; }
+.v6-dist__obj { margin-top: clamp(30px, 3.6vw, 46px); display: flex; align-items: baseline; gap: clamp(12px, 1.6vw, 22px);
+  flex-wrap: wrap; padding-bottom: clamp(16px, 2vw, 22px); border-bottom: 2px solid var(--ink); }
+.v6-dist__objk { font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-4); }
+.v6-dist__objid { font-size: clamp(1.05rem, 1.8vw, 1.5rem); color: var(--ink); letter-spacing: -0.01em; }
+.v6-dist__objsys { font-size: 14.5px; color: var(--ink-3); }
+.v6-dist__objsig { margin-left: auto; font-family: var(--mono); font-size: 12px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--go-ink); }
+.v6-dist__idx { margin-top: 4px; }
+.v6-dist__row { display: flex; align-items: baseline; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.v6-dist__rk { font-family: var(--sans); font-weight: 600; letter-spacing: -0.016em;
+  font-size: clamp(1.02rem, 1.5vw, 1.25rem); color: var(--ink); flex: none; }
+.v6-dist__lead { flex: 1 1 24px; min-width: 18px; height: 1px; background: var(--line-2); align-self: center; }
+.v6-dist__rv { font-size: 14px; color: var(--ink-3); text-align: right; flex: 0 1 auto; }
+.v6-dist__row.is-soon .v6-dist__rk { color: var(--ink-4); font-weight: 500; }
+.v6-dist__row.is-soon .v6-dist__lead { background: transparent; border-top: 1px dashed var(--line-2); height: 0; }
+.v6-dist__next { margin-top: clamp(34px, 4vw, 52px); }
+.v6-dist__nexth { font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--wait-ink);
+  margin: 0 0 4px; padding-bottom: 12px; border-bottom: 1px solid var(--line-2); }
+.v6-dist__fine { margin: 20px 0 0; font-size: 13.5px; line-height: 1.55; color: var(--ink-4); }
+.v6-dist__fine a { color: var(--brand-ink); text-decoration: underline; text-underline-offset: 2px; }
 
-.v6-cn { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--surface); border: 1px solid var(--line-2); border-radius: 14px; overflow: hidden; }
-.v6-cn__col { background: var(--surface); padding: clamp(22px,2.6vw,32px); box-shadow: 0 0 0 1px var(--line-2); }
-.v6-cn__col--next { background: var(--sunk); }
-.v6-cn__h { margin: 0 0 16px; }
-.v6-cn__col ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 11px; }
-.v6-cn__col li { display: flex; gap: 10px; font-size: 15px; line-height: 1.45; color: var(--ink-2); }
-.v6-cn__col li::before { content: ""; flex: none; width: 6px; height: 6px; border-radius: 999px; margin-top: 8px; background: var(--brand); }
-.v6-cn__col--next li { color: var(--ink-3); }
-.v6-cn__col--next li::before { background: transparent; border: 1px solid var(--ink-4); }
+/* ══════════════════════════════════════════════════════════════════ MEMORY ══
+   Deliberately the quietest scene on the page: lightest ground, no signal colour, no per-row motion. The
+   lifecycle is what work feels like; this is what is left when the work is over. */
+/* matches the authority scene: those two are the page's breathing rooms, every other section is --sec */
+.v6-mem { padding-block: clamp(88px, 12vw, 168px); }
+.v6-mem__h { margin-top: 16px; max-width: 20ch; }
+.v6-mem__lead { margin-top: 18px; }
+.v6-mem__reg { margin-top: clamp(38px, 4.6vw, 62px); border-top: 2px solid var(--ink-2); }
+.v6-mem__row { display: grid; grid-template-columns: minmax(180px, 0.42fr) minmax(0, 1fr);
+  gap: clamp(18px, 3vw, 52px); padding: clamp(16px, 1.9vw, 24px) 0; border-bottom: 1px solid var(--line); }
+.v6-mem__k { font-family: var(--sans); font-weight: 600; letter-spacing: -0.014em;
+  font-size: clamp(1rem, 1.25vw, 1.14rem); color: var(--ink); }
+.v6-mem__v { font-size: clamp(0.95rem, 1.1vw, 1.06rem); line-height: 1.5; color: var(--ink-3); }
+.v6-mem__foot { margin: clamp(24px, 3vw, 34px) 0 0; font-size: 14px; color: var(--ink-4); }
 
-@media (max-width: 940px) {
-  .v6-hero__grid, .v6-versus, .v6-verify, .v6-memory, .v6-cn, .v6-dist { grid-template-columns: 1fr; }
-  .v6-console__grid { grid-template-columns: 1fr; }
-  .v6-console__main { border-right: none; border-bottom: 1px solid var(--g-line); }
-  .v6-life { grid-template-columns: 1fr; }
-  .v6-life__spine { left: 6px; right: auto; top: 6px; bottom: 6px; width: 2px; height: auto; }
-  .v6-life__node { padding: 0 0 22px 32px; }
-  .v6-life__dot { position: absolute; left: 0; top: 2px; margin: 0; }
+/* ═══════════════════════════════════════════════════════════════ KNOWLEDGE ══ */
+.v6-kn__h { margin-top: 16px; }
+/* Three columns: an essay, the documentation index, and the periodicals. The index is the point of the
+   section, so it gets a full column rather than three sample links in a card. */
+.v6-kn__grid { margin-top: clamp(34px, 4vw, 54px); display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 0.9fr);
+  gap: clamp(24px, 3.2vw, 48px); align-items: start; }
+.v6-kn__lead { border-top: 2px solid var(--ink); }
+.v6-kn__leadlink { display: block; text-decoration: none; padding-top: clamp(20px, 2.4vw, 28px); }
+.v6-kn__kicker { font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--brand-ink); margin: 0; }
+.v6-kn__leadt { font-family: var(--sans); font-weight: 600; letter-spacing: -0.028em; line-height: 1.06;
+  font-size: clamp(1.65rem, 2.9vw, 2.5rem); color: var(--ink); margin: 14px 0 0; text-wrap: balance; }
+.v6-kn__leadp { font-size: clamp(1rem, 1.15vw, 1.1rem); line-height: 1.62; color: var(--ink-2); margin: 18px 0 0; }
+.v6-kn__more { display: inline-flex; align-items: center; gap: 8px; margin-top: 22px; font-size: 15px;
+  font-weight: 600; color: var(--ink); }
+.v6-kn__leadlink:hover .v6-kn__more { color: var(--brand-ink); }
+.v6-kn__leadlink:hover .v6-arw { transform: translateX(3px); }
+.v6-kn__more .v6-arw { color: var(--brand-ink); transition: transform 180ms var(--ease-out); }
+.v6-kn__leadlink:focus-visible { outline: 2px solid var(--brand); outline-offset: 4px; border-radius: 3px; }
+
+/* ---- the documentation index ---- */
+.v6-kn__docs { border-top: 2px solid var(--ink); padding-top: clamp(20px, 2.4vw, 28px); }
+.v6-kn__meta { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-4); }
+.v6-kn__group { margin-top: 18px; }
+.v6-kn__group:first-of-type { margin-top: 14px; }
+.v6-kn__groupn { font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--brand-ink);
+  margin: 0 0 6px; padding-bottom: 7px; border-bottom: 1px solid var(--line); }
+.v6-kn__pages { display: flex; flex-direction: column; }
+.v6-kn__page { display: block; text-decoration: none; padding: 7px 0; }
+.v6-kn__paget { display: block; font-size: 14.5px; font-weight: 500; color: var(--ink); line-height: 1.3;
+  transition: color 140ms ease; }
+.v6-kn__paged { display: block; font-size: 12.5px; color: var(--ink-3); line-height: 1.45; margin-top: 1px; }
+.v6-kn__page:hover .v6-kn__paget { color: var(--brand-ink); }
+.v6-kn__page:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; border-radius: 3px; }
+.v6-kn__more--std { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--line-2); width: 100%;
+  text-decoration: none; }
+
+.v6-kn__side { display: flex; flex-direction: column; }
+.v6-kn__blk { padding: clamp(16px, 1.8vw, 20px) 0; border-top: 1px solid var(--line-2); }
+.v6-kn__blk:first-child { border-top: 2px solid var(--ink); }
+.v6-kn__blkh { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  font-family: var(--sans); font-size: 13px; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase;
+  color: var(--ink); text-decoration: none; margin-bottom: 10px; min-height: 24px; }
+.v6-kn__docs > .v6-kn__blkh { margin-bottom: 0; }
+.v6-kn__blkh .v6-arw { color: var(--brand-ink); transition: transform 180ms var(--ease-out); }
+.v6-kn__blkh:hover .v6-arw { transform: translateX(3px); }
+.v6-kn__item { display: block; text-decoration: none; padding: 7px 0; }
+a.v6-kn__item:hover .v6-kn__itemt { color: var(--brand-ink); }
+.v6-kn__itemt { display: block; font-size: 14.5px; font-weight: 500; color: var(--ink); line-height: 1.35;
+  transition: color 140ms ease; }
+.v6-kn__itemd { display: block; font-size: 13px; color: var(--ink-3); line-height: 1.45; margin-top: 2px; }
+.v6-kn__date { display: block; font-size: 11px; color: var(--ink-4); letter-spacing: 0.04em; }
+.v6-kn__quote { font-size: 14.5px; line-height: 1.55; color: var(--ink-2); margin: 0; }
+
+/* ══════════════════════════════════════════════════════════ REDUCED MOTION ══
+   The strike is the whole point of the authority scene: it is what says the claim did not hold. Without this
+   it stayed at scaleX(0) forever, because the global reduced-motion reset only neutralises .v6-reveal and the
+   strike is a child with its own transform. Draw it and recede the word immediately instead. */
+@media (prefers-reduced-motion: reduce) {
+  .v6-auth__strike { transform: scaleX(1) !important; transition: none !important; }
+  .v6-auth__word { opacity: 0.5 !important; transition: none !important; }
 }
 
-/* Mobile recomposition of the activity stream: on desktop the detail sits inline and ellipsises, which on a
-   phone truncated it to uselessness ("re-che..."). Here the row becomes two rows, so the title and its signal
-   stay on line one and the full detail wraps underneath. */
-@media (max-width: 640px) {
-  .v6-stream__row { grid-template-columns: 12px minmax(0,1fr) auto; row-gap: 3px; }
-  .v6-stream__dot { grid-row: 1; grid-column: 1; }
-  .v6-stream__t { grid-row: 1; grid-column: 2; white-space: normal; }
-  .v6-stream__row .v6-sig { grid-row: 1; grid-column: 3; }
-  .v6-stream__d { grid-row: 2; grid-column: 2 / -1; white-space: normal; overflow: visible; text-overflow: clip;
-    font-size: 12.5px; line-height: 1.45; }
-  .v6-console__tv { font-size: 14px; }
-  .v6-console__tk { font-size: 10.5px; }
+/* ═══════════════════════════════════════════════════════════════ RESPONSIVE ══ */
+@media (max-width: 1000px) {
+  .v6-cc { grid-template-columns: 1fr; }
+  .v6-cc__rail { flex-direction: row; flex-wrap: wrap; gap: 6px; border-right: 0;
+    border-bottom: 1px solid var(--g-line); padding: 14px; align-items: center; }
+  .v6-cc__railh { width: 100%; margin: 0 0 2px; padding-inline: 4px; }
+  .v6-cc__railh.is-soon { margin-top: 10px; padding-top: 10px; }
+  .v6-cc__tab { min-height: 40px; }
+  /* The essay leads full width, then the index and the periodicals sit side by side beneath it. */
+  .v6-kn__grid { grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr); gap: clamp(26px, 4vw, 44px); }
+  .v6-kn__lead { grid-column: 1 / -1; }
+}
+@media (max-width: 680px) {
+  .v6-kn__grid { grid-template-columns: 1fr; gap: clamp(28px, 6vw, 40px); }
 }
 
-/* masked headline reveal (one authored hero moment; reduced-motion shows it immediately) */
-.v6-mask { display: block; overflow: hidden; padding-bottom: 0.08em; margin-bottom: -0.04em; }
-.v6-mask__in { display: block; animation: v6MaskIn 760ms cubic-bezier(0.22,1,0.36,1) both; animation-delay: calc(var(--d,0) * 90ms + 80ms); }
-@keyframes v6MaskIn { from { transform: translateY(110%); } to { transform: translateY(0); } }
-@media (prefers-reduced-motion: reduce) { .v6-mask__in { animation: none !important; } }
+@media (max-width: 720px) {
+  .v6-auth { padding-block: clamp(70px, 14vw, 104px); }
+  .v6-auth__word { font-size: clamp(3.2rem, 20vw, 5.4rem); }
+  .v6-auth__t { font-size: clamp(1.15rem, 5.4vw, 1.5rem); }
+  .v6-auth__verdict { font-size: clamp(1.3rem, 6.4vw, 1.75rem); }
+
+  .v6-eng__row { grid-template-columns: 1fr; gap: 3px; padding-block: 12px; }
+  .v6-eng__k { font-size: 10.5px; }
+
+  .v6-dist__obj { gap: 8px 14px; }
+  .v6-dist__objsig { margin-left: 0; }
+  /* the leader collapses on a phone: name over description reads, a squeezed leader does not */
+  .v6-dist__row { flex-wrap: wrap; gap: 2px 14px; }
+  .v6-dist__lead { display: none; }
+  .v6-dist__rv { flex: 1 1 100%; text-align: left; }
+
+  .v6-mem__row { grid-template-columns: 1fr; gap: 5px; }
+}

@@ -5,14 +5,15 @@
 // rather than parking a card above the footer.
 import Link from "next/link";
 import { CTA, EditorialLink } from "./ui";
+import { CLOSE_TITLE, CLOSE_SAY, FOOTER_STATEMENT } from "./positioning";
 import "./close.css";
 
 const BASE = "/dev-preview/v6";
 
 export function ClosingScene({
   resolve = true,
-  title = "Ship what you can stand behind.",
-  say = "Vraelis shows you what an agent changed, catches what it could not prove, and puts the decisions that matter in front of a person before they reach production.",
+  title = CLOSE_TITLE,
+  say = CLOSE_SAY,
   secondaryHref = `${BASE}/platform`,
   secondaryLabel = "See the platform",
 }: {
@@ -55,7 +56,7 @@ export function SiteFooter() {
       <div className="v6-foot2__upper">
         <div>
           <Link href={BASE} className="v6-foot2__mark">Vraelis</Link>
-          <p className="v6-foot2__stmt">Control for AI-built software. See what changed, catch what it missed, and keep a person on the decisions that matter.</p>
+          <p className="v6-foot2__stmt">{FOOTER_STATEMENT}</p>
         </div>
         <div className="v6-foot2__act">
           <CTA brand>Open Vraelis</CTA>

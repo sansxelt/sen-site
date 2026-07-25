@@ -35,7 +35,7 @@ const MEGA: { h: string; links: { t: string; d: string; href: string }[] }[] = [
   { h: "Trust", links: [
     { t: "Security", d: "Architecture and data handling", href: `${BASE}/security` },
     { t: "System status", d: "What is operational", href: `${BASE}/security#status` },
-    { t: "Current capabilities", d: "Live today vs direction", href: `${BASE}/platform#current` },
+    { t: "Current capabilities", d: "What is built, and what is not", href: `${BASE}/platform#current` },
     { t: "Contact", d: "Talk to the team", href: `${BASE}/company#contact` },
   ] },
 ];
@@ -61,9 +61,10 @@ function ResourcesMega({ onNavigate }: { onNavigate: () => void }) {
             </div>
           ))}
           <Link href={`${BASE}/platform`} className="v6-mega__feature" onClick={onNavigate}>
-            <span className="v6-eyebrow" style={{ color: "var(--go-dk)" }}>The platform</span>
-            <h4>One system that follows the work</h4>
-            <p>Responsibility, live activity, review, findings, repair, and memory, in one place.</p>
+            {/* brand indigo, not green: green is reserved for successful states */}
+            <span className="v6-eyebrow" style={{ color: "var(--brand-dk)" }}>The platform</span>
+            <h4>What the product actually does</h4>
+            <p>Requirements, runs, findings, review, repair, and the record, in one place.</p>
             <span className="v6-elink" style={{ marginTop: "auto", color: "var(--g-fg)" }}><span className="v6-elink__t">Explore the platform</span><span className="v6-arw" aria-hidden>→</span></span>
           </Link>
         </div>
@@ -81,6 +82,20 @@ function V6Nav() {
   const [menu, setMenu] = useState(false);
   const [drawer, setDrawer] = useState(false);
   const closeT = useRef(0);
+
+  // Publish the real nav height as --nav-h. The hero and the lifecycle scene both size themselves against it,
+  // and it changes with the wordmark size and the viewport, so measuring beats the hardcoded fallback.
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const root = nav.closest(".v6") as HTMLElement | null;
+    if (!root) return;
+    const publish = () => root.style.setProperty("--nav-h", `${Math.round(nav.offsetHeight)}px`);
+    publish();
+    const ro = new ResizeObserver(publish);
+    ro.observe(nav);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     const nav = navRef.current;
@@ -204,8 +219,11 @@ export function RouteTransition({ children }: { children: ReactNode }) {
 export function V6Shell({ children }: { children: ReactNode }) {
   return (
     <div className="v6">
+      {/* Nine focus stops sit in the nav before any content. Keyboard and screen-reader users get one stop to
+          jump past them; it is invisible until focused. */}
+      <a href="#v6-main" className="v6-skip">Skip to content</a>
       <V6Nav />
-      <main><RouteTransition>{children}</RouteTransition></main>
+      <main id="v6-main" tabIndex={-1}><RouteTransition>{children}</RouteTransition></main>
       <SiteFooter />
     </div>
   );

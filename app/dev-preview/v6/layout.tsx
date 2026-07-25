@@ -4,23 +4,24 @@ import "./_system/v6.css";
 import "./_system/pagekit.css";
 import { V6Shell } from "./_system/shell";
 import { V6_ORIGIN } from "./_system/meta";
+import { META_TITLE, META_DESCRIPTION, OG_TITLE, OG_DESCRIPTION } from "./_system/positioning";
 
-// Root metadata for the design-06 public rebuild. This is the "embed" replacement: the site is now framed as
-// oversight for AI software agents, not deployment verification. Preview routes are noindex; the values are
-// still real so the Discord / Slack / X / LinkedIn / browser previews can be inspected and approved.
+// Root metadata for the design-06 public rebuild. Every positioning string here is imported, not written in
+// place: the company category is still being decided, and changing it must be one edit in
+// _system/positioning.ts rather than a sweep across the site. Preview routes stay noindex; the values are
+// real so the Discord / Slack / X / LinkedIn / browser previews can be inspected and approved.
 export const metadata: Metadata = {
   metadataBase: new URL(V6_ORIGIN),
   title: {
-    default: "Vraelis | Oversight for AI software agents",
+    default: META_TITLE,
     template: "%s | Vraelis",
   },
-  description:
-    "Vraelis follows AI software agents from assigned responsibility to trusted completion, surfacing uncertainty, evidence, decisions, repairs, and what the company learns.",
+  description: META_DESCRIPTION,
   applicationName: "Vraelis",
   category: "technology",
   keywords: [
-    "AI agents", "AI oversight", "software agents", "agent supervision",
-    "trusted completion", "AI software", "agent reliability", "verification",
+    "AI agents", "AI-built software", "software agents", "agent supervision",
+    "code review for AI", "AI software", "agent reliability", "verification",
   ],
   authors: [{ name: "Vraelis" }],
   creator: "Vraelis",
@@ -31,16 +32,10 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "Vraelis",
     url: `${V6_ORIGIN}/`,
-    title: "Give AI agents responsibility without giving up control.",
-    description:
-      "Vraelis provides independent oversight for AI software work across planning, execution, review, repair, and trusted completion.",
+    title: OG_TITLE,
+    description: OG_DESCRIPTION,
   },
-  twitter: {
-    card: "summary_large_image",
-    title: "Give AI agents responsibility without giving up control.",
-    description:
-      "Vraelis provides independent oversight for AI software work across planning, execution, review, repair, and trusted completion.",
-  },
+  twitter: { card: "summary_large_image", title: OG_TITLE, description: OG_DESCRIPTION },
 };
 
 export const viewport: Viewport = {

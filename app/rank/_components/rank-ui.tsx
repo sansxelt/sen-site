@@ -79,7 +79,11 @@ export function SignOutButton({ className = "btn btn--ghost", label = "Sign out"
   return <button onClick={() => signOut({ callbackUrl: signOutTarget() })} className={className}>{label}</button>;
 }
 
-function Brand({ href }: { href: string }) {
+// `lg` is the top-bar wordmark: deliberately the largest element in the bar, roughly twice the size of the
+// nav links beside it. Everything in the bar is centred on it (the bars are align-items:center), and the bar's
+// height is still set by the taller button, so the bigger type does not grow the header or push a control off
+// the edge. The footer keeps the base size. Sizes live in the injected stylesheet so they can be responsive.
+function Brand({ href, lg = false }: { href: string; lg?: boolean }) {
   // When the logo already points at the page you're on, don't fire a full navigation
   // (which reloads and jumps you nowhere) — smooth-scroll back to the top instead.
   // Compared against the BROWSER url (window.location.pathname), not usePathname(), because
@@ -96,7 +100,7 @@ function Brand({ href }: { href: string }) {
   // Wordmark only. The mark does its job where type cannot go (browser tab, home screen); sat beside the
   // name it just crowds the header, so the lockup here is the word on its own.
   return (
-    <Link href={href} onClick={onClick} className="vra-brand" style={{ display: "inline-flex", alignItems: "center", minHeight: 24, textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.035em", lineHeight: 1 }}>Vraelis</Link>
+    <Link href={href} onClick={onClick} className={`vra-brand${lg ? " vra-brand--lg" : ""}`} style={{ display: "inline-flex", alignItems: "center", minHeight: 24, textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.035em", lineHeight: 1, whiteSpace: "nowrap", flex: "none" }}>Vraelis</Link>
   );
 }
 
@@ -123,7 +127,7 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
   const link = { fontSize: 15.5, color: "var(--fg-2)", textDecoration: "none", whiteSpace: "nowrap", fontWeight: 500, display: "inline-flex", alignItems: "center", minHeight: 24 } as const;
   return (
     <nav style={{ position: "relative", display: "flex", alignItems: "center", gap: 18, padding: "15px var(--gutter)", background: scrolled ? "rgba(250,248,244,0.82)" : "transparent", backdropFilter: scrolled ? "blur(14px)" : "none", WebkitBackdropFilter: scrolled ? "blur(14px)" : "none", borderBottom: `1px solid ${scrolled ? "var(--line-1)" : "transparent"}`, transition: "border-color .25s ease, background .25s ease" }}>
-      <Brand href="/" />
+      <Brand href="/" lg />
       <div className="vra-nav-links" style={{ display: "flex", gap: 28, alignItems: "center", marginLeft: 22 }}>
         {PUBLIC_LINKS.map((l) => <Link key={l.href} href={l.href} style={{ ...link, color: pathname === l.href ? "var(--fg-1)" : "var(--fg-2)" }}>{l.label}</Link>)}
       </div>
@@ -262,8 +266,9 @@ function AppTopbar({ email }: { email: string | null }) {
       {/* Mobile-only hamburger: opens the accessible nav drawer. Hidden at desktop/tablet widths (CSS). */}
       <MobileNav />
       {/* in-app logo returns to the APP home (app.vraelis.com/); leaving the product entirely is the
-          sidebar's "Back to site" -> https://vraelis.com. Small left nudge centers over the sidebar. */}
-      <span style={{ marginLeft: 14, marginTop: 4, display: "inline-flex", alignItems: "center" }}><Brand href="/" /></span>
+          sidebar's "Back to site" -> https://vraelis.com. Small left nudge centers over the sidebar. No
+          vertical nudge: the header centres every child on one axis and the wordmark defines it. */}
+      <span style={{ marginLeft: 14, display: "inline-flex", alignItems: "center" }}><Brand href="/" lg /></span>
       <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
         {/* Plan + balance at a glance, right in the bar — no menu dig. Two matched pills (per founder): the
             plan by its FULL NAME (accent-tinted, ties to the brand avatar) -> /plans, and the credits pill
@@ -527,6 +532,10 @@ const SHELL_UI_CSS = "@keyframes vraTextIn{from{opacity:0;transform:translateY(1
   // both read at the same optical size. !important because Brand carries an inline font-size.
   // If either zoom in styles.css changes, update the ratio here: it is site-zoom / app-zoom.
   + ".rank-root:not(.rank-root--site) .vra-brand{font-size:calc(21px * (0.99 / 0.89))!important}"
+  // Top-bar wordmark. Same optical size on both shells (the app rule re-applies the zoom ratio above), and it
+  // steps down on narrow phones so the bar still fits the wordmark, the action, and the menu on one line.
+  + ".rank-root .vra-brand--lg{font-size:clamp(25px,3.2vw,32px)!important}"
+  + ".rank-root:not(.rank-root--site) .vra-brand--lg{font-size:calc(clamp(25px,3.2vw,32px) * (0.99 / 0.89))!important}"
   + "@media (prefers-reduced-motion:reduce){.rank-root .eyebrow,.rank-root .display,.rank-root .lead-copy{animation:none}.rank-root .btn:active,.rank-root a.card:hover,.rank-root a.card:active,.rank-root a.acard:hover,.rank-root a.acard:active{transform:none}}";
 
 export function RankShell({ signedIn = false, email = null, appHost = false, children }: { signedIn?: boolean; email?: string | null; appHost?: boolean; children: ReactNode }) {

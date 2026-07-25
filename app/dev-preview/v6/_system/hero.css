@@ -40,7 +40,10 @@
 .v6-h__crop--ev { display: none; }
 .v6-h__crop-h { display: flex; align-items: center; justify-content: space-between; gap: 10px;
   padding: 9px 14px; border-bottom: 1px solid var(--g-line); }
-.v6-h__crop-r { display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
+/* Label and value sit together at the left. The panel bleeds off the viewport on purpose, but with the value
+   pushed to the far right the bleed was cutting off the only part that carries meaning (ok / unverified /
+   not enforced), so what remained on screen was a column of labels with nothing beside them. */
+.v6-h__crop-r { display: flex; align-items: baseline; gap: 10px;
   padding: 8px 14px; border-top: 1px solid var(--g-line); font-family: var(--mono); font-size: 11.5px; color: var(--g-fg-3); }
 .v6-h__crop-r:first-of-type { border-top: 0; }
 .v6-h__crop-r b { color: var(--g-fg-2); font-weight: 500; }
@@ -49,7 +52,8 @@
 /* ---- content plane ---- */
 .v6-h__inner { position: relative; z-index: 3; width: 100%; max-width: var(--max-wide);
   margin-inline: auto; padding-inline: var(--gutter); }
-.v6-h__eyebrow { color: var(--go-dk); }
+/* brand indigo, NOT green: green is a success signal and the category label is not a state */
+.v6-h__eyebrow { color: var(--brand-dk); }
 .v6-h__h1 { font-family: var(--sans); font-weight: 600; letter-spacing: -0.036em; line-height: 0.99;
   color: var(--g-fg); margin: clamp(14px, 2vh, 22px) 0 0; font-size: clamp(2.1rem, 3.8vw, 3.45rem);
   max-width: 21ch; text-wrap: balance; }
@@ -112,6 +116,14 @@
 }
 @media (max-width: 380px) { .v6-h__state-l { font-size: 8px; } }
 
+/* The one authored opening moment: each clause of the headline rises out of its own mask. Lives here with the
+   rest of the hero rather than in the homepage stylesheet, since it belongs to this component. */
+.v6-mask { display: block; overflow: hidden; padding-bottom: 0.08em; margin-bottom: -0.04em; }
+.v6-mask__in { display: block; animation: v6MaskIn 760ms cubic-bezier(0.22,1,0.36,1) both;
+  animation-delay: calc(var(--d,0) * 90ms + 80ms); }
+@keyframes v6MaskIn { from { transform: translateY(110%); } to { transform: translateY(0); } }
+
 @media (prefers-reduced-motion: reduce) {
   .v6-h__fill { animation: none !important; width: var(--reach, 52%) !important; }
+  .v6-mask__in { animation: none !important; }
 }
