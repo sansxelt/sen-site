@@ -14,77 +14,113 @@ const SIGNIN = "/signin?callbackUrl=%2Fapp";
 // Three top-level items open a menu; Company is a plain link. Research and Developers were promoted to the
 // top bar in phase 1 and are demoted back into the menus that already carry them, so the closed bar stays
 // short and calm. Every menu has 2-3 named groups plus one editorial preview.
-type Group = { h: string; links: { t: string; d?: string; href: string }[] };
-type Feature = { eyebrow: string; title: string; body: string; href: string; cta: string };
-type Menu = { label: string; groups: Group[]; feature: Feature };
+type Preview = { eyebrow: string; title: string; body: string; stat?: string };
+type MLink = { t: string; d?: string; href: string; preview?: Preview };
+type Group = { h: string; links: MLink[] };
+type Menu = { label: string; groups: Group[]; feature: Preview & { href: string; cta: string } };
 
 const MENUS: Menu[] = [
   {
     label: "Platform",
     groups: [
       { h: "Understand", links: [
-        { t: "Platform overview", d: "What the product does", href: `${BASE}/platform` },
-        { t: "Requirements", d: "What a change must not break", href: `${BASE}/docs/responsibilities` },
-        { t: "Systems", d: "Everything you have connected", href: `${BASE}/docs/work` },
+        { t: "Platform overview", d: "What the product does", href: BASE + "/platform" },
+        { t: "Requirements", d: "What a change must not break", href: BASE + "/docs/responsibilities",
+          preview: { eyebrow: "Requirements", title: "One sentence the change is not allowed to break.", body: "Written by a person, held outside the code, and fixed before anything runs.", stat: "Held outside the code" } },
+        { t: "Systems", d: "Everything you have connected", href: BASE + "/docs/work" },
       ] },
       { h: "Verify", links: [
-        { t: "Execution", d: "A real browser on the live software", href: `${BASE}/docs/live-activity` },
-        { t: "Findings", d: "What the evidence does not support", href: `${BASE}/docs/findings` },
-        { t: "Completion", d: "Verified, Failed, or Blocked", href: `${BASE}/docs/completion` },
+        { t: "Execution", d: "A real browser on the live software", href: BASE + "/docs/live-activity",
+          preview: { eyebrow: "Execution", title: "A real browser drives the running software.", body: "Not a mock, and not the agent's account of itself. What the run does is captured as it goes.", stat: "Real browser" } },
+        { t: "Findings", d: "What the evidence does not support", href: BASE + "/docs/findings" },
+        { t: "Completion", d: "Verified, Failed, or Blocked", href: BASE + "/docs/completion",
+          preview: { eyebrow: "Completion", title: "Three answers, and the third is the honest one.", body: "Verified, Failed, or Blocked. Blocked is the one most tools refuse to say.", stat: "Three outcomes" } },
       ] },
       { h: "Resolve", links: [
-        { t: "Review", d: "Decisions that need a person", href: `${BASE}/docs/review` },
-        { t: "Repair", d: "Handoff and independent recheck", href: `${BASE}/docs/repair` },
-        { t: "Integrations", d: "GitHub, Vercel, Slack", href: `${BASE}/integrations` },
+        { t: "Review", d: "Decisions that need a person", href: BASE + "/docs/review" },
+        { t: "Repair", d: "Handoff and independent recheck", href: BASE + "/docs/repair" },
+        { t: "Integrations", d: "GitHub, Vercel, Slack", href: BASE + "/integrations" },
       ] },
     ],
     feature: { eyebrow: "One real run", title: "Payment went through. Access did not.",
       body: "A checkout that reported success, two repairs, and the run that finally held.",
-      href: `${BASE}/platform`, cta: "See the platform" },
+      stat: "vrf_ff9d6c0d", href: BASE + "/platform", cta: "See the platform" },
   },
   {
     label: "Agents",
     groups: [
       { h: "Coding agents", links: [
-        { t: "How Vraelis reads agent work", d: "Plans, changes, and claims", href: `${BASE}/agents` },
-        { t: "Claimed complete", d: "Where a check begins", href: `${BASE}/docs/completion` },
+        { t: "How agent work is read", d: "Plans, changes, and claims", href: BASE + "/agents" },
+        { t: "Claimed complete", d: "Where a check begins", href: BASE + "/docs/completion" },
       ] },
       { h: "Agent workflows", links: [
-        { t: "API", d: "Create and read verifications", href: `${BASE}/developers#api` },
-        { t: "CLI", d: "One command, one exit code", href: `${BASE}/developers#cli` },
-        { t: "Webhooks", d: "verification.completed", href: `${BASE}/developers#webhooks` },
+        { t: "API", d: "Create and read verifications", href: BASE + "/developers#api" },
+        { t: "CLI", d: "One command, one exit code", href: BASE + "/developers#cli" },
+        { t: "Webhooks", d: "verification.completed", href: BASE + "/developers#webhooks" },
       ] },
       { h: "Direction", links: [
-        { t: "Continuous agent activity", d: "Not available yet", href: `${BASE}/platform#current` },
-        { t: "Autonomy from track record", d: "Not available yet", href: `${BASE}/platform#current` },
+        { t: "Continuous agent activity", d: "Not available yet", href: BASE + "/platform#current",
+          preview: { eyebrow: "Direction", title: "Reading an agent's work as it happens.", body: "Not built. Today a check begins at the point the work is claimed complete.", stat: "Not available" } },
+        { t: "Autonomy from track record", d: "Not available yet", href: BASE + "/platform#current",
+          preview: { eyebrow: "Direction", title: "Autonomy earned from a record.", body: "Not built. How much an agent may do alone should be a conclusion, not a setting.", stat: "Not available" } },
       ] },
     ],
     feature: { eyebrow: "Honest boundary", title: "Vraelis does not watch an agent work.",
       body: "It holds a requirement outside the code and checks the running software when the work is claimed done.",
-      href: `${BASE}/agents`, cta: "How agents are handled" },
+      stat: "What is actually built", href: BASE + "/agents", cta: "How agents are handled" },
   },
   {
     label: "Resources",
     groups: [
       { h: "Learn", links: [
-        { t: "Documentation", d: "Use and administer Vraelis", href: `${BASE}/docs` },
-        { t: "Vraelis Method", d: "The worldview behind the product", href: `${BASE}/method` },
-        { t: "README", d: "Why Vraelis exists", href: `${BASE}/readme` },
+        { t: "Documentation", d: "Use and administer Vraelis", href: BASE + "/docs",
+          preview: { eyebrow: "Documentation", title: "Nine pages, each with one outcome.", body: "Getting started, the work, oversight, and what is kept once the work is done.", stat: "9 pages" } },
+        { t: "Vraelis Method", d: "The worldview behind the product", href: BASE + "/method" },
+        { t: "README", d: "Why Vraelis exists", href: BASE + "/readme" },
       ] },
       { h: "Build", links: [
-        { t: "Developer docs", d: "Build on the API", href: `${BASE}/developers` },
-        { t: "Changelog", d: "What shipped, dated", href: `${BASE}/changelog` },
-        { t: "Research", d: "Methodology and open questions", href: `${BASE}/research` },
+        { t: "Developer docs", d: "Build on the API", href: BASE + "/developers" },
+        { t: "Changelog", d: "What shipped, dated", href: BASE + "/changelog" },
+        { t: "Research", d: "Methodology and open questions", href: BASE + "/research",
+          preview: { eyebrow: "Research", title: "How do you show the edge of a check?", body: "So that absence of evidence is never read as evidence of safety.", stat: "Open question" } },
       ] },
       { h: "Trust", links: [
-        { t: "Security", d: "Architecture and data handling", href: `${BASE}/security` },
-        { t: "System status", d: "What is operational", href: `${BASE}/security#status` },
-        { t: "Current capabilities", d: "What is built, and what is not", href: `${BASE}/platform#current` },
+        { t: "Security", d: "Architecture and data handling", href: BASE + "/security" },
+        { t: "System status", d: "What is operational", href: BASE + "/security#status" },
+        { t: "Current capabilities", d: "What is built, and what is not", href: BASE + "/platform#current" },
       ] },
     ],
     feature: { eyebrow: "The Vraelis Method", title: "The builder cannot be the only judge.",
       body: "Eight positions on how software built by agents earns trust.",
-      href: `${BASE}/method`, cta: "Read the Method" },
+      stat: "8 positions", href: BASE + "/method", cta: "Read the Method" },
+  },
+  {
+    label: "Company",
+    groups: [
+      { h: "Company", links: [
+        { t: "About Vraelis", d: "Who is building this", href: BASE + "/company" },
+        { t: "Why Vraelis exists", d: "The README", href: BASE + "/readme",
+          preview: { eyebrow: "Why Vraelis exists", title: "Software used to be trusted because humans held the loop.", body: "That loop is changing. Agents now plan, change code, and repair their own failures faster than any review process built for people.", stat: "README" } },
+        { t: "Contact", d: "Talk to the team", href: BASE + "/company#contact" },
+      ] },
+      { h: "Trust", links: [
+        { t: "Security", d: "Architecture and data handling", href: BASE + "/security",
+          preview: { eyebrow: "Security", title: "How the engine is built and what it can reach.", body: "Data handling, isolation, and the boundary of what a single run is allowed to touch.", stat: "Architecture" } },
+        { t: "Privacy", href: "/privacy" },
+        { t: "Terms", href: "/terms" },
+        { t: "Subprocessors", href: "/subprocessors" },
+      ] },
+      { h: "Updates", links: [
+        { t: "Current capabilities", d: "What is built, and what is not", href: BASE + "/platform#current",
+          preview: { eyebrow: "Current capabilities", title: "What is built, stated without decoration.", body: "Everything marked Direction is unbuilt, and is labelled that way everywhere it appears on this site.", stat: "Live vs Direction" } },
+        { t: "System status", d: "What is operational", href: BASE + "/security#status",
+          preview: { eyebrow: "System status", title: "Verification engine operational.", body: "The engine that drives a real browser against a requirement is running.", stat: "Operational" } },
+        { t: "Changelog", d: "What shipped, dated", href: BASE + "/changelog" },
+      ] },
+    ],
+    feature: { eyebrow: "Vraelis", title: "Independent proof that software built by agents does what the business needs.",
+      body: "Built in the open, with the boundary between what works and what does not stated on the site rather than in a footnote.",
+      stat: "Verification engine operational", href: BASE + "/company", cta: "About the company" },
   },
 ];
 
@@ -92,30 +128,42 @@ function Brand() {
   return <Link href={BASE} className="v6-brand" aria-label="Vraelis home">Vraelis</Link>;
 }
 
-// The panel stays mounted through its exit so it can animate out. Unmounting on close made it vanish
-// instantly, which is what made dismissing a menu feel broken.
-function MegaPanel({ menu, state, onNavigate }: { menu: Menu; state: "in" | "out"; onNavigate: () => void }) {
+// ONE persistent night shell. Switching top-level items keeps the shell open and crossfades only its
+// contents; hovering or focusing a link swaps the preview inside the same frame. The panel stays mounted
+// through its exit animation, so dismissing it animates rather than popping away.
+function MegaShell({ index, state, preview, onPreview, onNavigate }: {
+  index: number; state: "in" | "out"; preview: Preview | null;
+  onPreview: (p: Preview | null) => void; onNavigate: () => void;
+}) {
+  const menu = MENUS[index];
+  const shown: Preview = preview ?? menu.feature;
   return (
     <div className="v6-mega" data-state={state}>
       <div className="v6-mega__panel">
-        <div className="v6-mega__grid">
+        <div className="v6-mega__grid" key={menu.label}>
           {menu.groups.map((col) => (
             <div key={col.h} className="v6-mega__col">
               <p className="v6-mega__col-h">{col.h}</p>
               {col.links.map((l) => (
-                <Link key={l.t} href={l.href} className="v6-mega__link" onClick={onNavigate}>
+                <Link key={l.t} href={l.href} className="v6-mega__link" onClick={onNavigate}
+                  onMouseEnter={() => onPreview(l.preview ?? null)} onFocus={() => onPreview(l.preview ?? null)}>
                   <span className="v6-mega__lt">{l.t}</span>
                   {l.d ? <span className="v6-mega__ld">{l.d}</span> : null}
                 </Link>
               ))}
             </div>
           ))}
-          <Link href={menu.feature.href} className="v6-mega__feature" onClick={onNavigate}>
-            <span className="v6-mega__fe">{menu.feature.eyebrow}</span>
-            <h4>{menu.feature.title}</h4>
-            <p>{menu.feature.body}</p>
-            <span className="v6-mega__fcta">{menu.feature.cta}<span className="v6-arw" aria-hidden>&rarr;</span></span>
-          </Link>
+          <div className="v6-mega__feature">
+            <div className="v6-mega__fin" key={menu.label + shown.title}>
+              <span className="v6-mega__fe">{shown.eyebrow}</span>
+              <h4>{shown.title}</h4>
+              <p>{shown.body}</p>
+              {shown.stat ? <span className="v6-mega__fstat">{shown.stat}</span> : null}
+            </div>
+            <Link href={menu.feature.href} className="v6-mega__fcta" onClick={onNavigate}>
+              {menu.feature.cta}<span className="v6-arw" aria-hidden>&rarr;</span>
+            </Link>
+          </div>
         </div>
       </div>
     </div>
@@ -133,6 +181,7 @@ function V6Nav() {
   // mounted for the length of its exit is the whole fix for menus that used to vanish on dismiss.
   const [open, setOpen] = useState<number | null>(null);
   const [exiting, setExiting] = useState<number | null>(null);
+  const [preview, setPreview] = useState<Preview | null>(null);
   const closeT = useRef(0);
   const exitT = useRef(0);
 
@@ -181,7 +230,8 @@ function V6Nav() {
     window.clearTimeout(closeT.current);
     window.clearTimeout(exitT.current);
     setExiting(null);
-    setOpen(i);
+    // switching top-level items keeps the shell open and only crossfades its contents
+    setOpen((cur) => { if (cur !== i) setPreview(null); return i; });
   }, []);
   const scheduleClose = useCallback(() => { closeT.current = window.setTimeout(() => close(null), 160); }, [close]);
 
@@ -218,8 +268,13 @@ function V6Nav() {
               {m.label}
             </button>
           ))}
-          <Link href={`${BASE}/company`} className="v6-nav__item" aria-current={pathname === `${BASE}/company` ? "page" : undefined}>Company</Link>
         </div>
+        {shown !== null ? (
+          <div onMouseEnter={() => openAt(shown)} onMouseLeave={scheduleClose}>
+            <MegaShell index={shown} state={open === null ? "out" : "in"} preview={preview}
+              onPreview={setPreview} onNavigate={() => close(shown)} />
+          </div>
+        ) : null}
         <div className="v6-nav__right">
           <Link href={SIGNIN} className="v6-nav__signin">Sign in</Link>
           <Link href={SIGNIN} className="v6-btn v6-btn--brand">Open Vraelis</Link>
@@ -228,11 +283,6 @@ function V6Nav() {
           </button>
         </div>
       </div>
-      {shown !== null ? (
-        <div onMouseEnter={() => openAt(shown)} onMouseLeave={scheduleClose}>
-          <MegaPanel menu={MENUS[shown]} state={open === null ? "out" : "in"} onNavigate={() => close(shown)} />
-        </div>
-      ) : null}
       {drawer ? <MobileNav onClose={() => setDrawer(false)} /> : null}
     </nav>
   );

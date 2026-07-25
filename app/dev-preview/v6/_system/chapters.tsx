@@ -349,10 +349,14 @@ export function Reach() {
         ))}
       </ol>
 
-      <p className="v6-rx__next">
-        <span className="v6-mono">Direction, not built</span>
-        {NEXT.map((n) => <span key={n} className="v6-rx__soon">{n}</span>)}
-      </p>
+      {/* Direction is secondary and must read that way: a ruled band under the live surfaces, not an inline
+          run of words wedged against the caption above it. */}
+      <div className="v6-rx__next">
+        <p className="v6-rx__nexth">Direction, not built</p>
+        <ul className="v6-rx__soons">
+          {NEXT.map((n) => <li key={n}>{n}</li>)}
+        </ul>
+      </div>
     </section>
   );
 }

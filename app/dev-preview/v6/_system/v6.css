@@ -102,7 +102,10 @@
 .v6-eyebrow { font-family: var(--sans); font-size: 14px; font-weight: 600; letter-spacing: -0.005em;
   color: var(--brand-ink); margin: 0; display: inline-block; }
 /* mono survives only for machine text: identifiers, values, timestamps, code */
-.v6-kicker { font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.04em; color: var(--ink-4); }
+/* Small labels are SANS. Geist Mono at 10-12px reads as machine output and made every caption on the site
+   look robotic. Mono is now reserved for things that genuinely are machine text: identifiers and code. */
+.v6-kicker { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-4); }
 .v6-mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 .v6-head { display: flex; flex-direction: column; gap: 18px; max-width: 760px; }
 
@@ -130,7 +133,7 @@
 .v6-dark .v6-elink { color: var(--g-fg); } .v6-dark .v6-elink .v6-arw { color: var(--go-dk); }
 
 /* signal pills: trusted / review / stopped */
-.v6-sig { display: inline-flex; align-items: center; gap: 7px; padding: 4px 11px 4px 9px; border-radius: 999px; font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; white-space: nowrap; }
+.v6-sig { display: inline-flex; align-items: center; gap: 7px; padding: 4px 11px 4px 9px; border-radius: 999px; font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; white-space: nowrap; }
 .v6-sig__dot { width: 7px; height: 7px; border-radius: 999px; background: currentColor; flex: none; }
 .v6-sig--go   { color: var(--go-ink);   background: rgba(11,124,85,0.09);  border: 1px solid rgba(11,124,85,0.28); }
 .v6-sig--wait { color: var(--wait-ink); background: rgba(169,106,18,0.09); border: 1px solid rgba(169,106,18,0.28); }
@@ -165,7 +168,10 @@
   transition: background 260ms ease, border-color 260ms ease, backdrop-filter 260ms ease; }
 /* The page is the drama; the bar is not. Minimal blur, no saturation boost, no floating container. */
 .v6-nav[data-scrolled="true"] .v6-nav__in { background: rgba(255,255,255,0.88); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom-color: var(--line); }
-.v6-nav[data-theme="dark"] .v6-nav__in { background: rgba(10,10,11,0.86); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom-color: var(--g-line); }
+/* Solid, and identical at scrollY 0. The ground under the bar at the top of the page IS black, so a
+   translucent plate over it only ever read as a lighter grey strip sitting on the hero. */
+.v6-nav[data-theme="dark"] .v6-nav__in { background: #0A0A0B; backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom-color: transparent; }
+.v6-nav[data-theme="dark"][data-scrolled="true"] .v6-nav__in { border-bottom-color: rgba(255,255,255,0.10); }
 .v6-nav[data-open="true"] .v6-nav__in { background: #08080A; backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom-color: transparent; }
 /* The wordmark is the largest thing in the bar by a clear margin (roughly 2x the nav links) and it is the
    axis everything else is centred on. It never wraps and never shrinks, and the bar's own height is still set
@@ -173,15 +179,23 @@
    Wordmark only: no icon beside it. */
 .v6-brand { font-family: var(--sans); font-weight: 700; font-size: clamp(25px, 2.1vw, 34px);
   letter-spacing: -0.038em; color: var(--ink); text-decoration: none; line-height: 1; white-space: nowrap;
-  display: inline-flex; align-items: center; flex: none; padding-right: 16px;
+  display: inline-flex; align-items: center; flex: none;
+  /* the gutter puts ~58px between the edge and the wordmark but only 16px between the wordmark and the
+     first trigger, which reads as the logo being shoved right. Pull it back so both gaps are close. */
+  /* edge-to-wordmark and wordmark-to-first-trigger both land near 38px at desktop. The trigger's own
+     14px padding plus the bar's 8px gap already supply most of the right-hand space. */
+  margin-left: calc(var(--gutter) / -3); padding-right: 16px;
   /* optical: "Vraelis" carries no descender, so its glyph box sits a touch high on the shared centre line */
   transform: translateY(0.02em); }
 .v6-nav[data-theme="dark"] .v6-brand { color: var(--g-fg); }
 .v6-nav__items { display: flex; align-items: center; gap: 2px; min-width: 0; }
-.v6-nav__item { font-size: 14.5px; font-weight: 500; color: var(--ink-3); text-decoration: none; white-space: nowrap; background: none; border: 0; cursor: pointer; font-family: var(--sans); padding: 8px 12px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; transition: color 160ms ease, background 160ms ease; }
-.v6-nav__item:hover, .v6-nav__item[aria-current="page"], .v6-nav__item[aria-expanded="true"] { color: var(--ink); background: rgba(10,10,11,0.05); }
+/* No pill, no rounded hover plate, no outlined active box. State is carried by colour alone. */
+.v6-nav__item { font-size: 14.5px; font-weight: 500; color: var(--ink-3); text-decoration: none; white-space: nowrap;
+  background: none; border: 0; cursor: pointer; font-family: var(--sans); padding: 8px 14px; display: inline-flex;
+  align-items: center; transition: color 160ms ease; }
+.v6-nav__item:hover, .v6-nav__item[aria-current="page"], .v6-nav__item[aria-expanded="true"] { color: var(--ink); }
 .v6-nav[data-theme="dark"] .v6-nav__item { color: var(--g-fg-2); }
-.v6-nav[data-theme="dark"] .v6-nav__item:hover, .v6-nav[data-theme="dark"] .v6-nav__item[aria-expanded="true"] { color: var(--g-fg); background: rgba(255,255,255,0.07); }
+.v6-nav[data-theme="dark"] .v6-nav__item:hover, .v6-nav[data-theme="dark"] .v6-nav__item[aria-expanded="true"] { color: var(--g-fg); }
 .v6-nav__right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex: none; }
 .v6-nav__signin { font-size: 14.5px; font-weight: 500; color: var(--ink-3); text-decoration: none; padding: 8px 12px; white-space: nowrap; }
 .v6-nav__signin:hover { color: var(--ink); }
@@ -202,7 +216,7 @@
 .v6-nav[data-open="true"] .v6-nav__item { color: #B9BBC0; }
 .v6-nav[data-open="true"] .v6-nav__item:hover,
 .v6-nav[data-open="true"] .v6-nav__item[aria-current="page"],
-.v6-nav[data-open="true"] .v6-nav__item[aria-expanded="true"] { color: #FAFAFA; background: rgba(255,255,255,0.08); }
+.v6-nav[data-open="true"] .v6-nav__item[aria-expanded="true"] { color: #FAFAFA; }
 .v6-nav[data-open="true"] .v6-nav__signin { color: #B9BBC0; }
 .v6-nav[data-open="true"] .v6-nav__signin:hover { color: #FAFAFA; }
 .v6-nav[data-open="true"] .v6-btn { background: #FAFAFA; border-color: #FAFAFA; color: #0A0A0B; }
@@ -229,11 +243,14 @@
 .v6-mega[data-state="out"] .v6-mega__panel { animation: v6MegaOut 190ms cubic-bezier(0.4,0,1,1) both; pointer-events: none; }
 @keyframes v6MegaIn  { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
 @keyframes v6MegaOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-6px); } }
-.v6-mega__grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)) minmax(0,1.15fr);
+/* switching top-level items keeps the shell and crossfades only what is inside it */
+@keyframes v6MegaSwap { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+@keyframes v6MegaFade { from { opacity: 0; } to { opacity: 1; } }
+.v6-mega__grid { animation: v6MegaSwap 220ms var(--ease) both; display: grid; grid-template-columns: repeat(3, minmax(0,1fr)) minmax(0,1.15fr);
   gap: clamp(28px,3.4vw,64px); max-width: var(--max-wide); margin-inline: auto;
   padding: clamp(34px,3.2vw,52px) var(--gutter) clamp(36px,3.6vw,56px); }
-.v6-mega__col-h { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase;
-  color: #8E9095; margin: 0 0 16px; }
+.v6-mega__col-h { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.15em;
+  text-transform: uppercase; color: #8E9095; margin: 0 0 16px; }
 .v6-mega__link { display: block; text-decoration: none; padding: 9px 10px; margin: 0 -10px; border-radius: 8px;
   transition: background 140ms ease; }
 .v6-mega__link:hover { background: rgba(255,255,255,0.06); }
@@ -242,16 +259,20 @@
 .v6-mega__ld { display: block; font-size: 12.5px; color: #9A9CA1; margin-top: 2px; line-height: 1.4; }
 /* editorial preview, not a card of muted text on a black card */
 .v6-mega__feature { border-left: 1px solid rgba(255,255,255,0.13); padding-left: clamp(24px,2.4vw,40px);
-  display: flex; flex-direction: column; text-decoration: none; }
-.v6-mega__fe { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #8E9095; }
+  display: flex; flex-direction: column; min-height: 232px; }
+.v6-mega__fin { animation: v6MegaFade 200ms var(--ease) both; }
+.v6-mega__fstat { display: inline-block; margin-top: 16px; font-family: var(--sans); font-size: 11px;
+  font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #8E9095;
+  border: 1px solid rgba(255,255,255,0.16); border-radius: 999px; padding: 5px 12px; }
+.v6-mega__fe { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #8E9095; }
 .v6-mega__feature h4 { color: #FAFAFA; font-size: clamp(1.2rem,1.5vw,1.5rem); font-weight: 600; margin: 14px 0 0;
   letter-spacing: -0.022em; line-height: 1.12; }
 .v6-mega__feature p { font-size: 13.5px; line-height: 1.55; margin: 12px 0 0; color: #B9BBC0; }
-.v6-mega__fcta { display: inline-flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 22px;
-  font-size: 14px; font-weight: 600; color: #FAFAFA; }
+.v6-mega__fcta { display: inline-flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 24px;
+  font-size: 14px; font-weight: 600; color: #FAFAFA; text-decoration: none; }
 .v6-mega__fcta .v6-arw { transition: transform 180ms var(--ease-out); }
-.v6-mega__feature:hover .v6-arw { transform: translateX(4px); }
-.v6-mega__feature:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 4px; border-radius: 4px; }
+.v6-mega__fcta:hover .v6-arw { transform: translateX(4px); }
+.v6-mega__fcta:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 4px; border-radius: 4px; }
 
 /* mobile full-screen nav */
 /* --surface, not --paper: on the page ground the panel sampled the same colour as the page behind it and had
@@ -265,7 +286,7 @@
 .v6-drawer__foot .v6-btn { justify-content: center; }
 .v6-drawer__link { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; color: var(--ink); text-decoration: none; padding: 15px 2px; border-bottom: 1px solid var(--line); min-height: 48px; display: flex; align-items: center; }
 .v6-drawer__sub { padding: 14px 2px; border-bottom: 1px solid var(--line); }
-.v6-drawer__sub-h { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-4); margin: 0 0 10px; }
+.v6-drawer__sub-h { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-4); margin: 0 0 10px; }
 .v6-drawer__sub-links { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
 .v6-drawer__sub-links a { font-size: 15px; color: var(--ink-2); text-decoration: none; padding: 6px 0; }
 .v6-drawer__cta { margin-top: 24px; display: flex; flex-direction: column; gap: 10px; }
