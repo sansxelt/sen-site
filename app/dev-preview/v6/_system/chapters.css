@@ -83,36 +83,47 @@
 .v6-cs { position: relative; height: 340vh; background: var(--graphite); color: var(--g-fg-2); --p: 0;
   --f: calc(var(--p) * 2); }
 .v6-cs__pin { position: sticky; top: 0; height: 100svh; overflow: hidden; display: grid;
-  grid-template-rows: auto 1fr; gap: clamp(10px, 1.6vh, 24px);
+  grid-template-rows: auto 1fr; gap: clamp(8px, 1.2vh, 18px);
   padding: calc(var(--nav-h, 66px) + 2vh) 0 3vh;
   background: radial-gradient(1500px 900px at 50% 46%, rgba(255,255,255,0.05), transparent 72%); }
-.v6-cs__head { max-width: var(--max-wide); width: 100%; margin-inline: auto; padding-inline: var(--gutter); }
+.v6-cs__head { position: relative; z-index: 2; max-width: var(--max-wide); width: 100%;
+  margin-inline: auto; padding-inline: var(--gutter); pointer-events: none; }
 
 /* the three sentences occupy one space and hand over as focus moves */
 .v6-cs__acts { position: relative; min-height: clamp(104px, 13vh, 132px); margin-top: clamp(8px, 1.4vh, 16px); }
-.v6-cs__act { position: absolute; inset: 0;
-  /* visible only while focus is on this act */
-  opacity: clamp(0, calc(1.6 - 2.2 * max(calc(var(--f) - var(--i)), calc(var(--i) - var(--f)))), 1);
-  transform: translateY(calc(14px * max(calc(var(--f) - var(--i)), calc(var(--i) - var(--f))))); }
+/* exactly one act is readable at a time, selected by the index the component computes */
+.v6-cs__act { position: absolute; inset: 0; opacity: 0; transform: translateY(16px);
+  transition: opacity 320ms var(--ease), transform 380ms var(--ease); pointer-events: none; }
+.v6-cs[data-act="0"] .v6-cs__act:nth-child(1),
+.v6-cs[data-act="1"] .v6-cs__act:nth-child(2),
+.v6-cs[data-act="2"] .v6-cs__act:nth-child(3) { opacity: 1; transform: none; }
 .v6-cs__act h2 { font-family: var(--sans); font-weight: 600; letter-spacing: -0.034em; line-height: 1;
   font-size: clamp(1.9rem, 4.2vw, 3.5rem); color: var(--g-fg); margin: 0; }
 .v6-cs__act p { font-size: clamp(1rem, 1.2vw, 1.18rem); line-height: 1.5; color: var(--g-fg-2);
   margin: clamp(12px, 1.6vh, 18px) 0 0; max-width: 52ch; }
 
 /* the environment itself: one scene, panned */
-.v6-cs__viewport { overflow: hidden; align-self: center; width: 100%; }
+/* starts at the top of its row and lifts into the text band, so the chapter is one composition
+   rather than a sentence with a diagram parked below it */
+/* starts at the top of its row so the chapter is one composition, but NOT lifted into the headline:
+   at -7vh the environment printed straight through the act sentence. */
+.v6-cs__viewport { overflow: hidden; align-self: start; width: 100%; margin-top: 0; }
 .v6-cs__scene { min-height: 0; }
 .v6-cs__scene { width: 200%; height: auto; display: block;
-  transform: translateX(calc(var(--f) / 2 * -50%)); }
+  transition: transform 620ms var(--ease); transform: translateX(0); }
+.v6-cs[data-act="1"] .v6-cs__scene { transform: translateX(-25%); }
+.v6-cs[data-act="2"] .v6-cs__scene { transform: translateX(-50%); }
 
 .v6-cs__spine { stroke: rgba(255,255,255,0.22); stroke-width: 1.5; stroke-dasharray: 5 7; }
 .v6-cs__spinet { fill: var(--g-fg-3); font-family: var(--sans); font-weight: 600; font-size: 17px;
   letter-spacing: 0.16em; text-transform: uppercase; }
 
 /* regions dim by distance from focus, but never disappear */
-/* the whole environment stays on screen: an unfocused region reads at 0.4, never as a ghost */
-.v6-cs__r { opacity: clamp(0.4, calc(1 - 0.5 * max(calc(var(--f) - var(--ri, 0)), calc(var(--ri, 0) - var(--f)))), 1); }
-.v6-cs__r[data-r="0"] { --ri: 0; } .v6-cs__r[data-r="1"] { --ri: 1; } .v6-cs__r[data-r="2"] { --ri: 2; }
+/* the whole environment stays on screen; the focused region is at full strength, the others at 0.38 */
+.v6-cs__r { opacity: 0.38; transition: opacity 360ms var(--ease); }
+.v6-cs[data-act="0"] .v6-cs__r[data-r="0"],
+.v6-cs[data-act="1"] .v6-cs__r[data-r="1"],
+.v6-cs[data-act="2"] .v6-cs__r[data-r="2"] { opacity: 1; }
 
 .v6-cs__guar { fill: rgba(255,255,255,0.07); stroke: rgba(255,255,255,0.34); stroke-width: 1.5; }
 .v6-cs__guart { fill: var(--g-fg-3); font-family: var(--sans); font-weight: 600; font-size: 17px;
@@ -139,6 +150,35 @@
 .v6-cs__node.is-wait text { fill: var(--wait-dk); }
 .v6-cs__node.is-go circle { fill: var(--go-dk); stroke: var(--go-dk); }
 .v6-cs__node.is-go text { fill: var(--go-dk); }
+
+/* ---- chapter 3, authored mobile: three stages, one record line down the left ---- */
+.v6-cs__m { display: none; list-style: none; margin: clamp(28px, 6vw, 40px) 0 0;
+  padding: 0 var(--gutter); gap: clamp(30px, 7vw, 46px); }
+.v6-cs__mstage { position: relative; padding-left: 26px; }
+.v6-cs__mstage::before { content: ""; position: absolute; left: 4px; top: 8px; bottom: -46px; width: 1px;
+  background: rgba(255,255,255,0.2); }
+.v6-cs__mstage:last-child::before { bottom: 50%; }
+.v6-cs__mstage::after { content: ""; position: absolute; left: 0; top: 8px; width: 9px; height: 9px;
+  border-radius: 999px; background: var(--g-fg); }
+.v6-cs__mh { margin: 0; font-family: var(--sans); font-weight: 600; letter-spacing: -0.024em;
+  font-size: clamp(1.3rem, 5.6vw, 1.62rem); color: var(--g-fg); line-height: 1.14; }
+.v6-cs__mguar { margin-top: 14px; padding: 14px 16px; border: 1px solid rgba(255,255,255,0.24);
+  border-radius: 12px; background: rgba(255,255,255,0.05); color: var(--g-fg);
+  font-size: 1rem; font-weight: 500; line-height: 1.35; }
+.v6-cs__mtags, .v6-cs__mpath, .v6-cs__mres { list-style: none; margin: 12px 0 0; padding: 0;
+  display: flex; flex-wrap: wrap; gap: 8px; }
+.v6-cs__mtags li, .v6-cs__mpath li, .v6-cs__mres li { font-size: 14px; color: var(--g-fg-2);
+  border: 1px solid var(--g-line-2); border-radius: 999px; padding: 7px 14px; }
+.v6-cs__mpath li { font-family: var(--mono); font-size: 13px; }
+.v6-cs__mres li.is-stop { color: var(--stop-dk); border-color: rgba(255,122,85,0.4); }
+.v6-cs__mres li.is-wait { color: var(--wait-dk); border-color: rgba(242,183,90,0.4); }
+.v6-cs__mres li.is-go { color: var(--go-dk); border-color: rgba(74,222,156,0.4); }
+.v6-cs__mobs { margin-top: 14px; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px;
+  align-items: baseline; font-size: 15px; color: var(--g-fg-2); }
+.v6-cs__mobs span { font-family: var(--sans); font-weight: 600; font-size: 10.5px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--g-fg-3); }
+.v6-cs__mobs b { color: var(--stop-dk); font-weight: 600; }
+.v6-cs__ms { margin: 14px 0 0; font-size: 15px; line-height: 1.5; color: var(--g-fg-3); }
 
 /* ══════════════════════════════ 4. INTERNAL PRODUCTION DEMONSTRATION ══ */
 .v6-pf { background: var(--paper); padding-block: clamp(72px, 9vh, 124px); overflow: hidden; }
@@ -171,6 +211,7 @@
 .v6-pf__pt.is-go circle { fill: var(--go); stroke: var(--go); }
 .v6-pf__pt.is-go text { fill: var(--go-ink); font-weight: 600; }
 .v6-pf__note-t { fill: var(--stop-ink); font-family: var(--sans); font-size: 16px; font-style: italic; }
+.v6-pf__decide { stroke: var(--go); stroke-width: 2; fill: none; stroke-dasharray: 4 6; opacity: 0.7; }
 .v6-pf__final rect { fill: rgba(11,124,85,0.10); stroke: rgba(11,124,85,0.45); stroke-width: 1.6; }
 .v6-pf__final text { fill: var(--go-ink); font-family: var(--sans); font-weight: 700; font-size: 24px;
   letter-spacing: 0.02em; text-anchor: middle; }
@@ -238,9 +279,12 @@
   color: var(--ink); background: var(--paper); border: 1px solid var(--line-2); border-radius: 999px;
   padding: 5px 12px; white-space: nowrap; }
 .v6-rx__chipdot { width: 7px; height: 7px; border-radius: 999px; background: var(--go); flex: none; }
-.v6-rx__surfaces { border-top: 1px solid var(--line); flex: 1; }
-.v6-rx__surface { display: flex; flex-direction: column; gap: 5px; padding: clamp(14px, 1.8vh, 20px) 0;
-  border-bottom: 1px solid var(--line); }
+/* the environments start and end on the same lines; the differing surface counts distribute inside,
+   so three, two and two read as different shapes rather than as a ragged column */
+.v6-rx__surfaces { border-top: 1px solid var(--line); flex: 1; display: flex; flex-direction: column;
+  justify-content: space-between; min-height: clamp(240px, 26vh, 300px); }
+.v6-rx__surface { display: flex; flex-direction: column; justify-content: center; gap: 5px;
+  flex: 1; padding: clamp(12px, 1.6vh, 18px) 0; border-bottom: 1px solid var(--line); }
 .v6-rx__sn { font-family: var(--sans); font-weight: 600; font-size: clamp(1.02rem, 1.4vw, 1.24rem);
   color: var(--ink); letter-spacing: -0.016em; }
 .v6-rx__sf { font-size: 14px; line-height: 1.5; color: var(--ink-3); }
@@ -322,9 +366,9 @@
   .v6-cs__act { position: static; opacity: 1 !important; transform: none !important;
     padding-top: 20px; border-top: 1px solid var(--g-line); }
   .v6-cs__act h2 { font-size: clamp(1.5rem, 6.4vw, 2rem); }
-  .v6-cs__viewport { margin-top: clamp(30px, 6vw, 44px); overflow-x: auto; padding-inline: var(--gutter); }
-  .v6-cs__scene { width: auto; min-width: 1100px; transform: none !important; }
-  .v6-cs__r { opacity: 1 !important; }
+  /* the desktop scene is replaced, not scrolled */
+  .v6-cs__viewport { display: none; }
+  .v6-cs__m { display: grid; }
 
   .v6-pf__figure, .v6-rx__journey { }
   .v6-pf__figure { overflow-x: auto; padding-inline: var(--gutter); width: 100%; }
@@ -360,9 +404,8 @@
   .v6-cs__pin { position: static; height: auto; display: block; padding: clamp(64px, 8vw, 100px) 0; }
   .v6-cs__acts { position: static; min-height: 0; display: grid; gap: 34px; }
   .v6-cs__act { position: static; opacity: 1 !important; transform: none !important; }
-  .v6-cs__viewport { overflow-x: auto; padding-inline: var(--gutter); }
-  .v6-cs__scene { width: auto; min-width: 1100px; transform: none !important; }
-  .v6-cs__r { opacity: 1 !important; }
+  .v6-cs__viewport { display: none; }
+  .v6-cs__m { display: grid; }
   .v6-pf__pt, .v6-rec__sheet, .v6-rx__env {
     opacity: 1 !important; transform: none !important; transition: none !important; }
 }

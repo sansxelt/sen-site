@@ -202,19 +202,40 @@ function V6Nav() {
 
   useEffect(() => {
     const nav = navRef.current;
+    // Read the ACTUAL background under the bar rather than trusting a [data-nav-dark] marker. The marker
+    // approach guessed, and it guessed wrong on the docs environment: a white bar on a near-black page.
+    // Walk up from the element under the bar to the first opaque background, measure its luminance, and let
+    // that decide. Any surface added later is handled without having to remember to tag it.
+    const luminance = (c: string) => {
+      const m = c.match(/[\d.]+/g);
+      if (!m || m.length < 3) return null;
+      if (m.length > 3 && Number(m[3]) < 0.5) return null; // effectively transparent
+      const [r, g, b] = m.slice(0, 3).map((v) => {
+        const x = Number(v) / 255;
+        return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+      });
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
     const onScroll = () => {
       setScrolled(window.scrollY > 4);
-      const h = nav?.offsetHeight ?? 56;
-      const el = document.elementFromPoint(Math.round(window.innerWidth / 2), h + 2);
-      setDark(!!(el && (el as Element).closest?.("[data-nav-dark]")));
+      if (!nav) return;
+      const y = Math.round(nav.getBoundingClientRect().bottom) + 4;
+      let el = document.elementFromPoint(Math.round(window.innerWidth / 2), y) as HTMLElement | null;
+      let lum: number | null = null;
+      while (el && lum === null) {
+        // only a surface that spans most of the viewport counts as "the background". Without this the
+        // knowledge chapter read as dark because its small black code fragment happened to sit under the bar.
+        if (el.getBoundingClientRect().width >= window.innerWidth * 0.7) {
+          lum = luminance(getComputedStyle(el).backgroundColor);
+        }
+        el = el.parentElement;
+      }
+      setDark(lum !== null && lum < 0.4);
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
     return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); };
-    // `shown` is a dependency because the open panel covers the sample point: while a menu is open,
-    // elementFromPoint hits the panel rather than the section, so the theme has to be re-read the moment the
-    // panel unmounts. Without it the bar stayed dark over a white chapter until the next scroll event.
   }, [pathname, shown]);
 
   const close = useCallback((i: number | null) => {

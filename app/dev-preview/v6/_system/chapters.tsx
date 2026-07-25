@@ -164,8 +164,35 @@ const ACTS: [string, string][] = [
 export function SystemMap() {
   const wrap = useRef<HTMLDivElement>(null);
   useScrollProgress(wrap);
+  // The focus index is computed here rather than in CSS. Deriving it from clamp()/max() over custom
+  // properties silently failed to resolve and every act rendered at full opacity on top of the others.
+  const [act, setAct] = useState(0);
+  useEffect(() => {
+    const el = wrap.current;
+    if (!el) return;
+    let raf = 0;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const read = () => {
+      raf = 0;
+      if (!el.offsetParent) return;
+      const r = el.getBoundingClientRect();
+      const total = r.height - window.innerHeight;
+      if (total <= 0) return;
+      const p = Math.min(0.9999, Math.max(0, -r.top / total));
+      setAct(Math.floor(p * 3));
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(read); };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
   return (
-    <section className="v6-cs" data-nav-dark ref={wrap}>
+    <section className="v6-cs" data-nav-dark data-act={act} ref={wrap}>
       <div className="v6-cs__pin">
         <div className="v6-cs__head">
           <p className="v6-eyebrow">The operating environment</p>
@@ -232,6 +259,41 @@ export function SystemMap() {
             </g>
           </svg>
         </div>
+
+        {/* Mobile is authored, not the desktop scene on a horizontal scroller. Three stages read top to
+            bottom, and one record line runs down the left through all of them so it is still one
+            environment rather than three sections. */}
+        <ol className="v6-cs__m">
+          <li className="v6-cs__mstage">
+            <p className="v6-cs__mh">Define what must hold</p>
+            <div className="v6-cs__mguar">A paying customer keeps Pro access.</div>
+            <ul className="v6-cs__mtags">
+              {["application", "checkout", "account-api"].map((t) => <li key={t}>{t}</li>)}
+            </ul>
+            <p className="v6-cs__ms">Kept outside the code, so a change cannot quietly drop it.</p>
+          </li>
+          <li className="v6-cs__mstage">
+            <p className="v6-cs__mh">Check the running system</p>
+            <ul className="v6-cs__mpath">
+              {["open checkout", "pay", "sign out", "sign back in"].map((t) => <li key={t}>{t}</li>)}
+            </ul>
+            <div className="v6-cs__mobs">
+              <span>Expected</span>access is still there
+              <span>Observed</span><b>access is gone</b>
+            </div>
+            <p className="v6-cs__ms">A real browser crosses the deployed workflow, not the source.</p>
+          </li>
+          <li className="v6-cs__mstage">
+            <p className="v6-cs__mh">Resolve what failed</p>
+            <ul className="v6-cs__mres">
+              <li className="is-stop">finding</li>
+              <li className="is-wait">a person decides</li>
+              <li>repair</li>
+              <li className="is-go">recheck holds</li>
+            </ul>
+            <p className="v6-cs__ms">All of it lands on the same permanent record.</p>
+          </li>
+        </ol>
       </div>
     </section>
   );
@@ -247,15 +309,16 @@ export function SystemMap() {
    This is an authored reconstruction. It is not a screenshot, it carries no invented run identifier and no
    invented timestamp, and it says so on the page.
    ------------------------------------------------------------------------------------------------- */
-type Ev = { x: number; label: string; lane: "pay" | "ent"; s?: "go" | "stop"; note?: string; up?: boolean };
+type Ev = { x: number; cy: number; ly: number; label: string; s?: "go" | "stop"; note?: string; anchor?: "start" | "middle" };
 const CASE: Ev[] = [
-  { x: 150, label: "Checkout reports success", lane: "pay", up: true },
-  { x: 430, label: "Payment succeeds", lane: "pay", s: "go" },
-  { x: 400, label: "Pro access missing", lane: "ent", s: "stop" },
-  { x: 700, label: "Repair 1 grants access", lane: "ent" },
-  { x: 1180, label: "Access disappears", lane: "ent", s: "stop", note: "the first repair never survived a new session" },
-  { x: 1480, label: "Repair 2 attaches the entitlement", lane: "ent" },
-  { x: 1700, label: "Access remains", lane: "ent", s: "go" },
+  { x: 150, cy: 152, ly: 90, label: "Checkout reports success", anchor: "start" },
+  { x: 430, cy: 152, ly: 118, label: "Payment succeeds", s: "go" },
+  { x: 400, cy: 336, ly: 378, label: "Pro access missing", s: "stop" },
+  { x: 700, cy: 240, ly: 216, label: "Repair 1 grants access" },
+  { x: 1180, cy: 336, ly: 378, label: "Access disappears", s: "stop",
+    note: "the first repair never survived a new session" },
+  { x: 1480, cy: 336, ly: 378, label: "Repair 2 attaches the entitlement" },
+  { x: 1740, cy: 240, ly: 206, label: "Access remains after sign-in", s: "go" },
 ];
 
 export function Proof() {
@@ -272,22 +335,22 @@ export function Proof() {
       </div>
 
       <div className="v6-pf__figure" data-i="0" data-on={seen > 0}>
-        <svg className="v6-pf__svg" viewBox="0 0 1960 470" role="img"
+        <svg className="v6-pf__svg" viewBox="0 0 2000 470" role="img"
           aria-label="Checkout reported success and payment succeeded, but Pro access was missing. A first repair granted access, which disappeared after signing out and back in. A second repair attached the entitlement to the account and access remained. The result is Verified and both earlier failures are preserved.">
           {/* the two systems, named, so payment and entitlement are never confused */}
           <text className="v6-pf__lane" x="40" y="122">PAYMENT</text>
           <text className="v6-pf__lane" x="40" y="306">ENTITLEMENT</text>
-          <line className="v6-pf__base" x1="40" y1="152" x2="1900" y2="152" />
-          <line className="v6-pf__base" x1="40" y1="336" x2="1900" y2="336" />
+          <line className="v6-pf__base" x1="40" y1="152" x2="1960" y2="152" />
+          <line className="v6-pf__base" x1="40" y1="336" x2="1960" y2="336" />
 
           {/* the payment lane holds from the moment it succeeds */}
-          <path className="v6-pf__pay" d="M150 152 L 1900 152" />
+          <path className="v6-pf__pay" d="M150 152 L 1960 152" />
 
           {/* the entitlement lane: missing, granted, lost at the session wall, attached, held */}
           <path className="v6-pf__ent is-bad" d="M400 336 L 700 336" />
           <path className="v6-pf__ent" d="M700 336 L 700 240 L 1180 240" />
           <path className="v6-pf__ent is-bad" d="M1180 240 L 1180 336 L 1480 336" />
-          <path className="v6-pf__ent is-good" d="M1480 336 L 1480 240 L 1860 240" />
+          <path className="v6-pf__ent is-good" d="M1480 336 L 1480 240 L 1740 240" />
 
           {/* the session wall: the turning point of the whole demonstration */}
           <g className="v6-pf__wall">
@@ -296,17 +359,19 @@ export function Proof() {
           </g>
 
           {CASE.map((e, i) => (
-            <g key={e.label + i} className={`v6-pf__pt ${e.s ? `is-${e.s}` : ""}`} style={{ ["--i" as string]: i }}>
-              <circle cx={e.x} cy={e.lane === "pay" ? 152 : (i === 3 || i === 6 ? 240 : 336)} r={e.s === "go" ? 12 : 9} />
-              <text x={e.x} y={e.lane === "pay" ? (e.up ? 90 : 118) : (i === 3 || i === 6 ? 216 : 378)}
-                textAnchor={i === 0 ? "start" : "middle"}>{e.label}</text>
+            <g key={e.label} className={`v6-pf__pt ${e.s ? `is-${e.s}` : ""}`} style={{ ["--i" as string]: i }}>
+              <circle cx={e.x} cy={e.cy} r={e.s === "go" ? 12 : 9} />
+              <text x={e.x} y={e.ly} textAnchor={e.anchor ?? "middle"}>{e.label}</text>
               {e.note ? <text className="v6-pf__note-t" x={e.x} y={410} textAnchor="middle">{e.note}</text> : null}
             </g>
           ))}
 
+          {/* the decision sits BEYOND the last observation, joined to it, so the observed outcome and the
+              decision drawn from it are two readable things rather than one plate on top of a label */}
+          <path className="v6-pf__decide" d="M1740 240 C 1830 240, 1840 176, 1900 176" />
           <g className="v6-pf__final">
-            <rect x="1700" y="96" width="200" height="60" rx="12" />
-            <text x="1800" y="134">Verified</text>
+            <rect x="1760" y="146" width="188" height="60" rx="12" />
+            <text x="1854" y="184">Verified</text>
           </g>
         </svg>
       </div>
