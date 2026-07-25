@@ -1,8 +1,9 @@
 "use client";
 
-// The stealth curtain. Shares the 404's calm paper field and restraint (app/not-found.tsx) but not its
-// oversized numeral: here the headline IS the composition. An earlier version put a redacted line above it
-// and the mark competed with the one sentence that carries the page, so it went.
+// The stealth curtain, in the v6 monochrome system: full graphite field, white and neutral grey only.
+// No colour, no glow, no grid, no floating card. A top row (wordmark left, "Private access" right) and
+// one quiet block of copy. There is deliberately nothing interactive on this page: the real entrances are
+// the reviewer link (/yc?k=) and the hidden gesture below, and the page must never advertise either.
 //
 // The unlock gesture is below. It cannot be hidden (client code has to interpret keystrokes), so what
 // protects it is the server-enforced three-second wait and the attempt limiter. See lib/stealth.ts.
@@ -156,77 +157,89 @@ export function StealthScreen() {
   }, []);
 
   return (
-    <main
-      style={{
-        position: "relative",
-        minHeight: "100svh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        overflow: "hidden",
-        isolation: "isolate",
-        textAlign: "center",
-        padding: "clamp(40px, 8vw, 96px) var(--gutter)",
-        background: "radial-gradient(135% 100% at 50% 4%, var(--bg-1) 0%, var(--bg-0) 62%, var(--bg-2) 100%)",
-      }}
-    >
+    <div className="vst-page">
       <style>{ST_CSS}</style>
 
-      <div className="gridbg" aria-hidden style={{ opacity: 0.4 }} />
-      <div className="vst-bloom" aria-hidden />
+      <header className="vst-top">
+        <span className="vst-mark">Vraelis</span>
+        <span className="vst-priv">Private access</span>
+      </header>
 
-      <div className="wrap vst-stack">
-        <h1 className="vst-head vst-in vst-d1">
-          Vraelis is in <span className="em">stealth</span>.
-        </h1>
-
-        <p className="vst-body vst-in vst-d2">
-          Not public yet. If you were meant to be here, you already know the way in.
-        </p>
-      </div>
-    </main>
+      <main className="vst-main">
+        <div className="vst-stack">
+          <p className="vst-eyebrow vst-in vst-d1">Vraelis is in stealth</p>
+          <h1 className="vst-head vst-in vst-d2">This environment is not public yet.</h1>
+          <p className="vst-body vst-in vst-d3">
+            Use the private access link you were given, or sign in with an authorized account.
+          </p>
+          <p className="vst-quiet vst-in vst-d4">Reviewer and invited access only.</p>
+        </div>
+      </main>
+    </div>
   );
 }
 
 const ST_CSS = `
-/* Type only, sat a little above true centre. Dead centre reads as content that fell there; a touch high
-   reads as composed. */
-.vst-stack{
-  position:relative; z-index:1;
-  display:flex; flex-direction:column; align-items:center;
-  max-width:680px; margin:0 auto;
-  transform:translateY(-6%);
+/* Black and white only. Ground #0A0A0B, type #FFFFFF at varying opacity for hierarchy; no third hue,
+   no grey tints, no colour anywhere.
+   Self-contained: the stealth branch of the root layout loads no site stylesheets. */
+.vst-page{
+  min-height:100svh;
+  display:flex; flex-direction:column;
+  background:#0A0A0B; color:#FFFFFF;
+  font-family:var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  -webkit-font-smoothing:antialiased;
 }
 
+.vst-top{
+  display:flex; align-items:baseline; justify-content:space-between; gap:16px;
+  padding:clamp(20px, 3.5vw, 32px) clamp(20px, 5vw, 48px);
+}
+.vst-mark{
+  font-weight:700; font-size:clamp(22px, 2.2vw, 28px); letter-spacing:-0.038em; line-height:1;
+  color:#FFFFFF; white-space:nowrap;
+}
+.vst-priv{
+  font-size:12px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase;
+  color:#FFFFFF; opacity:0.55; white-space:nowrap;
+}
+
+/* One quiet block, sat a little above true centre. Left edge lines up with the wordmark. */
+.vst-main{
+  flex:1; display:flex; align-items:center;
+  padding:clamp(32px, 6vw, 72px) clamp(20px, 5vw, 48px) clamp(64px, 12vh, 140px);
+}
+.vst-stack{ max-width:620px; }
+
+.vst-eyebrow{
+  font-size:11px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase;
+  color:#FFFFFF; opacity:0.55; margin:0 0 18px;
+}
 .vst-head{
-  font-family:var(--font-display);
-  font-size:clamp(1.5rem, 3.4vw, 2.35rem);
-  font-weight:600; letter-spacing:-.02em; line-height:1.12;
-  color:var(--fg-1);
-  margin:0; /* nothing above it now, so no top margin to clear */
+  font-weight:600; letter-spacing:-0.026em; line-height:1.08;
+  font-size:clamp(1.85rem, 4.4vw, 3.1rem);
+  color:#FFFFFF; margin:0; text-wrap:balance;
 }
 .vst-body{
-  font-size:clamp(1rem, 1.25vw, 1.12rem); line-height:1.55;
-  color:var(--fg-2); max-width:440px; margin:13px auto 0; text-wrap:pretty;
+  font-size:clamp(1rem, 1.25vw, 1.13rem); line-height:1.6;
+  color:#FFFFFF; opacity:0.72; max-width:46ch; margin:18px 0 0; text-wrap:pretty;
+}
+.vst-quiet{
+  font-size:13.5px; line-height:1.5; color:#FFFFFF; opacity:0.5;
+  margin:28px 0 0; padding-top:20px;
+  border-top:1px solid rgba(255,255,255,0.18);
+  max-width:46ch;
 }
 
-.vst-bloom{
-  position:absolute; z-index:0; pointer-events:none;
-  top:44%; left:50%; width:min(880px, 122vw); height:min(880px, 122vw);
-  transform:translate(-50%,-50%);
-  background:radial-gradient(circle, var(--acc-glow) 0%, var(--acc-soft) 36%, transparent 68%);
-  animation:vst-breathe 10s var(--ease-out) infinite;
-}
+.vst-in{ animation:vst-rise .55s cubic-bezier(.22,.61,.36,1) both; }
+.vst-d1{ animation-delay:60ms; }
+.vst-d2{ animation-delay:120ms; }
+.vst-d3{ animation-delay:190ms; }
+.vst-d4{ animation-delay:260ms; }
 
-.vst-in{ animation:vst-rise .6s var(--ease-out) both; }
-.vst-d1{ animation-delay:120ms; }
-.vst-d2{ animation-delay:200ms; }
-
-@keyframes vst-rise{ from{ opacity:0; transform:translateY(14px); } to{ opacity:1; transform:none; } }
-@keyframes vst-breathe{ 0%,100%{ opacity:.45; transform:translate(-50%,-50%) scale(1); } 50%{ opacity:.8; transform:translate(-50%,-50%) scale(1.07); } }
+@keyframes vst-rise{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
 
 @media (prefers-reduced-motion: reduce){
-  .vst-in, .vst-bloom{ animation:none !important; }
-  .vst-in{ opacity:1; transform:none; }
+  .vst-in{ animation:none !important; opacity:1; transform:none; }
 }
 `;

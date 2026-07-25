@@ -6,7 +6,7 @@
 import { useRef } from "react";
 import Link from "next/link";
 import { CTA, EditorialLink } from "./ui";
-import { CLOSE_TITLE, FOOTER_STATEMENT } from "./positioning";
+import { CLOSE_TITLE, CLOSE_SAY } from "./positioning";
 import { useScrollProgress, entryProgress } from "./progress";
 import { Spectral } from "./spectral";
 import "./close.css";
@@ -18,11 +18,9 @@ const BASE = "/dev-preview/v6";
 export function ClosingScene({
   resolve = false,
   title = CLOSE_TITLE,
-  say = `${FOOTER_STATEMENT} Written down before the work starts, and checked against the running software after it ends.`,
-  secondaryHref = `${BASE}/platform`,
-  secondaryLabel = "See the platform",
+  say = CLOSE_SAY,
 }: {
-  resolve?: boolean; title?: string; say?: string; secondaryHref?: string; secondaryLabel?: string;
+  resolve?: boolean; title?: string; say?: string;
 }) {
   // The closing statement is one of the page's few spectral reveals: --p rises continuously with the
   // section's own entry into the viewport, so the pass scrubs with the reader in both directions.
@@ -41,12 +39,11 @@ export function ClosingScene({
             </p>
           </div>
         ) : null}
-        <h2 className="v6-end__h"><Spectral sv="clamp(0, calc((var(--p) - 0.12) / 0.82), 1)">{title}</Spectral></h2>
+        <Spectral as="h2" className="v6-end__h" sv="clamp(0, calc((var(--p) - 0.12) / 0.82), 1)" text={title} />
         <p className="v6-end__say">{say}</p>
         <div className="v6-end__cta">
           <CTA brand lg>Open Vraelis</CTA>
-          <EditorialLink href={secondaryHref}>{secondaryLabel}</EditorialLink>
-          <Link href={`${BASE}/company#contact`} className="v6-end__third">Talk to the team</Link>
+          <EditorialLink href={`${BASE}/company#contact`}>Talk to the team</EditorialLink>
         </div>
       </div>
     </section>

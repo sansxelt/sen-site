@@ -53,13 +53,24 @@ function useSeen(root: RefObject<HTMLElement | null>, total: number) {
 }
 
 /* ══════════════════════════════════════════════════════════════ CHAPTER 2 ══
-   THE COMPLETION GAP. One word at the largest scale on the page, which then
-   loses its authority as what actually happened takes the same space. Two
-   states in one pinned viewport, not a heading-list-paragraph section. */
-const FOUND = [
-  "One pricing decision nobody approved.",
-  "A usage limit never enforced.",
-  "Two billing paths changed by one edit.",
+   THE COMPLETION GAP.
+
+   ONE STORY for the whole homepage. This chapter used to run a billing demo (pricing decisions, usage
+   limits) and then the rest of the page switched to the Pro-access demonstration, which read as two
+   unrelated demos stapled together. It is now the same Pro-access story the case file, the archive and
+   the distribution chapter all use.
+
+   The verdict is FAILED, not Blocked. The checkout actually ran and produced evidence contradicting the
+   guarantee, which is the definition of Failed. Blocked is reserved for the case where Vraelis could not
+   obtain enough requirements, coverage, authorization or execution evidence to reach a decision at all.
+
+   Composition: one centred column. Every traveller owns a trajectory through the same space driven by
+   --p, and the ranges are sequenced so ONE state is dominant at a time rather than three being legible
+   at once. */
+const OBSERVED = [
+  "Payment succeeded.",
+  "Pro access was missing.",
+  "The first repair failed after signing back in.",
 ];
 
 export function Gap() {
@@ -68,10 +79,6 @@ export function Gap() {
   return (
     <section className="v6-gap" id="gap" data-nav-theme="light" ref={wrap}>
       <div className="v6-gap__pin">
-        {/* One continuous space, not stacked frames. Each traveller owns a trajectory through the viewport
-            driven by --p: the claim rises and shrinks as it loses authority, the systems it reached pass
-            through behind it, the findings climb into the space the claim vacated, and the consequence
-            arrives last. Nothing cross-fades in place, so nothing ever sits on top of anything else. */}
         <div className="v6-gap__stage">
           <div className="v6-gap__t v6-gap__claim">
             <p className="v6-gap__label">The agent reported</p>
@@ -79,27 +86,30 @@ export function Gap() {
               <span className="v6-gap__wordt">Complete.</span>
               <span className="v6-gap__strike" aria-hidden />
             </p>
+            <p className="v6-gap__turn">Complete is a claim.</p>
           </div>
 
-          <div className="v6-gap__t v6-gap__sys" aria-hidden>
-            <p className="v6-gap__label">Systems the change reached</p>
+          <div className="v6-gap__t v6-gap__sys">
+            <p className="v6-gap__label">One change crossed</p>
             <ul className="v6-gap__syslist">
-              {["billing-web", "checkout", "account-api"].map((t) => (
+              {["checkout", "payment", "account access"].map((t) => (
                 <li key={t} className="v6-mono">{t}</li>
               ))}
             </ul>
           </div>
 
           <div className="v6-gap__t v6-gap__found">
-            <p className="v6-gap__label">Vraelis found</p>
+            <p className="v6-gap__label">What Vraelis observed</p>
             <ul className="v6-gap__list">
-              {FOUND.map((t) => <li key={t}>{t}</li>)}
+              {OBSERVED.map((t) => <li key={t}>{t}</li>)}
             </ul>
           </div>
 
           <div className="v6-gap__t v6-gap__verdictwrap">
-            <p className="v6-gap__verdict">Blocked.</p>
-            <p className="v6-gap__verdictsay">This release cannot be trusted yet.</p>
+            <p className="v6-gap__verdict">Failed.</p>
+            <p className="v6-gap__verdictsay">
+              Checked in the deployed workflow, before the completion claim could be trusted.
+            </p>
           </div>
         </div>
       </div>
@@ -119,9 +129,9 @@ export function Gap() {
      region 2  finding, person, repair, recheck, all returning into the same record
    ------------------------------------------------------------------------------------------------- */
 const ACTS: [string, string][] = [
-  ["Define what must hold", "One sentence the change is not allowed to break, kept outside the code."],
-  ["Check the running system", "A real browser crosses the deployed workflow, not the source."],
-  ["Resolve what failed", "Findings, a decision, a repair, and an independent recheck, all on one record."],
+  ["Define the outcome", "State what the business cannot afford to lose."],
+  ["Check the deployed workflow", "Vraelis derives the requirements and browser plan, then runs the real product rather than inspecting only the source."],
+  ["Verify the repair", "Failures return with evidence and a repair handoff. A new run determines whether the fix held."],
 ];
 
 export function SystemMap() {
@@ -142,7 +152,7 @@ export function SystemMap() {
     <section className="v6-cs" data-nav-dark data-nav-theme="dark" data-act={act} ref={wrap}>
       <div className="v6-cs__pin">
         <div className="v6-cs__head">
-          <p className="v6-eyebrow">The operating environment</p>
+          <p className="v6-eyebrow">One guarantee, every system it crosses</p>
           <div className="v6-cs__acts">
             {ACTS.map(([t, d], i) => (
               <div key={t} className="v6-cs__act" style={{ ["--i" as string]: i }}>
@@ -159,7 +169,7 @@ export function SystemMap() {
             {/* The record spine: present across the whole environment, tying all three regions together, and
                 running on past the last node so nothing implies the trail stops where the result lands. */}
             <line className="v6-cs__spine" x1="30" y1="392" x2="2745" y2="392" />
-            <text className="v6-cs__spinet" x="89" y="426">one permanent record</text>
+            <text className="v6-cs__spinet" x="89" y="426">every run stays attached to the same outcome</text>
 
             {/* ── region 0: the guarantee, outside the code ── */}
             <g className="v6-cs__r" data-r="0">
@@ -265,10 +275,10 @@ export function SystemMap() {
    ------------------------------------------------------------------------------------------------- */
 type Beat = { s: "stop" | "none" | "go"; h: string; d: string };
 const ENT: Beat[] = [
-  { s: "stop", h: "Pro access missing", d: "The customer had paid and had nothing." },
-  { s: "none", h: "Repair 1 grants access", d: "Access appeared inside the session that was already open." },
-  { s: "stop", h: "Access disappears", d: "The first repair had never survived a new session." },
-  { s: "go", h: "Repair 2 attaches the entitlement", d: "Attached to the account, so a new session inherits it." },
+  { s: "stop", h: "Access was missing", d: "The account never received the Pro entitlement." },
+  { s: "none", h: "The first repair appeared to work", d: "Access appeared only inside the session that was already open." },
+  { s: "stop", h: "Signing back in broke it again", d: "The apparent fix did not survive a new session." },
+  { s: "go", h: "The second repair held", d: "The entitlement was attached to the account. Access remained after signing back in." },
 ];
 
 export function Proof() {
@@ -287,10 +297,10 @@ export function Proof() {
       <div className="v6-pf__case" data-i="0" data-on={seen > 0}>
         {/* the lane that worked, stated once and kept quiet */}
         <div className="v6-pf__minor">
-          <p className="v6-pf__lanen">Payment</p>
+          <p className="v6-pf__lanen">Payment succeeded</p>
           <p className="v6-pf__minors">
             <span className="v6-pf__tick" aria-hidden />
-            Succeeded on the first attempt, and stayed correct for the whole demonstration.
+            Checkout completed and payment was confirmed.
           </p>
         </div>
 
@@ -327,12 +337,12 @@ export function Proof() {
         <div className="v6-pf__decide" style={{ ["--i" as string]: 5 }}>
           <div className="v6-pf__obs">
             <p className="v6-pf__dh">What the last run observed</p>
-            <p className="v6-pf__dv">Access held after signing back in.</p>
+            <p className="v6-pf__dv">Access remained after signing back in.</p>
           </div>
           <div className="v6-pf__dec">
             <p className="v6-pf__dh">Decision</p>
             <p className="v6-pf__verd">Verified</p>
-            <p className="v6-pf__dn">Decided on the evidence of the third run.</p>
+            <p className="v6-pf__dn">The original failure and incomplete repair remained preserved.</p>
           </div>
         </div>
       </div>
@@ -361,16 +371,16 @@ export function Proof() {
 type Filed =
   | { t: "evidence"; n: string; head: string; body: string; s: "stop" }
   | { t: "change"; n: string; head: string; body: string }
-  | { t: "decision"; head: string; body: string; by: string }
+  | { t: "decision"; head: string; body: string }
   | { t: "result"; head: string; body: string };
 
 const ARCHIVE: Filed[] = [
-  { t: "evidence", n: "Run 1", head: "Failed", body: "Payment succeeded and Pro access was missing.", s: "stop" },
-  { t: "change", n: "Repair 1", head: "Access granted", body: "Applied to the session that was already open." },
-  { t: "evidence", n: "Run 2", head: "Failed", body: "Access was lost after signing out and back in.", s: "stop" },
-  { t: "decision", head: "Approved to continue", body: "A person accepted the second repair and recorded the reason.", by: "Recorded against this guarantee, not against a run." },
-  { t: "change", n: "Repair 2", head: "Entitlement attached", body: "Attached to the account, so a new session inherits it." },
-  { t: "result", head: "Verified", body: "Access held after signing back in. Both earlier failures stay on the record." },
+  { t: "evidence", n: "Run 1", head: "Failed", body: "Payment succeeded. Pro access was missing.", s: "stop" },
+  { t: "change", n: "Repair 1", head: "Access granted", body: "Access was granted only inside the active session." },
+  { t: "evidence", n: "Run 2", head: "Failed", body: "Access disappeared after signing out and back in.", s: "stop" },
+  { t: "decision", head: "Human decision", body: "The second repair was approved, with the reason recorded." },
+  { t: "change", n: "Repair 2", head: "Entitlement attached", body: "The entitlement was attached to the account." },
+  { t: "result", head: "Verified", body: "Access remained after signing back in." },
 ];
 
 export function Record() {
@@ -391,11 +401,6 @@ export function Record() {
           <div className="v6-rec__doc">
             <p className="v6-rec__dock">Guarantee</p>
             <p className="v6-rec__docv">A customer who pays for Pro keeps access after signing back in.</p>
-            <dl className="v6-rec__meta">
-              <div><dt>Scope</dt><dd>checkout, account-api</dd></div>
-              <div><dt>Entries</dt><dd>{ARCHIVE.length}</dd></div>
-              <div><dt>Standing</dt><dd className="is-go">Held</dd></div>
-            </dl>
           </div>
         </div>
 
@@ -425,7 +430,6 @@ export function Record() {
                   <p className="v6-rec__tab">Signed decision</p>
                   <p className="v6-rec__fh">{f.head}</p>
                   <p className="v6-rec__fb">{f.body}</p>
-                  <p className="v6-rec__sig">{f.by}</p>
                 </div>
               ) : null}
 
@@ -452,15 +456,13 @@ export function Record() {
    the surface it actually is, staggered across three stages so the composition moves left to right and
    down rather than sitting in equal columns.
 
-   RESULT_REF is the through-line. The same reference appears in every fragment, which is the only claim
-   this section makes: one result, seven forms. The composition is labelled illustrative on the page, so
-   nothing here reads as a captured artefact of a specific run.
+   The identifier appears ONCE, on the Vraelis decision itself. It used to repeat on all seven surfaces,
+   which made an authored diagram start to read as a captured production record no matter what the
+   disclosure said. The composition is labelled illustrative on the page.
    ------------------------------------------------------------------------------------------------- */
+// ONE example identifier, shown ONCE, on the Vraelis decision itself. It used to repeat on all seven
+// surfaces, which made an authored diagram start to look like a captured production record.
 const RESULT_REF = "vrf_2f8a";
-
-function Ref() {
-  return <span className="v6-rx__ref v6-mono">{RESULT_REF}</span>;
-}
 
 export function Reach() {
   const root = useRef<HTMLElement>(null);
@@ -469,10 +471,10 @@ export function Reach() {
     <section className="v6-rx" data-nav-theme="light" ref={root}>
       <div className="v6-rx__head">
         <p className="v6-eyebrow">Where it lands</p>
-        <h2 className="v6-rx__h">One result, in the form each place needs.</h2>
+        <h2 className="v6-rx__h">One decision, wherever the work happens.</h2>
         <p className="v6-rx__sub">
-          The same reference travels through every surface below, so a decision made once can be read
-          wherever the work is already happening.
+          A verification can be read in Vraelis, returned through the API and CLI, attached to the
+          deployment, and delivered to the team responsible for the system.
         </p>
       </div>
 
@@ -489,8 +491,7 @@ export function Reach() {
           </div>
           <div className="v6-rx__ghrow is-sub">
             <span className="v6-rx__ghtick" aria-hidden />
-            <span className="v6-rx__ghsay">A customer who pays for Pro keeps access</span>
-            <Ref />
+            <span className="v6-rx__ghsay">Attached to the work that produced the deployment.</span>
           </div>
         </figure>
 
@@ -502,7 +503,7 @@ export function Reach() {
             <code>
               <span className="v6-rx__p">{"$ "}</span><span className="v6-rx__cmd">{"vraelis verify pro-access\n"}</span>
               <span className="v6-rx__dim">{"crossing the deployed workflow\n"}</span>
-              <span className="v6-rx__ok">{"verified"}</span><span className="v6-rx__cmd">{"  " + RESULT_REF + "\n"}</span>
+              <span className="v6-rx__ok">{"verified\n"}</span>
               <span className="v6-rx__p">{"$ "}</span><span className="v6-rx__cmd">{"echo $?\n"}</span>
               <span className="v6-rx__cmd">{"0"}</span>
             </code>
@@ -516,9 +517,8 @@ export function Reach() {
           <figcaption className="v6-rx__fcap"><b className="v6-mono">POST</b> /v1/verifications</figcaption>
           <pre className="v6-rx__json">
             <code>{`{
-  "result":    "${RESULT_REF}",
-  "guarantee": "pro-access",
-  "decision":  "verified"
+  "decision":  "verified",
+  "guarantee": "pro-access"
 }`}</code>
           </pre>
         </figure>
@@ -529,9 +529,8 @@ export function Reach() {
             <span className="v6-rx__mark" aria-hidden />
             <div>
               <p className="v6-rx__depn">billing-web<em>Production</em></p>
-              <p className="v6-rx__depsay">Checked against this deployment, not against the branch.</p>
+              <p className="v6-rx__depsay">The result belongs to the running product, not only the branch.</p>
             </div>
-            <Ref />
           </div>
         </figure>
 
@@ -541,16 +540,16 @@ export function Reach() {
         <figure className="v6-rx__f v6-rx__f--hook" data-i="2" data-on={seen > 2}>
           <figcaption className="v6-rx__fcap">Webhook</figcaption>
           <pre className="v6-rx__json">
-            <code>{`{ "event":  "verification.completed",
-  "result": "${RESULT_REF}" }`}</code>
+            <code>{`{ "event":    "verification.completed",
+  "decision": "verified" }`}</code>
           </pre>
         </figure>
 
         <figure className="v6-rx__f v6-rx__f--dec" data-i="2" data-on={seen > 2}>
           <figcaption className="v6-rx__fcap">Vraelis</figcaption>
           <p className="v6-rx__decv">Verified</p>
-          <p className="v6-rx__decsay">A customer who pays for Pro keeps access after signing back in.</p>
-          <Ref />
+          <p className="v6-rx__decsay">The complete decision, the evidence, and the previous history.</p>
+          <span className="v6-rx__ref v6-mono">{RESULT_REF}</span>
         </figure>
 
         <figure className="v6-rx__f v6-rx__f--slack" data-i="2" data-on={seen > 2}>
@@ -559,20 +558,13 @@ export function Reach() {
             <span className="v6-rx__av" aria-hidden>V</span>
             <div>
               <p className="v6-rx__who">Vraelis<em>app</em></p>
-              <p className="v6-rx__said">The guarantee held after the second repair. <Ref /></p>
+              <p className="v6-rx__said">The Pro access guarantee held after the second repair.</p>
             </div>
           </div>
         </figure>
       </div>
 
-      <div className="v6-rx__next">
-        <p className="v6-rx__nexth">Direction, not built</p>
-        <ul className="v6-rx__soons">
-          {["IDE", "Desktop", "Browser companion", "Mobile approvals", "MCP and agent tools"].map((n) => <li key={n}>{n}</li>)}
-        </ul>
-      </div>
-
-      <p className="v6-rx__ill">Illustrative. The surfaces are real; the reference shown is an example.</p>
+      <p className="v6-rx__ill">Illustrative. The surfaces are real; the identifier shown is an example.</p>
     </section>
   );
 }
@@ -607,13 +599,12 @@ export function Knowledge() {
           <Link href={`${BASE}/method`} className="v6-kn__sheet">
             <p className="v6-kn__run"><span>The Vraelis Method</span><span>Position 3 of 8</span></p>
             <blockquote className="v6-kn__q">
-              <Spectral sv="clamp(0, calc((var(--p) - 0.18) / 0.78), 1)">
-                An agent that plans, writes, and repairs the work will also tell you it is finished.
-              </Spectral>
+              <Spectral sv="clamp(0, calc((var(--p) - 0.18) / 0.78), 1)"
+                text="An agent that plans, writes, and repairs the work will also tell you it is finished." />
             </blockquote>
             <p className="v6-kn__qp">
-              A test written inside the system inherits the same assumptions the mistake came from.
-              Independence is not something you reach by trying harder; it is structural.
+              The system that produced the work should not be the only authority on whether it succeeded.
+              Independence is structural.
             </p>
             <span className="v6-kn__more">Read all eight positions<span className="v6-arw" aria-hidden>→</span></span>
           </Link>

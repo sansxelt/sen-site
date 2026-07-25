@@ -24,36 +24,38 @@
 //   "autonomous reliability operator" / "software intent infrastructure"
 
 /** Short category label. Appears once, above the opening headline. */
-export const CATEGORY = "Verification for AI-built software";
+export const CATEGORY = "Independent verification for AI-built software";
 
-/** The opening headline, as two clauses. The page then spends its whole length proving the second one:
- *  the claim of done, the check against the deployed workflow, the repair that only appeared to hold, the
- *  repair that did, the record that keeps all of it, and the decision landing where work already happens. */
+/** THE COMPANY THESIS, as two clauses. The insight, not the mechanism: the thing that built the software
+ *  cannot also be the authority on whether it worked. Everything below this line on the page is a
+ *  mechanism around that idea, and no other section is allowed to restate it. */
 export const HEADLINE: [string, string] = [
-  "AI builds the software.",
-  "Vraelis verifies it works.",
+  "AI can build the software.",
+  "It cannot be the final authority on whether it worked.",
 ];
 
-/** ONE short sentence under the headline. The opening creates scale and curiosity; proof comes later, so
- *  this line must not try to explain the product, and it must not pre-state a chapter's own line. */
-export const SUPPORT = "Checked in the deployed product, against the outcome the business depends on.";
+/** ONE paragraph under the headline. It may describe the loop once, because this is the only place on the
+ *  page that is allowed to. Under 45 words. */
+export const SUPPORT =
+  "Vraelis independently verifies the deployed outcome the business depends on. Give it a live application and one guarantee; it derives the checks, runs the real workflow in a browser, and returns evidence of what held, what failed, and whether the repair survived.";
 
 /** Page title and meta description. */
-export const META_TITLE = "Vraelis | AI builds the software. Vraelis verifies it works.";
+export const META_TITLE = "Vraelis | Verification for AI-built software";
 export const META_DESCRIPTION =
-  "When an agent claims the work is done, Vraelis checks the deployed product against the outcome the business depends on, and keeps the result on the record.";
+  "Vraelis independently verifies deployed software built by AI against the outcome the business depends on, then preserves the evidence across failures, repairs, and successful runs.";
 
 /** Link-preview text, shared by Open Graph, Twitter, and the generated OG image. */
-export const OG_TITLE = "AI builds the software. Vraelis verifies it works.";
+export const OG_TITLE = "AI can build the software. It cannot verify itself.";
 export const OG_DESCRIPTION =
-  "The claim of done, checked in the deployed product, with every result kept on the record.";
+  "Independent verification of the deployed outcome the business depends on, with the evidence preserved.";
 
 /** The three beats drawn in the OG artwork. */
-export const OG_BEATS: [string, string, string] = ["What changed", "What it missed", "What ships"];
+export const OG_BEATS: [string, string, string] = ["The claim", "The evidence", "The decision"];
 
 /** Closing scene. One statement, one short line. No recap, no feature list. */
 export const CLOSE_TITLE = "Ship what you can stand behind.";
-export const CLOSE_SAY = "Proof before production, and a record that outlives the change.";
+export const CLOSE_SAY =
+  "Vraelis independently verifies the deployed outcome the business depends on and preserves the evidence behind every failure, repair, and successful run.";
 
 /** The statement in the footer. */
 export const FOOTER_STATEMENT =

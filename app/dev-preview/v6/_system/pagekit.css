@@ -25,6 +25,22 @@
 .v6-prose .v6-note { background: var(--sunk); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; font-size: 0.98rem; color: var(--ink-2); }
 .v6-prose .v6-note b { color: var(--brand-ink); font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; display: block; margin-bottom: 6px; }
 
+/* ---------------------------------------------------------------------------
+   Single ground per page (design 07, round 2). One ground per inner page, full
+   stop: no full-width band may repaint the page, graphite OR sunk grey. A zone
+   keeps the page's own paper ground and reads as its own region through
+   hairline rules at its edges plus the section's own spacing. --sunk survives
+   only on inset surfaces (code blocks, chips, small bordered cards). Adjacent
+   zones share a single hairline; a zone that runs into the closing rule yields
+   its bottom edge to it. Only the homepage chapters and the docs subtree are
+   allowed to change ground mid-page.
+   --------------------------------------------------------------------------- */
+.v6-sec--zone { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.v6-sec--zone + .v6-sec--zone { border-top: 0; }
+.v6-sec--zone:has(+ .v6-rule) { border-bottom: 0; }
+/* white card lifted off the zone: the panel treatment that used to be graphite-2 on graphite */
+.v6-zcard { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+
 /* generic feature rows / grid */
 .v6-rows { display: flex; flex-direction: column; margin-top: clamp(36px,4vw,56px); }
 .v6-row { display: grid; grid-template-columns: auto minmax(0,1fr); gap: clamp(18px,3vw,44px); align-items: baseline; padding: clamp(22px,2.6vw,32px) 0; border-top: 1px solid var(--line); }

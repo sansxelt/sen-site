@@ -29,22 +29,24 @@
   margin-inline: auto; padding-inline: var(--gutter); }
 /* neutral, not a signal colour: the category label is not a state */
 .v6-h__eyebrow { color: var(--g-fg-2); }
-.v6-h__h1 { font-family: var(--sans); font-weight: 600; letter-spacing: -0.042em; line-height: 0.94;
-  color: var(--g-fg); margin: clamp(18px, 2.4vh, 30px) 0 0; font-size: clamp(2.5rem, 6.3vw, 5.7rem);
-  max-width: 15ch; text-wrap: balance; }
+/* The thesis is a longer sentence than the category line it replaced, so the scale and the measure are
+   set to keep it to three or four lines and leave the support and the action above the fold. */
+.v6-h__h1 { font-family: var(--sans); font-weight: 600; letter-spacing: -0.04em; line-height: 0.98;
+  color: var(--g-fg); margin: clamp(14px, 2vh, 24px) 0 0; font-size: clamp(2.05rem, 4.35vw, 3.95rem);
+  max-width: 22ch; text-wrap: balance; }
 .v6-h__h1 .lead-clause { color: var(--g-fg-3); }
-.v6-h__say { margin: clamp(20px, 2.6vh, 32px) 0 0; max-width: 34ch;
-  font-size: clamp(1.06rem, 1.35vw, 1.34rem); line-height: 1.5; color: var(--g-fg-2); }
+.v6-h__say { margin: clamp(18px, 2.2vh, 26px) 0 0; max-width: 62ch;
+  font-size: clamp(1rem, 1.2vw, 1.16rem); line-height: 1.6; color: var(--g-fg-2); }
 .v6-h__cta { margin-top: clamp(26px, 3.4vh, 44px); display: flex; align-items: center; gap: 26px; flex-wrap: wrap; }
 
 /* ============================ RESPONSIVE ============================ */
 @media (max-width: 1080px) {
-  .v6-h__h1 { max-width: 13ch; }
+  .v6-h__h1 { max-width: 18ch; }
 }
 @media (max-width: 720px) {
   .v6-h { min-height: calc(100svh - var(--nav-h, 62px)); padding-block: clamp(40px, 8vh, 72px); }
-  .v6-h__h1 { font-size: clamp(2.35rem, 10.2vw, 3.4rem); max-width: 12ch; }
-  .v6-h__say { font-size: 1.02rem; max-width: 30ch; }
+  .v6-h__h1 { font-size: clamp(1.85rem, 7.6vw, 2.6rem); max-width: 17ch; }
+  .v6-h__say { font-size: 1rem; max-width: 42ch; }
 }
 
 /* The one authored opening moment: each clause of the headline rises out of its own mask. */
