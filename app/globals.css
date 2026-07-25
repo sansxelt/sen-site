@@ -62,12 +62,16 @@
   animation-fill-mode: both;
   mix-blend-mode: normal;
 }
-::view-transition-old(root) { animation-name: vt-fade-out; }
+/* The old page HOLDS, fully opaque, while the new page fades in over it. The previous version cross-faded
+   both: at the midpoint the stack was two half-transparent snapshots, which is not opaque, so the root
+   canvas showed through as a white flash on every document swap. With the outgoing ground preserved until
+   the incoming one has fully arrived, there is no frame in which the canvas can appear. */
+::view-transition-old(root) { animation-name: vt-hold; }
 ::view-transition-new(root) { animation-name: vt-fade-in; }
 
-@keyframes vt-fade-out {
-  from { opacity: 1; transform: translateY(0); }
-  to   { opacity: 0; transform: translateY(-6px); }
+@keyframes vt-hold {
+  from { opacity: 1; }
+  to   { opacity: 1; }
 }
 @keyframes vt-fade-in {
   from { opacity: 0; transform: translateY(8px); }
@@ -80,7 +84,7 @@
   ::view-transition-new(root) {
     animation-duration: 120ms;
   }
-  @keyframes vt-fade-out { from { opacity: 1 } to { opacity: 0 } }
+  /* same structure, faster: the old page holds while the new fades over it, no movement */
   @keyframes vt-fade-in  { from { opacity: 0 } to { opacity: 1 } }
 }
 

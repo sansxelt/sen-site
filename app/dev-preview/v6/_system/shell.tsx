@@ -465,8 +465,21 @@ function useInstantHistoryRestore() {
 
 export function V6Shell({ children }: { children: ReactNode }) {
   useInstantHistoryRestore();
+  // THE PERSISTENT ROUTE CANVAS. Every route declares the ground of its opening surface from the same map
+  // the nav already trusts, computed during render, so the server-rendered document carries it and a
+  // client-side commit swaps it in the same frame as the content. Nothing samples, defers, or corrects
+  // after paint. The shell is opaque and viewport-tall, so the fade the incoming page plays happens over
+  // the route's own ground: the white shell that used to sit beneath dark routes is what every transition
+  // flash was actually showing.
+  const pathname = usePathname() || "";
+  const ground = themeAtTop(pathname) ? "dark" : "light";
   return (
-    <div className="v6">
+    <div className="v6" data-route-theme={ground}>
+      {/* The final safety canvas, behind even the shell. The root layout paints html/body cream inline for
+          the rest of the site; on v6 documents this beats it (stylesheet !important outranks an inline
+          style), so the browser has no frame in which its own canvas can show. It follows the route theme,
+          so a light route never flashes black and a dark route never flashes white, in overscroll included. */}
+      <style>{`html, body { background: ${ground === "dark" ? "#0A0A0B" : "#FFFFFF"} !important; }`}</style>
       {/* Nine focus stops sit in the nav before any content. Keyboard and screen-reader users get one stop to
           jump past them; it is invisible until focused. */}
       <a href="#v6-main" className="v6-skip">Skip to content</a>

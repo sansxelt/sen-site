@@ -67,7 +67,14 @@
   font-family: var(--sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* the shell is the persistent canvas behind every route: always opaque, always at least viewport-tall,
+     so no transition can reach the browser's own canvas through it */
+  min-height: 100dvh;
 }
+/* the shell wears the ground of the CURRENT route's opening surface, declared in markup before paint.
+   Dark for the homepage and the night docs; paper for routes that open on a light page hero. This is what
+   the incoming page's entrance plays over, which is why dark->dark navigation no longer flashes white. */
+.v6[data-route-theme="dark"] { background: var(--graphite); }
 .v6 *, .v6 *::before, .v6 *::after { box-sizing: border-box; }
 .v6 ::selection { background: var(--brand-soft); }
 .v6 img, .v6 svg, .v6 video { max-width: 100%; display: block; }
@@ -358,7 +365,7 @@
 
 /* ============================================================== MOTION ===== */
 @keyframes v6PageIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-.v6-page { animation: v6PageIn 340ms var(--ease) both; }
+.v6-page { animation: v6PageIn 340ms var(--ease) both; min-height: 100dvh; }
 .v6-reveal { opacity: 0; transform: translateY(14px); transition: opacity 560ms var(--ease), transform 560ms var(--ease); transition-delay: calc(var(--i,0) * 66ms); }
 .v6-reveal.in { opacity: 1; transform: none; }
 .v6-reveal--m { transform: translateY(22px) scale(0.99); } .v6-reveal--m.in { transform: none; }
