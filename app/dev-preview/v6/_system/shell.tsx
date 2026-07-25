@@ -3,7 +3,7 @@
 // Shared public shell for design 06: one nav, one Resources mega-menu, one mobile full-screen nav, one
 // footer, one route transition, used by every v6 route. Sticky nav goes transparent -> blurred on scroll and
 // flips to a dark treatment over graphite (live-work) sections. Client-side nav with prefetch (next/link).
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SiteFooter } from "./close";
@@ -359,17 +359,30 @@ function MobileNav({ onClose }: { onClose: () => void }) {
   );
 }
 
+// Fires before the browser paints, so the new route is never shown at the offset it inherited. Falls back
+// to useEffect on the server, which never runs it and avoids React's SSR warning: a server-rendered first
+// paint is at the top already.
+const useBeforePaint = typeof window === "undefined" ? useEffect : useLayoutEffect;
+
 export function RouteTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  // Navigating back to a route restored the scroll position it was left at, so returning to the homepage
-  // dropped the visitor into the middle of a chapter and scrolled up from there. Every route entry starts
-  // at the top. Deferred a frame so it runs after the new route has painted.
-  useEffect(() => {
-    // Turn off the browser's own scroll restoration first: on a fresh load it restores the offset from the
-    // previous visit before React mounts, which dropped visitors into the middle of the page on arrival.
+  // Every route entry starts at the top.
+  //
+  // On a client-side navigation the document never changes, so the new route mounts at the scroll offset
+  // carried over from the previous one. Returning to the homepage from the bottom of /platform mounted it
+  // at y=9435 of a 15621px page. The reset below was written as window.scrollTo(0, 0), which does NOT jump:
+  // app/globals.css sets `html { scroll-behavior: smooth }`, so it animated all the way up instead, taking
+  // 1488ms across 344 intermediate positions and dragging the reader backwards through the pinned chapters.
+  // The intended override in v6.css cannot help, because it is `.v6 *` and html is an ancestor of .v6.
+  //
+  // `behavior: "instant"` overrides the CSS value for this one call, so route entry is a single-frame jump
+  // while in-page anchor links keep their smooth glide.
+  useBeforePaint(() => {
     if ("scrollRestoration" in history) history.scrollRestoration = "manual";
-    const id = requestAnimationFrame(() => window.scrollTo(0, 0));
-    return () => cancelAnimationFrame(id);
+    // A hash names a position the reader asked for, so it is left alone. Without this the anchor scroll
+    // started and was then pulled back to the top, and #gap never landed.
+    if (window.location.hash) return;
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, [pathname]);
   return <div key={pathname} className="v6-page">{children}</div>;
 }
