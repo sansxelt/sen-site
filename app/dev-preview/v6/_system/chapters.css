@@ -78,7 +78,7 @@
   opacity: calc(var(--turn) * (1 - var(--claim))); }
 
 /* the claim: holds the centre, then rises and shrinks as it loses authority */
-.v6-gap__claim { transform: translateY(calc(-54% - var(--claim) * 60vh))
+.v6-gap__claim { transform: translateY(calc(-50% - var(--claim) * 60vh))
   scale(calc(1 - 0.38 * var(--claim))); opacity: calc(1 - var(--claim)); }
 
 /* the systems: travel up into the centre the claim vacated, then clear for the observations */
@@ -90,7 +90,7 @@
   border: 1px solid var(--line-2); border-radius: 999px; padding: 9px 20px; }
 
 /* the observations: take the centre, hold it, then lift as the verdict resolves beneath */
-.v6-gap__found { transform: translateY(calc(-50% + 13vh - var(--found) * 24vh - var(--foundout) * 62vh));
+.v6-gap__found { transform: translateY(calc(-50% + 13vh - var(--found) * 15vh - var(--foundout) * 62vh));
   opacity: calc(var(--found) * (1 - var(--foundout))); }
 .v6-gap__found .v6-gap__label { color: var(--stop-ink); }
 .v6-gap__list { list-style: none; margin: clamp(14px, 2.2vh, 26px) 0 0; padding: 0;
@@ -100,7 +100,7 @@
 /* the consequence: arrives beneath the observations and resolves */
 /* resolves just above the optical centre, matching where the observations rested, rather than sitting low
    in the lower third of the frame */
-.v6-gap__verdictwrap { transform: translateY(calc(-50% + 12vh - var(--verdict) * 25vh - var(--settle) * 1.5vh));
+.v6-gap__verdictwrap { transform: translateY(calc(-50% + 12vh - var(--verdict) * 14vh - var(--settle) * 1.5vh));
   opacity: var(--verdict); }
 .v6-gap__verdict { font-family: var(--sans); font-weight: 600; letter-spacing: -0.04em; line-height: 1.02;
   font-size: clamp(2rem, 5vw, 4rem); color: var(--ink); margin: 0; max-width: 22ch;
