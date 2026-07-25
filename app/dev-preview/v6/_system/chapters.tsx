@@ -195,96 +195,80 @@ export function Standard() {
 }
 
 /* ══════════════════════════════════════════════════════════════ CHAPTER 4 ══
-   INTERNAL PRODUCTION DEMONSTRATION, as a case file.
+   THE PRODUCT, IN THE TERMINAL.
 
-   Authored as a document rather than a chart. The earlier version drew seven events as points on two thin
-   traces: at the width this section runs it read as an oscilloscope, the labels sat at 16-19px scattered
-   across 1400px, and the decision was a plate resting on top of the last observation.
+   This chapter was a five column timeline walking one guarantee through two repairs. Whatever example it
+   used, it made the product look like a bug report. Substituting a different example for the same shape
+   changed nothing.
 
-   The composition now carries five beats and nothing else:
-     payment           one quiet statement, because it succeeded immediately and never failed again
-     entitlement       four segments at full weight, because the guarantee lives in this lane
-     the session wall  a solid division through the entitlement track, not a dashed hairline
-     the decision      a separate area below, holding the observed outcome and the decision as two objects
+   It now shows the tool. Everything here is the real shipped contract, read from cli/vraelis.mjs and
+   app/api/v1: the command and its required flags, and the three exit codes, which are the genuinely
+   opinionated part. 0 Verified, 1 Failed, 2 Blocked, and Blocked is NOT folded into success. A release
+   gate should treat "I could not check" exactly like "I could not reach a verdict": in both cases you do
+   not know, and shipping on 2 has to be a decision the caller makes deliberately rather than one they
+   inherit from an exit code that merely looks like success.
 
-   It is an authored reconstruction. No screenshot, no invented run identifier, no invented timestamp, and
-   it says so on the page.
+   The terminal is the dominant object, scrubbed by scroll. No cards, no timeline, no anecdote.
    ------------------------------------------------------------------------------------------------- */
-type Beat = { s: "stop" | "none" | "go"; h: string; d: string };
-const ENT: Beat[] = [
-  { s: "stop", h: "Access was wrong", d: "An unauthorized account could read customer records." },
-  { s: "none", h: "The first repair appeared to work", d: "Access appeared only inside the session that was already open." },
-  { s: "stop", h: "Signing back in broke it again", d: "The apparent fix did not survive a new session." },
-  { s: "go", h: "The second repair held", d: "A new session inherited the corrected permission." },
+type Line = { at: number; k: "cmd" | "out" | "dim" | "go" | "stop" | "wait"; t: string };
+const RUN: Line[] = [
+  { at: 0.00, k: "cmd", t: "vraelis verify --url https://app.example.com --claim \"only authorized staff can read customer records\"" },
+  { at: 0.14, k: "dim", t: "reading the claim" },
+  { at: 0.22, k: "out", t: "4 obligations derived, 1 needs a second identity" },
+  { at: 0.32, k: "dim", t: "plan minted, awaiting approval" },
+  { at: 0.40, k: "out", t: "plan approved" },
+  { at: 0.48, k: "dim", t: "opening a real browser against the deployment" },
+  { at: 0.58, k: "out", t: "signed in, opened a record, signed out, signed back in" },
+  { at: 0.68, k: "dim", t: "checking the obligation that needs a second identity" },
+  { at: 0.78, k: "stop", t: "an unauthorized account could read the record" },
+  { at: 0.86, k: "out", t: "evidence written to the record" },
+];
+const EXITS: [string, string, string, "go" | "stop" | "wait"][] = [
+  ["0", "Verified", "The evidence supports the claim.", "go"],
+  ["1", "Failed", "The evidence contradicts it.", "stop"],
+  ["2", "Blocked", "It could not be checked, which is not success.", "wait"],
 ];
 
-export function Proof() {
-  const root = useRef<HTMLElement>(null);
-  const seen = useSeen(root, 1);
+export function Product() {
+  const wrap = useRef<HTMLDivElement>(null);
+  useScrollProgress(wrap);
   return (
-    <section className="v6-pf" data-nav-theme="light" ref={root}>
-      <div className="v6-pf__head">
-        <p className="v6-eyebrow">Internal production demonstration</p>
-        <h2 className="v6-pf__h">The work shipped. The guarantee did not hold.</h2>
-        <p className="v6-pf__guar">
-          <span>The guarantee</span>Only authorized staff can read customer records, and that stays true after signing back in.
-        </p>
-      </div>
-
-      <div className="v6-pf__case" data-i="0" data-on={seen > 0}>
-        {/* the lane that worked, stated once and kept quiet */}
-        <div className="v6-pf__minor">
-          <p className="v6-pf__lanen">The change shipped</p>
-          <p className="v6-pf__minors">
-            <span className="v6-pf__tick" aria-hidden />
-            The work was written, reviewed and deployed without incident.
-          </p>
+    <section className="v6-tm" data-nav-dark data-nav-theme="dark" ref={wrap}>
+      <div className="v6-tm__pin">
+        <div className="v6-tm__head">
+          <p className="v6-eyebrow">The command</p>
+          <h2 className="v6-tm__h">One command. Three answers. No false green.</h2>
         </div>
 
-        {/* the lane the business actually depends on */}
-        <div className="v6-pf__major">
-          <p className="v6-pf__lanen">
-            Access
-            <em>where the guarantee actually lives</em>
-          </p>
+        <div className="v6-tm__stage">
+          <div className="v6-tm__term">
+            <header className="v6-tm__bar">
+              <span className="v6-tm__dots" aria-hidden><i /><i /><i /></span>
+              <span className="v6-mono">vraelis</span>
+            </header>
+            <pre className="v6-tm__body">
+              {RUN.map((l) => (
+                <span key={l.t} className={`v6-tm__line is-${l.k}`} style={{ ["--at" as string]: l.at }}>
+                  {l.k === "cmd" ? <b aria-hidden>$ </b> : null}{l.t}{"\n"}
+                </span>
+              ))}
+              <span className="v6-tm__line v6-tm__exit" style={{ ["--at" as string]: 0.92 }}>
+                <b aria-hidden>$ </b>echo $?{"\n"}1{"\n"}
+              </span>
+            </pre>
+          </div>
 
-          <ol className="v6-pf__track">
-            {ENT.slice(0, 2).map((e, i) => (
-              <li key={e.h} className="v6-pf__seg" data-s={e.s} style={{ ["--i" as string]: i }}>
-                <p className="v6-pf__segh">{e.h}</p>
-                <p className="v6-pf__segd">{e.d}</p>
-              </li>
-            ))}
-
-            {/* the turning point of the whole demonstration, drawn as a division rather than a hairline */}
-            <li className="v6-pf__wall" style={{ ["--i" as string]: 2 }}>
-              <span>Sign out<br />Sign back in</span>
-            </li>
-
-            {ENT.slice(2).map((e, i) => (
-              <li key={e.h} className="v6-pf__seg" data-s={e.s} style={{ ["--i" as string]: i + 3 }}>
-                <p className="v6-pf__segh">{e.h}</p>
-                <p className="v6-pf__segd">{e.d}</p>
+          <ol className="v6-tm__exits">
+            {EXITS.map(([code, name, say, k], i) => (
+              <li key={code} className={`v6-tm__ex is-${k}`} style={{ ["--i" as string]: i }}>
+                <p className="v6-tm__exc v6-mono">exit {code}</p>
+                <p className="v6-tm__exn">{name}</p>
+                <p className="v6-tm__exs">{say}</p>
               </li>
             ))}
           </ol>
         </div>
-
-        {/* the decision is not the outcome: two objects, read left to right, with the reasoning between */}
-        <div className="v6-pf__decide" style={{ ["--i" as string]: 5 }}>
-          <div className="v6-pf__obs">
-            <p className="v6-pf__dh">What the last run observed</p>
-            <p className="v6-pf__dv">Access remained after signing back in.</p>
-          </div>
-          <div className="v6-pf__dec">
-            <p className="v6-pf__dh">Decision</p>
-            <p className="v6-pf__verd">Verified</p>
-            <p className="v6-pf__dn">The original failure and incomplete repair remained preserved.</p>
-          </div>
-        </div>
       </div>
-
-      <p className="v6-pf__disclose">Authored reconstruction of an internal production demonstration.</p>
     </section>
   );
 }
