@@ -452,12 +452,19 @@ export function Reach() {
         <h2 className="v6-rx__h">One result, in the form each place needs.</h2>
       </div>
 
+      {/* the result is named once, at the head of the journey. Repeating an identical badge in all three
+          environments read as three results and as generated filler. */}
+      <div className="v6-rx__object">
+        <span className="v6-rx__odot" aria-hidden />
+        <span className="v6-rx__oid">one verified result</span>
+        <span className="v6-rx__osay">carried into three places, in the form each one needs</span>
+      </div>
+
       <div className="v6-rx__journey">
         {ENVS.map((e, i) => (
           <section key={e.env} className="v6-rx__env" data-i={i} data-on={i < seen}>
             <header className="v6-rx__envh">
               <span className="v6-rx__envn">{e.env}</span>
-              <span className="v6-rx__chip"><span className="v6-rx__chipdot" aria-hidden />the same result</span>
             </header>
             <div className="v6-rx__surfaces">
               {e.surfaces.map((sf) => (
@@ -517,8 +524,7 @@ export function Knowledge() {
 
 {
   "decision": "verified",
-  "claim": "A paid customer keeps Pro access
-            after signing back in."
+  "claim": "Pro access survives sign-in"
 }`}</pre>
             </div>
           </div>

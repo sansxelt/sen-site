@@ -122,6 +122,12 @@
 .v6-btn--lg { min-height: 50px; padding: 15px 26px; font-size: 16px; }
 .v6-btn--brand { background: var(--brand); border-color: var(--brand); }
 .v6-btn--brand:hover { background: var(--brand-ink); border-color: var(--brand-ink); }
+/* On a dark ground the primary action inverts. --brand is near-black, so without this the CTA was
+   black on black in the opening. One rule, keyed to the marker every dark surface already sets. */
+[data-nav-dark] .v6-btn--brand, .v6-dark .v6-btn--brand {
+  background: var(--g-fg); border-color: var(--g-fg); color: var(--graphite); }
+[data-nav-dark] .v6-btn--brand:hover, .v6-dark .v6-btn--brand:hover {
+  background: #fff; border-color: #fff; color: var(--graphite); }
 .v6-btn--ghost { background: transparent; color: var(--ink); border-color: var(--line-2); }
 .v6-btn--ghost:hover { background: transparent; border-color: var(--ink); }
 .v6-elink { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; color: var(--ink); text-decoration: none; cursor: pointer; }
@@ -176,7 +182,9 @@
    translucent plate over it only ever read as a lighter grey strip sitting on the hero. */
 .v6-nav[data-theme="dark"] .v6-nav__in { background: #0A0A0B; backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom-color: transparent; }
 .v6-nav[data-theme="dark"][data-scrolled="true"] .v6-nav__in { border-bottom-color: rgba(255,255,255,0.10); }
-.v6-nav[data-open="true"] .v6-nav__in { background: #08080A; backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom-color: transparent; }
+.v6-nav[data-open="true"] .v6-nav__in { backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom-color: transparent; }
+.v6-nav[data-open="true"][data-theme="dark"] .v6-nav__in { background: #08080A; }
+.v6-nav[data-open="true"][data-theme="light"] .v6-nav__in { background: #FFFFFF; }
 /* The wordmark is the largest thing in the bar by a clear margin (roughly 2x the nav links) and it is the
    axis everything else is centred on. It never wraps and never shrinks, and the bar's own height is still set
    by the taller button, so growing the type does not grow the header or push a link off the edge.
@@ -217,15 +225,20 @@
    wordmark and every nav link invisible against the bar's own background.
    These rules must stay BELOW the entire [data-theme="dark"] block: the two selectors have identical
    specificity, so source order is the only thing that decides which one wins. */
-.v6-nav[data-open="true"] .v6-brand { color: #FAFAFA; }
-.v6-nav[data-open="true"] .v6-nav__item { color: #B9BBC0; }
+.v6-nav[data-open="true"][data-theme="dark"] .v6-brand { color: #FAFAFA; }
+.v6-nav[data-open="true"][data-theme="light"] .v6-brand { color: var(--ink); }
+.v6-nav[data-open="true"][data-theme="dark"] .v6-nav__item { color: #B9BBC0; }
+.v6-nav[data-open="true"][data-theme="light"] .v6-nav__item { color: var(--ink-3); }
 .v6-nav[data-open="true"] .v6-nav__item:hover,
 .v6-nav[data-open="true"] .v6-nav__item[aria-current="page"],
-.v6-nav[data-open="true"] .v6-nav__item[aria-expanded="true"] { color: #FAFAFA; }
-.v6-nav[data-open="true"] .v6-nav__signin { color: #B9BBC0; }
-.v6-nav[data-open="true"] .v6-nav__signin:hover { color: #FAFAFA; }
-.v6-nav[data-open="true"] .v6-btn { background: #FAFAFA; border-color: #FAFAFA; color: #0A0A0B; }
-.v6-nav[data-open="true"] .v6-btn:hover { background: #fff; border-color: #fff; }
+.v6-nav[data-open="true"][data-theme="dark"] .v6-nav__item[aria-expanded="true"] { color: #FAFAFA; }
+.v6-nav[data-open="true"][data-theme="light"] .v6-nav__item[aria-expanded="true"] { color: var(--ink); }
+.v6-nav[data-open="true"][data-theme="dark"] .v6-nav__signin { color: #B9BBC0; }
+.v6-nav[data-open="true"][data-theme="light"] .v6-nav__signin { color: var(--ink-3); }
+.v6-nav[data-open="true"][data-theme="dark"] .v6-nav__signin:hover { color: #FAFAFA; }
+.v6-nav[data-open="true"][data-theme="light"] .v6-nav__signin:hover { color: var(--ink); }
+.v6-nav[data-open="true"][data-theme="dark"] .v6-btn { background: #FAFAFA; border-color: #FAFAFA; color: #0A0A0B; }
+.v6-nav[data-open="true"][data-theme="light"] .v6-btn { background: var(--ink); border-color: var(--ink); color: #fff; }
 /* Focus ring is brand indigo, never a signal colour, and is stated for each bar treatment. */
 .v6-nav__item:focus-visible, .v6-nav__signin:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 8px; }
 .v6-nav[data-theme="dark"] .v6-nav__item:focus-visible,
@@ -243,8 +256,11 @@
 .v6-mega { position: absolute; top: 100%; left: 0; right: 0; z-index: 55; }
 /* No drop shadow. Over a white chapter the soft shadow spread a grey haze across the section below the
    panel, which read as a rendering fault rather than as depth. The panel ends on a hard edge. */
-.v6-mega__panel { background: #08080A; border-bottom: 1px solid rgba(255,255,255,0.14);
-  transform-origin: 50% 0; }
+/* the panel takes the ground it opens over: white section, white panel with dark text; dark section,
+   near-black panel with light text. It never forces one treatment onto the other. */
+.v6-mega__panel { transform-origin: 50% 0; }
+.v6-nav[data-theme="dark"] .v6-mega__panel { background: #08080A; border-bottom: 1px solid rgba(255,255,255,0.14); }
+.v6-nav[data-theme="light"] .v6-mega__panel { background: #FFFFFF; border-bottom: 1px solid var(--line); }
 .v6-mega[data-state="in"] .v6-mega__panel { animation: v6MegaIn 260ms cubic-bezier(0.22,1,0.36,1) both; }
 .v6-mega[data-state="out"] .v6-mega__panel { animation: v6MegaOut 190ms cubic-bezier(0.4,0,1,1) both; pointer-events: none; }
 @keyframes v6MegaIn  { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
@@ -279,6 +295,20 @@
 .v6-mega__fcta .v6-arw { transition: transform 180ms var(--ease-out); }
 .v6-mega__fcta:hover .v6-arw { transform: translateX(4px); }
 .v6-mega__fcta:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 4px; border-radius: 4px; }
+
+
+/* light-ground values for the same panel */
+.v6-nav[data-theme="light"] .v6-mega__col-h { color: var(--ink-4); }
+.v6-nav[data-theme="light"] .v6-mega__lt { color: var(--ink); }
+.v6-nav[data-theme="light"] .v6-mega__ld { color: var(--ink-3); }
+.v6-nav[data-theme="light"] .v6-mega__fe { color: var(--ink-4); }
+.v6-nav[data-theme="light"] .v6-mega__feature h4 { color: var(--ink); }
+.v6-nav[data-theme="light"] .v6-mega__feature p { color: var(--ink-3); }
+.v6-nav[data-theme="light"] .v6-mega__fcta { color: var(--ink); }
+.v6-nav[data-theme="light"] .v6-mega__feature { border-left-color: var(--line-2); }
+.v6-nav[data-theme="light"] .v6-mega__link:hover { background: rgba(10,10,11,0.05); }
+.v6-nav[data-theme="light"] .v6-mega__link:focus-visible,
+.v6-nav[data-theme="light"] .v6-mega__fcta:focus-visible { outline-color: var(--ink); }
 
 /* mobile full-screen nav */
 /* --surface, not --paper: on the page ground the panel sampled the same colour as the page behind it and had

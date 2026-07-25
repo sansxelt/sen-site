@@ -1,11 +1,10 @@
 /* ============================================================================
-   CHAPTER 1 — the opening, as an operational landscape.
+   CHAPTER 1 — the opening.
 
-   The company's software is long horizontal plates receding into depth. One
-   change crosses all of them. The plates are cropped by both viewport edges, so
-   what is on screen reads as part of something larger. Three depths, each
-   drifting at its own rate with scroll, which is what makes it a space rather
-   than a picture.
+   A full-height graphite field carrying four things: category, headline, one
+   sentence, one action. Nothing else. The landscape that used to occupy the
+   bottom band was removed: it competed with the type for the same viewport and
+   did not earn the room.
    ============================================================================ */
 
 .v6-h {
@@ -21,53 +20,11 @@
   --p: 0;
 }
 
+/* a clean ground, not a lit one: the radial read as a smudge sitting behind the headline */
 .v6-h__field { position: absolute; inset: 0; z-index: 0; pointer-events: none;
-  background:
-    radial-gradient(1500px 900px at 62% 58%, rgba(255,255,255,0.055), transparent 72%),
-    linear-gradient(178deg, #101113 0%, var(--graphite) 44%, #050506 100%); }
+  background: linear-gradient(180deg, #0C0C0E 0%, var(--graphite) 55%, #060607 100%); }
 
-/* ---- the landscape ---- */
-/* Anchored to the bottom band. At 74% the trail ran straight through the headline and the support line,
-   striking the copy out. The landscape is the ground the type sits above, not a layer across it. */
-.v6-h__land { position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; pointer-events: none;
-  height: min(46%, 340px); }
-.v6-h__svg { width: 100%; height: 100%; display: block; }
-
-/* far horizon, blurred, drifting least */
-.v6-h__far line { stroke: rgba(255,255,255,0.07); stroke-width: 1; }
-.v6-h__far { filter: blur(1.5px); transform: translateX(calc(var(--p) * -22px)); }
-
-/* plates: three depths. Far plates are smaller, fainter and drift slowest. */
-.v6-h__plate rect { fill: rgba(255,255,255,0.11); }
-.v6-h__plate text { font-family: var(--sans); font-weight: 500; letter-spacing: 0.01em; fill: var(--g-fg-2); }
-.v6-h__plate.is-d1 { opacity: 0.42; transform: translateX(calc(var(--p) * -34px)); }
-.v6-h__plate.is-d1 text { font-size: 19px; }
-.v6-h__plate.is-d2 { opacity: 0.68; transform: translateX(calc(var(--p) * -58px)); }
-.v6-h__plate.is-d2 text { font-size: 21px; }
-.v6-h__plate.is-d3 { opacity: 1; transform: translateX(calc(var(--p) * -84px)); }
-.v6-h__plate.is-d3 rect { fill: rgba(255,255,255,0.18); }
-.v6-h__plate.is-d3 text { font-size: 23px; fill: var(--g-fg); }
-
-/* the change: one continuous trail across the whole landscape */
-.v6-h__trail { stroke: var(--g-fg); stroke-width: 2.4; stroke-linecap: round; opacity: 0.9;
-  stroke-dasharray: 3200; stroke-dashoffset: 3200;
-  animation: v6Trail 2600ms cubic-bezier(0.5, 0, 0.2, 1) 320ms forwards;
-  transform: translateX(calc(var(--p) * -62px)); }
-@keyframes v6Trail { to { stroke-dashoffset: 0; } }
-
-/* the consequential moments. Colour only where it is a real state. */
-.v6-h__stop { transform: translateX(calc(var(--p) * -62px)); }
-.v6-h__stop circle { fill: var(--graphite); stroke: var(--g-fg); stroke-width: 2.4; }
-.v6-h__stop text { font-family: var(--sans); font-weight: 600; font-size: 18px; letter-spacing: 0.01em;
-  fill: var(--g-fg-2); text-anchor: middle; }
-.v6-h__stop.is-find circle { stroke: var(--stop-dk); fill: var(--stop-dk); }
-.v6-h__stop.is-find text { fill: var(--stop-dk); }
-.v6-h__stop.is-person circle { stroke: var(--wait-dk); fill: var(--wait-dk); }
-.v6-h__stop.is-person text { fill: var(--wait-dk); }
-.v6-h__stop.is-done circle { stroke: var(--go-dk); fill: var(--go-dk); }
-.v6-h__stop.is-done text { fill: var(--go-dk); font-size: 20px; }
-
-/* ---- content plane, sitting above the landscape ---- */
+/* ---- content plane ---- */
 .v6-h__inner { position: relative; z-index: 3; width: 100%; max-width: var(--max-wide);
   margin-inline: auto; padding-inline: var(--gutter); }
 /* neutral, not a signal colour: the category label is not a state */
@@ -82,16 +39,10 @@
 
 /* ============================ RESPONSIVE ============================ */
 @media (max-width: 1080px) {
-  .v6-h__land { height: min(42%, 300px); opacity: 0.9; }
   .v6-h__h1 { max-width: 13ch; }
 }
-/* Mobile: the landscape becomes a quiet band under the type rather than a squeezed diagram. The type keeps
-   its scale; the plates keep their crop. */
 @media (max-width: 720px) {
-  .v6-h { min-height: calc(100svh - var(--nav-h, 62px)); padding-block: clamp(40px, 8vh, 72px);
-    align-items: flex-start; }
-  .v6-h__inner { padding-top: clamp(24px, 6vh, 56px); }
-  .v6-h__land { height: 30%; opacity: 0.7; }
+  .v6-h { min-height: calc(100svh - var(--nav-h, 62px)); padding-block: clamp(40px, 8vh, 72px); }
   .v6-h__h1 { font-size: clamp(2.35rem, 10.2vw, 3.4rem); max-width: 12ch; }
   .v6-h__say { font-size: 1.02rem; max-width: 30ch; }
 }
@@ -103,6 +54,4 @@
 
 @media (prefers-reduced-motion: reduce) {
   .v6-mask__in { animation: none !important; }
-  .v6-h__trail { animation: none !important; stroke-dasharray: none !important; stroke-dashoffset: 0 !important; }
-  .v6-h__far, .v6-h__plate, .v6-h__trail, .v6-h__stop { transform: none !important; }
 }

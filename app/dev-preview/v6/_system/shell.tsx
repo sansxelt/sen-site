@@ -219,6 +219,9 @@ function V6Nav() {
     const onScroll = () => {
       setScrolled(window.scrollY > 4);
       if (!nav) return;
+      // While a panel is open it covers the sample point, so measuring would read the panel's own colour and
+      // feed back on itself. Hold the theme measured just before it opened.
+      if (shown !== null) return;
       const y = Math.round(nav.getBoundingClientRect().bottom) + 4;
       let el = document.elementFromPoint(Math.round(window.innerWidth / 2), y) as HTMLElement | null;
       let lum: number | null = null;

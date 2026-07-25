@@ -107,12 +107,12 @@
    rather than a sentence with a diagram parked below it */
 /* starts at the top of its row so the chapter is one composition, but NOT lifted into the headline:
    at -7vh the environment printed straight through the act sentence. */
-.v6-cs__viewport { overflow: hidden; align-self: start; width: 100%; margin-top: 0; }
+.v6-cs__viewport { overflow: hidden; align-self: center; width: 100%; margin-top: 0; }
 .v6-cs__scene { min-height: 0; }
-.v6-cs__scene { width: 200%; height: auto; display: block;
+.v6-cs__scene { width: 300%; height: auto; display: block;
   transition: transform 620ms var(--ease); transform: translateX(0); }
-.v6-cs[data-act="1"] .v6-cs__scene { transform: translateX(-25%); }
-.v6-cs[data-act="2"] .v6-cs__scene { transform: translateX(-50%); }
+.v6-cs[data-act="1"] .v6-cs__scene { transform: translateX(-33.333%); }
+.v6-cs[data-act="2"] .v6-cs__scene { transform: translateX(-66.667%); }
 
 .v6-cs__spine { stroke: rgba(255,255,255,0.22); stroke-width: 1.5; stroke-dasharray: 5 7; }
 .v6-cs__spinet { fill: var(--g-fg-3); font-family: var(--sans); font-weight: 600; font-size: 17px;
@@ -260,7 +260,7 @@
 .v6-rx__h { font-family: var(--sans); font-weight: 600; letter-spacing: -0.036em; line-height: 1;
   font-size: clamp(2rem, 4.6vw, 3.8rem); color: var(--ink); margin: clamp(14px, 2vh, 22px) 0 0;
   max-width: 17ch; text-wrap: balance; }
-.v6-rx__journey { max-width: var(--max-wide); margin: clamp(36px, 5vh, 64px) auto 0; padding-inline: var(--gutter);
+.v6-rx__journey { max-width: var(--max-wide); margin: clamp(22px, 3vh, 36px) auto 0; padding-inline: var(--gutter);
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(18px, 2.4vw, 34px);
   position: relative; }
 /* the through-line that carries the same result across all three environments */
@@ -269,16 +269,17 @@
 .v6-rx__env { position: relative; display: flex; flex-direction: column; opacity: 0; transform: translateY(20px);
   transition: opacity 560ms var(--ease), transform 620ms var(--ease); transition-delay: calc(var(--i, 0) * 90ms); }
 .v6-rx__env[data-on="true"] { opacity: 1; transform: none; }
-.v6-rx__envh { display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding-bottom: 18px; }
+.v6-rx__envh { display: flex; align-items: center; gap: 12px; padding-bottom: 16px; }
 .v6-rx__envn { font-family: var(--sans); font-weight: 600; font-size: 11px; letter-spacing: 0.16em;
   text-transform: uppercase; color: var(--ink-4); background: var(--paper); padding-right: 12px; }
 /* the result object, identical in all three environments */
-/* the SAME result object, carried into each environment: one identifier, one state, three appearances */
-.v6-rx__chip { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11.5px;
-  color: var(--ink); background: var(--paper); border: 1px solid var(--line-2); border-radius: 999px;
-  padding: 5px 12px; white-space: nowrap; }
-.v6-rx__chipdot { width: 7px; height: 7px; border-radius: 999px; background: var(--go); flex: none; }
+/* the result, stated once above the journey */
+.v6-rx__object { max-width: var(--max-wide); margin: clamp(30px, 4vh, 52px) auto 0; padding-inline: var(--gutter);
+  display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.v6-rx__odot { width: 9px; height: 9px; border-radius: 999px; background: var(--go); flex: none; align-self: center; }
+.v6-rx__oid { font-family: var(--sans); font-weight: 600; letter-spacing: -0.018em;
+  font-size: clamp(1.06rem, 1.5vw, 1.32rem); color: var(--ink); }
+.v6-rx__osay { font-size: 14.5px; color: var(--ink-3); }
 /* the environments start and end on the same lines; the differing surface counts distribute inside,
    so three, two and two read as different shapes rather than as a ragged column */
 .v6-rx__surfaces { border-top: 1px solid var(--line); flex: 1; display: flex; flex-direction: column;
@@ -301,7 +302,7 @@
 .v6-kn { background: var(--sunk); padding-block: clamp(72px, 9vh, 124px); }
 .v6-kn__in { max-width: var(--max-wide); margin-inline: auto; padding-inline: var(--gutter); }
 .v6-kn__grid { margin-top: clamp(26px, 3.5vh, 44px); display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, 0.8fr);
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 0.72fr);
   gap: clamp(24px, 3.2vw, 52px); align-items: start; }
 .v6-kn__lead { display: block; text-decoration: none; border-top: 2px solid var(--ink);
   padding-top: clamp(20px, 2.4vw, 28px); }
@@ -325,7 +326,8 @@
 .v6-kn__code { background: #0A0A0B; border-radius: 12px; padding: 18px 20px; overflow-x: auto; }
 .v6-kn__codeh { margin: 0 0 12px; font-family: var(--sans); font-weight: 600; font-size: 10.5px;
   letter-spacing: 0.15em; text-transform: uppercase; color: #8E9095; }
-.v6-kn__code pre { margin: 0; font-family: var(--mono); font-size: 12.5px; line-height: 1.62; color: #C4C5C9; }
+.v6-kn__code pre { margin: 0; font-family: var(--mono); font-size: 12px; line-height: 1.62; color: #C4C5C9;
+  white-space: pre-wrap; overflow-wrap: anywhere; }
 
 .v6-kn__rail { display: block; text-decoration: none; border-top: 1px solid var(--line-2); padding-top: 18px; }
 .v6-kn__railh { margin: 0 0 14px; font-family: var(--sans); font-weight: 600; font-size: 10.5px;
