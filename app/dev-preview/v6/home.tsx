@@ -1,37 +1,34 @@
 "use client";
 
-// Homepage, design 06 phase 2.
+// Homepage, design 06 phase 2R.
 //
-// The company category is NOT settled. Every high-level positioning string lives in _system/positioning.ts
-// and is read from there by the opening, the closing, the footer, the metadata, and the OG image. No scene
-// below restates the thesis: each one does one job, describes concrete behaviour that exists today, and says
-// it once. That is what lets the category be replaced later without rewriting the page.
+// Seven chapters, each a full-screen scene with one dominant idea and one dominant visual. Backgrounds
+// alternate at every boundary so the page reads as changes of atmosphere rather than as stacked modules:
 //
-//   opening      what the product is, as one live environment
-//   authority    why a claim of "complete" is not proof
-//   lifecycle    one responsibility, followed across four states  (the signature scene)
-//   control      the actual product structure
-//   engine       the one capability that is working today, as a real run
-//   distribution where a finished result already reaches
-//   memory       what the company is left holding
-//   knowledge    the writing behind the product
-//   closing      the opening's responsibility, resolved
-import "./_system/home.css";
+//   1 opening        graphite   headline, one line, one action, one cropped visual
+//   2 the gap        stone      one word at full scale, losing its authority
+//   3 the system     graphite   the whole workflow as one full-bleed diagram
+//   4 the proof      stone      the real checkout run drawn as a single falling line
+//   5 the record     graphite   a composition assembled in front of the reader
+//   6 reach          stone      one result fanning into the stack a company runs
+//     knowledge      sunk       the writing behind the product, as a publication
+//   7 closing        graphite   one statement, one line, two actions
+//
+// Explanation deliberately does NOT live here. /platform, /agents, /method, /research and /docs carry it.
+// The company category is unsettled and every positioning string comes from _system/positioning.ts.
 import { Hero } from "./_system/hero";
-import { Lifecycle } from "./_system/lifecycle";
-import { Authority, ControlCenter, Engine, Distribution, Memory, Knowledge } from "./_system/scenes";
+import { Gap, SystemMap, Proof, Record, Reach, Knowledge } from "./_system/chapters";
 import { ClosingScene } from "./_system/close";
 
 export default function Home() {
   return (
     <>
       <Hero />
-      <Authority />
-      <Lifecycle />
-      <ControlCenter />
-      <Engine />
-      <Distribution />
-      <Memory />
+      <Gap />
+      <SystemMap />
+      <Proof />
+      <Record />
+      <Reach />
       <Knowledge />
       <ClosingScene />
     </>

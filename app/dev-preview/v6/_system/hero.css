@@ -1,129 +1,73 @@
 /* ============================================================================
-   Homepage opening, re-authored. ONE immersive full-bleed graphite environment:
-   the headline, the responsibility, its live activity, the human decision and
-   the completion arc all live in a single visual field. No text column, no
-   product card opposite it, no two balanced columns. Product surfaces are
-   cropped and bleed off the viewport edges as background planes; the type sits
-   over them; a single trajectory carries the responsibility through its states.
-   Strong with motion disabled: the first frame already states the system.
+   CHAPTER 1 — the opening. A full-height graphite environment carrying exactly
+   five things: category, headline, one sentence, one action, one quiet action.
+   The visual is a cropped fragment of the chapter-3 system graph, anchored off
+   the right edge so it reads as a slice of something larger.
    ============================================================================ */
 
 .v6-h {
   position: relative;
-  /* the sticky nav sits in flow above this section, so a full 100svh would push the trajectory
-     out of the first frame by exactly the nav height */
   min-height: calc(100svh - var(--nav-h, 66px));
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: clamp(26px, 4.5vh, 58px);
+  align-items: center;
   overflow: hidden;
   background: var(--graphite);
   color: var(--g-fg-2);
-  padding: clamp(40px, 6vh, 76px) 0 clamp(28px, 4vh, 44px);
+  padding-block: clamp(56px, 9vh, 120px);
   isolation: isolate;
 }
 
-/* ---- background plane: depth, not decoration ---- */
 .v6-h__field { position: absolute; inset: 0; z-index: 0; pointer-events: none;
   background:
-    radial-gradient(1200px 620px at 78% -10%, rgba(52,211,153,0.13), transparent 62%),
-    radial-gradient(900px 520px at 8% 108%, rgba(240,180,74,0.07), transparent 60%),
-    linear-gradient(168deg, var(--graphite-3) 0%, var(--graphite) 52%, #080B10 100%); }
+    radial-gradient(1500px 900px at 70% 46%, rgba(255,255,255,0.06), transparent 72%),
+    linear-gradient(168deg, #141517 0%, var(--graphite) 56%, #060607 100%); }
 
-/* ---- cropped product surfaces: enter and leave the viewport, never framed as cards ---- */
-.v6-h__crop { position: absolute; z-index: 1; pointer-events: none; border: 1px solid var(--g-line);
-  background: rgba(255,255,255,0.028); backdrop-filter: blur(1px); border-radius: 12px; overflow: hidden; }
-/* activity surface: bleeds off the right edge */
-.v6-h__crop--act { top: clamp(96px, 15vh, 168px); right: -96px; width: min(500px, 40vw); }
-/* evidence surface: bleeds off the bottom-left edge, sits deeper */
-.v6-h__crop--ev { display: none; }
-.v6-h__crop-h { display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  padding: 9px 14px; border-bottom: 1px solid var(--g-line); }
-/* Label and value sit together at the left. The panel bleeds off the viewport on purpose, but with the value
-   pushed to the far right the bleed was cutting off the only part that carries meaning (ok / unverified /
-   not enforced), so what remained on screen was a column of labels with nothing beside them. */
-.v6-h__crop-r { display: flex; align-items: baseline; gap: 10px;
-  padding: 8px 14px; border-top: 1px solid var(--g-line); font-family: var(--mono); font-size: 11.5px; color: var(--g-fg-3); }
-.v6-h__crop-r:first-of-type { border-top: 0; }
-.v6-h__crop-r b { color: var(--g-fg-2); font-weight: 500; }
-.v6-h__crop-r .amber { color: var(--wait-dk); } .v6-h__crop-r .red { color: var(--stop-dk); } .v6-h__crop-r .green { color: var(--go-dk); }
+/* ---- the fragment: cropped by the viewport, never framed ---- */
+.v6-h__gfxwrap { position: absolute; z-index: 1; pointer-events: none;
+  top: 50%; right: clamp(-320px, -14vw, -90px); translate: 0 -50%;
+  width: clamp(560px, 62vw, 940px); aspect-ratio: 1; }
+.v6-h__gfx { width: 100%; height: 100%; overflow: visible; }
+.v6-h__gfx-nodes circle { fill: var(--graphite); stroke: var(--g-fg); stroke-width: 1.5; stroke-opacity: 0.55; }
+.v6-h__gfx-nodes circle.is-hub { fill: rgba(255,255,255,0.07); stroke-opacity: 0.9; stroke-width: 2; }
+.v6-h__gfx-x line { stroke: var(--stop-dk); stroke-width: 2.2; stroke-linecap: round; }
+.v6-h__gfx-t { fill: var(--g-fg-2); font-family: var(--mono); font-size: 20px; letter-spacing: 0.06em;
+  text-transform: uppercase; }
 
 /* ---- content plane ---- */
 .v6-h__inner { position: relative; z-index: 3; width: 100%; max-width: var(--max-wide);
   margin-inline: auto; padding-inline: var(--gutter); }
-/* brand indigo, NOT green: green is a success signal and the category label is not a state */
-.v6-h__eyebrow { color: var(--brand-dk); }
-.v6-h__h1 { font-family: var(--sans); font-weight: 600; letter-spacing: -0.036em; line-height: 0.99;
-  color: var(--g-fg); margin: clamp(14px, 2vh, 22px) 0 0; font-size: clamp(2.1rem, 3.8vw, 3.45rem);
-  max-width: 21ch; text-wrap: balance; }
+/* neutral, not a signal colour: the category label is not a state */
+.v6-h__eyebrow { color: var(--g-fg-2); }
+/* The single largest type on the page after the closing. 90px at 1440. */
+.v6-h__h1 { font-family: var(--sans); font-weight: 600; letter-spacing: -0.042em; line-height: 0.94;
+  color: var(--g-fg); margin: clamp(18px, 2.4vh, 30px) 0 0; font-size: clamp(2.5rem, 6.3vw, 5.7rem);
+  max-width: 15ch; text-wrap: balance; }
 .v6-h__h1 .lead-clause { color: var(--g-fg-3); }
-.v6-h__say { margin: clamp(13px, 1.7vh, 19px) 0 0; max-width: 52ch; font-size: clamp(1rem, 1.2vw, 1.16rem);
-  line-height: 1.55; color: var(--g-fg-2); }
-.v6-h__cta { margin-top: clamp(16px, 2.1vh, 25px); display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.v6-h__say { margin: clamp(20px, 2.6vh, 32px) 0 0; max-width: 34ch;
+  font-size: clamp(1.06rem, 1.35vw, 1.34rem); line-height: 1.5; color: var(--g-fg-2); }
+.v6-h__cta { margin-top: clamp(26px, 3.4vh, 44px); display: flex; align-items: center; gap: 26px; flex-wrap: wrap; }
 .v6-h .v6-elink { color: var(--g-fg); }
 
-/* ---- the responsibility under governance: the unmistakable object ---- */
-.v6-h__gov { position: relative; z-index: 3; width: 100%; max-width: var(--max-wide); margin: 0 auto;
-  padding-inline: var(--gutter); }
-.v6-h__resp { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
-.v6-h__resp-k { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--g-fg-3); }
-.v6-h__resp-t { font-family: var(--sans); font-weight: 500; font-size: clamp(1.02rem, 1.5vw, 1.32rem);
-  color: var(--g-fg); letter-spacing: -0.012em; margin: 0; }
-
-/* trajectory: full-bleed line carrying the responsibility through its arc */
-.v6-h__traj { position: relative; margin-top: clamp(16px, 2.4vh, 26px); }
-.v6-h__rail { position: relative; height: 2px; background: var(--g-line-2); border-radius: 2px; }
-.v6-h__fill { position: absolute; left: 0; top: 0; bottom: 0; width: var(--reach, 52%); border-radius: 2px;
-  background: linear-gradient(90deg, var(--go-dk), var(--wait-dk));
-  animation: v6Reach 1100ms cubic-bezier(0.22,1,0.36,1) both; }
-@keyframes v6Reach { from { width: 0; } to { width: var(--reach, 52%); } }
-.v6-h__states { display: grid; grid-template-columns: repeat(5, 1fr); margin-top: 14px; gap: 10px; }
-.v6-h__state { position: relative; }
-.v6-h__state::before { content: ""; position: absolute; top: -21px; left: 0; width: 9px; height: 9px;
-  border-radius: 999px; background: var(--graphite); border: 2px solid var(--g-fg-3); }
-.v6-h__state.done::before { background: var(--go-dk); border-color: var(--go-dk); }
-.v6-h__state.now::before { background: var(--wait-dk); border-color: var(--wait-dk); width: 13px; height: 13px; top: -23px;
-  box-shadow: 0 0 0 5px rgba(240,180,74,0.16); }
-.v6-h__state-l { display: block; font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.08em;
-  text-transform: uppercase; color: var(--g-fg-3); }
-.v6-h__state.now .v6-h__state-l { color: var(--wait-dk); }
-.v6-h__state.done .v6-h__state-l { color: var(--g-fg-2); }
-/* the consequential state is the only one that speaks at size */
-.v6-h__now { margin-top: 10px; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-.v6-h__now-t { font-family: var(--sans); font-weight: 600; font-size: clamp(1.05rem, 1.5vw, 1.3rem);
-  color: var(--g-fg); letter-spacing: -0.012em; }
-.v6-h__now-d { font-size: 13.5px; color: var(--g-fg-3); }
-
 /* ============================ RESPONSIVE ============================ */
-@media (max-width: 1100px) {
-  .v6-h__crop--act { right: -260px; width: 470px; opacity: 0.5; }
-  .v6-h__crop--ev { display: none; }
+@media (max-width: 1080px) {
+  .v6-h__gfxwrap { right: -34vw; width: 82vw; opacity: 0.55; }
+  .v6-h__h1 { max-width: 13ch; }
 }
-/* Mobile is authored, not reflowed: the crops leave, the environment keeps its field and its trajectory,
-   the headline shortens its measure, and the consequential state stays the loudest thing on screen. */
+/* Mobile: the fragment drops behind the type as a quiet field rather than competing with it, and the
+   headline keeps its scale instead of shrinking to fit an ornament. */
 @media (max-width: 720px) {
-  .v6-h { min-height: calc(100svh - var(--nav-h, 62px)); padding: 24px 0 26px; justify-content: flex-start; gap: 0; }
-  .v6-h__crop { display: none; }
-  .v6-h__h1 { font-size: clamp(1.9rem, 7.6vw, 2.5rem); max-width: 17ch; }
-  .v6-h__say { font-size: 15px; max-width: none; margin-top: 14px; }
-  .v6-h__gov { margin-top: auto; padding-top: 20px; }
-  .v6-h__states { grid-template-columns: repeat(5, 1fr); gap: 4px; }
-  .v6-h__state-l { font-size: 8.5px; letter-spacing: 0.04em; }
-  .v6-h__state::before { top: -19px; width: 8px; height: 8px; }
-  .v6-h__state.now::before { width: 11px; height: 11px; top: -20px; }
-  .v6-h__resp-t { font-size: 1.02rem; }
+  .v6-h { min-height: calc(100svh - var(--nav-h, 62px)); padding-block: clamp(40px, 8vh, 72px); }
+  .v6-h__gfxwrap { top: 20%; right: -46vw; width: 118vw; opacity: 0.3; translate: 0 0; }
+  .v6-h__h1 { font-size: clamp(2.35rem, 10.2vw, 3.4rem); max-width: 12ch; }
+  .v6-h__say { font-size: 1.02rem; max-width: 30ch; }
+  .v6-h__cta { gap: 20px; }
 }
-@media (max-width: 380px) { .v6-h__state-l { font-size: 8px; } }
 
-/* The one authored opening moment: each clause of the headline rises out of its own mask. Lives here with the
-   rest of the hero rather than in the homepage stylesheet, since it belongs to this component. */
-.v6-mask { display: block; overflow: hidden; padding-bottom: 0.08em; margin-bottom: -0.04em; }
-.v6-mask__in { display: block; animation: v6MaskIn 760ms cubic-bezier(0.22,1,0.36,1) both;
-  animation-delay: calc(var(--d,0) * 90ms + 80ms); }
-@keyframes v6MaskIn { from { transform: translateY(110%); } to { transform: translateY(0); } }
+/* The one authored opening moment: each clause of the headline rises out of its own mask. */
+.v6-mask { display: block; overflow: hidden; padding-bottom: 0.09em; margin-bottom: -0.05em; }
+.v6-mask__in { display: block; animation: v6MaskIn 860ms cubic-bezier(0.22,1,0.36,1) both; animation-delay: 90ms; }
+@keyframes v6MaskIn { from { transform: translateY(112%); } to { transform: translateY(0); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .v6-h__fill { animation: none !important; width: var(--reach, 52%) !important; }
   .v6-mask__in { animation: none !important; }
 }

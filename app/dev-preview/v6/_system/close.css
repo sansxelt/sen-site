@@ -6,13 +6,15 @@
    ============================================================================ */
 
 /* ---------------------------------------------------------- closing scene --- */
+/* The final chapter, and the largest type on the page. Given a full viewport of its own so the page ends
+   on a statement rather than on a block above a footer. */
 .v6-end { position: relative; background: var(--graphite); color: var(--g-fg-2); overflow: hidden;
-  padding: clamp(92px, 14vh, 176px) 0 clamp(76px, 11vh, 140px); }
+  min-height: 74svh; display: flex; align-items: center;
+  padding: clamp(84px, 11vh, 140px) 0 clamp(76px, 10vh, 120px); }
 .v6-end__field { position: absolute; inset: 0; pointer-events: none;
   background:
-    radial-gradient(1000px 520px at 82% 8%, rgba(74,222,156,0.10), transparent 62%),
-    radial-gradient(820px 460px at 4% 96%, rgba(63,61,158,0.16), transparent 60%),
-    linear-gradient(170deg, var(--graphite-3), var(--graphite) 60%, #12161F); }
+    radial-gradient(1300px 780px at 74% 18%, rgba(255,255,255,0.055), transparent 70%),
+    linear-gradient(170deg, #141517, var(--graphite) 62%, #060607); }
 .v6-end__in { position: relative; z-index: 2; width: 100%; max-width: var(--max-wide);
   margin-inline: auto; padding-inline: var(--gutter); }
 
@@ -24,9 +26,9 @@
 .v6-end__resolve-t b { color: var(--g-fg); font-weight: 600; }
 
 .v6-end__h { font-family: var(--sans); font-weight: 600; letter-spacing: -0.034em; line-height: 1.0;
-  font-size: clamp(2.4rem, 5.2vw, 4.6rem); color: var(--g-fg); margin: 0; max-width: 16ch; text-wrap: balance; }
-.v6-end__say { font-size: clamp(1.02rem, 1.25vw, 1.22rem); line-height: 1.55; color: var(--g-fg-2);
-  margin: clamp(20px, 2.6vh, 30px) 0 0; max-width: 54ch; }
+  font-size: clamp(2.7rem, 7.4vw, 6.6rem); color: var(--g-fg); margin: 0; max-width: 13ch; text-wrap: balance; }
+.v6-end__say { font-size: clamp(1.06rem, 1.4vw, 1.4rem); line-height: 1.5; color: var(--g-fg-2);
+  margin: clamp(24px, 3.2vh, 40px) 0 0; max-width: 40ch; }
 .v6-end__cta { margin-top: clamp(28px, 4vh, 44px); display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
 .v6-end .v6-btn { background: var(--g-fg); border-color: var(--g-fg); color: var(--graphite); min-height: 52px; padding: 16px 28px; font-size: 16px; }
 .v6-end .v6-btn:hover { background: #fff; border-color: #fff; }

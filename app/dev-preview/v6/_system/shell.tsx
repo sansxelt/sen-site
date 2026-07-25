@@ -61,8 +61,8 @@ function ResourcesMega({ onNavigate }: { onNavigate: () => void }) {
             </div>
           ))}
           <Link href={`${BASE}/platform`} className="v6-mega__feature" onClick={onNavigate}>
-            {/* brand indigo, not green: green is reserved for successful states */}
-            <span className="v6-eyebrow" style={{ color: "var(--brand-dk)" }}>The platform</span>
+            {/* neutral: colour on this site only ever means a state */}
+            <span className="v6-eyebrow" style={{ color: "var(--g-fg-3)" }}>The platform</span>
             <h4>What the product actually does</h4>
             <p>Requirements, runs, findings, review, repair, and the record, in one place.</p>
             <span className="v6-elink" style={{ marginTop: "auto", color: "var(--g-fg)" }}><span className="v6-elink__t">Explore the platform</span><span className="v6-arw" aria-hidden>→</span></span>

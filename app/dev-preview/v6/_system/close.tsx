@@ -10,8 +10,10 @@ import "./close.css";
 
 const BASE = "/dev-preview/v6";
 
+// `resolve` defaults OFF. The closing is one statement, one line and two actions; the recap strip it used to
+// carry was a second idea in the same viewport and re-explained a story the page had already told.
 export function ClosingScene({
-  resolve = true,
+  resolve = false,
   title = CLOSE_TITLE,
   say = CLOSE_SAY,
   secondaryHref = `${BASE}/platform`,

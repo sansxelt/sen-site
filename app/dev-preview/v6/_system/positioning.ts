@@ -32,9 +32,9 @@ export const HEADLINE: [string, string] = [
   "Vraelis keeps the company in control.",
 ];
 
-/** The one supporting paragraph under the headline. Concrete, not categorical. */
-export const SUPPORT =
-  "Write down what a change must not break. When an agent says it is done, Vraelis checks the running software against that, shows you what it could not prove, and puts the decisions that matter in front of a person.";
+/** ONE short sentence under the headline. The opening creates scale and curiosity; proof comes later, so
+ *  this line must not try to explain the product. Keep it under about 20 words. */
+export const SUPPORT = "An agent says the work is done. Vraelis decides whether that is true.";
 
 /** Page title and meta description. */
 export const META_TITLE = "Vraelis | Control for AI-built software";
@@ -49,11 +49,10 @@ export const OG_DESCRIPTION =
 /** The three beats drawn in the OG artwork. */
 export const OG_BEATS: [string, string, string] = ["What changed", "What it missed", "What ships"];
 
-/** Closing scene. */
+/** Closing scene. One statement, one short line. No recap, no feature list. */
 export const CLOSE_TITLE = "Ship what you can stand behind.";
-export const CLOSE_SAY =
-  "Vraelis checks a finished change against what it was required to do, tells you what it could not prove, and keeps a person on the decisions that matter.";
+export const CLOSE_SAY = "Proof before production, and a record that outlives the change.";
 
 /** The statement in the footer. */
 export const FOOTER_STATEMENT =
-  "Vraelis checks what AI agents build against what the business actually requires, and keeps a person on the decisions that matter.";
+  "Vraelis checks what AI agents build against what the business actually requires.";
