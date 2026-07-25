@@ -22,7 +22,7 @@ export default function DocsIndex() {
           <div className="v6-grid3" style={{ marginTop: "clamp(28px,3vw,40px)" }}>
             {DOCS.map((d) => (
               <Link key={d.slug} href={`${BASE}/docs/${d.slug}`} className="v6-gcard" style={{ textDecoration: "none", display: "block" }}>
-                <h3>{d.title}</h3>
+                <h2>{d.title}</h2>
                 <p>{d.summary}</p>
               </Link>
             ))}

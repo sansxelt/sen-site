@@ -65,8 +65,8 @@ export function DocShell({ activeSlug = "", toc = [], children }: {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden><path d="M6 6l12 12M6 18L18 6" /></svg>
         </button>
 
-        <aside className="v6-docs__side">
-          <nav aria-label="Documentation">
+        <aside className="v6-docs__side" aria-label="Documentation sections">
+          <nav aria-label="Documentation sections list">
             {groups.map((g) => (
               <div className="v6-docs__group" key={g.group}>
                 <p className="v6-docs__group-h">{g.group}</p>
@@ -83,7 +83,7 @@ export function DocShell({ activeSlug = "", toc = [], children }: {
         <div className="v6-docs__main">{children}</div>
 
         {toc.length ? (
-          <aside className="v6-docs__toc">
+          <aside className="v6-docs__toc" aria-label="On this page">
             <p className="v6-docs__toc-h">On this page</p>
             {toc.map((h) => <a key={h} href={`#${dslug(h)}`}>{h}</a>)}
           </aside>

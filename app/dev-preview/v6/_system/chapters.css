@@ -13,27 +13,30 @@
 /* ══════════════════════════════════════════════════════ 2. THE COMPLETION GAP ══
    A pinned confrontation. State 0 is one word at the largest scale on the page.
    State 1 takes that same optical space away from it. */
-/* CONTINUOUS MOTION, not cross-faded frames.
-   --p runs 0..1 with scroll. Every traveller below has its OWN trajectory through the viewport, expressed as
-   a translateY that is a function of --p. They move through one shared space and pass each other; none of
-   them is stacked on another and fading in place, which is what made the previous version read as slides and
-   let four layers physically overlap.
+/* CONTINUOUS DEVELOPMENT.
+   --p runs 0..1 with scroll. Every traveller owns a trajectory through one shared space.
 
-     0.00-0.20  the claim holds the centre
-     0.20-0.42  the claim rises and shrinks; the systems it reached travel up behind it
-     0.42-0.65  the findings climb into the space the claim vacated and settle
-     0.65-0.82  the consequence arrives beneath them
-     0.82-1.00  everything rests before the next chapter
+   The previous ranges left long dead holds and then compressed each handover into ~9% of the chapter, which
+   is why the same scene could feel slow AND abrupt. Now no transformation happens in less than ~18% of the
+   range, no state sits completely still for more than ~15%, and something secondary is always developing
+   while the primary statement stays readable:
 
-   Ramps are short, rests are long, and the whole thing is an absolute function of scroll position, so any
-   speed or direction resolves immediately. */
+     0.00-0.18  the claim establishes and holds
+     0.18-0.42  first handoff: the claim rises and shrinks as the systems travel up behind it
+     0.42-0.64  the findings become dominant while the systems continue clearing
+     0.64-0.84  the consequence enters and resolves
+     0.84-1.00  resolved, with a slow settle continuing to the chapter exit
+
+   Ramps overlap on purpose: the findings begin arriving at 0.42 while the claim is still leaving, so one
+   state hands to the next rather than a frame fading out into a pause. */
 .v6-gap { position: relative; height: 520vh; background: var(--paper); --p: 0;
-  --claim:   clamp(0, calc((var(--p) - 0.20) / 0.22), 1);
-  --strike:  clamp(0, calc((var(--p) - 0.20) / 0.10), 1);
-  --sys:     clamp(0, calc((var(--p) - 0.24) / 0.10), 1);
-  --sysout:  clamp(0, calc((var(--p) - 0.44) / 0.10), 1);
-  --found:   clamp(0, calc((var(--p) - 0.42) / 0.12), 1);
-  --verdict: clamp(0, calc((var(--p) - 0.67) / 0.10), 1);
+  --claim:   clamp(0, calc((var(--p) - 0.18) / 0.24), 1);   /* 18 -> 42, 24% */
+  --strike:  clamp(0, calc((var(--p) - 0.18) / 0.18), 1);   /* 18 -> 36, 18% */
+  --sys:     clamp(0, calc((var(--p) - 0.20) / 0.20), 1);   /* 20 -> 40, 20% */
+  --sysout:  clamp(0, calc((var(--p) - 0.44) / 0.20), 1);   /* 44 -> 64, 20% */
+  --found:   clamp(0, calc((var(--p) - 0.40) / 0.22), 1);   /* 40 -> 62, 22% */
+  --verdict: clamp(0, calc((var(--p) - 0.64) / 0.20), 1);   /* 64 -> 84, 20% */
+  --settle:  clamp(0, calc((var(--p) - 0.84) / 0.16), 1);   /* 84 -> 100, a slow drift to the exit */
 }
 .v6-gap__pin { position: sticky; top: 0; height: 100svh; overflow: hidden;
   padding: calc(var(--nav-h, 66px) + 2vh) var(--gutter) 4vh; }
@@ -49,11 +52,12 @@
 .v6-gap__strike { position: absolute; left: -2%; right: -2%; top: 47%; height: clamp(4px, 0.6vw, 9px);
   background: var(--stop); border-radius: 999px; transform-origin: 0 50%; transform: scaleX(var(--strike)); }
 
-/* the claim: holds the centre, then rises out of the way and shrinks */
-.v6-gap__claim { transform: translateY(calc(-52% - var(--claim) * 30vh)) scale(calc(1 - 0.56 * var(--claim)));
-  transform-origin: 0 50%; opacity: calc(1 - 0.88 * var(--claim)); }
+/* the claim: holds the centre, then rises and shrinks. It keeps drifting slightly to the exit rather than
+   parking, so the last sixth of the chapter is not frozen. */
+.v6-gap__claim { transform: translateY(calc(-52% - var(--p) * 2.5vh - var(--claim) * 28vh - var(--settle) * 3vh))
+  scale(calc(1 - 0.56 * var(--claim))); transform-origin: 0 50%; opacity: calc(1 - 0.88 * var(--claim)); }
 
-/* the systems: travel up through the frame behind the claim and leave again */
+/* the systems: travel up through the frame behind the claim and clear as the findings take over */
 .v6-gap__sys { transform: translateY(calc(46vh - var(--sys) * 44vh - var(--sysout) * 34vh));
   opacity: calc(var(--sys) * (1 - var(--sysout))); }
 .v6-gap__syslist { list-style: none; margin: clamp(14px, 2vh, 22px) 0 0; padding: 0;
@@ -61,12 +65,14 @@
 .v6-gap__syslist li { font-size: clamp(0.95rem, 1.5vw, 1.3rem); color: var(--ink-2);
   border: 1px solid var(--line-2); border-radius: 999px; padding: 9px 20px; }
 
-/* the findings: climb into the space the claim left, and stay */
-.v6-gap__found { transform: translateY(calc(52vh - var(--found) * 74vh)); opacity: var(--found); }
+/* the findings: begin arriving while the claim is still leaving, settle, then drift on slowly */
+.v6-gap__found { transform: translateY(calc(52vh - var(--found) * 74vh - var(--settle) * 2vh));
+  opacity: var(--found); }
 .v6-gap__found .v6-gap__label { color: var(--stop-ink); }
 
-/* the consequence: arrives underneath them, last */
-.v6-gap__verdictwrap { transform: translateY(calc(56vh - var(--verdict) * 34vh)); opacity: var(--verdict); }
+/* the consequence: develops from what is already on screen, last */
+.v6-gap__verdictwrap { transform: translateY(calc(56vh - var(--verdict) * 34vh - var(--settle) * 1.5vh));
+  opacity: var(--verdict); }
 .v6-gap__list { list-style: none; margin: clamp(14px, 2.2vh, 26px) 0 0; padding: 0;
   display: flex; flex-direction: column; gap: clamp(8px, 1.4vh, 16px); }
 .v6-gap__list li { font-family: var(--sans); font-weight: 500; letter-spacing: -0.026em; line-height: 1.12;
@@ -80,8 +86,7 @@
    focus in turn; the other two stay on screen the whole time at lower contrast.
    --f runs 0..2 and is the focus position, derived from --p.
    ========================================================================== */
-.v6-cs { position: relative; height: 340vh; background: var(--graphite); color: var(--g-fg-2); --p: 0;
-  --f: calc(var(--p) * 2); }
+.v6-cs { position: relative; height: 400vh; background: var(--graphite); color: var(--g-fg-2); --p: 0; }
 .v6-cs__pin { position: sticky; top: 0; height: 100svh; overflow: hidden; display: grid;
   grid-template-rows: auto 1fr; gap: clamp(8px, 1.2vh, 18px);
   padding: calc(var(--nav-h, 66px) + 2vh) 0 3vh;
@@ -109,10 +114,11 @@
    at -7vh the environment printed straight through the act sentence. */
 .v6-cs__viewport { overflow: hidden; align-self: center; width: 100%; margin-top: 0; }
 .v6-cs__scene { min-height: 0; }
+/* the pan is CONTINUOUS: it tracks --p directly, so the environment is always developing under the
+   reader rather than snapping between three parked positions. The act text still switches
+   discretely, which is what keeps one sentence readable at a time. */
 .v6-cs__scene { width: 300%; height: auto; display: block;
-  transition: transform 620ms var(--ease); transform: translateX(0); }
-.v6-cs[data-act="1"] .v6-cs__scene { transform: translateX(-33.333%); }
-.v6-cs[data-act="2"] .v6-cs__scene { transform: translateX(-66.667%); }
+  transform: translateX(calc(var(--p) * -66.667%)); }
 
 .v6-cs__spine { stroke: rgba(255,255,255,0.22); stroke-width: 1.5; stroke-dasharray: 5 7; }
 .v6-cs__spinet { fill: var(--g-fg-3); font-family: var(--sans); font-weight: 600; font-size: 17px;
@@ -188,7 +194,7 @@
   max-width: 16ch; text-wrap: balance; }
 .v6-pf__guar { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap;
   margin: clamp(22px, 3vh, 34px) 0 0; padding-top: clamp(18px, 2.4vh, 26px); border-top: 1px solid var(--line-2);
-  font-size: clamp(1.02rem, 1.35vw, 1.28rem); color: var(--ink-2); max-width: 74ch; }
+  font-size: clamp(1.02rem, 1.35vw, 1.28rem); color: var(--ink-2); max-width: 62ch; }
 .v6-pf__guar span { font-family: var(--sans); font-weight: 600; font-size: 11px; letter-spacing: 0.16em;
   text-transform: uppercase; color: var(--ink-4); flex: none; }
 
