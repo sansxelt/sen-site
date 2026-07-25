@@ -64,8 +64,11 @@ function useSeen(root: RefObject<HTMLElement | null>, total: number) {
    reached and whether the outcomes the business depends on are still true.
 
    The verdict is "Unverified", not "Failed". Nothing has been checked at this point in the page, so
-   claiming a failure here would be using a decision word the evidence does not support. Failed belongs
-   to the demonstration chapter, where a run actually produced contradicting evidence.
+   claiming a failure here would be using a decision word the evidence does not support.
+
+   There were four states; there are now three. The middle one listed what a completion claim DOES settle
+   as two small pills, which is the weakest thing a full viewport can hold: a tiny tag in an enormous
+   empty field. The chapter is stronger as claim, absence, verdict, with nothing small in it.
    ------------------------------------------------------------------------------------------------- */
 const UNCOVERED = [
   "Which systems the change actually reached.",
@@ -89,15 +92,6 @@ export function Gap() {
             <p className="v6-gap__turn">An assertion, made by the thing that wrote the work.</p>
           </div>
 
-          <div className="v6-gap__t v6-gap__sys">
-            <p className="v6-gap__label">What it settles</p>
-            <ul className="v6-gap__syslist">
-              {["that the work is written", "that it deployed"].map((t) => (
-                <li key={t}>{t}</li>
-              ))}
-            </ul>
-          </div>
-
           <div className="v6-gap__t v6-gap__found">
             <p className="v6-gap__label">What it does not</p>
             <ul className="v6-gap__list">
@@ -118,140 +112,84 @@ export function Gap() {
 }
 
 /* ══════════════════════════════════════════════════════════════ CHAPTER 3 ══
-   THE CONNECTED OPERATING ENVIRONMENT.
+   WHAT VERIFIED HAS TO MEAN.
 
-   ONE environment, not three cards. The whole system is drawn once, twice as wide as the viewport, and the
-   chapter pans across it as you scroll. Three regions come into focus in turn; the other two stay on screen
-   at lower contrast the entire time, so focus moves inside a space rather than replacing it.
+   This chapter replaces a three-step "define, check, repair" diagram, which explained the mechanism and
+   argued nothing. The strongest thing this company has is the STANDARD it holds itself to, and it was
+   nowhere on the page.
 
-     region 0  the guarantee, held outside the code, connected to what it applies to
-     region 1  a browser run travelling through the deployed workflow
-     region 2  finding, person, repair, recheck, all returning into the same record
+   Verified is the most dangerous word the product can say. It is issued only when all eight conditions
+   hold at once; any one unmet and the honest answer is Failed, or Blocked. That is also why Blocked
+   exists as a first-class answer, which most tools refuse to say.
+
+   The motif is the company's own: a gapped ring. The centre holds the claim, the outer path is the
+   independent verification closing around it, one segment per condition. The ring only closes when every
+   segment does, and the conclusion resolves in the centre only after it has.
    ------------------------------------------------------------------------------------------------- */
-const ACTS: [string, string][] = [
-  ["Define the outcome", "State what the business cannot afford to lose."],
-  ["Check the deployed workflow", "Vraelis derives the requirements and browser plan, then runs the real product rather than inspecting only the source."],
-  ["Verify the repair", "Failures return with evidence and a repair handoff. A new run determines whether the fix held."],
+const STANDARD: [string, string][] = [
+  ["The business requirement is preserved", "Not quietly softened into something easier to pass."],
+  ["The plan can actually prove it", "Every clause maps to an obligation and an observable assertion."],
+  ["The real product was exercised", "The deployed software, not a mock and not the source."],
+  ["The evidence supports the conclusion", "Read from what the run captured, not from its own summary."],
+  ["The result is scoped", "What it covers, and just as plainly what it does not."],
+  ["The plan is not stale", "Still valid for the deployment it ran against."],
+  ["The work could not grade itself", "The system that wrote it cannot approve it."],
+  ["The record is inspectable", "Anyone can check the conclusion against the evidence."],
 ];
 
-export function SystemMap() {
+export function Standard() {
   const wrap = useRef<HTMLDivElement>(null);
-  const [act, setAct] = useState(0);
-  const lastAct = useRef(0);
-  // The act index derives from the same RENDERED progress that drives the pan, inside the engine's frame
-  // callback, so the sentence and the environment can never disagree. React state changes twice on the
-  // whole chapter; every frame in between is CSS only.
+  const [at, setAt] = useState(0);
+  const last = useRef(0);
+  // The active condition derives from the SAME rendered progress that closes the ring, inside the engine's
+  // frame callback, so the segment and the sentence can never disagree. React renders eight times across
+  // the whole chapter; every frame between is CSS only.
   useScrollProgress(wrap, {
     onFrame: (p) => {
-      // matches the dwell schedule in chapters.css: the sentence changes at the midpoint of each travel
-      const next = p < 0.24 ? 0 : p < 0.69 ? 1 : 2;
-      if (next !== lastAct.current) { lastAct.current = next; setAct(next); }
+      // 0.06 to 0.86 carries the eight conditions; the rest is the arrival and the conclusion
+      const k = Math.min(STANDARD.length - 1, Math.max(0, Math.floor(((p - 0.06) / 0.80) * STANDARD.length)));
+      if (k !== last.current) { last.current = k; setAt(k); }
     },
   });
   return (
-    <section className="v6-cs" data-nav-dark data-nav-theme="dark" data-act={act} ref={wrap}>
-      <div className="v6-cs__pin">
-        <div className="v6-cs__head">
-          <p className="v6-eyebrow">One guarantee, every system it crosses</p>
-          <div className="v6-cs__acts">
-            {ACTS.map(([t, d], i) => (
-              <div key={t} className="v6-cs__act" style={{ ["--i" as string]: i }}>
-                <h2>{t}</h2>
-                <p>{d}</p>
-              </div>
-            ))}
-          </div>
+    <section className="v6-st" data-nav-dark data-nav-theme="dark" data-at={at} ref={wrap}>
+      <div className="v6-st__pin">
+        <div className="v6-st__head">
+          <p className="v6-eyebrow">The standard</p>
+          <h2 className="v6-st__h">Verified is the most dangerous word this product can say.</h2>
+          <p className="v6-st__sub">
+            It is issued only when all eight of these hold. Any one unmet and the honest answer is Failed,
+            or Blocked.
+          </p>
         </div>
 
-        <div className="v6-cs__viewport">
-          <svg className="v6-cs__scene" viewBox="0 0 2760 470" role="img"
-            aria-label="One environment. A guarantee held outside the code connects to the systems it crosses. A browser run crosses the deployed product. A finding goes to a person, a repair returns, and an independent recheck writes back to the same record.">
-            {/* The record spine: present across the whole environment, tying all three regions together, and
-                running on past the last node so nothing implies the trail stops where the result lands. */}
-            <line className="v6-cs__spine" x1="30" y1="392" x2="2745" y2="392" />
-            <text className="v6-cs__spinet" x="89" y="426">every run stays attached to the same outcome</text>
-
-            {/* ── region 0: the guarantee, outside the code ── */}
-            <g className="v6-cs__r" data-r="0">
-              <rect className="v6-cs__guar" x="89" y="40" width="600" height="98" rx="14" />
-              <text className="v6-cs__guart" x="119" y="78">Guarantee</text>
-              <text className="v6-cs__guarb" x="119" y="114">Only authorized staff can read customer records.</text>
-              {["application", "identity", "records-api"].map((t, i) => (
-                <g key={t}>
-                  <rect className="v6-cs__svc" x={99 + i * 200} y="234" width="176" height="56" rx="10" />
-                  <text className="v6-cs__svct" x={187 + i * 200} y="269">{t}</text>
-                  <path className="v6-cs__link" d={`M389 138 C 389 190, ${187 + i * 200} 182, ${187 + i * 200} 234`} />
-                  <path className="v6-cs__drop" d={`M${187 + i * 200} 290 L ${187 + i * 200} 392`} />
-                </g>
+        <div className="v6-st__stage">
+          {/* the gapped ring: centre is the claim, the outer path is the verification closing around it */}
+          <div className="v6-st__ringwrap">
+            <svg className="v6-st__ring" viewBox="0 0 240 240" aria-hidden>
+              <circle className="v6-st__track" cx="120" cy="120" r="104" />
+              {STANDARD.map(([t], i) => (
+                <circle key={t} className="v6-st__seg" cx="120" cy="120" r="104"
+                  style={{ ["--i" as string]: i }} />
               ))}
-            </g>
-
-            {/* ── region 1: the browser run crossing the deployed workflow ── */}
-            <g className="v6-cs__r" data-r="1">
-              <rect className="v6-cs__plane" x="1000" y="52" width="740" height="238" rx="16" />
-              <text className="v6-cs__planet" x="1030" y="96">Browser run, deployed product</text>
-              <line className="v6-cs__planerule" x1="1000" y1="120" x2="1740" y2="120" />
-              {["sign in", "open a record", "sign out", "sign back in"].map((t, i) => (
-                <g key={t} className="v6-cs__step">
-                  <circle cx={1090 + i * 180} cy="194" r="11" />
-                  <text x={1090 + i * 180} y="240">{t}</text>
-                </g>
-              ))}
-              <path className="v6-cs__run" d="M1090 194 L 1630 194" />
-              <path className="v6-cs__drop" d="M1370 290 L 1370 392" />
-            </g>
-
-            {/* ── region 2: finding, person, repair, recheck, all back onto the record ──
-                Pulled 50 units left of the old positions so the resolved node and its label keep a clear
-                margin from the right edge of the frame when the pan finishes. */}
-            <g className="v6-cs__r" data-r="2">
-              <g className="v6-cs__node is-stop"><circle cx="2030" cy="118" r="13" /><text x="2030" y="84">finding</text></g>
-              <g className="v6-cs__node is-wait"><circle cx="2240" cy="190" r="13" /><text x="2240" y="158">a person decides</text></g>
-              <g className="v6-cs__node"><circle cx="2420" cy="118" r="13" /><text x="2420" y="84">repair</text></g>
-              <g className="v6-cs__node is-go"><circle cx="2590" cy="190" r="15" /><text x="2590" y="158">recheck holds</text></g>
-              <path className="v6-cs__arc" d="M2030 118 C 2130 118, 2150 190, 2240 190" />
-              <path className="v6-cs__arc" d="M2240 190 C 2330 190, 2340 118, 2420 118" />
-              <path className="v6-cs__arc" d="M2420 118 C 2510 118, 2520 190, 2590 190" />
-              <path className="v6-cs__drop" d="M2030 131 L 2030 392" />
-              <path className="v6-cs__drop" d="M2590 205 L 2590 392" />
-            </g>
-          </svg>
-        </div>
-
-        {/* Mobile is authored, not the desktop scene on a horizontal scroller. Three stages read top to
-            bottom, and one record line runs down the left through all of them so it is still one
-            environment rather than three sections. */}
-        <ol className="v6-cs__m">
-          <li className="v6-cs__mstage">
-            <p className="v6-cs__mh">{ACTS[0][0]}</p>
-            <div className="v6-cs__mguar">Only authorized staff can read customer records.</div>
-            <ul className="v6-cs__mtags">
-              {["application", "identity", "records-api"].map((t) => <li key={t}>{t}</li>)}
-            </ul>
-            <p className="v6-cs__ms">Kept outside the code, so a change cannot quietly drop it.</p>
-          </li>
-          <li className="v6-cs__mstage">
-            <p className="v6-cs__mh">{ACTS[1][0]}</p>
-            <ul className="v6-cs__mpath">
-              {["sign in", "open a record", "sign out", "sign back in"].map((t) => <li key={t}>{t}</li>)}
-            </ul>
-            <div className="v6-cs__mobs">
-              <span>Expected</span>access is still there
-              <span>Observed</span><b>access is gone</b>
+            </svg>
+            <div className="v6-st__centre">
+              <p className="v6-st__count"><span>{at + 1}</span> of {STANDARD.length}</p>
+              <p className="v6-st__verdict">Verified</p>
             </div>
-            <p className="v6-cs__ms">A real browser crosses the deployed workflow, not the source.</p>
-          </li>
-          <li className="v6-cs__mstage">
-            <p className="v6-cs__mh">{ACTS[2][0]}</p>
-            <ul className="v6-cs__mres">
-              <li className="is-stop">finding</li>
-              <li className="is-wait">a person decides</li>
-              <li>repair</li>
-              <li className="is-go">recheck holds</li>
-            </ul>
-            <p className="v6-cs__ms">All of it lands on the same permanent record.</p>
-          </li>
-        </ol>
+          </div>
+
+          {/* one condition at a time, at readable scale */}
+          <ol className="v6-st__list">
+            {STANDARD.map(([t, d], i) => (
+              <li key={t} className="v6-st__cond" style={{ ["--i" as string]: i }}>
+                <p className="v6-st__condn v6-mono">{String(i + 1).padStart(2, "0")}</p>
+                <p className="v6-st__condt">{t}</p>
+                <p className="v6-st__condd">{d}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
       </div>
     </section>
   );

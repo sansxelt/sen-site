@@ -7,7 +7,7 @@
 //
 //   1 opening        graphite   headline, one line, one action, one cropped visual
 //   2 the gap        stone      one word at full scale, losing its authority
-//   3 the system     graphite   the whole workflow as one full-bleed diagram
+//   3 the standard   graphite   what Verified has to mean: eight conditions closing a ring
 //   4 the proof      stone      the real checkout run drawn as a single falling line
 //   5 the record     graphite   a composition assembled in front of the reader
 //   6 reach          stone      one result fanning into the stack a company runs
@@ -17,7 +17,7 @@
 // Explanation deliberately does NOT live here. /platform, /agents, /method, /research and /docs carry it.
 // The company category is unsettled and every positioning string comes from _system/positioning.ts.
 import { Hero } from "./_system/hero";
-import { Gap, SystemMap, Proof, Record, Reach, Knowledge } from "./_system/chapters";
+import { Gap, Standard, Proof, Record, Reach, Knowledge } from "./_system/chapters";
 import { ClosingScene } from "./_system/close";
 
 export default function Home() {
@@ -25,7 +25,7 @@ export default function Home() {
     <>
       <Hero />
       <Gap />
-      <SystemMap />
+      <Standard />
       <Proof />
       <Record />
       <Reach />

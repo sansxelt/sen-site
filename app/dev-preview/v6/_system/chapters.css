@@ -63,16 +63,16 @@
    too low in the frame. */
 .v6-gap__t { position: absolute; left: 0; right: 0; top: 50%; text-align: center; will-change: transform; }
 
-.v6-gap__label { font-family: var(--sans); font-weight: 600; font-size: 11px; letter-spacing: 0.16em;
+.v6-gap__label { font-family: var(--sans); font-weight: 600; font-size: 12px; letter-spacing: 0.16em;
   text-transform: uppercase; color: var(--ink-4); margin: 0; }
 .v6-gap__word { position: relative; display: inline-block; margin: clamp(8px, 1.8vh, 20px) 0 0; }
 .v6-gap__wordt { display: block; font-family: var(--sans); font-weight: 600; letter-spacing: -0.055em;
-  line-height: 0.84; color: var(--ink); font-size: clamp(3.2rem, 11vw, 9.5rem); }
+  line-height: 0.84; color: var(--ink); font-size: clamp(3.6rem, 13vw, 12rem); }
 .v6-gap__strike { position: absolute; left: -2%; right: -2%; top: 47%; height: clamp(4px, 0.6vw, 9px);
   background: var(--stop); border-radius: 999px; transform-origin: 0 50%; transform: scaleX(var(--strike)); }
 /* the turn: the sentence that reframes the claim, arriving as the claim starts to go */
-.v6-gap__turn { margin: clamp(16px, 2.4vh, 28px) 0 0; font-family: var(--sans); font-weight: 500;
-  letter-spacing: -0.02em; font-size: clamp(1.05rem, 1.8vw, 1.5rem); color: var(--ink-3);
+.v6-gap__turn { margin: clamp(18px, 2.6vh, 32px) 0 0; font-family: var(--sans); font-weight: 500;
+  letter-spacing: -0.024em; font-size: clamp(1.2rem, 2.2vw, 1.9rem); color: var(--ink-3);
   opacity: calc(var(--turn) * (1 - var(--claim))); }
 
 /* the claim: holds the centre, then rises and shrinks as it loses authority */
@@ -93,147 +93,93 @@
 .v6-gap__found .v6-gap__label { color: var(--stop-ink); }
 .v6-gap__list { list-style: none; margin: clamp(14px, 2.2vh, 26px) 0 0; padding: 0;
   display: flex; flex-direction: column; align-items: center; gap: clamp(8px, 1.4vh, 16px); }
-.v6-gap__list li { font-family: var(--sans); font-weight: 500; letter-spacing: -0.026em; line-height: 1.12;
-  font-size: clamp(1.3rem, 3.3vw, 2.7rem); color: var(--ink); }
+.v6-gap__list li { font-family: var(--sans); font-weight: 500; letter-spacing: -0.03em; line-height: 1.1;
+  font-size: clamp(1.6rem, 4.4vw, 3.6rem); color: var(--ink); }
 /* the consequence: arrives beneath the observations and resolves */
 /* resolves just above the optical centre, matching where the observations rested, rather than sitting low
    in the lower third of the frame */
 .v6-gap__verdictwrap { transform: translateY(calc(-50% + 12vh - var(--verdict) * 20vh - var(--settle) * 1.5vh));
   opacity: var(--verdict); }
-.v6-gap__verdict { font-family: var(--sans); font-weight: 600; letter-spacing: -0.04em; line-height: 1;
-  font-size: clamp(1.9rem, 4.6vw, 3.4rem); color: var(--stop); margin: 0; }
-.v6-gap__verdictsay { font-size: clamp(1rem, 1.3vw, 1.24rem); color: var(--ink-3); margin: 14px 0 0; }
+.v6-gap__verdict { font-family: var(--sans); font-weight: 600; letter-spacing: -0.045em; line-height: 1;
+  font-size: clamp(2.6rem, 7vw, 5.4rem); color: var(--ink); margin: 0; }
+.v6-gap__verdictsay { font-size: clamp(1.05rem, 1.5vw, 1.4rem); color: var(--ink-3); margin: 18px 0 0;
+  max-width: 46ch; margin-inline: auto; }
 
-/* ═══════════════════════════════════ 3. THE CONNECTED OPERATING ENVIRONMENT ══
-   One scene, twice the viewport wide, panned by scroll. Three regions come into
-   focus in turn; the other two stay on screen the whole time at lower contrast.
-   --f runs 0..2 and is the focus position, derived from --p.
-   ========================================================================== */
-/* The pan TRAVELS AND RESTS. A single linear sweep meant every region was only correctly framed for one
-   instant and cropped either side of it, so the sentence on screen described something half off-frame.
-   Three dwells, two travels:
-       p 0.00-0.12   pan 0       region 0 framed and still
-       p 0.12-0.36   pan 0 -> 0.494   travel
-       p 0.36-0.56   pan 0.494   region 1 framed and still
-       p 0.56-0.82   pan 0.494 -> 1   travel
-       p 0.82-1.00   pan 1       region 2 framed and still, before the sticky releases
-   0.494 is where region 1 sits dead centre. The visible slice is always 2760/2.55 = 1082 viewBox units
-   whatever the viewport width, because the scene is sized as a percentage of it, so that number holds at
-   every desktop width rather than only at 1440. */
-.v6-cs { position: relative; height: 440vh; background: var(--graphite); color: var(--g-fg-2); --p: 0;
-  --pan: calc(0.494 * clamp(0, calc((var(--p) - 0.12) / 0.24), 1)
-             + 0.506 * clamp(0, calc((var(--p) - 0.56) / 0.26), 1)); }
-.v6-cs__pin { position: sticky; top: 0; height: 100svh; overflow: hidden; display: grid;
-  grid-template-rows: auto 1fr; gap: clamp(8px, 1.2vh, 18px);
-  padding: calc(var(--nav-h, 66px) + 2vh) 0 3vh;
-  background: radial-gradient(1500px 900px at 50% 46%, rgba(255,255,255,0.05), transparent 72%); }
-.v6-cs__head { position: relative; z-index: 2; max-width: var(--max-wide); width: 100%;
-  margin-inline: auto; padding-inline: var(--gutter); pointer-events: none; }
+/* ═══════════════════════════════════════════ 3. WHAT VERIFIED HAS TO MEAN ══
+   The company's own motif: a gapped ring. The centre carries the conclusion, the outer path is the
+   independent verification closing around it, one segment per condition. The ring only closes when all
+   eight do, and the conclusion only resolves after that.
 
-/* the three sentences occupy one space and hand over as focus moves */
-.v6-cs__acts { position: relative; min-height: clamp(92px, 11.5vh, 118px); margin-top: clamp(6px, 1vh, 12px); }
-/* exactly one act is readable at a time, selected by the index the component computes */
-.v6-cs__act { position: absolute; inset: 0; opacity: 0; transform: translateY(16px);
-  transition: opacity 320ms var(--ease), transform 380ms var(--ease); pointer-events: none; }
-.v6-cs[data-act="0"] .v6-cs__act:nth-child(1),
-.v6-cs[data-act="1"] .v6-cs__act:nth-child(2),
-.v6-cs[data-act="2"] .v6-cs__act:nth-child(3) { opacity: 1; transform: none; }
-.v6-cs__act h2 { font-family: var(--sans); font-weight: 600; letter-spacing: -0.034em; line-height: 1;
-  font-size: clamp(1.9rem, 4.2vw, 3.5rem); color: var(--g-fg); margin: 0; }
-.v6-cs__act p { font-size: clamp(1rem, 1.2vw, 1.18rem); line-height: 1.5; color: var(--g-fg-2);
-  margin: clamp(12px, 1.6vh, 18px) 0 0; max-width: 52ch; }
+   Scale is the point. A condition is a full statement at display size, not a row in a list.
+   ========================================================================================= */
+.v6-st { position: relative; height: 620vh; background: var(--graphite); color: var(--g-fg-2); --p: 0;
+  /* 0.06 to 0.86 carries the eight conditions, matching the index the component derives */
+  --ring: clamp(0, calc((var(--p) - 0.06) / 0.80), 1);
+  --done: clamp(0, calc((var(--p) - 0.86) / 0.10), 1); }
+.v6-st__pin { position: sticky; top: 0; height: 100svh; overflow: hidden;
+  display: grid; grid-template-rows: auto 1fr; gap: clamp(10px, 2vh, 26px);
+  padding: calc(var(--nav-h, 66px) + 3vh) var(--gutter) clamp(30px, 6vh, 64px);
+  background: radial-gradient(1400px 900px at 22% 44%, rgba(255,255,255,0.05), transparent 70%); }
+.v6-st__head { max-width: var(--max-wide); width: 100%; margin-inline: auto; }
+.v6-st__h { margin: clamp(12px, 1.8vh, 20px) 0 0; font-family: var(--sans); font-weight: 600;
+  letter-spacing: -0.04em; line-height: 1.02; font-size: clamp(1.9rem, 4.2vw, 3.7rem);
+  color: var(--g-fg); max-width: 20ch; text-wrap: balance; }
+.v6-st__sub { margin: clamp(12px, 1.6vh, 18px) 0 0; font-size: clamp(1rem, 1.25vw, 1.2rem);
+  line-height: 1.55; color: var(--g-fg-2); max-width: 58ch; }
 
-/* the environment itself: one scene, panned */
-/* starts at the top of its row and lifts into the text band, so the chapter is one composition
-   rather than a sentence with a diagram parked below it */
-/* starts at the top of its row so the chapter is one composition, but NOT lifted into the headline:
-   at -7vh the environment printed straight through the act sentence. */
-/* The environment is the section, not a strip under it: it claims the majority of the pinned height. */
-/* Flex, not grid: the scene's width is a percentage, and a grid item's percentage width resolves against
-   an auto-sized track, which is circular and collapses to auto. A flex container has a definite width, so
-   255% resolves the way it reads. */
-.v6-cs__viewport { overflow: hidden; align-self: stretch; width: 100%; margin-top: 0;
-  display: flex; align-items: center; }
-/* the pan is CONTINUOUS: it tracks --pan, so the environment is always developing under the reader
-   rather than snapping between three parked positions. The act text still switches discretely, which
-   is what keeps one sentence readable at a time.
+.v6-st__stage { position: relative; max-width: var(--max-wide); width: 100%; margin-inline: auto;
+  display: grid; grid-template-columns: minmax(230px, 30%) minmax(0, 1fr);
+  gap: clamp(28px, 5vw, 80px); align-items: center; min-height: 0; }
 
-   255%, not 300%: at 300% a 2760x560 box rendered 876px tall inside a ~600px row, so the top and bottom
-   of every region were clipped away and only a horizontal band survived. At 255% with a 470-unit box the
-   whole scene fits the row AND one region still fills ~85% of the viewport width. Type and stroke weights
-   below are scaled up to compensate for the smaller magnification. */
-/* Prefixed with .v6 to outrank the `.v6 svg { max-width: 100% }` guard in v6.css. Without that, the scene
-   was capped at container width: the whole 2760-unit environment was squeezed into one viewport and the
-   pan slid that squeezed diagram sideways off the screen, which is exactly why it read as a small strip
-   with the last region hard against the right edge. */
-.v6 .v6-cs__scene { flex: none; width: 255%; max-width: none; height: auto; display: block;
-  transform: translateX(calc(var(--pan) * -60.8%)); }
+/* ---- the gapped ring ---- */
+.v6-st__ringwrap { position: relative; display: grid; place-items: center;
+  width: 100%; max-width: 340px; aspect-ratio: 1; margin-inline: auto; }
+.v6-st__ring { width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
+.v6-st__track { fill: none; stroke: rgba(255,255,255,0.10); stroke-width: 6; }
+/* eight arcs around a 104r circle: circumference 653.45, each segment 74 long with a 7.7 gap */
+.v6-st__seg { fill: none; stroke: var(--g-fg); stroke-width: 6; stroke-linecap: butt;
+  stroke-dasharray: 74 579.45;
+  stroke-dashoffset: calc(var(--i) * -81.68px);
+  /* each segment closes over its own eighth of the ring progress */
+  opacity: clamp(0, calc((var(--ring) * 8) - var(--i)), 1); }
+.v6-st__centre { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.v6-st__count { margin: 0; font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--g-fg-3); opacity: calc(1 - var(--done)); }
+.v6-st__count span { color: var(--g-fg); }
+.v6-st__verdict { position: absolute; inset: 0; display: grid; place-content: center; margin: 0;
+  font-family: var(--sans); font-weight: 700; letter-spacing: -0.04em;
+  font-size: clamp(1.5rem, 2.6vw, 2.3rem); color: var(--go-dk);
+  opacity: var(--done); transform: scale(calc(0.92 + 0.08 * var(--done))); }
 
-.v6-cs__spine { stroke: rgba(255,255,255,0.22); stroke-width: 1.8; stroke-dasharray: 5 7; }
-.v6-cs__spinet { fill: var(--g-fg-3); font-family: var(--sans); font-weight: 600; font-size: 20px;
-  letter-spacing: 0.16em; text-transform: uppercase; }
+/* ---- the conditions: one at a time, at display scale ---- */
+.v6-st__list { position: relative; list-style: none; margin: 0; padding: 0; min-height: clamp(230px, 34vh, 340px); }
+.v6-st__cond { position: absolute; inset: 0; display: grid; align-content: center; gap: 12px;
+  opacity: 0; transform: translateY(22px);
+  transition: opacity 300ms var(--ease), transform 380ms var(--ease); pointer-events: none; }
+.v6-st[data-at="0"] .v6-st__cond:nth-child(1),
+.v6-st[data-at="1"] .v6-st__cond:nth-child(2),
+.v6-st[data-at="2"] .v6-st__cond:nth-child(3),
+.v6-st[data-at="3"] .v6-st__cond:nth-child(4),
+.v6-st[data-at="4"] .v6-st__cond:nth-child(5),
+.v6-st[data-at="5"] .v6-st__cond:nth-child(6),
+.v6-st[data-at="6"] .v6-st__cond:nth-child(7),
+.v6-st[data-at="7"] .v6-st__cond:nth-child(8) { opacity: 1; transform: none; }
+.v6-st__condn { margin: 0; font-size: 13px; letter-spacing: 0.12em; color: var(--g-fg-3); }
+.v6-st__condt { margin: 0; font-family: var(--sans); font-weight: 600; letter-spacing: -0.036em;
+  line-height: 1.04; font-size: clamp(1.8rem, 4.4vw, 3.9rem); color: var(--g-fg); max-width: 17ch; }
+.v6-st__condd { margin: 0; font-size: clamp(1rem, 1.35vw, 1.3rem); line-height: 1.5;
+  color: var(--g-fg-2); max-width: 44ch; }
 
-/* regions dim by distance from focus, but never disappear */
-/* the whole environment stays on screen; the focused region is at full strength, the others at 0.38 */
-.v6-cs__r { opacity: 0.38; transition: opacity 360ms var(--ease); }
-.v6-cs[data-act="0"] .v6-cs__r[data-r="0"],
-.v6-cs[data-act="1"] .v6-cs__r[data-r="1"],
-.v6-cs[data-act="2"] .v6-cs__r[data-r="2"] { opacity: 1; }
-
-.v6-cs__guar { fill: rgba(255,255,255,0.07); stroke: rgba(255,255,255,0.34); stroke-width: 1.8; }
-.v6-cs__guart { fill: var(--g-fg-3); font-family: var(--sans); font-weight: 600; font-size: 20px;
-  letter-spacing: 0.16em; text-transform: uppercase; }
-.v6-cs__guarb { fill: var(--g-fg); font-family: var(--sans); font-weight: 600; font-size: 32px; letter-spacing: -0.018em; }
-.v6-cs__svc { fill: rgba(255,255,255,0.045); stroke: rgba(255,255,255,0.24); stroke-width: 1.6; }
-.v6-cs__svct { fill: var(--g-fg-2); font-family: var(--sans); font-size: 23px; text-anchor: middle; }
-.v6-cs__link, .v6-cs__drop { stroke: rgba(255,255,255,0.28); stroke-width: 1.6; fill: none; }
-.v6-cs__drop { stroke-dasharray: 4 8; }
-
-.v6-cs__plane { fill: rgba(255,255,255,0.05); stroke: rgba(255,255,255,0.3); stroke-width: 1.8; }
-.v6-cs__planet { fill: var(--g-fg); font-family: var(--sans); font-weight: 600; font-size: 26px; letter-spacing: -0.014em; }
-.v6-cs__planerule { stroke: rgba(255,255,255,0.18); stroke-width: 1.2; }
-.v6-cs__run { stroke: var(--g-fg); stroke-width: 2.6; fill: none; }
-.v6-cs__step circle { fill: var(--graphite); stroke: var(--g-fg); stroke-width: 2.6; }
-.v6-cs__step text { fill: var(--g-fg-2); font-family: var(--sans); font-size: 22px; text-anchor: middle; }
-
-.v6-cs__arc { stroke: rgba(255,255,255,0.34); stroke-width: 2.1; fill: none; }
-.v6-cs__node circle { fill: var(--graphite); stroke: var(--g-fg); stroke-width: 2.8; }
-.v6-cs__node text { fill: var(--g-fg-2); font-family: var(--sans); font-weight: 600; font-size: 24px; text-anchor: middle; }
-.v6-cs__node.is-stop circle { fill: var(--stop-dk); stroke: var(--stop-dk); }
-.v6-cs__node.is-stop text { fill: var(--stop-dk); }
-.v6-cs__node.is-wait circle { fill: var(--wait-dk); stroke: var(--wait-dk); }
-.v6-cs__node.is-wait text { fill: var(--wait-dk); }
-.v6-cs__node.is-go circle { fill: var(--go-dk); stroke: var(--go-dk); }
-.v6-cs__node.is-go text { fill: var(--go-dk); }
-
-/* ---- chapter 3, authored mobile: three stages, one record line down the left ---- */
-.v6-cs__m { display: none; list-style: none; margin: clamp(28px, 6vw, 40px) 0 0;
-  padding: 0 var(--gutter); gap: clamp(30px, 7vw, 46px); }
-.v6-cs__mstage { position: relative; padding-left: 26px; }
-.v6-cs__mstage::before { content: ""; position: absolute; left: 4px; top: 8px; bottom: -46px; width: 1px;
-  background: rgba(255,255,255,0.2); }
-.v6-cs__mstage:last-child::before { bottom: 50%; }
-.v6-cs__mstage::after { content: ""; position: absolute; left: 0; top: 8px; width: 9px; height: 9px;
-  border-radius: 999px; background: var(--g-fg); }
-.v6-cs__mh { margin: 0; font-family: var(--sans); font-weight: 600; letter-spacing: -0.024em;
-  font-size: clamp(1.3rem, 5.6vw, 1.62rem); color: var(--g-fg); line-height: 1.14; }
-.v6-cs__mguar { margin-top: 14px; padding: 14px 16px; border: 1px solid rgba(255,255,255,0.24);
-  border-radius: 12px; background: rgba(255,255,255,0.05); color: var(--g-fg);
-  font-size: 1rem; font-weight: 500; line-height: 1.35; }
-.v6-cs__mtags, .v6-cs__mpath, .v6-cs__mres { list-style: none; margin: 12px 0 0; padding: 0;
-  display: flex; flex-wrap: wrap; gap: 8px; }
-.v6-cs__mtags li, .v6-cs__mpath li, .v6-cs__mres li { font-size: 14px; color: var(--g-fg-2);
-  border: 1px solid var(--g-line-2); border-radius: 999px; padding: 7px 14px; }
-.v6-cs__mpath li { font-family: var(--mono); font-size: 13px; }
-.v6-cs__mres li.is-stop { color: var(--stop-dk); border-color: rgba(255,122,85,0.4); }
-.v6-cs__mres li.is-wait { color: var(--wait-dk); border-color: rgba(242,183,90,0.4); }
-.v6-cs__mres li.is-go { color: var(--go-dk); border-color: rgba(74,222,156,0.4); }
-.v6-cs__mobs { margin-top: 14px; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px;
-  align-items: baseline; font-size: 15px; color: var(--g-fg-2); }
-.v6-cs__mobs span { font-family: var(--sans); font-weight: 600; font-size: 10.5px; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--g-fg-3); }
-.v6-cs__mobs b { color: var(--stop-dk); font-weight: 600; }
-.v6-cs__ms { margin: 14px 0 0; font-size: 15px; line-height: 1.5; color: var(--g-fg-3); }
+@media (max-width: 900px) {
+  .v6-st { height: auto; }
+  .v6-st__pin { position: static; height: auto; display: block; padding: clamp(64px, 10vw, 96px) var(--gutter); }
+  .v6-st__stage { grid-template-columns: 1fr; gap: clamp(26px, 7vw, 40px); margin-top: clamp(28px, 7vw, 44px); }
+  .v6-st__ringwrap { max-width: 200px; }
+  .v6-st__list { position: static; min-height: 0; display: grid; gap: clamp(26px, 6vw, 38px); }
+  .v6-st__cond { position: static; opacity: 1 !important; transform: none !important;
+    padding-top: 20px; border-top: 1px solid var(--g-line); }
+  .v6-st__condt { font-size: clamp(1.5rem, 6.6vw, 2.1rem); }
+}
 
 /* ══════════════════════════════ 4. INTERNAL PRODUCTION DEMONSTRATION ══ */
 .v6-pf { background: var(--paper); padding-block: clamp(72px, 9vh, 124px); overflow: hidden; }
@@ -725,6 +671,11 @@
   .v6-cs__acts { display: none; }
   .v6-cs__viewport { display: none; }
   .v6-cs__m { display: grid; }
+  .v6-st { height: auto; }
+  .v6-st__pin { position: static; height: auto; display: block; padding: clamp(64px, 8vw, 100px) var(--gutter); }
+  .v6-st__stage { grid-template-columns: 1fr; }
+  .v6-st__list { position: static; min-height: 0; display: grid; gap: 34px; }
+  .v6-st__cond { position: static; opacity: 1 !important; transform: none !important; }
   .v6-pf__seg::before, .v6-pf__decide, .v6-rec__filed, .v6-rx__f, .v6-rx__stage {
     opacity: 1 !important; transform: none !important; transition: none !important; }
 }
