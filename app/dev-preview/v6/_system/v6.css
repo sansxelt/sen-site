@@ -143,7 +143,15 @@
 .v6-elink .v6-arw { color: var(--brand-ink); transition: transform 180ms var(--ease-out); }
 .v6-elink:hover .v6-arw { transform: translateX(3px); }
 .v6-elink:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; border-radius: 3px; }
-.v6-dark .v6-elink { color: var(--g-fg); } .v6-dark .v6-elink .v6-arw { color: var(--go-dk); }
+/* Dark grounds declare themselves with data-nav-dark, not only the .v6-dark class. Keying the inverted
+   treatment solely on the class left the hero's and the closing scene's editorial links at --ink, which is
+   near-black text on a near-black field: invisible. The underline swatch has to invert too, since --brand
+   is also near-black. */
+.v6-dark .v6-elink, [data-nav-dark] .v6-elink { color: var(--g-fg); }
+.v6-dark .v6-elink .v6-arw, [data-nav-dark] .v6-elink .v6-arw { color: var(--g-fg-2); }
+.v6-dark .v6-elink .v6-elink__t, [data-nav-dark] .v6-elink .v6-elink__t {
+  background-image: linear-gradient(var(--g-fg), var(--g-fg)); }
+.v6-dark .v6-elink:focus-visible, [data-nav-dark] .v6-elink:focus-visible { outline-color: var(--g-fg); }
 
 /* signal pills: trusted / review / stopped */
 .v6-sig { display: inline-flex; align-items: center; gap: 7px; padding: 4px 11px 4px 9px; border-radius: 999px; font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; white-space: nowrap; }
