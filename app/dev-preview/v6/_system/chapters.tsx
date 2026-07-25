@@ -22,24 +22,32 @@ const BASE = "/dev-preview/v6";
    wrapper's progress. Native scrolling only: nothing is captured or re-timed,
    and reduced motion resolves straight to the final phase.
    --------------------------------------------------------------------------- */
-function useScrollPhase(ref: RefObject<HTMLElement | null>, count: number) {
-  const [phase, setPhase] = useState(0);
+// Continuous scroll progress, 0..1, written to the DOM as a CSS variable.
+//
+// The previous version snapped to an integer phase and let a fixed-duration CSS transition play out. Scroll
+// slowly and that looked fine; scroll quickly and the animation carried on at its own pace long after the
+// reader had moved, so the scene never matched the gesture. Progress is now driven directly by scroll
+// position: the composition is always exactly where the reader put it, at any speed, in either direction.
+//
+// The value is set on the element rather than through React state so a fast scroll does not queue a render
+// per frame. Reduced motion pins it to 1 and never listens.
+function useScrollProgress(ref: RefObject<HTMLElement | null>) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    let raf = 0;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      raf = requestAnimationFrame(() => setPhase(count - 1));
-      return () => cancelAnimationFrame(raf);
+      el.style.setProperty("--p", "1");
+      return;
     }
+    let raf = 0;
     const read = () => {
       raf = 0;
       if (!el.offsetParent) return;
       const r = el.getBoundingClientRect();
       const total = r.height - window.innerHeight;
       if (total <= 0) return;
-      const p = Math.min(0.9999, Math.max(0, -r.top / total));
-      setPhase(Math.floor(p * count));
+      const p = Math.min(1, Math.max(0, -r.top / total));
+      el.style.setProperty("--p", p.toFixed(4));
     };
     const onScroll = () => { if (!raf) raf = requestAnimationFrame(read); };
     onScroll();
@@ -50,8 +58,7 @@ function useScrollPhase(ref: RefObject<HTMLElement | null>, count: number) {
       window.removeEventListener("resize", onScroll);
       if (raf) cancelAnimationFrame(raf);
     };
-  }, [ref, count]);
-  return phase;
+  }, [ref]);
 }
 
 /** Marks a node "seen" once and never unsets it, for compositions that accumulate. */
@@ -95,9 +102,9 @@ const FOUND = [
 
 export function Gap() {
   const wrap = useRef<HTMLDivElement>(null);
-  const phase = useScrollPhase(wrap, 2);
+  useScrollProgress(wrap);
   return (
-    <section className="v6-gap" id="gap" ref={wrap} data-phase={phase}>
+    <section className="v6-gap" id="gap" ref={wrap}>
       <div className="v6-gap__pin">
         {/* Both layers share one grid cell, so the findings take the exact space the claim occupied rather
             than being positioned near it. Absolute positioning could not hold the two in register once the

@@ -166,7 +166,7 @@
 /* The page is the drama; the bar is not. Minimal blur, no saturation boost, no floating container. */
 .v6-nav[data-scrolled="true"] .v6-nav__in { background: rgba(255,255,255,0.88); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom-color: var(--line); }
 .v6-nav[data-theme="dark"] .v6-nav__in { background: rgba(10,10,11,0.86); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom-color: var(--g-line); }
-.v6-nav[data-open="true"] .v6-nav__in { background: rgba(255,255,255,0.98); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom-color: transparent; }
+.v6-nav[data-open="true"] .v6-nav__in { background: #08080A; backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom-color: transparent; }
 /* The wordmark is the largest thing in the bar by a clear margin (roughly 2x the nav links) and it is the
    axis everything else is centred on. It never wraps and never shrinks, and the bar's own height is still set
    by the taller button, so growing the type does not grow the header or push a link off the edge.
@@ -182,8 +182,6 @@
 .v6-nav__item:hover, .v6-nav__item[aria-current="page"], .v6-nav__item[aria-expanded="true"] { color: var(--ink); background: rgba(10,10,11,0.05); }
 .v6-nav[data-theme="dark"] .v6-nav__item { color: var(--g-fg-2); }
 .v6-nav[data-theme="dark"] .v6-nav__item:hover, .v6-nav[data-theme="dark"] .v6-nav__item[aria-expanded="true"] { color: var(--g-fg); background: rgba(255,255,255,0.07); }
-.v6-nav__caret { width: 8px; height: 8px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg) translate(-1px,-1px); opacity: 0.6; transition: transform 200ms var(--ease); }
-.v6-nav__item[aria-expanded="true"] .v6-nav__caret { transform: rotate(-135deg) translate(-1px,-1px); }
 .v6-nav__right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex: none; }
 .v6-nav__signin { font-size: 14.5px; font-weight: 500; color: var(--ink-3); text-decoration: none; padding: 8px 12px; white-space: nowrap; }
 .v6-nav__signin:hover { color: var(--ink); }
@@ -200,15 +198,15 @@
    wordmark and every nav link invisible against the bar's own background.
    These rules must stay BELOW the entire [data-theme="dark"] block: the two selectors have identical
    specificity, so source order is the only thing that decides which one wins. */
-.v6-nav[data-open="true"] .v6-brand { color: var(--ink); }
-.v6-nav[data-open="true"] .v6-nav__item { color: var(--ink-3); }
+.v6-nav[data-open="true"] .v6-brand { color: #FAFAFA; }
+.v6-nav[data-open="true"] .v6-nav__item { color: #B9BBC0; }
 .v6-nav[data-open="true"] .v6-nav__item:hover,
 .v6-nav[data-open="true"] .v6-nav__item[aria-current="page"],
-.v6-nav[data-open="true"] .v6-nav__item[aria-expanded="true"] { color: var(--ink); background: rgba(10,10,11,0.05); }
-.v6-nav[data-open="true"] .v6-nav__signin { color: var(--ink-3); }
-.v6-nav[data-open="true"] .v6-nav__signin:hover { color: var(--ink); }
-.v6-nav[data-open="true"] .v6-btn { background: var(--brand); border-color: var(--brand); color: #fff; }
-.v6-nav[data-open="true"] .v6-btn:hover { background: var(--brand-ink); border-color: var(--brand-ink); }
+.v6-nav[data-open="true"] .v6-nav__item[aria-expanded="true"] { color: #FAFAFA; background: rgba(255,255,255,0.08); }
+.v6-nav[data-open="true"] .v6-nav__signin { color: #B9BBC0; }
+.v6-nav[data-open="true"] .v6-nav__signin:hover { color: #FAFAFA; }
+.v6-nav[data-open="true"] .v6-btn { background: #FAFAFA; border-color: #FAFAFA; color: #0A0A0B; }
+.v6-nav[data-open="true"] .v6-btn:hover { background: #fff; border-color: #fff; }
 /* Focus ring is brand indigo, never a signal colour, and is stated for each bar treatment. */
 .v6-nav__item:focus-visible, .v6-nav__signin:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 8px; }
 .v6-nav[data-theme="dark"] .v6-nav__item:focus-visible,
@@ -216,21 +214,44 @@
 .v6-nav[data-open="true"] .v6-nav__item:focus-visible,
 .v6-nav[data-open="true"] .v6-nav__signin:focus-visible { outline-color: var(--brand); }
 
-/* mega-menu */
+/* ---------------------------------------------------------------- mega-menu ---
+   Night panel: the open menu is a dark full-width surface regardless of which
+   section the bar is sitting over, so it always reads the same way and its text
+   is always white on near-black. It animates OUT as well as in; the previous
+   panel unmounted on close and simply vanished, which is what made dismissing a
+   menu feel broken.
+   ------------------------------------------------------------------------- */
 .v6-mega { position: absolute; top: 100%; left: 0; right: 0; z-index: 55; }
-.v6-mega__panel { background: rgba(255,255,255,0.99); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); box-shadow: var(--sh-md);
-  animation: v6MegaIn 220ms var(--ease) both; }
-@keyframes v6MegaIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
-.v6-mega__grid { display: grid; grid-template-columns: repeat(3, 1fr) 1.1fr; gap: clamp(28px,3vw,56px); max-width: var(--max-wide); margin-inline: auto; padding: clamp(28px,2.6vw,40px) var(--gutter) clamp(30px,3vw,44px); }
-.v6-mega__col-h { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-4); margin: 0 0 14px; }
-.v6-mega__link { display: block; text-decoration: none; padding: 9px 10px; margin: 0 -10px; border-radius: 8px; transition: background 140ms ease; }
-.v6-mega__link:hover { background: rgba(10,10,11,0.05); }
-.v6-mega__lt { display: block; font-size: 14.5px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em; }
-.v6-mega__ld { display: block; font-size: 12.5px; color: var(--ink-3); margin-top: 2px; line-height: 1.4; }
-.v6-mega__feature { background: var(--graphite); border-radius: 14px; padding: 22px; color: var(--g-fg-2); display: flex; flex-direction: column; gap: 10px; text-decoration: none; }
-.v6-mega__feature:hover { background: var(--graphite-2); }
-.v6-mega__feature h4 { color: var(--g-fg); font-size: 16px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
-.v6-mega__feature p { font-size: 13px; line-height: 1.5; margin: 0; }
+.v6-mega__panel { background: #08080A; border-bottom: 1px solid rgba(255,255,255,0.13);
+  box-shadow: 0 40px 80px -40px rgba(0,0,0,0.85);
+  transform-origin: 50% 0; }
+.v6-mega[data-state="in"] .v6-mega__panel { animation: v6MegaIn 260ms cubic-bezier(0.22,1,0.36,1) both; }
+.v6-mega[data-state="out"] .v6-mega__panel { animation: v6MegaOut 190ms cubic-bezier(0.4,0,1,1) both; pointer-events: none; }
+@keyframes v6MegaIn  { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
+@keyframes v6MegaOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-6px); } }
+.v6-mega__grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)) minmax(0,1.15fr);
+  gap: clamp(28px,3.4vw,64px); max-width: var(--max-wide); margin-inline: auto;
+  padding: clamp(34px,3.2vw,52px) var(--gutter) clamp(36px,3.6vw,56px); }
+.v6-mega__col-h { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: #8E9095; margin: 0 0 16px; }
+.v6-mega__link { display: block; text-decoration: none; padding: 9px 10px; margin: 0 -10px; border-radius: 8px;
+  transition: background 140ms ease; }
+.v6-mega__link:hover { background: rgba(255,255,255,0.06); }
+.v6-mega__link:focus-visible { outline: 2px solid #FAFAFA; outline-offset: -2px; }
+.v6-mega__lt { display: block; font-size: 15px; font-weight: 600; color: #FAFAFA; letter-spacing: -0.012em; }
+.v6-mega__ld { display: block; font-size: 12.5px; color: #9A9CA1; margin-top: 2px; line-height: 1.4; }
+/* editorial preview, not a card of muted text on a black card */
+.v6-mega__feature { border-left: 1px solid rgba(255,255,255,0.13); padding-left: clamp(24px,2.4vw,40px);
+  display: flex; flex-direction: column; text-decoration: none; }
+.v6-mega__fe { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #8E9095; }
+.v6-mega__feature h4 { color: #FAFAFA; font-size: clamp(1.2rem,1.5vw,1.5rem); font-weight: 600; margin: 14px 0 0;
+  letter-spacing: -0.022em; line-height: 1.12; }
+.v6-mega__feature p { font-size: 13.5px; line-height: 1.55; margin: 12px 0 0; color: #B9BBC0; }
+.v6-mega__fcta { display: inline-flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 22px;
+  font-size: 14px; font-weight: 600; color: #FAFAFA; }
+.v6-mega__fcta .v6-arw { transition: transform 180ms var(--ease-out); }
+.v6-mega__feature:hover .v6-arw { transform: translateX(4px); }
+.v6-mega__feature:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 4px; border-radius: 4px; }
 
 /* mobile full-screen nav */
 /* --surface, not --paper: on the page ground the panel sampled the same colour as the page behind it and had

@@ -11,61 +11,110 @@ import { SiteFooter } from "./close";
 const BASE = "/dev-preview/v6";
 const SIGNIN = "/signin?callbackUrl=%2Fapp";
 
-const MAIN: { label: string; href: string }[] = [
-  { label: "Platform", href: `${BASE}/platform` },
-  { label: "Agents", href: `${BASE}/agents` },
-  { label: "Research", href: `${BASE}/research` },
-  { label: "Developers", href: `${BASE}/developers` },
-];
+// Three top-level items open a menu; Company is a plain link. Research and Developers were promoted to the
+// top bar in phase 1 and are demoted back into the menus that already carry them, so the closed bar stays
+// short and calm. Every menu has 2-3 named groups plus one editorial preview.
+type Group = { h: string; links: { t: string; d?: string; href: string }[] };
+type Feature = { eyebrow: string; title: string; body: string; href: string; cta: string };
+type Menu = { label: string; groups: Group[]; feature: Feature };
 
-const MEGA: { h: string; links: { t: string; d: string; href: string }[] }[] = [
-  { h: "Learn", links: [
-    { t: "Documentation", d: "Use and administer Vraelis", href: `${BASE}/docs` },
-    { t: "Vraelis Method", d: "The worldview behind the product", href: `${BASE}/method` },
-    { t: "README", d: "Why Vraelis exists", href: `${BASE}/readme` },
-    { t: "Changelog", d: "What shipped, dated", href: `${BASE}/changelog` },
-  ] },
-  { h: "Build", links: [
-    { t: "Developer docs", d: "Build on the API", href: `${BASE}/developers` },
-    { t: "API", d: "Create and read verifications", href: `${BASE}/developers#api` },
-    { t: "CLI", d: "One command, one exit code", href: `${BASE}/developers#cli` },
-    { t: "Webhooks", d: "verification.completed", href: `${BASE}/developers#webhooks` },
-    { t: "Integrations", d: "GitHub, Vercel, Slack", href: `${BASE}/integrations` },
-  ] },
-  { h: "Trust", links: [
-    { t: "Security", d: "Architecture and data handling", href: `${BASE}/security` },
-    { t: "System status", d: "What is operational", href: `${BASE}/security#status` },
-    { t: "Current capabilities", d: "What is built, and what is not", href: `${BASE}/platform#current` },
-    { t: "Contact", d: "Talk to the team", href: `${BASE}/company#contact` },
-  ] },
+const MENUS: Menu[] = [
+  {
+    label: "Platform",
+    groups: [
+      { h: "Understand", links: [
+        { t: "Platform overview", d: "What the product does", href: `${BASE}/platform` },
+        { t: "Requirements", d: "What a change must not break", href: `${BASE}/docs/responsibilities` },
+        { t: "Systems", d: "Everything you have connected", href: `${BASE}/docs/work` },
+      ] },
+      { h: "Verify", links: [
+        { t: "Execution", d: "A real browser on the live software", href: `${BASE}/docs/live-activity` },
+        { t: "Findings", d: "What the evidence does not support", href: `${BASE}/docs/findings` },
+        { t: "Completion", d: "Verified, Failed, or Blocked", href: `${BASE}/docs/completion` },
+      ] },
+      { h: "Resolve", links: [
+        { t: "Review", d: "Decisions that need a person", href: `${BASE}/docs/review` },
+        { t: "Repair", d: "Handoff and independent recheck", href: `${BASE}/docs/repair` },
+        { t: "Integrations", d: "GitHub, Vercel, Slack", href: `${BASE}/integrations` },
+      ] },
+    ],
+    feature: { eyebrow: "One real run", title: "Payment went through. Access did not.",
+      body: "A checkout that reported success, two repairs, and the run that finally held.",
+      href: `${BASE}/platform`, cta: "See the platform" },
+  },
+  {
+    label: "Agents",
+    groups: [
+      { h: "Coding agents", links: [
+        { t: "How Vraelis reads agent work", d: "Plans, changes, and claims", href: `${BASE}/agents` },
+        { t: "Claimed complete", d: "Where a check begins", href: `${BASE}/docs/completion` },
+      ] },
+      { h: "Agent workflows", links: [
+        { t: "API", d: "Create and read verifications", href: `${BASE}/developers#api` },
+        { t: "CLI", d: "One command, one exit code", href: `${BASE}/developers#cli` },
+        { t: "Webhooks", d: "verification.completed", href: `${BASE}/developers#webhooks` },
+      ] },
+      { h: "Direction", links: [
+        { t: "Continuous agent activity", d: "Not available yet", href: `${BASE}/platform#current` },
+        { t: "Autonomy from track record", d: "Not available yet", href: `${BASE}/platform#current` },
+      ] },
+    ],
+    feature: { eyebrow: "Honest boundary", title: "Vraelis does not watch an agent work.",
+      body: "It holds a requirement outside the code and checks the running software when the work is claimed done.",
+      href: `${BASE}/agents`, cta: "How agents are handled" },
+  },
+  {
+    label: "Resources",
+    groups: [
+      { h: "Learn", links: [
+        { t: "Documentation", d: "Use and administer Vraelis", href: `${BASE}/docs` },
+        { t: "Vraelis Method", d: "The worldview behind the product", href: `${BASE}/method` },
+        { t: "README", d: "Why Vraelis exists", href: `${BASE}/readme` },
+      ] },
+      { h: "Build", links: [
+        { t: "Developer docs", d: "Build on the API", href: `${BASE}/developers` },
+        { t: "Changelog", d: "What shipped, dated", href: `${BASE}/changelog` },
+        { t: "Research", d: "Methodology and open questions", href: `${BASE}/research` },
+      ] },
+      { h: "Trust", links: [
+        { t: "Security", d: "Architecture and data handling", href: `${BASE}/security` },
+        { t: "System status", d: "What is operational", href: `${BASE}/security#status` },
+        { t: "Current capabilities", d: "What is built, and what is not", href: `${BASE}/platform#current` },
+      ] },
+    ],
+    feature: { eyebrow: "The Vraelis Method", title: "The builder cannot be the only judge.",
+      body: "Eight positions on how software built by agents earns trust.",
+      href: `${BASE}/method`, cta: "Read the Method" },
+  },
 ];
 
 function Brand() {
   return <Link href={BASE} className="v6-brand" aria-label="Vraelis home">Vraelis</Link>;
 }
 
-function ResourcesMega({ onNavigate }: { onNavigate: () => void }) {
+// The panel stays mounted through its exit so it can animate out. Unmounting on close made it vanish
+// instantly, which is what made dismissing a menu feel broken.
+function MegaPanel({ menu, state, onNavigate }: { menu: Menu; state: "in" | "out"; onNavigate: () => void }) {
   return (
-    <div className="v6-mega">
+    <div className="v6-mega" data-state={state}>
       <div className="v6-mega__panel">
         <div className="v6-mega__grid">
-          {MEGA.map((col) => (
-            <div key={col.h}>
+          {menu.groups.map((col) => (
+            <div key={col.h} className="v6-mega__col">
               <p className="v6-mega__col-h">{col.h}</p>
               {col.links.map((l) => (
                 <Link key={l.t} href={l.href} className="v6-mega__link" onClick={onNavigate}>
                   <span className="v6-mega__lt">{l.t}</span>
-                  <span className="v6-mega__ld">{l.d}</span>
+                  {l.d ? <span className="v6-mega__ld">{l.d}</span> : null}
                 </Link>
               ))}
             </div>
           ))}
-          <Link href={`${BASE}/platform`} className="v6-mega__feature" onClick={onNavigate}>
-            {/* neutral: colour on this site only ever means a state */}
-            <span className="v6-eyebrow" style={{ color: "var(--g-fg-3)" }}>The platform</span>
-            <h4>What the product actually does</h4>
-            <p>Requirements, runs, findings, review, repair, and the record, in one place.</p>
-            <span className="v6-elink" style={{ marginTop: "auto", color: "var(--g-fg)" }}><span className="v6-elink__t">Explore the platform</span><span className="v6-arw" aria-hidden>→</span></span>
+          <Link href={menu.feature.href} className="v6-mega__feature" onClick={onNavigate}>
+            <span className="v6-mega__fe">{menu.feature.eyebrow}</span>
+            <h4>{menu.feature.title}</h4>
+            <p>{menu.feature.body}</p>
+            <span className="v6-mega__fcta">{menu.feature.cta}<span className="v6-arw" aria-hidden>&rarr;</span></span>
           </Link>
         </div>
       </div>
@@ -76,15 +125,19 @@ function ResourcesMega({ onNavigate }: { onNavigate: () => void }) {
 function V6Nav() {
   const pathname = usePathname() || "";
   const navRef = useRef<HTMLElement>(null);
-  const resBtn = useRef<HTMLButtonElement>(null);
+  const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [scrolled, setScrolled] = useState(false);
   const [dark, setDark] = useState(false);
-  const [menu, setMenu] = useState(false);
   const [drawer, setDrawer] = useState(false);
+  // `open` is which menu is showing; `exiting` is the one still animating away. Keeping the outgoing panel
+  // mounted for the length of its exit is the whole fix for menus that used to vanish on dismiss.
+  const [open, setOpen] = useState<number | null>(null);
+  const [exiting, setExiting] = useState<number | null>(null);
   const closeT = useRef(0);
+  const exitT = useRef(0);
 
-  // Publish the real nav height as --nav-h. The hero and the lifecycle scene both size themselves against it,
-  // and it changes with the wordmark size and the viewport, so measuring beats the hardcoded fallback.
+  // Publish the real nav height as --nav-h. Chapters size themselves against it, and it changes with the
+  // wordmark size and the viewport, so measuring beats a hardcoded fallback.
   useEffect(() => {
     const nav = navRef.current;
     if (!nav) return;
@@ -111,41 +164,60 @@ function V6Nav() {
     return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); };
   }, [pathname]);
 
-  // close menus on route change (deferred so it is not a synchronous setState in the effect body)
+  const close = useCallback((i: number | null) => {
+    window.clearTimeout(closeT.current);
+    setOpen((cur) => {
+      const target = i === null ? cur : i;
+      if (target !== null) {
+        setExiting(target);
+        window.clearTimeout(exitT.current);
+        exitT.current = window.setTimeout(() => setExiting(null), 200);
+      }
+      return null;
+    });
+  }, []);
+
+  const openAt = useCallback((i: number) => {
+    window.clearTimeout(closeT.current);
+    window.clearTimeout(exitT.current);
+    setExiting(null);
+    setOpen(i);
+  }, []);
+  const scheduleClose = useCallback(() => { closeT.current = window.setTimeout(() => close(null), 160); }, [close]);
+
+  // close on route change (deferred so it is not a synchronous setState in the effect body)
   useEffect(() => {
-    const id = requestAnimationFrame(() => { setMenu(false); setDrawer(false); });
+    const id = requestAnimationFrame(() => { setOpen(null); setExiting(null); setDrawer(false); });
     return () => cancelAnimationFrame(id);
   }, [pathname]);
 
-  // Escape + click-outside for the mega-menu
+  // Escape + click-outside
   useEffect(() => {
-    if (!menu) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setMenu(false); resBtn.current?.focus(); } };
-    const onDown = (e: PointerEvent) => { if (!navRef.current?.contains(e.target as Node)) setMenu(false); };
+    if (open === null) return;
+    const i = open;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { close(i); btnRefs.current[i]?.focus(); } };
+    const onDown = (e: PointerEvent) => { if (!navRef.current?.contains(e.target as Node)) close(i); };
     document.addEventListener("keydown", onKey);
     document.addEventListener("pointerdown", onDown, true);
     return () => { document.removeEventListener("keydown", onKey); document.removeEventListener("pointerdown", onDown, true); };
-  }, [menu]);
+  }, [open, close]);
 
-  const openMenu = useCallback(() => { window.clearTimeout(closeT.current); setMenu(true); }, []);
-  const scheduleClose = useCallback(() => { closeT.current = window.setTimeout(() => setMenu(false), 140); }, []);
+  const shown = open ?? exiting;
 
   return (
-    <nav ref={navRef} className="v6-nav" data-scrolled={scrolled} data-theme={dark ? "dark" : "light"} data-open={menu} aria-label="Primary"
-      onMouseLeave={scheduleClose}>
+    <nav ref={navRef} className="v6-nav" data-scrolled={scrolled} data-theme={dark ? "dark" : "light"}
+      data-open={open !== null} aria-label="Primary" onMouseLeave={scheduleClose}>
       <div className="v6-nav__in">
         <Brand />
         <div className="v6-nav__items">
-          {MAIN.map((l) => (
-            <Link key={l.label} href={l.href} className="v6-nav__item" aria-current={pathname === l.href ? "page" : undefined}>{l.label}</Link>
+          {/* No caret on any item. Pointer users get hover; keyboard users open with Enter or Space. */}
+          {MENUS.map((m, i) => (
+            <button key={m.label} type="button" ref={(el) => { btnRefs.current[i] = el; }}
+              className="v6-nav__item" aria-expanded={open === i} aria-haspopup="true"
+              onClick={() => (open === i ? close(i) : openAt(i))} onMouseEnter={() => openAt(i)}>
+              {m.label}
+            </button>
           ))}
-          {/* No onFocus opener: it re-fired when the Escape handler restored focus (so Escape could never
-              close the panel), and it sprang the panel open merely by tabbing through the nav. Pointer users
-              get hover; keyboard users open it with Enter or Space on this real button. */}
-          <button ref={resBtn} type="button" className="v6-nav__item" aria-expanded={menu} aria-haspopup="true"
-            onClick={() => setMenu((v) => !v)} onMouseEnter={openMenu}>
-            Resources <span className="v6-nav__caret" aria-hidden />
-          </button>
           <Link href={`${BASE}/company`} className="v6-nav__item" aria-current={pathname === `${BASE}/company` ? "page" : undefined}>Company</Link>
         </div>
         <div className="v6-nav__right">
@@ -156,13 +228,17 @@ function V6Nav() {
           </button>
         </div>
       </div>
-      {menu ? <div onMouseEnter={openMenu} onMouseLeave={scheduleClose}><ResourcesMega onNavigate={() => setMenu(false)} /></div> : null}
-      {drawer ? <MobileNav pathname={pathname} onClose={() => setDrawer(false)} /> : null}
+      {shown !== null ? (
+        <div onMouseEnter={() => openAt(shown)} onMouseLeave={scheduleClose}>
+          <MegaPanel menu={MENUS[shown]} state={open === null ? "out" : "in"} onNavigate={() => close(shown)} />
+        </div>
+      ) : null}
+      {drawer ? <MobileNav onClose={() => setDrawer(false)} /> : null}
     </nav>
   );
 }
 
-function MobileNav({ pathname, onClose }: { pathname: string; onClose: () => void }) {
+function MobileNav({ onClose }: { onClose: () => void }) {
   const panel = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -192,16 +268,15 @@ function MobileNav({ pathname, onClose }: { pathname: string; onClose: () => voi
         </button>
       </div>
       <div className="v6-drawer__body">
-        {MAIN.map((l) => <Link key={l.label} href={l.href} className="v6-drawer__link" onClick={onClose} aria-current={pathname === l.href ? "page" : undefined}>{l.label}</Link>)}
         <Link href={`${BASE}/company`} className="v6-drawer__link" onClick={onClose}>Company</Link>
-        {MEGA.map((col) => (
-          <div key={col.h} className="v6-drawer__sub">
-            <p className="v6-drawer__sub-h">{col.h}</p>
+        {MENUS.flatMap((m) => m.groups.map((col) => (
+          <div key={m.label + col.h} className="v6-drawer__sub">
+            <p className="v6-drawer__sub-h">{m.label}, {col.h}</p>
             <div className="v6-drawer__sub-links">
               {col.links.map((l) => <Link key={l.t} href={l.href} onClick={onClose}>{l.t}</Link>)}
             </div>
           </div>
-        ))}
+        )))}
       </div>
       <div className="v6-drawer__foot">
         <Link href={SIGNIN} className="v6-btn v6-btn--ghost" onClick={onClose}>Sign in</Link>
