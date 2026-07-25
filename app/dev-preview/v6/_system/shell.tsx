@@ -42,8 +42,8 @@ const MENUS: Menu[] = [
         { t: "Integrations", d: "GitHub, Vercel, Slack", href: BASE + "/integrations" },
       ] },
     ],
-    feature: { eyebrow: "One real run", title: "Payment went through. Access did not.",
-      body: "A checkout that reported success, two repairs, and the run that finally held.",
+    feature: { eyebrow: "One real run", title: "The change shipped. The guarantee did not hold.",
+      body: "A change that reported success, two repairs, and the run that finally held.",
       stat: "vrf_ff9d6c0d", href: BASE + "/platform", cta: "See the platform" },
   },
   {

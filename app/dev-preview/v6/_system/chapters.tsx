@@ -53,24 +53,24 @@ function useSeen(root: RefObject<HTMLElement | null>, total: number) {
 }
 
 /* ══════════════════════════════════════════════════════════════ CHAPTER 2 ══
-   THE COMPLETION GAP.
+   THE COMPLETION GAP, AT COMPANY LEVEL.
 
-   ONE STORY for the whole homepage. This chapter used to run a billing demo (pricing decisions, usage
-   limits) and then the rest of the page switched to the Pro-access demonstration, which read as two
-   unrelated demos stapled together. It is now the same Pro-access story the case file, the archive and
-   the distribution chapter all use.
+   This chapter used to walk a checkout: payment succeeded, Pro access was missing, the first repair
+   failed. That is a feature-level anecdote, and running it here made the whole page read as one bug
+   report rather than a company. The concrete demonstration belongs in ONE chapter, later, as proof.
 
-   The verdict is FAILED, not Blocked. The checkout actually ran and produced evidence contradicting the
-   guarantee, which is the definition of Failed. Blocked is reserved for the case where Vraelis could not
-   obtain enough requirements, coverage, authorization or execution evidence to reach a decision at all.
+   What this chapter argues instead is the thing that is true of every AI-built company: a completion
+   claim is an assertion, and an assertion is not evidence. What it cannot tell you is what the change
+   reached and whether the outcomes the business depends on are still true.
 
-   Composition: one centred column. Every traveller owns a trajectory through the same space driven by
-   --p, and the ranges are sequenced so ONE state is dominant at a time rather than three being legible
-   at once. */
-const OBSERVED = [
-  "Payment succeeded.",
-  "Pro access was missing.",
-  "The first repair failed after signing back in.",
+   The verdict is "Unverified", not "Failed". Nothing has been checked at this point in the page, so
+   claiming a failure here would be using a decision word the evidence does not support. Failed belongs
+   to the demonstration chapter, where a run actually produced contradicting evidence.
+   ------------------------------------------------------------------------------------------------- */
+const UNCOVERED = [
+  "Which systems the change actually reached.",
+  "Whether the outcomes the business depends on still hold.",
+  "What moved somewhere nobody was looking.",
 ];
 
 export function Gap() {
@@ -86,29 +86,29 @@ export function Gap() {
               <span className="v6-gap__wordt">Complete.</span>
               <span className="v6-gap__strike" aria-hidden />
             </p>
-            <p className="v6-gap__turn">Complete is a claim.</p>
+            <p className="v6-gap__turn">An assertion, made by the thing that wrote the work.</p>
           </div>
 
           <div className="v6-gap__t v6-gap__sys">
-            <p className="v6-gap__label">One change crossed</p>
+            <p className="v6-gap__label">What it settles</p>
             <ul className="v6-gap__syslist">
-              {["checkout", "payment", "account access"].map((t) => (
-                <li key={t} className="v6-mono">{t}</li>
+              {["that the work is written", "that it deployed"].map((t) => (
+                <li key={t}>{t}</li>
               ))}
             </ul>
           </div>
 
           <div className="v6-gap__t v6-gap__found">
-            <p className="v6-gap__label">What Vraelis observed</p>
+            <p className="v6-gap__label">What it does not</p>
             <ul className="v6-gap__list">
-              {OBSERVED.map((t) => <li key={t}>{t}</li>)}
+              {UNCOVERED.map((t) => <li key={t}>{t}</li>)}
             </ul>
           </div>
 
           <div className="v6-gap__t v6-gap__verdictwrap">
-            <p className="v6-gap__verdict">Failed.</p>
+            <p className="v6-gap__verdict">Unverified.</p>
             <p className="v6-gap__verdictsay">
-              Checked in the deployed workflow, before the completion claim could be trusted.
+              Until something independent checks the running software, done is a claim about it.
             </p>
           </div>
         </div>
@@ -165,7 +165,7 @@ export function SystemMap() {
 
         <div className="v6-cs__viewport">
           <svg className="v6-cs__scene" viewBox="0 0 2760 470" role="img"
-            aria-label="One environment. A guarantee held outside the code connects to the application, checkout and account services. A browser run crosses the deployed workflow. A finding goes to a person, a repair returns, and an independent recheck writes back to the same record.">
+            aria-label="One environment. A guarantee held outside the code connects to the systems it crosses. A browser run crosses the deployed product. A finding goes to a person, a repair returns, and an independent recheck writes back to the same record.">
             {/* The record spine: present across the whole environment, tying all three regions together, and
                 running on past the last node so nothing implies the trail stops where the result lands. */}
             <line className="v6-cs__spine" x1="30" y1="392" x2="2745" y2="392" />
@@ -175,8 +175,8 @@ export function SystemMap() {
             <g className="v6-cs__r" data-r="0">
               <rect className="v6-cs__guar" x="89" y="40" width="600" height="98" rx="14" />
               <text className="v6-cs__guart" x="119" y="78">Guarantee</text>
-              <text className="v6-cs__guarb" x="119" y="114">A paying customer keeps Pro access.</text>
-              {["application", "checkout", "account-api"].map((t, i) => (
+              <text className="v6-cs__guarb" x="119" y="114">Only authorized staff can read customer records.</text>
+              {["application", "identity", "records-api"].map((t, i) => (
                 <g key={t}>
                   <rect className="v6-cs__svc" x={99 + i * 200} y="234" width="176" height="56" rx="10" />
                   <text className="v6-cs__svct" x={187 + i * 200} y="269">{t}</text>
@@ -189,9 +189,9 @@ export function SystemMap() {
             {/* ── region 1: the browser run crossing the deployed workflow ── */}
             <g className="v6-cs__r" data-r="1">
               <rect className="v6-cs__plane" x="1000" y="52" width="740" height="238" rx="16" />
-              <text className="v6-cs__planet" x="1030" y="96">Browser run, live deployment</text>
+              <text className="v6-cs__planet" x="1030" y="96">Browser run, deployed product</text>
               <line className="v6-cs__planerule" x1="1000" y1="120" x2="1740" y2="120" />
-              {["open checkout", "pay", "sign out", "sign back in"].map((t, i) => (
+              {["sign in", "open a record", "sign out", "sign back in"].map((t, i) => (
                 <g key={t} className="v6-cs__step">
                   <circle cx={1090 + i * 180} cy="194" r="11" />
                   <text x={1090 + i * 180} y="240">{t}</text>
@@ -224,16 +224,16 @@ export function SystemMap() {
         <ol className="v6-cs__m">
           <li className="v6-cs__mstage">
             <p className="v6-cs__mh">{ACTS[0][0]}</p>
-            <div className="v6-cs__mguar">A paying customer keeps Pro access.</div>
+            <div className="v6-cs__mguar">Only authorized staff can read customer records.</div>
             <ul className="v6-cs__mtags">
-              {["application", "checkout", "account-api"].map((t) => <li key={t}>{t}</li>)}
+              {["application", "identity", "records-api"].map((t) => <li key={t}>{t}</li>)}
             </ul>
             <p className="v6-cs__ms">Kept outside the code, so a change cannot quietly drop it.</p>
           </li>
           <li className="v6-cs__mstage">
             <p className="v6-cs__mh">{ACTS[1][0]}</p>
             <ul className="v6-cs__mpath">
-              {["open checkout", "pay", "sign out", "sign back in"].map((t) => <li key={t}>{t}</li>)}
+              {["sign in", "open a record", "sign out", "sign back in"].map((t) => <li key={t}>{t}</li>)}
             </ul>
             <div className="v6-cs__mobs">
               <span>Expected</span>access is still there
@@ -275,10 +275,10 @@ export function SystemMap() {
    ------------------------------------------------------------------------------------------------- */
 type Beat = { s: "stop" | "none" | "go"; h: string; d: string };
 const ENT: Beat[] = [
-  { s: "stop", h: "Access was missing", d: "The account never received the Pro entitlement." },
+  { s: "stop", h: "Access was wrong", d: "An unauthorized account could read customer records." },
   { s: "none", h: "The first repair appeared to work", d: "Access appeared only inside the session that was already open." },
   { s: "stop", h: "Signing back in broke it again", d: "The apparent fix did not survive a new session." },
-  { s: "go", h: "The second repair held", d: "A new session inherited the entitlement." },
+  { s: "go", h: "The second repair held", d: "A new session inherited the corrected permission." },
 ];
 
 export function Proof() {
@@ -288,26 +288,26 @@ export function Proof() {
     <section className="v6-pf" data-nav-theme="light" ref={root}>
       <div className="v6-pf__head">
         <p className="v6-eyebrow">Internal production demonstration</p>
-        <h2 className="v6-pf__h">Payment succeeded. The guarantee did not.</h2>
+        <h2 className="v6-pf__h">The work shipped. The guarantee did not hold.</h2>
         <p className="v6-pf__guar">
-          <span>The guarantee</span>A customer who pays for Pro receives access and keeps it after signing back in.
+          <span>The guarantee</span>Only authorized staff can read customer records, and that stays true after signing back in.
         </p>
       </div>
 
       <div className="v6-pf__case" data-i="0" data-on={seen > 0}>
         {/* the lane that worked, stated once and kept quiet */}
         <div className="v6-pf__minor">
-          <p className="v6-pf__lanen">Payment succeeded</p>
+          <p className="v6-pf__lanen">The change shipped</p>
           <p className="v6-pf__minors">
             <span className="v6-pf__tick" aria-hidden />
-            Checkout completed and payment was confirmed.
+            The work was written, reviewed and deployed without incident.
           </p>
         </div>
 
         {/* the lane the business actually depends on */}
         <div className="v6-pf__major">
           <p className="v6-pf__lanen">
-            Entitlement
+            Access
             <em>where the guarantee actually lives</em>
           </p>
 
@@ -375,11 +375,11 @@ type Filed =
   | { t: "result"; head: string; body: string };
 
 const ARCHIVE: Filed[] = [
-  { t: "evidence", n: "Run 1", head: "Failed", body: "Payment succeeded. Pro access was missing.", s: "stop" },
+  { t: "evidence", n: "Run 1", head: "Failed", body: "The change shipped. Access was wrong.", s: "stop" },
   { t: "change", n: "Repair 1", head: "Access granted", body: "Access was granted only inside the active session." },
   { t: "evidence", n: "Run 2", head: "Failed", body: "Access disappeared after signing out and back in.", s: "stop" },
   { t: "decision", head: "Human decision", body: "The second repair was approved, with the reason recorded." },
-  { t: "change", n: "Repair 2", head: "Entitlement attached", body: "The entitlement was attached to the account." },
+  { t: "change", n: "Repair 2", head: "Permission corrected", body: "The permission was corrected on the account itself." },
   { t: "result", head: "Verified", body: "Persistence confirmed." },
 ];
 
@@ -400,7 +400,7 @@ export function Record() {
         <div className="v6-rec__anchor">
           <div className="v6-rec__doc">
             <p className="v6-rec__dock">Guarantee</p>
-            <p className="v6-rec__docv">A customer who pays for Pro keeps access after signing back in.</p>
+            <p className="v6-rec__docv">Only authorized staff can read customer records.</p>
           </div>
         </div>
 
@@ -483,7 +483,7 @@ export function Reach() {
         <p className="v6-rx__stage" data-i="0" data-on={seen > 0}><span>Build</span></p>
 
         <figure className="v6-rx__f v6-rx__f--gh" data-i="0" data-on={seen > 0}>
-          <figcaption className="v6-rx__fcap v6-mono">github.com/acme/billing-web</figcaption>
+          <figcaption className="v6-rx__fcap v6-mono">github.com/acme/records-web</figcaption>
           <div className="v6-rx__ghrow">
             <span className="v6-rx__ghtick" aria-hidden>&#10003;</span>
             <span className="v6-rx__ghname">Vraelis / guarantee</span>
@@ -501,7 +501,7 @@ export function Reach() {
               elements into single spaces, which silently shifted every line of the transcript */}
           <pre className="v6-rx__term">
             <code>
-              <span className="v6-rx__p">{"$ "}</span><span className="v6-rx__cmd">{"vraelis verify pro-access\n"}</span>
+              <span className="v6-rx__p">{"$ "}</span><span className="v6-rx__cmd">{"vraelis verify record-access\n"}</span>
               <span className="v6-rx__dim">{"crossing the deployed workflow\n"}</span>
               <span className="v6-rx__ok">{"verified\n"}</span>
               <span className="v6-rx__p">{"$ "}</span><span className="v6-rx__cmd">{"echo $?\n"}</span>
@@ -518,7 +518,7 @@ export function Reach() {
           <pre className="v6-rx__json">
             <code>{`{
   "decision":  "verified",
-  "guarantee": "pro-access"
+  "guarantee": "record-access"
 }`}</code>
           </pre>
         </figure>
@@ -528,7 +528,7 @@ export function Reach() {
           <div className="v6-rx__dep">
             <span className="v6-rx__mark" aria-hidden />
             <div>
-              <p className="v6-rx__depn">billing-web<em>Production</em></p>
+              <p className="v6-rx__depn">records-web<em>Production</em></p>
               <p className="v6-rx__depsay">The result belongs to the running product, not only the branch.</p>
             </div>
           </div>
@@ -558,7 +558,7 @@ export function Reach() {
             <span className="v6-rx__av" aria-hidden>V</span>
             <div>
               <p className="v6-rx__who">Vraelis<em>app</em></p>
-              <p className="v6-rx__said">The Pro access guarantee held after the second repair.</p>
+              <p className="v6-rx__said">The record access guarantee held after the second repair.</p>
             </div>
           </div>
         </figure>
@@ -641,7 +641,7 @@ export function Knowledge() {
 
 {
   "decision": "verified",
-  "claim": "Pro access survives sign-in"
+  "claim": "record access survives sign-in"
 }`}</pre>
           </figure>
 
