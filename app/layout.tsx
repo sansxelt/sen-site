@@ -71,11 +71,12 @@ export default async function RootLayout({
   // no session lookup, no DB. The cookie is HMAC-verified rather than string-compared, so one typed into a
   // cookie editor does not open anything.
   if (stealthConfigured() && !verifyStealthCookie((await cookies()).get(STEALTH_COOKIE)?.value)) {
+    // The curtain is the v6 graphite surface and carries all of its own CSS inline, so the site
+    // stylesheets are not loaded here: nothing of the real design ships while the curtain is down,
+    // and the first painted frame is already near-black rather than cream.
     return (
-      <html lang="en" data-theme="light" style={{ colorScheme: "light", background: "#FAF8F4" }} className={`${GeistSans.variable} ${GeistMono.variable} h-full`}>
-        <body className="min-h-full" style={{ background: "#FAF8F4" }}>
-          <link rel="stylesheet" href="/vraelis/tokens.css?v=20" />
-          <link rel="stylesheet" href="/vraelis/styles.css?v=51" />
+      <html lang="en" data-theme="dark" style={{ colorScheme: "dark", background: "#0A0A0B" }} className={`${GeistSans.variable} ${GeistMono.variable} h-full`}>
+        <body className="min-h-full" style={{ background: "#0A0A0B" }}>
           <StealthScreen />
         </body>
       </html>

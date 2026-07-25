@@ -76,6 +76,8 @@ playwright/.cache/
 
 # Local design-review workspace: screenshots and screen recordings produced while verifying a
 # redesign. Evidence for a review, not source, and ~16MB per pass.
-review/
+# Anchored to the repo root: an unanchored "review/" matches a directory of that name at ANY depth, which
+# silently excluded the app's own Review route at app/dev-preview/v6/app/review/.
+/review/
 .playwright-cli/
 .playwright/
