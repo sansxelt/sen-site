@@ -158,7 +158,6 @@ function MegaShell({ index, state, preview, onPreview, onNavigate }: {
               <span className="v6-mega__fe">{shown.eyebrow}</span>
               <h4>{shown.title}</h4>
               <p>{shown.body}</p>
-              {shown.stat ? <span className="v6-mega__fstat">{shown.stat}</span> : null}
             </div>
             <Link href={menu.feature.href} className="v6-mega__fcta" onClick={onNavigate}>
               {menu.feature.cta}<span className="v6-arw" aria-hidden>&rarr;</span>

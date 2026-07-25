@@ -106,37 +106,36 @@ export function Gap() {
   return (
     <section className="v6-gap" id="gap" ref={wrap}>
       <div className="v6-gap__pin">
-        {/* Both layers share one grid cell, so the findings take the exact space the claim occupied rather
-            than being positioned near it. Absolute positioning could not hold the two in register once the
-            word ran to 240px tall. */}
+        {/* One continuous space, not stacked frames. Each traveller owns a trajectory through the viewport
+            driven by --p: the claim rises and shrinks as it loses authority, the systems it reached pass
+            through behind it, the findings climb into the space the claim vacated, and the consequence
+            arrives last. Nothing cross-fades in place, so nothing ever sits on top of anything else. */}
         <div className="v6-gap__stage">
-          <div className="v6-gap__layer v6-gap__claim">
+          <div className="v6-gap__t v6-gap__claim">
             <p className="v6-gap__label">The agent reported</p>
             <p className="v6-gap__word">
               <span className="v6-gap__wordt">Complete.</span>
               <span className="v6-gap__strike" aria-hidden />
             </p>
           </div>
-          {/* Stage two: what the claim actually touched. It arrives as the claim gives up its authority and
-              holds while the findings come in, so the reader has something to look at during the handover
-              instead of watching one word fade. */}
-          <div className="v6-gap__layer v6-gap__sys" aria-hidden>
+
+          <div className="v6-gap__t v6-gap__sys" aria-hidden>
             <p className="v6-gap__label">Systems the change reached</p>
             <ul className="v6-gap__syslist">
-              {["billing-web", "checkout", "account-api"].map((t, i) => (
-                <li key={t} className="v6-mono" style={{ ["--i" as string]: i }}>{t}</li>
+              {["billing-web", "checkout", "account-api"].map((t) => (
+                <li key={t} className="v6-mono">{t}</li>
               ))}
             </ul>
           </div>
-          <div className="v6-gap__layer v6-gap__found">
+
+          <div className="v6-gap__t v6-gap__found">
             <p className="v6-gap__label">Vraelis found</p>
             <ul className="v6-gap__list">
-              {FOUND.map((t, i) => (
-                <li key={t} style={{ ["--i" as string]: i }}>{t}</li>
-              ))}
+              {FOUND.map((t) => <li key={t}>{t}</li>)}
             </ul>
           </div>
-          <div className="v6-gap__layer v6-gap__verdictwrap">
+
+          <div className="v6-gap__t v6-gap__verdictwrap">
             <p className="v6-gap__verdict">Blocked.</p>
             <p className="v6-gap__verdictsay">This release cannot be trusted yet.</p>
           </div>

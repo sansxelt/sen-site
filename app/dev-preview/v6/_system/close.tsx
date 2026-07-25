@@ -66,9 +66,6 @@ export function SiteFooter() {
         <div className="v6-foot2__act">
           <CTA brand>Open Vraelis</CTA>
           <Link href={`${BASE}/company#contact`} className="v6-foot2__second">Talk to the team<span className="v6-arw" aria-hidden>&rarr;</span></Link>
-          <Link href={`${BASE}/security#status`} className="v6-foot2__status">
-            <span className="v6-foot2__dot" aria-hidden />Verification engine operational
-          </Link>
         </div>
       </div>
 

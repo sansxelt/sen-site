@@ -13,69 +13,66 @@
 /* ══════════════════════════════════════════════════════ 2. THE COMPLETION GAP ══
    A pinned confrontation. State 0 is one word at the largest scale on the page.
    State 1 takes that same optical space away from it. */
-/* Scroll-linked, and STAGED. --p runs 0..1 with scroll position; every value below is derived from it, so
-   the scene is always at the absolute state the reader scrolled to, at any speed, in either direction, with
-   nothing queued.
+/* CONTINUOUS MOTION, not cross-faded frames.
+   --p runs 0..1 with scroll. Every traveller below has its OWN trajectory through the viewport, expressed as
+   a translateY that is a function of --p. They move through one shared space and pass each other; none of
+   them is stacked on another and fading in place, which is what made the previous version read as slides and
+   let four layers physically overlap.
 
-   The runway is long on purpose. At 300vh an ordinary continuous wheel pace crossed the whole sequence in
-   about five seconds, which is not enough time for any one state to be read. Each stage now owns a slice of
-   the chapter and, critically, RESTS inside it:
+     0.00-0.20  the claim holds the centre
+     0.20-0.42  the claim rises and shrinks; the systems it reached travel up behind it
+     0.42-0.65  the findings climb into the space the claim vacated and settle
+     0.65-0.82  the consequence arrives beneath them
+     0.82-1.00  everything rests before the next chapter
 
-     0.00-0.20  the claim, stable
-     0.20-0.40  the claim loses authority, the systems it reached appear
-     0.40-0.65  the findings take over and stay fully readable
-     0.65-0.82  the consequence: the release cannot be trusted yet
-     0.82-1.00  resolved and stable before the next chapter
-
-   Each ramp is short and each hold is long, so something is not always moving. */
-/* 520vh measured, not guessed: at 460vh the full sequence crossed in 4.6s at a brisk wheel pace and
-   7.2s at an unhurried one, both under the benchmark. 520vh puts an unhurried pace at ~8.4s. */
+   Ramps are short, rests are long, and the whole thing is an absolute function of scroll position, so any
+   speed or direction resolves immediately. */
 .v6-gap { position: relative; height: 520vh; background: var(--paper); --p: 0;
-  --claim:   clamp(0, calc((var(--p) - 0.20) / 0.16), 1);   /* claim recedes 20 -> 36 */
-  --strike:  clamp(0, calc((var(--p) - 0.20) / 0.10), 1);   /* struck through 20 -> 30 */
-  --sys:     clamp(0, calc((var(--p) - 0.24) / 0.09), 1);   /* systems in    24 -> 33 */
-  --sysout:  clamp(0, calc((var(--p) - 0.42) / 0.07), 1);   /* systems out   42 -> 49 */
-  --found:   clamp(0, calc((var(--p) - 0.42) / 0.09), 1);   /* findings in   42 -> 51 */
-  --verdict: clamp(0, calc((var(--p) - 0.67) / 0.08), 1);   /* consequence   67 -> 75 */
+  --claim:   clamp(0, calc((var(--p) - 0.20) / 0.22), 1);
+  --strike:  clamp(0, calc((var(--p) - 0.20) / 0.10), 1);
+  --sys:     clamp(0, calc((var(--p) - 0.24) / 0.10), 1);
+  --sysout:  clamp(0, calc((var(--p) - 0.44) / 0.10), 1);
+  --found:   clamp(0, calc((var(--p) - 0.42) / 0.12), 1);
+  --verdict: clamp(0, calc((var(--p) - 0.67) / 0.10), 1);
 }
-.v6-gap__pin { position: sticky; top: 0; height: 100svh; display: grid; place-items: center;
-  padding: calc(var(--nav-h, 66px) + 3vh) var(--gutter) 6vh; overflow: hidden; }
-.v6-gap__stage { position: relative; width: 100%; max-width: 1180px; display: grid; align-items: center; }
-.v6-gap__layer { grid-area: 1 / 1; }
+.v6-gap__pin { position: sticky; top: 0; height: 100svh; overflow: hidden;
+  padding: calc(var(--nav-h, 66px) + 2vh) var(--gutter) 4vh; }
+.v6-gap__stage { position: relative; width: 100%; max-width: 1180px; height: 100%; margin-inline: auto; }
+/* every traveller is anchored to the same origin and moves from there */
+.v6-gap__t { position: absolute; left: 0; right: 0; top: 50%; will-change: transform; }
 
 .v6-gap__label { font-family: var(--sans); font-weight: 600; font-size: 11px; letter-spacing: 0.16em;
   text-transform: uppercase; color: var(--ink-4); margin: 0; }
-.v6-gap__word { position: relative; display: inline-block; margin: clamp(8px, 1.8vh, 22px) 0 0; }
+.v6-gap__word { position: relative; display: inline-block; margin: clamp(8px, 1.8vh, 20px) 0 0; }
 .v6-gap__wordt { display: block; font-family: var(--sans); font-weight: 600; letter-spacing: -0.055em;
-  line-height: 0.84; color: var(--ink); font-size: clamp(4rem, 16.5vw, 14rem); }
-.v6-gap__strike { position: absolute; left: -2%; right: -2%; top: 47%; height: clamp(4px, 0.7vw, 11px);
-  background: var(--stop); border-radius: 999px; transform-origin: 0 50%;
-  transform: scaleX(var(--strike)); }
-.v6-gap__claim { opacity: calc(1 - 0.93 * var(--claim)); transform: scale(calc(1 - 0.04 * var(--claim)));
-  transform-origin: 0 50%; }
+  line-height: 0.84; color: var(--ink); font-size: clamp(3.4rem, 13vw, 11rem); }
+.v6-gap__strike { position: absolute; left: -2%; right: -2%; top: 47%; height: clamp(4px, 0.6vw, 9px);
+  background: var(--stop); border-radius: 999px; transform-origin: 0 50%; transform: scaleX(var(--strike)); }
 
-/* stage two: the systems the change reached, holding through the handover */
-.v6-gap__sys { opacity: calc(var(--sys) * (1 - var(--sysout)));
-  transform: translateY(calc(26px * (1 - var(--sys)))); pointer-events: none; }
-.v6-gap__syslist { list-style: none; margin: clamp(20px, 3vh, 36px) 0 0; padding: 0;
+/* the claim: holds the centre, then rises out of the way and shrinks */
+.v6-gap__claim { transform: translateY(calc(-52% - var(--claim) * 30vh)) scale(calc(1 - 0.56 * var(--claim)));
+  transform-origin: 0 50%; opacity: calc(1 - 0.88 * var(--claim)); }
+
+/* the systems: travel up through the frame behind the claim and leave again */
+.v6-gap__sys { transform: translateY(calc(46vh - var(--sys) * 44vh - var(--sysout) * 34vh));
+  opacity: calc(var(--sys) * (1 - var(--sysout))); }
+.v6-gap__syslist { list-style: none; margin: clamp(14px, 2vh, 22px) 0 0; padding: 0;
   display: flex; flex-wrap: wrap; gap: 10px 14px; }
-.v6-gap__syslist li { font-size: clamp(1rem, 1.9vw, 1.5rem); color: var(--ink-2);
-  border: 1px solid var(--line-2); border-radius: 999px; padding: 10px 22px; }
+.v6-gap__syslist li { font-size: clamp(0.95rem, 1.5vw, 1.3rem); color: var(--ink-2);
+  border: 1px solid var(--line-2); border-radius: 999px; padding: 9px 20px; }
 
-/* stage three: the findings, which then stay put for the rest of the chapter */
-.v6-gap__found { opacity: var(--found); transform: translateY(calc(30px * (1 - var(--found))));
-  pointer-events: none; }
+/* the findings: climb into the space the claim left, and stay */
+.v6-gap__found { transform: translateY(calc(52vh - var(--found) * 74vh)); opacity: var(--found); }
 .v6-gap__found .v6-gap__label { color: var(--stop-ink); }
 
-/* stage four: the consequence */
-.v6-gap__verdictwrap { align-self: end; opacity: var(--verdict);
-  transform: translateY(calc(22px * (1 - var(--verdict)))); pointer-events: none; }
-.v6-gap__list { list-style: none; margin: clamp(18px, 3vh, 34px) 0 0; padding: 0;
-  display: flex; flex-direction: column; gap: clamp(10px, 1.8vh, 22px); }
-.v6-gap__list li { font-family: var(--sans); font-weight: 500; letter-spacing: -0.026em; line-height: 1.14;
-  font-size: clamp(1.5rem, 4.1vw, 3.4rem); color: var(--ink); }
+/* the consequence: arrives underneath them, last */
+.v6-gap__verdictwrap { transform: translateY(calc(56vh - var(--verdict) * 34vh)); opacity: var(--verdict); }
+.v6-gap__list { list-style: none; margin: clamp(14px, 2.2vh, 26px) 0 0; padding: 0;
+  display: flex; flex-direction: column; gap: clamp(8px, 1.4vh, 16px); }
+.v6-gap__list li { font-family: var(--sans); font-weight: 500; letter-spacing: -0.026em; line-height: 1.12;
+  font-size: clamp(1.3rem, 3.3vw, 2.7rem); color: var(--ink); }
 .v6-gap__verdict { font-family: var(--sans); font-weight: 600; letter-spacing: -0.04em; line-height: 1;
-  font-size: clamp(2.2rem, 6vw, 4.6rem); color: var(--stop); margin: 0; }
+  font-size: clamp(1.9rem, 4.6vw, 3.4rem); color: var(--stop); margin: 0; }
 .v6-gap__verdictsay { font-size: clamp(1rem, 1.3vw, 1.24rem); color: var(--ink-3); margin: 14px 0 0; }
 
 /* ═══════════════════════════════════════════════════ 3. THE CONNECTED SYSTEM ══
@@ -233,8 +230,8 @@
   /* Mobile is short and never traps: the four states simply flow, each as its own authored screen. */
   .v6-gap { height: auto; }
   .v6-gap__pin { position: static; height: auto; display: block; padding: clamp(72px, 12vh, 104px) var(--gutter); }
-  .v6-gap__stage { max-width: none; display: block; }
-  .v6-gap__layer { grid-area: auto; }
+  .v6-gap__stage { max-width: none; height: auto; }
+  .v6-gap__t { position: static; transform: none !important; opacity: 1 !important; }
   .v6-gap__claim { opacity: 1 !important; transform: none !important; }
   .v6-gap__strike { transform: scaleX(1); }
   .v6-gap__sys { opacity: 1 !important; transform: none !important; margin-top: clamp(34px, 7vh, 52px); }
@@ -314,8 +311,8 @@
 @media (prefers-reduced-motion: reduce) {
   .v6-gap { height: auto; }
   .v6-gap__pin { position: static; height: auto; display: block; padding: clamp(80px, 12vh, 130px) var(--gutter); }
-  .v6-gap__stage { display: block; }
-  .v6-gap__layer { grid-area: auto; }
+  .v6-gap__stage { height: auto; }
+  .v6-gap__t { position: static; transform: none !important; opacity: 1 !important; }
   .v6-gap__claim { opacity: 1 !important; transform: none !important; }
   .v6-gap__strike { transform: scaleX(1) !important; }
   .v6-gap__sys { opacity: 1 !important; transform: none !important; margin-top: clamp(30px, 5vh, 44px); }

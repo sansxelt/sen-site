@@ -2,59 +2,83 @@
 
 // CHAPTER 1 — the opening.
 //
-// One headline, one sentence, one action, one quiet action, one visual. Nothing else. The previous opening
-// put a requirement, a five-state trajectory, a findings panel and a decision line above the fold, which is
-// four ideas competing before anyone has scrolled. The opening's job is scale and curiosity; the proof is
-// chapters 2 to 5.
+// A full-width operational landscape, not a flowchart and not a node constellation. The company's software
+// is drawn as long horizontal plates receding into depth; one change travels across all of them, dips into a
+// browser check, raises a finding, passes a person, and arrives at a trusted result. The plates are cropped
+// hard by both viewport edges so the landscape reads as larger than the screen.
 //
-// The visual is a fragment of the system graph that chapter 3 opens out in full, cropped hard by the right
-// edge of the viewport. It is deliberately unexplained: two node labels, one broken edge, no legend.
-// Positioning copy comes from _system/positioning.ts and is provisional.
+// Depth is real: three plate depths at different scales and opacities, each drifting at its own rate with
+// scroll. Positioning copy comes from _system/positioning.ts and is provisional.
+import { useEffect, useRef } from "react";
 import { CTA } from "./ui";
 import { CATEGORY, HEADLINE, SUPPORT } from "./positioning";
 import "./hero.css";
 
-function GraphFragment() {
-  // Authored at 900x900 and anchored off the right edge, so a visitor sees a slice of something larger
-  // rather than a diagram sitting in a box.
-  return (
-    <svg className="v6-h__gfx" viewBox="0 0 900 900" aria-hidden focusable="false">
-      <defs>
-        <linearGradient id="v6hEdge" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#FFFFFF" stopOpacity="0" />
-          <stop offset="0.55" stopColor="#FFFFFF" stopOpacity="0.34" />
-          <stop offset="1" stopColor="#FFFFFF" stopOpacity="0.1" />
-        </linearGradient>
-      </defs>
-      <g fill="none" strokeWidth="1.5">
-        <path d="M120 470 C 300 470, 320 250, 470 250" stroke="url(#v6hEdge)" />
-        <path d="M120 470 C 300 470, 330 700, 500 700" stroke="url(#v6hEdge)" />
-        <path d="M470 250 C 640 250, 660 470, 790 470" stroke="url(#v6hEdge)" />
-        {/* the one edge that did not hold */}
-        <path d="M500 700 C 660 700, 680 470, 790 470" stroke="var(--stop-dk)" strokeOpacity="0.7" strokeDasharray="9 13" />
-      </g>
-      <g className="v6-h__gfx-nodes">
-        <circle cx="120" cy="470" r="12" />
-        <circle cx="470" cy="250" r="9" />
-        <circle cx="500" cy="700" r="9" />
-        <circle className="is-hub" cx="790" cy="470" r="27" />
-      </g>
-      <g className="v6-h__gfx-x">
-        <line x1="488" y1="688" x2="512" y2="712" />
-        <line x1="512" y1="688" x2="488" y2="712" />
-      </g>
-      <text className="v6-h__gfx-t" x="120" y="514">checkout</text>
-      <text className="v6-h__gfx-t" x="500" y="744">account-api</text>
-    </svg>
-  );
-}
+/** Plates the change crosses, back to front. Authored positions, not generated. */
+const PLATES: { x: number; y: number; w: number; label: string; depth: 1 | 2 | 3 }[] = [
+  { x: -140, y: 236, w: 600, label: "application", depth: 1 },
+  { x: 400, y: 302, w: 520, label: "deployment", depth: 2 },
+  { x: 860, y: 374, w: 470, label: "payment", depth: 3 },
+  { x: 1270, y: 302, w: 470, label: "account access", depth: 2 },
+  { x: 1620, y: 236, w: 520, label: "database", depth: 1 },
+];
+
+/** Where the change actually goes. One continuous path across the whole landscape. */
+const PATH =
+  "M -80 258 C 220 258, 320 322, 540 328 C 760 334, 820 398, 1040 400 " +
+  "C 1260 402, 1330 326, 1470 328 C 1610 330, 1660 258, 1960 258";
 
 export function Hero() {
+  const root = useRef<HTMLElement>(null);
+
+  // Slow scroll-linked drift. Each depth layer moves at its own rate, which is what makes the landscape read
+  // as a space rather than a picture. An absolute function of scroll position, so it never queues.
+  useEffect(() => {
+    const el = root.current;
+    if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let raf = 0;
+    const read = () => {
+      raf = 0;
+      const r = el.getBoundingClientRect();
+      const p = Math.min(1, Math.max(0, -r.top / Math.max(1, r.height)));
+      el.style.setProperty("--p", p.toFixed(4));
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(read); };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
   return (
-    <section className="v6-h" data-nav-dark>
+    <section className="v6-h" data-nav-dark ref={root}>
       <div className="v6-h__field" aria-hidden />
-      <div className="v6-h__gfxwrap" aria-hidden>
-        <GraphFragment />
+
+      <div className="v6-h__land" aria-hidden>
+        <svg className="v6-h__svg" viewBox="0 0 1960 620" preserveAspectRatio="xMidYMid slice">
+          <g className="v6-h__far">
+            {[104, 146, 188].map((y) => <line key={y} x1="-240" y1={y} x2="2200" y2={y} />)}
+          </g>
+
+          {PLATES.map((pl) => (
+            <g key={pl.label} className={`v6-h__plate is-d${pl.depth}`}>
+              <rect x={pl.x} y={pl.y} width={pl.w} height="14" rx="7" />
+              <text x={pl.x + 18} y={pl.y - 18}>{pl.label}</text>
+            </g>
+          ))}
+
+          <path className="v6-h__trail" d={PATH} fill="none" />
+
+          <g className="v6-h__stop is-check"><circle cx="1040" cy="400" r="11" /><text x="1040" y="444">browser check</text></g>
+          <g className="v6-h__stop is-find"><circle cx="1270" cy="362" r="11" /><text x="1270" y="334">finding</text></g>
+          <g className="v6-h__stop is-person"><circle cx="1470" cy="328" r="11" /><text x="1470" y="300">a person decides</text></g>
+          <g className="v6-h__stop is-done"><circle cx="1770" cy="258" r="15" /><text x="1770" y="224">verified</text></g>
+        </svg>
       </div>
 
       <div className="v6-h__inner">
@@ -64,9 +88,7 @@ export function Hero() {
           <span className="v6-mask"><span className="v6-mask__in" style={{ animationDelay: "170ms" }}>{HEADLINE[1]}</span></span>
         </h1>
         <p className="v6-h__say">{SUPPORT}</p>
-        <div className="v6-h__cta">
-          <CTA brand lg>Open Vraelis</CTA>
-        </div>
+        <div className="v6-h__cta"><CTA brand lg>Open Vraelis</CTA></div>
       </div>
     </section>
   );

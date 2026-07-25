@@ -38,11 +38,14 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: OG_TITLE, description: OG_DESCRIPTION },
 };
 
+// dark, because the first thing every v6 route paints is a near-black chapter. With colorScheme light the
+// browser painted its light default for a frame before the stylesheet applied, which showed as a white flash
+// on load.
 export const viewport: Viewport = {
-  colorScheme: "light",
+  colorScheme: "dark",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#F7F7F4" },
-    { media: "(prefers-color-scheme: dark)", color: "#0F1319" },
+    { media: "(prefers-color-scheme: light)", color: "#0A0A0B" },
+    { media: "(prefers-color-scheme: dark)", color: "#0A0A0B" },
   ],
 };
 

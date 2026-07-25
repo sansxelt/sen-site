@@ -56,10 +56,6 @@
   color: var(--g-fg); text-decoration: none; min-height: 32px; }
 .v6-foot2__second .v6-arw { transition: transform 180ms var(--ease-out); }
 .v6-foot2__second:hover .v6-arw { transform: translateX(4px); }
-.v6-foot2__status { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; color: var(--g-fg-3);
-  text-decoration: none; margin-top: 6px; padding-top: 16px; border-top: 1px solid var(--g-line); width: 100%; }
-.v6-foot2__dot { width: 7px; height: 7px; border-radius: 999px; background: var(--go-dk); flex: none; }
-.v6-foot2__status:hover { color: var(--g-fg-2); }
 
 .v6-foot2__lower { max-width: var(--max-wide); margin-inline: auto; padding: clamp(38px,5vh,58px) var(--gutter) clamp(28px,3.5vh,40px);
   display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: clamp(24px,3vw,52px); }
@@ -79,9 +75,8 @@
    v1 footer's class names and therefore did nothing once this footer replaced it. */
 /* min-width too: the "X" link is a single glyph, so height alone left an 8px-wide target. */
 .v6-foot2__legal a { display: inline-flex; align-items: center; justify-content: center; min-height: 24px; min-width: 24px; }
-.v6-foot2__status { min-height: 28px; }
 @media (pointer: coarse), (max-width: 640px) {
-  .v6-foot2__legal a, .v6-foot2__status, .v6-foot2__base-in span { min-height: 44px; }
+  .v6-foot2__legal a, .v6-foot2__base-in span { min-height: 44px; }
   .v6-foot2__col a { min-height: 44px; }
 }
 
