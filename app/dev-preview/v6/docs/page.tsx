@@ -14,9 +14,8 @@ export const metadata: Metadata = v6meta({
 
 export default function DocsIndex() {
   return (
-    <section className="v6-sec" style={{ paddingTop: "clamp(40px,5vw,72px)" }}>
-      <DocShell>
-        <div>
+    <DocShell>
+      <div>
           <p className="v6-eyebrow v6-phero__k">Documentation</p>
           <h1 className="v6-dxl" style={{ marginTop: 12 }}>Use and administer Vraelis.</h1>
           <p className="v6-lead" style={{ marginTop: 16, maxWidth: "58ch" }}>Everything from connecting your first system to running oversight across a team. Each page has one clear outcome and links to the next step.</p>
@@ -28,8 +27,7 @@ export default function DocsIndex() {
               </Link>
             ))}
           </div>
-        </div>
-      </DocShell>
-    </section>
+      </div>
+    </DocShell>
   );
 }
