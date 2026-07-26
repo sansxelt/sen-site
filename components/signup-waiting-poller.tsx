@@ -66,7 +66,10 @@ export function SignupWaitingPoller() {
   return (
     <div style={{ marginTop: 18, display: "inline-flex", alignItems: "center", gap: 9, fontSize: 12.5, color: "var(--fg-3)" }}>
       <span className="relative flex h-2 w-2">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full" style={{ background: "var(--acc)", opacity: 0.55 }} />
+        {/* motion-safe: Tailwind's animate-ping loops forever and ships no reduced-motion guard, so on the
+            verify-email screen it kept pulsing for readers who had asked the system for less movement. The
+            solid dot underneath still carries "we are waiting", so nothing is lost when the halo stops. */}
+        <span className="absolute inline-flex h-full w-full motion-safe:animate-ping rounded-full" style={{ background: "var(--acc)", opacity: 0.55 }} />
         <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: "var(--acc)" }} />
       </span>
       {status === "waiting"

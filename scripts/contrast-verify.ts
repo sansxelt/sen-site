@@ -160,6 +160,39 @@ ok(`blocked and failed are different hues (${hWait.toFixed(0)}deg vs ${hStop.toF
 // as "broken", which is the single most expensive misreading this product can cause.
 ok(`blocked is not a red (${hWait.toFixed(0)}deg is in the amber band)`, hWait >= 25 && hWait <= 65);
 
+console.log("\n── the PUBLIC light theme, which the product theme sits on top of ──");
+// This file only ever measured the product surface, so the marketing site went unchecked, and a rendered
+// audit found the primary call to action on EVERY public page at 3.43:1: white on --acc. Twenty-five
+// instances, one cause. The button now sits on --acc-deep. These pairs exist so it stays there.
+{
+  const pub = readFileSync("public/vraelis/styles.css", "utf8");
+  const ptok = (name: string): string => {
+    const m = pub.match(new RegExp(`--${name}:\\s*(#[0-9a-fA-F]{3,8})`));
+    if (!m) throw new Error(`public token --${name} not found`);
+    return m[1];
+  };
+  const PUB: Pair[] = [
+    { what: "public body on paper", fg: ptok("fg-2"), bg: ptok("bg-0"), min: 4.5 },
+    { what: "public secondary on paper", fg: ptok("fg-3"), bg: ptok("bg-0"), min: 4.5 },
+    { what: "public meta on paper", fg: ptok("fg-4"), bg: ptok("bg-0"), min: 4.5 },
+    { what: "public fine print on paper", fg: ptok("fg-5"), bg: ptok("bg-0"), min: 4.5 },
+    { what: "public accent text on paper", fg: ptok("acc-deep"), bg: ptok("bg-0"), min: 4.5 },
+    // THE ONE THAT WAS BROKEN, and its hover.
+    { what: "white on the primary button", fg: ptok("fg-on-accent"), bg: ptok("acc-deep"), min: 4.5 },
+    { what: "white on the primary button, hovered", fg: ptok("fg-on-accent"), bg: ptok("acc-deepest"), min: 4.5 },
+  ];
+  for (const p of PUB) {
+    const r = ratio(p.fg, p.bg);
+    ok(`${p.what}  ${p.fg} on ${p.bg}  ${r.toFixed(2)}:1 (min ${p.min})`, r >= p.min);
+  }
+  // The button must not drift back onto --acc, which is the value that failed. --acc is still correct for
+  // fills and marks that carry no text, so it is not removed, only kept off text-bearing grounds.
+  const btnRule = pub.slice(pub.indexOf("\n.btn {"), pub.indexOf("\n.btn--ghost"));
+  ok("the primary button is not painted on --acc", !/background:\s*var\(--acc\)/.test(btnRule), btnRule.slice(0, 80));
+  ok("white never sits on --acc in a gradient either",
+    !/linear-gradient\([^)]*var\(--acc\)[^)]*\)[^;]*;\s*[^}]*color:\s*#fff/i.test(pub));
+}
+
 console.log("\n── no declared token may be unused ──");
 // THE GUARD THAT WOULD HAVE CAUGHT THE ORIGINAL FAILURE. A theme is only real if the product resolves it.
 function walk(dir: string, out: string[] = []): string[] {

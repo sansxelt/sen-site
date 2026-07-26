@@ -36,6 +36,7 @@ body { margin: 0; overflow-x: clip; max-width: 100%; }
   /* primary — emerald (growth / money) */
   --acc: #0E9E6C;
   --acc-deep: #0A7B54;
+  --acc-deepest: #086342;  /* pressed/hover ground for the primary button: 7.3:1 with white */
   --acc-glow: rgba(14,158,108,0.26);
   --acc-soft: rgba(14,158,108,0.09);
   --acc-line: rgba(14,158,108,0.28);
@@ -84,17 +85,23 @@ body { margin: 0; overflow-x: clip; max-width: 100%; }
 h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; }
 body { font-weight: 400; }
 
-/* green primary button */
+/* Green primary button.
+   THE GROUND IS --acc-deep, NOT --acc. White on --acc (#0E9E6C) measures 3.43:1, which fails WCAG AA for
+   normal text, and this rule paints the primary call to action on every public page: "Open app", "Check
+   your application", "Contact sales", and the 404's "Back home". A site-wide audit of rendered pairs found
+   25 instances and one cause. --acc-deep (#0A7B54) carries the same hue at 5.28:1, and hover goes a step
+   deeper again rather than reaching for a colour that cannot hold white. --acc is still the right value for
+   fills and marks that carry no text. */
 .btn {
-  background: var(--acc);
-  border-color: var(--acc);
+  background: var(--acc-deep);
+  border-color: var(--acc-deep);
   color: var(--fg-on-accent);
   border-radius: var(--r-sm);
 }
-.btn:hover  { background: var(--acc-deep); border-color: var(--acc-deep); color: var(--fg-on-accent); }
-.btn:active { background: var(--acc-deep); }
+.btn:hover  { background: var(--acc-deepest); border-color: var(--acc-deepest); color: var(--fg-on-accent); }
+.btn:active { background: var(--acc-deepest); }
 .btn:disabled, .btn[disabled], .btn[aria-disabled="true"] { opacity: .55; cursor: not-allowed; }
-.btn:disabled:hover, .btn[disabled]:hover, .btn[aria-disabled="true"]:hover { background: var(--acc); border-color: var(--acc); }
+.btn:disabled:hover, .btn[disabled]:hover, .btn[aria-disabled="true"]:hover { background: var(--acc-deep); border-color: var(--acc-deep); }
 .btn--ghost {
   background: var(--bg-1);
   border: 1px solid var(--line-3);
@@ -332,7 +339,7 @@ summary::-webkit-details-marker { display: none; }
 .bento .tile:hover { transform: translateY(-2px); border-color: var(--line-3); box-shadow: 0 2px 4px rgba(28,27,24,0.05), 0 18px 40px -16px rgba(28,27,24,0.18); }
 .tile.span3 { grid-column: span 3; } .tile.span2 { grid-column: span 2; } .tile.span4 { grid-column: span 4; }
 .tile.span6 { grid-column: span 6; }
-.bento .tile--accent { background: linear-gradient(150deg, var(--acc) 0%, var(--acc-deep) 100%); border-color: transparent; color: #fff; }
+.bento .tile--accent { background: linear-gradient(150deg, var(--acc-deep) 0%, var(--acc-deepest) 100%); border-color: transparent; color: #fff; }
 .tile--accent h3, .tile--accent p { color: rgba(255,255,255,0.94); }
 .bento .tile--ink { background: var(--fg-1); border-color: transparent; }
 .tile--ink h3 { color: #fff; } .tile--ink p { color: rgba(255,255,255,0.62); }
@@ -625,7 +632,7 @@ summary::-webkit-details-marker { display: none; }
 .price--hot { border-color: var(--acc-line-2); box-shadow: 0 2px 8px rgba(14,158,108,0.08), 0 44px 84px -40px rgba(14,158,108,0.3); }
 .price--hot::before {
   content: "Most popular"; position: absolute; top: -11px; left: clamp(22px,2.4vw,30px);
-  background: linear-gradient(90deg, var(--acc), var(--acc-deep)); color: #fff;
+  background: linear-gradient(90deg, var(--acc-deep), var(--acc-deepest)); color: #fff;
   font-family: var(--font-code); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase;
   padding: 4px 11px; border-radius: 99px;
 }

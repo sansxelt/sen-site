@@ -80,7 +80,7 @@ export default async function RootLayout({
       <html lang="en" data-theme="dark" style={{ colorScheme: "dark", background: "#0A0A0B" }} className={`${GeistSans.variable} ${GeistMono.variable} h-full`}>
         <body className="min-h-full" style={{ background: "#0A0A0B" }}>
           <link rel="stylesheet" href="/vraelis/tokens.css?v=20" />
-          <link rel="stylesheet" href="/vraelis/styles.css?v=52" />
+          <link rel="stylesheet" href="/vraelis/styles.css?v=53" />
           <StealthScreen />
         </body>
       </html>
@@ -120,7 +120,7 @@ export default async function RootLayout({
           {/* ?v bust: bump on every CSS change so browsers don't serve a
               stale cached stylesheet (the static file URL is otherwise fixed). */}
           <link rel="stylesheet" href="/vraelis/tokens.css?v=20" />
-          <link rel="stylesheet" href="/vraelis/styles.css?v=52" />
+          <link rel="stylesheet" href="/vraelis/styles.css?v=53" />
           {children}
         </body>
       </html>
