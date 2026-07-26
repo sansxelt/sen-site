@@ -111,24 +111,13 @@
 *::-webkit-scrollbar-thumb:active { background: rgba(90,  90,  98,  0.92); background-clip: content-box; }
 *::-webkit-scrollbar-corner { background: transparent; }
 
-/* Vraelis runs on a light cream background — give it the brand GREEN
-   scrollbar (#0A7B54, the --acc-deep emerald) so it's obvious and on-brand.
-   Scoped to the light zone so the dark Sansxel pages keep their thumb above. */
-[data-theme="light"],
-[data-theme="light"] * {
-  scrollbar-color: #0A7B54 rgba(10, 123, 84, 0.14);
-  scrollbar-width: auto;
-}
-[data-theme="light"] ::-webkit-scrollbar-track  { background: rgba(10, 123, 84, 0.14); border-radius: 10px; }
-[data-theme="light"] ::-webkit-scrollbar-thumb  {
-  background: #0A7B54;
-  border-radius: 10px;
-  border: 3px solid transparent;
-  background-clip: content-box;
-  transition: background 160ms ease;
-}
-[data-theme="light"] ::-webkit-scrollbar-thumb:hover  { background: #0E9E6C; background-clip: content-box; }
-[data-theme="light"] ::-webkit-scrollbar-thumb:active { background: #086A48; background-clip: content-box; }
+/* NO COLOURED SCROLLBAR ANYWHERE.
+   A block here used to paint the scrollbar brand emerald on every [data-theme="light"] document, which is
+   every document. Design 06 reserves colour so completely that green, amber and red mean only "it held",
+   "a person is needed" and "it failed" — and a scrollbar is not a state. It also meant the graphite
+   product, the auth screens and the stealth curtain all rendered a bright green bar down a near-black
+   page, because the neutraliser that existed only covered .v6 surfaces.
+   The grey above is the one definition, and it reads on both grounds. */
 
 html {
   color-scheme: dark;

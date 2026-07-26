@@ -7,7 +7,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNo
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SiteFooter } from "./close";
-import { V6_BASE, V6_HOME, V6_APP, v6SignInPath } from "@/lib/v6-routes";
+import { V6_BASE, V6_HOME, V6_APP, v6SignInPath, v6GroundAtTop, GROUND_CSS } from "@/lib/v6-routes";
 
 // FOLLOWS THE PROMOTION FLAG. These were hardcoded to "/dev-preview/v6", which is precisely the mistake
 // lib/v6-routes.ts was written to prevent: it says every V6 destination lives there so promotion is one
@@ -203,11 +203,12 @@ function MegaShell({ index, state, preview, onPreview, onNavigate }: {
   );
 }
 
-/** Which theme the top of a route paints, known synchronously so the server-rendered bar is already right. */
+/** Which theme the top of a route paints, known synchronously so the server-rendered bar is already right.
+ *  The rule itself lives in lib/v6-routes.ts, because proxy.ts needs the SAME answer one step earlier to
+ *  paint the document canvas before this component exists. Two copies would eventually disagree, and the
+ *  symptom of disagreeing is a white flash on a black page, which is exactly what it was. */
 function themeAtTop(pathname: string): boolean {
-  if (pathname === BASE || pathname === BASE + "/") return true;      // the homepage opens on a black hero
-  if (pathname.startsWith(BASE + "/docs")) return true;               // the docs environment is night
-  return false;                                                        // every other route opens on a page hero
+  return v6GroundAtTop(pathname) === "graphite";
 }
 
 // A SIGNED-IN READER MUST NOT BE ASKED TO SIGN IN.
@@ -548,14 +549,21 @@ export function V6Shell({ children, authed = false }: { children: ReactNode; aut
   // the route's own ground: the white shell that used to sit beneath dark routes is what every transition
   // flash was actually showing.
   const pathname = usePathname() || "";
-  const ground = themeAtTop(pathname) ? "dark" : "light";
+  const groundName = v6GroundAtTop(pathname);
+  const ground = groundName === "graphite" ? "dark" : "light";
   return (
     <div className="v6" data-route-theme={ground}>
       {/* The final safety canvas, behind even the shell. The root layout paints html/body cream inline for
           the rest of the site; on v6 documents this beats it (stylesheet !important outranks an inline
           style), so the browser has no frame in which its own canvas can show. It follows the route theme,
-          so a light route never flashes black and a dark route never flashes white, in overscroll included. */}
-      <style>{`html, body { background: ${ground === "dark" ? "#0A0A0B" : "#FFFFFF"} !important; }`}</style>
+          so a light route never flashes black and a dark route never flashes white, in overscroll included.
+          COLOR-SCHEME IS PART OF THE CANVAS, and leaving it out is what kept the white flash alive. The root
+          layout sets color-scheme inline from --canvas-scheme, which v6 never defines, so every dark route
+          ran as color-scheme:light. That value is what the browser paints BEFORE a document's own CSS has
+          applied, and what it uses for the overscroll gutter and for native controls. So a dark route still
+          flashed white on entry and still showed a pale strip past the end of the page, even though its
+          background was pinned correctly. Both are one declaration. */}
+      <style>{`html, body { background: ${GROUND_CSS[groundName].bg} !important; color-scheme: ${GROUND_CSS[groundName].scheme} !important; }`}</style>
       {/* Nine focus stops sit in the nav before any content. Keyboard and screen-reader users get one stop to
           jump past them; it is invisible until focused. */}
       <a href="#v6-main" className="v6-skip">Skip to content</a>

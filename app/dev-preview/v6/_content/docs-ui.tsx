@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { docsByGroup, type Block } from "./docs";
 import { V6_BASE, V6_HOME } from "@/lib/v6-routes";
+import { MARK_PATH, MARK_VIEWBOX } from "@/lib/brand-mark";
 
 const BASE = V6_BASE;
 export const dslug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -81,9 +82,16 @@ export function DocShell({ activeSlug = "", toc = [], children }: {
         <aside className="v6-docs__side" aria-label="Documentation sections">
           {/* The rail owns its own head. Without one there is nowhere for identity or search to live, which
               is why the previous version opened cold on a group label. */}
+          {/* The mark carries the way home; "Docs" names where you are.
+              It used to read "Docs Vraelis", two words of similar weight sitting next to each other, which
+              made the rail's head say the company name a second time and left the section label small.
+              The wordmark is gone and the mark takes its place, so the escape route survives, and Docs is
+              now sized like the heading it is. */}
           <div className="v6-docs__brand">
+            <Link href={V6_HOME} className="v6-docs__brandmark" aria-label="Vraelis home">
+              <svg viewBox={MARK_VIEWBOX} aria-hidden><path d={MARK_PATH} fill="currentColor" /></svg>
+            </Link>
             <Link href={`${BASE}/docs`} className="v6-docs__brandname">Docs</Link>
-            <Link href={V6_HOME} className="v6-docs__brandback">Vraelis</Link>
           </div>
           <div className="v6-docs__search">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>

@@ -134,6 +134,7 @@
     "embedded-postgres": "^18.4.0-beta.17",
     "eslint": "^9",
     "eslint-config-next": "16.2.3",
+    "pngjs": "^7.0.0",
     "tailwindcss": "^4",
     "tsx": "^4.20.6",
     "typescript": "^5"

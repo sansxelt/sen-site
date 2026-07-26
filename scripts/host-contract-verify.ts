@@ -195,10 +195,35 @@ for (const [root, file] of [
   // Browser focus rings vanish against graphite, so the surface defines its own.
   ok("keyboard focus is defined on the product ground",
     /:focus-visible \{ outline: 2px solid var\(--focus-ring\)/.test(authCss));
-  ok("the document canvas follows the surface, so overscroll is not cream",
-    /html:has\(\[data-surface="app"\]\)/.test(authCss) && /--canvas:/.test(authCss));
-  ok("the root layout paints the canvas through that variable, not a literal",
-    /var\(--canvas, #FAF8F4\)/.test(readFileSync("app/layout.tsx", "utf8")));
+  // THE FIRST PAINTED FRAME.
+  //
+  // This used to assert that the root layout painted html through a --canvas variable that
+  // authenticated.css set. That mechanism worked, and it was still too late: a linked stylesheet has not
+  // applied when the browser paints its first frame, so arriving at any dark surface showed a white frame
+  // and the overscroll gutter past a dark page stayed pale. Screencasting a stalled load proved it — the
+  // first painted frame was pure white.
+  //
+  // The ground is now resolved by proxy.ts from the route it is about to serve and forwarded as a request
+  // header, so <html> carries the correct background AND colour scheme on its opening tag. colour-scheme is
+  // the half that actually mattered: it is what the browser uses for its own canvas, the overscroll region
+  // and native controls, all before the page exists.
+  const rootLayout = readFileSync("app/layout.tsx", "utf8");
+  const proxySrc = readFileSync("proxy.ts", "utf8");
+  ok("the proxy resolves a ground for every rendered request",
+    /export const GROUND_HEADER/.test(proxySrc) && /function groundFor\(/.test(proxySrc)
+    && /NextResponse\.rewrite\(url, withGround\(req, pathname\)\)/.test(proxySrc)
+    && /NextResponse\.next\(withGround\(req, path\)\)/.test(proxySrc));
+  ok("the root layout paints <html> from that ground, on the opening tag",
+    /GROUND_CSS\[ground\]\.scheme/.test(rootLayout) && /GROUND_CSS\[ground\]\.bg/.test(rootLayout)
+    && /headers\(\)\)\.get\(GROUND_HEADER\)/.test(rootLayout));
+  ok("colour scheme is set, not just background — it is what paints before any CSS",
+    /colorScheme: GROUND_CSS\[ground\]\.scheme/.test(rootLayout));
+  ok("the ground rule has ONE definition, shared by the proxy and the v6 shell",
+    /export function v6GroundAtTop/.test(readFileSync("lib/v6-routes.ts", "utf8"))
+    && /v6GroundAtTop/.test(proxySrc)
+    && /v6GroundAtTop/.test(readFileSync("app/dev-preview/v6/_system/shell.tsx", "utf8")));
+  ok("the product surface pins its canvas in the document, not only in the linked sheet",
+    /color-scheme: dark !important/.test(readFileSync("app/_components/product-surface.tsx", "utf8")));
 }
 
 console.log("\n── retired product surfaces are not reachable or indexable ──");

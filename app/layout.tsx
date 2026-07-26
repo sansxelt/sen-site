@@ -3,10 +3,12 @@ import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 import "./globals.css";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { stealthConfigured, verifyStealthCookie, STEALTH_COOKIE } from "../lib/stealth";
 import { StealthScreen } from "./_components/stealth-screen";
 import { socialCard } from "../lib/social-card";
+import { GROUND_CSS, type Ground } from "../lib/v6-routes";
+import { GROUND_HEADER } from "../proxy";
 
 // There used to be a second brand here (an AI-memory chatbot) with its own metadata and JSON-LD, selected
 // per request. isVraelisRequest() has returned a constant true for a long time, so none of it was ever
@@ -73,6 +75,12 @@ export default async function RootLayout({
   // is down the real tree is never rendered and never reaches the browser in any form. Cheap cookie read;
   // no session lookup, no DB. The cookie is HMAC-verified rather than string-compared, so one typed into a
   // cookie editor does not open anything.
+  // Which ground this request renders on, resolved by proxy.ts from the route it is serving. Absent (a
+  // direct hit that skipped the proxy) falls back to the previous site's cream, which is what every
+  // unmapped legacy path is.
+  const g = (await headers()).get(GROUND_HEADER);
+  const ground: Ground = g === "graphite" || g === "paper" ? g : "cream";
+
   if (stealthConfigured() && !verifyStealthCookie((await cookies()).get(STEALTH_COOKIE)?.value)) {
     return (
       // The curtain is graphite, so the canvas is painted graphite too. Left cream, the overscroll gutter
@@ -94,20 +102,23 @@ export default async function RootLayout({
   return (
       <html
         lang="en"
-        data-theme="light"
-        // Paint the canvas inline so it is correct from the FIRST frame. The palette comes from external
-        // stylesheets loaded below (and a legacy dark tokens.css loads first), so without this the bare
-        // canvas flashes on every navigation — the site uses <a href> full reloads.
+        data-theme={GROUND_CSS[ground].scheme}
+        // THE FIRST FRAME. This is the only place early enough to decide what colour the browser paints
+        // before it has parsed a single stylesheet, because it is on the opening <html> tag.
         //
-        // It reads a variable rather than a literal because the product renders inside this document and is
-        // graphite, not cream. An inline literal cannot be overridden by any stylesheet, so the product's
-        // theme layer could paint its own wrapper but never the document, leaving cream in the overscroll
-        // gutter and below a short page. Indirecting through --canvas lets authenticated.css set the value
-        // while the fallback keeps the marketing site painting cream with no stylesheet involved at all.
-        style={{ colorScheme: "var(--canvas-scheme, light)", background: "var(--canvas, #FAF8F4)" }}
+        // It used to read a --canvas variable that authenticated.css set. That was too late by construction:
+        // a linked stylesheet has not applied when the first frame is painted, so every arrival at a dark
+        // surface showed a white frame, and the overscroll gutter past the end of a dark page stayed pale.
+        // Screencasting a stalled load made it plain — the first painted frame was pure white.
+        //
+        // proxy.ts now resolves the ground per request from the route it is about to serve and forwards it
+        // here, so <html> carries the right background AND colour scheme immediately. Colour scheme is the
+        // half that actually caused the flash: it is what the browser uses for its own canvas, the
+        // overscroll region and native controls, all before the page exists.
+        style={{ colorScheme: GROUND_CSS[ground].scheme, background: GROUND_CSS[ground].bg }}
         className={`${GeistSans.variable} ${GeistMono.variable} h-full`}
       >
-        <body className="min-h-full" style={{ background: "var(--canvas, #FAF8F4)" }}>
+        <body className="min-h-full" style={{ background: GROUND_CSS[ground].bg }}>
           {/* The public stylesheets load for every request. They define the LIGHT half of the brand; the
               product and the auth round-trip load public/vraelis/authenticated.css on top of these and
               resolve the same token names to graphite (see app/_components/product-surface.tsx). tokens

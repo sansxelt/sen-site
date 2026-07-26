@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { isAppPath, legacyToNew, legacyRunsPath } from "./lib/app-routes";
+import { v6GroundAtTop, type Ground } from "./lib/v6-routes";
 
 // vraelis.com: Vraelis Rank. Clean public paths map onto the internal /rank
 // route group; /rank/* bounce back to their clean alias so /rank never shows.
@@ -87,10 +88,33 @@ const VANITY_EXACT: Record<string, string> = {
   "/v/contact": "/contact",
 };
 
+// THE GROUND THIS REQUEST WILL RENDER ON, decided from the RESOLVED target rather than the incoming path,
+// because the target is what actually says which tree renders. The root layout reads this off the request
+// and paints <html> with it, which is the only moment early enough to matter: the browser paints its first
+// frame from the colour scheme on the opening <html> tag, before any stylesheet or inline <style> has been
+// seen. Establishing darkness anywhere further down the document is a white flash by construction.
+export const GROUND_HEADER = "x-vraelis-ground";
+
+function groundFor(target: string): Ground {
+  if (target.startsWith("/rank/app")) return "graphite";                 // the signed-in product
+  if (target === "/signin" || target === "/signup" || target.startsWith("/auth/")) return "graphite";
+  if (target === "/dev-preview/v6" || target.startsWith("/dev-preview/v6/")) {
+    return v6GroundAtTop(target.slice("/dev-preview/v6".length) || "/");
+  }
+  return "cream";                                                        // the previous generation
+}
+
+function withGround(req: NextRequest, target: string) {
+  const headers = new Headers(req.headers);
+  headers.set(GROUND_HEADER, groundFor(target));
+  return { request: { headers } };
+}
+
 function go(req: NextRequest, pathname: string, kind: "redirect" | "rewrite") {
   const url = req.nextUrl.clone();
   url.pathname = pathname;
-  return kind === "redirect" ? NextResponse.redirect(url) : NextResponse.rewrite(url);
+  if (kind === "redirect") return NextResponse.redirect(url);
+  return NextResponse.rewrite(url, withGround(req, pathname));
 }
 
 function goAbs(req: NextRequest, absolute: string) {
@@ -280,7 +304,8 @@ export default function proxy(req: NextRequest) {
   }
   if (target) return go(req, target, "rewrite");
 
-  return NextResponse.next();
+  // Not rewritten: the path renders as itself. /signin and /auth/* arrive here, and they are graphite.
+  return NextResponse.next(withGround(req, path));
 }
 
 export const config = {

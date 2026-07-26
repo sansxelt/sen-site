@@ -379,34 +379,13 @@
 .v6-reveal--m { transform: translateY(22px) scale(0.99); } .v6-reveal--m.in { transform: none; }
 
 /* ══════════════════════════════════════════════════════════ SCROLLBAR ══
-   The site-wide scrollbar is the old brand emerald, keyed on [data-theme="light"] in globals.css. The v6
-   system has no accent colour at all: colour only ever means a state, and a scrollbar is not a state.
-   Scoped with :has so only documents actually rendering a v6 surface are affected; every other route keeps
-   the scrollbar it was designed with. The stealth curtain is covered too, since it is the same brand. */
-html:has(.v6),
-html:has(.v6) *,
-html:has(.vst-page),
-html:has(.vst-page) * {
-  scrollbar-color: rgba(140, 142, 148, 0.62) rgba(140, 142, 148, 0.12) !important;
-}
-html:has(.v6) ::-webkit-scrollbar-track,
-html:has(.vst-page) ::-webkit-scrollbar-track {
-  background: rgba(140, 142, 148, 0.12) !important; border-radius: 10px;
-}
-html:has(.v6) ::-webkit-scrollbar-thumb,
-html:has(.vst-page) ::-webkit-scrollbar-thumb {
-  background: rgba(140, 142, 148, 0.62) !important;
-  border-radius: 10px; border: 3px solid transparent; background-clip: content-box;
-  transition: background 160ms ease;
-}
-html:has(.v6) ::-webkit-scrollbar-thumb:hover,
-html:has(.vst-page) ::-webkit-scrollbar-thumb:hover {
-  background: rgba(170, 172, 178, 0.8) !important; background-clip: content-box;
-}
-html:has(.v6) ::-webkit-scrollbar-thumb:active,
-html:has(.vst-page) ::-webkit-scrollbar-thumb:active {
-  background: rgba(200, 202, 208, 0.9) !important; background-clip: content-box;
-}
+   Nothing here any more. This used to override a brand-emerald scrollbar that globals.css painted on every
+   document, scoped with :has to the surfaces v6 owned. Two things were wrong with that shape. It left the
+   graphite PRODUCT and the auth screens still green, because they are not .v6 surfaces. And it listed
+   .vst-page, a class the stealth curtain stopped using when it was reframed, so the curtain silently went
+   back to green and nothing failed.
+   The emerald is gone from globals.css instead, so monochrome is the default and there is nothing to
+   override. A rule that has to enumerate every surface it protects will always miss the next one. */
 
 /* ══════════════════════════════════════════════════════ SPECTRAL REVEAL ═════
    The sentence exists once. .v6-spec__t is the real text and the only thing announced, extracted or

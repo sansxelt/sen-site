@@ -23,6 +23,18 @@ export const AUTHENTICATED_CSS = "/vraelis/authenticated.css?v=8";
 export function ProductSurface({ children }: { children: ReactNode }) {
   return (
     <>
+      {/* THE CANVAS, PINNED IN THE DOCUMENT ITSELF, not in the linked sheet below.
+       *
+       * authenticated.css already sets --canvas and --canvas-scheme, which the root layout's inline paint
+       * reads. That is correct once the sheet has applied — and it is a LINKED stylesheet, so until it does
+       * the same inline paint falls back to cream and color-scheme:light. That gap is a real white frame
+       * every time someone arrives here from a dark page, which is exactly the walk from the site to
+       * sign-in. Being render-blocking does not help: the browser still paints its own canvas from the
+       * colour scheme before it has any of the page.
+       *
+       * This <style> is part of the HTML payload, so it applies while the document is being parsed, with no
+       * network in the way. Same device the v6 shell uses for its route canvas, for the same reason. */}
+      <style>{"html, body { background: #0A0A0B !important; color-scheme: dark !important; }"}</style>
       <link rel="stylesheet" href={AUTHENTICATED_CSS} />
       <div data-surface="app">{children}</div>
     </>
