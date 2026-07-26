@@ -38,6 +38,14 @@ const V6_EXACT: Record<string, string> = {
   "/integrations": "/dev-preview/v6/integrations",
   "/changelog": "/dev-preview/v6/changelog",
   "/docs": "/dev-preview/v6/docs",
+  // Added in the reframe: commercial, honesty and legal surfaces V6 was missing. /sso and /how-it-works are
+  // deliberately absent: SSO folded into /enterprise, and how-it-works is superseded by /method + /platform.
+  "/pricing": "/dev-preview/v6/pricing",
+  "/enterprise": "/dev-preview/v6/enterprise",
+  "/limitations": "/dev-preview/v6/limitations",
+  "/contact": "/dev-preview/v6/contact",
+  "/data-rights": "/dev-preview/v6/data-rights",
+  "/trademark": "/dev-preview/v6/trademark",
   "/readme": "/dev-preview/v6/readme",
 };
 
@@ -171,7 +179,12 @@ export default function proxy(req: NextRequest) {
   if (v) return go(req, v, "redirect");
 
   // Moved routes -> redirect to the new clean path.
-  if (path === "/security") return go(req, "/enterprise", "redirect");
+  //
+  // /security folded into /enterprise in the Rank-era site because there was no security page. V6 has a real
+  // one, so once promoted this rule would send readers away from a page that exists. Same shape as the
+  // /platform redirect in next.config: a rule that was correct for the site that had no such page, and wrong
+  // for the site that does.
+  if (!v6Public() && path === "/security") return go(req, "/enterprise", "redirect");
 
   // 2) Archived / retired -> home.
   if (
@@ -206,7 +219,12 @@ export default function proxy(req: NextRequest) {
   // Vraelis Rank now, and `/` already serves Rank, so these stray routes just
   // leak another product; send them all home. (Rank's own /app, /vote, /signin,
   // /api, /r, /embed, /og, /auth are untouched.)
-  if (SANSXEL.some((p) => path === p || path.startsWith(p + "/"))) {
+  // A PROMOTED V6 ROUTE IS NOT A RETIRED ONE. /platform is on this retired list from the sansxel era AND is
+  // a main nav item in V6, so with the flag on it was redirected home before the V6 map was ever consulted:
+  // a top-level navigation link that bounced to the homepage. The V6 map wins, and anything V6 does not
+  // claim is still retired exactly as before.
+  if (!(v6Public() && path in V6_EXACT)
+      && SANSXEL.some((p) => path === p || path.startsWith(p + "/"))) {
     return go(req, "/", "redirect");
   }
 

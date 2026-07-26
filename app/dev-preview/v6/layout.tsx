@@ -8,6 +8,8 @@ import { V6_ORIGIN } from "./_system/meta";
 import { META_TITLE, META_DESCRIPTION, OG_TITLE } from "./_system/positioning";
 import { socialCard } from "@/lib/social-card";
 
+const v6Public = process.env.NEXT_PUBLIC_VRAELIS_V6_PUBLIC === "1";
+
 // Root metadata for the design-06 public rebuild. Every positioning string here is imported, not written in
 // place: the company category is still being decided, and changing it must be one edit in
 // _system/positioning.ts rather than a sweep across the site. Preview routes stay noindex; the values are
@@ -28,7 +30,13 @@ export const metadata: Metadata = {
   authors: [{ name: "Vraelis" }],
   creator: "Vraelis",
   publisher: "Vraelis",
-  robots: { index: false, follow: false },
+  // INDEXABLE ONLY WHEN PROMOTED. While V6 serves from /dev-preview/v6 it must stay out of the index: a
+  // preview competing with the live site for the same queries is worse than either alone. Promoted, it IS
+  // the live site, and a noindex would quietly remove the company from search the moment the flag flipped.
+  // Same variable as the routing, so the two can never disagree about which site is public.
+  robots: v6Public
+    ? { index: true, follow: true }
+    : { index: false, follow: false },
   alternates: { canonical: `${V6_ORIGIN}/` },
   ...socialCard(OG_TITLE),
   openGraph: {

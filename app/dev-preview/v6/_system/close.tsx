@@ -39,10 +39,12 @@ export function ClosingScene({
 }
 
 const COLS: [string, [string, string][]][] = [
-  ["Product", [[`${BASE}/platform`, "Platform"], [`${BASE}/agents`, "Agents"], [`${BASE}/integrations`, "Integrations"], [`${BASE}/platform#current`, "Current capabilities"]]],
+  ["Product", [[`${BASE}/platform`, "Platform"], [`${BASE}/agents`, "Agents"], [`${BASE}/integrations`, "Integrations"], [`${BASE}/pricing`, "Pricing"], [`${BASE}/enterprise`, "Enterprise"]]],
   ["Developers", [[`${BASE}/developers`, "Documentation"], [`${BASE}/developers#api`, "API"], [`${BASE}/developers#cli`, "CLI"], [`${BASE}/developers#webhooks`, "Webhooks"]]],
   ["Company", [[`${BASE}/research`, "Research"], [`${BASE}/method`, "Method"], [`${BASE}/readme`, "README"], [`${BASE}/changelog`, "Changelog"], [`${BASE}/company`, "About"]]],
-  ["Trust", [[`${BASE}/security`, "Security"], [`${BASE}/privacy`, "Privacy"], [`${BASE}/terms`, "Terms"], [`${BASE}/subprocessors`, "Subprocessors"], [`${BASE}/company#contact`, "Contact"]]],
+  // "Contact" pointed at an anchor on the company page. It is now a page, because a contact anchor is where
+  // a contact route goes to be quietly missing.
+  ["Trust", [[`${BASE}/security`, "Security"], [`${BASE}/limitations`, "Limitations"], [`${BASE}/privacy`, "Privacy"], [`${BASE}/terms`, "Terms"], [`${BASE}/data-rights`, "Data rights"], [`${BASE}/subprocessors`, "Subprocessors"], [`${BASE}/trademark`, "Trademark"], [`${BASE}/contact`, "Contact"]]],
 ];
 
 export function SiteFooter() {

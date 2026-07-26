@@ -28,8 +28,21 @@ const nextConfig: NextConfig = {
       { source: "/audio", destination: "/", permanent: true },
       { source: "/platform-soon", destination: "/", permanent: true },
       { source: "/platform-soon/:path*", destination: "/", permanent: true },
-      { source: "/platform", destination: "/", permanent: true },
-      { source: "/platform/:path*", destination: "/", permanent: true },
+      // /platform IS A REAL PAGE ONCE V6 IS PROMOTED, and it is a main nav item.
+      //
+      // Config redirects run BEFORE middleware, so this fired before the proxy ever saw the request: with
+      // the flag on, a top-level nav link bounced to the homepage and no amount of proxy work could stop it.
+      // Retired while V6 is not public, absent once it is.
+      //
+      // Note the cost of `permanent: true` here: browsers cache a 308 indefinitely, so anyone who hit
+      // /platform before promotion keeps being redirected until their cache clears. That is the price of
+      // marking a redirect permanent on a path you might later want back.
+      ...(process.env.NEXT_PUBLIC_VRAELIS_V6_PUBLIC === "1"
+        ? []
+        : [
+          { source: "/platform", destination: "/", permanent: true },
+          { source: "/platform/:path*", destination: "/", permanent: true },
+        ]),
     ];
   },
 };
