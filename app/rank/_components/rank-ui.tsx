@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, type ReactNode, type RefObject } from "rea
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { ProductSurface } from "@/app/_components/product-surface";
 import { isAppPath } from "@/lib/app-routes";
 // The product-wide drawn icon set (one language, no glyph characters). Kept in its own
 // server-safe module so app pages can render the same icons without a client boundary.
@@ -258,7 +259,7 @@ function AppTopbar({ email }: { email: string | null }) {
   const item = { display: "flex", alignItems: "center", gap: 9, padding: "8px 10px", borderRadius: 9, fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" } as const;
   const itemIcon = { display: "inline-flex", color: "var(--fg-4)", flex: "none" } as const;
   return (
-    <header style={{ display: "flex", alignItems: "center", gap: 16, height: 64, padding: "0 var(--gutter)", borderBottom: "1px solid var(--line-1)", background: "rgba(250,248,244,0.88)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+    <header style={{ display: "flex", alignItems: "center", gap: 16, height: 64, padding: "0 var(--gutter)", borderBottom: "1px solid var(--line-1)", background: "var(--chrome-veil)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
       {/* Mobile-only hamburger: opens the accessible nav drawer. Hidden at desktop/tablet widths (CSS). */}
       <MobileNav />
       {/* in-app logo returns to the APP home (app.vraelis.com/); leaving the product entirely is the
@@ -271,14 +272,15 @@ function AppTopbar({ email }: { email: string | null }) {
             never flashes a wrong number. Both share height/radius/shadow so they read as one status set. */}
         {planLabel !== null && (
           <div className="vra-app-pills" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {/* Plan pill — full plan name, in the warm-neutral accent tint (the same --acc-soft / --acc-line /
-                --acc-deep the composer and the rest of this shell use). The old --accent-dim / --accent-border
+            {/* Plan pill — full plan name, on the neutral surface tokens. It used to wear the accent tint;
+                on this surface that is the green reserved for "it held", and a subscription tier is not a
+                verification result. The old --accent-dim / --accent-border
                 were the RETIRED teal accent (globals.css), which clashed with the emerald avatar beside it. */}
             <Link
               href="/plans"
               title={`${planLabel} plan`}
               aria-label={`Your plan: ${planLabel}`}
-              style={{ display: "inline-flex", alignItems: "center", height: 34, padding: "0 14px", borderRadius: 99, border: "1px solid var(--acc-line)", background: "var(--acc-soft)", textDecoration: "none", color: "var(--acc-deep)", fontSize: 12.5, fontWeight: 700, letterSpacing: "0.01em", whiteSpace: "nowrap", flex: "none" }}
+              style={{ display: "inline-flex", alignItems: "center", height: 34, padding: "0 14px", borderRadius: 99, border: "1px solid var(--line-2)", background: "var(--bg-2)", textDecoration: "none", color: "var(--fg-2)", fontSize: 12.5, fontWeight: 700, letterSpacing: "0.01em", whiteSpace: "nowrap", flex: "none" }}
             >
               {planLabel}
             </Link>
@@ -304,7 +306,7 @@ function AppTopbar({ email }: { email: string | null }) {
             // eslint-disable-next-line @next/next/no-img-element
             <img src={avatar} alt="" aria-hidden width={26} height={26} style={{ width: 26, height: 26, borderRadius: "50%", objectFit: "cover", display: "block" }} />
           ) : (
-            <span aria-hidden style={{ width: 26, height: 26, borderRadius: "50%", background: "linear-gradient(135deg, var(--acc), var(--acc-deep))", color: "#fff", display: "grid", placeItems: "center", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 12 }}>{(who || "?").slice(0, 1).toUpperCase()}</span>
+            <span aria-hidden style={{ width: 26, height: 26, borderRadius: "50%", background: "var(--bg-3)", border: "1px solid var(--line-2)", color: "var(--fg-1)", display: "grid", placeItems: "center", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 12 }}>{(who || "?").slice(0, 1).toUpperCase()}</span>
           )}
           <span aria-hidden style={{ display: "inline-flex", color: "var(--fg-3)" }}><Ic d={I.chevron} size={12} sw={2.2} /></span>
         </button>
@@ -359,7 +361,7 @@ function WorkspaceSwitcher() {
           {data.available.map((w) => (
             <button key={w.id} onClick={() => select(w.id)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "8px 10px", borderRadius: 8, border: "none", background: w.id === current.id ? "var(--acc-soft)" : "transparent", cursor: "pointer", textAlign: "left" }}>
               <span style={{ minWidth: 0 }}><span style={{ display: "block", fontSize: 13, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{w.isPersonal ? "Personal workspace" : w.name}</span><span style={{ fontSize: 10.5, color: "var(--fg-4)" }}>{WS_ROLE[w.role] ?? w.role}</span></span>
-              {w.id === current.id ? <span aria-hidden style={{ display: "inline-flex", color: "var(--acc-deep)" }}><Ic d={I.check} size={12} sw={2.4} /></span> : null}
+              {w.id === current.id ? <span aria-hidden style={{ display: "inline-flex", color: "var(--fg-1)" }}><Ic d={I.check} size={12} sw={2.4} /></span> : null}
             </button>
           ))}
         </div>
@@ -545,15 +547,21 @@ export function RankShell({ signedIn = false, email = null, appHost = false, chi
   const inApp = isAppPath(pathname) || (appHost && (pathname === "/" || consolePath));
 
   if (inApp) {
+    // The theme boundary belongs HERE, not deeper. app/rank/app/layout.tsx also mounts one, but that layout
+    // is a CHILD of this shell, so the topbar and the sidebar rendered outside it: the product came up with
+    // a graphite page framed by a cream sidebar and an emerald button. The chrome is part of the product,
+    // so the boundary has to start above it.
     return (
-      <div className="rank-root">
-        <style dangerouslySetInnerHTML={{ __html: SHELL_UI_CSS }} />
-        <div style={{ position: "sticky", top: 0, zIndex: 50 }}><AppTopbar email={email} /></div>
-        <div className="app-shell">
-          <AppSidebar />
-          <main className="app-main">{children}</main>
+      <ProductSurface>
+        <div className="rank-root">
+          <style dangerouslySetInnerHTML={{ __html: SHELL_UI_CSS }} />
+          <div style={{ position: "sticky", top: 0, zIndex: 50 }}><AppTopbar email={email} /></div>
+          <div className="app-shell">
+            <AppSidebar />
+            <main className="app-main">{children}</main>
+          </div>
         </div>
-      </div>
+      </ProductSurface>
     );
   }
 

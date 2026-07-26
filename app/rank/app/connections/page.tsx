@@ -197,8 +197,8 @@ export default function ConnectionsPage() {
         <div role={msg.ok ? "status" : "alert"} style={{
           borderRadius: "var(--r-sm)", padding: "11px 15px", fontSize: 13.5, lineHeight: 1.5, marginBottom: 20,
           border: `1px solid ${msg.ok ? "var(--acc-line)" : "rgba(178,58,58,0.25)"}`,
-          background: msg.ok ? "var(--acc-soft)" : "rgba(178,58,58,0.08)",
-          color: msg.ok ? "var(--acc-deep)" : "#9F2D2D",
+          background: msg.ok ? "var(--go-wash)" : "rgba(178,58,58,0.08)",
+          color: msg.ok ? "var(--go-ink)" : "var(--stop-ink)",
         }}>{msg.text}</div>
       ) : null}
 

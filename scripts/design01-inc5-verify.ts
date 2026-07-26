@@ -100,9 +100,20 @@ console.log("\n── visual drift corrected, motion respected ──");
 // teal tokens) is excluded.
 const pillIdx = ui.indexOf('href="/plans"');
 const pillStyle = ui.slice(pillIdx, pillIdx + 480);
-ok("the topbar plan pill uses the warm-neutral accent tokens", /var\(--acc-line\)/.test(pillStyle) && /var\(--acc-soft\)/.test(pillStyle) && /var\(--acc-deep\)/.test(pillStyle));
+// Was: "uses the warm-neutral ACCENT tokens". The pill has been moved off the accent entirely. On the
+// design-06 product surface the accent resolves to the same green the product uses for "this verification
+// held", and a subscription tier is not a verification result — a Free plan badge wearing the pass colour
+// is the product spending its only signal on billing. The rule the check now enforces is the durable one:
+// the pill names surface tokens, and never a state token or a literal.
+ok("the topbar plan pill uses neutral surface tokens", /var\(--line-2\)/.test(pillStyle) && /var\(--bg-2\)/.test(pillStyle) && /var\(--fg-2\)/.test(pillStyle));
+ok("the topbar plan pill never wears a state colour", !/--go-|--wait-|--stop-|--ok\)|--err\)|--warn\)/.test(pillStyle));
 ok("the topbar plan pill drops the retired teal tokens and the hardcoded hex", !/--accent-dim|--accent-border|#0A7B54/.test(pillStyle));
-ok("the composer's not_provable + error panels use the tok'd blocked/failed swatches", /background: "#F2ECDD"/.test(composer) && /background: "#F6ECE7"/.test(composer));
+// Was: literal hex swatches. Those literals are exactly what pinned the product to one theme, so the
+// check now asserts the PROPERTY it always meant — that these panels name a state rather than a colour —
+// and would fail again the moment someone reintroduces a hardcoded swatch here.
+ok("the composer's not_provable + error panels name a state token, never a literal swatch",
+  /background: "var\(--wait-wash\)"/.test(composer) && /background: "var\(--stop-wash\)"/.test(composer)
+  && !/background: "#[0-9A-Fa-f]{6}"/.test(composer));
 ok("the remaining infinite animations honour prefers-reduced-motion", /@media \(prefers-reduced-motion: reduce\) \{ \.pulse \{ animation: none; \} \.typing i \{ animation: none; \} \}/.test(css));
 
 console.log("\n── overflow + heading structure locked (verified live at 5 widths; guarded structurally) ──");

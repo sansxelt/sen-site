@@ -91,9 +91,9 @@ export function RegenerateButton({ appId, guaranteeId, approved, label = "Regene
 }
 
 function NotProvableCard({ np, onRetry, busy }: { np: NotProvable; onRetry: () => void; busy: boolean }) {
-  const label = { fontFamily: "var(--font-code)", fontSize: 10.5, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "#B45309", margin: 0 };
+  const label = { fontFamily: "var(--font-code)", fontSize: 10.5, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--wait-ink)", margin: 0 };
   return (
-    <div style={{ border: "1px solid #F3DFB0", background: "#FEF6E7", borderRadius: "var(--r-md, 10px)", padding: "clamp(16px, 2.2vw, 22px)", display: "grid", gap: 10 }}>
+    <div style={{ border: "1px solid var(--wait-line)", background: "var(--wait-wash)", borderRadius: "var(--r-md, 10px)", padding: "clamp(16px, 2.2vw, 22px)", display: "grid", gap: 10 }}>
       <div style={label}>Not provable yet</div>
       <p style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.55, margin: 0 }}>
         Vraelis understood the claim but could not build a test that would prove it against the current deployment, so there is no plan to approve.

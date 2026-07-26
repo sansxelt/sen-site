@@ -349,7 +349,7 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
       <div style={cardHead}>Enterprise readiness</div>
       <div className="card" style={{ background: "var(--bg-2)" }}>
         <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, marginBottom: 6 }}>OIDC SSO is available | SCIM is not enabled yet</div>
-        <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0, lineHeight: 1.7 }}>OIDC single sign-on can be configured above for any verified domain. SAML configuration is a scaffold (assertion sign-in coming later), and SCIM provisioning is not enabled yet. SSO authenticates users into the organization only, workspace and project access stay separate. <Link href="/contact" style={{ color: "var(--acc-deep)" }}>Contact us for enterprise SSO requirements →</Link></p>
+        <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0, lineHeight: 1.7 }}>OIDC single sign-on can be configured above for any verified domain. SAML configuration is a scaffold (assertion sign-in coming later), and SCIM provisioning is not enabled yet. SSO authenticates users into the organization only, workspace and project access stay separate. <Link href="/contact" style={{ color: "var(--go-ink)" }}>Contact us for enterprise SSO requirements →</Link></p>
       </div>
     </>
   );
@@ -406,7 +406,7 @@ function DomainRow({ d, token, canManage, onVerified, onToken, onRemoved, onHeal
     <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", padding: "13px 15px", background: "var(--bg-1)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
         <span style={{ fontFamily: "var(--font-code)", fontSize: 13.5, color: "var(--fg-1)", fontWeight: 600 }}>{d.domain}</span>
-        <span className="pill" style={{ fontSize: 10, color: verified ? "var(--acc-deep)" : "var(--fg-4)" }}>{verified ? "Verified" : "Unverified"}</span>
+        <span className="pill" style={{ fontSize: 10, color: verified ? "var(--go-ink)" : "var(--fg-4)" }}>{verified ? "Verified" : "Unverified"}</span>
       </div>
 
       {!verified && (

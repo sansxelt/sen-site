@@ -39,8 +39,8 @@ export default async function ConfirmSignupPage({
     return (
       <div style={{ maxWidth: 520, margin: "0 auto", padding: "clamp(24px, 4vw, 40px) clamp(16px, 4vw, 24px) 80px" }}>
         <div className="card" style={{ padding: "clamp(24px, 4vw, 40px)" }}>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 7, borderRadius: 999, border: "1px solid rgba(194,104,12,0.25)", background: "rgba(194,104,12,0.08)", color: "#C2680C", padding: "4px 11px", fontSize: 12, fontWeight: 600 }}>
-            <span style={{ width: 6, height: 6, borderRadius: 999, background: "#C2680C", flex: "none" }} />
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 7, borderRadius: 999, border: "1px solid var(--wait-line)", background: "var(--wait-wash)", color: "var(--wait-ink)", padding: "4px 11px", fontSize: 12, fontWeight: 600 }}>
+            <span style={{ width: 6, height: 6, borderRadius: 999, background: "var(--wait-ink)", flex: "none" }} />
             Link expired or invalid
           </span>
           <h1 style={{ marginTop: 18, fontSize: 26, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--fg-1)", lineHeight: 1.15 }}>

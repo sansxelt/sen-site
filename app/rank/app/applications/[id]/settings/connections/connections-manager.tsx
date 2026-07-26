@@ -49,8 +49,8 @@ import type { SafeConnection } from "@/lib/preflight/connections-db";
 const STATE_PILL: Record<string, { color: string; bg: string; bd: string }> = {
   connected: { color: "var(--acc-deep)", bg: "var(--acc-soft)", bd: "var(--acc-line)" },
   connected_manually: { color: "var(--acc-deep)", bg: "var(--acc-soft)", bd: "var(--acc-line)" },
-  needs_attention: { color: "#B45309", bg: "#FBF3E4", bd: "#F3DFB0" },
-  verification_failed: { color: "#C0392B", bg: "#FBEBEA", bd: "#F0C7C2" },
+  needs_attention: { color: "var(--wait-ink)", bg: "var(--wait-wash)", bd: "var(--wait-line)" },
+  verification_failed: { color: "var(--stop-ink)", bg: "var(--stop-wash)", bd: "var(--stop-line)" },
 };
 
 function StatePill({ state }: { state: ConnectionState }) {
@@ -403,8 +403,8 @@ export function ConnectionsManager({ appId, connections, canManage = true }: { a
         <div role={oauthResult.ok ? "status" : "alert"} style={{
           borderRadius: "var(--r-sm)", padding: "11px 15px", fontSize: 13.5, lineHeight: 1.5,
           border: `1px solid ${oauthResult.ok ? "var(--acc-line)" : "rgba(178,58,58,0.25)"}`,
-          background: oauthResult.ok ? "var(--acc-soft)" : "rgba(178,58,58,0.08)",
-          color: oauthResult.ok ? "var(--acc-deep)" : "#9F2D2D",
+          background: oauthResult.ok ? "var(--go-wash)" : "rgba(178,58,58,0.08)",
+          color: oauthResult.ok ? "var(--go-ink)" : "var(--stop-ink)",
         }}>{oauthResult.text}</div>
       ) : null}
       <section aria-label="Connections">

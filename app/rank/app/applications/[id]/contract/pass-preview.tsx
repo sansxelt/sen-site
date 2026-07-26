@@ -115,7 +115,7 @@ export function PassPreview({ appId, flowIds }: { appId: string; flowIds?: strin
           <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
             {data.readiness.roles.map((r) => (
               <div key={r.role} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5 }}>
-                <span aria-hidden style={{ width: 7, height: 7, borderRadius: "50%", flex: "none", background: r.ok ? "var(--acc-deep, #0A7B54)" : "var(--err)" }} />
+                <span aria-hidden style={{ width: 7, height: 7, borderRadius: "50%", flex: "none", background: r.ok ? "var(--go-ink)" : "var(--err)" }} />
                 <span style={{ color: "var(--fg-1)", fontWeight: 600 }}>{r.role}</span>
                 <span style={{ color: r.ok ? "var(--fg-3)" : "var(--err)" }}>
                   {r.ok ? "ready" : (r.reason || (r.credentialState === "missing" ? "no test account" : r.credentialState === "revoked" ? "account revoked" : !r.environmentMatch ? "environment mismatch" : "not ready"))}
@@ -124,7 +124,7 @@ export function PassPreview({ appId, flowIds }: { appId: string; flowIds?: strin
             ))}
           </div>
           {!data.readiness.ok ? (
-            <Link href={`/applications/${appId}/settings/connections`} style={{ display: "inline-block", marginTop: 8, fontSize: 12.5, fontWeight: 600, color: "var(--acc-deep, #0A7B54)", textDecoration: "none" }}>
+            <Link href={`/applications/${appId}/settings/connections`} style={{ display: "inline-block", marginTop: 8, fontSize: 12.5, fontWeight: 600, color: "var(--acc-deep)", textDecoration: "none" }}>
               Manage test accounts →
             </Link>
           ) : null}

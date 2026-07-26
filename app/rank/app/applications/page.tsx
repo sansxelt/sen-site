@@ -39,9 +39,9 @@ const isActiveRun = (run: RunSummary | null | undefined): boolean => !!run && !r
 // the pill icon matches the label (no verified-repair wrench on a Blocked pill).
 function decisionStyle(run: RunSummary | null | undefined): { label: string; mark?: string; color: string; bg: string; border: string } {
   const pub = run ? toPublicDecision(run.state, run.decision) : null;
-  if (pub === "verified") return { label: "Verified", mark: "verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
+  if (pub === "verified") return { label: "Verified", mark: "verified", color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" };
   if (pub === "failed") return { label: "Failed", mark: "failed", color: "var(--err)", bg: "rgba(194,84,12,0.08)", border: "rgba(194,84,12,0.28)" };
-  if (pub === "blocked") return { label: "Blocked", mark: "blocked", color: "#c2831a", bg: "rgba(194,131,26,0.09)", border: "rgba(194,131,26,0.3)" };
+  if (pub === "blocked") return { label: "Blocked", mark: "blocked", color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "rgba(194,131,26,0.3)" };
   if (isActiveRun(run)) return { label: "In progress", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
   return { label: "Not tested", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };
 }
@@ -130,7 +130,7 @@ export default async function ApplicationsPage() {
           {/* overview */}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 24 }}>
             <StatChip label="Applications" value={apps.length} />
-            <StatChip label="Verified" value={readyCount} color={readyCount ? "var(--acc-deep)" : undefined} />
+            <StatChip label="Verified" value={readyCount} color={readyCount ? "var(--go-ink)" : undefined} />
             <StatChip label="Failed" value={blockedCount} color={blockedCount ? "var(--err)" : undefined} />
             <StatChip label="Untested" value={untestedCount} />
           </div>

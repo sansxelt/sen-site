@@ -1,11 +1,14 @@
 /* eslint-disable */
 "use client";
 
-// Vraelis-branded sign-in surface. Same NextAuth mechanics as the
-// sansxel AuthPanel/OAuthSection (credentials via signIn(..,{redirect:
-// false}), email signup via /api/auth/register, OAuth via
-// signIn(provider)), but rendered light + green + centered using the
-// vraelis design tokens instead of the dark sansxel chrome.
+// The Vraelis sign-in surface. NextAuth mechanics only: credentials via signIn(.., {redirect:false}),
+// email signup via /api/auth/register, OAuth via signIn(provider). Nothing about credentials, providers,
+// sessions or redirects is reimplemented here.
+//
+// It renders on the design-06 product tokens, which it reaches by being mounted inside ProductSurface
+// rather than by knowing anything about the theme: every colour below is a token, so the same component
+// renders correctly on whichever ground it is placed on. The one thing it must NOT do is reach for a
+// colour directly, because that is what pinned the previous version to a cream-and-emerald surface.
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -26,7 +29,7 @@ const inputStyle: CSSProperties = {
   width: "100%",
   borderRadius: "var(--r-sm)",
   border: "1px solid var(--line-2)",
-  background: "var(--bg-1)",
+  background: "var(--bg-0)",
   padding: "12px 14px",
   fontSize: 14.5,
   color: "var(--fg-1)",
@@ -56,8 +59,8 @@ function GitHubIcon() {
 
 function statusStyle(tone: Tone): CSSProperties {
   const map: Record<Tone, { bg: string; border: string; color: string }> = {
-    success: { bg: "var(--acc-soft)", border: "var(--acc-line)", color: "var(--acc-deep)" },
-    error: { bg: "rgba(178,58,58,0.08)", border: "rgba(178,58,58,0.25)", color: "#9F2D2D" },
+    success: { bg: "var(--go-wash)", border: "var(--go-line)", color: "var(--go-ink)" },
+    error: { bg: "var(--stop-wash)", border: "var(--stop-line)", color: "var(--stop-ink)" },
     info: { bg: "var(--bg-2)", border: "var(--line-2)", color: "var(--fg-3)" },
   };
   const c = map[tone];
@@ -165,14 +168,15 @@ export function VraelisSignIn({
 
   return (
     <div style={{ width: "min(440px, 100%)", margin: "0 auto" }}>
+      {/* No wordmark in this header. Every surface that renders the form already puts one in its own
+          chrome, so a second one directly beneath it read as the page saying its own name twice. */}
       {showHeader ? (
       <div style={{ textAlign: "center", marginBottom: 18 }}>
-        <a href="/" style={{ textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.035em", display: "inline-block", marginBottom: 10 }}>Vraelis</a>
         <h1 className="display" style={{ fontSize: "clamp(1.6rem, 3.4vw, 2.2rem)", marginBottom: 8 }}>
-          {mode === "signup" ? <>Create your <span className="em">account</span>.</> : <>Access your <span className="em">account</span>.</>}
+          {mode === "signup" ? "Create your Vraelis account." : "Your Vraelis account."}
         </h1>
         <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.55 }}>
-          {mode === "signup" ? "Connect an AI-built system and verify it before production." : "Sign in to your applications, verification runs, evidence, and reports."}
+          {mode === "signup" ? "One account across the console, the CLI, and the API." : "The same account across the console, the CLI, and the API."}
         </p>
       </div>
       ) : null}
@@ -190,8 +194,8 @@ export function VraelisSignIn({
         {/* Clickwrap consent — gates every signup method (email + OAuth). */}
         {mode === "signup" && (
           <label style={{ display: "flex", gap: 9, alignItems: "flex-start", marginBottom: 16, fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, cursor: "pointer" }}>
-            <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} style={{ marginTop: 2, width: 15, height: 15, flex: "none", accentColor: "var(--acc-deep)", cursor: "pointer" }} />
-            <span>I agree to the <Link href={`${legalBase}/terms`} target="_blank" style={{ color: "var(--acc-deep)" }}>Terms</Link> and <Link href={`${legalBase}/privacy`} target="_blank" style={{ color: "var(--acc-deep)" }}>Privacy Policy</Link>.</span>
+            <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} style={{ marginTop: 2, width: 15, height: 15, flex: "none", accentColor: "var(--fg-1)", cursor: "pointer" }} />
+            <span>I agree to the <Link href={`${legalBase}/terms`} target="_blank" style={{ color: "var(--fg-1)", textDecoration: "underline", textUnderlineOffset: 2 }}>Terms</Link> and <Link href={`${legalBase}/privacy`} target="_blank" style={{ color: "var(--fg-1)", textDecoration: "underline", textUnderlineOffset: 2 }}>Privacy Policy</Link>.</span>
           </label>
         )}
 

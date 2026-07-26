@@ -108,7 +108,7 @@ export function WebhooksSection() {
               <div style={{ marginTop: 12, borderTop: "1px solid var(--line-1)", paddingTop: 10 }}>
                 {dels.length === 0 ? <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: 0 }}>No deliveries yet.</p> : dels.map((d) => (
                   <div key={d.id} style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center", flexWrap: "wrap", fontFamily: "var(--font-mono)", fontSize: 11.5, padding: "5px 0", color: "var(--fg-3)", borderTop: "1px solid var(--line-1)" }}>
-                    <span style={{ color: d.status === "success" ? "var(--acc-deep)" : "var(--err)", whiteSpace: "nowrap" }}>{d.status}{d.response_status ? ` ${d.response_status}` : ""}{d.attempts > 1 ? `, try ${d.attempts}` : ""}{d.test_id ? "" : ", test"}</span>
+                    <span style={{ color: d.status === "success" ? "var(--go-ink)" : "var(--err)", whiteSpace: "nowrap" }}>{d.status}{d.response_status ? ` ${d.response_status}` : ""}{d.attempts > 1 ? `, try ${d.attempts}` : ""}{d.test_id ? "" : ", test"}</span>
                     <span style={{ display: "flex", gap: 8, alignItems: "center", whiteSpace: "nowrap" }}>
                       <span>{new Date(d.created_at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
                       {d.status === "failed" && <button onClick={() => retry(h, d)} className="btn btn--ghost" style={{ fontSize: 11, padding: "2px 9px", gap: 5 }}><Ic d={I.retry} size={11} sw={2.2} />Retry</button>}

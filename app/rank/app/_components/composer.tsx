@@ -35,9 +35,9 @@ const DECISION: Record<Decision, { label: string; tone: "verified" | "failed" | 
   blocked: { label: "Blocked", tone: "blocked", line: "Vraelis could not reach a reliable conclusion." },
 };
 const toneStyle = (t: "verified" | "failed" | "blocked") =>
-  t === "verified" ? { color: "var(--a-verified, #2F5D50)", bg: "var(--acc-soft)", border: "var(--acc-line)" }
-  : t === "failed" ? { color: "var(--a-failed, #A8452A)", bg: "#F6ECE7", border: "#E7CFC5" }
-  : { color: "var(--a-blocked, #7E6F43)", bg: "#F2ECDD", border: "#E4D9BE" };
+  t === "verified" ? { color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" }
+  : t === "failed" ? { color: "var(--stop-ink)", bg: "var(--stop-wash)", border: "var(--stop-line)" }
+  : { color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "var(--wait-line)" };
 
 const lbl: CSSProperties = { fontFamily: "var(--font-code)", fontSize: 10.5, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)" };
 
@@ -127,7 +127,7 @@ export function Composer({ balance }: { balance: number }) {
     <section className="card" aria-label="New verification" style={{ background: "var(--bg-1)", padding: "clamp(22px, 3vw, 30px)", boxShadow: "var(--shadow-md)" }}>
       <div style={lbl}>New verification</div>
       <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3.4vw, 2.15rem)", letterSpacing: "-0.03em", margin: "8px 0 6px", lineHeight: 1.05 }}>
-        What should be <span className="em" style={{ color: "var(--acc-deep)" }}>true</span>?
+        What should be <span className="em">true</span>?
       </h1>
       <p style={{ margin: "0 0 20px", color: "var(--fg-3)", fontSize: 14, maxWidth: "56ch", lineHeight: 1.55 }}>
         Name a deployed build and the outcome it claims. Vraelis derives the plan it would run, shows it to you
@@ -150,7 +150,7 @@ export function Composer({ balance }: { balance: number }) {
           placeholder="A customer can upgrade to Pro, receive access immediately, and keep it after signing out and back in."
           value={claim} onChange={(e) => setClaim(e.target.value)} style={{ resize: "vertical", minHeight: 66 }}
           aria-invalid={claim.length > 0 && !claimOk} aria-describedby="cmp-claim-h" />
-        <span id="cmp-claim-h" style={{ fontSize: 12, color: claim.length > 0 && !claimOk ? "var(--a-failed, #A8452A)" : "var(--fg-4)" }}>
+        <span id="cmp-claim-h" style={{ fontSize: 12, color: claim.length > 0 && !claimOk ? "var(--stop-ink)" : "var(--fg-4)" }}>
           {claim.length > 0 && !claimOk ? "Describe a specific, observable result: what a person does and what should be true afterwards." : "Be specific about the result, identity, timing, or persistence that matters."}
         </span>
       </div>
@@ -168,9 +168,9 @@ export function Composer({ balance }: { balance: number }) {
       )}
 
       {phase.k === "not_provable" && (
-        <div role="status" style={{ marginTop: 16, border: "1px solid #E4D9BE", borderRadius: "var(--r-lg, 14px)", overflow: "hidden", background: "#F2ECDD" }}>
-          <div style={{ padding: "13px 16px", borderBottom: "1px solid #E4D9BE" }}>
-            <div style={{ ...lbl, color: "var(--a-blocked, #7E6F43)" }}>Cannot prove this yet</div>
+        <div role="status" style={{ marginTop: 16, border: "1px solid var(--wait-line)", borderRadius: "var(--r-lg, 14px)", overflow: "hidden", background: "var(--wait-wash)" }}>
+          <div style={{ padding: "13px 16px", borderBottom: "1px solid var(--wait-line)" }}>
+            <div style={{ ...lbl, color: "var(--wait-ink)" }}>Cannot prove this yet</div>
             <p style={{ margin: "6px 0 0", fontSize: 14, color: "var(--fg-1)" }}>{phase.draft.blockedReason || "Vraelis could not build a browser flow that would prove this outcome. Nothing was charged."}</p>
           </div>
           {phase.draft.remainingObligations.length > 0 && (
@@ -178,7 +178,7 @@ export function Composer({ balance }: { balance: number }) {
               {phase.draft.remainingObligations.map((o, i) => <li key={i} style={{ marginBottom: 4 }}>{o}</li>)}
             </ul>
           )}
-          <div style={{ padding: "12px 16px", borderTop: "1px solid #E4D9BE" }}>
+          <div style={{ padding: "12px 16px", borderTop: "1px solid var(--wait-line)" }}>
             <button className="btn btn--ghost" onClick={() => setPhase({ k: "compose" })}>Adjust the outcome</button>
           </div>
         </div>
@@ -196,7 +196,7 @@ export function Composer({ balance }: { balance: number }) {
       )}
 
       {phase.k === "error" && (
-        <div role="alert" style={{ marginTop: 16, padding: "13px 16px", borderRadius: "var(--r-md, 12px)", border: "1px solid #E7CFC5", background: "#F6ECE7", fontSize: 13.5, color: "var(--fg-1)" }}>
+        <div role="alert" style={{ marginTop: 16, padding: "13px 16px", borderRadius: "var(--r-md, 12px)", border: "1px solid var(--stop-line)", background: "var(--stop-wash)", fontSize: 13.5, color: "var(--fg-1)" }}>
           <div style={{ fontWeight: 600, marginBottom: 3 }}>{phase.verificationId ? "Still running" : phase.error.code === "cancelled" ? "Stopped watching" : "That step could not be completed"}</div>
           <div style={{ color: "var(--fg-2)", lineHeight: 1.5 }}>
             {phase.verificationId ? "This verification is already running and stays available under Verifications. It was not charged again." : phase.error.message}
@@ -230,7 +230,7 @@ export function Composer({ balance }: { balance: number }) {
         .cmp-inp::placeholder{color:var(--fg-5)}
         .cmp-inp:focus{outline:none;border-color:var(--acc-deep);box-shadow:0 0 0 3px var(--acc-soft);background:var(--bg-1)}
         .cmp-inp:disabled{opacity:.7}
-        .cmp-inp[aria-invalid="true"]{border-color:var(--a-failed,#A8452A)}
+        .cmp-inp[aria-invalid="true"]{border-color:var(--stop-ink)}
         .cmp-dot{width:7px;height:7px;border-radius:50%;background:var(--acc-deep);animation:cmpPulse 1.2s ease-in-out infinite}
         @keyframes cmpPulse{0%,100%{opacity:.35;transform:scale(.85)}50%{opacity:1;transform:scale(1)}}
         @media(prefers-reduced-motion:reduce){.cmp-dot{animation:none}}
@@ -254,11 +254,11 @@ function PlanPanel({ plan, balance, busy, stale, canReview, onReview, onApprove,
         <span style={lbl}>Proof plan</span>
         <span style={{ flex: 1 }} />
         <span aria-live="polite" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase",
-          color: approved ? "var(--a-verified, #2F5D50)" : "var(--fg-3)", padding: "3px 9px", borderRadius: 6,
+          color: approved ? "var(--go-ink)" : "var(--fg-3)", padding: "3px 9px", borderRadius: 6,
           background: approved ? "var(--acc-soft)" : "var(--bg-3)", border: `1px solid ${approved ? "var(--acc-line)" : "var(--line-2)"}` }}>
           {approved ? "Approved" : "Pending approval"}
         </span>
-        {exp && <span style={{ fontSize: 11.5, color: expired ? "var(--a-failed, #A8452A)" : "var(--fg-4)" }}>{exp}</span>}
+        {exp && <span style={{ fontSize: 11.5, color: expired ? "var(--stop-ink)" : "var(--fg-4)" }}>{exp}</span>}
       </div>
 
       <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--line-2)", fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5 }}>
@@ -291,12 +291,12 @@ function PlanPanel({ plan, balance, busy, stale, canReview, onReview, onApprove,
       )}
 
       {stale && (
-        <div role="status" style={{ margin: "0 16px 12px", padding: "10px 13px", borderRadius: 10, background: "#F2ECDD", border: "1px solid #E4D9BE", fontSize: 12.5, color: "var(--fg-1)" }}>
+        <div role="status" style={{ margin: "0 16px 12px", padding: "10px 13px", borderRadius: 10, background: "var(--wait-wash)", border: "1px solid var(--wait-line)", fontSize: 12.5, color: "var(--fg-1)" }}>
           You changed the deployment or the outcome, so this plan no longer matches. Review the updated plan before approving.
         </div>
       )}
       {!stale && expired && (
-        <div role="status" style={{ margin: "0 16px 12px", padding: "10px 13px", borderRadius: 10, background: "#F6ECE7", border: "1px solid #E7CFC5", fontSize: 12.5, color: "var(--fg-1)" }}>
+        <div role="status" style={{ margin: "0 16px 12px", padding: "10px 13px", borderRadius: 10, background: "var(--stop-wash)", border: "1px solid var(--stop-line)", fontSize: 12.5, color: "var(--fg-1)" }}>
           This plan expired. Review the outcome again to build a fresh one against the current build.
         </div>
       )}

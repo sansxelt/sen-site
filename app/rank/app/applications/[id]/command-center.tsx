@@ -11,9 +11,9 @@ import { LaunchPassButton } from "./launch-button";
 type Tone = { fg: string; bg: string; line: string };
 
 const RIBBON_COLOR: Record<RibbonFact["tone"], string> = {
-  good: "var(--acc-deep, #0A7B54)",
-  warn: "#B45309",
-  bad: "#C0392B",
+  good: "var(--go-ink)",
+  warn: "var(--wait-ink)",
+  bad: "var(--stop-ink)",
   muted: "var(--fg-4)",
 };
 

@@ -44,6 +44,18 @@ body { margin: 0; overflow-x: clip; max-width: 100%; }
   --ok: #0E9E6C;
   --warn: #C2680C;
   --err: #DC2626;
+
+  /* ── State triads ─────────────────────────────────────────────────────────────
+     A state is almost never one colour: it is an ink, the wash it sits on, and the
+     hairline around them. Those three travelled the product as loose hex literals
+     (#B45309 / #FEF6E7 / #F3DFB0 and friends, ~140 of them), which is why the
+     product could not be rethemed without editing ninety-five files. Named here,
+     one theme swap moves every badge, banner and pill at once.
+     These light values are the literals they replace, unchanged, so nothing that
+     already renders on cream shifts. */
+  --go-ink:    #0A7B54;  --go-wash:   #EAF5F0;  --go-line:   #C4DED3;
+  --wait-ink:  #B45309;  --wait-wash: #FEF6E7;  --wait-line: #F3DFB0;
+  --stop-ink:  #C0392B;  --stop-wash: #FBEBEA;  --stop-line: #F0C7C2;
   --rec: #DC2626;
   --rec-glow: rgba(220,38,38,0.4);
 
@@ -53,6 +65,10 @@ body { margin: 0; overflow-x: clip; max-width: 100%; }
   --line-3: rgba(28,27,24,0.20);
   --line-strong: rgba(28,27,24,0.32);
   --focus-ring: var(--acc);
+
+  /* The translucent ground under a sticky bar. Named because the app topbar and the auth header each had
+     their own copy of the cream literal, so neither followed the product onto graphite. */
+  --chrome-veil: rgba(250, 248, 244, 0.88);
 
   /* soft elevation */
   --shadow-card: 0 1px 2px rgba(28,27,24,0.04), 0 10px 28px -14px rgba(28,27,24,0.12);

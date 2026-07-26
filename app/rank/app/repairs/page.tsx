@@ -30,13 +30,13 @@ function timeAgo(iso: string | null | undefined): string {
 // conveyed by colour alone.
 const STATUS_STYLE: Record<string, { label: string; color: string; bg: string; border: string }> = {
   suggested: { label: "Suggested", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" },
-  applied_by_user: { label: "Awaiting verification", color: "#B45309", bg: "#FEF6E7", border: "#F3DFB0" },
-  verified: { label: "Verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" },
-  failed: { label: "Failed", color: "#C0392B", bg: "#FBEBEA", border: "#F0C7C2" },
+  applied_by_user: { label: "Awaiting verification", color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "var(--wait-line)" },
+  verified: { label: "Verified", color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" },
+  failed: { label: "Failed", color: "var(--stop-ink)", bg: "var(--stop-wash)", border: "var(--stop-line)" },
 };
 
 // Severity pill colours match the run report (app/rank/app/applications/[id]/passes/[runId]/page.tsx).
-const SEV_COLOR: Record<string, string> = { critical: "var(--err)", high: "#c2831a", medium: "var(--fg-3)", low: "var(--fg-4)" };
+const SEV_COLOR: Record<string, string> = { critical: "var(--err)", high: "var(--wait-ink)", medium: "var(--fg-3)", low: "var(--fg-4)" };
 const SEV_LABEL: Record<string, string> = { critical: "Critical", high: "High", medium: "Medium", low: "Low" };
 
 function RepairRowItem({ repair }: { repair: RepairRow }) {

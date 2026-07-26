@@ -7,10 +7,10 @@ import type { GuaranteeStatus } from "@/lib/preflight/guarantee-status";
 type DisplayKey = GuaranteeStatus | "draft";
 
 const TONE: Record<DisplayKey, { fg: string; bg: string; line: string; label: string; mark: string }> = {
-  verified: { fg: "var(--acc-deep)", bg: "var(--acc-soft)", line: "var(--acc-line)", label: "Verified", mark: I.check },
-  failed: { fg: "#A8452A", bg: "#F6ECE7", line: "#E7CFC5", label: "Failed", mark: I.x },
-  blocked: { fg: "#7E6F43", bg: "#F2ECDD", line: "#E4D9BE", label: "Blocked", mark: I.dash },
-  plan_review_required: { fg: "#B45309", bg: "#FEF6E7", line: "#F3DFB0", label: "Plan review required", mark: I.eye },
+  verified: { fg: "var(--go-ink)", bg: "var(--go-wash)", line: "var(--go-line)", label: "Verified", mark: I.check },
+  failed: { fg: "var(--stop-ink)", bg: "var(--stop-wash)", line: "var(--stop-line)", label: "Failed", mark: I.x },
+  blocked: { fg: "var(--wait-ink)", bg: "var(--wait-wash)", line: "var(--wait-line)", label: "Blocked", mark: I.dash },
+  plan_review_required: { fg: "var(--wait-ink)", bg: "var(--wait-wash)", line: "var(--wait-line)", label: "Plan review required", mark: I.eye },
   checking: { fg: "var(--fg-3)", bg: "var(--bg-2)", line: "var(--line-2)", label: "Checking", mark: I.dash },
   unproven: { fg: "var(--fg-4)", bg: "var(--bg-2)", line: "var(--line-2)", label: "Unproven", mark: I.dash },
   draft: { fg: "var(--fg-4)", bg: "var(--bg-2)", line: "var(--line-2)", label: "Draft", mark: I.dash },

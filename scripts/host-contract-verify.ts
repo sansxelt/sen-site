@@ -99,14 +99,27 @@ for (const [root, file] of [
 }
 
 // ── The theme boundary ───────────────────────────────────────────────────────────────────────────────────
-// One brand, two contexts. The authenticated token layer must not reach a public document, and the public
-// tokens must not be what the product resolves. The boundary is a single attribute, which is what makes this
-// checkable at all rather than a matter of remembering.
+// The product renders on design 06's graphite token layer; the marketing site keeps the light tokens. The
+// boundary is a single attribute, which is what makes this checkable at all rather than a matter of
+// remembering.
+//
+// WHAT THIS BLOCK USED TO ASSERT, AND WHY IT WAS REPLACED.
+//
+// It previously encoded the opposite contract: "the product is NOT dark, exactly one surface is dark (the
+// verification console), everything around it stays warm-neutral". Every one of those assertions passed
+// while the product wore no theme at all. They were checking that authenticated.css DECLARED a --c-ground,
+// a --a-accent and a .vconsole class, and it did — but nothing in the product referenced any of them, so the
+// interface rendered on the public marketing tokens from end to end. The file was internally consistent and
+// describing an interface that did not exist.
+//
+// The lesson is in scripts/contrast-verify now: a theme is real only if the product references it, which is
+// enforced there by a usage census. What is left here is the part this file is actually for — that the
+// boundary exists, is scoped, and cannot leak into a public document.
 {
-  console.log("\n── the authenticated theme is scoped, and does not leak ──");
+  console.log("\n── the product theme is scoped, and does not leak ──");
   const authCss = readFileSync("public/vraelis/authenticated.css", "utf8");
   const publicTokens = readFileSync("public/vraelis/tokens.css", "utf8");
-  const layout = readFileSync("app/rank/app/layout.tsx", "utf8");
+  const surface = readFileSync("app/_components/product-surface.tsx", "utf8");
 
   // Every rule must be scoped. An unscoped :root here would redefine the public palette for the whole
   // document the moment the sheet loads.
@@ -114,30 +127,57 @@ for (const [root, file] of [
     .map((b) => b.split("{")[0].trim())
     .filter((s) => s && !s.startsWith("/*") && !s.startsWith("@") && !s.includes("*/"));
   const unscoped = selectors.filter((s) => !s.includes('data-surface="app"'));
-  ok("every authenticated rule is scoped to the app surface", unscoped.length === 0, unscoped.join(" | "));
-  ok("the authenticated sheet never redefines :root", !/^\s*:root\s*\{/m.test(authCss));
-  ok("authenticated tokens do not appear in the public token file", !/--a-ground|--c-ground|--a-accent/.test(publicTokens));
+  ok("every product rule is scoped to the app surface", unscoped.length === 0, unscoped.join(" | "));
+  ok("the product sheet never redefines :root", !/^\s*:root\s*\{/m.test(authCss));
+  ok("product tokens do not appear in the public token file", !/--graphite|--g-fg|--canvas-scheme/.test(publicTokens));
 
-  ok("the authenticated layout establishes the surface attribute", /data-surface="app"/.test(layout));
-  ok("the authenticated stylesheet loads only in the authenticated layout", /authenticated\.css/.test(layout));
-  ok("the public layout does not load the authenticated stylesheet",
-    !readFileSync("app/rank/layout.tsx", "utf8").includes("authenticated.css"));
+  // ONE mount point, not a copy per layout. Three layouts need this boundary (the signed-in shell, the auth
+  // round-trip, sign-in) and when each carried its own <link> and wrapper they drifted: the app layout had
+  // one, both auth layouts had none, and the sheet they pointed at had gone dead anyway.
+  ok("the boundary is a single shared component", /data-surface="app"/.test(surface) && /authenticated\.css/.test(surface));
+  ok("the shared component carries a cache-busting version", /authenticated\.css\?v=\d+/.test(surface));
+  for (const [what, file] of [
+    ["the signed-in shell", "app/rank/_components/rank-ui.tsx"],
+    ["the auth round-trip", "app/auth/layout.tsx"],
+    ["sign-in", "app/signin/layout.tsx"],
+    ["the authenticated layout", "app/rank/app/layout.tsx"],
+  ] as const) {
+    ok(`${what} mounts the boundary through ProductSurface`, /<ProductSurface>/.test(readFileSync(file, "utf8")));
+  }
+  // The chrome is part of the product. Mounted only deeper, the topbar and sidebar rendered OUTSIDE the
+  // boundary and the product came up graphite inside a cream frame with an emerald button.
+  ok("the boundary opens ABOVE the app chrome, not below it",
+    /<ProductSurface>[\s\S]{0,400}<AppTopbar/.test(readFileSync("app/rank/_components/rank-ui.tsx", "utf8")));
+  // No public route may mount it: the marketing site is the light half of the same brand.
+  ok("no public marketing page mounts the product boundary",
+    !/<ProductSurface>/.test(readFileSync("app/rank/page.tsx", "utf8")));
 
-  console.log("\n── the dark console is a device, not the theme ──");
-  // Exactly one surface is dark. If a page hardcodes a dark background, the device has become an identity
-  // and the warm control plane it is meant to sit inside has quietly disappeared.
-  ok("the console ground is a token, not a hardcoded colour", /--c-ground:/.test(authCss));
-  ok("the console is reachable as one class", /\.vconsole\s*\{/.test(authCss));
-  // Pure black on every layer flattens depth and reads as a terminal rather than as this brand.
-  // Comments are stripped first: the sheet explains this rule in prose, and the prose must not fail it.
+  console.log("\n── the product ground, and colour that only ever means state ──");
   const authRules = authCss.replace(/\/\*[\s\S]*?\*\//g, "");
-  ok("no pure black is used", !/#000\b|#000000/i.test(authRules));
+  // Near-black, never pure black: #000 on every layer flattens depth and reads as a terminal. Shadows are
+  // exempt — a shadow IS black, at low alpha.
+  const surfaceTokens = [...authRules.matchAll(/--bg-\d:\s*(#[0-9a-fA-F]{6})/g)].map((m) => m[1]);
+  ok(`no surface token is pure black (${surfaceTokens.length} grounds)`,
+    surfaceTokens.length >= 4 && !surfaceTokens.some((c) => /^#000000$/i.test(c)), surfaceTokens.join(" "));
+  // Design 06 has no accent hue: the primary action is contrast. An accent that is a colour is an accent
+  // competing with the state signals, which is the one thing colour is reserved for here.
+  const accent = (authRules.match(/--acc:\s*(#[0-9a-fA-F]{6})/) ?? [])[1] ?? "";
+  const accentDeep = (authRules.match(/--acc-deep:\s*(#[0-9a-fA-F]{6})/) ?? [])[1] ?? "";
+  const isNeutral = (hex: string) => {
+    const h = hex.replace("#", "");
+    const [r, g, b] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16));
+    return Math.max(r, g, b) - Math.min(r, g, b) <= 6;
+  };
+  ok("the primary action is contrast, not a hue", !!accent && isNeutral(accent), accent);
+  ok("the accent text colour is contrast, not a hue", !!accentDeep && isNeutral(accentDeep), accentDeep);
+  // The three state triads are the ONLY colour, and each needs its ink, wash and hairline.
+  for (const s of ["go", "wait", "stop"]) {
+    ok(`the ${s} state is a full triad (ink, wash, line)`,
+      new RegExp(`--${s}-ink:`).test(authRules) && new RegExp(`--${s}-wash:`).test(authRules) && new RegExp(`--${s}-line:`).test(authRules));
+  }
   // Blocked must not be coloured as a failure: it is the honest third answer, not a broken run, and
-  // colouring it red would teach people to read "no verdict" as "something went wrong".
-  //
-  // Asserted as a PROPERTY rather than a literal hex, because the values legitimately move when contrast is
-  // corrected (they already did once). What must not change is that blocked and failed stay distinguishable
-  // and that blocked is not a red.
+  // colouring it red would teach people to read "no verdict" as "something went wrong". Asserted as a
+  // PROPERTY rather than a literal, because the values legitimately move when contrast is corrected.
   const hueOf = (hex: string) => {
     const h = hex.replace("#", "");
     const r = parseInt(h.slice(0, 2), 16) / 255, g = parseInt(h.slice(2, 4), 16) / 255, b = parseInt(h.slice(4, 6), 16) / 255;
@@ -146,20 +186,19 @@ for (const [root, file] of [
     const deg = max === r ? 60 * (((g - b) / d) % 6) : max === g ? 60 * ((b - r) / d + 2) : 60 * ((r - g) / d + 4);
     return (deg + 360) % 360;
   };
-  const grab = (name: string) => (authCss.match(new RegExp(`--${name}:\\s*(#[0-9a-fA-F]{6})`)) ?? [])[1] ?? "";
-  for (const scope of ["a", "c"]) {
-    const blocked = grab(`${scope}-blocked`), failed = grab(`${scope}-failed`);
-    ok(`${scope === "a" ? "shell" : "console"}: blocked and failed are different colours`, !!blocked && !!failed && blocked !== failed);
-    // Reds sit near 0 and 360. Blocked should read amber/olive, well away from that.
-    const hb = hueOf(blocked);
-    ok(`${scope === "a" ? "shell" : "console"}: blocked is not a red`, hb > 30 && hb < 90, `hue ${hb.toFixed(0)}deg`);
-  }
-  // The deep public green fails contrast on charcoal, so the console carries a lifted variant of the hue.
-  ok("the console uses a lifted accent that survives the dark ground", /--c-accent: #7FBFA8/.test(authCss));
-  // Browser focus rings vanish against charcoal, so both grounds define their own.
-  ok("keyboard focus is defined on both grounds",
-    /:focus-visible \{ outline: 2px solid var\(--a-focus\)/.test(authCss) && /\.vconsole :focus-visible/.test(authCss));
-  ok("reduced motion is respected", /prefers-reduced-motion/.test(authCss));
+  const grab = (name: string) => (authRules.match(new RegExp(`--${name}:\\s*(#[0-9a-fA-F]{6})`)) ?? [])[1] ?? "";
+  const blocked = grab("wait-ink"), failed = grab("stop-ink"), verified = grab("go-ink");
+  ok("blocked, failed and verified are three different colours",
+    !!blocked && !!failed && !!verified && new Set([blocked, failed, verified]).size === 3);
+  const hb = hueOf(blocked);
+  ok("blocked is an amber, not a red", hb > 30 && hb < 90, `hue ${hb.toFixed(0)}deg`);
+  // Browser focus rings vanish against graphite, so the surface defines its own.
+  ok("keyboard focus is defined on the product ground",
+    /:focus-visible \{ outline: 2px solid var\(--focus-ring\)/.test(authCss));
+  ok("the document canvas follows the surface, so overscroll is not cream",
+    /html:has\(\[data-surface="app"\]\)/.test(authCss) && /--canvas:/.test(authCss));
+  ok("the root layout paints the canvas through that variable, not a literal",
+    /var\(--canvas, #FAF8F4\)/.test(readFileSync("app/layout.tsx", "utf8")));
 }
 
 console.log("\n── retired product surfaces are not reachable or indexable ──");

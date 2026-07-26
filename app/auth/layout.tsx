@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { ProductSurface } from "@/app/_components/product-surface";
 
 // Auth round-trip shell for /auth/* (verify-email, confirm-signup, verified, reset-password, error,
 // auto-signin).
@@ -9,19 +10,23 @@ import Link from "next/link";
 // not, so signing up walked you from a cream sign-in screen onto a near-black confirmation screen with a
 // different wordmark, in the middle of the flow. It read like a different product.
 //
-// ZoneShell is deliberately left alone rather than flipped to light: /checkout still depends on its dark
-// surface and carries hardcoded dark Tailwind classes that would go invisible on a light ground. The pages
-// here are already token-based (var(--fg-*), var(--bg-*), var(--line-*)), so they render correctly on the
-// cream theme with no per-page changes.
+// ZoneShell is deliberately left alone rather than flipped: /checkout still depends on its dark surface and
+// carries hardcoded dark Tailwind classes that would go invisible on a light ground.
+//
+// These pages are token-based (var(--fg-*), var(--bg-*), var(--line-*)), which is why wrapping them in
+// ProductSurface is the whole change needed to move them onto design 06: the tokens resolve to graphite
+// instead of cream and every page follows. Sign-up now walks from sign-in to confirmation to the product
+// across one continuous ground.
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
+    <ProductSurface>
     <div style={{ minHeight: "100svh", background: "var(--bg-0)", color: "var(--fg-1)" }}>
       <header
         style={{
           position: "sticky", top: 0, zIndex: 40,
           display: "flex", alignItems: "center", justifyContent: "space-between",
           height: 64, padding: "0 clamp(20px, 4vw, 64px)",
-          background: "rgba(250,248,244,0.88)",
+          background: "var(--chrome-veil)",
           backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
           borderBottom: "1px solid var(--line-1)",
         }}
@@ -47,5 +52,6 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         <div style={{ width: "100%", maxWidth: 560 }}>{children}</div>
       </main>
     </div>
+    </ProductSurface>
   );
 }

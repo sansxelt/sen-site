@@ -41,9 +41,9 @@ function shortId(v: string): string { return v.length > 12 ? `${v.slice(0, 8)}�
 // non-conclusions In progress / Not yet verified. It never exposes an internal decision string, and it uses the
 // approved warm-neutral tokens — no retired teal. This page implements NO second decision mapping. ──
 const TONE: Record<ToneKey, { color: string; bg: string; border: string }> = {
-  verified: { color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" },
-  failed: { color: "var(--a-failed, #A8452A)", bg: "#F6ECE7", border: "#E7CFC5" },
-  blocked: { color: "var(--a-blocked, #7E6F43)", bg: "#F2ECDD", border: "#E4D9BE" },
+  verified: { color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" },
+  failed: { color: "var(--stop-ink)", bg: "var(--stop-wash)", border: "var(--stop-line)" },
+  blocked: { color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "var(--wait-line)" },
   progress: { color: "var(--fg-3)", bg: "var(--bg-2)", border: "var(--line-2)" },
   unproven: { color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" },
 };
@@ -59,7 +59,7 @@ function flowStatus(state: string): { label: string; tone: ToneKey } {
   return { label: state ? state.charAt(0).toUpperCase() + state.slice(1) : "Pending", tone: "unproven" };
 }
 
-const SEV_COLOR: Record<string, string> = { critical: "var(--a-failed, #A8452A)", high: "#B45309", medium: "var(--fg-3)", low: "var(--fg-4)" };
+const SEV_COLOR: Record<string, string> = { critical: "var(--stop-ink)", high: "var(--wait-ink)", medium: "var(--fg-3)", low: "var(--fg-4)" };
 const SEV_LABEL: Record<string, string> = { critical: "Critical", high: "High", medium: "Medium", low: "Low" };
 const ENV_LABELS: Record<string, string> = { preview: "Preview", staging: "Staging", production: "Production" };
 const DEPLOY_PROVIDER_LABELS: Record<string, string> = { vercel: "Vercel", railway: "Railway", netlify: "Netlify", custom: "Custom" };
@@ -282,7 +282,7 @@ function FindingEvidence({ issue, index, flowName, screenshotIds, runId }: { iss
           <span className="pill" style={{ fontSize: 10, color: sevColor, borderColor: "var(--line-2)", background: "var(--bg-2)" }}>{SEV_LABEL[issue.severity] ?? issue.severity}</span>
           <span className="pill" style={{ fontSize: 10, color: "var(--fg-3)", borderColor: "var(--line-2)", background: "var(--bg-2)" }}>{catLabel(issue.category)}</span>
           {issue.first_seen_run && issue.first_seen_run !== runId
-            ? <span className="pill" style={{ fontSize: 10, color: "#B45309", borderColor: "#F3DFB0", background: "#FEF6E7" }} title="First detected in an earlier verification">Recurring</span>
+            ? <span className="pill" style={{ fontSize: 10, color: "var(--wait-ink)", borderColor: "var(--wait-line)", background: "var(--wait-wash)" }} title="First detected in an earlier verification">Recurring</span>
             : <span className="pill" style={{ fontSize: 10, color: "var(--fg-4)", borderColor: "var(--line-2)", background: "var(--bg-2)" }} title="First detected in this verification">First seen here</span>}
         </div>
       </div>
@@ -334,7 +334,7 @@ function FlowTimeline({ flow, displayName, screenshotIds, runId, showShots }: { 
             {auth.roles.length ? <span style={{ overflowWrap: "anywhere", minWidth: 0 }}>Role{auth.roles.length === 1 ? "" : "s"}: <span style={{ color: "var(--fg-2)", fontWeight: 600 }}>{auth.roles.join(", ")}</span></span> : null}
             {auth.accountLabel ? <span style={{ overflowWrap: "anywhere", minWidth: 0 }}>Account: {auth.accountLabel}</span> : null}
             {auth.environment ? <span className="pill" style={{ fontSize: 10 }}>{ENV_LABELS[auth.environment] ?? auth.environment}</span> : null}
-            <span>Credential: <span style={{ color: auth.credentialState === "active" ? "var(--acc-deep)" : "#B45309", fontWeight: 600 }}>{CRED_STATE_LABEL[auth.credentialState] ?? auth.credentialState}</span></span>
+            <span>Credential: <span style={{ color: auth.credentialState === "active" ? "var(--acc-deep)" : "var(--wait-ink)", fontWeight: 600 }}>{CRED_STATE_LABEL[auth.credentialState] ?? auth.credentialState}</span></span>
             {auth.sessionReuse ? <span>Session reuse on</span> : null}
           </div>
           {authFailLine ? <p style={{ fontSize: 12, color: "var(--fg-3)", lineHeight: 1.5, margin: "7px 0 0" }}>{authFailLine}</p> : null}
@@ -348,9 +348,9 @@ function FlowTimeline({ flow, displayName, screenshotIds, runId, showShots }: { 
               const okk = s.status === "ok";
               const stepFailed = !okk && s.status != null && s.status !== "";
               return (
-                <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 10px", borderRadius: "var(--r-sm, 8px)", background: stepFailed ? "#F6ECE7" : "var(--bg-2)", border: `1px solid ${stepFailed ? "#E7CFC5" : "var(--line-2)"}` }}>
+                <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 10px", borderRadius: "var(--r-sm, 8px)", background: stepFailed ? "var(--stop-wash)" : "var(--bg-2)", border: `1px solid ${stepFailed ? "var(--stop-line)" : "var(--line-2)"}` }}>
                   <span aria-hidden style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-5)", flex: "none", marginTop: 2, width: 18, textAlign: "right" }}>{i + 1}</span>
-                  <span aria-hidden style={{ display: "inline-flex", color: okk ? "var(--acc-deep)" : stepFailed ? "var(--a-failed, #A8452A)" : "var(--fg-4)", flex: "none", marginTop: 3 }}><Ic d={okk ? I.check : stepFailed ? I.x : I.dash} size={13} sw={2.4} /></span>
+                  <span aria-hidden style={{ display: "inline-flex", color: okk ? "var(--acc-deep)" : stepFailed ? "var(--stop-ink)" : "var(--fg-4)", flex: "none", marginTop: 3 }}><Ic d={okk ? I.check : stepFailed ? I.x : I.dash} size={13} sw={2.4} /></span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     {/* The pass/fail/not-run outcome is otherwise only an aria-hidden icon + background tint;
                         this makes the per-step outcome available to assistive tech (WCAG 1.1.1 / 1.4.1). */}
@@ -632,7 +632,7 @@ export default async function VerificationResultPage({ params }: { params: Promi
                       <span className="pill" style={{ fontSize: 10, color: SEV_COLOR[issue.severity] ?? "var(--fg-4)", borderColor: "var(--line-2)", background: "var(--bg-2)", flex: "none" }}>{SEV_LABEL[issue.severity] ?? issue.severity}</span>
                       <span style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5, flex: "1 1 auto", minWidth: 0, wordBreak: "break-word" }}>{issue.title}</span>
                       {issue.first_seen_run && issue.first_seen_run !== runId
-                        ? <span className="pill" style={{ fontSize: 10, color: "#B45309", borderColor: "#F3DFB0", background: "#FEF6E7", flex: "none" }} title="This finding was first detected in an earlier verification">Recurring</span>
+                        ? <span className="pill" style={{ fontSize: 10, color: "var(--wait-ink)", borderColor: "var(--wait-line)", background: "var(--wait-wash)", flex: "none" }} title="This finding was first detected in an earlier verification">Recurring</span>
                         : <span className="pill" style={{ fontSize: 10, color: "var(--fg-4)", borderColor: "var(--line-2)", background: "var(--bg-2)", flex: "none" }} title="First detected in this verification">First seen here</span>}
                     </div>
                   ))}

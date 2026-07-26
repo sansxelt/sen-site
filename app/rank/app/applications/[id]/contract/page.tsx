@@ -315,7 +315,7 @@ export default async function ContractPage({ params }: { params: Promise<{ id: s
       <AppTabs appId={id} active="contract" />
 
       {prevApproved ? (
-        <div style={{ border: "1px solid #F3DFB0", background: "#FEF6E7", color: "#B45309", borderRadius: "var(--r-sm)", padding: "10px 14px", fontSize: 13, lineHeight: 1.55, marginBottom: 18 }}>
+        <div style={{ border: "1px solid var(--wait-line)", background: "var(--wait-wash)", color: "var(--wait-ink)", borderRadius: "var(--r-sm)", padding: "10px 14px", fontSize: 13, lineHeight: 1.55, marginBottom: 18 }}>
           Draft v{contract!.version}. The approved v{prevApproved.version} remains the version runs verify against until you approve this one.
         </div>
       ) : null}

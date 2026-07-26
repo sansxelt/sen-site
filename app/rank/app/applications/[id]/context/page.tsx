@@ -193,8 +193,8 @@ export default async function AppContextPage({ params }: { params: Promise<{ id:
 
       {/* ── Migration-7 notice: versioning not active yet (honest, full width) ─────────────────────── */}
       {!versioningActive ? (
-        <div role="status" style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "14px 16px", border: "1px solid var(--line-2)", borderLeft: "3px solid #F3DFB0", borderRadius: "var(--r-sm)", background: "var(--bg-1)", marginBottom: 24 }}>
-          <span style={{ color: "#B45309", flex: "none", marginTop: 1 }}><Ic d={I.alert} size={17} sw={1.8} /></span>
+        <div role="status" style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "14px 16px", border: "1px solid var(--line-2)", borderLeft: "3px solid var(--wait-line)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", marginBottom: 24 }}>
+          <span style={{ color: "var(--wait-ink)", flex: "none", marginTop: 1 }}><Ic d={I.alert} size={17} sw={1.8} /></span>
           <p style={{ fontSize: 13, color: "var(--fg-2)", lineHeight: 1.6, margin: 0 }}>
             Context versioning is not active yet: apply <span style={{ ...mono, fontSize: 12 }}>sql/vraelis-preflight-7-context-snapshots.sql</span> (migration 7).
             Nothing is lost; the current context below is live but unversioned.
@@ -239,10 +239,10 @@ export default async function AppContextPage({ params }: { params: Promise<{ id:
       {/* ── Stale-context notice: latest snapshot vs the approved contract's pinned snapshot ───────── */}
       {stale && staleDiff && pinnedSnap && approvedContract ? (
         <section style={sectionStyle} aria-label="Context changed since the approved contract">
-          <div style={{ padding: "14px 16px", border: "1px solid var(--line-2)", borderLeft: "3px solid #F3DFB0", borderRadius: "var(--r-sm)", background: "var(--bg-1)" }}>
+          <div style={{ padding: "14px 16px", border: "1px solid var(--line-2)", borderLeft: "3px solid var(--wait-line)", borderRadius: "var(--r-sm)", background: "var(--bg-1)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <span style={{ color: "#B45309" }}><Ic d={I.alert} size={15} sw={2} /></span>
-              <span style={{ fontSize: 13.5, fontWeight: 600, color: "#B45309" }}>Context has changed since the approved contract</span>
+              <span style={{ color: "var(--wait-ink)" }}><Ic d={I.alert} size={15} sw={2} /></span>
+              <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--wait-ink)" }}>Context has changed since the approved contract</span>
             </div>
             <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.55, margin: "0 0 10px" }}>
               Contract v{approvedContract.version} was approved against context version {pinnedSnap.version}.
@@ -346,8 +346,8 @@ export default async function AppContextPage({ params }: { params: Promise<{ id:
             </p>
             <div style={{ display: "grid", gap: 8 }}>
               {gaps.map((gap) => (
-                <div key={gap.what} style={{ display: "flex", gap: 12, alignItems: "baseline", padding: "11px 14px", border: "1px solid var(--line-2)", borderLeft: "3px solid #F3DFB0", borderRadius: "var(--r-sm)", background: "var(--bg-1)" }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: "#B45309", flex: "none" }}>{gap.what}</span>
+                <div key={gap.what} style={{ display: "flex", gap: 12, alignItems: "baseline", padding: "11px 14px", border: "1px solid var(--line-2)", borderLeft: "3px solid var(--wait-line)", borderRadius: "var(--r-sm)", background: "var(--bg-1)" }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "var(--wait-ink)", flex: "none" }}>{gap.what}</span>
                   <span style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5 }}>{gap.why}</span>
                 </div>
               ))}

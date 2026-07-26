@@ -72,10 +72,12 @@ export default async function RootLayout({
   // cookie editor does not open anything.
   if (stealthConfigured() && !verifyStealthCookie((await cookies()).get(STEALTH_COOKIE)?.value)) {
     return (
-      <html lang="en" data-theme="light" style={{ colorScheme: "light", background: "#FAF8F4" }} className={`${GeistSans.variable} ${GeistMono.variable} h-full`}>
-        <body className="min-h-full" style={{ background: "#FAF8F4" }}>
+      // The curtain is graphite, so the canvas is painted graphite too. Left cream, the overscroll gutter
+      // and the strip below a short viewport flashed warm paper around a near-black screen.
+      <html lang="en" data-theme="dark" style={{ colorScheme: "dark", background: "#0A0A0B" }} className={`${GeistSans.variable} ${GeistMono.variable} h-full`}>
+        <body className="min-h-full" style={{ background: "#0A0A0B" }}>
           <link rel="stylesheet" href="/vraelis/tokens.css?v=20" />
-          <link rel="stylesheet" href="/vraelis/styles.css?v=51" />
+          <link rel="stylesheet" href="/vraelis/styles.css?v=52" />
           <StealthScreen />
         </body>
       </html>
@@ -90,14 +92,19 @@ export default async function RootLayout({
       <html
         lang="en"
         data-theme="light"
-        // Paint the warm-paper floor (--bg-0) inline so the canvas is cream from the
-        // first frame. The Vraelis palette is set by external stylesheets loaded below
-        // (and a legacy dark tokens.css loads first), so without this the bare canvas
-        // flashes dark on every navigation (the site uses <a href> full reloads).
-        style={{ colorScheme: "light", background: "#FAF8F4" }}
+        // Paint the canvas inline so it is correct from the FIRST frame. The palette comes from external
+        // stylesheets loaded below (and a legacy dark tokens.css loads first), so without this the bare
+        // canvas flashes on every navigation — the site uses <a href> full reloads.
+        //
+        // It reads a variable rather than a literal because the product renders inside this document and is
+        // graphite, not cream. An inline literal cannot be overridden by any stylesheet, so the product's
+        // theme layer could paint its own wrapper but never the document, leaving cream in the overscroll
+        // gutter and below a short page. Indirecting through --canvas lets authenticated.css set the value
+        // while the fallback keeps the marketing site painting cream with no stylesheet involved at all.
+        style={{ colorScheme: "var(--canvas-scheme, light)", background: "var(--canvas, #FAF8F4)" }}
         className={`${GeistSans.variable} ${GeistMono.variable} h-full`}
       >
-        <body className="min-h-full" style={{ background: "#FAF8F4" }}>
+        <body className="min-h-full" style={{ background: "var(--canvas, #FAF8F4)" }}>
           {/* Vraelis stylesheets load for every vraelis request (marketing
               pages AND the shared /signin, /account flows) so the whole
               brand renders light + green. tokens before styles. */}
@@ -109,7 +116,7 @@ export default async function RootLayout({
           {/* ?v bust: bump on every CSS change so browsers don't serve a
               stale cached stylesheet (the static file URL is otherwise fixed). */}
           <link rel="stylesheet" href="/vraelis/tokens.css?v=20" />
-          <link rel="stylesheet" href="/vraelis/styles.css?v=51" />
+          <link rel="stylesheet" href="/vraelis/styles.css?v=52" />
           {children}
         </body>
       </html>

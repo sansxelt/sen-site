@@ -53,7 +53,7 @@ function guessEnvironment(host: string): string {
 }
 
 function Badge({ kind }: { kind: "required" | "recommended" | "optional" }) {
-  const c = kind === "required" ? { color: "#C0392B", bg: "#FBEBEA", bd: "#F0C7C2" }
+  const c = kind === "required" ? { color: "var(--stop-ink)", bg: "var(--stop-wash)", bd: "var(--stop-line)" }
     : kind === "recommended" ? { color: "var(--acc-deep)", bg: "var(--acc-soft)", bd: "var(--acc-line)" }
     : { color: "var(--fg-4)", bg: "var(--bg-2)", bd: "var(--line-2)" };
   return <span className="pill" style={{ fontSize: 9.5, color: c.color, background: c.bg, borderColor: c.bd }}>{kind}</span>;
@@ -278,7 +278,7 @@ export default function ConnectWorkspace() {
   const summaryRow = (label: string, done: boolean) => (
     <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, fontSize: 12.5 }}>
       <span style={{ color: "var(--fg-3)" }}>{label}</span>
-      <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: done ? "var(--acc-deep)" : "var(--fg-5)" }}>{done ? "Complete" : "Missing"}</span>
+      <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: done ? "var(--go-ink)" : "var(--fg-5)" }}>{done ? "Complete" : "Missing"}</span>
     </div>
   );
 

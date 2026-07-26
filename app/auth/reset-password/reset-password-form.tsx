@@ -20,8 +20,8 @@ const inputStyle: CSSProperties = {
 
 function statusStyle(tone: StatusTone): CSSProperties {
   const c = tone === "success"
-    ? { bg: "var(--acc-soft)", border: "var(--acc-line)", color: "var(--acc-deep)" }
-    : { bg: "rgba(178,58,58,0.08)", border: "rgba(178,58,58,0.25)", color: "#9F2D2D" };
+    ? { bg: "var(--go-wash)", border: "var(--go-line)", color: "var(--go-ink)" }
+    : { bg: "var(--stop-wash)", border: "var(--stop-line)", color: "var(--stop-ink)" };
   return { borderRadius: "var(--r-sm)", border: `1px solid ${c.border}`, background: c.bg, color: c.color, padding: "10px 14px", fontSize: 13.5 };
 }
 

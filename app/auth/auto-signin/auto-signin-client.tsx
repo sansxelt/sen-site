@@ -60,7 +60,7 @@ export function AutoSigninClient({
 
   return (
     <>
-      <span style={{ display: "inline-flex", alignItems: "center", gap: 7, borderRadius: 999, border: "1px solid var(--acc-line)", background: "var(--acc-soft)", color: "var(--acc-deep)", padding: "4px 11px", fontSize: 12, fontWeight: 600 }}>
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 7, borderRadius: 999, border: "1px solid var(--go-line)", background: "var(--go-wash)", color: "var(--go-ink)", padding: "4px 11px", fontSize: 12, fontWeight: 600 }}>
         <span style={{ width: 6, height: 6, borderRadius: 999, background: "var(--acc)", flex: "none" }} />
         Email verified
       </span>

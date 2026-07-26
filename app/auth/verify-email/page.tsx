@@ -12,11 +12,17 @@ type SearchParams = {
   status?: "expired" | "invalid" | "error";
 };
 
-type Tone = "success" | "warn" | "error";
+// Colour here means a state and nothing else, which is why "waiting" exists as its own neutral tone.
+// "Check your email" used to render on the success chip, in the same green the product uses for a
+// verification that HELD. Nothing has held at that point: the account is unconfirmed and the reader is
+// being asked to go and do something. Spending the strongest signal in the system on an instruction is
+// how that signal stops meaning anything by the time it appears on a real verdict.
+type Tone = "waiting" | "success" | "warn" | "error";
 const toneChip: Record<Tone, { bg: string; border: string; color: string; dot: string }> = {
-  success: { bg: "var(--acc-soft)", border: "var(--acc-line)", color: "var(--acc-deep)", dot: "var(--acc)" },
-  warn:    { bg: "rgba(194,104,12,0.08)", border: "rgba(194,104,12,0.25)", color: "#C2680C", dot: "#C2680C" },
-  error:   { bg: "rgba(178,58,58,0.08)", border: "rgba(178,58,58,0.25)", color: "#9F2D2D", dot: "#B23A3A" },
+  waiting: { bg: "var(--bg-2)", border: "var(--line-2)", color: "var(--fg-2)", dot: "var(--fg-3)" },
+  success: { bg: "var(--go-wash)", border: "var(--go-line)", color: "var(--go-ink)", dot: "var(--go-ink)" },
+  warn:    { bg: "var(--wait-wash)", border: "var(--wait-line)", color: "var(--wait-ink)", dot: "var(--wait-ink)" },
+  error:   { bg: "var(--stop-wash)", border: "var(--stop-line)", color: "var(--stop-ink)", dot: "var(--stop-ink)" },
 };
 
 function StatusPill({ tone, children }: { tone: Tone; children: React.ReactNode }) {
@@ -56,7 +62,7 @@ export default async function VerifyEmailPage({
 
         <div style={{ marginTop: 32, borderTop: "1px solid var(--line-2)", paddingTop: 22, textAlign: "center", fontSize: 14, color: "var(--fg-3)" }}>
           Already verified?{" "}
-          <Link href="/signin" style={{ color: "var(--acc-deep)", fontWeight: 600 }}>
+          <Link href="/signin" style={{ color: "var(--fg-1)", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: 2 }}>
             Sign in
           </Link>
         </div>
@@ -70,7 +76,7 @@ function PendingState({ email }: { email: string }) {
   const dot = { marginTop: 7, width: 4, height: 4, flex: "none", borderRadius: 999, background: "var(--fg-4)" } as const;
   return (
     <>
-      <StatusPill tone="success">Check your email</StatusPill>
+      <StatusPill tone="waiting">Check your email</StatusPill>
       <h1 style={h1Style}>Confirm your email to finish.</h1>
       <p style={bodyStyle}>
         We just sent a confirmation link to{" "}
@@ -146,7 +152,7 @@ function ErrorState({ email }: { email: string }) {
       <StatusPill tone="error">Something went wrong</StatusPill>
       <h1 style={h1Style}>We hit a snag verifying your email.</h1>
       <p style={bodyStyle}>
-        Try the link again in a minute, if it keeps failing, resend a fresh link below or email <a href="mailto:help@vraelis.com" style={{ color: "var(--acc-deep)", fontWeight: 600 }}>help@vraelis.com</a> and we&apos;ll sort it out.
+        Try the link again in a minute, if it keeps failing, resend a fresh link below or email <a href="mailto:help@vraelis.com" style={{ color: "var(--fg-1)", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: 2 }}>help@vraelis.com</a> and we&apos;ll sort it out.
       </p>
       <ResendVerification defaultEmail={email} />
     </>

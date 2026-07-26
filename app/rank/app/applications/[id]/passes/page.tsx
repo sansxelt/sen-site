@@ -32,10 +32,10 @@ type Pill = { label: string; color: string; bg: string; border: string };
 // its lifecycle state as in-progress or untested, muted.
 function runPill(decision: string | null, state: string): Pill {
   // "Verified", matching every other surface: a scoped decision, never a recommendation.
-  if (decision === "ready") return { label: "Verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
-  if (decision === "repair_verified") return { label: "Verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
-  if (decision === "needs_review") return { label: "Blocked", color: "#B45309", bg: "#FEF6E7", border: "#F3DFB0" };
-  if (decision === "blocked") return { label: "Failed", color: "#C0392B", bg: "#FBEBEA", border: "#F0C7C2" };
+  if (decision === "ready") return { label: "Verified", color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" };
+  if (decision === "repair_verified") return { label: "Verified", color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" };
+  if (decision === "needs_review") return { label: "Blocked", color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "var(--wait-line)" };
+  if (decision === "blocked") return { label: "Failed", color: "var(--stop-ink)", bg: "var(--stop-wash)", border: "var(--stop-line)" };
   const active = state === "queued" || state === "discovering" || state === "running" || state === "analyzing";
   return { label: active ? "In progress" : "No decision", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };
 }

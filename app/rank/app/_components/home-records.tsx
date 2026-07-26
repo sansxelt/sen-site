@@ -15,9 +15,9 @@ import { isActiveRun, runVerdict, systemProof, runningStage, timeAgo, type Tone,
 export { isActiveRun, timeAgo } from "@/lib/preflight/home-verdict";
 
 const TONE: Record<Tone, { color: string; bg: string; border: string }> = {
-  verified: { color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" },
-  failed: { color: "var(--a-failed, #A8452A)", bg: "#F6ECE7", border: "#E7CFC5" },
-  blocked: { color: "var(--a-blocked, #7E6F43)", bg: "#F2ECDD", border: "#E4D9BE" },
+  verified: { color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" },
+  failed: { color: "var(--stop-ink)", bg: "var(--stop-wash)", border: "var(--stop-line)" },
+  blocked: { color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "var(--wait-line)" },
   progress: { color: "var(--fg-3)", bg: "var(--bg-2)", border: "var(--line-2)" },
   unproven: { color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" },
 };
@@ -77,7 +77,7 @@ export function SectionError({ label }: { label: string }) {
 
 // ── Needs attention ───────────────────────────────────────────────────────────────────────────────────
 
-const SEV_COLOR: Record<string, string> = { critical: "var(--a-failed, #A8452A)", high: "#B45309", medium: "var(--fg-3)", low: "var(--fg-4)" };
+const SEV_COLOR: Record<string, string> = { critical: "var(--stop-ink)", high: "var(--wait-ink)", medium: "var(--fg-3)", low: "var(--fg-4)" };
 
 export function HomeAttention({ issues, error }: { issues: IssueRow[]; error?: boolean }) {
   if (error) return <SectionError label="Needs attention" />;

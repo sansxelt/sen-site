@@ -1,8 +1,19 @@
 "use client";
 
-// The stealth curtain. Shares the 404's calm paper field and restraint (app/not-found.tsx) but not its
-// oversized numeral: here the headline IS the composition. An earlier version put a redacted line above it
-// and the mark competed with the one sentence that carries the page, so it went.
+// The stealth curtain, in the V6 system.
+//
+// This is the ONLY page anyone following a link to vraelis.com sees while stealth is on, which makes it the
+// entire first impression: investors, a prospective design partner, anyone sent the domain. It was still
+// wearing the previous brand's warm paper and emerald bloom, so the front door announced a company that no
+// longer exists behind it.
+//
+// It cannot reuse the V6 stylesheet. Stealth renders from the ROOT layout, which never loads
+// app/dev-preview/v6/_system/v6.css, and importing it here would ship the design system to a page that
+// exists to ship nothing. So the V6 values are written out literally below and must be kept in step with
+// v6.css by hand; there is no import that would keep them honest.
+//
+// The composition follows V6's opening chapter: near-black graphite ground, one sentence at display weight,
+// one quiet line under it, nothing else. No mark, no bloom, no gradient doing work the type should do.
 //
 // The unlock gesture is below. It cannot be hidden (client code has to interpret keystrokes), so what
 // protects it is the server-enforced three-second wait and the attempt limiter. See lib/stealth.ts.
@@ -156,32 +167,17 @@ export function StealthScreen() {
   }, []);
 
   return (
-    <main
-      style={{
-        position: "relative",
-        minHeight: "100svh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        overflow: "hidden",
-        isolation: "isolate",
-        textAlign: "center",
-        padding: "clamp(40px, 8vw, 96px) var(--gutter)",
-        background: "radial-gradient(135% 100% at 50% 4%, var(--bg-1) 0%, var(--bg-0) 62%, var(--bg-2) 100%)",
-      }}
-    >
+    <main className="vst-root">
       <style>{ST_CSS}</style>
 
-      <div className="gridbg" aria-hidden style={{ opacity: 0.4 }} />
-      <div className="vst-bloom" aria-hidden />
-
-      <div className="wrap vst-stack">
-        <h1 className="vst-head vst-in vst-d1">
-          Vraelis is in <span className="em">stealth</span>.
+      <div className="vst-stack">
+        <p className="vst-kicker vst-in vst-d1">Vraelis</p>
+        <h1 className="vst-head vst-in vst-d2">
+          Not open yet.
         </h1>
-
-        <p className="vst-body vst-in vst-d2">
-          Not public yet. If you were meant to be here, you already know the way in.
+        <p className="vst-body vst-in vst-d3">
+          Vraelis independently proves that software built or changed by AI still delivers the outcome the
+          business depends on. If you were meant to be here, you already know the way in.
         </p>
       </div>
     </main>
@@ -189,44 +185,59 @@ export function StealthScreen() {
 }
 
 const ST_CSS = `
-/* Type only, sat a little above true centre. Dead centre reads as content that fell there; a touch high
-   reads as composed. */
+/* V6 VALUES, WRITTEN OUT. The V6 stylesheet is not loaded on this page and must not be: stealth exists to
+   ship nothing. Keep these in step with app/dev-preview/v6/_system/v6.css by hand. */
+.vst-root{
+  position:relative; min-height:100svh;
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden; isolation:isolate;
+  padding:clamp(40px,8vw,96px) clamp(20px,5vw,64px);
+  background:#0A0A0B;                 /* --graphite */
+  color:#FAFAFA;                      /* --g-fg */
+}
+
+/* Left-aligned, not centred. V6 opens on a left-set headline in a wide field; centring it here would be a
+   different company's composition wearing this one's colours. */
 .vst-stack{
   position:relative; z-index:1;
-  display:flex; flex-direction:column; align-items:center;
-  max-width:680px; margin:0 auto;
-  transform:translateY(-6%);
+  width:100%; max-width:720px;
+  transform:translateY(-4%);
 }
 
+.vst-kicker{
+  margin:0 0 18px;
+  font-size:13px; font-weight:500; letter-spacing:.14em; text-transform:uppercase;
+  color:#8E9095;                      /* --g-fg-3 */
+}
 .vst-head{
-  font-family:var(--font-display);
-  font-size:clamp(1.5rem, 3.4vw, 2.35rem);
-  font-weight:600; letter-spacing:-.02em; line-height:1.12;
-  color:var(--fg-1);
-  margin:0; /* nothing above it now, so no top margin to clear */
+  margin:0;
+  font-weight:600; letter-spacing:-.032em; line-height:1.0;
+  font-size:clamp(2.7rem,5vw,4.4rem); /* v6-d2xl */
+  color:#FAFAFA;
+  text-wrap:balance;
 }
 .vst-body{
-  font-size:clamp(1rem, 1.25vw, 1.12rem); line-height:1.55;
-  color:var(--fg-2); max-width:440px; margin:13px auto 0; text-wrap:pretty;
+  margin:20px 0 0; max-width:56ch;
+  font-size:clamp(1rem,1.2vw,1.1rem); line-height:1.6;
+  color:#C4C5C9;                      /* --g-fg-2 */
+  text-wrap:pretty;
 }
 
-.vst-bloom{
-  position:absolute; z-index:0; pointer-events:none;
-  top:44%; left:50%; width:min(880px, 122vw); height:min(880px, 122vw);
-  transform:translate(-50%,-50%);
-  background:radial-gradient(circle, var(--acc-glow) 0%, var(--acc-soft) 36%, transparent 68%);
-  animation:vst-breathe 10s var(--ease-out) infinite;
+/* One hairline, the way every V6 section separates itself. The only ornament on the page. */
+.vst-stack::after{
+  content:""; display:block; margin-top:34px;
+  height:1px; width:100%; max-width:220px;
+  background:rgba(255,255,255,0.12);  /* --g-line */
 }
 
-.vst-in{ animation:vst-rise .6s var(--ease-out) both; }
-.vst-d1{ animation-delay:120ms; }
-.vst-d2{ animation-delay:200ms; }
+.vst-in{ animation:vst-rise .62s cubic-bezier(.22,1,.36,1) both; }
+.vst-d1{ animation-delay:80ms; }
+.vst-d2{ animation-delay:150ms; }
+.vst-d3{ animation-delay:220ms; }
 
-@keyframes vst-rise{ from{ opacity:0; transform:translateY(14px); } to{ opacity:1; transform:none; } }
-@keyframes vst-breathe{ 0%,100%{ opacity:.45; transform:translate(-50%,-50%) scale(1); } 50%{ opacity:.8; transform:translate(-50%,-50%) scale(1.07); } }
+@keyframes vst-rise{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:none; } }
 
 @media (prefers-reduced-motion: reduce){
-  .vst-in, .vst-bloom{ animation:none !important; }
-  .vst-in{ opacity:1; transform:none; }
+  .vst-in{ animation:none !important; opacity:1; transform:none; }
 }
 `;

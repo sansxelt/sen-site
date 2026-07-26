@@ -27,8 +27,8 @@ function timeAgo(iso: string | null | undefined): string {
 
 // Severity accent used for the row's left border. Unknown severities fall back to the medium tone.
 const SEVERITY_COLOR: Record<string, string> = {
-  critical: "#C0392B",
-  high: "#B45309",
+  critical: "var(--stop-ink)",
+  high: "var(--wait-ink)",
   medium: "var(--fg-3)",
   low: "var(--fg-4)",
 };
@@ -37,8 +37,8 @@ const SEVERITY_COLOR: Record<string, string> = {
 // never by colour alone.
 function severityTone(severity: string): { color: string; bg: string; border: string } {
   switch (severity) {
-    case "critical": return { color: "#C0392B", bg: "#FBEBEA", border: "#F0C7C2" };
-    case "high": return { color: "#B45309", bg: "#FEF6E7", border: "#F3DFB0" };
+    case "critical": return { color: "var(--stop-ink)", bg: "var(--stop-wash)", border: "var(--stop-line)" };
+    case "high": return { color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "var(--wait-line)" };
     case "low": return { color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };
     default: return { color: "var(--fg-3)", bg: "var(--bg-2)", border: "var(--line-2)" };
   }
@@ -160,8 +160,8 @@ export default async function IssuesPage() {
           {/* counts */}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 24 }}>
             <StatChip label="Open" value={open.length} color={open.length ? "var(--fg-1)" : undefined} />
-            <StatChip label="Critical" value={criticalCount} color={criticalCount ? "#C0392B" : undefined} />
-            <StatChip label="High" value={highCount} color={highCount ? "#B45309" : undefined} />
+            <StatChip label="Critical" value={criticalCount} color={criticalCount ? "var(--stop-ink)" : undefined} />
+            <StatChip label="High" value={highCount} color={highCount ? "var(--wait-ink)" : undefined} />
             <StatChip label="Resolved" value={resolved.length} color={resolved.length ? "var(--acc-deep)" : undefined} />
           </div>
 

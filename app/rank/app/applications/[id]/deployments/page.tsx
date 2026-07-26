@@ -47,10 +47,10 @@ type Pill = { label: string; color: string; bg: string; border: string };
 
 // Decision AND text carry the status together (never colour alone).
 function verdictPill(decision: string | null, state: string): Pill {
-  if (decision === "ready") return { label: "Verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
-  if (decision === "repair_verified") return { label: "Verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
-  if (decision === "needs_review") return { label: "Blocked", color: "#B45309", bg: "#FEF6E7", border: "#F3DFB0" };
-  if (decision === "blocked") return { label: "Failed", color: "#C0392B", bg: "#FBEBEA", border: "#F0C7C2" };
+  if (decision === "ready") return { label: "Verified", color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" };
+  if (decision === "repair_verified") return { label: "Verified", color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" };
+  if (decision === "needs_review") return { label: "Blocked", color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "var(--wait-line)" };
+  if (decision === "blocked") return { label: "Failed", color: "var(--stop-ink)", bg: "var(--stop-wash)", border: "var(--stop-line)" };
   const active = state === "queued" || state === "discovering" || state === "running" || state === "analyzing";
   return { label: active ? "In progress" : "No decision", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };
 }
@@ -168,8 +168,8 @@ export default async function AppDeploymentsPage({ params }: { params: Promise<{
 
       {/* ── Migration-8 notice: deployment identity not active yet (honest, one line, full width) ──── */}
       {!deploymentsReady ? (
-        <div role="status" style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "14px 16px", border: "1px solid var(--line-2)", borderLeft: "3px solid #F3DFB0", borderRadius: "var(--r-sm)", background: "var(--bg-1)", marginBottom: 20 }}>
-          <span style={{ color: "#B45309", flex: "none", marginTop: 1 }}><Ic d={I.alert} size={17} sw={1.8} /></span>
+        <div role="status" style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "14px 16px", border: "1px solid var(--line-2)", borderLeft: "3px solid var(--wait-line)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", marginBottom: 20 }}>
+          <span style={{ color: "var(--wait-ink)", flex: "none", marginTop: 1 }}><Ic d={I.alert} size={17} sw={1.8} /></span>
           <p style={{ fontSize: 13, color: "var(--fg-2)", lineHeight: 1.6, margin: 0 }}>
             Deployment identity is not active yet: apply <span style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>sql/vraelis-preflight-8-deployments.sql</span> (migration 8).
             Nothing is lost; the verification history below still shows every URL your verifications tested.
@@ -227,7 +227,7 @@ export default async function AppDeploymentsPage({ params }: { params: Promise<{
               {currentRun ? (() => { const p = verdictPill(currentRun.decision, currentRun.state); return (
                 <span className="pill" style={{ fontSize: 10.5, color: p.color, background: p.bg, borderColor: p.border, flex: "none" }}><DecisionMark decision={currentRun.decision} />{p.label}</span>
               ); })() : (
-                <span className="pill" style={{ fontSize: 10.5, color: "#B45309", background: "#FEF6E7", borderColor: "#F3DFB0", flex: "none" }}>Unverified</span>
+                <span className="pill" style={{ fontSize: 10.5, color: "var(--wait-ink)", background: "var(--wait-wash)", borderColor: "var(--wait-line)", flex: "none" }}>Unverified</span>
               )}
             </div>
           </div>
@@ -271,7 +271,7 @@ export default async function AppDeploymentsPage({ params }: { params: Promise<{
                       {p && vr ? (
                         <span className="pill" style={{ fontSize: 10.5, color: p.color, background: p.bg, borderColor: p.border }}><DecisionMark decision={vr.decision} />{p.label}</span>
                       ) : (
-                        <span className="pill" style={{ fontSize: 10.5, color: "#B45309", background: "#FEF6E7", borderColor: "#F3DFB0" }}>Unverified</span>
+                        <span className="pill" style={{ fontSize: 10.5, color: "var(--wait-ink)", background: "var(--wait-wash)", borderColor: "var(--wait-line)" }}>Unverified</span>
                       )}
                     </div>
                   </div>

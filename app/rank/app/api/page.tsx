@@ -210,7 +210,7 @@ export default function ApiKeysPage() {
                   It can launch verifications{freshGrant.dailyCeilingCents ? `, up to $${(freshGrant.dailyCeilingCents / 100).toFixed(2)} per day` : ", with no daily spend limit"}.
                 </p>
               ) : (
-                <p style={{ margin: 0, fontSize: 12.5, color: "#B45309" }}>
+                <p style={{ margin: 0, fontSize: 12.5, color: "var(--wait-ink)" }}>
                   This key cannot launch verifications. To give it that, revoke it and create a new one with Preflight access set to &ldquo;Launch runs&rdquo;.
                 </p>
               )}

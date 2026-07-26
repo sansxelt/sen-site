@@ -40,10 +40,10 @@ const ACTIVE_RUN_STATES = new Set(["queued", "discovering", "running", "analyzin
 
 function decisionStyle(run: PassRow): { label: string; color: string; bg: string; border: string } {
   switch (run.decision) {
-    case "ready": return { label: "Verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
-    case "repair_verified": return { label: "Verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
-    case "needs_review": return { label: "Blocked", color: "#B45309", bg: "#FEF6E7", border: "#F3DFB0" };
-    case "blocked": return { label: "Failed", color: "#C0392B", bg: "#FBEBEA", border: "#F0C7C2" };
+    case "ready": return { label: "Verified", color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" };
+    case "repair_verified": return { label: "Verified", color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" };
+    case "needs_review": return { label: "Blocked", color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "var(--wait-line)" };
+    case "blocked": return { label: "Failed", color: "var(--stop-ink)", bg: "var(--stop-wash)", border: "var(--stop-line)" };
     default:
       if (ACTIVE_RUN_STATES.has(run.state)) return { label: "In progress", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };
       return { label: "No verdict", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };

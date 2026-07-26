@@ -178,7 +178,7 @@ export default async function GuaranteeDetailPage({ params }: { params: Promise<
                 <div style={{ display: "grid", gap: 8 }}>
                   {history.map((r) => {
                     const pub = toPublicDecision(r.state, r.decision);
-                    const tone = pub === "verified" ? "var(--acc-deep)" : pub === "failed" ? "#A8452A" : pub === "blocked" ? "#7E6F43" : "var(--fg-4)";
+                    const tone = pub === "verified" ? "var(--go-ink)" : pub === "failed" ? "var(--stop-ink)" : pub === "blocked" ? "var(--wait-ink)" : "var(--fg-4)";
                     return (
                       <Link key={r.id} href={`/applications/${id}/passes/${r.id}`} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", textDecoration: "none" }}>
                         <span aria-hidden style={{ width: 9, height: 9, borderRadius: "50%", background: tone, flex: "none" }} />

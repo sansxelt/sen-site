@@ -29,8 +29,8 @@ function timeAgo(iso: string | null | undefined): string {
 // Severity pill: label AND colour together, never colour alone.
 type Pill = { label: string; color: string; bg: string; border: string };
 const SEVERITY_PILLS: Record<string, Pill> = {
-  critical: { label: "Critical", color: "#C0392B", bg: "#FBEBEA", border: "#F0C7C2" },
-  high: { label: "High", color: "#B45309", bg: "#FEF6E7", border: "#F3DFB0" },
+  critical: { label: "Critical", color: "var(--stop-ink)", bg: "var(--stop-wash)", border: "var(--stop-line)" },
+  high: { label: "High", color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "var(--wait-line)" },
   medium: { label: "Medium", color: "var(--fg-3)", bg: "var(--bg-2)", border: "var(--line-2)" },
   low: { label: "Low", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" },
 };

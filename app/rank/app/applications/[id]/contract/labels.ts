@@ -8,7 +8,7 @@ export const SEVERITY_LABELS: Record<Severity, string> = {
 };
 // critical = red, important = amber literal, informational = grey (matches the app's status palette).
 export const SEVERITY_COLORS: Record<Severity, string> = {
-  critical: "var(--err)", important: "#c2831a", informational: "var(--fg-4)",
+  critical: "var(--err)", important: "var(--wait-ink)", informational: "var(--fg-4)",
 };
 
 // Known machine categories get a hand-written label; anything else is underscores-to-spaces, sentence case.

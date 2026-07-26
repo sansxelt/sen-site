@@ -55,11 +55,11 @@ function timeAgo(iso: string | null | undefined): string {
 // The launch-decision tones. Every status carries its label in text; color never stands alone.
 type Tone = { fg: string; bg: string; line: string };
 const TONE_READY: Tone = { fg: "var(--acc-deep)", bg: "var(--acc-soft)", line: "var(--acc-line)" };
-const TONE_REVIEW: Tone = { fg: "#B45309", bg: "#FEF6E7", line: "#F3DFB0" };
-const TONE_BLOCKED: Tone = { fg: "#C0392B", bg: "#FBEBEA", line: "#F0C7C2" };
+const TONE_REVIEW: Tone = { fg: "var(--wait-ink)", bg: "var(--wait-wash)", line: "var(--wait-line)" };
+const TONE_BLOCKED: Tone = { fg: "var(--stop-ink)", bg: "var(--stop-wash)", line: "var(--stop-line)" };
 const TONE_MUTED: Tone = { fg: "var(--fg-4)", bg: "var(--bg-2)", line: "var(--line-2)" };
 
-const SEV_COLOR: Record<string, string> = { critical: "#C0392B", high: "#B45309", medium: "var(--fg-3)", low: "var(--fg-4)" };
+const SEV_COLOR: Record<string, string> = { critical: "var(--stop-ink)", high: "var(--wait-ink)", medium: "var(--fg-3)", low: "var(--fg-4)" };
 const SEV_LABEL: Record<string, string> = { critical: "Critical", high: "High", medium: "Medium", low: "Low" };
 
 const ACTIVE_RUN_STATES = new Set(["queued", "discovering", "running", "analyzing"]);
@@ -298,10 +298,10 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
           different deployment exists and offers the one honest way forward: run a pass against it. ── */}
       {newerDeploy ? (
         <section aria-label="New deployment unverified"
-          style={{ border: "1px solid #F3DFB0", borderLeft: "4px solid #B45309", borderRadius: "var(--r-md)", background: "#FEF6E7", padding: "16px 18px", marginBottom: 14 }}>
+          style={{ border: "1px solid var(--wait-line)", borderLeft: "4px solid var(--wait-ink)", borderRadius: "var(--r-md)", background: "var(--wait-wash)", padding: "16px 18px", marginBottom: 14 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span aria-hidden style={{ display: "inline-flex", color: "#B45309" }}><Ic d={I.deploy} size={15} sw={2} /></span>
-            <span style={{ fontFamily: "var(--font-display)", fontWeight: 650, fontSize: 15, color: "#B45309" }}>New deployment unverified</span>
+            <span aria-hidden style={{ display: "inline-flex", color: "var(--wait-ink)" }}><Ic d={I.deploy} size={15} sw={2} /></span>
+            <span style={{ fontFamily: "var(--font-display)", fontWeight: 650, fontSize: 15, color: "var(--wait-ink)" }}>New deployment unverified</span>
           </div>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, fontWeight: 600, color: "var(--fg-1)", margin: "8px 0 0", wordBreak: "break-all" }}>
             {newerDeploy.deployment.url}

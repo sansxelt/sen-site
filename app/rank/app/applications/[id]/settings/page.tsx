@@ -234,8 +234,8 @@ export default async function AppSettingsPage({ params }: { params: Promise<{ id
             </p>
             <div style={{ display: "grid", gap: 8 }}>
               {gaps.map((g) => (
-                <div key={g.what} style={{ display: "flex", gap: 12, alignItems: "baseline", padding: "11px 14px", border: "1px solid var(--line-2)", borderLeft: "3px solid #F3DFB0", borderRadius: "var(--r-sm)", background: "var(--bg-1)" }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: "#B45309", flex: "none" }}>{g.what}</span>
+                <div key={g.what} style={{ display: "flex", gap: 12, alignItems: "baseline", padding: "11px 14px", border: "1px solid var(--line-2)", borderLeft: "3px solid var(--wait-line)", borderRadius: "var(--r-sm)", background: "var(--bg-1)" }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "var(--wait-ink)", flex: "none" }}>{g.what}</span>
                   <span style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5 }}>{g.why}</span>
                 </div>
               ))}

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { SignInHeader } from "./signin-header";
+import { ProductSurface } from "@/app/_components/product-surface";
 
 // vraelis.com is the only host now (the sansxel zone shell is retired), so /signin always renders the
 // clean, product-first surface. The root layout already provides the light body + vraelis stylesheets;
@@ -11,6 +12,7 @@ export default function SignInLayout({ children }: { children: ReactNode }) {
     // up behind it. The content column SCROLLS (min-height, not fixed 100dvh grid) and is top-padded rather
     // than vertically centered, so a tall form — the create-account panel with Terms, Google, GitHub, and
     // the email fields — is always fully reachable without being clipped at the bottom of the viewport.
+    <ProductSurface>
     <div style={{ position: "relative", minHeight: "100dvh", overflow: "clip" }}>
       {/* atmosphere: same bloom + hairline grid the homepage hero uses, bleeding up behind the bar */}
       <div className="glow glow--bleed" aria-hidden />
@@ -29,5 +31,6 @@ export default function SignInLayout({ children }: { children: ReactNode }) {
         </div>
       </div>
     </div>
+    </ProductSurface>
   );
 }

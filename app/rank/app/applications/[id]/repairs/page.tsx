@@ -31,9 +31,9 @@ function timeAgo(iso: string | null | undefined): string {
 type Pill = { label: string; color: string; bg: string; border: string };
 const STATUS_PILLS: Record<string, Pill> = {
   suggested: { label: "Suggested", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" },
-  applied_by_user: { label: "Applied", color: "#B45309", bg: "#FEF6E7", border: "#F3DFB0" },
-  verified: { label: "Verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" },
-  failed: { label: "Failed", color: "#C0392B", bg: "#FBEBEA", border: "#F0C7C2" },
+  applied_by_user: { label: "Applied", color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "var(--wait-line)" },
+  verified: { label: "Verified", color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" },
+  failed: { label: "Failed", color: "var(--stop-ink)", bg: "var(--stop-wash)", border: "var(--stop-line)" },
 };
 function statusPill(status: string): Pill {
   return STATUS_PILLS[status] ?? { label: status, color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };

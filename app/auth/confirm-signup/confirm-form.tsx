@@ -59,7 +59,7 @@ export function ConfirmSignupForm({ email, provider, name, token }: Props) {
       </div>
 
       {error && (
-        <div style={{ marginTop: 16, borderRadius: "var(--r-sm)", border: "1px solid rgba(178,58,58,0.25)", background: "rgba(178,58,58,0.08)", color: "#9F2D2D", padding: "10px 14px", fontSize: 12.5, lineHeight: 1.5 }}>
+        <div style={{ marginTop: 16, borderRadius: "var(--r-sm)", border: "1px solid var(--stop-line)", background: "var(--stop-wash)", color: "var(--stop-ink)", padding: "10px 14px", fontSize: 12.5, lineHeight: 1.5 }}>
           {error}
         </div>
       )}
