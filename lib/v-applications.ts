@@ -296,10 +296,40 @@ async function ownsContract(uid: string, contractId: string): Promise<boolean> {
   return !!data;
 }
 
+// ── APPROVAL FREEZES MEANING ───────────────────────────────────────────────────────────────────────────
+// One policy, used by every helper that writes semantic contract content.
+//
+// A verification run persists contract_id. If approved requirement or flow content can change in place
+// afterwards, that run's contract_id resolves to CURRENT meaning rather than the meaning approved when the
+// run began, and a rerun proves something different while still calling itself a rerun. History rewrites
+// itself silently.
+//
+// The flow helpers already enforced this through contractStatusForFlow. contractStatusForRequirement was
+// written, exported, and never wired to anything: addRequirement checked ownership but not status, and
+// updateRequirement and deleteRequirement checked neither. So an approved contract accepted a new
+// requirement, an edited requirement, and a deleted requirement.
+//
+// SEMANTIC content freezes at approval: requirement text, the requirement set and its order, flow steps and
+// assertions, the flow set. LIFECYCLE state does not: approval timestamps, execution linkage, run counters.
+//
+// A meaningful revision after approval is a NEW contract version, which prepareVerification already creates
+// per verification, not an edit to the one historical runs point at.
+async function contractAcceptsSemanticWrite(uid: string, contractId: string): Promise<boolean> {
+  const contract = await getContractById(uid, contractId);
+  return contract?.status === "draft";
+}
+
+async function requirementAcceptsSemanticWrite(uid: string, requirementId: string): Promise<boolean> {
+  // null covers "does not exist for this owner", which the callers already treat as a refusal.
+  return (await contractStatusForRequirement(uid, requirementId)) === "draft";
+}
+
 export async function addRequirement(userId: string, contractId: string, input: { requirement: string; category?: string; severity?: Severity; role?: string; area?: string }): Promise<ContractRequirement | null> {
   if (!isDatabaseConfigured()) return null;
   const uid = norm(userId);
   if (!(await ownsContract(uid, contractId))) return null;
+  // Approval freezes the requirement SET, not only the text of existing rows.
+  if (!(await contractAcceptsSemanticWrite(uid, contractId))) return null;
   const requirement = (input.requirement || "").trim().slice(0, 400);
   if (!requirement) return null;
   const { data } = await db().from("v_contract_requirements").insert({
@@ -323,6 +353,7 @@ export async function updateRequirement(
   patch: { enabled?: boolean; severity?: Severity; requirement?: string; reviewState?: "approved" | "rejected" },
 ): Promise<boolean> {
   if (!isDatabaseConfigured()) return false;
+  if (!(await requirementAcceptsSemanticWrite(norm(userId), id))) return false;
   const fields: Record<string, unknown> = { approved: true };
   if (typeof patch.enabled === "boolean") fields.enabled = patch.enabled;
   if (patch.severity) fields.severity = patch.severity;
@@ -337,6 +368,8 @@ export async function updateRequirement(
 
 export async function deleteRequirement(userId: string, id: string): Promise<boolean> {
   if (!isDatabaseConfigured()) return false;
+  // A deleted row leaves no timestamp, so this is the one mutation no later audit could detect.
+  if (!(await requirementAcceptsSemanticWrite(norm(userId), id))) return false;
   const { error } = await db().from("v_contract_requirements").delete().eq("user_id", norm(userId)).eq("id", id);
   return !error;
 }

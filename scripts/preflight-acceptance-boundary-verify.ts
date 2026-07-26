@@ -1,0 +1,212 @@
+// THE ACCEPTANCE BOUNDARY RATCHET.
+//
+// A run-creation inventory found that the coverage gate sits in the caller ABOVE the shared handler rather
+// than below every entrance, so the dashboard and rerun paths can start a run the public API would refuse
+// with claim_not_provable. The fix is a domain acceptance service that all three entrances call.
+//
+// That refactor runs through credit holds, idempotency and dispatch, so it is not something to do halfway.
+// This file exists to hold the line until it lands, and to keep holding it afterwards.
+//
+// It asserts two things about the SOURCE, not about runtime behaviour:
+//
+//   1. exactly the known set of customer-visible paths calls createRun, and nothing else does
+//   2. no route handler imports another route handler's POST/GET
+//
+// Both currently FAIL-BY-ADDITION only: the known violations are listed with the reason they exist and the
+// commit that will remove them. A NEW violation fails the suite immediately. That is the whole point: the
+// next entrance someone adds cannot quietly forget coverage the way these two did.
+//
+// Run: npm run preflight:acceptance:test
+
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { join, relative } from "node:path";
+
+let pass = 0, fail = 0;
+const ok = (n: string, c: boolean, d = "") => {
+  console.log(`${c ? "PASS" : "FAIL"}  ${n}${d ? `  (${d})` : ""}`);
+  if (c) pass++; else fail++;
+};
+
+const ROOT = process.cwd();
+const SEARCH_DIRS = ["app", "lib", "worker"];
+
+/** Every .ts/.tsx under the production directories. Scripts and tests are deliberately excluded. */
+function sources(): string[] {
+  const out: string[] = [];
+  const walk = (dir: string) => {
+    let entries: string[];
+    try { entries = readdirSync(dir); } catch { return; }
+    for (const e of entries) {
+      if (e === "node_modules" || e === ".next" || e.startsWith(".")) continue;
+      const p = join(dir, e);
+      if (statSync(p).isDirectory()) { walk(p); continue; }
+      if (/\.(ts|tsx)$/.test(e)) out.push(p);
+    }
+  };
+  for (const d of SEARCH_DIRS) walk(join(ROOT, d));
+  return out;
+}
+
+/** Comments are prose, and prose is not a call site. A first pass flagged lib/preflight/run-report-db.ts as
+ *  a third createRun caller; it is a sentence containing "createRun (stream 1's shared creator)". */
+function stripComments(src: string): string {
+  return src
+    .replace(/\/\*[\s\S]*?\*\//g, " ")     // block comments, which these files use heavily
+    .replace(/(^|[^:])\/\/[^\n]*/g, "$1"); // line comments, without eating the // inside a URL
+}
+
+const files = sources().map((p) => ({
+  path: relative(ROOT, p).replace(/\\/g, "/"),
+  text: stripComments(readFileSync(p, "utf8")),
+}));
+console.log(`\nscanned ${files.length} production source files\n`);
+
+// ── 1. who may create a durable customer-visible run ──────────────────────────────────────────────────
+//
+// KNOWN, and each one is a defect this ratchet is protecting, not an approved pattern:
+//   the dashboard route      creates without evaluating coverage
+//   the rerun route          creates without evaluating coverage
+//
+// When acceptVerificationRun() lands, BOTH move into it and this list becomes that single module.
+const KNOWN_CREATE_CALLERS = new Set([
+  "app/api/preflight/apps/[id]/runs/route.ts",
+  "app/api/preflight/runs/[runId]/rerun/route.ts",
+]);
+
+const createCallers = files
+  .filter((f) => /\bcreateRun\s*\(/.test(f.text))
+  .filter((f) => !/export (async )?function createRun/.test(f.text))   // the definition itself
+  .map((f) => f.path);
+
+const newCreateCallers = createCallers.filter((p) => !KNOWN_CREATE_CALLERS.has(p));
+ok("no NEW production path calls createRun directly",
+  newCreateCallers.length === 0,
+  newCreateCallers.length ? newCreateCallers.join(", ") : `${createCallers.length} known callers`);
+
+ok("the known createRun callers are still exactly the two the inventory found",
+  KNOWN_CREATE_CALLERS.size === 2
+  && [...KNOWN_CREATE_CALLERS].every((p) => createCallers.includes(p)),
+  createCallers.join(", "));
+
+// ── 2. no route handler may be another route handler's backend ────────────────────────────────────────
+//
+// KNOWN: the public verification API imports the dashboard route's POST and invokes it with a synthesized
+// Request. That is the pattern the acceptance service replaces.
+const KNOWN_ROUTE_TO_ROUTE = new Set(["app/api/v1/verifications/route.ts"]);
+
+const routeToRoute = files
+  .filter((f) => f.path.endsWith("/route.ts"))
+  .filter((f) => /import\s*\{[^}]*\b(POST|GET|PUT|PATCH|DELETE)\b[^}]*\}\s*from\s*["'][^"']*route["']/.test(f.text)
+    || /import\s*\{[^}]*\bPOST as \w+/.test(f.text))
+  .map((f) => f.path);
+
+const newRouteToRoute = routeToRoute.filter((p) => !KNOWN_ROUTE_TO_ROUTE.has(p));
+ok("no NEW route handler imports another route handler",
+  newRouteToRoute.length === 0,
+  newRouteToRoute.length ? newRouteToRoute.join(", ") : `${routeToRoute.length} known`);
+
+// ── 3. the coverage gate's current placement, recorded so a move is deliberate ─────────────────────────
+const coverageCallers = files
+  .filter((f) => /\bresolveCoverage\s*\(/.test(f.text))
+  .filter((f) => !/export (async )?function resolveCoverage/.test(f.text))
+  .map((f) => f.path);
+
+ok("the acceptance coverage gate is still only in the public API route",
+  coverageCallers.length === 1 && coverageCallers[0] === "app/api/v1/verifications/route.ts",
+  coverageCallers.join(", "));
+
+ok("...and therefore the dashboard route still does NOT evaluate coverage (the defect this tracks)",
+  !files.find((f) => f.path === "app/api/preflight/apps/[id]/runs/route.ts")?.text.includes("resolveCoverage"));
+
+ok("...and neither does the rerun route",
+  !files.find((f) => f.path === "app/api/preflight/runs/[runId]/rerun/route.ts")?.text.includes("resolveCoverage"));
+
+// ── 4. nothing may declare its own coverage verdict ───────────────────────────────────────────────────
+const selfDeclared = files.filter((f) =>
+  /readyToLaunch\s*:\s*true/.test(f.text) && !f.path.startsWith("lib/preflight/coverage"));
+ok("no path outside the coverage module asserts readyToLaunch: true",
+  selfDeclared.length === 0, selfDeclared.map((f) => f.path).join(", "));
+
+
+// ── APPROVAL FREEZES MEANING ──────────────────────────────────────────────────────────────────────────
+// A run persists contract_id. If approved semantic content can change in place, that id resolves to
+// current meaning rather than approved meaning, and a rerun proves something else while calling itself a
+// rerun. These assertions are source-level: they prove every semantic writer consults contract status.
+console.log("\n── approval freezes meaning ──");
+{
+  const va = files.find((f) => f.path === "lib/v-applications.ts");
+  const src = va?.text ?? "";
+  ok("lib/v-applications.ts was scanned", !!va);
+
+  // the shared policy exists rather than three ad-hoc checks
+  ok("a shared semantic-write policy exists",
+    /async function contractAcceptsSemanticWrite/.test(src)
+    && /async function requirementAcceptsSemanticWrite/.test(src));
+  ok("the policy admits writes only on a draft contract",
+    /contract\?\.status === "draft"/.test(src)
+    && /contractStatusForRequirement\(uid, requirementId\)\)\) === "draft"/.test(src.replace(/\s+/g, " ")) === false
+      ? /=== "draft"/.test(src) : true);
+
+  // each writer body must consult it. Slice each function body and look inside it, so a policy defined
+  // elsewhere in the file cannot make an unguarded writer look guarded.
+  const body = (name: string) => {
+    const i = src.indexOf(`export async function ${name}(`);
+    if (i < 0) return "";
+    const j = src.indexOf("\nexport ", i + 10);
+    return src.slice(i, j < 0 ? src.length : j);
+  };
+  for (const [fn, note] of [
+    ["addRequirement", "an approved contract must not accept a NEW requirement"],
+    ["updateRequirement", "approved requirement text must not be editable"],
+    ["deleteRequirement", "an approved requirement must not be deletable"],
+  ] as const) {
+    const b = body(fn);
+    ok(`${fn}: ${note}`,
+      b.length > 0 && /(contractAcceptsSemanticWrite|requirementAcceptsSemanticWrite)/.test(b),
+      b.length ? "guard present" : "function not found");
+  }
+
+  // the flow side was already correct; assert it stays that way
+  for (const fn of ["updateFlow", "deleteFlow", "addFlow"] as const) {
+    const b = body(fn);
+    if (!b) continue;
+    ok(`${fn} still consults contract status`,
+      /(contractStatusForFlow|contractAcceptsSemanticWrite|status === "approved"|getContractById)/.test(b),
+      "addFlow guards inline via getContractById + status check, not a named helper");
+  }
+
+  // and nothing may write these tables outside this module
+  // KNOWN direct writers of the requirement table, each recorded with its status:
+  //
+  //   lib/v-applications.ts                      the guarded helpers. Correct.
+  //   app/api/preflight/apps/[id]/contract/draft  creates a DRAFT contract and seeds it, then deletes it on
+  //                                              rollback. Pre-approval by construction. Acceptable.
+  //   lib/preflight/discovery-db.ts              OPEN DEFECT. applyMergePlan inserts and patches requirement
+  //                                              rows directly with no contract-status guard, and its caller
+  //                                              lib/preflight/discover-run.ts contains no reference to
+  //                                              status, approved or draft at all. Discovery can therefore
+  //                                              add to and edit an APPROVED contract, breaching "approval
+  //                                              freezes meaning" on a path the v-applications guards do not
+  //                                              cover. Not fixed here: whether discovery should refuse on an
+  //                                              approved contract or propose a new version is a product
+  //                                              decision, not a mechanical one.
+  const KNOWN_SEMANTIC_WRITERS = new Set([
+    "lib/v-applications.ts",
+    "app/api/preflight/apps/[id]/contract/draft/route.ts",
+    "lib/preflight/discovery-db.ts",
+  ]);
+  const rogue = files.filter((f) =>
+    !KNOWN_SEMANTIC_WRITERS.has(f.path)
+    && !f.path.startsWith("scripts/")
+    && /from\("v_contract_requirements"\)[\s\S]{0,80}\.(update|delete|insert|upsert)\(/.test(f.text));
+  ok("no NEW module writes requirement rows outside the known set",
+    rogue.length === 0, rogue.map((f) => f.path).join(", "));
+  ok("discovery remains a recorded open defect, not silently forgotten",
+    files.some((f) => f.path === "lib/preflight/discovery-db.ts"
+      && /from\("v_contract_requirements"\)[\s\S]{0,80}\.(insert|update)\(/.test(f.text)),
+    "applyMergePlan still writes requirement rows unguarded");
+}
+
+console.log(`
+${pass} passed, ${fail} failed`);
+process.exit(fail === 0 ? 0 : 1);
