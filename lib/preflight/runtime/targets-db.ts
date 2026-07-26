@@ -3,6 +3,7 @@
 // tables (v_runtime_targets, v_builds); never touches web rows. Degrades to null/empty if the tables aren't
 // migrated yet. No canary import: this is the customer path.
 
+import { contractAcceptsSemanticWrite } from "../../v-applications";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "../../supabase-admin";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
@@ -101,7 +102,28 @@ export async function listApiFlows(owner: string, appId: string, targetId: strin
   return ((data as ApiFlowRow[] | null) ?? []).map((f) => ({ ...f, steps: Array.isArray(f.steps) ? f.steps : [] }));
 }
 
+/* APPROVAL FREEZES MEANING, ON THIS SURFACE TOO.
+ *
+ * These three write v_test_flows, the same table the web flow helpers guard. The web path refuses on an
+ * approved contract in both the helper (lib/v-applications.ts) and the route; this parallel API-runtime
+ * path checked nothing, and its route read getApprovedContract only to STAMP contract_id onto the row
+ * rather than to refuse. So an approved contract's flow steps, name, goal, priority and enabled state were
+ * editable, and its flows deletable, through a customer-reachable route.
+ *
+ * The guard sits at the data layer for the same reason it does in applyMergePlan: a route check alone does
+ * not survive a direct caller, and it does not survive an approval that lands between the route's read and
+ * the write. A flow with no contract_id is unowned scratch and stays mutable. */
+async function flowContractAcceptsWrite(uid: string, flowId: string): Promise<boolean> {
+  const { data } = await db().from("v_test_flows").select("contract_id").eq("user_id", uid).eq("id", flowId).maybeSingle();
+  const contractId = (data as { contract_id?: string | null } | null)?.contract_id;
+  if (!contractId) return true;
+  return contractAcceptsSemanticWrite(uid, contractId);
+}
+
 export async function createApiFlow(owner: string, appId: string, targetId: string, contractId: string | null, input: { name: string; goal?: string; priority?: "critical" | "important" | "informational"; steps: unknown[] }): Promise<{ ok: true; id: string } | { ok: false; reason: string }> {
+  if (contractId && !(await contractAcceptsSemanticWrite(norm(owner), contractId))) {
+    return { ok: false, reason: "contract_approved" };
+  }
   const { data, error } = await db().from("v_test_flows").insert({
     user_id: norm(owner), application_id: appId, runtime_target_id: targetId, contract_id: contractId,
     name: input.name.slice(0, 140), goal: (input.goal || "").slice(0, 400) || null, priority: input.priority || "critical",
@@ -112,6 +134,7 @@ export async function createApiFlow(owner: string, appId: string, targetId: stri
 }
 
 export async function updateApiFlow(owner: string, appId: string, targetId: string, flowId: string, patch: { name?: string; goal?: string; priority?: "critical" | "important" | "informational"; steps?: unknown[]; enabled?: boolean }): Promise<boolean> {
+  if (!(await flowContractAcceptsWrite(norm(owner), flowId))) return false;
   const set: Record<string, unknown> = {};
   if (patch.name !== undefined) set.name = patch.name.slice(0, 140);
   if (patch.goal !== undefined) set.goal = (patch.goal || "").slice(0, 400) || null;
@@ -125,6 +148,7 @@ export async function updateApiFlow(owner: string, appId: string, targetId: stri
 }
 
 export async function deleteApiFlow(owner: string, appId: string, targetId: string, flowId: string): Promise<boolean> {
+  if (!(await flowContractAcceptsWrite(norm(owner), flowId))) return false;
   const { data } = await db().from("v_test_flows").delete()
     .eq("user_id", norm(owner)).eq("application_id", appId).eq("runtime_target_id", targetId).eq("id", flowId).select("id");
   return Array.isArray(data) && data.length > 0;
