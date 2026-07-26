@@ -1,11 +1,15 @@
 import Link from "next/link";
 import { ogMeta } from "@/lib/og-meta";
+import { V6_IS_LIVE } from "@/lib/v6-routes";
 
+  // A previous-generation demo. Still resolves for old links; not part of design 06, so not indexable once
+  // that is the live site.
 export const metadata = ogMeta({
   title: "Demo",
   description:
     "A walkthrough of a Vraelis verification: connect an AI-built app, approve the Production Contract, watch a real browser run the critical flows as two users, and follow one failure from evidence to a verified fix and a Verified decision.",
   path: "/demo",
+  index: !V6_IS_LIVE,
 });
 
 // Public walkthrough of the verification workflow. Every artifact rendered here is an

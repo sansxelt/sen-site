@@ -7,7 +7,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { docsByGroup, type Block } from "./docs";
-import { V6_BASE } from "@/lib/v6-routes";
+import { V6_BASE, V6_HOME } from "@/lib/v6-routes";
 
 const BASE = V6_BASE;
 export const dslug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -83,7 +83,7 @@ export function DocShell({ activeSlug = "", toc = [], children }: {
               is why the previous version opened cold on a group label. */}
           <div className="v6-docs__brand">
             <Link href={`${BASE}/docs`} className="v6-docs__brandname">Docs</Link>
-            <Link href={BASE} className="v6-docs__brandback">Vraelis</Link>
+            <Link href={V6_HOME} className="v6-docs__brandback">Vraelis</Link>
           </div>
           <div className="v6-docs__search">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>

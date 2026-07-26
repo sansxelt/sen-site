@@ -184,7 +184,7 @@ function Footer() {
           </div>
         </div>
         <Col title="Product" links={productLinks} />
-        <Col title="Developers" links={[["/developers", "Developer overview"], ["/developers#ci-gate", "CI gate"], ["/research", "Research"], ["/signin?callbackUrl=%2Fapi", "API & webhooks"]]} />
+        <Col title="Developers" links={[["/developers", "Developer overview"], ["/developers#cli", "CLI and CI"], ["/research", "Research"], ["/signin?callbackUrl=%2Fapi", "API & webhooks"]]} />
         <Col title="Account" links={[["/app", "Dashboard"], ["/account", "Account"], ["/billing", "Billing"], ["/signin", "Sign in"]]} />
         <Col title="Legal" links={[["/enterprise", "Enterprise & security"], ["/privacy", "Privacy"], ["/terms", "Terms"], ["/refunds", "Refunds"], ["/data-rights", "Data rights"], ["/subprocessors", "Subprocessors"], ["/trademark", "Trademark"], ["/contact", "Contact"]]} />
       </div>

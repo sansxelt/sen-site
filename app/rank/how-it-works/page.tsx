@@ -1,11 +1,16 @@
 import Link from "next/link";
 import { ogMeta } from "@/lib/og-meta";
+import { V6_IS_LIVE } from "@/lib/v6-routes";
 
+  // Superseded by design 06 (/method + /platform). It still resolves so old links do not 404, but once the
+  // new site is live this page must stop competing with it in search: nothing links here any more and it
+  // renders the previous generation's chrome. Same treatment /sso already has, applied conditionally.
 export const metadata = ogMeta({
   title: "How it works",
   description:
     "How Vraelis works: define the production requirements a system must keep, approve what runs, and Vraelis executes it against the exact build and environment, captures the evidence, and returns a truthful production decision.",
   path: "/how-it-works",
+  index: !V6_IS_LIVE,
 });
 
 function Icon({ d, size = 20 }: { d: string; size?: number }) {

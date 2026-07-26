@@ -29,13 +29,21 @@ function Ul({ items }: { items: ReactNode[] }) {
 /* The legal text is shared with the rank surface, so it names that surface's routes. Rewrite them to the
    V6 equivalents here rather than forking the copy: a crawl found /account and /refunds walking readers out
    of the preview from inside Privacy and Terms. */
-const V6_EQUIVALENT: Record<string, string> = {
-  "/account": `${V6_BASE}/app`,
-  "/refunds": `${V6_BASE}/refunds`,
-  "/terms": `${V6_BASE}/terms`,
-  "/privacy": `${V6_BASE}/privacy`,
-  "/billing": `${V6_BASE}/app`,
-};
+//
+// PROMOTED, TWO OF THESE BECOME DOWNGRADES. /account and /billing were sent to the app overview because the
+// preview had no equivalent of either. Once V6_BASE is "", the real /account and /billing resolve perfectly
+// well, so the rewrite stopped protecting anything and started sending a reader who clicked "billing
+// settings" to a dashboard overview instead. That is on Refunds and Terms, the pages someone reads while
+// disputing a charge, which is the worst place to make navigation vaguer.
+const V6_EQUIVALENT: Record<string, string> = V6_BASE === ""
+  ? { "/refunds": "/refunds", "/terms": "/terms", "/privacy": "/privacy" }
+  : {
+      "/account": `${V6_BASE}/app`,
+      "/refunds": `${V6_BASE}/refunds`,
+      "/terms": `${V6_BASE}/terms`,
+      "/privacy": `${V6_BASE}/privacy`,
+      "/billing": `${V6_BASE}/app`,
+    };
 
 function A({ href, children }: { href: string; children: ReactNode }) {
   // mailto and other schemes must not go through the router

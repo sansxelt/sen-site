@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PUBLIC_HOW_IT_WORKS } from "@/lib/v6-routes";
 
 /**
  * Vraelis 404. Server Component, zero JS — motion is pure CSS with a
@@ -45,7 +46,7 @@ export default function NotFound() {
 
         <div className="v404-actions v404-in v404-d3">
           <Link href="/" className="btn btn--lg">Back home</Link>
-          <Link href="/how-it-works" className="v404-link">See how Vraelis works</Link>
+          <Link href={PUBLIC_HOW_IT_WORKS} className="v404-link">See how Vraelis works</Link>
         </div>
       </div>
     </main>

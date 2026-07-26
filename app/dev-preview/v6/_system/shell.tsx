@@ -7,7 +7,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNo
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SiteFooter } from "./close";
-import { V6_BASE, V6_APP, v6SignInPath } from "@/lib/v6-routes";
+import { V6_BASE, V6_HOME, V6_APP, v6SignInPath } from "@/lib/v6-routes";
 
 // FOLLOWS THE PROMOTION FLAG. These were hardcoded to "/dev-preview/v6", which is precisely the mistake
 // lib/v6-routes.ts was written to prevent: it says every V6 destination lives there so promotion is one
@@ -158,7 +158,7 @@ function Brand() {
     }, 170);
   };
   return (
-    <Link href={BASE} className="v6-brand" aria-label="Vraelis home" onClick={restart}>Vraelis</Link>
+    <Link href={V6_HOME} className="v6-brand" aria-label="Vraelis home" onClick={restart}>Vraelis</Link>
   );
 }
 

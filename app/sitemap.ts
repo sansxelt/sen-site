@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { publishedArticles } from "@/app/rank/research/_articles";
 import { V6_EXACT, CLEAN_EXACT, v6Public } from "@/proxy";
+import { DOCS } from "@/app/dev-preview/v6/_content/docs";
 
 // The sitemap is DERIVED FROM THE ROUTING, not written alongside it.
 //
@@ -80,10 +81,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     .sort((a, b) => (WEIGHT[b]?.p ?? 0.5) - (WEIGHT[a]?.p ?? 0.5) || a.localeCompare(b))
     .map(entry);
 
-  // Research articles are the one section with a prefix rule rather than an exact mapping, so they cannot
-  // come from the maps. They still render from the previous site (design 06's /research is a thesis page
-  // with anchors, not an index of these), and nothing on the new site links to them, so they are listed
-  // only while they remain the real published writing. Unpublished ones are filtered out and 404.
+  // TWO SECTIONS ROUTE BY PREFIX RATHER THAN BY AN EXACT MAPPING, so neither can come from the maps above
+  // and both have to be listed explicitly. That is the seam this file has to keep watching: derivation
+  // covers every exact route automatically, and silently covers no prefix route at all.
+
+  // Research articles still render from the previous site (design 06's /research is a thesis page with
+  // anchors, not an index of these), and nothing on the new site links to them, so they are listed only
+  // while they remain the real published writing. Unpublished ones are filtered out and 404.
   const articles = publishedArticles().map((a) => ({
     url: `${BASE}/research/${a.slug}`,
     lastModified: now,
@@ -91,5 +95,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  return [...pages, ...articles];
+  // Docs articles are design 06's own, routed at /docs/<slug> by the prefix rule in proxy.ts. They return
+  // 200 with index,follow and are linked from /docs, so they would be crawled eventually; being absent from
+  // the sitemap only made that slower and less reliable. They exist as public pages just once promoted.
+  const docs = promoted
+    ? DOCS.map((d) => ({
+        url: `${BASE}/docs/${d.slug}`,
+        lastModified: now,
+        changeFrequency: "monthly" as Freq,
+        priority: 0.6,
+      }))
+    : [];
+
+  return [...pages, ...docs, ...articles];
 }

@@ -205,7 +205,7 @@ export function SubprocessorsTail({ H, P, A }: LegalPrims) {
       <P>We may add or replace a subprocessor as the product evolves. When we make a material change we will update this page. If you need advance notice of new subprocessors for a contract, contact us and we can arrange it.</P>
 
       <H>Contact</H>
-      <P>Questions about a subprocessor or a data-processing agreement? Email <A href="mailto:privacy@vraelis.com">privacy@vraelis.com</A>. See also our <A href="/dev-preview/v6/privacy">Privacy Policy</A>.</P>
+      <P>Questions about a subprocessor or a data-processing agreement? Email <A href="mailto:privacy@vraelis.com">privacy@vraelis.com</A>. See also our <A href="/privacy">Privacy Policy</A>.</P>
     </>
   );
 }

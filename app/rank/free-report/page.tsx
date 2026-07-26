@@ -1,14 +1,18 @@
 import Link from "next/link";
 import { ogMeta } from "@/lib/og-meta";
+import { V6_IS_LIVE } from "@/lib/v6-routes";
 
 // Public entry point for the free verification. New accounts start with free
 // credits; this page explains what one verification returns and routes into sign-in.
 // Marketing pattern mirrors /how-it-works (glow + grid hero, acard tiles, CTA row).
+  // A retired lead-generation surface. It still resolves for old links; once design 06 is live it is not
+  // part of the site and must not be advertised for indexing.
 export const metadata = ogMeta({
   title: "Your first verification is free",
   description:
     "Your first verification is free. Connect your AI-built app, approve its critical flows, and get a launch decision backed by real browser evidence.",
   path: "/free-report",
+  index: !V6_IS_LIVE,
 });
 
 const STATUS = {
