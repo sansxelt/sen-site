@@ -43,7 +43,7 @@ export default function V6DataRights() {
           </Reveal>
         </div>
       </section>
-      <section className="v6-sec" data-nav-dark>
+      <section className="v6-sec v6-dark" data-nav-dark>
         <div className="v6-wrap">
           <SectionHead eyebrow="Stated plainly" title="How the data is actually handled." />
           <Reveal media className="v6-grid3">

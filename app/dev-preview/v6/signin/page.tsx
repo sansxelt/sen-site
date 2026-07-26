@@ -1,76 +1,37 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
-import { VraelisSignIn } from "@/components/vraelis-auth";
 import { getSafeRedirectPath } from "@/lib/auth-ui";
-import { v6meta } from "../_system/meta";
-import { V6_BASE, V6_APP } from "@/lib/v6-routes";
+import { V6_APP } from "@/lib/v6-routes";
 
-/* The V6 sign-in destination.
-
-   This exists so the preview stops throwing reviewers out of V6 and into the old site. It is deliberately
-   NOT a second auth system: the form below is the SHIPPED VraelisSignIn component running the real NextAuth
-   flows, the same one /signin renders. Nothing about credentials, providers, sessions, redirects or route
-   permissions is reimplemented or altered here. The only thing this route adds is the V6 surface around it
-   and a callback that lands inside V6 instead of at /app, which does not exist.
-
-   getSafeRedirectPath still gates the callback, and /dev-preview/v6/app passes its allowlist unchanged
-   (relative, no protocol-relative prefix, no backslash, no encoded separators, no dot segments), so the
-   hardening is untouched.
-
-   The full V6 auth redesign, including two-step authentication, is the next separate phase. */
-
-export const metadata = v6meta({
-  title: "Sign in",
-  description: "Sign in to Vraelis.",
-  path: "/signin",
-  type: "website",
-});
-
-const APP = V6_APP;
-
-export default async function V6SignInPage({
+/* THERE IS ONE SIGN-IN, AND THIS IS NOT IT.
+ *
+ * This route used to render a second copy of the sign-in form: the shipped VraelisSignIn component wrapped
+ * in a light V6 section, so that preview navigation would not throw a reviewer out of V6.
+ *
+ * It should never have been a page. /signin is deliberately absent from the proxy's V6 map, so it is never
+ * rewritten — app/signin is what a visitor reaches today AND after promotion. That made this a duplicate
+ * auth surface that had to be kept in step with the real one by hand, and it immediately drifted: the real
+ * sign-in moved onto the design-06 product theme (graphite, contrast primary action, no italic serif) while
+ * this one stayed on warm paper. A preview that shows a LIGHT sign-in for a page that ships DARK is worse
+ * than no preview, because it invites approving a design nobody will ever see.
+ *
+ * Rendering the product surface inside a V6 page was tried and is not the answer either: the V6 nav and
+ * footer are light, so the result was a three-surface sandwich that matched neither system.
+ *
+ * So the duplicate is gone and this redirects to the real thing. A reviewer clicking "Sign in" in the V6 nav
+ * now lands on exactly what ships. One sign-in page also means one place where credentials, providers,
+ * sessions and redirect allowlisting live, which is the right number for an auth surface.
+ *
+ * The callback is still gated by getSafeRedirectPath before it is forwarded, so this cannot be used to
+ * launder an unvalidated redirect target into /signin.
+ */
+export default async function V6SignInRedirect({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const [session, params] = await Promise.all([auth(), searchParams]);
-  const raw = Array.isArray(params.callbackUrl) ? params.callbackUrl[0] : params.callbackUrl;
-  const callbackUrl = getSafeRedirectPath(raw ?? APP);
-
-  // Already signed in: go where they were going rather than sitting on a sign-in screen.
-  if (session?.user?.email) redirect(callbackUrl);
-
-  const modeParam = Array.isArray(params.mode) ? params.mode[0] : params.mode;
-
-  return (
-    <section className="v6-sec v6-signin" data-nav-theme="light">
-      <div className="v6-wrap v6-signin__wrap">
-        {/* One heading, this one. VraelisSignIn also ships its own, so it is suppressed below: two stacked
-            headers pushed the form most of a fold down the page.
-
-            The wording has to work in BOTH modes. This is a server component and the Sign in / Create
-            account toggle is client state inside the form, so a heading that said "Sign in to Vraelis."
-            was still saying it after the reader switched to Create account. */}
-        <div className="v6-signin__head">
-          <p className="v6-eyebrow">Access</p>
-          <h1 className="v6-signin__h">Your Vraelis account.</h1>
-          <p className="v6-signin__lead">
-            The same account across the console, the CLI, and the API.
-          </p>
-        </div>
-        <div className="v6-signin__panel">
-          <VraelisSignIn
-            callbackUrl={callbackUrl}
-            initialMode={modeParam === "signup" ? "signup" : "signin"}
-            showHeader={false}
-            legalBase={V6_BASE}
-          />
-        </div>
-        <p className="v6-signin__note">
-          This is the shipped sign-in, shown inside the V6 preview. The redesigned account surface is still
-          being built.
-        </p>
-      </div>
-    </section>
-  );
+  const params = await searchParams;
+  const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+  const callbackUrl = getSafeRedirectPath(one(params.callbackUrl) ?? V6_APP);
+  const mode = one(params.mode) === "signup" ? "&mode=signup" : "";
+  redirect(`/signin?callbackUrl=${encodeURIComponent(callbackUrl)}${mode}`);
 }

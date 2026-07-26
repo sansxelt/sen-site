@@ -77,7 +77,7 @@ export default function V6Pricing() {
         </div>
       </section>
 
-      <section className="v6-sec" data-nav-dark>
+      <section className="v6-sec v6-dark" data-nav-dark>
         <div className="v6-wrap">
           <SectionHead eyebrow="What a pass is" title="One system, verified once, with the evidence kept." />
           <Reveal media className="v6-grid3">

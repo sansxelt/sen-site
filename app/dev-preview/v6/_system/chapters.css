@@ -88,13 +88,9 @@
 .v6-gap__claim { transform: translateY(calc(-50% - var(--claim) * 60vh))
   scale(calc(1 - 0.38 * var(--claim))); opacity: calc(1 - var(--claim)); }
 
-/* the systems: travel up into the centre the claim vacated, then clear for the observations */
-.v6-gap__sys { transform: translateY(calc(-50% + 12vh - var(--sys) * 14vh - var(--sysout) * 62vh));
-  opacity: calc(var(--sys) * (1 - var(--sysout))); }
-.v6-gap__syslist { list-style: none; margin: clamp(14px, 2vh, 22px) 0 0; padding: 0;
-  display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 14px; }
-.v6-gap__syslist li { font-size: clamp(0.95rem, 1.5vw, 1.3rem); color: var(--ink-2);
-  border: 1px solid var(--line-2); border-radius: 999px; padding: 9px 20px; }
+/* The .v6-gap__sys / .v6-gap__syslist block lived here. Its markup went when the chapter changed and the
+   rules stayed behind: dead selectors, and the only readers of --sys and --sysout, which is why those two
+   then looked like undefined tokens. Deleted rather than carried. */
 
 /* the observations: take the centre, hold it, then lift as the verdict resolves beneath */
 .v6-gap__found { transform: translateY(calc(-50% + 13vh - var(--found) * 15vh - var(--foundout) * 62vh));
@@ -347,15 +343,8 @@
    implementation changing, and at --g-fg-3 it was barely legible. Brighter now, carrying a label so its
    meaning is not a guess, with a long symmetric dwell per name. Written as two clamps rather than abs(),
    which is too new to depend on, and which was part of why it popped. */
-.v6-rg__impl { position: relative; margin: 6px 0 0; height: 1.3em; padding-left: 4.7rem; }
-.v6-rg__imlabel { position: absolute; left: 0; top: 0; font-family: var(--sans); font-weight: 600;
-  font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--g-fg-3);
-  line-height: 1.75; }
-.v6-rg__im { position: absolute; left: 4.7rem; top: 0; font-family: var(--mono); font-size: 12px;
-  letter-spacing: 0.01em; color: var(--g-fg-2); white-space: nowrap;
-  --up: clamp(0, calc((var(--cyc) - var(--k)) * 2.2 + 1), 1);
-  --dn: clamp(0, calc((var(--k) - var(--cyc)) * 2.2 + 1), 1);
-  opacity: calc(min(var(--up), var(--dn)) * 0.94); }
+/* .v6-rg__impl / .v6-rg__imlabel / .v6-rg__im lived here and went the same way as the block above: no
+   markup renders them, and they were the only readers of --k. */
 .v6-rg__m { margin: 0; font-size: 0.84rem; color: var(--g-fg-2); white-space: nowrap;
   overflow: hidden; text-overflow: ellipsis; }
 /* the decision is told by the word and its weight, not by a coloured pip */
@@ -376,9 +365,6 @@
   .v6-rg__row { grid-template-columns: 1fr; gap: 3px; padding: 14px 0;
     opacity: 1 !important; transform: none !important; }
   .v6-rg__m, .v6-rg__d { font-size: 0.8rem; }
-  .v6-rg__impl { height: auto; }
-  .v6-rg__im { position: static; opacity: 1 !important; }
-  .v6-rg__im + .v6-rg__im { display: none; }
   .v6-rg__foot { opacity: 1 !important; margin-top: 20px; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -386,8 +372,6 @@
   .v6-rg__pin { position: static; height: auto; display: block; padding: clamp(64px, 8vw, 100px) var(--gutter); }
   .v6-rg__stage { overflow: visible; }
   .v6-rg__row, .v6-rg__foot { opacity: 1 !important; transform: none !important; }
-  .v6-rg__im { position: static; opacity: 1 !important; }
-  .v6-rg__im + .v6-rg__im { display: none; }
 }
 
 /* ══════════════════════════════════════════ 6A. REACH ══ */

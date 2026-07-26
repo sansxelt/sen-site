@@ -39,7 +39,7 @@ export default function V6Contact() {
               <div key={addr} style={CARD}>
                 <h3 style={H3}>{role}</h3>
                 <p style={{ ...P, marginBottom: 8 }}>{d}</p>
-                <a href={`mailto:${addr}`} style={{ fontSize: 14, color: "var(--g-brand)", textDecoration: "none" }}>{addr}</a>
+                <a href={`mailto:${addr}`} style={{ fontSize: 14, color: "var(--g-fg)", textDecoration: "underline", textUnderlineOffset: 3 }}>{addr}</a>
               </div>
             ))}
           </Reveal>

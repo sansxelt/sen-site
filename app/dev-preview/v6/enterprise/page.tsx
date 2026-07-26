@@ -48,7 +48,7 @@ export default function V6Enterprise() {
             <div style={{ display: "grid", gap: 10 }}>
               {CAPABILITY.map(([label, state, note]) => (
                 <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "14px 0", borderBottom: "1px solid var(--g-line)" }}>
-                  <span style={{ fontSize: 15, color: "var(--g-fg)" }}>{label}</span>
+                  <span style={{ fontSize: 15, color: "var(--ink)" }}>{label}</span>
                   <Signal state={state}>{note}</Signal>
                 </div>
               ))}
@@ -57,7 +57,7 @@ export default function V6Enterprise() {
         </div>
       </section>
 
-      <section className="v6-sec" data-nav-dark>
+      <section className="v6-sec v6-dark" data-nav-dark>
         <div className="v6-wrap">
           <SectionHead eyebrow="How it works" title="Three things that hold at team scale." />
           <Reveal media className="v6-grid3">

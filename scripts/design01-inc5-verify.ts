@@ -63,6 +63,74 @@ ok("isAppPath(/dev-preview) is false", !isAppPath("/dev-preview"));
 
   ok("the design-01 preview itself is still unreachable by any clean path",
     !/"\/dev-preview"/.test(proxy) && !/dev-preview\/page/.test(proxy));
+
+  // ── A SECTION THAT DECLARES ITSELF DARK MUST ACTUALLY BE DARK ──────────────────────────────────────
+  //
+  // v6.css splits the two halves of "dark" across two markers, and they are easy to mix up:
+  //   .v6-dark          paints the graphite BACKGROUND
+  //   [data-nav-dark]   sets the dark-surface TEXT colours, and flips the nav
+  //
+  // Six page sections carried data-nav-dark WITHOUT v6-dark, so they rendered near-white headings on a
+  // white ground. The author had declared the intent; the class that paints it was simply missing, and
+  // nothing failed — the text was invisible rather than wrong-coloured, so it did not look broken, it
+  // looked absent. A rendered contrast audit found it; this keeps it found.
+  //
+  // Chapter sections (.v6-h, .v6-st, .v6-tm, .v6-rg, .v6-dr, .v6-end, .v6-docsenv) paint their own ground
+  // in chapters.css, so they are allowed to carry the marker without .v6-dark.
+  const OWN_GROUND = /v6-h\b|v6-st\b|v6-tm\b|v6-rg\b|v6-dr\b|v6-end\b|v6-docsenv\b/;
+  const darkMismatch: string[] = [];
+  for (const f of v6Files.filter((x) => typeof x === "string" && /\.tsx$/.test(x))) {
+    const src = readFileSync(join("app/dev-preview/v6", f), "utf8");
+    for (const line of src.split("\n")) {
+      if (!line.includes("data-nav-dark")) continue;
+      if (line.includes("v6-dark") || OWN_GROUND.test(line)) continue;
+      // Multi-line JSX elements: the className may sit on a neighbouring line, so only flag a line that
+      // carries a className of its own and still has no ground.
+      if (!/className=/.test(line)) continue;
+      darkMismatch.push(`${f}: ${line.trim().slice(0, 70)}`);
+    }
+  }
+  ok("every section that declares data-nav-dark also paints a dark ground",
+    darkMismatch.length === 0, darkMismatch.join(" | "));
+
+  // ── NO V6 FILE MAY READ A CUSTOM PROPERTY THAT DOES NOT EXIST ──────────────────────────────────────
+  //
+  // An undefined custom property is invalid at computed-value time, so the declaration is dropped and the
+  // element silently inherits instead. That is how the contact page's four email addresses — the entire
+  // content of the page — ended up at 1.40:1 on a graphite card: they asked for --g-brand, which was never
+  // a token. Legal-page links did the same with --go-dp. Neither produced an error anywhere.
+  const DEFINES = [
+    "app/dev-preview/v6/_system/v6.css", "app/dev-preview/v6/_system/pagekit.css",
+    "app/dev-preview/v6/_system/chapters.css",
+    "public/vraelis/tokens.css", "public/vraelis/styles.css", "public/vraelis/authenticated.css",
+  ];
+  const defined = new Set<string>(["--font-geist-sans", "--font-geist-mono"]);
+  for (const f of DEFINES) {
+    if (!existsSync(f)) continue;
+    for (const m of readFileSync(f, "utf8").matchAll(/(--[a-zA-Z0-9-]+)\s*:/g)) defined.add(m[1]);
+  }
+  // The scroll-driven chapters set some properties at RUNTIME as React style props ("--i", "--sv"), so the
+  // rule that reads one lives in a .css while the value is set in a .tsx. Those count as defined, and the
+  // scope for that has to be the whole V6 tree rather than one file.
+  const v6Sources = v6Files
+    .filter((x): x is string => typeof x === "string" && /\.(tsx?|css)$/.test(x))
+    .map((f) => ({ f, src: readFileSync(join("app/dev-preview/v6", f), "utf8") }));
+  const runtimeSet = new Set<string>();
+  for (const { src } of v6Sources) {
+    for (const m of src.matchAll(/["'`](--[a-zA-Z0-9-]+)["'`]/g)) runtimeSet.add(m[1]);
+    for (const m of src.matchAll(/^\s*(--[a-zA-Z0-9-]+)\s*:/gm)) runtimeSet.add(m[1]);
+  }
+  const undef: string[] = [];
+  for (const { f, src } of v6Sources) {
+    for (const m of src.matchAll(/var\((--[a-zA-Z0-9-]+)\s*(,|\))/g)) {
+      const [, tok, next] = m;
+      // A fallback is a deliberate degradation, so var(--x, y) is always fine.
+      if (next === "," || defined.has(tok) || runtimeSet.has(tok)) continue;
+      undef.push(`${tok} in ${f}`);
+    }
+  }
+  ok("every var() in the V6 tree resolves to a token that exists", undef.length === 0,
+    [...new Set(undef)].join(", "));
 }
 ok("no navigation, sitemap, or metadata links to the preview", !/dev-preview/.test(ui) && !/dev-preview/.test(page) && !/dev-preview/.test(rec));
 ok("the preview is noindex", /robots: \{ index: false/.test(preview));

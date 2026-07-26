@@ -58,7 +58,7 @@ export default function V6Limitations() {
             <div style={{ display: "grid", gap: 10 }}>
               {RUNTIMES.map(([label, state, note]) => (
                 <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "14px 0", borderBottom: "1px solid var(--g-line)" }}>
-                  <span style={{ fontSize: 15, color: "var(--g-fg)" }}>{label}</span>
+                  <span style={{ fontSize: 15, color: "var(--ink)" }}>{label}</span>
                   <Signal state={state}>{note}</Signal>
                 </div>
               ))}
@@ -67,7 +67,7 @@ export default function V6Limitations() {
         </div>
       </section>
 
-      <section className="v6-sec" data-nav-dark>
+      <section className="v6-sec v6-dark" data-nav-dark>
         <div className="v6-wrap">
           <SectionHead eyebrow="Where a run needs you" title="Three things a run cannot do alone." />
           <Reveal media className="v6-grid3">
@@ -85,7 +85,7 @@ export default function V6Limitations() {
         </div>
       </section>
 
-      <section className="v6-sec" data-nav-dark>
+      <section className="v6-sec v6-dark" data-nav-dark>
         <div className="v6-wrap">
           <SectionHead eyebrow="Authorship and review" title="The system will not approve its own work." />
           <Reveal media className="v6-grid3">
