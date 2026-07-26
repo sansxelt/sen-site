@@ -88,6 +88,7 @@ const SUITES: Suite[] = [
   { file: "scripts/research-verify.ts", npm: "research:test" },
   { file: "scripts/app-shell-verify.ts", npm: "shell:test" },
   { file: "scripts/host-contract-verify.ts", npm: "host:test" },
+  { file: "scripts/custom-checkout-verify.ts", npm: "checkout:test" },
   { file: "scripts/verification-client-verify.ts", npm: "client:test" },
   { file: "scripts/contrast-verify.ts", npm: "contrast:test" },
   { file: "scripts/verification-idempotency-verify.ts", npm: "idempotency:test" },

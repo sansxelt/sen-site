@@ -182,6 +182,30 @@ async function resolveContext(subscription: Stripe.Subscription): Promise<{
 }
 
 async function handleSubscriptionChange(event: Stripe.Event, subscription: Stripe.Subscription) {
+  // ── A SUBSCRIPTION THAT HAS NEVER BEEN PAID FOR GRANTS NOTHING, AND REVOKES NOTHING ─────────────────
+  //
+  // `incomplete` means the first invoice has not been paid. `incomplete_expired` means it never was and
+  // Stripe gave up. In both cases no money has moved, so the correct effect on entitlement is NONE.
+  //
+  // Every guard below tested for "canceled | unpaid | incomplete_expired" and treated anything else as
+  // entitled, so a subscription sitting at `incomplete` fell through to the GRANT branch in all four
+  // product paths. That was unreachable while Stripe Checkout was the only way to subscribe, because
+  // Checkout does not create the subscription until payment succeeds — the status was `active` by the
+  // time any event arrived. It stops being unreachable the moment anything creates a subscription with
+  // payment_behavior: "default_incomplete", which is exactly what an in-app Payment Element must do.
+  // Without this line, opening the new checkout screen and never paying would hand out a paid plan.
+  //
+  // Ignoring `incomplete_expired` matters just as much and in the other direction: an abandoned checkout
+  // expires and emits a deletion, and the old code would have CLEARED the plan for that user_id. If they
+  // already had a live subscription, abandoning an upgrade would have cancelled the plan they were paying
+  // for. Neither granting nor revoking is the only safe reading of "never paid".
+  //
+  // A real activation still arrives: the status moves to `active` and Stripe sends
+  // customer.subscription.updated, which is handled normally below.
+  if (subscription.status === "incomplete" || subscription.status === "incomplete_expired") {
+    return;
+  }
+
   // Team-seat subscription? Sync v_workspace_billing (real-time) and stop BEFORE any
   // personal/plan handling — a team sub must never be recorded as a personal plan.
   if (subscription.metadata?.type === "team_seats") {

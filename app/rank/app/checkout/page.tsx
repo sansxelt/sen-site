@@ -5,6 +5,9 @@ import { PLAN_CATALOG } from "@/lib/v-plans";
 import { TOPUP_MIN_DOLLARS, topupMaxDollars } from "@/lib/v-entitlements";
 import { passPricingEnabled, PLAN_CATALOG_V1 } from "@/lib/preflight/pass-pricing";
 import { CheckoutClient, PlanPrice } from "./checkout-client";
+import { OwnPaymentPanel } from "./checkout-own";
+import { customCheckoutEnabled } from "@/lib/custom-checkout";
+import { billingReturnUrls, stripeReturnUrl } from "@/lib/return-urls";
 import { PlanPriceV1, V1RenewalTerms, v1Blurb, v1Included } from "./checkout-v1";
 
 export const metadata: Metadata = { title: "Checkout" };
@@ -56,6 +59,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
   if (!planKey && !sp.amount) redirect("/credits");
   const amount = Math.max(TOPUP_MIN_DOLLARS, Math.min(topupMaxDollars(), parseInt(sp.amount || "0", 10) || 0));
 
+  const ownCheckout = customCheckoutEnabled();
   const session = await auth();
   if (!session?.user?.email) {
     const back = planKey ? `/checkout?plan=${planKey}&cycle=${cycle}` : `/checkout?amount=${amount}`;
@@ -107,9 +111,18 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
 
           {/* payment */}
           <div className="card" style={{ padding: "clamp(16px, 2vw, 22px)" }}>
-            {/* PayPal is suppressed for _v1 plans: only the six Stripe prices exist for them (PayPal
-                _v1 plans are not provisioned), so the button would always fail. */}
-            {planKey ? <CheckoutClient plan={planKey} cycle={cycle} paypal={!v1Plan} /> : <CheckoutClient amount={amount} />}
+            {/* IN-APP PAYMENT, BEHIND A FLAG, FOR SUBSCRIPTION PLANS ONLY.
+                With VRAELIS_CUSTOM_CHECKOUT on, a _v1 plan renders a Payment Element on this page instead
+                of Stripe's embedded Checkout, so the purchase never leaves the product. Everything else,
+                legacy plans and credit top-ups, keeps the Checkout path: those flows are known-good and
+                there is no reason to move all of them at once.
+
+                The flag is read HERE, on the server, and the panel is simply not rendered when it is off.
+                A client-side check would let the page and the endpoint disagree about whether the surface
+                exists. Off, this file behaves exactly as it did. */}
+            {ownCheckout && v1Plan
+              ? <OwnPaymentPanel plan={v1Plan.key} cycle={cycle} returnUrl={stripeReturnUrl(billingReturnUrls().success)} />
+              : planKey ? <CheckoutClient plan={planKey} cycle={cycle} paypal={!v1Plan} /> : <CheckoutClient amount={amount} />}
           </div>
         </div>
       </div>

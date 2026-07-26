@@ -91,7 +91,8 @@
     "provenance:integrity:test": "tsx scripts/preflight-provenance-integrity-verify.ts",
     "integrity:test": "tsx scripts/integrity-verify.ts",
     "provenance:census": "tsx scripts/provenance-census.ts",
-    "provenance:rehearse": "tsx ops/rehearsal/rehearse.ts"
+    "provenance:rehearse": "tsx ops/rehearsal/rehearse.ts",
+    "checkout:test": "tsx scripts/custom-checkout-verify.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
