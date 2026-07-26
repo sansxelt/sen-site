@@ -314,7 +314,7 @@ async function ownsContract(uid: string, contractId: string): Promise<boolean> {
 //
 // A meaningful revision after approval is a NEW contract version, which prepareVerification already creates
 // per verification, not an edit to the one historical runs point at.
-async function contractAcceptsSemanticWrite(uid: string, contractId: string): Promise<boolean> {
+export async function contractAcceptsSemanticWrite(uid: string, contractId: string): Promise<boolean> {
   const contract = await getContractById(uid, contractId);
   return contract?.status === "draft";
 }

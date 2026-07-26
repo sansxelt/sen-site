@@ -5,6 +5,7 @@
 // cleanly no-ops before sql/vraelis-preflight-2-discovery.sql is applied. Server-only. It NEVER deletes a
 // prior row: a failed run marks its own snapshot 'failed' and leaves the last successful discovery + all
 // existing requirements intact.
+import { contractAcceptsSemanticWrite } from "../v-applications";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "../supabase-admin";
 import type { PageSnapshot } from "./discover-extract";
 import { fingerprint } from "./contract-merge";
@@ -137,6 +138,21 @@ export async function applyMergePlan(
 ): Promise<void> {
   if (!isDatabaseConfigured()) return;
   const uid = norm(owner);
+  // DISCOVERY MAY PROPOSE A NEW TRUTH. IT MAY NOT REWRITE AN OLD ONE.
+  //
+  // This wrote requirement rows directly, bypassing the guarded helpers in lib/v-applications.ts, and its
+  // caller resolved its target with getContract, which returns the LATEST version regardless of status.
+  // POST /api/preflight/apps/[id]/discover is customer-reachable and gated only on flag, auth, editor role,
+  // attestation, rate limit and idempotency, so an editor could trigger a merge that edited the requirement
+  // text of an APPROVED contract that historical runs point at.
+  //
+  // The guard lives HERE, at the lowest write, rather than only in the route: a future caller importing
+  // applyMergePlan directly must not be able to step around it. The refusal is before any write, so no
+  // partial merge can survive it.
+  //
+  // The eventual behaviour is a derived draft version that a person reviews. Until that exists, an approved
+  // contract is simply refused.
+  if (!(await contractAcceptsSemanticWrite(uid, contractId))) return;
   for (const ins of plan.inserts) {
     try {
       await db().from("v_contract_requirements").insert({
