@@ -182,27 +182,28 @@ async function resolveContext(subscription: Stripe.Subscription): Promise<{
 }
 
 async function handleSubscriptionChange(event: Stripe.Event, subscription: Stripe.Subscription) {
-  // ── A SUBSCRIPTION THAT HAS NEVER BEEN PAID FOR GRANTS NOTHING, AND REVOKES NOTHING ─────────────────
+  // ── A SUBSCRIPTION THAT HAS NEVER BEEN PAID FOR GRANTS NOTHING ──────────────────────────────────────
   //
-  // `incomplete` means the first invoice has not been paid. `incomplete_expired` means it never was and
-  // Stripe gave up. In both cases no money has moved, so the correct effect on entitlement is NONE.
+  // `incomplete` means the first invoice is unpaid and Stripe is still waiting. No money has moved, so the
+  // correct effect on entitlement is NONE.
   //
   // Every guard below tested for "canceled | unpaid | incomplete_expired" and treated anything else as
-  // entitled, so a subscription sitting at `incomplete` fell through to the GRANT branch in all four
-  // product paths. That was unreachable while Stripe Checkout was the only way to subscribe, because
-  // Checkout does not create the subscription until payment succeeds — the status was `active` by the
-  // time any event arrived. It stops being unreachable the moment anything creates a subscription with
-  // payment_behavior: "default_incomplete", which is exactly what an in-app Payment Element must do.
-  // Without this line, opening the new checkout screen and never paying would hand out a paid plan.
+  // entitled, so a subscription at `incomplete` fell through to the GRANT branch in all four product paths.
+  // That is reachable: app/api/stripe/payment-intent/route.ts already creates default_incomplete
+  // subscriptions, and an in-app Payment Element must. Without this line, starting a checkout and never
+  // paying hands out a paid plan.
   //
-  // Ignoring `incomplete_expired` matters just as much and in the other direction: an abandoned checkout
-  // expires and emits a deletion, and the old code would have CLEARED the plan for that user_id. If they
-  // already had a live subscription, abandoning an upgrade would have cancelled the plan they were paying
-  // for. Neither granting nor revoking is the only safe reading of "never paid".
+  // `incomplete_expired` IS NOT INCLUDED, and that is a deliberate correction. It is terminal: Stripe has
+  // given up and the subscription will never be paid. Returning early on it looked safer, and was not: the
+  // legacy path resets plan_key to "free" for any non-active subscription (lib/subscriptions.ts), and
+  // skipping that leaves a row permanently marked as a PAID plan for someone who never paid. A terminal
+  // state has to be allowed to terminate.
   //
-  // A real activation still arrives: the status moves to `active` and Stripe sends
-  // customer.subscription.updated, which is handled normally below.
-  if (subscription.status === "incomplete" || subscription.status === "incomplete_expired") {
+  // The reason it was wrongly included is real and is fixed at its source instead: clearing was not scoped
+  // to the subscription that granted the plan, so an abandoned upgrade expiring could clear the plan of a
+  // customer still paying on a different subscription. See handleRankSubChange in lib/v-subscriptions.ts,
+  // which now refuses to clear while another live subscription exists for the same owner.
+  if (subscription.status === "incomplete") {
     return;
   }
 
@@ -497,6 +498,36 @@ async function handleInvoiceUpcoming(invoice: Stripe.Invoice) {
 // retried webhook is a no-op (we swallow the unique-violation error).
 async function handlePaymentIntentSucceeded(intent: Stripe.PaymentIntent) {
   const meta = intent.metadata ?? {};
+
+  // ── Vraelis credit top-up bought WITHOUT a Checkout session ──────────────────────────────────────────
+  //
+  // The in-app checkout charges a PaymentIntent directly, so there is no checkout.session.completed to
+  // carry the grant. Without this branch that flow takes the money and grants nothing, which is the worst
+  // failure this system has: the customer is charged and has no credits and no record.
+  //
+  // THE SOURCE MARKER IS LICENSING TO GRANT, and it is why this cannot double-grant. A Checkout session
+  // does NOT copy its metadata onto the PaymentIntent unless payment_intent_data.metadata is set, and
+  // /api/v/checkout deliberately does not set it, so today only the session handler fires for that flow.
+  // Requiring source === "in_app" means that stays true even if someone later copies metadata onto the
+  // intent: the session grant and this one can never both apply to the same purchase.
+  //
+  // Idempotency is the ledger's, keyed on the PaymentIntent id, so a webhook replay or a Stripe retry
+  // cannot grant twice. grant() returns false when the ext_ref has been seen, and only a fresh grant
+  // writes the audit row.
+  if (meta.type === "credit_topup" && meta.source === "in_app") {
+    const userId = meta.user_id ?? null;
+    const credits = parseInt(meta.credits || "0", 10);
+    if (!userId || !(credits > 0)) {
+      console.warn("[stripe webhook] in-app topup intent missing metadata:", intent.id);
+      return;
+    }
+    const { recordPackPurchase } = await import("../../../../lib/v-db");
+    const { grant } = await import("../../../../lib/v-credits");
+    if (await grant(userId, credits, "topup", { bucket: "purchased", extRef: intent.id })) {
+      await recordPackPurchase(userId, "credit_topup", credits, intent.id);
+    }
+    return;
+  }
 
   // ── v0.1.9, credits top-up ────────────────────────────────────────
   // metadata.kind === "credits" means the desktop billing panel asked

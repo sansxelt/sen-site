@@ -129,6 +129,28 @@ export async function handleRankInvoicePaid(invoice: Stripe.Invoice): Promise<bo
   return true;
 }
 
+/** Does this owner still have a DIFFERENT live _v1 subscription? Used before revoking a plan, so the
+ *  death of one subscription cannot cancel entitlement another one is still paying for.
+ *
+ *  Fails CLOSED on any error: if Stripe cannot be reached we return false and the caller proceeds to
+ *  clear. Revoking a plan we cannot prove is still paid is the safe direction; the customer can be
+ *  restored, whereas silently serving a plan nobody is paying for cannot be detected. */
+async function ownerHasAnotherLiveV1Subscription(dying: Stripe.Subscription): Promise<boolean> {
+  const customerId = typeof dying.customer === "string" ? dying.customer : dying.customer?.id;
+  if (!customerId) return false;
+  try {
+    const { getStripe } = await import("./stripe");
+    const list = await getStripe().subscriptions.list({ customer: customerId, status: "all", limit: 20 });
+    const LIVE = new Set(["active", "trialing", "past_due"]);
+    return list.data.some(
+      (s) => s.id !== dying.id && s.metadata?.type === "v_plan" && LIVE.has(s.status),
+    );
+  } catch (e) {
+    console.error("[v-subscriptions] sibling-subscription check failed, clearing:", e);
+    return false;
+  }
+}
+
 export async function handleRankSubChange(event: Stripe.Event, subscription: Stripe.Subscription): Promise<void> {
   const userId = subscription.metadata?.user_id;
   if (!userId) return;
@@ -142,6 +164,19 @@ export async function handleRankSubChange(event: Stripe.Event, subscription: Str
     if (v1) {
       const gone = event.type === "customer.subscription.deleted" || ["canceled", "unpaid", "incomplete_expired"].includes(subscription.status);
       if (gone) {
+        // ── ONLY THE SUBSCRIPTION THAT GRANTED THE PLAN MAY TAKE IT AWAY ────────────────────────────
+        //
+        // clearPlanV1 is keyed on user_id alone, so ANY dying subscription for this owner used to wipe
+        // the plan, including one that never granted it. That is not hypothetical once a customer can
+        // have a second subscription in flight: starting an upgrade and abandoning it ends in a
+        // cancellation or an expiry, and the old code would have cancelled the plan they are still
+        // paying for on the original subscription.
+        //
+        // Rather than store the granting subscription id (a migration, and a second source of truth to
+        // keep correct), ask Stripe whether the owner still has a LIVE v_plan subscription. If they do,
+        // this death is not the one that matters and the plan stays. Stripe is the authority on what is
+        // being billed, which is the question actually being asked.
+        if (await ownerHasAnotherLiveV1Subscription(subscription)) return;
         await clearPlanV1(userId);
       } else {
         const ps = Number((subscription as any).current_period_start ?? (subscription as any).items?.data?.[0]?.current_period_start);

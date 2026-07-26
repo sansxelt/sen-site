@@ -7,7 +7,7 @@ import { passPricingEnabled, PLAN_CATALOG_V1 } from "@/lib/preflight/pass-pricin
 import { CheckoutClient, PlanPrice } from "./checkout-client";
 import { OwnPaymentPanel } from "./checkout-own";
 import { customCheckoutEnabled } from "@/lib/custom-checkout";
-import { billingReturnUrls, stripeReturnUrl } from "@/lib/return-urls";
+import { billingReturnUrls, stripeReturnUrl, topupReturnUrl } from "@/lib/return-urls";
 import { PlanPriceV1, V1RenewalTerms, v1Blurb, v1Included } from "./checkout-v1";
 
 export const metadata: Metadata = { title: "Checkout" };
@@ -120,9 +120,20 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
                 The flag is read HERE, on the server, and the panel is simply not rendered when it is off.
                 A client-side check would let the page and the endpoint disagree about whether the surface
                 exists. Off, this file behaves exactly as it did. */}
-            {ownCheckout && v1Plan
-              ? <OwnPaymentPanel plan={v1Plan.key} cycle={cycle} returnUrl={stripeReturnUrl(billingReturnUrls().success)} />
-              : planKey ? <CheckoutClient plan={planKey} cycle={cycle} paypal={!v1Plan} /> : <CheckoutClient amount={amount} />}
+            {ownCheckout && v1Plan ? (
+              <OwnPaymentPanel
+                purchase={{ kind: "plan", plan: v1Plan.key, cycle }}
+                returnUrl={stripeReturnUrl(billingReturnUrls().success)}
+              />
+            ) : ownCheckout && !planKey ? (
+              // Credit top-ups return to /credits, which already polls for the webhook's grant, exactly as
+              // the Checkout path does. Different destination, same rule: the redirect proves nothing and
+              // the page waits for the ledger.
+              <OwnPaymentPanel
+                purchase={{ kind: "credits", amountDollars: amount }}
+                returnUrl={stripeReturnUrl(topupReturnUrl())}
+              />
+            ) : planKey ? <CheckoutClient plan={planKey} cycle={cycle} paypal={!v1Plan} /> : <CheckoutClient amount={amount} />}
           </div>
         </div>
       </div>

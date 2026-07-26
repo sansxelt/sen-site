@@ -51,7 +51,10 @@ const APPEARANCE: Appearance = {
   },
 };
 
-type Intent = { clientSecret: string; subscriptionId: string; amountCents: number | null; currency: string };
+type Intent = { clientSecret: string; subscriptionId?: string; amountCents: number | null; currency: string };
+/** A first invoice of zero (comped or fully discounted) activates immediately and has nothing to confirm.
+ *  The server says so explicitly rather than handing back a secret that does not exist. */
+type Activated = { activated: true };
 type Fail = { error: string; message?: string; manage?: string };
 
 const money = (cents: number, currency: string) =>
@@ -91,11 +94,20 @@ function PayForm({ returnUrl, label }: { returnUrl: string; label: string }) {
     }
 
     if (paymentIntent && (paymentIntent.status === "succeeded" || paymentIntent.status === "processing")) {
-      // The plan is NOT active yet and this page must not pretend otherwise. The webhook is the only
-      // activation authority; /billing/success polls until its write is visible.
+      // NOT active yet, and this page must not pretend otherwise. The webhook is the only activation
+      // authority; the return page polls until its write is visible.
       window.location.assign(returnUrl);
       return;
     }
+
+    // Anything else is a payment that did not happen. Silently clearing the spinner here left the customer
+    // looking at a form with no explanation, one tap from having paid, which reads as the product being
+    // broken rather than the card being declined.
+    setError(
+      paymentIntent?.status === "requires_payment_method"
+        ? "That payment method was declined. Try another card."
+        : "That payment was not completed. Nothing has been charged.",
+    );
     setBusy(false);
   }
 
@@ -129,11 +141,17 @@ function PayForm({ returnUrl, label }: { returnUrl: string; label: string }) {
  * BEFORE payment. Re-implementing any of that here would give two versions of a screen that has to be
  * accurate, and the renewal terms are the last thing that should be duplicated. This slots into the same
  * column Stripe's embedded Checkout used to occupy. */
+/** What is being bought. A subscription posts a plan and a cycle to the subscription route; a top-up posts
+ *  an amount to the credits route. Once a client secret exists the two are identical, which is why the form
+ *  below is shared: confirming a payment is confirming a payment. */
+export type Purchase =
+  | { kind: "plan"; plan: string; cycle: "monthly" | "yearly" }
+  | { kind: "credits"; amountDollars: number };
+
 export function OwnPaymentPanel({
-  plan, cycle, returnUrl,
+  purchase, returnUrl,
 }: {
-  plan: string;
-  cycle: "monthly" | "yearly";
+  purchase: Purchase;
   returnUrl: string;
 }) {
   const [intent, setIntent] = useState<Intent | null>(null);
@@ -146,18 +164,25 @@ export function OwnPaymentPanel({
     // intent rather than creating a second subscription. This flag only stops a late response from
     // writing state after unmount.
     (async () => {
-      const r = await fetch("/api/v/subscribe/intent", {
+      const [url, payload] = purchase.kind === "plan"
+        ? ["/api/v/subscribe/intent", { plan: purchase.plan, cycle: purchase.cycle }] as const
+        : ["/api/v/checkout/intent", { amountDollars: purchase.amountDollars }] as const;
+      const r = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan, cycle }),
+        body: JSON.stringify(payload),
       }).catch(() => null);
       if (cancelled) return;
-      const j = (await r?.json().catch(() => null)) as (Intent & Fail) | null;
+      const j = (await r?.json().catch(() => null)) as (Intent & Fail & Partial<Activated>) | null;
+      if (r?.ok && j?.activated) { window.location.assign(returnUrl); return; }
       if (!r?.ok || !j?.clientSecret) { setFail(j ?? { error: "checkout_failed" }); return; }
       setIntent(j);
     })();
     return () => { cancelled = true; };
-  }, [plan, cycle]);
+    // Keyed on the purchase itself: changing the plan, the cycle or the amount must fetch a fresh secret,
+    // because a Payment Element bound to the old one would charge the old price.
+  }, [returnUrl, purchase.kind, (purchase as { plan?: string }).plan, (purchase as { cycle?: string }).cycle,
+      (purchase as { amountDollars?: number }).amountDollars]);
 
   const options = useMemo(
     () => (intent ? { clientSecret: intent.clientSecret, appearance: APPEARANCE } : null),
@@ -193,7 +218,7 @@ export function OwnPaymentPanel({
     <Elements stripe={stripePromise} options={options}>
       <PayForm
         returnUrl={returnUrl}
-        label={intent?.amountCents != null ? `Pay ${money(intent.amountCents, intent.currency)}` : "Subscribe"}
+        label={intent?.amountCents != null ? `Pay ${money(intent.amountCents, intent.currency)}` : (purchase.kind === "plan" ? "Subscribe" : "Buy credits")}
       />
     </Elements>
   );
