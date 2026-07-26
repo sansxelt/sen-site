@@ -57,8 +57,10 @@ export default function V6Limitations() {
           <Reveal>
             <div style={{ display: "grid", gap: 10 }}>
               {RUNTIMES.map(([label, state, note]) => (
-                <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "14px 0", borderBottom: "1px solid var(--g-line)" }}>
-                  <span style={{ fontSize: 15, color: "var(--ink)" }}>{label}</span>
+                // flexWrap + minWidth:0 so a long label and its signal stack on a phone instead of pushing the
+                // pill past the viewport edge, where it was clipped by 3px at 390.
+                <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "6px 16px", padding: "14px 0", borderBottom: "1px solid var(--g-line)" }}>
+                  <span style={{ fontSize: 15, color: "var(--ink)", minWidth: 0 }}>{label}</span>
                   <Signal state={state}>{note}</Signal>
                 </div>
               ))}
