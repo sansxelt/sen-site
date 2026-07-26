@@ -379,7 +379,22 @@ export async function approveContract(userId: string, contractId: string): Promi
   if (!isDatabaseConfigured()) return false;
   const uid = norm(userId);
   const reqs = await listRequirements(uid, contractId);
-  if (!reqs.some((r) => r.enabled)) return false;
+  // AN ENABLED REQUIREMENT IS PART OF THE OFFICIAL MEANING, SO IT MUST HAVE BEEN REVIEWED.
+  //
+  // This previously required only that ONE enabled requirement existed, and never that any of them had been
+  // approved. An enabled row still in review_state 'suggested' therefore froze into the contract, became
+  // binding, and was then silently reworded by the next discovery pass, because the merge planner preserves
+  // content for user/user_modified/approved rows but not for suggested ones.
+  //
+  // The guards added elsewhere stop approved meaning being rewritten later. This stops UNREVIEWED content
+  // becoming the approved meaning in the first place, which is upstream of all of it.
+  //
+  // The column default is 'approved' (migration 2), so requirements written by prepareVerification and
+  // addRequirement satisfy this untouched. Only explicitly-suggested rows, which is what discovery inserts,
+  // are blocked. Disabled suggestions stay as excluded draft material and never reach this check.
+  const enabled = reqs.filter((r) => r.enabled);
+  if (!enabled.length) return false;
+  if (enabled.some((r) => (r as { review_state?: string }).review_state !== "approved")) return false;
   const { error } = await db().from("v_production_contracts").update({ status: "approved", approved_at: new Date().toISOString() } as never).eq("user_id", uid).eq("id", contractId);
   if (!error) await logEvent({ userId: uid, eventType: "preflight_contract_approved", actorType: "owner", source: "app", metadata: { contract_id: contractId, requirements: reqs.length } });
   return !error;
