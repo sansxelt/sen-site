@@ -1,5 +1,7 @@
 import type { CSSProperties } from "react";
 import { v6meta } from "../_system/meta";
+import Link from "next/link";
+import { publishedArticles, formatDate, readingMinutes } from "@/app/rank/research/_articles";
 import { PageHero, Reveal, SectionHead, Signal, Prose, EditorialLink, Kicker, CTA } from "../_system/ui";
 import { V6_BASE } from "@/lib/v6-routes";
 
@@ -289,6 +291,39 @@ export default function ResearchPage() {
           <div style={{ display: "flex", flexDirection: "column", marginTop: "clamp(36px,4vw,56px)" }}>
             {DIRECTIONS.map((d, i) => <Direction key={d.id} d={d} first={i === 0} />)}
           </div>
+        </div>
+      </section>
+
+      {/* THE WRITING ITSELF.
+          This page argues the thesis; the articles are where it is worked out at length. Until now nothing
+          on the new site linked to them, so five published pieces were reachable only from a search result,
+          which is the wrong way round: they are the most considered thing here. */}
+      <hr className="v6-rule" />
+      <section className="v6-sec v6-sec--tight">
+        <div className="v6-wrap v6-wrap--read">
+          <Reveal>
+            <SectionHead
+              eyebrow="Notes"
+              title="Written at length."
+              lead="Each note takes one part of the argument and works it through, with the limits stated where they apply."
+            />
+          </Reveal>
+          <Reveal>
+            <div style={{ display: "grid", gap: 2, marginTop: 26 }}>
+              {publishedArticles().map((a) => (
+                <Link key={a.slug} href={`${BASE}/research/${a.slug}`} className="v6-elink"
+                  style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 20, padding: "18px 0", borderBottom: "1px solid var(--line)" }}>
+                  <span style={{ minWidth: 0 }}>
+                    <span className="v6-elink__t" style={{ display: "block", fontSize: "1.08rem", fontWeight: 600 }}>{a.title}</span>
+                    <span style={{ display: "block", marginTop: 5, fontSize: 14, lineHeight: 1.55, color: "var(--ink-3)" }}>{a.summary}</span>
+                  </span>
+                  <span style={{ flex: "none", fontSize: 12.5, color: "var(--ink-4)", whiteSpace: "nowrap" }}>
+                    {formatDate(a.date)} / {readingMinutes(a)} min
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </Reveal>
         </div>
       </section>
 

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { appHostUrl } from "@/lib/app-routes";
 import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "../../setup-required";
@@ -23,7 +22,10 @@ export default async function AppTeamPage({ params }: { params: Promise<{ id: st
   const { id } = await params;
   if (!preflightEnabled()) redirect("/app");
   const email = (await auth())?.user?.email;
-  if (!email) redirect(`/signin?callbackUrl=${encodeURIComponent(appHostUrl("/applications/" + id + "/team"))}`);
+  // Relative, so the open-redirect allowlist keeps it. Wrapped in appHostUrl() it became an absolute URL,
+  // which safeReturnPath rejects, and the invited teammate landed on account settings instead of the team
+  // they were invited to. See the note in lib/v-preflight-guard.ts.
+  if (!email) redirect(`/signin?callbackUrl=${encodeURIComponent("/applications/" + id + "/team")}`);
   // A teammate invited by email token activates on click; a token-less (email-match) invite activates on
   // first Preflight visit — do it here so a newly-invited member sees their shared apps immediately.
   await activateInvitesForEmail(email);

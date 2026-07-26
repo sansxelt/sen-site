@@ -5,6 +5,7 @@
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { legacyToNew, isAppPath, appHostUrl, legacyRunsPath } from "../lib/app-routes";
+import { getSafeRedirectPath } from "../lib/auth-ui";
 
 let pass = 0, fail = 0;
 const ok = (n: string, c: boolean, d = "") => { console.log(`${c ? "PASS" : "FAIL"}  ${n}${d ? `  (${d})` : ""}`); if (c) pass++; else fail++; };
@@ -196,9 +197,41 @@ ok("retired per-token shared reports redirect to the site root, rendering no ret
 ok("the retired share stubs use the one shared social card",
   /socialCard\(\)/.test(rToken) && /socialCard\(\)/.test(rcToken));
 
-// ── Static: the guard sends logged-out deep links to sign-in with an app-host callback ──
-const guard = readFileSync("lib/v-preflight-guard.ts", "utf8");
-ok("guard builds its signin callback with appHostUrl", guard.includes("appHostUrl(") && /encodeURIComponent\(appHostUrl\(/.test(guard));
+// ── A SIGNED-OUT DEEP LINK MUST KEEP ITS DESTINATION ──────────────────────────────────────────────────
+//
+// This asserted the opposite until now: that the guard wrapped its callback in appHostUrl(). It did, and
+// that is what broke it. appHostUrl is ABSOLUTE in production, safeReturnPath rejects any absolute URL as
+// open-redirect defence, and getSafeRedirectPath therefore threw the destination away and returned its
+// default. Every signed-out deep link into the product landed on account settings, and a team invite is
+// exactly the link you send to someone who is not signed in.
+//
+// So the check is now BEHAVIOURAL rather than structural: run the value the guard actually builds through
+// the function that actually gates it, in production mode, and assert the destination is still there. A
+// test that pins an implementation detail cannot tell you the implementation is wrong.
+{
+  const guard = readFileSync("lib/v-preflight-guard.ts", "utf8");
+  const teamPage = readFileSync("app/rank/app/applications/[id]/team/page.tsx", "utf8");
+  const code = (t: string) => t.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+
+  ok("the guard does not wrap its signin callback in an absolute URL",
+    !/appHostUrl\(/.test(code(guard)) && /encodeURIComponent\(returnPath\)/.test(code(guard)));
+  ok("the team page does not either (it is the invite destination)",
+    !/appHostUrl\(/.test(code(teamPage)));
+
+  // The property itself, end to end, in the mode where it broke.
+  const prev = process.env.VERCEL_ENV;
+  process.env.VERCEL_ENV = "production";
+  const deep = "/applications/abc123/team";
+  const survives = getSafeRedirectPath(deep);
+  const absoluteWouldBe = getSafeRedirectPath(appHostUrl(deep));
+  process.env.VERCEL_ENV = prev;
+
+  ok(`a relative deep link survives the redirect allowlist (${survives})`, survives === deep);
+  // And the reason the wrapper cannot come back: prove the allowlist still rejects the absolute form, so
+  // nobody "fixes" this later by loosening the open-redirect defence instead.
+  ok(`an absolute app-host callback is still rejected, as it must be (${absoluteWouldBe})`,
+    absoluteWouldBe !== deep);
+}
 
 // ── Static: proxy decides the app host (and the product roots) before the retired-sansxel list ──
 const proxy = readFileSync("proxy.ts", "utf8");

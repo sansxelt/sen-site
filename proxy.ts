@@ -300,7 +300,13 @@ export default function proxy(req: NextRequest) {
     else if (path === "/app" || path.startsWith("/app/")) target = "/rank" + path;
     // Research articles live at /research/<slug>, so the section needs the PREFIX form as well as the exact
     // entry above. A section with only an exact mapping serves its index and 404s every article under it.
-    else if (path.startsWith("/research/")) target = "/rank" + path;
+    //
+    // Promoted, they render in design 06 like everything else. They were the last surface still serving the
+    // previous generation: indexed, in the sitemap, and linked from nothing, so a reader arriving from
+    // search landed inside the old company with the old navigation. The renderer at
+    // app/dev-preview/v6/research/[slug] reads the SAME registry, so this is a presentation change and not
+    // a second copy of the writing.
+    else if (path.startsWith("/research/")) target = (v6Public() ? "/dev-preview/v6" : "/rank") + path;
   }
   if (target) return go(req, target, "rewrite");
 

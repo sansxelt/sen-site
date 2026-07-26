@@ -48,7 +48,13 @@ console.log("\n── every public page is actually reachable ──");
   const cleanExact = new Set(
     [...proxy.matchAll(/"(\/[a-z0-9-]*)":\s*"\/rank[^"]*"/g)].map((m) => m[1]),
   );
-  const prefixed = [...proxy.matchAll(/path\.startsWith\("(\/[a-z0-9-]+)\/"\)\)\s*target = "\/rank"/g)].map((m) => m[1]);
+  // A section can be prefix-routed to the previous site, or to whichever generation is serving. Research
+  // articles now take the second form, because promoted they render in design 06 and unpromoted they do
+  // not exist there.
+  const prefixed = [
+    ...[...proxy.matchAll(/path\.startsWith\("(\/[a-z0-9-]+)\/"\)\)\s*target = "\/rank"/g)].map((m) => m[1]),
+    ...[...proxy.matchAll(/path\.startsWith\("(\/[a-z0-9-]+)\/"\)\)\s*target = \(v6Public\(\)/g)].map((m) => m[1]),
+  ];
 
   // Every directory directly under app/rank/ that has a page is a public route.
   const pages = readdirSync("app/rank", { withFileTypes: true })
@@ -67,6 +73,17 @@ console.log("\n── every public page is actually reachable ──");
   // A section with dynamic children needs the prefix form too, or the index works and every article 404s.
   ok("/research articles are reachable, not just the index", prefixed.includes("/research"),
     "needs a startsWith(\"/research/\") rule");
+  // AND they must be reachable in BOTH regimes, rendering whichever generation is live. They were the last
+  // surface still serving the previous site after promotion: indexed, in the sitemap, and linked from
+  // nothing, so a reader arriving from search landed inside the old company.
+  ok("research articles follow the promotion instead of pinning one generation",
+    /path\.startsWith\("\/research\/"\)\) target = \(v6Public\(\) \? "\/dev-preview\/v6" : "\/rank"\)/.test(proxy));
+  ok("design 06 has a renderer for them", existsSync("app/dev-preview/v6/research/[slug]/page.tsx"));
+  // One registry. A re-skin that forked the prose would give two versions of an authoritative document.
+  ok("that renderer reads the SAME article registry, it does not copy the writing",
+    /from "@\/app\/rank\/research\/_articles"/.test(readFileSync("app/dev-preview/v6/research/[slug]/page.tsx", "utf8")));
+  ok("design 06 links its articles, so they are reachable and not only addressable",
+    /publishedArticles\(\)/.test(readFileSync("app/dev-preview/v6/research/page.tsx", "utf8")));
 }
 
 console.log("\n── cross-host redirects preserve the query string ──");
