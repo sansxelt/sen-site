@@ -35,12 +35,26 @@ ok("isAppPath(/dev-preview) is false", !isAppPath("/dev-preview"));
     && /v6Public\(\) && path\.startsWith\("\/docs\/"\)/.test(proxy);
   // Every dev-preview mention in the proxy must sit inside the V6 map or its gate; a bare mapping elsewhere
   // is the leak this check exists to catch.
-  const strayLeak = proxy
+  //
+  // COMMENTS ARE STRIPPED FIRST. proxy.ts explains this rule in prose, and prose that names /dev-preview/*
+  // while describing what is NOT claimed was failing the check that the prose exists to document. A test
+  // that its own documentation breaks teaches people to delete the explanation instead of fixing the code.
+  const proxyCode = proxy.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  const strayLeak = proxyCode
     .split("\n")
     .filter((l) => l.includes("dev-preview") && !l.includes("/dev-preview/v6"))
     .length > 0;
   ok("the proxy exposes the preview only behind an explicit, default-off flag",
     gated && usesGate && !strayLeak);
+  // PROMOTED, THE PREVIEW PATH IS NOT A SECOND ADDRESS FOR THE SITE.
+  //
+  // The clean paths rewrite ONTO /dev-preview/v6, so after promotion every page answered at two URLs, both
+  // returning 200 and both emitting index,follow. The canonical already pointed at the clean path, so the
+  // duplication would have been consolidated rather than penalised, but a canonical is a hint and there is
+  // no reason to publish a second address. Promoted, the preview path 308s to the clean one.
+  ok("promoted, /dev-preview/v6 permanently redirects to the clean path",
+    /v6Public\(\) && \(path === "\/dev-preview\/v6" \|\| path\.startsWith\("\/dev-preview\/v6\/"\)\)/.test(proxyCode)
+    && /NextResponse\.redirect\(url, 308\)/.test(proxyCode));
   // NOTHING IN V6 MAY HARDCODE ITS OWN BASE PATH.
   //
   // lib/v6-routes.ts exists so promotion is one edit, and the shell kept a private copy anyway. Promoted,

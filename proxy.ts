@@ -150,6 +150,31 @@ export default function proxy(req: NextRequest) {
   //     CRITICAL: "/api/<anything>" is the real API namespace (NextAuth, preflight routes) and must never
   //     be redirected or rewritten — only the EXACT "/api" path is the product's API & Webhooks page.
   if (path.startsWith("/api/")) return NextResponse.next();
+
+  // ONCE PROMOTED, THE PREVIEW NAMESPACE IS NOT A SECOND ADDRESS FOR THE SITE.
+  //
+  // The V6 tree lives at /dev-preview/v6 and the clean paths REWRITE onto it, which means that after
+  // promotion every page answered at two URLs: /pricing and /dev-preview/v6/pricing, both returning 200 and
+  // both emitting index,follow (layout.tsx flips robots on the same flag). The canonical tag on the preview
+  // copy already points at the clean path, so search engines would consolidate, but a canonical is a hint
+  // and not a directive, and there is no reason to publish a second address at all.
+  //
+  // So promoted, the preview path permanently redirects to the clean one. This is the same mapping
+  // lib/v6-routes.ts performs for constructed navigation: V6_BASE becomes "", so /dev-preview/v6/x is
+  // simply /x. Unpromoted nothing changes and the preview stays reachable for review.
+  //
+  // A rewrite does not re-enter middleware, so redirecting the incoming preview path cannot interfere with
+  // the internal rewrite that serves the clean path from this same tree. Only /dev-preview/v6 is claimed;
+  // the older design previews under /dev-preview/* are untouched.
+  // 308, not the helper's default 307: the preview address is permanently superseded once the site serves
+  // from the clean paths, and a permanent redirect is what tells a crawler to drop the old URL rather than
+  // keep revisiting it. The query string is preserved by clone().
+  if (v6Public() && (path === "/dev-preview/v6" || path.startsWith("/dev-preview/v6/"))) {
+    const url = req.nextUrl.clone();
+    url.pathname = path.slice("/dev-preview/v6".length) || "/";
+    return NextResponse.redirect(url, 308);
+  }
+
   // Reviewer entrance: a clean /yc?k=<code> onto the route handler that opens the stealth curtain. A
   // handler rather than a page, because handlers skip layouts and the stealth gate lives in the root
   // layout. Rewritten (not redirected) so the code never bounces through a visible URL.
