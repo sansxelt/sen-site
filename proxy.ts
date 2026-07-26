@@ -22,7 +22,11 @@ import { isAppPath, legacyToNew, legacyRunsPath } from "./lib/app-routes";
 // rewriting to a 404, which is why this is an explicit map and not a prefix rule.
 export const v6Public = () => process.env.NEXT_PUBLIC_VRAELIS_V6_PUBLIC === "1";
 
-const V6_EXACT: Record<string, string> = {
+// EXPORTED so app/sitemap.ts can derive the public route list from the SAME source that routes it. A
+// sitemap with its own hand-written list is a sitemap that eventually advertises a generation of the site
+// that no longer serves, which is exactly what happened at promotion: it listed /how-it-works and
+// /free-report (both still the previous site) and none of the nine routes design 06 added.
+export const V6_EXACT: Record<string, string> = {
   "/": "/dev-preview/v6",
   "/developers": "/dev-preview/v6/developers",
   "/research": "/dev-preview/v6/research",
@@ -49,7 +53,7 @@ const V6_EXACT: Record<string, string> = {
   "/readme": "/dev-preview/v6/readme",
 };
 
-const CLEAN_EXACT: Record<string, string> = {
+export const CLEAN_EXACT: Record<string, string> = {
   "/": "/rank",
   "/how-it-works": "/rank/how-it-works",
   "/pricing": "/rank/pricing",

@@ -227,9 +227,35 @@ console.log("\n── retired product surfaces are not reachable or indexable �
   // The retired sansxel (site) group (AR lens, voice, workshop, learn) is removed from the build entirely.
   ok("the retired sansxel (site) route group is removed", !existsSync("app/(site)"));
 
-  // Research (current content) is now advertised in the sitemap; the app checkout success gap is repointed.
+  // THE SITEMAP IS DERIVED FROM THE ROUTING, NOT WRITTEN BESIDE IT.
+  //
+  // This used to assert a literal page("/research") entry in a hand-kept list. The promotion showed why
+  // that is the wrong thing to hold: the moment NEXT_PUBLIC_VRAELIS_V6_PUBLIC was set, the proxy began
+  // serving design 06 at the clean paths and the hand-kept list did not know. It went on advertising
+  // /how-it-works and /free-report, which are the PREVIOUS generation, and listed none of the nine routes
+  // design 06 added. The one file whose job is telling search engines what this site is was describing the
+  // site being replaced. Every assertion here passed throughout.
+  //
+  // So what is checked now is the derivation itself, which is what makes divergence impossible.
   const sitemap = readFileSync("app/sitemap.ts", "utf8");
-  ok("sitemap includes /research and its published articles", /page\("\/research"/.test(sitemap) && /publishedArticles\(\)/.test(sitemap));
+  const proxyMaps = readFileSync("proxy.ts", "utf8");
+  ok("the sitemap derives its routes from the same maps the proxy routes with",
+    /import \{[^}]*V6_EXACT[^}]*CLEAN_EXACT[^}]*\} from "@\/proxy"/.test(sitemap)
+    && /Object\.keys\(V6_EXACT\)/.test(sitemap) && /Object\.keys\(CLEAN_EXACT\)/.test(sitemap));
+  ok("the sitemap keeps no hand-written page list to fall out of date",
+    !/\bpage\("\//.test(sitemap));
+  ok("those maps are exported so there can only be one source of truth",
+    /export const V6_EXACT/.test(proxyMaps) && /export const CLEAN_EXACT/.test(proxyMaps));
+  // /research is advertised because it is a routed path, and its articles are the one section with a prefix
+  // rule rather than an exact mapping, so they are still listed explicitly.
+  ok("sitemap advertises /research and its published articles",
+    /"\/research":/.test(proxyMaps) && /publishedArticles\(\)/.test(sitemap));
+  ok("the sitemap never advertises a sign-in form", /NEVER_INDEXED[\s\S]{0,140}"\/signin"/.test(sitemap));
+  // Superseded pages stay REACHABLE (old bookmarks must not 404) but stop being advertised once there is a
+  // newer site to be superseded by. Before promotion they are the live site and belong in the sitemap.
+  ok("superseded pages are dropped from the sitemap only once design 06 is serving",
+    /SUPERSEDED_BY_V6[\s\S]{0,200}"\/how-it-works"/.test(sitemap)
+    && /promoted && SUPERSEDED_BY_V6\.has\(p\)/.test(sitemap));
   const paypal = readFileSync("app/api/paypal/create-subscription/route.ts", "utf8");
   ok("PayPal subscription returns to the live /billing/success (not the dead /checkout/success)",
     /returnUrl:[\s\S]{0,60}\/billing\/success/.test(paypal) && !/returnUrl:[\s\S]{0,60}\/checkout\/success/.test(paypal));
