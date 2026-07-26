@@ -12,7 +12,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { preflightEnabled } from "@/lib/v-preflight-flags";
 import {
-  addRequirement, updateRequirement, deleteRequirement, approveContract,
+  addAuthoredRequirement, updateRequirement, deleteRequirement, approveContract,
   getContractById, contractStatusForRequirement, type Severity,
 } from "@/lib/v-applications";
 import { snapshotIfChanged, pinSnapshotToContract } from "@/lib/preflight/context-snapshots";
@@ -50,7 +50,9 @@ export async function POST(req: Request) {
 
   if (body?.approve === true) {
     if (contract?.status === "approved") return NextResponse.json({ ok: true }); // idempotent; approved_at untouched
-    const ok = await approveContract(email, contractId);
+    // The PERSON who clicked, not the app owner. On a team those are routinely different people, and the
+    // review record has to name whoever actually made the decision.
+    const ok = await approveContract(email, contractId, { kind: "human_direct", email: callerEmail });
     if (ok && contract) {
       // Pin the exact context this approval was made against (S3). Best-effort per the migration rule:
       // snapshotIfChanged and pinSnapshotToContract both warn (naming migration 7's sql file) and no-op
@@ -64,7 +66,10 @@ export async function POST(req: Request) {
   }
 
   if (contract?.status === "approved") return approvedImmutable();
-  const r = await addRequirement(email, contractId, {
+  // A PERSON typed this, which records human authorship and nothing else. The row lands `suggested`: typing
+  // text is not the same act as deciding it should bind, and a generic "Add requirement" button must never
+  // silently approve. The person approves it through the explicit review action below.
+  const r = await addAuthoredRequirement(email, contractId, {
     requirement: typeof body?.requirement === "string" ? body.requirement : "",
     category: typeof body?.category === "string" ? body.category : undefined,
     severity: sev(body?.severity), role: typeof body?.role === "string" ? body.role : undefined, area: typeof body?.area === "string" ? body.area : undefined,
@@ -93,7 +98,8 @@ export async function PATCH(req: Request) {
     severity: sev(body?.severity),
     requirement: typeof body?.requirement === "string" ? body.requirement : undefined,
     reviewState,
-  });
+    // The reviewer is the caller, not the app owner: an accept is a human review and must name the human.
+  }, callerEmail);
   return ok ? NextResponse.json({ ok: true }) : NextResponse.json({ error: "update_failed" }, { status: 400 });
 }
 

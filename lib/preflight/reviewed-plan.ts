@@ -79,6 +79,11 @@ export type StoredReviewedPlan = {
   plan: PlannedVerification;
   role_refs: string[];
   approval_state: "pending" | "approved";
+  /** The PERSON who approved this plan, and when. Carried down onto every requirement row the execution
+   *  writes, so the review recorded in the contract names the human who actually gave it rather than
+   *  asserting an anonymous "approved". Null while approval_state is "pending". */
+  approved_by: string | null;
+  approved_at: string | null;
   execution_state: "unconsumed" | "consuming" | "consumed";
   expires_at: string; // ISO
 };

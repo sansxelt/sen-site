@@ -207,7 +207,9 @@ ok("secrets route snapshots AFTER the sealed store (plaintext never flows toward
 
 const reqRoute = stripComments(read("app/api/preflight/requirements/route.ts"));
 ok("contract approval snapshots + pins inside try/catch, only AFTER approveContract succeeded",
-  /const ok = await approveContract\(email, contractId\);[\s\S]*?if \(ok && contract\) \{[\s\S]*?try \{[\s\S]*?snapshotIfChanged\(email, contract\.application_id, "owner"\)[\s\S]*?pinSnapshotToContract\(email, contractId, snap\.id\)[\s\S]*?\} catch/.test(reqRoute));
+  // Argument-shape independent: approveContract gained a required review actor, and this assertion is about
+  // ORDER and error containment, not about how many arguments the call takes.
+  /const ok = await approveContract\([^;]*\);[\s\S]*?if \(ok && contract\) \{[\s\S]*?try \{[\s\S]*?snapshotIfChanged\(email, contract\.application_id, "owner"\)[\s\S]*?pinSnapshotToContract\(email, contractId, snap\.id\)[\s\S]*?\} catch/.test(reqRoute));
 ok("approval outcome is decided by approveContract alone (pin failure can never turn ok into an error)",
   reqRoute.indexOf("return ok ? NextResponse.json({ ok: true })") > reqRoute.indexOf("pinSnapshotToContract("));
 

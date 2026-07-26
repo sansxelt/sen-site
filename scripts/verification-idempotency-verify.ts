@@ -76,9 +76,17 @@ ok("only an OWNED reservation proceeds to work", /ownsReservation = r\.outcome =
 console.log("\n── a failed reservation is released, never left stuck ──");
 ok("synthesis failure releases the reservation", /if \("error" in s\) \{\s*await releaseOnFailure\(\)/.test(src));
 ok("contract-prep failure releases the reservation", /if \("error" in prepared\) \{\s*await releaseOnFailure\(\)/.test(src));
-ok("a refused launch releases the reservation", /if \(!launched\.ok \|\| !result\?\.runId\) \{[\s\S]{0,400}await releaseOnFailure\(\)/.test(src));
 ok("releaseOnFailure marks the key failed (reclaimable), not deleted or left pending", /markFailed\(p\.principal\.email, idemKey\)/.test(src));
-ok("a successful launch records the run so a retry replays it", /if \(ownsReservation && idemKey\) await markLaunched/.test(src));
+
+// THE DIRECT LANE NO LONGER LAUNCHES, so there is no launch refusal to release from and no launched run to
+// record. It writes a reviewable draft, mints a plan for approval, and returns review_required. The
+// reservation still must not be left pending, which is the property those two assertions protected, so that
+// is what is asserted now: it is released on the SUCCESS path too, because nothing was started.
+ok("a lane that launched nothing still releases the reservation",
+  /await releaseOnFailure\(\);[\s\S]{0,300}mintReviewedPlan/.test(src),
+  "a key held for work that never happened would block the caller's own follow-up request");
+ok("no reservation is ever marked launched on a lane that cannot launch",
+  !/markLaunched\(/.test(src.split("async function executeReviewedPlan")[0]));
 
 console.log("\n── dry run is idempotent too, and never launches, holds, or charges ──");
 // The dry-run block runs synthesis + the bounded correction loop, all of which cost money to Vraelis. A

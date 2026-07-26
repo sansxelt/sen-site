@@ -12,7 +12,9 @@ import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { applicationAccessForRun } from "@/lib/preflight/team-access";
 import { hasAtLeastRole } from "@/lib/v-workspace";
 import { getRun, runContractId } from "@/lib/preflight/runs-db";
-import { getContractById, listRequirements } from "@/lib/v-applications";
+import { getContractById } from "@/lib/v-applications";
+import { requirementsForRun } from "@/lib/preflight/requirements-for-run";
+import { getReviewedPlanByRunId } from "@/lib/preflight/reviewed-plan-db";
 import { apiError, requestId } from "../../_lib";
 import { toRunId, toPublicDecision } from "../_shared";
 
@@ -54,7 +56,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   // is the only defense against a confidently wrong verdict from a misread claim.
   const contractId = await runContractId(access.owner, runId);
   const contract = contractId ? await getContractById(access.owner, contractId) : null;
-  const requirements = contract ? (await listRequirements(access.owner, contract.id)).filter((r) => r.enabled).map((r) => r.requirement) : [];
+  // Order comes from the immutable reviewed plan when this run consumed one, and is reported as incomplete
+  // rather than invented when it does not exist to be read.
+  const reqs = await requirementsForRun(access.owner, runId, contract?.id ?? null);
+  const reviewedPlan = await getReviewedPlanByRunId(access.owner, runId);
 
   // Only failures the run actually observed. Each carries what was expected, what happened instead, and how
   // to reproduce it.
@@ -85,10 +90,28 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     state: "completed",
     decision,
     claim: contract?.source_prompt ?? null,
-    requirements,
+    requirements: reqs.requirements,
     failures,
     evidence,
     repair_prompt: repairPrompt,
-    human_reviewed: false,
+    // ASSERTED FROM THE PERSISTED BINDING, NOT HARDCODED.
+    //
+    // This was the literal `false` on every response, including runs that had consumed an approved reviewed
+    // plan, so the one case where a person really had reviewed the plan was reported as if nobody had. The
+    // run -> plan binding is durable (v_reviewed_plans.run_id, stamped at consume time), so the answer is
+    // readable rather than assumed.
+    human_reviewed: reviewedPlan?.approvalState === "approved",
+    ...(reviewedPlan?.approvalState === "approved"
+      ? { reviewed_by: reviewedPlan.approvedBy, reviewed_at: reviewedPlan.approvedAt, reviewed_plan_id: reviewedPlan.id }
+      : {}),
+    // Two INDEPENDENT facts, never collapsed into one. A decision is historical and is never rewritten;
+    // whether a person reviewed the contract behind it is a separate question with a separate answer, and a
+    // record may carry both, either, or neither.
+    decision_status: contract?.legacy_approval_class ? "legacy" : "current",
+    contract_review_status: contract?.legacy_approval_class
+      ?? (reviewedPlan?.approvalState === "approved" ? "human_reviewed" : "unreviewed"),
+    // Whether the order above is the order something durable recorded, or simply the order the rows came
+    // back in. Silence here would present a tied legacy sort as if it were the approved sequence.
+    requirement_order: reqs.orderBasis,
   }, { headers: { "X-Request-Id": rid, "cache-control": "no-store" } });
 }

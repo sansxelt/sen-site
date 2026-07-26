@@ -124,7 +124,9 @@ export async function listRequirementsForMerge(owner: string, contractId: string
     id: r.id,
     fingerprint: r.fingerprint || fingerprint(r.category, r.requirement),
     requirement: r.requirement, category: r.category, severity: r.severity as Severity,
-    origin: (r.origin as ReqOrigin) || "user", review_state: (r.review_state as ReqState) || "approved",
+    // A missing value means UNKNOWN, and unknown must never resolve to "a person wrote it" or "a person
+    // approved it". These fallbacks previously did exactly that, so a null column read as a human decision.
+    origin: (r.origin as ReqOrigin) || "unspecified", review_state: (r.review_state as ReqState) || "suggested",
     user_modified: !!r.user_modified, stale: !!r.stale,
     source_refs: Array.isArray(r.source_refs) ? (r.source_refs as SourceRef[]) : [],
     discovery_version_last_suggested: r.discovery_version_last_suggested ?? null,

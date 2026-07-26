@@ -27,8 +27,8 @@
 // cannot be repaired in place.
 import { getSupabaseAdminClient, isDatabaseConfigured } from "../supabase-admin";
 import {
-  listApplications, createApplication, addRequirement, addFlow, approveContract,
-  type Application, type Severity,
+  listApplications, createApplication, addGeneratedRequirement, addFlow, approveContract,
+  type Application, type Severity, type RequirementReview,
 } from "../v-applications";
 import { crawl } from "./discover-crawl";
 import { makeSafeFetcher } from "./crawl-fetch";
@@ -139,6 +139,8 @@ export type PreparedVerification = {
   flowIds: string[];
   /** The requirements Vraelis derived from the claim. ALWAYS returned to the caller. */
   requirements: string[];
+  /** True only when a hash-verified reviewed-plan approval was stamped onto every requirement row. */
+  humanReviewed: boolean;
 };
 
 // A requirement exactly as it would be written: the checkable text plus the metadata the contract stores.
@@ -154,6 +156,13 @@ export type PlanFlow = { name: string; goal: string; role: string | null; steps:
 // projects the same plan); the correction loop may replace this plan with a stronger one, but whatever plan
 // reaches prepareVerification is exactly what runs.
 export type PlannedVerification = { requirements: PlanRequirement[]; flows: PlanFlow[] };
+
+// The approval carried down from an approved, integrity-checked reviewed plan. This is the ONLY shape that
+// authorizes prepareVerification to freeze a contract, because it is the only case where a person demonstrably
+// saw the exact ordered requirement set that is about to run: the plan is immutable, plan_hash binds its
+// canonical projection, evaluateForExecution refuses a plan whose content no longer hashes to that value, and
+// execution writes the stored plan without resynthesis.
+export type ReviewedPlanApproval = { reviewed: true; planId: string; approvedBy: string; approvedAt: string };
 
 export function projectPlan(synth: Synthesis): PlannedVerification {
   const requirements: PlanRequirement[] = [];
@@ -182,7 +191,7 @@ export function planRequirementTexts(plan: PlannedVerification): string[] {
 }
 
 /**
- * Write a RESOLVED plan into a fresh contract with approved, enabled flows, then freeze it.
+ * Write a RESOLVED plan into a fresh contract, and freeze it ONLY when a person approved that exact plan.
  *
  * The plan passed in is whatever survived the coverage gate: either projectPlan(synth) unchanged, or a
  * stronger plan the correction loop produced. prepareVerification writes exactly that plan and nothing else,
@@ -196,6 +205,10 @@ export function planRequirementTexts(plan: PlannedVerification): string[] {
  */
 export async function prepareVerification(
   owner: string, app: Application, claim: string, plan: PlannedVerification,
+  // How, if at all, this plan was reviewed. `{reviewed:false}` writes a REVIEWABLE DRAFT and approves
+  // nothing; a reviewed_plan approval writes rows already carrying that approval's identity and then freezes
+  // the contract. There is no third value, so there is no way to reach an approved contract without a person.
+  review: ReviewedPlanApproval | { reviewed: false },
 ): Promise<PreparedVerification | LaneFailure> {
   const uid = norm(owner);
 
@@ -224,11 +237,24 @@ export async function prepareVerification(
   // the gate and the run can never disagree about what was checked.
 
   // Requirements first: approveContract refuses a contract with no enabled requirement, and a flow's
-  // requirement_refs are only meaningful once the requirements exist. addRequirement inserts
-  // enabled + approved, which is the auto-approval decision made explicit.
+  // requirement_refs are only meaningful once the requirements exist.
+  //
+  // A MODEL AUTHORED THESE. The row says so: source "inference", origin "prompt". It used to say source
+  // "manual" with origin and review_state left to defaults that meant "a person wrote this" and "a person
+  // approved this", which is how 136 production rows came to claim a human review that never happened.
+  //
+  // order_index is the plan's own position, so the stored order reproduces the order plan_hash bound rather
+  // than the constant 9999 the old insert wrote for every row.
+  const rowReview: RequirementReview = review.reviewed
+    ? { reviewed: true, basis: "reviewed_plan", approvedBy: review.approvedBy, approvedAt: review.approvedAt }
+    : { reviewed: false };
   const requirements: string[] = [];
-  for (const r of plan.requirements) {
-    const added = await addRequirement(uid, contractId, { requirement: r.text, category: r.category, severity: r.severity });
+  for (const [i, r] of plan.requirements.entries()) {
+    const added = await addGeneratedRequirement(
+      uid, contractId,
+      { requirement: r.text, category: r.category, severity: r.severity },
+      { review: rowReview, orderIndex: i + 1 },
+    );
     if (added) requirements.push(r.text);
   }
   if (!requirements.length) {
@@ -257,10 +283,25 @@ export async function prepareVerification(
     };
   }
 
-  // Freeze it. Everything above had to happen first; nothing can be added after this line.
-  if (!(await approveContract(uid, contractId))) {
+  // ── APPROVAL IS A HUMAN ACT, OR IT DOES NOT HAPPEN ──────────────────────────────────────────────────
+  //
+  // This line used to call approveContract unconditionally, and the row defaults made it succeed: a model
+  // wrote the requirements, a machine approved them, and the contract was indistinguishable from one a
+  // person had read. That is the mechanism this whole change exists to remove.
+  //
+  // With a reviewed plan, a person approved this exact hash-bound set and the rows already carry their
+  // identity, so the contract freezes here. Without one, the contract stays a DRAFT holding suggested
+  // requirements for review. Nothing is lost: the caller gets a real reviewable artifact instead of a
+  // manufactured approval, and the run does not start.
+  if (!review.reviewed) {
+    return { applicationId: app.id, contractId, contractVersion: version, flowIds, requirements, humanReviewed: false };
+  }
+
+  if (!(await approveContract(uid, contractId, {
+    kind: "reviewed_plan", planId: review.planId, approvedBy: review.approvedBy, approvedAt: review.approvedAt,
+  }))) {
     return { error: "unavailable", message: "Could not finalize the verification contract.", status: 503 };
   }
 
-  return { applicationId: app.id, contractId, contractVersion: version, flowIds, requirements };
+  return { applicationId: app.id, contractId, contractVersion: version, flowIds, requirements, humanReviewed: true };
 }

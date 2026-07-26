@@ -28,6 +28,9 @@ function toStored(d: Row): StoredReviewedPlan {
     id: d.id, user_id: d.user_id, deployment_fp: d.deployment_fp, claim_fp: d.claim_fp,
     plan_hash: d.plan_hash, plan: d.plan, role_refs: d.role_refs ?? [],
     approval_state: d.approval_state, execution_state: d.execution_state, expires_at: d.expires_at,
+    // The approver travels with the plan: execution stamps this exact identity onto every requirement row it
+    // writes, so the contract records WHO reviewed it rather than an unattributed "approved".
+    approved_by: d.approved_by ?? null, approved_at: d.approved_at ?? null,
   };
 }
 
@@ -87,21 +90,33 @@ export async function getReviewedPlan(owner: string, id: string): Promise<Stored
 // this run at consume time. Read-only, owner-scoped, over the existing v_reviewed_plans.run_id column (no new
 // table/concept). Returns null for a run that consumed no reviewed plan (a legacy/direct run) or before
 // migration 18, so a legacy record honestly falls back rather than fabricating a binding.
-export type ReviewedPlanProvenance = { id: string; approvalState: "pending" | "approved"; approvedAt: string | null; planHash: string; executionState: "unconsumed" | "consuming" | "consumed" };
+export type ReviewedPlanProvenance = {
+  id: string; approvalState: "pending" | "approved"; approvedBy: string | null; approvedAt: string | null;
+  planHash: string; executionState: "unconsumed" | "consuming" | "consumed";
+  /** The approved requirement texts IN THE ORDER plan_hash bound. The authoritative historical order. */
+  requirementTexts: string[];
+};
 export async function getReviewedPlanByRunId(owner: string, runId: string): Promise<ReviewedPlanProvenance | null> {
   if (!isDatabaseConfigured() || !runId) return null;
   try {
     const s = getSupabaseAdminClient();
-    const r = await s.from(TABLE as never).select("id, approval_state, approved_at, plan_hash, execution_state")
+    const r = await s.from(TABLE as never).select("id, approval_state, approved_by, approved_at, plan_hash, execution_state, plan")
       .eq("run_id", runId).eq("user_id", norm(owner)).maybeSingle();
-    const d = r.data as { id?: string; approval_state?: string; approved_at?: string | null; plan_hash?: string; execution_state?: string } | null;
+    const d = r.data as {
+      id?: string; approval_state?: string; approved_by?: string | null; approved_at?: string | null;
+      plan_hash?: string; execution_state?: string; plan?: PlannedVerification;
+    } | null;
     if (!d?.id) return null;
     return {
       id: String(d.id),
       approvalState: d.approval_state === "approved" ? "approved" : "pending",
+      approvedBy: (d.approved_by as string) ?? null,
       approvedAt: (d.approved_at as string) ?? null,
       planHash: String(d.plan_hash ?? ""),
       executionState: d.execution_state === "consumed" ? "consumed" : d.execution_state === "consuming" ? "consuming" : "unconsumed",
+      // Read straight off the immutable plan. This is why historical order never has to be reconstructed
+      // from row timestamps: the artifact that was approved still holds it, exactly as approved.
+      requirementTexts: (d.plan?.requirements ?? []).map((x) => (x?.text ?? "").trim()).filter(Boolean),
     };
   } catch { return null; }
 }

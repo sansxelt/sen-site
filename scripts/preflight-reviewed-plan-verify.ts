@@ -41,6 +41,9 @@ const stored = (plan: PlannedVerification, over: Partial<StoredReviewedPlan> = {
   plan_hash: planHash(plan),
   plan, role_refs: planRoleRefs(plan),
   approval_state: "approved", execution_state: "unconsumed",
+  // An approved plan names its approver. Execution copies these onto every requirement row it writes, so a
+  // fixture that omitted them would be modelling a plan that could not legally execute.
+  approved_by: "reviewer@example.com", approved_at: new Date(NOW - 60e3).toISOString(),
   expires_at: new Date(NOW + 3600e3).toISOString(),
   ...over,
 });

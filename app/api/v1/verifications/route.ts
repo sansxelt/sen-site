@@ -28,13 +28,15 @@ import { laneApplication, synthesizeClaim, prepareVerification, laneRoles } from
 import { repairPrompt } from "@/lib/preflight/coverage";
 import { resolveCoverage, resolutionGaps, type CoverageResolution } from "@/lib/preflight/coverage-resolve";
 import { runIdentity } from "@/lib/preflight/runs-db";
-import { getContractById, listRequirements } from "@/lib/v-applications";
-import { reserve, markLaunched, markFailed, verificationFingerprint } from "@/lib/preflight/verification-idempotency";
+import { listRequirements } from "@/lib/v-applications";
+// markLaunched is gone with the direct lane's launch: this path no longer starts a run, so there is no
+// launched run to record against a reservation.
+import { reserve, markFailed, verificationFingerprint } from "@/lib/preflight/verification-idempotency";
 import { evaluateForExecution } from "@/lib/preflight/reviewed-plan";
 import { mintReviewedPlan, getReviewedPlan, consumeReviewedPlan, markReviewedPlanRun, releaseReviewedPlan } from "@/lib/preflight/reviewed-plan-db";
 import { createHash } from "crypto";
 import { apiError, requestId } from "../_lib";
-import { toVerificationId, canonicalClaim } from "./_shared";
+import { toVerificationId } from "./_shared";
 
 export const runtime = "nodejs";
 export const maxDuration = 300; // crawl + synthesis + at most two bounded corrections; inside the worker budget
@@ -261,9 +263,22 @@ export async function POST(req: Request) {
     }, { status: 422, headers: { "X-Request-Id": rid } });
   }
 
-  // Both gates pass. Write and launch the RESOLVED plan (the corrected one when correction ran), so the run
-  // executes exactly what the gate judged sufficient.
-  const prepared = await prepareVerification(p.principal.email, app, claim, resolution.plan);
+  // ── BOTH GATES PASS, AND THAT IS STILL NOT A HUMAN REVIEW ───────────────────────────────────────────
+  //
+  // This is where the direct synthesis lane used to write a contract, approve it on the caller's behalf, and
+  // launch. The approval was real in the database and imaginary in fact: a model read the claim, a model
+  // wrote the requirements, and the row defaults recorded that a person had authored and approved them. 136
+  // production rows still carry that claim. Preserving the old behaviour would mean manufacturing human
+  // review, which is the one thing this product cannot do and still mean anything.
+  //
+  // So the plan is written as a REVIEWABLE DRAFT (model-authored, suggested, no reviewer, contract not
+  // approved) and minted as an immutable reviewed plan for approval. Nothing launches, nothing is charged,
+  // and the caller gets back the exact requirements plus the handle to approve. Once approved, resubmitting
+  // with reviewed_plan_id runs precisely that hash-bound plan.
+  //
+  // The reviewed-plan lane may proceed without stopping here because exact review is already proven there.
+  // This lane must wait for it.
+  const prepared = await prepareVerification(p.principal.email, app, claim, resolution.plan, { reviewed: false });
   if ("error" in prepared) {
     await releaseOnFailure();
     await logKeyUsage(p.principal, { endpoint: "POST /v1/verifications", status: prepared.status, applicationId: app.id });
@@ -273,99 +288,35 @@ export async function POST(req: Request) {
     );
   }
 
-  // DELEGATE. The forwarded request carries the caller's own key, so the runs route resolves the SAME
-  // principal, enforces the SAME scope, and applies the SAME per-key ceiling. Nothing is elevated in
-  // transit: this route cannot grant a permission the caller did not already have.
-  //
-  // The idempotency key is forwarded when the caller sent one, so retrying a verification is a retry of the
-  // underlying run rather than a second charge. When they did not, the claim itself keys it, which makes
-  // "verify this same claim against this same build twice" idempotent for free.
-  const idem = req.headers.get("idempotency-key") || `vrf:${prepared.contractId}`;
-  const forwarded = new Request(new URL(`/api/preflight/apps/${prepared.applicationId}/runs`, req.url), {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-api-key": req.headers.get("x-api-key") ?? "",
-      "idempotency-key": idem,
-    },
-    body: JSON.stringify({ deployment_url: deploymentUrl, flow_ids: prepared.flowIds }),
-  });
-  const launched = await launchRun(forwarded, { params: Promise.resolve({ id: prepared.applicationId }) });
-  const result = await launched.json().catch(() => null) as { runId?: string; error?: string; message?: string } | null;
+  // Nothing launched, so the idempotency key must not stay pending: the caller will resubmit with a
+  // reviewed_plan_id, and that is a different request.
+  await releaseOnFailure();
 
-  // IDEMPOTENCY RECONCILIATION. /v1 must respect the launch VERDICT, not merely whether a runId came back.
-  //
-  // The runs route dedupes on an idempotency key bound to the payload, and a 409 conflict still carries the
-  // conflicting runId. An earlier version checked only `result.runId` and so treated that 409 as success:
-  // a caller who reused a key with a CHANGED claim got a 202 with the FIRST verification's id and believed
-  // their new claim was running. That is precisely the confident-wrong-answer this product exists to catch,
-  // reintroduced at the seam. Found by the first real production run.
-  //
-  // The runs route cannot tell an identical retry from a changed request on this path, because the
-  // verification lane mints fresh flow ids per call, so the payload fingerprint never repeats and EVERY
-  // reuse looks like a changed payload. /v1 can tell, because it holds the caller's inputs: compare the
-  // claim (and URL) the conflicting run actually tested.
-  if (launched.status === 409 && result?.runId) {
-    const idn = await runIdentity(p.principal.email, result.runId);
-    const priorClaim = idn?.contractId ? (await getContractById(p.principal.email, idn.contractId))?.source_prompt : null;
-    const sameRequest = !!idn
-      && canonicalClaim(priorClaim) === canonicalClaim(claim)
-      && idn.deploymentUrl === deploymentUrl;
-    if (sameRequest) {
-      // A genuine retry: same key, same claim, same deployment. Return the ORIGINAL verification rather than
-      // starting or charging a second one. This is the double-click / lost-response case working correctly.
-      await logKeyUsage(p.principal, { endpoint: "POST /v1/verifications", status: 200, applicationId: prepared.applicationId, runId: result.runId });
-      return Response.json({
-        verification_id: toVerificationId(result.runId),
-        state: "running",
-        status_url: `/v1/verifications/${toVerificationId(result.runId)}`,
-        claim,
-        requirements: prepared.requirements,
-        human_reviewed: false,
-      }, { status: 200, headers: { "X-Request-Id": rid } });
-    }
-    // Same key, DIFFERENT request. Refuse loudly rather than answering with the earlier run.
-    await logKeyUsage(p.principal, { endpoint: "POST /v1/verifications", status: 409, applicationId: prepared.applicationId });
-    return Response.json(
-      { error: { code: "idempotency_key_reused", message: "That idempotency key was already used for a different verification. Use a new key, or resend the original request exactly.", request_id: rid } },
-      { status: 409, headers: { "X-Request-Id": rid } },
-    );
-  }
-
-  // Every other refusal (paused, over a cap, over the key ceiling, out of balance) is passed through with
-  // its own status and message rather than flattened. An agent branching on key_daily_ceiling must still
-  // see key_daily_ceiling.
-  if (!launched.ok || !result?.runId) {
-    // The launch was refused after we owned the reservation. Release it so the key is reclaimable rather than
-    // stuck pending: the caller can fix the cause (add balance, wait out a pause) and retry the same key.
-    await releaseOnFailure();
-    return Response.json(
-      { error: { code: result?.error ?? "internal_error", message: result?.message ?? "The verification could not be started.", request_id: rid } },
-      { status: launched.status, headers: { "X-Request-Id": rid } },
-    );
-  }
-
-  // Launched. Record the run on the reservation so an identical retry replays it without doing any work.
-  if (ownsReservation && idemKey) await markLaunched(p.principal.email, idemKey, result.runId);
-
-  const verificationId = toVerificationId(result.runId);
-  await logKeyUsage(p.principal, {
-    endpoint: "POST /v1/verifications", status: 200,
-    applicationId: prepared.applicationId, runId: result.runId,
+  const discoveryHash = createHash("sha256").update(JSON.stringify(s.pages ?? [])).digest("hex").slice(0, 32);
+  const minted = await mintReviewedPlan({
+    owner: p.principal.email, deploymentUrl, claim, plan: resolution.plan, discoveryHash,
+    coverage: { claim_after: resolution.claimAfter, execution_after: resolution.executionAfter, ready: resolution.readyToLaunch },
+    ttlMs: REVIEWED_PLAN_TTL_MS, nowMs: Date.now(),
   });
 
+  await logKeyUsage(p.principal, { endpoint: "POST /v1/verifications", status: 202, applicationId: prepared.applicationId });
   return Response.json({
-    verification_id: verificationId,
-    state: "running",
-    status_url: `/v1/verifications/${verificationId}`,
+    state: "review_required",
     claim,
-    // ALWAYS returned. A misread claim producing a confident wrong verdict is this endpoint's main failure
-    // mode, and the caller cannot detect it from a decision alone. These are what Vraelis is about to check.
+    // What a person is being asked to approve, in the order plan_hash binds. Reviewing a decision you were
+    // never shown is not reviewing it.
     requirements: prepared.requirements,
-    // No human approved this contract. Said plainly, on every response, rather than buried in documentation.
     human_reviewed: false,
+    review_required: true,
+    contract_id: prepared.contractId,
+    contract_version: prepared.contractVersion,
+    ...(minted ? { reviewed_plan_id: minted.id, reviewed_plan_expires_at: minted.expiresAt } : {}),
+    message: minted
+      ? "Vraelis built a plan that can prove this claim, and no person has reviewed it yet. Approve the reviewed plan, then resubmit with reviewed_plan_id to run exactly what was approved. Nothing was run and nothing was charged."
+      : "Vraelis built a plan that can prove this claim, and no person has reviewed it yet. Approve the requirements on this contract before running it. Nothing was run and nothing was charged.",
   }, { status: 202, headers: { "X-Request-Id": rid } });
 }
+
 
 // Execute an APPROVED reviewed plan verbatim. The invariant this function protects: between here and the run,
 // nothing is synthesized, corrected, recrawled, or substituted — production runs exactly the requirements and
@@ -406,7 +357,25 @@ async function executeReviewedPlan(req: Request, rid: string, principal: Princip
   if ("error" in app) { await release(); return apiError("internal_error", app.message, app.status, rid); }
 
   // Write and launch the EXACT stored plan. prepareVerification takes a given plan and never synthesizes.
-  const prepared = await prepareVerification(principal.email, app, claim, stored.plan);
+  //
+  // The approval travels WITH the plan onto every requirement row: review_state approved, review_basis
+  // reviewed_plan, and the reviewer's own identity and timestamp copied from the approval event. Authorship
+  // is untouched by this — the rows stay source "inference", origin "prompt", because a person approving a
+  // model's text does not make them its author. approveContract then refuses to freeze the contract unless
+  // every enabled row carries exactly that basis and that approver, so an approval can never end up covering
+  // rows the reviewer did not see.
+  //
+  // evaluateForExecution has already refused any plan whose content no longer hashes to its stored
+  // plan_hash, so what is being written here is provably the artifact that was approved.
+  const approval = stored.approved_by && stored.approved_at
+    ? { reviewed: true as const, planId: stored.id, approvedBy: stored.approved_by, approvedAt: stored.approved_at }
+    : null;
+  if (!approval) {
+    await release();
+    await logKeyUsage(principal, { endpoint: "POST /v1/verifications (reviewed)", status: 409 });
+    return err("reviewed_plan_approval_incomplete", 409, "That reviewed plan is marked approved but records no approver. It cannot be executed. Create and approve a new one.");
+  }
+  const prepared = await prepareVerification(principal.email, app, claim, stored.plan, approval);
   if ("error" in prepared) {
     await release();
     await logKeyUsage(principal, { endpoint: "POST /v1/verifications (reviewed)", status: prepared.status, applicationId: app.id });

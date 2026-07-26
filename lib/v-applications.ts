@@ -12,6 +12,7 @@ import { canonicalDeploymentUrl } from "./preflight/deployments-db";
 import { apiTargetIdsForOwner, webRuntimeFilter } from "./preflight/runtime/targets-db";
 import { memberWorkspaceIds } from "./preflight/team-access";
 import type { FlowStep } from "./preflight/flow-steps";
+import { requirementReviewIdentity } from "./preflight/contract-merge";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
 function db() { return getSupabaseAdminClient(); }
@@ -26,6 +27,10 @@ export type Application = {
 };
 export type ProductionContract = {
   id: string; application_id: string; version: number; status: "draft" | "approved"; source_prompt: string | null; approved_at: string | null; created_at: string;
+  // Migration 19 (additive; absent until applied). Records that this contract's approval was manufactured by
+  // the pre-correction lane rather than performed by a person. SEPARATE from `status`, which records only
+  // that an approval happened, and separate from any run decision, which is never rewritten.
+  legacy_approval_class?: string | null;
 };
 export type ContractRequirement = {
   id: string; contract_id: string; category: string; requirement: string; severity: Severity; enabled: boolean;
@@ -38,6 +43,20 @@ export type ContractRequirement = {
   // (kept, never deleted). These drive the suggestion-review UI; listRequirements select("*") already returns them.
   review_state?: string | null; stale?: boolean | null; reasoning_summary?: string | null;
   discovery_version_last_suggested?: number | null;
+  // Migration 19 (additive; absent until applied). AUTHORSHIP AND REVIEW ARE SEPARATE FACTS:
+  //   source/origin  = who or what authored the text
+  //   review_state   = the review decision
+  //   review_basis   = HOW that approval happened ("human_direct" | "reviewed_plan"), null when unapproved
+  //   approved_by    = the person who reviewed it        (null unless review_state is "approved")
+  //   approved_at    = when that person reviewed it      (null unless review_state is "approved")
+  // legacy_review_class marks a row the migration-21 backfill corrected, so a row that was WRITTEN honestly
+  // is always distinguishable from one that was CORRECTED into honesty.
+  review_basis?: string | null; approved_by?: string | null; approved_at?: string | null;
+  legacy_review_class?: string | null;
+  // The canonical content the reviewer agreed to, captured at approval. A draft revision carries the
+  // approval forward only when the copy still produces this exact value; anything else, including a missing
+  // value, means the review cannot be proven to apply and is cleared.
+  review_identity?: string | null;
 };
 export type TestFlow = {
   id: string; contract_id: string; name: string; goal: string | null; role: string | null; start_path: string | null;
@@ -284,10 +303,37 @@ export async function contractStatusForRequirement(userId: string, requirementId
   return contract?.status ?? null;
 }
 
+// Ordered by order_index, then created_at, then id. The trailing keys are a TOTAL-ORDER GUARANTEE, not an
+// ordering claim: where order_index ties (152 legacy rows do, because the old insert hardcoded 9999), this
+// at least returns the same sequence on every read instead of whatever Postgres happens to produce. It does
+// NOT reconstruct the order those rows were approved in — see requirementsForRun, which reads historical
+// order from the immutable reviewed plan and refuses to invent one when there is no plan to read.
 export async function listRequirements(userId: string, contractId: string): Promise<ContractRequirement[]> {
   if (!isDatabaseConfigured()) return [];
-  const { data } = await db().from("v_contract_requirements").select("*").eq("user_id", norm(userId)).eq("contract_id", contractId).order("order_index", { ascending: true });
+  const { data } = await db().from("v_contract_requirements").select("*").eq("user_id", norm(userId)).eq("contract_id", contractId)
+    .order("order_index", { ascending: true }).order("created_at", { ascending: true }).order("id", { ascending: true });
   return (data as ContractRequirement[]) ?? [];
+}
+
+// Whether this contract's stored requirement order is trustworthy. A contract whose rows share an
+// order_index has no recoverable authored order: prepareVerification inserted sequentially, but a UUID is
+// not evidence of insertion order and two rows can share a timestamp. Callers report this rather than
+// presenting a manufactured sequence as the approved one.
+export function requirementOrderIsComplete(reqs: ContractRequirement[]): boolean {
+  const seen = new Set<number>();
+  for (const r of reqs) {
+    const i = typeof r.order_index === "number" ? r.order_index : 0;
+    if (seen.has(i)) return false;
+    seen.add(i);
+  }
+  return true;
+}
+
+// One requirement row, owner-scoped. Null when it does not exist for this owner.
+export async function getRequirementById(userId: string, id: string): Promise<ContractRequirement | null> {
+  if (!isDatabaseConfigured()) return null;
+  const { data } = await db().from("v_contract_requirements").select("*").eq("user_id", norm(userId)).eq("id", id).maybeSingle();
+  return (data as unknown as ContractRequirement) ?? null;
 }
 
 // Verify a contract belongs to this owner (used before any requirement mutation).
@@ -324,22 +370,125 @@ async function requirementAcceptsSemanticWrite(uid: string, requirementId: strin
   return (await contractStatusForRequirement(uid, requirementId)) === "draft";
 }
 
-export async function addRequirement(userId: string, contractId: string, input: { requirement: string; category?: string; severity?: Severity; role?: string; area?: string }): Promise<ContractRequirement | null> {
+// ── REQUIREMENT INSERTION: TWO WRITERS, NEITHER OF WHICH MAY GUESS ─────────────────────────────────────
+//
+// There used to be ONE addRequirement, called both by a person typing in the dashboard and by
+// prepareVerification writing what a model synthesized. It hardcoded source "manual" and approved true, and
+// passed neither `origin` nor `review_state`, so both columns fell to the migration-2 defaults 'user' and
+// 'approved'. Every model-authored requirement therefore claimed, in the database, that a person wrote it
+// and a person approved it. 136 production rows carry that claim. The synthesis layer already forbids this
+// in writing (discover-synthesis: "manual" is never a valid AI attribution) — the write path simply did not
+// obey it.
+//
+// The fix is not a parameter. It is two functions that cannot be confused for one another:
+//
+//   addAuthoredRequirement   a PERSON typed this text.        source manual,    origin user
+//   addGeneratedRequirement  a MODEL synthesized this text.   source inference, origin prompt
+//
+// Neither reads a database default for authorship or review; every provenance column is supplied at the
+// call site. A generated writer cannot reach the authored one, and the AST ratchet in
+// scripts/preflight-provenance-integrity-verify.ts fails the build if it ever can.
+export type RequirementInput = { requirement: string; category?: string; severity?: Severity; role?: string; area?: string };
+
+// How a requirement came to be approved. Null is not "unknown", it is "not approved": review_basis is
+// non-null exactly when review_state is "approved".
+export type ReviewBasis = "human_direct" | "reviewed_plan";
+
+// The review facts a row carries at insertion. "unreviewed" is not a review_state (the lifecycle stays
+// suggested | approved | rejected | archived); it is the ABSENCE of a review, which is what `suggested`
+// already means for generated content awaiting a decision.
+export type RequirementReview =
+  | { reviewed: false }
+  | { reviewed: true; basis: ReviewBasis; approvedBy: string; approvedAt: string };
+
+function reviewColumns(review: RequirementReview, identity: string) {
+  return review.reviewed
+    ? {
+      review_state: "approved", approved: true, review_basis: review.basis,
+      approved_by: norm(review.approvedBy), approved_at: review.approvedAt,
+      // What the reviewer was agreeing to, captured at the moment they agreed. A later draft revision may
+      // carry this approval forward only if the content still hashes to this exact value.
+      review_identity: identity,
+    }
+    : {
+      // Generated-or-authored-but-undecided. No reviewer identity, no timestamp, no basis: a row must never
+      // imply a review that did not happen.
+      review_state: "suggested", approved: false, review_basis: null,
+      approved_by: null, approved_at: null, review_identity: null,
+    };
+}
+
+// order_index = max+1 for this contract, mirroring addFlow. The old code hardcoded 9999 for every row, which
+// is why 152 rows across 21 contracts share an order_index with a sibling and requirement order is whatever
+// Postgres happens to return. Callers that own a canonical order (the verification lane, whose plan order is
+// what plan_hash binds) pass their index explicitly instead.
+async function nextRequirementOrderIndex(uid: string, contractId: string): Promise<number> {
+  const existing = await listRequirements(uid, contractId);
+  return existing.reduce((m, r) => Math.max(m, typeof r.order_index === "number" ? r.order_index : 0), 0) + 1;
+}
+
+async function insertRequirement(
+  uid: string, contractId: string, input: RequirementInput,
+  provenance: { source: string; origin: string; review: RequirementReview; orderIndex: number },
+): Promise<ContractRequirement | null> {
+  const requirement = (input.requirement || "").trim().slice(0, 400);
+  if (!requirement) return null;
+  const category = (input.category || "general").slice(0, 60);
+  const severity = input.severity ?? "important";
+  const { data } = await db().from("v_contract_requirements").insert({
+    contract_id: contractId, user_id: uid, requirement, category,
+    severity, enabled: true,
+    role: input.role ?? null, area: input.area ?? null,
+    // EXPLICIT. Nothing below is allowed to come from a column default.
+    source: provenance.source, origin: provenance.origin,
+    ...reviewColumns(provenance.review, requirementReviewIdentity({ requirement, category, severity, enabled: true })),
+    order_index: provenance.orderIndex,
+  } as never).select("*").single();
+  return (data as unknown as ContractRequirement) ?? null;
+}
+
+/**
+ * A PERSON typed this requirement. Records human AUTHORSHIP and nothing more.
+ *
+ * Typing text proves who wrote it. It does not prove they then reviewed it as binding contract content, so
+ * the row lands `suggested` and the person approves it through the explicit review action. A generic "Add
+ * requirement" button must never silently approve; a future "Add and approve" may, provided the UI says so
+ * and it records the same review provenance as the normal approval path.
+ */
+export async function addAuthoredRequirement(userId: string, contractId: string, input: RequirementInput): Promise<ContractRequirement | null> {
   if (!isDatabaseConfigured()) return null;
   const uid = norm(userId);
   if (!(await ownsContract(uid, contractId))) return null;
   // Approval freezes the requirement SET, not only the text of existing rows.
   if (!(await contractAcceptsSemanticWrite(uid, contractId))) return null;
-  const requirement = (input.requirement || "").trim().slice(0, 400);
-  if (!requirement) return null;
-  const { data } = await db().from("v_contract_requirements").insert({
-    contract_id: contractId, user_id: uid, requirement, category: (input.category || "general").slice(0, 60),
-    // Provenance (S7): hand-added requirements record source "manual" (the closed provenance set); the
-    // origin column keeps its default "user". Older rows with source "user"/"seed" stay labeled honestly.
-    severity: input.severity ?? "important", source: "manual", approved: true, enabled: true,
-    role: input.role ?? null, area: input.area ?? null, order_index: 9999,
-  } as never).select("*").single();
-  return (data as unknown as ContractRequirement) ?? null;
+  return insertRequirement(uid, contractId, input, {
+    source: "manual", origin: "user", review: { reviewed: false },
+    orderIndex: await nextRequirementOrderIndex(uid, contractId),
+  });
+}
+
+/**
+ * A MODEL synthesized this requirement from the caller's claim.
+ *
+ * source "inference" is the closed-set provenance tag for text the model inferred; origin "prompt" is where
+ * the material came from, the claim being the contract's source_prompt. The claim is INPUT MATERIAL, never
+ * the author, which is why neither column says "manual" or "user".
+ *
+ * `review` is `{reviewed:false}` on the direct synthesis lane (nobody has looked at it) and a reviewed_plan
+ * approval only when an approved, hash-verified immutable plan is being executed. orderIndex is the plan's
+ * own position, so the stored order reproduces the order plan_hash bound.
+ */
+export async function addGeneratedRequirement(
+  userId: string, contractId: string, input: RequirementInput,
+  provenance: { review: RequirementReview; orderIndex: number },
+): Promise<ContractRequirement | null> {
+  if (!isDatabaseConfigured()) return null;
+  const uid = norm(userId);
+  if (!(await ownsContract(uid, contractId))) return null;
+  if (!(await contractAcceptsSemanticWrite(uid, contractId))) return null;
+  return insertRequirement(uid, contractId, input, {
+    source: "inference", origin: "prompt", review: provenance.review, orderIndex: provenance.orderIndex,
+  });
 }
 
 // Owner-scoped patch of a requirement (toggle enabled, change severity, edit text, or accept/reject a
@@ -351,17 +500,70 @@ export async function updateRequirement(
   userId: string,
   id: string,
   patch: { enabled?: boolean; severity?: Severity; requirement?: string; reviewState?: "approved" | "rejected" },
+  // The PERSON performing this patch. An accept is the one moment a human review is recorded on a row, so
+  // the reviewer's identity is required rather than inferred from the app owner (on a team, the owner and
+  // the person clicking are routinely different people).
+  reviewer: string,
 ): Promise<boolean> {
   if (!isDatabaseConfigured()) return false;
   if (!(await requirementAcceptsSemanticWrite(norm(userId), id))) return false;
-  const fields: Record<string, unknown> = { approved: true };
+  const fields: Record<string, unknown> = {};
   if (typeof patch.enabled === "boolean") fields.enabled = patch.enabled;
   if (patch.severity) fields.severity = patch.severity;
   if (typeof patch.requirement === "string") { fields.requirement = patch.requirement.trim().slice(0, 400); fields.user_modified = true; }
+
+  // A REVIEW DESCRIBES THE EXACT CONTENT THAT WAS REVIEWED.
+  //
+  // Changing the text, the severity, or whether the requirement binds at all changes what a reviewer would
+  // have been agreeing to. Carrying the old approval across that change would let edited content inherit a
+  // review nobody gave it, which is the same defect as a default that assumes one. So any semantic change
+  // that is not itself an explicit review decision drops the row back to `suggested` and clears the
+  // reviewer, the timestamp and the basis together.
+  const semanticChange = typeof patch.requirement === "string" || !!patch.severity || typeof patch.enabled === "boolean";
+  if (semanticChange && !patch.reviewState) {
+    fields.review_state = "suggested";
+    fields.approved = false;
+    fields.review_basis = null;
+    fields.approved_by = null;
+    fields.approved_at = null;
+    fields.review_identity = null;
+  }
+
   // Accept a suggestion -> approved + enabled; reject -> rejected + disabled (so a rejected suggestion can
   // never count toward an approvable contract). Absent reviewState leaves the column untouched (legacy edit).
-  if (patch.reviewState === "approved") { fields.review_state = "approved"; if (typeof patch.enabled !== "boolean") fields.enabled = true; }
-  else if (patch.reviewState === "rejected") { fields.review_state = "rejected"; fields.enabled = false; }
+  //
+  // An accept is a HUMAN REVIEW and is recorded as one: who, when, and on what basis. It is the only path
+  // besides a hash-verified reviewed plan that may write review_state "approved".
+  if (patch.reviewState === "approved") {
+    // Capture WHAT is being approved, not just that something was. The row as it will exist after this
+    // patch: the incoming values where present, the stored ones otherwise. An approval whose identity was
+    // computed from stale content would be a review of text the reviewer never saw.
+    const current = await getRequirementById(norm(userId), id);
+    if (!current) return false;
+    const enabled = typeof fields.enabled === "boolean" ? fields.enabled : true;
+    fields.review_state = "approved";
+    fields.approved = true;
+    fields.review_basis = "human_direct";
+    fields.approved_by = norm(reviewer);
+    fields.approved_at = new Date().toISOString();
+    fields.review_identity = requirementReviewIdentity({
+      requirement: String(fields.requirement ?? current.requirement),
+      category: String(fields.category ?? current.category),
+      severity: String(fields.severity ?? current.severity),
+      enabled,
+      source_refs: (current as { source_refs?: unknown }).source_refs as never,
+    });
+    if (typeof patch.enabled !== "boolean") fields.enabled = true;
+  } else if (patch.reviewState === "rejected") {
+    fields.review_state = "rejected";
+    fields.approved = false;
+    fields.review_basis = null;
+    fields.approved_by = null;
+    fields.approved_at = null;
+    fields.review_identity = null;
+    fields.enabled = false;
+  }
+  if (!Object.keys(fields).length) return true;
   const { error } = await db().from("v_contract_requirements").update(fields as never).eq("user_id", norm(userId)).eq("id", id);
   return !error;
 }
@@ -374,29 +576,84 @@ export async function deleteRequirement(userId: string, id: string): Promise<boo
   return !error;
 }
 
+// How an approval is being performed. There is no machine actor, and that absence is the point: a contract
+// can be approved by a person deciding row by row, or by a person approving one exact immutable plan. There
+// is no third way, so no code path can approve a contract without a human decision behind it.
+export type ApprovalActor =
+  | { kind: "human_direct"; email: string }
+  // A hash-verified approved reviewed plan. planHash is re-checked against the rows this contract actually
+  // carries before the approval is written, so an approval can never cover more than the reviewer saw.
+  | { kind: "reviewed_plan"; planId: string; approvedBy: string; approvedAt: string };
+
+// Why a contract may or may not be approved. PURE and total, so the rule can be tested with real inputs
+// instead of asserted against the source text of the function that used to hold it. The previous suite
+// checked for an exact statement string here, went red when that statement was reworded while staying
+// correct, and taught everyone to edit the checker.
+export type ApprovalReadiness =
+  | { ok: true }
+  | { ok: false; reason: "no_enabled_requirement" | "unreviewed_requirement" | "unattributed_approval" | "approval_actor_mismatch" };
+
+export function contractApprovalReadiness(reqs: ContractRequirement[], actor: ApprovalActor): ApprovalReadiness {
+  // AN ENABLED REQUIREMENT IS PART OF THE OFFICIAL MEANING, SO IT MUST HAVE BEEN REVIEWED.
+  //
+  // This once required only that ONE enabled requirement existed, and never that any had been approved, so
+  // an enabled row still in review_state 'suggested' froze into the contract and became binding. It was also
+  // satisfied for free: the migration-2 default made every row 'approved' before anyone looked at it. Now
+  // that no writer reads a default, the check does what it says.
+  const enabled = reqs.filter((r) => r.enabled);
+  if (!enabled.length) return { ok: false, reason: "no_enabled_requirement" };
+  if (enabled.some((r) => (r as { review_state?: string }).review_state !== "approved")) {
+    return { ok: false, reason: "unreviewed_requirement" };
+  }
+
+  // AND EVERY ONE OF THOSE APPROVALS MUST NAME THE PERSON WHO GAVE IT. "approved" with no reviewer and no
+  // timestamp is exactly the shape of the defect being corrected: a state that reads like a human decision
+  // and records none.
+  //
+  // Rows written before migration 19 have no such columns to carry, and are grandfathered ONLY when the
+  // columns are absent entirely (undefined), never when they are present and null, which would mean a
+  // post-migration writer skipped them.
+  const unattributed = enabled.filter((r) => !r.review_basis || !r.approved_by || !r.approved_at);
+  const preMigration = unattributed.some((r) => r.review_basis === undefined);
+  if (unattributed.length && !preMigration) return { ok: false, reason: "unattributed_approval" };
+
+  // A reviewed-plan approval must still be covering THIS contract's rows. evaluateForExecution verified the
+  // stored plan against its own hash before execution began; this is the second half of that guarantee, at
+  // the moment approval is written. An approval may only ever cover the exact set the reviewer saw.
+  if (actor.kind === "reviewed_plan") {
+    const approver = norm(actor.approvedBy);
+    const mismatched = enabled.some((r) => {
+      if (r.review_basis === undefined) return false; // pre-migration-19 row, grandfathered as above
+      return r.review_basis !== "reviewed_plan" || norm(r.approved_by || "") !== approver;
+    });
+    if (mismatched) return { ok: false, reason: "approval_actor_mismatch" };
+  }
+
+  return { ok: true };
+}
+
 // Approve a contract (requires at least one enabled requirement). Approval is the gate before a paid run.
-export async function approveContract(userId: string, contractId: string): Promise<boolean> {
+export async function approveContract(userId: string, contractId: string, actor: ApprovalActor): Promise<boolean> {
   if (!isDatabaseConfigured()) return false;
   const uid = norm(userId);
   const reqs = await listRequirements(uid, contractId);
-  // AN ENABLED REQUIREMENT IS PART OF THE OFFICIAL MEANING, SO IT MUST HAVE BEEN REVIEWED.
-  //
-  // This previously required only that ONE enabled requirement existed, and never that any of them had been
-  // approved. An enabled row still in review_state 'suggested' therefore froze into the contract, became
-  // binding, and was then silently reworded by the next discovery pass, because the merge planner preserves
-  // content for user/user_modified/approved rows but not for suggested ones.
-  //
-  // The guards added elsewhere stop approved meaning being rewritten later. This stops UNREVIEWED content
-  // becoming the approved meaning in the first place, which is upstream of all of it.
-  //
-  // The column default is 'approved' (migration 2), so requirements written by prepareVerification and
-  // addRequirement satisfy this untouched. Only explicitly-suggested rows, which is what discovery inserts,
-  // are blocked. Disabled suggestions stay as excluded draft material and never reach this check.
-  const enabled = reqs.filter((r) => r.enabled);
-  if (!enabled.length) return false;
-  if (enabled.some((r) => (r as { review_state?: string }).review_state !== "approved")) return false;
+  // The whole rule lives in contractApprovalReadiness, which is pure and directly tested. Keeping it here
+  // as inline statements is what let a checker assert on its exact wording and go red when the wording moved.
+  if (!contractApprovalReadiness(reqs, actor).ok) return false;
+
   const { error } = await db().from("v_production_contracts").update({ status: "approved", approved_at: new Date().toISOString() } as never).eq("user_id", uid).eq("id", contractId);
-  if (!error) await logEvent({ userId: uid, eventType: "preflight_contract_approved", actorType: "owner", source: "app", metadata: { contract_id: contractId, requirements: reqs.length } });
+  if (!error) {
+    await logEvent({
+      userId: uid, eventType: "preflight_contract_approved", actorType: "owner", source: "app",
+      // Who approved, and how. A contract approval that cannot say which of the two paths produced it is not
+      // auditable after the fact.
+      metadata: {
+        contract_id: contractId, requirements: reqs.length, review_basis: actor.kind,
+        approved_by: actor.kind === "human_direct" ? norm(actor.email) : norm(actor.approvedBy),
+        ...(actor.kind === "reviewed_plan" ? { reviewed_plan_id: actor.planId } : {}),
+      },
+    });
+  }
   return !error;
 }
 

@@ -153,7 +153,10 @@ console.log("── ownership: data-layer functions filter eq(\"user_id\") or ar
         || f.body.includes('in("user_id"') || f.body.includes("in('user_id'")
         || /ownsContract\(/.test(f.body)
         || /user_id:\s*(uid|owner|norm\()/.test(f.body)
-        || /accessibleOwners\(|listApplications\(|latestRunByApp\(/.test(f.body)
+        // getContractById is itself eq("user_id")-filtered, so delegating to it IS the ownership check.
+        // contractAcceptsSemanticWrite used to satisfy this rule only because the body slice happened to
+        // include a trailing comment containing "owner-scoped", which is not an ownership mechanism.
+        || /accessibleOwners\(|listApplications\(|latestRunByApp\(|getContractById\(/.test(f.body)
         || /transitive|owner-scoped/i.test(f.body);
       ok(`${t.file}: ${f.name}() filters eq("user_id") or documents transitive ownership`, owned);
     }

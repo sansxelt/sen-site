@@ -151,10 +151,16 @@ async function main(): Promise<void> {
 
   // 7. Seed APPROVED requirements (definitions only; no results).
   for (const r of REQUIREMENTS) {
+    // FIXTURE PROVENANCE, STATED AS SUCH. This is a script seeding a demo account, so origin is "system"
+    // and the reviewer is the seed owner: a fixture that recorded origin "user" would be indistinguishable
+    // from a requirement a person actually typed, and fixture rows must never be usable as evidence that a
+    // human reviewed anything. The contract is seeded approved, so the rows must name a basis and an
+    // approver or migration 20's constraints would reject them, and rightly.
     const { error } = await s.from("v_contract_requirements").insert({
       contract_id: contractId, user_id: owner, category: r.category, requirement: r.requirement,
-      severity: "critical", enabled: true, approved: true, source: "seed", origin: "user",
-      review_state: "approved", order_index: r.order,
+      severity: "critical", enabled: true, approved: true, source: "seed", origin: "system",
+      review_state: "approved", review_basis: "human_direct", approved_by: owner,
+      approved_at: new Date().toISOString(), order_index: r.order,
     } as never);
     if (error) { console.error("Failed to seed requirement:", error.message); process.exit(1); }
   }

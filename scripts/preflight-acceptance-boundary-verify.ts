@@ -155,8 +155,12 @@ console.log("\n── approval freezes meaning ──");
     const j = src.indexOf("\nexport ", i + 10);
     return src.slice(i, j < 0 ? src.length : j);
   };
+  // addRequirement was split into two explicit writers (a person typed it / a model generated it) so a
+  // generated path can no longer be recorded as human-authored. BOTH must carry the same guard: the split
+  // must not have created a second, unguarded way into an approved contract.
   for (const [fn, note] of [
-    ["addRequirement", "an approved contract must not accept a NEW requirement"],
+    ["addAuthoredRequirement", "an approved contract must not accept a NEW human-authored requirement"],
+    ["addGeneratedRequirement", "an approved contract must not accept a NEW model-generated requirement"],
     ["updateRequirement", "approved requirement text must not be editable"],
     ["deleteRequirement", "an approved requirement must not be deletable"],
   ] as const) {

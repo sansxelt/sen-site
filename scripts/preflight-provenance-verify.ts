@@ -14,6 +14,7 @@ import {
   type SynthContext, type Synthesis,
 } from "../lib/preflight/discover-synthesis";
 import { planMerge } from "../lib/preflight/contract-merge";
+import { contractApprovalReadiness, type ContractRequirement, type ApprovalActor } from "../lib/v-applications";
 import { extractSnapshot } from "../lib/preflight/discover-extract";
 import { sourceLabel, sourceChipInfo } from "../app/rank/app/applications/[id]/contract/labels";
 
@@ -273,7 +274,9 @@ ok("applyMergePlan writes origin (inference for connection signals; fallback: di
 ok("merged suggestions are never auto-enabled (enabled comes from the review-gated default)",
   discoveryDb.includes("enabled: synthEnabledByFp[ins.fingerprint] ?? false"));
 const vApps = stripComments(read("lib/v-applications.ts"));
-ok("hand-added requirements record source manual", /addRequirement[\s\S]*?source: "manual"/.test(vApps));
+ok("hand-added requirements record human authorship and nothing more",
+  /addAuthoredRequirement[\s\S]*?source: "manual", origin: "user", review: \{ reviewed: false \}/.test(vApps),
+  "a person typing text proves who wrote it, not that they reviewed it as binding");
 const mergeSrc = stripComments(read("lib/preflight/contract-merge.ts"));
 ok("planMerge threads provenance + origin through inserts",
   mergeSrc.includes("source: sug.provenance") && mergeSrc.includes('origin: sug.origin ?? "discovery"'));
@@ -290,11 +293,42 @@ ok("keyless path never marks prior AI suggestions stale", run.includes("plan.upd
 console.log("\n── approval flow static ──");
 const reqRoute = stripComments(read("app/api/preflight/requirements/route.ts"));
 ok("approval still requires the explicit approve action through approveContract",
-  reqRoute.includes("body?.approve === true") && reqRoute.includes("approveContract(email, contractId)"));
+  reqRoute.includes("body?.approve === true") && /approveContract\(email, contractId,/.test(reqRoute));
+ok("the approval names the PERSON who clicked, not the app owner",
+  /approveContract\(email, contractId, \{ kind: "human_direct", email: callerEmail \}\)/.test(reqRoute),
+  "on a team the owner and the reviewer are routinely different people");
 ok("approved contracts stay immutable (409 on every mutation path)",
   (reqRoute.match(/approvedImmutable\(\)/g) ?? []).length >= 3);
-ok("approveContract still refuses a contract with zero enabled requirements",
-  vApps.includes("if (!reqs.some((r) => r.enabled)) return false;"));
+// BEHAVIOUR, NOT WORDING. This assertion used to check for one exact statement inside approveContract and
+// went red the moment that statement was reworded while remaining correct. The rule now lives in a pure
+// function, so the suite can simply run it.
+{
+  const HUMAN = { kind: "human_direct" as const, email: "reviewer@example.com" };
+  const req = (over: Partial<ContractRequirement> = {}): ContractRequirement => ({
+    enabled: true, review_state: "approved", review_basis: "human_direct",
+    approved_by: "reviewer@example.com", approved_at: "2026-07-25T00:00:00.000Z", ...over,
+  } as ContractRequirement);
+  const readiness = (reqs: ContractRequirement[], actor: ApprovalActor = HUMAN) => contractApprovalReadiness(reqs, actor);
+
+  ok("approveContract still refuses a contract with zero enabled requirements",
+    readiness([]).ok === false
+    && readiness([{ ...req({}), enabled: false }]).ok === false);
+  ok("a fully reviewed contract is approvable", readiness([req({})]).ok === true);
+  ok("an enabled but unreviewed requirement blocks approval",
+    readiness([{ ...req({}), review_state: "suggested" }]).ok === false);
+  ok("an approved requirement naming no reviewer blocks approval",
+    readiness([{ ...req({}), approved_by: null }]).ok === false
+    && readiness([{ ...req({}), approved_at: null }]).ok === false
+    && readiness([{ ...req({}), review_basis: null }]).ok === false);
+  ok("a disabled unreviewed suggestion never blocks approval",
+    readiness([req({}), { ...req({}), enabled: false, review_state: "suggested" }]).ok === true);
+  ok("a reviewed-plan approval refuses rows approved by someone else",
+    readiness([{ ...req({}), review_basis: "reviewed_plan", approved_by: "someone.else@example.com" }],
+      { kind: "reviewed_plan", planId: "rvp_1", approvedBy: "reviewer@example.com", approvedAt: "2026-07-25T00:00:00.000Z" }).ok === false);
+  ok("a reviewed-plan approval accepts rows carrying that same approval",
+    readiness([{ ...req({}), review_basis: "reviewed_plan" }],
+      { kind: "reviewed_plan", planId: "rvp_1", approvedBy: "reviewer@example.com", approvedAt: "2026-07-25T00:00:00.000Z" }).ok === true);
+}
 const editor = read("app/rank/app/applications/[id]/contract/contract-editor.tsx");
 ok("the editor's approve button still gates on enabled requirements",
   editor.includes("disabled={busyApprove || enabledCount === 0}"));

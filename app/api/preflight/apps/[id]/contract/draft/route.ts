@@ -17,6 +17,7 @@ import { getContract } from "@/lib/v-applications";
 import { gatePreflightApp, gateReasonResponse } from "@/lib/preflight/team-access";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "@/lib/supabase-admin";
 import { logEvent } from "@/lib/v-events";
+import { requirementReviewIdentity } from "@/lib/preflight/contract-merge";
 
 export const runtime = "nodejs";
 
@@ -50,8 +51,13 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json({ contractId: ex.id, version: ex.version });
   }
 
+  // The claim the new version is written against. Named rather than inlined so the review carry-over below
+  // compares against the value actually stored: if a future revision path ever transforms the prompt, the
+  // comparison stops matching and every carried approval is cleared instead of silently surviving a change
+  // of claim.
+  const carriedSourcePrompt = current.source_prompt;
   const { data: createdRow, error: createErr } = await db.from("v_production_contracts").insert({
-    user_id: owner, application_id: id, version: nextVersion, status: "draft", source_prompt: current.source_prompt,
+    user_id: owner, application_id: id, version: nextVersion, status: "draft", source_prompt: carriedSourcePrompt,
   } as never).select("id,version").single();
   if (createErr || !createdRow) return NextResponse.json({ error: "unavailable", message: "Could not create the draft. Try again." }, { status: 503 });
   const created = createdRow as { id: string; version: number };
@@ -63,13 +69,30 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json({ error: "copy_failed", message: "Could not copy the contract into a draft. Try again." }, { status: 503 });
   };
 
-  // Copy requirements. New ids are minted here so flow requirement_ids can be remapped; approved resets to
-  // false (the copy is back in draft); origin/source/review_state and every other field carry over as-is.
+  // ── COPY REQUIREMENTS, AND DECIDE WHAT THE COPY MAY STILL CLAIM ────────────────────────────────────
+  //
+  // New ids are minted here so flow requirement_ids can be remapped. AUTHORSHIP (source, origin) always
+  // carries over: who wrote the sentence does not change because it was copied into a new version.
+  //
+  // REVIEW is different. An approval is a decision about exact content, so it may only travel with content
+  // that is provably identical. Each row stores the canonical identity of what its reviewer agreed to
+  // (review_identity); the copy recomputes it and carries the approval forward only on an exact match, with
+  // the claim unchanged and no edit recorded after the approval. Anything else, including a row that has no
+  // stored identity to compare against, drops back to `suggested` with the reviewer, timestamp and basis
+  // cleared together. Fail-closed: an approval that cannot be proven to apply does not apply.
+  //
+  // Reviewed-PLAN approval never carries forward, whatever the individual rows do. A new version can differ
+  // in flows, steps, ordering, or scope even when every requirement text is untouched, so it needs its own
+  // reviewed plan. Only the row-level human decisions survive the copy.
+  const claimUnchanged = (carriedSourcePrompt ?? null) === (current.source_prompt ?? null);
   const { data: reqRows, error: reqErr } = await db.from("v_contract_requirements").select("*")
-    .eq("user_id", owner).eq("contract_id", current.id).order("order_index", { ascending: true });
+    .eq("user_id", owner).eq("contract_id", current.id)
+    .order("order_index", { ascending: true }).order("created_at", { ascending: true }).order("id", { ascending: true });
   if (reqErr) return abort();
   const reqIdMap = new Map<string, string>();
-  const reqCopies = ((reqRows ?? []) as Row[]).map((r) => {
+  let reviewsCarried = 0;
+  let reviewsCleared = 0;
+  const reqCopies = ((reqRows ?? []) as Row[]).map((r, i) => {
     const copy: Row = { ...r };
     const oldId = String(copy.id);
     const newId = randomUUID();
@@ -77,7 +100,40 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     delete copy.created_at;
     copy.id = newId;
     copy.contract_id = created.id;
-    copy.approved = false;
+
+    const storedIdentity = typeof r.review_identity === "string" ? r.review_identity : null;
+    const currentIdentity = requirementReviewIdentity({
+      requirement: String(r.requirement ?? ""),
+      category: String(r.category ?? "general"),
+      severity: String(r.severity ?? "important"),
+      enabled: r.enabled !== false,
+      source_refs: Array.isArray(r.source_refs) ? (r.source_refs as never) : [],
+    });
+    const provenApproved = r.review_state === "approved"
+      && !!storedIdentity
+      && storedIdentity === currentIdentity
+      && claimUnchanged
+      && r.user_modified !== true
+      && !!r.approved_by && !!r.approved_at;
+
+    if (provenApproved) {
+      copy.approved = true;
+      reviewsCarried++;
+    } else {
+      copy.review_state = r.review_state === "rejected" ? "rejected" : "suggested";
+      copy.approved = false;
+      copy.review_basis = null;
+      copy.approved_by = null;
+      copy.approved_at = null;
+      copy.review_identity = null;
+      if (r.review_state === "approved") reviewsCleared++;
+    }
+    // The copy is not the artifact any plan was approved against, and it was not produced by the backfill.
+    copy.reviewed_plan_id = null;
+    copy.legacy_review_class = null;
+    // Dense, unique ordering. Copying order_index verbatim would inherit the legacy 9999 ties, so a revision
+    // of an old contract would be as unordered as the contract it came from.
+    copy.order_index = i + 1;
     return copy;
   });
   if (reqCopies.length) {
@@ -107,7 +163,13 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   await logEvent({
     userId: owner, eventType: "preflight_contract_draft_created", actorType: "owner", source: "app",
     route: `/api/preflight/apps/${id}/contract/draft`,
-    metadata: { application_id: id, contract_id: created.id, version: created.version, from_contract_id: current.id, requirements: reqCopies.length, flows: flowCopies.length },
+    // How many approvals survived the copy and how many were dropped, so a revision that silently lost a
+    // review is visible in the event log rather than only in the rows.
+    metadata: {
+      application_id: id, contract_id: created.id, version: created.version, from_contract_id: current.id,
+      requirements: reqCopies.length, flows: flowCopies.length,
+      reviews_carried: reviewsCarried, reviews_cleared: reviewsCleared,
+    },
   });
   return NextResponse.json({ contractId: created.id, version: created.version });
 }

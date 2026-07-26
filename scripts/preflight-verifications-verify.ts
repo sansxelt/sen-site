@@ -114,8 +114,14 @@ function disclosureTests() {
   ok("the create response echoes the derived requirements", /requirements: prepared\.requirements/.test(create));
   ok("the terminal response echoes the requirements", /\brequirements,/.test(readRoute));
   ok("the terminal response echoes the claim it tested", /claim: contract\?\.source_prompt/.test(readRoute));
-  ok("both responses state that no human reviewed the contract",
-    /human_reviewed: false/.test(create) && /human_reviewed: false/.test(readRoute));
+  // The create response still says plainly that nobody reviewed it. The terminal response no longer says
+  // so unconditionally: it used to return the literal `false` even for a run that had consumed an APPROVED
+  // reviewed plan, which reported the one case where a person really did review the plan as if nobody had.
+  // It is now read from the persisted run-to-plan binding.
+  ok("the create response states that no human reviewed the contract", /human_reviewed: false/.test(create));
+  ok("the terminal response derives human review from the persisted binding, never a literal",
+    /human_reviewed: reviewedPlan\?\.approvalState === "approved"/.test(readRoute)
+    && !/human_reviewed: (false|true)\b/.test(readRoute));
   // The loop-closing artifact. A decision without it leaves the caller knowing something is wrong and not
   // knowing what to do.
   ok("the terminal response carries the repair prompt", /repair_prompt: repairPrompt/.test(readRoute));
@@ -152,15 +158,40 @@ function reconciliationTests() {
 
   console.log("\n── the route respects the launch verdict, not just the presence of a runId ──");
   const src = read(ROUTE_CREATE);
-  ok("a 409 from the runs route is handled explicitly", /launched\.status === 409 && result\?\.runId/.test(src));
-  ok("a reused key with the SAME claim returns the ORIGINAL verification at status 200",
-    /sameRequest[\s\S]{0,400}status: 200/.test(src));
-  ok("a reused key with a DIFFERENT claim is refused as idempotency_key_reused",
-    /idempotency_key_reused[\s\S]{0,220}status: 409/.test(src));
-  // The old bug: success was inferred from a runId alone. Success must now gate on the HTTP result too.
-  ok("success now requires an ok status, not merely a runId", /if \(!launched\.ok \|\| !result\?\.runId\)/.test(src));
-  ok("the sameRequest check compares BOTH the claim and the deployment url",
-    /canonicalClaim\(priorClaim\) === canonicalClaim\(claim\)[\s\S]{0,140}idn\.deploymentUrl === deploymentUrl/.test(src));
+
+  // THE FAILURE MODE IS NOW STRUCTURALLY ABSENT ON THIS PATH, NOT GUARDED.
+  //
+  // The bug these assertions were written for: a caller reused an idempotency key with a CHANGED claim, the
+  // runs route answered 409 carrying the earlier run's id, and /v1 treated that as success and returned the
+  // FIRST verification's id for the SECOND claim. It was found by the first real production run, and the fix
+  // was a reconciliation block that compared the stored claim and deployment before trusting the 409.
+  //
+  // The direct synthesis lane no longer launches anything: it writes a reviewable draft, mints a plan for
+  // approval, and returns review_required. With no launch there is no 409 to misread, so the reconciliation
+  // it guarded is gone with it. Asserting the guard still exists would now require reintroducing the launch.
+  //
+  // What must stay true is the property the guard existed to protect, so that is what is checked.
+  const directLane = src.split("async function executeReviewedPlan")[0];
+  ok("the direct lane cannot launch a run at all", !/launchRun\(/.test(directLane),
+    "no launch means no 409 to mistake for success");
+  // Scoped to the review_required response itself: the idempotency REPLAY branch earlier in the same
+  // function legitimately returns a verification_id, because it is replaying a run that really did launch
+  // under a reservation taken before this lane stopped launching.
+  const reviewBody = directLane.slice(directLane.indexOf('state: "review_required"'));
+  ok("the direct lane returns review_required instead of a verification id",
+    /state: "review_required"/.test(directLane) && !/verification_id:/.test(reviewBody));
+  ok("the direct lane charges nothing and says so",
+    /Nothing was run and nothing was charged/.test(directLane));
+  ok("a reservation that launched nothing is released, so the key stays reusable",
+    /await releaseOnFailure\(\);[\s\S]{0,400}mintReviewedPlan/.test(directLane));
+
+  // The reviewed-plan lane DOES launch. Its idempotency key is derived from the plan id, and a plan is
+  // consumed exactly once atomically, so the same key can never carry a different claim.
+  const reviewedLane = src.slice(src.indexOf("async function executeReviewedPlan"));
+  ok("success still requires an ok status, not merely a runId", /if \(!launched\.ok \|\| !result\?\.runId\)/.test(reviewedLane));
+  ok("the reviewed lane keys idempotency on the plan, which is consumed exactly once",
+    /"idempotency-key": `rvp:\$\{reviewedPlanId\}`/.test(reviewedLane) && /consumeReviewedPlan\(/.test(reviewedLane),
+    "a key bound to a single-use plan cannot be reused with a different claim");
 }
 
 function main() {

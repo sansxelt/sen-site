@@ -43,6 +43,8 @@ const SOURCE_LABELS: Record<string, string> = {
   "connection:github": "From GitHub connection",
   manual: "Added manually",
   inference: "Vraelis inference",
+  // Authorship the database used to hide: a row with no stated author claims no author.
+  unspecified: "Source not recorded",
   // legacy values that may exist on older rows
   build_prompt: "From your prompt",
   discovery: "Discovered from the app",
@@ -50,6 +52,28 @@ const SOURCE_LABELS: Record<string, string> = {
   seed: "Added manually",
   requirements_file: "From requirements file",
 };
+
+// How a requirement's review stands, in the owner's language. "approved" now means a PERSON accepted it, so
+// it is the only value that may be phrased as a decision; everything else says plainly that no one has
+// decided yet. There is no auto-approved label because there is no auto-approved state.
+const REVIEW_STATE_LABELS: Record<string, string> = {
+  approved: "Reviewed and approved",
+  suggested: "Awaiting your review",
+  rejected: "Rejected",
+  archived: "Archived",
+};
+export function reviewStateLabel(raw: string | null | undefined): string {
+  return REVIEW_STATE_LABELS[(raw || "suggested").trim().toLowerCase()] ?? "Awaiting your review";
+}
+
+// How the approval happened. Null is not "unknown", it is "not approved", and is rendered as such by the
+// caller rather than given a label that could be mistaken for a weak form of approval.
+export function reviewBasisLabel(raw: string | null | undefined): string | null {
+  const key = (raw || "").trim().toLowerCase();
+  if (key === "human_direct") return "Approved directly";
+  if (key === "reviewed_plan") return "Approved as part of a reviewed plan";
+  return null;
+}
 
 export function sourceLabel(raw: string | null | undefined): string {
   if (!raw) return "Added manually";
