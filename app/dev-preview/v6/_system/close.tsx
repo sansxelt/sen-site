@@ -10,9 +10,9 @@ import { CLOSE_TITLE, CLOSE_SAY } from "./positioning";
 import { useScrollProgress, entryProgress } from "./progress";
 import { Spectral } from "./spectral";
 import "./close.css";
+import { V6_BASE } from "@/lib/v6-routes";
 
-const BASE = "/dev-preview/v6";
-
+const BASE = V6_BASE;
 export function ClosingScene({
   title = CLOSE_TITLE,
   say = CLOSE_SAY,

@@ -1,5 +1,6 @@
 import { Reveal, PageHero, SectionHead, CTA, EditorialLink, Signal, Kicker } from "../_system/ui";
 import { v6meta } from "../_system/meta";
+import { V6_BASE } from "@/lib/v6-routes";
 
 // Integrations (design 06). Only surfaces that are actually shipped: GitHub, Vercel, Slack, API, CLI,
 // webhooks. Each description says truthfully what it does today (e.g. GitHub is read-only repository
@@ -13,8 +14,7 @@ export const metadata = v6meta({
   path: "/integrations",
 });
 
-const BASE = "/dev-preview/v6";
-
+const BASE = V6_BASE;
 type Live = { name: string; what: string; href?: string; hrefLabel?: string };
 
 const LIVE: Live[] = [

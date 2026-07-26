@@ -4,9 +4,9 @@ import { notFound } from "next/navigation";
 import { v6meta } from "../../_system/meta";
 import { DocShell, Blocks, DocCode } from "../../_content/docs-ui";
 import { DOCS, getDoc, adjacentDocs, docHeadings } from "../../_content/docs";
+import { V6_BASE } from "@/lib/v6-routes";
 
-const BASE = "/dev-preview/v6";
-
+const BASE = V6_BASE;
 // Real, runnable examples against the shipped API surface. Only pages where an example is genuinely truthful
 // carry one; the rest render without a code block rather than inventing a call that does not exist.
 const EXAMPLES: Record<string, [string, string]> = {

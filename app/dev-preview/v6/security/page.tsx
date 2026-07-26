@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { v6meta } from "../_system/meta";
 import { PageHero, Reveal, SectionHead, Signal, CTA, EditorialLink } from "../_system/ui";
+import { V6_BASE } from "@/lib/v6-routes";
 
 export const metadata = v6meta({
   title: "Security",
@@ -10,7 +11,7 @@ export const metadata = v6meta({
   type: "website",
 });
 
-const BASE = "/dev-preview/v6";
+const BASE = V6_BASE;
 const ANCHOR: CSSProperties = { scrollMarginTop: 88 };
 
 type SigState = "go" | "wait" | "stop";

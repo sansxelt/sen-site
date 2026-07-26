@@ -3,9 +3,9 @@ import Link from "next/link";
 import { v6meta } from "../_system/meta";
 import { DocShell } from "../_content/docs-ui";
 import { DOCS } from "../_content/docs";
+import { V6_BASE } from "@/lib/v6-routes";
 
-const BASE = "/dev-preview/v6";
-
+const BASE = V6_BASE;
 export const metadata: Metadata = v6meta({
   title: "Documentation",
   description: "Use and administer Vraelis: connect a system, assign responsibilities, run oversight, and read results.",

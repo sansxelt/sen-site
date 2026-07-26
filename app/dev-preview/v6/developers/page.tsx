@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Reveal, PageHero, SectionHead, CTA, EditorialLink, Signal } from "../_system/ui";
 import { v6meta } from "../_system/meta";
+import { V6_BASE } from "@/lib/v6-routes";
 
 // Developers (design 06). How external systems invoke the verification engine, the one capability inside
 // Vraelis oversight that is live and self-serve today. Every request/response shape here is copied from the
@@ -14,8 +15,7 @@ export const metadata = v6meta({
   path: "/developers",
 });
 
-const BASE = "/dev-preview/v6";
-
+const BASE = V6_BASE;
 /* ------------------------------------------------------------------ code --- */
 // A char-exact tokenizer: the final [\s\S] alternative matches every remaining character, so the rendered
 // text always equals the source byte for byte and the copy button returns exactly what is shown.

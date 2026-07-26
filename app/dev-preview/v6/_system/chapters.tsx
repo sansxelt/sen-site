@@ -16,9 +16,9 @@ import Link from "next/link";
 import { DOCS } from "../_content/docs";
 import { CHANGELOG } from "../_content/changelog";
 import "./chapters.css";
+import { V6_BASE } from "@/lib/v6-routes";
 
-const BASE = "/dev-preview/v6";
-
+const BASE = V6_BASE;
 /* ---------------------------------------------------------------------------
    Scroll phase. A tall wrapper, a pinned scene, an integer phase read off the
    wrapper's progress. Native scrolling only: nothing is captured or re-timed,

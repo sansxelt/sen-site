@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { V6_BASE } from "@/lib/v6-routes";
 
 /* V6 primitives for the legal pages. The words come from app/_content/legal.tsx, which both this surface
    and the rank surface render; only the styling is decided here. */
@@ -29,11 +30,11 @@ function Ul({ items }: { items: ReactNode[] }) {
    V6 equivalents here rather than forking the copy: a crawl found /account and /refunds walking readers out
    of the preview from inside Privacy and Terms. */
 const V6_EQUIVALENT: Record<string, string> = {
-  "/account": "/dev-preview/v6/app",
-  "/refunds": "/dev-preview/v6/refunds",
-  "/terms": "/dev-preview/v6/terms",
-  "/privacy": "/dev-preview/v6/privacy",
-  "/billing": "/dev-preview/v6/app",
+  "/account": `${V6_BASE}/app`,
+  "/refunds": `${V6_BASE}/refunds`,
+  "/terms": `${V6_BASE}/terms`,
+  "/privacy": `${V6_BASE}/privacy`,
+  "/billing": `${V6_BASE}/app`,
 };
 
 function A({ href, children }: { href: string; children: ReactNode }) {

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { appHostUrl } from "@/lib/app-routes";
 import { v6meta } from "../_system/meta";
+import { V6_BASE, v6SignInPath } from "@/lib/v6-routes";
 
 /* The V6 app destination.
 
@@ -23,8 +24,7 @@ export const metadata = v6meta({
   type: "website",
 });
 
-const SIGNIN = "/dev-preview/v6/signin?callbackUrl=%2Fdev-preview%2Fv6%2Fapp";
-
+const SIGNIN = v6SignInPath();
 export default async function V6AppPage() {
   const session = await auth();
   const email = session?.user?.email ?? null;
@@ -61,7 +61,7 @@ export default async function V6AppPage() {
               Sign in<span className="v6-arw" aria-hidden>→</span>
             </Link>
           )}
-          <Link className="v6-btn v6-btn--ghost" href="/dev-preview/v6/docs/getting-started">
+          <Link className="v6-btn v6-btn--ghost" href={`${V6_BASE}/docs/getting-started`}>
             Read the docs
           </Link>
         </div>

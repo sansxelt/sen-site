@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import "./_system/v6.css";
 import "./_system/pagekit.css";
 import { V6Shell } from "./_system/shell";
+import { auth } from "@/auth";
 import { V6_ORIGIN } from "./_system/meta";
 import { META_TITLE, META_DESCRIPTION, OG_TITLE } from "./_system/positioning";
 import { socialCard } from "@/lib/social-card";
@@ -48,6 +49,10 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function V6Layout({ children }: { children: ReactNode }) {
-  return <V6Shell>{children}</V6Shell>;
+// The session is resolved HERE, on the server, and handed to the shell as one boolean. The shell is a
+// client component and cannot read it, which is why the bar previously offered "Sign in" to readers who
+// were already signed in, on a page telling them so.
+export default async function V6Layout({ children }: { children: ReactNode }) {
+  const session = await auth();
+  return <V6Shell authed={!!session?.user?.email}>{children}</V6Shell>;
 }

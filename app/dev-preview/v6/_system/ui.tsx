@@ -3,11 +3,11 @@
 // Shared presentational primitives for design 06. One reveal primitive; the rest are static.
 import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
+import { v6SignInPath } from "@/lib/v6-routes";
 
 // Stays inside V6. The old value left the preview for the previous design and called back to
 // /app, which does not exist, so a successful sign-in landed on a 404.
-const SIGNIN = "/dev-preview/v6/signin?callbackUrl=%2Fdev-preview%2Fv6%2Fapp";
-
+const SIGNIN = v6SignInPath();
 export function Reveal({ children, i = 0, media = false, className = "", style }: {
   children: ReactNode; i?: number; media?: boolean; className?: string; style?: CSSProperties;
 }) {

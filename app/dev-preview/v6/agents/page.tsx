@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { CSSProperties, ReactNode } from "react";
 import { v6meta } from "../_system/meta";
 import { PageHero, Reveal, SectionHead, CTA, EditorialLink, Signal, Kicker } from "../_system/ui";
+import { V6_BASE } from "@/lib/v6-routes";
 
 // Agents page (design 06). Framing: how Vraelis works AROUND software agents, from assigned responsibility to
 // trusted completion. TRUTH: Vraelis does NOT read an agent's private reasoning. It works from observable,
@@ -20,7 +21,7 @@ export const metadata: Metadata = v6meta({
     "Vraelis works around software agents from observable activity and evidence, not private reasoning: plan, changes, claims, findings, repair, and independent completion.",
 });
 
-const BASE = "/dev-preview/v6";
+const BASE = V6_BASE;
 type Sig = "go" | "wait" | "stop";
 
 const wrapRow: CSSProperties = {

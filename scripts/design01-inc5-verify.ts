@@ -3,8 +3,9 @@
 // coverage" framing. Static source checks; the responsive/overflow/keyboard behaviour was verified live in a
 // real browser at 1440/1180/834/390/360 (0px horizontal overflow, clean a11y DOM, correct focus order) and
 // those guarantees are locked structurally here.
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { isAppPath, APP_ROOTS } from "../lib/app-routes";
+import { join } from "node:path";
 
 let pass = 0, fail = 0;
 const ok = (n: string, c: boolean, d = "") => { if (c) { pass++; console.log(`PASS  ${n}`); } else { fail++; console.log(`FAIL  ${n}${d ? `  — ${d}` : ""}`); } };
@@ -40,6 +41,26 @@ ok("isAppPath(/dev-preview) is false", !isAppPath("/dev-preview"));
     .length > 0;
   ok("the proxy exposes the preview only behind an explicit, default-off flag",
     gated && usesGate && !strayLeak);
+  // NOTHING IN V6 MAY HARDCODE ITS OWN BASE PATH.
+  //
+  // lib/v6-routes.ts exists so promotion is one edit, and the shell kept a private copy anyway. Promoted,
+  // that copy made themeAtTop compare "/" against "/dev-preview/v6", so the bar painted LIGHT over the black
+  // hero, and every nav link pointed back into the preview namespace. The colour was the visible symptom; the
+  // links were the real breakage.
+  const v6Files = readdirSync("app/dev-preview/v6", { recursive: true, encoding: "utf8" } as never) as unknown as string[];
+  const hardcoded = v6Files
+    .filter((f) => typeof f === "string" && /\.tsx?$/.test(f))
+    .map((f) => ({ f, t: readFileSync(join("app/dev-preview/v6", f), "utf8") }))
+    // Comments may name the path (several explain this very rule); code may not. Line comments are
+    // stripped first, then any surviving quoted literal is a hardcode.
+    .filter(({ t }) => /["'`]\/dev-preview\/v6/.test(t.replace(/\/\/[^\n]*/g, "")))
+    .map(({ f }) => f);
+  ok("no V6 file hardcodes its own base path; they all derive it from lib/v6-routes",
+    hardcoded.length === 0, hardcoded.join(", "));
+  ok("V6_BASE is the single switch, and it follows the promotion flag",
+    /export const V6_BASE = process\.env\.NEXT_PUBLIC_VRAELIS_V6_PUBLIC === "1" \? "" : "\/dev-preview\/v6";/
+      .test(readFileSync("lib/v6-routes.ts", "utf8")));
+
   ok("the design-01 preview itself is still unreachable by any clean path",
     !/"\/dev-preview"/.test(proxy) && !/dev-preview\/page/.test(proxy));
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { v6SignInPath } from "@/lib/v6-routes";
+import { V6_BASE, v6SignInPath } from "@/lib/v6-routes";
 import Link from "next/link";
 import { v6meta } from "../_system/meta";
 import { PageHero } from "../_system/ui";
@@ -42,7 +42,7 @@ export default function Readme() {
           <p className="v6-lead" style={{ margin: "18px auto 28px", textAlign: "center" }}>Vraelis follows AI software work from assigned responsibility to trusted completion, and keeps what your company learns along the way.</p>
           <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href={v6SignInPath()} className="v6-btn v6-btn--brand v6-btn--lg">Open Vraelis <span className="v6-arw" aria-hidden>→</span></Link>
-            <Link href="/dev-preview/v6/method" className="v6-btn v6-btn--ghost v6-btn--lg" style={{ background: "transparent", color: "var(--g-fg)", borderColor: "var(--g-line-2)" }}>Read the Method</Link>
+            <Link href={`${V6_BASE}/method`} className="v6-btn v6-btn--ghost v6-btn--lg" style={{ background: "transparent", color: "var(--g-fg)", borderColor: "var(--g-line-2)" }}>Read the Method</Link>
           </div>
         </div>
       </section>

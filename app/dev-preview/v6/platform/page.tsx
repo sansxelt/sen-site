@@ -3,6 +3,7 @@ import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { v6meta } from "../_system/meta";
 import { PageHero, Reveal, SectionHead, CTA, EditorialLink, Signal, Kicker } from "../_system/ui";
+import { V6_BASE } from "@/lib/v6-routes";
 
 // Platform overview (design 06). Framing: Vraelis is oversight for AI software agents, from assigned
 // responsibility to trusted completion. The verification engine (real browser, requirement held outside the
@@ -20,7 +21,7 @@ export const metadata: Metadata = v6meta({
     "Responsibility, live activity, review, findings, repair, verified completion, and memory, on one durable record per piece of agent work.",
 });
 
-const BASE = "/dev-preview/v6";
+const BASE = V6_BASE;
 type Sig = "go" | "wait" | "stop";
 const DOT: Record<string, string> = {
   go: "var(--go-dk)",

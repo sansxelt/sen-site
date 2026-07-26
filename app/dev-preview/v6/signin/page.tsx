@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { VraelisSignIn } from "@/components/vraelis-auth";
 import { getSafeRedirectPath } from "@/lib/auth-ui";
 import { v6meta } from "../_system/meta";
+import { V6_BASE, V6_APP } from "@/lib/v6-routes";
 
 /* The V6 sign-in destination.
 
@@ -25,7 +26,7 @@ export const metadata = v6meta({
   type: "website",
 });
 
-const APP = "/dev-preview/v6/app";
+const APP = V6_APP;
 
 export default async function V6SignInPage({
   searchParams,
@@ -62,7 +63,7 @@ export default async function V6SignInPage({
             callbackUrl={callbackUrl}
             initialMode={modeParam === "signup" ? "signup" : "signin"}
             showHeader={false}
-            legalBase="/dev-preview/v6"
+            legalBase={V6_BASE}
           />
         </div>
         <p className="v6-signin__note">

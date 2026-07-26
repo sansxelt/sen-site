@@ -7,11 +7,17 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNo
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SiteFooter } from "./close";
+import { V6_BASE, V6_APP, v6SignInPath } from "@/lib/v6-routes";
 
-const BASE = "/dev-preview/v6";
-// Stays inside V6. The old value left the preview for the previous design and called back to
-// /app, which does not exist, so a successful sign-in landed on a 404.
-const SIGNIN = "/dev-preview/v6/signin?callbackUrl=%2Fdev-preview%2Fv6%2Fapp";
+// FOLLOWS THE PROMOTION FLAG. These were hardcoded to "/dev-preview/v6", which is precisely the mistake
+// lib/v6-routes.ts was written to prevent: it says every V6 destination lives there so promotion is one
+// edit, and then the shell kept its own copy anyway.
+//
+// Promoted, the hardcoded value broke two things at once. themeAtTop compared the pathname "/" against
+// "/dev-preview/v6", never matched, and painted the bar LIGHT over the black hero. And every nav link still
+// pointed into the preview namespace, so the promoted site navigated back out of itself.
+const BASE = V6_BASE;
+const SIGNIN = v6SignInPath();
 
 // Three top-level items open a menu; Company is a plain link. Research and Developers were promoted to the
 // top bar in phase 1 and are demoted back into the menus that already carry them, so the closed bar stays
@@ -204,7 +210,14 @@ function themeAtTop(pathname: string): boolean {
   return false;                                                        // every other route opens on a page hero
 }
 
-export function V6Nav() {
+// A SIGNED-IN READER MUST NOT BE ASKED TO SIGN IN.
+//
+// The bar offered "Sign in" and "Open Vraelis" unconditionally, so someone already authenticated was invited
+// to authenticate again, next to a page telling them they were signed in. The shell is a client component
+// and cannot read the session itself, so the layout resolves it on the server and passes the one fact the
+// bar needs. Undefined means "not known yet", which renders the signed-out affordance, because inviting a
+// signed-out reader to open the app is a smaller error than telling a signed-in one to sign in again.
+export function V6Nav({ authed = false }: { authed?: boolean }) {
   const pathname = usePathname() || "";
   const navRef = useRef<HTMLElement>(null);
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -362,19 +375,19 @@ export function V6Nav() {
           </div>
         ) : null}
         <div className="v6-nav__right">
-          <Link href={SIGNIN} className="v6-nav__signin">Sign in</Link>
-          <Link href={SIGNIN} className="v6-btn v6-btn--brand">Open Vraelis</Link>
+          {authed ? null : <Link href={SIGNIN} className="v6-nav__signin">Sign in</Link>}
+          <Link href={authed ? V6_APP : SIGNIN} className="v6-btn v6-btn--brand">Open Vraelis</Link>
           <button className="v6-nav__burger" aria-label="Open navigation" aria-haspopup="dialog" onClick={() => setDrawer(true)}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
           </button>
         </div>
       </div>
-      {drawer ? <MobileNav onClose={() => setDrawer(false)} /> : null}
+      {drawer ? <MobileNav authed={authed} onClose={() => setDrawer(false)} /> : null}
     </nav>
   );
 }
 
-function MobileNav({ onClose }: { onClose: () => void }) {
+function MobileNav({ authed, onClose }: { authed: boolean; onClose: () => void }) {
   const panel = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -415,8 +428,8 @@ function MobileNav({ onClose }: { onClose: () => void }) {
         )))}
       </div>
       <div className="v6-drawer__foot">
-        <Link href={SIGNIN} className="v6-btn v6-btn--ghost" onClick={onClose}>Sign in</Link>
-        <Link href={SIGNIN} className="v6-btn v6-btn--brand" onClick={onClose}>Open Vraelis <span className="v6-arw" aria-hidden>→</span></Link>
+        {authed ? null : <Link href={SIGNIN} className="v6-btn v6-btn--ghost" onClick={onClose}>Sign in</Link>}
+        <Link href={authed ? V6_APP : SIGNIN} className="v6-btn v6-btn--brand" onClick={onClose}>Open Vraelis <span className="v6-arw" aria-hidden>→</span></Link>
       </div>
     </div>
   );
@@ -526,7 +539,7 @@ function useInstantHistoryRestore() {
   }, []);
 }
 
-export function V6Shell({ children }: { children: ReactNode }) {
+export function V6Shell({ children, authed = false }: { children: ReactNode; authed?: boolean }) {
   useInstantHistoryRestore();
   // THE PERSISTENT ROUTE CANVAS. Every route declares the ground of its opening surface from the same map
   // the nav already trusts, computed during render, so the server-rendered document carries it and a
@@ -546,7 +559,7 @@ export function V6Shell({ children }: { children: ReactNode }) {
       {/* Nine focus stops sit in the nav before any content. Keyboard and screen-reader users get one stop to
           jump past them; it is invisible until focused. */}
       <a href="#v6-main" className="v6-skip">Skip to content</a>
-      <V6Nav />
+      <V6Nav authed={authed} />
       <main id="v6-main" tabIndex={-1}><RouteTransition>{children}</RouteTransition></main>
       <SiteFooter />
     </div>

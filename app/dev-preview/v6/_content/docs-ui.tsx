@@ -7,8 +7,9 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { docsByGroup, type Block } from "./docs";
+import { V6_BASE } from "@/lib/v6-routes";
 
-const BASE = "/dev-preview/v6";
+const BASE = V6_BASE;
 export const dslug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
 export function Blocks({ blocks }: { blocks: Block[] }) {
