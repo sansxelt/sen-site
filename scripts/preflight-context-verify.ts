@@ -182,9 +182,15 @@ ok("createRun retries the insert WITHOUT the column on a column-missing error, w
   const raw = read("lib/preflight/runs-db.ts");
   // Since S4 the retry is ONE combined path shared with the deployment_id pin (migration 8): the
   // column-missing error drops the named pin and re-inserts the same submission id.
+  // Scoped to the retry LOOP rather than measured in characters. The old form allowed 700 characters
+  // between "pinContext = false" and the re-insert; the Guarantees increment added a fourth pin branch
+  // (guarantee_id) and pushed them apart, failing a check whose behaviour was entirely intact.
+  const loop = raw.slice(raw.indexOf("while (error && (pinContext"));
+  const body = loop.slice(0, loop.indexOf("\n    }"));
   return /context_snapshot_id\/i\.test/.test(raw)
     && raw.includes("createRun: v_preflight_runs.context_snapshot_id is missing. Apply sql/vraelis-preflight-7-context-snapshots.sql")
-    && /pinContext = false;[\s\S]{0,700}insert\(rowFor\(\) as never\)/.test(raw);
+    && /pinContext = false;/.test(body)
+    && /insert\(rowFor\(\) as never\)/.test(body);
 })());
 
 const appsRoute = stripComments(read("app/api/preflight/apps/route.ts"));

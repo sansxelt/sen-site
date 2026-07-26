@@ -73,3 +73,15 @@ scripts/apikey-audit.ts
 test-results/
 playwright-report/
 playwright/.cache/
+
+# Local design-review workspace: screenshots and screen recordings produced while verifying a
+# redesign. Evidence for a review, not source, and ~16MB per pass.
+# Anchored to the repo root: an unanchored "review/" matches a directory of that name at ANY depth, which
+# silently excluded the app's own Review route at app/dev-preview/v6/app/review/.
+/review/
+.playwright-cli/
+.playwright/
+
+# Provenance correction backups: complete row exports of production tables.
+# Requirement text is customer content and must not enter version control.
+ops/backups/

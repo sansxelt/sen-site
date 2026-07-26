@@ -14,7 +14,7 @@
 // suite asserted a literal source line and went red the moment that line was reworded while remaining
 // correct; a checker that breaks on rewording trains people to edit the checker.
 import * as ts from "typescript";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
 
@@ -422,8 +422,8 @@ console.log("\n── migrations ──");
 
 const m19 = read("sql/vraelis-preflight-19-requirement-provenance.sql");
 const m20 = read("sql/vraelis-preflight-20-provenance-defaults.sql");
-const m21 = read("sql/vraelis-preflight-21-provenance-backfill.sql");
-const m21r = read("sql/vraelis-preflight-21-provenance-rollback.sql");
+const m21 = read("ops/provenance-correction-MANUAL.sql");
+const m21r = read("ops/provenance-correction-ROLLBACK.sql");
 
 ok("19 is additive only: no update, no delete, no default change",
   !/\bupdate\s+v_/i.test(m19) && !/\bdelete\s+from/i.test(m19) && !/set\s+default/i.test(m19));
@@ -439,6 +439,60 @@ ok("20 forbids an unapproved row carrying approval provenance", /chk_v_req_unapp
 ok("20 adds every constraint NOT VALID so it binds forward without rewriting history",
   (m20.match(/not valid;/g) ?? []).length === (m20.match(/add constraint/g) ?? []).length);
 
+// ── MIGRATION 22: the invariant migration 20 left open ────────────────────────────────────────────────
+const m22 = read("sql/vraelis-preflight-22-approved-review-state-consistency.sql");
+ok("22 exists as its OWN migration rather than editing live migration 20",
+  /add constraint chk_v_req_approved_matches_review_state/.test(m22)
+  && !/alter column (origin|review_state) set default/.test(m22),
+  "a live migration is a historical fact and is not edited afterwards");
+ok("22 binds approved to review_state in both directions",
+  /approved is not distinct from \(review_state = 'approved'\)/.test(m22),
+  "is not distinct from, so a null approved is compared rather than silently passing");
+ok("22 lands NOT VALID like migration 20's constraints", /not valid;/.test(m22));
+ok("22 rewrites no row", !/update\s+v_/i.test(m22) && !/delete\s+from/i.test(m22));
+
+// ── THE CORRECTION VALIDATES WHAT IT CAN, AND SAYS WHY IT CANNOT VALIDATE THE REST ────────────────────
+// The six that CAN validate after the correction. Which six was measured by simulating the correction
+// against a full production export, not reasoned about: an earlier version also listed
+// chk_v_req_approved_matches_review_state and failed on production with 23514, because 8 rows already
+// violate it and nobody had checked.
+ok("the correction validates every constraint it can before committing",
+  ["chk_v_req_origin", "chk_v_req_review_state", "chk_v_req_review_basis_value",
+   "chk_v_req_legacy_class_value", "chk_v_req_basis_complete", "chk_v_req_unapproved_clean",
+   "chk_v_contract_legacy_class_value"]
+    .every((c) => new RegExp(`validate constraint ${c}`).test(m21)),
+  "a constraint nobody validated is a rule nobody checked the existing data against");
+ok("it does NOT attempt the two that out-of-scope rows block",
+  !/^\s*alter table v_contract_requirements validate constraint chk_v_req_approved_has_basis;/m.test(m21)
+  && !/^\s*alter table v_contract_requirements validate constraint chk_v_req_approved_matches_review_state;/m.test(m21),
+  "either would raise and discard the whole correction several statements after it succeeded");
+// THE TWO CORRECTION FILES MUST NOT DRIFT APART. One is staged for psql, one is a single self-gating paste
+// for the SQL editor, and they must agree on exactly which constraints get validated. A divergence here is
+// how one of them ends up attempting a VALIDATE that aborts the whole correction on production.
+{
+  const onePaste = read("ops/CORRECTION-ONE-PASTE.sql");
+  // Comments are stripped first. Both files document the blocked VALIDATEs by showing the exact statement
+  // to run later, and matching those would report a constraint as validated when it is explicitly not.
+  const stripSql = (src: string) => src.replace(/--.*$/gm, "");
+  const validated = (src: string) =>
+    [...stripSql(src).matchAll(/validate constraint (chk_\w+)/g)].map((m) => m[1]).sort().join(",");
+  ok("the staged file and the one-paste file validate exactly the same constraints",
+    validated(m21) === validated(onePaste), `${validated(m21)}  vs  ${validated(onePaste)}`);
+  ok("neither attempts the two that out-of-scope rows block",
+    !validated(m21).includes("chk_v_req_approved_has_basis")
+    && !validated(m21).includes("chk_v_req_approved_matches_review_state")
+    && !validated(onePaste).includes("chk_v_req_approved_has_basis")
+    && !validated(onePaste).includes("chk_v_req_approved_matches_review_state"));
+  ok("both blocked constraints are named with their measured violation counts",
+    /chk_v_req_approved_has_basis\s+17 violations/.test(onePaste)
+    && /chk_v_req_approved_matches_review_state\s+8 violations/.test(onePaste));
+  ok("the one-paste file gates on the census and refuses a moved population",
+    /CENSUS MISMATCH/.test(onePaste) && /raise exception/.test(onePaste));
+}
+ok("and the correction never ATTEMPTS that validate inside its own transaction",
+  !/^\s*alter table v_contract_requirements validate constraint chk_v_req_approved_has_basis;/m.test(m21),
+  "a failed statement poisons the transaction (25P02) and would discard the whole correction");
+
 ok("21 verifies the exact census before writing anything",
   /expect 153/.test(m21) && /expect 136/.test(m21) && /expect 17/.test(m21) && /expect 8/.test(m21) && /expect 128/.test(m21));
 ok("21 snapshots before it writes", /backup_21/.test(m21) && m21.indexOf("backup_21") < m21.indexOf("STAGE 2"));
@@ -450,14 +504,54 @@ ok("21 never assigns contract status",
 ok("21 never edits requirement text", !/set[\s\S]{0,200}\brequirement\s*=/i.test(m21));
 ok("21 puts group B back to suggested with the legacy classification",
   /review_state\s*=\s*'suggested'[\s\S]{0,400}legacy_review_class = 'legacy_auto_approved'/.test(m21));
-ok("21 gives group A no legacy classification",
+ok("the correction gives group A no legacy classification",
   /review_basis\s*=\s*'reviewed_plan'/.test(m21)
-  && !/from group_a[\s\S]{0,200}legacy_review_class/.test(m21));
+  && !/from group_a[\s\S]{0,400}legacy_review_class/.test(m21));
+
+// Each group is corrected in ONE statement. Correcting authorship first and review second left rows at
+// review_state 'approved' with a null review_basis mid-transaction, which chk_v_req_approved_has_basis
+// rejects on UPDATE, aborting the whole correction. Found by the clone rehearsal.
+ok("each group reaches a constraint-valid state within a single statement",
+  /set source\s*=\s*'inference',[\s\S]{0,600}review_basis\s*=\s*'reviewed_plan'/.test(m21)
+  && /set source\s*=\s*'inference',[\s\S]{0,600}legacy_review_class = 'legacy_auto_approved'/.test(m21),
+  "authorship and review must move together or the NOT VALID constraints abort the transaction");
+ok("no statement corrects authorship alone, leaving review columns mid-flight",
+  !/set\s+source\s*=\s*'inference',\s+origin\s*=\s*'prompt'\s+where/i.test(m21),
+  "an authorship-only UPDATE re-checks chk_v_req_approved_has_basis on rows whose review is not fixed yet");
+ok("exactly two correction statements, one per group",
+  (m21.match(/set\s+source\s+=\s+'inference'/g) ?? []).length === 2);
 ok("21 normalizes ordering for DRAFT contracts only",
   /where c\.status = 'draft'/.test(m21) && /APPROVED CONTRACTS ARE NOT TOUCHED/.test(m21));
 ok("21 does not commit itself", !/^\s*commit;/m.test(m21));
 ok("a rollback exists and refuses to run against an empty snapshot",
   /refusing to roll back/.test(m21r));
+ok("the rollback drops and re-adds the one constraint the restored state violates",
+  /drop constraint if exists chk_v_req_approved_has_basis/.test(m21r)
+  && /add constraint chk_v_req_approved_has_basis[\s\S]{0,200}not valid/.test(m21r),
+  "restoring approved-with-no-basis is exactly what that constraint forbids");
+
+// ── THE CORRECTION MUST NEVER BE RUNNABLE AS A MIGRATION ────────────────────────────────────────────
+// A historical data correction is a judgement about recorded history. It must not execute because it
+// happened to sort after migration 20 in somebody's glob.
+{
+  const sqlDir = readdirSync(join(ROOT, "sql"));
+  ok("no numbered migration contains the historical correction",
+    !sqlDir.some((f) => /provenance-backfill|provenance-correction/.test(f)),
+    sqlDir.filter((f) => /backfill|correction/.test(f)).join(", "));
+  ok("the correction and its rollback live outside sql/, in ops/",
+    existsSync(join(ROOT, "ops/provenance-correction-MANUAL.sql"))
+    && existsSync(join(ROOT, "ops/provenance-correction-ROLLBACK.sql")));
+  ok("the correction says in its first line that it is not a migration",
+    /NOT A MIGRATION/.test(m21.split("\n").slice(0, 3).join(" ")));
+  // Numbered migrations are SCHEMA. 21 is deliberately absent: it was the historical correction, and it now
+  // lives in ops/ where no runner can reach it. 22 is schema again, so it is numbered.
+  ok("no migration is numbered 21 (the correction's old number stays retired)",
+    !sqlDir.some((f) => /^vraelis-preflight-21/.test(f)));
+  ok("migration 22 is a numbered schema migration",
+    sqlDir.includes("vraelis-preflight-22-approved-review-state-consistency.sql"));
+  ok("nothing above 22 has appeared unreviewed",
+    !sqlDir.some((f) => /^vraelis-preflight-2[3-9]/.test(f)));
+}
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

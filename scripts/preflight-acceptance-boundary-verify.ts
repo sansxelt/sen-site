@@ -111,8 +111,21 @@ const coverageCallers = files
   .filter((f) => !/export (async )?function resolveCoverage/.test(f.text))
   .map((f) => f.path);
 
-ok("the acceptance coverage gate is still only in the public API route",
-  coverageCallers.length === 1 && coverageCallers[0] === "app/api/v1/verifications/route.ts",
+// TWO callers, both deliberate. The point of this check is that the gate does not spread silently, not
+// that exactly one route may ever hold it.
+//
+//   app/api/v1/verifications/route.ts                       the public API lane
+//   app/api/preflight/apps/[id]/guarantees/[gid]/prepare     mints a reviewed plan, so it must gate too
+//
+// The second was invisible to this suite when it was written, because the Guarantees increments are live in
+// production and absent from the branch it was authored on. Recorded here rather than widened to "any
+// number of callers", so a THIRD one still fails.
+const KNOWN_COVERAGE_CALLERS = [
+  "app/api/preflight/apps/[id]/guarantees/[gid]/prepare/route.ts",
+  "app/api/v1/verifications/route.ts",
+].sort();
+ok("the acceptance coverage gate sits only where it was deliberately placed",
+  JSON.stringify([...coverageCallers].sort()) === JSON.stringify(KNOWN_COVERAGE_CALLERS),
   coverageCallers.join(", "));
 
 ok("...and therefore the dashboard route still does NOT evaluate coverage (the defect this tracks)",
