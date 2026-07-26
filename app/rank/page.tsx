@@ -8,9 +8,10 @@ export const metadata = {
     description:
       "Give Vraelis a deployed application and the outcome that should be true. It independently derives what must be checked, verifies the live result, and returns the evidence behind its decision. Starting with deployed web applications.",
     path: "/",
-    // Text-only card: LinkedIn froze on a stale OG image across several ?v bumps, so the homepage
-    // advertises no image and shows the current title + description instead.
-    noImage: true,
+    // noImage used to be set here, because LinkedIn froze on a stale rendered OG card across several ?v
+    // bumps and a text-only embed was the only way to stop it showing an old positioning. Nothing renders a
+    // headline card any more: every embed now carries the square Vraelis mark and one fixed sentence, so
+    // there is no stale artwork left to opt out of.
   }),
   title: { absolute: "Vraelis" },
 };

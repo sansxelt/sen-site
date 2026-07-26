@@ -4,7 +4,8 @@
 // production layer for AI-built software", and the social cards plus the root-layout meta still carrying the
 // retired homepage headline. Link previews and lifecycle emails are the two places a stale product identity
 // travels furthest, so this keeps them pinned to the current one.
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
 
 let pass = 0, fail = 0;
 const ok = (n: string, c: boolean, d = "") => {
@@ -59,20 +60,73 @@ ok("the verify CTA points at the app host root (no legacy /app suffix)",
   /https:\/\/app\.vraelis\.com"/.test(email) && !/https:\/\/app\.vraelis\.com\/app(\/|")/.test(email));
 ok("public references point at the marketing host", /https:\/\/vraelis\.com\/(how-it-works|pricing|privacy|terms)/.test(email));
 
-console.log("\n── social embeds carry the current headline, not the retired one ──");
-const RETIRED_HEADLINE = /Nobody checked it/;
-ok("the main OG card is updated", !RETIRED_HEADLINE.test(ogMain) && /Vraelis proves it/.test(ogMain));
-ok("the report OG card is updated", !RETIRED_HEADLINE.test(ogReport) && /Vraelis proves it/.test(ogReport));
-ok("the root-layout default meta is updated (the site-wide embed fallback)",
-  !RETIRED_HEADLINE.test(rootLayout) && /Vraelis proves it/.test(rootLayout));
-// The OG image version must bump when the card changes, or platforms serve the cached old render.
-ok("the OG image cache version was bumped past v4", /\/og\?v=([5-9]|\d\d)/.test(readFileSync("lib/og-meta.ts", "utf8")));
-// The official 50-character company description must appear in the card and the site meta, so link previews
-// and search snippets say the one sanctioned thing.
+console.log("\n── ONE embed, for every surface, forever ──");
+// This section used to check that each rendered OG card carried the current headline. That was the wrong
+// shape of check: it verified that several independently-written embeds happened to agree today, which is a
+// property that decays the moment anyone adds a page. And they did NOT all agree — the root layout carried a
+// three-sentence description and no image at all, nineteen marketing pages carried a per-page description
+// plus a rendered 1200x630 headline card, and two retired share stubs were still advertising "Production
+// validation for AI-built systems", a positioning two pivots old.
+//
+// So the check is now structural: there is exactly one embed, it is defined in exactly one file, and no
+// surface may fork it. The standing rule from the founder is one sentence and no artwork beyond the mark.
+const socialCardSrc = readFileSync("lib/social-card.ts", "utf8");
+const ogMeta = readFileSync("lib/og-meta.ts", "utf8");
+
 const OFFICIAL_DESC = "Verifies software built with AI actually works";
-ok("the OG card carries the official description", ogMain.includes(OFFICIAL_DESC));
-ok("the root-layout meta leads with the official description", rootLayout.includes(OFFICIAL_DESC));
+ok("the shared card states the official sentence", socialCardSrc.includes(OFFICIAL_DESC));
 ok("the official description fits the 50-character limit", OFFICIAL_DESC.length <= 50, `${OFFICIAL_DESC.length} chars`);
+
+// The ONLY embed image is the square mark, which is the artwork the favicon is generated from. A rendered
+// headline card is the worst kind of stale: platforms cache the PNG far longer than the page, so the picture
+// keeps saying the old thing after the words around it have been fixed.
+ok("the only embed image is the Vraelis mark", /SOCIAL_IMAGE = "https:\/\/vraelis\.com\/icon-original\.png"/.test(socialCardSrc));
+ok("the card is a small summary, so the mark is never stretched across a banner",
+  /card: "summary" as const/.test(socialCardSrc));
+
+// A census across every route: nothing but social-card.ts may name an embed image, and nothing may ask for
+// the wide card. This is the assertion that would have caught all three forks above.
+{
+  const walk = (dir: string, out: string[] = []): string[] => {
+    for (const e of readdirSync(dir)) {
+      if (e === "node_modules" || e === ".next") continue;
+      const p = join(dir, e);
+      if (statSync(p).isDirectory()) walk(p, out);
+      else if (/\.tsx?$/.test(e)) out.push(p.replace(/\\/g, "/"));
+    }
+    return out;
+  };
+  // app/og/** are the legacy rendered-card endpoints. They are RETAINED, not referenced: a platform that
+  // cached one of those image URLs from an old share still fetches it, and deleting the route would turn
+  // those previews into a broken image. Nothing may point at them again.
+  const routes = walk("app").concat(walk("lib")).filter((f) => !f.startsWith("app/og/"));
+  // COMMENTS ARE STRIPPED FIRST. Several of the files below explain this very rule in prose, naming
+  // summary_large_image and the retired positioning in order to record what was removed. A scan that reads
+  // comments fails on its own documentation, which teaches the next person to delete the explanation rather
+  // than fix the code.
+  const code = (f: string) => readFileSync(f, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  const forkedImage = routes.filter((f) =>
+    /(openGraph|twitter)[\s\S]{0,300}?images:\s*\[/.test(code(f)) && f !== "lib/social-card.ts");
+  ok("no route declares its own embed image", forkedImage.length === 0, forkedImage.join(", "));
+
+  const wideCard = routes.filter((f) => code(f).includes("summary_large_image"));
+  ok("no route asks for summary_large_image", wideCard.length === 0, wideCard.join(", "));
+
+  const referencesRendered = routes.filter((f) => /["'`](https:\/\/vraelis\.com)?\/og(\?|\/|["'`])/.test(code(f)));
+  ok("nothing references the legacy rendered cards", referencesRendered.length === 0, referencesRendered.join(", "));
+
+  const retired = routes.filter((f) => code(f).includes("Production validation for AI-built systems"));
+  ok("no surface still carries the retired positioning", retired.length === 0, retired.join(", "));
+}
+
+// og-meta serves nineteen marketing pages, so it is the highest-leverage place for a fork to reappear.
+ok("the marketing pages take their embed from the shared card", /socialCard/.test(ogMeta));
+ok("og-meta offers no per-page image or opt-out override",
+  !/noImage|image\?:/.test(ogMeta.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "")));
+ok("the root layout takes its embed from the shared card", /socialCard\(/.test(rootLayout));
+// The rendered endpoints must stay unreferenced but keep working, so old cached previews still resolve.
+ok("the legacy rendered card endpoints still exist for already-shared links",
+  ogMain.length > 0 && ogReport.length > 0);
 
 console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

@@ -178,13 +178,23 @@ const proxySrc2 = readFileSync("proxy.ts", "utf8");
 ok("proxy redirects ALL retired /v/* to home (catch-all, after the legal vanity paths)", /path === "\/v" \|\| path\.startsWith\("\/v\/"\)/.test(proxySrc2));
 const rToken = readFileSync("app/r/[token]/page.tsx", "utf8");
 const rcToken = readFileSync("app/r/c/[token]/page.tsx", "utf8");
-// The retired per-token shared reports (human-eval /r/[token] and checker /r/c/[token]) now REDIRECT to the
-// current product and render NO retired report body, so no retired positioning (judgments / Decision Package
-// / AI output check) or retired CTA (/new, /app/checks/new) can reach the public.
-ok("retired per-token shared reports redirect to the current product, rendering no retired body/CTA",
-  /redirect\("\/how-it-works"\)/.test(rToken) && /redirect\("\/how-it-works"\)/.test(rcToken)
+// The retired per-token shared reports (human-eval /r/[token] and checker /r/c/[token]) REDIRECT and render
+// NO retired report body, so no retired positioning (judgments / Decision Package / AI output check) or
+// retired CTA (/new, /app/checks/new) can reach the public.
+//
+// The target used to be pinned to the literal /how-it-works. That is a page design 06 deliberately drops
+// (superseded by /method and /platform), so the assertion was holding these stubs to a destination that
+// disappears at promotion — an old link would land on the generation this repo is replacing. "/" is the only
+// target correct in both regimes, and it is what the check now requires.
+ok("retired per-token shared reports redirect to the site root, rendering no retired body/CTA",
+  /redirect\("\/"\)/.test(rToken) && /redirect\("\/"\)/.test(rcToken)
+  && !/redirect\("\/how-it-works"\)/.test(rToken) && !/redirect\("\/how-it-works"\)/.test(rcToken)
   && !rToken.includes("app.vraelis.com/new") && !rcToken.includes('href="/app/checks/new"')
   && !/getSharedReport|ReportBody|Decision Package/.test(rToken) && !/getSharedCheck|CheckReport/.test(rcToken));
+// And their link preview is the shared one, not a hand-written card. These two were the last surfaces still
+// advertising "Production validation for AI-built systems" with a rendered 1200x630 image.
+ok("the retired share stubs use the one shared social card",
+  /socialCard\(\)/.test(rToken) && /socialCard\(\)/.test(rcToken));
 
 // ── Static: the guard sends logged-out deep links to sign-in with an app-host callback ──
 const guard = readFileSync("lib/v-preflight-guard.ts", "utf8");

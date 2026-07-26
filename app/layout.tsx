@@ -6,6 +6,7 @@ import "./globals.css";
 import { cookies } from "next/headers";
 import { stealthConfigured, verifyStealthCookie, STEALTH_COOKIE } from "../lib/stealth";
 import { StealthScreen } from "./_components/stealth-screen";
+import { socialCard } from "../lib/social-card";
 
 // There used to be a second brand here (an AI-memory chatbot) with its own metadata and JSON-LD, selected
 // per request. isVraelisRequest() has returned a constant true for a long time, so none of it was ever
@@ -16,6 +17,10 @@ import { StealthScreen } from "./_components/stealth-screen";
 // Note: app/icon.png and app/apple-icon.png are auto-detected by Next.js 16 and served at hashed URLs
 // (e.g. /icon?abc123) so the browser cache busts on every change. Manually overriding `icons` here would
 // force a non-hashed path and break that; leave it unset and let the file convention do its job.
+// The one shared link preview, resolved once. socialCard owns the sentence and the image; the only thing
+// this surface chooses is its title.
+const CARD = socialCard("AI says it is done. Vraelis proves it.");
+
 const vraelisMetadata: Metadata = {
   metadataBase: new URL("https://vraelis.com"),
   title: {
@@ -28,22 +33,20 @@ const vraelisMetadata: Metadata = {
   // Favicon + apple icon come from app/icon.tsx and app/apple-icon.tsx (the Vraelis mark), auto-detected
   // by Next and served at hashed URLs so the tab icon cache-busts on change. Do NOT set `icons` here —
   // a manual path overrides that convention and pins a stale non-hashed file.
-  // No og:image on the homepage on purpose: LinkedIn hard-caches a domain's OG image and would not let
-  // go of a stale headline render across several ?v bumps. A text-only card (title + description + url)
-  // sidesteps that entirely and always shows the current copy. The dynamic /og card still exists for
-  // pages/surfaces that want it; the homepage just does not advertise one.
-  openGraph: {
-    type: "website",
-    url: "https://vraelis.com",
-    siteName: "Vraelis",
-    title: "AI says it is done. Vraelis proves it.",
-    description: "Verifies software built with AI actually works. Give Vraelis a deployed app and the outcome that should be true, and it independently checks the live result in a real browser, then returns the evidence behind its decision. Starting with deployed web applications.",
-  },
-  twitter: {
-    card: "summary",
-    title: "AI says it is done. Vraelis proves it.",
-    description: "Verifies software built with AI actually works. Give Vraelis a deployed app and the outcome that should be true, and it independently checks the live result in a real browser, then returns the evidence behind its decision. Starting with deployed web applications.",
-  },
+  // THE EMBED COMES FROM ONE PLACE. This block used to write its own, and it was the site-wide fallback, so
+  // it set the preview for every page without more specific metadata.
+  //
+  // Two things were wrong with it. It carried a three-sentence description where every other surface carries
+  // one, and it carried NO image at all — deliberately, to escape LinkedIn hard-caching a stale rendered
+  // headline card across several ?v bumps. That workaround made sense against artwork with copy baked into
+  // it. It stopped making sense once the only embed image became the square Vraelis mark, which says the
+  // same thing under every positioning this company will ever have and therefore never goes stale.
+  //
+  // So the fallback is now the same card as everything else: one sentence, the mark, a small summary. The
+  // long description above stays, because that is the page's own meta description and what a search result
+  // shows, which is a different job from a link preview.
+  ...CARD,
+  openGraph: { ...CARD.openGraph, type: "website", url: "https://vraelis.com" },
   robots: { index: true, follow: true },
 };
 
@@ -105,9 +108,10 @@ export default async function RootLayout({
         className={`${GeistSans.variable} ${GeistMono.variable} h-full`}
       >
         <body className="min-h-full" style={{ background: "var(--canvas, #FAF8F4)" }}>
-          {/* Vraelis stylesheets load for every vraelis request (marketing
-              pages AND the shared /signin, /account flows) so the whole
-              brand renders light + green. tokens before styles. */}
+          {/* The public stylesheets load for every request. They define the LIGHT half of the brand; the
+              product and the auth round-trip load public/vraelis/authenticated.css on top of these and
+              resolve the same token names to graphite (see app/_components/product-surface.tsx). tokens
+              before styles. */}
           {/* Display + body render in Geist (self-hosted via next/font, so no
               external font fetch and nothing to fail at load). tokens.css still
               pulls JetBrains Mono + Instrument Serif from Google for code/accents. */}

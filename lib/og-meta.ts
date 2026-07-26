@@ -1,30 +1,50 @@
 import type { Metadata } from "next";
+import { SOCIAL_DESCRIPTION, SOCIAL_IMAGE, socialCard } from "./social-card";
 
-// Consistent Open Graph + Twitter metadata for Vraelis public pages. The OG
-// image is the dynamic 1200×630 card at /og (see app/og/route.tsx). The ?v= busts the
-// IMAGE-level cache (the CDN + platforms that key on the image URL) when the card changes.
-// It does NOT force a platform that already cached the PAGE to re-scrape: X and others key
-// their card cache on the PAGE URL, so to refresh an already-shared card you version the
-// PAGE URL (e.g. /r/check?v=2) or use a platform's re-scrape tool where one exists.
-const OG_IMAGE_URL = "/og?v=6";
-const OG_IMAGE = { url: OG_IMAGE_URL, width: 1200, height: 630, alt: "Vraelis" };
+// Page metadata for the public marketing pages.
+//
+// THE EMBED IS NOT PER-PAGE. This helper used to own its own link preview: a per-page og:description plus a
+// rendered 1200x630 headline card at /og?v=N, served as summary_large_image. Nineteen pages import it, so
+// nineteen surfaces each shipped a different embed, and the rendered card was the worst part — platforms
+// cache the PNG far longer than the page, so the picture kept announcing an old positioning after the words
+// around it had been corrected. That is the exact failure lib/social-card.ts was written to end, and it was
+// only ever applied to the root layout and to V6. These nineteen pages were missed.
+//
+// So the embed now comes from ONE place for every surface: one sentence, and the square Vraelis mark as the
+// only image, in a small summary card. There is no per-page override and there is no headline artwork.
+//
+// What stays per-page is everything that is NOT an embed: the browser title, the HTML meta description that
+// a search result shows, the canonical URL, and whether the page is indexable.
+//
+// The `image` and `noImage` parameters are gone rather than deprecated. Left in place they were an invitation
+// to reintroduce exactly what was removed, and `noImage` existed only to work around LinkedIn hard-caching a
+// rendered card, which stops being a problem once nothing renders one.
 
-// noImage: emit a TEXT-ONLY card (no og:image, twitter card 'summary'). Used on the homepage because
-// LinkedIn hard-caches a domain's OG image and would not release a stale headline render across several
-// ?v bumps; a text card always shows the current title + description instead of a frozen image.
-export function ogMeta({ title, description, path = "/", index = true, image, noImage = false }: { title: string; description: string; path?: string; index?: boolean; image?: string; noImage?: boolean }): Metadata {
+export function ogMeta({
+  title,
+  description,
+  path = "/",
+  index = true,
+}: {
+  title: string;
+  description: string;
+  path?: string;
+  index?: boolean;
+}): Metadata {
   const url = `https://vraelis.com${path}`;
-  const img = image ? { url: image, width: 1200, height: 630, alt: title } : OG_IMAGE;
+  const card = socialCard(title);
   return {
     title,
+    // The page's own description, which is what a search result shows. The EMBED description is the single
+    // shared sentence, deliberately not this one.
     description,
     alternates: { canonical: url },
-    openGraph: noImage
-      ? { type: "website", url, siteName: "Vraelis", title, description }
-      : { type: "website", url, siteName: "Vraelis", title, description, images: [img] },
-    twitter: noImage
-      ? { card: "summary", title, description }
-      : { card: "summary_large_image", title, description, images: [image || OG_IMAGE_URL] },
+    openGraph: { ...card.openGraph, type: "website", url },
+    twitter: card.twitter,
     robots: { index, follow: index },
   };
 }
+
+// Re-exported so a caller that wants the shared sentence in body copy reads it from the same constant the
+// embed uses, rather than retyping it and drifting.
+export { SOCIAL_DESCRIPTION, SOCIAL_IMAGE };
