@@ -7,6 +7,40 @@ import { isAppPath, legacyToNew, legacyRunsPath } from "./lib/app-routes";
 // Archived products (Flip) and retired lead-agent marketing redirect home.
 // /signin, /api/*, and legal pages pass through / are mapped explicitly.
 
+// ── THE V6 PROMOTION, BEHIND ONE FLAG ──────────────────────────────────────────────────────────────
+//
+// V6 is a complete public site living under /dev-preview/v6. Promoting it is a mapping change, not a file
+// move: the clean public paths already route through this table, so pointing them at the V6 tree swaps the
+// whole site at once and swapping back is the same edit in reverse.
+//
+// NEXT_PUBLIC_VRAELIS_V6_PUBLIC=1 turns it on. Off, nothing here changes and the current site serves
+// exactly as before. It is NEXT_PUBLIC_ because lib/v6-routes.ts reads the same flag to decide whether
+// constructed navigation points at /dev-preview/v6/... or at the clean paths; both must agree or links and
+// routes disagree about where the site lives.
+//
+// Only routes V6 actually has are listed. A clean path with no V6 page keeps its current target rather than
+// rewriting to a 404, which is why this is an explicit map and not a prefix rule.
+export const v6Public = () => process.env.NEXT_PUBLIC_VRAELIS_V6_PUBLIC === "1";
+
+const V6_EXACT: Record<string, string> = {
+  "/": "/dev-preview/v6",
+  "/developers": "/dev-preview/v6/developers",
+  "/research": "/dev-preview/v6/research",
+  "/privacy": "/dev-preview/v6/privacy",
+  "/terms": "/dev-preview/v6/terms",
+  "/refunds": "/dev-preview/v6/refunds",
+  "/subprocessors": "/dev-preview/v6/subprocessors",
+  "/security": "/dev-preview/v6/security",
+  "/company": "/dev-preview/v6/company",
+  "/platform": "/dev-preview/v6/platform",
+  "/method": "/dev-preview/v6/method",
+  "/agents": "/dev-preview/v6/agents",
+  "/integrations": "/dev-preview/v6/integrations",
+  "/changelog": "/dev-preview/v6/changelog",
+  "/docs": "/dev-preview/v6/docs",
+  "/readme": "/dev-preview/v6/readme",
+};
+
 const CLEAN_EXACT: Record<string, string> = {
   "/": "/rank",
   "/how-it-works": "/rank/how-it-works",
@@ -183,10 +217,16 @@ export default function proxy(req: NextRequest) {
     return go(req, "/", "redirect");
   }
 
-  // 3) Clean public paths -> internal /rank routes (rewrite; URL stays clean).
-  let target = CLEAN_EXACT[path];
+  // 3) Clean public paths -> the internal route group (rewrite; URL stays clean).
+  //
+  // With the V6 flag on, its map is consulted FIRST and falls through to the current site for any path V6
+  // does not have. So promotion never produces a 404: an unmapped path keeps serving what it serves today.
+  let target = v6Public() ? V6_EXACT[path] : undefined;
+  if (!target) target = CLEAN_EXACT[path];
   if (!target) {
-    if (path === "/app" || path.startsWith("/app/")) target = "/rank" + path;
+    // Docs articles live under /docs/<slug> in V6, so the section needs the prefix form too.
+    if (v6Public() && path.startsWith("/docs/")) target = "/dev-preview/v6" + path;
+    else if (path === "/app" || path.startsWith("/app/")) target = "/rank" + path;
     // Research articles live at /research/<slug>, so the section needs the PREFIX form as well as the exact
     // entry above. A section with only an exact mapping serves its index and 404s every article under it.
     else if (path.startsWith("/research/")) target = "/rank" + path;

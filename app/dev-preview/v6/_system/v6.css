@@ -1,0 +1,467 @@
+/* ============================================================================
+   Vraelis public site, design 06. Scoped under .v6.
+
+   The company category is provisional and is NOT stated here: every positioning
+   string lives in _system/positioning.ts. This file owns the visual grammar only.
+
+   Grammar: LIGHT surfaces (warm stone) carry company framing, knowledge, memory
+   and research; GRAPHITE surfaces carry runs, evidence, findings and
+   consequential decisions, and mark themselves [data-nav-dark]. Brand is indigo.
+   Colour ONLY ever carries state: green means it held, amber means a person is
+   needed, red means it failed. Nothing decorative is allowed to use them.
+   ============================================================================ */
+
+.v6 {
+  /* ---- light surfaces: white and neutral grey. No warm cast. ---- */
+  --paper:   #FFFFFF;   /* page ground */
+  --surface: #FFFFFF;   /* raised */
+  --sunk:    #F4F4F5;   /* recessed / alternating band */
+  --ink:     #0A0A0B;   /* near black */
+  --ink-2:   #2E2F33;   /* body */
+  --ink-3:   #5B5D63;   /* secondary, 5.9:1 on the grey band */
+  --ink-4:   #6A6C71;   /* meta, 4.7:1 on the grey band, 5.0:1 on white */
+  --line:    rgba(10,10,11,0.10);
+  --line-2:  rgba(10,10,11,0.17);
+
+  /* ---- dark surfaces: near black, never a blue-grey ---- */
+  --graphite:   #0A0A0B;
+  --graphite-2: #121214;
+  --graphite-3: #1B1C1F;
+  --g-fg:    #FAFAFA;   /* ~19:1 */
+  --g-fg-2:  #C4C5C9;   /* ~11:1 */
+  --g-fg-3:  #8E9095;   /* ~6.2:1 */
+  --g-line:  rgba(255,255,255,0.12);
+  --g-line-2:rgba(255,255,255,0.20);
+
+  /* ---- "brand" is contrast, not hue. There is no accent colour in this system: the primary action is
+     black on white and white on black, and the ONLY colour anywhere on the site is a state signal. ---- */
+  --brand:     #0A0A0B;
+  --brand-ink: #2E2F33;   /* neutral, for labels that used to carry the accent */
+  --brand-dk:  #FAFAFA;
+  --brand-soft:rgba(10,10,11,0.06);
+  --brand-line:rgba(10,10,11,0.20);
+
+  /* ---- signals: the only colour that ever appears, and it always means a state ---- */
+  --go:   #0B7C55;   --go-ink:  #06603F;   --go-dk:   #4ADE9C;   /* it held */
+  --wait: #A96A12;   --wait-ink:#7E4E0C;   --wait-dk: #F2B75A;   /* a person is needed */
+  --stop: #B03A22;   --stop-ink:#8C2E19;   --stop-dk: #FF7A55;   /* it failed */
+
+  /* type */
+  --sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* layout + motion */
+  --gutter: clamp(20px, 4vw, 64px);
+  --max: 1200px;
+  --max-wide: 1320px;
+  --max-read: 720px;
+  --sec: clamp(72px, 9vw, 132px);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --sh-sm: 0 1px 2px rgba(20,22,28,0.06), 0 1px 3px rgba(20,22,28,0.05);
+  --sh-md: 0 12px 34px -14px rgba(20,22,28,0.22);
+  --sh-lg: 0 40px 90px -36px rgba(15,19,25,0.4);
+
+  background: var(--paper);
+  color: var(--ink-2);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* the shell is the persistent canvas behind every route: always opaque, always at least viewport-tall,
+     so no transition can reach the browser's own canvas through it */
+  min-height: 100dvh;
+}
+/* the shell wears the ground of the CURRENT route's opening surface, declared in markup before paint.
+   Dark for the homepage and the night docs; paper for routes that open on a light page hero. This is what
+   the incoming page's entrance plays over, which is why dark->dark navigation no longer flashes white. */
+.v6[data-route-theme="dark"] { background: var(--graphite); }
+.v6 *, .v6 *::before, .v6 *::after { box-sizing: border-box; }
+.v6 ::selection { background: var(--brand-soft); }
+.v6 img, .v6 svg, .v6 video { max-width: 100%; display: block; }
+
+/* ---------------------------------------------------------------- layout --- */
+.v6-wrap { width: 100%; max-width: var(--max); margin-inline: auto; padding-inline: var(--gutter); }
+.v6-wrap--wide { max-width: var(--max-wide); }
+.v6-wrap--read { max-width: var(--max-read); }
+.v6-sec { padding-block: var(--sec); position: relative; }
+.v6-sec--sunk { background: var(--sunk); }
+.v6-sec--tight { padding-block: clamp(52px, 7vw, 96px); }
+.v6-rule { height: 1px; background: var(--line); border: 0; margin: 0; }
+
+/* Dark section. [data-nav-dark] is the reliable marker: every dark surface sets it so the nav can flip over
+   it, and keying the text colours to it too means a new dark chapter cannot forget to opt in and silently
+   render dark-grey type on near-black. */
+.v6-dark { background: var(--graphite); color: var(--g-fg-2); }
+.v6-dark :is(h1,h2,h3,h4), [data-nav-dark] :is(h1,h2,h3,h4) { color: var(--g-fg); }
+.v6-dark .v6-lead, [data-nav-dark] .v6-lead { color: var(--g-fg-2); }
+.v6-dark .v6-kicker, [data-nav-dark] .v6-kicker { color: var(--g-fg-3); }
+.v6-dark .v6-eyebrow, [data-nav-dark] .v6-eyebrow { color: var(--g-fg-2); }
+
+/* ------------------------------------------------------------ typography --- */
+.v6-d2xl { font-family: var(--sans); font-weight: 600; letter-spacing: -0.032em; line-height: 1.0; font-size: clamp(2.7rem, 5vw, 4.4rem); color: var(--ink); margin: 0; text-wrap: balance; }
+.v6-dxl  { font-family: var(--sans); font-weight: 600; letter-spacing: -0.028em; line-height: 1.04; font-size: clamp(2.1rem, 3.7vw, 3.3rem); color: var(--ink); margin: 0; text-wrap: balance; }
+.v6-dl   { font-family: var(--sans); font-weight: 600; letter-spacing: -0.024em; line-height: 1.08; font-size: clamp(1.7rem, 2.9vw, 2.5rem); color: var(--ink); margin: 0; text-wrap: balance; }
+.v6-dm   { font-family: var(--sans); font-weight: 600; letter-spacing: -0.018em; line-height: 1.16; font-size: clamp(1.3rem, 2vw, 1.7rem); color: var(--ink); margin: 0; }
+.v6-lead { font-size: clamp(1.08rem, 1.35vw, 1.3rem); line-height: 1.55; color: var(--ink-2); margin: 0; max-width: 60ch; }
+.v6-body { font-size: 1rem; line-height: 1.62; color: var(--ink-3); margin: 0; }
+/* Quiet sans label, sentence case. The old treatment was a tiny all-caps mono eyebrow with a drawn rule
+   repeated above every heading, which is the single strongest "AI startup" tell in the type system. */
+.v6-eyebrow { font-family: var(--sans); font-size: 14px; font-weight: 600; letter-spacing: -0.005em;
+  color: var(--brand-ink); margin: 0; display: inline-block; }
+/* mono survives only for machine text: identifiers, values, timestamps, code */
+/* Small labels are SANS. Geist Mono at 10-12px reads as machine output and made every caption on the site
+   look robotic. Mono is now reserved for things that genuinely are machine text: identifiers and code. */
+.v6-kicker { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-4); }
+.v6-mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.v6-head { display: flex; flex-direction: column; gap: 18px; max-width: 760px; }
+
+/* ------------------------------------------------------------- actions ----- */
+.v6-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; box-sizing: border-box;
+  padding: 12px 20px; border-radius: 8px; font-size: 15px; font-weight: 600; letter-spacing: -0.005em; text-decoration: none; cursor: pointer;
+  border: 1px solid var(--ink); background: var(--ink); color: #fff; font-family: var(--sans);
+  transition: transform 130ms var(--ease-out), background 160ms ease, border-color 160ms ease, box-shadow 160ms ease, color 160ms ease; }
+.v6-btn:hover { background: #000; border-color: #000; }
+.v6-btn:active { transform: scale(0.985); }
+.v6-btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
+.v6-btn .v6-arw { transition: transform 180ms var(--ease-out); }
+.v6-btn:hover .v6-arw { transform: translateX(3px); }
+.v6-btn--lg { min-height: 50px; padding: 15px 26px; font-size: 16px; }
+.v6-btn--brand { background: var(--brand); border-color: var(--brand); }
+.v6-btn--brand:hover { background: var(--brand-ink); border-color: var(--brand-ink); }
+/* On a dark ground the primary action inverts. --brand is near-black, so without this the CTA was
+   black on black in the opening. One rule, keyed to the marker every dark surface already sets. */
+[data-nav-dark] .v6-btn--brand, .v6-dark .v6-btn--brand {
+  background: var(--g-fg); border-color: var(--g-fg); color: var(--graphite); }
+[data-nav-dark] .v6-btn--brand:hover, .v6-dark .v6-btn--brand:hover {
+  background: #fff; border-color: #fff; color: var(--graphite); }
+.v6-btn--ghost { background: transparent; color: var(--ink); border-color: var(--line-2); }
+.v6-btn--ghost:hover { background: transparent; border-color: var(--ink); }
+.v6-elink { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; color: var(--ink); text-decoration: none; cursor: pointer; }
+.v6-elink .v6-elink__t { background-image: linear-gradient(var(--brand), var(--brand)); background-position: 0 100%; background-repeat: no-repeat; background-size: 0% 1.5px; padding-bottom: 3px; transition: background-size 220ms var(--ease); }
+.v6-elink:hover .v6-elink__t { background-size: 100% 1.5px; }
+.v6-elink .v6-arw { color: var(--brand-ink); transition: transform 180ms var(--ease-out); }
+.v6-elink:hover .v6-arw { transform: translateX(3px); }
+.v6-elink:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; border-radius: 3px; }
+/* Dark grounds declare themselves with data-nav-dark, not only the .v6-dark class. Keying the inverted
+   treatment solely on the class left the hero's and the closing scene's editorial links at --ink, which is
+   near-black text on a near-black field: invisible. The underline swatch has to invert too, since --brand
+   is also near-black. */
+.v6-dark .v6-elink, [data-nav-dark] .v6-elink { color: var(--g-fg); }
+.v6-dark .v6-elink .v6-arw, [data-nav-dark] .v6-elink .v6-arw { color: var(--g-fg-2); }
+.v6-dark .v6-elink .v6-elink__t, [data-nav-dark] .v6-elink .v6-elink__t {
+  background-image: linear-gradient(var(--g-fg), var(--g-fg)); }
+.v6-dark .v6-elink:focus-visible, [data-nav-dark] .v6-elink:focus-visible { outline-color: var(--g-fg); }
+
+/* signal pills: trusted / review / stopped */
+.v6-sig { display: inline-flex; align-items: center; gap: 7px; padding: 4px 11px 4px 9px; border-radius: 999px; font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; white-space: nowrap; }
+.v6-sig__dot { width: 7px; height: 7px; border-radius: 999px; background: currentColor; flex: none; }
+.v6-sig--go   { color: var(--go-ink);   background: rgba(11,124,85,0.09);  border: 1px solid rgba(11,124,85,0.28); }
+.v6-sig--wait { color: var(--wait-ink); background: rgba(169,106,18,0.09); border: 1px solid rgba(169,106,18,0.28); }
+.v6-sig--stop { color: var(--stop-ink); background: rgba(176,58,34,0.09);  border: 1px solid rgba(176,58,34,0.28); }
+/* Keyed off [data-nav-dark] as well as .v6-dark. Every graphite surface already marks itself with that
+   attribute so the nav can flip over it, which makes it the reliable signal for "this ground is dark". The
+   closing scene is graphite but carries no .v6-dark class, so its Shipped pill was rendering the light-surface
+   treatment on graphite at 2.16:1. Binding to the attribute fixes it there and for any graphite section added
+   later, without each one having to remember to opt in twice. */
+.v6-dark .v6-sig--go,   [data-nav-dark] .v6-sig--go   { color: var(--go-dk);   background: rgba(52,211,153,0.12); border-color: rgba(52,211,153,0.32); }
+.v6-dark .v6-sig--wait, [data-nav-dark] .v6-sig--wait { color: var(--wait-dk); background: rgba(240,180,74,0.12); border-color: rgba(240,180,74,0.32); }
+.v6-dark .v6-sig--stop, [data-nav-dark] .v6-sig--stop { color: var(--stop-dk); background: rgba(255,122,85,0.12); border-color: rgba(255,122,85,0.32); }
+
+/* --------------------------------------------------------------- cards ----- */
+.v6-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: clamp(20px,2.2vw,28px); }
+.v6-card--sunk { background: var(--sunk); border-color: transparent; }
+
+/* Skip link: off-canvas until it takes focus, then it lands as a real button above the nav. */
+.v6-skip { position: fixed; top: 8px; left: 8px; z-index: 100; transform: translateY(-160%);
+  background: var(--ink); color: #fff; font-family: var(--sans); font-size: 14px; font-weight: 600;
+  padding: 12px 18px; border-radius: 8px; text-decoration: none;
+  transition: transform 160ms var(--ease-out); }
+/* :focus, not :focus-visible. The link is only ever reachable by keyboard, and relying on the heuristic left
+   it parked off-canvas in testing, which is the one failure mode a skip link cannot have. */
+.v6-skip:focus { transform: none; outline: 2px solid var(--brand-dk); outline-offset: 2px; }
+.v6 main:focus { outline: none; }
+
+/* ================================================================ NAV ====== */
+.v6-nav { position: sticky; top: 0; z-index: 60; }
+/* The initial theme is correct from the server-rendered markup, so it must not animate in. Crossing a
+   chapter boundary later gets the restrained transition. */
+.v6-nav[data-settled="false"] .v6-nav__in,
+.v6-nav[data-settled="false"] .v6-brand,
+.v6-nav[data-settled="false"] .v6-nav__item,
+.v6-nav[data-settled="false"] .v6-nav__signin,
+.v6-nav[data-settled="false"] .v6-btn { transition: none !important; }
+.v6-nav__in { display: flex; align-items: center; gap: 8px; padding: 13px var(--gutter);
+  background: transparent; border-bottom: 1px solid transparent;
+  transition: background 90ms linear, border-color 90ms linear; }
+/* The page is the drama; the bar is not. Solid, on both grounds: over a white chapter a translucent bar
+   let the section's own eyebrow and headline ghost through the nav links, and over a black chapter it
+   read as a lighter grey strip. White ground gets a white bar with dark text; black ground gets a black
+   bar with white text. Nothing shows through either. */
+.v6-nav[data-scrolled="true"] .v6-nav__in { background: #FFFFFF; backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom-color: var(--line); }
+.v6-nav[data-theme="light"] .v6-nav__in { background: #FFFFFF; }
+/* Solid, and identical at scrollY 0. The ground under the bar at the top of the page IS black, so a
+   translucent plate over it only ever read as a lighter grey strip sitting on the hero. */
+.v6-nav[data-theme="dark"] .v6-nav__in { background: #0A0A0B; backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom-color: transparent; }
+.v6-nav[data-theme="dark"][data-scrolled="true"] .v6-nav__in { border-bottom-color: rgba(255,255,255,0.10); }
+.v6-nav[data-open="true"] .v6-nav__in { backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom-color: transparent; }
+.v6-nav[data-open="true"][data-theme="dark"] .v6-nav__in { background: #08080A; }
+.v6-nav[data-open="true"][data-theme="light"] .v6-nav__in { background: #FFFFFF; }
+/* The wordmark is the largest thing in the bar by a clear margin (roughly 2x the nav links) and it is the
+   axis everything else is centred on. It never wraps and never shrinks, and the bar's own height is still set
+   by the taller button, so growing the type does not grow the header or push a link off the edge.
+   Wordmark only: no icon beside it. */
+.v6-brand { transition: color 90ms linear;
+  font-family: var(--sans); font-weight: 700; font-size: clamp(25px, 2.1vw, 34px);
+  letter-spacing: -0.038em; color: var(--ink); text-decoration: none; line-height: 1; white-space: nowrap;
+  display: inline-flex; align-items: center; flex: none;
+  /* the gutter puts ~58px between the edge and the wordmark but only 16px between the wordmark and the
+     first trigger, which reads as the logo being shoved right. Pull it back so both gaps are close. */
+  /* edge-to-wordmark and wordmark-to-first-trigger both land near 38px at desktop. The trigger's own
+     14px padding plus the bar's 8px gap already supply most of the right-hand space. */
+  margin-left: calc(var(--gutter) / -3); padding-right: 16px;
+  /* optical: "Vraelis" carries no descender, so its glyph box sits a touch high on the shared centre line */
+  transform: translateY(0.02em); }
+.v6-nav[data-theme="dark"] .v6-brand { color: var(--g-fg); }
+.v6-nav__items { display: flex; align-items: center; gap: 2px; min-width: 0; }
+/* No pill, no rounded hover plate, no outlined active box. State is carried by colour alone. */
+.v6-nav__item { font-size: 14.5px; font-weight: 500; color: var(--ink-3); text-decoration: none; white-space: nowrap;
+  background: none; border: 0; cursor: pointer; font-family: var(--sans); padding: 8px 14px; display: inline-flex;
+  align-items: center; transition: color 90ms linear; }
+.v6-nav__item:hover, .v6-nav__item[aria-current="page"], .v6-nav__item[aria-expanded="true"] { color: var(--ink); }
+.v6-nav[data-theme="dark"] .v6-nav__item { color: var(--g-fg-2); }
+.v6-nav[data-theme="dark"] .v6-nav__item:hover, .v6-nav[data-theme="dark"] .v6-nav__item[aria-expanded="true"] { color: var(--g-fg); }
+.v6-nav__right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex: none; }
+.v6-nav__signin { font-size: 14.5px; font-weight: 500; color: var(--ink-3); text-decoration: none; padding: 8px 12px; white-space: nowrap; transition: color 90ms linear; }
+.v6-nav__signin:hover { color: var(--ink); }
+.v6-nav[data-theme="dark"] .v6-nav__signin { color: var(--g-fg-2); } .v6-nav[data-theme="dark"] .v6-nav__signin:hover { color: var(--g-fg); }
+.v6-nav .v6-btn { min-height: 38px; padding: 8px 16px; font-size: 14px; }
+.v6-nav[data-theme="dark"] .v6-btn { background: var(--g-fg); border-color: var(--g-fg); color: var(--graphite); }
+.v6-nav[data-theme="dark"] .v6-btn:hover { background: #fff; border-color: #fff; }
+.v6-nav__burger { display: none; width: 40px; height: 40px; border-radius: 9px; border: 1px solid var(--line-2); background: var(--surface); color: var(--ink); align-items: center; justify-content: center; cursor: pointer; }
+.v6-nav[data-theme="dark"] .v6-nav__burger { background: rgba(255,255,255,0.06); border-color: var(--g-line); color: var(--g-fg); }
+
+/* Resources open: the bar is sitting directly on the panel's light ground, so the WHOLE bar takes the light
+   treatment regardless of which section is behind it. Previously only the background switched while the
+   foreground colours stayed on their dark-section values, so opening the menu anywhere over graphite left the
+   wordmark and every nav link invisible against the bar's own background.
+   These rules must stay BELOW the entire [data-theme="dark"] block: the two selectors have identical
+   specificity, so source order is the only thing that decides which one wins. */
+.v6-nav[data-open="true"][data-theme="dark"] .v6-brand { color: #FAFAFA; }
+.v6-nav[data-open="true"][data-theme="light"] .v6-brand { color: var(--ink); }
+.v6-nav[data-open="true"][data-theme="dark"] .v6-nav__item { color: #B9BBC0; }
+.v6-nav[data-open="true"][data-theme="light"] .v6-nav__item { color: var(--ink-3); }
+.v6-nav[data-open="true"] .v6-nav__item:hover,
+.v6-nav[data-open="true"] .v6-nav__item[aria-current="page"],
+.v6-nav[data-open="true"][data-theme="dark"] .v6-nav__item[aria-expanded="true"] { color: #FAFAFA; }
+.v6-nav[data-open="true"][data-theme="light"] .v6-nav__item[aria-expanded="true"] { color: var(--ink); }
+.v6-nav[data-open="true"][data-theme="dark"] .v6-nav__signin { color: #B9BBC0; }
+.v6-nav[data-open="true"][data-theme="light"] .v6-nav__signin { color: var(--ink-3); }
+.v6-nav[data-open="true"][data-theme="dark"] .v6-nav__signin:hover { color: #FAFAFA; }
+.v6-nav[data-open="true"][data-theme="light"] .v6-nav__signin:hover { color: var(--ink); }
+.v6-nav[data-open="true"][data-theme="dark"] .v6-btn { background: #FAFAFA; border-color: #FAFAFA; color: #0A0A0B; }
+.v6-nav[data-open="true"][data-theme="light"] .v6-btn { background: var(--ink); border-color: var(--ink); color: #fff; }
+/* Focus ring is brand indigo, never a signal colour, and is stated for each bar treatment. */
+.v6-nav__item:focus-visible, .v6-nav__signin:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 8px; }
+.v6-nav[data-theme="dark"] .v6-nav__item:focus-visible,
+.v6-nav[data-theme="dark"] .v6-nav__signin:focus-visible { outline-color: var(--brand-dk); }
+.v6-nav[data-open="true"] .v6-nav__item:focus-visible,
+.v6-nav[data-open="true"] .v6-nav__signin:focus-visible { outline-color: var(--brand); }
+
+/* ---------------------------------------------------------------- mega-menu ---
+   Night panel: the open menu is a dark full-width surface regardless of which
+   section the bar is sitting over, so it always reads the same way and its text
+   is always white on near-black. It animates OUT as well as in; the previous
+   panel unmounted on close and simply vanished, which is what made dismissing a
+   menu feel broken.
+   ------------------------------------------------------------------------- */
+.v6-mega { position: absolute; top: 100%; left: 0; right: 0; z-index: 55; }
+/* No drop shadow. Over a white chapter the soft shadow spread a grey haze across the section below the
+   panel, which read as a rendering fault rather than as depth. The panel ends on a hard edge. */
+/* the panel takes the ground it opens over: white section, white panel with dark text; dark section,
+   near-black panel with light text. It never forces one treatment onto the other. */
+.v6-mega__panel { transform-origin: 50% 0; }
+.v6-nav[data-theme="dark"] .v6-mega__panel { background: #08080A; border-bottom: 1px solid rgba(255,255,255,0.14); }
+.v6-nav[data-theme="light"] .v6-mega__panel { background: #FFFFFF; border-bottom: 1px solid var(--line); }
+.v6-mega[data-state="in"] .v6-mega__panel { animation: v6MegaIn 260ms cubic-bezier(0.22,1,0.36,1) both; }
+.v6-mega[data-state="out"] .v6-mega__panel { animation: v6MegaOut 190ms cubic-bezier(0.4,0,1,1) both; pointer-events: none; }
+@keyframes v6MegaIn  { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
+@keyframes v6MegaOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-6px); } }
+/* switching top-level items keeps the shell and crossfades only what is inside it */
+@keyframes v6MegaSwap { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+@keyframes v6MegaFade { from { opacity: 0; } to { opacity: 1; } }
+.v6-mega__grid { animation: v6MegaSwap 220ms var(--ease) both; display: grid; grid-template-columns: repeat(3, minmax(0,1fr)) minmax(0,1.15fr);
+  gap: clamp(28px,3.4vw,64px); max-width: var(--max-wide); margin-inline: auto;
+  padding: clamp(34px,3.2vw,52px) var(--gutter) clamp(36px,3.6vw,56px); }
+.v6-mega__col-h { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.15em;
+  text-transform: uppercase; color: #8E9095; margin: 0 0 16px; }
+.v6-mega__link { display: block; text-decoration: none; padding: 9px 10px; margin: 0 -10px; border-radius: 8px;
+  transition: background 140ms ease; }
+.v6-mega__link:hover { background: rgba(255,255,255,0.06); }
+.v6-mega__link:focus-visible { outline: 2px solid #FAFAFA; outline-offset: -2px; }
+.v6-mega__lt { display: block; font-size: 15px; font-weight: 600; color: #FAFAFA; letter-spacing: -0.012em; }
+.v6-mega__ld { display: block; font-size: 12.5px; color: #9A9CA1; margin-top: 2px; line-height: 1.4; }
+/* editorial preview, not a card of muted text on a black card */
+.v6-mega__feature { border-left: 1px solid rgba(255,255,255,0.13); padding-left: clamp(24px,2.4vw,40px);
+  display: flex; flex-direction: column; min-height: 232px; }
+.v6-mega__fin { animation: v6MegaFade 200ms var(--ease) both; }
+.v6-mega__fstat { display: inline-block; margin-top: 16px; font-family: var(--sans); font-size: 11px;
+  font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #8E9095;
+  border: 1px solid rgba(255,255,255,0.16); border-radius: 999px; padding: 5px 12px; }
+.v6-mega__fe { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #8E9095; }
+.v6-mega__feature h4 { color: #FAFAFA; font-size: clamp(1.2rem,1.5vw,1.5rem); font-weight: 600; margin: 14px 0 0;
+  letter-spacing: -0.022em; line-height: 1.12; }
+.v6-mega__feature p { font-size: 13.5px; line-height: 1.55; margin: 12px 0 0; color: #B9BBC0; }
+.v6-mega__fcta { display: inline-flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 24px;
+  font-size: 14px; font-weight: 600; color: #FAFAFA; text-decoration: none; }
+.v6-mega__fcta .v6-arw { transition: transform 180ms var(--ease-out); }
+.v6-mega__fcta:hover .v6-arw { transform: translateX(4px); }
+.v6-mega__fcta:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 4px; border-radius: 4px; }
+
+
+/* light-ground values for the same panel */
+.v6-nav[data-theme="light"] .v6-mega__col-h { color: var(--ink-4); }
+.v6-nav[data-theme="light"] .v6-mega__lt { color: var(--ink); }
+.v6-nav[data-theme="light"] .v6-mega__ld { color: var(--ink-3); }
+.v6-nav[data-theme="light"] .v6-mega__fe { color: var(--ink-4); }
+.v6-nav[data-theme="light"] .v6-mega__feature h4 { color: var(--ink); }
+.v6-nav[data-theme="light"] .v6-mega__feature p { color: var(--ink-3); }
+.v6-nav[data-theme="light"] .v6-mega__fcta { color: var(--ink); }
+.v6-nav[data-theme="light"] .v6-mega__feature { border-left-color: var(--line-2); }
+.v6-nav[data-theme="light"] .v6-mega__link:hover { background: rgba(10,10,11,0.05); }
+.v6-nav[data-theme="light"] .v6-mega__link:focus-visible,
+.v6-nav[data-theme="light"] .v6-mega__fcta:focus-visible { outline-color: var(--ink); }
+
+/* mobile full-screen nav */
+/* --surface, not --paper: on the page ground the panel sampled the same colour as the page behind it and had
+   no layer identity. The primary actions are pinned in a footer so they never scroll out of the viewport. */
+.v6-drawer { position: fixed; inset: 0; z-index: 90; background: var(--surface); display: flex; flex-direction: column; animation: v6DrawerIn 240ms var(--ease) both; overflow: hidden; }
+@keyframes v6DrawerIn { from { opacity: 0; } to { opacity: 1; } }
+.v6-drawer__top { display: flex; align-items: center; justify-content: space-between; padding: 13px var(--gutter); border-bottom: 1px solid var(--line); flex: none; }
+.v6-drawer__x { width: 44px; height: 44px; border-radius: 9px; border: 1px solid var(--line-2); background: var(--surface); color: var(--ink); display: grid; place-items: center; cursor: pointer; }
+.v6-drawer__body { padding: 8px var(--gutter) 28px; display: flex; flex-direction: column; flex: 1; overflow-y: auto; }
+.v6-drawer__foot { flex: none; padding: 14px var(--gutter) 18px; border-top: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; gap: 10px; }
+.v6-drawer__foot .v6-btn { justify-content: center; }
+.v6-drawer__link { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; color: var(--ink); text-decoration: none; padding: 15px 2px; border-bottom: 1px solid var(--line); min-height: 48px; display: flex; align-items: center; }
+.v6-drawer__sub { padding: 14px 2px; border-bottom: 1px solid var(--line); }
+.v6-drawer__sub-h { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-4); margin: 0 0 10px; }
+.v6-drawer__sub-links { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
+.v6-drawer__sub-links a { font-size: 15px; color: var(--ink-2); text-decoration: none; padding: 6px 0; }
+.v6-drawer__cta { margin-top: 24px; display: flex; flex-direction: column; gap: 10px; }
+.v6-drawer__cta .v6-btn { justify-content: center; }
+
+/* The v1 footer (.v6-foot*) lived here. The institutional footer in close.css (.v6-foot2*) replaced it in
+   phase 1 and no v6 route renders the old markup any more, so these rules are deleted rather than left to
+   rot and be copied forward by mistake. */
+@media (max-width: 940px) {
+  .v6-nav__items, .v6-nav__signin { display: none; }
+  .v6-nav__burger { display: inline-flex; }
+}
+@media (max-width: 560px) {
+  .v6-drawer__sub-links { grid-template-columns: 1fr; }
+  /* Keep the enlarged wordmark AND both controls on one line down to 320px: the button gives back the
+     padding rather than the wordmark giving back its size. */
+  .v6-nav .v6-btn { padding: 8px 12px; }
+  .v6-brand { padding-right: 10px; }
+}
+/* Touch targets: editorial links and footer links are text-height on desktop, which is under the 44px touch
+   guidance on a phone. Grow the hit area vertically without moving the text. */
+@media (max-width: 640px) {
+  .v6-elink { min-height: 44px; }
+  .v6-drawer__sub-links a { min-height: 40px; }
+}
+
+/* ============================================================== MOTION ===== */
+@keyframes v6PageIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.v6-page { animation: v6PageIn 340ms var(--ease) both; min-height: 100dvh; }
+.v6-reveal { opacity: 0; transform: translateY(14px); transition: opacity 560ms var(--ease), transform 560ms var(--ease); transition-delay: calc(var(--i,0) * 66ms); }
+.v6-reveal.in { opacity: 1; transform: none; }
+.v6-reveal--m { transform: translateY(22px) scale(0.99); } .v6-reveal--m.in { transform: none; }
+
+/* ══════════════════════════════════════════════════════════ SCROLLBAR ══
+   The site-wide scrollbar is the old brand emerald, keyed on [data-theme="light"] in globals.css. The v6
+   system has no accent colour at all: colour only ever means a state, and a scrollbar is not a state.
+   Scoped with :has so only documents actually rendering a v6 surface are affected; every other route keeps
+   the scrollbar it was designed with. The stealth curtain is covered too, since it is the same brand. */
+html:has(.v6),
+html:has(.v6) *,
+html:has(.vst-page),
+html:has(.vst-page) * {
+  scrollbar-color: rgba(140, 142, 148, 0.62) rgba(140, 142, 148, 0.12) !important;
+}
+html:has(.v6) ::-webkit-scrollbar-track,
+html:has(.vst-page) ::-webkit-scrollbar-track {
+  background: rgba(140, 142, 148, 0.12) !important; border-radius: 10px;
+}
+html:has(.v6) ::-webkit-scrollbar-thumb,
+html:has(.vst-page) ::-webkit-scrollbar-thumb {
+  background: rgba(140, 142, 148, 0.62) !important;
+  border-radius: 10px; border: 3px solid transparent; background-clip: content-box;
+  transition: background 160ms ease;
+}
+html:has(.v6) ::-webkit-scrollbar-thumb:hover,
+html:has(.vst-page) ::-webkit-scrollbar-thumb:hover {
+  background: rgba(170, 172, 178, 0.8) !important; background-clip: content-box;
+}
+html:has(.v6) ::-webkit-scrollbar-thumb:active,
+html:has(.vst-page) ::-webkit-scrollbar-thumb:active {
+  background: rgba(200, 202, 208, 0.9) !important; background-clip: content-box;
+}
+
+/* ══════════════════════════════════════════════════════ SPECTRAL REVEAL ═════
+   The sentence exists once. .v6-spec__t is the real text and the only thing announced, extracted or
+   copied. .v6-spec__fx is an EMPTY, aria-hidden element whose ::after paints the travelling colour:
+   aria-hidden excludes its generated content from the accessibility tree, and generated content never
+   appears in innerText. Both layers share the same box so the colour registers with the letterforms.
+   Everything derives from --sv (0..1), a pure function of rendered scroll progress. */
+.v6-spec { position: relative; display: inline-block;
+  --sv-in:   clamp(0, calc(var(--sv) / 0.42), 1);            /* establish: dim -> present      */
+  --sv-out:  clamp(0, calc((var(--sv) - 0.42) / 0.40), 1);   /* the pass leaves by 0.82        */
+  --sv-move: clamp(0, calc((var(--sv) - 0.10) / 0.66), 1);   /* where the light is, 0.10-0.76  */
+  opacity: calc(0.22 + 0.78 * var(--sv-in));
+  transform: translateY(calc((1 - var(--sv-in)) * 12px));
+  filter: blur(calc((1 - var(--sv-in)) * 6px));
+  will-change: transform, filter, opacity; }
+.v6-spec__t { display: inline; }
+/* the decorative layer sits exactly over the real text and paints only through the letterforms */
+.v6-spec__fx { position: absolute; inset: 0; pointer-events: none; user-select: none; }
+.v6-spec__fx::after {
+  content: attr(data-text);
+  display: block;
+  background-image: linear-gradient(100deg,
+    transparent 6%,
+    rgba(139, 118, 210, 0.9) 22%,
+    rgba(92, 132, 224, 0.95) 34%,
+    rgba(96, 196, 222, 0.95) 46%,
+    rgba(96, 190, 140, 0.9) 57%,
+    rgba(214, 178, 120, 0.75) 65%,
+    transparent 80%);
+  background-size: 300% 100%;
+  background-position: calc(100% - var(--sv-move) * 200%) 0;
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent;
+  opacity: calc(min(clamp(0, calc(var(--sv) / 0.18), 1), 1 - var(--sv-out)));
+  will-change: background-position, opacity; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* the final solid text, immediately: no colour travel, no blur, no partial reveal */
+  .v6-spec { opacity: 1 !important; transform: none !important; filter: none !important; }
+  .v6-spec__fx { display: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v6-page { animation: none !important; }
+  .v6-reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .v6-btn:active { transform: none !important; }
+  .v6 * { scroll-behavior: auto !important; }
+}
+
+/* Homepage restart via the wordmark. The jump to the top happens while opacity is 0, so no one ever sees
+   15600px of pinned chapters rewinding. Only the main content fades: the nav stays put, because the thing
+   you just clicked vanishing under the cursor reads as a bug. */
+.v6[data-restart] #v6-main { will-change: opacity; }
+.v6[data-restart="out"] #v6-main { opacity: 0; transition: opacity 170ms cubic-bezier(0.4, 0, 1, 1); }
+.v6[data-restart="in"] #v6-main { opacity: 1; transition: opacity 260ms cubic-bezier(0, 0, 0.2, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .v6[data-restart] #v6-main { transition: none !important; opacity: 1 !important; }
+}

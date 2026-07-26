@@ -1,0 +1,74 @@
+/* ============================================================================
+   Global closing scene + institutional footer. The closing is a full editorial
+   ending that resolves the opening's responsibility into a settled state; it is
+   not a centered card above the footer. The footer is a two-level structure with
+   real links only.
+   ============================================================================ */
+
+/* ---------------------------------------------------------- closing scene --- */
+/* The final chapter, and the largest type on the page. Given a full viewport of its own so the page ends
+   on a statement rather than on a block above a footer. */
+.v6-end { position: relative; background: var(--graphite); color: var(--g-fg-2); overflow: hidden;
+  min-height: 82svh; display: flex; align-items: center;
+  padding: clamp(96px, 13vh, 168px) 0 clamp(88px, 12vh, 144px); }
+.v6-end__field { position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(1300px 780px at 74% 18%, rgba(255,255,255,0.055), transparent 70%),
+    linear-gradient(170deg, #141517, var(--graphite) 62%, #060607); }
+.v6-end__in { position: relative; z-index: 2; width: 100%; max-width: var(--max-wide);
+  margin-inline: auto; padding-inline: var(--gutter); }
+
+/* the responsibility from the opening, now settled */
+.v6-end__resolve { display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  padding-bottom: clamp(26px, 4vh, 44px); margin-bottom: clamp(30px, 4.5vh, 52px);
+  border-bottom: 1px solid var(--g-line); }
+.v6-end__resolve-t { font-size: clamp(0.98rem, 1.2vw, 1.12rem); color: var(--g-fg-2); margin: 0; }
+.v6-end__resolve-t b { color: var(--g-fg); font-weight: 600; }
+
+.v6-end__h { font-family: var(--sans); font-weight: 600; letter-spacing: -0.034em; line-height: 1.0;
+  font-size: clamp(2.7rem, 7.4vw, 6.6rem); color: var(--g-fg); margin: 0; max-width: 13ch; text-wrap: balance; }
+.v6-end__say { font-size: clamp(1.06rem, 1.35vw, 1.32rem); line-height: 1.5; color: var(--g-fg-2);
+  margin: clamp(24px, 3.2vh, 40px) 0 0; max-width: 56ch; }
+.v6-end__cta { margin-top: clamp(30px, 4.4vh, 48px); display: flex; align-items: center; gap: 26px; flex-wrap: wrap; }
+.v6-end__third { font-size: 15px; color: var(--g-fg-3); text-decoration: none; min-height: 32px;
+  display: inline-flex; align-items: center; }
+.v6-end__third:hover { color: var(--g-fg); }
+.v6-end .v6-btn { background: var(--g-fg); border-color: var(--g-fg); color: var(--graphite); min-height: 52px; padding: 16px 28px; font-size: 16px; }
+.v6-end .v6-btn:hover { background: #fff; border-color: #fff; }
+.v6-end .v6-elink { color: var(--g-fg); }
+.v6-end .v6-elink .v6-arw { color: var(--brand-dk); }
+.v6-end .v6-elink .v6-elink__t { background-image: linear-gradient(var(--brand-dk), var(--brand-dk)); }
+
+/* ---------------------------------------------------------------- footer --- */
+.v6-foot2 { background: var(--graphite-2); color: var(--g-fg-2); border-top: 1px solid var(--g-line); }
+.v6-foot2__lower { max-width: var(--max-wide); margin-inline: auto; padding: clamp(46px,6vh,72px) var(--gutter) clamp(28px,3.5vh,40px);
+  display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: clamp(24px,3vw,52px); }
+.v6-foot2__h { font-family: var(--sans); font-size: 13px; font-weight: 600; color: var(--g-fg); margin: 0 0 16px; letter-spacing: -0.005em; }
+.v6-foot2__col { display: flex; flex-direction: column; gap: 2px; }
+.v6-foot2__col a { font-size: 14.5px; color: var(--g-fg-2); text-decoration: none; display: inline-flex; align-items: center; min-height: 34px; transition: color 140ms ease; }
+.v6-foot2__col a:hover { color: var(--g-fg); }
+.v6-foot2__base { border-top: 1px solid var(--g-line); }
+.v6-foot2__base-in { max-width: var(--max-wide); margin-inline: auto; padding: 22px var(--gutter) 30px;
+  display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+.v6-foot2__base-in span, .v6-foot2__base-in a { font-size: 13.5px; color: var(--g-fg-3); text-decoration: none; }
+.v6-foot2__base-in a:hover { color: var(--g-fg-2); }
+.v6-foot2__legal { display: flex; gap: 22px; flex-wrap: wrap; }
+
+/* Touch targets. These are text-height links on desktop, which is fine for a pointer and too small for a
+   thumb, so the hit area grows vertically on touch widths without moving the text. The old rules covered the
+   v1 footer's class names and therefore did nothing once this footer replaced it. */
+/* min-width too: the "X" link is a single glyph, so height alone left an 8px-wide target. */
+.v6-foot2__legal a { display: inline-flex; align-items: center; justify-content: center; min-height: 24px; min-width: 24px; }
+@media (pointer: coarse), (max-width: 640px) {
+  .v6-foot2__legal a, .v6-foot2__base-in span { min-height: 44px; }
+  .v6-foot2__col a { min-height: 44px; }
+}
+
+@media (max-width: 940px) {
+  .v6-foot2__lower { grid-template-columns: 1fr 1fr; gap: 26px 24px; }
+}
+@media (max-width: 520px) {
+  .v6-foot2__lower { grid-template-columns: 1fr; }
+  .v6-end__cta { gap: 18px; }
+  .v6-end .v6-btn { width: 100%; justify-content: center; }
+}

@@ -24,7 +24,25 @@ ok("the preview 404s outside development via an explicit gate", /if \(process\.e
 ok("the gate is NODE_ENV, so no query string can enable it in production", !/searchParams|\?preview|enablePreview/.test(preview));
 ok("dev-preview is NOT an APP_ROOT (the app host never rewrites to it; it redirects to marketing then 404s)", !(APP_ROOTS as readonly string[]).includes("dev-preview") && !(APP_ROOTS as readonly string[]).includes("dev"));
 ok("isAppPath(/dev-preview) is false", !isAppPath("/dev-preview"));
-ok("the proxy adds no clean-path mapping that would expose the preview", !/dev-preview/.test(proxy));
+// This forbade the string outright, which was right while /dev-preview held only the design-01 preview.
+// V6 now also lives there and is a complete public site awaiting promotion, so the rule is the one the
+// check always meant: no clean path may reach /dev-preview UNGATED. The V6 map is consulted only when
+// v6Public() is true, and that reads NEXT_PUBLIC_VRAELIS_V6_PUBLIC, which is unset by default.
+{
+  const gated = /export const v6Public = \(\) => process\.env\.NEXT_PUBLIC_VRAELIS_V6_PUBLIC === "1";/.test(proxy);
+  const usesGate = /v6Public\(\) \? V6_EXACT\[path\] : undefined/.test(proxy)
+    && /v6Public\(\) && path\.startsWith\("\/docs\/"\)/.test(proxy);
+  // Every dev-preview mention in the proxy must sit inside the V6 map or its gate; a bare mapping elsewhere
+  // is the leak this check exists to catch.
+  const strayLeak = proxy
+    .split("\n")
+    .filter((l) => l.includes("dev-preview") && !l.includes("/dev-preview/v6"))
+    .length > 0;
+  ok("the proxy exposes the preview only behind an explicit, default-off flag",
+    gated && usesGate && !strayLeak);
+  ok("the design-01 preview itself is still unreachable by any clean path",
+    !/"\/dev-preview"/.test(proxy) && !/dev-preview\/page/.test(proxy));
+}
 ok("no navigation, sitemap, or metadata links to the preview", !/dev-preview/.test(ui) && !/dev-preview/.test(page) && !/dev-preview/.test(rec));
 ok("the preview is noindex", /robots: \{ index: false/.test(preview));
 ok("the preview reuses the REAL home components (no drift into a second implementation)",

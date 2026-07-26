@@ -1,0 +1,815 @@
+/* ============================================================================
+   CHAPTERS 2-6.
+
+   Rules this file exists to enforce:
+     - one dominant idea and one dominant visual per viewport
+     - the visual occupies most of the composition, and is allowed to exceed the
+       content container and crop at the viewport edge
+     - large uninterrupted negative space between chapters
+     - no two chapters share a composition or a maximum width
+     - backgrounds change at every chapter boundary
+   ============================================================================ */
+
+/* ══════════════════════════════════════════════════════ 2. THE COMPLETION GAP ══
+   A pinned confrontation. State 0 is one word at the largest scale on the page.
+   State 1 takes that same optical space away from it. */
+/* CONTINUOUS DEVELOPMENT, ONE STATE AT A TIME.
+   --p runs 0..1 with scroll. Every traveller owns a trajectory through one shared, CENTRED space.
+
+   ONE STATE AT A TIME, AND NO CROSS-FADE. Three earlier attempts each left two states on screen at once:
+   all four together, then the observations at 45% under a resolved verdict, then a genuine cross-fade
+   where the outgoing and incoming statements were both half-transparent in the same optical space and
+   blended into mush.
+
+   Strictly disjoint opacity was tried and was worse: it produced a dead frame at every boundary where the
+   outgoing had gone and the incoming had not arrived. SEPARATION IS SPATIAL, NOT TEMPORAL. Each outgoing
+   statement travels a full 60vh upward, clearing the viewport entirely, while the incoming one rises from
+   only ~17vh below centre. The brief opacity overlap that keeps the frame alive therefore happens with
+   the two statements more than half a viewport apart, so they can never occupy the same optical space and
+   cannot blend into each other.
+
+   The ramps are deliberately steep. A gentle fade meant the incoming statement drifted in at low opacity
+   for a long stretch, which left the frame looking thin even though nothing was blending. Each statement
+   now reaches full strength within 8 or 9 percent of the chapter.
+
+     0.00-0.17  the claim establishes and the strike develops
+     0.17-0.26  the claim rises 60vh and clears the frame
+     0.23-0.31  the systems it crossed rise into the centre
+     0.47-0.54  the systems leave upward
+     0.51-0.59  the observations take the centre
+     0.75-0.81  the observations leave upward
+     0.78-0.86  the verdict resolves
+     0.90-1.00  settled
+
+   Centred: the stage is a narrow measure in the middle of the viewport and every traveller is
+   text-align: center, so the chapter reads as one column rather than a left-hung block. */
+/* 560vh. This has moved twice: 520 made the setup chapter feel like the page's main focus, 300 made the
+   three states jump past, and 420 still read as too fast. The earlier problem was never the length, it was
+   a dead 25 percent slot left behind by a removed traveller. With that gone the runway is all working
+   scroll, so it can be long without feeling slow. */
+.v6-gap { position: relative; height: 360vh; background: var(--paper); --p: 0;
+  /* RETIMED. "Complete." used to leave over 0.16 -> 0.25, a 9% window, which on this chapter is about two
+     wheel notches: the line was gone before it had been read. The strike now finishes later, the statement
+     HOLDS at full for a stretch after it, and the exit runs nearly twice as long. */
+  --strike:  clamp(0, calc((var(--p) - 0.06) / 0.14), 1);   /* 06 -> 20      */
+  --turn:    clamp(0, calc((var(--p) - 0.10) / 0.08), 1);   /* 10 -> 18      */
+  --claim:   clamp(0, calc((var(--p) - 0.26) / 0.15), 1);   /* 26 -> 41 out  */
+  /* "What it does not" was the worst of them. --foundout began at 0.52 while --found was still arriving at
+     0.57, so the list started leaving BEFORE it had finished appearing, and its whole exit ran over 7% of
+     the chapter, about a notch and a half. The two no longer overlap: it arrives, then HOLDS for a stretch
+     with nothing else moving, then leaves over twice the distance it used to. */
+  --found:   clamp(0, calc((var(--p) - 0.38) / 0.12), 1);   /* 38 -> 50 in   */
+  --foundout:clamp(0, calc((var(--p) - 0.62) / 0.14), 1);   /* 62 -> 76 out  */
+  --verdict: clamp(0, calc((var(--p) - 0.74) / 0.12), 1);   /* 74 -> 86 in   */
+  --settle:  clamp(0, calc((var(--p) - 0.88) / 0.12), 1);   /* 88 -> 100     */
+}
+.v6-gap__pin { position: sticky; top: 0; height: 100svh; overflow: hidden;
+  padding: calc(var(--nav-h, 66px) + 2vh) var(--gutter) 4vh; }
+.v6-gap__stage { position: relative; width: 100%; max-width: 980px; height: 100%; margin-inline: auto; }
+/* every traveller is anchored to the same centre and moves from there */
+/* top:50% puts each block's TOP edge on the viewport centre, so every traveller needs its own -50%
+   to sit on its own midpoint. Only the claim had it, which is why the other three read half a block
+   too low in the frame. */
+.v6-gap__t { position: absolute; left: 0; right: 0; top: 50%; text-align: center; will-change: transform; }
+
+.v6-gap__label { font-family: var(--sans); font-weight: 600; font-size: 12px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ink-4); margin: 0; }
+.v6-gap__word { position: relative; display: inline-block; margin: clamp(8px, 1.8vh, 20px) 0 0; }
+.v6-gap__wordt { display: block; font-family: var(--sans); font-weight: 600; letter-spacing: -0.055em;
+  line-height: 0.84; color: var(--ink); font-size: clamp(3.6rem, 13vw, 12rem); }
+.v6-gap__strike { position: absolute; left: -2%; right: -2%; top: 47%; height: clamp(4px, 0.6vw, 9px);
+  background: var(--stop); border-radius: 999px; transform-origin: 0 50%; transform: scaleX(var(--strike)); }
+/* the turn: the sentence that reframes the claim, arriving as the claim starts to go */
+.v6-gap__turn { margin: clamp(18px, 2.6vh, 32px) 0 0; font-family: var(--sans); font-weight: 500;
+  letter-spacing: -0.024em; font-size: clamp(1.2rem, 2.2vw, 1.9rem); color: var(--ink-3);
+  opacity: calc(var(--turn) * (1 - var(--claim))); }
+
+/* the claim: holds the centre, then rises and shrinks as it loses authority */
+.v6-gap__claim { transform: translateY(calc(-50% - var(--claim) * 60vh))
+  scale(calc(1 - 0.38 * var(--claim))); opacity: calc(1 - var(--claim)); }
+
+/* the systems: travel up into the centre the claim vacated, then clear for the observations */
+.v6-gap__sys { transform: translateY(calc(-50% + 12vh - var(--sys) * 14vh - var(--sysout) * 62vh));
+  opacity: calc(var(--sys) * (1 - var(--sysout))); }
+.v6-gap__syslist { list-style: none; margin: clamp(14px, 2vh, 22px) 0 0; padding: 0;
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 14px; }
+.v6-gap__syslist li { font-size: clamp(0.95rem, 1.5vw, 1.3rem); color: var(--ink-2);
+  border: 1px solid var(--line-2); border-radius: 999px; padding: 9px 20px; }
+
+/* the observations: take the centre, hold it, then lift as the verdict resolves beneath */
+.v6-gap__found { transform: translateY(calc(-50% + 13vh - var(--found) * 15vh - var(--foundout) * 62vh));
+  opacity: calc(var(--found) * (1 - var(--foundout))); }
+.v6-gap__found .v6-gap__label { color: var(--stop-ink); }
+.v6-gap__list { list-style: none; margin: clamp(14px, 2.2vh, 26px) 0 0; padding: 0;
+  display: flex; flex-direction: column; align-items: center; gap: clamp(8px, 1.4vh, 16px); }
+.v6-gap__list li { font-family: var(--sans); font-weight: 500; letter-spacing: -0.03em; line-height: 1.1;
+  font-size: clamp(1.6rem, 4.4vw, 3.6rem); color: var(--ink); }
+/* the consequence: arrives beneath the observations and resolves */
+/* resolves just above the optical centre, matching where the observations rested, rather than sitting low
+   in the lower third of the frame */
+.v6-gap__verdictwrap { transform: translateY(calc(-50% + 12vh - var(--verdict) * 14vh - var(--settle) * 1.5vh));
+  opacity: var(--verdict); }
+.v6-gap__verdict { font-family: var(--sans); font-weight: 600; letter-spacing: -0.04em; line-height: 1.02;
+  font-size: clamp(2rem, 5vw, 4rem); color: var(--ink); margin: 0; max-width: 22ch;
+  margin-inline: auto; text-wrap: balance; }
+.v6-gap__verdictsay { font-size: clamp(1.05rem, 1.5vw, 1.4rem); color: var(--ink-3); margin: 18px 0 0;
+  max-width: 46ch; margin-inline: auto; }
+
+/* ═══════════════════════════════════════════ 3. WHAT VERIFIED HAS TO MEAN ══
+   The company's own motif: a gapped ring. The centre carries the conclusion, the outer path is the
+   independent verification closing around it, one segment per condition. The ring only closes when all
+   eight do, and the conclusion only resolves after that.
+
+   Scale is the point. A condition is a full statement at display size, not a row in a list.
+   ========================================================================================= */
+.v6-st { position: relative; height: 430vh; background: var(--graphite); color: var(--g-fg-2); --p: 0;
+  /* --ring fills the eight bars and stops. --travel shares its start and rate but overruns to 1.13, so
+     the last statement travels out of frame rather than parking there. Statement i is centred at
+     travel = (i + 0.5) / 4, which is exactly where bar 2i+1 completes: the bars ARE the text. */
+  --ring:   clamp(0, calc((var(--p) - 0.05) / 0.62), 1);
+  --travel: clamp(0, calc((var(--p) - 0.05) / 0.70), 1.13);
+  --done:   clamp(0, calc((var(--p) - 0.80) / 0.11), 1); }
+.v6-st__pin { position: sticky; top: 0; height: 100svh; overflow: hidden;
+  display: grid; grid-template-rows: auto 1fr; gap: clamp(10px, 2vh, 26px);
+  padding: calc(var(--nav-h, 66px) + 3vh) var(--gutter) clamp(30px, 6vh, 64px);
+  background: radial-gradient(1400px 900px at 22% 44%, rgba(255,255,255,0.05), transparent 70%); }
+.v6-st__head { max-width: var(--max-wide); width: 100%; margin-inline: auto; }
+.v6-st__h { margin: clamp(12px, 1.8vh, 20px) 0 0; font-family: var(--sans); font-weight: 600;
+  letter-spacing: -0.04em; line-height: 1.02; font-size: clamp(1.9rem, 4.2vw, 3.7rem);
+  color: var(--g-fg); max-width: 20ch; text-wrap: balance; }
+.v6-st__sub { margin: clamp(12px, 1.6vh, 18px) 0 0; font-size: clamp(1rem, 1.25vw, 1.2rem);
+  line-height: 1.55; color: var(--g-fg-2); max-width: 58ch; }
+
+.v6-st__stage { position: relative; max-width: var(--max-wide); width: 100%; margin-inline: auto;
+  display: grid; grid-template-columns: minmax(230px, 30%) minmax(0, 1fr);
+  gap: clamp(28px, 5vw, 80px); align-items: center; min-height: 0; }
+
+/* ---- the gapped ring ---- */
+.v6-st__ringwrap { position: relative; display: grid; place-items: center;
+  width: 100%; max-width: 340px; aspect-ratio: 1; margin-inline: auto; }
+.v6-st__ring { width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
+.v6-st__track { fill: none; stroke: rgba(255,255,255,0.10); stroke-width: 6; }
+/* eight arcs around a 104r circle: circumference 653.45, each segment 74 long with a 7.7 gap */
+.v6-st__seg { fill: none; stroke: var(--g-fg); stroke-width: 6; stroke-linecap: butt;
+  stroke-dasharray: 160.16 493.29;
+  stroke-dashoffset: calc(var(--i) * -163.36px);
+  /* One slice per refusal. Slice i completes exactly as statement i reaches the centre, so a lit slice
+     always corresponds to text that is on screen. */
+  opacity: clamp(0, calc((var(--ring) * 4) - var(--i)), 1); }
+.v6-st__centre { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+/* the counter must be GONE before the conclusion is legible; at a plain 1-done both were half-lit in
+   the same spot and printed through each other */
+.v6-st__count { margin: 0; font-family: var(--sans); font-weight: 600; font-size: 12px;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--g-fg-3);
+  opacity: clamp(0, calc(1 - var(--done) * 3.5), 1); }
+.v6-st__count span { color: var(--g-fg); }
+.v6-st__verdict { position: absolute; inset: 0; display: grid; place-content: center; margin: 0;
+  font-family: var(--sans); font-weight: 700; letter-spacing: -0.04em;
+  font-size: clamp(1.5rem, 2.6vw, 2.3rem); color: var(--wait-dk);
+  opacity: clamp(0, calc((var(--done) - 0.35) / 0.4), 1);
+  transform: scale(calc(0.94 + 0.06 * var(--done))); }
+
+/* ---- the conditions: one at a time, at display scale ---- */
+.v6-st__list { position: relative; list-style: none; margin: 0; padding: 0; min-height: clamp(230px, 34vh, 340px); }
+/* CONTINUOUS, not a state swap. This used to toggle a class per condition and let a CSS transition play
+   out, which is exactly the frame-to-frame feel: nothing moves while you scroll, then a state snaps and
+   eases on its own clock, unrelated to your hand. Every condition now derives its position and opacity
+   directly from --p, so the statements travel WITH the scroll and the reader is always mid-motion.
+
+   --slot is where a condition sits relative to the current reading position, in units of one condition:
+   0 is centred, negative has passed, positive is still to come. max(x, -x) stands in for abs(), which is
+   too new to rely on here. */
+.v6-st__cond { position: absolute; inset: 0; display: grid; align-content: center; gap: 12px;
+  pointer-events: none;
+  --slot: calc((var(--travel) * 4) - var(--i) - 0.5);
+  --dist: max(var(--slot), calc(var(--slot) * -1));
+  /* Full opacity out to 0.38 of a slot, zero by 0.55. The plateau is what the reader actually reads:
+     roughly four wheel notches at full brightness, five and a half before it is gone. At the midpoint
+     between two statements both sit at 0.29, which hands over without either being legible enough to
+     print through the other. */
+  opacity: clamp(0, calc(3.235 - 5.88 * var(--dist)), 1);
+  /* and they pass through a long enough travel that the outgoing one is clear of the incoming */
+  transform: translateY(calc(var(--slot) * -150px)); }
+.v6-st__condn { margin: 0; font-size: 13px; letter-spacing: 0.12em; color: var(--g-fg-3); }
+.v6-st__condt { margin: 0; font-family: var(--sans); font-weight: 600; letter-spacing: -0.036em;
+  line-height: 1.04; font-size: clamp(1.8rem, 4.4vw, 3.9rem); color: var(--g-fg); max-width: 17ch; }
+.v6-st__condd { margin: 0; font-size: clamp(1rem, 1.35vw, 1.3rem); line-height: 1.5;
+  color: var(--g-fg-2); max-width: 44ch; }
+
+@media (max-width: 900px) {
+  .v6-st { height: auto; }
+  .v6-st__pin { position: static; height: auto; display: block; padding: clamp(64px, 10vw, 96px) var(--gutter); }
+  .v6-st__stage { grid-template-columns: 1fr; gap: clamp(26px, 7vw, 40px); margin-top: clamp(28px, 7vw, 44px); }
+  .v6-st__ringwrap { max-width: 200px; }
+  .v6-st__list { position: static; min-height: 0; display: grid; gap: clamp(26px, 6vw, 38px); }
+  .v6-st__cond { position: static; opacity: 1 !important; transform: none !important;
+    padding-top: 20px; border-top: 1px solid var(--g-line); }
+  .v6-st__condt { font-size: clamp(1.5rem, 6.6vw, 2.1rem); }
+}
+
+/* ═══════════════════════════════════════════════ 4. THE PRODUCT, IN A TERMINAL ══
+   A window, not a code block, and NOT a scroll chapter: the run plays itself the moment the window comes
+   into view, and replays on re-entry. The prompt at the end is a real input styled as part of the shell,
+   with no border and no box, because an input outline inside a terminal is the single thing that most
+   gives away that it is a web page.
+   ============================================================================================= */
+.v6-tm { position: relative; background: var(--graphite); color: var(--g-fg-2);
+  padding-block: clamp(72px, 10vh, 130px); }
+.v6-tm__in { max-width: var(--max-wide); width: 100%; margin-inline: auto; padding-inline: var(--gutter); }
+.v6-tm__head { margin-bottom: clamp(22px, 3.4vh, 40px); }
+.v6-tm__h { margin: clamp(10px, 1.6vh, 18px) 0 0; font-family: var(--sans); font-weight: 600;
+  letter-spacing: -0.04em; line-height: 1.02; font-size: clamp(1.8rem, 4.2vw, 3.6rem);
+  color: var(--g-fg); max-width: 18ch; text-wrap: balance; }
+
+.v6-tm__win { display: flex; flex-direction: column; overflow: hidden;
+  height: clamp(400px, 60vh, 620px);
+  background: #08080A; border: 1px solid var(--g-line-2); border-radius: 10px;
+  box-shadow: 0 50px 110px -60px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.03) inset; }
+.v6-tm__bar { flex: none; display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center; gap: 14px; padding: 10px 14px; border-bottom: 1px solid var(--g-line);
+  background: linear-gradient(180deg, #17181B, #101113); cursor: default; }
+.v6-tm__lights { display: inline-flex; gap: 8px; }
+.v6-tm__lights i { width: 12px; height: 12px; border-radius: 999px; background: rgba(255,255,255,0.16);
+  display: grid; place-items: center; }
+.v6-tm__lights i::after { content: ""; font-family: var(--sans); font-size: 9px; line-height: 1;
+  color: rgba(0,0,0,0.7); opacity: 0; transition: opacity 140ms ease; }
+.v6-tm__bar:hover .v6-tm__lights i { background: rgba(255,255,255,0.34); }
+.v6-tm__bar:hover .v6-tm__lights i::after { opacity: 1; }
+.v6-tm__lights i.is-close::after { content: "\00d7"; }
+.v6-tm__lights i.is-min::after   { content: "\2013"; }
+.v6-tm__lights i.is-max::after   { content: "+"; }
+.v6-tm__title { font-family: var(--mono); font-size: 12px; color: var(--g-fg-3); text-align: center;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* a real control, unlike the window buttons: it replays the run on demand, so playback never has to
+   restart itself just because the reader scrolled past and came back */
+.v6-tm__replay { appearance: none; background: none; border: 1px solid var(--g-line-2);
+  border-radius: 6px; padding: 3px 10px; font-family: var(--sans); font-weight: 600; font-size: 11px;
+  letter-spacing: 0.02em; color: var(--g-fg-3); cursor: pointer;
+  transition: color 140ms ease, border-color 140ms ease; }
+.v6-tm__replay:hover { color: var(--g-fg); border-color: var(--g-fg-3); }
+.v6-tm__replay:focus-visible { outline: 2px solid var(--g-fg); outline-offset: 2px; }
+
+/* overscroll-behavior:contain was trapping the wheel inside the window, so scrolling over the terminal
+   looked like the page had stopped responding. The transcript still scrolls when it overflows, but the
+   page keeps moving with it. */
+.v6-tm__body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: auto;
+  padding: clamp(14px, 1.8vw, 22px); cursor: text;
+  font-family: var(--mono); font-size: clamp(12px, 1vw, 14px); line-height: 1.85; color: var(--g-fg-2); }
+.v6-tm__line { margin: 0; white-space: pre-wrap; word-break: break-word; }
+.v6-tm__line b { color: var(--g-fg-3); font-weight: 400; }
+.v6-tm__line.is-cmd { color: var(--g-fg); }
+.v6-tm__line.is-dim { color: var(--g-fg-3); }
+.v6-tm__line.is-out { color: var(--g-fg-2); }
+.v6-tm__line.is-go { color: var(--go-dk); }
+.v6-tm__line.is-stop { color: var(--stop-dk); }
+.v6-tm__line.is-wait { color: var(--wait-dk); }
+.v6-tm__caret { display: inline-block; width: 0.6em; height: 1.05em; margin-left: 1px;
+  vertical-align: text-bottom; background: var(--g-fg); animation: v6-blink 1s steps(1) infinite; }
+@keyframes v6-blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
+
+.v6-tm__prompt { display: flex; align-items: baseline; gap: 0; margin: 0; }
+.v6-tm__ps { color: var(--g-fg-3); flex: none; white-space: pre; }
+.v6-tm__in-field { flex: 1; min-width: 0; appearance: none;
+  background: transparent; border: 0; border-radius: 0; box-shadow: none; outline: none;
+  padding: 0; margin: 0; font: inherit; color: var(--g-fg); caret-color: var(--g-fg); }
+.v6-tm__in-field:focus { outline: none; box-shadow: none; }
+.v6-tm__in-field::placeholder { color: var(--g-fg-3); opacity: 0.5; }
+
+.v6-tm__exits { list-style: none; margin: clamp(20px, 3vh, 34px) 0 0; padding: 0;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(12px, 1.8vw, 26px); }
+.v6-tm__ex { padding-top: 14px; border-top: 2px solid var(--g-line-2);
+  opacity: 0.25; transition: opacity 420ms var(--ease); transition-delay: calc(var(--i) * 90ms); }
+.v6-tm__exits[data-on="true"] .v6-tm__ex { opacity: 1; }
+.v6-tm__ex.is-go { border-top-color: var(--go-dk); }
+.v6-tm__ex.is-stop { border-top-color: var(--stop-dk); }
+.v6-tm__ex.is-wait { border-top-color: var(--wait-dk); }
+.v6-tm__exc { margin: 0; font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; color: var(--g-fg-3); }
+.v6-tm__exn { margin: 5px 0 0; font-family: var(--sans); font-weight: 600; letter-spacing: -0.026em;
+  font-size: clamp(1.1rem, 1.6vw, 1.45rem); color: var(--g-fg); }
+.v6-tm__ex.is-go .v6-tm__exn { color: var(--go-dk); }
+.v6-tm__ex.is-stop .v6-tm__exn { color: var(--stop-dk); }
+.v6-tm__ex.is-wait .v6-tm__exn { color: var(--wait-dk); }
+.v6-tm__exs { margin: 6px 0 0; font-size: 0.92rem; line-height: 1.5; color: var(--g-fg-2); }
+
+@media (max-width: 900px) {
+  .v6-tm__win { height: clamp(340px, 56vh, 480px); }
+  .v6-tm__body { font-size: 11.5px; }
+  .v6-tm__grip { display: none; }
+  .v6-tm__exits { grid-template-columns: 1fr; gap: 18px; }
+  .v6-tm__ex { opacity: 1 !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .v6-tm__caret { animation: none; opacity: 1; }
+  .v6-tm__ex { opacity: 1 !important; transition: none; }
+}
+
+/* ══════════════════════════ 5. THE SOFTWARE CHANGES, THE PROMISE DOES NOT ══
+   The guarantee text is fixed. The implementation line underneath it cycles as --p advances, so the
+   composition itself makes the argument: services and deployments are rewritten while the promise stays
+   put. There are no run counts and no dates anywhere; inventing usage history would be the exact
+   dishonesty this product exists to catch.
+   ===================================================================================== */
+.v6-rg { position: relative; height: 480vh; background: var(--graphite); color: var(--g-fg-2); --p: 0;
+  /* four implementation names per guarantee, cycled across the chapter */
+  --cyc: calc(var(--p) * 2.2); }
+.v6-rg__pin { position: sticky; top: 0; height: 100svh; overflow: hidden;
+  display: grid; grid-template-rows: auto 1fr auto; gap: clamp(8px, 1.4vh, 18px);
+  padding: calc(var(--nav-h, 66px) + 2.5vh) var(--gutter) clamp(18px, 3vh, 36px); }
+.v6-rg__head { max-width: var(--max-wide); width: 100%; margin-inline: auto; }
+.v6-rg__h { margin: clamp(8px, 1.4vh, 16px) 0 0; font-family: var(--sans); font-weight: 600;
+  letter-spacing: -0.04em; line-height: 1.03; font-size: clamp(1.6rem, 3.6vw, 3.1rem);
+  color: var(--g-fg); max-width: 22ch; text-wrap: balance; }
+
+.v6-rg__stage { max-width: var(--max-wide); width: 100%; margin-inline: auto;
+  min-height: 0; overflow: hidden; align-content: start; }
+
+.v6-rg__cols { display: grid; grid-template-columns: minmax(0, 1fr) 8rem 6.5rem 9rem;
+  gap: clamp(10px, 1.4vw, 20px); padding-bottom: 8px; border-bottom: 1px solid var(--g-line);
+  font-family: var(--sans); font-weight: 600; font-size: 10px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--g-fg-3); }
+
+.v6-rg__grp { margin-top: clamp(10px, 1.6vh, 18px); }
+.v6-rg__gh { margin: 0 0 4px; font-family: var(--sans); font-weight: 600; font-size: 10px;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--g-fg-3); }
+
+.v6-rg__row { display: grid; grid-template-columns: minmax(0, 1fr) 8rem 6.5rem 9rem;
+  gap: clamp(10px, 1.4vw, 20px); align-items: start;
+  padding: clamp(7px, 1vh, 11px) 0; border-bottom: 1px solid var(--g-line);
+  /* each row settles in turn, so the register assembles rather than appearing at once */
+  --on: clamp(0, calc((var(--p) * 9) - var(--i) * 0.55), 1);
+  opacity: calc(0.12 + 0.88 * var(--on));
+  transform: translateY(calc((1 - var(--on)) * 10px)); }
+
+.v6-rg__t { margin: 0; font-family: var(--sans); font-weight: 500; letter-spacing: -0.018em;
+  line-height: 1.28; color: var(--g-fg); font-size: clamp(0.94rem, 1.15vw, 1.1rem); }
+/* the churn: four implementation names stacked in one slot, one visible at a time */
+/* The churn line. One dim name flashed past per cycle, which read as a glitch rather than as the
+   implementation changing, and at --g-fg-3 it was barely legible. Brighter now, carrying a label so its
+   meaning is not a guess, with a long symmetric dwell per name. Written as two clamps rather than abs(),
+   which is too new to depend on, and which was part of why it popped. */
+.v6-rg__impl { position: relative; margin: 6px 0 0; height: 1.3em; padding-left: 4.7rem; }
+.v6-rg__imlabel { position: absolute; left: 0; top: 0; font-family: var(--sans); font-weight: 600;
+  font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--g-fg-3);
+  line-height: 1.75; }
+.v6-rg__im { position: absolute; left: 4.7rem; top: 0; font-family: var(--mono); font-size: 12px;
+  letter-spacing: 0.01em; color: var(--g-fg-2); white-space: nowrap;
+  --up: clamp(0, calc((var(--cyc) - var(--k)) * 2.2 + 1), 1);
+  --dn: clamp(0, calc((var(--k) - var(--cyc)) * 2.2 + 1), 1);
+  opacity: calc(min(var(--up), var(--dn)) * 0.94); }
+.v6-rg__m { margin: 0; font-size: 0.84rem; color: var(--g-fg-2); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; }
+/* the decision is told by the word and its weight, not by a coloured pip */
+.v6-rg__d { margin: 0; font-family: var(--sans); font-weight: 600; font-size: 0.88rem; white-space: nowrap; }
+.v6-rg__row[data-d="Verified"] .v6-rg__d { color: var(--go-dk); }
+.v6-rg__row[data-d="Failed"] .v6-rg__d { color: var(--stop-dk); }
+.v6-rg__row[data-d="Blocked"] .v6-rg__d { color: var(--wait-dk); }
+
+.v6-rg__foot { max-width: var(--max-wide); width: 100%; margin: 0 auto; font-size: 12px;
+  line-height: 1.5; color: var(--g-fg-3); max-width: 74ch;
+  opacity: clamp(0, calc((var(--p) - 0.72) / 0.18), 1); }
+
+@media (max-width: 900px) {
+  .v6-rg { height: auto; }
+  .v6-rg__pin { position: static; height: auto; display: block; padding: clamp(64px, 10vw, 96px) var(--gutter); }
+  .v6-rg__stage { overflow: visible; margin-top: clamp(22px, 6vw, 32px); }
+  .v6-rg__cols { display: none; }
+  .v6-rg__row { grid-template-columns: 1fr; gap: 3px; padding: 14px 0;
+    opacity: 1 !important; transform: none !important; }
+  .v6-rg__m, .v6-rg__d { font-size: 0.8rem; }
+  .v6-rg__impl { height: auto; }
+  .v6-rg__im { position: static; opacity: 1 !important; }
+  .v6-rg__im + .v6-rg__im { display: none; }
+  .v6-rg__foot { opacity: 1 !important; margin-top: 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .v6-rg { height: auto; }
+  .v6-rg__pin { position: static; height: auto; display: block; padding: clamp(64px, 8vw, 100px) var(--gutter); }
+  .v6-rg__stage { overflow: visible; }
+  .v6-rg__row, .v6-rg__foot { opacity: 1 !important; transform: none !important; }
+  .v6-rg__im { position: static; opacity: 1 !important; }
+  .v6-rg__im + .v6-rg__im { display: none; }
+}
+
+/* ══════════════════════════════════════════ 6A. REACH ══ */
+.v6-rx { background: var(--paper); padding-block: clamp(72px, 9vh, 124px); }
+.v6-rx__head { max-width: var(--max-wide); margin-inline: auto; padding-inline: var(--gutter); }
+.v6-rx__h { font-family: var(--sans); font-weight: 600; letter-spacing: -0.036em; line-height: 1;
+  font-size: clamp(2rem, 4.6vw, 3.8rem); color: var(--ink); margin: clamp(14px, 2vh, 22px) 0 0;
+  max-width: 17ch; text-wrap: balance; }
+.v6-rx__sub { max-width: 54ch; margin: clamp(16px, 2vh, 24px) 0 0;
+  font-size: clamp(1rem, 1.2vw, 1.14rem); line-height: 1.55; color: var(--ink-3); }
+
+/* ---- the flow ------------------------------------------------------------------------------------
+   A 12 column field. Every fragment is placed by hand: different spans, different rows, deliberate
+   overlaps, so the composition steps across and down instead of standing in three equal columns.
+   Stage markers are full-width rules, which is what separates this from the vertical spine used by the
+   record chapter above. */
+.v6-rx__flow { max-width: var(--max-wide); margin: clamp(30px, 4.5vh, 60px) auto 0;
+  padding-inline: var(--gutter); display: grid; grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: clamp(12px, 1.6vw, 22px); }
+
+.v6-rx__stage { grid-column: 1 / -1; margin: clamp(30px, 4vw, 52px) 0 clamp(14px, 1.8vw, 22px);
+  display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 18px; }
+.v6-rx__stage:first-of-type { margin-top: 0; }
+.v6-rx__stage span { font-family: var(--sans); font-weight: 600; font-size: 11px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--ink-4); }
+.v6-rx__stage::after { content: ""; height: 1px; background: var(--line-2); }
+
+/* every fragment shares only its reveal and its reference chip; construction is per surface */
+.v6-rx__f { position: relative; margin: 0; opacity: 0; transform: translateY(20px);
+  transition: opacity 560ms var(--ease), transform 620ms var(--ease); }
+.v6-rx__f[data-on="true"] { opacity: 1; transform: none; }
+.v6-rx__fcap { font-family: var(--sans); font-weight: 600; font-size: 11px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-4); margin-bottom: 10px; }
+.v6-rx__fcap b { font-weight: 600; letter-spacing: 0.04em; color: var(--ink-2); margin-right: 8px; }
+.v6-rx__ref { display: inline-block; font-size: 12px; letter-spacing: 0.02em; color: var(--ink-3);
+  background: var(--sunk); border: 1px solid var(--line); border-radius: 4px; padding: 2px 8px; }
+
+/* --- github check --- */
+.v6-rx__f--gh { grid-column: 1 / span 6; grid-row: 2; }
+.v6-rx__f--gh .v6-rx__fcap { font-family: var(--mono); text-transform: none; letter-spacing: 0; font-size: 12px; }
+.v6-rx__ghrow { display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 12px;
+  border: 1px solid var(--line-2); border-bottom: 0; padding: 15px 18px; background: var(--paper); }
+.v6-rx__ghrow.is-sub { border-bottom: 1px solid var(--line-2); border-top: 1px solid var(--line);
+  padding-block: 12px; background: var(--sunk); }
+.v6-rx__ghtick { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 999px;
+  background: var(--go); color: #fff; font-size: 12px; line-height: 1; }
+.v6-rx__ghrow.is-sub .v6-rx__ghtick { background: none; }
+.v6-rx__ghname { font-family: var(--sans); font-weight: 600; font-size: clamp(1rem, 1.2vw, 1.1rem); color: var(--ink); }
+.v6-rx__ghstate { font-family: var(--sans); font-weight: 600; font-size: 0.94rem; color: var(--go-ink); }
+.v6-rx__ghsay { font-size: 0.92rem; color: var(--ink-3); }
+
+/* --- cli terminal: the only dark object in the upper half, dropped below the check row it follows --- */
+/* dropped below the check row rather than overlapping it: at 7 columns wide the check row ran under
+   this block and its state and reference were both covered. */
+.v6-rx__f--cli { grid-column: 7 / span 6; grid-row: 2; align-self: end; margin-top: clamp(26px, 3.4vw, 52px); }
+.v6-rx__term { margin: 0; background: var(--graphite); border-radius: 8px; overflow: hidden;
+  padding: clamp(16px, 1.8vw, 22px);
+  font-family: var(--mono); font-size: clamp(12px, 0.92vw, 13.5px); line-height: 1.85;
+  color: var(--g-fg-2); box-shadow: 0 24px 50px -38px rgba(0,0,0,0.8); }
+/* the project sets a font-family on `code`, which beats inheritance from the `pre` and rendered
+   every transcript and response body in the sans face. font: inherit puts them back on mono. */
+.v6-rx__term code { font: inherit; white-space: pre; }
+/* what was typed reads at full strength; what the tool printed back sits behind it */
+.v6-rx__p { color: var(--g-fg-3); }
+.v6-rx__cmd { color: var(--g-fg); }
+.v6-rx__dim { color: var(--g-fg-3); }
+.v6-rx__ok { color: var(--go-dk); }
+
+/* --- api response --- */
+.v6-rx__f--api { grid-column: 2 / span 5; grid-row: 4; }
+/* a request line is a path, not a label: it must not be upper-cased */
+.v6-rx__f--api .v6-rx__fcap { text-transform: none; letter-spacing: 0.01em; font-family: var(--mono); font-size: 12px; }
+.v6-rx__json { margin: 0; border: 1px solid var(--line-2); border-radius: 6px; background: var(--sunk);
+  padding: clamp(14px, 1.6vw, 20px) clamp(16px, 1.8vw, 22px);
+  font-family: var(--mono); font-size: clamp(12px, 0.9vw, 13px); line-height: 1.8; color: var(--ink-2); }
+.v6-rx__json code { font: inherit; white-space: pre; }
+
+/* --- deployment --- */
+.v6-rx__f--dep { grid-column: 7 / span 6; grid-row: 4; margin-top: clamp(20px, 2.6vw, 40px); }
+.v6-rx__dep { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center;
+  gap: clamp(14px, 1.6vw, 20px); border: 1px solid var(--line-2); border-radius: 6px;
+  padding: clamp(16px, 1.8vw, 22px); background: var(--paper); }
+.v6-rx__mark { width: 0; height: 0; border-left: 11px solid transparent; border-right: 11px solid transparent;
+  border-bottom: 19px solid var(--ink); }
+.v6-rx__depn { margin: 0; display: flex; align-items: baseline; gap: 12px; font-family: var(--sans);
+  font-weight: 600; font-size: clamp(1rem, 1.2vw, 1.12rem); color: var(--ink); }
+.v6-rx__depn em { font-style: normal; font-weight: 600; font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-4); border: 1px solid var(--line-2); border-radius: 4px;
+  padding: 2px 7px; }
+.v6-rx__depsay { margin: 6px 0 0; font-size: 0.92rem; color: var(--ink-3); }
+
+/* --- webhook --- */
+.v6-rx__f--hook { grid-column: 1 / span 5; grid-row: 6; }
+
+/* --- the vraelis decision: the heaviest fragment, and the only one on black --- */
+/* It was a black slab floating on a white chapter, lifted above its neighbours. It now sits on the same
+   paper as everything around it, distinguished by weight and a state-coloured edge rather than by being
+   the one dark object, and it drops to the neighbours' baseline instead of hanging above them. */
+.v6-rx__f--dec { grid-column: 6 / span 4; grid-row: 6;
+  /* Sits lower than the fragments it follows, and stays black: it is the decision, not another fragment,
+     and the weight is the point. */
+  margin-top: clamp(10px, 1.6vw, 26px);
+  background: var(--graphite); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px; padding: clamp(20px, 2.2vw, 28px);
+  box-shadow: 0 20px 50px -34px rgba(16,18,22,0.62); }
+.v6-rx__f--dec .v6-rx__fid { color: var(--g-fg-3); background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.12); }
+/* This card is black. It was still using the light-surface ink tokens, so the label, the verdict and the
+   body were all dark text on a dark ground. */
+.v6-rx__f--dec .v6-rx__fcap { color: rgba(255,255,255,0.60); }
+.v6-rx__f--dec .v6-rx__decv { color: #4ADE9C; }
+.v6-rx__f--dec .v6-rx__decsay { color: rgba(255,255,255,0.84); }
+.v6-rx__decv { margin: 0; font-family: var(--sans); font-weight: 700; letter-spacing: -0.03em; line-height: 1;
+  font-size: clamp(1.7rem, 2.6vw, 2.3rem); color: var(--go-ink); }
+.v6-rx__decsay { margin: 12px 0 16px; font-size: 0.96rem; line-height: 1.5; color: var(--ink-3); }
+.v6-rx__f--dec .v6-rx__ref { background: var(--sunk); border-color: var(--line); color: var(--ink-3); }
+
+/* --- slack message: crops past the field edge, so the run of surfaces reads as continuing --- */
+.v6-rx__f--slack { grid-column: 10 / span 3; grid-row: 6; margin-top: clamp(24px, 3vw, 46px);
+  margin-right: clamp(-56px, -4vw, 0px); }
+.v6-rx__msg { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px;
+  border: 1px solid var(--line-2); border-radius: 6px; padding: clamp(14px, 1.6vw, 18px); background: var(--paper); }
+.v6-rx__av { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 6px;
+  background: var(--ink); color: var(--paper); font-family: var(--sans); font-weight: 700; font-size: 14px; }
+.v6-rx__who { margin: 0; display: flex; align-items: baseline; gap: 8px; font-family: var(--sans);
+  font-weight: 600; font-size: 0.98rem; color: var(--ink); }
+.v6-rx__who em { font-style: normal; font-weight: 600; font-size: 9px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-4); background: var(--sunk); border-radius: 3px; padding: 2px 5px; }
+.v6-rx__said { margin: 6px 0 0; font-size: 0.92rem; line-height: 1.55; color: var(--ink-3); }
+.v6-rx__said .v6-rx__ref { margin-top: 4px; }
+
+/* the direction strip, restated after the flow */
+.v6-rx__next { max-width: var(--max-wide); margin: clamp(40px, 5vh, 66px) auto 0;
+  padding: clamp(20px, 2.4vw, 28px) var(--gutter) 0; border-top: 1px solid var(--line);
+  display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: clamp(16px, 3vw, 44px);
+  align-items: start; }
+.v6-rx__nexth { margin: 0; font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-4); }
+.v6-rx__soons { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 28px; }
+.v6-rx__soons li { font-size: 15px; color: var(--ink-4); }
+
+.v6-rx__ill { max-width: var(--max-wide); margin: clamp(20px, 2.6vh, 30px) auto 0; padding-inline: var(--gutter);
+  font-size: 13px; color: var(--ink-4); }
+
+/* ══════════════════════════════════════════════════ 7. DIRECTION ══
+   The only unshipped chapter on the page. Labelled in the eyebrow, on every future line, and in a
+   disclosure that stays visible inside the chapter rather than being buried in the footer.
+
+   The graph assembles from --p: guarantees first and fixed, then the systems they cross, then the edges,
+   then one deployment touching several outcomes. Hard lines and real boxes, deliberately not a glowing
+   constellation: this is an operational structure, and it should look like one.
+   ========================================================================================= */
+.v6-dr { position: relative; height: 520vh; background: var(--graphite); color: var(--g-fg-2); --p: 0;
+  --g1: clamp(0, calc((var(--p) - 0.06) / 0.14), 1);   /* the guarantees   */
+  --g2: clamp(0, calc((var(--p) - 0.22) / 0.16), 1);   /* the systems      */
+  --g3: clamp(0, calc((var(--p) - 0.38) / 0.18), 1);   /* the edges        */
+  --g4: clamp(0, calc((var(--p) - 0.56) / 0.14), 1);   /* the deployment   */
+  --g5: clamp(0, calc((var(--p) - 0.62) / 0.30), 1); } /* the layers       */
+.v6-dr__pin { position: sticky; top: 0; height: 100svh; overflow: hidden;
+  display: grid; grid-template-rows: auto 1fr auto; gap: clamp(10px, 1.6vh, 22px);
+  padding: calc(var(--nav-h, 66px) + 2.5vh) var(--gutter) clamp(18px, 3vh, 36px); }
+.v6-dr__head { max-width: var(--max-wide); width: 100%; margin-inline: auto; }
+/* the label is a state of the content, so it is allowed to carry the one colour that means "a person
+   must read this differently" */
+.v6-dr__label { color: var(--wait-dk) !important; }
+.v6-dr__h { margin: clamp(8px, 1.4vh, 16px) 0 0; font-family: var(--sans); font-weight: 600;
+  letter-spacing: -0.04em; line-height: 1.03; font-size: clamp(1.7rem, 3.8vw, 3.2rem);
+  color: var(--g-fg); max-width: 20ch; text-wrap: balance; }
+.v6-dr__sub { margin: clamp(10px, 1.4vh, 16px) 0 0; font-size: clamp(0.98rem, 1.2vw, 1.14rem);
+  line-height: 1.55; color: var(--g-fg-2); max-width: 66ch; }
+
+.v6-dr__stage { max-width: var(--max-wide); width: 100%; margin-inline: auto; min-height: 0;
+  display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: clamp(20px, 3.5vw, 56px); align-items: center; }
+
+/* ---- the graph ---- */
+.v6-dr__graph { width: 100%; height: auto; max-height: 62vh; overflow: visible; }
+.v6-dr__g rect { fill: rgba(255,255,255,0.05); stroke: var(--g-fg-3); stroke-width: 1.4;
+  opacity: clamp(0, calc((var(--g1) * 3.4) - var(--i)), 1); }
+.v6-dr__g line { stroke: var(--g-fg); stroke-width: 2;
+  opacity: clamp(0, calc((var(--g1) * 3.4) - var(--i)), 1); }
+/* the guarantee text is the fixed thing in this composition, so it reads at full strength */
+.v6-dr__g text { fill: var(--g-fg); font-family: var(--sans); font-weight: 500; font-size: 15px;
+  letter-spacing: -0.012em; opacity: clamp(0, calc((var(--g1) * 3.4) - var(--i)), 1); }
+.v6-dr__n rect { fill: rgba(255,255,255,0.03); stroke: var(--g-line-2); stroke-width: 1.2;
+  opacity: clamp(0, calc((var(--g2) * 3.4) - var(--i)), 1); }
+.v6-dr__n text { fill: var(--g-fg-2); font-family: var(--mono); font-size: 15px; text-anchor: middle;
+  opacity: clamp(0, calc((var(--g2) * 3.4) - var(--i)), 1); }
+.v6-dr__dep rect { fill: rgba(255,255,255,0.06); stroke: var(--g-fg-3); stroke-width: 1.4;
+  opacity: var(--g4); }
+.v6-dr__dep text { fill: var(--g-fg); font-family: var(--sans); font-weight: 600; font-size: 15px;
+  text-anchor: middle; opacity: var(--g4); }
+.v6-dr__edge { fill: none; stroke: rgba(255,255,255,0.32); stroke-width: 1.2;
+  stroke-dasharray: 260; stroke-dashoffset: calc(260 - clamp(0, calc((var(--g3) * 9) - var(--i)), 1) * 260); }
+
+/* ---- the three layers, each split into what ships and what does not ---- */
+.v6-dr__layers { list-style: none; margin: 0; padding: 0; display: grid; gap: clamp(14px, 2vh, 24px); }
+.v6-dr__layer { --on: clamp(0, calc((var(--g5) * 3.4) - var(--i)), 1);
+  opacity: calc(0.12 + 0.88 * var(--on));
+  transform: translateY(calc((1 - var(--on)) * 12px));
+  padding-top: 14px; border-top: 1px solid var(--g-line); }
+.v6-dr__lk { margin: 0; font-family: var(--sans); font-weight: 600; font-size: 10.5px;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--g-fg-3); }
+.v6-dr__lh { margin: 7px 0 0; font-family: var(--sans); font-weight: 600; letter-spacing: -0.026em;
+  line-height: 1.15; font-size: clamp(1.05rem, 1.6vw, 1.4rem); color: var(--g-fg); }
+.v6-dr__now, .v6-dr__next { margin: 8px 0 0; font-size: 0.9rem; line-height: 1.5; }
+.v6-dr__now { color: var(--g-fg-2); }
+.v6-dr__next { color: var(--g-fg-3); }
+/* every future line is prefixed with the word Direction, so no sentence can be read out of context */
+.v6-dr__now span, .v6-dr__next span { display: inline-block; margin-right: 9px;
+  font-family: var(--sans); font-weight: 600; font-size: 9.5px; letter-spacing: 0.14em;
+  text-transform: uppercase; border: 1px solid var(--g-line-2); border-radius: 3px; padding: 1px 6px;
+  vertical-align: 1px; }
+.v6-dr__now span { color: var(--go-dk); border-color: rgba(74,222,156,0.4); }
+.v6-dr__next span { color: var(--wait-dk); border-color: rgba(242,183,90,0.4); }
+
+.v6-dr__disc { max-width: var(--max-wide); width: 100%; margin: 0 auto; font-size: 12.5px;
+  line-height: 1.5; color: var(--wait-dk); }
+
+@media (max-width: 900px) {
+  .v6-dr { height: auto; }
+  .v6-dr__pin { position: static; height: auto; display: block; padding: clamp(64px, 10vw, 96px) var(--gutter); }
+  .v6-dr__stage { grid-template-columns: 1fr; gap: clamp(24px, 6vw, 36px); margin-top: clamp(22px, 6vw, 32px); }
+  .v6-dr__graph { max-height: none; }
+  .v6-dr__g rect, .v6-dr__g line, .v6-dr__n rect, .v6-dr__n text,
+  .v6-dr__dep rect, .v6-dr__dep text { opacity: 1 !important; }
+  .v6-dr__edge { stroke-dashoffset: 0 !important; }
+  .v6-dr__layer { opacity: 1 !important; transform: none !important; }
+  .v6-dr__disc { margin-top: 22px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .v6-dr { height: auto; }
+  .v6-dr__pin { position: static; height: auto; display: block; padding: clamp(64px, 8vw, 100px) var(--gutter); }
+  .v6-dr__stage { grid-template-columns: 1fr; }
+  .v6-dr__g rect, .v6-dr__g line, .v6-dr__n rect, .v6-dr__n text,
+  .v6-dr__dep rect, .v6-dr__dep text { opacity: 1 !important; }
+  .v6-dr__edge { stroke-dashoffset: 0 !important; }
+  .v6-dr__layer { opacity: 1 !important; transform: none !important; }
+}
+
+/* ══════════════════════════════════════ 6B. KNOWLEDGE ══ */
+/* clip, not hidden: the documentation sheet is meant to run off the right page edge */
+.v6-kn { background: var(--sunk); padding-block: clamp(72px, 9vh, 124px); overflow-x: clip; }
+.v6-kn__in { max-width: var(--max-wide); margin-inline: auto; padding-inline: var(--gutter); }
+/* ---- the field ------------------------------------------------------------------------------------
+   Four objects, placed by hand on a 12 column field. They deliberately do not share a top line: the
+   documentation sheet breaks above it, the exhibit is slipped across the lower corner of the Method
+   sheet, and the rail runs off the right page edge. */
+.v6-kn__field { margin-top: clamp(26px, 3.5vh, 44px);
+  display: grid; grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: clamp(12px, 1.6vw, 22px); align-items: start; }
+
+/* wraps: at 320 the two tracked-out labels together are wider than the sheet and the second one was
+   clipped by the section's overflow rather than moving to its own line */
+.v6-kn__run { margin: 0; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 18px;
+  padding-bottom: 14px; border-bottom: 1px solid var(--line);
+  font-family: var(--sans); font-weight: 600; font-size: 10.5px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-4); }
+
+/* the Method sheet: a document on the grey ground, with the edge of the pages under it showing */
+.v6-kn__sheet { position: relative; z-index: 2; grid-column: 1 / span 8; grid-row: 1;
+  display: block; text-decoration: none; background: var(--paper); border: 1px solid var(--line);
+  padding: clamp(26px, 3vw, 44px) clamp(26px, 3.2vw, 48px) clamp(56px, 6vw, 92px);
+  box-shadow: 0 1px 0 rgba(16,18,22,0.04), 0 30px 70px -56px rgba(16,18,22,0.45); }
+/* two page edges, so the sheet reads as the top of something longer rather than as a card */
+.v6-kn__sheet::before, .v6-kn__sheet::after { content: ""; position: absolute; z-index: -1;
+  background: var(--paper); border: 1px solid var(--line); border-top: 0; }
+.v6-kn__sheet::before { left: 10px; right: 10px; bottom: -7px; height: 7px; }
+.v6-kn__sheet::after  { left: 21px; right: 21px; bottom: -13px; height: 6px; }
+.v6-kn__q { margin: clamp(22px, 2.6vw, 34px) 0 0; font-family: var(--sans); font-weight: 600;
+  letter-spacing: -0.034em; line-height: 1.05; font-size: clamp(1.6rem, 3.1vw, 2.85rem);
+  color: var(--ink); max-width: 18ch; text-wrap: balance; }
+.v6-kn__qp { margin: clamp(18px, 2vw, 26px) 0 0; font-size: clamp(1rem, 1.15vw, 1.1rem); line-height: 1.6;
+  color: var(--ink-3); max-width: 52ch; }
+.v6-kn__more { display: inline-flex; align-items: center; gap: 8px; margin-top: clamp(20px, 2.2vw, 28px);
+  font-size: 15px; font-weight: 600; color: var(--ink); }
+.v6-kn__more .v6-arw { transition: transform 180ms var(--ease-out); }
+.v6-kn__sheet:hover .v6-arw, .v6-kn__doc:hover .v6-arw, .v6-kn__rail:hover .v6-arw { transform: translateX(4px); }
+
+/* the documentation sheet: lifted above the top line, and contained by the right page edge */
+/* one right-hand column, so the rail follows the sheet immediately instead of waiting for the second
+   grid row and leaving a 340px hole beside the Method sheet */
+.v6-kn__col { position: relative; z-index: 3; grid-column: 9 / span 4; grid-row: 1 / span 2; }
+.v6-kn__doc { position: relative; display: block;
+  margin-top: clamp(-52px, -3.4vw, -20px);
+  /* Sits INSIDE the page container. This used to bleed off the right edge by design, covering the outer
+     margin and the gutter, which put it ~78px past the container and 18px past the viewport itself. A card
+     with readable text running under the edge reads as broken layout rather than as a crop. */
+  margin-right: 0;
+  display: block; text-decoration: none; background: var(--paper); border: 1px solid var(--line);
+  padding: clamp(20px, 2.2vw, 28px) clamp(20px, 2.4vw, 30px) clamp(22px, 2.4vw, 30px);
+  box-shadow: 0 24px 54px -44px rgba(16,18,22,0.5); }
+.v6-kn__doct { margin: 16px 0 0; font-family: var(--sans); font-weight: 600; letter-spacing: -0.024em;
+  line-height: 1.14; font-size: clamp(1.2rem, 1.7vw, 1.55rem); color: var(--ink); }
+.v6-kn__docb { margin: 10px 0 0; font-size: 14.5px; line-height: 1.55; color: var(--ink-3); max-width: 30ch; }
+
+/* the exhibit: slipped across the lower corner of the Method sheet, and clearly a different artefact */
+/* Pulled up into the foot of the Method sheet. Columns 4 to 8 put its right edge on the sheet's right
+   edge and its left edge clear of the sheet's link, so the overlap is vertical and deliberate rather than
+   something sitting on top of readable text: an earlier placement covered three changelog entries, and
+   the one after that covered the sheet's own link. */
+.v6-kn__ex { position: relative; z-index: 4; grid-column: 4 / span 5; grid-row: 2;
+  align-self: start; margin: clamp(-130px, -7.5vw, -60px) 0 0;
+  background: var(--graphite); padding: clamp(18px, 2vw, 24px) clamp(20px, 2.2vw, 28px);
+  box-shadow: 0 30px 66px -46px rgba(0,0,0,0.8); }
+.v6-kn__ex figcaption { font-family: var(--sans); font-weight: 600; font-size: 10.5px;
+  letter-spacing: 0.17em; text-transform: uppercase; color: var(--g-fg-3); margin-bottom: 14px; }
+.v6-kn__ex pre { margin: 0; font-family: var(--mono); font-size: clamp(12px, 0.88vw, 12.8px);
+  line-height: 1.7; color: var(--g-fg-2); overflow-x: auto; }
+
+/* the changelog: a dated rail, not a card. Hairlines and dates, running down the right. */
+.v6-kn__rail { position: relative; margin-top: clamp(26px, 3vw, 42px); display: block; text-decoration: none; }
+.v6-kn__railh { margin: 0 0 6px; font-family: var(--sans); font-weight: 600; font-size: 10.5px;
+  letter-spacing: 0.17em; text-transform: uppercase; color: var(--ink-4); }
+.v6-kn__rl { list-style: none; margin: 0; padding: 0; }
+.v6-kn__rl li { display: grid; gap: 3px; padding: 13px 0; border-bottom: 1px solid var(--line); }
+.v6-kn__rd { font-size: 11.5px; letter-spacing: 0.02em; color: var(--ink-4); font-variant-numeric: tabular-nums; }
+.v6-kn__rt { font-size: 14.5px; line-height: 1.4; color: var(--ink); }
+
+.v6-kn__cta { display: inline-flex; align-items: center; gap: 9px; margin-top: clamp(30px, 4vh, 48px);
+  font-size: 15px; font-weight: 600; color: var(--ink); text-decoration: none; min-height: 44px; }
+.v6-kn__cta .v6-arw { transition: transform 180ms var(--ease-out); }
+.v6-kn__cta:hover .v6-arw { transform: translateX(4px); }
+
+/* ═══════════════════════════════════════════════════════════════ RESPONSIVE ══
+   Mobile is authored, never a shrunk desktop: the panned environment becomes
+   three stages, the case file and the ledger become vertical, and the journey
+   becomes a Build -> Deploy -> Decide path.
+   ========================================================================== */
+@media (max-width: 1040px) {
+  .v6-kn__grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .v6-kn__rail { grid-column: 1 / -1; }
+}
+
+@media (max-width: 900px) {
+  /* chapter 2 stops pinning entirely: the four travellers become a plain vertical flow, so a phone is never
+     held inside a scroll sequence it cannot leave. */
+  .v6-gap { height: auto; }
+  .v6-gap__pin { position: static; height: auto; padding: clamp(72px, 12vh, 104px) var(--gutter); }
+  .v6-gap__stage { max-width: none; height: auto; }
+  .v6-gap__t { position: static; transform: none !important; opacity: 1 !important; }
+  .v6-gap__sys { margin-top: clamp(34px, 7vw, 52px); }
+  .v6-gap__found { margin-top: clamp(40px, 8vw, 64px); }
+  .v6-gap__verdictwrap { margin-top: clamp(32px, 6vw, 48px); }
+
+  /* chapter 3 stops panning and becomes three stages carrying the same record line */
+  .v6-cs { height: auto; }
+  .v6-cs__pin { position: static; height: auto; display: block; padding: clamp(64px, 9vw, 96px) 0; }
+  /* EXACTLY ONE composition exists per breakpoint. The desktop act stack and the authored mobile stack
+     were both rendering here, so the three stage headings appeared twice: once in layout, twice in the
+     accessibility tree, and twice in extracted page text. display:none removes the inactive one from
+     layout, focus order, the accessibility tree and innerText together; opacity would not. */
+  .v6-cs__acts { display: none; }
+  .v6-cs__viewport { display: none; }
+  .v6-cs__m { display: grid; }
+
+  /* the case file stacks: the state band moves from the top of each segment to its left edge, and the
+     session wall becomes a full-width division instead of a column. */
+  .v6-pf__case { max-width: none; width: calc(100% - var(--gutter) * 2); border-radius: 16px; }
+  .v6-pf__track { grid-template-columns: minmax(0, 1fr); }
+  .v6-pf__seg { padding: 16px 0 18px 20px; }
+  .v6-pf__seg::before { left: 0; right: auto; top: 4px; bottom: 4px; height: auto; width: 8px;
+    border-radius: 4px; transform: scaleY(0); transform-origin: 50% 0; }
+  .v6-pf__case[data-on="true"] .v6-pf__seg::before { transform: scaleY(1); }
+  .v6-pf__seg + .v6-pf__seg::after { left: 20px; right: 0; top: 0; bottom: auto;
+    border-left: 0; border-top: 1px solid var(--line); }
+  .v6-pf__wall { justify-items: start; padding: 14px 18px; margin: 10px 0;
+    border-radius: 8px; grid-auto-flow: column; align-items: center; }
+  .v6-pf__wall::before { display: none; }
+  /* the break stays: without it the two clauses ran together as one word */
+  .v6-pf__wall span { margin-top: 0; text-align: left; }
+  .v6-pf__decide { grid-template-columns: 1fr; gap: 22px; }
+  .v6-pf__dec { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); padding-top: 20px; }
+  
+  /* the hand placement collapses to a single column: every fragment keeps its own construction, but
+     nothing overlaps or crops on a narrow screen. */
+  .v6-rx__flow { grid-template-columns: minmax(0, 1fr); row-gap: clamp(22px, 5vw, 32px); }
+  .v6-rx__f { grid-column: 1 / -1 !important; grid-row: auto !important;
+    margin-top: 0 !important; margin-right: 0 !important; align-self: auto; }
+  .v6-rx__stage { grid-column: 1 / -1; margin-top: clamp(26px, 7vw, 40px); }
+  .v6-rx__next { grid-template-columns: 1fr; gap: 12px; }
+
+  /* the anchor stops being sticky and becomes the first thing you read, then the archive runs below it */
+  .v6-rec__arch { grid-template-columns: minmax(0, 1fr); gap: clamp(30px, 7vw, 46px); }
+  .v6-rec__anchor { position: static; }
+  .v6-rec__re { margin-right: 0; }
+}
+
+@media (max-width: 900px) {
+  /* the hand placement unwinds: every object keeps its own construction, nothing overlaps or crops */
+  /* minmax(0, 1fr), not 1fr: a plain 1fr track keeps an auto minimum, so at 320 the widest child
+     stretched the single column past the viewport and the section clipped it. */
+  .v6-kn__field { grid-template-columns: minmax(0, 1fr); row-gap: clamp(26px, 6vw, 40px); }
+  .v6-kn__sheet, .v6-kn__col, .v6-kn__ex {
+    grid-column: 1 / -1; grid-row: auto; margin: 0; align-self: auto; }
+  .v6-kn__doc, .v6-kn__rail { margin: 0; }
+  .v6-kn__rail { margin-top: clamp(26px, 6vw, 38px); }
+  .v6-kn__sheet { padding-bottom: clamp(30px, 6vw, 44px); }
+  .v6-kn__sheet::before, .v6-kn__sheet::after { display: none; }
+}
+
+/* ══════════════════════════════════════════════════════════ REDUCED MOTION ══ */
+@media (prefers-reduced-motion: reduce) {
+  .v6-gap { height: auto; }
+  .v6-gap__pin { position: static; height: auto; padding: clamp(72px, 10vh, 110px) var(--gutter); }
+  .v6-gap__stage { height: auto; }
+  .v6-gap__t { position: static; transform: none !important; opacity: 1 !important; }
+  .v6-gap__sys { margin-top: 34px; }
+  .v6-gap__found { margin-top: 40px; }
+  .v6-gap__verdictwrap { margin-top: 32px; }
+
+  .v6-cs { height: auto; }
+  .v6-cs__pin { position: static; height: auto; display: block; padding: clamp(64px, 8vw, 100px) 0; }
+  /* same rule under reduced motion: one composition, not both */
+  .v6-cs__acts { display: none; }
+  .v6-cs__viewport { display: none; }
+  .v6-cs__m { display: grid; }
+  .v6-st { height: auto; }
+  .v6-st__pin { position: static; height: auto; display: block; padding: clamp(64px, 8vw, 100px) var(--gutter); }
+  .v6-st__stage { grid-template-columns: 1fr; }
+  .v6-st__list { position: static; min-height: 0; display: grid; gap: 34px; }
+  .v6-st__cond { position: static; opacity: 1 !important; transform: none !important; }
+  .v6-pf__seg::before, .v6-pf__decide, .v6-rec__filed, .v6-rx__f, .v6-rx__stage {
+    opacity: 1 !important; transform: none !important; transition: none !important; }
+}

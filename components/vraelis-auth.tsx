@@ -76,9 +76,19 @@ function statusStyle(tone: Tone): CSSProperties {
 export function VraelisSignIn({
   callbackUrl = "/account",
   initialMode = "signin",
+  // Defaults ON, so /signin is unchanged. The V6 surface supplies its own heading and would otherwise
+  // stack two of them on the same screen, pushing the form
+  // most of a fold down.
+  showHeader = true,
+  // Where Terms and Privacy live for the surface rendering this form. Empty keeps /terms and /privacy, which
+  // is right for the current site; V6 passes its own base so the links do not walk out of the preview into
+  // the previous design.
+  legalBase = "",
 }: {
   callbackUrl?: string;
   initialMode?: AuthMode;
+  showHeader?: boolean;
+  legalBase?: string;
 }) {
   const router = useRouter();
   const safeRedirect = getSafeRedirectPath(callbackUrl) || "/account";
@@ -155,6 +165,7 @@ export function VraelisSignIn({
 
   return (
     <div style={{ width: "min(440px, 100%)", margin: "0 auto" }}>
+      {showHeader ? (
       <div style={{ textAlign: "center", marginBottom: 18 }}>
         <a href="/" style={{ textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.035em", display: "inline-block", marginBottom: 10 }}>Vraelis</a>
         <h1 className="display" style={{ fontSize: "clamp(1.6rem, 3.4vw, 2.2rem)", marginBottom: 8 }}>
@@ -164,6 +175,7 @@ export function VraelisSignIn({
           {mode === "signup" ? "Connect an AI-built system and verify it before production." : "Sign in to your applications, verification runs, evidence, and reports."}
         </p>
       </div>
+      ) : null}
 
       <div className="card" style={{ padding: "20px 24px 24px", borderRadius: "var(--r-xl)", boxShadow: "var(--shadow-lg)" }}>
         {/* mode toggle */}
@@ -179,7 +191,7 @@ export function VraelisSignIn({
         {mode === "signup" && (
           <label style={{ display: "flex", gap: 9, alignItems: "flex-start", marginBottom: 16, fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, cursor: "pointer" }}>
             <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} style={{ marginTop: 2, width: 15, height: 15, flex: "none", accentColor: "var(--acc-deep)", cursor: "pointer" }} />
-            <span>I agree to the <Link href="/terms" target="_blank" style={{ color: "var(--acc-deep)" }}>Terms</Link> and <Link href="/privacy" target="_blank" style={{ color: "var(--acc-deep)" }}>Privacy Policy</Link>.</span>
+            <span>I agree to the <Link href={`${legalBase}/terms`} target="_blank" style={{ color: "var(--acc-deep)" }}>Terms</Link> and <Link href={`${legalBase}/privacy`} target="_blank" style={{ color: "var(--acc-deep)" }}>Privacy Policy</Link>.</span>
           </label>
         )}
 
