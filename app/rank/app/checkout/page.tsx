@@ -80,8 +80,23 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
 
   return (
     <section className="section" style={{ borderBottom: "none", paddingTop: "clamp(20px, 3vw, 40px)", paddingBottom: "clamp(56px, 7vw, 96px)" }}>
+      <style>{`
+.vra-back{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:0 16px;margin-bottom:22px;
+  border:1px solid var(--line-2);border-radius:99px;background:var(--bg-1);color:var(--fg-2);
+  font-size:13.5px;font-weight:500;text-decoration:none;width:fit-content;
+  transition:border-color 140ms ease,color 140ms ease,background 140ms ease}
+.vra-back:hover{border-color:var(--line-3);color:var(--fg-1);background:var(--bg-2)}
+.vra-back:focus-visible{outline:2px solid var(--fg-1);outline-offset:2px}
+      `}</style>
       <div className="wrap" style={{ maxWidth: 960 }}>
-        <a href={backHref} style={{ display: "flex", width: "fit-content", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 22 }}>← Back</a>
+        {/* A PILL, NOT A WHISPER. This was 13.5px of --fg-3 with no shape: on a payment screen, the one
+            control that is not "give us money" was the faintest thing on the page, and it sat directly
+            above a heading many times its size. A bordered pill gives it an edge to aim at and a real
+            touch target, and it stays a quiet outline rather than a filled button, because the primary
+            action here is the payment and there must be no doubt which is which. */}
+        <a href={backHref} className="vra-back">
+          <span aria-hidden>←</span> Back
+        </a>
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0,0.82fr) minmax(0,1.18fr)", gap: "clamp(24px, 4vw, 48px)", alignItems: "start" }} className="cols-stack">
           {/* order summary */}
           <div>
