@@ -29,7 +29,7 @@ const DESTINATIONS: Item[] = [
   { id: "d-integrations", label: "Integrations", hint: "GitHub, Vercel, Slack and more", href: "/connections", icon: I.key },
   { id: "d-developers", label: "Developers", hint: "API keys, CLI, webhooks", href: "/developers", icon: I.code },
   { id: "a-new", label: "New verification", hint: "Name an outcome to prove", href: "/app", icon: I.plus },
-  { id: "a-connect", label: "Connect a system", hint: "Point Vraelis at a deployment", href: "/applications/new", icon: I.plus },
+  { id: "a-connect", label: "Connect a system", hint: "Point Vraelis at a deployment", href: "/systems/new", icon: I.plus },
   { id: "s-team", label: "Team", hint: "Who can see what", href: "/team", icon: I.user },
   { id: "s-org", label: "Organization", hint: "Company settings", href: "/organization", icon: I.building },
   { id: "s-usage", label: "Usage", hint: "API keys, consumption, limits", href: "/usage", icon: I.data },
@@ -60,7 +60,7 @@ export function CommandPalette({ systems }: { systems: PaletteSystem[] }) {
 
   const items = useMemo(() => {
     const sys: Item[] = systems.map((s) => ({
-      id: `sys-${s.id}`, label: s.name || "System", hint: "Open system", href: `/applications/${s.id}`, icon: I.layers,
+      id: `sys-${s.id}`, label: s.name || "System", hint: "Open system", href: `/systems/${s.id}`, icon: I.layers,
     }));
     const all = [...DESTINATIONS, ...sys];
     const needle = q.trim().toLowerCase();

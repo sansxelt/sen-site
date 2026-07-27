@@ -95,10 +95,10 @@ ok("onboarding explains the real four-step workflow", /Name the deployed build/.
 ok("empty sections collapse to null rather than showing empty shells", /if \(!issues\.length\) return null;/.test(rec) && /if \(!rows\.length\) return null;/.test(rec) && /if \(!systems\.length\) return null;/.test(rec));
 
 console.log("\n── every action resolves to a CURRENT route by stable id, never a name or a retired path ──");
-ok("a recent record links to the current result route by id", rec.includes("`/applications/${run.applicationId}/passes/${run.id}`"));
-ok("a running record links to the current result route by id", rec.includes("`/applications/${r.applicationId}/passes/${r.id}`"));
-ok("a system links to the current system detail route by id", rec.includes("`/applications/${s.id}`"));
-ok("an attention item links to the current issues route by id", rec.includes("`/applications/${iss.applicationId}/issues`"));
+ok("a recent record links to the current result route by id", rec.includes("`/systems/${run.applicationId}/passes/${run.id}`"));
+ok("a running record links to the current result route by id", rec.includes("`/systems/${r.applicationId}/passes/${r.id}`"));
+ok("a system links to the current system detail route by id", rec.includes("`/systems/${s.id}`"));
+ok("an attention item links to the current issues route by id", rec.includes("`/systems/${iss.applicationId}/issues`"));
 ok("links use stable ids, not display names", !/href=\{`\/applications\/\$\{[a-z]*\.applicationName/.test(rec));
 ok("no retired /app/apps path is linked", !rec.includes("/app/" + "apps") && !page.includes("/app/" + "apps"));
 ok("no link points at a not-yet-built Design 02-04 route", !/\/results\//.test(rec) && !/\/dashboard/.test(rec));

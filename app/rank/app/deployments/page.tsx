@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requirePreflightOwner } from "@/lib/v-preflight-guard";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
-import { SetupRequired } from "../applications/setup-required";
+import { SetupRequired } from "../systems/setup-required";
 import { listAllRuns, type PassRow } from "@/lib/preflight/overview-db";
 import { environmentsByApp, sourceConnectionsByApp, describeSource } from "@/lib/preflight/setup-read";
 import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
@@ -90,7 +90,7 @@ function DeploymentCard({ group, envLabel, sourceLine }: { group: DeploymentGrou
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
         <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>{metaParts.join(", ")}</span>
         <Link
-          href={`/applications/${latest.applicationId}/passes/${latest.id}`}
+          href={`/systems/${latest.applicationId}/passes/${latest.id}`}
           style={{ fontSize: 13, fontWeight: 600, color: "var(--acc-deep)", display: "inline-flex", alignItems: "center", gap: 5, textDecoration: "none", flex: "none" }}
         >
           View latest verification <span aria-hidden>→</span>
@@ -157,7 +157,7 @@ export default async function DeploymentsPage() {
             </div>
           ) : null}
           <div style={{ marginTop: 12 }}>
-            <Link href={`/applications/${lastVerified.applicationId}/passes/${lastVerified.id}`}
+            <Link href={`/systems/${lastVerified.applicationId}/passes/${lastVerified.id}`}
               style={{ fontSize: 13, fontWeight: 600, color: "var(--acc-deep)", textDecoration: "none" }}>
               View verification report →
             </Link>
@@ -170,7 +170,7 @@ export default async function DeploymentsPage() {
           <EmptyIcon d={I.deploy} />
           <h3>No deployments tested yet</h3>
           <p>Run a verification and the deployment it tests appears here with its verdict.</p>
-          <Link href="/applications" className="btn">Go to applications</Link>
+          <Link href="/systems" className="btn">Go to applications</Link>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>

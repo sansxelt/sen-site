@@ -206,7 +206,7 @@ console.log("\n── a guarantee can find the plan it just minted (mint and fin
 {
   const db = code("lib/preflight/reviewed-plan-db.ts");
   const approve = code("app/api/preflight/apps/[id]/guarantees/[gid]/approve/route.ts");
-  const detail = code("app/rank/app/applications/[id]/guarantees/[gid]/page.tsx");
+  const detail = code("app/rank/app/systems/[id]/guarantees/[gid]/page.tsx");
   const prepare = code("app/api/preflight/apps/[id]/guarantees/[gid]/prepare/route.ts");
 
   // THE DEFECT: the lookup filtered `.eq("guarantee_id", guaranteeId as never)` unconditionally. PostgREST
@@ -234,7 +234,7 @@ console.log("\n── a guarantee can find the plan it just minted (mint and fin
 
 console.log("\n── the record says which promise it proves, and whether that promise still stands ──");
 {
-  const record = code("app/rank/app/applications/[id]/passes/[runId]/page.tsx");
+  const record = code("app/rank/app/systems/[id]/passes/[runId]/page.tsx");
   // A run bound to a guarantee that says nothing about it is a record a customer cannot audit.
   ok("the record reads the guarantee from the run's OWN pin", /internal\.guaranteeId \? getGuarantee\(owner, internal\.guaranteeId\)/.test(record));
   ok("it names the guarantee and links to it", /guarantee\.title/.test(record) && /guarantees\/\$\{guarantee\.id\}/.test(record));

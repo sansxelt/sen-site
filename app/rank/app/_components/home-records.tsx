@@ -87,7 +87,7 @@ export function HomeAttention({ issues, error }: { issues: IssueRow[]; error?: b
       <SectionHead label="Needs attention" count={issues.length} href="/verifications" hrefLabel="All failures" />
       <div style={{ display: "grid", gap: 8 }}>
         {issues.map((iss) => {
-          const href = iss.applicationId ? `/applications/${iss.applicationId}/issues` : "/verifications";
+          const href = iss.applicationId ? `/systems/${iss.applicationId}/issues` : "/verifications";
           return (
             <Link key={iss.id} href={href}
               style={{ ...rowLink, gridTemplateColumns: "auto 1fr auto auto", gap: 12, padding: "11px 14px", border: "1px solid var(--line-2)", borderLeft: `3px solid ${SEV_COLOR[iss.severity] ?? "var(--fg-4)"}`, borderRadius: "var(--r-sm, 8px)", background: "var(--bg-1)" }}
@@ -117,7 +117,7 @@ export function RunningWork({ rows, count, error }: { rows: PassRow[]; count: nu
       <SectionHead label="Running now" count={count > 0 ? count : rows.length} href="/verifications" hrefLabel="View all" />
       <div className="card" style={{ padding: 0, overflow: "hidden", background: "var(--bg-1)" }}>
         {rows.map((r, i) => {
-          const href = r.applicationId ? `/applications/${r.applicationId}/passes/${r.id}` : "/verifications";
+          const href = r.applicationId ? `/systems/${r.applicationId}/passes/${r.id}` : "/verifications";
           return (
             <Link key={r.id} href={href}
               style={{ ...rowLink, gridTemplateColumns: "1fr auto", gap: 14, padding: "13px 16px", borderTop: i ? "1px solid var(--line-2)" : "none" }}
@@ -151,7 +151,7 @@ export function RunningWork({ rows, count, error }: { rows: PassRow[]; count: nu
 
 export function VerificationRecordRow({ run, top }: { run: PassRow; top: boolean }) {
   const verdict = runVerdict(run.state, run.decision);
-  const href = run.applicationId ? `/applications/${run.applicationId}/passes/${run.id}` : "/verifications";
+  const href = run.applicationId ? `/systems/${run.applicationId}/passes/${run.id}` : "/verifications";
   const flows = run.flowsTotal > 0 ? `${run.flowsPassed}/${run.flowsTotal} flows` : "";
   const meta = [timeAgo(run.completedAt ?? run.createdAt), flows].filter(Boolean).join(" · ");
   return (
@@ -212,7 +212,7 @@ export function SystemsSummary({ systems, error }: { systems: SystemSummaryItem[
         {systems.map((s, i) => {
           const proof = systemProof(s.state === null ? null : { state: s.state, decision: s.decision });
           return (
-            <Link key={s.id} href={s.id ? `/applications/${s.id}` : "/systems"}
+            <Link key={s.id} href={s.id ? `/systems/${s.id}` : "/systems"}
               style={{ ...rowLink, gridTemplateColumns: "1fr auto auto", gap: 14, padding: "12px 16px", borderTop: i ? "1px solid var(--line-2)" : "none" }}
               aria-label={`${s.name || "System"}, latest verification: ${proof.verdict.label}`}>
               <div style={{ minWidth: 0 }}>

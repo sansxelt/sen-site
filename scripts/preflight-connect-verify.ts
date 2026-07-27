@@ -58,7 +58,7 @@ ok("removeConnection counts deleted rows (no false 'revoked' on a zero-row delet
 ok("deleteApplication counts deleted rows too", /deleteApplication[\s\S]{0,600}\.select\("id"\)/.test(readFileSync("lib/v-applications.ts", "utf8")));
 ok("secrets DELETE returns 404 when nothing was revoked", readFileSync("app/api/preflight/apps/[id]/secrets/route.ts", "utf8").includes("Nothing was revoked"));
 // 2. No credential loss on partial failure: every account attempted, failures stay on-page for retry.
-const uiSrc = readFileSync("app/rank/app/applications/new/connect-form.tsx", "utf8");
+const uiSrc = readFileSync("app/rank/app/systems/new/connect-form.tsx", "utf8");
 // The summary's REQUIRED set must include EVERY field the submit button gates on — otherwise the panel
 // shows "all required complete" while the button is still disabled (the app name was the hidden gate).
 ok("the connect button gates on url + name + ownership (canSubmit)",
@@ -117,9 +117,9 @@ ok("openTestAccount is documented worker-only and never IMPORTED by the secrets 
 
 // The chips + manual forms were extracted to the shared _connections modules (S2) so the management
 // page reuses them; the honesty assertions follow the code.
-const ui = readFileSync("app/rank/app/applications/new/connect-form.tsx", "utf8");
-const sharedBrand = readFileSync("app/rank/app/applications/_connections/brand.tsx", "utf8");
-const sharedForms = readFileSync("app/rank/app/applications/_connections/forms.tsx", "utf8");
+const ui = readFileSync("app/rank/app/systems/new/connect-form.tsx", "utf8");
+const sharedBrand = readFileSync("app/rank/app/systems/_connections/brand.tsx", "utf8");
+const sharedForms = readFileSync("app/rank/app/systems/_connections/forms.tsx", "utf8");
 ok("UI: unbuilt integrations say Coming later (never fake active buttons)",
   ui.includes("<ComingLater") && sharedBrand.includes("Coming later") && !/function ComingLater[\s\S]*?<button/.test(sharedBrand) && !ui.includes("SoonButton"));
 // OAuth is honestly deferred: the manual form labels itself "Manual connection" (metadata only) and points

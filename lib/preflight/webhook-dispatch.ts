@@ -148,7 +148,7 @@ export function buildVerificationPayload(input: {
     deployment_url: input.deploymentUrl ?? null,
     completed_at: new Date().toISOString(),
     report_url: input.appBaseUrl
-      ? `${input.appBaseUrl}/applications/${input.applicationId}/passes/${input.runId}`
+      ? `${input.appBaseUrl}/systems/${input.applicationId}/passes/${input.runId}`
       : null,
   };
 }

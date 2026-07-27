@@ -71,7 +71,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const internal = await getRunInternal(access.owner, runId);
   const guarantee = internal?.guaranteeId ? await getGuarantee(access.owner, internal.guaranteeId) : null;
   const consoleBase = appHostUrl("");
-  const recordUrl = `${consoleBase}/applications/${access.applicationId}/passes/${runId}`;
+  const recordUrl = `${consoleBase}/systems/${access.applicationId}/passes/${runId}`;
 
   // Only failures the run actually observed. Each carries what was expected, what happened instead, and how
   // to reproduce it.
@@ -108,7 +108,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     ...(guarantee ? { guarantee_title: guarantee.title, guarantee_plan_version: internal?.guaranteePlanVersion ?? null, guarantee_plan_hash: internal?.guaranteePlanHash ?? null } : {}),
     // The repair relationship. Present when this run re-verified an earlier one; null for a first attempt.
     reverification_of: detail.run.parent_run_id ?? null,
-    ...(detail.run.parent_run_id ? { reverification_of_url: `${consoleBase}/applications/${access.applicationId}/passes/${detail.run.parent_run_id}` } : {}),
+    ...(detail.run.parent_run_id ? { reverification_of_url: `${consoleBase}/systems/${access.applicationId}/passes/${detail.run.parent_run_id}` } : {}),
     // Where a person looks. An API result that cannot be opened is a dead end for the human the agent is
     // reporting to.
     console_url: recordUrl,

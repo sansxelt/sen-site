@@ -298,7 +298,7 @@ export async function sendTestEvent(userId: string, endpointId: string): Promise
     run_id: "sample_run", application_id: "sample_app", decision: "verified",
     flows_total: 5, flows_passed: 5, deployment_url: "https://demo.example.com",
     completed_at: new Date().toISOString(),
-    report_url: "https://app.vraelis.com/applications/sample_app/passes/sample_run",
+    report_url: "https://app.vraelis.com/systems/sample_app/passes/sample_run",
   };
   const res = await post(ep.url, ep.secret, "verification.completed", deliveryId, payload);
   await s.from("v_webhook_deliveries" as never).insert({ endpoint_id: endpointId, test_id: null, event: "verification.completed", status: res.ok ? "success" : "failed", response_status: res.status, error: res.error, attempts: 1, payload, delivered_at: res.ok ? new Date().toISOString() : null } as never);

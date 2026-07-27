@@ -187,7 +187,7 @@ ok("an unknown insert error still breaks out of the retry loop (no infinite retr
 
 // ── Static: the run report confines provider_deployment_id to Technical details ──
 console.log("\n── run report static ──");
-const REPORT = "app/rank/app/applications/[id]/passes/[runId]/page.tsx";
+const REPORT = "app/rank/app/systems/[id]/passes/[runId]/page.tsx";
 const reportRaw = read(REPORT);
 const report = stripComments(reportRaw);
 ok("Tested deployment block present", reportRaw.includes("Tested deployment"));
@@ -199,9 +199,9 @@ ok("provider_deployment_id appears ONLY inside a Technical details disclosure", 
     && /\{deployment\?\.provider_deployment_id \? \(\s*<details[\s\S]{0,600}\{deployment\.provider_deployment_id\}[\s\S]{0,300}<\/details>/.test(report);
 })());
 ok("no other S4 surface renders provider_deployment_id",
-  !stripComments(read("app/rank/app/applications/[id]/deployments/page.tsx")).includes("provider_deployment_id")
-  && !stripComments(read("app/rank/app/applications/[id]/page.tsx")).includes("provider_deployment_id")
-  && !stripComments(read("app/rank/app/applications/[id]/deployments/record-deployment.tsx")).includes("provider_deployment_id")
+  !stripComments(read("app/rank/app/systems/[id]/deployments/page.tsx")).includes("provider_deployment_id")
+  && !stripComments(read("app/rank/app/systems/[id]/page.tsx")).includes("provider_deployment_id")
+  && !stripComments(read("app/rank/app/systems/[id]/deployments/record-deployment.tsx")).includes("provider_deployment_id")
   && !stripComments(read("app/api/preflight/apps/[id]/deployments/route.ts")).includes("provider_deployment_id"));
 ok("migration-8 honesty on the report: one line naming the sql file, gated on deploymentStoreReady",
   reportRaw.includes("sql/vraelis-preflight-8-deployments.sql") && reportRaw.includes("deploymentStoreReady("));
@@ -214,7 +214,7 @@ ok("context version resolves through getSnapshot, best-effort",
 
 // ── Static: the health page banner never replaces the decision ──
 console.log("\n── application health static ──");
-const HEALTH = "app/rank/app/applications/[id]/page.tsx";
+const HEALTH = "app/rank/app/systems/[id]/page.tsx";
 const health = read(HEALTH);
 ok("banner present with honest carry-forward copy",
   health.includes("New deployment unverified") && health.includes("never carried forward to an untested deployment"));
@@ -265,14 +265,14 @@ ok("URL and commit are validated before anything is recorded",
 
 // ── Static: the Deployments tab surfaces (form, comparison, honest notice) ──
 console.log("\n── deployments tab static ──");
-const TAB = "app/rank/app/applications/[id]/deployments/page.tsx";
+const TAB = "app/rank/app/systems/[id]/deployments/page.tsx";
 const tab = read(TAB);
 ok("migration-8 notice present, naming the sql file, gated on deploymentStoreReady",
   tab.includes("Deployment identity is not active yet: apply")
   && tab.includes("sql/vraelis-preflight-8-deployments.sql") && tab.includes("deploymentStoreReady("));
 ok("Record new deployment affordance wired to the form component",
   tab.includes("<RecordDeploymentForm appId={id} />")
-  && read("app/rank/app/applications/[id]/deployments/record-deployment.tsx").includes("Record new deployment"));
+  && read("app/rank/app/systems/[id]/deployments/record-deployment.tsx").includes("Record new deployment"));
 ok("comparison renders previous verified against current with the pure diff",
   tab.includes("Deployment comparison") && tab.includes("Previous verified")
   && tab.includes("compareDeployments(previous, current)"));
@@ -285,7 +285,7 @@ ok("owner/member-gated server component (requirePreflightAppAccess or requirePre
 console.log("\n── design rules ──");
 for (const f of [
   MODULE, REPORT, HEALTH, ROUTE, TAB,
-  "app/rank/app/applications/[id]/deployments/record-deployment.tsx",
+  "app/rank/app/systems/[id]/deployments/record-deployment.tsx",
 ]) {
   // Copy rule: em dashes and middle dots are checked on comment-stripped source (rendered copy and
   // string literals), since pre-S4 files carry them in code comments; emoji nowhere at all.

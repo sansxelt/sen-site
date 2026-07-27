@@ -16,7 +16,7 @@ import {
 import { planMerge } from "../lib/preflight/contract-merge";
 import { contractApprovalReadiness, type ContractRequirement, type ApprovalActor } from "../lib/v-applications";
 import { extractSnapshot } from "../lib/preflight/discover-extract";
-import { sourceLabel, sourceChipInfo } from "../app/rank/app/applications/[id]/contract/labels";
+import { sourceLabel, sourceChipInfo } from "../app/rank/app/systems/[id]/contract/labels";
 
 let pass = 0, fail = 0;
 const ok = (n: string, c: boolean, d = "") => { console.log(`${c ? "PASS" : "FAIL"}  ${n}${d ? `  (${d})` : ""}`); if (c) pass++; else fail++; };
@@ -225,7 +225,7 @@ function tsFilesUnder(dir: string): string[] {
   //   3. coverage-correction.ts — the bounded correction loop (the model PROPOSES a stronger plan; the
   //      deterministic validators DECIDE). Same key/model discipline as synthesis; assertions below.
   const ALLOWED_AI_CLIENTS = ["discover-synthesis.ts", "agent/agent-client.ts", "coverage-correction.ts"];
-  const roots = ["lib/preflight", "app/api/preflight", "worker/preflight", "app/rank/app/applications"];
+  const roots = ["lib/preflight", "app/api/preflight", "worker/preflight", "app/rank/app/systems"];
   const offenders: string[] = [];
   for (const root of roots) {
     for (const f of tsFilesUnder(root)) {
@@ -329,7 +329,7 @@ ok("approved contracts stay immutable (409 on every mutation path)",
     readiness([{ ...req({}), review_basis: "reviewed_plan" }],
       { kind: "reviewed_plan", planId: "rvp_1", approvedBy: "reviewer@example.com", approvedAt: "2026-07-25T00:00:00.000Z" }).ok === true);
 }
-const editor = read("app/rank/app/applications/[id]/contract/contract-editor.tsx");
+const editor = read("app/rank/app/systems/[id]/contract/contract-editor.tsx");
 ok("the editor's approve button still gates on enabled requirements",
   editor.includes("disabled={busyApprove || enabledCount === 0}"));
 // HF3: requirement wording is editable on a DRAFT via the existing PATCH (updateRequirement accepts
@@ -342,14 +342,14 @@ ok("the requirement edit reverts optimistically on failure (no silent loss)",
 
 // ── Static: the chips render in both contract surfaces, on-design ──
 console.log("\n── contract UI static ──");
-const page = read("app/rank/app/applications/[id]/contract/page.tsx");
-const chip = read("app/rank/app/applications/[id]/contract/provenance-chip.tsx");
+const page = read("app/rank/app/systems/[id]/contract/page.tsx");
+const chip = read("app/rank/app/systems/[id]/contract/provenance-chip.tsx");
 ok("approved (read-only) rows render the chip", page.includes("<ProvenanceChip source={r.source} origin={r.origin} />"));
 ok("draft editor rows render the chip", editor.includes("<ProvenanceChip source={r.source} origin={r.origin} />"));
 ok("inferred chips are visually distinct (muted ink + dashed hairline + qualifier)",
   chip.includes('borderStyle: inferred ? "dashed" : "solid"') && chip.includes("qualifier"));
 ok("no em dash, no middle dot, no emoji in the chip or labels modules",
-  [chip, read("app/rank/app/applications/[id]/contract/labels.ts")].every((s) => !s.includes("—") && !s.includes("·") && !/[\u{1F300}-\u{1FAFF}]/u.test(s)));
+  [chip, read("app/rank/app/systems/[id]/contract/labels.ts")].every((s) => !s.includes("—") && !s.includes("·") && !/[\u{1F300}-\u{1FAFF}]/u.test(s)));
 
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);

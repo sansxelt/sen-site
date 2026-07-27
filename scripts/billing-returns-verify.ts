@@ -19,7 +19,7 @@ const KEEP = [
   "/",
   "/plans",
   "/billing/success?session_id=cs_test_a1B2c3",
-  "/applications/abc-123/passes/42?tab=evidence#screenshots",
+  "/systems/abc-123/passes/42?tab=evidence#screenshots",
   "/signin?callbackUrl=%3Fx%3D1",
 ];
 for (const p of KEEP) ok(`preserves deep link ${p}`, safeReturnPath(p) === p);
@@ -153,7 +153,7 @@ console.log("\n── success page: webhook authority + poll ──");
     !page.includes(`method: "POST"`) && !poller.includes(`method: "POST"`));
   ok("still-processing state is honest with a support path",
     poller.includes("activation still completing") && poller.includes("help@vraelis.com"));
-  ok("activated state links /plans and /applications", poller.includes(`href="/plans"`) && poller.includes(`href="/applications"`));
+  ok("activated state links /plans and /systems", poller.includes(`href="/plans"`) && poller.includes(`href="/systems"`));
 
   const cancelled = read("app/rank/app/billing/cancelled/page.tsx");
   ok("cancelled page: nothing charged + back to /plans", cancelled.includes("No charge was made") && cancelled.includes(`href="/plans"`));

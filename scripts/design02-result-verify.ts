@@ -8,7 +8,7 @@ import { runVerdict } from "../lib/preflight/home-verdict";
 let pass = 0, fail = 0;
 const ok = (n: string, c: boolean, d = "") => { if (c) { pass++; console.log(`PASS  ${n}`); } else { fail++; console.log(`FAIL  ${n}${d ? `  — ${d}` : ""}`); } };
 
-const ROUTE = "app/rank/app/applications/[id]/passes/[runId]/page.tsx";
+const ROUTE = "app/rank/app/systems/[id]/passes/[runId]/page.tsx";
 const page = readFileSync(ROUTE, "utf8");
 const runsDb = readFileSync("lib/preflight/runs-db.ts", "utf8");
 // Comment-stripped view for "forbidden term" negative checks — a comment that documents a rule ("NOT a stored
@@ -167,7 +167,7 @@ ok("reverification copy states every reverification is a separate immutable reco
 ok("lineage is built ONLY from parent_run_id + listChildRuns (never v_repairs, never inferred ancestry)", /getRunLite\(owner, run\.parent_run_id\)/.test(page) && /listChildRuns\(owner, runId\)/.test(page) && !/v_repairs|inferAncestry/.test(shown));
 ok("lineage is parent -> current -> children, chronological, each a separate record", /const lineage: LineageNode\[\]/.test(page) && /\.sort\(\(a, b\) => \(Date\.parse\(a\.iso\)/.test(page) && /isCurrent: true/.test(page));
 ok("every lineage record's verdict goes through the canonical translator", /runVerdict\(node\.state, node\.decision\)/.test(page));
-ok("the current record is marked; the others link to owner-authorized result routes", /This record/.test(page) && page.includes("href={`/applications/${id}/passes/${node.runId}`}"));
+ok("the current record is marked; the others link to owner-authorized result routes", /This record/.test(page) && page.includes("href={`/systems/${id}/passes/${node.runId}`}"));
 ok("the parent failure is never rewritten (its own decision is rendered; a later success does not overwrite it)", /parentLite\.decision/.test(page) && /does not overwrite an earlier failure/.test(page));
 ok("getRunLite is owner-scoped, read-only, and returns null for a missing/non-owned parent (no leak)",
   (() => { const db = readFileSync("lib/preflight/runs-db.ts", "utf8"); const b = db.slice(db.indexOf("export async function getRunLite")); return /eq\("user_id", norm\(owner\)\)\.eq\("id", runId\)/.test(b) && /if \(!r\) return null;/.test(b) && !/\.insert\(|\.update\(|\.delete\(/.test(b.slice(0, 500)); })());
@@ -178,7 +178,7 @@ const rpDb = readFileSync("lib/preflight/reviewed-plan-db.ts", "utf8");
 ok("the record identity block shows the run id and offers a copy control", /Verification \{shortId\(runId\)\}/.test(page) && /<CopyButton text=\{runId\} label="Copy id" \/>/.test(page));
 ok("the conclusion in the identity block goes through the shared translator (a Chip), never a recomputed verdict", /<Chip tone=\{verdict\.tone\} label=\{verdict\.label\} \/>/.test(page));
 ok("record identity shows the run's own created/completed timestamps (its real lifecycle)", /Created \{when\(run\.created_at\)\}/.test(page) && /Completed \{when\(run\.completed_at\)\}/.test(page));
-ok("the parent link, when present, points at the owner-authorized parent result route", page.includes("href={`/applications/${id}/passes/${run.parent_run_id}`}"));
+ok("the parent link, when present, points at the owner-authorized parent result route", page.includes("href={`/systems/${id}/passes/${run.parent_run_id}`}"));
 // 02 Reviewed-plan provenance — REAL persisted binding only
 ok("reviewed-plan provenance comes ONLY from the persisted run->plan binding (getReviewedPlanByRunId)", /getReviewedPlanByRunId\(owner, runId\)/.test(page) && /export async function getReviewedPlanByRunId/.test(rpDb));
 ok("the reviewed-plan reader is owner-scoped over the existing run_id column (no new table/concept)", /\.eq\("run_id", runId\)\.eq\("user_id", norm\(owner\)\)/.test(rpDb));
@@ -213,8 +213,8 @@ for (const s of ["approved_by", "deployment_fp", "claim_fp", "role_refs"]) {
 }
 
 console.log("\n── Increment 6: cancellation restored on the run-control surface; result page stays read-only ──");
-const detail6 = readFileSync("app/rank/app/applications/[id]/page.tsx", "utf8");
-const cancelCtl = readFileSync("app/rank/app/applications/[id]/cancel-run-control.tsx", "utf8");
+const detail6 = readFileSync("app/rank/app/systems/[id]/page.tsx", "utf8");
+const cancelCtl = readFileSync("app/rank/app/systems/[id]/cancel-run-control.tsx", "utf8");
 const detailFlat = detail6.replace(/\n/g, " ");
 // The result page remains a read-only record: no cancel mutator, no cancel fetch; it only NAVIGATES to controls.
 ok("the result page still has no cancellation mutator and only navigates to controls", !/CancelRunButton|CancelRunControl/.test(page) && !/\/cancel/.test(shown) && /View run controls/.test(page));
@@ -223,7 +223,7 @@ ok("the detail page renders the cancel control ONLY for a genuinely active run t
 ok("the cancel control is gated so a completed/terminal record shows none (single, latestActive-gated usage)", (detail6.match(/<CancelRunControl\b/g) ?? []).length === 1 && before(detail6, "latestActive && caps.canLaunch", "<CancelRunControl"));
 // The control uses the EXISTING owner-checked route; it invents no new cancellation API and reuses no deleted file.
 ok("the control POSTs the existing owner-checked cancel route (no new API)", /fetch\(`\/api\/preflight\/runs\/\$\{encodeURIComponent\(runId\)\}\/cancel`, \{ method: "POST" \}\)/.test(cancelCtl));
-ok("the deleted result-page cancel mutator is not revived (cancel-run-button.tsx under passes/ is gone)", (() => { try { readFileSync("app/rank/app/applications/[id]/passes/[runId]/cancel-run-button.tsx", "utf8"); return false; } catch { return true; } })());
+ok("the deleted result-page cancel mutator is not revived (cancel-run-button.tsx under passes/ is gone)", (() => { try { readFileSync("app/rank/app/systems/[id]/passes/[runId]/cancel-run-button.tsx", "utf8"); return false; } catch { return true; } })());
 // Two-step explicit confirm: a first click only ARMS; only a distinct Confirm mutates (never on nav/first click).
 ok("cancellation is a two-step explicit confirm (arm, then Confirm cancel) — never on first click or navigation", /setAsked\(true\)/.test(cancelCtl) && /Confirm cancel/.test(cancelCtl) && /onClick=\{cancel\}/.test(cancelCtl) && before(cancelCtl, "setAsked(true)", "onClick={cancel}"));
 // Pending state prevents duplicate requests.
@@ -233,7 +233,7 @@ ok("success shows a truthful 'Cancellation requested' state and refreshes the se
 ok("failure is announced in an accessible live region; 401 routes to sign-in; 403 states the view-only cause", /role="status" aria-live="polite"/.test(cancelCtl) && /res\.status === 401/.test(cancelCtl) && /view-only access/.test(cancelCtl));
 
 console.log("\n── Increment 6: accessibility + responsive + performance closure (from the rendered review) ──");
-const copyBtn = readFileSync("app/rank/app/applications/[id]/passes/[runId]/copy-button.tsx", "utf8");
+const copyBtn = readFileSync("app/rank/app/systems/[id]/passes/[runId]/copy-button.tsx", "utf8");
 // a11y: copy success is announced in a polite live region without moving focus (name-change alone is not read).
 ok("the copy button announces success via a polite sr-only live region (focus is not stolen)", /role="status" aria-live="polite" className="sr-only"/.test(copyBtn) && /Copied to clipboard/.test(copyBtn) && !/\.focus\(\)/.test(copyBtn));
 // a11y: per-step pass/fail/not-run is available non-visually, not by icon + color alone.

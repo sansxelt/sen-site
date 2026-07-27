@@ -122,7 +122,7 @@ async function spyRun(selectedFlowIds: unknown, runId: string, deploymentUrl: st
     pickHealthRun([mk("active", "running", null, "2026-07-12T12:00:00Z"), mk("fullready", "completed", "ready", "2026-07-10T12:00:00Z", "full")])?.id === "active");
 
   // ── C + CTA: report UX source checks (server component helpers are file-local) ──
-  const report = readFileSync("app/rank/app/applications/[id]/passes/[runId]/page.tsx", "utf8");
+  const report = readFileSync("app/rank/app/systems/[id]/passes/[runId]/page.tsx", "utf8");
   // Design 02 (founder decision "unify on external"): the RESULT PAGE renders repair_verified through the
   // SHARED home-verdict translator, which delegates to toPublicDecision -> the public BLOCKED conclusion (a
   // targeted repair rerun is not the full verification). No teal, no green Verified pill; the scope is
@@ -135,9 +135,9 @@ async function spyRun(selectedFlowIds: unknown, runId: string, deploymentUrl: st
   // The overview + list now DELEGATE to the canonical translator (no TONE_REPAIR, no teal): repair_verified is
   // public Blocked, consistent with Home/Results/API/webhook, with the scope explained in the subline.
   ok("CANONICAL: the overview delegates repair_verified to the public translator (Blocked, no retired teal)",
-    (() => { const ov = readFileSync("app/rank/app/applications/[id]/page.tsx", "utf8"); return !/TONE_REPAIR|--accent-dim|--accent-border|#0A7B54/.test(ov) && /toPublicDecision\(latest\?\.state \?\? "completed", decision\)/.test(ov) && /Targeted repair check passed/.test(ov); })());
+    (() => { const ov = readFileSync("app/rank/app/systems/[id]/page.tsx", "utf8"); return !/TONE_REPAIR|--accent-dim|--accent-border|#0A7B54/.test(ov) && /toPublicDecision\(latest\?\.state \?\? "completed", decision\)/.test(ov) && /Targeted repair check passed/.test(ov); })());
   ok("CANONICAL: the applications list delegates repair_verified to the public translator (Blocked, no teal)",
-    (() => { const list = readFileSync("app/rank/app/applications/page.tsx", "utf8"); return !/--accent-dim|--accent-border|#0A7B54/.test(list) && /toPublicDecision\(run\.state, run\.decision\)/.test(list); })());
+    (() => { const list = readFileSync("app/rank/app/systems/page.tsx", "utf8"); return !/--accent-dim|--accent-border|#0A7B54/.test(list) && /toPublicDecision\(run\.state, run\.decision\)/.test(list); })());
   ok("C: the report states a full critical verification is still required", report.includes("full critical verification is still required before Vraelis can return Verified"));
   ok("CTA: the repair-verified report offers Run full critical verification", report.includes('scope="critical"') && report.includes("Run full critical verification"));
   // Evidence-first: each blocker shows its lineage (new here vs recurring from an earlier run) from the
@@ -147,7 +147,7 @@ async function spyRun(selectedFlowIds: unknown, runId: string, deploymentUrl: st
   const route = readFileSync("app/api/preflight/runs/[runId]/rerun/route.ts", "utf8");
   ok("the rerun route implements the critical scope from the contract's eligible critical flows",
     route.includes('scope === "critical"') && route.includes('priority === "critical"'));
-  const overview = readFileSync("app/rank/app/applications/[id]/page.tsx", "utf8");
+  const overview = readFileSync("app/rank/app/systems/[id]/page.tsx", "utf8");
   ok("the application overview keeps health via pickHealthRun and shows Latest repair separately",
     overview.includes("pickHealthRun(runs)") && overview.includes("Latest repair:"));
 
@@ -183,9 +183,9 @@ async function spyRun(selectedFlowIds: unknown, runId: string, deploymentUrl: st
     ok("a still-running run has no verdict at all", toPublicDecision("running", "ready") === null);
 
     const SURFACES = [
-      "app/rank/app/applications/[id]/passes/page.tsx",
-      "app/rank/app/applications/[id]/deployments/page.tsx",
-      "app/rank/app/applications/[id]/page.tsx",
+      "app/rank/app/systems/[id]/passes/page.tsx",
+      "app/rank/app/systems/[id]/deployments/page.tsx",
+      "app/rank/app/systems/[id]/page.tsx",
     ];
     for (const f of SURFACES) {
       const src = readFileSync(f, "utf8");

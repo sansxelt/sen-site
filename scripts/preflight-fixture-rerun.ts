@@ -120,7 +120,7 @@ async function main(): Promise<void> {
   console.log(`  scope:           ${scope}`);
   console.log(`  selected flows (${flowIds.length}):`);
   for (const id of flowIds) console.log(`    - ${id}  ${nameById.get(id) ?? ""}`);
-  console.log(`  report route:    https://app.vraelis.com/applications/${parent.applicationId}/passes/${created.runId}`);
+  console.log(`  report route:    https://app.vraelis.com/systems/${parent.applicationId}/passes/${created.runId}`);
   process.exit(0);
 }
 

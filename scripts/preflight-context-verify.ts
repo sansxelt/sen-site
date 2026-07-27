@@ -221,7 +221,7 @@ ok("approval outcome is decided by approveContract alone (pin failure can never 
 
 // ── Static: the Context tab is honest about migration 7 and the design rules ──
 console.log("\n── context tab static ──");
-const PAGE = "app/rank/app/applications/[id]/context/page.tsx";
+const PAGE = "app/rank/app/systems/[id]/context/page.tsx";
 const page = read(PAGE);
 ok("migration-7 notice present, word for word",
   page.includes("Context versioning is not active yet: apply")
@@ -247,7 +247,7 @@ ok("owner/member-gated server component (requirePreflightAppAccess or requirePre
 ok("all twelve source kinds are labeled", ["prompt", "prd", "requirements", "readme", "risks", "roles", "summary", "goal", "workflows", "data", "auth_expect", "billing_expect"].every((k) => new RegExp(`${k}: "`).test(page)));
 ok("no em dash, no middle dot, no emoji in the tab copy",
   !page.includes("—") && !page.includes("·") && !/[\u{1F300}-\u{1FAFF}]/u.test(page));
-const tabs = read("app/rank/app/applications/[id]/app-tabs.tsx");
+const tabs = read("app/rank/app/systems/[id]/app-tabs.tsx");
 ok("app tabs include Context -> /context", tabs.includes('label: "Context"') && tabs.includes('path: "/context"'));
 
 console.log(`\n${pass}/${pass + fail} passed`);

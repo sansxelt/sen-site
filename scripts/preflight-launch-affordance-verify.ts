@@ -18,9 +18,9 @@ const read = (...p: string[]) => fs.readFileSync(path.join(process.cwd(), ...p),
 const stripComments = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "").replace(/(\s)\/\/ .*$/gm, "$1");
 const readCode = (...p: string[]) => stripComments(read(...p));
 
-const OVERVIEW = path.join("app", "rank", "app", "applications", "[id]", "page.tsx");
-const REPORT = path.join("app", "rank", "app", "applications", "[id]", "passes", "[runId]", "page.tsx");
-const RERUN_BTN = path.join("app", "rank", "app", "applications", "[id]", "passes", "[runId]", "rerun-button.tsx");
+const OVERVIEW = path.join("app", "rank", "app", "systems", "[id]", "page.tsx");
+const REPORT = path.join("app", "rank", "app", "systems", "[id]", "passes", "[runId]", "page.tsx");
+const RERUN_BTN = path.join("app", "rank", "app", "systems", "[id]", "passes", "[runId]", "rerun-button.tsx");
 
 async function main(): Promise<void> {
   // ─────────────────────────────────────────────────────────────────────────────────────────────────────

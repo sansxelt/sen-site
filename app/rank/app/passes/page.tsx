@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requirePreflightOwner } from "@/lib/v-preflight-guard";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
-import { SetupRequired } from "../applications/setup-required";
+import { SetupRequired } from "../systems/setup-required";
 import { listAllRuns, type PassRow } from "@/lib/preflight/overview-db";
 import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
 import { runVerdict } from "@/lib/preflight/home-verdict";
@@ -80,7 +80,7 @@ function PassLine({ pass }: { pass: PassRow }) {
   const when = timeAgo(pass.completedAt ?? pass.createdAt);
   return (
     <Link
-      href={`/applications/${pass.applicationId}/passes/${pass.id}`}
+      href={`/systems/${pass.applicationId}/passes/${pass.id}`}
       style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 16px", textDecoration: "none", color: "inherit" }}
     >
       {/* The mark is driven by the PUBLIC tone, not the raw decision: a repair_verified row reads Blocked,
@@ -162,7 +162,7 @@ export default async function PassesPage() {
             Every verification run across your applications, newest first, grouped by the launch decision it produced.
           </p>
         </div>
-        <Link href="/applications/new" className="btn" style={{ flex: "none" }}>+ Connect app</Link>
+        <Link href="/systems/new" className="btn" style={{ flex: "none" }}>+ Connect app</Link>
       </div>
 
       {passes.length === 0 ? (
@@ -170,7 +170,7 @@ export default async function PassesPage() {
           <EmptyIcon d={I.shield} />
           <h3>Nothing verified yet</h3>
           <p>Connect an application and run a verification in a real browser to get a launch decision.</p>
-          <Link href="/applications/new" className="btn">Connect an app</Link>
+          <Link href="/systems/new" className="btn">Connect an app</Link>
         </div>
       ) : (
         <>

@@ -63,7 +63,7 @@ app/api/preflight/apps/[id]/contract/draft/route.ts   lib/preflight/reviewed-pla
 app/api/preflight/requirements/route.ts               lib/preflight/reviewed-plan.ts
 app/api/v1/verifications/[id]/route.ts                lib/preflight/requirements-for-run.ts  (new)
 app/api/v1/verifications/route.ts                     lib/preflight/runtime/targets-db.ts
-app/rank/app/applications/[id]/contract/labels.ts     lib/preflight/verification-lane.ts
+app/rank/app/systems/[id]/contract/labels.ts     lib/preflight/verification-lane.ts
 lib/preflight/contract-merge.ts                       lib/v-applications.ts
 lib/preflight/discovery-db.ts
 ```

@@ -102,7 +102,7 @@ export function NeedsAttention({ items }: { items: AttentionItem[] }) {
         {items.map(({ issue, repair, lastProven, systemVerdict }) => {
           const rep = repairLine(repair);
           const recurring = Boolean(issue.firstSeenRun && issue.lastSeenRun && issue.firstSeenRun !== issue.lastSeenRun);
-          const href = issue.applicationId ? `/applications/${issue.applicationId}/issues` : "/verifications";
+          const href = issue.applicationId ? `/systems/${issue.applicationId}/issues` : "/verifications";
           return (
             <Link key={issue.id} href={href}
               style={{ display: "block", padding: "13px 16px", border: "1px solid var(--line-2)", borderLeft: `3px solid ${SEV_COLOR[issue.severity] ?? "var(--fg-4)"}`, borderRadius: "var(--r-sm, 8px)", background: "var(--bg-1)", color: "inherit", textDecoration: "none" }}
@@ -151,7 +151,7 @@ export function SystemsTable({ rows }: { rows: SystemRow[] }) {
           <span>System</span><span>Guarantees</span><span>Latest result</span><span>Critical issues</span><span>Last proven</span>
         </div>
         {rows.map((s) => (
-          <Link key={s.id} href={`/applications/${s.id}`} className="vra-tbl__row" aria-label={`${s.name}, latest verification ${s.verdict.label}`}>
+          <Link key={s.id} href={`/systems/${s.id}`} className="vra-tbl__row" aria-label={`${s.name}, latest verification ${s.verdict.label}`}>
             <span style={{ minWidth: 0 }}>
               <span style={{ display: "block", fontSize: 13.5, fontWeight: 500, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name || "System"}</span>
               {s.deploymentUrl ? <DeploymentReference url={s.deploymentUrl} /> : null}
@@ -212,7 +212,7 @@ export function RecentVerificationsTable({ rows }: { rows: PassRow[] }) {
         </div>
         {rows.map((r) => {
           const v = runVerdict(r.state, r.decision);
-          const href = r.applicationId ? `/applications/${r.applicationId}/passes/${r.id}` : "/verifications";
+          const href = r.applicationId ? `/systems/${r.applicationId}/passes/${r.id}` : "/verifications";
           return (
             <Link key={r.id} href={href} className="vra-tbl__row" aria-label={`${v.label}, ${r.applicationName || "verification"}`}>
               <span><Pill v={v} /></span>

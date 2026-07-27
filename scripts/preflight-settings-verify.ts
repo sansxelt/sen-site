@@ -138,7 +138,7 @@ ok("no settings-path file UPDATEs v_preflight_runs (historical run rows, incl. d
   const runsWrites = [...apps.matchAll(/from\("v_preflight_runs"\)[\s\r\n]*\.(update|delete|upsert)/g)];
   return runsWrites.length === 0
     && !route.includes("v_preflight_runs")
-    && !stripComments(read("app/rank/app/applications/[id]/settings/edit-application.tsx")).includes("v_preflight_runs");
+    && !stripComments(read("app/rank/app/systems/[id]/settings/edit-application.tsx")).includes("v_preflight_runs");
 })());
 ok("recordDeployment (the write this feature triggers) is INSERT-only against v_deployments (S4 invariant holds)", (() => {
   const dep = stripComments(read("lib/preflight/deployments-db.ts"));
@@ -148,7 +148,7 @@ ok("recordDeployment (the write this feature triggers) is INSERT-only against v_
 
 // ── Static: the settings UI form (client edit, stay-on-settings, confirmation, honest states) ──
 console.log("\n── settings edit UI static ──");
-const FORM = "app/rank/app/applications/[id]/settings/edit-application.tsx";
+const FORM = "app/rank/app/systems/[id]/settings/edit-application.tsx";
 const form = read(FORM);
 const formStripped = stripComments(form);
 ok("client component that PATCHes the owner-gated route", form.startsWith('"use client"') && form.includes("method: \"PATCH\"") && form.includes("/api/preflight/apps/"));
@@ -169,7 +169,7 @@ ok("native saving / failure states (busy + inline error), no fake progress bar",
 
 // ── The settings page renders the edit form above the read-only sections it keeps ──
 console.log("\n── settings page wiring ──");
-const PAGE = "app/rank/app/applications/[id]/settings/page.tsx";
+const PAGE = "app/rank/app/systems/[id]/settings/page.tsx";
 const page = read(PAGE);
 ok("page renders <EditApplicationForm> seeded from the app + extras",
   page.includes("<EditApplicationForm") && page.includes("initial={{") && page.includes("environment: extras.environment"));
@@ -182,7 +182,7 @@ ok("no longer claims renaming or deletion is 'coming' (both are built now)",
 
 // The delete control (B3): calls the owner-scoped DELETE route, requires a typed name confirmation, and
 // never trusts the client for ownership (the server re-derives owner + returns 404 on a zero-row delete).
-const del = read("app/rank/app/applications/[id]/settings/delete-application.tsx");
+const del = read("app/rank/app/systems/[id]/settings/delete-application.tsx");
 ok("delete calls the DELETE /api/preflight/apps route (owner-scoped server-side)",
   del.includes('method: "DELETE"') && del.includes("/api/preflight/apps?id="));
 ok("delete requires a typed-name confirmation before it can fire (no accidental one-click delete)",

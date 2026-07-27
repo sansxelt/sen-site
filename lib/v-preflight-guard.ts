@@ -4,7 +4,7 @@ import { preflightEnabled } from "./v-preflight-flags";
 import { applicationAccess } from "./preflight/team-access";
 import type { Role } from "./v-workspace";
 
-// Server-side gate for every /applications/* page. Preflight is dark unless a flag is set (route access is the
+// Server-side gate for every /systems/* page. Preflight is dark unless a flag is set (route access is the
 // real security boundary — the nav item is separate), so a guessed URL redirects to the normal dashboard.
 // Returns the owner email (lowercased) or redirects to sign-in. redirect() throws, so callers get a
 // non-null string.

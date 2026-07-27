@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { isAppPath, legacyToNew, legacyRunsPath } from "./lib/app-routes";
+import { isAppPath, legacyToNew, legacyRunsPath, legacySystemsPath } from "./lib/app-routes";
 import { v6GroundAtTop, type Ground } from "./lib/v6-routes";
 import { stealthConfigured } from "./lib/stealth";
 
@@ -173,6 +173,11 @@ export default function proxy(req: NextRequest) {
     // target /passes never matches legacyRunsPath, so this cannot loop; runs BEFORE the product rewrite.
     const appHostRuns = legacyRunsPath(path);
     if (appHostRuns) return goAbs(req, `https://app.vraelis.com${appHostRuns}`);
+    // The same for the word that moved: /applications/* is now an old spelling of /systems/*, and on this
+    // host it must be redirected before the product rewrite below, which would otherwise try to serve a
+    // directory that no longer exists. legacyRunsPath already ran, so a link with both dead words is done.
+    const appHostSystems = legacySystemsPath(path);
+    if (appHostSystems) return goAbs(req, `https://app.vraelis.com${appHostSystems}`);
     // /developers means two different things, on purpose, and the host is what decides which.
     //
     //   vraelis.com/developers      public documentation, no sign-in, indexable
@@ -236,6 +241,16 @@ export default function proxy(req: NextRequest) {
   if (cleanRuns && !path.startsWith("/app")) {
     if (isProd) return goAbs(req, `https://app.vraelis.com${cleanRuns}`);
     const url = req.nextUrl.clone(); url.pathname = cleanRuns;                // query preserved by clone()
+    return NextResponse.redirect(url, 308);
+  }
+  // /applications/* -> /systems/* (308). The pages moved; this is what keeps every bookmark, webhook
+  // payload and shared report URL emitted before the move landing on them. Runs AFTER legacyRunsPath so a
+  // link carrying both dead words is corrected in one hop, and BEFORE the isAppPath rewrite because
+  // "applications" is still in APP_ROOTS and would otherwise rewrite into a directory that no longer exists.
+  const cleanSystems = legacySystemsPath(path);
+  if (cleanSystems) {
+    if (isProd) return goAbs(req, `https://app.vraelis.com${cleanSystems}`);
+    const url = req.nextUrl.clone(); url.pathname = cleanSystems;             // query preserved by clone()
     return NextResponse.redirect(url, 308);
   }
   if (isAppPath(path) && !path.startsWith("/app")) {

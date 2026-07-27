@@ -3,14 +3,14 @@ import type { CSSProperties } from "react";
 import Link from "next/link";
 import { requirePreflightOwner } from "@/lib/v-preflight-guard";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
-import { SetupRequired } from "../applications/setup-required";
+import { SetupRequired } from "../systems/setup-required";
 import { listRepairs, type RepairRow } from "@/lib/preflight/overview-db";
 import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "Repairs" };
 
 // Relative "3m ago / 4h ago / Jul 2". Server component rendered once per request, so a wall-clock
-// relative time carries no hydration-mismatch risk. (Same helper as app/rank/app/applications/page.tsx.)
+// relative time carries no hydration-mismatch risk. (Same helper as app/rank/app/systems/page.tsx.)
 function timeAgo(iso: string | null | undefined): string {
   if (!iso) return "";
   const d = new Date(iso);
@@ -35,7 +35,7 @@ const STATUS_STYLE: Record<string, { label: string; color: string; bg: string; b
   failed: { label: "Failed", color: "var(--stop-ink)", bg: "var(--stop-wash)", border: "var(--stop-line)" },
 };
 
-// Severity pill colours match the run report (app/rank/app/applications/[id]/passes/[runId]/page.tsx).
+// Severity pill colours match the run report (app/rank/app/systems/[id]/passes/[runId]/page.tsx).
 const SEV_COLOR: Record<string, string> = { critical: "var(--err)", high: "var(--wait-ink)", medium: "var(--fg-3)", low: "var(--fg-4)" };
 const SEV_LABEL: Record<string, string> = { critical: "Critical", high: "High", medium: "Medium", low: "Low" };
 
@@ -47,7 +47,7 @@ function RepairRowItem({ repair }: { repair: RepairRow }) {
   // Verified repairs with a recorded rerun deep-link to that verification run; everything else opens the app.
   const verifiedRun = repair.status === "verified" && repair.verificationRunId;
   const href = repair.applicationId
-    ? (verifiedRun ? `/applications/${repair.applicationId}/passes/${repair.verificationRunId}` : `/applications/${repair.applicationId}`)
+    ? (verifiedRun ? `/systems/${repair.applicationId}/passes/${repair.verificationRunId}` : `/systems/${repair.applicationId}`)
     : null;
   const linkLabel = verifiedRun ? "View verification" : "Open app";
 

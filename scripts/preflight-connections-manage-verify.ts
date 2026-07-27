@@ -243,16 +243,16 @@ ok("secrets audit events never carry masks or credentials",
 
 // ── Static: the management UI stays honest ──
 console.log("\n── management UI static ──");
-const tabs = read("app/rank/app/applications/[id]/app-tabs.tsx");
+const tabs = read("app/rank/app/systems/[id]/app-tabs.tsx");
 ok("app tabs include Connections -> /settings/connections", tabs.includes('"/settings/connections"') && tabs.includes('label: "Connections"'));
-const page = read("app/rank/app/applications/[id]/settings/connections/page.tsx");
+const page = read("app/rank/app/systems/[id]/settings/connections/page.tsx");
 ok("management page is owner/member-gated (requirePreflightAppAccess or requirePreflightOwner, + getApplication)", (page.includes("requirePreflightAppAccess(") || page.includes("requirePreflightOwner(")) && page.includes("getApplication("));
 ok("management page renders the audit history from v_events (last 10)", page.includes("recentConnectionEvents(") && page.includes("Connection activity"));
 ok("management page has an honest empty state for the audit trail", page.includes("No connection activity recorded yet"));
-const mgr = read("app/rank/app/applications/[id]/settings/connections/connections-manager.tsx");
+const mgr = read("app/rank/app/systems/[id]/settings/connections/connections-manager.tsx");
 ok("cards state the truthful feature use and the never-accesses promise", mgr.includes("Used by Vraelis for") && mgr.includes("Data Vraelis never accesses"));
 ok("coming-later providers render as chips (shared ComingLater), never buttons",
-  mgr.includes("<ComingLater") && mgr.includes("COMING_LATER_PROVIDERS") && !/function ComingLater[\s\S]*?<button/.test(read("app/rank/app/applications/_connections/brand.tsx")));
+  mgr.includes("<ComingLater") && mgr.includes("COMING_LATER_PROVIDERS") && !/function ComingLater[\s\S]*?<button/.test(read("app/rank/app/systems/_connections/brand.tsx")));
 ok("empty / busy / success / failure states all render natively",
   mgr.includes("No connections recorded") && mgr.includes('"Checking"') && mgr.includes('role={msg.kind === "err" ? "alert" : "status"}'));
 ok("disconnect and revoke require an inline confirm step", mgr.includes("confirming") && mgr.includes("Cancel"));
@@ -262,12 +262,12 @@ ok("edits echo expected_updated_at (stale edits surface as a conflict, never a s
 ok("manager reuses the SHARED forms (no duplicated form components)",
   mgr.includes('from "../../../_connections/forms"') && !mgr.includes("function TwoFieldForm") && !mgr.includes("function GithubForm"));
 ok("connect workspace reuses the same shared forms (extraction, not duplication)", (() => {
-  const cf = read("app/rank/app/applications/new/connect-form.tsx");
+  const cf = read("app/rank/app/systems/new/connect-form.tsx");
   return cf.includes('from "../_connections/forms"') && !cf.includes("function TwoFieldForm") && !cf.includes("function GithubForm") && !cf.includes("const BRAND_PATHS");
 })());
 ok("management surface never renders an em dash or middle dot (copy rule)",
   ![page, mgr].some((s) => s.includes("—") || s.includes("·")));
-const settings = read("app/rank/app/applications/[id]/settings/page.tsx");
+const settings = read("app/rank/app/systems/[id]/settings/page.tsx");
 ok("settings page superseded: compact count + Manage connections link, old read-only section gone",
   settings.includes("Manage connections") && settings.includes("/settings/connections") && !settings.includes("Managed at connect time for now"));
 

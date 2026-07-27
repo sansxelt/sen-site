@@ -46,7 +46,7 @@ const ALLOWLIST: { file: string; allowed: string }[] = [
     allowed: 'retained-internal payload VERDICT map: "READY"/"NEEDS REVIEW"/"REPAIR VERIFIED"/"BLOCKED" as API field VALUES keyed by the internal enum; the display layer translates' },
   { file: "app/api/preflight/apps/[id]/api-runs/list/route.ts",
     allowed: "same retained-internal payload VERDICT map as the [runId] route" },
-  { file: "app/rank/app/applications/[id]/api-runtime/api-workspace.tsx",
+  { file: "app/rank/app/systems/[id]/api-runtime/api-workspace.tsx",
     allowed: "payload strings appear as translation-map KEYS only (payload verdict -> public verdict / colour); the rendered strings are the public vocabulary" },
   { file: "lib/preflight/oauth/vercel-deploy.ts",
     allowed: 'Vercel deployment-state "READY" (platform vocabulary in the deployments query, not a Vraelis verdict)' },
@@ -105,7 +105,7 @@ const stripped = new Map(surfaces.map((p) => [p, stripComments(read(p))]));
   }
   // api-workspace.tsx: the payload strings may appear as translation-map KEYS only (each quoted
   // occurrence is immediately followed by a colon).
-  const ws = stripComments(read("app/rank/app/applications/[id]/api-runtime/api-workspace.tsx"));
+  const ws = stripComments(read("app/rank/app/systems/[id]/api-runtime/api-workspace.tsx"));
   const keysOnly = (label: string) =>
     (ws.match(new RegExp(`"${label}"`, "g")) ?? []).length === (ws.match(new RegExp(`"${label}"\\s*:`, "g")) ?? []).length;
   ok("allowlist form: api-workspace uses payload strings as translation-map keys only",

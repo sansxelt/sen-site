@@ -132,7 +132,7 @@ function main() {
     ["bearer", "api_key", "basic"].every((s) => ["bearer", "api_key", "basic"].includes(s)) && cv.ok === true);
 
   console.log("\n── general-purpose: NO canary/fixture/mode vocabulary in the customer product ──");
-  const CUSTOMER_FILES = ["lib/preflight/runtime/api-steps.ts", "lib/preflight/runtime/api-readiness.ts", "app/rank/app/applications/[id]/api-runtime/api-workspace.tsx"];
+  const CUSTOMER_FILES = ["lib/preflight/runtime/api-steps.ts", "lib/preflight/runtime/api-readiness.ts", "app/rank/app/systems/[id]/api-runtime/api-workspace.tsx"];
   for (const f of CUSTOMER_FILES) {
     const s = readFileSync(f, "utf8").toLowerCase().split("\n").filter((l) => !l.trim().startsWith("//")).join("\n");
     const bad = ["broken", "partially_fixed", "canary", "fixture", "\"mode\""].filter((t) => s.includes(t));
@@ -299,7 +299,7 @@ function vocabularyContainmentTests() {
     "app/api/preflight/apps/[id]/api-runs/[runId]/route.ts",
     "app/api/preflight/apps/[id]/api-runs/list/route.ts",
     "app/api/preflight/apps/[id]/api-preview/route.ts",
-    "app/rank/app/applications/[id]/api-runtime/api-workspace.tsx",
+    "app/rank/app/systems/[id]/api-runtime/api-workspace.tsx",
   ];
   // These internal tokens must never be RENDERED to a customer. Scan only NON-COMMENT, non-map-key content:
   // strip // line comments and /* */ blocks so a doc-comment mentioning "no fixture terms" isn't a false hit.

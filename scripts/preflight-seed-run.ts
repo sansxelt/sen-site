@@ -198,7 +198,7 @@ async function main(): Promise<void> {
   console.log(`  application id:  ${applicationId}`);
   console.log(`  contract id:     ${contractId}  (version ${contractVersion})`);
   console.log(`  run id:          ${runId}  (state: queued, ${created.flowCount} flows)`);
-  console.log(`  report route:    https://app.vraelis.com/applications/${applicationId}/passes/${runId}`);
+  console.log(`  report route:    https://app.vraelis.com/systems/${applicationId}/passes/${runId}`);
   console.log("\nStart the worker in another terminal if it is not running:  npm run preflight:worker");
   console.log("Then open the report route once the worker finalizes the run.");
   process.exit(0);

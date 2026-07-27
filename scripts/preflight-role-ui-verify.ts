@@ -83,20 +83,20 @@ for (const f of ["app/api/preflight/runs/[runId]/route.ts", "app/api/preflight/r
 console.log("\n── UI affordance gating (structural) ──");
 {
   const pages = [
-    "app/rank/app/applications/[id]/page.tsx",
-    "app/rank/app/applications/[id]/contract/page.tsx",
-    "app/rank/app/applications/[id]/settings/page.tsx",
-    "app/rank/app/applications/[id]/settings/connections/page.tsx",
-    "app/rank/app/applications/[id]/deployments/page.tsx",
-    "app/rank/app/applications/[id]/passes/[runId]/page.tsx",
-    "app/rank/app/applications/[id]/api-runtime/page.tsx",
+    "app/rank/app/systems/[id]/page.tsx",
+    "app/rank/app/systems/[id]/contract/page.tsx",
+    "app/rank/app/systems/[id]/settings/page.tsx",
+    "app/rank/app/systems/[id]/settings/connections/page.tsx",
+    "app/rank/app/systems/[id]/deployments/page.tsx",
+    "app/rank/app/systems/[id]/passes/[runId]/page.tsx",
+    "app/rank/app/systems/[id]/api-runtime/page.tsx",
   ];
   // Every one of these pages must compute the capability object from the resolved role.
   for (const p of pages) {
     ok(`${p.split("/").slice(-2).join("/")} derives capabilities from the resolved role`, /capabilities\(access\?\.role\)/.test(read(p)) || /capabilities\(/.test(read(p)));
   }
   // ── Per-surface: the exact affordance is gated on the exact flag (structural regression) ──
-  const app = (p: string) => read(`app/rank/app/applications/[id]/${p}`);
+  const app = (p: string) => read(`app/rank/app/systems/[id]/${p}`);
 
   // OVERVIEW + CommandCenter: launch gated on canLaunch, and the CommandCenter receives canLaunch.
   const overview = app("page.tsx");

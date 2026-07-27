@@ -26,7 +26,7 @@ function baseUrl(req: Request): string {
 }
 
 function backToConnections(req: Request, appId: string, params: string): NextResponse {
-  return NextResponse.redirect(`${baseUrl(req)}/applications/${appId}/settings/connections?${params}`, 302);
+  return NextResponse.redirect(`${baseUrl(req)}/systems/${appId}/settings/connections?${params}`, 302);
 }
 
 export async function GET(req: Request, ctx: { params: Promise<{ id: string; provider: string }> }) {

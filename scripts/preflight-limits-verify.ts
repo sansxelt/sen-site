@@ -111,7 +111,7 @@ for (const [name, gateFile, bodyFile, handoff] of [
 // ── static: the report page maps the code to a user sentence, keeping the generic line as fallback ──
 {
   // (path updated after the shell rename: apps/[id]/runs/[runId] -> applications/[id]/passes/[runId])
-  const src = read("app", "rank", "app", "applications", "[id]", "passes", "[runId]", "page.tsx");
+  const src = read("app", "rank", "app", "systems", "[id]", "passes", "[runId]", "page.tsx");
   ok("report page has a FAILURE_LINE map covering the classifier codes", ["provider_auth_failed", "provider_quota", "provider_capacity", "provider_unavailable", "infra_misconfigured", "session_timeout"].every((c) => src.includes(c)));
   ok("report page keeps the generic line for unknown/absent codes", src.includes("This verification stopped before it reached a conclusion."));
 }
@@ -119,13 +119,13 @@ for (const [name, gateFile, bodyFile, handoff] of [
 // ── static: the launch button no longer guesses a price (cost comes from the gate-parity PassPreview) ──
 {
   // (path updated after the shell rename: apps/[id] -> applications/[id])
-  const src = read("app", "rank", "app", "applications", "[id]", "launch-button.tsx");
+  const src = read("app", "rank", "app", "systems", "[id]", "launch-button.tsx");
   // HF1: the old "(N credits)" suffix was the LEGACY model and wrong under pass pricing; it was removed so
   // the button can never show a price that contradicts the actual charge. The authoritative cost is the
   // PassPreview panel (same gate as launch), rendered beside the button on the Overview + Contract tab.
   ok("launch button does NOT append a hardcoded credit count", !/credit\$\{flowIds\.length/.test(src) && !/flowIds\.length[\s\S]{0,40}credit/.test(src));
   ok("cost transparency comes from PassPreview beside the launch button (Overview)",
-    read("app", "rank", "app", "applications", "[id]", "page.tsx").includes("<PassPreview"));
+    read("app", "rank", "app", "systems", "[id]", "page.tsx").includes("<PassPreview"));
   ok("launch button maps runs_paused + daily_limit inline", src.includes("runs_paused") && src.includes("daily_limit"));
 }
 

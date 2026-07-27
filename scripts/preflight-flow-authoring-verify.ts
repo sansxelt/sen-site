@@ -261,10 +261,10 @@ ok("the route imports validateSteps from the pure flow-steps model", /import \{ 
 
 // ══ 4. STATIC: the UI ══════════════════════════════════════════════════════════════════════════════════
 console.log("\n── 4. UI: draft-only flow authoring, read-only when approved, no password field, on-design ──");
-const editor = read("app/rank/app/applications/[id]/contract/contract-editor.tsx");
-const flowsSection = read("app/rank/app/applications/[id]/contract/flows-section.tsx");
-const flowEditor = read("app/rank/app/applications/[id]/contract/flow-editor.tsx");
-const page = read("app/rank/app/applications/[id]/contract/page.tsx");
+const editor = read("app/rank/app/systems/[id]/contract/contract-editor.tsx");
+const flowsSection = read("app/rank/app/systems/[id]/contract/flows-section.tsx");
+const flowEditor = read("app/rank/app/systems/[id]/contract/flow-editor.tsx");
+const page = read("app/rank/app/systems/[id]/contract/page.tsx");
 ok("the draft editor renders the Flows section", editor.includes("<FlowsSection"));
 ok("the draft editor passes flows + roles down to the Flows section", /<FlowsSection contractId=\{contractId\} initial=\{flows\} roles=\{roles\}/.test(editor));
 ok("the page passes flows + roles to the draft ContractEditor", /<ContractEditor[^>]*flows=\{flows\} roles=\{roles\}/.test(page));
@@ -292,7 +292,7 @@ ok("the editor validates step completeness client-side before saving (stepIncomp
   flowEditor.includes("stepIncompleteReason") && /for \(let i = 0; i < steps\.length; i\+\+\)/.test(flowEditor));
 // The pass-preview panel reads the plan NAME (plan.name), never interpolates the PlanV1 object (which would
 // render "[object Object]" to a subscriber). Regression lock for the review fix.
-const passPreview = read("app/rank/app/applications/[id]/contract/pass-preview.tsx");
+const passPreview = read("app/rank/app/systems/[id]/contract/pass-preview.tsx");
 ok("the pass preview renders decision.plan.name, never the raw plan object",
   passPreview.includes("decision.plan.name") && !/\$\{decision\.plan\}/.test(passPreview));
 ok("the FlowsSection has an honest empty state", flowsSection.includes("No flows yet"));

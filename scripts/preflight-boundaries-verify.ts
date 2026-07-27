@@ -227,7 +227,7 @@ async function spyRun(input: { runId: string; deploymentUrl: string; flows: Flow
     pgSrc.includes('select("test_boundaries")') && pgSrc.includes("normalizeBoundaries(") && /catch\s*\{\s*\/\*\s*boundaries stay null/.test(pgSrc));
   ok("static: Postgres failRun treats blocked_by_policy as terminal", pgSrc.includes('code === "blocked_by_policy"'));
   ok("static: Postgres issue reconciliation skips blocked_by_policy flows", pgSrc.includes('result.state === "blocked_by_policy"'));
-  const report = readFileSync("app/rank/app/applications/[id]/passes/[runId]/page.tsx", "utf8");
+  const report = readFileSync("app/rank/app/systems/[id]/passes/[runId]/page.tsx", "utf8");
   ok("static: report page has the muted 'Blocked by policy' pill", report.includes('"blocked_by_policy"') && report.includes('"Blocked by policy"'));
   ok("static: report page has the blocked_by_policy failure line",
     report.includes("your test boundaries do not permit an action they require"));

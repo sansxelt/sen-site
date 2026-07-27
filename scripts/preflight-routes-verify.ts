@@ -5,7 +5,7 @@
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { before } from "./_source-order";
 import { join } from "node:path";
-import { legacyToNew, isAppPath, appHostUrl, legacyRunsPath } from "../lib/app-routes";
+import { legacyToNew, isAppPath, appHostUrl, legacyRunsPath, legacySystemsPath } from "../lib/app-routes";
 import { getSafeRedirectPath } from "../lib/auth-ui";
 
 let pass = 0, fail = 0;
@@ -15,10 +15,14 @@ const ok = (n: string, c: boolean, d = "") => { console.log(`${c ? "PASS" : "FAI
 const MAP: [string, string][] = [
   ["/app", "/"],
   ["/app/", "/"],
-  ["/app/apps", "/applications"],
-  ["/app/apps/X/runs/Y", "/applications/X/passes/Y"],
-  ["/app/apps/abc123", "/applications/abc123"],
-  ["/app/apps/abc123/contract", "/applications/abc123/contract"],
+  // "apps" now lands on /systems, not /applications. Both were the canonical word once; only one is now,
+  // and an old link should not have to be redirected twice to reach the page it always meant.
+  ["/app/apps", "/systems"],
+  ["/app/apps/X/runs/Y", "/systems/X/passes/Y"],
+  ["/app/apps/abc123", "/systems/abc123"],
+  ["/app/apps/abc123/contract", "/systems/abc123/contract"],
+  ["/app/applications/abc123", "/systems/abc123"],
+  ["/app/applications/abc123/runs/r1", "/systems/abc123/passes/r1"],
   ["/app/audit", "/activity"],
   ["/app/api-keys", "/api"],
   ["/app/team", "/team"],
@@ -52,26 +56,61 @@ for (const p of ["/pricing", "/", "/signin", "/demo", "/how-it-works", "/contact
 }
 
 // ── legacyRunsPath: the CLEAN-path /runs -> /passes redirect (distinct from the /app-prefix mapping) ──
-ok("legacyRunsPath /applications/X/runs -> /applications/X/passes",
-  legacyRunsPath("/applications/X/runs") === "/applications/X/passes");
-ok("legacyRunsPath /applications/X/runs/Y -> /applications/X/passes/Y",
-  legacyRunsPath("/applications/X/runs/Y") === "/applications/X/passes/Y");
+ok("legacyRunsPath /systems/X/runs -> /systems/X/passes",
+  legacyRunsPath("/systems/X/runs") === "/systems/X/passes");
+ok("legacyRunsPath /systems/X/runs/Y -> /systems/X/passes/Y",
+  legacyRunsPath("/systems/X/runs/Y") === "/systems/X/passes/Y");
 ok("legacyRunsPath preserves a real id + runId",
-  legacyRunsPath("/applications/abc123/runs/run_789") === "/applications/abc123/passes/run_789");
-ok("legacyRunsPath /applications/X/passes -> null (the target must NOT match, so no redirect loop)",
-  legacyRunsPath("/applications/X/passes") === null);
-ok("legacyRunsPath /applications/X/passes/Y -> null (no loop on the report page either)",
-  legacyRunsPath("/applications/X/passes/Y") === null);
-ok("legacyRunsPath leaves other application tabs alone",
-  legacyRunsPath("/applications/X/contract") === null && legacyRunsPath("/applications/X/deployments") === null);
+  legacyRunsPath("/systems/abc123/runs/run_789") === "/systems/abc123/passes/run_789");
+// TWO DEAD WORDS IN ONE URL, CORRECTED IN ONE HOP. Every share page and webhook payload emitted
+// /applications/<id>/runs/<run> for months. Answering with /systems/<id>/runs would be technically
+// progress and practically a second redirect for the same click.
+ok("legacyRunsPath accepts the OLD first segment and answers with the canonical one",
+  legacyRunsPath("/applications/abc123/runs/run_789") === "/systems/abc123/passes/run_789"
+  && legacyRunsPath("/applications/X/runs") === "/systems/X/passes");
+ok("legacyRunsPath /systems/X/passes -> null (the target must NOT match, so no redirect loop)",
+  legacyRunsPath("/systems/X/passes") === null);
+ok("legacyRunsPath /systems/X/passes/Y -> null (no loop on the report page either)",
+  legacyRunsPath("/systems/X/passes/Y") === null);
+ok("legacyRunsPath leaves other system tabs alone",
+  legacyRunsPath("/systems/X/contract") === null && legacyRunsPath("/systems/X/deployments") === null);
 ok("legacyRunsPath ignores a deeper/unknown shape rather than guessing",
-  legacyRunsPath("/applications/X/runs/Y/extra") === null);
-ok("legacyRunsPath ignores non-application paths",
-  legacyRunsPath("/runs") === null && legacyRunsPath("/pricing") === null && legacyRunsPath("/applications") === null);
+  legacyRunsPath("/systems/X/runs/Y/extra") === null);
+ok("legacyRunsPath ignores non-system paths",
+  legacyRunsPath("/runs") === null && legacyRunsPath("/pricing") === null && legacyRunsPath("/systems") === null);
 // The proxy carries the query string itself (goAbs sets url.search; the localhost clone keeps it), so
 // legacyRunsPath is path-only by design: the query is never encoded into its return value.
 ok("legacyRunsPath is path-only (query is the proxy's job, never baked into the mapping)",
-  legacyRunsPath("/applications/X/runs") === "/applications/X/passes" && !legacyRunsPath("/applications/X/runs")!.includes("?"));
+  legacyRunsPath("/systems/X/runs") === "/systems/X/passes" && !legacyRunsPath("/systems/X/runs")!.includes("?"));
+
+// ── legacySystemsPath: /applications/* -> /systems/*, the last leg of the rename ──
+//
+// The pages MOVED. Until this shipped, /systems was a file that re-exported /applications and the same
+// screen answered at two addresses; now only one directory exists, so every old address has to be carried
+// across or it 404s. These assertions are the carry.
+ok("legacySystemsPath /applications -> /systems", legacySystemsPath("/applications") === "/systems");
+ok("legacySystemsPath preserves the rest of the path",
+  legacySystemsPath("/applications/abc123") === "/systems/abc123"
+  && legacySystemsPath("/applications/abc123/passes/run_789") === "/systems/abc123/passes/run_789"
+  && legacySystemsPath("/applications/abc123/settings/connections") === "/systems/abc123/settings/connections");
+ok("legacySystemsPath -> null for the canonical word (this is what stops the 308 looping)",
+  legacySystemsPath("/systems") === null && legacySystemsPath("/systems/abc123/passes/r1") === null);
+ok("legacySystemsPath -> null for everything that is not the old prefix",
+  legacySystemsPath("/pricing") === null && legacySystemsPath("/passes") === null
+  && legacySystemsPath("/") === null && legacySystemsPath("/app/applications") === null);
+// A path that merely STARTS with the letters is not the prefix. Without the trailing slash this would
+// rewrite /applications-archive into /systems-archive and invent a route.
+ok("legacySystemsPath does not match a longer first segment",
+  legacySystemsPath("/applicationsx") === null && legacySystemsPath("/applications-archive") === null);
+ok("legacySystemsPath is path-only (the proxy carries the query, same as legacyRunsPath)",
+  !legacySystemsPath("/applications/abc123")!.includes("?"));
+// THE PAGES ARE GONE FROM THE OLD DIRECTORY, which is the fact that makes the redirect load-bearing rather
+// than cosmetic. If the tree ever came back, /applications would serve again and this whole mapping would
+// quietly stop being the thing that keeps old links alive.
+ok("the old route directory no longer exists (so the redirect is what serves those URLs)",
+  !existsSync("app/rank/app/applications"));
+ok("the tree it moved to does exist", existsSync("app/rank/app/systems/page.tsx")
+  && existsSync("app/rank/app/systems/[id]/passes/[runId]/page.tsx"));
 
 // ── Static: the proxy wires the clean /runs -> /passes redirect BEFORE the product rewrite, on both hosts ──
 {
@@ -91,18 +130,45 @@ ok("legacyRunsPath is path-only (query is the proxy's job, never baked into the 
   })());
   ok("proxy uses a 308 for the clean /runs redirect (permanent, method-preserving)",
     proxySrc.includes("NextResponse.redirect(url, 308)") && /goAbs\(req, `https:\/\/app\.vraelis\.com\$\{(appHostRuns|cleanRuns)\}`\)/.test(proxySrc));
+
+  // THE SAME WIRING FOR THE WORD THAT MOVED, and the ordering matters twice over.
+  //
+  // "applications" is still in APP_ROOTS, so isAppPath() answers true for it and the rewrite below would
+  // happily try to serve /rank/app/applications, a directory that no longer exists. The redirect has to
+  // win. And it has to run AFTER legacyRunsPath, or a link carrying both dead words gets corrected one
+  // word per round trip.
+  ok("proxy imports legacySystemsPath", proxySrc.includes("legacySystemsPath"));
+  ok("proxy redirects /applications on the app host before the product rewrite", (() => {
+    const iSys = proxySrc.indexOf("legacySystemsPath(path)");
+    const iRewrite = proxySrc.indexOf('"/rank/app" + (path === "/"');
+    return iSys !== -1 && iRewrite !== -1 && iSys < iRewrite;
+  })());
+  ok("proxy redirects /applications on the main host before the isAppPath rewrite", (() => {
+    const iSys = proxySrc.indexOf("const cleanSystems = legacySystemsPath(path)");
+    const iIsApp = proxySrc.indexOf("if (isAppPath(path) && !path.startsWith");
+    return iSys !== -1 && iIsApp !== -1 && iSys < iIsApp;
+  })());
+  ok("the /runs correction runs first, so a doubly-legacy URL costs one hop and not two", (() => {
+    const iRuns = proxySrc.indexOf("const cleanRuns = legacyRunsPath(path)");
+    const iSys = proxySrc.indexOf("const cleanSystems = legacySystemsPath(path)");
+    return iRuns !== -1 && iSys !== -1 && iRuns < iSys;
+  })());
+  ok("the /applications redirect is a 308 on both hosts",
+    /goAbs\(req, `https:\/\/app\.vraelis\.com\$\{(appHostSystems|cleanSystems)\}`\)/.test(proxySrc)
+    && /cleanSystems[\s\S]{0,200}NextResponse\.redirect\(url, 308\)/.test(proxySrc));
 }
 
 // ── Static: no active PAGE link points at a /runs REPORT route (customer-facing nav uses /passes now) ──
 // The report route moved /runs -> /passes. A page Link/href/router.push/redirect to
-// /applications/<id>/runs would 404 or (via the redirect) cost a round trip; every such link must be
+// /systems/<id>/runs would 404 or (via the redirect) cost a round trip; every such link must be
 // /passes. The API namespace (/api/preflight/.../runs) and the developers page code SAMPLE (an API call)
 // are the real API and are exempt.
 {
   const runLinkOffenders: string[] = [];
-  // A customer-facing link to the run report page: href/Link/push/redirect ending at an application's
-  // /runs, i.e. "/applications/<something>/runs" NOT under /api/.
-  const reportLink = /["'`]\/applications\/[^"'`]*\/runs(\/[^"'`]*)?["'`]/g;
+  // A customer-facing link to the run report page: href/Link/push/redirect ending at a system's /runs.
+  // BOTH first segments, because the directory rename did not delete the old word from anyone's fingers:
+  // a link written as /applications/<id>/runs now costs two redirects, and this is the check that says so.
+  const reportLink = /["'`]\/(systems|applications)\/[^"'`]*\/runs(\/[^"'`]*)?["'`]/g;
   for (const dir of ["app", "components"]) {
     for (const file of walk(dir)) {
       if (!/\.(tsx|ts)$/.test(file)) continue;
@@ -113,7 +179,7 @@ ok("legacyRunsPath is path-only (query is the proxy's job, never baked into the 
       reportLink.lastIndex = 0;
     }
   }
-  ok("no active PAGE link points at a /applications/<id>/runs report route (must be /passes)",
+  ok("no active PAGE link points at a /systems/<id>/runs report route (must be /passes)",
     runLinkOffenders.length === 0, runLinkOffenders.join(", "));
 }
 
@@ -211,7 +277,7 @@ ok("the retired share stubs use the one shared social card",
 // test that pins an implementation detail cannot tell you the implementation is wrong.
 {
   const guard = readFileSync("lib/v-preflight-guard.ts", "utf8");
-  const teamPage = readFileSync("app/rank/app/applications/[id]/team/page.tsx", "utf8");
+  const teamPage = readFileSync("app/rank/app/systems/[id]/team/page.tsx", "utf8");
   const code = (t: string) => t.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
 
   ok("the guard does not wrap its signin callback in an absolute URL",
@@ -222,7 +288,7 @@ ok("the retired share stubs use the one shared social card",
   // The property itself, end to end, in the mode where it broke.
   const prev = process.env.VERCEL_ENV;
   process.env.VERCEL_ENV = "production";
-  const deep = "/applications/abc123/team";
+  const deep = "/systems/abc123/team";
   const survives = getSafeRedirectPath(deep);
   const absoluteWouldBe = getSafeRedirectPath(appHostUrl(deep));
   process.env.VERCEL_ENV = prev;

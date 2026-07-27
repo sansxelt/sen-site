@@ -54,7 +54,7 @@ ok("home-verdict does NOT reintroduce a display-only repair_verified -> Verified
 
 console.log("\n── the surfaces render through the shared delegate ──");
 const rec = readFileSync("app/rank/app/_components/home-records.tsx", "utf8");
-const page = readFileSync("app/rank/app/applications/[id]/passes/[runId]/page.tsx", "utf8");
+const page = readFileSync("app/rank/app/systems/[id]/passes/[runId]/page.tsx", "utf8");
 ok("Home records render through runVerdict (the shared delegate)", /runVerdict\(/.test(rec) && /from "@\/lib\/preflight\/home-verdict"/.test(rec));
 ok("the result page renders the conclusion through runVerdict", /runVerdict\(run\.state, run\.decision\)/.test(page));
 ok("the result page never maps repair_verified to a Verified label", !/repair_verified[\s\S]{0,40}"Verified"/.test(page) && !/repair_verified[\s\S]{0,40}Verified conclusion/.test(page));
@@ -66,8 +66,8 @@ ok("the result page keeps the parent record separate and unchanged", /The earlie
 ok("no surface renders the internal REPAIR VERIFIED term", !/REPAIR VERIFIED/.test(page) && !/REPAIR VERIFIED/.test(rec));
 
 console.log("\n── EVERY authenticated surface renders repair_verified consistently (list, detail, Home, result) ──");
-const list = readFileSync("app/rank/app/applications/page.tsx", "utf8");
-const detail = readFileSync("app/rank/app/applications/[id]/page.tsx", "utf8");
+const list = readFileSync("app/rank/app/systems/page.tsx", "utf8");
+const detail = readFileSync("app/rank/app/systems/[id]/page.tsx", "utf8");
 for (const [name, src] of [["applications list", list], ["application detail", detail], ["Home records", rec], ["result page", page]] as const) {
   ok(`${name}: no retired teal repair treatment (no accent-dim/border, no #0A7B54, no TONE_REPAIR)`, !/--accent-dim|--accent-border|#0A7B54|TONE_REPAIR/.test(src));
   ok(`${name}: never labels a repair_verified record "Verified"`, !/repair_verified[\s\S]{0,60}"Verified"|repair_verified[\s\S]{0,60}label: "Verified"/.test(src));

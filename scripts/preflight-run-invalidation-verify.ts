@@ -118,7 +118,7 @@ console.log("\n── the findings of an invalidated run stop counting too ─�
 
 console.log("\n── a customer can see that it was ours ──");
 {
-  const record = readFileSync("app/rank/app/applications/[id]/passes/[runId]/page.tsx", "utf8");
+  const record = readFileSync("app/rank/app/systems/[id]/passes/[runId]/page.tsx", "utf8");
   ok("the record labels an invalidated run", /Invalidated \(verifier defect\)/.test(record));
   ok("it states the reason", /run\.invalidation\.reason/.test(record));
   ok("it says the evidence is preserved and uncounted", /no longer counted toward this/.test(record));

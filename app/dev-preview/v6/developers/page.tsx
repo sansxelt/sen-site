@@ -246,7 +246,7 @@ const HOOK = `{
   "flows_passed": 3,
   "deployment_url": "https://staging.example.com",
   "completed_at": "2026-07-24T18:04:11.220Z",
-  "report_url": "https://app.vraelis.com/applications/app_5b7d/passes/9c1e0f2a41"
+  "report_url": "https://app.vraelis.com/systems/app_5b7d/passes/9c1e0f2a41"
 }`;
 
 const VERIFY = `// Verify the delivery: HMAC-SHA256 over \`\${timestamp}.\${rawBody}\`.

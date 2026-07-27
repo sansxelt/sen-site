@@ -39,7 +39,7 @@ export type NextAction = {
 // Priority-ordered so exactly ONE action wins. Earliest funnel gap first; a healthy READY app falls to the
 // quiet "run a new pass" at the end. This ladder is the product's operating logic, encoded once.
 export function nextAction(s: CommandState): NextAction {
-  const app = `/applications/${s.appId}`;
+  const app = `/systems/${s.appId}`;
   // 1. Nothing to test yet: a freshly connected app with an empty contract and no flows.
   if (!s.contractApproved && s.requirementCount === 0 && s.flowCount === 0) {
     return { label: "Author your Production Contract", href: `${app}/contract`, why: "Define what Vraelis should verify before this app can be tested.", tone: "primary" };

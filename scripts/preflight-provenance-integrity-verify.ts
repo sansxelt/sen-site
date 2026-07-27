@@ -22,7 +22,7 @@ import { execFileSync } from "node:child_process";
 import { requirementReviewIdentity, planMerge, fingerprint, type MergeReq } from "../lib/preflight/contract-merge";
 import { PROVENANCE_SOURCES, normalizeProvenanceSource } from "../lib/preflight/discover-synthesis";
 import { requirementOrderIsComplete, contractApprovalReadiness, type ContractRequirement } from "../lib/v-applications";
-import { reviewStateLabel, reviewBasisLabel } from "../app/rank/app/applications/[id]/contract/labels";
+import { reviewStateLabel, reviewBasisLabel } from "../app/rank/app/systems/[id]/contract/labels";
 
 const ROOT = process.cwd();
 let pass = 0;
@@ -448,7 +448,7 @@ ok("an unknown review state degrades to awaiting review, never to approved",
 ok("a null basis has no label rather than a weak-approval label", reviewBasisLabel(null) === null);
 ok("both approval bases are named", !!reviewBasisLabel("human_direct") && !!reviewBasisLabel("reviewed_plan"));
 
-const labels = read("app/rank/app/applications/[id]/contract/labels.ts");
+const labels = read("app/rank/app/systems/[id]/contract/labels.ts");
 ok("no em dash, en dash, middot or emoji in the labels module",
   !/[—–·•]/.test(labels) && !/\p{Extended_Pictographic}/u.test(labels));
 

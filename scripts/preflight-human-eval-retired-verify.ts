@@ -44,7 +44,7 @@ console.log("\n2. No authenticated route reaches human evaluation");
 for (const d of ["tests", "sandbox", "projects", "data", "data-quality", "legacy", "shared", "_workspace"])
   ok(`retired app surface is gone (app/rank/app/${d})`, gone(`app/rank/app/${d}`));
 ok("/new is a redirect stub, not the retired vote-creation form",
-  read("app/rank/app/new/page.tsx").includes('redirect("/applications/new")') && gone("app/rank/app/new/layout.tsx"));
+  read("app/rank/app/new/page.tsx").includes('redirect("/systems/new")') && gone("app/rank/app/new/layout.tsx"));
 
 // ── 3. No API or WEBHOOK exposes human-evaluation behavior ──
 console.log("\n3. No API or webhook exposes human-evaluation behavior");

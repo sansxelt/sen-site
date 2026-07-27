@@ -88,7 +88,10 @@ const APP_NAV: { group: string; items: { href: string; label: string; d: string 
 // Old destinations that are no longer in the sidebar but must still light up the right nav item when
 // visited directly, so a bookmarked URL does not land you in a shell with nothing selected.
 const NAV_ALIASES: Record<string, string> = {
-  "/applications": "/systems",
+  // No /applications entry, and that is not an omission. The pages moved out of /applications entirely and
+  // proxy.ts 308s the whole prefix to /systems before anything renders, so the shell is never asked to
+  // resolve the old word. An alias here would be a mapping nothing can reach, which is how a table like
+  // this fills up with rules nobody can tell are dead.
   "/passes": "/verifications",
   "/issues": "/verifications",
   "/repairs": "/verifications",
@@ -441,7 +444,7 @@ function WorkspaceSwitcher() {
 
 
 // Resolve which nav item is the current page, mapping a retired-but-still-routable URL onto the item that
-// replaced it so a bookmarked /applications never renders the shell with nothing selected.
+// replaced it so a bookmarked old URL never renders the shell with nothing selected.
 function useActiveNav() {
   const pathname = usePathname() || "";
   const aliasRoot = Object.keys(NAV_ALIASES).find((old) => pathname === old || pathname.startsWith(old + "/"));
@@ -607,7 +610,7 @@ const SHELL_UI_CSS = "@keyframes vraTextIn{from{opacity:0;transform:translateY(1
 export function RankShell({ signedIn = false, email = null, appHost = false, systems = [], pendingReviews = 0, children }: { signedIn?: boolean; email?: string | null; appHost?: boolean; systems?: PaletteSystem[]; pendingReviews?: number; children: ReactNode }) {
   const pathname = usePathname() || "";
   // The product answers on the legacy /app prefix (localhost dev) AND the clean subdomain paths
-  // (/applications, /passes, ...). On app.vraelis.com the overview is served at "/" — the pathname
+  // (/systems, /passes, ...). On app.vraelis.com the overview is served at "/" — the pathname
   // can't distinguish it from the marketing home, so the server layout passes the host down.
   //
   // /developers is the ONE product path deliberately kept out of APP_ROOTS: the same clean path is public,

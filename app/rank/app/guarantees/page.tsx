@@ -30,7 +30,7 @@ import { listGuaranteesForApps, latestGuaranteeRun, type Guarantee } from "@/lib
 import { guaranteeStatus, GUARANTEE_STATUS_LABEL, GUARANTEE_COVERAGE_NOTE } from "@/lib/preflight/guarantee-status";
 import { timeAgo } from "@/lib/preflight/home-verdict";
 import { Ic, I } from "@/app/rank/_components/icons";
-import { SetupRequired } from "../applications/setup-required";
+import { SetupRequired } from "../systems/setup-required";
 
 export const metadata: Metadata = { title: "Guarantees" };
 export const dynamic = "force-dynamic";
@@ -101,7 +101,7 @@ export default async function GuaranteesPage() {
           {guarantees.map((g, i) => {
             const p = planPill(g);
             return (
-              <Link key={g.id} href={`/applications/${g.application_id}/guarantees/${g.id}`}
+              <Link key={g.id} href={`/systems/${g.application_id}/guarantees/${g.id}`}
                 style={{ display: "grid", gridTemplateColumns: "1fr auto auto", alignItems: "center", gap: 14, padding: "13px 16px", borderTop: i ? "1px solid var(--line-2)" : "none", color: "inherit", textDecoration: "none" }}
                 aria-label={`${g.title}, ${appName.get(g.application_id) ?? "system"}, ${p.label}`}>
                 <span style={{ minWidth: 0 }}>
@@ -140,7 +140,7 @@ export default async function GuaranteesPage() {
             A verification answers a question once. A guarantee writes the question down: open a system, name
             the outcome it must always keep true, and approve the proof plan Vraelis derives for it.
           </p>
-          <Link href={apps.length ? `/applications/${apps[0].id}` : "/systems"} className="btn btn--ghost">
+          <Link href={apps.length ? `/systems/${apps[0].id}` : "/systems"} className="btn btn--ghost">
             {apps.length ? "Open a system to define one" : "Connect a system first"}
           </Link>
         </section>

@@ -118,7 +118,7 @@ export default async function AuditPage() {
       <div style={cardHead}>Workspace activity</div>
       <EventList events={events}
         empty="Application connections, verification launches and completions, credit top-ups, exports, billing actions, invites, and role changes are recorded here as you work."
-        action={{ href: "/applications", label: "Go to applications" }} />
+        action={{ href: "/systems", label: "Go to applications" }} />
 
       {/* Organization activity */}
       {org && canOrgAudit && (

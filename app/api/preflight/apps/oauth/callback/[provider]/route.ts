@@ -92,7 +92,7 @@ function popupClose(req: Request, path: string, params: string, handoff?: string
 // Redirect back to the surface the flow came from: an app's Connections tab (per-app) or the account
 // Connections page (account). In popup mode this closes the popup and messages the opener instead.
 function backTo(req: Request, appId: string | undefined, params: string, popup = false, handoff?: string | null): NextResponse {
-  const path = appId ? `/applications/${appId}/settings/connections` : `/connections`;
+  const path = appId ? `/systems/${appId}/settings/connections` : `/connections`;
   if (popup) return popupClose(req, path, params, handoff);
   return NextResponse.redirect(`${baseUrl(req)}${path}?${params}`, 302);
 }

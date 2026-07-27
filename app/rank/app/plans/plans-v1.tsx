@@ -109,7 +109,7 @@ export default function PlansV1({ initialCycle = "monthly" }: { initialCycle?: C
             <li>Real-browser evidence with screenshots</li>
             <li>A full Verified, Failed, or Blocked decision</li>
           </ul>
-          <Link className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href="/applications">{currentPlan ? "Open applications" : "Run your free verification"}</Link>
+          <Link className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href="/systems">{currentPlan ? "Open applications" : "Run your free verification"}</Link>
         </div>
 
         {PLAN_CATALOG_V1.map((p) => {

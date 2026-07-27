@@ -55,7 +55,7 @@ export default function PlansPage() {
             <li>Real-browser execution with screenshots</li>
             <li>Verified, Failed, or Blocked, with evidence</li>
           </ul>
-          <Link className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href="/applications">Run your free verification</Link>
+          <Link className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href="/systems">Run your free verification</Link>
         </div>
         <div className="price price--hot">
           <div className="price__name">Pay as you go</div>

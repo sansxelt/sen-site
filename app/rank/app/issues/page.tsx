@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requirePreflightOwner } from "@/lib/v-preflight-guard";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
-import { SetupRequired } from "../applications/setup-required";
+import { SetupRequired } from "../systems/setup-required";
 import { listAllIssues, type IssueRow } from "@/lib/preflight/overview-db";
 import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "Issues" };
 
 // Relative "3m ago / 4h ago / Jul 2". Server component, rendered once per request, so a wall-clock
-// relative time carries no hydration-mismatch risk. Same helper as app/rank/app/applications/page.tsx.
+// relative time carries no hydration-mismatch risk. Same helper as app/rank/app/systems/page.tsx.
 function timeAgo(iso: string | null | undefined): string {
   if (!iso) return "";
   const d = new Date(iso);
@@ -73,7 +73,7 @@ function OpenIssueRow({ issue }: { issue: IssueRow }) {
   const opened = timeAgo(issue.createdAt);
   return (
     <Link
-      href={`/applications/${issue.applicationId}`}
+      href={`/systems/${issue.applicationId}`}
       className="card card--hover"
       style={{ display: "flex", flexDirection: "column", gap: 8, padding: "14px 16px", borderLeft: `3px solid ${accent}`, textDecoration: "none", color: "inherit" }}
     >
@@ -94,8 +94,8 @@ function OpenIssueRow({ issue }: { issue: IssueRow }) {
 // that run's report; otherwise it falls back to the application page.
 function ResolvedIssueRow({ issue }: { issue: IssueRow }) {
   const href = issue.resolvedRun
-    ? `/applications/${issue.applicationId}/passes/${issue.resolvedRun}`
-    : `/applications/${issue.applicationId}`;
+    ? `/systems/${issue.applicationId}/passes/${issue.resolvedRun}`
+    : `/systems/${issue.applicationId}`;
   const opened = timeAgo(issue.createdAt);
   return (
     <Link
@@ -123,7 +123,7 @@ function NoOpenIssues() {
       <EmptyIcon d={I.alert} />
       <h3>No open issues</h3>
       <p>Run a verification and any failure it finds appears here with evidence and reproduction steps.</p>
-      <Link href="/applications" className="btn">Go to applications</Link>
+      <Link href="/systems" className="btn">Go to applications</Link>
     </div>
   );
 }

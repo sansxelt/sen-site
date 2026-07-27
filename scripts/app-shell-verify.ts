@@ -72,7 +72,7 @@ ok("settings carries account, team, usage and billing",
   // The re-export pages are followed to their implementation, because that is where the heading lives.
   const IMPL: Record<string, string> = {
     "/app": "app/rank/app/page.tsx",
-    "/systems": "app/rank/app/applications/page.tsx",
+    "/systems": "app/rank/app/systems/page.tsx",
     "/verifications": "app/rank/app/passes/page.tsx",
     "/records": "app/rank/app/activity/page.tsx",
     "/developers": "app/rank/app/api/page.tsx",
@@ -121,7 +121,7 @@ ok("settings carries account, team, usage and billing",
 console.log("\n── nothing was deleted: every retired destination still resolves ──");
 // A route that stopped existing would break a bookmark, a saved link, and any deep link in an old email.
 const RETIRED: [string, string][] = [
-  ["applications", "app/rank/app/applications/page.tsx"],
+  ["applications", "app/rank/app/systems/page.tsx"],
   ["passes", "app/rank/app/passes/page.tsx"],
   ["issues", "app/rank/app/issues/page.tsx"],
   ["repairs", "app/rank/app/repairs/page.tsx"],
@@ -142,9 +142,15 @@ for (const root of ["systems", "verifications"]) {
   ok(`/${root} has a page`, existsSync(`app/rank/app/${root}/page.tsx`));
   ok(`/${root} is in APP_ROOTS`, (APP_ROOTS as readonly string[]).includes(root));
 }
-// Aliased rather than reimplemented, so the old and new URLs cannot drift apart mid-transition.
-ok("/systems re-exports the applications page (one implementation, two URLs)",
-  /from "\.\.\/applications\/page"/.test(readFileSync("app/rank/app/systems/page.tsx", "utf8")));
+// THE TRANSITION THIS USED TO PROTECT IS OVER.
+//
+// /systems was a file that re-exported ../applications/page, and this asserted exactly that: one
+// implementation, two URLs, no drift while the rename was in flight. The rename finished. The pages moved
+// into /systems and the old directory is gone, so re-exporting is no longer possible and the two URLs can
+// no longer drift because there is only one. What replaces the assertion is the fact underneath it.
+ok("/systems is the implementation now, not an alias for one",
+  existsSync("app/rank/app/systems/[id]/page.tsx") && !existsSync("app/rank/app/applications"));
+// /verifications is still mid-transition, so it still has to be an alias rather than a copy.
 ok("/verifications re-exports the passes page",
   /from "\.\.\/passes\/page"/.test(readFileSync("app/rank/app/verifications/page.tsx", "utf8")));
 
@@ -157,9 +163,11 @@ const resolve = (p: string) => {
   const root = Object.keys(aliases).find((o) => p === o || p.startsWith(o + "/"));
   return root ? aliases[root] : p;
 };
+// No /applications rows. It is not that the mapping stopped mattering, it is that the shell stopped being
+// the thing that does it: the pages moved out of /applications and proxy.ts 308s the whole prefix before a
+// component renders, so an alias here would be a rule nothing can reach. The redirect that replaced it is
+// asserted in preflight-routes-verify.ts, against legacySystemsPath and the proxy's ordering.
 const EXPECT: [string, string][] = [
-  ["/applications", "/systems"],
-  ["/applications/abc-123", "/systems"],
   ["/passes", "/verifications"],
   ["/passes/run-1", "/verifications"],
   ["/issues", "/verifications"],

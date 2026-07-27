@@ -36,7 +36,7 @@ ok("a null decision -> public blocked", mapDecision(null) === "blocked");
 ok("no internal decision word ever leaks as the public decision",
   ["ready", "needs_review", "repair_verified"].every((d) => !["ready", "needs_review", "repair_verified"].includes(mapDecision(d) as string)));
 
-ok("payload links to the run report", payload.report_url === "https://app.vraelis.com/applications/app-1/passes/run-1");
+ok("payload links to the run report", payload.report_url === "https://app.vraelis.com/systems/app-1/passes/run-1");
 ok("report_url is null when no base url is known", buildVerificationPayload({ runId: "r", applicationId: "a", decision: "ready", flowsTotal: 0, flowsPassed: 0 }).report_url === null);
 
 // THE invariant: nothing secret or internal may ever reach a third-party endpoint.

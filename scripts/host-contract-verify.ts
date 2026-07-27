@@ -108,13 +108,24 @@ for (const root of ["systems", "verifications", "connections", "account", "team"
 
 console.log("\n── legacy routes still resolve (nothing was traded for the rename) ──");
 for (const [root, file] of [
-  ["applications", "app/rank/app/applications/page.tsx"],
   ["passes", "app/rank/app/passes/page.tsx"],
   ["issues", "app/rank/app/issues/page.tsx"],
   ["api", "app/rank/app/api/page.tsx"],
 ] as [string, string][]) {
   ok(`/${root} still routes and still has a page`, isAppPath(`/${root}`) && existsSync(file));
 }
+// /applications is the one legacy root with NO page of its own. It used to be listed above, and after the
+// tree moved to /systems that row read "/applications still routes and still has a page" while pointing at
+// a file belonging to a different URL — an assertion passing on the strength of the wrong evidence.
+//
+// It still has to route: isAppPath is what decides whether the main host bounces a path to the app
+// subdomain at all, so dropping it from APP_ROOTS would send an old bookmark to the marketing site instead
+// of into the redirect. So the requirement is that it routes AND that the redirect, not a page, is what
+// answers it.
+ok("/applications still routes, so the redirect gets a chance to run", isAppPath("/applications"));
+ok("/applications has no page of its own any more", !existsSync("app/rank/app/applications"));
+ok("proxy.ts is what answers it, on both hosts",
+  (proxy.match(/legacySystemsPath\(path\)/g) || []).length >= 2);
 
 // ── The theme boundary ───────────────────────────────────────────────────────────────────────────────────
 // The product renders on design 06's graphite token layer; the marketing site keeps the light tokens. The
