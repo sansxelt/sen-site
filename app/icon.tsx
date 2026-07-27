@@ -27,7 +27,7 @@ export default function Icon() {
           justifyContent: "center",
         }}
       >
-        <svg width="26" height="26" viewBox={MARK_VIEWBOX}>
+        <svg width="31" height="31" viewBox={MARK_VIEWBOX}>
           {MARK_FACETS.map((f) => <path key={f.fill} d={f.d} fill={f.fill} />)}
         </svg>
       </div>
