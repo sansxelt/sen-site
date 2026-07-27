@@ -78,6 +78,7 @@ for (const [rule, marker] of [
   ["the browser is not reset between flows", "The browser is NOT reset between flows"],
   ["a signed-out check needs reset_context", "must begin with reset_context"],
   ["assert the outcome, not the furniture", "Assert the OUTCOME, not the furniture"],
+  ["absence cannot be asserted at all", "NOTHING HERE CAN ASSERT ABSENCE"],
 ] as const) {
   ok(`the synthesis prompt tells the model that ${rule}`, withContext.includes(marker));
 }
