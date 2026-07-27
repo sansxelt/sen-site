@@ -167,6 +167,10 @@ export function buildSynthesisPrompt(pages: PageSnapshot[], buildPrompt: string 
     // page, and every flow shares it. A generated plan opened with sign_in_as as step 0 and would have died
     // on a blank page with login_ui_not_found.
     `- EVERY flow must begin with a navigate, because the session opens on a BLANK page and is shared by all flows in order. sign_in_as does NOT navigate: it looks for the login form on whatever page is already open. So navigate to the sign-in page in the step IMMEDIATELY BEFORE any sign_in_as, including the second sign-in when a flow signs out and back in.\n` +
+    // Flows share one page and nothing resets it between them, so "signed out" is only true for whichever
+    // flow happens to run first. A generated plan asserted that /dashboard redirects to /auth, in a flow
+    // placed after two flows that had signed in, and would have failed the customer for staying signed in.
+    `- The browser is NOT reset between flows. Whatever the previous flow left behind, including its session, is still there. Only the FIRST flow starts signed out. So a flow that checks signed-out behaviour, such as a gated route redirecting to the login page, must begin with reset_context, otherwise it runs as an already-authenticated user and fails for a reason the application is not responsible for.\n` +
     `- Assert the OUTCOME, not the furniture. After creating something, assert the value you typed, not that a heading or an empty container is present: a heading is still there when the thing was never saved.\n` +
     `- severity/priority: critical only for launch-blocking promises (auth, persistence, authorization, payment). Write plainly; no em dashes.\n\n` +
     `ORIGINAL BUILD PROMPT:\n${(buildPrompt || "(none provided)").slice(0, 6000)}\n\n` +

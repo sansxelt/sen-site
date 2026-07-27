@@ -75,6 +75,8 @@ for (const [rule, marker] of [
   ["the session starts signed out", "STARTS SIGNED OUT"],
   ["every flow must open with a navigate", "EVERY flow must begin with a navigate"],
   ["sign_in_as does not navigate", "sign_in_as does NOT navigate"],
+  ["the browser is not reset between flows", "The browser is NOT reset between flows"],
+  ["a signed-out check needs reset_context", "must begin with reset_context"],
   ["assert the outcome, not the furniture", "Assert the OUTCOME, not the furniture"],
 ] as const) {
   ok(`the synthesis prompt tells the model that ${rule}`, withContext.includes(marker));
