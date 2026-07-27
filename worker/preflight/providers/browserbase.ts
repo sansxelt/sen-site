@@ -38,7 +38,7 @@ export function safeMetadata(input: Record<string, string>): Record<string, stri
 type PWContext = { cookies: () => Promise<unknown[]>; clearCookies: () => Promise<void>; clearPermissions?: () => Promise<void> };
 type PWPage = {
   goto: (u: string, o?: unknown) => Promise<unknown>; reload: (o?: unknown) => Promise<unknown>; url: () => string;
-  getByRole: (r: string, o?: unknown) => PWLocator; getByText: (t: string, o?: unknown) => PWLocator; getByLabel: (t: string, o?: unknown) => PWLocator; locator: (s: string) => PWLocator;
+  getByRole: (r: string, o?: unknown) => PWLocator; getByText: (t: string, o?: unknown) => PWLocator; getByLabel: (t: string, o?: unknown) => PWLocator; getByPlaceholder: (t: string, o?: unknown) => PWLocator; locator: (s: string) => PWLocator;
   keyboard: { press: (k: string) => Promise<void> }; screenshot: (o?: unknown) => Promise<Buffer>; setViewportSize: (o: { width: number; height: number }) => Promise<void>;
   on: (ev: string, cb: (a: unknown) => void) => void;
   context: () => PWContext; evaluate?: (fn: string) => Promise<unknown>;
@@ -69,6 +69,43 @@ type PWLocator = { first: () => PWLocator; locator: (s: string) => PWLocator; fi
 // happily match a paragraph, the click would "succeed" against non-interactive copy, and a real failure
 // would turn into a false PASS — trading this defect for a worse one.
 const INTERACTIVE = "a, button, [role=button], [role=link], input[type=submit], input[type=button], summary";
+
+// A FIELD IS NOT A BUTTON. resolve() above is a CLICK resolver: when nothing matches it falls back to the
+// button locator, which is the honest error for "click X". Filling shares the same function, so a fill whose
+// label lookup missed ended up calling .fill() on getByRole("button"), waited 30 seconds for a button named
+// "email", and reported the customer's form as broken. Observed on the first guarantee run:
+//
+//   fill "email"  ->  action_error: locator.fill: Timeout 30000ms exceeded.
+//                     waiting for getByRole('button', { name: 'email' }).first()
+//
+// So filling gets its own chain, made of the things a value can actually be typed into. The last resort is
+// the label locator, so a genuinely missing field still fails saying it looked for a field.
+const FIELD = 'input:not([type=hidden]):not([type=submit]):not([type=button]):not([type=checkbox]):not([type=radio]), textarea, [contenteditable="true"]';
+
+async function resolveField(page: PWPage, target: string): Promise<{ locator: PWLocator; candidates: string[]; selected: string }> {
+  const t = target.toLowerCase();
+  // A named type only when the target actually names it. Guessing a type from an unrelated word would put
+  // a password into an email box.
+  const typed = t.includes("password") ? 'input[type="password"]'
+    : t.includes("email") ? 'input[type="email"]'
+      : t.includes("search") ? 'input[type="search"]'
+        : null;
+  const attempts: { name: string; locator: PWLocator }[] = [
+    { name: `label=${target}`, locator: page.getByLabel(target).first() },
+    { name: `role=textbox[name=${target}]`, locator: page.getByRole("textbox", { name: target }).first() },
+    { name: `placeholder=${target}`, locator: page.getByPlaceholder(target).first() },
+    ...(typed ? [{ name: typed, locator: page.locator(typed).first() }] : []),
+    { name: `field:first`, locator: page.locator(FIELD).first() },
+  ];
+  const candidates = attempts.map((a) => a.name);
+  for (const a of attempts) {
+    const n = await a.locator.count().catch(() => 0);
+    if (n === 0) continue;
+    if (!(await a.locator.isVisible().catch(() => false))) continue;
+    return { locator: a.locator, candidates, selected: a.name };
+  }
+  return { locator: attempts[0].locator, candidates, selected: attempts[0].name };
+}
 
 async function resolve(page: PWPage, target: string): Promise<{ locator: PWLocator; candidates: string[]; selected: string }> {
   const attempts: { name: string; locator: PWLocator }[] = [
@@ -209,7 +246,7 @@ export class PlaywrightPreflightPage implements PreflightPage {
         case "navigate": await this.page.goto(step.target || step.value || "", { waitUntil: "domcontentloaded", timeout: step.timeoutMs ?? 30000 }); return base(true, "navigated");
         case "refresh": await this.page.reload({ waitUntil: "domcontentloaded" }); return base(true, "refreshed");
         case "click": { const r = await resolve(this.page, step.target || ""); await r.locator.click({ timeout: step.timeoutMs ?? 10000 }); return base(true, "clicked", { candidates: r.candidates, selected: r.selected }); }
-        case "fill": { const r = await resolve(this.page, step.target || ""); await this.page.getByLabel(step.target || "").first().fill(step.value || "", { timeout: 10000 }).catch(async () => { await r.locator.fill(step.value || ""); }); return base(true, "filled"); }
+        case "fill": { const r = await resolveField(this.page, step.target || ""); await r.locator.fill(step.value || "", { timeout: step.timeoutMs ?? 10000 }); return base(true, "filled", { candidates: r.candidates, selected: r.selected }); }
         case "select": await this.page.getByLabel(step.target || "").first().selectOption(step.value || ""); return base(true, "selected");
         case "check": await this.page.getByLabel(step.target || "").first().check(); return base(true, "checked");
         case "uncheck": await this.page.getByLabel(step.target || "").first().uncheck(); return base(true, "unchecked");

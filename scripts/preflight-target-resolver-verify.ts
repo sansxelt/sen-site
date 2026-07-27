@@ -68,11 +68,38 @@ ok("nothing matching falls back to the button locator, so the step still fails",
   /return \{ locator: attempts\[0\]\.locator/.test(code));
 ok("the selection is reported truthfully", /selected: a\.name/.test(code));
 
+console.log("\n── a field is not a button ──");
+{
+  // The first guarantee run died here: fill shared the CLICK resolver, whose no-match fallback is the button
+  // locator, so filling "email" called .fill() on getByRole("button", { name: "email" }), waited 30 seconds
+  // and reported the customer's sign-in form as broken.
+  const field = src.slice(src.indexOf("async function resolveField("), src.indexOf("async function resolve("));
+  ok("filling has its own resolver", /async function resolveField\(/.test(src));
+  ok("fill no longer uses the click resolver", /case "fill":[^\n]*resolveField\(/.test(src));
+  ok("click still uses the click resolver", /case "click":[^\n]*await resolve\(/.test(src));
+  ok("it starts from the accessible label", /getByLabel\(target\)/.test(field));
+  ok("it tries the textbox role", /getByRole\("textbox", \{ name: target \}\)/.test(field));
+  ok("it tries the placeholder", /getByPlaceholder\(target\)/.test(field));
+  // A type is inferred ONLY from a target that names it: guessing would type a password into an email box.
+  ok("a typed input is used only when the target names that type",
+    /includes\("password"\)/.test(field) && /includes\("email"\)/.test(field));
+  ok("the last resort is a fillable element, never a button",
+    /FIELD/.test(field) && !/role=button/.test(field));
+  {
+    const list = (src.match(/const FIELD = '([^']+)'/) ?? [])[1] ?? "";
+    ok("the fillable set excludes buttons and submits",
+      /not\(\[type=submit\]\)/.test(list) && /not\(\[type=button\]\)/.test(list));
+    ok("it excludes hidden inputs", /not\(\[type=hidden\]\)/.test(list));
+    ok("it includes textareas and contenteditable", /textarea/.test(list) && /contenteditable/.test(list));
+  }
+}
+
 console.log("\n── both callers await it ──");
 // resolve became async. A missed await would return a Promise and every click would throw.
 ok("click awaits the resolver", /case "click":[^\n]*await resolve\(/.test(src));
-ok("fill awaits the resolver", /case "fill":[^\n]*await resolve\(/.test(src));
-ok("no un-awaited resolve call remains", !/[^t] resolve\(this\.page/.test(src.replace(/await resolve\(this\.page/g, "AWAITED")));
+ok("fill awaits its own field resolver", /case "fill":[^\n]*await resolveField\(/.test(src));
+ok("no un-awaited resolver call remains",
+  !/[^t] resolve(Field)?\(this\.page/.test(src.replace(/await resolve(Field)?\(this\.page/g, "AWAITED")));
 
 console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);
