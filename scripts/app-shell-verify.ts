@@ -149,9 +149,27 @@ ok("the nav body is a single shared component (sidebar + drawer cannot drift)",
 ok("icon-only nav icons are aria-hidden (labels carry meaning)", /slink__i" aria-hidden/.test(ui));
 
 console.log("\n── one accessible dismissal contract for every popover ──");
-ok("useDismiss exists (Escape + outside-press close every popover)", /function useDismiss\(/.test(ui));
-ok("Escape returns focus to the trigger", /refs\.trigger\.current\?\.focus\(\)/.test(ui));
-ok("outside-press restores focus to the trigger on non-focusable space", /if \(!el\) refs\.trigger\.current\?\.focus\(\)/.test(ui));
+// The hook moved out of rank-ui.tsx into its own module. Not cosmetic: rank-ui imports the command palette,
+// so the palette importing the hook back would have been a cycle, and the palette therefore shipped with a
+// PRIVATE copy that only closed when the press resolved to the backdrop element itself. A press landing on
+// any descendant of the overlay left it open, which is what the founder hit.
+const dismiss = readFileSync("app/rank/_components/use-dismiss.ts", "utf8");
+ok("useDismiss exists (Escape + outside-press close every popover)", /export function useDismiss\(/.test(dismiss));
+ok("Escape returns focus to the trigger", /refs\.trigger\.current\?\.focus\(\)/.test(dismiss));
+ok("outside-press restores focus to the trigger on non-focusable space", /if \(!el\) refs\.trigger\.current\?\.focus\(\)/.test(dismiss));
+ok("the outside-press listener is capturing, so a deeper stopPropagation cannot swallow it",
+  /addEventListener\("pointerdown", onDown, true\)/.test(dismiss));
+
+// THE ASSERTION THAT WOULD HAVE CAUGHT THE PALETTE. Every pop-open surface must reach the ONE hook. A
+// dismissal rule that exists in two places is a rule that will behave two ways, and it did.
+{
+  const palette = readFileSync("app/rank/_components/command-palette.tsx", "utf8");
+  ok("the command palette uses the shared contract", /useDismiss\(open, close, \{ panel:/.test(palette));
+  ok("the palette rolls no private dismissal of its own", !/function useDismiss\(/.test(palette));
+  ok("rank-ui keeps no second copy", !/function useDismiss\(/.test(ui) && /from "\.\/use-dismiss"/.test(ui));
+  // Both refs must be real elements or the contains() checks silently pass for everything.
+  ok("the palette wires a panel ref and a trigger ref", /ref=\{panelRef\}/.test(palette) && /ref=\{triggerRef\}/.test(palette));
+}
 
 console.log("\n── account + workspace popovers use NATIVE popover semantics, not an unimplemented ARIA menu ──");
 // role=menu advertises arrow-key roving focus; these popovers navigate with Tab, so they must NOT claim it.

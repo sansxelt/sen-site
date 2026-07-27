@@ -12,6 +12,7 @@ import { isAppPath } from "@/lib/app-routes";
 // server-safe module so app pages can render the same icons without a client boundary.
 import { Ic, I } from "./icons";
 import { CommandPalette, type PaletteSystem } from "./command-palette";
+import { useDismiss } from "./use-dismiss";
 
 // Research sits between Developers and Enterprise for now. The fuller restructure toward
 // Product / Developers / Research / Pricing belongs with the verification-first redesign
@@ -398,31 +399,6 @@ function WorkspaceSwitcher() {
   );
 }
 
-// One dismissal contract for every pop-open control (account menu, workspace switcher, mobile drawer):
-// Escape closes it AND returns focus to the trigger, a pointer press outside closes it, and it is a no-op
-// while closed. Keeping this in one hook means every menu behaves identically for a keyboard user.
-function useDismiss(open: boolean, close: () => void, refs: { panel: RefObject<HTMLElement | null>; trigger: RefObject<HTMLElement | null> }) {
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") { e.stopPropagation(); close(); refs.trigger.current?.focus(); }
-    };
-    const onDown = (e: PointerEvent) => {
-      const t = e.target as Node;
-      if (!refs.panel.current?.contains(t) && !refs.trigger.current?.contains(t)) {
-        close();
-        // Return focus to the trigger (matching the Escape path) so it is never lost to <body> — but only when
-        // the press landed on non-focusable space; if the user clicked another control, let that control keep
-        // the focus the browser is about to give it.
-        const el = t instanceof Element ? t.closest("a,button,input,select,textarea,[tabindex]") : null;
-        if (!el) refs.trigger.current?.focus();
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    document.addEventListener("pointerdown", onDown, true);
-    return () => { document.removeEventListener("keydown", onKey); document.removeEventListener("pointerdown", onDown, true); };
-  }, [open, close, refs.panel, refs.trigger]);
-}
 
 // Resolve which nav item is the current page, mapping a retired-but-still-routable URL onto the item that
 // replaced it so a bookmarked /applications never renders the shell with nothing selected.

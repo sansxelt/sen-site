@@ -14,6 +14,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Ic, I } from "./icons";
+import { useDismiss } from "./use-dismiss";
 
 export type PaletteSystem = { id: string; name: string };
 type Item = { id: string; label: string; hint: string; href: string; icon: string };
@@ -44,6 +45,8 @@ export function CommandPalette({ systems }: { systems: PaletteSystem[] }) {
   const [mac, setMac] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const restoreTo = useRef<HTMLElement | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   // The hint said the Mac shortcut to everyone. On Windows and Linux the key is Control, so the bar was
   // advertising a chord that does nothing on most of the machines that will ever see it. Resolved on the
@@ -72,6 +75,11 @@ export function CommandPalette({ systems }: { systems: PaletteSystem[] }) {
     // Give focus back to whatever the user was on, so the palette does not strand a keyboard user on <body>.
     restoreTo.current?.focus?.();
   }, []);
+
+  // The SAME dismissal contract every other menu in the shell uses: Escape, and a pointer press anywhere
+  // outside the panel. The palette previously closed only when the press resolved to the backdrop element
+  // itself, so a press that landed on any descendant of the overlay left it open.
+  useDismiss(open, close, { panel: panelRef, trigger: triggerRef });
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -106,6 +114,7 @@ export function CommandPalette({ systems }: { systems: PaletteSystem[] }) {
   if (!open) {
     return (
       <button
+        ref={triggerRef}
         onClick={() => { restoreTo.current = document.activeElement as HTMLElement; setOpen(true); }}
         aria-label="Search and commands"
         className="vra-cmd-trigger"
@@ -130,7 +139,7 @@ export function CommandPalette({ systems }: { systems: PaletteSystem[] }) {
       // graphite rather than pure black, so what shows through stays the colour it already was.
       style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(10,10,11,0.76)", display: "grid", placeItems: "start center", paddingTop: "12vh" }}
     >
-      <div role="dialog" aria-modal="true" aria-label="Search and commands"
+      <div ref={panelRef} role="dialog" aria-modal="true" aria-label="Search and commands"
         style={{ width: "min(560px, calc(100vw - 32px))", background: "var(--bg-1)", border: "1px solid var(--line-2)", borderRadius: 14, boxShadow: "var(--shadow-lg)", overflow: "hidden" }}>
         <input
           ref={inputRef}

@@ -18,8 +18,21 @@ const eyebrow = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing:
 const bigNum = { fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "clamp(2.1rem, 4vw, 2.7rem)", letterSpacing: "-0.03em", lineHeight: 1 } as const;
 
 export default function CreditsPage() {
-  const [amount, setAmount] = useState<number>(39);
-  const [custom, setCustom] = useState("");
+  // ONE SELECTION, STATED EXPLICITLY, WITH NO SILENT FALLBACK.
+  //
+  // This was two independent pieces of state — a preselected pack of 39 and a custom string — with
+  // `usingCustom = custom !== ""` deciding between them. So backspacing a typo out of the custom field
+  // silently re-armed the $39 pack: the input read empty, the panel beside it said "390 credits for $39",
+  // and Continue charged $39. A customer typing their own number and ending up on somebody else's price is
+  // the worst defect a checkout can have, and it is invisible because the page looks calm the whole time.
+  //
+  // Now the selection IS the state. Choosing custom keeps custom selected even when it is empty, so an empty
+  // field is an INVALID selection that disables the button, never a different price.
+  const [sel, setSel] = useState<{ kind: "pack"; dollars: number } | { kind: "custom"; text: string }>({ kind: "pack", dollars: 39 });
+  const custom = sel.kind === "custom" ? sel.text : "";
+  const amount = sel.kind === "pack" ? sel.dollars : 0;
+  const setCustom = (text: string) => setSel({ kind: "custom", text });
+  const setAmount = (dollars: number) => setSel({ kind: "pack", dollars });
   const [bal, setBal] = useState<number | null>(null);
   const [paid, setPaid] = useState(false);
   const [MAX, setMAX] = useState(DEFAULT_MAX);
@@ -41,7 +54,7 @@ export default function CreditsPage() {
     }
   }, []);
 
-  const usingCustom = custom !== "";
+  const usingCustom = sel.kind === "custom";
   const effective = usingCustom ? Math.floor(Number(custom) || 0) : amount;
   const valid = effective >= MIN && effective <= MAX;
   const credits = (valid ? effective : 0) * RATE;
@@ -79,7 +92,7 @@ export default function CreditsPage() {
             {RECOMMENDED.map((a) => {
               const on = !usingCustom && amount === a;
               return (
-                <button key={a} onClick={() => { setAmount(a); setCustom(""); }} style={{ flex: "0 1 150px", textAlign: "center", padding: "16px 14px", borderRadius: "var(--r-lg)", cursor: "pointer", border: `1.5px solid ${on ? "var(--acc-line-2)" : "var(--line-2)"}`, background: on ? "var(--acc-soft)" : "var(--bg-1)", boxShadow: on ? "0 0 0 3px var(--acc-soft)" : "var(--shadow-sm)", transition: "all .15s ease" }}>
+                <button key={a} onClick={() => setAmount(a)} style={{ flex: "0 1 150px", textAlign: "center", padding: "16px 14px", borderRadius: "var(--r-lg)", cursor: "pointer", border: `1.5px solid ${on ? "var(--acc-line-2)" : "var(--line-2)"}`, background: on ? "var(--acc-soft)" : "var(--bg-1)", boxShadow: on ? "0 0 0 3px var(--acc-soft)" : "var(--shadow-sm)", transition: "all .15s ease" }}>
                   <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 21, color: on ? "var(--acc-deep)" : "var(--fg-1)" }}>${a.toLocaleString()}</div>
                   <div style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-4)", marginTop: 3 }}>{(a * RATE).toLocaleString()} credits</div>
                 </button>

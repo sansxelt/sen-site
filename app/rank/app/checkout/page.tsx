@@ -67,7 +67,10 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
   }
 
   const plan = v1Plan ? undefined : PLAN_CATALOG.find((p) => p.plan === planKey);
-  const title = v1Plan ? `${v1Plan.name} plan` : plan ? `${plan.name} plan` : `${(amount * 10).toLocaleString()} credits`;
+  // The heading says the price, not only what the price buys. A page headed "50 credits" with the amount
+  // hidden inside the pay button asks the customer to reconcile two numbers on the screen where they are
+  // about to be charged, which is the one screen that should never require arithmetic.
+  const title = v1Plan ? `${v1Plan.name} plan` : plan ? `${plan.name} plan` : `${(amount * 10).toLocaleString()} credits for $${amount.toLocaleString()}`;
   const backHref = plan || v1Plan ? "/plans" : "/credits";
   const included: string[] = v1Plan
     ? v1Included(v1Plan, cycle)
