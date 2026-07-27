@@ -91,10 +91,21 @@ export async function POST(req: Request) {
       });
     }
 
-    // A deterministic key, so two racing POSTs produce one intent. Scoped to owner + amount + day: a
-    // genuine second purchase of the same size tomorrow is allowed, a double-clicked button today is not.
-    const day = new Date().toISOString().slice(0, 10);
-    const idempotencyKey = `credit_topup:${owner}:${amountDollars}:${day}`;
+    // THE KEY THAT MADE THE SECOND PURCHASE OF THE DAY IMPOSSIBLE.
+    //
+    // This was scoped to owner + amount + DAY. Buy $5, it succeeds. Buy $5 again an hour later and Stripe
+    // replays the idempotent request and returns THE SAME INTENT, now `succeeded`. The Payment Element is
+    // then asked to confirm a completed payment and stalls, so the checkout froze and the amount could not
+    // be bought again until tomorrow. The reuse search above filters to requires_payment_method and
+    // correctly found nothing, fell through to create, and the key resurrected the dead intent regardless.
+    //
+    // The key's only real job is to collapse a genuine double-POST race, where two requests arrive close
+    // enough together that neither sees the other's intent in the search. That is a seconds-wide problem,
+    // not a day-wide one, so the window is now seconds wide. Two deliberate purchases of the same size are
+    // two purchases, and the customer is entitled to both.
+    const ATTEMPT_WINDOW_MS = 90_000;
+    const bucket = Math.floor(Date.now() / ATTEMPT_WINDOW_MS);
+    const idempotencyKey = `credit_topup:${owner}:${amountDollars}:${bucket}`;
 
     const intent = await stripe.paymentIntents.create(
       {
