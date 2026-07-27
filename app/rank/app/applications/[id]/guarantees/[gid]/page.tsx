@@ -7,6 +7,7 @@ import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "../../../setup-required";
 import { getApplication } from "@/lib/v-applications";
 import { getGuarantee, guaranteeRunHistory } from "@/lib/preflight/guarantees-db";
+import { GUARANTEE_COVERAGE_NOTE } from "@/lib/preflight/guarantee-status";
 import { guaranteeStatus, lastProvenRun } from "@/lib/preflight/guarantee-status";
 import { findLivePendingPlanForClaim } from "@/lib/preflight/reviewed-plan-db";
 import { toPublicDecision } from "@/lib/preflight/public-decision";
@@ -164,9 +165,11 @@ export default async function GuaranteeDetailPage({ params }: { params: Promise<
         {/* ── Current status: derived from the guarantee's runs (Inc3 populates history + the verify action) ── */}
         {g.plan_state === "ok" ? (
           <Section n={approvedReqs.length ? "02" : "01"} title="Current status">
+            <p style={{ fontSize: 12, color: "var(--fg-4)", margin: "0 0 10px" }}>{GUARANTEE_COVERAGE_NOTE}</p>
             {history.length === 0 ? (
               <p style={{ fontSize: 14, color: "var(--fg-3)", lineHeight: 1.55, margin: 0, maxWidth: "64ch" }}>
-                Not verified yet. Once this guarantee runs against a deployment, its decision and the evidence behind it show here, and it is reverified as new deployments appear.
+                Never verified. Once this guarantee runs against a deployment, its decision and the evidence
+                behind it show here, and it is reverified as new deployments appear.
               </p>
             ) : (
               <div style={{ display: "grid", gap: 10 }}>
