@@ -145,6 +145,26 @@ console.log("\n── the launch boundary is respected ──");
     !existsSync("app/api/preflight/apps/[id]/guarantees/[gid]/verify/route.ts"));
 }
 
+console.log("\n── the API and the CLI carry the same relationship the console does ──");
+{
+  const api = code("app/api/v1/verifications/[id]/route.ts");
+  // An agent could read the decision and the evidence and had no way to learn which standing promise it
+  // belonged to, whether it repaired an earlier run, or where a human would open the record.
+  ok("the API returns the guarantee it proved", /guarantee_id: internal\?\.guaranteeId/.test(api));
+  ok("it returns the exact meaning proved, not just the id", /guarantee_plan_hash/.test(api));
+  ok("it returns the repair relationship", /reverification_of: detail\.run\.parent_run_id/.test(api));
+  ok("it returns a console record URL", /console_url: recordUrl/.test(api));
+  // Absent must read as absent. A title invented for a run with no guarantee would be the same class of
+  // defect as inventing the guarantee itself.
+  ok("guarantee fields are omitted when there is no guarantee", /\.\.\.\(guarantee \? \{/.test(api));
+
+  const cli = readFileSync("cli/vraelis.mjs", "utf8");
+  ok("the CLI prints the guarantee, the repair link and the record URL", /Guarantee  \$\{v\.guarantee_title\}/.test(cli) && /console_url/.test(cli));
+  ok("each CLI line appears only when the API returned it", /if \(v\.guarantee_title\) say/.test(cli));
+  // The founder banned middots in ALL visible copy; two had survived in the CLI's own output.
+  ok("no middots in CLI output", !cli.includes("·"));
+}
+
 console.log("\n── nothing invents a relationship ──");
 const migration = readFileSync("sql/vraelis-preflight-23-guarantee-binding.sql", "utf8");
 ok("migration 23 backfills nothing", !/^\s*update\s+v_preflight_runs/im.test(migration.replace(/^--.*$/gm, "")));

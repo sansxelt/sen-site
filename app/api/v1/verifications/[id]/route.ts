@@ -12,6 +12,9 @@ import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { applicationAccessForRun } from "@/lib/preflight/team-access";
 import { hasAtLeastRole } from "@/lib/v-workspace";
 import { getRun, runContractId } from "@/lib/preflight/runs-db";
+import { getRunInternal } from "@/lib/preflight/run-report-db";
+import { getGuarantee } from "@/lib/preflight/guarantees-db";
+import { appHostUrl } from "@/lib/app-routes";
 import { getContractById } from "@/lib/v-applications";
 import { requirementsForRun } from "@/lib/preflight/requirements-for-run";
 import { getReviewedPlanByRunId } from "@/lib/preflight/reviewed-plan-db";
@@ -61,6 +64,15 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const reqs = await requirementsForRun(access.owner, runId, contract?.id ?? null);
   const reviewedPlan = await getReviewedPlanByRunId(access.owner, runId);
 
+  // THE DURABLE RELATIONSHIP, RETURNED. An agent that launched a verification over the API could read the
+  // decision and the evidence and had no way to learn which standing promise it belonged to, whether it was
+  // repairing an earlier run, or where to open the record a human would look at. All three are recorded; not
+  // returning them made the API a poorer citizen of its own product than the console.
+  const internal = await getRunInternal(access.owner, runId);
+  const guarantee = internal?.guaranteeId ? await getGuarantee(access.owner, internal.guaranteeId) : null;
+  const consoleBase = appHostUrl("");
+  const recordUrl = `${consoleBase}/applications/${access.applicationId}/passes/${runId}`;
+
   // Only failures the run actually observed. Each carries what was expected, what happened instead, and how
   // to reproduce it.
   const failures = detail.issues.map((i) => ({
@@ -89,6 +101,17 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     verification_id: id,
     state: "completed",
     decision,
+    // WHICH STANDING PROMISE THIS PROVES, and the exact meaning it proved. guarantee_plan_hash is what makes
+    // the claim checkable later: compare it against the guarantee's current approved hash to learn whether
+    // this evidence still speaks to the live definition, or to one that has since been re-approved.
+    guarantee_id: internal?.guaranteeId ?? null,
+    ...(guarantee ? { guarantee_title: guarantee.title, guarantee_plan_version: internal?.guaranteePlanVersion ?? null, guarantee_plan_hash: internal?.guaranteePlanHash ?? null } : {}),
+    // The repair relationship. Present when this run re-verified an earlier one; null for a first attempt.
+    reverification_of: detail.run.parent_run_id ?? null,
+    ...(detail.run.parent_run_id ? { reverification_of_url: `${consoleBase}/applications/${access.applicationId}/passes/${detail.run.parent_run_id}` } : {}),
+    // Where a person looks. An API result that cannot be opened is a dead end for the human the agent is
+    // reporting to.
+    console_url: recordUrl,
     claim: contract?.source_prompt ?? null,
     requirements: reqs.requirements,
     failures,

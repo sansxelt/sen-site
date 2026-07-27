@@ -147,7 +147,7 @@ async function verify(args) {
   if (!args.json && !args["repair-prompt"]) {
     say(`Verifying: ${claim}`);
     say(`Against:   ${url}`);
-    for (const r of started.json.requirements ?? []) say(`  · ${r}`);
+    for (const r of started.json.requirements ?? []) say(`  - ${r}`);
     say("");
     say("No human reviewed these requirements. If they do not match your claim, the verdict will not either.");
     say("");
@@ -183,7 +183,18 @@ function report(v, args) {
 
   if (args.json) { process.stdout.write(JSON.stringify(v) + "\n"); return code; }
 
+  // WHAT THIS RUN BELONGS TO. Printed before the verdict for every decision, because an agent handing this
+  // to a person needs the record to be openable and the standing promise to be nameable. Each line appears
+  // only when the API actually returned it, so the CLI never invents a relationship the record does not have.
+  const context = () => {
+    if (v.guarantee_title) say(`Guarantee  ${v.guarantee_title}`);
+    if (v.reverification_of) say(`Reverifies ${v.reverification_of}`);
+    if (v.console_url) say(`Record     ${v.console_url}`);
+    if (v.guarantee_title || v.reverification_of || v.console_url) say("");
+  };
+
   say("");
+  context();
   if (v.decision === "verified") {
     say(`VERIFIED  ${v.claim ?? ""}`);
     say(`Checked ${(v.requirements ?? []).length} requirement(s) in a real browser. No failures observed.`);
@@ -203,7 +214,7 @@ function report(v, args) {
   }
   say(`BLOCKED  no verdict was reached for: ${v.claim ?? ""}`);
   say("The deployment could not be exercised well enough to confirm or deny the claim.");
-  for (const e of v.evidence ?? []) if (e.result && e.result !== "passed") say(`  · ${e.checking}: ${e.result}`);
+  for (const e of v.evidence ?? []) if (e.result && e.result !== "passed") say(`  - ${e.checking}: ${e.result}`);
   return code;
 }
 
