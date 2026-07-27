@@ -73,7 +73,7 @@ export default async function UsagePage() {
   const spent = await Promise.all(keys.map((k) => settle(keySpentTodayCents(k.id), null)));
 
   const dayCap = maxRunsPerDay();
-  const hasApi = apiAccessAllowed(plan, email);
+  const hasApi = apiAccessAllowed(plan, email, planV1?.plan);
 
   return (
     <div className="wrap" style={{ maxWidth: 1080, paddingTop: "clamp(20px, 2.6vw, 32px)", paddingBottom: 80 }}>

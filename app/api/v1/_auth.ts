@@ -1,4 +1,5 @@
 import { verifyApiKey } from "@/lib/v-api-keys";
+import { getPlanV1State } from "@/lib/preflight/entitlements-v1";
 import { getPlan } from "@/lib/v-db";
 import { apiAccessAllowed } from "@/lib/v-entitlements";
 import { logEvent } from "@/lib/v-events";
@@ -53,7 +54,8 @@ export async function apiAuth(req: Request, scope?: string): Promise<ApiAuth> {
   const v = await verifyApiKey(key);
   if (!v) return { ok: false, response: apiError("unauthorized", "Invalid API key.", 401, rid) };
 
-  if (!apiAccessAllowed(await getPlan(v.userId), v.userId)) {
+  const v1 = await getPlanV1State(v.userId.toLowerCase()).catch(() => null);
+  if (!apiAccessAllowed(await getPlan(v.userId), v.userId, v1?.plan)) {
     return { ok: false, response: apiError("forbidden", "API access requires the Scale plan.", 403, rid) };
   }
 

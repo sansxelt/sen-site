@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { KeyUsage } from "@/lib/preflight/key-usage";
+import type { KeyUsage, KeySpendSummary } from "@/lib/preflight/key-usage";
 import { useEffect, useState } from "react";
 import { WebhooksSection } from "./webhooks-section";
 import { CliSection } from "./cli-section";
@@ -77,6 +77,9 @@ export default function ApiKeysPage() {
   const [openKey, setOpenKey] = useState<string | null>(null);
   // Per-key spend, fetched on expand and cached. Undefined = not asked yet, null = asked and unavailable.
   const [keyUsage, setKeyUsage] = useState<Record<string, KeyUsage | null | undefined>>({});
+  // Account-wide key spend. A per-key view cannot account for a revoked key, whose row is deleted, so this
+  // is what makes the panels add up to the bill.
+  const [spend, setSpend] = useState<KeySpendSummary | null>(null);
 
   // Money is fetched per key rather than with the list: the list is one query, this is a scan of that key's
   // runs, and nobody should pay for it on a page they opened to copy a prefix.
@@ -97,6 +100,7 @@ export default function ApiKeysPage() {
     if (r.ok) { const j = await r.json(); setKeys(j.keys || []); }
     setLoaded(true);
     fetch("/api/v/usage").then((x) => x.json()).then((j) => { if (j.signedIn) setU(j); }).catch(() => {});
+    fetch("/api/v/keys/spend").then((x) => (x.ok ? x.json() : null)).then((j) => setSpend(j?.summary ?? null)).catch(() => setSpend(null));
   }
   useEffect(() => { load(); }, []);
 
@@ -252,6 +256,32 @@ export default function ApiKeysPage() {
         </div>
       )}
       {keys.length > 0 && (
+        <>
+        {/* WHAT EVERY KEY HAS COST, TOGETHER. A per-key panel cannot account for a revoked key: the row is
+            deleted, and the panel finds keys through the caller's live list. Measured in production, that
+            was 9 of 10 key-launched runs and $120 of $135, so adding up the panels gave a number that did
+            not match the bill. Losing "which key" after revocation is fair. Losing "does this add up" is not. */}
+        {spend && spend.total.runs > 0 ? (
+          <div style={{ display: "flex", gap: 26, flexWrap: "wrap", alignItems: "baseline", padding: "12px 16px", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-2)", marginBottom: 12 }}>
+            <div>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-5)" }}>Charged to API keys, all time</div>
+              <div style={{ fontSize: 19, fontWeight: 600, color: "var(--fg-1)", marginTop: 3, fontVariantNumeric: "tabular-nums" }}>${(spend.total.chargedCents / 100).toFixed(2)}</div>
+              <div style={{ fontSize: 11, color: "var(--fg-5)", marginTop: 2 }}>{spend.total.runs} verification{spend.total.runs === 1 ? "" : "s"}{spend.total.flowUnits ? `, ${spend.total.flowUnits} journeys` : ""}</div>
+            </div>
+            {spend.revokedKeys.chargedCents > 0 || spend.revokedKeys.runs > 0 ? (
+              <div>
+                <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-5)" }}>By keys you have revoked</div>
+                <div style={{ fontSize: 19, fontWeight: 600, color: "var(--fg-2)", marginTop: 3, fontVariantNumeric: "tabular-nums" }}>${(spend.revokedKeys.chargedCents / 100).toFixed(2)}</div>
+                <div style={{ fontSize: 11, color: "var(--fg-5)", marginTop: 2 }}>
+                  {spend.revoked.map((r) => r.prefix ?? "a deleted key").slice(0, 3).join(", ")}{spend.revoked.length > 3 ? ` and ${spend.revoked.length - 3} more` : ""}
+                </div>
+              </div>
+            ) : null}
+            <p style={{ fontSize: 11, color: "var(--fg-5)", margin: 0, flex: 1, minWidth: 200 }}>
+              Revoking a key deletes it, so its own panel goes with it. Its verifications and their charges stay on your record, and are counted here.
+            </p>
+          </div>
+        ) : null}
         <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-lg)", overflow: "hidden", background: "var(--bg-1)", marginBottom: 28, boxShadow: "var(--shadow-sm)" }}>
           {keys.map((k, i) => {
             const reqs = u?.usage?.byPrefix?.[k.prefix] ?? 0;
@@ -339,6 +369,7 @@ export default function ApiKeysPage() {
             );
           })}
         </div>
+        </>
       )}
 
       {/* developer usage analytics */}

@@ -52,6 +52,28 @@ async function requestCounts(owner: string, prefix: string, nowMs: number): Prom
 
 export type KeyUsageWindow = { runs: number; chargedCents: number; flowUnits: number };
 
+/**
+ * Every verification any key ever launched for this owner, split by whether the key still exists.
+ *
+ * WHY THIS EXISTS. Revoking a key DELETES its row (revokeApiKey is a hard delete), and the per-key panel
+ * establishes ownership from the caller's live key list. So the moment a key is revoked, everything it
+ * spent stops being attributable to anything, and the panels no longer add up to the bill.
+ *
+ * Measured in production: 9 of 10 key-launched runs, $120 of $135, were launched by keys since revoked. A
+ * customer adding up their key panels would have seen $15 and been billed $135. "Which key cost me this"
+ * is a fair question to lose after revocation; "does this add up" is not.
+ *
+ * Names for revoked keys are recovered from the audit log, which records the prefix at revocation and on
+ * every use. That log is best-effort, so a key that was never logged stays unnamed rather than invented.
+ */
+export type KeySpendSummary = {
+  total: KeyUsageWindow;
+  liveKeys: KeyUsageWindow;
+  revokedKeys: KeyUsageWindow;
+  /** Newest first, only keys that actually spent something. `prefix` is null when the log cannot name it. */
+  revoked: { keyId: string; prefix: string | null; chargedCents: number; runs: number; flowUnits: number }[];
+};
+
 export type KeyUsage = {
   keyId: string;
   /** Produced by keySpentTodayCents: the SAME figure the daily ceiling enforces. */
@@ -174,5 +196,61 @@ export async function keyUsage(
       deploymentUrl: r.deployment_url,
     })),
     requests: await requestCounts(owner, String(key.prefix ?? ""), nowMs),
+  };
+}
+
+/**
+ * The account-wide reconciliation: what every key spent, and how much of it belongs to keys that are gone.
+ *
+ * Owner-scoped. Reads the run table for money (authoritative) and the events log only to put a name to a
+ * key id that no longer has a row (best-effort, and null rather than guessed when the log is silent).
+ */
+export async function keySpendSummary(owner: string, liveKeyIds: string[]): Promise<KeySpendSummary | null> {
+  if (!isDatabaseConfigured() || !owner) return null;
+  const s = getSupabaseAdminClient();
+  const uid = owner.trim().toLowerCase();
+
+  const { data, error } = await s
+    .from("v_preflight_runs" as never)
+    .select("id, created_at, state, decision, held_cents, credits_held, flow_units, deployment_url, api_key_id")
+    .eq("user_id", uid)
+    .not("api_key_id", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(2000);
+  if (error) return null;
+  const rows = ((data as unknown as (RunRow & { api_key_id: string | null })[] | null) ?? []);
+
+  const live = new Set(liveKeyIds);
+  const liveRows = rows.filter((r) => r.api_key_id && live.has(r.api_key_id));
+  const goneRows = rows.filter((r) => r.api_key_id && !live.has(r.api_key_id));
+
+  // Group the orphans by the key that launched them, so the total can be broken down rather than asserted.
+  const byKey = new Map<string, (RunRow & { api_key_id: string | null })[]>();
+  for (const r of goneRows) {
+    const k = String(r.api_key_id);
+    byKey.set(k, [...(byKey.get(k) ?? []), r]);
+  }
+
+  const revoked = await Promise.all(Array.from(byKey.entries()).map(async ([keyId, keyRows]) => {
+    const w = windowOf(keyRows);
+    let prefix: string | null = null;
+    try {
+      // api_key_used records BOTH the id and the prefix, so a key that ever made a logged call can still
+      // be named after its row is gone. A key that never did stays null; inventing a label would be worse.
+      const ev = await s.from("v_events" as never)
+        .select("metadata")
+        .eq("user_id", uid).eq("event_type", "api_key_used").eq("metadata->>id", keyId)
+        .limit(1).maybeSingle();
+      const meta = (ev.data as { metadata?: { prefix?: string | null } } | null)?.metadata;
+      prefix = meta?.prefix ?? null;
+    } catch { prefix = null; }
+    return { keyId, prefix, chargedCents: w.chargedCents, runs: w.runs, flowUnits: w.flowUnits };
+  }));
+
+  return {
+    total: windowOf(rows),
+    liveKeys: windowOf(liveRows),
+    revokedKeys: windowOf(goneRows),
+    revoked: revoked.filter((r) => r.runs > 0).sort((a, b) => b.chargedCents - a.chargedCents),
   };
 }

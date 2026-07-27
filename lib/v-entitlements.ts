@@ -42,7 +42,23 @@ export const MAX_VOTES_FREE = 100;
 
 // API access is a Scale+ feature. VRAELIS_API_ALLOW (comma-separated emails)
 // allowlists specific accounts regardless of plan — e.g. for testing.
-export function apiAccessAllowed(plan: string | null | undefined, email: string): boolean {
+// The VERSIONED catalog keys that carry API access. Held separately from TABLE rather than added to it,
+// because the two vocabularies are deliberately distinct: "scale" and "scale_v1" are different products
+// that happen to share a word, and the legacy meanings are never reused.
+const V1_API_PLANS = new Set(["scale_v1"]);
+
+/**
+ * May this account use the public API?
+ *
+ * `planV1` IS NOT OPTIONAL IN PRACTICE, and leaving it out was a real outage for paying customers.
+ *
+ * A versioned-plan subscriber has no v_subscriptions row, so getPlan returns "free". And "scale_v1" is not
+ * a key in TABLE, so entitlements() falls back to free as well. Two independent reasons, same answer: every
+ * caller that passed only the legacy plan refused API access to someone paying $399 a month for the plan
+ * whose headline feature is the API. That closed key creation AND every request an existing key made.
+ */
+export function apiAccessAllowed(plan: string | null | undefined, email: string, planV1?: string | null): boolean {
+  if (planV1 && V1_API_PLANS.has(planV1.trim())) return true;
   if (entitlements(plan).api) return true;
   const allow = (process.env.VRAELIS_API_ALLOW || "").toLowerCase().split(",").map((s) => s.trim()).filter(Boolean);
   return allow.includes((email || "").trim().toLowerCase());

@@ -13,6 +13,7 @@
 // be tested without a database, because a number about money that only production can check is a number
 // nobody checks.
 import { summarizeKeyRuns, windowOf, chargedCentsOf, type RunRow } from "../lib/preflight/key-usage";
+import { apiAccessAllowed } from "../lib/v-entitlements";
 
 let pass = 0, fail = 0;
 const ok = (n: string, c: boolean, d = "") => { console.log(`${c ? "PASS" : "FAIL"}  ${n}${d ? `  (${d})` : ""}`); if (c) pass++; else fail++; };
@@ -119,6 +120,95 @@ console.log("\n── money comes from the run table, requests come from the log
   const route = require("node:fs").readFileSync("app/api/v/keys/[id]/usage/route.ts", "utf8") as string;
   ok("the route establishes ownership from the caller's own key list", route.includes("listApiKeys(owner)") && route.includes("keys.find("));
   ok("a key that is not the caller's is a 404, not someone else's spend", route.includes('{ error: "not_found" }'));
+}
+
+// ── A REVOKED KEY'S SPEND MUST NOT VANISH ────────────────────────────────────────────────────────────
+// revokeApiKey DELETES the row, and the per-key panel finds keys through the caller's live list, so the
+// moment a key is revoked everything it spent stops being attributable to anything. Measured in production:
+// 9 of 10 key-launched runs, $120 of $135. Adding up the panels gave $15 against a $135 bill. Losing "which
+// key" after revocation is fair; losing "does this add up" is not.
+console.log("\n── the panels must add up to the bill ──");
+{
+  const src = require("node:fs").readFileSync("lib/preflight/key-usage.ts", "utf8") as string;
+  const code = src.replace(/^\s*\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "");
+  ok("there is an account-wide key spend summary", code.includes("export async function keySpendSummary("));
+  ok("it splits live keys from revoked ones", code.includes("liveKeys:") && code.includes("revokedKeys:"));
+  ok("it reads every key-launched run, not only the live ones", code.includes('.not("api_key_id", "is", null)'));
+  ok("a revoked key is named from the audit log rather than guessed",
+    code.includes('"api_key_used"') && code.includes("metadata->>id"));
+  ok("and stays unnamed when the log cannot name it", code.includes("prefix = null"));
+
+  const route = require("node:fs").readFileSync("app/api/v/keys/spend/route.ts", "utf8") as string;
+  ok("the summary route requires a session", route.includes('{ error: "signin_required" }'));
+  ok("and scopes to the caller's own keys", route.includes("listApiKeys(owner)"));
+}
+
+// The split is arithmetic, so it can be proven rather than described: live + revoked must equal the total,
+// whatever the rows are.
+{
+  const rows: RunRow[] = [
+    run({ created_at: new Date(NOW - HOUR).toISOString(), held_cents: 1500, flow_units: 1 }),
+    run({ created_at: new Date(NOW - 2 * DAY).toISOString(), held_cents: 3000, flow_units: 2 }),
+    run({ created_at: new Date(NOW - 3 * DAY).toISOString(), held_cents: null, flow_units: 3 }),
+  ];
+  const liveOnly = windowOf(rows.slice(0, 1));
+  const revokedOnly = windowOf(rows.slice(1));
+  const total = windowOf(rows);
+  ok("live money plus revoked money equals the total",
+    liveOnly.chargedCents + revokedOnly.chargedCents === total.chargedCents, `${liveOnly.chargedCents}+${revokedOnly.chargedCents} vs ${total.chargedCents}`);
+  ok("live runs plus revoked runs equal the total", liveOnly.runs + revokedOnly.runs === total.runs);
+  ok("live journeys plus revoked journeys equal the total",
+    liveOnly.flowUnits + revokedOnly.flowUnits === total.flowUnits, `${liveOnly.flowUnits}+${revokedOnly.flowUnits} vs ${total.flowUnits}`);
+}
+
+// ── A SCALE SUBSCRIBER MUST BE ABLE TO USE THE API THEY ARE PAYING FOR ───────────────────────────────
+// apiAccessAllowed took only the legacy plan. A versioned-plan subscriber has no v_subscriptions row, so
+// getPlan returns "free", and "scale_v1" is not a key in the legacy TABLE either, so entitlements() also
+// falls back to free. Two independent reasons, same answer: someone paying for the plan whose headline
+// feature is the API was refused key creation AND every request an existing key made.
+console.log("\n── the plan that sells the API must grant the API ──");
+{
+  ok("a versioned Scale subscriber is allowed", apiAccessAllowed("free", "a@b.c", "scale_v1"));
+  ok("and that is the exact shape a v1 subscriber presents: legacy plan reads free",
+    apiAccessAllowed("free", "a@b.c", "scale_v1") && !apiAccessAllowed("free", "a@b.c"));
+  ok("the legacy Scale plan still works", apiAccessAllowed("scale", "a@b.c"));
+  ok("enterprise still works", apiAccessAllowed("enterprise", "a@b.c"));
+
+  // The lower versioned plans do not sell the API, and must not quietly gain it.
+  ok("Builder does not get the API", !apiAccessAllowed("free", "a@b.c", "builder_v1"));
+  ok("Pro does not get the API", !apiAccessAllowed("free", "a@b.c", "pro_v1"));
+  ok("free is still free", !apiAccessAllowed("free", "a@b.c", null));
+  ok("an unknown versioned key grants nothing", !apiAccessAllowed("free", "a@b.c", "enterprise_v9"));
+
+  // Every gate must ASK with the versioned plan, or it reproduces the outage at that one call site.
+  //
+  // The arguments are extracted by BALANCED PARENTHESES, not by a regex. `apiAccessAllowed(await
+  // getPlan(email), email, v1?.plan)` contains a nested call, and a lazy regex stops at the inner `)` and
+  // reports two arguments as one. My first version of this check did exactly that and failed two call
+  // sites that were correct.
+  const argsOf = (src: string): string | null => {
+    const start = src.indexOf("apiAccessAllowed(");
+    if (start === -1) return null;
+    let depth = 0;
+    for (let i = start + "apiAccessAllowed".length; i < src.length; i++) {
+      if (src[i] === "(") depth++;
+      else if (src[i] === ")") { depth--; if (depth === 0) return src.slice(start + "apiAccessAllowed(".length + 1, i); }
+    }
+    return null;
+  };
+  const topLevelArgs = (args: string): number => {
+    let depth = 0, n = 1;
+    for (const ch of args) {
+      if (ch === "(" || ch === "[") depth++;
+      else if (ch === ")" || ch === "]") depth--;
+      else if (ch === "," && depth === 0) n++;
+    }
+    return args.trim() ? n : 0;
+  };
+  for (const f of ["app/api/v/keys/route.ts", "app/api/v1/_auth.ts", "app/api/v/usage/route.ts", "app/rank/app/usage/page.tsx"]) {
+    const args = argsOf(require("node:fs").readFileSync(f, "utf8") as string);
+    ok(`${f} asks with the versioned plan`, args !== null && topLevelArgs(args) >= 3, String(args).slice(0, 80));
+  }
 }
 
 console.log(`\n${pass}/${pass + fail} passed`);

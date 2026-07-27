@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getPlanV1State } from "@/lib/preflight/entitlements-v1";
 import { auth } from "@/auth";
 import { ensureProfile, getPlan } from "@/lib/v-db";
 import { apiAccessAllowed } from "@/lib/v-entitlements";
@@ -18,7 +19,8 @@ export async function POST(req: Request) {
   const email = session?.user?.email;
   if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
   await ensureProfile(email, session.user?.name ?? undefined);
-  if (!apiAccessAllowed(await getPlan(email), email)) {
+  const v1 = await getPlanV1State(email.toLowerCase()).catch(() => null);
+  if (!apiAccessAllowed(await getPlan(email), email, v1?.plan)) {
     return NextResponse.json({ error: "plan_required", need: "scale" }, { status: 403 });
   }
   const body = await req.json().catch(() => ({}));

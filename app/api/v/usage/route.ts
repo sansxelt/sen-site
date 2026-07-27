@@ -3,6 +3,7 @@
 // secrets, payloads, ip/device data).
 
 import { NextResponse } from "next/server";
+import { getPlanV1State } from "@/lib/preflight/entitlements-v1";
 import { auth } from "@/auth";
 import { getPlan } from "@/lib/v-db";
 import { apiAccessAllowed } from "@/lib/v-entitlements";
@@ -33,7 +34,7 @@ export async function GET() {
   return NextResponse.json({
     signedIn: true,
     plan,
-    hasApiAccess: apiAccessAllowed(plan, email),
+    hasApiAccess: apiAccessAllowed(plan, email, (await getPlanV1State(email.toLowerCase()).catch(() => null))?.plan),
     usage,
     webhook,
     recent,
