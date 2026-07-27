@@ -158,6 +158,9 @@ export async function POST(req: Request) {
     if (resolution.readyToLaunch) {
       const discoveryHash = createHash("sha256").update(JSON.stringify(s.pages ?? [])).digest("hex").slice(0, 32);
       reviewed = await mintReviewedPlan({
+      // A /v1 verification is a plain one: it runs on the API lane application, not against a standing
+      // guarantee. Stated rather than omitted, so nobody later reads the absence as an oversight.
+      guaranteeId: null,
         owner: p.principal.email, deploymentUrl, claim, plan: resolution.plan, discoveryHash,
         coverage: { claim_after: resolution.claimAfter, execution_after: resolution.executionAfter, ready: resolution.readyToLaunch },
         ttlMs: REVIEWED_PLAN_TTL_MS, nowMs: Date.now(),
@@ -294,6 +297,9 @@ export async function POST(req: Request) {
 
   const discoveryHash = createHash("sha256").update(JSON.stringify(s.pages ?? [])).digest("hex").slice(0, 32);
   const minted = await mintReviewedPlan({
+      // A /v1 verification is a plain one: it runs on the API lane application, not against a standing
+      // guarantee. Stated rather than omitted, so nobody later reads the absence as an oversight.
+      guaranteeId: null,
     owner: p.principal.email, deploymentUrl, claim, plan: resolution.plan, discoveryHash,
     coverage: { claim_after: resolution.claimAfter, execution_after: resolution.executionAfter, ready: resolution.readyToLaunch },
     ttlMs: REVIEWED_PLAN_TTL_MS, nowMs: Date.now(),

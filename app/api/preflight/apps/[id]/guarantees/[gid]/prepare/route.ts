@@ -71,7 +71,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   // REUSE-FIRST: a valid prepared plan already exists for this claim + deployment, so return it unchanged
   // instead of re-synthesizing. This is what makes the prepared plan stable across refresh and repeated clicks.
   if (!force) {
-    const live = await findLivePendingPlanForClaim(owner, app.app_url, g.title);
+    const live = await findLivePendingPlanForClaim(owner, app.app_url, g.title, gid);
     if (live && planHash(live.plan) === live.planHash) return planResponse(live, true);
   }
 
@@ -96,6 +96,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   // onto the guarantee, so the durable approved plan is independent of this row's TTL.
   const discoveryHash = createHash("sha256").update(JSON.stringify(s.pages ?? [])).digest("hex").slice(0, 32);
   const reviewed = await mintReviewedPlan({
+    // This plan DEFINES this guarantee. Recorded now, so nothing downstream has to infer it from the
+    // claim text and the URL happening to match.
+    guaranteeId: gid,
     owner, deploymentUrl: app.app_url, claim: g.title, plan: resolution.plan, discoveryHash,
     coverage: { claim_after: resolution.claimAfter, execution_after: resolution.executionAfter, ready: true },
     ttlMs: TTL_MS, nowMs: Date.now(),

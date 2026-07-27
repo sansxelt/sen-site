@@ -40,6 +40,12 @@ function toStored(d: Row): StoredReviewedPlan {
 export async function mintReviewedPlan(input: {
   owner: string; deploymentUrl: string; claim: string; plan: PlannedVerification;
   discoveryHash: string | null; coverage: unknown; ttlMs: number; nowMs: number;
+  /** WHICH GUARANTEE THIS PLAN DEFINES, decided at mint and never inferred afterwards. Explicit, not
+   *  optional, because the two kinds of plan are otherwise indistinguishable: the dedupe below matches on
+   *  (owner, deployment_fp, claim_fp, plan_hash), so a plain verification and a guarantee's plan for the
+   *  same URL and the same sentence were the SAME ROW, and whichever was minted first decided what the
+   *  other one became. Null means a plain verification, which is the common case and stays supported. */
+  guaranteeId: string | null;
 }): Promise<{ id: string; expiresAt: string; reused: boolean } | null> {
   if (!isDatabaseConfigured()) return null;
   const s = getSupabaseAdminClient();
@@ -48,10 +54,22 @@ export async function mintReviewedPlan(input: {
   const claim_fp = claimFingerprint(input.claim);
   const plan_hash = planHash(input.plan);
 
+  // Reuse is scoped to the guarantee as well. Without this a guarantee's plan and a plain verification of
+  // the same claim collapse into one row, and approving one silently approves the other.
   const findLive = async () => {
-    const r = await s.from(TABLE as never).select("id,expires_at").eq("user_id", uid)
+    let q = s.from(TABLE as never).select("id,expires_at").eq("user_id", uid)
       .eq("deployment_fp", deployment_fp).eq("claim_fp", claim_fp).eq("plan_hash", plan_hash)
-      .neq("execution_state", "consumed").maybeSingle();
+      .neq("execution_state", "consumed");
+    q = input.guaranteeId ? q.eq("guarantee_id", input.guaranteeId) : q.is("guarantee_id", null);
+    const r = await q.maybeSingle();
+    // guarantee_id is additive (migration 23). If it is absent the scoped query errors, so fall back to the
+    // pre-migration behaviour rather than losing dedupe entirely.
+    if (r.error) {
+      const plain = await s.from(TABLE as never).select("id,expires_at").eq("user_id", uid)
+        .eq("deployment_fp", deployment_fp).eq("claim_fp", claim_fp).eq("plan_hash", plan_hash)
+        .neq("execution_state", "consumed").maybeSingle();
+      return (plain.data as { id: string; expires_at: string } | null) ?? null;
+    }
     return (r.data as { id: string; expires_at: string } | null) ?? null;
   };
 
@@ -67,7 +85,15 @@ export async function mintReviewedPlan(input: {
     coverage: input.coverage, approval_state: "pending", execution_state: "unconsumed",
     expires_at: expiresAt, created_at: nowIso, updated_at: nowIso,
   };
-  const ins = await s.from(TABLE as never).insert(row as never).select("id,expires_at").maybeSingle();
+  const withGuarantee = input.guaranteeId ? { ...row, guarantee_id: input.guaranteeId } : row;
+  let ins = await s.from(TABLE as never).insert(withGuarantee as never).select("id,expires_at").maybeSingle();
+  // A plan that was supposed to define a guarantee must NOT quietly become a plain one. If the column is
+  // missing the feature is unmigrated, so refuse rather than mint an unlinked plan that later reads as a
+  // guarantee's approved meaning.
+  if (ins.error && input.guaranteeId && /guarantee_id/i.test(ins.error.message ?? "")) {
+    console.error("mintReviewedPlan: v_reviewed_plans.guarantee_id is missing. Apply sql/vraelis-preflight-23-guarantee-binding.sql (migration 23). Refusing to mint an UNLINKED plan for a guarantee.");
+    return null;
+  }
   if (ins.error) {
     // Either the table is missing (feature inert) or a concurrent mint won the unique index. Re-select: if a
     // live row now exists it was the race, return it; otherwise the table is unavailable and we offer no handle.
@@ -126,7 +152,7 @@ export async function getReviewedPlanByRunId(owner: string, runId: string): Prom
 // prepare route both look it up so a refresh (or a repeated derive) shows the SAME prepared plan instead of
 // re-synthesizing a new one. Keyed by the same fingerprints mint uses, so it finds exactly what was minted.
 export type PendingPlanView = { id: string; plan: PlannedVerification; planHash: string; claim: string; expiresAt: string };
-export async function findLivePendingPlanForClaim(owner: string, deploymentUrl: string, claim: string): Promise<PendingPlanView | null> {
+export async function findLivePendingPlanForClaim(owner: string, deploymentUrl: string, claim: string, guaranteeId: string | null = null): Promise<PendingPlanView | null> {
   if (!isDatabaseConfigured()) return null;
   try {
     const s = getSupabaseAdminClient();
@@ -137,6 +163,9 @@ export async function findLivePendingPlanForClaim(owner: string, deploymentUrl: 
       .eq("approval_state", "pending")
       .eq("execution_state", "unconsumed")
       .gt("expires_at", new Date().toISOString())
+      // Same scoping as mint: a guarantee looking for its live plan must never be handed a plain
+      // verification's plan that happens to share the claim text and the URL.
+      .eq("guarantee_id", guaranteeId as never)
       .order("created_at", { ascending: false }).limit(1).maybeSingle();
     const d = r.data as { id?: string; plan?: PlannedVerification; plan_hash?: string; claim?: string; expires_at?: string } | null;
     if (!d?.id || !d.plan) return null;

@@ -32,7 +32,7 @@ import { passPricingEnabled, rerunPriceCents } from "@/lib/preflight/pass-pricin
 import { gatePassLaunch, recordRunPassUsage } from "@/lib/preflight/entitlements-v1";
 import { resolveCanonicalCluster, consumeFreeGrantOverride, recordFreeGrantRisk, hashRiskSignal, claimFreePass, attachRunToClaim, releaseFreePass } from "@/lib/preflight/free-grant-cluster";
 import { isRunsGovernorPaused, globalActiveRunsAtCap, checkAccountVelocity, recordProviderAttempt, recordProviderCost, maybeTripGlobalBudget, estimateProviderCents } from "@/lib/preflight/cost-governor";
-import { getRunInternal, parentRunFlows, setParentRun } from "@/lib/preflight/run-report-db";
+import { getRunInternal, parentRunFlows } from "@/lib/preflight/run-report-db";
 import { applicationAccessForRun } from "@/lib/preflight/team-access";
 import { hasAtLeastRole } from "@/lib/v-workspace";
 import { logEvent } from "@/lib/v-events";
@@ -262,6 +262,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ runId: 
       ? { id: parent.guaranteeId, planVersion: parent.guaranteePlanVersion, planHash: parent.guaranteePlanHash, reviewedPlanId: parent.guaranteeReviewedPlanId }
       : null,
     deploymentUrl, submissionId, flowIds, creditsHeld, reservationId: heldReservationId,
+    // Lineage rides the SAME insert. It used to be a separate UPDATE afterwards, inside a try/catch that
+    // swallowed every error, so a rerun could succeed while quietly losing the link to what it repaired.
+    parentRunId,
   });
 
   if (!created) {
@@ -296,8 +299,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ runId: 
     }
   }
 
-  // Best-effort provenance: link the new run back to its parent (see setParentRun).
-  await setParentRun(owner, created.runId, parentRunId);
 
   await logEvent({
     userId: owner, eventType: "preflight_run_rerun", actorType: "owner", source: "app",

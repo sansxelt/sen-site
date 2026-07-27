@@ -56,6 +56,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     planHash: live.planHash,
     roleRefs: planRoleRefs(live.plan),
     approver: callerEmail.toLowerCase(),
+    // The exact artifact this person read. live.id is the plan the integrity check above just verified and
+    // the supersede check just confirmed is still the current one, so it is the only honest answer to
+    // "what did they approve".
+    reviewedPlanId: live.id,
   });
   if (!updated) return NextResponse.json({ error: "approve_failed", message: "Could not record the approval." }, { status: 400 });
 

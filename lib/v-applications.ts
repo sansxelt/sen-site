@@ -284,10 +284,24 @@ export async function getContractById(userId: string, contractId: string): Promi
 
 // The latest APPROVED contract for an app (may differ from getContract when a newer draft revision
 // exists). Runs verify against this one until the draft is approved.
+// The system's PRODUCTION contract: the customer's own curated requirements, and the one a browser launch
+// runs. It deliberately excludes kind='guarantee'.
+//
+// WHY THAT EXCLUSION EXISTS BEFORE THE THING IT EXCLUDES. Approving a guarantee's plan materializes it into
+// a frozen contract on the SAME application, and this query returns the highest-version APPROVED contract.
+// Without the filter, approving one guarantee would silently replace the customer's Production Contract for
+// the contract page, the context page, pass preview, api-flows and every later browser-launched run. The
+// guard ships first, so the feature can never land ahead of it.
 export async function getApprovedContract(userId: string, applicationId: string): Promise<ProductionContract | null> {
   if (!isDatabaseConfigured()) return null;
-  const { data } = await db().from("v_production_contracts").select("*").eq("user_id", norm(userId)).eq("application_id", applicationId)
-    .eq("status", "approved").order("version", { ascending: false }).limit(1).maybeSingle();
+  const base = () => db().from("v_production_contracts").select("*").eq("user_id", norm(userId)).eq("application_id", applicationId)
+    .eq("status", "approved").order("version", { ascending: false }).limit(1);
+  // kind is additive (migration 23) with default 'production', so every pre-existing row already answers
+  // this filter correctly. If the column is absent the query errors and we fall back — on that schema no
+  // guarantee contract can exist yet, so the unfiltered read is exactly equivalent.
+  const filtered = await base().eq("kind", "production").maybeSingle();
+  if (!filtered.error) return (filtered.data as unknown as ProductionContract) ?? null;
+  const { data } = await base().maybeSingle();
   return (data as unknown as ProductionContract) ?? null;
 }
 

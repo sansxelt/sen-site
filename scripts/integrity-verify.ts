@@ -68,6 +68,7 @@ const SUITES: Suite[] = [
   { file: "scripts/preflight-human-eval-retired-verify.ts", npm: "human-eval-retired:test" },
   { file: "scripts/preflight-launch-affordance-verify.ts", npm: "launch:affordance:test" },
   { file: "scripts/preflight-limits-verify.ts", npm: "preflight:limits:test" },
+  { file: "scripts/guarantee-binding-verify.ts", npm: "guarantee:binding:test" },
   { file: "scripts/preflight-reconcile-verify.ts", npm: "preflight:reconcile:test" },
   { file: "scripts/preflight-role-ui-verify.ts", npm: "role:ui:test" },
   { file: "scripts/preflight-routes-verify.ts", npm: "routes:test" },

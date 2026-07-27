@@ -124,7 +124,12 @@ export async function createGuarantee(owner: string, input: CreateGuaranteeInput
 // reviewed plan onto the guarantee (durable, deployment-independent), stamp the approver, bump plan_version,
 // and flip plan_state to 'ok'. This is the ONLY path that sets a guarantee approved; the caller must have
 // authenticated a session principal (never an agent key) before calling. Returns the updated row or null.
-export type ApproveGuaranteePlanInput = { claim: string; plan: PlannedVerification; planHash: string; roleRefs: string[]; approver: string };
+export type ApproveGuaranteePlanInput = {
+  claim: string; plan: PlannedVerification; planHash: string; roleRefs: string[]; approver: string;
+  /** The immutable reviewed plan the approver actually read. Carried onto the guarantee so every run it
+   *  later launches can point at the artifact a person accepted, rather than at a claim that it happened. */
+  reviewedPlanId: string | null;
+};
 
 export async function approveGuaranteePlan(owner: string, id: string, input: ApproveGuaranteePlanInput): Promise<Guarantee | null> {
   try {
@@ -133,12 +138,22 @@ export async function approveGuaranteePlan(owner: string, id: string, input: App
     // Read the current version (owner-scoped) so the bump is monotonic; a missing/foreign row aborts.
     const current = await getGuarantee(owner, id);
     if (!current) return null;
-    const { data, error } = await db().from("v_guarantees").update({
+    const patch = {
       approved_claim: input.claim, approved_plan: input.plan, approved_plan_hash: input.planHash,
       approved_role_refs: input.roleRefs, plan_version: current.plan_version + 1,
       plan_approved_by: input.approver, plan_approved_at: new Date().toISOString(),
       plan_state: "ok", updated_at: new Date().toISOString(),
-    } as never).eq("user_id", uid).eq("id", id).select(GUARANTEE_COLUMNS).single();
+    };
+    // approved_reviewed_plan_id is additive (migration 23). Written when the column exists, dropped when it
+    // does not, so approval keeps working on an unmigrated database and simply records less provenance.
+    const withProvenance = input.reviewedPlanId ? { ...patch, approved_reviewed_plan_id: input.reviewedPlanId } : patch;
+    let { data, error } = await db().from("v_guarantees").update(withProvenance as never)
+      .eq("user_id", uid).eq("id", id).select(GUARANTEE_COLUMNS).single();
+    if (error && /approved_reviewed_plan_id/i.test((error as { message?: string }).message ?? "")) {
+      console.warn("approveGuaranteePlan: v_guarantees.approved_reviewed_plan_id is missing. Apply sql/vraelis-preflight-23-guarantee-binding.sql (migration 23). Approved without approval provenance.");
+      ({ data, error } = await db().from("v_guarantees").update(patch as never)
+        .eq("user_id", uid).eq("id", id).select(GUARANTEE_COLUMNS).single());
+    }
     if (error || !data) { if (missingGuaranteesTable(error)) warnUnmigrated("approveGuaranteePlan"); return null; }
     return rowToGuarantee(data as Record<string, unknown>);
   } catch { return null; }
