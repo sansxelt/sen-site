@@ -61,6 +61,45 @@ export function resolveRole(accounts: TestAccountRef[], role: string): TestAccou
 
 // The core sign-in. Returns an AuthActionResult; NEVER throws for a credential/auth problem (those become
 // classified failures). Only a genuinely unexpected provider error propagates to the executor's catch.
+// HOW LONG A SIGN-IN IS GIVEN TO BECOME OBSERVABLE.
+//
+// submitLogin resolves when the CLICK is done, not when the application has signed anyone in. Reading the
+// session state at that instant asks whether an app is authenticated before it has had a chance to be.
+//
+// Measured against the demo deployment, from the click:
+//     53ms   not authenticated, "still on the login screen"
+//    567ms   the browser is on /dashboard, still no session evidence
+//   1094ms   authenticated
+//
+// The old code read once, immediately, and turned that first observation into auth_rejected_by_app, whose
+// own comment reads "the app refused VALID creds". Three consecutive production runs against an application
+// whose sign-in works by hand were published as the customer's login being broken.
+//
+// Bounded by ATTEMPTS rather than wall-clock, because `now` is injectable and the suites freeze it; a
+// deadline computed from a frozen clock never expires. A rejection still resolves as a rejection, it just
+// takes the full window first, which is the right trade: a slow no is recoverable, a false no is not.
+const AUTH_SETTLE = { attempts: 40, delayMs: 200 } as const;   // up to 8s
+
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+// Poll until the session becomes observable, the app declares a challenge, or the window closes. Returns
+// the LAST state seen, so nothing here can manufacture a pass: only readAuthState decides.
+async function settleAuthState(
+  page: PreflightPage,
+  expect: { route?: string; element?: string },
+  settle: { attempts: number; delayMs: number },
+): Promise<AuthState> {
+  let state: AuthState = { authenticated: false, via: "none", detail: "no session evidence" };
+  for (let i = 0; i < Math.max(1, settle.attempts); i++) {
+    state = await page.readAuthState({ expectRoute: expect.route, expectElement: expect.element });
+    if (state.authenticated) return state;
+    // An MFA or CAPTCHA wall is a final answer, not something to wait out.
+    if (challengeFromAuthDetail(state.detail)) return state;
+    if (i < settle.attempts - 1 && settle.delayMs > 0) await sleep(settle.delayMs);
+  }
+  return state;
+}
+
 export async function signInAs(
   page: PreflightPage,
   role: string,
@@ -70,6 +109,7 @@ export async function signInAs(
   vaultConfigured: boolean,
   expect: { route?: string; element?: string },
   now: () => number,
+  settle: { attempts: number; delayMs: number } = AUTH_SETTLE,
 ): Promise<AuthActionResult> {
   const t0 = now();
   const fail = (detail: string, authFailure: AuthFailureCode): AuthActionResult => ({
@@ -139,7 +179,7 @@ export async function signInAs(
 
     // 7. VERIFY the session by DETERMINISTIC observed evidence — never claim success just because submit
     //    was clicked. An expected route OR a visible authenticated element OR a session/cookie presence.
-    const state = await page.readAuthState({ expectRoute: expect.route, expectElement: expect.element });
+    const state = await settleAuthState(page, expect, settle);
     const chal = challengeFromAuthDetail(state.detail);
     if (chal) {
       // MFA / CAPTCHA: stop safely, classify, manual setup required. NEVER attempt to bypass.
@@ -191,11 +231,24 @@ export async function verifyAuth(
 
 // sign_out: perform the app's logout, then confirm the session is gone. A logout that does not clear the
 // session is a real finding (failed), not a worker config problem.
-export async function signOut(page: PreflightPage, logoutStep: Step | null, now: () => number): Promise<AuthActionResult> {
+export async function signOut(
+  page: PreflightPage,
+  logoutStep: Step | null,
+  now: () => number,
+  settle: { attempts: number; delayMs: number } = AUTH_SETTLE,
+): Promise<AuthActionResult> {
   const t0 = now();
   try {
     if (logoutStep) await page.perform(logoutStep);
-    const state = await page.readAuthState();
+    // THE SAME RACE, IN REVERSE. Clicking sign out returns when the click is done, not when the session is
+    // gone, and reading once at that instant reports "sign-out did not clear the session" against an
+    // application that was about to clear it. Poll until it IS gone, and only then decide.
+    let state: AuthState = { authenticated: true, via: "none", detail: "session still present" };
+    for (let i = 0; i < Math.max(1, settle.attempts); i++) {
+      state = await page.readAuthState();
+      if (!state.authenticated) break;
+      if (i < settle.attempts - 1 && settle.delayMs > 0) await sleep(settle.delayMs);
+    }
     const ok = !state.authenticated;
     return { obs: { action: "sign_out", ok, detail: (ok ? "signed out; session cleared" : "sign-out did not clear the session").slice(0, 200), ms: now() - t0 }, ok };
   } catch {

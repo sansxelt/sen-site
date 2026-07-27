@@ -570,6 +570,88 @@ const workerSrc = readFileSync("worker/preflight/worker.ts", "utf8");
 ok("static: worker.ts documents per-run credential scoping is what makes maxConcurrentRuns safe to raise",
   /per run|per-run/i.test(workerSrc) && workerSrc.includes("maxConcurrentRuns"));
 
+// ── A SIGN-IN IS NOT INSTANT, AND ASKING TOO EARLY IS NOT A REJECTION ─────────────────────────────────
+// submitLogin resolves when the click is done, not when the application has signed anyone in. The old code
+// read the session state once at that instant and turned "not yet" into auth_rejected_by_app, whose comment
+// reads "the app refused VALID creds". Measured against the demo deployment from the click: 53ms not
+// authenticated and still on the login screen, 567ms on /dashboard with no session evidence, 1094ms
+// authenticated. Three consecutive production runs blamed an application whose sign-in works by hand.
+{
+  // Authenticates only from the Nth read onward, and counts how many times it was asked.
+  class LateAuthPage extends FakePage {
+    public reads = 0;
+    constructor(private readonly authFromRead: number, private readonly detail = "still on the login screen") {
+      super({}, "https://app.example/login", undefined, { authenticated: false });
+    }
+    async readAuthState() {
+      this.reads++;
+      return this.reads >= this.authFromRead
+        ? { authenticated: true, via: "session" as const, detail: "a session cookie is present" }
+        : { authenticated: false, via: "none" as const, detail: this.detail };
+    }
+  }
+  const go = (page: FakePage, attempts: number) =>
+    signInAs(page, "admin", ACCOUNTS[0], goodOpener, { owner: "o", applicationId: "a" }, true, {}, clock, { attempts, delayMs: 0 });
+
+  const late = new LateAuthPage(4);
+  const lateResult = await go(late, 10);
+  ok("signInAs waits for a sign-in that only becomes observable after a few reads", lateResult.ok && !lateResult.authFailure);
+  ok("it stopped asking as soon as the session appeared", late.reads === 4, `reads=${late.reads}`);
+
+  // The defect itself, pinned: the SAME page read only once is called a rejection. This is what the code did.
+  const onceOnly = new LateAuthPage(4);
+  const onceResult = await go(onceOnly, 1);
+  ok("reading once, as the old code did, calls that same working sign-in a rejection",
+    !onceResult.ok && onceResult.authFailure === "auth_rejected_by_app");
+
+  // And a real rejection is still a rejection, bounded rather than waited on forever.
+  const never = new LateAuthPage(Number.MAX_SAFE_INTEGER);
+  const neverResult = await go(never, 3);
+  ok("a sign-in that never becomes observable is still auth_rejected_by_app",
+    !neverResult.ok && neverResult.authFailure === "auth_rejected_by_app");
+  ok("the wait is bounded by attempts, not left to a clock the suites freeze", never.reads === 3, `reads=${never.reads}`);
+
+  // A challenge is a final answer. Waiting one out would burn the whole window for nothing.
+  class MfaPage extends FakePage {
+    public reads = 0;
+    constructor() { super({}, "https://app.example/login", undefined, { authenticated: false }); }
+    async readAuthState() {
+      this.reads++;
+      return { authenticated: false, via: "none" as const, detail: "mfa verification code required" };
+    }
+  }
+  const mfaPage = new MfaPage();
+  const mfaResult = await go(mfaPage, 50);
+  ok("an MFA wall is answered immediately, not waited out", mfaResult.authFailure === "mfa_required");
+  ok("and it was asked exactly once", mfaPage.reads === 1, `reads=${mfaPage.reads}`);
+
+  // The same race in reverse: sign-out reports success only once the session is actually gone.
+  class LateSignOutPage extends FakePage {
+    public reads = 0;
+    constructor(private readonly clearFromRead: number) {
+      super({}, "https://app.example/dashboard", undefined, { authenticated: true });
+    }
+    async readAuthState() {
+      this.reads++;
+      return this.reads >= this.clearFromRead
+        ? { authenticated: false, via: "none" as const, detail: "no session evidence" }
+        : { authenticated: true, via: "session" as const, detail: "a session cookie is present" };
+    }
+  }
+  const lateOut = new LateSignOutPage(3);
+  const outResult = await signOut(lateOut, null, clock, { attempts: 10, delayMs: 0 });
+  ok("sign_out waits for the session to actually clear before judging it", outResult.ok);
+  // The read COUNT is the assertion that can fail. Whether it stops early changes reads; whether it ends
+  // up correct does not, because the last read is right either way. Without this the guard was decorative.
+  ok("and it stopped asking the moment the session was gone", lateOut.reads === 3, `reads=${lateOut.reads}`);
+  const outOnce = new LateSignOutPage(3);
+  const outOnceResult = await signOut(outOnce, null, clock, { attempts: 1, delayMs: 0 });
+  ok("reading once would have called that same working sign-out a failure", !outOnceResult.ok);
+  const outNever = new LateSignOutPage(Number.MAX_SAFE_INTEGER);
+  const outNeverResult = await signOut(outNever, null, clock, { attempts: 3, delayMs: 0 });
+  ok("a sign-out that genuinely leaves the session behind is still a failure", !outNeverResult.ok);
+}
+
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);
 })().catch((e) => { console.error("auth-flow tests crashed:", (e as Error).message); process.exit(1); });
