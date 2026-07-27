@@ -305,6 +305,21 @@ function AppTopbar({ email, systems, pendingReviews }: { email: string | null; s
             of the screen and neither does Linear. Both are still one click away, now inside the account menu
             where the rest of the account lives, and neither the plan nor the balance was removed. */}
         <CommandPalette systems={systems} />
+        {/* PLAN AND BALANCE, BACK IN THE BAR AT THE FOUNDER'S REQUEST, but not leading it.
+            They were two large pills that opened the product, which made "what you pay" and "what you have
+            left" the headline facts of a verification tool. Then they moved into the account menu, which
+            hid a number people check constantly. This is the middle: plain text, after the command surface,
+            no pill, no state colour — a subscription tier is not a verification result, and the green here
+            means "it held". */}
+        {planLabel !== null && (
+          <div className="vra-acct-readout">
+            <Link href="/plans" aria-label={`Your plan: ${planLabel}`}>{planLabel}</Link>
+            <span aria-hidden>/</span>
+            <Link href="/usage" aria-label={`${balanceLabel} credits available`}>
+              <span style={{ fontVariantNumeric: "tabular-nums" }}>{balanceLabel}</span> credits
+            </Link>
+          </div>
+        )}
         {/* Shown only when a plan is genuinely waiting for a person. A zero-state badge trains people to
             ignore the badge, which costs more than it ever gains. */}
         {pendingReviews > 0 && (
@@ -341,13 +356,7 @@ function AppTopbar({ email, systems, pendingReviews }: { email: string | null; s
               {/* Where the two topbar pills went. Same values, same destinations, read from the same
                   /api/v/me; they are account facts, so they sit with the account. The balance is a CREDIT
                   COUNT, never cents and never dollars — do not format it as currency. */}
-              {planLabel !== null && (
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, fontSize: 12, color: "var(--fg-3)" }}>
-                  <Link href="/plans" style={{ color: "var(--fg-2)", textDecoration: "none", fontWeight: 600 }}>{planLabel} plan</Link>
-                  <span aria-hidden style={{ color: "var(--fg-5)" }}>/</span>
-                  <Link href="/credits" style={{ color: "var(--fg-2)", textDecoration: "none", fontVariantNumeric: "tabular-nums" }}>{balanceLabel} credits</Link>
-                </div>
-              )}
+
             </div>
             {ACCOUNT_MENU.map((l) => (
               <Link key={l.href} href={l.href} style={item}><span style={itemIcon}><Ic d={l.d} size={15} sw={1.8} /></span>{l.label}</Link>
@@ -543,8 +552,12 @@ const SHELL_UI_CSS = "@keyframes vraTextIn{from{opacity:0;transform:translateY(1
   + ".vra-cmd-kbd{font-family:var(--font-code);font-size:10.5px;color:var(--fg-5);border:1px solid var(--line-2);border-radius:5px;padding:1px 5px;background:var(--bg-1)}"
   + ".vra-topbar-review{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 12px;border-radius:99px;text-decoration:none;font-size:12.5px;font-weight:600;color:var(--wait-ink);background:var(--wait-wash);border:1px solid var(--wait-line);white-space:nowrap;flex:none}"
   + ".vra-topbar-review__n{font-variant-numeric:tabular-nums;font-weight:700}"
+  + ".vra-acct-readout{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--fg-4);white-space:nowrap;flex:none}"
+  + ".vra-acct-readout a{color:var(--fg-3);text-decoration:none}"
+  + ".vra-acct-readout a:hover{color:var(--fg-1)}"
   // Narrow screens: the trigger collapses to its icon, and the review indicator drops its word but keeps the
   // number, because the number is the part that says whether it needs you.
+  + "@media (max-width:980px){.vra-acct-readout{display:none}}"
   + "@media (max-width:760px){.vra-cmd-trigger__label,.vra-cmd-kbd{display:none}.vra-cmd-trigger{padding:0 10px}.vra-topbar-review__label{display:none}}"
   + "@media (prefers-reduced-motion:reduce){.rank-root .eyebrow,.rank-root .display,.rank-root .lead-copy{animation:none}.rank-root .btn:active,.rank-root a.card:hover,.rank-root a.card:active,.rank-root a.acard:hover,.rank-root a.acard:active{transform:none}}";
 

@@ -190,8 +190,17 @@ const topbar = ui.slice(topbarIdx, ui.indexOf("function WorkspaceSwitcher"));
 const topbarHeader = topbar.slice(topbar.indexOf("<header"));
 ok("the top bar does not lead with the plan or the balance",
   !/href="\/plans"[\s\S]{0,400}?height: 34/.test(topbarHeader.slice(0, topbarHeader.indexOf("acct-menu"))));
-ok("plan and balance are still reachable, inside the account menu",
-  /href="\/plans"/.test(topbar) && /href="\/credits"/.test(topbar));
+// The founder asked for them back in the bar: a number people check constantly should not need a click.
+// So the rule is no longer WHERE they live but HOW they carry themselves. They may not lead the bar, and
+// they may not wear a state colour, because on this surface green means "this verification held" and a
+// subscription tier is not a verification result.
+ok("plan and balance are visible in the bar", /vra-acct-readout/.test(topbar) && /href="\/plans"/.test(topbar));
+ok("they do not lead it: the command surface comes first",
+  topbarHeader.indexOf("<CommandPalette") < topbarHeader.indexOf("vra-acct-readout"));
+ok("the readout is plain text, not a pill competing with the primary action",
+  !/vra-acct-readout[\s\S]{0,300}?border-radius:99px/.test(ui));
+ok("the readout never wears a state colour",
+  !/\.vra-acct-readout[^"]*(--go-|--wait-|--stop-)/.test(ui));
 ok("the top bar leads with the command surface and the primary action",
   /<CommandPalette/.test(topbar) && /New verification/.test(topbar));
 // The one thing in the bar allowed a state colour is the review indicator, because it is the only thing in
