@@ -17,6 +17,7 @@ import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { getApplication, updateApplication } from "@/lib/v-applications";
 import { recordDeployment } from "@/lib/preflight/deployments-db";
+import { applySetupExtras, normalizeContextSources } from "@/lib/preflight/connections-db";
 import { applicationAccess } from "@/lib/preflight/team-access";
 import { hasAtLeastRole } from "@/lib/v-workspace";
 import { logEvent } from "@/lib/v-events";
@@ -55,6 +56,16 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   else if (typeof body?.appUrl === "string") patch.app_url = body.appUrl;
   if (typeof body?.environment === "string" || body?.environment === null) patch.environment = body.environment;
   if (typeof body?.description === "string") patch.description = body.description;
+
+  // PRODUCT CONTEXT WAS WRITE-ONCE. POST /api/preflight/apps accepted context_sources at creation and
+  // nothing accepted them afterwards, so a maker who described their product badly, or learned something
+  // about it later, could never correct the record. The description feeds claim synthesis, and the crawler
+  // cannot sign in, so for a system whose interesting behaviour is behind a login this is the only channel
+  // the planner has for the signed-in surface. Write-once meant the planner's evidence was frozen at setup.
+  // Same normalizer and same writer as creation; absent key leaves the stored context untouched.
+  if (Array.isArray(body?.context_sources)) {
+    await applySetupExtras(g.owner, g.appId, { context: normalizeContextSources(body.context_sources) });
+  }
 
   const r = await updateApplication(g.owner, g.appId, patch);
   if (!r.ok) {

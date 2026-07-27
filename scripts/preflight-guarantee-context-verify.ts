@@ -18,6 +18,7 @@
 import { readFileSync } from "node:fs";
 import { buildSynthesisPrompt } from "../lib/preflight/discover-synthesis";
 import type { PageSnapshot } from "../lib/preflight/discover-extract";
+import { normalizeContextSources } from "../lib/preflight/connections-db";
 
 let pass = 0, fail = 0;
 const ok = (n: string, c: boolean, d = "") => { console.log(`${c ? "PASS" : "FAIL"}  ${n}${d ? `  (${d})` : ""}`); if (c) pass++; else fail++; };
@@ -36,6 +37,13 @@ function between(src: string, startAnchor: string, endAnchor: string, label: str
   if (a === -1) { ok(`${label}: start anchor ${JSON.stringify(startAnchor)} exists`, false); return ""; }
   if (b === -1) { ok(`${label}: end anchor ${JSON.stringify(endAnchor)} exists`, false); return ""; }
   return src.slice(a, b);
+}
+
+// The same, for a function that runs to the end of its file. Still fails loudly when the anchor is gone.
+function fromAnchor(src: string, startAnchor: string, label: string): string {
+  const a = src.indexOf(startAnchor);
+  if (a === -1) { ok(`${label}: anchor ${JSON.stringify(startAnchor)} exists`, false); return ""; }
+  return src.slice(a);
 }
 
 // ── Behavioural: a context source reaches the model, an empty context adds nothing ──────────────────────
@@ -77,6 +85,31 @@ ok("systemSynthContext degrades to empty rather than failing the request that wa
 // ── Wiring: the guarantee prepare route hands its system down ──────────────────────────────────────────
 ok("the guarantee prepare route passes its owner + application to synthesizeClaim",
   /synthesizeClaim\(\s*app\.app_url\s*,\s*g\.title\s*,\s*\{\s*owner\s*,\s*applicationId:\s*id\s*\}\s*\)/.test(prepare));
+
+// ── The context has to be writable, or the wiring above is inert ──────────────────────────────────────
+// context_sources used to be accepted only by POST /api/preflight/apps, at creation. Every system created
+// before a maker knew what to write was stuck with what it had, and for a system whose behaviour is behind
+// a login this is the planner's only channel to the signed-in surface.
+const appPatch = read("app/api/preflight/apps/[id]/route.ts");
+const patchFn = fromAnchor(appPatch, "export async function PATCH", "apps/[id] PATCH");
+ok("an existing system's product context can be updated, not only set at creation",
+  /Array\.isArray\(body\?\.context_sources\)/.test(patchFn));
+ok("the update normalizes through the SAME normalizer creation uses", patchFn.includes("normalizeContextSources(body.context_sources)"));
+ok("the update persists through the SAME writer creation uses", patchFn.includes("applySetupExtras("));
+ok("creation still writes context the same way, so the two paths cannot drift",
+  read("app/api/preflight/apps/route.ts").includes("normalizeContextSources(body?.context_sources)"));
+
+// Behavioural: the normalizer fails closed on a kind nobody declared, so a PATCH cannot smuggle in a
+// context kind the synthesis prompt has no tag for.
+const normalized = normalizeContextSources([
+  { kind: "workflows", name: "w", content: "notes live on /dashboard" },
+  { kind: "not_a_real_kind", name: "x", content: "should be dropped" },
+  { kind: "auth_expect", name: "a", content: "   " },
+]);
+ok("a declared context kind with content survives normalization",
+  normalized.some((s) => s.kind === "workflows" && s.content.includes("/dashboard")));
+ok("an undeclared context kind is dropped rather than stored", !normalized.some((s) => s.kind === "not_a_real_kind"));
+ok("a declared kind with only whitespace contributes nothing", !normalized.some((s) => s.kind === "auth_expect"));
 
 // ── The parity this exists to hold ─────────────────────────────────────────────────────────────────────
 const discover = read("lib/preflight/discover-run.ts");
