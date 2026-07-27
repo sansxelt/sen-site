@@ -206,9 +206,28 @@ export class PlaywrightPreflightPage implements PreflightPage {
         const vis = await this.page.getByText(opts.expectElement).first().isVisible().catch(() => false);
         if (vis) return { authenticated: true, via: "element", detail: "an authenticated element is visible" };
       }
-      // 3. Session/cookie presence: a session-ish cookie exists in the context.
+      // 3. Session presence. A COOKIE USED TO BE THE ONLY POSITIVE SIGNAL, and that made this routine
+      //    declare a successful sign-in a failure on any app that keeps its session in web storage —
+      //    Supabase, Firebase and Clerk all do by default. The executor turns "not authenticated" into
+      //    auth_rejected_by_app, whose comment reads "the app refused VALID creds", so the customer is told
+      //    their login is broken because we looked in the wrong place.
+      //
+      //    Measured: a test identity that signs into the demo deployment by hand (lands on /dashboard, no
+      //    password field, sign-out present) was reported as rejecting valid credentials on three runs.
+      //
+      //    Only KEY NAMES are inspected, never values: a session token must not be read into the worker,
+      //    and nothing here can reach an artifact.
       const cookies = (await this.page.context().cookies().catch(() => [])) as { name?: string }[];
-      const sessiony = cookies.some((c) => /sess|auth|token|sid|__secure|csrf|jwt|login/i.test(c?.name || ""));
+      const SESSION_KEY = /sess|auth|token|sid|__secure|csrf|jwt|login|supabase|firebase|clerk/i;
+      const cookieSession = cookies.some((c) => SESSION_KEY.test(c?.name || ""));
+      let storageSession = false;
+      if (this.page.evaluate) {
+        const names = await this.page.evaluate(
+          "try{[...Object.keys(localStorage),...Object.keys(sessionStorage)].join(',')}catch(e){''}"
+        ).catch(() => "") as string;
+        storageSession = String(names || "").split(",").some((k) => SESSION_KEY.test(k));
+      }
+      const sessiony = cookieSession || storageSession;
       // 4. A login form still on the page implies NOT authenticated (unless a route/element already proved it).
       const stillOnLogin = (await this.page.locator('input[type="password"]').count().catch(() => 0)) > 0;
       // Detect an MFA/CAPTCHA wall from visible page text so the executor can classify + stop safely.
