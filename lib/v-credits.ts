@@ -116,8 +116,38 @@ export async function hold(userId: string, testId: string, amount: number, unit:
   const fromMonthly = Math.max(0, Math.min(amount, monthlyNet));
   const fromPurchased = amount - fromMonthly;
 
-  if (fromMonthly > 0) await grant(userId, -fromMonthly, "hold", { bucket: "monthly", expiresAt: monthlyExpiry, refType: "test", refId: testId, unit });
-  if (fromPurchased > 0) await grant(userId, -fromPurchased, "hold", { bucket: "purchased", refType: "test", refId: testId, unit });
+  // THE DEBITS DECIDE WHETHER THE HOLD HAPPENED. Both grant() calls used to be awaited and DISCARDED, and
+  // this returned true unconditionally after the balance check.
+  //
+  // grant() returns false when the ledger insert fails; it logs and moves on. So a transient failure left
+  // hold() reporting success with nothing debited, and the caller then set creditsHeld and a reservation id
+  // for money it did not have. Both ends of that are wrong:
+  //
+  //   - the run proceeds and the worker settles by RETAINING a hold that was never taken, so the run is free
+  //   - any later failure path calls refund(), which reads the actual held rows, finds none, treats the whole
+  //     amount as the monthly remainder and GRANTS it. That mints credits out of a failed insert.
+  //
+  // A hold is now true only when every debit it needed actually landed.
+  if (fromMonthly > 0) {
+    const ok = await grant(userId, -fromMonthly, "hold", { bucket: "monthly", expiresAt: monthlyExpiry, refType: "test", refId: testId, unit });
+    if (!ok) return false;                                   // nothing was debited; the caller takes no hold
+  }
+  if (fromPurchased > 0) {
+    const ok = await grant(userId, -fromPurchased, "hold", { bucket: "purchased", refType: "test", refId: testId, unit });
+    if (!ok) {
+      // COMPENSATE THE LEG THAT DID LAND. Returning false here without this would leave the monthly debit in
+      // the ledger for a hold the caller believes it never took, so nothing would ever release it and the
+      // customer would silently lose those credits. Written as a `hold` row so it nets against its own
+      // negative in every computation that reads them, and keyed so a retry cannot double-compensate.
+      if (fromMonthly > 0) {
+        await grant(userId, fromMonthly, "hold", {
+          bucket: "monthly", expiresAt: monthlyExpiry, refType: "test", refId: testId, unit,
+          extRef: `hold_rollback:${testId}:m`,
+        });
+      }
+      return false;
+    }
+  }
   return true;
 }
 
