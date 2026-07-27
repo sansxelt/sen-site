@@ -2,6 +2,7 @@
 // hierarchy, read-only integrity, pinned-history honesty, and the security boundary. Unit-tests the shared
 // decision translator, then static-checks the route's contract against source.
 import { readFileSync } from "node:fs";
+import { before } from "./_source-order";
 import { runVerdict } from "../lib/preflight/home-verdict";
 
 let pass = 0, fail = 0;
@@ -16,7 +17,7 @@ const shown = page.replace(/\/\/[^\n]*/g, "").replace(/\/\*[\s\S]*?\*\//g, "");
 
 console.log("── canonical route + owner/workspace authorization (no existence leak) ──");
 ok("the canonical result route loads the run through owner-scoped loaders", /getRun\(owner, runId\)/.test(page) && /getRunInternal\(owner, runId\)/.test(page));
-ok("access is gated by requirePreflightAppAccess before any load", page.indexOf("requirePreflightAppAccess(") < page.indexOf("getRun(owner"));
+ok("access is gated by requirePreflightAppAccess before any load", before(page, "requirePreflightAppAccess(", "getRun(owner"));
 ok("a run under the WRONG application id is refused (id must match)", /internal\.applicationId !== id/.test(page));
 ok("not-found and not-owned share ONE response — existence of another tenant's run is never revealed",
   /if \(!detail \|\| !internal \|\| internal\.applicationId !== id\)/.test(page) && /Verification not found/.test(page));
@@ -219,12 +220,12 @@ const detailFlat = detail6.replace(/\n/g, " ");
 ok("the result page still has no cancellation mutator and only navigates to controls", !/CancelRunButton|CancelRunControl/.test(page) && !/\/cancel/.test(shown) && /View run controls/.test(page));
 // The cancellation capability lives on the application-detail run-control surface, editor+ and active-only.
 ok("the detail page renders the cancel control ONLY for a genuinely active run to an editor+ member", /latestActive && caps\.canLaunch \?[\s\S]{0,140}<CancelRunControl appId=\{id\} runId=\{latest\.id\}/.test(detailFlat));
-ok("the cancel control is gated so a completed/terminal record shows none (single, latestActive-gated usage)", (detail6.match(/<CancelRunControl\b/g) ?? []).length === 1 && detail6.indexOf("latestActive && caps.canLaunch") < detail6.indexOf("<CancelRunControl"));
+ok("the cancel control is gated so a completed/terminal record shows none (single, latestActive-gated usage)", (detail6.match(/<CancelRunControl\b/g) ?? []).length === 1 && before(detail6, "latestActive && caps.canLaunch", "<CancelRunControl"));
 // The control uses the EXISTING owner-checked route; it invents no new cancellation API and reuses no deleted file.
 ok("the control POSTs the existing owner-checked cancel route (no new API)", /fetch\(`\/api\/preflight\/runs\/\$\{encodeURIComponent\(runId\)\}\/cancel`, \{ method: "POST" \}\)/.test(cancelCtl));
 ok("the deleted result-page cancel mutator is not revived (cancel-run-button.tsx under passes/ is gone)", (() => { try { readFileSync("app/rank/app/applications/[id]/passes/[runId]/cancel-run-button.tsx", "utf8"); return false; } catch { return true; } })());
 // Two-step explicit confirm: a first click only ARMS; only a distinct Confirm mutates (never on nav/first click).
-ok("cancellation is a two-step explicit confirm (arm, then Confirm cancel) — never on first click or navigation", /setAsked\(true\)/.test(cancelCtl) && /Confirm cancel/.test(cancelCtl) && /onClick=\{cancel\}/.test(cancelCtl) && cancelCtl.indexOf("setAsked(true)") < cancelCtl.indexOf("onClick={cancel}"));
+ok("cancellation is a two-step explicit confirm (arm, then Confirm cancel) — never on first click or navigation", /setAsked\(true\)/.test(cancelCtl) && /Confirm cancel/.test(cancelCtl) && /onClick=\{cancel\}/.test(cancelCtl) && before(cancelCtl, "setAsked(true)", "onClick={cancel}"));
 // Pending state prevents duplicate requests.
 ok("a pending (busy) state blocks duplicate requests and disables both buttons", /if \(busy \|\| done\) return;/.test(cancelCtl) && (cancelCtl.match(/disabled=\{busy\}/g) ?? []).length >= 2);
 // Success shows a truthful resulting state + refresh; failure is announced accessibly; 401 -> sign-in; 403 explained.

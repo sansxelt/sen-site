@@ -14,6 +14,7 @@
 // suite asserted a literal source line and went red the moment that line was reworded while remaining
 // correct; a checker that breaks on rewording trains people to edit the checker.
 import * as ts from "typescript";
+import { before } from "./_source-order";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
@@ -495,7 +496,7 @@ ok("and the correction never ATTEMPTS that validate inside its own transaction",
 
 ok("21 verifies the exact census before writing anything",
   /expect 153/.test(m21) && /expect 136/.test(m21) && /expect 17/.test(m21) && /expect 8/.test(m21) && /expect 128/.test(m21));
-ok("21 snapshots before it writes", /backup_21/.test(m21) && m21.indexOf("backup_21") < m21.indexOf("STAGE 2"));
+ok("21 snapshots before it writes", /backup_21/.test(m21) && before(m21, "backup_21", "STAGE 2"));
 ok("21 never writes a run decision", !/update\s+v_preflight_runs/i.test(m21));
 // Reading c.status in a WHERE clause is how the file SELECTS what to classify; assigning it is what must
 // never happen. Only the assignment forms are forbidden.

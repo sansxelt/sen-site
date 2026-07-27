@@ -5,6 +5,7 @@
 // Pure unit tests + static source checks; no DB, no network, no browser.
 // Pattern follows scripts/preflight-connect-verify.ts: PASS/FAIL counters, exit 1 on any FAIL.
 import { readFileSync } from "node:fs";
+import { before } from "./_source-order";
 import {
   connectionState, stateLabel, STATE_LABELS, featureUse, neverAccesses, metaSummary, whenUtc,
   MANUAL_ADD_KINDS, MANUAL_FIELDS, COMING_LATER_PROVIDERS, isStoredNotYetUsed, STORED_NOT_YET_USED,
@@ -221,9 +222,9 @@ ok("verify: only safeFetch touches the network (no bare fetch anywhere)", !/(?<!
 ok("verify: strict 5s timeout on every probe", (v.match(/AbortSignal\.timeout\(CHECK_TIMEOUT_MS\)/g) ?? []).length >= 3);
 ok("verify: read-only probes (HEAD/GET only, redirects never followed)",
   !/method:\s*"(POST|PUT|DELETE|PATCH)"/.test(v) && v.includes('redirect: "manual"'));
-ok("verify: rate-limited per user before any work", v.includes("checkRateLimit(") && v.indexOf("checkRateLimit(") < v.indexOf("getConnection("));
+ok("verify: rate-limited per user before any work", before(v, "checkRateLimit(", "getConnection("));
 ok("verify: a removed/revoked connection cannot verify (404, nothing recorded)",
-  v.indexOf("getConnection(") < v.indexOf("planHealthCheck(") && v.includes('"not_found"'));
+  before(v, "getConnection(", "planHealthCheck(") && v.includes('"not_found"'));
 ok("verify: the checked URL comes ONLY from the connection's stored metadata (request body never read)",
   v.includes("planHealthCheck(conn.provider, conn.meta)") && !v.includes("req.json"));
 ok("verify: notes come from CHECK_NOTES only, raw provider errors never surface",
@@ -277,7 +278,7 @@ console.log("\n── review fixes ──");
 const secretsDel = secrets.slice(secrets.indexOf("export async function DELETE"));
 ok("secrets DELETE revokes ONLY test_account rows (getConnection provider gate before removeConnection)",
   secretsDel.includes("getConnection(") && secretsDel.includes('provider !== "test_account"')
-  && secretsDel.indexOf("getConnection(") < secretsDel.indexOf("removeConnection("));
+  && before(secretsDel, "getConnection(", "removeConnection("));
 // 2. The stale-edit guard is ATOMIC: the expected timestamp rides the UPDATE's own WHERE (JSON filter),
 //    with a null-path branch for never-edited rows, and a zero-row result is disambiguated by a re-read.
 ok("updateConnectionMeta stale guard is atomic (expected meta->>updated_at in the UPDATE's own WHERE, null branch included)",

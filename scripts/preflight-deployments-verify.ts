@@ -8,6 +8,7 @@
 // Pure unit tests + static source checks; no DB, no network, no browser.
 // Pattern follows scripts/preflight-context-verify.ts: PASS/FAIL counters, exit 1 on any FAIL.
 import { readFileSync } from "node:fs";
+import { before } from "./_source-order";
 import {
   canonicalDeploymentUrl, sameDeploymentIdentity, runTestedDeployment,
   compareDeployments, pickUnverifiedNewer,
@@ -254,7 +255,7 @@ const route = stripComments(routeRaw);
 ok("route gates ownership via gatePreflightApp (flag + auth + db-ready + access) or the legacy inline gates",
   route.includes("gatePreflightApp(") || (route.includes("preflightEnabled()") && /\bauth\s*\(\s*\)/.test(route) && route.includes("preflightDbReady()") && route.includes("getApplication(")));
 ok("ownership gate precedes the write (recordDeployment)",
-  route.indexOf("gatePreflightApp(") !== -1 && route.indexOf("gatePreflightApp(") < route.indexOf("recordDeployment("));
+  before(route, "gatePreflightApp(", "recordDeployment("));
 ok("manual recording posts source 'manual'", route.includes('source: "manual"'));
 ok("GET lists via the owner-scoped listDeployments", route.includes("listDeployments(g.owner, g.appId)"));
 ok("unapplied migration 8 answers an actionable 503 naming the sql file, never a fake success",

@@ -8,6 +8,7 @@
 // are locked with static source checks against the actual module + route text.
 // Pure unit tests + a live no-DB call + static source checks. No live DB, no network, no browser.
 import { readFileSync } from "node:fs";
+import { before } from "./_source-order";
 import { unsafeHttpsUrlReason } from "../lib/safe-fetch";
 import { canonicalDeploymentUrl } from "../lib/preflight/deployments-db";
 import { updateApplication } from "../lib/v-applications";
@@ -69,7 +70,7 @@ ok("updateApplication exists and returns a discriminated result",
   apps.includes("export async function updateApplication") && apps.includes("UpdateApplicationResult"));
 ok("ownership is loaded owner-scoped BEFORE any write (getApplication gate)",
   /updateApplication[\s\S]*?getApplication\(uid, id\)[\s\S]*?if \(!current\) return \{ ok: false, error: "not_found" \}/.test(apps)
-  && apps.indexOf("getApplication(uid, id)") < apps.indexOf('from("v_applications").update'));
+  && before(apps, "getApplication(uid, id)", 'from("v_applications").update'));
 ok("the UPDATE is owner-scoped (eq user_id AND eq id) — a cross-owner id can never match another tenant",
   /from\("v_applications"\)\.update\([\s\S]{0,120}\.eq\("user_id", uid\)\.eq\("id", id\)/.test(apps));
 ok("app_url is validated with unsafeHttpsUrlReason before it can be stored",
@@ -105,7 +106,7 @@ ok("owner identity comes from the session (auth() -> applicationAccess), never t
   && !route.includes("body?.owner") && !route.includes("body?.user_id") && !route.includes("body.owner_id"));
 ok("gate order: the ownership resolver (applicationAccess / getApplication) precedes the update",
   (route.includes("applicationAccess(") || (route.includes("preflightEnabled()") && route.includes("preflightDbReady()") && route.indexOf("getApplication(") !== -1))
-  && (route.indexOf("applicationAccess(") !== -1 ? route.indexOf("applicationAccess(") : route.indexOf("getApplication(")) < route.indexOf("updateApplication("));
+  && (before(route, "applicationAccess(", "updateApplication(") || before(route, "getApplication(", "updateApplication(")));
 ok("editing settings is EDITOR+ and a caller without access 404s before any mutation (view-only member 403)",
   /applicationAccess\(email, id\)/.test(route) && /if \(!access\)/.test(route) && /hasAtLeastRole\(access\.role,\s*"editor"\)/.test(route));
 ok("the id used for the update is the route param, never a client-supplied app id",

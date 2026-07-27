@@ -5,6 +5,7 @@
 // retired homepage headline. Link previews and lifecycle emails are the two places a stale product identity
 // travels furthest, so this keeps them pinned to the current one.
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
+import { before } from "./_source-order";
 import { join } from "node:path";
 import { robotsMeta } from "../lib/stealth";
 
@@ -180,7 +181,7 @@ console.log("\n== the company describes itself once, and only when it is public 
   // The stealth branch returns before the body that carries the graph, so a curtained page never claims an
   // identity it is not showing.
   ok("the curtain does not carry it",
-    rootLayout2.indexOf("StealthScreen") < rootLayout2.indexOf("entityJsonLd()"));
+    before(rootLayout2, "StealthScreen", "entityJsonLd()"));
 
   // THE ACTIVE DEFECT THIS SECTION EXISTS FOR. Every page served "Not open yet." while telling crawlers
   // index,follow under a real title, because nested segment metadata wins in Next and the v6 layout flipped

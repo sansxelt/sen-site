@@ -8,6 +8,7 @@
 // while 404ing or leaking a sign-in wall in production. The APP_ROOTS omission caught during the navigation
 // work was exactly this shape, and it reached a commit.
 import { readFileSync } from "node:fs";
+import { before } from "./_source-order";
 import { existsSync, readdirSync } from "node:fs";
 import { isAppPath, APP_ROOTS } from "../lib/app-routes";
 
@@ -38,7 +39,7 @@ ok("/developers does not read as an app path on the public host", !isAppPath("/d
 ok("the app host rewrites /developers to the authenticated console",
   /path === "\/developers"[\s\S]{0,200}rank\/app\/developers/.test(proxy));
 ok("that rewrite precedes the marketing bounce (order decides which page you get)",
-  proxy.indexOf('rank/app/developers') < proxy.indexOf("marketing never renders here"));
+  before(proxy, 'rank/app/developers', "marketing never renders here"));
 
 console.log("\n── every public page is actually reachable ──");
 // A page under app/rank/ only serves if the proxy maps its clean path to /rank/<path>. Nothing enforces

@@ -15,6 +15,7 @@
 // What is NOT proven here: that a real claim produces a sensible contract. That needs a model and a live
 // deployment, and it is what the production proof exists for.
 import { readFileSync } from "node:fs";
+import { before } from "./_source-order";
 import { toVerificationId, toRunId, toPublicDecision } from "../app/api/v1/verifications/_shared";
 
 let pass = 0, fail = 0;
@@ -99,8 +100,11 @@ function delegationTests() {
   ok("the lane never creates a run", !/createRun\(/.test(lane));
   ok("the lane never takes a hold", !/\bhold\(/.test(lane));
   // Ordering is not negotiable: approving a contract freezes it, so every write must precede the approval.
-  ok("requirements are written before flows", lane.indexOf("addRequirement(") < lane.indexOf("addFlow("));
-  ok("the contract is approved LAST, after every write", lane.indexOf("addFlow(") < lane.indexOf("approveContract("));
+  // The writer is addGeneratedRequirement. This asserted "addRequirement(", which is not a function that
+  // exists here, so it compared -1 against a real offset and passed for as long as it has existed. It is
+  // green again now because the lane genuinely does write requirements first, not because the check works.
+  ok("requirements are written before flows", before(lane, "addGeneratedRequirement(", "addFlow("));
+  ok("the contract is approved LAST, after every write", before(lane, "addFlow(", "approveContract("));
   // Model output is not trusted into the browser: steps go through the same validator the dashboard uses.
   ok("model-authored steps go through the shared validator", /validateSteps\(/.test(lane));
 }

@@ -3,6 +3,7 @@
 // renamed routes actually propagated (no stale /app/apps nav links, shell + guard + proxy + email
 // wired to the new single source of truth). Pure unit tests + static checks; no DB, no network.
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
+import { before } from "./_source-order";
 import { join } from "node:path";
 import { legacyToNew, isAppPath, appHostUrl, legacyRunsPath } from "../lib/app-routes";
 import { getSafeRedirectPath } from "../lib/auth-ui";
@@ -268,7 +269,7 @@ if (fail > 0) process.exit(1);
 {
   const proxySrc = require("node:fs").readFileSync("proxy.ts", "utf8");
   ok("main host passes /api/* through untouched (NextAuth + preflight API must never redirect)",
-    proxySrc.indexOf('path.startsWith("/api/")') < proxySrc.indexOf("isAppPath(path) && !path.startsWith"));
+    before(proxySrc, 'path.startsWith("/api/")', "isAppPath(path) && !path.startsWith"));
   ok("retired checker links land home: /app/checks[/*] -> / (the checker surface is deleted)",
     legacyToNew("/app/checks/abc") === "/" && legacyToNew("/app/checks") === "/");
 }

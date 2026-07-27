@@ -6,6 +6,7 @@
 // real, owner-scoped, workspace-consistent data through the current contracts and links only to routes that
 // exist — the properties that are structural, not per-value.
 import { readFileSync } from "node:fs";
+import { before } from "./_source-order";
 import { isActiveRun, runVerdict, systemProof, runningStage, timeAgo } from "../lib/preflight/home-verdict";
 
 let pass = 0, fail = 0;
@@ -104,7 +105,7 @@ ok("no link points at a not-yet-built Design 02-04 route", !/\/results\//.test(r
 
 console.log("\n── the record leads with the system + summary; the verdict is supporting, not the whole row ──");
 const recRow = rec.slice(rec.indexOf("function VerificationRecordRow"), rec.indexOf("export function RecentVerifications"));
-ok("the record row shows the system name before the verdict pill", recRow.indexOf("run.applicationName") < recRow.indexOf("<VerdictPill"));
+ok("the record row shows the system name before the verdict pill", before(recRow, "run.applicationName", "<VerdictPill"));
 ok("the record row carries a deployment reference and flow summary, not just a status", /DeploymentReference url=\{run\.deploymentUrl\}/.test(recRow) && /flows/.test(recRow));
 const runBody = rec.slice(rec.indexOf("export function RunningWork"), rec.indexOf("// ── Recent verifications"));
 ok("a running row shows progress language, not a verdict pill", /runningStage\(r\.state\)/.test(runBody) && !/VerdictPill/.test(runBody));

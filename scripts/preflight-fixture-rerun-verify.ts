@@ -3,6 +3,7 @@
 // sets parent_run_id, never inserts results/issues/evidence/decisions/resolution, and keeps every internal
 // and production safeguard. This is the "linked, not fresh" guarantee, enforced.
 import fs from "node:fs";
+import { before } from "./_source-order";
 import path from "node:path";
 
 const src = fs.readFileSync(path.join(process.cwd(), "scripts", "preflight-fixture-rerun.ts"), "utf8");
@@ -35,7 +36,7 @@ ok("never seeds a decision or resolution", !/\b(decision|resolved_run|first_seen
 
 // ── Safeguards ──
 ok("requires PREFLIGHT_SEED_RUN=1", /PREFLIGHT_SEED_RUN\s*!==\s*"1"/.test(code));
-ok("prod safeguard uses a pre-load runtime snapshot", /const RUNTIME\s*=/.test(src) && src.indexOf("const RUNTIME") < src.indexOf("loadLocalEnv()") && /RUNTIME\.VERCEL_ENV/.test(code));
+ok("prod safeguard uses a pre-load runtime snapshot", /const RUNTIME\s*=/.test(src) && before(src, "const RUNTIME", "loadLocalEnv()") && /RUNTIME\.VERCEL_ENV/.test(code));
 ok("refuses production unless explicitly overridden", /PREFLIGHT_SEED_ALLOW_PROD/.test(code));
 ok("requires an owner email (no silent ownership bypass)", /includes\("@"\)/.test(code));
 ok("verifies the artifact bucket before queueing", /preflightArtifactBucketExists/.test(code));

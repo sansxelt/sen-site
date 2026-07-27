@@ -5,6 +5,7 @@
 // human-approved and then never become proven. These assertions are about the relationship being IMPOSSIBLE
 // TO LOSE, not about it being present today.
 import { readFileSync, existsSync } from "node:fs";
+import { before } from "./_source-order";
 
 let pass = 0, fail = 0;
 const ok = (n: string, c: boolean, d = "") => {
@@ -64,7 +65,7 @@ console.log("\n── a rerun proves the SAME approved meaning ──");
   // Producing evidence and charging for it against a definition nobody currently stands behind is the
   // failure the whole binding exists to prevent.
   ok("every refusal happens BEFORE any money is held",
-    rerun.indexOf("guarantee_plan_superseded") < rerun.indexOf("await hold("));
+    before(rerun, "guarantee_plan_superseded", "await hold("));
 }
 
 console.log("\n── a plan knows which guarantee it defines ──");
@@ -107,7 +108,7 @@ console.log("\n── approval produces something runnable ──");
   ok("the guarantee records which contract to run", /setGuaranteePlanContract\(/.test(approve));
   // The person really did approve. That fact must not be lost because a later write failed.
   ok("a failed materialization does not void the approval",
-    approve.indexOf("approveGuaranteePlan(") < approve.indexOf("prepareVerification("));
+    before(approve, "approveGuaranteePlan(", "prepareVerification("));
   ok("the response says whether it is runnable", /runnable: planContractId !== null/.test(approve));
 }
 
@@ -124,7 +125,7 @@ console.log("\n── status is derived, and stale evidence stops counting ─�
   // Both halves required, or a first run carrying a parent id would claim a repair story it does not have.
   ok("reverified requires a real earlier failure in this guarantee's own history",
     /repairedSomething = Boolean\(latest\.parentRunId\)/.test(st) && /=== "failed"/.test(st));
-  ok("review required outranks any verdict", st.indexOf('planState === "review_required"') < st.indexOf("qualifying[0]"));
+  ok("review required outranks any verdict", before(st, 'planState === "review_required"', "qualifying[0]"));
   ok("every decision goes through the canonical translator", /toPublicDecision\(/.test(st) && !/decision === "ready"/.test(st));
   // One Verified run must never read as permanent health.
   ok("the labels say 'most recently', never a bare permanent verdict",

@@ -4,6 +4,7 @@
 // real browser at 1440/1180/834/390/360 (0px horizontal overflow, clean a11y DOM, correct focus order) and
 // those guarantees are locked structurally here.
 import { readFileSync, existsSync, readdirSync } from "node:fs";
+import { before } from "./_source-order";
 import { isAppPath, APP_ROOTS } from "../lib/app-routes";
 import { join } from "node:path";
 
@@ -157,7 +158,7 @@ console.log("\n── composer a11y: the final decision is announced, not swappe
 const runPanel = composer.slice(composer.indexOf("function RunPanel"));
 ok("RunPanel wraps the status in ONE persistent live region", /role="status" aria-live="polite" aria-atomic="true"/.test(runPanel));
 ok("the decision pill and the running text share that live region (so the verdict is announced)",
-  runPanel.indexOf('role="status" aria-live="polite"') < runPanel.indexOf("{d.label}") && runPanel.indexOf('role="status" aria-live="polite"') < runPanel.indexOf("{statusText}"));
+  before(runPanel, 'role="status" aria-live="polite"', "{d.label}") && before(runPanel, 'role="status" aria-live="polite"', "{statusText}"));
 
 console.log("\n── composer states: a stale plan has a real, visible next action ──");
 const planPanel = composer.slice(composer.indexOf("function PlanPanel"), composer.indexOf("function RunPanel"));
@@ -196,7 +197,7 @@ ok("the top bar does not lead with the plan or the balance",
 // subscription tier is not a verification result.
 ok("plan and balance are visible in the bar", /vra-acct-readout/.test(topbar) && /href="\/plans"/.test(topbar));
 ok("they do not lead it: the command surface comes first",
-  topbarHeader.indexOf("<CommandPalette") < topbarHeader.indexOf("vra-acct-readout"));
+  before(topbarHeader, "<CommandPalette", "vra-acct-readout"));
 ok("the readout is plain text, not a pill competing with the primary action",
   !/vra-acct-readout[\s\S]{0,300}?border-radius:99px/.test(ui));
 ok("the readout never wears a state colour",

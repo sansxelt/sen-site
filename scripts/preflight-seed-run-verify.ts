@@ -3,6 +3,7 @@
 // createRun, carries the dev-only safeguards, requires an owner, verifies the bucket, prints no secrets, and
 // only uses worker-supported step actions. This is the "no seeded findings" guarantee, enforced.
 import fs from "node:fs";
+import { before } from "./_source-order";
 import path from "node:path";
 
 const src = fs.readFileSync(path.join(process.cwd(), "scripts", "preflight-seed-run.ts"), "utf8");
@@ -31,7 +32,7 @@ ok("requirements + flows seeded review_state approved", /review_state:\s*"approv
 // ── Dev-only safeguards + ownership ──
 ok("requires PREFLIGHT_SEED_RUN=1", /PREFLIGHT_SEED_RUN\s*!==\s*"1"/.test(src));
 ok("refuses production unless explicitly overridden", /PREFLIGHT_SEED_ALLOW_PROD/.test(src) && /production/.test(src));
-ok("prod safeguard uses a pre-load runtime snapshot (ignores file-loaded VERCEL_ENV)", /const RUNTIME\s*=/.test(src) && src.indexOf("const RUNTIME") < src.indexOf("loadLocalEnv()") && /RUNTIME\.VERCEL_ENV/.test(src));
+ok("prod safeguard uses a pre-load runtime snapshot (ignores file-loaded VERCEL_ENV)", /const RUNTIME\s*=/.test(src) && before(src, "const RUNTIME", "loadLocalEnv()") && /RUNTIME\.VERCEL_ENV/.test(src));
 ok("requires an owner email (no silent ownership bypass)", /owner/.test(src) && /includes\("@"\)/.test(src));
 ok("verifies the artifact bucket before queueing", /preflightArtifactBucketExists/.test(src));
 ok("dev-free credits (credits_held 0)", /creditsHeld:\s*0/.test(src));
