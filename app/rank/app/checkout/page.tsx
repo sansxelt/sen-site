@@ -129,12 +129,11 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
                 returnUrl={stripeReturnUrl(billingReturnUrls().success)}
               />
             ) : ownCheckout && !planKey ? (
-              // Credit top-ups return to /credits, which already polls for the webhook's grant, exactly as
-              // the Checkout path does. Different destination, same rule: the redirect proves nothing and
-              // the page waits for the ledger.
+              // The redirect proves nothing; the page waits for the ledger. It is handed the credits it
+              // should expect so it can wait for THAT number rather than poll blindly.
               <OwnPaymentPanel
                 purchase={{ kind: "credits", amountDollars: amount }}
-                returnUrl={stripeReturnUrl(topupReturnUrl())}
+                returnUrl={stripeReturnUrl(topupReturnUrl(amount * 10))}
               />
             ) : planKey ? <CheckoutClient plan={planKey} cycle={cycle} paypal={!v1Plan} /> : <CheckoutClient amount={amount} />}
           </div>

@@ -15,6 +15,8 @@ const RULES: [string, string][] = [
 ];
 
 const eyebrow = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 } as const;
+const BEFORE_KEY = "vraelis:balance-before-topup";
+
 const bigNum = { fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "clamp(2.1rem, 4vw, 2.7rem)", letterSpacing: "-0.03em", lineHeight: 1 } as const;
 
 export default function CreditsPage() {
@@ -34,7 +36,10 @@ export default function CreditsPage() {
   const setCustom = (text: string) => setSel({ kind: "custom", text });
   const setAmount = (dollars: number) => setSel({ kind: "pack", dollars });
   const [bal, setBal] = useState<number | null>(null);
-  const [paid, setPaid] = useState(false);
+  // The purchase wait. `expected` is what the ledger should gain; `settle` is what the page is allowed to
+  // say about it. "waiting" is the only honest state until the webhook's write is actually visible.
+  const [expected, setExpected] = useState(0);
+  const [settle, setSettle] = useState<null | "waiting" | "credited" | "slow">(null);
   const [MAX, setMAX] = useState(DEFAULT_MAX);
   const [elevated, setElevated] = useState(false);
   const [plan, setPlan] = useState<string>("free");
@@ -42,16 +47,50 @@ export default function CreditsPage() {
   useEffect(() => {
     const load = () => fetch("/api/v/me").then((r) => r.json()).then((j) => { if (j.signedIn) { setBal(j.balance); if (typeof j.topupMax === "number") setMAX(j.topupMax); setElevated(!!j.elevatedTopup); if (j.plan) setPlan(j.plan); } }).catch(() => {});
     load();
-    // Stripe returns with session_id; a PayPal credit top-up returns with paypal=1. Both
-    // credit via webhook/capture, so poll the balance until it lands.
+
+    // WAITING FOR THE LEDGER, NOT FOR A TIMER.
+    //
+    // Every purchase path returns here: hosted Checkout with ?session_id, PayPal with ?paypal=1, and the
+    // in-app Payment Element with ?topup=<credits>. None of them proves anything by arriving; the webhook is
+    // the only authority, and its write can land after the redirect.
+    //
+    // This used to poll eight times and then stop saying anything, so a slow webhook left the page quietly
+    // showing the OLD balance under the words "Payment received". Now it waits for a TARGET: the balance
+    // recorded before checkout plus the credits bought. It only says "credited" when that number is really
+    // there, and if it does not arrive it says so plainly instead of falling silent.
     const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
-    if (params && (params.get("session_id") || params.get("paypal"))) {
-      setPaid(true);
-      window.history.replaceState({}, "", "/credits");
-      let tries = 0;
-      const iv = setInterval(() => { tries += 1; load(); if (tries >= 8) clearInterval(iv); }, 2000);
-      return () => clearInterval(iv);
-    }
+    const topup = Number(params?.get("topup") || 0);
+    if (!params || !(params.get("session_id") || params.get("paypal") || topup > 0)) return;
+
+    window.history.replaceState({}, "", "/credits");
+
+    // The balance the moment before this person left for checkout. Written by go(); absent for a hosted
+    // Checkout round trip, in which case any increase at all is the signal.
+    const beforeRaw = typeof window !== "undefined" ? window.sessionStorage.getItem(BEFORE_KEY) : null;
+    const before = beforeRaw === null ? null : Number(beforeRaw);
+    const target = before !== null && topup > 0 ? before + topup : null;
+
+    let stop = false;
+    const deadline = Date.now() + 45_000;
+    (async () => {
+      // Announced from inside the wait rather than from the effect body: the state belongs to this
+      // asynchronous piece of work, and setting it in the effect itself renders twice before anything has
+      // been checked.
+      setExpected(topup);
+      setSettle("waiting");
+      while (!stop && Date.now() < deadline) {
+        const j = await fetch("/api/v/me").then((r) => r.json()).catch(() => null);
+        const b = typeof j?.balance === "number" ? j.balance : null;
+        if (b !== null) {
+          setBal(b);
+          const landed = target !== null ? b >= target : before !== null ? b > before : false;
+          if (landed) { setSettle("credited"); window.sessionStorage.removeItem(BEFORE_KEY); return; }
+        }
+        await new Promise((r) => setTimeout(r, 1500));
+      }
+      if (!stop) setSettle("slow");
+    })();
+    return () => { stop = true; };
   }, []);
 
   const usingCustom = sel.kind === "custom";
@@ -59,7 +98,13 @@ export default function CreditsPage() {
   const valid = effective >= MIN && effective <= MAX;
   const credits = (valid ? effective : 0) * RATE;
 
-  function go() { if (valid) window.location.href = `/checkout?amount=${effective}`; }
+  function go() {
+    if (!valid) return;
+    // The number to beat, stashed before leaving. Without it the return page can only guess whether the
+    // balance it sees already includes this purchase.
+    if (bal !== null) window.sessionStorage.setItem(BEFORE_KEY, String(bal));
+    window.location.href = `/checkout?amount=${effective}`;
+  }
 
   return (
     <div className="wrap" style={{ maxWidth: 880, paddingTop: "clamp(24px, 3vw, 38px)", paddingBottom: 80 }}>
@@ -78,9 +123,23 @@ export default function CreditsPage() {
         </div>
       )}
 
-      {paid && (
-        <div className="card" style={{ marginBottom: 22, borderColor: "var(--acc-line)", background: "var(--acc-soft)", boxShadow: "none" }}>
-          <p style={{ margin: 0, color: "var(--acc-deep)", fontSize: 14, fontWeight: 600 }}>Payment received. Your new credits will appear here in a few seconds.</p>
+      {settle && (
+        <div className="card" role="status" aria-live="polite"
+          style={{ marginBottom: 22, boxShadow: "none",
+            borderColor: settle === "credited" ? "var(--go-line)" : settle === "slow" ? "var(--wait-line)" : "var(--line-2)",
+            background: settle === "credited" ? "var(--go-wash)" : settle === "slow" ? "var(--wait-wash)" : "var(--bg-2)" }}>
+          <p style={{ margin: 0, fontSize: 14, fontWeight: 600,
+            color: settle === "credited" ? "var(--go-ink)" : settle === "slow" ? "var(--wait-ink)" : "var(--fg-2)" }}>
+            {settle === "waiting" && (expected > 0 ? `Payment received. Confirming ${expected.toLocaleString()} credits…` : "Payment received. Confirming your credits…")}
+            {settle === "credited" && (expected > 0 ? `${expected.toLocaleString()} credits added.` : "Your credits have been added.")}
+            {settle === "slow" && "Payment received. Your credits have not appeared yet."}
+          </p>
+          {settle === "slow" && (
+            <p style={{ margin: "6px 0 0", fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55 }}>
+              Nothing is lost: the payment is recorded and the balance settles from it. Reload in a minute,
+              and <Link href="/contact" style={{ color: "var(--acc-deep)" }}>tell us</Link> if it is still missing.
+            </p>
+          )}
         </div>
       )}
 

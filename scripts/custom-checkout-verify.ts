@@ -191,8 +191,23 @@ console.log("\n── it is off, and off means absent ──");
   // Scope, stated: subscriptions only. Top-ups and legacy plans keep Checkout, so this change cannot
   // affect them at all.
   ok("subscription plans take the new panel", /ownCheckout && v1Plan/.test(code(page)));
-  ok("credit top-ups take it too, and return to the page that polls for the grant",
-    /kind: "credits"/.test(code(page)) && /topupReturnUrl\(\)/.test(code(page)));
+  // The old assertion accepted a bare topupReturnUrl(), which is exactly what shipped and exactly what was
+  // broken: /credits arms its wait only when the URL says a purchase just happened, and it recognised
+  // ?session_id and ?paypal but not the in-app panel. The customer paid and landed on their OLD balance.
+  // So the requirement is now that the return URL CARRIES the expected credits.
+  ok("credit top-ups take it too, and return with the credits the page must wait for",
+    /kind: "credits"/.test(code(page)) && /topupReturnUrl\(amount \* 10\)/.test(code(page)));
+  {
+    const returns = code(readFileSync("lib/return-urls.ts", "utf8"));
+    ok("the top-up return marks the purchase in the URL", /topup=\$\{credits\}/.test(returns));
+    const creditsPage = code(readFileSync("app/rank/app/credits/page.tsx", "utf8"));
+    ok("the credits page arms its wait on that marker", /params\?\.get\("topup"\)/.test(creditsPage));
+    // The wait must end on the LEDGER, not on a timer: eight polls and silence is how a slow webhook left
+    // the page showing an old balance under the words "Payment received".
+    ok("it waits for the balance to actually reach the target", /b >= target/.test(creditsPage));
+    ok("it says so plainly when the grant has not arrived", /setSettle\("slow"\)/.test(creditsPage));
+    ok("it only claims credited when the number is really there", /setSettle\("credited"\)/.test(creditsPage));
+  }
 }
 
 console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);

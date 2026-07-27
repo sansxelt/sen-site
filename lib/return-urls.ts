@@ -71,11 +71,19 @@ export function billingReturnUrls(): BillingReturnUrls {
   };
 }
 
-// Credit TOP-UPS keep returning to /credits (the page already polls ?session_id= for the webhook
-// grant); only SUBSCRIPTION checkouts moved to /billing/success. Kept here so the checkout route has
-// no inline return URL either.
-export function topupReturnUrl(): string {
-  return appHostUrl("/credits");
+// Credit TOP-UPS return to /credits; only SUBSCRIPTION checkouts moved to /billing/success.
+//
+// THE MARKER IS NOT DECORATION. /credits waits for the webhook's grant only when the URL says a purchase
+// just happened, and it recognised ?session_id= (hosted Checkout) and ?paypal=. The in-app Payment Element
+// returned to a BARE /credits, so the wait never armed: the customer paid, landed on a page showing their
+// OLD balance, and had no way to tell whether the money had done anything. That is the "it should wait and
+// confirm the credits" report.
+//
+// The expected credits ride along so the page can wait for THAT number to arrive rather than poll blindly
+// for a few seconds and give up.
+export function topupReturnUrl(credits?: number): string {
+  const q = typeof credits === "number" && credits > 0 ? `?topup=${credits}` : "";
+  return appHostUrl(`/credits${q}`);
 }
 
 // Stripe requires ABSOLUTE return URLs even in dev, where appHostUrl stays relative so localhost auth
