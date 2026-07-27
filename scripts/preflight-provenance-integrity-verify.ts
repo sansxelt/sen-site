@@ -15,7 +15,7 @@
 // correct; a checker that breaks on rewording trains people to edit the checker.
 import * as ts from "typescript";
 import { before } from "./_source-order";
-import { readFileSync, existsSync, readdirSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
 
@@ -319,6 +319,40 @@ ok("changing severity changes identity",
   requirementReviewIdentity(base) !== requirementReviewIdentity({ ...base, severity: "informational" }));
 ok("changing enabled changes identity",
   requirementReviewIdentity(base) !== requirementReviewIdentity({ ...base, enabled: false }));
+
+// THE IDENTITY MUST BE STORABLE. Its separator was a raw NUL byte, sitting invisibly in the source. Postgres
+// text rejects NUL, so every insert carrying an identity failed — and an identity is written on exactly the
+// rows that record a human approval, so the entire reviewed-approval write path had never once succeeded.
+// Production: 153 requirement rows, 0 with a review_identity. The error was discarded by insertRequirement,
+// so it surfaced as "claim_not_testable", blaming the customer's wording for a control character of ours.
+ok("the identity contains no NUL (Postgres text cannot store one)",
+  !requirementReviewIdentity(base).includes(String.fromCharCode(0)));
+{
+  // Any C0 control except tab/newline/carriage-return is a portability hazard in a text column and, more to
+  // the point, is invisible to whoever next reads this file.
+  const id = requirementReviewIdentity({ ...base, source_refs: [{ type: "doc", url: "u", reference: "r" }] });
+  ok("the identity contains no other raw control characters",
+    ![...id].some((c) => { const n = c.charCodeAt(0); return n < 9 || (n > 13 && n < 32); }));
+  ok("field boundaries survive encoding (two splits cannot render the same)",
+    requirementReviewIdentity({ ...base, requirement: "A", category: "b" })
+    !== requirementReviewIdentity({ ...base, requirement: "Ab", category: "" }));
+}
+{
+  // The source itself must stay readable. One invisible byte is what made this cost a day.
+  const files: string[] = [];
+  const walk = (dir: string) => {
+    for (const e of readdirSync(dir)) {
+      if (e === "node_modules" || e === ".next" || e.startsWith(".")) continue;
+      const p = join(dir, e);
+      if (statSync(p).isDirectory()) walk(p);
+      else if (/\.(ts|tsx)$/.test(e)) files.push(p);
+    }
+  };
+  for (const d of ["lib", "app", "worker", "scripts", "ops"]) walk(join(ROOT, d));
+  const dirty = files.filter((f) => readFileSync(f).includes(0));
+  ok("no source file contains a raw NUL byte", dirty.length === 0,
+    dirty.map((f) => f.replace(ROOT, "")).join(", "));
+}
 ok("changing category changes identity",
   requirementReviewIdentity(base) !== requirementReviewIdentity({ ...base, category: "billing" }));
 ok("source refs are part of what was reviewed",
@@ -450,7 +484,7 @@ ok("22 binds approved to review_state in both directions",
   /approved is not distinct from \(review_state = 'approved'\)/.test(m22),
   "is not distinct from, so a null approved is compared rather than silently passing");
 ok("22 lands NOT VALID like migration 20's constraints", /not valid;/.test(m22));
-ok("22 rewrites no row", !/update\s+v_/i.test(m22) && !/delete\s+from/i.test(m22));
+ok("22 rewrites no row", !/\bupdate\s+v_/i.test(m22) && !/\bdelete\s+from/i.test(m22));
 
 // ── THE CORRECTION VALIDATES WHAT IT CAN, AND SAYS WHY IT CANNOT VALIDATE THE REST ────────────────────
 // The six that CAN validate after the correction. Which six was measured by simulating the correction

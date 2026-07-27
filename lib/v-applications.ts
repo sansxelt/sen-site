@@ -451,7 +451,7 @@ async function insertRequirement(
   if (!requirement) return null;
   const category = (input.category || "general").slice(0, 60);
   const severity = input.severity ?? "important";
-  const { data } = await db().from("v_contract_requirements").insert({
+  const { data, error } = await db().from("v_contract_requirements").insert({
     contract_id: contractId, user_id: uid, requirement, category,
     severity, enabled: true,
     role: input.role ?? null, area: input.area ?? null,
@@ -460,6 +460,15 @@ async function insertRequirement(
     ...reviewColumns(provenance.review, requirementReviewIdentity({ requirement, category, severity, enabled: true })),
     order_index: provenance.orderIndex,
   } as never).select("*").single();
+  // THIS ERROR USED TO BE DISCARDED, and it cost more than the bug it hid. A raw NUL byte in the review
+  // identity separator made every reviewed insert fail the text encoding, and because only `data` was read
+  // the failure became a silent null. The caller turned that into "claim_not_testable" — telling a customer
+  // their claim was too vague when the real cause was a control character in our own source. A write that
+  // fails must say so, or the layer above it will invent a reason.
+  if (error) {
+    console.error(`insertRequirement: refused by the database for contract ${contractId}: ${error.message}`);
+    return null;
+  }
   return (data as unknown as ContractRequirement) ?? null;
 }
 
