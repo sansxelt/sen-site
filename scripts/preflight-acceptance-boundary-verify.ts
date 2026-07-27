@@ -88,6 +88,41 @@ ok("the known createRun callers are still exactly the two the inventory found",
   && [...KNOWN_CREATE_CALLERS].every((p) => createCallers.includes(p)),
   createCallers.join(", "));
 
+// ── 1b. THE BLIND SPOT THIS RATCHET HAD ───────────────────────────────────────────────────────────────
+//
+// The check above keys on createRun, so it was watching run CREATION and calling that the money boundary.
+// They are not the same set. app/api/preflight/apps/[id]/api-runs/route.ts takes a real credit hold via
+// takeApiHold and inserts through claimApiRun, so it was completely invisible to a ratchet whose entire
+// purpose is to notice new entrances into the money path. A guard that names one function will keep missing
+// every entrance that reaches the same escrow by another name.
+//
+// So the second key is the ESCROW itself: anything that takes a hold is an entrance, whatever it calls to
+// create its row.
+const KNOWN_HOLD_TAKERS = new Set([
+  "app/api/preflight/apps/[id]/runs/route.ts",        // dashboard launch, legacy credits + PAYG cents
+  "app/api/preflight/runs/[runId]/rerun/route.ts",    // repair rerun
+  "app/api/preflight/apps/[id]/api-runs/route.ts",    // API-runtime beta: holds, executes INLINE, settles
+]);
+
+// Matched on the CALL SHAPE, not on a word boundary: `await hold(` and `takeApiHold(` are the two ways a
+// route actually reaches the escrow. Either can be used without ever naming createRun, which is exactly how
+// the API-runtime entrance stayed invisible to this file.
+const holdTakers = files
+  .filter((f) => f.path.startsWith("app/api/"))
+  .filter((f) => /await[ ]+hold[ ]*[(]/.test(f.text) || /takeApiHold[ ]*[(]/.test(f.text))
+  .map((f) => f.path);
+
+const newHoldTakers = holdTakers.filter((p) => !KNOWN_HOLD_TAKERS.has(p));
+ok("no NEW production path takes a credit hold", newHoldTakers.length === 0,
+  newHoldTakers.length ? newHoldTakers.join(", ") : `${holdTakers.length} known entrances`);
+
+// The inline entrance settles in its own request rather than through the worker, so a killed function
+// between the hold and the settle strands escrow with nothing to sweep it. Recorded as a known exposure so
+// it is a decision rather than an oversight.
+ok("the inline API entrance still releases on a thrown error",
+  /held\.hold\.release\(\)/.test(readFileSync(join(ROOT, "app/api/preflight/apps/[id]/api-runs/route.ts"), "utf8")),
+  "an inline entrance that cannot release strands escrow permanently");
+
 // ── 2. no route handler may be another route handler's backend ────────────────────────────────────────
 //
 // KNOWN: the public verification API imports the dashboard route's POST and invokes it with a synthesized
