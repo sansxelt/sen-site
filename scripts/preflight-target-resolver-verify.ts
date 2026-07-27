@@ -33,7 +33,12 @@ const ok = (n: string, c: boolean, d = "") => {
 
 const SRC = "worker/preflight/providers/browserbase.ts";
 const src = readFileSync(SRC, "utf8");
-const fn = src.slice(src.indexOf("async function resolve("), src.indexOf("export class PlaywrightPreflightPage"));
+// The slice starts at the shared matcher, not at resolve(). The candidate iteration used to be written
+// inline inside each resolver; it now lives in firstVisibleMatch, which both call, because scanning ONCE
+// was itself the defect (a client-rendered page that had not painted yet answered as a page with no such
+// control). Anchoring on resolve() alone would have left the iteration assertions below looking at code
+// that no longer contains it, and a check that cannot find its subject is a check that cannot fail.
+const fn = src.slice(src.indexOf("async function firstVisibleMatch("), src.indexOf("export class PlaywrightPreflightPage"));
 const code = fn.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
 
 console.log("── the resolver actually tries what it reports ──");
@@ -61,12 +66,22 @@ ok("no bare getByText fallback", !/getByText\(target/.test(code));
 }
 
 console.log("\n── a match must be real ──");
-ok("a zero-match candidate is skipped", /if \(n === 0\) continue/.test(code));
+ok("a zero-match candidate is skipped", /count\(\)\.catch\(\(\) => 0\)\) === 0\) continue/.test(code));
 ok("an invisible match is skipped", /isVisible\(\)/.test(code) && /continue/.test(code));
+// A page mid-render is not a page without the control. The scan is retried; what COUNTS as a match is
+// unchanged, so waiting can never turn an absent control into a present one.
+ok("the whole chain is retried rather than judged on one paint",
+  /for \(let i = 0; i < Math\.max\(1, window_\.attempts\); i\+\+\)/.test(code));
+ok("it waits between passes", /await sleep\(window_\.delayMs\)/.test(code));
+ok("the retry is bounded, not an open wait", /RESOLVE_WINDOW = \{ attempts: \d+, delayMs: \d+ \}/.test(src));
+ok("having waited and found nothing, it says so rather than inventing a match", /return null;/.test(code));
 // Absent must stay absent: inventing a match would turn a missing control into a passing step.
 ok("nothing matching falls back to the button locator, so the step still fails",
   /return \{ locator: attempts\[0\]\.locator/.test(code));
-ok("the selection is reported truthfully", /selected: a\.name/.test(code));
+// The reported `selected` must be the candidate that actually matched, not a guess. Both resolvers now
+// name the matcher's own hit rather than a loop variable they no longer have.
+ok("the selection reported is the candidate that actually matched",
+  (code.match(/selected: hit\.name/g) ?? []).length >= 2);
 
 console.log("\n── a field is not a button ──");
 {
