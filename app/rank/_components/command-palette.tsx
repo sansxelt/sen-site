@@ -41,8 +41,18 @@ export function CommandPalette({ systems }: { systems: PaletteSystem[] }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const [cursor, setCursor] = useState(0);
+  const [mac, setMac] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const restoreTo = useRef<HTMLElement | null>(null);
+
+  // The hint said the Mac shortcut to everyone. On Windows and Linux the key is Control, so the bar was
+  // advertising a chord that does nothing on most of the machines that will ever see it. Resolved on the
+  // client because the server cannot know, and defaulting to the Ctrl label so the first paint is right for
+  // the majority rather than briefly wrong for them.
+  useEffect(() => {
+    const p = navigator.userAgent;
+    setMac(/Mac|iPhone|iPad|iPod/i.test(p));
+  }, []);
 
   const items = useMemo(() => {
     const sys: Item[] = systems.map((s) => ({
@@ -79,6 +89,20 @@ export function CommandPalette({ systems }: { systems: PaletteSystem[] }) {
 
   useEffect(() => { if (open) inputRef.current?.focus(); }, [open]);
 
+  // Hold the page still while the palette is up. With the blur gone the page behind the scrim is legible,
+  // so a stray wheel event visibly scrolls it under a panel that is not moving, which reads as broken.
+  // The scrollbar's width is replaced as padding, or removing it shifts the whole layout sideways.
+  useEffect(() => {
+    if (!open) return;
+    const { body } = document;
+    const prevOverflow = body.style.overflow;
+    const prevPad = body.style.paddingRight;
+    const gap = window.innerWidth - document.documentElement.clientWidth;
+    body.style.overflow = "hidden";
+    if (gap > 0) body.style.paddingRight = `${gap}px`;
+    return () => { body.style.overflow = prevOverflow; body.style.paddingRight = prevPad; };
+  }, [open]);
+
   if (!open) {
     return (
       <button
@@ -88,7 +112,7 @@ export function CommandPalette({ systems }: { systems: PaletteSystem[] }) {
       >
         <span aria-hidden style={{ display: "inline-flex", color: "var(--fg-4)" }}><Ic d={I.list} size={14} sw={1.9} /></span>
         <span className="vra-cmd-trigger__label">Search</span>
-        <kbd aria-hidden className="vra-cmd-kbd">⌘K</kbd>
+        <kbd aria-hidden className="vra-cmd-kbd">{mac ? "⌘K" : "Ctrl K"}</kbd>
       </button>
     );
   }
@@ -99,7 +123,12 @@ export function CommandPalette({ systems }: { systems: PaletteSystem[] }) {
     <div
       role="presentation"
       onMouseDown={(e) => { if (e.target === e.currentTarget) close(); }}
-      style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(2px)", display: "grid", placeItems: "start center", paddingTop: "12vh" }}
+      // NO BACKDROP BLUR. It read as a smear rather than depth: blur re-samples whatever is behind it, so the
+      // wordmark, the topbar buttons and the headline all came back soft and slightly wrong, and the effect
+      // was strongest exactly where the eye goes first. A scrim does the whole job — it pushes the page back
+      // by dimming it, and the panel's own border and shadow supply the elevation. The tint is the product's
+      // graphite rather than pure black, so what shows through stays the colour it already was.
+      style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(10,10,11,0.76)", display: "grid", placeItems: "start center", paddingTop: "12vh" }}
     >
       <div role="dialog" aria-modal="true" aria-label="Search and commands"
         style={{ width: "min(560px, calc(100vw - 32px))", background: "var(--bg-1)", border: "1px solid var(--line-2)", borderRadius: 14, boxShadow: "var(--shadow-lg)", overflow: "hidden" }}>
