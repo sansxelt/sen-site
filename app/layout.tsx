@@ -7,6 +7,7 @@ import { cookies, headers } from "next/headers";
 import { stealthConfigured, verifyStealthCookie, STEALTH_COOKIE } from "../lib/stealth";
 import { StealthScreen } from "./_components/stealth-screen";
 import { socialCard } from "../lib/social-card";
+import { entityJsonLd } from "../lib/entity";
 import { GROUND_CSS, type Ground } from "../lib/v6-routes";
 import { GROUND_HEADER } from "../proxy";
 
@@ -132,6 +133,11 @@ export default async function RootLayout({
               stale cached stylesheet (the static file URL is otherwise fixed). */}
           <link rel="stylesheet" href="/vraelis/tokens.css?v=20" />
           <link rel="stylesheet" href="/vraelis/styles.css?v=53" />
+          {/* WHO THIS IS, for machines. Emitted only when the site is actually public: publishing an
+              identity graph on a page whose entire body reads "Not open yet." asks to be indexed as a
+              company with no content, which is the impression this document already refuses to leave.
+              It is JSON generated from lib/entity, not markup, so nothing here can be injected. */}
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: entityJsonLd() }} />
           {children}
         </body>
       </html>

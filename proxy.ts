@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { isAppPath, legacyToNew, legacyRunsPath } from "./lib/app-routes";
 import { v6GroundAtTop, type Ground } from "./lib/v6-routes";
+import { stealthConfigured } from "./lib/stealth";
 
 // vraelis.com: Vraelis Rank. Clean public paths map onto the internal /rank
 // route group; /rank/* bounce back to their clean alias so /rank never shows.
@@ -110,11 +111,28 @@ function withGround(req: NextRequest, target: string) {
   return { request: { headers } };
 }
 
+// WHILE THE CURTAIN IS DOWN, NOTHING IS INDEXABLE. AS A HEADER, NOT A META TAG.
+//
+// The root layout already returns robots:noindex while stealth is on. It does not hold: Next merges
+// metadata from the matched route segments and the DEEPEST one wins, so app/dev-preview/v6/layout.tsx,
+// which flips robots on the promotion flag, overrode it. The result was every page serving "Not open yet."
+// to a crawler while telling it `index, follow` under a real title like "Pricing | Vraelis". That is worse
+// than being absent: it teaches search engines the pages are empty, which is exactly the impression the
+// root layout's own comment says must not outlive the launch.
+//
+// X-Robots-Tag applies to the whole response and cannot be overridden by anything inside the document, so
+// it covers every route including ones that do not exist yet. Fixing only the layouts that exist today
+// would be the same enumeration mistake that left the stealth curtain with a green scrollbar.
+function noindexWhileStealthed(res: NextResponse) {
+  if (stealthConfigured()) res.headers.set("X-Robots-Tag", "noindex, nofollow");
+  return res;
+}
+
 function go(req: NextRequest, pathname: string, kind: "redirect" | "rewrite") {
   const url = req.nextUrl.clone();
   url.pathname = pathname;
   if (kind === "redirect") return NextResponse.redirect(url);
-  return NextResponse.rewrite(url, withGround(req, pathname));
+  return noindexWhileStealthed(NextResponse.rewrite(url, withGround(req, pathname)));
 }
 
 function goAbs(req: NextRequest, absolute: string) {
@@ -311,7 +329,7 @@ export default function proxy(req: NextRequest) {
   if (target) return go(req, target, "rewrite");
 
   // Not rewritten: the path renders as itself. /signin and /auth/* arrive here, and they are graphite.
-  return NextResponse.next(withGround(req, path));
+  return noindexWhileStealthed(NextResponse.next(withGround(req, path)));
 }
 
 export const config = {

@@ -128,5 +128,38 @@ ok("the root layout takes its embed from the shared card", /socialCard\(/.test(r
 ok("the legacy rendered card endpoints still exist for already-shared links",
   ogMain.length > 0 && ogReport.length > 0);
 
+console.log("\n== the company describes itself once, and only when it is public ==");
+{
+  const entity = readFileSync("lib/entity.ts", "utf8");
+  const rootLayout2 = readFileSync("app/layout.tsx", "utf8");
+  const proxySrc = readFileSync("proxy.ts", "utf8");
+  const v6Layout = readFileSync("app/dev-preview/v6/layout.tsx", "utf8");
+  const strip = (t) => t.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+
+  // A search for the company returned a description of the RETIRED product, assembled by a model from
+  // whatever it could find. The retired wording is gone from the code; what was missing was any
+  // machine-readable statement of identity at all.
+  ok("there is an entity graph", /"@type": "Organization"/.test(entity) && /"@type": "WebSite"/.test(entity));
+  ok("it reuses the ONE sentence rather than writing a second description",
+    /SOCIAL_DESCRIPTION/.test(entity) && !/description: "/.test(strip(entity)));
+  ok("it names only profiles the company controls", /linkedin\.com\/company\/vraelis/.test(entity) && /x\.com\/vraelis/.test(entity));
+  ok("the root layout emits it", /entityJsonLd\(\)/.test(rootLayout2));
+  // The stealth branch returns before the body that carries the graph, so a curtained page never claims an
+  // identity it is not showing.
+  ok("the curtain does not carry it",
+    rootLayout2.indexOf("StealthScreen") < rootLayout2.indexOf("entityJsonLd()"));
+
+  // THE ACTIVE DEFECT THIS SECTION EXISTS FOR. Every page served "Not open yet." while telling crawlers
+  // index,follow under a real title, because nested segment metadata wins in Next and the v6 layout flipped
+  // robots on the promotion flag alone.
+  ok("stealth sets a noindex HEADER, which no nested metadata can override",
+    /X-Robots-Tag/.test(strip(proxySrc)) && /noindex, nofollow/.test(strip(proxySrc)));
+  ok("that header is applied to rendered routes, not just one of them",
+    (strip(proxySrc).match(/noindexWhileStealthed\(/g) ?? []).length >= 3);
+  ok("and the meta tag itself stops claiming otherwise",
+    /v6Public && !stealthConfigured\(\)/.test(strip(v6Layout)));
+}
+
+
 console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

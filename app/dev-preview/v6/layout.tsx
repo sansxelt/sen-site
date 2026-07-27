@@ -7,6 +7,7 @@ import { auth } from "@/auth";
 import { V6_ORIGIN } from "./_system/meta";
 import { META_TITLE, META_DESCRIPTION, OG_TITLE } from "./_system/positioning";
 import { socialCard } from "@/lib/social-card";
+import { stealthConfigured } from "@/lib/stealth";
 
 const v6Public = process.env.NEXT_PUBLIC_VRAELIS_V6_PUBLIC === "1";
 
@@ -34,7 +35,11 @@ export const metadata: Metadata = {
   // preview competing with the live site for the same queries is worse than either alone. Promoted, it IS
   // the live site, and a noindex would quietly remove the company from search the moment the flag flipped.
   // Same variable as the routing, so the two can never disagree about which site is public.
-  robots: v6Public
+  // AND NOT WHILE THE CURTAIN IS DOWN. This flipped on the promotion flag alone, and because nested
+  // segment metadata wins in Next, it overrode the root layout's stealth noindex: every page told crawlers
+  // to index a document whose entire body was "Not open yet." The header set in proxy.ts is the catch-all;
+  // this stops the meta tag itself from saying something untrue.
+  robots: v6Public && !stealthConfigured()
     ? { index: true, follow: true }
     : { index: false, follow: false },
   alternates: { canonical: `${V6_ORIGIN}/` },
