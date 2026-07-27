@@ -3,6 +3,7 @@
 // Vraelis chrome: public nav/footer for marketing pages, and a real sidebar
 // shell for the app so the product feels like one connected SaaS surface.
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -471,6 +472,9 @@ function AppSidebar() {
 // prevents pointer interaction with the page behind it; body scroll is locked while open.
 function MobileNav() {
   const [open, setOpen] = useState(false);
+  // The portal target only exists in the browser, so the drawer mounts after hydration.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const pathname = usePathname() || "";
   const trigger = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
@@ -506,7 +510,16 @@ function MobileNav() {
         aria-expanded={open} aria-controls="app-drawer" onClick={() => setOpen(true)}>
         <Ic d={I.menu} size={20} sw={1.9} />
       </button>
-      {open && (
+      {/* THE DRAWER IS RENDERED INTO document.body, NOT HERE.
+          The trigger lives in the top bar, and that bar carries backdrop-filter: blur(12px). A
+          backdrop-filter makes an element the containing block for position:fixed descendants, so
+          `.app-drawer-root { position: fixed; inset: 0 }` resolved against the 64px header instead of the
+          viewport. Measured on a 390x844 phone: the drawer root computed to 63px tall with 852px of
+          content inside it. Everything past the first row was clipped, which is why "Back to site" and
+          "Sign out", both near the bottom of the panel, could not be reached at all.
+          A portal is the fix rather than removing the blur, because any future filter, transform or
+          will-change anywhere above this component would silently do the same thing again. */}
+      {open && mounted && createPortal(
         <div className="app-drawer-root" role="presentation">
           <div className="app-drawer-scrim" onClick={close} aria-hidden />
           <div ref={panel} id="app-drawer" className="app-drawer" role="dialog" aria-modal="true" aria-label="Navigation">
@@ -519,7 +532,8 @@ function MobileNav() {
             <WorkspaceSwitcher />
             <NavItems onNavigate={close} />
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );

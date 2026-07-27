@@ -233,5 +233,32 @@ ok("the drawer + scrim are styled", /\.app-drawer \{/.test(css) && /\.app-drawer
 ok("visible keyboard focus across the shell", /\.slink:focus-visible/.test(css) && /outline: 2px solid var\(--acc-deep\)/.test(css));
 ok("drawer motion respects prefers-reduced-motion", /prefers-reduced-motion: reduce\) \{ \.app-drawer/.test(css));
 
+// ── The drawer must escape the top bar, or it is 63px tall ────────────────────────────────────────────
+// The burger lives in the top bar and that bar carries backdrop-filter: blur(12px). A backdrop-filter makes
+// an element the containing block for position:fixed descendants, so `.app-drawer-root { position: fixed;
+// inset: 0 }` resolved against the 64px header rather than the viewport. Measured on a 390x844 phone: the
+// drawer root computed to 63px tall around 852px of content. Everything below the first row was clipped,
+// which is why "Back to site" and "Sign out" could not be reached on a phone at all. The CSS was correct
+// the whole time, which is why reading it did not find this.
+console.log("\n── the mobile drawer is not trapped inside the top bar ──");
+{
+  const start = ui.indexOf("function MobileNav()");
+  ok("MobileNav exists to be checked", start !== -1);
+  const body = start === -1 ? "" : ui.slice(start, ui.indexOf("\n}", start));
+  ok("the drawer is rendered through a portal", /createPortal\(/.test(body));
+  ok("the portal target is the document body, which no filter can contain", /document\.body,?\s*\)/.test(body));
+  ok("it is the drawer itself that is portaled", /createPortal\([\s\S]*?app-drawer-root/.test(body));
+  ok("createPortal is imported from react-dom", /import \{ createPortal \} from "react-dom";/.test(ui));
+  // The portal only has a target in the browser, so rendering must wait for mount or hydration throws.
+  ok("the portal waits for mount before rendering", /open && mounted && createPortal\(/.test(body));
+
+  // The reason the portal is required. If the blur ever leaves the header this assertion should be READ,
+  // not blindly deleted: the portal stays correct either way, and it is what makes the drawer immune to the
+  // next transform, filter or will-change that lands anywhere above it.
+  const header = ui.slice(ui.indexOf("<header"), ui.indexOf("</header>"));
+  ok("the top bar still carries the backdrop-filter that made the portal necessary",
+    /backdropFilter: "blur/.test(header));
+}
+
 console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);
