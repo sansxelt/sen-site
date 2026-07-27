@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { V6_BASE, v6SignInPath } from "@/lib/v6-routes";
+import { V6_BASE, v6AppEntry } from "@/lib/v6-routes";
 import Link from "next/link";
 import { v6meta } from "../_system/meta";
 import { PageHero, Prose } from "../_system/ui";
@@ -74,7 +74,7 @@ export default function Method() {
           </Prose>
           <div style={{ marginTop: 56, paddingTop: 28, borderTop: "1px solid var(--line)", display: "flex", gap: 14, flexWrap: "wrap" }}>
             <Link href={`${V6_BASE}/readme`} className="v6-btn v6-btn--ghost">Read the README</Link>
-            <Link href={v6SignInPath()} className="v6-btn v6-btn--brand">Open Vraelis <span className="v6-arw" aria-hidden>→</span></Link>
+            <Link href={v6AppEntry()} className="v6-btn v6-btn--brand">Open Vraelis <span className="v6-arw" aria-hidden>→</span></Link>
           </div>
         </div>
       </section>

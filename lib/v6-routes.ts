@@ -92,3 +92,15 @@ export const V6_COMPANY = `${V6_BASE}/company`;
 export function v6SignInPath(callbackUrl: string = V6_APP): string {
   return `${V6_SIGNIN}?callbackUrl=${encodeURIComponent(callbackUrl)}`;
 }
+
+/**
+ * Where "Open Vraelis" goes.
+ *
+ * It used to go to SIGN-IN with a callback, which meant someone already signed in was shown a sign-in page
+ * before their own console. The session is not knowable from a static marketing page, so the page must not
+ * try to decide: it points at the app, and the app decides. Signed in lands on the console; signed out gets
+ * the console's own sign-in prompt.
+ */
+export function v6AppEntry(): string {
+  return V6_APP;
+}

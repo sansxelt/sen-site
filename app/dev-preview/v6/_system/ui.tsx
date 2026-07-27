@@ -3,11 +3,13 @@
 // Shared presentational primitives for design 06. One reveal primitive; the rest are static.
 import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
-import { v6SignInPath } from "@/lib/v6-routes";
+import { v6AppEntry } from "@/lib/v6-routes";
 
 // Stays inside V6. The old value left the preview for the previous design and called back to
 // /app, which does not exist, so a successful sign-in landed on a 404.
-const SIGNIN = v6SignInPath();
+// "Open Vraelis" goes to the APP, not to sign-in: a signed-in visitor was being shown a sign-in page
+// before their own console. A static page cannot know the session, so it does not try to - the app decides.
+const OPEN_APP = v6AppEntry();
 export function Reveal({ children, i = 0, media = false, className = "", style }: {
   children: ReactNode; i?: number; media?: boolean; className?: string; style?: CSSProperties;
 }) {
@@ -37,7 +39,7 @@ export function SectionHead({ eyebrow, title, lead, align = "left" }: {
   );
 }
 
-export function CTA({ href = SIGNIN, children, brand = false, ghost = false, lg = false }: {
+export function CTA({ href = OPEN_APP, children, brand = false, ghost = false, lg = false }: {
   href?: string; children: ReactNode; brand?: boolean; ghost?: boolean; lg?: boolean;
 }) {
   return (
