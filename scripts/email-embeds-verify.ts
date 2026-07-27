@@ -134,7 +134,7 @@ console.log("\n== the company describes itself once, and only when it is public 
   const rootLayout2 = readFileSync("app/layout.tsx", "utf8");
   const proxySrc = readFileSync("proxy.ts", "utf8");
   const v6Layout = readFileSync("app/dev-preview/v6/layout.tsx", "utf8");
-  const strip = (t) => t.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  const strip = (t: string) => t.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
 
   // A search for the company returned a description of the RETIRED product, assembled by a model from
   // whatever it could find. The retired wording is gone from the code; what was missing was any
