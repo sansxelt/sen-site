@@ -63,6 +63,23 @@ ok("an EMPTY context contributes no product context at all (this is what the lan
   !withoutContext.includes("PRODUCT CONTEXT") && !withoutContext.includes("CONNECTED SERVICES"));
 ok("context therefore changes the prompt, so wiring it through is not cosmetic", withContext !== withoutContext);
 
+// ── The prompt must state the runner's contracts, because the model cannot observe them ───────────────
+// Each of these rules was earned by a generated plan that failed for a reason the model had no way to know:
+// a sentence in a URL field, a first step of sign_in_as on a blank page, a flow that opened a gated route
+// before authenticating, and an assertion on a heading that survives the thing it was meant to prove.
+for (const [rule, marker] of [
+  ["field contracts are stated", "FIELD CONTRACTS"],
+  ["a breach discards the whole flow", "DISCARDS ITS WHOLE FLOW"],
+  ["assert_url wants a path, not a sentence", "url.includes(expect)"],
+  ["assert_text wants the literal text", "LITERAL text that will be on the page"],
+  ["the session starts signed out", "STARTS SIGNED OUT"],
+  ["every flow must open with a navigate", "EVERY flow must begin with a navigate"],
+  ["sign_in_as does not navigate", "sign_in_as does NOT navigate"],
+  ["assert the outcome, not the furniture", "Assert the OUTCOME, not the furniture"],
+] as const) {
+  ok(`the synthesis prompt tells the model that ${rule}`, withContext.includes(marker));
+}
+
 // ── Wiring: the lane derives its context from the system rather than hard-coding an empty one ──────────
 ok("the lane no longer hands synthesize() a hard-coded empty context literal",
   !/synthesize\(\s*snapshot\.pages\s*,\s*claim\s*,\s*\{\s*sources:\s*\[\s*\]\s*,\s*connections:\s*\[\s*\]\s*\}\s*\)/.test(lane));

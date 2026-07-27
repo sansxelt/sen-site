@@ -163,6 +163,10 @@ export function buildSynthesisPrompt(pages: PageSnapshot[], buildPrompt: string 
     // The runner has no implicit login. A flow that opened a gated page first reached the login screen and
     // the failure was published as the customer's application defect.
     `- A flow runs EXACTLY as written, in order, in ONE browser session that STARTS SIGNED OUT. Nothing signs in implicitly, and a role on the flow does not sign anyone in. A flow that needs a signed-in page must sign in BEFORE it navigates there, or it will only ever reach the login screen.\n` +
+    // sign_in_as reads the CURRENT page (detectLoginUi) and never navigates, the session opens on a blank
+    // page, and every flow shares it. A generated plan opened with sign_in_as as step 0 and would have died
+    // on a blank page with login_ui_not_found.
+    `- EVERY flow must begin with a navigate, because the session opens on a BLANK page and is shared by all flows in order. sign_in_as does NOT navigate: it looks for the login form on whatever page is already open. So navigate to the sign-in page in the step IMMEDIATELY BEFORE any sign_in_as, including the second sign-in when a flow signs out and back in.\n` +
     `- Assert the OUTCOME, not the furniture. After creating something, assert the value you typed, not that a heading or an empty container is present: a heading is still there when the thing was never saved.\n` +
     `- severity/priority: critical only for launch-blocking promises (auth, persistence, authorization, payment). Write plainly; no em dashes.\n\n` +
     `ORIGINAL BUILD PROMPT:\n${(buildPrompt || "(none provided)").slice(0, 6000)}\n\n` +
