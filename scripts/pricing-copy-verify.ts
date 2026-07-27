@@ -5,6 +5,17 @@
 // under app/rank/app/legacy is flag-gated and exempt. Static source checks; no DB, no network.
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { passPriceCents, PASS_INCLUDED_FLOWS, PASS_BASE_CENTS } from "../lib/preflight/pass-pricing";
+function readAll(dir: string): string {
+  let out = "";
+  for (const e of readdirSync(dir)) {
+    const p2 = join(dir, e);
+    if (statSync(p2).isDirectory()) out += readAll(p2);
+    else if (/.(ts|tsx)$/.test(e)) out += readFileSync(p2, "utf8");
+  }
+  return out;
+}
+import { join } from "node:path";
 
 let pass = 0, fail = 0;
 const ok = (n: string, c: boolean, d = "") => { console.log(`${c ? "PASS" : "FAIL"}  ${n}${d ? `  (${d})` : ""}`); if (c) pass++; else fail++; };
@@ -56,8 +67,41 @@ ok("signed-in plans: future Pro/Scale render as a disabled preview, no subscript
 ok("signed-in plans show the per-verification model", plans.includes("$10") && plans.includes("$10<small>/verification</small>"));
 
 const credits = read("app/rank/app/credits/page.tsx");
-ok("credits page frames the balance as early access funding verifications", credits.toLowerCase().includes("early access") && credits.includes("$10 per verification"));
+// This used to REQUIRE the credits page to say "early access" and "$10 per verification". Both were wrong.
+// The early-access base exists in the catalog but no caller has ever asked for it, so every launch is
+// charged at the public price, and the page was quoting a number nobody pays. An assertion that pins a
+// specific wrong price in place is worse than no assertion, so what is pinned now is the property: the page
+// explains per-verification pricing and gets the figure from the same function that charges it.
+ok("credits page explains per-verification pricing", /per[- ]verification pricing/i.test(credits));
+ok("credits page takes its figure from the pricing catalog, not from a typed number",
+  credits.includes("passPriceCents(PASS_INCLUDED_FLOWS)"));
 ok("credits page keeps the honest refund rule", credits.includes("Nothing ran, nothing charged"));
+
+
+// ── A PRICE A CUSTOMER READS MUST NOT DISAGREE WITH THE PRICE THEY ARE CHARGED ────────────────────────
+// /credits said "$10 per verification". Every charging path calls passPriceCents with no options, and
+// nothing in production has ever passed earlyAccess, so the amount actually taken is $15. /plans and
+// /pricing were right because they derive from the function; /credits had the number typed in.
+{
+  const charged = passPriceCents(PASS_INCLUDED_FLOWS);
+  ok("the charged pass price is the public one, not the early-access one",
+    charged === PASS_BASE_CENTS, `${charged} cents`);
+
+  // The early-access base is still in the catalog. It has never been anyone's price, because no caller
+  // asks for it. If one ever does, the pages below start understating what is taken, so this notices.
+  const productSource = ["lib", "app", "worker"].map((d) => readAll(d)).join("\n");
+  ok("nothing in the product asks for early-access pricing",
+    !/earlyAccess:\s*true/.test(productSource));
+
+  // A dollar amount typed next to "per verification" is a number that cannot follow the catalog.
+  const HARDCODED = /\$\s?\d+(\.\d+)?\s*(per verification|per pass)/i;
+  for (const f of ["app/rank/app/credits/page.tsx", "app/rank/app/plans/plans-v1.tsx", "app/rank/pricing/pricing-v1.tsx"]) {
+    const src = readFileSync(f, "utf8");
+    const withoutComments = src.replace(/^\s*\/\/.*$/gm, "");
+    ok(`${f} does not hard-code a per-verification dollar amount`, !HARDCODED.test(withoutComments));
+    ok(`${f} derives the price from passPriceCents`, src.includes("passPriceCents("));
+  }
+}
 
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);

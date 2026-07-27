@@ -2,16 +2,24 @@
 
 import { useEffect, useState } from "react";
 import { planLabel, isOnAPaidPlan } from "@/lib/plan-label";
+import { passPriceCents, PASS_INCLUDED_FLOWS } from "@/lib/preflight/pass-pricing";
 import Link from "next/link";
 
 const RECOMMENDED = [9, 39, 99, 299, 999];
 // $999,999 is the hard ceiling for a single Stripe charge; it's the default max.
 const MIN = 5, DEFAULT_MAX = 999999, RATE = 10;
 
+// THE PRICE IS COMPUTED, NOT TYPED. This line said "$10 per verification" while every charging path called
+// passPriceCents with no options and took $15: the early-access base exists in the catalog but nothing in
+// production ever passes earlyAccess, so it has never been the price anyone paid. /plans and /pricing were
+// right because they derive from the same function this now uses. A price a customer reads should not be
+// able to disagree with the price they are charged.
+const PASS_PRICE = `${(passPriceCents(PASS_INCLUDED_FLOWS) / 100).toFixed(0)}`;
+
 const RULES: [string, string][] = [
   ["Pays for validation runs", "Your balance covers verifying your app before it ships. Each verification draws from it and settles only when it actually executes."],
   ["Nothing ran, nothing charged", "If a run cannot start or no flow executes, the hold is returned automatically."],
-  ["Early access pricing", "Per-verification pricing ($10 per verification, 5 flows included) is rolling out. Your balance keeps its full purchase value through the change."],
+  ["Per-verification pricing", `Verifications are priced per pass (${PASS_PRICE} per verification, ${PASS_INCLUDED_FLOWS} journeys included). Your balance keeps its full purchase value.`],
   ["Larger volumes", "Invoicing is available for teams that need more than a single top-up."],
 ];
 
