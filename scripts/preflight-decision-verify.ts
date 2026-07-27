@@ -10,6 +10,7 @@ import { decideRun, executeRun } from "../worker/preflight/execute-run";
 import { FakeRunStore } from "../worker/preflight/run-store-fake";
 import { FakeBrowserProvider } from "../worker/preflight/providers/fake";
 import { pickHealthRun, isLaunchHealthCandidate } from "../lib/preflight/target-url";
+import { toPublicDecision } from "../lib/preflight/public-decision";
 import { planReconcile } from "../lib/preflight/issues";
 import { estimateRunCredits } from "../lib/preflight/flow-selection";
 import type { FlowSpec, FlowResult } from "../worker/preflight/types";
@@ -162,6 +163,42 @@ async function spyRun(selectedFlowIds: unknown, runId: string, deploymentUrl: st
     tool.includes("protectedFull") && tool.includes("full coverage: a legitimate READY, never touched"));
   ok("K: repair tool never touches billing (no refund/charge on a run that did its selected work)",
     !tool.includes("refund(") && !tool.includes("credits_held"));
+
+  // ── NO SURFACE GETS ITS OWN OPINION ABOUT A VERDICT ─────────────────────────────────────────────────
+  // Two console surfaces mapped repair_verified to a green "Verified" while toPublicDecision, and therefore
+  // the public API, the outbound webhooks and the CI gate, called the same run blocked. A targeted repair
+  // rerun exercises only the flows that failed: it is evidence the repair worked, not evidence the system's
+  // critical promises hold. The product said Verified about a run it elsewhere said was not, in green, which
+  // is the one direction a verdict must never be wrong in.
+  //
+  // Both also read `decision` without ever consulting `state`, so a decision left over from an earlier
+  // attempt of a run that never completed rendered as a settled verdict.
+  console.log("\n── every verdict surface defers to the one mapper ──");
+  {
+    // The mapper's own answer, so the assertions below cannot drift from it.
+    ok("toPublicDecision calls repair_verified blocked, not verified",
+      toPublicDecision("completed", "repair_verified") === "blocked");
+    ok("and a run that did not complete is blocked whatever it recorded",
+      toPublicDecision("failed", "ready") === "blocked");
+    ok("a still-running run has no verdict at all", toPublicDecision("running", "ready") === null);
+
+    const SURFACES = [
+      "app/rank/app/applications/[id]/passes/page.tsx",
+      "app/rank/app/applications/[id]/deployments/page.tsx",
+      "app/rank/app/applications/[id]/page.tsx",
+    ];
+    for (const f of SURFACES) {
+      const src = readFileSync(f, "utf8");
+      const code = src.replace(/^\s*\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "");
+      ok(`${f} asks the shared mapper`, code.includes("toPublicDecision("));
+      // The exact shape that was wrong: a branch keyed on repair_verified that returns a Verified label.
+      ok(`${f} does not decide repair_verified for itself`,
+        !/repair_verified"?\s*\)?\s*return\s*\{\s*label:\s*"Verified"/.test(code) &&
+        !/decision === "repair_verified"[\s\S]{0,120}label: "Verified"/.test(code));
+      // A pill built from `decision` alone cannot know a run never finished.
+      ok(`${f} passes the run state to the mapper`, /toPublicDecision\(\s*(state|r\.state|g\.latest\.state)/.test(code));
+    }
+  }
 
   console.log(`\n${pass}/${pass + fail} passed`);
   process.exit(fail ? 1 : 0);

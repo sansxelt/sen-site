@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { toPublicDecision } from "@/lib/preflight/public-decision";
 import Link from "next/link";
 import { requirePreflightAppAccess } from "@/lib/v-preflight-guard";
 import { capabilities } from "@/lib/preflight/role-capabilities";
@@ -46,11 +47,17 @@ function timeAgo(iso: string | null | undefined): string {
 type Pill = { label: string; color: string; bg: string; border: string };
 
 // Decision AND text carry the status together (never colour alone).
+//
+// This mapped repair_verified to a green "Verified" while toPublicDecision, and therefore the API, the
+// webhooks and the CI gate, called the same run blocked. A targeted repair rerun exercises only the flows
+// that failed, so it is evidence the repair worked, not evidence the system's critical promises hold.
+// It also ignored `state`, so a decision left over from an earlier attempt of a run that never completed
+// was rendered as a settled verdict. The shared mapper decides now, and it is given the state.
 function verdictPill(decision: string | null, state: string): Pill {
-  if (decision === "ready") return { label: "Verified", color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" };
-  if (decision === "repair_verified") return { label: "Verified", color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" };
-  if (decision === "needs_review") return { label: "Blocked", color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "var(--wait-line)" };
-  if (decision === "blocked") return { label: "Failed", color: "var(--stop-ink)", bg: "var(--stop-wash)", border: "var(--stop-line)" };
+  const pub = toPublicDecision(state, decision);
+  if (pub === "verified") return { label: "Verified", color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" };
+  if (pub === "failed") return { label: "Failed", color: "var(--stop-ink)", bg: "var(--stop-wash)", border: "var(--stop-line)" };
+  if (pub === "blocked") return { label: "Blocked", color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "var(--wait-line)" };
   const active = state === "queued" || state === "discovering" || state === "running" || state === "analyzing";
   return { label: active ? "In progress" : "No decision", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };
 }

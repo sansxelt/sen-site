@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { toPublicDecision } from "@/lib/preflight/public-decision";
 import Link from "next/link";
 import { requirePreflightAppAccess } from "@/lib/v-preflight-guard";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
@@ -30,12 +31,23 @@ type Pill = { label: string; color: string; bg: string; border: string };
 
 // Decision AND text carry the status together (never colour alone). A run with no decision yet reflects
 // its lifecycle state as in-progress or untested, muted.
+// THIS SAID "Verified" FOR A RUN THE API, THE WEBHOOKS AND THE CI GATE ALL CALL BLOCKED.
+//
+// It mapped repair_verified to a green Verified. toPublicDecision maps it to blocked, because a targeted
+// repair rerun exercises only the flows that failed: it is evidence the repair worked, not evidence the
+// system's critical promises hold. Every other surface in this product says so, including the sibling
+// runPill on the system overview and the comment two files over that reads "repair_verified is public
+// Blocked". This one disagreed, in green, which is the one direction a verdict must never be wrong in.
+//
+// It also read `decision` without ever looking at `state`, so a run that did not complete but carried a
+// decision from an earlier attempt rendered that decision as a settled verdict.
+//
+// Both are gone: the shared mapper decides, and it is given the state.
 function runPill(decision: string | null, state: string): Pill {
-  // "Verified", matching every other surface: a scoped decision, never a recommendation.
-  if (decision === "ready") return { label: "Verified", color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" };
-  if (decision === "repair_verified") return { label: "Verified", color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" };
-  if (decision === "needs_review") return { label: "Blocked", color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "var(--wait-line)" };
-  if (decision === "blocked") return { label: "Failed", color: "var(--stop-ink)", bg: "var(--stop-wash)", border: "var(--stop-line)" };
+  const pub = toPublicDecision(state, decision);
+  if (pub === "verified") return { label: "Verified", color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" };
+  if (pub === "failed") return { label: "Failed", color: "var(--stop-ink)", bg: "var(--stop-wash)", border: "var(--stop-line)" };
+  if (pub === "blocked") return { label: "Blocked", color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "var(--wait-line)" };
   const active = state === "queued" || state === "discovering" || state === "running" || state === "analyzing";
   return { label: active ? "In progress" : "No decision", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };
 }

@@ -76,7 +76,11 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
     ? v1Included(v1Plan, cycle)
     : plan
     ? PLAN_VALUE[plan.plan] ?? [`${plan.monthlyCredits.toLocaleString()} credits every month`, "Credits refresh each billing cycle", "Cancel anytime, no lock-in"]
-    : ["Your balance funds verifications during early access", "Nothing ran, nothing charged: unused holds refund automatically", "Balance keeps its full purchase value as per-verification pricing rolls out"];
+    // NOT "during early access", and not "as per-verification pricing rolls out". Per-verification pricing
+    // is what production charges today: every launch path calls passPriceCents with no options, and nothing
+    // anywhere asks for the early-access base. Describing the live model as forthcoming told a customer at
+    // the moment of payment that the thing they were paying into had not started yet.
+    : ["Your balance funds verifications", "Nothing ran, nothing charged: unused holds refund automatically", "Balance keeps its full purchase value"];
 
   return (
     <section className="section" style={{ borderBottom: "none", paddingTop: "clamp(20px, 3vw, 40px)", paddingBottom: "clamp(56px, 7vw, 96px)" }}>
