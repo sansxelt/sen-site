@@ -28,7 +28,11 @@ import { createHmac, timingSafeEqual } from "crypto";
 
 export const STEALTH_COOKIE = "vr_stealth";
 
-const TTL_MS = 24 * 60 * 60 * 1000; // a browser open tomorrow is still unlocked; a shared machine re-arms
+// 30 days. It was 24 hours, which was the right length for the gesture — a shared machine re-arms by the
+// next day — but the same cookie is what a YC reviewer gets from the /yc entrance. A reviewer who opens the
+// link, bookmarks the bare domain, and comes back two days later would have hit "Not open yet." and had no
+// way to know the site was ever there. The entrance link always works; this is about the second visit.
+const TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 // The wait between starting the gesture and completing it. MIN is the three seconds; MAX stops a handshake
 // being banked and cashed in much later.

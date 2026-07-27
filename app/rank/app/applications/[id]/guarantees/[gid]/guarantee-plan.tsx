@@ -90,6 +90,51 @@ export function RegenerateButton({ appId, guaranteeId, approved, label = "Regene
   );
 }
 
+/** Prove the guarantee against the deployment as it stands now.
+ *
+ *  The button sends almost nothing: the guarantee is in the URL and everything executable — the journeys,
+ *  the approved plan, the meaning being proved — is resolved server-side from the approved record. It cannot
+ *  ask for a different plan, and it is not able to name what counts as proof.
+ *
+ *  `parentRunId` is what makes this a REVERIFICATION rather than a fresh proof. It is passed only when the
+ *  page is offering to re-check a specific earlier failure, and the server refuses it if it belongs to a
+ *  different guarantee or was proved under a plan that has since been re-approved.
+ *
+ *  A fresh idempotency key per press is deliberate. The key is fingerprinted with {app, url, journeys}, so
+ *  reusing one after a repair — same system, same URL, same journeys — would be indistinguishable from a
+ *  double click and would hand back the ORIGINAL failed run instead of checking the fix. */
+export function VerifyGuaranteeButton({
+  appId, guaranteeId, parentRunId = null, label = "Verify this guarantee",
+}: { appId: string; guaranteeId: string; parentRunId?: string | null; label?: string }) {
+  const router = useRouter();
+  const { busy, err, run } = useSingleFlight();
+  const verify = () => run(async () => {
+    const res = await fetch(`/api/preflight/apps/${appId}/guarantees/${guaranteeId}/verify`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "idempotency-key": crypto.randomUUID() },
+      body: JSON.stringify(parentRunId ? { parent_run_id: parentRunId } : {}),
+    });
+    const j = await res.json().catch(() => ({} as Record<string, unknown>));
+    if (!res.ok) { throw new Error((j as { message?: string })?.message || "Could not start the verification."); }
+    const runId = (j as { runId?: string }).runId;
+    if (runId) { router.push(`/applications/${appId}/passes/${runId}`); return true; }
+    router.refresh(); return true;
+  });
+  return (
+    <div style={{ display: "grid", gap: 8 }}>
+      <div>
+        <button className="btn" disabled={busy} onClick={verify}>{busy ? "Starting verification…" : label}</button>
+      </div>
+      {err ? <p style={{ fontSize: 12.5, color: "var(--err)", margin: 0 }}>{err}</p> : null}
+      <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5, margin: 0, maxWidth: 560 }}>
+        {parentRunId
+          ? "Runs the same approved plan against the deployment as it stands now, and records the result as a re-check of that failure. The earlier result is kept."
+          : "Runs the plan you approved against the current deployment. Nothing about the approved plan changes."}
+      </p>
+    </div>
+  );
+}
+
 function NotProvableCard({ np, onRetry, busy }: { np: NotProvable; onRetry: () => void; busy: boolean }) {
   const label = { fontFamily: "var(--font-code)", fontSize: 10.5, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--wait-ink)", margin: 0 };
   return (

@@ -75,11 +75,15 @@ export type AcceptRunInput = {
   actor?: { email: string; level: string; role: string } | null;
   /** Hashed at the boundary, never stored raw. Used only for the free-pass abuse signal. */
   risk?: { ip: string | null; userAgent: string | null };
+  /** The label this launch appears under in the per-key audit and on the Usage page. Defaults to the run
+   *  endpoint, because that is where every launch came from when this moved out of the route. An entrance
+   *  that does not say which one it is makes the Usage page quietly wrong about where a key's spend went. */
+  endpoint?: string;
 };
 
 export async function acceptVerificationRun(input: AcceptRunInput): Promise<AcceptanceOutcome> {
   const { owner, applicationId: id, contract, deploymentUrl, flowIds, principal, guarantee } = input;
-  const endpoint = "POST /api/preflight/apps/{id}/runs";
+  const endpoint = input.endpoint ?? "POST /api/preflight/apps/{id}/runs";
 
   // Per-owner concurrency cap.
   if ((await ownerActiveRunCount(owner)) >= MAX_ACTIVE_RUNS_PER_OWNER) {

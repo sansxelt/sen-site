@@ -72,8 +72,9 @@ export default async function GuaranteesPage() {
         person approved.
       </p>
       <p style={{ margin: "0 0 24px", fontSize: 13, color: "var(--fg-4)", lineHeight: 1.6, maxWidth: "62ch" }}>
-        Approving a plan records what must stay true and who accepted it. Re-checking a guarantee automatically
-        against each new deployment is not wired up yet, so these carry a plan state rather than a verdict.
+        Approving a plan records what must stay true and who accepted it. Open a guarantee to prove it against
+        the current deployment, and again after a repair. Re-checking automatically as each new deployment
+        appears is not wired up yet, so a guarantee is proven when you ask it to be.
       </p>
 
       {guarantees.length > 0 ? (

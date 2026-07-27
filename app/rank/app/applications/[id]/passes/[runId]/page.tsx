@@ -7,6 +7,8 @@ import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { getApplication, getContractById, listRequirements, type ContractRequirement } from "@/lib/v-applications";
 import { getRun, listChildRuns, getRunLite, type RunFlow, type RunStep, type RunIssue, type ChildRun } from "@/lib/preflight/runs-db";
 import { getRunInternal, listFlowRunMeta, type FlowRunMeta } from "@/lib/preflight/run-report-db";
+import { getGuarantee } from "@/lib/preflight/guarantees-db";
+import { provesCurrentMeaning } from "@/lib/preflight/guarantee-status";
 import { runVersionPins, getDeployment, deploymentStoreReady } from "@/lib/preflight/deployments-db";
 import { getSnapshot } from "@/lib/preflight/context-snapshots";
 import { getReviewedPlanByRunId } from "@/lib/preflight/reviewed-plan-db";
@@ -409,7 +411,7 @@ export default async function VerificationResultPage({ params }: { params: Promi
   // Second wave: the contract behind the run's claim/requirements, and the PINNED historical version rows.
   // Missing ids resolve to null (never substituted with a latest/current object).
   const pins = await runVersionPins(owner, runId);
-  const [contract, requirements, deployment, contextSnap, deploymentsReady, parentLite, reviewedPlan] = await Promise.all([
+  const [contract, requirements, deployment, contextSnap, deploymentsReady, parentLite, reviewedPlan, guarantee] = await Promise.all([
     internal.contractId ? getContractById(owner, internal.contractId) : Promise.resolve(null),
     internal.contractId ? listRequirements(owner, internal.contractId) : Promise.resolve([] as ContractRequirement[]),
     pins.deploymentId ? getDeployment(owner, pins.deploymentId) : Promise.resolve(null),
@@ -420,6 +422,10 @@ export default async function VerificationResultPage({ params }: { params: Promi
     run.parent_run_id ? getRunLite(owner, run.parent_run_id) : Promise.resolve(null),
     // The reviewed plan this run consumed (the REAL persisted run_id binding), or null for a legacy/direct run.
     getReviewedPlanByRunId(owner, runId),
+    // The standing guarantee this run proves, read from the run's OWN pin. Null for a plain verification and
+    // for every run predating migration 23, and absent must read as absent: a run with no pin proves no
+    // standing promise, and saying otherwise would be the same defect class as inventing the guarantee.
+    internal.guaranteeId ? getGuarantee(owner, internal.guaranteeId) : Promise.resolve(null),
   ]);
 
   // ── derived, nothing invented ──
@@ -574,6 +580,24 @@ export default async function VerificationResultPage({ params }: { params: Promi
               snapshot). Omitted cleanly with a quiet note when the claim is absent. ── */}
         {(claim || contract || requirements.length > 0) ? (
           <Section n="02" title="What had to be true" aria="Submitted claim">
+            {/* THE STANDING PROMISE THIS RUN PROVES. Read from the run's own pin, so it says what this run
+                was bound to at launch rather than what the guarantee happens to say now. When the guarantee
+                has been re-approved since, the run is evidence for a definition that no longer stands, and
+                the record says so instead of letting an old result read as current proof. */}
+            {guarantee ? (
+              <div style={{ marginBottom: 14, display: "grid", gap: 4 }}>
+                <div style={label}>Guarantee</div>
+                <Link href={`/applications/${id}/guarantees/${guarantee.id}`} style={{ fontSize: 14, color: "var(--fg-1)", fontWeight: 600, textDecoration: "none", maxWidth: "60ch" }}>
+                  {guarantee.title} <span aria-hidden style={{ color: "var(--fg-5)", fontWeight: 400 }}>→</span>
+                </Link>
+                <p style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>
+                  {internal.guaranteePlanVersion != null ? <>Proved against approved plan v{internal.guaranteePlanVersion}. </> : null}
+                  {provesCurrentMeaning({ state: run.state, decision: run.decision, planHash: internal.guaranteePlanHash }, guarantee.approved_plan_hash)
+                    ? "This is still the guarantee's approved meaning."
+                    : "The guarantee has been re-approved since, so this record is evidence for a superseded definition and does not count toward its current state."}
+                </p>
+              </div>
+            ) : null}
             {claim ? (
               <p style={{ fontSize: "clamp(1.05rem, 1.9vw, 1.3rem)", color: "var(--fg-1)", lineHeight: 1.5, letterSpacing: "-0.005em", margin: 0, maxWidth: "60ch", wordBreak: "break-word", whiteSpace: "pre-line" }}>{claim}</p>
             ) : (

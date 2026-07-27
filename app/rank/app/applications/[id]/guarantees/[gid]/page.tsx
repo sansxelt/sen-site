@@ -13,7 +13,7 @@ import { findLivePendingPlanForClaim } from "@/lib/preflight/reviewed-plan-db";
 import { toPublicDecision } from "@/lib/preflight/public-decision";
 import { Ic, I, EmptyIcon } from "@/app/rank/_components/icons";
 import { GuaranteeStatusPill } from "../../guarantee-ui";
-import { DerivePlanButton, ApprovePlanButton, RegenerateButton } from "./guarantee-plan";
+import { DerivePlanButton, ApprovePlanButton, RegenerateButton, VerifyGuaranteeButton } from "./guarantee-plan";
 
 // The guarantee detail: a durable, named claim on a system, its approved proof plan, and whether it is
 // currently proven. Server component. The PREPARED plan is read from the database here (not held in the
@@ -162,10 +162,30 @@ export default async function GuaranteeDetailPage({ params }: { params: Promise<
           </Section>
         ) : null}
 
-        {/* ── Current status: derived from the guarantee's runs (Inc3 populates history + the verify action) ── */}
+        {/* ── Current status: derived from the guarantee's own runs, and the action that produces them ── */}
         {g.plan_state === "ok" ? (
           <Section n={approvedReqs.length ? "02" : "01"} title="Current status">
             <p style={{ fontSize: 12, color: "var(--fg-4)", margin: "0 0 10px" }}>{GUARANTEE_COVERAGE_NOTE}</p>
+            {/* An approved plan that was never materialized into a contract cannot run, and approval is
+                deliberately allowed to stand when that write fails. Say so instead of offering a button that
+                would refuse. */}
+            {canEdit && !g.plan_contract_id ? (
+              <p style={{ fontSize: 13.5, color: "var(--wait-ink)", lineHeight: 1.55, margin: "0 0 12px", maxWidth: "64ch" }}>
+                This plan was approved but has nothing runnable behind it yet. Approve the plan again to rebuild it.
+              </p>
+            ) : null}
+            {canEdit && g.plan_contract_id ? (
+              <div style={{ marginBottom: 14 }}>
+                <VerifyGuaranteeButton
+                  appId={id}
+                  guaranteeId={gid}
+                  // Offer a re-check only against a latest run that actually FAILED, and only once it is
+                  // finished. Re-checking a run that is still going, or one that passed, is not a repair.
+                  parentRunId={latest && toPublicDecision(latest.state, latest.decision) === "failed" ? latest.id : null}
+                  label={latest && toPublicDecision(latest.state, latest.decision) === "failed" ? "Verify again after repair" : (history.length ? "Verify again" : "Verify this guarantee")}
+                />
+              </div>
+            ) : null}
             {history.length === 0 ? (
               <p style={{ fontSize: 14, color: "var(--fg-3)", lineHeight: 1.55, margin: 0, maxWidth: "64ch" }}>
                 Never verified. Once this guarantee runs against a deployment, its decision and the evidence

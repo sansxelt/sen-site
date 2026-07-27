@@ -138,12 +138,90 @@ console.log("\n── the launch boundary is respected ──");
 {
   // The acceptance-boundary ratchet exists because the coverage gate sits in the caller ABOVE the shared
   // handler, so every new entrance can forget it. A verify-this-guarantee action IS a new entrance, and it
-  // waits for the acceptance service rather than working around the boundary.
+  // waited for the acceptance service rather than working around the boundary.
   const boundary = readFileSync("scripts/preflight-acceptance-boundary-verify.ts", "utf8");
   ok("the ratchet still names exactly one permitted route-to-route import",
     /KNOWN_ROUTE_TO_ROUTE = new Set\(\["app\/api\/v1\/verifications\/route\.ts"\]\)/.test(boundary));
-  ok("no guarantee verify route was added ahead of it",
-    !existsSync("app/api/preflight/apps/[id]/guarantees/[gid]/verify/route.ts"));
+
+  // This used to assert the route did NOT exist, because building it before the acceptance service would
+  // have meant a third copy of the money path. The service landed, so the precondition is satisfied and the
+  // assertions below are what that "not yet" was protecting.
+  const VERIFY = "app/api/preflight/apps/[id]/guarantees/[gid]/verify/route.ts";
+  ok("the verify-this-guarantee entrance exists", existsSync(VERIFY));
+  const verify = code(VERIFY);
+  ok("it goes through the acceptance service", /acceptVerificationRun\(/.test(verify));
+  ok("it does not create runs itself", !/\bcreateRun\s*\(/.test(verify));
+  ok("it does not import another route handler", !/\bPOST as \w+/.test(verify));
+}
+
+console.log("\n── the guarantee a run proves is resolved server-side, never asserted by the caller ──");
+{
+  const verify = code("app/api/preflight/apps/[id]/guarantees/[gid]/verify/route.ts");
+
+  // THE FALSE-VERIFIED PRIMITIVE. If this entrance read a guarantee id, a plan hash or a flow list from the
+  // request body, any editor could post one trivial passing journey alongside the tenant's most critical
+  // guarantee id and that guarantee would render Verified. The id comes from the URL; everything executable
+  // comes from the approved record.
+  ok("the binding is read from the stored guarantee", /getGuarantee\(owner, gid\)/.test(verify));
+  ok("no guarantee id is accepted from the body", !/body\?\.guarantee/i.test(verify));
+  ok("no plan hash is accepted from the body", !/body\?\.plan_hash|body\?\.planHash/i.test(verify));
+  ok("no flow list is accepted from the body", !/body\?\.flow_ids|body\?\.flowIds/i.test(verify));
+  ok("the flows come from the frozen approved contract", /listFlows\(owner, g\.plan_contract_id\)/.test(verify));
+  ok("the pin sent to the service is the guarantee's own fields",
+    /planHash: g\.approved_plan_hash/.test(verify) && /planVersion: g\.plan_version/.test(verify));
+
+  // An unapproved definition has no human behind it, so it cannot be proved.
+  ok("an unapproved guarantee is refused", /guarantee_not_approved/.test(verify) && /g\.plan_state !== "ok"/.test(verify));
+  ok("a re-approval pending review is named as such", /review_required/.test(verify));
+  // Approval deliberately stands even when materializing the contract fails, so approved does not imply
+  // runnable, and the entrance must say which it is instead of inventing a contract at launch.
+  ok("an approved-but-unmaterialized guarantee is refused, not improvised",
+    /guarantee_not_runnable/.test(verify) && /!g\.plan_contract_id/.test(verify));
+}
+
+console.log("\n── a reverification inherits a lineage, it does not choose one ──");
+{
+  const verify = code("app/api/preflight/apps/[id]/guarantees/[gid]/verify/route.ts");
+  const internal = code("lib/preflight/run-report-db.ts");
+
+  // ONE reader, not a second one. getRunInternal already existed for exactly this, and its own comment says
+  // why: "so a rerun can INHERIT the meaning it proved rather than look up whatever the guarantee says
+  // today". It also degrades correctly on a pre-migration database. A parallel pin reader was written for
+  // this route and then deleted — two live reads of the same fact is how they drift apart.
+  ok("the parent pin is READ off the parent run", /getRunInternal\(owner, rawParent\)/.test(verify));
+  ok("it reuses the existing internal reader rather than adding a second one",
+    !/runGuaranteePin/.test(verify) && /guarantee_plan_hash, guarantee_reviewed_plan_id/.test(internal));
+  ok("a parent with no guarantee cannot anchor a reverification", /!pin \|\| !pin\.guaranteeId/.test(verify));
+  // One guarantee's failure must never be presented as another guarantee's repair.
+  ok("a parent from a different guarantee is refused",
+    /parent_guarantee_mismatch/.test(verify) && /pin\.guaranteeId !== gid/.test(verify));
+  // Re-approval is a new meaning. Attributing it to the old failure would restate history.
+  ok("a parent proved under a superseded plan is refused",
+    /parent_plan_superseded/.test(verify) && /pin\.guaranteePlanHash !== g\.approved_plan_hash/.test(verify));
+  ok("the parent is carried into the run, so the repair chain is stored not inferred",
+    /parentRunId,/.test(verify));
+}
+
+console.log("\n── the record says which promise it proves, and whether that promise still stands ──");
+{
+  const record = code("app/rank/app/applications/[id]/passes/[runId]/page.tsx");
+  // A run bound to a guarantee that says nothing about it is a record a customer cannot audit.
+  ok("the record reads the guarantee from the run's OWN pin", /internal\.guaranteeId \? getGuarantee\(owner, internal\.guaranteeId\)/.test(record));
+  ok("it names the guarantee and links to it", /guarantee\.title/.test(record) && /guarantees\/\$\{guarantee\.id\}/.test(record));
+  ok("it states the approved plan version the run executed", /internal\.guaranteePlanVersion/.test(record));
+  // The drift rule is DERIVED, not restated: one definition of "still the current meaning" for the whole
+  // product, so a record and a guarantee page can never disagree about the same run.
+  ok("drift is decided by the shared rule, not re-implemented here",
+    /provesCurrentMeaning\(/.test(record) && !/planHash === /.test(record));
+  ok("a superseded record says it no longer counts", /superseded definition/.test(record));
+  // Absent must read as absent.
+  ok("a run with no guarantee renders no guarantee", /guarantee \? \(/.test(record));
+
+  // The list page may only claim what is now true: proving on demand IS wired; proving automatically on
+  // each new deployment is NOT, and saying otherwise would be the misleading copy this whole pass removed.
+  const list = readFileSync("app/rank/app/guarantees/page.tsx", "utf8");
+  ok("the guarantees page no longer says verification is unwired", !/Re-checking a guarantee automatically\s+against each new deployment is not wired up yet/.test(list));
+  ok("it still says automatic re-checking is not wired", /automatically as each new deployment\s+appears is not wired up yet/.test(list));
 }
 
 console.log("\n── the API and the CLI carry the same relationship the console does ──");
