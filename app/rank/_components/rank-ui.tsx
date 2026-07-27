@@ -77,7 +77,7 @@ const APP_NAV: { group: string; items: { href: string; label: string; d: string 
   { group: "Settings", items: [
     { href: "/organization", label: "Organization", d: I.building },
     { href: "/team", label: "Team", d: I.user },
-    { href: "/credits", label: "Usage", d: I.coin },
+    { href: "/usage", label: "Usage", d: I.data },
     { href: "/plans", label: "Billing", d: I.card },
     { href: "/account", label: "Account", d: I.user },
   ] },
@@ -93,6 +93,7 @@ const NAV_ALIASES: Record<string, string> = {
   "/deployments": "/systems",
   "/activity": "/records",          // the audit trail IS the permanent record; /records is its canonical URL
   "/billing": "/plans",
+  "/credits": "/usage",        // topping up is an action ON usage, not a destination beside it
   "/api": "/developers",
 };
 

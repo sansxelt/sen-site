@@ -17,6 +17,7 @@
 // (app/api/preflight/apps/[id]/runs/route.ts).
 
 import { NextResponse } from "next/server";
+import { MAX_ACTIVE_RUNS_PER_OWNER, maxRunsPerDay } from "@/lib/preflight/limits";
 import { randomUUID } from "node:crypto";
 import { getGuarantee } from "@/lib/preflight/guarantees-db";
 import { auth } from "@/auth";
@@ -41,7 +42,6 @@ export const runtime = "nodejs";
 // Mirror the launch route (app/api/preflight/apps/[id]/runs/route.ts): the concurrency cap is a worker-load
 // guard, and the credit hold is the flat per-run spend cap: a completed run keeps the full hold as the
 // charge, and the worker refunds the whole hold only if no flow ran (no partial remainder).
-const MAX_ACTIVE_RUNS_PER_OWNER = 2;
 
 function billingBypassAllowed(): boolean {
   return process.env.PREFLIGHT_INTERNAL_BILLING_BYPASS === "1"
@@ -176,7 +176,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ runId: 
 
   // Per-owner DAILY cap (runs created since UTC midnight), checked BEFORE the credit hold so no hold is
   // ever taken for a run the cap would refuse.
-  if ((await ownerRunsToday(owner)) >= Number(process.env.PREFLIGHT_MAX_RUNS_PER_DAY || 20)) {
+  if ((await ownerRunsToday(owner)) >= maxRunsPerDay()) {
     return NextResponse.json({ error: "daily_limit", message: "Daily run limit reached. Try again tomorrow or contact support." }, { status: 429 });
   }
 

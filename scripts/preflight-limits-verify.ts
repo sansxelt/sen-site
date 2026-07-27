@@ -68,7 +68,13 @@ for (const [name, file] of [
   ok(`${name}: kill switch gated BEFORE the credit hold`, iKill >= 0 && iHold >= 0 && iKill < iHold);
   ok(`${name}: daily cap checked BEFORE the credit hold (no hold past the cap)`, iDaily >= 0 && iHold >= 0 && iDaily < iHold);
   ok(`${name}: daily cap returns 429 daily_limit`, /daily_limit[\s\S]{0,220}status:\s*429/.test(src));
-  ok(`${name}: daily cap uses PREFLIGHT_MAX_RUNS_PER_DAY with default 20`, /PREFLIGHT_MAX_RUNS_PER_DAY\s*\|\|\s*20/.test(src));
+  // The cap moved to lib/preflight/limits.ts so the Usage page could show it without becoming a third copy
+  // of the number. Asserting the env expression inline would now fail on correct code AND would go back to
+  // permitting two routes that disagree; assert the shared source instead.
+  ok(`${name}: daily cap comes from the shared limit, not a local literal`,
+    /maxRunsPerDay\(\)/.test(src) && !/PREFLIGHT_MAX_RUNS_PER_DAY/.test(src));
+  ok(`${name}: concurrency cap comes from the shared limit too`,
+    /MAX_ACTIVE_RUNS_PER_OWNER/.test(src) && !/const MAX_ACTIVE_RUNS_PER_OWNER\s*=/.test(src));
 }
 
 // ── static: ownerRunsToday is owner-scoped, counts since UTC midnight, degrades to 0 ──
@@ -116,6 +122,18 @@ for (const [name, file] of [
   ok("executor keeps cancelled / lease_lost codes as-is", /CancelledError \? "cancelled"/.test(src) && /LeaseLostError \? "lease_lost"/.test(src));
   const cfg = read("worker", "preflight", "config.ts");
   ok("worker startup notes the unsafe seed flag and the kill switch", /PREFLIGHT_SEED_ALLOW_PROD === "1"/.test(cfg) && /VRAELIS_RUNS_DISABLED === "1"/.test(cfg));
+}
+
+// ONE PLACE HOLDS THE NUMBERS. A page that restates a limit the routes enforce will eventually promise a
+// customer a ceiling the API refuses at, which is worse than not showing it at all.
+{
+  const limits = fs.readFileSync("lib/preflight/limits.ts", "utf8");
+  ok("the shared limit module defines the concurrency cap", /export const MAX_ACTIVE_RUNS_PER_OWNER = 2;/.test(limits));
+  ok("the shared limit module defaults the daily cap to 20", /PREFLIGHT_MAX_RUNS_PER_DAY \|\| 20/.test(limits));
+  ok("a bad env value cannot raise the cap to NaN", /Number\.isFinite\(n\) && n > 0 \? n : 20/.test(limits));
+  const usage = fs.readFileSync("app/rank/app/usage/page.tsx", "utf8");
+  ok("the Usage page quotes the shared limits rather than its own",
+    /from "@\/lib\/preflight\/limits"/.test(usage) && !/= 2;/.test(usage));
 }
 
 console.log(`\n${pass}/${pass + fail} passed`);

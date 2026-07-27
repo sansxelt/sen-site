@@ -17,6 +17,7 @@
 // browser path runs, so a key can never spend more or reach further than its owner can in the app.
 
 import { NextResponse } from "next/server";
+import { MAX_ACTIVE_RUNS_PER_OWNER, maxRunsPerDay } from "@/lib/preflight/limits";
 import { randomUUID } from "node:crypto";
 import { resolvePrincipal, logKeyUsage, PREFLIGHT_SCOPES } from "@/lib/preflight/api-principal";
 import { preflightEnabled, runsDisabled } from "@/lib/v-preflight-flags";
@@ -44,7 +45,6 @@ export const runtime = "nodejs";
 // hard spend limit). Credits held per requested flow (estimateRunCredits); pricing is flat per run, so a
 // completed run keeps the full hold as the charge and the worker refunds the whole hold only if no flow ran
 // (no partial remainder).
-const MAX_ACTIVE_RUNS_PER_OWNER = 2;
 
 // The internal billing bypass is only ever honored OUTSIDE production, and even then must be set explicitly.
 // A live production deployment can never skip the hold, regardless of the env var.
@@ -184,7 +184,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   // Per-owner DAILY cap (runs created since UTC midnight), checked BEFORE the credit hold so no hold is
   // ever taken for a run the cap would refuse.
-  if ((await ownerRunsToday(owner)) >= Number(process.env.PREFLIGHT_MAX_RUNS_PER_DAY || 20)) {
+  if ((await ownerRunsToday(owner)) >= maxRunsPerDay()) {
     return NextResponse.json({ error: "daily_limit", message: "Daily run limit reached. Try again tomorrow or contact support." }, { status: 429 });
   }
 

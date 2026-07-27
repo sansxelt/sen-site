@@ -32,7 +32,8 @@ const DESTINATIONS: Item[] = [
   { id: "a-connect", label: "Connect a system", hint: "Point Vraelis at a deployment", href: "/applications/new", icon: I.plus },
   { id: "s-team", label: "Team", hint: "Who can see what", href: "/team", icon: I.user },
   { id: "s-org", label: "Organization", hint: "Company settings", href: "/organization", icon: I.building },
-  { id: "s-usage", label: "Usage", hint: "Credits and consumption", href: "/credits", icon: I.coin },
+  { id: "s-usage", label: "Usage", hint: "API keys, consumption, limits", href: "/usage", icon: I.data },
+  { id: "s-topup", label: "Top up credits", hint: "Add balance", href: "/credits", icon: I.coin },
   { id: "s-billing", label: "Billing", hint: "Plan and payment", href: "/plans", icon: I.card },
   { id: "s-account", label: "Account", hint: "Your profile", href: "/account", icon: I.user },
 ];

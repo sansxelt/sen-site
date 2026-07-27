@@ -7,7 +7,10 @@ import { createHash, randomBytes } from "crypto";
 function norm(e: string): string { return e.trim().toLowerCase(); }
 function hash(k: string): string { return createHash("sha256").update(k).digest("hex"); }
 
-export type ApiKeyRow = { id: string; prefix: string; scopes: string[]; last_used: string | null; created_at: string; name?: string | null };
+export type ApiKeyRow = { id: string; prefix: string; scopes: string[]; last_used: string | null; created_at: string; name?: string | null;
+  /** Per-key daily spend ceiling in cents (migration 16). Null means unbounded, which is a real and
+   *  deliberate state: a key minted before ceilings existed, or one created without asking for one. */
+  daily_ceiling_cents?: number | null };
 
 // The scopes a key may be granted at creation, and the only strings the API route will accept. A scope not
 // on this list is dropped rather than stored, so a typo or a hostile body can never mint a key carrying a
@@ -100,9 +103,16 @@ export async function listApiKeys(userId: string): Promise<ApiKeyRow[]> {
   if (!userId || !isDatabaseConfigured()) return [];
   const s = getSupabaseAdminClient();
   // Never select key_hash. Try with name; fall back if the column isn't there yet.
-  const first = await s.from("v_api_keys" as never).select("id,prefix,scopes,last_used,created_at,name").eq("user_id", norm(userId)).order("created_at", { ascending: false });
-  let data = first.data;
-  if (first.error) ({ data } = await s.from("v_api_keys" as never).select("id,prefix,scopes,last_used,created_at").eq("user_id", norm(userId)).order("created_at", { ascending: false }));
+  // Two additive columns, two fallbacks, widest first. Selecting a column that does not exist fails the
+  // WHOLE query rather than returning nulls, so each step drops one optional field instead of leaving the
+  // owner with no key list at all. name is migration-era; daily_ceiling_cents is migration 16.
+  const q = (cols: string) => s.from("v_api_keys" as never).select(cols)
+    .eq("user_id", norm(userId)).order("created_at", { ascending: false });
+  const widest = await q("id,prefix,scopes,last_used,created_at,name,daily_ceiling_cents");
+  if (!widest.error) return (widest.data as unknown as ApiKeyRow[]) ?? [];
+  const withName = await q("id,prefix,scopes,last_used,created_at,name");
+  if (!withName.error) return (withName.data as unknown as ApiKeyRow[]) ?? [];
+  const { data } = await q("id,prefix,scopes,last_used,created_at");
   return (data as unknown as ApiKeyRow[]) ?? [];
 }
 
