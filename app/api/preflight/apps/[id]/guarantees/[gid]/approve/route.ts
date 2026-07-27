@@ -38,8 +38,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const app = await getApplication(owner, id);
   if (!app?.app_url) return NextResponse.json({ error: "no_deployment", message: "This system has no deployment URL." }, { status: 400 });
 
-  // The guarantee's CURRENT prepared plan (server-authoritative), keyed by its claim + deployment.
-  const live = await findLivePendingPlanForClaim(owner, app.app_url, g.title);
+  // The guarantee's CURRENT prepared plan (server-authoritative), keyed by its claim + deployment AND by
+  // the guarantee itself. The gid argument is not optional in practice: prepare mints the plan carrying this
+  // guarantee's id, so a lookup that omits it asks for an UNLINKED plan and finds nothing, which is what
+  // made approval impossible. It is also what stops a plain verification's plan, sharing this claim text and
+  // URL, from being approved as this guarantee's meaning.
+  const live = await findLivePendingPlanForClaim(owner, app.app_url, g.title, gid);
   if (!live) return NextResponse.json({ error: "no_prepared_plan", message: "No prepared plan to approve. Derive the proof plan first." }, { status: 409 });
   // Integrity: the stored plan must still hash to its stored hash, or nothing about it can be trusted.
   if (planHash(live.plan) !== live.planHash) {

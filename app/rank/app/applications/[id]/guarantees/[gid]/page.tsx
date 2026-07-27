@@ -82,7 +82,10 @@ export default async function GuaranteeDetailPage({ params }: { params: Promise<
 
   const notApproved = g.plan_state !== "ok";
   // The prepared plan is read from the DB (sticky across refresh). Only relevant while unapproved.
-  const pending = notApproved && app.app_url ? await findLivePendingPlanForClaim(owner, app.app_url, g.title) : null;
+  // Scoped to THIS guarantee, the same way prepare minted it. Without the gid this asked for an unlinked
+  // plan, always got null, and so never rendered the approve control at all: the page offered "Derive proof
+  // plan" again after a successful derive, and the workflow had no visible way to finish.
+  const pending = notApproved && app.app_url ? await findLivePendingPlanForClaim(owner, app.app_url, g.title, gid) : null;
 
   const history = await guaranteeRunHistory(owner, gid);
   const latest = history[0] ?? null;

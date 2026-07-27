@@ -156,17 +156,38 @@ export async function findLivePendingPlanForClaim(owner: string, deploymentUrl: 
   if (!isDatabaseConfigured()) return null;
   try {
     const s = getSupabaseAdminClient();
-    const r = await s.from(TABLE as never).select("id, plan, plan_hash, claim, expires_at")
+    const base = () => s.from(TABLE as never).select("id, plan, plan_hash, claim, expires_at")
       .eq("user_id", norm(owner))
       .eq("deployment_fp", deploymentFingerprint(deploymentUrl))
       .eq("claim_fp", claimFingerprint(claim))
       .eq("approval_state", "pending")
       .eq("execution_state", "unconsumed")
-      .gt("expires_at", new Date().toISOString())
-      // Same scoping as mint: a guarantee looking for its live plan must never be handed a plain
-      // verification's plan that happens to share the claim text and the URL.
-      .eq("guarantee_id", guaranteeId as never)
-      .order("created_at", { ascending: false }).limit(1).maybeSingle();
+      .gt("expires_at", new Date().toISOString());
+    // Same scoping as mint: a guarantee looking for its live plan must never be handed a plain
+    // verification's plan that happens to share the claim text and the URL.
+    //
+    // THIS USED TO BE `.eq("guarantee_id", guaranteeId as never)` UNCONDITIONALLY, and it made approval
+    // impossible. PostgREST renders .eq(col, null) as `guarantee_id=eq.null`, which matches neither a real
+    // id nor a SQL NULL, so the lookup returned nothing on BOTH paths: a guarantee could never find the plan
+    // prepare had just minted for it, and a plain verification could never find its own either. mint has had
+    // the correct form since it was written (`input.guaranteeId ? q.eq(...) : q.is(...)`, above) — the two
+    // were supposed to be symmetric, and the `as never` cast is what let this half compile.
+    const q = guaranteeId ? base().eq("guarantee_id", guaranteeId) : base().is("guarantee_id", null);
+    const r = await q.order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (r.error && /guarantee_id/i.test(r.error.message ?? "")) {
+      // Pre-migration. For a PLAIN plan the column simply does not exist yet, so the unscoped query is the
+      // correct historical behaviour. For a GUARANTEE it is not: an unscoped match could hand back a plain
+      // verification's plan and it would go on to be approved as that guarantee's meaning. Refuse instead,
+      // the same way mint refuses to write an unlinked plan for a guarantee.
+      if (guaranteeId) {
+        console.error("findLivePendingPlanForClaim: v_reviewed_plans.guarantee_id is missing. Apply sql/vraelis-preflight-23-guarantee-binding.sql (migration 23). Refusing to match an UNLINKED plan to a guarantee.");
+        return null;
+      }
+      const legacy = await base().order("created_at", { ascending: false }).limit(1).maybeSingle();
+      const ld = legacy.data as { id?: string; plan?: PlannedVerification; plan_hash?: string; claim?: string; expires_at?: string } | null;
+      if (!ld?.id || !ld.plan) return null;
+      return { id: String(ld.id), plan: ld.plan, planHash: String(ld.plan_hash ?? ""), claim: String(ld.claim ?? ""), expiresAt: String(ld.expires_at ?? "") };
+    }
     const d = r.data as { id?: string; plan?: PlannedVerification; plan_hash?: string; claim?: string; expires_at?: string } | null;
     if (!d?.id || !d.plan) return null;
     return { id: String(d.id), plan: d.plan, planHash: String(d.plan_hash ?? ""), claim: String(d.claim ?? ""), expiresAt: String(d.expires_at ?? "") };

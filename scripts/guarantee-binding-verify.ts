@@ -202,6 +202,36 @@ console.log("\n── a reverification inherits a lineage, it does not choose on
     /parentRunId,/.test(verify));
 }
 
+console.log("\n── a guarantee can find the plan it just minted (mint and find scope identically) ──");
+{
+  const db = code("lib/preflight/reviewed-plan-db.ts");
+  const approve = code("app/api/preflight/apps/[id]/guarantees/[gid]/approve/route.ts");
+  const detail = code("app/rank/app/applications/[id]/guarantees/[gid]/page.tsx");
+  const prepare = code("app/api/preflight/apps/[id]/guarantees/[gid]/prepare/route.ts");
+
+  // THE DEFECT: the lookup filtered `.eq("guarantee_id", guaranteeId as never)` unconditionally. PostgREST
+  // renders .eq(col, null) as `guarantee_id=eq.null`, which matches neither a real id nor a SQL NULL, so it
+  // returned nothing on BOTH paths. Approval was unreachable: prepare minted a plan carrying the guarantee's
+  // id, and nothing could ever find it again. The `as never` cast is what let it compile.
+  ok("the null case uses .is(), not .eq(col, null)",
+    /\.is\("guarantee_id", null\)/.test(db) && !/\.eq\("guarantee_id", guaranteeId as never\)/.test(db));
+  ok("a guarantee lookup filters by the guarantee id", /\.eq\("guarantee_id", guaranteeId\)/.test(db));
+  // Mint has always had the correct shape. The two must agree or a plan is unfindable the moment it is made.
+  ok("mint still scopes the same way", /input\.guaranteeId \? q\.eq\("guarantee_id", input\.guaranteeId\) : q\.is\("guarantee_id", null\)/.test(db));
+
+  // Every caller must SAY which guarantee it means. Omitting the argument silently asks for an unlinked plan.
+  const calls = [...code("app/api/preflight/apps/[id]/guarantees/[gid]/approve/route.ts").matchAll(/findLivePendingPlanForClaim\(([^)]*)\)/g)].map((m) => m[1]);
+  ok("the approve route passes the guarantee id", calls.some((c) => /,\s*gid\s*$/.test(c)));
+  ok("the detail page passes the guarantee id", /findLivePendingPlanForClaim\([^)]*,\s*gid\)/.test(detail));
+  ok("prepare still passes it too", /findLivePendingPlanForClaim\([^)]*,\s*gid\)/.test(prepare));
+  ok("no caller omits it", !/findLivePendingPlanForClaim\(owner, app\.app_url, g\.title\)/.test(approve + detail + prepare));
+
+  // Pre-migration, an unscoped match could hand a guarantee a plain verification's plan sharing its claim
+  // and URL, and it would be approved as that guarantee's meaning. Refuse, exactly as mint refuses.
+  ok("an unmigrated column refuses rather than matching an unlinked plan",
+    /Refusing to match an UNLINKED plan to a guarantee/.test(readFileSync("lib/preflight/reviewed-plan-db.ts", "utf8")));
+}
+
 console.log("\n── the record says which promise it proves, and whether that promise still stands ──");
 {
   const record = code("app/rank/app/applications/[id]/passes/[runId]/page.tsx");
