@@ -17,19 +17,46 @@ function db() { return getSupabaseAdminClient(); }
 export type RunInternal = {
   applicationId: string; deploymentUrl: string | null;
   contractId: string | null; contractVersion: number | null; state: string;
+  // The parent's guarantee pin, so a rerun can INHERIT the meaning it proved rather than look up whatever
+  // the guarantee says today. Null on a plain verification and on every run predating migration 23.
+  guaranteeId: string | null; guaranteePlanVersion: number | null;
+  guaranteePlanHash: string | null; guaranteeReviewedPlanId: string | null;
 };
+
+const RUN_INTERNAL_BASE = "application_id, deployment_url, contract_id, contract_version, state";
+const RUN_INTERNAL_GUARANTEE = "guarantee_id, guarantee_plan_version, guarantee_plan_hash, guarantee_reviewed_plan_id";
+
 export async function getRunInternal(owner: string, runId: string): Promise<RunInternal | null> {
   if (!isDatabaseConfigured()) return null;
-  const { data } = await db().from("v_preflight_runs")
-    .select("application_id, deployment_url, contract_id, contract_version, state")
-    .eq("user_id", norm(owner)).eq("id", runId).maybeSingle();
-  if (!data) return null;
-  const r = data as Record<string, unknown>;
+  const uid = norm(owner);
+  // The guarantee columns are additive (migration 23). Selecting a column that does not exist fails the
+  // WHOLE query, so a rerun would stop working on an unmigrated database; ask for them, and on a
+  // column-missing error fall back to the base select and carry nulls. Same degrade-cleanly rule the run
+  // insert follows.
+  let r: Record<string, unknown> | null = null;
+  const withGuarantee = await db().from("v_preflight_runs")
+    .select(`${RUN_INTERNAL_BASE}, ${RUN_INTERNAL_GUARANTEE}`)
+    .eq("user_id", uid).eq("id", runId).maybeSingle();
+  if (withGuarantee.error) {
+    if (/guarantee_/i.test(withGuarantee.error.message ?? "")) {
+      console.warn("getRunInternal: the guarantee binding columns are missing. Apply sql/vraelis-preflight-23-guarantee-binding.sql (migration 23). Reruns will not inherit a guarantee.");
+    }
+    const base = await db().from("v_preflight_runs").select(RUN_INTERNAL_BASE)
+      .eq("user_id", uid).eq("id", runId).maybeSingle();
+    r = (base.data as Record<string, unknown> | null) ?? null;
+  } else {
+    r = (withGuarantee.data as Record<string, unknown> | null) ?? null;
+  }
+  if (!r) return null;
   return {
     applicationId: String(r.application_id ?? ""), deploymentUrl: (r.deployment_url as string) ?? null,
     contractId: (r.contract_id as string) ?? null,
     contractVersion: typeof r.contract_version === "number" ? r.contract_version : null,
     state: String(r.state ?? ""),
+    guaranteeId: (r.guarantee_id as string) ?? null,
+    guaranteePlanVersion: typeof r.guarantee_plan_version === "number" ? r.guarantee_plan_version : null,
+    guaranteePlanHash: (r.guarantee_plan_hash as string) ?? null,
+    guaranteeReviewedPlanId: (r.guarantee_reviewed_plan_id as string) ?? null,
   };
 }
 

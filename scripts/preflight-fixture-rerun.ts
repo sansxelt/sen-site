@@ -97,6 +97,7 @@ async function main(): Promise<void> {
   // 7. Queue via the canonical createRun (state 'queued', dev-free credits_held 0), then link to the parent.
   const submissionId = `rerun-${mode}-${scope}-${parentRunId.slice(0, 8)}`;
   const created = await createRun(owner, {
+    guarantee: null,   // A fixture rerun replays a fixture, not a guarantee.
     applicationId: parent.applicationId, contractId: parent.contractId, contractVersion: parent.contractVersion,
     deploymentUrl: url, submissionId, flowIds, creditsHeld: 0, reservationId: null,
   });

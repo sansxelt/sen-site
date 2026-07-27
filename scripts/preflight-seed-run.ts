@@ -181,6 +181,7 @@ async function main(): Promise<void> {
   // 9. Queue the run via the canonical createRun (state 'queued'; dev-free credits_held 0; no child rows).
   const submissionId = `seed-${mode}-${applicationId.slice(0, 8)}`;
   const created = await createRun(owner, {
+    guarantee: null,   // A seeded run is a plain verification; it proves no standing guarantee.
     applicationId, contractId, contractVersion, deploymentUrl: url,
     submissionId, flowIds, creditsHeld: 0, reservationId: null,
   });

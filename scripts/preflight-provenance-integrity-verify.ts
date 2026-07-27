@@ -549,8 +549,32 @@ ok("the rollback drops and re-adds the one constraint the restored state violate
     !sqlDir.some((f) => /^vraelis-preflight-21/.test(f)));
   ok("migration 22 is a numbered schema migration",
     sqlDir.includes("vraelis-preflight-22-approved-review-state-consistency.sql"));
-  ok("nothing above 22 has appeared unreviewed",
-    !sqlDir.some((f) => /^vraelis-preflight-2[3-9]/.test(f)));
+  // 23 BINDS A RUN TO THE GUARANTEE MEANING IT PROVES. It is reviewed here rather than merely permitted:
+  // this guard exists so a schema change cannot arrive unnoticed, so registering one means stating what it
+  // is allowed to do. The tripwire then moves to 24.
+  const m23f = "vraelis-preflight-23-guarantee-binding.sql";
+  ok("migration 23 is a numbered schema migration", sqlDir.includes(m23f));
+  if (sqlDir.includes(m23f)) {
+    const m23 = readFileSync(join(ROOT, "sql", m23f), "utf8");
+    // Additive and inert, the same contract migrations 7, 8, 16 and 19 follow: a launch must never fail
+    // because an optional column is missing, and no existing row may be rewritten.
+    ok("23 only ever adds columns and indexes",
+      /alter table [\w.]+ add column if not exists/.test(m23)
+      && !/^\s*(drop|delete|update|truncate)\s/im.test(m23.replace(/^--.*$/gm, "")));
+    ok("23 adds no foreign key, so archiving a guarantee never rewrites or cascades away evidence",
+      !/references\s+v_guarantees/i.test(m23.replace(/^--.*$/gm, "")));
+    ok("23 backfills nothing (no invented lineage for historical runs)",
+      !/^\s*update\s+v_preflight_runs/im.test(m23.replace(/^--.*$/gm, "")));
+    ok("23 carries a rollback", /ROLLBACK/.test(m23) && /drop column if exists/.test(m23));
+    // The whole point of the migration: the run pins the MEANING, not just the id.
+    for (const col of ["guarantee_plan_version", "guarantee_plan_hash", "guarantee_reviewed_plan_id"]) {
+      ok(`23 pins ${col} on the run`, new RegExp(`add column if not exists ${col}`).test(m23));
+    }
+    ok("23 gives the reviewed plan its own guarantee link, replacing the claim-text coincidence",
+      /alter table v_reviewed_plans add column if not exists guarantee_id/.test(m23));
+  }
+  ok("nothing above 23 has appeared unreviewed",
+    !sqlDir.some((f) => /^vraelis-preflight-2[4-9]/.test(f)));
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

@@ -307,6 +307,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     // Attribute the run to the launching key, so the per-key ceiling is enforceable tomorrow and the audit
     // trail can answer "which credential launched this". Null for a browser session.
     apiKeyId: p.principal.keyId,
+    // NO GUARANTEE FROM AN HTTP CALLER, EVER. A guarantee id accepted from the request body would be a
+    // false-Verified manufacturing primitive: any editor or run:create key could POST one trivial approved
+    // flow plus the tenant's most critical guarantee id, and that guarantee would render Verified. It would
+    // also collide in payloadFingerprint, which hashes only {app, url, flows}, so two runs differing solely
+    // by guarantee would 409 onto each other's records. Guarantee-bound runs are launched in-process by the
+    // verify-this-guarantee path, which resolves the binding server-side from the guarantee row itself.
+    guarantee: null,
   });
 
   if (!created) {

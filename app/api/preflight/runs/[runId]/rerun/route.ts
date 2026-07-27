@@ -18,6 +18,7 @@
 
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
+import { getGuarantee } from "@/lib/preflight/guarantees-db";
 import { auth } from "@/auth";
 import { preflightEnabled, runsDisabled } from "@/lib/v-preflight-flags";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
@@ -146,6 +147,28 @@ export async function POST(req: Request, { params }: { params: Promise<{ runId: 
     return NextResponse.json({ error: "nothing_to_rerun", message: "There are no matching flows from this run to re-run." }, { status: 400 });
   }
 
+  // GUARANTEE INHERITANCE, CHECKED BEFORE ANY MONEY MOVES.
+  //
+  // A rerun of a guarantee-bound run is that guarantee's evidence, at the meaning the parent proved. Three
+  // things can have changed since, and each of them makes this rerun worthless rather than merely stale, so
+  // each refuses HERE: before the concurrency cap, before the daily cap, and before every hold. Producing
+  // evidence and charging for it against a definition nobody currently stands behind is the failure this
+  // whole binding exists to prevent.
+  if (parent.guaranteeId) {
+    const g = await getGuarantee(owner, parent.guaranteeId);
+    if (!g || g.application_id !== parent.applicationId || g.status !== "active") {
+      return NextResponse.json({ error: "guarantee_unavailable", message: "The guarantee this run proves is no longer active." }, { status: 409 });
+    }
+    if (g.plan_state !== "ok") {
+      return NextResponse.json({ error: "guarantee_review_required", message: "This guarantee's proof plan is awaiting human review. Approve the current plan, then verify it again." }, { status: 409 });
+    }
+    // The parent pinned a hash; the guarantee carries one now. Unequal means it was re-approved in between,
+    // so re-running the OLD plan would file evidence under a definition that has been superseded.
+    if (g.approved_plan_hash !== parent.guaranteePlanHash || g.plan_version !== parent.guaranteePlanVersion) {
+      return NextResponse.json({ error: "guarantee_plan_superseded", message: "This guarantee was re-approved since that run. Verify the current plan instead of re-running the old one." }, { status: 409 });
+    }
+  }
+
   // Per-owner concurrency cap.
   if ((await ownerActiveRunCount(owner)) >= MAX_ACTIVE_RUNS_PER_OWNER) {
     return NextResponse.json({ error: "too_many_active_runs", message: "You already have preflight runs in progress. Wait for them to finish." }, { status: 429 });
@@ -231,6 +254,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ runId: 
   // Queue the run (insert only; NO execution). createRun re-reads the approved flows before inserting.
   const created = await createRun(owner, {
     applicationId: parent.applicationId, contractId: parent.contractId, contractVersion: parent.contractVersion,
+    // A rerun is the SAME guarantee at the SAME approved meaning, copied off the parent row. It never
+    // re-resolves "the latest guarantee": that would let a re-approval retroactively decide what an earlier
+    // repair was evidence for. If the definition has moved on, this run is not evidence for it, and the
+    // guard above refuses before any money is held.
+    guarantee: parent.guaranteeId
+      ? { id: parent.guaranteeId, planVersion: parent.guaranteePlanVersion, planHash: parent.guaranteePlanHash, reviewedPlanId: parent.guaranteeReviewedPlanId }
+      : null,
     deploymentUrl, submissionId, flowIds, creditsHeld, reservationId: heldReservationId,
   });
 

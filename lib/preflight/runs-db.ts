@@ -259,8 +259,43 @@ export type CreateRunInput = {
   creditsHeld: number; reservationId: string | null;
   /** Which API key launched this run, for the per-key spend ceiling and audit. Null for a browser session. */
   apiKeyId?: string | null;
-  /** The guarantee this run verifies, if any (migration 19). Null for a plain verification. */
-  guaranteeId?: string | null;
+
+  /** THE GUARANTEE THIS RUN PROVES, AND THE EXACT MEANING IT PROVED. Required, not optional.
+   *
+   *  It was `guaranteeId?: string | null` and every one of the four callers simply omitted it, so
+   *  v_preflight_runs.guarantee_id was never written once and a guarantee could be created, planned and
+   *  human-approved and then never become proven. An optional field is an invitation to forget; a required
+   *  one makes "this is a plain verification" a decision somebody wrote down.
+   *
+   *  Null is a first-class, permanently supported answer: most verifications are not guarantee work. */
+  guarantee: GuaranteeBinding | null;
+
+  /** The run this one re-verifies, if any. Written in the SAME insert as everything else: it used to be a
+   *  separate UPDATE afterwards inside a try/catch that swallowed every error, so lineage could be lost
+   *  silently while the run itself succeeded. */
+  parentRunId?: string | null;
+};
+
+/** What a run pins about the guarantee it proves, copied at insert and never re-resolved.
+ *
+ *  THE ID ALONE IS NOT AN IDENTITY. approveGuaranteePlan overwrites approved_claim, approved_plan and
+ *  approved_plan_hash and bumps plan_version IN PLACE on the live v_guarantees row; there is no version
+ *  table and no history. A run carrying only guarantee_id therefore resolves, at READ time, to whatever the
+ *  definition happens to say today, so one re-approval silently restates every historical verdict.
+ *
+ *  planHash is what makes the evidence checkable: comparing run.guarantee_plan_hash against the guarantee's
+ *  current approved_plan_hash is a local comparison with no join and no inference, and when they differ the
+ *  run is evidence for a superseded definition. It stays in the history and stops counting toward the live
+ *  verdict, which is what "a changed guarantee needs a new lineage" means mechanically.
+ *
+ *  reviewedPlanId is APPROVAL PROVENANCE, never an execution token: a reviewed plan is single use and TTL
+ *  bound, and a guarantee is reverified forever, so a run that had to hold a live one could never be
+ *  reverified twice. */
+export type GuaranteeBinding = {
+  id: string;
+  planVersion: number | null;
+  planHash: string | null;
+  reviewedPlanId: string | null;
 };
 export type CreateRunResult =
   | { runId: string; flowCount: number }
@@ -307,10 +342,16 @@ export async function createRun(owner: string, input: CreateRunInput): Promise<C
   // deployment: carried only when present, dropped on a column-missing error, never failing the launch.
   // A run that loses its key attribution is a weaker audit trail, not a broken run.
   let pinApiKey = !!input.apiKeyId;
-  // guarantee_id is additive (migration 19) and follows the SAME best-effort pin pattern: carried only when
-  // present, dropped on a column-missing error, never failing the launch. A run that loses its guarantee link
-  // is a weaker map, not a broken run.
-  let pinGuarantee = !!input.guaranteeId;
+  // The guarantee pin (guarantee_id from migration 19; the version, hash and reviewed-plan id from migration
+  // 23) follows the SAME best-effort pattern as every other additive column: carried only when a binding was
+  // supplied, dropped on a column-missing error, never failing the launch. A run that loses its guarantee
+  // link is a weaker map, not a broken run.
+  //
+  // The four pin fields are ONE unit and are dropped together. A row carrying guarantee_id without the hash
+  // would be the exact defect this binding exists to remove: a link to a definition that can change
+  // underneath it, with nothing to detect that it did.
+  let pinGuarantee = !!input.guarantee;
+  let pinParent = !!input.parentRunId;
 
   let deploymentId: string | null = null;
   try { deploymentId = await deploymentForRun(uid, input.applicationId, input.deploymentUrl); } catch { deploymentId = null; }
@@ -328,7 +369,16 @@ export async function createRun(owner: string, input: CreateRunInput): Promise<C
       let row: Record<string, unknown> = pinContext ? { ...baseRow, context_snapshot_id: contextSnapshotId } : baseRow;
       if (pinDeployment) row = { ...row, deployment_id: deploymentId };
       if (pinApiKey) row = { ...row, api_key_id: input.apiKeyId };
-      if (pinGuarantee) row = { ...row, guarantee_id: input.guaranteeId };
+      if (pinGuarantee && input.guarantee) {
+        row = {
+          ...row,
+          guarantee_id: input.guarantee.id,
+          guarantee_plan_version: input.guarantee.planVersion,
+          guarantee_plan_hash: input.guarantee.planHash,
+          guarantee_reviewed_plan_id: input.guarantee.reviewedPlanId,
+        };
+      }
+      if (pinParent) row = { ...row, parent_run_id: input.parentRunId };
       return row;
     };
     let { data, error } = await db().from("v_preflight_runs").insert(rowFor() as never).select("id").single();
@@ -336,7 +386,7 @@ export async function createRun(owner: string, input: CreateRunInput): Promise<C
     // deployment_id, migration 8). A missing column fails the whole insert atomically (nothing was
     // written), so re-inserting the SAME submission id after dropping the named pin can never create a
     // duplicate run. At most one retry per pin; the run itself must always queue.
-    while (error && (pinContext || pinDeployment || pinApiKey || pinGuarantee)) {
+    while (error && (pinContext || pinDeployment || pinApiKey || pinGuarantee || pinParent)) {
       const msg = (error as { message?: string }).message ?? "";
       if (pinContext && /context_snapshot_id/i.test(msg)) {
         console.warn("createRun: v_preflight_runs.context_snapshot_id is missing. Apply sql/vraelis-preflight-7-context-snapshots.sql (migration 7). Run queued without a context pin.");
@@ -347,9 +397,18 @@ export async function createRun(owner: string, input: CreateRunInput): Promise<C
       } else if (pinDeployment && /deployment_id/i.test(msg)) {
         console.warn("createRun: v_preflight_runs.deployment_id is missing. Apply sql/vraelis-preflight-8-deployments.sql (migration 8). Run queued without a deployment pin.");
         pinDeployment = false;
+      } else if (pinGuarantee && /guarantee_plan_(version|hash)|guarantee_reviewed_plan_id/i.test(msg)) {
+        // The whole guarantee pin drops together. Keeping guarantee_id while losing the hash would write the
+        // exact row this binding exists to prevent: a link to a definition that can move underneath it with
+        // nothing able to detect that it did.
+        console.warn("createRun: the guarantee binding columns are missing. Apply sql/vraelis-preflight-23-guarantee-binding.sql (migration 23). Run queued without a guarantee link.");
+        pinGuarantee = false;
       } else if (pinGuarantee && /guarantee_id/i.test(msg)) {
         console.warn("createRun: v_preflight_runs.guarantee_id is missing. Apply sql/vraelis-preflight-19-guarantees.sql (migration 19). Run queued without a guarantee link.");
         pinGuarantee = false;
+      } else if (pinParent && /parent_run_id/i.test(msg)) {
+        console.warn("createRun: v_preflight_runs.parent_run_id is missing. Apply sql/vraelis-preflight-3-linked-reruns.sql (migration 3). Run queued without repair lineage.");
+        pinParent = false;
       } else break;
       ({ data, error } = await db().from("v_preflight_runs").insert(rowFor() as never).select("id").single());
     }
