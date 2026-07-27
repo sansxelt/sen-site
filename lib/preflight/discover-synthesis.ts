@@ -148,6 +148,22 @@ export function buildSynthesisPrompt(pages: PageSnapshot[], buildPrompt: string 
     `- Do NOT invent authentication, payments, teams, file uploads, admin roles, or ROUTES that are not in the evidence. Do not turn generic SaaS conventions into facts about THIS product.\n` +
     `- Prefer state-integrity requirements (does created data persist across refresh / new session) when a create action is observed.\n` +
     `- Flow steps use ONLY these actions: navigate, click, fill, assert_visible, assert_text, assert_url, refresh. There is NO select, check, uncheck, press, wait_for, or screenshot action; a step using one is rejected and its whole flow is discarded, so never emit them. The auth actions sign_in_as, switch_role, verify_authenticated, verify_unauthorized, sign_out, reset_context work ONLY when the product has configured role-based test accounts; when it does not, express signing in as a plain fill + click on the visible form, not as an auth action. Never put a password, card number, or security code in a fill value; treat such forms as pre-filled and click the submit control directly. Targets are SEMANTIC accessible names (e.g. the button labeled "Create project"), never CSS/XPath. Set unused string fields to "".\n` +
+    // FIELD CONTRACTS. validateSteps enforces every line below and DISCARDS THE WHOLE FLOW on a breach,
+    // and the prompt never used to say what these fields hold. So the model described what should happen
+    // ("the saved note appears in the list") where a literal was required, the flow was dropped, and the
+    // coverage gate then reported the claim unprovable. Every rule here mirrors lib/preflight/flow-steps.ts.
+    `- FIELD CONTRACTS. A step that breaks one of these is not repaired, it DISCARDS ITS WHOLE FLOW:\n` +
+    `    navigate       target is a path on this app, e.g. "/dashboard", or "" for the app root. Never an absolute URL.\n` +
+    `    assert_url     expect is a path fragment on this app, e.g. "/auth". It is checked with url.includes(expect), so a sentence such as "user is on the sign-in page" can never match and is rejected outright.\n` +
+    `    assert_text    target names the element or region to look inside. expect is the LITERAL text that will be on the page at that moment, normally a value an earlier fill step typed. It is compared as text, so a DESCRIPTION of the outcome ("the saved note appears in the list") is looked for word for word and never found.\n` +
+    `    assert_visible target is the literal visible text or accessible name to look for.\n` +
+    `    fill           target is the field's label or placeholder; value is the literal text to type.\n` +
+    `    sign_in_as / switch_role  target is one of the configured role labels, exactly as given.\n` +
+    `    refresh / sign_out / reset_context  carry no target, value or expect.\n` +
+    // The runner has no implicit login. A flow that opened a gated page first reached the login screen and
+    // the failure was published as the customer's application defect.
+    `- A flow runs EXACTLY as written, in order, in ONE browser session that STARTS SIGNED OUT. Nothing signs in implicitly, and a role on the flow does not sign anyone in. A flow that needs a signed-in page must sign in BEFORE it navigates there, or it will only ever reach the login screen.\n` +
+    `- Assert the OUTCOME, not the furniture. After creating something, assert the value you typed, not that a heading or an empty container is present: a heading is still there when the thing was never saved.\n` +
     `- severity/priority: critical only for launch-blocking promises (auth, persistence, authorization, payment). Write plainly; no em dashes.\n\n` +
     `ORIGINAL BUILD PROMPT:\n${(buildPrompt || "(none provided)").slice(0, 6000)}\n\n` +
     (contextBlock ? `PRODUCT CONTEXT (the maker's own words; strong evidence of intent, not of the deployed app's behavior):\n${contextBlock}\n\n` : "") +

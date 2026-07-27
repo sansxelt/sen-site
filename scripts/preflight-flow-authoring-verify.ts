@@ -365,5 +365,38 @@ console.log("\n── a journey that needs a session must declare it ──");
   ]).ok);
 }
 
+// ── A URL FIELD MUST HOLD A URL, NOT A SENTENCE ───────────────────────────────────────────────────────
+// isRelativeTarget rejected other origins and nothing else, so a DESCRIPTION passed validation and became
+// a step that can never pass: the worker checks page.url().includes(expect), and synthesis had written
+// assert_url expect="Redirected to auth page". The run then failed against an application that had done
+// exactly what was asked, which is a false failure manufactured by our own validator letting it through.
+{
+  const V = (steps: unknown[], roles: string[] = []) => validateSteps(steps, { rolesAvailable: roles });
+
+  ok("assert_url refuses a sentence where a path belongs",
+    !V([{ action: "assert_url", expect: "Redirected to auth page" }]).ok);
+  ok("the refusal names what the field wants",
+    /path/i.test((V([{ action: "assert_url", expect: "user is on the sign-in page" }]) as { reason: string }).reason ?? ""));
+  ok("assert_url still accepts a leading-slash path", V([{ action: "assert_url", expect: "/auth" }]).ok);
+  ok("assert_url still accepts a bare relative fragment", V([{ action: "assert_url", expect: "dashboard" }]).ok);
+  ok("assert_url still accepts a path with a query string", V([{ action: "assert_url", expect: "/auth?mode=signup" }]).ok);
+  ok("assert_url still refuses another origin", !V([{ action: "assert_url", expect: "https://evil.test/auth" }]).ok);
+
+  ok("navigate refuses a sentence where a path belongs",
+    !V([{ action: "navigate", target: "go to the dashboard page" }]).ok);
+  ok("navigate still accepts a path", V([{ action: "navigate", target: "/dashboard" }]).ok);
+  ok("navigate still accepts an empty target (the app root)", V([{ action: "navigate", target: "" }]).ok);
+
+  ok("verify_authenticated refuses a sentence in its expected page",
+    !V([{ action: "verify_authenticated", value: "the dashboard page" }]).ok);
+  ok("verify_authenticated still accepts a path", V([{ action: "verify_authenticated", value: "/dashboard" }]).ok);
+  ok("verify_authenticated's expect is ELEMENT TEXT, so a phrase there is still fine",
+    V([{ action: "verify_authenticated", expect: "Your notes" }]).ok);
+
+  // assert_text's expect is page text, not a path, and must keep accepting ordinary sentences.
+  ok("assert_text still accepts a multi-word expected string",
+    V([{ action: "assert_text", target: "Your notes", expect: "This is a test note body" }]).ok);
+}
+
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);

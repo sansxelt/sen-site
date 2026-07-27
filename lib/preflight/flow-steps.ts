@@ -65,6 +65,13 @@ function isRelativeTarget(v: string): boolean {
   if (v === "") return true;
   if (/^[a-z][a-z0-9+.-]*:/i.test(v)) return false; // any URL scheme (http:, javascript:, data:, mailto:)
   if (v.startsWith("//")) return false;             // protocol-relative — resolves to another origin
+  // A PATH NEVER CONTAINS A RAW SPACE; it would be percent-encoded. Without this, the only things rejected
+  // were other origins, so a SENTENCE passed validation and became a step that cannot pass: synthesis wrote
+  // assert_url expect="Redirected to auth page", the worker checks url().includes(expect), and the run
+  // failed against an application that had done exactly what was asked. Every field routed through here is
+  // a URL path (navigate target, assert_url expect, verify_authenticated/verify_unauthorized value), so a
+  // value with whitespace in it is not a path that failed, it is not a path at all.
+  if (/\s/.test(v)) return false;
   return true;
 }
 
@@ -115,7 +122,7 @@ export function validateSteps(rawSteps: unknown, opts: { rolesAvailable: string[
       }
       case "navigate": {
         if (target && !isRelativeTarget(target)) {
-          return { ok: false, reason: `Step ${n}: navigate to a path on this app (e.g. /dashboard), not another website.` };
+          return { ok: false, reason: `Step ${n}: navigate to a path on this app (e.g. /dashboard). A path, not a description and not another website.` };
         }
         if (target) step.target = target; // empty = the app root (worker rebases)
         break;
@@ -140,7 +147,7 @@ export function validateSteps(rawSteps: unknown, opts: { rolesAvailable: string[
         // intent honest and owner-safe.
         if (!expect) return { ok: false, reason: `Step ${n}: enter the path you expect to be on (e.g. /dashboard).` };
         if (!isRelativeTarget(expect)) {
-          return { ok: false, reason: `Step ${n}: check a path on this app (e.g. /dashboard), not another website.` };
+          return { ok: false, reason: `Step ${n}: check a path on this app (e.g. /dashboard). A path, not a description of where the user should be.` };
         }
         step.expect = expect;
         break;
@@ -160,7 +167,7 @@ export function validateSteps(rawSteps: unknown, opts: { rolesAvailable: string[
         // navigate/assert_url) and expect is element text; both already passed the credential guard above.
         if (value) {
           if (!isRelativeTarget(value)) {
-            return { ok: false, reason: `Step ${n}: the expected page must be a path on this app (e.g. /dashboard), not another website.` };
+            return { ok: false, reason: `Step ${n}: the expected page must be a path on this app (e.g. /dashboard). A path, not a description.` };
           }
           step.value = value;
         }
