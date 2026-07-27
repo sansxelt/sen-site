@@ -56,6 +56,23 @@ export function useScrollProgress(ref: RefObject<HTMLElement | null>, options?: 
       onFrame?.(1);
       return;
     }
+    // BELOW 900px NOTHING READS THIS, so nothing should compute it.
+    //
+    // Every chapter's mobile block unpins its scene and overrides each --p-driven declaration, which means
+    // on a phone this loop was attaching a scroll listener, measuring getBoundingClientRect() and writing a
+    // custom property that the cascade then discarded. Measured on an iPhone 13 viewport: --p travelled a
+    // full 0.00 -> 1.00 while not one part of any chapter moved. Scroll work with no rendered result is the
+    // most expensive kind, and it is a fair share of why the page felt heavy on a phone.
+    //
+    // The value is pinned to 1 rather than left unset for the same reason reduced motion pins it: a
+    // consumer that survives at this width reads a finished scene, never a half-scrubbed one. Not
+    // re-evaluated on resize: a phone does not cross 900px, and a desktop window dragged narrow enough to
+    // matter is a case worth less than a listener on every composition on the page.
+    if (window.matchMedia("(max-width: 900px)").matches) {
+      el.style.setProperty(property, "1");
+      onFrame?.(1);
+      return;
+    }
 
     let target = 0;
     let rendered = -1; // first frame adopts target directly, so a mid-page load never animates from 0

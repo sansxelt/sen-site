@@ -19,8 +19,13 @@
 import { Hero } from "./_system/hero";
 import { Gap, Standard, Product, Register, Reach, Direction, Knowledge } from "./_system/chapters";
 import { ClosingScene } from "./_system/close";
+import { useMobileMotion } from "./_system/mobile-motion";
 
 export default function Home() {
+  // Below 900px every chapter above unpins and freezes, so a phone was shown the finished frames of an
+  // argument the desktop watches being made. This gives those same parts entry motion, which is the form
+  // a phone can afford: no pinning, no scroll listener, each part animating once on its way in.
+  useMobileMotion();
   return (
     <>
       <Hero />

@@ -708,7 +708,10 @@
 
 @media (max-width: 900px) {
   /* chapter 2 stops pinning entirely: the four travellers become a plain vertical flow, so a phone is never
-     held inside a scroll sequence it cannot leave. */
+     held inside a scroll sequence it cannot leave. That decision stands. What did not follow from it, and
+     was applied anyway here and in every other chapter, is that the parts should never move: rest state
+     forced with !important, so a phone received the finished frames of an argument the desktop watches
+     being made. Motion comes back on entry instead of on pinning (see _system/mobile-motion.ts). */
   .v6-gap { height: auto; }
   .v6-gap__pin { position: static; height: auto; padding: clamp(72px, 12vh, 104px) var(--gutter); }
   .v6-gap__stage { max-width: none; height: auto; }
@@ -796,4 +799,53 @@
   .v6-st__cond { position: static; opacity: 1 !important; transform: none !important; }
   .v6-pf__seg::before, .v6-pf__decide, .v6-rec__filed, .v6-rx__f, .v6-rx__stage {
     opacity: 1 !important; transform: none !important; transition: none !important; }
+}
+
+/* ══════════════════════════════════════════════════ MOBILE MOTION ══
+   THE PHONE GETS THE ARGUMENT, NOT JUST ITS CONCLUSION.
+
+   Every block above unpins its chapter below 900px and then forces each moving part to its rest state with
+   `opacity: 1 !important; transform: none !important`. Unpinning is right: a scene pinned to 100vh and
+   scrubbed from scroll position is hostile on a device whose URL bar resizes the viewport mid-gesture.
+   Freezing the parts is the part that did not follow. Measured on an iPhone 13 viewport, not one part of
+   any chapter ever left rest, while the identical page at 1440px animated all of them.
+
+   These rules give those same parts entry motion instead. They arrive once, on their way in, and are then
+   finished: no pinning, no per-frame work, no scroll listener, nothing to recompute. Only opacity and
+   transform, so nothing here can trigger layout or paint.
+
+   .v6-mo IS ADDED BY JAVASCRIPT AND IS WHAT MAKES THE HIDDEN START STATE LEGAL. Unconditionally hiding
+   these parts in the stylesheet would mean that any failure to run the observer leaves a phone looking at
+   a blank page. Gated this way, the worst case is no animation, which is exactly where the page already
+   was, and never no page. The specificity carries !important because the rules it overrides use it too.
+
+   Reduced motion never reaches here: mobile-motion.ts refuses to add .v6-mo when it is set, and the
+   reduced-motion block above keeps its rest state either way. */
+@media (max-width: 900px) {
+  .v6-mo .v6-gap__t,
+  .v6-mo .v6-st__cond,
+  .v6-mo .v6-rg__row,
+  .v6-mo .v6-rg__foot,
+  .v6-mo .v6-dr__layer,
+  .v6-mo .v6-tm__ex,
+  .v6-mo .v6-cs__m > * {
+    opacity: 0 !important;
+    transform: translateY(18px) !important;
+    transition: opacity 620ms var(--ease), transform 620ms var(--ease);
+    transition-delay: calc(var(--i, 0) * 70ms);
+    will-change: opacity, transform;
+  }
+  .v6-mo .v6-gap__t.v6-in,
+  .v6-mo .v6-st__cond.v6-in,
+  .v6-mo .v6-rg__row.v6-in,
+  .v6-mo .v6-rg__foot.v6-in,
+  .v6-mo .v6-dr__layer.v6-in,
+  .v6-mo .v6-tm__ex.v6-in,
+  .v6-mo .v6-cs__m > .v6-in {
+    opacity: 1 !important;
+    transform: none !important;
+    /* Released once it has arrived. will-change held on dozens of elements costs a compositor layer each,
+       which on a phone is the memory pressure it was meant to avoid. */
+    will-change: auto;
+  }
 }

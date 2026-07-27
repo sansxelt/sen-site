@@ -94,7 +94,8 @@
     "provenance:rehearse": "tsx ops/rehearsal/rehearse.ts",
     "checkout:test": "tsx scripts/custom-checkout-verify.ts",
     "guarantee:binding:test": "tsx scripts/guarantee-binding-verify.ts",
-    "credit:hold:test": "tsx scripts/credit-hold-verify.ts"
+    "credit:hold:test": "tsx scripts/credit-hold-verify.ts",
+    "mobile:motion:test": "tsx scripts/mobile-motion-verify.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
