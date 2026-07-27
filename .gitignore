@@ -85,3 +85,7 @@ playwright/.cache/
 # Provenance correction backups: complete row exports of production tables.
 # Requirement text is customer content and must not enter version control.
 ops/backups/
+
+# Throwaway investigation scripts kept at the repo root during a session. They routinely hold a
+# deployment URL, an account identity, or a demo password inline, and this repository is public.
+_tmp-*
