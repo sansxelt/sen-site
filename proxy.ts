@@ -102,6 +102,11 @@ function groundFor(target: string): Ground {
   if (target === "/dev-preview/v6" || target.startsWith("/dev-preview/v6/")) {
     return v6GroundAtTop(target.slice("/dev-preview/v6".length) || "/");
   }
+  // Anything the maps did not claim renders the 404, which is design 06 and therefore graphite. Left as
+  // cream, the browser painted a pale first frame behind a near-black page: the same flash that was fixed
+  // everywhere else, on the one surface the router cannot describe in advance because its path matched
+  // nothing. Unpromoted the 404 is still the previous generation's, so this follows the flag.
+  if (v6Public()) return "graphite";
   return "cream";                                                        // the previous generation
 }
 

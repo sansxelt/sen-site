@@ -1,113 +1,116 @@
 import Link from "next/link";
-import { PUBLIC_HOW_IT_WORKS } from "@/lib/v6-routes";
+import { PUBLIC_HOW_IT_WORKS, GROUND_CSS } from "@/lib/v6-routes";
 
-/**
- * Vraelis 404. Server Component, zero JS — motion is pure CSS with a
- * prefers-reduced-motion guard. Deliberately restrained: one oversized
- * numeral set with the Instrument-Serif "0" in deep emerald, a calm paper
- * field, one honest line. Text is dark ink on warm paper (readable).
+/* THE 404, IN DESIGN 06.
+ *
+ * It was the last surface still wearing the previous brand: warm paper, an emerald numeral, an italic serif
+ * flourish on "exist", a green button, and a coloured bloom behind all of it. Every one of those is a thing
+ * design 06 removed elsewhere, and this is the page a visitor lands on when something has already gone
+ * wrong, so it is a poor place to look like a different company.
+ *
+ * IT PAINTS ITS OWN CANVAS. Every other route gets its ground from proxy.ts, which resolves it from the
+ * route it is about to serve. A 404 by definition has no such route: the path matched nothing, so the proxy
+ * falls through to the previous generation's cream and the document would flash pale behind a graphite page.
+ * The rule that stopped the white flash everywhere else is the same one applied here, stated locally
+ * because this is the one page the router cannot describe in advance.
+ *
+ * The colour rule holds: nothing here is coloured, because nothing here is a state. A missing page is not a
+ * failure the product detected, and dressing it in the red that means "this verification failed" would spend
+ * a signal on a typo.
  */
 export default function NotFound() {
+  const g = GROUND_CSS.graphite;
   return (
-    <main
-      style={{
-        position: "relative",
-        minHeight: "100svh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        overflow: "hidden",
-        isolation: "isolate",
-        textAlign: "center",
-        padding: "clamp(40px, 8vw, 96px) var(--gutter)",
-        background:
-          "radial-gradient(135% 100% at 50% 4%, var(--bg-1) 0%, var(--bg-0) 62%, var(--bg-2) 100%)",
-      }}
-    >
-      <style>{NF_CSS}</style>
+    <main className="v404">
+      <style>{`html, body { background: ${g.bg} !important; color-scheme: ${g.scheme} !important; }` + NF_CSS}</style>
 
-      <div className="gridbg" aria-hidden style={{ opacity: 0.4 }} />
-      <div className="v404-bloom" aria-hidden />
+      <div className="v404-stack">
+        <p className="v404-kicker v404-in v404-d1">Vraelis</p>
 
-      <div className="wrap v404-stack">
-        <h1 className="display v404-num" aria-label="404 page not found">
-          <span aria-hidden>4</span>
-          <span aria-hidden className="em v404-zero">0</span>
-          <span aria-hidden>4</span>
-        </h1>
+        {/* One h1 carrying the whole meaning. The numeral is decorative and hidden from assistive tech, so
+            a screen reader hears the sentence rather than "four zero four" followed by it. */}
+        <h1 className="v404-head v404-in v404-d2">This page does not exist.</h1>
 
-        <h2 className="v404-head v404-in v404-d1">
-          This page doesn&rsquo;t <span className="em">exist</span>.
-        </h2>
-
-        <p className="v404-body v404-in v404-d2">
-          The link you followed doesn&rsquo;t exist, or it doesn&rsquo;t anymore.
+        <p className="v404-body v404-in v404-d3">
+          The link you followed is wrong, or it points at something Vraelis no longer has. Nothing is broken.
         </p>
 
-        <div className="v404-actions v404-in v404-d3">
-          <Link href="/" className="btn btn--lg">Back home</Link>
-          <Link href={PUBLIC_HOW_IT_WORKS} className="v404-link">See how Vraelis works</Link>
+        <div className="v404-actions v404-in v404-d4">
+          <Link href="/" className="v404-cta">Back to Vraelis</Link>
+          <Link href={PUBLIC_HOW_IT_WORKS} className="v404-link">See how it works</Link>
         </div>
       </div>
+
+      <span className="v404-num" aria-hidden>404</span>
     </main>
   );
 }
 
 const NF_CSS = `
-.v404-stack{ position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; max-width:680px; margin:0 auto; }
-
-.v404-num{
-  font-family:var(--font-display);
-  font-size:clamp(7rem, 27vw, 21rem);
-  line-height:.82;
-  letter-spacing:-.05em;
-  font-weight:600;
-  color:var(--fg-1);
-  margin:0;
-  animation:v404-fade .8s var(--ease-out) both, v404-float 8s var(--ease-out) 900ms infinite;
+/* Design 06, written out. This page renders from the ROOT layout, which never loads the v6 stylesheet, so
+   the values are restated here the same way the stealth curtain restates them. Keep in step by hand. */
+.v404{
+  position:relative; min-height:100svh;
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden; isolation:isolate;
+  padding:clamp(40px,8vw,96px) clamp(20px,5vw,64px);
+  background:#0A0A0B; color:#C4C5C9;
 }
-.v404-zero{ color:var(--acc-deep); display:inline-block; animation:v404-drift 8s var(--ease-out) infinite; }
 
+/* Left-set, like every other design 06 opening. The numeral sits behind the text as a quiet mark of scale
+   rather than as the headline: the sentence is the message, and a giant numeral competing with it is what
+   made the old page read as decoration first. */
+.v404-stack{ position:relative; z-index:1; width:100%; max-width:640px; }
+
+.v404-kicker{
+  margin:0 0 18px; font-size:13px; font-weight:500;
+  letter-spacing:.14em; text-transform:uppercase; color:#8E9095;
+}
 .v404-head{
-  font-family:var(--font-display);
-  font-size:clamp(1.5rem, 3.4vw, 2.35rem);
-  font-weight:600; letter-spacing:-.02em; line-height:1.12;
-  color:var(--fg-1);
-  margin:clamp(10px, 1.8vw, 18px) 0 0;
+  margin:0; font-weight:600; letter-spacing:-.032em; line-height:1.02;
+  font-size:clamp(2.3rem,4.6vw,3.6rem); color:#FAFAFA; text-wrap:balance;
 }
 .v404-body{
-  font-size:clamp(1rem, 1.25vw, 1.12rem); line-height:1.55;
-  color:var(--fg-2); max-width:440px; margin:13px auto 0; text-wrap:pretty;
+  margin:20px 0 0; max-width:52ch;
+  font-size:clamp(1rem,1.2vw,1.08rem); line-height:1.6; color:#C4C5C9; text-wrap:pretty;
 }
-.v404-actions{ display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:20px; margin-top:clamp(26px, 3.4vw, 40px); }
+
+.v404-actions{ display:flex; flex-wrap:wrap; align-items:center; gap:22px; margin-top:34px; }
+/* Contrast, not hue: the primary action is white on graphite, the way it is everywhere else now. */
+.v404-cta{
+  display:inline-flex; align-items:center; justify-content:center;
+  background:#FAFAFA; color:#0A0A0B; text-decoration:none;
+  font-size:15px; font-weight:550; letter-spacing:-.01em;
+  padding:12px 22px; border-radius:11px;
+  transition:background 140ms cubic-bezier(0,0,.2,1);
+}
+.v404-cta:hover{ background:#FFFFFF; }
 .v404-link{
-  font-size:var(--fs-body-sm); color:var(--fg-3); text-decoration:none;
-  border-bottom:1px solid var(--line-3); padding-bottom:2px;
-  transition:color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+  font-size:14.5px; color:#C4C5C9; text-decoration:none;
+  border-bottom:1px solid rgba(255,255,255,.22); padding-bottom:2px;
+  transition:color 140ms ease, border-color 140ms ease;
 }
-.v404-link:hover{ color:var(--acc); border-color:var(--acc); }
+.v404-link:hover{ color:#FAFAFA; border-color:rgba(255,255,255,.5); }
 
-.v404-bloom{
-  position:absolute; z-index:0; pointer-events:none;
-  top:44%; left:50%; width:min(880px, 122vw); height:min(880px, 122vw);
-  transform:translate(-50%,-50%);
-  background:radial-gradient(circle, var(--acc-glow) 0%, var(--acc-soft) 36%, transparent 68%);
-  animation:v404-breathe 10s var(--ease-out) infinite;
+/* The numeral, as a watermark. Sized off the viewport and clipped by the page, so it reads as scale rather
+   than as content. Hidden from assistive tech; the h1 already says it. */
+.v404-num{
+  position:absolute; z-index:0; pointer-events:none; user-select:none;
+  right:clamp(-28px,-2vw,0px); bottom:clamp(-40px,-4vw,-12px);
+  font-weight:600; letter-spacing:-.06em; line-height:.75;
+  font-size:clamp(11rem,34vw,30rem);
+  color:rgba(255,255,255,.038);
 }
+@media (max-width:760px){ .v404-num{ right:auto; left:50%; transform:translateX(-50%); bottom:-6vh; } }
 
-.v404-in{ animation:v404-rise .6s var(--ease-out) both; }
-.v404-d1{ animation-delay:120ms; }
-.v404-d2{ animation-delay:200ms; }
-.v404-d3{ animation-delay:280ms; }
-
-@keyframes v404-rise{ from{ opacity:0; transform:translateY(14px); } to{ opacity:1; transform:none; } }
-@keyframes v404-fade{ from{ opacity:0; } to{ opacity:1; } }
-@keyframes v404-float{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-10px); } }
-@keyframes v404-drift{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-5px); } }
-@keyframes v404-breathe{ 0%,100%{ opacity:.45; transform:translate(-50%,-50%) scale(1); } 50%{ opacity:.8; transform:translate(-50%,-50%) scale(1.07); } }
+.v404-in{ animation:v404-rise .58s cubic-bezier(.22,1,.36,1) both; }
+.v404-d1{ animation-delay:60ms; }
+.v404-d2{ animation-delay:130ms; }
+.v404-d3{ animation-delay:200ms; }
+.v404-d4{ animation-delay:270ms; }
+@keyframes v404-rise{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:none; } }
 
 @media (prefers-reduced-motion: reduce){
-  .v404-num, .v404-zero, .v404-in, .v404-bloom{ animation:none !important; }
-  .v404-in{ opacity:1; transform:none; }
+  .v404-in{ animation:none !important; opacity:1; transform:none; }
 }
 `;
