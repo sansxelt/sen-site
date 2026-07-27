@@ -40,6 +40,7 @@ const SUITES: Suite[] = [
   // Ships in the Guarantees increments, which are live in production and absent from the
   // verification-contract branch. The registry caught that asymmetry rather than silently skipping it.
   { file: "scripts/preflight-guarantee-logic-verify.ts" },
+  { file: "scripts/preflight-guarantee-context-verify.ts" },
 
   { file: "scripts/preflight-account-deletion-verify.ts", npm: "account:test" },
   { file: "scripts/preflight-agent-verify.ts", npm: "agent:test" },

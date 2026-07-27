@@ -75,7 +75,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     if (live && planHash(live.plan) === live.planHash) return planResponse(live, true);
   }
 
-  const s = await synthesizeClaim(app.app_url, g.title);
+  // Pass the SYSTEM, not just its URL. The crawl cannot sign in, so without the maker's product context the
+  // planner only ever sees this deployment's logged-out pages and has to build signed-in flows out of them.
+  const s = await synthesizeClaim(app.app_url, g.title, { owner, applicationId: id });
   if ("error" in s) return NextResponse.json({ error: s.error, message: s.message }, { status: s.status });
 
   const resolution = await resolveCoverage(app.app_url, g.title, s.synth, s.pages, { rolesAvailable: await systemRoles(owner, id) });

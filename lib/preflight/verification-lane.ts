@@ -33,7 +33,9 @@ import {
 import { crawl } from "./discover-crawl";
 import { makeSafeFetcher } from "./crawl-fetch";
 import { listConnections } from "./connections-db";
-import { synthesize, synthesisConfigured, type Synthesis } from "./discover-synthesis";
+import { readContextSources } from "./setup-read";
+import { listAppLinks } from "./connection-links-db";
+import { synthesize, synthesisConfigured, type Synthesis, type SynthContext } from "./discover-synthesis";
 import type { PageSnapshot } from "./discover-extract";
 import { validateSteps, type FlowStep } from "./flow-steps";
 
@@ -106,7 +108,44 @@ export async function laneRoles(owner: string): Promise<string[]> {
 // controls, and re-crawling from scratch would both cost time and risk seeing a different app.
 export type SynthesisResult = { synth: Synthesis; pages: PageSnapshot[] };
 
-export async function synthesizeClaim(deploymentUrl: string, claim: string): Promise<SynthesisResult | LaneFailure> {
+// The maker's own product context + connection presence signals for an existing system, assembled exactly
+// the way discover-run.ts assembles them so the two lanes see the SAME evidence. Every read degrades to
+// empty, because missing context must weaken a plan, never fail the request that wanted one.
+export async function systemSynthContext(owner: string, applicationId: string): Promise<SynthContext> {
+  const [sources, connections, links] = await Promise.all([
+    readContextSources(owner, applicationId).catch(() => []),
+    listConnections(owner, applicationId).catch(() => []),
+    listAppLinks(owner, applicationId).catch(() => []),
+  ]);
+  return {
+    sources: sources.map((s) => ({ kind: s.kind, content: s.content })),
+    connections: Array.from(new Set([...connections.map((c) => c.provider), ...links.map((l) => l.provider)])),
+  };
+}
+
+/**
+ * `system` is the application this claim belongs to, when there is one.
+ *
+ * WITHOUT IT THIS LANE PLANNED BLIND. The context argument used to be the hard-coded literal
+ * `{ sources: [], connections: [] }`, so every guarantee plan was synthesized from an UNAUTHENTICATED crawl
+ * and nothing else, while discover-run.ts fed the same model the maker's product context and the app's
+ * connected services. The crawler cannot sign in, so for any claim about signed-in behavior the only pages
+ * in evidence are the marketing and login pages, and the prompt's own rule ("do NOT invent ROUTES that are
+ * not in the evidence") then forces the model to build the flow out of whatever the logged-out site shows.
+ *
+ * Measured on the Notewell demo system: the approved plan navigated to "/" (the marketing page) and clicked
+ * "Create free account" (a link to signup) to create a note, then asserted the note's title on the marketing
+ * page. Notes live on /dashboard, which the crawl never saw. The app satisfies the guarantee by hand; that
+ * plan can only ever have returned a false failure.
+ *
+ * Passing the system does not make the crawl authenticated. It gives the model the maker's description of
+ * the signed-in surface as evidence it is allowed to plan against.
+ */
+export async function synthesizeClaim(
+  deploymentUrl: string,
+  claim: string,
+  system?: { owner: string; applicationId: string },
+): Promise<SynthesisResult | LaneFailure> {
   if (!synthesisConfigured()) {
     return { error: "synthesis_unavailable", message: "Claim analysis is not configured on this deployment.", status: 503 };
   }
@@ -118,7 +157,8 @@ export async function synthesizeClaim(deploymentUrl: string, claim: string): Pro
       status: 400,
     };
   }
-  const synth = await synthesize(snapshot.pages, claim, { sources: [], connections: [] });
+  const context = system ? await systemSynthContext(system.owner, system.applicationId) : { sources: [], connections: [] };
+  const synth = await synthesize(snapshot.pages, claim, context);
   if (!synth) {
     return { error: "synthesis_failed", message: "The claim could not be analyzed against this deployment. Try again.", status: 503 };
   }
