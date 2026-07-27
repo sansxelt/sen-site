@@ -68,11 +68,24 @@ export default function V6Pricing() {
                       : `${p.maxApplications} connected system${p.maxApplications === 1 ? "" : "s"}`}
                   </li>
                 </ul>
+                {/* EVERY CARD NEEDS A WAY TO SAY YES.
+                    This page listed three plans, their prices and what each includes, and offered nothing to
+                    click. Someone who read it and decided on Pro had to sign in, land on the app overview,
+                    and go looking through Settings for where plans live. The checkout page takes the plan
+                    from the query and sends a signed-out visitor through sign-in and back, so one link
+                    serves both cases. */}
+                <div style={{ marginTop: 20 }}>
+                  <CTA brand={p.key === "pro_v1"} href={`/checkout?plan=${p.key}&cycle=monthly`}>Choose {p.name}</CTA>
+                </div>
               </div>
             ))}
           </Reveal>
           <Reveal>
-            <div style={{ marginTop: 28 }}><CTA brand>Open Vraelis</CTA></div>
+            <p style={{ ...P, marginTop: 24 }}>
+              Yearly billing is available at checkout. Or start without a plan: a verification can be paid for
+              on its own.
+            </p>
+            <div style={{ marginTop: 16 }}><CTA ghost>Open Vraelis</CTA></div>
           </Reveal>
         </div>
       </section>
