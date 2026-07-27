@@ -11,11 +11,10 @@ function readAll(dir: string): string {
   for (const e of readdirSync(dir)) {
     const p2 = join(dir, e);
     if (statSync(p2).isDirectory()) out += readAll(p2);
-    else if (/.(ts|tsx)$/.test(e)) out += readFileSync(p2, "utf8");
+    else if (/\.(ts|tsx)$/.test(e)) out += readFileSync(p2, "utf8");
   }
   return out;
 }
-import { join } from "node:path";
 
 let pass = 0, fail = 0;
 const ok = (n: string, c: boolean, d = "") => { console.log(`${c ? "PASS" : "FAIL"}  ${n}${d ? `  (${d})` : ""}`); if (c) pass++; else fail++; };
