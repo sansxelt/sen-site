@@ -9,7 +9,7 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { ProductSurface } from "@/app/_components/product-surface";
 import { isAppPath } from "@/lib/app-routes";
-import { planV1 } from "@/lib/preflight/pass-pricing";
+import { planLabel } from "@/lib/plan-label";
 // The product-wide drawn icon set (one language, no glyph characters). Kept in its own
 // server-safe module so app pages can render the same icons without a client boundary.
 import { Ic, I } from "./icons";
@@ -285,14 +285,13 @@ function AppTopbar({ email, systems, pendingReviews }: { email: string | null; s
     return () => window.removeEventListener("vraelis:balance", load);
   }, []);
   // A PLAN KEY IS NOT A PLAN NAME. Capitalizing the raw key rendered the versioned catalog keys as
-  // "Scale_v1", "Pro_v1", "Builder_v1" in the top bar of every page in the console. The catalog already
-  // carries the human name, so use it; the capitalize fallback stays for the legacy plan strings
-  // (starter/creator/pro/scale), which are words rather than keys.
-  const planLabel = acct
-    ? acct.plan === "free"
-      ? "Free"
-      : planV1(acct.plan)?.name ?? acct.plan.charAt(0).toUpperCase() + acct.plan.slice(1)
-    : null;
+  // "Scale_v1", "Pro_v1", "Builder_v1" in the top bar of every page in the console.
+  //
+  // The naming now goes through lib/plan-label, shared with /usage, /credits, /account and /billing, because
+  // this was one of FOUR places that answered "what plan is this?" independently and they disagreed: the
+  // same account read "Scale_v1" here, "Scale" on /billing and "Free plan" on /usage and /account.
+  // acct.plan already carries plan_v1 when there is one (see the fetch above), so it is passed as both.
+  const planLabelText = acct ? planLabel(acct.plan, acct.plan) : null;
   const creditCount = acct ? Math.max(0, Math.round(acct.credits)) : null;
   const balanceLabel = creditCount !== null ? creditCount.toLocaleString() : null;
   const item = { display: "flex", alignItems: "center", gap: 9, padding: "8px 10px", borderRadius: 9, fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" } as const;
@@ -321,9 +320,9 @@ function AppTopbar({ email, systems, pendingReviews }: { email: string | null; s
             hid a number people check constantly. This is the middle: plain text, after the command surface,
             no pill, no state colour — a subscription tier is not a verification result, and the green here
             means "it held". */}
-        {planLabel !== null && (
+        {planLabelText !== null && (
           <div className="vra-acct-readout">
-            <Link href="/plans" aria-label={`Your plan: ${planLabel}`}>{planLabel}</Link>
+            <Link href="/plans" aria-label={`Your plan: ${planLabelText}`}>{planLabelText}</Link>
             <span aria-hidden>/</span>
             <Link href="/usage" aria-label={`${balanceLabel} credits available`}>
               <span style={{ fontVariantNumeric: "tabular-nums" }}>{balanceLabel}</span> credits

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { planLabel, isOnAPaidPlan } from "@/lib/plan-label";
 import Link from "next/link";
 
 const RECOMMENDED = [9, 39, 99, 299, 999];
@@ -43,9 +44,10 @@ export default function CreditsPage() {
   const [MAX, setMAX] = useState(DEFAULT_MAX);
   const [elevated, setElevated] = useState(false);
   const [plan, setPlan] = useState<string>("free");
+  const [planV1, setPlanV1] = useState<string | null>(null);
 
   useEffect(() => {
-    const load = () => fetch("/api/v/me").then((r) => r.json()).then((j) => { if (j.signedIn) { setBal(j.balance); if (typeof j.topupMax === "number") setMAX(j.topupMax); setElevated(!!j.elevatedTopup); if (j.plan) setPlan(j.plan); } }).catch(() => {});
+    const load = () => fetch("/api/v/me").then((r) => r.json()).then((j) => { if (j.signedIn) { setBal(j.balance); if (typeof j.topupMax === "number") setMAX(j.topupMax); setElevated(!!j.elevatedTopup); if (j.plan) setPlan(j.plan); if (typeof j.plan_v1 === "string") setPlanV1(j.plan_v1); } }).catch(() => {});
     load();
 
     // WAITING FOR THE LEDGER, NOT FOR A TIMER.
@@ -116,9 +118,9 @@ export default function CreditsPage() {
         </div>
       </div>
 
-      {plan !== "free" && (
+      {isOnAPaidPlan(planV1, plan) && (
         <div className="card" style={{ marginBottom: 22, background: "var(--bg-2)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-          <div style={{ fontSize: 13.5, color: "var(--fg-2)" }}>You&apos;re on the <strong style={{ color: "var(--fg-1)", textTransform: "capitalize" }}>{plan}</strong> plan, your monthly credits refresh automatically. Top up here only if you want extra beyond your plan.</div>
+          <div style={{ fontSize: 13.5, color: "var(--fg-2)" }}>You&apos;re on the <strong style={{ color: "var(--fg-1)" }}>{planLabel(planV1, plan)}</strong> plan, your monthly credits refresh automatically. Top up here only if you want extra beyond your plan.</div>
           <Link href="/plans" style={{ fontSize: 13, color: "var(--acc-deep)", whiteSpace: "nowrap" }}>Manage plan →</Link>
         </div>
       )}

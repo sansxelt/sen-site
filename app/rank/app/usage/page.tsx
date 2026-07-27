@@ -18,6 +18,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getPlan } from "@/lib/v-db";
+import { getPlanV1State } from "@/lib/preflight/entitlements-v1";
+import { planLabel } from "@/lib/plan-label";
 import { balance } from "@/lib/v-credits";
 import { apiAccessAllowed } from "@/lib/v-entitlements";
 import { apiUsage, apiRequestCountsByPrefix } from "@/lib/v-events";
@@ -54,8 +56,9 @@ export default async function UsagePage() {
 
   const settle = async <T,>(p: Promise<T>, fallback: T): Promise<T> => { try { return await p; } catch { return fallback; } };
 
-  const [plan, bal, keys, usage, hooks, active, today] = await Promise.all([
+  const [plan, planV1, bal, keys, usage, hooks, active, today] = await Promise.all([
     settle(getPlan(email), "free"),
+    settle(getPlanV1State(owner), null),
     settle(balance(email), 0),
     settle(listApiKeys(email), []),
     settle(apiUsage(email), { total: 0, last24h: 0, last7d: 0, lastAt: null, byEndpoint: [], byPrefix: {} }),
@@ -83,7 +86,7 @@ export default async function UsagePage() {
       <section aria-label="Balance and consumption" style={{ marginBottom: 30 }}>
         <h2 style={{ ...label, marginBottom: 10 }}>Right now</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 10 }}>
-          <Stat k="Credits available" v={bal.toLocaleString()} sub={plan === "free" ? "Free plan" : `${plan.charAt(0).toUpperCase()}${plan.slice(1)} plan`} />
+          <Stat k="Credits available" v={bal.toLocaleString()} sub={`${planLabel(planV1?.plan, plan)} plan`} />
           <Stat k="Verifications running" v={`${active} / ${MAX_ACTIVE_RUNS_PER_OWNER}`} sub="At once" />
           <Stat k="Launched today" v={`${today} / ${dayCap}`} sub="Resets at UTC midnight" />
           <Stat k="API requests, 24h" v={usage.last24h.toLocaleString()} sub={`${usage.last7d.toLocaleString()} in 7 days`} />

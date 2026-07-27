@@ -3,6 +3,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { ensureProfile, getPlan, getSubscription } from "@/lib/v-db";
+import { getPlanV1State } from "@/lib/preflight/entitlements-v1";
+import { planLabel, isOnAPaidPlan } from "@/lib/plan-label";
 import { balance } from "@/lib/v-credits";
 import { recentAccountEvents } from "@/lib/v-events";
 import { getDisplayName } from "@/lib/v-account-profile";
@@ -31,8 +33,12 @@ export default async function AccountPage() {
   if (!email) redirect("/signin?callbackUrl=%2Fapp%2Faccount");
 
   await ensureProfile(email, session.user?.name ?? undefined);
-  const [bal, plan, sub, activity, displayName] = await Promise.all([balance(email), getPlan(email), getSubscription(email), recentAccountEvents(email, 8), getDisplayName(email)]);
-  const planName = plan === "free" ? "Free" : cap(plan);
+  const [bal, plan, planV1, sub, activity, displayName] = await Promise.all([balance(email), getPlan(email), getPlanV1State(email.toLowerCase()).catch(() => null), getSubscription(email), recentAccountEvents(email, 8), getDisplayName(email)]);
+  // ONE decision, shared with /usage, /billing and the top bar. This page used to read only the legacy
+  // v_subscriptions row, which a versioned-plan subscriber does not have, so a paying account was told it
+  // was on "Free" here while /billing told it "Scale".
+  const planName = planLabel(planV1?.plan, plan);
+  const paid = isOnAPaidPlan(planV1?.plan, plan);
   const status = sub?.status ?? "active";
   const renews = sub?.current_period_end ? new Date(sub.current_period_end).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : null;
 
@@ -57,15 +63,15 @@ export default async function AccountPage() {
 
       {/* stats */}
       <div className="tile-grid cols-3" style={{ marginBottom: 26 }}>
-        <div className="stat"><div className="stat__l">Plan</div><div className="stat__v">{planName}</div><div className="stat__s">{plan === "free" ? "No subscription" : `Status: ${status}`}{renews ? `, renews ${renews}` : ""}</div></div>
+        <div className="stat"><div className="stat__l">Plan</div><div className="stat__v">{planName}</div><div className="stat__s">{paid ? `Status: ${status}` : "No subscription"}{renews ? `, renews ${renews}` : ""}</div></div>
         <div className="stat"><div className="stat__l">Credit balance</div><div className="stat__v tnum">{bal.toLocaleString()}</div><div className="stat__s">Funds verifications</div></div>
-        <div className="stat"><div className="stat__l">Monthly credits</div><div className="stat__v tnum">{(sub?.monthly_credits ?? 0).toLocaleString()}</div><div className="stat__s">{plan === "free" ? "Monthly plans are coming" : "Refreshed each cycle"}</div></div>
+        <div className="stat"><div className="stat__l">Monthly credits</div><div className="stat__v tnum">{(sub?.monthly_credits ?? 0).toLocaleString()}</div><div className="stat__s">{paid ? "Refreshed each cycle" : "Included with a monthly plan"}</div></div>
       </div>
 
       {/* manage */}
       <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Manage</div>
       <div className="tile-grid cols-2" style={{ marginBottom: 26 }}>
-        {linkCard("/plans", "Plan", plan === "free" ? "Upgrade to unlock monthly credits and higher limits." : "Change plan, see what's included, or switch cycle.")}
+        {linkCard("/plans", "Plan", paid ? "Change plan, see what's included, or switch cycle." : "Upgrade to unlock monthly credits and higher limits.")}
         {linkCard("/billing", "Billing", "Subscription status, renewal, cancel or resume, payment.")}
         {linkCard("/credits", "Credits", "Top up your balance with packs or a custom amount.")}
         {linkCard("/api", "API & webhooks", "Create API keys, manage webhook endpoints and deliveries.")}
