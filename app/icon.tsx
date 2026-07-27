@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { MARK_PATH, MARK_VIEWBOX } from "@/lib/brand-mark";
+import { MARK_FACETS, MARK_VIEWBOX, MARK_GROUND } from "@/lib/brand-mark";
 
 // Favicon: the Vraelis mark in white on an ink tile, matching the icon as designed.
 //
@@ -21,14 +21,14 @@ export default function Icon() {
         style={{
           width: "100%",
           height: "100%",
-          background: "#141310",
+          background: MARK_GROUND,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
         }}
       >
         <svg width="26" height="26" viewBox={MARK_VIEWBOX}>
-          <path d={MARK_PATH} fill="#FFFFFF" />
+          {MARK_FACETS.map((f) => <path key={f.fill} d={f.d} fill={f.fill} />)}
         </svg>
       </div>
     ),

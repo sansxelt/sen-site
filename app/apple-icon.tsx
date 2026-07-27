@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { MARK_PATH, MARK_VIEWBOX } from "@/lib/brand-mark";
+import { MARK_FACETS, MARK_VIEWBOX, MARK_GROUND } from "@/lib/brand-mark";
 
 // iOS home-screen icon (180x180): the Vraelis mark in white on an ink tile. Monochrome and high contrast,
 // which is what survives being shrunk into a home screen next to fifty other icons. iOS rounds the corners
@@ -14,14 +14,14 @@ export default function AppleIcon() {
         style={{
           width: "100%",
           height: "100%",
-          background: "#141310",
+          background: MARK_GROUND,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
         }}
       >
         <svg width="128" height="128" viewBox={MARK_VIEWBOX}>
-          <path d={MARK_PATH} fill="#FFFFFF" />
+          {MARK_FACETS.map((f) => <path key={f.fill} d={f.d} fill={f.fill} />)}
         </svg>
       </div>
     ),
