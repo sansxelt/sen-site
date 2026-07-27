@@ -43,6 +43,7 @@ const SUITES: Suite[] = [
   { file: "scripts/preflight-guarantee-context-verify.ts" },
   { file: "scripts/plan-label-verify.ts" },
   { file: "scripts/pricing-purchasable-verify.ts" },
+  { file: "scripts/key-usage-verify.ts" },
 
   { file: "scripts/preflight-account-deletion-verify.ts", npm: "account:test" },
   { file: "scripts/preflight-agent-verify.ts", npm: "agent:test" },

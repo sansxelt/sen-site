@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import type { KeyUsage } from "@/lib/preflight/key-usage";
 import { useEffect, useState } from "react";
 import { WebhooksSection } from "./webhooks-section";
 import { CliSection } from "./cli-section";
 import { Ic, I, EmptyIcon } from "@/app/rank/_components/icons";
 
-type Key = { id: string; prefix: string; scopes: string[]; last_used: string | null; created_at: string; name?: string | null };
+type Key = { id: string; prefix: string; scopes: string[]; last_used: string | null; created_at: string; name?: string | null;
+  /** The key's daily spend limit in cents, or null for a key with no limit. Shown beside what it has spent. */
+  daily_ceiling_cents?: number | null };
 type DevEvent = { id: string; event_type: string; metadata: Record<string, unknown>; created_at: string; test_id: string | null };
 type Usage = {
   signedIn: boolean; plan?: string; hasApiAccess?: boolean;
@@ -70,8 +73,24 @@ export default function ApiKeysPage() {
   // Optional daily spend limit for this key, in whole dollars. Empty means no limit.
   const [dailyLimit, setDailyLimit] = useState("");
   const [u, setU] = useState<Usage | null>(null);
-  // Which key's usage detail is expanded. Click a key to see its own request count and facts.
+  // Which key's usage detail is expanded. Click a key to see what it has actually cost.
   const [openKey, setOpenKey] = useState<string | null>(null);
+  // Per-key spend, fetched on expand and cached. Undefined = not asked yet, null = asked and unavailable.
+  const [keyUsage, setKeyUsage] = useState<Record<string, KeyUsage | null | undefined>>({});
+
+  // Money is fetched per key rather than with the list: the list is one query, this is a scan of that key's
+  // runs, and nobody should pay for it on a page they opened to copy a prefix.
+  function openKeyDetail(id: string) {
+    const next = openKey === id ? null : id;
+    setOpenKey(next);
+    if (next && keyUsage[next] === undefined) {
+      setKeyUsage((m) => ({ ...m, [next]: undefined }));
+      fetch(`/api/v/keys/${next}/usage`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((j) => setKeyUsage((m) => ({ ...m, [next]: j?.usage ?? null })))
+        .catch(() => setKeyUsage((m) => ({ ...m, [next]: null })));
+    }
+  }
 
   async function load() {
     const r = await fetch("/api/v/keys");
@@ -242,7 +261,7 @@ export default function ApiKeysPage() {
             <div key={k.id} style={{ borderTop: i === 0 ? "none" : "1px solid var(--line-1)" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "14px 18px" }}>
                 {/* The whole row is the toggle: click a key to open its usage detail. */}
-                <button onClick={() => setOpenKey(open ? null : k.id)} aria-expanded={open} style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit" }}>
+                <button onClick={() => openKeyDetail(k.id)} aria-expanded={open} style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 14, fontWeight: 600, color: "var(--fg-1)" }}>{k.name || "Untitled key"}</span>
                     <code style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-4)" }}>{k.prefix}…</code>
@@ -253,19 +272,69 @@ export default function ApiKeysPage() {
                 </button>
                 <button onClick={() => revoke(k.id)} className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5, gap: 6 }}><Ic d={I.slash} size={12} sw={2.2} />Revoke</button>
               </div>
-              {open && (
+              {open && (() => {
+                const usage = keyUsage[k.id];
+                const money = (c: number | null | undefined) => (c == null ? "—" : `$${(c / 100).toFixed(2)}`);
+                const ceiling = k.daily_ceiling_cents ?? null;
+                return (
                 <div style={{ padding: "0 18px 16px" }}>
+                  {/* SPEND FIRST. "What has this cost me" is the question people open a key to answer, and it
+                      was the one thing this panel did not say. The figure against the limit is produced by
+                      the same function the limit enforces, so it cannot read differently from the refusal. */}
                   <div style={{ display: "flex", gap: 28, flexWrap: "wrap", padding: "12px 14px", background: "var(--bg-2)", borderRadius: "var(--r-sm)", border: "1px solid var(--line-1)" }}>
-                    {[["Requests (all time)", reqs.toLocaleString()], ["Last request", k.last_used ? fmt(k.last_used)! : "Never used"], ["Created", fmt(k.created_at)!]].map(([l, v]) => (
+                    {[
+                      ["Spent today", usage === undefined ? "…" : money(usage?.spentTodayCents),
+                        ceiling == null ? "No daily limit on this key" : `of ${money(ceiling)} daily limit${usage?.remainingTodayCents != null ? `, ${money(usage.remainingTodayCents)} left` : ""}`],
+                      ["Charged, last 30 days", usage === undefined ? "…" : money(usage?.last30d.chargedCents),
+                        usage ? `${usage.last30d.runs} verification${usage.last30d.runs === 1 ? "" : "s"}` : ""],
+                      ["Charged, all time", usage === undefined ? "…" : money(usage?.allTime.chargedCents),
+                        usage ? `${usage.allTime.runs} verification${usage.allTime.runs === 1 ? "" : "s"}` : ""],
+                      ["Requests (all time)", reqs.toLocaleString(), k.last_used ? `last ${fmt(k.last_used)}` : "never used"],
+                    ].map(([l, v, sub]) => (
                       <div key={l} style={{ minWidth: 0 }}>
                         <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-5)" }}>{l}</div>
-                        <div style={{ fontSize: 17, fontWeight: 600, color: "var(--fg-1)", marginTop: 3 }}>{v}</div>
+                        <div style={{ fontSize: 17, fontWeight: 600, color: "var(--fg-1)", marginTop: 3, fontVariantNumeric: "tabular-nums" }}>{v}</div>
+                        {sub ? <div style={{ fontSize: 11, color: "var(--fg-5)", marginTop: 2 }}>{sub}</div> : null}
                       </div>
                     ))}
                   </div>
-                  <p style={{ fontSize: 11, color: "var(--fg-5)", margin: "8px 2px 0" }}>Counts every call this key made, including verifications launched from CI. {reqs === 0 ? "This key has not been used yet." : null}</p>
+
+                  {/* A subscriber's key is charged nothing and still consumes something. Saying only the
+                      dollars would tell them the key is free. */}
+                  {usage && usage.allTime.flowUnits > 0 ? (
+                    <p style={{ fontSize: 11.5, color: "var(--fg-4)", margin: "10px 2px 0" }}>
+                      This key has also used <strong style={{ color: "var(--fg-2)" }}>{usage.allTime.flowUnits.toLocaleString()} journey{usage.allTime.flowUnits === 1 ? "" : "s"}</strong> of your plan allowance
+                      {usage.allTime.chargedCents === 0 ? ", which is what a verification costs on a plan rather than pay as you go." : "."}
+                    </p>
+                  ) : null}
+
+                  {/* Every charge traceable to the thing it paid for. A total nobody can break down is a
+                      number a customer has to take on trust, which is the opposite of this product. */}
+                  {usage && usage.recentRuns.length > 0 ? (
+                    <div style={{ marginTop: 12 }}>
+                      <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-5)", marginBottom: 6 }}>Verifications this key launched</div>
+                      <div style={{ display: "grid", gap: 4 }}>
+                        {usage.recentRuns.slice(0, 8).map((r) => (
+                          <Link key={r.id} href={`/records/${r.id}`} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12, color: "var(--fg-3)", textDecoration: "none", padding: "5px 8px", borderRadius: 6, background: "var(--bg-2)" }}>
+                            <span style={{ fontFamily: "var(--font-code)", color: "var(--fg-5)" }}>{new Date(r.createdAt).toLocaleDateString()}</span>
+                            <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.deploymentUrl || r.id.slice(0, 8)}</span>
+                            {r.flowUnits ? <span style={{ color: "var(--fg-5)" }}>{r.flowUnits} journey{r.flowUnits === 1 ? "" : "s"}</span> : null}
+                            <span style={{ fontVariantNumeric: "tabular-nums", color: "var(--fg-2)", fontWeight: 600 }}>{r.chargedCents == null ? "on plan" : money(r.chargedCents)}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <p style={{ fontSize: 11, color: "var(--fg-5)", margin: "10px 2px 0" }}>
+                    Spend is read from the verifications this key launched, which is the same record the daily
+                    limit is enforced against. Requests are counted separately and include calls that launch
+                    nothing, such as pricing a verification or reading a report.
+                    {usage === null ? " Spend could not be read just now." : ""}
+                  </p>
                 </div>
-              )}
+                );
+              })()}
             </div>
             );
           })}
