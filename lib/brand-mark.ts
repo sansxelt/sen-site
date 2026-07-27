@@ -18,31 +18,41 @@
 // small mark has to avoid.
 export const MARK_VIEWBOX = "0 0 24 24";
 
-// The geometry, named once so the facets and the silhouette cannot disagree.
-//   table   y = 4       the flat top
-//   girdle  y = 10      the widest line, where crown meets pavilion
-//   culet   y = 20.5    the point
-const L = "1.6 10";       // left girdle corner
-const R = "22.4 10";      // right girdle corner
-const TL = "6.6 4";       // table, left
-const TR = "17.4 4";      // table, right
-const ML = "8.9 10";      // girdle, below the table's left edge
-const MR = "15.1 10";     // girdle, below the table's right edge
-const C = "12 10";        // girdle, centre
-const B = "12 20.5";      // culet
+// THE GEOMETRY IS MEASURED FROM THE OFFICIAL ARTWORK, NOT EYEballed.
+//
+// The founder supplied the mark as a 500x500 transparent PNG and said every Vraelis icon must be it. So the
+// vertices below were extracted from that file rather than approximated: the alpha bounding box gives the
+// silhouette (313 x 294, so the stone is WIDER than it is tall, which a from-memory redraw gets wrong), the
+// widest scanline gives the girdle at 0.337 of the height, and scanning the colour runs either side of the
+// girdle gives where each facet edge lands. Every number here is one of those measurements mapped onto the
+// 24x24 box, which is why they are not round.
+//
+// Redrawing it by hand would have produced a mark that is nearly this one, and "nearly" is how a logo drifts.
+//   table   y = 2.15    the flat top
+//   girdle  y = 8.79    the widest line, where crown meets pavilion  (0.337 of the height)
+//   culet   y = 21.85   the point
+const L = "1.5 8.79";     // left girdle corner
+const R = "22.5 8.79";    // right girdle corner
+const TL = "6.27 2.15";   // table, left    (0.227 across)
+const TR = "17.73 2.15";  // table, right   (0.773 across)
+const ML = "8.07 8.79";   // girdle, below the table's left edge   (0.313)
+const MR = "15.99 8.79";  // girdle, below the table's right edge  (0.690)
+const C = "12 8.79";      // girdle, centre
+const B = "12 21.85";     // culet
 
 export const MARK_PATH = `M${L} L${TL} L${TR} L${R} L${B} Z`;
 
-/** The cut stone, back to front. The fills are neutral by design: the mark carries no hue, because on this
- *  product green means "this verification held" and a logo must never spend that signal. */
+/** The cut stone, back to front. Fills sampled from the official artwork. They are neutral, which is not
+ *  only a description but a rule: on this product green means "this verification held", and a logo must
+ *  never spend that signal. */
 export const MARK_FACETS: { d: string; fill: string }[] = [
-  { d: `M${TL} L${TR} L${MR} L${ML} Z`, fill: "#F2F3F4" },   // table
-  { d: `M${L} L${TL} L${ML} Z`, fill: "#BCBDC1" },           // crown, left
-  { d: `M${TR} L${R} L${MR} Z`, fill: "#77797D" },           // crown, right
-  { d: `M${L} L${ML} L${B} Z`, fill: "#E4E5E6" },            // pavilion, far left
-  { d: `M${ML} L${C} L${B} Z`, fill: "#FAFAFB" },            // pavilion, centre left
-  { d: `M${C} L${MR} L${B} Z`, fill: "#9A9CA0" },            // pavilion, centre right
-  { d: `M${MR} L${R} L${B} Z`, fill: "#6B6D71" },            // pavilion, far right
+  { d: `M${TL} L${TR} L${MR} L${ML} Z`, fill: "#EDEDEF" },   // table
+  { d: `M${L} L${TL} L${ML} Z`, fill: "#BDBCC1" },           // crown, left
+  { d: `M${TR} L${R} L${MR} Z`, fill: "#7E7E80" },           // crown, right
+  { d: `M${L} L${ML} L${B} Z`, fill: "#D7D7D9" },            // pavilion, far left
+  { d: `M${ML} L${C} L${B} Z`, fill: "#F8F8FA" },            // pavilion, centre left
+  { d: `M${C} L${MR} L${B} Z`, fill: "#98979C" },            // pavilion, centre right
+  { d: `M${MR} L${R} L${B} Z`, fill: "#6C6C6E" },            // pavilion, far right
 ];
 
 /** The ground the mark is set on where it needs one (favicon tile, iOS icon). Design 06 graphite, the same

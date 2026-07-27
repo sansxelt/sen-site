@@ -20,7 +20,7 @@ export default function AppleIcon() {
           justifyContent: "center",
         }}
       >
-        <svg width="128" height="128" viewBox={MARK_VIEWBOX}>
+        <svg width="146" height="146" viewBox={MARK_VIEWBOX}>
           {MARK_FACETS.map((f) => <path key={f.fill} d={f.d} fill={f.fill} />)}
         </svg>
       </div>
