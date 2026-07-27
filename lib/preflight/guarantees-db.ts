@@ -28,6 +28,10 @@ export type Guarantee = {
   plan_approved_by: string | null; plan_approved_at: string | null; plan_state: GuaranteePlanState;
   last_evaluated_at: string | null; status: "active" | "archived";
   created_at: string; updated_at: string;
+  // Migration 23. Null before it is applied, and null on a guarantee approved before it existed.
+  approved_reviewed_plan_id?: string | null;
+  plan_contract_id?: string | null;
+  plan_contract_version?: number | null;
 };
 
 // The owner-safe slice of a run needed to derive a guarantee's status and its last-proven deployment. Mirrors
@@ -40,6 +44,11 @@ export type GuaranteeRunRef = {
 
 const GUARANTEE_COLUMNS =
   "id, application_id, user_id, title, scope, criticality, approved_claim, approved_plan, approved_plan_hash, approved_role_refs, plan_version, plan_approved_by, plan_approved_at, plan_state, last_evaluated_at, status, created_at, updated_at";
+
+// The migration-23 columns, read separately. Selecting a column that does not exist fails the WHOLE query,
+// so asking for these in GUARANTEE_COLUMNS would take the guarantee feature down on an unmigrated database
+// rather than degrade it.
+const GUARANTEE_BINDING_COLUMNS = "approved_reviewed_plan_id, plan_contract_id, plan_contract_version";
 
 const RUN_REF_COLUMNS = "id, state, decision, deployment_url, commit_sha, deployment_id, created_at, completed_at";
 
@@ -58,6 +67,9 @@ function rowToGuarantee(r: Record<string, unknown>): Guarantee {
     last_evaluated_at: (r.last_evaluated_at as string) ?? null,
     status: (r.status === "archived" ? "archived" : "active"),
     created_at: String(r.created_at ?? ""), updated_at: String(r.updated_at ?? ""),
+    approved_reviewed_plan_id: (r.approved_reviewed_plan_id as string) ?? null,
+    plan_contract_id: (r.plan_contract_id as string) ?? null,
+    plan_contract_version: typeof r.plan_contract_version === "number" ? r.plan_contract_version : null,
   };
 }
 
@@ -188,12 +200,38 @@ export async function archiveGuarantee(owner: string, id: string): Promise<void>
   } catch { /* best-effort */ }
 }
 
+/** Record the FROZEN contract that approval materialized this guarantee's plan into.
+ *
+ *  Until this exists, "this run proves that guarantee" is asserted by the caller and checked against
+ *  nothing: approved_plan_hash had zero runtime consumers, because a run executes the flow_ids of a
+ *  v_production_contracts row and nothing related the two. Pinning the contract makes reverification pure
+ *  execution of a fixed artifact — no synthesis, no per-run contract, and the flows cannot drift, because an
+ *  approved contract refuses addFlow / updateFlow / deleteFlow.
+ *
+ *  Additive (migration 23) and best-effort: a guarantee that cannot record its contract keeps its approval
+ *  and simply has nothing to run yet, which the verify action reports honestly. */
+export async function setGuaranteePlanContract(owner: string, id: string, contractId: string, contractVersion: number | null): Promise<boolean> {
+  if (!isDatabaseConfigured()) return false;
+  const { error } = await db().from("v_guarantees").update({
+    plan_contract_id: contractId, plan_contract_version: contractVersion, updated_at: new Date().toISOString(),
+  } as never).eq("user_id", norm(owner)).eq("id", id);
+  if (error) {
+    console.warn("setGuaranteePlanContract: v_guarantees.plan_contract_id is missing. Apply sql/vraelis-preflight-23-guarantee-binding.sql (migration 23). The guarantee is approved but has no runnable plan contract.");
+    return false;
+  }
+  return true;
+}
+
 // ── Reads (owner-scoped; null / empty and a clear warn when unmigrated) ────────────────────────────────
 
 export async function getGuarantee(owner: string, id: string): Promise<Guarantee | null> {
   if (!isDatabaseConfigured()) return null;
+  const uid = norm(owner);
+  const widest = await db().from("v_guarantees")
+    .select(`${GUARANTEE_COLUMNS}, ${GUARANTEE_BINDING_COLUMNS}`).eq("user_id", uid).eq("id", id).maybeSingle();
+  if (!widest.error) return widest.data ? rowToGuarantee(widest.data as Record<string, unknown>) : null;
   const { data, error } = await db().from("v_guarantees")
-    .select(GUARANTEE_COLUMNS).eq("user_id", norm(owner)).eq("id", id).maybeSingle();
+    .select(GUARANTEE_COLUMNS).eq("user_id", uid).eq("id", id).maybeSingle();
   if (error) { if (missingGuaranteesTable(error)) warnUnmigrated("getGuarantee"); return null; }
   return data ? rowToGuarantee(data as Record<string, unknown>) : null;
 }

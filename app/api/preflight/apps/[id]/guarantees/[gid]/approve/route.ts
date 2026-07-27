@@ -11,7 +11,8 @@ import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { applicationAccess } from "@/lib/preflight/team-access";
 import { hasAtLeastRole } from "@/lib/v-workspace";
 import { getApplication } from "@/lib/v-applications";
-import { getGuarantee, approveGuaranteePlan } from "@/lib/preflight/guarantees-db";
+import { getGuarantee, approveGuaranteePlan, setGuaranteePlanContract } from "@/lib/preflight/guarantees-db";
+import { prepareVerification } from "@/lib/preflight/verification-lane";
 import { findLivePendingPlanForClaim } from "@/lib/preflight/reviewed-plan-db";
 import { planHash, planRoleRefs } from "@/lib/preflight/reviewed-plan";
 
@@ -63,7 +64,38 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   });
   if (!updated) return NextResponse.json({ error: "approve_failed", message: "Could not record the approval." }, { status: 400 });
 
+  // MATERIALIZE THE APPROVED PLAN INTO A FROZEN CONTRACT.
+  //
+  // Approval used to end at the previous line, which stored the plan as JSON on the guarantee and stopped.
+  // A run does not execute JSON: it executes the flow_ids of a contract. So "this run proves that
+  // guarantee" was asserted by whoever launched it and checked against nothing, and approved_plan_hash had
+  // no runtime consumer at all.
+  //
+  // Writing it as a contract makes reverification pure execution of a fixed artifact: no synthesis, no
+  // per-run contract, and the flows cannot drift afterwards because an approved contract refuses
+  // addFlow / updateFlow / deleteFlow. It is marked kind='guarantee' so it can never be returned as this
+  // system's own Production Contract.
+  //
+  // The approval STANDS even if this fails. The person really did approve, and that fact must not be lost
+  // because a later write did not land; the guarantee simply has nothing runnable yet, and the verify
+  // action says so rather than inventing a contract at launch time.
+  const prepared = await prepareVerification(
+    owner, app, live.claim, live.plan,
+    { reviewed: true, planId: live.id, approvedBy: callerEmail.toLowerCase(), approvedAt: new Date().toISOString() },
+    "guarantee",
+  );
+  let planContractId: string | null = null;
+  if ("error" in prepared) {
+    console.error(`approveGuaranteePlan: could not materialize the plan contract for ${gid}: ${prepared.error}`);
+  } else {
+    planContractId = prepared.contractId;
+    await setGuaranteePlanContract(owner, gid, prepared.contractId, prepared.contractVersion);
+  }
+
   return NextResponse.json({
     guarantee: { id: updated.id, plan_state: updated.plan_state, plan_version: updated.plan_version, plan_approved_at: updated.plan_approved_at, plan_approved_by: updated.plan_approved_by },
+    // Stated rather than assumed: a caller can tell whether this guarantee is runnable yet.
+    plan_contract_id: planContractId,
+    runnable: planContractId !== null,
   }, { status: 200 });
 }

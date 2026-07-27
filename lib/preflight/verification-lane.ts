@@ -209,6 +209,11 @@ export async function prepareVerification(
   // nothing; a reviewed_plan approval writes rows already carrying that approval's identity and then freezes
   // the contract. There is no third value, so there is no way to reach an approved contract without a person.
   review: ReviewedPlanApproval | { reviewed: false },
+  // WHAT KIND OF CONTRACT THIS IS. 'production' is the customer's own curated contract for a system and is
+  // what getApprovedContract returns for an ordinary launch. 'guarantee' is the FROZEN materialization of a
+  // guarantee's approved plan: it lives on the same application but must never be mistaken for the system's
+  // contract, or approving one guarantee would silently replace it everywhere.
+  kind: "production" | "guarantee" = "production",
 ): Promise<PreparedVerification | LaneFailure> {
   const uid = norm(owner);
 
@@ -226,8 +231,16 @@ export async function prepareVerification(
       application_id: app.id, user_id: uid, version, status: "draft",
       // The claim IS the source prompt. Anyone opening this contract later sees the sentence it came from.
       source_prompt: claim.slice(0, 20000),
+      ...(kind === "guarantee" ? { kind } : {}),
     } as never)
     .select("id").single();
+  // kind is additive (migration 23). A guarantee contract that cannot be MARKED as one must not be written
+  // at all: unmarked, getApprovedContract would return it as the system's Production Contract the moment it
+  // is approved. Refusing is the safe failure; silently creating it is not.
+  if (error && kind === "guarantee" && /kind/i.test((error as { message?: string }).message ?? "")) {
+    console.error("prepareVerification: v_production_contracts.kind is missing. Apply sql/vraelis-preflight-23-guarantee-binding.sql (migration 23). Refusing to materialize an UNMARKED guarantee contract.");
+    return { error: "unavailable", message: "Guarantee verification is not available on this deployment yet.", status: 503 };
+  }
   if (error || !inserted) {
     return { error: "unavailable", message: "Could not create the verification contract.", status: 503 };
   }

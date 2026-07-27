@@ -4,7 +4,7 @@
 // v_preflight_runs.guarantee_id was never written, and a guarantee could be created, planned and
 // human-approved and then never become proven. These assertions are about the relationship being IMPOSSIBLE
 // TO LOSE, not about it being present today.
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 
 let pass = 0, fail = 0;
 const ok = (n: string, c: boolean, d = "") => {
@@ -91,6 +91,59 @@ console.log("\n── a guarantee's contract cannot hijack the system's own ─�
 // Production Contract everywhere it is read.
 ok("the production contract read excludes guarantee contracts", /\.eq\("kind", "production"\)/.test(apps));
 ok("it still works before migration 23", /if \(!filtered\.error\)/.test(apps));
+
+console.log("\n── approval produces something runnable ──");
+{
+  const approve = code("app/api/preflight/apps/[id]/guarantees/[gid]/approve/route.ts");
+  const lane = code("lib/preflight/verification-lane.ts");
+  // Approval used to store the plan as JSON and stop. A run does not execute JSON; it executes the flow_ids
+  // of a contract. So "this run proves that guarantee" was checked against nothing.
+  ok("approval materializes the plan into a contract", /prepareVerification\(/.test(approve));
+  ok("that contract is marked as a guarantee's, not the system's", /"guarantee",/.test(approve));
+  ok("the contract kind is a real parameter", /kind: "production" \| "guarantee"/.test(lane));
+  // Unmarked, getApprovedContract would return it as the Production Contract the moment it is approved.
+  ok("an unmarkable guarantee contract is refused rather than written",
+    /Refusing to materialize an UNMARKED guarantee contract/.test(readFileSync("lib/preflight/verification-lane.ts", "utf8")));
+  ok("the guarantee records which contract to run", /setGuaranteePlanContract\(/.test(approve));
+  // The person really did approve. That fact must not be lost because a later write failed.
+  ok("a failed materialization does not void the approval",
+    approve.indexOf("approveGuaranteePlan(") < approve.indexOf("prepareVerification("));
+  ok("the response says whether it is runnable", /runnable: planContractId !== null/.test(approve));
+}
+
+console.log("\n── status is derived, and stale evidence stops counting ──");
+{
+  const st = code("lib/preflight/guarantee-status.ts");
+  ok("every state the founder named exists",
+    ["verified", "reverified", "failed", "repairing", "blocked", "checking", "unproven", "plan_review_required"]
+      .every((k) => new RegExp(`\\b${k}\\b`).test(st)));
+  // approveGuaranteePlan overwrites approved_plan_hash IN PLACE, so runs from before a re-approval proved a
+  // DIFFERENT sentence. They stay in the history and stop counting toward the live verdict.
+  ok("only runs proving the CURRENT meaning count", /export function provesCurrentMeaning/.test(st));
+  ok("a run with no pinned hash is not assumed to match", /Boolean\(run\.planHash\) && run\.planHash === approvedPlanHash/.test(st));
+  // Both halves required, or a first run carrying a parent id would claim a repair story it does not have.
+  ok("reverified requires a real earlier failure in this guarantee's own history",
+    /repairedSomething = Boolean\(latest\.parentRunId\)/.test(st) && /=== "failed"/.test(st));
+  ok("review required outranks any verdict", st.indexOf('planState === "review_required"') < st.indexOf("qualifying[0]"));
+  ok("every decision goes through the canonical translator", /toPublicDecision\(/.test(st) && !/decision === "ready"/.test(st));
+  // One Verified run must never read as permanent health.
+  ok("the labels say 'most recently', never a bare permanent verdict",
+    /Verified most recently/.test(st) && /Failed most recently/.test(st));
+  ok("the coverage disclosure is stated once and shared",
+    /GUARANTEE_COVERAGE_NOTE/.test(st) && /not continuous or complete coverage/.test(st));
+}
+
+console.log("\n── the launch boundary is respected ──");
+{
+  // The acceptance-boundary ratchet exists because the coverage gate sits in the caller ABOVE the shared
+  // handler, so every new entrance can forget it. A verify-this-guarantee action IS a new entrance, and it
+  // waits for the acceptance service rather than working around the boundary.
+  const boundary = readFileSync("scripts/preflight-acceptance-boundary-verify.ts", "utf8");
+  ok("the ratchet still names exactly one permitted route-to-route import",
+    /KNOWN_ROUTE_TO_ROUTE = new Set\(\["app\/api\/v1\/verifications\/route\.ts"\]\)/.test(boundary));
+  ok("no guarantee verify route was added ahead of it",
+    !existsSync("app/api/preflight/apps/[id]/guarantees/[gid]/verify/route.ts"));
+}
 
 console.log("\n── nothing invents a relationship ──");
 const migration = readFileSync("sql/vraelis-preflight-23-guarantee-binding.sql", "utf8");
