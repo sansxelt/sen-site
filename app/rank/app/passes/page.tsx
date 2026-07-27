@@ -133,8 +133,14 @@ export default async function PassesPage() {
   // decisions, which is how "Verified (targeted rerun)" came to exist as a green heading for runs the rest
   // of the product calls Blocked. Now the heading a row sits under and the pill it wears are computed from
   // the same call, so they cannot drift apart.
-  const running = passes.filter(isRunning);
-  const terminal = passes.filter((p) => !isRunning(p));
+  // A run invalidated by a verifier defect is not a result ABOUT the customer's software, so it cannot sit
+  // under Failed or Blocked next to real ones. It keeps its verdict and its evidence and moves to its own
+  // section, out of every count. Separated before the verdict grouping rather than filtered afterwards, so
+  // there is no ordering in which it could still be counted.
+  const invalidated = passes.filter((p) => !!p.invalidatedAt);
+  const live = passes.filter((p) => !p.invalidatedAt);
+  const running = live.filter(isRunning);
+  const terminal = live.filter((p) => !isRunning(p));
   const publicOf = (p: PassRow) => runVerdict(p.state, p.decision).tone;
 
   const sections = [
@@ -143,6 +149,7 @@ export default async function PassesPage() {
     { label: "Blocked", rows: terminal.filter((p) => publicOf(p) === "blocked") },
     { label: "Verified", rows: terminal.filter((p) => publicOf(p) === "verified") },
     { label: "Not yet verified", rows: terminal.filter((p) => publicOf(p) === "unproven" || publicOf(p) === "progress") },
+    { label: "Invalidated (verifier defect)", rows: invalidated },
   ].filter((s) => s.rows.length > 0);
 
   return (

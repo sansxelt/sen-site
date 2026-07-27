@@ -125,5 +125,17 @@ console.log("\n── a customer can see that it was ours ──");
   ok("it shows the defect reference", /run\.invalidation\.ref/.test(record));
 }
 
+console.log("\n── the history list does not file it as an application failure ──");
+{
+  const list = readFileSync("app/rank/app/passes/page.tsx", "utf8");
+  // Split out BEFORE the verdict grouping, so there is no ordering in which it could still be counted.
+  ok("invalidated runs are separated before grouping", /const invalidated = passes\.filter\(\(p\) => !!p\.invalidatedAt\)/.test(list));
+  ok("the verdict sections are built from the remainder",
+    /const live = passes\.filter\(\(p\) => !p\.invalidatedAt\)/.test(list) && /const running = live\.filter/.test(list));
+  ok("they get their own labelled section", /Invalidated \(verifier defect\)/.test(list));
+  ok("the run list carries the invalidation",
+    /invalidatedAt: \(r\.invalidated_at as string\)/.test(readFileSync("lib/preflight/overview-db.ts", "utf8")));
+}
+
 console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

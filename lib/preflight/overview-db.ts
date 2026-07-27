@@ -27,6 +27,8 @@ export type PassRow = {
   deploymentUrl: string | null; parentRunId: string | null;
   createdAt: string; completedAt: string | null;
   flowsTotal: number; flowsPassed: number; criticalTotal: number; criticalPassed: number;
+  /** Migration 24: set when this verdict came from a verifier defect. Preserved, but not a customer result. */
+  invalidatedAt: string | null;
 };
 
 // WEB Production Passes only — EXCLUDE the owner's api-kind targets (a web run is null-or-web-target; the
@@ -40,7 +42,7 @@ export async function listAllRuns(owner: string, limit = 50): Promise<PassRow[]>
     // parent_run_id (migration 3) is what makes a run a REVERIFICATION of an earlier one. It was read below
     // through a cast but never selected, so PassRow.parentRunId was unconditionally null and every surface
     // that shows the repair relationship has silently shown nothing since the column was added.
-    .select("id, application_id, state, decision, summary, deployment_url, parent_run_id, created_at, completed_at")
+    .select("id, application_id, state, decision, summary, deployment_url, parent_run_id, created_at, completed_at, invalidated_at")
     .eq("user_id", norm(owner));
   if (filter) q = q.or(filter);
   // Also exclude runs on the internal canary app (e.g. its seeded web-baseline run), so no internal pass
@@ -62,6 +64,7 @@ export async function listAllRuns(owner: string, limit = 50): Promise<PassRow[]>
       createdAt: String(r.created_at ?? ""), completedAt: (r.completed_at as string) ?? null,
       flowsTotal: num(s.flows_total), flowsPassed: num(s.flows_passed),
       criticalTotal: num(s.critical_total), criticalPassed: num(s.critical_passed),
+      invalidatedAt: (r.invalidated_at as string) ?? null,
     };
   });
 }

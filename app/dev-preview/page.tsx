@@ -23,7 +23,7 @@ const ago = (ms: number) => new Date(Date.now() - ms).toISOString();
 
 const pass = (o: Partial<PassRow> & { id: string }): PassRow => ({
   id: o.id, applicationId: o.applicationId ?? "app-" + o.id, applicationName: o.applicationName ?? "Example System",
-  state: o.state ?? "completed", decision: o.decision ?? null, deploymentUrl: o.deploymentUrl ?? null, parentRunId: null,
+  state: o.state ?? "completed", decision: o.decision ?? null, deploymentUrl: o.deploymentUrl ?? null, parentRunId: null, invalidatedAt: o.invalidatedAt ?? null,
   createdAt: o.createdAt ?? ago(2 * H), completedAt: o.completedAt ?? ago(2 * H),
   flowsTotal: o.flowsTotal ?? 0, flowsPassed: o.flowsPassed ?? 0, criticalTotal: o.criticalTotal ?? 0, criticalPassed: o.criticalPassed ?? 0,
 });
