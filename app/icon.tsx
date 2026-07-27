@@ -1,12 +1,18 @@
 import { ImageResponse } from "next/og";
-import { MARK_FACETS, MARK_VIEWBOX, MARK_GROUND } from "@/lib/brand-mark";
+import { MARK_FACETS, MARK_VIEWBOX } from "@/lib/brand-mark";
 
-// Favicon: the Vraelis mark in white on an ink tile, matching the icon as designed.
+// Favicon: the Vraelis mark, on nothing.
 //
-// A full-bleed tile rather than the mark alone, because a lone glyph on a transparent background vanishes
-// against dark browser chrome and the silhouette then differs per theme. Every edge of the mark is
-// axis-aligned, so it stays crisp at 16px instead of turning to mush the way a thin stroke does at
-// favicon size.
+// It used to sit on an ink tile. The founder supplied the mark with no background and asked for that
+// version, which is the better call in a browser tab: a tile is a rectangle competing with every other
+// tile in the strip, while a bare silhouette reads as a shape and lets the browser's own chrome be the
+// background in whichever theme the reader is using.
+//
+// A favicon is one PNG at a fixed URL and cannot answer prefers-color-scheme, so a transparent mark has to
+// survive both themes on its own. This one does, and it was CHECKED rather than assumed: rendered at 32px
+// over graphite, over Chrome's light tab strip (#DEE1E6) and over pure white. The stone is lit from the
+// upper left, so its left facets do fade on a pale ground, but the right side runs to #6C6C6E and holds the
+// silhouette in every case. It reads as a cut stone on all three.
 //
 // Drawn from lib/brand-mark rather than a PNG: one definition shared with the iOS icon, the site header
 // and the OG card, and a few hundred bytes instead of the 694KB source file. Served at a hashed URL, so
@@ -21,7 +27,6 @@ export default function Icon() {
         style={{
           width: "100%",
           height: "100%",
-          background: MARK_GROUND,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",

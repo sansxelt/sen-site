@@ -1,9 +1,12 @@
 import { ImageResponse } from "next/og";
-import { MARK_FACETS, MARK_VIEWBOX, MARK_GROUND } from "@/lib/brand-mark";
+import { MARK_FACETS, MARK_VIEWBOX } from "@/lib/brand-mark";
 
-// iOS home-screen icon (180x180): the Vraelis mark in white on an ink tile. Monochrome and high contrast,
-// which is what survives being shrunk into a home screen next to fifty other icons. iOS rounds the corners
-// itself, so a full-bleed tile is correct here.
+// iOS home-screen icon (180x180): the Vraelis mark, on nothing.
+//
+// Transparency costs nothing here and matches the favicon. iOS does not honour alpha in a home-screen
+// icon: it composites the icon onto black before rounding the corners itself. Since the tile this replaced
+// was near-black graphite already, the rendered result on a device is the same picture, reached with one
+// fewer thing to keep in step.
 export const size = { width: 180, height: 180 };
 export const contentType = "image/png";
 
@@ -14,7 +17,6 @@ export default function AppleIcon() {
         style={{
           width: "100%",
           height: "100%",
-          background: MARK_GROUND,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
