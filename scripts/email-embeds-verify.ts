@@ -4,7 +4,7 @@
 // production layer for AI-built software", and the social cards plus the root-layout meta still carrying the
 // retired homepage headline. Link previews and lifecycle emails are the two places a stale product identity
 // travels furthest, so this keeps them pinned to the current one.
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { robotsMeta } from "../lib/stealth";
 
@@ -134,6 +134,32 @@ ok("the root layout takes its embed from the shared card", /socialCard\(/.test(r
 // The rendered endpoints must stay unreferenced but keep working, so old cached previews still resolve.
 ok("the legacy rendered card endpoints still exist for already-shared links",
   ogMain.length > 0 && ogReport.length > 0);
+
+console.log("\n== ONE mark, and every file that draws it agrees ==");
+{
+  // The mark is defined ONCE in lib/brand-mark.ts. The favicon, the iOS icon, the docs rail and the chapter
+  // marks import it, so those cannot drift by construction. public/mark.svg is the exception: it is a static
+  // file anyone can hand to a designer or paste into a deck, and a static copy of a definition is exactly
+  // the thing that silently goes stale. So it is checked against the source rather than trusted.
+  const brand = readFileSync("lib/brand-mark.ts", "utf8");
+  const svg = readFileSync("public/mark.svg", "utf8");
+  const pts: Record<string, string> = {};
+  for (const m of brand.matchAll(/^const (L|R|TL|TR|ML|MR|C|B) = "([^"]+)";/gm)) pts[m[1]] = m[2];
+  ok("the mark's vertices are all named in the definition", Object.keys(pts).length === 8, Object.keys(pts).join(","));
+
+  const facets = [...brand.matchAll(/\{ d: `([^`]+)`, fill: "(#[0-9A-F]{6})" \}/g)]
+    .map((m) => ({ d: m[1].replace(/\$\{(\w+)\}/g, (_x, k) => pts[k]), fill: m[2] }));
+  ok("the definition carries the seven facets of the cut stone", facets.length === 7, String(facets.length));
+
+  const missing = facets.filter((f) => !svg.includes(`d="${f.d}"`) || !svg.includes(f.fill));
+  ok("public/mark.svg matches lib/brand-mark.ts facet for facet", missing.length === 0,
+    missing.map((f) => f.fill).join(", "));
+
+  // The retired brand's coloured logos are gone; nothing may point at them again.
+  const revived = ["logo-amber", "logo-cyan", "logo-emerald", "logo-violet", "logo-circle-amber"]
+    .filter((g) => existsSync(`public/${g}.svg`));
+  ok("the retired coloured logos stay deleted", revived.length === 0, revived.join(", "));
+}
 
 console.log("\n== the company describes itself once, and only when it is public ==");
 {

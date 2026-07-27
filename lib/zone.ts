@@ -21,7 +21,6 @@ export const ZONE_THEME: Record<Zone, {
   bg: string;
   font: string;
   signInLabel: string;
-  logoSrc: string;
 }> = {
   apex: {
     label: "Vraelis",
@@ -31,7 +30,6 @@ export const ZONE_THEME: Record<Zone, {
     bg: "bg-[#080809]",
     font: "",
     signInLabel: "Sign in to Vraelis",
-    logoSrc: "/logo-violet.svg",
   },
   chat: {
     label: "Vraelis",
@@ -41,7 +39,6 @@ export const ZONE_THEME: Record<Zone, {
     bg: "bg-[#080809]",
     font: "",
     signInLabel: "Sign in to the workshop",
-    logoSrc: "/logo-emerald.svg",
   },
   platform: {
     label: "Vraelis",
@@ -51,6 +48,5 @@ export const ZONE_THEME: Record<Zone, {
     bg: "bg-[#060810]",
     font: "font-mono",
     signInLabel: "Sign in to platform",
-    logoSrc: "/logo-amber.svg",
   },
 };
