@@ -64,12 +64,16 @@ console.log(`\nscanned ${files.length} production source files\n`);
 // ── 1. who may create a durable customer-visible run ──────────────────────────────────────────────────
 //
 // KNOWN, and each one is a defect this ratchet is protecting, not an approved pattern:
-//   the dashboard route      creates without evaluating coverage
+//   the acceptance service   creates without evaluating coverage
 //   the rerun route          creates without evaluating coverage
 //
-// When acceptVerificationRun() lands, BOTH move into it and this list becomes that single module.
+// HALF DONE, deliberately: acceptVerificationRun() landed and the dashboard route moved into it, so the
+// launch path is now one domain function instead of a route body. The rerun route has NOT moved yet — it
+// carries lineage rules the launch path does not (it must inherit the parent's guarantee binding and must
+// never look up the current one), so it moves in its own increment. Until then this list is two entries,
+// and it is the rerun route that keeps it from being one.
 const KNOWN_CREATE_CALLERS = new Set([
-  "app/api/preflight/apps/[id]/runs/route.ts",
+  "lib/preflight/acceptance/accept-run.ts",
   "app/api/preflight/runs/[runId]/rerun/route.ts",
 ]);
 
@@ -83,7 +87,7 @@ ok("no NEW production path calls createRun directly",
   newCreateCallers.length === 0,
   newCreateCallers.length ? newCreateCallers.join(", ") : `${createCallers.length} known callers`);
 
-ok("the known createRun callers are still exactly the two the inventory found",
+ok("the known createRun callers are still exactly the two the inventory records",
   KNOWN_CREATE_CALLERS.size === 2
   && [...KNOWN_CREATE_CALLERS].every((p) => createCallers.includes(p)),
   createCallers.join(", "));
@@ -98,8 +102,12 @@ ok("the known createRun callers are still exactly the two the inventory found",
 //
 // So the second key is the ESCROW itself: anything that takes a hold is an entrance, whatever it calls to
 // create its row.
+// The escrow has since MOVED OUT of app/api/: the dashboard launch now holds inside the acceptance service.
+// A scan restricted to route files would have watched the money path walk out of its field of view and
+// reported one fewer entrance, which reads as an improvement and is the exact shape of the blind spot
+// described above. So the scan follows the escrow into the domain layer.
 const KNOWN_HOLD_TAKERS = new Set([
-  "app/api/preflight/apps/[id]/runs/route.ts",        // dashboard launch, legacy credits + PAYG cents
+  "lib/preflight/acceptance/accept-run.ts",           // acceptance service: the dashboard launch's escrow
   "app/api/preflight/runs/[runId]/rerun/route.ts",    // repair rerun
   "app/api/preflight/apps/[id]/api-runs/route.ts",    // API-runtime beta: holds, executes INLINE, settles
 ]);
@@ -108,13 +116,22 @@ const KNOWN_HOLD_TAKERS = new Set([
 // route actually reaches the escrow. Either can be used without ever naming createRun, which is exactly how
 // the API-runtime entrance stayed invisible to this file.
 const holdTakers = files
-  .filter((f) => f.path.startsWith("app/api/"))
+  .filter((f) => f.path.startsWith("app/api/") || f.path.startsWith("lib/preflight/"))
+  .filter((f) => !/export async function takeApiHold/.test(f.text))   // the shared helper's own definition
   .filter((f) => /await[ ]+hold[ ]*[(]/.test(f.text) || /takeApiHold[ ]*[(]/.test(f.text))
   .map((f) => f.path);
 
 const newHoldTakers = holdTakers.filter((p) => !KNOWN_HOLD_TAKERS.has(p));
 ok("no NEW production path takes a credit hold", newHoldTakers.length === 0,
   newHoldTakers.length ? newHoldTakers.join(", ") : `${holdTakers.length} known entrances`);
+
+// A permission list only ever grew here, so an entrance that MOVED left its old path behind as a standing
+// permission: re-adding a hold to the dashboard route would have been waved through by an entry describing
+// code that no longer exists. Every recorded entrance must still be a real one, so the list shrinks when
+// the money path does.
+const staleHoldTakers = [...KNOWN_HOLD_TAKERS].filter((p) => !holdTakers.includes(p));
+ok("every recorded escrow entrance is still a real one", staleHoldTakers.length === 0,
+  staleHoldTakers.length ? `no longer takes a hold: ${staleHoldTakers.join(", ")}` : `${holdTakers.length} live`);
 
 // The inline entrance settles in its own request rather than through the worker, so a killed function
 // between the hold and the settle strands escrow with nothing to sweep it. Recorded as a known exposure so

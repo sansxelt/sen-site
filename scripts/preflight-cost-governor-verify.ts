@@ -49,16 +49,40 @@ function main(): void {
   ok("checkAccountVelocity refuses over the rolling-hour session cap", /count \?\? 0\) >= SESSIONS_PER_HOUR\(\)[\s\S]*?reason: "session_velocity"/.test(cg));
 
   // ── Launches fail BEFORE billing while paused / throttled (both routes). ──
-  for (const route of [["app", "api", "preflight", "apps", "[id]", "runs", "route.ts"], ["app", "api", "preflight", "runs", "[runId]", "rerun", "route.ts"]]) {
+  // The two launches are no longer the same shape. The app run route now stops at the owner-level gates and
+  // hands over to the acceptance service, which owns the billing decision, run creation and the cost
+  // recording that follows it. The rerun route has not been extracted yet, so both halves are still one
+  // file. Each entry therefore names where its BILLING half lives; the governor half is always the route.
+  const LAUNCHES = [
+    {
+      label: "app run route",
+      route: ["app", "api", "preflight", "apps", "[id]", "runs", "route.ts"],
+      billing: ["lib", "preflight", "acceptance", "accept-run.ts"],
+      // The route hands over here, so "before the billing gate" means before this call.
+      handoff: "await acceptVerificationRun(",
+    },
+    {
+      label: "rerun route",
+      route: ["app", "api", "preflight", "runs", "[runId]", "rerun", "route.ts"],
+      billing: ["app", "api", "preflight", "runs", "[runId]", "rerun", "route.ts"],
+      handoff: "gatePassLaunch(",
+    },
+  ];
+  for (const { label, route, billing, handoff } of LAUNCHES) {
     const src = read(...route);
-    const label = route.includes("rerun") ? "rerun route" : "app run route";
+    const bill = read(...billing);
     const iPause = src.indexOf("isRunsGovernorPaused");
     const iVelocity = src.indexOf("checkAccountVelocity");
-    const iHold = src.indexOf("gatePassLaunch("); // billing decision
-    ok(`${label}: auto-pause + velocity are checked BEFORE the billing gate`, iPause >= 0 && iVelocity >= 0 && iHold >= 0 && iPause < iHold && iVelocity < iHold);
+    const iHold = src.indexOf(handoff);
+    // Presence is asserted separately from order: -1 sorts before every real offset, so a deleted governor
+    // check would otherwise satisfy "checked BEFORE billing" by being absent.
+    ok(`${label}: auto-pause + velocity are checked BEFORE the billing gate`,
+      iPause >= 0 && iVelocity >= 0 && iHold >= 0 && iPause < iHold && iVelocity < iHold);
+    // Wherever the handoff points, the billing gate itself must actually be on the other side of it.
+    ok(`${label}: the billing gate exists past that handoff`, bill.includes("gatePassLaunch("));
     ok(`${label}: a paused governor returns 503 runs_paused (same as the kill switch)`, /isRunsGovernorPaused\(\)\) \{[\s\S]*?runs_paused[\s\S]*?503/.test(src));
     ok(`${label}: velocity refusal returns 429 with Retry-After`, /checkAccountVelocity\(owner\)[\s\S]*?status: 429, headers: \{ "Retry-After"/.test(src));
-    ok(`${label}: records the provider attempt + launch cost + evaluates the ceiling after queueing`, /recordProviderAttempt\(owner, created\.runId, "session"\)[\s\S]*?recordProviderCost[\s\S]*?maybeTripGlobalBudget\(\)/.test(src));
+    ok(`${label}: records the provider attempt + launch cost + evaluates the ceiling after queueing`, /recordProviderAttempt\(owner, created\.runId, "session"\)[\s\S]*?recordProviderCost[\s\S]*?maybeTripGlobalBudget\(\)/.test(bill));
   }
 
   // ── The worker records provider/infra failures for the breaker; NOT app-defect failures. ──

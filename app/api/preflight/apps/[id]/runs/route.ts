@@ -17,9 +17,7 @@
 // browser path runs, so a key can never spend more or reach further than its owner can in the app.
 
 import { NextResponse } from "next/server";
-import { MAX_ACTIVE_RUNS_PER_OWNER, maxRunsPerDay } from "@/lib/preflight/limits";
-import { randomUUID } from "node:crypto";
-import { resolvePrincipal, logKeyUsage, PREFLIGHT_SCOPES } from "@/lib/preflight/api-principal";
+import { resolvePrincipal, PREFLIGHT_SCOPES } from "@/lib/preflight/api-principal";
 import { preflightEnabled, runsDisabled } from "@/lib/v-preflight-flags";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { getApplication, getApprovedContract, listFlows } from "@/lib/v-applications";
@@ -29,15 +27,8 @@ import { getSetupExtras } from "@/lib/preflight/setup-read";
 import { evaluateAuthReadiness, anyAuthenticated, type PreviewFlow } from "@/lib/preflight/auth-preflight";
 import { unsafeHttpsUrlReason } from "@/lib/safe-fetch";
 import { linkedVercelDeploymentUrl } from "@/lib/preflight/oauth/vercel-deploy";
-import { hold, refund } from "@/lib/v-credits";
-import { createRun, ownerActiveRunCount, ownerRunsToday, runWithSameKeyDifferentPayload } from "@/lib/preflight/runs-db";
-import { estimateRunCredits, keyFingerprint, payloadFingerprint, buildSubmissionId } from "@/lib/preflight/flow-selection";
-import { passPricingEnabled, passPriceCents } from "@/lib/preflight/pass-pricing";
-import { gatePassLaunch, recordRunPassUsage } from "@/lib/preflight/entitlements-v1";
-import { resolveCanonicalCluster, consumeFreeGrantOverride, recordFreeGrantRisk, hashRiskSignal, claimFreePass, attachRunToClaim, releaseFreePass } from "@/lib/preflight/free-grant-cluster";
-import { isRunsGovernorPaused, globalActiveRunsAtCap, checkAccountVelocity, recordProviderAttempt, recordProviderCost, maybeTripGlobalBudget, estimateProviderCents } from "@/lib/preflight/cost-governor";
-import { keyCeilingRefusal } from "@/lib/preflight/key-spend";
-import { logEvent } from "@/lib/v-events";
+import { isRunsGovernorPaused, globalActiveRunsAtCap, checkAccountVelocity } from "@/lib/preflight/cost-governor";
+import { acceptVerificationRun } from "@/lib/preflight/acceptance/accept-run";
 
 export const runtime = "nodejs";
 
@@ -46,13 +37,6 @@ export const runtime = "nodejs";
 // completed run keeps the full hold as the charge and the worker refunds the whole hold only if no flow ran
 // (no partial remainder).
 
-// The internal billing bypass is only ever honored OUTSIDE production, and even then must be set explicitly.
-// A live production deployment can never skip the hold, regardless of the env var.
-function billingBypassAllowed(): boolean {
-  return process.env.PREFLIGHT_INTERNAL_BILLING_BYPASS === "1"
-    && process.env.NODE_ENV !== "production"
-    && process.env.VERCEL_ENV !== "production";
-}
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!preflightEnabled()) return NextResponse.json({ error: "not_found" }, { status: 404 });
@@ -177,205 +161,38 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
   }
 
-  // Per-owner concurrency cap.
-  if ((await ownerActiveRunCount(owner)) >= MAX_ACTIVE_RUNS_PER_OWNER) {
-    return NextResponse.json({ error: "too_many_active_runs", message: "You already have preflight runs in progress. Wait for them to finish." }, { status: 429 });
-  }
-
-  // Per-owner DAILY cap (runs created since UTC midnight), checked BEFORE the credit hold so no hold is
-  // ever taken for a run the cap would refuse.
-  if ((await ownerRunsToday(owner)) >= maxRunsPerDay()) {
-    return NextResponse.json({ error: "daily_limit", message: "Daily run limit reached. Try again tomorrow or contact support." }, { status: 429 });
-  }
-
-  // Idempotency: an Idempotency-Key header or a submission_id in the body; one run per submission, enforced
-  // by unique (user_id, submission_id). A retry after a timeout therefore returns the original run instead
-  // of launching a second browser and taking a second hold — the failure mode that matters most now that
-  // agents and CI, which retry automatically, can call this.
-  const clientKey = (req.headers.get("idempotency-key") || (typeof body?.submission_id === "string" ? body.submission_id : "")).slice(0, 100);
-  if (!clientKey) {
-    return NextResponse.json({ error: "submission_id_required", message: "Send an Idempotency-Key header or a submission_id." }, { status: 400 });
-  }
-
-  // PAYLOAD BINDING. The stored id carries a fingerprint of WHAT was requested alongside the caller's key,
-  // so a genuine retry matches exactly and a key reused for a different request is refused rather than
-  // answered with an earlier run's result. Both halves are pure functions (flow-selection.ts), so the rule
-  // is testable without a database.
-  const keyFp = keyFingerprint(owner, id, clientKey);
-  const submissionId = buildSubmissionId(keyFp, payloadFingerprint({ applicationId: id, deploymentUrl, flowIds }));
-  const conflicting = await runWithSameKeyDifferentPayload(owner, keyFp, submissionId);
-  if (conflicting) {
-    await logKeyUsage(p.principal, { endpoint: "POST /api/preflight/apps/{id}/runs", status: 409, applicationId: id, runId: conflicting, creditsReserved: 0, creditsCharged: 0 });
-    return NextResponse.json({
-      error: "idempotency_key_reused",
-      message: "That Idempotency-Key was already used for a different request. Use a new key, or resend the original request exactly.",
-      runId: conflicting,
-    }, { status: 409 });
-  }
-
-  // Billing reservation. Keyed by a FRESH id per attempt so an idempotent replay or a lost unique-submission
-  // race can be refunded in isolation, never colliding with the winning run's own reservation. estCredits is
-  // the flat per-run hold (the spend cap): kept in full as the charge on completion, refunded in full if no
-  // flow ran.
-  const estCredits = estimateRunCredits(flowIds.length);
-  const reservationId = randomUUID();
-  let creditsHeld = 0;
-  let heldReservationId: string | null = null;
-  // PER-KEY DAILY CEILING. Checked before any hold, so a refusal never leaves money reserved. This only
-  // ever NARROWS: it runs in addition to every owner-level gate below, never instead of one, so a key can
-  // spend less than its owner could and never more. A session caller has no ceiling and skips this entirely.
-  {
-    const refusal = await keyCeilingRefusal(
-      { id: p.principal.keyId, dailyCeilingCents: p.principal.dailyCeilingCents },
-      passPricingEnabled() ? passPriceCents(flowIds.length) : estCredits,
-    );
-    if (refusal) {
-      await logKeyUsage(p.principal, { endpoint: "POST /api/preflight/apps/{id}/runs", status: refusal.status, applicationId: id, creditsReserved: 0, creditsCharged: 0 });
-      return NextResponse.json({ error: refusal.error, message: refusal.message }, { status: refusal.status, headers: { "Retry-After": String(refusal.retryAfterSec) } });
-    }
-  }
-
-  let paygHeldCents: number | null = null;
-  let usedFreePass = false; // true when this launch consumed the lifetime free pass (gate mode 'free')
-  let freeClaimCanonical: string | null = null; // set when we WON the atomic free-pass claim (release on insert failure)
-
-  if (passPricingEnabled()) {
-    // Per-pass pricing (docs/pricing-verdict-final.md), behind VRAELIS_PASS_PRICING — this branch fully
-    // replaces the legacy credit hold. Subscription: the entitlement gate IS the billing decision (no
-    // hold; the metered monthly flow-unit window is the spend limit). Free tier: one lifetime pass of up
-    // to 3 flows (no hold). PAYG: hold CENTS via the same ledger reservation semantics as legacy credits
-    // (kept as the charge on completion, refunded by the worker when nothing ran). Exhausted allowances
-    // REFUSE — they never auto-spill into a paid charge.
-    if (billingBypassAllowed()) {
-      console.warn(`[preflight] BILLING BYPASS active (PREFLIGHT_INTERNAL_BILLING_BYPASS=1); run for ${owner} on app ${id} will NOT be charged.`);
-    } else {
-      const gate = await gatePassLaunch(owner, flowIds.length);
-      if (!gate.ok) {
-        return NextResponse.json({ error: gate.error, message: gate.message }, { status: gate.status });
-      }
-      // Free mode must WIN the atomic cluster claim before it is honored — this closes the concurrent
-      // double-spend race (two simultaneous free launches from one inbox). A lost claim ('already_claimed')
-      // means the cluster's one free pass is already taken, so this launch RE-PRICES to PAYG. 'unavailable'
-      // (claims table not migrated yet) proceeds free on the gate's decision — no worse than the pre-table
-      // status quo. Done here, inside the gate branch, so the effective mode may flip free -> payg below.
-      let effectiveMode: typeof gate.mode = gate.mode;
-      let repricedCents = 0;
-      if (gate.mode === "free") {
-        const cluster = await resolveCanonicalCluster(owner);
-        const claim = await claimFreePass(owner, cluster.canonical);
-        if (claim === "already_claimed") {
-          effectiveMode = "payg";
-          repricedCents = passPriceCents(flowIds.length);
-        } else {
-          if (claim === "won") freeClaimCanonical = cluster.canonical; // release if the run insert fails
-          effectiveMode = "free";
-        }
-      }
-      if (effectiveMode === "payg") {
-        const cents = gate.mode === "payg" ? gate.cents : repricedCents;
-        const ok = await hold(owner, reservationId, cents, "cent");
-        if (!ok) {
-          // The free pass was lost to a concurrent launch and the owner cannot cover the paid price. No
-          // claim was won here (only 'already_claimed' reaches this with gate.mode==='free'), so nothing
-          // to release.
-          return NextResponse.json({ error: "insufficient_balance", message: `This verification costs $${(cents / 100).toFixed(2)}. Add balance to run it.` }, { status: 402 });
-        }
-        // credits_held carries the held amount in the hold's OWN unit (cents here), so the worker's
-        // unchanged settlement — refund credits_held via the reservation — settles cent holds too.
-        creditsHeld = cents;
-        heldReservationId = reservationId;
-        paygHeldCents = cents;
-      } else if (effectiveMode === "free") {
-        usedFreePass = true; // consume any operator comp + capture a risk signal AFTER the run is created
-      }
-    }
-  } else if (billingBypassAllowed()) {
-    console.warn(`[preflight] BILLING BYPASS active (PREFLIGHT_INTERNAL_BILLING_BYPASS=1); run for ${owner} on app ${id} will NOT be charged.`);
-  } else {
-    const ok = await hold(owner, reservationId, estCredits);
-    if (!ok) {
-      return NextResponse.json({ error: "insufficient_credits", message: "You do not have enough credits to launch this preflight run." }, { status: 402 });
-    }
-    creditsHeld = estCredits;
-    heldReservationId = reservationId;
-  }
-
-  // Queue the run (insert only; NO execution). createRun re-reads the approved flows before inserting.
-  const created = await createRun(owner, {
-    applicationId: id, contractId: contract.id, contractVersion: contract.version,
-    deploymentUrl, submissionId, flowIds, creditsHeld, reservationId: heldReservationId,
-    // Attribute the run to the launching key, so the per-key ceiling is enforceable tomorrow and the audit
-    // trail can answer "which credential launched this". Null for a browser session.
-    apiKeyId: p.principal.keyId,
+  // EVERYTHING FROM HERE IS THE ACCEPTANCE SERVICE.
+  //
+  // Caps, idempotency, the per-key ceiling, billing, the run insert and every release path moved into
+  // lib/preflight/acceptance/accept-run.ts unchanged, in the same order. This route now owns only what a
+  // route should own: reading HTTP, resolving who is asking and what they are asking about, and rendering
+  // the outcome. A second entrance can reuse the money path without duplicating it or importing a handler.
+  const outcome = await acceptVerificationRun({
+    owner,
+    applicationId: id,
+    contract: { id: contract.id, version: contract.version },
+    deploymentUrl,
+    flowIds,
+    principal: p.principal,
+    clientKey: (req.headers.get("idempotency-key") || (typeof body?.submission_id === "string" ? body.submission_id : "")).slice(0, 100),
     // NO GUARANTEE FROM AN HTTP CALLER, EVER. A guarantee id accepted from the request body would be a
     // false-Verified manufacturing primitive: any editor or run:create key could POST one trivial approved
     // flow plus the tenant's most critical guarantee id, and that guarantee would render Verified. It would
-    // also collide in payloadFingerprint, which hashes only {app, url, flows}, so two runs differing solely
-    // by guarantee would 409 onto each other's records. Guarantee-bound runs are launched in-process by the
-    // verify-this-guarantee path, which resolves the binding server-side from the guarantee row itself.
+    // also collide in payloadFingerprint, which hashes only {app, url, flows}. Guarantee-bound runs are
+    // launched by the verify-this-guarantee path, which resolves the binding server-side.
     guarantee: null,
+    actor: { email, level: access.level, role: access.role },
+    risk: {
+      ip: req.headers.get("x-forwarded-for")?.split(",")[0] ?? req.headers.get("x-real-ip"),
+      userAgent: req.headers.get("user-agent"),
+    },
   });
 
-  if (!created) {
-    // Nothing eligible at re-read, or a transient insert failure; release any hold we just made so the owner
-    // is never left with stranded escrow for a run that does not exist. creditsHeld is the hold's own
-    // amount in its own unit (legacy credits, or cents on the flag-on PAYG branch). Also release a won free
-    // claim so a queue error never permanently locks the owner out of their legitimate free pass.
-    if (heldReservationId) await refund(owner, reservationId, creditsHeld);
-    if (freeClaimCanonical) await releaseFreePass(owner, freeClaimCanonical);
-    return NextResponse.json({ error: "unavailable", message: "Could not queue the run. Try again." }, { status: 503 });
+  if (!outcome.ok) {
+    return NextResponse.json(
+      { error: outcome.error, message: outcome.message, ...(outcome.runId ? { runId: outcome.runId, status: "queued" } : {}) },
+      { status: outcome.status, ...(outcome.retryAfterSec ? { headers: { "Retry-After": String(outcome.retryAfterSec) } } : {}) },
+    );
   }
-  if ("conflict" in created) {
-    // A run for this submission already exists (idempotent replay / lost race). Release this attempt's hold
-    // and its free claim (the existing run already owns the pass) and point the caller at the existing run.
-    if (heldReservationId) await refund(owner, reservationId, creditsHeld);
-    if (freeClaimCanonical) await releaseFreePass(owner, freeClaimCanonical);
-    await logKeyUsage(p.principal, { endpoint: `POST /api/preflight/apps/{id}/runs`, status: 409, applicationId: id, runId: created.runId, creditsReserved: 0, creditsCharged: 0 });
-    return NextResponse.json({ error: "run_exists", runId: created.runId, status: "queued" }, { status: 409 });
-  }
-
-  if (passPricingEnabled()) {
-    // Record the selected-flow units this run consumes (subscription metering sums flow_units over the
-    // anchor window) plus the PAYG cents escrow (audit mirror). Best-effort: the run is queued and billed
-    // either way, and metering falls back to the stored flow_ids length.
-    await recordRunPassUsage(owner, created.runId, { flowUnits: created.flowCount, heldCents: paygHeldCents });
-    if (usedFreePass) {
-      // This launch took the lifetime free pass. (0) Link the run to its atomic claim (audit). (1) Consume
-      // any operator comp so it is single-use. (2) Capture a risk SIGNAL (hashed IP/device only) so an
-      // operator can review clustered abuse — never a denial key. All best-effort; the run is queued.
-      const canonical = freeClaimCanonical ?? (await resolveCanonicalCluster(owner)).canonical;
-      if (freeClaimCanonical) await attachRunToClaim(freeClaimCanonical, created.runId);
-      await consumeFreeGrantOverride(owner, canonical);
-      await recordFreeGrantRisk({
-        owner, canonical, runId: created.runId,
-        ipHash: hashRiskSignal(req.headers.get("x-forwarded-for")?.split(",")[0] ?? req.headers.get("x-real-ip")),
-        deviceHash: hashRiskSignal(req.headers.get("user-agent")),
-        signal: "free_launch",
-      });
-    }
-  }
-
-  await logEvent({
-    userId: owner, eventType: "preflight_run_queued", actorType: "owner", source: "app",
-    route: `/api/preflight/apps/${id}/runs`,
-    // userId stays the app OWNER (the dashboard queries runs by owner). When a workspace member launched the
-    // run, record who actually did it (actor) for audit — the credits were still the owner's.
-    metadata: { application_id: id, run_id: created.runId, flow_count: created.flowCount, credits_held: creditsHeld, ...(access.level === "workspace" ? { actor: email.toLowerCase(), actor_role: access.role } : {}) },
-  });
-
-  // Cost governor (blocker 3): record this launch as a provider-session ATTEMPT (drives the per-account
-  // velocity cap) and a conservative LAUNCH-TIME cost estimate (drives the global $/hour + $/day ceiling —
-  // counting the commit as it happens, so the ceiling trips BEFORE a burst finishes burning, not after).
-  // Then evaluate the ceilings and auto-pause at 100%. All best-effort; the run is already queued.
-  await recordProviderAttempt(owner, created.runId, "session");
-  await recordProviderCost({ owner, runId: created.runId, browserbaseSeconds: created.flowCount * 60, estimatedCents: estimateProviderCents({ browserbaseSeconds: created.flowCount * 60 }) });
-  await maybeTripGlobalBudget();
-
-  // Key audit: what this key did, on what, for how much. Never the key itself. No-op for session calls.
-  await logKeyUsage(p.principal, {
-    endpoint: `POST /api/preflight/apps/{id}/runs`, status: 200,
-    applicationId: id, runId: created.runId, creditsReserved: creditsHeld, creditsCharged: 0,
-  });
-
-  return NextResponse.json({ runId: created.runId, status: "queued", flowCount: created.flowCount });
+  return NextResponse.json({ runId: outcome.runId, status: "queued", flowCount: outcome.flowCount });
 }

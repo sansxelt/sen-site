@@ -107,12 +107,23 @@ function wiringTests() {
   }
 
   console.log("\n── owner-anchored billing: the launch/rerun paths key billing to the resolved OWNER ──");
-  for (const f of ["app/api/preflight/apps/[id]/runs/route.ts", "app/api/preflight/runs/[runId]/rerun/route.ts"]) {
+  // The launch route now resolves the owner and hands it to the acceptance service, which does the billing.
+  // Both halves still have to be checked, or "bills the owner" could pass while the route quietly handed
+  // over the CALLER instead. The rerun route is not extracted, so its two halves are the same file.
+  for (const [f, billingFile] of [
+    ["app/api/preflight/apps/[id]/runs/route.ts", "lib/preflight/acceptance/accept-run.ts"],
+    ["app/api/preflight/runs/[runId]/rerun/route.ts", "app/api/preflight/runs/[runId]/rerun/route.ts"],
+  ] as const) {
     const src = readFileSync(f, "utf8");
+    const billing = readFileSync(billingFile, "utf8");
     // owner must be assigned FROM the resolver's access.owner, and the billing calls must use `owner`.
     const ownerFromAccess = /const owner = access\.owner;/.test(src);
-    const holdsOnOwner = /hold\(owner,/.test(src) && /gatePassLaunch\(owner,/.test(src) && /createRun\(owner,/.test(src);
-    ok(`${f.split("/").slice(-2).join("/")} sets owner = access.owner and bills the owner`, ownerFromAccess && holdsOnOwner, ownerFromAccess ? "billing not on owner" : "owner not from access");
+    const holdsOnOwner = /hold\(owner,/.test(billing) && /gatePassLaunch\(owner,/.test(billing) && /createRun\(owner,/.test(billing);
+    // The resolved owner is what crosses the boundary — not the acting email.
+    const handsOverOwner = f === billingFile || /acceptVerificationRun\(\{\s*\n?\s*owner,/.test(src);
+    ok(`${f.split("/").slice(-2).join("/")} sets owner = access.owner and bills the owner`,
+      ownerFromAccess && holdsOnOwner && handsOverOwner,
+      !ownerFromAccess ? "owner not from access" : !handsOverOwner ? "owner not handed to the service" : "billing not on owner");
     // The caller email must NOT be the billing key: no `const owner = email.toLowerCase()` remains.
     ok(`${f.split("/").slice(-2).join("/")} never bills the caller (no owner = email.toLowerCase())`, !/const owner = email\.toLowerCase\(\)/.test(src));
   }

@@ -18,6 +18,7 @@
 // is exactly why the /developers assertion below exists.
 
 import { readFileSync } from "node:fs";
+import { before } from "./_source-order";
 import {
   PREFLIGHT_SCOPES,
   type PreflightScope,
@@ -39,7 +40,14 @@ function ok(name: string, cond: boolean, detail = "") {
 }
 
 const read = (p: string) => readFileSync(p, "utf8");
+
+
 const ROUTE_RUNS = "app/api/preflight/apps/[id]/runs/route.ts";
+// The launch is now TWO files. The route keeps request parsing, auth and the owner-level gates, then hands
+// over to the acceptance service, which owns idempotency, the key ceiling, the escrow and run creation.
+// Assertions below name whichever half is supposed to hold each guard, so a guard that silently moves has
+// to be re-recorded rather than quietly passing from wherever it landed.
+const ACCEPT_SVC = "lib/preflight/acceptance/accept-run.ts";
 const ROUTE_RUN_READ = "app/api/preflight/runs/[runId]/route.ts";
 const ROUTE_PREVIEW = "app/api/preflight/apps/[id]/pass-preview/route.ts";
 const PRINCIPAL = "lib/preflight/api-principal.ts";
@@ -126,17 +134,23 @@ async function ceilingTests() {
     !!blind && /not started/i.test(blind.message));
 
   console.log("\n── the ceiling is wired where it cannot strand money ──");
-  const runsSrc = read(ROUTE_RUNS);
-  ok("the run route enforces the key ceiling", /keyCeilingRefusal\(/.test(runsSrc));
+  const routeSrc = read(ROUTE_RUNS);
+  const svcSrc = read(ACCEPT_SVC);
+  ok("the acceptance service enforces the key ceiling", /keyCeilingRefusal\(/.test(svcSrc));
   // Order is the whole point: a ceiling checked after the hold would refuse the run while the money stayed
-  // reserved.
+  // reserved. Ceiling and escrow are both inside the service, so this comparison still measures real order.
   ok("the ceiling is checked BEFORE any credit hold is taken",
-    runsSrc.indexOf("keyCeilingRefusal") < runsSrc.indexOf("await hold("));
+    before(svcSrc, "keyCeilingRefusal(", "await hold("));
+  // The ceiling narrows the owner's own limits, so it must come after them. Those two now sit either side of
+  // a function call rather than in one file, and an indexOf across concatenated sources would measure the
+  // order I pasted them in, not the order they run. The structural statement is the honest one: the route
+  // runs the velocity cap before handing over, and the route does not check the ceiling itself.
   ok("the ceiling is checked AFTER the owner-level gates (it narrows, never replaces)",
-    runsSrc.indexOf("checkAccountVelocity") < runsSrc.indexOf("keyCeilingRefusal"));
+    before(routeSrc, "await checkAccountVelocity(", "await acceptVerificationRun(")
+    && !/keyCeilingRefusal/.test(routeSrc));
   ok("the run records which key launched it (so tomorrow's ceiling is enforceable)",
-    /apiKeyId: p\.principal\.keyId/.test(runsSrc));
-  ok("a ceiling refusal is logged to the key audit", /status: refusal\.status/.test(runsSrc));
+    /apiKeyId: principal\.keyId/.test(svcSrc));
+  ok("a ceiling refusal is logged to the key audit", /status: refusal\.status/.test(svcSrc));
 
   console.log("\n── minting a bounded key never silently produces an unbounded one ──");
   const keysLib = read("lib/v-api-keys.ts");
@@ -275,23 +289,38 @@ function wiringTests() {
   console.log("\n── spend safety is the SAME code on both paths ──");
   // The whole risk of a machine caller is unattended spend. These are the session path's own guards; if any
   // disappeared from this route, a key would be able to outspend a browser.
-  for (const [needle, what] of [
-    ["isRunsGovernorPaused", "cost governor auto-pause"],
-    ["globalActiveRunsAtCap", "global in-flight brake"],
-    ["checkAccountVelocity", "per-account velocity cap"],
-    ["ownerActiveRunCount", "per-owner concurrency cap"],
-    ["ownerRunsToday", "per-owner daily cap"],
-    ["gatePassLaunch", "entitlement gate"],
-    ["hold(", "credit hold"],
-    ["refund(", "refund on failure to queue"],
-  ] as [string, string][]) {
-    ok(`run create still applies the ${what}`, runsSrc.includes(needle));
+  // These guards did not disappear when the launch was extracted, they MOVED: everything from the
+  // concurrency cap inward now lives in the acceptance service the route calls. Each needle records which
+  // half is meant to hold it, so a guard that vanished from BOTH still fails, and one that merely drifted
+  // between them has to be re-recorded here rather than passing from wherever it ended up.
+  const acceptSvcSrc = read(ACCEPT_SVC);
+  const half = { route: runsSrc, service: acceptSvcSrc };
+  for (const [needle, what, where] of [
+    ["isRunsGovernorPaused(", "cost governor auto-pause", "route"],
+    ["globalActiveRunsAtCap(", "global in-flight brake", "route"],
+    ["checkAccountVelocity(", "per-account velocity cap", "route"],
+    ["ownerActiveRunCount(", "per-owner concurrency cap", "service"],
+    ["ownerRunsToday(", "per-owner daily cap", "service"],
+    ["gatePassLaunch(", "entitlement gate", "service"],
+    ["hold(", "credit hold", "service"],
+    ["refund(", "refund on failure to queue", "service"],
+  ] as [string, string, "route" | "service"][]) {
+    ok(`run create still applies the ${what} (${where})`, half[where].includes(needle));
   }
+  // Presence-of-a-substring is weaker than it looks, and a mutation proved it: deleting the legacy-credits
+  // hold outright left the check above GREEN, because the PAYG cents branch still contained the characters
+  // "hold(". A launch that bills in credits would have run for free with nothing reserved. So the property
+  // is stated per branch — each one takes its own hold — and each result is CHECKED rather than discarded,
+  // which is the same defect that made hold() itself report success on a failed debit.
+  ok("every billing branch takes its own hold, and checks that the debit landed",
+    (acceptSvcSrc.match(/const ok = await hold\(/g) ?? []).length === 2,
+    `${(acceptSvcSrc.match(/await hold\(/g) ?? []).length} hold call(s) found`);
+
   // Ordering matters as much as presence: a hold taken before the idempotency check would let a retry storm
-  // reserve credits it never uses.
+  // reserve credits it never uses. Both sides are inside the service now.
   ok("the idempotency check runs BEFORE the credit hold",
-    runsSrc.indexOf("runWithSameKeyDifferentPayload") < runsSrc.indexOf("const estCredits"));
-  ok("auth runs BEFORE the application is read", runsSrc.indexOf("resolvePrincipal") < runsSrc.indexOf("applicationAccess("));
+    before(acceptSvcSrc, "runWithSameKeyDifferentPayload(", "const estCredits"));
+  ok("auth runs BEFORE the application is read", before(runsSrc, "resolvePrincipal(", "applicationAccess("));
 
   console.log("\n── the key itself never leaves the request ──");
   const principalSrc = read(PRINCIPAL);
@@ -321,7 +350,7 @@ function wiringTests() {
     ok(`the resolver returns the ${code} code`, principalSrc.includes(`"${code}"`));
   }
   ok("run create returns idempotency_key_reused for a key used on a different payload",
-    runsSrc.includes("idempotency_key_reused"));
+    acceptSvcSrc.includes(`error: "idempotency_key_reused"`));
   ok("an unknown key and a REVOKED key are indistinguishable (both invalid_api_key)",
     (principalSrc.match(/invalid_api_key/g) || []).length === 1);
 

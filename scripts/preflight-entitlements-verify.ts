@@ -165,14 +165,24 @@ async function main(): Promise<void> {
   delete process.env.STRIPE_PRICE_PRO_V1_MONTHLY; delete process.env.STRIPE_PRICE_SCALE_V1_YEARLY;
   delete process.env.STRIPE_PRICE_PRO_MONTHLY;
 
-  // ── static: both run routes keep the legacy hold path UNMODIFIED and gate only under the flag ──
+  // ── static: both launch paths keep the legacy hold path UNMODIFIED and gate only under the flag ──
+  //
+  // The dashboard launch body moved out of its route and into the acceptance service. These assertions are
+  // the reason that move is checkable at all: they are byte-level, so they pass only if the billing path was
+  // relocated verbatim rather than quietly rewritten on the way. The rerun route has not been extracted yet,
+  // so its billing still sits in the route file.
   for (const [name, file] of [
-    ["launch route", path.join("app", "api", "preflight", "apps", "[id]", "runs", "route.ts")],
+    ["launch (acceptance service)", path.join("lib", "preflight", "acceptance", "accept-run.ts")],
     ["rerun route", path.join("app", "api", "preflight", "runs", "[runId]", "rerun", "route.ts")],
   ] as const) {
     const src = read(file);
     ok(`${name}: legacy hold line is byte-identical`, src.includes("const ok = await hold(owner, reservationId, estCredits);"));
-    ok(`${name}: legacy insufficient-credits refusal is intact`, src.includes(`{ error: "insufficient_credits", message: "You do not have enough credits to launch this preflight run." }, { status: 402 }`));
+    // The one thing the extraction was ALLOWED to change is the transport wrapper: the service returns a
+    // refusal object and the route turns it into a response, where the rerun route still writes
+    // NextResponse.json directly. What a customer receives must not change, so the code, the message and the
+    // 402 are still matched exactly, adjacent, and only the punctuation between them may differ.
+    ok(`${name}: legacy insufficient-credits refusal is intact (code, message and 402 unchanged)`,
+      /error: "insufficient_credits", message: "You do not have enough credits to launch this preflight run\."[^]{0,12}status: 402/.test(src));
     ok(`${name}: legacy path still sets creditsHeld = estCredits`, src.includes("creditsHeld = estCredits;"));
     const iFlag = src.indexOf("if (passPricingEnabled())");
     const iGate = src.indexOf("gatePassLaunch(");
@@ -192,8 +202,8 @@ async function main(): Promise<void> {
   {
     const rerun = read(path.join("app", "api", "preflight", "runs", "[runId]", "rerun", "route.ts"));
     ok("rerun route gates with { rerun: true } (rerunPriceCents, capped at the comparable pass)", rerun.includes("gatePassLaunch(owner, flowIds.length, { rerun: true })"));
-    const launch = read(path.join("app", "api", "preflight", "apps", "[id]", "runs", "route.ts"));
-    ok("launch route gates WITHOUT the rerun price (full pass price)", launch.includes("gatePassLaunch(owner, flowIds.length)"));
+    const launch = read(path.join("lib", "preflight", "acceptance", "accept-run.ts"));
+    ok("launch gates WITHOUT the rerun price (full pass price)", launch.includes("gatePassLaunch(owner, flowIds.length)"));
   }
 
   // ── static: entitlements-v1 prices reruns via rerunPriceCents and records both usage columns ──

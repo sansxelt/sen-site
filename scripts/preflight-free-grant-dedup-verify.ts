@@ -13,6 +13,13 @@ let pass = 0, fail = 0;
 const ok = (n: string, c: boolean, d = "") => { console.log(`${c ? "PASS" : "FAIL"}  ${n}${d ? `  (${d})` : ""}`); if (c) pass++; else fail++; };
 const read = (...p: string[]) => fs.readFileSync(path.join(process.cwd(), ...p), "utf8");
 
+/** Where each launch's billing body actually lives. The dashboard launch was extracted into the acceptance
+ *  service, so its comp handling is asserted there; the rerun route still carries its own. */
+const LAUNCH_BODIES: [string, string[]][] = [
+  ["launch (acceptance service)", ["lib", "preflight", "acceptance", "accept-run.ts"]],
+  ["rerun route", ["app", "api", "preflight", "runs", "[runId]", "rerun", "route.ts"]],
+];
+
 function main(): void {
   // ── Canonical clustering: the ONE hard-denial key. Every alias of one inbox must collapse to the same
   //    canonical string, so the cluster resolver groups them and the free pass is per real inbox. ──
@@ -87,9 +94,10 @@ function main(): void {
 
   // ── STATIC: both launch routes consume the comp + capture the signal ONLY in free mode, and only AFTER
   //    the run is created (so a failed insert never burns a comp). ──
-  for (const route of [["app", "api", "preflight", "apps", "[id]", "runs", "route.ts"], ["app", "api", "preflight", "runs", "[runId]", "rerun", "route.ts"]]) {
+  // The dashboard launch body now lives in the acceptance service, so the comp handling it owns is asserted
+  // there. The rerun route has not been extracted yet.
+  for (const [label, route] of LAUNCH_BODIES) {
     const src = read(...route);
-    const label = route.includes("rerun") ? "rerun route" : "app run route";
     ok(`${label}: free mode is flagged and handled after creation`, /gate\.mode === "free"[\s\S]*?usedFreePass = true/.test(src));
     ok(`${label}: consumes the comp + records the signal only when usedFreePass`, /if \(usedFreePass\) \{[\s\S]*?consumeFreeGrantOverride[\s\S]*?recordFreeGrantRisk/.test(src));
     ok(`${label}: passes a HASHED ip/device to the risk signal (never raw)`, /ipHash: hashRiskSignal\(/.test(src) && /deviceHash: hashRiskSignal\(/.test(src));
@@ -108,9 +116,8 @@ function main(): void {
     /claimFreePass[\s\S]*?return "unavailable"/.test(cl));
   ok("releaseFreePass is owner-scoped and only deletes an UNattached claim (never another live claim)",
     /releaseFreePass[\s\S]*?\.delete\(\)\.eq\("canonical_email", canonical\)\.eq\("user_id", norm\(owner\)\)\.is\("run_id", null\)/.test(cl));
-  for (const route of [["app", "api", "preflight", "apps", "[id]", "runs", "route.ts"], ["app", "api", "preflight", "runs", "[runId]", "rerun", "route.ts"]]) {
+  for (const [label, route] of LAUNCH_BODIES) {
     const src = read(...route);
-    const label = route.includes("rerun") ? "rerun route" : "app run route";
     ok(`${label}: free mode must WIN the atomic claim before it is honored`, /gate\.mode === "free"[\s\S]*?claimFreePass\(owner, cluster\.canonical\)/.test(src));
     ok(`${label}: a lost claim ('already_claimed') RE-PRICES to PAYG (no free double-spend)`, /already_claimed"\)\s*\{[\s\S]*?effectiveMode = "payg"/.test(src));
     ok(`${label}: a won claim is RELEASED if the run insert fails (no lock-out)`, /if \(freeClaimCanonical\) await releaseFreePass\(owner, freeClaimCanonical\)/.test(src));

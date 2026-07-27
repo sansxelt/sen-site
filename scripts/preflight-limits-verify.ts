@@ -4,6 +4,7 @@
 // button shows the credit estimate. Proves the classifier maps every provider failure to a fixed, owner-safe
 // enum and NEVER leaks a raw provider message into the code or the user sentence.
 import fs from "node:fs";
+import { before } from "./_source-order";
 import path from "node:path";
 import { classifyProviderError, type ProviderErrorCode } from "../worker/preflight/provider-errors";
 import { BrowserbaseApiError } from "../worker/preflight/providers/browserbase-api";
@@ -53,19 +54,32 @@ ok("null -> run_error", classifyProviderError(null).code === "run_error");
   ok("every mapping carries a non-empty user sentence", raws.every((raw) => classifyProviderError(raw).userMessage.length > 0));
 }
 
-// ── static: both routes gate on the kill switch and the daily cap BEFORE the credit hold ──
-for (const [name, file] of [
-  ["launch route", path.join("app", "api", "preflight", "apps", "[id]", "runs", "route.ts")],
-  ["rerun route", path.join("app", "api", "preflight", "runs", "[runId]", "rerun", "route.ts")],
+// ── static: both launches gate on the kill switch and the daily cap BEFORE the credit hold ──
+//
+// The launch is two files now. The route keeps the flag gates and then hands over to the acceptance
+// service, which owns the caps and the escrow; the rerun route is still one file, so both halves of it
+// point at the same source. "gate" is where the flags are read, "body" is where money is reserved, and
+// "handoff" is the call in the gate file that the hold sits behind.
+for (const [name, gateFile, bodyFile, handoff] of [
+  ["launch", path.join("app", "api", "preflight", "apps", "[id]", "runs", "route.ts"),
+    path.join("lib", "preflight", "acceptance", "accept-run.ts"), "await acceptVerificationRun("],
+  ["rerun route", path.join("app", "api", "preflight", "runs", "[runId]", "rerun", "route.ts"),
+    path.join("app", "api", "preflight", "runs", "[runId]", "rerun", "route.ts"), "await hold("],
 ] as const) {
-  const src = read(file);
-  const iEnabled = src.indexOf("preflightEnabled()");
-  const iKill = src.indexOf("runsDisabled()");
+  const gate = read(gateFile);
+  const src = read(bodyFile);
+  const iEnabled = gate.indexOf("preflightEnabled()");
+  const iKill = gate.indexOf("runsDisabled()");
   const iDaily = src.indexOf("ownerRunsToday(");
   const iHold = src.indexOf("await hold(");
   ok(`${name}: kill switch check exists, right after the preflight flag gate`, iKill > iEnabled && iEnabled >= 0 && iKill >= 0);
-  ok(`${name}: kill switch returns 503 runs_paused`, /runs_paused[\s\S]{0,220}status:\s*503/.test(src));
-  ok(`${name}: kill switch gated BEFORE the credit hold`, iKill >= 0 && iHold >= 0 && iKill < iHold);
+  ok(`${name}: kill switch returns 503 runs_paused`, /runs_paused[\s\S]{0,220}status:\s*503/.test(gate));
+  // Stated as two facts rather than one offset comparison, because the two ends are in different files when
+  // the launch is extracted: nothing is reserved before the handover, and the kill switch precedes it.
+  // When the two are the same file the handoff IS the hold, so this is the original comparison unchanged.
+  const extracted = gateFile !== bodyFile;
+  ok(`${name}: kill switch gated BEFORE the credit hold`,
+    before(gate, "runsDisabled()", handoff) && iHold >= 0 && (!extracted || !gate.includes("await hold(")));
   ok(`${name}: daily cap checked BEFORE the credit hold (no hold past the cap)`, iDaily >= 0 && iHold >= 0 && iDaily < iHold);
   ok(`${name}: daily cap returns 429 daily_limit`, /daily_limit[\s\S]{0,220}status:\s*429/.test(src));
   // The cap moved to lib/preflight/limits.ts so the Usage page could show it without becoming a third copy
