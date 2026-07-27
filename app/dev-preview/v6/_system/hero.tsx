@@ -7,6 +7,7 @@
 // earn the room it took. Positioning copy comes from _system/positioning.ts and is provisional.
 import { CTA } from "./ui";
 import { CATEGORY, HEADLINE, SUPPORT } from "./positioning";
+import { PUBLIC_HOW_IT_WORKS } from "@/lib/v6-routes";
 import "./hero.css";
 
 export function Hero() {
@@ -22,7 +23,11 @@ export function Hero() {
         <p className="v6-h__say">{SUPPORT}</p>
         {/* One action. The secondary link has been "See the proof" and then "Watch it run"; both were a
             second decision offered before the reader had a reason to make one. */}
-        <div className="v6-h__cta"><CTA brand lg>Open Vraelis</CTA></div>
+        {/* The header already carries Open Vraelis and Sign in. A second Open button here sent a visitor
+            who has never signed in straight into an app that can only ask them to sign in, and it spent the
+            page's one dominant action on a destination the header already owns. The hero's job is to earn
+            the next scroll, so it points at how the thing works. */}
+        <div className="v6-h__cta"><CTA brand lg href={PUBLIC_HOW_IT_WORKS}>See how it works</CTA></div>
       </div>
     </section>
   );
