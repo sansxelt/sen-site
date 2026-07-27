@@ -268,17 +268,37 @@ export async function listGuarantees(owner: string, applicationId: string, inclu
 
 // The newest run tagged with this guarantee's id (its current run, terminal or in-flight). Null when none, or
 // when v_preflight_runs.guarantee_id is not present yet (migration 19 unapplied). Used to derive live status.
+//
+// INVALIDATED RUNS ARE EXCLUDED, and that is the whole point of invalidation.
+//
+// Migration 24 lets a verdict Vraelis produced from its own defect stop counting without being deleted or
+// rewritten. This query did not know about it, so the newest run decided a guarantee's live status even when
+// the company had formally recorded that the run was its own fault. A guarantee could therefore read Failed
+// off a run whose stated reason was "our resolver was broken, the application was not".
+//
+// Thirteen of the fourteen runs on the demo guarantee are invalidated. It reads correctly today only because
+// the one that is not happens to be the newest.
+//
+// A database without migration 24 has no invalidated runs to exclude, so the filter is retried without it
+// rather than taking the feature down.
 export async function latestGuaranteeRun(owner: string, guaranteeId: string): Promise<GuaranteeRunRef | null> {
   if (!isDatabaseConfigured()) return null;
+  const base = () => db().from("v_preflight_runs")
+    .select(RUN_REF_COLUMNS).eq("user_id", norm(owner)).eq("guarantee_id", guaranteeId)
+    .order("created_at", { ascending: false });
   try {
-    const { data, error } = await db().from("v_preflight_runs")
-      .select(RUN_REF_COLUMNS).eq("user_id", norm(owner)).eq("guarantee_id", guaranteeId)
-      .order("created_at", { ascending: false }).limit(1).maybeSingle();
-    if (error) {
-      if (/guarantee_id/i.test(error.message ?? "")) warnUnmigrated("latestGuaranteeRun");
-      return null;
+    const { data, error } = await base().is("invalidated_at", null).limit(1).maybeSingle();
+    if (!error) return data ? rowToRunRef(data as Record<string, unknown>) : null;
+    if (/invalidated_at/i.test(error.message ?? "")) {
+      const retry = await base().limit(1).maybeSingle();
+      if (retry.error) {
+        if (/guarantee_id/i.test(retry.error.message ?? "")) warnUnmigrated("latestGuaranteeRun");
+        return null;
+      }
+      return retry.data ? rowToRunRef(retry.data as Record<string, unknown>) : null;
     }
-    return data ? rowToRunRef(data as Record<string, unknown>) : null;
+    if (/guarantee_id/i.test(error.message ?? "")) warnUnmigrated("latestGuaranteeRun");
+    return null;
   } catch { return null; }
 }
 

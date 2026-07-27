@@ -249,9 +249,19 @@ console.log("\n── the record says which promise it proves, and whether that 
 
   // The list page may only claim what is now true: proving on demand IS wired; proving automatically on
   // each new deployment is NOT, and saying otherwise would be the misleading copy this whole pass removed.
-  const list = readFileSync("app/rank/app/guarantees/page.tsx", "utf8");
-  ok("the guarantees page no longer says verification is unwired", !/Re-checking a guarantee automatically\s+against each new deployment is not wired up yet/.test(list));
-  ok("it still says automatic re-checking is not wired", /automatically as each new deployment\s+appears is not wired up yet/.test(list));
+  // Whitespace-collapsed, because these assert a CLAIM and not a line wrap. The previous version pinned the
+  // exact break positions and failed when the paragraph was reflowed around an unrelated edit, reporting
+  // copy that still said the right thing as copy that had stopped saying it.
+  const list = readFileSync("app/rank/app/guarantees/page.tsx", "utf8").replace(/\s+/g, " ");
+  ok("the guarantees page no longer says verification is unwired",
+    !/Re-checking a guarantee automatically against each new deployment is not wired up yet/.test(list));
+  ok("it still says automatic re-checking is not wired",
+    /automatically as each new deployment appears is not wired up yet/.test(list));
+  // And now that a verdict is reachable, the page must actually show one rather than only the plan's state.
+  ok("the guarantees page reports the verification verdict, not only the plan state",
+    /guaranteeStatus\(/.test(list) && /GUARANTEE_STATUS_LABEL/.test(list));
+  ok("the verdict comes from the newest NON-invalidated run",
+    /is\("invalidated_at", null\)/.test(readFileSync("lib/preflight/guarantees-db.ts", "utf8")));
 }
 
 console.log("\n── the API and the CLI carry the same relationship the console does ──");

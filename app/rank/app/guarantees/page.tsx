@@ -4,25 +4,30 @@
 // question a founder or an auditor actually asks, which is "what have we promised". That question is the
 // product, so it now has an address.
 //
-// WHAT THIS PAGE DELIBERATELY DOES NOT CLAIM.
+// WHAT THIS PAGE CLAIMS, AND WHEN IT EARNED THE RIGHT TO.
 //
-// A guarantee is meant to carry a live verdict: proven, or not, against the newest deployment. It cannot,
-// and the reason is one missing argument. createRun() accepts guaranteeId and pins it onto the row
-// (lib/preflight/runs-db.ts:263, 331) and NOT ONE CALLER PASSES IT — not the run route, not the rerun route,
-// not either seeding script. So v_preflight_runs.guarantee_id is never written, latestGuaranteeRun() can
-// only ever return null, and guaranteeStatus() can only ever answer draft / unproven.
+// It used to show only the PLAN's state, and the note here explained why: createRun accepted guaranteeId
+// and not one caller passed it, so v_preflight_runs.guarantee_id was never written, latestGuaranteeRun
+// could only ever return null, and guaranteeStatus could only ever answer draft or unproven. Rendering a
+// pill whose vocabulary includes Verified would have been a surface that looks live and is not.
 //
-// An earlier version of this page called latestGuaranteeRun per row and rendered the full status pill, whose
-// vocabulary includes Verified and Failed. That is N queries that always return nothing, feeding a pill that
-// can never show most of its own labels — a surface that looks live and is not. So the pill here reports the
-// only axis that has real values, the PLAN's state, and the page says in words that re-checking is not
-// wired yet. Overstating this would be the exact failure the engine is sold to catch.
+// That was true and is no longer. The verify entrance writes guarantee_id on every run it launches, and the
+// first guarantee now carries fourteen of them with a standing Verified. So the verdict is shown, from the
+// same guaranteeStatus every other guarantee surface uses.
+//
+// The plan's state is still shown beside it, because they answer different questions: an approved plan with
+// no proof and a guarantee proven against the current deployment are not the same thing, and collapsing
+// them into one pill would lose the distinction this product exists to keep.
+//
+// What is still NOT claimed: continuous coverage. A guarantee reports its LATEST verification, nothing is
+// re-checked automatically when a deployment changes, and the page says so in words.
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requirePreflightOwner } from "@/lib/v-preflight-guard";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { listApplicationsForMember, type Application } from "@/lib/v-applications";
-import { listGuaranteesForApps, type Guarantee } from "@/lib/preflight/guarantees-db";
+import { listGuaranteesForApps, latestGuaranteeRun, type Guarantee } from "@/lib/preflight/guarantees-db";
+import { guaranteeStatus, GUARANTEE_STATUS_LABEL, GUARANTEE_COVERAGE_NOTE } from "@/lib/preflight/guarantee-status";
 import { timeAgo } from "@/lib/preflight/home-verdict";
 import { Ic, I } from "@/app/rank/_components/icons";
 import { SetupRequired } from "../applications/setup-required";
@@ -30,9 +35,8 @@ import { SetupRequired } from "../applications/setup-required";
 export const metadata: Metadata = { title: "Guarantees" };
 export const dynamic = "force-dynamic";
 
-// The three states a guarantee can really be in. Not the run vocabulary: a guarantee has never been attached
-// to a run, so Verified and Failed are not reachable and must not be implied by the presence of a pill that
-// could show them.
+// The PLAN's state: has a person approved what must stay true, and is the approved version still current.
+// Deliberately separate from the verdict beside it, which answers whether the deployment currently keeps it.
 function planPill(g: Guarantee): { label: string; color: string; bg: string; border: string } {
   if (g.plan_state === "review_required") return { label: "Plan review required", color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "var(--wait-line)" };
   if (g.plan_state === "ok") return { label: `Plan approved v${g.plan_version}`, color: "var(--fg-2)", bg: "var(--bg-2)", border: "var(--line-2)" };
@@ -64,6 +68,21 @@ export default async function GuaranteesPage() {
   const guarantees = groups.flat().sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
   const appName = new Map(apps.map((a) => [a.id, a.name]));
 
+  // THE VERDICT, WHICH THIS PAGE USED TO SAY IT COULD NOT SHOW.
+  //
+  // The note above was written when createRun accepted guaranteeId and no caller passed it, so every
+  // guarantee could only ever read "unproven" and a status pill here would have been a surface pretending
+  // to be live. That stopped being true when the verify entrance shipped: guarantee_id is written on every
+  // run it launches, and the demo guarantee now carries fourteen of them.
+  //
+  // So the page reports the verdict, from the same status function every other guarantee surface uses.
+  // One query per row, which is honest at this scale and would need batching before it is not.
+  const verdicts = await Promise.all(guarantees.map(async (g) => {
+    const latest = await latestGuaranteeRun(g.user_id, g.id);
+    return [g.id, guaranteeStatus(latest, g.plan_state)] as const;
+  }));
+  const verdictOf = new Map(verdicts);
+
   return (
     <div className="wrap" style={{ maxWidth: 1080, paddingTop: "clamp(20px, 2.6vw, 32px)", paddingBottom: 80 }}>
       <h1 className="display" style={{ fontSize: "clamp(1.55rem, 2.6vw, 2rem)", margin: "0 0 8px", letterSpacing: "-0.025em" }}>Guarantees</h1>
@@ -72,9 +91,9 @@ export default async function GuaranteesPage() {
         person approved.
       </p>
       <p style={{ margin: "0 0 24px", fontSize: 13, color: "var(--fg-4)", lineHeight: 1.6, maxWidth: "62ch" }}>
-        Approving a plan records what must stay true and who accepted it. Open a guarantee to prove it against
-        the current deployment, and again after a repair. Re-checking automatically as each new deployment
-        appears is not wired up yet, so a guarantee is proven when you ask it to be.
+        Approving a plan records what must stay true and who accepted it. Each guarantee shows its verdict from
+        its most recent verification. Re-checking automatically as each new deployment appears is not wired
+        up yet, so a guarantee is proven when you ask it to be. {GUARANTEE_COVERAGE_NOTE}
       </p>
 
       {guarantees.length > 0 ? (
@@ -94,7 +113,20 @@ export default async function GuaranteesPage() {
                       : <span>No approved plan yet</span>}
                   </span>
                 </span>
-                <span className="pill" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: p.color, background: p.bg, borderColor: p.border, flex: "none" }}>{p.label}</span>
+                {/* The verdict leads, because "is this still true" is the question. The plan's state stays
+                    beside it: an approved plan with no proof and a proven guarantee are different things. */}
+                <span style={{ display: "flex", gap: 6, alignItems: "center", flex: "none" }}>
+                  {(() => {
+                    const st = verdictOf.get(g.id) ?? "unproven";
+                    const meta = GUARANTEE_STATUS_LABEL[st];
+                    const tone = meta.tone === "verified" ? { color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" }
+                      : meta.tone === "failed" ? { color: "var(--stop-ink)", bg: "var(--stop-wash)", border: "var(--stop-line)" }
+                      : meta.tone === "blocked" || meta.tone === "progress" ? { color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "var(--wait-line)" }
+                      : { color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };
+                    return <span className="pill" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: tone.color, background: tone.bg, borderColor: tone.border }}>{meta.label}</span>;
+                  })()}
+                  <span className="pill" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: p.color, background: p.bg, borderColor: p.border }}>{p.label}</span>
+                </span>
                 <span aria-hidden style={{ color: "var(--fg-5)", flex: "none" }}>→</span>
               </Link>
             );
