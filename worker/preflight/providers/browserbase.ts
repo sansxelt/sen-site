@@ -82,6 +82,39 @@ const INTERACTIVE = "a, button, [role=button], [role=link], input[type=submit], 
 // the label locator, so a genuinely missing field still fails saying it looked for a field.
 const FIELD = 'input:not([type=hidden]):not([type=submit]):not([type=button]):not([type=checkbox]):not([type=radio]), textarea, [contenteditable="true"]';
 
+// A PAGE THAT HAS NOT RENDERED YET IS NOT A PAGE WITHOUT THE CONTROL.
+//
+// Both resolvers scanned their candidate chain ONCE, at the instant the step began. navigate resolves when
+// the document loads, but a client-rendered app paints its content after that: it fetches the session, then
+// the data, then draws. So the scan ran against an empty shell, every candidate had count 0, and the chain
+// fell through to its no-match fallback. The step then waited its full timeout on a locator chosen when the
+// right one did not exist yet, and reported the customer's control as missing.
+//
+// Observed on the demo deployment: navigate /dashboard, then
+//   fill "Title" -> action_error: locator.fill: Timeout 10000ms exceeded. waiting for getByLabel
+// against a page whose Title field appears a moment later and which fills correctly by hand.
+//
+// Scanning is now retried until something matches or the window closes. This cannot invent a match: the
+// same chain, in the same order, decides. It only stops asking the question too early. A target that really
+// is absent still resolves to the same fallback and fails with the same message, just later.
+const RESOLVE_WINDOW = { attempts: 24, delayMs: 250 } as const;   // up to 6s
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+async function firstVisibleMatch(
+  attempts: { name: string; locator: PWLocator }[],
+  window_: { attempts: number; delayMs: number } = RESOLVE_WINDOW,
+): Promise<{ name: string; locator: PWLocator } | null> {
+  for (let i = 0; i < Math.max(1, window_.attempts); i++) {
+    for (const a of attempts) {
+      if ((await a.locator.count().catch(() => 0)) === 0) continue;
+      if (!(await a.locator.isVisible().catch(() => false))) continue;   // a hidden duplicate is not the target
+      return a;
+    }
+    if (i < window_.attempts - 1 && window_.delayMs > 0) await sleep(window_.delayMs);
+  }
+  return null;
+}
+
 async function resolveField(page: PWPage, target: string): Promise<{ locator: PWLocator; candidates: string[]; selected: string }> {
   const t = target.toLowerCase();
   // A named type only when the target actually names it. Guessing a type from an unrelated word would put
@@ -98,12 +131,8 @@ async function resolveField(page: PWPage, target: string): Promise<{ locator: PW
     { name: `field:first`, locator: page.locator(FIELD).first() },
   ];
   const candidates = attempts.map((a) => a.name);
-  for (const a of attempts) {
-    const n = await a.locator.count().catch(() => 0);
-    if (n === 0) continue;
-    if (!(await a.locator.isVisible().catch(() => false))) continue;
-    return { locator: a.locator, candidates, selected: a.name };
-  }
+  const hit = await firstVisibleMatch(attempts);
+  if (hit) return { locator: hit.locator, candidates, selected: hit.name };
   return { locator: attempts[0].locator, candidates, selected: attempts[0].name };
 }
 
@@ -115,14 +144,10 @@ async function resolve(page: PWPage, target: string): Promise<{ locator: PWLocat
     { name: `label=${target}`, locator: page.getByLabel(target).first() },
   ];
   const candidates = attempts.map((a) => a.name);
-  for (const a of attempts) {
-    const n = await a.locator.count().catch(() => 0);
-    if (n === 0) continue;
-    if (!(await a.locator.isVisible().catch(() => false))) continue;   // a hidden duplicate is not the target
-    return { locator: a.locator, candidates, selected: a.name };
-  }
-  // Nothing matched. Return the button locator so the failure a customer sees is the same one as before:
-  // we looked for a control with this name and there was not one. Inventing a match here would be worse.
+  const hit = await firstVisibleMatch(attempts);
+  if (hit) return { locator: hit.locator, candidates, selected: hit.name };
+  // Nothing matched, after waiting. Return the button locator so the failure a customer sees is the same one
+  // as before: we looked for a control with this name and there was not one. Inventing a match would be worse.
   return { locator: attempts[0].locator, candidates, selected: attempts[0].name };
 }
 
@@ -271,7 +296,29 @@ export class PlaywrightPreflightPage implements PreflightPage {
         case "uncheck": await this.page.getByLabel(step.target || "").first().uncheck(); return base(true, "unchecked");
         case "press": await this.page.keyboard.press(step.value || step.target || "Enter"); return base(true, "pressed");
         case "wait_for": await this.page.getByText(step.target || step.expect || "").first().waitFor({ timeout: step.timeoutMs ?? 10000 }); return base(true, "appeared");
-        case "assert_visible": { const vis = await this.page.getByText(step.expect || step.target || "").first().isVisible().catch(() => false); return base(vis, vis ? "visible" : "not_visible"); }
+        case "assert_visible": {
+          // WAS: getByText(...).isVisible(), once, immediately. Two defects in one line.
+          //
+          // getByText matches TEXT NODES only, so a control named by its placeholder can never satisfy it.
+          // The dashboard's title field is <input placeholder="Title"> with no visible label, so
+          // assert_visible "Title" reported not_visible against a field that is on screen and fills by hand.
+          // An accessible name is a name; the plan contract this product hands the author says the target is
+          // "the literal visible text or accessible name", and only half of that was implemented.
+          //
+          // And it asked once, the instant the step began, so a client-rendered page that had not painted
+          // yet answered for a page that does not exist.
+          const want = (step.expect || step.target || "").trim();
+          if (!want) return base(false, "assert_visible_no_target");
+          const hit = await firstVisibleMatch([
+            { name: `text=${want}`, locator: this.page.getByText(want).first() },
+            { name: `label=${want}`, locator: this.page.getByLabel(want).first() },
+            { name: `placeholder=${want}`, locator: this.page.getByPlaceholder(want).first() },
+            { name: `role=button[name=${want}]`, locator: this.page.getByRole("button", { name: want }).first() },
+            { name: `role=link[name=${want}]`, locator: this.page.getByRole("link", { name: want }).first() },
+            { name: `role=textbox[name=${want}]`, locator: this.page.getByRole("textbox", { name: want }).first() },
+          ]);
+          return base(!!hit, hit ? `visible [${hit.name}]` : "not_visible");
+        }
         case "assert_text": {
           // SCOPED assertion: the expected value must appear inside the element the TARGET names, not anywhere
           // on the page. A page-wide match lets marketing copy ("Get Pro") satisfy "the plan value is Pro",

@@ -570,6 +570,50 @@ const workerSrc = readFileSync("worker/preflight/worker.ts", "utf8");
 ok("static: worker.ts documents per-run credential scoping is what makes maxConcurrentRuns safe to raise",
   /per run|per-run/i.test(workerSrc) && workerSrc.includes("maxConcurrentRuns"));
 
+// ── NEITHER IS RENDERING. A CONTROL THAT HAS NOT PAINTED YET IS NOT A MISSING CONTROL ─────────────────
+// Both resolvers scanned their candidate chain once, at the instant the step began. navigate resolves when
+// the document loads, but a client-rendered app paints after that, so the scan ran against an empty shell,
+// every candidate had count 0, and the chain fell through to its no-match fallback. The step then waited
+// its whole timeout on a locator chosen when the right one did not exist, and blamed the customer.
+// Observed on the demo deployment: navigate /dashboard then
+//   fill "Title" -> action_error: locator.fill: Timeout 10000ms exceeded. waiting for getByLabel
+// against a field that fills by hand. Rehearsed after the fix, at the same back-to-back timing:
+//   +600ms assert_visible "Title" -> visible [placeholder=Title];  +654ms click "Save note" -> clicked.
+{
+  const between = (from: string, to: string) => {
+    const a = browserbaseSrc.indexOf(from), b = browserbaseSrc.indexOf(to, a + 1);
+    if (a === -1 || b === -1) { ok(`static: anchors ${JSON.stringify(from)}..${JSON.stringify(to)} exist`, false); return ""; }
+    return browserbaseSrc.slice(a, b);
+  };
+  ok("static: there is a retrying matcher rather than a single scan",
+    /async function firstVisibleMatch\(/.test(browserbaseSrc));
+  const matcher = between("async function firstVisibleMatch(", "\nasync function resolveField(");
+  ok("static: it retries the WHOLE chain, in order, instead of settling for the first pass",
+    /for \(let i = 0; i < Math\.max\(1, window_\.attempts\); i\+\+\)/.test(matcher) && /for \(const a of attempts\)/.test(matcher));
+  ok("static: it waits between attempts", /await sleep\(window_\.delayMs\)/.test(matcher));
+  ok("static: it returns null rather than inventing a match", /return null;/.test(matcher));
+
+  const fieldFn = between("async function resolveField(", "\nasync function resolve(");
+  const clickFn = between("async function resolve(", "\nexport class PlaywrightPreflightPage");
+  ok("static: the FIELD resolver waits for the field to appear", /await firstVisibleMatch\(attempts\)/.test(fieldFn));
+  ok("static: the CLICK resolver waits too", /await firstVisibleMatch\(attempts\)/.test(clickFn));
+  ok("static: a genuinely absent target still falls back to the same honest locator",
+    /return \{ locator: attempts\[0\]\.locator/.test(fieldFn) && /return \{ locator: attempts\[0\]\.locator/.test(clickFn));
+
+  // assert_visible matched TEXT NODES only, so a control named by its placeholder could never satisfy it.
+  // The dashboard's title field is <input placeholder="Title"> with no visible label.
+  const assertVisible = between('case "assert_visible": {', 'case "assert_text": {');
+  ok("static: assert_visible waits instead of asking once", /await firstVisibleMatch\(\[/.test(assertVisible));
+  for (const [what, probe] of [
+    ["a placeholder", "getByPlaceholder(want)"],
+    ["a label", "getByLabel(want)"],
+    ["a textbox role", 'getByRole("textbox", { name: want })'],
+    ["plain text", "getByText(want)"],
+  ] as const) {
+    ok(`static: assert_visible accepts ${what} as a name`, assertVisible.includes(probe));
+  }
+}
+
 // ── A SIGN-IN IS NOT INSTANT, AND ASKING TOO EARLY IS NOT A REJECTION ─────────────────────────────────
 // submitLogin resolves when the click is done, not when the application has signed anyone in. The old code
 // read the session state once at that instant and turned "not yet" into auth_rejected_by_app, whose comment
