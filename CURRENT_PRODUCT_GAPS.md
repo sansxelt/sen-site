@@ -105,33 +105,109 @@ should not.* Check this first.
 
 ## Ranked: what to do next
 
-**Before the YC demo**
-1. C1 — false Verified. Verify the four `repair_verified` mappings yourself; this is the product's core claim.
-2. B1 — the 500 on first derive.
-3. Finish the guarantee lifecycle (needs the Railway redeploy).
+**Updated 2026-07-27, after the demo push.** What changed is recorded in section D below rather than by
+editing the sections above, so the original assessment stays readable next to what it turned out to be.
 
 **Before external users**
-4. B2 — coverage gate on every launch path.
-5. C2 — `human_reviewed` without a human.
-6. C3 — worker resilience, particularly the un-reaped `analyzing` state and stranded escrow.
-7. C6 — the CLI and `/v1` create.
-8. C7 — the $10 vs $15 contradiction.
+1. B2 — coverage gate on every launch path (console launch and rerun still skip it).
+2. C2 — `human_reviewed` without a human.
+3. C3 — worker resilience. No longer theoretical: run d6be46e0 was claimed by two workers during a
+   redeploy, executed its flows twice, and lost its lease. Both halves of the C3 claim were observed.
+4. C6 — the CLI and `/v1` create.
+5. B1 — the 500 on first derive.
 
 **Can wait**
-9. C5 tenancy polish, B5, B4.
+6. C5 tenancy polish, B5, B4.
+
+---
+
+## D. What today changed, and what it cost to find out
+
+**The Verified baseline exists.** Run `5dc7f28e`, decision `ready`, guarantee `grt_c8110fd1`, plan version 5,
+hash `741ff923…`, reviewed plan `rvp_bdd07789`, contract `baef7f93`, no parent. The run's plan hash equals the
+guarantee's approved hash, so the evidence speaks to the live definition.
+
+### D1. C1 was half true, and the true half is fixed
+
+`passes/page.tsx` runPill and `deployments/page.tsx` verdictPill both mapped `repair_verified` to a green
+**Verified** while `toPublicDecision`, and therefore the API, the webhooks and the CI gate, called the same
+run blocked. Both also ignored `state`. Both now defer to the shared mapper, with 12 assertions holding it.
+
+The rest of the C1 claim was wrong: the third runPill already delegated correctly, and the API-runtime maps
+use a distinct `REPAIR VERIFIED` label rather than claiming Verified. Checking each is the only reason the
+third one still works.
+
+### D2. Seven defects, one shape
+
+Every one made Vraelis report working software as broken. None was visible in code review; each was decided
+in under a second by a browser.
+
+| what we got wrong | commit |
+|---|---|
+| looked for the session in cookies only, ignoring web storage | `415e3b69` |
+| asked whether the app was signed in 53ms after clicking submit | `d69558b7` |
+| looked for a control before the page had painted | `8a0b3579` |
+| treated an accessible name as text nodes only, so a placeholder-named field was "missing" | `8a0b3579` |
+| read the URL before the navigation happened | `b2ab1d70` |
+| read text before it was rendered | `b2ab1d70` |
+| planned from an empty product context, so signed-in claims were planned off the marketing page | `473dd287` |
+
+`assert_url` is the clearest proof of the class: the same step passed in 0ms on one run and failed as
+`url_mismatch` on the next, same plan, same application.
+
+### D3. The generator writes plans that cannot pass
+
+Six generated plans in a row were unrunnable: clicking an `<h2>` as a button, asserting text no element has,
+opening a gated page before signing in, asserting a note is still present after deleting it, starting a flow
+with `sign_in_as` on a blank page. Field contracts, the runner's actual behaviour and the absence of any
+"assert absent" action are now stated in the synthesis prompt.
+
+**`ops/plan-rehearse.ts` is the durable answer**: it executes every step of every flow against the live
+deployment and refuses to mint a plan that cannot pass. It belongs in the product, as a dry-run stage between
+prepare and approve.
+
+**Still open, and it is a false-Verified risk**: a plan asserts a FIXED value it wrote, so a record left by an
+earlier run satisfies the assertion on its own. A run against an application that had stopped saving would
+come back Verified. `ops/demo-reset-notes.ts` is a workaround. The fix is a per-run unique value, or plans
+that clean up after themselves.
+
+### D4. Billing, verified live rather than read
+
+All three plans mint a real Stripe session (`cs_live_`, HTTP 200). The credits top-up renders a live Payment
+Element for an arbitrary amount. A second plan is correctly refused.
+
+Two things were wrong and are fixed: `/credits` advertised **$10 per verification** while every charging path
+takes **$15** (the figure is computed from the catalog now), and the public pricing page listed three plans
+with **no way to buy any of them**. C7's "$10 vs $15" was real.
+
+Plan naming disagreed four ways for one account (`Scale_v1` / `Scale` / `Free plan` / `Free`). One function
+now, 27 behavioural assertions.
+
+### D5. Mobile
+
+The console drawer was **63px tall** on a phone, clipping 852px of content, so "Sign out" and "Back to site"
+could not be tapped: a `backdrop-filter` on the top bar made it the containing block for the drawer's
+`position: fixed`. All seven `/docs/*` pages had the same class of bug from `animation: … both`, whose filled
+transform keyframe computes to `matrix(1,0,0,1,0,0)` rather than `none`. Both verified fixed on production.
+
+`/developers` reports 73 elements wider than the viewport and is **correct** — they sit inside a `<pre>` with
+`overflow-x: auto`. Nearly "fixed" it.
 
 ---
 
 ## Is this exhaustive?
 
-**No, and I would not claim it.** It is the union of two broad sweeps and a day of live testing, which is
-enough to say the *shape* of the risk is now known: the dangerous concentration is in decision truth
-(C1, C2) and worker resilience (C3), not in missing features.
+**No.** Sections A to C were the union of two sweeps and a day of live testing. Section D is one more day,
+and its main finding is about method rather than any single defect: **everything that mattered was found by
+establishing the deployment's real behaviour by hand first, then asking of each step whether it could pass.**
+Nothing found these from the inside. The plans validated, the coverage gate passed, and the runs would have
+said Failed with a straight face.
 
-**Confidence:** high on section A (reproduced and guarded), high on B (I hit each one myself), **low to
-medium on C** — those are single-agent claims and the refutation stage returned no verdicts, so nothing in C
-has been adversarially checked.
+**Confidence:** high on A, B and D (each reproduced, each guarded, each guard mutation-tested). C is still
+single-agent claims except C1 and C7, which are now checked; C1 was half wrong and C7 was right.
 
-**What I could not verify:** anything requiring Railway access, Lovable access, Stripe dashboard state, or a
-paid run beyond the one I executed. The claims in C7 about live pricing pages and C8 about production env
-vars need a look at the deployed environment, not the source.
+**What is still unverified:** Railway's running commit was never confirmed directly — no CLI, no token, and
+`/health` carries no build id, so every statement about the worker is inferred from run behaviour. The
+aggregate test runner cannot complete on Windows (a libuv teardown crash at suite 12, pre-existing); the 80
+suites are run individually instead. `preflight-coverage-correction-verify.ts` fails 5/35 on a clean tree and
+is excluded from the runner as "calls a live model", so nobody sees it.
