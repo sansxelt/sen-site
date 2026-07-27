@@ -332,20 +332,46 @@ export class PlaywrightPreflightPage implements PreflightPage {
             const n = await this.page.getByText(want).count().catch(() => 0);
             return base(n > 0, n > 0 ? "text_present_pagewide" : "text_absent");
           }
+          // The same waiting rule as everything else here: a value that a client-rendered app is about to
+          // paint is not an absent value, and the target itself may not exist yet either. The SCOPE rule
+          // below is unchanged, so nothing new can satisfy the assertion; it just gets asked at a time when
+          // the answer can be right.
           const loc = this.page.getByText(target).first();
-          if ((await loc.count().catch(() => 0)) === 0) return base(false, "assert_target_not_found");
-          // Check the value in the target element's own text first. If the target is a LABEL or heading beside
-          // the value (e.g. a "Plan" heading next to "Current plan: Pro"), also check its IMMEDIATE container —
-          // which holds the value but not unrelated sections, so a sibling "Get Pro" upsell card stays excluded.
-          const ownText = (await loc.innerText().catch(() => "")) || "";
-          let ok = textPresentInScope(ownText, want);
-          if (!ok) {
-            const parentText = (await loc.locator("xpath=..").innerText().catch(() => "")) || "";
-            ok = textPresentInScope(parentText, want);
+          let ok = false;
+          let targetFound = false;
+          for (let i = 0; i < RESOLVE_WINDOW.attempts; i++) {
+            if ((await loc.count().catch(() => 0)) > 0) {
+              targetFound = true;
+              // Check the value in the target element's own text first. If the target is a LABEL or heading
+              // beside the value (e.g. a "Plan" heading next to "Current plan: Pro"), also check its
+              // IMMEDIATE container, which holds the value but not unrelated sections, so a sibling
+              // "Get Pro" upsell card stays excluded.
+              const ownText = (await loc.innerText().catch(() => "")) || "";
+              ok = textPresentInScope(ownText, want);
+              if (!ok) {
+                const parentText = (await loc.locator("xpath=..").innerText().catch(() => "")) || "";
+                ok = textPresentInScope(parentText, want);
+              }
+              if (ok) break;
+            }
+            if (i < RESOLVE_WINDOW.attempts - 1) await sleep(RESOLVE_WINDOW.delayMs);
           }
+          if (!targetFound) return base(false, "assert_target_not_found");
           return base(ok, ok ? "text_present" : "text_absent");
         }
-        case "assert_url": { const ok = this.page.url().includes(step.expect || ""); return base(ok, ok ? "url_match" : "url_mismatch"); }
+        case "assert_url": {
+          // A NAVIGATION IS NOT DONE WHEN THE CLICK THAT CAUSED IT RETURNS. This read the URL at the
+          // instant the previous step finished, so "click Sign out" then "assert_url /auth" was asking
+          // where the browser is before it has gone anywhere. It passed on one run at 0ms and failed on
+          // the next against the same application doing the same thing, which is the tell.
+          const want = (step.expect || "").trim();
+          let matched = this.page.url().includes(want);
+          for (let i = 0; !matched && i < RESOLVE_WINDOW.attempts; i++) {
+            await sleep(RESOLVE_WINDOW.delayMs);
+            matched = this.page.url().includes(want);
+          }
+          return base(matched, matched ? "url_match" : "url_mismatch");
+        }
         case "screenshot": { await this.page.screenshot({ fullPage: false }); return base(true, "screenshot"); }
         case "new_context": return base(true, "new_context_requested"); // handled at the session layer
         default: return base(false, "unsupported_action");

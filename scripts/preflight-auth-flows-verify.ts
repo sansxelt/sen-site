@@ -614,6 +614,30 @@ ok("static: worker.ts documents per-run credential scoping is what makes maxConc
   }
 }
 
+// ── AND NEITHER IS A NAVIGATION, OR A VALUE THE PAGE IS ABOUT TO PAINT ────────────────────────────────
+// assert_url read the URL at the instant the previous step returned, so "click Sign out" then
+// assert_url "/auth" asked where the browser was before it had gone anywhere. It passed on one run at
+// 0ms and failed on the next against the same application doing the same thing, which is the tell.
+{
+  const perform = browserbaseSrc.slice(browserbaseSrc.indexOf("async perform("));
+  const slice = (from: string, to: string, label: string) => {
+    const a = perform.indexOf(from), b = perform.indexOf(to, a + 1);
+    if (a === -1 || b === -1) { ok(`static: ${label} case found to check`, false); return ""; }
+    return perform.slice(a, b);
+  };
+  const urlCase = slice('case "assert_url": {', 'case "screenshot"', "assert_url");
+  ok("static: assert_url waits for the navigation instead of reading once",
+    urlCase.includes("!matched && i < RESOLVE_WINDOW.attempts"));
+  ok("static: assert_url still decides by the same substring rule", urlCase.includes("url().includes(want)"));
+
+  const textCase = slice('case "assert_text": {', 'case "assert_url": {', "assert_text");
+  ok("static: assert_text retries rather than judging the first paint",
+    textCase.includes("i < RESOLVE_WINDOW.attempts") && textCase.includes("await sleep(RESOLVE_WINDOW.delayMs)"));
+  ok("static: assert_text keeps its SCOPED rule, so waiting cannot widen what counts as a match",
+    textCase.includes("textPresentInScope(ownText, want)") && textCase.includes('locator("xpath=..")'));
+  ok("static: a target that never appears is still assert_target_not_found",
+    textCase.includes("assert_target_not_found"));
+}
 // ── A SIGN-IN IS NOT INSTANT, AND ASKING TOO EARLY IS NOT A REJECTION ─────────────────────────────────
 // submitLogin resolves when the click is done, not when the application has signed anyone in. The old code
 // read the session state once at that instant and turned "not yet" into auth_rejected_by_app, whose comment
