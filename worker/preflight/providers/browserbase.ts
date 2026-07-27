@@ -43,14 +43,50 @@ type PWPage = {
   on: (ev: string, cb: (a: unknown) => void) => void;
   context: () => PWContext; evaluate?: (fn: string) => Promise<unknown>;
 };
-type PWLocator = { first: () => PWLocator; locator: (s: string) => PWLocator; click: (o?: unknown) => Promise<void>; fill: (v: string, o?: unknown) => Promise<void>; selectOption: (v: string) => Promise<unknown>; check: (o?: unknown) => Promise<void>; uncheck: (o?: unknown) => Promise<void>; waitFor: (o?: unknown) => Promise<void>; isVisible: () => Promise<boolean>; textContent: () => Promise<string | null>; innerText: () => Promise<string>; count: () => Promise<number> };
+type PWLocator = { first: () => PWLocator; locator: (s: string) => PWLocator; filter: (o: unknown) => PWLocator; click: (o?: unknown) => Promise<void>; fill: (v: string, o?: unknown) => Promise<void>; selectOption: (v: string) => Promise<unknown>; check: (o?: unknown) => Promise<void>; uncheck: (o?: unknown) => Promise<void>; waitFor: (o?: unknown) => Promise<void>; isVisible: () => Promise<boolean>; textContent: () => Promise<string | null>; innerText: () => Promise<string>; count: () => Promise<number> };
 
-// Resolve a semantic target ("Create project") to a best-effort accessible locator, recording candidates.
-function resolve(page: PWPage, target: string): { locator: PWLocator; candidates: string[]; selected: string } {
-  const candidates = [`role=button[name=${target}]`, `text=${target}`, `label=${target}`];
-  // Prefer an accessible role match, then visible text, then a form label.
-  const locator = page.getByRole("button", { name: target }).first();
-  return { locator, candidates, selected: candidates[0] };
+// Resolve a semantic target ("Create project") to an accessible locator, recording what was tried.
+// THE FALSE FAILURE. This function used to build ONE locator — getByRole("button") — while reporting three
+// candidates as evidence of what it "considered", and types.ts described that array as "accessible-name
+// candidates the resolver considered". Nothing considered them. The comment described a fallback chain the
+// code did not have.
+//
+// A plain <a href> has the accessible role LINK, not button, so every anchor styled as a button was
+// unreachable and its step timed out. That is reported to a customer as "the flow stopped at step 2", which
+// reads as a defect in THEIR application. It is not: it is this resolver failing to look.
+//
+// Measured against the demo deployment, whose landing page is anchors styled as buttons:
+//   role=button[name="Create free account"]  ->  0 matches, click times out, verification FAILED
+//   role=link[name="Create free account"]    ->  1 match,  clicks, navigates to /auth?mode=signup
+// The same for "Sign in" and "See pricing". Three critical failures against an application that works.
+//
+// A false FAILED is the mirror of a false Verified and costs the same trust: the product told someone their
+// working software was broken, with evidence, three times.
+//
+// The chain is ordered, deterministic and INTERACTIVE-ONLY. Order matters because an accessible button is a
+// better answer than a link with the same name, and .first() keeps a repeat run on the same element. The
+// text fallback is deliberately restricted to elements that can actually be clicked: a bare getByText would
+// happily match a paragraph, the click would "succeed" against non-interactive copy, and a real failure
+// would turn into a false PASS — trading this defect for a worse one.
+const INTERACTIVE = "a, button, [role=button], [role=link], input[type=submit], input[type=button], summary";
+
+async function resolve(page: PWPage, target: string): Promise<{ locator: PWLocator; candidates: string[]; selected: string }> {
+  const attempts: { name: string; locator: PWLocator }[] = [
+    { name: `role=button[name=${target}]`, locator: page.getByRole("button", { name: target }).first() },
+    { name: `role=link[name=${target}]`, locator: page.getByRole("link", { name: target }).first() },
+    { name: `interactive:has-text=${target}`, locator: page.locator(INTERACTIVE).filter({ hasText: target }).first() },
+    { name: `label=${target}`, locator: page.getByLabel(target).first() },
+  ];
+  const candidates = attempts.map((a) => a.name);
+  for (const a of attempts) {
+    const n = await a.locator.count().catch(() => 0);
+    if (n === 0) continue;
+    if (!(await a.locator.isVisible().catch(() => false))) continue;   // a hidden duplicate is not the target
+    return { locator: a.locator, candidates, selected: a.name };
+  }
+  // Nothing matched. Return the button locator so the failure a customer sees is the same one as before:
+  // we looked for a control with this name and there was not one. Inventing a match here would be worse.
+  return { locator: attempts[0].locator, candidates, selected: attempts[0].name };
 }
 
 export class PlaywrightPreflightPage implements PreflightPage {
@@ -172,8 +208,8 @@ export class PlaywrightPreflightPage implements PreflightPage {
       switch (step.action) {
         case "navigate": await this.page.goto(step.target || step.value || "", { waitUntil: "domcontentloaded", timeout: step.timeoutMs ?? 30000 }); return base(true, "navigated");
         case "refresh": await this.page.reload({ waitUntil: "domcontentloaded" }); return base(true, "refreshed");
-        case "click": { const r = resolve(this.page, step.target || ""); await r.locator.click({ timeout: step.timeoutMs ?? 10000 }); return base(true, "clicked", { candidates: r.candidates, selected: r.selected }); }
-        case "fill": { const r = resolve(this.page, step.target || ""); await this.page.getByLabel(step.target || "").first().fill(step.value || "", { timeout: 10000 }).catch(async () => { await r.locator.fill(step.value || ""); }); return base(true, "filled"); }
+        case "click": { const r = await resolve(this.page, step.target || ""); await r.locator.click({ timeout: step.timeoutMs ?? 10000 }); return base(true, "clicked", { candidates: r.candidates, selected: r.selected }); }
+        case "fill": { const r = await resolve(this.page, step.target || ""); await this.page.getByLabel(step.target || "").first().fill(step.value || "", { timeout: 10000 }).catch(async () => { await r.locator.fill(step.value || ""); }); return base(true, "filled"); }
         case "select": await this.page.getByLabel(step.target || "").first().selectOption(step.value || ""); return base(true, "selected");
         case "check": await this.page.getByLabel(step.target || "").first().check(); return base(true, "checked");
         case "uncheck": await this.page.getByLabel(step.target || "").first().uncheck(); return base(true, "unchecked");

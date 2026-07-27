@@ -52,6 +52,7 @@ const SUITES: Suite[] = [
   { file: "scripts/preflight-auth-flows-verify.ts", npm: "auth:flows:test" },
   { file: "scripts/preflight-boundaries-verify.ts", npm: "boundaries:test" },
   { file: "scripts/preflight-browserbase-transport-verify.ts", npm: "preflight:transport:test" },
+  { file: "scripts/preflight-target-resolver-verify.ts" },
   { file: "scripts/preflight-command-center-verify.ts", npm: "command:center:test" },
   { file: "scripts/preflight-connect-verify.ts", npm: "preflight:connect:test" },
   { file: "scripts/preflight-connections-manage-verify.ts", npm: "connections:manage:test" },
