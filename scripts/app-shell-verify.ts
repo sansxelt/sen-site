@@ -63,6 +63,32 @@ ok("settings carries account, team, usage and billing",
   // Two entries pointing at one page is how a menu starts lying about how much is in it.
   const dupes = hrefs.filter((h, i) => hrefs.indexOf(h) !== i);
   ok("no two nav items share a destination", dupes.length === 0, dupes.join(", "));
+
+  // A PAGE MUST ANSWER TO THE NAME IT WAS CLICKED BY. Three pages did not: /systems said "Applications",
+  // /records said "Activity", /developers said "API & webhooks". Each is a rename that stopped halfway, and
+  // the effect is that clicking a word lands you somewhere that calls itself something else. Checked
+  // against the h1 that actually renders, since that is the thing a reader compares against the menu.
+  //
+  // The re-export pages are followed to their implementation, because that is where the heading lives.
+  const IMPL: Record<string, string> = {
+    "/app": "app/rank/app/page.tsx",
+    "/systems": "app/rank/app/applications/page.tsx",
+    "/verifications": "app/rank/app/passes/page.tsx",
+    "/records": "app/rank/app/activity/page.tsx",
+    "/developers": "app/rank/app/api/page.tsx",
+  };
+  const mismatched: string[] = [];
+  for (const g of Array.from(navBlock.matchAll(/href: "([^"]+)", label: "([^"]+)"/g))) {
+    const [, href, labelText] = g;
+    const file = IMPL[href] ?? (href === "/app" ? "app/rank/app/page.tsx" : `app/rank/app${href}/page.tsx`);
+    if (!existsSync(file)) continue;                       // settings pages are checked by their own suites
+    const src = readFileSync(file, "utf8");
+    const h1 = src.match(/<h1[^>]*>([^<{]+)<\/h1>/);
+    if (!h1) continue;                                     // no literal h1 to compare (dynamic heading)
+    const heading = h1[1].replace(/&amp;/g, "&").trim();
+    if (heading.toLowerCase() !== labelText.toLowerCase()) mismatched.push(`${labelText} -> "${heading}"`);
+  }
+  ok("every nav item opens a page that calls itself the same thing", mismatched.length === 0, mismatched.join(", "));
 }
 
 console.log("\n── nothing was deleted: every retired destination still resolves ──");

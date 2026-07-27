@@ -115,9 +115,12 @@ export default function ApiKeysPage() {
     <div className="wrap" style={{ maxWidth: 820, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
       <div className="phead">
         <div>
-          <p className="eyebrow">Developers</p>
-          <h1 className="display">API &amp; webhooks</h1>
-          <p>API keys and signed webhooks for your Vraelis integration. Launch verifications from CI, gate the deploy on the decision, and read the evidence back; usage analytics and webhook reliability are below.</p>
+          {/* The nav says Developers and this is what it opens, so this says Developers. The eyebrow used to
+              carry that word while the heading named two of the things on the page, which reads as a
+              different destination than the one that was clicked. The CLI is here too, and it is neither an
+              API nor a webhook. */}
+          <h1 className="display">Developers</h1>
+          <p>Operate Vraelis from CI, an agent or a terminal: API keys, the command line, and signed webhooks. Launch verifications, gate the deploy on the decision, and read the evidence back.</p>
         </div>
       </div>
 

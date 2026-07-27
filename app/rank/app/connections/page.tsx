@@ -187,7 +187,7 @@ export default function ConnectionsPage() {
   return (
     <div className="wrap" style={{ maxWidth: 900, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
       <p style={eyebrow}>Account</p>
-      <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "0 0 10px" }}>Connections</h1>
+      <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "0 0 10px" }}>Integrations</h1>
       <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.6, margin: "0 0 24px", maxWidth: 620 }}>
         Authorize a provider once for your whole account. Vraelis holds a read-only token, sealed with
         AES-256-GCM, never a password. Every application then uses it, choosing its own repo or project.

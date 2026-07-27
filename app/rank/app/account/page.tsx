@@ -48,7 +48,7 @@ export default async function AccountPage() {
       <div className="phead">
         <div>
           <p className="eyebrow">Account</p>
-          <h1 className="display">Your account</h1>
+          <h1 className="display">Account</h1>
         </div>
       </div>
 
