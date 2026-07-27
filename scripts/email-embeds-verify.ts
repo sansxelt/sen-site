@@ -6,6 +6,13 @@
 // travels furthest, so this keeps them pinned to the current one.
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { robotsMeta } from "../lib/stealth";
+
+// robotsMeta reads STEALTH_MODE at call time, so the behavioural assertions below can drive it both ways.
+// The original value is restored afterwards; nothing else in the suite depends on it, but a check that
+// leaves the environment changed is a check that breaks the next one.
+const stealthWas = process.env.STEALTH_MODE ?? "";
+const setStealth = (v: string) => { process.env.STEALTH_MODE = v; };
 
 let pass = 0, fail = 0;
 const ok = (n: string, c: boolean, d = "") => {
@@ -156,8 +163,43 @@ console.log("\n== the company describes itself once, and only when it is public 
     /X-Robots-Tag/.test(strip(proxySrc)) && /noindex, nofollow/.test(strip(proxySrc)));
   ok("that header is applied to rendered routes, not just one of them",
     (strip(proxySrc).match(/noindexWhileStealthed\(/g) ?? []).length >= 3);
-  ok("and the meta tag itself stops claiming otherwise",
-    /v6Public && !stealthConfigured\(\)/.test(strip(v6Layout)));
+  ok("and the meta tag itself stops claiming otherwise", /robotsMeta\(v6Public\)/.test(strip(v6Layout)));
+
+  // AND THE CENSUS THAT WOULD HAVE CAUGHT IT. Fixing the layout above was verified by asserting the layout's
+  // own source, which passed while the site went on serving index,follow: v6meta() in _system/meta.ts sets
+  // robots on twenty-six PAGES, and page metadata is deeper than layout metadata, so it won every time.
+  // og-meta.ts had a third copy of the same decision for the previous generation's pages.
+  //
+  // So the rule is now structural: exactly one function decides indexing, and no module may reach that
+  // conclusion by itself. A hardcoded noindex is exempt, because stealth only ever vetoes TOWARD noindex, so
+  // a page that has already opted out cannot be made to lie by it.
+  const walkAll = (dir: string, out: string[] = []): string[] => {
+    for (const e of readdirSync(dir)) {
+      if (e === "node_modules" || e === ".next") continue;
+      const p = join(dir, e);
+      if (statSync(p).isDirectory()) walkAll(p, out);
+      else if (/\.tsx?$/.test(e)) out.push(p.replace(/\\/g, "/"));
+    }
+    return out;
+  };
+  const forks: string[] = [];
+  for (const f of walkAll("app").concat(walkAll("lib"))) {
+    for (const m of strip(readFileSync(f, "utf8")).matchAll(/robots:\s*([\s\S]{0,60})/g)) {
+      const val = m[1];
+      if (/^\s*robotsMeta\(/.test(val)) continue;              // routed through the one decision
+      if (/^\s*\{\s*index:\s*false/.test(val)) continue;       // opted out already, cannot be made to lie
+      forks.push(`${f} → robots: ${val.split("\n")[0].trim().slice(0, 44)}`);
+    }
+  }
+  ok("every indexable page routes its robots through the one stealth-aware decision",
+    forks.length === 0, forks.join(" | "));
+
+  // Static reading is what let the last fix pass while the site stayed broken, so assert the BEHAVIOUR too.
+  ok("stealth vetoes a page that wants to be indexed", (setStealth("1"), robotsMeta(true).index === false));
+  ok("it vetoes follow as well, not just index", robotsMeta(true).follow === false);
+  ok("a page that opted out stays out when the curtain lifts", (setStealth(""), robotsMeta(false).index === false));
+  ok("and a public page indexes normally once it is off", robotsMeta(true).index === true);
+  setStealth(stealthWas);
 }
 
 

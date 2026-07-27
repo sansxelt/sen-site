@@ -4,7 +4,7 @@ import { GeistSans } from "geist/font/sans";
 import "./globals.css";
 
 import { cookies, headers } from "next/headers";
-import { stealthConfigured, verifyStealthCookie, STEALTH_COOKIE } from "../lib/stealth";
+import { stealthConfigured, robotsMeta, verifyStealthCookie, STEALTH_COOKIE } from "../lib/stealth";
 import { StealthScreen } from "./_components/stealth-screen";
 import { socialCard } from "../lib/social-card";
 import { entityJsonLd } from "../lib/entity";
@@ -50,7 +50,7 @@ const vraelisMetadata: Metadata = {
   // shows, which is a different job from a link preview.
   ...CARD,
   openGraph: { ...CARD.openGraph, type: "website", url: "https://vraelis.com" },
-  robots: { index: true, follow: true },
+  robots: robotsMeta(true),
 };
 
 export async function generateMetadata(): Promise<Metadata> {

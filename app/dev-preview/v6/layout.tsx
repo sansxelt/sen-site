@@ -7,7 +7,7 @@ import { auth } from "@/auth";
 import { V6_ORIGIN } from "./_system/meta";
 import { META_TITLE, META_DESCRIPTION, OG_TITLE } from "./_system/positioning";
 import { socialCard } from "@/lib/social-card";
-import { stealthConfigured } from "@/lib/stealth";
+import { robotsMeta } from "@/lib/stealth";
 
 const v6Public = process.env.NEXT_PUBLIC_VRAELIS_V6_PUBLIC === "1";
 
@@ -38,10 +38,9 @@ export const metadata: Metadata = {
   // AND NOT WHILE THE CURTAIN IS DOWN. This flipped on the promotion flag alone, and because nested
   // segment metadata wins in Next, it overrode the root layout's stealth noindex: every page told crawlers
   // to index a document whose entire body was "Not open yet." The header set in proxy.ts is the catch-all;
-  // this stops the meta tag itself from saying something untrue.
-  robots: v6Public && !stealthConfigured()
-    ? { index: true, follow: true }
-    : { index: false, follow: false },
+  // this stops the meta tag itself from saying something untrue. The stealth veto lives in robotsMeta, not
+  // here: writing it out a second time is how the per-page helper came to disagree with this layout.
+  robots: robotsMeta(v6Public),
   alternates: { canonical: `${V6_ORIGIN}/` },
   ...socialCard(OG_TITLE),
   openGraph: {

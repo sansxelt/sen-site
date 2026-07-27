@@ -39,6 +39,24 @@ export function stealthConfigured(): boolean {
   return (process.env.STEALTH_MODE ?? "").trim() === "1";
 }
 
+/** THE ONE PLACE THAT DECIDES WHETHER A PAGE MAY BE INDEXED.
+ *
+ *  `wanted` is the page's own preference. Stealth vetoes it, and only ever in the noindex direction, so a
+ *  page that wants to be hidden stays hidden whether or not the curtain is down.
+ *
+ *  This exists because the decision was made independently in three places: the root layout, the v6 layout,
+ *  and the two per-page metadata helpers. Metadata in Next merges by depth and the DEEPEST wins, so the
+ *  per-page helpers silently overrode both layouts. Every page therefore served a real title, a real
+ *  description and index,follow over a body that read "Not open yet." Fixing the layout alone looked correct
+ *  in the diff and changed nothing on the site, which is exactly what a duplicated decision buys you.
+ *
+ *  proxy.ts sets X-Robots-Tag as the catch-all, because a response header cannot be overridden by document
+ *  metadata at any depth. This function stops the tag from disagreeing with it. */
+export function robotsMeta(wanted: boolean): { index: boolean; follow: boolean } {
+  const allowed = wanted && !stealthConfigured();
+  return { index: allowed, follow: allowed };
+}
+
 function signingKey(): string {
   return process.env.VRAELIS_SECRET_KEY || process.env.AUTH_SECRET || "stealth-fallback-key";
 }

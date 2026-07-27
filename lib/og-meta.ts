@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SOCIAL_DESCRIPTION, SOCIAL_IMAGE, socialCard } from "./social-card";
+import { robotsMeta } from "./stealth";
 
 // Page metadata for the public marketing pages.
 //
@@ -41,7 +42,10 @@ export function ogMeta({
     alternates: { canonical: url },
     openGraph: { ...card.openGraph, type: "website", url },
     twitter: card.twitter,
-    robots: { index, follow: index },
+    // The caller's preference, vetoed by stealth. These are the PREVIOUS generation's marketing pages, which
+    // are the public site until V6 is promoted, so they index normally; they just must not do so from behind
+    // the curtain.
+    robots: robotsMeta(index),
   };
 }
 
