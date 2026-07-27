@@ -315,5 +315,55 @@ ok("POST derives the flow role from its steps (flowRoles), not the client body",
 ok("PATCH re-derives the role from edited steps, never the client body",
   /derivedRole = flowRoles\(v\.steps\)\[0\]/.test(flowsRoute) && !/role:\s*body\?\.role !== undefined/.test(flowsRoute));
 
+// ── a journey that needs a session must DECLARE it ────────────────────────────────────────────────────
+//
+// The worker's whole authenticated-journey apparatus hangs off the semantic auth actions: a launch-time
+// readiness refusal before any money moves, and an auth_config_failed state that carries no severity and
+// opens no issue. A flow that signs in by TYPING bypasses all of it, so nothing knows authentication was
+// attempted and nothing checks it worked.
+//
+// A guarantee about note persistence produced exactly that journey against an app requiring email
+// confirmation. The sign-in silently did not happen, the rest ran as an anonymous visitor, and the run was
+// published as the application failing to provide a Save control. The verifier had no basis to judge the
+// guarantee and blamed the customer's software instead.
+console.log("\n── a journey that needs a session must declare it ──");
+{
+  const V = (steps: unknown[], roles: string[] = []) => validateSteps(steps, { rolesAvailable: roles });
+
+  const typed = V([
+    { action: "navigate", target: "/auth" },
+    { action: "fill", target: "email", value: "u@example.com" },
+    { action: "fill", target: "password", value: "hunter2000" },
+    { action: "click", target: "Sign in" },
+  ]);
+  ok("typing a password without declaring a role is refused", !typed.ok);
+  ok("the refusal names the step and points at Connections",
+    !typed.ok && /Step 3/.test(typed.reason) && /Connections/.test(typed.reason));
+  ok("the refusal explains the consequence, not just the rule",
+    !typed.ok && /report a signed-out page as a defect in your app/.test(typed.reason));
+
+  ok("a differently named password field is caught too",
+    !V([{ action: "fill", target: "Passcode", value: "123456" }]).ok);
+
+  ok("declaring a role is accepted", V([
+    { action: "sign_in_as", target: "member" },
+    { action: "verify_authenticated" },
+    { action: "fill", target: "note title", value: "n" },
+  ], ["member"]).ok);
+
+  // THE FALSE POSITIVE THAT MATTERS: a journey may legitimately exercise the sign-in FORM without ever
+  // needing a session. Refusing that would block a whole class of honest checks, so clicking a control named
+  // "Sign in" is deliberately not enough to refuse - only typing a password is.
+  ok("exercising the sign-in form without a session is still allowed", V([
+    { action: "navigate", target: "/auth" },
+    { action: "click", target: "Sign in" },
+    { action: "assert_visible", target: "Email" },
+  ]).ok);
+  ok("an ordinary fill is unaffected", V([
+    { action: "navigate", target: "/" },
+    { action: "fill", target: "note title", value: "hello" },
+  ]).ok);
+}
+
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);

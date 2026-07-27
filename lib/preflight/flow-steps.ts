@@ -176,6 +176,33 @@ export function validateSteps(rawSteps: unknown, opts: { rolesAvailable: string[
     out.push(step);
   }
 
+  // A JOURNEY THAT NEEDS A SESSION MUST DECLARE IT.
+  //
+  // The worker has a complete apparatus for authenticated journeys: a launch-time readiness check that
+  // refuses before any money moves when a role has no usable credential, and an auth_config_failed flow
+  // state that carries no severity, opens no issue, and softens the run rather than blaming the customer.
+  // All of it hangs off the semantic auth actions. A flow that signs in by TYPING bypasses every piece of
+  // it, so nothing knows authentication was attempted and nothing checks that it worked.
+  //
+  // That is not theoretical. A guarantee about note persistence produced a journey that filled an email
+  // field and clicked Sign in against an app requiring email confirmation. The sign-in silently did not
+  // happen, the remaining steps ran as an anonymous visitor, and the run was published as the application
+  // failing to provide a Save control. The verifier had no basis to judge the guarantee at all, and said
+  // the customer's software was broken instead.
+  //
+  // Filling a password field is the unambiguous signal. A journey may legitimately exercise the sign-in
+  // FORM without a session (checking the fields render), so clicking a control named "Sign in" is not
+  // enough to refuse; typing a password is, because a real session is the only reason to do it.
+  if (!out.some((s) => ROLE_ACTIONS.has(s.action))) {
+    const typed = out.findIndex((s) => s.action === "fill" && /pass\s*(word|code)?|pwd|secret/i.test(s.target ?? ""));
+    if (typed >= 0) {
+      return {
+        ok: false,
+        reason: `Step ${typed + 1}: this journey signs in by typing a password, so Vraelis cannot confirm the sign-in worked and would report a signed-out page as a defect in your app. Add the test account under Connections and sign in by role instead.`,
+      };
+    }
+  }
+
   return { ok: true, steps: out };
 }
 
