@@ -68,15 +68,38 @@ export function executedTargetMismatch(runTarget: string | null | undefined, exe
 // "In progress" still surfaces), else the newest completed FULL-coverage run WITH a launch decision, else
 // the newest run of any state (honest fallback for empty histories). Runs finalized before coverage was
 // recorded (no summary.coverage) executed their whole contract, so they count as full.
-export type HealthRunLike = { state: string; decision: string | null; created_at: string; summary?: Record<string, unknown> | null };
+export type HealthRunLike = {
+  state: string; decision: string | null; created_at: string; summary?: Record<string, unknown> | null;
+  /** Set when this verdict was produced by a defect in the VERIFIER rather than by the software under test
+   *  (migration 24). The verdict is preserved exactly; it simply stops counting. */
+  invalidated_at?: string | null;
+};
 const ACTIVE_STATES = new Set(["queued", "discovering", "running", "analyzing"]);
+
+/** A run whose verdict came from our own defect is not evidence about the customer's software.
+ *
+ *  This is the ONE definition of "does this run still count", and it is deliberately separate from the
+ *  verdict: state and decision keep whatever they said, because a record that changes retroactively is worth
+ *  less than one that is wrong but honest. What invalidation removes is standing, not history. */
+export function isInvalidatedRun(r: Pick<HealthRunLike, "invalidated_at">): boolean {
+  return Boolean(r.invalidated_at);
+}
+
 export function isLaunchHealthCandidate(r: HealthRunLike): boolean {
+  if (isInvalidatedRun(r)) return false;
   return r.state === "completed" && r.decision != null && r.decision !== "repair_verified"
     && (r.summary?.coverage ?? "full") !== "partial";
 }
+
 export function pickHealthRun<T extends HealthRunLike>(runsNewestFirst: T[]): T | undefined {
-  if (!runsNewestFirst.length) return undefined;
-  const newest = runsNewestFirst[0];
+  // Invalidated runs are removed before anything else is considered, including the honest-fallback branch.
+  // Leaving them in the fallback is how the defect would survive the fix: an application whose ONLY runs
+  // were invalidated would still report the verdict those runs produced, which is the precise claim we
+  // established was untrue. With nothing valid left, the truthful answer is that there is no current
+  // verdict, so this returns undefined and the surfaces render "not verified yet" rather than a stale FAILED.
+  const valid = runsNewestFirst.filter((r) => !isInvalidatedRun(r));
+  if (!valid.length) return undefined;
+  const newest = valid[0];
   if (ACTIVE_STATES.has(newest.state) && !newest.decision) return newest;
-  return runsNewestFirst.find(isLaunchHealthCandidate) ?? newest;
+  return valid.find(isLaunchHealthCandidate) ?? newest;
 }

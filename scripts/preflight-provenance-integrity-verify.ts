@@ -574,8 +574,32 @@ ok("the rollback drops and re-adds the one constraint the restored state violate
     ok("23 gives the reviewed plan its own guarantee link, replacing the claim-text coincidence",
       /alter table v_reviewed_plans add column if not exists guarantee_id/.test(m23));
   }
-  ok("nothing above 23 has appeared unreviewed",
-    !sqlDir.some((f) => /^vraelis-preflight-2[4-9]/.test(f)));
+  // ── 24: a verdict can be invalidated without being rewritten ───────────────────────────────────────
+  {
+    const f24 = sqlDir.find((f) => /^vraelis-preflight-24-/.test(f));
+    ok("24 exists", !!f24);
+    const m24 = f24 ? readFileSync(join(ROOT, "sql", f24), "utf8") : "";
+    const body24 = m24.replace(/^--.*$/gm, "");
+    ok("24 is additive only", /alter table [\w.]+\s+add column if not exists/i.test(m24)
+      && !/^\s*(drop|delete|truncate)\s/im.test(body24));
+    // THE PROPERTY THIS MIGRATION EXISTS FOR: a run's verdict is history. Invalidation removes its standing,
+    // never its content, so nothing here may write state, decision, summary or evidence.
+    ok("24 never rewrites a verdict", !/^\s*update\s+/im.test(body24)
+      && !/\b(set\s+(state|decision|summary)\b)/i.test(body24));
+    ok("24 backfills nothing (invalidating a run is an explicit act, never inferred by a migration)",
+      !/^\s*update\s+public\.v_preflight_runs/im.test(body24));
+    ok("24 adds no foreign key", !/references\s+/i.test(body24));
+    ok("24 carries a rollback", /rollback/i.test(m24) && /drop column if exists/.test(m24));
+    for (const col of ["invalidated_at", "invalidated_reason", "invalidated_by", "invalidated_ref"]) {
+      ok(`24 adds ${col}`, new RegExp(`add column if not exists\\s+${col}`).test(m24));
+    }
+    // Attribution is the difference between a correction and a quiet edit.
+    ok("24 requires the act to be attributable and checkable",
+      /invalidated_by/.test(m24) && /invalidated_ref/.test(m24));
+  }
+
+  ok("nothing above 24 has appeared unreviewed",
+    !sqlDir.some((f) => /^vraelis-preflight-2[5-9]/.test(f)));
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

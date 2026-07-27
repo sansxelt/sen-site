@@ -95,7 +95,32 @@ export async function listAllIssues(owner: string, opts: { status?: "open" | "re
   }
   const { data, error } = await q;
   if (error || !data) return [];
-  const rows = data as Record<string, unknown>[];
+  let rows = data as Record<string, unknown>[];
+
+  // AN ISSUE IS ONLY AS GOOD AS THE RUN THAT SAW IT. When a verdict is invalidated because Vraelis's own
+  // defect produced it, the findings that verdict generated are invalidated with it: they describe our bug,
+  // not the customer's software. Leaving them would keep the same false story on the dashboard through a
+  // different surface, since the critical counts and the needs-attention list are built from issues rather
+  // than from runs.
+  //
+  // Keyed on last_seen_run, the run that most recently OBSERVED the issue. An issue seen again by a valid
+  // later run is real and stays, even if some earlier sighting was invalidated.
+  const seenRuns = [...new Set(rows.map((r) => String(r.last_seen_run ?? "")).filter(Boolean))];
+  if (seenRuns.length) {
+    const inv = await db().from("v_preflight_runs").select("id")
+      .eq("user_id", norm(owner)).in("id", seenRuns).not("invalidated_at", "is", null);
+    // Pre-migration the column does not exist and the query errors; nothing is excluded, which is exactly
+    // the behaviour before invalidation existed.
+    if (inv.error) {
+      if (/invalidated_at/i.test(inv.error.message ?? "")) {
+        console.warn("listAllIssues: v_preflight_runs.invalidated_at is missing. Apply sql/vraelis-preflight-24-run-invalidation.sql (migration 24). Verifier-defect findings will still be counted.");
+      }
+    } else {
+      const dead = new Set(((inv.data as { id: string }[] | null) ?? []).map((r) => r.id));
+      if (dead.size) rows = rows.filter((r) => !dead.has(String(r.last_seen_run ?? "")));
+    }
+  }
+
   const names = await appNames(owner, rows.map((r) => String(r.application_id ?? "")));
   return rows.map((r) => ({
     id: String(r.id), applicationId: String(r.application_id ?? ""),

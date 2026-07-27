@@ -68,6 +68,8 @@ export type TestFlow = {
 export type RunSummary = {
   id: string; application_id: string; state: string; decision: string | null; summary: Record<string, unknown>;
   deployment_url: string | null; commit_sha: string | null; created_at: string; completed_at: string | null;
+  /** Migration 24. Set when the verdict came from a verifier defect: preserved, but no longer counted. */
+  invalidated_at?: string | null;
 };
 
 export type NewApplication = { name: string; appUrl: string; builder?: string; repo?: string; sourcePrompt?: string; ownershipConfirmed: boolean; workspaceId?: string | null };
@@ -811,9 +813,20 @@ export async function listRuns(userId: string, applicationId: string, limit = 20
 export async function latestRunByApp(userId: string, appIds: string[]): Promise<Record<string, RunSummary>> {
   if (!isDatabaseConfigured() || !appIds.length) return {};
   const filter = webRuntimeFilter(await apiTargetIdsForOwner(userId));
-  let q = db().from("v_preflight_runs").select("id,application_id,state,decision,summary,deployment_url,commit_sha,created_at,completed_at").eq("user_id", norm(userId)).in("application_id", appIds);
-  if (filter) q = q.or(filter);
-  const { data } = await q.order("created_at", { ascending: false });
+  // invalidated_at is additive (migration 24) and a missing column fails the WHOLE select, which would take
+  // the dashboard's health with it. Ask for it, and fall back to the pre-migration columns on a column
+  // error: without it every run simply reads as valid, which is exactly the old behaviour.
+  const BASE = "id,application_id,state,decision,summary,deployment_url,commit_sha,created_at,completed_at";
+  const build = (cols: string) => {
+    let q = db().from("v_preflight_runs").select(cols).eq("user_id", norm(userId)).in("application_id", appIds);
+    if (filter) q = q.or(filter);
+    return q.order("created_at", { ascending: false });
+  };
+  let { data, error } = await build(`${BASE},invalidated_at`);
+  if (error && /invalidated_at/i.test(error.message ?? "")) {
+    console.warn("latestRunByApp: v_preflight_runs.invalidated_at is missing. Apply sql/vraelis-preflight-24-run-invalidation.sql (migration 24). Verifier-defect runs will still count toward health.");
+    ({ data } = await build(BASE));
+  }
   // Application HEALTH comes from pickHealthRun, never "newest terminal row": the newest ACTIVE run still
   // surfaces as in-progress, but a failed / invalidated run (e.g. a harness target_mismatch) can never
   // displace the newest VALID completed decision.

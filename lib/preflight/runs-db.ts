@@ -64,6 +64,8 @@ export type RunHeader = {
   // Provenance extras behind additive migrations 3 + 4; null when unmigrated. selected_flow_ids is the
   // run snapshot's authoritative flow selection (what "Targeted rerun — 2 flows selected" reads).
   parent_run_id: string | null;
+  /** Migration 24: set when this verdict came from a verifier defect. The verdict itself is untouched. */
+  invalidation?: RunInvalidation | null;
   selected_flow_ids: string[] | null;
 };
 export type RunIssue = {
@@ -72,6 +74,9 @@ export type RunIssue = {
   likely_cause: string | null; confidence: number | null; suggested_areas: string | null; repair_prompt: string | null;
   status: string; first_seen_run: string | null; last_seen_run: string | null; resolved_run: string | null;
 };
+/** Why a preserved verdict no longer counts. Never a change to the verdict: only to its standing. */
+export type RunInvalidation = { at: string; reason: string | null; by: string | null; ref: string | null };
+
 export type RunDetail = { run: RunHeader; flows: RunFlow[]; issues: RunIssue[] };
 
 const SEVERITY_RANK: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
@@ -93,12 +98,37 @@ export async function getRun(owner: string, runId: string): Promise<RunDetail | 
   // pre-migration schema only loses these fields (data null on the column error), never the whole payload.
   let parentRunId: string | null = null;
   let selectedFlowIds: string[] | null = null;
+  let invalidation: RunInvalidation | null = null;
+  // Migration 24's invalidation fields ride the same read for the same reason: a missing column must cost
+  // these fields, never the whole record.
   const { data: extras } = await db().from("v_preflight_runs")
-    .select("parent_run_id, flow_ids").eq("user_id", uid).eq("id", runId).maybeSingle();
-  const ex = extras as { parent_run_id?: string | null; flow_ids?: unknown } | null;
+    .select("parent_run_id, flow_ids, invalidated_at, invalidated_reason, invalidated_by, invalidated_ref")
+    .eq("user_id", uid).eq("id", runId).maybeSingle();
+  const ex = extras as {
+    parent_run_id?: string | null; flow_ids?: unknown;
+    invalidated_at?: string | null; invalidated_reason?: string | null; invalidated_by?: string | null; invalidated_ref?: string | null;
+  } | null;
   if (ex) {
     parentRunId = (ex.parent_run_id as string) ?? null;
     selectedFlowIds = Array.isArray(ex.flow_ids) ? (ex.flow_ids as unknown[]).map(String) : null;
+    if (ex.invalidated_at) {
+      invalidation = {
+        at: ex.invalidated_at,
+        reason: ex.invalidated_reason ?? null,
+        by: ex.invalidated_by ?? null,
+        ref: ex.invalidated_ref ?? null,
+      };
+    }
+  } else {
+    // The combined select failed (pre-migration 24). Fall back to the fields that predate it, so a record
+    // does not lose its parent link just because invalidation has not been migrated yet.
+    const { data: legacy } = await db().from("v_preflight_runs")
+      .select("parent_run_id, flow_ids").eq("user_id", uid).eq("id", runId).maybeSingle();
+    const lg = legacy as { parent_run_id?: string | null; flow_ids?: unknown } | null;
+    if (lg) {
+      parentRunId = (lg.parent_run_id as string) ?? null;
+      selectedFlowIds = Array.isArray(lg.flow_ids) ? (lg.flow_ids as unknown[]).map(String) : null;
+    }
   }
 
   // Flow runs (owner-scoped), stable oldest-first. observed carries the sanitized evidence + the S6 auth
@@ -155,7 +185,7 @@ export async function getRun(owner: string, runId: string): Promise<RunDetail | 
     summary: (rr.summary as Record<string, unknown>) ?? {}, deployment_url: (rr.deployment_url as string) ?? null,
     commit_sha: (rr.commit_sha as string) ?? null, created_at: String(rr.created_at ?? ""), completed_at: (rr.completed_at as string) ?? null,
     failure_code: (rr.failure_code as string) ?? null,
-    parent_run_id: parentRunId, selected_flow_ids: selectedFlowIds,
+    parent_run_id: parentRunId, selected_flow_ids: selectedFlowIds, invalidation,
   };
   return { run, flows, issues };
 }

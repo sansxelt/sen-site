@@ -571,6 +571,25 @@ export default async function VerificationResultPage({ params }: { params: Promi
         </div>
       </header>
 
+      {/* INVALIDATED BY A VERIFIER DEFECT. The verdict above is preserved exactly as it was issued, because
+          a record that changes retroactively is worth less than one that is wrong but honest. What this
+          says is that it no longer counts, and why. Placed above the evidence so nobody reads the findings
+          as facts about their software before learning the run was ours. */}
+      {run.invalidation ? (
+        <div role="note" style={{ marginTop: 20, border: "1px solid var(--wait-line)", background: "var(--wait-wash)", borderRadius: "var(--r-md, 10px)", padding: "clamp(14px, 2vw, 20px)", display: "grid", gap: 8 }}>
+          <div style={{ ...label, color: "var(--wait-ink)" }}>Invalidated (verifier defect)</div>
+          <p style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.55, margin: 0, maxWidth: "68ch" }}>
+            {run.invalidation.reason ?? "This result was produced by a defect in Vraelis, not by the software under test."}
+          </p>
+          <p style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>
+            The decision and evidence below are kept exactly as they were issued, and are no longer counted toward this
+            system&apos;s current state, its open issues, or any guarantee.
+            {run.invalidation.ref ? <> Defect reference {run.invalidation.ref}.</> : null}
+            {run.invalidation.by ? <> Recorded by {run.invalidation.by}.</> : null}
+          </p>
+        </div>
+      ) : null}
+
       <div style={{ display: "grid", gap: "clamp(20px, 3vw, 30px)", marginTop: "clamp(20px, 3vw, 30px)" }}>
 
         {/* ── 02 SUBMITTED CLAIM — the outcome this verification checked. It is contract.source_prompt (the
