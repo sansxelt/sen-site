@@ -144,6 +144,59 @@ export async function findLivePendingPlanForClaim(owner: string, deploymentUrl: 
   } catch { return null; }
 }
 
+// ── The review queue ──────────────────────────────────────────────────────────────────────────────────────
+//
+// Every plan this tenant has minted that is still WAITING FOR A PERSON: pending approval, not yet consumed,
+// and not past its expiry. A read, not a new capability — the rows, the states and the expiry rule already
+// exist; nothing had ever listed them, so the one place a human decision is owed was invisible.
+//
+// EXPIRY IS PART OF "PENDING". approveReviewedPlan refuses a plan past expires_at, so an expired row is not
+// awaiting anyone: showing it in a review queue would put an item in front of a person that they cannot act
+// on, which is worse than an empty queue. The filter is applied in SQL so the count and the list agree.
+export type PendingReviewRow = {
+  id: string; claim: string; deploymentUrl: string; createdAt: string; expiresAt: string;
+  requirements: number; flows: number;
+};
+
+// nowMs defaults here rather than at the call sites: reading the clock inside a React component trips the
+// purity rule, and the expiry comparison belongs beside the query that uses it in any case. Callers that
+// need a fixed clock (tests) can still pass one.
+export async function listPendingReviews(owner: string, nowMs: number = Date.now(), limit = 50): Promise<PendingReviewRow[]> {
+  if (!isDatabaseConfigured()) return [];
+  try {
+    const s = getSupabaseAdminClient();
+    const r = await s.from(TABLE as never)
+      .select("id,claim,deployment_url,created_at,expires_at,plan")
+      .eq("user_id", norm(owner))
+      .eq("approval_state", "pending")
+      .eq("execution_state", "unconsumed")
+      .gt("expires_at", new Date(nowMs).toISOString())
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (r.error) return [];
+    return ((r.data as unknown as { id: string; claim: string; deployment_url: string; created_at: string; expires_at: string; plan: PlannedVerification }[] | null) ?? [])
+      .map((d) => ({
+        id: d.id,
+        claim: d.claim ?? "",
+        deploymentUrl: d.deployment_url ?? "",
+        createdAt: d.created_at,
+        expiresAt: d.expires_at,
+        // Counted from the stored plan itself, which is the artifact under review. Not stored separately,
+        // because a count that can disagree with the thing it counts is a count nobody should trust.
+        requirements: (d.plan?.requirements ?? []).length,
+        flows: (d.plan?.flows ?? []).length,
+      }));
+  } catch { return []; }
+}
+
+/** Whether a plan's approval window has closed. The clock lives here rather than in the page, both because
+ *  reading it during render trips the purity rule and because "expired" is a rule about reviewed plans, not
+ *  a detail of one screen. */
+export function reviewedPlanExpired(expiresAt: string, nowMs: number = Date.now()): boolean {
+  const t = new Date(expiresAt).getTime();
+  return Number.isFinite(t) ? t <= nowMs : false;
+}
+
 // The full row for display (state, coverage, approver, timestamps) — safe fields only, owner-scoped.
 export async function getReviewedPlanView(owner: string, id: string): Promise<Row | null> {
   if (!isDatabaseConfigured() || !id) return null;

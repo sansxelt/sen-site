@@ -183,6 +183,25 @@ export async function getGuarantee(owner: string, id: string): Promise<Guarantee
   return data ? rowToGuarantee(data as Record<string, unknown>) : null;
 }
 
+// Every guarantee this tenant holds ACROSS the given systems, newest first.
+//
+// listGuarantees is per-application, which is right for a system page and wrong for the Guarantees map: the
+// console had no way to answer "what has this company promised", only "what has this one system promised".
+// One `in` query rather than a fan-out, so the cost does not grow with the number of systems.
+//
+// Owner-scoped like every read here. The caller passes the application ids the signed-in MEMBER can see
+// (listApplicationsForMember), so a teammate's view is bounded by the systems shared with them and never by
+// this function's own idea of tenancy.
+export async function listGuaranteesForApps(owner: string, applicationIds: string[], includeArchived = false): Promise<Guarantee[]> {
+  if (!isDatabaseConfigured() || applicationIds.length === 0) return [];
+  let q = db().from("v_guarantees")
+    .select(GUARANTEE_COLUMNS).eq("user_id", norm(owner)).in("application_id", applicationIds);
+  if (!includeArchived) q = q.eq("status", "active");
+  const { data, error } = await q.order("created_at", { ascending: false });
+  if (error) { if (missingGuaranteesTable(error)) warnUnmigrated("listGuaranteesForApps"); return []; }
+  return ((data as Record<string, unknown>[] | null) ?? []).map(rowToGuarantee);
+}
+
 // A system's active guarantees, newest first. Empty when unmigrated. Pass includeArchived to list archived too.
 export async function listGuarantees(owner: string, applicationId: string, includeArchived = false): Promise<Guarantee[]> {
   if (!isDatabaseConfigured()) return [];

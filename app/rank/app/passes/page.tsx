@@ -5,6 +5,7 @@ import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "../applications/setup-required";
 import { listAllRuns, type PassRow } from "@/lib/preflight/overview-db";
 import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
+import { runVerdict } from "@/lib/preflight/home-verdict";
 
 export const metadata: Metadata = { title: "Verification" };
 
@@ -33,18 +34,37 @@ const RUNNING_LABELS: Record<string, string> = {
   queued: "Queued", discovering: "Discovering", running: "Running", analyzing: "Analyzing",
 };
 
-// Decision/state -> pill label + tones. The label always accompanies the colour, so status is never
-// conveyed by colour alone.
-function passStyle(p: PassRow): { label: string; color: string; bg: string; border: string } {
-  switch (p.decision) {
-    case "ready": return { label: "Verified", color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" };
-    case "repair_verified": return { label: "Verified", color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" };
-    case "needs_review": return { label: "Blocked", color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "var(--wait-line)" };
-    case "blocked": return { label: "Failed", color: "var(--stop-ink)", bg: "var(--stop-wash)", border: "var(--stop-line)" };
-    default:
-      return { label: RUNNING_LABELS[p.state] ?? "In progress", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };
-  }
+// A FALSE VERIFIED LIVED HERE.
+//
+// This function used to be a SECOND decision translator, switching on p.decision alone. It got two things
+// wrong, and both produced the one error this company exists to prevent:
+//
+//   1. repair_verified rendered as a green "Verified". The canonical translator maps repair_verified to
+//      BLOCKED, because a targeted repair passing is not the same as the system being proven. So the same
+//      run read Verified here and Blocked on the Overview.
+//   2. It ignored run state entirely. A run that FAILED or was CANCELLED while carrying decision='ready'
+//      rendered as a pass, when toPublicDecision refuses any non-completed state outright.
+//
+// There is now one translator. runVerdict delegates to toPublicDecision, so this page cannot disagree with
+// the Overview, the system page, or the API about what happened.
+const TONE: Record<string, { color: string; bg: string; border: string }> = {
+  verified: { color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" },
+  failed: { color: "var(--stop-ink)", bg: "var(--stop-wash)", border: "var(--stop-line)" },
+  blocked: { color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "var(--wait-line)" },
+  progress: { color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" },
+  unproven: { color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" },
+};
+
+function passStyle(p: PassRow): { label: string; color: string; bg: string; border: string; tone: string } {
+  const v = runVerdict(p.state, p.decision);
+  return { label: v.label, tone: v.tone, ...TONE[v.tone] };
 }
+
+// The ink a count wears, keyed by the section it summarises. Only the three public verdicts get a colour;
+// Running and Not yet verified are states, not conclusions, so they stay neutral.
+const CHIP_INK: Record<string, string | undefined> = {
+  Failed: "var(--stop-ink)", Blocked: "var(--wait-ink)", Verified: "var(--go-ink)",
+};
 
 function StatChip({ label, value, color }: { label: string; value: number; color?: string }) {
   return (
@@ -63,7 +83,9 @@ function PassLine({ pass }: { pass: PassRow }) {
       href={`/applications/${pass.applicationId}/passes/${pass.id}`}
       style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 16px", textDecoration: "none", color: "inherit" }}
     >
-      <span className="pill" style={{ fontSize: 10, color: st.color, background: st.bg, borderColor: st.border, flex: "none" }}><DecisionMark decision={pass.decision} />{st.label}</span>
+      {/* The mark is driven by the PUBLIC tone, not the raw decision: a repair_verified row reads Blocked,
+          so it must not carry the verified-repair wrench beside that word. */}
+      <span className="pill" style={{ fontSize: 10, color: st.color, background: st.bg, borderColor: st.border, flex: "none" }}><DecisionMark decision={st.tone} />{st.label}</span>
       <span style={{ fontWeight: 600, fontSize: 14, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: "0 1 auto", minWidth: 0 }}>
         {pass.applicationName || "Untitled application"}
       </span>
@@ -107,22 +129,20 @@ export default async function PassesPage() {
   if (!(await preflightDbReady())) return <SetupRequired />;
   const passes = await listAllRuns(owner, 60);
 
+  // GROUPED BY THE PUBLIC VERDICT, not by the internal decision string. The sections used to filter on raw
+  // decisions, which is how "Verified (targeted rerun)" came to exist as a green heading for runs the rest
+  // of the product calls Blocked. Now the heading a row sits under and the pill it wears are computed from
+  // the same call, so they cannot drift apart.
   const running = passes.filter(isRunning);
-  const blocked = passes.filter((p) => p.decision === "blocked");
-  const needsReview = passes.filter((p) => p.decision === "needs_review");
-  const ready = passes.filter((p) => p.decision === "ready");
-  const repairVerified = passes.filter((p) => p.decision === "repair_verified");
-  // Terminal runs that never produced a decision (crashed / cancelled) — bucket them so a failed first
-  // pass is never silently dropped from the list.
-  const didNotComplete = passes.filter((p) => !p.decision && !isRunning(p) && (p.state === "failed" || p.state === "cancelled"));
+  const terminal = passes.filter((p) => !isRunning(p));
+  const publicOf = (p: PassRow) => runVerdict(p.state, p.decision).tone;
 
   const sections = [
     { label: "Running", rows: running },
-    { label: "Failed", rows: blocked },
-    { label: "Blocked", rows: needsReview },
-    { label: "Verified", rows: ready },
-    { label: "Verified (targeted rerun)", rows: repairVerified },
-    { label: "Didn't complete", rows: didNotComplete },
+    { label: "Failed", rows: terminal.filter((p) => publicOf(p) === "failed") },
+    { label: "Blocked", rows: terminal.filter((p) => publicOf(p) === "blocked") },
+    { label: "Verified", rows: terminal.filter((p) => publicOf(p) === "verified") },
+    { label: "Not yet verified", rows: terminal.filter((p) => publicOf(p) === "unproven" || publicOf(p) === "progress") },
   ].filter((s) => s.rows.length > 0);
 
   return (
@@ -130,8 +150,7 @@ export default async function PassesPage() {
       {/* header */}
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 24 }}>
         <div>
-          <p className="eyebrow">Vraelis Preflight</p>
-          <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "6px 0 10px" }}>Verification</h1>
+          <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "0 0 10px" }}>Verifications</h1>
           <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.6, margin: 0, maxWidth: 560 }}>
             Every verification run across your applications, newest first, grouped by the launch decision it produced.
           </p>
@@ -148,14 +167,13 @@ export default async function PassesPage() {
         </div>
       ) : (
         <>
-          {/* counts */}
+          {/* Counts read from the SAME sections rendered below, so a chip can never disagree with the list
+              under it. They used to be six independent filters on raw decision strings, which is how a
+              "Verified (targeted rerun)" chip came to count runs the rest of the product calls Blocked. */}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 24 }}>
-            <StatChip label="Running" value={running.length} />
-            <StatChip label="Failed" value={blocked.length} color={blocked.length ? "var(--stop-ink)" : undefined} />
-            <StatChip label="Blocked" value={needsReview.length} color={needsReview.length ? "var(--wait-ink)" : undefined} />
-            <StatChip label="Verified" value={ready.length} color={ready.length ? "var(--go-ink)" : undefined} />
-            {repairVerified.length > 0 && <StatChip label="Verified (targeted rerun)" value={repairVerified.length} color="var(--go-ink)" />}
-            {didNotComplete.length > 0 && <StatChip label="Didn't complete" value={didNotComplete.length} color="var(--fg-4)" />}
+            {sections.map((s) => (
+              <StatChip key={s.label} label={s.label} value={s.rows.length} color={CHIP_INK[s.label]} />
+            ))}
           </div>
 
           {sections.map((s) => <PassSection key={s.label} label={s.label} rows={s.rows} />)}

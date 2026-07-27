@@ -109,8 +109,9 @@ export default async function ApplicationsPage() {
       {/* header */}
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 24 }}>
         <div>
-          <p className="eyebrow">Vraelis Preflight</p>
-          <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "6px 0 10px" }}>Applications</h1>
+          {/* The nav says Systems and this page is what it opens, so it says Systems. "Vraelis Preflight"
+              was an internal programme name that no customer has ever been taught. */}
+          <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "0 0 10px" }}>Systems</h1>
           <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.6, margin: 0, maxWidth: 560 }}>
             Connect an AI-built app and Vraelis looks for failures in the flows you approve, before your users hit them.
           </p>

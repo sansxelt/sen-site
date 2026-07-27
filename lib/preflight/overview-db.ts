@@ -37,7 +37,10 @@ export async function listAllRuns(owner: string, limit = 50): Promise<PassRow[]>
   const filter = webRuntimeFilter(await apiTargetIdsForOwner(owner));
   const internalApps = await internalAppIdsForOwner(owner);
   let q = db().from("v_preflight_runs")
-    .select("id, application_id, state, decision, summary, deployment_url, created_at, completed_at")
+    // parent_run_id (migration 3) is what makes a run a REVERIFICATION of an earlier one. It was read below
+    // through a cast but never selected, so PassRow.parentRunId was unconditionally null and every surface
+    // that shows the repair relationship has silently shown nothing since the column was added.
+    .select("id, application_id, state, decision, summary, deployment_url, parent_run_id, created_at, completed_at")
     .eq("user_id", norm(owner));
   if (filter) q = q.or(filter);
   // Also exclude runs on the internal canary app (e.g. its seeded web-baseline run), so no internal pass

@@ -12,7 +12,7 @@ export const APP_ROOTS = [
   // A root missing here still builds, but never rewrites on app.vraelis.com, so it 404s only in production.
   // Every entry must map to a real directory under app/rank/app/ — a ghost root only routes into a 404.
   // (/developers is deliberately absent: it is public docs on the marketing host; see proxy.ts.)
-  "systems", "verifications",
+  "systems", "verifications", "guarantees", "review", "records",
   "applications", "passes", "issues", "repairs", "deployments", "activity",
   "team", "organization", "api", "connections", "plans", "credits", "billing", "account", "checkout",
   "admin", "new",

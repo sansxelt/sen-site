@@ -13,6 +13,9 @@ const ok = (n: string, c: boolean, d = "") => { if (c) { pass++; console.log(`PA
 
 const page = readFileSync("app/rank/app/page.tsx", "utf8");
 const rec = readFileSync("app/rank/app/_components/home-records.tsx", "utf8");
+// The Overview's own sections moved out of home-records when the page stopped being a form with a list
+// under it. home-records still owns the shared row vocabulary the other product pages use.
+const sec = readFileSync("app/rank/app/_components/overview-sections.tsx", "utf8");
 
 console.log("── the only labels are the public vocabulary; an internal decision string can never leak ──");
 const ALLOWED = new Set(["Verified", "Failed", "Blocked", "In progress", "Not yet verified"]);
@@ -58,19 +61,35 @@ ok("runs are read owner-scoped via the current lister", /listAllRuns\(owner, \d+
 ok("issues are read WEB-scoped so the attention list and the badges count the same population", /listAllIssues\(owner, \{ status: "open", webOnly: true/.test(page));
 ok("counts come from the real owner overview, not an invented metric", /overviewCounts\(owner\)/.test(page));
 ok("systems come from the member-aware application lister", /listApplicationsForMember\(email\)/.test(page));
-ok("balance/plan stay per-individual (owner-anchored), not re-keyed by workspace", /balance\(email\), getPlan\(email\)/.test(page));
+// The plan no longer loads here at all: it was only ever read to render a badge on this page, and that
+// badge moved into the account menu (fed by /api/v/me). The rule the check exists for is unchanged — the
+// balance is keyed by the PERSON, never by the selected workspace.
+ok("balance stays per-individual (owner-anchored), not re-keyed by workspace",
+  /balance\(email\)/.test(page) && !/balance\(\s*(workspace|wsId|ws\.)/.test(page));
 ok("no data source is a hardcoded mock or example array", !/const (MOCK|SAMPLE|FAKE|EXAMPLE)/i.test(page));
 
 console.log("\n── the composer stays primary; a section failure cannot take it down ──");
-ok("the composer renders unconditionally, outside the empty/sections branch", page.indexOf("<Composer balance={bal} />") < page.indexOf("fullyEmpty ? ("));
+// WAS: the composer must render before the branch, i.e. dominate the page. That was right for an empty
+// account and wrong for a working one — a full-height form at the top asserts that the reason to open the
+// console is to start work, when it is usually to read state. It is now full size when there is nothing to
+// read, and one line when there is. The durable rule is that a way to create a verification is ALWAYS on
+// the page, in both branches.
+ok("the empty account still gets the full composer", /fullyEmpty \? \([\s\S]{0,400}?<Composer balance=\{bal\} \/>/.test(page));
+ok("a populated account still gets a creation surface, compact", /<CompactComposer balance=\{bal\} \/>/.test(page));
+ok("the compact surface opens the same composer, not a second implementation",
+  /<Composer balance=\{balance\} \/>/.test(readFileSync("app/rank/app/_components/compact-composer.tsx", "utf8")));
 ok("record groups are loaded with independent failure isolation", /async function settle</.test(page) && (page.match(/settle\(/g) ?? []).length >= 4);
 ok("a caught load error is swallowed to a safe fallback, never surfaced raw", /catch \{ return \{ value: fallback, error: true \}; \}/.test(page));
-ok("each section takes an error flag and renders a degraded state, not a crash", /error=\{issuesR\.error\}/.test(page) && /error=\{runsR\.error\}/.test(page) && /error=\{countsR\.error\}/.test(page) && /error=\{appsR\.error \|\| latestR\.error\}/.test(page));
+// Each record group renders EITHER its section or a degraded stand-in, chosen by its own settle() flag, so
+// one failed read cannot blank the page or crash the render.
+ok("each section has its own degraded branch, not a crash",
+  /issuesR\.error \? <SectionError/.test(page) && /runsR\.error \? <SectionError/.test(page)
+  && /pendingR\.error \? <SectionError/.test(page) && /appsR\.error \|\| latestR\.error \? <SectionError/.test(page));
 ok("the degraded state is plain language with a keyboard-reachable retry, no raw server text", /function SectionError/.test(rec) && /Reload/.test(rec) && !/error\.message/.test(rec) && !/error\.message/.test(page));
 
 console.log("\n── empty account shows deliberate onboarding, not fake records ──");
 ok("fully-empty is only true when nothing failed to load (a failure is degraded, not empty)", /const fullyEmpty = !anyError &&/.test(page));
-ok("the empty account renders the onboarding workflow", /<EmptyHome \/>/.test(page) && /export function EmptyHome/.test(rec));
+ok("the empty account renders the onboarding workflow", /<EmptyOverview \/>/.test(page) && /export function EmptyOverview/.test(sec));
 ok("onboarding explains the real four-step workflow", /Name the deployed build/.test(rec) && /State what must be true/.test(rec) && /Review the proof plan/.test(rec) && /Run the verification/.test(rec));
 ok("empty sections collapse to null rather than showing empty shells", /if \(!issues\.length\) return null;/.test(rec) && /if \(!rows\.length\) return null;/.test(rec) && /if \(!systems\.length\) return null;/.test(rec));
 

@@ -11,6 +11,7 @@ import { isAppPath } from "@/lib/app-routes";
 // The product-wide drawn icon set (one language, no glyph characters). Kept in its own
 // server-safe module so app pages can render the same icons without a client boundary.
 import { Ic, I } from "./icons";
+import { CommandPalette, type PaletteSystem } from "./command-palette";
 
 // Research sits between Developers and Enterprise for now. The fuller restructure toward
 // Product / Developers / Research / Pricing belongs with the verification-first redesign
@@ -38,20 +39,46 @@ const PUBLIC_LINKS = [
 //
 // API keys sit under Developers rather than being duplicated in Settings: it is one page, and two sidebar
 // entries pointing at the same destination is how a menu starts lying about how much is in it.
+// THE NAVIGATION NOW STATES THE PRODUCT MODEL, NOT ONE ACTION.
+//
+// The previous version collapsed everything to "verify this outcome" because passes, runs, contracts and
+// reports were lifecycle stages that nobody should have to learn. That was right about the STAGES and wrong
+// about the OBJECTS. A system, a guarantee, a reviewed plan and a permanent record are not stages of one
+// another; they are the durable things a customer actually owns, and a menu that hides them describes a URL
+// box with a prompt in it.
+//
+// PRODUCT is the human control plane, in the order the model runs: a System holds Guarantees, a guarantee is
+// proven by Verifications, a plan reaches a person at Review, and everything that happened is kept in
+// Records. PLATFORM is the same product reached another way, which is the point of naming it separately: the
+// console is not the only interface. SETTINGS is last and stays boring.
+//
+// EVERY ITEM RESOLVES TO A REAL SURFACE READING REAL ROWS. Guarantees and Review are the two that are empty
+// today (zero guarantees have ever been defined, and no reviewed plan is currently awaiting a person), and
+// they say so and say what would put something there. That is a working surface with nothing in it, which is
+// not the same as dead navigation, and in a verification product it is the only honest option: inventing a
+// row here would be the exact failure the engine exists to catch.
 const APP_NAV: { group: string; items: { href: string; label: string; d: string }[] }[] = [
   { group: "Product", items: [
-    { href: "/app", label: "Home", d: I.grid },
-    { href: "/verifications", label: "Verifications", d: I.shield },
+    { href: "/app", label: "Overview", d: I.grid },
     { href: "/systems", label: "Systems", d: I.layers },
-    { href: "/connections", label: "Connections", d: I.key },
+    { href: "/guarantees", label: "Guarantees", d: I.shield },
+    { href: "/verifications", label: "Verifications", d: I.vote },
+    { href: "/review", label: "Review", d: I.eye },
+    { href: "/records", label: "Records", d: I.fileText },
+  ] },
+  // Connections became Integrations because that is what the page already contains: GitHub, Vercel, Sentry,
+  // Stripe and Supabase account authorizations, plus per-application Slack, webhook, deploy and test-account
+  // wiring. "Connections" described the mechanism; "Integrations" describes what a reader is looking for.
+  { group: "Platform", items: [
+    { href: "/connections", label: "Integrations", d: I.key },
     { href: "/developers", label: "Developers", d: I.code },
   ] },
   { group: "Settings", items: [
-    { href: "/account", label: "Account", d: I.user },
-    { href: "/team", label: "Team", d: I.user },
     { href: "/organization", label: "Organization", d: I.building },
-    { href: "/credits", label: "Usage & credits", d: I.coin },
-    { href: "/plans", label: "Plans & billing", d: I.card },
+    { href: "/team", label: "Team", d: I.user },
+    { href: "/credits", label: "Usage", d: I.coin },
+    { href: "/plans", label: "Billing", d: I.card },
+    { href: "/account", label: "Account", d: I.user },
   ] },
 ];
 
@@ -63,7 +90,7 @@ const NAV_ALIASES: Record<string, string> = {
   "/issues": "/verifications",
   "/repairs": "/verifications",
   "/deployments": "/systems",
-  "/activity": "/app",
+  "/activity": "/records",          // the audit trail IS the permanent record; /records is its canonical URL
   "/billing": "/plans",
   "/api": "/developers",
 };
@@ -212,7 +239,7 @@ const ACCOUNT_MENU_FOOT: { href: string; label: string; d: string }[] = [
   { href: "/billing", label: "Billing", d: I.card },
 ];
 
-function AppTopbar({ email }: { email: string | null }) {
+function AppTopbar({ email, systems, pendingReviews }: { email: string | null; systems: PaletteSystem[]; pendingReviews: number }) {
   const [menu, setMenu] = useState(false);
   const pathname = usePathname() || "";
   useEffect(() => { setMenu(false); }, [pathname]);
@@ -270,36 +297,27 @@ function AppTopbar({ email }: { email: string | null }) {
             plan by its FULL NAME (accent-tinted, ties to the brand avatar) -> /plans, and the credits pill
             with a properly-centered coin + exact balance -> /credits. Hidden until /api/v/me resolves so it
             never flashes a wrong number. Both share height/radius/shadow so they read as one status set. */}
-        {planLabel !== null && (
-          <div className="vra-app-pills" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {/* Plan pill — full plan name, on the neutral surface tokens. It used to wear the accent tint;
-                on this surface that is the green reserved for "it held", and a subscription tier is not a
-                verification result. The old --accent-dim / --accent-border
-                were the RETIRED teal accent (globals.css), which clashed with the emerald avatar beside it. */}
-            <Link
-              href="/plans"
-              title={`${planLabel} plan`}
-              aria-label={`Your plan: ${planLabel}`}
-              style={{ display: "inline-flex", alignItems: "center", height: 34, padding: "0 14px", borderRadius: 99, border: "1px solid var(--line-2)", background: "var(--bg-2)", textDecoration: "none", color: "var(--fg-2)", fontSize: 12.5, fontWeight: 700, letterSpacing: "0.01em", whiteSpace: "nowrap", flex: "none" }}
-            >
-              {planLabel}
-            </Link>
-            {/* Credits pill — styling matched to the sibling account button so the two read as a set.
-                Coin icon centered in a fixed square box (its '$' stroke sits left-of-axis in the
-                24x24 path, which is why it looked off-center before). */}
-            <Link
-              href="/credits"
-              title={`${balanceLabel} credits, buy more`}
-              aria-label={`Credit balance: ${balanceLabel} credits`}
-              style={{ display: "inline-flex", alignItems: "center", gap: 7, height: 34, padding: "0 14px", borderRadius: 99, border: "1px solid var(--line-2)", background: "var(--bg-1)", boxShadow: "var(--shadow-sm)", textDecoration: "none", color: "var(--fg-1)", fontSize: 12.5, fontWeight: 600, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", flex: "none" }}
-            >
-              <span aria-hidden style={{ display: "grid", placeItems: "center", width: 15, height: 15, color: "var(--fg-4)", flex: "none" }}><Ic d={I.coin} size={14} sw={1.8} /></span>
-              {balanceLabel}
-            </Link>
-          </div>
+        {/* THE TOP BAR NO LONGER LEADS WITH MONEY.
+            It used to open with a plan badge and a credit balance, which made the most prominent facts in the
+            product "what you pay" and "what you have left". Cursor does not put a token balance at the centre
+            of the screen and neither does Linear. Both are still one click away, now inside the account menu
+            where the rest of the account lives, and neither the plan nor the balance was removed. */}
+        <CommandPalette systems={systems} />
+        {/* Shown only when a plan is genuinely waiting for a person. A zero-state badge trains people to
+            ignore the badge, which costs more than it ever gains. */}
+        {pendingReviews > 0 && (
+          <Link
+            href="/review"
+            className="vra-topbar-review"
+            aria-label={`${pendingReviews} proof plan${pendingReviews === 1 ? "" : "s"} awaiting review`}
+          >
+            <span aria-hidden style={{ display: "inline-flex" }}><Ic d={I.eye} size={14} sw={1.9} /></span>
+            <span className="vra-topbar-review__label">Review</span>
+            <span className="vra-topbar-review__n">{pendingReviews}</span>
+          </Link>
         )}
-        <Link href="/applications/new" className="btn vra-app-connect" style={{ padding: "9px 16px" }} aria-label="Connect app">
-          +<span className="vra-app-connect__label"> Connect app</span>
+        <Link href="/app" className="btn vra-app-connect" style={{ padding: "9px 16px" }} aria-label="New verification">
+          +<span className="vra-app-connect__label"> New verification</span>
         </Link>
         <button ref={menuBtn} onClick={() => setMenu((v) => !v)} aria-label="Account menu" aria-expanded={menu} aria-controls="acct-menu" style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px 6px 6px", borderRadius: 99, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", boxShadow: "var(--shadow-sm)" }}>
           {avatar ? (
@@ -318,6 +336,16 @@ function AppTopbar({ email }: { email: string | null }) {
             <div style={{ padding: "8px 10px 10px", borderBottom: "1px solid var(--line-1)", marginBottom: 6 }}>
               <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-4)" }}>Signed in</div>
               <div style={{ fontSize: 13, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>{who || "your account"}</div>
+              {/* Where the two topbar pills went. Same values, same destinations, read from the same
+                  /api/v/me; they are account facts, so they sit with the account. The balance is a CREDIT
+                  COUNT, never cents and never dollars — do not format it as currency. */}
+              {planLabel !== null && (
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, fontSize: 12, color: "var(--fg-3)" }}>
+                  <Link href="/plans" style={{ color: "var(--fg-2)", textDecoration: "none", fontWeight: 600 }}>{planLabel} plan</Link>
+                  <span aria-hidden style={{ color: "var(--fg-5)" }}>/</span>
+                  <Link href="/credits" style={{ color: "var(--fg-2)", textDecoration: "none", fontVariantNumeric: "tabular-nums" }}>{balanceLabel} credits</Link>
+                </div>
+              )}
             </div>
             {ACCOUNT_MENU.map((l) => (
               <Link key={l.href} href={l.href} style={item}><span style={itemIcon}><Ic d={l.d} size={15} sw={1.8} /></span>{l.label}</Link>
@@ -529,9 +557,21 @@ const SHELL_UI_CSS = "@keyframes vraTextIn{from{opacity:0;transform:translateY(1
   // both read at the same optical size. !important because Brand carries an inline font-size.
   // If either zoom in styles.css changes, update the ratio here: it is site-zoom / app-zoom.
   + ".rank-root:not(.rank-root--site) .vra-brand{font-size:calc(21px * (0.99 / 0.89))!important}"
+  // The command trigger and the review indicator. Both are chrome, so they stay quiet: surface tokens, no
+  // accent, and the review count is the only thing in the bar allowed to carry a state colour, because it is
+  // the only thing in the bar reporting one.
+  + ".vra-cmd-trigger{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 12px;border-radius:99px;border:1px solid var(--line-2);background:var(--bg-2);color:var(--fg-3);font-size:12.5px;font-family:inherit;cursor:pointer;transition:border-color 140ms ease,color 140ms ease}"
+  + ".vra-cmd-trigger:hover{border-color:var(--line-3);color:var(--fg-2)}"
+  + ".vra-cmd-trigger__label{min-width:74px;text-align:left}"
+  + ".vra-cmd-kbd{font-family:var(--font-code);font-size:10.5px;color:var(--fg-5);border:1px solid var(--line-2);border-radius:5px;padding:1px 5px;background:var(--bg-1)}"
+  + ".vra-topbar-review{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 12px;border-radius:99px;text-decoration:none;font-size:12.5px;font-weight:600;color:var(--wait-ink);background:var(--wait-wash);border:1px solid var(--wait-line);white-space:nowrap;flex:none}"
+  + ".vra-topbar-review__n{font-variant-numeric:tabular-nums;font-weight:700}"
+  // Narrow screens: the trigger collapses to its icon, and the review indicator drops its word but keeps the
+  // number, because the number is the part that says whether it needs you.
+  + "@media (max-width:760px){.vra-cmd-trigger__label,.vra-cmd-kbd{display:none}.vra-cmd-trigger{padding:0 10px}.vra-topbar-review__label{display:none}}"
   + "@media (prefers-reduced-motion:reduce){.rank-root .eyebrow,.rank-root .display,.rank-root .lead-copy{animation:none}.rank-root .btn:active,.rank-root a.card:hover,.rank-root a.card:active,.rank-root a.acard:hover,.rank-root a.acard:active{transform:none}}";
 
-export function RankShell({ signedIn = false, email = null, appHost = false, children }: { signedIn?: boolean; email?: string | null; appHost?: boolean; children: ReactNode }) {
+export function RankShell({ signedIn = false, email = null, appHost = false, systems = [], pendingReviews = 0, children }: { signedIn?: boolean; email?: string | null; appHost?: boolean; systems?: PaletteSystem[]; pendingReviews?: number; children: ReactNode }) {
   const pathname = usePathname() || "";
   // The product answers on the legacy /app prefix (localhost dev) AND the clean subdomain paths
   // (/applications, /passes, ...). On app.vraelis.com the overview is served at "/" — the pathname
@@ -555,7 +595,7 @@ export function RankShell({ signedIn = false, email = null, appHost = false, chi
       <ProductSurface>
         <div className="rank-root">
           <style dangerouslySetInnerHTML={{ __html: SHELL_UI_CSS }} />
-          <div style={{ position: "sticky", top: 0, zIndex: 50 }}><AppTopbar email={email} /></div>
+          <div style={{ position: "sticky", top: 0, zIndex: 50 }}><AppTopbar email={email} systems={systems} pendingReviews={pendingReviews} /></div>
           <div className="app-shell">
             <AppSidebar />
             <main className="app-main">{children}</main>

@@ -9,8 +9,8 @@
 // the plan's state comes from the PERSISTED reviewed-plan record, never a local guess. Every visible
 // conclusion is Verified / Failed / Blocked. No em dashes in copy.
 
-import { useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
+import { useRef, useState, type CSSProperties } from "react";
 import {
   createReviewedPlan, getReviewedPlan, approveReviewedPlan, executeReviewedPlan, pollVerification,
   normalizeDeploymentUrl, normalizeClaim,
@@ -318,6 +318,13 @@ function PlanPanel({ plan, balance, busy, stale, canReview, onReview, onApprove,
             {busy === "executing" ? "Starting..." : "Run approved verification"} <span aria-hidden>→</span>
           </button>
         )}
+        {/* THE PLAN HAS AN ADDRESS NOW. Until /review/{id} existed, a minted plan lived only inside this
+            component: navigate away or refresh and the thing you were asked to take responsibility for was
+            gone, recoverable by no URL. Approving is the most consequential act in the product and it was
+            the only one you could not come back to. */}
+        <Link href={`/review/${plan.reviewedPlanId}`} style={{ fontSize: 12.5, color: "var(--fg-4)", textDecoration: "none", flex: "none" }}>
+          Open as a page <span aria-hidden>→</span>
+        </Link>
         <button className="btn btn--ghost" onClick={onReset} style={{ flex: "none" }} disabled={!!busy}>Discard</button>
         <span style={{ flex: 1 }} />
         <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>

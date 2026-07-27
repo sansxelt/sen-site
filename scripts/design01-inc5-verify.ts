@@ -178,18 +178,25 @@ ok("the Systems row aria says 'latest verification', not a bare verdict", /aria-
 ok("an unverified system still reads 'Not yet verified', never Failed/Blocked", /Not yet verified/.test(readFileSync("lib/preflight/home-verdict.ts", "utf8")));
 
 console.log("\n── visual drift corrected, motion respected ──");
-// The plan pill's <Link> only, starting at href="/plans" so the comment above it (which documents the removed
-// teal tokens) is excluded.
-const pillIdx = ui.indexOf('href="/plans"');
-const pillStyle = ui.slice(pillIdx, pillIdx + 480);
-// Was: "uses the warm-neutral ACCENT tokens". The pill has been moved off the accent entirely. On the
-// design-06 product surface the accent resolves to the same green the product uses for "this verification
-// held", and a subscription tier is not a verification result — a Free plan badge wearing the pass colour
-// is the product spending its only signal on billing. The rule the check now enforces is the durable one:
-// the pill names surface tokens, and never a state token or a literal.
-ok("the topbar plan pill uses neutral surface tokens", /var\(--line-2\)/.test(pillStyle) && /var\(--bg-2\)/.test(pillStyle) && /var\(--fg-2\)/.test(pillStyle));
-ok("the topbar plan pill never wears a state colour", !/--go-|--wait-|--stop-|--ok\)|--err\)|--warn\)/.test(pillStyle));
-ok("the topbar plan pill drops the retired teal tokens and the hardcoded hex", !/--accent-dim|--accent-border|#0A7B54/.test(pillStyle));
+// THE PLAN PILL IS NO LONGER IN THE TOP BAR AT ALL, so the checks that policed its colour are gone with it.
+// It used to open the product: a plan badge and a credit balance were the two most prominent things on every
+// screen, which made "what you pay" and "what you have left" the headline facts of a verification product.
+// Both moved into the account menu. Neither was removed.
+//
+// The rule that replaces the colour checks is the placement one, because that is what actually regressed:
+// billing must not be the first thing in the chrome, and it must still be reachable.
+const topbarIdx = ui.indexOf("function AppTopbar");
+const topbar = ui.slice(topbarIdx, ui.indexOf("function WorkspaceSwitcher"));
+const topbarHeader = topbar.slice(topbar.indexOf("<header"));
+ok("the top bar does not lead with the plan or the balance",
+  !/href="\/plans"[\s\S]{0,400}?height: 34/.test(topbarHeader.slice(0, topbarHeader.indexOf("acct-menu"))));
+ok("plan and balance are still reachable, inside the account menu",
+  /href="\/plans"/.test(topbar) && /href="\/credits"/.test(topbar));
+ok("the top bar leads with the command surface and the primary action",
+  /<CommandPalette/.test(topbar) && /New verification/.test(topbar));
+// The one thing in the bar allowed a state colour is the review indicator, because it is the only thing in
+// the bar reporting a state, and it renders only when a plan is genuinely waiting.
+ok("the review indicator appears only when a plan is really waiting", /pendingReviews > 0 &&/.test(topbar));
 // Was: literal hex swatches. Those literals are exactly what pinned the product to one theme, so the
 // check now asserts the PROPERTY it always meant — that these panels name a state rather than a colour —
 // and would fail again the moment someone reintroduces a hardcoded swatch here.
@@ -199,7 +206,19 @@ ok("the composer's not_provable + error panels name a state token, never a liter
 ok("the remaining infinite animations honour prefers-reduced-motion", /@media \(prefers-reduced-motion: reduce\) \{ \.pulse \{ animation: none; \} \.typing i \{ animation: none; \} \}/.test(css));
 
 console.log("\n── overflow + heading structure locked (verified live at 5 widths; guarded structurally) ──");
-ok("a single h1 on Home: the greeting is a paragraph, the composer's question is the h1", !/<h1[^>]*>\s*\{displayName/.test(page) && /<p style=\{\{ fontSize: 15[\s\S]*Welcome back/.test(page));
+// The greeting is gone. "Welcome back" is a fact about the door, not the business, and it occupied the line
+// a reader looks at first; the h1 is now the operational state. The invariant that mattered is unchanged and
+// still checked: the page carries exactly ONE h1 for a signed-in reader.
+{
+  const sections = readFileSync("app/rank/app/_components/overview-sections.tsx", "utf8");
+  ok("the overview no longer greets the reader instead of reporting", !/Welcome back/.test(page));
+  ok("the operational state is the h1", /<h1 className="display"[^>]*>Operational state<\/h1>/.test(sections));
+  // Two h1s in page.tsx is correct: one for the signed-OUT hero and one for the signed-in overview, and a
+  // request only ever renders one of them. What must never happen is a second h1 inside the signed-in tree.
+  ok("exactly one h1 in the signed-in overview tree",
+    (sections.match(/<h1/g) ?? []).length === 1
+    && (readFileSync("app/rank/app/_components/composer.tsx", "utf8").match(/<h1/g) ?? []).length <= 1);
+}
 ok("deployment references truncate rather than overflow (bounded width + ellipsis)", /maxWidth: "22ch"[\s\S]*textOverflow: "ellipsis"/.test(rec) || /textOverflow: "ellipsis"[\s\S]*maxWidth: "22ch"/.test(rec));
 ok("record rows constrain their text column (minWidth:0 + ellipsis) so long names cannot push the row wide",
   (rec.match(/minWidth: 0/g) ?? []).length >= 3 && (rec.match(/textOverflow: "ellipsis"/g) ?? []).length >= 3);

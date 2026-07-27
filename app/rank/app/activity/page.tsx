@@ -85,8 +85,7 @@ export default async function AuditPage() {
     <div className="wrap" style={{ maxWidth: 880, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
       <div className="phead">
         <div>
-          <p className="eyebrow">Trust &amp; governance</p>
-          <h1 className="display">Activity</h1>
+          <h1 className="display">Records</h1>
           <p>A read-only trail of everything that happens in your workspace: verifications, balance, billing, team access, and governance.</p>
         </div>
         <Link href="/enterprise" className="btn btn--ghost">Trust overview →</Link>

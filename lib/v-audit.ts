@@ -13,6 +13,33 @@ const norm = (e: string) => e.trim().toLowerCase();
 // Covers evaluations, credits, billing, exports, and governance — but NOT high-volume
 // machine noise (api_request_made) or internal/admin events.
 const AUDIT_LABELS: Record<string, string> = {
+  // THE VERIFICATION TRAIL. Anything not in this map is dropped by AUDIT_TYPES, and until now not a single
+  // preflight event was here: the product emits preflight_run_queued, preflight_run_rerun,
+  // preflight_contract_approved, preflight_contract_draft_created, preflight_app_connected,
+  // preflight_flow_*, connection_* and deployment_recorded, and the activity log silently discarded all of
+  // them. What it kept was workspace, billing and SSO governance plus the retired human-evaluation
+  // vocabulary below, so the page a founder would reach for as "what did Vraelis actually do" showed
+  // invites, seats and logins and nothing about a single verification.
+  //
+  // These are the durable record of the chain: a system connected, a plan approved, a run launched, a
+  // reverification launched, a deployment observed. They are listed FIRST because they are the product.
+  preflight_app_connected: "System connected",
+  preflight_contract_draft_created: "Proof plan drafted",
+  preflight_contract_approved: "Proof plan approved",
+  preflight_run_queued: "Verification launched",
+  preflight_run_rerun: "Reverification launched",
+  preflight_flow_added: "Journey added",
+  preflight_flow_updated: "Journey updated",
+  preflight_flow_removed: "Journey removed",
+  deployment_recorded: "Deployment recorded",
+  connection_added: "Integration connected",
+  connection_updated: "Integration updated",
+  connection_removed: "Integration removed",
+  connection_verified: "Integration verified",
+
+  // Retired human-evaluation vocabulary. KEPT, not revived: these rows were really written, by a product
+  // that no longer exists, and dropping the labels would hide history rather than correct it. Nothing emits
+  // them any more.
   test_launched: "Evaluation launched",
   test_completed: "Evaluation completed",
   sandbox_evaluation_created: "Sandbox evaluation created",

@@ -3,8 +3,7 @@
 // The restructure's whole promise is that it changes what users SEE without breaking what they already
 // depend on. That is easy to claim and easy to get wrong: it takes one deleted route or one unhandled alias
 // to strand a bookmark in a shell with nothing selected. These assertions hold both halves.
-import { readFileSync } from "node:fs";
-import { existsSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { isAppPath, APP_ROOTS } from "../lib/app-routes";
 
 let pass = 0, fail = 0;
@@ -18,16 +17,53 @@ const ui = readFileSync("app/rank/_components/rank-ui.tsx", "utf8");
 const navBlock = ui.slice(ui.indexOf("const APP_NAV"), ui.indexOf("const NAV_ALIASES"));
 
 console.log("── the primary navigation is the product, not the architecture ──");
-for (const label of ["Home", "Verifications", "Systems", "Connections", "Developers"]) {
+// The nav states the PRODUCT MODEL. Each of these is a durable object a customer owns, in the order the
+// model runs, and the earlier version of this check asserted a flat five-item list that described one action.
+for (const label of ["Overview", "Systems", "Guarantees", "Verifications", "Review", "Records"]) {
   ok(`primary nav contains ${label}`, new RegExp(`label: "${label}"`).test(navBlock));
 }
 // Internal lifecycle stages must not be presented as equal destinations.
-for (const gone of ["Applications", "Passes", "Issues", "Repairs", "Deployments", "Activity", "Credits", "Billing", "Plans"]) {
+for (const gone of ["Applications", "Passes", "Issues", "Repairs", "Deployments", "Activity", "Credits", "Plans", "Home"]) {
   ok(`primary nav no longer offers ${gone} as a destination`, !new RegExp(`label: "${gone}"`).test(navBlock));
 }
+ok("the platform group presents the other ways to operate Vraelis",
+  /group: "Platform"/.test(navBlock) && /label: "Integrations"/.test(navBlock) && /label: "Developers"/.test(navBlock));
 ok("settings carries account, team, usage and billing",
   /label: "Account"/.test(navBlock) && /label: "Team"/.test(navBlock)
-  && /label: "Usage & credits"/.test(navBlock) && /label: "Plans & billing"/.test(navBlock));
+  && /label: "Usage"/.test(navBlock) && /label: "Billing"/.test(navBlock));
+
+// THE FOUNDER'S HARD RULE, CHECKED RATHER THAN TRUSTED: "a navigation item may appear only when it leads to
+// a real working surface". A label list cannot catch a dead link, and asserting the list I just wrote would
+// only confirm that I wrote it. So resolve every href in the nav to a file on disk, and separately require
+// that the proxy will actually route it on the app host.
+{
+  const hrefs = Array.from(navBlock.matchAll(/href: "([^"]+)"/g)).map((m) => m[1]);
+  ok("the nav is not empty", hrefs.length >= 12, `${hrefs.length} items`);
+
+  const missing = hrefs.filter((h) => {
+    const dir = h === "/app" ? "app/rank/app" : `app/rank/app${h}`;
+    return !existsSync(`${dir}/page.tsx`);
+  });
+  ok("every nav item leads to a page that exists", missing.length === 0, missing.join(", "));
+
+  // A root absent from APP_ROOTS builds fine and then 404s on app.vraelis.com only in production, which is
+  // the worst possible place to discover it.
+  const roots = readFileSync("lib/app-routes.ts", "utf8");
+  const proxySrc = readFileSync("proxy.ts", "utf8");
+  // /developers is the one product path deliberately absent from APP_ROOTS: the same clean path is PUBLIC
+  // documentation on vraelis.com and the authenticated console on app.vraelis.com, and isAppPath is
+  // host-agnostic, so listing it would drag the public docs behind a sign-in wall. proxy.ts routes it by
+  // host instead, so the requirement is that SOMETHING routes it, not that this one list does.
+  const routedByProxy = (h: string) => new RegExp(`path === "${h}"`).test(proxySrc);
+  const unrouted = hrefs.filter((h) => h !== "/app"
+    && !new RegExp(`"${h.slice(1)}"`).test(roots)
+    && !routedByProxy(h));
+  ok("every nav item is routable on the app host", unrouted.length === 0, unrouted.join(", "));
+
+  // Two entries pointing at one page is how a menu starts lying about how much is in it.
+  const dupes = hrefs.filter((h, i) => hrefs.indexOf(h) !== i);
+  ok("no two nav items share a destination", dupes.length === 0, dupes.join(", "));
+}
 
 console.log("\n── nothing was deleted: every retired destination still resolves ──");
 // A route that stopped existing would break a bookmark, a saved link, and any deep link in an old email.
@@ -75,7 +111,7 @@ const EXPECT: [string, string][] = [
   ["/passes/run-1", "/verifications"],
   ["/issues", "/verifications"],
   ["/billing", "/plans"],
-  ["/activity", "/app"],
+  ["/activity", "/records"],
   // /api is the OLD name for the authenticated developer console, which now lives at /developers. It is an
   // alias like the rest, not a pass-through, and the page itself still resolves.
   ["/api", "/developers"],
