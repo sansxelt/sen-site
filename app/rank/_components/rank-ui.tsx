@@ -80,7 +80,7 @@ const APP_NAV: { group: string; items: { href: string; label: string; d: string 
     { href: "/organization", label: "Organization", d: I.building },
     { href: "/team", label: "Team", d: I.user },
     { href: "/usage", label: "Usage", d: I.data },
-    { href: "/plans", label: "Billing", d: I.card },
+    { href: "/billing", label: "Billing", d: I.card },
     { href: "/account", label: "Account", d: I.user },
   ] },
 ];
@@ -94,7 +94,7 @@ const NAV_ALIASES: Record<string, string> = {
   "/repairs": "/verifications",
   "/deployments": "/systems",
   "/activity": "/records",          // the audit trail IS the permanent record; /records is its canonical URL
-  "/billing": "/plans",
+  "/plans": "/billing",       // choosing a plan is a billing action, not a destination beside it
   "/credits": "/usage",        // topping up is an action ON usage, not a destination beside it
   "/api": "/developers",
 };
@@ -233,10 +233,14 @@ function Footer() {
 // The account page broadcasts "vraelis:avatar" after upload/remove so this stays in sync without
 // a reload. Menu items mirror the sidebar's icons (same Ic stroke set, same assignments).
 const ACCOUNT_MENU: { href: string; label: string; d: string }[] = [
-  { href: "/applications", label: "Applications", d: I.layers },
+  // EVERY ITEM HERE IS A SECOND NAME FOR A PAGE THE SIDEBAR ALREADY NAMES, so the two must agree. This menu
+  // still said "Applications" for the page headed Systems and "API & Webhooks" for the page headed
+  // Developers: the same halfway rename the sidebar was corrected for, surviving in the one navigation the
+  // sidebar's own check never walked.
+  { href: "/systems", label: "Systems", d: I.layers },
   { href: "/plans", label: "Plans", d: I.layers },
   { href: "/credits", label: "Credits", d: I.coin },
-  { href: "/api", label: "API & Webhooks", d: I.code },
+  { href: "/developers", label: "Developers", d: I.code },
 ];
 const ACCOUNT_MENU_FOOT: { href: string; label: string; d: string }[] = [
   { href: "/account", label: "Account", d: I.user },
@@ -276,9 +280,14 @@ function AppTopbar({ email, systems, pendingReviews }: { email: string | null; s
   // with a currency symbol: the top-up RATE lives in credits/page.tsx and is not a per-cent conversion,
   // and this credit-only sum can't be dollar-formatted anyway.
   const [acct, setAcct] = useState<{ plan: string; credits: number } | null>(null);
+  // The account's display name, from the same /api/v/me the plan and balance already come from.
+  const [displayName, setDisplayName] = useState<string | null>(null);
   useEffect(() => {
     const load = () => fetch("/api/v/me").then((r) => (r.ok ? r.json() : null)).then((j) => {
-      if (j && j.signedIn) setAcct({ plan: typeof j.plan_v1 === "string" && j.plan_v1 ? j.plan_v1 : String(j.plan ?? "free"), credits: Number(j.balance ?? 0) });
+      if (j && j.signedIn) {
+        setAcct({ plan: typeof j.plan_v1 === "string" && j.plan_v1 ? j.plan_v1 : String(j.plan ?? "free"), credits: Number(j.balance ?? 0) });
+        setDisplayName(typeof j.displayName === "string" && j.displayName.trim() ? j.displayName.trim() : null);
+      }
     }).catch(() => {});
     load();
     window.addEventListener("vraelis:balance", load);
@@ -361,7 +370,19 @@ function AppTopbar({ email, systems, pendingReviews }: { email: string | null; s
           <div ref={menuPanel} id="acct-menu" style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, width: 232, background: "var(--bg-1)", border: "1px solid var(--line-2)", borderRadius: 14, boxShadow: "var(--shadow-lg)", padding: 8, zIndex: 60 }}>
             <div style={{ padding: "8px 10px 10px", borderBottom: "1px solid var(--line-1)", marginBottom: 6 }}>
               <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-4)" }}>Signed in</div>
-              <div style={{ fontSize: 13, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>{who || "your account"}</div>
+              {/* THE NAME FIRST, THEN THE ADDRESS. This showed the email alone, so an account that had set a
+                  display name was still identified by a mailbox. The name is what a person answers to and
+                  what the account page already collects; the email stays underneath because on a shared or
+                  multi-account setup it is the thing that disambiguates. No name set, the email leads and
+                  nothing is invented to fill the gap. */}
+              {displayName ? (
+                <>
+                  <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 3 }}>{displayName}</div>
+                  <div style={{ fontSize: 12, color: "var(--fg-4)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 1 }}>{who || "your account"}</div>
+                </>
+              ) : (
+                <div style={{ fontSize: 13, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>{who || "your account"}</div>
+              )}
               {/* Where the two topbar pills went. Same values, same destinations, read from the same
                   /api/v/me; they are account facts, so they sit with the account. The balance is a CREDIT
                   COUNT, never cents and never dollars — do not format it as currency. */}

@@ -120,8 +120,12 @@ export default function CreditsPage() {
     <div className="wrap" style={{ maxWidth: 880, paddingTop: "clamp(24px, 3vw, 38px)", paddingBottom: 80 }}>
       <div className="phead">
         <div>
-          <p className="eyebrow">Credits</p>
-          <h1 className="display">Top up credits</h1>
+          {/* Headed by the name it is clicked by. It used to read "Top up credits", which is what you DO
+              here and not what this page IS, so arriving from the account menu's "Credits" landed you on a
+              heading that did not repeat the word you pressed. Topping up is still the point, and the
+              button below still says so. */}
+          <p className="eyebrow">Billing</p>
+          <h1 className="display">Credits</h1>
           <p>Your balance pays for validating your AI-built app before it ships. Each verification draws from it and only settles when it actually executes. Per-verification pricing is rolling out; your balance keeps its full purchase value through the change.</p>
         </div>
       </div>

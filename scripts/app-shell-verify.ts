@@ -77,18 +77,45 @@ ok("settings carries account, team, usage and billing",
     "/records": "app/rank/app/activity/page.tsx",
     "/developers": "app/rank/app/api/page.tsx",
   };
+  // THE MENU THIS CHECK USED TO SKIP. It only ever walked the sidebar, so the account menu went on calling
+  // /systems "Applications" and /developers "API & Webhooks" — the same halfway rename this assertion exists
+  // to catch, surviving in the one navigation nothing was reading.
+  //
+  // Compared against the literal h1 only. An earlier attempt also accepted a page's eyebrow, so that /plans
+  // (headed "Priced by the run, not the seat") could match on its "Plans" kicker. That version accepted ANY
+  // eyebrow anywhere in the file and promptly reported /app as wrong against a section kicker further down
+  // the page. A check that calls a correct page broken is a check people switch off, so this stays narrow:
+  // no literal h1, no comparison.
+  const menuStart = ui.indexOf("const ACCOUNT_MENU");
+  const menuBlock = ui.slice(menuStart, ui.indexOf("function AppTopbar", menuStart));
   const mismatched: string[] = [];
-  for (const g of Array.from(navBlock.matchAll(/href: "([^"]+)", label: "([^"]+)"/g))) {
-    const [, href, labelText] = g;
-    const file = IMPL[href] ?? (href === "/app" ? "app/rank/app/page.tsx" : `app/rank/app${href}/page.tsx`);
-    if (!existsSync(file)) continue;                       // settings pages are checked by their own suites
-    const src = readFileSync(file, "utf8");
-    const h1 = src.match(/<h1[^>]*>([^<{]+)<\/h1>/);
-    if (!h1) continue;                                     // no literal h1 to compare (dynamic heading)
-    const heading = h1[1].replace(/&amp;/g, "&").trim();
-    if (heading.toLowerCase() !== labelText.toLowerCase()) mismatched.push(`${labelText} -> "${heading}"`);
+  const checked: string[] = [];
+  for (const [where, block] of [["sidebar", navBlock], ["account menu", menuBlock]] as const) {
+    for (const g of Array.from(block.matchAll(/href: "([^"]+)", label: "([^"]+)"/g))) {
+      const [, href, labelText] = g;
+      const file = IMPL[href] ?? (href === "/app" ? "app/rank/app/page.tsx" : `app/rank/app${href}/page.tsx`);
+      if (!existsSync(file)) continue;                     // settings pages are checked by their own suites
+      const h1 = readFileSync(file, "utf8").match(/<h1[^>]*>([^<{]+)<\/h1>/);
+      if (!h1) continue;                                   // no literal h1 to compare (dynamic heading)
+      const heading = h1[1].replace(/&amp;/g, "&").trim();
+      checked.push(`${where}:${labelText}`);
+      if (heading.toLowerCase() !== labelText.toLowerCase()) mismatched.push(`${where} "${labelText}" -> "${heading}"`);
+    }
   }
-  ok("every nav item opens a page that calls itself the same thing", mismatched.length === 0, mismatched.join(", "));
+  ok("every nav item opens a page that calls itself the same thing", mismatched.length === 0, mismatched.join(" | "));
+  ok("the account menu is actually covered by that check", checked.some((c) => c.startsWith("account menu:")), checked.join(", "));
+
+  // Two entries with the same word pointing at different pages is the same lie from the other direction.
+  const labelDest = new Map<string, Set<string>>();
+  for (const block of [navBlock, menuBlock]) {
+    for (const g of Array.from(block.matchAll(/href: "([^"]+)", label: "([^"]+)"/g))) {
+      const set = labelDest.get(g[2]) ?? new Set<string>();
+      set.add(g[1]);
+      labelDest.set(g[2], set);
+    }
+  }
+  const split = Array.from(labelDest.entries()).filter(([, d]) => d.size > 1).map(([l, d]) => `${l} -> ${Array.from(d).join(" and ")}`);
+  ok("one word never points at two different pages", split.length === 0, split.join(", "));
 }
 
 console.log("\n── nothing was deleted: every retired destination still resolves ──");
@@ -136,7 +163,7 @@ const EXPECT: [string, string][] = [
   ["/passes", "/verifications"],
   ["/passes/run-1", "/verifications"],
   ["/issues", "/verifications"],
-  ["/billing", "/plans"],
+  ["/plans", "/billing"],   // Settings > Billing is the page headed "Billing"; /plans is reached from it
   ["/activity", "/records"],
   // /api is the OLD name for the authenticated developer console, which now lives at /developers. It is an
   // alias like the rest, not a pass-through, and the page itself still resolves.
@@ -146,7 +173,7 @@ for (const [from, to] of EXPECT) {
   ok(`${from} highlights ${to}`, resolve(from) === to, `got ${resolve(from)}`);
 }
 // A current URL must pass through untouched, or the alias table would hijack live navigation.
-for (const p of ["/systems", "/verifications", "/connections", "/developers", "/account"]) {
+for (const p of ["/systems", "/verifications", "/connections", "/developers", "/account", "/billing"]) {
   ok(`${p} is not rewritten by the alias table`, resolve(p) === p);
 }
 
