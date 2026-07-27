@@ -386,7 +386,20 @@
 
 /* ============================================================== MOTION ===== */
 @keyframes v6PageIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-.v6-page { animation: v6PageIn 340ms var(--ease) both; min-height: 100dvh; }
+/* FILL MODE IS `backwards`, NOT `both`, AND THAT IS LOAD-BEARING.
+   `both` keeps the final keyframe applied forever, and a filled transform keyframe computes to
+   matrix(1, 0, 0, 1, 0, 0) rather than none. Any transform other than none makes an element the containing
+   block for its position:fixed descendants, so every page on this site permanently trapped its own fixed
+   children inside a box the height of the document.
+   Measured on /docs/findings at 390x844: .v6-docs__side and .v6-docs__close are position:fixed with
+   inset:0, and resolved against a 1241px .v6-page starting 67px down the page instead of against the
+   844px viewport. The docs navigation opened in the wrong place and scrolled away with the page instead
+   of staying put, on all seven docs pages. Users with prefers-reduced-motion never saw it, because the
+   rule below removes the animation entirely, which is what identified the animation as the cause.
+   `backwards` still applies the FROM keyframe before the animation starts, so there is no flash of
+   unstyled entry, and afterwards the element returns to its own style: opacity 1, transform none. The
+   final rendered result is identical, and the containing block disappears. */
+.v6-page { animation: v6PageIn 340ms var(--ease) backwards; min-height: 100dvh; }
 .v6-reveal { opacity: 0; transform: translateY(14px); transition: opacity 560ms var(--ease), transform 560ms var(--ease); transition-delay: calc(var(--i,0) * 66ms); }
 .v6-reveal.in { opacity: 1; transform: none; }
 .v6-reveal--m { transform: translateY(22px) scale(0.99); } .v6-reveal--m.in { transform: none; }

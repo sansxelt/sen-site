@@ -223,5 +223,30 @@ ok("the theme boundary is mounted by a shared component, not copied per layout",
 ok("the signed-in shell renders INSIDE the boundary (chrome is part of the product)",
   /<ProductSurface>[\s\S]{0,400}<AppTopbar/.test(readFileSync("app/rank/_components/rank-ui.tsx", "utf8")));
 
+// ── A FILLED TRANSFORM KEYFRAME IS A CONTAINING BLOCK THAT NEVER GOES AWAY ────────────────────────────
+// `animation-fill-mode: both` keeps the final keyframe applied forever, and a filled transform keyframe
+// computes to matrix(1, 0, 0, 1, 0, 0) rather than none. Anything other than none makes the element the
+// containing block for its position:fixed descendants. .v6-page wraps every page on the site, so every
+// fixed child on every page was permanently resolved against the document box instead of the viewport.
+// Measured on /docs/findings at 390x844: .v6-docs__side and .v6-docs__close (position:fixed, inset:0)
+// landed inside a 1241px .v6-page starting 67px down, so the docs navigation opened in the wrong place
+// and scrolled away with the page. Seven docs pages, all of them.
+console.log("\n── page-entry motion does not leave a containing block behind ──");
+{
+  const v6 = readFileSync("app/dev-preview/v6/_system/v6.css", "utf8");
+  const pageRule = (v6.match(/^\.v6-page \{[^}]*\}/m) ?? [""])[0];
+  ok(".v6-page rule found to check", pageRule.length > 0);
+  ok(".v6-page still animates in", /animation:\s*v6PageIn/.test(pageRule));
+  // The whole point. `both` and `forwards` both retain the final keyframe.
+  ok(".v6-page's entry animation does not retain its final transform keyframe",
+    !/animation:[^;]*\b(both|forwards)\b/.test(pageRule), pageRule.trim());
+  ok(".v6-page uses backwards, so it still has no entry flash",
+    /animation:[^;]*\bbackwards\b/.test(pageRule));
+  // The keyframe that made it matter. If the transform leaves this animation the rule above is moot, but
+  // it should be READ rather than deleted, because the fill mode is what the fix turns on.
+  ok("v6PageIn is still the transform-animating keyframe this guards",
+    /@keyframes v6PageIn \{[^}]*transform:/.test(v6.replace(/\n/g, " ")));
+}
+
 console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);
