@@ -11,8 +11,18 @@
 // limits come from lib/preflight/limits.ts, which the routes themselves import, so this page cannot quote a
 // ceiling the API does not enforce.
 //
-// NO CHART. A cost graph over this data would be one bar, and a shape drawn from three points is decoration
-// pretending to be analysis. When there is enough history to say something, it can earn its space.
+// NO CHART UNTIL THERE IS A SHAPE TO SHOW. This used to read "NO CHART", full stop: a cost graph over this
+// data would be one bar, and a shape drawn from three points is decoration pretending to be analysis. That
+// judgement was about the DATA and not about charts, so it is now a threshold rather than a refusal.
+// CHART_MIN_ACTIVE_DAYS separate active days before anything is drawn, and the page says what it is waiting
+// for when it is not met. Same for the cost trend, which needs TREND_MIN_RUNS charged runs before it will
+// name a direction: two points and a line between them is not a trend.
+//
+// AND THE THING THIS PAGE DID NOT SAY AT ALL: money. Balance, runs in flight, launched today, request
+// counts, webhook delivery, limits. Not one figure for what any of it cost, on the page named after usage.
+// The spend figures come from lib/preflight/account-usage.ts, which imports the SAME pure functions the key
+// detail page uses rather than reimplementing them, so the account total and the sum of its keys cannot
+// drift apart into two different answers to one question.
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -25,6 +35,7 @@ import { apiAccessAllowed } from "@/lib/v-entitlements";
 import { apiUsage, apiRequestCountsByPrefix } from "@/lib/v-events";
 import { listApiKeys } from "@/lib/v-api-keys";
 import { webhookStats } from "@/lib/v-webhooks";
+import { accountUsage, activeDays, CHART_MIN_ACTIVE_DAYS, TREND_MIN_RUNS } from "@/lib/preflight/account-usage";
 import { keySpentTodayCents } from "@/lib/preflight/key-spend";
 import { ownerActiveRunCount, ownerRunsToday } from "@/lib/preflight/runs-db";
 import { MAX_ACTIVE_RUNS_PER_OWNER, maxRunsPerDay } from "@/lib/preflight/limits";
@@ -67,6 +78,9 @@ export default async function UsagePage() {
     settle(ownerRunsToday(owner), 0),
   ]);
 
+  // Spend, verdicts and duration for the whole account, from the same functions the key detail page uses.
+  const acct = await settle(accountUsage(owner), null);
+
   // Exact per-key totals, not the sampled breakdown apiUsage carries by default.
   const byPrefix = await settle(apiRequestCountsByPrefix(email, keys.map((k) => k.prefix)), usage.byPrefix);
   // Spend today per key, from the same ledger the ceiling refusal reads. Null when migration 16 is absent.
@@ -95,6 +109,98 @@ export default async function UsagePage() {
           Need more balance? <Link href="/credits" style={{ color: "var(--acc-deep)" }}>Top up credits</Link>. Single top-up limit ${topupMaxDollars().toLocaleString()}.
         </p>
       </section>
+
+      {/* ── WHAT IT COST, which a page called Usage did not say anywhere ─────────────────────────────────
+          Balance, running, launched today and request counts were all here. Not one figure for money, on
+          the one page whose whole subject is consumption. Every number below comes from the same functions
+          the key detail page uses, so the account total and the sum of its keys cannot disagree. */}
+      {acct && acct.runs > 0 ? (
+        <section aria-label="Spend" style={{ marginBottom: 30 }}>
+          <h2 style={{ ...label, marginBottom: 10 }}>Spend</h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 10 }}>
+            <Stat k="This month" v={money(acct.months.thisMonth.chargedCents)}
+              sub={`${acct.months.thisMonth.runs} verification${acct.months.thisMonth.runs === 1 ? "" : "s"}`} />
+            <Stat k="Last month" v={money(acct.months.lastMonth.chargedCents)}
+              sub={`${acct.months.lastMonth.runs} verification${acct.months.lastMonth.runs === 1 ? "" : "s"}`} />
+            <Stat k="Per verification" v={acct.cost.medianCentsPerPaidRun == null ? "—" : money(acct.cost.medianCentsPerPaidRun)}
+              sub={acct.cost.paidRuns ? `median of ${acct.cost.paidRuns} charged` : "nothing charged yet"} />
+            <Stat k="Typical run" v={acct.duration.medianSeconds == null ? "—"
+              : acct.duration.medianSeconds < 60 ? `${Math.round(acct.duration.medianSeconds)}s`
+              : `${Math.floor(acct.duration.medianSeconds / 60)}m ${Math.round(acct.duration.medianSeconds % 60)}s`}
+              sub={acct.duration.count ? `measured over ${acct.duration.count}` : "no completed runs"} />
+          </div>
+
+          {/* The trend refuses to draw itself from too little. Six paid runs is an arbitrary floor, but it
+              is a STATED one, and below it the page says what it is waiting for instead of drawing a line
+              between two points and calling it a direction. */}
+          <p style={{ margin: "12px 0 0", fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.6 }}>
+            {acct.trend.changePct == null ? (
+              <>A cost trend needs {TREND_MIN_RUNS} charged verifications to say anything; there {acct.trend.sampleSize === 1 ? "is" : "are"} {acct.trend.sampleSize}.</>
+            ) : Math.abs(acct.trend.changePct) < 5 ? (
+              <>Cost per verification is holding steady across {acct.trend.sampleSize} charged runs.</>
+            ) : (
+              <>Cost per verification is <strong style={{ color: acct.trend.changePct > 0 ? "var(--wait-ink)" : "var(--go-ink)" }}>
+                {acct.trend.changePct > 0 ? "up" : "down"} {Math.abs(Math.round(acct.trend.changePct))}%
+              </strong> against the first half of your {acct.trend.sampleSize} charged runs, {money(acct.trend.earlierCents ?? 0)} to {money(acct.trend.recentCents ?? 0)} median.</>
+            )}
+            {acct.cost.planRuns > 0 ? <> {acct.cost.planRuns} run{acct.cost.planRuns === 1 ? " was" : "s were"} covered by your plan rather than charged.</> : null}
+          </p>
+        </section>
+      ) : null}
+
+      {/* ── VERDICTS OVER TIME ───────────────────────────────────────────────────────────────────────────
+          NO CHART UNTIL THERE IS A SHAPE TO SHOW. This page carried a standing note: "A cost graph over
+          this data would be one bar, and a shape drawn from three points is decoration pretending to be
+          analysis." That judgement was about the DATA, not about charts, so it is encoded as a threshold
+          rather than overruled: five separate active days before anything is drawn. */}
+      {acct && acct.verdicts.decided > 0 ? (
+        <section aria-label="Verdicts" style={{ marginBottom: 30 }}>
+          <h2 style={{ ...label, marginBottom: 10 }}>Verdicts</h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 10, marginBottom: 12 }}>
+            <Stat k="Verified" v={String(acct.verdicts.verified)} />
+            <Stat k="Failed" v={String(acct.verdicts.failed)} />
+            <Stat k="Blocked" v={String(acct.verdicts.blocked)} />
+            <Stat k="Pass rate" v={acct.verdicts.passRate == null ? "—" : `${Math.round(acct.verdicts.passRate * 100)}%`}
+              sub={`of ${acct.verdicts.decided} decided`} />
+          </div>
+          {activeDays(acct.daily) >= CHART_MIN_ACTIVE_DAYS ? (
+            <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-lg, 14px)", background: "var(--bg-1)", padding: "16px 18px 12px" }}>
+              <div style={{ display: "flex", alignItems: "flex-end", gap: 2, height: 80 }}>
+                {(() => {
+                  const max = Math.max(1, ...acct.daily.map((b) => b.runs));
+                  return acct.daily.map((b) => (
+                    <div key={b.day} title={`${b.day}: ${b.runs} run${b.runs === 1 ? "" : "s"}, ${money(b.chargedCents)}`}
+                      style={{ flex: 1, minWidth: 3, display: "flex", flexDirection: "column", justifyContent: "flex-end", height: "100%" }}>
+                      {/* Stacked, so a bad day is visible as a proportion rather than only as a total. */}
+                      {(["blocked", "failed", "verified"] as const).map((k) => b[k] > 0 ? (
+                        <div key={k} style={{ height: Math.max(2, Math.round((b[k] / max) * 76)),
+                          background: k === "verified" ? "var(--go-line)" : k === "failed" ? "var(--stop-line)" : "var(--wait-line)" }} />
+                      ) : null)}
+                      {b.runs === 0 ? <div style={{ height: 1, background: "var(--line-2)" }} /> : null}
+                    </div>
+                  ));
+                })()}
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontSize: 11, color: "var(--fg-5)" }}>
+                <span>{acct.daily[0]?.day}</span>
+                <span>30 days, {activeDays(acct.daily)} with activity</span>
+                <span>today</span>
+              </div>
+            </div>
+          ) : (
+            <p style={{ margin: 0, fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.6 }}>
+              A chart needs {CHART_MIN_ACTIVE_DAYS} separate days of activity before it shows a shape rather
+              than a few bars. There {activeDays(acct.daily) === 1 ? "has been 1 day" : `have been ${activeDays(acct.daily)} days`} in the last 30.
+            </p>
+          )}
+          {acct.verdicts.invalidated > 0 ? (
+            <p style={{ margin: "10px 0 0", fontSize: 12, color: "var(--fg-5)", lineHeight: 1.6 }}>
+              {acct.verdicts.invalidated} verification{acct.verdicts.invalidated === 1 ? " was" : "s were"} invalidated. The
+              charge stands and the evidence is kept; the verdict no longer does, so {acct.verdicts.invalidated === 1 ? "it is" : "they are"} not counted above.
+            </p>
+          ) : null}
+        </section>
+      ) : null}
 
       <section aria-label="API keys" style={{ marginBottom: 30 }}>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, marginBottom: 4 }}>

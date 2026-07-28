@@ -97,7 +97,8 @@
     "credit:hold:test": "tsx scripts/credit-hold-verify.ts",
     "mobile:motion:test": "tsx scripts/mobile-motion-verify.ts",
     "key:detail:test": "tsx scripts/key-detail-verify.ts",
-    "prose:link:test": "tsx scripts/prose-link-verify.ts"
+    "prose:link:test": "tsx scripts/prose-link-verify.ts",
+    "usage:account:test": "tsx scripts/account-usage-verify.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
