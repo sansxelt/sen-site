@@ -74,23 +74,48 @@ say "  Vraelis CLI installed."
 say "    $DEST/vraelis"
 say ""
 
-# ── PATH, said plainly rather than edited silently ────────────────────────────────────────────────────
-# This does NOT write to a shell profile. Editing someone's .zshrc from a piped script is a surprise, and
-# the surprise is discovered later by someone who did not run this. Telling them is enough.
+# ── WHAT TO DO NEXT, ALWAYS, NOT ONLY WHEN PATH HAPPENS TO BE RIGHT ──────────────────────────────────
+#
+# The next-steps block used to sit in the on-PATH branch only. That branch is FALSE for every first-time
+# install, because ~/.local/bin is not on PATH by default on most systems, so the people who most needed
+# telling were the only people never told. They got a PATH instruction and silence.
+#
+# Numbered, because an installer that finishes with three unlabelled commands leaves the reader to guess
+# the order. Step 1 appears only when it is actually needed, and the rest renumber around it.
+n=1
+step() { printf '  %s. %s
+' "$n" "$1"; n=$((n+1)); }
+
+say "  Next:"
+say ""
+
 case ":${PATH}:" in
-  *":$DEST:"*)
-    say "  Get a key at https://app.vraelis.com/developers, then:"
-    say ""
-    say "    export VRAELIS_API_KEY=vr_live_..."
-    say "    vraelis verify --url https://your-preview.example.com \\"
-    say "      --claim \"A customer can upgrade and still have access after signing back in\" --wait"
-    ;;
+  *":$DEST:"*) ;;
   *)
-    say "  $DEST is not on your PATH. Add it:"
+    # This does NOT write to a shell profile. Editing someone's .zshrc from a piped script is a surprise
+    # discovered later by somebody who did not run this. Telling them is enough.
+    step "Put it on your PATH, for this shell:"
     say ""
-    say "    export PATH=\"$DEST:\$PATH\""
+    say "       export PATH=\"$DEST:$PATH\""
     say ""
-    say "  Add that line to your shell profile to keep it. This installer does not edit profiles."
+    say "     To keep it, add that line to your shell profile (~/.zshrc or ~/.bashrc)."
+    say "     This installer does not edit profiles."
+    say ""
     ;;
 esac
+
+step "Create an API key with \"Launch runs\" access:"
+say ""
+say "       https://app.vraelis.com/developers"
+say ""
+step "Sign in. The key is stored in ~/.vraelis/config.json:"
+say ""
+say "       vraelis login"
+say ""
+step "Verify something. This one spends credits:"
+say ""
+say "       vraelis verify --url https://your-preview.example.com \\"
+say "         --claim \"A customer can upgrade and still have access after signing back in\" --wait"
+say ""
+say "  Exit codes: 0 verified, 1 failed, 2 blocked or could not run."
 say ""

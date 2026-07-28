@@ -390,6 +390,42 @@ async function main() {
     ok("the shim is a .cmd, so it runs from cmd.exe as well as PowerShell",
       /vraelis\.cmd/.test(psCode) && /%~dp0vraelis\.mjs/.test(ps));
 
+    // ── AN INSTALLER THAT DOES NOT SAY WHAT TO DO NEXT HAS NOT FINISHED ─────────────────────────────
+    //
+    // Both installers printed "get a key, then login" only in the branch where the directory was ALREADY
+    // on PATH. That branch is false for every first-time install, so the people who most needed the
+    // instructions were the only ones who never saw them: they got a PATH line and silence.
+    for (const [name, src] of [["sh", shCode], ["ps1", psCode]]) {
+      ok(`the ${name} installer always says what to do next`, /Next:/.test(src));
+      // The steps must sit OUTSIDE the on-PATH branch. A grep for the text alone would have passed on the
+      // broken version too, since the text existed; it was unreachable, which is the harder thing to see.
+      const stepsIdx = src.indexOf("Next:");
+      const onPathIdx = Math.max(src.indexOf("*\":$DEST:\"*)"), src.indexOf("if ($onPath)"));
+      ok(`and the ${name} steps are not trapped inside the already-on-PATH branch`,
+        stepsIdx !== -1 && (onPathIdx === -1 || stepsIdx < onPathIdx || /\$onPath\)/.test(src)));
+      ok(`the ${name} installer names the key page, login and verify, in order`,
+        /app\.vraelis\.com\/developers/.test(src)
+        && src.indexOf("vraelis login") > src.indexOf("app.vraelis.com/developers")
+        && src.indexOf("vraelis verify") > src.indexOf("vraelis login"));
+      // Someone following a numbered list to the end should know which step costs money before they run it.
+      ok(`the ${name} installer warns that verifying spends credits`, /spends credits/.test(src));
+    }
+
+    // ── A PASTED KEY ARRIVES AS ONE CHUNK ───────────────────────────────────────────────────────────
+    //
+    // In raw mode a single data event carries everything that arrived together, so pasting delivers
+    // "vr_live_abc\r" in one string. The handler compared the WHOLE chunk against "\r", so Enter never
+    // registered and the carriage return was appended to the key. Typing slowly worked; pasting, which is
+    // how anyone enters a credential, did not.
+    const cliSrc = readFileSync("cli/vraelis.mjs", "utf8");
+    const prompt = cliSrc.slice(cliSrc.indexOf("function promptSecret"), cliSrc.indexOf("function usage()"));
+    ok("the key prompt walks the chunk character by character", /for \(const ch of String\(chunk\)\)/.test(prompt));
+    ok("and never compares a whole chunk to a single key", !/\(chunk === "|ch === chunk/.test(prompt));
+    // A prompt that shows nothing while you type reads as a hung program.
+    ok("the prompt gives some sign it is receiving input", /process\.stderr\.write\(dim\("\."\)\)/.test(prompt));
+    ok("but never echoes the key itself", !/write\(buf\)|write\(ch\)/.test(prompt));
+    ok("and the label says the input is hidden", /hidden/.test(cliSrc));
+
     // "cli" IS NOW AN APP ROOT, and that is a collision waiting to happen.
     //
     // The console has a Command line page at /cli, so "cli" was added to APP_ROOTS. isAppPath is

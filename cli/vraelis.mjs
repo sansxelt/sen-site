@@ -102,14 +102,39 @@ function promptSecret(label) {
     input.resume();
     input.setEncoding("utf8");
     let buf = "";
-    const onData = (ch) => {
-      // Ctrl-C and Ctrl-D leave nothing behind rather than half a key.
-      if (ch === "\u0003" || ch === "\u0004") { cleanup(); process.stderr.write("\n"); resolve(""); return; }
-      if (ch === "\r" || ch === "\n") { cleanup(); process.stderr.write("\n"); resolve(buf.trim()); return; }
-      if (ch === "\u007f" || ch === "\b") { buf = buf.slice(0, -1); return; }
-      buf += ch;
-    };
+    let done = false;
+
     const cleanup = () => { input.removeListener("data", onData); input.setRawMode(false); input.pause(); };
+    const finish = (value) => { if (done) return; done = true; cleanup(); process.stderr.write("\n"); resolve(value); };
+
+    // CHARACTER BY CHARACTER THROUGH THE CHUNK, not once per event.
+    //
+    // In raw mode one data event carries whatever arrived together, and a PASTE arrives as a single
+    // chunk: "vr_live_abc123\r", the key and the return in the same string. Comparing the whole chunk
+    // against "\r" therefore never matched, so Enter did nothing and the carriage return was appended to
+    // the key. Typing slowly worked and pasting did not, which is the wrong way round for a credential
+    // nobody types by hand.
+    const onData = (chunk) => {
+      for (const ch of String(chunk)) {
+        if (done) return;
+        // Ctrl-C and Ctrl-D leave nothing behind rather than half a key.
+        if (ch === "\u0003" || ch === "\u0004") { finish(""); return; }
+        if (ch === "\r" || ch === "\n") { finish(buf.trim()); return; }
+        if (ch === "\u007f" || ch === "\b") {
+          if (buf.length) { buf = buf.slice(0, -1); process.stderr.write("\b \b"); }
+          continue;
+        }
+        // Control characters are not part of a key and must not be swallowed into one. An arrow key sends
+        // an escape sequence; appending it would store a credential that never authenticates, with no
+        // clue as to why.
+        if (ch < " ") continue;
+        buf += ch;
+        // ONE DOT PER CHARACTER. The key is never echoed, but echoing NOTHING is why this looked broken:
+        // a prompt that does not move while you type reads as a hung program, so people paste again,
+        // press Enter twice, or kill it. A dot is not the key, and it is proof of life.
+        process.stderr.write(dim("."));
+      }
+    };
     input.on("data", onData);
   });
 }
@@ -462,7 +487,7 @@ async function login(args) {
   say(`  ${bold("Sign in to Vraelis")}`);
   say(`  ${dim("Create a key with \"Launch runs\" access at")} ${cyan("https://app.vraelis.com/developers")}`);
   say("");
-  const key = await promptSecret(`  ${dim("API key:")} `);
+  const key = await promptSecret(`  ${dim("API key")} ${dim("(hidden, paste it and press Enter):")} `);
   if (!key) fail("No key entered. Nothing was stored.");
 
   const spin = PLAIN ? { stop() {} } : spinner("Checking the key");

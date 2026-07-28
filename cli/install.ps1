@@ -69,25 +69,46 @@ Write-Host "  Vraelis CLI installed." -ForegroundColor Green
 Write-Host "    $shim"
 Write-Host ""
 
-# ── PATH, said rather than silently rewritten ──────────────────────────────────────────────────────────
-# This does NOT edit the registry. A piped installer that changes your environment is a surprise found
-# later by someone who did not run it, and the same restraint the sh installer shows about shell profiles
-# applies here. The command to make it permanent is printed instead, and it is user-scoped and reversible.
+# ── WHAT TO DO NEXT, ALWAYS, NOT ONLY WHEN PATH HAPPENS TO BE RIGHT ───────────────────────────────────
+#
+# The next-steps block used to live in the on-PATH branch only. That branch is FALSE for every first-time
+# install, because LOCALAPPDATAVraelis is on nobody's PATH by default, so the people who most needed
+# telling were the only people never told. They got a PATH instruction and then silence.
+#
+# Numbered, because an installer that ends with three unlabelled commands leaves the reader to guess the
+# order. Step 1 appears only when it is actually needed and the rest renumber around it.
+$n = 1
+function Step($text) { Write-Host ("  {0}. {1}" -f $script:n, $text); $script:n++ }
+
+Write-Host "  Next:"
+Write-Host ""
+
 $onPath = ($env:Path -split ';') -contains $Dest
-if ($onPath) {
-  Write-Host "  Get a key at https://app.vraelis.com/developers, then:"
+if (-not $onPath) {
+  # This does NOT edit the registry. A piped installer that changes your environment is a surprise found
+  # later by somebody who did not run it. The command is printed instead: user-scoped and reversible.
+  Step "Put it on your PATH, for this window:"
   Write-Host ""
-  Write-Host "    vraelis login"
-  Write-Host "    vraelis verify --url https://your-preview.example.com --claim `"...`" --wait"
-} else {
-  Write-Host "  $Dest is not on your PATH. For this session:"
+  Write-Host "       `$env:Path += `";$Dest`""
   Write-Host ""
-  Write-Host "    `$env:Path += `";$Dest`""
+  Write-Host "     To keep it, run this once and then open a NEW terminal:"
   Write-Host ""
-  Write-Host "  To keep it, once:"
+  Write-Host "       [Environment]::SetEnvironmentVariable('Path', [Environment]::GetEnvironmentVariable('Path','User') + ';$Dest', 'User')"
   Write-Host ""
-  Write-Host "    [Environment]::SetEnvironmentVariable('Path', [Environment]::GetEnvironmentVariable('Path','User') + ';$Dest', 'User')"
-  Write-Host ""
-  Write-Host "  This installer does not change your PATH for you." -ForegroundColor DarkGray
 }
+
+Step "Create an API key with `"Launch runs`" access:"
+Write-Host ""
+Write-Host "       https://app.vraelis.com/developers"
+Write-Host ""
+Step "Sign in. Paste the key when asked; it is hidden as you type."
+Write-Host ""
+Write-Host "       vraelis login"
+Write-Host ""
+Step "Verify something. This one spends credits:"
+Write-Host ""
+Write-Host "       vraelis verify --url https://your-preview.example.com ``"
+Write-Host "         --claim `"A customer can upgrade and still have access after signing back in`" --wait"
+Write-Host ""
+Write-Host "  Exit codes: 0 verified, 1 failed, 2 blocked or could not run." -ForegroundColor DarkGray
 Write-Host ""
