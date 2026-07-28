@@ -278,8 +278,17 @@ console.log("\n── the API and the CLI carry the same relationship the consol
   ok("guarantee fields are omitted when there is no guarantee", /\.\.\.\(guarantee \? \{/.test(api));
 
   const cli = readFileSync("cli/vraelis.mjs", "utf8");
-  ok("the CLI prints the guarantee, the repair link and the record URL", /Guarantee  \$\{v\.guarantee_title\}/.test(cli) && /console_url/.test(cli));
-  ok("each CLI line appears only when the API returned it", /if \(v\.guarantee_title\) say/.test(cli));
+  // CHECKED AS A PROPERTY, NOT AS A FORMAT STRING. These pinned the literal `Guarantee  ${v.guarantee_title}`
+  // and the exact call shape `if (v.guarantee_title) say`, so restyling the output broke them while the
+  // behaviour they exist to protect was untouched. An assertion that fails when a colour is added, and
+  // would pass if the field were dropped and re-added under a different label, is guarding the wrong thing.
+  for (const field of ["guarantee_title", "reverification_of", "console_url"]) {
+    ok(`the CLI surfaces ${field}`, new RegExp(`v\\.${field}`).test(cli));
+    // Guarded on ITS OWN field. Printing a guarantee title for a run that has none would be the same class
+    // of defect as inventing the guarantee: a relationship the record does not have, stated as fact.
+    ok(`and prints it only when the API returned it`,
+      new RegExp(`if \\(v\\.${field}\\)`).test(cli));
+  }
   // The founder banned middots in ALL visible copy; two had survived in the CLI's own output.
   ok("no middots in CLI output", !cli.includes("·"));
 }
