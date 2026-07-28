@@ -66,7 +66,16 @@ export default function V6Enterprise() {
             {HOW.map(([t, d]) => (<div key={t} style={CARD}><h3 style={H3}>{t}</h3><p style={P}>{d}</p></div>))}
           </Reveal>
           <Reveal>
-            <div style={{ marginTop: 28 }}><CTA href={`${BASE}/contact`} brand>Talk to us</CTA></div>
+            {/* THE ADDRESS, NOT A ROUTE TO IT. This sent an enterprise reader to /contact, which lists
+                three inboxes and asks them to pick. They already know what they are asking about, and the
+                contact page routes exactly this to sales@ anyway, so the extra hop only gives somebody
+                mid-evaluation another page to close. */}
+            <div style={{ marginTop: 28, display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
+              <CTA href="mailto:sales@vraelis.com?subject=Vraelis%20Enterprise" brand>Talk to sales</CTA>
+              <span style={{ fontSize: 14, color: "var(--g-fg-3)" }}>
+                or <ProseLink href={`${BASE}/contact`}>the other addresses</ProseLink> if it is not a commercial question.
+              </span>
+            </div>
             <p className="v6-note">
               Controls and data handling are on{" "}
               <ProseLink href={`${BASE}/security`}>security</ProseLink>. Listed plans are on{" "}

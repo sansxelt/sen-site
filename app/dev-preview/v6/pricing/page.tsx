@@ -92,6 +92,25 @@ export default function V6Pricing() {
               </div>
             ))}
           </Reveal>
+          {/* THE TIER THAT WAS NOT ON THE PAGE. An agency, a platform team, or anyone with a procurement
+              process reads three self-serve cards, sees a ceiling and no way to say "we need more than
+              that, and we need a contract", and leaves. Every line here is something /enterprise marks
+              Operational: OIDC single sign-on, roles, owner-anchored billing, audit export. SAML is
+              Preview there and SCIM is Planned, so neither is sold here. A card that presents a preview as
+              shipped is the exact failure this product exists to catch, and enterprise buyers check. */}
+          <Reveal>
+            <div style={{ ...CARD, marginTop: 22 }}>
+              <h3 style={{ ...H3, marginBottom: 6 }}>
+                Enterprise: more than {PLAN_CATALOG_V1[PLAN_CATALOG_V1.length - 1].maxGuarantees} guarantees, or a contract
+              </h3>
+              <p style={{ ...P, marginBottom: 16 }}>
+                Volume above the listed plans, single sign-on through your own identity provider, roles
+                across a team, owner-anchored billing, and audit activity you can export. Invoicing, a
+                signed agreement and a security review are all available. Written quotes, not a calculator.
+              </p>
+              <CTA href="mailto:sales@vraelis.com?subject=Vraelis%20Enterprise">Talk to sales</CTA>
+            </div>
+          </Reveal>
           <Reveal>
             <p style={{ ...P, marginTop: 24 }}>
               Yearly billing is available at checkout. Or start without a plan: a verification can be paid for

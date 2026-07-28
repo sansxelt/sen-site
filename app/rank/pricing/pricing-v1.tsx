@@ -111,6 +111,24 @@ export default function PricingV1({ initialCycle = "monthly" }: { initialCycle?:
             ))}
           </div>
 
+          {/* THE TIER THAT WAS NOT ON THE PAGE. An agency or a platform team reads four self-serve cards,
+              sees a ceiling of 30 guarantees and no way to say "we need more, and we need a contract", and
+              leaves. Every line below is something /enterprise marks Operational; SAML is Preview there
+              and SCIM is Planned, so neither is sold here. */}
+          <div className="card" style={{ marginTop: 22, display: "flex", flexWrap: "wrap", alignItems: "center", gap: "16px clamp(20px, 3vw, 36px)" }}>
+            <div style={{ flex: "1 1 380px", minWidth: 0 }}>
+              <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 6 }}>
+                Enterprise: more than {PLAN_CATALOG_V1[PLAN_CATALOG_V1.length - 1].maxGuarantees} guarantees, or a contract
+              </div>
+              <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>
+                Volume above the listed plans, single sign-on through your own identity provider, roles
+                across a team, owner-anchored billing, and audit activity you can export. Invoicing, a
+                signed agreement and a security review are all available.
+              </p>
+            </div>
+            <a className="btn btn--ghost" style={{ flex: "none" }} href="mailto:sales@vraelis.com?subject=Vraelis%20Enterprise">Talk to sales</a>
+          </div>
+
           <div className="card" style={{ marginTop: 22, display: "flex", flexWrap: "wrap", alignItems: "center", gap: "16px clamp(20px, 3vw, 36px)" }}>
             <div style={{ flex: "1 1 380px", minWidth: 0 }}>
               <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 6 }}>

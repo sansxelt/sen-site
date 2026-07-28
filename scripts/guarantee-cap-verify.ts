@@ -81,6 +81,47 @@ console.log("\n── what a plan sells is said once ──");
   ok("and states the API, which was previously sold to nobody", planCapacity(b).some((l) => /API/.test(l)));
 }
 
+console.log("\n── there is a way past the top self-serve tier ──");
+{
+  // An agency or a platform team reads the cards, sees a ceiling and no way to say "we need more than
+  // that, and we need a contract", and leaves. The capability existed the whole time and was reachable
+  // only from a marketing page nobody in that position had a reason to visit.
+  const SURFACES = [
+    "app/rank/app/plans/plans-v1.tsx",
+    "app/rank/pricing/pricing-v1.tsx",
+    "app/dev-preview/v6/pricing/page.tsx",
+  ];
+  for (const f of SURFACES) {
+    const src = readFileSync(f, "utf8");
+    ok(`${f.split("/").slice(-2).join("/")} offers an enterprise route`, /Enterprise: more than/.test(src));
+    ok("  and gives the address rather than another page to click", /sales@vraelis\.com/.test(src));
+  }
+  // ONLY WHAT /enterprise MARKS OPERATIONAL. SAML is Preview there and SCIM is Planned, and a card that
+  // presents a preview as shipped is the exact failure this product exists to catch. Enterprise buyers are
+  // also the readers most likely to check.
+  const ent = readFileSync("app/dev-preview/v6/enterprise/page.tsx", "utf8");
+  const notShipped = Array.from(ent.matchAll(/\["([^"]+)", "wait"/g)).map((m) => m[1]);
+  ok("the enterprise page still marks some capabilities as not shipped", notShipped.length > 0, notShipped.join(", "));
+  for (const f of SURFACES) {
+    const src = readFileSync(f, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+    for (const claim of notShipped) {
+      const word = claim.split(" ")[0];
+      ok(`  pricing does not sell "${word}", which is not shipped`, !new RegExp(word, "i").test(src));
+    }
+  }
+}
+
+console.log("\n── a subscriber can get back off ──");
+{
+  // Every paid card says "Switch in billing" when you are on another plan. Free said "Open applications",
+  // which is not an action on this plan at all, so somebody on Scale who wanted to stop paying had no path
+  // from the one page whose entire job is choosing a plan. It also still said "applications" for a page
+  // renamed to Systems, which is the same halfway rename being cleaned up everywhere else.
+  const plans = readFileSync("app/rank/app/plans/plans-v1.tsx", "utf8");
+  ok("the free card offers a way to cancel when you are subscribed", /Cancel in billing/.test(plans));
+  ok("and no longer sends a subscriber sightseeing instead", !/Open applications/.test(plans));
+}
+
 console.log("\n── the API is on every paid plan ──");
 // It was Scale-only at $399 and listed on no card, while the console shipped a CLI, an installer for two
 // platforms and a documented CI gate. A Builder customer following any of it was refused by a rule they

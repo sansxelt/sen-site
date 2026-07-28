@@ -104,7 +104,19 @@ export default function PlansV1({ initialCycle = "monthly" }: { initialCycle?: C
                 from the card rather than discovered when a key is refused. */}
             <li>Console only, no API or CLI</li>
           </ul>
-          <Link className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href="/systems">{currentPlan ? "Open applications" : "Run your free verification"}</Link>
+          {/* A SUBSCRIBER NEEDS A WAY DOWN, and this offered them a sightseeing link instead.
+              Every paid card says "Switch in billing" when you are on another plan. Free said "Open
+              applications", which is not an action on this plan at all, so someone on Scale who wanted to
+              stop paying had no path from the page whose entire job is choosing a plan. It also still said
+              "applications" for a page renamed to Systems this morning, which is the same halfway rename
+              being cleaned up everywhere else. */}
+          {currentPlan ? (
+            <button onClick={manageBilling} disabled={busy} className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }}>
+              {busy ? "Opening…" : "Cancel in billing"}
+            </button>
+          ) : (
+            <Link className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href="/systems">Run your free verification</Link>
+          )}
         </div>
 
         {PLAN_CATALOG_V1.map((p) => {
@@ -163,6 +175,30 @@ export default function PlansV1({ initialCycle = "monthly" }: { initialCycle?: C
           </p>
         </div>
         <Link className="btn btn--ghost" style={{ flex: "none" }} href="/credits">Add balance</Link>
+      </div>
+
+      {/* ── THE TIER THAT WAS NOT ON THE PAGE ────────────────────────────────────────────────────────
+          An agency, a platform team or anyone with a procurement process reads four self-serve cards, sees
+          a ceiling of 30 guarantees and no way to say "we need more and we need a contract", and leaves.
+          The capability existed the whole time and was reachable only from a marketing page they had no
+          reason to visit.
+
+          EVERY LINE HERE IS SOMETHING /enterprise MARKS OPERATIONAL. OIDC single sign-on, roles, owner
+          anchored billing, audit export. SAML is Preview there and SCIM is Planned, so neither is sold
+          here: a card that promises a preview as though it shipped is the exact failure this product
+          exists to catch, and enterprise buyers are the ones who check. */}
+      <div className="card" style={{ marginTop: 22, display: "flex", flexWrap: "wrap", alignItems: "center", gap: "16px clamp(20px, 3vw, 36px)" }}>
+        <div style={{ flex: "1 1 380px", minWidth: 0 }}>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 6 }}>
+            Enterprise: more than {PLAN_CATALOG_V1[PLAN_CATALOG_V1.length - 1].maxGuarantees} guarantees, or a contract
+          </div>
+          <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>
+            Volume above the listed plans, single sign-on through your own identity provider, roles across a
+            team, owner-anchored billing, and audit activity you can export. Invoicing, a signed agreement
+            and a security review are all available. Written quotes, not a calculator.
+          </p>
+        </div>
+        <a className="btn btn--ghost" style={{ flex: "none" }} href="mailto:sales@vraelis.com?subject=Vraelis%20Enterprise">Talk to sales</a>
       </div>
 
       {/* EVERY PLAN, STATED ONCE. These were bullets on all four cards, which differentiated nothing and
