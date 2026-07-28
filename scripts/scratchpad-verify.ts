@@ -83,8 +83,12 @@ ok("close, collapse and zoom are all wired",
 // Anchored on being a button with a label, not on how the JSX happens to be formatted. The previous
 // version matched `<button key={id}` on one line, so wrapping the attributes across lines for readability
 // broke it while the markup was unchanged. A check that fails when code is tidied gets tidied away.
+// ...and it pinned `onClick={act}` anyway, which is the same mistake one line lower: a fact about how the
+// handler is spelled, not about whether the control does anything. Wrapping the call to stop a click on a
+// light also reaching the bar behind it broke this while every button kept working. What matters is that
+// the light invokes its own action, in whatever form.
 ok("they are real buttons with labels, not decorative spans",
-  /<button\b/.test(code) && /aria-label=\{label\}/.test(code) && /onClick=\{act\}/.test(code));
+  /<button\b/.test(code) && /aria-label=\{label\}/.test(code) && /onClick=\{[\s\S]{0,90}?\bact\b/.test(code));
 // Verdict colours mean something in this product. Spending --go-ink, the green that means Verified, on a
 // zoom control blurs the one vocabulary it cannot afford to blur.
 ok("the window controls do not borrow the verdict palette",
@@ -122,6 +126,26 @@ console.log("\n── the controls are actually visible ──");
   }
   // A translucent fill is exactly how the washed-out version happened in the first place.
   ok("none of them is a translucent tint", !/base: "rgba/.test(code));
+}
+
+console.log("\n── a collapsed panel does not look like a broken one ──");
+{
+  // An 11px dot is a fine control for somebody who already knows it is there. Collapsed to a bare strip it
+  // is the ONLY way back, and anyone who does not think to aim at the amber dot a second time reads the
+  // panel as stuck. The whole bar restores it.
+  ok("the title bar restores the panel when collapsed", /onClick=\{view === "min" \? \(\) => setView\("normal"\)/.test(code));
+  // Keyboard too, or the bar is a control only a mouse can reach.
+  ok("  by keyboard as well as by pointer", /onKeyDown=\{view === "min"/.test(code) && /e\.key === "Enter" \|\| e\.key === " "/.test(code));
+  ok("  and announces itself as a control while collapsed", /role=\{view === "min" \? "button"/.test(code) && /tabIndex=\{view === "min" \? 0/.test(code));
+  ok("  showing a pointer so it reads as clickable", /cursor: view === "min" \? "pointer"/.test(code));
+
+  // ONLY WHEN COLLAPSED. Making the expanded bar collapse on click trades a discovery problem for an
+  // accidental one, and this is the safe direction: it never closes and it never touches the text.
+  ok("the expanded bar stays inert, so nothing collapses by accident", /: undefined\}/.test(code) && !/onClick=\{\(\) => setView\("min"\)\}/.test(code));
+
+  // The bar behind the lights restores. Without stopPropagation, closing a collapsed panel would also
+  // expand it, and it would come back full size the next time it was opened.
+  ok("a click on one of the three lights stops at that light", /onClick=\{\(e\) => \{ e\.stopPropagation\(\); act\(\); \}\}/.test(code));
 }
 
 console.log("\n── it is in the product, not on the marketing site ──");

@@ -157,7 +157,28 @@ export function Scratchpad() {
           }}
         >
           {/* The title bar, in the product's own terminal register: three dots, a name, a status. */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", borderBottom: "1px solid var(--line-2)", background: "var(--bg-2)" }}>
+          {/* AND, ONCE COLLAPSED, THE WAY BACK.
+              An 11px dot is a fine control for someone who already knows it is there. Collapsed to a bare
+              strip it is the ONLY way back, and a panel that looks inert to anyone who does not think to
+              aim at the amber dot again is a panel people assume is broken. The whole bar restores it.
+
+              Only when collapsed. Making the expanded bar collapse on click would trade a discovery
+              problem for an accident, and this is meant to be the safe direction: it never closes, and it
+              never touches the text. */}
+          <div
+            onClick={view === "min" ? () => setView("normal") : undefined}
+            onKeyDown={view === "min" ? (e) => {
+              if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setView("normal"); }
+            } : undefined}
+            role={view === "min" ? "button" : undefined}
+            tabIndex={view === "min" ? 0 : undefined}
+            title={view === "min" ? "Expand notes" : undefined}
+            aria-label={view === "min" ? "Expand notes" : undefined}
+            style={{
+              display: "flex", alignItems: "center", gap: 8, padding: "9px 12px",
+              borderBottom: "1px solid var(--line-2)", background: "var(--bg-2)",
+              cursor: view === "min" ? "pointer" : "default",
+            }}>
             {/* THREE REAL CONTROLS, NOT THREE DOTS. They look like a title bar, so they have to behave
                 like one: something that renders as a button and does nothing is a small lie that costs a
                 click to discover. Same jobs a window has, adapted to a panel with no dock to fly into.
@@ -177,7 +198,10 @@ export function Scratchpad() {
               ] as [string, { base: string; hot: string }, string, () => void][]).map(([id, c, label, act]) => (
                 <button
                   key={id}
-                  onClick={act}
+                  // The bar behind these restores the panel when collapsed, so a click on red has to stop
+                  // there. Without this, closing a collapsed panel would also quietly expand it, and it
+                  // would come back full size the next time it was opened.
+                  onClick={(e) => { e.stopPropagation(); act(); }}
                   title={label}
                   aria-label={label}
                   onMouseEnter={(e) => { e.currentTarget.style.background = c.hot; }}
