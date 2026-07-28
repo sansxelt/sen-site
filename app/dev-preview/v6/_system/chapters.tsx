@@ -145,7 +145,7 @@ const STANDARD: [string, string][] = [
 
 export function Standard() {
   const wrap = useRef<HTMLDivElement>(null);
-  // No React state at all. The eight conditions derive their position and opacity from --p in CSS, so
+  // No React state at all. The four conditions derive their position and opacity from --p in CSS, so
   // there is nothing to re-render as the reader scrolls and nothing that can snap out of step with the
   // ring. The counter reads from the same value.
   useScrollProgress(wrap);

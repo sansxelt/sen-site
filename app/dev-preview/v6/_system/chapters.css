@@ -114,16 +114,30 @@
 /* ═══════════════════════════════════════════ 3. WHAT VERIFIED HAS TO MEAN ══
    The company's own motif: a gapped ring. The centre carries the conclusion, the outer path is the
    independent verification closing around it, one segment per condition. The ring only closes when all
-   eight do, and the conclusion only resolves after that.
+   four do, and the conclusion only resolves after that.
 
    Scale is the point. A condition is a full statement at display size, not a row in a list.
    ========================================================================================= */
 .v6-st { position: relative; height: 430vh; background: var(--graphite); color: var(--g-fg-2); --p: 0;
-  /* --ring fills the eight bars and stops. --travel shares its start and rate but overruns to 1.13, so
-     the last statement travels out of frame rather than parking there. Statement i is centred at
-     travel = (i + 0.5) / 4, which is exactly where bar 2i+1 completes: the bars ARE the text. */
+  /* FOUR refusals, four ring segments, one statement each. The comments here said eight, from a version
+     of this chapter with eight of them; the geometry below was updated when the list shrank and the prose
+     was not.
+
+     THE LOCK IS NOW STRUCTURAL RATHER THAN A COINCIDENCE THAT HAD ALREADY BROKEN. This claimed that a
+     statement reaching the centre is exactly where its segment completes, so that a lit segment always
+     corresponds to text on screen. The two variables were defined with DIFFERENT rates (0.62 against
+     0.70), so they could not stay in step, and did not: measured with ops/standard-timing-probe.mjs, the
+     first statement was centred 22.3vh of scrolling BEFORE its segment finished, closing to 2.5vh by the
+     last. The text ran ahead of the ring and the mismatch was worst at the opening, which is the part
+     everyone sees.
+
+     --travel is now the ring's own ramp shifted back by an eighth. Statement i is centred where
+     travel = (i + 0.5) / 4, and segment i completes where ring = (i + 1) / 4, so subtracting 1/8 makes
+     those the same instant by construction. It is unclamped at the top so the last statement can travel
+     out of frame instead of parking there, and slightly negative at the bottom so the first one rises in
+     rather than fading up from a standstill. */
   --ring:   clamp(0, calc((var(--p) - 0.05) / 0.62), 1);
-  --travel: clamp(0, calc((var(--p) - 0.05) / 0.70), 1.13);
+  --travel: clamp(-0.14, calc((var(--p) - 0.05) / 0.62 - 0.125), 1.13);
   --done:   clamp(0, calc((var(--p) - 0.80) / 0.11), 1); }
 .v6-st__pin { position: sticky; top: 0; height: 100svh; overflow: hidden;
   display: grid; grid-template-rows: auto 1fr; gap: clamp(10px, 2vh, 26px);
@@ -145,12 +159,14 @@
   width: 100%; max-width: 340px; aspect-ratio: 1; margin-inline: auto; }
 .v6-st__ring { width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
 .v6-st__track { fill: none; stroke: rgba(255,255,255,0.10); stroke-width: 6; }
-/* eight arcs around a 104r circle: circumference 653.45, each segment 74 long with a 7.7 gap */
+/* FOUR arcs around a 104r circle: circumference 653.45, each segment 160.16 long with a 3.2 gap,
+   stepping 163.36 per slice. Said eight, from the version of this chapter that had eight refusals. */
 .v6-st__seg { fill: none; stroke: var(--g-fg); stroke-width: 6; stroke-linecap: butt;
   stroke-dasharray: 160.16 493.29;
   stroke-dashoffset: calc(var(--i) * -163.36px);
   /* One slice per refusal. Slice i completes exactly as statement i reaches the centre, so a lit slice
-     always corresponds to text that is on screen. */
+     always corresponds to text on screen. That is now true by construction rather than by coincidence:
+     see --travel above, and ops/standard-timing-probe.mjs, which measures it. */
   opacity: clamp(0, calc((var(--ring) * 4) - var(--i)), 1); }
 .v6-st__centre { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
 /* the counter must be GONE before the conclusion is legible; at a plain 1-done both were half-lit in
