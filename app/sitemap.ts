@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { publishedArticles } from "@/app/rank/research/_articles";
 import { V6_EXACT, CLEAN_EXACT, v6Public } from "@/proxy";
 import { DOCS } from "@/app/dev-preview/v6/_content/docs";
+import { stealthConfigured } from "@/lib/stealth";
 
 // The sitemap is DERIVED FROM THE ROUTING, not written alongside it.
 //
@@ -64,6 +65,23 @@ const SUPERSEDED_BY_V6 = new Set(["/how-it-works", "/free-report", "/demo", "/ss
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
+
+  // ── WHILE THE CURTAIN IS DOWN, ADVERTISE ONLY WHAT IS ACTUALLY INDEXABLE ────────────────────────────
+  //
+  // This listed thirty URLs while proxy.ts sent X-Robots-Tag: noindex on every one of them. robots.txt says
+  // Allow: /, so a crawler was being invited in, handed a list of thirty pages, and told to forget each one
+  // on arrival. That is not a neutral waste of a crawl budget: it is a site actively teaching search
+  // engines that its pages are not worth having.
+  //
+  // The homepage is the single exception the proxy now makes, because curtained it shows the company name
+  // and one sentence and no product surface at all. So it is the only thing worth listing, and listing
+  // anything else would contradict the header the same request carries.
+  //
+  // The moment stealth is lifted this reverts to the full derived list on its own. Nothing here needs
+  // remembering at launch.
+  if (stealthConfigured()) {
+    return [{ url: `${BASE}/`, lastModified: now, changeFrequency: "weekly" as Freq, priority: 1 }];
+  }
   const entry = (path: string): Entry => {
     const w = WEIGHT[path] ?? { p: 0.5, f: "monthly" as Freq };
     return { url: `${BASE}${path}`, lastModified: now, changeFrequency: w.f, priority: w.p };

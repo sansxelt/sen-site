@@ -104,6 +104,7 @@ const SUITES: Suite[] = [
   { file: "scripts/prose-link-verify.ts", npm: "prose:link:test" },
   { file: "scripts/account-usage-verify.ts", npm: "usage:account:test" },
   { file: "scripts/auto-recharge-verify.ts", npm: "recharge:test" },
+  { file: "scripts/stealth-index-verify.ts", npm: "stealth:index:test" },
   { file: "scripts/verification-idempotency-verify.ts", npm: "idempotency:test" },
   { file: "scripts/email-embeds-verify.ts", npm: "email:test" },
   { file: "scripts/terminology-verify.ts", npm: "terminology:test" },

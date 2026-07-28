@@ -55,10 +55,27 @@ export function stealthConfigured(): boolean {
  *  in the diff and changed nothing on the site, which is exactly what a duplicated decision buys you.
  *
  *  proxy.ts sets X-Robots-Tag as the catch-all, because a response header cannot be overridden by document
- *  metadata at any depth. This function stops the tag from disagreeing with it. */
-export function robotsMeta(wanted: boolean): { index: boolean; follow: boolean } {
-  const allowed = wanted && !stealthConfigured();
-  return { index: allowed, follow: allowed };
+ *  metadata at any depth. This function stops the tag from disagreeing with it.
+ *
+ *  ONE PAGE IS EXEMPT WHILE THE CURTAIN IS DOWN, and it is expressed HERE rather than by a page writing its
+ *  own robots object, so this stays the single decision the comment above insists on. A hardcoded override
+ *  on the homepage was the first attempt and email-embeds-verify rejected it, correctly: the moment two
+ *  places decide indexing, the one you did not edit is the one that ships.
+ *
+ *  The exemption exists because blanket noindex had an end state nobody had followed through. robots.txt
+ *  invites crawlers, they read noindex everywhere, and vraelis.com eventually leaves the index entirely. At
+ *  that point the only descriptions of this company left are the profiles it links to, which still carry
+ *  the product that was retired. Curtained, the homepage renders the name, one sentence and no product
+ *  surface at all, so an indexed copy of it gives away nothing stealth exists to protect. */
+export function robotsMeta(
+  wanted: boolean,
+  opts?: { curtainVisible?: boolean },
+): { index: boolean; follow: boolean } {
+  if (stealthConfigured()) {
+    const allowed = opts?.curtainVisible === true;
+    return { index: allowed, follow: allowed };
+  }
+  return { index: wanted, follow: wanted };
 }
 
 function signingKey(): string {

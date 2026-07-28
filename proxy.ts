@@ -128,8 +128,26 @@ function withGround(req: NextRequest, target: string) {
 // X-Robots-Tag applies to the whole response and cannot be overridden by anything inside the document, so
 // it covers every route including ones that do not exist yet. Fixing only the layouts that exist today
 // would be the same enumeration mistake that left the stealth curtain with a green scrollbar.
-function noindexWhileStealthed(res: NextResponse) {
-  if (stealthConfigured()) res.headers.set("X-Robots-Tag", "noindex, nofollow");
+// ── ONE EXCEPTION, AND ONLY ONE: THE HOMEPAGE ────────────────────────────────────────────────────────
+//
+// Blanket noindex had a consequence nobody had followed through. robots.txt says Allow: / and advertises a
+// sitemap, so crawlers arrive, fetch, read noindex on every single page, and drop the lot. The end state
+// is vraelis.com absent from search entirely, at which point the ONLY descriptions of this company left
+// anywhere are the LinkedIn and X profiles, which still carry the product that was retired. The stale
+// answer an AI gives when asked what Vraelis is would stop being a cache artefact and become the only
+// thing there is.
+//
+// The homepage is the one page where being indexed costs nothing. Curtained, it renders "Not open yet",
+// the one-sentence description, and no product surface of any kind, so a crawler that indexes it learns
+// the company's name and what it does and nothing that stealth exists to hide. Everything else keeps the
+// blanket, for the reason above: a real title like "Pricing | Vraelis" over an empty curtain teaches a
+// search engine the page is hollow, which is worse than absence.
+//
+// This is NOT coming out of stealth. Nothing about what a visitor sees changes.
+function noindexWhileStealthed(res: NextResponse, pathname?: string) {
+  if (!stealthConfigured()) return res;
+  if (pathname === "/") return res;
+  res.headers.set("X-Robots-Tag", "noindex, nofollow");
   return res;
 }
 
@@ -137,7 +155,7 @@ function go(req: NextRequest, pathname: string, kind: "redirect" | "rewrite") {
   const url = req.nextUrl.clone();
   url.pathname = pathname;
   if (kind === "redirect") return NextResponse.redirect(url);
-  return noindexWhileStealthed(NextResponse.rewrite(url, withGround(req, pathname)));
+  return noindexWhileStealthed(NextResponse.rewrite(url, withGround(req, pathname)), req.nextUrl.pathname);
 }
 
 function goAbs(req: NextRequest, absolute: string) {
@@ -381,7 +399,7 @@ export default function proxy(req: NextRequest) {
   if (target) return go(req, target, "rewrite");
 
   // Not rewritten: the path renders as itself. /signin and /auth/* arrive here, and they are graphite.
-  return noindexWhileStealthed(NextResponse.next(withGround(req, path)));
+  return noindexWhileStealthed(NextResponse.next(withGround(req, path)), path);
 }
 
 export const config = {
