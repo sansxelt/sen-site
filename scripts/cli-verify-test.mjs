@@ -19,7 +19,7 @@ const ok = (name, cond, detail = "") => {
 };
 
 // A server that returns `terminal` on the first poll, so --wait finishes fast.
-function mock(terminal, { createStatus = 202 } = {}) {
+function mock(terminal, { createStatus = 202, creditsStatus = 200 } = {}) {
   const seen = { idem: null, body: null, keys: [] };
   const server = createServer((req, res) => {
     seen.keys.push(req.headers["x-api-key"]);
@@ -36,6 +36,14 @@ function mock(terminal, { createStatus = 202 } = {}) {
           : { verification_id: "vrf_run1", state: "running", requirements: ["Payment completes", "Access is granted"] }));
         return;
       }
+      // login and status validate a key against GET /v1/credits, an endpoint that already existed.
+      if (req.url && req.url.startsWith("/v1/credits")) {
+        res.writeHead(creditsStatus);
+        res.end(JSON.stringify(creditsStatus >= 400
+          ? { error: { code: creditsStatus === 401 ? "invalid_key" : "forbidden", message: "nope" } }
+          : { balance: 640 }));
+        return;
+      }
       res.writeHead(200);
       res.end(JSON.stringify(terminal));
     });
@@ -43,11 +51,17 @@ function mock(terminal, { createStatus = 202 } = {}) {
   return { server, seen };
 }
 
-function run(args, env, port) {
+function run(args, env, port, stdin) {
   return new Promise((resolve) => {
     const p = spawn(process.execPath, [CLI, ...args], {
       env: { ...process.env, VRAELIS_API_KEY: "vr_live_test", VRAELIS_BASE_URL: `http://127.0.0.1:${port}`, ...env },
     });
+    // stdin is a pipe here, never a terminal, which is exactly the automation path login has to support.
+    if (stdin !== undefined) {
+      if (typeof stdin !== "string") throw new TypeError(`run(): stdin must be a string, got ${typeof stdin}`);
+      p.stdin.write(stdin);
+    }
+    p.stdin.end();
     let out = "", err = "";
     p.stdout.on("data", (d) => (out += d));
     p.stderr.on("data", (d) => (err += d));
@@ -117,8 +131,22 @@ async function main() {
     ok("stdout stays empty on a network failure", r.out.trim() === "");
   }
   {
-    const r = await run(["verify", "--url", "https://x.example.com", "--claim", "c"], { VRAELIS_API_KEY: "" }, 1);
-    ok("a missing API key exits 2 and says where to get one", r.code === 2 && /app\.vraelis\.com\/api/.test(r.err));
+    // ISOLATED HOME, or this test asks the machine it runs on. Since the CLI falls back to
+    // ~/.vraelis/config.json, a developer who has run `vraelis login` would supply a real key here and the
+    // assertion would silently stop testing anything. "No key" has to mean no key from any source.
+    const { mkdtempSync, rmSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
+    const empty = mkdtempSync(join(tmpdir(), "vraelis-nokey-"));
+    const r = await run(["verify", "--url", "https://x.example.com", "--claim", "c"],
+      { VRAELIS_API_KEY: "", HOME: empty, USERPROFILE: empty }, 1);
+    // /developers, not /api. /api was the console's name for the page until it was renamed; it still
+    // redirects, so the old text worked and cost every reader a hop to a page whose heading did not match
+    // the address they were sent to.
+    ok("a missing API key exits 2 and says where to get one",
+      r.code === 2 && /app\.vraelis\.com\/developers/.test(r.err), r.err.slice(0, 200));
+    ok("and points at login as well as the environment variable", /vraelis login/.test(r.err));
+    rmSync(empty, { recursive: true, force: true });
   }
 
   console.log("\n── idempotency is automatic ──");
@@ -133,6 +161,78 @@ async function main() {
     await run(["verify", "--url", "https://x.example.com", "--claim", "c", "--wait", "--idempotency-key", "mine-1"], {}, port);
     ok("an explicit --idempotency-key is used verbatim", seen.idem === "mine-1", String(seen.idem));
   });
+
+  // ── login / logout / status ───────────────────────────────────────────────────────────────────────
+  //
+  // Behavioural, against a real temporary HOME and a real config file, because every interesting property
+  // here is about WHERE the key comes from and that cannot be read off the source.
+  //
+  // The one that matters most is precedence. A build machine with both an environment key and a developer's
+  // stored login must use the environment: it is the credential the pipeline owns, and a login left behind
+  // by a person is exactly the one you do not want spending an organisation's balance.
+  console.log("\n── the key comes from the right place ──");
+  {
+    const { mkdtempSync, existsSync, readFileSync: rf, rmSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
+
+    // HOME and USERPROFILE both, because homedir() reads whichever the platform uses.
+    const home = mkdtempSync(join(tmpdir(), "vraelis-home-"));
+    const asHome = (extra = {}) => ({ HOME: home, USERPROFILE: home, ...extra });
+    const configPath = join(home, ".vraelis", "config.json");
+    const stored = () => (existsSync(configPath) ? JSON.parse(rf(configPath, "utf8")) : {});
+
+    await withServer(VERIFIED, {}, async (port) => {
+      // Signed out: exit 2, because "no credential" is a state a pipeline must be able to branch on.
+      let r = await run(["status"], asHome({ VRAELIS_API_KEY: "" }), port);
+      ok("status with no key exits 2 and says so", r.code === 2 && /Not signed in/.test(r.err));
+      ok("and nothing was written just by asking", !existsSync(configPath));
+
+      // stdin is a pipe here, which is the automation path. The key is read as a line.
+      r = await run(["login"], asHome({ VRAELIS_API_KEY: "", VRAELIS_STDIN: "" }), port, "vr_live_test");
+      ok("login stores the key", r.code === 0 && stored().apiKey === "vr_live_test", JSON.stringify(stored()));
+      // A credential printed in full ends up in a terminal buffer, a screenshot and a CI log.
+      ok("login never prints the whole key", !r.err.includes("vr_live_test") && /vr_live_\.\.\./.test(r.err), r.err.slice(0, 200));
+
+      r = await run(["status"], asHome({ VRAELIS_API_KEY: "" }), port);
+      ok("status then reads the stored key", r.code === 0 && /Signed in/.test(r.err));
+      ok("and names the config file as the source", r.err.includes(configPath));
+      ok("status never prints the whole key either", !r.err.includes("vr_live_test"));
+
+      // THE PRECEDENCE RULE.
+      r = await run(["status"], asHome({ VRAELIS_API_KEY: "vr_live_fromenv" }), port);
+      ok("VRAELIS_API_KEY beats the stored key", /VRAELIS_API_KEY/.test(r.err) && !r.err.includes(configPath.slice(0, 8) + "zzz"));
+      ok("and status says the environment is winning", /environment wins/.test(r.err));
+
+      // logout removes the credential and NOTHING else in the file.
+      r = await run(["logout"], asHome({ VRAELIS_API_KEY: "" }), port);
+      ok("logout removes the stored key", r.code === 0 && !stored().apiKey);
+      ok("and says it did", /Signed out/.test(r.err));
+
+      // It cannot unset an environment variable, and must not imply otherwise.
+      r = await run(["logout"], asHome({ VRAELIS_API_KEY: "vr_live_fromenv" }), port);
+      ok("logout admits it cannot clear an environment variable",
+        /still set in this environment/.test(r.err) && /cannot unset/.test(r.err), r.err.slice(0, 240));
+    });
+
+    // A key the API rejects must not be stored, or the next command fails for a reason nobody remembers.
+    await withServer(VERIFIED, { creditsStatus: 401 }, async (port) => {
+      const r = await run(["login"], asHome({ VRAELIS_API_KEY: "" }), port, "vr_live_bad");
+      ok("a rejected key is refused", r.code === 2 && /rejected/.test(r.err));
+      ok("and is NOT stored", stored().apiKey !== "vr_live_bad", JSON.stringify(stored()));
+    });
+
+    // 403 means the key is real but lacks credits:read, which is a legitimate CI key. Storing it while
+    // saying it could not be checked is the honest outcome; refusing it would reject a valid credential.
+    await withServer(VERIFIED, { creditsStatus: 403 }, async (port) => {
+      const r = await run(["login"], asHome({ VRAELIS_API_KEY: "" }), port, "vr_live_scoped");
+      ok("a key that cannot read credits is stored anyway", r.code === 0 && stored().apiKey === "vr_live_scoped");
+      ok("and is labelled as not verified rather than reported as signed in",
+        /not verified/.test(r.err) && !/^\s*Signed in/m.test(r.err), r.err.slice(0, 240));
+    });
+
+    rmSync(home, { recursive: true, force: true });
+  }
 
   // ── COLOUR IS DECORATION, AND DECORATION MUST NEVER REACH A PIPE ──────────────────────────────────
   //
@@ -152,7 +252,7 @@ async function main() {
     });
     await withServer(FAILED, {}, async (port) => {
       const r = await run(["verify", "--url", "https://x.example.com", "--claim", "c", "--wait", "--repair-prompt"],
-        { FORCE_COLOR: "1" }, port, 1);
+        { FORCE_COLOR: "1" }, port);
       ok("--repair-prompt emits no escape codes either", !/\x1b\[/.test(r.out), JSON.stringify(r.out.slice(0, 80)));
       ok("and is still only the prompt", r.out.trim() === "REPAIR PROMPT BODY");
     });
@@ -258,10 +358,24 @@ async function main() {
       ok("the proxy still skips .mjs, which is the only reason the download survives /cli being an app root",
         /matcher:[\s\S]{0,400}mjs/.test(proxySrc));
     }
-    // npm publish is a real option and an irreversible one. Until it happens, nothing may imply it.
-    ok("nothing claims an npm install that has never been published",
-      !/npm i(nstall)? -g vraelis|npx vraelis/.test(install)
-      && /"private":\s*true/.test(readFileSync("cli/package.json", "utf8")));
+    // ── PUBLISHED IS A FACT, NOT AN INTENTION ────────────────────────────────────────────────────────
+    //
+    // This used `"private": true` as a stand-in for "not on npm". That was a fair proxy while nothing was
+    // ever going to be published and became wrong the moment the package was prepared: private: true is
+    // exactly what BLOCKS `npm publish`, so removing it is a prerequisite for publishing rather than
+    // evidence of having published.
+    //
+    // Nothing here can check the registry; a test that reaches the network is a test that fails on a
+    // train. So the rule is the one that actually protects a reader: the CONSOLE docs, which customers
+    // read today, must not claim an install that may not work yet. When the name is claimed, this
+    // assertion and that copy change together, in one commit, with the tarball as the evidence.
+    const pkg = JSON.parse(readFileSync("cli/package.json", "utf8"));
+    ok("the console docs do not claim an npm install", !/npm i(nstall)? -g vraelis|npx vraelis/.test(install));
+    ok("but the package is ready to be published, so the claim can become true",
+      pkg.private !== true && !!pkg.bin?.vraelis && Array.isArray(pkg.files) && pkg.name === "vraelis");
+    // files lists README.md, and a tarball missing it publishes a blank page on the registry.
+    ok("everything the package promises to ship exists",
+      pkg.files.every((f) => existsSync(`cli/${f}`)), pkg.files.filter((f) => !existsSync(`cli/${f}`)).join(", "));
   }
 
   console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);

@@ -2,10 +2,14 @@
   "name": "vraelis",
   "version": "0.1.0",
   "description": "Verify that a claimed outcome is actually true, in a real browser.",
+  "keywords": ["verification", "ci", "deployment", "release-gate", "testing", "ai"],
+  "homepage": "https://vraelis.com",
+  "repository": { "type": "git", "url": "git+https://github.com/sansxelt/sen-site.git", "directory": "cli" },
+  "bugs": { "url": "https://vraelis.com/contact" },
   "bin": { "vraelis": "./vraelis.mjs" },
   "type": "module",
   "files": ["vraelis.mjs", "README.md"],
   "engines": { "node": ">=18" },
   "license": "UNLICENSED",
-  "private": true
+  "publishConfig": { "access": "public" }
 }

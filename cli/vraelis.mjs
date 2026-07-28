@@ -23,6 +23,97 @@ const EXIT_VERIFIED = 0;
 const EXIT_FAILED = 1;
 const EXIT_BLOCKED = 2;
 
+// The public API host. Named once: verify, login and status all resolve against it, and a literal
+// repeated in three places is two places to forget when it moves.
+const DEFAULT_BASE = "https://vraelis.com";
+
+// ── WHERE THE KEY COMES FROM ─────────────────────────────────────────────────────────────────────────
+//
+// Three sources, in a fixed order, and the order is the contract:
+//
+//   --api-key <k>        an explicit flag beats everything, because someone typed it on purpose
+//   VRAELIS_API_KEY      the environment beats stored config, so CI never inherits whatever a developer
+//                        happened to log in with on that machine, and a stored key can never quietly
+//                        override a pipeline secret
+//   ~/.vraelis/config.json   what `vraelis login` wrote
+//
+// The middle rule is the one that matters. A build machine that has both must use the environment: it is
+// the one the pipeline owns, and a login left behind by a person is exactly the credential you do not want
+// spending an organisation's balance.
+import { homedir } from "node:os";
+import { join, dirname } from "node:path";
+import { readFileSync as readFile, writeFileSync as writeFile, mkdirSync, chmodSync, unlinkSync, existsSync as fileExists, renameSync } from "node:fs";
+
+const CONFIG_DIR = () => join(homedir(), ".vraelis");
+const CONFIG_PATH = () => join(CONFIG_DIR(), "config.json");
+
+function readConfig() {
+  try { return JSON.parse(readFile(CONFIG_PATH(), "utf8")); } catch { return {}; }
+}
+
+// ATOMIC, because a config file half-written by an interrupted process is a credential store that reads as
+// corrupt on next launch. Written to a temp file beside the target and renamed, which is atomic within a
+// filesystem, so a reader sees either the old file or the new one and never a partial.
+//
+// 0600 on the file and 0700 on the directory where the platform honours them. Windows ignores chmod, hence
+// "where supported" rather than a promise: a credential file on Windows is protected by the user profile
+// ACL, not by these bits, and claiming otherwise would be worse than saying nothing.
+function writeConfig(next) {
+  const dir = CONFIG_DIR();
+  mkdirSync(dir, { recursive: true, mode: 0o700 });
+  try { chmodSync(dir, 0o700); } catch { /* not supported here */ }
+  const tmp = join(dir, `.config.${process.pid}.tmp`);
+  writeFile(tmp, JSON.stringify(next, null, 2) + "\n", { mode: 0o600 });
+  try { chmodSync(tmp, 0o600); } catch { /* not supported here */ }
+  renameSync(tmp, CONFIG_PATH());
+}
+
+/** Where the key came from, so `status` can say and `logout` can be honest about what it cannot remove. */
+function resolveKey(args) {
+  if (args && args["api-key"]) return { key: args["api-key"], source: "flag" };
+  if (process.env.VRAELIS_API_KEY) return { key: process.env.VRAELIS_API_KEY, source: "env" };
+  const stored = readConfig().apiKey;
+  if (stored) return { key: stored, source: "config" };
+  return { key: "", source: "none" };
+}
+
+/** Never the whole key. Enough to recognise which one it is, not enough to use. */
+function mask(key) {
+  if (!key) return "";
+  const tail = key.slice(-4);
+  const head = key.startsWith("vr_live_") ? "vr_live_" : key.slice(0, 3);
+  return `${head}...${tail}`;
+}
+
+/** Read one line without echoing it. Falls back to a plain read when stdin is not a terminal, so
+ *  `echo "$KEY" | vraelis login` works for automation and says nothing about hiding what was piped. */
+function promptSecret(label) {
+  return new Promise((resolve) => {
+    const input = process.stdin;
+    if (!input.isTTY) {
+      let buf = "";
+      input.setEncoding("utf8");
+      input.on("data", (d) => { buf += d; });
+      input.on("end", () => resolve(buf.trim()));
+      return;
+    }
+    process.stderr.write(label);
+    input.setRawMode(true);
+    input.resume();
+    input.setEncoding("utf8");
+    let buf = "";
+    const onData = (ch) => {
+      // Ctrl-C and Ctrl-D leave nothing behind rather than half a key.
+      if (ch === "\u0003" || ch === "\u0004") { cleanup(); process.stderr.write("\n"); resolve(""); return; }
+      if (ch === "\r" || ch === "\n") { cleanup(); process.stderr.write("\n"); resolve(buf.trim()); return; }
+      if (ch === "\u007f" || ch === "\b") { buf = buf.slice(0, -1); return; }
+      buf += ch;
+    };
+    const cleanup = () => { input.removeListener("data", onData); input.setRawMode(false); input.pause(); };
+    input.on("data", onData);
+  });
+}
+
 // THE HELP SCREEN, AS A FUNCTION RATHER THAN A CONSTANT.
 //
 // It has to render AFTER the presentation helpers below have decided whether colour is allowed, and a
@@ -36,6 +127,11 @@ function usage() {
     `  ${bold("VRAELIS")}  ${dim("verify that a claimed outcome is actually true")}`,
     heading("  Usage"),
     `    ${cyan("vraelis verify")} --url <deployment> --claim <outcome> [options]`,
+    heading("  Commands"),
+    row("verify", "Check that a claimed outcome holds against a deployment.", 24),
+    row("login", "Store an API key in ~/.vraelis/config.json.", 24),
+    row("logout", "Forget the stored key.", 24),
+    row("status", "Show which key is in use, where it came from, and whether it works.", 24),
     heading("  Required"),
     row("--url <url>", "The deployment to verify. Must be https and publicly reachable.", 24),
     row("--claim <text>", "What should be true, in a sentence. The outcome, not the steps.", 24),
@@ -184,11 +280,14 @@ function errorMessage(payload, text, status) {
 
 async function verify(args) {
   const base = (args["base-url"] || process.env.VRAELIS_BASE_URL || "https://vraelis.com").replace(/\/+$/, "");
-  const key = args["api-key"] || process.env.VRAELIS_API_KEY || "";
+  const { key } = resolveKey(args);
   const url = args.url || "";
   const claim = args.claim || "";
 
-  if (!key) fail("No API key. Set VRAELIS_API_KEY, or pass --api-key.\nCreate one at https://app.vraelis.com/api with \"Launch runs\" access.");
+  // /developers, not /api. /api was the console's name for this page until it was renamed; it still
+  // redirects, so the old text worked and cost every reader an extra hop to a page with a different name
+  // at the top than the one they were sent to.
+  if (!key) fail(`No API key. Run "vraelis login", set VRAELIS_API_KEY, or pass --api-key.\nCreate one with "Launch runs" access at https://app.vraelis.com/developers`);
   if (!url || !claim) fail(`Both --url and --claim are required.\n\n${usage()}`);
 
   // Generated per invocation unless the caller supplies one. A retried CI step that passes the same key
@@ -315,11 +414,145 @@ function randomId() {
 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+
+// ── login / logout / status ──────────────────────────────────────────────────────────────────────────
+//
+// Carrying VRAELIS_API_KEY in every shell is fine for a pipeline and tedious for a person, which is why
+// every CLI worth using has these three. They are deliberately thin: a key goes in a file, comes back out
+// of that file, or is removed from it. Nothing here decides anything about verification.
+
+/** Prove the key is real by asking the API something harmless.
+ *
+ *  GET /v1/credits, because it ALREADY EXISTS and needs only credits:read. Minting a /v1/whoami purely so
+ *  a login command could feel thorough would be a new public endpoint with no other reason to exist, and
+ *  a public API surface is a promise you keep forever.
+ *
+ *  The three outcomes are genuinely different and are not collapsed:
+ *    ok        the key authenticates
+ *    rejected  401, the key is wrong. Refuse to store it.
+ *    unproven  403 (real key, lacks credits:read), or the network did not answer. Store it and SAY SO.
+ *
+ *  403 is the case that matters. A key scoped to launch runs but not to read credits is perfectly valid,
+ *  and treating it as bad would refuse to log in the exact key a CI user was told to create. */
+async function checkKey(base, key) {
+  try {
+    const r = await api(base, "/v1/credits", { key });
+    if (r.status === 401) return { state: "rejected", detail: errorMessage(r.json, r.text, r.status) };
+    if (r.status === 403) return { state: "unproven", detail: "the key is valid but cannot read credits, so it could not be fully checked" };
+    if (r.status >= 200 && r.status < 300) return { state: "ok", balance: r.json?.balance };
+    return { state: "unproven", detail: `the API answered ${r.status}` };
+  } catch (e) {
+    return { state: "unproven", detail: `could not reach ${base}` };
+  }
+}
+
+async function login(args) {
+  const base = args["base-url"] || process.env.VRAELIS_BASE_URL || DEFAULT_BASE;
+
+  // An existing environment key is not overwritten silently, because it would keep winning afterwards and
+  // the login would look like it did nothing.
+  if (process.env.VRAELIS_API_KEY) {
+    say("");
+    say(`  ${amber("VRAELIS_API_KEY is set in this environment.")}`);
+    say(`  ${dim("It takes priority over anything stored here, so a stored key would not be used until you unset it.")}`);
+    say("");
+  }
+
+  say("");
+  say(`  ${bold("Sign in to Vraelis")}`);
+  say(`  ${dim("Create a key with \"Launch runs\" access at")} ${cyan("https://app.vraelis.com/developers")}`);
+  say("");
+  const key = await promptSecret(`  ${dim("API key:")} `);
+  if (!key) fail("No key entered. Nothing was stored.");
+
+  const spin = PLAIN ? { stop() {} } : spinner("Checking the key");
+  const check = await checkKey(base, key);
+  spin.stop();
+
+  if (check.state === "rejected") {
+    fail(`That key was rejected: ${check.detail}\nNothing was stored.`);
+  }
+
+  writeConfig({ ...readConfig(), apiKey: key, baseUrl: base === DEFAULT_BASE ? undefined : base });
+
+  say("");
+  if (check.state === "ok") {
+    say(`  ${green("Signed in")}  ${dim(mask(key))}`);
+    if (typeof check.balance === "number") say(`  ${dim(`Balance ${check.balance.toLocaleString()} credits`)}`);
+  } else {
+    // STORED, AND SAID SO. Silently storing an unchecked key and printing "Signed in" would be the CLI
+    // asserting something it did not establish, which is the one thing this product cannot do.
+    say(`  ${amber("Stored, but not verified")}  ${dim(mask(key))}`);
+    say(`  ${dim(check.detail)}`);
+  }
+  say(`  ${dim(CONFIG_PATH())}`);
+  say("");
+  return EXIT_VERIFIED;
+}
+
+function logout() {
+  const had = fileExists(CONFIG_PATH()) && !!readConfig().apiKey;
+  if (had) {
+    const next = readConfig();
+    delete next.apiKey;
+    writeConfig(next);
+  }
+  say("");
+  say(had ? `  ${green("Signed out")}  ${dim("the stored key was removed")}` : `  ${dim("No stored key to remove.")}`);
+  // IT CANNOT UNSET AN ENVIRONMENT VARIABLE, and pretending otherwise would leave someone believing they
+  // had signed out while every subsequent command still authenticated.
+  if (process.env.VRAELIS_API_KEY) {
+    say(`  ${amber("VRAELIS_API_KEY is still set in this environment.")}`);
+    say(`  ${dim("A child process cannot unset it. Clear it in your shell if you meant to sign out entirely.")}`);
+  }
+  say("");
+  return EXIT_VERIFIED;
+}
+
+async function status(args) {
+  const { key, source } = resolveKey(args);
+  const base = args["base-url"] || process.env.VRAELIS_BASE_URL || readConfig().baseUrl || DEFAULT_BASE;
+  say("");
+  if (!key) {
+    say(`  ${dim("Not signed in.")}`);
+    say(`  ${dim("Run")} ${cyan("vraelis login")}${dim(", or set VRAELIS_API_KEY.")}`);
+    say("");
+    return EXIT_BLOCKED;
+  }
+  const where = source === "flag" ? "--api-key flag" : source === "env" ? "VRAELIS_API_KEY" : CONFIG_PATH();
+  say(`  ${bold("Signed in")}  ${dim(mask(key))}`);
+  say(`  ${dim("from")}       ${where}`);
+  say(`  ${dim("api")}        ${cyan(base)}`);
+  // Both sources at once is not an error, but which one wins decides whose balance gets spent.
+  if (source === "env" && readConfig().apiKey) {
+    say(`  ${dim("A different key is stored in")} ${CONFIG_PATH()}${dim(", and the environment wins.")}`);
+  }
+  const spin = PLAIN ? { stop() {} } : spinner("Checking");
+  const check = await checkKey(base, key);
+  spin.stop();
+  say("");
+  if (check.state === "ok") {
+    say(`  ${green("The key works.")}${typeof check.balance === "number" ? dim(`  Balance ${check.balance.toLocaleString()} credits`) : ""}`);
+    say("");
+    return EXIT_VERIFIED;
+  }
+  if (check.state === "rejected") {
+    say(`  ${red("The key was rejected.")} ${dim(check.detail)}`);
+    say("");
+    return EXIT_BLOCKED;
+  }
+  say(`  ${amber("Could not confirm the key.")} ${dim(check.detail)}`);
+  say("");
+  return EXIT_BLOCKED;
+}
 async function main() {
   const argv = process.argv.slice(2);
   const args = parseArgs(argv);
   if (args.help || argv.length === 0) { say(usage()); return argv.length === 0 ? EXIT_BLOCKED : EXIT_VERIFIED; }
   const cmd = args._[0];
+  if (cmd === "login") return await login(args);
+  if (cmd === "logout") return logout();
+  if (cmd === "status") return await status(args);
   if (cmd !== "verify") fail(`Unknown command ${cmd ? `"${cmd}"` : ""}.\n\n${usage()}`);
   return await verify(args);
 }
