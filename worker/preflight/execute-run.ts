@@ -200,6 +200,20 @@ async function runFlow(flow: FlowSpec, page: import("./types").PreflightPage, de
   // role it required, which is not an application defect. (blocked_by_policy already broke out above.)
   if (authConfigFailed && state !== "blocked_by_policy") state = "auth_config_failed";
 
+  // A FLOW THAT OBSERVED NOTHING CANNOT CERTIFY ANYTHING.
+  //
+  // `state` initialises to "passed" and the loop below only ever moves it away from that. A flow with no
+  // steps never enters the loop, so it came out "passed", was counted in critical_passed, and satisfied a
+  // critical guarantee having never touched the application. Reachable because the discovery path stores
+  // `steps: f.steps ?? []` without validating, and approval does not re-validate.
+  //
+  // "blocked", not "failed": the application was never asked, so it failed nothing. That is the same
+  // distinction blocked_by_policy already draws, and it keeps the verdict honest in both directions.
+  if (state === "passed" && steps.length === 0) {
+    steps.push({ action: "navigate", ok: false, detail: "flow_has_no_steps", ms: 0 });
+    state = "blocked";
+  }
+
   // Deterministic side-channel evidence for the whole flow.
   const consoleErrors = page.drainConsoleErrors();
   const networkFailures = page.drainNetworkFailures();
@@ -234,15 +248,32 @@ export function decideRun(results: FlowResult[], flows: FlowSpec[], fullCoverage
   // boundary, so the decision softens to needs_review — never READY (unverified critical) and never
   // BLOCKED (the application did not fail anything).
   const policyBlocked = results.filter((r) => r.state === "blocked_by_policy");
-  const criticalPolicyBlocked = policyBlocked.some((r) => critById.get(r.flowId));
+  // ANY of them, not just the critical ones. The criticality qualifier meant a NON-critical flow that never
+  // executed contributed to no term of the decision below: not a failure, not a blocker, and not a
+  // softener. It was erased, and the run reported ready having never touched that journey.
+  //
+  // Non-critical is the DEFAULT, not an edge case — the synthesis prompt reserves `critical` for
+  // launch-blocking promises, and a plan's flows come back `important`. So the practical shape is: a plan
+  // holds "public pages load" and "the whole save/sign-out/sign-in journey"; a Turnstile check or a
+  // redesigned login makes the second one execute zero application steps; the first passes; the run says
+  // Verified. The dashboard behind that login could have stopped persisting entirely.
+  //
+  // The whole-run escape hatches further down cannot save it either: both require results.every(...), so
+  // one trivially-passing sibling disables them.
+  const anyPolicyBlocked = policyBlocked.length > 0;
   // auth_config_failed (S6): a role-requiring flow could not authenticate for a WORKER/ENVIRONMENT reason
   // (missing/revoked credential, vault failure, MFA/CAPTCHA, provider infra). Like blocked_by_policy it is
   // NEVER an application defect: excluded from failure evidence, and a CRITICAL one only softens to
   // needs_review (a human must fix the credential/vault) — never READY (unverified critical), never BLOCKED
   // (the app failed nothing). auth_rejected_by_app is a normal `failed` and is counted above.
   const authConfigFailed = results.filter((r) => r.state === "auth_config_failed");
-  const criticalAuthConfigFailed = authConfigFailed.some((r) => critById.get(r.flowId));
-  let decision: RunDecision = criticalFailed ? "blocked" : (anyFailed || criticalPolicyBlocked || criticalAuthConfigFailed) ? "needs_review" : "ready";
+  // Same correction, same reason: reaching auth_config_failed needs nothing exotic — a bot check, an MFA
+  // prompt, a login redesign or a credential revoked since launch all land here, and a flow that could not
+  // authenticate ran none of the journey it was supposed to prove.
+  const anyAuthConfigFailed = authConfigFailed.length > 0;
+  // A flow that did not run can never leave the run at ready. needs_review is the honest verdict: not
+  // blocked (the application failed nothing) and not ready (something claimed was never checked).
+  let decision: RunDecision = criticalFailed ? "blocked" : (anyFailed || anyPolicyBlocked || anyAuthConfigFailed) ? "needs_review" : "ready";
   if (decision === "ready" && !fullCoverage) decision = "repair_verified";
   return { decision, summary: {
     critical_total: criticalTotal, critical_passed: criticalPassed, flows_total: flows.length,

@@ -27,7 +27,7 @@ import {
 } from "../worker/preflight/auth-executor";
 import { checkAuthReadiness, requiredRoles, anyAuthenticated, type PreviewFlow, type PreviewAccount } from "../lib/preflight/auth-preflight";
 import { flowRequiresAuth, flowRoles, AUTH_ACTIONS, type TestAccountRef, type FlowSpec, type Step } from "../worker/preflight/types";
-import { executeRun } from "../worker/preflight/execute-run";
+import { executeRun, decideRun } from "../worker/preflight/execute-run";
 import { FakeRunStore } from "../worker/preflight/run-store-fake";
 import { FakeBrowserProvider, FakePage, type FakeAuthScript } from "../worker/preflight/providers/fake";
 
@@ -231,6 +231,23 @@ async function spyRun(input: {
   const claimed = await store.claim("w1", 60);
   if (claimed) await executeRun(claimed, { store, provider, workerId: "w1", limits, artifacts, credentialOpener: input.opener ?? goodOpener, vaultConfigured: input.vaultConfigured });
   return { row: store.get(input.runId)!, provider, claimed, saved };
+}
+
+// A FLOW WITH NO STEPS CANNOT CERTIFY ANYTHING.
+//
+// `state` initialises to "passed" and the step loop only ever moves it away from that, so a flow with an
+// empty step array never entered the loop and came out passed — counted in critical_passed, billed, and
+// satisfying a critical guarantee having never touched the application. Reachable because the discovery
+// path stores `steps: f.steps ?? []` without validating and approval does not re-validate.
+{
+  const t = await spyRun({ runId: "no-steps", flows: [spec("f-empty", "critical", [])] });
+  const flow = t.row.flowResults[0];
+  ok("a flow with no steps does not come out passed", flow.state !== "passed", flow.state);
+  // "blocked", not "failed": the application was never asked, so it failed nothing. Same distinction
+  // blocked_by_policy already draws.
+  ok("  it is blocked, because the application was never asked", flow.state === "blocked", flow.state);
+  ok("  and the run does not certify anything", t.row.decision !== "ready", String(t.row.decision));
+  ok("  with the reason on the record rather than an empty step list", JSON.stringify(flow.steps).includes("flow_has_no_steps"));
 }
 
 // Correct account authenticates -> passed, READY, charged, no secret anywhere.
@@ -528,7 +545,42 @@ ok("static: the executor clears active credentials RUN-SCOPED after persistFlowR
   execSrc.includes("clearActiveCredentials(run.runId)") && execSrc.includes("page.screenshotsSuppressed = false"));
 ok("static: the run NEVER clears credentials with a bare clearActiveCredentials() (all clears are run-scoped)",
   !/clearActiveCredentials\(\s*\)/.test(execSrc));
-ok("static: auth_config_failed is never an application defect in decideRun (softens to needs_review)", execSrc.includes("criticalAuthConfigFailed") && execSrc.includes('"auth_config_failed"'));
+// WAS: execSrc.includes("criticalAuthConfigFailed"), which named a variable rather than a behaviour and
+// went red when that variable was renamed for a fix. decideRun is pure and exported, so ask IT.
+{
+  const flow = (id: string, priority: "critical" | "important") => ({ flowId: id, priority, steps: [], maxMs: 1, name: id } as unknown as FlowSpec);
+  const res = (id: string, state: string) => ({ flowId: id, state, steps: [], evidence: { consoleErrors: [], networkFailures: [] } } as unknown as Parameters<typeof decideRun>[0][number]);
+
+  const criticalCase = decideRun([res("a", "auth_config_failed")], [flow("a", "critical")]);
+  ok("auth_config_failed softens to needs_review, never blocked (it is not an application defect)",
+    criticalCase.decision === "needs_review", criticalCase.decision);
+
+  // THE ERASURE. A non-critical flow that could not authenticate ran none of the journey it was meant to
+  // prove, and `important` is what the synthesis actually emits — `critical` is reserved for
+  // launch-blocking promises. Alongside one trivially-passing sibling this returned ready.
+  const erased = decideRun(
+    [res("pages", "passed"), res("journey", "auth_config_failed")],
+    [flow("pages", "important"), flow("journey", "important")]);
+  ok("a NON-critical flow that could not authenticate still stops the run being ready",
+    erased.decision === "needs_review", erased.decision);
+
+  // Same shape, same fix, for a flow the boundary refused to run.
+  const blocked = decideRun(
+    [res("pages", "passed"), res("journey", "blocked_by_policy")],
+    [flow("pages", "important"), flow("journey", "important")]);
+  ok("and so does a NON-critical flow the policy never let run", blocked.decision === "needs_review", blocked.decision);
+
+  // decideRun handling a blocked flow correctly says nothing about whether a zero-step flow BECOMES
+  // blocked — that conversion lives in runFlow, and asserting it here tested the wrong layer entirely: a
+  // mutation disabling the conversion left this green. The real thing is exercised through executeRun
+  // further down, where a flow with no steps actually runs.
+  const empty = decideRun([res("a", "blocked")], [flow("a", "critical")]);
+  ok("decideRun treats a blocked critical flow as blocked, not ready", empty.decision === "blocked", empty.decision);
+
+  // And a genuinely clean run is still ready, or the fix would just be a refusal machine.
+  const clean = decideRun([res("a", "passed"), res("b", "passed")], [flow("a", "critical"), flow("b", "important")]);
+  ok("a run where everything actually ran and passed is still ready", clean.decision === "ready", clean.decision);
+}
 ok("static: an all-auth-config-failed run throws WorkerConfigFailedError (refund path)", execSrc.includes("WorkerConfigFailedError"));
 
 const issuesSrc = readFileSync("lib/preflight/issues.ts", "utf8");
