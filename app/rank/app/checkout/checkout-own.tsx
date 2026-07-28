@@ -146,7 +146,7 @@ function PayForm({ returnUrl, label }: { returnUrl: string; label: string }) {
  *  below is shared: confirming a payment is confirming a payment. */
 export type Purchase =
   | { kind: "plan"; plan: string; cycle: "monthly" | "yearly" }
-  | { kind: "credits"; amountDollars: number };
+  | { kind: "credits"; amountDollars: number; saveCard?: boolean };
 
 export function OwnPaymentPanel({
   purchase, returnUrl,
@@ -166,7 +166,7 @@ export function OwnPaymentPanel({
     (async () => {
       const [url, payload] = purchase.kind === "plan"
         ? ["/api/v/subscribe/intent", { plan: purchase.plan, cycle: purchase.cycle }] as const
-        : ["/api/v/checkout/intent", { amountDollars: purchase.amountDollars }] as const;
+        : ["/api/v/checkout/intent", { amountDollars: purchase.amountDollars, saveCard: purchase.saveCard === true }] as const;
       const r = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -182,7 +182,8 @@ export function OwnPaymentPanel({
     // Keyed on the purchase itself: changing the plan, the cycle or the amount must fetch a fresh secret,
     // because a Payment Element bound to the old one would charge the old price.
   }, [returnUrl, purchase.kind, (purchase as { plan?: string }).plan, (purchase as { cycle?: string }).cycle,
-      (purchase as { amountDollars?: number }).amountDollars]);
+      (purchase as { amountDollars?: number }).amountDollars,
+      (purchase as { saveCard?: boolean }).saveCard]);
 
   const options = useMemo(
     () => (intent ? { clientSecret: intent.clientSecret, appearance: APPEARANCE } : null),

@@ -210,6 +210,34 @@ export async function acceptVerificationRun(input: AcceptRunInput): Promise<Acce
 
   if (passPricingEnabled()) {
     await recordRunPassUsage(owner, created.runId, { flowUnits: created.flowCount, heldCents: paygHeldCents });
+
+    // ── AUTOMATIC TOP-UP, AFTER THE MONEY HAS MOVED AND NEVER IN FRONT OF IT ─────────────────────────
+    //
+    // This run is already accepted and already charged. Topping the balance back up is for the NEXT one,
+    // so nothing here may delay, block or fail this one. It is deliberately:
+    //
+    //   AWAITED, not fired and forgotten. This runs in a serverless function that can be frozen the
+    //   moment the response is returned, and a Stripe call abandoned midway is the one thing worse than a
+    //   slow one: the charge may land with no log of it. The cost is bounded, because maybeTopUp exits
+    //   after a single indexed read for the accounts that have never switched it on, which is all of them
+    //   until someone does.
+    //
+    //   WRAPPED, so a billing outage cannot turn a successful verification into a failed request. If this
+    //   throws, the customer still gets the run they paid for and the top-up is simply not attempted.
+    //
+    // The balance is passed in rather than re-read: this code path just changed it, and re-reading would
+    // race with its own write.
+    try {
+      const { maybeTopUp } = await import("../auto-recharge-execute");
+      const { creditsToCents } = await import("../auto-recharge");
+      const { balance } = await import("../../v-credits");
+      // CONVERTED, NOT PASSED THROUGH. balance() is in credits and every threshold is in cents. Handing
+      // credits straight over under-reads the balance tenfold, and an under-read balance looks like an
+      // empty one, so it would top up an account that was nowhere near its trigger.
+      await maybeTopUp(owner, creditsToCents(await balance(owner)));
+    } catch (e) {
+      console.warn("[auto-recharge] skipped after run acceptance:", e);
+    }
     if (usedFreePass) {
       const canonical = freeClaimCanonical ?? (await resolveCanonicalCluster(owner)).canonical;
       if (freeClaimCanonical) await attachRunToClaim(freeClaimCanonical, created.runId);

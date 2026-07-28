@@ -107,12 +107,26 @@ export async function POST(req: Request) {
     const bucket = Math.floor(Date.now() / ATTEMPT_WINDOW_MS);
     const idempotencyKey = `credit_topup:${owner}:${amountDollars}:${bucket}`;
 
+    // SAVING THE CARD IS A SEPARATE ACT FROM PAYING WITH IT, and it only happens when asked.
+    //
+    // Stripe will only permit a later off-session charge if the payment method was collected with
+    // setup_future_usage set, and it is only lawful to set it with the customer's agreement. So this comes
+    // from a checkbox at checkout and defaults to false: a top-up has never stored a card, and adding the
+    // flag unconditionally would silently change what every existing customer's payment means.
+    //
+    // NOTE WHAT THIS DOES NOT DO. Storing a card does not switch automatic top-up on. That needs a second,
+    // separate agreement to specific amounts (the panel on /credits, which writes consent_at), and
+    // decide() requires BOTH. Someone who ticks this box has made a card available, not authorised a
+    // recurring charge.
+    const saveCard = body?.saveCard === true;
+
     const intent = await stripe.paymentIntents.create(
       {
         customer: customer.id,
         amount: amountDollars * 100,
         currency: "usd",
         automatic_payment_methods: { enabled: true },
+        ...(saveCard ? { setup_future_usage: "off_session" as const } : {}),
         description: `${credits.toLocaleString()} Vraelis credits`,
         // The webhook grants on exactly this shape. `source` is what keeps the session grant and the
         // intent grant from ever both applying to one purchase.
@@ -122,6 +136,11 @@ export async function POST(req: Request) {
           credits: String(credits),
           amountDollars: String(amountDollars),
           user_id: owner,
+          // Carried on the intent because the webhook is where the card actually gets stored, and the
+          // webhook has nothing but this object. The idempotency key below deliberately does NOT include
+          // it: two requests seconds apart for the same amount are still one purchase, and whether the box
+          // was ticked should not be able to mint a second intent for money already being taken.
+          ...(saveCard ? { save_card: "1" } : {}),
         },
       },
       { idempotencyKey },

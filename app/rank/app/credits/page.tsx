@@ -54,6 +54,8 @@ export default function CreditsPage() {
   const [elevated, setElevated] = useState(false);
   const [plan, setPlan] = useState<string>("free");
   const [planV1, setPlanV1] = useState<string | null>(null);
+  // Whether this purchase should leave a card behind for automatic top-up. Off unless asked.
+  const [saveCard, setSaveCard] = useState(false);
 
   useEffect(() => {
     const load = () => fetch("/api/v/me").then((r) => r.json()).then((j) => { if (j.signedIn) { setBal(j.balance); if (typeof j.topupMax === "number") setMAX(j.topupMax); setElevated(!!j.elevatedTopup); if (j.plan) setPlan(j.plan); if (typeof j.plan_v1 === "string") setPlanV1(j.plan_v1); } }).catch(() => {});
@@ -114,7 +116,10 @@ export default function CreditsPage() {
     // The number to beat, stashed before leaving. Without it the return page can only guess whether the
     // balance it sees already includes this purchase.
     if (bal !== null) window.sessionStorage.setItem(BEFORE_KEY, String(bal));
-    window.location.href = `/checkout?amount=${effective}`;
+    // The card-saving choice has to be made HERE, before checkout, because the Payment Element is bound to
+    // an intent created on mount and a card can only be stored if setup_future_usage was set when that
+    // intent was made. A checkbox on the checkout page itself would come too late to mean anything.
+    window.location.href = `/checkout?amount=${effective}${saveCard ? "&save=1" : ""}`;
   }
 
   return (
@@ -207,6 +212,17 @@ export default function CreditsPage() {
               <div style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 6 }}>credits for ${valid ? effective.toLocaleString() : "0"}</div>
             </div>
             <div style={{ marginTop: 16 }}>
+              {/* OFF BY DEFAULT, and it says exactly what it does. A top-up has never stored a card, so a
+                  ticked-by-default box would quietly change what an existing customer's payment means.
+                  The wording is careful about the boundary too: this makes a card AVAILABLE. It does not
+                  switch automatic top-up on, which needs a separate agreement to specific amounts. */}
+              <label style={{ display: "flex", gap: 9, alignItems: "flex-start", margin: "0 0 12px", cursor: "pointer" }}>
+                <input type="checkbox" checked={saveCard} onChange={(e) => setSaveCard(e.target.checked)} style={{ marginTop: 2 }} />
+                <span style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.55 }}>
+                  Save this card so automatic top-up can use it later. This does not turn automatic top-up
+                  on; you choose the amounts separately, below.
+                </span>
+              </label>
               <button onClick={go} disabled={!valid} className="btn btn--lg" style={{ width: "100%", justifyContent: "center", opacity: valid ? 1 : 0.55 }}>Continue to checkout <span aria-hidden>→</span></button>
               <p style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-5)", marginTop: 12, marginBottom: 0, lineHeight: 1.6 }}>Secure checkout on Vraelis, payments processed by Stripe.</p>
             </div>

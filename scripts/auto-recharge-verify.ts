@@ -19,6 +19,7 @@ import { readFileSync } from "node:fs";
 import {
   decide, validateSettings, REFUSAL_TEXT,
   MAX_CONSECUTIVE_FAILURES, MIN_TOPUP_MARGIN_CENTS, MAX_MONTHLY_CAP_CENTS,
+  CENTS_PER_CREDIT, creditsToCents,
   type AutoRechargeSettings,
 } from "../lib/preflight/auto-recharge";
 
@@ -129,6 +130,31 @@ console.log("\n── settings a customer could not have meant ──");
   ok("fractional cents are refused", validateSettings({ ...okSettings, targetCents: 5000.5 }).length > 0);
   ok("every refusal has wording for the customer",
     (Object.keys(REFUSAL_TEXT) as (keyof typeof REFUSAL_TEXT)[]).every((k) => REFUSAL_TEXT[k].length > 10));
+}
+
+console.log("\n── credits are not cents, and the difference charges people ──");
+{
+  // THE BUG THIS EXISTS TO PREVENT, caught during wiring and before it shipped. balance() returns CREDITS.
+  // Every threshold in the module is CENTS. Passing one as the other under-reads the balance tenfold, and
+  // an under-read balance looks like an empty one, so an account sitting at $50 would be topped up as if
+  // it were at $5. The dangerous direction: it charges people who did not need charging.
+  ok("one credit is ten cents", CENTS_PER_CREDIT === 10);
+  ok("a 500 credit balance is $50, not $5", creditsToCents(500) === 5000);
+  ok("the conversion is exact at the trigger boundary", creditsToCents(50) === 500);
+  ok("it rounds rather than drifting on a fractional balance", creditsToCents(0.5) === 5);
+
+  // THE RATE MUST AGREE WITH WHAT CHECKOUT ACTUALLY SELLS. If someone changes the price of a credit and
+  // not this constant, every trigger silently means something else.
+  const checkout = readFileSync("app/api/v/checkout/intent/route.ts", "utf8");
+  const sold = /const CREDITS_PER_DOLLAR = (\d+);/.exec(checkout)?.[1];
+  ok("the checkout route still states its own rate", !!sold, "could not find CREDITS_PER_DOLLAR");
+  ok("and this module's cents-per-credit is its exact inverse",
+    !!sold && Number(sold) * CENTS_PER_CREDIT === 100, `checkout sells ${sold}/dollar, this says ${CENTS_PER_CREDIT} cents each`);
+
+  // The call site must convert. Passing balance() straight in is the whole bug.
+  const accept = readFileSync("lib/preflight/acceptance/accept-run.ts", "utf8");
+  ok("the run path converts before deciding, rather than passing credits as cents",
+    /maybeTopUp\(owner, creditsToCents\(await balance\(owner\)\)\)/.test(accept));
 }
 
 console.log("\n── it fails closed ──");

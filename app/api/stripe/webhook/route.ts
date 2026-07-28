@@ -526,6 +526,35 @@ async function handlePaymentIntentSucceeded(intent: Stripe.PaymentIntent) {
     if (await grant(userId, credits, "topup", { bucket: "purchased", extRef: intent.id })) {
       await recordPackPurchase(userId, "credit_topup", credits, intent.id);
     }
+
+    // ── THE CARD, IF AND ONLY IF THE CUSTOMER ASKED US TO KEEP IT ────────────────────────────────────
+    //
+    // Deliberately AFTER the grant and never able to affect it. This is a convenience for a future
+    // top-up; the credits the customer just paid for are the thing that must not be at risk, so a failure
+    // here is swallowed rather than allowed to bubble into a webhook error and a Stripe retry.
+    //
+    // Runs outside the grant's idempotency check on purpose. grant() returns false on a replay, and a
+    // replay is exactly when we might be re-storing a card that a previous delivery already stored. That
+    // is an upsert of identical values, which is harmless, whereas skipping it would mean a replayed
+    // webhook silently drops the card.
+    //
+    // WHAT IS WRITTEN, AND WHAT IS NOT. The customer and payment method, nothing else. Not enabled, not
+    // consent_at, not any amount. Ticking "save my card" is not agreeing to be charged automatically:
+    // that is a separate act on /credits, and decide() refuses without both.
+    if (meta.save_card === "1") {
+      try {
+        const pm = typeof intent.payment_method === "string" ? intent.payment_method : intent.payment_method?.id ?? null;
+        const cust = typeof intent.customer === "string" ? intent.customer : intent.customer?.id ?? null;
+        if (pm && cust) {
+          const { saveSettings } = await import("../../../../lib/preflight/auto-recharge");
+          await saveSettings(userId, { stripeCustomerId: cust, stripePaymentMethod: pm });
+        } else {
+          console.warn("[stripe webhook] save_card requested but intent carried no payment method:", intent.id);
+        }
+      } catch (e) {
+        console.warn("[stripe webhook] could not store the saved card:", intent.id, e);
+      }
+    }
     return;
   }
 

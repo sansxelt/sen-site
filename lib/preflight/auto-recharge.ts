@@ -29,6 +29,23 @@
 // customer has completed it, decide() returns "no_payment_method" and nothing is ever attempted.
 import { getSupabaseAdminClient, isDatabaseConfigured } from "../supabase-admin";
 
+// THE UNIT, WRITTEN DOWN, BECAUSE GETTING IT WRONG CHARGES PEOPLE WHO DID NOT NEED TOPPING UP.
+//
+// balance() returns CREDITS. Every threshold in this file is CENTS. Vraelis sells 10 credits per dollar
+// (app/api/v/checkout/intent/route.ts, and the /credits page shows the same rate), so one credit is ten
+// cents. Passing a credit balance straight in as cents under-reads it by 10x, and an under-read balance
+// looks like an empty one: it would fire a top-up at $50 for someone who set their trigger at $5.
+//
+// Note lib/credits.ts also exports CREDITS_PER_DOLLAR = 100. That is the retired chatbot product's
+// economics and nothing in Vraelis uses it. The checkout route shadows it with its own 10 deliberately.
+// auto-recharge-verify.ts asserts this constant still agrees with the rate the checkout route charges.
+export const CENTS_PER_CREDIT = 10;
+
+/** Credits, as the ledger stores them, into the cents every rule here is written in. */
+export function creditsToCents(credits: number): number {
+  return Math.round(credits * CENTS_PER_CREDIT);
+}
+
 /** Cents. Deliberately narrow: a top-up is a small number of dollars, not an arbitrary one. */
 export const MIN_TRIGGER_CENTS = 100;        // $1
 export const MAX_TRIGGER_CENTS = 50_000;     // $500

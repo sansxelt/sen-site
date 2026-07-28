@@ -48,7 +48,7 @@ const PLAN_VALUE: Record<string, string[]> = {
   ],
 };
 
-export default async function CheckoutPage({ searchParams }: { searchParams: Promise<{ amount?: string; plan?: string; cycle?: string }> }) {
+export default async function CheckoutPage({ searchParams }: { searchParams: Promise<{ amount?: string; plan?: string; cycle?: string; save?: string }> }) {
   const sp = await searchParams;
   // _v1 plan keys (pricing cutover step 11) are recognized ONLY behind VRAELIS_PASS_PRICING — with the
   // flag off they stay unknown and take today's redirect-to-/credits path. Legacy plans and top-ups are
@@ -151,7 +151,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
               // The redirect proves nothing; the page waits for the ledger. It is handed the credits it
               // should expect so it can wait for THAT number rather than poll blindly.
               <OwnPaymentPanel
-                purchase={{ kind: "credits", amountDollars: amount }}
+                purchase={{ kind: "credits", amountDollars: amount, saveCard: sp.save === "1" }}
                 returnUrl={stripeReturnUrl(topupReturnUrl(amount * 10))}
               />
             ) : planKey ? <CheckoutClient plan={planKey} cycle={cycle} paypal={!v1Plan} /> : <CheckoutClient amount={amount} />}
