@@ -39,6 +39,26 @@ console.log("── the token belongs to one run and no other ──");
   // No clock, no randomness: a rehearsal has to be reproducible, and a plan hash must not move.
   const src = readFileSync("lib/preflight/run-unique.ts", "utf8");
   ok("nothing here reads a clock or a random source", !/Date\.now|Math\.random|new Date/.test(strip(src)));
+
+  // REAL IDS, taken from production. A token scheme that is unique in theory and collides on the actual
+  // shape of a run id would be worse than none, because the mechanism would look present and prove
+  // nothing.
+  const REAL = [
+    "de53ab8b-35d7-403b-8d16-f605f98cd02a", "909642a3-6d05-4257-ba79-f482e63d719d",
+    "a9099445-0295-426a-975d-1bb38e86eefe", "56b42806-b1f7-4928-9ece-36dea7ef6907",
+    "6dab9166-bcad-4c31-9b37-8e40925acd40", "6dacee25-2881-4b8c-8d87-d2c937b1f3c5",
+  ];
+  const tokens = REAL.map(runUniqueToken);
+  ok("production run ids give distinct tokens", new Set(tokens).size === REAL.length, tokens.join(" "));
+  // The two ids above sharing "6da" are deliberate: a scheme keying on too few leading characters passes
+  // a hand-picked sample and collides on the real thing.
+  ok("  including two that share a leading run of characters", runUniqueToken(REAL[4]) !== runUniqueToken(REAL[5]));
+  // The trap the rehearsal fell into: ids sharing a prefix collapse to one token. Asserted so the
+  // constraint is a checked property rather than a comment somebody has to notice.
+  ok("ids sharing their first eight characters DO collide, which is why the varying part must lead",
+    runUniqueToken("rehearsal-a") === runUniqueToken("rehearsal-b"));
+  const rehearse = readFileSync("ops/plan-rehearse.ts", "utf8");
+  ok("  so the rehearsal builds its own token instead", !/runUniqueToken\(`rehearsal/.test(rehearse) && /vr-rh/.test(rehearse));
 }
 
 console.log("\n── the run writes what it will later look for ──");
@@ -133,6 +153,26 @@ console.log("\n── a plan using it is still a legal plan ──");
   ], { rolesAvailable: [] });
   ok("the flow validator accepts a placeholder", v.ok === true, v.ok ? "" : v.reason);
   ok("and stores it verbatim, unresolved", v.ok && v.steps[1].value === `Vraelis check ${UNIQUE_PLACEHOLDER}`);
+}
+
+console.log("\n── the rehearsal executes what the run will execute ──");
+{
+  // A rehearsal that runs the plan differently from the way a paid run will is not a rehearsal. It called
+  // page.perform on the raw step, so the browser would have typed the literal "{{unique}}" into the
+  // customer's application, and the assertion would have looked for that same literal and passed —
+  // proving the placeholder works and nothing whatsoever about the product.
+  const r = strip(readFileSync("ops/plan-rehearse.ts", "utf8"));
+  ok("the rehearsal substitutes before performing", /applyRunUnique\(/.test(r));
+  // THE CONDITION OF A RETURN, not merely a mention. Checking that the file contains
+  // "fixedValueAssertions(" passes for a file that computes the risks and then ignores them, which is
+  // exactly what a careless edit leaves behind. The same weakness let a mutation that gutted the guarantee
+  // cap sail through until it was pinned to `if (await guaranteeCapReached(`.
+  ok("and refuses a plan that could pass on an earlier run's leftovers",
+    /fixedValueAssertions\(/.test(r) && /if \(risky\.length\)\s*\{[\s\S]{0,900}?\breturn\b/.test(r));
+  ok("  telling the operator which steps, and what to write instead", /REFUSING/.test(r) && r.includes("UNIQUE_PLACEHOLDER"));
+  // Before the browser opens: a session spent rehearsing a plan that will be refused anyway is waste, and
+  // it would write the risky values into the customer's app on the way.
+  ok("  before spending a browser session on it", r.indexOf("fixedValueAssertions(") < r.indexOf("chromium.launch("));
 }
 
 console.log("\n── the pieces are actually wired together ──");

@@ -34,6 +34,13 @@ export const UNIQUE_PLACEHOLDER = "{{unique}}";
 //
 // A rerun is a NEW run with a new id and therefore a new token, which is correct: a rerun has to prove the
 // app works NOW, not that a row from the original run is still lying around.
+// CONSTRAINT: the VARYING part of the id must come first. Run ids are plain uuids (verified against
+// production: twelve consecutive runs, twelve distinct tokens), and the leading eight characters are
+// already how a run is abbreviated everywhere else in this product, so a token reads as the run it came
+// from. Hand this a set of ids sharing a prefix and every token is identical, which is the very bug this
+// module exists to prevent. That is not hypothetical: the plan rehearsal first called this with
+// `rehearsal${clock}` and got vr-rehearsa on every invocation, so two rehearsals could satisfy each
+// other's assertions. It builds its own token now.
 export function runUniqueToken(runId: string): string {
   const hex = String(runId).replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
   // Short enough to fit a title field beside real text, long enough that two runs never collide in
