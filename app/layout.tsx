@@ -91,6 +91,16 @@ export default async function RootLayout({
         <body className="min-h-full" style={{ background: "#0A0A0B" }}>
           <link rel="stylesheet" href="/vraelis/tokens.css?v=20" />
           <link rel="stylesheet" href="/vraelis/styles.css?v=53" />
+          {/* THE CURTAIN IS THE ONLY THING MOST MACHINES EVER SEE, AND IT SAID NOTHING ABOUT THE COMPANY.
+              This branch returned before the JSON-LD below, so every crawler and every AI summariser
+              fetching vraelis.com got "Not open yet" and no structured self-description at all. Asked what
+              Vraelis is, they answered from their pre-stealth index, which describes the human-evaluation
+              product this company retired: "users submit options, collect valid judgments from real
+              people". A stale answer beats no answer, so no answer is what has to stop.
+              It does NOT change what is indexed. The curtain still sends X-Robots-Tag: noindex, nofollow
+              and still shows nothing of the product. This is the one machine-readable sentence saying who
+              this is, for anything that reads the page rather than its own cache. */}
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: entityJsonLd() }} />
           <StealthScreen />
         </body>
       </html>
