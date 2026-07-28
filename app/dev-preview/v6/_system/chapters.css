@@ -716,6 +716,13 @@
   .v6-gap__pin { position: static; height: auto; padding: clamp(72px, 12vh, 104px) var(--gutter); }
   .v6-gap__stage { max-width: none; height: auto; }
   .v6-gap__t { position: static; transform: none !important; opacity: 1 !important; }
+  /* THE CHILD THE PARENT'S RULE COULD NOT REACH.
+     .v6-gap__turn sits INSIDE .v6-gap__t.v6-gap__claim and carries its own opacity, derived as
+     calc(var(--turn) * (1 - var(--claim))). Once --p stopped travelling on mobile and was pinned to the
+     end of the scrub, --claim resolved to 1 and this computed to 0: the sentence painted once from the
+     stylesheet's own --p: 0 default and then vanished the moment the effect ran. Forcing the PARENT
+     visible never touched it, because opacity does not inherit, it composites. */
+  .v6-gap__turn { opacity: 1 !important; }
   .v6-gap__sys { margin-top: clamp(34px, 7vw, 52px); }
   .v6-gap__found { margin-top: clamp(40px, 8vw, 64px); }
   .v6-gap__verdictwrap { margin-top: clamp(32px, 6vw, 48px); }
