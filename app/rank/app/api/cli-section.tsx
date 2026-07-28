@@ -18,22 +18,24 @@
 //
 // The file is now served from the site (app/cli/vraelis.mjs/route.ts), from its source rather than a copy,
 // so one curl gets the same code this repo runs. No npm decision, no account, and a CI runner can fetch it.
-const INSTALL = `# macOS and Linux. Node 18+, no sudo, installs to ~/.local/bin.
-curl -fsS https://vraelis.com/install | sh
+// ONE BLOCK PER PLATFORM, LABELLED IN THE CHROME RATHER THAN IN A COMMENT.
+//
+// This was a single block whose first line was `curl ... | sh`, with the platform written as a shell
+// comment above it. Nobody reads comments in a code sample; they copy the first line. On Windows that
+// line cannot work at all, because sh is not on PATH in cmd.exe or PowerShell, so the reader's first
+// experience of the product was an error message about a shell they never mentioned wanting.
+//
+// The label a reader actually sees is the one in the bar above the block, so that is where the platform
+// goes. Two bars, two blocks, and neither can be mistaken for the other.
+const INSTALL_UNIX = `curl -fsS https://vraelis.com/install | sh`;
 
-# Windows, in PowerShell. Same idea, installs to %LOCALAPPDATA%\Vraelis.
-irm https://vraelis.com/install.ps1 | iex
+const INSTALL_WINDOWS = `irm https://vraelis.com/install.ps1 | iex`;
 
-vraelis login
+const AFTER_INSTALL = `vraelis login
 vraelis verify \\
   --url https://your-preview.example.com \\
   --claim "A customer can upgrade to Pro and still have access after signing back in" \
-  --wait
-
-# Rather read a script before running it? Both are text files:
-#   curl https://vraelis.com/install        (sh)
-#   curl https://vraelis.com/install.ps1    (PowerShell)
-# Or skip the installer: curl -O https://vraelis.com/cli/vraelis.mjs && node vraelis.mjs verify ...`;
+  --wait`;
 
 const CI = `# In CI: gate the deploy on the DECISION, not on the command finishing.
 curl -fsS https://vraelis.com/install | sh
@@ -65,8 +67,31 @@ export function CliSection() {
         claim, and its exit code is the launch decision.
       </p>
 
-      <div className="codebar"><i /><i /><i /><span>shell</span></div>
-      <pre className="codeblock"><code>{INSTALL}</code></pre>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14 }}>
+        <div>
+          <div className="codebar"><i /><i /><i /><span>macOS and Linux</span></div>
+          <pre className="codeblock"><code>{INSTALL_UNIX}</code></pre>
+        </div>
+        <div>
+          {/* Named as PowerShell, not "Windows", because that is the app someone has to open. cmd.exe
+              cannot run irm either, and a reader who tries it there gets a second error. */}
+          <div className="codebar"><i /><i /><i /><span>Windows, in PowerShell</span></div>
+          <pre className="codeblock"><code>{INSTALL_WINDOWS}</code></pre>
+        </div>
+      </div>
+
+      <p style={{ margin: "14px 0 6px", fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.6 }}>
+        Node 18 or newer. No sudo, no admin, and neither script edits your PATH or your shell profile.
+        Both are plain text at those URLs if you would rather read one first:
+        <code style={{ color: "var(--fg-3)" }}>curl https://vraelis.com/install</code> or
+        <code style={{ color: "var(--fg-3)" }}>curl https://vraelis.com/install.ps1</code>.
+        Or skip the installer entirely and run the file:
+        <code style={{ color: "var(--fg-3)" }}>curl -O https://vraelis.com/cli/vraelis.mjs</code>,
+        then <code style={{ color: "var(--fg-3)" }}>node vraelis.mjs verify ...</code>
+      </p>
+
+      <div className="codebar"><i /><i /><i /><span>then, on either</span></div>
+      <pre className="codeblock"><code>{AFTER_INSTALL}</code></pre>
 
       <div style={{ marginTop: 22, border: "1px solid var(--line-2)", borderRadius: "var(--r-lg, 14px)", overflow: "hidden", background: "var(--bg-1)" }}>
         {FLAGS.map(([flag, what], i) => (

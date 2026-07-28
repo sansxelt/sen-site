@@ -297,10 +297,17 @@ async function main() {
 
     ok("the install line does not point at a path inside this repository",
       !/node \.?\/?cli\/vraelis\.mjs/.test(install), "customers do not have this repo");
-    // THE INSTALL BLOCK SPECIFICALLY, not "somewhere in the file". The CI block further down also fetches
-    // the CLI, so a check against the whole file stayed green when the download was deleted from the very
-    // first thing a reader sees. Found by mutation: removing it from INSTALL changed nothing.
-    const installBlock = /const INSTALL = `([\s\S]*?)`;/.exec(install)?.[1] ?? "";
+    // THE INSTALL AREA SPECIFICALLY, not "somewhere in the file". The CI block further down also installs
+    // the CLI, so a check against the whole file stayed green when the instruction was deleted from the
+    // very first thing a reader sees. Found by mutation: removing it from INSTALL changed nothing.
+    //
+    // It spans two constants and the rendered prose between them now, because the platform label a reader
+    // actually sees lives in the block's chrome rather than in a shell comment. A reader copies the first
+    // line of a code sample; they do not read comments inside it. So the slice runs from the first install
+    // constant to the CI one, which is everything above the fold for someone installing this.
+    const from = install.indexOf("const INSTALL_UNIX");
+    const to = install.indexOf("const CI =");
+    const installBlock = from !== -1 && to > from ? install.slice(from, to) : "";
     ok("the install block exists to be checked", installBlock.length > 0);
     ok("it tells the reader how to install the CLI, in the install block itself",
       /curl -fsS https:\/\/vraelis\.com\/install \| sh/.test(installBlock));
@@ -308,10 +315,14 @@ async function main() {
       /curl -fsS https:\/\/vraelis\.com\/install \| sh/.test(/const CI = `([\s\S]*?)`;/.exec(install)?.[1] ?? ""));
     // Piping a script into a shell asks for real trust. Offering to show it first is the least that buys,
     // and offering a route that skips the installer is what makes the trust optional rather than required.
+    // These two are page-level, not block-level, and are checked against the whole file on purpose: they
+    // moved out of the code sample into rendered prose beside it, which is the better place for them.
+    // Neither string can be satisfied by the CI block below, so widening the search does not weaken it:
+    // CI uses `curl -fsS`, and nothing else on the page fetches the raw .mjs.
     ok("the reader is told they can read the script before running it",
-      /curl https:\/\/vraelis\.com\/install/.test(installBlock));
+      /curl https:\/\/vraelis\.com\/install/.test(install));
     ok("and offered a way to skip the installer entirely",
-      /curl -O https:\/\/vraelis\.com\/cli\/vraelis\.mjs/.test(installBlock));
+      /curl -O https:\/\/vraelis\.com\/cli\/vraelis\.mjs/.test(install));
     // The commands must be the INSTALLED one. Leaving `node vraelis.mjs` after adding an installer is the
     // same halfway rename that put a repo path in front of customers in the first place.
     ok("the examples call the installed command, not a file path",
