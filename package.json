@@ -100,7 +100,8 @@
     "prose:link:test": "tsx scripts/prose-link-verify.ts",
     "usage:account:test": "tsx scripts/account-usage-verify.ts",
     "recharge:test": "tsx scripts/auto-recharge-verify.ts",
-    "stealth:index:test": "tsx scripts/stealth-index-verify.ts"
+    "stealth:index:test": "tsx scripts/stealth-index-verify.ts",
+    "scratchpad:test": "tsx scripts/scratchpad-verify.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",

@@ -14,6 +14,7 @@ import { planLabel } from "@/lib/plan-label";
 // server-safe module so app pages can render the same icons without a client boundary.
 import { Ic, I } from "./icons";
 import { CommandPalette, type PaletteSystem } from "./command-palette";
+import { Scratchpad } from "./scratchpad";
 import { useDismiss } from "./use-dismiss";
 
 // Research sits between Developers and Enterprise for now. The fuller restructure toward
@@ -657,6 +658,10 @@ export function RankShell({ signedIn = false, email = null, appHost = false, sys
             <AppSidebar />
             <main className="app-main">{children}</main>
           </div>
+          {/* Product only. The marketing site has nothing worth carrying between pages, and a notes button
+              on a pricing page is furniture. Inside the shell rather than in a page, because the entire
+              point is that it survives navigating from one to the next. */}
+          <Scratchpad />
         </div>
       </ProductSurface>
     );
