@@ -5,6 +5,7 @@
 // Testing this any other way (importing an internal function) would prove the mapping and miss the thing
 // that actually breaks a pipeline: a message written to stdout, a nonzero code on success, or a crash
 // exiting 0.
+import { readFileSync, existsSync } from "node:fs";
 import { createServer } from "node:http";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -132,6 +133,46 @@ async function main() {
     await run(["verify", "--url", "https://x.example.com", "--claim", "c", "--wait", "--idempotency-key", "mine-1"], {}, port);
     ok("an explicit --idempotency-key is used verbatim", seen.idem === "mine-1", String(seen.idem));
   });
+
+  // ── THE INSTALL INSTRUCTION HAS TO BE ONE A STRANGER CAN RUN ──────────────────────────────────────
+  //
+  // Everything above proves the CLI works. None of it proved anyone could GET it. The console told
+  // customers to run `node ./cli/vraelis.mjs`, a path inside this repository, which they do not have, so
+  // every command in that section was unrunnable for the person reading it. cli/package.json is
+  // `private: true` and the package has never been published, so the npm form would be a different lie.
+  console.log("\n── the install instruction is obtainable ──");
+  {
+    // COMMENTS STRIPPED BEFORE ANY BAN IS CHECKED. The comment in cli-section.tsx explains that
+    // "npm i -g vraelis" would be a lie, so a check reading raw text finds the string it is banning inside
+    // the sentence banning it. That is the third guard in this repo to fail by searching prose. Strip
+    // first, then assert, every time.
+    const code = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+    const install = code(readFileSync("app/rank/app/api/cli-section.tsx", "utf8"));
+    const hasRoute = existsSync("app/cli/vraelis.mjs/route.ts");
+    ok("the CLI is served from the site", hasRoute);
+    ok("from its SOURCE file, so there is no second copy to go stale",
+      hasRoute && /readFile\(join\(process\.cwd\(\), "cli", "vraelis\.mjs"\)/.test(
+        readFileSync("app/cli/vraelis.mjs/route.ts", "utf8")));
+    // Nothing imports cli/vraelis.mjs, so without tracing the download 404s in production and works locally.
+    ok("and traced into the route bundle, or it 404s only in production",
+      /outputFileTracingIncludes[\s\S]{0,240}cli\/vraelis\.mjs/.test(readFileSync("next.config.ts", "utf8")));
+
+    ok("the install line does not point at a path inside this repository",
+      !/node \.?\/?cli\/vraelis\.mjs/.test(install), "customers do not have this repo");
+    // THE INSTALL BLOCK SPECIFICALLY, not "somewhere in the file". The CI block further down also fetches
+    // the CLI, so a check against the whole file stayed green when the download was deleted from the very
+    // first thing a reader sees. Found by mutation: removing it from INSTALL changed nothing.
+    const installBlock = /const INSTALL = `([\s\S]*?)`;/.exec(install)?.[1] ?? "";
+    ok("the install block exists to be checked", installBlock.length > 0);
+    ok("it tells the reader how to obtain the file, in the install block itself",
+      /curl -s?O https:\/\/vraelis\.com\/cli\/vraelis\.mjs/.test(installBlock));
+    ok("and the CI block fetches it too, so a runner needs nothing preinstalled",
+      /curl -s?O https:\/\/vraelis\.com\/cli\/vraelis\.mjs/.test(/const CI = `([\s\S]*?)`;/.exec(install)?.[1] ?? ""));
+    // npm publish is a real option and an irreversible one. Until it happens, nothing may imply it.
+    ok("nothing claims an npm install that has never been published",
+      !/npm i(nstall)? -g vraelis|npx vraelis/.test(install)
+      && /"private":\s*true/.test(readFileSync("cli/package.json", "utf8")));
+  }
 
   console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);
   process.exit(fail === 0 ? 0 : 1);

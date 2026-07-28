@@ -8,26 +8,35 @@
 // cli/vraelis.mjs implements, not an aspirational surface: one command (verify), three exit codes, and the
 // two flags that make it useful to something other than a human (--json, --repair-prompt).
 //
-// THE INSTALL LINE IS THE HONEST ONE. cli/package.json is `private: true` and the package has never been
-// published, so "npm i -g vraelis" would be a lie that fails at a terminal in front of a customer. It ships
-// with the repo and runs from there, and that is what it says.
-const INSTALL = `# The CLI ships in the Vraelis repo and runs on Node 18+.
-# It is not on npm yet, so point node at the file directly:
+// THE INSTALL LINE HAS TO BE ONE A STRANGER CAN RUN.
+//
+// This said "The CLI ships in the Vraelis repo, point node at ./cli/vraelis.mjs". The first half of that
+// reasoning was right: cli/package.json is `private: true` and nothing has ever been published, so
+// "npm i -g vraelis" would be a lie that fails at a terminal in front of a customer. The second half was
+// not an install instruction. A customer does not have this repository, so ./cli/vraelis.mjs is a path to
+// a file they cannot obtain, and every command below it was unrunnable for the person reading it.
+//
+// The file is now served from the site (app/cli/vraelis.mjs/route.ts), from its source rather than a copy,
+// so one curl gets the same code this repo runs. No npm decision, no account, and a CI runner can fetch it.
+const INSTALL = `# Download it. One dependency-free file, Node 18+.
+curl -O https://vraelis.com/cli/vraelis.mjs
+
 export VRAELIS_API_KEY=vr_live_...
-node ./cli/vraelis.mjs verify \\
+node vraelis.mjs verify \\
   --url https://your-preview.example.com \\
   --claim "A customer can upgrade to Pro and still have access after signing back in" \\
   --wait`;
 
 const CI = `# In CI: gate the deploy on the DECISION, not on the command finishing.
-node ./cli/vraelis.mjs verify --url "$PREVIEW_URL" --claim "$CLAIM" --wait --json > result.json
+curl -sO https://vraelis.com/cli/vraelis.mjs
+node vraelis.mjs verify --url "$PREVIEW_URL" --claim "$CLAIM" --wait --json > result.json
 # exit 0 verified   exit 1 failed   exit 2 blocked, or could not run
 #
 # Blocked is not a pass. A run that merely finished is not a pass.
 # Only exit 0 should ship.
 
 # On a failure, hand the repair prompt straight to a coding agent:
-node ./cli/vraelis.mjs verify --url "$PREVIEW_URL" --claim "$CLAIM" --wait --repair-prompt | claude -p`;
+node vraelis.mjs verify --url "$PREVIEW_URL" --claim "$CLAIM" --wait --repair-prompt | claude -p`;
 
 const label = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--fg-4)" };
 

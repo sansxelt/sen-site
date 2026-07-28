@@ -213,7 +213,7 @@ export function Standard() {
    ------------------------------------------------------------------------------------------------- */
 type LK = "cmd" | "out" | "dim" | "go" | "stop" | "wait";
 type Line = { k: LK; t: string };
-const CMD = 'node cli/vraelis.mjs verify --url https://app.example.com --claim "A paid customer keeps Pro access after signing back in."';
+const CMD = 'node vraelis.mjs verify --url https://app.example.com --claim "A paid customer keeps Pro access after signing back in."';
 const RUN: Line[] = [
   { k: "dim", t: "reading the claim" },
   { k: "out", t: "obligations derived, one needs a second session" },
@@ -240,7 +240,7 @@ function reply(raw: string): Line[] {
   switch (head) {
     case "help":
       return [
-        { k: "out", t: 'node cli/vraelis.mjs verify --url <deployment> --claim "<outcome>"' },
+        { k: "out", t: 'node vraelis.mjs verify --url <deployment> --claim "<outcome>"' },
         { k: "dim", t: "  --url     the deployment to verify, https and reachable" },
         { k: "dim", t: "  --claim   what should be true, as a sentence" },
         { k: "out", t: "exit codes  0 verified   1 failed   2 blocked" },
@@ -248,7 +248,7 @@ function reply(raw: string): Line[] {
       ];
     case "node":
     case "vraelis":
-      if (rest[0] !== "verify") return say(`vraelis: unknown subcommand '${rest[0] ?? ""}'. try: node cli/vraelis.mjs verify`, "dim");
+      if (rest[0] !== "verify") return say(`vraelis: unknown subcommand '${rest[0] ?? ""}'. try: node vraelis.mjs verify`, "dim");
       if (!cmd.includes("--url")) return say("vraelis: --url is required. try: help", "stop");
       if (!cmd.includes("--claim")) return say("vraelis: --claim is required. try: help", "stop");
       return [
@@ -522,7 +522,7 @@ export function Reach() {
               elements into single spaces, which silently shifted every line of the transcript */}
           <pre className="v6-rx__term">
             <code>
-              <span className="v6-rx__p">{"$ "}</span><span className="v6-rx__cmd">{"node cli/vraelis.mjs verify\n"}</span>
+              <span className="v6-rx__p">{"$ "}</span><span className="v6-rx__cmd">{"node vraelis.mjs verify\n"}</span>
               <span className="v6-rx__dim">{"crossing the deployed workflow\n"}</span>
               <span className="v6-rx__ok">{"verified\n"}</span>
               <span className="v6-rx__p">{"$ "}</span><span className="v6-rx__cmd">{"echo $?\n"}</span>
