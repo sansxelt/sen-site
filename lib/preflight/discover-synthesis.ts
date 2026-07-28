@@ -155,7 +155,7 @@ export function buildSynthesisPrompt(pages: PageSnapshot[], buildPrompt: string 
     // coverage gate then reported the claim unprovable. Every rule here mirrors lib/preflight/flow-steps.ts.
     `- FIELD CONTRACTS. A step that breaks one of these is not repaired, it DISCARDS ITS WHOLE FLOW:\n` +
     `    navigate       target is a path on this app, e.g. "/dashboard", or "" for the app root. Never an absolute URL.\n` +
-    `    assert_url     expect is a path fragment on this app, e.g. "/auth". It is checked with url.includes(expect), so a sentence such as "user is on the sign-in page" can never match and is rejected outright.\n` +
+    `    assert_url     expect is a path on this app, e.g. "/auth". It is compared against the page's path, anchored at a segment boundary: "/auth" matches /auth and /auth/callback but not /authenticate, and never matches a path that merely mentions it in a query string. A sentence such as "user is on the sign-in page" can never match and is rejected outright. Never leave it empty.\n` +
     `    assert_text    target names the element or region to look inside. expect is the LITERAL text that will be on the page at that moment, normally a value an earlier fill step typed. It is compared as text, so a DESCRIPTION of the outcome ("the saved note appears in the list") is looked for word for word and never found.\n` +
     `    assert_visible target is the literal visible text or accessible name to look for.\n` +
     `    fill           target is the field's label or placeholder; value is the literal text to type.\n` +

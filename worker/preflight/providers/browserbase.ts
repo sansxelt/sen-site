@@ -9,7 +9,7 @@
 // action allowlist with sanitized console/network capture. Downloads/permissions are restricted.
 import type { BrowserProvider, BrowserSession, CreateBrowserSessionInput, PreflightPage, Step, StepObservation } from "../types";
 import { safePath, redactString } from "../redaction";
-import { textPresentInScope } from "../assert-scope";
+import { textPresentInScope, urlPathMatches } from "../assert-scope";
 import { createBrowserbaseSession, releaseBrowserbaseSession } from "./browserbase-api";
 
 // Playwright is a worker-only dep imported via a VARIABLE module name so tsc does not resolve it until it is
@@ -368,13 +368,30 @@ export class PlaywrightPreflightPage implements PreflightPage {
           // instant the previous step finished, so "click Sign out" then "assert_url /auth" was asking
           // where the browser is before it has gone anywhere. It passed on one run at 0ms and failed on
           // the next against the same application doing the same thing, which is the tell.
+          // AN ASSERTION THAT CANNOT FAIL IS WORSE THAN NO ASSERTION, because it is counted as coverage.
+          //
+          // This was url().includes(expect) over the WHOLE url, and three separate things could not fail:
+          //
+          //   expect ""          "".includes("") is true, so the step certified every possible destination
+          //   expect "/"         every url contains a slash, so the root check passed on any page
+          //   expect "/dashboard" satisfied by https://app/login?next=/dashboard — the redirect AWAY from
+          //                      the destination contains the destination
+          //
+          // The last is the cruel one: being bounced back to sign-in is the exact failure the assertion
+          // exists to catch, and the bounce carries the wanted path in its query string.
+          //
+          // The plan contract has always said expect is "a path fragment on this app", so comparing the
+          // PATH is what was meant. Anchored at a segment boundary: /auth matches /auth and /auth/callback,
+          // never /authenticate, and never a path that merely mentions it somewhere.
           const want = (step.expect || "").trim();
-          let matched = this.page.url().includes(want);
+          if (!want) return base(false, "assert_url_no_expected_path");
+          const hit = () => urlPathMatches(this.page.url(), want);
+          let matched = hit();
           for (let i = 0; !matched && i < RESOLVE_WINDOW.attempts; i++) {
             await sleep(RESOLVE_WINDOW.delayMs);
-            matched = this.page.url().includes(want);
+            matched = hit();
           }
-          return base(matched, matched ? "url_match" : "url_mismatch");
+          return base(matched, matched ? "url_match" : `url_mismatch [at ${(() => { try { return new URL(this.page.url()).pathname; } catch { return "?"; } })()}]`);
         }
         case "screenshot": { await this.page.screenshot({ fullPage: false }); return base(true, "screenshot"); }
         case "new_context": return base(true, "new_context_requested"); // handled at the session layer

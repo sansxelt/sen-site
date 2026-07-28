@@ -628,7 +628,17 @@ ok("static: worker.ts documents per-run credential scoping is what makes maxConc
   const urlCase = slice('case "assert_url": {', 'case "screenshot"', "assert_url");
   ok("static: assert_url waits for the navigation instead of reading once",
     urlCase.includes("!matched && i < RESOLVE_WINDOW.attempts"));
-  ok("static: assert_url still decides by the same substring rule", urlCase.includes("url().includes(want)"));
+  // WAS: urlCase.includes("url().includes(want)"). The intent was right — adding a retry loop must not
+  // quietly widen what can match — but it was pinned to the substring rule itself, and that rule was the
+  // defect: an empty expect matched everything, "/" matched every page, and "/dashboard" was satisfied by
+  // a redirect to /login?next=/dashboard, which is the very failure the assertion exists to catch. The
+  // property survives the fix; the spelling did not.
+  ok("static: assert_url decides by the shared, unit-testable path rule",
+    urlCase.includes("urlPathMatches(this.page.url(), want)"));
+  ok("static: and the retry re-asks the SAME question rather than loosening it",
+    (urlCase.match(/= hit\(\)/g) ?? []).length === 2);
+  ok("static: an empty expectation is refused, not treated as satisfied by anything",
+    /if \(!want\) return base\(false, "assert_url_no_expected_path"\)/.test(urlCase));
 
   const textCase = slice('case "assert_text": {', 'case "assert_url": {', "assert_text");
   ok("static: assert_text retries rather than judging the first paint",

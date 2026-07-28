@@ -109,6 +109,7 @@ const SUITES: Suite[] = [
   { file: "scripts/guarantee-cap-verify.ts", npm: "guarantee:cap:test" },
   { file: "scripts/cancellation-lifecycle-verify.ts", npm: "cancellation:lifecycle:test" },
   { file: "scripts/run-unique-verify.ts", npm: "run:unique:test" },
+  { file: "scripts/assertion-strength-verify.ts", npm: "assertion:strength:test" },
   { file: "scripts/verification-idempotency-verify.ts", npm: "idempotency:test" },
   { file: "scripts/email-embeds-verify.ts", npm: "email:test" },
   { file: "scripts/terminology-verify.ts", npm: "terminology:test" },

@@ -70,7 +70,11 @@ ok("context therefore changes the prompt, so wiring it through is not cosmetic",
 for (const [rule, marker] of [
   ["field contracts are stated", "FIELD CONTRACTS"],
   ["a breach discards the whole flow", "DISCARDS ITS WHOLE FLOW"],
-  ["assert_url wants a path, not a sentence", "url.includes(expect)"],
+  // Was pinned to the literal "url.includes(expect)", which described HOW the worker compared rather than
+  // WHAT the model is being asked for. When that comparison was replaced (it could not fail: an empty
+  // expect, a bare "/", and a ?next= redirect all matched), this went red while the rule it checks was
+  // unchanged and better stated. The marker is the anti-pattern the rule exists to prevent.
+  ["assert_url wants a path, not a sentence", "sentence such as"],
   ["assert_text wants the literal text", "LITERAL text that will be on the page"],
   ["the session starts signed out", "STARTS SIGNED OUT"],
   ["every flow must open with a navigate", "EVERY flow must begin with a navigate"],
