@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AutoRechargePanel } from "./auto-recharge-panel";
 import { planLabel, isOnAPaidPlan } from "@/lib/plan-label";
 import { passPriceCents, PASS_INCLUDED_FLOWS } from "@/lib/preflight/pass-pricing";
 import Link from "next/link";
@@ -212,6 +213,10 @@ export default function CreditsPage() {
           </div>
         </div>
       </div>
+
+      {/* Automatic top-up sits between buying credits and the rules that govern them, because that is what
+          it is: a rule about when the balance refills, chosen by the person whose card it charges. */}
+      <AutoRechargePanel />
 
       {/* rules */}
       <div style={{ marginTop: 30 }}>

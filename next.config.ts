@@ -14,6 +14,7 @@ const nextConfig: NextConfig = {
   // would 404 in production while working locally.
   outputFileTracingIncludes: {
     "/cli/vraelis.mjs": ["./cli/vraelis.mjs"],
+    "/install": ["./cli/install.sh"],
   },
   // Compress responses
   compress: true,

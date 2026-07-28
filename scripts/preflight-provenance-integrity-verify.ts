@@ -632,8 +632,45 @@ ok("the rollback drops and re-adds the one constraint the restored state violate
       /invalidated_by/.test(m24) && /invalidated_ref/.test(m24));
   }
 
-  ok("nothing above 24 has appeared unreviewed",
-    !sqlDir.some((f) => /^vraelis-preflight-2[5-9]/.test(f)));
+  // ── 25: automatic top-up, the only schema that moves money with nobody present ─────────────────────
+  //
+  // This tripwire caught migration 25 the moment it appeared, which is exactly what it is for. A schema
+  // that can cause a card to be charged is the last one that should arrive unreviewed, so the review is
+  // written down here rather than performed once and forgotten.
+  {
+    const f25 = sqlDir.find((f) => /^vraelis-preflight-25-/.test(f));
+    ok("25 exists", !!f25);
+    const m25 = f25 ? readFileSync(join(ROOT, "sql", f25), "utf8") : "";
+    const body25 = m25.replace(/^--.*$/gm, "");
+
+    ok("25 is additive: it creates its own tables and alters nobody else's",
+      /create table if not exists public\.v_auto_recharge\b/.test(body25)
+      && !/^\s*(drop|delete|truncate)\s/im.test(body25)
+      && !/alter table (?!public\.v_auto_recharge)/i.test(body25));
+    ok("25 backfills nothing", !/^\s*(update|insert)\s+/im.test(body25));
+
+    // OFF, AND WITH NO AMOUNTS. A default trigger or target would be this company deciding when a customer
+    // gets charged. The absence of those defaults is the property, so it is asserted rather than assumed.
+    ok("25 defaults enabled to false", /enabled\s+boolean\s+not null default false/.test(body25));
+    for (const col of ["trigger_cents", "target_cents", "monthly_cap_cents"]) {
+      ok(`25 gives ${col} no default, so we never choose when someone is charged`,
+        new RegExp(`${col}\\s+integer,`).test(body25) && !new RegExp(`${col}[^,]*default`, "i").test(body25));
+    }
+    // A stored card is not an agreement. An off-session charge has to be able to point at one.
+    ok("25 records consent separately from the saved card",
+      /consent_at\s+timestamptz/.test(body25) && /stripe_payment_method\s+text/.test(body25));
+    // Without this index nothing prevents two concurrent settlements from charging twice.
+    ok("25 carries the unique index that makes a double charge impossible",
+      /create unique index[\s\S]{0,200}idempotency_key/.test(body25));
+    // A log of successes cannot answer "why did it not top up", which is the question customers ask.
+    ok("25 logs refusals and failures, not only charges",
+      /v_auto_recharge_events/.test(body25) && /reason\s+text/.test(body25));
+    ok("25 records a failure count, so a declining card can stop the loop",
+      /consecutive_failures\s+integer/.test(body25));
+  }
+
+  ok("nothing above 25 has appeared unreviewed",
+    !sqlDir.some((f) => /^vraelis-preflight-2[6-9]/.test(f)));
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

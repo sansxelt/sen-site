@@ -98,7 +98,8 @@
     "mobile:motion:test": "tsx scripts/mobile-motion-verify.ts",
     "key:detail:test": "tsx scripts/key-detail-verify.ts",
     "prose:link:test": "tsx scripts/prose-link-verify.ts",
-    "usage:account:test": "tsx scripts/account-usage-verify.ts"
+    "usage:account:test": "tsx scripts/account-usage-verify.ts",
+    "recharge:test": "tsx scripts/auto-recharge-verify.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",

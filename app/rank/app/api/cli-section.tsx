@@ -18,25 +18,28 @@
 //
 // The file is now served from the site (app/cli/vraelis.mjs/route.ts), from its source rather than a copy,
 // so one curl gets the same code this repo runs. No npm decision, no account, and a CI runner can fetch it.
-const INSTALL = `# Download it. One dependency-free file, Node 18+.
-curl -O https://vraelis.com/cli/vraelis.mjs
+const INSTALL = `# Install it. Node 18+, no sudo, installs to ~/.local/bin.
+curl -fsS https://vraelis.com/install | sh
 
 export VRAELIS_API_KEY=vr_live_...
-node vraelis.mjs verify \\
+vraelis verify \\
   --url https://your-preview.example.com \\
   --claim "A customer can upgrade to Pro and still have access after signing back in" \\
-  --wait`;
+  --wait
+
+# Rather read it first? It is a text file: curl https://vraelis.com/install
+# Or skip the installer entirely: curl -O https://vraelis.com/cli/vraelis.mjs && node vraelis.mjs verify ...`;
 
 const CI = `# In CI: gate the deploy on the DECISION, not on the command finishing.
-curl -sO https://vraelis.com/cli/vraelis.mjs
-node vraelis.mjs verify --url "$PREVIEW_URL" --claim "$CLAIM" --wait --json > result.json
+curl -fsS https://vraelis.com/install | sh
+vraelis verify --url "$PREVIEW_URL" --claim "$CLAIM" --wait --json > result.json
 # exit 0 verified   exit 1 failed   exit 2 blocked, or could not run
 #
 # Blocked is not a pass. A run that merely finished is not a pass.
 # Only exit 0 should ship.
 
 # On a failure, hand the repair prompt straight to a coding agent:
-node vraelis.mjs verify --url "$PREVIEW_URL" --claim "$CLAIM" --wait --repair-prompt | claude -p`;
+vraelis verify --url "$PREVIEW_URL" --claim "$CLAIM" --wait --repair-prompt | claude -p`;
 
 const label = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--fg-4)" };
 

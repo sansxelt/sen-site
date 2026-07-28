@@ -164,10 +164,47 @@ async function main() {
     // first thing a reader sees. Found by mutation: removing it from INSTALL changed nothing.
     const installBlock = /const INSTALL = `([\s\S]*?)`;/.exec(install)?.[1] ?? "";
     ok("the install block exists to be checked", installBlock.length > 0);
-    ok("it tells the reader how to obtain the file, in the install block itself",
-      /curl -s?O https:\/\/vraelis\.com\/cli\/vraelis\.mjs/.test(installBlock));
-    ok("and the CI block fetches it too, so a runner needs nothing preinstalled",
-      /curl -s?O https:\/\/vraelis\.com\/cli\/vraelis\.mjs/.test(/const CI = `([\s\S]*?)`;/.exec(install)?.[1] ?? ""));
+    ok("it tells the reader how to install the CLI, in the install block itself",
+      /curl -fsS https:\/\/vraelis\.com\/install \| sh/.test(installBlock));
+    ok("and the CI block installs it too, so a runner needs nothing preinstalled",
+      /curl -fsS https:\/\/vraelis\.com\/install \| sh/.test(/const CI = `([\s\S]*?)`;/.exec(install)?.[1] ?? ""));
+    // Piping a script into a shell asks for real trust. Offering to show it first is the least that buys,
+    // and offering a route that skips the installer is what makes the trust optional rather than required.
+    ok("the reader is told they can read the script before running it",
+      /curl https:\/\/vraelis\.com\/install/.test(installBlock));
+    ok("and offered a way to skip the installer entirely",
+      /curl -O https:\/\/vraelis\.com\/cli\/vraelis\.mjs/.test(installBlock));
+    // The commands must be the INSTALLED one. Leaving `node vraelis.mjs` after adding an installer is the
+    // same halfway rename that put a repo path in front of customers in the first place.
+    ok("the examples call the installed command, not a file path",
+      /^vraelis verify/m.test(installBlock));
+
+    // ── The installer itself ────────────────────────────────────────────────────────────────────────
+    const sh = readFileSync("cli/install.sh", "utf8");
+    const shCode = sh.replace(/^\s*#.*$/gm, "");
+    ok("the installer is served from the site", existsSync("app/install/route.ts"));
+    ok("from its source file, so there is no second copy to go stale",
+      /readFile\(join\(process\.cwd\(\), "cli", "install\.sh"\)/.test(readFileSync("app/install/route.ts", "utf8")));
+    ok("and traced into the bundle, or it 404s only in production",
+      /outputFileTracingIncludes[\s\S]{0,320}cli\/install\.sh/.test(readFileSync("next.config.ts", "utf8")));
+
+    // NO SUDO. An installer that wants root to place one text file is asking for far more trust than the
+    // job needs, and a CI runner usually cannot grant it anyway.
+    ok("the installer never asks for root", !/\bsudo\b/.test(shCode));
+    ok("it installs into the user's own directory", /\$HOME\/\.local\/bin/.test(sh));
+    // Editing someone's shell profile from a piped script is a surprise found later by someone else.
+    ok("it does not edit anyone's shell profile",
+      !/(>>|>)\s*"?\$HOME\/\.(bashrc|zshrc|profile|bash_profile)/.test(shCode));
+    ok("it stops at the first failure rather than half-installing", /^set -eu/m.test(shCode));
+    ok("it checks the Node version, so the failure is a sentence and not a syntax error",
+      /MIN_NODE/.test(shCode) && /process\.versions\.node/.test(shCode));
+    // A captive portal's login page is a valid file of about the right size and would install cleanly.
+    ok("it refuses a download that is empty or is not the CLI",
+      /-s "\$TMP"/.test(shCode) && /grep -q "vraelis"/.test(shCode));
+    // Writing straight to the destination leaves a truncated CLI that runs and does the wrong thing.
+    ok("it downloads to a temporary file and moves it into place",
+      /mktemp/.test(shCode) && /mv "\$TMP"/.test(shCode));
+    ok("it is POSIX sh, not bash", /^#!\/bin\/sh/.test(sh) && !/\[\[/.test(shCode));
     // npm publish is a real option and an irreversible one. Until it happens, nothing may imply it.
     ok("nothing claims an npm install that has never been published",
       !/npm i(nstall)? -g vraelis|npx vraelis/.test(install)
