@@ -277,6 +277,38 @@ export default function proxy(req: NextRequest) {
   // for the site that does.
   if (!v6Public() && path === "/security") return go(req, "/enterprise", "redirect");
 
+  // ── THE PREVIOUS GENERATION, STILL ANSWERING AT 200 ───────────────────────────────────────────────
+  //
+  // CLEAN_EXACT is an explicit map so that a clean path with no V6 page keeps its old target rather than
+  // 404ing. That was the right call DURING the promotion and became a liability the moment it finished:
+  // four paths had no V6 successor, so they quietly went on serving the previous company's site. Searching
+  // for Vraelis surfaced vraelis.com/how-it-works, a page from a product generation this repo has
+  // replaced, sitting at 200 with its own title template.
+  //
+  // The sitemap never advertised them, which is why this was invisible: it derives from V6_EXACT and has
+  // been correct the whole time. These are indexed leftovers from before promotion, and a page nobody
+  // links to is still the first result if it is the one Google already has.
+  //
+  // 301, not the helper's 307. A permanent redirect is the only status that tells a crawler to DROP the old
+  // URL and pass its history to the new one. A temporary redirect keeps the old address in the index
+  // indefinitely, which is exactly the state being fixed.
+  //
+  // Only while V6 is promoted. Unpromoted, these are the live site and must keep working.
+  if (v6Public()) {
+    const RETIRED: Record<string, string> = {
+      "/how-it-works": "/method",       // superseded by /method and /platform
+      "/sso": "/enterprise",            // SSO folded into the enterprise page
+      "/free-report": "/pricing",       // an offer page for a lead loop that no longer runs
+      "/demo": "/contact",              // booking a demo is a conversation, and /contact is where it lives
+    };
+    const successor = RETIRED[path];
+    if (successor) {
+      const url = req.nextUrl.clone();
+      url.pathname = successor;
+      return NextResponse.redirect(url, 301);
+    }
+  }
+
   // 2) Archived / retired -> home.
   if (
     path === "/flip" || path.startsWith("/flip/") ||
