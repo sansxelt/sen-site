@@ -72,14 +72,32 @@ const APP_NAV: { group: string; items: { href: string; label: string; d: string 
   // Connections became Integrations because that is what the page already contains: GitHub, Vercel, Sentry,
   // Stripe and Supabase account authorizations, plus per-application Slack, webhook, deploy and test-account
   // wiring. "Connections" described the mechanism; "Integrations" describes what a reader is looking for.
+  // Command line joins Platform rather than becoming a fourth group. The three groups are the product's
+  // stated shape and they are not changing for one entry, but "you can run this from a terminal" was
+  // findable only by scrolling most of the way down Developers, which meant knowing it existed first.
   { group: "Platform", items: [
     { href: "/connections", label: "Integrations", d: I.key },
     { href: "/developers", label: "Developers", d: I.code },
+    { href: "/cli", label: "Command line", d: I.terminal },
   ] },
+  // SETTINGS IS WHERE MONEY LIVES, AND EACH QUESTION GETS ITS OWN ANSWER. This had Usage and Billing and
+  // nothing else, so four genuinely different questions were collapsed into two destinations:
+  //
+  //   Plans    what you subscribe to
+  //   Credits  the balance, and topping it up
+  //   Usage    what you have actually consumed
+  //   Limits   what will refuse you, and how close you are
+  //   Billing  invoices, payment method, the commercial relationship
+  //
+  // Credits and Plans were previously reachable only through the account menu, and Limits was the last
+  // section of the Usage page, which put "why was I refused" at the bottom of a page about spending.
   { group: "Settings", items: [
     { href: "/organization", label: "Organization", d: I.building },
     { href: "/team", label: "Team", d: I.user },
+    { href: "/plans", label: "Plans", d: I.layers },
+    { href: "/credits", label: "Credits", d: I.coin },
     { href: "/usage", label: "Usage", d: I.data },
+    { href: "/limits", label: "Limits", d: I.slash },
     { href: "/billing", label: "Billing", d: I.card },
     { href: "/account", label: "Account", d: I.user },
   ] },
@@ -97,8 +115,11 @@ const NAV_ALIASES: Record<string, string> = {
   "/repairs": "/verifications",
   "/deployments": "/systems",
   "/activity": "/records",          // the audit trail IS the permanent record; /records is its canonical URL
-  "/plans": "/billing",       // choosing a plan is a billing action, not a destination beside it
-  "/credits": "/usage",        // topping up is an action ON usage, not a destination beside it
+  // No /plans or /credits entries any more. They were aliased onto Billing and Usage on the reasoning that
+  // choosing a plan is a billing action and topping up is an action on usage. Both are true and neither
+  // makes them the same PAGE: an alias meant landing on /credits lit up Usage, so the highlight pointed at
+  // somewhere the reader was not. They are their own items now, so aliasing them would hijack a live
+  // destination rather than rescue a retired one, which is the opposite of this table's job.
   "/api": "/developers",
 };
 

@@ -19,6 +19,11 @@ export const APP_ROOTS = [
   "systems", "verifications", "guarantees", "review", "records", "usage",
   "applications", "passes", "issues", "repairs", "deployments", "activity",
   "team", "organization", "api", "connections", "plans", "credits", "billing", "account", "checkout",
+  // "limits" and "cli" are their own console pages: what will refuse a request, and the ways to run
+  // Vraelis from outside the console. NOTE on "cli": the marketing host also serves the installer at
+  // /cli/vraelis.mjs and the CLI file itself, and those keep working because proxy.ts skips a fixed list
+  // of asset extensions, .mjs among them, so they never reach this check at all.
+  "limits", "cli",
   "admin", "new",
 ] as const;
 

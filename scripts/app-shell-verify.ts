@@ -22,15 +22,40 @@ console.log("── the primary navigation is the product, not the architecture 
 for (const label of ["Overview", "Systems", "Guarantees", "Verifications", "Review", "Records"]) {
   ok(`primary nav contains ${label}`, new RegExp(`label: "${label}"`).test(navBlock));
 }
-// Internal lifecycle stages must not be presented as equal destinations.
-for (const gone of ["Applications", "Passes", "Issues", "Repairs", "Deployments", "Activity", "Credits", "Plans", "Home"]) {
-  ok(`primary nav no longer offers ${gone} as a destination`, !new RegExp(`label: "${gone}"`).test(navBlock));
+// PER GROUP, because that is what this always meant. The list below is of INTERNAL LIFECYCLE STAGES, and
+// the rule is that they must not sit in Product as if they were durable objects a customer owns. It used
+// to be checked against the whole nav, which worked only while the offending labels appeared nowhere at
+// all. Credits and Plans were on that list for a different reason: they had been removed entirely. They
+// are settings, not stages, and putting them back in Settings is correct, so a whole-nav search would now
+// fail for a change that is right.
+const groupOf = (name: string) => {
+  const start = navBlock.indexOf(`group: "${name}"`);
+  if (start === -1) return "";
+  const end = navBlock.indexOf('group: "', start + 8);
+  return navBlock.slice(start, end === -1 ? undefined : end);
+};
+const product = groupOf("Product"), platform = groupOf("Platform"), settings = groupOf("Settings");
+ok("the three groups exist to be checked separately", !!product && !!platform && !!settings);
+
+for (const gone of ["Applications", "Passes", "Issues", "Repairs", "Deployments", "Activity", "Home", "Credits", "Plans", "Billing", "Usage"]) {
+  ok(`Product does not present ${gone} as a durable object`, !new RegExp(`label: "${gone}"`).test(product));
 }
 ok("the platform group presents the other ways to operate Vraelis",
-  /group: "Platform"/.test(navBlock) && /label: "Integrations"/.test(navBlock) && /label: "Developers"/.test(navBlock));
-ok("settings carries account, team, usage and billing",
-  /label: "Account"/.test(navBlock) && /label: "Team"/.test(navBlock)
-  && /label: "Usage"/.test(navBlock) && /label: "Billing"/.test(navBlock));
+  /label: "Integrations"/.test(platform) && /label: "Developers"/.test(platform));
+// The console is not the only interface, and that was findable only by scrolling down Developers.
+ok("platform names the command line as its own destination", /label: "Command line"/.test(platform));
+
+// FIVE DIFFERENT QUESTIONS, FIVE ANSWERS. Usage and Billing alone collapsed what you subscribe to, what
+// your balance is, what you consumed, and what will refuse you into two destinations.
+for (const item of ["Organization", "Team", "Plans", "Credits", "Usage", "Limits", "Billing", "Account"]) {
+  ok(`settings carries ${item}`, new RegExp(`label: "${item}"`).test(settings));
+}
+// Money questions belong together and not scattered across groups.
+for (const money of ["Plans", "Credits", "Billing", "Limits"]) {
+  ok(`${money} is in Settings and nowhere else`,
+    new RegExp(`label: "${money}"`).test(settings)
+    && !new RegExp(`label: "${money}"`).test(platform));
+}
 
 // THE FOUNDER'S HARD RULE, CHECKED RATHER THAN TRUSTED: "a navigation item may appear only when it leads to
 // a real working surface". A label list cannot catch a dead link, and asserting the list I just wrote would
@@ -171,7 +196,9 @@ const EXPECT: [string, string][] = [
   ["/passes", "/verifications"],
   ["/passes/run-1", "/verifications"],
   ["/issues", "/verifications"],
-  ["/plans", "/billing"],   // Settings > Billing is the page headed "Billing"; /plans is reached from it
+  // No /plans row. It was aliased onto Billing while it was reachable only from there; it is its own
+  // Settings item now, so aliasing it would hijack a live destination and light up the wrong row. Same for
+  // /credits, which used to point at Usage. This table exists to rescue RETIRED urls, not current ones.
   ["/activity", "/records"],
   // /api is the OLD name for the authenticated developer console, which now lives at /developers. It is an
   // alias like the rest, not a pass-through, and the page itself still resolves.
@@ -181,7 +208,8 @@ for (const [from, to] of EXPECT) {
   ok(`${from} highlights ${to}`, resolve(from) === to, `got ${resolve(from)}`);
 }
 // A current URL must pass through untouched, or the alias table would hijack live navigation.
-for (const p of ["/systems", "/verifications", "/connections", "/developers", "/account", "/billing"]) {
+for (const p of ["/systems", "/verifications", "/connections", "/developers", "/account", "/billing",
+                 "/plans", "/credits", "/usage", "/limits", "/cli"]) {
   ok(`${p} is not rewritten by the alias table`, resolve(p) === p);
 }
 

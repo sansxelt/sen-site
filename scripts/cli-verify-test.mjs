@@ -205,6 +205,21 @@ async function main() {
     ok("it downloads to a temporary file and moves it into place",
       /mktemp/.test(shCode) && /mv "\$TMP"/.test(shCode));
     ok("it is POSIX sh, not bash", /^#!\/bin\/sh/.test(sh) && !/\[\[/.test(shCode));
+
+    // "cli" IS NOW AN APP ROOT, and that is a collision waiting to happen.
+    //
+    // The console has a Command line page at /cli, so "cli" was added to APP_ROOTS. isAppPath is
+    // host-agnostic, so on vraelis.com every /cli path is now something the proxy wants to bounce to
+    // app.vraelis.com behind a sign-in wall. The download survives only because the proxy's matcher skips
+    // a fixed list of asset extensions and .mjs is one of them, so /cli/vraelis.mjs never reaches the
+    // routing at all. That is load-bearing and entirely non-obvious: remove .mjs from that matcher and the
+    // installer starts redirecting a CI runner to a login page, while everything else keeps working.
+    const routes = readFileSync("lib/app-routes.ts", "utf8");
+    const proxySrc = readFileSync("proxy.ts", "utf8");
+    if (/"cli"/.test(routes)) {
+      ok("the proxy still skips .mjs, which is the only reason the download survives /cli being an app root",
+        /matcher:[\s\S]{0,400}mjs/.test(proxySrc));
+    }
     // npm publish is a real option and an irreversible one. Until it happens, nothing may imply it.
     ok("nothing claims an npm install that has never been published",
       !/npm i(nstall)? -g vraelis|npx vraelis/.test(install)
