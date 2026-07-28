@@ -37,6 +37,21 @@ const VIEW_KEY = "vraelis:scratchpad-view";
 // how one runaway paste evicts everything else the product stores there.
 const MAX = 20000;
 
+// WINDOW CHROME HAS ITS OWN PALETTE, and it is deliberately not the verdict tokens.
+//
+// These first used --stop-line, --wait-line and --go-line, which are 30% alpha BORDER tints, so the dots
+// came out muddy against a dark panel. The obvious fix is the matching --*-ink values, and it is the
+// wrong one: --go-ink is the green that means Verified. In a product whose entire claim rests on what
+// green means, spending it on a zoom button blurs the one vocabulary that cannot afford to blur.
+//
+// So these are the window-control colours everybody already reads as close, minimise and zoom. They say
+// "this is a window", which is exactly what they are for, and they leave the verdict palette alone.
+const LIGHTS = {
+  close: { base: "#FF5F57", hot: "#FF8A84" },
+  min:   { base: "#FEBC2E", hot: "#FFD067" },
+  zoom:  { base: "#28C840", hot: "#5BE06E" },
+};
+
 export function Scratchpad() {
   const [ready, setReady] = useState(false);
   const [open, setOpen] = useState(false);
@@ -154,15 +169,28 @@ export function Scratchpad() {
                 None of them touches the text. It is written on every keystroke and only Reset removes it. */}
             <span style={{ display: "flex", gap: 5 }}>
               {([
-                ["close", "var(--stop-line)", "Close", () => setOpen(false)],
-                ["min", "var(--wait-line)", view === "min" ? "Expand" : "Collapse to the title bar",
+                ["close", LIGHTS.close, "Close", () => setOpen(false)],
+                ["min", LIGHTS.min, view === "min" ? "Expand" : "Collapse to the title bar",
                   () => setView((v) => (v === "min" ? "normal" : "min"))],
-                ["zoom", "var(--go-line)", view === "zoom" ? "Restore size" : "Zoom",
+                ["zoom", LIGHTS.zoom, view === "zoom" ? "Restore size" : "Zoom",
                   () => setView((v) => (v === "zoom" ? "normal" : "zoom"))],
-              ] as [string, string, string, () => void][]).map(([id, colour, label, act]) => (
-                <button key={id} onClick={act} title={label} aria-label={label}
-                  style={{ width: 11, height: 11, borderRadius: "50%", background: colour,
-                           border: "none", padding: 0, cursor: "pointer", lineHeight: 0 }} />
+              ] as [string, { base: string; hot: string }, string, () => void][]).map(([id, c, label, act]) => (
+                <button
+                  key={id}
+                  onClick={act}
+                  title={label}
+                  aria-label={label}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = c.hot; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = c.base; }}
+                  style={{
+                    width: 11, height: 11, borderRadius: "50%", background: c.base,
+                    // A hairline inner edge, which is what stops a flat circle reading as a sticker on a
+                    // dark panel. Same trick the real ones use.
+                    boxShadow: "inset 0 0 0 0.5px rgba(0,0,0,0.28)",
+                    border: "none", padding: 0, cursor: "pointer", lineHeight: 0,
+                    transition: "background 120ms ease",
+                  }}
+                />
               ))}
             </span>
             <span style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", letterSpacing: "0.06em" }}>notes</span>

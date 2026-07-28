@@ -80,8 +80,15 @@ console.log("\n── the title bar controls are real ──");
 // nothing is a small lie that costs one click to discover.
 ok("close, collapse and zoom are all wired",
   /setOpen\(false\)/.test(code) && /"min"/.test(code) && /"zoom"/.test(code));
+// Anchored on being a button with a label, not on how the JSX happens to be formatted. The previous
+// version matched `<button key={id}` on one line, so wrapping the attributes across lines for readability
+// broke it while the markup was unchanged. A check that fails when code is tidied gets tidied away.
 ok("they are real buttons with labels, not decorative spans",
-  /<button key=\{id\}/.test(code) && /aria-label=\{label\}/.test(code));
+  /<button\b/.test(code) && /aria-label=\{label\}/.test(code) && /onClick=\{act\}/.test(code));
+// Verdict colours mean something in this product. Spending --go-ink, the green that means Verified, on a
+// zoom control blurs the one vocabulary it cannot afford to blur.
+ok("the window controls do not borrow the verdict palette",
+  !/--go-(ink|line)[\s\S]{0,120}Zoom|Zoom[\s\S]{0,120}--go-(ink|line)/.test(code));
 // A window state that resets on navigation is the panel forgetting a decision you just made.
 //
 // Checked as a round trip, both directions. Asserting the constant's NAME appeared was not enough: a
@@ -92,6 +99,30 @@ ok("and read back on mount, so it survives navigation", /getItem\(VIEW_KEY\)/.te
 // None of the three may touch the note.
 ok("no title-bar control clears the text",
   !/setView[\s\S]{0,90}setText\(""\)/.test(code) && !/setOpen[\s\S]{0,90}setText\(""\)/.test(code));
+
+console.log("\n── the controls are actually visible ──");
+{
+  // MEASURED, NOT EYEBALLED. These first used --stop-line, --wait-line and --go-line, which are 30% alpha
+  // BORDER tints rather than fills. Over the title bar that came out at 1.68:1, 2.00:1 and 2.01:1, all
+  // three below the 3:1 WCAG floor for a non-text control. They read as "dark", which is how a contrast
+  // failure usually announces itself: as a vague sense that something looks off rather than as a bug.
+  const rgb = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const lin = (c: number) => { const v = c / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  const lum = (c: number[]) => 0.2126 * lin(c[0]) + 0.7152 * lin(c[1]) + 0.0722 * lin(c[2]);
+  const contrast = (a: number[], b: number[]) => {
+    const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x);
+    return (hi + 0.05) / (lo + 0.05);
+  };
+  const panel = rgb("#111214");
+  const found = Array.from(code.matchAll(/base: "(#[0-9A-Fa-f]{6})"/g)).map((m) => m[1]);
+  ok("the three control colours are declared as opaque fills", found.length === 3, found.join(", "));
+  for (const c of found) {
+    const r = contrast(rgb(c), panel);
+    ok(`${c} clears the 3:1 floor for a non-text control`, r >= 3, `${r.toFixed(2)}:1`);
+  }
+  // A translucent fill is exactly how the washed-out version happened in the first place.
+  ok("none of them is a translucent tint", !/base: "rgba/.test(code));
+}
 
 console.log("\n── it is in the product, not on the marketing site ──");
 ok("mounted inside the signed-in shell", /<Scratchpad \/>/.test(shell));
