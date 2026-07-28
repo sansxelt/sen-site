@@ -60,6 +60,39 @@ ok("storage is read after mount, never during render",
   /useEffect\(\(\) => \{[\s\S]{0,200}localStorage\.getItem/.test(code)
   && !/useState\([^)]*localStorage/.test(code));
 
+console.log("\n── the only thing that removes it is Reset ──");
+// THE PROMISE THE PANEL MAKES OUT LOUD, so it had better be true of the code. Nothing may clear this key
+// except the reset control: not signing out, not navigating, not closing the tab. The dangerous version of
+// this feature is one that silently forgets a key somebody was relying on having.
+ok("only the reset path clears the text",
+  (code.match(/setText\(""\)/g) ?? []).length === 1
+  && /const reset = \(\) => \{[\s\S]{0,220}setText\(""\)/.test(code));
+ok("nothing removes the stored key outright", !/removeItem/.test(code));
+// Signing out clears a session cookie. If anything cleared storage alongside it, the note would vanish at
+// the one moment a person is most likely to be mid-task and least likely to notice.
+const shellSrc = readFileSync("app/rank/_components/rank-ui.tsx", "utf8");
+ok("signing out does not clear browser storage", !/localStorage\.clear|sessionStorage\.clear/.test(shellSrc));
+ok("and the panel states how long the text lasts, not only where it lives",
+  /signing out/.test(src) && /only thing that/.test(src.replace(/\s+/g, " ")));
+
+console.log("\n── the title bar controls are real ──");
+// Three things that render as buttons must do three things. Something shaped like a control that does
+// nothing is a small lie that costs one click to discover.
+ok("close, collapse and zoom are all wired",
+  /setOpen\(false\)/.test(code) && /"min"/.test(code) && /"zoom"/.test(code));
+ok("they are real buttons with labels, not decorative spans",
+  /<button key=\{id\}/.test(code) && /aria-label=\{label\}/.test(code));
+// A window state that resets on navigation is the panel forgetting a decision you just made.
+//
+// Checked as a round trip, both directions. Asserting the constant's NAME appeared was not enough: a
+// mutation renaming the declaration left every use of it intact, so the regex matched a file that no
+// longer compiled. What matters is that the view is written on change and read back on mount.
+ok("the window state is written when it changes", /setItem\(VIEW_KEY/.test(code));
+ok("and read back on mount, so it survives navigation", /getItem\(VIEW_KEY\)/.test(code));
+// None of the three may touch the note.
+ok("no title-bar control clears the text",
+  !/setView[\s\S]{0,90}setText\(""\)/.test(code) && !/setOpen[\s\S]{0,90}setText\(""\)/.test(code));
+
 console.log("\n── it is in the product, not on the marketing site ──");
 ok("mounted inside the signed-in shell", /<Scratchpad \/>/.test(shell));
 ok("and only there", (shell.match(/<Scratchpad \/>/g) ?? []).length === 1);

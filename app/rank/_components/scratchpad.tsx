@@ -29,6 +29,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 const KEY = "vraelis:scratchpad";
 const OPEN_KEY = "vraelis:scratchpad-open";
+// Window state persists alongside the text. Minimising something and finding it maximised again on the
+// next page is the panel forgetting a decision you made, which is the same failure as losing the note.
+const VIEW_KEY = "vraelis:scratchpad-view";
 
 // Generous, and bounded. localStorage is a shared, small quota per origin, and an unbounded text area is
 // how one runaway paste evicts everything else the product stores there.
@@ -37,6 +40,9 @@ const MAX = 20000;
 export function Scratchpad() {
   const [ready, setReady] = useState(false);
   const [open, setOpen] = useState(false);
+  // The three window states a real title bar has. "normal" is the default, "min" shows the bar alone,
+  // "zoom" is the taller one for when you are actually working in here rather than glancing at it.
+  const [view, setView] = useState<"normal" | "min" | "zoom">("normal");
   const [text, setText] = useState("");
   const [confirmReset, setConfirmReset] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -49,6 +55,8 @@ export function Scratchpad() {
     try {
       setText(localStorage.getItem(KEY) ?? "");
       setOpen(localStorage.getItem(OPEN_KEY) === "1");
+      const v = localStorage.getItem(VIEW_KEY);
+      if (v === "min" || v === "zoom" || v === "normal") setView(v);
     } catch { /* private mode, or storage disabled: the panel still works, it just will not persist */ }
     setReady(true);
   }, []);
@@ -62,6 +70,11 @@ export function Scratchpad() {
     if (!ready) return;
     try { localStorage.setItem(OPEN_KEY, open ? "1" : "0"); } catch { /* ignored */ }
   }, [open, ready]);
+
+  useEffect(() => {
+    if (!ready) return;
+    try { localStorage.setItem(VIEW_KEY, view); } catch { /* ignored */ }
+  }, [view, ready]);
 
   // Escape closes, but only when the panel has focus. A global Escape handler would fight every dialog,
   // menu and command palette in the product for a keystroke none of them expect to lose.
@@ -130,9 +143,26 @@ export function Scratchpad() {
         >
           {/* The title bar, in the product's own terminal register: three dots, a name, a status. */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", borderBottom: "1px solid var(--line-2)", background: "var(--bg-2)" }}>
-            <span aria-hidden style={{ display: "flex", gap: 5 }}>
-              {["var(--stop-line)", "var(--wait-line)", "var(--go-line)"].map((c) => (
-                <span key={c} style={{ width: 9, height: 9, borderRadius: "50%", background: c }} />
+            {/* THREE REAL CONTROLS, NOT THREE DOTS. They look like a title bar, so they have to behave
+                like one: something that renders as a button and does nothing is a small lie that costs a
+                click to discover. Same jobs a window has, adapted to a panel with no dock to fly into.
+
+                  red     close it
+                  amber   collapse to this bar alone, so it stays to hand without taking the screen
+                  green   zoom, for when you are working in here rather than glancing at it
+
+                None of them touches the text. It is written on every keystroke and only Reset removes it. */}
+            <span style={{ display: "flex", gap: 5 }}>
+              {([
+                ["close", "var(--stop-line)", "Close", () => setOpen(false)],
+                ["min", "var(--wait-line)", view === "min" ? "Expand" : "Collapse to the title bar",
+                  () => setView((v) => (v === "min" ? "normal" : "min"))],
+                ["zoom", "var(--go-line)", view === "zoom" ? "Restore size" : "Zoom",
+                  () => setView((v) => (v === "zoom" ? "normal" : "zoom"))],
+              ] as [string, string, string, () => void][]).map(([id, colour, label, act]) => (
+                <button key={id} onClick={act} title={label} aria-label={label}
+                  style={{ width: 11, height: 11, borderRadius: "50%", background: colour,
+                           border: "none", padding: 0, cursor: "pointer", lineHeight: 0 }} />
               ))}
             </span>
             <span style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", letterSpacing: "0.06em" }}>notes</span>
@@ -142,6 +172,7 @@ export function Scratchpad() {
             </span>
           </div>
 
+          {view !== "min" ? (
           <textarea
             ref={area}
             value={text}
@@ -152,7 +183,7 @@ export function Scratchpad() {
             placeholder={"# keys, ids, a claim you are drafting\n# stays here while you move around the console"}
             aria-label="Notes"
             style={{
-              width: "100%", minHeight: 220, maxHeight: "42vh", resize: "vertical",
+              width: "100%", minHeight: view === "zoom" ? 420 : 220, maxHeight: view === "zoom" ? "68vh" : "42vh", resize: "vertical",
               padding: "12px 14px", border: "none", outline: "none",
               background: "var(--bg-1)", color: "var(--fg-1)",
               fontFamily: "var(--font-code)", fontSize: 12.5, lineHeight: 1.65,
@@ -160,7 +191,13 @@ export function Scratchpad() {
               whiteSpace: "pre", overflowWrap: "normal", overflowX: "auto",
             }}
           />
+          ) : null}
 
+          {/* Footer and disclosure hide together, so a collapsed panel really is just the title bar
+              rather than a bar with an orphaned row of buttons under it. Two siblings, hence the
+              fragment: a ternary returns one node. */}
+          {view !== "min" ? (
+          <>
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderTop: "1px solid var(--line-2)", background: "var(--bg-2)" }}>
             <button onClick={copy} disabled={!text} className="btn btn--ghost"
               style={{ padding: "5px 10px", fontSize: 11.5, fontFamily: "var(--font-code)", opacity: text ? 1 : 0.5 }}>
@@ -181,11 +218,16 @@ export function Scratchpad() {
           </div>
 
           {/* SAID IN THE PANEL, NOT IN A DOC NOBODY OPENS. People will paste API keys here, and they are
-              entitled to know the terms before they do rather than after. */}
+              entitled to know the terms before they do rather than after, and to know how long it lasts
+              before they rely on it. Both halves matter: what it costs, and what it guarantees. */}
           <p style={{ margin: 0, padding: "8px 12px 10px", fontSize: 10.5, lineHeight: 1.55, color: "var(--fg-5)", borderTop: "1px solid var(--line-1)" }}>
-            Saved in this browser only. Never sent to Vraelis, never leaves this device, and not encrypted,
-            so treat it like a sticky note on your desk. Reset clears it completely.
+            Kept in this browser. It survives closing the panel, moving between pages, signing out, closing
+            the tab and restarting. <strong style={{ color: "var(--fg-4)" }}>Reset is the only thing that
+            removes it.</strong> Never sent to Vraelis and not encrypted, so treat it like a sticky note on
+            your desk.
           </p>
+          </>
+          ) : null}
         </section>
       ) : null}
     </>
