@@ -8,6 +8,7 @@ import { flowRequiresAuth, flowRoles, AUTH_ACTIONS } from "./types";
 import { classifyProviderError } from "./provider-errors";
 import { resolveNavigationUrl, targetInvariantViolation } from "../../lib/preflight/target-url";
 import { classifyStepAction, evaluateBoundary } from "../../lib/preflight/boundaries";
+import { runUniqueToken, applyRunUnique } from "../../lib/preflight/run-unique";
 import { log, clearActiveCredentials } from "./redaction";
 import { signInAs, verifyAuth, signOut, resetContext, resolveRole, type CredentialOpener } from "./auth-executor";
 
@@ -81,7 +82,17 @@ async function runFlow(flow: FlowSpec, page: import("./types").PreflightPage, de
   if (flow.viewport) { try { await page.setViewport(flow.viewport.width, flow.viewport.height); } catch { /* non-fatal */ } }
 
   try {
-  for (const step of boundedSteps) {
+  // Every run writes values no earlier run could have written. A plan carries `{{unique}}`; this run
+  // replaces it with a token derived from its own id, so an assertion on a value the flow typed can only
+  // be satisfied by THIS run's write. Without it, a plan that types a fixed value passes on a row left
+  // behind by an earlier run, and an application that had stopped saving comes back Verified.
+  //
+  // Substituted here, at the top of the loop, so the auth branch below sees it too, and BEFORE the
+  // boundary gate so policy judges the string the browser will really receive. Same discipline as the
+  // navigation rebase further down: the stored step keeps its intent, execution resolves it.
+  const uniqueToken = runUniqueToken(runId);
+  for (const rawStep of boundedSteps) {
+    const step = applyRunUnique(rawStep, uniqueToken);
     // Heartbeat BEFORE each step: extends the lease if we still own it, aborts if we lost it / cancel.
     if (!(await deps.store.heartbeat(runId, deps.workerId, deps.limits.leaseSecs))) {
       throw (await deps.store.cancelRequested(runId)) ? new CancelledError() : new LeaseLostError();

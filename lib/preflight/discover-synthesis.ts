@@ -13,6 +13,7 @@ import { z } from "zod";
 import type { PageSnapshot } from "./discover-extract";
 import type { Suggestion, SourceRef } from "./contract-merge";
 import type { Severity } from "../v-applications";
+import { UNIQUE_PLACEHOLDER } from "./run-unique";
 
 // Read lazily (call time) so env loaded after import order — and the Next runtime — still resolve.
 const apiKey = () => process.env.VRAELIS_LLM_API_KEY || process.env.ANTHROPIC_API_KEY;
@@ -172,6 +173,13 @@ export function buildSynthesisPrompt(pages: PageSnapshot[], buildPrompt: string 
     // placed after two flows that had signed in, and would have failed the customer for staying signed in.
     `- The browser is NOT reset between flows. Whatever the previous flow left behind, including its session, is still there. Only the FIRST flow starts signed out. So a flow that checks signed-out behaviour, such as a gated route redirecting to the login page, must begin with reset_context, otherwise it runs as an already-authenticated user and fails for a reason the application is not responsible for.\n` +
     `- Assert the OUTCOME, not the furniture. After creating something, assert the value you typed, not that a heading or an empty container is present: a heading is still there when the thing was never saved.\n` +
+    // AND THAT VALUE MUST BE DIFFERENT EVERY RUN. Asserting the value you typed closes the obvious hole
+    // and leaves a quieter one: a FIXED value is still on the page from the last run. The app stops saving,
+    // the flow types the same words, the assertion finds the old row, and the verdict is Verified. A false
+    // Verified is the only failure that makes every other verdict worth less. ${UNIQUE_PLACEHOLDER} is
+    // substituted per run at execution time (lib/preflight/run-unique.ts), so the plan stays hash-stable
+    // for review while each run writes something no earlier run could have written.
+    `- ANY value you type and then assert MUST contain ${UNIQUE_PLACEHOLDER}, for example value "Vraelis check ${UNIQUE_PLACEHOLDER}" and later expect "Vraelis check ${UNIQUE_PLACEHOLDER}". Each run replaces ${UNIQUE_PLACEHOLDER} with a token of its own, so the assertion can only be satisfied by what THIS run just wrote. Without it the same text is already on the page from the previous run, and a product that has stopped saving still passes. Use it verbatim, spelled exactly ${UNIQUE_PLACEHOLDER}; do not invent your own suffix, number or date, and do not put it in text you are only searching for rather than creating.\n` +
     // There is no assert_absent. A generated flow deleted a note and then asserted the note was still
     // visible, which is the only shape the action set allowed and is the opposite of what it meant.
     `- NOTHING HERE CAN ASSERT ABSENCE. Every assertion is a presence check (assert_visible, assert_text) or a URL check. There is no way to say that something is gone, hidden, empty or no longer listed. So do NOT write a flow whose point is a removal, a logout leaving nothing behind, an emptied list, or a hidden element: it cannot be expressed, and the closest expressible step asserts the OPPOSITE of what was meant and fails. Prove such things only where a POSITIVE observation carries them, for example a redirect to the sign-in path after signing out.\n` +

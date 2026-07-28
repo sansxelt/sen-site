@@ -103,7 +103,8 @@
     "stealth:index:test": "tsx scripts/stealth-index-verify.ts",
     "scratchpad:test": "tsx scripts/scratchpad-verify.ts",
     "guarantee:cap:test": "tsx scripts/guarantee-cap-verify.ts",
-    "cancellation:lifecycle:test": "tsx scripts/cancellation-lifecycle-verify.ts"
+    "cancellation:lifecycle:test": "tsx scripts/cancellation-lifecycle-verify.ts",
+    "run:unique:test": "tsx scripts/run-unique-verify.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
