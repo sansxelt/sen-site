@@ -27,7 +27,9 @@ import {
 } from "./auto-recharge";
 
 export type ExecuteResult =
-  | { charged: true; amountCents: number; paymentIntentId: string }
+  // `settled` false means the payment was accepted but the money has not moved yet, which is the normal
+  // outcome for a bank debit. It is not a failure and it is not a completed top-up.
+  | { charged: true; amountCents: number; paymentIntentId: string; settled: boolean }
   | { charged: false; reason: string; detail?: string };
 
 /**
@@ -118,12 +120,29 @@ export async function maybeTopUp(owner: string, balanceCents: number, nowMs = Da
       { idempotencyKey: `auto_${owner}_${d.idempotencyKey}` },
     );
 
+    // ── NOT EVERY PAYMENT METHOD SETTLES WHILE YOU WAIT ─────────────────────────────────────────────
+    //
+    // A card either succeeds or throws. A bank debit does neither: ACH and SEPA return `processing` and
+    // resolve days later, and they can still fail after that. Treating "did not throw" as "charged" would
+    // have told the customer their balance was topped up while the money had not moved, and would have
+    // reset the failure counter on a debit that later bounced.
+    //
+    // The event stays logged either way, because the attempt is real and the customer should see it. What
+    // differs is the wording and whether this counts as a success yet. The grant is unaffected: the
+    // existing payment_intent.succeeded webhook credits when the money actually arrives, whenever that is.
+    const settled = intent.status === "succeeded";
     await record(owner, {
       kind: "charged", amountCents: d.amountCents, balanceBeforeCents: balanceCents,
-      stripePaymentIntent: intent.id, reason: null,
+      stripePaymentIntent: intent.id,
+      reason: settled ? null : `pending settlement (${intent.status})`,
     });
-    await saveSettings(owner, { consecutiveFailures: 0, disabledReason: null, lastChargeAt: new Date(nowMs).toISOString() });
-    return { charged: true, amountCents: d.amountCents, paymentIntentId: intent.id };
+    // The failure counter is only cleared by a payment that actually landed. A `processing` debit has not
+    // proven the payment method works, and clearing it here would let a repeatedly bouncing bank account
+    // reset the protection on every attempt.
+    await saveSettings(owner, settled
+      ? { consecutiveFailures: 0, disabledReason: null, lastChargeAt: new Date(nowMs).toISOString() }
+      : { lastChargeAt: new Date(nowMs).toISOString() });
+    return { charged: true, amountCents: d.amountCents, paymentIntentId: intent.id, settled };
   } catch (e) {
     // A decline, or a card that now needs the customer present. Both are the same thing from here: this
     // attempt did not work and the count moves toward switching the whole feature off.

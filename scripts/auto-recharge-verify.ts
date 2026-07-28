@@ -157,6 +157,53 @@ console.log("\n── credits are not cents, and the difference charges people �
     /maybeTopUp\(owner, creditsToCents\(await balance\(owner\)\)\)/.test(accept));
 }
 
+console.log("\n── every payment method Stripe offers, not just cards ──");
+{
+  const intent = readFileSync("app/api/v/checkout/intent/route.ts", "utf8");
+  const exec = readFileSync("lib/preflight/auto-recharge-execute.ts", "utf8");
+  const hook = readFileSync("app/api/stripe/webhook/route.ts", "utf8");
+  const panel = readFileSync("app/rank/app/credits/auto-recharge-panel.tsx", "utf8");
+  const api = readFileSync("app/api/v/auto-recharge/route.ts", "utf8");
+  const strip = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+
+  // The method list is Stripe's, from the dashboard, not a hardcoded one here. Naming types in code is how
+  // a product ends up card-only by accident.
+  ok("checkout offers whatever the account has enabled, rather than a hardcoded list",
+    /automatic_payment_methods: \{ enabled: true \}/.test(strip(intent))
+    && !/payment_method_types:\s*\[/.test(strip(intent)));
+  // setup_future_usage is also what makes Stripe show only the methods that CAN be reused off-session, so
+  // a customer can never save something that would then fail every automatic charge.
+  ok("saving asks for off-session reuse, which is what filters the list to reusable methods",
+    /setup_future_usage: "off_session"/.test(strip(intent)));
+  ok("the executor charges a saved payment method generically, with no card-specific branch",
+    /payment_method: settings\.stripePaymentMethod/.test(strip(exec))
+    && !/\bcard\b/i.test(strip(exec)));
+
+  // A BANK DEBIT DOES NOT SETTLE WHILE YOU WAIT. Treating "did not throw" as charged tells a customer
+  // their balance is topped up while the money has not moved.
+  ok("a payment that has not settled yet is not reported as charged",
+    /intent\.status === "succeeded"/.test(strip(exec)) && /pending settlement/.test(strip(exec)));
+  ok("and the failure counter is only cleared by a payment that actually landed",
+    /settled\s*\n?\s*\?\s*\{ consecutiveFailures: 0/.test(strip(exec)));
+  ok("the panel says pending rather than charged for one",
+    /pending/.test(panel));
+
+  // A bounced debit arrives days later as a webhook. Without this the failure limit is unreachable for
+  // bank payments and the protection only ever fires for cards.
+  ok("a failure that arrives days later still counts against the limit",
+    /case "payment_intent\.payment_failed"/.test(strip(hook)) && /handleAutoTopUpFailed/.test(strip(hook)));
+  ok("and only for top-ups this system started, never a customer's own failed checkout",
+    /meta\.auto !== "1"/.test(strip(hook)));
+
+  // Calling a PayPal account "your card" is a small lie with a real consequence.
+  ok("the saved method is named from Stripe rather than assumed to be a card",
+    /paymentMethods\.retrieve/.test(strip(api)) && /paypal/.test(strip(api)) && /us_bank_account/.test(strip(api)));
+  ok("a detached method reports as none, so nobody enables against something that is gone",
+    /hasPaymentMethod: [^\n]*&& !!method/.test(strip(api)));
+  ok("no customer-facing copy calls it a card",
+    !/saved card|your card will|Save this card/i.test(panel));
+}
+
 console.log("\n── it fails closed ──");
 {
   const src = readFileSync("lib/preflight/auto-recharge.ts", "utf8");

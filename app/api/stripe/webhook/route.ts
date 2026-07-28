@@ -496,6 +496,41 @@ async function handleInvoiceUpcoming(invoice: Stripe.Invoice) {
 //
 // Idempotent: the table's stripe_payment_intent column is unique, so a
 // retried webhook is a no-op (we swallow the unique-violation error).
+/**
+ * An automatic top-up that failed AFTER we stopped watching.
+ *
+ * Only touches intents this system created (metadata.auto === "1"), so a customer's own failed checkout is
+ * none of this function's business and must not count against their automatic top-up.
+ *
+ * The counter it moves is the one that switches the whole feature off after three consecutive failures.
+ * That protection exists so a payment method which keeps bouncing stops being retried, and it was only
+ * ever reachable by card-shaped failures until this branch existed.
+ */
+async function handleAutoTopUpFailed(intent: Stripe.PaymentIntent) {
+  const meta = (intent.metadata ?? {}) as Record<string, string | undefined>;
+  if (meta.type !== "credit_topup" || meta.auto !== "1") return;
+  const owner = meta.user_id;
+  if (!owner) return;
+
+  try {
+    const { getSettings, saveSettings, record, MAX_CONSECUTIVE_FAILURES } = await import("../../../../lib/preflight/auto-recharge");
+    const reason = intent.last_payment_error?.code
+      ?? intent.last_payment_error?.decline_code
+      ?? intent.last_payment_error?.message
+      ?? "payment_failed";
+
+    const settings = await getSettings(owner);
+    const failures = settings.consecutiveFailures + 1;
+    await record(owner, { kind: "failed", amountCents: intent.amount, reason: String(reason) });
+    await saveSettings(owner, {
+      consecutiveFailures: failures,
+      ...(failures >= MAX_CONSECUTIVE_FAILURES ? { disabledReason: String(reason) } : {}),
+    });
+  } catch (e) {
+    console.warn("[stripe webhook] could not record an automatic top-up failure:", intent.id, e);
+  }
+}
+
 async function handlePaymentIntentSucceeded(intent: Stripe.PaymentIntent) {
   const meta = intent.metadata ?? {};
 
@@ -860,6 +895,17 @@ export async function POST(request: Request) {
 
       case "payment_intent.succeeded":
         await handlePaymentIntentSucceeded(event.data.object as Stripe.PaymentIntent);
+        break;
+
+      // A BOUNCED DEBIT ARRIVES DAYS LATE, and until now nothing was listening.
+      //
+      // A card fails inside the request that created it, so the executor sees it and counts it. A bank
+      // debit does not: ACH and SEPA return `processing`, the customer is told it is pending, and the
+      // failure turns up as this event days later. Without this branch a bank account that bounces every
+      // single time would never reach the failure limit, because the count only ever moved on card-shaped
+      // failures. The protection would look present and never fire.
+      case "payment_intent.payment_failed":
+        await handleAutoTopUpFailed(event.data.object as Stripe.PaymentIntent);
         break;
 
       case "invoice.payment_failed":

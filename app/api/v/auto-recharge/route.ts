@@ -39,12 +39,43 @@ export async function GET() {
     getSettings(owner), chargedThisMonthCents(owner), recentEvents(owner),
   ]);
 
+  // WHAT IS ACTUALLY SAVED, named. "A saved card" is wrong whenever it is a PayPal account or a bank
+  // debit, and Stripe offers whichever of those this account has enabled.
+  //
+  // Fetched rather than stored. A stored label goes stale the moment a card expires or a PayPal account
+  // is disconnected, and a settings page confidently naming a payment method that no longer works is worse
+  // than one that names none. One API call, on a page nobody opens in a loop.
+  let method: { type: string; label: string } | null = null;
+  if (s.stripePaymentMethod) {
+    try {
+      const { getStripe, isStripeConfigured } = await import("@/lib/stripe");
+      if (isStripeConfigured()) {
+        const pm = await getStripe().paymentMethods.retrieve(s.stripePaymentMethod);
+        const brand = pm.card ? `${pm.card.brand} ending ${pm.card.last4}`
+          : pm.us_bank_account ? `${pm.us_bank_account.bank_name ?? "Bank account"} ending ${pm.us_bank_account.last4}`
+          : pm.sepa_debit ? `SEPA account ending ${pm.sepa_debit.last4}`
+          : pm.paypal ? `PayPal${pm.paypal.payer_email ? ` (${pm.paypal.payer_email})` : ""}`
+          : pm.link ? `Link${pm.link.email ? ` (${pm.link.email})` : ""}`
+          : pm.type.replace(/_/g, " ");
+        method = { type: pm.type, label: brand };
+      }
+    } catch {
+      // A payment method Stripe cannot find is one that has been detached. Reporting none is correct:
+      // decide() will refuse for want of a usable method, and the page should say the same thing.
+      method = null;
+    }
+  }
+
   // The payment method id itself never leaves the server. The client needs to know WHETHER one exists, not
   // which one it is, and a pm_ id in a JSON response is a token in a browser's network log for no reason.
   return NextResponse.json({
     enabled: s.enabled,
     triggerCents: s.triggerCents, targetCents: s.targetCents, monthlyCapCents: s.monthlyCapCents,
-    hasPaymentMethod: !!s.stripePaymentMethod && !!s.stripeCustomerId,
+    // Requires the method to still EXIST at Stripe, not merely to have an id on file. A detached method
+    // leaves the id behind, and reporting that as "you have a payment method saved" would let someone turn
+    // this on and then watch every top-up refuse.
+    hasPaymentMethod: !!s.stripePaymentMethod && !!s.stripeCustomerId && !!method,
+    paymentMethod: method,
     consentAt: s.consentAt,
     consecutiveFailures: s.consecutiveFailures,
     disabledReason: s.disabledReason,

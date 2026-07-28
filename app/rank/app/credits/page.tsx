@@ -219,8 +219,9 @@ export default function CreditsPage() {
               <label style={{ display: "flex", gap: 9, alignItems: "flex-start", margin: "0 0 12px", cursor: "pointer" }}>
                 <input type="checkbox" checked={saveCard} onChange={(e) => setSaveCard(e.target.checked)} style={{ marginTop: 2 }} />
                 <span style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.55 }}>
-                  Save this card so automatic top-up can use it later. This does not turn automatic top-up
-                  on; you choose the amounts separately, below.
+                  Save this payment method so automatic top-up can use it later. Card, PayPal or a bank
+                  account all work. This does not turn automatic top-up on; you choose the amounts
+                  separately, below.
                 </span>
               </label>
               <button onClick={go} disabled={!valid} className="btn btn--lg" style={{ width: "100%", justifyContent: "center", opacity: valid ? 1 : 0.55 }}>Continue to checkout <span aria-hidden>→</span></button>

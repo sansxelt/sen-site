@@ -21,6 +21,7 @@ type Settings = {
   targetCents: number | null;
   monthlyCapCents: number | null;
   hasPaymentMethod: boolean;
+  paymentMethod: { type: string; label: string } | null;
   consentAt: string | null;
   consecutiveFailures: number;
   disabledReason: string | null;
@@ -107,19 +108,33 @@ export function AutoRechargePanel() {
           )}
         </div>
 
+        {/* NAMED, not called "your card". Stripe offers whichever methods this account has enabled that can
+            be reused without the customer present, so the saved one may be PayPal or a bank account, and
+            telling someone their card will be charged when it is their bank is a small lie with a real
+            consequence. Read from Stripe rather than stored, so a detached method shows as gone. */}
+        {s.paymentMethod ? (
+          <p style={{ margin: "0 0 12px", fontSize: 12.5, color: "var(--fg-4)" }}>
+            Charging <strong style={{ color: "var(--fg-2)", textTransform: "capitalize" }}>{s.paymentMethod.label}</strong>.
+            {s.paymentMethod.type === "us_bank_account" || s.paymentMethod.type === "sepa_debit" ? (
+              <> Bank debits take a few days to clear, so a top-up shows as pending until the money actually arrives.</>
+            ) : null}
+          </p>
+        ) : null}
+
         {stopped ? (
           <p style={{ margin: "0 0 14px", fontSize: 13, color: "var(--stop-ink)", background: "var(--stop-wash)", border: "1px solid var(--stop-line)", borderRadius: 8, padding: "9px 12px", lineHeight: 1.55 }}>
-            Automatic top-up was switched off after {s.consecutiveFailures} failed charges
+            Automatic top-up was switched off after {s.consecutiveFailures} failed payments
             {s.disabledReason ? ` (${s.disabledReason})` : ""}. Repeated attempts against a card that is
-            declining get an account flagged by its bank, so it stops rather than retrying. Save again to
-            turn it back on.
+            declining, or a bank account that keeps bouncing, gets an account flagged, so it stops rather
+            than retrying. Save again to turn it back on.
           </p>
         ) : null}
 
         {!s.hasPaymentMethod ? (
           <p style={{ margin: "0 0 14px", fontSize: 13, color: "var(--wait-ink)", background: "var(--wait-wash)", border: "1px solid var(--wait-line)", borderRadius: 8, padding: "9px 12px", lineHeight: 1.55 }}>
-            No saved card yet. Automatic top-up needs one, and cards are only saved when you explicitly ask
-            for it, so a past top-up did not leave one behind. Your next manual top-up can save it.
+            No saved payment method yet. Automatic top-up needs one, and nothing is saved unless you ask
+            for it, so a past top-up did not leave one behind. Tick the box on your next top-up and
+            whichever method you use, card, PayPal or a bank account, can be reused.
           </p>
         ) : null}
 
@@ -161,7 +176,8 @@ export function AutoRechargePanel() {
         <label style={{ display: "flex", gap: 9, alignItems: "flex-start", marginBottom: 16, cursor: "pointer" }}>
           <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} style={{ marginTop: 3 }} />
           <span style={{ fontSize: 13, color: "var(--fg-2)", lineHeight: 1.55 }}>
-            I authorise Vraelis to charge my saved card automatically on these terms, until I turn this off.
+            I authorise Vraelis to charge my saved payment method automatically on these terms, until I
+            turn this off.
           </span>
         </label>
 
@@ -192,8 +208,14 @@ export function AutoRechargePanel() {
               {s.recent.map((e, i) => (
                 <div key={`${e.at}-${i}`} style={{ display: "flex", gap: 10, fontSize: 12.5, color: "var(--fg-3)" }}>
                   <span style={{ fontFamily: "var(--font-code)", color: "var(--fg-5)" }}>{new Date(e.at).toLocaleDateString()}</span>
-                  <span style={{ color: e.kind === "charged" ? "var(--go-ink)" : e.kind === "failed" ? "var(--stop-ink)" : "var(--fg-4)" }}>
-                    {e.kind === "charged" ? `Charged $${dollars(e.amountCents)}` : e.kind === "failed" ? "Charge failed" : "Not charged"}
+                  {/* A pending bank debit is neither charged nor failed, and calling it "Charged" would
+                      tell someone their balance is topped up while the money has not moved. The executor
+                      writes the pending reason; this reads it rather than assuming success. */}
+                  <span style={{ color: e.kind === "failed" ? "var(--stop-ink)" : e.kind === "charged" && !/^pending settlement/.test(e.reason ?? "") ? "var(--go-ink)" : "var(--fg-4)" }}>
+                    {e.kind === "failed" ? "Payment failed"
+                      : e.kind !== "charged" ? "Not charged"
+                      : /^pending settlement/.test(e.reason ?? "") ? `$${dollars(e.amountCents)} pending`
+                      : `Charged $${dollars(e.amountCents)}`}
                   </span>
                   {e.reason ? <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--fg-5)" }}>{e.reason}</span> : null}
                 </div>
