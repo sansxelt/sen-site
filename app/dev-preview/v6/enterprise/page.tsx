@@ -1,5 +1,5 @@
 import { v6meta } from "../_system/meta";
-import { PageHero, Reveal, SectionHead, Signal, CTA, EditorialLink } from "../_system/ui";
+import { PageHero, Reveal, SectionHead, Signal, CTA, EditorialLink, ProseLink } from "../_system/ui";
 import { V6_BASE } from "@/lib/v6-routes";
 
 export const metadata = v6meta({
@@ -69,8 +69,8 @@ export default function V6Enterprise() {
             <div style={{ marginTop: 28 }}><CTA href={`${BASE}/contact`} brand>Talk to us</CTA></div>
             <p className="v6-note">
               Controls and data handling are on{" "}
-              <EditorialLink href={`${BASE}/security`}>security</EditorialLink>. Listed plans are on{" "}
-              <EditorialLink href={`${BASE}/pricing`}>pricing</EditorialLink>.
+              <ProseLink href={`${BASE}/security`}>security</ProseLink>. Listed plans are on{" "}
+              <ProseLink href={`${BASE}/pricing`}>pricing</ProseLink>.
             </p>
           </Reveal>
         </div>

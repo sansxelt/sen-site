@@ -1,5 +1,5 @@
 import { v6meta } from "../_system/meta";
-import { PageHero, Reveal, SectionHead, EditorialLink } from "../_system/ui";
+import { PageHero, Reveal, SectionHead, EditorialLink, ProseLink } from "../_system/ui";
 import { V6_BASE } from "@/lib/v6-routes";
 
 export const metadata = v6meta({
@@ -16,11 +16,16 @@ const P = { margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--g-fg-2)" } a
 
 // Addresses are the ones the product already uses. A contact page inventing a new alias is a contact page
 // with a dead address on it.
+//
+// hello@vraelis.com WAS LISTED HERE AS "Everything else. It reaches a person." It does not. It is the FROM
+// address on outbound mail (lib/email.ts, lib/broadcasts.ts), which is a send-only drop, so the one card on
+// this page that promised a human was the one card that reached nobody. Removed rather than repointed:
+// support already takes anything that does not fit a category, and a fourth card whose job is "the other
+// three, again" is a choice a reader has to make for no reason.
 const WHO: [string, string, string][] = [
-  ["help@vraelis.com", "Support", "A run that behaved unexpectedly, a verification you cannot interpret, anything broken. Include the verification id and you will get a specific answer rather than a general one."],
+  ["help@vraelis.com", "Support, and anything that does not fit below", "A run that behaved unexpectedly, a verification you cannot interpret, anything broken. Include the verification id and you will get a specific answer rather than a general one."],
   ["sales@vraelis.com", "Enterprise and invoicing", "Volume above the listed plans, a signed agreement, security review, or single sign-on for your team."],
   ["privacy@vraelis.com", "Privacy and data rights", "Access, export or deletion of your data, and any question about how it is handled."],
-  ["hello@vraelis.com", "Everything else", "Including the ones that do not fit a category. It reaches a person."],
 ];
 
 export default function V6Contact() {
@@ -29,7 +34,7 @@ export default function V6Contact() {
       <PageHero
         kicker="Contact"
         title="Write to a person."
-        lead="Four addresses, each with a job. There is no ticket maze and no contact form that disappears into one."
+        lead="Three addresses, each with a job. There is no ticket maze and no contact form that disappears into one."
       />
       <section className="v6-sec">
         <div className="v6-wrap">
@@ -46,7 +51,7 @@ export default function V6Contact() {
           <Reveal>
             <p className="v6-note">
               Reporting a security issue? Please use the disclosure route on{" "}
-              <EditorialLink href={`${BASE}/security`}>security</EditorialLink> rather than a general address.
+              <ProseLink href={`${BASE}/security`}>security</ProseLink> rather than a general address.
             </p>
           </Reveal>
         </div>

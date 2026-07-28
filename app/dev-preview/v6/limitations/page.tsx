@@ -1,5 +1,5 @@
 import { v6meta } from "../_system/meta";
-import { PageHero, Reveal, SectionHead, Signal, EditorialLink } from "../_system/ui";
+import { PageHero, Reveal, SectionHead, Signal, EditorialLink, ProseLink } from "../_system/ui";
 import { V6_BASE } from "@/lib/v6-routes";
 
 export const metadata = v6meta({
@@ -96,8 +96,8 @@ export default function V6Limitations() {
           <Reveal>
             <p className="v6-note">
               How access, secrets and evidence are handled is on{" "}
-              <EditorialLink href={`${BASE}/security`}>security</EditorialLink>. How a verification is
-              produced is on <EditorialLink href={`${BASE}/method`}>method</EditorialLink>.
+              <ProseLink href={`${BASE}/security`}>security</ProseLink>. How a verification is
+              produced is on <ProseLink href={`${BASE}/method`}>method</ProseLink>.
             </p>
           </Reveal>
         </div>

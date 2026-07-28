@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { v6meta } from "../_system/meta";
-import { Signal, EditorialLink } from "../_system/ui";
+import { Signal, EditorialLink, ProseLink } from "../_system/ui";
 import { V6_BASE, v6SignInPath } from "@/lib/v6-routes";
 import { listApplicationsForMember, latestRunByAppForApps } from "@/lib/v-applications";
 import { listAllRuns, overviewCounts } from "@/lib/preflight/overview-db";
@@ -150,8 +150,8 @@ export default async function V6Console() {
             does not belong on a dashboard.
           </p>
           <p style={{ ...P, marginTop: 14 }}>
-            <EditorialLink href={`${BASE}/docs`}>Read the docs</EditorialLink>
-            <span style={{ marginLeft: 20 }}><EditorialLink href={`${BASE}/limitations`}>What this cannot do</EditorialLink></span>
+            <ProseLink href={`${BASE}/docs`}>Read the docs</ProseLink>
+            <span style={{ marginLeft: 20 }}><ProseLink href={`${BASE}/limitations`}>What this cannot do</ProseLink></span>
           </p>
         </div>
       </div>

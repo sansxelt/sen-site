@@ -6,7 +6,7 @@ import { safeFetch, unsafeHttpsUrlReason } from "../safe-fetch";
 import { normalizeUrl } from "./url-policy";
 import type { FetchResult, Fetcher } from "./discover-crawl";
 
-const UA = "VraelisPreflightBot/1.0 (+https://vraelis.com; authorized production preflight; contact hello@vraelis.com)";
+const UA = "VraelisPreflightBot/1.0 (+https://vraelis.com; authorized production preflight; contact help@vraelis.com)";
 
 export function makeSafeFetcher(opts: { maxHtmlBytes?: number; maxRedirects?: number; perRequestMs?: number } = {}): Fetcher {
   const maxBytes = opts.maxHtmlBytes ?? 2 * 1024 * 1024;

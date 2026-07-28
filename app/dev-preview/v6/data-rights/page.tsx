@@ -1,5 +1,5 @@
 import { v6meta } from "../_system/meta";
-import { PageHero, Reveal, SectionHead, EditorialLink } from "../_system/ui";
+import { PageHero, Reveal, SectionHead, EditorialLink, ProseLink } from "../_system/ui";
 import { V6_BASE } from "@/lib/v6-routes";
 
 export const metadata = v6meta({
@@ -51,9 +51,9 @@ export default function V6DataRights() {
           </Reveal>
           <Reveal>
             <p className="v6-note">
-              The full terms are on <EditorialLink href={`${BASE}/privacy`}>privacy</EditorialLink>, and the
+              The full terms are on <ProseLink href={`${BASE}/privacy`}>privacy</ProseLink>, and the
               processors involved are listed on{" "}
-              <EditorialLink href={`${BASE}/subprocessors`}>subprocessors</EditorialLink>. To exercise any of
+              <ProseLink href={`${BASE}/subprocessors`}>subprocessors</ProseLink>. To exercise any of
               this: privacy@vraelis.com.
             </p>
           </Reveal>

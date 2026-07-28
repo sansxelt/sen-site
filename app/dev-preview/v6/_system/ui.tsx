@@ -49,8 +49,22 @@ export function CTA({ href = OPEN_APP, children, brand = false, ghost = false, l
   );
 }
 
+// A STANDALONE next step. "Read the docs →", "See the full platform →". The arrow is the whole point: it
+// says this link is somewhere to go, and it belongs at the end of a line, not in the middle of one.
 export function EditorialLink({ href, children }: { href: string; children: ReactNode }) {
   return <Link href={href} className="v6-elink"><span className="v6-elink__t">{children}</span><span className="v6-arw" aria-hidden>→</span></Link>;
+}
+
+// A link INSIDE a sentence. Same underline, no arrow, and it inherits the surrounding type rather than
+// jumping to 15px semibold.
+//
+// This exists because six pages had reached for EditorialLink mid-sentence and got a component built for
+// the opposite job. The result read "use the disclosure route on security → rather than a general
+// address": an arrow pointing at the next word, a bold 15px fragment inside a 14px paragraph, and an
+// inline-flex box that will not wrap with the text around it. There was no inline link component, which is
+// exactly why people reached for the CTA one.
+export function ProseLink({ href, children }: { href: string; children: ReactNode }) {
+  return <Link href={href} className="v6-plink">{children}</Link>;
 }
 
 export function Signal({ state, children }: { state: "go" | "wait" | "stop"; children: ReactNode }) {

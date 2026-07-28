@@ -100,6 +100,8 @@ const SUITES: Suite[] = [
   { file: "scripts/verification-client-verify.ts", npm: "client:test" },
   { file: "scripts/contrast-verify.ts", npm: "contrast:test" },
   { file: "scripts/mobile-motion-verify.ts", npm: "mobile:motion:test" },
+  { file: "scripts/key-detail-verify.ts", npm: "key:detail:test" },
+  { file: "scripts/prose-link-verify.ts", npm: "prose:link:test" },
   { file: "scripts/verification-idempotency-verify.ts", npm: "idempotency:test" },
   { file: "scripts/email-embeds-verify.ts", npm: "email:test" },
   { file: "scripts/terminology-verify.ts", npm: "terminology:test" },

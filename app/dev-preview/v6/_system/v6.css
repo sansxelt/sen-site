@@ -470,3 +470,27 @@
 @media (prefers-reduced-motion: reduce) {
   .v6[data-restart] #v6-main { transition: none !important; opacity: 1 !important; }
 }
+
+/* ═════════════════════════════════════════════ INLINE PROSE LINK ══
+   A link inside a sentence, as opposed to .v6-elink which is a standalone next step with an arrow.
+
+   Six pages were using .v6-elink mid-sentence because this did not exist. That put an arrow between a word
+   and the word after it ("the disclosure route on security -> rather than a general address"), set a bold
+   15px fragment inside a 14px paragraph, and made an inline-flex box that will not wrap with its text.
+
+   Inherits font-size and weight on purpose: a link in a sentence is the sentence, differing only by the
+   underline. The underline is the same brand swatch .v6-elink animates, drawn at rest here rather than on
+   hover, because inside a paragraph a link that only reveals itself on hover is a link nobody finds. */
+.v6-plink {
+  color: inherit; text-decoration: none; cursor: pointer;
+  background-image: linear-gradient(var(--brand), var(--brand));
+  background-position: 0 100%; background-repeat: no-repeat; background-size: 100% 1.2px;
+  padding-bottom: 1px;
+  transition: background-size 180ms var(--ease), opacity 180ms var(--ease);
+}
+.v6-plink:hover { background-size: 100% 2px; }
+.v6-plink:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 2px; }
+/* Same inversion .v6-elink needs, and for the same reason: --brand is near-black, so on a dark ground the
+   underline vanishes into the field along with the text. */
+.v6-dark .v6-plink, [data-nav-dark] .v6-plink { background-image: linear-gradient(var(--g-fg), var(--g-fg)); }
+.v6-dark .v6-plink:focus-visible, [data-nav-dark] .v6-plink:focus-visible { outline-color: var(--g-fg); }

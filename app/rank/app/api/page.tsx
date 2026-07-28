@@ -300,6 +300,13 @@ export default function ApiKeysPage() {
                   <div style={{ fontSize: 11.5, color: "var(--fg-4)", marginTop: 4 }}>Created {fmt(k.created_at)}, {k.last_used ? `last used ${fmt(k.last_used)}` : "never used"}{reqs ? `, ${reqs.toLocaleString()} request${reqs === 1 ? "" : "s"}` : ""}</div>
                   {k.scopes?.length ? <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-5)", marginTop: 3 }}>{k.scopes.join("  ")}</div> : null}
                 </button>
+                {/* THE WAY INSIDE. The expander is a summary and stays one: four figures without leaving
+                    the list. Everything a key can actually be asked (what it decided, how long it takes,
+                    when it is used, which endpoints it calls, every verification it launched) needs a page,
+                    and until now there was nowhere for it to go. */}
+                <Link href={`/developers/keys/${k.id}`} className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5, gap: 6 }} aria-label={`Open ${k.name || "untitled key"}`}>
+                  Open<span aria-hidden>→</span>
+                </Link>
                 <button onClick={() => revoke(k.id)} className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5, gap: 6 }}><Ic d={I.slash} size={12} sw={2.2} />Revoke</button>
               </div>
               {open && (() => {

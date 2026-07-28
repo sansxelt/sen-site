@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { v6meta } from "../../_system/meta";
-import { Reveal, Prose, EditorialLink } from "../../_system/ui";
+import { Reveal, Prose, EditorialLink, ProseLink } from "../../_system/ui";
 import { V6_BASE } from "@/lib/v6-routes";
 import {
   articleBySlug, relatedArticles, publishedArticles, readingMinutes, formatDate,
@@ -95,7 +95,7 @@ export default async function V6Article({ params }: { params: Promise<{ slug: st
             <p className="v6-note" style={{ maxWidth: "72ch" }}>
               Written by {a.author}. Research explains why outcome verification is necessary; it is not a
               description of the product. What Vraelis can and cannot do today is on{" "}
-              <EditorialLink href={`${V6_BASE}/limitations`}>limitations</EditorialLink>.
+              <ProseLink href={`${V6_BASE}/limitations`}>limitations</ProseLink>.
             </p>
           </Reveal>
 
@@ -117,7 +117,7 @@ export default async function V6Article({ params }: { params: Promise<{ slug: st
 
           <Reveal>
             <p style={{ marginTop: 34 }}>
-              <EditorialLink href={`${V6_BASE}/research`}>All research</EditorialLink>
+              <ProseLink href={`${V6_BASE}/research`}>All research</ProseLink>
             </p>
           </Reveal>
         </div>

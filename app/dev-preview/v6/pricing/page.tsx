@@ -1,5 +1,5 @@
 import { v6meta } from "../_system/meta";
-import { PageHero, Reveal, SectionHead, CTA, EditorialLink } from "../_system/ui";
+import { PageHero, Reveal, SectionHead, CTA, EditorialLink, ProseLink } from "../_system/ui";
 import { V6_BASE } from "@/lib/v6-routes";
 import { PLAN_CATALOG_V1 } from "@/lib/preflight/pass-pricing";
 
@@ -112,9 +112,9 @@ export default function V6Pricing() {
           <Reveal>
             <p className="v6-note">
               Running past the largest plan, or need invoicing, SSO and a signed agreement? That is the{" "}
-              <EditorialLink href={`${BASE}/enterprise`}>enterprise</EditorialLink> conversation. What Vraelis
+              <ProseLink href={`${BASE}/enterprise`}>enterprise</ProseLink> conversation. What Vraelis
               cannot do yet is written down on{" "}
-              <EditorialLink href={`${BASE}/limitations`}>limitations</EditorialLink>.
+              <ProseLink href={`${BASE}/limitations`}>limitations</ProseLink>.
             </p>
           </Reveal>
         </div>

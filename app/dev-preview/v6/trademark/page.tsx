@@ -33,7 +33,7 @@ export default function V6Trademark() {
             {RULES.map(([t, d]) => (<div key={t} style={CARD}><h3 style={H3}>{t}</h3><p style={P}>{d}</p></div>))}
           </Reveal>
           <Reveal>
-            <p className="v6-note">Questions about a specific use, including press and partner materials: hello@vraelis.com.</p>
+            <p className="v6-note">Questions about a specific use, including press and partner materials: help@vraelis.com.</p>
           </Reveal>
         </div>
       </section>
