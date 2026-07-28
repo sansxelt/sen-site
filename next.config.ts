@@ -15,6 +15,7 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/cli/vraelis.mjs": ["./cli/vraelis.mjs"],
     "/install": ["./cli/install.sh"],
+    "/install.ps1": ["./cli/install.ps1"],
   },
   // Compress responses
   compress: true,

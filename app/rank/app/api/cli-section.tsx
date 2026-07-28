@@ -18,17 +18,22 @@
 //
 // The file is now served from the site (app/cli/vraelis.mjs/route.ts), from its source rather than a copy,
 // so one curl gets the same code this repo runs. No npm decision, no account, and a CI runner can fetch it.
-const INSTALL = `# Install it. Node 18+, no sudo, installs to ~/.local/bin.
+const INSTALL = `# macOS and Linux. Node 18+, no sudo, installs to ~/.local/bin.
 curl -fsS https://vraelis.com/install | sh
 
-export VRAELIS_API_KEY=vr_live_...
+# Windows, in PowerShell. Same idea, installs to %LOCALAPPDATA%\Vraelis.
+irm https://vraelis.com/install.ps1 | iex
+
+vraelis login
 vraelis verify \\
   --url https://your-preview.example.com \\
-  --claim "A customer can upgrade to Pro and still have access after signing back in" \\
+  --claim "A customer can upgrade to Pro and still have access after signing back in" \
   --wait
 
-# Rather read it first? It is a text file: curl https://vraelis.com/install
-# Or skip the installer entirely: curl -O https://vraelis.com/cli/vraelis.mjs && node vraelis.mjs verify ...`;
+# Rather read a script before running it? Both are text files:
+#   curl https://vraelis.com/install        (sh)
+#   curl https://vraelis.com/install.ps1    (PowerShell)
+# Or skip the installer: curl -O https://vraelis.com/cli/vraelis.mjs && node vraelis.mjs verify ...`;
 
 const CI = `# In CI: gate the deploy on the DECISION, not on the command finishing.
 curl -fsS https://vraelis.com/install | sh

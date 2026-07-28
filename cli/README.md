@@ -11,11 +11,20 @@ npx vraelis verify \
 
 ## Install
 
+**macOS and Linux**
+
 ```
 curl -fsS https://vraelis.com/install | sh
 ```
 
-Installs a `vraelis` command into `~/.local/bin`. No sudo, no shell profile edited, and it refuses rather
+**Windows**, in PowerShell. `sh` does not exist in cmd or PowerShell, so the line above cannot work there.
+
+```
+irm https://vraelis.com/install.ps1 | iex
+```
+
+Installs a `vraelis` command into `~/.local/bin`, or `%LOCALAPPDATA%\Vraelis` on Windows. No sudo, no
+admin, no shell profile or PATH edited, and it refuses rather
 than half-installing. Read it first if you like: it is a text file at that same URL.
 
 Once the package is on npm, `npm i -g vraelis` and `npx vraelis` work too. The curl installer is listed

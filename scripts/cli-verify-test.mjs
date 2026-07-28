@@ -344,6 +344,41 @@ async function main() {
       /mktemp/.test(shCode) && /mv "\$TMP"/.test(shCode));
     ok("it is POSIX sh, not bash", /^#!\/bin\/sh/.test(sh) && !/\[\[/.test(shCode));
 
+    // ── WINDOWS, WHERE `sh` DOES NOT EXIST ──────────────────────────────────────────────────────────
+    //
+    // `curl ... | sh` fails with "sh is not recognized" in cmd.exe and PowerShell. Git Bash has sh; a
+    // plain terminal does not, and documentation cannot assume which one someone opened. So the docs have
+    // to carry a line that works there, and a line that works there has to exist.
+    const ps = readFileSync("cli/install.ps1", "utf8");
+    const psCode = ps.replace(/^\s*#.*$/gm, "");
+    ok("a Windows installer exists and is served", existsSync("app/install.ps1/route.ts"));
+    ok("from its source file, so there is no second copy to go stale",
+      /readFile\(join\(process\.cwd\(\), "cli", "install\.ps1"\)/.test(readFileSync("app/install.ps1/route.ts", "utf8")));
+    ok("and traced into the bundle, or it 404s only in production",
+      /outputFileTracingIncludes[\s\S]{0,400}cli\/install\.ps1/.test(readFileSync("next.config.ts", "utf8")));
+    ok("the console docs give Windows a line that can actually run",
+      /irm https:\/\/vraelis\.com\/install\.ps1 \| iex/.test(installBlock));
+
+    // Windows PowerShell 5.1 is what ships with Windows. A script using PowerShell 7 syntax fails to parse
+    // on the majority of machines, and a parse error from a piped installer is unreadable.
+    ok("the installer targets Windows PowerShell 5.1, not just PowerShell 7",
+      !/\?\?|\|\|\s*$|\$\w+\s*\?\s*[^:]+:/.test(psCode) && !/-AsHashtable/.test(psCode));
+    ok("it never asks for admin", !/\bRunAs\b|Start-Process[^\n]*-Verb/i.test(psCode));
+    ok("it installs into the user's own directory", /LOCALAPPDATA/.test(ps));
+    // Rewriting someone's PATH from a piped script is a surprise found later by someone who did not run it.
+    ok("it does not rewrite PATH behind your back",
+      !/SetEnvironmentVariable\([^)]*\)\s*$/m.test(psCode.split("Write-Host").join("")));
+    ok("it stops at the first failure rather than half-installing", /\$ErrorActionPreference\s*=\s*"Stop"/.test(psCode));
+    ok("it checks the Node version", /MinNode/.test(psCode) && /process\.versions\.node/.test(psCode));
+    // A captive portal's login page is a valid file of roughly the right size and would install cleanly.
+    ok("it refuses a download that is empty or is not the CLI",
+      /\.Length -lt 1024/.test(psCode) && /Select-String[^\n]*vraelis/.test(psCode));
+    ok("it downloads to a temp name and moves it into place", /\.download/.test(psCode) && /Move-Item/.test(psCode));
+    // A .cmd shim is on PATHEXT, so the command works from cmd.exe and from PowerShell. A .ps1 shim would
+    // work in neither until the machine's execution policy allowed it.
+    ok("the shim is a .cmd, so it runs from cmd.exe as well as PowerShell",
+      /vraelis\.cmd/.test(psCode) && /%~dp0vraelis\.mjs/.test(ps));
+
     // "cli" IS NOW AN APP ROOT, and that is a collision waiting to happen.
     //
     // The console has a Command line page at /cli, so "cli" was added to APP_ROOTS. isAppPath is
