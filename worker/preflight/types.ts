@@ -63,6 +63,21 @@ export type StepObservation = {
   url?: string; status?: number; screenshotRef?: string; ms: number;
   candidates?: string[];        // accessible-name candidates the resolver considered
   selected?: string;            // which candidate was chosen
+  // WHAT THIS STEP WAS ACTUALLY LOOKING FOR, OR ACTUALLY TYPED, AFTER RESOLUTION.
+  //
+  // Without these the record shows that a field was filled and an assertion passed, but never with WHAT, so
+  // no past verdict can be audited: 342 stored steps, every one of them expected=null. The question you
+  // cannot answer from that is the one that matters — was the assertion satisfied by this run's write, or by
+  // a row an earlier run left behind?
+  //
+  // RESOLVED, not as authored. The plan says {{unique}}; the run typed vr-3f9a2b71. The resolved form is
+  // what proves whose write satisfied the assertion, and it is the only form worth keeping.
+  //
+  // Redacted before storage (run-store-postgres). A value is never a credential by contract — flow-steps.ts
+  // rejects credential-shaped values and auth actions carry role labels rather than secrets — but this is
+  // the kind of field where defence in depth is cheap and a mistake is permanent.
+  value?: string;               // what a fill actually typed
+  expect?: string;              // what an assertion actually looked for
 };
 
 // What a login screen looks like once detected: the accessible handles the executor will fill/submit.

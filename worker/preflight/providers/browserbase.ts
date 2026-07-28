@@ -284,7 +284,11 @@ export class PlaywrightPreflightPage implements PreflightPage {
 
   async perform(step: Step): Promise<StepObservation> {
     const t0 = Date.now();
-    const base = (ok: boolean, detail: string, extra: Partial<StepObservation> = {}): StepObservation => ({ action: step.action, target: step.target, ok, detail, url: this.page.url(), ms: Date.now() - t0, ...extra });
+    // value/expect ride along on EVERY observation: the step handed to perform() is already resolved (the
+    // navigation rebased, {{unique}} bound to this run), so recording them here captures what the browser
+    // actually did rather than what the plan said. That is the difference between a record you can audit
+    // and one that only tells you a field was "filled".
+    const base = (ok: boolean, detail: string, extra: Partial<StepObservation> = {}): StepObservation => ({ action: step.action, target: step.target, value: step.value, expect: step.expect, ok, detail, url: this.page.url(), ms: Date.now() - t0, ...extra });
     try {
       switch (step.action) {
         case "navigate": await this.page.goto(step.target || step.value || "", { waitUntil: "domcontentloaded", timeout: step.timeoutMs ?? 30000 }); return base(true, "navigated");

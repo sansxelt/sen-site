@@ -224,7 +224,21 @@ export class PostgresRunStore implements RunStore {
     const { data: fr } = await this.s.from("v_flow_runs").insert({ preflight_run_id: runId, test_flow_id: result.flowId, user_id: userId, name: result.flowId, state: result.state, observed, severity: result.severity ?? null } as never).select("id").single();
     const flowRunId = (fr as { id?: string } | null)?.id;
     if (flowRunId && result.steps.length) {
-      await this.s.from("v_run_steps").insert(result.steps.map((st, i) => ({ flow_run_id: flowRunId, idx: i, action: st.action, target: st.target ?? null, expected: null, observed: redactString(st.detail ?? ""), status: st.ok ? "ok" : "fail", ms: st.ms })) as never);
+      // `expected` WAS HARDCODED null, on a column that already existed for exactly this. 342 stored steps,
+      // not one of them recording what the step was looking for, so no verdict in the product's history can
+      // be audited after the fact: the record shows "filled" and "text_present" without ever saying with
+      // what. The question that cannot be answered from that is whether an assertion was satisfied by the
+      // run's own write or by a row left behind by an earlier run, which is the whole false-Verified
+      // question.
+      //
+      // An assertion stores what it sought; a fill stores what it typed. Both are "what this step meant to
+      // do", both are the RESOLVED form (the plan's {{unique}} already bound to this run's token), and both
+      // are redacted on the way in like every other string here.
+      const intent = (st: { expect?: string; value?: string }) => {
+        const s = st.expect ?? st.value ?? "";
+        return s ? redactString(s).slice(0, 400) : null;
+      };
+      await this.s.from("v_run_steps").insert(result.steps.map((st, i) => ({ flow_run_id: flowRunId, idx: i, action: st.action, target: st.target ?? null, expected: intent(st), observed: redactString(st.detail ?? ""), status: st.ok ? "ok" : "fail", ms: st.ms })) as never);
     }
   }
   async finalizeRun(runId: string, decision: RunDecision, summary: Record<string, unknown>): Promise<void> {

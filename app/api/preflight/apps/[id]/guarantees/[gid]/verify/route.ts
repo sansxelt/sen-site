@@ -129,6 +129,38 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }, { status: 409 });
   }
 
+  // ── A PLAN THAT CANNOT TELL ITS OWN WRITE FROM LAST RUN'S LEFTOVER MAY NOT PROVE A GUARANTEE ─────────
+  //
+  // A flow types a fixed value and later asserts it. The first run creates the row; every run after that is
+  // satisfied by the row the first one left, so an application that has stopped saving keeps coming back
+  // Verified. Re-proving is not a side feature of this product, it IS the product, which puts the false
+  // Verified exactly where the value is.
+  //
+  // REFUSED, not warned. A warning on a launch screen is how the fixed value survived this long, and a
+  // Verified that overstates itself is the one output this company cannot ship. The plans already approved
+  // are hash-bound to what a person read, so they are NOT rewritten here: silently editing an approved plan
+  // is the sin this product exists to prevent. Re-synthesis emits {{unique}}, and a human approves that.
+  //
+  // Only on this route. The guarantee lane is where a standing promise is re-proven over time; a one-off
+  // verification of a claim nobody is tracking has no earlier run to inherit from.
+  {
+    const { fixedValueAssertions, UNIQUE_PLACEHOLDER } = await import("@/lib/preflight/run-unique");
+    const runnable = flows.filter((f) => flowIds.includes(f.id));
+    const risky = runnable.flatMap((f) =>
+      fixedValueAssertions((f.steps ?? []) as { action: string; target?: string; value?: string; expect?: string }[])
+        .map((r) => ({ flow: f.name, ...r })));
+    if (risky.length) {
+      return NextResponse.json({
+        error: "plan_cannot_distinguish",
+        message: `This guarantee's approved plan types a fixed value and then checks for it, so the check would also pass on a value left behind by an earlier verification. It cannot tell a working product from one that has stopped saving. Re-plan this guarantee and approve the new version: values it types are now written as "${UNIQUE_PLACEHOLDER}", which is different on every run.`,
+        // Named, so the owner can see which journeys and does not have to guess what changed.
+        flows: Array.from(new Set(risky.map((r) => r.flow))),
+        values: Array.from(new Set(risky.map((r) => r.value))).slice(0, 8),
+        plan_version: g.plan_version ?? null,
+      }, { status: 409 });
+    }
+  }
+
   const body = await req.json().catch(() => ({} as Record<string, unknown>));
 
   // ── reverification lineage ────────────────────────────────────────────────────────────────────────────

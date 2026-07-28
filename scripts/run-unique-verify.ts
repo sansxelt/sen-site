@@ -175,6 +175,50 @@ console.log("\n── the rehearsal executes what the run will execute ──");
   ok("  before spending a browser session on it", r.indexOf("fixedValueAssertions(") < r.indexOf("chromium.launch("));
 }
 
+console.log("\n── an old plan cannot quietly go on proving a guarantee ──");
+{
+  // 24 of 77 stored flows carry the shape and none use the placeholder, including eight of the eleven
+  // approved plans on the one live guarantee. Those plans are hash-bound to what a person read, so they are
+  // not rewritten: silently editing an approved plan is the sin this product exists to prevent. They are
+  // refused instead, and re-planning emits the placeholder for a human to approve.
+  const route = strip(readFileSync("app/api/preflight/apps/[id]/guarantees/[gid]/verify/route.ts", "utf8"));
+  ok("the guarantee lane checks the approved plan before launching", /fixedValueAssertions\(/.test(route));
+  // The condition of a return, not a mention. A route that computes the risk and launches anyway reads
+  // identically to one that refuses, which is how the first version of the rehearsal guard passed a
+  // mutation that gutted it.
+  ok("  and refuses rather than warning", /if \(risky\.length\)\s*\{[\s\S]{0,1200}?return NextResponse\.json\(/.test(route));
+  ok("  with a distinct error code, not a generic 400", /plan_cannot_distinguish/.test(route) && /status: 409/.test(route));
+  // Somebody told "no" is owed which journeys and what to do about it.
+  ok("  naming the flows and telling them what changed", /flows: Array\.from/.test(route) && route.includes("UNIQUE_PLACEHOLDER"));
+  // BEFORE money and before a browser. Refusing after acceptVerificationRun would charge for a run that
+  // could never have proven anything.
+  ok("  before the run is accepted or billed", route.indexOf("fixedValueAssertions(") < route.indexOf("acceptVerificationRun("));
+}
+
+console.log("\n── a verdict can be audited after the fact ──");
+{
+  // 342 stored steps, every one expected=null, on a column that already existed for exactly this. The
+  // record said a field was "filled" and an assertion was "text_present" without ever saying with what, so
+  // no verdict in this product's history can be checked. The question you cannot answer from that is the
+  // false-Verified question itself.
+  const store = strip(readFileSync("worker/preflight/run-store-postgres.ts", "utf8"));
+  ok("steps no longer record a hardcoded empty expectation", !/expected: null/.test(store));
+  ok("  an assertion stores what it sought, a fill what it typed", /st\.expect \?\? st\.value/.test(store));
+  ok("  redacted like every other stored string", /redactString\(s\)/.test(store));
+
+  const types = strip(readFileSync("worker/preflight/types.ts", "utf8"));
+  ok("the observation can carry them at all", /value\?: string;/.test(types) && /expect\?: string;/.test(types));
+
+  // THE RESOLVED FORM. The plan says {{unique}}; the run typed vr-3f9a2b71. Recording the plan's text would
+  // preserve the exact ambiguity this is meant to remove, because every run would look identical.
+  const bb = strip(readFileSync("worker/preflight/providers/browserbase.ts", "utf8"));
+  ok("and records what the browser received, not what the plan said",
+    /value: step\.value, expect: step\.expect/.test(bb));
+  const exec = strip(readFileSync("worker/preflight/execute-run.ts", "utf8"));
+  ok("  which is already resolved by the time perform sees it",
+    exec.indexOf("applyRunUnique(") < exec.indexOf("page.perform("));
+}
+
 console.log("\n── the pieces are actually wired together ──");
 {
   // The mechanism existing is worth nothing if execution never calls it or the synthesis never emits it.
