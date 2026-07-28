@@ -129,6 +129,28 @@ export async function handleRankInvoicePaid(invoice: Stripe.Invoice): Promise<bo
   return true;
 }
 
+/** WHEN A PAID PLAN ACTUALLY ENDS.
+ *
+ *  The most consequential boolean in billing: end it too early and a customer loses access they paid
+ *  for, too late and Vraelis serves a plan nobody is paying for. It was written twice as an inline
+ *  expression, which is the shape a rule takes right before the two copies stop agreeing.
+ *
+ *  A cancellation REQUEST is not an ending. Stripe keeps `cancel_at_period_end` subscriptions in status
+ *  "active" until the paid period actually elapses, and only then sends the deletion event. Dunning is
+ *  not an ending either: past_due means a card failed and Stripe is retrying, and pulling the plan mid
+ *  retry punishes someone whose bank declined once.
+ *
+ *  Nothing here deletes a customer's work. Ending a plan clears plan_v1 and nothing else, so the
+ *  guarantees, runs and evidence stay exactly where they were. That is what "Cancel anytime, your
+ *  record stays readable" means on the pricing page, and scripts/cancellation-lifecycle-verify.ts
+ *  fails the build if a read path ever starts asking what someone is paying. */
+export const TERMINAL_SUB_STATUSES = ["canceled", "unpaid", "incomplete_expired"] as const;
+
+export function subscriptionIsTerminal(eventType: string, status: string): boolean {
+  return eventType === "customer.subscription.deleted"
+    || (TERMINAL_SUB_STATUSES as readonly string[]).includes(status);
+}
+
 /** Does this owner still have a DIFFERENT live _v1 subscription? Used before revoking a plan, so the
  *  death of one subscription cannot cancel entitlement another one is still paying for.
  *
@@ -162,7 +184,7 @@ export async function handleRankSubChange(event: Stripe.Event, subscription: Str
   {
     const v1 = v1FromPriceOrMeta(subscription.items?.data?.[0]?.price?.id ?? null, subscription.metadata as Record<string, string>);
     if (v1) {
-      const gone = event.type === "customer.subscription.deleted" || ["canceled", "unpaid", "incomplete_expired"].includes(subscription.status);
+      const gone = subscriptionIsTerminal(event.type, subscription.status);
       if (gone) {
         // ── ONLY THE SUBSCRIPTION THAT GRANTED THE PLAN MAY TAKE IT AWAY ────────────────────────────
         //
@@ -192,7 +214,7 @@ export async function handleRankSubChange(event: Stripe.Event, subscription: Str
 
   const rank = planFromPriceId(subscription.items?.data?.[0]?.price?.id ?? null);
   const status = subscription.status;
-  const canceled = event.type === "customer.subscription.deleted" || ["canceled", "unpaid", "incomplete_expired"].includes(status);
+  const canceled = subscriptionIsTerminal(event.type, status);
   const pastDue = status === "past_due";
   const cycle = rank?.cycle ?? "monthly";
   const pe = (subscription as any).current_period_end ?? (subscription as any).items?.data?.[0]?.current_period_end;

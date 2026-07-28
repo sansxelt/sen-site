@@ -107,6 +107,7 @@ const SUITES: Suite[] = [
   { file: "scripts/stealth-index-verify.ts", npm: "stealth:index:test" },
   { file: "scripts/scratchpad-verify.ts", npm: "scratchpad:test" },
   { file: "scripts/guarantee-cap-verify.ts", npm: "guarantee:cap:test" },
+  { file: "scripts/cancellation-lifecycle-verify.ts", npm: "cancellation:lifecycle:test" },
   { file: "scripts/verification-idempotency-verify.ts", npm: "idempotency:test" },
   { file: "scripts/email-embeds-verify.ts", npm: "email:test" },
   { file: "scripts/terminology-verify.ts", npm: "terminology:test" },

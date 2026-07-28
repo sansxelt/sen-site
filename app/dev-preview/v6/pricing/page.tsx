@@ -103,6 +103,11 @@ export default function V6Pricing() {
               <h3 style={{ ...H3, marginBottom: 6 }}>
                 Enterprise: more than {PLAN_CATALOG_V1[PLAN_CATALOG_V1.length - 1].maxGuarantees} guarantees, or a contract
               </h3>
+              {/* The last rung, in the same units as the other three. Not "Unlimited": what a contract
+                  costs depends on verification volume, browser time, systems, retention and support. */}
+              <p style={{ margin: "0 0 12px", fontSize: 15, fontWeight: 600, color: "var(--g-fg)" }}>
+                Custom guarantee capacity
+              </p>
               <p style={{ ...P, marginBottom: 16 }}>
                 Volume above the listed plans, single sign-on through your own identity provider, roles
                 across a team, owner-anchored billing, and audit activity you can export. Invoicing, a

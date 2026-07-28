@@ -120,6 +120,13 @@ export default function PricingV1({ initialCycle = "monthly" }: { initialCycle?:
               <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 6 }}>
                 Enterprise: more than {PLAN_CATALOG_V1[PLAN_CATALOG_V1.length - 1].maxGuarantees} guarantees, or a contract
               </div>
+              {/* The last rung, in the same units as the other four, so the ladder does not end mid
+                  sentence. Not "Unlimited": what a contract costs depends on verification volume, browser
+                  time, systems, retention and support, and a public number would underprice the first
+                  serious customer or promise something nobody agreed to. */}
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, marginBottom: 6 }}>
+                Custom guarantee capacity
+              </div>
               <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>
                 Volume above the listed plans, single sign-on through your own identity provider, roles
                 across a team, owner-anchored billing, and audit activity you can export. Invoicing, a

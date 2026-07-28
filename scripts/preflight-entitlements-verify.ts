@@ -13,6 +13,7 @@ import {
   decidePassGate, resolvePlanV1FromPriceId, gatePassLaunch, type MeterableRun,
 } from "../lib/preflight/entitlements-v1";
 import { planV1, passPriceCents, rerunPriceCents } from "../lib/preflight/pass-pricing";
+import { subscriptionIsTerminal } from "../lib/v-subscriptions";
 
 let pass = 0, fail = 0;
 const ok = (n: string, c: boolean, d = "") => { console.log(`${c ? "PASS" : "FAIL"}  ${n}${d ? `  (${d})` : ""}`); if (c) pass++; else fail++; };
@@ -241,8 +242,18 @@ async function main(): Promise<void> {
     ok("anchor = current_period_start of the FIRST period; renewals never move it",
       invoiceV1.includes(`anchorOnlyIfUnset: inv.billing_reason !== "subscription_create"`));
     const sub = src.slice(src.indexOf("export async function handleRankSubChange"));
-    ok("plan_v1 is cleared only on a true termination (deletion event)",
-      sub.includes("clearPlanV1(userId)") && sub.includes(`event.type === "customer.subscription.deleted"`));
+    // The clearing itself still has to live in this branch.
+    ok("plan_v1 is cleared in the subscription-change handler", sub.includes("clearPlanV1(userId)"));
+    // WHEN it clears is now asked of the rule rather than of the source text. This searched for the
+    // literal `event.type === "customer.subscription.deleted"` in the function body, which is a fact about
+    // how the condition happens to be spelled, not about when a customer loses access. Lifting the
+    // duplicated expression into subscriptionIsTerminal broke the assertion while the behavior was
+    // identical, and the same brittleness would have let a genuine change through if it kept the phrasing.
+    ok("and only on a true termination, never on a cancellation request",
+      sub.includes("subscriptionIsTerminal(event.type, subscription.status)")
+      && subscriptionIsTerminal("customer.subscription.deleted", "active")
+      && !subscriptionIsTerminal("customer.subscription.updated", "active")
+      && !subscriptionIsTerminal("customer.subscription.updated", "past_due"));
     ok("legacy plan behavior below the _v1 branch is intact (grantMonthly + expireMonthly + setSubscription)",
       src.includes("grantMonthly(userId, credits, periodEnd") && src.includes("expireMonthly(userId, undefined, `cancel:${subscription.id}`)") && src.includes("setSubscription({"));
   }
