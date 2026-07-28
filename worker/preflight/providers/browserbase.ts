@@ -222,7 +222,7 @@ export class PlaywrightPreflightPage implements PreflightPage {
       return true;
     } catch { return false; }
   }
-  async readAuthState(opts?: { expectRoute?: string; expectElement?: string }): Promise<import("../types").AuthState> {
+  async readAuthState(opts?: { expectRoute?: string; expectElement?: string; baselineKeys?: string[] }): Promise<import("../types").AuthState> {
     try {
       // 1. Expected route: the URL contains the configured path/substring.
       if (opts?.expectRoute && this.page.url().includes(opts.expectRoute)) return { authenticated: true, via: "route", detail: "on the expected authenticated route" };
@@ -242,24 +242,48 @@ export class PlaywrightPreflightPage implements PreflightPage {
       //
       //    Only KEY NAMES are inspected, never values: a session token must not be read into the worker,
       //    and nothing here can reach an artifact.
+      //    ── AND THE PRESENCE OF A KEY WAS NOT EVIDENCE OF ANYTHING ────────────────────────────────────
+      //
+      //    Fixing the false negative created a worse false positive. SESSION_KEY matched `csrf`, and
+      //    `next-auth.csrf-token` is issued to ANONYMOUS visitors before anyone signs in. So did `sid`,
+      //    which matches `sidebar_state`. A login the application REJECTED was recorded as successful
+      //    whenever the password field was no longer on screen — which is what an error page looks like.
+      //    auth_rejected_by_app, the one auth outcome the subsystem calls the customer's defect, became
+      //    ok:true with a verifiedAuthAt stamp, and a guarantee of the form "a customer can sign in" was
+      //    false-Verified on its own.
+      //
+      //    Narrowing the pattern alone cannot fix it: `next-auth.csrf-token` matches `auth` too. The
+      //    question is not whether an auth-shaped key EXISTS, it is whether signing in CHANGED anything,
+      //    so the caller supplies the keys that were there beforehand and only a new one counts.
       const cookies = (await this.page.context().cookies().catch(() => [])) as { name?: string }[];
-      const SESSION_KEY = /sess|auth|token|sid|__secure|csrf|jwt|login|supabase|firebase|clerk/i;
-      const cookieSession = cookies.some((c) => SESSION_KEY.test(c?.name || ""));
-      let storageSession = false;
+      const SESSION_KEY = /sess|auth|token|sid|__secure|jwt|supabase|firebase|clerk/i;
+      // Never session evidence, however auth-shaped the name: an anti-CSRF token, an OAuth PKCE verifier,
+      // a nonce and an oauth state are all handed to anonymous visitors BY DEFINITION, before sign-in.
+      const NOT_SESSION = /csrf|xsrf|code[-_]?verifier|pkce|nonce|oauth[-_]?state|sidebar|locale|theme|consent/i;
+      const sessionish = (k: string) => SESSION_KEY.test(k) && !NOT_SESSION.test(k);
+      const keys = cookies.map((c) => String(c?.name || "")).filter(sessionish);
       if (this.page.evaluate) {
         const names = await this.page.evaluate(
           "try{[...Object.keys(localStorage),...Object.keys(sessionStorage)].join(',')}catch(e){''}"
         ).catch(() => "") as string;
-        storageSession = String(names || "").split(",").some((k) => SESSION_KEY.test(k));
+        for (const k of String(names || "").split(",")) if (sessionish(k)) keys.push(k);
       }
-      const sessiony = cookieSession || storageSession;
+      // With a baseline, ONLY a key that appeared counts. Without one the caller is asking what the state
+      // is now rather than what a sign-in did, and presence is the best available answer.
+      const fresh = opts?.baselineKeys ? keys.filter((k) => !opts.baselineKeys!.includes(k)) : keys;
+      const sessiony = fresh.length > 0;
       // 4. A login form still on the page implies NOT authenticated (unless a route/element already proved it).
       const stillOnLogin = (await this.page.locator('input[type="password"]').count().catch(() => 0)) > 0;
       // Detect an MFA/CAPTCHA wall from visible page text so the executor can classify + stop safely.
       const challenge = await this.detectChallengeText();
-      if (challenge) return { authenticated: false, via: "none", detail: challenge };
-      if (sessiony && !stillOnLogin) return { authenticated: true, via: "session", detail: "a session cookie is present" };
-      return { authenticated: false, via: "none", detail: stillOnLogin ? "still on the login screen" : "no session evidence" };
+      if (challenge) return { authenticated: false, via: "none", detail: challenge, sessionKeys: keys };
+      if (sessiony && !stillOnLogin) return { authenticated: true, via: "session", detail: "a session was created", sessionKeys: keys };
+      // Said precisely, because this is the branch a false FAILURE would come out of and somebody has to be
+      // able to tell "your login is broken" from "we could not see the session it created".
+      const detail = stillOnLogin ? "still on the login screen"
+        : opts?.baselineKeys && keys.length ? "no new session appeared; the auth-shaped keys present were already there before signing in"
+        : "no session evidence";
+      return { authenticated: false, via: "none", detail, sessionKeys: keys };
     } catch { return { authenticated: false, via: "none", detail: "could not read session state" }; }
   }
   // Owner-safe challenge detection: scans for MFA/CAPTCHA wording in the DOM. Returns a short marker string

@@ -661,7 +661,13 @@ ok("static: worker.ts documents per-run credential scoping is what makes maxConc
     constructor(private readonly authFromRead: number, private readonly detail = "still on the login screen") {
       super({}, "https://app.example/login", undefined, { authenticated: false });
     }
-    async readAuthState() {
+    // COUNTS SETTLE READS ONLY. signInAs now takes a BASELINE read on the login screen before submitting,
+    // so it can tell a session that APPEARED from an auth-shaped cookie an anonymous visitor already had.
+    // That read passes no opts; every settle read passes them. Counting both made these guards fail for a
+    // fix while the property they protect — the settle loop is bounded by `attempts` — was untouched.
+    public baselineReads = 0;
+    async readAuthState(opts?: { expectRoute?: string; expectElement?: string; baselineKeys?: string[] }) {
+      if (opts === undefined) { this.baselineReads++; return { authenticated: false, via: "none" as const, detail: "still on the login screen" }; }
       this.reads++;
       return this.reads >= this.authFromRead
         ? { authenticated: true, via: "session" as const, detail: "a session cookie is present" }
@@ -693,7 +699,9 @@ ok("static: worker.ts documents per-run credential scoping is what makes maxConc
   class MfaPage extends FakePage {
     public reads = 0;
     constructor() { super({}, "https://app.example/login", undefined, { authenticated: false }); }
-    async readAuthState() {
+    async readAuthState(opts?: { expectRoute?: string; expectElement?: string; baselineKeys?: string[] }) {
+      // The pre-submit baseline read, not a settle read. See LateAuthPage above.
+      if (opts === undefined) return { authenticated: false, via: "none" as const, detail: "still on the login screen" };
       this.reads++;
       return { authenticated: false, via: "none" as const, detail: "mfa verification code required" };
     }

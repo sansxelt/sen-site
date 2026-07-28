@@ -88,10 +88,13 @@ async function settleAuthState(
   page: PreflightPage,
   expect: { route?: string; element?: string },
   settle: { attempts: number; delayMs: number },
+  // The session-ish key names present BEFORE credentials were submitted. Passed through on every poll so
+  // "a session exists" can never be satisfied by a key that was sitting there the whole time.
+  baselineKeys?: string[],
 ): Promise<AuthState> {
   let state: AuthState = { authenticated: false, via: "none", detail: "no session evidence" };
   for (let i = 0; i < Math.max(1, settle.attempts); i++) {
-    state = await page.readAuthState({ expectRoute: expect.route, expectElement: expect.element });
+    state = await page.readAuthState({ expectRoute: expect.route, expectElement: expect.element, baselineKeys });
     if (state.authenticated) return state;
     // An MFA or CAPTCHA wall is a final answer, not something to wait out.
     if (challengeFromAuthDetail(state.detail)) return state;
@@ -173,13 +176,20 @@ export async function signInAs(
     password = null;
     if (!secretOk) return fail(roleNote("The password field could not be filled", role), "credential_field_not_found");
 
-    // 6. Submit. A submit failure is a field/UI problem, not an app rejection.
+    // 6. WHAT WAS ALREADY THERE, before anything was submitted. Read on the login screen itself, so the
+    //    auth-shaped keys an anonymous visitor carries — an anti-CSRF token, a PKCE verifier — are on
+    //    record as pre-existing and cannot later be mistaken for the session this sign-in created.
+    //    Best-effort: a failed read yields no baseline, which falls back to the old presence rule rather
+    //    than refusing a sign-in over a transient storage error.
+    const baselineKeys = (await page.readAuthState().catch(() => null))?.sessionKeys;
+
+    //    Submit. A submit failure is a field/UI problem, not an app rejection.
     const submitted = await page.submitLogin();
     if (!submitted) return fail(roleNote("The login form could not be submitted", role), "credential_field_not_found");
 
     // 7. VERIFY the session by DETERMINISTIC observed evidence — never claim success just because submit
-    //    was clicked. An expected route OR a visible authenticated element OR a session/cookie presence.
-    const state = await settleAuthState(page, expect, settle);
+    //    was clicked. An expected route OR a visible authenticated element OR a session that APPEARED.
+    const state = await settleAuthState(page, expect, settle, baselineKeys);
     const chal = challengeFromAuthDetail(state.detail);
     if (chal) {
       // MFA / CAPTCHA: stop safely, classify, manual setup required. NEVER attempt to bypass.

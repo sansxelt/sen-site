@@ -16,6 +16,7 @@
 // These are behavioural tests against the real functions, not shape checks. The failure each one prevents
 // is written out and asserted, so the suite fails if the defect comes back rather than if the code is
 // tidied.
+import { readFileSync } from "node:fs";
 import { textPresentInScope, urlPathMatches } from "../worker/preflight/assert-scope";
 
 let pass = 0, fail = 0;
@@ -23,6 +24,14 @@ const ok = (n: string, c: boolean, d = "") => {
   if (c) { pass++; console.log(`PASS  ${n}`); }
   else { fail++; console.log(`FAIL  ${n}${d ? `  — ${d}` : ""}`); }
 };
+
+/** `a` appears in `hay`, before `b` does. Both halves matter: indexOf returns -1 for something absent, and
+ *  -1 is less than every real index, so a plain `indexOf(a) < indexOf(b)` PASSES when `a` was deleted —
+ *  an ordering guard that reads as protecting `a` while quietly permitting its removal. */
+export function before(hay: string, a: string, b: string): boolean {
+  const i = hay.indexOf(a), j = hay.indexOf(b);
+  return i >= 0 && j >= 0 && i < j;
+}
 
 console.log("── the failure state must not satisfy the success assertion ──");
 {
@@ -102,6 +111,55 @@ console.log("\n── the url check must be able to fail ──");
   ok("a bare path fragment still means the route", urlPathMatches("https://app.example.com/dashboard", "dashboard"));
   // A URL the parser cannot read must not become a free pass.
   ok("an unparseable url does not match by default", !urlPathMatches("not a url at all", "/dashboard"));
+}
+
+console.log("\n── a rejected sign-in must not be recorded as a successful one ──");
+{
+  // Sign-in was confirmed by the PRESENCE of a cookie or storage key whose NAME matched
+  // /sess|auth|token|sid|__secure|csrf|jwt|login|.../ . Every one of these is on an anonymous visitor's
+  // browser before anybody signs in:
+  //
+  //   next-auth.csrf-token             matches csrf, and also auth
+  //   __Host-authjs.csrf-token         matches auth
+  //   sb-xyz-auth-token-code-verifier  Supabase's PKCE verifier, written at page load
+  //   sidebar_state                    matches sid
+  //
+  // So when a login the application REJECTED left the browser somewhere without a password field — an
+  // error page, a generic "something went wrong" — the run recorded a successful sign-in with a
+  // verifiedAuthAt stamp. auth_rejected_by_app is the ONE auth outcome the subsystem calls the customer's
+  // defect, and it was being converted into proof that their login works.
+  //
+  // Narrowing the pattern cannot fix it, because next-auth.csrf-token matches `auth` as well as `csrf`.
+  // The question is not whether an auth-shaped key exists, it is whether signing in CHANGED anything.
+  const src = readFileSync("worker/preflight/providers/browserbase.ts", "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+
+  // A baseline turns presence into a delta.
+  ok("only a session key that APPEARED counts as a session",
+    /opts\?\.baselineKeys \? keys\.filter\(\(k\) => !opts\.baselineKeys!\.includes\(k\)\) : keys/.test(src));
+  // And the pre-auth artefacts are excluded outright, which also stops sign_out reporting a cleared
+  // session as uncleared because the csrf cookie survives it.
+  ok("anti-CSRF and PKCE artefacts are never session evidence", /const NOT_SESSION = /.test(src)
+    && /csrf/.test(src) && /code\[-_\]\?verifier/.test(src) && /sidebar/.test(src));
+  ok("  and the broad pattern no longer claims csrf or login by itself",
+    /const SESSION_KEY = \/sess\|auth\|token\|sid\|__secure\|jwt\|supabase\|firebase\|clerk\/i/.test(src));
+  // EVERY answering path, not "somewhere in the file". A single occurrence satisfied this while another
+  // return dropped the keys, and the caller that diffs them would silently get undefined and fall back to
+  // the presence rule this whole change exists to remove.
+  ok("every state it returns reports which keys it saw, names only, so a caller can diff them",
+    (src.match(/sessionKeys: keys/g) ?? []).length === 3 && !/cookie\.value|c\?\.value/.test(src));
+
+  const exec = readFileSync("worker/preflight/auth-executor.ts", "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  // `a appears before b` MUST also require that a appears at all. indexOf returns -1 when it does not, and
+  // -1 is less than every real index, so deleting the baseline read outright PASSED an ordering check that
+  // reads like it is protecting the baseline read. Four assertions written today had this hole.
+  ok("the baseline is taken BEFORE the credentials are submitted",
+    before(exec, "const baselineKeys = (await page.readAuthState()", "await page.submitLogin()"));
+  ok("  and carried into every settle read, not just the first",
+    /readAuthState\(\{ expectRoute: expect\.route, expectElement: expect\.element, baselineKeys \}\)/.test(exec));
+  // A transient storage error must not refuse a legitimate sign-in outright.
+  ok("  degrading to the old rule if the baseline cannot be read", /\.catch\(\(\) => null\)\)\?\.sessionKeys/.test(exec));
 }
 
 console.log(fail === 0 ? `\nALL PASS  ${pass} passed, 0 failed` : `\nFAILURES  ${pass} passed, ${fail} failed`);

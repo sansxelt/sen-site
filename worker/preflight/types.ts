@@ -94,6 +94,11 @@ export type AuthState = {
   authenticated: boolean;
   via: "route" | "element" | "session" | "none"; // which signal decided it (for owner-safe step detail)
   detail: string;                 // short, owner-safe note (NEVER a credential value)
+  // The session-ish storage/cookie KEY NAMES seen at this moment. Names only, never values — a session
+  // token must not be read into the worker. Returned so a caller can take a BEFORE snapshot and ask what
+  // signing in actually changed, which is the only way to tell a real sign-in from a page that always had
+  // an auth-shaped cookie sitting on it.
+  sessionKeys?: string[];
 };
 
 // The page surface the executor drives. Real impl wraps a Playwright Page; the fake is scripted. Each
@@ -126,7 +131,10 @@ export interface PreflightPage {
   // Read the current authenticated state from DETERMINISTIC evidence. `expectRoute` (a path/substring) and
   // `expectElement` (an accessible name) are optional expectations; when absent the page falls back to a
   // session/cookie presence signal. Reads no credential.
-  readAuthState(opts?: { expectRoute?: string; expectElement?: string }): Promise<AuthState>;
+  // baselineKeys: the session-ish key names present BEFORE a sign-in was attempted. When given, only a key
+  // that was NOT there already counts as evidence of a session. Omitted by callers asking "what is the
+  // state now" (verify_authenticated, sign_out) rather than "did signing in work".
+  readAuthState(opts?: { expectRoute?: string; expectElement?: string; baselineKeys?: string[] }): Promise<AuthState>;
   // Clear cookies + storage and open a FRESH browser context (role isolation / reset_context). After this
   // the page is unauthenticated. No-op-safe in the fake.
   resetContext(): Promise<void>;

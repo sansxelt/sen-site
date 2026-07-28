@@ -23,6 +23,15 @@ const ok = (n: string, c: boolean, d = "") => {
 };
 const strip = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
 
+/** `a` appears in `hay`, before `b` does. Both halves matter: indexOf returns -1 for something absent, and
+ *  -1 is less than every real index, so a plain `indexOf(a) < indexOf(b)` PASSES when `a` was deleted
+ *  entirely — an ordering guard that reads as protecting `a` while quietly permitting its removal. Caught
+ *  by a mutation that deleted the line an ordering assertion existed to protect, and went green. */
+const before = (hay: string, a: string, b: string) => {
+  const i = hay.indexOf(a), j = hay.indexOf(b);
+  return i >= 0 && j >= 0 && i < j;
+};
+
 const RUN_A = "3f9a2b71-1c4d-4e8a-9b2f-0a1b2c3d4e5f";
 const RUN_B = "8c1e5d02-7a3b-4f19-8e6d-1122334455aa";
 
@@ -172,7 +181,7 @@ console.log("\n── the rehearsal executes what the run will execute ──");
   ok("  telling the operator which steps, and what to write instead", /REFUSING/.test(r) && r.includes("UNIQUE_PLACEHOLDER"));
   // Before the browser opens: a session spent rehearsing a plan that will be refused anyway is waste, and
   // it would write the risky values into the customer's app on the way.
-  ok("  before spending a browser session on it", r.indexOf("fixedValueAssertions(") < r.indexOf("chromium.launch("));
+  ok("  before spending a browser session on it", before(r, "fixedValueAssertions(", "chromium.launch("));
 }
 
 console.log("\n── an old plan cannot quietly go on proving a guarantee ──");
@@ -192,7 +201,7 @@ console.log("\n── an old plan cannot quietly go on proving a guarantee ─�
   ok("  naming the flows and telling them what changed", /flows: Array\.from/.test(route) && route.includes("UNIQUE_PLACEHOLDER"));
   // BEFORE money and before a browser. Refusing after acceptVerificationRun would charge for a run that
   // could never have proven anything.
-  ok("  before the run is accepted or billed", route.indexOf("fixedValueAssertions(") < route.indexOf("acceptVerificationRun("));
+  ok("  before the run is accepted or billed", before(route, "fixedValueAssertions(", "acceptVerificationRun("));
 }
 
 console.log("\n── a verdict can be audited after the fact ──");
@@ -216,7 +225,7 @@ console.log("\n── a verdict can be audited after the fact ──");
     /value: step\.value, expect: step\.expect/.test(bb));
   const exec = strip(readFileSync("worker/preflight/execute-run.ts", "utf8"));
   ok("  which is already resolved by the time perform sees it",
-    exec.indexOf("applyRunUnique(") < exec.indexOf("page.perform("));
+    before(exec, "applyRunUnique(", "page.perform("));
 }
 
 console.log("\n── the pieces are actually wired together ──");
@@ -226,7 +235,7 @@ console.log("\n── the pieces are actually wired together ──");
   ok("execution substitutes before performing a step", /applyRunUnique\(/.test(exec) && /runUniqueToken\(runId\)/.test(exec));
   // Before the boundary gate, or policy would judge a string the browser never receives.
   ok("  and before the policy gate sees the step",
-    exec.indexOf("applyRunUnique(") < exec.indexOf("evaluateBoundary("));
+    before(exec, "applyRunUnique(", "evaluateBoundary("));
   // The token is minted ONCE per run, not per step: a token that changed between the fill and the assert
   // would make every flow fail.
   ok("  minting the token once for the whole run", (exec.match(/runUniqueToken\(/g) ?? []).length === 1);
