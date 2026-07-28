@@ -10,6 +10,7 @@ import { socialCard } from "../lib/social-card";
 import { entityJsonLd } from "../lib/entity";
 import { GROUND_CSS, type Ground } from "../lib/v6-routes";
 import { GROUND_HEADER } from "../proxy";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 // There used to be a second brand here (an AI-memory chatbot) with its own metadata and JSON-LD, selected
 // per request. isVraelisRequest() has returned a constant true for a long time, so none of it was ever
@@ -139,6 +140,14 @@ export default async function RootLayout({
               It is JSON generated from lib/entity, not markup, so nothing here can be injected. */}
           <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: entityJsonLd() }} />
           {children}
+          {/* REAL DEVICES, WHICH IS THE ONLY PLACE THE MOBILE QUESTION GETS SETTLED.
+              The homepage motion work was measured on an emulated iPhone viewport, and an emulated
+              viewport has a desktop CPU behind it. That is enough to prove what renders and useless for
+              proving what a phone can render fast. Speed Insights reports field LCP, CLS and INP from
+              the hardware people actually hold.
+              Deliberately NOT inside the stealth branch above: the curtain is a static screen with no
+              product on it, and measuring it would report the curtain's numbers as the site's. */}
+          <SpeedInsights />
         </body>
       </html>
   );
