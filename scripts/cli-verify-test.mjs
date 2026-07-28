@@ -134,6 +134,44 @@ async function main() {
     ok("an explicit --idempotency-key is used verbatim", seen.idem === "mine-1", String(seen.idem));
   });
 
+  // ── COLOUR IS DECORATION, AND DECORATION MUST NEVER REACH A PIPE ──────────────────────────────────
+  //
+  // Every human line goes to stderr, so styling is safe by construction. That is only true while it stays
+  // true, and the failure is silent: escape codes in a JSON payload break a caller's parser, and escape
+  // codes in a repair prompt get pasted into a coding agent as if they were instructions.
+  console.log("\n── the output is styled without contaminating anything ──");
+  {
+    // FORCE_COLOR is the strongest possible signal to colour, so if stdout survives THIS, it survives.
+    await withServer(VERIFIED, {}, async (port) => {
+      const r = await run(["verify", "--url", "https://x.example.com", "--claim", "c", "--wait", "--json"],
+        { FORCE_COLOR: "1" }, port);
+      ok("--json emits no escape codes even with FORCE_COLOR set", !/\x1b\[/.test(r.out), JSON.stringify(r.out.slice(0, 80)));
+      ok("and is still exactly one parseable object", (() => {
+        try { return JSON.parse(r.out.trim()).decision === "verified"; } catch { return false; }
+      })());
+    });
+    await withServer(FAILED, {}, async (port) => {
+      const r = await run(["verify", "--url", "https://x.example.com", "--claim", "c", "--wait", "--repair-prompt"],
+        { FORCE_COLOR: "1" }, port, 1);
+      ok("--repair-prompt emits no escape codes either", !/\x1b\[/.test(r.out), JSON.stringify(r.out.slice(0, 80)));
+      ok("and is still only the prompt", r.out.trim() === "REPAIR PROMPT BODY");
+    });
+    // NO_COLOR is a convention, and honouring it is the difference between a tool people keep and one they
+    // replace. It has to beat FORCE_COLOR: an explicit request for less always wins over one for more.
+    await withServer(VERIFIED, {}, async (port) => {
+      const r = await run(["verify", "--url", "https://x.example.com", "--claim", "c", "--wait"],
+        { NO_COLOR: "1", FORCE_COLOR: "1" }, port);
+      ok("NO_COLOR wins over FORCE_COLOR", !/\x1b\[/.test(r.err), JSON.stringify(r.err.slice(0, 80)));
+      ok("and the verdict word survives without any colour to carry it", /VERIFIED/.test(r.err));
+    });
+    // A spinner in a build log is fifteen minutes of animation frames nobody can read.
+    await withServer(VERIFIED, {}, async (port) => {
+      const r = await run(["verify", "--url", "https://x.example.com", "--claim", "c", "--wait"], {}, port);
+      ok("no spinner frames when the output is not a terminal", !/[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏]/.test(r.err));
+      ok("and no carriage returns redrawing a line nobody is watching", !/\r/.test(r.err));
+    });
+  }
+
   // ── THE INSTALL INSTRUCTION HAS TO BE ONE A STRANGER CAN RUN ──────────────────────────────────────
   //
   // Everything above proves the CLI works. None of it proved anyone could GET it. The console told
