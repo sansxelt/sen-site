@@ -6,7 +6,7 @@ import {
   PLAN_CATALOG_V1, FREE_TIER, PASS_INCLUDED_FLOWS, EXTRA_FLOW_CENTS,
   passPriceCents, rerunPriceCents, type PlanV1,
 } from "@/lib/preflight/pass-pricing";
-import { usdFromCents, effectiveMonthlyUsd } from "@/lib/preflight/pass-pricing-format";
+import { usdFromCents, effectiveMonthlyUsd , planHeadline, planCapacity } from "@/lib/preflight/pass-pricing-format";
 
 // Signed-in plans surface for the _v1 cutover: the SAME approved ladder as /pricing (pricing-v1.tsx),
 // plus account state: the current plan is marked, the current subscription month's usage is shown when
@@ -22,18 +22,6 @@ const PLAN_BLURBS: Record<PlanV1["key"], string> = {
   pro_v1: "For teams launching continuously across applications.",
   scale_v1: "For agencies and platforms verifying at volume.",
 };
-
-function planFeatures(p: PlanV1): string[] {
-  return [
-    `Validate ${p.passesPerMonth} launches a month (${p.passesPerMonth} verifications)`,
-    `Up to ${p.flowsPerPass} flows verified per run`,
-    p.maxApplications === null ? "No cap on connected applications" : `${p.maxApplications} connected applications`,
-    "Real-browser evidence with screenshots",
-    "Linked repair verification",
-    "Targeted reruns spend only the selected flows",
-    "Cancel anytime",
-  ];
-}
 
 export default function PlansV1({ initialCycle = "monthly" }: { initialCycle?: Cycle }) {
   const [signedIn, setSignedIn] = useState(false);
@@ -101,13 +89,20 @@ export default function PlansV1({ initialCycle = "monthly" }: { initialCycle?: C
         <div className="price">
           <div className="price__name">Free</div>
           <div className="price__amt">{usdFromCents(0)}</div>
-          <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600 }}>One lifetime free verification</div>
+          {/* The same headline every paid card uses, so the four read as one scale rather than three plans
+              and an oddity beside them. One guarantee, proven once, at no cost. */}
+          <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600 }}>
+            Protects {FREE_TIER.maxGuarantees} active guarantee
+          </div>
           <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>A real launch decision on your own app before paying anything. No card required.</div>
+          <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-5)", marginTop: 4 }}>Included</div>
           <ul className="price__feat">
-            <li>Up to {FREE_TIER.flowsPerPass} critical flows</li>
-            <li>{FREE_TIER.maxApplications} application</li>
-            <li>Real-browser evidence with screenshots</li>
+            <li>{FREE_TIER.lifetimePasses} verification, up to {FREE_TIER.flowsPerPass} critical flows</li>
+            <li>{FREE_TIER.maxApplications} connected application</li>
             <li>A full Verified, Failed, or Blocked decision</li>
+            {/* Stated, because the API is now on every PAID plan and the difference has to be legible
+                from the card rather than discovered when a key is refused. */}
+            <li>Console only, no API or CLI</li>
           </ul>
           <Link className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href="/systems">{currentPlan ? "Open applications" : "Run your free verification"}</Link>
         </div>
@@ -131,9 +126,16 @@ export default function PlansV1({ initialCycle = "monthly" }: { initialCycle?: C
                   <div style={{ fontSize: 14, color: "var(--fg-2)", fontWeight: 600, marginTop: 2 }}>{usdFromCents(p.yearlyCents)} billed yearly</div>
                 </>
               )}
+              {/* THE HEADLINE IS THE PROTECTED SURFACE AREA. What a customer is buying is how many
+                  outcomes stay proven, not how many times a browser opens. */}
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, marginTop: 2 }}>
+                {planHeadline(p)}
+              </div>
               <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>{PLAN_BLURBS[p.key]}</div>
+              {/* And the capacity that pays for it, stated rather than implied. */}
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-5)", marginTop: 4 }}>Included</div>
               <ul className="price__feat">
-                {planFeatures(p).map((f) => <li key={f}>{f}</li>)}
+                {planCapacity(p).map((f) => <li key={f}>{f}</li>)}
               </ul>
               {isCurrent ? (
                 <button onClick={manageBilling} disabled={busy} className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }}>{busy ? "Opening…" : "Manage billing"}</button>
@@ -163,8 +165,34 @@ export default function PlansV1({ initialCycle = "monthly" }: { initialCycle?: C
         <Link className="btn btn--ghost" style={{ flex: "none" }} href="/credits">Add balance</Link>
       </div>
 
+      {/* EVERY PLAN, STATED ONCE. These were bullets on all four cards, which differentiated nothing and
+          padded three of them into looking fuller than they were. They are how the product works rather
+          than something a tier buys, so they are said here, in one place, where they read as a floor
+          instead of a feature. */}
+      <div style={{ marginTop: 30, border: "1px solid var(--line-2)", borderRadius: "var(--r-lg, 14px)", background: "var(--bg-1)", padding: "18px 20px" }}>
+        <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 10 }}>On every plan, including Free</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "10px 22px" }}>
+          {[
+            ["Real-browser evidence", "Screenshots and traces from the deployment itself, not a mock."],
+            ["A decision, not a report", "Verified, Failed or Blocked. A run that merely finished is not a pass."],
+            ["Linked repair verification", "A repair is proven against the guarantee it was meant to fix."],
+            ["Targeted reruns", "Re-verify only the flows that failed, and pay only for those."],
+            ["The permanent record", "Every run, its evidence and its verdict, kept. Withdrawn verdicts stay visible."],
+            ["Cancel anytime", "Your record stays readable after you do."],
+          ].map(([t, d]) => (
+            <div key={t}>
+              <div style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 500 }}>{t}</div>
+              <div style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.55 }}>{d}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 28, lineHeight: 1.6, textAlign: "center", maxWidth: 620, marginInline: "auto" }}>
-        Unused monthly allowance resets each subscription month. Annual plans are charged up front and release usage monthly. Payments are processed by Stripe.
+        A guarantee is one business outcome that must stay true. Verifications are how it is proven, and a
+        re-verification from the console, the CLI or the API draws on the same monthly allowance. Unused
+        monthly allowance resets each subscription month. Annual plans are charged up front and release usage
+        monthly. Payments are processed by Stripe.
       </p>
     </div>
   );

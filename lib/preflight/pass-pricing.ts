@@ -41,13 +41,23 @@ export type PlanV1 = {
   monthlyCents: number; yearlyCents: number;        // yearly = 10x monthly (two months free)
   passesPerMonth: number; flowsPerPass: number;
   maxApplications: number | null;                   // null = no cap surfaced yet
+  // ACTIVE GUARANTEES ARE WHAT A PLAN SELLS.
+  //
+  // Nobody wants forty verifications. They want six outcomes that must not break: checkout still grants
+  // Pro, users can still sign in, payments still reconcile. Runs are the mechanism that proves it, so they
+  // stay disclosed underneath as capacity, but the number a plan leads with is the protected surface area.
+  //
+  // A REAL NUMBER ON EVERY TIER, including the top one. "Unlimited guarantees" invites the obvious
+  // question of whether one guarantee can trigger unbounded browser time, and the honest answer to that
+  // has to be a figure rather than a word.
+  maxGuarantees: number;
 };
 export const PLAN_CATALOG_V1: PlanV1[] = [
-  { key: "builder_v1", name: "Builder", monthlyCents: 4900, yearlyCents: 49000, passesPerMonth: 10, flowsPerPass: 5, maxApplications: 2 },
-  { key: "pro_v1", name: "Pro", monthlyCents: 14900, yearlyCents: 149000, passesPerMonth: 40, flowsPerPass: 10, maxApplications: 10 },
-  { key: "scale_v1", name: "Scale", monthlyCents: 39900, yearlyCents: 399000, passesPerMonth: 150, flowsPerPass: 20, maxApplications: null },
+  { key: "builder_v1", name: "Builder", monthlyCents: 4900, yearlyCents: 49000, passesPerMonth: 10, flowsPerPass: 5, maxApplications: 2, maxGuarantees: 3 },
+  { key: "pro_v1", name: "Pro", monthlyCents: 14900, yearlyCents: 149000, passesPerMonth: 40, flowsPerPass: 10, maxApplications: 10, maxGuarantees: 10 },
+  { key: "scale_v1", name: "Scale", monthlyCents: 39900, yearlyCents: 399000, passesPerMonth: 150, flowsPerPass: 20, maxApplications: null, maxGuarantees: 30 },
 ];
-export const FREE_TIER = { lifetimePasses: 1, flowsPerPass: 3, maxApplications: 1 } as const;
+export const FREE_TIER = { lifetimePasses: 1, flowsPerPass: 3, maxApplications: 1, maxGuarantees: 1 } as const;
 
 export function planV1(key: string): PlanV1 | null {
   return PLAN_CATALOG_V1.find((p) => p.key === key) ?? null;

@@ -59,14 +59,26 @@ export default function V6Pricing() {
                   <span style={{ fontSize: 14, fontWeight: 400, color: "var(--g-fg-3)" }}> per month</span>
                 </p>
                 <p style={{ ...P, marginBottom: 16 }}>{money(p.yearlyCents)} yearly, ten months for twelve.</p>
+                {/* THE HEADLINE IS THE PROTECTED SURFACE AREA, matching the console exactly.
+                    Nobody wants forty verifications. They want checkout to keep granting Pro access and
+                    users to keep being able to sign in. Runs are how that is proven, so they stay
+                    disclosed underneath rather than behind a phrase like "fair use": the first question
+                    anyone serious asks is whether one guarantee can trigger unbounded browser time, and
+                    the answer has to be a number on the card. */}
+                <p style={{ margin: "0 0 12px", fontSize: 15, fontWeight: 600, color: "var(--g-fg)" }}>
+                  Protects up to {p.maxGuarantees} active guarantees
+                </p>
                 <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 6 }}>
-                  <li style={P}>{p.passesPerMonth} verification passes each month</li>
-                  <li style={P}>Up to {p.flowsPerPass} flows in a single pass</li>
+                  <li style={P}>{p.passesPerMonth} verifications a month, up to {p.flowsPerPass} flows each</li>
                   <li style={P}>
                     {p.maxApplications === null
-                      ? "Unlimited connected systems"
+                      ? "Connect any number of systems"
                       : `${p.maxApplications} connected system${p.maxApplications === 1 ? "" : "s"}`}
                   </li>
+                  {/* Was Scale-only and stated on no card, which is how somebody could install the CLI and
+                      then be refused by a rule they had no way to read. */}
+                  <li style={P}>API, CLI and webhooks</li>
+                  <li style={P}>Top up for more, billed per verification</li>
                 </ul>
                 {/* EVERY CARD NEEDS A WAY TO SAY YES.
                     This page listed three plans, their prices and what each includes, and offered nothing to

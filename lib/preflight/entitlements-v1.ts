@@ -273,6 +273,36 @@ export async function applicationCapReached(owner: string, planKey: string | nul
   return (count ?? 0) >= cap;
 }
 
+// GUARANTEE CAP: FREE_TIER 1; builder_v1 3; pro_v1 10; scale_v1 30.
+//
+// The number a plan LEADS with, so it has to be real. A cap printed on a pricing card and enforced nowhere
+// is exactly the kind of claim this product exists to catch, and it would be caught first by the customer
+// who bought the tier because of it.
+//
+// Every tier has a figure, including the top one. "Unlimited guarantees" invites the obvious question of
+// whether one guarantee can trigger unbounded browser time, and a word is not an answer to that.
+//
+// Counts ACTIVE guarantees only. A guarantee someone stopped maintaining should not hold a slot forever,
+// and the alternative is a customer who cannot add what they need without deleting history they may want.
+//
+// Degrades open on a read error, matching applicationCapReached: this is a plan perk, not a security
+// boundary, and refusing to define a guarantee because a count query blipped is the worse failure.
+export async function guaranteeCapReached(owner: string, planKey: string | null): Promise<boolean> {
+  const plan = planKey ? planV1(planKey) : null;
+  const cap = plan ? plan.maxGuarantees : FREE_TIER.maxGuarantees;
+  if (!isDatabaseConfigured()) return false;
+  const { count, error } = await db().from("v_guarantees" as never)
+    .select("id", { count: "exact", head: true })
+    // status, not a boolean column. v_guarantees stores 'active' | 'archived'; filtering on a boolean
+    // `active` would have matched nothing and quietly reported every account as having zero, so the cap
+    // would have been enforced against a count that was always 0 and never fired.
+    .eq("user_id", norm(owner)).eq("status", "active");
+  // A missing column or table means the guarantee layer predates this cap. Open, not closed: an owner
+  // must never be locked out of their own product by a migration that has not run yet.
+  if (error) return false;
+  return (count ?? 0) >= cap;
+}
+
 // ── The launch gate the run routes call ──────────────────────────────────────────────────────────────
 // Flag off => { mode: 'legacy' } and the caller takes today's credit-hold path byte-for-byte. Flag on:
 // subscription => canRunPass over the metered window; free => the lifetime pass; payg => the cents to

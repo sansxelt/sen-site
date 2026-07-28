@@ -174,10 +174,19 @@ console.log("\n── the plan that sells the API must grant the API ──");
   ok("the legacy Scale plan still works", apiAccessAllowed("scale", "a@b.c"));
   ok("enterprise still works", apiAccessAllowed("enterprise", "a@b.c"));
 
-  // The lower versioned plans do not sell the API, and must not quietly gain it.
-  ok("Builder does not get the API", !apiAccessAllowed("free", "a@b.c", "builder_v1"));
-  ok("Pro does not get the API", !apiAccessAllowed("free", "a@b.c", "pro_v1"));
-  ok("free is still free", !apiAccessAllowed("free", "a@b.c", null));
+  // EVERY PAID PLAN GETS THE API, and this used to assert the opposite.
+  //
+  // It was Scale only, at $399, and no pricing card said so. The console meanwhile shipped a Command line
+  // page, an installer for two platforms and a documented CI gate, so a Builder or Pro customer following
+  // any of it was refused by a rule they had no way to read. The assertion was faithfully protecting a
+  // decision that was costing customers the cheapest path to depending on the product.
+  //
+  // Volume still differs per plan and still binds: an API run spends the same allowance a console run
+  // does. What changed is whether the door opens at all.
+  ok("Builder gets the API", apiAccessAllowed("free", "a@b.c", "builder_v1"));
+  ok("Pro gets the API", apiAccessAllowed("free", "a@b.c", "pro_v1"));
+  // Free is the one that must stay shut, or the paid tiers are selling nothing.
+  ok("free does not", !apiAccessAllowed("free", "a@b.c", null));
   ok("an unknown versioned key grants nothing", !apiAccessAllowed("free", "a@b.c", "enterprise_v9"));
 
   // Every gate must ASK with the versioned plan, or it reproduces the outage at that one call site.

@@ -119,7 +119,17 @@ const stripped = new Map(surfaces.map((p) => [p, stripComments(read(p))]));
 // ── C) Positive gates: the new vocabulary is present where it must be ────────────────────────────────
 {
   const pricingV1 = read("app/rank/pricing/pricing-v1.tsx");
-  ok('pricing-v1 sells "verifications"', pricingV1.includes("verifications"));
+  // FOLLOWED THE COPY TO WHERE IT LIVES. This asserted the word appeared in pricing-v1.tsx, and the plan
+  // wording now comes from lib/preflight/pass-pricing-format.ts because it was previously duplicated
+  // across three surfaces and had already drifted: API access was Scale-only and stated on none of them.
+  //
+  // The property is that the pricing surface sells verifications, not that a particular file contains the
+  // string. So it is satisfied either by the surface's own copy or by the shared source it renders from,
+  // and the second half checks it really does render from it rather than having quietly gone quiet.
+  const planCopy = read("lib/preflight/pass-pricing-format.ts");
+  ok('pricing-v1 sells "verifications"',
+    pricingV1.includes("verifications") || planCopy.includes("verifications"));
+  ok("pricing-v1 renders the shared plan copy rather than its own", /planCapacity\(p\)/.test(pricingV1));
   ok('pricing-v1 never says "Production Pass"', !pricingV1.includes("Production Pass"));
 
   // The CI quickstart in the API console: gate on the DECISION ("verified"), never on READY.

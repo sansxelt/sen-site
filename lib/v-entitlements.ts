@@ -45,7 +45,20 @@ export const MAX_VOTES_FREE = 100;
 // The VERSIONED catalog keys that carry API access. Held separately from TABLE rather than added to it,
 // because the two vocabularies are deliberately distinct: "scale" and "scale_v1" are different products
 // that happen to share a word, and the legacy meanings are never reused.
-const V1_API_PLANS = new Set(["scale_v1"]);
+// EVERY PAID PLAN, not just the top one.
+//
+// This was scale_v1 alone, at $399 a month, and no pricing card said so. Which meant the console shipped a
+// Command line page, an installer for two platforms and a documented CI gate, and a Builder or Pro customer
+// following any of it was refused by a rule they had no way to read. The most expensive thing to discover
+// about a product is a capability you were told you had.
+//
+// It is also the wrong commercial call. The API and the CLI are how this gets embedded in a pipeline, and a
+// verification wired into someone's deploy is worth incomparably more than one run in a browser tab.
+// Gating that behind the top tier closes the cheapest path to becoming dependent on it.
+//
+// The volume limits still differ per plan and still bind: an API run spends the same allowance a console
+// run does. What changed is whether the door opens at all.
+const V1_API_PLANS = new Set(["builder_v1", "pro_v1", "scale_v1"]);
 
 /**
  * May this account use the public API?

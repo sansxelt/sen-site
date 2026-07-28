@@ -45,6 +45,10 @@ const renders: Record<string, string> = {
   "plans yearly": renderToStaticMarkup(el(PlansV1, { initialCycle: "yearly" })),
 };
 
+// Rendered JSX wraps wherever the source broke the line, so anything spanning one is compared with
+// whitespace collapsed. The words are the property; the line breaks are not.
+const flat0 = (h: string) => h.replace(/\s+/g, " ");
+
 for (const surface of ["pricing", "plans"]) {
   const m = renders[`${surface} monthly`], y = renders[`${surface} yearly`];
   ok(`${surface}: monthly renders $49 / $149 / $399`,
@@ -64,21 +68,46 @@ for (const surface of ["pricing", "plans"]) {
   const unitPlural = "verifications";
   const paygUnit = "$15 per verification";
   const rerunCap = "Targeted reruns cost $3 per selected failed flow and never more than a comparable full verification";
-  ok(`${surface}: free tier is $0, one lifetime free unit, 3 flows, 1 application, no card`,
-    m.includes("$0") && m.includes(freeLead) && m.includes("Up to 3 critical flows") && m.includes("1 application") && m.includes("No card required"));
+  // Free leads with the same headline the paid cards use, so the four read as one scale rather than three
+  // plans and an oddity beside them. The capacity underneath is unchanged: one verification, three flows,
+  // one system.
+  ok(`${surface}: free tier is $0, one guarantee, one verification, 3 flows, 1 application, no card`,
+    m.includes("$0") && flat0(m).includes("Protects 1 active guarantee")
+    && m.includes("1 verification, up to 3 critical flows") && m.includes("1 connected application")
+    && m.includes("No card required"));
+  // Free is the ONE tier without the API, and that difference has to be legible from the card rather than
+  // discovered when a key is refused.
+  ok(`${surface}: free states plainly that it has no API`, m.includes("Console only, no API or CLI"));
   // Reframe (2026-07): the pass figures are unchanged, but the lead bullet now reads outcome-first
   // ("Validate N launches a month (N <unit>)") and flows are "verified per run". The figures
   // (10/40/150 runs, 5/10/20 flows, 2/10/∞ apps) must still render on both surfaces.
-  ok(`${surface}: approved plan limits render (runs/flows/applications)`,
-    m.includes(`Validate 10 launches a month (10 ${unitPlural})`) && m.includes("Up to 5 flows verified per run") && m.includes("2 connected applications")
-    && m.includes(`Validate 40 launches a month (40 ${unitPlural})`) && m.includes("Up to 10 flows verified per run") && m.includes("10 connected applications")
-    && m.includes(`Validate 150 launches a month (150 ${unitPlural})`) && m.includes("Up to 20 flows verified per run") && m.includes("No cap on connected applications"));
+  // WHAT A PLAN SELLS, AND WHAT IT COSTS TO RUN. The cards lead with protected surface area now, so the
+  // guarantee figure is the headline assertion. The capacity underneath still has to render, because a
+  // plan that names an outcome count without disclosing the runs behind it is the "fair use" evasion
+  // this reframe exists to avoid: anyone evaluating it will ask whether one guarantee can trigger
+  // unbounded browser time, and the answer must be a number on the card.
+  ok(`${surface}: each plan leads with the guarantees it protects`,
+    m.includes("Protects up to 3 active guarantees") && m.includes("Protects up to 10 active guarantees")
+    && m.includes("Protects up to 30 active guarantees"));
+  ok(`${surface}: and discloses the capacity behind it (runs/flows/systems)`,
+    m.includes("10 verifications a month, up to 5 flows each") && m.includes("2 connected systems")
+    && m.includes("40 verifications a month, up to 10 flows each") && m.includes("10 connected systems")
+    && m.includes("150 verifications a month, up to 20 flows each") && m.includes("Connect any number of systems"));
+  // The capability that was Scale-only and unlisted, which is how a Builder customer could install the
+  // CLI and be refused by a rule they had no way to read.
+  ok(`${surface}: every paid plan states that it includes the API and CLI`,
+    (m.match(/API, CLI and webhooks/g) ?? []).length >= 3);
   ok(`${surface}: PAYG band: $15 per run, 5 flows included, $3 extra flow, capped $3 reruns, no subscription`,
     m.includes(paygUnit) && m.includes("5 flows included, $3 per additional flow")
     && m.includes(rerunCap)
     && m.includes("No subscription required") && m.includes("/credits"));
+  // WHITESPACE COLLAPSED FIRST. Rendered JSX wraps a paragraph wherever the source happened to break the
+  // line, so an exact-string match here fails the moment someone reflows a sentence they did not change
+  // the meaning of. The billing terms are the property; the line breaks are not.
+  const flat = m.replace(/\s+/g, " ");
   ok(`${surface}: allowance-reset and annual up-front lines present`,
-    m.includes("Unused monthly allowance resets each subscription month") && m.includes("Annual plans are charged up front and release usage monthly"));
+    flat.includes("Unused monthly allowance resets each subscription month")
+    && flat.includes("Annual plans are charged up front and release usage monthly"));
 }
 ok("pricing: paid CTAs go to /checkout?plan=<key>&cycle=<cycle>",
   ["builder_v1", "pro_v1", "scale_v1"].every((k) => renders["pricing monthly"].includes(`plan%3D${k}%26cycle%3Dmonthly`) || renders["pricing monthly"].includes(`plan=${k}&amp;cycle=monthly`))

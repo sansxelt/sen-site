@@ -31,6 +31,29 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "validation_error", message: "A guarantee needs a one-sentence business requirement: what must always be true." }, { status: 400 });
   }
 
+  // THE NUMBER ON THE PRICING CARD, ENFORCED. Plans lead with how many active guarantees they protect,
+  // so that figure has to be real: a cap printed and enforced nowhere is exactly the claim this product
+  // exists to catch, and the person who would catch it is the customer who bought the tier for it.
+  //
+  // The message names the current plan and the cap rather than saying "upgrade", because someone who has
+  // hit a limit is entitled to know which limit and what it is before deciding what to do about it.
+  {
+    const { guaranteeCapReached } = await import("@/lib/preflight/entitlements-v1");
+    const { getPlanV1State } = await import("@/lib/preflight/entitlements-v1");
+    const state = await getPlanV1State(access.owner).catch(() => null);
+    const planKey = state?.plan ?? null;
+    if (await guaranteeCapReached(access.owner, planKey)) {
+      const { planV1, FREE_TIER } = await import("@/lib/preflight/pass-pricing");
+      const plan = planKey ? planV1(planKey) : null;
+      const cap = plan ? plan.maxGuarantees : FREE_TIER.maxGuarantees;
+      return NextResponse.json({
+        error: "guarantee_cap_reached",
+        message: `Your ${plan ? plan.name : "Free"} plan protects up to ${cap} active guarantee${cap === 1 ? "" : "s"}. Archive one you no longer need, or move to a plan that protects more.`,
+        cap, plan: plan ? plan.key : null,
+      }, { status: 402 });
+    }
+  }
+
   const g = await createGuarantee(access.owner, { applicationId: id, title, scope: scope || null });
   if (!g) return NextResponse.json({ error: "create_failed", message: "Could not define the guarantee. Confirm the system exists and migration 19 is applied." }, { status: 400 });
   return NextResponse.json({ guarantee: { id: g.id, title: g.title, scope: g.scope, plan_state: g.plan_state } }, { status: 201 });

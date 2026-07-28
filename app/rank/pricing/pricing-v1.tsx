@@ -6,7 +6,7 @@ import {
   PLAN_CATALOG_V1, FREE_TIER, PASS_INCLUDED_FLOWS, EXTRA_FLOW_CENTS,
   passPriceCents, rerunPriceCents, type PlanV1,
 } from "@/lib/preflight/pass-pricing";
-import { usdFromCents, effectiveMonthlyUsd } from "@/lib/preflight/pass-pricing-format";
+import { usdFromCents, effectiveMonthlyUsd , planHeadline, planCapacity } from "@/lib/preflight/pass-pricing-format";
 
 // The approved _v1 pricing ladder (docs/pricing-verdict-final.md), rendered ONLY when
 // VRAELIS_PASS_PRICING=1 (the server gate in page.tsx keeps the legacy page byte-identical until then).
@@ -22,18 +22,6 @@ const PLAN_BLURBS: Record<PlanV1["key"], string> = {
   pro_v1: "For teams launching continuously across applications.",
   scale_v1: "For agencies and platforms verifying at volume.",
 };
-
-function planFeatures(p: PlanV1): string[] {
-  return [
-    `Validate ${p.passesPerMonth} launches a month (${p.passesPerMonth} verifications)`,
-    `Up to ${p.flowsPerPass} flows verified per run`,
-    p.maxApplications === null ? "No cap on connected applications" : `${p.maxApplications} connected applications`,
-    "Real-browser evidence with screenshots",
-    "Linked repair verification",
-    "Targeted reruns spend only the selected flows",
-    "Cancel anytime",
-  ];
-}
 
 export default function PricingV1({ initialCycle = "monthly" }: { initialCycle?: Cycle }) {
   const [signedIn, setSignedIn] = useState(false);
@@ -73,13 +61,20 @@ export default function PricingV1({ initialCycle = "monthly" }: { initialCycle?:
             <div className="price">
               <div className="price__name">Free</div>
               <div className="price__amt">{usdFromCents(0)}</div>
-              <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600 }}>One lifetime free verification</div>
+              {/* The same headline every paid card uses, so the four read as one scale rather than three
+                  plans and an oddity beside them. */}
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600 }}>
+                Protects {FREE_TIER.maxGuarantees} active guarantee
+              </div>
               <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>See a real launch decision on your own app before paying anything. No card required.</div>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-5)", marginTop: 4 }}>Included</div>
               <ul className="price__feat">
-                <li>Up to {FREE_TIER.flowsPerPass} critical flows</li>
-                <li>{FREE_TIER.maxApplications} application</li>
-                <li>Real-browser evidence with screenshots</li>
+                <li>{FREE_TIER.lifetimePasses} verification, up to {FREE_TIER.flowsPerPass} critical flows</li>
+                <li>{FREE_TIER.maxApplications} connected application</li>
                 <li>A full Verified, Failed, or Blocked decision</li>
+                {/* Free is the ONE tier without the API, now that every paid plan has it. Stated on the
+                    card rather than discovered when a key is refused. */}
+                <li>Console only, no API or CLI</li>
               </ul>
               <Link className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href={earlyAccess}>Run a verification</Link>
             </div>
@@ -104,8 +99,12 @@ export default function PricingV1({ initialCycle = "monthly" }: { initialCycle?:
                   </>
                 )}
                 <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>{PLAN_BLURBS[p.key]}</div>
+                {/* Headline first, capacity under it, both from the one shared source, so this page and
+                    the console cannot end up describing the same plan two different ways. */}
+                <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, marginTop: 2 }}>{planHeadline(p)}</div>
+                <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-5)", marginTop: 4 }}>Included</div>
                 <ul className="price__feat">
-                  {planFeatures(p).map((f) => <li key={f}>{f}</li>)}
+                  {planCapacity(p).map((f) => <li key={f}>{f}</li>)}
                 </ul>
                 <Link className={p.key === "pro_v1" ? "btn" : "btn btn--ghost"} style={{ marginTop: "auto", justifyContent: "center" }} href={checkoutHref(p.key)}>Choose {p.name}</Link>
               </div>
