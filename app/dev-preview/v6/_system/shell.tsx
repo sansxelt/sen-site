@@ -7,6 +7,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNo
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SiteFooter } from "./close";
+import { useHideOnScroll } from "@/components/use-hide-on-scroll";
 import { V6_BASE, V6_HOME, V6_APP, v6SignInPath, v6GroundAtTop, GROUND_CSS } from "@/lib/v6-routes";
 
 // FOLLOWS THE PROMOTION FLAG. These were hardcoded to "/dev-preview/v6", which is precisely the mistake
@@ -238,6 +239,12 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
   // whichever panel is on screen: the open one, or the one still animating out
   const shown = open ?? exiting;
 
+  // The bar gets out of the way on the way down and comes back on the way up, or when the pointer
+  // reaches the top edge. Anything hanging off the bar pins it: a mega panel or the mobile drawer
+  // would otherwise slide up the screen still attached to it.
+  const hideOnScroll = useHideOnScroll();
+  const navHidden = !hideOnScroll && shown === null && !drawer;
+
   // Publish the real nav height as --nav-h. Chapters size themselves against it, and it changes with the
   // wordmark size and the viewport, so measuring beats a hardcoded fallback.
   useEffect(() => {
@@ -356,7 +363,7 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
 
   return (
     <nav ref={navRef} className="v6-nav" data-scrolled={scrolled} data-theme={dark ? "dark" : "light"}
-      data-open={shown !== null} data-settled={settled} aria-label="Primary" onMouseLeave={scheduleClose}>
+      data-open={shown !== null} data-settled={settled} data-hidden={navHidden} aria-label="Primary" onMouseLeave={scheduleClose}>
       <div className="v6-nav__in">
         <Brand />
         <div className="v6-nav__items">

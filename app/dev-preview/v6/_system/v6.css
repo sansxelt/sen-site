@@ -183,7 +183,27 @@
 .v6 main:focus { outline: none; }
 
 /* ================================================================ NAV ====== */
-.v6-nav { position: sticky; top: 0; z-index: 60; }
+.v6-nav { position: sticky; top: 0; z-index: 60;
+  /* Out of the way on the way down, back on the way up or when the pointer reaches the top edge.
+     TRANSFORM ONLY. The rules below are emphatic that this bar does not crossfade its colours,
+     because a fade over a ground that changes in one frame IS the lag; moving it is a different
+     property and does not reintroduce that. overflow-anchor keeps the browser from reading the
+     slide as content shifting and compensating with a scroll adjustment, which would be another
+     scroll event and would move the bar again. */
+  transform: translate3d(0, 0, 0);
+  transition: transform 340ms cubic-bezier(0.22, 1, 0.36, 1);
+  overflow-anchor: none; }
+.v6-nav[data-hidden="true"] { transform: translate3d(0, -100%, 0); }
+/* A bar that has left the screen is still in the tab order, so tabbing into it would move focus to
+   something nobody can see. Any focus inside brings it straight back. */
+.v6-nav:focus-within { transform: translate3d(0, 0, 0); }
+/* The first paint must not animate, same reasoning as the theme swap above. */
+.v6-nav[data-settled="false"] { transition: none; }
+/* The bar still leaves — that is layout, and the reader gets the screen back either way — but it
+   snaps rather than sliding. */
+@media (prefers-reduced-motion: reduce) {
+  .v6-nav { transition: none; }
+}
 /* The initial theme is correct from the server-rendered markup, so it must not animate in. Crossing a
    chapter boundary later gets the restrained transition. */
 .v6-nav[data-settled="false"] .v6-nav__in,
