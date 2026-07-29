@@ -46,6 +46,17 @@ const PARTS = [
   ".v6-dr__layer",    // reach: the stack a result fans into
   ".v6-tm__ex",       // the terminal's exit codes
   ".v6-cs__m > *",    // the authored mobile stack for chapter 3
+
+  // THE LEAD-IN OF EVERY CHAPTER, which used to animate nowhere. Counted on the live page: 22 parts moved
+  // across 13 sections while all 7 category labels and every headline simply existed — so each scene
+  // announced itself flatly and only its interior had any life. That is the difference between a page that
+  // reveals and a page with some animated widgets in it.
+  ".v6-eyebrow",
+  ".v6-st__h", ".v6-st__sub",
+  ".v6-rg__h",
+  ".v6-dr__h", ".v6-dr__sub",
+  ".v6-rx__h", ".v6-rx__sub",
+  ".v6-tm__h",
 ].join(", ");
 
 /**

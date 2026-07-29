@@ -985,3 +985,100 @@
 .v6-cs__acts { display: none; }
 .v6-cs__viewport { display: none; }
 .v6-cs__m { display: grid; }
+
+/* ══════════════════════════ THE LEAD-IN OF EVERY CHAPTER ═══════════════════
+   22 parts moved across 13 sections while all 7 category labels and every headline simply existed. Each
+   scene announced itself flatly and only its interior had any life, which is the difference between a page
+   that reveals and a page with some animated widgets inside it.
+
+   TWO TIERS, because a label and a headline are not the same event. The label and the supporting line
+   arrive the way everything else does. The headline gets its own: more travel, a longer settle, and a mask
+   that wipes it upward out of nothing — the same move the hero already makes with .v6-mask, which is the
+   one authored opening moment on the page and the thing worth repeating at the top of every chapter.
+
+   The mask is clip-path rather than an extra wrapper element, so no heading markup changes and nothing new
+   enters the accessibility tree. inset() bottoms out at -18% rather than 0 so descenders and the odd
+   accent are never shaved on the last frame.
+
+   Easing is cubic-bezier(0.16, 1, 0.3, 1) — a hard decelerate that covers most of its distance early and
+   settles slowly. It is what makes a reveal read as deliberate rather than as a fade someone tuned. */
+
+.v6-mo .v6-eyebrow,
+.v6-mo .v6-st__sub,
+.v6-mo .v6-dr__sub,
+.v6-mo .v6-rx__sub {
+  opacity: 0 !important;
+  transform: translateY(16px) !important;
+  transition: opacity 640ms cubic-bezier(0.16, 1, 0.3, 1), transform 640ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(var(--i, 0) * 70ms);
+  will-change: opacity, transform;
+}
+.v6-mo .v6-eyebrow.v6-in,
+.v6-mo .v6-st__sub.v6-in,
+.v6-mo .v6-dr__sub.v6-in,
+.v6-mo .v6-rx__sub.v6-in {
+  opacity: 1 !important;
+  transform: none !important;
+  will-change: auto;
+}
+
+.v6-mo .v6-st__h,
+.v6-mo .v6-rg__h,
+.v6-mo .v6-dr__h,
+.v6-mo .v6-rx__h,
+.v6-mo .v6-tm__h {
+  opacity: 0 !important;
+  transform: translateY(26px) !important;
+  clip-path: inset(0 0 100% 0);
+  transition: opacity 760ms cubic-bezier(0.16, 1, 0.3, 1),
+              transform 760ms cubic-bezier(0.16, 1, 0.3, 1),
+              clip-path 880ms cubic-bezier(0.16, 1, 0.3, 1);
+  /* One step behind its own eyebrow, so the chapter names itself and then states itself. */
+  transition-delay: 90ms;
+  will-change: opacity, transform, clip-path;
+}
+.v6-mo .v6-st__h.v6-in,
+.v6-mo .v6-rg__h.v6-in,
+.v6-mo .v6-dr__h.v6-in,
+.v6-mo .v6-rx__h.v6-in,
+.v6-mo .v6-tm__h.v6-in {
+  opacity: 1 !important;
+  transform: none !important;
+  clip-path: inset(0 0 -18% 0);
+  will-change: auto;
+}
+
+/* Reduced motion keeps the reveal and drops the travel, same rule as everywhere else on this page.
+   clip-path MUST be released here explicitly: it is not a transform, so resetting transform would leave
+   the headline clipped to nothing and a reader who asked for less motion would get no headline at all.
+   Last in the file so it wins the tie against the tier above it. */
+@media (prefers-reduced-motion: reduce) {
+  .v6-mo .v6-eyebrow,
+  .v6-mo .v6-st__sub,
+  .v6-mo .v6-dr__sub,
+  .v6-mo .v6-rx__sub,
+  .v6-mo .v6-st__h,
+  .v6-mo .v6-rg__h,
+  .v6-mo .v6-dr__h,
+  .v6-mo .v6-rx__h,
+  .v6-mo .v6-tm__h {
+    opacity: 0 !important;
+    transform: none !important;
+    clip-path: none !important;
+    transition: opacity 520ms var(--ease) !important;
+    transition-delay: calc(var(--i, 0) * 60ms) !important;
+    will-change: opacity;
+  }
+  .v6-mo .v6-eyebrow.v6-in,
+  .v6-mo .v6-st__sub.v6-in,
+  .v6-mo .v6-dr__sub.v6-in,
+  .v6-mo .v6-rx__sub.v6-in,
+  .v6-mo .v6-st__h.v6-in,
+  .v6-mo .v6-rg__h.v6-in,
+  .v6-mo .v6-dr__h.v6-in,
+  .v6-mo .v6-rx__h.v6-in,
+  .v6-mo .v6-tm__h.v6-in {
+    opacity: 1 !important;
+    will-change: auto;
+  }
+}
