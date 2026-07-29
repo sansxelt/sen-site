@@ -844,33 +844,33 @@
 
    Reduced motion never reaches here: mobile-motion.ts refuses to add .v6-mo when it is set, and the
    reduced-motion block above keeps its rest state either way. */
-@media (max-width: 900px) {
-  .v6-mo .v6-gap__t,
-  .v6-mo .v6-st__cond,
-  .v6-mo .v6-rg__row,
-  .v6-mo .v6-rg__foot,
-  .v6-mo .v6-dr__layer,
-  .v6-mo .v6-tm__ex,
-  .v6-mo .v6-cs__m > * {
-    opacity: 0 !important;
-    transform: translateY(18px) !important;
-    transition: opacity 620ms var(--ease), transform 620ms var(--ease);
-    transition-delay: calc(var(--i, 0) * 70ms);
-    will-change: opacity, transform;
-  }
-  .v6-mo .v6-gap__t.v6-in,
-  .v6-mo .v6-st__cond.v6-in,
-  .v6-mo .v6-rg__row.v6-in,
-  .v6-mo .v6-rg__foot.v6-in,
-  .v6-mo .v6-dr__layer.v6-in,
-  .v6-mo .v6-tm__ex.v6-in,
-  .v6-mo .v6-cs__m > .v6-in {
-    opacity: 1 !important;
-    transform: none !important;
-    /* Released once it has arrived. will-change held on dozens of elements costs a compositor layer each,
-       which on a phone is the memory pressure it was meant to avoid. */
-    will-change: auto;
-  }
+/* NO WIDTH GATE. This is the page's motion now, not the phone's consolation for not getting the real one.
+   These rules used to live behind max-width:900px, which is what made the homepage three different pages. */
+.v6-mo .v6-gap__t,
+.v6-mo .v6-st__cond,
+.v6-mo .v6-rg__row,
+.v6-mo .v6-rg__foot,
+.v6-mo .v6-dr__layer,
+.v6-mo .v6-tm__ex,
+.v6-mo .v6-cs__m > * {
+  opacity: 0 !important;
+  transform: translateY(18px) !important;
+  transition: opacity 620ms var(--ease), transform 620ms var(--ease);
+  transition-delay: calc(var(--i, 0) * 70ms);
+  will-change: opacity, transform;
+}
+.v6-mo .v6-gap__t.v6-in,
+.v6-mo .v6-st__cond.v6-in,
+.v6-mo .v6-rg__row.v6-in,
+.v6-mo .v6-rg__foot.v6-in,
+.v6-mo .v6-dr__layer.v6-in,
+.v6-mo .v6-tm__ex.v6-in,
+.v6-mo .v6-cs__m > .v6-in {
+  opacity: 1 !important;
+  transform: none !important;
+  /* Released once it has arrived. will-change held on dozens of elements costs a compositor layer each,
+     which on a phone is the memory pressure it was meant to avoid. */
+  will-change: auto;
 }
 
 /* ══════════════════════════ REDUCED MOTION STILL GETS THE ARGUMENT ═════════
@@ -916,3 +916,72 @@
     will-change: auto;
   }
 }
+
+/* ════════════════════════════ ONE COMPOSITION, EVERY VISITOR ═══════════════
+   The homepage used to be three pages that shared copy. Measured before this block existed:
+
+     desktop, no preference   21,580px   seven chapters pinned to the viewport and scrubbed by scroll
+     phone (<900px)           11,687px   unpinned, each part revealed as it arrived
+     reduced motion, any size  unpinned   the same flow again, with a third motion rule
+
+   Three compositions is three things to design, three to test and three to keep true to each other, and
+   they had already drifted: the founder could not find the film on their own site, because the preference
+   their machine shipped with had quietly put them on the third page.
+
+   So the pinned mapping is retired and the flow that phones already had becomes the page. It is not a
+   downgrade dressed up as unification — pinning is what a phone could never have, what reduced motion must
+   not have, and what forces a reader to scroll through 21,580px of captured viewport to read one argument.
+   What survives is what actually carried the argument: the order of the scenes, the compositions inside
+   them, and motion on arrival.
+
+   THIS BLOCK IS THE STRUCTURAL HALF ONLY — unpin, un-stack, and release the parts the scrub used to drive.
+   The narrow-viewport LAYOUT choices stay behind their breakpoint where they belong: a single column and a
+   200px ring are right for a phone and wrong for a 1920px screen, and collapsing those too is how a desktop
+   ends up looking like a stretched phone. Placed last so it beats the pinned defaults above it, and it
+   still loses to the .v6-mo rules, which carry one more class — the reveal owns the rest state, not this.
+
+   Every `opacity: 1 !important` here is releasing a part from a --p expression that no longer travels.
+   Without them a scene would paint at whatever its scrub start happened to be and stay there. */
+
+.v6-gap { height: auto; }
+.v6-gap__pin { position: static; height: auto; padding: clamp(72px, 12vh, 104px) var(--gutter); }
+.v6-gap__stage { max-width: none; height: auto; }
+.v6-gap__t { position: static; transform: none !important; opacity: 1 !important; }
+/* .v6-gap__turn composites its own opacity from calc(var(--turn) * (1 - var(--claim))), so releasing the
+   parent never reaches it: opacity does not inherit. */
+.v6-gap__turn { opacity: 1 !important; }
+.v6-gap__sys { margin-top: clamp(34px, 7vw, 52px); }
+.v6-gap__found { margin-top: clamp(40px, 8vw, 64px); }
+.v6-gap__verdictwrap { margin-top: clamp(32px, 6vw, 48px); }
+
+.v6-st { height: auto; }
+.v6-st__pin { position: static; height: auto; display: block; padding: clamp(64px, 10vw, 96px) var(--gutter); }
+/* The conditions were stacked on top of one another and swapped by --p. Unpinned they have to occupy real
+   space in order, or only the last one would ever be readable. */
+.v6-st__list { position: static; min-height: 0; display: grid; gap: clamp(26px, 6vw, 38px); }
+.v6-st__cond { position: static; opacity: 1 !important; transform: none !important;
+  padding-top: 20px; border-top: 1px solid var(--g-line); }
+
+.v6-rg { height: auto; }
+.v6-rg__pin { position: static; height: auto; display: block; padding: clamp(64px, 10vw, 96px) var(--gutter); }
+.v6-rg__stage { overflow: visible; }
+.v6-rg__row { opacity: 1 !important; transform: none !important; }
+.v6-rg__foot { opacity: 1 !important; }
+
+.v6-dr { height: auto; }
+.v6-dr__pin { position: static; height: auto; display: block; padding: clamp(64px, 10vw, 96px) var(--gutter); }
+.v6-dr__graph { max-height: none; }
+.v6-dr__g rect, .v6-dr__g line, .v6-dr__n rect, .v6-dr__n text,
+.v6-dr__dep rect, .v6-dr__dep text { opacity: 1 !important; }
+.v6-dr__edge { stroke-dashoffset: 0 !important; }
+.v6-dr__layer { opacity: 1 !important; transform: none !important; }
+
+/* Chapter 3 carried TWO authored compositions: an act stack panned by --p, and a written-out stack that
+   needs no scrub. With the scrub gone only the second one can work, and rendering both put every stage
+   heading on the page twice — in layout, in the accessibility tree and in extracted text. display:none,
+   not opacity, so the retired one leaves all three. */
+.v6-cs { height: auto; }
+.v6-cs__pin { position: static; height: auto; display: block; padding: clamp(64px, 9vw, 96px) 0; }
+.v6-cs__acts { display: none; }
+.v6-cs__viewport { display: none; }
+.v6-cs__m { display: grid; }
