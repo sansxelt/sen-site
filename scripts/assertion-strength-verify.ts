@@ -20,6 +20,7 @@ import { readFileSync } from "node:fs";
 import { textPresentInScope, urlPathMatches, parentScopeAcceptable } from "../worker/preflight/assert-scope";
 import { PlaywrightPreflightPage } from "../worker/preflight/providers/browserbase";
 import { preferredProductionHost } from "../lib/preflight/oauth/vercel-deploy";
+import { before } from "./_source-order";
 
 let pass = 0, fail = 0;
 const ok = (n: string, c: boolean, d = "") => {
@@ -27,13 +28,6 @@ const ok = (n: string, c: boolean, d = "") => {
   else { fail++; console.log(`FAIL  ${n}${d ? `  — ${d}` : ""}`); }
 };
 
-/** `a` appears in `hay`, before `b` does. Both halves matter: indexOf returns -1 for something absent, and
- *  -1 is less than every real index, so a plain `indexOf(a) < indexOf(b)` PASSES when `a` was deleted —
- *  an ordering guard that reads as protecting `a` while quietly permitting its removal. */
-export function before(hay: string, a: string, b: string): boolean {
-  const i = hay.indexOf(a), j = hay.indexOf(b);
-  return i >= 0 && j >= 0 && i < j;
-}
 
 (async () => {
 console.log("── the failure state must not satisfy the success assertion ──");

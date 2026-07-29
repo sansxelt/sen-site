@@ -15,6 +15,7 @@ import {
   UNIQUE_PLACEHOLDER, runUniqueToken, applyRunUnique, containsPlaceholder, fixedValueAssertions,
 } from "../lib/preflight/run-unique";
 import { validateSteps } from "../lib/preflight/flow-steps";
+import { before } from "./_source-order";
 
 let pass = 0, fail = 0;
 const ok = (n: string, c: boolean, d = "") => {
@@ -23,14 +24,6 @@ const ok = (n: string, c: boolean, d = "") => {
 };
 const strip = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
 
-/** `a` appears in `hay`, before `b` does. Both halves matter: indexOf returns -1 for something absent, and
- *  -1 is less than every real index, so a plain `indexOf(a) < indexOf(b)` PASSES when `a` was deleted
- *  entirely — an ordering guard that reads as protecting `a` while quietly permitting its removal. Caught
- *  by a mutation that deleted the line an ordering assertion existed to protect, and went green. */
-const before = (hay: string, a: string, b: string) => {
-  const i = hay.indexOf(a), j = hay.indexOf(b);
-  return i >= 0 && j >= 0 && i < j;
-};
 
 const RUN_A = "3f9a2b71-1c4d-4e8a-9b2f-0a1b2c3d4e5f";
 const RUN_B = "8c1e5d02-7a3b-4f19-8e6d-1122334455aa";
