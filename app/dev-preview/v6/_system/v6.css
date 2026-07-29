@@ -197,6 +197,15 @@
 /* A bar that has left the screen is still in the tab order, so tabbing into it would move focus to
    something nobody can see. Any focus inside brings it straight back. */
 .v6-nav:focus-within { transform: translate3d(0, 0, 0); }
+/* AN OPEN PANEL HANGS OFF THIS BAR, SO THE BAR HAS TO BE STILL.
+   .v6-mega is position:absolute at top:100% of this element, so while the bar is mid-slide the panel is
+   mid-slide with it. The reachable path is exactly the one a pointer takes: summon the hidden bar at the
+   top edge, then hover an item before the 340ms has finished. The panel then opens against a moving
+   anchor, and because v6MegaIn is a 260ms fade from opacity 0, the page behind shows straight through it
+   for the overlap — a half-placed, half-transparent menu.
+   Snapping instead of transitioning is right rather than merely expedient: the bar is not travelling for
+   its own sake here, it is getting out of the way of something the reader has just asked for. */
+.v6-nav[data-open="true"] { transition: none; transform: translate3d(0, 0, 0); }
 /* The first paint must not animate, same reasoning as the theme swap above. */
 .v6-nav[data-settled="false"] { transition: none; }
 /* REDUCED MOTION FADES THE BAR, IT DOES NOT MOVE IT — and it does not simply give up on hiding.
