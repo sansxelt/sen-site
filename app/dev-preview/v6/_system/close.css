@@ -67,8 +67,24 @@
 @media (max-width: 940px) {
   .v6-foot2__lower { grid-template-columns: 1fr 1fr; gap: 26px 24px; }
 }
+/* ONE COLUMN WAS THE PROBLEM, NOT THE LINK COUNT.
+   Collapsing to a single column at phone width turned the footer into 27 stacked links, each carrying the
+   44px touch target it correctly needs, plus four headings: measured at 1,469px on an iPhone 13, which is
+   more than two full screens of nothing but a list. The touch target is not the thing to give back — it is
+   the one part that has to stay — so the columns are.
+   Two fit comfortably: at 390px that is two ~165px tracks, and the longest label here ("Subprocessors")
+   sits inside one. Halving the rows halves the height, and a footer reads as a directory again rather than
+   as an outline of the site typed out end to end. */
 @media (max-width: 520px) {
-  .v6-foot2__lower { grid-template-columns: 1fr; }
+  .v6-foot2__lower { grid-template-columns: 1fr 1fr; gap: 30px 20px;
+    padding-top: clamp(36px, 5vh, 52px); }
+  /* The heading no longer needs to shout across a full-width row. */
+  .v6-foot2__h { font-size: 12px; margin-bottom: 10px; }
+  .v6-foot2__col a { font-size: 14px; }
+  /* The base row was a single wrapping line of six things. Stacked, the copyright reads as the footer's
+     last word instead of competing with the legal links for the same row. */
+  .v6-foot2__base-in { flex-direction: column; align-items: flex-start; gap: 6px; padding-bottom: 34px; }
+  .v6-foot2__legal { gap: 18px; row-gap: 0; }
   .v6-end__cta { gap: 18px; }
   .v6-end .v6-btn { width: 100%; justify-content: center; }
 }
