@@ -194,6 +194,87 @@ console.log("\n── a crashed deployment must not navigate successfully ──
   ok("refresh does not swallow a 503 either", refreshed.ok === false, refreshed.detail);
 }
 
+console.log("\n── the assert STEPS themselves must be able to fail ──");
+{
+  // A MUTATION CAMPAIGN FOUND THIS. Replacing the return of assert_visible and assert_text with a constant
+  // `true` survived all 93 suites: nothing in four and a half thousand assertions noticed that both
+  // assertions had stopped being able to fail.
+  //
+  // The reason is the wrong-layer trap, in this very file. The tests above exercise textPresentInScope, the
+  // pure decision — which is correct and worth testing — while the STEP that calls it was covered by
+  // nothing. A pure function cannot vouch for its caller.
+  //
+  // So these drive perform() itself, through a page stub that behaves like the DOM does: a locator matches
+  // hidden elements, innerText returns text from a display:none subtree, and getByText resolves to the
+  // deepest node.
+  type El = { text: string; visible: boolean; parentText?: string };
+  const pageWith = (els: El[]) => {
+    const find = (t: string) => els.filter((e) => e.text.toLowerCase().includes(t.toLowerCase()));
+    const loc = (matches: El[]) => {
+      const self: Record<string, unknown> = {
+        first: () => self,
+        filter: (o: { visible?: boolean }) => loc(o?.visible ? matches.filter((m) => m.visible) : matches),
+        count: async () => matches.length,
+        isVisible: async () => matches.length > 0 && matches[0].visible,
+        innerText: async () => matches[0]?.text ?? "",
+        // xpath=.. is the parent widening
+        locator: () => loc(matches[0]?.parentText ? [{ text: matches[0].parentText, visible: matches[0].visible }] : []),
+      };
+      return self;
+    };
+    const none = loc([]);
+    return {
+      url: () => "https://app.example.com/x",
+      on: () => {},
+      context: () => ({ cookies: async () => [], clearCookies: async () => {} }),
+      getByText: (t: string) => loc(find(t)),
+      getByLabel: () => none, getByPlaceholder: () => none, getByRole: () => none,
+      locator: () => none,
+    };
+  };
+  const perform = async (els: El[], step: Record<string, unknown>) =>
+    new PlaywrightPreflightPage(pageWith(els) as never).perform(step as never);
+
+  // assert_visible
+  const seen = await perform([{ text: "Saved", visible: true }], { action: "assert_visible", target: "Saved" });
+  ok("assert_visible passes when the text really is on screen", seen.ok === true, seen.detail);
+  const missing = await perform([], { action: "assert_visible", target: "Saved" });
+  ok("assert_visible FAILS when nothing matches", missing.ok === false, missing.detail);
+  const hidden = await perform([{ text: "Saved", visible: false }], { action: "assert_visible", target: "Saved" });
+  ok("  and when the element exists but is not visible", hidden.ok === false, hidden.detail);
+  const noTarget = await perform([{ text: "Saved", visible: true }], { action: "assert_visible" });
+  ok("  and with no target at all, rather than passing vacuously", noTarget.ok === false, noTarget.detail);
+
+  // assert_text
+  const present = await perform([{ text: "Changes saved", visible: true }], { action: "assert_text", target: "Changes", expect: "saved" });
+  ok("assert_text passes when the value is inside the target", present.ok === true, present.detail);
+  const absent = await perform([{ text: "Changes pending", visible: true }], { action: "assert_text", target: "Changes", expect: "saved" });
+  ok("assert_text FAILS when the value is not there", absent.ok === false, absent.detail);
+  // The whole point of the scope rule, exercised through the step.
+  const negated = await perform([{ text: "Unsaved changes", visible: true }], { action: "assert_text", target: "Unsaved", expect: "saved" });
+  ok("  and when the target says the OPPOSITE", negated.ok === false, negated.detail);
+  // display:none content still yields innerText, which is how a broken drawer satisfied this.
+  const invisible = await perform([{ text: "Changes saved", visible: false }], { action: "assert_text", target: "Changes", expect: "saved" });
+  ok("  and when the text exists only in a hidden subtree", invisible.ok === false, invisible.detail);
+  const noTargetFound = await perform([], { action: "assert_text", target: "Changes", expect: "saved" });
+  ok("  and when the target element does not exist", noTargetFound.ok === false, noTargetFound.detail);
+  // The VERDICT is the same either way here, so only the wording distinguishes "we could not find the
+  // place to look" from "we looked and the value was not there". That difference is the whole of what a
+  // customer acts on: one is a plan pointing at the wrong element, the other is their product. A mutation
+  // deleting the distinction changed no pass or fail, which is exactly how it would have been lost.
+  ok("    saying the TARGET was missing, not that the value was absent",
+    noTargetFound.detail.includes("target_not_found"), noTargetFound.detail);
+  const noExpect = await perform([{ text: "Changes saved", visible: true }], { action: "assert_text", target: "Changes" });
+  ok("  and with no expected text, rather than passing vacuously", noExpect.ok === false, noExpect.detail);
+  // The bounded parent fallback, through the step: a small label reaches its value...
+  const viaParent = await perform([{ text: "Plan", visible: true, parentText: "Plan Current plan: Pro" }], { action: "assert_text", target: "Plan", expect: "Pro" });
+  ok("the label/value fallback still reaches a real container", viaParent.ok === true, viaParent.detail);
+  // ...but a whole section does not license a page-wide match.
+  const wholeSection = "Notes Dashboard Settings Billing Current plan: Free Get Pro for unlimited notebooks Upgrade Sign out Help Terms Privacy and a great deal more besides".padEnd(900, " x");
+  const viaSection = await perform([{ text: "Notes", visible: true, parentText: wholeSection }], { action: "assert_text", target: "Notes", expect: "Pro" });
+  ok("  but a whole section does not", viaSection.ok === false, viaSection.detail);
+}
+
 console.log("\n── widening to the parent must not restore the page-wide match ──");
 {
   // getByText resolves to the DEEPEST node containing the text, so when a target names a REGION — which is
