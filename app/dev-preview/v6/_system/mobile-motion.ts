@@ -48,10 +48,27 @@ const PARTS = [
 const MOBILE = "(max-width: 900px)";
 const REDUCED = "(prefers-reduced-motion: reduce)";
 
-/** True when this device should get entry motion: a phone-width viewport that has not asked for less. */
+/**
+ * True when this document should get entry reveals instead of the scrubbed film.
+ *
+ * TWO POPULATIONS, ONE MECHANISM. Phone widths get entry motion because pinning is hostile there.
+ * Reduced-motion readers get it AT EVERY WIDTH, because the alternative they were being handed was
+ * nothing at all: every scrubbed chapter is overridden for them, so the seven-scene argument collapsed
+ * into one flat column that arrives already finished. That is not restraint, it is a different and worse
+ * page, and it is what a visitor sees by default on a battery saver or a managed Windows image — not a
+ * rare setting somebody opted into.
+ *
+ * What the preference actually asks for is less MOTION, and the stylesheet honours that precisely: the
+ * reduced-motion block moves nothing, it only fades. Travel is what provokes vestibular symptoms; opacity
+ * does not travel. So the reveal survives and the movement does not.
+ *
+ * This also stops useScrollProgress from running for these readers, which is the same win it already was
+ * on phones: every consumer of --p is overridden here, so the loop was computing a value the stylesheet
+ * throws away.
+ */
 export function mobileMotionWanted(): boolean {
   if (typeof window === "undefined" || !window.matchMedia) return false;
-  return window.matchMedia(MOBILE).matches && !window.matchMedia(REDUCED).matches;
+  return window.matchMedia(REDUCED).matches || window.matchMedia(MOBILE).matches;
 }
 
 /**

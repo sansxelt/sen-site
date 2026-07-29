@@ -185,7 +185,7 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
 
   const link = { fontSize: 15.5, color: "var(--fg-2)", textDecoration: "none", whiteSpace: "nowrap", fontWeight: 500, display: "inline-flex", alignItems: "center", minHeight: 24 } as const;
   return (
-    <nav style={{ position: "relative", display: "flex", alignItems: "center", gap: 18, padding: "15px var(--gutter)", background: scrolled ? "rgba(250,248,244,0.82)" : "transparent", backdropFilter: scrolled ? "blur(14px)" : "none", WebkitBackdropFilter: scrolled ? "blur(14px)" : "none", borderBottom: `1px solid ${scrolled ? "var(--line-1)" : "transparent"}`,
+    <nav data-hidden={hidden} style={{ position: "relative", display: "flex", alignItems: "center", gap: 18, padding: "15px var(--gutter)", background: scrolled ? "rgba(250,248,244,0.82)" : "transparent", backdropFilter: scrolled ? "blur(14px)" : "none", WebkitBackdropFilter: scrolled ? "blur(14px)" : "none", borderBottom: `1px solid ${scrolled ? "var(--line-1)" : "transparent"}`,
       // Transform, not height/display: the bar leaves the viewport without reflowing the page
       // under it, and it stays in the tab order so keyboard focus can still reach it (the
       // focus-within rule in SHELL_UI_CSS brings it back when it does).
@@ -643,10 +643,12 @@ const SHELL_UI_CSS = "@keyframes vraTextIn{from{opacity:0;transform:translateY(1
   // something scrolled off-screen. Any focus inside brings it straight back.
   + ".rank-root--site nav:focus-within{transform:translate3d(0,0,0)!important}"
   + "@media (prefers-reduced-motion:reduce){.rank-root .eyebrow,.rank-root .display,.rank-root .lead-copy{animation:none}.rank-root .btn:active,.rank-root a.card:hover,.rank-root a.card:active,.rank-root a.acard:hover,.rank-root a.acard:active{transform:none}"
-  // Reduced motion: the bar stays put instead of hiding without the slide. Removing only the
-  // transition made it teleport a full bar-height in one frame, which reads as a fault rather than
-  // as restraint. Keeping it visible is the honest version of "less motion".
-  + ".rank-root--site nav{transition:border-color .25s ease,background .25s ease!important;transform:translate3d(0,0,0)!important}}";
+  // Reduced motion FADES the bar rather than sliding it, and rather than giving up on hiding it.
+  // The setting asks for less motion, not less behaviour: travel is what provokes vestibular
+  // symptoms, and opacity does not travel. visibility rides along so the invisible bar stops
+  // swallowing clicks meant for the page under it. Same rule as the v6 shell.
+  + ".rank-root--site nav{transition:border-color .25s ease,background .25s ease,opacity .2s linear,visibility .2s linear!important;transform:translate3d(0,0,0)!important}"
+  + ".rank-root--site nav[data-hidden=\"true\"]{opacity:0;visibility:hidden}}";
 
 export function RankShell({ signedIn = false, email = null, appHost = false, systems = [], pendingReviews = 0, children }: { signedIn?: boolean; email?: string | null; appHost?: boolean; systems?: PaletteSystem[]; pendingReviews?: number; children: ReactNode }) {
   const pathname = usePathname() || "";

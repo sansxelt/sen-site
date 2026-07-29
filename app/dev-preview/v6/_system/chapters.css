@@ -872,3 +872,47 @@
     will-change: auto;
   }
 }
+
+/* ══════════════════════════ REDUCED MOTION STILL GETS THE ARGUMENT ═════════
+   The blocks above unpin every scrubbed chapter for these readers, which was right, and then left them
+   with a page that arrives already finished — seven scenes flattened into one column, every part at its
+   rest state before it is reached. The reader who asked for less motion was handed a different and worse
+   page, and that reader is not rare: a battery saver or a managed Windows image turns this on without
+   anybody choosing it.
+
+   So the reveal comes back and the MOVEMENT does not. The preference exists to prevent travel — sliding,
+   parallax, zoom, the things that provoke vestibular symptoms — and opacity does not travel. Each part
+   fades up as it arrives, once, then it is done.
+
+   No width gate: this is about the preference, not the device. Placed after the phone block so that when
+   both apply the phone's 18px rise is overridden back to a pure fade, which is the whole point.
+
+   Same safety property as the block above: the hidden start state lives behind .v6-mo, which only exists
+   once mobile-motion.ts has run and can reveal it, so a failure costs the animation and never the page.
+   The !important is required to beat the per-chapter reduced-motion overrides, which pin these same parts
+   visible with !important of their own; these selectors carry one more class and win. */
+@media (prefers-reduced-motion: reduce) {
+  .v6-mo .v6-gap__t,
+  .v6-mo .v6-st__cond,
+  .v6-mo .v6-rg__row,
+  .v6-mo .v6-rg__foot,
+  .v6-mo .v6-dr__layer,
+  .v6-mo .v6-tm__ex,
+  .v6-mo .v6-cs__m > * {
+    opacity: 0 !important;
+    transform: none !important;
+    transition: opacity 520ms var(--ease) !important;
+    transition-delay: calc(var(--i, 0) * 60ms) !important;
+    will-change: opacity;
+  }
+  .v6-mo .v6-gap__t.v6-in,
+  .v6-mo .v6-st__cond.v6-in,
+  .v6-mo .v6-rg__row.v6-in,
+  .v6-mo .v6-rg__foot.v6-in,
+  .v6-mo .v6-dr__layer.v6-in,
+  .v6-mo .v6-tm__ex.v6-in,
+  .v6-mo .v6-cs__m > .v6-in {
+    opacity: 1 !important;
+    will-change: auto;
+  }
+}

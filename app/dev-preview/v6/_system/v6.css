@@ -199,14 +199,23 @@
 .v6-nav:focus-within { transform: translate3d(0, 0, 0); }
 /* The first paint must not animate, same reasoning as the theme swap above. */
 .v6-nav[data-settled="false"] { transition: none; }
-/* Reduced motion: the bar does not move AT ALL, rather than moving without the transition.
-   Killing only the transition was worse than leaving it alone — the bar teleported 67px in a single
-   frame every time the pointer came near the top, which reads as a rendering fault rather than as
-   restraint, and it was the first thing the founder noticed. Hiding the bar is a nicety; a reader who
-   has asked for less motion loses nothing by keeping it, and gains a bar that never jumps. */
+/* REDUCED MOTION FADES THE BAR, IT DOES NOT MOVE IT — and it does not simply give up on hiding.
+   The setting asks for less MOTION, not less behaviour. What it exists to prevent is travel: sliding,
+   parallax, zoom, the things that provoke vestibular symptoms. A change of opacity provokes none of
+   that, so the bar can still get out of the reader's way; it just stops sliding to do it.
+
+   Two earlier versions of this rule were both wrong. Removing only the transition left the bar still
+   hiding and still returning, in one frame, jumping its full height whenever the pointer came near
+   the top — a fault, not restraint. Pinning it visible fixed the jump by taking the feature away from
+   everyone who asks for less motion, and that is a large share of visitors: battery savers, managed
+   Windows images, anyone who set it once and forgot. Neither is a reason to hand them a worse page.
+
+   visibility is transitioned alongside opacity so the invisible bar stops swallowing clicks meant for
+   the page underneath; it is a discrete property, so it flips at the end of the fade going out and at
+   the start coming back. */
 @media (prefers-reduced-motion: reduce) {
-  .v6-nav { transition: none; }
-  .v6-nav[data-hidden="true"] { transform: translate3d(0, 0, 0); }
+  .v6-nav { transition: opacity 200ms linear, visibility 200ms linear; }
+  .v6-nav[data-hidden="true"] { transform: translate3d(0, 0, 0); opacity: 0; visibility: hidden; }
 }
 /* The initial theme is correct from the server-rendered markup, so it must not animate in. Crossing a
    chapter boundary later gets the restrained transition. */
