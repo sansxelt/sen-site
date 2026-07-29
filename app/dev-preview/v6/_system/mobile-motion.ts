@@ -1,21 +1,18 @@
 "use client";
 
-// THE MOTION SYSTEM FOR THE HOMEPAGE. Not the phone's version of it — the only one.
+// MOTION FOR PHONES, WHICH HAD NONE.
 //
-// This began as the phone's consolation prize. Every scroll-scrubbed chapter was switched off below 900px
-// for a good reason — `a phone is never held inside a scroll sequence it cannot leave` — and what replaced
-// it was `opacity: 1 !important` on every moving part, which is not the opposite of scroll-jacking, it is
-// stillness. A phone got the finished frames of an argument the desktop watched being made. So this file
-// gave those parts entry motion instead.
+// Every scroll-scrubbed chapter on this page is switched off below 900px. The stylesheet says why, and the
+// reason is right: `a phone is never held inside a scroll sequence it cannot leave`. Pinning a scene to a
+// 100vh viewport and scrubbing it from scroll position is hostile on a device whose URL bar resizes the
+// viewport mid-gesture and whose only navigation IS the scroll.
 //
-// It is now what every visitor gets. The pinned film is retired: it made the homepage three different
-// compositions (a 21,580px scrubbed desktop, an 11,687px phone flow, and a third for reduced motion) that
-// shared copy and little else, and the divergence was not theoretical — the founder could not find the
-// film on their own site, because the preference their machine shipped with had put them on a third page
-// nobody was designing. One composition, one motion system, and the only thing width or preference still
-// decides is how far a part travels on its way in.
+// But the fix that was applied was `opacity: 1 !important; transform: none !important` on every moving
+// part, and the opposite of scroll-jacking is not stillness. Measured on an iPhone 13 viewport, not one
+// part of any chapter ever left its rest state, while the same page on a 1440px viewport animated all of
+// them. A phone got the finished frames of an argument the desktop gets to watch being made.
 //
-// The form it takes, which was always the right one and is now simply universal:
+// So this restores motion in the form a phone can actually afford:
 //
 //   PINNING STAYS OFF. Native scroll, never captured, always leavable. Unchanged from the decision above.
 //   ENTRY DRIVES IT.   An element animates once, as it arrives, then it is done and unobserved. There is
@@ -46,44 +43,15 @@ const PARTS = [
   ".v6-dr__layer",    // reach: the stack a result fans into
   ".v6-tm__ex",       // the terminal's exit codes
   ".v6-cs__m > *",    // the authored mobile stack for chapter 3
-
-  // THE LEAD-IN OF EVERY CHAPTER, which used to animate nowhere. Counted on the live page: 22 parts moved
-  // across 13 sections while all 7 category labels and every headline simply existed — so each scene
-  // announced itself flatly and only its interior had any life. That is the difference between a page that
-  // reveals and a page with some animated widgets in it.
-  ".v6-eyebrow",
-  ".v6-st__h", ".v6-st__sub",
-  ".v6-rg__h",
-  ".v6-dr__h", ".v6-dr__sub",
-  ".v6-rx__h", ".v6-rx__sub",
-  ".v6-tm__h",
 ].join(", ");
 
-/**
- * True when this document should get entry reveals instead of the scrubbed film.
- *
- * TWO POPULATIONS, ONE MECHANISM. Phone widths get entry motion because pinning is hostile there.
- * Reduced-motion readers get it AT EVERY WIDTH, because the alternative they were being handed was
- * nothing at all: every scrubbed chapter is overridden for them, so the seven-scene argument collapsed
- * into one flat column that arrives already finished. That is not restraint, it is a different and worse
- * page, and it is what a visitor sees by default on a battery saver or a managed Windows image — not a
- * rare setting somebody opted into.
- *
- * What the preference actually asks for is less MOTION, and the stylesheet honours that precisely: the
- * reduced-motion block moves nothing, it only fades. Travel is what provokes vestibular symptoms; opacity
- * does not travel. So the reveal survives and the movement does not.
- *
- * This also stops useScrollProgress from running for these readers, which is the same win it already was
- * on phones: every consumer of --p is overridden here, so the loop was computing a value the stylesheet
- * throws away.
- */
+const MOBILE = "(max-width: 900px)";
+const REDUCED = "(prefers-reduced-motion: reduce)";
+
+/** True when this device should get entry motion: a phone-width viewport that has not asked for less. */
 export function mobileMotionWanted(): boolean {
-  if (typeof window === "undefined") return false;
-  // EVERY visitor, at every width, with or without the preference. There is one composition now and this
-  // is what animates it. The width and preference tests that used to live here are what made the homepage
-  // three different pages; the only thing either still decides is how far a part travels on its way in,
-  // which is a question for the stylesheet and not for this file.
-  return true;
+  if (typeof window === "undefined" || !window.matchMedia) return false;
+  return window.matchMedia(MOBILE).matches && !window.matchMedia(REDUCED).matches;
 }
 
 /**

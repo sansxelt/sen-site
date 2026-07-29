@@ -51,30 +51,24 @@ export function useScrollProgress(ref: RefObject<HTMLElement | null>, options?: 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    // NOTHING READS THIS ANY MORE, AT ANY WIDTH, so nothing computes it.
-    //
-    // The scrubbed compositions are gone. The page used to be three different pages — a 21,580px pinned
-    // film on a desktop, an 11,687px entry-revealed flow on a phone, and a third thing again for reduced
-    // motion — which shared copy and almost nothing else. One composition now serves everyone and it
-    // reveals on entry, so no scene is driven by scroll position and this loop has no consumer left.
-    //
-    // Kept rather than deleted because the mapping, the smoothing and the entryProgress() measures are the
-    // hard-won part, and the closing scene and the terminal still call this module with their own measures.
-    // What is retired is the PINNED mapping, not the engine.
-    //
-    // The value is pinned to 1 rather than left unset: any declaration still deriving from --p resolves to
-    // its finished state, never to a half-scrubbed one. This is the same thing reduced motion always did
-    // here, now extended to everybody, which is the whole point of the unification.
-    //
-    // The order matters. Settling to 1 has to be the LAST thing that happens to a pinned scene and must not
-    // happen at all to an entry-measured one: writing 1 first and then letting the engine start would show
-    // a consumer below the fold its finished state for a frame before the engine reset it to 0.
-    if (measure === pinned) {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       el.style.setProperty(property, "1");
       onFrame?.(1);
       return;
     }
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    // BELOW 900px NOTHING READS THIS, so nothing should compute it.
+    //
+    // Every chapter's mobile block unpins its scene and overrides each --p-driven declaration, which means
+    // on a phone this loop was attaching a scroll listener, measuring getBoundingClientRect() and writing a
+    // custom property that the cascade then discarded. Measured on an iPhone 13 viewport: --p travelled a
+    // full 0.00 -> 1.00 while not one part of any chapter moved. Scroll work with no rendered result is the
+    // most expensive kind, and it is a fair share of why the page felt heavy on a phone.
+    //
+    // The value is pinned to 1 rather than left unset for the same reason reduced motion pins it: a
+    // consumer that survives at this width reads a finished scene, never a half-scrubbed one. Not
+    // re-evaluated on resize: a phone does not cross 900px, and a desktop window dragged narrow enough to
+    // matter is a case worth less than a listener on every composition on the page.
+    if (window.matchMedia("(max-width: 900px)").matches) {
       el.style.setProperty(property, "1");
       onFrame?.(1);
       return;
