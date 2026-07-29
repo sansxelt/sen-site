@@ -57,6 +57,25 @@ export function urlPathMatches(currentUrl: string, expect: string): boolean {
   return path === wantPath || (wantPath !== "/" && path.startsWith(`${wantPath}/`));
 }
 
+/** When the expected value is not in the target element's own text, assert_text widens to the target's
+ *  IMMEDIATE parent — because a target often names a LABEL sitting beside the value ("Plan" next to
+ *  "Current plan: Pro").
+ *
+ *  Unbounded, that widening restores the exact page-wide match this module exists to prevent. getByText
+ *  resolves to the DEEPEST node containing the text, so when the target names a REGION — which is what the
+ *  plan contract asks authors for — its parent is the section, or <main>, or the body, and the check runs
+ *  over the whole page again. The Free-vs-Pro false pass, arrived at from the other side.
+ *
+ *  A genuine label/value container is small and close in size to the label itself. Anything materially
+ *  bigger is a different scope, not a container. */
+export function parentScopeAcceptable(ownText: string, parentText: string): boolean {
+  const own = (ownText || "").trim().length;
+  const parent = (parentText || "").trim().length;
+  // The floor lets a short label ("Plan") reach a normal-sized value container; the ratio keeps a long
+  // target from licensing an enormous one.
+  return parent <= Math.max(240, own * 3);
+}
+
 // Regex-special characters in the expected value are literal text, not syntax.
 function escapeRe(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

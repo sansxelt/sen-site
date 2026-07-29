@@ -9,7 +9,7 @@
 // action allowlist with sanitized console/network capture. Downloads/permissions are restricted.
 import type { BrowserProvider, BrowserSession, CreateBrowserSessionInput, PreflightPage, Step, StepObservation } from "../types";
 import { safePath, redactString } from "../redaction";
-import { textPresentInScope, urlPathMatches } from "../assert-scope";
+import { textPresentInScope, urlPathMatches, parentScopeAcceptable } from "../assert-scope";
 import { createBrowserbaseSession, releaseBrowserbaseSession } from "./browserbase-api";
 
 // Playwright is a worker-only dep imported via a VARIABLE module name so tsc does not resolve it until it is
@@ -37,7 +37,9 @@ export function safeMetadata(input: Record<string, string>): Record<string, stri
 // Minimal structural types for the lazily-imported deps (avoid a hard dependency at compile time).
 type PWContext = { cookies: () => Promise<unknown[]>; clearCookies: () => Promise<void>; clearPermissions?: () => Promise<void> };
 type PWPage = {
-  goto: (u: string, o?: unknown) => Promise<unknown>; reload: (o?: unknown) => Promise<unknown>; url: () => string;
+  // goto resolves with the main-frame RESPONSE (null for a same-document navigation). Typed, because
+  // discarding it is how a 500 came to count as a successful navigation.
+  goto: (u: string, o?: unknown) => Promise<{ status?: () => number } | null>; reload: (o?: unknown) => Promise<{ status?: () => number } | null>; url: () => string;
   getByRole: (r: string, o?: unknown) => PWLocator; getByText: (t: string, o?: unknown) => PWLocator; getByLabel: (t: string, o?: unknown) => PWLocator; getByPlaceholder: (t: string, o?: unknown) => PWLocator; locator: (s: string) => PWLocator;
   keyboard: { press: (k: string) => Promise<void> }; screenshot: (o?: unknown) => Promise<Buffer>; setViewportSize: (o: { width: number; height: number }) => Promise<void>;
   on: (ev: string, cb: (a: unknown) => void) => void;
@@ -315,8 +317,25 @@ export class PlaywrightPreflightPage implements PreflightPage {
     const base = (ok: boolean, detail: string, extra: Partial<StepObservation> = {}): StepObservation => ({ action: step.action, target: step.target, value: step.value, expect: step.expect, ok, detail, url: this.page.url(), ms: Date.now() - t0, ...extra });
     try {
       switch (step.action) {
-        case "navigate": await this.page.goto(step.target || step.value || "", { waitUntil: "domcontentloaded", timeout: step.timeoutMs ?? 30000 }); return base(true, "navigated");
-        case "refresh": await this.page.reload({ waitUntil: "domcontentloaded" }); return base(true, "refreshed");
+        // NOTHING IN THE RUN COULD SEE AN HTTP STATUS.
+        //
+        // page.goto RESOLVES for a 500 — it only rejects on a network-level failure — and the response was
+        // thrown away, so navigate returned ok for a wholly crashed deployment. The 5xx was not invisible
+        // either: the page listener records it into `evidence`, which decideRun never reads. The run
+        // persisted the 500 and the word "ready" in the same transaction.
+        //
+        // A flow of navigate + assert_url passed end to end against a server returning 500 on every route.
+        case "navigate": {
+          const resp = await this.page.goto(step.target || step.value || "", { waitUntil: "domcontentloaded", timeout: step.timeoutMs ?? 30000 });
+          const code = typeof resp?.status === "function" ? resp.status() : 0;
+          // 0 means no main-frame response, which is a same-document navigation, not a failure.
+          return code >= 400 ? base(false, `http_${code}`) : base(true, code ? `navigated [${code}]` : "navigated");
+        }
+        case "refresh": {
+          const resp = await this.page.reload({ waitUntil: "domcontentloaded" });
+          const code = typeof resp?.status === "function" ? resp.status() : 0;
+          return code >= 400 ? base(false, `http_${code}`) : base(true, code ? `refreshed [${code}]` : "refreshed");
+        }
         case "click": { const r = await resolve(this.page, step.target || ""); await r.locator.click({ timeout: step.timeoutMs ?? 10000 }); return base(true, "clicked", { candidates: r.candidates, selected: r.selected }); }
         case "fill": { const r = await resolveField(this.page, step.target || ""); await r.locator.fill(step.value || "", { timeout: step.timeoutMs ?? 10000 }); return base(true, "filled", { candidates: r.candidates, selected: r.selected }); }
         case "select": await this.page.getByLabel(step.target || "").first().selectOption(step.value || ""); return base(true, "selected");
@@ -364,7 +383,12 @@ export class PlaywrightPreflightPage implements PreflightPage {
           // paint is not an absent value, and the target itself may not exist yet either. The SCOPE rule
           // below is unchanged, so nothing new can satisfy the assertion; it just gets asked at a time when
           // the answer can be right.
-          const loc = this.page.getByText(target).first();
+          // VISIBLE. Every other resolver here goes through firstVisibleMatch, whose own comment records
+          // that a Playwright locator matches hidden elements; assert_text alone read innerText off a bare
+          // getByText with no gate. For a display:none subtree innerText still returns the full text, so a
+          // drawer, modal or tab whose open handler is broken, or a toast that never appeared, satisfied
+          // the assertion from markup the user could not see.
+          const loc = this.page.getByText(target).filter({ visible: true }).first();
           let ok = false;
           let targetFound = false;
           for (let i = 0; i < RESOLVE_WINDOW.attempts; i++) {
@@ -377,8 +401,16 @@ export class PlaywrightPreflightPage implements PreflightPage {
               const ownText = (await loc.innerText().catch(() => "")) || "";
               ok = textPresentInScope(ownText, want);
               if (!ok) {
+                // AND THE FALLBACK HAD TO BE BOUNDED, or it restores the page-wide match this module
+                // exists to prevent. getByText resolves to the DEEPEST node containing the text, so when
+                // the target names a region — which is exactly what the plan contract asks for — its
+                // parent is the section, or <main>, or the body. Widening to that is the Free-vs-Pro false
+                // pass again, arrived at from the other side.
+                //
+                // A genuine label/value container is small and close in size to the label itself. Anything
+                // materially bigger is a different scope, not a container, so it is refused.
                 const parentText = (await loc.locator("xpath=..").innerText().catch(() => "")) || "";
-                ok = textPresentInScope(parentText, want);
+                if (parentScopeAcceptable(ownText, parentText)) ok = textPresentInScope(parentText, want);
               }
               if (ok) break;
             }

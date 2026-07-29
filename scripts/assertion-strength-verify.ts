@@ -17,7 +17,8 @@
 // is written out and asserted, so the suite fails if the defect comes back rather than if the code is
 // tidied.
 import { readFileSync } from "node:fs";
-import { textPresentInScope, urlPathMatches } from "../worker/preflight/assert-scope";
+import { textPresentInScope, urlPathMatches, parentScopeAcceptable } from "../worker/preflight/assert-scope";
+import { PlaywrightPreflightPage } from "../worker/preflight/providers/browserbase";
 
 let pass = 0, fail = 0;
 const ok = (n: string, c: boolean, d = "") => {
@@ -33,6 +34,7 @@ export function before(hay: string, a: string, b: string): boolean {
   return i >= 0 && j >= 0 && i < j;
 }
 
+(async () => {
 console.log("── the failure state must not satisfy the success assertion ──");
 {
   // Each pair is a real product telling a real user something went wrong.
@@ -162,5 +164,59 @@ console.log("\n── a rejected sign-in must not be recorded as a successful on
   ok("  degrading to the old rule if the baseline cannot be read", /\.catch\(\(\) => null\)\)\?\.sessionKeys/.test(exec));
 }
 
+console.log("\n── a crashed deployment must not navigate successfully ──");
+{
+  // page.goto RESOLVES for a 500 — it only rejects on a network-level failure — and the response was
+  // discarded, so navigate returned ok against a wholly crashed deployment. The 5xx was not even unknown:
+  // the page listener records it into `evidence`, which decideRun never reads. The run persisted the 500
+  // and the word "ready" in the same transaction.
+  const pageStub = (status: number | null, url = "https://app.example.com/dashboard") => ({
+    url: () => url,
+    goto: async () => (status === null ? null : { status: () => status }),
+    reload: async () => (status === null ? null : { status: () => status }),
+    on: () => {},
+    context: () => ({ cookies: async () => [], clearCookies: async () => {} }),
+  });
+  const perform = async (status: number | null, action: "navigate" | "refresh" = "navigate") => {
+    const p = new PlaywrightPreflightPage(pageStub(status) as never);
+    return p.perform({ action, target: "/dashboard" } as never);
+  };
+
+  for (const code of [500, 502, 503, 404, 400]) {
+    const o = await perform(code);
+    ok(`a ${code} is not a successful navigation`, o.ok === false, o.detail);
+    ok(`  and the status is on the record`, o.detail.includes(String(code)), o.detail);
+  }
+  for (const code of [200, 201, 304]) {
+    const o = await perform(code);
+    ok(`a ${code} still navigates`, o.ok === true, o.detail);
+  }
+  // goto returns null for a same-document navigation. That is not a failure.
+  const same = await perform(null);
+  ok("a same-document navigation with no response is still fine", same.ok === true, same.detail);
+  // The same hole existed on refresh.
+  const refreshed = await perform(503, "refresh");
+  ok("refresh does not swallow a 503 either", refreshed.ok === false, refreshed.detail);
+}
+
+console.log("\n── widening to the parent must not restore the page-wide match ──");
+{
+  // getByText resolves to the DEEPEST node containing the text, so when a target names a REGION — which is
+  // exactly what the plan contract asks authors for — its parent is the section, or <main>, or the body.
+  // Widening there is the Free-vs-Pro false pass again, reached from the other side.
+  const label = "Plan";
+  ok("a small label reaches its value container", parentScopeAcceptable(label, "Plan Current plan: Pro"));
+  ok("  even when the label is very short and the container is a normal size",
+    parentScopeAcceptable("Plan", "Plan".padEnd(200, " x")));
+  // A whole section is not a container.
+  const wholePage = "Notes Dashboard Settings Billing Current plan: Free Get Pro for unlimited notebooks Upgrade Sign out Help Terms Privacy".padEnd(900, " more page text");
+  ok("a whole section is refused", !parentScopeAcceptable("Notes", wholePage));
+  // And a long target does not license an unbounded parent.
+  ok("a long target still cannot license a page-sized parent",
+    !parentScopeAcceptable("a".repeat(100), "b".repeat(2000)));
+  ok("  but its own proportionate container is fine", parentScopeAcceptable("a".repeat(100), "b".repeat(280)));
+}
+
 console.log(fail === 0 ? `\nALL PASS  ${pass} passed, 0 failed` : `\nFAILURES  ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);
+})();
