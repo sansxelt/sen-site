@@ -47,7 +47,17 @@ async function runFlow(flow: FlowSpec, page: import("./types").PreflightPage, de
   const now = deps.now ?? (() => Date.now());
   const steps: StepObservation[] = [];
   const flowDeadline = Math.min(now() + flow.maxMs, runDeadline);
+  // TRUNCATION IS SILENT, AND IT DROPS THE END OF THE FLOW.
+  //
+  // A flow longer than the cap has its tail sliced off and the prefix executed, and every step in that
+  // prefix passing left `state` at "passed". In a create-then-assert flow the tail is exactly the
+  // assertions: the run signs in, fills the form, clicks save, and stops one step before checking that
+  // anything was saved. It then certifies the guarantee.
+  //
+  // The authoring validator refuses more than MAX_STEPS, but the discovery path stores `steps: f.steps ?? []`
+  // without validating, so a generated flow can carry more and reach here.
   const boundedSteps = flow.steps.slice(0, deps.limits.maxStepsPerFlow);
+  const stepsDropped = flow.steps.length - boundedSteps.length;
   let state: FlowResult["state"] = "passed";
   // The run target's origin, for the boundary origin rule. null when unparseable (the boundary layer then
   // refuses absolute external navigations outright — with no valid target there is no legitimate origin).
@@ -211,6 +221,14 @@ async function runFlow(flow: FlowSpec, page: import("./types").PreflightPage, de
   // distinction blocked_by_policy already draws, and it keeps the verdict honest in both directions.
   if (state === "passed" && steps.length === 0) {
     steps.push({ action: "navigate", ok: false, detail: "flow_has_no_steps", ms: 0 });
+    state = "blocked";
+  }
+
+  // And the same rule for a flow that ran only its beginning: a prefix of a journey is not the journey.
+  // "blocked", not "failed", for the same reason — the steps that would have judged the application were
+  // never executed, so the application has not failed anything.
+  if (state === "passed" && stepsDropped > 0) {
+    steps.push({ action: "navigate", ok: false, detail: `flow_truncated: ${stepsDropped} step(s) past the ${deps.limits.maxStepsPerFlow}-step cap were never executed`, ms: 0 });
     state = "blocked";
   }
 

@@ -21,7 +21,7 @@ import {
   activeCredentialCount, log,
 } from "../worker/preflight/redaction";
 import { redactObject } from "../worker/preflight/redaction";
-import { PostgresRunStore } from "../worker/preflight/run-store-postgres";
+import { PostgresRunStore, coverageIsFull } from "../worker/preflight/run-store-postgres";
 import {
   resolveRole, signInAs, verifyAuth, resetContext as resetCtx, signOut, DETERMINISTIC_AUTH_FAILURE, authFailureConsumesNothing, type CredentialOpener,
 } from "../worker/preflight/auth-executor";
@@ -248,6 +248,46 @@ async function spyRun(input: {
   ok("  it is blocked, because the application was never asked", flow.state === "blocked", flow.state);
   ok("  and the run does not certify anything", t.row.decision !== "ready", String(t.row.decision));
   ok("  with the reason on the record rather than an empty step list", JSON.stringify(flow.steps).includes("flow_has_no_steps"));
+}
+
+// A PREFIX OF A JOURNEY IS NOT THE JOURNEY.
+//
+// boundedSteps = flow.steps.slice(0, maxStepsPerFlow) truncates SILENTLY, and every executed step passing
+// left the flow at "passed". The dropped steps are the TAIL, which in a create-then-assert flow are exactly
+// the assertions: the run signs in, fills the form, clicks save, and stops one step before checking that
+// anything was saved — then certifies the guarantee.
+//
+// The authoring validator refuses more than MAX_STEPS, but the discovery path stores `steps: f.steps ?? []`
+// without validating, so a generated flow can carry more and reach the executor.
+{
+  const many = Array.from({ length: limits.maxStepsPerFlow + 3 }, () => ({ action: "navigate", target: "/" } as Step));
+  const t = await spyRun({ runId: "truncated", flows: [spec("f-long", "critical", many)] });
+  const flow = t.row.flowResults[0];
+  ok("a flow truncated by the step cap does not come out passed", flow.state !== "passed", flow.state);
+  ok("  it is blocked, because the steps that would have judged the app never ran", flow.state === "blocked", flow.state);
+  ok("  and the run does not certify anything", t.row.decision !== "ready", String(t.row.decision));
+  ok("  with the count of dropped steps on the record", JSON.stringify(flow.steps).includes("flow_truncated"));
+  // A flow that fits is untouched.
+  const fits = await spyRun({ runId: "fits", flows: [spec("f-fits", "critical", many.slice(0, limits.maxStepsPerFlow))] });
+  ok("a flow exactly at the cap is not treated as truncated", fits.row.flowResults[0].state === "passed", fits.row.flowResults[0].state);
+}
+
+// COVERAGE, WHICH WAS VACUOUS FOR EVERY PLAN WITHOUT A CRITICAL FLOW.
+{
+  const f = (id: string, priority: string) => ({ id, priority });
+  const sel = (...ids: string[]) => new Set(ids);
+
+  const crit = [f("a", "critical"), f("b", "critical"), f("c", "important")];
+  ok("every critical flow selected is full coverage", coverageIsFull(crit, sel("a", "b", "c")));
+  ok("  and a missing critical one is not", !coverageIsFull(crit, sel("a", "c")));
+
+  // THE HOLE. `every` over an empty list is true, and `important` is what the synthesis actually emits.
+  const none = [f("a", "important"), f("b", "important"), f("c", "important")];
+  ok("a partial rerun on a plan with no critical flow is NOT full coverage", !coverageIsFull(none, sel("a")));
+  ok("  so it proves its repair rather than certifying the whole guarantee", !coverageIsFull(none, sel("a", "b")));
+  ok("  while a complete run of that same plan still certifies", coverageIsFull(none, sel("a", "b", "c")));
+  // Nothing approved cannot be full coverage of anything.
+  ok("an empty contract is not full coverage", !coverageIsFull([], sel()));
 }
 
 // Correct account authenticates -> passed, READY, charged, no secret anywhere.

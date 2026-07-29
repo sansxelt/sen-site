@@ -23,6 +23,28 @@ import { deliverVerificationCompleted, runWebhookRetries } from "../../lib/v-web
 // classifier code IS an infra failure (never an app defect: app defects are FAILED flow states like
 // auth_rejected_by_app / a broken journey, which do NOT reach failRun as a code). Plus the two worker
 // auth/infra codes (vault + the mid-flow provider_infra_failure) and lease_expired.
+/** Did this run cover enough of its contract to CERTIFY, or only enough to prove a repair?
+ *
+ *  Coverage is read from THIS run's own contract snapshot, never aggregated across runs. READY is a launch
+ *  decision, so it requires the full critical set; a partial selection (a targeted rerun) proves its repair
+ *  and gets repair_verified instead.
+ *
+ *  `every` OVER AN EMPTY LIST IS TRUE, which made this vacuous for any contract with no critical flow — and
+ *  non-critical is the DEFAULT, because the synthesis reserves `critical` for launch-blocking promises and a
+ *  generated plan's flows come back `important`. So a targeted rerun of ONE flow computed full coverage and
+ *  minted READY: a full certification for a guarantee it had re-checked a single journey of.
+ *
+ *  When a contract declares nothing critical there is no critical coverage to have, so the whole approved set
+ *  is what must be covered instead. A complete run still certifies; a partial one is still a repair proof.
+ *
+ *  Exported and pure so the rule can be tested without a database — being unreachable from a test is most of
+ *  why it stayed wrong. */
+export function coverageIsFull(approved: { id: string; priority: string }[], selected: Set<string>): boolean {
+  const criticals = approved.filter((f) => f.priority === "critical");
+  const mustCover = criticals.length ? criticals : approved;
+  return mustCover.length > 0 && mustCover.every((f) => selected.has(f.id));
+}
+
 const PROVIDER_INFRA_FAILURE: ReadonlySet<string> = new Set<string>([
   // classifyProviderError() outputs — keep exhaustive with provider-errors.ts ProviderErrorCode:
   "provider_auth_failed", "provider_quota", "provider_capacity", "provider_unavailable",
@@ -144,7 +166,16 @@ export class PostgresRunStore implements RunStore {
     }));
     // Coverage from THIS run's own contract snapshot only (never aggregated across runs): full means every
     // enabled+approved CRITICAL flow is in the selection. Partial runs can verify a repair, never grant READY.
-    const fullCoverage = approved.filter((f) => (f.priority as string) === "critical").every((f) => selected.has(String(f.id)));
+    //
+    // `every` OVER AN EMPTY LIST IS TRUE, and that made this vacuous for any contract with no critical flow.
+    // Non-critical is the DEFAULT — the synthesis reserves `critical` for launch-blocking promises, so a
+    // generated plan's flows come back `important` — which meant a TARGETED RERUN of one flow computed full
+    // coverage and minted READY, a full certification, for a guarantee it had re-checked one journey of.
+    //
+    // When a contract declares nothing critical there is no critical coverage to have, so the whole approved
+    // set is what must be covered instead. A complete run still certifies; a partial one is a repair proof,
+    // which is exactly the distinction this value exists to draw.
+    const fullCoverage = coverageIsFull(approved.map((f) => ({ id: String(f.id), priority: String(f.priority ?? "important") })), selected);
 
     // Test boundaries (S5) via the run's application. DEFENSIVE by design: a pre-migration-5 schema
     // (test_boundaries column missing) errors this select, and any read failure degrades to null — the
