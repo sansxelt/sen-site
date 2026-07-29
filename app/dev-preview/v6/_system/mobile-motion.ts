@@ -35,7 +35,10 @@ import { useEffect } from "react";
 // The parts each chapter's own mobile block forces visible. Kept as one list rather than pushed into the
 // chapter components because it is exactly the inverse of the override list in chapters.css: these two
 // have to stay in step, and they are easier to keep in step side by side than scattered across seven files.
-const PARTS = [
+// THE PARTS THE SCRUB DRIVES. On a desktop these are animated by --p and must NOT be touched here, or the
+// entry reveal and the scrub would both be writing the same opacity. They are observed only where the
+// scrub does not run, which is the width and the preference below.
+const SCRUBBED_PARTS = [
   ".v6-gap__t",       // chapter 2: the claim, the absence, the verdict
   ".v6-st__cond",     // chapter 3: the conditions that close the ring
   ".v6-rg__row",      // chapter 5: the register's rows
@@ -45,13 +48,38 @@ const PARTS = [
   ".v6-cs__m > *",    // the authored mobile stack for chapter 3
 ].join(", ");
 
+// EVERYTHING THE SCRUB NEVER TOUCHED, WHICH IS MOST OF THE PAGE.
+//
+// Four of thirteen sections are pinned and scrubbed. The other nine had no motion of any kind on a desktop:
+// counted on the live page, 7 category labels, 5 chapter headlines, 3 supporting lines and the whole
+// knowledge section simply existed. The film was real and it was also most of what moved, which is why the
+// page could be described as not having much animation while the film was demonstrably running.
+//
+// Verified against the stylesheet before adding any of these: not one is derived from --p or from any of
+// the scrub's intermediate variables, so nothing here can contend with a scrubbed declaration.
+const ALWAYS_PARTS = [
+  ".v6-eyebrow",                    // every chapter's category label
+  ".v6-st__h", ".v6-st__sub",
+  ".v6-rg__h",
+  ".v6-dr__h", ".v6-dr__sub",
+  ".v6-rx__h", ".v6-rx__sub",
+  ".v6-tm__h",
+  ".v6-kn__sheet", ".v6-kn__col", ".v6-kn__ex",   // the knowledge field
+].join(", ");
+
 const MOBILE = "(max-width: 900px)";
 const REDUCED = "(prefers-reduced-motion: reduce)";
 
-/** True when this device should get entry motion: a phone-width viewport that has not asked for less. */
+/** True where the scrubbed chapters do NOT run, so their parts need entry motion instead. */
 export function mobileMotionWanted(): boolean {
   if (typeof window === "undefined" || !window.matchMedia) return false;
   return window.matchMedia(MOBILE).matches && !window.matchMedia(REDUCED).matches;
+}
+
+/** True where entry motion should animate a part on its way in rather than settle it instantly. */
+function entryMotionWanted(): boolean {
+  if (typeof window === "undefined" || !window.matchMedia) return false;
+  return !window.matchMedia(REDUCED).matches;
 }
 
 /**
@@ -63,15 +91,25 @@ export function mobileMotionWanted(): boolean {
  */
 export function useMobileMotion(): void {
   useEffect(() => {
-    if (!mobileMotionWanted()) return;
+    // TWO SETS, ONE OBSERVER.
+    //
+    // ALWAYS_PARTS run everywhere, because the scrub never drove them and on a desktop they had no motion
+    // at all. SCRUBBED_PARTS run only where the scrub does not, or the reveal and the scrub would both be
+    // writing the same opacity on the same element.
+    //
+    // Reduced motion still gets the class and still gets the observer: the stylesheet decides that its
+    // reveal is a fade with no travel, which is a question about distance, not about whether a reader is
+    // allowed to see anything arrive.
+    if (!entryMotionWanted()) return;
     const root = document.documentElement;
+    const selector = mobileMotionWanted() ? `${ALWAYS_PARTS}, ${SCRUBBED_PARTS}` : ALWAYS_PARTS;
 
     // Marked FIRST, in the same synchronous pass that sets up the observer. The hidden start state and the
     // thing that can undo it arrive together, so there is no window in which content is hidden by a class
     // whose observer does not exist yet.
     root.classList.add("v6-mo");
 
-    const els = Array.from(document.querySelectorAll<HTMLElement>(PARTS));
+    const els = Array.from(document.querySelectorAll<HTMLElement>(selector));
     // Stagger is per PARENT, not per page: --i restarts inside each chapter, so a chapter's own parts
     // cascade while a chapter further down does not inherit a delay from how much came before it. A single
     // page-wide counter would give the last chapter a delay measured in seconds.

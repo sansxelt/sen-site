@@ -955,3 +955,78 @@
   .v6-gap__found { margin-top: clamp(44px, 5vw, 72px); }
   .v6-gap__verdictwrap { margin-top: clamp(40px, 4.5vw, 64px); }
 }
+
+/* ═══════════ THE NINE SECTIONS THE SCRUB NEVER REACHED ═════════════════════
+   Four of thirteen sections are pinned and scrubbed. The other nine had no motion of any kind on a
+   desktop: 7 category labels, 5 chapter headlines, 3 supporting lines and the whole knowledge field
+   simply existed. The film was real and it was also very nearly all of the movement on the page, which
+   is how it could be running and still be described as not much animation.
+
+   NO WIDTH GATE, and no conflict with the film: every selector here was checked against the stylesheet
+   first and not one derives from --p or from any of the scrub's intermediate variables, so a scrubbed
+   declaration and a reveal never write the same property on the same element. The block above, which
+   DOES cover scrubbed parts, keeps its max-width:900px gate for exactly that reason.
+
+   Same safety property as the rest of this system: the hidden start state lives behind .v6-mo, which
+   exists only once the script that can reveal it has run. */
+.v6-mo .v6-eyebrow,
+.v6-mo .v6-st__sub,
+.v6-mo .v6-dr__sub,
+.v6-mo .v6-rx__sub,
+.v6-mo .v6-kn__sheet,
+.v6-mo .v6-kn__col,
+.v6-mo .v6-kn__ex {
+  opacity: 0 !important;
+  transform: translateY(16px) !important;
+  transition: opacity 640ms cubic-bezier(0.16, 1, 0.3, 1), transform 640ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(var(--i, 0) * 70ms);
+  will-change: opacity, transform;
+}
+.v6-mo .v6-eyebrow.v6-in,
+.v6-mo .v6-st__sub.v6-in,
+.v6-mo .v6-dr__sub.v6-in,
+.v6-mo .v6-rx__sub.v6-in,
+.v6-mo .v6-kn__sheet.v6-in,
+.v6-mo .v6-kn__col.v6-in,
+.v6-mo .v6-kn__ex.v6-in {
+  opacity: 1 !important;
+  transform: none !important;
+  will-change: auto;
+}
+
+/* The headline of a chapter is its own event: more travel, a longer settle, and a mask that wipes it up
+   out of nothing — the move the hero already makes, repeated at the top of each chapter. clip-path rather
+   than a wrapper element, so no heading markup changes and nothing new enters the accessibility tree. It
+   bottoms out at -18% so descenders are never shaved on the last frame. 90ms behind its own eyebrow, so
+   the chapter names itself and then states itself. */
+.v6-mo .v6-st__h,
+.v6-mo .v6-rg__h,
+.v6-mo .v6-dr__h,
+.v6-mo .v6-rx__h,
+.v6-mo .v6-tm__h {
+  opacity: 0 !important;
+  transform: translateY(26px) !important;
+  clip-path: inset(0 0 100% 0);
+  transition: opacity 760ms cubic-bezier(0.16, 1, 0.3, 1),
+              transform 760ms cubic-bezier(0.16, 1, 0.3, 1),
+              clip-path 880ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: 90ms;
+  will-change: opacity, transform, clip-path;
+}
+.v6-mo .v6-st__h.v6-in,
+.v6-mo .v6-rg__h.v6-in,
+.v6-mo .v6-dr__h.v6-in,
+.v6-mo .v6-rx__h.v6-in,
+.v6-mo .v6-tm__h.v6-in {
+  opacity: 1 !important;
+  transform: none !important;
+  clip-path: inset(0 0 -18% 0);
+  will-change: auto;
+}
+
+/* NO REDUCED-MOTION VARIANT HERE, DELIBERATELY, AND NOT AN OVERSIGHT.
+   mobile-motion.ts returns before adding .v6-mo when the preference is set, so nothing above ever applies
+   to those readers and they get the page at rest — the clean static version, which is what was asked for.
+   A reduced-motion block written against .v6-mo would be unreachable by construction, and an unreachable
+   rule that looks like a safety net is worse than no rule: the next person to read it would believe these
+   readers are covered here when the decision is actually made in the script. */
