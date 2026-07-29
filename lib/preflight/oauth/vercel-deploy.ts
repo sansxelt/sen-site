@@ -15,8 +15,40 @@ import { openAccountToken } from "../account-connections-db";
 
 const VERCEL_API = "https://api.vercel.com";
 
-// Resolve the current READY production deployment URL for a Vercel project (by name or id). `teamId` scopes
-// the lookup when the connection is team-scoped. Returns an https URL or null.
+/** Which of a project's production aliases is the host a customer actually visits.
+ *
+ *  Pure, so the choice is testable without a Vercel account. Vercel lists several aliases for a production
+ *  target: the custom domain, the canonical project.vercel.app, and generated branch/deployment variants.
+ *
+ *  A branch alias (project-git-main-team.vercel.app) is not production, so it is dropped outright. A custom
+ *  domain wins when present, because that is what a customer types. Among equals the shortest wins, which
+ *  picks the canonical name over a longer generated variant. */
+export function preferredProductionHost(aliases: unknown): string | null {
+  const list = Array.isArray(aliases) ? aliases : [];
+  const clean = list
+    .map((a) => (typeof a === "string" ? a : (a as { domain?: string })?.domain ?? ""))
+    .map((a) => String(a).trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, ""))
+    .filter(Boolean)
+    .filter((a) => !a.includes("-git-"));
+  if (!clean.length) return null;
+  const custom = clean.filter((a) => !a.endsWith(".vercel.app"));
+  const pool = custom.length ? custom : clean;
+  return pool.slice().sort((a, b) => a.length - b.length || a.localeCompare(b))[0] ?? null;
+}
+
+// THE URL A CUSTOMER ACTUALLY GETS, NOT THE NEWEST BUILD.
+//
+// This asked /v6/deployments?target=production&state=READY&limit=1 and returned deployments[0].url. That
+// list is ordered by CREATION, not by what the production domain serves, and `url` is the deployment's own
+// immutable host — project-hash.vercel.app — which no customer ever visits.
+//
+// So after a rollback, a staged promotion, or an alias assignment that failed, the newest READY deployment
+// is a healthy build that is serving nobody, while the production domain serves the broken one. The run
+// exercised the healthy build and the guarantee printed that hash-host as "Last proven on". A verdict
+// presented as current production health, measured somewhere else.
+//
+// The project's production ALIAS is the answer: it is by definition what the domain resolves to right now.
+// Absent, this returns null and the caller falls back to the stored URL — never to a host nobody uses.
 export async function resolveVercelProductionUrl(
   owner: string,
   project: string,
@@ -25,19 +57,19 @@ export async function resolveVercelProductionUrl(
   const token = await freshAccountToken(owner, "vercel");
   if (!token || !project) return null;
 
-  const params = new URLSearchParams({ projectId: project, target: "production", state: "READY", limit: "1" });
+  const params = new URLSearchParams();
   if (opts?.teamId) params.set("teamId", opts.teamId);
+  const qs = params.toString();
 
   try {
-    const res = await safeFetch(`${VERCEL_API}/v6/deployments?${params.toString()}`, {
+    const res = await safeFetch(`${VERCEL_API}/v9/projects/${encodeURIComponent(project)}${qs ? `?${qs}` : ""}`, {
       headers: { authorization: `Bearer ${token}`, accept: "application/json", "user-agent": "vraelis" },
     });
     if (!res.ok) return null;
-    const j = (await res.json().catch(() => ({}))) as { deployments?: { url?: string; readyState?: string }[] };
-    const dep = j.deployments?.[0];
-    if (!dep?.url) return null;
-    // Vercel returns a bare host; make it a full https URL.
-    return dep.url.startsWith("http") ? dep.url : `https://${dep.url}`;
+    const j = (await res.json().catch(() => ({}))) as { targets?: { production?: { alias?: unknown } } };
+    const host = preferredProductionHost(j.targets?.production?.alias);
+    if (!host) return null;
+    return `https://${host}`;
   } catch {
     return null;
   }

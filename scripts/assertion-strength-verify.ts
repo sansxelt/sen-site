@@ -19,6 +19,7 @@
 import { readFileSync } from "node:fs";
 import { textPresentInScope, urlPathMatches, parentScopeAcceptable } from "../worker/preflight/assert-scope";
 import { PlaywrightPreflightPage } from "../worker/preflight/providers/browserbase";
+import { preferredProductionHost } from "../lib/preflight/oauth/vercel-deploy";
 
 let pass = 0, fail = 0;
 const ok = (n: string, c: boolean, d = "") => {
@@ -215,6 +216,39 @@ console.log("\n── widening to the parent must not restore the page-wide matc
   ok("a long target still cannot license a page-sized parent",
     !parentScopeAcceptable("a".repeat(100), "b".repeat(2000)));
   ok("  but its own proportionate container is fine", parentScopeAcceptable("a".repeat(100), "b".repeat(280)));
+}
+
+console.log("\n── the verified host must be the one customers reach ──");
+{
+  // The old code asked /v6/deployments?target=production&state=READY&limit=1 and took deployments[0].url.
+  // That list is ordered by CREATION, not by what the domain serves, and `url` is the deployment's own
+  // immutable project-hash.vercel.app host that no customer ever visits. After a rollback or a staged
+  // promotion the newest READY build is serving nobody while production serves the broken one.
+  ok("a custom domain wins, because that is what a customer types",
+    preferredProductionHost(["app.example.com", "myproj.vercel.app"]) === "app.example.com");
+  // A branch alias is not production.
+  ok("a branch alias is never production",
+    preferredProductionHost(["myproj-git-main-team.vercel.app", "myproj.vercel.app"]) === "myproj.vercel.app");
+  ok("  even when it is the only vercel.app host left",
+    preferredProductionHost(["myproj-git-main-team.vercel.app"]) === null);
+  // The canonical name over a longer generated variant.
+  ok("the canonical project host beats a longer generated one",
+    preferredProductionHost(["myproj-abc123xyz.vercel.app", "myproj.vercel.app"]) === "myproj.vercel.app");
+  ok("hosts are normalised, not trusted as given",
+    preferredProductionHost(["HTTPS://App.Example.com/some/path"]) === "app.example.com");
+  ok("object-shaped aliases are read too", preferredProductionHost([{ domain: "app.example.com" }]) === "app.example.com");
+  // NO ALIAS MEANS FALL BACK TO THE STORED URL, never to a host nobody uses.
+  ok("no alias resolves to nothing rather than to a deployment host", preferredProductionHost([]) === null);
+  ok("  and neither does a missing field", preferredProductionHost(undefined) === null);
+  ok("  nor a malformed one", preferredProductionHost("app.example.com") === null);
+  // Comments stripped first. The banned endpoint is NAMED in the comment explaining why it is banned, so
+  // asserting over the raw file failed on the very note that documents the fix.
+  const src = readFileSync("lib/preflight/oauth/vercel-deploy.ts", "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  ok("the resolver asks for the project's alias, not the newest deployment",
+    /v9\/projects\//.test(src) && !/v6\/deployments/.test(src));
+  ok("  and returns the alias host rather than a deployment url",
+    /preferredProductionHost\(j\.targets\?\.production\?\.alias\)/.test(src));
 }
 
 console.log(fail === 0 ? `\nALL PASS  ${pass} passed, 0 failed` : `\nFAILURES  ${pass} passed, ${fail} failed`);
