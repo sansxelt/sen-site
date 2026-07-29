@@ -8,6 +8,9 @@ import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { before } from "./_source-order";
 import { join } from "node:path";
 import { robotsMeta } from "../lib/stealth";
+import {
+  SOCIAL_EMBEDS, socialCardFor, SOCIAL_IMAGE, SOCIAL_IMAGE_WIDTH, SOCIAL_IMAGE_HEIGHT, SOCIAL_IMAGE_ALT,
+} from "../lib/social-card";
 
 // robotsMeta reads STEALTH_MODE at call time, so the behavioural assertions below can drive it both ways.
 // The original value is restored afterwards; nothing else in the suite depends on it, but a check that
@@ -91,6 +94,71 @@ ok("the official description fits the 50-character limit", OFFICIAL_DESC.length 
 ok("the only embed image is the Vraelis mark", /SOCIAL_IMAGE = "https:\/\/vraelis\.com\/icon-original\.png"/.test(socialCardSrc));
 ok("the card is a small summary, so the mark is never stretched across a banner",
   /card: "summary" as const/.test(socialCardSrc));
+
+// ── the few embeds, and what makes them universal ────────────────────────────────────────────────────
+{
+  // A FEW, NOT ONE AND NOT NINETEEN. One sentence for everything meant a link to a specific verification
+  // said the same thing as a link to the company. A small fixed set declared in ONE file keeps the property
+  // that mattered — a rewrite opens one file and sees every embed — while letting a page say what it is.
+  const kinds = Object.keys(SOCIAL_EMBEDS);
+  ok("there are a few named embeds, not one and not a per-page free-for-all",
+    kinds.length >= 2 && kinds.length <= 5, kinds.join(", "));
+
+  // EVERY VARIANT HAS A CONSUMER. A variant nobody imports is the same trap as a route nobody links: it
+  // looks maintained, drifts quietly, and gets reintroduced by whoever finds it. `site` is the default and
+  // is used by construction; the rest have to be asked for by name somewhere.
+  {
+    const walkAll = (dir: string, out: string[] = []): string[] => {
+      for (const e of readdirSync(dir)) {
+        const p = join(dir, e);
+        if (statSync(p).isDirectory()) walkAll(p, out);
+        else if (/\.tsx?$/.test(e)) out.push(p.replace(/\\/g, "/"));
+      }
+      return out;
+    };
+    const src = walkAll("app").concat(walkAll("lib")).map((f) => readFileSync(f, "utf8")).join("\n");
+    for (const k of kinds.filter((k) => k !== "site")) {
+      ok(`  "${k}" is actually used by a page`, new RegExp(`embed: "${k}"|socialCardFor\\("${k}"\\)`).test(src), k);
+    }
+  }
+  for (const k of kinds as (keyof typeof SOCIAL_EMBEDS)[]) {
+    const c = socialCardFor(k);
+    // UNIVERSAL means every variant renders the same way everywhere: a square mark beside a title and a
+    // sentence. A variant that differed in card type or image would need per-platform handling, which is
+    // the thing this file exists to avoid.
+    ok(`  "${k}" is the same small card as the others`, c.twitter.card === "summary");
+    ok(`  "${k}" carries the one mark, sized`, c.openGraph.images[0].url === SOCIAL_IMAGE
+      && c.openGraph.images[0].width === SOCIAL_IMAGE_WIDTH && c.openGraph.images[0].height === SOCIAL_IMAGE_HEIGHT);
+    ok(`  "${k}" says the same thing to both platforms`,
+      c.openGraph.title === c.twitter.title && c.openGraph.description === c.twitter.description);
+    // A sentence long enough to be truncated is a sentence nobody reads the end of. X clips around 200
+    // characters and LinkedIn well before that.
+    ok(`  "${k}" fits in a card without being clipped`, c.openGraph.description.length <= 120,
+      `${c.openGraph.description.length} chars`);
+    ok(`  "${k}" has a title worth showing`, c.openGraph.title.length > 0 && c.openGraph.title.length <= 60);
+  }
+  // Founder ruling: no single feature stands in for the whole product. "Production Pass" is the retired
+  // unit and may not reappear as a definition of the company.
+  for (const k of kinds as (keyof typeof SOCIAL_EMBEDS)[]) {
+    ok(`  "${k}" does not sell one feature as the whole product`,
+      !/production pass/i.test(SOCIAL_EMBEDS[k].description + " " + SOCIAL_EMBEDS[k].title));
+  }
+}
+
+// THE STATED DIMENSIONS ARE THE REAL ONES. A scraper on a short timeout uses these instead of fetching and
+// decoding the file; if they were wrong the tile would be laid out wrong everywhere, and nothing about the
+// page would look broken enough to notice.
+{
+  const png = readFileSync("public/icon-original.png");
+  ok("the declared image width matches the actual PNG", png.readUInt32BE(16) === SOCIAL_IMAGE_WIDTH,
+    `${png.readUInt32BE(16)} vs ${SOCIAL_IMAGE_WIDTH}`);
+  ok("  and the height", png.readUInt32BE(20) === SOCIAL_IMAGE_HEIGHT, `${png.readUInt32BE(20)} vs ${SOCIAL_IMAGE_HEIGHT}`);
+  // Square, because a summary card crops to a square tile. A non-square mark would be cut off.
+  ok("  and the mark is square, which is what a summary tile shows", SOCIAL_IMAGE_WIDTH === SOCIAL_IMAGE_HEIGHT);
+  // X refuses images over 5MB and under 144x144.
+  ok("  within the size every platform accepts", png.length < 5_000_000 && SOCIAL_IMAGE_WIDTH >= 144);
+  ok("the image is described, not just linked", SOCIAL_IMAGE_ALT.length > 0);
+}
 
 // A census across every route: nothing but social-card.ts may name an embed image, and nothing may ask for
 // the wide card. This is the assertion that would have caught all three forks above.

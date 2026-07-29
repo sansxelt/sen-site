@@ -6,6 +6,8 @@ export const metadata = ogMeta({
   description:
     "Put Vraelis Preflight in your pipeline. Trigger a real-browser run from CI, gate the deploy on the launch decision, and pull structured evidence with private, short-lived artifact URLs.",
   path: "/developers",
+  // The link preview says what a developer is being handed, from the shared set.
+  embed: "developers",
 });
 
 // Illustrative CI gate. The endpoint shape is real (queue a run, poll it, read the decision); the exact

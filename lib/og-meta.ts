@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SOCIAL_DESCRIPTION, SOCIAL_IMAGE, socialCard } from "./social-card";
+import { SOCIAL_DESCRIPTION, SOCIAL_IMAGE, socialCard, socialCardFor, type SocialEmbed } from "./social-card";
 import { robotsMeta } from "./stealth";
 
 // Page metadata for the public marketing pages.
@@ -26,14 +26,20 @@ export function ogMeta({
   description,
   path = "/",
   index = true,
+  embed,
 }: {
   title: string;
   description: string;
   path?: string;
   index?: boolean;
+  // ONE OF THE FEW NAMED EMBEDS, not a per-page sentence. This is the narrow door left open after the
+  // nineteen forks were closed: a page whose link genuinely means something different picks a variant that
+  // lives in lib/social-card.ts, where a rewrite sees all of them at once. There is still no way to type a
+  // description here, which is what created the drift in the first place.
+  embed?: SocialEmbed;
 }): Metadata {
   const url = `https://vraelis.com${path}`;
-  const card = socialCard(title);
+  const card = embed ? socialCardFor(embed) : socialCard(title);
   return {
     title,
     // The page's own description, which is what a search result shows. The EMBED description is the single
