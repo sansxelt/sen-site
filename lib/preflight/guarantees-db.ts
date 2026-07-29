@@ -40,6 +40,11 @@ export type GuaranteeRunRef = {
   id: string; state: string; decision: string | null;
   deployment_url: string | null; commit_sha: string | null; deployment_id: string | null;
   created_at: string; completed_at: string | null;
+  /** The guarantee meaning this run executed. Null on legacy runs and on an unmigrated database; either
+   *  way it does not prove the current meaning, because nothing recorded what it proved. */
+  planHash: string | null;
+  /** The run this one was a repair of, which is what distinguishes Verified from Reverified. */
+  parentRunId: string | null;
 };
 
 const GUARANTEE_COLUMNS =
@@ -51,6 +56,19 @@ const GUARANTEE_COLUMNS =
 const GUARANTEE_BINDING_COLUMNS = "approved_reviewed_plan_id, plan_contract_id, plan_contract_version";
 
 const RUN_REF_COLUMNS = "id, state, decision, deployment_url, commit_sha, deployment_id, created_at, completed_at";
+
+// WHICH MEANING THE RUN ACTUALLY PROVED, and what it was repairing.
+//
+// approveGuaranteePlan overwrites approved_plan_hash in place, so a re-approved guarantee means something
+// different from what it meant when older runs executed. Without the run's own pinned hash, every surface
+// read the newest run's verdict as the verdict for the CURRENT wording — so one re-approval silently
+// restated a past result as evidence for a promise no run had ever executed.
+//
+// Read separately, and the query degrades to the base columns if they are absent, because selecting a
+// column that does not exist fails the WHOLE query and would take the guarantee surfaces down on an
+// unmigrated database instead of degrading them. A run with no pinned hash then reads as not proving the
+// current meaning, which is the honest answer: unknown is not the same as matching.
+const RUN_BINDING_COLUMNS = "guarantee_plan_hash, parent_run_id";
 
 function rowToGuarantee(r: Record<string, unknown>): Guarantee {
   const planState = r.plan_state as string;
@@ -79,6 +97,10 @@ function rowToRunRef(r: Record<string, unknown>): GuaranteeRunRef {
     deployment_url: (r.deployment_url as string) ?? null, commit_sha: (r.commit_sha as string) ?? null,
     deployment_id: (r.deployment_id as string) ?? null,
     created_at: String(r.created_at ?? ""), completed_at: (r.completed_at as string) ?? null,
+    // Absent on a degraded (pre-migration) read, which correctly reads as "does not prove the current
+    // meaning" rather than as a match.
+    planHash: (r.guarantee_plan_hash as string) ?? null,
+    parentRunId: (r.parent_run_id as string) ?? null,
   };
 }
 
@@ -284,7 +306,9 @@ export async function listGuarantees(owner: string, applicationId: string, inclu
 export async function latestGuaranteeRun(owner: string, guaranteeId: string): Promise<GuaranteeRunRef | null> {
   if (!isDatabaseConfigured()) return null;
   const base = () => db().from("v_preflight_runs")
-    .select(RUN_REF_COLUMNS).eq("user_id", norm(owner)).eq("guarantee_id", guaranteeId)
+    // The binding columns ride along here too, so the single latest run also carries which meaning it
+    // proved. The existing retry below already degrades this select when a column is missing.
+    .select(`${RUN_REF_COLUMNS}, ${RUN_BINDING_COLUMNS}`).eq("user_id", norm(owner)).eq("guarantee_id", guaranteeId)
     .order("created_at", { ascending: false });
   try {
     const { data, error } = await base().is("invalidated_at", null).limit(1).maybeSingle();
@@ -304,16 +328,34 @@ export async function latestGuaranteeRun(owner: string, guaranteeId: string): Pr
 
 // The runs tagged with this guarantee, newest first (its verification history / lineage). Empty when none or
 // unmigrated. Powers the guarantee detail page and the last-proven-deployment derivation.
+// INVALIDATED RUNS ARE EXCLUDED HERE TOO. latestGuaranteeRun has excluded them since migration 24, and this
+// function — which powers the detail page and the last-proven-deployment derivation — did not, so a verdict
+// the company had formally retracted as its OWN defect still decided what the history said. Thirteen of the
+// fourteen runs on the live guarantee are invalidated.
+//
+// And the binding columns are selected, so a caller can tell which meaning each run proved. Both selects
+// degrade rather than fail: a database missing either column returns the base columns, and a run with no
+// pinned hash reads as not proving the current meaning.
 export async function guaranteeRunHistory(owner: string, guaranteeId: string, limit = 20): Promise<GuaranteeRunRef[]> {
   if (!isDatabaseConfigured()) return [];
-  try {
-    const { data, error } = await db().from("v_preflight_runs")
-      .select(RUN_REF_COLUMNS).eq("user_id", norm(owner)).eq("guarantee_id", guaranteeId)
+  const q = (cols: string, excludeInvalidated: boolean) => {
+    const base = db().from("v_preflight_runs")
+      .select(cols).eq("user_id", norm(owner)).eq("guarantee_id", guaranteeId);
+    return (excludeInvalidated ? base.is("invalidated_at", null) : base)
       .order("created_at", { ascending: false }).limit(limit);
-    if (error) {
-      if (/guarantee_id/i.test(error.message ?? "")) warnUnmigrated("guaranteeRunHistory");
-      return [];
+  };
+  const full = `${RUN_REF_COLUMNS}, ${RUN_BINDING_COLUMNS}`;
+  try {
+    for (const [cols, excl] of [[full, true], [full, false], [RUN_REF_COLUMNS, true], [RUN_REF_COLUMNS, false]] as const) {
+      const { data, error } = await q(cols, excl);
+      if (!error) return ((data as Record<string, unknown>[] | null) ?? []).map(rowToRunRef);
+      // Only retry for a MISSING COLUMN. Any other error is real and must not be papered over by
+      // silently asking a weaker question.
+      if (!/guarantee_plan_hash|parent_run_id|invalidated_at/i.test(error.message ?? "")) {
+        if (/guarantee_id/i.test(error.message ?? "")) warnUnmigrated("guaranteeRunHistory");
+        return [];
+      }
     }
-    return ((data as Record<string, unknown>[] | null) ?? []).map(rowToRunRef);
+    return [];
   } catch { return []; }
 }

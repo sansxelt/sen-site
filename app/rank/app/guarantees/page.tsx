@@ -8,12 +8,12 @@
 //
 // It used to show only the PLAN's state, and the note here explained why: createRun accepted guaranteeId
 // and not one caller passed it, so v_preflight_runs.guarantee_id was never written, latestGuaranteeRun
-// could only ever return null, and guaranteeStatus could only ever answer draft or unproven. Rendering a
+// could only ever return null, and the status could only ever answer draft or unproven. Rendering a
 // pill whose vocabulary includes Verified would have been a surface that looks live and is not.
 //
 // That was true and is no longer. The verify entrance writes guarantee_id on every run it launches, and the
 // first guarantee now carries fourteen of them with a standing Verified. So the verdict is shown, from the
-// same guaranteeStatus every other guarantee surface uses.
+// same status function every other guarantee surface uses.
 //
 // The plan's state is still shown beside it, because they answer different questions: an approved plan with
 // no proof and a guarantee proven against the current deployment are not the same thing, and collapsing
@@ -26,8 +26,8 @@ import Link from "next/link";
 import { requirePreflightOwner } from "@/lib/v-preflight-guard";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { listApplicationsForMember, type Application } from "@/lib/v-applications";
-import { listGuaranteesForApps, latestGuaranteeRun, type Guarantee } from "@/lib/preflight/guarantees-db";
-import { guaranteeStatus, GUARANTEE_STATUS_LABEL, GUARANTEE_COVERAGE_NOTE } from "@/lib/preflight/guarantee-status";
+import { listGuaranteesForApps, guaranteeRunHistory, type Guarantee } from "@/lib/preflight/guarantees-db";
+import { guaranteeStatusFrom, GUARANTEE_STATUS_LABEL, GUARANTEE_COVERAGE_NOTE } from "@/lib/preflight/guarantee-status";
 import { timeAgo } from "@/lib/preflight/home-verdict";
 import { Ic, I } from "@/app/rank/_components/icons";
 import { SetupRequired } from "../systems/setup-required";
@@ -77,9 +77,12 @@ export default async function GuaranteesPage() {
   //
   // So the page reports the verdict, from the same status function every other guarantee surface uses.
   // One query per row, which is honest at this scale and would need batching before it is not.
+  // Only runs proving the CURRENT meaning count. approveGuaranteePlan overwrites approved_plan_hash in
+  // place, so reading the newest run's verdict without checking which meaning it executed republishes an
+  // old result as evidence for a promise nothing has ever proven.
   const verdicts = await Promise.all(guarantees.map(async (g) => {
-    const latest = await latestGuaranteeRun(g.user_id, g.id);
-    return [g.id, guaranteeStatus(latest, g.plan_state)] as const;
+    const history = await guaranteeRunHistory(g.user_id, g.id);
+    return [g.id, guaranteeStatusFrom(history, g.plan_state, g.approved_plan_hash)] as const;
   }));
   const verdictOf = new Map(verdicts);
 

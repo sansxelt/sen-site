@@ -1,10 +1,11 @@
 // The Guarantees section on the Systems page: a live map of what this system depends on and whether each
 // requirement is currently proven. Server component, owner-scoped, degrades to an empty state before migration
-// 19. Each guarantee's status is DERIVED (guaranteeStatus over its latest tagged run + plan_state), never
+// 19. Each guarantee's status is DERIVED (guaranteeStatusFrom over the runs that proved its CURRENT
+// meaning, plus plan_state), never
 // stored. Sits above the Production Contract card, which becomes internal synthesis substrate.
 import Link from "next/link";
-import { listGuarantees, latestGuaranteeRun } from "@/lib/preflight/guarantees-db";
-import { guaranteeStatus } from "@/lib/preflight/guarantee-status";
+import { listGuarantees, guaranteeRunHistory } from "@/lib/preflight/guarantees-db";
+import { guaranteeStatusFrom } from "@/lib/preflight/guarantee-status";
 import { Ic, I } from "@/app/rank/_components/icons";
 import { GuaranteeStatusPill } from "./guarantee-ui";
 import { AddGuarantee } from "./add-guarantee";
@@ -22,9 +23,13 @@ export async function GuaranteesSection({ owner, appId, canEdit }: { owner: stri
   const guarantees = await listGuarantees(owner, appId);
   // Derive each guarantee's live status from its latest tagged run + plan_state (parallel, owner-scoped). A
   // review_required guarantee never trusts a stale run, so we skip the run read for it.
+  // The status comes from the runs that proved THIS guarantee's current meaning, not simply from the
+  // newest one: approveGuaranteePlan overwrites approved_plan_hash in place, so after a re-approval the
+  // newest run proved the previous wording. Same query count as before, reading the history rather than
+  // one row.
   const withStatus = await Promise.all(guarantees.map(async (g) => {
-    const latest = g.plan_state === "review_required" ? null : await latestGuaranteeRun(owner, g.id);
-    return { g, status: guaranteeStatus(latest, g.plan_state) };
+    const history = g.plan_state === "review_required" ? [] : await guaranteeRunHistory(owner, g.id);
+    return { g, status: guaranteeStatusFrom(history, g.plan_state, g.approved_plan_hash) };
   }));
 
   return (

@@ -258,10 +258,26 @@ console.log("\n── the record says which promise it proves, and whether that 
   ok("it still says automatic re-checking is not wired",
     /automatically as each new deployment appears is not wired up yet/.test(list));
   // And now that a verdict is reachable, the page must actually show one rather than only the plan's state.
+  // Was /guaranteeStatus\(/, which stopped matching when the page moved to the function that actually
+  // checks which meaning a run proved — a rename, not a regression. Pinned to the stronger property now.
   ok("the guarantees page reports the verification verdict, not only the plan state",
-    /guaranteeStatus\(/.test(list) && /GUARANTEE_STATUS_LABEL/.test(list));
+    /guaranteeStatusFrom\(/.test(list) && /GUARANTEE_STATUS_LABEL/.test(list));
+  // THE VERDICT IS FOR THE CURRENT WORDING. approveGuaranteePlan overwrites approved_plan_hash in place,
+  // so a status derived without it republishes a run that proved the PREVIOUS meaning as evidence for the
+  // new one. guaranteeStatusFrom is the function that checks, and it had zero callers.
+  ok("and it only counts runs that proved the CURRENT approved meaning",
+    /guaranteeStatusFrom\(history, g\.plan_state, g\.approved_plan_hash\)/.test(list));
+  const db = readFileSync("lib/preflight/guarantees-db.ts", "utf8");
   ok("the verdict comes from the newest NON-invalidated run",
-    /is\("invalidated_at", null\)/.test(readFileSync("lib/preflight/guarantees-db.ts", "utf8")));
+    /is\("invalidated_at", null\)/.test(db));
+  // BOTH read paths. latestGuaranteeRun excluded invalidated runs; guaranteeRunHistory — which powers the
+  // detail page, the list pages and the last-proven-deployment derivation — did not, so a verdict formally
+  // retracted as Vraelis's OWN defect still decided what those surfaces said. Thirteen of the fourteen runs
+  // on the live guarantee are invalidated.
+  ok("  in the history read as well as the latest read",
+    (db.match(/is\("invalidated_at", null\)/g) ?? []).length >= 2);
+  // The run's own pinned meaning has to be selected, or nothing downstream can compare it.
+  ok("  and each run carries which meaning it proved", /guarantee_plan_hash/.test(db) && /planHash: \(r\.guarantee_plan_hash/.test(db));
 }
 
 console.log("\n── the API and the CLI carry the same relationship the console does ──");

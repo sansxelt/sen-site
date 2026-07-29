@@ -8,7 +8,7 @@ import { SetupRequired } from "../../../setup-required";
 import { getApplication } from "@/lib/v-applications";
 import { getGuarantee, guaranteeRunHistory } from "@/lib/preflight/guarantees-db";
 import { GUARANTEE_COVERAGE_NOTE } from "@/lib/preflight/guarantee-status";
-import { guaranteeStatus, lastProvenRun } from "@/lib/preflight/guarantee-status";
+import { guaranteeStatusFrom, lastProvenRun } from "@/lib/preflight/guarantee-status";
 import { findLivePendingPlanForClaim } from "@/lib/preflight/reviewed-plan-db";
 import { toPublicDecision } from "@/lib/preflight/public-decision";
 import { Ic, I, EmptyIcon } from "@/app/rank/_components/icons";
@@ -89,7 +89,13 @@ export default async function GuaranteeDetailPage({ params }: { params: Promise<
 
   const history = await guaranteeRunHistory(owner, gid);
   const latest = history[0] ?? null;
-  const status = guaranteeStatus(g.plan_state === "review_required" ? null : latest, g.plan_state);
+  // ONLY A RUN THAT PROVED THIS MEANING COUNTS.
+  //
+  // This called guaranteeStatus(latest, planState), which never sees a plan hash, so the newest run's
+  // verdict was published as the verdict for the CURRENT wording. approveGuaranteePlan overwrites
+  // approved_plan_hash in place, so one re-approval silently restated a past result as evidence for a
+  // promise no run had ever executed. guaranteeStatusFrom is the function that checks; it had zero callers.
+  const status = guaranteeStatusFrom(history, g.plan_state, g.approved_plan_hash);
   const proven = lastProvenRun(history);
   const approvedReqs = g.approved_plan?.requirements?.map((r) => r.text) ?? [];
   const pendingReqs = pending?.plan.requirements?.map((r) => r.text) ?? [];
