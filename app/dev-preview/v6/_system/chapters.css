@@ -927,3 +927,31 @@
     color: color-mix(in oklab, var(--g-fg-2) calc(var(--ink-flip) * 100%), var(--ink-3));
   }
 }
+
+/* ════════════ THE STACKED FALLBACK IS A COLUMN, NOT FOUR POSTERS ══════════
+   Chapter 2's beats are travellers: absolutely positioned on one shared centre, taking the stage in turn.
+   Their scale was chosen for being ALONE on a screen. Unpinned they become a stack, and every one of them
+   keeps that scale — measured at 1920 with the preference set: "Complete." at 192px, each of the three
+   statements at 58px, the verdict at 64px. Four display-size blocks in a column, all centred, all equally
+   loud, so nothing leads and the chapter reads as a wall.
+
+   A phone never had this problem: its own clamps resolve to 58 / 26 / 32, which is the same composition
+   with real hierarchy. The bug is only where a wide viewport meets the unpinned layout, which is exactly
+   what a reduced-motion desktop is — and that is not a rare visitor. A battery saver or a managed Windows
+   image sets this without anybody choosing it, and it is the view the founder kept landing on.
+
+   So the fallback gets its own scale rather than inheriting the stage's. The ratios follow the phone,
+   which was already right: the word stays clearly dominant, the statements drop to reading size, and the
+   verdict sits between them so the conclusion still resolves. Copy, order and composition are untouched;
+   this is type scale for a layout the type was not measured for. */
+@media (prefers-reduced-motion: reduce) and (min-width: 901px) {
+  .v6-gap__wordt { font-size: clamp(4.4rem, 8vw, 7rem); }
+  .v6-gap__list li { font-size: clamp(1.5rem, 2.1vw, 2.15rem); line-height: 1.24; }
+  .v6-gap__verdict { font-size: clamp(1.9rem, 2.9vw, 2.9rem); }
+  .v6-gap__turn { font-size: clamp(1.05rem, 1.35vw, 1.3rem); }
+  /* The stage's vertical rhythm was set by beats arriving and leaving one at a time. Stacked, they need
+     room between them instead. */
+  .v6-gap__list { gap: clamp(12px, 1.4vw, 20px); }
+  .v6-gap__found { margin-top: clamp(44px, 5vw, 72px); }
+  .v6-gap__verdictwrap { margin-top: clamp(40px, 4.5vw, 64px); }
+}
