@@ -57,3 +57,101 @@
 @media (prefers-reduced-motion: reduce) {
   .v6-mask__in { animation: none !important; }
 }
+
+/* ══════════════════════════ THE HERO'S SUBJECT ═════════════════════════════
+   The opening carried four lines of type and, measured at 1920x1200, about 750px of empty graphite. The
+   reference for this page is Scale, and what carries Scale's homepage is media: type sits ON something.
+   There is no photography of Vraelis and nothing to shoot — the product is a verdict about somebody else's
+   deployment — so the subject is the product's own output, which is the more honest choice anyway.
+
+   The two empty planes behind the card are the whole trick. Scale's second scene is stacked translucent
+   frames at slightly different angles; without them a panel reads as a screenshot pasted onto the page
+   rather than as a composition. They carry no content and are aria-hidden with the rest. */
+
+.v6-h__inner { position: relative; }
+
+.v6-he {
+  position: relative;
+  margin-top: clamp(30px, 4.5vh, 56px);
+  max-width: 560px;
+  /* Its entrance is the hero's, one beat behind the copy that introduces it. */
+  animation: v6HeIn 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 320ms;
+}
+@keyframes v6HeIn {
+  from { opacity: 0; transform: translateY(22px) scale(0.985); }
+  to   { opacity: 1; transform: none; }
+}
+
+.v6-he__plane {
+  position: absolute; inset: 0;
+  border: 1px solid var(--g-line);
+  border-radius: 16px;
+  pointer-events: none;
+}
+.v6-he__plane--back { transform: translate(26px, -18px) rotate(1.1deg); opacity: 0.34; }
+.v6-he__plane--mid  { transform: translate(13px, -9px) rotate(0.5deg); opacity: 0.6; }
+
+.v6-he__card {
+  position: relative;
+  border: 1px solid var(--g-line-2);
+  border-radius: 16px;
+  padding: clamp(16px, 2vw, 22px);
+  /* Sits ON the graphite rather than being a lighter box cut out of it. */
+  background: color-mix(in oklab, var(--g-fg) 5%, var(--graphite));
+  display: grid;
+  gap: 14px;
+}
+
+.v6-he__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.v6-he__lbl { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--g-fg-3); }
+.v6-he__dep { font-family: var(--mono); font-size: 11.5px; color: var(--g-fg-3); }
+
+.v6-he__claim { font-family: var(--sans); font-size: clamp(0.92rem, 1.05vw, 1.02rem); line-height: 1.5;
+  color: var(--g-fg-2); padding-bottom: 12px; border-bottom: 1px solid var(--g-line); }
+
+.v6-he__rows { display: grid; gap: 7px; }
+.v6-he__row { display: grid; grid-template-columns: minmax(0, 1fr) auto 16px; gap: 12px;
+  align-items: center; font-family: var(--mono); font-size: 12.5px; }
+.v6-he__k { color: var(--g-fg-3); overflow: hidden; text-overflow: ellipsis; }
+.v6-he__v { color: var(--g-fg-2); }
+.v6-he__mk { display: inline-flex; justify-content: center; }
+/* The failing rows are the only colour in the panel, because they are the only thing it is reporting. */
+.v6-he__row.is-bad .v6-he__v,
+.v6-he__row.is-bad .v6-he__mk { color: var(--stop); }
+.v6-he__row.is-ok .v6-he__mk { color: var(--g-fg-3); }
+
+.v6-he__foot { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  padding-top: 12px; border-top: 1px solid var(--g-line); }
+.v6-he__verdict { font-family: var(--sans); font-weight: 600; font-size: 13px; letter-spacing: 0.02em;
+  color: var(--stop); }
+.v6-he__note { font-family: var(--sans); font-size: 12.5px; color: var(--g-fg-3); }
+
+/* Narrow: the planes are depth for a composition that has room. At phone width they would only crowd the
+   card and push it off-centre, so the card stands alone. */
+@media (max-width: 720px) {
+  .v6-he { max-width: none; margin-top: clamp(26px, 4vh, 38px); }
+  .v6-he__plane { display: none; }
+  .v6-he__row { grid-template-columns: minmax(0, 1fr) auto 16px; font-size: 11.5px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v6-he { animation: none; }
+}
+
+/* Two columns at width: the argument on the left, the evidence for it on the right. Below this the
+   wrapper is inert and the two stack in reading order, which is the phone composition unchanged. */
+@media (min-width: 1080px) {
+  .v6-h__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr);
+    gap: clamp(40px, 5vw, 88px);
+    align-items: center;
+  }
+  /* The headline was measured for a full-width field. Given half of one it has to give some scale back,
+     or it wraps to five lines and the two columns stop reading as one composition. */
+  .v6-h__h1 { font-size: clamp(2.05rem, 3.35vw, 3.35rem); max-width: 18ch; }
+  .v6-h__say { max-width: 46ch; }
+  .v6-he { margin-top: 0; max-width: none; }
+}
