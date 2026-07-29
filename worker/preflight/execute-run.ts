@@ -9,6 +9,10 @@ import { classifyProviderError } from "./provider-errors";
 import { resolveNavigationUrl, targetInvariantViolation } from "../../lib/preflight/target-url";
 import { classifyStepAction, evaluateBoundary } from "../../lib/preflight/boundaries";
 import { runUniqueToken, applyRunUnique } from "../../lib/preflight/run-unique";
+
+// The auth actions that TYPE A SECRET. Only these are origin-gated: the rest submit nothing, and refusing
+// them off-origin would break legitimate flows that verify state after a redirect.
+const CREDENTIAL_ACTIONS: ReadonlySet<string> = new Set(["sign_in_as", "switch_role"]);
 import { log, clearActiveCredentials } from "./redaction";
 import { signInAs, verifyAuth, signOut, resetContext, resolveRole, type CredentialOpener } from "./auth-executor";
 
@@ -120,6 +124,38 @@ async function runFlow(flow: FlowSpec, page: import("./types").PreflightPage, de
         state = "blocked_by_policy";
         break;
       }
+      // ── SEALED CREDENTIALS GO ONLY TO THE SYSTEM UNDER TEST ─────────────────────────────────────────
+      //
+      // The boundary gate above cannot refuse an auth action. TRIGGER_ACTIONS is {click, press}, so an auth
+      // action is neither a navigate nor a trigger, classifies as `core`, and core is always allowed. The
+      // comment beside it claims every auth action is checked for origin; it is not, and no test could have
+      // caught that because there was nothing to catch — a control that reads as protection and is a no-op.
+      //
+      // What the origin rule actually governs is where a NAVIGATE was AIMED. Nothing asked where the
+      // browser IS. So a flow that lands off-boundary — an OAuth hop, a redirect to a vendor's page, a
+      // misconfigured target — and then signs in would type a customer's real, sealed test-account
+      // credentials into whatever page happened to be there.
+      //
+      // Only the two actions that submit a secret are gated. verify_authenticated, sign_out and
+      // reset_context type nothing, and refusing them off-origin would break legitimate flows.
+      //
+      // Both origins must PARSE for this to refuse. A session that has not navigated yet sits on
+      // about:blank, which is unparseable and falls through to the honest login_ui_not_found rather than
+      // being reported as a boundary violation.
+      if (CREDENTIAL_ACTIONS.has(step.action)) {
+        let here: string | null = null;
+        try { here = new URL(page.currentUrl()).origin; } catch { here = null; }
+        if (runOrigin && here && here !== runOrigin) {
+          steps.push({
+            action: step.action, target: step.target, ok: false,
+            detail: `blocked_by_policy: credentials are entered only on the system under test (${runOrigin}); the browser is on ${here}`.slice(0, 400),
+            ms: 0,
+          });
+          state = "blocked_by_policy";
+          break;
+        }
+      }
+
       counters.performedSteps += 1;
       const expect = { route: step.value || undefined, element: step.expect || undefined };
       let r;

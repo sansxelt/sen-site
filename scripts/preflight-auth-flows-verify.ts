@@ -222,9 +222,12 @@ const signInFlow = (id: string, role: string): FlowSpec => spec(id, "critical", 
 async function spyRun(input: {
   runId: string; flows: FlowSpec[]; testAccounts?: TestAccountRef[]; owner?: string;
   authScript?: FakeAuthScript; opener?: CredentialOpener; vaultConfigured?: boolean; artifacts?: boolean;
+  // Where the BROWSER is, which is not always the run's target: a redirect, an OAuth hop or a
+  // misconfigured session can leave the page on another origin. Defaults to the target.
+  startUrl?: string;
 }) {
   const store = new FakeRunStore();
-  const provider = new FakeBrowserProvider({}, `${BASE}/?mode=fixed`, input.authScript ?? { authenticated: true, authVia: "route" });
+  const provider = new FakeBrowserProvider({}, input.startUrl ?? `${BASE}/?mode=fixed`, input.authScript ?? { authenticated: true, authVia: "route" });
   const saved: { runId: string; flowId: string; bytes: number }[] = [];
   const artifacts = input.artifacts ? { async saveScreenshot(runId: string, flowId: string, bytes: Buffer) { saved.push({ runId, flowId, bytes: bytes.length }); } } : undefined;
   store.enqueue({ runId: input.runId, applicationId: "app1", owner: input.owner ?? "owner@x", deploymentUrl: `${BASE}/?mode=fixed`, flows: input.flows, testAccounts: input.testAccounts ?? ACCOUNTS });
@@ -248,6 +251,47 @@ async function spyRun(input: {
   ok("  it is blocked, because the application was never asked", flow.state === "blocked", flow.state);
   ok("  and the run does not certify anything", t.row.decision !== "ready", String(t.row.decision));
   ok("  with the reason on the record rather than an empty step list", JSON.stringify(flow.steps).includes("flow_has_no_steps"));
+}
+
+// SEALED CREDENTIALS GO ONLY TO THE SYSTEM UNDER TEST.
+//
+// The boundary gate in the auth branch could not refuse anything: TRIGGER_ACTIONS is {click, press}, so an
+// auth action is neither a navigate nor a trigger, classifies as `core`, and core is always allowed. The
+// comment beside it claimed every auth action was origin-checked. A mutation replacing that gate with
+// `if (false)` survived all 93 suites, because there was nothing to catch.
+//
+// And the origin rule it deferred to governs where a NAVIGATE was AIMED — nothing asked where the browser
+// IS. So a flow that lands off-boundary and then signs in would type a customer's real, sealed
+// test-account credentials into whatever page happened to be there.
+{
+  // No navigate first: the executor REBASES every navigate onto the run target, so a flow that navigates
+  // is on-origin by construction and could never exercise this. The dangerous shape is a credential step
+  // reached while the browser sits somewhere the run never aimed at.
+  const foreign = await spyRun({
+    runId: "creds-offsite",
+    startUrl: "https://attacker-or-vendor.example/login",
+    flows: [spec("f-offsite", "critical", [{ action: "sign_in_as", target: "admin" }, { action: "verify_authenticated" }])],
+  });
+  const flow = foreign.row.flowResults[0];
+  ok("signing in on a foreign origin is refused", flow.state === "blocked_by_policy", flow.state);
+  ok("  before any credential is typed", foreign.provider.lastPage?.filledSecrets.length === 0,
+    String(foreign.provider.lastPage?.filledSecrets.length));
+  ok("  and the refusal names both origins so it is diagnosable",
+    JSON.stringify(flow.steps).includes("attacker-or-vendor.example") && JSON.stringify(flow.steps).includes("preflight-demo-ten.vercel.app"));
+  ok("  and the run does not certify", foreign.row.decision !== "ready", String(foreign.row.decision));
+
+  // The ordinary case is untouched: same origin, sign-in proceeds.
+  const home = await spyRun({ runId: "creds-onsite", flows: [signInFlow("f-onsite", "admin")] });
+  ok("signing in on the system under test still works", home.row.flowResults[0].state === "passed", home.row.flowResults[0].state);
+  // Only the two actions that submit a secret are gated; the rest type nothing and must still run
+  // off-origin, or a flow verifying state after a redirect would break.
+  const afterRedirect = await spyRun({
+    runId: "verify-offsite",
+    startUrl: "https://vendor.example/return",
+    flows: [spec("f-verify", "critical", [{ action: "verify_unauthorized" }])],
+  });
+  ok("a non-credential auth action is not gated by origin", afterRedirect.row.flowResults[0].state !== "blocked_by_policy",
+    afterRedirect.row.flowResults[0].state);
 }
 
 // A PREFIX OF A JOURNEY IS NOT THE JOURNEY.
