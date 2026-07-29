@@ -507,3 +507,12 @@
    underline vanishes into the field along with the text. */
 .v6-dark .v6-plink, [data-nav-dark] .v6-plink { background-image: linear-gradient(var(--g-fg), var(--g-fg)); }
 .v6-dark .v6-plink:focus-visible, [data-nav-dark] .v6-plink:focus-visible { outline-color: var(--g-fg); }
+
+/* ══════════════ THE PANEL AND THE DRAWER TAKE THE GROUND TOO ═══════════════
+   The bar reads the section under it; these hang off the bar and were still painting a fixed #08080A or
+   #FFFFFF from the theme flag. Over chapter 2's resolve that put a dark panel under a bar the colour of
+   paper — the two halves of one surface disagreeing, which is worse than either being wrong alone.
+   Same rule, same variable, and still no transition: they match the source rather than animating toward
+   it, so a hard cut is one frame and a slow resolve is slow. */
+.v6-nav[data-ground="1"] .v6-mega__panel { background: var(--nav-bg) !important; }
+.v6-nav[data-ground="1"] .v6-drawer { background: var(--nav-bg) !important; }

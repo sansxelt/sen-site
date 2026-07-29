@@ -256,13 +256,22 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
     return () => ro.disconnect();
   }, []);
 
-  // Rec. 709 luma of a computed colour, or null if it cannot be read. The only thing it decides is whether
-  // the bar's wordmark and links are ink or paper.
+  // LIGHTNESS OF A COMPUTED COLOUR, in whatever notation the browser hands back.
+  //
+  // This must not assume rgb(). Chapter 2's ground is a color-mix(in oklab, ...), which computes to an
+  // `oklab(L a b)` string, and reading its numbers as 0-255 channels made pure white (L 0.999) resolve to
+  // a luma of 0.0008 — so the bar decided it was over something black and painted white text onto a white
+  // bar. It failed hardest exactly where the transition it exists to follow actually lives.
+  //
+  // oklab/oklch carry perceptual lightness as their FIRST component already, which is a better answer than
+  // anything derivable from channels, so it is used directly. lab/lch are the same on a 0-100 scale.
   const luma = (c: string | null): number | null => {
-    const m = c && c.match(/[\d.]+/g);
-    if (!m || m.length < 3) return null;
-    const [r, g, b] = m.map(Number);
-    return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+    if (!c) return null;
+    const n = c.match(/-?[\d.]+/g)?.map(Number);
+    if (!n || n.length < 3) return null;
+    if (/^\s*ok(lab|lch)\(/i.test(c)) return n[0];
+    if (/^\s*(lab|lch)\(/i.test(c)) return n[0] / 100;
+    return (0.2126 * n[0] + 0.7152 * n[1] + 0.0722 * n[2]) / 255;
   };
 
   // data-ground gates the CSS rule, so a bar that has never measured (no JS, first paint) keeps the
