@@ -183,49 +183,20 @@
 .v6 main:focus { outline: none; }
 
 /* ================================================================ NAV ====== */
-.v6-nav { position: sticky; top: 0; z-index: 60;
-  /* Out of the way on the way down, back on the way up or when the pointer reaches the top edge.
-     TRANSFORM ONLY. The rules below are emphatic that this bar does not crossfade its colours,
-     because a fade over a ground that changes in one frame IS the lag; moving it is a different
-     property and does not reintroduce that. overflow-anchor keeps the browser from reading the
-     slide as content shifting and compensating with a scroll adjustment, which would be another
-     scroll event and would move the bar again. */
-  transform: translate3d(0, 0, 0);
-  transition: transform 340ms cubic-bezier(0.22, 1, 0.36, 1);
-  overflow-anchor: none; }
-.v6-nav[data-hidden="true"] { transform: translate3d(0, -100%, 0); }
-/* A bar that has left the screen is still in the tab order, so tabbing into it would move focus to
-   something nobody can see. Any focus inside brings it straight back. */
-.v6-nav:focus-within { transform: translate3d(0, 0, 0); }
-/* AN OPEN PANEL HANGS OFF THIS BAR, SO THE BAR HAS TO BE STILL.
-   .v6-mega is position:absolute at top:100% of this element, so while the bar is mid-slide the panel is
-   mid-slide with it. The reachable path is exactly the one a pointer takes: summon the hidden bar at the
-   top edge, then hover an item before the 340ms has finished. The panel then opens against a moving
-   anchor, and because v6MegaIn is a 260ms fade from opacity 0, the page behind shows straight through it
-   for the overlap — a half-placed, half-transparent menu.
-   Snapping instead of transitioning is right rather than merely expedient: the bar is not travelling for
-   its own sake here, it is getting out of the way of something the reader has just asked for. */
-.v6-nav[data-open="true"] { transition: none; transform: translate3d(0, 0, 0); }
-/* The first paint must not animate, same reasoning as the theme swap above. */
+.v6-nav { position: sticky; top: 0; z-index: 60; overflow-anchor: none; }
+/* THE BAR NEVER HIDES. It stays put and takes the colour of whatever is under it instead — see the ground
+   sampler in shell.tsx. Hiding it was a worse answer to the same problem (a bar that fights the page) and
+   it cost a mega panel that could open against a moving anchor, because .v6-mega is anchored at top:100%
+   of this element.
+
+   --nav-bg is written per scroll frame from the actual painted colour of the section under the bar, and
+   there is deliberately NO transition on it. That is not an omission: a hard cut at a section boundary is
+   one frame here because the ground changes in one frame, and chapter 2s slow resolve from paper to
+   graphite is slow here because the ground is. Matching the source beats animating toward it, and it is
+   the only way the bar is never seen catching up — which is what the rules below have always argued for. */
+.v6-nav[data-ground="1"] .v6-nav__in { background: var(--nav-bg) !important; }
+/* The first paint must not animate, same reasoning as the theme swap below. */
 .v6-nav[data-settled="false"] { transition: none; }
-/* REDUCED MOTION FADES THE BAR, IT DOES NOT MOVE IT — and it does not simply give up on hiding.
-   The setting asks for less MOTION, not less behaviour. What it exists to prevent is travel: sliding,
-   parallax, zoom, the things that provoke vestibular symptoms. A change of opacity provokes none of
-   that, so the bar can still get out of the reader's way; it just stops sliding to do it.
-
-   Two earlier versions of this rule were both wrong. Removing only the transition left the bar still
-   hiding and still returning, in one frame, jumping its full height whenever the pointer came near
-   the top — a fault, not restraint. Pinning it visible fixed the jump by taking the feature away from
-   everyone who asks for less motion, and that is a large share of visitors: battery savers, managed
-   Windows images, anyone who set it once and forgot. Neither is a reason to hand them a worse page.
-
-   visibility is transitioned alongside opacity so the invisible bar stops swallowing clicks meant for
-   the page underneath; it is a discrete property, so it flips at the end of the fade going out and at
-   the start coming back. */
-@media (prefers-reduced-motion: reduce) {
-  .v6-nav { transition: opacity 200ms linear, visibility 200ms linear; }
-  .v6-nav[data-hidden="true"] { transform: translate3d(0, 0, 0); opacity: 0; visibility: hidden; }
-}
 /* The initial theme is correct from the server-rendered markup, so it must not animate in. Crossing a
    chapter boundary later gets the restrained transition. */
 .v6-nav[data-settled="false"] .v6-nav__in,

@@ -7,7 +7,6 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNo
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SiteFooter } from "./close";
-import { useHideOnScroll } from "@/components/use-hide-on-scroll";
 import { V6_BASE, V6_HOME, V6_APP, v6SignInPath, v6GroundAtTop, GROUND_CSS } from "@/lib/v6-routes";
 
 // FOLLOWS THE PROMOTION FLAG. These were hardcoded to "/dev-preview/v6", which is precisely the mistake
@@ -239,11 +238,9 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
   // whichever panel is on screen: the open one, or the one still animating out
   const shown = open ?? exiting;
 
-  // The bar gets out of the way on the way down and comes back on the way up, or when the pointer
-  // reaches the top edge. Anything hanging off the bar pins it: a mega panel or the mobile drawer
-  // would otherwise slide up the screen still attached to it.
-  const hideOnScroll = useHideOnScroll();
-  const navHidden = !hideOnScroll && shown === null && !drawer;
+  // THE BAR DOES NOT HIDE. It stays where it is and matches whatever is under it instead; see the ground
+  // sampler below. Hiding it was a worse answer to the same problem — a bar that fights the page — and it
+  // cost a menu that could open against a moving anchor.
 
   // Publish the real nav height as --nav-h. Chapters size themselves against it, and it changes with the
   // wordmark size and the viewport, so measuring beats a hardcoded fallback.
@@ -259,6 +256,22 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
     return () => ro.disconnect();
   }, []);
 
+  // Rec. 709 luma of a computed colour, or null if it cannot be read. The only thing it decides is whether
+  // the bar's wordmark and links are ink or paper.
+  const luma = (c: string | null): number | null => {
+    const m = c && c.match(/[\d.]+/g);
+    if (!m || m.length < 3) return null;
+    const [r, g, b] = m.map(Number);
+    return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  };
+
+  // data-ground gates the CSS rule, so a bar that has never measured (no JS, first paint) keeps the
+  // declared theme's own background rather than resolving var(--nav-bg) to nothing and going transparent.
+  const setGround = (nav: HTMLElement, bg: string | null) => {
+    if (bg) { nav.style.setProperty("--nav-bg", bg); nav.dataset.ground = "1"; }
+    else { nav.style.removeProperty("--nav-bg"); delete nav.dataset.ground; }
+  };
+
   useEffect(() => {
     const nav = navRef.current;
     // The SECTION under the bar decides, by its own declaration. Sampling a computed background picked up
@@ -273,23 +286,63 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
       // takes it from the route and never measures. Measuring here is what left a white bar on the black
       // homepage: on arrival the probe runs before the hero has painted, finds no labelled surface, and the
       // fallback resolves to light. If the reader then never scrolls, it stays wrong.
-      if (y0 <= 4) { setDark(themeAtTop(pathname)); return; }
+      if (y0 <= 4) { setGround(nav, null); setDark(themeAtTop(pathname)); return; }
       const y = Math.round(nav.getBoundingClientRect().bottom) + 1;
       const stack = document.elementsFromPoint(Math.round(window.innerWidth / 2), y) as HTMLElement[];
+
+      // THE BAR TAKES THE GROUND'S ACTUAL COLOUR, NOT A LABEL FOR IT.
+      //
+      // A declared theme is one of two values, and chapter 2 does not have two values: it interpolates its
+      // background from paper to graphite across the last 12% of the chapter. The section still declares
+      // itself light the whole way, so the bar stayed white over a ground that had gone very nearly black.
+      //
+      // Reading the painted colour covers both cases with one rule and no transition anywhere. A hard cut
+      // at a section boundary is one frame here because the ground changes in one frame; a slow resolve is
+      // slow here because the ground is. That is exactly the property the rules in v6.css argue for — the
+      // bar must never be seen catching up — and sampling gets it for free where a crossfade could not.
+      //
+      // Measured from the SECTION, never from whatever child happens to sit under the sample point. That
+      // distinction is why the original took a label instead: a code block or a card under the bar would
+      // otherwise hand it their colour.
+      const ground = (from: HTMLElement | null): string | null => {
+        let n: HTMLElement | null = from;
+        while (n && n !== document.documentElement) {
+          const bg = getComputedStyle(n).backgroundColor;
+          if (bg && bg !== "transparent" && !bg.startsWith("rgba(0, 0, 0, 0")) return bg;
+          n = n.parentElement;
+        }
+        return null;
+      };
+
       for (const el of stack) {
         // Both attributes count. Every dark band in the page kit declares data-nav-dark and NOT
         // data-nav-theme, so matching only the latter walked straight past them.
         const surface = el.closest?.("[data-nav-theme], [data-nav-dark]") as HTMLElement | null;
         if (surface) {
           const t = surface.dataset.navTheme;
-          setDark(t ? t === "dark" : surface.hasAttribute("data-nav-dark"));
+          const bg = ground(surface);
+          setGround(nav, bg);
+          // THE MEASUREMENT OUTRANKS THE LABEL, and it has to. A declaration is fixed for the life of the
+          // section; a background is not. Chapter 2 declares itself light and then paints its way to
+          // graphite, so taking the bar's colour from the ground and its text from the label put dark ink
+          // on a dark bar — measured at 0.04 luma apart, which is text nobody can read.
+          // The label still decides when there is nothing to measure.
+          const lum = luma(bg);
+          setDark(lum !== null ? lum < 0.5 : t ? t === "dark" : surface.hasAttribute("data-nav-dark"));
           return;
         }
       }
-      // Nothing under the bar declares a theme, so the surface is the ordinary light page. This used to
-      // fall out of the loop without deciding anything, which left the bar holding whatever the LAST dark
-      // section set: scroll off a dark band onto white and the bar stayed black the rest of the page.
-      setDark(false);
+
+      // Nothing under the bar declares a theme. Rather than assume the ordinary light page — which was the
+      // old behaviour and is wrong for any section that paints itself without saying so — take the colour
+      // of the section that is actually there and decide the text from its luminance, so the two can never
+      // disagree. Falls back to light only when there is genuinely nothing to read.
+      const section = (stack[0]?.closest?.("section") ?? stack[0]) as HTMLElement | null;
+      const bg = ground(section);
+      if (!bg) { setGround(nav, null); setDark(false); return; }
+      setGround(nav, bg);
+      const lum = luma(bg);
+      setDark(lum !== null ? lum < 0.5 : false);
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -363,7 +416,7 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
 
   return (
     <nav ref={navRef} className="v6-nav" data-scrolled={scrolled} data-theme={dark ? "dark" : "light"}
-      data-open={shown !== null} data-settled={settled} data-hidden={navHidden} aria-label="Primary" onMouseLeave={scheduleClose}>
+      data-open={shown !== null} data-settled={settled} aria-label="Primary" onMouseLeave={scheduleClose}>
       <div className="v6-nav__in">
         <Brand />
         <div className="v6-nav__items">
