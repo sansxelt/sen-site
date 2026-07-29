@@ -199,10 +199,14 @@
 .v6-nav:focus-within { transform: translate3d(0, 0, 0); }
 /* The first paint must not animate, same reasoning as the theme swap above. */
 .v6-nav[data-settled="false"] { transition: none; }
-/* The bar still leaves — that is layout, and the reader gets the screen back either way — but it
-   snaps rather than sliding. */
+/* Reduced motion: the bar does not move AT ALL, rather than moving without the transition.
+   Killing only the transition was worse than leaving it alone — the bar teleported 67px in a single
+   frame every time the pointer came near the top, which reads as a rendering fault rather than as
+   restraint, and it was the first thing the founder noticed. Hiding the bar is a nicety; a reader who
+   has asked for less motion loses nothing by keeping it, and gains a bar that never jumps. */
 @media (prefers-reduced-motion: reduce) {
   .v6-nav { transition: none; }
+  .v6-nav[data-hidden="true"] { transform: translate3d(0, 0, 0); }
 }
 /* The initial theme is correct from the server-rendered markup, so it must not animate in. Crossing a
    chapter boundary later gets the restrained transition. */

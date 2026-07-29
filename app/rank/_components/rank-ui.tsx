@@ -643,8 +643,10 @@ const SHELL_UI_CSS = "@keyframes vraTextIn{from{opacity:0;transform:translateY(1
   // something scrolled off-screen. Any focus inside brings it straight back.
   + ".rank-root--site nav:focus-within{transform:translate3d(0,0,0)!important}"
   + "@media (prefers-reduced-motion:reduce){.rank-root .eyebrow,.rank-root .display,.rank-root .lead-copy{animation:none}.rank-root .btn:active,.rank-root a.card:hover,.rank-root a.card:active,.rank-root a.acard:hover,.rank-root a.acard:active{transform:none}"
-  // The bar still hides — that is layout, not decoration — but it snaps instead of sliding.
-  + ".rank-root--site nav{transition:border-color .25s ease,background .25s ease!important}}";
+  // Reduced motion: the bar stays put instead of hiding without the slide. Removing only the
+  // transition made it teleport a full bar-height in one frame, which reads as a fault rather than
+  // as restraint. Keeping it visible is the honest version of "less motion".
+  + ".rank-root--site nav{transition:border-color .25s ease,background .25s ease!important;transform:translate3d(0,0,0)!important}}";
 
 export function RankShell({ signedIn = false, email = null, appHost = false, systems = [], pendingReviews = 0, children }: { signedIn?: boolean; email?: string | null; appHost?: boolean; systems?: PaletteSystem[]; pendingReviews?: number; children: ReactNode }) {
   const pathname = usePathname() || "";
