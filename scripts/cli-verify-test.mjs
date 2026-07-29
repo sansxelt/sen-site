@@ -458,6 +458,23 @@ async function main() {
     // files lists README.md, and a tarball missing it publishes a blank page on the registry.
     ok("everything the package promises to ship exists",
       pkg.files.every((f) => existsSync(`cli/${f}`)), pkg.files.filter((f) => !existsSync(`cli/${f}`)).join(", "));
+
+    // THE COMMAND HAS TO SURVIVE PUBLISHING.
+    //
+    // bin was "./vraelis.mjs", and npm STRIPS a bin entry whose path is written that way:
+    //
+    //   npm warn publish "bin[vraelis]" script name vraelis.mjs was invalid and removed
+    //
+    // The publish still succeeds. The tarball is still correct. `npm i -g vraelis` installs the package and
+    // creates no `vraelis` command, and the only sign is one warn line scrolling past during a publish
+    // nobody re-reads. Found by running --dry-run before telling the founder the steps, which is the only
+    // reason it was not discovered by a user typing `vraelis` and getting "command not found".
+    ok("the bin path is written the way npm keeps",
+      typeof pkg.bin.vraelis === "string" && !pkg.bin.vraelis.startsWith("./") && !pkg.bin.vraelis.startsWith("/"),
+      pkg.bin.vraelis);
+    ok("  and points at a file that exists", existsSync(`cli/${pkg.bin.vraelis}`));
+    // Shipped, or the command installs and the file is absent.
+    ok("  and at one the package actually ships", pkg.files.includes(pkg.bin.vraelis));
   }
 
   console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);

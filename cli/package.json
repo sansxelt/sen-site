@@ -6,7 +6,7 @@
   "homepage": "https://vraelis.com",
   "repository": { "type": "git", "url": "git+https://github.com/sansxelt/sen-site.git", "directory": "cli" },
   "bugs": { "url": "https://vraelis.com/contact" },
-  "bin": { "vraelis": "./vraelis.mjs" },
+  "bin": { "vraelis": "vraelis.mjs" },
   "type": "module",
   "files": ["vraelis.mjs", "README.md"],
   "engines": { "node": ">=18" },
