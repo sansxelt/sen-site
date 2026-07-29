@@ -14,6 +14,8 @@ import { planLabel } from "@/lib/plan-label";
 // server-safe module so app pages can render the same icons without a client boundary.
 import { Ic, I } from "./icons";
 import { CommandPalette, type PaletteSystem } from "./command-palette";
+import { useHideOnScroll } from "@/components/use-hide-on-scroll";
+import { Reveal } from "@/components/reveal";
 import { Scratchpad } from "./scratchpad";
 import { useDismiss } from "./use-dismiss";
 
@@ -162,6 +164,10 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
   const [open, setOpen] = useState(false);
   const [authed, setAuthed] = useState(signedIn);
   const pathname = usePathname() || "";
+  // Slides the bar out on the way down and brings it back on the way up (or when
+  // the pointer reaches the top edge). The mobile menu hangs off this element, so
+  // an open menu pins the bar — otherwise it would slide away with the menu on it.
+  const hidden = !useHideOnScroll() && !open;
 
   useEffect(() => {
     const o = () => setScrolled(window.scrollY > 4);
@@ -179,7 +185,13 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
 
   const link = { fontSize: 15.5, color: "var(--fg-2)", textDecoration: "none", whiteSpace: "nowrap", fontWeight: 500, display: "inline-flex", alignItems: "center", minHeight: 24 } as const;
   return (
-    <nav style={{ position: "relative", display: "flex", alignItems: "center", gap: 18, padding: "15px var(--gutter)", background: scrolled ? "rgba(250,248,244,0.82)" : "transparent", backdropFilter: scrolled ? "blur(14px)" : "none", WebkitBackdropFilter: scrolled ? "blur(14px)" : "none", borderBottom: `1px solid ${scrolled ? "var(--line-1)" : "transparent"}`, transition: "border-color .25s ease, background .25s ease" }}>
+    <nav style={{ position: "relative", display: "flex", alignItems: "center", gap: 18, padding: "15px var(--gutter)", background: scrolled ? "rgba(250,248,244,0.82)" : "transparent", backdropFilter: scrolled ? "blur(14px)" : "none", WebkitBackdropFilter: scrolled ? "blur(14px)" : "none", borderBottom: `1px solid ${scrolled ? "var(--line-1)" : "transparent"}`,
+      // Transform, not height/display: the bar leaves the viewport without reflowing the page
+      // under it, and it stays in the tab order so keyboard focus can still reach it (the
+      // focus-within rule in SHELL_UI_CSS brings it back when it does).
+      transform: hidden ? "translate3d(0, -100%, 0)" : "translate3d(0, 0, 0)",
+      transition: "border-color .25s ease, background .25s ease, transform .34s cubic-bezier(0.22, 1, 0.36, 1)",
+      willChange: "transform" }}>
       <Brand href="/" />
       <div className="vra-nav-links" style={{ display: "flex", gap: 28, alignItems: "center", marginLeft: 22 }}>
         {PUBLIC_LINKS.map((l) => <Link key={l.href} href={l.href} style={{ ...link, color: pathname === l.href ? "var(--fg-1)" : "var(--fg-2)" }}>{l.label}</Link>)}
@@ -627,7 +639,12 @@ const SHELL_UI_CSS = "@keyframes vraTextIn{from{opacity:0;transform:translateY(1
   // number, because the number is the part that says whether it needs you.
   + "@media (max-width:980px){.vra-acct-readout{display:none}}"
   + "@media (max-width:760px){.vra-cmd-trigger__label,.vra-cmd-kbd{display:none}.vra-cmd-trigger{padding:0 10px}.vra-topbar-review__label{display:none}}"
-  + "@media (prefers-reduced-motion:reduce){.rank-root .eyebrow,.rank-root .display,.rank-root .lead-copy{animation:none}.rank-root .btn:active,.rank-root a.card:hover,.rank-root a.card:active,.rank-root a.acard:hover,.rank-root a.acard:active{transform:none}}";
+  // A hidden bar is still focusable, so tabbing into it from the page would move focus to
+  // something scrolled off-screen. Any focus inside brings it straight back.
+  + ".rank-root--site nav:focus-within{transform:translate3d(0,0,0)!important}"
+  + "@media (prefers-reduced-motion:reduce){.rank-root .eyebrow,.rank-root .display,.rank-root .lead-copy{animation:none}.rank-root .btn:active,.rank-root a.card:hover,.rank-root a.card:active,.rank-root a.acard:hover,.rank-root a.acard:active{transform:none}"
+  // The bar still hides — that is layout, not decoration — but it snaps instead of sliding.
+  + ".rank-root--site nav{transition:border-color .25s ease,background .25s ease!important}}";
 
 export function RankShell({ signedIn = false, email = null, appHost = false, systems = [], pendingReviews = 0, children }: { signedIn?: boolean; email?: string | null; appHost?: boolean; systems?: PaletteSystem[]; pendingReviews?: number; children: ReactNode }) {
   const pathname = usePathname() || "";
@@ -670,7 +687,19 @@ export function RankShell({ signedIn = false, email = null, appHost = false, sys
   return (
     <div className="rank-root rank-root--site">
       <style dangerouslySetInnerHTML={{ __html: SHELL_UI_CSS }} />
-      <div style={{ position: "sticky", top: 0, zIndex: 50 }}><PublicNav signedIn={signedIn} /></div>
+      {/* Drives the `.reveal` classes in the marketing stylesheet. Mounted on the shell rather
+          than per page so every public route animates by the same rule, and so it survives a
+          client navigation between them. */}
+      <Reveal />
+      {/* overflowAnchor:none keeps the browser from treating the bar's slide as content moving under
+          the reader and compensating with a scroll adjustment — which would be a scroll event, which
+          would move the bar again. Precautionary rather than a fix for an observed bug: the homepage
+          DOES oscillate on narrow viewports (body.scrollHeight cycles 6401/6461/6359 during a scroll,
+          bouncing the position ~100px), but that reproduces on a clean checkout with the nav's
+          hide-on-scroll removed entirely, so its cause is elsewhere in the page and this does not
+          cure it. Kept because opting a translating sticky element out of anchoring is correct
+          regardless; do not read it as having addressed the oscillation. */}
+      <div style={{ position: "sticky", top: 0, zIndex: 50, overflowAnchor: "none" }}><PublicNav signedIn={signedIn} /></div>
       {children}
       <Footer />
     </div>

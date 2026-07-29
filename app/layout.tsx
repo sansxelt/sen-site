@@ -115,6 +115,14 @@ export default async function RootLayout({
       <html
         lang="en"
         data-theme={GROUND_CSS[ground].scheme}
+        // styles.css sets `scroll-behavior: smooth` on <html> for in-page anchors. Through Next 15
+        // that was neutralised during route transitions; Next 16 no longer does it unless this
+        // attribute says to (see docs 02-guides/upgrading/version-16, "Scroll Behavior Override").
+        // Without it a navigation ANIMATES back to the top instead of arriving there, which reads as
+        // the new page sliding around on load and drags the nav's hide-on-scroll through every
+        // intermediate position on the way. The attribute restores the instant jump and leaves
+        // anchor links smooth.
+        data-scroll-behavior="smooth"
         // THE FIRST FRAME. This is the only place early enough to decide what colour the browser paints
         // before it has parsed a single stylesheet, because it is on the opening <html> tag.
         //

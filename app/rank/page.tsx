@@ -31,9 +31,11 @@ function Rule() {
 }
 
 // Small monospace label used to number and name the three beats of the primitive.
-function Step({ n, title, children }: { n: string; title: string; children: React.ReactNode }) {
+// `d` is the reveal stagger slot (see .reveal[data-d] in styles.css): the three
+// beats settle in reading order rather than all at once.
+function Step({ n, title, d, children }: { n: string; title: string; d?: string; children: React.ReactNode }) {
   return (
-    <div style={{ display: "grid", gap: 10, alignContent: "start" }}>
+    <div className="reveal" data-d={d} style={{ display: "grid", gap: 10, alignContent: "start" }}>
       <div style={{ display: "flex", gap: 10, alignItems: "baseline" }}>
         <span style={{ fontFamily: "var(--font-code)", fontSize: 11, letterSpacing: "0.1em", color: "var(--acc-deep)" }}>{n}</span>
         <h3 style={{ margin: 0, fontSize: "1.06rem", letterSpacing: "-0.015em", color: "var(--fg-1)" }}>{title}</h3>
@@ -94,14 +96,14 @@ export default function VraelisLanding() {
           than an authored test suite, because a test encodes the same assumptions the bug came from. */}
       <section className="section">
         <div className="wrap">
-          <div className="sec-head" style={{ marginBottom: 34 }}>
+          <div className="sec-head reveal" style={{ marginBottom: 34 }}>
             <p className="eyebrow">From claim to evidence</p>
             <h2 className="display">You describe the outcome. Vraelis works out the rest.</h2>
             <p>Not a test suite you author and maintain. A sentence about what should be true, turned into checks against the running system.</p>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "clamp(22px, 3vw, 40px)", alignItems: "start" }}>
-            <Step n="01" title="Describe what should be true">
+            <Step n="01" title="Describe what should be true" d="1">
               <p style={{ margin: "0 0 12px" }}>One sentence, about the result rather than the steps to reach it.</p>
               <p style={{
                 margin: 0, padding: "11px 13px", borderRadius: 8, background: "var(--bg-2)",
@@ -111,7 +113,7 @@ export default function VraelisLanding() {
               </p>
             </Step>
 
-            <Step n="02" title="Vraelis derives what must be checked">
+            <Step n="02" title="Vraelis derives what must be checked" d="2">
               <p style={{ margin: "0 0 12px" }}>It reads the deployed application and works out the requirements that claim implies.</p>
               <ul style={{ margin: "0 0 12px", paddingLeft: 16, display: "grid", gap: 5 }}>
                 {DERIVED.slice(0, 4).map((d) => (
@@ -126,7 +128,7 @@ export default function VraelisLanding() {
               </p>
             </Step>
 
-            <Step n="03" title="Vraelis returns a decision, with evidence">
+            <Step n="03" title="Vraelis returns a decision, with evidence" d="3">
               <p style={{ margin: "0 0 12px" }}>Three answers, and the third one is the honest option most tools refuse to have.</p>
               <div style={{ display: "grid", gap: 7, marginBottom: 12 }}>
                 {[
@@ -154,7 +156,7 @@ export default function VraelisLanding() {
       <section className="section" style={{ background: "var(--bg-2)" }}>
         <div className="wrap">
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.05fr) minmax(0,0.95fr)", gap: "clamp(28px, 5vw, 64px)", alignItems: "center" }} className="cols-stack">
-            <div>
+            <div className="reveal">
               <p className="eyebrow">Independent by design</p>
               <h2 className="display" style={{ fontSize: "clamp(1.85rem, 3.3vw, 2.7rem)", marginBottom: 16 }}>It checks from outside the application.</h2>
               <p className="lead-copy" style={{ marginBottom: 16 }}>
@@ -167,7 +169,7 @@ export default function VraelisLanding() {
 
             {/* The contrast, drawn rather than described. Three stacked stages, with Vraelis clearly beside
                 the deployed system instead of inside it. */}
-            <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-lg)", background: "var(--bg-1)", padding: "clamp(20px, 3vw, 30px)", boxShadow: "var(--shadow-sm)" }}>
+            <div className="reveal" data-d="2" style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-lg)", background: "var(--bg-1)", padding: "clamp(20px, 3vw, 30px)", boxShadow: "var(--shadow-sm)" }}>
               <div style={{ display: "grid", gap: 0, justifyItems: "center", textAlign: "center" }}>
                 {[
                   { t: "AI builder", d: "writes and ships the change" },
@@ -196,7 +198,7 @@ export default function VraelisLanding() {
           tempting overclaim here is that Vraelis fixes code. It does not. */}
       <section className="section">
         <div className="wrap">
-          <div className="sec-head" style={{ marginBottom: 30 }}>
+          <div className="sec-head reveal" style={{ marginBottom: 30 }}>
             <p className="eyebrow">Failure is not the end</p>
             <h2 className="display">A failed claim becomes something the builder can fix.</h2>
             <p>A verdict on its own tells you something is wrong and leaves you to find it. The useful output is the package that lets the thing which wrote the code repair it.</p>
@@ -211,8 +213,11 @@ export default function VraelisLanding() {
                 "Sent back to the coding agent",
                 "New deployment",
                 "Reverified",
+              // The loop settles one step at a time, in the order the loop runs. Capped at slot 5
+              // because that is where the stagger scale ends; the last step lands with the one
+              // before it rather than reading as a dropped frame.
               ].map((s, i, arr) => (
-                <div key={s} style={{ display: "grid", gridTemplateColumns: "16px minmax(0,1fr)", gap: 12, alignItems: "start" }}>
+                <div key={s} className="reveal" data-d={String(Math.min(i + 1, 5))} style={{ display: "grid", gridTemplateColumns: "16px minmax(0,1fr)", gap: 12, alignItems: "start" }}>
                   <div style={{ display: "grid", justifyItems: "center", height: "100%" }}>
                     <span style={{ width: 7, height: 7, borderRadius: 999, background: i === arr.length - 1 ? "var(--acc-deep)" : "var(--line-3)", marginTop: 7 }} />
                     {i < arr.length - 1 && <span style={{ width: 1, flex: 1, minHeight: 26, background: "var(--line-2)" }} />}
@@ -222,7 +227,7 @@ export default function VraelisLanding() {
               ))}
             </div>
 
-            <div>
+            <div className="reveal" data-d="2">
               <p style={{ color: "var(--fg-2)", fontSize: "1.02rem", lineHeight: 1.62, margin: "0 0 18px" }}>
                 Vraelis packages what should have happened, what happened instead, how to reproduce it, and the browser evidence from the failure.
               </p>
@@ -244,13 +249,13 @@ export default function VraelisLanding() {
           secondary while the developer surface is still being proven in production. */}
       <section className="section" style={{ background: "var(--bg-2)" }}>
         <div className="wrap">
-          <div className="sec-head" style={{ marginBottom: 30 }}>
+          <div className="sec-head reveal" style={{ marginBottom: 30 }}>
             <p className="eyebrow">Built for people and agents</p>
             <h2 className="display">The same verification, however it is asked for.</h2>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(270px, 1fr))", gap: "clamp(20px, 3vw, 34px)" }}>
-            <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-lg)", background: "var(--bg-1)", padding: "clamp(20px, 2.6vw, 28px)" }}>
+            <div className="reveal" data-d="1" style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-lg)", background: "var(--bg-1)", padding: "clamp(20px, 2.6vw, 28px)" }}>
               <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 10 }}>For people</div>
               <h3 style={{ margin: "0 0 10px", fontSize: "1.12rem", letterSpacing: "-0.015em" }}>Submit and review verifications from the Vraelis application.</h3>
               <p style={{ margin: "0 0 18px", color: "var(--fg-3)", fontSize: "0.95rem", lineHeight: 1.6 }}>
@@ -259,7 +264,7 @@ export default function VraelisLanding() {
               <Link href="/signin?callbackUrl=%2Fapp" className="btn">Verify an outcome</Link>
             </div>
 
-            <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-lg)", background: "var(--bg-1)", padding: "clamp(20px, 2.6vw, 28px)" }}>
+            <div className="reveal" data-d="2" style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-lg)", background: "var(--bg-1)", padding: "clamp(20px, 2.6vw, 28px)" }}>
               <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 10 }}>For software</div>
               <h3 style={{ margin: "0 0 10px", fontSize: "1.12rem", letterSpacing: "-0.015em" }}>Launch and read verifications through the API or CLI.</h3>
               <p style={{ margin: "0 0 14px", color: "var(--fg-3)", fontSize: "0.95rem", lineHeight: 1.6 }}>
@@ -275,7 +280,7 @@ export default function VraelisLanding() {
 
           {/* The direction, stated as direction. This is where a reader decides how big the company is, and
               it is also where it would be easiest to fabricate coverage, so the boundary is explicit. */}
-          <div style={{ marginTop: "clamp(30px, 4vw, 46px)", paddingTop: 24, borderTop: "1px solid var(--line-2)", maxWidth: 640 }}>
+          <div className="reveal" style={{ marginTop: "clamp(30px, 4vw, 46px)", paddingTop: 24, borderTop: "1px solid var(--line-2)", maxWidth: 640 }}>
             <p style={{ fontSize: "1.05rem", lineHeight: 1.6, color: "var(--fg-2)", margin: "0 0 10px" }}>
               Vraelis starts with deployed web applications. The long-term verification layer should work anywhere AI claims an outcome occurred.
             </p>
@@ -290,7 +295,7 @@ export default function VraelisLanding() {
 
       <section className="section cta-band" style={{ borderBottom: "none" }}>
         <div className="glow glow--soft" />
-        <div className="wrap" style={{ maxWidth: 720, textAlign: "center" }}>
+        <div className="wrap reveal" style={{ maxWidth: 720, textAlign: "center" }}>
           <h2 className="display" style={{ fontSize: "clamp(2.1rem, 4.4vw, 3.4rem)", marginBottom: 18 }}>Before anything says <span className="em">done</span>.</h2>
           <p className="lead-copy" style={{ margin: "0 auto 28px", textAlign: "center" }}>
             Give Vraelis a deployed application and the outcome that should be true. Get back a decision you can act on, and the evidence behind it.
