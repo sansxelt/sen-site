@@ -6,7 +6,6 @@
 // operational landscape that used to sit in the bottom band is gone: it competed with the type and did not
 // earn the room it took. Positioning copy comes from _system/positioning.ts and is provisional.
 import { CTA } from "./ui";
-import { HeroEvidence } from "./hero-evidence";
 import { CATEGORY, HEADLINE, SUPPORT } from "./positioning";
 import { PUBLIC_HOW_IT_WORKS } from "@/lib/v6-routes";
 import "./hero.css";
@@ -16,9 +15,6 @@ export function Hero() {
     <section className="v6-h" data-nav-dark data-nav-theme="dark">
       <div className="v6-h__field" aria-hidden />
       <div className="v6-h__inner">
-        {/* The copy is wrapped so the opening can be two columns at width, with the evidence beside the
-            argument rather than under it. Below 1080 the wrapper is inert and the two stack. */}
-        <div className="v6-h__copy">
         <p className="v6-eyebrow v6-h__eyebrow">{CATEGORY}</p>
         <h1 className="v6-h__h1">
           <span className="v6-mask"><span className="v6-mask__in lead-clause">{HEADLINE[0]}</span></span>
@@ -32,11 +28,6 @@ export function Hero() {
             page's one dominant action on a destination the header already owns. The hero's job is to earn
             the next scroll, so it points at how the thing works. */}
         <div className="v6-h__cta"><CTA brand lg href={PUBLIC_HOW_IT_WORKS}>See how it works</CTA></div>
-        </div>
-        {/* The subject. Type on an empty field was the one thing this opening had that the reference it is
-            measured against never does; see hero-evidence.tsx for why the product's own output is the
-            honest choice of subject here and stock imagery is not. */}
-        <HeroEvidence />
       </div>
     </section>
   );
