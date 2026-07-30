@@ -13,7 +13,7 @@ import { PROVIDER_LABELS, whenUtc } from "@/lib/preflight/connection-display";
 import { AppTabs } from "../app-tabs";
 import { I, Ic, EmptyIcon } from "@/app/rank/_components/icons";
 
-export const metadata: Metadata = { title: "Application context" };
+export const metadata: Metadata = { title: "System context" };
 
 // The versioned application context graph (V1.1 workstream S3): everything Vraelis knows about this
 // application, rendered by section from the LIVE graph, with the recorded version history alongside.
@@ -117,9 +117,9 @@ export default async function AppContextPage({ params }: { params: Promise<{ id:
       <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
         <div className="empty">
           <EmptyIcon d={I.slash} />
-          <h3>Application not found</h3>
-          <p>This application doesn&apos;t exist, or it belongs to another account.</p>
-          <Link href="/systems" className="btn">Back to applications</Link>
+          <h3>System not found</h3>
+          <p>This system doesn&apos;t exist, or it belongs to another account.</p>
+          <Link href="/systems" className="btn">Back to systems</Link>
         </div>
       </div>
     );
@@ -175,7 +175,7 @@ export default async function AppContextPage({ params }: { params: Promise<{ id:
   return (
     <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
       <nav aria-label="Breadcrumb" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 13, marginBottom: 14 }}>
-        <Link href="/systems" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Applications</Link>
+        <Link href="/systems" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Systems</Link>
         <span aria-hidden style={{ color: "var(--fg-5)" }}>/</span>
         <span style={{ color: "var(--fg-2)", fontWeight: 600, maxWidth: 360, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app.name}</span>
       </nav>
@@ -257,7 +257,7 @@ export default async function AppContextPage({ params }: { params: Promise<{ id:
       {g ? (
         <>
           <section style={sectionStyle} aria-label="Identity">
-            <SectionHead label="Identity" from="Application record" />
+            <SectionHead label="Identity" from="System record" />
             <div style={{ display: "grid", gap: 11, maxWidth: 640 }}>
               <KV k="Name" v={g.identity.name} />
               <KV k="URL" v={g.identity.app_url} />
@@ -325,7 +325,7 @@ export default async function AppContextPage({ params }: { params: Promise<{ id:
               </div>
             ) : (
               <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0 }}>
-                No connections recorded, so verifications run with only the application URL. Manage them on the{" "}
+                No connections recorded, so verifications run with only the system URL. Manage them on the{" "}
                 <Link href={`/systems/${id}/settings/connections`} style={{ color: "var(--acc-deep)", fontWeight: 600 }}>Connections tab</Link>.
               </p>
             )}
@@ -355,7 +355,7 @@ export default async function AppContextPage({ params }: { params: Promise<{ id:
           </>
         ) : (
           <p style={{ fontSize: 13, color: "var(--acc-deep)", fontWeight: 600, margin: 0 }}>
-            Nothing is missing. Every kind of context Vraelis can use today is on file for this application.
+            Nothing is missing. Every kind of context Vraelis can use today is on file for this system.
           </p>
         )}
       </section>

@@ -22,7 +22,7 @@ const NOW = Date.parse("2026-07-27T14:00:00.000Z");
 const HOUR = 3600_000, DAY = 24 * HOUR;
 const run = (o: Partial<RunRow> & { created_at: string }): RunRow => ({
   id: "r", state: "completed", decision: "ready",
-  held_cents: null, credits_held: null, flow_units: null, deployment_url: null, ...o,
+  held_cents: null, credits_held: null, flow_units: null, deployment_url: null, application_id: null, ...o,
 });
 
 // ── A PAY-AS-YOU-GO RUN IS MONEY. A SUBSCRIPTION RUN IS NOT. ──────────────────────────────────────────

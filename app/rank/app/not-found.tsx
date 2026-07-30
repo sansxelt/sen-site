@@ -10,7 +10,7 @@ export default function AppNotFound() {
       <div className="empty">
         <EmptyIcon d={I.help} />
         <h3>This page does not exist.</h3>
-        <p>The link may be out of date, or the page may have moved. Your applications and runs are still on the overview.</p>
+        <p>The link may be out of date, or the page may have moved. Your systems and runs are still on the overview.</p>
         <Link href="/app" className="btn">Back to overview</Link>
       </div>
     </div>

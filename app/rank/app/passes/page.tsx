@@ -87,7 +87,7 @@ function PassLine({ pass }: { pass: PassRow }) {
           so it must not carry the verified-repair wrench beside that word. */}
       <span className="pill" style={{ fontSize: 10, color: st.color, background: st.bg, borderColor: st.border, flex: "none" }}><DecisionMark decision={st.tone} />{st.label}</span>
       <span style={{ fontWeight: 600, fontSize: 14, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: "0 1 auto", minWidth: 0 }}>
-        {pass.applicationName || "Untitled application"}
+        {pass.applicationName || "Untitled system"}
       </span>
       {pass.parentRunId && (
         <span className="pill" style={{ fontSize: 10, color: "var(--fg-4)", background: "var(--bg-2)", borderColor: "var(--line-2)", flex: "none" }}>rerun</span>
@@ -159,7 +159,7 @@ export default async function PassesPage() {
         <div>
           <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "0 0 10px" }}>Verifications</h1>
           <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.6, margin: 0, maxWidth: 560 }}>
-            Every verification run across your applications, newest first, grouped by the decision it produced.
+            Every verification run across your systems, newest first, grouped by the decision it produced.
           </p>
         </div>
         <Link href="/systems/new" className="btn" style={{ flex: "none" }}>+ Connect app</Link>
@@ -169,7 +169,7 @@ export default async function PassesPage() {
         <div className="empty">
           <EmptyIcon d={I.shield} />
           <h3>Nothing verified yet</h3>
-          <p>Connect an application and run a verification in a real browser to get a decision.</p>
+          <p>Connect a system and run a verification in a real browser to get a decision.</p>
           <Link href="/systems/new" className="btn">Connect an app</Link>
         </div>
       ) : (

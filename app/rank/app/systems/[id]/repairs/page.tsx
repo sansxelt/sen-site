@@ -78,9 +78,9 @@ export default async function AppRepairsPage({ params }: { params: Promise<{ id:
       <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
         <div className="empty">
           <EmptyIcon d={I.slash} />
-          <h3>Application not found</h3>
-          <p>This application doesn&apos;t exist, or it belongs to another account.</p>
-          <Link href="/systems" className="btn">Back to applications</Link>
+          <h3>System not found</h3>
+          <p>This system doesn&apos;t exist, or it belongs to another account.</p>
+          <Link href="/systems" className="btn">Back to systems</Link>
         </div>
       </div>
     );
@@ -91,7 +91,7 @@ export default async function AppRepairsPage({ params }: { params: Promise<{ id:
   return (
     <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
       <nav aria-label="Breadcrumb" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 13, marginBottom: 14 }}>
-        <Link href="/systems" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Applications</Link>
+        <Link href="/systems" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Systems</Link>
         <span aria-hidden style={{ color: "var(--fg-5)" }}>/</span>
         <span style={{ color: "var(--fg-2)", fontWeight: 600, maxWidth: 360, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app.name}</span>
       </nav>
@@ -111,8 +111,11 @@ export default async function AppRepairsPage({ params }: { params: Promise<{ id:
       ) : (
         <div className="empty">
           <EmptyIcon d={I.wrench} />
-          <h3>No repairs yet</h3>
-          <p>When a verification finds an issue, Vraelis writes a repair prompt for your AI builder. Apply it, rerun the verification, and the result is recorded here.</p>
+          {/* Same correction as /repairs: nothing writes v_repairs, so "the result is recorded here" was a
+              promise with no writer behind it. The repair prompt lives on the issue and the rerun is its own
+              verification linked by parent_run_id. */}
+          <h3>Repairs are recorded on issues and verifications</h3>
+          <p>Each failure on this system carries a repair prompt for your builder, on the issue itself. Rerun after a fix and the result is kept as its own verification, linked to the one it repairs.</p>
           <Link href={`/systems/${id}/issues`} className="btn">View issues</Link>
         </div>
       )}

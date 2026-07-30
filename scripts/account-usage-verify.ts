@@ -5,7 +5,7 @@ const ok = (n: string, c: boolean, d = "") => { if (c) { pass++; console.log(`PA
 const NOW = Date.parse("2026-07-27T12:00:00.000Z");
 const at = (iso: string, cents: number | null = null): DetailRunRow => ({
   id: iso, created_at: iso, started_at: iso, completed_at: null, state: "completed", decision: "ready",
-  held_cents: cents, credits_held: 0, flow_units: null, deployment_url: null, invalidated_at: null, guarantee_id: null,
+  held_cents: cents, credits_held: 0, flow_units: null, deployment_url: null, application_id: null, invalidated_at: null, guarantee_id: null,
 });
 
 console.log("── months are calendar months, in UTC ──");

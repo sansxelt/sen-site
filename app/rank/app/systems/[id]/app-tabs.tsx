@@ -24,7 +24,7 @@ const API_TAB = { key: "api", label: "API", path: "/api-runtime" };
 export function AppTabs({ appId, active, showApiTab }: { appId: string; active: string; showApiTab?: boolean }) {
   const tabs = showApiTab ? [...TABS, API_TAB] : TABS;
   return (
-    <nav aria-label="Application sections"
+    <nav aria-label="System sections"
       style={{ display: "flex", gap: 2, borderBottom: "1px solid var(--line-1)", marginTop: 22, marginBottom: 20, overflowX: "auto" }}>
       {tabs.map((t) => {
         const isActive = t.key === active;

@@ -39,7 +39,7 @@ export default function PlansPage() {
         <div>
           <p className="eyebrow">Plans</p>
           <h1 className="display">Priced by the run, not the seat</h1>
-          <p>Run your AI-built application through a real verification. Every verification includes browser execution, evidence, issue tracking, and an explainable decision.</p>
+          <p>Run your AI-built system through a real verification. Every verification includes browser execution, evidence, issue tracking, and an explainable decision.</p>
         </div>
         {signedIn && <button onClick={manageBilling} disabled={busy} className="btn btn--ghost">{busy ? "Opening…" : "Manage billing"}</button>}
       </div>

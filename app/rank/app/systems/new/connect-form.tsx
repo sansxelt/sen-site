@@ -34,10 +34,10 @@ type Source = { kind: string; name: string; content: string; added?: number };
 
 function friendlyError(code: unknown): string {
   switch (code) {
-    case "name_and_url_required": return "Add both an application name and its URL.";
+    case "name_and_url_required": return "Add both a system name and its URL.";
     case "ownership_required": return "Confirm you own or are authorized to test this app.";
     case "invalid_url": return "Enter a public https URL for the deployed app.";
-    case "application_limit": return "You've reached your plan's application limit. Delete an application from its Settings, or upgrade your plan, then try again.";
+    case "application_limit": return "You've reached your plan's system limit. Delete a system from its Settings, or upgrade your plan, then try again.";
     case "unavailable": return "Preflight isn't available right now. Try again in a moment.";
     default: return "Something went wrong. Try again.";
   }
@@ -266,7 +266,7 @@ export default function ConnectWorkspace() {
     }
     if (failed.length) {
       setAccounts(failed.map((f) => f.account));
-      setErr(`Application connected, but ${failed.length} test account${failed.length === 1 ? " was" : "s were"} NOT stored (${failed.map((f) => `"${f.account.label}": ${f.why}`).join("; ")}). They are still here. Fix the cause and press Retry, or continue without them.`);
+      setErr(`System connected, but ${failed.length} test account${failed.length === 1 ? " was" : "s were"} NOT stored (${failed.map((f) => `"${f.account.label}": ${f.why}`).join("; ")}). They are still here. Fix the cause and press Retry, or continue without them.`);
       setBusy(false);
       return;
     }
@@ -286,7 +286,7 @@ export default function ConnectWorkspace() {
     <div>
       {/* header + progress */}
       <div style={{ marginBottom: 22 }}>
-        <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "0 0 8px" }}>Connect your application</h1>
+        <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "0 0 8px" }}>Connect your system</h1>
         <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.6, margin: 0, maxWidth: 640 }}>
           Give Vraelis the context required to test the exact product, deployment, data layer, and user journeys you intend to ship.
         </p>
@@ -302,15 +302,15 @@ export default function ConnectWorkspace() {
         {/* main column */}
         <div style={{ display: "grid", gap: 26 }}>
 
-          <Section n={1} title="Application" sub="The deployed product Vraelis will run like production.">
+          <Section n={1} title="System" sub="The deployed product Vraelis will run like production.">
             <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: 14 }} className="cols-stack">
               <div>
-                <label style={lab} htmlFor="c-url">Application URL</label>
+                <label style={lab} htmlFor="c-url">System URL</label>
                 <input id="c-url" type="url" required inputMode="url" value={appUrl} onChange={(e) => setAppUrl(e.target.value)} placeholder="https://your-app.vercel.app" maxLength={2000} style={input} />
                 {host ? <p style={help}>Detected deployment: <strong style={{ color: "var(--fg-2)" }}>{host}</strong>{envValue ? `, looks like ${envValue}` : ""}.</p> : <p style={help}>The public https URL of the deployment under test.</p>}
               </div>
               <div>
-                <label style={lab} htmlFor="c-name">Application name</label>
+                <label style={lab} htmlFor="c-name">System name</label>
                 <input id="c-name" type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Acme dashboard" maxLength={140} style={input} />
               </div>
               <div>
@@ -352,7 +352,7 @@ export default function ConnectWorkspace() {
               </ConnCard>
             </div>
             <p style={{ fontSize: 12, color: "var(--fg-4)", margin: "10px 0 0", lineHeight: 1.5 }}>
-              Prefer to authorize with a token instead of pasting metadata? Connect GitHub with read-only OAuth on the Connections tab once this application is set up.
+              Prefer to authorize with a token instead of pasting metadata? Connect GitHub with read-only OAuth on the Connections tab once this system is set up.
             </p>
             <ComingLater names={["Vercel OAuth", "Railway", "Netlify"]} />
           </Section>
@@ -400,7 +400,7 @@ export default function ConnectWorkspace() {
           <Section n={6} title="Test boundaries" sub="What Vraelis may and may not do. Defaults are conservative; widen them only when you mean it.">
             <label htmlFor="c-own" style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", padding: "13px 15px", border: `1px solid ${own ? "var(--acc-line)" : "var(--line-2)"}`, borderRadius: "var(--r-sm)", background: own ? "var(--acc-soft)" : "var(--bg-2)" }}>
               <input id="c-own" type="checkbox" checked={own} onChange={(e) => setOwn(e.target.checked)} style={{ marginTop: 2, accentColor: "var(--acc)", width: 16, height: 16, flex: "none" }} />
-              <span style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5, fontWeight: 600 }}>I own this application or am authorized to test it. <span style={{ fontWeight: 400, color: "var(--fg-3)" }}>Required.</span></span>
+              <span style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5, fontWeight: 600 }}>I own this system or am authorized to test it. <span style={{ fontWeight: 400, color: "var(--fg-3)" }}>Required.</span></span>
             </label>
             <div>
               <label style={lab} htmlFor="c-domains">Allowed domains</label>
@@ -427,8 +427,8 @@ export default function ConnectWorkspace() {
             <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)" }}>Connection summary</div>
             <div style={{ display: "grid", gap: 7 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: "var(--fg-2)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Required</div>
-              {summaryRow("Application URL", urlOk)}
-              {summaryRow("Application name", nameOk)}
+              {summaryRow("System URL", urlOk)}
+              {summaryRow("System name", nameOk)}
               {summaryRow("Ownership authorization", own)}
             </div>
             <div style={{ display: "grid", gap: 7, borderTop: "1px solid var(--line-1)", paddingTop: 10 }}>
@@ -450,14 +450,14 @@ export default function ConnectWorkspace() {
             ) : (
               <>
                 <button type="button" className="btn btn--lg" disabled={!canSubmit} onClick={onSubmit} style={{ width: "100%", justifyContent: "center", opacity: canSubmit ? 1 : 0.55 }}>
-                  {busy ? "Connecting…" : "Connect application"}
+                  {busy ? "Connecting…" : "Connect system"}
                 </button>
                 {/* Never a dead button with no reason: name the first unmet requirement so the user knows
                     exactly what to do (the recommended connections are NOT required to continue). */}
                 {!canSubmit && !busy ? (
                   <p style={{ fontSize: 12, color: "var(--fg-4)", textAlign: "center", margin: "2px 0 0" }}>
-                    {!urlOk ? "Add a valid https application URL to continue."
-                      : !nameOk ? "Add an application name to continue."
+                    {!urlOk ? "Add a valid https system URL to continue."
+                      : !nameOk ? "Add a system name to continue."
                       : !own ? "Confirm you own or are authorized to test this app."
                       : "Complete the required fields to continue."}
                   </p>

@@ -191,7 +191,7 @@ export default async function DeploymentsPage() {
           <EmptyIcon d={I.deploy} />
           <h3>No deployments tested yet</h3>
           <p>Run a verification and the deployment it tests appears here with its verdict.</p>
-          <Link href="/systems" className="btn">Go to applications</Link>
+          <Link href="/systems" className="btn">Go to systems</Link>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>

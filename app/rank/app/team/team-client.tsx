@@ -25,9 +25,9 @@ const INVITABLE: Role[] = ["admin", "editor", "viewer", "client_viewer"];
 const ROLE_LABEL: Record<Role, string> = { owner: "Owner", admin: "Admin", editor: "Editor", viewer: "Viewer", client_viewer: "Client viewer" };
 const ROLE_DESC: Record<Role, string> = {
   owner: "Full workspace control. Manages the team and owns billing.",
-  admin: "Manage members and application access. See analytics and reports.",
+  admin: "Manage members and system access. See analytics and reports.",
   editor: "Author contracts and flows, and launch verifications. See analytics and reports.",
-  viewer: "Read-only workspace access to applications, verifications, and reports.",
+  viewer: "Read-only workspace access to systems, verifications, and reports.",
   client_viewer: "Client-safe reports only, no team, billing, API, or private internals.",
 };
 const PROJ_ROLE_LABEL: Record<ProjRole, string> = { editor: "Editor", viewer: "Viewer", client_viewer: "Client viewer" };

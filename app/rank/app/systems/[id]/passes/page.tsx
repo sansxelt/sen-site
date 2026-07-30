@@ -86,9 +86,9 @@ export default async function AppRunsPage({ params }: { params: Promise<{ id: st
       <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
         <div className="empty">
           <EmptyIcon d={I.slash} />
-          <h3>Application not found</h3>
-          <p>This application doesn&apos;t exist, or it belongs to another account.</p>
-          <Link href="/systems" className="btn">Back to applications</Link>
+          <h3>System not found</h3>
+          <p>This system doesn&apos;t exist, or it belongs to another account.</p>
+          <Link href="/systems" className="btn">Back to systems</Link>
         </div>
       </div>
     );
@@ -99,7 +99,7 @@ export default async function AppRunsPage({ params }: { params: Promise<{ id: st
   return (
     <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
       <nav aria-label="Breadcrumb" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 13, marginBottom: 14 }}>
-        <Link href="/systems" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Applications</Link>
+        <Link href="/systems" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Systems</Link>
         <span aria-hidden style={{ color: "var(--fg-5)" }}>/</span>
         <span style={{ color: "var(--fg-2)", fontWeight: 600, maxWidth: 360, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app.name}</span>
       </nav>

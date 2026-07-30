@@ -42,8 +42,8 @@ function row(o: Partial<DetailRunRow> & { id: string }): DetailRunRow {
     id: o.id, created_at: o.created_at ?? day(0), started_at: o.started_at ?? o.created_at ?? day(0),
     completed_at: o.completed_at ?? null, state: o.state ?? "completed", decision: o.decision ?? null,
     held_cents: o.held_cents ?? null, credits_held: o.credits_held ?? 0, flow_units: o.flow_units ?? null,
-    deployment_url: o.deployment_url ?? null, invalidated_at: o.invalidated_at ?? null,
-    guarantee_id: o.guarantee_id ?? null,
+    deployment_url: o.deployment_url ?? null, application_id: o.application_id ?? null,
+    invalidated_at: o.invalidated_at ?? null, guarantee_id: o.guarantee_id ?? null,
   };
 }
 

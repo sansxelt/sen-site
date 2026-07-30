@@ -31,7 +31,7 @@ export function DeleteApplication({ appId, appName }: { appId: string; appName: 
       const res = await fetch(`/api/preflight/apps?id=${encodeURIComponent(appId)}`, { method: "DELETE" });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErr(typeof j?.message === "string" ? j.message : "Could not delete this application. Try again, or contact support if it persists.");
+        setErr(typeof j?.message === "string" ? j.message : "Could not delete this system. Try again, or contact support if it persists.");
         setBusy(false);
         return;
       }
@@ -39,14 +39,14 @@ export function DeleteApplication({ appId, appName }: { appId: string; appName: 
       router.push("/systems");
       router.refresh();
     } catch {
-      setErr("Network error. The application was not deleted.");
+      setErr("Network error. The system was not deleted.");
       setBusy(false);
     }
   }
 
   return (
     <div className="card" style={{ padding: "clamp(18px, 2.4vw, 24px)", background: "var(--bg-2)", marginTop: 26, border: "1px solid var(--line-2)" }}>
-      <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--fg-1)", margin: 0 }}>Delete application</h2>
+      <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--fg-1)", margin: 0 }}>Delete system</h2>
       <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, margin: "8px 0 0" }}>
         Permanently removes <strong style={{ color: "var(--fg-1)" }}>{appName}</strong> and its contract, flows,
         connections, and run history. This cannot be undone. Your billing records are kept.
@@ -59,18 +59,18 @@ export function DeleteApplication({ appId, appName }: { appId: string; appName: 
           className="btn btn--ghost"
           style={{ marginTop: 14, color: "var(--err)", borderColor: "var(--err)" }}
         >
-          Delete this application
+          Delete this system
         </button>
       ) : (
         <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 12, maxWidth: 420 }}>
           <label style={{ fontSize: 12.5, color: "var(--fg-2)" }}>
-            Type the application name <strong style={{ color: "var(--fg-1)" }}>{appName}</strong> to confirm.
+            Type the system name <strong style={{ color: "var(--fg-1)" }}>{appName}</strong> to confirm.
           </label>
           <input
             value={confirmText}
             onChange={(e) => setConfirmText(e.target.value)}
             placeholder={appName}
-            aria-label="Type the application name to confirm deletion"
+            aria-label="Type the system name to confirm deletion"
             style={inputStyle}
             autoFocus
           />

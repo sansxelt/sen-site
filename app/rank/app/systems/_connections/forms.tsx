@@ -29,7 +29,7 @@ export function GithubForm({ value, onSave, saveLabel = "Save connection", busy 
         <div><label style={lab}>Branch (optional)</label><input value={branch} onChange={(e) => setBranch(e.target.value)} placeholder="main" style={input} /></div>
         <div><label style={lab}>Commit SHA (optional)</label><input value={commit} onChange={(e) => setCommit(e.target.value)} placeholder="7-40 hex chars" style={input} />{commit && !commitOk ? <p style={{ ...help, color: "var(--err)" }}>A commit SHA is 7-40 hex characters.</p> : null}</div>
       </div>
-      <p style={help}>Manual connection: metadata only. To authorize GitHub with a read-only token, use Connect GitHub on the application&apos;s Connections tab after setup.</p>
+      <p style={help}>Manual connection: metadata only. To authorize GitHub with a read-only token, use Connect GitHub on the system&apos;s Connections tab after setup.</p>
       <button type="button" className="btn" disabled={!canSave} style={{ justifySelf: "start", opacity: canSave ? 1 : 0.55 }}
         onClick={() => onSave({ repo: repo.trim(), ...(branch.trim() ? { branch: branch.trim() } : {}), ...(commit.trim() ? { commit: commit.trim().toLowerCase() } : {}) })}>{busy ? "Saving" : saveLabel}</button>
     </div>

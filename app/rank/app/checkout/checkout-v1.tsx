@@ -12,7 +12,7 @@ export type V1Cycle = "monthly" | "yearly";
 
 const BLURBS: Record<PlanV1["key"], string> = {
   builder_v1: "For one product moving steadily toward launch.",
-  pro_v1: "For teams launching continuously across applications.",
+  pro_v1: "For teams launching continuously across systems.",
   scale_v1: "For agencies and platforms verifying at volume.",
 };
 
@@ -24,7 +24,7 @@ export function v1Included(plan: PlanV1, cycle: V1Cycle): string[] {
   return [
     `Validate ${plan.passesPerMonth} launches a month (${plan.passesPerMonth} verifications)`,
     `Up to ${plan.flowsPerPass} flows verified per run`,
-    plan.maxApplications === null ? "No cap on connected applications" : `${plan.maxApplications} connected applications`,
+    plan.maxApplications === null ? "No cap on connected systems" : `${plan.maxApplications} connected systems`,
     "Real-browser evidence with screenshots on every verification",
     "Linked repair verification",
     "Targeted reruns spend only the selected flows",

@@ -71,7 +71,7 @@ export function TeamPanel({ appId, initialMembers }: { appId: string; initialMem
   }
 
   async function remove(memberId: string, memberEmail: string) {
-    if (!confirm(`Remove ${memberEmail} from this application's team?`)) return;
+    if (!confirm(`Remove ${memberEmail} from this system's team?`)) return;
     setErr(null); setNote(null);
     try {
       const res = await fetch(`${base}?memberId=${encodeURIComponent(memberId)}`, { method: "DELETE" });
@@ -89,7 +89,7 @@ export function TeamPanel({ appId, initialMembers }: { appId: string; initialMem
       <div className="card" style={{ padding: "clamp(18px, 2.4vw, 24px)" }}>
         <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16.5, color: "var(--fg-1)", margin: 0 }}>Invite a teammate</h2>
         <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, margin: "8px 0 16px" }}>
-          They&apos;ll collaborate on this application&apos;s contract, flows, and reports. Runs they launch are
+          They&apos;ll collaborate on this system&apos;s contract, flows, and reports. Runs they launch are
           billed to your account. Invites go out by email; they join the moment they sign in.
         </p>
         <form onSubmit={invite} style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-start" }}>

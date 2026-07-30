@@ -24,7 +24,7 @@ import { GuaranteesSection } from "./guarantees-section";
 import { nextAction, stateRibbon, type CommandState } from "@/lib/preflight/command-center";
 import { Ic, I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
 
-export const metadata: Metadata = { title: "Application" };
+export const metadata: Metadata = { title: "System" };
 
 // Friendly labels for the builder the app was created with (raw key falls through).
 const BUILDER_LABELS: Record<string, string> = {
@@ -132,9 +132,9 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
       <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
         <div className="empty">
           <EmptyIcon d={I.slash} />
-          <h3>Application not found</h3>
-          <p>This application doesn&apos;t exist, or you don&apos;t have access to it.</p>
-          <Link href="/systems" className="btn">Back to applications</Link>
+          <h3>System not found</h3>
+          <p>This system doesn&apos;t exist, or you don&apos;t have access to it.</p>
+          <Link href="/systems" className="btn">Back to systems</Link>
         </div>
       </div>
     );
@@ -255,7 +255,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
   return (
     <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
       <nav aria-label="Breadcrumb" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 13, marginBottom: 14 }}>
-        <Link href="/systems" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Applications</Link>
+        <Link href="/systems" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Systems</Link>
         <span aria-hidden style={{ color: "var(--fg-5)" }}>/</span>
         <span style={{ color: "var(--fg-2)", fontWeight: 600, maxWidth: 360, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app.name}</span>
       </nav>
@@ -469,14 +469,14 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
           style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14, padding: "12px 18px", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", textDecoration: "none" }}>
           <span className="pill" style={{ fontSize: 10.5, color: TONE_READY.fg, background: TONE_READY.bg, borderColor: TONE_READY.line, flex: "none" }}><DecisionMark decision="verified" />Verified</span>
           <span style={{ fontSize: 13, color: "var(--fg-2)", fontWeight: 500, flex: 1 }}>
-            {verifiedRepairCount} verified repair{verifiedRepairCount === 1 ? "" : "s"} on this application
+            {verifiedRepairCount} verified repair{verifiedRepairCount === 1 ? "" : "s"} on this system
           </span>
           <span aria-hidden style={{ color: "var(--fg-5)", flex: "none", fontSize: 13 }}>→</span>
         </Link>
       ) : null}
 
       {/* ── Application details: last, compact ───────────────────────────────────────────────────────── */}
-      <section style={sectionStyle} aria-label="Application details">
+      <section style={sectionStyle} aria-label="System details">
         <div className="card" style={{ padding: "14px 18px 16px" }}>
           <div style={{ ...headLbl, marginBottom: 10 }}>Details</div>
           <div style={{ display: "grid", gap: 8 }}>

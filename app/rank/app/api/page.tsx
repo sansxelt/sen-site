@@ -352,7 +352,8 @@ export default function ApiKeysPage() {
                       <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-5)", marginBottom: 6 }}>Verifications this key launched</div>
                       <div style={{ display: "grid", gap: 4 }}>
                         {usage.recentRuns.slice(0, 8).map((r) => (
-                          <Link key={r.id} href={`/records/${r.id}`} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12, color: "var(--fg-3)", textDecoration: "none", padding: "5px 8px", borderRadius: 6, background: "var(--bg-2)" }}>
+                          // Same dead /records/<run> link as the key detail page; the report is under its system.
+                          <Link key={r.id} href={r.applicationId ? `/systems/${r.applicationId}/passes/${r.id}` : `/verifications`} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12, color: "var(--fg-3)", textDecoration: "none", padding: "5px 8px", borderRadius: 6, background: "var(--bg-2)" }}>
                             <span style={{ fontFamily: "var(--font-code)", color: "var(--fg-5)" }}>{new Date(r.createdAt).toLocaleDateString()}</span>
                             <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.deploymentUrl || r.id.slice(0, 8)}</span>
                             {r.flowUnits ? <span style={{ color: "var(--fg-5)" }}>{r.flowUnits} journey{r.flowUnits === 1 ? "" : "s"}</span> : null}

@@ -73,7 +73,7 @@ export default function ConnectionsPage() {
     if (o !== "connected" && o !== "error") return;
     const provider = search.get("provider") || "";
     const label = PROVIDER_LABELS[provider] ?? provider;
-    if (o === "connected") setMsg({ ok: true, text: `${label} connected for your account. Every application can now use it.` });
+    if (o === "connected") setMsg({ ok: true, text: `${label} connected for your account. Every system can now use it.` });
     else setMsg({ ok: false, text: `Could not connect ${label}. ${OAUTH_REASONS[search.get("reason") || ""] ?? "Please try again."}` });
   }, [search]);
 
@@ -106,7 +106,7 @@ export default function ConnectionsPage() {
       const provider = q.get("provider") || "";
       const label = PROVIDER_LABELS[provider] ?? provider;
       if (q.get("oauth") === "connected") {
-        setMsg({ ok: true, text: `${label} connected for your account. Every application can now use it.` });
+        setMsg({ ok: true, text: `${label} connected for your account. Every system can now use it.` });
       } else {
         setMsg({ ok: false, text: `Could not connect ${label}. ${OAUTH_REASONS[q.get("reason") || ""] ?? "Please try again."}` });
       }
@@ -190,7 +190,7 @@ export default function ConnectionsPage() {
       <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "0 0 10px" }}>Integrations</h1>
       <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.6, margin: "0 0 24px", maxWidth: 620 }}>
         Authorize a provider once for your whole account. Vraelis holds a read-only token, sealed with
-        AES-256-GCM, never a password. Every application then uses it, choosing its own repo or project.
+        AES-256-GCM, never a password. Every system then uses it, choosing its own repo or project.
       </p>
 
       {msg ? (
@@ -216,7 +216,7 @@ export default function ConnectionsPage() {
                 <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 3, lineHeight: 1.5 }}>
                   {c
                     ? `${c.meta.account ? `${c.meta.account}, ` : ""}token ${c.meta.token_mask ?? "sealed"}${c.created_at ? `, connected ${whenUtc(c.created_at)}` : ""}`
-                    : "Not connected. Authorize once and every application can use it."}
+                    : "Not connected. Authorize once and every system can use it."}
                 </div>
                 {/* What was actually granted — so "read-only" is verifiable, not just claimed. */}
                 {c && Array.isArray(c.meta.scopes) && c.meta.scopes.length > 0 ? (
@@ -243,7 +243,7 @@ export default function ConnectionsPage() {
       {conns !== null && conns.length === 0 ? (
         <div style={{ marginTop: 22, display: "flex", alignItems: "center", gap: 10, color: "var(--fg-4)", fontSize: 13 }}>
           <EmptyIcon d={I.key} />
-          <span>Nothing connected yet. Connecting a provider here makes it available to all of your applications.</span>
+          <span>Nothing connected yet. Connecting a provider here makes it available to all of your systems.</span>
         </div>
       ) : null}
 
@@ -251,11 +251,11 @@ export default function ConnectionsPage() {
           someone to a Connect button here would land them somewhere they cannot finish. */}
       <section aria-labelledby="per-app-heading" style={{ marginTop: 40 }}>
         <h2 id="per-app-heading" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, color: "var(--fg-1)", margin: 0 }}>
-          Set on each application
+          Set on each system
         </h2>
         <p style={{ fontSize: 13, color: "var(--fg-4)", margin: "6px 0 14px", lineHeight: 1.6, maxWidth: 620 }}>
-          These differ between applications, so they live on an application&rsquo;s Connections tab rather than here.
-          Open any application and choose Settings, then Connections.
+          These differ between systems, so they live on a system&rsquo;s Connections tab rather than here.
+          Open any system and choose Settings, then Connections.
         </p>
         <div style={{ display: "grid", gap: 8, gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))" }}>
           {PER_APP_KINDS.map((kind) => (

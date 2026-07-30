@@ -27,8 +27,8 @@ const OAUTH_REASONS: Record<string, string> = {
   server_misconfigured: "This provider isn't configured yet on our side. Nothing was connected.",
   bad_state: "The authorization link expired or was tampered with. Try connecting again.",
   state_mismatch: "The authorization couldn't be verified in this browser. Try connecting again.",
-  forbidden: "You need editor access on this application to connect an account.",
-  owner_mismatch: "That authorization didn't match this application. Nothing was connected.",
+  forbidden: "You need editor access on this system to connect an account.",
+  owner_mismatch: "That authorization didn't match this system. Nothing was connected.",
   exchange_failed: "The provider didn't complete the token exchange. Try again in a moment.",
   vault_unconfigured: "Secure storage isn't configured, so the token couldn't be sealed.",
   no_code: "The provider didn't return an authorization code. Try connecting again.",
@@ -156,7 +156,7 @@ function ReadOnlyConnections({ connections }: { connections: SafeConnection[] })
   return (
     <div style={{ display: "grid", gap: 26 }}>
       <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: 0, lineHeight: 1.5 }}>
-        View-only: you can see every connection this application has, but adding, editing, verifying, or
+        View-only: you can see every connection this system has, but adding, editing, verifying, or
         removing connections is limited to editors and the owner.
       </p>
       <section aria-label="Connections">
@@ -167,7 +167,7 @@ function ReadOnlyConnections({ connections }: { connections: SafeConnection[] })
           </div>
         ) : (
           <p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>
-            No connections recorded. Verifications run with only the application URL until an editor adds source,
+            No connections recorded. Verifications run with only the system URL until an editor adds source,
             deployment, data, or service context.
           </p>
         )}
@@ -415,7 +415,7 @@ export function ConnectionsManager({ appId, connections, canManage = true }: { a
           </div>
         ) : (
           <p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>
-            No connections recorded. Verifications run with only the application URL until you add source,
+            No connections recorded. Verifications run with only the system URL until you add source,
             deployment, data, or service context below.
           </p>
         )}

@@ -202,7 +202,7 @@ function DraftReadOnly({ reqs, flows, reason }: { reqs: ContractRequirement[]; f
           This contract is still a draft.
         </div>
         <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.55, margin: "6px 0 0" }}>
-          {reason ?? "You have view-only access to this application. Ask an editor or the owner to make changes."}
+          {reason ?? "You have view-only access to this system. Ask an editor or the owner to make changes."}
         </p>
       </div>
 
@@ -300,7 +300,7 @@ export default async function ContractPage({ params }: { params: Promise<{ id: s
   return (
     <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
       <nav aria-label="Breadcrumb" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 13, marginBottom: 14 }}>
-        <Link href="/systems" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Applications</Link>
+        <Link href="/systems" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Systems</Link>
         <span aria-hidden style={{ color: "var(--fg-5)" }}>/</span>
         <Link href={`/systems/${id}`} style={{ color: "var(--fg-4)", textDecoration: "none", maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app.name}</Link>
         <span aria-hidden style={{ color: "var(--fg-5)" }}>/</span>

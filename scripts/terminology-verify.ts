@@ -154,5 +154,64 @@ const stripped = new Map(surfaces.map((p) => [p, stripComments(read(p))]));
   ok('lib/preflight/pass-pricing.ts message strings have no "Production Pass"', !stripComments(read("lib/preflight/pass-pricing.ts")).includes("Production Pass"));
 }
 
+// ── D) The object a customer connects is a SYSTEM in every label ─────────────────────────────────────
+// The product name and the schema name diverge permanently and on purpose: v_applications is a table,
+// app_url a column, application_id a foreign key several tables point at, and the v1 API carries
+// applicationId in its own shapes. Renaming through that is a schema migration plus a breaking public API
+// change, invisible to every user because nobody logs in and reads the schema. So persistence says
+// application forever, the UI says system, and the only thing that has to hold is the boundary.
+//
+// WHY THIS ASSERTION EXISTS. /systems once showed four names for one object on a single screen (h1
+// "Systems", tab title "Applications", CTA "Connect an app", empty state "No applications yet"). That was
+// fixed with no guard behind it, and the same defect was later found across eighteen more files:
+// breadcrumbs reading "Applications" above a page titled "Systems", "Back to applications", "Application
+// not found". A copy fix without an assertion is a copy fix that comes back.
+{
+  // Identifiers that are legitimately named application, removed BEFORE the scan. Renaming one end of a
+  // contract makes the other end lie, so none of these is a defect and none may be "fixed" to pass.
+  // `Application` the TYPE is stripped only in type position — so user copy like "Application not found"
+  // is still caught, which is the whole point.
+  const ALLOWED_IDENT: RegExp[] = [
+    // MIME types first: "Content-Type: application/json" is on nearly every fetch in the console and would
+    // otherwise be 186 of 201 hits, burying the real ones. It is a wire format, not a product noun.
+    /application\/[a-z0-9.+-]+/gi,
+    // The DATA-LAYER MODULE. Every console surface imports its types from "@/lib/v-applications", so the
+    // module path alone accounted for all 24 remaining hits once the copy was fixed — the file is named after
+    // the table, correctly, and renaming it would be the same lie as renaming the column.
+    /@\/lib\/v-applications/g, /\bv-applications\b/g,
+    /\bv_applications\b/g, /\bapplication_id\b/g, /\bapplicationId\b/g,
+    /\bapplication_limit\b/g, /\bapplication_url\b/g, /\bapplications_count\b/g,
+    /\bapplicationName\b/g, /\bmaxApplications\b/g,
+    /\blistApplicationsForMember\b/g, /\blistApplications\b/g, /\bgetApplication\b/g,
+    /\bApplicationRow\b/g, /\bEditApplicationForm\b/g, /\bDeleteApplication\b/g,
+    /\bdelete-application\b/g, /\bedit-application\b/g,
+    /\bApplication\[\]/g,                                   // Application[] — a type
+    /(?::\s*|\bas\s+|\btype\s+|<)Application\b/g,            // : Application, as Application, <Application
+  ];
+  // SCOPED TO THE CONSOLE (app/rank/app), NOT the marketing pages. On /rank the sentence "Give Vraelis a
+  // deployed application and the outcome that should be true" is ordinary English about software, and
+  // rewriting it to "deployed system" trades clear copy for internal jargon. The defect being guarded is one
+  // object wearing four names inside the product — h1 "Systems" over a breadcrumb reading "Applications" —
+  // which is a console problem. Widening this to the marketing tree produced 87 hits that were all correct
+  // prose, and a guard that cries wolf gets an allowlist entry per line and then gets ignored.
+  const consoleSurfaces = surfaces.filter((p) => norm(p).startsWith("app/rank/app"));
+  const offenders: string[] = [];
+  for (const p of consoleSurfaces) {
+    let s = stripped.get(p)!;
+    for (const re of ALLOWED_IDENT) s = s.replace(re, "");
+    s.split("\n").forEach((line, i) => {
+      if (/\bapplications?\b/i.test(line)) offenders.push(`${norm(p)}:${i + 1}  ${line.trim().slice(0, 88)}`);
+    });
+  }
+  ok(`no console surface renders "application" (${consoleSurfaces.length} files; comments + DB identifiers stripped)`,
+    offenders.length === 0, offenders.length ? `${offenders.length} line(s)` : "");
+  for (const o of offenders.slice(0, 15)) console.log(`      ${o}`);
+  if (offenders.length > 15) console.log(`      … and ${offenders.length - 15} more`);
+
+  // The positive half, so a future sweep cannot satisfy the above by deleting labels instead of fixing them.
+  const systemsPage = read("app/rank/app/systems/page.tsx");
+  ok("/systems still titles itself Systems", />\s*Systems\s*</.test(systemsPage));
+}
+
 console.log(`\n${pass}/${pass + fail} passed  (${surfaces.length} files scanned; cli/src ${existsSync("cli/src") ? "included" : "absent, skipped"})`);
 process.exit(fail ? 1 : 0);

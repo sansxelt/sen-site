@@ -10,7 +10,7 @@ export function SetupRequired() {
       <div className="card" style={{ display: "flex", flexDirection: "column", gap: 12, padding: "clamp(18px, 2.6vw, 26px)" }}>
         <p style={{ fontSize: 14, color: "var(--fg-2)", lineHeight: 1.6, margin: 0 }}>
           The Preflight database migration has not been applied. This surface is available to internal
-          testers, but it needs its additive tables before applications can be connected.
+          testers, but it needs its additive tables before systems can be connected.
         </p>
         <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-3)", background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: "var(--r-sm)", padding: "12px 14px", lineHeight: 1.7 }}>
           1. Apply sql/vraelis-preflight.sql<br />

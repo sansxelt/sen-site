@@ -87,7 +87,7 @@ export function EditApplicationForm({ appId, initial }: { appId: string; initial
 
   return (
     <form onSubmit={onSubmit} className="card" style={{ padding: "clamp(18px, 2.4vw, 24px)", display: "grid", gap: 14 }}>
-      <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16.5, color: "var(--fg-1)", margin: 0 }}>Edit application</h2>
+      <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16.5, color: "var(--fg-1)", margin: 0 }}>Edit system</h2>
 
       <div>
         <label htmlFor="edit-name" style={labelStyle}>Name</label>
@@ -123,10 +123,10 @@ export function EditApplicationForm({ appId, initial }: { appId: string; initial
         <label htmlFor="edit-desc" style={labelStyle}>Description</label>
         <textarea id="edit-desc" rows={3} value={description}
           onChange={(e) => { setDescription(e.target.value); setOk(null); setConfirming(false); }}
-          placeholder="A short summary of what this application does."
+          placeholder="A short summary of what this system does."
           style={{ ...inputStyle, resize: "vertical", lineHeight: 1.5 }} />
         <p style={{ fontSize: 11.5, color: "var(--fg-4)", margin: "6px 0 0", lineHeight: 1.5 }}>
-          Sharpens the Production Contract Vraelis derives. Saved as the application summary.
+          Sharpens the Production Contract Vraelis derives. Saved as the system summary.
         </p>
       </div>
 

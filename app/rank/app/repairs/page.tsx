@@ -121,8 +121,17 @@ export default async function RepairsPage() {
       {repairs.length === 0 ? (
         <div className="empty">
           <EmptyIcon d={I.wrench} />
-          <h3>No verified repairs yet</h3>
-          <p>Open a failure from a verification to get repair guidance. When you push a fix, Vraelis reruns the exact failed check and records the result here.</p>
+          {/* THIS PAGE CANNOT FILL ITSELF, so it no longer says it will. v_repairs is a writerless table —
+              read in three places, inserted by nothing — and the old copy promised "Vraelis reruns the exact
+              failed check and records the result here", which was a commitment the system had no code to
+              keep. An empty state that describes a mechanism that does not exist is worse than no page: the
+              user waits for rows instead of going where the artifacts actually are.
+              The two things it described ARE real, just recorded elsewhere: the repair prompt is written onto
+              each issue (v_issues.repair_prompt, rendered as the repair handoff on the report), and the
+              rerun is a verification linked by parent_run_id, shown in the run's lineage. So this points at
+              both instead of inventing a third home for them. */}
+          <h3>Repairs are recorded on issues and verifications</h3>
+          <p>Every failure carries a repair prompt you can hand to your builder, on the issue itself. When you rerun after a fix, the result is kept as its own verification, linked to the one it repairs. This index stays empty until repair tracking is a separate record.</p>
           <Link href="/issues" className="btn">View issues</Link>
         </div>
       ) : (

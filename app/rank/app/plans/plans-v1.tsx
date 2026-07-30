@@ -19,7 +19,7 @@ type Usage = { subscribed: boolean; plan?: string; passesUsed?: number; passesPe
 
 const PLAN_BLURBS: Record<PlanV1["key"], string> = {
   builder_v1: "For one product moving steadily toward launch.",
-  pro_v1: "For teams launching continuously across applications.",
+  pro_v1: "For teams launching continuously across systems.",
   scale_v1: "For agencies and platforms verifying at volume.",
 };
 
@@ -60,7 +60,7 @@ export default function PlansV1({ initialCycle = "monthly" }: { initialCycle?: C
         <div>
           <p className="eyebrow">Plans</p>
           <h1 className="display">Priced by the run, not the seat</h1>
-          <p>Run your AI-built application through a real verification. Every verification includes browser execution, evidence, issue tracking, and an explainable decision.</p>
+          <p>Run your AI-built system through a real verification. Every verification includes browser execution, evidence, issue tracking, and an explainable decision.</p>
         </div>
         {signedIn && <button onClick={manageBilling} disabled={busy} className="btn btn--ghost">{busy ? "Opening…" : "Manage billing"}</button>}
       </div>
@@ -98,7 +98,7 @@ export default function PlansV1({ initialCycle = "monthly" }: { initialCycle?: C
           <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-5)", marginTop: 4 }}>Included</div>
           <ul className="price__feat">
             <li>{FREE_TIER.lifetimePasses} verification, up to {FREE_TIER.flowsPerPass} critical flows</li>
-            <li>{FREE_TIER.maxApplications} connected application</li>
+            <li>{FREE_TIER.maxApplications} connected system</li>
             <li>A full Verified, Failed, or Blocked decision</li>
             {/* Stated, because the API is now on every PAID plan and the difference has to be legible
                 from the card rather than discovered when a key is refused. */}

@@ -78,7 +78,7 @@ const FAILURE_LINE: Record<string, string> = {
   target_mismatch: "The run harness did not honor this run's target URL, so the result was invalidated. This was on our side, not your deployment. Nothing was charged.",
   flow_selection_invalid: "This run's flow selection was missing or invalid, so no browser was started. This was on our side, not your deployment. Nothing was charged.",
   blocked_by_policy: "Vraelis did not run these flows: your test boundaries do not permit an action they require. Widen the boundaries and run again. Nothing was charged for flows that never ran.",
-  worker_vault_failure: "Vraelis could not decrypt this application's test credentials, so no flow ran. This was on our side, not your deployment. Nothing was charged.",
+  worker_vault_failure: "Vraelis could not decrypt this system's test credentials, so no flow ran. This was on our side, not your deployment. Nothing was charged.",
   invalid_or_revoked_credential: "The test account needed to sign in is missing or was revoked, so no authenticated flow ran. Add it under Connections and run again. Nothing was charged.",
   login_ui_not_found: "Vraelis could not find a sign-in screen where these flows expected one, so nothing ran. Check the flow start path. Nothing was charged.",
   credential_field_not_found: "Vraelis could not locate the sign-in form's fields, so nothing ran. The login page may have changed. Nothing was charged.",
@@ -212,7 +212,7 @@ const AUTH_FAILURE_LINE: Record<string, string> = {
   credential_field_not_found: "The sign-in form's fields could not be located. The login page may have changed.",
   mfa_required: "This account requires multi-factor authentication. Vraelis will not bypass it. Use a test account without MFA.",
   captcha_encountered: "A CAPTCHA or bot check blocked sign-in. Vraelis will not bypass it.",
-  worker_vault_failure: "Vraelis could not decrypt this application's test credentials. This is on our side, not your deployment.",
+  worker_vault_failure: "Vraelis could not decrypt this system's test credentials. This is on our side, not your deployment.",
   provider_infra_failure: "The browser provider failed during sign-in. This is on our side, not your deployment.",
   boundary_blocked: "An action this flow needed was refused by your test boundaries. Widen the boundaries and run again.",
 };
@@ -400,7 +400,7 @@ export default async function VerificationResultPage({ params }: { params: Promi
           <EmptyIcon d={I.slash} />
           <h1 style={{ ...h2Style, fontSize: "1.4rem" }}>Verification not found</h1>
           <p>This verification does not exist, or it belongs to another account.</p>
-          <Link href={`/systems/${id}`} className="btn">Back to application</Link>
+          <Link href={`/systems/${id}`} className="btn">Back to system</Link>
         </div>
       </div>
     );
@@ -529,7 +529,7 @@ export default async function VerificationResultPage({ params }: { params: Promi
 
   // Record-SPECIFIC historical limitations: only the ones that genuinely apply to this run. Never a generic
   // disclaimer wall, never undermining valid evidence.
-  const limitations: string[] = ["Vraelis observed the deployed workflow, not every behavior in the application.", "Source code was not installed, modified, or necessarily inspected."];
+  const limitations: string[] = ["Vraelis observed the deployed workflow, not every behavior in the system.", "Source code was not installed, modified, or necessarily inspected."];
   if (pub === "verified") limitations.push("Verified applies only to the checked workflow and claim, not the whole system.");
   if (pub === "blocked" && run.decision !== "repair_verified") limitations.push("A Blocked result is not a confirmed product failure.");
   if (run.decision === "repair_verified") limitations.push("A targeted repair check passing is not equivalent to a full critical verification.");
@@ -756,7 +756,7 @@ export default async function VerificationResultPage({ params }: { params: Promi
             <Empty>No repair guidance was generated for this verification.</Empty>
           ) : (
             <>
-              <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>Each prompt describes the observed failure and the requested repair for a coding agent. Copying it does not change your application; Vraelis verifies a repair, it does not modify your code from this page.</p>
+              <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>Each prompt describes the observed failure and the requested repair for a coding agent. Copying it does not change your system; Vraelis verifies a repair, it does not modify your code from this page.</p>
               <div style={{ display: "grid", gap: 12 }}>
                 {repairIssues.map((iss) => (
                   <div key={iss.id} style={{ display: "grid", gap: 8, border: "1px solid var(--line-2)", borderRadius: "var(--r-md, 10px)", background: "var(--bg-1)", padding: "12px 14px" }}>

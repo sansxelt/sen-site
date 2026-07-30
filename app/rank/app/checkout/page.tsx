@@ -40,7 +40,7 @@ const PLAN_VALUE: Record<string, string[]> = {
   ],
   scale: [
     "7,500 credits every month",
-    "Many applications, one workspace",
+    "Many systems, one workspace",
     "Webhooks + developer usage analytics",
     "Schema-versioned JSON / CSV exports",
     "Priority support",
@@ -106,8 +106,8 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
           <div>
             <p className="eyebrow">Checkout</p>
             <h1 className="display" style={{ fontSize: "clamp(1.9rem, 3.4vw, 2.6rem)" }}>{title}</h1>
-            {plan ? <p style={{ fontSize: 14.5, color: "var(--fg-3)", marginTop: 6, marginBottom: 0, lineHeight: 1.5 }}>{plan.blurb} Independently verify the outcome your application has to deliver, and get a decision with the exact failures to fix, with evidence you can act on, share, and export.</p> : null}
-            {v1Plan ? <p style={{ fontSize: 14.5, color: "var(--fg-3)", marginTop: 6, marginBottom: 0, lineHeight: 1.5 }}>{v1Blurb(v1Plan)} Independently verify the outcome your application has to deliver, and get a decision with the exact failures to fix, with evidence you can act on and share.</p> : null}
+            {plan ? <p style={{ fontSize: 14.5, color: "var(--fg-3)", marginTop: 6, marginBottom: 0, lineHeight: 1.5 }}>{plan.blurb} Independently verify the outcome your system has to deliver, and get a decision with the exact failures to fix, with evidence you can act on, share, and export.</p> : null}
+            {v1Plan ? <p style={{ fontSize: 14.5, color: "var(--fg-3)", marginTop: 6, marginBottom: 0, lineHeight: 1.5 }}>{v1Blurb(v1Plan)} Independently verify the outcome your system has to deliver, and get a decision with the exact failures to fix, with evidence you can act on and share.</p> : null}
             {plan ? <PlanPrice plan={plan.plan} cycle={cycle} /> : null}
             {v1Plan ? <PlanPriceV1 plan={v1Plan} cycle={cycle} /> : null}
 

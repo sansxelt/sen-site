@@ -51,7 +51,7 @@ export function CancelRunControl({ appId, runId }: { appId: string; runId: strin
         typeof j?.message === "string"
           ? j.message
           : res.status === 403
-            ? "You have view-only access to this application."
+            ? "You have view-only access to this system."
             : "Could not cancel this run. Try again.",
       );
       setBusy(false);

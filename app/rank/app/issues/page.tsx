@@ -83,7 +83,7 @@ function OpenIssueRow({ issue }: { issue: IssueRow }) {
       </div>
       <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--fg-1)", lineHeight: 1.35 }}>{issue.title}</div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 12.5, color: "var(--fg-4)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{issue.applicationName || "Unknown application"}</span>
+        <span style={{ fontSize: 12.5, color: "var(--fg-4)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{issue.applicationName || "Unknown system"}</span>
         {opened ? <span style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-4)", flex: "none" }}>opened {opened}</span> : null}
       </div>
     </Link>
@@ -110,7 +110,7 @@ function ResolvedIssueRow({ issue }: { issue: IssueRow }) {
       </div>
       <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14, color: "var(--fg-3)", lineHeight: 1.35 }}>{issue.title}</div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 12.5, color: "var(--fg-4)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{issue.applicationName || "Unknown application"}</span>
+        <span style={{ fontSize: 12.5, color: "var(--fg-4)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{issue.applicationName || "Unknown system"}</span>
         {opened ? <span style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-4)", flex: "none" }}>opened {opened}</span> : null}
       </div>
     </Link>
@@ -123,7 +123,7 @@ function NoOpenIssues() {
       <EmptyIcon d={I.alert} />
       <h3>No open issues</h3>
       <p>Run a verification and any failure it finds appears here with evidence and reproduction steps.</p>
-      <Link href="/systems" className="btn">Go to applications</Link>
+      <Link href="/systems" className="btn">Go to systems</Link>
     </div>
   );
 }

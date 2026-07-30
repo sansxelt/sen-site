@@ -38,9 +38,9 @@ export default async function AppTeamPage({ params }: { params: Promise<{ id: st
       <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
         <div className="empty">
           <EmptyIcon d={I.slash} />
-          <h3>Application not found</h3>
-          <p>This application doesn&apos;t exist, or you don&apos;t have access to it.</p>
-          <Link href="/systems" className="btn">Back to applications</Link>
+          <h3>System not found</h3>
+          <p>This system doesn&apos;t exist, or you don&apos;t have access to it.</p>
+          <Link href="/systems" className="btn">Back to systems</Link>
         </div>
       </div>
     );
@@ -57,7 +57,7 @@ export default async function AppTeamPage({ params }: { params: Promise<{ id: st
   return (
     <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
       <nav aria-label="Breadcrumb" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 13, marginBottom: 14 }}>
-        <Link href="/systems" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Applications</Link>
+        <Link href="/systems" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Systems</Link>
         <span aria-hidden style={{ color: "var(--fg-5)" }}>/</span>
         <span style={{ color: "var(--fg-2)", fontWeight: 600, maxWidth: 360, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app.name}</span>
       </nav>
@@ -86,14 +86,14 @@ function ReadOnlyRoster({ appId, yourRole }: { appId: string; yourRole: string }
     <div className="card" style={{ padding: "clamp(18px, 2.4vw, 24px)", maxWidth: 720 }}>
       <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16.5, color: "var(--fg-1)", margin: 0 }}>Shared with your team</h2>
       <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.6, margin: "10px 0 0" }}>
-        You have <strong style={{ color: "var(--fg-1)" }}>{yourRole}</strong> access to this application. It&apos;s
+        You have <strong style={{ color: "var(--fg-1)" }}>{yourRole}</strong> access to this system. It&apos;s
         owned and managed by your workspace owner, who invites teammates and sets each person&apos;s role.
         {" "}Editors can author the contract and flows and launch verifications; viewers can read the
         contract, verifications, and reports.
       </p>
       <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.6, margin: "12px 0 0" }}>
-        Runs on this application are billed to the owner&apos;s account. To change your role or invite others,
-        ask the application owner.
+        Runs on this system are billed to the owner&apos;s account. To change your role or invite others,
+        ask the system owner.
       </p>
       <div style={{ marginTop: 16 }}>
         <Link href={`/systems/${appId}`} className="btn" style={{ fontSize: 13 }}>Back to overview</Link>

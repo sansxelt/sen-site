@@ -206,7 +206,11 @@ export default async function KeyDetailPage(ctx: { params: Promise<{ id: string 
                 const tone = verdict.tone === "verified" ? "var(--go-ink)" : verdict.tone === "failed" ? "var(--stop-ink)"
                   : verdict.tone === "blocked" ? "var(--wait-ink)" : "var(--fg-4)";
                 return (
-                  <Link key={r.id} href={`/records/${r.id}`} style={{ display: "grid", gridTemplateColumns: "auto 1fr auto auto", alignItems: "center", gap: 12, padding: "10px 16px", borderTop: i ? "1px solid var(--line-1)" : "none", color: "inherit", textDecoration: "none", fontSize: 12.5 }}>
+                  // /records/<run> was a 404: /records is an alias of /activity and has no [id] segment, so
+                  // every row here pointed at nothing. The report lives under its system, which needs the
+                  // application id — now carried on the row. A run with no application id (pre-migration)
+                  // renders as plain text rather than a link that goes nowhere.
+                  <Link key={r.id} href={r.applicationId ? `/systems/${r.applicationId}/passes/${r.id}` : `/verifications`} style={{ display: "grid", gridTemplateColumns: "auto 1fr auto auto", alignItems: "center", gap: 12, padding: "10px 16px", borderTop: i ? "1px solid var(--line-1)" : "none", color: "inherit", textDecoration: "none", fontSize: 12.5 }}>
                     <span style={{ fontFamily: "var(--font-code)", color: "var(--fg-5)" }}>{new Date(r.createdAt).toLocaleDateString()}</span>
                     <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--fg-3)" }}>{r.deploymentUrl || r.id.slice(0, 12)}</span>
                     <span style={{ color: tone, fontWeight: 600 }}>{verdict.label}</span>

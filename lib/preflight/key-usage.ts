@@ -86,7 +86,7 @@ export type KeyUsage = {
   last30d: KeyUsageWindow;
   allTime: KeyUsageWindow;
   /** Newest first. The runs this key launched, so a charge can be traced to the thing it paid for. */
-  recentRuns: { id: string; createdAt: string; state: string; decision: string | null; chargedCents: number | null; flowUnits: number | null; deploymentUrl: string | null }[];
+  recentRuns: { id: string; createdAt: string; state: string; decision: string | null; chargedCents: number | null; flowUnits: number | null; deploymentUrl: string | null; applicationId: string | null }[];
   /**
    * Requests are the ONE figure here that comes from the best-effort events log rather than the run table,
    * because a request that launches nothing writes no run row. It is reported separately and labelled, and
@@ -105,6 +105,10 @@ function utcDayStartIso(nowMs: number): string {
 export type RunRow = {
   id: string; created_at: string; state: string | null; decision: string | null;
   held_cents: number | null; credits_held: number | null; flow_units: number | null; deployment_url: string | null;
+  // Carried so a run in this list can be LINKED. Its report lives at /systems/<app>/passes/<run>, which is
+  // unreachable from a run id alone — the key pages linked /records/<run> instead, a route that does not
+  // exist (/records is an alias of /activity), so every row in "Verifications this key launched" 404'd.
+  application_id: string | null;
 };
 
 // Money actually taken for one run. held_cents is written by recordRunPassUsage on the PAYG path only;
@@ -169,7 +173,7 @@ export async function keyUsage(
 
   const { data, error } = await s
     .from("v_preflight_runs" as never)
-    .select("id, created_at, state, decision, held_cents, credits_held, flow_units, deployment_url")
+    .select("id, created_at, state, decision, held_cents, credits_held, flow_units, deployment_url, application_id")
     .eq("user_id", owner.trim().toLowerCase())
     .eq("api_key_id", key.id)
     .order("created_at", { ascending: false })
@@ -194,6 +198,7 @@ export async function keyUsage(
       chargedCents: r.held_cents == null ? null : Number(r.held_cents),
       flowUnits: r.flow_units == null ? null : Number(r.flow_units),
       deploymentUrl: r.deployment_url,
+      applicationId: r.application_id ?? null,
     })),
     requests: await requestCounts(owner, String(key.prefix ?? ""), nowMs),
   };

@@ -12,7 +12,7 @@ import { EditApplicationForm } from "./edit-application";
 import { DeleteApplication } from "./delete-application";
 import { I, EmptyIcon } from "@/app/rank/_components/icons";
 
-export const metadata: Metadata = { title: "Application settings" };
+export const metadata: Metadata = { title: "System settings" };
 
 // Friendly labels for the builder the app was created with (raw key falls through).
 const BUILDER_LABELS: Record<string, string> = {
@@ -75,9 +75,9 @@ export default async function AppSettingsPage({ params }: { params: Promise<{ id
       <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
         <div className="empty">
           <EmptyIcon d={I.slash} />
-          <h3>Application not found</h3>
-          <p>This application doesn&apos;t exist, or it belongs to another account.</p>
-          <Link href="/systems" className="btn">Back to applications</Link>
+          <h3>System not found</h3>
+          <p>This system doesn&apos;t exist, or it belongs to another account.</p>
+          <Link href="/systems" className="btn">Back to systems</Link>
         </div>
       </div>
     );
@@ -112,7 +112,7 @@ export default async function AppSettingsPage({ params }: { params: Promise<{ id
   return (
     <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
       <nav aria-label="Breadcrumb" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 13, marginBottom: 14 }}>
-        <Link href="/systems" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Applications</Link>
+        <Link href="/systems" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Systems</Link>
         <span aria-hidden style={{ color: "var(--fg-5)" }}>/</span>
         <span style={{ color: "var(--fg-2)", fontWeight: 600, maxWidth: 360, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app.name}</span>
       </nav>
@@ -136,7 +136,7 @@ export default async function AppSettingsPage({ params }: { params: Promise<{ id
         />
       ) : (
         <div className="card" style={{ padding: "clamp(18px, 2.4vw, 24px)" }}>
-          <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16.5, color: "var(--fg-1)", margin: 0 }}>Application settings</h2>
+          <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16.5, color: "var(--fg-1)", margin: 0 }}>System settings</h2>
           <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.55, margin: "8px 0 0", maxWidth: 640 }}>
             View-only. Ask an editor or the owner to change these settings.
           </p>
@@ -151,7 +151,7 @@ export default async function AppSettingsPage({ params }: { params: Promise<{ id
 
       {/* ── Application details (read-only facts the form does not own) ──────────────────────────────── */}
       <div className="card" style={{ padding: "clamp(18px, 2.4vw, 24px)", marginTop: 18 }}>
-        <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16.5, color: "var(--fg-1)", margin: 0 }}>Application details</h2>
+        <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16.5, color: "var(--fg-1)", margin: 0 }}>System details</h2>
         <div style={{ display: "grid", gap: 11, marginTop: 14 }}>
           <KV k="Builder" v={builderLabel} />
           <KV k="Framework" v={app.framework} />
@@ -170,7 +170,7 @@ export default async function AppSettingsPage({ params }: { params: Promise<{ id
         <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, margin: 0, maxWidth: 640 }}>
           {connections.length
             ? `${otherConnections.length} connection${otherConnections.length === 1 ? "" : "s"} and ${testAccounts.length} test account${testAccounts.length === 1 ? "" : "s"} on file.`
-            : "No connections recorded, so verifications run with only the application URL."}{" "}
+            : "No connections recorded, so verifications run with only the system URL."}{" "}
           Editing metadata, health checks, disconnecting, and the audit history live on the Connections tab.
         </p>
 
@@ -197,8 +197,8 @@ export default async function AppSettingsPage({ params }: { params: Promise<{ id
         <div style={{ ...headLbl, marginBottom: 4 }}>Test boundaries</div>
         <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, margin: "0 0 14px", maxWidth: 640 }}>
           {b
-            ? "What verifications on this application are permitted to do. Set at connect time; every permit is off unless the owner turned it on."
-            : "No boundaries were recorded for this application, so Vraelis treats every permit as off, the most conservative default."}
+            ? "What verifications on this system are permitted to do. Set at connect time; every permit is off unless the owner turned it on."
+            : "No boundaries were recorded for this system, so Vraelis treats every permit as off, the most conservative default."}
         </p>
         {b ? (
           <>
@@ -225,7 +225,7 @@ export default async function AppSettingsPage({ params }: { params: Promise<{ id
 
       {/* ── What's missing ──────────────────────────────────────────────────────────────────────────── */}
       <section style={sectionStyle} aria-label="Missing context">
-        <div style={{ ...headLbl, marginBottom: 4 }}>Missing from this application</div>
+        <div style={{ ...headLbl, marginBottom: 4 }}>Missing from this system</div>
         {gaps.length ? (
           <>
             <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, margin: "0 0 12px", maxWidth: 640 }}>
@@ -243,7 +243,7 @@ export default async function AppSettingsPage({ params }: { params: Promise<{ id
           </>
         ) : (
           <p style={{ fontSize: 13, color: "var(--acc-deep)", fontWeight: 600, margin: 0 }}>
-            Nothing is missing. Every kind of context Vraelis can use today is on file for this application.
+            Nothing is missing. Every kind of context Vraelis can use today is on file for this system.
           </p>
         )}
       </section>

@@ -119,7 +119,7 @@ export function ActivationPoller({ expectedPlan, expectedCycle, plans }: {
           </p>
         )}
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <Link href="/systems" className="btn">Go to your applications</Link>
+          <Link href="/systems" className="btn">Go to your systems</Link>
           <Link href="/plans" className="btn btn--ghost">View your plan</Link>
         </div>
       </div>
