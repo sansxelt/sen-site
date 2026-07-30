@@ -148,7 +148,12 @@ async function snapshot(): Promise<number> {
 }
 
 async function main() {
-  if (!WATCH) process.exit(await snapshot());
+  // process.exitCode, NOT process.exit(). Exiting immediately after the last query tears the process down
+  // while the Supabase client's socket is still closing, and libuv aborts with
+  // "Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)" on Windows — which prints after a perfectly
+  // good report and reads like the script failed. Setting the code lets Node drain its handles and exit on
+  // its own.
+  if (!WATCH) { process.exitCode = await snapshot(); return; }
   console.log("watching every 5s — Ctrl+C to stop");
   for (;;) {
     const code = await snapshot();
