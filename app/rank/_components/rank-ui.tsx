@@ -15,6 +15,7 @@ import { planLabel } from "@/lib/plan-label";
 import { Ic, I } from "./icons";
 import { CommandPalette, type PaletteSystem } from "./command-palette";
 import { useHideOnScroll } from "@/components/use-hide-on-scroll";
+import { useGroundColor } from "@/components/use-ground-color";
 import { Reveal } from "@/components/reveal";
 import { Scratchpad } from "./scratchpad";
 import { useDismiss } from "./use-dismiss";
@@ -172,6 +173,12 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
   const [open, setOpen] = useState(false);
   const [authed, setAuthed] = useState(signedIn);
   const pathname = usePathname() || "";
+  // THE BAR MATCHES THE PAGE, by the same hook the v6 marketing shell uses. This was a hardcoded
+  // rgba(250,248,244,0.82) — one cream, regardless of what it was actually sitting on — so on any band that
+  // is not that colour the chrome and the page simply disagreed. An open mobile menu pauses the sampler,
+  // because the menu covers the sample line and the reading would be the menu's own colour.
+  const navRef = useRef<HTMLElement>(null);
+  const ground = useGroundColor(navRef, { paused: open });
   // Slides the bar out on the way down and brings it back on the way up (or when
   // the pointer reaches the top edge). The mobile menu hangs off this element, so
   // an open menu pins the bar — otherwise it would slide away with the menu on it.
@@ -193,7 +200,15 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
 
   const link = { fontSize: 15.5, color: "var(--fg-2)", textDecoration: "none", whiteSpace: "nowrap", fontWeight: 500, display: "inline-flex", alignItems: "center", minHeight: 24 } as const;
   return (
-    <nav data-hidden={hidden} style={{ position: "relative", display: "flex", alignItems: "center", gap: 18, padding: "15px var(--gutter)", background: scrolled ? "rgba(250,248,244,0.82)" : "transparent", backdropFilter: scrolled ? "blur(14px)" : "none", WebkitBackdropFilter: scrolled ? "blur(14px)" : "none", borderBottom: `1px solid ${scrolled ? "var(--line-1)" : "transparent"}`,
+    <nav ref={navRef} data-hidden={hidden} data-ground={ground.bg ? "1" : undefined} style={{ position: "relative", display: "flex", alignItems: "center", gap: 18, padding: "15px var(--gutter)",
+      // The sampled ground wins when there is one. The cream stays as the fallback for the scrolled state
+      // before any measurement exists (no JS, first frame), so the bar never resolves to nothing.
+      background: ground.bg ?? (scrolled ? "rgba(250,248,244,0.82)" : "transparent"),
+      // Blur only when the bar is translucent. An exact colour match needs no blur, and blurring a surface
+      // that already equals the page behind it just costs a compositor layer for no visible difference.
+      backdropFilter: !ground.bg && scrolled ? "blur(14px)" : "none",
+      WebkitBackdropFilter: !ground.bg && scrolled ? "blur(14px)" : "none",
+      borderBottom: `1px solid ${scrolled ? "var(--line-1)" : "transparent"}`,
       // Transform, not height/display: the bar leaves the viewport without reflowing the page
       // under it, and it stays in the tab order so keyboard focus can still reach it (the
       // focus-within rule in SHELL_UI_CSS brings it back when it does).
@@ -296,6 +311,12 @@ function AppTopbar({ email, systems, pendingReviews }: { email: string | null; s
   const [menu, setMenu] = useState(false);
   const pathname = usePathname() || "";
   useEffect(() => { setMenu(false); }, [pathname]);
+  // SAME HOOK AS BOTH MARKETING SHELLS, so "the bar matches the page" is one behaviour and not three
+  // opinions. This bar was a fixed var(--chrome-veil): correct on the graphite the product usually paints
+  // and wrong the moment a surface underneath is anything else. atTopFallback is dark because every console
+  // route opens on the product's graphite, so the first frame needs no measurement to be right.
+  const barRef = useRef<HTMLElement>(null);
+  const ground = useGroundColor(barRef, { atTopFallback: true, paused: menu });
   const menuBtn = useRef<HTMLButtonElement>(null);
   const menuPanel = useRef<HTMLDivElement>(null);
   useDismiss(menu, () => setMenu(false), { panel: menuPanel, trigger: menuBtn });
@@ -351,7 +372,14 @@ function AppTopbar({ email, systems, pendingReviews }: { email: string | null; s
   const item = { display: "flex", alignItems: "center", gap: 9, padding: "8px 10px", borderRadius: 9, fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" } as const;
   const itemIcon = { display: "inline-flex", color: "var(--fg-4)", flex: "none" } as const;
   return (
-    <header style={{ display: "flex", alignItems: "center", gap: 16, height: 64, padding: "0 var(--gutter)", borderBottom: "1px solid var(--line-1)", background: "var(--chrome-veil)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+    <header ref={barRef} style={{ display: "flex", alignItems: "center", gap: 16, height: 64, padding: "0 var(--gutter)", borderBottom: "1px solid var(--line-1)",
+      // The measured ground when there is one; the veil is the fallback for the first frame and for a
+      // browser with no JS, so the bar is never left transparent.
+      background: ground.bg ?? "var(--chrome-veil)",
+      // Blur only while translucent — an exact match has nothing to blur and the layer costs more than it
+      // shows. Same reasoning as the public nav above.
+      backdropFilter: ground.bg ? "none" : "blur(12px)",
+      WebkitBackdropFilter: ground.bg ? "none" : "blur(12px)" }}>
       {/* Mobile-only hamburger: opens the accessible nav drawer. Hidden at desktop/tablet widths (CSS). */}
       <MobileNav />
       {/* in-app logo returns to the APP home (app.vraelis.com/); leaving the product entirely is the
