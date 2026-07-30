@@ -3,7 +3,8 @@ import Link from "next/link";
 import { requirePreflightOwner } from "@/lib/v-preflight-guard";
 import ConnectWorkspace from "./connect-form";
 
-export const metadata: Metadata = { title: "Connect an app" };
+// Matches the CTA that opens it: /systems says "Connect a system", so the tab does too.
+export const metadata: Metadata = { title: "Connect a system" };
 
 // Production-context onboarding workspace for Vraelis Preflight. Gated so a guessed URL redirects out when
 // the flag is off. The page records intent + context only — no discovery or browser execution runs here.

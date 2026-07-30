@@ -8,7 +8,8 @@ import { activateInvitesForEmail } from "@/lib/v-workspace";
 import { toPublicDecision } from "@/lib/preflight/public-decision";
 import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
 
-export const metadata: Metadata = { title: "Applications" };
+// The tab title said "Applications" while the h1 said Systems, on the same screen.
+export const metadata: Metadata = { title: "Systems" };
 
 // Relative "3m ago / 4h ago / Jul 2" for the last-run line. This is a server component, rendered once per
 // request, so a wall-clock relative time carries no hydration-mismatch risk.
@@ -68,7 +69,7 @@ function AppCard({ app, run }: { app: Application; run: RunSummary | undefined }
   const last = timeAgo(run?.completed_at ?? run?.created_at);
   const crit = criticalFlows(run?.summary);
   const metaParts = [crit, last ? `Last run ${last}` : null].filter(Boolean);
-  const metaText = metaParts.length ? metaParts.join(", ") : "No preflight yet";
+  const metaText = metaParts.length ? metaParts.join(", ") : "No verification yet";
   return (
     <Link href={`/systems/${app.id}`} className="card card--hover" style={{ display: "flex", flexDirection: "column", gap: 14, textDecoration: "none", color: "inherit", padding: 18 }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
@@ -113,24 +114,24 @@ export default async function ApplicationsPage() {
               was an internal programme name that no customer has ever been taught. */}
           <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "0 0 10px" }}>Systems</h1>
           <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.6, margin: 0, maxWidth: 560 }}>
-            Connect an AI-built app and Vraelis looks for failures in the flows you approve, before your users hit them.
+            Connect an AI-built system and Vraelis looks for failures in the flows you approve, before your users hit them.
           </p>
         </div>
-        <Link href="/systems/new" className="btn" style={{ flex: "none" }}>Connect an app <span aria-hidden>→</span></Link>
+        <Link href="/systems/new" className="btn" style={{ flex: "none" }}>Connect a system <span aria-hidden>→</span></Link>
       </div>
 
       {apps.length === 0 ? (
         <div className="empty">
           <EmptyIcon d={I.layers} />
-          <h3>No applications yet</h3>
-          <p>A preflight walks your live app the way a user would, then reports which of your approved critical flows broke. Connect your first app to begin.</p>
-          <Link href="/systems/new" className="btn">Connect an app</Link>
+          <h3>No systems yet</h3>
+          <p>A verification walks your live system the way a user would, then reports which of your approved critical flows broke. Connect your first system to begin.</p>
+          <Link href="/systems/new" className="btn">Connect a system</Link>
         </div>
       ) : (
         <>
           {/* overview */}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 24 }}>
-            <StatChip label="Applications" value={apps.length} />
+            <StatChip label="Systems" value={apps.length} />
             <StatChip label="Verified" value={readyCount} color={readyCount ? "var(--go-ink)" : undefined} />
             <StatChip label="Failed" value={blockedCount} color={blockedCount ? "var(--err)" : undefined} />
             <StatChip label="Untested" value={untestedCount} />
