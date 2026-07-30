@@ -23,6 +23,7 @@ import { ownerActiveRunCount, ownerRunsToday } from "../lib/preflight/runs-db";
 import { MAX_ACTIVE_RUNS_PER_OWNER, maxRunsPerDay } from "../lib/preflight/limits";
 import { gatePassLaunch } from "../lib/preflight/entitlements-v1";
 import { passPricingEnabled } from "../lib/preflight/pass-pricing";
+import { centsToCredits } from "../lib/preflight/auto-recharge";
 
 // AFTER the imports on purpose, and safe there: every module above reads process.env lazily at call time
 // (lib/supabase-admin.ts documents exactly this), so nothing has captured an undefined URL by now. Omitting
@@ -118,10 +119,10 @@ async function readiness(owner: string, apps: AppRow[]): Promise<boolean> {
   //    because a hold is a write. Marked inferred for that reason: the authoritative answer only exists at
   //    the moment the hold is attempted.
   //
-  //    AND THE UNIT MATTERS. A pass-priced run escrows in 'cent'; the legacy path escrows in 'credit'.
-  //    Credits cannot fund a cent-denominated hold, so an account topped up with credits still fails a
-  //    paywalled launch with insufficient_balance — which is exactly the trap to avoid when restoring a
-  //    reviewer's pass after a run.
+  //    THE UNIT USED TO MATTER AND NO LONGER DOES. A pass-priced run escrowed in 'cent' while every purchase
+  //    minted 'credit', so a topped-up account still failed with insufficient_balance — the defect this tool
+  //    was written alongside. PAYG now prices in cents and escrows in credits, converting at
+  //    CENTS_PER_CREDIT, so one balance funds every path and the report below reads credits.
   //
   //    The price comes off the DECISION (gate.cents), not from passPriceCents() again: only the payg branch
   //    charges at all, and re-deriving the number here is how a readiness report ends up quoting a price the
@@ -132,15 +133,21 @@ async function readiness(owner: string, apps: AppRow[]): Promise<boolean> {
       const { data } = await s.from("v_credit_ledger" as never)
         .select("delta, unit").eq("user_id", owner.trim().toLowerCase()).limit(5000);
       const rows = (data as { delta?: number; unit?: string }[] | null) ?? [];
+      // CREDITS DECIDE THIS NOW. The hold used to be denominated in 'cent' and this reported the cent
+      // balance to match it — which was correct then and is misleading now: PAYG prices in cents and
+      // escrows in credits (accept-run.ts converts at CENTS_PER_CREDIT), so the credit balance is what a
+      // launch actually spends. A readiness tool still reading the old denomination would report a funded
+      // account as broke, or worse, the reverse.
+      const creditBal = rows.filter((r) => (r.unit ?? "credit") === "credit").reduce((n, r) => n + (r.delta ?? 0), 0);
       const centBal = rows.filter((r) => r.unit === "cent").reduce((n, r) => n + (r.delta ?? 0), 0);
-      const creditBal = rows.filter((r) => r.unit === "credit").reduce((n, r) => n + (r.delta ?? 0), 0);
-      const short = centBal < cents;
-      console.log(`  pay     this launch costs ${cents}c   balance ${centBal}c (inferred)` +
-        `${short ? `  <-- insufficient_balance (402)` : ""}`);
-      if (short && creditBal > 0) {
-        console.log(`          NOTE ${creditBal} credit(s) held, and credits CANNOT fund a cent hold.`);
-        console.log(`          Restore a free pass via the operator override, not by granting credits.`);
-      }
+      const needed = centsToCredits(cents);
+      const short = creditBal < needed;
+      console.log(`  pay     costs $${(cents / 100).toFixed(2)} = ${needed} credits   balance ${creditBal} credits (inferred)` +
+        `${short ? `  <-- insufficient_balance (402)` : "  -> affordable"}`);
+      if (short) console.log(`          top up ${needed - creditBal} more credit(s) ($${((needed - creditBal) / 10).toFixed(2)}) to launch.`);
+      // Stranded cent rows are legacy: minted only by the operator-gated conversion script, and now spent by
+      // nothing. Surfaced so an operator does not mistake them for spendable balance.
+      if (centBal > 0) console.log(`          NOTE ${centBal} legacy 'cent' unit(s) on this account are no longer spent by any hold.`);
     }
   }
 
