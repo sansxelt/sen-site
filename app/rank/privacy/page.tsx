@@ -12,12 +12,12 @@ export default function PrivacyPage() {
   return (
     <LegalShell eyebrow="Legal" title="Privacy" updated="Updated June 2026">
       <H>Overview</H>
-      <P>Vraelis is production validation for AI-built systems: you connect an application, define what it must do in production, and Vraelis runs those requirements against your exact build and environment and captures the evidence. This page explains how data is handled when you use the website, app, verification runs, API, webhooks, and exports at vraelis.com. We have kept it plain and specific to what the product actually does.</P>
+      <P>Vraelis is independent verification for AI-built software: you connect an application, define what it must do in production, and Vraelis runs those requirements against your exact build and environment and captures the evidence. This page explains how data is handled when you use the website, app, verification runs, API, webhooks, and exports at vraelis.com. We have kept it plain and specific to what the product actually does.</P>
 
       <H>Data we collect</H>
       <Ul items={[
         "Account details: your name, email, and which sign-in provider you used (email, Google, or GitHub).",
-        "Applications you connect: names, deployment URLs, environment and build metadata, and the production requirements and verification flows you define.",
+        "Applications you connect: names, deployment URLs, environment and build metadata, and the requirements and verification flows you define.",
         "Connection data for integrations you link (provider metadata and OAuth tokens), and test-account sign-in credentials you provide for verification runs, stored encrypted (AES-256-GCM) and used only to execute your verifications.",
         "Verification data: the runs Vraelis executes against your application, the evidence they capture, and the results and decisions generated from them.",
         "API key metadata: a key's name, prefix, scopes, created date, and last-used time. The full key is shown once at creation and stored only as a hash.",

@@ -8,7 +8,7 @@ import { V6_IS_LIVE } from "@/lib/v6-routes";
 export const metadata = ogMeta({
   title: "How it works",
   description:
-    "How Vraelis works: define the production requirements a system must keep, approve what runs, and Vraelis executes it against the exact build and environment, captures the evidence, and returns a truthful production decision.",
+    "How Vraelis works: define the requirements a system must keep, approve what runs, and Vraelis executes it against the exact build and environment, captures the evidence, and returns a truthful verification decision.",
   path: "/how-it-works",
   index: !V6_IS_LIVE,
 });
@@ -71,7 +71,7 @@ export default function HowItWorks() {
             You approve what runs. <span className="em">Vraelis runs it like production.</span>
           </h1>
           <p className="lead-copy" style={{ margin: "0 auto", textAlign: "center", maxWidth: 700 }}>
-            No test scripts to write and no dashboard to babysit. You define what must work and approve what runs; Vraelis executes it against the exact build, captures the evidence, and returns one truthful production decision, with the reasons behind it.
+            No test scripts to write and no dashboard to babysit. You define what must work and approve what runs; Vraelis executes it against the exact build, captures the evidence, and returns one truthful verification decision, with the reasons behind it.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 26 }}>
             <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Check your application <span aria-hidden>→</span></Link>

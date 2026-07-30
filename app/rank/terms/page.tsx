@@ -17,10 +17,10 @@ export default function TermsPage() {
       <P>These terms cover your use of Vraelis at vraelis.com. By creating an account or using the product, you agree to them. If you do not agree, do not use the service.</P>
 
       <H>What Vraelis provides</H>
-      <P>Vraelis is production validation for AI-built systems. You connect an application, define what it must do in production, and Vraelis returns a structured result:</P>
+      <P>Vraelis is independent verification for AI-built software. You connect an application, define what it must do in production, and Vraelis returns a structured result:</P>
       <Ul items={[
         "A verification: your requirements executed against your exact build and environment, with the evidence captured from each run.",
-        "A truthful production decision and the issues found, tracked across releases.",
+        "A truthful verification decision and the issues found, tracked across releases.",
         "Plans, an account balance, and a developer API with keys, webhooks, and data exports.",
       ]} />
 
@@ -35,7 +35,7 @@ export default function TermsPage() {
       <P>Subscriptions renew automatically until cancelled, and you can cancel anytime from the app; access continues until the end of the current billing period. Prices, packs, plans, and limits may change over time. Our <Link href="/refunds" style={acc}>Refund and Cancellation policy</Link> explains what is and is not refundable.</P>
 
       <H>How to read a verification result</H>
-      <P><strong style={strong}>A Vraelis result is evidence from a verification run. It is informational and directional, not a guarantee, a certification, or professional, legal, or financial advice.</strong> A production decision reflects how your exact build behaved against the requirements you defined, under the scenarios that were run; it does not certify that a system is bug-free, safe, or universally production-ready. You are solely responsible for the decisions you make and for anything you choose to ship. Do not rely on a Vraelis result as the sole basis for a decision, and do not present it as a guarantee of quality, safety, performance, or any business outcome.</P>
+      <P><strong style={strong}>A Vraelis result is evidence from a verification run. It is informational and directional, not a guarantee, a certification, or professional, legal, or financial advice.</strong> A verification decision reflects how your exact build behaved against the requirements you defined, under the scenarios that were run; it does not certify that a system is bug-free, safe, or universally production-ready. You are solely responsible for the decisions you make and for anything you choose to ship. Do not rely on a Vraelis result as the sole basis for a decision, and do not present it as a guarantee of quality, safety, performance, or any business outcome.</P>
 
       <H>API keys, webhooks, and exports</H>
       <P>API access is available on the Scale plan. API keys are secrets, and you are responsible for keeping them secure. Webhook events are signed so you can verify them. Handle exported data responsibly. Abuse, scraping, excessive requests, or attempts to bypass rate limits or entitlements may be throttled or blocked.</P>
