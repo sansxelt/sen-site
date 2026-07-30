@@ -1,4 +1,4 @@
-// Feature flags for the Vraelis Preflight pivot (production layer for AI-built software). Preflight ships
+// Feature flags for the Vraelis Preflight pivot (independent verification for AI-built software). Preflight ships
 // dark until each phase is verified. Server flags gate route ACCESS (the real security boundary); the
 // NEXT_PUBLIC_ flag only controls nav VISIBILITY so internal testers can see the surface without exposing
 // it publicly. (The old AI-output checker and its VRAELIS_LEGACY_CHECKER_ENABLED flag are retired.)

@@ -16,7 +16,7 @@ export const metadata: Metadata = { title: "Checkout" };
 const PLAN_VALUE: Record<string, string[]> = {
   starter: [
     "150 credits every month",
-    "Verifications with a launch decision",
+    "Verifications with a decision and the evidence behind it",
     "Screenshots and repro steps on every failure",
     "Reruns that verify your repairs",
     "Shareable verification reports",
@@ -106,8 +106,8 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
           <div>
             <p className="eyebrow">Checkout</p>
             <h1 className="display" style={{ fontSize: "clamp(1.9rem, 3.4vw, 2.6rem)" }}>{title}</h1>
-            {plan ? <p style={{ fontSize: 14.5, color: "var(--fg-3)", marginTop: 6, marginBottom: 0, lineHeight: 1.5 }}>{plan.blurb} Run your AI-built app like production and get a launch decision with the exact failures to fix, with evidence you can act on, share, and export.</p> : null}
-            {v1Plan ? <p style={{ fontSize: 14.5, color: "var(--fg-3)", marginTop: 6, marginBottom: 0, lineHeight: 1.5 }}>{v1Blurb(v1Plan)} Run your AI-built app like production and get a launch decision with the exact failures to fix, with evidence you can act on and share.</p> : null}
+            {plan ? <p style={{ fontSize: 14.5, color: "var(--fg-3)", marginTop: 6, marginBottom: 0, lineHeight: 1.5 }}>{plan.blurb} Independently verify the outcome your application has to deliver, and get a decision with the exact failures to fix, with evidence you can act on, share, and export.</p> : null}
+            {v1Plan ? <p style={{ fontSize: 14.5, color: "var(--fg-3)", marginTop: 6, marginBottom: 0, lineHeight: 1.5 }}>{v1Blurb(v1Plan)} Independently verify the outcome your application has to deliver, and get a decision with the exact failures to fix, with evidence you can act on and share.</p> : null}
             {plan ? <PlanPrice plan={plan.plan} cycle={cycle} /> : null}
             {v1Plan ? <PlanPriceV1 plan={v1Plan} cycle={cycle} /> : null}
 

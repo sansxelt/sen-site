@@ -49,7 +49,7 @@ export function PrivacyBody({ H, P, Ul, A }: LegalPrims) {
         "Account details: your name, email, and which sign-in provider you used (email, Google, or GitHub).",
         "Applications you connect: names, deployment URLs, environment and build metadata, and the production requirements and verification flows you define.",
         "Connection data for integrations you link (provider metadata and OAuth tokens), and test-account sign-in credentials you provide for verification runs, stored encrypted (AES-256-GCM) and used only to execute your verifications.",
-        "Verification data: the runs Vraelis executes against your application, the evidence they capture, and the results and launch decisions generated from them.",
+        "Verification data: the runs Vraelis executes against your application, the evidence they capture, and the results and decisions generated from them.",
         "API key metadata: a key's name, prefix, scopes, created date, and last-used time. The full key is shown once at creation and stored only as a hash.",
         "Webhook endpoint URLs and delivery logs, including status, timestamps, and response or error details.",
         "Plan, balance, billing, and subscription records, and checkout and payment status.",
@@ -214,7 +214,7 @@ export function RefundsBody({ H, P, Ul, A, S }: LegalPrims) {
   return (
     <>
       <H>Account balance</H>
-      <P>Your balance funds verifications: real-browser runs of your approved flows that end in a launch decision. <S>Purchased balance is non-refundable once bought</S>, but it does not expire, so there is no pressure to spend it.</P>
+      <P>Your balance funds verifications: real-browser runs of your approved flows that end in a decision. <S>Purchased balance is non-refundable once bought</S>, but it does not expire, so there is no pressure to spend it.</P>
       <P>You are not charged for work you do not get. If a verification cannot start, or no flow executes, the hold is returned to your account automatically. Failures on our infrastructure are never billed to you.</P>
 
       <H>Subscriptions</H>

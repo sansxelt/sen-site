@@ -60,7 +60,7 @@ export default function PlansV1({ initialCycle = "monthly" }: { initialCycle?: C
         <div>
           <p className="eyebrow">Plans</p>
           <h1 className="display">Priced by the run, not the seat</h1>
-          <p>Run your AI-built application through a real production review. Every verification includes browser execution, evidence, issue tracking, and an explainable launch decision.</p>
+          <p>Run your AI-built application through a real verification. Every verification includes browser execution, evidence, issue tracking, and an explainable decision.</p>
         </div>
         {signedIn && <button onClick={manageBilling} disabled={busy} className="btn btn--ghost">{busy ? "Opening…" : "Manage billing"}</button>}
       </div>
@@ -94,7 +94,7 @@ export default function PlansV1({ initialCycle = "monthly" }: { initialCycle?: C
           <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600 }}>
             Protects {FREE_TIER.maxGuarantees} active guarantee
           </div>
-          <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>A real launch decision on your own app before paying anything. No card required.</div>
+          <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>A real decision on your own app before paying anything. No card required.</div>
           <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-5)", marginTop: 4 }}>Included</div>
           <ul className="price__feat">
             <li>{FREE_TIER.lifetimePasses} verification, up to {FREE_TIER.flowsPerPass} critical flows</li>

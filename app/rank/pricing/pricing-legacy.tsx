@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 // come live from Stripe via /api/v/team/pricing.
 
 const PASS_RULES: [string, string][] = [
-  ["Priced by the verification", "One price covers the whole run: browser execution, screenshots, issue tracking, and the launch decision. Never a seat charge."],
+  ["Priced by the verification", "One price covers the whole run: browser execution, screenshots, issue tracking, and the decision. Never a seat charge."],
   ["Nothing ran, nothing charged", "If a verification cannot start or no flow executes, you are not charged. Infrastructure failures on our side are always on us."],
   ["Targeted reruns cost less", "After a fix, rerun just the failed flows. You pay only for the flows the rerun actually executes."],
   ["Every verification ends in a decision", "Verified, Failed, or Blocked, with the evidence to back it. Never a vague score."],
@@ -40,7 +40,7 @@ export default function PricingPage() {
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(44px, 6vw, 84px)", paddingBottom: "clamp(20px, 3vw, 30px)", textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Pricing</p>
           <h1 className="display" style={{ fontSize: "clamp(2.2rem, 4.6vw, 3.6rem)", marginBottom: 16 }}>Priced by the <span className="em">run</span>, not the seat.</h1>
-          <p className="lead-copy" style={{ margin: "0 auto", textAlign: "center" }}>Run your AI-built application through a real production review. Every verification includes browser execution, evidence, issue tracking, and an explainable launch decision.</p>
+          <p className="lead-copy" style={{ margin: "0 auto", textAlign: "center" }}>Run your AI-built application through a real verification. Every verification includes browser execution, evidence, issue tracking, and an explainable decision.</p>
         </div>
       </section>
 
@@ -51,7 +51,7 @@ export default function PricingPage() {
               <div className="price__name">Free</div>
               <div className="price__amt">$0</div>
               <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, marginTop: 6 }}>One complete verification</div>
-              <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>See a real launch decision on your own app before paying anything. No card required.</div>
+              <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>See a real decision on your own app before paying anything. No card required.</div>
               <ul className="price__feat">
                 <li>Up to 3 critical flows</li>
                 <li>Real-browser execution with screenshot evidence</li>

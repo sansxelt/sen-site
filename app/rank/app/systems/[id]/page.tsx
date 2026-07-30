@@ -111,7 +111,7 @@ function RunRow({ appId, r }: { appId: string; r: RunSummary }) {
   );
 }
 
-// Application overview (server component), health-first: the latest launch decision leads the page as a
+// Application overview (server component), health-first: the latest decision leads the page as a
 // full-width tinted verdict panel with the one state-appropriate action, then the open blockers, the pass
 // history, and the supporting records. All data is owner-scoped and degrades to empty/null before the
 // tables exist, so this renders honest empty states with no fake runs, scores, or blockers.
@@ -387,8 +387,8 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
             />
             <p style={{ fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.45, margin: 0, maxWidth: 320 }}>
               {decision === "repair_verified"
-                ? "Run every critical flow to earn a full launch decision."
-                : "Runs a full verification against the current deployment and returns a launch decision with evidence."}
+                ? "Run every critical flow to earn a full decision."
+                : "Runs a full verification against the current deployment and returns a decision with evidence."}
             </p>
           </div>
           <div style={{ maxWidth: 420, flex: "1 1 300px" }}>
@@ -428,7 +428,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
             {runs.slice(0, 5).map((r) => <RunRow key={r.id} appId={app.id} r={r} />)}
           </div>
         ) : (
-          <p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>Not verified yet. Once a run finishes, its launch decision and the evidence behind it show here.</p>
+          <p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>Not verified yet. Once a run finishes, its decision and the evidence behind it show here.</p>
         )}
       </section>
 

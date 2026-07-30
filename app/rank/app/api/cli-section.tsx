@@ -64,7 +64,7 @@ export function CliSection() {
       <h2 style={{ ...label, margin: "0 0 6px" }}>Command line</h2>
       <p style={{ margin: "0 0 16px", fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.6, maxWidth: "62ch" }}>
         The same verification the console runs, from a terminal or a CI job. It takes a deployment and a
-        claim, and its exit code is the launch decision.
+        claim, and its exit code is the decision.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14 }}>

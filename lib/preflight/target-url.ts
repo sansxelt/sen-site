@@ -64,8 +64,8 @@ export function executedTargetMismatch(runTarget: string | null | undefined, exe
 // Application health must come from the newest VALID FULL-COVERAGE completed pass, never from an
 // invalidated / merely terminal run, and never from a targeted (partial-coverage) rerun: a targeted run
 // may resolve its selected issues and read "Repair verified", but it verified a subset on its own target —
-// it cannot certify or replace the application's launch decision. Preference: the newest ACTIVE run (so
-// "In progress" still surfaces), else the newest completed FULL-coverage run WITH a launch decision, else
+// it cannot certify or replace the application's decision. Preference: the newest ACTIVE run (so
+// "In progress" still surfaces), else the newest completed FULL-coverage run WITH a decision, else
 // the newest run of any state (honest fallback for empty histories). Runs finalized before coverage was
 // recorded (no summary.coverage) executed their whole contract, so they count as full.
 export type HealthRunLike = {

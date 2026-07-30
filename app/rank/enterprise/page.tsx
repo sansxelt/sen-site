@@ -191,7 +191,7 @@ export default function EnterprisePage() {
       {/* CTA */}
       <section className="section">
         <div className="wrap" style={{ maxWidth: 720, textAlign: "center" }}>
-          <h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)", marginBottom: 18 }}>A launch decision you can defend, before you ship.</h2>
+          <h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)", marginBottom: 18 }}>A decision you can defend, before you ship.</h2>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Check your application</Link>
             <Link href="/developers" className="btn btn--ghost btn--lg">View developer platform</Link>

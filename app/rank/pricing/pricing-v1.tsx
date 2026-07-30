@@ -13,7 +13,7 @@ import { usdFromCents, effectiveMonthlyUsd , planHeadline, planCapacity } from "
 // Every dollar figure on this page is formatted from cents exported by lib/preflight/pass-pricing.ts;
 // scripts/pricing-v1-ui-verify.ts fails the build script if a dollar amount is ever hardcoded here.
 // Cards list ONLY implemented entitlements (verdict ruling 10): passes/month, flows/pass, application
-// caps, real-browser evidence, launch decision, linked repair verification, targeted reruns.
+// caps, real-browser evidence, decision, linked repair verification, targeted reruns.
 
 type Cycle = "monthly" | "yearly";
 
@@ -44,7 +44,7 @@ export default function PricingV1({ initialCycle = "monthly" }: { initialCycle?:
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(44px, 6vw, 84px)", paddingBottom: "clamp(20px, 3vw, 30px)", textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Pricing</p>
           <h1 className="display" style={{ fontSize: "clamp(2.2rem, 4.6vw, 3.6rem)", marginBottom: 16 }}>Priced by the <span className="em">run</span>, not the seat.</h1>
-          <p className="lead-copy" style={{ margin: "0 auto", textAlign: "center" }}>Run your AI-built application through a real production review. Every verification includes browser execution, evidence, issue tracking, and an explainable launch decision.</p>
+          <p className="lead-copy" style={{ margin: "0 auto", textAlign: "center" }}>Run your AI-built application through a real verification. Every verification includes browser execution, evidence, issue tracking, and an explainable decision.</p>
         </div>
       </section>
 
@@ -66,7 +66,7 @@ export default function PricingV1({ initialCycle = "monthly" }: { initialCycle?:
               <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600 }}>
                 Protects {FREE_TIER.maxGuarantees} active guarantee
               </div>
-              <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>See a real launch decision on your own app before paying anything. No card required.</div>
+              <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>See a real decision on your own app before paying anything. No card required.</div>
               <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-5)", marginTop: 4 }}>Included</div>
               <ul className="price__feat">
                 <li>{FREE_TIER.lifetimePasses} verification, up to {FREE_TIER.flowsPerPass} critical flows</li>

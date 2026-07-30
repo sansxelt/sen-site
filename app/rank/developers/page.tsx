@@ -4,7 +4,7 @@ import { ogMeta } from "@/lib/og-meta";
 export const metadata = ogMeta({
   title: "Developers",
   description:
-    "Put Vraelis Preflight in your pipeline. Trigger a real-browser run from CI, gate the deploy on the launch decision, and pull structured evidence with private, short-lived artifact URLs.",
+    "Put Vraelis Preflight in your pipeline. Trigger a real-browser run from CI, gate the deploy on the decision, and pull structured evidence with private, short-lived artifact URLs.",
   path: "/developers",
   // The link preview says what a developer is being handed, from the shared set.
   embed: "developers",
@@ -97,7 +97,7 @@ export default function DevelopersPage() {
             Put <span className="em">preflight</span> in your pipeline.
           </h1>
           <p className="lead-copy" style={{ margin: "0 auto 16px", textAlign: "center", maxWidth: 720 }}>
-            Trigger a real-browser preflight from CI, gate the deploy on the launch decision, and pull structured evidence back. The decision is explainable, the evidence is deterministic, and every artifact stays private behind a short-lived signed URL.
+            Trigger a real-browser preflight from CI, gate the deploy on the decision, and pull structured evidence back. The decision is explainable, the evidence is deterministic, and every artifact stays private behind a short-lived signed URL.
           </p>
           <p style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: "0 auto 22px" }}>queue a run against the preview build, then stop the release when a critical flow fails</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
@@ -172,7 +172,7 @@ export default function DevelopersPage() {
             <div>
               <p className="eyebrow">Deterministic and explainable</p>
               <h2 className="display" style={{ fontSize: "clamp(1.5rem, 2.6vw, 2rem)", marginBottom: 12 }}>A gate you can trust.</h2>
-              <p className="lead-copy" style={{ marginBottom: 12 }}>The pass or fail of every flow is what the browser actually did, not a model&apos;s opinion. The launch decision follows one rule you can read: any critical flow that fails means the verification is Failed. When Vraelis suggests a cause, it is labeled as interpretation and never counts as the gate.</p>
+              <p className="lead-copy" style={{ marginBottom: 12 }}>The pass or fail of every flow is what the browser actually did, not a model&apos;s opinion. The decision follows one rule you can read: any critical flow that fails means the verification is Failed. When Vraelis suggests a cause, it is labeled as interpretation and never counts as the gate.</p>
               <Link href="/how-it-works" className="btn btn--ghost" style={{ fontSize: 12.5 }}>See the decision rule →</Link>
             </div>
           </div>

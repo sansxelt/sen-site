@@ -78,7 +78,7 @@ export function nextAction(s: CommandState): NextAction {
     return { label: "Re-verify", href: `${app}`, why: "The flows in your contract passed on this deployment. Run it again after your next change.", tone: "quiet", launch: { flowIds: "eligible" } };
   }
   // 10. Approved contract with runnable flows and no prior decision: the first run. LAUNCHES the pass.
-  return { label: "Verify this deployment", href: `${app}`, why: "Run a verification to see if this deployment is ready: a launch decision with evidence.", tone: "primary", launch: { flowIds: "eligible" } };
+  return { label: "Verify this deployment", href: `${app}`, why: "Run a verification to see if this deployment is ready: a decision with evidence.", tone: "primary", launch: { flowIds: "eligible" } };
 }
 
 // The ribbon: only-true state facts, in a fixed reading order (deployment identity -> verification ->

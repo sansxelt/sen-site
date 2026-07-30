@@ -85,7 +85,7 @@ export default function HowItWorks() {
         <div className="wrap">
           <div className="sec-head">
             <p className="eyebrow">The loop</p>
-            <h2 className="display">Six steps from <span className="em">connected app</span> to <span className="em">launch decision</span>.</h2>
+            <h2 className="display">Six steps from <span className="em">connected app</span> to <span className="em">decision</span>.</h2>
           </div>
           <div className="tile-grid cols-2">
             {STEPS.map((s) => (
@@ -131,7 +131,7 @@ export default function HowItWorks() {
               <p className="eyebrow">How Vraelis stays honest</p>
               <h2 className="display" style={{ fontSize: "clamp(1.85rem, 3.3vw, 2.7rem)", marginBottom: 16 }}>Evidence is <span className="em">deterministic</span>. Interpretation is <span className="em">labeled</span>.</h2>
               <p className="lead-copy" style={{ marginBottom: 16 }}>The pass or fail of every flow comes from what the browser actually did, never from a model&apos;s opinion. Screenshots, step timelines, and console and network activity are the record. When Vraelis suggests a likely cause, it is marked as interpretation and never counts as evidence.</p>
-              <p style={{ fontSize: 14, color: "var(--fg-3)", lineHeight: 1.6 }}>The launch decision follows one explainable rule, not a number you have to trust: any critical flow that fails means the claim comes back Failed, anything that needs a human call comes back Blocked, and only a clean run is Verified.</p>
+              <p style={{ fontSize: 14, color: "var(--fg-3)", lineHeight: 1.6 }}>The decision follows one explainable rule, not a number you have to trust: any critical flow that fails means the claim comes back Failed, anything that needs a human call comes back Blocked, and only a clean run is Verified.</p>
             </div>
             <div className="card card--acc" style={{ padding: "clamp(20px, 3vw, 30px)" }}>
               <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 14 }}>The rule, in full</div>
@@ -157,7 +157,7 @@ export default function HowItWorks() {
         <div className="wrap">
           <div className="sec-head sec-head--center">
             <p className="eyebrow">The output</p>
-            <h2 className="display">A <span className="em">launch decision</span>, not a report to interpret.</h2>
+            <h2 className="display">A <span className="em">decision</span>, not a report to interpret.</h2>
             <p>Every run ends in one answer you can act on, each with the reason and the evidence behind it.</p>
           </div>
           <div className="tile-grid cols-3" style={{ maxWidth: 900, margin: "0 auto" }}>
@@ -181,7 +181,7 @@ export default function HowItWorks() {
         <div className="glow glow--soft" />
         <div className="wrap" style={{ maxWidth: 680, textAlign: "center" }}>
           <h2 className="display" style={{ fontSize: "clamp(1.9rem, 3.6vw, 2.8rem)", marginBottom: 16 }}>See it run on <span className="em">your app</span>.</h2>
-          <p className="lead-copy" style={{ margin: "0 auto 26px", textAlign: "center" }}>Connect your AI-built app and get a launch decision before your users find the failures.</p>
+          <p className="lead-copy" style={{ margin: "0 auto 26px", textAlign: "center" }}>Connect your AI-built app and get a decision before your users find the failures.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Check your application <span aria-hidden>→</span></Link>
             <Link href="/pricing" className="btn btn--ghost btn--lg">View pricing</Link>

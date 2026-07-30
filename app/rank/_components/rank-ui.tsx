@@ -31,7 +31,15 @@ const PUBLIC_LINKS = [
   { href: "/enterprise", label: "Enterprise" },
 ];
 
-// The signed-in product: Vraelis is the production layer for AI-built software. The legacy AI-output checker
+// ONE VOCABULARY, DECIDED IN ONE PLACE. This shell used to call the company "the production layer for
+// AI-built software" while the marketing site called it independent verification and the CLI called its
+// exit code a "launch" decision. Three names for one company is not a copy nit: asked what Vraelis is, an
+// AI summariser read the site and reported that "the exact product positioning looks a bit inconsistent
+// across sources", then offered two different companies as candidates. The word is VERIFICATION, and the
+// canonical machine-readable sentence is SOCIAL_DESCRIPTION in lib/social-card (which lib/entity feeds to
+// schema.org). Anything user-facing that names the category should agree with it.
+//
+// The signed-in product: Vraelis independently verifies software built with AI. The legacy AI-output checker
 // is retired and deleted (old /app/checks links redirect home); Projects / Analytics / Data quality
 // belonged to that product and left with it.
 // The product is ONE action, "verify this outcome", and the navigation should say that rather than listing

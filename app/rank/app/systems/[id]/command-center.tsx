@@ -41,13 +41,13 @@ export function CommandCenter({
   const showReadOnlyNote = (isLaunch && !canLaunch) || (isAuthorCTA && !canEditContract);
   return (
     <section
-      aria-label="Launch decision and next action"
+      aria-label="Decision and next action"
       style={{ border: `1px solid ${tone.line}`, background: tone.bg, borderRadius: "var(--r-lg, 16px)", padding: "clamp(20px, 3vw, 30px)", marginTop: 6 }}
     >
       <div style={{ display: "flex", gap: "clamp(16px, 3vw, 32px)", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap" }}>
         {/* Verdict — the thesis of the strip, in the decision tone at hero scale. */}
         <div style={{ minWidth: 0, flex: "1 1 320px" }}>
-          <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.09em", textTransform: "uppercase", color: tone.fg, opacity: 0.85 }}>Launch decision</div>
+          <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.09em", textTransform: "uppercase", color: tone.fg, opacity: 0.85 }}>Decision</div>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(2rem, 4.2vw, 3rem)", lineHeight: 1.04, letterSpacing: "-0.01em", color: tone.fg, marginTop: 8 }}>{verdict}</div>
           {subline ? <p style={{ fontSize: 14.5, color: "var(--fg-1)", lineHeight: 1.5, margin: "10px 0 0", maxWidth: "52ch" }}>{subline}</p> : null}
         </div>

@@ -14,7 +14,7 @@ import type { FlowResult, Decision, FailureClass, EvidenceItem, EvidenceKind, Ev
 
 export type DecideInput = {
   results: FlowResult[];
-  criticalFlowIds: ReadonlySet<string>;   // which flows are critical (for the launch decision)
+  criticalFlowIds: ReadonlySet<string>;   // which flows are critical (for the decision)
   fullCoverage: boolean;                   // false for a targeted/partial rerun
   failureClass?: FailureClass;             // set when the run terminated on an infra/indeterminate condition
 };

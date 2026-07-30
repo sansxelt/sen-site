@@ -19,7 +19,7 @@ export const CONNECTION_KINDS = [
   "github", "vercel", "custom_deploy",       // source + deployment
   "supabase", "custom_auth",                 // data + auth (metadata only; no DB credentials)
   "stripe_test", "sentry", "openapi", "webhook", // billing + services
-  "slack",                                   // notifications: receives the launch decision
+  "slack",                                   // notifications: receives the decision
   "test_account",                            // sealed credentials (the only kind with encrypted_ref)
 ] as const;
 export type ConnectionKind = (typeof CONNECTION_KINDS)[number];

@@ -120,7 +120,7 @@ export default async function AppRunsPage({ params }: { params: Promise<{ id: st
         <div className="empty">
           <EmptyIcon d={I.shield} />
           <h3>No verifications yet</h3>
-          <p>A verification walks this app in a real browser against its contract and returns a launch decision with evidence. Once one runs, it shows here.</p>
+          <p>A verification walks this app in a real browser against its contract and returns a decision with evidence. Once one runs, it shows here.</p>
           <Link href={`/systems/${id}`} className="btn">Back to overview</Link>
         </div>
       )}

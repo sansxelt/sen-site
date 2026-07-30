@@ -61,8 +61,8 @@ export const FEATURE_USE: Record<string, string> = {
   stripe_test: "Seeds a billing-flow requirement verified in Stripe test mode.",
   sentry: "Seeds a reliability requirement (core flows complete without unhandled errors).",
   custom_auth: "Stored as application context. Not yet read during verification.",
-  webhook: "Receives the launch decision when a verification run finishes (signed POST).",
-  slack: "Posts the launch decision to your Slack channel when a verification run finishes.",
+  webhook: "Receives the decision when a verification run finishes (signed POST).",
+  slack: "Posts the decision to your Slack channel when a verification run finishes.",
   openapi: "Stored as application context. Not yet read during verification.",
   // This said "coming later" while worker/preflight/execute-run.ts has been signing in with these
   // credentials for real. Understating a shipped capability is the same defect as overstating one.

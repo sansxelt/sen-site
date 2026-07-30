@@ -105,7 +105,7 @@ export type StepObservation = {
 export type FlowState = "passed" | "failed" | "blocked" | "skipped" | "blocked_by_policy" | "auth_not_ready";
 export type FlowResult = { flowId: string; state: FlowState; steps: StepObservation[] };
 
-// The launch decisions — identical vocabulary to the web engine (worker/preflight/types.ts RunDecision)
+// The decisions — identical vocabulary to the web engine (worker/preflight/types.ts RunDecision)
 // plus the infra + not-verified states the multi-runtime model needs at the product level.
 export type Decision = "ready" | "needs_review" | "blocked" | "repair_verified" | "infra_failure" | "not_verified";
 

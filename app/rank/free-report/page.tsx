@@ -10,7 +10,7 @@ import { V6_IS_LIVE } from "@/lib/v6-routes";
 export const metadata = ogMeta({
   title: "Your first verification is free",
   description:
-    "Your first verification is free. Connect your AI-built app, approve its critical flows, and get a launch decision backed by real browser evidence.",
+    "Your first verification is free. Connect your AI-built app, approve its critical flows, and get a decision backed by real browser evidence.",
   path: "/free-report",
   index: !V6_IS_LIVE,
 });
@@ -56,7 +56,7 @@ export default function FreeReportPage() {
             Your first <span className="em">verification</span> is free.
           </h1>
           <p className="lead-copy" style={{ margin: "0 auto", textAlign: "center", maxWidth: 680 }}>
-            Your first verification is free. Connect your AI-built app, approve its critical flows, and Vraelis runs them in a real browser, then returns a launch decision with the evidence behind it.
+            Your first verification is free. Connect your AI-built app, approve its critical flows, and Vraelis runs them in a real browser, then returns a decision with the evidence behind it.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 26 }}>
             <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Check your application <span aria-hidden>→</span></Link>
@@ -77,7 +77,7 @@ export default function FreeReportPage() {
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {(["ready", "review", "blocked"] as StatusKey[]).map((s) => <StatusPill key={s} s={s} />)}
               </div>
-              <div className="acard__t">A launch decision</div>
+              <div className="acard__t">A decision</div>
               <div className="acard__d">One answer for the whole app: Verified, Failed, or Blocked. Any critical flow that fails means a Failed decision, so the label always tells you why.</div>
             </div>
             <div className="acard" style={{ gap: 10 }}>

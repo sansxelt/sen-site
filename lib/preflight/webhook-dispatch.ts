@@ -1,4 +1,4 @@
-// Outbound webhook delivery: when a verification run finalizes, POST the launch decision to the webhook
+// Outbound webhook delivery: when a verification run finalizes, POST the decision to the webhook
 // endpoints an application has connected. This is the first OUTPUT connection — every other connection tells
 // Vraelis about the app; this one tells the owner's systems what Vraelis found.
 //
