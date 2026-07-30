@@ -7,6 +7,7 @@
 
 import { randomUUID } from "node:crypto";
 import { hold, refund } from "@/lib/v-credits";
+import { centsToCredits } from "@/lib/preflight/auto-recharge";
 import { estimateRunCredits } from "@/lib/preflight/flow-selection";
 import { passPricingEnabled, passPriceCents, rerunPriceCents } from "@/lib/preflight/pass-pricing";
 import { gatePassLaunch } from "@/lib/preflight/entitlements-v1";
@@ -61,25 +62,27 @@ export async function takeApiHold(owner: string, price: ApiPrice): Promise<{ ok:
   if (price.mode === "blocked") return { ok: false, status: price.status, error: price.error, message: price.message };
   if (price.mode === "free" || price.mode === "subscription") return { ok: true, hold: noop };
 
+  // Escrowed in credits on BOTH branches now. PAYG is priced in cents and converted at the canonical rate;
+  // see accept-run.ts for why the hold moved rather than the ledger. `amount` stays the price for the
+  // message, `debit` is what the ledger actually moves.
   const amount = price.mode === "payg" ? price.cents : price.credits;
-  const unit = price.mode === "payg" ? ("cent" as const) : undefined;
-  const ok = unit ? await hold(owner, reservationId, amount, unit) : await hold(owner, reservationId, amount);
+  const debit = price.mode === "payg" ? centsToCredits(price.cents) : price.credits;
+  const ok = await hold(owner, reservationId, debit);
   if (!ok) {
-    // The payg branch holds 'cent' (line above) while every top-up path mints 'credit', so "Add balance"
-    // named an action that cannot clear this refusal. Same correction as accept-run.ts, which carries the
-    // full note on why the denomination fix is a migration and not an edit. The credit branch is unchanged:
-    // there, adding balance genuinely does resolve it.
     const msg = price.mode === "payg"
-      ? `This run costs $${(amount / 100).toFixed(2)}. Paid runs aren't self-serve yet — contact us and we'll enable them on your account.`
+      ? `This run costs $${(amount / 100).toFixed(2)}. Add balance to launch it.`
       : "You do not have enough credits to launch this run.";
     return { ok: false, status: 402, error: price.mode === "payg" ? "insufficient_balance" : "insufficient_credits", message: msg };
   }
   const held: ApiHold = {
-    reservationId, creditsHeld: amount,
+    // `debit`, NOT `amount`. Every number here is reversed through refund(), which moves the ledger in the
+    // HOLD's unit — so passing the cent PRICE while the hold debited credits would refund ten times what was
+    // taken, minting balance on every infra failure and every unproductive PAYG run.
+    reservationId, creditsHeld: debit,
     // On productive work: KEEP the hold (retaining it IS the charge, exactly like a completed web run — no
     // positive ledger write). On no productive work / infra: REFUND the full hold.
-    async settle(chargedFullHold: boolean) { if (!chargedFullHold) await refund(owner, reservationId, amount); },
-    async release() { await refund(owner, reservationId, amount); },
+    async settle(chargedFullHold: boolean) { if (!chargedFullHold) await refund(owner, reservationId, debit); },
+    async release() { await refund(owner, reservationId, debit); },
   };
   return { ok: true, hold: held };
 }

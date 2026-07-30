@@ -46,6 +46,25 @@ export function creditsToCents(credits: number): number {
   return Math.round(credits * CENTS_PER_CREDIT);
 }
 
+/**
+ * A cent price into the credits a hold actually debits. The inverse of creditsToCents, and the reason a
+ * PAYG launch can be funded at all.
+ *
+ * WHY THIS EXISTS. PAYG escrow used to be denominated in 'cent' while every purchase path mints
+ * unit='credit' rows, so a paying customer could top up, watch the balance rise, and get the identical 402
+ * forever — the ledger had their money in a denomination the hold could not see. Rather than migrate three
+ * grant paths, six balance surfaces and the public /api/v1/credits contract to cents, the hold converts at
+ * the rate that was already canonical and already asserted by auto-recharge-verify.
+ *
+ * CEILING, NEVER ROUND. Every price today is a whole dollar ($15 pass, $3 per rerun flow) and divides
+ * exactly, so this is currently lossless. If a price ever lands off the 10-cent grid, rounding to nearest
+ * would let a customer be charged LESS than the price quoted to them; the ceiling charges the next whole
+ * credit instead. Over-charging by at most 9 cents is a support conversation. Under-charging is a hole.
+ */
+export function centsToCredits(cents: number): number {
+  return Math.ceil(cents / CENTS_PER_CREDIT);
+}
+
 /** Cents. Deliberately narrow: a top-up is a small number of dollars, not an arbitrary one. */
 export const MIN_TRIGGER_CENTS = 100;        // $1
 export const MAX_TRIGGER_CENTS = 50_000;     // $500

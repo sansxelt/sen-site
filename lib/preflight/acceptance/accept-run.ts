@@ -22,6 +22,10 @@ import { estimateRunCredits, keyFingerprint, payloadFingerprint, buildSubmission
 import { keyCeilingRefusal } from "../key-spend";
 import { MAX_ACTIVE_RUNS_PER_OWNER, maxRunsPerDay } from "../limits";
 import { hold, refund } from "../../v-credits";
+// Static, unlike the auto-recharge-execute import further down: that one is deferred to keep Stripe out of
+// the eager graph, while auto-recharge.ts itself imports only supabase-admin and carries the rate constant
+// this money path needs on every PAYG launch.
+import { centsToCredits } from "../auto-recharge";
 import { passPricingEnabled, passPriceCents } from "../pass-pricing";
 import { gatePassLaunch, recordRunPassUsage } from "../entitlements-v1";
 import { resolveCanonicalCluster, claimFreePass, releaseFreePass, attachRunToClaim, consumeFreeGrantOverride, recordFreeGrantRisk, hashRiskSignal } from "../free-grant-cluster";
@@ -162,22 +166,27 @@ export async function acceptVerificationRun(input: AcceptRunInput): Promise<Acce
       }
       if (effectiveMode === "payg") {
         const cents = gate.mode === "payg" ? gate.cents : repricedCents;
-        const ok = await hold(owner, reservationId, cents, "cent");
+        // ESCROWED IN CREDITS, PRICED IN CENTS.
+        //
+        // This held unit='cent' while all three purchase paths mint unit='credit', and liveRows filters by
+        // unit — so the hold could not see a paying customer's money. They topped up, watched /credits rise,
+        // relaunched, and got the same 402 forever. The product asked for money it could not take.
+        //
+        // The fix converts at the rate that was already canonical (CENTS_PER_CREDIT = 10, asserted by
+        // auto-recharge-verify against what checkout charges) instead of migrating the ledger. Choosing this
+        // over minting cents on purchase leaves three grant paths, six balance surfaces and the PUBLIC
+        // /api/v1/credits contract untouched, and lets everyone holding credits today pay immediately.
+        const credits = centsToCredits(cents);
+        const ok = await hold(owner, reservationId, credits);
         if (!ok) {
-          // DOES NOT ASK FOR MONEY IT CANNOT TAKE. This used to read "Add balance to run it." and the UI put
-          // an "Add balance" button next to it pointing at /credits. Paying there cannot satisfy this hold:
-          // the PAYG escrow is denominated in 'cent' and every top-up path mints unit='credit' rows (a credit
-          // is 10 cents, so the money is real but in the wrong denomination). A customer could pay, watch the
-          // credits page tick up, relaunch, and get this identical 402 forever.
-          //
-          // Fixing the denomination is a migration, not a copy change: three grant paths would have to mint
-          // cents, seven surfaces that display a balance would have to report them, one of those is the public
-          // /api/v1/credits endpoint whose meaning customer integrations depend on, and every existing
-          // credit-holder needs the per-owner conversion in scripts/preflight-balance-convert.ts. Until that
-          // lands, the honest thing is to stop inviting the payment rather than to keep taking it.
-          return { ok: false, error: "insufficient_balance", message: `This verification costs $${(cents / 100).toFixed(2)}. Paid verifications aren't self-serve yet — contact us and we'll enable them on your account.`, status: 402 };
+          // Invites the payment again, because the payment now works: a top-up mints exactly the credits this
+          // hold spends.
+          return { ok: false, error: "insufficient_balance", message: `This verification costs $${(cents / 100).toFixed(2)}. Add balance to run it.`, status: 402 };
         }
-        creditsHeld = cents;
+        // credits_held is what the worker hands back to refund(), so it must be in the HOLD's unit, not the
+        // price's. paygHeldCents keeps the cent price for the audit mirror, which is what the money actually
+        // cost regardless of the denomination it was escrowed in.
+        creditsHeld = credits;
         heldReservationId = reservationId;
         paygHeldCents = cents;
       } else if (effectiveMode === "free") {

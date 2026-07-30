@@ -207,11 +207,11 @@ export function Composer({ balance }: { balance: number }) {
               <Link href="/verifications" className="btn btn--ghost" style={{ padding: "7px 14px", fontSize: 13 }}>Open the record</Link>
             ) : (
               <>
-                {/* Was "Add balance" -> /credits. That button was the other half of the invitation: topping
-                    up mints 'credit' ledger rows and a PAYG hold spends 'cent', so paying there could never
-                    clear this refusal. Points at the one action that can actually resolve it until the
-                    denomination migration lands. */}
-                {phase.error.code === "insufficient_balance" && <Link href="/contact" className="btn btn--ghost" style={{ padding: "7px 14px", fontSize: 13 }}>Contact us</Link>}
+                {/* Back to /credits, because topping up now clears this refusal: the PAYG hold debits the
+                    same 'credit' rows a purchase mints (accept-run.ts converts the cent price at
+                    CENTS_PER_CREDIT). This briefly pointed at /contact, correctly, during the window when
+                    the hold spent a denomination no purchase could produce. */}
+                {phase.error.code === "insufficient_balance" && <Link href="/credits" className="btn btn--ghost" style={{ padding: "7px 14px", fontSize: 13 }}>Add balance</Link>}
                 {String(phase.error.code).startsWith("reviewed_plan_") && <button className="btn btn--ghost" onClick={review} style={{ padding: "7px 14px", fontSize: 13 }} disabled={!canReview}>Review a fresh plan</button>}
                 {phase.error.retryable && phase.error.code !== "cancelled" && !String(phase.error.code).startsWith("reviewed_plan_") && <button className="btn btn--ghost" onClick={review} style={{ padding: "7px 14px", fontSize: 13 }}>Try again</button>}
               </>

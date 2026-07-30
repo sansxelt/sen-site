@@ -191,10 +191,15 @@ async function main(): Promise<void> {
     ok(`${name}: pass gate exists ONLY inside the passPricingEnabled() branch, before the legacy path`,
       iFlag >= 0 && iGate > iFlag && iGate < iLegacyHold);
     ok(`${name}: exactly one gatePassLaunch call`, count(src, "gatePassLaunch(") === 1);
-    ok(`${name}: PAYG holds CENTS via the ledger (unit='cent'), keyed by the same reservation`,
-      // The amount is `cents` (a free-mode launch that loses the atomic claim re-prices to PAYG, so the
-      // held amount is gate.cents OR the reprice) — the invariant is the reservation-keyed 'cent' hold.
-      /await hold\(owner, reservationId, (?:gate\.cents|cents), "cent"\)/.test(src));
+    ok(`${name}: PAYG is PRICED in cents and ESCROWED in credits, keyed by the same reservation`,
+      // This asserted a unit='cent' hold. That was the defect, not the contract: every purchase path mints
+      // unit='credit' rows and liveRows filters by unit, so a cent hold could not see a paying customer's
+      // money -- they topped up, watched the balance rise, and got the same 402 forever. The hold now
+      // converts at CENTS_PER_CREDIT (already canonical, already asserted by auto-recharge-verify) and
+      // debits credits. The invariant that survives is: one reservation, one conversion, no raw cent hold.
+      /const credits = centsToCredits\(cents\)/.test(src)
+      && /await hold\(owner, reservationId, credits\)/.test(src)
+      && !/hold\([^)]*"cent"\)/.test(src));
     ok(`${name}: failure refunds use the hold's own amount (creditsHeld), covering both units`,
       count(src, "await refund(owner, reservationId, creditsHeld);") === 2 && !src.includes("await refund(owner, reservationId, estCredits);"));
     ok(`${name}: records flow_units on the created run, only under the flag`,

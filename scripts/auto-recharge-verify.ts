@@ -19,7 +19,7 @@ import { readFileSync } from "node:fs";
 import {
   decide, validateSettings, REFUSAL_TEXT,
   MAX_CONSECUTIVE_FAILURES, MIN_TOPUP_MARGIN_CENTS, MAX_MONTHLY_CAP_CENTS,
-  CENTS_PER_CREDIT, creditsToCents,
+  CENTS_PER_CREDIT, creditsToCents, centsToCredits,
   type AutoRechargeSettings,
 } from "../lib/preflight/auto-recharge";
 
@@ -142,6 +142,18 @@ console.log("\n── credits are not cents, and the difference charges people �
   ok("a 500 credit balance is $50, not $5", creditsToCents(500) === 5000);
   ok("the conversion is exact at the trigger boundary", creditsToCents(50) === 500);
   ok("it rounds rather than drifting on a fractional balance", creditsToCents(0.5) === 5);
+
+  // ── The INVERSE, which is now on the money path ─────────────────────────────────────────────────────
+  // PAYG is priced in cents and escrowed in credits: the hold converts here. It used to hold unit='cent'
+  // while every purchase mints unit='credit', so a paying customer's balance was invisible to it and the
+  // 402 could never be cleared by paying. These assertions guard the conversion that replaced that.
+  ok("the two real PAYG prices convert exactly", centsToCredits(1500) === 150 && centsToCredits(300) === 30);
+  ok("round-trips at every price on the grid", [100, 300, 1500, 5000].every((c) => creditsToCents(centsToCredits(c)) === c));
+  // CEILING, not round: rounding to nearest lets an off-grid price debit LESS than the customer was quoted.
+  // Over-charging by at most 9 cents is a support conversation; under-charging is a hole in the ledger.
+  ok("an off-grid price rounds UP so a launch can never debit less than its price",
+    centsToCredits(1505) === 151 && centsToCredits(1501) === 151 && creditsToCents(centsToCredits(1505)) >= 1505);
+  ok("zero and negative never mint a debit", centsToCredits(0) === 0 && centsToCredits(-10) <= 0);
 
   // THE RATE MUST AGREE WITH WHAT CHECKOUT ACTUALLY SELLS. If someone changes the price of a credit and
   // not this constant, every trigger silently means something else.

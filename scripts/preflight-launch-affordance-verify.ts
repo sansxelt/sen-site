@@ -65,8 +65,11 @@ async function main(): Promise<void> {
   }
   {
     const route = read("app", "api", "preflight", "runs", "[runId]", "rerun", "route.ts");
-    ok("rerun route holds CENTS and 402s with an insufficient_balance refusal when the balance is short",
-      route.includes('error: "insufficient_balance"') && route.includes("aren't self-serve yet") && route.includes("status: 402"));
+    // Priced in cents, escrowed in credits: see preflight-entitlements-verify for why the cent hold was the
+    // defect. The refusal invites a top-up again because a top-up now funds it.
+    ok("rerun route converts the cent price to credits and 402s when the balance is short",
+      route.includes('error: "insufficient_balance"') && route.includes("centsToCredits(cents)")
+      && route.includes("Add balance to launch it.") && route.includes("status: 402"));
     ok("rerun route prices the PAYG hold via rerunPriceCents (never passPriceCents / free)",
       route.includes("rerunPriceCents(") && !route.includes("passPriceCents("));
   }

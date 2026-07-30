@@ -26,6 +26,7 @@ import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { getApplication, listFlows } from "@/lib/v-applications";
 import { unsafeHttpsUrlReason } from "@/lib/safe-fetch";
 import { hold, refund } from "@/lib/v-credits";
+import { centsToCredits } from "@/lib/preflight/auto-recharge";
 import { createRun, ownerActiveRunCount, ownerRunsToday } from "@/lib/preflight/runs-db";
 import { estimateRunCredits, selectFailedFlows } from "@/lib/preflight/flow-selection";
 import { passPricingEnabled, rerunPriceCents } from "@/lib/preflight/pass-pricing";
@@ -227,16 +228,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ runId: 
       }
       if (effectiveMode === "payg") {
         const cents = gate.mode === "payg" ? gate.cents : repricedCents;
-        const ok = await hold(owner, reservationId, cents, "cent");
+        // Escrowed in credits, priced in cents — the same correction as accept-run.ts, which carries the
+        // full note. A top-up mints 'credit' rows, so holding 'cent' made a paid rerun unfundable.
+        const credits = centsToCredits(cents);
+        const ok = await hold(owner, reservationId, credits);
         if (!ok) {
-          // Same correction as accept-run.ts: a top-up mints 'credit' rows and this hold spends 'cent', so
-          // "Add balance" invited a payment that could never satisfy it. See the note there for why the
-          // denomination fix is a migration rather than an edit.
-          return NextResponse.json({ error: "insufficient_balance", message: `This targeted rerun costs $${(cents / 100).toFixed(2)}. Paid verifications aren't self-serve yet — contact us and we'll enable them on your account.` }, { status: 402 });
+          return NextResponse.json({ error: "insufficient_balance", message: `This targeted rerun costs $${(cents / 100).toFixed(2)}. Add balance to launch it.` }, { status: 402 });
         }
-        // credits_held carries the held amount in the hold's OWN unit (cents here), so the worker's
-        // unchanged settlement — refund credits_held via the reservation — settles cent holds too.
-        creditsHeld = cents;
+        // credits_held carries the held amount in the hold's OWN unit, which is now credits, so the worker's
+        // unchanged settlement — refund credits_held via the reservation — stays correct.
+        creditsHeld = credits;
         heldReservationId = reservationId;
         paygHeldCents = cents;
       } else if (effectiveMode === "free") {
