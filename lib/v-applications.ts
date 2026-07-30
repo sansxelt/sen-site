@@ -271,9 +271,35 @@ export async function deleteApplication(userId: string, id: string): Promise<boo
 }
 
 // ── Production Contract + requirements + flows (read for the shell; manual edits in Phase 1) ──
+// The newest PRODUCTION contract for an app, draft or approved. Excludes kind='guarantee' for the same
+// reason getApprovedContract does: a guarantee is a different object that happens to share this table and
+// this app's single version sequence.
+//
+// WITHOUT THE KIND FILTER THIS RETURNED A GUARANTEE CONTRACT AND BROKE THE VERIFY BUTTON. When kind was
+// added (migration 23) the filter went onto getApprovedContract and not onto this function directly above
+// it. The two then answered different questions, and the system overview asks THIS one while the run route
+// asks the other:
+//
+//   overview page  getContract()          -> v9 approved kind=guarantee   (5 flow ids, posted to the route)
+//   run route      getApprovedContract()  -> v2 approved kind=production  (3 flow ids, the only ones valid)
+//
+// Disjoint sets, so every launch failed flow eligibility with "One or more selected flows are not enabled
+// and approved" — a 400 on the primary action of the main screen, permanent rather than transient, for any
+// app whose newest contract is a guarantee. Measured on demo@vraelis.com/Notewell before this changed.
+//
+// The draft route is the reason this is fixed here rather than at the one call site: it forks a new revision
+// from whatever this returns, so an unfiltered read forks the production lineage off a guarantee contract.
+// A display bug and a write bug from one missing filter.
 export async function getContract(userId: string, applicationId: string): Promise<ProductionContract | null> {
   if (!isDatabaseConfigured()) return null;
-  const { data } = await db().from("v_production_contracts").select("*").eq("user_id", norm(userId)).eq("application_id", applicationId).order("version", { ascending: false }).limit(1).maybeSingle();
+  const base = () => db().from("v_production_contracts").select("*").eq("user_id", norm(userId))
+    .eq("application_id", applicationId).order("version", { ascending: false }).limit(1);
+  // kind is additive with default 'production', so pre-existing rows already answer this. If the column is
+  // absent the query errors and we fall back — on that schema no guarantee contract can exist, so the
+  // unfiltered read is exactly equivalent. Same pattern as getApprovedContract, deliberately.
+  const filtered = await base().eq("kind", "production").maybeSingle();
+  if (!filtered.error) return (filtered.data as unknown as ProductionContract) ?? null;
+  const { data } = await base().maybeSingle();
   return (data as unknown as ProductionContract) ?? null;
 }
 
