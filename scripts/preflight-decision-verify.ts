@@ -182,21 +182,34 @@ async function spyRun(selectedFlowIds: unknown, runId: string, deploymentUrl: st
       toPublicDecision("failed", "ready") === "blocked");
     ok("a still-running run has no verdict at all", toPublicDecision("running", "ready") === null);
 
+    // EVERY SURFACE THAT RENDERS A VERDICT, not the three that were fixed first.
+    //
+    // This list enumerated three files and its own regex below matched, character for character, a fourth
+    // that was not in it: app/rank/app/deployments/page.tsx kept a private switch mapping repair_verified to
+    // a green "Verified". The test to catch it existed and was simply not aimed at the file, and
+    // CURRENT_PRODUCT_GAPS.md had recorded the defect as closed on the strength of the per-system fix.
+    // The account-wide Deployments page and /passes are both here now. Adding a verdict surface without
+    // adding it here is how the fifth instance happens.
     const SURFACES = [
       "app/rank/app/systems/[id]/passes/page.tsx",
       "app/rank/app/systems/[id]/deployments/page.tsx",
       "app/rank/app/systems/[id]/page.tsx",
+      "app/rank/app/deployments/page.tsx",
+      "app/rank/app/passes/page.tsx",
     ];
     for (const f of SURFACES) {
       const src = readFileSync(f, "utf8");
       const code = src.replace(/^\s*\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "");
-      ok(`${f} asks the shared mapper`, code.includes("toPublicDecision("));
+      // runVerdict (lib/preflight/home-verdict) delegates to toPublicDecision and is documented to, so a
+      // surface reaching the mapper through it is not deciding for itself either.
+      ok(`${f} asks the shared mapper`, code.includes("toPublicDecision(") || code.includes("runVerdict("));
       // The exact shape that was wrong: a branch keyed on repair_verified that returns a Verified label.
       ok(`${f} does not decide repair_verified for itself`,
         !/repair_verified"?\s*\)?\s*return\s*\{\s*label:\s*"Verified"/.test(code) &&
         !/decision === "repair_verified"[\s\S]{0,120}label: "Verified"/.test(code));
       // A pill built from `decision` alone cannot know a run never finished.
-      ok(`${f} passes the run state to the mapper`, /toPublicDecision\(\s*(state|r\.state|g\.latest\.state)/.test(code));
+      ok(`${f} passes the run state to the mapper`,
+        /(toPublicDecision|runVerdict)\(\s*(state|r\.state|p\.state|run\.state|g\.latest\.state)/.test(code));
     }
   }
 

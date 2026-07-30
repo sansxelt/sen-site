@@ -6,6 +6,7 @@ import { SetupRequired } from "../systems/setup-required";
 import { listAllRuns, type PassRow } from "@/lib/preflight/overview-db";
 import { environmentsByApp, sourceConnectionsByApp, describeSource } from "@/lib/preflight/setup-read";
 import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
+import { toPublicDecision } from "@/lib/preflight/public-decision";
 
 export const metadata: Metadata = { title: "Deployments" };
 
@@ -38,16 +39,36 @@ function timeAgo(iso: string | null | undefined): string {
 // never conveyed by colour alone. A run is "in progress" while it moves through the pre-decision states.
 const ACTIVE_RUN_STATES = new Set(["queued", "discovering", "running", "analyzing"]);
 
-function decisionStyle(run: PassRow): { label: string; color: string; bg: string; border: string } {
-  switch (run.decision) {
-    case "ready": return { label: "Verified", color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" };
-    case "repair_verified": return { label: "Verified", color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" };
-    case "needs_review": return { label: "Blocked", color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "var(--wait-line)" };
-    case "blocked": return { label: "Failed", color: "var(--stop-ink)", bg: "var(--stop-wash)", border: "var(--stop-line)" };
-    default:
-      if (ACTIVE_RUN_STATES.has(run.state)) return { label: "In progress", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };
-      return { label: "No verdict", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };
-  }
+// A FALSE VERIFIED LIVED HERE, and this was the last surface still carrying it.
+//
+// The switch below read run.decision ALONE and mapped repair_verified to a green "Verified", while
+// toPublicDecision — and therefore the public API, the CI gate and the outbound webhooks — call that same
+// run blocked. A targeted repair rerun exercises only the flows that had failed, so it is evidence the
+// repair worked, not evidence the system's critical promises hold. The worker actively writes that value
+// (worker/preflight/execute-run.ts sets it whenever a ready run lacks full coverage), so this was live and
+// not theoretical: every partial-coverage pass read green on this page and Blocked everywhere else.
+//
+// It also never looked at run.state except in the default arm, so a decision left over from an attempt of
+// a run that never completed rendered as a settled verdict.
+//
+// The same defect was found and fixed twice before — app/rank/app/passes/page.tsx and the per-system
+// app/rank/app/systems/[id]/deployments/page.tsx both carry postmortems for it — and this account-wide page
+// was the missed third instance. CURRENT_PRODUCT_GAPS.md named it and then credited the fix to the
+// per-system file. The mapper decides now, and it is given the state.
+//
+// The tone is returned alongside the label because the MARK has to agree with the word: DECISION_MARK maps
+// repair_verified to a verified-repair wrench, so passing the raw decision put a checkmark-wrench next to
+// "Blocked". /passes already solved this by passing the public tone instead.
+type Verdict = { label: string; color: string; bg: string; border: string; tone: string | null };
+
+function decisionStyle(run: PassRow): Verdict {
+  const pub = toPublicDecision(run.state, run.decision);
+  if (pub === "verified") return { label: "Verified", color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)", tone: "verified" };
+  if (pub === "failed") return { label: "Failed", color: "var(--stop-ink)", bg: "var(--stop-wash)", border: "var(--stop-line)", tone: "failed" };
+  if (pub === "blocked") return { label: "Blocked", color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "var(--wait-line)", tone: "needs_review" };
+  // pub === null: the run has not reached a terminal state, so there is no verdict to render yet.
+  if (ACTIVE_RUN_STATES.has(run.state)) return { label: "In progress", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)", tone: null };
+  return { label: "No verdict", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)", tone: null };
 }
 
 type DeploymentGroup = { url: string; runs: PassRow[] };
@@ -79,7 +100,7 @@ function DeploymentCard({ group, envLabel, sourceLine }: { group: DeploymentGrou
         </div>
         <div style={{ display: "flex", gap: 6, flex: "none" }}>
           {envLabel ? <span className="pill" style={{ fontSize: 10 }}>{envLabel}</span> : null}
-          <span className="pill" style={{ fontSize: 10, color: st.color, background: st.bg, borderColor: st.border }}><DecisionMark decision={latest.decision} />{st.label}</span>
+          <span className="pill" style={{ fontSize: 10, color: st.color, background: st.bg, borderColor: st.border }}><DecisionMark decision={st.tone} />{st.label}</span>
         </div>
       </div>
       {sourceLine ? (
@@ -141,7 +162,7 @@ export default async function DeploymentsPage() {
             <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>
               Last verified deployment
             </div>
-            <span className="pill" style={{ fontSize: 10.5, color: lv.color, background: lv.bg, borderColor: lv.border, flex: "none" }}><DecisionMark decision={lastVerified.decision} />{lv.label}</span>
+            <span className="pill" style={{ fontSize: 10.5, color: lv.color, background: lv.bg, borderColor: lv.border, flex: "none" }}><DecisionMark decision={lv.tone} />{lv.label}</span>
           </div>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: 13.5, fontWeight: 600, color: "var(--fg-1)", marginTop: 10, wordBreak: "break-all" }}>
             {lastVerified.deploymentUrl}
