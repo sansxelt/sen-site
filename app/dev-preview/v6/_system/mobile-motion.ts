@@ -73,13 +73,16 @@ const REDUCED = "(prefers-reduced-motion: reduce)";
 /** True where the scrubbed chapters do NOT run, so their parts need entry motion instead. */
 export function mobileMotionWanted(): boolean {
   if (typeof window === "undefined" || !window.matchMedia) return false;
-  return window.matchMedia(MOBILE).matches && !window.matchMedia(REDUCED).matches;
-}
-
-/** True where entry motion should animate a part on its way in rather than settle it instantly. */
-function entryMotionWanted(): boolean {
-  if (typeof window === "undefined" || !window.matchMedia) return false;
-  return !window.matchMedia(REDUCED).matches;
+  // REDUCED MOTION IS NOT ITS OWN PAGE. It gets what a phone gets: the scrubbed chapters unpinned and
+  // revealed on entry. The preference is about how far a thing TRAVELS, not about whether a reader is
+  // allowed to see anything arrive, and the stylesheet answers that separately by damping the travel to
+  // zero and keeping the fade.
+  //
+  // Measured before this changed, on the same page: desktop 26,869px with four pins and a live scrub;
+  // desktop with the preference set 11,325px with no pins, no scrub AND no reveals — a third composition
+  // that nobody designed, reached by a setting a battery saver turns on without asking. Branching a page on
+  // that preference is the mistake; expressing it as an amount of movement is not.
+  return window.matchMedia(MOBILE).matches || window.matchMedia(REDUCED).matches;
 }
 
 /**
@@ -100,7 +103,8 @@ export function useMobileMotion(): void {
     // Reduced motion still gets the class and still gets the observer: the stylesheet decides that its
     // reveal is a fade with no travel, which is a question about distance, not about whether a reader is
     // allowed to see anything arrive.
-    if (!entryMotionWanted()) return;
+    // No gate on the preference any more: everybody gets the observer. What differs is only how far a
+    // revealed part moves, which is decided in chapters.css.
     const root = document.documentElement;
     const selector = mobileMotionWanted() ? `${ALWAYS_PARTS}, ${SCRUBBED_PARTS}` : ALWAYS_PARTS;
 

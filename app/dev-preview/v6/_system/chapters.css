@@ -859,7 +859,12 @@
 
    Reduced motion never reaches here: mobile-motion.ts refuses to add .v6-mo when it is set, and the
    reduced-motion block above keeps its rest state either way. */
-@media (max-width: 900px) {
+/* GATE WIDENED. These parts are driven by --p on a desktop, so the reveal must not also touch them
+   there — but reduced motion is not a desktop for this purpose: progress.ts pins --p to 1 for it, so
+   nothing is scrubbing and the reveal is the only motion available. Gating this on width alone left
+   reduced motion with four chapters that neither scrubbed nor revealed, which is how it ended up a
+   third composition nobody designed. */
+@media (max-width: 900px), (prefers-reduced-motion: reduce) {
   .v6-mo .v6-gap__t,
   .v6-mo .v6-st__cond,
   .v6-mo .v6-rg__row,
@@ -1039,9 +1044,37 @@
   will-change: auto;
 }
 
-/* NO REDUCED-MOTION VARIANT HERE, DELIBERATELY, AND NOT AN OVERSIGHT.
-   mobile-motion.ts returns before adding .v6-mo when the preference is set, so nothing above ever applies
-   to those readers and they get the page at rest — the clean static version, which is what was asked for.
-   A reduced-motion block written against .v6-mo would be unreachable by construction, and an unreachable
-   rule that looks like a safety net is worse than no rule: the next person to read it would believe these
-   readers are covered here when the decision is actually made in the script. */
+/* REDUCED MOTION IS A DISTANCE, NOT A DIFFERENT PAGE.
+   This note previously said there was deliberately no variant here, because mobile-motion.ts returned before
+   adding .v6-mo when the preference was set and nothing above could apply. That was true and it was the bug:
+   the preference bought a page with no reveals at all. The script no longer branches, so this block is
+   reachable and is the whole of what the preference now changes.
+   Travel goes to zero and the fade stays. What the preference exists to prevent is movement — sliding,
+   parallax, zoom, the things that provoke vestibular symptoms — and opacity does not move. clip-path is
+   released EXPLICITLY because it is not a transform: resetting transform alone would leave every headline
+   masked to nothing, which is the one way this could be worse than no reveal at all. */
+@media (prefers-reduced-motion: reduce) {
+  .v6-mo .v6-eyebrow,
+  .v6-mo .v6-st__sub, .v6-mo .v6-dr__sub, .v6-mo .v6-rx__sub,
+  .v6-mo .v6-kn__sheet, .v6-mo .v6-kn__col, .v6-mo .v6-kn__ex,
+  .v6-mo .v6-st__h, .v6-mo .v6-rg__h, .v6-mo .v6-dr__h, .v6-mo .v6-rx__h, .v6-mo .v6-tm__h,
+  .v6-mo .v6-gap__t, .v6-mo .v6-st__cond, .v6-mo .v6-rg__row, .v6-mo .v6-rg__foot,
+  .v6-mo .v6-dr__layer, .v6-mo .v6-tm__ex, .v6-mo .v6-cs__m > * {
+    transform: none !important;
+    clip-path: none !important;
+    transition: opacity 520ms var(--ease) !important;
+    transition-delay: calc(var(--i, 0) * 60ms) !important;
+    will-change: opacity;
+  }
+  .v6-mo .v6-eyebrow.v6-in,
+  .v6-mo .v6-st__sub.v6-in, .v6-mo .v6-dr__sub.v6-in, .v6-mo .v6-rx__sub.v6-in,
+  .v6-mo .v6-kn__sheet.v6-in, .v6-mo .v6-kn__col.v6-in, .v6-mo .v6-kn__ex.v6-in,
+  .v6-mo .v6-st__h.v6-in, .v6-mo .v6-rg__h.v6-in, .v6-mo .v6-dr__h.v6-in,
+  .v6-mo .v6-rx__h.v6-in, .v6-mo .v6-tm__h.v6-in,
+  .v6-mo .v6-gap__t.v6-in, .v6-mo .v6-st__cond.v6-in, .v6-mo .v6-rg__row.v6-in,
+  .v6-mo .v6-rg__foot.v6-in, .v6-mo .v6-dr__layer.v6-in, .v6-mo .v6-tm__ex.v6-in,
+  .v6-mo .v6-cs__m > .v6-in {
+    opacity: 1 !important;
+    will-change: auto;
+  }
+}
