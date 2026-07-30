@@ -64,18 +64,18 @@ function StatChip({ label, value, color }: { label: string; value: number; color
   );
 }
 
-function AppCard({ app, run }: { app: Application; run: RunSummary | undefined }) {
+function SystemCard({ system, run }: { system: Application; run: RunSummary | undefined }) {
   const st = decisionStyle(run);
   const last = timeAgo(run?.completed_at ?? run?.created_at);
   const crit = criticalFlows(run?.summary);
   const metaParts = [crit, last ? `Last run ${last}` : null].filter(Boolean);
   const metaText = metaParts.length ? metaParts.join(", ") : "No verification yet";
   return (
-    <Link href={`/systems/${app.id}`} className="card card--hover" style={{ display: "flex", flexDirection: "column", gap: 14, textDecoration: "none", color: "inherit", padding: 18 }}>
+    <Link href={`/systems/${system.id}`} className="card card--hover" style={{ display: "flex", flexDirection: "column", gap: 14, textDecoration: "none", color: "inherit", padding: 18 }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, color: "var(--fg-1)", lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app.name}</div>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)", marginTop: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app.app_url}</div>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, color: "var(--fg-1)", lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{system.name}</div>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)", marginTop: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{system.app_url}</div>
         </div>
         <span className="pill" style={{ fontSize: 10, color: st.color, background: st.bg, borderColor: st.border, flex: "none" }}><DecisionMark decision={st.mark} />{st.label}</span>
       </div>
@@ -87,10 +87,10 @@ function AppCard({ app, run }: { app: Application; run: RunSummary | undefined }
   );
 }
 
-// Applications dashboard for Vraelis Preflight. Server component behind the preflight owner gate; every read
+// Systems dashboard for Vraelis Preflight. Server component behind the preflight owner gate; every read
 // degrades to an empty state when the data layer has nothing (or the tables aren't migrated yet). No browser
 // execution or discovery lives here — a run is a later phase.
-export default async function ApplicationsPage() {
+export default async function SystemsPage() {
   const caller = await requirePreflightOwner("/systems");
   // A token-less (email-match) invite activates on first Preflight visit so a newly-invited teammate sees
   // their shared apps here immediately. Idempotent + best-effort.
@@ -139,7 +139,7 @@ export default async function ApplicationsPage() {
 
           {/* app cards */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(288px, 1fr))", gap: 12 }}>
-            {apps.map((a) => <AppCard key={a.id} app={a} run={latest[a.id]} />)}
+            {apps.map((a) => <SystemCard key={a.id} system={a} run={latest[a.id]} />)}
           </div>
         </>
       )}
