@@ -66,7 +66,7 @@ async function main(): Promise<void> {
   {
     const route = read("app", "api", "preflight", "runs", "[runId]", "rerun", "route.ts");
     ok("rerun route holds CENTS and 402s with an insufficient_balance refusal when the balance is short",
-      route.includes('error: "insufficient_balance"') && route.includes("Add balance to launch it.") && route.includes("status: 402"));
+      route.includes('error: "insufficient_balance"') && route.includes("aren't self-serve yet") && route.includes("status: 402"));
     ok("rerun route prices the PAYG hold via rerunPriceCents (never passPriceCents / free)",
       route.includes("rerunPriceCents(") && !route.includes("passPriceCents("));
   }
@@ -138,8 +138,8 @@ async function main(): Promise<void> {
     const report = readCode(REPORT);
     ok("report passes the computed priceNote into BOTH rerun call sites",
       (report.match(/RerunButton[\s\S]*?priceNote=\{rerunPriceNote\}/g)?.length ?? 0) >= 2);
-    ok("the 'Back to application' link is a separate control (not inside the rerun card)",
-      report.includes('className="btn btn--ghost"') && report.includes("Back to application"));
+    ok("the 'Back to system' link is a separate control (not inside the rerun card)",
+      report.includes('className="btn btn--ghost"') && report.includes("Back to system"));
   }
 
   // A sanity check on the constants the scenarios lean on (guards a silent constant drift).

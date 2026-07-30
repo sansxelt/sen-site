@@ -319,8 +319,15 @@ console.log("\n── the mobile drawer is not trapped inside the top bar ──
   // not blindly deleted: the portal stays correct either way, and it is what makes the drawer immune to the
   // next transform, filter or will-change that lands anywhere above it.
   const header = ui.slice(ui.indexOf("<header"), ui.indexOf("</header>"));
-  ok("the top bar still carries the backdrop-filter that made the portal necessary",
-    /backdropFilter: "blur/.test(header));
+  // READ, as the note above instructs, rather than deleted. The blur has NOT left the header; it became
+  // CONDITIONAL when the bar started matching the page's measured ground colour:
+  //   backdropFilter: ground.bg ? "none" : "blur(12px)"
+  // An opaque measured ground needs no blur, but the blur is still the fallback for the first frame and for
+  // any page where the sampler has no reading — so a filter can still land on the header, and the portal is
+  // still exactly as necessary as it was. The invariant is "a blur is reachable here", not "the blur is
+  // unconditional", so the assertion now matches either form.
+  ok("the top bar can still carry the backdrop-filter that made the portal necessary",
+    /backdropFilter:[^,\n]*blur\(/.test(header));
 }
 
 console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);

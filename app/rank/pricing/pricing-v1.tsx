@@ -70,7 +70,7 @@ export default function PricingV1({ initialCycle = "monthly" }: { initialCycle?:
               <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-5)", marginTop: 4 }}>Included</div>
               <ul className="price__feat">
                 <li>{FREE_TIER.lifetimePasses} verification, up to {FREE_TIER.flowsPerPass} critical flows</li>
-                <li>{FREE_TIER.maxApplications} connected application</li>
+                <li>{FREE_TIER.maxApplications} connected system</li>
                 <li>A full Verified, Failed, or Blocked decision</li>
                 {/* Free is the ONE tier without the API, now that every paid plan has it. Stated on the
                     card rather than discovered when a key is refused. */}

@@ -71,9 +71,9 @@ for (const surface of ["pricing", "plans"]) {
   // Free leads with the same headline the paid cards use, so the four read as one scale rather than three
   // plans and an oddity beside them. The capacity underneath is unchanged: one verification, three flows,
   // one system.
-  ok(`${surface}: free tier is $0, one guarantee, one verification, 3 flows, 1 application, no card`,
+  ok(`${surface}: free tier is $0, one guarantee, one verification, 3 flows, 1 system, no card`,
     m.includes("$0") && flat0(m).includes("Protects 1 active guarantee")
-    && m.includes("1 verification, up to 3 critical flows") && m.includes("1 connected application")
+    && m.includes("1 verification, up to 3 critical flows") && m.includes("1 connected system")
     && m.includes("No card required"));
   // Free is the ONE tier without the API, and that difference has to be legible from the card rather than
   // discovered when a key is refused.

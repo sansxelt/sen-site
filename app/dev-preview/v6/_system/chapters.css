@@ -857,8 +857,10 @@
    a blank page. Gated this way, the worst case is no animation, which is exactly where the page already
    was, and never no page. The specificity carries !important because the rules it overrides use it too.
 
-   Reduced motion never reaches here: mobile-motion.ts refuses to add .v6-mo when it is set, and the
-   reduced-motion block above keeps its rest state either way. */
+   Reduced motion DOES reach here, and that is deliberate — see GATE WIDENED immediately below. This comment
+   used to claim the opposite ("mobile-motion.ts refuses to add .v6-mo when it is set"), which stopped being
+   true when the preference became a question of how far a part travels rather than whether it appears. Left
+   uncorrected it reads as permission to hide something on the assumption that reduced motion never sees it. */
 /* GATE WIDENED. These parts are driven by --p on a desktop, so the reveal must not also touch them
    there — but reduced motion is not a desktop for this purpose: progress.ts pins --p to 1 for it, so
    nothing is scrubbing and the reveal is the only motion available. Gating this on width alone left

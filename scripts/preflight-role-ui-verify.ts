@@ -110,7 +110,7 @@ console.log("\n── UI affordance gating (structural) ──");
   // SETTINGS: EditApplicationForm gated on canEditSettings (editor), Delete on canDeleteApplication (admin).
   const settings = app("settings/page.tsx");
   ok("settings gates EditApplicationForm on caps.canEditSettings with a read-only facts replacement",
-    /caps\.canEditSettings\s*\?[\s\S]{0,600}EditApplicationForm/.test(settings) && /Application settings[\s\S]{0,400}<KV/.test(settings));
+    /caps\.canEditSettings\s*\?[\s\S]{0,600}EditApplicationForm/.test(settings) && /System settings[\s\S]{0,400}<KV/.test(settings));
   ok("settings gates DeleteApplication on caps.canDeleteApplication (admin, NOT editor)",
     /caps\.canDeleteApplication\s*\?\s*<DeleteApplication/.test(settings));
 

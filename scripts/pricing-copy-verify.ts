@@ -49,7 +49,12 @@ for (const phrase of STALE) {
 // app/rank; their approved-ladder copy is verified by scripts/pricing-v1-ui-verify.ts.
 const pricing = read("app/rank/pricing/pricing-legacy.tsx");
 ok("pricing keeps the headline: priced by the run, not the seat", pricing.includes("Priced by the") && pricing.includes("not the seat"));
-ok("pricing carries the new subtitle", pricing.includes("Run your AI-built application through a real production review"));
+// The retired vocabulary was "a real production review"; the migration replaced it with "verification".
+// Asserted as a property (it sells a real verification and names what comes back) so the guard survives the
+// next wording pass instead of going red on copy that says exactly what it is supposed to say.
+ok("pricing carries the new subtitle",
+  /Run your AI-built \w+ through a real verification/.test(pricing)
+  && pricing.includes("explainable decision"));
 ok("free tier: one complete verification, up to 3 critical flows, no card",
   pricing.includes("One complete verification") && pricing.includes("Up to 3 critical flows") && pricing.includes("No card required"));
 ok("pay as you go: $10 per pass with 5 flows included and $3 per additional",

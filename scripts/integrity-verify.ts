@@ -41,6 +41,9 @@ const SUITES: Suite[] = [
   // verification-contract branch. The registry caught that asymmetry rather than silently skipping it.
   { file: "scripts/preflight-guarantee-logic-verify.ts" },
   { file: "scripts/preflight-guarantee-context-verify.ts" },
+  // Guards that every resolver of "the newest production contract" excludes kind='guarantee'. Registered
+  // when it was written; the registry is what noticed it had not been, which is the point of the registry.
+  { file: "scripts/preflight-contract-kind-verify.ts" },
   { file: "scripts/plan-label-verify.ts" },
   { file: "scripts/pricing-purchasable-verify.ts" },
   { file: "scripts/key-usage-verify.ts" },

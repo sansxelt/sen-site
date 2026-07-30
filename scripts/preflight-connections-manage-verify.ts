@@ -107,8 +107,14 @@ ok("their feature-use line says not yet read during verification (no overstated 
 // webhook GRADUATED: it now receives the launch decision when a run finalizes, so it must no longer claim
 // to be inert, and its line must describe the real delivery.
 ok("webhook is NO LONGER stored-not-yet-used (it receives the decision now)", !isStoredNotYetUsed("webhook"));
+// Asserts the PROPERTY, not a retired phrase. This required the literal "launch decision", which the
+// vocabulary migration replaced with "verification decision" across 55 occurrences — so the guard went red
+// on copy that still says exactly what the guard exists to require, and because integrity-verify halts at the
+// first failing suite, that one stale regex kept 67 of 94 suites from running at all.
 ok("webhook's feature-use line describes the real delivery, not inertness",
-  /launch decision/i.test(featureUse("webhook")) && !/not yet read/i.test(featureUse("webhook")));
+  /\bdecision\b/i.test(featureUse("webhook"))
+  && /run (finishes|finalizes|completes)/i.test(featureUse("webhook"))
+  && !/not yet read/i.test(featureUse("webhook")));
 ok("wired providers are NOT flagged stored-not-yet-used",
   ["supabase", "stripe_test", "sentry", "github", "vercel", "custom_deploy", "test_account"].every((p) => !isStoredNotYetUsed(p)));
 ok("wired discovery providers name a real seeded requirement (never 'not yet')",

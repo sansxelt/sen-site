@@ -176,7 +176,7 @@ ok("page renders <EditApplicationForm> seeded from the app + extras",
 ok("the current description (summary source) seeds the form",
   page.includes("readContextSources(") && page.includes('s.kind === "summary"'));
 ok("read-only sections are KEPT below the form (connections summary, boundaries, missing)",
-  page.includes("Connections (") && page.includes("Test boundaries") && page.includes("Missing from this application"));
+  page.includes("Connections (") && page.includes("Test boundaries") && page.includes("Missing from this system"));
 ok("no longer claims renaming or deletion is 'coming' (both are built now)",
   !page.includes("Renaming an application and deleting") && !page.includes("Deleting an application from the UI is coming") && page.includes("<DeleteApplication"));
 

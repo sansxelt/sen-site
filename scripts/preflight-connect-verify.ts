@@ -63,10 +63,10 @@ const uiSrc = readFileSync("app/rank/app/systems/new/connect-form.tsx", "utf8");
 // shows "all required complete" while the button is still disabled (the app name was the hidden gate).
 ok("the connect button gates on url + name + ownership (canSubmit)",
   /canSubmit = urlOk && nameOk && own/.test(uiSrc));
-ok("the REQUIRED summary lists Application name (so it can't say complete while the button is disabled)",
-  uiSrc.includes('summaryRow("Application name", nameOk)') && /requiredDone = .*nameOk \? 1 : 0/.test(uiSrc));
+ok("the REQUIRED summary lists System name (so it can't say complete while the button is disabled)",
+  uiSrc.includes('summaryRow("System name", nameOk)') && /requiredDone = .*nameOk \? 1 : 0/.test(uiSrc));
 ok("a disabled connect button explains the first unmet requirement (never a dead button with no reason)",
-  uiSrc.includes("!canSubmit && !busy") && uiSrc.includes("Add an application name to continue"));
+  uiSrc.includes("!canSubmit && !busy") && uiSrc.includes("Add a system name to continue"));
 ok("secret storage attempts EVERY account and keeps failures in state for retry",
   uiSrc.includes("storeAccounts") && uiSrc.includes("Retry storing test accounts") && /failed\.map\(\(f\) => f\.account\)/.test(uiSrc));
 const failStart = uiSrc.indexOf("if (failed.length) {");
