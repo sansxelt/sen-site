@@ -65,8 +65,12 @@ export async function takeApiHold(owner: string, price: ApiPrice): Promise<{ ok:
   const unit = price.mode === "payg" ? ("cent" as const) : undefined;
   const ok = unit ? await hold(owner, reservationId, amount, unit) : await hold(owner, reservationId, amount);
   if (!ok) {
+    // The payg branch holds 'cent' (line above) while every top-up path mints 'credit', so "Add balance"
+    // named an action that cannot clear this refusal. Same correction as accept-run.ts, which carries the
+    // full note on why the denomination fix is a migration and not an edit. The credit branch is unchanged:
+    // there, adding balance genuinely does resolve it.
     const msg = price.mode === "payg"
-      ? `This run costs $${(amount / 100).toFixed(2)}. Add balance to launch it.`
+      ? `This run costs $${(amount / 100).toFixed(2)}. Paid runs aren't self-serve yet — contact us and we'll enable them on your account.`
       : "You do not have enough credits to launch this run.";
     return { ok: false, status: 402, error: price.mode === "payg" ? "insufficient_balance" : "insufficient_credits", message: msg };
   }

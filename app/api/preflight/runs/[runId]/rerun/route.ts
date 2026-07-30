@@ -229,7 +229,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ runId: 
         const cents = gate.mode === "payg" ? gate.cents : repricedCents;
         const ok = await hold(owner, reservationId, cents, "cent");
         if (!ok) {
-          return NextResponse.json({ error: "insufficient_balance", message: `This targeted rerun costs $${(cents / 100).toFixed(2)}. Add balance to launch it.` }, { status: 402 });
+          // Same correction as accept-run.ts: a top-up mints 'credit' rows and this hold spends 'cent', so
+          // "Add balance" invited a payment that could never satisfy it. See the note there for why the
+          // denomination fix is a migration rather than an edit.
+          return NextResponse.json({ error: "insufficient_balance", message: `This targeted rerun costs $${(cents / 100).toFixed(2)}. Paid verifications aren't self-serve yet — contact us and we'll enable them on your account.` }, { status: 402 });
         }
         // credits_held carries the held amount in the hold's OWN unit (cents here), so the worker's
         // unchanged settlement — refund credits_held via the reservation — settles cent holds too.

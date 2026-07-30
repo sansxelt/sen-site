@@ -164,7 +164,18 @@ export async function acceptVerificationRun(input: AcceptRunInput): Promise<Acce
         const cents = gate.mode === "payg" ? gate.cents : repricedCents;
         const ok = await hold(owner, reservationId, cents, "cent");
         if (!ok) {
-          return { ok: false, error: "insufficient_balance", message: `This verification costs $${(cents / 100).toFixed(2)}. Add balance to run it.`, status: 402 };
+          // DOES NOT ASK FOR MONEY IT CANNOT TAKE. This used to read "Add balance to run it." and the UI put
+          // an "Add balance" button next to it pointing at /credits. Paying there cannot satisfy this hold:
+          // the PAYG escrow is denominated in 'cent' and every top-up path mints unit='credit' rows (a credit
+          // is 10 cents, so the money is real but in the wrong denomination). A customer could pay, watch the
+          // credits page tick up, relaunch, and get this identical 402 forever.
+          //
+          // Fixing the denomination is a migration, not a copy change: three grant paths would have to mint
+          // cents, seven surfaces that display a balance would have to report them, one of those is the public
+          // /api/v1/credits endpoint whose meaning customer integrations depend on, and every existing
+          // credit-holder needs the per-owner conversion in scripts/preflight-balance-convert.ts. Until that
+          // lands, the honest thing is to stop inviting the payment rather than to keep taking it.
+          return { ok: false, error: "insufficient_balance", message: `This verification costs $${(cents / 100).toFixed(2)}. Paid verifications aren't self-serve yet — contact us and we'll enable them on your account.`, status: 402 };
         }
         creditsHeld = cents;
         heldReservationId = reservationId;
