@@ -153,7 +153,7 @@ export function VerificationRecordRow({ run, top }: { run: PassRow; top: boolean
   const verdict = runVerdict(run.state, run.decision);
   const href = run.applicationId ? `/systems/${run.applicationId}/passes/${run.id}` : "/verifications";
   const flows = run.flowsTotal > 0 ? `${run.flowsPassed}/${run.flowsTotal} flows` : "";
-  const meta = [timeAgo(run.completedAt ?? run.createdAt), flows].filter(Boolean).join(" · ");
+  const meta = [timeAgo(run.completedAt ?? run.createdAt), flows].filter(Boolean).join(", ");
   return (
     <Link href={href}
       style={{ ...rowLink, gridTemplateColumns: "1fr auto auto", gap: 16, padding: "13px 16px", borderTop: top ? "none" : "1px solid var(--line-2)" }}
@@ -201,7 +201,7 @@ export function SystemsSummary({ systems, error }: { systems: SystemSummaryItem[
   return (
     <section aria-label="Systems">
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 4, gap: 12 }}>
-        <h2 style={headLbl}>Systems ({systems.length}){needsProof > 0 ? ` · ${needsProof} need proof` : ""}</h2>
+        <h2 style={headLbl}>Systems ({systems.length}){needsProof > 0 ? `, ${needsProof} need proof` : ""}</h2>
         <Link href="/systems" style={{ fontSize: 13, color: "var(--acc-deep)", flex: "none" }}>Open Systems <span aria-hidden>→</span></Link>
       </div>
       {/* The pill is the LATEST verification, not whole-system coverage: the data model has no "current

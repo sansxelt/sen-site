@@ -158,10 +158,10 @@ export function SystemsTable({ rows }: { rows: SystemRow[] }) {
             </span>
             {/* data-l carries the column name so the narrow layout can print it before the value. Without it
                 a phone showed a column of bare em dashes with nothing saying what was missing. */}
-            <span data-l="Guarantees" style={{ fontVariantNumeric: "tabular-nums", color: s.guarantees ? "var(--fg-2)" : "var(--fg-5)" }}>{s.guarantees || "—"}</span>
+            <span data-l="Guarantees" style={{ fontVariantNumeric: "tabular-nums", color: s.guarantees ? "var(--fg-2)" : "var(--fg-5)" }}>{s.guarantees || "n/a"}</span>
             <span data-l="Latest"><Pill v={s.verdict} /></span>
-            <span data-l="Critical" style={{ fontVariantNumeric: "tabular-nums", color: s.criticals ? "var(--stop-ink)" : "var(--fg-5)" }}>{s.criticals || "—"}</span>
-            <span data-l="Last proven" style={{ color: "var(--fg-4)" }}>{s.lastProven ? timeAgo(s.lastProven) : "—"}</span>
+            <span data-l="Critical" style={{ fontVariantNumeric: "tabular-nums", color: s.criticals ? "var(--stop-ink)" : "var(--fg-5)" }}>{s.criticals || "n/a"}</span>
+            <span data-l="Last proven" style={{ color: "var(--fg-4)" }}>{s.lastProven ? timeAgo(s.lastProven) : "n/a"}</span>
           </Link>
         ))}
       </div>
@@ -220,7 +220,7 @@ export function RecentVerificationsTable({ rows }: { rows: PassRow[] }) {
                 <span style={{ display: "block", fontSize: 13.5, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.applicationName || "Verification"}</span>
                 {r.parentRunId ? <span style={{ fontSize: 11.5, color: "var(--fg-4)" }}>Reverification of an earlier run</span> : null}
               </span>
-              <span data-l="Journeys" style={{ fontVariantNumeric: "tabular-nums", color: "var(--fg-3)" }}>{r.flowsTotal > 0 ? `${r.flowsPassed}/${r.flowsTotal}` : "—"}</span>
+              <span data-l="Journeys" style={{ fontVariantNumeric: "tabular-nums", color: "var(--fg-3)" }}>{r.flowsTotal > 0 ? `${r.flowsPassed}/${r.flowsTotal}` : "n/a"}</span>
               <span data-l="When" style={{ color: "var(--fg-4)" }}>{timeAgo(r.completedAt ?? r.createdAt)}</span>
             </Link>
           );

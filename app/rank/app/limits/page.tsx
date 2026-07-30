@@ -86,7 +86,7 @@ export default async function LimitsPage() {
                     <code style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)" }}>{k.prefix}…</code>
                   </span>
                   <span style={{ fontSize: 13, color: ceiling == null ? "var(--wait-ink)" : "var(--fg-2)", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
-                    {ceiling == null ? "No daily ceiling" : `${used != null ? money(used) : "—"} of ${money(ceiling)} today`}
+                    {ceiling == null ? "No daily ceiling" : `${used != null ? money(used) : "n/a"} of ${money(ceiling)} today`}
                   </span>
                 </Link>
               );

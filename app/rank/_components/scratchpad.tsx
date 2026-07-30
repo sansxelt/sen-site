@@ -150,7 +150,7 @@ export function inspect(t: string): Notice[] {
   if (API_KEY.test(t)) {
     out.push({
       id: "api-key",
-      text: "That looks like a live API key. This note is stored unencrypted in this browser — Reset is what removes it.",
+      text: "That looks like a live API key. This note is stored unencrypted in this browser. Reset is what removes it.",
     });
   }
 

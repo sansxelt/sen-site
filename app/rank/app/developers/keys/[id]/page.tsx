@@ -30,11 +30,11 @@ export const metadata: Metadata = { title: "API key" };
 export const dynamic = "force-dynamic";
 
 const label = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--fg-4)", margin: 0 };
-const money = (c: number | null | undefined) => (c == null ? "—" : `$${(c / 100).toFixed(2)}`);
+const money = (c: number | null | undefined) => (c == null ? "n/a" : `$${(c / 100).toFixed(2)}`);
 
 /** Seconds, said the way a person says them. 9s, 1m 12s, never 0.15 minutes. */
 function secs(s: number | null): string {
-  if (s == null) return "—";
+  if (s == null) return "n/a";
   if (s < 60) return `${s < 10 ? s.toFixed(1) : Math.round(s)}s`;
   const m = Math.floor(s / 60);
   return `${m}m ${Math.round(s - m * 60)}s`;
@@ -123,7 +123,7 @@ export default async function KeyDetailPage(ctx: { params: Promise<{ id: string 
             <Stat k="Verified" v={String(v!.verified)} tone={v!.verified ? "var(--go-ink)" : undefined} />
             <Stat k="Failed" v={String(v!.failed)} tone={v!.failed ? "var(--stop-ink)" : undefined} />
             <Stat k="Blocked" v={String(v!.blocked)} tone={v!.blocked ? "var(--wait-ink)" : undefined} />
-            <Stat k="Pass rate" v={v!.passRate == null ? "—" : `${Math.round(v!.passRate * 100)}%`}
+            <Stat k="Pass rate" v={v!.passRate == null ? "n/a" : `${Math.round(v!.passRate * 100)}%`}
               sub={v!.decided ? `of ${v!.decided} decided` : "nothing decided yet"} />
           </div>
           <p style={{ fontSize: 12, color: "var(--fg-5)", margin: "0 0 26px", lineHeight: 1.6, maxWidth: "70ch" }}>
@@ -175,7 +175,7 @@ export default async function KeyDetailPage(ctx: { params: Promise<{ id: string 
             <Stat k="All time" v={(d.usage.requests?.total ?? 0).toLocaleString()} />
             <Stat k="Last 24 hours" v={(d.usage.requests?.last24h ?? 0).toLocaleString()} />
             <Stat k="Verifications launched" v={String(d.runs)} sub="the rest read or priced something" />
-            <Stat k="Busiest hour" v={busiest >= 0 && d.hourly[busiest] > 0 ? `${String(busiest).padStart(2, "0")}:00` : "—"} sub="UTC" />
+            <Stat k="Busiest hour" v={busiest >= 0 && d.hourly[busiest] > 0 ? `${String(busiest).padStart(2, "0")}:00` : "n/a"} sub="UTC" />
           </div>
           <p style={{ fontSize: 12, color: "var(--fg-5)", margin: "0 0 14px", lineHeight: 1.6, maxWidth: "70ch" }}>
             Requests are counted from the activity log, which is best effort: it is written after the fact

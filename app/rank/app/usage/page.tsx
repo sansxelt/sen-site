@@ -122,9 +122,9 @@ export default async function UsagePage() {
               sub={`${acct.months.thisMonth.runs} verification${acct.months.thisMonth.runs === 1 ? "" : "s"}`} />
             <Stat k="Last month" v={money(acct.months.lastMonth.chargedCents)}
               sub={`${acct.months.lastMonth.runs} verification${acct.months.lastMonth.runs === 1 ? "" : "s"}`} />
-            <Stat k="Per verification" v={acct.cost.medianCentsPerPaidRun == null ? "—" : money(acct.cost.medianCentsPerPaidRun)}
+            <Stat k="Per verification" v={acct.cost.medianCentsPerPaidRun == null ? "n/a" : money(acct.cost.medianCentsPerPaidRun)}
               sub={acct.cost.paidRuns ? `median of ${acct.cost.paidRuns} charged` : "nothing charged yet"} />
-            <Stat k="Typical run" v={acct.duration.medianSeconds == null ? "—"
+            <Stat k="Typical run" v={acct.duration.medianSeconds == null ? "n/a"
               : acct.duration.medianSeconds < 60 ? `${Math.round(acct.duration.medianSeconds)}s`
               : `${Math.floor(acct.duration.medianSeconds / 60)}m ${Math.round(acct.duration.medianSeconds % 60)}s`}
               sub={acct.duration.count ? `measured over ${acct.duration.count}` : "no completed runs"} />
@@ -160,7 +160,7 @@ export default async function UsagePage() {
             <Stat k="Verified" v={String(acct.verdicts.verified)} />
             <Stat k="Failed" v={String(acct.verdicts.failed)} />
             <Stat k="Blocked" v={String(acct.verdicts.blocked)} />
-            <Stat k="Pass rate" v={acct.verdicts.passRate == null ? "—" : `${Math.round(acct.verdicts.passRate * 100)}%`}
+            <Stat k="Pass rate" v={acct.verdicts.passRate == null ? "n/a" : `${Math.round(acct.verdicts.passRate * 100)}%`}
               sub={`of ${acct.verdicts.decided} decided`} />
           </div>
           {activeDays(acct.daily) >= CHART_MIN_ACTIVE_DAYS ? (
@@ -226,7 +226,7 @@ export default async function UsagePage() {
                   </span>
                   <span data-l="Requests" style={{ fontVariantNumeric: "tabular-nums", color: "var(--fg-2)" }}>{(byPrefix[k.prefix] ?? 0).toLocaleString()}</span>
                   <span data-l="Spent today" style={{ fontVariantNumeric: "tabular-nums", color: over ? "var(--stop-ink)" : "var(--fg-2)" }}>
-                    {cents === null ? "—" : money(cents)}
+                    {cents === null ? "n/a" : money(cents)}
                     {ceiling !== null ? <span style={{ color: "var(--fg-5)" }}> / {money(ceiling)}</span> : <span style={{ color: "var(--fg-5)" }}> / no cap</span>}
                   </span>
                   <span data-l="Last used" style={{ color: "var(--fg-4)" }}>{k.last_used ? timeAgo(k.last_used) : "never"}</span>

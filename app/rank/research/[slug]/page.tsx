@@ -88,7 +88,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
           <div style={{ display: "flex", gap: 12, alignItems: "baseline", marginBottom: 14, flexWrap: "wrap" }}>
             <span style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--acc-deep)" }}>{a.category}</span>
             <span style={{ fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-5)" }}>
-              {a.author} · {formatDate(a.date)} · {readingMinutes(a)} min read
+              {a.author}, {formatDate(a.date)}, {readingMinutes(a)} min read
             </span>
           </div>
           <h1 className="display" style={{ fontSize: "clamp(2rem, 4.4vw, 3rem)", lineHeight: 1.08, letterSpacing: "-0.03em", margin: "0 0 16px", textWrap: "balance" }}>

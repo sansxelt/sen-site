@@ -50,7 +50,7 @@ export function ResearchFilter({ categories, items }: { categories: string[]; it
               <span style={{ display: "block", fontSize: "0.9rem", color: "var(--fg-4)", maxWidth: "62ch", lineHeight: 1.5 }}>{a.summary}</span>
             </span>
             <span style={{ fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-5)", whiteSpace: "nowrap" }}>
-              {a.date} · {a.minutes} min
+              {a.date}, {a.minutes} min
             </span>
           </Link>
         ))}

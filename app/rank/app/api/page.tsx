@@ -311,7 +311,7 @@ export default function ApiKeysPage() {
               </div>
               {open && (() => {
                 const usage = keyUsage[k.id];
-                const money = (c: number | null | undefined) => (c == null ? "—" : `$${(c / 100).toFixed(2)}`);
+                const money = (c: number | null | undefined) => (c == null ? "n/a" : `$${(c / 100).toFixed(2)}`);
                 const ceiling = k.daily_ceiling_cents ?? null;
                 return (
                 <div style={{ padding: "0 18px 16px" }}>

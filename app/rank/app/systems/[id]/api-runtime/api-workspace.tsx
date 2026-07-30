@@ -155,9 +155,9 @@ export function ApiWorkspace({ appId, initial, canEdit, canLaunch }: { appId: st
         ) : target ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 13.5, color: "var(--fg-2)" }}>
             <div><span style={{ color: "var(--fg-4)" }}>Target:</span> <strong>{target.label}</strong></div>
-            <div><span style={{ color: "var(--fg-4)" }}>Environment:</span> {target.environment ?? "—"}</div>
-            <div><span style={{ color: "var(--fg-4)" }}>Base URL:</span> {build?.baseUrl ?? "—"}</div>
-            <div><span style={{ color: "var(--fg-4)" }}>Version:</span> {build?.version ?? "—"}</div>
+            <div><span style={{ color: "var(--fg-4)" }}>Environment:</span> {target.environment ?? "n/a"}</div>
+            <div><span style={{ color: "var(--fg-4)" }}>Base URL:</span> {build?.baseUrl ?? "n/a"}</div>
+            <div><span style={{ color: "var(--fg-4)" }}>Version:</span> {build?.version ?? "n/a"}</div>
           </div>
         ) : (
           <p style={{ color: "var(--fg-4)", fontSize: 13 }}>No API target has been configured yet.</p>
@@ -220,9 +220,9 @@ export function ApiWorkspace({ appId, initial, canEdit, canLaunch }: { appId: st
         ) : preview ? (
           <div>
             <div style={{ fontSize: 13.5, color: "var(--fg-2)", marginBottom: 8 }}>
-              <div>Target: {target?.label ?? "—"} · {target?.environment ?? "—"}{build?.version ? ` · ${build.version}` : ""}</div>
+              <div>Target: {target?.label ?? "n/a"}, {target?.environment ?? "n/a"}{build?.version ? `, ${build.version}` : ""}</div>
               <div>Selected flows: {preview.readiness.selectedCount}</div>
-              <div>Price: <strong>{preview.price?.label ?? "—"}</strong></div>
+              <div>Price: <strong>{preview.price?.label ?? "n/a"}</strong></div>
             </div>
             {preview.readiness.blockers.length > 0 && (
               <ul style={{ margin: "8px 0", paddingLeft: 18, color: "var(--warn)", fontSize: 13 }}>

@@ -82,13 +82,13 @@ export function CommandCenter({
       </div>
 
       {/* State ribbon: only-true facts, instrument-style. A short ribbon means a healthy app. */}
+      {/* SPACING SEPARATES THESE, NOT PUNCTUATION. The facts were joined by middle dots, which read as
+          content in a row of uppercase mono and add nothing a gap does not. Column gap only, so a wrapped
+          ribbon never starts a line with an orphaned separator either. */}
       {ribbon.length > 0 ? (
-        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "6px 0", marginTop: 18, paddingTop: 14, borderTop: `1px solid ${tone.line}` }}>
-          {ribbon.map((f, i) => (
-            <span key={f.key} style={{ display: "inline-flex", alignItems: "center" }}>
-              {i > 0 ? <span aria-hidden style={{ color: "var(--fg-5)", margin: "0 10px" }}>·</span> : null}
-              <span style={{ fontFamily: "var(--font-code)", fontSize: 11, letterSpacing: "0.04em", textTransform: "uppercase", color: RIBBON_COLOR[f.tone] }}>{f.text}</span>
-            </span>
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "6px 26px", marginTop: 18, paddingTop: 14, borderTop: `1px solid ${tone.line}` }}>
+          {ribbon.map((f) => (
+            <span key={f.key} style={{ fontFamily: "var(--font-code)", fontSize: 11, letterSpacing: "0.04em", textTransform: "uppercase", color: RIBBON_COLOR[f.tone] }}>{f.text}</span>
           ))}
         </div>
       ) : null}
