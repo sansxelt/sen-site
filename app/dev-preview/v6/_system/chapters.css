@@ -47,25 +47,36 @@
    three states jump past, and 420 still read as too fast. The earlier problem was never the length, it was
    a dead 25 percent slot left behind by a removed traveller. With that gone the runway is all working
    scroll, so it can be long without feeling slow. */
-/* RESIZED FOR ONE BEAT. This chapter carried three travellers across 360vh. Two are now commented out in
-   chapters.tsx, and the length and timings had to follow: the verdict used to arrive at 74% of 360vh, so
-   left alone this would have scrolled ~2.6 viewports with an empty stage before one line appeared.
-   200vh gives the bridge one viewport of travel — the line rises in early, holds, and the ground resolves
-   under it. TO RESTORE the three-beat version: uncomment the travellers and put 360vh and the original
-   windows back (--strike 06->20, --turn 10->18, --claim 26->41, --found 38->50, --foundout 62->76,
-   --verdict 74->86, --settle 88->100). */
-.v6-gap { position: relative; height: 200vh; background: var(--paper); --p: 0;
-  /* Retained for the commented-out travellers so restoring them needs no re-derivation. Nothing reads
-     these while those two beats are out. */
-  --strike:  clamp(0, calc((var(--p) - 0.06) / 0.14), 1);
-  --turn:    clamp(0, calc((var(--p) - 0.10) / 0.08), 1);
-  --claim:   clamp(0, calc((var(--p) - 0.26) / 0.15), 1);
-  --found:   clamp(0, calc((var(--p) - 0.38) / 0.12), 1);
-  --foundout:clamp(0, calc((var(--p) - 0.62) / 0.14), 1);
-  /* The bridge's own two: the line arrives, holds through the middle, and the paper -> graphite resolve
-     runs long underneath it so the handoff into the graphite run below is a settle rather than a cut. */
-  --verdict: clamp(0, calc((var(--p) - 0.05) / 0.18), 1);   /* 05 -> 23 in   */
-  --settle:  clamp(0, calc((var(--p) - 0.55) / 0.40), 1);   /* 55 -> 95      */
+/* RESIZED FOR TWO BEATS, on the third attempt. 360vh carried three travellers. Cutting to one and 200vh
+   left the opening empty: after the hero there was nothing until the resolution, because one line cannot
+   hold a screen. The claim is back and the length follows it.
+   280vh gives each beat roughly a viewport of travel: the word lands and is struck, HOLDS long enough to be
+   read as a claim rather than a caption, leaves, and the resolution answers it while the ground darkens
+   underneath. The strike finishes well before the claim starts to go — a line that is gone before its own
+   strike completes is the defect the original timings were written to fix, and it is easy to reintroduce
+   when the windows move.
+   TO RESTORE the third beat: uncomment .v6-gap__found in chapters.tsx, add ~90vh, and open a window for
+   --found / --foundout between --claim and --verdict. */
+.v6-gap { position: relative; height: 280vh; background: var(--paper); --p: 0;
+  /* Beat one: the claim, and the strike that contradicts it. */
+  --strike:  clamp(0, calc((var(--p) - 0.05) / 0.13), 1);   /* 05 -> 18 struck   */
+  --turn:    clamp(0, calc((var(--p) - 0.09) / 0.08), 1);   /* 09 -> 17 the line */
+  --claim:   clamp(0, calc((var(--p) - 0.40) / 0.14), 1);   /* 40 -> 54 out      */
+  /* Retained for the still-commented third beat so restoring it needs no re-derivation. Nothing reads these
+     while .v6-gap__found is out, and --found resolving to 0 keeps that traveller at its hidden rest state. */
+  --found:   clamp(0, calc((var(--p) - 1.10) / 0.10), 1);
+  --foundout:clamp(0, calc((var(--p) - 1.20) / 0.10), 1);
+  /* Beat two: the resolution arrives as the claim loses the stage, then the paper -> graphite resolve runs
+     long underneath it so the handoff into the graphite run below is a settle rather than a cut.
+     THE TWO WINDOWS OVERLAP ON PURPOSE, and the first version of this did not. Claim out 40->54 against
+     verdict in 50->64 left them 2% apart, and measured at p=0.50 the claim was down to 0.14 while the
+     verdict had not started — an empty stage mid-chapter, which is the same "nothing is here" the reader
+     reported, just moved. 44->58 crossfades them: the answer is arriving while the claim is still leaving.
+     Note this is the OPPOSITE of the overlap the original timings were written to remove. That one was a
+     beat starting to leave before it had finished ARRIVING (--found/--foundout), which reads as a glitch.
+     Two different beats trading one stage is a crossfade and wants the overlap. */
+  --verdict: clamp(0, calc((var(--p) - 0.44) / 0.14), 1);   /* 44 -> 58 in       */
+  --settle:  clamp(0, calc((var(--p) - 0.74) / 0.24), 1);   /* 74 -> 98          */
 }
 .v6-gap__pin { position: sticky; top: 0; height: 100svh; overflow: hidden;
   padding: calc(var(--nav-h, 66px) + 2vh) var(--gutter) 4vh; }

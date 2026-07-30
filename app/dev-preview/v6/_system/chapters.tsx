@@ -88,15 +88,15 @@ export function Gap() {
     <section className="v6-gap" id="gap" data-nav-theme="light" ref={wrap}>
       <div className="v6-gap__pin">
         <div className="v6-gap__stage">
-          {/* COLLAPSED TO ONE BEAT. This chapter argued the hero's point three more times before the reader
-              reached anything concrete — "Complete." struck through, then what the claim does not cover,
-              then the resolution — and a skimmer could bounce before the CLI demo. Only the resolution is
-              kept, because it is the one that names Vraelis and ends the tension rather than restating it.
-
-              COMMENTED OUT, NOT DELETED, as asked: both travellers below are intact and restoring them is
-              uncommenting them and putting .v6-gap's height and timings back (see the note in chapters.css).
-              Their CSS is left in place for the same reason. UNCOVERED is still exported above.
-
+          {/* TWO BEATS, WHICH IS THE THIRD ANSWER AND THE RIGHT ONE.
+              Three beats re-argued the hero before the reader reached any proof, so this was cut to one —
+              and that hollowed out the opening instead: after the hero there was nothing at all until the
+              resolution, which is what got reported. One line does not carry a screen.
+              The claim comes back because it is the only beat here that PRESENTS rather than states: a
+              display-scale word with a strike drawn through it, and the strike is the argument. The
+              three-line "what it does not" list stays out — it was the most redundant of the three and the
+              one that read as a wall on a phone. So: the claim is made, it is struck, and the resolution
+              answers it. */}
           <div className="v6-gap__t v6-gap__claim">
             <p className="v6-gap__label">The agent reported</p>
             <p className="v6-gap__word">
@@ -105,6 +105,9 @@ export function Gap() {
             </p>
             <p className="v6-gap__turn">An assertion, made by the thing that wrote the work.</p>
           </div>
+
+          {/* STILL OUT, still restorable, and UNCOVERED above is kept for it. Uncommenting this needs one
+              more beat's worth of scroll and a shift of the windows in chapters.css.
 
           <div className="v6-gap__t v6-gap__found">
             <p className="v6-gap__label">What it does not</p>
