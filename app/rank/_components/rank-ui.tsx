@@ -226,8 +226,15 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
           <Ic d={open ? I.x : I.menu} size={18} sw={2} />
         </button>
       </div>
+      {/* The dropdown hangs off the bar, so it takes the bar's colour rather than a fixed token. It read
+          correctly by coincidence — var(--bg-1) happens to be near the marketing ground — and coincidence
+          is what drifts.
+          ground.bg is safe to read here even though the menu now covers the sample line: useGroundColor is
+          paused while open and returns early WITHOUT touching state, so the value still standing is the last
+          reading of the page itself. My first attempt kept a copy in a ref and assigned it during render,
+          which is a worse way to get the same value and is why the lint rule exists. */}
       {open && (
-        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "var(--bg-1)", borderBottom: "1px solid var(--line-2)", boxShadow: "var(--shadow-md)", padding: "10px var(--gutter) 18px", display: "flex", flexDirection: "column", gap: 2 }}>
+        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: ground.bg ?? "var(--bg-1)", borderBottom: "1px solid var(--line-2)", boxShadow: "var(--shadow-md)", padding: "10px var(--gutter) 18px", display: "flex", flexDirection: "column", gap: 2 }}>
           {PUBLIC_LINKS.map((l) => <Link key={l.href} href={l.href} style={{ ...link, padding: "12px 4px", borderBottom: "1px solid var(--line-1)" }}>{l.label}</Link>)}
           <Link href={authed ? "/app" : "/signin?callbackUrl=%2Fapp"} style={{ ...link, padding: "12px 4px" }}>{authed ? "Dashboard" : "Sign in"}</Link>
         </div>

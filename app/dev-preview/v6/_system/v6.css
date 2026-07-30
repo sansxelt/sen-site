@@ -521,9 +521,30 @@
    sheet, measured at 0.02 luma apart. Unreadable, and it predates the ground sampler. Tying both halves
    to the same flag is what makes them unable to disagree. */
 .v6-drawer, .v6-drawer * { --nav-bg: initial; }
-/* The drawer keeps var(--surface) — it is authored as a light sheet with ink type. What broke it was ONE
-   element: the wordmark follows the nav's data-theme, so over the graphite hero it turned paper-white on
-   a paper-white sheet, 0.02 luma apart. Nothing inside a surface that replaces the page should take its
-   colour from the page it replaced. */
-.v6-drawer .v6-brand,
-.v6-nav[data-theme="dark"] .v6-drawer .v6-brand { color: var(--ink); }
+
+/* ── THE DRAWER TAKES THE PAGE'S SIDE, BY SWAPPING TOKENS ────────────────────────────────────────────
+   The directory opened as a white sheet over a black page and vice versa, on both hosts, which is what
+   was reported. I had argued the opposite here — that a surface REPLACING the page owes it nothing — and
+   that was wrong about what a reader experiences: the drawer opens from the bar, over the page, while both
+   are still visible at its edges, so it reads as part of them and not as a separate document.
+   The first attempt at this failed instructively and is worth recording, because it is the trap: flipping
+   only `background` to the ground turned the sheet dark while every child kept `color: var(--ink)`, i.e.
+   ink type on a near-black sheet, measured 0.02 lightness apart. Patching the children one at a time is
+   how that bug reappears forever — I patched the wordmark and the arrow glyph stayed wrong.
+   So nothing here sets a colour. It rebinds the six TOKENS the drawer is already written against, and
+   every existing rule (`background: var(--surface)`, `color: var(--ink)`, the borders, the close button,
+   the section headings, the CTA) follows automatically and cannot disagree with the sheet it sits on. The
+   pairs are the palette's own light/graphite counterparts, so this introduces no new colour.
+   Driven by the bar's data-theme, which is derived from the MEASURED ground (see the sampler in
+   shell.tsx), so "page dark -> directory dark" needs no second source of truth. */
+.v6-nav[data-theme="dark"] .v6-drawer {
+  --surface: var(--graphite);
+  --ink:     var(--g-fg);
+  --ink-2:   var(--g-fg-2);
+  --ink-3:   var(--g-fg-3);
+  --line:    var(--g-line);
+  --line-2:  var(--g-line-2);
+}
+/* The wordmark pin stays and is now self-adjusting rather than a patch: --ink resolves light inside a dark
+   drawer by the block above, so this reads correctly on both grounds. */
+.v6-drawer .v6-brand { color: var(--ink); }
