@@ -29,9 +29,17 @@ export default function Home() {
   return (
     <>
       <Hero />
+      {/* REORDERED so the reader reaches something concrete sooner.
+          Gap is now a single-beat BRIDGE rather than three scenes: it kept the line that names Vraelis
+          ("So something independent has to answer it") and the other two travellers are commented out in
+          chapters.tsx, restorable. It stays in position 2 on purpose — it is the page's only light chapter,
+          and its last stretch resolves paper -> graphite, which is what hands the reader into the graphite
+          run below. Moving it later would have left five dark screens with no tonal break.
+          Product (the CLI: one command, three answers) moves AHEAD of Standard so the first thing after
+          the bridge is proof rather than more argument. Nothing else moved, and no copy changed. */}
       <Gap />
-      <Standard />
       <Product />
+      <Standard />
       <Register />
       <Reach />
       <Direction />

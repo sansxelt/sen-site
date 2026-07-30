@@ -47,21 +47,25 @@
    three states jump past, and 420 still read as too fast. The earlier problem was never the length, it was
    a dead 25 percent slot left behind by a removed traveller. With that gone the runway is all working
    scroll, so it can be long without feeling slow. */
-.v6-gap { position: relative; height: 360vh; background: var(--paper); --p: 0;
-  /* RETIMED. "Complete." used to leave over 0.16 -> 0.25, a 9% window, which on this chapter is about two
-     wheel notches: the line was gone before it had been read. The strike now finishes later, the statement
-     HOLDS at full for a stretch after it, and the exit runs nearly twice as long. */
-  --strike:  clamp(0, calc((var(--p) - 0.06) / 0.14), 1);   /* 06 -> 20      */
-  --turn:    clamp(0, calc((var(--p) - 0.10) / 0.08), 1);   /* 10 -> 18      */
-  --claim:   clamp(0, calc((var(--p) - 0.26) / 0.15), 1);   /* 26 -> 41 out  */
-  /* "What it does not" was the worst of them. --foundout began at 0.52 while --found was still arriving at
-     0.57, so the list started leaving BEFORE it had finished appearing, and its whole exit ran over 7% of
-     the chapter, about a notch and a half. The two no longer overlap: it arrives, then HOLDS for a stretch
-     with nothing else moving, then leaves over twice the distance it used to. */
-  --found:   clamp(0, calc((var(--p) - 0.38) / 0.12), 1);   /* 38 -> 50 in   */
-  --foundout:clamp(0, calc((var(--p) - 0.62) / 0.14), 1);   /* 62 -> 76 out  */
-  --verdict: clamp(0, calc((var(--p) - 0.74) / 0.12), 1);   /* 74 -> 86 in   */
-  --settle:  clamp(0, calc((var(--p) - 0.88) / 0.12), 1);   /* 88 -> 100     */
+/* RESIZED FOR ONE BEAT. This chapter carried three travellers across 360vh. Two are now commented out in
+   chapters.tsx, and the length and timings had to follow: the verdict used to arrive at 74% of 360vh, so
+   left alone this would have scrolled ~2.6 viewports with an empty stage before one line appeared.
+   200vh gives the bridge one viewport of travel — the line rises in early, holds, and the ground resolves
+   under it. TO RESTORE the three-beat version: uncomment the travellers and put 360vh and the original
+   windows back (--strike 06->20, --turn 10->18, --claim 26->41, --found 38->50, --foundout 62->76,
+   --verdict 74->86, --settle 88->100). */
+.v6-gap { position: relative; height: 200vh; background: var(--paper); --p: 0;
+  /* Retained for the commented-out travellers so restoring them needs no re-derivation. Nothing reads
+     these while those two beats are out. */
+  --strike:  clamp(0, calc((var(--p) - 0.06) / 0.14), 1);
+  --turn:    clamp(0, calc((var(--p) - 0.10) / 0.08), 1);
+  --claim:   clamp(0, calc((var(--p) - 0.26) / 0.15), 1);
+  --found:   clamp(0, calc((var(--p) - 0.38) / 0.12), 1);
+  --foundout:clamp(0, calc((var(--p) - 0.62) / 0.14), 1);
+  /* The bridge's own two: the line arrives, holds through the middle, and the paper -> graphite resolve
+     runs long underneath it so the handoff into the graphite run below is a settle rather than a cut. */
+  --verdict: clamp(0, calc((var(--p) - 0.05) / 0.18), 1);   /* 05 -> 23 in   */
+  --settle:  clamp(0, calc((var(--p) - 0.55) / 0.40), 1);   /* 55 -> 95      */
 }
 .v6-gap__pin { position: sticky; top: 0; height: 100svh; overflow: hidden;
   padding: calc(var(--nav-h, 66px) + 2vh) var(--gutter) 4vh; }

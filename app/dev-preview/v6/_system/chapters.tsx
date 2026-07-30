@@ -72,6 +72,9 @@ function useSeen(root: RefObject<HTMLElement | null>, total: number) {
    as two small pills, which is the weakest thing a full viewport can hold: a tiny tag in an enormous
    empty field. The chapter is stronger as claim, absence, verdict, with nothing small in it.
    ------------------------------------------------------------------------------------------------- */
+// Read only by the .v6-gap__found traveller, which is commented out in Gap() below. Kept rather than
+// deleted so restoring that beat is uncommenting one block, not rewriting its copy from the git history.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const UNCOVERED = [
   "Which systems the change actually reached.",
   "Whether the outcomes the business depends on still hold.",
@@ -85,6 +88,15 @@ export function Gap() {
     <section className="v6-gap" id="gap" data-nav-theme="light" ref={wrap}>
       <div className="v6-gap__pin">
         <div className="v6-gap__stage">
+          {/* COLLAPSED TO ONE BEAT. This chapter argued the hero's point three more times before the reader
+              reached anything concrete — "Complete." struck through, then what the claim does not cover,
+              then the resolution — and a skimmer could bounce before the CLI demo. Only the resolution is
+              kept, because it is the one that names Vraelis and ends the tension rather than restating it.
+
+              COMMENTED OUT, NOT DELETED, as asked: both travellers below are intact and restoring them is
+              uncommenting them and putting .v6-gap's height and timings back (see the note in chapters.css).
+              Their CSS is left in place for the same reason. UNCOVERED is still exported above.
+
           <div className="v6-gap__t v6-gap__claim">
             <p className="v6-gap__label">The agent reported</p>
             <p className="v6-gap__word">
@@ -100,6 +112,7 @@ export function Gap() {
               {UNCOVERED.map((t) => <li key={t}>{t}</li>)}
             </ul>
           </div>
+          */}
 
           <div className="v6-gap__t v6-gap__verdictwrap">
             <p className="v6-gap__verdict">So something independent has to answer it.</p>
