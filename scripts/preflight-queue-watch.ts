@@ -25,9 +25,15 @@
 //
 // USAGE
 //   vercel env pull .env.local          # or have SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY set
-//   npx tsx scripts/preflight-queue-watch.ts
-//   npx tsx scripts/preflight-queue-watch.ts --watch          # poll every 5s; Ctrl+C to stop
-//   npx tsx scripts/preflight-queue-watch.ts --watch --run <id>   # follow one run to a terminal state
+//   npx tsx scripts/preflight-queue-watch.ts                  # one snapshot
+//   npx tsx scripts/preflight-queue-watch.ts --watch           # poll every 5s; Ctrl+C to stop
+//   npx tsx scripts/preflight-queue-watch.ts --watch --run RUN_ID
+//
+// PLACEHOLDERS ARE UPPERCASE, NOT ANGLE-BRACKETED, and that is deliberate. This is a Windows-first repo and
+// PowerShell reserves "<" as a redirection operator, so a pasted `--run <id>` dies with "The '<' operator is
+// reserved for future use" before the script is even reached — an error that names PowerShell and never
+// mentions this tool. Replace RUN_ID with the id from the URL the console lands on after a launch
+// (/systems/.../passes/RUN_ID). Or omit --run entirely and watch the whole queue.
 //
 // Exits 0 normally, 1 when stranded runs exist (the one condition that needs a human), 2 on bad config.
 import { loadEnvConfig } from "@next/env";
