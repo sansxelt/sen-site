@@ -486,6 +486,14 @@ async function login(args) {
   say("");
   say(`  ${bold("Sign in to Vraelis")}`);
   say(`  ${dim("Create a key with \"Launch runs\" access at")} ${cyan("https://app.vraelis.com/developers")}`);
+  // WINDOWS GETS ONE EXTRA LINE, because this prompt hides what you type and that turns a failed paste
+  // into a failed key. Ctrl+V inserts nothing in a legacy console window; the prompt shows nothing either
+  // way, so the reader cannot tell those apart and reasonably concludes the key is wrong. Right-click
+  // pastes in every Windows console, so it is the gesture worth naming. Not printed elsewhere: on macOS
+  // and Linux the normal paste already works and a hint about right-clicking would just be noise.
+  if (process.platform === "win32") {
+    say(`  ${dim("On Windows, paste with a right-click — Ctrl+V does not work in every console window.")}`);
+  }
   say("");
   const key = await promptSecret(`  ${dim("API key")} ${dim("(hidden, paste it and press Enter):")} `);
   if (!key) fail("No key entered. Nothing was stored.");

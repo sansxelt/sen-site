@@ -93,6 +93,19 @@ export function CliSection() {
       <div className="codebar"><i /><i /><i /><span>then, on either</span></div>
       <pre className="codeblock"><code>{AFTER_INSTALL}</code></pre>
 
+      {/* THE PASTE IS THE STEP THAT FAILS SILENTLY, so it gets its own line rather than a footnote.
+          `vraelis login` hides the key as you type it, which is right for a secret and means a paste that
+          inserted nothing looks exactly like a key that was rejected. Ctrl+V does not work in every
+          PowerShell window; right-click works in all of them. The CLI prints the same sentence itself on
+          win32 (cli/vraelis.mjs), and the installer prints it too (cli/install.ps1) — three places because
+          a reader arrives at this step from any of them, and none of the three can assume the other two
+          were read. */}
+      <p style={{ margin: "12px 0 0", fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.6 }}>
+        On Windows, paste the key with a <strong style={{ color: "var(--fg-3)", fontWeight: 600 }}>right-click</strong>.
+        Ctrl+V does not work in every PowerShell window, and because <code style={{ color: "var(--fg-3)" }}>login</code> hides
+        what you type, a paste that did nothing is indistinguishable from a key that was refused.
+      </p>
+
       <div style={{ marginTop: 22, border: "1px solid var(--line-2)", borderRadius: "var(--r-lg, 14px)", overflow: "hidden", background: "var(--bg-1)" }}>
         {FLAGS.map(([flag, what], i) => (
           <div key={flag} style={{ display: "grid", gridTemplateColumns: "minmax(140px,auto) 1fr", gap: 14, padding: "11px 16px", borderTop: i ? "1px solid var(--line-2)" : "none" }}>

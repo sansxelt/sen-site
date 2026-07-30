@@ -105,6 +105,14 @@ Step "Sign in. Paste the key when asked; it is hidden as you type."
 Write-Host ""
 Write-Host "       vraelis login"
 Write-Host ""
+# RIGHT-CLICK, because this is the one prompt where a failed paste looks like a failed key. The prompt
+# hides what you type, so a Ctrl+V that inserts nothing is indistinguishable from a key that did not
+# arrive — the reader tries again, gets the same silence, and concludes the login is broken. Ctrl+V does
+# work in Windows Terminal and in recent conhost, but not in every window this script can be run from,
+# and right-click works in all of them.
+Write-Host "       Paste with a right-click. Ctrl+V does not work in every PowerShell window," -ForegroundColor DarkGray
+Write-Host "       and because the prompt is hidden, a paste that did nothing looks like a bad key." -ForegroundColor DarkGray
+Write-Host ""
 Step "Verify something. This one spends credits:"
 Write-Host ""
 Write-Host "       vraelis verify --url https://your-preview.example.com ``"

@@ -67,19 +67,24 @@
 @media (max-width: 940px) {
   .v6-foot2__lower { grid-template-columns: 1fr 1fr; gap: 26px 24px; }
 }
-/* ONE COLUMN WAS THE PROBLEM, NOT THE LINK COUNT.
-   Collapsing to a single column at phone width turned the footer into 27 stacked links, each carrying the
-   44px touch target it correctly needs, plus four headings: measured at 1,469px on an iPhone 13, which is
-   more than two full screens of nothing but a list. The touch target is not the thing to give back — it is
-   the one part that has to stay — so the columns are.
-   Two fit comfortably: at 390px that is two ~165px tracks, and the longest label here ("Subprocessors")
-   sits inside one. Halving the rows halves the height, and a footer reads as a directory again rather than
-   as an outline of the site typed out end to end. */
+/* THE GROUPS GO FULL-WIDTH; THE LINKS INSIDE THEM GO TWO-UP.
+   Two earlier attempts at this were both wrong in an instructive way. One column of GROUPS stacked all 22
+   links vertically: 1,469px on an iPhone 13, over two screens of nothing but a list. Two columns of GROUPS
+   halved the height and introduced a worse defect — the four groups hold [5, 4, 5, 8] links and pair up two
+   per row, so the eight-link Trust group sat beside a five-link group and left a three-row void with the
+   footer visibly dead-ending on one side.
+   Both failed for the same reason: they let two groups of DIFFERENT length share a row. So no two groups
+   share a row now. Each takes the full width and flows its OWN links into two columns, which makes ragged
+   columns structurally impossible — the worst case inside a group is one odd link on the last row.
+   The 44px touch target is untouched. It was never the problem: measured, the rows are 46px apart, and the
+   137px I first read off a screenshot was that image's device-pixel ratio, not layout. */
 @media (max-width: 520px) {
-  .v6-foot2__lower { grid-template-columns: 1fr 1fr; gap: 30px 20px;
+  .v6-foot2__lower { grid-template-columns: 1fr; gap: 26px;
     padding-top: clamp(36px, 5vh, 52px); }
-  /* The heading no longer needs to shout across a full-width row. */
-  .v6-foot2__h { font-size: 12px; margin-bottom: 10px; }
+  .v6-foot2__col { display: grid; grid-template-columns: 1fr 1fr; column-gap: 18px; row-gap: 2px; }
+  /* The heading names the whole group, so it spans both of the group's columns rather than sitting in the
+     first one and letting a link ride up beside it. */
+  .v6-foot2__h { grid-column: 1 / -1; font-size: 12px; margin-bottom: 6px; }
   .v6-foot2__col a { font-size: 14px; }
   /* The base row was a single wrapping line of six things. Stacked, the copyright reads as the footer's
      last word instead of competing with the legal links for the same row. */
