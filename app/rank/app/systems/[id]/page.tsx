@@ -5,7 +5,7 @@ import { capabilities } from "@/lib/preflight/role-capabilities";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "../setup-required";
 import {
-  getApplication, getContract, listRequirements, listFlows,
+  getApplication, getContract, getApprovedContract, listRequirements, listFlows,
   type ContractRequirement, type TestFlow, type RunSummary,
 } from "@/lib/v-applications";
 import { listRunsForApp, issuesResolvedByRun } from "@/lib/preflight/runs-db";
@@ -154,6 +154,24 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
   let flows: TestFlow[] = [];
   if (contract) [reqs, flows] = await Promise.all([listRequirements(owner, contract.id), listFlows(owner, contract.id)]);
 
+  // LAUNCHABLE FLOWS COME FROM THE APPROVED CONTRACT, NOT THE NEWEST ONE.
+  //
+  // `contract` is getContract() — the newest production contract, DRAFT OR APPROVED — which is correct for
+  // everything this page displays. It is wrong for anything it can launch: POST /runs validates posted flow
+  // ids against getApprovedContract()'s flows, so while a draft revision exists the two disagree.
+  //
+  // The draft route copies every flow row with a FRESH id (contract/draft/route.ts deletes copy.id) and
+  // copies enabled/review_state verbatim, so a draft's flows look perfectly eligible to this page while being
+  // ids the route has never heard of. The new-deployment banner was the one launch control that gated on
+  // `eligibleFlowIds.length > 0` alone rather than also on contractApproved, so with a draft open it posted
+  // draft ids and took a guaranteed 400 — the same defect as the guarantee/production mismatch fixed in
+  // 503aa360, reached by a different route. Deriving the ids from the approved contract fixes it at the
+  // source, and makes the missing guard unnecessary rather than merely restored.
+  const approvedContract = contract?.status === "approved" ? contract : await getApprovedContract(owner, id);
+  const launchFlows: TestFlow[] = !approvedContract ? []
+    : approvedContract.id === contract?.id ? flows
+    : await listFlows(owner, approvedContract.id);
+
   const builderLabel = app.builder ? (BUILDER_LABELS[app.builder] ?? app.builder) : null;
   const reqCount = reqs.length, flowCount = flows.length;
 
@@ -183,7 +201,8 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
   const contractApproved = contract?.status === "approved";
   // Run-eligible flows, exactly as the run route filters them: enabled AND review_state approved
   // (an absent review_state column reads as approved).
-  const eligibleFlowIds = flows
+  // launchFlows, not flows: these ids get POSTed, so they must come from the contract the route validates.
+  const eligibleFlowIds = launchFlows
     .filter((f) => f.enabled && (((f as { review_state?: string }).review_state ?? "approved") === "approved"))
     .map((f) => f.id);
 
@@ -214,7 +233,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
   if (!latest) subParts.push("This app hasn't been verified yet");
 
   // Full-verification selection for a repair-verified state: every eligible critical flow.
-  const criticalEligibleIds = flows
+  const criticalEligibleIds = launchFlows
     .filter((f) => f.enabled && (((f as { review_state?: string }).review_state ?? "approved") === "approved") && f.priority === "critical")
     .map((f) => f.id);
 

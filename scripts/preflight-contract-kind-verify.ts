@@ -17,8 +17,10 @@
 // against data where a guarantee outranks the production contract by version. Asserting on the source
 // catches it on the commit that removes the filter, rather than on the account that happens to have the
 // shape. It is deliberately dumb: it does not run a query and needs no database.
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join } from "node:path";
+
+const norm = (p: string) => p.replace(/\\/g, "/");
 
 let pass = 0, fail = 0;
 const ok = (n: string, c: boolean, d = "") => { console.log(`${c ? "PASS" : "FAIL"}  ${n}${d ? `  (${d})` : ""}`); if (c) pass++; else fail++; };
@@ -71,6 +73,61 @@ for (const [label, path, fn] of [["overview page", PAGE, "getContract"], ["run r
   try { text = readFileSync(path, "utf8"); } catch { /* reported by the assertion below */ }
   ok(`${label} resolves its contract via ${fn}()`, text.includes(`${fn}(owner, id)`),
     "an inlined v_production_contracts query here bypasses the kind filter entirely");
+}
+
+// ── EVERY RAW READ, NOT JUST THE TWO NAMED EXPORTS ───────────────────────────────────────────────────
+// The first version of this file asserted on getContract and getApprovedContract by name and nothing else.
+// It was therefore green over a THIRD resolver of the same question: buildContextGraph in
+// lib/preflight/context-snapshots.ts issued its own v_production_contracts read, ordered by version desc,
+// limit 1, with no kind filter — and was wrong in production, reporting Notewell's v9 guarantee contract as
+// the system's contract. A guard that names the call sites it knows about cannot catch the one nobody
+// remembered to add, so this scans the source instead.
+//
+// The property: any query that reads v_production_contracts and orders by version DESC is asking "the newest
+// contract", and must therefore filter kind. A read that does NOT order by version is fetching a specific
+// row (by id) or a list, and is out of scope.
+{
+  const roots = ["lib", "app", "worker"];
+  const files: string[] = [];
+  const walkAll = (dir: string) => {
+    for (const e of readdirSync(dir)) {
+      const p = join(dir, e);
+      if (statSync(p).isDirectory()) walkAll(p);
+      else if (/\.(ts|tsx)$/.test(p)) files.push(p);
+    }
+  };
+  for (const r of roots) if (existsSync(r)) walkAll(r);
+
+  const offenders: string[] = [];
+  for (const f of files) {
+    const src = readFileSync(f, "utf8");
+    if (!src.includes("v_production_contracts")) continue;
+    // Each query chain, from the table name to the call that ends it. Newlines included: these chains are
+    // formatted across several lines.
+    for (const m of src.matchAll(/from\(\s*["']v_production_contracts["'][\s\S]{0,600}?(?:maybeSingle\(\)|single\(\)|\.limit\(\s*\d+\s*\))/g)) {
+      const chain = m[0];
+      const ordersByVersionDesc = /order\(\s*["']version["'][\s\S]{0,60}?ascending:\s*false/.test(chain);
+      if (!ordersByVersionDesc) continue;                       // not asking "the newest" — out of scope
+
+      // NUMBERING IS NOT RESOLUTION, and this distinction is load-bearing. A query that selects ONLY
+      // `version` is computing the next version number, and that sequence is deliberately SHARED across both
+      // kinds — Notewell holds v1-v2 production and v3-v9 guarantee in one sequence. Filtering kind there
+      // would let a new contract reuse a number an existing one already has. verification-lane.ts:264 is
+      // exactly this, and the first draft of this check flagged it: a resolver selects the row to ACT on it
+      // (`id`, or `*`), a counter selects only the label.
+      const selectList = chain.match(/select\(\s*["']([^"']*)["']/)?.[1] ?? "";
+      const resolvesARow = selectList.trim() === "*" || /\bid\b/.test(selectList);
+      if (!resolvesARow) continue;
+      if (/\.eq\(\s*["']kind["']\s*,\s*["']production["']\s*\)/.test(chain)) continue;   // filtered, fine
+      // A base-query builder whose caller adds the filter (the fallback pattern) is legitimate. Detect it by
+      // the file containing a kind filter applied to that builder.
+      if (/\.eq\(\s*["']kind["']\s*,\s*["']production["']\s*\)/.test(src)) continue;
+      const line = src.slice(0, m.index ?? 0).split("\n").length;
+      offenders.push(`${norm(f)}:${line}`);
+    }
+  }
+  ok(`no raw "newest v_production_contracts" read is missing the kind filter (${files.length} files scanned)`,
+    offenders.length === 0, offenders.join(", "));
 }
 
 console.log(`\n${pass}/${pass + fail} passed`);

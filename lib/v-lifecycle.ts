@@ -36,9 +36,24 @@ export async function runActivationNudges(limit = 100): Promise<ActivationSummar
     out.scanned = emails.length;
     if (!emails.length) return out;
 
-    // Who has already run at least one check (activated)?
-    const { data: checks } = await s.from("v_checks" as never).select("user_id").in("user_id", emails);
-    const active = new Set(((checks as unknown as { user_id: string }[] | null) ?? []).map((c) => c.user_id));
+    // Who has already run at least one verification (activated)?
+    //
+    // READS v_preflight_runs, NOT v_checks. All three stages in this file used to derive activity from
+    // v_checks, the table behind the retired AI-check product. Nothing has written it since that product was
+    // removed — scripts/preflight-account-deletion-verify.ts lists v-checks among the deleted modules — so it
+    // answers empty for everybody, and the two stages failed in opposite directions:
+    //
+    //   stage 1 (here)   concluded every active customer had never run anything, and emailed them
+    //                    "You signed up but haven't run a verification yet" while their runs sat in
+    //                    v_preflight_runs
+    //   stages 2 and 3   build their candidate list FROM it, so `emails` was always empty and both returned
+    //                    early at their own guards — the low-balance nudge and the win-back email could not
+    //                    reach a single person, silently, every day the cron ran
+    //
+    // A verification is a row in v_preflight_runs, keyed by the same lowercased-email user_id. No date bound,
+    // matching the previous semantics: activation asks "ever", not "recently".
+    const { data: runs } = await s.from("v_preflight_runs" as never).select("user_id").in("user_id", emails);
+    const active = new Set(((runs as unknown as { user_id: string }[] | null) ?? []).map((c) => c.user_id));
 
     // Who has already been nudged?
     const { data: sent } = await s.from("v_events" as never).select("user_id").eq("event_type", NUDGE_EVENT).in("user_id", emails);
@@ -98,10 +113,12 @@ export async function runLowCreditNudges(limit = 100): Promise<LowCreditSummary>
     const s = getSupabaseAdminClient();
     const since = new Date(Date.now() - ACTIVE_WINDOW_DAYS * DAY).toISOString();
 
-    // Recently-active users (deduped, capped). These have run checks, so they've spent credits.
-    const { data: checks } = await s.from("v_checks" as never)
+    // Recently-active users (deduped, capped). These have run verifications, so they've spent balance.
+    // v_preflight_runs, not the retired v_checks — see the note in runActivationNudges. Reading the dead
+    // table here meant this entire stage returned at the guard below on every single run.
+    const { data: runs } = await s.from("v_preflight_runs" as never)
       .select("user_id").gte("created_at", since).limit(2000);
-    const emails = [...new Set(((checks as unknown as { user_id: string }[] | null) ?? [])
+    const emails = [...new Set(((runs as unknown as { user_id: string }[] | null) ?? [])
       .map((c) => (c.user_id || "").trim().toLowerCase()).filter(Boolean))].slice(0, limit);
     out.scanned = emails.length;
     if (!emails.length) return out;
@@ -150,19 +167,20 @@ export async function runWinbackNudges(limit = 100): Promise<WinbackSummary> {
     const from = new Date(now - QUIET_MAX_DAYS * DAY).toISOString();
     const quietBefore = now - QUIET_AFTER_DAYS * DAY;
 
-    // Checks in the last QUIET_MAX_DAYS, newest first. The first row per user (desc order)
-    // is their latest check — robust to the cap, since only the oldest rows drop if hit.
-    const { data: checks } = await s.from("v_checks" as never)
+    // Verifications in the last QUIET_MAX_DAYS, newest first. The first row per user (desc order)
+    // is their latest run — robust to the cap, since only the oldest rows drop if hit.
+    // v_preflight_runs, not the retired v_checks — see the note in runActivationNudges.
+    const { data: runs } = await s.from("v_preflight_runs" as never)
       .select("user_id, created_at").gte("created_at", from)
       .order("created_at", { ascending: false }).limit(5000);
     const latest = new Map<string, number>();
-    for (const r of ((checks as unknown as { user_id: string; created_at: string }[] | null) ?? [])) {
+    for (const r of ((runs as unknown as { user_id: string; created_at: string }[] | null) ?? [])) {
       const email = (r.user_id || "").trim().toLowerCase();
       if (!email) continue;
       if (!latest.has(email)) latest.set(email, new Date(r.created_at).getTime());
     }
 
-    // Quiet = latest check older than QUIET_AFTER_DAYS. (Users active more recently are
+    // Quiet = latest verification older than QUIET_AFTER_DAYS. (Users active more recently are
     // stage 2's / nobody's, not win-back's.)
     const quiet = [...latest].filter(([, t]) => t <= quietBefore).map(([e]) => e);
     out.scanned = quiet.length;

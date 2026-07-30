@@ -14,6 +14,7 @@ import { preflightEnabled } from "@/lib/v-preflight-flags";
 import {
   addAuthoredRequirement, updateRequirement, deleteRequirement, approveContract,
   getContractById, contractStatusForRequirement, type Severity,
+  listRequirements, contractApprovalReadiness,
 } from "@/lib/v-applications";
 import { snapshotIfChanged, pinSnapshotToContract } from "@/lib/preflight/context-snapshots";
 import { applicationAccessForContract, applicationAccessForRequirement } from "@/lib/preflight/team-access";
@@ -62,7 +63,30 @@ export async function POST(req: Request) {
         if (snap) await pinSnapshotToContract(email, contractId, snap.id);
       } catch { /* the approval stands, unpinned */ }
     }
-    return ok ? NextResponse.json({ ok: true }) : NextResponse.json({ error: "approve_failed", message: "Enable at least one requirement before approving." }, { status: 400 });
+    if (ok) return NextResponse.json({ ok: true });
+
+    // WHY THE REFUSAL IS NOW NAMED. contractApprovalReadiness distinguishes four reasons, and this line used
+    // to render all four as "Enable at least one requirement before approving." Only ONE of them is about
+    // enabling anything. The common case on a brand-new system is the opposite: requirements are inserted
+    // enabled=true, review_state='suggested', so the user is looking at rows that ARE enabled, is told to
+    // enable them, and the suggestion block offers only Keep/Reject — no enable control exists to obey the
+    // instruction with. The real action (press Keep, which approves the suggestion) was never mentioned, so
+    // the first-run path dead-ended on a message that described a different problem.
+    //
+    // The reason is recomputed here rather than returned from approveContract: verification-lane.ts:353 calls
+    // it as `if (!(await approveContract(...)))`, and widening the return type to an object would make that
+    // negation always false and silently disable a guard on the verification path. A second read on a rare
+    // human action is the cheaper mistake.
+    const reqs = await listRequirements(email, contractId);
+    const readiness = contractApprovalReadiness(reqs, { kind: "human_direct", email: callerEmail });
+    const REFUSAL: Record<string, string> = {
+      no_enabled_requirement: "Enable at least one requirement before approving.",
+      unreviewed_requirement: "Every requirement that will be tested has to be reviewed first. Press Keep on each suggested requirement you want to bind, or Reject to drop it.",
+      unattributed_approval: "A requirement was approved without recording who approved it. Re-review the affected requirements, then approve again.",
+      approval_actor_mismatch: "These requirements were approved by someone else. Whoever approved them has to approve the contract, or re-review them yourself first.",
+    };
+    const reason = readiness.ok ? "no_enabled_requirement" : readiness.reason;
+    return NextResponse.json({ error: "approve_failed", reason, message: REFUSAL[reason] ?? REFUSAL.no_enabled_requirement }, { status: 400 });
   }
 
   if (contract?.status === "approved") return approvedImmutable();

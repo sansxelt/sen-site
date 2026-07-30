@@ -215,7 +215,17 @@ export async function listPendingReviews(owner: string, nowMs: number = Date.now
   if (!isDatabaseConfigured()) return [];
   try {
     const s = getSupabaseAdminClient();
-    const r = await s.from(TABLE as never)
+    // GUARANTEE-BOUND PLANS ARE NOT IN THIS INBOX, and listing them here was destructive rather than merely
+    // untidy. /review/[id] offers "Approve this plan", which sets approval_state='approved' — and
+    // findLivePendingPlanForClaim (above) requires approval_state='pending'. So approving a guarantee's plan
+    // from the generic inbox moved it out of the only state its own approve route can find, and the guarantee
+    // could never be approved again. One click, permanently unrecoverable through the UI.
+    //
+    // Scoped the same way mint (:63) and findLivePendingPlanForClaim (:175) already scope it: `.is(col, null)`
+    // for the unbound case, never `.eq(col, null)`, because PostgREST renders the latter as
+    // `guarantee_id=eq.null` which matches neither a real id nor a SQL NULL. That exact mistake is documented
+    // at :169-174 as having previously made approval impossible on both paths.
+    const base = () => s.from(TABLE as never)
       .select("id,claim,deployment_url,created_at,expires_at,plan")
       .eq("user_id", norm(owner))
       .eq("approval_state", "pending")
@@ -223,6 +233,10 @@ export async function listPendingReviews(owner: string, nowMs: number = Date.now
       .gt("expires_at", new Date(nowMs).toISOString())
       .order("created_at", { ascending: false })
       .limit(limit);
+    let r = await base().is("guarantee_id", null);
+    // guarantee_id is additive (migration 23). If the column is absent the scoped query errors and we fall
+    // back — on that schema no guarantee-bound plan can exist, so the unscoped read is exactly equivalent.
+    if (r.error && /guarantee_id/i.test(r.error.message ?? "")) r = await base();
     if (r.error) return [];
     return ((r.data as unknown as { id: string; claim: string; deployment_url: string; created_at: string; expires_at: string; plan: PlannedVerification }[] | null) ?? [])
       .map((d) => ({

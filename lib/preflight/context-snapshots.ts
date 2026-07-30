@@ -260,10 +260,25 @@ export async function buildContextGraph(owner: string, applicationId: string): P
 
   const connections = await listConnections(uid, applicationId);
 
-  const { data: contractRow } = await db().from("v_production_contracts")
+  // NEWEST PRODUCTION CONTRACT — kind='guarantee' excluded, like every other resolver of this question.
+  //
+  // v_production_contracts holds both the production contract and guarantee contracts, sharing one per-app
+  // version sequence. Without the filter this returned whichever had the highest version, and guarantees are
+  // edited far more often: on demo@vraelis.com/Notewell it answered v9 guarantee while the app's production
+  // contract was v2, so the Context tab reported a contract the system does not verify against.
+  //
+  // Filtered inline rather than by calling getContract(): lib/v-applications.ts already imports from
+  // lib/preflight/*, so importing it back here risks an import cycle. scripts/preflight-contract-kind-verify.ts
+  // now scans for RAW reads like this one repo-wide, not just the two named exports — it was green over this
+  // line, which is the whole reason it went unnoticed.
+  const contractBase = () => db().from("v_production_contracts")
     .select("id, version, status, created_at")
     .eq("user_id", uid).eq("application_id", applicationId)
-    .order("version", { ascending: false }).limit(1).maybeSingle();
+    .order("version", { ascending: false }).limit(1);
+  // kind is additive with default 'production'; if the column is absent the query errors and we fall back,
+  // where the unfiltered read is exactly equivalent because no guarantee can exist yet.
+  const filteredContract = await contractBase().eq("kind", "production").maybeSingle();
+  const contractRow = filteredContract.error ? (await contractBase().maybeSingle()).data : filteredContract.data;
   const c = contractRow as Record<string, unknown> | null;
 
   return assembleContextGraph({
