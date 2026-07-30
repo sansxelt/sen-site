@@ -82,7 +82,12 @@ const ago = (iso: string | null): string => {
 /** Owners are hashed in output. Nothing here needs to identify a person to be useful. */
 const owner = (u: string): string => `…${u.slice(-6)}`;
 
-async function snapshot(): Promise<number> {
+/** Set by snapshot() to a fingerprint of everything the report actually shows, so --watch can stay quiet
+ *  until something moves. Excludes the clock and the heartbeat's exact age, which change every poll and
+ *  would defeat the point. */
+let lastSignature = "";
+
+async function snapshot(quiet = false): Promise<number> {
   // Newest 400 runs is plenty to see a queue and any stranding; ordered so "oldest queued" is exact.
   const { data, error } = await s
     .from("v_preflight_runs" as never)
@@ -107,6 +112,24 @@ async function snapshot(): Promise<number> {
   const beats = rows.map((r) => r.heartbeat_at).filter((h): h is string => Boolean(h)).sort().reverse();
   const lastBeat = beats[0] ?? null;
   const beatAgeSec = lastBeat ? Math.round((Date.now() - Date.parse(lastBeat)) / 1000) : null;
+
+  // ONLY PRINT WHEN SOMETHING MOVED. Polling every 5s and reprinting an identical block is how the one frame
+  // that matters — a run appearing — becomes indistinguishable from the twenty before it. Watched an empty
+  // queue for two minutes and got twenty-two identical reports: the tool was working and unreadable.
+  //
+  // The heartbeat goes in as a BUCKET, not its age in seconds. Its age changes on every single poll, so
+  // comparing it exactly would make every snapshot "different" and defeat the whole guard.
+  const beatBucket = beatAgeSec === null ? "none" : beatAgeSec < 60 ? "live" : beatAgeSec < 600 ? "idle" : "stale";
+  const signature = [
+    STATES.map((st) => `${st}=${counts[st]}`).join(","),
+    `a${active.length}`, `q${queued.length}`, `s${stranded.length}`, beatBucket,
+    queued[queued.length - 1]?.id ?? "-",
+    stranded.map((r) => `${r.id}:${r.state}`).join(","),
+    RUN_ID ? `${rows.find((r) => r.id === RUN_ID)?.state ?? "absent"}/${rows.find((r) => r.id === RUN_ID)?.decision ?? "-"}` : "-",
+  ].join("|");
+  const unchanged = signature === lastSignature;
+  lastSignature = signature;
+  if (quiet && unchanged) return stranded.length ? 1 : 0;
 
   console.log(`\n─── preflight queue @ ${new Date().toISOString()} ───`);
   console.log(`  states   ${STATES.filter((st) => counts[st] > 0).map((st) => `${st}=${counts[st]}`).join("  ") || "(no runs at all)"}`);
@@ -160,9 +183,18 @@ async function main() {
   // good report and reads like the script failed. Setting the code lets Node drain its handles and exit on
   // its own.
   if (!WATCH) { process.exitCode = await snapshot(); return; }
-  console.log("watching every 5s — Ctrl+C to stop");
+  console.log("watching every 5s — prints only when something changes. Ctrl+C to stop.");
+  let quietPolls = 0;
   for (;;) {
-    const code = await snapshot();
+    const before = lastSignature;
+    const code = await snapshot(true);
+    if (lastSignature === before && before !== "") {
+      // Nothing moved. Say so once a minute rather than every 5s, so a silent watcher is never mistaken
+      // for a hung one, and a real change still arrives as the only loud thing on screen.
+      if (++quietPolls % 12 === 0) console.log(`  · unchanged for ${Math.round((quietPolls * 5) / 60)}m — waiting`);
+    } else {
+      quietPolls = 0;
+    }
     if (RUN_ID && code !== 2) {
       // Stop on our own accord once the followed run is terminal: the whole point was to see it land.
       const { data } = await s.from("v_preflight_runs" as never).select("state").eq("id", RUN_ID).maybeSingle();
