@@ -110,6 +110,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
     "@auth/core": "^0.41.2",
+    "@next/env": "16.2.3",
     "@paypal/react-paypal-js": "^8.9.2",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
@@ -144,6 +145,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
+    "playwright": "^1.61.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
