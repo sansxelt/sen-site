@@ -40,7 +40,21 @@ export function ContractEditor({ contractId, appId, initial, status, flows, role
   const [busyApprove, setBusyApprove] = useState(false);
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
 
+  // THREE COUNTS, BECAUSE "ENABLED" WAS NEVER THE SAME QUESTION AS "APPROVABLE".
+  //
+  // A requirement is inserted enabled=true, review_state='suggested' — by discovery and by the Add form
+  // alike. This counted only `enabled`, so the bar said "2 requirements will be tested", the button was
+  // active, and the server then refused every click: contractApprovalReadiness rejects any ENABLED row whose
+  // review_state is not 'approved'. The refusal rendered as "Enable at least one requirement before
+  // approving", pointing at rows that were already enabled, and the suggestion block offers only Keep and
+  // Reject — so there was no control anywhere that could carry out the instruction. First-run dead end.
+  //
+  // readyCount is what will actually be tested; unreviewedCount is what stands in the way, and naming it is
+  // what lets the bar say the one thing that clears it.
   const enabledCount = reqs.filter((r) => r.enabled).length;
+  const readyCount = reqs.filter((r) => r.enabled && (r.review_state ?? "approved") === "approved").length;
+  const unreviewedCount = reqs.filter((r) => r.enabled && (r.review_state ?? "approved") !== "approved").length;
+  const canApprove = readyCount > 0 && unreviewedCount === 0;
 
   // Group the CONFIRMED requirements by category (suggestions render in their own review section above).
   // A newly added row is prepended to `reqs`, so its category floats to the top.
@@ -214,7 +228,7 @@ export function ContractEditor({ contractId, appId, initial, status, flows, role
   }
 
   async function approve() {
-    if (busyApprove || enabledCount === 0 || contractStatus === "approved") return;
+    if (busyApprove || !canApprove || contractStatus === "approved") return;
     setBusyApprove(true); setMsg(null);
     try {
       const res = await fetch("/api/preflight/requirements", {
@@ -416,14 +430,16 @@ export function ContractEditor({ contractId, appId, initial, status, flows, role
             ? "This contract is approved. Vraelis will test these requirements before you launch."
             : enabledCount === 0
               ? "Enable at least one requirement to approve this contract."
-              : `${enabledCount} requirement${enabledCount === 1 ? "" : "s"} will be tested. Approving locks in this definition.`}
+              : unreviewedCount > 0
+                ? `${unreviewedCount} suggested requirement${unreviewedCount === 1 ? "" : "s"} still need${unreviewedCount === 1 ? "s" : ""} a decision. Press Keep on each one you want tested, or Reject to drop it.`
+                : `${readyCount} requirement${readyCount === 1 ? "" : "s"} will be tested. Approving locks in this definition.`}
         </div>
         {contractStatus === "approved" ? (
           <span className="pill" style={{ color: "var(--acc-deep)", borderColor: "var(--acc-line)", background: "var(--acc-soft)", display: "inline-flex", alignItems: "center", gap: 7, fontSize: 12.5, padding: "6px 14px" }}>
             <Ic d={I.check} size={13} sw={2.4} /> Approved
           </span>
         ) : (
-          <button type="button" className="btn btn--lg" onClick={approve} disabled={busyApprove || enabledCount === 0} style={{ opacity: busyApprove || enabledCount === 0 ? 0.6 : 1 }}>
+          <button type="button" className="btn btn--lg" onClick={approve} disabled={busyApprove || !canApprove} style={{ opacity: busyApprove || !canApprove ? 0.6 : 1 }}>
             {busyApprove ? "Approving…" : "Approve contract"}
           </button>
         )}

@@ -228,6 +228,24 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
   const subParts: string[] = [];
   if (decision === "blocked" && blockers.length > 0) subParts.push(`${blockers.length} critical failure${blockers.length === 1 ? "" : "s"}`);
   if (latest && !latestActive && critTotal > 0) subParts.push(`${critPassed} of ${critTotal} critical flows passed`);
+  // WHY A RUN WITH EVERY CRITICAL FLOW PASSING IS NOT "VERIFIED".
+  //
+  // needs_review translates to the public verdict BLOCKED, correctly: something did not pass, and Verified
+  // has to mean the whole checked scope held. But the hero then read "BLOCKED" directly above "2 of 2
+  // critical flows passed" with zero open blockers, which looks like the product contradicting itself, and
+  // the reader has no way to tell that the failures were non-critical.
+  //
+  // The verdict is NOT softened — toPublicDecision is the single thing standing between this surface and a
+  // false Verified, and it stays exactly as it is. Only the explanation is added.
+  if (decision === "needs_review" && latest && !latestActive) {
+    const totalFlows = num(latest.summary?.flows_total);
+    const passedFlows = num(latest.summary?.flows_passed);
+    const notPassed = Math.max(0, totalFlows - passedFlows);
+    const criticalFailures = Math.max(0, critTotal - critPassed);
+    if (notPassed > 0 && criticalFailures === 0) {
+      subParts.push(`${notPassed} non-critical check${notPassed === 1 ? "" : "s"} did not pass, so this is not a clean verification`);
+    }
+  }
   if (decision === "repair_verified") subParts.push("Targeted repair check passed. A full critical verification is still required.");
   if (latestActive) subParts.push("A verification is running right now");
   if (!latest) subParts.push("This app hasn't been verified yet");

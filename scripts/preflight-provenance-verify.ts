@@ -330,8 +330,15 @@ ok("approved contracts stay immutable (409 on every mutation path)",
       { kind: "reviewed_plan", planId: "rvp_1", approvedBy: "reviewer@example.com", approvedAt: "2026-07-25T00:00:00.000Z" }).ok === true);
 }
 const editor = read("app/rank/app/systems/[id]/contract/contract-editor.tsx");
-ok("the editor's approve button still gates on enabled requirements",
-  editor.includes("disabled={busyApprove || enabledCount === 0}"));
+// STRENGTHENED, not relaxed. This asserted the literal `enabledCount === 0`, which was a WEAKER gate than
+// the server's: a requirement is inserted enabled=true / review_state='suggested', so the button was live on
+// rows contractApprovalReadiness always refuses, and every first-run approval 400'd with a message telling
+// the user to enable rows that were already enabled. The gate now also requires that nothing enabled is
+// still unreviewed, which is exactly the server's rule, so the refusal happens in the bar with an action
+// instead of in a toast without one.
+ok("the editor's approve button gates on requirements that are enabled AND reviewed",
+  editor.includes("disabled={busyApprove || !canApprove}")
+  && /const canApprove = readyCount > 0 && unreviewedCount === 0/.test(editor));
 // HF3: requirement wording is editable on a DRAFT via the existing PATCH (updateRequirement accepts
 // `requirement`). The editor only mounts on a draft and the PATCH route rejects edits to an approved
 // contract, so this stays consistent with contract versioning.
