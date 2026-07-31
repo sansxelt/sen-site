@@ -44,6 +44,8 @@ const SUITES: Suite[] = [
   // Guards that every resolver of "the newest production contract" excludes kind='guarantee'. Registered
   // when it was written; the registry is what noticed it had not been, which is the point of the registry.
   { file: "scripts/preflight-contract-kind-verify.ts" },
+  // The launch-time reachability gate: pure classifier plus its position above the hold and the free pass.
+  { file: "scripts/preflight-deployment-reach-verify.ts" },
   { file: "scripts/plan-label-verify.ts" },
   { file: "scripts/pricing-purchasable-verify.ts" },
   { file: "scripts/key-usage-verify.ts" },

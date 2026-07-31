@@ -26,6 +26,7 @@ import { hold, refund } from "../../v-credits";
 // the eager graph, while auto-recharge.ts itself imports only supabase-admin and carries the rate constant
 // this money path needs on every PAYG launch.
 import { centsToCredits } from "../auto-recharge";
+import { probeDeployment } from "../deployment-reach";
 import { passPricingEnabled, passPriceCents } from "../pass-pricing";
 import { gatePassLaunch, recordRunPassUsage } from "../entitlements-v1";
 import { resolveCanonicalCluster, claimFreePass, releaseFreePass, attachRunToClaim, consumeFreeGrantOverride, recordFreeGrantRisk, hashRiskSignal } from "../free-grant-cluster";
@@ -136,6 +137,20 @@ export async function acceptVerificationRun(input: AcceptRunInput): Promise<Acce
       await logKeyUsage(principal, { endpoint, status: refusal.status, applicationId: id, creditsReserved: 0, creditsCharged: 0 });
       return { ok: false, error: refusal.error, message: refusal.message, status: refusal.status, retryAfterSec: refusal.retryAfterSec };
     }
+  }
+
+  // BEFORE ANY MONEY OR ANY FREE PASS. A launch against a hostname that does not resolve produced a real
+  // charge and a BLOCKED verdict that said nothing about the customer's software: the worker drove a browser
+  // at nothing, every flow failed, and the hold was retained. On a free-tier account the same mistake spends
+  // the LIFETIME free pass instead, which is worse, so this sits above the gate rather than beside the hold.
+  //
+  // Only a definitive DNS answer refuses. Any HTTP status, any timeout, any error inside the probe itself
+  // lets the launch through — see deployment-reach.ts for why a stricter gate would block real deployments.
+  if (await probeDeployment(deploymentUrl) === "unresolved") {
+    return {
+      ok: false, error: "deployment_unreachable", status: 400,
+      message: `Nothing is answering at ${(() => { try { return new URL(deploymentUrl).host; } catch { return "that address"; } })()}. Check the URL and try again. Nothing was charged.`,
+    };
   }
 
   let paygHeldCents: number | null = null;

@@ -65,10 +65,10 @@ async function readiness(owner: string, apps: AppRow[]): Promise<boolean> {
       // Newest FIRST, and the whole list, because "does a system have flows" is a question about the
       // contract a launch would actually select, not about the system.
       s.from("v_production_contracts" as never)
-        .select("id, version, status, approved_at").eq("application_id", a.id)
+        .select("id, version, status, approved_at, kind").eq("application_id", a.id)
         .order("version", { ascending: false }).limit(200),
     ]);
-    const contracts = (contractQ.data as { id: string; version: number | null; status: string; approved_at: string | null }[] | null) ?? [];
+    const contracts = (contractQ.data as { id: string; version: number | null; status: string; approved_at: string | null; kind?: string }[] | null) ?? [];
 
     // FLOWS HANG OFF THE CONTRACT, NOT THE SYSTEM. v_test_flows has contract_id and no application_id
     // (sql/vraelis-preflight.sql:75-77), so filtering flows by application_id names a column that does not
@@ -79,22 +79,27 @@ async function readiness(owner: string, apps: AppRow[]): Promise<boolean> {
     // Only APPROVED contracts count: flows are generated from an approved contract, and a draft's flows are
     // not what a launch selects.
     const approved = contracts.filter((c) => c.status === "approved");
+    // ONE CONTRACT, THE ONE A LAUNCH WOULD USE. This counted enabled flows across EVERY approved contract,
+    // which on an app with ten revisions reported 21 flows when the launch selects 3 — an inflated number on
+    // the exact tool being used to decide whether a demo is ready. getApprovedContract resolves the newest
+    // APPROVED PRODUCTION contract, and that is the only one whose flows can be selected.
+    const launchContract = approved.find((c) => (c.kind ?? "production") === "production");
     let flows = 0;
     let flowErr: string | null = null;
-    if (approved.length) {
+    if (launchContract) {
       const { count, error } = await s.from("v_test_flows" as never)
         .select("id", { count: "exact", head: true })
-        .in("contract_id", approved.map((c) => c.id))
+        .eq("contract_id", launchContract.id)
         .eq("enabled", true);
       if (error) flowErr = error.message;
       flows = count ?? 0;
     }
     const blocking = !a.ownership_confirmed ? "  <-- ownership NOT confirmed"
-      : !approved.length ? "  <-- no APPROVED contract: nothing to generate flows from"
+      : !launchContract ? "  <-- no approved PRODUCTION contract: nothing a launch could select"
       : flows === 0 ? "  <-- no enabled flows: nothing to run" : "";
     console.log(`  system  ${a.name}  ${a.app_url}`);
     console.log(`          status ${a.status}  connections ${conns ?? 0}  contracts ${contracts.length}` +
-      ` (${approved.length} approved)  enabled flows ${flowErr ? `UNKNOWN — ${flowErr}` : flows}${blocking}`);
+      ` (${approved.length} approved, launch uses v${launchContract?.version ?? "-"})  enabled flows ${flowErr ? `UNKNOWN — ${flowErr}` : flows}${blocking}`);
     if (a.ownership_confirmed && flows > 0 && !flowErr) launchable++;
   }
 
