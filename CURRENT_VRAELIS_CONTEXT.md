@@ -5,9 +5,9 @@ landing copy are deliberately excluded. Where something does not work, it says s
 
 **What the refresh changed.** 89 commits landed between the two dates and the document had drifted in the
 direction that flatters: the two gaps it ranked first and second are closed, and it still described the
-central object as inert. Corrected below. One thing it ranked as fixed is not — the coverage gate still
-does not sit under every launch entrance — and that is now stated where it belongs rather than left
-implied by a sentence about the acceptance service.
+central object as inert. Corrected below. It also implied one thing was fixed that was not: the acceptance
+service did NOT carry the coverage gate below every entrance. That was true when this refresh began and is
+false now — the gate moved in the same pass, and section 4 records what it took.
 
 **What could not be re-measured.** Every production COUNT in this document (systems, runs, guarantees,
 payments) was measured on 2026-07-27/28 and is carried forward unchanged, because this pass had no
@@ -328,8 +328,8 @@ reverification → Verified loop, against a live application, with real payment.
    single-use atomic consumption; execution that runs exactly what was approved.
 3. **One canonical decision translator**, now enforced across every surface, plus the discipline that
    found and removed a false Verified in the product's own console.
-4. **A coverage gate that refuses to charge** for a plan that could not prove the claim — on the two
-   entrances that have it. See the ranked gaps: it is not yet under all four.
+4. **A coverage gate that refuses to charge** for a plan that could not prove the claim, below every launch
+   entrance and above every credit hold.
 5. **Provenance as a first-class concern.** Who authored a requirement versus who approved it, with an
    audited correction of 136 rows that falsely claimed human authorship.
 6. **Multi-tenant foundations**: workspaces, roles, org domains, SSO, owner-anchored billing.
@@ -347,19 +347,18 @@ because the engineering that used to sit above it is done and the thing blocking
 1. **No external users.** Nothing has been validated with a company that is not us. This was sixth while
    two engineering gaps outranked it; both are closed, and nothing else on this list is a customer. It is
    first now and it will stay first until it is false.
-2. **The coverage gate is not under every launch entrance.** The console launch route and the rerun route
-   do not evaluate coverage at all, so the product's defining refusal — declining to charge for a claim it
-   cannot prove — is absent from the path a console user actually takes. The acceptance service made this
-   fixable by giving the gate one place to live; it did not move it.
-3. **No coding-agent handoff.** The loop stops at a prompt the customer copies.
-4. **No deployment detection and no automatic reverification.** The customer must come back and press a
+2. **No coding-agent handoff.** The loop stops at a prompt the customer copies.
+3. **No deployment detection and no automatic reverification.** The customer must come back and press a
    button.
-5. **The site is curtained**, so nothing is discoverable. `STEALTH_MODE=1`; the homepage is exempt from
+4. **The site is curtained**, so nothing is discoverable. `STEALTH_MODE=1`; the homepage is exempt from
    `noindex` so the domain does not leave the index entirely, and `/yc?k=…` is the reviewer entrance.
-6. **Two open money defects** (per-journey overcharge, strandable inline escrow). Both need a founder
+5. **Two open money defects** (per-journey overcharge, strandable inline escrow). Both need a founder
    decision, not more investigation.
-7. **CLI is unpublished**, so "operate it from CI" still requires the repo. The package is ready; only the
+6. **CLI is unpublished**, so "operate it from CI" still requires the repo. The package is ready; only the
    registry publish is missing.
+7. **A contract with no outcome sentence is not gated**, because there is no proposition to gate it
+   against. Recorded per launch as `preflight_launch_ungated` rather than assumed away. The fix is to
+   require the outcome when a system is connected.
 8. **The plan rehearsal is not in the product.** `ops/plan-rehearse.ts` refuses to mint a plan that cannot
    pass, and six consecutive generated plans were unrunnable without it. It belongs between prepare and
    approve.
@@ -367,8 +366,14 @@ because the engineering that used to sit above it is done and the thing blocking
    could still come back Verified. The workaround is a reset script. The fix is a per-run unique value or
    plans that clean up after themselves. This is the last known false-Verified risk.
 
-**Closed since the previous revision:** the run-to-guarantee binding (was #1), the verify-a-guarantee
-action (was #2), the demo account having no story (was #5), and the Repairs surface rendering empty.
+**Closed since the previous revision:** the run-to-guarantee binding, the verify-a-guarantee action, the
+coverage gate under every launch entrance, the demo account having no story, and the Repairs surface
+rendering empty.
+
+**Before trusting the gate against live data:** `npx tsx ops/launch-gate-audit.ts` evaluates it read-only
+against every approved contract and prints which would now be refused. Every existing contract was approved
+while the console path was ungated, so a refusal is possible, and that command is a better way to find out
+than a reviewer's blocked demo.
 
 ---
 
@@ -380,9 +385,9 @@ action (was #2), the demo account having no story (was #5), and the Repairs surf
   approves them before anything runs or is charged.
 - It drives a real browser against the deployed application and returns Verified, Failed or Blocked with
   evidence: per-journey results, the failing step, expected versus observed, and screenshots.
-- It refuses to charge when it cannot build a test that would prove the claim — **on the public API and
-  the guarantee-prepare path.** Say it that way, or say "the API refuses". A console launch does not
-  evaluate coverage today, so the unqualified sentence is not currently true of the path most people use.
+- It refuses to charge when it cannot build a test that would prove the claim. Say it plainly: this now
+  runs on every launch path, above every credit hold and above the free-pass claim. The qualifier this
+  sentence carried for one revision is gone because the gate moved, not because it read badly.
 - On failure it produces a repair prompt written for a coding agent, carried on the issue and rendered as
   the repair handoff on the report.
 - A verification can prove a **named, durable guarantee**, pinned to the exact approved meaning (plan
@@ -402,8 +407,9 @@ action (was #2), the demo account having no story (was #5), and the Repairs surf
 - "Every verification belongs to a durable guarantee." — **Every verification CAN.** The binding is
   compulsory in code and exercised against a live application. It is not true that every historical run
   carries one, and the population has not been re-measured since 2026-07-27.
-- "Vraelis refuses to charge for an unprovable claim." — True of the API, **not of a console launch.** See
-  gap 2.
+- "Vraelis refuses to charge for an unprovable claim." — True on every launch path. The one boundary worth
+  stating if pressed: a contract that never named an outcome has no claim to test, so it is recorded as
+  ungated rather than gated. Nothing is claimed about it either way.
 - "Vraelis sends a scoped repair task to your coding agent." — **It does not.** It produces a prompt.
 - "Vraelis detects the repaired deployment." — **It does not.** It can read the current Vercel URL when a
   run is launched.
@@ -446,9 +452,6 @@ founder's own feature, and was satisfied by building the service rather than by 
 
 **Clearest current limitation.** No company that is not us has ever used it. Every gap the previous
 revision ranked above that one is now closed, which removes the last engineering answer to the question.
-
-**Second clearest.** The refusal that defines the product is not yet on the path most people take: a
-console launch does not evaluate coverage. Do not describe the coverage gate without naming where it runs.
 
 **Most important thing YC should understand.** The hard part is not driving a browser; it is refusing to
 produce a false Verified. Most of the engineering is spent on gates that decline to answer.
@@ -515,8 +518,9 @@ a badge service.
    against a live application. Migration 23 is applied.
 3. The verify-a-guarantee action exists, and `lib/preflight/acceptance/accept-run.ts` is the single
    acceptance service under every entrance. `createRun` has exactly two callers and a suite enforces that.
-4. **The coverage gate is NOT under every entrance.** Console launch and rerun do not evaluate coverage.
-   It is a recorded defect, not an oversight, and it is asserted as one.
+4. The coverage gate runs on **every** launch path, above every hold and every free-pass claim, via
+   `gateLaunchCoverage`. The corrective resolver (`resolveCoverage`) stays where plans are built. A
+   contract with no outcome sentence is the one ungated case and is logged as such.
 5. There is no coding-agent connection, no deployment detection and no automatic reverification. The loop
    ends at a repair prompt the customer copies.
 6. The public site is behind a stealth curtain. The homepage is exempt from `noindex` so the domain does
@@ -539,14 +543,14 @@ settlement and refunds; console + API + CLI over one engine.
 surface; plan rehearsal moved into the product; per-run unique assertion values; a repair record that
 something actually writes.
 
-**5 claims safe for YC:** a person approves the plan before anything runs or is charged; the API refuses to
+**5 claims safe for YC:** a person approves the plan before anything runs or is charged; Vraelis refuses to
 charge when it cannot prove the claim; decisions come with per-journey evidence and screenshots; the full
 Failed → repair → reverification → Verified loop has been closed against a live app with real payment;
 verification runs from console, API or CI with meaningful exit codes.
 
-**5 claims that must be framed as future:** repairs are dispatched to your coding agent; repaired
+**4 claims that must be framed as future:** repairs are dispatched to your coding agent; repaired
 deployments are detected; reverification happens automatically; guarantees present a permanent proof
-history; every launch path refuses an unprovable claim.
+history.
 
 **Most accurate description, under 500 characters**
 
