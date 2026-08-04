@@ -279,7 +279,11 @@ export async function issuesResolvedByRun(owner: string, runId: string, limit = 
 
 // A flow is run-eligible exactly as the worker's claim() filters it: enabled AND review_state 'approved'
 // (review_state defaults to 'approved' in migration 2; treat an absent column as approved).
-function flowApprovedEnabled(f: { enabled: boolean; review_state?: string }): boolean {
+//
+// EXPORTED so the coverage gate in the acceptance service scores the same flows this function will let
+// createRun insert. A gate that evaluated a different set from the one that executes would be worse than
+// no gate: it would pass on the strength of a journey nobody is going to run.
+export function flowApprovedEnabled(f: { enabled: boolean; review_state?: string }): boolean {
   return f.enabled && ((f.review_state ?? "approved") === "approved");
 }
 

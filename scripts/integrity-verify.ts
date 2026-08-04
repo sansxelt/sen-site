@@ -37,6 +37,7 @@ const SUITES: Suite[] = [
   { file: "scripts/preflight-contract-merge-verify.ts", npm: "merge:test" },
   { file: "scripts/preflight-reviewed-plan-verify.ts", npm: "reviewed-plan:test" },
   { file: "scripts/preflight-acceptance-boundary-verify.ts", npm: "preflight:acceptance:test" },
+  { file: "scripts/launch-coverage-verify.ts", npm: "launch:coverage:test" },
   // Ships in the Guarantees increments, which are live in production and absent from the
   // verification-contract branch. The registry caught that asymmetry rather than silently skipping it.
   { file: "scripts/preflight-guarantee-logic-verify.ts" },

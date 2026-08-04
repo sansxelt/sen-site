@@ -23,7 +23,8 @@ import { getGuarantee } from "@/lib/preflight/guarantees-db";
 import { auth } from "@/auth";
 import { preflightEnabled, runsDisabled } from "@/lib/v-preflight-flags";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
-import { getApplication, listFlows } from "@/lib/v-applications";
+import { getApplication, listFlows, getContractById } from "@/lib/v-applications";
+import { gateLaunchCoverage, launchCoverageRefusalMessage } from "@/lib/preflight/acceptance/launch-coverage";
 import { unsafeHttpsUrlReason } from "@/lib/safe-fetch";
 import { hold, refund } from "@/lib/v-credits";
 import { centsToCredits } from "@/lib/preflight/auto-recharge";
@@ -167,6 +168,34 @@ export async function POST(req: Request, { params }: { params: Promise<{ runId: 
     // so re-running the OLD plan would file evidence under a definition that has been superseded.
     if (g.approved_plan_hash !== parent.guaranteePlanHash || g.plan_version !== parent.guaranteePlanVersion) {
       return NextResponse.json({ error: "guarantee_plan_superseded", message: "This guarantee was re-approved since that run. Verify the current plan instead of re-running the old one." }, { status: 409 });
+    }
+  }
+
+  // COVERAGE, BEFORE ANY MONEY MOVES, through the same gate the launch entrances use.
+  //
+  // A rerun re-executes a SUBSET of the parent's flows — often just the ones that failed — and a subset can
+  // be weaker than the whole. So this is not a formality inherited from the parent's approval: selecting two
+  // failed journeys out of five can leave a set that no longer proves the claim, and charging $3 a flow to
+  // execute it would be charging for an answer that could not mean anything.
+  //
+  // The claim is the contract's own, which is the guarantee's approved_claim when this contract was
+  // materialized from one. gateLaunchCoverage loads, filters to what will actually execute, and decides;
+  // this route only renders the refusal, exactly as the acceptance service only returns it.
+  {
+    const rerunContract = await getContractById(owner, parent.contractId);
+    const verdict = await gateLaunchCoverage(owner, parent.contractId, rerunContract?.source_prompt ?? null, flowIds);
+    if (verdict.gate === "refused") {
+      return NextResponse.json({
+        error: "claim_not_provable",
+        message: launchCoverageRefusalMessage(verdict.missing),
+      }, { status: 422 });
+    }
+    if (verdict.gate === "no_claim") {
+      await logEvent({
+        userId: owner, eventType: "preflight_launch_ungated", actorType: "system", source: "app",
+        route: `/api/preflight/runs/${parentRunId}/rerun`,
+        metadata: { application_id: parent.applicationId, contract_id: parent.contractId, reason: "contract_has_no_claim" },
+      });
     }
   }
 

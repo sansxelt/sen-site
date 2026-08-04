@@ -213,14 +213,30 @@ and goes through the acceptance service. This was the "one missing link" the pre
 deliberately blocked; the ratchet that blocked it was satisfied by building the service rather than by
 working around it.
 
-**The coverage gate below every entrance — STILL OPEN, and the previous revision implied otherwise.** The
-acceptance service moved run creation and the money path; it did **not** move the coverage gate. That gate
-still sits only on the public API route and the guarantee-prepare route. The console launch route and the
-rerun route continue not to evaluate coverage at all, and
-`scripts/preflight-acceptance-boundary-verify.ts` asserts this as a *recorded defect* rather than as
-correct behaviour, naming the two places the gate is allowed to live so a third cannot appear unnoticed.
-This is the single most misreadable item in the old document: "the acceptance service is the fix" was true
-about entrances and false about coverage.
+**The coverage gate below every entrance — done.** The acceptance service moved run creation and the money
+path and left the gate behind; for one revision the console launch and the rerun evaluated coverage nowhere,
+so the product's defining refusal was absent from every path a human takes and present only on the API
+surface nobody was using yet. It now runs on all of them.
+
+The move turned on separating two gates that share a name. `resolveCoverage` is the **corrective** resolver:
+it needs a fresh synthesis and page snapshots, calls a model up to twice, can trigger a recrawl and can take
+300s. It belongs where a plan is *built*, and it stays on the API route and the guarantee-prepare route.
+`coverageReport` is the **deterministic** gate: pure, synchronous, no model, no network. That is the one
+that moved, into `lib/preflight/acceptance/launch-coverage.ts`, below every launch entrance and above every
+credit hold and free-pass claim. `lib/preflight/reviewed-plan.ts` had already made exactly this distinction
+for stored plans; this applies it to a stored contract.
+
+It is scored on **the flows the run will execute** — the selected ids intersected with the same
+enabled-and-approved predicate `createRun` re-reads with — because a gate that passed on the strength of a
+journey nobody selected would be worse than no gate at all.
+
+**The one hole that remains, named rather than hidden.** A contract with no outcome sentence cannot be
+gated: there is no proposition to test the plan against. It is not treated as a pass — the gate returns a
+third state and the launch is recorded as ungated in the event log, so the size of the hole is measurable
+rather than arguable. Feeding a blank claim into the gate instead would NOT have failed open:
+`checkExecutionCoverage` applies a fallback contract demanding an assertion after a persistence boundary, so
+"" would have refused most legitimate contracts. The fix is upstream, requiring the outcome when a system is
+connected, not in the gate.
 
 **Money-path defects found while tracing — two fixed, two open.** Fixed: a credit hold that reported
 success when its ledger debit failed (which could both give free runs and *mint* credits on refund), and a

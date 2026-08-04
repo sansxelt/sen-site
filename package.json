@@ -106,7 +106,9 @@
     "cancellation:lifecycle:test": "tsx scripts/cancellation-lifecycle-verify.ts",
     "run:unique:test": "tsx scripts/run-unique-verify.ts",
     "assertion:strength:test": "tsx scripts/assertion-strength-verify.ts",
-    "lifecycle:nudge:test": "tsx scripts/lifecycle-nudge-verify.ts"
+    "lifecycle:nudge:test": "tsx scripts/lifecycle-nudge-verify.ts",
+    "launch:coverage:test": "tsx scripts/launch-coverage-verify.ts",
+    "launch:gate:audit": "tsx ops/launch-gate-audit.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",

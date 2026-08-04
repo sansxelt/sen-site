@@ -234,6 +234,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       planHash: g.approved_plan_hash,
       reviewedPlanId: g.approved_reviewed_plan_id ?? null,
     },
+    // The approved meaning, from the same record everything else executable here comes from. Nothing in
+    // this path regenerates or edits it, so the gate tests the plan against exactly the sentence a person
+    // approved. This plan already passed the corrective resolver at prepare time; running the
+    // deterministic gate again is what catches DRIFT since then, which is precisely what disabling a flow
+    // or editing the contract would cause.
+    claim: g.approved_claim,
     parentRunId,
     actor: { email, level: access.level, role: access.role },
     endpoint: ENDPOINT,

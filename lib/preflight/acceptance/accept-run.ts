@@ -18,6 +18,7 @@
 // be re-derived by the next caller.
 import { randomUUID } from "node:crypto";
 import { createRun, ownerActiveRunCount, ownerRunsToday, runWithSameKeyDifferentPayload, type GuaranteeBinding } from "../runs-db";
+import { gateLaunchCoverage, launchCoverageRefusalMessage } from "./launch-coverage";
 import { estimateRunCredits, keyFingerprint, payloadFingerprint, buildSubmissionId } from "../flow-selection";
 import { keyCeilingRefusal } from "../key-spend";
 import { MAX_ACTIVE_RUNS_PER_OWNER, maxRunsPerDay } from "../limits";
@@ -74,6 +75,18 @@ export type AcceptRunInput = {
   /** The standing promise this run proves, or an explicit null. Resolved SERVER-SIDE by the entrance and
    *  never accepted from a request body: a caller-supplied guarantee id is a false-Verified primitive. */
   guarantee: GuaranteeBinding | null;
+
+  /** THE OUTCOME THIS RUN MUST PROVE, for the coverage gate. Required, not optional, and null is a real
+   *  answer — the same shape as `guarantee` above and for the same reason. That field was
+   *  `guaranteeId?: string | null` once, every caller omitted it, and the column was never written; an
+   *  optional field is an invitation to forget, and this one decides whether the product's defining refusal
+   *  runs at all.
+   *
+   *  It is contract.source_prompt (a guarantee's materialized contract carries approved_claim there), which
+   *  is already what the run report calls the submitted claim and what the public API returns as `claim`.
+   *  Entrances resolve it server-side from the contract; it is never read off a request body, because a
+   *  caller-supplied claim would let anyone pick a proposition their plan happens to satisfy. */
+  claim: string | null;
   /** The run this one re-verifies, when it is a repair. */
   parentRunId?: string | null;
   /** Who actually pressed the button, when that is not the owner. Audit only. */
@@ -151,6 +164,42 @@ export async function acceptVerificationRun(input: AcceptRunInput): Promise<Acce
       ok: false, error: "deployment_unreachable", status: 400,
       message: `Nothing is answering at ${(() => { try { return new URL(deploymentUrl).host; } catch { return "that address"; } })()}. Check the URL and try again. Nothing was charged.`,
     };
+  }
+
+  // ── THE COVERAGE GATE ────────────────────────────────────────────────────────────────────────────────
+  //
+  // BEFORE ANY MONEY AND BEFORE THE FREE PASS, for the same reason the DNS probe above sits here: a refusal
+  // that happens after a hold has already cost the customer something, and on the free tier it would spend
+  // a lifetime pass on a run Vraelis had already decided it would not trust.
+  //
+  // This is the deterministic gate ONLY. resolveCoverage — the corrective resolver that synthesises, calls
+  // a model and may recrawl for up to 300s — stays where a plan is built. See launch-coverage.ts.
+  //
+  // Evaluated against exactly what will execute: the requirements in force, and the selected flows
+  // intersected with flowApprovedEnabled, which is the same predicate createRun re-reads with and the same
+  // one the worker claims by. Gating on the full contract while executing a subset would let a strong
+  // journey the caller did not select vouch for a weak one they did.
+  {
+    const verdict = await gateLaunchCoverage(owner, contract.id, input.claim, flowIds);
+
+    if (verdict.gate === "refused") {
+      // Nothing to release: this sits above every hold and above the free-pass claim.
+      await logKeyUsage(principal, { endpoint, status: 422, applicationId: id, creditsReserved: 0, creditsCharged: 0 });
+      return {
+        ok: false, error: "claim_not_provable", status: 422,
+        message: launchCoverageRefusalMessage(verdict.missing),
+      };
+    }
+    if (verdict.gate === "no_claim") {
+      // NOT a silent pass. A contract with no outcome sentence gives the gate no proposition to test, so it
+      // declines to decide rather than inventing obligations nobody asked for. Recorded so the size of this
+      // hole is measurable from the event log instead of being argued about.
+      await logEvent({
+        userId: owner, eventType: "preflight_launch_ungated", actorType: "system", source: "app",
+        route: `/api/preflight/apps/${id}/runs`,
+        metadata: { application_id: id, contract_id: contract.id, reason: "contract_has_no_claim" },
+      });
+    }
   }
 
   let paygHeldCents: number | null = null;

@@ -89,3 +89,6 @@ ops/backups/
 # Throwaway investigation scripts kept at the repo root during a session. They routinely hold a
 # deployment URL, an account identity, or a demo password inline, and this repository is public.
 _tmp-*
+
+# Scratch artifacts from the Playwright MCP server (page snapshots, console logs).
+.playwright-mcp/

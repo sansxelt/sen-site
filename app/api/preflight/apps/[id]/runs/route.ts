@@ -181,6 +181,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     // also collide in payloadFingerprint, which hashes only {app, url, flows}. Guarantee-bound runs are
     // launched by the verify-this-guarantee path, which resolves the binding server-side.
     guarantee: null,
+    // THE OUTCOME THIS CONTRACT CLAIMS, for the coverage gate. Read off the contract, never off the body:
+    // a caller-supplied claim would let anyone name a proposition their journeys happen to satisfy. This is
+    // the same field the run report shows as "Submitted claim" and the public API returns as `claim`.
+    claim: contract.source_prompt,
     actor: { email, level: access.level, role: access.role },
     risk: {
       ip: req.headers.get("x-forwarded-for")?.split(",")[0] ?? req.headers.get("x-real-ip"),

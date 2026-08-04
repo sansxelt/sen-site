@@ -157,34 +157,79 @@ ok("no NEW route handler imports another route handler",
   newRouteToRoute.length === 0,
   newRouteToRoute.length ? newRouteToRoute.join(", ") : `${routeToRoute.length} known`);
 
-// ── 3. the coverage gate's current placement, recorded so a move is deliberate ─────────────────────────
-const coverageCallers = files
+// ── 3. THE COVERAGE GATE RUNS ON EVERY LAUNCH PATH ─────────────────────────────────────────────────────
+//
+// These three assertions used to record the opposite. They named the dashboard and rerun routes as paths
+// that did NOT evaluate coverage and held that line as a defect. The gate has moved, so they now assert the
+// property instead of the absence of it.
+//
+// TWO GATES SHARE ONE NAME, and keeping them apart is what this section is really about:
+//
+//   resolveCoverage()     the CORRECTIVE resolver: synthesis, a model, possibly a recrawl, up to 300s. It
+//                         belongs where a plan is BUILT, and only there. Its placement is still pinned.
+//   gateLaunchCoverage()  the DETERMINISTIC gate: pure, no model, no network beyond two reads. It belongs
+//                         below every entrance that spends money, and now is.
+const correctiveCallers = files
   .filter((f) => /\bresolveCoverage\s*\(/.test(f.text))
   .filter((f) => !/export (async )?function resolveCoverage/.test(f.text))
   .map((f) => f.path);
 
-// TWO callers, both deliberate. The point of this check is that the gate does not spread silently, not
-// that exactly one route may ever hold it.
-//
-//   app/api/v1/verifications/route.ts                       the public API lane
-//   app/api/preflight/apps/[id]/guarantees/[gid]/prepare     mints a reviewed plan, so it must gate too
-//
-// The second was invisible to this suite when it was written, because the Guarantees increments are live in
-// production and absent from the branch it was authored on. Recorded here rather than widened to "any
-// number of callers", so a THIRD one still fails.
-const KNOWN_COVERAGE_CALLERS = [
+// The corrective resolver is still exactly where it was. It must NOT spread to a launch path: it cannot run
+// there (no synthesis in hand) and a 300s model loop in front of a launch is not a gate, it is an outage.
+const KNOWN_CORRECTIVE_CALLERS = [
   "app/api/preflight/apps/[id]/guarantees/[gid]/prepare/route.ts",
   "app/api/v1/verifications/route.ts",
 ].sort();
-ok("the acceptance coverage gate sits only where it was deliberately placed",
-  JSON.stringify([...coverageCallers].sort()) === JSON.stringify(KNOWN_COVERAGE_CALLERS),
-  coverageCallers.join(", "));
+ok("the corrective resolver still sits only where a plan is built",
+  JSON.stringify([...correctiveCallers].sort()) === JSON.stringify(KNOWN_CORRECTIVE_CALLERS),
+  correctiveCallers.join(", "));
 
-ok("...and therefore the dashboard route still does NOT evaluate coverage (the defect this tracks)",
-  !files.find((f) => f.path === "app/api/preflight/apps/[id]/runs/route.ts")?.text.includes("resolveCoverage"));
+// EVERY path that can queue a paid run evaluates coverage. The acceptance service covers the console launch
+// and the verify-a-guarantee entrance; the rerun route calls the same shared gate directly because its money
+// path has not merged yet.
+const LAUNCH_PATHS: [string, string][] = [
+  ["the acceptance service", "lib/preflight/acceptance/accept-run.ts"],
+  ["the rerun route", "app/api/preflight/runs/[runId]/rerun/route.ts"],
+];
+for (const [label, path] of LAUNCH_PATHS) {
+  const text = files.find((f) => f.path === path)?.text ?? "";
+  ok(`${label} evaluates coverage before it queues a run`, /\bgateLaunchCoverage\s*\(/.test(text), path);
+  ok(`${label} refuses with claim_not_provable`, /claim_not_provable/.test(text), path);
+}
 
-ok("...and neither does the rerun route",
-  !files.find((f) => f.path === "app/api/preflight/runs/[runId]/rerun/route.ts")?.text.includes("resolveCoverage"));
+// THE GATE MUST PRECEDE THE MONEY. A refusal after a hold has already cost the customer something, and on
+// the free tier it would spend a lifetime pass on a run Vraelis had already decided it would not trust.
+// Positional, because ordering is the only thing that makes the two facts above worth anything.
+for (const [label, path] of LAUNCH_PATHS) {
+  const text = files.find((f) => f.path === path)?.text ?? "";
+  const gateAt = text.search(/\bgateLaunchCoverage\s*\(/);
+  const holdAt = text.search(/\bhold\s*\(\s*owner/);
+  ok(`${label} runs the gate BEFORE any credit hold`,
+    gateAt !== -1 && (holdAt === -1 || gateAt < holdAt), `gate@${gateAt} hold@${holdAt}`);
+}
+
+// THE RATCHET, POINTED FORWARD. Any NEW file that queues a run must also gate it. createRun's caller list is
+// already frozen above; this catches the other half — a caller that is added to that list without the gate.
+const ungatedCreators = files
+  .filter((f) => /\bcreateRun\s*\(/.test(f.text))
+  .filter((f) => !/export (async )?function createRun/.test(f.text))
+  .filter((f) => !/\bgateLaunchCoverage\s*\(/.test(f.text))
+  .map((f) => f.path);
+ok("no path creates a run without evaluating coverage",
+  ungatedCreators.length === 0,
+  ungatedCreators.length ? ungatedCreators.join(", ") : `${LAUNCH_PATHS.length} gated launch paths`);
+
+// ONE COPY OF THE PREDICATE. The gate loads the requirements and flows, filters to what will execute, and
+// decides, all in one module. A caller assembling that input itself would be a second definition of what
+// the gate looks at, which is the exact shape of the bug that put a private balance fold in v-lifecycle.
+const reimplementers = files
+  .filter((f) => !f.path.startsWith("lib/preflight/acceptance/launch-coverage"))
+  .filter((f) => !f.path.startsWith("lib/preflight/coverage"))
+  .filter((f) => !f.path.startsWith("lib/preflight/reviewed-plan"))
+  .filter((f) => /\bcoverageReport\s*\(/.test(f.text))
+  .map((f) => f.path);
+ok("no launch path calls coverageReport directly instead of the shared gate",
+  reimplementers.length === 0, reimplementers.join(", "));
 
 // ── 4. nothing may declare its own coverage verdict ───────────────────────────────────────────────────
 const selfDeclared = files.filter((f) =>
