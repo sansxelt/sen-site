@@ -117,6 +117,7 @@ const SUITES: Suite[] = [
   { file: "scripts/assertion-strength-verify.ts", npm: "assertion:strength:test" },
   { file: "scripts/verification-idempotency-verify.ts", npm: "idempotency:test" },
   { file: "scripts/email-embeds-verify.ts", npm: "email:test" },
+  { file: "scripts/lifecycle-nudge-verify.ts", npm: "lifecycle:nudge:test" },
   { file: "scripts/terminology-verify.ts", npm: "terminology:test" },
   { file: "scripts/cli-verify-test.mjs", npm: "cli:test" },
 

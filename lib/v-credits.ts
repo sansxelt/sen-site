@@ -18,35 +18,94 @@ function norm(email: string): string {
 
 type LedgerRow = { delta: number; bucket: string | null; expires_at: string | null; ext_ref: string | null; reason?: string | null; ref_type?: string | null; ref_id?: string | null; unit?: string | null };
 
-// All ledger rows for a user that are not yet expired.
+// ── The unit + expiry rule, in ONE place ────────────────────────────────────────────────────────────
 //
 // Units (per-pass pricing, VRAELIS_PASS_PRICING): post-flip the ledger carries BOTH 'credit' and 'cent'
-// rows (sql/vraelis-preflight-6-pass-pricing.sql), and a balance is only meaningful PER UNIT. `unit`
-// selects which rows to return; null returns every live row WITH its unit so the caller can partition
-// (refund derives the hold's own unit from the escrow rows). With the flag OFF and credits requested,
-// this runs the exact legacy query (no unit column selected) so behavior is byte-identical on a
-// pre-migration database. Flag ON requires the phase-6 migration: the unit-selecting query fails closed
-// (empty rows) when the column is missing.
+// rows (sql/vraelis-preflight-6-pass-pricing.sql), and a balance is only meaningful PER UNIT. With the
+// flag OFF and credits requested, the legacy query (no unit column selected) runs instead so behavior is
+// byte-identical on a pre-migration database. Flag ON requires the phase-6 migration: the unit-selecting
+// query fails closed (empty rows) when the column is missing.
+//
+// THESE THREE HELPERS EXIST BECAUSE THE RULE WAS RESTATED SOMEWHERE ELSE AND GOT IT WRONG.
+// lib/v-lifecycle.ts had its own batch balance that selected `delta, expires_at` with no unit column and
+// no unit filter, summing legacy 'cent' rows into a credit total — while its comment claimed to mirror
+// balance(). Nothing caught it because a second copy of a rule is invisible to the tests that guard the
+// first. Both readers now go through the same predicates, so a unit rule can only be changed in one place.
+function isLegacyRead(unit: string | null): boolean {
+  return unit === "credit" && !passPricingEnabled();
+}
+
+function ledgerColumns(legacy: boolean): string {
+  return legacy
+    ? "delta, bucket, expires_at, ext_ref, reason, ref_type, ref_id"
+    : "delta, bucket, expires_at, ext_ref, reason, ref_type, ref_id, unit";
+}
+
+export function rowIsLive(r: { expires_at: string | null }, now: number): boolean {
+  return r.expires_at === null || new Date(r.expires_at).getTime() > now;
+}
+
+// A row with no `unit` is a 'credit' row: the column defaults to 'credit' and pre-migration rows predate
+// it entirely. Reading it as anything else would silently reclassify every legacy row.
+export function rowInUnit(r: { unit?: string | null }, unit: string): boolean {
+  return (r.unit ?? "credit") === unit;
+}
+
+// All ledger rows for a user that are not yet expired. `unit` selects which rows to return; null returns
+// every live row WITH its unit so the caller can partition (refund derives the hold's own unit from the
+// escrow rows).
 async function liveRows(userId: string, unit: string | null = "credit"): Promise<LedgerRow[]> {
   if (!userId || !isDatabaseConfigured()) return [];
   const s = getSupabaseAdminClient();
-  const legacy = unit === "credit" && !passPricingEnabled();
+  const legacy = isLegacyRead(unit);
   const { data } = await s
     .from("v_credit_ledger" as never)
-    .select(legacy
-      ? "delta, bucket, expires_at, ext_ref, reason, ref_type, ref_id"
-      : "delta, bucket, expires_at, ext_ref, reason, ref_type, ref_id, unit")
+    .select(ledgerColumns(legacy))
     .eq("user_id", norm(userId));
   const rows = (data as unknown as LedgerRow[]) ?? [];
   const now = Date.now();
-  const live = rows.filter((r) => r.expires_at === null || new Date(r.expires_at).getTime() > now);
+  const live = rows.filter((r) => rowIsLive(r, now));
   if (legacy || unit === null) return live;
-  return live.filter((r) => (r.unit ?? "credit") === unit);
+  return live.filter((r) => rowInUnit(r, unit));
 }
 
 export async function balance(userId: string): Promise<number> {
   const rows = await liveRows(userId);
   return rows.reduce((sum, r) => sum + r.delta, 0);
+}
+
+// balance() for MANY users in one query. Same expiry rule, same unit rule, same default unit — the only
+// difference is the `.in()` and the grouping, which is the whole reason this exists rather than a caller
+// looping balance() a hundred times inside a cron.
+//
+// Users with no live rows are ABSENT from the map rather than present with 0, so a caller can tell "no
+// ledger history" from "spent to zero" if it ever needs to. Every current caller treats absent as 0.
+export async function balances(userIds: string[], unit: string = "credit"): Promise<Map<string, number>> {
+  const ids = [...new Set(userIds.map(norm).filter(Boolean))];
+  if (!ids.length || !isDatabaseConfigured()) return new Map();
+  const s = getSupabaseAdminClient();
+  const legacy = isLegacyRead(unit);
+  const { data } = await s
+    .from("v_credit_ledger" as never)
+    .select(`user_id, ${ledgerColumns(legacy)}`)
+    .in("user_id", ids);
+  const rows = (data as unknown as (LedgerRow & { user_id: string })[]) ?? [];
+  return foldBalances(rows, { legacy, unit, now: Date.now() });
+}
+
+/** The fold behind balances(), separated so the expiry and unit rules can be exercised on fixture rows
+ *  rather than proxied through a live ledger. This is the code that actually runs, not a copy of it. */
+export function foldBalances(
+  rows: (LedgerRow & { user_id: string })[],
+  opts: { legacy: boolean; unit: string; now: number },
+): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const r of rows) {
+    if (!rowIsLive(r, opts.now)) continue;
+    if (!opts.legacy && !rowInUnit(r, opts.unit)) continue;
+    out.set(r.user_id, (out.get(r.user_id) ?? 0) + (r.delta ?? 0));
+  }
+  return out;
 }
 
 type GrantOpts = { bucket?: string; expiresAt?: string | null; refType?: string; refId?: string; extRef?: string | null; unit?: string };

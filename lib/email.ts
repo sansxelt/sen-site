@@ -1,4 +1,8 @@
 ﻿import { Resend } from "resend";
+// One conversion rule and one price, shared with the charging path rather than restated in copy. A number
+// in an email that disagrees with the number on the invoice is the kind of thing customers screenshot.
+import { creditsToCents } from "./preflight/auto-recharge";
+import { passPriceCents, PASS_INCLUDED_FLOWS } from "./preflight/pass-pricing";
 
 let resendClient: Resend | null = null;
 
@@ -379,22 +383,40 @@ export async function sendCheckActivationEmail(email: string) {
   }
 }
 
-function lowCreditsHtml(remaining: number): string {
+// THE COPY IS WRITTEN AGAINST WHAT THE ACCOUNT CAN ACTUALLY DO, which is the thing it kept getting wrong.
+//
+// Two staleness bugs lived here. It called the balance "included", from the era when signup minted 25
+// credits; under pass pricing signup mints nothing, so a recipient either bought that balance or never had
+// one. And it offered "Still have balance left? Verify an outcome" to anyone above zero, which after the
+// threshold retune (lib/v-lifecycle.ts) is precisely a set of people whose next launch is refused: the
+// link sent them to a 402. Both are gone.
+//
+// Money is stated in dollars next to the price of the thing being bought. "149 credits" is a number only
+// this system understands; "$14.90, and a verification costs $15.00" is a decision the reader can make.
+function money(cents: number): string {
+  return `$${(cents / 100).toFixed(2)}`;
+}
+
+// Exported for scripts/lifecycle-nudge-verify.ts. The amounts in this template are derived from the
+// charging path, so they are worth asserting on the RENDERED output rather than on the source text: a
+// scan of the file cannot tell a live template from a sentence in a comment about it.
+export function lowCreditsHtml(remaining: number): string {
   const plans = "https://app.vraelis.com/plans";
-  const run = "https://app.vraelis.com";
+  const credits = "https://app.vraelis.com/credits";
   const out = remaining <= 0;
-  const left = remaining === 1 ? "1 credit" : `${remaining} credits`;
-  const headline = out ? "Your included balance is used up." : `You're down to ${left}.`;
+  const left = money(creditsToCents(Math.max(0, remaining)));
+  const price = money(passPriceCents(PASS_INCLUDED_FLOWS));
+  const headline = out ? "You've used what you had." : `You're ${left} short of another verification.`;
   const lead = out
-    ? "You've used your included Vraelis balance, which means you've been catching failures before your users ever saw them. To keep going, add balance or pick a plan."
-    : `You've been running Vraelis on what your AI ships, and your included balance is almost gone (${left} left). To keep verifying your releases, add balance or pick a plan.`;
+    ? `Your Vraelis balance is empty, which means you've been putting real releases in front of a browser before your users saw them. A verification is ${price}. Add balance or pick a plan to keep going.`
+    : `You have ${left} left and a verification is ${price}, so the next one won't launch. Add balance or pick a plan to keep verifying what your AI ships.`;
   return `<!doctype html><html><body style="margin:0;background:#FAF8F4;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#1a1a1a">
     <div style="max-width:520px;margin:0 auto;padding:32px 24px">
       <div style="font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:20px;color:#0d5c46;margin-bottom:24px">Vraelis</div>
       <h1 style="font-size:22px;line-height:1.3;margin:0 0 12px">${headline}</h1>
-      <p style="font-size:15px;line-height:1.6;color:#42484f;margin:0 0 20px">${lead} Vraelis is priced by the verification, not the seat: every verification includes real-browser execution, evidence, and an explainable decision.</p>
+      <p style="font-size:15px;line-height:1.6;color:#42484f;margin:0 0 20px">${lead} Vraelis is priced by the verification, not the seat: every one includes real-browser execution, evidence, and an explainable decision.</p>
       <a href="${plans}" style="display:inline-block;background:#0d5c46;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:13px 26px;border-radius:10px">See plans</a>
-      ${out ? "" : `<p style="font-size:13px;line-height:1.6;color:#8a8f96;margin:24px 0 0">Still have balance left? <a href="${run}" style="color:#0d5c46">Verify an outcome</a>.</p>`}
+      <p style="font-size:13px;line-height:1.6;color:#8a8f96;margin:24px 0 0">Prefer to pay per verification? <a href="${credits}" style="color:#0d5c46">Add balance</a>.</p>
       <p style="font-size:12px;line-height:1.5;color:#a0a4aa;margin:24px 0 0">You're getting this because you have a Vraelis account. If you'd rather not get product nudges, just reply and we'll stop.</p>
     </div></body></html>`;
 }
@@ -408,7 +430,9 @@ export async function sendLowCreditsEmail(email: string, remaining: number) {
       from:    fromAccount,
       replyTo: "help@vraelis.com",
       to:      email,
-      subject: remaining <= 0 ? "Your Vraelis balance is used up" : "Your Vraelis balance is running low",
+      // Not "running low". The nudge now fires when the balance can no longer buy a verification, so the
+      // subject states the consequence rather than a trend.
+      subject: remaining <= 0 ? "Your Vraelis balance is used up" : "Not enough balance for your next verification",
       html:    lowCreditsHtml(remaining),
     });
   } catch (error) {
@@ -416,13 +440,16 @@ export async function sendLowCreditsEmail(email: string, remaining: number) {
   }
 }
 
-function winbackHtml(remaining: number): string {
+// Only ever sent to an account with a positive CREDIT balance (lib/v-lifecycle.ts gates on it), so the
+// amount is always real and worth naming. Stated in dollars for the same reason as the low-balance email.
+export function winbackHtml(remaining: number): string {
   const run = "https://app.vraelis.com";
+  const left = money(creditsToCents(Math.max(0, remaining)));
   return `<!doctype html><html><body style="margin:0;background:#FAF8F4;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#1a1a1a">
     <div style="max-width:520px;margin:0 auto;padding:32px 24px">
       <div style="font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:20px;color:#0d5c46;margin-bottom:24px">Vraelis</div>
-      <h1 style="font-size:22px;line-height:1.3;margin:0 0 12px">You still have Vraelis balance waiting.</h1>
-      <p style="font-size:15px;line-height:1.6;color:#42484f;margin:0 0 20px">You tried Vraelis a while back, then things went quiet. Your account balance is still here. Next time your AI ships something users will touch, run a verification first: give Vraelis the outcome that should be true and it checks the live result in a real browser, with evidence and a repair prompt.</p>
+      <h1 style="font-size:22px;line-height:1.3;margin:0 0 12px">You still have ${left} of Vraelis balance.</h1>
+      <p style="font-size:15px;line-height:1.6;color:#42484f;margin:0 0 20px">You tried Vraelis a while back, then things went quiet. Your ${left} is still here. Next time your AI ships something users will touch, run a verification first: give Vraelis the outcome that should be true and it checks the live result in a real browser, with evidence and a repair prompt.</p>
       <a href="${run}" style="display:inline-block;background:#0d5c46;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:13px 26px;border-radius:10px">Verify an outcome</a>
       <p style="font-size:12px;line-height:1.5;color:#a0a4aa;margin:24px 0 0">You're getting this because you have a Vraelis account. If you'd rather not get product nudges, just reply and we'll stop.</p>
     </div></body></html>`;

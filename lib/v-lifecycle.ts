@@ -6,6 +6,9 @@
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { isEmailConfigured, sendCheckActivationEmail, sendLowCreditsEmail, sendWinbackEmail } from "./email";
 import { getPlan } from "./v-db";
+import { balances } from "./v-credits";
+import { centsToCredits } from "./preflight/auto-recharge";
+import { passPriceCents, passPricingEnabled, PASS_INCLUDED_FLOWS } from "./preflight/pass-pricing";
 import { logEvent } from "./v-events";
 
 const NUDGE_EVENT = "activation_email_sent";
@@ -75,35 +78,46 @@ export async function runActivationNudges(limit = 100): Promise<ActivationSummar
   }
 }
 
-// ── Stage 2: low-credits upgrade nudge ─────────────────────────────────────────
-// A FREE user who has been actively checking and is nearly out of their 25 signup
-// credits is at the natural conversion moment. Email them once ("you're almost out,
-// pick a plan"). Targeted so it's timely, not spammy:
-//   - ran a check in the last ACTIVE_WINDOW_DAYS (recently engaged, so credits were used)
-//   - live balance <= LOW_MAX (almost/entirely out)
+// ── Stage 2: low-balance upgrade nudge ─────────────────────────────────────────
+// A FREE user who has been actively verifying and can no longer afford to launch again is at the natural
+// conversion moment. Email them once. Targeted so it's timely, not spammy:
+//   - ran a verification in the last ACTIVE_WINDOW_DAYS (recently engaged)
+//   - live CREDIT balance below one standard pass (the next launch will be refused)
 //   - plan is "free" (never nudge a paying subscriber mid-cycle)
 //   - not already sent (idempotent via the event log)
 const LOWCREDIT_EVENT = "lowcredits_email_sent";
-const LOW_MAX = 5;              // nudge at or below this many credits left
-// "Actively checking" = a check within the last QUIET_AFTER_DAYS. Kept equal to the
+
+// WHERE THE THRESHOLD COMES FROM, AND WHY IT IS NOT 5.
+//
+// It was 5, from a model where 1 credit = 1 check and signup minted 25 of them: "5 checks left" was a
+// runway measure. Neither half of that survives. A pass costs $15 = 150 credits (CENTS_PER_CREDIT = 10),
+// and under pass pricing signup mints NOTHING — ensureSignupGrant returns early and the free tier is
+// FREE_TIER.lifetimePasses = 1, enforced by gatePassLaunch rather than by a balance. So the old threshold
+// fires at 3% of a single launch: an account holding 149 credits cannot run anything and never got the
+// email, which is the entire conversion moment passing in silence.
+//
+// The replacement is the same IDEA measured in the current unit: nudge when the runway reaches zero, i.e.
+// when the balance can no longer buy one standard pass. That is also the moment the product itself refuses
+// the launch with a 402, so the email lands as the follow-up to something the user just hit rather than as
+// a warning about a future they cannot picture. It matters that this email is once-ever (idempotent on
+// LOWCREDIT_EVENT): a single send should land at maximum intent, not before it.
+//
+// Derived from the price rather than written down, so a price change moves it and cannot leave it stale
+// the way the literal 5 went stale.
+const LEGACY_LOW_MAX = 5; // pre-flip meaning: 5 checks left, when 1 credit bought 1 check
+
+/** The balance AT OR ABOVE which we do not nudge. Send when the live credit balance is below it. */
+export function nudgeBelowCredits(): number {
+  if (!passPricingEnabled()) return LEGACY_LOW_MAX + 1; // preserves the old `bal > 5` skip exactly
+  return centsToCredits(passPriceCents(PASS_INCLUDED_FLOWS)); // 150 credits = one $15 pass
+}
+
+// "Actively verifying" = a run within the last QUIET_AFTER_DAYS. Kept equal to the
 // win-back threshold so stages 2 and 3 are disjoint: active users get the upgrade nudge,
 // quiet users get win-back, and nobody gets both in the same run.
 const ACTIVE_WINDOW_DAYS = 14;
 
 export type LowCreditSummary = { scanned: number; sent: number; skippedPaid: number; skippedBalance: number; alreadySent: number };
-
-// One query → live (non-expired) balance per user, mirroring lib/v-credits balance().
-async function liveBalances(s: ReturnType<typeof getSupabaseAdminClient>, emails: string[]): Promise<Map<string, number>> {
-  const m = new Map<string, number>();
-  if (!emails.length) return m;
-  const { data } = await s.from("v_credit_ledger" as never).select("user_id, delta, expires_at").in("user_id", emails);
-  const now = Date.now();
-  for (const r of ((data as unknown as { user_id: string; delta: number; expires_at: string | null }[] | null) ?? [])) {
-    if (r.expires_at && new Date(r.expires_at).getTime() <= now) continue;
-    m.set(r.user_id, (m.get(r.user_id) ?? 0) + (r.delta ?? 0));
-  }
-  return m;
-}
 
 export async function runLowCreditNudges(limit = 100): Promise<LowCreditSummary> {
   const out: LowCreditSummary = { scanned: 0, sent: 0, skippedPaid: 0, skippedBalance: 0, alreadySent: 0 };
@@ -127,12 +141,15 @@ export async function runLowCreditNudges(limit = 100): Promise<LowCreditSummary>
     const { data: sent } = await s.from("v_events" as never).select("user_id").eq("event_type", LOWCREDIT_EVENT).in("user_id", emails);
     const already = new Set(((sent as unknown as { user_id: string }[] | null) ?? []).map((e) => e.user_id));
 
-    const balances = await liveBalances(s, emails);
+    // The CREDIT balance, unit-isolated by lib/v-credits — legacy 'cent' rows are not spendable and must
+    // never be summed in. This used to be a local reimplementation that did exactly that.
+    const bals = await balances(emails);
+    const below = nudgeBelowCredits();
 
     for (const email of emails) {
       if (already.has(email)) { out.alreadySent++; continue; }
-      const bal = balances.get(email) ?? 0;
-      if (bal > LOW_MAX) { out.skippedBalance++; continue; }
+      const bal = bals.get(email) ?? 0;
+      if (bal >= below) { out.skippedBalance++; continue; }
       // Only free users — a paying subscriber's low mid-cycle balance is not an upsell moment.
       if ((await getPlan(email)) !== "free") { out.skippedPaid++; continue; }
       await sendLowCreditsEmail(email, Math.max(0, bal));
@@ -191,12 +208,18 @@ export async function runWinbackNudges(limit = 100): Promise<WinbackSummary> {
     const { data: sent } = await s.from("v_events" as never).select("user_id").eq("event_type", WINBACK_EVENT).in("user_id", emails);
     const already = new Set(((sent as unknown as { user_id: string }[] | null) ?? []).map((e) => e.user_id));
 
-    const balances = await liveBalances(s, emails);
+    // Same unit-isolated read as stage 2. The mixed sum mattered MORE here: this gate is `bal > 0`, so a
+    // quiet account holding nothing but legacy 'cent' rows looked funded and was told "your balance is
+    // waiting" about money it could not spend.
+    const bals = await balances(emails);
 
     for (const email of emails) {
       if (already.has(email)) { out.alreadySent++; continue; }
-      const bal = balances.get(email) ?? 0;
-      if (bal <= 0) { out.skippedBalance++; continue; } // nothing concrete to return to
+      const bal = bals.get(email) ?? 0;
+      // Nothing concrete to return to. NOTED, NOT CHASED: under pass pricing this makes win-back reach
+      // only legacy credit holders, because the free tier mints no credits — a real question about
+      // whether the stage should target unused lifetime passes instead, and out of scope here.
+      if (bal <= 0) { out.skippedBalance++; continue; }
       await sendWinbackEmail(email, bal);
       await logEvent({ userId: email, eventType: WINBACK_EVENT, actorType: "system", source: "cron", metadata: { remaining: bal } });
       out.sent++;
