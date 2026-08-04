@@ -367,8 +367,9 @@ console.log("\n── the Repairs surface is hidden, not deleted ──");
   // survived. The RETIRED block above already asserts both page files still exist and still route.
   const overview = readFileSync("lib/preflight/overview-db.ts", "utf8");
   ok("listRepairs still reads v_repairs", /from\("v_repairs"\)/.test(overview));
+  // [\s\S] rather than the /s flag: the tsconfig target predates dotAll.
   ok("the verified-repair count still reads v_repairs",
-    /v_repairs.*count: "exact"/s.test(overview));
+    /v_repairs[\s\S]*count: "exact"/.test(overview));
   ok("both pages still render their real row lists",
     /listRepairs\(owner\)/.test(idx) && /listRepairs\(owner\)/.test(perApp));
   ok("the tab constant is retained rather than removed",
