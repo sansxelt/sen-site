@@ -47,3 +47,19 @@ export function apiRuntimeEnabled(): boolean {
 export function runsDisabled(): boolean {
   return process.env.VRAELIS_RUNS_DISABLED === "1";
 }
+
+// REPAIRS SURFACE. Off unless VRAELIS_REPAIRS_SURFACE=1, which is the opposite default from every other
+// flag here, and deliberately so: this one hides a surface that is FINISHED but cannot fill itself.
+//
+// v_repairs is a writerless table. It is read in three places and inserted by nothing, so /repairs and the
+// per-system Repairs tab render an empty state on every account that has ever existed. The empty copy is
+// honest — it points at the issue's repair prompt and the linked rerun, which are where the artifacts
+// actually live — but an honest empty page is still a tab a reader opens, reads, and leaves having learned
+// that a section of the product does nothing. Two working destinations already carry this information.
+//
+// NOTHING WAS DELETED. Both pages, listRepairs(), the overview counts and the per-system link are intact
+// and unchanged; they are gated, not removed. When something writes v_repairs, this flag is the whole
+// re-enable. That is why it is a flag rather than a revert: the surface is not wrong, it is early.
+export function repairsSurfaceEnabled(): boolean {
+  return process.env.VRAELIS_REPAIRS_SURFACE === "1";
+}

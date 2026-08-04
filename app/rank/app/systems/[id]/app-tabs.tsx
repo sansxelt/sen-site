@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { repairsSurfaceEnabled } from "@/lib/v-preflight-flags";
 
 // Application-scoped tab bar for the app workspace. Server component: pure links, no client state; the
 // active tab is passed in by each page. The run report pages live at /passes (renamed from /runs in the
@@ -9,7 +10,6 @@ const TABS: { key: string; label: string; path: string }[] = [
   { key: "contract", label: "Contract", path: "/contract" },
   { key: "passes", label: "Verifications", path: "/passes" },
   { key: "issues", label: "Issues", path: "/issues" },
-  { key: "repairs", label: "Repairs", path: "/repairs" },
   { key: "deployments", label: "Deployments", path: "/deployments" },
   { key: "connections", label: "Connections", path: "/settings/connections" },
   { key: "team", label: "Team", path: "/team" },
@@ -21,8 +21,21 @@ const TABS: { key: string; label: string; path: string }[] = [
 // 404), but the tab is genuinely absent so no hint of the beta leaks.
 const API_TAB = { key: "api", label: "API", path: "/api-runtime" };
 
+// Repairs follows the same "genuinely absent from the DOM" rule, and is read here rather than passed in as
+// a prop like showApiTab: the API gate is per-account and async, so only the page can answer it, while this
+// one is a process-wide env read that would otherwise have to be threaded through all eleven callers of
+// AppTabs identically. Same posture, cheaper wiring. Inserted back at its original position between Issues
+// and Deployments when enabled, so turning the flag on restores the exact tab order it had.
+const REPAIRS_TAB = { key: "repairs", label: "Repairs", path: "/repairs" };
+
+function baseTabs(): { key: string; label: string; path: string }[] {
+  if (!repairsSurfaceEnabled()) return TABS;
+  const at = TABS.findIndex((t) => t.key === "deployments");
+  return [...TABS.slice(0, at), REPAIRS_TAB, ...TABS.slice(at)];
+}
+
 export function AppTabs({ appId, active, showApiTab }: { appId: string; active: string; showApiTab?: boolean }) {
-  const tabs = showApiTab ? [...TABS, API_TAB] : TABS;
+  const tabs = showApiTab ? [...baseTabs(), API_TAB] : baseTabs();
   return (
     <nav aria-label="System sections"
       style={{ display: "flex", gap: 2, borderBottom: "1px solid var(--line-1)", marginTop: 22, marginBottom: 20, overflowX: "auto" }}>

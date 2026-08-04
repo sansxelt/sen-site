@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { requirePreflightAppAccess } from "@/lib/v-preflight-guard";
+import { repairsSurfaceEnabled } from "@/lib/v-preflight-flags";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "../../setup-required";
 import { getApplication } from "@/lib/v-applications";
@@ -8,7 +10,8 @@ import { listRepairs, type RepairRow } from "@/lib/preflight/overview-db";
 import { AppTabs } from "../app-tabs";
 import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
 
-export const metadata: Metadata = { title: "Repairs" };
+// Generic title: exported before the gate runs. See app/rank/app/repairs/page.tsx.
+export const metadata: Metadata = { title: "Vraelis" };
 
 // Relative "3m ago / 4h ago / Jul 2" (server component; rendered once per request, no hydration risk).
 function timeAgo(iso: string | null | undefined): string {
@@ -67,6 +70,7 @@ function RepairRowView({ appId, r }: { appId: string; r: RepairRow }) {
 // Repairs for one application: real v_repairs rows only, filtered to this app. Owner-gated server
 // component; every read degrades to an empty state, so nothing here is ever fabricated.
 export default async function AppRepairsPage({ params }: { params: Promise<{ id: string }> }) {
+  if (!repairsSurfaceEnabled()) notFound();
   const { id } = await params;
   const access = await requirePreflightAppAccess(id, "/systems/" + id);
   const owner = access?.owner ?? "";

@@ -330,5 +330,50 @@ console.log("\n── the mobile drawer is not trapped inside the top bar ──
     /backdropFilter:[^,\n]*blur\(/.test(header));
 }
 
+console.log("\n── the Repairs surface is hidden, not deleted ──");
+// v_repairs has no writer anywhere in the codebase, so both Repairs pages rendered an empty state on every
+// account that has ever existed. The empty copy was honest and pointed at where the artifacts really live,
+// which is exactly why this is a FLAG and not a revert: the surface is early, not wrong. These assertions
+// hold both halves — nothing reachable is empty, and nothing was destroyed.
+{
+  const flags = readFileSync("lib/v-preflight-flags.ts", "utf8");
+  const idx = readFileSync("app/rank/app/repairs/page.tsx", "utf8");
+  const perApp = readFileSync("app/rank/app/systems/[id]/repairs/page.tsx", "utf8");
+  const tabs = readFileSync("app/rank/app/systems/[id]/app-tabs.tsx", "utf8");
+  const sysPage = readFileSync("app/rank/app/systems/[id]/page.tsx", "utf8");
+
+  ok("the flag exists and is off unless explicitly set",
+    /VRAELIS_REPAIRS_SURFACE === "1"/.test(flags));
+
+  for (const [name, src] of [["/repairs", idx], ["per-system Repairs", perApp]] as const) {
+    ok(`${name} 404s while the surface is off`,
+      /if \(!repairsSurfaceEnabled\(\)\) notFound\(\);/.test(src));
+    ok(`${name} imports the shared flag rather than reading env itself`,
+      /repairsSurfaceEnabled\s*\}\s*from\s*"@\/lib\/v-preflight-flags"/.test(src));
+    // A descriptive title is exported before the gate runs, so it would announce a 404 page by name.
+    ok(`${name} exports a generic title`, /metadata: Metadata = \{ title: "Vraelis" \}/.test(src));
+  }
+
+  // The tab must be genuinely absent from the DOM, the same posture as the API beta tab next to it.
+  ok("the default tab list has no Repairs entry",
+    !/\{ key: "repairs".*\}\s*,\s*\n\s*\{ key: "deployments"/.test(tabs));
+  ok("Repairs is reinserted in its original position when the flag is on",
+    /const at = TABS\.findIndex\(\(t\) => t\.key === "deployments"\)/.test(tabs)
+    && /REPAIRS_TAB/.test(tabs));
+  ok("the system overview link is gated on the same flag",
+    /repairsSurfaceEnabled\(\) && verifiedRepairCount > 0/.test(sysPage));
+
+  // NOTHING WAS DELETED. Re-enabling is one environment variable, which is only true if all of this
+  // survived. The RETIRED block above already asserts both page files still exist and still route.
+  const overview = readFileSync("lib/preflight/overview-db.ts", "utf8");
+  ok("listRepairs still reads v_repairs", /from\("v_repairs"\)/.test(overview));
+  ok("the verified-repair count still reads v_repairs",
+    /v_repairs.*count: "exact"/s.test(overview));
+  ok("both pages still render their real row lists",
+    /listRepairs\(owner\)/.test(idx) && /listRepairs\(owner\)/.test(perApp));
+  ok("the tab constant is retained rather than removed",
+    /label: "Repairs", path: "\/repairs"/.test(tabs));
+}
+
 console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

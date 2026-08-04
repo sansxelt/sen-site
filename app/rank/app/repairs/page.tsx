@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { requirePreflightOwner } from "@/lib/v-preflight-guard";
+import { repairsSurfaceEnabled } from "@/lib/v-preflight-flags";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "../systems/setup-required";
 import { listRepairs, type RepairRow } from "@/lib/preflight/overview-db";
 import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
 
-export const metadata: Metadata = { title: "Repairs" };
+// Generic title, for the same reason app/rank/app/systems/[id]/api-runtime/page.tsx keeps one: metadata is
+// exported before the server component runs its gate, so a descriptive title announces a page that answers
+// 404 to everyone.
+export const metadata: Metadata = { title: "Vraelis" };
 
 // Relative "3m ago / 4h ago / Jul 2". Server component rendered once per request, so a wall-clock
 // relative time carries no hydration-mismatch risk. (Same helper as app/rank/app/systems/page.tsx.)
@@ -99,6 +104,10 @@ function Section({ heading, rows }: { heading: string; rows: RepairRow[] }) {
 // the user's builder plus the verification rerun that proves the blocker is closed; Vraelis never writes
 // code changes itself, and this page says so plainly.
 export default async function RepairsPage() {
+  // Gated BEFORE the owner is resolved, unlike the API-beta page whose gate is account-scoped and needs
+  // one. This flag is not per-account, so checking it first means an unauthenticated request gets the same
+  // "does not exist" as everyone else instead of a sign-in redirect to a page that would then 404.
+  if (!repairsSurfaceEnabled()) notFound();
   const owner = await requirePreflightOwner("/repairs");
   if (!(await preflightDbReady())) return <SetupRequired />;
   const repairs = await listRepairs(owner);

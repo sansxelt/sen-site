@@ -14,6 +14,7 @@ import { unverifiedNewerDeployment } from "@/lib/preflight/deployments-db";
 import { pickHealthRun, isLaunchHealthCandidate } from "@/lib/preflight/target-url";
 import { listAllIssues, listRepairs } from "@/lib/preflight/overview-db";
 import { apiBetaVisible } from "@/lib/preflight/api-beta-gate";
+import { repairsSurfaceEnabled } from "@/lib/v-preflight-flags";
 import { getApiStatus } from "@/lib/preflight/runtime/platform-status";
 import { AppTabs } from "./app-tabs";
 import { LaunchPassButton } from "./launch-button";
@@ -500,8 +501,11 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
         </div>
       </section>
 
-      {/* ── Verified repairs (only when at least one exists) ─────────────────────────────────────────── */}
-      {verifiedRepairCount > 0 ? (
+      {/* ── Verified repairs (only when at least one exists, and only while the surface is enabled) ──
+           The count guard alone was enough while /repairs merely rendered empty. Now that the page 404s
+           unless VRAELIS_REPAIRS_SURFACE=1, a link that survives the flag is a link into a dead end the
+           moment anything writes v_repairs with the surface still off. Both conditions, or neither. */}
+      {repairsSurfaceEnabled() && verifiedRepairCount > 0 ? (
         <Link href={`/systems/${id}/repairs`}
           style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14, padding: "12px 18px", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", textDecoration: "none" }}>
           <span className="pill" style={{ fontSize: 10.5, color: TONE_READY.fg, background: TONE_READY.bg, borderColor: TONE_READY.line, flex: "none" }}><DecisionMark decision="verified" />Verified</span>
