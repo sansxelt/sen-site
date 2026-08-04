@@ -17,8 +17,14 @@
 //   npx tsx ops/launch-gate-audit.ts demo@vraelis.com   one owner
 import { readFileSync } from "node:fs";
 
+// .env.local is gitignored and may simply not exist on a given machine, so its absence is normal and must
+// not be a crash. The original copied this loader from ops/guarantee-lineage-audit.ts, which reads the file
+// unguarded and dies with ENOENT — an operator tool that explodes before it can say what it needs is worse
+// than one that never shipped.
 function loadEnv() {
-  for (const line of readFileSync(".env.local", "utf8").split("\n")) {
+  let raw = "";
+  try { raw = readFileSync(".env.local", "utf8"); } catch { return; }
+  for (const line of raw.split("\n")) {
     const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
     if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, "");
   }
@@ -31,7 +37,17 @@ async function main() {
   const { decideLaunchCoverage } = await import("../lib/preflight/acceptance/launch-coverage");
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-  if (!url || !key) { console.log("no supabase config"); return; }
+  if (!url || !key) {
+    console.log("No Supabase credentials found, so nothing was read.\n");
+    console.log("This tool needs the same two values the app runs on. Either create .env.local, or pass");
+    console.log("them for one command (PowerShell):\n");
+    console.log('  $env:NEXT_PUBLIC_SUPABASE_URL="https://<project>.supabase.co"');
+    console.log('  $env:SUPABASE_SERVICE_ROLE_KEY="<service role key>"');
+    console.log("  npx tsx ops/launch-gate-audit.ts\n");
+    console.log("Both are in the Vercel project's environment variables, or Supabase > Project Settings > API.");
+    console.log("If you would rather not, the shortcut is in the note at the bottom of this file.");
+    return;
+  }
   const s = createClient(url, key, { auth: { persistSession: false } });
 
   console.log(`LAUNCH GATE AUDIT (read-only)${only ? `  owner=${only}` : ""}\n`);
@@ -89,3 +105,12 @@ async function main() {
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });
+
+// THE SHORTCUT, IF YOU NEVER RUN THIS.
+//
+// This tool answers "which of my contracts would the new gate refuse?" across the whole account. If the
+// only one you actually care about is the demo, you do not need credentials or this file at all: open the
+// console and press Launch on it once. The gate now sits above every hold, so if the run queues, it passed.
+// If it is going to refuse, it refuses there with claim_not_provable and charges nothing.
+//
+// That is a complete answer for one contract and no answer for the rest, which is the trade.
