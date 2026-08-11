@@ -201,9 +201,15 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
   const link = { fontSize: 15.5, color: "var(--fg-2)", textDecoration: "none", whiteSpace: "nowrap", fontWeight: 500, display: "inline-flex", alignItems: "center", minHeight: 24 } as const;
   return (
     <nav ref={navRef} data-hidden={hidden} data-ground={ground.bg ? "1" : undefined} style={{ position: "relative", display: "flex", alignItems: "center", gap: 18, padding: "15px var(--gutter)",
-      // The sampled ground wins when there is one. The cream stays as the fallback for the scrolled state
+      // The sampled ground wins when there is one. --chrome-veil is the fallback for the scrolled state
       // before any measurement exists (no JS, first frame), so the bar never resolves to nothing.
-      background: ground.bg ?? (scrolled ? "rgba(250,248,244,0.82)" : "transparent"),
+      //
+      // It was the cream LITERAL rgba(250,248,244,0.82), which is the retired generation's paper and cannot
+      // follow the surface it is on. That is the identical mistake app/signin/signin-header.tsx carried, and
+      // AppTopbar 180 lines below already reads the token for exactly this reason. The token resolves to
+      // cream on a light document and to rgba(10,10,11,0.88) inside the product, so the fallback can never
+      // be a colour the page is not.
+      background: ground.bg ?? (scrolled ? "var(--chrome-veil)" : "transparent"),
       // Blur only when the bar is translucent. An exact colour match needs no blur, and blurring a surface
       // that already equals the page behind it just costs a compositor layer for no visible difference.
       backdropFilter: !ground.bg && scrolled ? "blur(14px)" : "none",
@@ -619,8 +625,21 @@ function MobileNav() {
           "Sign out", both near the bottom of the panel, could not be reached at all.
           A portal is the fix rather than removing the blur, because any future filter, transform or
           will-change anywhere above this component would silently do the same thing again. */}
+      {/* THE THEME BOUNDARY HAS TO TRAVEL WITH THE NODE, because the portal above moved the node out of it.
+          ProductSurface mounts the product's tokens as <div data-surface="app">, and authenticated.css
+          declares the graphite palette on that selector. Custom properties inherit down the DOM, so a
+          subtree relocated to <body> stops inheriting them and falls back to the PUBLIC light theme in
+          styles.css. The drawer paints `background: var(--bg-0)`, which is #0A0A0B inside the boundary and
+          #FAF8F4 — warm paper, the retired generation's floor — outside it. On a phone, tapping the
+          hamburger in the signed-in product therefore opened a cream sheet over a near-black app.
+          The same escape also cost the active-page marker: [data-surface="app"] .slink.on .slink__i sets it
+          to var(--fg-1), and without the boundary it fell through to the base rule's --acc-deep, i.e. the
+          retired emerald. Green in this product means a verification held. It is not allowed to mean "you
+          are on this page", and outside the boundary that is exactly what it meant.
+          The attribute declares custom properties and paints nothing of its own, so putting it here costs
+          no layer, no background and no stacking context. It restores the palette and nothing else. */}
       {open && mounted && createPortal(
-        <div className="app-drawer-root" role="presentation">
+        <div className="app-drawer-root" role="presentation" data-surface="app">
           <div className="app-drawer-scrim" onClick={close} aria-hidden />
           <div ref={panel} id="app-drawer" className="app-drawer" role="dialog" aria-modal="true" aria-label="Navigation">
             <div className="app-drawer-head">

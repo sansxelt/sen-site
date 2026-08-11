@@ -23,6 +23,7 @@
 // The loop runs ONLY while rendered is still chasing target; at rest there is no rAF churn at all.
 // Reduced motion pins the value to 1 and never listens.
 import { useEffect, type RefObject } from "react";
+import { SHORT } from "./mobile-motion";
 
 type Options = {
   /** Written on the element as this custom property. Defaults to "--p". */
@@ -68,7 +69,16 @@ export function useScrollProgress(ref: RefObject<HTMLElement | null>, options?: 
     // consumer that survives at this width reads a finished scene, never a half-scrubbed one. Not
     // re-evaluated on resize: a phone does not cross 900px, and a desktop window dragged narrow enough to
     // matter is a case worth less than a listener on every composition on the page.
-    if (window.matchMedia("(max-width: 900px)").matches) {
+    // THE SAME IS TRUE OF A WINDOW TOO SHORT TO PIN A SCENE IN, for the same reason and with the same cost.
+    // chapters.css unpins every scene below 768px tall (see NOT ENOUGH ROOM TO PIN) and forces its moving
+    // parts to rest with !important, so from that height down this loop was measuring and writing a value
+    // the cascade discards, exactly as it was on a phone. SHORT is imported rather than restated so the
+    // stylesheet, the reveal and this cannot drift apart; the media query literal lives in one place.
+    //
+    // Not re-evaluated on resize, matching the width rule above: a window dragged across the threshold gets
+    // whichever composition it loaded with until the next navigation, which is worth less than a listener on
+    // every composition on the page.
+    if (window.matchMedia("(max-width: 900px)").matches || window.matchMedia(SHORT).matches) {
       el.style.setProperty(property, "1");
       onFrame?.(1);
       return;

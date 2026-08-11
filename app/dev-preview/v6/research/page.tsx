@@ -14,7 +14,11 @@ export const metadata = v6meta({
 });
 
 const BASE = V6_BASE;
-const ANCHOR: CSSProperties = { scrollMarginTop: 88 };
+// Empty on purpose. html { scroll-padding-top: var(--nav-h) } in app/globals.css already reserves the bar,
+// and scroll-padding on the scrollport ADDS to scroll-margin on the target rather than overriding it, so the
+// 88px that used to be here doubled the offset instead of setting it. Every question anchor landed about
+// 153px down under a 67px bar. See the longer note on the same constant in ../company/page.tsx.
+const ANCHOR: CSSProperties = {};
 
 /* ---- the two evidence exhibits (conceptual, not measured) ---- */
 function ExpectedObserved() {

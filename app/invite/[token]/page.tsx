@@ -3,19 +3,36 @@ import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { resolveInviteForAccept, ROLE_LABEL } from "@/lib/v-workspace";
+import { ProductSurface } from "@/app/_components/product-surface";
 
 // Tokened acceptance links are private — never indexed.
 export const metadata: Metadata = { title: "Accept invite", robots: { index: false, follow: false } };
 
+// THE INVITE IS A DOOR INTO THE PRODUCT, AND THE DOCUMENT ALREADY SAID SO.
+//
+// proxy.ts never claims /invite/*, so groundFor falls through to its catch-all and the root layout paints
+// <html> graphite before a stylesheet has been parsed. This page did not follow: it mounted no theme
+// boundary, so every token resolved to the PUBLIC light palette from styles.css while sitting on a
+// near-black document. The nav additionally hardcoded rgba(250,248,244,0.9), which is the retired
+// generation's cream, so the one thing that was not merely inheriting the wrong palette was wearing it
+// deliberately. What a person clicking a team invite in their email actually got: a bright cream bar
+// pasted across a near-black page, above a headline in dark ink measuring about 1.14:1 against it.
+//
+// ProductSurface is the same boundary app/auth/layout.tsx and app/signin/layout.tsx already mount, and it
+// is the whole fix: the tokens re-resolve to graphite and every rule written against them follows. The bar
+// then reads --chrome-veil like its siblings instead of naming a colour that cannot track the ground.
+// Mounted here rather than in a layout because this route does not have one.
 function Frame({ children }: { children: ReactNode }) {
   return (
+    <ProductSurface>
     <div className="rank-root">
-      <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px var(--gutter)", borderBottom: "1px solid var(--line-1)", background: "rgba(250,248,244,0.9)" }}>
+      <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px var(--gutter)", borderBottom: "1px solid var(--line-1)", background: "var(--chrome-veil)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
         <a href="https://vraelis.com" style={{ textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.035em" }}>Vraelis</a>
         <a href="/app" className="btn btn--ghost">Open Vraelis</a>
       </nav>
       <div className="wrap" style={{ maxWidth: 560, paddingTop: "clamp(40px, 8vw, 90px)", paddingBottom: 80, textAlign: "center" }}>{children}</div>
     </div>
+    </ProductSurface>
   );
 }
 

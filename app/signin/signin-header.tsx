@@ -2,9 +2,24 @@
 
 import { useEffect, useState } from "react";
 
-// Sign-in top bar, matching the homepage nav: TRANSPARENT until the user scrolls, then it fades in a
-// blurred paper background + hairline border. Non-sticky visual noise on first paint — the hero glow/grid
-// behind it bleeds through the top, so the auth surface reads as part of the page, not a boxed-in form.
+// Sign-in top bar: TRANSPARENT until the user scrolls, then it fades in a blurred veil + hairline border.
+// Nothing on first paint, so the hero glow and grid behind it bleed through the top and the auth surface
+// reads as part of the page rather than a boxed-in form.
+//
+// THE VEIL IS A TOKEN, NOT A LITERAL, AND THAT IS THE WHOLE OF THIS FILE'S HISTORY.
+//
+// It was hardcoded rgba(250, 248, 244, 0.82). That is CREAM: the retired generation's paper ground, written
+// when /signin was a cream page. /signin is graphite now (proxy.ts groundFor returns "graphite" for it, the
+// layout wraps the page in ProductSurface, and authenticated.css re-resolves every token to its on-dark
+// value), so the literal did not move with the page. Measured on the live surface: the bar faded in at
+// rgb(250, 248, 244) while the wordmark and "Back to site" inside it stayed var(--fg-1) = rgb(250, 250, 250).
+// Near-white type on a near-white plate, over a near-black page. That is what "scrolling makes the top bar
+// go lighter for no reason" was.
+//
+// --chrome-veil exists for exactly this and is already what app/auth/layout.tsx uses: styles.css defines it
+// as the cream veil for light surfaces and authenticated.css redefines it as rgba(10, 10, 11, 0.88) for the
+// product and the auth round-trip. Reading it means the bar cannot disagree with the ground it sits on,
+// on either theme, and cannot be left behind by the next theme move the way the literal was.
 export function SignInHeader() {
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
@@ -20,7 +35,7 @@ export function SignInHeader() {
         position: "sticky", top: 0, zIndex: 50,
         display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16,
         padding: "15px var(--gutter)",
-        background: scrolled ? "rgba(250,248,244,0.82)" : "transparent",
+        background: scrolled ? "var(--chrome-veil)" : "transparent",
         backdropFilter: scrolled ? "blur(14px)" : "none",
         WebkitBackdropFilter: scrolled ? "blur(14px)" : "none",
         borderBottom: `1px solid ${scrolled ? "var(--line-1)" : "transparent"}`,

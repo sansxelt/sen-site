@@ -119,10 +119,32 @@
    page, because the neutraliser that existed only covered .v6 surfaces.
    The grey above is the one definition, and it reads on both grounds. */
 
+/* ── WHERE AN ANCHORED SECTION LANDS, DECIDED IN EXACTLY ONE PLACE ──────────────────────────────────────
+   scroll-padding-top on the scrollport and scroll-margin-top on the target are NOT alternatives. The browser
+   aligns the target's scroll-MARGIN box inside the scrollport's scroll-PADDING box, so the two ADD. This file
+   declared 5.125rem of each, which put every anchored section 164px below the top of the window while the bar
+   above it is 67px tall.
+
+   The 97px of leftover is the defect that was reported, and it is worst wherever an anchor sits on a section
+   boundary, because the leftover is filled by the section BEFORE the target. On /platform#current the previous
+   section is the grey band, so arriving showed 98px of grey under the bar and white beginning below it — and
+   the nav samples the ground directly beneath itself, so the bar painted grey too and then turned white as the
+   reader scrolled. Measured: nav bar rgb(244, 244, 245) on arrival at a section whose own ground is white. The
+   page read as though it had started in the wrong place, which is exactly what had happened.
+
+   So there is one offset now, on the scrollport, and it is the MEASURED height of the bar rather than a
+   guessed rem value: --nav-h is published by the v6 shell from a ResizeObserver on the real element (see
+   _system/shell.tsx), so it follows the wordmark's clamp() and the viewport instead of drifting from them. The
+   target's top edge therefore lands flush with the bar's bottom edge, the bar samples the section it was asked
+   to go to, and the section's own generous padding supplies the breathing room.
+
+   The fallback matters: --nav-h is only published on documents the v6 shell renders. Everything else (the
+   product, the auth round-trip, the retired generation) keeps the old 5.125rem, which is what those surfaces
+   were tuned against. It is a fallback and not a second source of truth. */
 html {
   color-scheme: dark;
   scroll-behavior: smooth;
-  scroll-padding-top: 5.125rem;
+  scroll-padding-top: var(--nav-h, 5.125rem);
 }
 
 body {
@@ -676,10 +698,12 @@ button.bg-zinc-900, a.bg-zinc-900, input.bg-zinc-900 {
   color: #f5f5f5;
 }
 
-section[id],
-div[id] {
-  scroll-margin-top: 5.125rem;
-}
+/* The companion scroll-margin-top rule that used to live here is DELETED, not moved. It named the same
+   offset a second time, and because scroll-padding and scroll-margin add rather than override, having both
+   was not redundancy, it was double-counting: see the note on html{scroll-padding-top} above. The scrollport
+   is the right place for it, because the thing being avoided is the bar pinned to the scrollport, not
+   anything about the section itself. Adding a per-element offset back for one stubborn anchor would silently
+   reintroduce the double, so do not. */
 
 ::selection {
   background: rgba(255, 255, 255, 0.18);

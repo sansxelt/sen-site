@@ -242,18 +242,30 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
   // sampler below. Hiding it was a worse answer to the same problem — a bar that fights the page — and it
   // cost a menu that could open against a moving anchor.
 
-  // Publish the real nav height as --nav-h. Chapters size themselves against it, and it changes with the
-  // wordmark size and the viewport, so measuring beats a hardcoded fallback.
+  // Publish the real nav height as --nav-h. The hero and every pinned chapter size themselves against it,
+  // and it changes with the wordmark's clamp() and the viewport, so measuring beats a hardcoded fallback.
+  //
+  // WRITTEN ON <html>, NOT ON .v6, AND THE DIFFERENCE IS LOAD-BEARING.
+  //
+  // Custom properties inherit, so everything under .v6 reads exactly the same value it read before; nothing
+  // inside the design system had to change. What moving it up buys is the one consumer that could never have
+  // seen it where it was: html { scroll-padding-top: var(--nav-h) } in app/globals.css. .v6 is inside <body>,
+  // and a property set on a descendant is invisible to an ancestor, so declaring the scrollport's anchor
+  // offset in terms of the measured bar was impossible until this moved. It is the fix for every in-page
+  // anchor landing 97px too low.
+  //
+  // Removed on unmount rather than left behind. Navigating from a v6 route to /signin or into the product
+  // tears this component down while the DOCUMENT survives, and a stale 67px would then be applied as the
+  // anchor offset on a surface whose bar is a different height, or has no bar at all.
   useEffect(() => {
     const nav = navRef.current;
     if (!nav) return;
-    const root = nav.closest(".v6") as HTMLElement | null;
-    if (!root) return;
+    const root = document.documentElement;
     const publish = () => root.style.setProperty("--nav-h", `${Math.round(nav.offsetHeight)}px`);
     publish();
     const ro = new ResizeObserver(publish);
     ro.observe(nav);
-    return () => ro.disconnect();
+    return () => { ro.disconnect(); root.style.removeProperty("--nav-h"); };
   }, []);
 
   // LIGHTNESS OF A COMPUTED COLOUR, in whatever notation the browser hands back.
@@ -609,8 +621,75 @@ function useInstantHistoryRestore() {
   }, []);
 }
 
+/**
+ * THE BROWSER ALIGNS AN ANCHOR ONCE, AGAINST A LAYOUT THAT IS NOT FINISHED YET.
+ *
+ * With the double offset removed (see app/globals.css) an anchored section should land with its top edge on
+ * the bar's bottom edge, and measured cold it does not quite: /platform#current settled at 75px under a 67px
+ * bar, /method#introduction at 77px, /company#contact at 77px. Asking the browser to redo the same alignment
+ * once everything had settled put all of them at 67px, which is the proof that the offset itself is right and
+ * the TIMING is what is off. Two things move under it, both after the scroll has already happened: the web
+ * font swaps and re-measures every line of type above the target, and --nav-h is published by a
+ * ResizeObserver on the real bar, so until it exists scroll-padding-top is still resolving to its 5.125rem
+ * fallback rather than the measured 67px.
+ *
+ * Ten pixels sounds like nothing and is not, on the one surface this was reported against: those ten pixels
+ * belong to the section ABOVE the target, the bar samples the ground directly beneath itself, and on
+ * /platform#current the section above is the grey band. So arriving painted a grey bar over a white section
+ * and then turned white as the reader moved. The offset is only correct if it is applied to the layout the
+ * reader actually gets.
+ *
+ * A CORRECTION, NEVER AN OVERRIDE. The first deliberate input ends it for good. Anything the reader does with
+ * a wheel, a finger or a key means they have taken over, and a page that scrolls itself after that is worse
+ * than a page that landed ten pixels high. It also never runs without a hash, never runs if the id is not on
+ * the page, and does nothing when it is already within a pixel of correct.
+ */
+function useHashLandsWhereItSays() {
+  const pathname = usePathname();
+  useEffect(() => {
+    const raw = window.location.hash.slice(1);
+    if (!raw) return;
+    const id = decodeURIComponent(raw);
+
+    let surrendered = false;
+    const surrender = () => { surrendered = true; };
+    window.addEventListener("wheel", surrender, { passive: true });
+    window.addEventListener("touchstart", surrender, { passive: true });
+    window.addEventListener("keydown", surrender);
+
+    const align = () => {
+      if (surrendered) return;
+      const el = document.getElementById(id);
+      if (!el) return;
+      // The scrollport's own reserved space is the single source of the offset, so read it rather than
+      // recomputing the bar's height here. Two places deciding this is the bug that was just removed.
+      const pad = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
+      const delta = el.getBoundingClientRect().top - pad;
+      if (Math.abs(delta) < 1) return;
+      // "instant" overrides html { scroll-behavior: smooth }: a correction the reader is not meant to notice
+      // must not animate, or it reads as the page drifting on its own after it had already arrived.
+      window.scrollBy({ top: delta, left: 0, behavior: "instant" });
+    };
+
+    // Both settle points, because either one can be the last to move: the font swap, and the frame after the
+    // ResizeObserver has published the real bar height. Whichever runs second finds the page already correct
+    // and returns without touching anything.
+    const raf = requestAnimationFrame(() => requestAnimationFrame(align));
+    document.fonts?.ready.then(align).catch(() => {});
+
+    return () => {
+      cancelAnimationFrame(raf);
+      surrendered = true;
+      window.removeEventListener("wheel", surrender);
+      window.removeEventListener("touchstart", surrender);
+      window.removeEventListener("keydown", surrender);
+    };
+  }, [pathname]);
+}
+
 export function V6Shell({ children, authed = false }: { children: ReactNode; authed?: boolean }) {
   useInstantHistoryRestore();
+  useHashLandsWhereItSays();
   // THE PERSISTENT ROUTE CANVAS. Every route declares the ground of its opening surface from the same map
   // the nav already trusts, computed during render, so the server-rendered document carries it and a
   // client-side commit swaps it in the same frame as the content. Nothing samples, defers, or corrects

@@ -221,16 +221,62 @@ const KNOWLEDGE: [string, string, string][] = [
 const LIVE = [
   "A responsibility record with a reviewed standard held outside the code",
   "Execution of the running software in a real browser, with evidence",
-  "Human review, findings, and a structured repair handoff",
+  "A refusal to charge when no check could prove the claim, on every path that starts a run",
+  "Human review, findings, and a repair package written for a coding agent",
   "Verified / Failed / Blocked decisions, with history preserved",
-  "API, CLI, webhooks, GitHub, Vercel, and Slack",
+  "Deployed web applications and HTTP APIs",
+  "API, an installable CLI, webhooks, GitHub, Vercel, and Slack",
 ];
-const DIRECTION = [
-  "Continuous ingestion of live agent activity as it happens",
-  "IDE and desktop surfaces alongside the agent",
-  "Agent reliability memory and earned-autonomy decisions",
-  "Automatic responsibility coverage across a whole system",
+
+/* THE PLAN, WITH WHAT IS MISSING SAID OUT LOUD.
+ *
+ * This was four bare noun phrases: "Continuous ingestion of live agent activity", "IDE and desktop
+ * surfaces", and so on. A roadmap written as a list of destinations is read as a list of features, because
+ * nothing in the phrasing tells a reader which side of the line it is on once it has been lifted out of the
+ * column it was sitting in. The heading said Direction; the sentences did not.
+ *
+ * So every item now carries the destination AND the true present tense underneath it. The second half is the
+ * load-bearing one, and it is the half a reader can check: it says what happens today, including the places
+ * where what happens today is "you copy it yourself". Each was verified against the code before being
+ * written here, not inferred from the roadmap it came from.
+ *
+ * Four became six because two of the honest boundaries were not on the list at all. The loop ending at a
+ * prompt a person copies, and nothing noticing a new deployment, are the two most consequential things this
+ * product does not do, and a reader who found either of them out after paying would be right to feel misled.
+ */
+const DIRECTION: [string, string][] = [
+  ["The repair reaches your coding agent on its own",
+    "Today a failure writes a repair package onto the issue: what should have happened, what happened instead, and the evidence. Vraelis does not send it anywhere. You copy it."],
+  ["A new deployment is noticed, and rechecked without being asked",
+    "Today Vraelis reads the deployment you point it at when a run is launched. Nothing watches for the next one, and every recheck is started by a person."],
+  ["One page per guarantee, showing every failure, repair and recheck in order",
+    "Today each run records the guarantee and the exact approved meaning it was proved against. No surface puts that history in a line yet."],
+  ["Live agent activity read as it happens",
+    "Today a check begins at the point work is claimed complete. Plans, code changes and tool calls are not ingested while an agent is working."],
+  ["Surfaces beyond a browser, and beside the agent",
+    "Today the boundary is what a real browser and an HTTP client can observe from outside. Mobile, desktop and native applications are not covered."],
+  ["Reliability memory, and autonomy earned from a record",
+    "Not built. How much an agent may be trusted to do alone should be a conclusion drawn from what it has actually got right, rather than a setting somebody chooses."],
 ];
+
+/* The Direction column's own renderer. Same dot and the same rhythm as Led, so the two cards still read as
+   one comparison, with a second line underneath each item carrying the present tense. Quieter than the
+   destination above it in weight but not in colour: this is the sentence that has to survive being skimmed. */
+function Planned({ items }: { items: [string, string][] }) {
+  return (
+    <ul style={{ listStyle: "none", margin: "18px 0 0", padding: 0, display: "flex", flexDirection: "column", gap: 18 }}>
+      {items.map(([t, now]) => (
+        <li key={t} style={{ display: "flex", gap: 11, alignItems: "flex-start" }}>
+          <span aria-hidden style={{ marginTop: 7, width: 7, height: 7, borderRadius: 999, background: "var(--wait)", flex: "none" }} />
+          <span>
+            <span style={{ display: "block", fontSize: 15, lineHeight: 1.5, color: "var(--ink-2)" }}>{t}</span>
+            <span style={{ display: "block", fontSize: 13.5, lineHeight: 1.55, color: "var(--ink-4)", marginTop: 4 }}>{now}</span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 function Led({ items, tone }: { items: string[]; tone: Sig }) {
   return (
@@ -578,8 +624,8 @@ export default function Platform() {
           <Reveal>
             <SectionHead
               eyebrow="Honest about what is live"
-              title="What Vraelis does today, and where it is going."
-              lead="The verification engine is real and in use. The wider, continuous oversight around agents is being built in the open. We keep the two clearly separated."
+              title="What Vraelis does today, and what it does not."
+              lead="The verification engine is real and in use. Everything on the right is a plan, and each line says what actually happens today instead. Nothing here is a delivery date, and nothing on the left is coming soon."
             />
           </Reveal>
           <div style={{ ...wrapRow, marginTop: "clamp(28px,3vw,40px)" }}>
@@ -592,10 +638,20 @@ export default function Platform() {
             <Reveal style={{ flex: "1 1 320px", minWidth: 0 }} i={1}>
               <div className="v6-card" style={{ height: "100%" }}>
                 <Signal state="wait">Direction</Signal>
-                <Led items={DIRECTION} tone="wait" />
+                <Planned items={DIRECTION} />
               </div>
             </Reveal>
           </div>
+          {/* The standing rule under both columns. It exists because the two lists will drift as work lands,
+              and the thing that has to survive that drift is the promise about how they are kept, not the
+              contents on any given day. */}
+          <Reveal i={2}>
+            <p className="v6-body" style={{ marginTop: "clamp(22px,2.4vw,32px)", maxWidth: "72ch" }}>
+              A line moves from the right column to the left when it works in the product, and the{" "}
+              <Link href={`${BASE}/changelog`} className="v6-plink">changelog</Link> records the date it did.
+              Nothing moves because it is nearly done.
+            </p>
+          </Reveal>
         </div>
       </section>
 

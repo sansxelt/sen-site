@@ -31,7 +31,17 @@ export default function Changelog() {
                 <div>
                   <h2 className="v6-clog__t">{e.title}</h2>
                   <div className="v6-clog__b">{e.body.map((p, i) => <p key={i}>{p}</p>)}</div>
-                  {e.note ? <div className="v6-note" style={{ marginTop: 6 }}><b>Direction</b>{" "}{e.note}</div> : null}
+                  {/* THE LABEL FOLLOWS THE ENTRY, IT IS NOT ALWAYS "DIRECTION".
+                      It was hardcoded, which silently meant a SHIPPED entry could not carry a caveat: the
+                      note would have been introduced as Direction, i.e. the page would have announced a
+                      capability as unbuilt in the same breath as dating its release. Shipped work still has
+                      boundaries worth stating, and stating them is the point of this site. A "wait" entry
+                      keeps Direction; a "go" entry gets Boundary. */}
+                  {e.note ? (
+                    <div className="v6-note" style={{ marginTop: 6 }}>
+                      <b>{e.tag === "wait" ? "Direction" : "Boundary"}</b>{" "}{e.note}
+                    </div>
+                  ) : null}
                 </div>
               </article>
             ))}

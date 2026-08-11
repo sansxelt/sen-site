@@ -839,6 +839,110 @@
     opacity: 1 !important; transform: none !important; transition: none !important; }
 }
 
+/* ══════════════════════════════════════════ NOT ENOUGH ROOM TO PIN ══
+   A PINNED SCENE IS A PROMISE ABOUT VERTICAL SPACE, AND ON A SHORT WINDOW THE PAGE COULD NOT KEEP IT.
+
+   Every pin is `height: 100svh; overflow: hidden`, and each scene was composed against the room a laptop
+   has. Below that the content does not shrink, it is CUT, silently, because the clip is the pin's own
+   overflow rule. Nothing looks broken; the bottom of the argument is simply not there.
+
+   Measured on the live page at 1366 wide, scrolled to the middle of each chapter, reading how far a child
+   escapes the bottom of its pin:
+
+                 600px   657px   700px   768px   830px
+     .v6-st       +82     +28      0       0       0     the ring and its centre
+     .v6-rg       +54       0      0       0       0
+     .v6-dr       +96    +157    +116     +55      0     the three layers, worst by a distance
+
+   657px is a Chromebook whose browser is not fullscreen, which is how most Chromebooks are actually used.
+   At that size the Direction chapter lost its whole third layer AND its disclosure line was overprinted by
+   the graph above it: two pieces of type painted over each other, which is what "disoriented and cut off"
+   was. 768px is the same machine fullscreen, and it still lost 55px.
+
+   Two fixes, because the deficit has two sizes. From 768px up the Direction chapter is tightened enough to
+   fit (see SHORT-WINDOW DENSITY below, which buys back about 62px of pure whitespace). Below 768px the
+   shortfall reaches 157px, which cannot come out of spacing without destroying the type scale, so the
+   scenes stop pinning and become the stacked composition instead. That is not a new fallback: it is the
+   one a phone and a reduced-motion desktop already get, and the argument for it there is the argument here.
+   A scene that cannot fit the window should lay out, not be trimmed to the window's height.
+
+   ── THE FOUR GATES THAT MUST AGREE, AND WHY THIS IS DANGEROUS TO EDIT ──────────────────────────────────
+   "The scrub does not run here" is expressed in four places, and this block is only one of them. They were
+   already out of step once for reduced motion and the symptom was a chapter nobody could read, so all four
+   move together or none of them do:
+
+     1. this block                          unpins the scenes and forces the moving parts to rest
+     2. the MOBILE MOTION reveal below      gives those same parts entry motion instead of stillness
+     3. CHAPTER 2 RESOLVES INTO THE NIGHT   must NOT run here. It paints .v6-gap's ground to graphite from
+                                            --settle while this block holds the type at var(--ink), which
+                                            is near-black type on a near-black field. It carries a
+                                            matching (min-height: 768px) for exactly that reason.
+     4. progress.ts / mobile-motion.ts      pin --p to 1 and stop the rAF loop, so nothing computes a value
+                                            the cascade here throws away
+   The height literal is 767/768 in all four. Changing it in one is a bug in the other three. */
+@media (min-width: 901px) and (max-height: 767px) {
+  .v6-gap { height: auto; }
+  .v6-gap__pin { position: static; height: auto; padding: clamp(64px, 9vh, 104px) var(--gutter); }
+  .v6-gap__stage { max-width: none; height: auto; }
+  .v6-gap__t { position: static; transform: none !important; opacity: 1 !important; }
+  /* The same child the parent's rule cannot reach: .v6-gap__turn composites its own opacity from
+     --turn * (1 - --claim), and with --p pinned to the end of the scrub that resolves to 0. Opacity does
+     not inherit, so forcing the parent visible never touches it. See the note in the 900px block. */
+  .v6-gap__turn { opacity: 1 !important; }
+  .v6-gap__sys { margin-top: 34px; }
+  .v6-gap__found { margin-top: 40px; }
+  .v6-gap__verdictwrap { margin-top: 32px; }
+
+  .v6-cs { height: auto; }
+  .v6-cs__pin { position: static; height: auto; display: block; padding: clamp(64px, 8vw, 100px) 0; }
+  /* One composition, not both. display:none rather than opacity, so the inactive stack leaves layout, focus
+     order, the accessibility tree and innerText together. */
+  .v6-cs__acts { display: none; }
+  .v6-cs__viewport { display: none; }
+  .v6-cs__m { display: grid; }
+
+  .v6-st { height: auto; }
+  .v6-st__pin { position: static; height: auto; display: block; padding: clamp(64px, 8vw, 100px) var(--gutter); }
+  .v6-st__stage { grid-template-columns: 1fr; }
+  .v6-st__list { position: static; min-height: 0; display: grid; gap: 34px; }
+  .v6-st__cond { position: static; opacity: 1 !important; transform: none !important; }
+
+  .v6-rg { height: auto; }
+  .v6-rg__pin { position: static; height: auto; display: block; padding: clamp(64px, 8vw, 100px) var(--gutter); }
+  .v6-rg__stage { overflow: visible; }
+  .v6-rg__row, .v6-rg__foot { opacity: 1 !important; transform: none !important; }
+
+  .v6-dr { height: auto; }
+  .v6-dr__pin { position: static; height: auto; display: block; padding: clamp(64px, 8vw, 100px) var(--gutter); }
+  .v6-dr__stage { margin-top: clamp(22px, 3vw, 34px); }
+  /* The vh cap is what made the graph overrun its row in the first place; unpinned there is no row to
+     overrun and the drawing should take the width it is given. */
+  .v6-dr__graph { max-height: none; }
+  .v6-dr__g rect, .v6-dr__g line, .v6-dr__n rect, .v6-dr__n text,
+  .v6-dr__dep rect, .v6-dr__dep text { opacity: 1 !important; }
+  .v6-dr__edge { stroke-dashoffset: 0 !important; }
+  .v6-dr__layer { opacity: 1 !important; transform: none !important; }
+  .v6-dr__disc { margin-top: 22px; }
+}
+
+/* ══════════════════════════════════════════ SHORT-WINDOW DENSITY ══
+   The band between 768px and the height the Direction chapter was composed for. It stays pinned here,
+   because the shortfall is 55px and all 55 of them are whitespace: three layer blocks each give back a
+   little top padding and a little leading between their two lines, the column's own gap tightens, and the
+   head gives back the space under its supporting line. Measured after: about 62px recovered, which clears
+   768px with a small margin for the copy growing by a line.
+
+   Type scale, measure and colour are untouched. Nothing here is allowed to make the chapter smaller, only
+   tighter — if a future edit needs more than this band can give, the honest move is to raise the 767px
+   unpin threshold above, not to shrink the words. */
+@media (min-width: 901px) and (max-height: 860px) {
+  .v6-dr__sub { margin-top: clamp(8px, 1vh, 12px); }
+  .v6-dr__layers { gap: clamp(9px, 1.2vh, 16px); }
+  .v6-dr__layer { padding-top: 8px; }
+  .v6-dr__lh { margin-top: 4px; }
+  .v6-dr__now, .v6-dr__next { margin-top: 5px; }
+}
+
 /* ══════════════════════════════════════════════════ MOBILE MOTION ══
    THE PHONE GETS THE ARGUMENT, NOT JUST ITS CONCLUSION.
 
@@ -866,7 +970,10 @@
    nothing is scrubbing and the reveal is the only motion available. Gating this on width alone left
    reduced motion with four chapters that neither scrubbed nor revealed, which is how it ended up a
    third composition nobody designed. */
-@media (max-width: 900px), (prefers-reduced-motion: reduce) {
+/* (max-height: 767px) is gate 2 of the four listed under NOT ENOUGH ROOM TO PIN. A short window unpins the
+   scenes, so their parts need the entry reveal for the same reason a phone does: unpinned and unrevealed is
+   the third composition nobody designed. */
+@media (max-width: 900px), (prefers-reduced-motion: reduce), (max-height: 767px) {
   .v6-mo .v6-gap__t,
   .v6-mo .v6-st__cond,
   .v6-mo .v6-rg__row,
@@ -913,8 +1020,13 @@
    because every scrubbed declaration is overridden for them. --settle therefore resolves to 1 immediately
    in both cases, and an ungated rule here would paint the ground full graphite while the reduced-motion and
    mobile blocks hold the type at var(--ink). That is black text on a near-black field: not a worse
-   animation, an unreadable chapter. So this runs only where the scrub itself runs. */
-@media (min-width: 901px) and (prefers-reduced-motion: no-preference) {
+   animation, an unreadable chapter. So this runs only where the scrub itself runs.
+
+   (min-height: 768px) IS THE SAME ARGUMENT, ONE CONDITION LATER. A short window now unpins this chapter too
+   (see NOT ENOUGH ROOM TO PIN) and holds its type at var(--ink) with the same !important, so without this
+   the ground would resolve to graphite under black type on any window under 768px tall. It is gate 3 of the
+   four listed there. */
+@media (min-width: 901px) and (min-height: 768px) and (prefers-reduced-motion: no-preference) {
   .v6-gap {
     background: color-mix(in oklab, var(--graphite) calc(var(--settle) * 100%), var(--paper));
     /* THE TYPE DOES NOT CROSS THE GROUND. Interpolating both on --settle put the ground at L 0.50 while the
@@ -965,8 +1077,16 @@
    So the fallback gets its own scale rather than inheriting the stage's. The ratios follow the phone,
    which was already right: the word stays clearly dominant, the statements drop to reading size, and the
    verdict sits between them so the conclusion still resolves. Copy, order and composition are untouched;
-   this is type scale for a layout the type was not measured for. */
-@media (prefers-reduced-motion: reduce) and (min-width: 901px) {
+   this is type scale for a layout the type was not measured for.
+
+   A SHORT WINDOW REACHES THE SAME LAYOUT BY A DIFFERENT ROUTE and therefore needs the same scale. The
+   condition is "wide viewport meets the unpinned stack", and since NOT ENOUGH ROOM TO PIN a reduced-motion
+   preference is no longer the only way to get there: a 1366x657 Chromebook is wide, unpinned, and would
+   otherwise have stacked four display-size blocks in a column exactly as described above. Written as two
+   full queries rather than one with `or`, so it needs nothing newer than every browser this site already
+   supports. */
+@media (min-width: 901px) and (prefers-reduced-motion: reduce),
+       (min-width: 901px) and (max-height: 767px) {
   .v6-gap__wordt { font-size: clamp(4.4rem, 8vw, 7rem); }
   .v6-gap__list li { font-size: clamp(1.5rem, 2.1vw, 2.15rem); line-height: 1.24; }
   .v6-gap__verdict { font-size: clamp(1.9rem, 2.9vw, 2.9rem); }

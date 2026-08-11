@@ -12,7 +12,16 @@ export const metadata = v6meta({
 });
 
 const BASE = V6_BASE;
-const ANCHOR: CSSProperties = { scrollMarginTop: 88 };
+// EMPTY, AND KEPT RATHER THAN DELETED SO THE REASON TRAVELS WITH THE CALL SITE.
+//
+// This was `{ scrollMarginTop: 88 }`. The document already reserves the bar's height on the scrollport, as
+// html { scroll-padding-top: var(--nav-h) } in app/globals.css, and scroll-padding and scroll-margin ADD
+// rather than override: the browser aligns the target's scroll-margin box inside the scrollport's
+// scroll-padding box. So 88 here did not set the offset, it doubled it. Measured on /company#contact before
+// this: the section landed 166px below the top of the window under a 67px bar, i.e. 99px of the section
+// ABOVE it sitting under the bar, which is also what the bar then sampled and painted itself.
+// One offset, on the scrollport, derived from the measured bar. Nothing per element.
+const ANCHOR: CSSProperties = {};
 // The real mailboxes are sales@, privacy@ and help@. hello@ was invented and does not receive mail, so a
 // reader writing to it would have got silence. This section answers product, security and partnership
 // questions, which is help@.

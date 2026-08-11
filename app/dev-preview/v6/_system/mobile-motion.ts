@@ -69,6 +69,12 @@ const ALWAYS_PARTS = [
 
 const MOBILE = "(max-width: 900px)";
 const REDUCED = "(prefers-reduced-motion: reduce)";
+// THE WINDOW IS TOO SHORT TO PIN A SCENE IN. Every pin is `height: 100svh; overflow: hidden`, so a window
+// shorter than the scene was composed for does not compress it, it clips it: measured at 1366x657 the
+// Direction chapter lost 157px off the bottom, including a whole layer, and its disclosure line was
+// overprinted by the graph. chapters.css unpins the scenes below this height for that reason, and the
+// literal is repeated there in three media queries. See NOT ENOUGH ROOM TO PIN for the four gates.
+export const SHORT = "(max-height: 767px)";
 
 /** True where the scrubbed chapters do NOT run, so their parts need entry motion instead. */
 export function mobileMotionWanted(): boolean {
@@ -82,7 +88,13 @@ export function mobileMotionWanted(): boolean {
   // desktop with the preference set 11,325px with no pins, no scrub AND no reveals — a third composition
   // that nobody designed, reached by a setting a battery saver turns on without asking. Branching a page on
   // that preference is the mistake; expressing it as an amount of movement is not.
-  return window.matchMedia(MOBILE).matches || window.matchMedia(REDUCED).matches;
+  // A SHORT WINDOW IS THE THIRD WAY INTO THE UNPINNED STACK, and it wants what the other two want. Left
+  // out, a 1366x657 Chromebook would get chapters that neither scrub (the stylesheet unpins them and forces
+  // rest with !important) nor reveal (this predicate said no) — the same "third composition nobody
+  // designed" the reduced-motion note below describes, reached from the other side.
+  return window.matchMedia(MOBILE).matches
+    || window.matchMedia(REDUCED).matches
+    || window.matchMedia(SHORT).matches;
 }
 
 /**
