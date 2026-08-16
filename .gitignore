@@ -92,3 +92,6 @@ _tmp-*
 
 # Scratch artifacts from the Playwright MCP server (page snapshots, console logs).
 .playwright-mcp/
+
+# next dev output when a session tails it to a file
+.next-dev.log
