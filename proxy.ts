@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { isAppPath, legacyToNew, legacyRunsPath, legacySystemsPath } from "./lib/app-routes";
 import { v6GroundAtTop, type Ground } from "./lib/v6-routes";
-import { stealthConfigured } from "./lib/stealth";
+import { stealthConfigured, verifyStealthCookie, STEALTH_COOKIE } from "./lib/stealth";
 
 // vraelis.com: Vraelis Rank. Clean public paths map onto the internal /rank
 // route group; /rank/* bounce back to their clean alias so /rank never shows.
@@ -169,6 +169,48 @@ export default function proxy(req: NextRequest) {
   const host = (req.headers.get("host") || "").toLowerCase();
   const isAppHost = host === "app.vraelis.com" || host.startsWith("app.localhost");
   const isProd = host.endsWith("vraelis.com");
+
+  // ── THE CURTAIN IS ENFORCED HERE, BECAUSE A LAYOUT IS TOO LATE ──────────────────────────────────────
+  //
+  // lib/stealth.ts opens by promising that while stealth is on "the real layout, the real pages and the RSC
+  // payload are never generated, so there is nothing to read in the page source". That was not true, and it
+  // had not been true in production. The root layout returns the curtain INSTEAD OF children, which decides
+  // what is displayed and decides nothing about what is serialized: Next renders the matched page segment
+  // regardless and streams it into the flight payload.
+  //
+  // Measured against production before this change, with no cookie of any kind: the curtained /platform
+  // returned 90,867 bytes against the homepage's 17,888, and grepping that response found "One system that
+  // follows every responsibility", "What Vraelis observes is the run" and the whole Live-today list. The
+  // entire site was readable with curl and a grep by anyone who tried, while appearing to be behind a
+  // curtain. Everything published about stealth being a curtain over the site was wrong about the part that
+  // matters, and nothing in the visible page would ever have shown it.
+  //
+  // A layout cannot fix this. By the time a layout runs, the segment it is wrapping is already scheduled to
+  // render. The only place that can stop a page from being rendered at all is in front of the renderer,
+  // which is here. Rewriting to a route whose page returns null leaves the payload with nothing in it.
+  //
+  // WHAT STAYS OPEN, unchanged from what lib/stealth.ts already documents: /api, because OAuth callbacks,
+  // webhooks and the worker have to keep working behind the curtain; /v1, the versioned public API, which
+  // rewrites into /api; /yc, the reviewer entrance, which is how the cookie is obtained in the first place;
+  // and /og, whose image routes carry no layout and no product surface and are what a shared link preview
+  // renders. Everything else is curtained on BOTH hosts, exactly as before, minus the leak.
+  //
+  // The cookie is verified, not merely present-checked. Proxy runs on the Node.js runtime in Next 16, so the
+  // same HMAC verification the root layout performs runs here too and a forged cookie gets the curtain. A
+  // presence check would have handed the whole leak back to anyone who set the cookie to any value at all.
+  //
+  // noindex still follows the original path via go(), so the homepage keeps the one indexable exemption
+  // robotsMeta() documents and every other curtained path keeps its noindex header.
+  const curtainExempt =
+    path === "/v1" || path.startsWith("/v1/") ||
+    path.startsWith("/api/") || path === "/yc" ||
+    path === "/og" || path.startsWith("/og/");
+  if (
+    !curtainExempt && stealthConfigured() &&
+    !verifyStealthCookie(req.cookies.get(STEALTH_COOKIE)?.value)
+  ) {
+    return go(req, "/curtain", "rewrite");
+  }
 
   // 00) The PUBLIC API namespace. /v1/* is the versioned surface machines call; it is served by the route
   //     handlers under /api/v1/*. Rewritten rather than redirected so a client never has to follow a hop

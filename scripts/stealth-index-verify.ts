@@ -75,5 +75,38 @@ ok("and carries the structured self-description, so an indexed copy names the co
   /entityJsonLd\(\)/.test(code(layout))
   && code(layout).indexOf("entityJsonLd()") < code(layout).indexOf("<StealthScreen />"));
 
+// ── THE CURTAIN HAS TO STOP THE PAGE RENDERING, NOT JUST STOP IT SHOWING ────────────────────────────
+//
+// The layout returning <StealthScreen /> instead of children is what the checks above assert, and on its
+// own it is not enough. It decides what is DISPLAYED; Next renders the matched page segment anyway and
+// streams it into the RSC flight payload. Measured against production: the curtained /platform answered
+// 90,867 bytes to a request with no cookie, and a grep of that response found the entire marketing copy.
+// The site looked hidden and was readable with curl.
+//
+// So the curtain is enforced in proxy.ts, in front of the renderer, and these hold that line.
+console.log("\n── the curtain stops the page being rendered at all ──");
+{
+  const proxy = code(readFileSync("proxy.ts", "utf8"));
+  ok("proxy rewrites a curtained request away from the real page",
+    /stealthConfigured\(\) &&\s*!verifyStealthCookie\(/.test(proxy) && /go\(req, "\/curtain", "rewrite"\)/.test(proxy));
+  // A presence check would hand the whole leak back to anyone who set the cookie to any value at all.
+  ok("and VERIFIES the cookie rather than checking it exists",
+    /verifyStealthCookie\(req\.cookies\.get\(STEALTH_COOKIE\)\?\.value\)/.test(proxy)
+    && !/req\.cookies\.has\(STEALTH_COOKIE\)/.test(proxy));
+  // The machine surfaces lib/stealth.ts already documents as exempt must stay exempt, or OAuth callbacks,
+  // webhooks, the worker and the reviewer entrance itself all break behind the curtain.
+  for (const p of ["/api/", "/v1", "/yc", "/og"]) {
+    ok(`  ${p} stays reachable while curtained`, proxy.includes(`"${p}"`));
+  }
+  ok("the curtain route renders nothing, so the payload has nothing to leak",
+    /return null;/.test(code(readFileSync("app/curtain/page.tsx", "utf8"))));
+  ok("  and 404s when stealth is off, so it never becomes a stray public URL",
+    /notFound\(\)/.test(code(readFileSync("app/curtain/page.tsx", "utf8"))));
+  // The check runs before every path-resolving branch, or a rewritten path would render its real page.
+  const bodyStart = proxy.indexOf("export default function proxy");
+  ok("the curtain check runs before any route resolution",
+    proxy.indexOf("/curtain", bodyStart) < proxy.indexOf("CLEAN_EXACT[path]", bodyStart));
+}
+
 console.log(fail === 0 ? `\nALL PASS  ${pass} passed, 0 failed` : `\nFAILURES  ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);
