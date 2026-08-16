@@ -211,7 +211,7 @@ export default function Method() {
           <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
             <Link href={`${V6_BASE}/readme`} className="v6-btn v6-btn--ghost">Read the README</Link>
             <Link href={`${V6_BASE}/limitations`} className="v6-btn v6-btn--ghost">What Vraelis cannot do</Link>
-            <Link href={v6AppEntry()} className="v6-btn v6-btn--brand">Open Vraelis <span className="v6-arw" aria-hidden>→</span></Link>
+            <Link href={v6AppEntry()} prefetch={false} className="v6-btn v6-btn--brand">Open Vraelis <span className="v6-arw" aria-hidden>→</span></Link>
           </div>
         </div>
       </section>

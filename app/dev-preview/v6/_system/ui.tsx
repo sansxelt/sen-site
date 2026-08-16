@@ -3,7 +3,7 @@
 // Shared presentational primitives for design 06. One reveal primitive; the rest are static.
 import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
-import { v6AppEntry } from "@/lib/v6-routes";
+import { v6AppEntry, v6ShouldPrefetch } from "@/lib/v6-routes";
 
 // Stays inside V6. The old value left the preview for the previous design and called back to
 // /app, which does not exist, so a successful sign-in landed on a 404.
@@ -43,7 +43,10 @@ export function CTA({ href = OPEN_APP, children, brand = false, ghost = false, l
   href?: string; children: ReactNode; brand?: boolean; ghost?: boolean; lg?: boolean;
 }) {
   return (
-    <Link href={href} className={`v6-btn ${brand ? "v6-btn--brand" : ""} ${ghost ? "v6-btn--ghost" : ""} ${lg ? "v6-btn--lg" : ""}`}>
+    // prefetch is switched off for the app and checkout paths only: they are 308'd to another origin in
+    // production and the prefetch is blocked by CORS. See v6ShouldPrefetch. This default href IS /app, so
+    // without it most pages on the site logged the error twice on load.
+    <Link href={href} prefetch={v6ShouldPrefetch(href) ? undefined : false} className={`v6-btn ${brand ? "v6-btn--brand" : ""} ${ghost ? "v6-btn--ghost" : ""} ${lg ? "v6-btn--lg" : ""}`}>
       {children}{!ghost && <span className="v6-arw" aria-hidden>→</span>}
     </Link>
   );

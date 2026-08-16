@@ -15,11 +15,11 @@ import { V6_BASE } from "@/lib/v6-routes";
 export const metadata: Metadata = v6meta({
   title: "Platform",
   description:
-    "One system that follows every responsibility you hand an AI software agent: the durable record, live activity, human review, findings, repair, verified completion, and memory.",
+    "One system that follows every responsibility you hand an AI software agent: the durable record, run activity, human review, findings, repair, verified completion, and memory.",
   path: "/platform",
   ogTitle: "The Vraelis platform",
   ogDescription:
-    "Responsibility, live activity, review, findings, repair, verified completion, and memory, on one durable record per piece of agent work.",
+    "Responsibility, run activity, review, findings, repair, verified completion, and memory, on one durable record per piece of agent work.",
 });
 
 const BASE = V6_BASE;
@@ -305,7 +305,7 @@ export default function Platform() {
       <PageHero
         kicker="The platform"
         title="One system that follows every responsibility you hand an agent."
-        lead="Vraelis stays with a piece of agent work from the moment it is assigned to the moment it can be trusted: the durable record, live activity, human review, findings, repair, verified completion, and everything the company learns along the way."
+        lead="Vraelis stays with a piece of agent work from the moment it is assigned to the moment it can be trusted: the durable record, run activity, human review, findings, repair, verified completion, and everything the company learns along the way."
         cta={
           <>
             <CTA brand lg>Open Vraelis</CTA>

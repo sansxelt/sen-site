@@ -104,3 +104,19 @@ export function v6SignInPath(callbackUrl: string = V6_APP): string {
 export function v6AppEntry(): string {
   return V6_APP;
 }
+
+/**
+ * Should a <Link> to this path be allowed to prefetch?
+ *
+ * Next prefetches a link by fetching its RSC payload. In production proxy.ts answers /app and /checkout with
+ * a 308 to app.vraelis.com, and a prefetch that crosses an origin is blocked by CORS, so each of these links
+ * logged two console errors on every page that carried one and fetched nothing useful. Measured on the
+ * deployed site: /platform, /agents and /pricing each did this on load, and the marketing CTA defaults to
+ * /app, so most pages had at least one.
+ *
+ * Only the prefetch is affected. Clicking still works exactly as before: a real navigation follows the
+ * redirect to the app host, which is the intended destination.
+ */
+export function v6ShouldPrefetch(href: string): boolean {
+  return !/^\/(app|checkout)(?:[/?#]|$)/.test(href);
+}

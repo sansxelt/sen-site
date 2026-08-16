@@ -8,7 +8,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SiteFooter } from "./close";
 import { useGroundColor } from "@/components/use-ground-color";
-import { V6_BASE, V6_HOME, V6_APP, v6SignInPath, v6GroundAtTop, GROUND_CSS } from "@/lib/v6-routes";
+import { V6_BASE, V6_HOME, V6_APP, v6SignInPath, v6GroundAtTop, v6ShouldPrefetch, GROUND_CSS } from "@/lib/v6-routes";
 
 // FOLLOWS THE PROMOTION FLAG. These were hardcoded to "/dev-preview/v6", which is precisely the mistake
 // lib/v6-routes.ts was written to prevent: it says every V6 destination lives there so promotion is one
@@ -412,7 +412,7 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
         ) : null}
         <div className="v6-nav__right">
           {authed ? null : <Link href={SIGNIN} className="v6-nav__signin">Sign in</Link>}
-          <Link href={authed ? V6_APP : SIGNIN} className="v6-btn v6-btn--brand">Open Vraelis</Link>
+          <Link href={authed ? V6_APP : SIGNIN} prefetch={v6ShouldPrefetch(authed ? V6_APP : SIGNIN) ? undefined : false} className="v6-btn v6-btn--brand">Open Vraelis</Link>
           <button className="v6-nav__burger" aria-label="Open navigation" aria-haspopup="dialog" onClick={() => setDrawer(true)}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
           </button>
@@ -465,7 +465,7 @@ function MobileNav({ authed, onClose }: { authed: boolean; onClose: () => void }
       </div>
       <div className="v6-drawer__foot">
         {authed ? null : <Link href={SIGNIN} className="v6-btn v6-btn--ghost" onClick={onClose}>Sign in</Link>}
-        <Link href={authed ? V6_APP : SIGNIN} className="v6-btn v6-btn--brand" onClick={onClose}>Open Vraelis <span className="v6-arw" aria-hidden>→</span></Link>
+        <Link href={authed ? V6_APP : SIGNIN} prefetch={v6ShouldPrefetch(authed ? V6_APP : SIGNIN) ? undefined : false} className="v6-btn v6-btn--brand" onClick={onClose}>Open Vraelis <span className="v6-arw" aria-hidden>→</span></Link>
       </div>
     </div>
   );
@@ -515,27 +515,30 @@ export function RouteTransition({ children }: { children: ReactNode }) {
   //   browser has already restored the offset by the time this runs, so forcing the top threw away the one
   //   thing the reader asked for.
   //
-  // scrollRestoration is a browser-global that sticks to the history entry it was set on, so it is written
-  // on every pathname change rather than once: "manual" only while the homepage is the entry being forced
-  // to the top, "auto" everywhere else and on the way out, so it is never left switched off behind us.
+  // NOTHING HERE TOUCHES history.scrollRestoration, AND THAT IS THE FIX.
+  //
+  // This used to set "manual" while it forced the homepage to the top, and hand back "auto" in the effect's
+  // cleanup. scrollRestoration is stored ON THE HISTORY ENTRY that was current when it was written, and the
+  // cleanup does not run until the pathname has already changed, by which point the new entry is the current
+  // one. So "auto" was written to the entry being navigated TO and the homepage entry kept "manual" forever.
+  // An entry marked manual is one the browser declines to restore, so Back to the homepage landed at the top
+  // no matter what the traversal guard below decided. Writing "auto" again from popstate does not rescue it
+  // either: by the time popstate fires the browser has already decided not to restore.
+  //
+  // "manual" was never buying anything. It exists to stop the browser restoring a position while we move the
+  // reader ourselves, and a forward navigation pushes a fresh entry that has no stored position to restore.
+  // Leaving the default alone means the browser restores on a traversal, which is the whole point, and the
+  // explicit scrollTo below still owns the forward case.
+  //
+  // Measured on the deployed site: leaving the homepage at y=3963, soft-navigating to /platform, then Back
+  // returned y=0 with the manual write in place and the left position without it.
   useBeforePaint(() => {
-    const canRestore = "scrollRestoration" in history;
     // Exact match, not a prefix: /dev-preview/v6/platform must not be treated as the homepage.
     const isHome = pathname === BASE || pathname === BASE + "/";
     // A hash names a position the reader asked for. Without this guard the anchor scroll started and was
     // then pulled back to the top, so /dev-preview/v6#gap never landed. A traversal names one too.
-    const wantsTop = isHome && !window.location.hash && !lastNavWasTraversal.current;
-
-    if (!wantsTop) {
-      if (canRestore) history.scrollRestoration = "auto";
-      return;
-    }
-
-    if (canRestore) history.scrollRestoration = "manual";
+    if (!isHome || window.location.hash || lastNavWasTraversal.current) return;
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-
-    // Runs once the pathname has already moved on, so this hands "auto" to the entry we are leaving for.
-    return () => { if (canRestore) history.scrollRestoration = "auto"; };
   }, [pathname]);
   return <div key={pathname} className="v6-page">{children}</div>;
 }
@@ -583,14 +586,12 @@ function useInstantHistoryRestore() {
       lastNavWasTraversal.current = kind === "traverse";
       if (kind === "traverse") arm();
     };
-    // scrollRestoration belongs to the history entry it was set on, and the homepage sets "manual" on its
-    // own entry every time it forces itself to the top (see RouteTransition). A manual entry is one the
-    // browser declines to restore, so returning to it would have left the reader at the offset of the page
-    // they came back from. popstate is the first moment `history` refers to the entry being returned TO,
-    // and it runs before the restoration is applied, so this is where the entry gets its restoration back.
+    // This used to write history.scrollRestoration = "auto" here, to undo the "manual" RouteTransition set
+    // on the homepage entry. It never worked: by the time popstate fires the browser has already decided
+    // whether to restore. RouteTransition no longer writes scrollRestoration at all, so there is nothing to
+    // undo and this only has to record that the navigation was a traversal.
     const onPop = () => {
       lastNavWasTraversal.current = true;
-      if ("scrollRestoration" in history) history.scrollRestoration = "auto";
       arm();
     };
     // Input disarms the style AND clears the traversal flag. scrollend deliberately does not clear it: it
