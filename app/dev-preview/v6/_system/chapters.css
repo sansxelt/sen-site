@@ -252,19 +252,15 @@
   height: clamp(400px, 60vh, 620px);
   background: #08080A; border: 1px solid var(--g-line-2); border-radius: 10px;
   box-shadow: 0 50px 110px -60px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.03) inset; }
-.v6-tm__bar { flex: none; display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
+/* TWO CELLS, TITLE AND REPLAY. The third was .v6-tm__lights: three dots drawn as a macOS window's close,
+   minimise and zoom controls, which revealed their glyphs on hover and then did nothing when clicked. The
+   markup already conceded it, in chapters.tsx: "they do nothing and must not be announced as buttons". A
+   control that looks like a control and answers nothing is the borrowed-chrome tell this whole chapter is
+   written against, and hovering it promised an action twice over. Deleted here and in the markup together.
+   The one real control in this bar is the replay button, which is styled as one. */
+.v6-tm__bar { flex: none; display: grid; grid-template-columns: minmax(0, 1fr) auto;
   align-items: center; gap: 14px; padding: 10px 14px; border-bottom: 1px solid var(--g-line);
   background: linear-gradient(180deg, #17181B, #101113); cursor: default; }
-.v6-tm__lights { display: inline-flex; gap: 8px; }
-.v6-tm__lights i { width: 12px; height: 12px; border-radius: 999px; background: rgba(255,255,255,0.16);
-  display: grid; place-items: center; }
-.v6-tm__lights i::after { content: ""; font-family: var(--sans); font-size: 9px; line-height: 1;
-  color: rgba(0,0,0,0.7); opacity: 0; transition: opacity 140ms ease; }
-.v6-tm__bar:hover .v6-tm__lights i { background: rgba(255,255,255,0.34); }
-.v6-tm__bar:hover .v6-tm__lights i::after { opacity: 1; }
-.v6-tm__lights i.is-close::after { content: "\00d7"; }
-.v6-tm__lights i.is-min::after   { content: "\2013"; }
-.v6-tm__lights i.is-max::after   { content: "+"; }
 .v6-tm__title { font-family: var(--mono); font-size: 12px; color: var(--g-fg-3); text-align: center;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* a real control, unlike the window buttons: it replays the run on demand, so playback never has to
@@ -350,7 +346,15 @@
 .v6-rg__stage { max-width: var(--max-wide); width: 100%; margin-inline: auto;
   min-height: 0; overflow: hidden; align-content: start; }
 
-.v6-rg__cols { display: grid; grid-template-columns: minmax(0, 1fr) 8rem 6.5rem 9rem;
+/* TWO TRACKS, BECAUSE TWO CELLS ARE RENDERED. This and .v6-rg__row below both declared four,
+   minmax(0, 1fr) 8rem 6.5rem 9rem, left over from a version of this chapter that carried an owner and a
+   decision per row. Those two cells went when the invented values did; the tracks stayed. Grid reserves a
+   declared track whether or not anything is placed in it, so every row was holding 6.5rem plus 9rem plus
+   two gaps of dead space, which is about 286px at 1366 wide by arithmetic rather than by measurement. The
+   guarantee sentence is the whole content of the chapter and it was being set against a column two thirds
+   of the width it had. Wherever both are rendered the header and the row must declare the same template:
+   they are separate grids that line up only because the numbers match. */
+.v6-rg__cols { display: grid; grid-template-columns: minmax(0, 1fr) 8rem;
   gap: clamp(10px, 1.4vw, 20px); padding-bottom: 8px; border-bottom: 1px solid var(--g-line);
   font-family: var(--sans); font-weight: 600; font-size: 10px; letter-spacing: 0.16em;
   text-transform: uppercase; color: var(--g-fg-3); }
@@ -359,7 +363,7 @@
 .v6-rg__gh { margin: 0 0 4px; font-family: var(--sans); font-weight: 600; font-size: 10px;
   letter-spacing: 0.18em; text-transform: uppercase; color: var(--g-fg-3); }
 
-.v6-rg__row { display: grid; grid-template-columns: minmax(0, 1fr) 8rem 6.5rem 9rem;
+.v6-rg__row { display: grid; grid-template-columns: minmax(0, 1fr) 8rem;
   gap: clamp(10px, 1.4vw, 20px); align-items: start;
   padding: clamp(7px, 1vh, 11px) 0; border-bottom: 1px solid var(--g-line);
   /* each row settles in turn, so the register assembles rather than appearing at once */
@@ -378,11 +382,10 @@
    markup renders them, and they were the only readers of --k. */
 .v6-rg__m { margin: 0; font-size: 0.84rem; color: var(--g-fg-2); white-space: nowrap;
   overflow: hidden; text-overflow: ellipsis; }
-/* the decision is told by the word and its weight, not by a coloured pip */
-.v6-rg__d { margin: 0; font-family: var(--sans); font-weight: 600; font-size: 0.88rem; white-space: nowrap; }
-.v6-rg__row[data-d="Verified"] .v6-rg__d { color: var(--go-dk); }
-.v6-rg__row[data-d="Failed"] .v6-rg__d { color: var(--stop-dk); }
-.v6-rg__row[data-d="Blocked"] .v6-rg__d { color: var(--wait-dk); }
+/* .v6-rg__d and the three [data-d] colour rules lived here and went the same way as the two blocks above.
+   No markup renders a decision cell and nothing sets data-d, because a decision per illustrative guarantee
+   would have been an invented run result, which is the one thing this chapter refuses to print. They were
+   the last readers of the two extra grid tracks. */
 
 .v6-rg__foot { max-width: var(--max-wide); width: 100%; margin: 0 auto; font-size: 12px;
   line-height: 1.5; color: var(--g-fg-3); max-width: 74ch;
@@ -395,7 +398,7 @@
   .v6-rg__cols { display: none; }
   .v6-rg__row { grid-template-columns: 1fr; gap: 3px; padding: 14px 0;
     opacity: 1 !important; transform: none !important; }
-  .v6-rg__m, .v6-rg__d { font-size: 0.8rem; }
+  .v6-rg__m { font-size: 0.8rem; }
   .v6-rg__foot { opacity: 1 !important; margin-top: 20px; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -758,35 +761,14 @@
   .v6-gap__found { margin-top: clamp(40px, 8vw, 64px); }
   .v6-gap__verdictwrap { margin-top: clamp(32px, 6vw, 48px); }
 
-  /* chapter 3 stops panning and becomes three stages carrying the same record line */
-  .v6-cs { height: auto; }
-  .v6-cs__pin { position: static; height: auto; display: block; padding: clamp(64px, 9vw, 96px) 0; }
-  /* EXACTLY ONE composition exists per breakpoint. The desktop act stack and the authored mobile stack
-     were both rendering here, so the three stage headings appeared twice: once in layout, twice in the
-     accessibility tree, and twice in extracted page text. display:none removes the inactive one from
-     layout, focus order, the accessibility tree and innerText together; opacity would not. */
-  .v6-cs__acts { display: none; }
-  .v6-cs__viewport { display: none; }
-  .v6-cs__m { display: grid; }
+  /* THE .v6-cs, .v6-pf__ AND .v6-rec__ STACKING RULES LIVED HERE and were deleted unread. Three chapters
+     were removed from this page: the panned case study, the case file and the record archive. Their
+     construction rules went with the markup; their responsive rules did not, so this block carried about
+     thirty declarations for elements that have not been rendered on any route since. Confirmed by search
+     across every .tsx in the repo before deleting: zero matches for any of the three prefixes. Copies of
+     the same rules were also carried in the reduced-motion block and in NOT ENOUGH ROOM TO PIN, which is
+     the real cost: a threshold change had to be applied in three places, two of which did nothing. */
 
-  /* the case file stacks: the state band moves from the top of each segment to its left edge, and the
-     session wall becomes a full-width division instead of a column. */
-  .v6-pf__case { max-width: none; width: calc(100% - var(--gutter) * 2); border-radius: 16px; }
-  .v6-pf__track { grid-template-columns: minmax(0, 1fr); }
-  .v6-pf__seg { padding: 16px 0 18px 20px; }
-  .v6-pf__seg::before { left: 0; right: auto; top: 4px; bottom: 4px; height: auto; width: 8px;
-    border-radius: 4px; transform: scaleY(0); transform-origin: 50% 0; }
-  .v6-pf__case[data-on="true"] .v6-pf__seg::before { transform: scaleY(1); }
-  .v6-pf__seg + .v6-pf__seg::after { left: 20px; right: 0; top: 0; bottom: auto;
-    border-left: 0; border-top: 1px solid var(--line); }
-  .v6-pf__wall { justify-items: start; padding: 14px 18px; margin: 10px 0;
-    border-radius: 8px; grid-auto-flow: column; align-items: center; }
-  .v6-pf__wall::before { display: none; }
-  /* the break stays: without it the two clauses ran together as one word */
-  .v6-pf__wall span { margin-top: 0; text-align: left; }
-  .v6-pf__decide { grid-template-columns: 1fr; gap: 22px; }
-  .v6-pf__dec { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); padding-top: 20px; }
-  
   /* the hand placement collapses to a single column: every fragment keeps its own construction, but
      nothing overlaps or crops on a narrow screen. */
   .v6-rx__flow { grid-template-columns: minmax(0, 1fr); row-gap: clamp(22px, 5vw, 32px); }
@@ -794,11 +776,6 @@
     margin-top: 0 !important; margin-right: 0 !important; align-self: auto; }
   .v6-rx__stage { grid-column: 1 / -1; margin-top: clamp(26px, 7vw, 40px); }
   .v6-rx__next { grid-template-columns: 1fr; gap: 12px; }
-
-  /* the anchor stops being sticky and becomes the first thing you read, then the archive runs below it */
-  .v6-rec__arch { grid-template-columns: minmax(0, 1fr); gap: clamp(30px, 7vw, 46px); }
-  .v6-rec__anchor { position: static; }
-  .v6-rec__re { margin-right: 0; }
 }
 
 @media (max-width: 900px) {
@@ -824,18 +801,13 @@
   .v6-gap__found { margin-top: 40px; }
   .v6-gap__verdictwrap { margin-top: 32px; }
 
-  .v6-cs { height: auto; }
-  .v6-cs__pin { position: static; height: auto; display: block; padding: clamp(64px, 8vw, 100px) 0; }
-  /* same rule under reduced motion: one composition, not both */
-  .v6-cs__acts { display: none; }
-  .v6-cs__viewport { display: none; }
-  .v6-cs__m { display: grid; }
+  /* The .v6-cs copies went with their markup. See the note in the 900px block above. */
   .v6-st { height: auto; }
   .v6-st__pin { position: static; height: auto; display: block; padding: clamp(64px, 8vw, 100px) var(--gutter); }
   .v6-st__stage { grid-template-columns: 1fr; }
   .v6-st__list { position: static; min-height: 0; display: grid; gap: 34px; }
   .v6-st__cond { position: static; opacity: 1 !important; transform: none !important; }
-  .v6-pf__seg::before, .v6-pf__decide, .v6-rec__filed, .v6-rx__f, .v6-rx__stage {
+  .v6-rx__f, .v6-rx__stage {
     opacity: 1 !important; transform: none !important; transition: none !important; }
 }
 
@@ -877,9 +849,21 @@
                                             --settle while this block holds the type at var(--ink), which
                                             is near-black type on a near-black field. It carries a
                                             matching (min-height: 768px) for exactly that reason.
-     4. progress.ts / mobile-motion.ts      pin --p to 1 and stop the rAF loop, so nothing computes a value
-                                            the cascade here throws away
-   The height literal is 767/768 in all four. Changing it in one is a bug in the other three. */
+     4. progress.ts                         pins --p to 1 and never attaches the scroll listener, so
+                                            nothing computes a value the cascade here throws away
+   The height literal is 767/768 in all four. Changing it in one is a bug in the other three.
+
+   A JAVASCRIPT GATE MUST LISTEN, NEVER SAMPLE, and both scripts used to sample. Gate 4 ran once against
+   effect deps that never changed, and mobile-motion.ts was a fifth reading of the same literal, choosing
+   its observer's selector at mount. A media query is live and these two were not, so a window resized
+   across 767px after load got this block, which is re-evaluated on every resize, agreed with by nothing:
+   about 13,100px of pinned scene frozen at --p: 1 with chapter 3 ending on a blank right column, and six
+   classes of content left at opacity 0 by gate 2's !important hide with nothing observing them. Toggling a
+   Chromebook out of fullscreen is exactly that resize, which is why it was the reported symptom.
+   Gate 4 now attaches a change listener to each of the three queries and tears its branch down and
+   re-enters it on any crossing. mobile-motion.ts no longer reads them at all: it observes every part on
+   every viewport, and gate 2 decides where a reveal does anything, which removes one copy of 767 rather
+   than adding a listener to it. */
 @media (min-width: 901px) and (max-height: 767px) {
   .v6-gap { height: auto; }
   .v6-gap__pin { position: static; height: auto; padding: clamp(64px, 9vh, 104px) var(--gutter); }
@@ -893,20 +877,28 @@
   .v6-gap__found { margin-top: 40px; }
   .v6-gap__verdictwrap { margin-top: 32px; }
 
-  .v6-cs { height: auto; }
-  .v6-cs__pin { position: static; height: auto; display: block; padding: clamp(64px, 8vw, 100px) 0; }
-  /* One composition, not both. display:none rather than opacity, so the inactive stack leaves layout, focus
-     order, the accessibility tree and innerText together. */
-  .v6-cs__acts { display: none; }
-  .v6-cs__viewport { display: none; }
-  .v6-cs__m { display: grid; }
+  /* The .v6-cs copies went with their markup. See the note in the 900px block above. */
 
+  /* UNPINNING IS STRUCTURE, AND CHAPTER 3 NEEDS THE TYPE SCALE THAT GOES WITH IT.
+     This copied the structural half of the 900px stacked layout and not the presentational half, so the
+     four conditions arrived in one column still carrying the scale they were given for holding a stage
+     alone: four headlines around 60px, no rule between them, and a 340px ring above. That is the same
+     defect THE STACKED FALLBACK IS A COLUMN, NOT FOUR POSTERS describes for chapter 2, reached in the same
+     way, and it wants the same answer. The clamp is not the 900px block's: 6.6vw there is a phone's width
+     term and pins to its own maximum on anything this wide, so the vw term is re-set for a wide window. */
   .v6-st { height: auto; }
   .v6-st__pin { position: static; height: auto; display: block; padding: clamp(64px, 8vw, 100px) var(--gutter); }
   .v6-st__stage { grid-template-columns: 1fr; }
+  .v6-st__ringwrap { max-width: 200px; }
   .v6-st__list { position: static; min-height: 0; display: grid; gap: 34px; }
-  .v6-st__cond { position: static; opacity: 1 !important; transform: none !important; }
+  .v6-st__cond { position: static; opacity: 1 !important; transform: none !important;
+    padding-top: 20px; border-top: 1px solid var(--g-line); }
+  .v6-st__condt { font-size: clamp(1.5rem, 2.4vw, 2.2rem); }
 
+  /* THE REGISTER KEEPS ITS TWO COLUMNS HERE, unlike at 900px where it collapses to one. A short window is
+     by definition a wide one, so the guarantee sentence and its business area still have the room for two
+     tracks, and dropping the column header as well would leave the second cell an unlabelled word at the
+     end of every row. The tracks are the corrected two, not the four this file used to declare. */
   .v6-rg { height: auto; }
   .v6-rg__pin { position: static; height: auto; display: block; padding: clamp(64px, 8vw, 100px) var(--gutter); }
   .v6-rg__stage { overflow: visible; }
@@ -972,15 +964,22 @@
    third composition nobody designed. */
 /* (max-height: 767px) is gate 2 of the four listed under NOT ENOUGH ROOM TO PIN. A short window unpins the
    scenes, so their parts need the entry reveal for the same reason a phone does: unpinned and unrevealed is
-   the third composition nobody designed. */
+   the third composition nobody designed.
+
+   THIS QUERY IS THE WHOLE GATE. mobile-motion.ts observes every selector named here on every viewport and
+   no longer decides anything about width or height. It is safe because the hide and the .v6-in that
+   releases it are BOTH inside this query: outside it neither matches, so an element that arrived while the
+   scrub was running carries .v6-in and nothing reads it. That inversion is what fixed the bug, because the
+   script's read of the query happened once at mount while this is re-evaluated on every resize, and the
+   two disagreed the moment a window crossed 767px tall. Keep the two selector lists below identical to
+   SCRUBBED_PARTS and ALWAYS_PARTS in that file; scripts/mobile-motion-verify.ts fails if they drift. */
 @media (max-width: 900px), (prefers-reduced-motion: reduce), (max-height: 767px) {
   .v6-mo .v6-gap__t,
   .v6-mo .v6-st__cond,
   .v6-mo .v6-rg__row,
   .v6-mo .v6-rg__foot,
   .v6-mo .v6-dr__layer,
-  .v6-mo .v6-tm__ex,
-  .v6-mo .v6-cs__m > * {
+  .v6-mo .v6-tm__ex {
     opacity: 0 !important;
     transform: translateY(18px) !important;
     transition: opacity 620ms var(--ease), transform 620ms var(--ease);
@@ -992,8 +991,7 @@
   .v6-mo .v6-rg__row.v6-in,
   .v6-mo .v6-rg__foot.v6-in,
   .v6-mo .v6-dr__layer.v6-in,
-  .v6-mo .v6-tm__ex.v6-in,
-  .v6-mo .v6-cs__m > .v6-in {
+  .v6-mo .v6-tm__ex.v6-in {
     opacity: 1 !important;
     transform: none !important;
     /* Released once it has arrived. will-change held on dozens of elements costs a compositor layer each,
@@ -1181,7 +1179,7 @@
   .v6-mo .v6-kn__sheet, .v6-mo .v6-kn__col, .v6-mo .v6-kn__ex,
   .v6-mo .v6-st__h, .v6-mo .v6-rg__h, .v6-mo .v6-dr__h, .v6-mo .v6-rx__h, .v6-mo .v6-tm__h,
   .v6-mo .v6-gap__t, .v6-mo .v6-st__cond, .v6-mo .v6-rg__row, .v6-mo .v6-rg__foot,
-  .v6-mo .v6-dr__layer, .v6-mo .v6-tm__ex, .v6-mo .v6-cs__m > * {
+  .v6-mo .v6-dr__layer, .v6-mo .v6-tm__ex {
     transform: none !important;
     clip-path: none !important;
     transition: opacity 520ms var(--ease) !important;
@@ -1194,8 +1192,7 @@
   .v6-mo .v6-st__h.v6-in, .v6-mo .v6-rg__h.v6-in, .v6-mo .v6-dr__h.v6-in,
   .v6-mo .v6-rx__h.v6-in, .v6-mo .v6-tm__h.v6-in,
   .v6-mo .v6-gap__t.v6-in, .v6-mo .v6-st__cond.v6-in, .v6-mo .v6-rg__row.v6-in,
-  .v6-mo .v6-rg__foot.v6-in, .v6-mo .v6-dr__layer.v6-in, .v6-mo .v6-tm__ex.v6-in,
-  .v6-mo .v6-cs__m > .v6-in {
+  .v6-mo .v6-rg__foot.v6-in, .v6-mo .v6-dr__layer.v6-in, .v6-mo .v6-tm__ex.v6-in {
     opacity: 1 !important;
     will-change: auto;
   }

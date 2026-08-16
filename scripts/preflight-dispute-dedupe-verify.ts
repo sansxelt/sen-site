@@ -88,12 +88,28 @@ function main(): void {
     /claimNotification[\s\S]*?isDatabaseConfigured\(\)\) return true[\s\S]*?return true; +\/\/ 42P01/.test(bf));
   // REPLAY SCENARIO 'state failure after email sent': the activation/renewal emails are gated on the
   // marker, so a 500-retry (state failure) re-runs state but the marker skips the already-sent email.
-  ok("subscription_activated email is gated on claimNotification (retry re-runs state, skips email)",
-    /claimNotification\(event\.id, "subscription_activated", ctx\.email\)\) \{[\s\S]*?sendSubscriptionActivatedEmail/.test(wh));
+  // THE SHAPE MOVED, THE PROPERTY DID NOT. The three subscription notices were a switch inline in the
+  // route, and that switch sat below the early return for Vraelis Rank, so the product with actual
+  // subscribers was never sent any of them. They are now one loop that claims per planned kind, and what
+  // is asserted is still exactly what was asserted before: nothing is sent without first claiming a
+  // durable (event id, kind, recipient) marker. See scripts/stripe-subscription-lifecycle-verify.ts.
+  const sendFn = wh.slice(wh.indexOf("async function sendSubscriptionEmails("));
+  const sendBody = sendFn.slice(0, sendFn.indexOf("\n}"));
+  ok("subscription emails are gated on claimNotification (retry re-runs state, skips email)",
+    /if \(!\(await claimNotification\(event\.id, mail\.kind, ctx\.email\)\)\) continue;/.test(sendBody));
+  ok("  and the claim precedes every sender, so no notice can escape it",
+    sendBody.length > 0 &&
+    ["sendSubscriptionActivatedEmail", "sendSubscriptionCancellationScheduledEmail", "sendSubscriptionEndedEmail"]
+      .every((s) => sendBody.includes(s) && sendBody.indexOf("claimNotification(") < sendBody.indexOf(s)));
   ok("renewal_succeeded email is gated on claimNotification (retry re-runs the idempotent grant, skips email)",
     /claimNotification\(eventId, "renewal_succeeded", email\)\) \{[\s\S]*?sendRenewalSucceededEmail/.test(wh));
-  ok("cancellation_scheduled + subscription_ended emails are gated too (redelivery re-fires the transition)",
-    /claimNotification\(event\.id, "cancellation_scheduled", ctx\.email\)/.test(wh) && /claimNotification\(event\.id, "subscription_ended", ctx\.email\)/.test(wh));
+  ok("cancellation_scheduled + subscription_ended are still distinct claim keys (redelivery re-fires the transition)",
+    ["subscription_activated", "cancellation_scheduled", "subscription_ended"]
+      .every((k) => read("lib", "stripe-subscription-notify.ts").includes(`"${k}"`)));
+  // One update can legitimately be a scheduled cancellation AND an ending. Distinct kinds are what stop a
+  // single shared marker from suppressing the second notice.
+  ok("the Rank branch notifies before returning (the bug: it returned above the switch entirely)",
+    /metadata\?\.type === "v_plan"[\s\S]{0,900}?sendSubscriptionEmails\(/.test(wh));
   // REPLAY SCENARIO 'never mark processed until state persists': a state throw releases the claim and
   // returns 500, so the event is NOT recorded as processed and Stripe retries the unfinished state.
   ok("a state failure returns 500 (event NOT marked processed) so Stripe retries the unfinished state",

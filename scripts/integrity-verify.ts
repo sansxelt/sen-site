@@ -114,6 +114,11 @@ const SUITES: Suite[] = [
   { file: "scripts/scratchpad-verify.ts", npm: "scratchpad:test" },
   { file: "scripts/guarantee-cap-verify.ts", npm: "guarantee:cap:test" },
   { file: "scripts/cancellation-lifecycle-verify.ts", npm: "cancellation:lifecycle:test" },
+  // The other half of the same question. cancellation-lifecycle asks whether a plan ENDS at the right
+  // moment; this asks whether the customer is ever TOLD. Three subscription templates and the renewal
+  // receipt were unreachable for the only product with paying subscribers, because the code that decided
+  // what to send sat below the early return that skipped it.
+  { file: "scripts/stripe-subscription-lifecycle-verify.ts", npm: "stripe:lifecycle:test" },
   { file: "scripts/run-unique-verify.ts", npm: "run:unique:test" },
   { file: "scripts/assertion-strength-verify.ts", npm: "assertion:strength:test" },
   { file: "scripts/verification-idempotency-verify.ts", npm: "idempotency:test" },

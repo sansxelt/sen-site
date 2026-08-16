@@ -104,6 +104,7 @@
     "scratchpad:test": "tsx scripts/scratchpad-verify.ts",
     "guarantee:cap:test": "tsx scripts/guarantee-cap-verify.ts",
     "cancellation:lifecycle:test": "tsx scripts/cancellation-lifecycle-verify.ts",
+    "stripe:lifecycle:test": "tsx scripts/stripe-subscription-lifecycle-verify.ts",
     "run:unique:test": "tsx scripts/run-unique-verify.ts",
     "assertion:strength:test": "tsx scripts/assertion-strength-verify.ts",
     "lifecycle:nudge:test": "tsx scripts/lifecycle-nudge-verify.ts",

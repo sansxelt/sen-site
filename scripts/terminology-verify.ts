@@ -17,6 +17,12 @@ const norm = (p: string) => p.replace(/\\/g, "/");
 // never mistaken for a comment) and removes both block comments (/* … */, including JSX {/* … */}) and
 // line comments (whole-line AND trailing). A `//` only opens a line comment when preceded by
 // start-of-line or whitespace, so protocol separators inside rendered text stay intact.
+//
+// KNOWN LIMIT: it does not recognise regex literals, so a quote inside one (lib/email.ts escapes with
+// .replace(/'/g, …)) opens string mode and the machine stays out of step until the next matching quote.
+// A comment in that stretch is not stripped and reads as a hit. It fails LOUDLY and only ever that way,
+// never quietly: string CONTENTS are copied through in every mode, so no rendered string can be hidden
+// by the desync. If a hit points at a line that is plainly a comment, this is why.
 function stripComments(src: string): string {
   let out = "", mode: "code" | "line" | "block" | "'" | '"' | "`" = "code";
   for (let i = 0; i < src.length; i++) {
@@ -57,8 +63,10 @@ const isAllowlisted = (p: string) => ALLOWLIST.some((a) =>
   a.file.endsWith("/") ? norm(p).includes(a.file) : norm(p).endsWith(a.file));
 
 // ── The scanned surfaces ─────────────────────────────────────────────────────────────────────────────
-// Every .ts/.tsx under app/rank and components (cli/src would be included if it existed), plus the three
-// lib files whose message strings reach users (emails, lifecycle notifications, pricing lines).
+// Every .ts/.tsx under app/rank, components and the live public site app/dev-preview/v6 (cli/src would be
+// included if it existed), plus the three lib files whose message strings reach users (emails, lifecycle
+// notifications, pricing lines). The public tree was outside the sweep entirely while it was a preview,
+// and it is the live site now: it is where a retired product name would be read by the most people.
 function walk(dir: string, out: string[] = []): string[] {
   for (const name of readdirSync(dir)) {
     const p = join(dir, name);
@@ -67,7 +75,7 @@ function walk(dir: string, out: string[] = []): string[] {
   }
   return out;
 }
-const trees = ["app/rank", "components", "cli/src"].filter((d) => existsSync(d));
+const trees = ["app/rank", "components", "cli/src", "app/dev-preview/v6"].filter((d) => existsSync(d));
 const surfaces = [...trees.flatMap((d) => walk(d)), "lib/email.ts", "lib/v-lifecycle.ts", "lib/preflight/pass-pricing.ts"];
 const stripped = new Map(surfaces.map((p) => [p, stripComments(read(p))]));
 
@@ -193,8 +201,15 @@ const stripped = new Map(surfaces.map((p) => [p, stripComments(read(p))]));
   // rewriting it to "deployed system" trades clear copy for internal jargon. The defect being guarded is one
   // object wearing four names inside the product — h1 "Systems" over a breadcrumb reading "Applications" —
   // which is a console problem. Widening this to the marketing tree produced 87 hits that were all correct
-  // prose, and a guard that cries wolf gets an allowlist entry per line and then gets ignored.
-  const consoleSurfaces = surfaces.filter((p) => norm(p).startsWith("app/rank/app"));
+  // prose, and a guard that cries wolf gets an allowlist entry per line and then gets ignored. That still
+  // holds, and app/dev-preview/v6 is deliberately NOT in this sweep for exactly that reason, even though it
+  // is now scanned by every other check above.
+  //
+  // lib/email.ts IS, because it is the console's copy sent by post. The workspace invite told a new
+  // teammate they would get access to "this team's applications and reports" while the page that link lands
+  // on is titled Systems, which is the four-names defect again, arriving by email where nobody was looking.
+  // Only the object noun is at stake here; the emails' ordinary prose about a "deployed app" is untouched.
+  const consoleSurfaces = surfaces.filter((p) => norm(p).startsWith("app/rank/app") || norm(p) === "lib/email.ts");
   const offenders: string[] = [];
   for (const p of consoleSurfaces) {
     let s = stripped.get(p)!;

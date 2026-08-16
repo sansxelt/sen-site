@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { v6meta } from "../_system/meta";
 import { PageHero, Reveal, SectionHead, CTA, EditorialLink, Signal, Prose } from "../_system/ui";
+import { LIVE, DIRECTION } from "../_content/scope";
 import { V6_BASE } from "@/lib/v6-routes";
 
 export const metadata = v6meta({
@@ -56,19 +57,13 @@ const ACTS: Act[] = [
   },
 ];
 
-const LIVE: string[] = [
-  "A verification engine that checks running software against a stated requirement.",
-  "Real-browser execution with inspectable evidence.",
-  "Human review, findings, and a structured repair handoff.",
-  "Preserved history of requirements, failures, and decisions.",
-  "API, CLI, webhooks, and current integrations.",
-];
-const NEXT: string[] = [
-  "Continuous oversight of live agent activity.",
-  "IDE and desktop surfaces where agents run.",
-  "Agent reliability memory and earned-autonomy decisions.",
-  "Automatic coverage of a responsibility.",
-];
+// THE TWO COLUMNS BELOW ARE NO LONGER AUTHORED HERE. They were a second copy of the lists on
+// /platform#current, and they had drifted: this page's live column had lost the refusal to charge for an
+// unprovable claim, and its direction column was still four bare noun phrases with nothing saying what
+// happens today instead, which is the shape /platform had already repaired. One of those noun phrases,
+// "Automatic coverage of a responsibility", appeared nowhere else in the product or the repository and no
+// checkable present tense could be written under it, so it is gone rather than restated. Both lists now come
+// from _content/scope.ts, where the reasoning sits above the data.
 
 const PRINCIPLES: [string, string, string][] = [
   ["01", "We ship what is real.", "Live capabilities and directions are labeled separately, on the site and in the product. We would rather show an honest gap than imply a finished one."],
@@ -133,7 +128,7 @@ export default function CompanyPage() {
             <SectionHead
               eyebrow="Product direction"
               title="One capability today, one system over time."
-              lead="Vraelis starts from a working verification engine and expands outward into full oversight. We ship what is real and label the rest as direction."
+              lead="Vraelis starts from a working verification engine and expands outward into full oversight. We ship what is real and label the rest as direction, and every direction line says what happens today instead. Next, Later and Horizon say how much of a line already stands, not when it lands."
             />
           </Reveal>
           <div className="v6-cn" style={{ marginTop: "clamp(28px,3vw,40px)" }}>
@@ -143,7 +138,19 @@ export default function CompanyPage() {
             </Reveal>
             <Reveal className="v6-cn__col v6-cn__col--next" i={1}>
               <p className="v6-cn__h"><Signal state="wait">Direction</Signal></p>
-              <ul>{NEXT.map((t) => <li key={t}>{t}</li>)}</ul>
+              {/* Two lines per item, matching /platform#current: the destination, then the sentence a reader
+                  can check. The list rule puts the dot on the li, so the pair goes in one child span. */}
+              <ul style={{ gap: 16 }}>{DIRECTION.map(([t, now, tier]) => (
+                <li key={t}>
+                  <span>
+                    <span style={{ display: "block" }}>
+                      {t}
+                      <span className="v6-mono" style={{ marginLeft: 8, fontSize: 10.5, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--ink-4)", whiteSpace: "nowrap" }}>{tier}</span>
+                    </span>
+                    <span style={{ display: "block", marginTop: 4, fontSize: 13.5, lineHeight: 1.55, color: "var(--ink-4)" }}>{now}</span>
+                  </span>
+                </li>
+              ))}</ul>
             </Reveal>
           </div>
         </div>

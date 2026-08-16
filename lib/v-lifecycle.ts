@@ -165,9 +165,10 @@ export async function runLowCreditNudges(limit = 100): Promise<LowCreditSummary>
 
 // ── Stage 3: win-back ──────────────────────────────────────────────────────────
 // A user who ran checks, then went quiet (no check in QUIET_AFTER_DAYS but active within
-// QUIET_MAX_DAYS) and still has credits gets one "your credits are waiting" nudge. Disjoint
-// from stage 2 by the QUIET_AFTER_DAYS boundary (stage 2 targets active users, this targets
-// quiet ones). Idempotent via the event log.
+// QUIET_MAX_DAYS) and can still afford to launch gets one "your balance is waiting" nudge.
+// Disjoint from stage 2 by the QUIET_AFTER_DAYS boundary (stage 2 targets active users, this
+// targets quiet ones) and by the balance: stage 2 is below one pass, this is at or above it.
+// Idempotent via the event log.
 const WINBACK_EVENT = "winback_email_sent";
 const QUIET_AFTER_DAYS = 14; // no check in this many days = "quiet" (matches ACTIVE_WINDOW_DAYS)
 const QUIET_MAX_DAYS = 60;   // but active within this window — don't chase long-gone accounts
@@ -208,18 +209,27 @@ export async function runWinbackNudges(limit = 100): Promise<WinbackSummary> {
     const { data: sent } = await s.from("v_events" as never).select("user_id").eq("event_type", WINBACK_EVENT).in("user_id", emails);
     const already = new Set(((sent as unknown as { user_id: string }[] | null) ?? []).map((e) => e.user_id));
 
-    // Same unit-isolated read as stage 2. The mixed sum mattered MORE here: this gate is `bal > 0`, so a
-    // quiet account holding nothing but legacy 'cent' rows looked funded and was told "your balance is
-    // waiting" about money it could not spend.
+    // Same unit-isolated read as stage 2. The mixed sum mattered MORE here: back when this gate was
+    // `bal > 0`, a quiet account holding nothing but legacy 'cent' rows looked funded and was told "your
+    // balance is waiting" about money it could not spend.
     const bals = await balances(emails);
 
     for (const email of emails) {
       if (already.has(email)) { out.alreadySent++; continue; }
       const bal = bals.get(email) ?? 0;
-      // Nothing concrete to return to. NOTED, NOT CHASED: under pass pricing this makes win-back reach
-      // only legacy credit holders, because the free tier mints no credits — a real question about
-      // whether the stage should target unused lifetime passes instead, and out of scope here.
-      if (bal <= 0) { out.skippedBalance++; continue; }
+      // ONLY IF THE BUTTON IN THE EMAIL ACTUALLY WORKS.
+      //
+      // This gate was `bal <= 0`, so the win-back went to everyone holding 1 to 149 credits. A launch
+      // costs one standard pass, 150 credits, and accept-run refuses below that with a 402, so "Verify an
+      // outcome" sent exactly those people into a payment wall. It is the same defect the sibling
+      // low-balance template already had removed from it, for the same reason, recorded above money() in
+      // lib/email.ts. The threshold is stage 2's, derived from the price, because it is the same
+      // question asked from the other side: can this account launch or not.
+      //
+      // NOTED, NOT CHASED: under pass pricing this makes win-back reach only legacy credit holders,
+      // because the free tier mints no credits. Whether the stage should target unused lifetime passes
+      // instead is a real question, and out of scope here.
+      if (bal < nudgeBelowCredits()) { out.skippedBalance++; continue; }
       await sendWinbackEmail(email, bal);
       await logEvent({ userId: email, eventType: WINBACK_EVENT, actorType: "system", source: "cron", metadata: { remaining: bal } });
       out.sent++;

@@ -398,6 +398,21 @@ export default function proxy(req: NextRequest) {
   }
   if (target) return go(req, target, "rewrite");
 
+  // /signup IS AN ADDRESS, NOT A ROUTE. Two places above already treat it as one: groundFor() declares it
+  // graphite, and the app-host split sends it to the brand site. Neither is wrong, but no app/signup segment
+  // exists and it is not in V6_EXACT, so on this host it reached the fall-through below and rendered a 404.
+  // Creating an account is a MODE of the sign-in page (app/signin/page.tsx:46 reads ?mode=signup), not a
+  // second surface, so the advertised address has to land on that mode rather than on a page of its own.
+  //
+  // Built by hand rather than through go(), which assigns the whole string to url.pathname and would encode
+  // the query into the path. 308 because this alias is permanent and there will never be a route here.
+  if (path === "/signup") {
+    const url = req.nextUrl.clone();
+    url.pathname = "/signin";
+    url.searchParams.set("mode", "signup");
+    return NextResponse.redirect(url, 308);
+  }
+
   // Not rewritten: the path renders as itself. /signin and /auth/* arrive here, and they are graphite.
   return noindexWhileStealthed(NextResponse.next(withGround(req, path)), path);
 }

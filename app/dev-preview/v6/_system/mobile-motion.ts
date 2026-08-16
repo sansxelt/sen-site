@@ -35,9 +35,20 @@ import { useEffect } from "react";
 // The parts each chapter's own mobile block forces visible. Kept as one list rather than pushed into the
 // chapter components because it is exactly the inverse of the override list in chapters.css: these two
 // have to stay in step, and they are easier to keep in step side by side than scattered across seven files.
-// THE PARTS THE SCRUB DRIVES. On a desktop these are animated by --p and must NOT be touched here, or the
-// entry reveal and the scrub would both be writing the same opacity. They are observed only where the
-// scrub does not run, which is the width and the preference below.
+// THE PARTS THE SCRUB DRIVES, AND WHY THEY ARE NOW OBSERVED EVERYWHERE ANYWAY.
+//
+// On a desktop these are animated by --p, and the reveal must not write the same opacity there. It does
+// not, because the hide and the .v6-in release that undoes it BOTH live inside one media query in
+// chapters.css, `(max-width: 900px), (prefers-reduced-motion: reduce), (max-height: 767px)`, which is the
+// inverse of where the scrub runs. Outside it neither rule matches, so carrying .v6-in on a scrubbed
+// element is inert.
+//
+// That is what makes it safe to observe them unconditionally, and unconditional is what they have to be.
+// The selector used to be chosen from a media query ONCE, at mount, while the hide rule is re-evaluated by
+// the browser on every resize. A window that crossed 768px tall after mount therefore got the hide with
+// nothing watching for its reveal, and six classes of homepage content sat at opacity 0 until the next
+// navigation. Toggling a Chromebook out of fullscreen is exactly that resize. A media query is live; a
+// JavaScript read of one is a single sample, and the two must not be asked to agree.
 const SCRUBBED_PARTS = [
   ".v6-gap__t",       // chapter 2: the claim, the absence, the verdict
   ".v6-st__cond",     // chapter 3: the conditions that close the ring
@@ -45,7 +56,6 @@ const SCRUBBED_PARTS = [
   ".v6-rg__foot",
   ".v6-dr__layer",    // reach: the stack a result fans into
   ".v6-tm__ex",       // the terminal's exit codes
-  ".v6-cs__m > *",    // the authored mobile stack for chapter 3
 ].join(", ");
 
 // EVERYTHING THE SCRUB NEVER TOUCHED, WHICH IS MOST OF THE PAGE.
@@ -76,7 +86,16 @@ const REDUCED = "(prefers-reduced-motion: reduce)";
 // literal is repeated there in three media queries. See NOT ENOUGH ROOM TO PIN for the four gates.
 export const SHORT = "(max-height: 767px)";
 
-/** True where the scrubbed chapters do NOT run, so their parts need entry motion instead. */
+/**
+ * True where the scrubbed chapters do NOT run, so their parts need entry motion instead.
+ *
+ * NOTHING IN THIS FILE CALLS IT ANY MORE, and that is the point. It used to choose the observer's
+ * selector, which sampled a live media query once at mount and left content hidden after a resize across
+ * it. The reveal now observes everything and lets the cascade decide, so this survives as the one written
+ * statement in JavaScript of "the scrub does not run here", which is gate 4 of the four in chapters.css.
+ * Read it before changing any of the three literals above; do not reintroduce it as a branch around a
+ * class or a selector.
+ */
 export function mobileMotionWanted(): boolean {
   if (typeof window === "undefined" || !window.matchMedia) return false;
   // REDUCED MOTION IS NOT ITS OWN PAGE. It gets what a phone gets: the scrubbed chapters unpinned and
@@ -89,9 +108,10 @@ export function mobileMotionWanted(): boolean {
   // that nobody designed, reached by a setting a battery saver turns on without asking. Branching a page on
   // that preference is the mistake; expressing it as an amount of movement is not.
   // A SHORT WINDOW IS THE THIRD WAY INTO THE UNPINNED STACK, and it wants what the other two want. Left
-  // out, a 1366x657 Chromebook would get chapters that neither scrub (the stylesheet unpins them and forces
-  // rest with !important) nor reveal (this predicate said no) — the same "third composition nobody
-  // designed" the reduced-motion note below describes, reached from the other side.
+  // out of this list, a 1366x657 Chromebook is a window the stylesheet unpins and forces to rest with
+  // !important, so it would neither scrub nor be counted anywhere as a place the scrub does not run. That
+  // is the same "third composition nobody designed" the reduced-motion note above describes, reached from
+  // the other side.
   return window.matchMedia(MOBILE).matches
     || window.matchMedia(REDUCED).matches
     || window.matchMedia(SHORT).matches;
@@ -106,11 +126,12 @@ export function mobileMotionWanted(): boolean {
  */
 export function useMobileMotion(): void {
   useEffect(() => {
-    // TWO SETS, ONE OBSERVER.
+    // TWO SETS, ONE OBSERVER, AND NO MEDIA QUERY READ FROM JAVASCRIPT.
     //
     // ALWAYS_PARTS run everywhere, because the scrub never drove them and on a desktop they had no motion
-    // at all. SCRUBBED_PARTS run only where the scrub does not, or the reveal and the scrub would both be
-    // writing the same opacity on the same element.
+    // at all. SCRUBBED_PARTS are observed everywhere too: the stylesheet decides where their reveal has
+    // any effect, and it decides it live, on every resize. See the note above SCRUBBED_PARTS for the
+    // failure this replaces, which was content stuck at opacity 0 after a resize across 767px tall.
     //
     // Reduced motion still gets the class and still gets the observer: the stylesheet decides that its
     // reveal is a fade with no travel, which is a question about distance, not about whether a reader is
@@ -118,7 +139,7 @@ export function useMobileMotion(): void {
     // No gate on the preference any more: everybody gets the observer. What differs is only how far a
     // revealed part moves, which is decided in chapters.css.
     const root = document.documentElement;
-    const selector = mobileMotionWanted() ? `${ALWAYS_PARTS}, ${SCRUBBED_PARTS}` : ALWAYS_PARTS;
+    const selector = `${ALWAYS_PARTS}, ${SCRUBBED_PARTS}`;
 
     // Marked FIRST, in the same synchronous pass that sets up the observer. The hidden start state and the
     // thing that can undo it arrive together, so there is no window in which content is hidden by a class
@@ -129,8 +150,16 @@ export function useMobileMotion(): void {
     // Stagger is per PARENT, not per page: --i restarts inside each chapter, so a chapter's own parts
     // cascade while a chapter further down does not inherit a delay from how much came before it. A single
     // page-wide counter would give the last chapter a delay measured in seconds.
+    //
+    // AN AUTHORED --i IS NEVER OVERWRITTEN, and that became load-bearing the moment SCRUBBED_PARTS were
+    // observed on a desktop as well. Four of them carry --i inline from chapters.tsx and the SCRUB reads
+    // it: .v6-st__cond derives --slot from it, .v6-rg__row and .v6-dr__layer derive --on, .v6-tm__ex
+    // derives its transition-delay. Writing a per-parent counter over those values reindexes the scrub
+    // itself, so the register's eight rows would have settled in pairs of 0,1 instead of in sequence.
+    // The authored index is also the correct reveal order, so there is nothing to compute for them.
     const seen = new Map<Element, number>();
     for (const el of els) {
+      if (el.style.getPropertyValue("--i")) continue;
       const parent = el.parentElement ?? document.body;
       const n = seen.get(parent) ?? 0;
       seen.set(parent, n + 1);

@@ -9,8 +9,12 @@
 //   A BALANCE THAT MIXES UNITS. The ledger carries 'credit' and legacy 'cent' rows. Summing both produces
 //   a number that is not money in either denomination. lib/v-lifecycle.ts did exactly this: it selected
 //   `delta, expires_at` with no unit column and no unit filter, while its own comment claimed to mirror
-//   balance(). The win-back gate is `bal > 0`, so an account holding nothing but dead 'cent' rows was told
+//   balance(). The win-back gate was `bal > 0`, so an account holding nothing but dead 'cent' rows was told
 //   its balance was waiting.
+//   AN EMAIL WHOSE ONLY BUTTON IS A PAYMENT WALL. That same `bal > 0` gate also sent the win-back to every
+//   account holding 1 to 149 credits, and its button is an unconditional link to the launch surface, which
+//   refuses below one pass with a 402. The low-balance template had already had this exact defect removed
+//   from it. The gate is now the launch threshold on both sides, and both halves are asserted below.
 //   A THRESHOLD IN A RETIRED DENOMINATION. LOW_MAX was 5, meaning "5 checks left" when 1 credit bought 1
 //   check. A pass is 150 credits now, so it fired at 3% of one launch and the conversion moment passed in
 //   silence. This is the same class as the readiness tool judging affordability in the old denomination.
@@ -192,6 +196,20 @@ console.log("── the amounts the emails print ──");
   ok("it never prints a raw credit count", !rawCount.test(win));
   ok("it links to the launch surface, because that account CAN launch",
     win.includes("https://app.vraelis.com"));
+
+  // THE SAME EMAIL, RENDERED FOR AN ACCOUNT THAT CANNOT LAUNCH. This is the inverse of the assertion
+  // directly above, and it is why the send gate is the only protection there is: the template is handed a
+  // number and prints it, so the button stays a link to the launch surface whatever the balance says.
+  // Asserted from both ends, because a template check alone cannot see a gate and a gate check alone
+  // cannot see that the button behind it is unconditional.
+  const short = winbackHtml(40);
+  const onePass = centsToCredits(passPriceCents(PASS_INCLUDED_FLOWS));
+  ok("at 40 credits the win-back email renders $4.00", short.includes("$4.00"));
+  ok("it never prints a raw credit count either", !rawCount.test(short));
+  ok("it still links to the launch surface, however small the balance is",
+    short.includes("https://app.vraelis.com"));
+  ok("so this account must never be sent it: 40 credits cannot buy a launch", 40 < onePass);
+  ok("the gate that shipped, anything above zero, would have sent it", 40 > 0);
 }
 
 // ── the rule cannot exist twice again ─────────────────────────────────────────────────────────────────
@@ -206,6 +224,12 @@ console.log("── one place decides what a balance is ──");
     /import\s*\{[^}]*\bbalances\b[^}]*\}\s*from\s*"\.\/v-credits"/.test(lifecycle));
   ok("the threshold is derived from the price, not written as a literal",
     /centsToCredits\(passPriceCents\(PASS_INCLUDED_FLOWS\)\)/.test(lifecycle));
+  // Both stages ask the same question, from opposite sides: stage 2 sends below one pass, stage 3 sends at
+  // or above it. Stage 3 asked "is there anything at all", which is the defect this line exists to hold.
+  ok("the win-back stage gates on the launch threshold, not on any balance at all",
+    /if \(bal < nudgeBelowCredits\(\)\)/.test(lifecycle));
+  ok("the low-balance stage still gates on the same threshold",
+    /if \(bal >= below\)/.test(lifecycle));
 
   const credits = readFileSync("lib/v-credits.ts", "utf8");
   ok("the unit predicate is exported for exactly one definition",

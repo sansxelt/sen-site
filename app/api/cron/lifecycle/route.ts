@@ -1,8 +1,11 @@
-// Vercel Cron: lifecycle automation — a short, well-timed email sequence, each stage sent
+// Vercel Cron: lifecycle automation, a short, well-timed email sequence, each stage sent
 // once per user (idempotent via the event log). Stage 1: accounts that signed up but never
-// ran a check (activation). Stage 2: free users actively checking and nearly out of their
-// 25 signup credits (upgrade nudge). Stage 3: users who ran checks then went quiet but still
-// have credits (win-back). Stages 2 and 3 are disjoint by the 14-day active/quiet boundary.
+// ran a check (activation). Stage 2: free users actively verifying whose balance can no
+// longer buy a launch (upgrade nudge). Stage 3: users who ran checks, went quiet, and still
+// hold enough to launch (win-back). The stages used to be described here as "nearly out of
+// their 25 signup credits", a denomination that stopped existing when pass pricing landed
+// and signup stopped minting anything. Stages 2 and 3 are disjoint by the 14-day
+// active/quiet boundary and by the balance, which is one standard pass on both sides.
 // CRON_SECRET-gated (Vercel Cron sends Authorization: Bearer <secret>). Bounded, fail-soft,
 // never blocks. Returns safe summary counts only (no emails or PII).
 import { NextResponse } from "next/server";

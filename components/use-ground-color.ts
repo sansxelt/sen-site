@@ -14,6 +14,11 @@ import { useEffect, useState, type RefObject } from "react";
 // simply a different colour from the page. Two shells with two mechanisms is how they drift, and "the bar
 // matches the page" is not a per-shell opinion, so there is now one hook and no per-shell copy.
 //
+// That last sentence was untrue for a while, and the drift it predicts is exactly what happened: the v6
+// shell kept its own copy of the walk, this one gained rAF throttling and that one did not, and every fix
+// had to be made twice or it was not made at all. app/dev-preview/v6/_system/shell.tsx calls the hook now.
+// Nothing samples the ground anywhere else. If a third surface needs it, it calls this.
+//
 // WHY SAMPLING RATHER THAN A TRANSITION. There is deliberately no easing on the result. A hard cut at a
 // section boundary is one frame here because the ground changes in one frame; a slow resolve is slow here
 // because the ground is. Matching the source beats animating toward it, and it is the only way the bar is
@@ -21,32 +26,81 @@ import { useEffect, useState, type RefObject } from "react";
 //
 // WHY THE SECTION AND NOT THE TOPMOST ELEMENT. elementsFromPoint returns whatever is painted at the sample
 // line, which may be a card, a code block or a table row. Reading that would hand the bar a card's colour.
-// The walk starts from the nearest ancestor that declares a theme, or failing that the nearest <section>,
-// and only then looks for a non-transparent background.
+// The walk starts from the nearest ancestor that declares a theme AND is band-level (see BAND below), or
+// failing that the nearest <section>, and only then looks for a non-transparent background.
 
 /**
  * Lightness of a computed colour, in whatever notation the browser returns.
  *
  * This must not assume rgb(). A background built with color-mix(in oklab, ...) computes to `oklab(L a b)`,
- * and reading those three numbers as 0-255 channels made pure white (L 0.999) resolve to a luma of 0.0008
- * — so the bar decided it was over something black and painted white text onto a white bar. It failed
+ * and reading those three numbers as 0-255 channels made pure white (L 0.999) resolve to a luma of 0.0008,
+ * so the bar decided it was over something black and painted white text onto a white bar. It failed
  * hardest exactly where the interpolation it exists to follow actually lives.
  *
  * oklab/oklch already carry perceptual lightness as their first component, which is a better answer than
  * anything derivable from channels, so it is used directly. lab/lch are the same on a 0-100 scale.
+ *
+ * color() is the same failure in a third notation. It names its colour space before the channels and that
+ * name can end in a digit, so `color(display-p3 0.9 0.1 0.1)` read as the channels [3, 0.9, 0.1] and came
+ * back at a lightness of 0.0031. The space is stripped before the numbers are taken, and its channels run
+ * 0-1 rather than 0-255 so they are not divided.
  */
 export function colorLightness(c: string | null | undefined): number | null {
   if (!c) return null;
-  const n = c.match(/-?[\d.]+/g)?.map(Number);
-  if (!n || n.length < 3) return null;
-  if (/^\s*ok(lab|lch)\(/i.test(c)) return n[0];
-  if (/^\s*(lab|lch)\(/i.test(c)) return n[0] / 100;
-  return (0.2126 * n[0] + 0.7152 * n[1] + 0.0722 * n[2]) / 255;
+  const channels = (s: string): number[] | null => {
+    const n = s.match(/-?[\d.]+/g)?.map(Number);
+    return n && n.length >= 3 ? n : null;
+  };
+  const rgbLuma = (n: number[], scale: number) =>
+    (0.2126 * n[0] + 0.7152 * n[1] + 0.0722 * n[2]) / scale;
+
+  if (/^\s*ok(lab|lch)\(/i.test(c)) { const n = channels(c); return n ? n[0] : null; }
+  if (/^\s*(lab|lch)\(/i.test(c)) { const n = channels(c); return n ? n[0] / 100 : null; }
+  const spaced = c.match(/^\s*color\(\s*[\w-]+\s+([^)]*)\)/i);
+  if (spaced) { const n = channels(spaced[1]); return n ? rgbLuma(n, 1) : null; }
+  const n = channels(c);
+  return n ? rgbLuma(n, 255) : null;
 }
 
-const TRANSPARENT = (c: string) => !c || c === "transparent" || c.startsWith("rgba(0, 0, 0, 0");
+/**
+ * Alpha of a computed colour. 1 when the notation carries none.
+ *
+ * Both forms getComputedStyle can return are covered: the legacy comma form rgba(r, g, b, a), and the slash
+ * form every other colour space uses, oklab(L a b / a) and color(display-p3 r g b / a).
+ */
+function alphaOf(c: string): number {
+  const slash = c.match(/\/\s*([\d.]+)(%?)\s*\)\s*$/);
+  if (slash) { const a = Number(slash[1]); return Number.isFinite(a) ? (slash[2] ? a / 100 : a) : 1; }
+  const legacy = c.match(/^\s*rgba\(([^)]*)\)/i);
+  if (legacy) {
+    const parts = legacy[1].split(",");
+    if (parts.length >= 4) {
+      const raw = parts[3].trim();
+      const a = parseFloat(raw);
+      return Number.isFinite(a) ? (raw.endsWith("%") ? a / 100 : a) : 1;
+    }
+  }
+  return 1;
+}
 
-/** Nearest ancestor of `from` that actually paints a background. */
+/**
+ * True when a colour hides whatever is behind it.
+ *
+ * Exported because a bar only earns the right to switch its backdrop blur off when the colour it is
+ * painting is solid, and keying that off "a colour was sampled" is what put a 94% see-through bar with no
+ * blur on the console. The two facts are the same today, since the walk below refuses a see-through
+ * reading, and they should stay independently checked so they cannot come apart again.
+ */
+export function isOpaqueColor(c: string | null | undefined): boolean {
+  return !!c && c !== "transparent" && alphaOf(c) >= 1;
+}
+
+// A COLOUR YOU CAN SEE THROUGH IS NOT THE GROUND, so the walk continues past it to the first fully opaque
+// ancestor. This used to reject only the literal `rgba(0, 0, 0, 0...`, which meant a 6% accent wash was
+// handed back as the answer: the bar then painted itself 94% see-through and turned its blur off.
+const TRANSPARENT = (c: string) => !isOpaqueColor(c);
+
+/** Nearest ancestor of `from` that actually paints an opaque background. */
 function paintedBackground(from: HTMLElement | null): string | null {
   let n: HTMLElement | null = from;
   while (n && n !== document.documentElement) {
@@ -57,11 +111,33 @@ function paintedBackground(from: HTMLElement | null): string | null {
   return null;
 }
 
+// A DECLARATION ONLY SPEAKS FOR THE GROUND WHEN IT IS ON THE BAND, because closest() matches ancestor OR
+// SELF and two inline CARDS declare data-nav-dark: the graphite panel on /platform and the quoted-claim
+// card on /agents. Both are rendered full width inside a paper section, and below about 760px the flex row
+// they sit in collapses, so innerWidth/2 lands on the card and the bar flipped near-black over a white
+// page. Neither attribute can be removed, because v6.css keys its on-dark TEXT treatments to it, so the
+// reader is what narrows.
+//
+// Band-level means a <section>, the site footer, the console's <main>, or an element that opts in with
+// data-nav-band. The opt-in exists for the one surface that is genuinely a band without being any of those
+// tags: the docs environment, which is a div wrapping a whole route.
+const BAND = "section[data-nav-theme], section[data-nav-dark], footer[data-nav-theme], footer[data-nav-dark], "
+  + "main[data-nav-theme], main[data-nav-dark], [data-nav-band]";
+
 export type Ground = {
-  /** The painted colour under the bar, or null when nothing could be read. */
+  /** The painted colour under the bar, always fully opaque, or null when nothing could be read. */
   bg: string | null;
   /** True when that colour is dark enough that the bar's own text should be light. */
   dark: boolean;
+  /**
+   * The `resetKey` this reading was taken under, empty when the caller passes none.
+   *
+   * A reading can only arrive after the commit that changed the page, so on a route change the value in
+   * hand for one commit is the PREVIOUS route's. Comparing this against the current key is how a caller
+   * tells the two apart and falls back to what it already knows, rather than painting the old route's
+   * colour onto the new one.
+   */
+  resetKey: string | number;
 };
 
 /**
@@ -73,29 +149,41 @@ export type Ground = {
  * scrolls it stays wrong.
  *
  * `paused` holds the last reading. An open mega panel or drawer covers the sample line, so continuing to
- * measure would read the panel's own colour rather than the page's.
+ * measure would read the panel's own colour rather than the page's. Unpausing re-samples, because the page
+ * underneath may have moved or resized while it was covered.
+ *
+ * `resetKey` re-enters the effect and takes a fresh reading immediately. A client-side route change swaps
+ * the entire DOM under a bar that is not scrolling and may not resize either, so without it the last
+ * reading of the PREVIOUS route stands until something happens to scroll. The v6 shell passes the pathname.
+ * It comes back on the reading (`Ground.resetKey`) so the caller can also tell which route it was taken on.
  */
 export function useGroundColor(
   ref: RefObject<HTMLElement | null>,
-  opts?: { atTopFallback?: boolean; topZone?: number; paused?: boolean },
+  opts?: { atTopFallback?: boolean; topZone?: number; paused?: boolean; resetKey?: string | number },
 ): Ground {
   const atTopFallback = opts?.atTopFallback ?? false;
   const topZone = opts?.topZone ?? 4;
   const paused = opts?.paused ?? false;
+  const resetKey = opts?.resetKey ?? "";
 
-  const [ground, setGround] = useState<Ground>({ bg: null, dark: atTopFallback });
+  const [ground, setGround] = useState<Ground>({ bg: null, dark: atTopFallback, resetKey });
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     let raf = 0;
 
+    // The key is part of the reading, so a reading that only stamps the new key still has to replace the
+    // one in state. Comparing all three is what keeps an unchanged ground from re-rendering on every frame.
+    const commit = (bg: string | null, dark: boolean) => setGround((g) =>
+      g.bg === bg && g.dark === dark && g.resetKey === resetKey ? g : { bg, dark, resetKey });
+
     const settle = () => {
       raf = 0;
       if (paused) return;
 
       if (window.scrollY <= topZone) {
-        setGround((g) => (g.bg === null && g.dark === atTopFallback ? g : { bg: null, dark: atTopFallback }));
+        commit(null, atTopFallback);
         return;
       }
 
@@ -106,14 +194,14 @@ export function useGroundColor(
       // question. Fall back to the nearest section, which is what an unlabelled band is.
       let from: HTMLElement | null = null;
       for (const node of stack) {
-        const declared = node.closest?.("[data-nav-theme], [data-nav-dark]") as HTMLElement | null;
+        const declared = node.closest?.(BAND) as HTMLElement | null;
         if (declared) { from = declared; break; }
       }
       if (!from) from = (stack[0]?.closest?.("section") ?? stack[0]) ?? null;
 
       const bg = paintedBackground(from);
       if (!bg) {
-        setGround((g) => (g.bg === null && g.dark === atTopFallback ? g : { bg: null, dark: atTopFallback }));
+        commit(null, atTopFallback);
         return;
       }
 
@@ -127,7 +215,7 @@ export function useGroundColor(
         ? lum < 0.5
         : declared ? declared === "dark" : Boolean(from?.hasAttribute("data-nav-dark"));
 
-      setGround((g) => (g.bg === bg && g.dark === dark ? g : { bg, dark }));
+      commit(bg, dark);
     };
 
     const onScroll = () => { if (!raf) raf = requestAnimationFrame(settle); };
@@ -140,7 +228,7 @@ export function useGroundColor(
       window.removeEventListener("resize", onScroll);
       if (raf) cancelAnimationFrame(raf);
     };
-  }, [ref, atTopFallback, topZone, paused]);
+  }, [ref, atTopFallback, topZone, paused, resetKey]);
 
   return ground;
 }

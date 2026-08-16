@@ -2,7 +2,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
-import { getStripe, isStripeConfigured, STRIPE_PRICES } from "../../../../lib/stripe";
+import { getStripe, isStripeConfigured } from "../../../../lib/stripe";
 import { upsertActiveSubscription } from "../../../../lib/subscriptions";
 import {
   sendPaymentFailedEmail,
@@ -12,13 +12,7 @@ import {
   sendSubscriptionCancellationScheduledEmail,
   sendSubscriptionEndedEmail,
 } from "../../../../lib/email";
-import {
-  type BillingAddonKey,
-  getPricingPlan,
-  isOneTimeBoost,
-  type PricingPlanKey,
-  pricingPlanMap,
-} from "../../../../lib/pricing";
+import { type BillingAddonKey, isOneTimeBoost } from "../../../../lib/pricing";
 import { getUserProfileByEmail } from "../../../../lib/user-profile";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "../../../../lib/supabase-admin";
 import { addCredits, CREDITS_PER_DOLLAR } from "../../../../lib/credits";
@@ -31,6 +25,16 @@ import { settlePaidSession } from "../../../../lib/vraelis-payment-settle";
 import { setFlipPlan } from "../../../../lib/flip-db";
 import { isTeamSeatPriceId } from "../../../../lib/v-team-billing";
 import { claimStripeEvent, markStripeEventResult, releaseStripeEvent, freezeBillingAccess, recordDisputeEvent, claimNotification } from "../../../../lib/preflight/billing-freeze";
+import {
+  invoiceRecipient,
+  plannedSubscriptionEmails,
+  planDisplayName,
+  rankEmailContext,
+  resolvePlanFromPriceId,
+  resolvePlanKeyFromPriceId,
+  subscriptionPeriodEnd,
+  type SubscriptionEmailContext,
+} from "../../../../lib/stripe-subscription-notify";
 
 // Vraelis runs in this same Stripe account. Vraelis checkout sessions +
 // subscriptions carry metadata { owner_email, plan, cycle }. When an
@@ -114,15 +118,10 @@ async function displayNameFor(email: string): Promise<string> {
   }
 }
 
-// Reverse-lookup a Stripe price ID to its plan key / cycle.
-function resolvePlanFromPriceId(priceId: string | null): { planKey: string; cycle: "monthly" | "yearly" } | null {
-  if (!priceId) return null;
-  for (const [key, cycles] of Object.entries(STRIPE_PRICES)) {
-    if (cycles.monthly === priceId) return { planKey: key, cycle: "monthly" };
-    if (cycles.yearly  === priceId) return { planKey: key, cycle: "yearly"  };
-  }
-  return null;
-}
+// The plan catalogues, the date shapes, and the decision about which lifecycle emails an event earns all
+// live in lib/stripe-subscription-notify.ts now. They were here, which meant they could not be imported by
+// a test: a Next route file may only export its HTTP handlers. See that file's header for why billing
+// decisions in particular had to move somewhere testable.
 
 function pickPlanItem(subscription: Stripe.Subscription): Stripe.SubscriptionItem | null {
   const items = subscription.items.data;
@@ -138,23 +137,8 @@ function pickPlanItem(subscription: Stripe.Subscription): Stripe.SubscriptionIte
   return items[0] ?? null;
 }
 
-function formatDate(unix: number | null): string {
-  if (!unix) return "your next billing date";
-  try {
-    return new Date(unix * 1000).toLocaleDateString("en-US", {
-      month: "long", day: "numeric", year: "numeric",
-    });
-  } catch { return "your next billing date"; }
-}
-
 // ── Resolve email + plan context from a subscription ──────────────────────
-async function resolveContext(subscription: Stripe.Subscription): Promise<{
-  email:    string;
-  planKey:  string;
-  planName: string;
-  cycle:    "monthly" | "yearly";
-  periodEndUnix: number | null;
-} | null> {
+async function resolveContext(subscription: Stripe.Subscription): Promise<SubscriptionEmailContext | null> {
   let email = subscription.metadata?.userEmail ?? "";
   if (!email) {
     const customerId = typeof subscription.customer === "string"
@@ -167,18 +151,60 @@ async function resolveContext(subscription: Stripe.Subscription): Promise<{
   }
 
   const planItem = pickPlanItem(subscription);
-  const resolved = planItem ? resolvePlanFromPriceId(planItem.price.id) : null;
+  const resolved = planItem ? resolvePlanKeyFromPriceId(planItem.price.id) : null;
   const planKey  = resolved?.planKey ?? subscription.metadata?.planKey ?? "free";
   const cycle    = (resolved?.cycle ?? subscription.metadata?.cycle ?? "monthly") as "monthly" | "yearly";
 
-  const planName = planKey in pricingPlanMap
-    ? getPricingPlan(planKey as PricingPlanKey).name
-    : planKey;
+  // Falls back to the raw key rather than to a generic word: here the key is known (it came off the
+  // subscription or its metadata), so printing it is more informative than "subscription".
+  const planName = planDisplayName(planKey) ?? planKey;
 
-  const periodEndRaw = (subscription as unknown as Record<string, unknown>)["current_period_end"];
-  const periodEndUnix = typeof periodEndRaw === "number" ? periodEndRaw : null;
+  return { email, planKey, planName, cycle, periodEndUnix: subscriptionPeriodEnd(subscription) };
+}
 
-  return { email, planKey, planName, cycle, periodEndUnix };
+/**
+ * THE LIFECYCLE EMAILS, FOR WHICHEVER PRODUCT THE SUBSCRIPTION BELONGS TO.
+ *
+ * The decision about what to send is pure and lives in lib/stripe-subscription-notify.ts. This is the half
+ * that talks to the world: it resolves the display name once, then claims a single-send marker per email
+ * before sending it.
+ *
+ * claimNotification is keyed on (event id, kind, recipient) and inserts ATOMICALLY, so the same email can
+ * never go twice for one event. That covers both ways a handler runs more than once: Stripe redelivering a
+ * duplicate, and this webhook returning 500 on a later state failure so Stripe retries. On a retry the
+ * state writes re-run, which is safe because they are idempotent, and the already-sent email is skipped.
+ *
+ * Marking BEFORE the send is deliberate. The worst case becomes a rare MISSED email (a crash between the
+ * mark and the send) rather than a duplicate, which is the correct direction for a secondary effect.
+ */
+async function sendSubscriptionEmails(
+  event: Stripe.Event,
+  subscription: Stripe.Subscription,
+  ctx: SubscriptionEmailContext,
+): Promise<void> {
+  const prev = (event.data as unknown as { previous_attributes?: Record<string, unknown> }).previous_attributes;
+  const planned = plannedSubscriptionEmails(event.type, subscription as unknown as Parameters<typeof plannedSubscriptionEmails>[1], prev, ctx);
+  if (planned.length === 0) return;
+
+  const name = await displayNameFor(ctx.email);
+  for (const mail of planned) {
+    if (!(await claimNotification(event.id, mail.kind, ctx.email))) continue;
+    switch (mail.kind) {
+      case "subscription_activated":
+        await sendSubscriptionActivatedEmail({
+          email: ctx.email, name, planName: mail.planName, cycle: mail.cycle, amountLabel: mail.amountLabel,
+        });
+        break;
+      case "cancellation_scheduled":
+        await sendSubscriptionCancellationScheduledEmail({
+          email: ctx.email, name, planName: mail.planName, endsOn: mail.endsOn,
+        });
+        break;
+      case "subscription_ended":
+        await sendSubscriptionEndedEmail({ email: ctx.email, name, planName: mail.planName });
+        break;
+    }
+  }
 }
 
 async function handleSubscriptionChange(event: Stripe.Event, subscription: Stripe.Subscription) {
@@ -215,10 +241,26 @@ async function handleSubscriptionChange(event: Stripe.Event, subscription: Strip
     return;
   }
 
-  // Vraelis Rank subscription? Update plan/status on v_subscriptions and stop.
+  // ── VRAELIS RANK: THE PRODUCT THAT IS ACTUALLY BEING SOLD ───────────────────────────────────────────
+  //
+  // Plan and status go to v_subscriptions / plan_v1, and then the customer is TOLD. This branch used to
+  // return here, two branches above the lifecycle email switch, so a real paying customer was never sent
+  // the activation, the cancellation confirmation, or the ending notice. Three templates existed, were
+  // correct, had tests, and could not be reached by the only product with subscribers.
+  //
+  // The state write goes first and the email second, on purpose. If handleRankSubChange throws, the webhook
+  // returns 500, Stripe retries, and nothing has been claimed yet, so the notice still goes out on the
+  // retry. The reverse order could announce a plan change that never got written.
+  //
+  // Only the notification is shared with the legacy path below. The state writes stay separate, and this
+  // must NOT fall through to them: upsertActiveSubscription and invalidateAddonsCache belong to the retired
+  // catalogue and would record a Rank subscription as a legacy personal plan.
   if (subscription.metadata?.type === "v_plan") {
     const { handleRankSubChange } = await import("../../../../lib/v-subscriptions");
     await handleRankSubChange(event, subscription);
+    const rankCtx = rankEmailContext(subscription as unknown as Parameters<typeof rankEmailContext>[0]);
+    if (rankCtx) await sendSubscriptionEmails(event, subscription, rankCtx);
+    else console.warn("[stripe webhook] v_plan subscription carried no emailable owner:", subscription.id);
     return;
   }
 
@@ -280,83 +322,11 @@ async function handleSubscriptionChange(event: Stripe.Event, subscription: Strip
   invalidateAddonsCache(ctx.email);
 
   // ── Email side effects ─────────────────────────────────────────
-  // Only send for events where a user-facing state changed.  Event
-  // data.previous_attributes lets us detect specific transitions
-  // (e.g. just-scheduled cancellation) without misfiring on every update.
-  const prev = (event.data as unknown as { previous_attributes?: Record<string, unknown> })
-    .previous_attributes ?? {};
-  const plan = ctx.planKey in pricingPlanMap
-    ? getPricingPlan(ctx.planKey as PricingPlanKey)
-    : null;
-
-  const name = await displayNameFor(ctx.email);
-
-  switch (event.type) {
-    case "customer.subscription.created": {
-      if (subscription.status === "active" || subscription.status === "trialing") {
-        const amountLabel = plan
-          ? (ctx.cycle === "yearly" ? plan.yearlyLabel ?? plan.monthlyLabel : plan.monthlyLabel)
-          : "";
-        // Retry-safe: this email is not idempotent and the event may be retried (500 on a later state
-        // failure). Claim a single-send marker keyed by (event, type, recipient) so a retry re-runs the
-        // state writes but skips the already-sent email.
-        if (await claimNotification(event.id, "subscription_activated", ctx.email)) {
-          await sendSubscriptionActivatedEmail({
-            email:       ctx.email,
-            name,
-            planName:    ctx.planName,
-            cycle:       ctx.cycle,
-            amountLabel,
-          });
-        }
-      }
-      break;
-    }
-
-    case "customer.subscription.updated": {
-      const prevCancel = Boolean(prev.cancel_at_period_end);
-      const currCancel = Boolean((subscription as unknown as { cancel_at_period_end?: boolean }).cancel_at_period_end);
-
-      // Transition: cancellation was JUST scheduled (was false, now true). Retry-safe via the per-event
-      // marker (on redelivery, previous_attributes is identical so the transition re-evaluates true).
-      if (currCancel && !prevCancel && await claimNotification(event.id, "cancellation_scheduled", ctx.email)) {
-        await sendSubscriptionCancellationScheduledEmail({
-          email:    ctx.email,
-          name,
-          planName: ctx.planName,
-          endsOn:   formatDate(ctx.periodEndUnix),
-        });
-      }
-
-      // Transition: previously-active sub became inactive via update
-      // (e.g. status moved to "unpaid" after retries exhausted).
-      const prevStatus = typeof prev.status === "string" ? prev.status : null;
-      if (
-        prevStatus && prevStatus !== subscription.status &&
-        ["unpaid", "canceled", "incomplete_expired"].includes(subscription.status) &&
-        await claimNotification(event.id, "subscription_ended", ctx.email)
-      ) {
-        await sendSubscriptionEndedEmail({
-          email:    ctx.email,
-          name,
-          planName: ctx.planName,
-        });
-      }
-      break;
-    }
-
-    case "customer.subscription.deleted": {
-      // Period ended on a scheduled cancel, or admin hard-canceled. Retry-safe via the per-event marker.
-      if (await claimNotification(event.id, "subscription_ended", ctx.email)) {
-        await sendSubscriptionEndedEmail({
-          email:    ctx.email,
-          name,
-          planName: ctx.planName,
-        });
-      }
-      break;
-    }
-  }
+  // Which events earn which emails is decided in lib/stripe-subscription-notify.ts, and the same function
+  // decides it for the Rank branch above. It was written out here as a switch, which is how the Rank
+  // customers ended up with no notices at all: the code that knew what to send sat below the return that
+  // meant it was never reached.
+  await sendSubscriptionEmails(event, subscription, ctx);
 }
 
 /**
@@ -374,13 +344,15 @@ function priceIdFromInvoice(invoice: Stripe.Invoice): string | null {
 /**
  * Best-effort plan name lookup for invoice-triggered emails.  Falls back
  * to a generic label so the subject line never reads "$12, undefined".
+ *
+ * The fallback was the word "your", which was written to sit inside "your ${planName} plan" and produced
+ * "your your plan renews next week" the moment the lookup missed, which under the retired catalogue was
+ * every single time. It is now a noun that stands on its own, because three templates interpolate this
+ * and a fallback written to fit one of their sentences will read wrong in the other two.
  */
 function planNameFromInvoice(invoice: Stripe.Invoice): string {
-  const resolved = resolvePlanFromPriceId(priceIdFromInvoice(invoice));
-  if (resolved && resolved.planKey in pricingPlanMap) {
-    return getPricingPlan(resolved.planKey as PricingPlanKey).name;
-  }
-  return "your";
+  const resolved = resolvePlanKeyFromPriceId(priceIdFromInvoice(invoice));
+  return (resolved && planDisplayName(resolved.planKey)) || "subscription";
 }
 
 function formatInvoiceAmount(invoice: Stripe.Invoice): string {
@@ -395,12 +367,17 @@ function formatInvoiceAmount(invoice: Stripe.Invoice): string {
   }
 }
 
-async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
+async function handleInvoicePaymentFailed(invoice: Stripe.Invoice, eventId: string) {
   // Team-seat invoices (monthly OR yearly) are reflected via subscription webhooks
   // (past_due/canceled) — skip the personal "payment failed" email path.
   if (isTeamSeatPriceId(priceIdFromInvoice(invoice))) return;
-  const email = invoice.customer_email ?? null;
+  const email = invoiceRecipient(invoice as unknown as Parameters<typeof invoiceRecipient>[0]);
   if (!email) return;
+  // The event-id dedupe above this is the first line of defence, but it falls through when the DB is
+  // unavailable, and this send had no second one: the other four billing emails all claim a single-send
+  // marker and this one did not. Telling somebody twice that their card was declined is the last message
+  // to duplicate.
+  if (!(await claimNotification(eventId, "payment_failed", email))) return;
   await sendPaymentFailedEmail({
     email,
     name:     await displayNameFor(email),
@@ -416,15 +393,27 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
  * from customer.subscription.created.
  */
 async function handleInvoicePaid(invoice: Stripe.Invoice, eventId: string) {
-  // Vraelis Rank subscription invoice? Grant monthly credits (deduped) and stop.
+  // ── THE RANK INVOICE IS HANDLED, AND THEN THE CUSTOMER IS STILL TOLD ────────────────────────────────
+  //
+  // This granted the credits (or set the metered plan state) and then RETURNED, and the only thing below
+  // this point is the renewal receipt. So the one product with paying subscribers was the one product
+  // whose customers were charged every month and never sent a word about it.
+  //
+  // The boolean is deliberately not read any more. It meant "this was a Rank invoice, no other handler
+  // needs it", which was true of the credit path and was never true of the notice. Everything below is
+  // gated on its own facts: not a team seat, has a recipient, and billing_reason is a scheduled renewal.
+  // That last gate is what keeps the FIRST charge silent here, because an activation email covers it.
+  //
+  // Credit behaviour is untouched: handleRankInvoicePaid is idempotent per invoice id and still runs first,
+  // so a replay cannot double-grant and a failure here cannot lose a grant that already landed.
   {
     const { handleRankInvoicePaid } = await import("../../../../lib/v-subscriptions");
-    if (await handleRankInvoicePaid(invoice)) return;
+    await handleRankInvoicePaid(invoice);
   }
   // Team-seat invoices (monthly OR yearly) are reflected via subscription webhooks —
   // don't credit or send a personal renewal email for them.
   if (isTeamSeatPriceId(priceIdFromInvoice(invoice))) return;
-  const email = invoice.customer_email ?? null;
+  const email = invoiceRecipient(invoice as unknown as Parameters<typeof invoiceRecipient>[0]);
   if (!email) return;
   const reason = (invoice as unknown as { billing_reason?: string }).billing_reason;
   if (reason !== "subscription_cycle") return;
@@ -456,9 +445,12 @@ async function handleInvoicePaid(invoice: Stripe.Invoice, eventId: string) {
  * Pure heads-up: gives the user a window to cancel / downgrade / swap
  * cards before money moves.
  */
-async function handleInvoiceUpcoming(invoice: Stripe.Invoice) {
-  const email = invoice.customer_email ?? null;
+async function handleInvoiceUpcoming(invoice: Stripe.Invoice, eventId: string) {
+  const email = invoiceRecipient(invoice as unknown as Parameters<typeof invoiceRecipient>[0]);
   if (!email) return;
+  // Single-send marker, for the same reason as the payment-failed notice: the event-id dedupe falls
+  // through when the DB is unavailable, and a duplicate "you are about to be charged" reads as two charges.
+  if (!(await claimNotification(eventId, "renewal_upcoming", email))) return;
 
   // Stripe sends this with `next_payment_attempt` or `period_end` as
   // the target date depending on configuration.
@@ -909,7 +901,7 @@ export async function POST(request: Request) {
         break;
 
       case "invoice.payment_failed":
-        await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
+        await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice, event.id);
         break;
 
       // Stripe sends both `invoice.paid` (newer) and
@@ -922,7 +914,7 @@ export async function POST(request: Request) {
         break;
 
       case "invoice.upcoming":
-        await handleInvoiceUpcoming(event.data.object as Stripe.Invoice);
+        await handleInvoiceUpcoming(event.data.object as Stripe.Invoice, event.id);
         break;
 
       // Dispute / chargeback: freeze execution access immediately (non-destructive), record for audit.

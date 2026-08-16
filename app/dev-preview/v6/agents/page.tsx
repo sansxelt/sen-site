@@ -18,7 +18,7 @@ export const metadata: Metadata = v6meta({
   path: "/agents",
   ogTitle: "Oversight around AI software agents",
   ogDescription:
-    "Vraelis works around software agents from observable activity and evidence, not private reasoning: plan, changes, claims, findings, repair, and independent completion.",
+    "Vraelis works around software agents from the outcome a person approved and the evidence the running software leaves behind: the claim, the run, findings, repair, and independent completion.",
 });
 
 const BASE = V6_BASE;
@@ -31,35 +31,44 @@ const wrapRow: CSSProperties = {
   alignItems: "stretch",
 };
 
-/* ---------- truthful inputs ---------- */
+/* ---------- truthful inputs ----------
+   THE HEADING SAID "truthful inputs" AND THREE OF THE SEVEN WERE NOT TRUE. This list claimed Vraelis works
+   from submitted plans, from code changes and diffs, and from the tool and API effects the work produces.
+   None of the three are ingested. It is the same overclaim the mock activity feed on /platform was removed
+   for, and the same one the Direction column on that page contradicts by name. A check begins at the point
+   the work is claimed complete, and everything before that point is the agent's business, not this
+   product's. The boundary moved out of DOES_NOT, where it was implied, and is now stated. */
 
 const WORKS_FROM = [
-  "Submitted plans, before the work begins",
-  "Code changes and diffs",
-  "Tool and API effects the work produces",
-  "External events from GitHub, CI, and webhooks",
-  "The claims an agent makes about its own work",
+  "The outcome a person approved, held outside the agent",
+  "The claim that the work is finished",
+  "The deployment that claim was made about",
+  "Deployment events from GitHub and Vercel",
   "Execution evidence from the running software in a real browser",
-  "Human-reviewed standards, held outside the agent",
+  "The state the software is left in, re-checked across a fresh session",
 ];
 const DOES_NOT = [
+  "Watch an agent while it works",
+  "Read a submitted plan, a diff, or a tool call",
   "Read an agent's private chain of thought",
   "Trust a claim because it sounds confident",
   "Treat a passing self-test as independent proof",
-  "Assume the agent's intentions, only its observable work",
 ];
 
 /* ---------- the loop around the agent (signature) ---------- */
 
 const LOOP: { n: string; agent: string; vraelis: string; sig?: Sig; tag?: string }[] = [
   { n: "01", agent: "Receives responsibility for real work.", vraelis: "Opens a durable record with the reviewed standard held outside the code.", sig: "go", tag: "Recorded" },
-  { n: "02", agent: "Submits a plan for how it will proceed.", vraelis: "Reads the submitted plan and maps the systems it will touch." },
-  { n: "03", agent: "Changes code and calls tools and APIs.", vraelis: "Tracks the changes and the external effects that appear." },
-  { n: "04", agent: "States assumptions and claims progress.", vraelis: "Challenges unsupported assumptions and asks for evidence.", sig: "wait", tag: "Challenged" },
+  // Steps 02 and 03 said "Reads the submitted plan and maps the systems it will touch" and "Tracks the
+  // changes and the external effects that appear". Neither happens. The honest answer is that Vraelis does
+  // nothing at all while the work is underway, and saying so plainly is what makes step 04 mean anything.
+  { n: "02", agent: "Submits a plan for how it will proceed.", vraelis: "Nothing. A plan an agent writes for itself is not read, and the work is not watched." },
+  { n: "03", agent: "Changes code and calls tools and APIs.", vraelis: "Still nothing. Diffs and tool calls are not ingested while the work is underway." },
+  { n: "04", agent: "Claims the work is complete.", vraelis: "This is where the check begins. The approved outcome becomes a browser plan a person signs off.", sig: "wait", tag: "Plan" },
   { n: "05", agent: "Reaches a sensitive or irreversible action.", vraelis: "Routes the decision to a person before it can ship.", sig: "wait", tag: "Review" },
   { n: "06", agent: "Produces work that misses the requirement.", vraelis: "Turns the failure into a structured, recorded finding.", sig: "stop", tag: "Finding" },
   { n: "07", agent: "Submits a repair for the finding.", vraelis: "Re-checks the repair independently against the same standard." },
-  { n: "08", agent: "Claims the work is complete.", vraelis: "Accepts Verified, or returns Failed or Blocked.", sig: "go", tag: "Decided" },
+  { n: "08", agent: "Asks to be marked done.", vraelis: "Accepts Verified, or returns Failed or Blocked.", sig: "go", tag: "Decided" },
 ];
 
 /* ---------- review + integrations ---------- */
@@ -132,7 +141,7 @@ export default function Agents() {
             <SectionHead
               eyebrow="What Vraelis works from"
               title="Observable work, not private reasoning."
-              lead="Vraelis is honest about what it can see. It judges the activity an agent produces and the evidence the software leaves behind, measured against standards a person approved. It does not claim to read an agent's mind."
+              lead="Vraelis is honest about what it can see, and about when. It does not watch an agent work. It waits until the work is claimed complete, then judges the running software against a standard a person approved, from the evidence that software leaves behind."
             />
           </Reveal>
           <div style={{ ...wrapRow, marginTop: "clamp(28px,3vw,40px)" }}>

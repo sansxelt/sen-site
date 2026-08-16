@@ -15,6 +15,19 @@ const CARD = { background: "var(--graphite-2)", border: "1px solid var(--g-line)
 const H3 = { margin: "0 0 8px", fontSize: "1.12rem", fontWeight: 600, letterSpacing: "-0.015em", color: "var(--g-fg)" } as const;
 const P = { margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--g-fg-2)" } as const;
 
+// ONE THREE-CARD GRID PER PAGE, AND ON THIS PAGE IT IS THE BINDING SECTION.
+//
+// This route ran .v6-grid3 three times in a row, so the whole page below the coverage list was nine
+// identical rounded cards in three rows of three. That is the default shape, not a considered one, and it
+// flattens three sections that are doing different jobs. Where a run needs you and Authorship and review are
+// prose, so they are set as rows; what a verification is evidence of stays a grid because those three are
+// genuinely parallel statements about the same object, and it sits between the two so the page alternates.
+//
+// Both row sections here are graphite. .v6-row was authored for the light ground and now carries its own
+// [data-nav-dark] rebind in pagekit.css, so nothing on-dark is stated per page: a page that patched the
+// colours inline is exactly how the next dark row section would come to miss them.
+const n2 = (i: number) => String(i + 1).padStart(2, "0");
+
 // Every entry here is a real, current property of the system. This page is worthless the moment it becomes
 // marketing about being humble, so nothing goes on it that is not actually true today.
 const RUNTIMES: [string, "go" | "wait" | "stop", string][] = [
@@ -72,9 +85,19 @@ export default function V6Limitations() {
       <section className="v6-sec v6-dark" data-nav-dark>
         <div className="v6-wrap">
           <SectionHead eyebrow="Where a run needs you" title="Three things a run cannot do alone." />
-          <Reveal media className="v6-grid3">
-            {NEEDS_HELP.map(([t, d]) => (<div key={t} style={CARD}><h3 style={H3}>{t}</h3><p style={P}>{d}</p></div>))}
-          </Reveal>
+          <div className="v6-rows">
+            {NEEDS_HELP.map(([t, d], i) => (
+              <Reveal key={t} i={i}>
+                <div className="v6-row">
+                  <span className="v6-row__n">{n2(i)}</span>
+                  <div>
+                    <h3 className="v6-row__t">{t}</h3>
+                    <p className="v6-row__d">{d}</p>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -90,9 +113,19 @@ export default function V6Limitations() {
       <section className="v6-sec v6-dark" data-nav-dark>
         <div className="v6-wrap">
           <SectionHead eyebrow="Authorship and review" title="The system will not approve its own work." />
-          <Reveal media className="v6-grid3">
-            {REVIEW.map(([t, d]) => (<div key={t} style={CARD}><h3 style={H3}>{t}</h3><p style={P}>{d}</p></div>))}
-          </Reveal>
+          <div className="v6-rows">
+            {REVIEW.map(([t, d], i) => (
+              <Reveal key={t} i={i}>
+                <div className="v6-row">
+                  <span className="v6-row__n">{n2(i)}</span>
+                  <div>
+                    <h3 className="v6-row__t">{t}</h3>
+                    <p className="v6-row__d">{d}</p>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
           <Reveal>
             <p className="v6-note">
               How access, secrets and evidence are handled is on{" "}

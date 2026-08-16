@@ -49,6 +49,23 @@
   /* type */
   --sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   --mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* ── WHY THERE IS A THIRD FACE, AND WHY IT IS NOT A REPLACEMENT FOR THE FIRST ──────────────────────
+     The complaint was that the site reads as generated, and the type was the strongest remaining reason.
+     The cause was NOT the choice of Geist on its own. It was that every headline on the site, all seven
+     declarations of it, was the same recipe: the sans, at weight 600, with letter-spacing between -0.02em
+     and -0.04em. That is the framework default look, on a site deployed to the framework's own host, and
+     swapping Geist for Inter or Plex would have kept the recipe exactly and changed nothing. The system had
+     one voice and it was the default one.
+     So the fix is contrast, not substitution. Display and chapter headings take an editorial serif; the
+     interface, the body copy and the labels stay on the sans, which is restrained and correct for them; and
+     machine text stays mono, which is the one typographic decision this system already made deliberately.
+     Instrument Serif is ALREADY loaded on every page of this site (public/vraelis/tokens.css, rendered by
+     app/layout.tsx for every request), so this costs no new font request, no new package and no licence:
+     it is SIL OFL. Nothing here adds a dependency.
+     IT HAS ONE WEIGHT, 400. Anything that sets 600 on it gets a browser-synthesised fake bold, which is
+     exactly the smeared look this change exists to avoid, so every rule that uses it sets weight 400 and
+     the synthesis is switched off below. A serif also must not carry the sans's tight tracking. */
+  --display: "Instrument Serif", ui-serif, Georgia, "Times New Roman", serif;
 
   /* layout + motion */
   --gutter: clamp(20px, 4vw, 64px);
@@ -61,6 +78,17 @@
   --sh-sm: 0 1px 2px rgba(20,22,28,0.06), 0 1px 3px rgba(20,22,28,0.05);
   --sh-md: 0 12px 34px -14px rgba(20,22,28,0.22);
   --sh-lg: 0 40px 90px -36px rgba(15,19,25,0.4);
+
+  /* Corner radii, four tiers by intent, so the next control cannot invent an eighth value. This file
+     carried seven distinct values across thirteen declarations and no token defined any of them. Two groups
+     collapsed rather than each keeping a token per pixel: the three focus rings were 2, 3 and 4px and all
+     three mean one thing, a ring hugging inline text; the controls were 8px in four places and 9px in two,
+     and the burger and the drawer's close button are the same object at two sizes. Nothing moves by more
+     than 1px. A radius that draws a specific shape rather than stating a tier keeps its own number. */
+  --r-sm:   3px;    /* a focus ring around inline text */
+  --r-md:   8px;    /* a control: button, burger, close button, hover plate */
+  --r-lg:   14px;   /* a card or a panel */
+  --r-pill: 999px;  /* a pill or a dot */
 
   background: var(--paper);
   color: var(--ink-2);
@@ -98,9 +126,15 @@
 .v6-dark .v6-eyebrow, [data-nav-dark] .v6-eyebrow { color: var(--g-fg-2); }
 
 /* ------------------------------------------------------------ typography --- */
-.v6-d2xl { font-family: var(--sans); font-weight: 600; letter-spacing: -0.032em; line-height: 1.0; font-size: clamp(2.7rem, 5vw, 4.4rem); color: var(--ink); margin: 0; text-wrap: balance; }
-.v6-dxl  { font-family: var(--sans); font-weight: 600; letter-spacing: -0.028em; line-height: 1.04; font-size: clamp(2.1rem, 3.7vw, 3.3rem); color: var(--ink); margin: 0; text-wrap: balance; }
-.v6-dl   { font-family: var(--sans); font-weight: 600; letter-spacing: -0.024em; line-height: 1.08; font-size: clamp(1.7rem, 2.9vw, 2.5rem); color: var(--ink); margin: 0; text-wrap: balance; }
+/* The display tier. Serif, weight 400, tracking near zero: a high-contrast serif set at the sans's -0.03em
+   collides with itself at these sizes. Sizes and line-heights are nudged up rather than left alone, because
+   this face runs smaller on the body than the sans at the same nominal size. */
+.v6-d2xl { font-family: var(--display); font-weight: 400; letter-spacing: -0.012em; line-height: 1.04; font-size: clamp(2.9rem, 5.4vw, 4.8rem); color: var(--ink); margin: 0; text-wrap: balance; }
+.v6-dxl  { font-family: var(--display); font-weight: 400; letter-spacing: -0.010em; line-height: 1.08; font-size: clamp(2.25rem, 4vw, 3.6rem); color: var(--ink); margin: 0; text-wrap: balance; }
+.v6-dl   { font-family: var(--display); font-weight: 400; letter-spacing: -0.008em; line-height: 1.12; font-size: clamp(1.8rem, 3.1vw, 2.7rem); color: var(--ink); margin: 0; text-wrap: balance; }
+/* No faked bold, anywhere the display face is used. Instrument Serif ships one weight; without this a
+   stray font-weight:600 from a parent or a <strong> renders a smeared synthetic bold. */
+.v6-d2xl, .v6-dxl, .v6-dl, .v6-phero h1, .v6-prose h2 { font-synthesis-weight: none; }
 .v6-dm   { font-family: var(--sans); font-weight: 600; letter-spacing: -0.018em; line-height: 1.16; font-size: clamp(1.3rem, 2vw, 1.7rem); color: var(--ink); margin: 0; }
 .v6-lead { font-size: clamp(1.08rem, 1.35vw, 1.3rem); line-height: 1.55; color: var(--ink-2); margin: 0; max-width: 60ch; }
 .v6-body { font-size: 1rem; line-height: 1.62; color: var(--ink-3); margin: 0; }
@@ -118,7 +152,7 @@
 
 /* ------------------------------------------------------------- actions ----- */
 .v6-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; box-sizing: border-box;
-  padding: 12px 20px; border-radius: 8px; font-size: 15px; font-weight: 600; letter-spacing: -0.005em; text-decoration: none; cursor: pointer;
+  padding: 12px 20px; border-radius: var(--r-md); font-size: 15px; font-weight: 600; letter-spacing: -0.005em; text-decoration: none; cursor: pointer;
   border: 1px solid var(--ink); background: var(--ink); color: #fff; font-family: var(--sans);
   transition: transform 130ms var(--ease-out), background 160ms ease, border-color 160ms ease, box-shadow 160ms ease, color 160ms ease; }
 .v6-btn:hover { background: #000; border-color: #000; }
@@ -130,10 +164,17 @@
 .v6-btn--brand { background: var(--brand); border-color: var(--brand); }
 .v6-btn--brand:hover { background: var(--brand-ink); border-color: var(--brand-ink); }
 /* On a dark ground the primary action inverts. --brand is near-black, so without this the CTA was
-   black on black in the opening. One rule, keyed to the marker every dark surface already sets. */
-[data-nav-dark] .v6-btn--brand, .v6-dark .v6-btn--brand {
+   black on black in the opening. One rule, keyed to the marker every dark surface already sets.
+   The dark drawer is the third selector because it is a dark ground that carries no marker: [data-nav-dark]
+   is worn by SECTIONS so the bar can sample them, and the drawer is chrome, not a section. Until the bar's
+   button rules were scoped to .v6-nav__in it did not need to be here, because it was being caught by the
+   leak that scoping removed. Losing that leak without stating the treatment would have left the drawer's
+   primary pill at --brand, near-black on a graphite sheet. */
+[data-nav-dark] .v6-btn--brand, .v6-dark .v6-btn--brand,
+.v6-nav[data-theme="dark"] .v6-drawer .v6-btn--brand {
   background: var(--g-fg); border-color: var(--g-fg); color: var(--graphite); }
-[data-nav-dark] .v6-btn--brand:hover, .v6-dark .v6-btn--brand:hover {
+[data-nav-dark] .v6-btn--brand:hover, .v6-dark .v6-btn--brand:hover,
+.v6-nav[data-theme="dark"] .v6-drawer .v6-btn--brand:hover {
   background: #fff; border-color: #fff; color: var(--graphite); }
 .v6-btn--ghost { background: transparent; color: var(--ink); border-color: var(--line-2); }
 .v6-btn--ghost:hover { background: transparent; border-color: var(--ink); }
@@ -142,7 +183,7 @@
 .v6-elink:hover .v6-elink__t { background-size: 100% 1.5px; }
 .v6-elink .v6-arw { color: var(--brand-ink); transition: transform 180ms var(--ease-out); }
 .v6-elink:hover .v6-arw { transform: translateX(3px); }
-.v6-elink:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; border-radius: 3px; }
+.v6-elink:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; border-radius: var(--r-sm); }
 /* Dark grounds declare themselves with data-nav-dark, not only the .v6-dark class. Keying the inverted
    treatment solely on the class left the hero's and the closing scene's editorial links at --ink, which is
    near-black text on a near-black field: invisible. The underline swatch has to invert too, since --brand
@@ -154,8 +195,8 @@
 .v6-dark .v6-elink:focus-visible, [data-nav-dark] .v6-elink:focus-visible { outline-color: var(--g-fg); }
 
 /* signal pills: trusted / review / stopped */
-.v6-sig { display: inline-flex; align-items: center; gap: 7px; padding: 4px 11px 4px 9px; border-radius: 999px; font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; white-space: nowrap; }
-.v6-sig__dot { width: 7px; height: 7px; border-radius: 999px; background: currentColor; flex: none; }
+.v6-sig { display: inline-flex; align-items: center; gap: 7px; padding: 4px 11px 4px 9px; border-radius: var(--r-pill); font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; white-space: nowrap; }
+.v6-sig__dot { width: 7px; height: 7px; border-radius: var(--r-pill); background: currentColor; flex: none; }
 .v6-sig--go   { color: var(--go-ink);   background: rgba(11,124,85,0.09);  border: 1px solid rgba(11,124,85,0.28); }
 .v6-sig--wait { color: var(--wait-ink); background: rgba(169,106,18,0.09); border: 1px solid rgba(169,106,18,0.28); }
 .v6-sig--stop { color: var(--stop-ink); background: rgba(176,58,34,0.09);  border: 1px solid rgba(176,58,34,0.28); }
@@ -169,13 +210,13 @@
 .v6-dark .v6-sig--stop, [data-nav-dark] .v6-sig--stop { color: var(--stop-dk); background: rgba(255,122,85,0.12); border-color: rgba(255,122,85,0.32); }
 
 /* --------------------------------------------------------------- cards ----- */
-.v6-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: clamp(20px,2.2vw,28px); }
+.v6-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: clamp(20px,2.2vw,28px); }
 .v6-card--sunk { background: var(--sunk); border-color: transparent; }
 
 /* Skip link: off-canvas until it takes focus, then it lands as a real button above the nav. */
 .v6-skip { position: fixed; top: 8px; left: 8px; z-index: 100; transform: translateY(-160%);
   background: var(--ink); color: #fff; font-family: var(--sans); font-size: 14px; font-weight: 600;
-  padding: 12px 18px; border-radius: 8px; text-decoration: none;
+  padding: 12px 18px; border-radius: var(--r-md); text-decoration: none;
   transition: transform 160ms var(--ease-out); }
 /* :focus, not :focus-visible. The link is only ever reachable by keyboard, and relying on the heuristic left
    it parked off-canvas in testing, which is the one failure mode a skip link cannot have. */
@@ -183,6 +224,38 @@
 .v6 main:focus { outline: none; }
 
 /* ================================================================ NAV ====== */
+/* THE BAR'S HEIGHT, DECLARED BEFORE ANY JAVASCRIPT RUNS.
+   html { scroll-padding-top: var(--nav-h, 5.125rem) } in app/globals.css is what reserves the bar for every
+   in-page anchor on this site, and the browser performs its fragment scroll DURING PARSE. The ResizeObserver
+   in shell.tsx publishes --nav-h onto the document element, but it cannot run until hydration, so on a cold
+   load of a URL carrying a #hash the offset resolved to the 5.125rem fallback, 82px, against a bar that is
+   66px. Every such anchor landed 16px short and parked the bottom of the PRECEDING band under the bar. That
+   is the reported /platform#current symptom: a grey strip sitting over a white section on arrival.
+
+   The value is derived from the box model in this file, not measured in a browser.
+     desktop   .v6-nav__in is a single-line flex row, so its content height is its tallest item. That is the
+               Open Vraelis button: :320 gives it 14px type, which at the body's 1.5 line-height in
+               app/globals.css is 21px, plus 8px of padding twice, plus its own 1px border twice, so 39px,
+               which is taller than the 38px min-height in the same rule. Add the bar's 13px padding twice and
+               its 1px bottom border, both at :271-272, and the bar is 66px. Nothing else reaches that: the
+               wordmark is 34px at the ceiling of its clamp, and a nav item is 37.75px.
+     <= 940px  the items and the sign in link are hidden at :438-441 and the burger appears, fixed at 40px by
+               :323, 1px taller than the button, so the bar is 67px. That agrees with the 67px measured at
+               390x844 and recorded at :463. The two figures this codebase quotes are both right; they are
+               the two sides of this breakpoint, not a disagreement.
+
+   THIS IS THE PRE-HYDRATION SEED, NOT A SECOND SOURCE OF TRUTH. The ResizeObserver stays and still wins: it
+   writes an inline style on the document element, which outranks any stylesheet rule, and it is what keeps
+   the value honest when the wordmark's clamp() or the viewport moves the real bar off these numbers. It also
+   unsets cleanly, because :has(.v6) stops matching the moment the shell unmounts, which hands /signin and
+   the console back to the 5.125rem their own layouts were tuned against.
+
+   :has() matches against the whole document, so this sets --nav-h for any document that contains a V6 shell
+   anywhere in it. That is correct today because no route mixes a V6 shell with another shell. If one ever
+   does, this has to become a declaration on the shell's own root element instead. */
+:root:has(.v6) { --nav-h: 66px; }
+@media (max-width: 940px) { :root:has(.v6) { --nav-h: 67px; } }
+
 .v6-nav { position: sticky; top: 0; z-index: 60; overflow-anchor: none; }
 /* THE BAR NEVER HIDES. It stays put and takes the colour of whatever is under it instead — see the ground
    sampler in shell.tsx. Hiding it was a worse answer to the same problem (a bar that fights the page) and
@@ -261,10 +334,16 @@
 .v6-nav__signin { font-size: 14.5px; font-weight: 500; color: var(--ink-3); text-decoration: none; padding: 8px 12px; white-space: nowrap; }
 .v6-nav__signin:hover { color: var(--ink); }
 .v6-nav[data-theme="dark"] .v6-nav__signin { color: var(--g-fg-2); } .v6-nav[data-theme="dark"] .v6-nav__signin:hover { color: var(--g-fg); }
-.v6-nav .v6-btn { min-height: 38px; padding: 8px 16px; font-size: 14px; }
-.v6-nav[data-theme="dark"] .v6-btn { background: var(--g-fg); border-color: var(--g-fg); color: var(--graphite); }
-.v6-nav[data-theme="dark"] .v6-btn:hover { background: #fff; border-color: #fff; }
-.v6-nav__burger { display: none; width: 40px; height: 40px; border-radius: 9px; border: 1px solid var(--line-2); background: var(--surface); color: var(--ink); align-items: center; justify-content: center; cursor: pointer; }
+/* .v6-nav__in, NOT .v6-nav. MobileNav mounts INSIDE <nav class="v6-nav"> in shell.tsx, so anything scoped
+   to the bar's element also reached the drawer's pinned footer, two floors down and on a different surface.
+   Both rules did damage there. The dark one is (0,3,0) and beat .v6-btn--ghost's (0,1,0), so Sign in and
+   Open Vraelis rendered as two identical white pills with no primary and no secondary between them. The
+   sizing one is (0,2,0) and beat the base button's 44px min-height with the bar's own 38px, on the one
+   surface that is only ever reached by touch. These are the bar's numbers and they belong to the bar's row. */
+.v6-nav__in .v6-btn { min-height: 38px; padding: 8px 16px; font-size: 14px; }
+.v6-nav[data-theme="dark"] .v6-nav__in .v6-btn { background: var(--g-fg); border-color: var(--g-fg); color: var(--graphite); }
+.v6-nav[data-theme="dark"] .v6-nav__in .v6-btn:hover { background: #fff; border-color: #fff; }
+.v6-nav__burger { display: none; width: 40px; height: 40px; border-radius: var(--r-md); border: 1px solid var(--line-2); background: var(--surface); color: var(--ink); align-items: center; justify-content: center; cursor: pointer; }
 .v6-nav[data-theme="dark"] .v6-nav__burger { background: rgba(255,255,255,0.06); border-color: var(--g-line); color: var(--g-fg); }
 
 /* Resources open: the bar is sitting directly on the panel's light ground, so the WHOLE bar takes the light
@@ -288,7 +367,7 @@
 .v6-nav[data-open="true"][data-theme="dark"] .v6-btn { background: #FAFAFA; border-color: #FAFAFA; color: #0A0A0B; }
 .v6-nav[data-open="true"][data-theme="light"] .v6-btn { background: var(--ink); border-color: var(--ink); color: #fff; }
 /* Focus ring is brand indigo, never a signal colour, and is stated for each bar treatment. */
-.v6-nav__item:focus-visible, .v6-nav__signin:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 8px; }
+.v6-nav__item:focus-visible, .v6-nav__signin:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: var(--r-md); }
 .v6-nav[data-theme="dark"] .v6-nav__item:focus-visible,
 .v6-nav[data-theme="dark"] .v6-nav__signin:focus-visible { outline-color: var(--brand-dk); }
 .v6-nav[data-open="true"] .v6-nav__item:focus-visible,
@@ -321,7 +400,7 @@
   padding: clamp(34px,3.2vw,52px) var(--gutter) clamp(36px,3.6vw,56px); }
 .v6-mega__col-h { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.15em;
   text-transform: uppercase; color: #8E9095; margin: 0 0 16px; }
-.v6-mega__link { display: block; text-decoration: none; padding: 9px 10px; margin: 0 -10px; border-radius: 8px;
+.v6-mega__link { display: block; text-decoration: none; padding: 9px 10px; margin: 0 -10px; border-radius: var(--r-md);
   transition: background 140ms ease; }
 .v6-mega__link:hover { background: rgba(255,255,255,0.06); }
 .v6-mega__link:focus-visible { outline: 2px solid #FAFAFA; outline-offset: -2px; }
@@ -333,7 +412,7 @@
 .v6-mega__fin { animation: v6MegaFade 200ms var(--ease) both; }
 .v6-mega__fstat { display: inline-block; margin-top: 16px; font-family: var(--sans); font-size: 11px;
   font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #8E9095;
-  border: 1px solid rgba(255,255,255,0.16); border-radius: 999px; padding: 5px 12px; }
+  border: 1px solid rgba(255,255,255,0.16); border-radius: var(--r-pill); padding: 5px 12px; }
 .v6-mega__fe { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #8E9095; }
 .v6-mega__feature h4 { color: #FAFAFA; font-size: clamp(1.2rem,1.5vw,1.5rem); font-weight: 600; margin: 14px 0 0;
   letter-spacing: -0.022em; line-height: 1.12; }
@@ -342,7 +421,7 @@
   font-size: 14px; font-weight: 600; color: #FAFAFA; text-decoration: none; }
 .v6-mega__fcta .v6-arw { transition: transform 180ms var(--ease-out); }
 .v6-mega__fcta:hover .v6-arw { transform: translateX(4px); }
-.v6-mega__fcta:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 4px; border-radius: 4px; }
+.v6-mega__fcta:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 4px; border-radius: var(--r-sm); }
 
 
 /* light-ground values for the same panel */
@@ -364,7 +443,7 @@
 .v6-drawer { position: fixed; inset: 0; z-index: 90; background: var(--surface); display: flex; flex-direction: column; animation: v6DrawerIn 240ms var(--ease) both; overflow: hidden; }
 @keyframes v6DrawerIn { from { opacity: 0; } to { opacity: 1; } }
 .v6-drawer__top { display: flex; align-items: center; justify-content: space-between; padding: 13px var(--gutter); border-bottom: 1px solid var(--line); flex: none; }
-.v6-drawer__x { width: 44px; height: 44px; border-radius: 9px; border: 1px solid var(--line-2); background: var(--surface); color: var(--ink); display: grid; place-items: center; cursor: pointer; }
+.v6-drawer__x { width: 44px; height: 44px; border-radius: var(--r-md); border: 1px solid var(--line-2); background: var(--surface); color: var(--ink); display: grid; place-items: center; cursor: pointer; }
 .v6-drawer__body { padding: 8px var(--gutter) 28px; display: flex; flex-direction: column; flex: 1; overflow-y: auto; }
 .v6-drawer__foot { flex: none; padding: 14px var(--gutter) 18px; border-top: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; gap: 10px; }
 .v6-drawer__foot .v6-btn { justify-content: center; }
@@ -387,7 +466,7 @@
   .v6-drawer__sub-links { grid-template-columns: 1fr; }
   /* Keep the enlarged wordmark AND both controls on one line down to 320px: the button gives back the
      padding rather than the wordmark giving back its size. */
-  .v6-nav .v6-btn { padding: 8px 12px; }
+  .v6-nav__in .v6-btn { padding: 8px 12px; }
   .v6-brand { padding-right: 10px; }
 }
 /* Touch targets: editorial links and footer links are text-height on desktop, which is under the 44px touch
@@ -428,9 +507,9 @@
 
 /* ══════════════════════════════════════════════════════ SPECTRAL REVEAL ═════
    The sentence exists once. .v6-spec__t is the real text and the only thing announced, extracted or
-   copied. .v6-spec__fx is an EMPTY, aria-hidden element whose ::after paints the travelling colour:
+   copied. .v6-spec__fx is an EMPTY, aria-hidden element whose ::after paints the travelling highlight:
    aria-hidden excludes its generated content from the accessibility tree, and generated content never
-   appears in innerText. Both layers share the same box so the colour registers with the letterforms.
+   appears in innerText. Both layers share the same box so the highlight registers with the letterforms.
    Everything derives from --sv (0..1), a pure function of rendered scroll progress. */
 .v6-spec { position: relative; display: inline-block;
   --sv-in:   clamp(0, calc(var(--sv) / 0.42), 1);            /* establish: dim -> present      */
@@ -443,16 +522,28 @@
 .v6-spec__t { display: inline; }
 /* the decorative layer sits exactly over the real text and paints only through the letterforms */
 .v6-spec__fx { position: absolute; inset: 0; pointer-events: none; user-select: none; }
+/* THE PASS IS ONE COLOUR, AND IT IS THE GROUND'S OWN FOREGROUND.
+   This gradient ran six stops from purple through blue, cyan and green to gold, across the largest headline
+   on the site, with the green stop sitting next to --go-dk. This file states at :10 and again at :36 that
+   colour may only ever carry state and that there is no accent colour in this system, so the one place the
+   rule was broken was the one place everybody looks. The mechanic survives, the palette does not.
+   It has to flip with the ground rather than being a fixed light value, because the pass is only legible as
+   a pass: it arrives at full strength while the real text underneath is still held at 0.22 opacity by the
+   envelope above, so the letters light up before they resolve. Both call sites are covered. The closing
+   scene is graphite and carries data-nav-dark (close.tsx), so it takes the near-white. The Method sheet in
+   the Knowledge band is --paper on a light section (.v6-kn__sheet in chapters.css), so it takes the
+   near-black. A fixed rgba(250,250,250,0.9) would have painted white on white and killed the reveal on the
+   second one without failing anywhere a test could see it.
+   The transparent ends stay at 6% and 80%. background-repeat is default, so the tile has to meet itself in
+   transparency to travel seamlessly, and moving those two stops would retime the whole pass. */
+.v6-spec { --spec-hl: rgba(10,10,11,0.9); }
+.v6-dark .v6-spec, [data-nav-dark] .v6-spec { --spec-hl: rgba(250,250,250,0.9); }
 .v6-spec__fx::after {
   content: attr(data-text);
   display: block;
   background-image: linear-gradient(100deg,
     transparent 6%,
-    rgba(139, 118, 210, 0.9) 22%,
-    rgba(92, 132, 224, 0.95) 34%,
-    rgba(96, 196, 222, 0.95) 46%,
-    rgba(96, 190, 140, 0.9) 57%,
-    rgba(214, 178, 120, 0.75) 65%,
+    var(--spec-hl) 40%,
     transparent 80%);
   background-size: 300% 100%;
   background-position: calc(100% - var(--sv-move) * 200%) 0;
@@ -462,7 +553,7 @@
   will-change: background-position, opacity; }
 
 @media (prefers-reduced-motion: reduce) {
-  /* the final solid text, immediately: no colour travel, no blur, no partial reveal */
+  /* the final solid text, immediately: no travelling highlight, no blur, no partial reveal */
   .v6-spec { opacity: 1 !important; transform: none !important; filter: none !important; }
   .v6-spec__fx { display: none !important; }
 }
@@ -502,7 +593,7 @@
   transition: background-size 180ms var(--ease), opacity 180ms var(--ease);
 }
 .v6-plink:hover { background-size: 100% 2px; }
-.v6-plink:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 2px; }
+.v6-plink:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: var(--r-sm); }
 /* Same inversion .v6-elink needs, and for the same reason: --brand is near-black, so on a dark ground the
    underline vanishes into the field along with the text. */
 .v6-dark .v6-plink, [data-nav-dark] .v6-plink { background-image: linear-gradient(var(--g-fg), var(--g-fg)); }
@@ -531,19 +622,32 @@
    only `background` to the ground turned the sheet dark while every child kept `color: var(--ink)`, i.e.
    ink type on a near-black sheet, measured 0.02 lightness apart. Patching the children one at a time is
    how that bug reappears forever — I patched the wordmark and the arrow glyph stayed wrong.
-   So nothing here sets a colour. It rebinds the six TOKENS the drawer is already written against, and
+   So nothing here sets a colour. It rebinds the EIGHT TOKENS the drawer is already written against, and
    every existing rule (`background: var(--surface)`, `color: var(--ink)`, the borders, the close button,
    the section headings, the CTA) follows automatically and cannot disagree with the sheet it sits on. The
    pairs are the palette's own light/graphite counterparts, so this introduces no new colour.
    Driven by the bar's data-theme, which is derived from the MEASURED ground (see the sampler in
-   shell.tsx), so "page dark -> directory dark" needs no second source of truth. */
+   shell.tsx), so "page dark -> directory dark" needs no second source of truth.
+
+   IT WAS SIX, AND THE TWO THAT WERE MISSING ARE THE PARAGRAPH ABOVE PROVING ITSELF. A token the drawer
+   consumes but this block does not name keeps its light value on graphite, silently, and the child that
+   reads it is the only thing that looks wrong, which is what invites the patch that must not be made.
+   --ink-4 was missing, so the twelve group labels at .v6-drawer__sub-h (:429) stayed #6A6C71 on the
+   graphite sheet, 3.77:1, under the 4.5:1 minimum, on every dark ground on both hosts. --brand was
+   missing, so the focus ring on both footer buttons stayed near-black on near-black and a keyboard user
+   could not see where they were. Neither child gets a colour here. Both tokens do.
+   --ink-4 resolves to --g-fg-3, the same as --ink-3, on purpose: the graphite ramp has three foreground
+   steps to the light ramp's four, and the meta tier collapses upward into the secondary one rather than
+   inventing a fourth grey that would land below 4.5:1 again. */
 .v6-nav[data-theme="dark"] .v6-drawer {
   --surface: var(--graphite);
   --ink:     var(--g-fg);
   --ink-2:   var(--g-fg-2);
   --ink-3:   var(--g-fg-3);
+  --ink-4:   var(--g-fg-3);
   --line:    var(--g-line);
   --line-2:  var(--g-line-2);
+  --brand:   var(--brand-dk);
 }
 /* The wordmark pin stays and is now self-adjusting rather than a patch: --ink resolves light inside a dark
    drawer by the block above, so this reads correctly on both grounds. */

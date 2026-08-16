@@ -27,6 +27,19 @@ const CARD = {
 const H3 = { margin: "0 0 8px", fontSize: "1.12rem", fontWeight: 600, letterSpacing: "-0.015em", color: "var(--g-fg)" } as const;
 const P = { margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--g-fg-2)" } as const;
 
+// ONE THREE-CARD GRID PER PAGE, AND ON THIS PAGE IT IS THE PLANS.
+//
+// This route ran .v6-grid3 three times in a row: the plans, then What a pass is, then What this pricing does
+// not do. Three consecutive rows of three rounded cards is the shape every SaaS pricing page has, and it
+// makes the two prose sections look like tiers as well, which they are not. The plans are the only thing
+// here that is genuinely a set of comparable options, so they keep the grid and the prose sections are set
+// as rows instead.
+//
+// Both row sections here are graphite. .v6-row was authored for the light ground and now carries its own
+// [data-nav-dark] rebind in pagekit.css, so nothing on-dark is stated per page: a page that patched the
+// colours inline is exactly how the next dark row section would come to miss them.
+const n2 = (i: number) => String(i + 1).padStart(2, "0");
+
 const WHAT_A_PASS_IS: [string, string][] = [
   ["One system, verified once", "A pass covers a single connected system end to end: deriving the checks from your guarantee, running the real workflow in a browser, and returning the evidence. It is not metered per page, per assertion, or per minute."],
   ["Flows are the depth of a pass", "A flow is one journey through the product. Higher plans allow more flows in a single pass, which is how a pass covers more of a system rather than more systems."],
@@ -86,8 +99,12 @@ export default function V6Pricing() {
                     and go looking through Settings for where plans live. The checkout page takes the plan
                     from the query and sends a signed-out visitor through sign-in and back, so one link
                     serves both cases. */}
+                {/* NO RECOMMENDED TIER. The middle plan used to carry brand, which is the highlighted
+                    centre card every three-tier pricing page has, and it is a nudge rather than a fact:
+                    which plan is right depends on how many guarantees a team is protecting, and the card
+                    already says that in a number. Three identical buttons let the numbers decide. */}
                 <div style={{ marginTop: 20 }}>
-                  <CTA brand={p.key === "pro_v1"} href={`/checkout?plan=${p.key}&cycle=monthly`}>Choose {p.name}</CTA>
+                  <CTA href={`/checkout?plan=${p.key}&cycle=monthly`}>Choose {p.name}</CTA>
                 </div>
               </div>
             ))}
@@ -129,22 +146,39 @@ export default function V6Pricing() {
       <section className="v6-sec v6-dark" data-nav-dark>
         <div className="v6-wrap">
           <SectionHead eyebrow="What a pass is" title="One system, verified once, with the evidence kept." />
-          <Reveal media className="v6-grid3">
-            {WHAT_A_PASS_IS.map(([t, d]) => (
-              <div key={t} style={CARD}><h3 style={H3}>{t}</h3><p style={P}>{d}</p></div>
+          <div className="v6-rows">
+            {WHAT_A_PASS_IS.map(([t, d], i) => (
+              <Reveal key={t} i={i}>
+                <div className="v6-row">
+                  <span className="v6-row__n">{n2(i)}</span>
+                  <div>
+                    <h3 className="v6-row__t">{t}</h3>
+                    <p className="v6-row__d">{d}</p>
+                  </div>
+                </div>
+              </Reveal>
             ))}
-          </Reveal>
+          </div>
         </div>
       </section>
 
       <section className="v6-sec">
         <div className="v6-wrap">
           <SectionHead eyebrow="Stated plainly" title="What this pricing does not do." />
-          <Reveal media className="v6-grid3">
-            {HONEST.map(([t, d]) => (
-              <div key={t} style={CARD}><h3 style={H3}>{t}</h3><p style={P}>{d}</p></div>
+          {/* Light ground, so the row classes need no overrides here. */}
+          <div className="v6-rows">
+            {HONEST.map(([t, d], i) => (
+              <Reveal key={t} i={i}>
+                <div className="v6-row">
+                  <span className="v6-row__n">{n2(i)}</span>
+                  <div>
+                    <h3 className="v6-row__t">{t}</h3>
+                    <p className="v6-row__d">{d}</p>
+                  </div>
+                </div>
+              </Reveal>
             ))}
-          </Reveal>
+          </div>
           <Reveal>
             <p className="v6-note">
               Running past the largest plan, or need invoicing, SSO and a signed agreement? That is the{" "}

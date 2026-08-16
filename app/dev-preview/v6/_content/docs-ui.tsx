@@ -57,16 +57,22 @@ export function DocShell({ activeSlug = "", toc = [], children }: {
     return () => { document.body.style.overflow = prev; document.removeEventListener("keydown", onKey); };
   }, [drawer]);
 
-  // Filtering 12 pages needs no index. Substring over title and group, so typing "repair" or "oversight"
-  // both narrow the rail.
+  // A rail this short needs no index. The page count that used to be stated here went stale the moment the
+  // registry changed and was wrong by three, so the number lives in docs.ts and nowhere else. Substring over
+  // title and group, so typing "repair" or "oversight" both narrow the rail.
   const q = query.trim().toLowerCase();
   const shown = useMemo(() => groups
     .map((g) => ({ ...g, docs: g.docs.filter((d) =>
       !q || d.title.toLowerCase().includes(q) || g.group.toLowerCase().includes(q)) }))
     .filter((g) => g.docs.length), [groups, q]);
 
+  // data-nav-band says this div speaks for the GROUND, not only for its own text. The nav's sampler stopped
+  // trusting every element that carries data-nav-dark, because two page-level cards carry it for their text
+  // treatment and the bar was taking their colour over a white section. Sections and the site footer are
+  // band-level by their tag; the docs environment is the one genuine band that is a div, so it opts in.
+  // See components/use-ground-color.ts.
   return (
-    <div className="v6-docsenv" data-nav-dark data-nav-theme="dark" data-drawer={drawer}>
+    <div className="v6-docsenv" data-nav-band data-nav-dark data-nav-theme="dark" data-drawer={drawer}>
       {/* NOT inside v6-wrap. Docs is a product surface, not a section of the marketing page: the rail runs
           the full height flush to the viewport edge, the way a tool does, rather than sitting inset inside
           a centred marketing container. */}

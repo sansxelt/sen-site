@@ -343,8 +343,19 @@ export default function DevelopersPage() {
         </div>
       </section>
 
-      {/* ── Review before spend (still the API, still live) ── */}
-      <section className="v6-sec v6-dark" data-nav-dark style={{ paddingTop: 0 }}>
+      {/* ── Review before spend (still the API, still live) ──
+          The four dark sections from #api down to #webhooks read as one graphite band, which is why the
+          three that follow #api open with paddingTop: 0. That is right for a section nobody can arrive at
+          directly and wrong for one that names itself in the URL: #cli and #webhooks are anchor targets, and
+          with no top padding their eyebrow (margin: 0) sat flush against the bottom edge of the bar. Those
+          two get their padding back below, and the section ABOVE each of them gives up the same amount off
+          its bottom, so the gap between any two of these sections is unchanged and the band still reads as
+          one run. This one is not an anchor, so it keeps the collapsed top and only pays the bottom. */}
+      <section
+        className="v6-sec v6-dark"
+        data-nav-dark
+        style={{ paddingTop: 0, paddingBottom: "calc(var(--sec) - clamp(48px,6vw,88px))" }}
+      >
         <div className="v6-wrap">
           <Reveal>
             <SectionHead
@@ -365,8 +376,17 @@ export default function DevelopersPage() {
         </div>
       </section>
 
-      {/* ── CLI ── */}
-      <section className="v6-sec v6-dark" id="cli" data-nav-dark style={{ paddingTop: 0 }}>
+      {/* ── CLI ── An anchor target, so it pays for its own arrival: the eyebrow needs room under the bar.
+          It is also the section above #webhooks, so it gives that gap back off its bottom. No
+          scroll-margin-top here or anywhere else on this page: globals.css:701-706 records that
+          scroll-padding on the scrollport and scroll-margin on the target ADD, and the previous per-element
+          offset is what produced the 97px overshoot. The section's own padding is the whole mechanism. */}
+      <section
+        className="v6-sec v6-dark"
+        id="cli"
+        data-nav-dark
+        style={{ paddingTop: "clamp(48px,6vw,88px)", paddingBottom: "calc(var(--sec) - clamp(48px,6vw,88px))" }}
+      >
         <div className="v6-wrap">
           <Reveal>
             <SectionHead
@@ -397,8 +417,14 @@ export default function DevelopersPage() {
         </div>
       </section>
 
-      {/* ── Webhooks ── */}
-      <section className="v6-sec v6-dark" id="webhooks" data-nav-dark style={{ paddingTop: 0 }}>
+      {/* ── Webhooks ── The other anchor target, same reason for the same top padding. Its bottom keeps the
+          full --sec: the section after it is light, so this is where the graphite band ends. */}
+      <section
+        className="v6-sec v6-dark"
+        id="webhooks"
+        data-nav-dark
+        style={{ paddingTop: "clamp(48px,6vw,88px)" }}
+      >
         <div className="v6-wrap">
           <Reveal>
             <SectionHead

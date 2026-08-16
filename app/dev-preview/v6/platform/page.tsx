@@ -3,6 +3,7 @@ import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { v6meta } from "../_system/meta";
 import { PageHero, Reveal, SectionHead, CTA, EditorialLink, Signal, Kicker } from "../_system/ui";
+import { LIVE, DIRECTION, type DirectionItem } from "../_content/scope";
 import { V6_BASE } from "@/lib/v6-routes";
 
 // Platform overview (design 06). Framing: Vraelis is oversight for AI software agents, from assigned
@@ -35,6 +36,17 @@ const wrapRow: CSSProperties = {
   flexWrap: "wrap",
   gap: "clamp(20px,2.8vw,44px)",
   alignItems: "stretch",
+};
+
+// A raised panel INSIDE an already-graphite section. GPanel below is the other half of this pair, for a
+// graphite panel sitting on a light section; this one does not need the .v6-dark class because the section
+// it lives in already carries it.
+const DARK_PANEL: CSSProperties = {
+  background: "var(--graphite-2)",
+  border: "1px solid var(--g-line)",
+  borderRadius: 16,
+  padding: "clamp(18px,2.2vw,26px)",
+  height: "100%",
 };
 
 /* ---------- small building blocks (server, no state) ---------- */
@@ -92,8 +104,15 @@ const RECORD_FACTS: [string, string][] = [
 const RECORD_STATES: { t: string; d: string; sig?: Sig; tag?: string }[] = [
   { t: "Context captured", d: "The business requirement and its scope are recorded before any work is judged.", sig: "go", tag: "Recorded" },
   { t: "Standard reviewed", d: "A person approves what must remain true. It is held outside the code, where the agent cannot move it." },
-  { t: "Plan observed", d: "6 steps, touching Stripe and the billing service, mapped to the systems they affect." },
-  { t: "Activity tracked", d: "7 files changed. One Stripe price and one usage meter created through the API." },
+  // THE SAME TWO CLAIMS THE MOCK FEED BELOW WAS REMOVED FOR. These read "Plan observed: 6 steps, touching
+  // Stripe and the billing service" and "Activity tracked: 7 files changed. One Stripe price and one usage
+  // meter created through the API." Both describe ingesting an agent's plan and its code and API effects,
+  // which this product does not do and which the Direction column on this same page says it does not do.
+  // Removing the feed and leaving these would have moved the false claim rather than retired it.
+  // What is here instead is the step that genuinely exists between the standard and the run: a dry run
+  // mints a plan, a person approves that exact plan, and the paid execution consumes it unchanged.
+  { t: "Plan approved", d: "A dry run derives the checks and the browser flow. A person approves that exact plan, and the paid run consumes it unchanged." },
+  { t: "Run recorded", d: "A real browser drives the live deployment. Each step is recorded as it happens, with the evidence it produced." },
   { t: "Assumption challenged", d: "“Existing customers keep their current price” is contested until it is proven.", sig: "wait", tag: "Needs proof" },
   { t: "Finding raised", d: "The usage meter is not enforced on the free plan. Recorded against the requirement.", sig: "stop", tag: "Finding" },
   { t: "Decision required", d: "The new pricing cannot ship until a person approves the change.", sig: "wait", tag: "Review" },
@@ -104,10 +123,15 @@ const RECORD_STATES: { t: string; d: string; sig?: Sig; tag?: string }[] = [
 function RecordObject() {
   return (
     <GPanel>
+      {/* This read "Responsibility record / GR-4471". There is no GR- identifier anywhere in this product,
+          which made it an invented reference number dressing a diagram up as a screenshot of a specific
+          record. The panel is an illustration of the record's SHAPE, so it says that instead. The vrf_ ids
+          elsewhere on the site are different and stay: those are example payloads in API documentation,
+          where an example id is what the reader needs. */}
       <GBar
         left={
           <span className="v6-kicker" style={{ color: "var(--g-fg-3)" }}>
-            Responsibility record / GR-4471
+            The shape of one responsibility record
           </span>
         }
         right={<Signal state="go">Verified</Signal>}
@@ -179,13 +203,25 @@ const WORK: { t: string; sys: string; state: Sig; label: string }[] = [
   { t: "Ship the new onboarding flow", sys: "web / analytics", state: "go", label: "Verified" },
 ];
 
-const ACTIVITY: { t: string; d: string; sig?: Sig; tag?: string; time: string }[] = [
-  { time: "09:14", t: "Plan submitted", d: "6 steps, touching Stripe and the billing service" },
-  { time: "09:15", t: "Systems mapped", d: "Stripe, billing, dashboard flagged as affected" },
-  { time: "09:22", t: "7 files changed", d: "billing/, dashboard/, api/usage" },
-  { time: "09:23", t: "Stripe API called", d: "created 1 price, 1 usage meter" },
-  { time: "09:24", t: "Assumption flagged", d: "existing customers keep their current price", sig: "wait", tag: "Needs proof" },
-  { time: "09:31", t: "Finding recorded", d: "usage meter is not enforced on the free plan", sig: "stop", tag: "Finding" },
+// WHAT A RUN IS ACTUALLY GIVEN, and every line is a gate that exists in the product today rather than a
+// description of one. The address is resolved before admission (above the credit hold, so a typo costs
+// nothing), the guarantee is a sentence a person wrote and approved, and the plan is minted by a dry run
+// and consumed unchanged by the paid execution.
+const RUN_INPUTS: { t: string; d: string }[] = [
+  { t: "A deployment it can reach", d: "The hostname is resolved before the run is admitted, above the credit hold, so a mistyped address costs nothing rather than buying a report that the address was wrong." },
+  { t: "A guarantee, in one sentence", d: "Written by a person and held outside the code, so the standard a change is judged against cannot be edited by the work being judged." },
+  { t: "A plan that was approved", d: "Minted by a dry run, reviewed, then consumed exactly as approved. Vraelis declines to charge when it cannot build a check that would prove the claim." },
+];
+
+// THE STATES A RUN REALLY MOVES THROUGH. These are the run states in lib/preflight, not an illustration of
+// them: queued, running, and then one terminal state, which lib/preflight/public-decision.ts maps to the
+// three words the API, the CI gate and the webhooks all return.
+const RUN_STATES: { t: string; d: string; sig?: Sig; tag?: string }[] = [
+  { t: "Queued", d: "Admitted, and waiting for a worker to lease it." },
+  { t: "Running", d: "A real browser is driving the live deployment, one approved step at a time." },
+  { t: "Verified", d: "The guarantee held, and the evidence behind that decision is kept with the record.", sig: "go", tag: "Verified" },
+  { t: "Failed", d: "The guarantee did not hold. The evidence and a repair prompt are written onto the issue.", sig: "stop", tag: "Failed" },
+  { t: "Blocked", d: "No verdict could be reached, so none is reported. Nothing is recorded as proven.", sig: "wait", tag: "Blocked" },
 ];
 
 const FINDINGS: { claim: string; reality: string; sig: Sig; tag: string }[] = [
@@ -218,58 +254,28 @@ const KNOWLEDGE: [string, string, string][] = [
   ["Research", "The methodology and open questions", `${BASE}/research`],
 ];
 
-const LIVE = [
-  "A responsibility record with a reviewed standard held outside the code",
-  "Execution of the running software in a real browser, with evidence",
-  "A refusal to charge when no check could prove the claim, on every path that starts a run",
-  "Human review, findings, and a repair package written for a coding agent",
-  "Verified / Failed / Blocked decisions, with history preserved",
-  "Deployed web applications and HTTP APIs",
-  "API, an installable CLI, webhooks, GitHub, Vercel, and Slack",
-];
-
-/* THE PLAN, WITH WHAT IS MISSING SAID OUT LOUD.
- *
- * This was four bare noun phrases: "Continuous ingestion of live agent activity", "IDE and desktop
- * surfaces", and so on. A roadmap written as a list of destinations is read as a list of features, because
- * nothing in the phrasing tells a reader which side of the line it is on once it has been lifted out of the
- * column it was sitting in. The heading said Direction; the sentences did not.
- *
- * So every item now carries the destination AND the true present tense underneath it. The second half is the
- * load-bearing one, and it is the half a reader can check: it says what happens today, including the places
- * where what happens today is "you copy it yourself". Each was verified against the code before being
- * written here, not inferred from the roadmap it came from.
- *
- * Four became six because two of the honest boundaries were not on the list at all. The loop ending at a
- * prompt a person copies, and nothing noticing a new deployment, are the two most consequential things this
- * product does not do, and a reader who found either of them out after paying would be right to feel misled.
- */
-const DIRECTION: [string, string][] = [
-  ["The repair reaches your coding agent on its own",
-    "Today a failure writes a repair package onto the issue: what should have happened, what happened instead, and the evidence. Vraelis does not send it anywhere. You copy it."],
-  ["A new deployment is noticed, and rechecked without being asked",
-    "Today Vraelis reads the deployment you point it at when a run is launched. Nothing watches for the next one, and every recheck is started by a person."],
-  ["One page per guarantee, showing every failure, repair and recheck in order",
-    "Today each run records the guarantee and the exact approved meaning it was proved against. No surface puts that history in a line yet."],
-  ["Live agent activity read as it happens",
-    "Today a check begins at the point work is claimed complete. Plans, code changes and tool calls are not ingested while an agent is working."],
-  ["Surfaces beyond a browser, and beside the agent",
-    "Today the boundary is what a real browser and an HTTP client can observe from outside. Mobile, desktop and native applications are not covered."],
-  ["Reliability memory, and autonomy earned from a record",
-    "Not built. How much an agent may be trusted to do alone should be a conclusion drawn from what it has actually got right, rather than a setting somebody chooses."],
-];
+/* LIVE and DIRECTION MOVED TO _content/scope.ts, because /company was rendering a second, older copy of both
+   and the two had already drifted apart. The reasoning that produced the [destination, present tense] shape
+   travelled with the data and now lives above it there, including why there is no /roadmap route. This page
+   is still where the section lives; it is no longer where the list is authored. */
 
 /* The Direction column's own renderer. Same dot and the same rhythm as Led, so the two cards still read as
    one comparison, with a second line underneath each item carrying the present tense. Quieter than the
-   destination above it in weight but not in colour: this is the sentence that has to survive being skimmed. */
-function Planned({ items }: { items: [string, string][] }) {
+   destination above it in weight but not in colour: this is the sentence that has to survive being skimmed.
+   The tier sits on the destination line as a mono label. It is deliberately the smallest thing in the card:
+   it orders the column by how much of each item already stands, and it is not a date, because the paragraph
+   under both columns promises there are none. */
+function Planned({ items }: { items: DirectionItem[] }) {
   return (
     <ul style={{ listStyle: "none", margin: "18px 0 0", padding: 0, display: "flex", flexDirection: "column", gap: 18 }}>
-      {items.map(([t, now]) => (
+      {items.map(([t, now, tier]) => (
         <li key={t} style={{ display: "flex", gap: 11, alignItems: "flex-start" }}>
           <span aria-hidden style={{ marginTop: 7, width: 7, height: 7, borderRadius: 999, background: "var(--wait)", flex: "none" }} />
           <span>
-            <span style={{ display: "block", fontSize: 15, lineHeight: 1.5, color: "var(--ink-2)" }}>{t}</span>
+            <span style={{ display: "block", fontSize: 15, lineHeight: 1.5, color: "var(--ink-2)" }}>
+              {t}
+              <span className="v6-mono" style={{ marginLeft: 8, fontSize: 10.5, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--ink-4)", whiteSpace: "nowrap" }}>{tier}</span>
+            </span>
             <span style={{ display: "block", fontSize: 13.5, lineHeight: 1.55, color: "var(--ink-4)", marginTop: 4 }}>{now}</span>
           </span>
         </li>
@@ -392,50 +398,81 @@ export default function Platform() {
         </div>
       </section>
 
-      {/* 4 ── Live activity (GRAPHITE) ── */}
+      {/* 4 ── Run activity (GRAPHITE) ──
+          THIS SECTION USED TO SHOW A FEED THIS PRODUCT CANNOT PRODUCE.
+          It was a timestamped live feed reading "Plan submitted", "7 files changed", "Stripe API called",
+          under a lead saying Vraelis follows submitted plans, code changes and tool effects. None of that is
+          ingested, by this product, today. The Direction column further down said so, and the boundary note
+          sitting directly under the feed said so, which meant one section contradicted itself twice over and
+          the illustration was the loudest part.
+          A mock is not a neutral placeholder on a site whose entire claim is that a record must not drift
+          from the thing it records. What replaces it is the run lifecycle that actually exists in
+          lib/preflight: what a run is given before it is admitted, the states it really moves through, and
+          the three words it can end on. Nothing here is invented, and nothing here needs a caveat. */}
       <section className="v6-sec v6-dark" data-nav-dark>
         <div className="v6-wrap">
           <Reveal>
             <SectionHead
-              eyebrow="Live activity"
-              title="The work as it happens, from the outside."
-              lead="Vraelis follows the activity it can actually observe: submitted plans, code changes, tool and API effects, external events, and the claims the agent makes. It reads what the work does, not what the agent privately thinks."
+              eyebrow="Run activity"
+              title="What Vraelis observes is the run, not the agent."
+              lead="A check begins at the point work is claimed complete. From there a real browser drives the live deployment and each step is recorded as it happens, with its evidence attached. Plans, code changes and tool calls are not ingested while an agent is working."
             />
           </Reveal>
-          <Reveal media style={{ marginTop: "clamp(28px,3vw,40px)" }}>
-            <div style={{ background: "var(--graphite-2)", border: "1px solid var(--g-line)", borderRadius: 16, padding: "clamp(18px,2.2vw,26px)" }}>
-              <GBar
-                left={<span className="v6-kicker" style={{ color: "var(--go-dk)" }}>&#9679; Live feed</span>}
-                right={<span className="v6-mono" style={{ color: "var(--g-fg-3)", fontSize: 12 }}>GR-4471</span>}
-              />
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                {ACTIVITY.map((a, i) => (
-                  <div
-                    key={a.t}
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "auto minmax(0,1fr)",
-                      gap: "clamp(12px,2vw,20px)",
-                      padding: "13px 0",
-                      borderTop: i === 0 ? "none" : "1px solid var(--g-line)",
-                      alignItems: "baseline",
-                    }}
-                  >
-                    <span className="v6-mono" style={{ color: "var(--g-fg-3)", fontSize: 12.5 }}>{a.time}</span>
-                    <div style={{ minWidth: 0, display: "flex", flexWrap: "wrap", gap: 10, alignItems: "baseline" }}>
-                      <span style={{ color: "var(--g-fg)", fontWeight: 600, fontSize: 14.5 }}>{a.t}</span>
-                      <span style={{ color: "var(--g-fg-2)", fontSize: 14 }}>{a.d}</span>
-                      {a.sig ? <span style={{ marginLeft: "auto" }}><Signal state={a.sig}>{a.tag}</Signal></span> : null}
-                    </div>
-                  </div>
-                ))}
+
+          <div style={{ ...wrapRow, marginTop: "clamp(28px,3vw,40px)" }}>
+            <Reveal media style={{ flex: "1 1 300px", minWidth: 0 }}>
+              <div style={DARK_PANEL}>
+                <GBar left={<Kicker>What a run is given</Kicker>} />
+                <ol style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column" }}>
+                  {RUN_INPUTS.map((r, i) => (
+                    <li key={r.t} style={{ padding: "13px 0", borderTop: i === 0 ? "none" : "1px solid var(--g-line)" }}>
+                      <p style={{ margin: 0, color: "var(--g-fg)", fontWeight: 600, fontSize: 14.5 }}>{r.t}</p>
+                      <p style={{ margin: "5px 0 0", color: "var(--g-fg-2)", fontSize: 14, lineHeight: 1.55 }}>{r.d}</p>
+                    </li>
+                  ))}
+                </ol>
               </div>
-            </div>
-          </Reveal>
+            </Reveal>
+
+            <Reveal media i={1} style={{ flex: "1 1 300px", minWidth: 0 }}>
+              <div style={DARK_PANEL}>
+                <GBar left={<Kicker>The states a run moves through</Kicker>} />
+                <ol style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column" }}>
+                  {RUN_STATES.map((s, i) => (
+                    <li
+                      key={s.t}
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "minmax(0,1fr) auto",
+                        gap: "clamp(10px,1.6vw,18px)",
+                        alignItems: "baseline",
+                        padding: "13px 0",
+                        borderTop: i === 0 ? "none" : "1px solid var(--g-line)",
+                      }}
+                    >
+                      <div style={{ minWidth: 0 }}>
+                        <p style={{ margin: 0, color: "var(--g-fg)", fontWeight: 600, fontSize: 14.5 }}>{s.t}</p>
+                        <p style={{ margin: "5px 0 0", color: "var(--g-fg-2)", fontSize: 14, lineHeight: 1.55 }}>{s.d}</p>
+                      </div>
+                      {s.sig ? <Signal state={s.sig}>{s.tag}</Signal> : (
+                        <span className="v6-mono" style={{ color: "var(--g-fg-3)", fontSize: 12 }}>in flight</span>
+                      )}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </Reveal>
+          </div>
+
+          {/* The three terminal words are the product's own external contract, not a presentation choice:
+              lib/preflight/public-decision.ts is what the API, the CI gate and the outbound webhooks all
+              translate through, so a reader here and a machine reading the API are told the same thing. */}
           <Reveal style={{ marginTop: 22 }}>
-            <p style={{ display: "inline-flex", alignItems: "center", gap: 12, flexWrap: "wrap", color: "var(--g-fg-2)", fontSize: 14.5 }}>
-              <Signal state="wait">Direction</Signal>
-              Continuous, deeper ingestion of live agent activity is where Vraelis is heading, not what it claims today.
+            <p style={{ color: "var(--g-fg-2)", fontSize: 14.5, maxWidth: "72ch", margin: 0 }}>
+              Verified, Failed and Blocked are the only three answers a run can end on, and they are the same
+              three the API, the CI gate and the webhooks return. Blocked means no verdict could be reached,
+              which is the answer that keeps the other two worth having.{" "}
+              <Link href={`${BASE}/docs/run-activity`} className="v6-plink">How a run is recorded</Link>
             </p>
           </Reveal>
         </div>
@@ -625,7 +662,7 @@ export default function Platform() {
             <SectionHead
               eyebrow="Honest about what is live"
               title="What Vraelis does today, and what it does not."
-              lead="The verification engine is real and in use. Everything on the right is a plan, and each line says what actually happens today instead. Nothing here is a delivery date, and nothing on the left is coming soon."
+              lead="The verification engine is real and in use. Everything on the right is a plan, and each line says what actually happens today instead. Next, Later and Horizon say how much of a line already stands, not when it lands. Nothing here is a delivery date, and nothing on the left is coming soon."
             />
           </Reveal>
           <div style={{ ...wrapRow, marginTop: "clamp(28px,3vw,40px)" }}>

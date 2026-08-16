@@ -8,9 +8,17 @@
 /* ---------------------------------------------------------- closing scene --- */
 /* The final chapter, and the largest type on the page. Given a full viewport of its own so the page ends
    on a statement rather than on a block above a footer. */
+/* THE FLOORS WERE ABOVE THEIR OWN vh TERMS, so they were constants, not floors. 13vh clears 96px only
+   above 738px of viewport height and 12vh clears 88px only above 733px, which means every window shorter
+   than a full laptop got a fixed 184px of padding around the largest type on the site and could not give
+   any of it back. On a 600px Chromebook window that is nearly a third of the viewport, and it is why the
+   closing statement and its action arrived split across a scroll. 20px and 18px keep the same proportion
+   and hand the decision to the vh terms, which govern from about 150px of height up. The ceilings are
+   unchanged, so nothing moves on a tall window. min-height is deliberately untouched: the ending is meant
+   to hold a screen, and the padding is what should yield when there is no screen to hold. */
 .v6-end { position: relative; background: var(--graphite); color: var(--g-fg-2); overflow: hidden;
   min-height: 82svh; display: flex; align-items: center;
-  padding: clamp(96px, 13vh, 168px) 0 clamp(88px, 12vh, 144px); }
+  padding: clamp(20px, 13vh, 168px) 0 clamp(18px, 12vh, 144px); }
 .v6-end__field { position: absolute; inset: 0; pointer-events: none;
   background:
     radial-gradient(1300px 780px at 74% 18%, rgba(255,255,255,0.055), transparent 70%),

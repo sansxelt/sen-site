@@ -15,7 +15,15 @@
   overflow: hidden;
   background: var(--graphite);
   color: var(--g-fg-2);
-  padding-block: clamp(56px, 9vh, 120px);
+  /* A FLOOR ABOVE THE vh TERM IS NOT A FLOOR, IT IS A CONSTANT. This was clamp(56px, 9vh, 120px), and 9vh
+     only clears 56px above 622px of viewport height, so on every short viewport the clamp resolved to a
+     fixed 112px of padding that no amount of shortness could reduce. On a landscape phone at 844x390 that
+     is 29 per cent of the window spent on empty space above and below, and it pushed the action below the
+     fold; the width-gated block at the bottom of this file does not apply at 844 wide, so nothing else
+     caught it. 24px lets the vh term govern from 267px up, which is every viewport that exists. The
+     ceiling is unchanged, so a tall window looks exactly as it did. min-height is deliberately untouched:
+     the opening is a full field by design, and the fix is the padding inside it. */
+  padding-block: clamp(24px, 9vh, 120px);
   isolation: isolate;
   --p: 0;
 }
@@ -31,20 +39,38 @@
 .v6-h__eyebrow { color: var(--g-fg-2); }
 /* The thesis is a longer sentence than the category line it replaced, so the scale and the measure are
    set to keep it to three or four lines and leave the support and the action above the fold. */
-.v6-h__h1 { font-family: var(--sans); font-weight: 600; letter-spacing: -0.04em; line-height: 0.98;
-  color: var(--g-fg); margin: clamp(14px, 2vh, 24px) 0 0; font-size: clamp(2.05rem, 4.35vw, 3.95rem);
+/* THE SAME CORRECTION AS THE PADDING ABOVE, applied to the three gaps between the four things. Each of
+   these was a vh clamp whose floor sat above its own vh term: 2vh clears 14px only above 700px of height,
+   2.2vh clears 18px only above 818px, 3.4vh clears 26px only above 765px. So on the short window this
+   section is measured for, the rhythm that was authored to breathe with the viewport did not move at all,
+   and the whole 58px of it was spent before the action was reached. The floors now hand over between 470px
+   and 545px of height, so nothing above about 700px tall changes by a pixel and the change is confined to
+   the windows that needed it. */
+/* THE DISPLAY SERIF, AND THE ONE PLACE IT IS APPLIED CONSERVATIVELY. See --display in v6.css for why the
+   headline tier stopped being the sans at weight 600 with -0.04em of tracking.
+   The font SIZE is deliberately left exactly as it was, unlike the other display rules which were nudged up
+   for this face. This headline sits inside the pinned hero whose short-window rhythm is measured in the
+   comment above, so its block height is load-bearing in a way no other headline on the site is. Only the
+   line-height moves, 0.98 to 1.04, because 0.98 is below this face's own ascender-to-descender clearance
+   and the lines would touch. On a three-line headline that is about 18px taller at the top clamp, which the
+   470px to 545px handover above absorbs. */
+.v6-h__h1 { font-family: var(--display); font-weight: 400; letter-spacing: -0.012em; line-height: 1.04;
+  font-synthesis-weight: none;
+  color: var(--g-fg); margin: clamp(10px, 2vh, 24px) 0 0; font-size: clamp(2.05rem, 4.35vw, 3.95rem);
   max-width: 22ch; text-wrap: balance; }
 .v6-h__h1 .lead-clause { color: var(--g-fg-3); }
-.v6-h__say { margin: clamp(18px, 2.2vh, 26px) 0 0; max-width: 62ch;
+.v6-h__say { margin: clamp(12px, 2.2vh, 26px) 0 0; max-width: 62ch;
   font-size: clamp(1rem, 1.2vw, 1.16rem); line-height: 1.6; color: var(--g-fg-2); }
-.v6-h__cta { margin-top: clamp(26px, 3.4vh, 44px); display: flex; align-items: center; gap: 26px; flex-wrap: wrap; }
+.v6-h__cta { margin-top: clamp(16px, 3.4vh, 44px); display: flex; align-items: center; gap: 26px; flex-wrap: wrap; }
 
 /* ============================ RESPONSIVE ============================ */
 @media (max-width: 1080px) {
   .v6-h__h1 { max-width: 18ch; }
 }
 @media (max-width: 720px) {
-  .v6-h { min-height: calc(100svh - var(--nav-h, 62px)); padding-block: clamp(40px, 8vh, 72px); }
+  /* Same correction one breakpoint down: 8vh clears 40px only above 500px of height, so a phone held
+     sideways got a constant here too. */
+  .v6-h { min-height: calc(100svh - var(--nav-h, 62px)); padding-block: clamp(20px, 8vh, 72px); }
   .v6-h__h1 { font-size: clamp(1.85rem, 7.6vw, 2.6rem); max-width: 17ch; }
   .v6-h__say { font-size: 1rem; max-width: 42ch; }
 }

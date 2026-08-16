@@ -3,6 +3,14 @@
 // in an email that disagrees with the number on the invoice is the kind of thing customers screenshot.
 import { creditsToCents } from "./preflight/auto-recharge";
 import { passPriceCents, PASS_INCLUDED_FLOWS } from "./preflight/pass-pricing";
+// The company category, imported rather than restated. positioning.ts declares itself the only place the
+// high-level thesis may live, and the header below had drifted off it: it carried its own hand-written
+// restatement, from a generation of positioning that file has since moved past. Every email carries this
+// header, so a stale copy here was the most-sent sentence the company owns.
+//
+// scripts/email-embeds-verify.ts asserts the old sentence appears in this file. It has to assert on the
+// import and the interpolation instead, or it is checking that a copy exists rather than that it agrees.
+import { CATEGORY } from "@/app/dev-preview/v6/_system/positioning";
 
 let resendClient: Resend | null = null;
 
@@ -117,7 +125,7 @@ function baseHtml(content: string) {
         <!-- ── Brand header ──────────────────────────────────── -->
         <tr><td style="padding:0 4px 20px;">
           <span style="font-size:18px;font-weight:700;color:#0a0a0a;letter-spacing:-0.02em;">Vraelis</span>
-          <span style="margin-left:10px;font-size:11px;font-weight:500;color:#737373;letter-spacing:0.06em;text-transform:uppercase;">The independent verification layer for work performed by AI.</span>
+          <span style="margin-left:10px;font-size:11px;font-weight:500;color:#737373;letter-spacing:0.06em;text-transform:uppercase;">${CATEGORY}</span>
         </td></tr>
 
         <!-- ── Message card ──────────────────────────────────── -->
@@ -143,7 +151,7 @@ function baseHtml(content: string) {
         <tr><td style="padding:22px 4px 0;border-top:1px solid #e5e5e5;margin-top:22px;">
           <p class="vrl-footer-links" style="margin:16px 0 0;font-size:11px;line-height:1.9;color:#a3a3a3;word-break:break-word;">
             <a href="https://vraelis.com" style="color:#737373;text-decoration:none;">vraelis.com</a>
-             · <a href="https://vraelis.com/how-it-works" style="color:#737373;text-decoration:none;">Product</a>
+             · <a href="https://vraelis.com/method" style="color:#737373;text-decoration:none;">Product</a>
              · <a href="https://vraelis.com/pricing" style="color:#737373;text-decoration:none;">Pricing</a>
              · <a href="https://vraelis.com/privacy" style="color:#737373;text-decoration:none;">Privacy</a>
              · <a href="https://vraelis.com/terms" style="color:#737373;text-decoration:none;">Terms</a>
@@ -218,37 +226,25 @@ export function welcomeHtml(name?: string) {
     <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">Your first verification:</strong></p>
     <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
       <li>Give Vraelis your deployed app and the outcome that should be true.</li>
-      <li>It derives what must be checked and runs it in a real browser.</li>
+      <li>It derives the checks, shows you the exact plan to approve, then runs it in a real browser.</li>
       <li>Get verified, failed, or blocked, with evidence and a repair prompt.</li>
     </ul>
     <a href="https://app.vraelis.com" class="vrl-btn" style="${BTN_STYLE}">Verify an outcome</a>
     <span class="vrl-btn-spacer">&nbsp;</span>
-    <a href="https://vraelis.com/how-it-works" class="vrl-btn" style="${BTN_LIGHT}">How it works</a>
+    <a href="https://vraelis.com/method" class="vrl-btn" style="${BTN_LIGHT}">How it works</a>
     <div style="${NOTE_STYLE}">
       <strong style="color:#0a0a0a;">Didn&apos;t create this account?</strong> You can safely ignore this email, the signup won&apos;t charge you anything and we won&apos;t email you again. If you&apos;re seeing emails you didn&apos;t expect, contact <a href="mailto:help@vraelis.com" style="color:#0a0a0a;">help@vraelis.com</a>.
     </div>
   `);
 }
 
-export function earlyAccessHtml(name: string) {
-  const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
-  return baseHtml(`
-    <p style="${KICKER_STYLE}">Early Access Requested</p>
-    <h1 class="vrl-h1" style="${H1_STYLE}">Your place in the rollout is saved.</h1>
-    <p style="${BODY_STYLE}">${greeting} thanks for requesting early access. We review access requests carefully and roll out in waves so we can actually support everyone who comes in. You&apos;ll get a personal email from the team once your seat is ready.</p>
-    <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">While you wait, a few things worth knowing:</strong></p>
-    <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
-      <li>Your Vraelis account exists now, you can sign in any time to manage preferences.</li>
-      <li>Rollout order prioritizes focus-area match, not signup date, so feel free to update your profile.</li>
-      <li>If access is urgent (team rollout, deadline, specific integration), reach out, we occasionally expedite.</li>
-    </ul>
-    <a href="https://app.vraelis.com" class="vrl-btn" style="${BTN_STYLE}">View your account</a>
-    <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Need a different path?</strong> Teams/sales conversations get fast-tracked, email <a href="mailto:sales@vraelis.com" style="color:#0a0a0a;">sales@vraelis.com</a>. General questions go to <a href="mailto:help@vraelis.com" style="color:#0a0a0a;">help@vraelis.com</a>.
-    </div>
-  `);
-}
-
+// THERE IS NO WAVED ROLLOUT, SO THERE IS NO EMAIL ABOUT ONE.
+//
+// earlyAccessHtml and sendEarlyAccessEmail lived here and promised a reviewed request, a rollout ordered
+// by focus-area match, and a personal note when a seat opened. None of that exists: there is no allowlist,
+// no seat queue and no reviewer, lib/v-preflight-flags.ts records the posture as public-by-default, and
+// nothing in the repo ever called either function. A promise a product cannot keep is worse sitting in the
+// codebase than missing from it, because the next person to need a signup email finds it and sends it.
 export function verifyAccountHtml(name: string, verifyUrl: string, expiryLabel: string) {
   const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
   return baseHtml(`
@@ -350,20 +346,33 @@ export async function sendWelcomeEmail(email: string, name?: string) {
   }
 }
 
+// THE THREE LIFECYCLE EMAILS NOW WEAR THE SAME CHROME AS EVERY OTHER ONE.
+//
+// This one, lowCreditsHtml and winbackHtml each rendered their own document: warm paper #FAF8F4, a Georgia
+// serif wordmark and a #0d5c46 emerald button. That is the retired generation's brand, named as such in
+// app/global-error.tsx, and it survived here for the same reason it survived there, which is that nobody
+// re-reads a file that keeps working. Design 06 has no serif wordmark, no warm ground, and reserves green
+// to mean "a verification held", so the primary button in a nudge was wearing the product's success
+// colour. They go through baseHtml and the shared style atoms now, so a customer who gets a receipt and a
+// nudge in the same week gets them from the same company, and the next brand change is one edit.
+//
 // Activation nudge: sent once by the lifecycle cron (lib/v-lifecycle.ts) to accounts that signed up but
 // haven't run their first verification. One job: get them to run their first one.
 function checkActivationHtml(): string {
   const run = "https://app.vraelis.com";
-  const learn = "https://vraelis.com/how-it-works";
-  return `<!doctype html><html><body style="margin:0;background:#FAF8F4;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#1a1a1a">
-    <div style="max-width:520px;margin:0 auto;padding:32px 24px">
-      <div style="font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:20px;color:#0d5c46;margin-bottom:24px">Vraelis</div>
-      <h1 style="font-size:22px;line-height:1.3;margin:0 0 12px">Your first verification is waiting.</h1>
-      <p style="font-size:15px;line-height:1.6;color:#42484f;margin:0 0 20px">You signed up but haven't run a verification yet. Give Vraelis your deployed app and the outcome that should be true, and it checks the live result in a real browser, then returns the evidence behind its decision.</p>
-      <a href="${run}" style="display:inline-block;background:#0d5c46;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:13px 26px;border-radius:10px">Verify an outcome</a>
-      <p style="font-size:13px;line-height:1.6;color:#8a8f96;margin:24px 0 0">Want to see how it works first? <a href="${learn}" style="color:#0d5c46">vraelis.com/how-it-works</a></p>
-      <p style="font-size:12px;line-height:1.5;color:#a0a4aa;margin:24px 0 0">You're getting this because you created a Vraelis account. If you'd rather not get product nudges, just reply and we'll stop.</p>
-    </div></body></html>`;
+  // /how-it-works is a 301 to /method whenever the V6 public flip is on, which it is (proxy.ts). A link
+  // that redirects is fine; printing the redirecting URL as the visible text is telling the reader a
+  // page name that no longer exists.
+  const learn = "https://vraelis.com/method";
+  return baseHtml(`
+    <p style="${KICKER_STYLE}">Your first verification</p>
+    <h1 class="vrl-h1" style="${H1_STYLE}">Your first verification is waiting.</h1>
+    <p style="${BODY_STYLE}">You signed up but haven't run a verification yet. Give Vraelis your deployed app and the outcome that should be true, and it checks the live result in a real browser, then returns the evidence behind its decision.</p>
+    <a href="${run}" class="vrl-btn" style="${BTN_STYLE}">Verify an outcome</a>
+    <div style="${HR_STYLE}"></div>
+    <p style="${META_STYLE}">Want to see how it works first? <a href="${learn}" style="color:#0a0a0a;">vraelis.com/method</a></p>
+    <div style="${NOTE_STYLE}">You're getting this because you created a Vraelis account. If you'd rather not get product nudges, just reply and we'll stop.</div>
+  `);
 }
 
 export async function sendCheckActivationEmail(email: string) {
@@ -410,15 +419,15 @@ export function lowCreditsHtml(remaining: number): string {
   const lead = out
     ? `Your Vraelis balance is empty, which means you've been putting real releases in front of a browser before your users saw them. A verification is ${price}. Add balance or pick a plan to keep going.`
     : `You have ${left} left and a verification is ${price}, so the next one won't launch. Add balance or pick a plan to keep verifying what your AI ships.`;
-  return `<!doctype html><html><body style="margin:0;background:#FAF8F4;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#1a1a1a">
-    <div style="max-width:520px;margin:0 auto;padding:32px 24px">
-      <div style="font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:20px;color:#0d5c46;margin-bottom:24px">Vraelis</div>
-      <h1 style="font-size:22px;line-height:1.3;margin:0 0 12px">${headline}</h1>
-      <p style="font-size:15px;line-height:1.6;color:#42484f;margin:0 0 20px">${lead} Vraelis is priced by the verification, not the seat: every one includes real-browser execution, evidence, and an explainable decision.</p>
-      <a href="${plans}" style="display:inline-block;background:#0d5c46;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:13px 26px;border-radius:10px">See plans</a>
-      <p style="font-size:13px;line-height:1.6;color:#8a8f96;margin:24px 0 0">Prefer to pay per verification? <a href="${credits}" style="color:#0d5c46">Add balance</a>.</p>
-      <p style="font-size:12px;line-height:1.5;color:#a0a4aa;margin:24px 0 0">You're getting this because you have a Vraelis account. If you'd rather not get product nudges, just reply and we'll stop.</p>
-    </div></body></html>`;
+  return baseHtml(`
+    <p style="${KICKER_STYLE}">Balance</p>
+    <h1 class="vrl-h1" style="${H1_STYLE}">${headline}</h1>
+    <p style="${BODY_STYLE}">${lead} Vraelis is priced by the verification, not the seat: every one includes real-browser execution, evidence, and an explainable decision.</p>
+    <a href="${plans}" class="vrl-btn" style="${BTN_STYLE}">See plans</a>
+    <div style="${HR_STYLE}"></div>
+    <p style="${META_STYLE}">Prefer to pay per verification? <a href="${credits}" style="color:#0a0a0a;">Add balance</a>.</p>
+    <div style="${NOTE_STYLE}">You're getting this because you have a Vraelis account. If you'd rather not get product nudges, just reply and we'll stop.</div>
+  `);
 }
 
 export async function sendLowCreditsEmail(email: string, remaining: number) {
@@ -440,19 +449,21 @@ export async function sendLowCreditsEmail(email: string, remaining: number) {
   }
 }
 
-// Only ever sent to an account with a positive CREDIT balance (lib/v-lifecycle.ts gates on it), so the
-// amount is always real and worth naming. Stated in dollars for the same reason as the low-balance email.
+// THE ONLY BUTTON IN THIS EMAIL IS A LAUNCH, so it may only ever be sent to an account that can afford
+// one. The template cannot check that itself, and it must not try: it is handed a number and prints it.
+// lib/v-lifecycle.ts holds the gate, and it now sends only at or above one standard pass, for the same
+// reason recorded above money() for the low-balance email. Between 1 and 149 credits the button below is
+// a link to a 402.
 export function winbackHtml(remaining: number): string {
   const run = "https://app.vraelis.com";
   const left = money(creditsToCents(Math.max(0, remaining)));
-  return `<!doctype html><html><body style="margin:0;background:#FAF8F4;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#1a1a1a">
-    <div style="max-width:520px;margin:0 auto;padding:32px 24px">
-      <div style="font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:20px;color:#0d5c46;margin-bottom:24px">Vraelis</div>
-      <h1 style="font-size:22px;line-height:1.3;margin:0 0 12px">You still have ${left} of Vraelis balance.</h1>
-      <p style="font-size:15px;line-height:1.6;color:#42484f;margin:0 0 20px">You tried Vraelis a while back, then things went quiet. Your ${left} is still here. Next time your AI ships something users will touch, run a verification first: give Vraelis the outcome that should be true and it checks the live result in a real browser, with evidence and a repair prompt.</p>
-      <a href="${run}" style="display:inline-block;background:#0d5c46;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:13px 26px;border-radius:10px">Verify an outcome</a>
-      <p style="font-size:12px;line-height:1.5;color:#a0a4aa;margin:24px 0 0">You're getting this because you have a Vraelis account. If you'd rather not get product nudges, just reply and we'll stop.</p>
-    </div></body></html>`;
+  return baseHtml(`
+    <p style="${KICKER_STYLE}">Your balance is still here</p>
+    <h1 class="vrl-h1" style="${H1_STYLE}">You still have ${left} of Vraelis balance.</h1>
+    <p style="${BODY_STYLE}">You tried Vraelis a while back, then things went quiet. Your ${left} is still here. Next time your AI ships something users will touch, run a verification first: give Vraelis the outcome that should be true, it derives the checks, shows you the exact plan to approve, then runs it in a real browser, with evidence and a repair prompt.</p>
+    <a href="${run}" class="vrl-btn" style="${BTN_STYLE}">Verify an outcome</a>
+    <div style="${NOTE_STYLE}">You're getting this because you have a Vraelis account. If you'd rather not get product nudges, just reply and we'll stop.</div>
+  `);
 }
 
 export async function sendWinbackEmail(email: string, remaining: number) {
@@ -469,23 +480,6 @@ export async function sendWinbackEmail(email: string, remaining: number) {
     });
   } catch (error) {
     console.error("sendWinbackEmail failed:", error);
-  }
-}
-
-export async function sendEarlyAccessEmail(email: string, name: string) {
-  const resend = getResend();
-  if (!resend) return;
-
-  try {
-    await resend.emails.send({
-      from:    fromAccount,
-      replyTo: "help@vraelis.com",
-      to:      email,
-      subject: "Your Vraelis invite request is on file",
-      html:    earlyAccessHtml(name),
-    });
-  } catch (error) {
-    console.error("sendEarlyAccessEmail failed:", error);
   }
 }
 
@@ -1014,13 +1008,17 @@ export function inviteHtml(opts: Omit<InviteEmail, "to">) {
   const access = clientSafe
     ? "You'll have client-safe access to this team's shared reports: read-only, with no access to private workspace controls."
     : isProject
-      ? `You'll have ${roleLabel} access to this team's applications and reports.`
+      // The object a customer connects is a System everywhere a user can see it, and proxy.ts redirects
+      // the old route to prove it. This sentence still named it the schema's way, in an email whose link
+      // lands on a page titled Systems. The table keeps its own name; this is copy, not schema.
+      // scripts/terminology-verify.ts now scans this file so the two cannot drift apart again.
+      ? `You'll have ${roleLabel} access to this team's systems and reports.`
       : `You'll join this workspace as ${roleLabel}.`;
   return baseHtml(`
     <p style="${KICKER_STYLE}">${isProject ? "Project invite" : "Workspace invite"}</p>
     <h1 class="vrl-h1" style="${H1_STYLE}">You were invited to ${isProject ? "review " : ""}${context}.</h1>
     <p style="${BODY_STYLE}">You&apos;ve been invited to ${isProject ? "review" : "join"} <strong style="color:#0a0a0a;">${context}</strong> as <strong style="color:#0a0a0a;">${roleLabel}</strong>. ${access}</p>
-    <p style="${BODY_STYLE}">Vraelis independently verifies AI-built applications: give it a deployed app and the outcome that should be true, it checks the live result in a real browser and returns the evidence behind its decision.</p>
+    <p style="${BODY_STYLE}">Vraelis independently verifies AI-built software: give it a deployed app and the outcome that should be true, it derives the checks, shows you the exact plan to approve, then runs it in a real browser and returns the evidence behind its decision.</p>
     <a href="${opts.acceptUrl}" class="vrl-btn" style="${BTN_STYLE}">${isProject ? "View project" : "Accept invite"}</a>
     <div style="${HR_STYLE}"></div>
     <p style="${META_STYLE}">Sign in with <strong style="color:#0a0a0a;">this email address</strong> to access the ${isProject ? "project" : "workspace"}. Your invite activates automatically.</p>

@@ -3,10 +3,11 @@
 // Shared public shell for design 06: one nav, one Resources mega-menu, one mobile full-screen nav, one
 // footer, one route transition, used by every v6 route. Sticky nav goes transparent -> blurred on scroll and
 // flips to a dark treatment over graphite (live-work) sections. Client-side nav with prefetch (next/link).
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SiteFooter } from "./close";
+import { useGroundColor } from "@/components/use-ground-color";
 import { V6_BASE, V6_HOME, V6_APP, v6SignInPath, v6GroundAtTop, GROUND_CSS } from "@/lib/v6-routes";
 
 // FOLLOWS THE PROMOTION FLAG. These were hardcoded to "/dev-preview/v6", which is precisely the mistake
@@ -35,10 +36,10 @@ const MENUS: Menu[] = [
         { t: "Platform overview", d: "What the product does", href: BASE + "/platform" },
         { t: "Requirements", d: "What a change must not break", href: BASE + "/docs/responsibilities",
           preview: { eyebrow: "Requirements", title: "One sentence the change is not allowed to break.", body: "Written by a person, held outside the code, and fixed before anything runs.", stat: "Held outside the code" } },
-        { t: "Systems", d: "Everything you have connected", href: BASE + "/docs/work" },
+        { t: "Systems", d: "Everything you have connected", href: BASE + "/docs/systems" },
       ] },
       { h: "Verify", links: [
-        { t: "Execution", d: "A real browser on the live software", href: BASE + "/docs/live-activity",
+        { t: "Execution", d: "A real browser on the live software", href: BASE + "/docs/run-activity",
           preview: { eyebrow: "Execution", title: "A real browser drives the running software.", body: "Not a mock, and not the agent's account of itself. What the run does is captured as it goes.", stat: "Real browser" } },
         { t: "Findings", d: "What the evidence does not support", href: BASE + "/docs/findings" },
         { t: "Completion", d: "Verified, Failed, or Blocked", href: BASE + "/docs/completion",
@@ -82,7 +83,7 @@ const MENUS: Menu[] = [
     groups: [
       { h: "Learn", links: [
         { t: "Documentation", d: "Use and administer Vraelis", href: BASE + "/docs",
-          preview: { eyebrow: "Documentation", title: "Nine pages, each with one outcome.", body: "Getting started, the work, oversight, and what is kept once the work is done.", stat: "9 pages" } },
+          preview: { eyebrow: "Documentation", title: "Nine pages, each with one outcome.", body: "Getting started, the systems you connect, oversight, and what is kept once the work is done.", stat: "9 pages" } },
         { t: "Vraelis Method", d: "The worldview behind the product", href: BASE + "/method" },
         { t: "README", d: "Why Vraelis exists", href: BASE + "/readme" },
       ] },
@@ -95,7 +96,7 @@ const MENUS: Menu[] = [
       { h: "Trust", links: [
         { t: "Security", d: "Architecture and data handling", href: BASE + "/security" },
         { t: "System status", d: "What is operational", href: BASE + "/security#status" },
-        { t: "Current capabilities", d: "What is built, and what is not", href: BASE + "/platform#current" },
+        { t: "What is built, and what is next", d: "The live list beside the planned one", href: BASE + "/platform#current" },
       ] },
     ],
     feature: { eyebrow: "The Vraelis Method", title: "The builder cannot be the only judge.",
@@ -119,8 +120,8 @@ const MENUS: Menu[] = [
         { t: "Subprocessors", href: "/subprocessors" },
       ] },
       { h: "Updates", links: [
-        { t: "Current capabilities", d: "What is built, and what is not", href: BASE + "/platform#current",
-          preview: { eyebrow: "Current capabilities", title: "What is built, stated without decoration.", body: "Everything marked Direction is unbuilt, and is labelled that way everywhere it appears on this site.", stat: "Live vs Direction" } },
+        { t: "What is built, and what is next", d: "The live list beside the planned one", href: BASE + "/platform#current",
+          preview: { eyebrow: "What is built, and what is next", title: "Both halves, stated without decoration.", body: "Everything marked Direction is unbuilt, is labelled that way everywhere it appears on this site, and carries no date. A line moves left when it works, and the changelog records the day it did.", stat: "Live vs Direction" } },
         { t: "System status", d: "What is operational", href: BASE + "/security#status",
           preview: { eyebrow: "System status", title: "Verification engine operational.", body: "The engine that drives a real browser against a requirement is running.", stat: "Operational" } },
         { t: "Changelog", d: "What shipped, dated", href: BASE + "/changelog" },
@@ -223,9 +224,6 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
   const navRef = useRef<HTMLElement>(null);
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [scrolled, setScrolled] = useState(false);
-  // Derived during render, not in an effect. The bar used to mount light and correct itself a beat later,
-  // which showed as a white flash over the black hero on every load.
-  const [dark, setDark] = useState(() => themeAtTop(pathname));
   const [settled, setSettled] = useState(false);
   const [drawer, setDrawer] = useState(false);
   // `open` is which menu is showing; `exiting` is the one still animating away. Keeping the outgoing panel
@@ -268,108 +266,59 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
     return () => { ro.disconnect(); root.style.removeProperty("--nav-h"); };
   }, []);
 
-  // LIGHTNESS OF A COMPUTED COLOUR, in whatever notation the browser hands back.
+  // THE BAR TAKES THE COLOUR OF WHATEVER IS UNDER IT. The walk that works that out is
+  // components/use-ground-color.ts, and the reasoning that used to be written out here lives there now.
   //
-  // This must not assume rgb(). Chapter 2's ground is a color-mix(in oklab, ...), which computes to an
-  // `oklab(L a b)` string, and reading its numbers as 0-255 channels made pure white (L 0.999) resolve to
-  // a luma of 0.0008 — so the bar decided it was over something black and painted white text onto a white
-  // bar. It failed hardest exactly where the transition it exists to follow actually lives.
+  // This file carried its own copy of it, which is how the two came to disagree: the hook was made
+  // rAF-throttled and the copy was not, the hook learned that a see-through colour is not a ground and the
+  // copy did not, and every repair to either one fixed half the site. There is one implementation.
   //
-  // oklab/oklch carry perceptual lightness as their FIRST component already, which is a better answer than
-  // anything derivable from channels, so it is used directly. lab/lch are the same on a 0-100 scale.
-  const luma = (c: string | null): number | null => {
-    if (!c) return null;
-    const n = c.match(/-?[\d.]+/g)?.map(Number);
-    if (!n || n.length < 3) return null;
-    if (/^\s*ok(lab|lch)\(/i.test(c)) return n[0];
-    if (/^\s*(lab|lch)\(/i.test(c)) return n[0] / 100;
-    return (0.2126 * n[0] + 0.7152 * n[1] + 0.0722 * n[2]) / 255;
-  };
+  // paused is everything that can sit ON the sample line. The mega panel was already here; the mobile
+  // drawer was in neither the guard nor the dependencies, so a resize with the drawer open latched the
+  // drawer's own surface into the bar and closing it never took a fresh reading.
+  //
+  // atTopFallback is the route's declared ground, because at the top of a route there is nothing to work
+  // out. Measuring there is what left a white bar on the black homepage: on arrival the probe runs before
+  // the hero has painted, finds no labelled surface, and the fallback resolves to light. If the reader then
+  // never scrolls, it stays wrong.
+  //
+  // resetKey is the pathname. A client-side navigation replaces the whole DOM under a bar that is not
+  // scrolling and need not resize, so without it the reading taken on the previous route stands.
+  const routeDark = themeAtTop(pathname);
+  const ground = useGroundColor(navRef, {
+    atTopFallback: routeDark,
+    paused: shown !== null || drawer,
+    resetKey: pathname,
+  });
 
-  // data-ground gates the CSS rule, so a bar that has never measured (no JS, first paint) keeps the
-  // declared theme's own background rather than resolving var(--nav-bg) to nothing and going transparent.
-  const setGround = (nav: HTMLElement, bg: string | null) => {
-    if (bg) { nav.style.setProperty("--nav-bg", bg); nav.dataset.ground = "1"; }
-    else { nav.style.removeProperty("--nav-bg"); delete nav.dataset.ground; }
-  };
-
+  // SCROLLED IS A DIFFERENT FACT and keeps its own listener: it is the bar's border and shadow rather than
+  // the page's colour, and it must go on updating while a panel is open, which is exactly when the ground
+  // sampler is paused.
   useEffect(() => {
-    const nav = navRef.current;
-    // The SECTION under the bar decides, by its own declaration. Sampling a computed background picked up
-    // whatever child happened to sit under the sample point (a code block, a card) and guessed wrong.
-    const onScroll = () => {
-      const y0 = window.scrollY;
-      setScrolled(y0 > 4);
-      if (!nav) return;
-      // While a panel is open it covers the sample line, so hold whatever was measured before it opened.
-      if (shown !== null) return;
-      // AT THE TOP THERE IS NOTHING TO WORK OUT. Every route's first screen is a known quantity, so the bar
-      // takes it from the route and never measures. Measuring here is what left a white bar on the black
-      // homepage: on arrival the probe runs before the hero has painted, finds no labelled surface, and the
-      // fallback resolves to light. If the reader then never scrolls, it stays wrong.
-      if (y0 <= 4) { setGround(nav, null); setDark(themeAtTop(pathname)); return; }
-      const y = Math.round(nav.getBoundingClientRect().bottom) + 1;
-      const stack = document.elementsFromPoint(Math.round(window.innerWidth / 2), y) as HTMLElement[];
-
-      // THE BAR TAKES THE GROUND'S ACTUAL COLOUR, NOT A LABEL FOR IT.
-      //
-      // A declared theme is one of two values, and chapter 2 does not have two values: it interpolates its
-      // background from paper to graphite across the last 12% of the chapter. The section still declares
-      // itself light the whole way, so the bar stayed white over a ground that had gone very nearly black.
-      //
-      // Reading the painted colour covers both cases with one rule and no transition anywhere. A hard cut
-      // at a section boundary is one frame here because the ground changes in one frame; a slow resolve is
-      // slow here because the ground is. That is exactly the property the rules in v6.css argue for — the
-      // bar must never be seen catching up — and sampling gets it for free where a crossfade could not.
-      //
-      // Measured from the SECTION, never from whatever child happens to sit under the sample point. That
-      // distinction is why the original took a label instead: a code block or a card under the bar would
-      // otherwise hand it their colour.
-      const ground = (from: HTMLElement | null): string | null => {
-        let n: HTMLElement | null = from;
-        while (n && n !== document.documentElement) {
-          const bg = getComputedStyle(n).backgroundColor;
-          if (bg && bg !== "transparent" && !bg.startsWith("rgba(0, 0, 0, 0")) return bg;
-          n = n.parentElement;
-        }
-        return null;
-      };
-
-      for (const el of stack) {
-        // Both attributes count. Every dark band in the page kit declares data-nav-dark and NOT
-        // data-nav-theme, so matching only the latter walked straight past them.
-        const surface = el.closest?.("[data-nav-theme], [data-nav-dark]") as HTMLElement | null;
-        if (surface) {
-          const t = surface.dataset.navTheme;
-          const bg = ground(surface);
-          setGround(nav, bg);
-          // THE MEASUREMENT OUTRANKS THE LABEL, and it has to. A declaration is fixed for the life of the
-          // section; a background is not. Chapter 2 declares itself light and then paints its way to
-          // graphite, so taking the bar's colour from the ground and its text from the label put dark ink
-          // on a dark bar — measured at 0.04 luma apart, which is text nobody can read.
-          // The label still decides when there is nothing to measure.
-          const lum = luma(bg);
-          setDark(lum !== null ? lum < 0.5 : t ? t === "dark" : surface.hasAttribute("data-nav-dark"));
-          return;
-        }
-      }
-
-      // Nothing under the bar declares a theme. Rather than assume the ordinary light page — which was the
-      // old behaviour and is wrong for any section that paints itself without saying so — take the colour
-      // of the section that is actually there and decide the text from its luminance, so the two can never
-      // disagree. Falls back to light only when there is genuinely nothing to read.
-      const section = (stack[0]?.closest?.("section") ?? stack[0]) as HTMLElement | null;
-      const bg = ground(section);
-      if (!bg) { setGround(nav, null); setDark(false); return; }
-      setGround(nav, bg);
-      const lum = luma(bg);
-      setDark(lum !== null ? lum < 0.5 : false);
-    };
+    const onScroll = () => setScrolled(window.scrollY > 4);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
     return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); };
-  }, [pathname, shown]);
+  }, []);
+
+  // THE ROUTE'S OWN GROUND HOLDS UNTIL THE SAMPLER HAS READ THIS ROUTE. A reading can only arrive after the
+  // commit that changed the page, so for one commit the value in hand belongs to the route just left. The
+  // key it was taken under says which, and everything below is derived from that during render rather than
+  // corrected afterwards.
+  //
+  // That one commit used to be indefinite. --nav-bg and data-ground were written straight to the DOM, which
+  // React does not manage, so the render-time reset further down could clear the theme and not the ground:
+  // v6.css:197 applies --nav-bg with !important, and the previous route's colour therefore survived into
+  // the new route until something scrolled. A white bar with white type on a graphite route is what that
+  // looked like. They are props on the <nav> now, so they turn over in the same commit as data-theme.
+  //
+  // data-ground gates the CSS rule, so a bar that has not measured (no JS, first paint, the commit after a
+  // navigation) keeps its declared theme's own background rather than resolving var(--nav-bg) to nothing
+  // and going transparent.
+  const sampled = ground.resetKey === pathname;
+  const dark = sampled ? ground.dark : routeDark;
+  const navBg = sampled ? ground.bg : null;
 
   // Colour transitions are suppressed for the first frames so the correct initial theme never animates in.
   useEffect(() => {
@@ -410,10 +359,13 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
   // it re-renders before the browser paints, so there is no frame where the two disagree. The crossfade is
   // suppressed for that swap too (data-settled=false), because a transition between two correct states still
   // looks like lag when the thing underneath changed instantly.
+  //
+  // The theme is no longer reset here, because it is no longer state: it is derived from the sampler's
+  // reading and the route above, which is the same rule one step further along. What is left is the state
+  // that genuinely has to be cleared on a navigation.
   const [lastPath, setLastPath] = useState(pathname);
   if (pathname !== lastPath) {
     setLastPath(pathname);
-    setDark(themeAtTop(pathname));
     setSettled(false);
     setOpen(null);
     setExiting(null);
@@ -437,7 +389,9 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
 
   return (
     <nav ref={navRef} className="v6-nav" data-scrolled={scrolled} data-theme={dark ? "dark" : "light"}
-      data-open={shown !== null} data-settled={settled} aria-label="Primary" onMouseLeave={scheduleClose}>
+      data-open={shown !== null} data-settled={settled} data-ground={navBg ? "1" : undefined}
+      style={navBg ? ({ "--nav-bg": navBg } as CSSProperties) : undefined}
+      aria-label="Primary" onMouseLeave={scheduleClose}>
       <div className="v6-nav__in">
         <Brand />
         <div className="v6-nav__items">
@@ -522,6 +476,21 @@ function MobileNav({ authed, onClose }: { authed: boolean; onClose: () => void }
 // paint is at the top already.
 const useBeforePaint = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
+// WAS THIS NAVIGATION A BACK OR A FORWARD. Three behaviours need the same fact and only one of them could
+// see it: it was a local in useInstantHistoryRestore, so the two scroll corrections below had no way to ask
+// and both treated a traversal as a fresh arrival. Back to the homepage was hard-reset to the top, and a
+// Back onto a hash was dragged to the heading, in both cases discarding the position the browser had just
+// restored, which is the position the reader left.
+//
+// Module scope rather than component state, because the readers are siblings in the tree rather than one
+// component, and there is exactly one shell per document.
+//
+// It is set by the listeners in useInstantHistoryRestore, which already watch the two events that can tell:
+// the Navigation API's navigate, whose navigationType names the kind directly, and popstate as the fallback
+// where that API does not exist. It is cleared on the next pointer or key press, which is the input that
+// precedes any navigation the reader starts, so a Back followed by a link click reads as a link click.
+const lastNavWasTraversal = { current: false };
+
 export function RouteTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   // THE HOMEPAGE always opens at the top. Every other v6 route keeps normal scroll restoration.
@@ -541,6 +510,11 @@ export function RouteTransition({ children }: { children: ReactNode }) {
   //   It does not force the top on inner routes. Doing that clobbered Back on /docs, /method and /platform,
   //   which should return the reader where they were.
   //
+  //   It does not force the top on a traversal, which is the same argument one line up: pressing Back is a
+  //   request to return to a position, and the homepage is not exempt from that because it is long. The
+  //   browser has already restored the offset by the time this runs, so forcing the top threw away the one
+  //   thing the reader asked for.
+  //
   // scrollRestoration is a browser-global that sticks to the history entry it was set on, so it is written
   // on every pathname change rather than once: "manual" only while the homepage is the entry being forced
   // to the top, "auto" everywhere else and on the way out, so it is never left switched off behind us.
@@ -549,8 +523,8 @@ export function RouteTransition({ children }: { children: ReactNode }) {
     // Exact match, not a prefix: /dev-preview/v6/platform must not be treated as the homepage.
     const isHome = pathname === BASE || pathname === BASE + "/";
     // A hash names a position the reader asked for. Without this guard the anchor scroll started and was
-    // then pulled back to the top, so /dev-preview/v6#gap never landed.
-    const wantsTop = isHome && !window.location.hash;
+    // then pulled back to the top, so /dev-preview/v6#gap never landed. A traversal names one too.
+    const wantsTop = isHome && !window.location.hash && !lastNavWasTraversal.current;
 
     if (!wantsTop) {
       if (canRestore) history.scrollRestoration = "auto";
@@ -586,6 +560,9 @@ export function RouteTransition({ children }: { children: ReactNode }) {
  *
  * No timers, no rAF, and the restoration is never animated by hand: the browser is simply allowed to do
  * it instantly.
+ *
+ * These same two events are the only place a traversal is observable, so this is also what publishes
+ * lastNavWasTraversal for the two scroll corrections below.
  */
 function useInstantHistoryRestore() {
   useEffect(() => {
@@ -602,20 +579,36 @@ function useInstantHistoryRestore() {
       html.style.removeProperty("scroll-behavior");
     };
     const onNavigate = (e: Event) => {
-      if ((e as Event & { navigationType?: string }).navigationType === "traverse") arm();
+      const kind = (e as Event & { navigationType?: string }).navigationType;
+      lastNavWasTraversal.current = kind === "traverse";
+      if (kind === "traverse") arm();
     };
+    // scrollRestoration belongs to the history entry it was set on, and the homepage sets "manual" on its
+    // own entry every time it forces itself to the top (see RouteTransition). A manual entry is one the
+    // browser declines to restore, so returning to it would have left the reader at the offset of the page
+    // they came back from. popstate is the first moment `history` refers to the entry being returned TO,
+    // and it runs before the restoration is applied, so this is where the entry gets its restoration back.
+    const onPop = () => {
+      lastNavWasTraversal.current = true;
+      if ("scrollRestoration" in history) history.scrollRestoration = "auto";
+      arm();
+    };
+    // Input disarms the style AND clears the traversal flag. scrollend deliberately does not clear it: it
+    // fires as soon as the restored scroll settles, which can be before the target route has committed, and
+    // the two corrections below read the flag at commit time.
+    const onInput = () => { lastNavWasTraversal.current = false; disarm(); };
     const nav = (window as Window & { navigation?: EventTarget }).navigation;
     nav?.addEventListener("navigate", onNavigate);
-    window.addEventListener("popstate", arm);
+    window.addEventListener("popstate", onPop);
     window.addEventListener("scrollend", disarm);
-    window.addEventListener("pointerdown", disarm, true);
-    window.addEventListener("keydown", disarm, true);
+    window.addEventListener("pointerdown", onInput, true);
+    window.addEventListener("keydown", onInput, true);
     return () => {
       nav?.removeEventListener("navigate", onNavigate);
-      window.removeEventListener("popstate", arm);
+      window.removeEventListener("popstate", onPop);
       window.removeEventListener("scrollend", disarm);
-      window.removeEventListener("pointerdown", disarm, true);
-      window.removeEventListener("keydown", disarm, true);
+      window.removeEventListener("pointerdown", onInput, true);
+      window.removeEventListener("keydown", onInput, true);
       disarm();
     };
   }, []);
@@ -639,19 +632,18 @@ function useInstantHistoryRestore() {
  * and then turned white as the reader moved. The offset is only correct if it is applied to the layout the
  * reader actually gets.
  *
- * A CORRECTION, NEVER AN OVERRIDE. The first deliberate input ends it for good. Anything the reader does with
- * a wheel, a finger or a key means they have taken over, and a page that scrolls itself after that is worse
- * than a page that landed ten pixels high. It also never runs without a hash, never runs if the id is not on
- * the page, and does nothing when it is already within a pixel of correct.
+ * A CORRECTION, NEVER AN OVERRIDE. The first deliberate input ends it, until the reader names a position
+ * again. Anything done with a wheel, a finger or a key means they have taken over, and a page that scrolls
+ * itself after that is worse than a page that landed ten pixels high. It never moves the page without a
+ * hash, never moves it when the id is not on the page, does nothing when it is already within a pixel of
+ * correct, and never touches a position that a Back or a Forward restored.
  */
 function useHashLandsWhereItSays() {
   const pathname = usePathname();
   useEffect(() => {
-    const raw = window.location.hash.slice(1);
-    if (!raw) return;
-    const id = decodeURIComponent(raw);
-
     let surrendered = false;
+    let raf = 0;
+    let settleRaf = 0;
     const surrender = () => { surrendered = true; };
     window.addEventListener("wheel", surrender, { passive: true });
     window.addEventListener("touchstart", surrender, { passive: true });
@@ -659,7 +651,11 @@ function useHashLandsWhereItSays() {
 
     const align = () => {
       if (surrendered) return;
-      const el = document.getElementById(id);
+      // Read the hash at the moment of the correction rather than capturing it, because the target can
+      // change without this effect re-running: usePathname() does not include the hash.
+      const raw = window.location.hash.slice(1);
+      if (!raw) return;
+      const el = document.getElementById(decodeURIComponent(raw));
       if (!el) return;
       // The scrollport's own reserved space is the single source of the offset, so read it rather than
       // recomputing the bar's height here. Two places deciding this is the bug that was just removed.
@@ -671,15 +667,52 @@ function useHashLandsWhereItSays() {
       window.scrollBy({ top: delta, left: 0, behavior: "instant" });
     };
 
+    // BACK AND FORWARD ARE NOT AN ARRIVAL. A traversal restores a position the reader already chose, and
+    // the surrender listeners above are installed after that restoration has already happened, so a Back
+    // press cannot trip the thing that is supposed to stop this. The correction then hauled the reader off
+    // the position they had gone back for and onto the heading they had scrolled away from. The listeners
+    // are still installed, because a hash the reader names later on the same route is a fresh request.
+    //
     // Both settle points, because either one can be the last to move: the font swap, and the frame after the
     // ResizeObserver has published the real bar height. Whichever runs second finds the page already correct
     // and returns without touching anything.
-    const raf = requestAnimationFrame(() => requestAnimationFrame(align));
-    document.fonts?.ready.then(align).catch(() => {});
+    if (!lastNavWasTraversal.current) {
+      raf = requestAnimationFrame(() => requestAnimationFrame(align));
+      document.fonts?.ready.then(align).catch(() => {});
+    }
+
+    // A HASH-ONLY MOVE IS A NEW REQUEST, and nothing here could see one. This effect is keyed on the
+    // pathname, which excludes the hash, so going from #api to #cli on /developers aligned nothing: the
+    // correction was applied to the first anchor of the visit and to no other, and one wheel tick anywhere
+    // in the route switched it off for the rest of the route. Naming a position again re-arms it.
+    //
+    // It waits for the scroll to stop before correcting. The browser is on its way to the anchor when this
+    // fires, animating, because scroll-behavior: smooth is deliberately kept for exactly these links, and
+    // an instant correction mid-flight would cancel the animation and drop the reader at the end of it.
+    // Two identical frames is the settle test, which needs no guessed duration; the frame cap is there so a
+    // reader who keeps scrolling does not leave a rAF loop running.
+    const onHashChange = () => {
+      if (lastNavWasTraversal.current) return;
+      surrendered = false;
+      cancelAnimationFrame(settleRaf);
+      let last = NaN, still = 0, frames = 0;
+      const tick = () => {
+        if (surrendered || frames++ > 180) return;
+        const y = window.scrollY;
+        still = y === last ? still + 1 : 0;
+        last = y;
+        if (still >= 2) { align(); return; }
+        settleRaf = requestAnimationFrame(tick);
+      };
+      settleRaf = requestAnimationFrame(tick);
+    };
+    window.addEventListener("hashchange", onHashChange);
 
     return () => {
       cancelAnimationFrame(raf);
+      cancelAnimationFrame(settleRaf);
       surrendered = true;
+      window.removeEventListener("hashchange", onHashChange);
       window.removeEventListener("wheel", surrender);
       window.removeEventListener("touchstart", surrender);
       window.removeEventListener("keydown", surrender);

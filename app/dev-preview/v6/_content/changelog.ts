@@ -7,6 +7,12 @@
 // that a record should not drift from the thing it records. Prefer fewer, truer entries: one line of work
 // that closed is one entry, even when it took nine commits, and nothing goes in that the code does not do.
 //
+// IT HAPPENED AGAIN, AND WORSE. The commit that now sits at the top of this list edited this very file and
+// did not record itself, so the feed ran twelve days behind the code while three bodies of shipped work went
+// unrecorded. Writing the entry is part of the commit, not a thing to do afterwards when the code is calm.
+// Three commits in that same window are deliberately absent: two refreshed internal documents and one added
+// an operator tool, and none of them changed what the product does for anyone reading this page.
+//
 // FUTURE SCOPE DOES NOT LIVE HERE. It lives on /platform#current, beside the list of what is live, so the two
 // are read together and cannot disagree. A changelog is a record of the past; a roadmap sitting inside one
 // eventually reads as though it already happened. The single Direction entry at the foot of this file is the
@@ -15,6 +21,16 @@ export type Entry = { date: string; tag: "go" | "wait"; tagLabel: string; title:
 
 export const CHANGELOG: Entry[] = [
   {
+    date: "2026-08-10",
+    tag: "go",
+    tagLabel: "Shipped",
+    title: "Three surfaces that disagreed with the ground they were standing on",
+    body: [
+      "Six arrival surfaces painted the retired cream palette on a graphite ground. Sign in measured 1.0:1. The team invite page, both error screens, the console bar's pre-measurement fallback and the product's mobile drawer were the others, the last of which opened as a cream sheet over the graphite console with its active-page marker in green, which in this product means a verification held.",
+      "Every in-page anchor landed 97px past the section it named, because the scrollport's reserved space and the target's own offset add rather than replace. There is one offset now, measured from the real bar. And a window shorter than 768px cut the third layer off a pinned scene instead of compressing it, so pinning stops below that height.",
+    ],
+  },
+  {
     date: "2026-08-03",
     tag: "go",
     tagLabel: "Shipped",
@@ -22,6 +38,26 @@ export const CHANGELOG: Entry[] = [
     body: [
       "Vraelis declines to charge when it cannot build a check that would prove the claim. That refusal ran on the public API and on guarantee preparation, and nowhere else, so the two paths a person actually takes, a launch from the console and a targeted rerun, never reached it. It now runs above every credit hold and above the free pass, so nothing is spent before the decision to refuse is made.",
       "A contract that never stated an outcome cannot be gated, because there is nothing to gate it against. Those launches are recorded as ungated rather than counted as having passed, so the size of what is left is measurable instead of arguable.",
+    ],
+  },
+  {
+    date: "2026-08-03",
+    tag: "go",
+    tagLabel: "Shipped",
+    title: "A tab whose table has no writer",
+    body: [
+      "Repairs read from a table that nothing inserts into, so the tab and its page rendered an empty state on every account that has ever existed. Both are hidden until something writes it, which is one flag the day something does. Nothing was deleted.",
+    ],
+    note: "Hidden, not removed. The repair prompt itself is unaffected: it lives on the issue and on the run report, which is where it always was.",
+  },
+  {
+    date: "2026-08-03",
+    tag: "go",
+    tagLabel: "Shipped",
+    title: "The nudge emails judged a balance in a denomination nobody spends",
+    body: [
+      "The ledger has held two units since passes were priced, and the lifecycle mailer summed both into one number. An account holding nothing but dead rows was told its balance was waiting for it.",
+      "The low-balance email also fired at a threshold from a retired pricing model, which was three per cent of a single launch. It now fires at the moment the balance can no longer buy one pass, which is the same moment the product itself refuses.",
     ],
   },
   {

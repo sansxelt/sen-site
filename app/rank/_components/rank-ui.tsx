@@ -2,7 +2,7 @@
 
 // Vraelis chrome: public nav/footer for marketing pages, and a real sidebar
 // shell for the app so the product feels like one connected SaaS surface.
-import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -15,7 +15,7 @@ import { planLabel } from "@/lib/plan-label";
 import { Ic, I } from "./icons";
 import { CommandPalette, type PaletteSystem } from "./command-palette";
 import { useHideOnScroll } from "@/components/use-hide-on-scroll";
-import { useGroundColor } from "@/components/use-ground-color";
+import { useGroundColor, isOpaqueColor } from "@/components/use-ground-color";
 import { Reveal } from "@/components/reveal";
 import { Scratchpad } from "./scratchpad";
 import { useDismiss } from "./use-dismiss";
@@ -179,6 +179,10 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
   // because the menu covers the sample line and the reading would be the menu's own colour.
   const navRef = useRef<HTMLElement>(null);
   const ground = useGroundColor(navRef, { paused: open });
+  // Whether the bar is SOLID, which is the question the blur below is actually asking. It used to ask
+  // whether a colour had been sampled at all, and the sampler would hand back a 6% wash, so the bar went
+  // see-through with its blur switched off at the same time.
+  const opaque = isOpaqueColor(ground.bg);
   // Slides the bar out on the way down and brings it back on the way up (or when
   // the pointer reaches the top edge). The mobile menu hangs off this element, so
   // an open menu pins the bar — otherwise it would slide away with the menu on it.
@@ -210,10 +214,11 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
       // cream on a light document and to rgba(10,10,11,0.88) inside the product, so the fallback can never
       // be a colour the page is not.
       background: ground.bg ?? (scrolled ? "var(--chrome-veil)" : "transparent"),
-      // Blur only when the bar is translucent. An exact colour match needs no blur, and blurring a surface
-      // that already equals the page behind it just costs a compositor layer for no visible difference.
-      backdropFilter: !ground.bg && scrolled ? "blur(14px)" : "none",
-      WebkitBackdropFilter: !ground.bg && scrolled ? "blur(14px)" : "none",
+      // Blur only when the bar is translucent, which is the veil fallback and nothing else. An exact colour
+      // match needs no blur, and blurring a surface that already equals the page behind it just costs a
+      // compositor layer for no visible difference.
+      backdropFilter: !opaque && scrolled ? "blur(14px)" : "none",
+      WebkitBackdropFilter: !opaque && scrolled ? "blur(14px)" : "none",
       borderBottom: `1px solid ${scrolled ? "var(--line-1)" : "transparent"}`,
       // Transform, not height/display: the bar leaves the viewport without reflowing the page
       // under it, and it stays in the tab order so keyboard focus can still reach it (the
@@ -330,6 +335,10 @@ function AppTopbar({ email, systems, pendingReviews }: { email: string | null; s
   // route opens on the product's graphite, so the first frame needs no measurement to be right.
   const barRef = useRef<HTMLElement>(null);
   const ground = useGroundColor(barRef, { atTopFallback: true, paused: menu });
+  // Same question as the public nav: is the bar solid. A sampled colour used to be assumed solid, and the
+  // console is where that hurt most, because most of its pages are cards over graphite with no band under
+  // the sample line at all.
+  const opaque = isOpaqueColor(ground.bg);
   const menuBtn = useRef<HTMLButtonElement>(null);
   const menuPanel = useRef<HTMLDivElement>(null);
   useDismiss(menu, () => setMenu(false), { panel: menuPanel, trigger: menuBtn });
@@ -389,10 +398,10 @@ function AppTopbar({ email, systems, pendingReviews }: { email: string | null; s
       // The measured ground when there is one; the veil is the fallback for the first frame and for a
       // browser with no JS, so the bar is never left transparent.
       background: ground.bg ?? "var(--chrome-veil)",
-      // Blur only while translucent — an exact match has nothing to blur and the layer costs more than it
-      // shows. Same reasoning as the public nav above.
-      backdropFilter: ground.bg ? "none" : "blur(12px)",
-      WebkitBackdropFilter: ground.bg ? "none" : "blur(12px)" }}>
+      // Blur only while translucent, which is the veil fallback: an exact match has nothing to blur and the
+      // layer costs more than it shows. Same reasoning as the public nav above.
+      backdropFilter: opaque ? "none" : "blur(12px)",
+      WebkitBackdropFilter: opaque ? "none" : "blur(12px)" }}>
       {/* Mobile-only hamburger: opens the accessible nav drawer. Hidden at desktop/tablet widths (CSS). */}
       <MobileNav />
       {/* in-app logo returns to the APP home (app.vraelis.com/); leaving the product entirely is the
@@ -739,7 +748,13 @@ export function RankShell({ signedIn = false, email = null, appHost = false, sys
           <div style={{ position: "sticky", top: 0, zIndex: 50 }}><AppTopbar email={email} systems={systems} pendingReviews={pendingReviews} /></div>
           <div className="app-shell">
             <AppSidebar />
-            <main className="app-main">{children}</main>
+            {/* THE CONSOLE DECLARES ITS GROUND ONCE, HERE. Nothing under app/rank said what theme it paints,
+                and 26 of the 46 console pages contain no <section> at all, so the topbar's sampler ran out of
+                ancestors to ask and settled on whatever card happened to be under it: the bar flickered
+                between the page's #0A0A0B and a card's #121214 as the reader scrolled. <main> is the band
+                every console route actually has, it is graphite on every one of them, and useGroundColor
+                accepts a declaration on main for exactly this reason. */}
+            <main className="app-main" data-nav-theme="dark">{children}</main>
           </div>
           {/* Product only. The marketing site has nothing worth carrying between pages, and a notes button
               on a pricing page is furniture. Inside the shell rather than in a page, because the entire

@@ -206,27 +206,40 @@ const DIRECTIONS: Dir[] = [
   },
 ];
 
+// THE ANCHOR TARGET IS THE OUTER DIV, AND IT IS DELIBERATELY NOT INSIDE THE REVEAL.
+//
+// The id used to sit on the <article>, inside the Reveal, and the divider plus its 44 to 68px of leading
+// space sat on the Reveal itself. The browser resolves a fragment from getBoundingClientRect(), which
+// includes ancestor transforms, and .v6-reveal is translateY(14px) until it intersects (v6.css:416-417). So
+// a cold arrival at /research#earned-autonomy measured a box 14px lower than its laid-out position, scrolled
+// there, and then the reveal finished and moved the section out from under the reader. It also landed past
+// the divider, since that space belonged to an element the id was not on.
+//
+// The wrapper carries the id, the divider and the space, and is never transformed. The Reveal keeps the
+// animation and nothing else, so what the browser measures is what the page settles at.
 function Direction({ d, first }: { d: Dir; first: boolean }) {
   return (
-    <Reveal style={first ? undefined : { borderTop: "1px solid var(--line)", paddingTop: "clamp(44px,5vw,68px)" }}>
-      <article id={d.id} style={{ ...ANCHOR, maxWidth: 840 }}>
-        <Kicker>Direction {d.n}</Kicker>
-        <h2 className="v6-dl" style={{ marginTop: 12 }}>{d.title}</h2>
-        <Prose className="" >
-          {d.body.map((p) => <p key={p}>{p}</p>)}
-        </Prose>
-        <div className="v6-cn" style={{ marginTop: "clamp(22px,2.4vw,30px)" }}>
-          <div className="v6-cn__col">
-            <p className="v6-cn__h"><Signal state="go">Current methodology</Signal></p>
-            <ul>{d.now.map((t) => <li key={t}>{t}</li>)}</ul>
+    <div id={d.id} style={first ? ANCHOR : { ...ANCHOR, borderTop: "1px solid var(--line)", paddingTop: "clamp(44px,5vw,68px)" }}>
+      <Reveal>
+        <article style={{ maxWidth: 840 }}>
+          <Kicker>Direction {d.n}</Kicker>
+          <h2 className="v6-dl" style={{ marginTop: 12 }}>{d.title}</h2>
+          <Prose className="" >
+            {d.body.map((p) => <p key={p}>{p}</p>)}
+          </Prose>
+          <div className="v6-cn" style={{ marginTop: "clamp(22px,2.4vw,30px)" }}>
+            <div className="v6-cn__col">
+              <p className="v6-cn__h"><Signal state="go">Current methodology</Signal></p>
+              <ul>{d.now.map((t) => <li key={t}>{t}</li>)}</ul>
+            </div>
+            <div className="v6-cn__col v6-cn__col--next">
+              <p className="v6-cn__h"><Signal state="wait">Open question</Signal></p>
+              <ul>{d.open.map((t) => <li key={t}>{t}</li>)}</ul>
+            </div>
           </div>
-          <div className="v6-cn__col v6-cn__col--next">
-            <p className="v6-cn__h"><Signal state="wait">Open question</Signal></p>
-            <ul>{d.open.map((t) => <li key={t}>{t}</li>)}</ul>
-          </div>
-        </div>
-      </article>
-    </Reveal>
+        </article>
+      </Reveal>
+    </div>
   );
 }
 

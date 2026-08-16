@@ -147,6 +147,16 @@ html {
   scroll-padding-top: var(--nav-h, 5.125rem);
 }
 
+/* SMOOTH SCROLLING IS OFF FOR ANYONE WHO ASKED FOR LESS MOTION, AND IT IS SAID IN BOTH SHEETS ON PURPOSE.
+   public/vraelis/styles.css:225-228 already carries this override. That file is a manual <link> rendered in
+   the body (app/layout.tsx:154); this one is a CSS import React hoists into the head. The two rules have the
+   same specificity, so the winner is decided by which sheet the framework happens to put last, which is not
+   something either file can read. Declaring it in both makes the outcome the same either way: the media
+   query is what turns smooth off, not load order. Duplication is the point here, not an oversight. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
 body {
   min-height: 100vh;
   background: var(--background);

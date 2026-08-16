@@ -224,8 +224,13 @@ export function Standard() {
    kept out of success.
 
    Once the run finishes the window HANDS OVER: a live prompt appears and the reader can type. It is a
-   sandbox, so nothing is executed and nothing leaves the page. The window controls are chrome and are
-   aria-hidden, because they do nothing and must not be announced as buttons.
+   sandbox, so nothing is executed and nothing leaves the page.
+
+   THE TITLE BAR HOLDS ONE CONTROL AND IT WORKS. It used to open with three dots drawn as a macOS window's
+   close, minimise and zoom buttons, aria-hidden with a comment conceding they did nothing. Hovering them
+   revealed their glyphs, which promised an action a second time. Borrowed chrome that answers nothing is
+   the exact tell this chapter is written against, so they are gone and Replay is the only thing in the bar
+   a reader can press.
    ------------------------------------------------------------------------------------------------- */
 type LK = "cmd" | "out" | "dim" | "go" | "stop" | "wait";
 type Line = { k: LK; t: string };
@@ -344,9 +349,6 @@ export function Product() {
 
         <div className="v6-tm__win">
           <header className="v6-tm__bar">
-            <span className="v6-tm__lights" aria-hidden>
-              <i className="is-close" /><i className="is-min" /><i className="is-max" />
-            </span>
             <span className="v6-tm__title">vraelis repository CLI</span>
             <button type="button" className="v6-tm__replay" onClick={play}>Replay</button>
           </header>
@@ -761,7 +763,7 @@ export function Knowledge() {
         <div className="v6-kn__field">
           {/* the dominant document */}
           <Link href={`${BASE}/method`} className="v6-kn__sheet">
-            <p className="v6-kn__run"><span>The Vraelis Method</span><span>Position 3 of 9</span></p>
+            <p className="v6-kn__run"><span>The Vraelis Method</span><span>Position 2 of 8</span></p>
             <blockquote className="v6-kn__q">
               <Spectral sv="clamp(0, calc((var(--p) - 0.18) / 0.78), 1)"
                 text="An agent that plans, writes, and repairs the work will also tell you it is finished." />

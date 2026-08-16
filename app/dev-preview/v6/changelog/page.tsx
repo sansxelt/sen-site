@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { v6meta } from "../_system/meta";
-import { PageHero, Signal } from "../_system/ui";
+import { PageHero, Signal, ProseLink } from "../_system/ui";
 import { CHANGELOG } from "../_content/changelog";
+import { V6_BASE } from "@/lib/v6-routes";
+
+const BASE = V6_BASE;
 
 export const metadata: Metadata = v6meta({
   title: "Changelog",
@@ -46,6 +49,17 @@ export default function Changelog() {
               </article>
             ))}
           </div>
+          {/* THE OTHER HALF OF THE RECORD, AND THE PAGE HAD NO LINK TO IT.
+              _content/changelog.ts keeps future scope off this page on purpose, and names the section beside
+              "Live today" as the reason it is safe to exclude here. That argument only holds if a reader can
+              get there, and this file contained no link of any kind. One sentence, at the foot of the list,
+              pointing at the surface the exclusion depends on. */}
+          <p className="v6-body" style={{ marginTop: "clamp(30px,3.2vw,44px)", maxWidth: "72ch" }}>
+            This page is a record of the past. What is built today, and what is planned with the sentence
+            saying what happens instead written under it, is{" "}
+            <ProseLink href={`${BASE}/platform#current`}>on the platform page</ProseLink>. A line crosses from
+            Direction to Live today there, and the date it crossed is recorded here.
+          </p>
         </div>
       </section>
     </>

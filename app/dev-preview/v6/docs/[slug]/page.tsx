@@ -9,14 +9,40 @@ import { V6_BASE } from "@/lib/v6-routes";
 const BASE = V6_BASE;
 // Real, runnable examples against the shipped API surface. Only pages where an example is genuinely truthful
 // carry one; the rest render without a code block rather than inventing a call that does not exist.
+//
+// THAT RULE WAS WRITTEN, AND THEN BROKEN IN TWO OF THE THREE EXAMPLES THAT FOLLOWED IT.
+//
+// The repair example called POST /v1/webhooks. There is no such endpoint: /v1 holds credits, keys and
+// verifications, and webhook management lives on a different surface entirely. It is deleted rather than
+// repointed, because subscribing to deliveries is not what a reader of the repair page came for, and the
+// renderer already handles a page with no example.
+//
+// The first example posted to api.vraelis.com with an Authorization: Bearer header. The host does not exist
+// and the header is not the one the route reads; it is vraelis.com/api/v1 and x-api-key. Worse, it showed a
+// single call returning a running verification. A submission with no reviewed_plan_id answers 202
+// review_required and runs nothing, which is the product's central promise working exactly as designed, and
+// the one example a new reader copies was the one place on the site that denied it.
+//
+// The line continuations are "\\", not "\". A backslash at the end of a line inside a template literal is a
+// LineContinuation: it eats itself AND the newline, so the previous block rendered as one unbroken line with
+// no backslashes in it. app/dev-preview/v6/developers/page.tsx already had this right.
 const EXAMPLES: Record<string, [string, string]> = {
-  "getting-started": ["Create a verification", `curl -X POST https://api.vraelis.com/v1/verifications \
-  -H "Authorization: Bearer $VRAELIS_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "deployment_url": "https://app.example.com",
-    "claim": "A paid customer keeps Pro access after signing back in."
-  }'`],
+  "getting-started": ["Submit a claim and get a plan for review", `curl -X POST https://vraelis.com/api/v1/verifications \\
+  -H "x-api-key: $VRAELIS_API_KEY" \\
+  -H "content-type: application/json" \\
+  -d '{ "deployment_url": "https://app.example.com",
+        "claim": "A paid customer keeps Pro access after signing back in." }'
+
+# 202. Nothing ran and nothing was charged: no plan has been approved yet.
+{
+  "state": "review_required",
+  "review_required": true,
+  "human_reviewed": false,
+  "reviewed_plan_id": "rvp_3c9e26ef",
+  "requirements": ["Signing back in keeps Pro access", "..."]
+}
+
+# Approve that plan, then resubmit the same claim with "reviewed_plan_id" to run exactly what was approved.`],
   "completion": ["Read a decision", `GET /v1/verifications/vrf_ff9d6c0d
 
 {
@@ -25,8 +51,6 @@ const EXAMPLES: Record<string, [string, string]> = {
   "claim": "A paid customer keeps Pro access after signing back in.",
   "evidence": { "screenshots": 4, "steps": 14 }
 }`],
-  "repair": ["Subscribe to the recheck", `POST /v1/webhooks
-{ "event": "verification.completed", "url": "https://example.com/hooks/vraelis" }`],
 };
 
 export function generateStaticParams() {

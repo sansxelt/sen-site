@@ -39,22 +39,39 @@ export const DOCS: Doc[] = [
     ],
     related: ["responsibilities", "review"],
   },
+  // THIS PAGE DOCUMENTED A ROUTE THAT DOES NOT EXIST, IN A VOCABULARY NOBODY ELSE USES.
+  //
+  // It was titled Work, described a /work surface, and listed four states: In progress, In review, Finding
+  // and Complete. There is no /work route. The console's own navigation reads Overview, Systems, Guarantees
+  // and Verifications, and the product has exactly three verdicts, translated through one function in
+  // lib/preflight/public-decision.ts so the console, the API, the CI gate and the webhooks cannot disagree
+  // about a run. Publishing a set of state names the product does not use is the same defect the engine
+  // exists to catch, committed by the company selling the catch. Retitled to the surface that is actually
+  // there, and the five labels below are the five that surface renders.
   {
-    slug: "work",
+    slug: "systems",
     group: "The work",
-    title: "Work",
-    summary: "Everything an agent is responsible for, and where each item stands.",
-    outcome: "You can see the state of every responsibility at a glance.",
+    title: "Systems",
+    summary: "Everything you have connected, and how the last run on each one decided.",
+    outcome: "You can see where every connected system stands.",
     blocks: [
-      { t: "p", text: "Work is the top-level view of your account: every responsibility assigned to an agent, grouped by system, with its current oversight state." },
-      { t: "h2", text: "States" },
+      { t: "p", text: "A system is one deployed application Vraelis oversees. Systems is the index of them: every system you have connected, each with the decision from its most recent verification." },
+      { t: "h2", text: "What a system holds" },
       { t: "ul", items: [
-        "In progress: the agent is planning or changing code.",
-        "In review: a person needs to make a decision before it can proceed.",
-        "Finding: Vraelis found a contradiction, a missing piece of evidence, or an unsafe assumption.",
-        "Complete: the responsibility was met and independently accepted.",
+        "The deployment Vraelis drives when a run is launched.",
+        "The guarantees defined against it, each pinned to the exact approved meaning it is proved against.",
+        "Every verification, with its evidence and its decision preserved.",
+        "The issues a failed run raised, each carrying the repair package written for a coding agent.",
       ] },
-      { t: "p", text: "Each state is a link into the detail for that responsibility, where the plan, the changes, the evidence, and the decisions live." },
+      { t: "h2", text: "What the label on a system means" },
+      { t: "ul", items: [
+        "Verified: the last run held its claim, with the evidence to show it.",
+        "Failed: the last run did not, and it says what happened instead.",
+        "Blocked: no honest decision could be reached, so none is claimed.",
+        "In progress: a run is moving and has not reached a decision yet.",
+        "Not tested: nothing has been verified against this system yet.",
+      ] },
+      { t: "note", label: "In review is not a verdict", text: "A plan waiting for a person to approve it is in review. That is a state a plan is in before anything runs, not an answer about your software. The answers are Verified, Failed, and Blocked." },
     ],
     related: ["responsibilities", "findings"],
   },
@@ -76,25 +93,33 @@ export const DOCS: Doc[] = [
     ],
     related: ["review", "completion"],
   },
+  // THE SUBJECT OF THIS PAGE IS THE RUN, NOT THE AGENT, AND IT USED TO BE THE AGENT.
+  //
+  // It promised "you can follow what an agent is doing while it does it" and listed submitted plans, code
+  // changes and external calls as things that appear here. None of that is ingested: no code reads an
+  // agent's activity, and /platform#current carries the opposite sentence in the Direction column, where it
+  // has always been. Two surfaces on the same site answering the same question differently is exactly the
+  // drift this product is sold to catch, so the boundary below is the platform page's sentence word for
+  // word rather than a second phrasing of it. The slug moved with the subject: /docs/live-activity named
+  // the thing that is not built.
   {
-    slug: "live-activity",
+    slug: "run-activity",
     group: "The work",
-    title: "Live activity",
-    summary: "The plan, changes, tools, assumptions, and evidence as the work happens.",
-    outcome: "You can follow what an agent is doing while it does it.",
+    title: "Run activity",
+    summary: "What a verification did, step by step, with the evidence it captured.",
+    outcome: "You can follow what a verification run observed, step by step, with its evidence.",
     blocks: [
-      { t: "p", text: "Live activity is the running record of a responsibility: the plan the agent created, the files it changed, the external systems it called, the assumptions it made, and the evidence collected along the way." },
+      { t: "p", text: "Run activity is the record of one verification: the approved plan it executed, the journeys it drove in a real browser, what each step expected against what it observed, and the evidence captured along the way." },
       { t: "h2", text: "What appears here" },
       { t: "ul", items: [
-        "Submitted plans and the steps they contain.",
-        "Code changes and the systems they touch.",
-        "External calls and their observable effects.",
-        "Assumptions the agent stated or Vraelis inferred, flagged for review.",
+        "The approved plan the run consumed, in the order it was reviewed.",
+        "Each journey and each step, with expected against observed.",
         "Execution evidence: real browser runs, screenshots, and traces.",
+        "The decision the run reached, and the issue and repair package behind a failure.",
       ] },
-      { t: "note", label: "Honest boundary", text: "Vraelis works from available activity, submitted plans, code changes, external events, and the agent's own claims. It does not read an agent's internal reasoning. Deeper live-agent integration is a direction." },
+      { t: "note", label: "Honest boundary", text: "Today a check begins at the point work is claimed complete. Plans, code changes and tool calls are not ingested while an agent is working." },
     ],
-    related: ["agents", "findings"],
+    related: ["completion", "findings"],
   },
   {
     slug: "review",
@@ -137,6 +162,11 @@ export const DOCS: Doc[] = [
       { t: "p", text: "When work fails a responsibility, Vraelis packages what should have happened, what happened instead, how to reproduce it, and the evidence. That package is a structured handoff the agent can act on." },
       { t: "h2", text: "The division of labor" },
       { t: "p", text: "The agent diagnoses the cause and makes the change. Vraelis independently rechecks the repair against the same responsibility. A repair is verified as its own run, and an earlier record is never overwritten." },
+      // WHERE THE LOOP ACTUALLY STOPS. This page described a handoff and a recheck without saying that both
+      // ends are manual, which let a reader assume the package is delivered and the recheck fires by itself.
+      // Neither is true, /platform#current says so in the Direction column, and a boundary a customer meets
+      // in their first week belongs on the page that describes the mechanism, not only on the marketing one.
+      { t: "note", label: "Honest boundary", text: "The package is written onto the issue and rendered as the repair handoff on the run report. Vraelis does not send it anywhere, and the recheck is a rerun a person starts." },
       { t: "note", label: "Preserved history", text: "Every result is kept. A later Verified does not erase an earlier Failed; the history of how the software reached trust stays intact." },
     ],
     related: ["completion", "memory"],
