@@ -288,6 +288,30 @@ export class PostgresRunStore implements RunStore {
     // Notify the application's connected webhook endpoints with the launch decision (the one OUTPUT
     // connection). Best-effort and last: a slow or dead endpoint must never affect a completed run.
     try { await this.dispatchWebhooks(runId, decision); } catch (e) { console.warn(`preflight webhook (${runId}):`, (e as Error).message); }
+    // THE END OF THE FUNNEL, AND UNTIL NOW THE ONLY STEP NOTHING RECORDED. A run being queued was logged by
+    // the acceptance path; a run FINISHING was logged nowhere, because finalizing happens in this worker
+    // process and it had never written an event. So the one number that says whether people who start a
+    // verification actually get an answer did not exist. Best-effort and after everything that settles the
+    // run: an analytics write must never be the reason a completed run is stranded.
+    try { await this.logCompletion(runId, decision); } catch (e) { console.warn(`preflight funnel (${runId}):`, (e as Error).message); }
+  }
+
+  // Record the completion against the owner, with the decision it ended on, so the funnel can show not just
+  // how many runs finished but how many finished Verified, Failed or Blocked. Imported lazily so the worker
+  // does not pull the event writer into its startup path.
+  private async logCompletion(runId: string, decision: RunDecision): Promise<void> {
+    const { data } = await this.s.from("v_preflight_runs")
+      .select("user_id, application_id").eq("id", runId).maybeSingle();
+    const run = data as { user_id?: string; application_id?: string } | null;
+    if (!run?.user_id) return;
+    const [{ logEvent }, { EV_RUN_COMPLETED }] = await Promise.all([
+      import("../../lib/v-events"),
+      import("../../lib/funnel"),
+    ]);
+    await logEvent({
+      userId: run.user_id, eventType: EV_RUN_COMPLETED, actorType: "system", source: "worker",
+      metadata: { run_id: runId, decision: String(decision), ...(run.application_id ? { application_id: run.application_id } : {}) },
+    });
   }
 
   // POST the decision to every webhook connection on this run's application. Owner-scoped; payload is

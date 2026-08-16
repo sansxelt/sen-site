@@ -721,9 +721,46 @@ function useHashLandsWhereItSays() {
   }, [pathname]);
 }
 
+/**
+ * ONE ANONYMOUS VISIT, ONCE PER TAB SESSION.
+ *
+ * The top of the funnel is the only stage that cannot be recorded server-side from something an account
+ * did, because nobody is signed in yet. Everything downstream (account created, verification queued,
+ * verification finished) is written at the moment it happens by the code that does it.
+ *
+ * sessionStorage rather than localStorage, deliberately: coming back tomorrow SHOULD count as a new visit.
+ * A second tab counts as a second session, which is the honest granularity for a number whose only job is
+ * "did anybody arrive", and it is better to slightly over-count sessions than to silently merge two people
+ * sharing a machine.
+ *
+ * Fires on mount only, so what it records is the LANDING path rather than every route the reader then
+ * clicks through. Route-by-route movement is a different question and this is not the mechanism for it.
+ *
+ * sendBeacon first, because it survives the page being closed mid-flight; fetch with keepalive is the
+ * fallback. Both are fire-and-forget: a failed analytics call must be invisible to the reader.
+ */
+function useVisitBeacon() {
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem("v6.visited") === "1") return;
+      sessionStorage.setItem("v6.visited", "1");
+    } catch {
+      return; // storage disabled (private mode): skip, rather than beacon on every mount forever
+    }
+    const body = JSON.stringify({ path: window.location.pathname });
+    try {
+      if (navigator.sendBeacon?.("/api/v/funnel", new Blob([body], { type: "application/json" }))) return;
+    } catch { /* fall through to fetch */ }
+    void fetch("/api/v/funnel", {
+      method: "POST", body, keepalive: true, headers: { "content-type": "application/json" },
+    }).catch(() => {});
+  }, []);
+}
+
 export function V6Shell({ children, authed = false }: { children: ReactNode; authed?: boolean }) {
   useInstantHistoryRestore();
   useHashLandsWhereItSays();
+  useVisitBeacon();
   // THE PERSISTENT ROUTE CANVAS. Every route declares the ground of its opening surface from the same map
   // the nav already trusts, computed during render, so the server-rendered document carries it and a
   // client-side commit swaps it in the same frame as the content. Nothing samples, defers, or corrects

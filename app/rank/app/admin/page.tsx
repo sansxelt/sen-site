@@ -5,6 +5,9 @@ import { I, EmptyIcon } from "@/app/rank/_components/icons";
 
 type Audit = { id: string; user_id: string | null; test_id: string | null; event_type: string; actor_type: string; source: string | null; route: string | null; metadata: Record<string, unknown>; created_at: string };
 type DReq = { id: string; user_id: string; request_type: string; status: string; message: string | null; admin_note: string | null; created_at: string };
+type Stage = { key: string; label: string; count: number; people: number | null };
+type Funnel = { stages: Stage[]; decisions: Record<string, number>; sinceIso: string; truncated: boolean };
+const WINDOWS = [7, 30, 90];
 const ACTORS = ["all", "owner", "admin", "api", "webhook", "system"] as const;
 const DREQ_TYPE: Record<string, string> = { data_export: "Data export", data_correction: "Correction", account_deletion: "Account deletion", privacy_question: "Privacy question" };
 
@@ -19,6 +22,16 @@ export default function AdminPage() {
     if (r.ok) { const j = await r.json(); setAudit(j.events || []); }
   }, [actor]);
 
+  // The funnel. Loaded separately from the audit feed because it answers a different question: the audit
+  // list is "what happened", this is "how many people made it to each step".
+  const [funnel, setFunnel] = useState<Funnel | null>(null);
+  const [days, setDays] = useState(30);
+  const loadFunnel = useCallback(async () => {
+    const r = await fetch(`/api/v/admin/funnel?days=${days}`);
+    if (r.status === 403) { setForbidden(true); return; }
+    if (r.ok) setFunnel(await r.json());
+  }, [days]);
+
   const [dreqs, setDreqs] = useState<DReq[]>([]);
   const [dnote, setDnote] = useState<Record<string, string>>({});
 
@@ -29,6 +42,7 @@ export default function AdminPage() {
 
   useEffect(() => { loadAudit(); }, [loadAudit]);
   useEffect(() => { loadDreqs(); }, [loadDreqs]);
+  useEffect(() => { loadFunnel(); }, [loadFunnel]);
 
   async function reqAction(id: string, body: object) {
     await fetch("/api/v/admin/data-requests", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, ...body }) });
@@ -45,9 +59,59 @@ export default function AdminPage() {
         <div>
           <p className="eyebrow">Admin</p>
           <h1 className="display">Admin</h1>
-          <p>Review user data requests and recent audit activity.</p>
+          <p>Where people fall out of the funnel, plus user data requests and recent audit activity.</p>
         </div>
       </div>
+
+      {/* THE FUNNEL. First on the page because before there are customers it is the only thing here that
+          answers a question worth acting on: which step people stop at. Percentages are of the STEP ABOVE,
+          not of visits, so the drop that matters is the one you read directly. */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "0 0 12px", flexWrap: "wrap" }}>
+        <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>Funnel</div>
+        <div className="seg" style={{ marginLeft: "auto" }}>
+          {WINDOWS.map((d) => <button key={d} onClick={() => setDays(d)} className={days === d ? "on" : ""}>{d}d</button>)}
+        </div>
+      </div>
+      {!funnel ? (
+        <div className="empty"><EmptyIcon d={I.clock} /><h3>Loading</h3><p>Reading visits, signups, and verifications.</p></div>
+      ) : (
+        <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-lg)", overflow: "hidden", background: "var(--bg-1)" }}>
+          {funnel.stages.map((s, i) => {
+            const prev = i > 0 ? funnel.stages[i - 1] : null;
+            // Visits are anonymous, so people-to-people conversion only exists from signup onward; the
+            // visit-to-signup step compares counts instead. Stated rather than quietly mixing the two.
+            const base = prev ? (prev.people ?? prev.count) : 0;
+            const mine = s.people ?? s.count;
+            const pct = prev && base > 0 ? Math.round((mine / base) * 100) : null;
+            return (
+              <div key={s.key} style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 16px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)" }}>
+                <span style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-5)", width: 18, flex: "none" }}>{String(i + 1).padStart(2, "0")}</span>
+                <span style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 600, minWidth: 0 }}>{s.label}</span>
+                {pct !== null ? <span className="pill" style={{ fontSize: 10.5 }}>{pct}%</span> : null}
+                <span style={{ marginLeft: "auto", display: "flex", gap: 14, alignItems: "baseline", flex: "none" }}>
+                  {s.people !== null && s.key !== "repeat"
+                    ? <span style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)" }}>{s.people} {s.people === 1 ? "person" : "people"}</span>
+                    : null}
+                  <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 17, color: "var(--fg-1)" }}>{s.count}</span>
+                </span>
+              </div>
+            );
+          })}
+          {Object.keys(funnel.decisions).length > 0 ? (
+            <div style={{ display: "flex", gap: 14, flexWrap: "wrap", padding: "11px 16px", borderTop: "1px solid var(--line-1)", background: "var(--bg-2)" }}>
+              <span style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>Decisions</span>
+              {Object.entries(funnel.decisions).map(([d, n]) => (
+                <span key={d} style={{ fontSize: 12.5, color: "var(--fg-3)", textTransform: "capitalize" }}>{d} <b style={{ color: "var(--fg-1)" }}>{n}</b></span>
+              ))}
+            </div>
+          ) : null}
+          {funnel.truncated ? (
+            <div style={{ padding: "9px 16px", borderTop: "1px solid var(--line-1)", fontSize: 12, color: "var(--fg-4)" }}>
+              Row cap reached. These are floors, not totals.
+            </div>
+          ) : null}
+        </div>
+      )}
 
       {/* data requests (admin only, gated server-side by isAdmin) */}
       <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: "0 0 12px" }}>Data requests</div>

@@ -119,6 +119,10 @@ const SUITES: Suite[] = [
   // receipt were unreachable for the only product with paying subscribers, because the code that decided
   // what to send sat below the early return that skipped it.
   { file: "scripts/stripe-subscription-lifecycle-verify.ts", npm: "stripe:lifecycle:test" },
+  // Five stages, four event names, four writers in three processes. The failure this guards is the quiet
+  // one: a rename leaves a writer and the reader disagreeing, the funnel reports zero for that step, and
+  // zero is indistinguishable from nobody showing up.
+  { file: "scripts/funnel-verify.ts", npm: "funnel:test" },
   { file: "scripts/run-unique-verify.ts", npm: "run:unique:test" },
   { file: "scripts/assertion-strength-verify.ts", npm: "assertion:strength:test" },
   { file: "scripts/verification-idempotency-verify.ts", npm: "idempotency:test" },

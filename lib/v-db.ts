@@ -4,13 +4,27 @@ import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
 
+// THE ONE PLACE AN ACCOUNT COMES INTO EXISTENCE, which is why the signup event is recorded here and not in
+// the sign-up routes. There are several ways to arrive (email and password, the OAuth providers, an
+// invite, domain auto-join) and every one of them lands on this call. Instrumenting the routes instead
+// would have meant four call sites to keep in step and a fifth one missed the next time a way in is added.
+//
+// ignoreDuplicates makes this an upsert that does nothing on conflict, so asking for the inserted rows back
+// is a reliable first-creation signal: a returning row means the account did not exist a moment ago, and an
+// empty result means this was one of the many calls that just re-assert an existing profile.
 export async function ensureProfile(userId: string, displayName?: string): Promise<void> {
   if (!userId || !isDatabaseConfigured()) return;
   const s = getSupabaseAdminClient();
-  await s.from("v_profiles" as never).upsert(
+  const { data } = await s.from("v_profiles" as never).upsert(
     { user_id: norm(userId), display_name: displayName ?? null } as never,
     { onConflict: "user_id", ignoreDuplicates: true } as never,
-  );
+  ).select("user_id");
+  const created = Array.isArray(data) && data.length > 0;
+  if (!created) return;
+  // Imported lazily so this module keeps its current import graph: v-db is pulled into a lot of request
+  // paths and the event writer is only needed on the rare call that actually creates something.
+  const [{ logEvent }, { EV_SIGNUP }] = await Promise.all([import("./v-events"), import("./funnel")]);
+  await logEvent({ userId: norm(userId), eventType: EV_SIGNUP, actorType: "owner", source: "app" });
 }
 
 export async function getPlan(userId: string): Promise<string> {
