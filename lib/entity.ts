@@ -20,9 +20,21 @@ import { SOCIAL_DESCRIPTION, SOCIAL_IMAGE, SOCIAL_TITLE } from "./social-card";
 // given the machine a reason to prefer its own summary.
 //
 // sameAs is the corroboration hook: the profiles that are demonstrably the same entity. Only accounts the
-// company actually controls belong here. It is also the honest place to note the part that is NOT code: the
-// retired positioning is still live on those profiles, and a crawler that reconciles them against this file
-// will find them disagreeing. Fixing that is a login, not a deploy.
+// company actually controls belong here.
+//
+// CHECKED AGAINST THE LIVE PROFILES, because this comment used to assert the opposite and was wrong.
+// It said the retired positioning was still live on them and that a crawler reconciling them against this
+// file would find them disagreeing. Both profiles resolve, both link back to vraelis.com, and neither
+// mentions the retired product: LinkedIn reads "Stealth." and X reads "Stealth Mode".
+//
+// So the disagreement is gone and a different gap is in its place, and it is the one that matters for
+// entity resolution. This file publishes a real sentence; both corroborating profiles publish nothing.
+// sameAs only corroborates if the thing it points at says something to corroborate, so an identity graph
+// with two silent endpoints is a claim with no second source. That is why a search for the name still
+// returns an unrelated game character: nothing outside this repo says what the company is.
+//
+// Still not a deploy. Fixing it is a login on each profile and one sentence, the same sentence this file
+// publishes, which is why SOCIAL_DESCRIPTION is the single place it is written.
 export const ORGANIZATION = {
   name: SOCIAL_TITLE,
   url: "https://vraelis.com",
