@@ -215,6 +215,23 @@ export async function POST(request: Request) {
         if (alreadyHas) {
           return NextResponse.json({ error: "You already have this addon." }, { status: 409 });
         }
+        // AN ADDON MAY NOT BE PRORATED ONTO A SUBSCRIPTION THAT HAS NEVER BEEN PAID FOR.
+        //
+        // findUsableSubscription (lib/stripe.ts) ranks "incomplete" last but still RETURNS it, so the
+        // subscription this is about to bill against can be one whose first invoice has never cleared.
+        // Attaching a prorated item to it invoices somebody who has not paid for the plan the addon
+        // extends, which is the same class of mistake the webhook already refuses on the read side.
+        //
+        // Stripe is about to enforce this independently: from 9 September 2026, an update to an
+        // "incomplete" subscription that generates invoice items or an invoice answers HTTP 400. A
+        // proration IS an invoice item, so this call is exactly the shape being retired. The guard is
+        // correct on its own terms and, as a side effect, makes that date a non-event here.
+        if (existing.status === "incomplete") {
+          return NextResponse.json(
+            { error: "Finish paying for your plan first, then add this addon." },
+            { status: 409 },
+          );
+        }
         await stripe.subscriptionItems.create({
           subscription: existing.id,
           price: priceId,
