@@ -96,6 +96,17 @@ const VANITY_EXACT: Record<string, string> = {
 // seen. Establishing darkness anywhere further down the document is a white flash by construction.
 export const GROUND_HEADER = "x-vraelis-ground";
 
+// THE PATH THE VISITOR ASKED FOR, CARRIED THROUGH THE CURTAIN REWRITE.
+//
+// Curtained requests are rewritten to /curtain so the real page never renders. That fixed the payload leak
+// and cost something nobody noticed: /curtain has no metadata of its own, so the root layout became the only
+// thing deciding robots, and the root layout is restrictive. The homepage exemption, which the whole
+// argument in robotsMeta() rests on, silently stopped applying.
+//
+// The rewrite target cannot tell which path was asked for, so it is forwarded. Same mechanism as the ground
+// header above, for the same reason: a rewrite loses the question and the answer depends on it.
+export const CURTAIN_PATH_HEADER = "x-vraelis-curtained-path";
+
 function groundFor(target: string): Ground {
   if (target.startsWith("/rank/app")) return "graphite";                 // the signed-in product
   if (target === "/signin" || target === "/signup" || target.startsWith("/auth/")) return "graphite";
@@ -209,7 +220,12 @@ export default function proxy(req: NextRequest) {
     !curtainExempt && stealthConfigured() &&
     !verifyStealthCookie(req.cookies.get(STEALTH_COOKIE)?.value)
   ) {
-    return go(req, "/curtain", "rewrite");
+    const url = req.nextUrl.clone();
+    url.pathname = "/curtain";
+    const headers = new Headers(req.headers);
+    headers.set(GROUND_HEADER, "graphite");
+    headers.set(CURTAIN_PATH_HEADER, path);
+    return noindexWhileStealthed(NextResponse.rewrite(url, { request: { headers } }), path);
   }
 
   // 00) The PUBLIC API namespace. /v1/* is the versioned surface machines call; it is served by the route

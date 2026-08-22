@@ -6,7 +6,7 @@ import "./globals.css";
 import { cookies, headers } from "next/headers";
 import { stealthConfigured, robotsMeta, verifyStealthCookie, STEALTH_COOKIE } from "../lib/stealth";
 import { StealthScreen } from "./_components/stealth-screen";
-import { socialCard } from "../lib/social-card";
+import { socialCard, SOCIAL_TITLE, SOCIAL_DESCRIPTION } from "../lib/social-card";
 import { entityJsonLd } from "../lib/entity";
 import { GROUND_CSS, type Ground } from "../lib/v6-routes";
 import { GROUND_HEADER } from "../proxy";
@@ -55,14 +55,26 @@ const vraelisMetadata: Metadata = {
 };
 
 export async function generateMetadata(): Promise<Metadata> {
-  // In stealth the only page that exists is the curtain, so tell crawlers not to index it. Otherwise the
-  // first thing search engines learn about the domain is a page that says nothing, and that impression
-  // outlives the launch.
+  // THE ONE SENTENCE THE CURTAIN HAS TO CARRY.
+  //
+  // This described the company as "Vraelis is in stealth." Machine-readably that is the company describing
+  // itself as nothing, on the one page the curtain deliberately leaves indexable, while lib/entity.ts
+  // publishes the real sentence as JSON-LD in the same document. entity.ts states the rule that breaks: a
+  // company that describes itself differently in two machine-readable places has given the machine a reason
+  // to prefer its own summary. It did. A search for "vraelis" returns a World of Warcraft character and an
+  // indexed /signin still carrying the RETIRED product's headline, because the live site offered nothing to
+  // replace it with. Saying nothing was not neutral: it left the stale answer standing as the best one.
+  //
+  // Same string as the JSON-LD and the link preview, from the one file that owns it, so the three cannot
+  // drift. It gives away nothing that the visible curtain does not already say.
+  //
+  // robots goes through robotsMeta rather than a literal. A hardcoded robots object here is what overrode
+  // the homepage exemption, and two places deciding indexing is the defect this repo has now fixed twice.
   if (stealthConfigured()) {
     return {
-      title: "Vraelis",
-      description: "Vraelis is in stealth.",
-      robots: { index: false, follow: false },
+      title: SOCIAL_TITLE,
+      description: SOCIAL_DESCRIPTION,
+      robots: robotsMeta(false),
     };
   }
   return vraelisMetadata;

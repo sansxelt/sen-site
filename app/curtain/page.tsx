@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { stealthConfigured } from "@/lib/stealth";
+import { robotsMeta, stealthConfigured } from "@/lib/stealth";
+import { CURTAIN_PATH_HEADER } from "@/proxy";
 
 // THE CURTAIN'S OWN ROUTE, WHICH DELIBERATELY RENDERS NOTHING.
 //
@@ -18,4 +21,24 @@ import { stealthConfigured } from "@/lib/stealth";
 export default function Curtain() {
   if (!stealthConfigured()) notFound();
   return null;
+}
+
+// AND THE ONE THING THAT CAME BACK WITH IT.
+//
+// Rewriting here took the homepage's metadata out of the tree. app/dev-preview/v6/page.tsx carries
+// `robots: robotsMeta(true, { curtainVisible: true })`, and Next merges metadata by depth with the deepest
+// segment winning, so before the rewrite that page was what made "/" indexable. Afterwards the deepest
+// segment was this one, which declared nothing, and the root layout's restrictive default became the only
+// signal. The header said indexable and the meta tag said noindex, and the two are combined restrictively,
+// so the exemption robotsMeta() argues for at length quietly stopped applying.
+//
+// scripts/stealth-index-verify.ts already warned about this exact shape: "Exempting the header while the
+// meta still says noindex changes nothing at all." It asserted the v6 homepage asked correctly and could not
+// see that the v6 homepage was no longer the page being rendered.
+//
+// The exemption is decided from the path the VISITOR asked for, forwarded by proxy.ts, never from this
+// route's own path, which is the same for every curtained request. Everything except "/" stays noindex.
+export async function generateMetadata(): Promise<Metadata> {
+  const asked = (await headers()).get(CURTAIN_PATH_HEADER);
+  return { robots: robotsMeta(true, { curtainVisible: asked === "/" }) };
 }

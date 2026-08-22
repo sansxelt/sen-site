@@ -88,7 +88,7 @@ console.log("\n── the curtain stops the page being rendered at all ──");
 {
   const proxy = code(readFileSync("proxy.ts", "utf8"));
   ok("proxy rewrites a curtained request away from the real page",
-    /stealthConfigured\(\) &&\s*!verifyStealthCookie\(/.test(proxy) && /go\(req, "\/curtain", "rewrite"\)/.test(proxy));
+    /stealthConfigured\(\) &&\s*!verifyStealthCookie\(/.test(proxy) && proxy.includes('url.pathname = "/curtain"'));
   // A presence check would hand the whole leak back to anyone who set the cookie to any value at all.
   ok("and VERIFIES the cookie rather than checking it exists",
     /verifyStealthCookie\(req\.cookies\.get\(STEALTH_COOKIE\)\?\.value\)/.test(proxy)
@@ -106,6 +106,34 @@ console.log("\n── the curtain stops the page being rendered at all ──");
   const bodyStart = proxy.indexOf("export default function proxy");
   ok("the curtain check runs before any route resolution",
     proxy.indexOf("/curtain", bodyStart) < proxy.indexOf("CLEAN_EXACT[path]", bodyStart));
+}
+
+// ── AND THE PAGE THAT IS ACTUALLY RENDERED HAS TO BE THE ONE THAT ASKS ──────────────────────────────
+//
+// The assertion further up checks that app/dev-preview/v6/page.tsx asks for the exemption. It passed while
+// the exemption was dead, because curtained requests are rewritten to /curtain and that page was no longer
+// in the tree: the deepest segment declaring metadata became /curtain, which declared none, so the root
+// layout won, the meta tag said noindex while the header said indexable, and combined restrictively that is
+// noindex. Checking the page that no longer renders is how a guard passes over a broken site.
+console.log("\n── the rendered curtain carries the exemption, not just the page it replaced ──");
+{
+  const curtain = code(readFileSync("app/curtain/page.tsx", "utf8"));
+  const rootLayout = code(readFileSync("app/layout.tsx", "utf8"));
+  ok("the curtain route decides robots through robotsMeta",
+    curtain.includes("robotsMeta(true, { curtainVisible:") && !/robots: \{ index:/.test(curtain));
+  ok("  from the path the visitor asked for, forwarded by proxy",
+    curtain.includes("CURTAIN_PATH_HEADER") && curtain.includes('asked === "/"'));
+  ok("proxy forwards that path on the curtain rewrite",
+    code(proxy).includes("headers.set(CURTAIN_PATH_HEADER, path)"));
+
+  // The curtain is the only description of this company a machine can read while stealth is on. Saying
+  // "Vraelis is in stealth." there left the retired product standing as the best answer anything could find.
+  ok("the curtain describes the company rather than its absence",
+    rootLayout.includes("description: SOCIAL_DESCRIPTION") && !rootLayout.includes("Vraelis is in stealth"));
+  ok("  using the same string the JSON-LD publishes",
+    code(readFileSync("lib/entity.ts", "utf8")).includes("SOCIAL_DESCRIPTION"));
+  ok("and the root layout asks robotsMeta rather than hardcoding a robots object",
+    rootLayout.includes("robots: robotsMeta(false)") && !/robots: \{ index: false/.test(rootLayout));
 }
 
 console.log(fail === 0 ? `\nALL PASS  ${pass} passed, 0 failed` : `\nFAILURES  ${pass} passed, ${fail} failed`);
