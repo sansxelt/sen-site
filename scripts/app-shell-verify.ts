@@ -233,8 +233,12 @@ ok("the authenticated developers console page exists", existsSync("app/rank/app/
 console.log("\n── increment 2: landmarks, current-page indication, shared nav body ──");
 ok("the sidebar is a labelled nav landmark", /<nav className="app-side" aria-label="Primary">/.test(ui));
 ok("the active nav item is announced with aria-current=page", /aria-current=\{on \? "page" : undefined\}/.test(ui));
-ok("the nav body is a single shared component (sidebar + drawer cannot drift)",
-  /function NavItems\(/.test(ui) && (ui.match(/<NavItems/g) ?? []).length >= 2);
+// The body is two shared pieces now, not one: the groups and the foot, because the two shells pin the foot
+// differently (sticky inside the sidebar's scroll; a fixed sibling BELOW the drawer's scroll). The
+// invariant is unchanged: both shells must compose the SAME pieces, so neither can drift alone.
+ok("the nav body is shared pieces used by both shells (sidebar + drawer cannot drift)",
+  /function NavGroups\(/.test(ui) && /function NavFoot\(/.test(ui)
+  && (ui.match(/<NavGroups/g) ?? []).length >= 2 && (ui.match(/<NavFoot/g) ?? []).length >= 2);
 ok("icon-only nav icons are aria-hidden (labels carry meaning)", /slink__i" aria-hidden/.test(ui));
 
 console.log("\n── one accessible dismissal contract for every popover ──");
@@ -285,7 +289,8 @@ ok("the drawer traps Tab focus within itself", /if \(e\.key !== "Tab"\) return;/
 ok("the drawer moves initial focus inside on open", /focusables\(\)\[0\]\?\.focus\(\)/.test(ui));
 ok("the drawer locks body scroll while open", /document\.body\.style\.overflow = "hidden"/.test(ui));
 ok("the drawer closes on backdrop press, close button, Escape, and following a link",
-  /app-drawer-scrim" onClick=\{close\}/.test(ui) && /aria-label="Close navigation"/.test(ui) && /<NavItems onNavigate=\{close\}/.test(ui));
+  /app-drawer-scrim" onClick=\{close\}/.test(ui) && /aria-label="Close navigation"/.test(ui)
+  && /<NavGroups onNavigate=\{close\}/.test(ui) && /<NavFoot onNavigate=\{close\}/.test(ui));
 ok("the drawer closes on route change", /useEffect\(\(\) => \{ setOpen\(false\); \}, \[pathname\]\)/.test(ui));
 
 console.log("\n── increment 2: the mobile layout is a drawer, not a shrunk desktop strip ──");

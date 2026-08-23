@@ -446,8 +446,11 @@ function AppTopbar({ email, systems, pendingReviews }: { email: string | null; s
             <span className="vra-topbar-review__n">{pendingReviews}</span>
           </Link>
         )}
-        <Link href="/app" className="btn vra-app-connect" style={{ padding: "9px 16px" }} aria-label="New verification">
-          +<span className="vra-app-connect__label"> New verification</span>
+        {/* On phones this collapses to an icon square matching the burger, not a pill around a bare "+"
+            text glyph: the glyph sat off-centre in its own padding and read as a stray character. */}
+        <Link href="/app" className="btn vra-app-connect" aria-label="New verification">
+          <span className="vra-app-connect__i" aria-hidden><Ic d={I.plus} size={15} sw={2.2} /></span>
+          <span className="vra-app-connect__label">New verification</span>
         </Link>
         <button ref={menuBtn} onClick={() => setMenu((v) => !v)} aria-label="Account menu" aria-expanded={menu} aria-controls="acct-menu" style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px 6px 6px", borderRadius: 99, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", boxShadow: "var(--shadow-sm)" }}>
           {avatar ? (
@@ -547,8 +550,10 @@ function useActiveNav() {
 }
 
 // The nav body, shared byte-for-byte between the desktop sidebar and the mobile drawer, so the two can never
-// drift. `onNavigate` lets the drawer close itself when a link is followed.
-function NavItems({ onNavigate }: { onNavigate?: () => void }) {
+// drift. `onNavigate` lets the drawer close itself when a link is followed. Groups and foot are separate
+// pieces because the two shells pin the foot differently: the sidebar keeps it sticky inside its own
+// scroll, the drawer holds it OUTSIDE the scroll region entirely (see MobileNav for why).
+function NavGroups({ onNavigate }: { onNavigate?: () => void }) {
   const active = useActiveNav();
   return (
     <>
@@ -565,10 +570,22 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
           })}
         </div>
       ))}
-      <div className="app-side__foot" style={{ marginTop: "auto", position: "sticky", bottom: 0, background: "var(--bg-0)", paddingTop: 12, paddingBottom: 4, borderTop: "1px solid var(--line-1)" }}>
-        <a href="https://vraelis.com" className="slink" style={{ color: "var(--fg-3)" }} onClick={onNavigate}><span className="slink__i" aria-hidden><Ic d={I.back} /></span>Back to site</a>
-        <button onClick={() => signOut({ callbackUrl: signOutTarget() })} className="slink" style={{ color: "var(--fg-3)", width: "100%", background: "none", border: "none", cursor: "pointer", textAlign: "left", fontFamily: "inherit", fontSize: 15.5, fontWeight: 500 }}><span className="slink__i" aria-hidden><Ic d={I.signout} /></span>Sign out</button>
-      </div>
+    </>
+  );
+}
+function NavFoot({ onNavigate, drawer = false }: { onNavigate?: () => void; drawer?: boolean }) {
+  return (
+    <div className={`app-side__foot${drawer ? " app-side__foot--drawer" : ""}`}>
+      <a href="https://vraelis.com" className="slink" style={{ color: "var(--fg-3)" }} onClick={onNavigate}><span className="slink__i" aria-hidden><Ic d={I.back} /></span>Back to site</a>
+      <button onClick={() => signOut({ callbackUrl: signOutTarget() })} className="slink" style={{ color: "var(--fg-3)", width: "100%", background: "none", border: "none", cursor: "pointer", textAlign: "left", fontFamily: "inherit", fontSize: 15.5, fontWeight: 500 }}><span className="slink__i" aria-hidden><Ic d={I.signout} /></span>Sign out</button>
+    </div>
+  );
+}
+function NavItems({ onNavigate }: { onNavigate?: () => void }) {
+  return (
+    <>
+      <NavGroups onNavigate={onNavigate} />
+      <NavFoot onNavigate={onNavigate} />
     </>
   );
 }
@@ -646,7 +663,10 @@ function MobileNav() {
           retired emerald. Green in this product means a verification held. It is not allowed to mean "you
           are on this page", and outside the boundary that is exactly what it meant.
           The attribute declares custom properties and paints nothing of its own, so putting it here costs
-          no layer, no background and no stacking context. It restores the palette and nothing else. */}
+          no layer, no background and no stacking context. It restores the palette and nothing else.
+          The foot is a sibling of the scroll region, not sticky inside it: sticky bottom pinned it to the
+          scrollport while the drawer's own bottom padding (plus the phone's safe-area inset) left a strip
+          below it where the nav items were visible scrolling past underneath. */}
       {open && mounted && createPortal(
         <div className="app-drawer-root" role="presentation" data-surface="app">
           <div className="app-drawer-scrim" onClick={close} aria-hidden />
@@ -657,8 +677,11 @@ function MobileNav() {
                 <Ic d="M6 6l12 12M6 18L18 6" size={18} sw={2} />
               </button>
             </div>
-            <WorkspaceSwitcher />
-            <NavItems onNavigate={close} />
+            <div className="app-drawer-body">
+              <WorkspaceSwitcher />
+              <NavGroups onNavigate={close} />
+            </div>
+            <NavFoot onNavigate={close} drawer />
           </div>
         </div>,
         document.body,

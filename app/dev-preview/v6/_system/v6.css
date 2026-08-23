@@ -438,22 +438,42 @@
 .v6-nav[data-theme="light"] .v6-mega__fcta:focus-visible { outline-color: var(--ink); }
 
 /* mobile full-screen nav */
-/* --surface, not --paper: on the page ground the panel sampled the same colour as the page behind it and had
-   no layer identity. The primary actions are pinned in a footer so they never scroll out of the viewport. */
-.v6-drawer { position: fixed; inset: 0; z-index: 90; background: var(--surface); display: flex; flex-direction: column; animation: v6DrawerIn 240ms var(--ease) both; overflow: hidden; }
+/* THE NIGHT PANEL, SAME AS THE DESKTOP MEGA-MENU. The drawer used to be a white surface holding a flat
+   dump of every desktop group under headings like "Platform, Understand", and because it renders inside
+   the nav, opening it over the dark hero also painted the wordmark white-on-white. It is now the same
+   graphite surface the desktop menus open, carrying the same groups, link titles and descriptions, as
+   accordion sections. Its own foreground colours are pinned here so no nav theme state can bleed in. */
+.v6-drawer { position: fixed; inset: 0; z-index: 90; background: #08080A; color: var(--g-fg-2); display: flex; flex-direction: column; animation: v6DrawerIn 240ms var(--ease) both; overflow: hidden; }
 @keyframes v6DrawerIn { from { opacity: 0; } to { opacity: 1; } }
-.v6-drawer__top { display: flex; align-items: center; justify-content: space-between; padding: 13px var(--gutter); border-bottom: 1px solid var(--line); flex: none; }
-.v6-drawer__x { width: 44px; height: 44px; border-radius: var(--r-md); border: 1px solid var(--line-2); background: var(--surface); color: var(--ink); display: grid; place-items: center; cursor: pointer; }
-.v6-drawer__body { padding: 8px var(--gutter) 28px; display: flex; flex-direction: column; flex: 1; overflow-y: auto; }
-.v6-drawer__foot { flex: none; padding: 14px var(--gutter) 18px; border-top: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; gap: 10px; }
+.v6-drawer__top { display: flex; align-items: center; justify-content: space-between; padding: 13px var(--gutter); border-bottom: 1px solid var(--g-line); flex: none; }
+/* The drawer states its own brand colour: it is always night, whatever theme the bar behind it holds. */
+.v6-nav .v6-drawer .v6-brand { color: var(--g-fg); }
+.v6-drawer__x { width: 44px; height: 44px; border-radius: var(--r-md); border: 1px solid var(--g-line-2); background: rgba(255,255,255,0.06); color: var(--g-fg); display: grid; place-items: center; cursor: pointer; }
+.v6-drawer__x:focus-visible { outline: 2px solid var(--g-fg); outline-offset: 2px; }
+.v6-drawer__body { padding: 2px var(--gutter) 24px; display: flex; flex-direction: column; flex: 1; overflow-y: auto; }
+.v6-drawer__foot { flex: none; padding: 14px var(--gutter) calc(18px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--g-line); background: #08080A; display: flex; flex-direction: column; gap: 10px; }
 .v6-drawer__foot .v6-btn { justify-content: center; }
-.v6-drawer__link { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; color: var(--ink); text-decoration: none; padding: 15px 2px; border-bottom: 1px solid var(--line); min-height: 48px; display: flex; align-items: center; }
-.v6-drawer__sub { padding: 14px 2px; border-bottom: 1px solid var(--line); }
-.v6-drawer__sub-h { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-4); margin: 0 0 10px; }
-.v6-drawer__sub-links { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
-.v6-drawer__sub-links a { font-size: 15px; color: var(--ink-2); text-decoration: none; padding: 6px 0; }
-.v6-drawer__cta { margin-top: 24px; display: flex; flex-direction: column; gap: 10px; }
-.v6-drawer__cta .v6-btn { justify-content: center; }
+/* Inside the drawer the actions take the night treatment regardless of the bar's theme. Specificity matches
+   the .v6-nav[data-theme] button rules, so these must stay AFTER that block: source order decides the tie. */
+.v6-nav .v6-drawer .v6-btn--brand { background: var(--g-fg); border-color: var(--g-fg); color: var(--graphite); }
+.v6-nav .v6-drawer .v6-btn--brand:hover { background: #fff; border-color: #fff; color: var(--graphite); }
+.v6-nav .v6-drawer .v6-btn--ghost { background: transparent; border-color: var(--g-line-2); color: var(--g-fg); }
+/* accordion sections: one per top-level desktop menu */
+.v6-drawer__sec { border-bottom: 1px solid var(--g-line); }
+.v6-drawer__sec-h { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 16px 2px; min-height: 56px; background: none; border: 0; cursor: pointer; text-align: left;
+  font-family: var(--sans); font-size: 20px; font-weight: 600; letter-spacing: -0.02em; color: var(--g-fg); }
+.v6-drawer__sec-h svg { color: var(--g-fg-3); flex: none; transition: transform 200ms var(--ease); }
+.v6-drawer__sec[data-open="true"] .v6-drawer__sec-h svg { transform: rotate(180deg); }
+.v6-drawer__sec-h:focus-visible { outline: 2px solid var(--g-fg); outline-offset: -2px; border-radius: var(--r-md); }
+.v6-drawer__sec-b { padding: 2px 2px 18px; display: flex; flex-direction: column; gap: 18px; animation: v6SecIn 220ms var(--ease) both; }
+@keyframes v6SecIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.v6-drawer__grp-h { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--g-fg-3); margin: 0 0 6px; }
+.v6-drawer__glink { display: block; text-decoration: none; padding: 9px 10px; margin: 0 -10px; border-radius: var(--r-md); }
+.v6-drawer__glink:active { background: rgba(255,255,255,0.06); }
+.v6-drawer__glink:focus-visible { outline: 2px solid var(--g-fg); outline-offset: -2px; }
+.v6-drawer__glt { display: block; font-size: 15.5px; font-weight: 600; color: var(--g-fg); letter-spacing: -0.012em; }
+.v6-drawer__gld { display: block; font-size: 12.5px; color: #9A9CA1; margin-top: 2px; line-height: 1.4; }
 
 /* The v1 footer (.v6-foot*) lived here. The institutional footer in close.css (.v6-foot2*) replaced it in
    phase 1 and no v6 route renders the old markup any more, so these rules are deleted rather than left to
@@ -463,7 +483,6 @@
   .v6-nav__burger { display: inline-flex; }
 }
 @media (max-width: 560px) {
-  .v6-drawer__sub-links { grid-template-columns: 1fr; }
   /* Keep the enlarged wordmark AND both controls on one line down to 320px: the button gives back the
      padding rather than the wordmark giving back its size. */
   .v6-nav__in .v6-btn { padding: 8px 12px; }
@@ -473,7 +492,7 @@
    guidance on a phone. Grow the hit area vertically without moving the text. */
 @media (max-width: 640px) {
   .v6-elink { min-height: 44px; }
-  .v6-drawer__sub-links a { min-height: 40px; }
+  .v6-drawer__glink { min-height: 44px; }
 }
 
 /* ============================================================== MOTION ===== */
@@ -562,6 +581,8 @@
   .v6-page { animation: none !important; }
   .v6-reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
   .v6-btn:active { transform: none !important; }
+  .v6-drawer, .v6-drawer__sec-b { animation: none !important; }
+  .v6-drawer__sec-h svg { transition: none !important; }
   .v6 * { scroll-behavior: auto !important; }
 }
 

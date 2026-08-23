@@ -102,7 +102,7 @@ export default async function RootLayout({
       <html lang="en" data-theme="dark" style={{ colorScheme: "dark", background: "#0A0A0B" }} className={`${GeistSans.variable} ${GeistMono.variable} h-full`}>
         <body className="min-h-full" style={{ background: "#0A0A0B" }}>
           <link rel="stylesheet" href="/vraelis/tokens.css?v=20" />
-          <link rel="stylesheet" href="/vraelis/styles.css?v=53" />
+          <link rel="stylesheet" href="/vraelis/styles.css?v=54" />
           {/* THE CURTAIN IS THE ONLY THING MOST MACHINES EVER SEE, AND IT SAID NOTHING ABOUT THE COMPANY.
               This branch returned before the JSON-LD below, so every crawler and every AI summariser
               fetching vraelis.com got "Not open yet" and no structured self-description at all. Asked what
@@ -163,7 +163,7 @@ export default async function RootLayout({
           {/* ?v bust: bump on every CSS change so browsers don't serve a
               stale cached stylesheet (the static file URL is otherwise fixed). */}
           <link rel="stylesheet" href="/vraelis/tokens.css?v=20" />
-          <link rel="stylesheet" href="/vraelis/styles.css?v=53" />
+          <link rel="stylesheet" href="/vraelis/styles.css?v=54" />
           {/* WHO THIS IS, for machines. Emitted only when the site is actually public: publishing an
               identity graph on a page whose entire body reads "Not open yet." asks to be indexed as a
               company with no content, which is the impression this document already refuses to leave.

@@ -326,6 +326,32 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
     return () => cancelAnimationFrame(id);
   }, []);
 
+  // THE OTHER BAR. On a phone there are two bars at the top of the page: this nav, and the strip of browser
+  // chrome above it, which iOS Safari and Android Chrome paint from meta theme-color. The layout pins that
+  // meta to graphite so the first paint of a dark route is right, but the nav flips light and dark per
+  // section, so scrolling a white chapter under the bar produced a black system strip sitting on a white
+  // nav: two bars, each changing on its own schedule. One state drives both now. The same flip that
+  // recolours the bar rewrites the meta tag in the same commit, so the browser chrome turns over with it.
+  // Re-asserted on every route change too, because Next re-emits the layout's static meta on navigation.
+  useEffect(() => {
+    // The exact sampled ground when there is one, so the chrome matches even mid-interpolation; the
+    // route's declared pole otherwise. Only rgb()/hex reach the meta tag: theme-color support for the
+    // wider notations (oklab, color()) is not dependable, and an unsupported value hands the browser
+    // back to its own guess, which is the disagreement this exists to end.
+    const color = navBg && /^(#|rgb)/i.test(navBg) ? navBg : dark ? "#0A0A0B" : "#FFFFFF";
+    const metas = document.head.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]');
+    if (metas.length === 0) {
+      const m = document.createElement("meta");
+      m.name = "theme-color";
+      m.content = color;
+      document.head.appendChild(m);
+      return;
+    }
+    // The layout emits one tag per prefers-color-scheme; the bar's theme is the same in both, so the media
+    // split only leaves a second tag to disagree with. Collapse them to one answer.
+    metas.forEach((m) => { m.removeAttribute("media"); m.content = color; });
+  }, [dark, navBg, pathname]);
+
   const close = useCallback((i: number | null) => {
     window.clearTimeout(closeT.current);
     setOpen((cur) => {
@@ -425,6 +451,11 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
 
 function MobileNav({ authed, onClose }: { authed: boolean; onClose: () => void }) {
   const panel = useRef<HTMLDivElement>(null);
+  // One section open at a time, Platform first: the drawer used to flatten all twelve desktop groups into
+  // one long list under headings like "Platform, Understand", which read as an index dump next to the
+  // desktop mega-menu. Each top-level item is now an accordion carrying the same groups, titles and
+  // descriptions the desktop panel shows, on the same night surface.
+  const [openSec, setOpenSec] = useState<number | null>(0);
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -453,15 +484,40 @@ function MobileNav({ authed, onClose }: { authed: boolean; onClose: () => void }
         </button>
       </div>
       <div className="v6-drawer__body">
-        <Link href={`${BASE}/company`} className="v6-drawer__link" onClick={onClose}>Company</Link>
-        {MENUS.flatMap((m) => m.groups.map((col) => (
-          <div key={m.label + col.h} className="v6-drawer__sub">
-            <p className="v6-drawer__sub-h">{m.label}, {col.h}</p>
-            <div className="v6-drawer__sub-links">
-              {col.links.map((l) => <Link key={l.t} href={l.href} onClick={onClose}>{l.t}</Link>)}
-            </div>
-          </div>
-        )))}
+        {MENUS.map((m, i) => (
+          <section key={m.label} className="v6-drawer__sec" data-open={openSec === i}>
+            <button type="button" className="v6-drawer__sec-h" aria-expanded={openSec === i}
+              aria-controls={`v6-dsec-${i}`}
+              onClick={(e) => {
+                const next = openSec === i ? null : i;
+                setOpenSec(next);
+                // Opening a section below a taller one that just collapsed can land the tapped header
+                // off-screen; keep the header where the reader's thumb is.
+                if (next !== null) {
+                  const el = e.currentTarget;
+                  requestAnimationFrame(() => el.scrollIntoView({ block: "nearest", behavior: "auto" }));
+                }
+              }}>
+              {m.label}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M6 9l6 6 6-6" /></svg>
+            </button>
+            {openSec === i ? (
+              <div id={`v6-dsec-${i}`} className="v6-drawer__sec-b">
+                {m.groups.map((col) => (
+                  <div key={col.h} className="v6-drawer__grp">
+                    <p className="v6-drawer__grp-h">{col.h}</p>
+                    {col.links.map((l) => (
+                      <Link key={l.t} href={l.href} className="v6-drawer__glink" onClick={onClose}>
+                        <span className="v6-drawer__glt">{l.t}</span>
+                        {l.d ? <span className="v6-drawer__gld">{l.d}</span> : null}
+                      </Link>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </section>
+        ))}
       </div>
       <div className="v6-drawer__foot">
         {authed ? null : <Link href={SIGNIN} className="v6-btn v6-btn--ghost" onClick={onClose}>Sign in</Link>}

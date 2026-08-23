@@ -147,7 +147,7 @@ export function Composer({ balance }: { balance: number }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 15 }}>
         <label htmlFor="cmp-claim" style={{ ...lbl, color: "var(--fg-2)" }}>What must be true</label>
         <textarea id="cmp-claim" className="cmp-inp" rows={3} spellCheck={false} disabled={busy}
-          placeholder="A customer can upgrade to Pro, receive access immediately, and keep it after signing out and back in."
+          placeholder="A signed-in user can create a record, and it is still there after signing out and back in."
           value={claim} onChange={(e) => setClaim(e.target.value)} style={{ resize: "vertical", minHeight: 66 }}
           aria-invalid={claim.length > 0 && !claimOk} aria-describedby="cmp-claim-h" />
         <span id="cmp-claim-h" style={{ fontSize: 12, color: claim.length > 0 && !claimOk ? "var(--stop-ink)" : "var(--fg-4)" }}>
