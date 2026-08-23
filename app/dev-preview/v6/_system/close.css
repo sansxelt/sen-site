@@ -98,6 +98,8 @@
      last word instead of competing with the legal links for the same row. */
   .v6-foot2__base-in { flex-direction: column; align-items: flex-start; gap: 6px; padding-bottom: 34px; }
   .v6-foot2__legal { gap: 18px; row-gap: 0; }
-  .v6-end__cta { gap: 18px; }
-  .v6-end .v6-btn { width: 100%; justify-content: center; }
+  /* The button was forced to the full width of the column, which put the editorial link beneath it on its
+     own line by construction: a full-width block can never share a row. The pair fits side by side once
+     the button is its own size again (see the .v6-btn--lg rule in v6.css). */
+  .v6-end__cta { gap: 10px; }
 }

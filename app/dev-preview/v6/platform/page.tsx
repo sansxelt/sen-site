@@ -310,7 +310,7 @@ export default function Platform() {
         cta={
           <>
             <CTA brand lg>Open Vraelis</CTA>
-            <EditorialLink href={`${BASE}/agents`}>See how it works around agents</EditorialLink>
+            <EditorialLink href={`${BASE}/agents`}>How agents are handled</EditorialLink>
           </>
         }
       />
@@ -743,7 +743,7 @@ export default function Platform() {
             </p>
             <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
               <CTA brand lg>Open Vraelis</CTA>
-              <CTA href={`${BASE}/agents`} ghost lg>See how it works around agents</CTA>
+              <CTA href={`${BASE}/agents`} ghost lg>How agents are handled</CTA>
             </div>
           </Reveal>
         </div>

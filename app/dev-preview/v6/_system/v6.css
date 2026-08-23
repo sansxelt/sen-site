@@ -451,8 +451,13 @@
 .v6-drawer__x { width: 44px; height: 44px; border-radius: var(--r-md); border: 1px solid var(--g-line-2); background: rgba(255,255,255,0.06); color: var(--g-fg); display: grid; place-items: center; cursor: pointer; }
 .v6-drawer__x:focus-visible { outline: 2px solid var(--g-fg); outline-offset: 2px; }
 .v6-drawer__body { padding: 2px var(--gutter) 24px; display: flex; flex-direction: column; flex: 1; overflow-y: auto; }
-.v6-drawer__foot { flex: none; padding: 14px var(--gutter) calc(18px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--g-line); background: #08080A; display: flex; flex-direction: column; gap: 10px; }
-.v6-drawer__foot .v6-btn { justify-content: center; }
+/* SIDE BY SIDE, NOT ONE ON TOP OF THE OTHER. These are two short labels, and stacked as full-width blocks
+   ten pixels apart they read as one control that has been cut in half rather than as a choice between
+   signing in and opening the app. On a row they are about 250px of the 350 available. Open Vraelis takes
+   the larger share because it is the primary action; signed in, it is the only child and fills the row. */
+.v6-drawer__foot { flex: none; padding: 14px var(--gutter) calc(18px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--g-line); background: #08080A; display: flex; gap: 10px; }
+.v6-drawer__foot .v6-btn { justify-content: center; flex: 1 1 0; min-width: 0; }
+.v6-drawer__foot .v6-btn--brand { flex-grow: 1.6; }
 /* Inside the drawer the actions take the night treatment regardless of the bar's theme. Specificity matches
    the .v6-nav[data-theme] button rules, so these must stay AFTER that block: source order decides the tie. */
 .v6-nav .v6-drawer .v6-btn--brand { background: var(--g-fg); border-color: var(--g-fg); color: var(--graphite); }
@@ -487,6 +492,26 @@
      padding rather than the wordmark giving back its size. */
   .v6-nav__in .v6-btn { padding: 8px 12px; }
   .v6-brand { padding-right: 10px; }
+
+  /* TWO ACTIONS SIT BESIDE EACH OTHER, NOT ON TOP OF EACH OTHER.
+     Every call-to-action on the site is a pair, and the pair was sized for a desktop: 20 to 26px of gap,
+     and 26px of padding either side of each button. On a 390px phone that leaves 350px of usable width
+     against a pair needing 357 to 400, so the second action wrapped onto its own line on eleven rows
+     across the site and the two read as one stacked block rather than as a choice. The buttons give the
+     room back out of their own padding, exactly as the nav's do two rules above, and nothing changes above
+     this width.
+     Rows whose second label is a sentence ("See how it works around agents") still wrap, and should: they
+     are past what one phone line can hold, and shrinking the type until they fit would be the worse
+     outcome. */
+  /* EVERY SELECTOR HERE IS SCOPED UNDER .v6 ON PURPOSE. This file is imported FIRST (layout.tsx imports
+     v6.css, then pagekit.css; hero.css, close.css and chapters.css arrive later still with their
+     components), so an override written at the same specificity as the rule it is correcting loses the tie
+     on source order and silently does nothing. Measured: the unscoped version left the page-hero pair at
+     its desktop padding and the hero gap at 26px. One extra class on each selector settles it wherever the
+     file happens to land in the cascade. */
+  .v6 .v6-btn--lg,
+  .v6 .v6-phero__cta .v6-btn { min-height: 46px; padding: 13px 16px; font-size: 15px; }
+  .v6 .v6-h__cta, .v6 .v6-phero__cta, .v6 .v6-end__cta { gap: 10px; }
 }
 /* Touch targets: editorial links and footer links are text-height on desktop, which is under the 44px touch
    guidance on a phone. Grow the hit area vertically without moving the text. */

@@ -33,7 +33,11 @@ export function Hero() {
             first screen. Same name the menus and the footer use, so it reads as one destination. */}
         <div className="v6-h__cta">
           <CTA brand lg href={PUBLIC_HOW_IT_WORKS}>See how it works</CTA>
-          <EditorialLink href={`${V6_BASE}/platform#current`}>What is built, and what is next</EditorialLink>
+          {/* The short spelling, which is the footer's. The long one ("What is built, and what is next")
+              is 231px and cannot share a phone line with the button no matter what the button gives up, so
+              on the one screen every visitor sees it was the thing forcing the pair to stack. The menus and
+              the Direction chapter keep the long form, where there is room for it. */}
+          <EditorialLink href={`${V6_BASE}/platform#current`}>What is built</EditorialLink>
         </div>
       </div>
     </section>
