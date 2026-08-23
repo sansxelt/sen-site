@@ -33,8 +33,12 @@
 .v6-end__resolve-t { font-size: clamp(0.98rem, 1.2vw, 1.12rem); color: var(--g-fg-2); margin: 0; }
 .v6-end__resolve-t b { color: var(--g-fg); font-weight: 600; }
 
-.v6-end__h { font-family: var(--sans); font-weight: 600; letter-spacing: -0.034em; line-height: 1.0;
-  font-size: clamp(2.7rem, 7.4vw, 6.6rem); color: var(--g-fg); margin: 0; max-width: 13ch; text-wrap: balance; }
+/* The display face, matching the opening. This heading and the hero are the two largest statements on the
+   site and they sat in different type systems: the hero serif, the closing at the sans's weight 600. See
+   the note above .v6-gap__wordt in chapters.css for the recipe and why the migration had missed these. */
+.v6-end__h { font-family: var(--display); font-weight: 400; font-synthesis-weight: none;
+  letter-spacing: -0.012em; line-height: 1.04;
+  font-size: clamp(2.9rem, 8vw, 7.1rem); color: var(--g-fg); margin: 0; max-width: 13ch; text-wrap: balance; }
 .v6-end__say { font-size: clamp(1.06rem, 1.35vw, 1.32rem); line-height: 1.5; color: var(--g-fg-2);
   margin: clamp(24px, 3.2vh, 40px) 0 0; max-width: 56ch; }
 .v6-end__cta { margin-top: clamp(30px, 4.4vh, 48px); display: flex; align-items: center; gap: 26px; flex-wrap: wrap; }
