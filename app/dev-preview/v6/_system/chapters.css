@@ -761,6 +761,18 @@
   .v6-gap__pin { position: static; height: auto; padding: clamp(72px, 12vh, 104px) var(--gutter); }
   .v6-gap__stage { max-width: none; height: auto; }
   .v6-gap__t { position: static; transform: none !important; opacity: 1 !important; }
+  /* LEFT, LIKE EVERY OTHER CHAPTER ON THE PAGE.
+     Centred is right for the pinned desktop scene: the stage is a narrow measure in the middle of a wide
+     screen and the chapter is meant to read as one column rather than a left-hung block. Unpinned on a
+     phone that reasoning is gone and the centring is not, so this became the only centred chapter on the
+     homepage. Measured at 390px: the hero, the terminal, the register, the reach, the direction, the
+     knowledge and the closing all set their type from the same 20px left edge, and this one centred its
+     label, its word, its observations and its verdict. Scrolling the page, the text stepped inward for one
+     chapter and back out again, which is the misalignment rather than any single element being wrong.
+     Desktop is untouched, including the short-window branch further down, which is still a wide screen. */
+  .v6-gap__t { text-align: left; }
+  .v6-gap__list { align-items: flex-start; }
+  .v6-gap__verdict, .v6-gap__verdictsay { margin-inline: 0; }
   /* THE CHILD THE PARENT'S RULE COULD NOT REACH.
      .v6-gap__turn sits INSIDE .v6-gap__t.v6-gap__claim and carries its own opacity, derived as
      calc(var(--turn) * (1 - var(--claim))). Once --p stopped travelling on mobile and was pinned to the
