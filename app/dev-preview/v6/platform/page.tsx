@@ -662,7 +662,10 @@ export default function Platform() {
             <SectionHead
               eyebrow="Honest about what is live"
               title="What Vraelis does today, and what it does not."
-              lead="The verification engine is real and in use. Everything on the right is a plan, and each line says what actually happens today instead. Next, Later and Horizon say how much of a line already stands, not when it lands. Nothing here is a delivery date, and nothing on the left is coming soon."
+              // NOT "on the left" and "on the right". The two cards sit side by side on a desktop and stack
+              // on a phone, so the directions named a layout half the readers do not have. The cards carry
+              // their own labels, Live today and Direction, and those are true in both arrangements.
+              lead="The verification engine is real and in use. Everything under Direction is a plan, and each line says what actually happens today instead. Next, Later and Horizon say how much of a line already stands, not when it lands. Nothing there is a delivery date, and nothing under Live today is coming soon."
             />
           </Reveal>
           <div style={{ ...wrapRow, marginTop: "clamp(28px,3vw,40px)" }}>

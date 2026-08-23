@@ -398,7 +398,10 @@
   .v6-rg__cols { display: none; }
   .v6-rg__row { grid-template-columns: 1fr; gap: 3px; padding: 14px 0;
     opacity: 1 !important; transform: none !important; }
-  .v6-rg__m { font-size: 0.8rem; }
+  /* The area cell is a table column on desktop. Stacked under each row on a phone it repeats the group
+     heading sitting two lines above it ("Revenue" under REVENUE, six times down the screen). The heading
+     already carries the fact; the cell disappears with the column layout that justified it. */
+  .v6-rg__m { display: none; }
   .v6-rg__foot { opacity: 1 !important; margin-top: 20px; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -629,7 +632,15 @@
   .v6-dr { height: auto; }
   .v6-dr__pin { position: static; height: auto; display: block; padding: clamp(64px, 10vw, 96px) var(--gutter); }
   .v6-dr__stage { grid-template-columns: 1fr; gap: clamp(24px, 6vw, 36px); margin-top: clamp(22px, 6vw, 32px); }
-  .v6-dr__graph { max-height: none; }
+  /* THE DRAWING IS 900 UNITS WIDE AND ITS LABELS ARE THE CONTENT. Fitted to a 390px screen the whole thing
+     scales by 0.39, so 15px type rendered under 6px: the guarantee boxes, the system chips and the
+     deployment node were all present and none of them could be read. The diagram scrolls sideways in its
+     own track instead, at a width that keeps the labels legible (720 units puts them back near 12px).
+     The track wraps the drawing ONLY, never the stage: the stage also carries the three written layers,
+     and scoping the overflow there cut their sentences off at the right edge. The page itself must never
+     move sideways, which is what overscroll containment on this element protects. */
+  .v6-dr__graphwrap { overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+  .v6-dr__graph { max-height: none; min-width: 720px; }
   .v6-dr__g rect, .v6-dr__g line, .v6-dr__n rect, .v6-dr__n text,
   .v6-dr__dep rect, .v6-dr__dep text { opacity: 1 !important; }
   .v6-dr__edge { stroke-dashoffset: 0 !important; }
@@ -789,6 +800,9 @@
   .v6-kn__rail { margin-top: clamp(26px, 6vw, 38px); }
   .v6-kn__sheet { padding-bottom: clamp(30px, 6vw, 44px); }
   .v6-kn__sheet::before, .v6-kn__sheet::after { display: none; }
+  /* The exhibit's claim line is the whole point of the exhibit, and on a phone it ran off the right edge
+     behind an overflow scroll nothing announced. JSON survives wrapping; a cut-off claim does not. */
+  .v6-kn__ex pre { white-space: pre-wrap; overflow-wrap: anywhere; overflow-x: visible; }
 }
 
 /* ══════════════════════════════════════════════════════════ REDUCED MOTION ══ */

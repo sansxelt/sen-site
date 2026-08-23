@@ -39,9 +39,12 @@ export function ClosingScene({
 }
 
 const COLS: [string, [string, string][]][] = [
-  ["Product", [[`${BASE}/platform`, "Platform"], [`${BASE}/agents`, "Agents"], [`${BASE}/integrations`, "Integrations"], [`${BASE}/pricing`, "Pricing"], [`${BASE}/enterprise`, "Enterprise"]]],
+  // "What is built" and "In public" are the two pages a sceptical reader actually wants, and neither was
+  // reachable from the footer: the live-versus-planned list sat behind two differently-named submenu
+  // entries, and the incident record had no inbound link anywhere on the site.
+  ["Product", [[`${BASE}/platform`, "Platform"], [`${BASE}/platform#current`, "What is built"], [`${BASE}/agents`, "Agents"], [`${BASE}/integrations`, "Integrations"], [`${BASE}/pricing`, "Pricing"], [`${BASE}/enterprise`, "Enterprise"]]],
   ["Developers", [[`${BASE}/developers`, "Documentation"], [`${BASE}/developers#api`, "API"], [`${BASE}/developers#cli`, "CLI"], [`${BASE}/developers#webhooks`, "Webhooks"]]],
-  ["Company", [[`${BASE}/research`, "Research"], [`${BASE}/method`, "Method"], [`${BASE}/readme`, "README"], [`${BASE}/changelog`, "Changelog"], [`${BASE}/company`, "About"]]],
+  ["Company", [[`${BASE}/research`, "Research"], [`${BASE}/method`, "Method"], [`${BASE}/method#in-public`, "In public"], [`${BASE}/readme`, "README"], [`${BASE}/changelog`, "Changelog"], [`${BASE}/company`, "About"]]],
   // "Contact" pointed at an anchor on the company page. It is now a page, because a contact anchor is where
   // a contact route goes to be quietly missing.
   ["Trust", [[`${BASE}/security`, "Security"], [`${BASE}/limitations`, "Limitations"], [`${BASE}/privacy`, "Privacy"], [`${BASE}/terms`, "Terms"], [`${BASE}/data-rights`, "Data rights"], [`${BASE}/subprocessors`, "Subprocessors"], [`${BASE}/trademark`, "Trademark"], [`${BASE}/contact`, "Contact"]]],

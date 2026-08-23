@@ -122,6 +122,10 @@ const MENUS: Menu[] = [
       { h: "Updates", links: [
         { t: "What is built, and what is next", d: "The live list beside the planned one", href: BASE + "/platform#current",
           preview: { eyebrow: "What is built, and what is next", title: "Both halves, stated without decoration.", body: "Everything marked Direction is unbuilt, is labelled that way everywhere it appears on this site, and carries no date. A line moves left when it works, and the changelog records the day it did.", stat: "Live vs Direction" } },
+        // The strongest evidence section on the site had zero inbound links: it sat at the foot of /method,
+        // a page whose menu description promises a worldview, not a record.
+        { t: "In public", d: "Reported incidents, sourced", href: BASE + "/method#in-public",
+          preview: { eyebrow: "In public", title: "Three times this was tested by somebody else.", body: "Public, dated, reported incidents that bear on the positions. Vraelis was involved in none of them, and each entry says plainly what an independent check would and would not have done.", stat: "3 incidents, sourced" } },
         { t: "System status", d: "What is operational", href: BASE + "/security#status",
           preview: { eyebrow: "System status", title: "Verification engine operational.", body: "The engine that drives a real browser against a requirement is running.", stat: "Operational" } },
         { t: "Changelog", d: "What shipped, dated", href: BASE + "/changelog" },

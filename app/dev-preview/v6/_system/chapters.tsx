@@ -668,10 +668,23 @@ export function Direction() {
             owner, dependency, failure, repair and decision forms a living record of what the company must
             keep true.
           </p>
+          {/* The chapter describes a future; the link goes to the page that says which parts of it exist.
+              A vision scene with no way to check it against the present is exactly the drift the two-column
+              list exists to prevent. Same destination and name as the hero, the menus and the footer. */}
+          <p className="v6-dr__sub" style={{ marginTop: 14 }}>
+            <Link href={`${BASE}/platform#current`} className="v6-elink">
+              <span className="v6-elink__t">What is built, and what is next</span>
+              <span className="v6-arw" aria-hidden>&rarr;</span>
+            </Link>
+          </p>
         </div>
 
         <div className="v6-dr__stage">
           {/* the structure assembles beneath the guarantees rather than replacing them */}
+          {/* THE DRAWING GETS ITS OWN SCROLL TRACK, and the track is around the drawing alone rather than
+              around the stage: the stage also holds the three written layers below, and scoping the
+              overflow to it clipped their sentences at the right edge on a phone. */}
+          <div className="v6-dr__graphwrap">
           <svg className="v6-dr__graph" viewBox="0 0 900 420" aria-hidden preserveAspectRatio="xMidYMid meet">
             {/* guarantees, fixed */}
             {[
@@ -716,6 +729,7 @@ export function Direction() {
               <path key={d} className="v6-dr__edge" d={d} style={{ ["--i" as string]: i }} />
             ))}
           </svg>
+          </div>
 
           <ol className="v6-dr__layers">
             {LAYERS.map((l, i) => (
