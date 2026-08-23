@@ -34,6 +34,8 @@ const MENUS: Menu[] = [
     groups: [
       { h: "Understand", links: [
         { t: "Platform overview", d: "What the product does", href: BASE + "/platform" },
+        { t: "What it can reach", d: "Browser and API today, and the ladder out", href: BASE + "/platform#coverage",
+          preview: { eyebrow: "What it can reach", title: "The browser is where this started, not where it stops.", body: "Web applications and HTTP APIs are live. An SDK that carries signed evidence back, connected devices, and physical systems are direction, and each one says plainly that it is not built.", stat: "Live vs Direction" } },
         { t: "Requirements", d: "What a change must not break", href: BASE + "/docs/responsibilities",
           preview: { eyebrow: "Requirements", title: "One sentence the change is not allowed to break.", body: "Written by a person, held outside the code, and fixed before anything runs.", stat: "Held outside the code" } },
         { t: "Systems", d: "Everything you have connected", href: BASE + "/docs/systems" },
@@ -108,6 +110,9 @@ const MENUS: Menu[] = [
     groups: [
       { h: "Company", links: [
         { t: "About Vraelis", d: "Who is building this", href: BASE + "/company" },
+        { t: "Who it is for", d: "And who it is not for yet", href: BASE + "/company#who" },
+        { t: "How this is different", d: "Against the categories, not the companies", href: BASE + "/company#different",
+          preview: { eyebrow: "How this is different", title: "Four things it is not, and what it does instead.", body: "Not the agent's own report, not a test suite, not monitoring. And it refuses rather than guesses: when no check could prove the claim, the answer is Blocked and nothing is charged.", stat: "Stated against categories" } },
         { t: "Why Vraelis exists", d: "The README", href: BASE + "/readme",
           preview: { eyebrow: "Why Vraelis exists", title: "Software used to be trusted because humans held the loop.", body: "That loop is changing. Agents now plan, change code, and repair their own failures faster than any review process built for people.", stat: "README" } },
         { t: "Contact", d: "Talk to the team", href: BASE + "/company#contact" },

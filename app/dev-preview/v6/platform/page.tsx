@@ -4,6 +4,7 @@ import Link from "next/link";
 import { v6meta } from "../_system/meta";
 import { PageHero, Reveal, SectionHead, CTA, EditorialLink, Signal, Kicker } from "../_system/ui";
 import { LIVE, DIRECTION, type DirectionItem } from "../_content/scope";
+import { SURFACES, COVERAGE_THESIS, COVERAGE_RULE } from "../_content/coverage";
 import { V6_BASE } from "@/lib/v6-routes";
 
 // Platform overview (design 06). Framing: Vraelis is oversight for AI software agents, from assigned
@@ -652,6 +653,42 @@ export default function Platform() {
               </Reveal>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* 10b ── What Vraelis can reach ──
+          The site described one surface, a web application in a browser, and never said whether that was the
+          thesis or the beachhead. Every line comes from _content/coverage.ts, which carries the rule that
+          governs them: a surface is Live only after a real failing case ran end to end on it. */}
+      <section className="v6-sec v6-sec--sunk" id="coverage">
+        <div className="v6-wrap">
+          <Reveal>
+            <SectionHead
+              eyebrow="What it can reach"
+              title="The browser is where this started, not where it stops."
+              lead={COVERAGE_THESIS}
+            />
+          </Reveal>
+          <ul style={{ listStyle: "none", margin: "clamp(28px,3vw,40px) 0 0", padding: 0, display: "flex", flexDirection: "column", gap: 0 }}>
+            {SURFACES.map((s, i) => (
+              <Reveal key={s.name} i={Math.min(i, 3)}>
+                <li style={{ display: "grid", gap: 10, paddingBlock: "clamp(20px,2.2vw,26px)", borderTop: "1px solid var(--line-2)" }}>
+                  <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap" }}>
+                    <h3 className="v6-dm" style={{ margin: 0 }}>{s.name}</h3>
+                    <Signal state={s.tier === "Live" ? "go" : "wait"}>{s.tier}</Signal>
+                  </div>
+                  <p className="v6-body" style={{ maxWidth: "70ch" }}>{s.reach}</p>
+                  {/* The half a reader can check, and on a Direction row the half that says it is not built. */}
+                  <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.55, color: "var(--ink-4)", maxWidth: "70ch" }}>{s.today}</p>
+                </li>
+              </Reveal>
+            ))}
+          </ul>
+          <Reveal>
+            <p className="v6-body" style={{ marginTop: "clamp(22px,2.4vw,32px)", maxWidth: "72ch", paddingTop: "clamp(20px,2.2vw,26px)", borderTop: "1px solid var(--line-2)" }}>
+              {COVERAGE_RULE}
+            </p>
+          </Reveal>
         </div>
       </section>
 

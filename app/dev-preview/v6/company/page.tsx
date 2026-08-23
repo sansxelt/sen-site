@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import Link from "next/link";
 import { v6meta } from "../_system/meta";
 import { PageHero, Reveal, SectionHead, CTA, EditorialLink, Signal, Prose } from "../_system/ui";
 import { LIVE, DIRECTION } from "../_content/scope";
@@ -65,11 +66,57 @@ const ACTS: Act[] = [
 // checkable present tense could be written under it, so it is gone rather than restated. Both lists now come
 // from _content/scope.ts, where the reasoning sits above the data.
 
+// WHO THIS IS FOR. The site never said, anywhere, and a reader who does not recognise themselves on a
+// homepage leaves without a way to check whether they were the intended audience.
+//
+// Written as a description of the SHAPE of the problem rather than as a claim about who is already a
+// customer, because the second thing would be an invented number. The "not for" half is deliberate: an
+// audience section that excludes nobody has not said anything, and two of the three exclusions below are
+// the honest edges of the product rather than a positioning move.
+const FOR: [string, string][] = [
+  ["Companies whose production software is now partly written by agents",
+    "The work arrives faster than anyone can review it by hand, and the thing that wrote it is also the thing reporting it is done."],
+  ["Where at least one outcome is not allowed to quietly break",
+    "The upgrade that has to grant access, the deactivation that has to remove it everywhere, the export that has to contain one tenant's records and no one else's."],
+  ["And where someone is accountable when it does",
+    "A person who would have to answer for the failure, and who currently has the agent's own word that it will not happen."],
+];
+const NOT_FOR: [string, string][] = [
+  ["Anyone who wants the agent watched while it works",
+    "A check begins when work is claimed complete. Reading an agent's activity as it happens is direction, and is not built."],
+  ["Anyone who wants a test suite written for them",
+    "Vraelis holds one business sentence outside the code and checks the deployed result against it. It does not author or maintain your tests."],
+  ["Anyone who needs a native mobile or desktop application covered",
+    "The boundary today is what a real browser and an HTTP client can observe from outside."],
+];
+
+// HOW THIS IS DIFFERENT. Each contrast is against a real category a reader is already paying for, and each
+// one states the difference in terms of a mechanism rather than an adjective. Nothing here names a competitor
+// or characterises anyone else's product as bad, because a claim about somebody else's software is a claim
+// this company cannot show evidence for, and the whole argument here is about evidence.
+const DIFFERENT: [string, string][] = [
+  ["It is not the agent's own report",
+    "The system that wrote the work does not get to be the authority on whether it worked. The check is run by something else, against the deployed result, and the separation is structural rather than a matter of prompting."],
+  ["It is not a test suite",
+    "A suite is written alongside the code, often by the same process, and passes in a pipeline against mocks. Vraelis holds one sentence in business language outside the code and drives the running deployment against it."],
+  ["It is not monitoring",
+    "Monitoring reports that something broke once your users have already found it. This is a decision made before that, on the deployment you are about to trust."],
+  ["It refuses rather than guesses",
+    "When no check could prove the claim, the answer is Blocked and nothing is charged. A verification tool that always returns an answer is a verification tool whose answers cannot be worth much."],
+];
+
 const PRINCIPLES: [string, string, string][] = [
   ["01", "We ship what is real.", "Live capabilities and directions are labeled separately, on the site and in the product. We would rather show an honest gap than imply a finished one."],
   ["02", "The judge is independent of the builder.", "Nothing an agent produces is trusted because the agent says so. Completion is a decision made on evidence by something other than the author."],
   ["03", "History is preserved.", "Failures and repairs are kept, not overwritten. The record is the point, because trust compounds from what a system has survived."],
-  ["04", "Autonomy is earned.", "Agents get more room to act by accumulating met responsibilities, and lose it when their record slips. Independence follows the work wherever it goes."],
+  // WRITTEN AS INTENT, BECAUSE NONE OF IT IS BUILT. This was in the flat present tense, in a list headed
+  // "the commitments the product is held to", two sections above the same page's own Direction column
+  // rendering "Reliability memory, and autonomy earned from a record. Not built." A reader met the
+  // capability as a current fact and then, further down, as a Horizon item. Nothing in the repository
+  // measures an agent's record: every hit for autonomy outside this copy is a research article.
+  // The second sentence had the same problem about reach. Independence today is a real browser and an HTTP
+  // client, which is what /platform#coverage says, and this page's own "not for" row repeats.
+  ["04", "Autonomy should be earned.", "How much an agent may do alone should be a conclusion drawn from responsibilities it has actually met, not a setting somebody chooses, and independent oversight should follow the work onto whatever it runs on. Neither is built: nothing in the product measures that record today, and the reach today is a real browser and an HTTP client."],
 ];
 
 export default function CompanyPage() {
@@ -117,6 +164,76 @@ export default function CompanyPage() {
                 <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--g-fg-2)" }}>{a.body}</p>
               </div>
             ))}
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Who it is for ── the site never answered this anywhere. Both halves render, because the exclusions
+          are the honest edges of the product and reading only the first half would overstate it. */}
+      <section className="v6-sec" id="who">
+        <div className="v6-wrap">
+          <Reveal>
+            <SectionHead
+              eyebrow="Who it is for"
+              title="One outcome that cannot be allowed to break, and an agent that keeps touching it."
+            />
+          </Reveal>
+          <div className="v6-rows" style={{ marginTop: "clamp(24px,2.6vw,34px)" }}>
+            {FOR.map(([t, d], i) => (
+              <Reveal key={t} i={i}>
+                <div className="v6-row">
+                  <span className="v6-row__n"><Signal state="go">Fits</Signal></span>
+                  <div>
+                    <h3 className="v6-dm" style={{ margin: 0 }}>{t}</h3>
+                    <p className="v6-body" style={{ marginTop: 8, maxWidth: "68ch" }}>{d}</p>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+            {NOT_FOR.map(([t, d], i) => (
+              <Reveal key={t} i={i}>
+                <div className="v6-row">
+                  <span className="v6-row__n"><Signal state="wait">Not yet</Signal></span>
+                  <div>
+                    <h3 className="v6-dm" style={{ margin: 0 }}>{t}</h3>
+                    <p className="v6-body" style={{ marginTop: 8, maxWidth: "68ch" }}>{d}</p>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How this is different ── against categories, never against a named company. */}
+      <section className="v6-sec v6-sec--sunk" id="different">
+        <div className="v6-wrap">
+          <Reveal>
+            <SectionHead
+              eyebrow="How this is different"
+              title="Four things it is not, and what it does instead."
+              lead="Stated against the categories a reader is already paying for. No competitor is named and none is characterised, because a claim about somebody else's software is a claim this company cannot show evidence for."
+            />
+          </Reveal>
+          <div className="v6-rows" style={{ marginTop: "clamp(24px,2.6vw,34px)" }}>
+            {DIFFERENT.map(([t, d], i) => (
+              <Reveal key={t} i={i}>
+                <div className="v6-row">
+                  <span className="v6-row__n">{String(i + 1).padStart(2, "0")}</span>
+                  <div>
+                    <h3 className="v6-dm" style={{ margin: 0 }}>{t}</h3>
+                    <p className="v6-body" style={{ marginTop: 8, maxWidth: "68ch" }}>{d}</p>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+          <Reveal>
+            <p className="v6-body" style={{ marginTop: "clamp(22px,2.4vw,32px)", maxWidth: "72ch" }}>
+              Three times this was tested by somebody else, with sources and with the cases where an
+              independent check would have done nothing:{" "}
+              <Link href={`${BASE}/method#in-public`} className="v6-plink">what happened in public</Link>.
+            </p>
           </Reveal>
         </div>
       </section>
