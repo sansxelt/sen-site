@@ -310,9 +310,20 @@
    axis everything else is centred on. It never wraps and never shrinks, and the bar's own height is still set
    by the taller button, so growing the type does not grow the header or push a link off the edge.
    Wordmark only: no icon beside it. */
+/* THE WORDMARK WAS TWICE THE SIZE OF THE BAR IT SITS IN.
+   Measured on the live page: the mark rendered at 30.24px weight 700 beside nav items at 14.5px weight
+   500. That is 2.09x the size and two weight steps heavier, so the first thing the bar said was its own
+   name, loudly, on every page. A wordmark should lead the nav, not shout over it.
+   1.45x is the ratio it lands on now, which is where a company's own name sits when it is confident about
+   it. The tracking relaxes with the size: -0.038em is drawn for 30px and closes the counters up at 21px.
+   Weight stays at 700 because this IS the logo and there is no separate mark; what was wrong was the
+   scale, not the voice.
+   The clamp floor still keeps it legible at 320px, and --nav-h is MEASURED from this element rather than
+   hardcoded (see shell.tsx), so the bar and every chapter that sizes against it follow this down on their
+   own. Nothing else needed changing for the bar to get shorter with it. */
 .v6-brand {
-  font-family: var(--sans); font-weight: 700; font-size: clamp(25px, 2.1vw, 34px);
-  letter-spacing: -0.038em; color: var(--ink); text-decoration: none; line-height: 1; white-space: nowrap;
+  font-family: var(--sans); font-weight: 700; font-size: clamp(20px, 1.5vw, 24px);
+  letter-spacing: -0.03em; color: var(--ink); text-decoration: none; line-height: 1; white-space: nowrap;
   display: inline-flex; align-items: center; flex: none;
   /* the gutter puts ~58px between the edge and the wordmark but only 16px between the wordmark and the
      first trigger, which reads as the logo being shoved right. Pull it back so both gaps are close. */
