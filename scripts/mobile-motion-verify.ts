@@ -35,7 +35,7 @@ const home = readFileSync("app/dev-preview/v6/home.tsx", "utf8");
 // selector regex then reports as a broken rule. This check exists to catch drift, not to manufacture some.
 const bare = css.replace(/\/\*[\s\S]*?\*\//g, "");
 const motionBlock = (() => {
-  const start = bare.lastIndexOf("@media (max-width: 900px)");
+  const start = bare.lastIndexOf("@media (prefers-reduced-motion: reduce), (max-height: 767px)");
   if (start === -1) return "";
   let depth = 0;
   for (let i = bare.indexOf("{", start); i < bare.length; i++) {
@@ -152,14 +152,29 @@ console.log("\n── the scrub engine stops where nothing reads it ──");
 // part of any chapter moved. A scroll listener and a rAF loop, measuring geometry, writing a value the
 // cascade discarded. If this short-circuit is removed the page still LOOKS correct, which is exactly why
 // it needs an assertion rather than a comment.
-ok("useScrollProgress returns early below 900px",
-  /max-width: 900px[\s\S]{0,200}setProperty\(property, "1"\)[\s\S]{0,80}return;/.test(progress));
-ok("it pins the value rather than leaving it unset, so any survivor reads a finished scene",
-  /max-width: 900px[\s\S]{0,200}setProperty\(property, "1"\)/.test(progress));
-const earlyReturn = progress.indexOf('matchMedia("(max-width: 900px)")');
+ok("the engine still declines where a scene cannot fit, and pins the value when it does",
+  /gates\s*=\s*\[[\s\S]{0,240}SHORT[\s\S]{0,240}\][\s\S]{0,320}setProperty\(property, "1"\)[\s\S]{0,80}return;/.test(progress));
+// The two conditions that survive, named individually so dropping either one is loud.
+ok("a window too short to pin a scene in is still a gate", /window\.matchMedia\(SHORT\)/.test(progress));
+ok("reduced motion is still a gate", /matchMedia\("\(prefers-reduced-motion: reduce\)"\)/.test(progress));
+// THE ONE THAT WOULD OTHERWISE COME BACK SILENTLY. A phone pins now; reinstating the width gate would
+// flatten every phone again and nothing else in this file would notice.
+ok("width is NOT a gate: the phone runs the same scrub the desktop does",
+  !/matchMedia\("\(max-width: 900px\)"\)/.test(progress));
+const gateList = progress.indexOf("const gates = [");
 const listener = progress.indexOf('addEventListener("scroll"');
 ok("the short-circuit runs before the scroll listener is ever attached",
-  earlyReturn !== -1 && listener !== -1 && earlyReturn < listener);
+  gateList !== -1 && listener !== -1 && gateList < listener);
+
+// 3. THE TWO SYSTEMS MUST NOT BOTH DRIVE THE SAME PARTS.
+//    The reveal writes opacity with !important and the scrub derives opacity from --p. They are safe only
+//    because their queries are exact inverses. If the reveal's query ever picks up a condition the engine
+//    does not gate on, every scrubbed part on that viewport gets written by both.
+console.log("\n── the reveal and the scrub are exact inverses ──");
+const revealQuery = (css.match(/@media \(prefers-reduced-motion: reduce\), \(max-height: 767px\)/g) ?? []).length;
+ok("the reveal is gated on exactly the engine's two conditions", revealQuery >= 1);
+ok("the reveal no longer claims a width the scrub also runs at",
+  !/@media \(max-width: 900px\), \(prefers-reduced-motion: reduce\), \(max-height: 767px\)/.test(css));
 
 console.log(fail === 0 ? `\nALL PASS  ${pass} passed, 0 failed` : `\nFAILURES  ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

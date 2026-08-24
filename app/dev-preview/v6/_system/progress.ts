@@ -78,9 +78,19 @@ export function useScrollProgress(ref: RefObject<HTMLElement | null>, options?: 
     // it. The three MediaQueryLists are built once so a listener can hang off each, and any crossing tears
     // the current branch down and re-enters this one. Two of them firing on the same resize is harmless:
     // the teardown is idempotent and the second pass finds nothing left to remove.
+    // WIDTH IS NO LONGER A REASON NOT TO PIN. It was, and the reasoning was sound at the time: below 900px
+    // every chapter unpinned, so the engine was measuring and writing a value the cascade then discarded.
+    // FOUNDER DECISION (2026-08-23): a phone should watch the same film a desktop watches, so the chapters
+    // now pin at every width and this engine has to run for them. The concern with pinning on a phone is
+    // real and was raised: a pinned scene consumes swipes without moving the page, and a reader who wants
+    // past it has to scrub through it. It is a deliberate trade, not an oversight.
+    //
+    // HEIGHT IS STILL A REASON, AND IT IS NOW THE ONLY ONE. Every pin is `height: 100svh; overflow: hidden`,
+    // so a window shorter than the scene was composed for does not compress it, it CLIPS it. That is true
+    // of a landscape phone (390px tall) exactly as it was of a short laptop, and it is why SHORT survives
+    // as a gate while MOBILE does not. An iPhone SE at 375x667 therefore still gets the unpinned stack.
     const gates = [
       window.matchMedia("(prefers-reduced-motion: reduce)"),
-      window.matchMedia("(max-width: 900px)"),
       window.matchMedia(SHORT),
     ];
 
