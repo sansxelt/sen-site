@@ -225,8 +225,16 @@
    The scene has to fit ONE screen, because a pin clips whatever overflows it. Everything below is sized
    against a 390x844 budget with the bar and the pin's own padding taken out first. */
 @media (max-width: 900px) {
-  .v6-au__pin { padding: calc(var(--nav-h, 67px) + 1.6vh) var(--gutter) clamp(14px, 2.2vh, 26px);
-    gap: clamp(6px, 1vh, 14px); }
+  .v6-au__pin { padding: calc(var(--nav-h, 67px) + 1.4vh) var(--gutter) clamp(16px, 2.6vh, 30px);
+    grid-template-rows: auto auto auto; align-content: safe center;
+    gap: clamp(10px, 1.8vh, 22px); }
+  /* MIDDLE, NOT TOP. The pin frame is a whole screen and the scene was sitting flush under the bar with
+     all of the slack collecting underneath it, which reads as a screen that ran out rather than one that
+     was composed. The rows stop stretching and the block centres in the frame instead, so the space is
+     split above and below.
+     `safe center` and not plain center, for the reason chapter 8 taught the hard way: a centred track list
+     that overflows spills out of BOTH edges, and the top edge is the one with the heading on it. safe
+     falls back to start the moment the content stops fitting. */
   .v6-au__h { font-size: clamp(1.62rem, 7.1vw, 2.3rem); max-width: 18ch; }
   .v6-au__sub { font-size: clamp(0.92rem, 3.7vw, 1.05rem); line-height: 1.45; }
   .v6-au__seals { grid-template-columns: 1fr; gap: 0; align-self: center; }
@@ -348,8 +356,9 @@
    list keeps its absolute positioning so the travelling stack works exactly as it does on a desktop, and
    it is given a fixed height because absolutely positioned children have none of their own. */
 @media (max-width: 900px) {
-  .v6-st__pin { padding: calc(var(--nav-h, 67px) + 1.6vh) var(--gutter) clamp(14px, 2.2vh, 26px);
-    gap: clamp(6px, 1vh, 14px); }
+  .v6-st__pin { padding: calc(var(--nav-h, 67px) + 1.4vh) var(--gutter) clamp(16px, 2.6vh, 30px);
+    grid-template-rows: auto auto; align-content: safe center;
+    gap: clamp(12px, 2.2vh, 26px); }
   .v6-st__h { font-size: clamp(1.62rem, 7.1vw, 2.3rem); max-width: 18ch; }
   .v6-st__sub { font-size: clamp(0.9rem, 3.6vw, 1.02rem); line-height: 1.45; }
   .v6-st__stage { grid-template-columns: 1fr; gap: clamp(12px, 2vh, 24px);
@@ -525,8 +534,9 @@
    The area cell is dropped rather than stacked: under each row it repeats the group heading two lines above
    it ("Revenue" under REVENUE, six times down the screen), and the heading already carries the fact. */
 @media (max-width: 900px) {
-  .v6-rg__pin { padding: calc(var(--nav-h, 67px) + 1.4vh) var(--gutter) clamp(12px, 1.8vh, 22px);
-    gap: clamp(4px, 0.8vh, 12px); }
+  .v6-rg__pin { padding: calc(var(--nav-h, 67px) + 1.4vh) var(--gutter) clamp(16px, 2.4vh, 28px);
+    grid-template-rows: auto auto auto; align-content: safe center;
+    gap: clamp(8px, 1.5vh, 18px); }
   .v6-rg__h { font-size: clamp(1.5rem, 6.6vw, 2.15rem); max-width: 17ch; }
   .v6-rg__stage { overflow: visible; align-content: safe center; }
   .v6-rg__cols { display: none; }
@@ -759,8 +769,9 @@
 
 /* NARROW, AND STILL PINNED. */
 @media (max-width: 900px) {
-  .v6-dr__pin { padding: calc(var(--nav-h, 67px) + 1.4vh) var(--gutter) clamp(12px, 1.8vh, 22px);
-    gap: clamp(4px, 0.8vh, 12px); }
+  .v6-dr__pin { padding: calc(var(--nav-h, 67px) + 1.4vh) var(--gutter) clamp(14px, 2.2vh, 26px);
+    grid-template-rows: auto auto auto; align-content: safe center;
+    gap: clamp(7px, 1.3vh, 16px); }
   .v6-dr__h { font-size: clamp(1.5rem, 6.6vw, 2.15rem); max-width: 17ch; }
   .v6-dr__sub { font-size: clamp(0.86rem, 3.5vw, 1rem); line-height: 1.42; }
   /* start, NOT center. This was centred and the stage is taller than the pin frame on a phone, so the
