@@ -351,7 +351,7 @@
   .v6-st__list { position: static; min-height: 0; display: grid; gap: clamp(26px, 6vw, 38px); }
   .v6-st__cond { position: static; opacity: 1 !important; transform: none !important;
     padding-top: 20px; border-top: 1px solid var(--g-line); }
-  .v6-st__condt { font-size: clamp(1.5rem, 6.6vw, 2.1rem); }
+  .v6-st__condt { font-size: clamp(1.7rem, 8.6vw, 2.5rem); }
 }
 
 /* ═══════════════════════════════════════════════ 4. THE PRODUCT, IN A TERMINAL ══
@@ -763,7 +763,16 @@
      The track wraps the drawing ONLY, never the stage: the stage also carries the three written layers,
      and scoping the overflow there cut their sentences off at the right edge. The page itself must never
      move sideways, which is what overscroll containment on this element protects. */
-  .v6-dr__graphwrap { overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+  .v6-dr__graphwrap { overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch;
+    /* AND IT HAS TO LOOK LIKE IT SCROLLS. The track was correct and completely silent about itself: the
+       drawing simply stopped at the right edge of the screen, which reads as a diagram that has been cut
+       off rather than one that continues. A phone shows no scrollbar to contradict that.
+       The mask is on the track's own border box, not on its content, so the fade stays pinned to the
+       visible right edge instead of travelling with the drawing. 24px, which is narrower than the empty
+       margin to the right of the last node, so scrolling to the end does not leave the deployment box
+       sitting in a haze. -webkit- included: iOS Safari is the browser this affordance exists for. */
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent); }
   .v6-dr__graph { max-height: none; min-width: 720px; }
   .v6-dr__g rect, .v6-dr__g line, .v6-dr__n rect, .v6-dr__n text,
   .v6-dr__dep rect, .v6-dr__dep text { opacity: 1 !important; }
@@ -907,7 +916,58 @@
   .v6-gap__turn { opacity: 1 !important; }
   .v6-gap__sys { margin-top: clamp(34px, 7vw, 52px); }
   .v6-gap__found { margin-top: clamp(40px, 8vw, 64px); }
-  .v6-gap__verdictwrap { margin-top: clamp(32px, 6vw, 48px); }
+  /* THE CHAPTER WAS 0.62 OF A SCREEN ON A PHONE AND 2.80 ON A DESKTOP, and that ratio is the whole of
+     what "the homepage looks nothing like it does on a computer" meant. Everything else on the page keeps
+     its composition when it unpins; this one did not. The turning point of the argument, the beat the rest
+     of the page is written around, arrived as a short white card wedged between two dark sections, with
+     the word set at 62px on a screen where it had room for a hundred.
+
+     UNPINNING IS NOT THE PROBLEM AND IS NOT BEING UNDONE. A phone should never be held inside a scroll
+     sequence it cannot leave. What was lost with the pin was not the scrubbing, it was the STRUCTURE the
+     pin implied: two beats, each owning a screen. That structure does not need a pin, it needs height, so
+     each beat is given most of a viewport and centred inside it. The reader now scrolls from the claim to
+     the answer, one screen to the next, which is the same reading the desktop composes by other means.
+
+     svh rather than vh throughout: dvh reflows the whole chapter every time a mobile browser's address bar
+     collapses, and vh reserves room for a bar that is not there. */
+  .v6-gap__claim,
+  .v6-gap__verdictwrap { display: grid; align-content: center; }
+  .v6-gap__claim { min-height: 76svh; }
+  /* Slightly shorter than the claim, and the margin is gone: two centred blocks that already own most of a
+     screen each do not need a gap between them as well. */
+  .v6-gap__verdictwrap { min-height: 68svh; margin-top: 0; }
+
+  /* THE WORD FILLS THE MEASURE, which is what it does on a desktop and what the clamp floor stopped it
+     doing here. 14vw is the desktop ramp and at 390px it computes to 55px, under the 3.9rem floor, so
+     every phone got the floor: one fixed size that had never been measured against a phone's width.
+     25vw puts "Complete." at about 98px on a 390px screen, filling the column the way 14vw fills 1440. */
+  .v6-gap__wordt { font-size: clamp(4.4rem, 25vw, 9rem); }
+  /* The strike is a proportion of the word, so it has to grow with it. At 4px against a 98px word it read
+     as a hairline rather than as the thing crossing the claim out. */
+  .v6-gap__strike { height: clamp(5px, 1.5vw, 9px); }
+  /* AND THE WORD HAS TO STAY SHRINK-WRAPPED, which centring the beat quietly undid. .v6-gap__word is an
+     inline-block sized to its own text, and the strike is drawn from -2% to 102% OF THAT BOX. Making the
+     claim a grid blockified the inline-block to full column width, so the strike kept its 2% overhang of a
+     box that was now the whole measure and ran about 30px past the full stop. justify-self restores the
+     shrink-to-fit without reintroducing an inline-block a grid would only blockify again. */
+  .v6-gap__word { justify-self: start; }
+  .v6-gap__verdict { font-size: clamp(2.1rem, 9.4vw, 3.4rem); }
+  .v6-gap__turn { font-size: clamp(1.05rem, 4.4vw, 1.3rem); }
+  .v6-gap__verdictsay { font-size: clamp(1rem, 4vw, 1.2rem); }
+
+  /* AND IT RESOLVES INTO THE NIGHT, as it does on a desktop. The scrubbed version of this cross-fades the
+     ground on --settle, and that mechanism is unavailable here for a good reason: progress.ts pins --p to
+     1 where the scrub does not run, so --settle would resolve to 1 immediately and paint the ground full
+     graphite under type still held at var(--ink). Black on near-black, which is why that rule is gated to
+     wide, tall, motion-allowing windows.
+     A static gradient over the last stretch of the section reaches the same end without touching the type:
+     it sits UNDER the content, and the bottom of the chapter is the empty half of the verdict's centred
+     block, so nothing is ever read through it. */
+  .v6-gap { position: relative; }
+  .v6-gap::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; z-index: 0;
+    height: clamp(120px, 22svh, 240px); pointer-events: none;
+    background: linear-gradient(to bottom, rgba(10,10,11,0), var(--graphite)); }
+  .v6-gap__pin { position: relative; z-index: 1; }
 
   /* THE .v6-cs, .v6-pf__ AND .v6-rec__ STACKING RULES LIVED HERE and were deleted unread. Three chapters
      were removed from this page: the panned case study, the case file and the record archive. Their
