@@ -53,7 +53,106 @@ function useSeen(root: RefObject<HTMLElement | null>, total: number) {
   return seen;
 }
 
-/* ══════════════════════════════════════════════════════════════ CHAPTER 2 ══
+/* ══════════════════════════════════════════════════════ CHAPTER 2 ══
+   THE MISSING AUTHORITY.
+
+   The one chapter on this page that makes a claim about the WORLD rather than about the product, and it is
+   the reason the company exists. Everything else here describes a mechanism; this describes an absence.
+
+   THE CLAIM IS DELIBERATELY NARROWER THAN THE ONE IT REPLACED, and narrower is what makes it survive a
+   hostile reader. The first draft said an independent authority for software had never existed. That is
+   false and a serious reader knows it: SOC 2 has auditors, DO-178C mandates independent verification, NASA
+   runs an IV&V facility. The true version is sharper. The authority was only ever built where a regulator
+   forced it into existence, which is a vanishingly small share of the software any business actually runs.
+   Everywhere else the authority was a person, and a person was enough, because a person can be held to it.
+
+   So this chapter does not claim a void where an institution exists. It claims the institution was never
+   built for ordinary software, names exactly why that was survivable, and names what changed.
+
+   IT ENDS OPEN, WHICH IS THE WHOLE REASON IT SITS HERE AND NOT LATER. It states the absence and refuses to
+   resolve it. The chapter directly below (the agent's "Complete.", struck) carries the resolution, and its
+   existing last line — "So something independent has to answer it. That is the whole of what Vraelis
+   does." — stops being a small observation about one agent and becomes the answer to this. Neither chapter
+   says the other's sentence. If a resolution ever appears in this file, delete it there, not below.
+
+   THE MOTIF IS THE COMPANY'S OWN GAPPED RING, reused rather than invented. Chapter 3 closes a ring one
+   segment per refusal; here five seals close one per discipline, and the fifth stops partway and stays
+   open. That gap is the argument, drawn in the same language the rest of the page already speaks.
+   ------------------------------------------------------------------------------------------------- */
+/* Four precedents and one absence. Every one of the four is an authority that is independent of the
+   builder BY LAW, not by convention, which is the property being claimed. Nothing here names a company,
+   characterises a competitor, or asserts anything about software Vraelis has not seen. */
+const PRECEDENTS: { field: string; who: string | null; says: string }[] = [
+  { field: "Accounts", who: "The external auditor", says: "The statements are true." },
+  { field: "Buildings", who: "The inspector", says: "It is safe to occupy." },
+  { field: "Medicine", who: "The controlled trial", says: "It does what the label says." },
+  { field: "Flight software", who: "Independent verification", says: "It may carry passengers." },
+  // The fifth is the chapter. Its authority is missing, so the slot that holds a name in the other four
+  // holds a rule, and the sentence underneath is the tell rather than a certification.
+  { field: "Your software", who: null, says: "Whoever built it says it is done." },
+];
+
+export function Authority() {
+  const wrap = useRef<HTMLDivElement>(null);
+  // Same engine as every other pinned chapter, and the same reason there is no React state: the five
+  // seals derive their arc length from --p in CSS, so nothing re-renders while the reader scrolls and no
+  // seal can fall out of step with the row it belongs to.
+  useScrollProgress(wrap);
+  return (
+    <section className="v6-au" data-nav-dark data-nav-theme="dark" ref={wrap}>
+      <div className="v6-au__pin">
+        <div className="v6-au__head">
+          <p className="v6-eyebrow">What was never built</p>
+          <h2 className="v6-au__h">Every discipline that matters has someone who is not the builder.</h2>
+          <p className="v6-au__sub">
+            Where being wrong was expensive enough, the law built an authority and gave it a name.
+            Everywhere else, the authority was the person who wrote the code.
+          </p>
+        </div>
+
+        <ol className="v6-au__seals">
+          {PRECEDENTS.map((pr, i) => (
+            <li key={pr.field} className="v6-au__seal" style={{ ["--i" as string]: i }} data-open={pr.who === null}>
+              <div className="v6-au__stamp">
+                <svg viewBox="0 0 100 100" aria-hidden>
+                  <circle className="v6-au__track" cx="50" cy="50" r="40" />
+                  {/* r 40, circumference 251.33. The arc is drawn by retracting a full-circumference dash,
+                      so a seal at --c 1 is closed and at 0 is absent. The fifth carries a lower ceiling
+                      through --max and therefore stops with a visible gap no matter how far the reader
+                      scrolls, which is the one thing on this page that never completes. */}
+                  <circle className="v6-au__arc" cx="50" cy="50" r="40" />
+                </svg>
+              </div>
+              <p className="v6-au__field">{pr.field}</p>
+              {/* THE ABSENCE HAS TO SIT ON THE SAME LINE AS THE FOUR NAMES. It was first drawn as a ruled
+                  blank ABOVE the word, which pushed "No one" a line lower than "The external auditor" and
+                  the other three, and a row of five whose fifth entry is simply lower reads as a layout
+                  fault rather than as a missing institution. The word now occupies the name's exact slot,
+                  in the name's exact type, and the rule sits under it where a form leaves a line empty. */}
+              {pr.who === null
+                ? <p className="v6-au__who v6-au__who--none">No one<span className="v6-au__blank" aria-hidden /></p>
+                : <p className="v6-au__who">{pr.who}</p>}
+              <p className="v6-au__says">{pr.says}</p>
+            </li>
+          ))}
+        </ol>
+
+        <div className="v6-au__turn">
+          <p className="v6-au__turnt">
+            That was survivable while a person wrote the code. A person can be asked, can be wrong in
+            public, and can be held to it.
+          </p>
+          <p className="v6-au__turnt v6-au__turnt--2">
+            An agent cannot. It has no licence to lose, no name on the certificate, and no stake in the
+            answer it gives you.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════ CHAPTER 3 ══
    THE COMPLETION GAP, AT COMPANY LEVEL.
 
    This chapter used to walk a checkout: payment succeeded, Pro access was missing, the first repair
@@ -127,7 +226,7 @@ export function Gap() {
   );
 }
 
-/* ══════════════════════════════════════════════════════════════ CHAPTER 3 ══
+/* ══════════════════════════════════════════════════════════════ CHAPTER 4 ══
    WHAT VERIFIED HAS TO MEAN.
 
    This chapter replaces a three-step "define, check, repair" diagram, which explained the mechanism and
@@ -210,7 +309,7 @@ export function Standard() {
   );
 }
 
-/* ══════════════════════════════════════════════════════════════ CHAPTER 4 ══
+/* ══════════════════════════════════════════════════════════════ CHAPTER 5 ══
    THE PRODUCT, IN A REAL TERMINAL.
 
    NOT a scroll chapter. Everything else on this page is scrubbed by scroll, but a terminal is the one
@@ -397,7 +496,7 @@ export function Product() {
   );
 }
 
-/* ══════════════════════════════════════════════════════════════ CHAPTER 5 ══
+/* ══════════════════════════════════════════════════════════════ CHAPTER 6 ══
    THE SOFTWARE CHANGES. THE PROMISE DOES NOT.
 
    This is the hinge where the page stops being about one verification.
@@ -490,7 +589,7 @@ export function Register() {
   );
 }
 
-/* ══════════════════════════════════════════════════════════ CHAPTER 6A — REACH ══
+/* ══════════════════════════════════════════════════════════ CHAPTER 7A — REACH ══
    WHERE THE RESULT LANDS.
 
    The previous version was a three column directory of names and one line of text each: true, but nothing
@@ -609,7 +708,7 @@ export function Reach() {
   );
 }
 
-/* ══════════════════════════════════════════════════════════════ CHAPTER 7 ══
+/* ══════════════════════════════════════════════════════════════ CHAPTER 8 ══
    DIRECTION. THE ONLY UNSHIPPED CHAPTER ON THE PAGE, AND IT SAYS SO.
 
    Chapters 1 to 6 are shipped-only on purpose: independent verification, deployed browser execution,
@@ -749,7 +848,7 @@ export function Direction() {
   );
 }
 
-/* ══════════════════════════════════════ CHAPTER 6B — KNOWLEDGE ══
+/* ══════════════════════════════════════ CHAPTER 7B — KNOWLEDGE ══
    A PUBLICATION, not a card grid.
 
    The previous version put the Method, the documentation and the changelog in three equal columns that

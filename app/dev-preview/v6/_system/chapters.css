@@ -138,6 +138,112 @@
 .v6-gap__verdictsay { font-size: clamp(1.05rem, 1.5vw, 1.4rem); color: var(--ink-3); margin: 18px 0 0;
   max-width: 46ch; margin-inline: auto; }
 
+/* ═══════════════════════════════════════════════ 2. THE MISSING AUTHORITY ══
+   Five seals in a row. Four close as the reader scrolls; the fifth stops partway and stays open, and that
+   gap is the chapter's whole argument.
+
+   DELIBERATELY THE SAME MOTIF AS CHAPTER 4 AND DELIBERATELY A DIFFERENT SCROLL BUDGET. There the ring is
+   one shape and the statements swap through it one at a time, so the chapter needs 430vh to give each
+   statement room to be read alone. Here all five seals are on screen from the first frame and only their
+   arcs travel, so nothing has to wait its turn: 300vh is two screens of scroll past the pin, which is
+   enough for the row to close and the turn to land without parking the reader in front of a finished
+   picture. Spending chapter-4's scroll budget here would have pushed the CLI, which is the page's first
+   real proof, four screens further from the opening.
+
+   --seals runs to 5 rather than 4 and finishes at 0.62, leaving the last third of the chapter for the turn
+   underneath. The fifth seal reads the same variable as the other four and clamps itself lower, so its gap
+   is a property of the drawing rather than a second timeline that could drift out of step with the first.
+   ========================================================================================= */
+.v6-au { position: relative; height: 300vh; background: var(--graphite); color: var(--g-fg-2); --p: 0;
+  --seals: clamp(0, calc(var(--p) / 0.62), 1);
+  --turn:  clamp(0, calc((var(--p) - 0.60) / 0.26), 1); }
+.v6-au__pin { position: sticky; top: 0; height: 100svh; overflow: hidden;
+  display: grid; grid-template-rows: auto 1fr auto; gap: clamp(10px, 2.2vh, 30px);
+  padding: calc(var(--nav-h, 66px) + 3vh) var(--gutter) clamp(30px, 6vh, 64px);
+  background: radial-gradient(1200px 800px at 78% 30%, rgba(255,255,255,0.05), transparent 72%); }
+.v6-au__head { max-width: var(--max-wide); width: 100%; margin-inline: auto; }
+.v6-au__h { margin: clamp(12px, 1.8vh, 20px) 0 0; font-family: var(--display); font-weight: 400;
+  font-synthesis-weight: none;
+  letter-spacing: -0.012em; line-height: 1.06; font-size: clamp(2.05rem, 4.3vw, 3.9rem);
+  color: var(--g-fg); max-width: 22ch; text-wrap: balance; }
+.v6-au__sub { margin: clamp(12px, 1.6vh, 18px) 0 0; font-size: clamp(1rem, 1.25vw, 1.2rem);
+  line-height: 1.55; color: var(--g-fg-2); max-width: 60ch; }
+
+/* ---- the row of seals ---- */
+.v6-au__seals { list-style: none; margin: 0; padding: 0; max-width: var(--max-wide); width: 100%;
+  margin-inline: auto; align-self: center;
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(16px, 2.4vw, 40px); }
+/* The row arrives as a row. Each seal's text lifts to full strength just before its own arc starts
+   closing, so the label is readable by the time the drawing acts on it rather than appearing underneath a
+   stamp that has already finished. */
+.v6-au__seal { display: grid; align-content: start; gap: clamp(6px, 0.9vh, 12px);
+  --on: clamp(0, calc((var(--seals) * 5) - var(--i) + 0.35), 1);
+  opacity: calc(0.24 + 0.76 * var(--on)); }
+.v6-au__stamp { width: clamp(56px, 6.2vw, 92px); aspect-ratio: 1; margin-bottom: clamp(4px, 0.8vh, 10px); }
+.v6-au__stamp svg { width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
+.v6-au__track { fill: none; stroke: rgba(255,255,255,0.11); stroke-width: 3; }
+/* r 40, so circumference 251.33. --c is this seal's share of --seals, ceilinged by --max so the fifth can
+   refuse to finish. stroke-linecap butt, because a round cap on an almost-closed arc visually closes it. */
+.v6-au__arc { fill: none; stroke: var(--g-fg); stroke-width: 3; stroke-linecap: butt;
+  stroke-dasharray: 251.33;
+  --c: clamp(0, calc((var(--seals) * 5) - var(--i)), var(--max, 1));
+  stroke-dashoffset: calc(251.33px * (1 - var(--c))); }
+.v6-au__seal[data-open="true"] .v6-au__arc { --max: 0.62; stroke: var(--g-fg-3); }
+.v6-au__field { margin: 0; font-family: var(--sans); font-weight: 600; font-size: 12px;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--g-fg-3); }
+.v6-au__who { margin: 0; font-family: var(--display); font-weight: 400; font-synthesis-weight: none;
+  letter-spacing: -0.008em; line-height: 1.14; font-size: clamp(1.15rem, 1.7vw, 1.7rem); color: var(--g-fg); }
+/* The slot that carries a name in the other four carries a rule and one word here. The rule is the point:
+   an empty cell reads as a rendering fault, a ruled blank reads as a form nobody filled in. */
+.v6-au__who--none { color: var(--wait-dk); }
+.v6-au__blank { display: block; width: 84%; max-width: 150px; height: 1px; background: var(--g-line-2);
+  margin-top: clamp(8px, 1.1vh, 14px); }
+.v6-au__says { margin: 0; font-size: clamp(0.9rem, 1.02vw, 1.05rem); line-height: 1.5; color: var(--g-fg-2); }
+
+/* ---- the turn, which does not resolve ---- */
+.v6-au__turn { max-width: var(--max-wide); width: 100%; margin-inline: auto;
+  display: grid; gap: clamp(8px, 1.2vh, 16px); border-top: 1px solid var(--g-line);
+  padding-top: clamp(16px, 2.4vh, 30px); }
+.v6-au__turnt { margin: 0; font-size: clamp(1.02rem, 1.35vw, 1.35rem); line-height: 1.5;
+  max-width: 62ch; color: var(--g-fg-2);
+  opacity: clamp(0, calc(var(--turn) * 2 - 0.15), 1);
+  transform: translateY(calc((1 - var(--turn)) * 14px)); }
+/* The second sentence is the one the chapter turns on, so it arrives after the first has been read and it
+   arrives at full strength. It does NOT resolve the problem: the chapter below does that. */
+.v6-au__turnt--2 { color: var(--g-fg);
+  opacity: clamp(0, calc(var(--turn) * 2 - 0.85), 1); }
+
+@media (max-width: 900px) {
+  .v6-au { height: auto; }
+  .v6-au__pin { position: static; height: auto; display: block; padding: clamp(64px, 10vw, 96px) var(--gutter); }
+  /* Five across is four too many on a phone. The seal moves beside its own text instead of above it, so
+     each precedent is one line of reading rather than a column to be scanned. */
+  .v6-au__seals { grid-template-columns: 1fr; gap: 0; margin-top: clamp(28px, 7vw, 44px); }
+  .v6-au__seal { grid-template-columns: clamp(44px, 12vw, 60px) minmax(0, 1fr);
+    column-gap: clamp(14px, 4vw, 22px); row-gap: 4px; align-items: start;
+    padding: clamp(18px, 5vw, 26px) 0; border-top: 1px solid var(--g-line); opacity: 1; }
+  .v6-au__seal:first-child { border-top: 0; padding-top: 0; }
+  .v6-au__stamp { grid-row: 1 / span 3; width: 100%; margin-bottom: 0; }
+  .v6-au__field, .v6-au__who, .v6-au__says { grid-column: 2; }
+  .v6-au__who { font-size: clamp(1.25rem, 5.6vw, 1.7rem); }
+  .v6-au__blank { margin-top: 8px; }
+  .v6-au__turn { margin-top: clamp(30px, 8vw, 44px); }
+  .v6-au__turnt { opacity: 1 !important; transform: none !important;
+    font-size: clamp(1.02rem, 4.4vw, 1.25rem); }
+}
+
+/* A window too short to pin a scene in gets the same unpinned composition a phone does. Gate 1 of the four
+   listed under NOT ENOUGH ROOM TO PIN; the other three are in mobile-motion.ts, progress.ts and the block
+   that resolves the completion chapter into the night. */
+@media (min-width: 901px) and (max-height: 767px) {
+  .v6-au { height: auto; }
+  .v6-au__pin { position: static; height: auto; display: block; padding: clamp(64px, 8vw, 100px) var(--gutter); }
+  .v6-au__seals { margin-top: clamp(28px, 4vw, 44px); }
+  .v6-au__seal { opacity: 1; }
+  .v6-au__turn { margin-top: clamp(30px, 4vw, 44px); }
+  .v6-au__turnt { opacity: 1 !important; transform: none !important; }
+}
+
 /* ═══════════════════════════════════════════ 3. WHAT VERIFIED HAS TO MEAN ══
    The company's own motif: a gapped ring. The centre carries the conclusion, the outer path is the
    independent verification closing around it, one segment per condition. The ring only closes when all
@@ -1019,6 +1125,8 @@
    two disagreed the moment a window crossed 767px tall. Keep the two selector lists below identical to
    SCRUBBED_PARTS and ALWAYS_PARTS in that file; scripts/mobile-motion-verify.ts fails if they drift. */
 @media (max-width: 900px), (prefers-reduced-motion: reduce), (max-height: 767px) {
+  .v6-mo .v6-au__seal,
+  .v6-mo .v6-au__turnt,
   .v6-mo .v6-gap__t,
   .v6-mo .v6-st__cond,
   .v6-mo .v6-rg__row,
@@ -1031,6 +1139,8 @@
     transition-delay: calc(var(--i, 0) * 70ms);
     will-change: opacity, transform;
   }
+  .v6-mo .v6-au__seal.v6-in,
+  .v6-mo .v6-au__turnt.v6-in,
   .v6-mo .v6-gap__t.v6-in,
   .v6-mo .v6-st__cond.v6-in,
   .v6-mo .v6-rg__row.v6-in,
@@ -1155,6 +1265,7 @@
    Same safety property as the rest of this system: the hidden start state lives behind .v6-mo, which
    exists only once the script that can reveal it has run. */
 .v6-mo .v6-eyebrow,
+.v6-mo .v6-au__sub,
 .v6-mo .v6-st__sub,
 .v6-mo .v6-dr__sub,
 .v6-mo .v6-rx__sub,
@@ -1168,6 +1279,7 @@
   will-change: opacity, transform;
 }
 .v6-mo .v6-eyebrow.v6-in,
+.v6-mo .v6-au__sub.v6-in,
 .v6-mo .v6-st__sub.v6-in,
 .v6-mo .v6-dr__sub.v6-in,
 .v6-mo .v6-rx__sub.v6-in,
@@ -1184,6 +1296,7 @@
    than a wrapper element, so no heading markup changes and nothing new enters the accessibility tree. It
    bottoms out at -18% so descenders are never shaved on the last frame. 90ms behind its own eyebrow, so
    the chapter names itself and then states itself. */
+.v6-mo .v6-au__h,
 .v6-mo .v6-st__h,
 .v6-mo .v6-rg__h,
 .v6-mo .v6-dr__h,
@@ -1198,6 +1311,7 @@
   transition-delay: 90ms;
   will-change: opacity, transform, clip-path;
 }
+.v6-mo .v6-au__h.v6-in,
 .v6-mo .v6-st__h.v6-in,
 .v6-mo .v6-rg__h.v6-in,
 .v6-mo .v6-dr__h.v6-in,
@@ -1220,10 +1334,10 @@
    masked to nothing, which is the one way this could be worse than no reveal at all. */
 @media (prefers-reduced-motion: reduce) {
   .v6-mo .v6-eyebrow,
-  .v6-mo .v6-st__sub, .v6-mo .v6-dr__sub, .v6-mo .v6-rx__sub,
+  .v6-mo .v6-au__sub, .v6-mo .v6-st__sub, .v6-mo .v6-dr__sub, .v6-mo .v6-rx__sub,
   .v6-mo .v6-kn__sheet, .v6-mo .v6-kn__col, .v6-mo .v6-kn__ex,
-  .v6-mo .v6-st__h, .v6-mo .v6-rg__h, .v6-mo .v6-dr__h, .v6-mo .v6-rx__h, .v6-mo .v6-tm__h,
-  .v6-mo .v6-gap__t, .v6-mo .v6-st__cond, .v6-mo .v6-rg__row, .v6-mo .v6-rg__foot,
+  .v6-mo .v6-au__h, .v6-mo .v6-st__h, .v6-mo .v6-rg__h, .v6-mo .v6-dr__h, .v6-mo .v6-rx__h, .v6-mo .v6-tm__h,
+  .v6-mo .v6-au__seal, .v6-mo .v6-au__turnt, .v6-mo .v6-gap__t, .v6-mo .v6-st__cond, .v6-mo .v6-rg__row, .v6-mo .v6-rg__foot,
   .v6-mo .v6-dr__layer, .v6-mo .v6-tm__ex {
     transform: none !important;
     clip-path: none !important;
@@ -1232,10 +1346,11 @@
     will-change: opacity;
   }
   .v6-mo .v6-eyebrow.v6-in,
-  .v6-mo .v6-st__sub.v6-in, .v6-mo .v6-dr__sub.v6-in, .v6-mo .v6-rx__sub.v6-in,
+  .v6-mo .v6-au__sub.v6-in, .v6-mo .v6-st__sub.v6-in, .v6-mo .v6-dr__sub.v6-in, .v6-mo .v6-rx__sub.v6-in,
   .v6-mo .v6-kn__sheet.v6-in, .v6-mo .v6-kn__col.v6-in, .v6-mo .v6-kn__ex.v6-in,
-  .v6-mo .v6-st__h.v6-in, .v6-mo .v6-rg__h.v6-in, .v6-mo .v6-dr__h.v6-in,
+  .v6-mo .v6-au__h.v6-in, .v6-mo .v6-st__h.v6-in, .v6-mo .v6-rg__h.v6-in, .v6-mo .v6-dr__h.v6-in,
   .v6-mo .v6-rx__h.v6-in, .v6-mo .v6-tm__h.v6-in,
+  .v6-mo .v6-au__seal.v6-in, .v6-mo .v6-au__turnt.v6-in,
   .v6-mo .v6-gap__t.v6-in, .v6-mo .v6-st__cond.v6-in, .v6-mo .v6-rg__row.v6-in,
   .v6-mo .v6-rg__foot.v6-in, .v6-mo .v6-dr__layer.v6-in, .v6-mo .v6-tm__ex.v6-in {
     opacity: 1 !important;

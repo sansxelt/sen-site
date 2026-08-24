@@ -6,18 +6,19 @@
 // alternate at every boundary so the page reads as changes of atmosphere rather than as stacked modules:
 //
 //   1 opening        graphite   headline, one line, one action, one cropped visual
-//   2 the gap        stone      one word at full scale, losing its authority
-//   3 the standard   graphite   what Verified has to mean: eight conditions closing a ring
-//   4 the product    graphite   the real CLI: one command, three exit codes, no false green
-//   5 the register   graphite   the zoom out: one guarantee becomes the whole operating surface
-//   6 reach          stone      one result fanning into the stack a company runs
+//   2 the authority  graphite   the absence the company exists inside: five seals, one that never closes
+//   3 the gap        stone      one word at full scale, losing its authority
+//   4 the standard   graphite   what Verified has to mean: four refusals closing a ring
+//   5 the product    graphite   the real CLI: one command, three exit codes, no false green
+//   6 the register   graphite   the zoom out: one guarantee becomes the whole operating surface
+//   7 reach          stone      one result fanning into the stack a company runs
 //     knowledge      sunk       the writing behind the product, as a publication
-//   7 closing        graphite   one statement, one line, two actions
+//   8 closing        graphite   one statement, one line, two actions
 //
 // Explanation deliberately does NOT live here. /platform, /agents, /method, /research and /docs carry it.
 // The company category is unsettled and every positioning string comes from _system/positioning.ts.
 import { Hero } from "./_system/hero";
-import { Gap, Standard, Product, Register, Reach, Direction, Knowledge } from "./_system/chapters";
+import { Authority, Gap, Standard, Product, Register, Reach, Direction, Knowledge } from "./_system/chapters";
 import { ClosingScene } from "./_system/close";
 import { useMobileMotion } from "./_system/mobile-motion";
 
@@ -29,6 +30,14 @@ export default function Home() {
   return (
     <>
       <Hero />
+      {/* THE ONE CHAPTER THAT ARGUES ABOUT THE WORLD RATHER THAN ABOUT THE PRODUCT, and the reason it sits
+          here rather than deeper: everything below this line is a mechanism, and a mechanism only reads as
+          groundbreaking if the reader already knows what is missing. It names the absence (every serious
+          discipline has an authority that is not the builder; ordinary software never had one, because the
+          builder was a person who could be held to it) and it deliberately does NOT resolve it.
+          Gap resolves it, one chapter down, with the line it already had. Do not let a resolution appear in
+          both: if one is ever written into Authority, delete it from Gap rather than carrying two. */}
+      <Authority />
       {/* REORDERED so the reader reaches something concrete sooner.
           Gap is now a single-beat BRIDGE rather than three scenes: it kept the line that names Vraelis
           ("So something independent has to answer it") and the other two travellers are commented out in

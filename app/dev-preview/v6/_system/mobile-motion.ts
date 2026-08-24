@@ -50,9 +50,11 @@ import { useEffect } from "react";
 // navigation. Toggling a Chromebook out of fullscreen is exactly that resize. A media query is live; a
 // JavaScript read of one is a single sample, and the two must not be asked to agree.
 const SCRUBBED_PARTS = [
-  ".v6-gap__t",       // chapter 2: the claim, the absence, the verdict
-  ".v6-st__cond",     // chapter 3: the conditions that close the ring
-  ".v6-rg__row",      // chapter 5: the register's rows
+  ".v6-au__seal",     // chapter 2: the five seals, four of which close
+  ".v6-au__turnt",    // chapter 2: the turn underneath them
+  ".v6-gap__t",       // chapter 3: the claim, the absence, the verdict
+  ".v6-st__cond",     // chapter 4: the conditions that close the ring
+  ".v6-rg__row",      // chapter 6: the register's rows
   ".v6-rg__foot",
   ".v6-dr__layer",    // reach: the stack a result fans into
   ".v6-tm__ex",       // the terminal's exit codes
@@ -69,6 +71,7 @@ const SCRUBBED_PARTS = [
 // the scrub's intermediate variables, so nothing here can contend with a scrubbed declaration.
 const ALWAYS_PARTS = [
   ".v6-eyebrow",                    // every chapter's category label
+  ".v6-au__h", ".v6-au__sub",
   ".v6-st__h", ".v6-st__sub",
   ".v6-rg__h",
   ".v6-dr__h", ".v6-dr__sub",
