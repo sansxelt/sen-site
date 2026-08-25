@@ -1,4 +1,7 @@
 import NextAuth from "next-auth";
+import { canonicalizeEmail } from "@/lib/user-credentials";
+import { allowStrict } from "@/lib/vraelis-ratelimit";
+import { bumpTokenVersion, currentTokenVersion, tokenVersionIsCurrent } from "@/lib/v-session-revocation";
 import type { NextRequest } from "next/server";
 import Credentials from "next-auth/providers/credentials";
 import GitHub from "next-auth/providers/github";
@@ -93,6 +96,15 @@ function buildCookieOptions(cookieDomain: string | undefined) {
   };
 }
 
+// The IP for the sign-in bucket. NextAuth passes a plain Request to authorize(), so this reads the
+// forwarded headers directly rather than going through lib/vraelis-ratelimit's NextRequest helper.
+// Falls back to a constant, which means an unidentifiable caller shares one bucket rather than
+// getting a free one.
+function clientIpFromHeaders(request: Request | undefined): string {
+  const xff = request?.headers?.get("x-forwarded-for");
+  if (xff) return xff.split(",")[0].trim();
+  return request?.headers?.get("x-real-ip")?.trim() || "unknown";
+}
 const authResult = NextAuth((req: NextRequest | undefined) => {
   const cookieOptions = buildCookieOptions(resolveCookieDomain(req));
   return {
@@ -121,11 +133,25 @@ const authResult = NextAuth((req: NextRequest | undefined) => {
           type: "text",
         },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         const email =
           typeof credentials.email === "string"
             ? credentials.email.trim().toLowerCase()
             : "";
+
+        // SECURITY: this is the password brute-force surface, and it had no limiter of any kind. Two
+        // buckets on the Postgres-backed limiter, so they hold across serverless instances rather than
+        // resetting with each cold start the way an in-memory Map does:
+        //   - per IP, so one source cannot sweep many accounts;
+        //   - per CANONICAL mailbox, so a distributed attempt cannot grind one account.
+        // Both are checked BEFORE the bcrypt verify, which is the expensive part (cost 12), so a flood
+        // costs the attacker a round trip and costs us a cheap counter rather than a CPU-bound hash.
+        // allowStrict: a limiter outage denies rather than reopening an unmetered brute force.
+        // Returning null is the same "bad credentials" answer a wrong password gets, so being rate
+        // limited is indistinguishable from being wrong and reveals nothing about which accounts exist.
+        const signinIp = clientIpFromHeaders(request);
+        if (!(await allowStrict(`signin-ip:${signinIp}`, 20, 600))) return null;
+        if (email && !(await allowStrict(`signin-email:${canonicalizeEmail(email)}`, 10, 600))) return null;
         const password =
           typeof credentials.password === "string" ? credentials.password : "";
         const autoSigninToken =
@@ -176,8 +202,23 @@ const authResult = NextAuth((req: NextRequest | undefined) => {
       options: { domain: ".vraelis.com", httpOnly: true, sameSite: "lax", path: "/", secure: true },
     },
   } : undefined,
+  events: {
+    // SIGN-OUT NOW ACTUALLY ENDS THE SESSION. With a JWT strategy, NextAuth's sign-out clears the
+    // browser cookie and nothing else — a token already copied elsewhere stayed valid until it expired.
+    // Bumping the revocation counter refuses every token issued before now.
+    //
+    // DOCUMENTED LIMITATION: the counter is per USER, so this is all-or-nothing. Signing out on one
+    // device signs out every device. That is a deliberate behaviour change and the safe direction —
+    // per-device revocation would need server-side sessions, which is a migration of the whole auth
+    // surface rather than a fix.
+    async signOut(message) {
+      const token = (message as { token?: { email?: unknown } }).token;
+      const email = typeof token?.email === "string" ? token.email : "";
+      if (email) await bumpTokenVersion(email, "sign_out");
+    },
+  },
   callbacks: {
-    async signIn({ user, account }) {
+    async signIn({ user, account, profile }) {
       const tag = `[auth:signIn][${account?.provider ?? "?"}]`;
 
       if (!user.email) {
@@ -190,6 +231,18 @@ const authResult = NextAuth((req: NextRequest | undefined) => {
       }
 
       const provider = account?.provider ?? "";
+
+      // SECURITY: the provider must say the address is VERIFIED. Identity here is a bare email string —
+      // it is what isAdminEmail and every owner-scoped query key on — so accepting an unverified one
+      // lets anyone who can make a provider assert an address take over the account that owns it.
+      // Google sends email_verified on the profile; GitHub only returns verified addresses from the
+      // /user/emails endpoint it is asked for. An explicit false is refused; an absent claim is
+      // accepted, because refusing it would break providers that do not send one at all.
+      const verifiedClaim = (profile as { email_verified?: unknown } | undefined)?.email_verified;
+      if (verifiedClaim === false || verifiedClaim === "false") {
+        console.error(`${tag} rejected — provider reports the email is not verified`);
+        return false;
+      }
       console.log(`${tag} email=${user.email} — looking up profile`);
 
       try {
@@ -250,6 +303,21 @@ const authResult = NextAuth((req: NextRequest | undefined) => {
     async jwt({ account, token }) {
       if (account?.provider) {
         token.provider = account.provider;
+      }
+
+      // SESSION REVOCATION. The session strategy is JWT, so the server stores nothing and sign-out only
+      // clears the browser's cookie — a token copied elsewhere stayed valid until expiry, and a password
+      // reset did not end the sessions the old password had created. Each token carries the user's
+      // revocation counter; returning null here discards a token whose counter is behind the stored one,
+      // which is how sign-out, password reset and administrative revocation become real.
+      const email = typeof token.email === "string" ? token.email : "";
+      if (email) {
+        if (account) {
+          // Fresh sign-in: stamp the current version.
+          token.tv = await currentTokenVersion(email);
+        } else if (!(await tokenVersionIsCurrent(email, token.tv))) {
+          return null;
+        }
       }
 
       return token;

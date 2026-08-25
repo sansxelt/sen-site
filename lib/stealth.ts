@@ -78,8 +78,20 @@ export function robotsMeta(
   return { index: wanted, follow: wanted };
 }
 
+// SECURITY: no literal fallback. "stealth-fallback-key" was committed to a PUBLIC repository, so when
+// neither variable was set every stealth/reviewer token was signed with a key anyone could read — the
+// signature proved nothing. Fail closed instead: an unset key means the entrance is closed, which is
+// the convention the reviewer entrance (app/api/yc) already follows.
+//
+// MIGRATION NOTE: no effect while either variable is set, and both are in the supported configuration.
+// Existing tokens keep verifying because the key in use is unchanged. If a deployment WAS relying on
+// the literal, setting VRAELIS_SECRET_KEY invalidates outstanding unlock tokens and users re-unlock.
 function signingKey(): string {
-  return process.env.VRAELIS_SECRET_KEY || process.env.AUTH_SECRET || "stealth-fallback-key";
+  const key = (process.env.VRAELIS_SECRET_KEY || process.env.AUTH_SECRET || "").trim();
+  if (!key) {
+    throw new Error("VRAELIS_SECRET_KEY (or AUTH_SECRET) is not set; refusing to sign stealth tokens.");
+  }
+  return key;
 }
 
 function hmac(payload: string): string {

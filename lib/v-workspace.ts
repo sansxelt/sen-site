@@ -112,7 +112,25 @@ export async function activateInvitesForEmail(email: string): Promise<void> {
   try {
     const s = getSupabaseAdminClient();
     const uid = norm(email);
-    await s.from("v_workspace_members" as never).update({ user_id: uid, status: "active", updated_at: new Date().toISOString() } as never).eq("email", uid).eq("status", "pending");
+    // SECURITY: the 7-day TTL is enforced HERE too, not only on the token path. This activates any
+    // pending row whose email matches, so without the expiry filter an invite that had long since
+    // lapsed still granted membership the moment its address signed up — the TTL existed on paper only.
+    // Rows predating the column have a NULL expiry and are still honoured, so no legitimate historical
+    // invite is broken by adding this.
+    const nowIso = new Date().toISOString();
+    const { error } = await s.from("v_workspace_members" as never)
+      .update({ user_id: uid, status: "active", updated_at: nowIso } as never)
+      .eq("email", uid)
+      .eq("status", "pending")
+      .or(`invite_expires_at.is.null,invite_expires_at.gt.${nowIso}`);
+    if (error) {
+      // Pre-migration databases have no invite_expires_at column. Fall back to the original update
+      // rather than silently activating nothing, and say so.
+      console.warn("[workspace] invite expiry filter unavailable, activating without it:", error.message);
+      await s.from("v_workspace_members" as never)
+        .update({ user_id: uid, status: "active", updated_at: nowIso } as never)
+        .eq("email", uid).eq("status", "pending");
+    }
   } catch { /* pre-migration / ignore */ }
 }
 

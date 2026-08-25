@@ -1,4 +1,5 @@
 import { hash } from "bcryptjs";
+import { bumpTokenVersion } from "@/lib/v-session-revocation";
 import { NextResponse } from "next/server";
 import { sendPasswordResetConfirmEmail } from "../../../../../lib/email";
 import { consumeResetToken, verifyResetToken } from "../../../../../lib/password-reset";
@@ -61,6 +62,19 @@ export async function POST(request: Request) {
     }
 
     await consumeResetToken(token);
+
+    // END EVERY EXISTING SESSION. The session strategy is JWT, so changing the password did NOT previously
+    // invalidate the sessions the OLD password had created — which is exactly backwards from what someone
+    // resetting a compromised password expects. Bumping the revocation counter refuses every token issued
+    // before now, on every device.
+    //
+    // Failure is logged, not thrown: the password IS already changed at this point, and turning a
+    // successful reset into an error would leave the user unable to tell whether it worked. The reset
+    // still succeeded; what failed is the extra containment.
+    const bumped = await bumpTokenVersion(email, "password_reset");
+    if (bumped === null) {
+      console.error("[reset-password/confirm] password changed but sessions could NOT be revoked for this user");
+    }
 
     // "Your password was reset" confirmation, fire-and-forget.
     // Look up the display name so the greeting reads "Hi <name>,"

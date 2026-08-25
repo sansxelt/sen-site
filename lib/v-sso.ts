@@ -27,7 +27,21 @@ type ProviderRow = SsoProviderSafe & { organization_id: string; client_secret_en
 type Result<T = unknown> = ({ ok: true } & T) | { ok: false; error: string };
 
 // ── Secret encryption (AES-256-GCM, key = sha256(AUTH_SECRET)) ────────────────
-const encKey = () => crypto.createHash("sha256").update(process.env.AUTH_SECRET || "").digest();
+// SECURITY: no empty-string fallback. sha256("") is a fixed, publicly known 32-byte value, so an unset
+// AUTH_SECRET meant every stored SSO client secret was encrypted under a key anyone can compute — the
+// ciphertext looked encrypted and was not. Failing loudly is correct: a deployment that cannot protect
+// these secrets must not store them.
+//
+// MIGRATION NOTE: this changes nothing while AUTH_SECRET is set, which is the supported configuration —
+// the derived key is identical and existing ciphertext decrypts as before. It only converts the
+// unset case from "silently weak" into a startup-visible error.
+const encKey = () => {
+  const secret = (process.env.AUTH_SECRET || "").trim();
+  if (!secret) {
+    throw new Error("AUTH_SECRET is not set; refusing to encrypt or decrypt SSO client secrets.");
+  }
+  return crypto.createHash("sha256").update(secret).digest();
+};
 export function encryptSecret(plain: string): string {
   const iv = crypto.randomBytes(12);
   const c = crypto.createCipheriv("aes-256-gcm", encKey(), iv);
