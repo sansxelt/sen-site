@@ -198,7 +198,8 @@ export default async function GuaranteeDetailPage({ params }: { params: Promise<
             {history.length === 0 ? (
               <p style={{ fontSize: 14, color: "var(--fg-3)", lineHeight: 1.55, margin: 0, maxWidth: "64ch" }}>
                 Never verified. Once this guarantee runs against a deployment, its decision and the evidence
-                behind it show here, and it is reverified as new deployments appear.
+                behind it show here. Re-checking automatically as new deployments appear is not wired up
+                yet, so it is reverified when you ask it to be.
               </p>
             ) : (
               <div style={{ display: "grid", gap: 10 }}>

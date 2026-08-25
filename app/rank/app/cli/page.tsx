@@ -27,7 +27,7 @@ const label = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "
 // that should be telling it.
 const SURFACES: [string, string, string, string][] = [
   ["Command line", "One command, three exit codes. Install it in CI and gate the deploy on the decision.", "#cli", "installed with one line"],
-  ["HTTP API", "POST a deployment and a claim, poll for the decision, read the evidence back. Same balance, same records.", "/developers", "requires a key with Launch runs"],
+  ["HTTP API", "POST a deployment and a claim, have a person approve the plan Vraelis derives, then poll for the decision and read the evidence back. Same balance, same records.", "/developers", "requires a key with Launch runs"],
   ["Webhooks", "A signed verification.completed event pushed to your app the moment a verification finishes.", "/developers", "no polling"],
 ];
 

@@ -1,9 +1,19 @@
 // POST /api/v1/verifications — the public primitive.
 //
-//   { "deployment_url": "https://example.com",
-//     "claim": "A customer can upgrade to Pro, receive access, and retain it after signing in again." }
+// THIS COMMENT WAS ITSELF THE STALE CLAIM THAT LEAKED INTO THE DOCS. It used to show a first call going
+// straight to state:"running", which is not what this route does and never was after human review became
+// mandatory: a first call with no reviewed_plan_id mints a plan and returns state:"review_required" (see the
+// handler below). The console's own /developers page and CLI docs copied this exact wrong shape until fixed
+// alongside this comment. Two real calls, so nobody has to reverse-engineer the handler to get this right:
 //
-//   -> { "verification_id": "vrf_...", "state": "running", "status_url": "/v1/verifications/vrf_..." }
+//   1. { "deployment_url": "https://example.com",
+//        "claim": "A customer can upgrade to Pro, receive access, and retain it after signing in again." }
+//      -> { "state": "review_required", "reviewed_plan_id": "rvp_...", "requirements": [...] }
+//      Nothing has run and nothing has been charged. A person approves the plan next.
+//
+//   2. Resubmit the SAME request with reviewed_plan_id to run exactly what was approved:
+//      { ...same body..., "reviewed_plan_id": "rvp_..." }
+//      -> { "verification_id": "vrf_...", "state": "running", "status_url": "/v1/verifications/vrf_..." }
 //
 // The caller never learns what an application, a contract, a flow, or a pass is. Those all still exist and
 // verification-lane.ts absorbs the mismatch.

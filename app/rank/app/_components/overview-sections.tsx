@@ -85,13 +85,9 @@ export type AttentionItem = {
   systemVerdict: Verdict | null;  // the system's latest public decision
 };
 
-function repairLine(r: RepairRow | null): { text: string; tone: string } {
-  if (!r) return { text: "Repair not started", tone: "var(--fg-4)" };
-  if (r.status === "verified") return { text: "Repair verified", tone: "var(--go-ink)" };
-  if (r.status === "applied_by_user") return { text: "Repair applied, awaiting reverification", tone: "var(--wait-ink)" };
-  if (r.status === "failed") return { text: "Repair attempt failed", tone: "var(--stop-ink)" };
-  return { text: "Repair prompt ready", tone: "var(--fg-3)" };
-}
+// repair-lifecycle tracking is not wired yet — v_repairs has no writer anywhere in the codebase (see
+// CURRENT_VRAELIS_CONTEXT.md), so `repair` is always null for every account and a status here could only
+// ever read "Repair not started". A label that can never change is not a status, so it's not shown.
 
 export function NeedsAttention({ items }: { items: AttentionItem[] }) {
   if (!items.length) return null;
@@ -99,8 +95,7 @@ export function NeedsAttention({ items }: { items: AttentionItem[] }) {
     <section aria-label="Needs attention" style={{ marginBottom: 30 }}>
       <SectionHead text="Needs attention" count={items.length} href="/verifications" hrefLabel="All failures" />
       <div style={{ display: "grid", gap: 8 }}>
-        {items.map(({ issue, repair, lastProven, systemVerdict }) => {
-          const rep = repairLine(repair);
+        {items.map(({ issue, lastProven, systemVerdict }) => {
           const recurring = Boolean(issue.firstSeenRun && issue.lastSeenRun && issue.firstSeenRun !== issue.lastSeenRun);
           const href = issue.applicationId ? `/systems/${issue.applicationId}/issues` : "/verifications";
           return (
@@ -119,7 +114,6 @@ export function NeedsAttention({ items }: { items: AttentionItem[] }) {
                     claim as "never verified". Say the weaker, true thing. */}
                 {lastProven ? <span>Last proven {timeAgo(lastProven)}</span> : <span>No verified run in recent history</span>}
                 {recurring ? <span style={{ color: "var(--wait-ink)" }}>Seen again after an earlier run</span> : null}
-                <span style={{ color: rep.tone }}>{rep.text}</span>
               </div>
             </Link>
           );

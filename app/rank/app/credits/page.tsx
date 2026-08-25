@@ -138,7 +138,7 @@ export default function CreditsPage() {
 
       {isOnAPaidPlan(planV1, plan) && (
         <div className="card" style={{ marginBottom: 22, background: "var(--bg-2)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-          <div style={{ fontSize: 13.5, color: "var(--fg-2)" }}>You&apos;re on the <strong style={{ color: "var(--fg-1)" }}>{planLabel(planV1, plan)}</strong> plan, your monthly credits refresh automatically. Top up here only if you want extra beyond your plan.</div>
+          <div style={{ fontSize: 13.5, color: "var(--fg-2)" }}>You&apos;re on the <strong style={{ color: "var(--fg-1)" }}>{planLabel(planV1, plan)}</strong> plan. Your plan&apos;s monthly allowance renews on its own; nothing here is charged unless you choose a top-up beyond it.</div>
           <Link href="/plans" style={{ fontSize: 13, color: "var(--acc-deep)", whiteSpace: "nowrap" }}>Manage plan →</Link>
         </div>
       )}

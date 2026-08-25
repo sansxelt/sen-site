@@ -28,19 +28,31 @@ const DEV_EVENT_LABEL: Record<string, string> = {
 };
 const shortDate = (s: string | null) => { if (!s) return "-"; try { return new Date(s).toLocaleDateString("en-US", { month: "short", day: "numeric" }); } catch { return "-"; } };
 
-const CURL = `# 1. Create a verification: does the deployed build actually keep this promise?
+const CURL = `# 1. Submit the claim. Vraelis builds a plan and asks a person to review it before anything runs or is charged.
 curl -X POST https://vraelis.com/api/v1/verifications \\
   -H "X-Api-Key: YOUR_KEY" -H "Content-Type: application/json" \\
   -H "Idempotency-Key: $(uuidgen)" \\
   -d '{ "deployment_url": "https://your-preview.example.com",
         "claim": "A customer can upgrade to Pro and still have it after signing back in" }'
+# -> { "state": "review_required", "reviewed_plan_id": "rvp_...", "requirements": [...] }
+# Nothing has run and nothing has been charged yet.
+
+# 2. A person approves the plan: in the console's Review queue, or via the plan-approve endpoint.
+#    Approval is a required, separate event. An API key cannot approve a plan that defines a guarantee.
+
+# 3. Resubmit the SAME request with reviewed_plan_id to run exactly what was approved:
+curl -X POST https://vraelis.com/api/v1/verifications \\
+  -H "X-Api-Key: YOUR_KEY" -H "Content-Type: application/json" \\
+  -d '{ "deployment_url": "https://your-preview.example.com",
+        "claim": "A customer can upgrade to Pro and still have it after signing back in",
+        "reviewed_plan_id": "rvp_..." }'
 # -> { "verification_id": "vrf_...", "state": "running" }
 
-# 2. Poll until a DECISION lands. While it is running the decision is null; keep polling.
+# 4. Poll until a DECISION lands. While it is running the decision is null; keep polling.
 curl https://vraelis.com/api/v1/verifications/VERIFICATION_ID -H "X-Api-Key: YOUR_KEY"
 # -> { "state": "completed", "decision": "failed", "failures": [ { "title": "...", "reproduce": "..." } ] }
 
-# 3. Gate on the DECISION, never the run state:
+# 5. Gate on the DECISION, never the run state:
 #      verified -> exit 0  (ship)     failed -> exit 1  (stop)     blocked -> exit 2  (stop)
 #    A finished run is NOT a pass. "state":"completed" with "decision":"failed" must STOP the deploy.
 #    Evidence (screenshots, traces) is fetched separately through a short-lived, owner-checked signed URL.`;

@@ -153,8 +153,15 @@ export default async function BillingPage() {
 
       <div className="card" style={{ marginBottom: 28 }}>
         <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 14 }}>Subscription</div>
-        <BillingActions canceling={cancelAtEnd} hasSub={hasSub} />
-        <p style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)", marginTop: 16, marginBottom: 0, lineHeight: 1.6 }}>Plan changes, cancellations, and resumptions happen here in Vraelis.</p>
+        {/* Builder/Pro/Scale (v1Plan) has no row in v_subscriptions, so /api/v/cancel 404s "no_subscription"
+            for it — hasSub stayed true here only for the status line above. The button is scoped to the
+            legacy path it actually works against; v1 cancels through the portal via Change plan instead. */}
+        <BillingActions canceling={cancelAtEnd} hasSub={hasSub && !v1Plan} />
+        <p style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)", marginTop: 16, marginBottom: 0, lineHeight: 1.6 }}>
+          {v1Plan
+            ? "Cancelling or resuming a Builder, Pro or Scale plan opens the secure billing portal — use Change plan above."
+            : "Plan changes, cancellations, and resumptions happen here in Vraelis."}
+        </p>
       </div>
 
       {/* Native payment history: Stripe invoices rendered in-app; the hosted invoice page is only the

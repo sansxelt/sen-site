@@ -106,6 +106,16 @@ export function CliSection() {
         what you type, a paste that did nothing is indistinguishable from a key that was refused.
       </p>
 
+      {/* Direction, not built: the API now requires a person to approve the plan it derives before any run
+          starts (see /api/v1/verifications), and this CLI does not yet submit that approval or resubmit with
+          reviewed_plan_id, so a first `verify --wait` cannot reach a decision on its own. */}
+      <p style={{ margin: "12px 0 0", fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.6 }}>
+        Direction, not built: a first <code style={{ color: "var(--fg-3)" }}>verify</code> call stops here
+        today — the API now requires a person to approve the plan it derives before any run starts, and this
+        CLI does not yet submit that approval or resubmit it, so <code style={{ color: "var(--fg-3)" }}>--wait</code> cannot
+        reach a decision on its own. Approve the plan from the console&apos;s Review queue first.
+      </p>
+
       <div style={{ marginTop: 22, border: "1px solid var(--line-2)", borderRadius: "var(--r-lg, 14px)", overflow: "hidden", background: "var(--bg-1)" }}>
         {FLAGS.map(([flag, what], i) => (
           <div key={flag} style={{ display: "grid", gridTemplateColumns: "minmax(140px,auto) 1fr", gap: 14, padding: "11px 16px", borderTop: i ? "1px solid var(--line-2)" : "none" }}>

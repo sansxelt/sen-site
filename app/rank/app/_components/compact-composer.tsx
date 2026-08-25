@@ -36,8 +36,8 @@ export function CompactComposer({ balance }: { balance: number }) {
         }}
       >
         <span aria-hidden style={{ display: "inline-flex", color: "var(--fg-3)" }}><Ic d={I.plus} size={16} sw={2} /></span>
-        <span style={{ fontWeight: 500 }}>Verify a guarantee</span>
-        <span style={{ color: "var(--fg-5)", fontSize: 12.5 }}>Name a deployment and what must stay true</span>
+        <span style={{ fontWeight: 500 }}>New verification</span>
+        <span style={{ color: "var(--fg-5)", fontSize: 12.5 }}>Name a deployment and the outcome to check</span>
       </button>
     );
   }

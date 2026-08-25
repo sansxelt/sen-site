@@ -65,7 +65,7 @@ export default async function AccountPage() {
       <div className="tile-grid cols-3" style={{ marginBottom: 26 }}>
         <div className="stat"><div className="stat__l">Plan</div><div className="stat__v">{planName}</div><div className="stat__s">{paid ? `Status: ${status}` : "No subscription"}{renews ? `, renews ${renews}` : ""}</div></div>
         <div className="stat"><div className="stat__l">Credit balance</div><div className="stat__v tnum">{bal.toLocaleString()}</div><div className="stat__s">Funds verifications</div></div>
-        <div className="stat"><div className="stat__l">Monthly credits</div><div className="stat__v tnum">{(sub?.monthly_credits ?? 0).toLocaleString()}</div><div className="stat__s">{paid ? "Refreshed each cycle" : "Included with a monthly plan"}</div></div>
+        <div className="stat"><div className="stat__l">Monthly credits</div><div className="stat__v tnum">{(sub?.monthly_credits ?? 0).toLocaleString()}</div><div className="stat__s">{planV1?.plan ? "Not used on this plan — allowance is metered in flows, see Usage" : paid ? "Refreshed each cycle" : "Included with a monthly plan"}</div></div>
       </div>
 
       {/* manage */}
