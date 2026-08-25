@@ -23,7 +23,7 @@ export const metadata: Metadata = { title: "Connections" };
 // with router.refresh() after each action, so the cards always show what the database holds.
 export default async function AppConnectionsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const access = await requirePreflightAppAccess(id, "/systems/" + id + "/settings/connections");
+  const access = await requirePreflightAppAccess(id, "/systems/" + id + "/settings/connections", "editor");
   const owner = access?.owner ?? "";
   const caps = capabilities(access?.role);
   if (!(await preflightDbReady())) return <SetupRequired />;

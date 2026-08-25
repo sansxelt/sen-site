@@ -381,7 +381,10 @@ export async function isClientSafeOnly(email: string, projectId: string): Promis
 
 // ── Workspace switcher + workspace-scoped member dashboards ──
 export type AvailableWorkspace = { id: string; name: string; role: Role; isPersonal: boolean; ownerId: string };
-export type SelectedWorkspace = AvailableWorkspace & { isOwner: boolean; clientSafeOnly: boolean };
+// viewerEmail carries the CALLER identity through to the reads that need to scope by membership.
+// Without it, workspaceProjectSummaries had no way to tell which projects a client_viewer may see and
+// listed every project in the workspace.
+export type SelectedWorkspace = AvailableWorkspace & { isOwner: boolean; clientSafeOnly: boolean; viewerEmail: string };
 export const canViewWorkspaceDashboard = (role: Role) => role !== "client_viewer";
 export const isWorkspaceClientSafeOnly = (role: Role) => role === "client_viewer";
 
@@ -413,7 +416,7 @@ export async function resolveWorkspaceSelection(email: string, selectedId?: stri
   const available = await getAvailableWorkspaces(email);
   const uid = norm(email);
   const pick = available.find((w) => w.id === selectedId) ?? available.find((w) => w.isPersonal) ?? available[0] ?? null;
-  const selected = pick ? { ...pick, isOwner: pick.ownerId === uid, clientSafeOnly: pick.role === "client_viewer" } : null;
+  const selected = pick ? { ...pick, isOwner: pick.ownerId === uid, clientSafeOnly: pick.role === "client_viewer", viewerEmail: uid } : null;
   return { available, selected };
 }
 
@@ -438,7 +441,27 @@ export async function workspaceProjectSummaries(selected: SelectedWorkspace): Pr
   try {
     const s = getSupabaseAdminClient();
     const { data: projs } = await s.from("v_projects" as never).select("id,name").eq("workspace_id", selected.id).order("updated_at", { ascending: false }).limit(200);
-    const projects = (projs as unknown as { id: string; name: string }[]) ?? [];
+    let projects = (projs as unknown as { id: string; name: string }[]) ?? [];
+
+    // SECURITY: a client_viewer is a report-only SIDE role, not a rung on the ladder. Listing every project
+    // in the workspace to one — as this did — hands an external client the full portfolio of a workspace
+    // they were invited into for a single engagement. Narrow to the projects they are explicitly a member
+    // of. Fail CLOSED: if the membership lookup errors we show nothing rather than falling back to all.
+    if (isWorkspaceClientSafeOnly(selected.role)) {
+      const { data: pm, error: pmErr } = await s
+        .from("v_project_members" as never)
+        .select("project_id")
+        .eq("user_id", norm(selected.viewerEmail))
+        .eq("status", "active")
+        .in("project_id", projects.map((p) => p.id));
+      if (pmErr) {
+        console.error("[workspace] client_viewer project scoping failed; showing none:", pmErr.message);
+        return empty;
+      }
+      const allowed = new Set(((pm as unknown as { project_id: string }[]) ?? []).map((r) => r.project_id));
+      projects = projects.filter((p) => allowed.has(p.id));
+    }
+
     if (!projects.length) return empty;
     const ids = projects.map((p) => p.id);
     // Scope by the workspace's projects (not the workspace owner id) so rollups stay

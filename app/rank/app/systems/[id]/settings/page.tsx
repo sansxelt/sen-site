@@ -64,7 +64,7 @@ function PermitRow({ label, on }: { label: string; on: boolean }) {
 // that are genuinely not built yet (deletion) say so honestly instead of faking controls.
 export default async function AppSettingsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const access = await requirePreflightAppAccess(id, "/systems/" + id);
+  const access = await requirePreflightAppAccess(id, "/systems/" + id, "editor");
   const owner = access?.owner ?? "";
   const caps = capabilities(access?.role);
   if (!(await preflightDbReady())) return <SetupRequired />;

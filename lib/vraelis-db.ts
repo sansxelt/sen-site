@@ -1384,3 +1384,58 @@ export async function isSubscriptionClaimedByAnother(
     return false;
   }
 }
+
+// Does this lead belong to this workspace owner?
+//
+// SECURITY: /api/vraelis/book authenticates with an intake key, which identifies a WORKSPACE, and then
+// accepted a client-supplied leadId. setLeadStatus is owner-scoped, but updateLeadContact and addMessage
+// take the bare id, so a valid key for one workspace could rewrite another workspace's lead contact
+// details and inject a message into its conversation. Callers must confirm ownership before any
+// lead-scoped write. Fails CLOSED: an unreadable row or an error returns false.
+export async function leadBelongsToOwner(email: string, leadId: string): Promise<boolean> {
+  if (!isDatabaseConfigured() || !email || !leadId) return false;
+  try {
+    const supabase = getSupabaseAdminClient();
+    const { data, error } = await supabase
+      .from("vraelis_leads" as never)
+      .select("id")
+      .eq("id", leadId)
+      .eq("owner_email", normalizeEmail(email))
+      .maybeSingle();
+    if (error) {
+      console.error("leadBelongsToOwner failed:", error.message);
+      return false;
+    }
+    return Boolean(data);
+  } catch (e) {
+    console.error("leadBelongsToOwner threw:", e);
+    return false;
+  }
+}
+
+// Sum of agent-reachable payment amounts created for this owner since `sinceISO`.
+//
+// Backs the rolling day / billing-cycle ceilings in lib/vraelis-payment-authz.ts. Returns null — NOT 0 —
+// when the total cannot be read, because a caller that treats an unreadable ledger as "nothing spent yet"
+// has no ceiling at all. The authorization path fails closed on null.
+export async function sumRecentPaymentCents(email: string, sinceISO: string): Promise<number | null> {
+  if (!isDatabaseConfigured()) return null;
+  try {
+    const supabase = getSupabaseAdminClient();
+    const { data, error } = await supabase
+      .from("vraelis_payments" as never)
+      .select("amount_cents")
+      .eq("owner_email", normalizeEmail(email))
+      .gte("created_at", sinceISO)
+      .limit(5000);
+    if (error) {
+      console.error("sumRecentPaymentCents failed:", error.message);
+      return null;
+    }
+    const rows = (data as unknown as { amount_cents: number | null }[]) ?? [];
+    return rows.reduce((acc, r) => acc + (Number(r.amount_cents) || 0), 0);
+  } catch (e) {
+    console.error("sumRecentPaymentCents threw:", e);
+    return null;
+  }
+}
