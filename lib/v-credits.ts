@@ -166,6 +166,19 @@ export async function ensureSignupGrant(userId: string): Promise<void> {
 // unit and behaves exactly as before.
 export async function hold(userId: string, testId: string, amount: number, unit: "credit" | "cent" = "credit"): Promise<boolean> {
   if (amount <= 0) return true;
+
+  // ATOMIC PATH. The TypeScript below reads the balance, decides the bucket split, and then writes — three
+  // round trips with nothing serialising them, so two concurrent launches both read the same balance, both
+  // decide they can afford it, and both debit. The ledger is append-only and the balance is a SUM, so the
+  // result is a negative balance: credits spent that were never held. No amount of care after the read
+  // fixes a decision made from a stale one.
+  //
+  // v_hold_credits does the read and the write in one transaction under a per-user advisory lock. When it
+  // is present it is the only path taken. When it is absent — an older database, or the migration not yet
+  // applied — we fall back to the original code rather than failing the launch, and say so once.
+  const atomic = await holdAtomic(userId, testId, amount, unit);
+  if (atomic !== "unavailable") return atomic;
+
   const rows = await liveRows(userId, unit);
   const bal = rows.reduce((s, r) => s + r.delta, 0);
   if (bal < amount) return false;
@@ -378,4 +391,49 @@ export async function rewardsToday(userId: string): Promise<number> {
     .gte("created_at", since.toISOString());
   const rows = (data as unknown as { delta: number }[]) ?? [];
   return rows.reduce((sum, r) => sum + r.delta, 0);
+}
+
+// Single-statement hold via the v_hold_credits RPC (sql/vraelis-credit-hold-atomic.sql).
+//
+// Returns true/false when the RPC answered, or "unavailable" when the function is not deployed so the
+// caller can fall back to the legacy path. Distinguishing those three is the point: treating a missing
+// function as "no credit" would block every launch on a database that has not run the migration, and
+// treating it as "held" would give away runs for free.
+let atomicHoldMissingLogged = false;
+async function holdAtomic(
+  userId: string,
+  testId: string,
+  amount: number,
+  unit: "credit" | "cent",
+): Promise<boolean | "unavailable"> {
+  if (!isDatabaseConfigured()) return "unavailable";
+  try {
+    const s = getSupabaseAdminClient();
+    const { data, error } = await s.rpc("v_hold_credits" as never, {
+      p_user: norm(userId),
+      p_test: testId,
+      p_amount: amount,
+      p_unit: unit,
+    } as never);
+    if (error) {
+      // 42883 = undefined_function; PostgREST also reports a missing RPC as PGRST202.
+      const code = (error as { code?: string }).code ?? "";
+      if (code === "42883" || code === "PGRST202" || /could not find the function/i.test(error.message ?? "")) {
+        if (!atomicHoldMissingLogged) {
+          atomicHoldMissingLogged = true;
+          console.warn("[credits] v_hold_credits is not deployed; holds are using the non-atomic path");
+        }
+        return "unavailable";
+      }
+      // A real error is NOT a fallback: retrying the racy path after the atomic one failed would be the
+      // worst of both. Refuse the hold.
+      console.error("[credits] v_hold_credits failed:", error.message);
+      return false;
+    }
+    const res = (data ?? {}) as { ok?: boolean };
+    return res.ok === true;
+  } catch (e) {
+    console.error("[credits] v_hold_credits threw:", e);
+    return false;
+  }
 }
