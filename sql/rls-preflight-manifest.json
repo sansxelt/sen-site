@@ -1,0 +1,91 @@
+{
+  "_comment": [
+    "Human judgement for the RLS preflight. Everything that can be DERIVED (the expected table list, the",
+    "revokes) is parsed from sql/vraelis-rls-01-deny-by-default.sql itself so it cannot drift. This file",
+    "holds only the decisions a human has to make and sign off on.",
+    "",
+    "The preflight FAILS CLOSED on anything not accounted for here. Adding an entry is an explicit act of",
+    "acknowledgement: you are saying you looked at this table and know why it is in this state.",
+    "",
+    "expectedPolicyCount is 0 because the migration creates NO policies. Deny-by-default with no policy",
+    "means every non-BYPASSRLS role is denied every row, which is the intent. A policy appearing in a live",
+    "database is therefore an unreviewed grant of access and must be classified before the migration runs."
+  ],
+
+  "migration": "sql/vraelis-rls-01-deny-by-default.sql",
+  "verifyScript": "sql/vraelis-rls-verify.sql",
+  "rollback": "sql/vraelis-rls-01-rollback.sql",
+
+  "expectedPolicyCount": 0,
+  "policyRationale": "The migration creates no policies. Access for the application is via the service_role connection, which holds BYPASSRLS. Any policy found in the target database predates this work and grants row access to some role; it must be reviewed and listed in allowedPolicies before the migration is run.",
+  "allowedPolicies": [],
+
+  "browserFacingRoles": ["anon", "authenticated"],
+  "privilegedRoles": ["service_role", "postgres"],
+
+  "_ackNote": "NOT listed here: _rls_migration_01_applied. It is created BY this migration and already appears in its explicit table list, so it is not an 'extra' table at all. Listing it was a modelling error that made the preflight BLOCK a complete, correct schema — before the migration runs, the ledger either does not exist or exists without RLS, and neither is a fault. A preflight that cries wolf on a good schema gets ignored, which is the one failure mode that makes it worthless.",
+
+  "acknowledgedExtraTables": [
+    {
+      "table": "v_agent_payment_reservations",
+      "reason": "Added by sql/vraelis-agent-payment-cap.sql (Phase 3). Postdates this migration's explicit list. Self-protecting: its own migration enables RLS and revokes anon/authenticated, verified behaviourally.",
+      "rlsExpected": true
+    },
+    {
+      "table": "v_oauth_identities",
+      "reason": "Added by sql/vraelis-oauth-identity-binding.sql (Phase 3). Postdates this migration's explicit list. Self-protecting, same as above.",
+      "rlsExpected": true
+    },
+    {
+      "table": "referral_events",
+      "reason": "Surfaced BY this preflight and worth stating plainly. The app writes to it (lib/referral.ts) and sql/vraelis-referral-idempotency.sql builds a unique index on it, but it is NOT among the 95 tables the RLS migration names, and no CREATE TABLE for it exists anywhere in the repository - its shape survives only as a comment in lib/referral.ts. So it is a real table that the reviewable list misses; only the catch-all DO block would enable RLS on it. Acknowledged here so the preflight stops calling it unexpected, while its actual RLS and grant state stay on the report every run. It holds referral attribution (referred_email, kind), so it is not public data and must NOT be readable by anon.",
+      "rlsExpected": false
+    }
+  ],
+
+  "intentionallyExcluded": [],
+
+  "_dependencyNote": "Objects the OTHER migrations on this branch need but do not create. A missing one either aborts that migration or - worse - lets it apply and silently not work. They are checked here because the preflight runs BEFORE anything is applied, which is the only moment the answer is still cheap.",
+
+  "migrationDependencies": [
+    {
+      "kind": "role", "name": "anon", "severity": "blocker",
+      "requiredBy": ["vraelis-credit-hold-atomic.sql", "vraelis-session-revocation.sql", "vraelis-expire-monthly-atomic.sql", "vraelis-agent-payment-cap.sql", "vraelis-oauth-identity-binding.sql", "vraelis-rls-01-deny-by-default.sql"],
+      "reason": "No migration creates the Supabase roles; every REVOKE/GRANT assumes they exist. A GRANT naming a nonexistent role raises an error, and inside the RLS migration's transaction that aborts the whole thing."
+    },
+    {
+      "kind": "role", "name": "authenticated", "severity": "blocker",
+      "requiredBy": ["vraelis-credit-hold-atomic.sql", "vraelis-session-revocation.sql", "vraelis-expire-monthly-atomic.sql", "vraelis-agent-payment-cap.sql", "vraelis-oauth-identity-binding.sql", "vraelis-rls-01-deny-by-default.sql"],
+      "reason": "Same as anon."
+    },
+    {
+      "kind": "role", "name": "service_role", "severity": "blocker",
+      "requiredBy": ["vraelis-credit-hold-atomic.sql", "vraelis-session-revocation.sql", "vraelis-expire-monthly-atomic.sql", "vraelis-agent-payment-cap.sql", "vraelis-oauth-identity-binding.sql"],
+      "reason": "Every migration grants EXECUTE on its functions to service_role. Without it the grant errors, and the application - which connects as service_role - could not call the function anyway."
+    },
+    {
+      "kind": "index", "name": "v_ledger_extref_uidx", "table": "v_credit_ledger", "severity": "blocker",
+      "requiredBy": ["vraelis-expire-monthly-atomic.sql"],
+      "reason": "THE SILENT ONE, and the reason this section exists. v_expire_monthly's entire replay protection is an `exception when unique_violation` handler. That handler can only fire if a unique constraint exists on the insert. The migration adds the ext_ref COLUMN but never creates the INDEX - only sql/vraelis-rank.sql does. If the index is absent the migration applies cleanly, the function runs, and a replayed webhook simply inserts a SECOND clawback. Nothing errors. The atomicity work would look deployed and be silently half-effective, which is worse than not deploying it."
+    },
+    {
+      "kind": "table", "name": "referral_events", "severity": "blocker",
+      "requiredBy": ["vraelis-referral-idempotency.sql"],
+      "reason": "No CREATE TABLE for it exists anywhere in the repository - its shape survives only as a comment in lib/referral.ts. The migration builds a unique index ON it, so if the table is absent the migration simply fails. Worth knowing before you run it rather than during."
+    },
+    {
+      "kind": "table", "name": "vraelis_workspaces", "severity": "blocker",
+      "requiredBy": ["vraelis-subscription-id-unique.sql"],
+      "reason": "The second CONCURRENTLY migration builds a partial unique index on vraelis_workspaces(plan_subscription_id)."
+    },
+    {
+      "kind": "table", "name": "v_credit_ledger", "severity": "blocker",
+      "requiredBy": ["vraelis-credit-hold-atomic.sql", "vraelis-expire-monthly-atomic.sql"],
+      "reason": "Both credit migrations ALTER it to add columns and read/write it inside their functions."
+    }
+  ],
+
+  "_duplicateNote": "Both CONCURRENTLY index builds FAIL if duplicate rows already exist, and a failed concurrent build leaves an INVALID index behind that must be dropped before retrying. The preflight reports any invalid index it finds, and the runbook carries the duplicate-detection queries to run first.",
+
+  "_excludedNote": "Empty on purpose. No table in this schema is intended to be readable by anon or authenticated: the application connects as service_role. If a genuinely public table is ever added (an unauthenticated marketing surface, say), list it here WITH its reason and the preflight will stop reporting it as unexpected - but it will still report its actual RLS and grant state so the exemption stays visible."
+}
