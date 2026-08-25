@@ -371,11 +371,61 @@ export async function grantMonthly(userId: string, credits: number, expiresAt: s
 // Callers pass a key that is STABLE across redeliveries of the same termination
 // (e.g. cancel:<subscription_id>) so the second delivery hits 23505 and no-ops.
 export async function expireMonthly(userId: string, exceptExtRef?: string, clawbackRef?: string): Promise<void> {
+  // ATOMIC PATH, for the same reason hold() has one. This read the live monthly net and then wrote -net
+  // with nothing serialising the two, and it is reachable concurrently from the Stripe and PayPal
+  // subscription webhooks and from a launch on the same account — so two runs could both read the same
+  // positive net and both claw it back, expiring the same credits twice and driving the balance negative.
+  //
+  // v_expire_monthly does it in one transaction under the SAME advisory-lock key as v_hold_credits, so an
+  // expiry and a hold cannot interleave either. Falls back to the original path only when the function is
+  // not deployed.
+  const atomic = await expireMonthlyAtomic(userId, exceptExtRef, clawbackRef);
+  if (atomic !== "unavailable") return;
+
   const rows = await liveRows(userId);
   const net = rows
     .filter((r) => r.bucket === "monthly" && (!exceptExtRef || r.ext_ref !== exceptExtRef))
     .reduce((s, r) => s + r.delta, 0);
   if (net > 0) await grant(userId, -net, "monthly_reset", { bucket: "monthly", extRef: clawbackRef });
+}
+
+// Single-statement expiry via the v_expire_monthly RPC (sql/vraelis-expire-monthly-atomic.sql).
+// Returns "done" when the RPC answered (including a legitimate no-op or a duplicate replay), or
+// "unavailable" when the function is not deployed so the caller can fall back.
+let atomicExpireMissingLogged = false;
+async function expireMonthlyAtomic(
+  userId: string,
+  exceptExtRef?: string,
+  clawbackRef?: string,
+): Promise<"done" | "unavailable"> {
+  if (!isDatabaseConfigured()) return "unavailable";
+  try {
+    const s = getSupabaseAdminClient();
+    const { error } = await s.rpc("v_expire_monthly" as never, {
+      p_user: norm(userId),
+      p_except_ref: exceptExtRef ?? null,
+      p_clawback_ref: clawbackRef ?? null,
+      p_unit: "credit",
+    } as never);
+    if (error) {
+      const code = (error as { code?: string }).code ?? "";
+      if (code === "42883" || code === "PGRST202" || /could not find the function/i.test(error.message ?? "")) {
+        if (!atomicExpireMissingLogged) {
+          atomicExpireMissingLogged = true;
+          console.warn("[credits] v_expire_monthly is not deployed; monthly expiry is using the non-atomic path");
+        }
+        return "unavailable";
+      }
+      // A real error is NOT a reason to run the racy path as well — that would risk a double clawback on
+      // top of whatever failed. Report and stop; the next reset will retry.
+      console.error("[credits] v_expire_monthly failed:", error.message);
+      return "done";
+    }
+    return "done";
+  } catch (e) {
+    console.error("[credits] v_expire_monthly threw:", e);
+    return "done";
+  }
 }
 
 // Count credits earned via vote-to-earn today (UTC) — used to cap farming.
