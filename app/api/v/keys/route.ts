@@ -7,6 +7,9 @@ import { listApiKeys, generateApiKey } from "@/lib/v-api-keys";
 
 export const runtime = "nodejs";
 
+// Env-overridable so it can be raised without a deploy.
+const MAX_API_KEYS_PER_USER = Number(process.env.MAX_API_KEYS_PER_USER || 25) || 25;
+
 export async function GET() {
   const session = await auth();
   const email = session?.user?.email;
@@ -23,6 +26,19 @@ export async function POST(req: Request) {
   if (!apiAccessAllowed(await getPlan(email), email, v1?.plan)) {
     return NextResponse.json({ error: "plan_required", need: "scale" }, { status: 403 });
   }
+  // RESOURCE CAP. There was no limit on how many keys one account could mint. Each is a live
+  // credential against the public API, so an unbounded set is both an audit problem (nobody can say
+  // which keys are legitimate) and a spend problem. The ceiling is generous — it exists to stop a loop,
+  // not to ration normal use — and counts only keys that are still active.
+  const existing = await listApiKeys(email);
+  const activeKeys = existing.filter((k) => !(k as { revoked_at?: string | null }).revoked_at).length;
+  if (activeKeys >= MAX_API_KEYS_PER_USER) {
+    return NextResponse.json(
+      { error: "key_limit_reached", limit: MAX_API_KEYS_PER_USER },
+      { status: 409 },
+    );
+  }
+
   const body = await req.json().catch(() => ({}));
   const name = String(body?.name || "").trim().slice(0, 40);
   // Scopes are chosen at creation and never widened afterwards; to change what a key can do you revoke it

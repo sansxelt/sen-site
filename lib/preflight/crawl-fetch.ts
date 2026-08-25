@@ -31,9 +31,31 @@ export function makeSafeFetcher(opts: { maxHtmlBytes?: number; maxRedirects?: nu
       if (res.status >= 400) return { ok: false, reason: `http_${res.status}`, status: res.status };
       const ct = res.headers.get("content-type") || "";
       if (!/text\/html/i.test(ct)) return { ok: false, reason: "non_html", status: res.status };
-      const buf = await res.arrayBuffer();
-      if (buf.byteLength > maxBytes) return { ok: false, reason: "page_too_large", status: res.status };
-      return { ok: true, status: res.status, contentType: ct, html: Buffer.from(buf).toString("utf8") };
+      // Enforce the cap WHILE reading, not after. arrayBuffer() materialises the whole response first,
+      // so a hostile or misconfigured host could hand back a multi-gigabyte body and the "too large"
+      // check would run only once it was already in memory — the cap bounded what we KEPT, not what we
+      // allocated. Streaming aborts the read the moment the limit is passed.
+      const body = res.body;
+      if (!body) return { ok: false, reason: "no_body", status: res.status };
+      const reader = body.getReader();
+      const chunks: Uint8Array[] = [];
+      let total = 0;
+      try {
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (!value) continue;
+          total += value.byteLength;
+          if (total > maxBytes) {
+            await reader.cancel().catch(() => {});
+            return { ok: false, reason: "page_too_large", status: res.status };
+          }
+          chunks.push(value);
+        }
+      } finally {
+        reader.releaseLock();
+      }
+      return { ok: true, status: res.status, contentType: ct, html: Buffer.concat(chunks).toString("utf8") };
     }
   };
 }

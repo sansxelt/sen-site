@@ -30,6 +30,35 @@ export const runtime = "nodejs";
 export const maxDuration = 120;
 const notFound = () => NextResponse.json({ error: "not_found" }, { status: 404 });
 
+// Bounds for the customer-endpoint fetcher below. The host on the other end is customer-supplied, so it
+// decides how long to hold a socket open and how much to send. Env-overridable so a slow-but-legitimate
+// integration can be accommodated without a deploy.
+const API_FETCH_TIMEOUT_MS = Number(process.env.API_FETCH_TIMEOUT_MS || 15000) || 15000;
+const API_FETCH_MAX_BYTES = Number(process.env.API_FETCH_MAX_BYTES || 2_000_000) || 2_000_000;
+
+// Read a response body up to `max` bytes, cancelling the stream at the limit rather than buffering the
+// whole thing first. res.text() would materialise whatever arrives before any cap could apply.
+async function readCapped(res: Response, max: number): Promise<string> {
+  const body = res.body;
+  if (!body) return "";
+  const reader = body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (!value) continue;
+      total += value.byteLength;
+      if (total > max) { await reader.cancel().catch(() => {}); break; }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  return Buffer.concat(chunks).toString("utf8");
+}
+
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   // Launching an API run is EDITOR+. Resolves the app OWNER (billing/data key) + caller role; both caller and
@@ -108,14 +137,28 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   // SSRF-safe fetcher (identical wrapper to the founder canary route).
   const fetcher: ApiFetch = async (url, init) => {
+    // BOUNDED. The host on the other end is customer-supplied, so it decides how long to hold the socket
+    // open and how much to send. Without a timeout a slow or hostile endpoint pins a serverless invocation
+    // until the platform kills it, and without a size cap res.text() materialises whatever arrives — the
+    // redirect: "manual" below was the only limit of any kind.
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), API_FETCH_TIMEOUT_MS);
     try {
-      const res = await safeFetch(url, { method: init.method, headers: init.headers, body: init.body, redirect: "manual" });
+      const res = await safeFetch(url, {
+        method: init.method,
+        headers: init.headers,
+        body: init.body,
+        redirect: "manual",
+        signal: ctl.signal,
+      });
       const headers: Record<string, string> = {};
       res.headers.forEach((v, k) => { headers[k] = v; });
-      return { status: res.status, headers, text: await res.text() };
+      return { status: res.status, headers, text: await readCapped(res, API_FETCH_MAX_BYTES) };
     } catch (e) {
       (e as { transportKind?: string }).transportKind = isBlockedFetchError(e) ? "blocked" : "unreachable";
       throw e;
+    } finally {
+      clearTimeout(timer);
     }
   };
 
