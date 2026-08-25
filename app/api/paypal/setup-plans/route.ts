@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../../auth";
+import { isAdminEmail } from "../../../../lib/admin";
 import { isPaypalConfigured, setupPaypalPlans } from "../../../../lib/paypal";
 
 /**
@@ -16,8 +17,16 @@ import { isPaypalConfigured, setupPaypalPlans } from "../../../../lib/paypal";
  * After redeploying the site picks the ids up and the PayPal button on
  * /checkout starts working for that tier/cycle.
  *
- * Gated behind simple auth, only logged-in users can call it.  Safe
- * because PayPal itself charges nothing just to create plans.
+ * ADMIN ONLY. This was previously gated on "is signed in", with a note that it was safe because PayPal
+ * charges nothing to create a plan. That reasoning was wrong on two counts: it writes real products and
+ * ACTIVE billing plans into the LIVE merchant account, and it RETURNS their ids. Those ids are outside the
+ * Vraelis plan catalogue, which made them the raw material for a tier forgery — subscribe to a plan the
+ * catalogue does not know, and any code path that fell back to a client-supplied tier would grant it.
+ * The fallback is gone (see app/api/paypal/webhook/route.ts), and this route is admin-gated so the
+ * unknown-plan primitive is not self-serve either. Mirrors the check its sibling
+ * /api/v/paypal/setup-plans already had.
+ *
+ * isAdminEmail reads ADMIN_EMAILS and fails closed when the var is unset.
  */
 export async function POST() {
   if (!isPaypalConfigured()) {
@@ -25,8 +34,10 @@ export async function POST() {
   }
 
   const session = await auth();
-  if (!session?.user?.email) {
-    return NextResponse.json({ error: "Sign in first." }, { status: 401 });
+  const email = session?.user?.email;
+  if (!email || !isAdminEmail(email)) {
+    // Uniform 403 for signed-out and non-admin alike: no signal about whether the route exists for others.
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
   try {

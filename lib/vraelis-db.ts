@@ -1353,3 +1353,34 @@ export async function listPayments(
   }
   return (data as unknown as VraelisPayment[]) ?? [];
 }
+
+// Is this provider subscription id already recorded against a DIFFERENT
+// workspace? Guards the PayPal record route (finding H1): without it, one
+// subscription id could be replayed by several accounts to grant each of them a
+// paid tier from a single payment. Fails soft to `false` when the DB isn't
+// configured or the column isn't migrated — the caller's plan_id + status
+// checks remain the primary control, this is the ownership backstop.
+export async function isSubscriptionClaimedByAnother(
+  subscriptionId: string,
+  email: string,
+): Promise<boolean> {
+  if (!isDatabaseConfigured()) return false;
+  try {
+    const supabase = getSupabaseAdminClient();
+    const { data, error } = await supabase
+      .from("vraelis_workspaces" as never)
+      .select("owner_email")
+      .eq("plan_subscription_id", subscriptionId)
+      .limit(2);
+    if (error) {
+      console.error("isSubscriptionClaimedByAnother (column may not be migrated):", error.message);
+      return false;
+    }
+    const rows = (data as unknown as { owner_email: string }[]) ?? [];
+    const owner = normalizeEmail(email);
+    return rows.some((r) => normalizeEmail(r.owner_email ?? "") !== owner);
+  } catch (e) {
+    console.error("isSubscriptionClaimedByAnother failed:", e);
+    return false;
+  }
+}

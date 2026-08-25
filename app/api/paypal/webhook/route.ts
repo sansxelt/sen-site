@@ -9,7 +9,7 @@ import { upsertActiveSubscription } from "../../../../lib/subscriptions";
 import { invalidateAddonsCache } from "../../../../lib/active-addons";
 import { maybeProvisionAgentNumber, releaseAgentNumber } from "../../../../lib/vraelis-sms";
 import { setWorkspacePlan } from "../../../../lib/vraelis-db";
-import { isPlanKey } from "../../../../lib/vraelis-plans";
+import { isPlanKey, vraelisPlanFromPaypalPlanId } from "../../../../lib/vraelis-plans";
 import { notifyOwnerPlanLapse } from "../../../../lib/vraelis-notify";
 
 /**
@@ -87,7 +87,27 @@ async function handleSubscriptionEvent(event: WebhookEvent) {
   // + the agent number forever). Maps PayPal status → our 3-way plan_status;
   // 'incomplete' (pre-activation) is left for the activation event to resolve.
   const ppStatus = normalizePaypalStatus(subscription.status);
-  if (isPlanKey(custom.planKey) && (custom.cycle === "monthly" || custom.cycle === "yearly")) {
+  // Canonical Vraelis tier comes from PayPal's own plan_id, and ONLY from there (finding H1).
+  //
+  // There is deliberately no custom_id fallback. custom_id is chosen by whoever created the subscription
+  // and merely relayed back by PayPal, so falling back to it whenever plan_id fails to resolve reproduces
+  // the exact escalation this fix exists to close — and an unrecognised plan_id is cheap to obtain, so the
+  // fallback branch was the reachable one, not the rare one. If plan_id is not in the Vraelis catalogue,
+  // the subscription is not a Vraelis subscription and no Vraelis tier is written. custom_id is used only
+  // for identity (which account), never for entitlement (which tier).
+  const derivedTier = vraelisPlanFromPaypalPlanId(subscription.plan_id);
+  const vraelisPlan = derivedTier?.plan ?? null;
+  const vraelisCycle = derivedTier?.cycle ?? "monthly";
+  if (!derivedTier && isPlanKey(custom.planKey)) {
+    // A custom_id claiming a Vraelis tier while the plan_id says otherwise is either a stale subscription
+    // or a forgery attempt. Refuse it and say so loudly rather than silently trusting the claim.
+    console.warn(
+      "[paypal webhook] refusing Vraelis tier from custom_id: plan_id",
+      subscription.plan_id,
+      "is not in the Vraelis catalogue",
+    );
+  }
+  if (vraelisPlan) {
     const vraelisStatus =
       ppStatus === "active"
         ? "active"
@@ -99,8 +119,8 @@ async function handleSubscriptionEvent(event: WebhookEvent) {
     if (vraelisStatus) {
       try {
         const { statusChanged } = await setWorkspacePlan(custom.email, {
-          plan: custom.planKey,
-          cycle: custom.cycle,
+          plan: vraelisPlan,
+          cycle: vraelisCycle,
           status: vraelisStatus,
           provider: "paypal",
           subscriptionId: subscription.id,
