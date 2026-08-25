@@ -7,6 +7,7 @@
 // (daily per vercel.json); CRON_SECRET-gated.
 
 import { NextResponse } from "next/server";
+import { cronAuthorized } from "@/lib/cron-auth";
 import type { NextRequest } from "next/server";
 import {
   getPaymentsToRecover,
@@ -31,8 +32,8 @@ const HOUR = 3600 * 1000;
 const TIER_AGE = [1 * HOUR, 24 * HOUR, 72 * HOUR];
 
 export async function GET(req: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret || req.headers.get("authorization") !== `Bearer ${secret}`) {
+  // Constant-time, and fails closed on an unset CRON_SECRET (lib/cron-auth.ts).
+  if (!cronAuthorized(req)) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 

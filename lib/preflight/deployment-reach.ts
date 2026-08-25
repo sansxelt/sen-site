@@ -52,11 +52,47 @@ export async function probeDeployment(url: string): Promise<ReachVerdict> {
   try {
     // GET, not HEAD: some hosts answer HEAD with 405 or refuse it outright, and a redirect chain is normal
     // for a deployment root. The body is never read — only that a status arrived at all.
-    const res = await safeFetch(url, { method: "GET", redirect: "follow", signal: ctl.signal });
+    //
+    // redirect: "manual", NOT "follow". safeFetch resolves the hostname and PINS the connection to the
+    // validated address, but "follow" hands the redirect to undici, which resolves the NEW location itself
+    // and never re-enters that guard. A customer-supplied deployment URL could therefore 302 to
+    // 169.254.169.254 and be fetched — the pin protected the first hop only, which is the invariant this
+    // file's own comments claim to hold. Each hop is now re-validated by going back through safeFetch.
+    const res = await followWithRevalidation(url, ctl.signal);
     return classifyReach({ httpStatus: res.status });
   } catch (e) {
     return classifyReach({ blockedReason: blockedFetchReason(e), errored: true });
   } finally {
     clearTimeout(timer);
   }
+}
+
+// Follow redirects by hand so EVERY hop goes back through safeFetch and is re-resolved and re-validated.
+//
+// With redirect: "follow", undici resolves the redirect target itself and the DNS pin safeFetch
+// established for the first hop does not apply to it — a public URL that 302s to a private address would
+// be fetched. Bounded at MAX_HOPS: a redirect loop must terminate, and a chain longer than this is not a
+// legitimate deployment root.
+const MAX_HOPS = 5;
+async function followWithRevalidation(startUrl: string, signal: AbortSignal): Promise<Response> {
+  let current = startUrl;
+  for (let hop = 0; hop <= MAX_HOPS; hop++) {
+    const res = await safeFetch(current, { method: "GET", redirect: "manual", signal });
+    const status = res.status;
+    const isRedirect = status === 301 || status === 302 || status === 303 || status === 307 || status === 308;
+    if (!isRedirect) return res;
+    const location = res.headers.get("location");
+    if (!location) return res; // a redirect with nowhere to go is just its status
+    // Resolve relative Locations against the hop we are on, then loop — safeFetch re-validates the host.
+    let next: string;
+    try {
+      next = new URL(location, current).toString();
+    } catch {
+      return res; // unparseable Location: report the redirect status rather than guessing
+    }
+    current = next;
+  }
+  // Too many hops. Surfaced as a normal fetch failure so classifyReach treats it like any other
+  // unreachable deployment rather than as a special case.
+  throw new Error("too_many_redirects");
 }

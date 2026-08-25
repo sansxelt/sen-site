@@ -58,17 +58,26 @@ export function decryptSecret(blob: string | null): string | null {
   } catch { return null; }
 }
 
+// The HMAC key for the OIDC state cookie. Same rule as encKey: no empty-string fallback. An unset
+// AUTH_SECRET meant the state was signed with the empty key, so ANY caller could forge a state token
+// and the nonce/issuer binding it carries proved nothing.
+function stateKey(): string {
+  const secret = (process.env.AUTH_SECRET || "").trim();
+  if (!secret) throw new Error("AUTH_SECRET is not set; refusing to sign or verify SSO state.");
+  return secret;
+}
+
 // ── State/nonce cookie (HMAC-signed, short-lived) ─────────────────────────────
 export function signOidcState(obj: Record<string, unknown>): string {
   const body = Buffer.from(JSON.stringify({ ...obj, exp: Date.now() + 10 * 60 * 1000 })).toString("base64url");
-  const mac = crypto.createHmac("sha256", process.env.AUTH_SECRET || "").update(body).digest("base64url");
+  const mac = crypto.createHmac("sha256", stateKey()).update(body).digest("base64url");
   return `${body}.${mac}`;
 }
 export function verifyOidcState(token: string | undefined): Record<string, unknown> | null {
   if (!token || !token.includes(".")) return null;
   try {
     const [body, mac] = token.split(".");
-    const expect = crypto.createHmac("sha256", process.env.AUTH_SECRET || "").update(body).digest("base64url");
+    const expect = crypto.createHmac("sha256", stateKey()).update(body).digest("base64url");
     if (mac.length !== expect.length || !crypto.timingSafeEqual(Buffer.from(mac), Buffer.from(expect))) return null;
     const obj = JSON.parse(Buffer.from(body, "base64url").toString("utf8"));
     if (typeof obj.exp !== "number" || obj.exp < Date.now()) return null;

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { csrfVerdict } from "@/lib/csrf";
 import type { NextRequest } from "next/server";
 import { isAppPath, legacyToNew, legacyRunsPath, legacySystemsPath } from "./lib/app-routes";
 import { v6GroundAtTop, type Ground } from "./lib/v6-routes";
@@ -277,7 +278,25 @@ export default function proxy(req: NextRequest) {
   //     below) so dev needs no subdomain DNS. Runs BEFORE the retired-sansxel list ("/account" collides).
   //     CRITICAL: "/api/<anything>" is the real API namespace (NextAuth, preflight routes) and must never
   //     be redirected or rewritten — only the EXACT "/api" path is the product's API & Webhooks page.
-  if (path.startsWith("/api/")) return NextResponse.next();
+  if (path.startsWith("/api/")) {
+    // CSRF: the only place every API request passes through, so the check lives here rather than in 66
+    // route handlers. It enforces ONLY when the request both mutates and carries our session cookie —
+    // see lib/csrf.ts for why that shape exempts webhooks, cron, API-key, CLI and public-form traffic by
+    // construction instead of by a list that would drift.
+    const verdict = csrfVerdict({
+      method: req.method,
+      cookieHeader: req.headers.get("cookie"),
+      origin: req.headers.get("origin"),
+      secFetchSite: req.headers.get("sec-fetch-site"),
+      host: req.headers.get("x-forwarded-host") || req.headers.get("host"),
+      proto: req.headers.get("x-forwarded-proto") || "https",
+    });
+    if (verdict.enforced && !verdict.ok) {
+      console.warn("[csrf] refused a cross-origin state change:", verdict.reason, path);
+      return NextResponse.json({ error: "cross_origin_blocked" }, { status: 403 });
+    }
+    return NextResponse.next();
+  }
 
   // ONCE PROMOTED, THE PREVIEW NAMESPACE IS NOT A SECOND ADDRESS FOR THE SITE.
   //

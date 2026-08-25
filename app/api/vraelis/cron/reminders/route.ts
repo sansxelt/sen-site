@@ -2,6 +2,7 @@
 // starts within the next 24h (once). Vercel Cron hits this; CRON_SECRET-gated.
 
 import { NextResponse } from "next/server";
+import { cronAuthorized } from "@/lib/cron-auth";
 import type { NextRequest } from "next/server";
 import { getBookingsDueReminder, markBookingReminded, slotLabel } from "@/lib/vraelis-booking";
 import { getWorkspaceContact } from "@/lib/vraelis-db";
@@ -11,8 +12,8 @@ import { captureError } from "@/lib/vraelis-monitor";
 export const maxDuration = 60;
 
 export async function GET(req: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret || req.headers.get("authorization") !== `Bearer ${secret}`) {
+  // Constant-time, and fails closed on an unset CRON_SECRET (lib/cron-auth.ts).
+  if (!cronAuthorized(req)) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
   if (!isTwilioConfigured()) {
