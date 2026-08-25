@@ -3,3 +3,55 @@
 # transitive @auth/core dependency (imported by lib/v-sso.ts) fails to resolve.
 pnpm-lock.yaml
 pnpm-workspace.yaml
+
+# ── Secrets and local-only artifacts ───────────────────────────────────────
+#
+# IMPORTANT: once a .vercelignore exists, Vercel uses IT to decide what to upload and stops consulting
+# .gitignore. The two pnpm entries above were the only rules, so everything .gitignore was quietly keeping
+# out of the deployment — local env files included — was being packed into the build upload instead.
+# The rules below restore those exclusions explicitly.
+#
+# Beyond the sprawl, a .env.local present at build time can shadow the environment variables configured in
+# the Vercel dashboard, so this also removes a class of "works locally, wrong in prod" bug.
+.env
+.env.*
+!.env.example
+!.env.preflight.example
+
+# Tauri updater signing key (NEVER upload).
+VRAELIS-updater.key
+VRAELIS-updater.key.pub
+
+# Playwright auth state — live session cookies.
+/.auth/
+/.playwright/
+/.playwright-cli/
+/.playwright-mcp/
+/test-results/
+/playwright-report/
+
+# Production table exports (customer content) and outreach target data.
+/ops/backups/
+outreach-*.csv
+outreach-seen.txt
+outreach-cron.log
+distribution-kit.md
+
+# Local ops/diagnostic scripts that carry deployment URLs, account identities or demo passwords inline.
+_tmp-*
+scripts/whoami.ts
+scripts/dbcheck.ts
+scripts/grant-credits.ts
+scripts/apikey-audit.ts
+
+# Build/dev output the platform rebuilds anyway.
+#
+# ANCHORED with a leading slash, every one of them. An unanchored pattern matches a directory of that name
+# at ANY depth: plain `review/` would exclude the app's own Review route at app/rank/app/review/ and ship a
+# deployment missing a live page. .gitignore already carries a comment about this exact trap, because it
+# has happened here before — the same mistake in .vercelignore is harder to notice, since the build still
+# succeeds and only the missing route reveals it.
+/.next/
+/.next-dev.log
+/coverage/
+/review/
