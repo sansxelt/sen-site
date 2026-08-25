@@ -56,9 +56,17 @@ console.log("── page guard wiring ──");
   ok("guard takes a minRole defaulting to viewer", /minRole:\s*Exclude<Role,\s*"client_viewer">\s*=\s*"viewer"/.test(g));
   ok("guard denies when the ladder check fails", /if \(!hasAtLeastRole\(access\.role, minRole\)\) return null;/.test(g));
   ok("guard returns null rather than redirecting (honest empty state)", g.includes("return null;"));
-  // Settings surfaces state a higher minimum than read-only pages.
+  // SUPERSEDED IN PHASE 3. This used to assert the two settings pages raise their own gate to "editor".
+  // That was the availability defect, not the protection: both pages already build a read-only branch for
+  // every mutating control, and gating the PAGE made all of it unreachable — a viewer was told the system
+  // did not exist. Raising a page gate never secured the writes; the routes do that, per method.
+  //
+  // The invariant that actually matters is asserted here instead, and in full by
+  // scripts/phase3-settings-authz-verify.ts: the pages stay guarded at the read minimum, and no page
+  // silently raises its own.
   for (const p of ["app/rank/app/systems/[id]/settings/page.tsx", "app/rank/app/systems/[id]/settings/connections/page.tsx"]) {
-    ok(`${p.split("/").slice(-2).join("/")} requires editor`, /requirePreflightAppAccess\([^)]*"editor"\)/.test(read(p)));
+    ok(`${p.split("/").slice(-2).join("/")} is guarded at the read minimum, not raised`,
+      /requirePreflightAppAccess\(/.test(read(p)) && !/requirePreflightAppAccess\([^)]*"editor"\)/.test(read(p)));
   }
 }
 

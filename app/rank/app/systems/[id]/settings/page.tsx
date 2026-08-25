@@ -64,7 +64,17 @@ function PermitRow({ label, on }: { label: string; on: boolean }) {
 // that are genuinely not built yet (deletion) say so honestly instead of faking controls.
 export default async function AppSettingsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const access = await requirePreflightAppAccess(id, "/systems/" + id, "editor");
+  // VIEWER, not editor. This page already builds a complete read-only branch for every mutating control
+  // (the edit form falls back to a facts card; delete is behind canDeleteApplication), and gating the whole
+  // PAGE at editor made all of that unreachable — a viewer got "System not found" for a system they can
+  // see everywhere else in the product. That was an availability defect, not a protection: raising a page
+  // gate hides read-only content, it does not secure the writes.
+  //
+  // The writes are secured where writes happen. Every control here calls an API that re-checks the role on
+  // its own: PATCH /api/preflight/apps/[id] requires editor, DELETE /api/preflight/apps requires admin, and
+  // each connections route requires editor. Verified rather than assumed — see
+  // scripts/phase3-settings-authz-verify.ts, which asserts those minimums directly.
+  const access = await requirePreflightAppAccess(id, "/systems/" + id);
   const owner = access?.owner ?? "";
   const caps = capabilities(access?.role);
   if (!(await preflightDbReady())) return <SetupRequired />;
