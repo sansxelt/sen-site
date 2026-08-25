@@ -11,6 +11,7 @@
 // threads that aren't its own, and no other workspace's data is exposed.
 
 import { NextResponse } from "next/server";
+import { authorizeAgentPayment, leadFacingRefusal } from "@/lib/vraelis-payment-authz";
 import type { NextRequest } from "next/server";
 import {
   addMessage,
@@ -129,13 +130,33 @@ export async function POST(req: NextRequest) {
     // If the AI decided to collect payment and payouts are live, raise a
     // secure on-platform pay/deposit link and drop it into the reply.
     if (ai.payment && connected) {
-      const amountCents = ai.payment.kind === "deposit" ? (workspace.deposit_amount_cents ?? 0) : ai.payment.amountCents;
-      if (amountCents >= 50) {
+      // SECURITY: the model does not authorize money. authorizeAgentPayment derives the amount from
+      // owner-configured data (a deposit is taken verbatim from the workspace and the model's number is
+      // discarded), enforces a per-request ceiling plus rolling day and billing-cycle caps, and fails
+      // closed when any of those cannot be established. Above the automatic band a human decides.
+      const authz = await authorizeAgentPayment(workspace, {
+        kind: ai.payment.kind,
+        proposedCents: ai.payment.amountCents,
+      });
+      if (!authz.ok) {
+        console.warn(
+          "[intake/continue] agent payment not authorized:",
+          authz.reason,
+          `proposed=${authz.proposedCents ?? "n/a"} ceiling=${authz.ceilingCents ?? "n/a"}`,
+        );
+        // The lead is told a human will follow up, and nothing about the limit that stopped it.
+        replyText += `\n\n${leadFacingRefusal()}`;
+        injected = true;
+      } else {
         const pay = await startWorkspacePayment(workspace, {
           leadId,
           kind: ai.payment.kind,
-          amountCents,
-          description: ai.payment.label || (ai.payment.kind === "deposit" ? "Deposit to confirm your booking" : "Payment"),
+          amountCents: authz.amountCents,
+          // The model writes this label and the payer sees it on the Stripe page, so it is clamped to a
+          // single line of bounded length rather than passed through.
+          description:
+            (ai.payment.label || "").replace(/[\r\n\u2028\u2029\0]/g, " ").trim().slice(0, 120) ||
+            (ai.payment.kind === "deposit" ? "Deposit to confirm your booking" : "Payment"),
           customerEmail: data.lead.contact_email,
           cancelUrl: `https://vraelis.com/f/${key}`,
         });

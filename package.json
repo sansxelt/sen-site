@@ -59,6 +59,7 @@
     "oauth:xss:test": "tsx scripts/oauth-callback-xss-verify.ts",
     "abuse:limits:test": "tsx scripts/contact-auth-abuse-verify.ts",
     "oauth:registry:test": "tsx scripts/oauth-registry-hardening-verify.ts",
+    "phase2:tenant:test": "tsx scripts/phase2-tenant-money-verify.ts",
     "context:test": "tsx scripts/preflight-context-verify.ts",
     "provenance:test": "tsx scripts/preflight-provenance-verify.ts",
     "deployments:test": "tsx scripts/preflight-deployments-verify.ts",
