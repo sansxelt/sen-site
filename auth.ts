@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import { canonicalizeEmail } from "@/lib/user-credentials";
-import { allowStrict } from "@/lib/vraelis-ratelimit";
+import { allowStrict, peekAllowed } from "@/lib/vraelis-ratelimit";
 import { bumpTokenVersion, currentTokenVersion, tokenVersionIsCurrent } from "@/lib/v-session-revocation";
 import type { NextRequest } from "next/server";
 import Credentials from "next-auth/providers/credentials";
@@ -142,16 +142,26 @@ const authResult = NextAuth((req: NextRequest | undefined) => {
         // SECURITY: this is the password brute-force surface, and it had no limiter of any kind. Two
         // buckets on the Postgres-backed limiter, so they hold across serverless instances rather than
         // resetting with each cold start the way an in-memory Map does:
-        //   - per IP, so one source cannot sweep many accounts;
-        //   - per CANONICAL mailbox, so a distributed attempt cannot grind one account.
-        // Both are checked BEFORE the bcrypt verify, which is the expensive part (cost 12), so a flood
-        // costs the attacker a round trip and costs us a cheap counter rather than a CPU-bound hash.
-        // allowStrict: a limiter outage denies rather than reopening an unmetered brute force.
-        // Returning null is the same "bad credentials" answer a wrong password gets, so being rate
-        // limited is indistinguishable from being wrong and reveals nothing about which accounts exist.
+        //   - per IP, consumed on every attempt: bounds a sweep across many accounts.
+        //   - per CANONICAL mailbox, consumed ONLY on failure: bounds a grind against one account.
+        // Both are consulted before the bcrypt verify (cost 12), so a flood costs a counter rather than a
+        // CPU-bound hash. allowStrict on the consuming calls, so a limiter outage denies rather than
+        // reopening an unmetered brute force. Returning null is the same answer a wrong password gets, so
+        // being rate limited is indistinguishable from being wrong and reveals nothing about which
+        // accounts exist.
+        //
+        // ORDERING MATTERS, AND I GOT IT WRONG FIRST. The per-mailbox bucket was consumed here, before any
+        // authentication — so ten unauthenticated POSTs per ten minutes, comfortably under the per-IP
+        // allowance, permanently denied the real owner their own account. That is the same lockout defect
+        // already fixed in app/api/auth/reset-password/route.ts, reintroduced by not carrying the reasoning
+        // across.
+        //
+        // The per-IP bucket is consumed up front, because that DOES bound a sweep and an IP is the
+        // attacker's own resource. The per-mailbox bucket is only consumed on a FAILED attempt, further
+        // down: a legitimate sign-in costs nothing, so no number of failures by anyone else can lock out a
+        // user who knows their password.
         const signinIp = clientIpFromHeaders(request);
         if (!(await allowStrict(`signin-ip:${signinIp}`, 20, 600))) return null;
-        if (email && !(await allowStrict(`signin-email:${canonicalizeEmail(email)}`, 10, 600))) return null;
         const password =
           typeof credentials.password === "string" ? credentials.password : "";
         const autoSigninToken =
@@ -161,8 +171,17 @@ const authResult = NextAuth((req: NextRequest | undefined) => {
 
         if (!email) return null;
 
+        // Per-mailbox FAILURE budget, checked before the bcrypt verify so a flood costs a counter rather
+        // than a cost-12 hash. It is only ever CONSUMED by a failed attempt (below), so a user who knows
+        // their password can always sign in no matter how many times someone else has guessed wrong.
+        const mailboxKey = `signin-fail:${canonicalizeEmail(email)}`;
+        if (email && !(await peekAllowed(mailboxKey, 10, 600))) return null;
+
         const userCredential = await getUserCredentialByEmail(email);
-        if (!userCredential) return null;
+        if (!userCredential) {
+          await allowStrict(mailboxKey, 10, 600);
+          return null;
+        }
 
         // Either a valid token OR a valid password authorizes the session.
         const tokenValid =
@@ -174,6 +193,9 @@ const authResult = NextAuth((req: NextRequest | undefined) => {
             : false;
 
         if (!tokenValid && !passwordValid) {
+          // Consume the per-mailbox budget HERE, on failure only. A correct password never touches it, so
+          // wrong guesses by someone else can never deny the real owner their own account.
+          await allowStrict(mailboxKey, 10, 600);
           return null;
         }
 
@@ -239,6 +261,11 @@ const authResult = NextAuth((req: NextRequest | undefined) => {
       // /user/emails endpoint it is asked for. An explicit false is refused; an absent claim is
       // accepted, because refusing it would break providers that do not send one at all.
       const verifiedClaim = (profile as { email_verified?: unknown } | undefined)?.email_verified;
+      // GitHub does not send email_verified at ALL — @auth/core's GitHub provider picks the primary
+      // address from /user/emails without filtering on `verified` — so for GitHub this claim is always
+      // undefined and a check for an explicit false is inert. Stated here so the gate's reach is not
+      // mistaken for what its name suggests: it closes Google, and GitHub remains an OPEN item that
+      // needs the provider's own verified flag to be requested and checked.
       if (verifiedClaim === false || verifiedClaim === "false") {
         console.error(`${tag} rejected — provider reports the email is not verified`);
         return false;

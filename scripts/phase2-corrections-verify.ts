@@ -10,6 +10,7 @@
 import { readFileSync } from "node:fs";
 import { isSafeRecipient, normalizeRecipient } from "../lib/email-address";
 import { envInt, _resetEnvWarnings } from "../lib/env-num";
+import { csrfVerdict, cookieNamePresent } from "../lib/csrf";
 
 let pass = 0, fail = 0;
 const ok = (n: string, c: boolean, d = "") => { console.log(`${c ? "PASS" : "FAIL"}  ${n}${d ? `  (${d})` : ""}`); if (c) pass++; else fail++; };
@@ -186,6 +187,51 @@ console.log("── declaration / import / usage checked separately ──");
     const used = use.test(s.split("\n").filter((l) => !l.startsWith("import ")).join("\n"));
     ok(`${f.split("/").slice(-2).join("/")} imports AND uses ${mod}`, imported && used, `imported=${imported} used=${used}`);
   }
+}
+
+// ── 5. Fixes for the independent re-attack findings ───────────────────────
+console.log("── re-attack closures ──");
+{
+  const px = read("proxy.ts");
+  // The check must precede the app-host branch: that branch returns for /api/ as its FIRST statement, so
+  // a check placed after it was inert on the host that actually carries the session cookie.
+  ok("CSRF runs before the app-host branch", px.indexOf("csrfVerdict({") < px.indexOf("if (isAppHost) {"));
+  ok("CSRF is wired exactly once", (px.match(/csrfVerdict\(\{/g) ?? []).length === 1);
+
+  // Auth.js chunks a large session cookie; a base-name-only check would see no session and wave it through.
+  const CH = "__Secure-authjs.session-token.0=abc; __Secure-authjs.session-token.1=def";
+  const chunked = csrfVerdict({ method: "POST", cookieHeader: CH, origin: "https://evil.test", secFetchSite: "cross-site", host: "vraelis.com", proto: "https" });
+  ok("a CHUNKED session cookie still counts as ambient authority", chunked.enforced === true && chunked.ok === false);
+  ok("an unchunked session cookie still counts", cookieNamePresent("__Secure-authjs.session-token=x", "__Secure-authjs.session-token"));
+  ok("a differently-named cookie does NOT count", !cookieNamePresent("not-authjs.session-token=x", "authjs.session-token"));
+  ok("a cookie VALUE containing the name does NOT count", !cookieNamePresent("junk=authjs.session-token=x", "authjs.session-token"));
+  ok("a non-numeric suffix does NOT count", !cookieNamePresent("authjs.session-token.evil=x", "authjs.session-token"));
+
+  const a = read("auth.ts");
+  // The per-mailbox bucket must be PEEKED before auth and CONSUMED only on failure, or wrong guesses by a
+  // stranger lock the real owner out of their own account.
+  ok("sign-in peeks the mailbox budget rather than consuming it", a.includes("peekAllowed(mailboxKey"));
+  ok("sign-in consumes the mailbox budget only on failure",
+    /!tokenValid && !passwordValid\)[\s\S]{0,300}allowStrict\(mailboxKey/.test(a));
+  ok("the per-IP bucket is still consumed up front", a.includes("allowStrict(`signin-ip:"));
+  ok("the GitHub email_verified gap is documented where the check lives", /GitHub does not send email_verified/.test(a));
+
+  const t = read("app/rank/app/systems/[id]/team/page.tsx");
+  ok("the team page uses the hardened guard", t.includes("requirePreflightAppAccess(id,"));
+  ok("the team page no longer calls applicationAccess directly", !t.includes("await applicationAccess("));
+
+  const w = read("lib/v-workspace.ts");
+  ok("project invites enforce the TTL too", (w.split("invite_expires_at.is.null").length - 1) >= 2);
+
+  const h = read("sql/vraelis-credit-hold-atomic.sql");
+  ok("the hold migration guarantees the unit column it depends on", h.includes("add column if not exists unit"));
+  ok("that guarantee precedes the function it protects", h.indexOf("add column if not exists unit") < h.indexOf("create or replace function v_hold_credits"));
+
+  const rl = read("lib/vraelis-ratelimit.ts");
+  ok("peekAllowed does not consume",
+    /export async function peekAllowed[\s\S]{0,700}\.select\("count, window_start"\)/.test(rl));
+  ok("peekAllowed honours a rolled-over window",
+    /peekAllowed[\s\S]{0,900}windowSecs \* 1000\) return true/.test(rl));
 }
 
 const pkg = read("package.json");

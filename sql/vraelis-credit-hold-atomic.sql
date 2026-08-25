@@ -22,6 +22,14 @@
 -- it needs, and a definer function here would be a privilege boundary with nothing to gain. search_path is
 -- pinned regardless, so a later change cannot silently inherit a mutable path.
 
+-- SCHEMA PRECONDITION. This function reads and writes the `unit` column, which is added by
+-- sql/vraelis-preflight-6-pass-pricing.sql. lib/v-credits.ts deliberately still supports a database
+-- where that migration has NOT run (isLegacyRead selects a column list without it), so creating this
+-- function against such a database would produce an RPC that fails at call time — and hold() would
+-- treat a genuine error as a refusal rather than falling back. Add the column first if absent; it is
+-- the same statement that migration runs, and it is idempotent.
+alter table v_credit_ledger add column if not exists unit text not null default 'credit';
+
 create or replace function v_hold_credits(
   p_user   text,
   p_test   uuid,

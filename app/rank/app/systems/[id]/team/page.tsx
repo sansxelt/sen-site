@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requirePreflightAppAccess } from "@/lib/v-preflight-guard";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
@@ -31,7 +32,11 @@ export default async function AppTeamPage({ params }: { params: Promise<{ id: st
   await activateInvitesForEmail(email);
   if (!(await preflightDbReady())) return <SetupRequired />;
 
-  const access = await applicationAccess(email, id);
+  // SECURITY: goes through the hardened guard, not applicationAccess directly. Calling the raw
+  // resolver skipped hasAtLeastRole, so a client_viewer — a report-only side role the API refuses —
+  // reached this page and saw the app name, its own role badge and the full internal nav. The guard
+  // was fixed; this call site was reaching around it.
+  const access = await requirePreflightAppAccess(id, `/systems/${id}/team`);
   const app = access ? await getApplication(access.owner, id) : null;
   if (!access || !app) {
     return (

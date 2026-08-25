@@ -66,3 +66,33 @@ export async function limitOr429(
     { status: 429, headers: { "Retry-After": String(windowSecs), ...(cors ?? {}) } },
   );
 }
+
+// READ a bucket without consuming it.
+//
+// The counting RPC increments on every call, which is right for "you used one" but wrong for "have you
+// already used them all". The sign-in path needs the second question: it must refuse an exhausted mailbox
+// WITHOUT charging the caller, because charging on a check is what turns a failure budget into a lockout —
+// a legitimate owner's correct password would burn the same counter an attacker's wrong guesses filled.
+//
+// FAILS OPEN (returns true = "still allowed"). This is a read used to decide whether to do expensive work;
+// the authoritative consume still happens on the failure path. Treating an unreadable counter as exhausted
+// would deny sign-in to everyone during a database blip.
+export async function peekAllowed(key: string, limit: number, windowSecs: number): Promise<boolean> {
+  if (!isDatabaseConfigured()) return true;
+  try {
+    const { data, error } = await getSupabaseAdminClient()
+      .from("vraelis_rate_limits" as never)
+      .select("count, window_start")
+      .eq("key", key)
+      .maybeSingle();
+    if (error || !data) return true;
+    const row = data as unknown as { count: number | null; window_start: string | null };
+    // A window that has rolled over is a fresh budget regardless of the stored count.
+    const started = row.window_start ? new Date(row.window_start).getTime() : 0;
+    if (!Number.isFinite(started) || Date.now() - started > windowSecs * 1000) return true;
+    return (Number(row.count) || 0) < limit;
+  } catch (e) {
+    captureError("ratelimit-peek", e, { key });
+    return true;
+  }
+}

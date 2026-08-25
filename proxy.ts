@@ -182,6 +182,33 @@ export default function proxy(req: NextRequest) {
   const isAppHost = host === "app.vraelis.com" || host.startsWith("app.localhost");
   const isProd = host.endsWith("vraelis.com");
 
+  // ── CSRF, FIRST, BEFORE ANY HOST BRANCHING ──────────────────────────────────────────────────────────
+  //
+  // This check used to sit further down, next to the main-host /api/ passthrough. That made it INERT on
+  // the host that matters most: the app.vraelis.com branch below returns NextResponse.next() for /api/
+  // paths as its very first statement, roughly forty lines earlier. app.vraelis.com serves the signed-in
+  // product, and the session cookie is pinned to ".vraelis.com", so the browser attaches it there exactly
+  // as it does on the apex — meaning every session-authenticated mutating route was reached with the check
+  // never invoked. A control placed after a host branch protects only the hosts that fall through it.
+  //
+  // It runs before everything now, so no later branch, redirect or rewrite can route around it.
+  if (path.startsWith("/api/")) {
+    const verdict = csrfVerdict({
+      method: req.method,
+      cookieHeader: req.headers.get("cookie"),
+      origin: req.headers.get("origin"),
+      secFetchSite: req.headers.get("sec-fetch-site"),
+      // The apex and the product subdomain are both legitimate self-origins; allowedOrigins() lists them,
+      // so a forged x-forwarded-host can only ever name a host that must already be on the allowlist.
+      host: req.headers.get("x-forwarded-host") || host,
+      proto: req.headers.get("x-forwarded-proto") || "https",
+    });
+    if (verdict.enforced && !verdict.ok) {
+      console.warn("[csrf] refused a cross-origin state change:", verdict.reason, path);
+      return NextResponse.json({ error: "cross_origin_blocked" }, { status: 403 });
+    }
+  }
+
   // ── THE CURTAIN IS ENFORCED HERE, BECAUSE A LAYOUT IS TOO LATE ──────────────────────────────────────
   //
   // lib/stealth.ts opens by promising that while stealth is on "the real layout, the real pages and the RSC
@@ -278,25 +305,7 @@ export default function proxy(req: NextRequest) {
   //     below) so dev needs no subdomain DNS. Runs BEFORE the retired-sansxel list ("/account" collides).
   //     CRITICAL: "/api/<anything>" is the real API namespace (NextAuth, preflight routes) and must never
   //     be redirected or rewritten — only the EXACT "/api" path is the product's API & Webhooks page.
-  if (path.startsWith("/api/")) {
-    // CSRF: the only place every API request passes through, so the check lives here rather than in 66
-    // route handlers. It enforces ONLY when the request both mutates and carries our session cookie —
-    // see lib/csrf.ts for why that shape exempts webhooks, cron, API-key, CLI and public-form traffic by
-    // construction instead of by a list that would drift.
-    const verdict = csrfVerdict({
-      method: req.method,
-      cookieHeader: req.headers.get("cookie"),
-      origin: req.headers.get("origin"),
-      secFetchSite: req.headers.get("sec-fetch-site"),
-      host: req.headers.get("x-forwarded-host") || req.headers.get("host"),
-      proto: req.headers.get("x-forwarded-proto") || "https",
-    });
-    if (verdict.enforced && !verdict.ok) {
-      console.warn("[csrf] refused a cross-origin state change:", verdict.reason, path);
-      return NextResponse.json({ error: "cross_origin_blocked" }, { status: 403 });
-    }
-    return NextResponse.next();
-  }
+  if (path.startsWith("/api/")) return NextResponse.next(); // CSRF already enforced at the top
 
   // ONCE PROMOTED, THE PREVIEW NAMESPACE IS NOT A SECOND ADDRESS FOR THE SITE.
   //

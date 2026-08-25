@@ -76,7 +76,15 @@ export function csrfVerdict(input: {
     return { enforced: false, reason: "not_mutating" };
   }
   const cookie = input.cookieHeader ?? "";
-  const hasSession = SESSION_COOKIE_NAMES.some((n) => cookie.includes(`${n}=`));
+  // Auth.js CHUNKS a cookie whose value exceeds ~4096 bytes into `<name>.0`, `<name>.1`, … and the base
+  // name then never appears. With a JWT strategy the whole session rides in that value, so a session
+  // carrying a few extra claims chunks — and a check for `<name>=` alone would see no session, conclude
+  // there is no ambient authority, and wave the request through. That is a bypass that gets MORE likely as
+  // the session grows. Match the chunked form too.
+  //
+  // Boundary-anchored: a cookie called `not-authjs.session-token` must not satisfy a check for
+  // `authjs.session-token`, so the match requires the name to start the header or follow "; ".
+  const hasSession = SESSION_COOKIE_NAMES.some((n) => cookieNamePresent(cookie, n));
   if (!hasSession) {
     // No credentials are being attached automatically, so there is nothing for a cross-site page to abuse.
     return { enforced: false, reason: "no_ambient_authority" };
@@ -108,4 +116,23 @@ export function csrfVerdict(input: {
     return { enforced: true, ok: true, reason: "allowed_origin" };
   }
   return { enforced: true, ok: false, reason: "cross_origin" };
+}
+
+/**
+ * Is a cookie named `name` (or its Auth.js chunked variants `name.0`, `name.1`, …) present in the header?
+ *
+ * Anchored at a cookie boundary — the start of the header or a "; " separator — so a differently-named
+ * cookie that merely CONTAINS this name, or a cookie whose VALUE contains it, cannot satisfy the check.
+ */
+export function cookieNamePresent(cookieHeader: string, name: string): boolean {
+  if (!cookieHeader) return false;
+  for (const part of cookieHeader.split(";")) {
+    const eq = part.indexOf("=");
+    if (eq === -1) continue;
+    const key = part.slice(0, eq).trim();
+    if (key === name) return true;
+    // Chunked form: exactly `<name>.<digits>`.
+    if (key.startsWith(`${name}.`) && /^\d+$/.test(key.slice(name.length + 1))) return true;
+  }
+  return false;
 }

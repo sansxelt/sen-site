@@ -158,7 +158,7 @@ console.log("── auth hardening ──");
   ok("stealth signing throws when unset", /refusing to sign stealth tokens/.test(st));
   const a = read("auth.ts");
   ok("sign-in is rate limited per IP", a.includes("signin-ip:"));
-  ok("sign-in is rate limited per canonical mailbox", a.includes("signin-email:"));
+  ok("sign-in is rate limited per canonical mailbox", a.includes("signin-fail:"));
   ok("the limiter fails closed", a.includes("allowStrict(`signin-ip:"));
   ok("the limiter runs before the password verify", a.indexOf("signin-ip:") < a.indexOf("verifyPassword("));
   ok("an unverified provider email is refused", /email_verified/.test(a) && /provider reports the email is not verified/.test(a));

@@ -594,7 +594,28 @@ export async function activateProjectInvitesForEmail(email: string): Promise<voi
   try {
     const s = getSupabaseAdminClient();
     const uid = norm(email);
-    const { data } = await s.from("v_project_members" as never).update({ user_id: uid, status: "active", updated_at: new Date().toISOString() } as never).eq("email", uid).eq("status", "pending").select("project_id");
+    // SECURITY: the same 7-day TTL the WORKSPACE activator enforces. Project invites are stamped with
+    // invite_expires_at by the same mintInviteToken, but this path matched on address alone — so the
+    // one sign-in that is TTL-checked for a workspace invite was unchecked for a project invite, and a
+    // long-lapsed project invite still granted access. Rows predating the column have a NULL expiry and
+    // are still honoured.
+    const nowIsoP = new Date().toISOString();
+    // `data` is reassigned by the pre-migration fallback below; `pErr` is not, so it stays const-like by
+    // being destructured separately.
+    const first = await s.from("v_project_members" as never)
+      .update({ user_id: uid, status: "active", updated_at: nowIsoP } as never)
+      .eq("email", uid).eq("status", "pending")
+      .or(`invite_expires_at.is.null,invite_expires_at.gt.${nowIsoP}`)
+      .select("project_id");
+    let data = first.data;
+    if (first.error) {
+      // Pre-migration database: no invite_expires_at column. Fall back rather than activating nothing.
+      console.warn("[workspace] project invite expiry filter unavailable:", first.error.message);
+      const retry = await s.from("v_project_members" as never)
+        .update({ user_id: uid, status: "active", updated_at: nowIsoP } as never)
+        .eq("email", uid).eq("status", "pending").select("project_id");
+      data = retry.data;
+    }
     for (const r of (data as unknown as { project_id: string }[]) ?? []) {
       await logEvent({ userId: uid, eventType: "project_member_activated", actorType: "owner", source: "app", metadata: { project_id: r.project_id } });
     }
