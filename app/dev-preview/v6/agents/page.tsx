@@ -65,7 +65,7 @@ const LOOP: { n: string; agent: string; vraelis: string; sig?: Sig; tag?: string
   { n: "02", agent: "Submits a plan for how it will proceed.", vraelis: "Nothing. A plan an agent writes for itself is not read, and the work is not watched." },
   { n: "03", agent: "Changes code and calls tools and APIs.", vraelis: "Still nothing. Diffs and tool calls are not ingested while the work is underway." },
   { n: "04", agent: "Claims the work is complete.", vraelis: "This is where the check begins. The approved outcome becomes a browser plan a person signs off.", sig: "wait", tag: "Plan" },
-  { n: "05", agent: "Reaches a sensitive or irreversible action.", vraelis: "Routes the decision to a person before it can ship.", sig: "wait", tag: "Review" },
+  { n: "05", agent: "Reaches a sensitive or irreversible action.", vraelis: "Direction, not built: today a plan is approved or refused as a whole, with nothing inside it held back on its own.", sig: "wait", tag: "Direction" },
   { n: "06", agent: "Produces work that misses the requirement.", vraelis: "Turns the failure into a structured, recorded finding.", sig: "stop", tag: "Finding" },
   { n: "07", agent: "Submits a repair for the finding.", vraelis: "Re-checks the repair independently against the same standard." },
   { n: "08", agent: "Asks to be marked done.", vraelis: "Accepts Verified, or returns Failed or Blocked.", sig: "go", tag: "Decided" },
@@ -73,11 +73,16 @@ const LOOP: { n: string; agent: string; vraelis: string; sig?: Sig; tag?: string
 
 /* ---------- review + integrations ---------- */
 
+// DIRECTION, NOT LIVE. This used to describe these four as things Vraelis already holds for a person, which
+// nothing in the product does: a plan is approved or refused as a whole today (step 04), and nothing inside
+// it is singled out on its own (see scope.ts's own Horizon item, "Live agent activity read as it happens" —
+// this needs that first). Same class of overclaim WORKS_FROM was corrected for above; matches the pattern
+// integrations/page.tsx already uses for its own DIRECTION list.
 const SENSITIVE: { t: string; d: string }[] = [
-  { t: "Changing what existing customers are charged", d: "Pricing that affects live accounts waits for a person." },
-  { t: "Deleting or exporting production data", d: "Irreversible data actions are held for approval." },
-  { t: "Granting broad access or API scope", d: "Widening permissions is a decision, not a step." },
-  { t: "Shipping an irreversible migration", d: "One-way changes stop until someone accepts them." },
+  { t: "Changing what existing customers are charged", d: "Today, a plan is approved or refused as a whole — nothing inside it is held back on its own." },
+  { t: "Deleting or exporting production data", d: "Today, an irreversible action inside an approved plan runs the same as any other step." },
+  { t: "Granting broad access or API scope", d: "Today, a scope change is not treated differently from the rest of the plan." },
+  { t: "Shipping an irreversible migration", d: "Today, nothing inside an approved plan is held back on its own." },
 ];
 
 const LIVE_SURFACES = ["Vraelis web app", "API", "CLI", "GitHub", "Vercel", "Slack", "Webhooks"];
@@ -247,21 +252,21 @@ export default function Agents() {
         </div>
       </section>
 
-      {/* 4 ── Sensitive decisions enter review ── */}
+      {/* 4 ── Sensitive decisions, direction not live — see the SENSITIVE comment above for why ── */}
       <section className="v6-sec">
         <div className="v6-wrap">
           <Reveal>
             <SectionHead
-              eyebrow="Review"
+              eyebrow="Direction"
               title="Some decisions should never be an agent's to make alone."
-              lead="Vraelis lets an agent move quickly on reversible work and stops it at the boundary. Sensitive and irreversible actions are raised to a person before they can ship."
+              lead="This is not built yet. Today Vraelis approves or refuses a plan as a whole, with nothing inside it singled out for its own hold. The direction is to raise exactly these moments to a person before they ship — not everything, and not nothing."
             />
           </Reveal>
           <div className="v6-grid3" style={{ marginTop: "clamp(28px,3vw,40px)" }}>
             {SENSITIVE.map((s, i) => (
               <Reveal key={s.t} i={i % 3}>
-                <div className="v6-gcard" style={{ height: "100%" }}>
-                  <div style={{ marginBottom: 12 }}><Signal state="wait">Enters review</Signal></div>
+                <div className="v6-gcard" style={{ height: "100%", borderStyle: "dashed", borderColor: "var(--line-2)" }}>
+                  <div style={{ marginBottom: 12 }}><Signal state="wait">Direction</Signal></div>
                   <h3>{s.t}</h3>
                   <p>{s.d}</p>
                 </div>

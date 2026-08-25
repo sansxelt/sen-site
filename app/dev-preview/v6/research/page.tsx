@@ -128,12 +128,12 @@ const DIRECTIONS: Dir[] = [
       "The design problem is not raising everything to a person, which no one can sustain, nor raising nothing, which is how bad decisions ship quietly. It is finding the small set of moments that genuinely need judgment and presenting each with enough context to decide well.",
     ],
     now: [
-      "Sensitive and uncertain decisions are surfaced for human review instead of auto-approved.",
-      "Each raised decision carries the context needed to make it.",
+      "A plan is approved or refused as a whole, by a person, before a run can start.",
     ],
     open: [
       "How to identify the moments that truly need a person without flooding the queue.",
       "How review load should scale as one person oversees many agents.",
+      "How to raise exactly the sensitive or irreversible moments inside an approved plan, rather than holding the whole plan as one unit.",
     ],
   },
   {

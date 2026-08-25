@@ -231,6 +231,9 @@ const FINDINGS: { claim: string; reality: string; sig: Sig; tag: string }[] = [
   { claim: "“Checkout works end to end.”", reality: "Access was not granted after a successful payment.", sig: "stop", tag: "Failed check" },
 ];
 
+// DIRECTION, NOT LIVE. Same overclaim as agents/page.tsx's SENSITIVE section: a plan is approved or refused
+// as a whole today, and nothing inside it is singled out for its own hold. These three stay as concrete
+// examples of what that would look like, not as live queue items.
 const REVIEW: { t: string; who: string }[] = [
   { t: "Approve the new pricing before it ships to existing customers", who: "Billing owner" },
   { t: "Confirm the data export is allowed for this account", who: "Security" },
@@ -485,20 +488,20 @@ export default function Platform() {
           <div style={wrapRow}>
             <Reveal style={{ flex: "1 1 320px", minWidth: 0 }}>
               <SectionHead
-                eyebrow="Review"
+                eyebrow="Direction"
                 title="Human judgment at the boundary."
-                lead="Most oversight can be mechanical. Some of it cannot. Sensitive and irreversible decisions are raised to a person, deliberately and rarely, instead of being absorbed silently by automation."
+                lead="This is not built yet. Most oversight can be mechanical; some of it cannot. Today a plan is approved or refused as a whole, with nothing inside it singled out on its own — the direction is to raise exactly the sensitive and irreversible moments to a person, deliberately and rarely, instead of holding the whole plan or none of it."
               />
             </Reveal>
             <Reveal style={{ flex: "1 1 360px", minWidth: 0 }} i={1}>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {REVIEW.map((r) => (
-                  <div key={r.t} className="v6-card" style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", justifyContent: "space-between", padding: "clamp(16px,1.8vw,20px)" }}>
+                  <div key={r.t} className="v6-card" style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", justifyContent: "space-between", padding: "clamp(16px,1.8vw,20px)", borderStyle: "dashed", borderColor: "var(--line-2)" }}>
                     <div style={{ minWidth: 0, flex: "1 1 240px" }}>
                       <div style={{ color: "var(--ink)", fontWeight: 600, fontSize: 15.5, lineHeight: 1.35 }}>{r.t}</div>
                       <div className="v6-mono" style={{ marginTop: 5, color: "var(--ink-4)", fontSize: 12, letterSpacing: "0.05em", textTransform: "uppercase" }}>Decides: {r.who}</div>
                     </div>
-                    <Signal state="wait">Awaiting decision</Signal>
+                    <Signal state="wait">Direction</Signal>
                   </div>
                 ))}
               </div>
@@ -594,7 +597,7 @@ export default function Platform() {
             {[
               { s: "go" as Sig, t: "Verified", d: "The responsibility holds, checked independently against the reviewed standard." },
               { s: "stop" as Sig, t: "Failed", d: "The software does not meet the requirement. The gap is recorded as evidence." },
-              { s: "stop" as Sig, t: "Blocked", d: "A sensitive or irreversible action stops the work until a person decides." },
+              { s: "stop" as Sig, t: "Blocked", d: "No verdict could be reached, so none is reported. Nothing is recorded as proven." },
             ].map((c, i) => (
               <Reveal key={c.t} i={i}>
                 <div style={{ background: "var(--graphite-2)", border: "1px solid var(--g-line)", borderRadius: 14, padding: "clamp(20px,2.2vw,26px)", height: "100%" }}>
