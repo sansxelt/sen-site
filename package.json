@@ -68,6 +68,7 @@
     "phase3:settings:test": "tsx scripts/phase3-settings-authz-verify.ts",
     "rls:preflight": "tsx scripts/rls-preflight.ts",
     "rls:preflight:test": "tsx scripts/rls-preflight-verify.ts",
+    "phase4:assurance:test": "tsx scripts/phase4-assurance-verify.ts",
     "gates": "tsx scripts/gates.ts",
     "gates:quick": "tsx scripts/gates.ts --quick",
     "context:test": "tsx scripts/preflight-context-verify.ts",

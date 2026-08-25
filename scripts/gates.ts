@@ -129,7 +129,7 @@ lintGate();
 const SUITES = [
   "paypal-tier-integrity", "oauth-callback-xss", "oauth-registry-hardening", "contact-auth-abuse",
   "phase2-tenant-money", "phase2-hardening", "phase2-corrections",
-  "phase3-settings-authz", "phase3-oauth-identity",
+  "phase3-settings-authz", "phase3-oauth-identity", "phase4-assurance",
 ];
 const DOCKER_SUITES = ["phase2-credit-concurrency", "phase3-payment-cap", "rls-preflight"];
 
