@@ -90,25 +90,29 @@
 
 /* Visible scrollbars \u2014 a clear, grabbable thumb on a faint track so the
    scroll control is obvious in every zone (works on both the light Vraelis
-   and dark Sansxel backgrounds). */
+   and dark Sansxel backgrounds).
+   FIXED DARK, NOT THEME-RELATIVE. This used to be a mid grey (120,120,128), which reads as a light-ish bar
+   on the light marketing pages and only looks "black" on dark surfaces like app.vraelis.com because the
+   background does the contrast work for it. The chrome itself is the same colour on every page now, so the
+   scrollbar reads as one consistent rail regardless of what page it's next to \u2014 the way Scale.ai's does. */
 * {
-  scrollbar-color: rgba(120, 120, 128, 0.55) rgba(120, 120, 128, 0.12);
+  scrollbar-color: rgba(10, 10, 14, 0.62) rgba(10, 10, 14, 0.12);
   scrollbar-width: auto;
 }
 *::-webkit-scrollbar        { width: 13px; height: 13px; }
 *::-webkit-scrollbar-track  {
-  background: rgba(120, 120, 128, 0.12);
+  background: rgba(10, 10, 14, 0.12);
   border-radius: 10px;
 }
 *::-webkit-scrollbar-thumb  {
-  background: rgba(120, 120, 128, 0.55);
+  background: rgba(10, 10, 14, 0.62);
   border-radius: 10px;
   border: 3px solid transparent;
   background-clip: content-box;
   transition: background 160ms ease;
 }
-*::-webkit-scrollbar-thumb:hover  { background: rgba(110, 110, 118, 0.78); background-clip: content-box; }
-*::-webkit-scrollbar-thumb:active { background: rgba(90,  90,  98,  0.92); background-clip: content-box; }
+*::-webkit-scrollbar-thumb:hover  { background: rgba(10, 10, 14, 0.8);  background-clip: content-box; }
+*::-webkit-scrollbar-thumb:active { background: rgba(10, 10, 14, 0.95); background-clip: content-box; }
 *::-webkit-scrollbar-corner { background: transparent; }
 
 /* NO COLOURED SCROLLBAR ANYWHERE.
@@ -145,6 +149,10 @@ html {
   color-scheme: dark;
   scroll-behavior: smooth;
   scroll-padding-top: var(--nav-h, 5.125rem);
+  /* iOS WKWebView (Safari, and every in-app browser built on it — Instagram, TikTok, etc.) rubber-bands the
+     whole document by default. Nothing here suppressed that, so a visitor opening the site from an Instagram
+     link felt Apple's own elastic overscroll fighting the pinned scroll-scrub chapters underneath it. */
+  overscroll-behavior-y: none;
 }
 
 /* SMOOTH SCROLLING IS OFF FOR ANYONE WHO ASKED FOR LESS MOTION, AND IT IS SAID IN BOTH SHEETS ON PURPOSE.
@@ -163,6 +171,7 @@ body {
   color: var(--fg-1);
   font-family: var(--font-inter-tight), var(--font-geist-sans), "Segoe UI", sans-serif;
   line-height: 1.5;
+  overscroll-behavior-y: none;
 }
 
 /* Inter Tight utility — apply to nav, headings, buttons, labels */

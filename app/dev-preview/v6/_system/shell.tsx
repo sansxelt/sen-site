@@ -343,11 +343,18 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
   // recolours the bar rewrites the meta tag in the same commit, so the browser chrome turns over with it.
   // Re-asserted on every route change too, because Next re-emits the layout's static meta on navigation.
   useEffect(() => {
-    // The exact sampled ground when there is one, so the chrome matches even mid-interpolation; the
-    // route's declared pole otherwise. Only rgb()/hex reach the meta tag: theme-color support for the
+    // The drawer overrides everything below it, and its own colour is not `navBg`: opening it PAUSES the
+    // ground sampler (see the useGroundColor call above), so navBg is whatever was last sampled before the
+    // tap — a light chapter's colour, say — while v6.css paints the drawer panel a hardcoded #08080A
+    // regardless ("always night"). Without this branch the chrome strip kept showing that stale light
+    // reading under a full-screen dark panel: the exact "two bars, different schedules" defect this effect
+    // exists to end, just reappearing on drawer-open instead of on scroll.
+    //
+    // Otherwise: the exact sampled ground when there is one, so the chrome matches even mid-interpolation;
+    // the route's declared pole otherwise. Only rgb()/hex reach the meta tag: theme-color support for the
     // wider notations (oklab, color()) is not dependable, and an unsupported value hands the browser
     // back to its own guess, which is the disagreement this exists to end.
-    const color = navBg && /^(#|rgb)/i.test(navBg) ? navBg : dark ? "#0A0A0B" : "#FFFFFF";
+    const color = drawer ? "#08080A" : navBg && /^(#|rgb)/i.test(navBg) ? navBg : dark ? "#0A0A0B" : "#FFFFFF";
     const metas = document.head.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]');
     if (metas.length === 0) {
       const m = document.createElement("meta");
@@ -359,7 +366,7 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
     // The layout emits one tag per prefers-color-scheme; the bar's theme is the same in both, so the media
     // split only leaves a second tag to disagree with. Collapse them to one answer.
     metas.forEach((m) => { m.removeAttribute("media"); m.content = color; });
-  }, [dark, navBg, pathname]);
+  }, [dark, navBg, pathname, drawer]);
 
   const close = useCallback((i: number | null) => {
     window.clearTimeout(closeT.current);

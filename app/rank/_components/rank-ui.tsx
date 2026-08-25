@@ -224,7 +224,11 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
       // under it, and it stays in the tab order so keyboard focus can still reach it (the
       // focus-within rule in SHELL_UI_CSS brings it back when it does).
       transform: hidden ? "translate3d(0, -100%, 0)" : "translate3d(0, 0, 0)",
-      transition: "border-color .25s ease, background .25s ease, transform .34s cubic-bezier(0.22, 1, 0.36, 1)",
+      // Colour is a HARD CUT to match the ground sampler (components/use-ground-color.ts): it commits a
+      // one-frame change, and a soft transition on top of that just makes the bar visibly finish changing
+      // after the page already has. This line used to also ease border-color/background, a leftover from
+      // before this bar read ground.bg — see v6.css's own removal of the same mistake for the full reasoning.
+      transition: "transform .34s cubic-bezier(0.22, 1, 0.36, 1)",
       willChange: "transform" }}>
       <Brand href="/" />
       <div className="vra-nav-links" style={{ display: "flex", gap: 28, alignItems: "center", marginLeft: 22 }}>
@@ -741,7 +745,7 @@ const SHELL_UI_CSS = "@keyframes vraTextIn{from{opacity:0;transform:translateY(1
   // The setting asks for less motion, not less behaviour: travel is what provokes vestibular
   // symptoms, and opacity does not travel. visibility rides along so the invisible bar stops
   // swallowing clicks meant for the page under it. Same rule as the v6 shell.
-  + ".rank-root--site nav{transition:border-color .25s ease,background .25s ease,opacity .2s linear,visibility .2s linear!important;transform:translate3d(0,0,0)!important}"
+  + ".rank-root--site nav{transition:opacity .2s linear,visibility .2s linear!important;transform:translate3d(0,0,0)!important}"
   + ".rank-root--site nav[data-hidden=\"true\"]{opacity:0;visibility:hidden}}";
 
 export function RankShell({ signedIn = false, email = null, appHost = false, systems = [], pendingReviews = 0, children }: { signedIn?: boolean; email?: string | null; appHost?: boolean; systems?: PaletteSystem[]; pendingReviews?: number; children: ReactNode }) {

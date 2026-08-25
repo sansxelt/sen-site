@@ -769,7 +769,7 @@
 
 /* NARROW, AND STILL PINNED. */
 @media (max-width: 900px) {
-  .v6-dr__pin { padding: calc(var(--nav-h, 67px) + 1.4vh) var(--gutter) clamp(14px, 2.2vh, 26px);
+  .v6-dr__pin { padding: calc(var(--nav-h, 67px) + 1.4vh) var(--gutter) clamp(28px, 4.5vh, 48px);
     grid-template-rows: auto auto auto; align-content: safe center;
     gap: clamp(7px, 1.3vh, 16px); }
   .v6-dr__h { font-size: clamp(1.5rem, 6.6vw, 2.15rem); max-width: 17ch; }
@@ -826,7 +826,7 @@
   .v6-dr__lk { font-size: 10px; letter-spacing: 0.13em; }
   .v6-dr__lh { font-size: clamp(1rem, 4.2vw, 1.2rem); margin-top: 5px; }
   .v6-dr__now, .v6-dr__next { font-size: clamp(0.8rem, 3.2vw, 0.9rem); line-height: 1.42; margin-top: 6px; }
-  .v6-dr__disc { margin-top: clamp(6px, 1vh, 14px); font-size: 0.68rem; }
+  .v6-dr__disc { margin-top: clamp(10px, 1.6vh, 20px); font-size: 0.68rem; }
 }
 
 /* ══════════════════════════════════════ 6B. KNOWLEDGE ══ */

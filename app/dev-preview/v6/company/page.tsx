@@ -308,15 +308,28 @@ export default function CompanyPage() {
               <CTA href={`mailto:${CONTACT_EMAIL}`}>Email the team</CTA>
               <EditorialLink href={`${BASE}/security`}>Read the security overview</EditorialLink>
             </div>
+            {/* Three real addresses, not one. help@ used to be the only one on this section, which made
+                enterprise/privacy mail arrive at a support inbox instead of the person who owns it. The
+                full list and what each is for lives on /contact; this is the short form. */}
             <p style={{ margin: "18px 0 0", fontSize: 14, color: "var(--ink-3)" }}>
-              Or write to <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: "var(--brand-ink)", textDecoration: "underline", textUnderlineOffset: 3 }}>{CONTACT_EMAIL}</a>.
+              Support: <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: "var(--brand-ink)", textDecoration: "underline", textUnderlineOffset: 3 }}>{CONTACT_EMAIL}</a>.
+              {" "}Enterprise and invoicing: <a href="mailto:sales@vraelis.com" style={{ color: "var(--brand-ink)", textDecoration: "underline", textUnderlineOffset: 3 }}>sales@vraelis.com</a>.
+              {" "}Privacy and data rights: <a href="mailto:privacy@vraelis.com" style={{ color: "var(--brand-ink)", textDecoration: "underline", textUnderlineOffset: 3 }}>privacy@vraelis.com</a>.
+              {" "}<Link href={`${BASE}/contact`} style={{ color: "var(--ink-4)", textDecoration: "underline", textUnderlineOffset: 3 }}>What each is for →</Link>
             </p>
           </Reveal>
         </div>
       </section>
 
-      {/* Close: mission + Open Vraelis */}
-      <hr className="v6-rule" />
+      {/* Close: mission + Open Vraelis.
+          The rule above is normally enough to mark a section boundary, but here it sits between two nearly
+          identical light surfaces — the Contact section's --sunk (#F4F4F5) and this section's plain white —
+          on top of a hairline that's only 10% opacity. The colour step is a few percent of lightness, which
+          reads fine at desktop's viewing distance but on a phone, where there's no surrounding chrome to cue
+          "new section," the two just run together: the last line of Contact copy looks like it's sitting
+          directly against the mission heading with no boundary at all. A visibly darker rule here (scoped to
+          this one boundary, not the shared .v6-rule class used elsewhere) gives it the wall it was missing. */}
+      <hr className="v6-rule" style={{ background: "var(--line-2)" }} />
       <section className="v6-sec v6-sec--tight">
         <div className="v6-wrap" style={{ textAlign: "center", maxWidth: 760 }}>
           <Reveal>
