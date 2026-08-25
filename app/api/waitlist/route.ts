@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { limitOr429 } from "@/lib/vraelis-ratelimit";
 import { auth } from "@/auth";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "@/lib/supabase-admin";
 
@@ -19,7 +21,12 @@ type Payload = {
   source?: string;
 };
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  // Unauthenticated Supabase write sink holding email PII. A signup burst from one IP is not a
+  // real user flow.
+  const limited = await limitOr429(req, "waitlist", 5, 600);
+  if (limited) return limited;
+
   if (!isDatabaseConfigured()) {
     return NextResponse.json(
       { error: "Waitlist temporarily unavailable. Try again shortly." },

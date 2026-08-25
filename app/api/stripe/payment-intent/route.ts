@@ -292,7 +292,9 @@ export async function POST(request: Request) {
     });
   } catch (err) {
     const message = extractErrorMessage(err);
+    // Log the detail, return a generic message. The raw text here can carry provider internals and
+    // Postgres errors naming tables and columns, which is free reconnaissance for a caller.
     console.error("[payment-intent] failed:", message, err);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: "We could not start that payment. Please try again." }, { status: 500 });
   }
 }
