@@ -1,5 +1,6 @@
 import { hash } from "bcryptjs";
 import { bumpTokenVersion } from "@/lib/v-session-revocation";
+import { revokeAllDesktopSessions } from "@/lib/desktop-auth";
 import { NextResponse } from "next/server";
 import { sendPasswordResetConfirmEmail } from "../../../../../lib/email";
 import { consumeResetToken, verifyResetToken } from "../../../../../lib/password-reset";
@@ -73,7 +74,18 @@ export async function POST(request: Request) {
     // still succeeded; what failed is the extra containment.
     const bumped = await bumpTokenVersion(email, "password_reset");
     if (bumped === null) {
-      console.error("[reset-password/confirm] password changed but sessions could NOT be revoked for this user");
+      console.error("[reset-password/confirm] password changed but web sessions could NOT be revoked for this user");
+    }
+
+    // Desktop clients authenticate with an opaque bearer token, not a JWT, so the web revocation counter
+    // cannot reach them — they need their own account-wide sweep. A password reset is precisely the event
+    // that should reach every device, so it runs here.
+    //
+    // Ordinary web sign-out deliberately does NOT do this: closing a browser tab must not sign a laptop
+    // app out. This is the "my account may be compromised" path, not the "I'm done for now" path.
+    const desktop = await revokeAllDesktopSessions(email, "password_reset");
+    if (desktop === null) {
+      console.error("[reset-password/confirm] password changed but desktop sessions could NOT be revoked");
     }
 
     // "Your password was reset" confirmation, fire-and-forget.

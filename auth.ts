@@ -5,6 +5,8 @@ import { bumpTokenVersion, currentTokenVersion, tokenVersionIsCurrent } from "@/
 import type { NextRequest } from "next/server";
 import Credentials from "next-auth/providers/credentials";
 import GitHub from "next-auth/providers/github";
+import { fetchGitHubProfile } from "./lib/github-identity";
+import { bindOAuthIdentity } from "./lib/oauth-identity";
 import Google from "next-auth/providers/google";
 import { getSafeRedirectPath } from "./lib/auth-ui";
 import { verifyAutoSigninToken } from "./lib/auto-signin-token";
@@ -209,7 +211,19 @@ const authResult = NextAuth((req: NextRequest | undefined) => {
       },
     }),
     Google,
-    GitHub,
+    // GitHub's stock provider takes the email from GET /user, falling back to
+    // `(emails.find(e => e.primary) ?? emails[0]).email` — never consulting the `verified` flag GitHub
+    // returns beside every address. Identity here IS the email string, so an unproven one is an account
+    // takeover. fetchGitHubProfile always reads the authoritative /user/emails list, accepts only a
+    // verified entry, and throws otherwise. See lib/github-identity.ts.
+    GitHub({
+      userinfo: {
+        url: "https://api.github.com/user",
+        async request({ tokens }: { tokens: { access_token?: string } }) {
+          return fetchGitHubProfile(String(tokens.access_token ?? ""));
+        },
+      },
+    }),
   ],
   session: {
     strategy: "jwt",
@@ -261,15 +275,34 @@ const authResult = NextAuth((req: NextRequest | undefined) => {
       // /user/emails endpoint it is asked for. An explicit false is refused; an absent claim is
       // accepted, because refusing it would break providers that do not send one at all.
       const verifiedClaim = (profile as { email_verified?: unknown } | undefined)?.email_verified;
-      // GitHub does not send email_verified at ALL — @auth/core's GitHub provider picks the primary
-      // address from /user/emails without filtering on `verified` — so for GitHub this claim is always
-      // undefined and a check for an explicit false is inert. Stated here so the gate's reach is not
-      // mistaken for what its name suggests: it closes Google, and GitHub remains an OPEN item that
-      // needs the provider's own verified flag to be requested and checked.
       if (verifiedClaim === false || verifiedClaim === "false") {
         console.error(`${tag} rejected — provider reports the email is not verified`);
         return false;
       }
+      // GitHub sends no email_verified of its own, so the check above used to be INERT on this provider —
+      // it closed Google and left GitHub open. lib/github-identity.ts now reads GitHub's authoritative
+      // /user/emails, accepts only an entry marked verified, and stamps email_verified itself. Requiring
+      // the claim POSITIVELY here means that if the provider config is ever reverted to the stock one,
+      // GitHub sign-in stops working rather than silently going back to accepting unproven addresses.
+      // A security control that fails loudly beats one that fails quietly.
+      if (provider === "github" && verifiedClaim !== true) {
+        console.error(`${tag} rejected — no positive verified-email claim from GitHub`);
+        return false;
+      }
+      // Bind this sign-in to the provider's stable subject. A DIFFERENT provider account presenting an
+      // address this provider already bound to someone else is refused — that is the takeover shape, and
+      // an email string alone cannot tell the two apart. A legitimate address change at the provider
+      // keeps the same subject and is allowed through.
+      const subject = String(account?.providerAccountId ?? (profile as { sub?: unknown } | undefined)?.sub ?? "");
+      const bound = await bindOAuthIdentity(provider, subject, user.email);
+      if (bound === "conflict") {
+        console.error(`${tag} rejected — this address is already bound to a different ${provider} account`);
+        return false;
+      }
+      if (bound === "email_changed") {
+        console.log(`${tag} the provider account's address changed; it now maps to ${user.email}`);
+      }
+
       console.log(`${tag} email=${user.email} — looking up profile`);
 
       try {

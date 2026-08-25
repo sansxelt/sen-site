@@ -6,6 +6,7 @@
 // secret is stored ENCRYPTED (AES-256-GCM, key derived from AUTH_SECRET) and never returned/logged.
 
 import crypto from "crypto";
+import { currentTokenVersion } from "./v-session-revocation";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { logEvent } from "./v-events";
 import { getPrimaryOrganization, canManageOrganization, applyDomainProvisioning, emailDomain, domainTrustState, type ProvOrg, type DomainDefaultRole } from "./v-organization";
@@ -299,8 +300,27 @@ export async function provisionSsoLogin(email: string, organizationId: string): 
 }
 
 // Mint a NextAuth-compatible session JWT for a validated SSO email (the IdP is the authority).
+//
+// SECURITY: the token carries `tv`, the account's revocation counter, exactly as a token minted through
+// the jwt callback does. This path encodes the cookie DIRECTLY and never passes through that callback, so
+// without this the claim was simply absent.
+//
+// That was not only a bypass — it was also a latent outage. tokenVersionIsCurrent treats an absent claim
+// as 0, so once an account had ever been revoked (any sign-out bumps the counter) its stored version was
+// >= 1 and every freshly minted SSO session was born STALE: the user would sign in through the IdP and be
+// rejected on their next request, permanently. Stamping the current value fixes both halves at once.
+//
+// Enforcement is unchanged and lives where it belongs — the jwt callback in auth.ts validates `tv` on
+// every request, so this is a stronger guarantee than checking only at mint time: revoking mid-session
+// still kills the session on its next use.
 export async function mintSsoSession(email: string): Promise<{ name: string; value: string; options: Record<string, unknown> }> {
   const { encode } = await import("@auth/core/jwt");
-  const value = await encode({ token: { email: norm(email), sub: norm(email), name: norm(email).split("@")[0], provider: "sso" }, secret: process.env.AUTH_SECRET as string, salt: SESSION_COOKIE, maxAge: SESSION_MAX_AGE });
+  const tv = await currentTokenVersion(norm(email));
+  const value = await encode({
+    token: { email: norm(email), sub: norm(email), name: norm(email).split("@")[0], provider: "sso", tv },
+    secret: process.env.AUTH_SECRET as string,
+    salt: SESSION_COOKIE,
+    maxAge: SESSION_MAX_AGE,
+  });
   return { name: SESSION_COOKIE, value, options: { httpOnly: true, secure: true, sameSite: "lax", path: "/", domain: ".vraelis.com", maxAge: SESSION_MAX_AGE } };
 }
