@@ -214,7 +214,13 @@ console.log("── re-attack closures ──");
   ok("sign-in consumes the mailbox budget only on failure",
     /!tokenValid && !passwordValid\)[\s\S]{0,300}allowStrict\(mailboxKey/.test(a));
   ok("the per-IP bucket is still consumed up front", a.includes("allowStrict(`signin-ip:"));
-  ok("the GitHub email_verified gap is documented where the check lives", /GitHub does not send email_verified/.test(a));
+  // SUPERSEDED IN PHASE 3. This used to assert only that the GitHub gap was DOCUMENTED — because at the
+  // time the check was inert on GitHub and honesty about that was all the code offered. The gap is now
+  // closed, so the assertion is raised from "it is written down" to "it is enforced": the provider reads
+  // GitHub's authoritative verified list, and sign-in requires a positive claim rather than merely the
+  // absence of a negative one. Full coverage in scripts/phase3-oauth-identity-verify.ts.
+  ok("GitHub sign-in requires a POSITIVE verified-email claim", /provider === "github" && verifiedClaim !== true/.test(a));
+  ok("the GitHub profile comes from the verified-email reader, not the stock provider", a.includes("fetchGitHubProfile"));
 
   const t = read("app/rank/app/systems/[id]/team/page.tsx");
   ok("the team page uses the hardened guard", t.includes("requirePreflightAppAccess(id,"));
