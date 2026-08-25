@@ -8,7 +8,10 @@ import {
   signSignupClaim,
 } from "../../../../lib/signup-claim-cookie";
 import { isDatabaseConfigured } from "../../../../lib/supabase-admin";
-import { canonicalizeEmail, getUserCredentialByEmail, getUserCredentialByCanonical } from "../../../../lib/user-credentials";
+// canonicalizeEmail stays: it still keys the per-mailbox RATE LIMIT, which is an anti-abuse control.
+// getUserCredentialByCanonical is gone — looking an account up by its folded address was the identity
+// use the owner ruled out.
+import { canonicalizeEmail, getUserCredentialByEmail } from "../../../../lib/user-credentials";
 import { allowStrict, limitOr429 } from "../../../../lib/vraelis-ratelimit";
 
 type RegisterPayload = {
@@ -85,17 +88,19 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Block an alias of an inbox that already has an account (Gmail +tag / dots resolve to the
-  // same mailbox), so free signup credits can't be farmed across aliases. Login is unaffected
-  // (it stays keyed on the real address). The DB unique index is the authoritative guard; this
-  // is the friendly fast-path message.
-  const existingCanonical = await getUserCredentialByCanonical(email);
-  if (existingCanonical) {
-    return NextResponse.json(
-      { error: "That email, or an alias of it, already has a Vraelis account. Sign in instead." },
-      { status: 409 },
-    );
-  }
+  // NO ALIAS BLOCK HERE ANY MORE. This used to refuse registration when the FOLDED form of the address
+  // already had an account, so someone@gmail.com and some.one+work@gmail.com could not both exist. That
+  // made a folded email the account identity key, which is precisely what the owner ruled against:
+  // folding is an anti-abuse signal, not an identity.
+  //
+  // The abuse it was aimed at — farming the free signup grant across aliases — is unaffected, because it
+  // is blocked at the layer that actually grants: lib/preflight/free-grant-cluster.ts hard-denies on the
+  // canonical cluster ("one lifetime free pass per real inbox"), so two aliases that are now two accounts
+  // still share ONE free pass between them. The control moved to where it belongs rather than being
+  // dropped.
+  //
+  // Identity checks that remain: the EXACT address above (409), and the exact-email unique index in the
+  // database behind it.
 
   // Per-mailbox budget before the bcrypt hash and the verify email. Canonicalized so gmail dot/+tag
   // aliases cannot be used to refill the bucket against one real inbox. A 429 here reveals nothing
