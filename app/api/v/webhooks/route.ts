@@ -2,13 +2,14 @@
 // POST /api/v/webhooks {url} — create one; returns the secret ONCE.
 
 import { NextResponse } from "next/server";
+import { envInt } from "@/lib/env-num";
 import { auth } from "@/auth";
 import { listWebhooks, createWebhook } from "@/lib/v-webhooks";
 
 export const runtime = "nodejs";
 
 // Env-overridable so it can be raised without a deploy.
-const MAX_WEBHOOKS_PER_USER = Number(process.env.MAX_WEBHOOKS_PER_USER || 20) || 20;
+const MAX_WEBHOOKS_PER_USER = envInt("MAX_WEBHOOKS_PER_USER", { min: 1, max: 500, fallback: 20 });
 
 export async function GET() {
   const session = await auth();

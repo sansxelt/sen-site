@@ -9,6 +9,7 @@
 // A missing/revoked credential or an unsupported action is caught in the readiness check, BEFORE any hold.
 
 import { NextResponse } from "next/server";
+import { envInt } from "@/lib/env-num";
 import { randomUUID } from "node:crypto";
 import { gateApiRuntimeApp, gateReasonResponse } from "@/lib/preflight/team-access";
 import { runsDisabled } from "@/lib/v-preflight-flags";
@@ -33,11 +34,25 @@ const notFound = () => NextResponse.json({ error: "not_found" }, { status: 404 }
 // Bounds for the customer-endpoint fetcher below. The host on the other end is customer-supplied, so it
 // decides how long to hold a socket open and how much to send. Env-overridable so a slow-but-legitimate
 // integration can be accommodated without a deploy.
-const API_FETCH_TIMEOUT_MS = Number(process.env.API_FETCH_TIMEOUT_MS || 15000) || 15000;
-const API_FETCH_MAX_BYTES = Number(process.env.API_FETCH_MAX_BYTES || 2_000_000) || 2_000_000;
+const API_FETCH_TIMEOUT_MS = envInt("API_FETCH_TIMEOUT_MS", { min: 1_000, max: 60_000, fallback: 15_000 });
+const API_FETCH_MAX_BYTES = envInt("API_FETCH_MAX_BYTES", { min: 64 * 1024, max: 32 * 1024 * 1024, fallback: 2_000_000 });
+
+/** Thrown when a response exceeds the byte cap. A distinct type so callers cannot mistake it for content. */
+export class ResponseTooLargeError extends Error {
+  readonly transportKind = "response_too_large";
+  constructor(max: number) {
+    super(`response exceeded ${max} bytes`);
+    this.name = "ResponseTooLargeError";
+  }
+}
 
 // Read a response body up to `max` bytes, cancelling the stream at the limit rather than buffering the
-// whole thing first. res.text() would materialise whatever arrives before any cap could apply.
+// whole thing first — res.text() would materialise whatever arrives before any cap could apply.
+//
+// THROWS at the limit; it does NOT return what it managed to read. Returning a truncated body would hand
+// the step executor a prefix of a JSON document that it would then parse, assert against, and report on as
+// though it were the complete response. A run that silently grades half an answer is worse than a run that
+// fails: the failure is visible, the wrong verdict is not.
 async function readCapped(res: Response, max: number): Promise<string> {
   const body = res.body;
   if (!body) return "";
@@ -50,7 +65,10 @@ async function readCapped(res: Response, max: number): Promise<string> {
       if (done) break;
       if (!value) continue;
       total += value.byteLength;
-      if (total > max) { await reader.cancel().catch(() => {}); break; }
+      if (total > max) {
+        await reader.cancel().catch(() => {});
+        throw new ResponseTooLargeError(max);
+      }
       chunks.push(value);
     }
   } finally {
@@ -155,7 +173,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       res.headers.forEach((v, k) => { headers[k] = v; });
       return { status: res.status, headers, text: await readCapped(res, API_FETCH_MAX_BYTES) };
     } catch (e) {
-      (e as { transportKind?: string }).transportKind = isBlockedFetchError(e) ? "blocked" : "unreachable";
+      // An over-cap response already carries its own transportKind and must keep it: it is a distinct
+      // outcome from "unreachable", and mislabelling it would hide why the run failed.
+      if (!(e instanceof ResponseTooLargeError)) {
+        (e as { transportKind?: string }).transportKind = isBlockedFetchError(e) ? "blocked" : "unreachable";
+      }
       throw e;
     } finally {
       clearTimeout(timer);

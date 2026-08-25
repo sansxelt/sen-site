@@ -1,5 +1,6 @@
 // Create a booking from the public booking page (key-scoped).
 import { NextResponse } from "next/server";
+import { isSafeRecipient } from "@/lib/email-address";
 import type { NextRequest } from "next/server";
 import {
   addMessage,
@@ -19,10 +20,9 @@ import { sendBookingConfirmation } from "@/lib/vraelis-email";
 import { limitOr429, allowStrict } from "@/lib/vraelis-ratelimit";
 import { canonicalizeEmail } from "@/lib/user-credentials";
 
-// Printable-ASCII, single @, dot in the domain, no RFC5322 delimiters. Matches the contact route's
-// validator: this value is handed to a mail API, so a control character or an address delimiter must be
-// rejected outright rather than sanitised downstream.
-const BOOK_EMAIL_RE = /^[\x21-\x7e]{1,64}@[\x21-\x7e]{1,190}$/;
+// Recipient validation lives in ONE place (lib/email-address.ts). The regex that used to sit here was a
+// route-local copy that its own comment described inaccurately: \x21-\x7e includes @, <, >, comma and
+// semicolon, and nothing required a dot in the domain, so it accepted a@b@c.com and victim@example.com>.
 
 const ORIGIN = "https://vraelis.com";
 
@@ -172,7 +172,7 @@ export async function POST(req: NextRequest) {
     // its own canonical per-mailbox budget (rotating IPs and gmail dot/+tag aliases cannot refill it) and
     // must look like a real address before it reaches the mailer. An address that fails either check
     // still books — the owner notification is what matters — it just gets no confirmation mail.
-    const leadEmail = BOOK_EMAIL_RE.test(email) ? email : null;
+    const leadEmail = isSafeRecipient(email) ? email : null;
     const mayConfirmLead =
       leadEmail !== null && (await allowStrict(`book-confirm:${canonicalizeEmail(leadEmail)}`, 3, 3600));
     if (leadEmail && !mayConfirmLead) {

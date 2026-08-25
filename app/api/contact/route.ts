@@ -1,4 +1,5 @@
 ﻿import { NextResponse } from "next/server";
+import { isSafeRecipient } from "@/lib/email-address";
 import {
   resolveSupportInbox,
   sendContactConfirmEmail,
@@ -21,14 +22,8 @@ type ContactPayload = {
   website?: string;
 };
 
-// Printable-ASCII only, single @, a dot in the domain, and none of the RFC5322 delimiters , ; < > ( ) [ ] \ "
-// This value is handed to a mail API as both a recipient and a replyTo, so a control character (NUL, C0,
-// U+0085) or an address delimiter has to be rejected outright rather than sanitised downstream. The old
-// pattern excluded only whitespace, which let all of those through. Matches the validator on the sibling
-// relay at app/api/vraelis/contact/route.ts.
-const EMAIL_ASCII = /^[\x21-\x7e]{1,64}@[\x21-\x7e]{1,190}$/;
-const EMAIL_SHAPE = /^[^\s@,;<>()[\]\\"]+@[^\s@,;<>()[\]\\"]+\.[^\s@,;<>()[\]\\"]+$/;
-const emailPattern = { test: (v: string) => EMAIL_ASCII.test(v) && EMAIL_SHAPE.test(v) };
+// Recipient validation lives in ONE place (lib/email-address.ts) so the three mail paths cannot drift.
+const emailPattern = { test: isSafeRecipient };
 
 // SECURITY (finding H4, second instance): this route is the same open email relay as
 // /api/vraelis/contact — it sends a confirmation to a CALLER-NAMED address from a verified sender. Two

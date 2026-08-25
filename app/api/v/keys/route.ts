@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { envInt } from "@/lib/env-num";
 import { getPlanV1State } from "@/lib/preflight/entitlements-v1";
 import { auth } from "@/auth";
 import { ensureProfile, getPlan } from "@/lib/v-db";
@@ -8,7 +9,7 @@ import { listApiKeys, generateApiKey } from "@/lib/v-api-keys";
 export const runtime = "nodejs";
 
 // Env-overridable so it can be raised without a deploy.
-const MAX_API_KEYS_PER_USER = Number(process.env.MAX_API_KEYS_PER_USER || 25) || 25;
+const MAX_API_KEYS_PER_USER = envInt("MAX_API_KEYS_PER_USER", { min: 1, max: 500, fallback: 25 });
 
 export async function GET() {
   const session = await auth();

@@ -16,6 +16,7 @@
 // instances), NOT lib/rate-limit, whose in-memory Map resets on every cold start and is per-instance.
 
 import { NextResponse } from "next/server";
+import { isSafeRecipient } from "@/lib/email-address";
 import type { NextRequest } from "next/server";
 import { Resend } from "resend";
 import { createContact } from "@/lib/vraelis-db";
@@ -24,19 +25,8 @@ import { canonicalizeEmail } from "@/lib/user-credentials";
 
 const SALES_INBOX = "sales@vraelis.com";
 
-// Deliberately strict: printable ASCII only, one @, a dot in the domain, and none of , ; < > ( ) [ ] \ "
-// — comma and semicolon separate recipients for some mail APIs, and the rest are RFC5322 address
-// delimiters, so "a@b.com>" or a quoted local part could smuggle a second recipient.
-//
-// The character CLASS matters as much as the delimiters: an earlier form excluded only \s, which let NUL,
-// C0 controls and U+0085 (NEL) through into replyTo and the acknowledgement recipient. \x21-\x7e is the
-// printable-ASCII range, so every control character is rejected by construction rather than stripped
-// later. This is stricter than RFC5322 permits (no internationalised addresses); that is the intended
-// trade for an unauthenticated endpoint that hands the value to a mail API.
-const EMAIL_RE = /^[\x21-\x7e]{1,64}@[\x21-\x7e]{1,190}$/;
-// Second gate: structure and the delimiter blocklist, applied to the same value.
-const EMAIL_SHAPE = /^[^\s@,;<>()[\]\\"]+@[^\s@,;<>()[\]\\"]+\.[^\s@,;<>()[\]\\"]+$/;
-const validEmail = (v: string) => EMAIL_RE.test(v) && EMAIL_SHAPE.test(v);
+// Recipient validation lives in ONE place (lib/email-address.ts) so the three mail paths cannot drift.
+const validEmail = isSafeRecipient;
 const TOPICS = ["sales", "support", "partnership", "press", "other"] as const;
 
 // Strip anything that could break out of a header value or a single-line field.

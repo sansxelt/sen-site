@@ -105,7 +105,11 @@ for (const bad of [
 for (const good of ["a@b.com", "first.last+tag@sub.example.co.uk"]) {
   ok(`legitimate address ${JSON.stringify(good)} is accepted`, EMAIL_RE.test(good));
 }
-ok("the route still enforces the delimiter blocklist", CONTACT.includes("const EMAIL_SHAPE ="));
+// The route-local EMAIL_SHAPE regex was consolidated into lib/email-address.ts, because three near-copies
+// of one security rule had already drifted — the weakest, on /api/vraelis/book, accepted a@b@c.com and
+// victim@example.com>. The delimiter blocklist is still enforced; it just lives in one place now, and
+// scripts/phase2-corrections-verify.ts exercises it against the full adversarial set.
+ok("the route delegates to the shared recipient validator", CONTACT.includes("isSafeRecipient"));
 
 // ── Wiring: limits exist, and run before the expensive work ─────────────────
 console.log("── limiter wiring and ordering ──");
