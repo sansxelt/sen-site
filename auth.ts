@@ -2,7 +2,6 @@ import NextAuth from "next-auth";
 import { canonicalizeEmail } from "@/lib/user-credentials";
 import { allowStrict, peekAllowed } from "@/lib/vraelis-ratelimit";
 import { bumpTokenVersion, currentTokenVersion, tokenVersionIsCurrent } from "@/lib/v-session-revocation";
-import type { NextRequest } from "next/server";
 import Credentials from "next-auth/providers/credentials";
 import GitHub from "next-auth/providers/github";
 import { fetchGitHubProfile } from "./lib/github-identity";
@@ -21,82 +20,35 @@ import { getUserCredentialByEmail, verifyPassword } from "./lib/user-credentials
 delete process.env.AUTH_URL;
 delete process.env.NEXTAUTH_URL;
 
-// v0.2.0 phase H — cross-subdomain cookie. Set AUTH_COOKIE_DOMAIN
-// to ".sansxel.ai" (with the leading dot) in prod env so the
-// session cookie is scoped to all subdomains. Without this, the
-// apex marketing site (sansxel.ai) couldn't see chat.sansxel.ai's
-// session and showed "Log in" to already-signed-in users.
+// ── COOKIE SCOPE: WHAT ACTUALLY APPLIES ───────────────────────────────────────────────────────────────
 //
-// Local dev / preview deploys: leave AUTH_COOKIE_DOMAIN unset, so
-// NextAuth uses its per-request default (single-host cookie) and
-// localhost / preview URLs keep working.
+// The ONLY cookie configuration that takes effect is the `cookies:` block further down. In production it
+// sets ONE cookie explicitly:
 //
-// Migration cost: existing chat-only cookies stay valid for now,
-// but new sign-ins will get the spanning cookie. Users who want
-// the apex to recognize them need to sign out + back in once.
-const envCookieDomain = (process.env.AUTH_COOKIE_DOMAIN ?? "").trim() || undefined;
-
-// v0.3.0 — vraelis.com now shares this project (separate brand, served
-// by host in proxy.ts). It's a different registrable domain, so it
-// CANNOT share the ".sansxel.ai" session cookie; with a hardcoded
-// domain the browser would silently reject the cookie and sign-in
-// would never stick. So the cookie domain is resolved per request:
-//   • *.sansxel.ai → ".sansxel.ai"  (unchanged: SSO across subdomains)
-//   • *.vraelis.com → ".vraelis.com" (its own cookie / session)
-//   • unknown host (preview, localhost) or RSC with no request → the
-//     env value (prod) or the per-host default, so previews keep
-//     working exactly as before.
-// Cookie NAMES stay constant whenever a domain applies, so the cookie
-// set during sign-in (request present) and read in RSC (request
-// absent) always match by name.
-function resolveCookieDomain(req: NextRequest | undefined): string | undefined {
-  const host = (req?.headers.get("host") ?? "").toLowerCase().split(":")[0];
-  if (host.endsWith("vraelis.com")) return ".vraelis.com";
-  if (host.endsWith("sansxel.ai")) return ".sansxel.ai";
-  return envCookieDomain;
-}
-
-function buildCookieOptions(cookieDomain: string | undefined) {
-  if (!cookieDomain) return undefined;
-  return {
-    sessionToken: {
-      // NextAuth picks the secure-prefixed name automatically
-      // for HTTPS; matching that here so existing logic still
-      // works.
-      name: "__Secure-authjs.session-token",
-      options: {
-        httpOnly: true,
-        sameSite: "lax" as const,
-        path: "/",
-        secure: true,
-        domain: cookieDomain,
-      },
-    },
-    callbackUrl: {
-      name: "__Secure-authjs.callback-url",
-      options: {
-        httpOnly: true,
-        sameSite: "lax" as const,
-        path: "/",
-        secure: true,
-        domain: cookieDomain,
-      },
-    },
-    csrfToken: {
-      name: "__Host-authjs.csrf-token",
-      options: {
-        httpOnly: true,
-        sameSite: "lax" as const,
-        path: "/",
-        secure: true,
-        // __Host- prefix forbids a domain attribute, so we
-        // intentionally OMIT domain on the csrf cookie. The
-        // CSRF check still fires per-host; only the session
-        // needs to span subdomains for SSO to work.
-      },
-    },
-  };
-}
+//   __Secure-authjs.session-token   domain .vraelis.com   httpOnly  secure  sameSite=lax  path=/
+//
+// A leading-dot domain is sent to vraelis.com AND EVERY subdomain of it. That is deliberate and is the
+// owner's standing decision: app.vraelis.com is a real, separately-hosted surface served by this same
+// app through proxy.ts host routing, the SSO callback redirects there expecting a live session, and the
+// billing return routes live there. A host-only cookie would not reach it and sign-in would not stick.
+//
+// Every other cookie (callbackUrl, csrfToken) is left to Auth.js's per-host defaults, so they are
+// HOST-ONLY and do not span subdomains. CSRF staying host-only while the session spans is the correct
+// split.
+//
+// REMOVED HERE, and worth knowing about: this file used to carry a per-request resolver
+// (resolveCookieDomain / buildCookieOptions) that mapped *.vraelis.com and *.sansxel.ai to their own
+// cookie domains and set an explicit __Host- CSRF cookie name. It was computed on every request and then
+// DISCARDED - the value was assigned to a local and never passed to NextAuth. So three things that file
+// comments advertised were inert, and had been inert since before this remediation:
+//
+//   - AUTH_COOKIE_DOMAIN      read by nothing (marked accordingly in .env.example)
+//   - the .sansxel.ai branch  a DIFFERENT registrable domain, which therefore never got a cookie domain
+//   - the __Host- CSRF name   configured only in the dead helper
+//
+// The dead code is deleted rather than wired up. Wiring it would change production cookie names and
+// domains and invalidate in-flight sign-ins - a deployment decision, not a cleanup. If cross-domain
+// support for sansxel.ai is wanted, restore it deliberately and re-test sign-in on both domains.
 
 // The IP for the sign-in bucket. NextAuth passes a plain Request to authorize(), so this reads the
 // forwarded headers directly rather than going through lib/vraelis-ratelimit's NextRequest helper.
@@ -107,8 +59,7 @@ function clientIpFromHeaders(request: Request | undefined): string {
   if (xff) return xff.split(",")[0].trim();
   return request?.headers?.get("x-real-ip")?.trim() || "unknown";
 }
-const authResult = NextAuth((req: NextRequest | undefined) => {
-  const cookieOptions = buildCookieOptions(resolveCookieDomain(req));
+const authResult = NextAuth(() => {
   return {
   trustHost: true,
   pages: {

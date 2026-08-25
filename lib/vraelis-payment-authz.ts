@@ -44,8 +44,24 @@ import { envInt } from "./env-num";
 // negative one that disables the cap entirely. Each bound below states the widest value this control is
 // willing to honour, so a typo cannot quietly become "no ceiling".
 export const AUTO_MULTIPLE   = () => envInt("VRAELIS_AUTO_PAY_MULTIPLE",     { min: 1, max: 100, fallback: 10 });
+// NOTE THE INTERACTION WITH AUTO_MAX_CENTS. The ceiling is min(max(deposit x MULTIPLE, FLOOR), MAX). With
+// the launch values FLOOR and MAX are BOTH $500, so the band collapses: every workspace gets exactly $500
+// and neither the deposit nor the multiple changes anything. That is within the owner's $500 limit, and it
+// is the conservative direction in absolute terms — but it does mean a workspace whose configured deposit
+// is $25 can still auto-charge $500, which is 20x its deposit.
+//
+// If per-workspace scaling is wanted back, LOWER THIS FLOOR (e.g. $100) rather than raising MAX; that
+// restores the multiple for small deposits while keeping $500 as the hard cap. Flagged for the owner
+// rather than changed here, because it is a policy choice, not a defect. Pinned by tests so the collapse
+// cannot change unnoticed.
 export const AUTO_FLOOR_CENTS = () => envInt("VRAELIS_AUTO_PAY_FLOOR_CENTS", { min: MIN_CHARGE_CENTS, max: 1_000_000, fallback: 50_000 });
-export const AUTO_MAX_CENTS  = () => envInt("VRAELIS_AUTO_PAY_MAX_CENTS",    { min: MIN_CHARGE_CENTS, max: 1_000_000, fallback: 200_000 });
+// LAUNCH DEFAULT $500, set by the owner. This is the single number that decides the worst case of one
+// successful manipulation, and $2,000 was judged too much exposure before there are real customers and
+// fraud data to reason from. Raising it is a deliberate act: set VRAELIS_AUTO_PAY_MAX_CENTS in the
+// deployment environment (see .env.example). It cannot be raised from a request, a database row, or the
+// conversation — only from the environment, and only within [MIN_CHARGE_CENTS, 1_000_000], so a typo or a
+// pasted "unlimited" value falls back to $500 rather than becoming a ceiling nobody intended.
+export const AUTO_MAX_CENTS  = () => envInt("VRAELIS_AUTO_PAY_MAX_CENTS",    { min: MIN_CHARGE_CENTS, max: 1_000_000, fallback: 50_000 });
 export const DAILY_CENTS     = () => envInt("VRAELIS_AUTO_PAY_DAILY_CENTS",  { min: 0, max: 10_000_000, fallback: 500_000 });
 export const CYCLE_CENTS     = () => envInt("VRAELIS_AUTO_PAY_CYCLE_CENTS",  { min: 0, max: 50_000_000, fallback: 2_000_000 });
 export const CYCLE_DAYS      = () => envInt("VRAELIS_AUTO_PAY_CYCLE_DAYS",   { min: 1, max: 365, fallback: 30 });
