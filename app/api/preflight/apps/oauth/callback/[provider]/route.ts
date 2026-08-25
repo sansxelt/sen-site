@@ -7,13 +7,14 @@
 // Both re-establish trust from the signed state alone (the callback runs mid-redirect): verify the HMAC +
 // expiry, match the nonce cookie, exchange the code via safeFetch (SSRF-pinned), seal in the vault, and
 // never echo the token. Every failure 302s to the right connections surface with an ?oauth=error&reason.
+import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { auth } from "@/auth";
 import { safeFetch } from "@/lib/safe-fetch";
 import { gatePreflightApp } from "@/lib/preflight/team-access";
 import { vaultConfigured } from "@/lib/preflight/secret-vault";
-import { resolveOAuthProvider, providerAvailable, callbackPath, clientId, clientSecret } from "@/lib/preflight/oauth/providers";
+import { resolveOAuthProvider, providerAvailable, callbackPath, clientId, clientSecret, OAUTH_PROVIDER_KINDS } from "@/lib/preflight/oauth/providers";
 import { verifyOAuthState } from "@/lib/preflight/oauth/state";
 import { pkceCookieName } from "@/lib/preflight/oauth/pkce";
 import { vercelHandoffUrl } from "@/lib/preflight/oauth/handoff";
@@ -28,6 +29,20 @@ function baseUrl(req: Request): string {
   const proto = req.headers.get("x-forwarded-proto") || (host.startsWith("localhost") ? "http" : "https");
   return `${proto}://${host}`;
 }
+// JSON for embedding inside an inline <script>. JSON.stringify ALONE IS NOT SAFE here: it escapes quotes
+// and backslashes but leaves "</script" intact, so any attacker-influenced value could terminate the script
+// element and open a new one. It also leaves U+2028/U+2029, which are literal line terminators in JS source
+// and break the expression. Escaping < > & and those two separators makes the value inert in HTML while
+// staying a valid JS string literal. Values reaching this must ALSO be validated at their source — this is
+// the second layer, not the first.
+function scriptJson(value: unknown): string {
+  return JSON.stringify(value ?? null)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026")
+    .replace(/[\u2028\u2029]/g, (c) => (c === "\u2028" ? "\\u2028" : "\\u2029"));
+}
+
 // POPUP MODE: when the flow was opened via window.open (the initiate route set vr_oauth_popup), the user
 // never sees this tab — so instead of a 302 into a page they won't look at, return a minimal document that
 // hands the outcome back and closes itself.
@@ -42,23 +57,27 @@ function baseUrl(req: Request): string {
 function popupClose(req: Request, path: string, params: string, handoff?: string | null): NextResponse {
   const origin = baseUrl(req);
   const target = `${origin}${path}?${params}`;
-  const payload = JSON.stringify({ source: "vraelis-oauth", params });
+  const payload = scriptJson({ source: "vraelis-oauth", params });
+  // Per-response nonce: the one inline script below carries it, so a CSP of
+  // script-src 'nonce-…' executes ours and nothing else. Injected <script> tags and inline event handlers
+  // (onerror=, onload=) are both refused, because a nonce source list excludes 'unsafe-inline'.
+  const nonce = randomBytes(16).toString("base64");
   const html = `<!doctype html><meta charset="utf-8"><title>Finishing…</title>
 <body style="font:14px system-ui;padding:32px;color:#4a463f;text-align:center">
 <p id="m">Finishing up…</p>
-<script>
+<script nonce="${nonce}">
 (function(){
   var msg = ${payload};
   // 1. BroadcastChannel: survives COOP severing window.opener (Vercel's install chain does this).
   try { var bc = new BroadcastChannel("vraelis-oauth"); bc.postMessage(msg); bc.close(); } catch (e) {}
   // 2. opener.postMessage: works when the opener link is intact (GitHub, Stripe).
-  try { if (window.opener && !window.opener.closed) window.opener.postMessage(msg, ${JSON.stringify(origin)}); } catch (e) {}
+  try { if (window.opener && !window.opener.closed) window.opener.postMessage(msg, ${scriptJson(origin)}); } catch (e) {}
   // 3. localStorage ping: fallback for anything without BroadcastChannel.
   try { localStorage.setItem("vraelis-oauth", JSON.stringify({ params: msg.params, t: Date.now() })); } catch (e) {}
 
   // 4. Hand back to the provider (Vercel) if it gave us a completion URL. The parent has ALREADY been told
   // above, so this is purely about closing the window, and the provider's own page can do it when we can't.
-  var handoff = ${JSON.stringify(handoff ?? null)};
+  var handoff = ${scriptJson(handoff ?? null)};
   if (handoff) { window.location.replace(handoff); return; }
 
   try { window.close(); } catch (e) {}
@@ -67,7 +86,7 @@ function popupClose(req: Request, path: string, params: string, handoff?: string
     if (!window.closed) {
       document.getElementById("m").textContent = "All set. You can close this window.";
       var a = document.createElement("a");
-      a.href = ${JSON.stringify(target)}; a.textContent = "Back to Connections";
+      a.href = ${scriptJson(target)}; a.textContent = "Back to Connections";
       a.style.cssText = "display:inline-block;margin-top:12px;color:#0A7B54";
       document.body.appendChild(a);
     }
@@ -83,6 +102,14 @@ function popupClose(req: Request, path: string, params: string, handoff?: string
       // detect the popup closing. This is the default, but stating it keeps a future global COOP header
       // from silently breaking every popup flow.
       "cross-origin-opener-policy": "unsafe-none",
+      // Nonce-based CSP (finding H2). script-src 'nonce-*' runs ONLY the one inline script below;
+      // an injected <script> carries no nonce and an inline handler (onerror=) is refused outright,
+      // because a nonce source list implicitly excludes 'unsafe-inline'. default-src 'none' means the
+      // document can load nothing else. style-src allows the inline style attributes on body/anchor,
+      // which cannot execute script.
+      "content-security-policy":
+        `default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline'; ` +
+        `base-uri 'none'; form-action 'none'; frame-ancestors 'none'`,
     },
   });
   res.cookies.delete("vr_oauth_popup");
@@ -96,8 +123,22 @@ function backTo(req: Request, appId: string | undefined, params: string, popup =
   if (popup) return popupClose(req, path, params, handoff);
   return NextResponse.redirect(`${baseUrl(req)}${path}?${params}`, 302);
 }
+// The provider label echoed back to the UI. FIRST layer for finding H2: the raw [provider] path segment
+// must never reach the popup document, where it was interpolated into an inline <script>. Only a member of
+// the explicit kind list is echoed; anything else collapses to the static string "unknown".
+//
+// Matched against OAUTH_PROVIDER_KINDS, not resolveOAuthProvider: that helper does a bare REGISTRY[kind]
+// lookup, so inherited keys ("constructor", "toString") come back truthy and would pass a resolve check.
+function safeProviderLabel(provider: string): string {
+  return (OAUTH_PROVIDER_KINDS as readonly string[]).includes(provider) ? provider : "unknown";
+}
 function backGeneric(req: Request, provider: string, reason: string, popup = false): NextResponse {
-  const params = `oauth=error&provider=${provider}&reason=${reason}`;
+  // URLSearchParams percent-encodes, so a reason can never smuggle extra params.
+  const params = new URLSearchParams({
+    oauth: "error",
+    provider: safeProviderLabel(provider),
+    reason,
+  }).toString();
   if (popup) return popupClose(req, "/connections", params);
   return NextResponse.redirect(`${baseUrl(req)}/connections?${params}`, 302);
 }
@@ -114,7 +155,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ provider: strin
   const popup = (await cookies()).get("vr_oauth_popup")?.value === "1";
 
   const p = resolveOAuthProvider(provider);
-  if (!p) return backGeneric(req, provider, "unknown_provider", popup);
+  // Never echo the unvalidated segment: this branch fires precisely when it is attacker-chosen.
+  if (!p) return backGeneric(req, "unknown", "unknown_provider", popup);
 
   // A PKCE verifier is single-use. Clear it on EVERY exit from here on, success or failure, so a stale
   // verifier can never be paired with a later intercepted code.
@@ -129,7 +171,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ provider: strin
   const appId = state.appId; // undefined => account-level
   const cookieName = appId ? `vr_oauth_${provider}` : `vr_oauth_acct_${provider}`;
 
-  const err = (reason: string) => exit(backTo(req, appId, `oauth=error&provider=${provider}&reason=${reason}`, popup));
+  const err = (reason: string) =>
+    exit(backTo(req, appId, new URLSearchParams({ oauth: "error", provider: safeProviderLabel(provider), reason }).toString(), popup));
 
   if (providerError) return err("denied");
   if (!code) return err("no_code");
@@ -233,7 +276,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ provider: strin
   // Hand the popup back to the provider ONLY on success. On failure we keep the user on our own page with
   // the reason, rather than bouncing them into the provider's "all done" UI after something went wrong.
   const handoff = vercelHandoffUrl(url.searchParams.get("next"));
-  const res = exit(backTo(req, appId, `oauth=connected&provider=${provider}`, popup, handoff));
+  const res = exit(backTo(req, appId, new URLSearchParams({ oauth: "connected", provider: safeProviderLabel(provider) }).toString(), popup, handoff));
   res.cookies.delete(cookieName);
   return res;
 }
