@@ -7,7 +7,7 @@ import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "../../setup-required";
 import { getApplication } from "@/lib/v-applications";
-import { applicationAccess, applicationWorkspaceForManage } from "@/lib/preflight/team-access";
+import { applicationWorkspaceForManage } from "@/lib/preflight/team-access";
 import { listMembers, canManageMembers, ROLE_LABEL, activateInvitesForEmail } from "@/lib/v-workspace";
 import { AppTabs } from "../app-tabs";
 import { TeamPanel } from "./team-panel";
@@ -18,7 +18,8 @@ export const metadata: Metadata = { title: "Team" };
 // Team for one application: invite teammates to collaborate on this app (its contract, flows, runs, and
 // reports) with a role. Owner/admin manage; everyone else sees the read-only roster. The application is
 // SHARED through its workspace; billing stays with the app owner (a teammate's runs spend the owner's
-// credits). Access resolves via applicationAccess — a member of the app's workspace may open this page too.
+// credits). Access resolves via requirePreflightAppAccess — a member of the app's workspace may open this
+// page too, but only at or above the ladder minimum (see the SECURITY note on the call below).
 export default async function AppTeamPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!preflightEnabled()) redirect("/app");

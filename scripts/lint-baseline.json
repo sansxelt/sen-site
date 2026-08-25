@@ -1,0 +1,403 @@
+{
+  "_comment": [
+    "Exact ESLint baseline, measured on main@f09d1bc7 - the commit the security remediation branched from.",
+    "It exists so 'lint is not green' can be stated precisely instead of waved at, and so a REGRESSION is",
+    "distinguishable from an inherited failure. scripts/gates.ts fails if the totals exceed these numbers,",
+    "or if any single file gains problems it did not have here.",
+    "Regenerate deliberately, never to turn a red gate green:  npx tsx scripts/gates.ts --write-baseline"
+  ],
+  "measuredOn": "main@f09d1bc7",
+  "measuredAt": "2026-08-25",
+  "command": "npx eslint . -f json",
+  "totals": {
+    "errors": 186,
+    "warnings": 86,
+    "files": 96
+  },
+  "files": {
+    "App.jsx": {
+      "errors": 27,
+      "warnings": 1
+    },
+    "Hero.jsx": {
+      "errors": 4,
+      "warnings": 0
+    },
+    "Lower.jsx": {
+      "errors": 25,
+      "warnings": 0
+    },
+    "Sections.jsx": {
+      "errors": 20,
+      "warnings": 0
+    },
+    "Vraelis Design System (1)/ui_kits/website/App.jsx": {
+      "errors": 14,
+      "warnings": 0
+    },
+    "Vraelis Design System (1)/ui_kits/website/FeatureRow.jsx": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "Vraelis Design System (1)/ui_kits/website/Glasses3D.jsx": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "Vraelis Design System (1)/ui_kits/website/Hero.jsx": {
+      "errors": 2,
+      "warnings": 1
+    },
+    "Vraelis Design System (1)/ui_kits/website/SignUpCard.jsx": {
+      "errors": 4,
+      "warnings": 1
+    },
+    "Vraelis Design System/ui_kits/website/App.jsx": {
+      "errors": 10,
+      "warnings": 0
+    },
+    "Vraelis Design System/ui_kits/website/ArchitectureGrid.jsx": {
+      "errors": 1,
+      "warnings": 0
+    },
+    "Vraelis Design System/ui_kits/website/CapabilityModes.jsx": {
+      "errors": 1,
+      "warnings": 0
+    },
+    "Vraelis Design System/ui_kits/website/CinematicAct.jsx": {
+      "errors": 1,
+      "warnings": 1
+    },
+    "Vraelis Design System/ui_kits/website/Footer.jsx": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "Vraelis Design System/ui_kits/website/Header.jsx": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "Vraelis Design System/ui_kits/website/WaitlistPlate.jsx": {
+      "errors": 3,
+      "warnings": 0
+    },
+    "app/api/preflight/apps/[id]/api-runs/route.ts": {
+      "errors": 0,
+      "warnings": 4
+    },
+    "app/api/preflight/apps/[id]/contract/draft/route.ts": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "app/api/preflight/apps/[id]/route.ts": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "app/dev-preview/page.tsx": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "app/dev-preview/public-v2/home/proof-chamber.tsx": {
+      "errors": 0,
+      "warnings": 2
+    },
+    "app/dev-preview/public-v2/proof-console.tsx": {
+      "errors": 3,
+      "warnings": 0
+    },
+    "app/dev-preview/public-v3/flagship-proof.tsx": {
+      "errors": 1,
+      "warnings": 0
+    },
+    "app/dev-preview/public-v4/flagship.tsx": {
+      "errors": 2,
+      "warnings": 0
+    },
+    "app/dev-preview/public-v4/page.tsx": {
+      "errors": 1,
+      "warnings": 0
+    },
+    "app/dev-preview/public-v5/conflict.tsx": {
+      "errors": 1,
+      "warnings": 0
+    },
+    "app/dev-preview/v6/app/page.tsx": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "app/dev-preview/v6/contact/page.tsx": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "app/dev-preview/v6/data-rights/page.tsx": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "app/dev-preview/v6/enterprise/page.tsx": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "app/dev-preview/v6/limitations/page.tsx": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "app/dev-preview/v6/pricing/page.tsx": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "app/dev-preview/v6/research/[slug]/page.tsx": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "app/layout.tsx": {
+      "errors": 0,
+      "warnings": 4
+    },
+    "app/rank/_components/command-palette.tsx": {
+      "errors": 1,
+      "warnings": 0
+    },
+    "app/rank/_components/rank-ui.tsx": {
+      "errors": 11,
+      "warnings": 0
+    },
+    "app/rank/_components/scratchpad.tsx": {
+      "errors": 1,
+      "warnings": 0
+    },
+    "app/rank/_components/verification-timeline.tsx": {
+      "errors": 1,
+      "warnings": 0
+    },
+    "app/rank/app/_components/home-records.tsx": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "app/rank/app/account/account-requests.tsx": {
+      "errors": 1,
+      "warnings": 0
+    },
+    "app/rank/app/account/page.tsx": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "app/rank/app/admin/page.tsx": {
+      "errors": 3,
+      "warnings": 0
+    },
+    "app/rank/app/api/webhooks-section.tsx": {
+      "errors": 1,
+      "warnings": 0
+    },
+    "app/rank/app/checkout/checkout-own.tsx": {
+      "errors": 0,
+      "warnings": 5
+    },
+    "app/rank/app/passes/page.tsx": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "app/rank/app/systems/[id]/api-runtime/api-workspace.tsx": {
+      "errors": 2,
+      "warnings": 0
+    },
+    "app/rank/app/systems/[id]/guarantees/[gid]/page.tsx": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "app/rank/app/systems/[id]/passes/[runId]/page.tsx": {
+      "errors": 0,
+      "warnings": 3
+    },
+    "app/rank/app/systems/[id]/team/team-panel.tsx": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "app/signin/signin-header.tsx": {
+      "errors": 2,
+      "warnings": 0
+    },
+    "auth.ts": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "cli/vraelis.mjs": {
+      "errors": 0,
+      "warnings": 3
+    },
+    "components/3d/camera-drift.tsx": {
+      "errors": 2,
+      "warnings": 0
+    },
+    "components/3d/lazy-scene.tsx": {
+      "errors": 1,
+      "warnings": 1
+    },
+    "components/3d/product-exploded.tsx": {
+      "errors": 1,
+      "warnings": 1
+    },
+    "components/3d/studio-rig.tsx": {
+      "errors": 4,
+      "warnings": 0
+    },
+    "components/3d/workshop-brain.tsx": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "components/account-dropdown.tsx": {
+      "errors": 1,
+      "warnings": 1
+    },
+    "components/aurora-background.tsx": {
+      "errors": 1,
+      "warnings": 0
+    },
+    "components/code-block.tsx": {
+      "errors": 1,
+      "warnings": 1
+    },
+    "components/compare-plans.tsx": {
+      "errors": 1,
+      "warnings": 1
+    },
+    "components/landing/cinematic-act.tsx": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "components/landing/copilot-section.tsx": {
+      "errors": 3,
+      "warnings": 0
+    },
+    "components/landing/how-it-connects.tsx": {
+      "errors": 4,
+      "warnings": 0
+    },
+    "components/landing/lens-section.tsx": {
+      "errors": 0,
+      "warnings": 2
+    },
+    "components/landing/reveal.tsx": {
+      "errors": 0,
+      "warnings": 2
+    },
+    "components/landing/workspace-section.tsx": {
+      "errors": 1,
+      "warnings": 0
+    },
+    "components/mobile-nav.tsx": {
+      "errors": 1,
+      "warnings": 0
+    },
+    "components/vraelis-auth.tsx": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "desktop/src/App.tsx": {
+      "errors": 0,
+      "warnings": 2
+    },
+    "desktop/src/billing-panel.tsx": {
+      "errors": 0,
+      "warnings": 3
+    },
+    "desktop/src/canvas.tsx": {
+      "errors": 1,
+      "warnings": 0
+    },
+    "desktop/src/chat-view.tsx": {
+      "errors": 0,
+      "warnings": 6
+    },
+    "desktop/src/code-preview.tsx": {
+      "errors": 1,
+      "warnings": 0
+    },
+    "desktop/src/floating-copilot.tsx": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "desktop/src/memory-view.tsx": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "desktop/src/settings-view.tsx": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "desktop/src/update-ui.tsx": {
+      "errors": 4,
+      "warnings": 0
+    },
+    "desktop/src/updates-view.tsx": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "lib/preflight/reviewed-plan-db.ts": {
+      "errors": 1,
+      "warnings": 0
+    },
+    "lib/preflight/runtime/api-readiness.ts": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "lib/v-applications.ts": {
+      "errors": 1,
+      "warnings": 0
+    },
+    "ops/plan-rehearse.ts": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "public/embed.js": {
+      "errors": 0,
+      "warnings": 2
+    },
+    "public/widget.js": {
+      "errors": 0,
+      "warnings": 2
+    },
+    "scripts/ad-probe.mjs": {
+      "errors": 0,
+      "warnings": 3
+    },
+    "scripts/design02-result-verify.ts": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "scripts/key-usage-verify.ts": {
+      "errors": 5,
+      "warnings": 0
+    },
+    "scripts/preflight-api-key-lifecycle.ts": {
+      "errors": 4,
+      "warnings": 0
+    },
+    "scripts/preflight-deployment-reach-verify.ts": {
+      "errors": 1,
+      "warnings": 0
+    },
+    "scripts/preflight-oauth-state-verify.ts": {
+      "errors": 1,
+      "warnings": 1
+    },
+    "scripts/preflight-routes-verify.ts": {
+      "errors": 1,
+      "warnings": 0
+    },
+    "scripts/preflight-teams-verify.ts": {
+      "errors": 1,
+      "warnings": 0
+    },
+    "scripts/pricing-v1-ui-verify.ts": {
+      "errors": 0,
+      "warnings": 2
+    },
+    "scripts/prose-link-verify.ts": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "sdk/typescript/dist/index.cjs": {
+      "errors": 1,
+      "warnings": 0
+    }
+  }
+}

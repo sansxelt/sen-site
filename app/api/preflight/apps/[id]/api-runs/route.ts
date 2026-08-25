@@ -10,11 +10,9 @@
 
 import { NextResponse } from "next/server";
 import { envInt } from "@/lib/env-num";
-import { randomUUID } from "node:crypto";
 import { gateApiRuntimeApp, gateReasonResponse } from "@/lib/preflight/team-access";
 import { runsDisabled } from "@/lib/v-preflight-flags";
 import { isRunsGovernorPaused } from "@/lib/preflight/cost-governor";
-import { getApplication } from "@/lib/v-applications";
 import { getApiTarget, getLatestApiBuild, listApiFlows } from "@/lib/preflight/runtime/targets-db";
 import { listConnections, openApiCredential } from "@/lib/preflight/connections-db";
 import { computeReadiness } from "@/lib/preflight/runtime/api-readiness";
@@ -29,7 +27,6 @@ import type { ApiFlowStep } from "@/lib/preflight/runtime/api-steps";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
-const notFound = () => NextResponse.json({ error: "not_found" }, { status: 404 });
 
 // Bounds for the customer-endpoint fetcher below. The host on the other end is customer-supplied, so it
 // decides how long to hold a socket open and how much to send. Env-overridable so a slow-but-legitimate
@@ -201,7 +198,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     // SETTLE exactly once: productive work keeps the hold (charge); otherwise refund.
     await held.hold.settle(result.chargedFullHold);
     return NextResponse.json({ runId: result.runId, decision: result.decision, state: result.state });
-  } catch (e) {
+  } catch {
+    // The error is deliberately not bound: nothing here logs it, and it must never reach the caller —
+    // an execution error can carry the target URL and fragments of its response.
     // Any execution/persist error: release the hold (never strand escrow) and fail sanitized.
     await held.hold.release();
     return NextResponse.json({ error: "run_failed", message: "Could not complete the run. Please try again." }, { status: 500 });
