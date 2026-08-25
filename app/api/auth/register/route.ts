@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { APP_URL } from "../../../../lib/stripe";
 import { sendVerifyAccountEmail } from "../../../../lib/email";
 import { upsertPendingSignup } from "../../../../lib/pending-signup";
@@ -7,7 +8,8 @@ import {
   signSignupClaim,
 } from "../../../../lib/signup-claim-cookie";
 import { isDatabaseConfigured } from "../../../../lib/supabase-admin";
-import { getUserCredentialByEmail, getUserCredentialByCanonical } from "../../../../lib/user-credentials";
+import { canonicalizeEmail, getUserCredentialByEmail, getUserCredentialByCanonical } from "../../../../lib/user-credentials";
+import { allowStrict, limitOr429 } from "../../../../lib/vraelis-ratelimit";
 
 type RegisterPayload = {
   email?:    string;
@@ -27,7 +29,14 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  *
  * Client should redirect to /auth/verify-email after a 200 here.
  */
-export async function POST(request: Request) {
+// SECURITY (finding H5): this route had NO rate limit. Every request costs a Resend send AND a bcrypt
+// cost-12 hash inside upsertPendingSignup, so it was both an inbox-bombing vector aimed at addresses
+// without an account and CPU amplification. The IP limit is checked FIRST, before any DB read, hashing
+// or mail send; the per-mailbox limit is checked before the expensive work too.
+export async function POST(request: NextRequest) {
+  const limited = await limitOr429(request, "register", 10, 600);
+  if (limited) return limited;
+
   if (!isDatabaseConfigured()) {
     return NextResponse.json(
       { error: "Email sign-in is not configured in this environment yet. Please try again shortly." },
@@ -85,6 +94,17 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: "That email, or an alias of it, already has a Vraelis account. Sign in instead." },
       { status: 409 },
+    );
+  }
+
+  // Per-mailbox budget before the bcrypt hash and the verify email. Canonicalized so gmail dot/+tag
+  // aliases cannot be used to refill the bucket against one real inbox. A 429 here reveals nothing
+  // new: this route already answers 409 for an address that has an account.
+  // allowStrict: a limiter outage must deny rather than restore unlimited mail plus unlimited bcrypt.
+  if (!(await allowStrict(`register-email:${canonicalizeEmail(email)}`, 3, 3600))) {
+    return NextResponse.json(
+      { error: "Too many signup attempts for that address. Wait a few minutes and try again." },
+      { status: 429 },
     );
   }
 

@@ -15,7 +15,13 @@ import { createPaymentCheckout, expireCheckout } from "@/lib/vraelis-connect";
 import { trackServer } from "@/lib/analytics";
 import { cutRateFor } from "@/lib/vraelis-plans";
 import { sendBookingConfirmation } from "@/lib/vraelis-email";
-import { limitOr429 } from "@/lib/vraelis-ratelimit";
+import { limitOr429, allowStrict } from "@/lib/vraelis-ratelimit";
+import { canonicalizeEmail } from "@/lib/user-credentials";
+
+// Printable-ASCII, single @, dot in the domain, no RFC5322 delimiters. Matches the contact route's
+// validator: this value is handed to a mail API, so a control character or an address delimiter must be
+// rejected outright rather than sanitised downstream.
+const BOOK_EMAIL_RE = /^[\x21-\x7e]{1,64}@[\x21-\x7e]{1,190}$/;
 
 const ORIGIN = "https://vraelis.com";
 
@@ -149,10 +155,20 @@ export async function POST(req: NextRequest) {
       if (email || name) await updateLeadContact(leadId, { contactEmail: email, name });
       await addMessage({ leadId, role: "agent", body: `Booked: ${label}`, channel: "booking", delivered: true });
     }
+    // The lead email is caller-supplied, so this send is a relay to an address the caller names. It gets
+    // its own canonical per-mailbox budget (rotating IPs and gmail dot/+tag aliases cannot refill it) and
+    // must look like a real address before it reaches the mailer. An address that fails either check
+    // still books — the owner notification is what matters — it just gets no confirmation mail.
+    const leadEmail = BOOK_EMAIL_RE.test(email) ? email : null;
+    const mayConfirmLead =
+      leadEmail !== null && (await allowStrict(`book-confirm:${canonicalizeEmail(leadEmail)}`, 3, 3600));
+    if (leadEmail && !mayConfirmLead) {
+      console.warn("[vraelis/book] lead confirmation suppressed by per-mailbox limit");
+    }
     await sendBookingConfirmation({
       businessName: workspace.business_name ?? "Vraelis",
       slotLabel: label,
-      leadEmail: email || null,
+      leadEmail: mayConfirmLead ? leadEmail : null,
       leadName: name || null,
       ownerEmail: workspace.owner_email,
     });
