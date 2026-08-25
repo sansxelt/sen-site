@@ -7,6 +7,8 @@
 // Secured by INBOUND_SECRET (set it in env and include it as ?secret=...
 // or an x-inbound-secret header in the provider's webhook URL).
 
+import { timingSafeEqual } from "node:crypto";
+import { limitOr429 } from "@/lib/vraelis-ratelimit";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import {
@@ -37,9 +39,17 @@ function stripQuoted(text: string): string {
 }
 
 export async function POST(req: NextRequest) {
+  // Rate limited even though it is secret-gated: each accepted POST costs one Anthropic call plus one
+  // Resend send, and the secret travels in a query string, so it leaks into logs and Referer headers
+  // more readily than a header-only credential would.
+  const limited = await limitOr429(req, "inbound-email", 60, 600);
+  if (limited) return limited;
+
   const secret = process.env.INBOUND_SECRET;
   const provided = req.nextUrl.searchParams.get("secret") || req.headers.get("x-inbound-secret") || "";
-  if (!secret || provided !== secret) {
+  // Constant-time compare so the shared secret cannot be recovered a character at a time.
+  const sBuf = Buffer.from(secret ?? ''), pBuf = Buffer.from(provided);
+  if (!secret || sBuf.length !== pBuf.length || !timingSafeEqual(sBuf, pBuf)) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 

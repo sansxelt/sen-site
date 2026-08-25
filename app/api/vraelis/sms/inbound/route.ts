@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 // Twilio inbound SMS webhook. A lead texts the business's Twilio number;
 // we route to that workspace, match (or create) the lead, run the SAME AI
 // qualification used by chat/email, advance the pipeline, and text the
@@ -33,9 +34,22 @@ import { trackServer } from "@/lib/analytics";
 const TWIML_EMPTY = '<?xml version="1.0" encoding="UTF-8"?><Response></Response>';
 const xml = () => new NextResponse(TWIML_EMPTY, { status: 200, headers: { "Content-Type": "text/xml" } });
 
+
+// Constant-time compare so the shared secret cannot be recovered a character at a time.
+function timingSafeStrEqual(a: string, b: string): boolean {
+  const x = Buffer.from(a), y = Buffer.from(b);
+  if (x.length !== y.length) return false;
+  return timingSafeEqual(x, y);
+}
+
 export async function POST(req: NextRequest) {
+  // FAIL CLOSED. This used to read `if (secret && ...)`, so an unset TWILIO_INBOUND_SECRET skipped the
+  // check entirely and left the webhook open to the internet — and every accepted request costs an
+  // Anthropic call plus an outbound Twilio SMS to a number the caller chooses. An absent secret now
+  // means the endpoint is CLOSED, the same convention the cron routes already use.
   const secret = (process.env.TWILIO_INBOUND_SECRET || "").trim();
-  if (secret && req.nextUrl.searchParams.get("secret") !== secret) {
+  const provided = req.nextUrl.searchParams.get("secret") ?? "";
+  if (!secret || !timingSafeStrEqual(provided, secret)) {
     return new NextResponse("forbidden", { status: 403 });
   }
 

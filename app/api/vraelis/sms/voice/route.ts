@@ -6,7 +6,9 @@
 // Configure in Twilio: a Number → "A call comes in" →
 //   POST https://vraelis.com/api/vraelis/sms/voice?secret=<TWILIO_INBOUND_SECRET>
 
+import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
+import { limitOr429 } from "@/lib/vraelis-ratelimit";
 import type { NextRequest } from "next/server";
 import {
   addMessage,
@@ -48,10 +50,27 @@ async function textBack(toNumber: string, callerNumber: string) {
   if (leadId) await addMessage({ leadId, role: "agent", body, channel: "sms", delivered: true });
 }
 
+
+// Constant-time compare so the shared secret cannot be recovered a character at a time.
+function timingSafeStrEqual(a: string, b: string): boolean {
+  const x = Buffer.from(a), y = Buffer.from(b);
+  if (x.length !== y.length) return false;
+  return timingSafeEqual(x, y);
+}
+
 export async function POST(req: NextRequest) {
+  // FAIL CLOSED. This used to read `if (secret && ...)`, so an unset TWILIO_INBOUND_SECRET skipped the
+  // check entirely and left the voice webhook open to the internet. An absent secret now means the
+  // endpoint is CLOSED, the same convention the cron routes already use.
+  // Rate limited as well as secret-gated: the secret travels in a query string (so it reaches logs and
+  // Referer headers), and every accepted request can drive an outbound Twilio call leg plus an SMS.
+  const limited = await limitOr429(req, "sms-voice", 60, 600);
+  if (limited) return limited;
+
   const secret = (process.env.TWILIO_INBOUND_SECRET || "").trim();
   const secretQ = secret ? `&secret=${secret}` : "";
-  if (secret && req.nextUrl.searchParams.get("secret") !== secret) {
+  const provided = req.nextUrl.searchParams.get("secret") ?? "";
+  if (!secret || !timingSafeStrEqual(provided, secret)) {
     return new NextResponse("forbidden", { status: 403 });
   }
 
