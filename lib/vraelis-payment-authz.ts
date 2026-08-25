@@ -21,7 +21,8 @@
 // automatic payment is authorized. A money route that cannot establish its ceiling must not charge.
 
 import type { VraelisWorkspace } from "./vraelis-db";
-import { sumRecentPaymentCents } from "./vraelis-db";
+import { reserveAgentPayment, settleAgentPayment, sumRecentPaymentCents } from "./vraelis-db";
+import { envInt } from "./env-num";
 
 // ── Defaults, and where they come from ─────────────────────────────────────
 //
@@ -38,19 +39,29 @@ import { sumRecentPaymentCents } from "./vraelis-db";
 // DAILY_CENTS = 500_000 ($5,000) and CYCLE_CENTS = 2_000_000 ($20,000). Sized so a compromised or
 //   manipulated agent cannot quietly issue a large number of in-band links; both are well above any
 //   plausible single-workspace day on the current plan tiers.
-const num = (name: string, fallback: number): number => {
-  const raw = (process.env[name] ?? "").trim();
-  if (!raw) return fallback;
-  const n = Number(raw);
-  return Number.isFinite(n) && n > 0 ? Math.floor(n) : fallback;
-};
-
-export const AUTO_MULTIPLE = () => num("VRAELIS_AUTO_PAY_MULTIPLE", 10);
-export const AUTO_FLOOR_CENTS = () => num("VRAELIS_AUTO_PAY_FLOOR_CENTS", 50_000);
-export const AUTO_MAX_CENTS = () => num("VRAELIS_AUTO_PAY_MAX_CENTS", 200_000);
-export const DAILY_CENTS = () => num("VRAELIS_AUTO_PAY_DAILY_CENTS", 500_000);
-export const CYCLE_CENTS = () => num("VRAELIS_AUTO_PAY_CYCLE_CENTS", 2_000_000);
-export const CYCLE_DAYS = () => num("VRAELIS_AUTO_PAY_CYCLE_DAYS", 30);
+// Every override goes through the one shared bounded parser (lib/env-num.ts). The local `Number(raw)` this
+// replaced accepted "2.5", "1e99" and "-5" — a fractional ceiling, an effectively unlimited one, and a
+// negative one that disables the cap entirely. Each bound below states the widest value this control is
+// willing to honour, so a typo cannot quietly become "no ceiling".
+export const AUTO_MULTIPLE   = () => envInt("VRAELIS_AUTO_PAY_MULTIPLE",     { min: 1, max: 100, fallback: 10 });
+export const AUTO_FLOOR_CENTS = () => envInt("VRAELIS_AUTO_PAY_FLOOR_CENTS", { min: MIN_CHARGE_CENTS, max: 1_000_000, fallback: 50_000 });
+export const AUTO_MAX_CENTS  = () => envInt("VRAELIS_AUTO_PAY_MAX_CENTS",    { min: MIN_CHARGE_CENTS, max: 1_000_000, fallback: 200_000 });
+export const DAILY_CENTS     = () => envInt("VRAELIS_AUTO_PAY_DAILY_CENTS",  { min: 0, max: 10_000_000, fallback: 500_000 });
+export const CYCLE_CENTS     = () => envInt("VRAELIS_AUTO_PAY_CYCLE_CENTS",  { min: 0, max: 50_000_000, fallback: 2_000_000 });
+export const CYCLE_DAYS      = () => envInt("VRAELIS_AUTO_PAY_CYCLE_DAYS",   { min: 1, max: 365, fallback: 30 });
+// How long a reservation holds budget before expiring on its own. This number sits between two opposite
+// failure modes, so it is chosen rather than defaulted:
+//
+//   TOO LONG  — an authorization whose charge attempt fails holds a slice of the owner's daily cap until
+//               it expires. finishAgentPayment releases it immediately on the normal failure path, but a
+//               process that dies in between cannot, so a run of failures could quietly cap the agent.
+//   TOO SHORT — a reservation whose settle call is LOST expires and stops counting, so a payment that was
+//               really issued no longer consumes the cap. That under-counts, which is the unsafe
+//               direction for a spend control.
+//
+// 300s is roughly two orders of magnitude longer than the Stripe Checkout call it has to outlast, which
+// makes the second case vanishingly rare, while bounding the first to five minutes.
+export const RESERVATION_TTL_SECONDS = () => envInt("VRAELIS_AUTO_PAY_TTL_SECONDS", { min: 30, max: 3_600, fallback: 300 });
 
 export const MIN_CHARGE_CENTS = 50; // Stripe's floor; mirrored here so the reason is explicit.
 
@@ -64,7 +75,19 @@ export type AuthzDenied =
   | "ceiling_unavailable";
 
 export type PaymentAuthz =
-  | { ok: true; amountCents: number; ceilingCents: number; source: "owner_configured_deposit" | "within_auto_ceiling" }
+  | {
+      ok: true;
+      amountCents: number;
+      ceilingCents: number;
+      source: "owner_configured_deposit" | "within_auto_ceiling";
+      /**
+       * The rolling-cap budget this authorization claimed, when the atomic path was used. The caller MUST
+       * hand it to finishAgentPayment once it knows whether the payment was actually created — otherwise
+       * the budget stays held until its TTL expires. Null means the bridge path ran and there is no
+       * reservation to settle.
+       */
+      reservationId: string | null;
+    }
   | { ok: false; reason: AuthzDenied; ceilingCents: number | null; proposedCents: number | null };
 
 /**
@@ -93,8 +116,14 @@ export async function authorizeAgentPayment(
       return { ok: false, reason: "deposit_not_configured", ceilingCents: null, proposedCents: null };
     }
     const rolling = await withinRollingCaps(ws.owner_email, configured);
-    if (rolling !== true) return rolling;
-    return { ok: true, amountCents: configured, ceilingCents: configured, source: "owner_configured_deposit" };
+    if (rolling.ok === false) return rolling;
+    return {
+      ok: true,
+      amountCents: configured,
+      ceilingCents: configured,
+      source: "owner_configured_deposit",
+      reservationId: rolling.reservationId,
+    };
   }
 
   const proposed = Number(input.proposedCents ?? NaN);
@@ -117,19 +146,81 @@ export async function authorizeAgentPayment(
   }
 
   const rolling = await withinRollingCaps(ws.owner_email, proposed);
-  if (rolling !== true) return rolling;
+  if (rolling.ok === false) return rolling;
 
-  return { ok: true, amountCents: proposed, ceilingCents: ceiling, source: "within_auto_ceiling" };
+  return {
+    ok: true,
+    amountCents: proposed,
+    ceilingCents: ceiling,
+    source: "within_auto_ceiling",
+    reservationId: rolling.reservationId,
+  };
 }
 
-// Rolling day and billing-cycle ceilings. Returns true, or the denial to hand back.
-async function withinRollingCaps(ownerEmail: string, addCents: number): Promise<true | PaymentAuthz> {
+/**
+ * Close out an authorization once the caller knows what happened to it.
+ *
+ * `created: false` returns the budget immediately, so a Stripe failure after a successful authorization
+ * does not hold a slice of the owner's daily cap for the full TTL. Call this on BOTH paths — a reservation
+ * nobody settles or releases is simply budget that stays claimed until it times out.
+ */
+export async function finishAgentPayment(authz: PaymentAuthz, created: boolean): Promise<void> {
+  if (!authz.ok || !authz.reservationId) return;
+  await settleAgentPayment(authz.reservationId, created);
+}
+
+type RollingDenial = Extract<PaymentAuthz, { ok: false }>;
+type RollingVerdict = { ok: true; reservationId: string | null } | RollingDenial;
+
+// Rolling day and billing-cycle ceilings.
+//
+// The authoritative path is the database RPC: it aggregates with no row limit and claims the budget under a
+// per-owner lock inside the same transaction as the decision, so two concurrent authorizations cannot both
+// pass one cap. The bridge below runs only while that migration is not yet deployed.
+async function withinRollingCaps(ownerEmail: string, addCents: number): Promise<RollingVerdict> {
+  const reserved = await reserveAgentPayment({
+    ownerEmail,
+    amountCents: addCents,
+    dayCapCents: DAILY_CENTS(),
+    cycleCapCents: CYCLE_CENTS(),
+    cycleDays: CYCLE_DAYS(),
+    ttlSeconds: RESERVATION_TTL_SECONDS(),
+  });
+
+  // A REAL failure is not a reason to try the weaker path as well: falling through to an unserialised read
+  // after the atomic one failed gives you the racy behaviour AND the failure. Refuse.
+  if (reserved === null) {
+    return { ok: false, reason: "ceiling_unavailable", ceilingCents: null, proposedCents: addCents };
+  }
+
+  if (reserved !== "unavailable") {
+    if (reserved.ok) return { ok: true, reservationId: reserved.reservationId };
+    if (reserved.reason === "daily_cap_reached") {
+      return { ok: false, reason: "daily_cap_reached", ceilingCents: DAILY_CENTS(), proposedCents: addCents };
+    }
+    if (reserved.reason === "cycle_cap_reached") {
+      return { ok: false, reason: "cycle_cap_reached", ceilingCents: CYCLE_CENTS(), proposedCents: addCents };
+    }
+    // 'invalid' means the RPC rejected the inputs. That is a refusal, not a licence to re-ask more weakly.
+    return { ok: false, reason: "ceiling_unavailable", ceilingCents: null, proposedCents: addCents };
+  }
+
+  // ── Bridge: the RPC is not deployed yet. ────────────────────────────────────────────────────────────
+  // Exact (paginated, fails closed rather than under-reporting) and it counts only settled payments, so an
+  // outsider minting pending rows cannot exhaust the cap. It still cannot serialise concurrent callers;
+  // deploying sql/vraelis-agent-payment-cap.sql is what closes that.
+  //
+  // THE TWO PATHS DO NOT MEASURE THE SAME THING, and pretending otherwise would hide a real behaviour
+  // change at deployment. The bridge counts SETTLED PAYMENTS on the account, agent-initiated or not. The
+  // RPC counts AGENT AUTHORIZATIONS only. So the bridge is the stricter of the two — an owner's own manual
+  // invoicing consumes the agent's budget under it — and switching to the RPC starts the counter at zero
+  // once, for the length of one window. Both are bounded and fail closed; the runbook states the switch.
   const dayMs = 24 * 60 * 60 * 1000;
   const [day, cycle] = await Promise.all([
     sumRecentPaymentCents(ownerEmail, new Date(Date.now() - dayMs).toISOString()),
     sumRecentPaymentCents(ownerEmail, new Date(Date.now() - CYCLE_DAYS() * dayMs).toISOString()),
   ]);
-  // sumRecentPaymentCents returns null when it cannot read. Fail closed rather than assume zero spent.
+  // null means the total could not be established exactly. Fail closed rather than assume zero spent.
   if (day === null || cycle === null) {
     return { ok: false, reason: "ceiling_unavailable", ceilingCents: null, proposedCents: addCents };
   }
@@ -139,7 +230,7 @@ async function withinRollingCaps(ownerEmail: string, addCents: number): Promise<
   if (cycle + addCents > CYCLE_CENTS()) {
     return { ok: false, reason: "cycle_cap_reached", ceilingCents: CYCLE_CENTS(), proposedCents: addCents };
   }
-  return true;
+  return { ok: true, reservationId: null };
 }
 
 // What the lead is told when a payment is not automatically authorized. Deliberately says nothing about

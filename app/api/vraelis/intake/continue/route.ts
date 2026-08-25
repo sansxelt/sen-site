@@ -11,7 +11,7 @@
 // threads that aren't its own, and no other workspace's data is exposed.
 
 import { NextResponse } from "next/server";
-import { authorizeAgentPayment, leadFacingRefusal } from "@/lib/vraelis-payment-authz";
+import { authorizeAgentPayment, finishAgentPayment, leadFacingRefusal } from "@/lib/vraelis-payment-authz";
 import type { NextRequest } from "next/server";
 import {
   addMessage,
@@ -160,6 +160,10 @@ export async function POST(req: NextRequest) {
           customerEmail: data.lead.contact_email,
           cancelUrl: `https://vraelis.com/f/${key}`,
         });
+        // Close out the rolling-cap reservation the authorization took. A Stripe failure here must return
+        // the budget rather than leave a slice of the owner's daily cap held until the reservation times
+        // out — otherwise repeated Stripe errors would silently cap the agent.
+        await finishAgentPayment(authz, pay.ok);
         if (pay.ok && pay.url) {
           replyText += `\n\nYou can ${ai.payment.kind === "deposit" ? "lock in your booking" : "pay securely"} here: ${pay.url}`;
           injected = true;

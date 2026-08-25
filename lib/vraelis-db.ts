@@ -1418,22 +1418,161 @@ export async function leadBelongsToOwner(email: string, leadId: string): Promise
 // Backs the rolling day / billing-cycle ceilings in lib/vraelis-payment-authz.ts. Returns null — NOT 0 —
 // when the total cannot be read, because a caller that treats an unreadable ledger as "nothing spent yet"
 // has no ceiling at all. The authorization path fails closed on null.
-export async function sumRecentPaymentCents(email: string, sinceISO: string): Promise<number | null> {
+// ── Agent payment caps ────────────────────────────────────────────────────────────────────────────────
+//
+// The authoritative path is the v_reserve_agent_payment RPC (sql/vraelis-agent-payment-cap.sql), which
+// aggregates in the database with no row limit and claims the budget under a per-owner lock in the same
+// transaction as the decision. sumRecentPaymentCents below is only the bridge used until that migration
+// runs; see its own comment for what it does and does not guarantee.
+
+export type AgentPaymentReservation =
+  | { ok: true; reservationId: string | null; dayCents: number; cycleCents: number }
+  | { ok: false; reason: "daily_cap_reached" | "cycle_cap_reached" | "invalid"; dayCents: number; cycleCents: number };
+
+let agentCapRpcMissingLogged = false;
+
+/**
+ * Reserve an agent payment against the rolling caps, atomically.
+ *
+ * Returns the verdict, or "unavailable" when the RPC is not deployed (the caller then bridges), or null
+ * when the call failed for a real reason — which is NOT a licence to fall back, because a failed
+ * authorization that then takes the racy path is the worst of both.
+ */
+export async function reserveAgentPayment(input: {
+  ownerEmail: string;
+  amountCents: number;
+  dayCapCents: number;
+  cycleCapCents: number;
+  cycleDays: number;
+  ttlSeconds?: number;
+  currency?: string;
+  extRef?: string | null;
+}): Promise<AgentPaymentReservation | "unavailable" | null> {
   if (!isDatabaseConfigured()) return null;
   try {
     const supabase = getSupabaseAdminClient();
-    const { data, error } = await supabase
-      .from("vraelis_payments" as never)
-      .select("amount_cents")
-      .eq("owner_email", normalizeEmail(email))
-      .gte("created_at", sinceISO)
-      .limit(5000);
+    const { data, error } = await supabase.rpc("v_reserve_agent_payment" as never, {
+      p_owner: normalizeEmail(input.ownerEmail),
+      p_amount: input.amountCents,
+      p_day_cap: input.dayCapCents,
+      p_cycle_cap: input.cycleCapCents,
+      p_cycle_days: input.cycleDays,
+      p_ttl_secs: input.ttlSeconds ?? 900,
+      p_currency: input.currency ?? "usd",
+      p_ext_ref: input.extRef ?? null,
+    } as never);
     if (error) {
-      console.error("sumRecentPaymentCents failed:", error.message);
+      // 42883 = undefined_function; PostgREST reports a missing RPC as PGRST202.
+      const code = (error as { code?: string }).code ?? "";
+      if (code === "42883" || code === "PGRST202" || /could not find the function/i.test(error.message ?? "")) {
+        if (!agentCapRpcMissingLogged) {
+          agentCapRpcMissingLogged = true;
+          console.warn("[vraelis] v_reserve_agent_payment is not deployed; payment caps are using the bridge path");
+        }
+        return "unavailable";
+      }
+      console.error("reserveAgentPayment failed:", error.message);
       return null;
     }
-    const rows = (data as unknown as { amount_cents: number | null }[]) ?? [];
-    return rows.reduce((acc, r) => acc + (Number(r.amount_cents) || 0), 0);
+    const res = (data ?? {}) as {
+      ok?: boolean;
+      reason?: string;
+      reservation_id?: string | null;
+      day_cents?: number;
+      cycle_cents?: number;
+    };
+    const dayCents = Number(res.day_cents) || 0;
+    const cycleCents = Number(res.cycle_cents) || 0;
+    if (res.ok === true) {
+      return { ok: true, reservationId: res.reservation_id ?? null, dayCents, cycleCents };
+    }
+    const reason =
+      res.reason === "daily_cap_reached" || res.reason === "cycle_cap_reached" ? res.reason : "invalid";
+    return { ok: false, reason, dayCents, cycleCents };
+  } catch (e) {
+    console.error("reserveAgentPayment threw:", e);
+    return null;
+  }
+}
+
+/**
+ * Settle a reservation (the payment was really created) or release it (it was not, so hand the budget back
+ * now rather than waiting out the TTL).
+ *
+ * Best-effort by design: an unsettled reservation expires on its own, so a failure here costs a little
+ * budget for the TTL and never authorizes anything it should not have.
+ */
+export async function settleAgentPayment(reservationId: string | null, settled: boolean): Promise<void> {
+  if (!reservationId || !isDatabaseConfigured()) return;
+  try {
+    const supabase = getSupabaseAdminClient();
+    const { error } = await supabase.rpc("v_settle_agent_payment" as never, {
+      p_reservation: reservationId,
+      p_settled: settled,
+    } as never);
+    if (error && !/could not find the function/i.test(error.message ?? "")) {
+      console.error("settleAgentPayment failed:", error.message);
+    }
+  } catch (e) {
+    console.error("settleAgentPayment threw:", e);
+  }
+}
+
+/**
+ * BRIDGE ONLY — used when v_reserve_agent_payment is not yet deployed. Two properties matter:
+ *
+ *   EXACT OR NOTHING. The previous version read `.limit(5000)` with no ordering and summed whatever came
+ *   back, so past 5000 rows it silently under-reported and the cap stopped binding on exactly the busiest
+ *   accounts. This pages deterministically by created_at and, if it reaches the hard page bound, returns
+ *   null so the caller fails closed. A cap that cannot be computed must refuse, not guess low.
+ *
+ *   SETTLED ROWS ONLY. It counts status='paid' and nothing else. Pending rows are creatable through
+ *   /api/vraelis/book by anyone holding the shared intake key, so counting them let an outsider exhaust the
+ *   owner's cap and mute their agent — a denial-of-service wearing a spend control's clothes.
+ *
+ * Scoped to one currency, because adding minor units of different currencies produces a number that is
+ * wrong in the permissive direction.
+ *
+ * What it still does NOT give you, and why the RPC exists: the read and the decision are separate, so
+ * concurrent authorizations can both pass one cap.
+ */
+export async function sumRecentPaymentCents(
+  email: string,
+  sinceISO: string,
+  currency = "usd",
+): Promise<number | null> {
+  if (!isDatabaseConfigured()) return null;
+  const PAGE = 1000;
+  const MAX_PAGES = 50; // 50k rows in one window; beyond this we refuse rather than under-report.
+  try {
+    const supabase = getSupabaseAdminClient();
+    const owner = normalizeEmail(email);
+    let total = 0;
+    for (let page = 0; page < MAX_PAGES; page += 1) {
+      const from = page * PAGE;
+      const { data, error } = await supabase
+        .from("vraelis_payments" as never)
+        .select("amount_cents")
+        .eq("owner_email", owner)
+        .eq("status", "paid")
+        .eq("currency", currency)
+        // gte, not gt: a row landing exactly on the window boundary is inside the window.
+        .gte("created_at", sinceISO)
+        // Total order, so paging cannot skip or repeat a row when timestamps tie. Ascending means new rows
+        // arrive at the END of the sequence and never shift a page that has already been read.
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true })
+        .range(from, from + PAGE - 1);
+      if (error) {
+        console.error("sumRecentPaymentCents failed:", error.message);
+        return null;
+      }
+      const rows = (data as unknown as { amount_cents: number | null }[]) ?? [];
+      for (const r of rows) total += Number(r.amount_cents) || 0;
+      if (rows.length < PAGE) return total;
+    }
+    console.error("sumRecentPaymentCents: exceeded page bound; refusing to under-report");
+    return null;
   } catch (e) {
     console.error("sumRecentPaymentCents threw:", e);
     return null;

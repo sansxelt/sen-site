@@ -26,7 +26,7 @@ import { continueLeadConversation, type ConvoTurn } from "@/lib/vraelis-ai";
 import { sendLeadReply } from "@/lib/vraelis-email";
 import { notifyOwnerStatusEvent } from "@/lib/vraelis-notify";
 import { startWorkspacePayment } from "@/lib/vraelis-connect";
-import { authorizeAgentPayment, leadFacingRefusal } from "@/lib/vraelis-payment-authz";
+import { authorizeAgentPayment, finishAgentPayment, leadFacingRefusal } from "@/lib/vraelis-payment-authz";
 
 const pick = (o: Record<string, unknown>, keys: string[]) => {
   for (const k of keys) if (typeof o[k] === "string" && (o[k] as string).trim()) return (o[k] as string).trim();
@@ -171,6 +171,10 @@ export async function POST(req: NextRequest) {
             (ai.payment.kind === "deposit" ? "Deposit to confirm your booking" : "Payment"),
           customerEmail: lead.contact_email,
         });
+        // Close out the rolling-cap reservation the authorization took. A Stripe failure here must return
+        // the budget rather than leave a slice of the owner's daily cap held until the reservation times
+        // out — otherwise repeated Stripe errors would silently cap the agent.
+        await finishAgentPayment(authz, pay.ok);
         if (pay.ok && pay.url) {
           replyText += `\n\nYou can ${ai.payment.kind === "deposit" ? "lock in your booking" : "pay securely"} here: ${pay.url}`;
           injected = true;
