@@ -3,7 +3,13 @@
 // It prints five things and nothing else:
 //   1. host   2. database   3. user   4. Supabase project ref (if detectable)   5. environment
 //
-// THE PASSWORD IS NEVER PRINTED, never logged, and never placed in argv. Neither is any other credential.
+// ── THE RULE FOR SECRETS: PRESENCE ONLY ────────────────────────────────────────────────────────────────
+//
+// A secret is never printed, logged, or placed in argv — and it is also never MEASURED. No length, no
+// hash, no prefix, no character-class summary, no comparison against another secret. Those are all
+// properties OF the secret, and "I only printed the length" is how a habit of handling secrets carelessly
+// starts. `hasPassword` below is a Boolean and stays a Boolean.
+//
 // The only value this reads from a connection string besides host/db/user is the password, and it does so
 // solely to hand it to psql through the child ENVIRONMENT.
 //

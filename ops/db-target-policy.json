@@ -13,8 +13,10 @@
   "productionProjectRefs": [
     {
       "ref": "gvcqzovxfijvtkhetopn",
-      "source": ".env.local SUPABASE_URL / NEXT_PUBLIC_SUPABASE_URL on the operator machine",
-      "note": "Treated as PRODUCTION. This machine runs the live site's environment and holds a service-role key for this project. Any target resolving to this ref is refused outright."
+      "source": "Observed once in a local file on the operator machine. NOT confirmed against the authoritative source.",
+      "confirmed": false,
+      "note": "TREATED AS PRODUCTION, UNCONFIRMED. The owner keeps environment variables in Vercel, not in local files, so the file this ref was read from may be stale and is not evidence of what production currently uses. The ref is kept here anyway because the two errors are not symmetric: wrongly refusing this target costs a re-run, wrongly allowing it could put a migration into production. It stays until the owner confirms the real production ref - at which point this entry should be corrected, not merely appended to.",
+      "howToConfirm": "The owner reads it from the Vercel project's environment settings. Do NOT go looking for it - that means reading deployment configuration, which is out of scope for this work."
     }
   ],
 
