@@ -159,13 +159,16 @@ BEGIN
     FROM pg_default_acl da JOIN pg_namespace n ON n.oid=da.defaclnamespace
     JOIN pg_roles cr ON cr.oid=da.defaclrole
     CROSS JOIN LATERAL aclexplode(da.defaclacl) a JOIN pg_roles r ON r.oid=a.grantee
-   WHERE cr.rolname='supabase_admin' AND r.rolname IN ('anon','authenticated')
-     AND (n.nspname <> 'public'
-          OR (da.defaclobjtype, a.privilege_type) NOT IN (
-               ('r','INSERT'),('r','SELECT'),('r','UPDATE'),('r','DELETE'),
-               ('r','TRUNCATE'),('r','REFERENCES'),('r','TRIGGER'),('r','MAINTAIN'),
-               ('S','SELECT'),('S','UPDATE'),('S','USAGE'),
-               ('f','EXECUTE')));
+   -- Scoped to schema public, like the migration itself. An earlier version also flagged supabase_admin
+   -- defaults in OTHER schemas as "a move out of public"; on a real Supabase project the platform holds
+   -- defaults in storage, auth, realtime and others - 48 such facts on staging - and none of them are in
+   -- this migration's blast radius. Asserting on them failed the run for something it must not police.
+   WHERE n.nspname = 'public' AND cr.rolname='supabase_admin' AND r.rolname IN ('anon','authenticated')
+     AND (da.defaclobjtype, a.privilege_type) NOT IN (
+           ('r','INSERT'),('r','SELECT'),('r','UPDATE'),('r','DELETE'),
+           ('r','TRUNCATE'),('r','REFERENCES'),('r','TRIGGER'),('r','MAINTAIN'),
+           ('S','SELECT'),('S','UPDATE'),('S','USAGE'),
+           ('f','EXECUTE'));
   IF d_sa <> 24 OR d_sa_unexpected <> 0 THEN
     RAISE EXCEPTION 'supabase_admin default privileges are not the expected platform baseline: % fact(s) (expected 24), % outside the expected shape (expected 0)', d_sa, d_sa_unexpected;
   END IF;

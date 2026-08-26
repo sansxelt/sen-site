@@ -161,9 +161,12 @@ say "    [ok] password accepted (presence only); PGSSLMODE=require"
 pg() { docker run --rm -i -e PGPASSWORD -e PGHOST -e PGPORT -e PGUSER -e PGDATABASE -e PGSSLMODE \
          -v "${REPO_ROOT}/ops:/sql:ro" -v "${DUMP_DIR}:/work" "$PG_IMAGE" psql "$@"; }
 
-sa_defaults() {  # $1 = label -> the platform-managed supabase_admin defaults, in full detail
+sa_defaults() {  # $1 = label -> supabase_admin's platform defaults IN SCHEMA PUBLIC, in full detail.
+  # Scoped to public deliberately: that is this migration's blast radius. The platform also holds
+  # defaults in storage, auth, realtime and others - 180 facts in total on staging - which this
+  # migration neither touches nor may police.
   local out="${DUMP_DIR}/p4-sa-$1.txt"
-  pg -q -tA -v ON_ERROR_STOP=1 -c 'begin read only;' -c "select 'SA|'||coalesce(n.nspname,'GLOBAL')||'|'||da.defaclobjtype::text||'|'||coalesce(r.rolname,'PUBLIC')||'|'||a.privilege_type from pg_default_acl da left join pg_namespace n on n.oid=da.defaclnamespace join pg_roles cr on cr.oid=da.defaclrole cross join lateral aclexplode(da.defaclacl) a left join pg_roles r on r.oid=a.grantee where cr.rolname='supabase_admin' order by 1;" -c 'rollback;' 2>&1 | grep '^SA|' | sort > "$out"
+  pg -q -tA -v ON_ERROR_STOP=1 -c 'begin read only;' -c "select 'SA|'||coalesce(n.nspname,'GLOBAL')||'|'||da.defaclobjtype::text||'|'||coalesce(r.rolname,'PUBLIC')||'|'||a.privilege_type from pg_default_acl da left join pg_namespace n on n.oid=da.defaclnamespace join pg_roles cr on cr.oid=da.defaclrole cross join lateral aclexplode(da.defaclacl) a left join pg_roles r on r.oid=a.grantee where cr.rolname='supabase_admin' and n.nspname='public' order by 1;" -c 'rollback;' 2>&1 | grep '^SA|' | sort > "$out"
   chmod 600 "$out"
   wc -l < "$out"
 }
