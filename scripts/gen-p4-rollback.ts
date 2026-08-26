@@ -27,7 +27,12 @@ if (!dumpPath) {
   process.exit(2);
 }
 
-const dump = readFileSync(dumpPath, "utf8").replace(/\r\n/g, "\n");
+// The dump is read RAW as well as normalised. Normalising is fine for scanning single-line GRANT
+// statements, but the function body must be reproduced BYTE FOR BYTE: this dump carries 232 carriage
+// returns inside function bodies, and stripping them changes prosrc. The staging rehearsal caught exactly
+// that - an otherwise perfect rollback left a 13-character shorter body with a different md5.
+const dumpRaw = readFileSync(dumpPath, "utf8");
+const dump = dumpRaw.replace(/\r\n/g, "\n");
 const lines = dump.split("\n");
 
 // The dump's own GRANT statements are the ground truth for the pre-migration ACL state.
@@ -39,12 +44,18 @@ const seqGrants = lines.filter((l) => /^GRANT .* ON SEQUENCE public\./.test(l));
 // platform's own, so re-issuing them would be a change rather than a restoration.
 const defaults = lines.filter((l) => /^ALTER DEFAULT PRIVILEGES FOR ROLE postgres /.test(l));
 
-// The original v_preflight_claim, verbatim, so the rollback restores the exact prior definition.
-const start = lines.findIndex((l) => l.startsWith("CREATE FUNCTION public.v_preflight_claim("));
-if (start < 0) { console.error("  FAILED: v_preflight_claim not found in the dump"); process.exit(1); }
-let end = start;
-while (end < lines.length && !/\$\$;\s*$/.test(lines[end])) end += 1;
-const originalFn = lines.slice(start, end + 1).join("\n").replace(/^CREATE FUNCTION /, "CREATE OR REPLACE FUNCTION ");
+// The original v_preflight_claim, taken from the RAW text so every byte survives - carriage returns
+// included. A line-joined extraction from the normalised copy silently loses them, and prosrc is what the
+// fingerprint hashes, so the loss shows up only after a full forward-and-back cycle.
+const fnMatch = dumpRaw.match(/CREATE FUNCTION public\.v_preflight_claim\([\s\S]*?\$\$;/);
+if (!fnMatch) { console.error("  FAILED: v_preflight_claim not found in the dump"); process.exit(1); }
+const originalFn = fnMatch[0].replace(/^CREATE FUNCTION /, "CREATE OR REPLACE FUNCTION ");
+const crIn = (fnMatch[0].match(/\r/g) || []).length;
+const crOut = (originalFn.match(/\r/g) || []).length;
+if (crIn !== crOut) {
+  console.error(`  FAILED: carriage returns lost extracting the function (${crIn} -> ${crOut})`);
+  process.exit(1);
+}
 
 const funcSignatures = [...new Set(
   funcGrants.map((l) => (l.match(/ON FUNCTION (public\.[A-Za-z0-9_]+\([^)]*\))/) || [])[1]).filter(Boolean),
