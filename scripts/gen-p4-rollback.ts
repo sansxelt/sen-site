@@ -139,7 +139,10 @@ const out = [
 ].join("\n");
 
 if (checkOnly) {
-  const existing = readFileSync(outPath, "utf8").replace(/\r\n/g, "\n");
+  // Compared RAW, deliberately. Normalising here would hide precisely the difference this generator now
+  // guards against: the carriage returns inside the function body are content, not formatting, and prosrc
+  // is what the fingerprint hashes.
+  const existing = readFileSync(outPath, "utf8");
   if (existing === out) { console.log(`  [ok] ${outPath} matches what the dump generates`); process.exit(0); }
   console.error(`  DRIFT: ${outPath} differs from what the dump generates. Regenerate it.`);
   process.exit(1);
