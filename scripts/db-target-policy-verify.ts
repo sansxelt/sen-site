@@ -135,6 +135,55 @@ console.log("── a genuine staging target is NOT refused by the denylist ─�
   ok("  and proceeds to the read-only check rather than being denied", r.code === 4, `exit=${r.code}`);
 }
 
+// ── 5b. The staging allowlist ──────────────────────────────────────────────
+//
+// An allowlist can only ever PROMOTE an unknown target to staging. It must never rescue a denied one, and
+// a malformed entry must announce itself rather than quietly protecting nothing.
+console.log("── the staging allowlist ──");
+{
+  const policy = JSON.parse(readFileSync(POLICY, "utf8")) as Policy & {
+    stagingProjectRefs?: { ref: string; confirmed?: boolean; shapeAnomaly?: string }[];
+  };
+  const allow = policy.stagingProjectRefs ?? [];
+  ok("a staging allowlist exists", Array.isArray(policy.stagingProjectRefs), `${allow.length} entr(ies)`);
+
+  // Shape: a Supabase ref is 20 lowercase alphanumerics. A wrong-length entry matches no real project.
+  const REF = /^[a-z0-9]{20}$/;
+  for (const e of allow) {
+    const wellFormed = REF.test(e.ref);
+    ok(`allowlist entry "${e.ref}" is ${wellFormed ? "well-formed" : `MALFORMED (${e.ref.length} chars, expected 20)`}`,
+      // A malformed entry is tolerated ONLY if it is explicitly flagged as such and not marked confirmed.
+      wellFormed || (typeof e.shapeAnomaly === "string" && e.confirmed !== true),
+      wellFormed ? "" : "must carry shapeAnomaly and must not be confirmed");
+    if (!wellFormed) {
+      ok(`  "${e.ref}" is NOT marked confirmed`, e.confirmed !== true,
+        "a ref that cannot match a real project must never be recorded as confirmed");
+    }
+  }
+
+  // Production beats the allowlist, even if someone adds the production ref to it.
+  const tampered = JSON.parse(readFileSync(POLICY, "utf8")) as Policy & { stagingProjectRefs?: unknown[] };
+  ok("the production ref is NOT in the staging allowlist",
+    !(tampered.stagingProjectRefs ?? []).some((e) => (e as { ref: string }).ref.toLowerCase() === PINNED_REF));
+
+  // And behaviourally: a production ref with a staging-looking database still refuses.
+  const r = run("scripts/db-target-identify.ts",
+    `postgresql://postgres:${PW}@db.${PINNED_REF}.supabase.co:5432/staging`);
+  ok("  production still wins over any staging signal", r.code === 3 && /Environment\s+PRODUCTION/.test(r.out));
+}
+
+// ── 5c. Identification must not require a network ──────────────────────────
+console.log("── --identify-only touches nothing ──");
+{
+  const r = spawnSync("npx", ["tsx", "scripts/db-target-identify.ts", "--identify-only"], {
+    encoding: "utf8", shell: process.platform === "win32",
+    env: { ...process.env, STAGING_URL: `postgresql://postgres:${PW}@db.${PINNED_REF}.supabase.co:5432/postgres` },
+  });
+  const out = `${r.stdout ?? ""}${r.stderr ?? ""}`;
+  ok("a denied target is refused without connecting", (r.status ?? -1) === 3);
+  ok("  and no connection was attempted", !/psql exited|could not connect/.test(out));
+}
+
 // ── 6. A missing policy fails CLOSED ───────────────────────────────────────
 console.log("── the policy itself ──");
 {

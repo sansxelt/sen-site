@@ -23,6 +23,18 @@
 
   "productionHostPatterns": ["vraelis.com", "app.vraelis.com"],
 
+  "_stagingAllowlistNote": "Refs positively identified as staging. An entry here makes a target STAGING regardless of whether its host or database name happens to contain a staging-looking word - which is the right way round, because a name is decoration and a ref is identity. PRODUCTION ALWAYS WINS: if a ref somehow appeared in both lists it would still be refused.",
+
+  "stagingProjectRefs": [
+    {
+      "ref": "mxhpfbazbwczrhuxasv",
+      "source": "Supplied by the owner, 2026-08-25.",
+      "confirmed": false,
+      "shapeAnomaly": "NINETEEN characters. Supabase project refs are TWENTY (the production ref is 20). This is almost certainly a transcription error with one character dropped, so it probably does not match the real staging project at all.",
+      "note": "RECORDED EXACTLY AS SUPPLIED, and deliberately NOT marked confirmed. If this ref is wrong, the real staging project will be classified UNKNOWN and refused - which is the safe direction, but it is also the direction that tempts an operator to loosen the check rather than fix the ref. Re-confirm the 20-character ref from the Supabase dashboard before relying on this entry."
+    }
+  ],
+
   "_stagingNote": "A target is only accepted when it can be POSITIVELY identified as staging. Absence of evidence that it is production is NOT evidence that it is staging - 'unknown' is refused, deliberately.",
 
   "stagingIndicators": ["staging", "stage", "stg", "preprod", "pre-prod"],

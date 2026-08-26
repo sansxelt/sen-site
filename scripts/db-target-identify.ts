@@ -35,11 +35,22 @@ const POLICY_PATH = "ops/db-target-policy.json";
 
 type Policy = {
   productionProjectRefs: { ref: string; source: string; note: string }[];
+  stagingProjectRefs?: { ref: string; source?: string; confirmed?: boolean; shapeAnomaly?: string; note?: string }[];
   productionHostPatterns: string[];
   stagingIndicators: string[];
   localHosts: string[];
   localHostSuffixes: string[];
 };
+
+/**
+ * A Supabase project ref is exactly 20 lowercase alphanumeric characters.
+ *
+ * Checked because a ref of the wrong length silently matches NOTHING: the real project is then classified
+ * UNKNOWN and refused, which looks like the gate malfunctioning rather than like a typo, and that is
+ * precisely when someone decides the check is in the way and removes it. A malformed allowlist entry is
+ * worse than a missing one, so it is called out loudly rather than left to be discovered.
+ */
+const REF_SHAPE = /^[a-z0-9]{20}$/;
 
 const line = (s = "") => console.log(s);
 const refuse = (code: number, why: string, detail = ""): never => {
@@ -107,6 +118,11 @@ const isLocal =
   policy!.localHostSuffixes.some((sfx) => host.toLowerCase().endsWith(sfx));
 
 const prodRef = ref ? policy!.productionProjectRefs.find((p) => p.ref.toLowerCase() === ref.toLowerCase()) : undefined;
+// PRODUCTION IS CHECKED FIRST AND WINS. The allowlist can only ever promote an otherwise-unknown target to
+// staging; it can never rescue one that is denied.
+const stagingRef = ref && !prodRef
+  ? (policy!.stagingProjectRefs ?? []).find((p) => p.ref.toLowerCase() === ref.toLowerCase())
+  : undefined;
 const prodHost = policy!.productionHostPatterns.find((p) => host.toLowerCase() === p.toLowerCase());
 const saysProd = /\bprod(uction)?\b/.test(hay);
 
@@ -123,6 +139,7 @@ const saysStaging = policy!.stagingIndicators.some(matchesIndicator);
 let environment: "production" | "staging" | "local" | "unknown";
 if (prodRef || prodHost || saysProd) environment = "production";
 else if (isLocal) environment = "local";
+else if (stagingRef) environment = "staging";   // an allowlisted ref beats a name-based guess
 else if (saysStaging) environment = "staging";
 else environment = "unknown";
 
@@ -137,6 +154,26 @@ line(`  5. Environment          ${environment.toUpperCase()}`);
 line();
 line(`     password              ${hasPassword ? "PRESENT — REDACTED, never printed or placed in argv" : "absent"}`);
 line("  ═══════════════════════════════════════════════════════════════════════");
+
+// ── Shape warnings — loud, because a malformed ref matches nothing ─────────
+if (ref && !REF_SHAPE.test(ref)) {
+  line();
+  line(`  !! WARNING  the ref detected from this URL is ${ref.length} characters; a Supabase project ref is 20.`);
+  line("              A ref of the wrong length matches no policy entry, so this target will be");
+  line("              classified UNKNOWN and refused. That is a typo, not a policy decision.");
+}
+for (const s of policy!.stagingProjectRefs ?? []) {
+  if (!REF_SHAPE.test(s.ref)) {
+    line();
+    line(`  !! WARNING  the ALLOWLIST entry "${s.ref}" is ${s.ref.length} characters, not 20.`);
+    line("              It cannot match a real Supabase project, so it protects nothing and will never");
+    line("              let a genuine staging target through. Correct it before relying on it.");
+    if (s.shapeAnomaly) line(`              recorded: ${s.shapeAnomaly}`);
+  } else if (s.confirmed === false) {
+    line();
+    line(`  !  note      allowlist entry "${s.ref}" is present but NOT marked confirmed.`);
+  }
+}
 
 // ── 5. Refuse, per the stated conditions ───────────────────────────────────
 if (prodRef) {
@@ -158,6 +195,19 @@ if (environment !== "staging") {
 //
 // Verified by asking the SERVER what it thinks the session is, inside a real transaction — not by trusting
 // that the SET was sent. Credentials go through the child environment, never argv.
+//
+// --identify-only stops HERE, before any network activity. Identification is pure string work on the URL
+// and the policy file, so it should not require touching a database — and when the standing instruction is
+// "do not access either database yet", a tool that quietly opens a socket to prove a point is the wrong
+// tool. Use it to check classification; drop it when you actually intend to connect.
+if (process.argv.includes("--identify-only")) {
+  line();
+  line("  --identify-only: stopping before the read-only check. NOTHING was connected to.");
+  line(`  Classification: ${environment.toUpperCase()}${environment === "staging" ? " (would proceed to the read-only check)" : " (would be REFUSED)"}`);
+  line();
+  process.exit(environment === "staging" ? 0 : 3);
+}
+
 line();
 line("  ── verifying read-only transaction mode ──");
 const env = { ...process.env };
