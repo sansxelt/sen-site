@@ -128,7 +128,7 @@ Restoring onto existing objects produces partial failures that are tedious to un
 
 ```bash
 read -rsp 'staging DB password: ' PGPASSWORD; echo; export PGPASSWORD
-export PGHOST='db.<STAGING_REF>.supabase.co'    # 20-char ref — see the note below
+export PGHOST='db.mxxhpfbazbwczrhuxasv.supabase.co'   # owner-confirmed staging
 export PGPORT=5432
 export PGUSER=postgres
 export PGDATABASE=postgres
@@ -195,21 +195,32 @@ Nothing in this procedure writes to production. The only write is Step 4, into s
 
 ---
 
-## Before this can run: the staging ref is malformed
+## Target refs, both confirmed
 
-**`mxhpfbazbwczrhuxasv` is 19 characters. A Supabase project ref is 20** — production's
-(`gvcqzovxfijvtkhetopn`) is 20. One character was almost certainly dropped in transcription.
+| | Ref | Status |
+|---|---|---|
+| Production | `gvcqzovxfijvtkhetopn` | **permanently denied** — refused in every connection shape |
+| Staging | `mxxhpfbazbwczrhuxasv` | owner-confirmed, allowlisted |
 
-It is recorded in `ops/db-target-policy.json` exactly as supplied, but **flagged and not marked
-confirmed**, and both the identify script and the policy test now warn loudly about the length. As it
-stands:
+The staging ref was corrected on 2026-08-25 after a dropped `x`; the earlier 19-character value
+`mxhpfbazbwczrhuxasv` is removed from the allowlist and now classifies as UNKNOWN and is refused. It is
+recorded under `_removedEntries` so that if it resurfaces in a URL it is recognisable as the known-bad
+value rather than a new mystery.
 
-- the ref as given will not match the real staging project;
-- the real project would be classified **UNKNOWN** and refused at Step 5a;
-- that looks like the gate malfunctioning, which is exactly when someone disables it.
+Verified offline (`--identify-only`, no connection):
 
-**Send the corrected 20-character ref** and I will update the allowlist and the `PGHOST` above. Until then
-Step 3's `<STAGING_REF>` is deliberately left as a placeholder rather than guessed at.
+```
+  1. Database host        db.mxxhpfbazbwczrhuxasv.supabase.co:5432
+  2. Database name        postgres
+  3. Database user        postgres
+  4. Supabase project ref mxxhpfbazbwczrhuxasv
+  5. Environment          STAGING          exit 0
+```
+
+**Not independently verified by this tooling.** `confirmed: true` records the OWNER's confirmation. Checking
+the ref against the Supabase dashboard's Copy button needs a browser and dashboard access, which this
+tooling does not have and which is out of scope. What was checked mechanically: 20 lowercase alphanumeric
+characters, exactly the earlier string with an `x` re-inserted at position 3, and distinct from production.
 
 ---
 

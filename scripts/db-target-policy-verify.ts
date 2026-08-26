@@ -19,7 +19,8 @@ let pass = 0, fail = 0;
 const ok = (n: string, c: boolean, d = "") => { console.log(`${c ? "PASS" : "FAIL"}  ${n}${d ? `  (${d})` : ""}`); if (c) pass++; else fail++; };
 
 const POLICY = "ops/db-target-policy.json";
-const PINNED_REF = "gvcqzovxfijvtkhetopn"; // confirmed production by the owner, 2026-08-25
+const PINNED_REF = "gvcqzovxfijvtkhetopn";  // owner-confirmed PRODUCTION, permanently denied
+const STAGING_REF = "mxxhpfbazbwczrhuxasv"; // owner-confirmed STAGING, allowlisted
 
 type Policy = {
   productionProjectRefs: { ref: string; confirmed?: boolean; permanent?: boolean; note?: string; doNotRemove?: string }[];
@@ -30,9 +31,21 @@ type Policy = {
 // a connection is attempted.
 const PW = "REDACTED";
 
-/** Run a script and return ITS exit status, read immediately. */
+/**
+ * Run a script and return ITS exit status, read immediately.
+ *
+ * OFFLINE BY DEFAULT. `db-target-identify.ts` is invoked with --identify-only so it stops before its
+ * read-only connection check: this suite is about POLICY, and policy is decided entirely from the URL
+ * string and the JSON file. It has no business opening a socket to prove that.
+ *
+ * That is not just tidiness. Every denied case here is refused before any connection is attempted, so
+ * without --identify-only the only cases that WOULD connect are the ones expected to pass — meaning the
+ * suite's network activity would consist solely of dialling hosts it believes are legitimate. Under a
+ * standing "do not connect to either database" instruction, that is exactly the wrong default.
+ */
 function run(script: string, url: string, viaEnv = true): { code: number; out: string } {
-  const args = viaEnv ? [script] : [script, "--url", url];
+  const offline = script.includes("db-target-identify") ? ["--identify-only"] : [];
+  const args = viaEnv ? [script, ...offline] : [script, "--url", url, ...offline];
   const r = spawnSync("npx", ["tsx", ...args], {
     encoding: "utf8", maxBuffer: 1 << 24, shell: process.platform === "win32",
     env: viaEnv ? { ...process.env, STAGING_URL: url } : { ...process.env },
@@ -127,12 +140,20 @@ console.log("── the preflight refuses it directly, gate skipped ──");
 // train whoever hits it to disable the check.
 console.log("── a genuine staging target is NOT refused by the denylist ──");
 {
+  // The ALLOWLISTED staging ref, identified by ref alone — its database name carries no staging word.
+  const allow = run("scripts/db-target-identify.ts",
+    `postgresql://postgres:${PW}@db.${STAGING_REF}.supabase.co:5432/postgres`);
+  ok("the allowlisted staging ref is not caught by the denylist", !/KNOWN PRODUCTION project/.test(allow.out));
+  ok("  it is classified STAGING on the REF alone, with no staging word in the name",
+    /Environment\s+STAGING/.test(allow.out));
+  ok("  and it is accepted (exit 0), not refused", allow.code === 0, `exit=${allow.code}`);
+  ok("  with no shape warning", !/WARNING  the ref detected/.test(allow.out));
+
+  // A ref that is neither denied nor allowlisted stays UNKNOWN and is refused.
   const r = run("scripts/db-target-identify.ts",
-    `postgresql://postgres:${PW}@db.stagingproj000000000.supabase.co:5432/vraelis-staging`);
-  ok("a different ref is not caught by the denylist", !/KNOWN PRODUCTION project/.test(r.out));
-  ok("  it is classified STAGING", /Environment\s+STAGING/.test(r.out));
-  // It then fails at read-only verification because the host does not resolve — exit 4, not 3.
-  ok("  and proceeds to the read-only check rather than being denied", r.code === 4, `exit=${r.code}`);
+    `postgresql://postgres:${PW}@db.notaknownproject0000.supabase.co:5432/postgres`);
+  ok("an unlisted ref is not caught by the denylist", !/KNOWN PRODUCTION project/.test(r.out));
+  ok("  but is classified UNKNOWN and refused", r.code === 3 && /Environment\s+UNKNOWN/.test(r.out), `exit=${r.code}`);
 }
 
 // ── 5b. The staging allowlist ──────────────────────────────────────────────

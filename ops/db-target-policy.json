@@ -27,11 +27,21 @@
 
   "stagingProjectRefs": [
     {
+      "ref": "mxxhpfbazbwczrhuxasv",
+      "source": "Owner-confirmed, 2026-08-25, after correcting a transcription error (a dropped second 'x' when reading it off a screenshot).",
+      "confirmed": true,
+      "confirmedBy": "owner",
+      "independentlyVerified": false,
+      "verificationNote": "The 'confirmed' flag records the OWNER's confirmation, not an independent check. Verifying this against the Supabase dashboard's Copy button is not something this tooling can do - it has no browser and no dashboard access, and reaching project configuration is out of scope. What WAS verified mechanically: the ref is 20 lowercase alphanumeric characters, it is exactly the earlier 19-character string with an 'x' re-inserted at position 3 (consistent with the stated cause), and it is distinct from the production ref.",
+      "note": "The staging project. Being on this list makes a target STAGING by REF, so it is identified correctly even if its host or database name carries no staging-looking word."
+    }
+  ],
+
+  "_removedEntries": [
+    {
       "ref": "mxhpfbazbwczrhuxasv",
-      "source": "Supplied by the owner, 2026-08-25.",
-      "confirmed": false,
-      "shapeAnomaly": "NINETEEN characters. Supabase project refs are TWENTY (the production ref is 20). This is almost certainly a transcription error with one character dropped, so it probably does not match the real staging project at all.",
-      "note": "RECORDED EXACTLY AS SUPPLIED, and deliberately NOT marked confirmed. If this ref is wrong, the real staging project will be classified UNKNOWN and refused - which is the safe direction, but it is also the direction that tempts an operator to loosen the check rather than fix the ref. Re-confirm the 20-character ref from the Supabase dashboard before relying on this entry."
+      "removed": "2026-08-25",
+      "why": "NINETEEN characters - a transcription error, superseded by mxxhpfbazbwczrhuxasv. Recorded here rather than silently deleted so that if it ever reappears in a URL or a config, it is recognisable as the known-bad value rather than as a new mystery. It is NOT allowlisted and must never be re-added."
     }
   ],
 
