@@ -34,10 +34,13 @@ Supabase currently runs PostgreSQL 15–17. If your local `pg_dump` is older tha
 and install a matching client — an older `pg_dump` against a newer server errors out rather than producing
 a partial file, but do not find that out at the end of a long run.
 
-> **Use the DIRECT connection, not the transaction pooler.**
-> `pg_dump` does not work through Supabase's transaction-mode pooler (port `6543`). Use the direct host
-> `db.<ref>.supabase.co:5432`, or the session-mode pooler on `5432`. This is the single most common way this
-> procedure fails.
+> **Port 5432, not 6543.**
+> `pg_dump` cannot work through Supabase's **transaction**-mode pooler (`6543`). It works through the
+> **session**-mode pooler (`5432`) and through the direct host `db.<ref>.supabase.co:5432`. This project's
+> dashboard reports the shared pooler, so the commands below use
+> `aws-1-us-east-2.pooler.supabase.com:5432` with the ref in the username. If your database password
+> contains special characters and you ever build a URL by hand, percent-encode them — the scripts here
+> avoid that entirely by passing the password through the environment instead of a URL.
 
 ---
 
@@ -46,9 +49,9 @@ a partial file, but do not find that out at the end of a long run.
 ```bash
 # Credentials via the environment, never on the command line: argv is visible to other processes.
 read -rsp 'production DB password: ' PGPASSWORD; echo; export PGPASSWORD
-export PGHOST='db.gvcqzovxfijvtkhetopn.supabase.co'
-export PGPORT=5432
-export PGUSER=postgres
+export PGHOST='aws-1-us-east-2.pooler.supabase.com'      # session-mode pooler
+export PGPORT=5432                                       # 5432 = session mode; 6543 would NOT work
+export PGUSER='postgres.gvcqzovxfijvtkhetopn'            # the ref rides in the USERNAME here
 export PGDATABASE=postgres
 
 pg_dump \

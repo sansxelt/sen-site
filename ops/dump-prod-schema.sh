@@ -18,13 +18,42 @@
 set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PROD_HOST='db.gvcqzovxfijvtkhetopn.supabase.co'   # owner-confirmed PRODUCTION
+
+# ── Target: PRODUCTION, via the SESSION-mode pooler ────────────────────────
+#
+# These are the connection parameters Supabase's dashboard reports for this project. Note the port:
+#
+#   5432 on the pooler host = SESSION mode   -> pg_dump WORKS
+#   6543 on the pooler host = TRANSACTION mode -> pg_dump does NOT work
+#
+# The ref rides in the USERNAME here (postgres.<ref>), not the host — which is why the identify gate has
+# to read both. The direct host db.<ref>.supabase.co:5432 is the alternative if it resolves for you;
+# newer Supabase projects often expose only the pooler.
+PROD_REF='gvcqzovxfijvtkhetopn'
+PROD_HOST='aws-1-us-east-2.pooler.supabase.com'
+PROD_PORT='5432'
+PROD_USER="postgres.${PROD_REF}"
 PG_IMAGE='postgres:17-alpine'                      # client >= server; Supabase runs 15-17
 
 echo
 echo "  Step 1 — production public-schema dump (READ-ONLY)"
-echo "  host: ${PROD_HOST}"
+echo "  host: ${PROD_HOST}:${PROD_PORT}"
+echo "  user: ${PROD_USER}"
+echo "  ref : ${PROD_REF}  (PRODUCTION — this step reads production deliberately)"
 echo
+
+# ── Guard: this must be PRODUCTION, and nothing else ───────────────────────
+# Step 1 exists to read production. If someone repoints this at another project, the dump would be of the
+# wrong schema and the whole reconciliation downstream would be measuring the wrong thing - quietly.
+case "$PROD_USER" in
+  *"$PROD_REF"*) : ;;
+  *) echo "  REFUSING: user '${PROD_USER}' does not carry the production ref '${PROD_REF}'."; exit 1 ;;
+esac
+if [ "$PROD_PORT" = "6543" ]; then
+  echo "  REFUSING: port 6543 is the TRANSACTION-mode pooler; pg_dump cannot work through it."
+  echo "            Use 5432 (session mode) or the direct host."
+  exit 1
+fi
 
 # ── Restrictive permissions BEFORE anything is created ─────────────────────
 umask 077
@@ -54,7 +83,7 @@ echo
 [ -n "$PGPASSWORD" ] || { echo "  FAILED: empty password — refusing to continue."; rmdir "$DUMP_DIR" 2>/dev/null; exit 1; }
 export PGPASSWORD
 
-export PGHOST="$PROD_HOST" PGPORT=5432 PGUSER=postgres PGDATABASE=postgres
+export PGHOST="$PROD_HOST" PGPORT="$PROD_PORT" PGUSER="$PROD_USER" PGDATABASE=postgres
 
 echo "  running pg_dump ..."
 if [ "$MODE" = native ]; then
