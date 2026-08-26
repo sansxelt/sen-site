@@ -31,8 +31,11 @@ pg_dump --version
 ```
 
 Supabase currently runs PostgreSQL 15–17. If your local `pg_dump` is older than the project's server, stop
-and install a matching client — an older `pg_dump` against a newer server errors out rather than producing
-a partial file, but do not find that out at the end of a long run.
+and install a matching client — an older `pg_dump` against a newer server aborts with a version mismatch
+rather than producing a partial file, but do not find that out at the end of a long run.
+
+**Verified for this project, 2026-08-25:** server **17.6** (reported by `--check-connection`), client
+`pg_dump 17.11` from `postgres:17-alpine`. Client is newer than the server, which is the requirement.
 
 > **Port 5432, not 6543.**
 > `pg_dump` cannot work through Supabase's **transaction**-mode pooler (`6543`). It works through the
