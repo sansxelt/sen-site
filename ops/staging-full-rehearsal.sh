@@ -73,8 +73,40 @@ say "    [ok] production ref absent; staging ref present; port 5432"
 
 cd "$REPO_ROOT" || fail "cannot cd to the repository root"
 GATE_URL="postgresql://${STAGING_USER}@${STAGING_HOST}:${STAGING_PORT}/${STAGING_DB}"
-identify() { npx tsx scripts/db-target-identify.ts --url "$GATE_URL" --identify-only >/dev/null 2>&1; }
-identify || fail "the target-identification gate refused this target."
+# The gate is re-run immediately before every write, so it runs many times. Its output was previously
+# discarded, which meant a refusal reported "the gate refused" with no evidence of WHY - and the reason
+# matters enormously here: a genuine misclassification and a transient npx failure need opposite responses.
+# It now captures the output, retries once, and hands the caller the diagnostic. cd is re-asserted because
+# the script path is relative and a refusal caused by a changed working directory would look identical to
+# a refusal caused by policy.
+IDENTIFY_DIAG=""
+identify() {
+  local out st
+  cd "$REPO_ROOT" 2>/dev/null || { IDENTIFY_DIAG="could not cd to REPO_ROOT ($REPO_ROOT)"; return 1; }
+  out="$(npx tsx scripts/db-target-identify.ts --url "$GATE_URL" --identify-only 2>&1)"; st=$?
+  if [ "$st" -ne 0 ]; then
+    IDENTIFY_DIAG="first attempt exit ${st}:
+${out}"
+    sleep 2
+    out="$(npx tsx scripts/db-target-identify.ts --url "$GATE_URL" --identify-only 2>&1)"; st=$?
+    if [ "$st" -eq 0 ]; then
+      say "    [note] the gate failed once and succeeded on retry - treated as transient, not a refusal"
+    else
+      IDENTIFY_DIAG="${IDENTIFY_DIAG}
+
+retry exit ${st}:
+${out}"
+    fi
+  fi
+  return "$st"
+}
+show_identify_diag() {
+  say "    ---- gate diagnostic ----"
+  printf '%s
+' "$IDENTIFY_DIAG" | sed 's/^/      /'
+  say "    ------------------------"
+}
+identify || { show_identify_diag; fail "the target-identification gate refused this target."; }
 say "    [ok] policy gate: classified STAGING"
 
 [ -n "$DUMP_FILE" ] || fail "no dump path given."
@@ -245,7 +277,7 @@ say "  -- Phase 4: forward, in order --"
 FAILED_AT=""
 for entry in "${FORWARD_ORDER[@]}"; do
   label="${entry%%|*}"; rest="${entry#*|}"; fwd="${rest%%|*}"
-  identify || { unset PGPASSWORD; fail "the gate refused this target immediately before writing ${label}."; }
+  identify || { show_identify_diag; unset PGPASSWORD; fail "the gate refused this target immediately before writing ${label}."; }
   LOG="${DUMP_DIR}/full-fwd-$(echo "$label" | tr -c 'A-Za-z0-9' '-')-$(date -u +%H%M%S).log"
   : > "$LOG"; chmod 600 "$LOG"
   pg -v ON_ERROR_STOP=1 -f "$fwd" >> "$LOG" 2>&1
@@ -298,7 +330,7 @@ say
 say "  -- Phase 6: rollback, exact reverse order --"
 for i in 3 2 1 0; do
   entry="${FORWARD_ORDER[$i]}"; label="${entry%%|*}"; back="${entry##*|}"
-  identify || { unset PGPASSWORD; fail "the gate refused this target immediately before rolling back ${label}."; }
+  identify || { show_identify_diag; unset PGPASSWORD; fail "the gate refused this target immediately before rolling back ${label}."; }
   LOG="${DUMP_DIR}/full-back-$(echo "$label" | tr -c 'A-Za-z0-9' '-')-$(date -u +%H%M%S).log"
   : > "$LOG"; chmod 600 "$LOG"
   pg -v ON_ERROR_STOP=1 -f "$back" >> "$LOG" 2>&1
