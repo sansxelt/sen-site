@@ -186,6 +186,7 @@ function main(): number {
     acknowledgedExtraTables: { table: string; reason: string; rlsExpected: boolean }[];
     intentionallyExcluded: { table: string; reason: string }[];
     migrationDependencies?: { kind: string; name: string; table?: string; severity: string; requiredBy: string[]; reason: string }[];
+    expectedColumns?: Record<string, { source: string; confidence?: string; columns: { name: string; type: string; nullable: boolean; confidence?: string; why?: string }[] }>;
   };
   try {
     manifest = JSON.parse(readFileSync(args.manifest, "utf8"));
@@ -237,6 +238,7 @@ function reconcile(db: ReadOnlyDb, args: Args, manifest: {
   acknowledgedExtraTables: { table: string; reason: string; rlsExpected: boolean }[];
   intentionallyExcluded: { table: string; reason: string }[];
   migrationDependencies?: { kind: string; name: string; table?: string; severity: string; requiredBy: string[]; reason: string }[];
+  expectedColumns?: Record<string, { source: string; confidence?: string; columns: { name: string; type: string; nullable: boolean; confidence?: string; why?: string }[] }>;
 }) {
   const blockers: Blocker[] = [];
   const warnings: Blocker[] = [];
@@ -376,6 +378,45 @@ function reconcile(db: ReadOnlyDb, args: Args, manifest: {
     }
   }
 
+  // ── Structural contracts ─────────────────────────────────────────────────
+  //
+  // A table can be PRESENT, pass every check above, and still be the wrong table. For any table whose
+  // shape is asserted somewhere but proven nowhere — referral_events is the case that prompted this — the
+  // manifest carries a column contract, and any difference BLOCKS. A missing column, an extra one, a
+  // different type, or a different nullability all mean the contract and the database disagree, and until
+  // that is resolved nobody knows which one is wrong.
+  const columnContracts = manifest.expectedColumns ?? {};
+  const structural: { table: string; matched: boolean; diffs: string[] }[] = [];
+  for (const [table, contract] of Object.entries(columnContracts)) {
+    if (!presentNames.has(table)) {
+      // Its absence is already reported by the dependency check; do not double-report it here.
+      structural.push({ table, matched: false, diffs: ["table not present"] });
+      continue;
+    }
+    const rows = db.query(`
+      select column_name, data_type, is_nullable
+        from information_schema.columns
+       where table_schema = 'public' and table_name = '${table.replace(/'/g, "''")}'
+       order by ordinal_position`);
+    const actual = new Map(rows.map((r) => [r[0], { type: r[1], nullable: r[2] === "YES" }]));
+    const diffs: string[] = [];
+    for (const c of contract.columns) {
+      const got = actual.get(c.name);
+      if (!got) { diffs.push(`MISSING column "${c.name}" (expected ${c.type}${c.nullable ? "" : " NOT NULL"})`); continue; }
+      if (got.type !== c.type) diffs.push(`column "${c.name}" type is ${got.type}, contract says ${c.type}`);
+      if (got.nullable !== c.nullable) diffs.push(`column "${c.name}" is ${got.nullable ? "NULLABLE" : "NOT NULL"}, contract says ${c.nullable ? "NULLABLE" : "NOT NULL"}`);
+      actual.delete(c.name);
+    }
+    for (const extra of actual.keys()) diffs.push(`EXTRA column "${extra}" the contract does not know about`);
+    structural.push({ table, matched: diffs.length === 0, diffs });
+    if (diffs.length > 0) {
+      blockers.push({
+        code: "SCHEMA_MISMATCH", table,
+        detail: `the target's shape differs from the contract in sql/rls-preflight-manifest.json (${contract.source}). ${diffs.join("; ")}. Resolve which is wrong before migrating — the contract is a hypothesis, not a fact.`,
+      });
+    }
+  }
+
   // A failed CREATE INDEX CONCURRENTLY leaves an INVALID index behind. Re-running the migration then hits
   // "already exists" and skips, so the index stays invalid and enforces nothing — another silent pass.
   const invalidRows = db.query(`
@@ -413,6 +454,7 @@ function reconcile(db: ReadOnlyDb, args: Args, manifest: {
   line(`  intentionally excluded             ${manifest.intentionallyExcluded.length}`);
   line(`  created BY the migration itself    ${created.length}${created.length ? " (" + created.join(", ") + ")" : ""}`);
   line(`  migration dependencies checked     ${depResults.length}  (${depResults.filter((d) => !d.present).length} missing)`);
+  line(`  structural contracts checked       ${structural.length}  (${structural.filter((x) => !x.matched).length} mismatched)`);
   line();
   if (blockers.length) {
     line("── BLOCKERS ── (the migration must NOT be run)");
@@ -440,6 +482,7 @@ function reconcile(db: ReadOnlyDb, args: Args, manifest: {
     },
     expected, created, present, missing, unexpected, policies, defaultAcls,
     dependencies: depResults.map((d) => ({ kind: d.dep.kind, name: d.dep.name, present: d.present })),
+    structural,
     blockers, warnings,
   };
 }

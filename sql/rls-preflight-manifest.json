@@ -85,6 +85,24 @@
     }
   ],
 
+  "_columnNote": "STRUCTURAL contracts. For a table whose shape is asserted somewhere but proven nowhere, listing its columns here makes the preflight compare the CONTRACT against the TARGET and block on any difference - a missing column, an extra one, a different type, or a different nullability. Without this a table can be present, pass every other check, and still be the wrong table. Types are information_schema.data_type spellings.",
+
+  "expectedColumns": {
+    "referral_events": {
+      "source": "sql/CANDIDATE-referral-events.sql, derived from lib/referral.ts:13-21 (spec comment) and its seven call sites. NO generated database types exist in this repository to check against - lib/supabase-admin.ts:3 types the client as Record<string, never> and every call casts `as never`, so not one column name is type-checked anywhere.",
+      "confidence": "MIXED - see per-column notes. This is a hypothesis awaiting reconciliation, which is exactly why a mismatch must BLOCK rather than warn.",
+      "columns": [
+        { "name": "id",              "type": "uuid",                        "nullable": false, "confidence": "medium", "why": "spec comment only; the value is never read by any code" },
+        { "name": "referrer_email",  "type": "text",                        "nullable": false, "confidence": "high",   "why": "written non-null at referral.ts:137/:195, read as non-optional string at :179" },
+        { "name": "referred_email",  "type": "text",                        "nullable": false, "confidence": "high",   "why": "always written lowercased; it is the column of the partial unique index" },
+        { "name": "code",            "type": "text",                        "nullable": false, "confidence": "high",   "why": "written at :139/:197, read at :179; deriveCode emits 8 base-36 chars" },
+        { "name": "kind",            "type": "text",                        "nullable": false, "confidence": "high",   "why": "only 'signup' and 'conversion' are ever written or filtered" },
+        { "name": "credits_awarded", "type": "integer",                     "nullable": false, "confidence": "medium", "why": "spec says NOT NULL; referral.ts:249 reads it with ?? 0, the only null-tolerance in the file" },
+        { "name": "created_at",      "type": "timestamp with time zone",    "nullable": false, "confidence": "low",    "why": "spec comment only; never read, written, or ordered on anywhere" }
+      ]
+    }
+  },
+
   "_duplicateNote": "Both CONCURRENTLY index builds FAIL if duplicate rows already exist, and a failed concurrent build leaves an INVALID index behind that must be dropped before retrying. The preflight reports any invalid index it finds, and the runbook carries the duplicate-detection queries to run first.",
 
   "_excludedNote": "Empty on purpose. No table in this schema is intended to be readable by anon or authenticated: the application connects as service_role. If a genuinely public table is ever added (an unauthenticated marketing surface, say), list it here WITH its reason and the preflight will stop reporting it as unexpected - but it will still report its actual RLS and grant state so the exemption stays visible."

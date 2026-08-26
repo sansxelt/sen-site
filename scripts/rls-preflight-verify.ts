@@ -91,12 +91,26 @@ function expectedTables(): string[] {
 // in the repository — yet vraelis-referral-idempotency.sql builds a unique index on it. So a schema that
 // is "complete" as far as the RLS migration is concerned still lacks it. The fixture has to add it
 // explicitly, which is precisely the cross-migration gap the preflight exists to surface.
-const DEPENDENCY_TABLES = [
-  "create table if not exists public.referral_events (id int, referred_email text, kind text);",
+// The referral_events shape the manifest's contract asserts. Fixtures that should come out CLEAR must
+// create THIS, because the preflight now compares columns, not just existence.
+const CONTRACT_REFERRAL_EVENTS = `create table public.referral_events (
+  id               uuid        primary key default gen_random_uuid(),
+  referrer_email   text        not null,
+  referred_email   text        not null,
+  code             text        not null,
+  kind             text        not null,
+  credits_awarded  integer     not null default 0,
+  created_at       timestamptz not null default now()
+);`;
+
+// Everything a "complete" fixture needs EXCEPT referral_events, so a fixture can supply its own shape.
+const DEPENDENCY_INDEX_ONLY_TABLES = [
   "alter table public.v_credit_ledger add column if not exists user_id text;",
   "alter table public.v_credit_ledger add column if not exists reason text;",
   "alter table public.v_credit_ledger add column if not exists ext_ref text;",
 ].join("\n");
+
+const DEPENDENCY_TABLES = [CONTRACT_REFERRAL_EVENTS, DEPENDENCY_INDEX_ONLY_TABLES].join("\n");
 
 // The silent one, kept separate so a fixture can omit JUST this: without v_ledger_extref_uidx,
 // v_expire_monthly's replay protection is a no-op and nothing errors to tell you.
@@ -282,7 +296,47 @@ function main(): void {
   ok("  and warns that a re-run would skip it",
     (invalid.report?.blockers ?? []).some((b) => b.code === "INVALID_INDEX" && /re-run will skip/i.test(b.detail)));
 
-  // ── 9. THE READ-ONLY GUARANTEE ─────────────────────────────────────────
+  // ── 9. referral_events: missing, or STRUCTURALLY DIFFERENT ─────────────
+  //
+  // Its shape is asserted in a comment and proven nowhere. So a preflight that only asked "does the table
+  // exist?" would wave through a table with the right NAME and the wrong COLUMNS — which, for a table the
+  // credit-awarding path writes to, is not a smaller problem than it being absent.
+  console.log("── fixture 9: referral_events present but structurally WRONG ──");
+  {
+    // Present, but with a shape that disagrees with the contract in three different ways at once.
+    fixture(expected, [
+      DEPENDENCY_INDEX_ONLY_TABLES,
+      `create table public.referral_events (
+         id serial primary key,
+         referrer_email text,
+         referred_email text not null,
+         code text not null,
+         kind text not null,
+         credits_awarded integer not null default 0,
+         created_at timestamptz not null default now(),
+         campaign_id text
+       );`,
+      DEPENDENCY_INDEX,
+    ].join("\n"));
+    const drift = runPreflight(["--docker", CONTAINER, "--database", "target"], "schema-drift");
+    ok("a structurally different referral_events is BLOCKED", drift.code === 1, `exit=${drift.code}`);
+    const sm = (drift.report?.blockers ?? []).filter((b) => b.code === "SCHEMA_MISMATCH");
+    ok("  with a SCHEMA_MISMATCH blocker", sm.length > 0);
+    ok("  it catches the WRONG TYPE (serial/integer vs uuid)", sm.some((b) => /"id" type is integer/.test(b.detail)));
+    ok("  it catches the WRONG NULLABILITY (referrer_email)", sm.some((b) => /"referrer_email" is NULLABLE/.test(b.detail)));
+    ok("  it catches an EXTRA column the contract does not know about", sm.some((b) => /EXTRA column "campaign_id"/.test(b.detail)));
+    ok("  and it says the contract is a hypothesis, not a fact", sm.some((b) => /hypothesis/.test(b.detail)));
+  }
+
+  console.log("── fixture 10: referral_events matching the contract exactly ──");
+  {
+    fixture(expected, [DEPENDENCY_INDEX_ONLY_TABLES, CONTRACT_REFERRAL_EVENTS, DEPENDENCY_INDEX].join("\n"));
+    const match = runPreflight(["--docker", CONTAINER, "--database", "target"], "schema-match");
+    ok("a contract-matching referral_events is CLEAR", match.code === 0, `exit=${match.code}`);
+    ok("  with no SCHEMA_MISMATCH blocker", !(match.report?.blockers ?? []).some((b) => b.code === "SCHEMA_MISMATCH"));
+  }
+
+  // ── 10. THE READ-ONLY GUARANTEE ────────────────────────────────────────
   console.log("── the read-only guarantee ──");
   fixture(expected, DEPENDENCY_DDL);
   {
