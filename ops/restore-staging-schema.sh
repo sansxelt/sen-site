@@ -13,7 +13,15 @@
 # Auth users, Storage objects or Vault contents, or delete the verified dump.
 set -uo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO_ROOT="${RESTORE_REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+# Sanity-check it: if this script is run from a copy elsewhere, REPO_ROOT resolves somewhere
+# arbitrary (from /tmp it resolves to "/"), and then every path on the machine looks "inside the
+# repository" while the gate and verifier below resolve nowhere.
+if [ ! -f "$REPO_ROOT/scripts/db-target-identify.ts" ] || [ ! -f "$REPO_ROOT/scripts/verify-schema-dump.ts" ]; then
+  echo "  STOP: cannot locate the repository root (looked in '$REPO_ROOT')."
+  echo "        Run this from a checkout, or set RESTORE_REPO_ROOT to the repository root."
+  exit 1
+fi
 
 # ── Targets ────────────────────────────────────────────────────────────────
 STAGING_REF='mxxhpfbazbwczrhuxasv'          # owner-confirmed, independently checked via the Copy button
@@ -101,7 +109,9 @@ say "    [ok] policy gate: classified STAGING, exit 0"
 [ -n "$DUMP_FILE" ] || fail "no dump path given. usage: bash ops/restore-staging-schema.sh <dump.sql>"
 [ -f "$DUMP_FILE" ] || fail "dump not found: ${DUMP_FILE}"
 DUMP_DIR="$(cd "$(dirname "$DUMP_FILE")" && pwd)"
-case "$DUMP_DIR" in "$REPO_ROOT"*) fail "the dump is INSIDE the repository (${DUMP_DIR}). It must stay outside." ;; esac
+# Compare with a trailing slash on both sides so a sibling directory whose name merely starts with
+# the repo name (vraelis-backup) is not mistaken for a path inside the repo.
+case "${DUMP_DIR%/}/" in "${REPO_ROOT%/}/"*) fail "the dump is INSIDE the repository (${DUMP_DIR}). It must stay outside." ;; esac
 [ -s "$DUMP_FILE" ] || fail "the dump is empty."
 DUMP_MODE="$(stat -c '%a' "$DUMP_FILE" 2>/dev/null || echo '?')"
 [ "$DUMP_MODE" = "600" ] || fail "dump mode is ${DUMP_MODE}, not 600. chmod 600 it before restoring."
