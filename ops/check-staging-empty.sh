@@ -27,12 +27,12 @@ echo "  Step 3 — is the STAGING public schema empty?  (READ-ONLY)"
 echo
 
 # ── The pooler host. Region-specific, so it is required rather than guessed ──
-POOLER_HOST="${STAGING_POOLER_HOST:-}"
+# Staging's Session pooler host, read from the project's Connect dialog on 2026-08-25. A pooler hostname
+# is not a secret. It is recorded rather than prompted for because it is region-specific and NOT derivable
+# from the ref: staging is us-west-2 while production is us-east-2, so guessing it would have been a guess
+# pointed at a database. Override with STAGING_POOLER_HOST if the project ever moves.
+POOLER_HOST="${STAGING_POOLER_HOST:-aws-0-us-west-2.pooler.supabase.com}"
 if [ -z "$POOLER_HOST" ]; then
-  echo "  Staging's pooler hostname is region-specific and is NOT derivable from the project ref."
-  echo "  Find it in: Supabase dashboard -> staging project -> Connect -> Session pooler"
-  echo "  It looks like  aws-<n>-<region>.pooler.supabase.com"
-  echo
   read -rp '  staging Session pooler host: ' POOLER_HOST
 fi
 POOLER_PORT=5432                        # SESSION mode. 6543 is transaction mode.
@@ -50,7 +50,13 @@ esac
 # gate needs no credential to classify, so it runs on a password-less URL first.
 echo "  ── policy gate (no credential involved) ──"
 GATE_URL="postgresql://${STAGING_USER}@${POOLER_HOST}:${POOLER_PORT}/postgres"
-if ! STAGING_URL="$GATE_URL" npx tsx "${REPO_ROOT}/scripts/db-target-identify.ts" --identify-only; then
+
+# RELATIVE path, and cd first. An ABSOLUTE path does not survive this boundary: under WSL, REPO_ROOT is
+# /mnt/c/Users/... but `npx`/`node` on this machine are the WINDOWS binaries, so Windows Node reads
+# /mnt/c/... relative to the current drive and looks for C:\mnt\c\Users\... — module not found. The
+# working directory IS translated correctly by WSL interop, so a relative path resolves on either side.
+cd "$REPO_ROOT" || { echo "  FAILED: cannot cd to the repository root"; exit 1; }
+if ! STAGING_URL="$GATE_URL" npx tsx scripts/db-target-identify.ts --identify-only; then
   echo
   echo "  REFUSING: the target did not pass the identification gate. No password was requested."
   exit 3
