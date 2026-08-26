@@ -106,8 +106,16 @@ const ws = (deposit: number | null): VraelisWorkspace =>
 
 ok("ceiling is deposit x multiple when that exceeds the floor",
   autoCeilingCents(ws(20_000)) === Math.min(20_000 * AUTO_MULTIPLE(), AUTO_MAX_CENTS()));
-ok("ceiling falls back to the floor for a small deposit",
-  autoCeilingCents(ws(2_500)) === AUTO_FLOOR_CENTS(), `got ${autoCeilingCents(ws(2_500))}`);
+// "Small" has to mean small RELATIVE TO THE FLOOR, not a fixed amount. This used to pass $25 and expect
+// the floor, which only held while the floor was $500 and the band was collapsed — at a $25 floor, a $25
+// deposit is no longer a small deposit and its band is deposit x multiple. Derived from the floor so the
+// assertion keeps meaning the same thing whatever the configured values are.
+{
+  const trulySmall = Math.max(1, Math.floor(AUTO_FLOOR_CENTS() / AUTO_MULTIPLE()) - 1);
+  ok("ceiling falls back to the floor for a deposit small enough that the multiple does not reach it",
+    autoCeilingCents(ws(trulySmall)) === AUTO_FLOOR_CENTS(),
+    `deposit ${trulySmall} -> ${autoCeilingCents(ws(trulySmall))}, floor ${AUTO_FLOOR_CENTS()}`);
+}
 ok("ceiling is capped by the absolute maximum",
   autoCeilingCents(ws(10_000_000)) === AUTO_MAX_CENTS());
 ok("a zero deposit still yields the floor", autoCeilingCents(ws(0)) === AUTO_FLOOR_CENTS());
@@ -129,7 +137,13 @@ console.log("── authorization fails closed without a readable ledger ──"
     if (!r.ok) ok(`  reason is a ceiling denial, not a silent clamp`, r.reason === "above_auto_ceiling" || r.reason === "ceiling_unavailable", r.reason);
   }
   // Above-ceiling must be refused, never clamped down to the ceiling.
-  const above = await authorizeAgentPayment(ws(2_500), { kind: "full", proposedCents: AUTO_FLOOR_CENTS() + 1 });
+  //
+  // One cent over THE CEILING, computed from the workspace — not over the FLOOR. Those were the same
+  // number only while floor and maximum were equal and the band was collapsed; with a $25 floor,
+  // floor + 1 for a $25-deposit workspace sits comfortably UNDER its $250 ceiling and is not refused
+  // for the ceiling at all.
+  const ceilingFor2500 = autoCeilingCents(ws(2_500))!;
+  const above = await authorizeAgentPayment(ws(2_500), { kind: "full", proposedCents: ceilingFor2500 + 1 });
   ok("an amount one cent over the ceiling is refused", above.ok === false);
   if (!above.ok) ok("  and is reported as above_auto_ceiling", above.reason === "above_auto_ceiling");
   ok("refusal never returns an amount to charge", !("amountCents" in above));

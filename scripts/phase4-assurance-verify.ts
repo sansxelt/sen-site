@@ -137,8 +137,18 @@ console.log("── AUTO_PAY_MAX_CENTS ──");
   }
 
   // The ceiling a workspace actually gets, at the launch values.
-  ok("a $25-deposit workspace is capped at $500", autoCeilingCents({ deposit_amount_cents: 2_500 }) === 50_000);
-  ok("a $2,000-deposit workspace is ALSO capped at $500", autoCeilingCents({ deposit_amount_cents: 200_000 }) === 50_000);
+  //
+  // SUPERSEDED IN PHASE 4.1. This used to assert "a $25-deposit workspace is capped at $500" — which was
+  // the DEFECT written down as an expectation. Floor and maximum were both $500, so the band
+  // min(max(deposit x MULTIPLE, FLOOR), MAX) collapsed and every workspace got the maximum regardless of
+  // its own deposit. The floor is now $25, so the band is proportional again and the assertion is raised
+  // from "everyone gets the cap" to "a small workspace gets a small band, and nobody exceeds the cap".
+  // Full boundary sweep in scripts/phase41-autopay-verify.ts.
+  ok("a $25-deposit workspace gets a PROPORTIONAL $250 band, not the $500 cap",
+    autoCeilingCents({ deposit_amount_cents: 2_500 }) === 25_000);
+  ok("a $2,000-deposit workspace IS capped at $500 by the hard ceiling", autoCeilingCents({ deposit_amount_cents: 200_000 }) === 50_000);
+  ok("  so the ceiling still binds where it should, and only where it should",
+    (autoCeilingCents({ deposit_amount_cents: 2_500 }) ?? 0) < (autoCeilingCents({ deposit_amount_cents: 200_000 }) ?? 0));
   ok("  so no workspace can auto-charge above the owner's limit",
     [0, 1, 2_500, 50_000, 200_000, 10_000_000].every((d) => (autoCeilingCents({ deposit_amount_cents: d }) ?? 0) <= 50_000));
   ok("a malformed deposit yields no ceiling at all (fail closed)",
