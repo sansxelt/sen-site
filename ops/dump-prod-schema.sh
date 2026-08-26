@@ -77,6 +77,13 @@ else
   echo "  client   : dockerised ${PG_IMAGE} (no local pg_dump found)"
 fi
 
+# ── --check-connection: prove the credentials WITHOUT producing a dump ─────
+#
+# Iterating on a password by running a full dump is slow and leaves files behind. This mode authenticates,
+# reads two catalog values, and exits. It writes nothing.
+CHECK_ONLY=0
+case "${1:-}" in --check-connection) CHECK_ONLY=1 ;; esac
+
 # ── The password. Read silently; never echoed, never in argv, never stored ──
 read -rsp '  production DB password (input hidden): ' PGPASSWORD
 echo
@@ -84,6 +91,27 @@ echo
 export PGPASSWORD
 
 export PGHOST="$PROD_HOST" PGPORT="$PROD_PORT" PGUSER="$PROD_USER" PGDATABASE=postgres
+
+if [ "$CHECK_ONLY" -eq 1 ]; then
+  echo "  --check-connection: authenticating only, writing nothing ..."
+  MSYS_NO_PATHCONV=1 docker run --rm \
+    -e PGPASSWORD -e PGHOST -e PGPORT -e PGUSER -e PGDATABASE \
+    "$PG_IMAGE" \
+    psql -tAc "select 'connected as ' || current_user || ' to ' || current_database() || ' | server ' || split_part(version(), ' ', 2);"
+  CHECK_STATUS=$?
+  unset PGPASSWORD
+  rmdir -- "$DUMP_DIR" 2>/dev/null
+  echo "  PGPASSWORD unset"
+  if [ "$CHECK_STATUS" -eq 0 ]; then
+    echo "  credentials OK. Re-run without --check-connection to produce the dump."
+  else
+    echo "  credentials FAILED (exit $CHECK_STATUS). Nothing was written."
+    echo "  If this says 'password authentication failed', the password is wrong for this project —"
+    echo "  connectivity and routing already worked. Check you are using the DATABASE password"
+    echo "  (Project Settings -> Database), not the anon key, the service_role key, or an access token."
+  fi
+  exit "$CHECK_STATUS"
+fi
 
 echo "  running pg_dump ..."
 if [ "$MODE" = native ]; then
@@ -107,7 +135,34 @@ echo "  PGPASSWORD unset"
 if [ "$DUMP_STATUS" -ne 0 ]; then
   echo
   echo "  pg_dump exit: $DUMP_STATUS  — STOPPING. Nothing further will run."
-  echo "  (a partial file, if any, is at $DUMP_FILE — delete it)"
+
+  # Clean up after ourselves rather than telling the operator to. A failed run leaves an empty or partial
+  # file; leaving fragments of a production schema lying around in temp is not something to delegate.
+  rm -f -- "$DUMP_FILE" 2>/dev/null
+  rmdir -- "$DUMP_DIR" 2>/dev/null
+  echo "  cleaned up: removed the partial file and its temp dir"
+
+  echo
+  echo "  ── what the two known failure modes look like ──"
+  echo
+  echo "  'Network unreachable' on an IPv6 address (2600:...):"
+  echo "      The DIRECT host db.<ref>.supabase.co publishes ONLY an AAAA record — Supabase direct"
+  echo "      connections are IPv6-only. The default Docker bridge has EnableIPv6=false, so the container"
+  echo "      has no route. This is NOT a credential problem. Use the pooler host (already the default"
+  echo "      here), which resolves to IPv4."
+  echo
+  echo "  'password authentication failed for user \"postgres\"':"
+  echo "      Connectivity and tenant routing WORKED — you reached the server. Supavisor parses the ref"
+  echo "      out of postgres.<ref> and then authenticates upstream as 'postgres', which is why the error"
+  echo "      names 'postgres' rather than the full username. It does NOT mean PGUSER failed to arrive."
+  echo "      It means the password is wrong for this project."
+  echo
+  echo "      Most common cause: using an API key instead of the DATABASE password. The anon key, the"
+  echo "      service_role key and a personal access token are all different things and none of them will"
+  echo "      authenticate here. The database password is under"
+  echo "          Project Settings -> Database -> Database password"
+  echo
+  echo "  To test credentials WITHOUT producing a dump:  bash $0 --check-connection"
   exit "$DUMP_STATUS"
 fi
 
