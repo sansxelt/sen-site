@@ -162,8 +162,18 @@ if [ "$MODE" = "--forward" ]; then IDX="0 1 2 3"; else IDX="3 2 1 0"; fi
 for i in $IDX; do
   entry="${ORDER[$i]}"; label="${entry%%|*}"; rest="${entry#*|}"
   if [ "$MODE" = "--forward" ]; then file="${rest%%|*}"; else file="${entry##*|}"; fi
-  npx tsx scripts/db-target-identify.ts --url "$GATE_URL" --identify-only 2>&1 | grep -q 'PRODUCTION' \
-    || { unset PGPASSWORD; fail "the target stopped classifying as PRODUCTION immediately before ${label}."; }
+  # Captured, then matched - NOT piped. The identify script exits 3 on production BY DESIGN, and under
+  # `set -o pipefail` a pipeline inherits that 3 even when grep succeeds, so the piped form reported
+  # 'the target stopped classifying as PRODUCTION' about a target that had classified perfectly.
+  # Phase 0 already captured-then-matched; this is the same shape.
+  IDENT_LOOP="$(npx tsx scripts/db-target-identify.ts --url "$GATE_URL" --identify-only 2>&1)"
+  if ! printf "%s
+" "$IDENT_LOOP" | grep -q "PRODUCTION"; then
+    printf "%s
+" "$IDENT_LOOP" | tail -6 | sed "s/^/      /"
+    unset PGPASSWORD
+    fail "the target stopped classifying as PRODUCTION immediately before ${label}."
+  fi
   LOG="${DUMP_DIR}/prod-${MODE#--}-$(echo "$label" | tr -c 'A-Za-z0-9' '-')-$(date -u +%H%M%S).log"
   : > "$LOG"; chmod 600 "$LOG"
   pg -v ON_ERROR_STOP=1 -f "$file" >> "$LOG" 2>&1
