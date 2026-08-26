@@ -198,9 +198,9 @@ for kind in COL IDX CON RLS POL ACL FUN FACL SEQ TYP TRG DACL; do
 done
 say
 if [ "$DIFF_COUNT" -eq 0 ]; then
-  say "  RECONCILED — staging is structurally identical to the production dump."
-  say "  Every column type, nullability and default; every index and constraint definition; every RLS"
-  say "  flag, policy, table and function grant, sequence, type and trigger matches, fact for fact."
+  say "  RECONCILED — staging matches the sanitized transferred public-schema artifact."
+  say "  This is NOT a claim that staging is structurally identical to production; see the scope"
+  say "  exclusions below for what was never in the artifact to begin with."
   rm -f "$DIFF_FILE"
 else
   say "  DRIFT — ${DIFF_COUNT} differing fact(s). '<' is expected from the dump, '>' is actual staging."
@@ -210,6 +210,16 @@ else
   say
   say "  full diff: ${DIFF_FILE}  (mode 0600)"
 fi
+say
+say
+say "  SCOPE EXCLUSIONS — outside this reconciliation by construction:"
+say "    1. Database-level event triggers, including the one calling public.rls_auto_enable():"
+say "       --schema=public never selected them. The FUNCTION was cloned; the TRIGGER was not."
+say "    2. The 12 ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin statements: deliberately"
+say "       neutralised, so default privileges for that role are NOT compared."
+say "    3. auth, storage, vault, realtime and extension-managed schemas; application row data;"
+say "       and production role/cluster state: intentionally never cloned."
+say "    4. Any other database-level object outside the public-schema dump: out of scope."
 say
 say "  Nothing was written to staging: every statement was a SELECT inside BEGIN READ ONLY."
 say "  reference fingerprint: ${REF_FP}"
