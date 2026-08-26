@@ -19,31 +19,23 @@ set lock_timeout = '5s';
 
 begin;
 
--- Restore the Supabase default grants.
-grant all on all tables in schema public to anon, authenticated;
-grant all on all sequences in schema public to anon, authenticated;
-alter default privileges in schema public grant all on tables to anon, authenticated;
-alter default privileges in schema public grant all on sequences to anon, authenticated;
-alter default privileges in schema public grant all on functions to anon, authenticated;
-alter default privileges in schema public grant execute on functions to public;
-
--- Restore EXECUTE on the application functions (same catalog-driven set the forward migration revoked).
-do $$
-declare r record;
-begin
-  for r in
-    select p.oid::regprocedure as sig
-    from pg_proc p
-    join pg_namespace n on n.oid = p.pronamespace
-    where n.nspname = 'public'
-      and not exists (
-        select 1 from pg_depend d join pg_extension e on e.oid = d.refobjid
-        where d.objid = p.oid and d.deptype = 'e'
-      )
-  loop
-    execute format('grant execute on function %s to public, anon, authenticated', r.sig);
-  end loop;
-end $$;
+-- PRIVILEGE RESTORATION IS DELIBERATELY ABSENT FROM THIS FILE.
+--
+-- It used to begin with `grant all on all tables in schema public to anon, authenticated`. That grants
+-- all 107 tables where production grants 101, re-exposing the six deliberately hardened to service_role
+-- only: analytics_events, vraelis_bookings, vraelis_leads, vraelis_payments, vraelis_workspaces,
+-- waitlist. It also re-granted EXECUTE on every function to PUBLIC. A rollback that ends more permissive
+-- than the state it claims to restore is not a rollback.
+--
+-- Privilege restoration is owned EXCLUSIVELY by ops/p4-remediation-rollback.sql, which is generated from
+-- the verified production dump and reproduces each grant individually - proven to restore the 5187-fact
+-- fingerprint with zero differences.
+--
+-- CONSEQUENCE: this migration is reversible only WITHIN the ordered set
+--     forward   P4 -> P3-C -> P3-D -> H3
+--     rollback  H3 -> P3-D -> P3-C -> P4
+-- where P4's rollback runs last and restores privileges exactly. Running H3 standalone and rolling it
+-- back alone would leave anon/authenticated without the privileges section B revoked. Do not do that.
 
 -- Disable RLS on EXACTLY the tables this migration enabled it for.
 do $$

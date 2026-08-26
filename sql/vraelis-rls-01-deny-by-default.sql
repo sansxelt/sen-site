@@ -227,6 +227,13 @@ begin
     select p.oid::regprocedure as sig
     from pg_proc p join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public' and p.prosecdef
+      -- Only pin functions that are NOT already pinned. This loop used to overwrite unconditionally,
+      -- which clobbered rls_auto_enable's deliberate 'pg_catalog' pin with the weaker 'public,
+      -- pg_temp', and would clobber v_preflight_claim's 'pg_catalog, pg_temp' from the P4 migration.
+      -- This rollback does not reset pins, so an overwrite here is unrecoverable: it would make exact
+      -- restoration to the frozen baseline impossible. Replacing a stronger pin with a weaker one is
+      -- a regression in its own right, independently of the ordering.
+      and p.proconfig is null
   loop
     execute format('alter function %s set search_path = public, pg_temp', r.sig);
   end loop;
