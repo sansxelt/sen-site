@@ -171,6 +171,24 @@ echo "  pg_dump exit: 0"
 echo "  dump file   : $DUMP_FILE"
 [ -s "$DUMP_FILE" ] && echo "  file present and non-empty" || { echo "  FAILED: dump file is missing or empty"; exit 1; }
 
+# ── umask 077 does NOT cover this file, so set the mode explicitly ─────────
+#
+# umask applies to the process that CREATES a file. In docker mode pg_dump runs inside the container, as
+# root, under the container's own umask (022) — so the dump landed 0644 root-owned while the enclosing
+# directory, created by this shell, was correctly 0700. The directory still blocked traversal, but the
+# file itself did not meet the requirement.
+#
+# Found by checking rather than assuming: the script reported "umask set to 077" and the file was
+# world-readable anyway. Setting a umask is not the same as verifying a mode.
+if [ "$MODE" = docker ]; then
+  MSYS_NO_PATHCONV=1 docker run --rm -v "$DUMP_DIR:/out" "$PG_IMAGE" \
+    sh -c 'chmod 600 /out/prod-public-schema.sql && chown '"$(id -u 2>/dev/null || echo 0)":"$(id -g 2>/dev/null || echo 0)"' /out/prod-public-schema.sql' 2>/dev/null
+else
+  chmod 600 "$DUMP_FILE" 2>/dev/null
+fi
+ACTUAL_MODE="$(stat -c '%a' "$DUMP_FILE" 2>/dev/null || echo '?')"
+echo "  file mode   : $ACTUAL_MODE$([ "$ACTUAL_MODE" = "600" ] && echo '  (as required)' || echo '  <-- NOT 600; tighten before sharing this file')"
+
 echo
 echo "  Next: hand this path to the assistant to run the safety verification."
 echo "  It needs no password."
