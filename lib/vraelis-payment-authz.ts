@@ -44,17 +44,18 @@ import { envInt } from "./env-num";
 // negative one that disables the cap entirely. Each bound below states the widest value this control is
 // willing to honour, so a typo cannot quietly become "no ceiling".
 export const AUTO_MULTIPLE   = () => envInt("VRAELIS_AUTO_PAY_MULTIPLE",     { min: 1, max: 100, fallback: 10 });
-// NOTE THE INTERACTION WITH AUTO_MAX_CENTS. The ceiling is min(max(deposit x MULTIPLE, FLOOR), MAX). With
-// the launch values FLOOR and MAX are BOTH $500, so the band collapses: every workspace gets exactly $500
-// and neither the deposit nor the multiple changes anything. That is within the owner's $500 limit, and it
-// is the conservative direction in absolute terms — but it does mean a workspace whose configured deposit
-// is $25 can still auto-charge $500, which is 20x its deposit.
+// $25, set by the owner so the band SCALES with the deposit again.
 //
-// If per-workspace scaling is wanted back, LOWER THIS FLOOR (e.g. $100) rather than raising MAX; that
-// restores the multiple for small deposits while keeping $500 as the hard cap. Flagged for the owner
-// rather than changed here, because it is a policy choice, not a defect. Pinned by tests so the collapse
-// cannot change unnoticed.
-export const AUTO_FLOOR_CENTS = () => envInt("VRAELIS_AUTO_PAY_FLOOR_CENTS", { min: MIN_CHARGE_CENTS, max: 1_000_000, fallback: 50_000 });
+// It was $500 — the same value as the hard ceiling — and that collapsed the band: max(deposit x MULTIPLE,
+// FLOOR) could never fall below MAX, so every workspace got exactly $500 and the deposit stopped mattering.
+// A workspace whose owner had configured a $25 deposit could still have a $500 "full" payment authorized
+// automatically, twenty times their own deposit. Lowering the floor (rather than raising the ceiling) is
+// what restores proportionality while keeping $500 as the number that bounds a single incident.
+//
+// At $25 the floor is now MIN_CHARGE_CENTS-adjacent and mostly inert: max(deposit x 10, 2500) is dominated
+// by the deposit term for any deposit at or above $2.50. It exists to keep a workspace with a tiny or
+// unset deposit from getting a ceiling below the provider's own minimum charge.
+export const AUTO_FLOOR_CENTS = () => envInt("VRAELIS_AUTO_PAY_FLOOR_CENTS", { min: MIN_CHARGE_CENTS, max: 1_000_000, fallback: 2_500 });
 // LAUNCH DEFAULT $500, set by the owner. This is the single number that decides the worst case of one
 // successful manipulation, and $2,000 was judged too much exposure before there are real customers and
 // fraud data to reason from. Raising it is a deliberate act: set VRAELIS_AUTO_PAY_MAX_CENTS in the
@@ -113,8 +114,35 @@ export type PaymentAuthz =
 export function autoCeilingCents(ws: Pick<VraelisWorkspace, "deposit_amount_cents">): number | null {
   const deposit = Number(ws?.deposit_amount_cents ?? 0);
   if (!Number.isFinite(deposit) || deposit < 0) return null;
-  const derived = Math.max(deposit * AUTO_MULTIPLE(), AUTO_FLOOR_CENTS());
-  return Math.min(derived, AUTO_MAX_CENTS());
+
+  // STAGE 1 — the ORDINARY BAND, proportional to what the owner configured.
+  //   band = max(deposit x MULTIPLE, FLOOR)
+  // This is the number that scales. A workspace with a $200 deposit gets a $2,000 band; one with a $25
+  // deposit gets $250. The floor only rescues a workspace whose deposit is tiny or unset.
+  const band = Math.max(deposit * AUTO_MULTIPLE(), AUTO_FLOOR_CENTS());
+
+  // STAGE 2 — the HARD INCIDENT CEILING, which does not scale with anything.
+  //   ceiling = min(band, MAX)
+  // MAX is the single number that bounds the damage of ONE successful manipulation. It is deliberately
+  // NOT derived from workspace data, so no configuration a workspace owner (or anyone who can influence
+  // their settings) makes can raise it. The band can only ever be reduced by this, never increased.
+  return Math.min(band, AUTO_MAX_CENTS());
+}
+
+/**
+ * The two stages above, exposed separately so the distinction can be asserted rather than assumed.
+ *
+ * `band` is the ordinary, proportional number. `ceiling` is what is actually enforced. When
+ * `cappedByIncidentCeiling` is true, the hard ceiling — not the workspace's own configuration — is what
+ * decided the outcome.
+ */
+export function ceilingBreakdown(ws: Pick<VraelisWorkspace, "deposit_amount_cents">):
+  { band: number; ceiling: number; cappedByIncidentCeiling: boolean } | null {
+  const deposit = Number(ws?.deposit_amount_cents ?? 0);
+  if (!Number.isFinite(deposit) || deposit < 0) return null;
+  const band = Math.max(deposit * AUTO_MULTIPLE(), AUTO_FLOOR_CENTS());
+  const ceiling = Math.min(band, AUTO_MAX_CENTS());
+  return { band, ceiling, cappedByIncidentCeiling: band > ceiling };
 }
 
 /**
@@ -126,6 +154,15 @@ export async function authorizeAgentPayment(
   input: { kind: "deposit" | "full"; proposedCents: number | null | undefined },
 ): Promise<PaymentAuthz> {
   // A deposit is never negotiable: the owner set the number, the model does not get a vote.
+  //
+  // THE CEILING IS NOT A CHARGE, and this branch is where that matters most. The amount charged for a
+  // deposit is `deposit_amount_cents` VERBATIM — autoCeilingCents() is never consulted here, so a
+  // workspace with a $25 deposit is charged $25 and could not be charged the band or the ceiling by any
+  // path through this function. `ceilingCents` below is reported as the configured amount precisely
+  // because for a deposit the only permissible value IS that amount; there is no band to sit inside.
+  //
+  // The band and the hard ceiling bound the "full" branch only, where a model-proposed number exists to
+  // be bounded.
   if (input.kind === "deposit") {
     const configured = Number(ws?.deposit_amount_cents ?? 0);
     if (!Number.isFinite(configured) || configured < MIN_CHARGE_CENTS) {
