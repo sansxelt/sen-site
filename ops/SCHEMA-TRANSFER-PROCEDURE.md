@@ -130,59 +130,106 @@ The preflight enforces `2a` mechanically too — `rls-preflight.ts --dump` **ref
 
 ## Step 3 — confirm staging's `public` schema is empty
 
-Restoring onto existing objects produces partial failures that are tedious to unpick.
+**Executed 2026-08-25. Result: EMPTY, verified.**
 
 ```bash
-read -rsp 'staging DB password: ' PGPASSWORD; echo; export PGPASSWORD
-export PGHOST='db.mxxhpfbazbwczrhuxasv.supabase.co'   # owner-confirmed staging
-export PGPORT=5432
-export PGUSER=postgres
-export PGDATABASE=postgres
-
-psql -v ON_ERROR_STOP=1 -c \
-  "select count(*) as public_tables from pg_tables where schemaname='public';"
-echo "exit: $?"
+bash ops/check-staging-empty.sh
 ```
 
-Expect `0`. If it is not 0, stop and decide deliberately — this procedure does **not** use `--clean` or
-`--if-exists`, because a transfer script that drops objects is a transfer script that can drop the wrong
-ones.
+Use the **session pooler**, not the direct host: `db.<ref>.supabase.co` publishes only an AAAA record
+and Docker's default bridge has `EnableIPv6: false`, so a container gets "Network unreachable". The ref
+rides in the *username* (`postgres.<ref>`) for pooler connections.
+
+TLS is read from `\conninfo`, which reports the **client** link. `pg_stat_ssl` describes the pooler's
+*backend* link (Supavisor→Postgres) and misleadingly reports `ssl = off`.
+
+> This check is load-bearing. Restoring into a non-empty `public` whose object names simply do not
+> collide returns **exit 0** and silently merges alongside whatever was there. `ON_ERROR_STOP` and
+> `--single-transaction` protect against *name collisions*, not against a dirty target.
 
 ---
 
 ## Step 4 — restore into staging
 
+**Executed 2026-08-25. Result: committed, `psql exit 0`.**
+
 ```bash
-# Still pointed at staging from Step 3.
-psql -v ON_ERROR_STOP=1 -f prod-public-schema.sql
-echo "psql exit: $?"
+bash ops/restore-staging-schema.sh /tmp/vraelis-schema-XXXXXXXX/prod-public-schema.sql
+# add --preflight-only as a second argument for a dry run that writes nothing
 ```
 
-`ON_ERROR_STOP=1` so it halts on the first problem rather than half-applying and reporting success.
+### The dump does NOT apply as-is. Two statements collide, and each one aborts the whole restore.
 
-Expect some benign noise about extensions or roles that already exist. Read them; do not wave them
-through.
+The earlier version of this document said to run `psql -f prod-public-schema.sql` and to "expect some
+benign noise about extensions or roles that already exist". That was wrong. Under `--single-transaction`
+there is no benign noise — there are two hard failures, and each discards everything:
+
+| | Statement | Error | Where |
+|---|---|---|---|
+| **A** | `CREATE SCHEMA public;` (line 26, no `IF NOT EXISTS`) | `schema "public" already exists` | the **first** statement |
+| **B** | `ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin ...` (12 lines) | `permission denied to change default privileges` | **line 6900**, after all 107 tables |
+
+**B** is the dangerous one. `ALTER DEFAULT PRIVILEGES FOR ROLE <r>` requires membership in `<r>`, and
+Supabase's `postgres` is neither a superuser nor a member of `supabase_admin`. Fixing only the obvious
+`CREATE SCHEMA` line yields a restore that runs for thousands of statements and *then* throws it away.
+
+Both are resolved before connecting, with no `DROP`, no `--clean` and no `--if-exists`: the script
+derives a restore copy in which exactly those 13 lines are commented out in place, each with a marker
+saying why. The original dump is never modified; the copy is re-derived on every run with the diff
+asserted to be exactly 1 class-A + 12 class-B + 0 unexpected, so a stale artifact cannot be used. Class B
+is validated at run time — if `postgres` turned out to *be* a member of `supabase_admin`, the script
+stops rather than silently make staging differ from production.
+
+`--single-transaction` means it all applies or none of it does. Verified: an induced failure at line 5858,
+after all 107 tables had been created, left 0 tables and 0 functions behind.
 
 ---
 
-## Step 5 — verify the clone, then run the preflight
+## Step 4b — reconcile structurally
+
+`ops/restore-staging-schema.sh` reconciles by **counts and table names**. That is too coarse to trust on
+its own: a column whose type differs still counts as one column.
 
 ```bash
-export STAGING_URL="postgresql://postgres:$PGPASSWORD@$PGHOST:5432/postgres"
-unset PGPASSWORD
-
-# 5a. Identify the target. Must print STAGING and exit 0.
-npx tsx scripts/db-target-identify.ts
-echo "exit: $?"
-
-# 5b. The read-only reconciliation.
-npx tsx scripts/rls-preflight.ts --url "$STAGING_URL" --json preflight-staging.json
-echo "exit: $?"
+bash ops/reconcile-staging-schema.sh /tmp/vraelis-schema-XXXXXXXX/prod-public-schema.sql
 ```
 
-`5a` refuses production outright and refuses anything not positively identifiable as staging. `5b` is
-read-only: catalog metadata only, `default_transaction_read_only` verified by the server, every statement
+This restores the same derived file into a throwaway PostgreSQL shaped like a Supabase project,
+fingerprints it and staging with the identical query (`ops/schema-fingerprint.sql`), and diffs — about
+5,200 facts covering every column type, nullability and default, every index and constraint definition,
+every RLS flag and policy, every table and function grant, sequences, enum types, triggers and default
+privileges. It writes nothing to staging: every statement is a `SELECT` inside `BEGIN READ ONLY`.
+
+It refuses to report a match when either fingerprint is empty, so an unreachable or empty target cannot
+pass vacuously.
+
+---
+
+## Step 5 — the RLS preflight
+
+```bash
+npx tsx scripts/db-target-identify.ts          # must print STAGING and exit 0
+npx tsx scripts/rls-preflight.ts --url "$STAGING_URL" --json preflight-staging.json
+```
+
+Read-only: catalog metadata only, `default_transaction_read_only` verified server-side, every statement
 asserted to be a `SELECT`.
+
+---
+
+## Two known differences from production, by design
+
+1. **The 12 `supabase_admin` default-privilege grants are not applied.** They govern privileges on
+   *future* objects created by `supabase_admin`, not the 107 restored tables, and a Supabase project
+   already carries the platform's own defaults.
+
+2. **The event trigger behind production's RLS state is not in the dump.** Production has a
+   `public.rls_auto_enable()` event-trigger function that force-enables RLS on every new table in
+   `public` — which is why 107 tables are RLS-enabled with 0 policies. `pg_dump --schema=public`
+   exported the **function** but not the **event trigger**, because event triggers are database-level
+   objects and were never selected. All 107 tables carry explicit `ENABLE ROW LEVEL SECURITY`, so the
+   present RLS state transfers faithfully — but staging will **not** auto-enable RLS on tables created
+   in future the way production does.
 
 ---
 
@@ -213,24 +260,33 @@ The staging ref was corrected on 2026-08-25 after a dropped `x`; the earlier 19-
 recorded under `_removedEntries` so that if it resurfaces in a URL it is recognisable as the known-bad
 value rather than a new mystery.
 
-Verified offline (`--identify-only`, no connection):
+Verified offline (`--identify-only`, no connection), in the shape actually used — the session pooler,
+with the ref in the username:
 
 ```
-  1. Database host        db.mxxhpfbazbwczrhuxasv.supabase.co:5432
+  1. Database host        aws-0-us-west-2.pooler.supabase.com:5432
   2. Database name        postgres
-  3. Database user        postgres
+  3. Database user        postgres.mxxhpfbazbwczrhuxasv
   4. Supabase project ref mxxhpfbazbwczrhuxasv
   5. Environment          STAGING          exit 0
 ```
 
-**Not independently verified by this tooling.** `confirmed: true` records the OWNER's confirmation. Checking
-the ref against the Supabase dashboard's Copy button needs a browser and dashboard access, which this
-tooling does not have and which is out of scope. What was checked mechanically: 20 lowercase alphanumeric
-characters, exactly the earlier string with an `x` re-inserted at position 3, and distinct from production.
+**Independently confirmed by the owner** against the Supabase dashboard's Copy button on 2026-08-25.
+What this tooling checks mechanically is separate and narrower: 20 lowercase alphanumeric characters,
+and distinct from production. Both hold.
 
 ---
 
-## Awaiting approval
+## Status
 
-Nothing above has been executed. No database has been accessed. I will not run Step 1 or any later step
-until you approve, and I will re-present the exact commands with the corrected ref filled in first.
+| Step | State |
+|---|---|
+| 1 — production schema dump (read-only) | **done** 2026-08-25, `pg_dump exit 0`, verified 11/11 |
+| 2 — verify the file | **done** — 0 `COPY`, 0 `INSERT`, 0 secret-shaped literals, no non-public DDL |
+| 3 — confirm staging empty | **done** — all object counts 0, TLSv1.3 |
+| 4 — restore into staging | **done** 2026-08-25, `psql exit 0`, committed in one transaction |
+| 4b — structural reconciliation | tooling ready and tested offline; not yet run against staging |
+| 5 — RLS preflight | **not started** — needs separate approval |
+
+The RLS and security migrations have **not** been run against staging or production. The verified dump
+has not been deleted. Nothing has been pushed, merged, deployed, or applied to production.
