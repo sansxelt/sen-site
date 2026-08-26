@@ -74,6 +74,7 @@
     "phase41:cookie:test": "tsx scripts/phase41-cookie-verify.ts",
     "db:target:identify": "tsx scripts/db-target-identify.ts",
     "db:target:policy:test": "tsx scripts/db-target-policy-verify.ts",
+    "dump:verify": "tsx scripts/verify-schema-dump.ts",
     "gates": "tsx scripts/gates.ts",
     "gates:quick": "tsx scripts/gates.ts --quick",
     "context:test": "tsx scripts/preflight-context-verify.ts",
