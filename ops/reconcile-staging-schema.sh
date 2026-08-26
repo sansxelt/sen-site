@@ -110,13 +110,21 @@ create role authenticated nologin;
 create role service_role nologin bypassrls;
 create role postgres login createrole createdb password 'ref';
 grant anon, authenticated, service_role to postgres with admin option;
-alter schema public owner to postgres;
 SQL
+
+# Schema ownership is per-database, and the heredoc above connects to the DEFAULT database
+# (supabase_admin, from POSTGRES_USER) - so this ALTER has to be issued against the database
+# the restore actually targets, or the restore runs as postgres against a public schema it
+# does not own and fails with "permission denied for schema public".
+docker exec -i "$REF_CONTAINER" psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q -c "alter schema public owner to postgres;" >/dev/null 2>&1 || fail "could not set public-schema ownership in the reference database."
 docker cp "$RESTORE_FILE" "$REF_CONTAINER":/tmp/restore.sql >/dev/null 2>&1
 docker cp "$REPO_ROOT/ops/schema-fingerprint.sql" "$REF_CONTAINER":/tmp/fp.sql >/dev/null 2>&1
-docker exec -i -e PGPASSWORD=ref "$REF_CONTAINER" psql -h 127.0.0.1 -U postgres -d postgres \
-  -v ON_ERROR_STOP=1 --single-transaction -f /tmp/restore.sql >/dev/null 2>&1 \
-  || fail "the reference restore failed - the dump does not apply cleanly even locally."
+if ! docker exec -i -e PGPASSWORD=ref "$REF_CONTAINER" psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 --single-transaction -f /tmp/restore.sql > /tmp/.ref-restore.$$ 2>&1; then
+  grep -iE 'error|fatal' /tmp/.ref-restore.$$ | head -3 | sed 's/^/      /'
+  rm -f /tmp/.ref-restore.$$
+  fail "the reference restore failed - the dump does not apply cleanly even locally."
+fi
+rm -f /tmp/.ref-restore.$$
 REF_FP="${DUMP_DIR}/fingerprint-reference.txt"
 docker exec -i -e PGPASSWORD=ref "$REF_CONTAINER" psql -h 127.0.0.1 -U postgres -d postgres \
   -tA -v ON_ERROR_STOP=1 -f /tmp/fp.sql > "$REF_FP" 2>&1 || fail "the reference fingerprint failed."
