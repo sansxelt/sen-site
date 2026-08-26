@@ -211,7 +211,7 @@ say "  ── Phase 3: read-only preflight against staging (writes nothing) ─�
 # restore transaction opens. This is the only thing standing between us and a silent merge into a dirty
 # schema: proven offline, restoring into a non-empty public schema whose object names simply don't collide
 # returns exit 0 and quietly merges. --single-transaction does NOT protect against that.
-PRE_OUT="$(pg -v ON_ERROR_STOP=1 <<'SQL' 2>&1
+PRE_OUT="$(pg -tA -v ON_ERROR_STOP=1 <<'SQL' 2>&1
 \conninfo
 begin read only;
 select 'K_RO='       || current_setting('transaction_read_only');
