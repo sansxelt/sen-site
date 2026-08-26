@@ -235,6 +235,37 @@ select c.relname, i.indisvalid
 
 ## 7. Procedure
 
+### Step 0 — identify the target (mandatory, and it refuses by default)
+
+Before the preflight, prove which database you are pointed at.
+
+```bash
+export STAGING_URL='postgres://user:password@staging-host:5432/dbname'   # never inline; argv is visible
+npx tsx scripts/db-target-identify.ts
+echo "exit: $?"      # 0 = staging, verified read-only
+```
+
+It prints five things — host, database, user, Supabase project ref, environment — and nothing else. The
+password is never printed, logged, or placed in argv, and **no secret is ever measured**: presence only,
+never a length or a hash.
+
+| Exit | Meaning |
+|---:|---|
+| **0** | identified as STAGING **and** read-only mode verified by the server — proceed |
+| **2** | `STAGING_URL` missing or malformed |
+| **3** | refused: production project, or the environment is not positively identifiable as staging |
+| **4** | read-only mode could not be enabled **and verified** |
+
+**Exit 3 on an UNKNOWN target is correct, not a bug.** Absence of evidence that a target is production is
+not evidence that it is staging. If your staging host has no staging marker in its name, record its project
+ref in `ops/db-target-policy.json` rather than loosening the check.
+
+> **`gvcqzovxfijvtkhetopn` is the production project and is permanently denied.** Owner-confirmed
+> 2026-08-25. It is refused in every connection shape — including the pooler form, where the ref hides in
+> the *username* rather than the host — and refused even if the database is named `staging`. The denylist
+> is enforced in `rls-preflight.ts` as well, so skipping this step does not get around it, and
+> `scripts/db-target-policy-verify.ts` fails the build if the entry is removed or unmarked.
+
 ### Step 1 — preflight (mandatory)
 
 ```bash
