@@ -13,10 +13,11 @@
   "productionProjectRefs": [
     {
       "ref": "gvcqzovxfijvtkhetopn",
-      "source": "Observed once in a local file on the operator machine. NOT confirmed against the authoritative source.",
-      "confirmed": false,
-      "note": "TREATED AS PRODUCTION, UNCONFIRMED. The owner keeps environment variables in Vercel, not in local files, so the file this ref was read from may be stale and is not evidence of what production currently uses. The ref is kept here anyway because the two errors are not symmetric: wrongly refusing this target costs a re-run, wrongly allowing it could put a migration into production. It stays until the owner confirms the real production ref - at which point this entry should be corrected, not merely appended to.",
-      "howToConfirm": "The owner reads it from the Vercel project's environment settings. Do NOT go looking for it - that means reading deployment configuration, which is out of scope for this work."
+      "source": "Confirmed by the owner, 2026-08-25.",
+      "confirmed": true,
+      "permanent": true,
+      "note": "THE CURRENT PRODUCTION SUPABASE PROJECT. Permanently denied for staging operations. Any target resolving to this ref is refused outright, in every connection shape, whatever else the host or database name says - a database called 'staging' on this project is still production.",
+      "doNotRemove": "This entry is pinned by scripts/db-target-policy-verify.ts, which fails if it is deleted, unmarked, or no longer refused. Removing it is not a config tweak; it is disabling the one check standing between a staging command and the production database. If production genuinely moves to a different project, ADD the new ref and leave this one denied."
     }
   ],
 

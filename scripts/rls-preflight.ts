@@ -164,6 +164,35 @@ function migrationIsTransactional(migrationPath: string): boolean {
   return /^begin;\s*$/im.test(src) && /^commit;\s*$/im.test(src);
 }
 
+/**
+ * Is this connection string a production project the policy denies?
+ *
+ * Recognises BOTH Supabase shapes, because they hide the ref in different places: the direct form puts it
+ * in the host (db.<ref>.supabase.co), while the pooler puts it in the USERNAME
+ * (postgres.<ref>@aws-0-....pooler.supabase.com). Checking only the host would let the pooler form
+ * straight through — and the pooler form is the one people actually paste.
+ *
+ * Fails CLOSED on a missing or unreadable policy: no policy means no way to know a target is safe.
+ */
+function deniedProductionRef(url: string): { ref: string; note: string } | null {
+  const POLICY = "ops/db-target-policy.json";
+  let policy: { productionProjectRefs?: { ref: string; note?: string }[] };
+  try { policy = JSON.parse(readFileSync(POLICY, "utf8")); }
+  catch { return { ref: "(policy unreadable)", note: `${POLICY} is missing or malformed, so no target can be shown to be safe.` }; }
+
+  let host = "", user = "";
+  try { const u = new URL(url); host = u.hostname.toLowerCase(); user = decodeURIComponent(u.username).toLowerCase(); }
+  catch { return null; } // a malformed URL fails later, on its own terms
+
+  const fromHost = host.match(/^(?:db\.)?([a-z0-9]{16,})\.supabase\.(?:co|in)$/);
+  const fromUser = user.match(/^postgres\.([a-z0-9]{16,})$/);
+  const ref = fromHost?.[1] ?? fromUser?.[1] ?? null;
+  if (!ref) return null;
+
+  const hit = (policy.productionProjectRefs ?? []).find((p) => p.ref.toLowerCase() === ref);
+  return hit ? { ref: hit.ref, note: hit.note ?? "recorded as a production project" } : null;
+}
+
 // ── Report model ───────────────────────────────────────────────────────────
 type TableRow = { table: string; rls: boolean; browserGrants: string[] };
 type Blocker = { code: string; table?: string; detail: string };
@@ -198,6 +227,22 @@ function main(): number {
     if (manifest[k] === undefined) {
       console.error(`ERROR  manifest is missing required key: ${k}`);
       return 2;
+    }
+  }
+
+  // ── DENYLIST, CHECKED HERE TOO ───────────────────────────────────────────
+  //
+  // scripts/db-target-identify.ts is the gate that is SUPPOSED to run first, but nothing forces anyone to
+  // run it — this script accepts --url directly. A gate that can be walked around is a suggestion. So the
+  // denylist is enforced at the point of connection as well, and a target resolving to a production
+  // project is refused here even if the identify step was skipped entirely.
+  if (args.url) {
+    const denied = deniedProductionRef(args.url);
+    if (denied) {
+      console.error(`\nREFUSED  the target resolves to a production project (${denied.ref}).`);
+      console.error(`         ${denied.note}`);
+      console.error("         This is a staging tool. It does not point at production, read-only or not.\n");
+      return 3;
     }
   }
 
