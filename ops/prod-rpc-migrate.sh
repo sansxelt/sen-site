@@ -218,8 +218,19 @@ if [ "$MODE" = "--forward" ]; then
   say "      bash ops/prod-rpc-migrate.sh ${DUMP_FILE} --rollback"
 else
   D=0
-  if [ -f "${DUMP_DIR}/prodrpc-acl-expected.txt" ]; then
-    D="$(diff "${DUMP_DIR}/prodrpc-acl-expected.txt" "${DUMP_DIR}/prodrpc-after-rollback.txt" | grep -cE '^[<>]')"
+  # Compare against the state captured BEFORE the forward, which is what a rollback is meant to restore.
+  # An earlier version pointed at a dump-derived file that a rename had left non-existent, so the diff
+  # silently stayed 0 and reported "0 differing" without comparing anything - a vacuous pass in the one
+  # place you least want one. If the forward ran in a different session that file is absent, and this
+  # says so rather than implying a comparison happened.
+  BEFORE_FWD="${DUMP_DIR}/prodrpc-before-forward.txt"
+  if [ -f "$BEFORE_FWD" ]; then
+    D="$(diff "$BEFORE_FWD" "${DUMP_DIR}/prodrpc-after-rollback.txt" | grep -cE '^[<>]')"
+    say "      compared against the pre-forward fingerprint: ${D} differing"
+  else
+    D=0
+    say "      NOTE: no pre-forward fingerprint in ${DUMP_DIR} (forward ran in another session)."
+    say "            Only the fact count was checked, not a fact-for-fact comparison."
   fi
   unset PGPASSWORD
   say "      restored to ${AFTER} facts; ${D} differing from the dump-derived expectation"
