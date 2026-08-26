@@ -287,7 +287,12 @@ say "    [ok] staging IS at the frozen baseline: ${N} facts, 0 differing"
 say
 say "  -- Phase 4: forward, in order --"
 FAILED_AT=""
-for entry in "${FORWARD_ORDER[@]}"; do
+# Which migrations actually COMMITTED. On a forward failure the reverse loop must revert only these:
+# reverting one that never applied is not a no-op - H3's rollback refuses outright when its ledger table
+# is absent, which turns a clean "nothing was applied" into "staging is part-way, investigate".
+APPLIED_IDX=""
+for i_fwd in 0 1 2 3 4 5; do
+  entry="${FORWARD_ORDER[$i_fwd]}"
   label="${entry%%|*}"; rest="${entry#*|}"; fwd="${rest%%|*}"
   identify || { show_identify_diag; unset PGPASSWORD; fail "the gate refused this target immediately before writing ${label}."; }
   LOG="${DUMP_DIR}/rpc-fwd-$(echo "$label" | tr -c 'A-Za-z0-9' '-')-$(date -u +%H%M%S).log"
@@ -300,6 +305,7 @@ for entry in "${FORWARD_ORDER[@]}"; do
     say "    [FAIL] ${label} failed (exit ${st})"
     break
   fi
+  APPLIED_IDX="${APPLIED_IDX} ${i_fwd}"
   say "    [ok] ${label} applied  ($(grep -c 'NOTICE' "$LOG") notices, log $(basename "$LOG"))"
 done
 
@@ -340,7 +346,10 @@ fi
 # == Phase 6: rollback, exact reverse ========================================
 say
 say "  -- Phase 6: rollback, exact reverse order --"
-for i in 5 4 3 2 1 0; do
+REVERSE_IDX="$(for x in ${APPLIED_IDX}; do echo "$x"; done | sort -rn | tr '
+' ' ')"
+[ -z "${REVERSE_IDX// /}" ] && REVERSE_IDX=""
+for i in ${REVERSE_IDX}; do
   entry="${FORWARD_ORDER[$i]}"; label="${entry%%|*}"; back="${entry##*|}"
   identify || { show_identify_diag; unset PGPASSWORD; fail "the gate refused this target immediately before rolling back ${label}."; }
   LOG="${DUMP_DIR}/rpc-back-$(echo "$label" | tr -c 'A-Za-z0-9' '-')-$(date -u +%H%M%S).log"
