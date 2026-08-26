@@ -104,9 +104,21 @@ begin;
 \echo '── read-only, verified by the server ──'
 select '  transaction_read_only = ' || current_setting('transaction_read_only')
     || ' | default = ' || current_setting('default_transaction_read_only')
-    || ' | ssl = ' || coalesce((select case when ssl then 'on' else 'off' end
-                                from pg_stat_ssl where pid = pg_backend_pid()), 'unknown')
     || ' | server ' || split_part(version(), ' ', 2);
+
+\echo ''
+\echo '── TLS, from the CLIENT side (the only side that matters here) ──'
+-- \conninfo reports what libpq negotiated on THIS connection. pg_stat_ssl is NOT the right check through
+-- a pooler: it describes the Postgres backend's link, which is Supavisor->Postgres inside Supabase's
+-- network, so it reads 'off' even when the client link is fully encrypted. Reading pg_stat_ssl here would
+-- look like an alarming finding and mean nothing.
+--
+-- The real guarantee is PGSSLMODE=require: libpq REFUSES to connect at all rather than fall back to
+-- plaintext. So a successful connection under `require` is itself proof the client link is TLS.
+\conninfo
+select '  pg_stat_ssl (backend link, NOT the client link): '
+    || coalesce((select case when ssl then 'on' else 'off' end from pg_stat_ssl where pid = pg_backend_pid()), 'unknown')
+    || '  <- expected to read off through a pooler; see note above';
 
 \echo ''
 \echo '── counts of USER-CREATED objects in public ──'
@@ -162,10 +174,24 @@ select '    ' || e.extname from pg_extension e join pg_namespace n on n.oid=e.ex
 
 \echo ''
 \echo '── migration history ──'
-select '  supabase_migrations.schema_migrations: ' ||
-       case when to_regclass('supabase_migrations.schema_migrations') is null
-            then 'table absent (no Supabase CLI migrations recorded)'
-            else (select count(*)::text || ' row(s)' from supabase_migrations.schema_migrations) end;
+-- A DO block with EXECUTE, not a plain SELECT, and for a specific reason: PostgreSQL resolves table
+-- references at PLAN time, so naming supabase_migrations.schema_migrations anywhere in a statement fails
+-- when the table is absent — even inside a CASE branch that can never be reached. The first version of
+-- this check did exactly that and aborted the whole run under ON_ERROR_STOP before the verdict printed.
+--
+-- Dynamic SQL defers the reference until we already know the table exists. The DO block only reads; the
+-- transaction is read_only, so the server would refuse a write from it regardless.
+do $mig$
+declare n bigint;
+begin
+  if to_regclass('supabase_migrations.schema_migrations') is null then
+    raise notice '  supabase_migrations.schema_migrations: table absent (no Supabase CLI migrations recorded)';
+  else
+    execute 'select count(*) from supabase_migrations.schema_migrations' into n;
+    raise notice '  supabase_migrations.schema_migrations: % row(s)', n;
+  end if;
+end
+$mig$;
 
 \echo ''
 \echo '── VERDICT ──'
