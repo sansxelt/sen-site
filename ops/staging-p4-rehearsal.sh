@@ -112,6 +112,17 @@ docker cp "$REPO_ROOT/ops/schema-fingerprint.sql" "$REF_CONTAINER":/tmp/fp.sql >
 docker exec -i -e PGPASSWORD=ref "$REF_CONTAINER" psql -h 127.0.0.1 -U postgres -d postgres \
   -v ON_ERROR_STOP=1 --single-transaction -f /tmp/restore.sql >/dev/null 2>&1 \
   || fail "the reference restore failed."
+# The reference is a bare restore, so it lacks the platform-managed supabase_admin default privileges
+# every real Supabase project carries. Without them the corrected postcondition cannot run here, and the
+# expected-forward fingerprint would be built against a shape staging does not have. Applied AS
+# supabase_admin, the only role permitted to set them - the same constraint that makes them a platform
+# limitation on staging rather than something this migration can remediate.
+docker exec -i "$REF_CONTAINER" psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q >/dev/null 2>&1 <<'SQL' || fail "could not apply the reference supabase_admin defaults."
+alter default privileges for role supabase_admin in schema public grant all on sequences to postgres, anon, authenticated, service_role;
+alter default privileges for role supabase_admin in schema public grant all on functions to postgres, anon, authenticated, service_role;
+alter default privileges for role supabase_admin in schema public grant all on tables    to postgres, anon, authenticated, service_role;
+SQL
+
 BASELINE="${DUMP_DIR}/p4-baseline.txt"
 docker exec -i -e PGPASSWORD=ref "$REF_CONTAINER" psql -h 127.0.0.1 -U postgres -d postgres \
   -tA -v ON_ERROR_STOP=1 -f /tmp/fp.sql 2>&1 | sort > "$BASELINE"
@@ -119,6 +130,22 @@ chmod 600 "$BASELINE"
 [ "$(wc -l < "$BASELINE")" -eq "$BASELINE_FACTS" ] \
   || fail "baseline is $(wc -l < "$BASELINE") facts, expected ${BASELINE_FACTS}. Refusing to rehearse against a shifted baseline."
 say "    [ok] baseline rebuilt: $(wc -l < "$BASELINE") facts"
+
+# The expectation staging is measured against: the SAME forward migration applied to this reference,
+# fingerprinted the same way. A proven expected state, not a broad zero-count assertion.
+docker cp "$REPO_ROOT/ops/p4-remediation-forward.sql" "$REF_CONTAINER":/tmp/fwd.sql >/dev/null 2>&1
+if ! docker exec -i -e PGPASSWORD=ref "$REF_CONTAINER" psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 -f /tmp/fwd.sql > /tmp/.ref-fwd.$$ 2>&1; then
+  grep -iE 'error' /tmp/.ref-fwd.$$ | head -3 | sed 's/^/      /'
+  rm -f /tmp/.ref-fwd.$$
+  fail "the forward migration does not apply cleanly to the reference. Fix it before touching staging."
+fi
+grep -E 'NOTICE' /tmp/.ref-fwd.$$ | sed 's/^/      reference: /'
+rm -f /tmp/.ref-fwd.$$
+EXPECTED_FWD="${DUMP_DIR}/p4-expected-forward.txt"
+docker exec -i -e PGPASSWORD=ref "$REF_CONTAINER" psql -h 127.0.0.1 -U postgres -d postgres -tA -v ON_ERROR_STOP=1 -f /tmp/fp.sql 2>&1 | sort > "$EXPECTED_FWD"
+chmod 600 "$EXPECTED_FWD"
+[ "$(wc -l < "$EXPECTED_FWD")" -gt 3000 ] || fail "the expected-forward fingerprint has only $(wc -l < "$EXPECTED_FWD") facts."
+say "    [ok] expected POST-FORWARD fingerprint proven offline: $(wc -l < "$EXPECTED_FWD") facts"
 
 # == Phase 2: credentials ====================================================
 say
@@ -133,6 +160,13 @@ say "    [ok] password accepted (presence only); PGSSLMODE=require"
 
 pg() { docker run --rm -i -e PGPASSWORD -e PGHOST -e PGPORT -e PGUSER -e PGDATABASE -e PGSSLMODE \
          -v "${REPO_ROOT}/ops:/sql:ro" -v "${DUMP_DIR}:/work" "$PG_IMAGE" psql "$@"; }
+
+sa_defaults() {  # $1 = label -> the platform-managed supabase_admin defaults, in full detail
+  local out="${DUMP_DIR}/p4-sa-$1.txt"
+  pg -q -tA -v ON_ERROR_STOP=1 -c 'begin read only;' -c "select 'SA|'||coalesce(n.nspname,'GLOBAL')||'|'||da.defaclobjtype::text||'|'||coalesce(r.rolname,'PUBLIC')||'|'||a.privilege_type from pg_default_acl da left join pg_namespace n on n.oid=da.defaclnamespace join pg_roles cr on cr.oid=da.defaclrole cross join lateral aclexplode(da.defaclacl) a left join pg_roles r on r.oid=a.grantee where cr.rolname='supabase_admin' order by 1;" -c 'rollback;' 2>&1 | grep '^SA|' | sort > "$out"
+  chmod 600 "$out"
+  wc -l < "$out"
+}
 
 fingerprint() {  # $1 = label -> writes ${DUMP_DIR}/p4-$1.txt, echoes the fact count
   local out="${DUMP_DIR}/p4-$1.txt"
@@ -172,6 +206,8 @@ D="$(diff "$BASELINE" "${DUMP_DIR}/p4-before.txt" | grep -cE '^[<>]')"
   diff "$BASELINE" "${DUMP_DIR}/p4-before.txt" | grep -E '^[<>]' | head -10 | sed 's/^/      /'
   unset PGPASSWORD; fail "staging differs from the frozen baseline by ${D} fact(s). Refusing to rehearse."; }
 say "    [ok] staging IS at the frozen baseline: 0 differing facts"
+SA_BEFORE="$(sa_defaults before)"
+say "    [ok] platform-managed supabase_admin defaults recorded: ${SA_BEFORE} facts (this migration does not touch them)"
 
 # == Phase 4: forward ========================================================
 say
@@ -202,6 +238,27 @@ for kind in COL IDX CON RLS POL ACL FUN FACL SEQ TYP TRG DACL; do
   else printf '      %-8s %10s %10s   <-- changed by %s\n' "$kind" "$a" "$b" "$((b-a))"; fi
 done
 say "      removed: $(grep -c '^< ' "${DUMP_DIR}/p4-forward.diff")   added: $(grep -c '^> ' "${DUMP_DIR}/p4-forward.diff")"
+
+# The authoritative check: staging's post-forward state must equal the expectation proven offline,
+# fact for fact. A broad zero-count assertion is what failed the first staging attempt - it demanded
+# something the migration is not permitted to do, on a shape the fixture did not have.
+FWD_DRIFT="$(diff "$EXPECTED_FWD" "${DUMP_DIR}/p4-after-forward.txt" | grep -cE '^[<>]')"
+if [ "$FWD_DRIFT" -eq 0 ]; then
+  say "    [ok] post-forward state matches the proven expectation exactly: 0 differing facts"
+else
+  diff "$EXPECTED_FWD" "${DUMP_DIR}/p4-after-forward.txt" | grep -E '^[<>]' | head -12 | sed 's/^/      /'
+  say "    [FAIL] post-forward state differs from the proven expectation by ${FWD_DRIFT} fact(s)"
+fi
+
+# supabase_admin is an ACCEPTED PLATFORM LIMITATION, not something this migration remediates - so the
+# requirement is that it is EXACTLY unchanged, not that it is zero.
+SA_AFTER="$(sa_defaults after)"
+SA_DRIFT="$(diff "${DUMP_DIR}/p4-sa-before.txt" "${DUMP_DIR}/p4-sa-after.txt" | grep -cE '^[<>]')"
+if [ "$SA_DRIFT" -eq 0 ] && [ "$SA_BEFORE" = "$SA_AFTER" ]; then
+  say "    [ok] supabase_admin defaults unchanged at ${SA_AFTER} facts - accepted platform limitation, NOT remediated"
+else
+  say "    [FAIL] supabase_admin defaults changed: ${SA_BEFORE} -> ${SA_AFTER}, ${SA_DRIFT} differing fact(s)"
+fi
 
 # == Phase 5: functional verification ========================================
 say
@@ -278,6 +335,8 @@ printf '    %-42s %s\n' "staging before"             "${N} facts, 0 differing"
 printf '    %-42s %s\n' "after forward"              "${AFTER_FWD} facts"
 printf '    %-42s %s\n' "after verification"         "${AFTER_TESTS} facts, ${TEST_DRIFT} drift"
 printf '    %-42s %s\n' "after rollback"             "${AFTER_BACK} facts, ${RESTORE_DRIFT} differing"
+printf '    %-42s %s\n' "post-forward vs proven expectation" "${FWD_DRIFT:-?} differing"
+printf '    %-42s %s\n' "supabase_admin (platform limitation)" "${SA_AFTER:-?} facts, ${SA_DRIFT:-?} differing - accepted"
 printf '    %-42s %s\n' "functional checks"          "${VER_PASSES} passed / ${VER_FAILS} failed, concurrency $([ "${CONC_OK:-0}" = "1" ] && echo PASS || echo FAIL)"
 printf '    %-42s %s\n' "synthetic residue"          "${RESIDUE}"
 say
@@ -285,7 +344,7 @@ if [ "$RESTORE_DRIFT" -ne 0 ]; then
   diff "$BASELINE" "${DUMP_DIR}/p4-after-rollback.txt" | grep -E '^[<>]' | head -15 | sed 's/^/      /'
   fail "staging did NOT return to the frozen baseline: ${RESTORE_DRIFT} differing fact(s)."
 fi
-if [ "$VER_FAILS" -ne 0 ] || [ "${CONC_OK:-0}" != "1" ] || [ "$RESIDUE" != "0" ] || [ "$TEST_DRIFT" -ne 0 ]; then
+if [ "$VER_FAILS" -ne 0 ] || [ "${CONC_OK:-0}" != "1" ] || [ "$RESIDUE" != "0" ] || [ "$TEST_DRIFT" -ne 0 ] || [ "${FWD_DRIFT:-1}" -ne 0 ] || [ "${SA_DRIFT:-1}" -ne 0 ]; then
   fail "the rollback restored the baseline, but the verification did not fully pass. Do not proceed."
 fi
 say "    REHEARSAL PASSED - forward applied, every check passed, rollback restored the frozen"

@@ -110,7 +110,8 @@ GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO service_role;
 
 -- == 5. Assertions, inside the transaction. A failure rolls everything back. ==
 DO $$
-DECLARE t int; f int; d int; sr_t int; sr_f int; pub_f int;
+DECLARE t int; f int; sr_t int; sr_f int; pub_f int;
+        d_pg int; d_sa int; d_other int; d_sa_unexpected int;
 BEGIN
   SELECT count(*) INTO t FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
     CROSS JOIN LATERAL aclexplode(c.relacl) a JOIN pg_roles r ON r.oid=a.grantee
@@ -120,13 +121,68 @@ BEGIN
    WHERE n.nspname='public' AND r.rolname IN ('anon','authenticated');
   SELECT count(*) INTO pub_f FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
     CROSS JOIN LATERAL aclexplode(p.proacl) a WHERE n.nspname='public' AND a.grantee = 0;
-  -- LEFT JOIN, and allow defaclnamespace = 0: an INNER JOIN on pg_namespace hides GLOBAL rows entirely.
-  SELECT count(*) INTO d FROM pg_default_acl da LEFT JOIN pg_namespace n ON n.oid=da.defaclnamespace
-    CROSS JOIN LATERAL aclexplode(da.defaclacl) a LEFT JOIN pg_roles r ON r.oid=a.grantee
-   WHERE (n.nspname='public' OR da.defaclnamespace = 0) AND (r.rolname IN ('anon','authenticated') OR a.grantee = 0);
-  IF t <> 0 OR f <> 0 OR d <> 0 OR pub_f <> 0 THEN
-    RAISE EXCEPTION 'anon/authenticated/PUBLIC still hold privileges: % table, % function, % default, % PUBLIC-function', t, f, d, pub_f;
+  IF t <> 0 OR f <> 0 OR pub_f <> 0 THEN
+    RAISE EXCEPTION 'anon/authenticated/PUBLIC still hold privileges: % table, % function, % PUBLIC-function', t, f, pub_f;
   END IF;
+
+  -- Default privileges are split by CREATOR ROLE, not counted in aggregate.
+  --
+  -- An aggregate count is wrong here and cost a staging run: default privileges belong to the role that
+  -- creates the object, this migration runs as postgres, and postgres cannot alter another role's - so a
+  -- blanket "must be zero" demanded something the migration is not permitted to do. On a real Supabase
+  -- project supabase_admin carries the platform's own defaults, which contributed exactly 24 facts
+  -- (12 anon + 12 authenticated) and raised. A local restore has none, which is why the fixture passed.
+  --
+  -- LEFT JOIN and allow defaclnamespace = 0 throughout: an INNER JOIN on pg_namespace hides GLOBAL rows.
+
+  -- (a) postgres-controlled unsafe defaults must be GONE. This is the part the migration owns.
+  SELECT count(*) INTO d_pg
+    FROM pg_default_acl da LEFT JOIN pg_namespace n ON n.oid=da.defaclnamespace
+    JOIN pg_roles cr ON cr.oid=da.defaclrole
+    CROSS JOIN LATERAL aclexplode(da.defaclacl) a LEFT JOIN pg_roles r ON r.oid=a.grantee
+   WHERE (n.nspname='public' OR da.defaclnamespace = 0)
+     AND cr.rolname = 'postgres'
+     AND (r.rolname IN ('anon','authenticated') OR a.grantee = 0);
+  IF d_pg <> 0 THEN
+    RAISE EXCEPTION 'postgres-controlled default privileges still grant anon/authenticated/PUBLIC: % fact(s)', d_pg;
+  END IF;
+
+  -- (b) supabase_admin's platform-managed defaults must be EXACTLY the known baseline - no more, no fewer.
+  SELECT count(*) INTO d_sa
+    FROM pg_default_acl da JOIN pg_namespace n ON n.oid=da.defaclnamespace
+    JOIN pg_roles cr ON cr.oid=da.defaclrole
+    CROSS JOIN LATERAL aclexplode(da.defaclacl) a JOIN pg_roles r ON r.oid=a.grantee
+   WHERE n.nspname='public' AND cr.rolname='supabase_admin' AND r.rolname IN ('anon','authenticated');
+  -- and every one of them must match the expected (objtype, grantee, privilege) shape, so a changed
+  -- privilege or a move to another schema fails even when the count happens to stay the same.
+  SELECT count(*) INTO d_sa_unexpected
+    FROM pg_default_acl da JOIN pg_namespace n ON n.oid=da.defaclnamespace
+    JOIN pg_roles cr ON cr.oid=da.defaclrole
+    CROSS JOIN LATERAL aclexplode(da.defaclacl) a JOIN pg_roles r ON r.oid=a.grantee
+   WHERE cr.rolname='supabase_admin' AND r.rolname IN ('anon','authenticated')
+     AND (n.nspname <> 'public'
+          OR (da.defaclobjtype, a.privilege_type) NOT IN (
+               ('r','INSERT'),('r','SELECT'),('r','UPDATE'),('r','DELETE'),
+               ('r','TRUNCATE'),('r','REFERENCES'),('r','TRIGGER'),('r','MAINTAIN'),
+               ('S','SELECT'),('S','UPDATE'),('S','USAGE'),
+               ('f','EXECUTE')));
+  IF d_sa <> 24 OR d_sa_unexpected <> 0 THEN
+    RAISE EXCEPTION 'supabase_admin default privileges are not the expected platform baseline: % fact(s) (expected 24), % outside the expected shape (expected 0)', d_sa, d_sa_unexpected;
+  END IF;
+
+  -- (c) no OTHER creator role may hold defaults granting anon/authenticated/PUBLIC.
+  SELECT count(*) INTO d_other
+    FROM pg_default_acl da LEFT JOIN pg_namespace n ON n.oid=da.defaclnamespace
+    LEFT JOIN pg_roles cr ON cr.oid=da.defaclrole
+    CROSS JOIN LATERAL aclexplode(da.defaclacl) a LEFT JOIN pg_roles r ON r.oid=a.grantee
+   WHERE (n.nspname='public' OR da.defaclnamespace = 0)
+     AND coalesce(cr.rolname,'?') NOT IN ('postgres','supabase_admin')
+     AND (r.rolname IN ('anon','authenticated') OR a.grantee = 0);
+  IF d_other <> 0 THEN
+    RAISE EXCEPTION 'an unexpected creator role holds default privileges granting anon/authenticated/PUBLIC: % fact(s)', d_other;
+  END IF;
+
+  RAISE NOTICE 'ACCEPTED PLATFORM LIMITATION (not remediated): supabase_admin retains % default-privilege facts granting anon/authenticated. postgres cannot alter another role''s defaults, so objects created BY supabase_admin remain outside this migration. scripts/check-public-executable.ts is the standing backstop.', d_sa;
 
   SELECT count(DISTINCT c.oid) INTO sr_t FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
     CROSS JOIN LATERAL aclexplode(c.relacl) a JOIN pg_roles r ON r.oid=a.grantee
