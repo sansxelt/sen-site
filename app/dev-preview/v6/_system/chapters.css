@@ -57,7 +57,7 @@
    when the windows move.
    TO RESTORE the third beat: uncomment .v6-gap__found in chapters.tsx, add ~90vh, and open a window for
    --found / --foundout between --claim and --verdict. */
-.v6-gap { position: relative; height: 280vh; background: var(--paper); --p: 0;
+.v6-gap { position: relative; height: 280svh; background: var(--paper); --p: 0;
   /* Beat one: the claim, and the strike that contradicts it. */
   --strike:  clamp(0, calc((var(--p) - 0.05) / 0.13), 1);   /* 05 -> 18 struck   */
   --turn:    clamp(0, calc((var(--p) - 0.09) / 0.08), 1);   /* 09 -> 17 the line */
@@ -111,7 +111,7 @@
   opacity: calc(var(--turn) * (1 - var(--claim))); }
 
 /* the claim: holds the centre, then rises and shrinks as it loses authority */
-.v6-gap__claim { transform: translateY(calc(-50% - var(--claim) * 60vh))
+.v6-gap__claim { transform: translateY(calc(-50% - var(--claim) * 60svh))
   scale(calc(1 - 0.38 * var(--claim))); opacity: calc(1 - var(--claim)); }
 
 /* The .v6-gap__sys / .v6-gap__syslist block lived here. Its markup went when the chapter changed and the
@@ -119,7 +119,7 @@
    then looked like undefined tokens. Deleted rather than carried. */
 
 /* the observations: take the centre, hold it, then lift as the verdict resolves beneath */
-.v6-gap__found { transform: translateY(calc(-50% + 13vh - var(--found) * 15vh - var(--foundout) * 62vh));
+.v6-gap__found { transform: translateY(calc(-50% + 13svh - var(--found) * 15svh - var(--foundout) * 62svh));
   opacity: calc(var(--found) * (1 - var(--foundout))); }
 .v6-gap__found .v6-gap__label { color: var(--stop-ink); }
 .v6-gap__list { list-style: none; margin: clamp(14px, 2.2vh, 26px) 0 0; padding: 0;
@@ -129,7 +129,7 @@
 /* the consequence: arrives beneath the observations and resolves */
 /* resolves just above the optical centre, matching where the observations rested, rather than sitting low
    in the lower third of the frame */
-.v6-gap__verdictwrap { transform: translateY(calc(-50% + 12vh - var(--verdict) * 14vh - var(--settle) * 1.5vh));
+.v6-gap__verdictwrap { transform: translateY(calc(-50% + 12svh - var(--verdict) * 14svh - var(--settle) * 1.5svh));
   opacity: var(--verdict); }
 .v6-gap__verdict { font-family: var(--display); font-weight: 400; letter-spacing: -0.012em;
   font-synthesis-weight: none; line-height: 1.06;
@@ -154,7 +154,7 @@
    underneath. The fifth seal reads the same variable as the other four and clamps itself lower, so its gap
    is a property of the drawing rather than a second timeline that could drift out of step with the first.
    ========================================================================================= */
-.v6-au { position: relative; height: 300vh; background: var(--graphite); color: var(--g-fg-2); --p: 0;
+.v6-au { position: relative; height: 300svh; background: var(--graphite); color: var(--g-fg-2); --p: 0;
   --seals: clamp(0, calc(var(--p) / 0.62), 1);
   --turn:  clamp(0, calc((var(--p) - 0.60) / 0.26), 1); }
 .v6-au__pin { position: sticky; top: 0; height: 100svh; overflow: hidden;
@@ -259,7 +259,7 @@
 
    Scale is the point. A condition is a full statement at display size, not a row in a list.
    ========================================================================================= */
-.v6-st { position: relative; height: 430vh; background: var(--graphite); color: var(--g-fg-2); --p: 0;
+.v6-st { position: relative; height: 430svh; background: var(--graphite); color: var(--g-fg-2); --p: 0;
   /* FOUR refusals, four ring segments, one statement each. The comments here said eight, from a version
      of this chapter with eight of them; the geometry below was updated when the list shrank and the prose
      was not.
@@ -469,7 +469,7 @@
    put. There are no run counts and no dates anywhere; inventing usage history would be the exact
    dishonesty this product exists to catch.
    ===================================================================================== */
-.v6-rg { position: relative; height: 480vh; background: var(--graphite); color: var(--g-fg-2); --p: 0;
+.v6-rg { position: relative; height: 480svh; background: var(--graphite); color: var(--g-fg-2); --p: 0;
   /* four implementation names per guarantee, cycled across the chapter */
   --cyc: calc(var(--p) * 2.2); }
 .v6-rg__pin { position: sticky; top: 0; height: 100svh; overflow: hidden;
@@ -699,7 +699,7 @@
    then one deployment touching several outcomes. Hard lines and real boxes, deliberately not a glowing
    constellation: this is an operational structure, and it should look like one.
    ========================================================================================= */
-.v6-dr { position: relative; height: 520vh; background: var(--graphite); color: var(--g-fg-2); --p: 0;
+.v6-dr { position: relative; height: 520svh; background: var(--graphite); color: var(--g-fg-2); --p: 0;
   --g1: clamp(0, calc((var(--p) - 0.06) / 0.14), 1);   /* the guarantees   */
   --g2: clamp(0, calc((var(--p) - 0.22) / 0.16), 1);   /* the systems      */
   --g3: clamp(0, calc((var(--p) - 0.38) / 0.18), 1);   /* the edges        */
@@ -724,7 +724,7 @@
   gap: clamp(20px, 3.5vw, 56px); align-items: center; }
 
 /* ---- the graph ---- */
-.v6-dr__graph { width: 100%; height: auto; max-height: 62vh; overflow: visible; }
+.v6-dr__graph { width: 100%; height: auto; max-height: 62svh; overflow: visible; }
 .v6-dr__g rect { fill: rgba(255,255,255,0.05); stroke: var(--g-fg-3); stroke-width: 1.4;
   opacity: clamp(0, calc((var(--g1) * 3.4) - var(--i)), 1); }
 .v6-dr__g line { stroke: var(--g-fg); stroke-width: 2;
@@ -1173,7 +1173,7 @@
    THE PHONE GETS THE ARGUMENT, NOT JUST ITS CONCLUSION.
 
    Every block above unpins its chapter below 900px and then forces each moving part to its rest state with
-   `opacity: 1 !important; transform: none !important`. Unpinning is right: a scene pinned to 100vh and
+   `opacity: 1 !important; transform: none !important`. Unpinning is right: a scene pinned to 100svh and
    scrubbed from scroll position is hostile on a device whose URL bar resizes the viewport mid-gesture.
    Freezing the parts is the part that did not follow. Measured on an iPhone 13 viewport, not one part of
    any chapter ever left rest, while the identical page at 1440px animated all of them.
@@ -1515,6 +1515,19 @@
   .v6-st__list { position: static; min-height: 0; display: grid; gap: clamp(24px, 6vw, 36px); }
   .v6-st__cond { position: static; opacity: 1 !important; transform: none !important;
     padding-top: 18px; border-top: 1px solid var(--g-line); }
+
+  /* THE COUNT WAS THE ONE LABEL IN THIS CHAPTER WITH NO REST STATE. `.v6-st__count` fades out as --done
+     rises while `.v6-st__verdict` fades in over it, which is right while a hand is driving the scrub. This
+     composition has no scrub: the ring is already at its finished state, so --done rests high and the count
+     was measured unreadable at EVERY scroll position here and under prefers-reduced-motion, while all four
+     statements beside it revealed normally. That is content reachable only by moving, which is exactly what
+     a motion preference must not cost a reader.
+     The two stop overlapping and stack instead, so the count reads as the label it is, above the verdict it
+     produced. Forced to 1 rather than re-timed because no value of --done makes an absolutely-positioned
+     pair legible at once. */
+  .v6-st__centre { gap: 6px; }
+  .v6-st__count { opacity: 1 !important; }
+  .v6-st__verdict { position: static; inset: auto; opacity: 1 !important; transform: none !important; }
 
   /* Chapters 6 and 8: rows and layers stop being scrubbed. */
   .v6-rg__row, .v6-rg__foot, .v6-dr__layer { opacity: 1 !important; transform: none !important; }

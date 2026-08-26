@@ -48,6 +48,7 @@ const pinned = (rect: DOMRect, vh: number) => {
 export function useScrollProgress(ref: RefObject<HTMLElement | null>, options?: Options) {
   const property = options?.property ?? "--p";
   const onFrame = options?.onFrame;
+  const usesPinnedMapping = !options?.measure;
   const measure = options?.measure ?? pinned;
 
   useEffect(() => {
@@ -106,9 +107,26 @@ export function useScrollProgress(ref: RefObject<HTMLElement | null>, options?: 
       let raf = 0;
       let lastTime = 0;
 
+      // THE DENOMINATOR IS MEASURED FROM THE PIN, NOT FROM window.innerHeight.
+      //
+      // iOS Safari collapses its URL bar as you scroll and restores it when you stop or reverse, and
+      // window.innerHeight follows that by 60-90px mid-gesture. Every wrapper is sized in svh and every pin
+      // is `height: 100svh`, so both of those are FIXED while the visual viewport moves. Dividing a fixed
+      // travel by a moving viewport made the phase step by the bar's height the first time it collapsed:
+      // the scene jumped, and the reader lost their place in the middle of a sentence. That is the Apple
+      // behaviour reported from the field.
+      //
+      // Measuring the pin instead keeps scroll -> phase a pure function of layout geometry, so a bar that
+      // appears or disappears changes what you can SEE and never where you ARE. Only the default pinned
+      // mapping gets this: entryProgress deliberately measures against the real viewport, because an
+      // unpinned element entering the screen is a question about the visible area and nothing else.
+      const pinEl = usesPinnedMapping
+        ? el.querySelector<HTMLElement>(':scope > [class*="__pin"]')
+        : null;
       const readTarget = () => {
         if (!el.offsetParent) return;
-        target = measure(el.getBoundingClientRect(), window.innerHeight);
+        const h = pinEl && pinEl.offsetHeight > 0 ? pinEl.offsetHeight : window.innerHeight;
+        target = measure(el.getBoundingClientRect(), h);
       };
 
       const frame = (now: number) => {

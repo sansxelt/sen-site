@@ -622,6 +622,29 @@
   .v6 * { scroll-behavior: auto !important; }
 }
 
+/* ══════════════════════════════════ SMOOTH SCROLLING IS OFF ON THIS SITE, AT EVERY MOTION PREFERENCE ══
+   app/globals.css sets `html { scroll-behavior: smooth }` so anchor jumps glide, and on an ordinary
+   document that is right. This one is not an ordinary document: it is 26 screens of scroll-scrubbed film
+   whose phase is a pure function of scroll position.
+
+   What smooth costs here, all of it observed rather than predicted:
+     - every programmatic scrollTo becomes an ANIMATION, so anything that reads position immediately after
+       one reads a stale value. It corrupted my own measurements of this page twice before I noticed.
+     - components/use-hide-on-scroll.ts documents the reader-visible half: the browser eases into a target
+       and settles back onto it, so one downward gesture ends with tens of pixels of backward drift, which
+       reads as a scroll UP and pops the nav open at the end of every gesture.
+     - a restored scroll position on reload lands by animating THROUGH the chapters between, scrubbing each
+       one on the way past.
+
+   The rule above only reaches `.v6 *`, and `html` is not inside `.v6`, so it never applied to the element
+   that actually scrolls. :has() reaches it and is supported everywhere this site targets.
+
+   Wheel and touch scrolling are NOT affected: those are the compositor's, and they stay exactly as smooth
+   as the platform makes them. The only thing that changes is that an anchor jump lands at once instead of
+   travelling — and scroll-padding-top still places it correctly under the bar. */
+:root:has(.v6) { scroll-behavior: auto;
+}
+
 /* Homepage restart via the wordmark. The jump to the top happens while opacity is 0, so no one ever sees
    15600px of pinned chapters rewinding. Only the main content fades: the nav stays put, because the thing
    you just clicked vanishing under the cursor reads as a bug. */
