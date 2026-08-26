@@ -133,17 +133,25 @@ manipulation.
 | `vraelis-agent-payment-cap.sql` | No | creates its own table + 2 functions |
 | `vraelis-oauth-identity-binding.sql` | No | creates its own table + 1 function |
 | `vraelis-canonical-not-identity.sql` | No | 2 statements (drop index, create index) |
-| `vraelis-subscription-id-unique.sql` | **Must not be** | `CREATE INDEX CONCURRENTLY` |
-| `vraelis-referral-idempotency.sql` | **Must not be** | `CREATE INDEX CONCURRENTLY` |
+| `vraelis-subscription-id-unique.sql` | **Must not be** | `CREATE INDEX CONCURRENTLY` — and so is its rollback |
+| `vraelis-referral-idempotency.sql` | **Must not be** | `CREATE INDEX CONCURRENTLY` — and so is its rollback |
 | `vraelis-rls-01-deny-by-default.sql` | **Yes** (`begin;` :34 → `commit;` :244) | all-or-nothing |
 
 **Six of nine are bare statement sequences.** If one fails midway, part of it is applied. Each is written to
 be idempotent, so re-running is the normal recovery — but check what landed before you re-run.
 
-> **`sql/README.md` is wrong for two of these.** It says files are "applied by hand in the Supabase SQL
-> editor". The two `CONCURRENTLY` migrations **cannot run inside a transaction**, and a SQL editor that
-> wraps submissions in one will fail them. Run those two through `psql`, each on its own, or verify your
-> editor does not wrap. Do not assume.
+> **`sql/README.md` used to be wrong about this and has been corrected** (Phase 4.1). It previously said
+> every file is "applied by hand in the Supabase SQL editor". Two categories cannot be:
+>
+> - **The four `CONCURRENTLY` files** — the two forward migrations below **and their two rollbacks**
+>   (`vraelis-referral-idempotency-rollback.sql`, `vraelis-subscription-id-unique-rollback.sql`, which use
+>   `DROP INDEX CONCURRENTLY` and carry the same restriction). PostgreSQL refuses all four inside a
+>   transaction block. Run each through `psql`, on its own.
+> - **Every `*-verify.sql` and `*-tests.sql`** — they use psql meta-commands (`\echo`, `\set`, `\connect`),
+>   which are a psql client feature, not SQL. A web editor rejects them.
+>
+> `sql/README.md` and this runbook now say the same thing. If they ever diverge, that is a bug in the
+> documentation, and `scripts/phase41-docs-verify.ts` fails when they do.
 
 ---
 

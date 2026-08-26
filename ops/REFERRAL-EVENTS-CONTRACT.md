@@ -2,8 +2,12 @@
 
 **Status: UNRESOLVED.** This is a hypothesis derived from code, not a description of a database.
 
-`referral_events` has **no `CREATE TABLE` anywhere** — not in `sql/`, not in `docs/`, not in the git
-history. The application has been reading and writing it for a long time, so it very likely exists in
+`referral_events` has **no `CREATE TABLE` anywhere** — not in `sql/`, not in `docs/`, and not at any point
+in the git history. Verified, not assumed: `git log --all -S 'referral_events'` returns five commits and
+**none of them contains DDL**. The only `create table ... referral_events` string in the entire history is
+a test fixture in `scripts/rls-preflight-verify.ts`, written during this remediation.
+
+The application has been reading and writing the table for a long time, so it very likely exists in
 production. Nobody can say what shape it has.
 
 The candidate migration is [`sql/CANDIDATE-referral-events.sql`](../sql/CANDIDATE-referral-events.sql).
@@ -42,13 +46,19 @@ renamed tomorrow.
 `user_profiles(email)` or `referral_codes(email)`, but nothing in the code enforces or assumes it, and
 adding an FK to a table with historical rows is how a migration fails at 3am.
 
-### Indexes
+### Indexes, and a second piece of uniqueness evidence
 
 The candidate creates two read-pattern indexes: `(referred_email, kind)` and `(referrer_email, kind)`,
 matching the filters at `:130`/`:170`/`:188` and `:236`/`:241`.
 
 It does **not** create the signup-uniqueness index. That lives in
 `sql/vraelis-referral-idempotency.sql` and must be built `CONCURRENTLY`, outside a transaction.
+
+**The code independently requires that uniqueness.** `lib/referral.ts:172` uses `.maybeSingle()`, which
+*errors* if more than one row matches — so the signup read already assumes at most one row per
+`(referred_email, kind='signup')`. That is the same invariant the partial index enforces, arrived at from
+the opposite direction: the index makes it true, and `.maybeSingle()` breaks if it is not. Two independent
+sources agreeing is the strongest evidence in this document.
 
 ## Two findings the tracing turned up
 

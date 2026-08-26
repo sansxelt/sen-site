@@ -1,7 +1,90 @@
 # Migrations
 
-Numbered files in this directory are SCHEMA. They are additive, safe to re-run, and applied by hand in the
-Supabase SQL editor. Historical DATA corrections are not migrations and do not live here; see `ops/`.
+Numbered files in this directory are SCHEMA. They are additive and safe to re-run. Historical DATA
+corrections are not migrations and do not live here; see `ops/`.
+
+## How to apply — read this before pasting anything into a SQL editor
+
+Most files here can be applied by hand in the Supabase SQL editor. **Some cannot**, and the difference is
+not cosmetic: pasting one of them into a web editor either fails outright or, worse, appears to succeed
+while leaving an index that enforces nothing.
+
+### These MUST run through `psql`, each on its own, NEVER inside a transaction
+
+| File | Statement |
+|---|---|
+| `vraelis-referral-idempotency.sql` | `create unique index concurrently ... referral_events_signup_uidx` |
+| `vraelis-referral-idempotency-rollback.sql` | `drop index concurrently ... referral_events_signup_uidx` |
+| `vraelis-subscription-id-unique.sql` | `create unique index concurrently ... vraelis_workspaces_plan_subscription_id_uidx` |
+| `vraelis-subscription-id-unique-rollback.sql` | `drop index concurrently ...` |
+
+`CREATE INDEX CONCURRENTLY` and `DROP INDEX CONCURRENTLY` are **refused by PostgreSQL inside a transaction
+block**. The Supabase SQL editor is not guaranteed to submit statements outside one, so do not rely on it
+for these. None of the four contains `begin;`/`commit;`, and none may be given one.
+
+```bash
+# Correct: one file, its own connection, no wrapper.
+psql "$URL" -v ON_ERROR_STOP=1 -f sql/vraelis-subscription-id-unique.sql
+echo "exit=$?"          # read on the NEXT line — see "Reading exit codes" below
+```
+
+**Before running either forward CONCURRENTLY migration**, check for the duplicates that would make the
+build fail:
+
+```sql
+-- for vraelis-subscription-id-unique.sql
+select plan_subscription_id, count(*), array_agg(owner_email)
+  from vraelis_workspaces
+ where plan_subscription_id is not null
+ group by plan_subscription_id having count(*) > 1;
+
+-- for vraelis-referral-idempotency.sql
+select referred_email, count(*) from referral_events
+ where kind = 'signup' group by referred_email having count(*) > 1;
+```
+
+Any rows returned mean the index build **will** fail. Resolve the duplicates first. For referrals a
+duplicate means credits were awarded more than once for one signup — reconcile the credit ledger by hand
+before building the index.
+
+**When a CONCURRENTLY build fails** it leaves an **INVALID** index behind. Because `if not exists` matches
+on *name*, re-running then skips it and the invalid index remains, enforcing nothing, silently and
+indefinitely. Always verify:
+
+```sql
+select c.relname, i.indisvalid
+  from pg_class c join pg_index i on i.indexrelid = c.oid
+ where c.relname in ('referral_events_signup_uidx', 'vraelis_workspaces_plan_subscription_id_uidx');
+```
+
+`indisvalid = false` → run the matching `-rollback.sql` to drop it, then re-run the forward migration.
+`scripts/rls-preflight.ts` also reports any invalid index in the schema and treats it as a blocker.
+
+### These cannot go in a web SQL editor either
+
+Every `*-verify.sql` and `*-tests.sql` file uses psql meta-commands (`\echo`, `\set`, `\connect`), which are
+a **psql client feature, not SQL**. A web editor will reject them. Run them with `psql -f`.
+
+```bash
+psql "$URL" -f sql/vraelis-credit-hold-atomic-verify.sql
+```
+
+### One file is transactional and must stay that way
+
+`vraelis-rls-01-deny-by-default.sql` wraps itself in `begin;` / `commit;` and enables RLS on 95 tables with
+no `if exists` guard. That is deliberate: one absent table aborts the whole thing and changes nothing.
+Do not split it up, and do not remove the wrapper.
+
+### Reading exit codes
+
+Read `$?` on the line immediately after the command. `psql -f x.sql | tee log` reports **tee's** status, and
+`echo "$(basename $f) $?"` reports **basename's** — both print `0` for a failed migration. This has produced
+false "green" reports in this repository before; `scripts/gates.ts` exists because of it.
+
+### The full procedure
+
+`ops/STAGING-RUNBOOK.md` is the operator procedure: prerequisites, order, preflight, verification, stop
+conditions and rollback boundaries. **No migration runs until `scripts/rls-preflight.ts` reports `CLEAR`.**
 
 ## There are two migration 19s
 

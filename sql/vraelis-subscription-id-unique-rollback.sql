@@ -1,0 +1,38 @@
+-- ROLLBACK for sql/vraelis-subscription-id-unique.sql
+--
+-- Written during Phase 4.1: this was the only migration on the branch without a rollback, and it is one of
+-- the two that cannot run inside a transaction — exactly the pair most likely to need one.
+--
+-- ── RUN THIS FILE ON ITS OWN. DO NOT WRAP IT IN A TRANSACTION. ────────────────────────────────────────
+--
+-- DROP INDEX CONCURRENTLY has the same restriction as CREATE INDEX CONCURRENTLY: PostgreSQL refuses it
+-- inside a transaction block. That rules out the Supabase SQL editor if it wraps submissions, and it rules
+-- out pasting this alongside other statements. Use psql:
+--
+--   psql "$URL" -v ON_ERROR_STOP=1 -f sql/vraelis-subscription-id-unique-rollback.sql
+--
+-- WHAT IT UNDOES. The forward migration builds a partial unique index that stops one Stripe subscription
+-- id being attached to two workspaces. Dropping it does not delete or alter a single row; it removes the
+-- guarantee that no future write can create that duplicate.
+--
+-- BEFORE DROPPING, know what you are giving up:
+--
+--   select plan_subscription_id, count(*), array_agg(owner_email)
+--     from vraelis_workspaces
+--    where plan_subscription_id is not null
+--    group by plan_subscription_id having count(*) > 1;
+--
+-- With the index in place that returns nothing, by construction. After dropping it, duplicates become
+-- possible again, and a duplicate means two workspaces billing against one subscription.
+--
+-- IF THE FORWARD BUILD FAILED. A cancelled or failed CREATE INDEX CONCURRENTLY leaves an INVALID index
+-- behind. Because `if not exists` matches on NAME, re-running the forward migration then SKIPS it and the
+-- invalid index stays — enforcing nothing, silently. Check first:
+--
+--   select c.relname, i.indisvalid
+--     from pg_class c join pg_index i on i.indexrelid = c.oid
+--    where c.relname = 'vraelis_workspaces_plan_subscription_id_uidx';
+--
+-- indisvalid = false means: run this rollback to drop it, then re-run the forward migration.
+
+drop index concurrently if exists vraelis_workspaces_plan_subscription_id_uidx;
