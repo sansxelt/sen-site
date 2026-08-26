@@ -176,7 +176,9 @@ for f in p4-remediation-forward.sql p4-remediation-rollback.sql; do
 done
 for f in vraelis-expire-monthly-atomic.sql vraelis-expire-monthly-atomic-rollback.sql \
          vraelis-agent-payment-cap.sql vraelis-agent-payment-cap-rollback.sql \
-         vraelis-rls-01-deny-by-default.sql vraelis-rls-01-rollback.sql; do
+         vraelis-rls-01-deny-by-default.sql vraelis-rls-01-rollback.sql \
+         vraelis-credit-hold-atomic.sql vraelis-credit-hold-atomic-rollback.sql \
+         vraelis-oauth-identity-binding.sql vraelis-oauth-identity-binding-rollback.sql; do
   docker cp "$REPO_ROOT/sql/$f" "$REF_CONTAINER":/sqlm/"$f" >/dev/null 2>&1
 done
 docker exec -i -e PGPASSWORD=ref "$REF_CONTAINER" psql -h 127.0.0.1 -U postgres -d postgres \
