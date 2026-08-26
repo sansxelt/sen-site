@@ -87,4 +87,9 @@ select 'DACL|' || coalesce(r.rolname, '?') || '|' || d.defaclobjtype::text || '|
   cross join lateral aclexplode(d.defaclacl) a
   left join pg_roles gr on gr.oid = a.grantee
  where n.nspname = 'public'
+   -- Scope exclusion 2: the 12 supabase_admin default-privilege statements are deliberately NOT applied,
+   -- and a real Supabase project carries the platform's own. Comparing them would report the platform's
+   -- expected state as drift, contradicting the exclusion this tooling prints. Excluded at the source so
+   -- what is claimed and what is compared agree.
+   and coalesce(r.rolname, '') <> 'supabase_admin'
 order by 1;
