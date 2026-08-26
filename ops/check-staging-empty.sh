@@ -55,8 +55,18 @@ GATE_URL="postgresql://${STAGING_USER}@${POOLER_HOST}:${POOLER_PORT}/postgres"
 # /mnt/c/Users/... but `npx`/`node` on this machine are the WINDOWS binaries, so Windows Node reads
 # /mnt/c/... relative to the current drive and looks for C:\mnt\c\Users\... — module not found. The
 # working directory IS translated correctly by WSL interop, so a relative path resolves on either side.
+#
+# And the URL goes in ARGV, not the environment. WSL does not forward environment variables to Windows
+# binaries AT ALL — not via `VAR=value cmd`, not via `export`; only names listed in WSLENV cross. So
+# `STAGING_URL=... npx tsx ...` reached Windows Node with STAGING_URL undefined, and the gate correctly
+# refused a target it could not see. (The dump script is unaffected: `docker` in this WSL is the Linux
+# CLI, which inherits the environment natively — which is why PGPASSWORD reached the container fine.)
+#
+# Argv is safe HERE specifically because this URL carries no password. That is deliberate: the gate
+# classifies from host and user alone, so it never needs a credential, and the one URL we must pass
+# across this boundary is the one with nothing sensitive in it.
 cd "$REPO_ROOT" || { echo "  FAILED: cannot cd to the repository root"; exit 1; }
-if ! STAGING_URL="$GATE_URL" npx tsx scripts/db-target-identify.ts --identify-only; then
+if ! npx tsx scripts/db-target-identify.ts --url "$GATE_URL" --identify-only; then
   echo
   echo "  REFUSING: the target did not pass the identification gate. No password was requested."
   exit 3
