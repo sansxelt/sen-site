@@ -39,7 +39,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string; pro
   const p = resolveOAuthProvider(provider);
   if (!p) return NextResponse.json({ error: "unknown_provider" }, { status: 404 });
   if (!vaultConfigured()) return NextResponse.json({ error: "vault_unconfigured" }, { status: 503 });
-  if (!providerAvailable(p)) return backToConnections(req, appId, `oauth=error&provider=${provider}&reason=server_misconfigured`);
+  if (!providerAvailable(p)) return backToConnections(req, appId, new URLSearchParams({ oauth: "error", provider: p.kind, reason: "server_misconfigured" }).toString());
 
   const nonce = newNonce();
   const state = signOAuthState({ appId, owner, provider, nonce });
@@ -47,7 +47,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string; pro
   // PKCE providers: only the S256 hash goes to the provider; the verifier stays in an httpOnly cookie.
   const verifier = p.pkce ? createCodeVerifier() : null;
   const authUrl = buildAuthorizeUrl(p, { state, redirectUri, codeChallenge: verifier ? codeChallengeS256(verifier) : undefined });
-  if (!authUrl) return backToConnections(req, appId, `oauth=error&provider=${provider}&reason=server_misconfigured`);
+  if (!authUrl) return backToConnections(req, appId, new URLSearchParams({ oauth: "error", provider: p.kind, reason: "server_misconfigured" }).toString());
 
   const res = NextResponse.redirect(authUrl, 302);
   // Nonce cookie: a belt-and-suspenders match the callback re-checks against the signed state's nonce.

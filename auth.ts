@@ -1,7 +1,11 @@
 import NextAuth from "next-auth";
-import type { NextRequest } from "next/server";
+import { canonicalizeEmail } from "@/lib/user-credentials";
+import { allowStrict, peekAllowed } from "@/lib/vraelis-ratelimit";
+import { bumpTokenVersion, currentTokenVersion, tokenVersionIsCurrent } from "@/lib/v-session-revocation";
 import Credentials from "next-auth/providers/credentials";
 import GitHub from "next-auth/providers/github";
+import { fetchGitHubProfile } from "./lib/github-identity";
+import { bindOAuthIdentity } from "./lib/oauth-identity";
 import Google from "next-auth/providers/google";
 import { getSafeRedirectPath } from "./lib/auth-ui";
 import { verifyAutoSigninToken } from "./lib/auto-signin-token";
@@ -16,85 +20,46 @@ import { getUserCredentialByEmail, verifyPassword } from "./lib/user-credentials
 delete process.env.AUTH_URL;
 delete process.env.NEXTAUTH_URL;
 
-// v0.2.0 phase H — cross-subdomain cookie. Set AUTH_COOKIE_DOMAIN
-// to ".sansxel.ai" (with the leading dot) in prod env so the
-// session cookie is scoped to all subdomains. Without this, the
-// apex marketing site (sansxel.ai) couldn't see chat.sansxel.ai's
-// session and showed "Log in" to already-signed-in users.
+// ── COOKIE SCOPE: WHAT ACTUALLY APPLIES ───────────────────────────────────────────────────────────────
 //
-// Local dev / preview deploys: leave AUTH_COOKIE_DOMAIN unset, so
-// NextAuth uses its per-request default (single-host cookie) and
-// localhost / preview URLs keep working.
+// The ONLY cookie configuration that takes effect is the `cookies:` block further down. In production it
+// sets ONE cookie explicitly:
 //
-// Migration cost: existing chat-only cookies stay valid for now,
-// but new sign-ins will get the spanning cookie. Users who want
-// the apex to recognize them need to sign out + back in once.
-const envCookieDomain = (process.env.AUTH_COOKIE_DOMAIN ?? "").trim() || undefined;
+//   __Secure-authjs.session-token   domain .vraelis.com   httpOnly  secure  sameSite=lax  path=/
+//
+// A leading-dot domain is sent to vraelis.com AND EVERY subdomain of it. That is deliberate and is the
+// owner's standing decision: app.vraelis.com is a real, separately-hosted surface served by this same
+// app through proxy.ts host routing, the SSO callback redirects there expecting a live session, and the
+// billing return routes live there. A host-only cookie would not reach it and sign-in would not stick.
+//
+// Every other cookie (callbackUrl, csrfToken) is left to Auth.js's per-host defaults, so they are
+// HOST-ONLY and do not span subdomains. CSRF staying host-only while the session spans is the correct
+// split.
+//
+// REMOVED HERE, and worth knowing about: this file used to carry a per-request resolver
+// (resolveCookieDomain / buildCookieOptions) that mapped *.vraelis.com and *.sansxel.ai to their own
+// cookie domains and set an explicit __Host- CSRF cookie name. It was computed on every request and then
+// DISCARDED - the value was assigned to a local and never passed to NextAuth. So three things that file
+// comments advertised were inert, and had been inert since before this remediation:
+//
+//   - AUTH_COOKIE_DOMAIN      read by nothing (marked accordingly in .env.example)
+//   - the .sansxel.ai branch  a DIFFERENT registrable domain, which therefore never got a cookie domain
+//   - the __Host- CSRF name   configured only in the dead helper
+//
+// The dead code is deleted rather than wired up. Wiring it would change production cookie names and
+// domains and invalidate in-flight sign-ins - a deployment decision, not a cleanup. If cross-domain
+// support for sansxel.ai is wanted, restore it deliberately and re-test sign-in on both domains.
 
-// v0.3.0 — vraelis.com now shares this project (separate brand, served
-// by host in proxy.ts). It's a different registrable domain, so it
-// CANNOT share the ".sansxel.ai" session cookie; with a hardcoded
-// domain the browser would silently reject the cookie and sign-in
-// would never stick. So the cookie domain is resolved per request:
-//   • *.sansxel.ai → ".sansxel.ai"  (unchanged: SSO across subdomains)
-//   • *.vraelis.com → ".vraelis.com" (its own cookie / session)
-//   • unknown host (preview, localhost) or RSC with no request → the
-//     env value (prod) or the per-host default, so previews keep
-//     working exactly as before.
-// Cookie NAMES stay constant whenever a domain applies, so the cookie
-// set during sign-in (request present) and read in RSC (request
-// absent) always match by name.
-function resolveCookieDomain(req: NextRequest | undefined): string | undefined {
-  const host = (req?.headers.get("host") ?? "").toLowerCase().split(":")[0];
-  if (host.endsWith("vraelis.com")) return ".vraelis.com";
-  if (host.endsWith("sansxel.ai")) return ".sansxel.ai";
-  return envCookieDomain;
+// The IP for the sign-in bucket. NextAuth passes a plain Request to authorize(), so this reads the
+// forwarded headers directly rather than going through lib/vraelis-ratelimit's NextRequest helper.
+// Falls back to a constant, which means an unidentifiable caller shares one bucket rather than
+// getting a free one.
+function clientIpFromHeaders(request: Request | undefined): string {
+  const xff = request?.headers?.get("x-forwarded-for");
+  if (xff) return xff.split(",")[0].trim();
+  return request?.headers?.get("x-real-ip")?.trim() || "unknown";
 }
-
-function buildCookieOptions(cookieDomain: string | undefined) {
-  if (!cookieDomain) return undefined;
-  return {
-    sessionToken: {
-      // NextAuth picks the secure-prefixed name automatically
-      // for HTTPS; matching that here so existing logic still
-      // works.
-      name: "__Secure-authjs.session-token",
-      options: {
-        httpOnly: true,
-        sameSite: "lax" as const,
-        path: "/",
-        secure: true,
-        domain: cookieDomain,
-      },
-    },
-    callbackUrl: {
-      name: "__Secure-authjs.callback-url",
-      options: {
-        httpOnly: true,
-        sameSite: "lax" as const,
-        path: "/",
-        secure: true,
-        domain: cookieDomain,
-      },
-    },
-    csrfToken: {
-      name: "__Host-authjs.csrf-token",
-      options: {
-        httpOnly: true,
-        sameSite: "lax" as const,
-        path: "/",
-        secure: true,
-        // __Host- prefix forbids a domain attribute, so we
-        // intentionally OMIT domain on the csrf cookie. The
-        // CSRF check still fires per-host; only the session
-        // needs to span subdomains for SSO to work.
-      },
-    },
-  };
-}
-
-const authResult = NextAuth((req: NextRequest | undefined) => {
-  const cookieOptions = buildCookieOptions(resolveCookieDomain(req));
+const authResult = NextAuth(() => {
   return {
   trustHost: true,
   pages: {
@@ -121,11 +86,35 @@ const authResult = NextAuth((req: NextRequest | undefined) => {
           type: "text",
         },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         const email =
           typeof credentials.email === "string"
             ? credentials.email.trim().toLowerCase()
             : "";
+
+        // SECURITY: this is the password brute-force surface, and it had no limiter of any kind. Two
+        // buckets on the Postgres-backed limiter, so they hold across serverless instances rather than
+        // resetting with each cold start the way an in-memory Map does:
+        //   - per IP, consumed on every attempt: bounds a sweep across many accounts.
+        //   - per CANONICAL mailbox, consumed ONLY on failure: bounds a grind against one account.
+        // Both are consulted before the bcrypt verify (cost 12), so a flood costs a counter rather than a
+        // CPU-bound hash. allowStrict on the consuming calls, so a limiter outage denies rather than
+        // reopening an unmetered brute force. Returning null is the same answer a wrong password gets, so
+        // being rate limited is indistinguishable from being wrong and reveals nothing about which
+        // accounts exist.
+        //
+        // ORDERING MATTERS, AND I GOT IT WRONG FIRST. The per-mailbox bucket was consumed here, before any
+        // authentication — so ten unauthenticated POSTs per ten minutes, comfortably under the per-IP
+        // allowance, permanently denied the real owner their own account. That is the same lockout defect
+        // already fixed in app/api/auth/reset-password/route.ts, reintroduced by not carrying the reasoning
+        // across.
+        //
+        // The per-IP bucket is consumed up front, because that DOES bound a sweep and an IP is the
+        // attacker's own resource. The per-mailbox bucket is only consumed on a FAILED attempt, further
+        // down: a legitimate sign-in costs nothing, so no number of failures by anyone else can lock out a
+        // user who knows their password.
+        const signinIp = clientIpFromHeaders(request);
+        if (!(await allowStrict(`signin-ip:${signinIp}`, 20, 600))) return null;
         const password =
           typeof credentials.password === "string" ? credentials.password : "";
         const autoSigninToken =
@@ -135,8 +124,17 @@ const authResult = NextAuth((req: NextRequest | undefined) => {
 
         if (!email) return null;
 
+        // Per-mailbox FAILURE budget, checked before the bcrypt verify so a flood costs a counter rather
+        // than a cost-12 hash. It is only ever CONSUMED by a failed attempt (below), so a user who knows
+        // their password can always sign in no matter how many times someone else has guessed wrong.
+        const mailboxKey = `signin-fail:${canonicalizeEmail(email)}`;
+        if (email && !(await peekAllowed(mailboxKey, 10, 600))) return null;
+
         const userCredential = await getUserCredentialByEmail(email);
-        if (!userCredential) return null;
+        if (!userCredential) {
+          await allowStrict(mailboxKey, 10, 600);
+          return null;
+        }
 
         // Either a valid token OR a valid password authorizes the session.
         const tokenValid =
@@ -148,6 +146,9 @@ const authResult = NextAuth((req: NextRequest | undefined) => {
             : false;
 
         if (!tokenValid && !passwordValid) {
+          // Consume the per-mailbox budget HERE, on failure only. A correct password never touches it, so
+          // wrong guesses by someone else can never deny the real owner their own account.
+          await allowStrict(mailboxKey, 10, 600);
           return null;
         }
 
@@ -161,7 +162,19 @@ const authResult = NextAuth((req: NextRequest | undefined) => {
       },
     }),
     Google,
-    GitHub,
+    // GitHub's stock provider takes the email from GET /user, falling back to
+    // `(emails.find(e => e.primary) ?? emails[0]).email` — never consulting the `verified` flag GitHub
+    // returns beside every address. Identity here IS the email string, so an unproven one is an account
+    // takeover. fetchGitHubProfile always reads the authoritative /user/emails list, accepts only a
+    // verified entry, and throws otherwise. See lib/github-identity.ts.
+    GitHub({
+      userinfo: {
+        url: "https://api.github.com/user",
+        async request({ tokens }: { tokens: { access_token?: string } }) {
+          return fetchGitHubProfile(String(tokens.access_token ?? ""));
+        },
+      },
+    }),
   ],
   session: {
     strategy: "jwt",
@@ -176,8 +189,23 @@ const authResult = NextAuth((req: NextRequest | undefined) => {
       options: { domain: ".vraelis.com", httpOnly: true, sameSite: "lax", path: "/", secure: true },
     },
   } : undefined,
+  events: {
+    // SIGN-OUT NOW ACTUALLY ENDS THE SESSION. With a JWT strategy, NextAuth's sign-out clears the
+    // browser cookie and nothing else — a token already copied elsewhere stayed valid until it expired.
+    // Bumping the revocation counter refuses every token issued before now.
+    //
+    // DOCUMENTED LIMITATION: the counter is per USER, so this is all-or-nothing. Signing out on one
+    // device signs out every device. That is a deliberate behaviour change and the safe direction —
+    // per-device revocation would need server-side sessions, which is a migration of the whole auth
+    // surface rather than a fix.
+    async signOut(message) {
+      const token = (message as { token?: { email?: unknown } }).token;
+      const email = typeof token?.email === "string" ? token.email : "";
+      if (email) await bumpTokenVersion(email, "sign_out");
+    },
+  },
   callbacks: {
-    async signIn({ user, account }) {
+    async signIn({ user, account, profile }) {
       const tag = `[auth:signIn][${account?.provider ?? "?"}]`;
 
       if (!user.email) {
@@ -190,6 +218,42 @@ const authResult = NextAuth((req: NextRequest | undefined) => {
       }
 
       const provider = account?.provider ?? "";
+
+      // SECURITY: the provider must say the address is VERIFIED. Identity here is a bare email string —
+      // it is what isAdminEmail and every owner-scoped query key on — so accepting an unverified one
+      // lets anyone who can make a provider assert an address take over the account that owns it.
+      // Google sends email_verified on the profile; GitHub only returns verified addresses from the
+      // /user/emails endpoint it is asked for. An explicit false is refused; an absent claim is
+      // accepted, because refusing it would break providers that do not send one at all.
+      const verifiedClaim = (profile as { email_verified?: unknown } | undefined)?.email_verified;
+      if (verifiedClaim === false || verifiedClaim === "false") {
+        console.error(`${tag} rejected — provider reports the email is not verified`);
+        return false;
+      }
+      // GitHub sends no email_verified of its own, so the check above used to be INERT on this provider —
+      // it closed Google and left GitHub open. lib/github-identity.ts now reads GitHub's authoritative
+      // /user/emails, accepts only an entry marked verified, and stamps email_verified itself. Requiring
+      // the claim POSITIVELY here means that if the provider config is ever reverted to the stock one,
+      // GitHub sign-in stops working rather than silently going back to accepting unproven addresses.
+      // A security control that fails loudly beats one that fails quietly.
+      if (provider === "github" && verifiedClaim !== true) {
+        console.error(`${tag} rejected — no positive verified-email claim from GitHub`);
+        return false;
+      }
+      // Bind this sign-in to the provider's stable subject. A DIFFERENT provider account presenting an
+      // address this provider already bound to someone else is refused — that is the takeover shape, and
+      // an email string alone cannot tell the two apart. A legitimate address change at the provider
+      // keeps the same subject and is allowed through.
+      const subject = String(account?.providerAccountId ?? (profile as { sub?: unknown } | undefined)?.sub ?? "");
+      const bound = await bindOAuthIdentity(provider, subject, user.email);
+      if (bound === "conflict") {
+        console.error(`${tag} rejected — this address is already bound to a different ${provider} account`);
+        return false;
+      }
+      if (bound === "email_changed") {
+        console.log(`${tag} the provider account's address changed; it now maps to ${user.email}`);
+      }
+
       console.log(`${tag} email=${user.email} — looking up profile`);
 
       try {
@@ -250,6 +314,21 @@ const authResult = NextAuth((req: NextRequest | undefined) => {
     async jwt({ account, token }) {
       if (account?.provider) {
         token.provider = account.provider;
+      }
+
+      // SESSION REVOCATION. The session strategy is JWT, so the server stores nothing and sign-out only
+      // clears the browser's cookie — a token copied elsewhere stayed valid until expiry, and a password
+      // reset did not end the sessions the old password had created. Each token carries the user's
+      // revocation counter; returning null here discards a token whose counter is behind the stored one,
+      // which is how sign-out, password reset and administrative revocation become real.
+      const email = typeof token.email === "string" ? token.email : "";
+      if (email) {
+        if (account) {
+          // Fresh sign-in: stamp the current version.
+          token.tv = await currentTokenVersion(email);
+        } else if (!(await tokenVersionIsCurrent(email, token.tv))) {
+          return null;
+        }
       }
 
       return token;

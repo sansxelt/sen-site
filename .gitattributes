@@ -1,0 +1,4 @@
+# The rollback is generated from the production dump and must survive round-tripping byte for byte.
+# That dump carries carriage returns INSIDE function bodies, and prosrc is hashed by the fingerprint, so a
+# line-ending conversion here silently changes what the rollback restores. Checked out verbatim.
+ops/p4-remediation-rollback.sql -text

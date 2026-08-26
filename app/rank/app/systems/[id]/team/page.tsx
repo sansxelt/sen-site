@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requirePreflightAppAccess } from "@/lib/v-preflight-guard";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
@@ -6,7 +7,7 @@ import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "../../setup-required";
 import { getApplication } from "@/lib/v-applications";
-import { applicationAccess, applicationWorkspaceForManage } from "@/lib/preflight/team-access";
+import { applicationWorkspaceForManage } from "@/lib/preflight/team-access";
 import { listMembers, canManageMembers, ROLE_LABEL, activateInvitesForEmail } from "@/lib/v-workspace";
 import { AppTabs } from "../app-tabs";
 import { TeamPanel } from "./team-panel";
@@ -17,7 +18,8 @@ export const metadata: Metadata = { title: "Team" };
 // Team for one application: invite teammates to collaborate on this app (its contract, flows, runs, and
 // reports) with a role. Owner/admin manage; everyone else sees the read-only roster. The application is
 // SHARED through its workspace; billing stays with the app owner (a teammate's runs spend the owner's
-// credits). Access resolves via applicationAccess — a member of the app's workspace may open this page too.
+// credits). Access resolves via requirePreflightAppAccess — a member of the app's workspace may open this
+// page too, but only at or above the ladder minimum (see the SECURITY note on the call below).
 export default async function AppTeamPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!preflightEnabled()) redirect("/app");
@@ -31,7 +33,11 @@ export default async function AppTeamPage({ params }: { params: Promise<{ id: st
   await activateInvitesForEmail(email);
   if (!(await preflightDbReady())) return <SetupRequired />;
 
-  const access = await applicationAccess(email, id);
+  // SECURITY: goes through the hardened guard, not applicationAccess directly. Calling the raw
+  // resolver skipped hasAtLeastRole, so a client_viewer — a report-only side role the API refuses —
+  // reached this page and saw the app name, its own role badge and the full internal nav. The guard
+  // was fixed; this call site was reaching around it.
+  const access = await requirePreflightAppAccess(id, `/systems/${id}/team`);
   const app = access ? await getApplication(access.owner, id) : null;
   if (!access || !app) {
     return (

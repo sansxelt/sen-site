@@ -12,7 +12,7 @@
 
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { allowStrict } from "@/lib/vraelis-ratelimit";
 import { AVATAR_MAX_BYTES, sniffAvatarImage, putAvatar, signedAvatarUrl, removeAvatar } from "@/lib/v-avatar";
 import { cleanDisplayName, getDisplayName, setDisplayName, DISPLAY_NAME_MAX } from "@/lib/v-account-profile";
 
@@ -46,7 +46,7 @@ export async function GET() {
 export async function POST(req: Request) {
   const u = await requireOwner();
   if (!u) return fail("Sign in.", 401, "signin_required");
-  if (!checkRateLimit(`avatar:${u}`, 20, 10 * 60 * 1000)) return fail("Too many uploads. Try again in a few minutes.", 429, "rate_limited");
+  if (!(await allowStrict(`avatar:${u}`, 20, 600))) return fail("Too many uploads. Try again in a few minutes.", 429, "rate_limited");
 
   const form = await req.formData().catch(() => null);
   if (!form) return fail("Expected a multipart file upload.");

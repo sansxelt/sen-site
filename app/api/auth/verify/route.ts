@@ -9,7 +9,9 @@ import {
 import { APP_URL } from "../../../../lib/stripe";
 import { getSupabaseAdminClient } from "../../../../lib/supabase-admin";
 import { syncUserProfileIdentity } from "../../../../lib/user-profile";
-import { getUserCredentialByEmail, getUserCredentialByCanonical, canonicalizeEmail } from "../../../../lib/user-credentials";
+// canonicalizeEmail stays: the canonical_email column is still written, because the free-pass cluster
+// joins on it. getUserCredentialByCanonical is gone — that was the folded-email identity lookup.
+import { getUserCredentialByEmail, canonicalizeEmail } from "../../../../lib/user-credentials";
 import { trackServer } from "../../../../lib/analytics";
 
 /**
@@ -62,14 +64,15 @@ export async function GET(request: Request) {
     return NextResponse.redirect(autoSigninRedirect(pending.email));
   }
 
-  // An alias of an inbox that already has an account (verified under a different alias). Same
-  // person, so don't mint a second account (and a second signup grant): clean up the pending
-  // row and send them to sign in with their existing account.
-  const canonicalOwner = await getUserCredentialByCanonical(pending.email);
-  if (canonicalOwner) {
-    await deletePendingSignup(pending.email);
-    return NextResponse.redirect(`${APP_URL}/signin`);
-  }
+  // NO ALIAS REFUSAL HERE ANY MORE. This used to abandon the pending signup when the FOLDED form of the
+  // address already had an account, which made a folded email the account identity key. Per the owner's
+  // decision, folding is an anti-abuse signal only; the exact address is the identity, so an alias is
+  // allowed to become its own account.
+  //
+  // The "second signup grant" this was worried about does not follow: the free pass is denied on the
+  // canonical CLUSTER by lib/preflight/free-grant-cluster.ts, so both accounts share one pass.
+  //
+  // canonical_email is still written below — it is the join key that clustering depends on.
 
   // Happy path, promote pending → real user.  Insert the credential row
   // directly (password is already hashed in the pending row, so we don't
@@ -88,8 +91,9 @@ export async function GET(request: Request) {
       } as never);
 
     if (error) {
-      // A unique violation means a concurrent verification (exact dupe or a canonical alias)
-      // won the race and created the account. Not a user-facing error: send them to sign in.
+      // A unique violation now means exactly one thing: a concurrent verification of the SAME exact
+      // address won the race. It used to also cover a canonical-alias collision, but that unique index
+      // is gone. Not a user-facing error: send them to sign in.
       if ((error as { code?: string }).code === "23505") {
         await deletePendingSignup(pending.email);
         return NextResponse.redirect(`${APP_URL}/signin`);

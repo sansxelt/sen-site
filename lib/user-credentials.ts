@@ -75,33 +75,21 @@ export async function getUserCredentialByEmail(email: string | null | undefined)
   }
 }
 
-// Look up a credentials account by the CANONICAL form of an email (see canonicalizeEmail).
-// Used at registration to block a new alias of an inbox that already has an account. Returns
-// null when none exists; safe because the unique index guarantees at most one row.
-export async function getUserCredentialByCanonical(email: string | null | undefined) {
-  if (!email || !isDatabaseConfigured()) {
-    return null;
-  }
-
-  try {
-    const supabase = getSupabaseAdminClient();
-    const { data, error } = await supabase
-      .from("user_credentials" as never)
-      .select("created_at, email, password_hash, updated_at")
-      .eq("canonical_email", canonicalizeEmail(email))
-      .maybeSingle();
-
-    if (error) {
-      console.error("Canonical credential lookup failed:", error);
-      return null;
-    }
-
-    return data ? normalizeCredentialRecord(data) : null;
-  } catch (error) {
-    console.error("Canonical credential lookup threw:", error);
-    return null;
-  }
-}
+// REMOVED: getUserCredentialByCanonical(email).
+//
+// It resolved an ACCOUNT from the FOLDED form of an address, and registration used it to refuse a second
+// alias of one inbox. That made a folded email the account identity key. The owner's ruling is that
+// folding is an anti-abuse signal ONLY: identity is the exact address, and for OAuth the provider's
+// subject id.
+//
+// Deleted rather than left unused, because an exported "find the account for this folded address" helper
+// is exactly what someone reaches for when adding the next signup path, and folded-email identity would
+// come straight back. If you need the cluster of accounts behind one real inbox — for a RISK decision,
+// which is the legitimate use — call resolveCanonicalCluster() in lib/preflight/free-grant-cluster.ts.
+// That returns the whole cluster for a grant/abuse judgement and never claims one of them is "the" account.
+//
+// The canonical_email COLUMN is still written and still indexed (non-uniquely); only its role as an
+// identity key is gone. See sql/vraelis-canonical-not-identity.sql.
 
 export async function createUserCredential(email: string, password: string) {
   const supabase = getSupabaseAdminClient();

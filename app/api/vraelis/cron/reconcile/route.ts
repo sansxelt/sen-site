@@ -8,6 +8,7 @@
 // (markPaymentPaid only flips pending->paid once). Vercel Cron; CRON_SECRET-gated.
 
 import { NextResponse } from "next/server";
+import { cronAuthorized } from "@/lib/cron-auth";
 import type { NextRequest } from "next/server";
 import { getPendingPaymentSessions } from "@/lib/vraelis-db";
 import { reconcileSessionById } from "@/lib/vraelis-payment-settle";
@@ -31,8 +32,8 @@ const MIN_AGE_MS = 10 * 60 * 1000;
 const MAX_AGE_MS = 126 * 60 * 60 * 1000;
 
 export async function GET(req: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret || req.headers.get("authorization") !== `Bearer ${secret}`) {
+  // Constant-time, and fails closed on an unset CRON_SECRET (lib/cron-auth.ts).
+  if (!cronAuthorized(req)) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 

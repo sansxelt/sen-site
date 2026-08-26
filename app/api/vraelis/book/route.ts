@@ -1,5 +1,6 @@
 // Create a booking from the public booking page (key-scoped).
 import { NextResponse } from "next/server";
+import { isSafeRecipient } from "@/lib/email-address";
 import type { NextRequest } from "next/server";
 import {
   addMessage,
@@ -9,13 +10,19 @@ import {
   leadOpenPaymentStatus,
   setLeadStatus,
   updateLeadContact,
+  leadBelongsToOwner,
 } from "@/lib/vraelis-db";
 import { createBooking, getTakenSlots, slotLabel } from "@/lib/vraelis-booking";
 import { createPaymentCheckout, expireCheckout } from "@/lib/vraelis-connect";
 import { trackServer } from "@/lib/analytics";
 import { cutRateFor } from "@/lib/vraelis-plans";
 import { sendBookingConfirmation } from "@/lib/vraelis-email";
-import { limitOr429 } from "@/lib/vraelis-ratelimit";
+import { limitOr429, allowStrict } from "@/lib/vraelis-ratelimit";
+import { canonicalizeEmail } from "@/lib/user-credentials";
+
+// Recipient validation lives in ONE place (lib/email-address.ts). The regex that used to sit here was a
+// route-local copy that its own comment described inaccurately: \x21-\x7e includes @, <, >, comma and
+// semicolon, and nothing required a dot in the domain, so it accepted a@b@c.com and victim@example.com>.
 
 const ORIGIN = "https://vraelis.com";
 
@@ -56,6 +63,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Invalid link" }, { status: 401, headers: CORS });
   }
 
+  // SECURITY: the intake key identifies a WORKSPACE; leadId arrives from the client. Resolve it to a
+  // lead THIS workspace owns, once, before it reaches createBooking, the deposit metadata, or any
+  // lead-scoped write. Previously a valid key for workspace A could attach a booking to, rewrite the
+  // contact details of, and inject a message into a lead in workspace B. A foreign or unknown id is
+  // dropped rather than rejected: the booking itself is legitimate and the owner still gets notified.
+  const ownedLeadId = leadId && (await leadBelongsToOwner(workspace.owner_email, leadId)) ? leadId : "";
+  if (leadId && !ownedLeadId) {
+    console.warn("[vraelis/book] ignoring leadId that does not belong to the intake key's workspace");
+  }
+
   // Deposit-to-confirm: if the owner requires a deposit and payouts are live,
   // send the lead to pay first. The booking is created on payment (webhook).
   const depositCents =
@@ -81,8 +98,8 @@ export async function POST(req: NextRequest) {
     // mint a second one. Different slots are never blocked (the guard is
     // slot-scoped), and an anonymous booking (no leadId) falls through to the
     // slot_taken check above — it can't be deduped by lead.
-    if (leadId) {
-      const open = await leadOpenPaymentStatus(workspace.owner_email, leadId, { bookingSlot: slotIso });
+    if (ownedLeadId) {
+      const open = await leadOpenPaymentStatus(workspace.owner_email, ownedLeadId, { bookingSlot: slotIso });
       if (open) {
         return NextResponse.json({ ok: false, error: "deposit_pending" }, { status: 409, headers: CORS });
       }
@@ -100,12 +117,12 @@ export async function POST(req: NextRequest) {
         description: `Deposit to confirm ${label}`,
         customerEmail: email || null,
         successUrl: `${ORIGIN}/pay/thanks?session_id={CHECKOUT_SESSION_ID}`,
-        cancelUrl: `${ORIGIN}/book/${key}${leadId ? `?lead=${leadId}` : ""}`,
-        metadata: { kind: "vraelis_payment", owner_email: workspace.owner_email, lead_id: leadId || "", pay_kind: "deposit" },
+        cancelUrl: `${ORIGIN}/book/${key}${ownedLeadId ? `?lead=${ownedLeadId}` : ""}`,
+        metadata: { kind: "vraelis_payment", owner_email: workspace.owner_email, lead_id: ownedLeadId || "", pay_kind: "deposit" },
       });
       const paymentId = await createPayment({
         ownerEmail: workspace.owner_email,
-        leadId: leadId || null,
+        leadId: ownedLeadId || null,
         kind: "deposit",
         description: workspace.business_name || "Vraelis",
         amountCents: depositCents,
@@ -128,7 +145,7 @@ export async function POST(req: NextRequest) {
 
   const result = await createBooking({
     ownerEmail: workspace.owner_email,
-    leadId: leadId || null,
+    leadId: ownedLeadId || null,
     slotIso: slot,
     name,
     contactEmail: email,
@@ -144,15 +161,27 @@ export async function POST(req: NextRequest) {
 
   const label = slotLabel(slot);
   try {
-    if (leadId) {
-      await setLeadStatus(workspace.owner_email, leadId, "booked");
-      if (email || name) await updateLeadContact(leadId, { contactEmail: email, name });
-      await addMessage({ leadId, role: "agent", body: `Booked: ${label}`, channel: "booking", delivered: true });
+    // ownedLeadId was resolved against this workspace above; updateLeadContact and addMessage take a bare
+    // id, so they must never see an unvalidated one.
+    if (ownedLeadId) {
+      await setLeadStatus(workspace.owner_email, ownedLeadId, "booked");
+      if (email || name) await updateLeadContact(ownedLeadId, { contactEmail: email, name });
+      await addMessage({ leadId: ownedLeadId, role: "agent", body: `Booked: ${label}`, channel: "booking", delivered: true });
+    }
+    // The lead email is caller-supplied, so this send is a relay to an address the caller names. It gets
+    // its own canonical per-mailbox budget (rotating IPs and gmail dot/+tag aliases cannot refill it) and
+    // must look like a real address before it reaches the mailer. An address that fails either check
+    // still books — the owner notification is what matters — it just gets no confirmation mail.
+    const leadEmail = isSafeRecipient(email) ? email : null;
+    const mayConfirmLead =
+      leadEmail !== null && (await allowStrict(`book-confirm:${canonicalizeEmail(leadEmail)}`, 3, 3600));
+    if (leadEmail && !mayConfirmLead) {
+      console.warn("[vraelis/book] lead confirmation suppressed by per-mailbox limit");
     }
     await sendBookingConfirmation({
       businessName: workspace.business_name ?? "Vraelis",
       slotLabel: label,
-      leadEmail: email || null,
+      leadEmail: mayConfirmLead ? leadEmail : null,
       leadName: name || null,
       ownerEmail: workspace.owner_email,
     });

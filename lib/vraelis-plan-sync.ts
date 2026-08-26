@@ -8,8 +8,32 @@
 import type Stripe from "stripe";
 import { getStripe, isStripeConfigured } from "./stripe";
 import type { WorkspaceLapseRow } from "./vraelis-db";
+import {
+  vraelisPlanFromPaypalPlanId,
+  vraelisPlanStatusFromPaypal,
+  type Cycle,
+  type PlanKey,
+} from "./vraelis-plans";
 
-export type LivePlan = { status: "active" | "past_due" | "canceled"; periodEndISO: string | null };
+// `plan`/`cycle` carry the provider's CANONICAL tier when it can be derived
+// (PayPal: from the subscription's plan_id). The reconcile cron uses them to
+// correct a stored tier that disagrees with what the customer actually pays
+// for — the self-heal for finding H1's historical rows. null/absent means the
+// provider gave us nothing authoritative and the stored tier must be left as-is.
+export type LivePlan = {
+  status: "active" | "past_due" | "canceled";
+  periodEndISO: string | null;
+  plan?: PlanKey | null;
+  cycle?: Cycle | null;
+  // Distinguishes the two reasons plan/cycle can be null, which are NOT the same thing:
+  //   "resolved"    - the provider named a plan we recognise; plan/cycle are authoritative.
+  //   "unbacked"    - the provider answered, but its plan is NOT in the Vraelis catalogue. A stored paid
+  //                   tier on such a subscription has no backing and must be treated as an anomaly.
+  //   "unavailable" - we could not ask (no id, provider unconfigured, poll failed), or the provider does
+  //                   not expose a tier (Stripe path). Keep whatever is stored.
+  // Collapsing "unbacked" into "unavailable" is what let a forged tier survive every reconcile pass.
+  tierSource?: "resolved" | "unbacked" | "unavailable";
+};
 
 function mapStripeStatus(s: Stripe.Subscription.Status): LivePlan["status"] | null {
   if (s === "active" || s === "trialing") return "active";
@@ -75,34 +99,42 @@ async function paypalToken(): Promise<string | null> {
   }
 }
 
-function mapPaypalStatus(s: string | undefined): LivePlan["status"] | null {
-  switch (s) {
-    case "ACTIVE":
-      return "active";
-    case "SUSPENDED":
-      return "past_due";
-    case "CANCELLED":
-    case "EXPIRED":
-      return "canceled";
-    default:
-      return null; // APPROVAL_PENDING / APPROVED / unknown → transient
-  }
-}
+// Single definition of "what does this PayPal status mean" lives in
+// vraelis-plans so the record route, the webhook and this reconcile agree.
+// APPROVED / APPROVAL_PENDING map to null (transient, never entitling).
+const mapPaypalStatus = vraelisPlanStatusFromPaypal;
 
 async function fetchPaypalLive(row: WorkspaceLapseRow): Promise<LivePlan | null> {
   if (!row.plan_subscription_id) return null; // can't poll PayPal without the id
   const token = await paypalToken();
   if (!token) return null;
   try {
-    const res = await fetch(`${PP_BASE}/v1/billing/subscriptions/${row.plan_subscription_id}`, {
+    // encodeURIComponent, matching the record route and the audit script: the stored id is data, and a
+    // stray / ? or # in it would otherwise change which PayPal resource this polls.
+    const res = await fetch(`${PP_BASE}/v1/billing/subscriptions/${encodeURIComponent(row.plan_subscription_id)}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) return null;
-    const sub = (await res.json()) as { status?: string; billing_info?: { next_billing_time?: string } };
+    const sub = (await res.json()) as {
+      status?: string;
+      plan_id?: string;
+      billing_info?: { next_billing_time?: string };
+    };
     const status = mapPaypalStatus(sub.status);
     if (!status) return null;
     const nb = sub.billing_info?.next_billing_time;
-    return { status, periodEndISO: nb ? new Date(nb).toISOString() : null };
+    // Canonical tier straight from PayPal. An unrecognised plan_id yields null
+    // and the caller keeps the stored tier rather than guessing.
+    const tier = vraelisPlanFromPaypalPlanId(sub.plan_id);
+    // PayPal answered. Either its plan is one of ours (resolved) or it is not (unbacked) — the latter is a
+    // real signal, not an absence of one.
+    return {
+      status,
+      periodEndISO: nb ? new Date(nb).toISOString() : null,
+      plan: tier?.plan ?? null,
+      cycle: tier?.cycle ?? null,
+      tierSource: tier ? "resolved" : "unbacked",
+    };
   } catch (e) {
     console.error("[plan-sync] paypal poll failed for", row.owner_email, e);
     return null;
@@ -119,3 +151,29 @@ export async function fetchLivePlanStatus(row: WorkspaceLapseRow): Promise<LiveP
   if (row.plan_subscription_id?.startsWith("sub_")) return fetchStripeLive(row);
   return null;
 }
+
+// The tier the reconcile cron should STORE, given what we have on the row and
+// what the provider reports live. Pure and exported so the security property —
+// a stored tier that disagrees with the provider gets corrected, and an
+// unresolvable provider tier never clobbers a good stored one — is directly
+// testable without a DB or network. See finding H1.
+export function canonicalTier(
+  stored: { plan: string; cycle: string },
+  live: Pick<LivePlan, "plan" | "cycle" | "tierSource">,
+): { plan: string; cycle: string; tierDiffers: boolean; unbacked: boolean } {
+  // The provider answered and its plan is not in our catalogue: the stored paid tier has nothing behind
+  // it. Demote to the free tier rather than preserving it — preserving it is precisely how a tier that was
+  // never paid for survived every reconcile pass. "starter" is the free default cutRateFor falls back to.
+  if (live.tierSource === "unbacked") {
+    const plan = FREE_PLAN;
+    const cycle = "monthly";
+    return { plan, cycle, tierDiffers: plan !== stored.plan || cycle !== stored.cycle, unbacked: true };
+  }
+  // Either resolved, or we could not ask. Trust the live tier when we have one, else keep what is stored.
+  const plan = live.plan ?? stored.plan;
+  const cycle = live.cycle ?? stored.cycle;
+  return { plan, cycle, tierDiffers: plan !== stored.plan || cycle !== stored.cycle, unbacked: false };
+}
+
+// The free tier a workspace falls back to. Kept here so the demotion above and the cron agree.
+export const FREE_PLAN = "starter";

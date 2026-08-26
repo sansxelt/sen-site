@@ -32,15 +32,24 @@ export async function GET(req: Request, ctx: { params: Promise<{ provider: strin
   const { provider } = await ctx.params;
 
   if (!preflightEnabled()) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const email = (await auth())?.user?.email;
-  if (!email) return NextResponse.redirect(`${baseUrl(req)}/signin?callbackUrl=${encodeURIComponent("/connections")}`, 302);
-  if (!(await preflightDbReady())) return backToConnections(req, `oauth=error&provider=${provider}&reason=server_misconfigured`);
-  const owner = email.trim().toLowerCase();
 
+  // Resolve BEFORE anything reflects the segment. The db-ready branch below used to echo the raw
+  // [provider] path segment into a redirect three lines before this check ran, so an arbitrary
+  // percent-decoded value reached a response with no validation of any kind.
   const p = resolveOAuthProvider(provider);
   if (!p) return NextResponse.json({ error: "unknown_provider" }, { status: 404 });
+
+  const email = (await auth())?.user?.email;
+  if (!email) return NextResponse.redirect(`${baseUrl(req)}/signin?callbackUrl=${encodeURIComponent("/connections")}`, 302);
+  if (!(await preflightDbReady())) {
+    return backToConnections(req, new URLSearchParams({ oauth: "error", provider: p.kind, reason: "server_misconfigured" }).toString());
+  }
+  const owner = email.trim().toLowerCase();
+
   if (!vaultConfigured()) return NextResponse.json({ error: "vault_unconfigured" }, { status: 503 });
-  if (!providerAvailable(p)) return backToConnections(req, `oauth=error&provider=${provider}&reason=server_misconfigured`);
+  if (!providerAvailable(p)) {
+    return backToConnections(req, new URLSearchParams({ oauth: "error", provider: p.kind, reason: "server_misconfigured" }).toString());
+  }
 
   const nonce = newNonce();
   const state = signOAuthState({ owner, provider, nonce }); // no appId => account-level state

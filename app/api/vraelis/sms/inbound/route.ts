@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 // Twilio inbound SMS webhook. A lead texts the business's Twilio number;
 // we route to that workspace, match (or create) the lead, run the SAME AI
 // qualification used by chat/email, advance the pipeline, and text the
@@ -24,6 +25,7 @@ import {
 } from "@/lib/vraelis-db";
 import { continueLeadConversation, type ConvoTurn } from "@/lib/vraelis-ai";
 import { startWorkspacePayment } from "@/lib/vraelis-connect";
+import { authorizeAgentPayment, finishAgentPayment, leadFacingRefusal } from "@/lib/vraelis-payment-authz";
 import { sendSms, normalizePhone } from "@/lib/vraelis-sms";
 import { notifyOwnerNewLeadEvent, notifyOwnerStatusEvent } from "@/lib/vraelis-notify";
 import { allow } from "@/lib/vraelis-ratelimit";
@@ -33,9 +35,22 @@ import { trackServer } from "@/lib/analytics";
 const TWIML_EMPTY = '<?xml version="1.0" encoding="UTF-8"?><Response></Response>';
 const xml = () => new NextResponse(TWIML_EMPTY, { status: 200, headers: { "Content-Type": "text/xml" } });
 
+
+// Constant-time compare so the shared secret cannot be recovered a character at a time.
+function timingSafeStrEqual(a: string, b: string): boolean {
+  const x = Buffer.from(a), y = Buffer.from(b);
+  if (x.length !== y.length) return false;
+  return timingSafeEqual(x, y);
+}
+
 export async function POST(req: NextRequest) {
+  // FAIL CLOSED. This used to read `if (secret && ...)`, so an unset TWILIO_INBOUND_SECRET skipped the
+  // check entirely and left the webhook open to the internet — and every accepted request costs an
+  // Anthropic call plus an outbound Twilio SMS to a number the caller chooses. An absent secret now
+  // means the endpoint is CLOSED, the same convention the cron routes already use.
   const secret = (process.env.TWILIO_INBOUND_SECRET || "").trim();
-  if (secret && req.nextUrl.searchParams.get("secret") !== secret) {
+  const provided = req.nextUrl.searchParams.get("secret") ?? "";
+  if (!secret || !timingSafeStrEqual(provided, secret)) {
     return new NextResponse("forbidden", { status: 403 });
   }
 
@@ -108,15 +123,39 @@ export async function POST(req: NextRequest) {
     let replyText = ai.reply;
     let injected = false;
     if (ai.payment && connected) {
-      const amountCents = ai.payment.kind === "deposit" ? (workspace.deposit_amount_cents ?? 0) : ai.payment.amountCents;
-      if (amountCents >= 50) {
+      // SECURITY: the model does not authorize money. authorizeAgentPayment derives the amount from
+      // owner-configured data (a deposit is taken verbatim from the workspace and the model's number is
+      // discarded), enforces a per-request ceiling plus rolling day and billing-cycle caps, and fails
+      // closed when any of those cannot be established. Above the automatic band a human decides.
+      const authz = await authorizeAgentPayment(workspace, {
+        kind: ai.payment.kind,
+        proposedCents: ai.payment.amountCents,
+      });
+      if (!authz.ok) {
+        console.warn(
+          "[sms/inbound] agent payment not authorized:",
+          authz.reason,
+          `proposed=${authz.proposedCents ?? "n/a"} ceiling=${authz.ceilingCents ?? "n/a"}`,
+        );
+        // The lead is told a human will follow up, and nothing about the limit that stopped it.
+        replyText += `\n\n${leadFacingRefusal()}`;
+        injected = true;
+      } else {
         const pay = await startWorkspacePayment(workspace, {
           leadId: lead.id,
           kind: ai.payment.kind,
-          amountCents,
-          description: ai.payment.label || (ai.payment.kind === "deposit" ? "Deposit to confirm your booking" : "Payment"),
+          amountCents: authz.amountCents,
+          // The model writes this label and the payer sees it on the Stripe page, so it is clamped to a
+          // single line of bounded length rather than passed through.
+          description:
+            (ai.payment.label || "").replace(/[\r\n\u2028\u2029\0]/g, " ").trim().slice(0, 120) ||
+            (ai.payment.kind === "deposit" ? "Deposit to confirm your booking" : "Payment"),
           customerEmail: lead.contact_email,
         });
+        // Close out the rolling-cap reservation the authorization took. A Stripe failure here must return
+        // the budget rather than leave a slice of the owner's daily cap held until the reservation times
+        // out — otherwise repeated Stripe errors would silently cap the agent.
+        await finishAgentPayment(authz, pay.ok);
         if (pay.ok && pay.url) {
           replyText += `\n\nPay securely here: ${pay.url}`;
           injected = true;

@@ -95,3 +95,10 @@ _tmp-*
 
 # next dev output when a session tails it to a file
 .next-dev.log
+
+# Agent skills installed by `npx skills add` (third-party guidance content).
+# Local tooling, not part of the application or this security remediation — kept out of the branch so
+# instruction content from another source is never mixed into a security review's history.
+.agents/
+.claude/skills/
+skills-lock.json

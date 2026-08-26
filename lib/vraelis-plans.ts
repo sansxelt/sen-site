@@ -45,8 +45,13 @@ export const CUT_RATES: Record<string, Record<Cycle, number>> = {
   agency: { monthly: 0.02, yearly: 0.02, lifetime: 0.03 },
 };
 
+// hasOwnProperty, not a bare CUT_RATES[plan] truthiness test: an inherited key such as "constructor" or
+// "__proto__" reads as truthy on a plain object, so the old form selected p="constructor" and then returned
+// CUT_RATES["constructor"][c] === undefined. Callers do Math.round(amountCents * rate), so the platform fee
+// silently became NaN instead of falling back to the 0.2 starter rate. Own-key only, so anything unknown —
+// inherited or not — lands on "starter".
 export function cutRateFor(plan: string | null, cycle: string | null): number {
-  const p = plan && CUT_RATES[plan] ? plan : "starter";
+  const p = plan && Object.prototype.hasOwnProperty.call(CUT_RATES, plan) ? plan : "starter";
   const c: Cycle = cycle === "yearly" || cycle === "lifetime" ? cycle : "monthly";
   return CUT_RATES[p][c];
 }
@@ -61,6 +66,13 @@ export function isPlanKey(v: string): v is PlanKey {
 const PAID_PLANS = new Set(["solo", "growth", "agency"]);
 export function isPaidPlan(plan: string | null, status: string | null): boolean {
   return Boolean(plan && PAID_PLANS.has(plan) && status === "active");
+}
+// Is this plan a PAID tier at all, regardless of status? The reconcile cron needs this rather than
+// isPlanKey: isPlanKey covers only the two tiers PayPal sells (solo|growth), but cutRateFor honours
+// "agency" too — at the LOWEST cut rate of all. Selecting rows with isPlanKey therefore exempted the most
+// valuable tier from the very backstop meant to catch an unbacked one.
+export function isPaidPlanKey(plan: string | null | undefined): boolean {
+  return Boolean(plan && PAID_PLANS.has(plan));
 }
 export function isCycle(v: string): v is Cycle {
   return v === "monthly" || v === "yearly" || v === "lifetime";
@@ -107,4 +119,46 @@ export function isPastDueExpired(status: string | null, planUpdatedAt?: string |
   const since = new Date(planUpdatedAt).getTime();
   if (!Number.isFinite(since)) return false;
   return Date.now() - since > PAST_DUE_GRACE_DAYS * DAY_MS;
+}
+
+// ── PayPal → canonical Vraelis tier ──────────────────────────────────────
+//
+// SECURITY (finding H1): a subscriber's tier must be derived from PayPal's own
+// plan_id on the server-verified subscription, NEVER from the request body. A
+// caller can hold a subscription to the cheapest plan while naming any tier it
+// likes, and the stored tier feeds cutRateFor() — so trusting client input lets
+// a caller cut the platform's take from 20% to 5% on every booking and payment.
+// An unrecognised plan id fails CLOSED (null) rather than defaulting to a paid
+// tier; callers must refuse the grant rather than fall back.
+export function vraelisPlanFromPaypalPlanId(
+  planId: string | null | undefined,
+): { plan: PlanKey; cycle: "monthly" | "yearly" } | null {
+  if (!planId) return null;
+  for (const plan of Object.keys(PAYPAL_PLANS) as PlanKey[]) {
+    for (const cycle of ["monthly", "yearly"] as const) {
+      if (PAYPAL_PLANS[plan][cycle] === planId) return { plan, cycle };
+    }
+  }
+  return null;
+}
+
+// PayPal subscription status → our 3-way plan_status. Returns null for every
+// state that must NOT grant a paid entitlement: APPROVED and APPROVAL_PENDING
+// mean the buyer consented but no money has moved yet, and an unknown status is
+// treated the same way. On null a caller must leave the stored plan untouched —
+// never assume "active".
+export function vraelisPlanStatusFromPaypal(
+  status: string | null | undefined,
+): PlanStatus | null {
+  switch (status) {
+    case "ACTIVE":
+      return "active";
+    case "SUSPENDED":
+      return "past_due";
+    case "CANCELLED":
+    case "EXPIRED":
+      return "canceled";
+    default:
+      return null; // APPROVAL_PENDING / APPROVED / unknown → never entitling
+  }
 }

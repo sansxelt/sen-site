@@ -186,3 +186,68 @@ export async function getDesktopUserEmailFromRequest(
     return null;
   }
 }
+
+// ── Account-wide desktop revocation ─────────────────────────────────
+//
+// Per-SESSION revocation already existed: desktop_sessions carries revoked_at and
+// findActiveSessionByToken filters on it, so signing out one device works and always did. What did not
+// exist is ACCOUNT-WIDE revocation — the security event that must reach every device at once.
+//
+// The web session counter (lib/v-session-revocation.ts) cannot cover these: a desktop call authenticates
+// with an opaque bearer token, never a JWT, so there is no `tv` claim to compare. Desktop sessions
+// therefore need their own account-wide sweep, invoked from the same security events.
+//
+// DELIBERATELY NOT invoked by ordinary web sign-out. Closing a browser tab must not sign a laptop app out;
+// that would make the desktop client unusable for anyone who also uses the site. It IS invoked by password
+// reset and administrative revocation, which is what "this account may be compromised" actually means.
+//
+// Tokens are never logged. The table stores sha256(token) only, and this function works from the email —
+// it never sees, returns, or records a raw token.
+export async function revokeAllDesktopSessions(
+  email: string,
+  reason: string,
+): Promise<{ revoked: number } | null> {
+  const normalized = email.trim().toLowerCase();
+  if (!normalized) return null;
+  try {
+    const supabase = getSupabaseAdminClient();
+    const { data, error } = await supabase
+      .from("desktop_sessions" as never)
+      .update({ revoked_at: new Date().toISOString() } as never)
+      .eq("email", normalized)
+      .is("revoked_at", null)
+      .select("id");
+    if (error) {
+      console.error("[desktop-auth] account-wide revocation failed:", error.message);
+      return null;
+    }
+    const revoked = ((data as unknown as { id: string }[]) ?? []).length;
+    // Count and reason only — never an identifier that could be correlated back to a token.
+    console.warn(`[desktop-auth] revoked ${revoked} desktop session(s):`, reason);
+    return { revoked };
+  } catch (e) {
+    console.error("[desktop-auth] account-wide revocation threw:", e);
+    return null;
+  }
+}
+
+/** Revoke ONE desktop session by its id. The ordinary "sign this device out" path. */
+export async function revokeDesktopSession(sessionId: string): Promise<boolean> {
+  if (!sessionId) return false;
+  try {
+    const supabase = getSupabaseAdminClient();
+    const { error } = await supabase
+      .from("desktop_sessions" as never)
+      .update({ revoked_at: new Date().toISOString() } as never)
+      .eq("id", sessionId)
+      .is("revoked_at", null);
+    if (error) {
+      console.error("[desktop-auth] single revocation failed:", error.message);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.error("[desktop-auth] single revocation threw:", e);
+    return false;
+  }
+}

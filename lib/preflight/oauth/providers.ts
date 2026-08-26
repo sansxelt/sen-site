@@ -133,9 +133,31 @@ const REGISTRY: Record<string, OAuthProvider> = {
 // isn't gated off (see providerAvailable), so listing all here is safe — unconfigured ones simply hide.
 export const OAUTH_PROVIDER_KINDS = ["github", "vercel", "sentry", "stripe_test", "supabase"] as const;
 
+// Own-key lookup table. A Map has NO prototype chain for its entries, so a key like "constructor",
+// "__proto__", "toString" or "valueOf" simply is not present — unlike a plain object, where REGISTRY[kind]
+// returns the inherited member and reads as truthy.
+//
+// This matters because three routes pass an attacker-controlled path segment straight into
+// resolveOAuthProvider: /api/preflight/apps/oauth/callback/[provider],
+// /api/preflight/apps/[id]/connections/oauth/[provider] and /api/preflight/connections/[provider]/oauth.
+// Each treats a truthy result as "this is a real provider" and then reads p.pkce, p.tokenUrl, p.clientIdEnv
+// and so on — all undefined on Object.prototype.constructor — and callbackPath() interpolates the same
+// unvalidated kind into a redirect_uri. Failing closed here fixes every caller at once rather than relying
+// on each one to pre-validate.
+const REGISTRY_BY_KIND: ReadonlyMap<string, OAuthProvider> = new Map(Object.entries(REGISTRY));
+
 // Resolve a provider by kind; null on an unknown/unregistered kind (routes fail closed on null).
+// Fails closed for: inherited/prototype keys, non-string input (a symbol or object from untyped JS),
+// the empty string, mixed-case variants, and anything not registered. Valid kinds are unchanged.
 export function resolveOAuthProvider(kind: string): OAuthProvider | null {
-  return REGISTRY[kind] ?? null;
+  if (typeof kind !== "string" || kind === "") return null;
+  return REGISTRY_BY_KIND.get(kind) ?? null;
+}
+
+// The registered kinds, derived from the registry itself so it can never drift from REGISTRY.
+// OAUTH_PROVIDER_KINDS above is the DISPLAY ORDER; a test asserts the two hold the same set.
+export function registeredOAuthKinds(): readonly string[] {
+  return [...REGISTRY_BY_KIND.keys()];
 }
 
 // Credential reads, ALWAYS trimmed. Every one of these values arrives by someone copying it out of a

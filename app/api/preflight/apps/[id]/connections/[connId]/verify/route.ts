@@ -20,7 +20,7 @@ import { gatePreflightApp, gateReasonResponse } from "@/lib/preflight/team-acces
 import { getConnection, recordConnectionCheck } from "@/lib/preflight/connections-db";
 import { planHealthCheck, healthStatusFromHttp, CHECK_NOTES, CHECK_TIMEOUT_MS } from "@/lib/preflight/connection-health";
 import { unsafeHttpsUrlReason, safeFetch, isBlockedFetchError } from "@/lib/safe-fetch";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { allowStrict } from "@/lib/vraelis-ratelimit";
 import { logEvent } from "@/lib/v-events";
 
 export const runtime = "nodejs";
@@ -81,7 +81,7 @@ export async function POST(req: Request, ctx: { params: Params }) {
   const g = await gatePreflightApp(id, "editor");
   if (!g.ok) return gateReasonResponse(g.reason);
   const owner = g.owner;
-  if (!checkRateLimit(`connverify:${owner}`, 10, 10 * 60 * 1000)) {
+  if (!(await allowStrict(`connverify:${owner}`, 10, 600))) {
     return NextResponse.json({ error: "rate_limited", message: "Too many health checks. Try again in a few minutes." }, { status: 429 });
   }
 

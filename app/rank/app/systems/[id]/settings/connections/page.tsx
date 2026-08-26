@@ -23,6 +23,11 @@ export const metadata: Metadata = { title: "Connections" };
 // with router.refresh() after each action, so the cards always show what the database holds.
 export default async function AppConnectionsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  // VIEWER, not editor — same reasoning as the settings page: every control here is behind canManage and
+  // every route it calls re-checks editor for itself, so the page gate was hiding read-only content
+  // rather than protecting anything.
+  //
+  // ONE READ DOES NOT FOLLOW THE GATE DOWN. See below: listAccountConnections is ACCOUNT-scoped.
   const access = await requirePreflightAppAccess(id, "/systems/" + id + "/settings/connections");
   const owner = access?.owner ?? "";
   const caps = capabilities(access?.role);
@@ -42,12 +47,20 @@ export default async function AppConnectionsPage({ params }: { params: Promise<{
     );
   }
 
-  const [connections, events, accountConns, appLinks] = await Promise.all([
+  // listConnections / recentConnectionEvents / listAppLinks are all scoped to THIS application, so a
+  // viewer of this application is entitled to them — the connections GET route already serves viewers.
+  //
+  // listAccountConnections is NOT: it is keyed on the owner's ACCOUNT and returns every provider they have
+  // authorized, including the account labels, for applications this member may have no access to at all.
+  // Lowering the page gate without noticing that would have turned a UX fix into a disclosure — one app's
+  // viewer reading the owner's whole integration inventory. It is fetched only for the role that can act
+  // on it, so a read-only member never causes the query, let alone sees the result.
+  const [connections, events, appLinks] = await Promise.all([
     listConnections(owner, id),
     recentConnectionEvents(owner, id, 10),
-    listAccountConnections(owner),
     listAppLinks(owner, id),
   ]);
+  const accountConns = caps.canManageConnections ? await listAccountConnections(owner) : [];
 
   return (
     <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>

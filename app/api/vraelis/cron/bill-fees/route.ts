@@ -7,6 +7,7 @@
 // triggered by anyone.
 
 import { NextResponse } from "next/server";
+import { cronAuthorized } from "@/lib/cron-auth";
 import type { NextRequest } from "next/server";
 import { getAllWorkspaces } from "@/lib/vraelis-db";
 import { billWorkspaceFee } from "@/lib/vraelis-billing";
@@ -14,8 +15,8 @@ import { billWorkspaceFee } from "@/lib/vraelis-billing";
 export const maxDuration = 60;
 
 export async function GET(req: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret || req.headers.get("authorization") !== `Bearer ${secret}`) {
+  // Constant-time, and fails closed on an unset CRON_SECRET (lib/cron-auth.ts).
+  if (!cronAuthorized(req)) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 

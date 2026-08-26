@@ -7,6 +7,8 @@
 // Secured by INBOUND_SECRET (set it in env and include it as ?secret=...
 // or an x-inbound-secret header in the provider's webhook URL).
 
+import { timingSafeEqual } from "node:crypto";
+import { limitOr429 } from "@/lib/vraelis-ratelimit";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import {
@@ -24,6 +26,7 @@ import { continueLeadConversation, type ConvoTurn } from "@/lib/vraelis-ai";
 import { sendLeadReply } from "@/lib/vraelis-email";
 import { notifyOwnerStatusEvent } from "@/lib/vraelis-notify";
 import { startWorkspacePayment } from "@/lib/vraelis-connect";
+import { authorizeAgentPayment, finishAgentPayment, leadFacingRefusal } from "@/lib/vraelis-payment-authz";
 
 const pick = (o: Record<string, unknown>, keys: string[]) => {
   for (const k of keys) if (typeof o[k] === "string" && (o[k] as string).trim()) return (o[k] as string).trim();
@@ -37,9 +40,17 @@ function stripQuoted(text: string): string {
 }
 
 export async function POST(req: NextRequest) {
+  // Rate limited even though it is secret-gated: each accepted POST costs one Anthropic call plus one
+  // Resend send, and the secret travels in a query string, so it leaks into logs and Referer headers
+  // more readily than a header-only credential would.
+  const limited = await limitOr429(req, "inbound-email", 60, 600);
+  if (limited) return limited;
+
   const secret = process.env.INBOUND_SECRET;
   const provided = req.nextUrl.searchParams.get("secret") || req.headers.get("x-inbound-secret") || "";
-  if (!secret || provided !== secret) {
+  // Constant-time compare so the shared secret cannot be recovered a character at a time.
+  const sBuf = Buffer.from(secret ?? ''), pBuf = Buffer.from(provided);
+  if (!secret || sBuf.length !== pBuf.length || !timingSafeEqual(sBuf, pBuf)) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
@@ -131,15 +142,39 @@ export async function POST(req: NextRequest) {
     let replyText = ai.reply;
     let injected = false;
     if (ws && ai.payment && connected) {
-      const amountCents = ai.payment.kind === "deposit" ? (ws.deposit_amount_cents ?? 0) : ai.payment.amountCents;
-      if (amountCents >= 50) {
+      // SECURITY: the model does not authorize money. authorizeAgentPayment derives the amount from
+      // owner-configured data (a deposit is taken verbatim from the workspace and the model's number is
+      // discarded), enforces a per-request ceiling plus rolling day and billing-cycle caps, and fails
+      // closed when any of those cannot be established. Above the automatic band a human decides.
+      const authz = await authorizeAgentPayment(ws, {
+        kind: ai.payment.kind,
+        proposedCents: ai.payment.amountCents,
+      });
+      if (!authz.ok) {
+        console.warn(
+          "[inbound/email] agent payment not authorized:",
+          authz.reason,
+          `proposed=${authz.proposedCents ?? "n/a"} ceiling=${authz.ceilingCents ?? "n/a"}`,
+        );
+        // The lead is told a human will follow up, and nothing about the limit that stopped it.
+        replyText += `\n\n${leadFacingRefusal()}`;
+        injected = true;
+      } else {
         const pay = await startWorkspacePayment(ws, {
           leadId: lead.id,
           kind: ai.payment.kind,
-          amountCents,
-          description: ai.payment.label || (ai.payment.kind === "deposit" ? "Deposit to confirm your booking" : "Payment"),
+          amountCents: authz.amountCents,
+          // The model writes this label and the payer sees it on the Stripe page, so it is clamped to a
+          // single line of bounded length rather than passed through.
+          description:
+            (ai.payment.label || "").replace(/[\r\n\u2028\u2029\0]/g, " ").trim().slice(0, 120) ||
+            (ai.payment.kind === "deposit" ? "Deposit to confirm your booking" : "Payment"),
           customerEmail: lead.contact_email,
         });
+        // Close out the rolling-cap reservation the authorization took. A Stripe failure here must return
+        // the budget rather than leave a slice of the owner's daily cap held until the reservation times
+        // out — otherwise repeated Stripe errors would silently cap the agent.
+        await finishAgentPayment(authz, pay.ok);
         if (pay.ok && pay.url) {
           replyText += `\n\nYou can ${ai.payment.kind === "deposit" ? "lock in your booking" : "pay securely"} here: ${pay.url}`;
           injected = true;

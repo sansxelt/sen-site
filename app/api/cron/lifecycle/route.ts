@@ -9,6 +9,7 @@
 // CRON_SECRET-gated (Vercel Cron sends Authorization: Bearer <secret>). Bounded, fail-soft,
 // never blocks. Returns safe summary counts only (no emails or PII).
 import { NextResponse } from "next/server";
+import { cronAuthorized } from "@/lib/cron-auth";
 import type { NextRequest } from "next/server";
 import { runActivationNudges, runLowCreditNudges, runWinbackNudges } from "@/lib/v-lifecycle";
 
@@ -16,8 +17,8 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 export async function GET(req: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret || req.headers.get("authorization") !== `Bearer ${secret}`) {
+  // Constant-time, and fails closed on an unset CRON_SECRET (lib/cron-auth.ts).
+  if (!cronAuthorized(req)) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
   const activation = await runActivationNudges(100);

@@ -112,7 +112,25 @@ export async function activateInvitesForEmail(email: string): Promise<void> {
   try {
     const s = getSupabaseAdminClient();
     const uid = norm(email);
-    await s.from("v_workspace_members" as never).update({ user_id: uid, status: "active", updated_at: new Date().toISOString() } as never).eq("email", uid).eq("status", "pending");
+    // SECURITY: the 7-day TTL is enforced HERE too, not only on the token path. This activates any
+    // pending row whose email matches, so without the expiry filter an invite that had long since
+    // lapsed still granted membership the moment its address signed up — the TTL existed on paper only.
+    // Rows predating the column have a NULL expiry and are still honoured, so no legitimate historical
+    // invite is broken by adding this.
+    const nowIso = new Date().toISOString();
+    const { error } = await s.from("v_workspace_members" as never)
+      .update({ user_id: uid, status: "active", updated_at: nowIso } as never)
+      .eq("email", uid)
+      .eq("status", "pending")
+      .or(`invite_expires_at.is.null,invite_expires_at.gt.${nowIso}`);
+    if (error) {
+      // Pre-migration databases have no invite_expires_at column. Fall back to the original update
+      // rather than silently activating nothing, and say so.
+      console.warn("[workspace] invite expiry filter unavailable, activating without it:", error.message);
+      await s.from("v_workspace_members" as never)
+        .update({ user_id: uid, status: "active", updated_at: nowIso } as never)
+        .eq("email", uid).eq("status", "pending");
+    }
   } catch { /* pre-migration / ignore */ }
 }
 
@@ -381,7 +399,10 @@ export async function isClientSafeOnly(email: string, projectId: string): Promis
 
 // ── Workspace switcher + workspace-scoped member dashboards ──
 export type AvailableWorkspace = { id: string; name: string; role: Role; isPersonal: boolean; ownerId: string };
-export type SelectedWorkspace = AvailableWorkspace & { isOwner: boolean; clientSafeOnly: boolean };
+// viewerEmail carries the CALLER identity through to the reads that need to scope by membership.
+// Without it, workspaceProjectSummaries had no way to tell which projects a client_viewer may see and
+// listed every project in the workspace.
+export type SelectedWorkspace = AvailableWorkspace & { isOwner: boolean; clientSafeOnly: boolean; viewerEmail: string };
 export const canViewWorkspaceDashboard = (role: Role) => role !== "client_viewer";
 export const isWorkspaceClientSafeOnly = (role: Role) => role === "client_viewer";
 
@@ -413,7 +434,7 @@ export async function resolveWorkspaceSelection(email: string, selectedId?: stri
   const available = await getAvailableWorkspaces(email);
   const uid = norm(email);
   const pick = available.find((w) => w.id === selectedId) ?? available.find((w) => w.isPersonal) ?? available[0] ?? null;
-  const selected = pick ? { ...pick, isOwner: pick.ownerId === uid, clientSafeOnly: pick.role === "client_viewer" } : null;
+  const selected = pick ? { ...pick, isOwner: pick.ownerId === uid, clientSafeOnly: pick.role === "client_viewer", viewerEmail: uid } : null;
   return { available, selected };
 }
 
@@ -438,7 +459,27 @@ export async function workspaceProjectSummaries(selected: SelectedWorkspace): Pr
   try {
     const s = getSupabaseAdminClient();
     const { data: projs } = await s.from("v_projects" as never).select("id,name").eq("workspace_id", selected.id).order("updated_at", { ascending: false }).limit(200);
-    const projects = (projs as unknown as { id: string; name: string }[]) ?? [];
+    let projects = (projs as unknown as { id: string; name: string }[]) ?? [];
+
+    // SECURITY: a client_viewer is a report-only SIDE role, not a rung on the ladder. Listing every project
+    // in the workspace to one — as this did — hands an external client the full portfolio of a workspace
+    // they were invited into for a single engagement. Narrow to the projects they are explicitly a member
+    // of. Fail CLOSED: if the membership lookup errors we show nothing rather than falling back to all.
+    if (isWorkspaceClientSafeOnly(selected.role)) {
+      const { data: pm, error: pmErr } = await s
+        .from("v_project_members" as never)
+        .select("project_id")
+        .eq("user_id", norm(selected.viewerEmail))
+        .eq("status", "active")
+        .in("project_id", projects.map((p) => p.id));
+      if (pmErr) {
+        console.error("[workspace] client_viewer project scoping failed; showing none:", pmErr.message);
+        return empty;
+      }
+      const allowed = new Set(((pm as unknown as { project_id: string }[]) ?? []).map((r) => r.project_id));
+      projects = projects.filter((p) => allowed.has(p.id));
+    }
+
     if (!projects.length) return empty;
     const ids = projects.map((p) => p.id);
     // Scope by the workspace's projects (not the workspace owner id) so rollups stay
@@ -553,7 +594,28 @@ export async function activateProjectInvitesForEmail(email: string): Promise<voi
   try {
     const s = getSupabaseAdminClient();
     const uid = norm(email);
-    const { data } = await s.from("v_project_members" as never).update({ user_id: uid, status: "active", updated_at: new Date().toISOString() } as never).eq("email", uid).eq("status", "pending").select("project_id");
+    // SECURITY: the same 7-day TTL the WORKSPACE activator enforces. Project invites are stamped with
+    // invite_expires_at by the same mintInviteToken, but this path matched on address alone — so the
+    // one sign-in that is TTL-checked for a workspace invite was unchecked for a project invite, and a
+    // long-lapsed project invite still granted access. Rows predating the column have a NULL expiry and
+    // are still honoured.
+    const nowIsoP = new Date().toISOString();
+    // `data` is reassigned by the pre-migration fallback below; `pErr` is not, so it stays const-like by
+    // being destructured separately.
+    const first = await s.from("v_project_members" as never)
+      .update({ user_id: uid, status: "active", updated_at: nowIsoP } as never)
+      .eq("email", uid).eq("status", "pending")
+      .or(`invite_expires_at.is.null,invite_expires_at.gt.${nowIsoP}`)
+      .select("project_id");
+    let data = first.data;
+    if (first.error) {
+      // Pre-migration database: no invite_expires_at column. Fall back rather than activating nothing.
+      console.warn("[workspace] project invite expiry filter unavailable:", first.error.message);
+      const retry = await s.from("v_project_members" as never)
+        .update({ user_id: uid, status: "active", updated_at: nowIsoP } as never)
+        .eq("email", uid).eq("status", "pending").select("project_id");
+      data = retry.data;
+    }
     for (const r of (data as unknown as { project_id: string }[]) ?? []) {
       await logEvent({ userId: uid, eventType: "project_member_activated", actorType: "owner", source: "app", metadata: { project_id: r.project_id } });
     }

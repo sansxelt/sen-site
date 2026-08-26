@@ -1,11 +1,13 @@
-﻿import { headers } from "next/headers";
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
+import { isSafeRecipient } from "@/lib/email-address";
 import {
   resolveSupportInbox,
   sendContactConfirmEmail,
   sendSupportEmail,
 } from "../../../lib/email";
-import { checkRateLimit } from "../../../lib/rate-limit";
+import { allowStrict, limitOr429 } from "../../../lib/vraelis-ratelimit";
+import { canonicalizeEmail } from "../../../lib/user-credentials";
+import type { NextRequest } from "next/server";
 
 type ContactPayload = {
   email?: string;
@@ -20,22 +22,21 @@ type ContactPayload = {
   website?: string;
 };
 
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Recipient validation lives in ONE place (lib/email-address.ts) so the three mail paths cannot drift.
+const emailPattern = { test: isSafeRecipient };
 
-export async function POST(request: Request) {
+// SECURITY (finding H4, second instance): this route is the same open email relay as
+// /api/vraelis/contact — it sends a confirmation to a CALLER-NAMED address from a verified sender. Two
+// defects made its original limiter ineffective:
+//   1. it read cf-connecting-ip FIRST, a header Vercel never sets, so a caller supplied any value and
+//      minted a fresh bucket on every request;
+//   2. it used lib/rate-limit's in-memory Map, which is per-lambda-instance and resets on cold start.
+// It now uses the Postgres-backed limiter keyed on the real client IP, plus a per-mailbox bucket on the
+// confirmation send.
+export async function POST(request: NextRequest) {
   // ── Rate limit: 5 submissions per IP per 10 minutes ──────────────────────
-  const headersList = await headers();
-  const ip =
-    headersList.get("cf-connecting-ip") ??
-    headersList.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    "unknown";
-
-  if (!checkRateLimit(ip, 5, 10 * 60 * 1000)) {
-    return NextResponse.json(
-      { error: "Too many requests. Please wait a few minutes before trying again." },
-      { status: 429 },
-    );
-  }
+  const limited = await limitOr429(request, "contact", 5, 600);
+  if (limited) return limited;
 
   let payload: ContactPayload;
 
@@ -87,8 +88,17 @@ export async function POST(request: Request) {
     // the user is best-effort, if it fails (e.g. their inbox bounces),
     // we don't want to lose the actual support request.
     await sendSupportEmail({ email, name, subject, message, to, channel });
-    try { await sendContactConfirmEmail(email, name, subject, to); }
-    catch (err) { console.warn("Contact confirmation email failed:", err); }
+    // The confirmation goes to an address the CALLER named — the relay surface. Its own per-mailbox
+    // budget, canonicalised so gmail dot/+tag aliases share one bucket, and allowStrict so a limiter
+    // outage denies the send rather than reopening the relay. Suppression is silent: the support email
+    // above already went out, and the caller must not learn which branch ran.
+    try {
+      if (await allowStrict(`contact-to:${canonicalizeEmail(email)}`, 1, 3600)) {
+        await sendContactConfirmEmail(email, name, subject, to);
+      } else {
+        console.warn("[contact] confirmation suppressed by per-mailbox limit");
+      }
+    } catch (err) { console.warn("Contact confirmation email failed:", err); }
 
     return NextResponse.json({ ok: true, to });
   } catch (error) {

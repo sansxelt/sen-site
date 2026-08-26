@@ -6,6 +6,7 @@
 // secret is stored ENCRYPTED (AES-256-GCM, key derived from AUTH_SECRET) and never returned/logged.
 
 import crypto from "crypto";
+import { currentTokenVersion } from "./v-session-revocation";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { logEvent } from "./v-events";
 import { getPrimaryOrganization, canManageOrganization, applyDomainProvisioning, emailDomain, domainTrustState, type ProvOrg, type DomainDefaultRole } from "./v-organization";
@@ -27,7 +28,21 @@ type ProviderRow = SsoProviderSafe & { organization_id: string; client_secret_en
 type Result<T = unknown> = ({ ok: true } & T) | { ok: false; error: string };
 
 // ── Secret encryption (AES-256-GCM, key = sha256(AUTH_SECRET)) ────────────────
-const encKey = () => crypto.createHash("sha256").update(process.env.AUTH_SECRET || "").digest();
+// SECURITY: no empty-string fallback. sha256("") is a fixed, publicly known 32-byte value, so an unset
+// AUTH_SECRET meant every stored SSO client secret was encrypted under a key anyone can compute — the
+// ciphertext looked encrypted and was not. Failing loudly is correct: a deployment that cannot protect
+// these secrets must not store them.
+//
+// MIGRATION NOTE: this changes nothing while AUTH_SECRET is set, which is the supported configuration —
+// the derived key is identical and existing ciphertext decrypts as before. It only converts the
+// unset case from "silently weak" into a startup-visible error.
+const encKey = () => {
+  const secret = (process.env.AUTH_SECRET || "").trim();
+  if (!secret) {
+    throw new Error("AUTH_SECRET is not set; refusing to encrypt or decrypt SSO client secrets.");
+  }
+  return crypto.createHash("sha256").update(secret).digest();
+};
 export function encryptSecret(plain: string): string {
   const iv = crypto.randomBytes(12);
   const c = crypto.createCipheriv("aes-256-gcm", encKey(), iv);
@@ -44,17 +59,26 @@ export function decryptSecret(blob: string | null): string | null {
   } catch { return null; }
 }
 
+// The HMAC key for the OIDC state cookie. Same rule as encKey: no empty-string fallback. An unset
+// AUTH_SECRET meant the state was signed with the empty key, so ANY caller could forge a state token
+// and the nonce/issuer binding it carries proved nothing.
+function stateKey(): string {
+  const secret = (process.env.AUTH_SECRET || "").trim();
+  if (!secret) throw new Error("AUTH_SECRET is not set; refusing to sign or verify SSO state.");
+  return secret;
+}
+
 // ── State/nonce cookie (HMAC-signed, short-lived) ─────────────────────────────
 export function signOidcState(obj: Record<string, unknown>): string {
   const body = Buffer.from(JSON.stringify({ ...obj, exp: Date.now() + 10 * 60 * 1000 })).toString("base64url");
-  const mac = crypto.createHmac("sha256", process.env.AUTH_SECRET || "").update(body).digest("base64url");
+  const mac = crypto.createHmac("sha256", stateKey()).update(body).digest("base64url");
   return `${body}.${mac}`;
 }
 export function verifyOidcState(token: string | undefined): Record<string, unknown> | null {
   if (!token || !token.includes(".")) return null;
   try {
     const [body, mac] = token.split(".");
-    const expect = crypto.createHmac("sha256", process.env.AUTH_SECRET || "").update(body).digest("base64url");
+    const expect = crypto.createHmac("sha256", stateKey()).update(body).digest("base64url");
     if (mac.length !== expect.length || !crypto.timingSafeEqual(Buffer.from(mac), Buffer.from(expect))) return null;
     const obj = JSON.parse(Buffer.from(body, "base64url").toString("utf8"));
     if (typeof obj.exp !== "number" || obj.exp < Date.now()) return null;
@@ -276,8 +300,27 @@ export async function provisionSsoLogin(email: string, organizationId: string): 
 }
 
 // Mint a NextAuth-compatible session JWT for a validated SSO email (the IdP is the authority).
+//
+// SECURITY: the token carries `tv`, the account's revocation counter, exactly as a token minted through
+// the jwt callback does. This path encodes the cookie DIRECTLY and never passes through that callback, so
+// without this the claim was simply absent.
+//
+// That was not only a bypass — it was also a latent outage. tokenVersionIsCurrent treats an absent claim
+// as 0, so once an account had ever been revoked (any sign-out bumps the counter) its stored version was
+// >= 1 and every freshly minted SSO session was born STALE: the user would sign in through the IdP and be
+// rejected on their next request, permanently. Stamping the current value fixes both halves at once.
+//
+// Enforcement is unchanged and lives where it belongs — the jwt callback in auth.ts validates `tv` on
+// every request, so this is a stronger guarantee than checking only at mint time: revoking mid-session
+// still kills the session on its next use.
 export async function mintSsoSession(email: string): Promise<{ name: string; value: string; options: Record<string, unknown> }> {
   const { encode } = await import("@auth/core/jwt");
-  const value = await encode({ token: { email: norm(email), sub: norm(email), name: norm(email).split("@")[0], provider: "sso" }, secret: process.env.AUTH_SECRET as string, salt: SESSION_COOKIE, maxAge: SESSION_MAX_AGE });
+  const tv = await currentTokenVersion(norm(email));
+  const value = await encode({
+    token: { email: norm(email), sub: norm(email), name: norm(email).split("@")[0], provider: "sso", tv },
+    secret: process.env.AUTH_SECRET as string,
+    salt: SESSION_COOKIE,
+    maxAge: SESSION_MAX_AGE,
+  });
   return { name: SESSION_COOKIE, value, options: { httpOnly: true, secure: true, sameSite: "lax", path: "/", domain: ".vraelis.com", maxAge: SESSION_MAX_AGE } };
 }

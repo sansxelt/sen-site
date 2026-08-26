@@ -11,6 +11,7 @@
 // set — required so the endpoint can't be triggered by anyone.
 
 import { NextResponse } from "next/server";
+import { cronAuthorized } from "@/lib/cron-auth";
 import type { NextRequest } from "next/server";
 import { getAllWorkspaces } from "@/lib/vraelis-db";
 import { maybeProvisionAgentNumber } from "@/lib/vraelis-sms";
@@ -18,8 +19,8 @@ import { maybeProvisionAgentNumber } from "@/lib/vraelis-sms";
 export const maxDuration = 60;
 
 export async function GET(req: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret || req.headers.get("authorization") !== `Bearer ${secret}`) {
+  // Constant-time, and fails closed on an unset CRON_SECRET (lib/cron-auth.ts).
+  if (!cronAuthorized(req)) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 

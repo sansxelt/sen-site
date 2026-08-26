@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { limitOr429 } from "@/lib/vraelis-ratelimit";
 import { auth } from "@/auth";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "@/lib/supabase-admin";
 
@@ -16,7 +18,12 @@ type Payload = {
   props?: Record<string, unknown>;
 };
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  // Unauthenticated Supabase write sink: one row per request, no cap. 60/10min per IP still
+  // comfortably covers a real browsing session while removing the unbounded-insert primitive.
+  const limited = await limitOr429(req, "analytics", 60, 600);
+  if (limited) return limited;
+
   if (!isDatabaseConfigured()) {
     // Don't error out on the client; just no-op.
     return new NextResponse(null, { status: 204 });
