@@ -1,11 +1,14 @@
 /**
  * Fail if any function in the public schema is executable by PUBLIC (and therefore by anon).
  *
- * This exists because ALTER DEFAULT PRIVILEGES cannot suppress PostgreSQL's built-in PUBLIC EXECUTE on
- * newly created functions - measured on 17.11, the statement does not even create a pg_default_acl row and
- * a function created afterwards still has proacl NULL. So the P4-B remediation cannot be made durable by
- * default privileges alone; every migration that creates a function has to revoke PUBLIC explicitly, and
- * this check is what catches the one that forgets.
+ * The GLOBAL form of ALTER DEFAULT PRIVILEGES does suppress PostgreSQL's built-in PUBLIC EXECUTE for a
+ * given creator role (the per-schema form cannot - it may only ADD privileges). But default privileges are
+ * per CREATOR, and postgres cannot set another role's: supabase_admin also holds CREATE on public, and a
+ * function it creates arrives with proacl NULL and is anon-executable. Verified: our migration covers
+ * postgres-created functions completely and supabase_admin-created ones not at all.
+ *
+ * This check is the backstop for the creators we cannot configure, and for any migration that creates a
+ * function without revoking PUBLIC.
  *
  *   usage:  npx tsx scripts/check-public-executable.ts --url <postgres-url>
  *

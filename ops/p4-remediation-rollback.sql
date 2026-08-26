@@ -40,8 +40,13 @@ GRANT EXECUTE ON FUNCTION public.v_record_vote(p_test uuid, p_voter text, p_opti
 GRANT EXECUTE ON FUNCTION public.v_spend_credit(p_user text, p_ref uuid, p_amount integer) TO PUBLIC;
 GRANT EXECUTE ON FUNCTION public.vraelis_rate_check(p_key text, p_limit integer, p_window_secs integer) TO PUBLIC;
 
--- 3. Function grants, exactly as the dump records them. CREATE OR REPLACE above reset this ACL, so
---    these must be replayed or anon/authenticated silently lose EXECUTE the rollback is meant to restore.
+-- 3. Undo the GLOBAL default-privilege revoke, restoring PostgreSQL's built-in PUBLIC EXECUTE for
+--    functions created by postgres. Without this the rollback leaves future functions hardened, which is
+--    a better state but NOT the state the dump records - and a rollback that does not restore is not exact.
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres GRANT EXECUTE ON FUNCTIONS TO PUBLIC;
+
+-- 4. Function grants, exactly as the dump records them. CREATE OR REPLACE preserves an existing ACL, but
+--    the forward migration revoked anon/authenticated, so these must be replayed to restore them.
 GRANT ALL ON FUNCTION public.rls_auto_enable() TO anon;
 GRANT ALL ON FUNCTION public.rls_auto_enable() TO authenticated;
 GRANT ALL ON FUNCTION public.rls_auto_enable() TO service_role;
@@ -67,13 +72,13 @@ GRANT ALL ON FUNCTION public.vraelis_rate_check(p_key text, p_limit integer, p_w
 GRANT ALL ON FUNCTION public.vraelis_rate_check(p_key text, p_limit integer, p_window_secs integer) TO authenticated;
 GRANT ALL ON FUNCTION public.vraelis_rate_check(p_key text, p_limit integer, p_window_secs integer) TO service_role;
 
--- 4. Schema-level grants.
+-- 5. Schema-level grants.
 GRANT USAGE ON SCHEMA public TO postgres;
 GRANT USAGE ON SCHEMA public TO anon;
 GRANT USAGE ON SCHEMA public TO authenticated;
 GRANT USAGE ON SCHEMA public TO service_role;
 
--- 5. Table grants, exactly as the dump records them.
+-- 6. Table grants, exactly as the dump records them.
 GRANT ALL ON TABLE public.account_subscriptions TO anon;
 GRANT ALL ON TABLE public.account_subscriptions TO authenticated;
 GRANT ALL ON TABLE public.account_subscriptions TO service_role;
@@ -384,9 +389,9 @@ GRANT ALL ON TABLE public.vraelis_rate_limits TO service_role;
 GRANT ALL ON TABLE public.vraelis_workspaces TO service_role;
 GRANT ALL ON TABLE public.waitlist TO service_role;
 
--- 6. No sequence grants in the dump (there are no sequences in public).
+-- 7. No sequence grants in the dump (there are no sequences in public).
 
--- 7. Default privileges for ROLE postgres.
+-- 8. Schema-scoped default privileges for ROLE postgres.
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENCES TO postgres;
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENCES TO anon;
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENCES TO authenticated;
@@ -400,7 +405,7 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES 
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES TO authenticated;
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES TO service_role;
 
--- 8. Assert the restoration matches the dump's own counts.
+-- 9. Assert the restoration matches the dump's own counts.
 DO $$
 DECLARE anon_t int; auth_t int; pub_f int; anon_f int;
 BEGIN
@@ -417,6 +422,10 @@ BEGIN
    WHERE n.nspname='public' AND r.rolname='anon';
   IF anon_t <> 101 OR auth_t <> 101 OR pub_f <> 8 OR anon_f <> 8 THEN
     RAISE EXCEPTION 'rollback did not restore the dump state: anon % tables, authenticated % tables, PUBLIC % functions (expected 101, 101, 8)', anon_t, auth_t, pub_f;
+  END IF;
+  IF EXISTS (SELECT 1 FROM pg_default_acl da JOIN pg_roles r ON r.oid=da.defaclrole
+              WHERE da.defaclnamespace = 0 AND da.defaclobjtype = 'f' AND r.rolname = 'postgres') THEN
+    RAISE EXCEPTION 'the GLOBAL default-privilege row for functions still exists - PUBLIC EXECUTE was not restored';
   END IF;
   RAISE NOTICE 'rollback ok: anon % tables, authenticated % tables, PUBLIC % functions, anon % functions', anon_t, auth_t, pub_f, anon_f;
 END $$;

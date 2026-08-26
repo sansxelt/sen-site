@@ -7,36 +7,39 @@
 --
 -- SCOPE NOTES, each established by measurement rather than assumption:
 --   * TABLES    - PUBLIC holds nothing (0 grants), so no PUBLIC clause is needed for tables.
---   * SEQUENCES - there are ZERO sequences in public. The clauses below are no-ops today and exist only so
---                 the migration stays correct if one is added before it runs.
---   * FUNCTIONS - PUBLIC holds EXECUTE on all 8, by PostgreSQL default. Revoking anon/authenticated ALONE
---                 does NOT deny anon: proven on a throwaway restore of this schema, where anon could still
---                 execute after such a revoke because PUBLIC's grant remained. This migration fixes the 8
---                 EXISTING functions. It does NOT fix FUTURE ones - see the KNOWN LIMITATION below.
+--   * SEQUENCES - there are ZERO sequences in public. Those clauses are no-ops today and exist only so the
+--                 migration stays correct if a sequence is added before it runs.
+--   * FUNCTIONS - PUBLIC holds EXECUTE on all 8, by PostgreSQL's built-in default. Revoking
+--                 anon/authenticated ALONE does NOT deny anon: proven on a throwaway restore, where anon
+--                 could still execute after such a revoke because PUBLIC's grant remained. Both the
+--                 existing grants and the future default are handled below.
 --   * service_role keeps everything. Its default privileges are load-bearing: the owner has implicit
---     rights, service_role does not, so removing them breaks the app on every newly created table.
+--                 rights, service_role does not, so removing them breaks the app on every new table.
 
 BEGIN;
 
 -- == 1. Future objects first. =================================================
 -- Ordering is deliberate: doing this AFTER the bulk revoke would leave a window in which a concurrently
 -- created table picks up the old defaults and keeps them.
-ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL     ON TABLES    FROM anon, authenticated;
-ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL     ON SEQUENCES FROM anon, authenticated;
-ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL     ON FUNCTIONS FROM anon, authenticated;
--- !! KNOWN LIMITATION - DO NOT ASSUME THIS LINE PROTECTS FUTURE FUNCTIONS !!
--- PUBLIC's EXECUTE on functions comes from PostgreSQL's BUILT-IN default (acldefault), not from
--- pg_default_acl, and ALTER DEFAULT PRIVILEGES cannot suppress it. Measured on PostgreSQL 17.11: with the
--- stored default cleared, this statement does not even create a pg_default_acl row, and a function created
--- afterwards still has proacl NULL - the pure built-in default - so has_function_privilege('anon', fn,
--- 'EXECUTE') remains TRUE. REVOKE ALL, REVOKE EXECUTE, and issuing it as postgres itself all behave the same.
--- The statement is kept because it is harmless and correct in intent, but the control that actually works
--- for FUTURE functions is one of:
---   (a) every migration that creates a function must end with REVOKE ALL ON FUNCTION ... FROM PUBLIC, and
---   (b) scripts/check-public-executable.ts must run in CI so a missed (a) fails the build.
--- An event trigger analogous to rls_auto_enable would also work, but that is a larger change and
--- rls_auto_enable is explicitly out of scope here.
-ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON TABLES    FROM anon, authenticated;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON SEQUENCES FROM anon, authenticated;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON FUNCTIONS FROM anon, authenticated;
+
+-- PUBLIC's EXECUTE on functions comes from PostgreSQL's built-in default. A PER-SCHEMA default can only
+-- ADD privileges - it cannot revoke what the global default supplies - so the IN SCHEMA form of this
+-- statement is silently a no-op. The GLOBAL form (no IN SCHEMA) is the one that works.
+-- Measured on 17.11: after the global revoke, a function created by postgres has proacl
+--   service_role=X/postgres,postgres=X/postgres   with NO leading =X/postgres (PUBLIC), and
+--   has_function_privilege('anon', fn, 'EXECUTE') = false, with a real call refused.
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
+
+-- COVERAGE LIMIT, not a defect in the above: default privileges are per CREATOR role, and postgres cannot
+-- set another role's - 'permission denied to change default privileges', the same limitation that made the
+-- 12 supabase_admin statements unrunnable during the restore. supabase_admin also holds CREATE on public,
+-- so a function it creates is NOT covered by this line. Only supabase_admin itself can run
+--   ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
+-- which is platform-managed and not available to us. scripts/check-public-executable.ts is the backstop:
+-- it detects any PUBLIC-executable function regardless of which role created it.
 
 -- == 2. Existing objects. =====================================================
 REVOKE ALL     ON ALL TABLES    IN SCHEMA public FROM anon, authenticated;
@@ -96,7 +99,10 @@ begin
   return v_id;
 end $$;
 
--- CREATE OR REPLACE resets the ACL to the default, which grants PUBLIC EXECUTE again. Re-revoke.
+-- Measured: CREATE OR REPLACE PRESERVES the existing ACL (identical proacl before and after), so this is
+-- not a repair of something CREATE OR REPLACE broke. It is kept deliberately: PostgreSQL recommends
+-- creating/replacing, revoking PUBLIC and granting the intended role in ONE transaction, so a function
+-- created fresh by this file can never be publicly executable even momentarily.
 REVOKE ALL ON FUNCTION public.v_preflight_claim(text, integer) FROM PUBLIC, anon, authenticated;
 
 -- == 4. service_role continuity. ==============================================
@@ -114,9 +120,10 @@ BEGIN
    WHERE n.nspname='public' AND r.rolname IN ('anon','authenticated');
   SELECT count(*) INTO pub_f FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
     CROSS JOIN LATERAL aclexplode(p.proacl) a WHERE n.nspname='public' AND a.grantee = 0;
-  SELECT count(*) INTO d FROM pg_default_acl da JOIN pg_namespace n ON n.oid=da.defaclnamespace
+  -- LEFT JOIN, and allow defaclnamespace = 0: an INNER JOIN on pg_namespace hides GLOBAL rows entirely.
+  SELECT count(*) INTO d FROM pg_default_acl da LEFT JOIN pg_namespace n ON n.oid=da.defaclnamespace
     CROSS JOIN LATERAL aclexplode(da.defaclacl) a LEFT JOIN pg_roles r ON r.oid=a.grantee
-   WHERE n.nspname='public' AND (r.rolname IN ('anon','authenticated') OR a.grantee = 0);
+   WHERE (n.nspname='public' OR da.defaclnamespace = 0) AND (r.rolname IN ('anon','authenticated') OR a.grantee = 0);
   IF t <> 0 OR f <> 0 OR d <> 0 OR pub_f <> 0 THEN
     RAISE EXCEPTION 'anon/authenticated/PUBLIC still hold privileges: % table, % function, % default, % PUBLIC-function', t, f, d, pub_f;
   END IF;
@@ -129,6 +136,10 @@ BEGIN
    WHERE n.nspname='public' AND r.rolname='service_role';
   IF sr_t <> 107 OR sr_f <> 8 THEN
     RAISE EXCEPTION 'service_role continuity broken: % tables, % functions (expected 107, 8)', sr_t, sr_f;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_default_acl da JOIN pg_roles r ON r.oid=da.defaclrole
+                  WHERE da.defaclnamespace = 0 AND da.defaclobjtype = 'f' AND r.rolname = 'postgres') THEN
+    RAISE EXCEPTION 'the GLOBAL default-privilege row for functions created by postgres was not created - the PUBLIC revoke was a no-op';
   END IF;
   RAISE NOTICE 'forward ok: anon/authenticated/PUBLIC at zero; service_role intact (% tables, % functions)', sr_t, sr_f;
 END $$;
