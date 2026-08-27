@@ -253,6 +253,58 @@
   .v6-au__turnt { font-size: clamp(0.88rem, 3.6vw, 1.05rem); line-height: 1.42; }
 }
 
+/* ════════════════════════════════ 2b. THE PHONE IS NOT ONE PHONE ══
+   The block above says it was budgeted "against a 390x844 budget", and it was: measured, that is the only
+   size it fits. Everywhere else chapter 2 ran past the bottom of its own pin and the overflow rule cut it,
+   silently, at full opacity — which is content lost rather than content arriving.
+
+   Resting overflow of .v6-au__turn past the pin, before this block (negative = fits):
+
+                768    800    844    896    932
+       320     83.3   57.9   23.3  -17.9  -35.3
+       360     63.4   38.0    3.3  -30.5  -45.3      360x800 is the commonest Android size there is
+       375     69.5   44.2    9.5  -27.5  -42.2
+       390     57.4   32.0   -2.7  -33.5  -48.3      the one size it was composed against
+       412     59.4   34.0   -0.7  -32.5  -47.3
+       430     79.9   54.5   19.9  -21.3  -37.0
+       480    120.5   95.1   60.4   19.3   -9.3
+
+   IT FAILS AT BOTH ENDS, for opposite reasons, which is why one factor cannot fix it:
+     - narrower than 390, the second turn statement wraps to a third line and the column grows;
+     - wider than 412, every vw-driven size in the chapter grows while the pin's height does not.
+
+   So there are two corrections, and neither touches the entrance animation, the wording, or the structure:
+
+     --aufit is how far short this window is of the room the chapter wants: 0 at 960px, 1 at 768px, which is
+     the shortest that still pins here (below 768 a narrow window takes the stacked composition, exactly as
+     it always did). It is anchored at 960 rather than at the 844 budget on purpose — at 844 four of the
+     seven widths above still clip, so a factor that reached zero there would do nothing for the row it was
+     written to fix. It is spent on SPACING and LEADING first, because that is what a scene this dense
+     actually has to give: five seal rows at a few px each is most of the deficit, and none of it is type.
+
+     min(Xvw, Ysvh) caps every vw-driven size against the pin's own height, so the chapter can no longer
+     grow a display size a short window has no room for. On a tall phone the vw term still wins and nothing
+     changes; only short-and-wide sees the svh term at all.
+
+   Scoped to (min-height: 768px) so it can never reach the stacked composition below it, and left inside
+   max-width: 900px so no laptop sees any of it. */
+@media (max-width: 900px) and (min-height: 768px) {
+  .v6-au { --aufit: clamp(0, calc((960px - 100svh) / 192px), 1); }
+
+  /* spacing and leading, which is where the room is */
+  .v6-au__seal { padding-block: calc(clamp(7px, 1.15vh, 13px) - var(--aufit) * 6px); }
+  .v6-au__says { line-height: calc(1.38 - var(--aufit) * 0.08); }
+  .v6-au__sub { line-height: calc(1.45 - var(--aufit) * 0.07); }
+  .v6-au__turn { padding-top: calc(clamp(9px, 1.5vh, 16px) - var(--aufit) * 6px); }
+  .v6-au__turnt { line-height: calc(1.42 - var(--aufit) * 0.06); }
+
+  /* type, capped against the pin's height as well as the window's width */
+  .v6-au__h { font-size: calc(clamp(1.62rem, min(7.1vw, 3.95svh), 2.3rem) - var(--aufit) * 0.2rem); }
+  .v6-au__who { font-size: min(clamp(1.02rem, 4.6vw, 1.35rem), 2.35svh); }
+  .v6-au__says { font-size: min(clamp(0.8rem, 3.3vw, 0.94rem), 1.62svh); }
+  .v6-au__stamp { width: min(100%, 5.6svh); }
+}
+
 /* ═══════════════════════════════════════════ 3. WHAT VERIFIED HAS TO MEAN ══
    The company's own motif: a gapped ring. The centre carries the conclusion, the outer path is the
    independent verification closing around it, one segment per condition. The ring only closes when all
@@ -1291,7 +1343,7 @@
    the worst kind of bug: the reveal hides these parts at opacity 0 and releases them on .v6-in, while the
    scrub drives the same parts from --p, so on every phone the two systems would have written the same
    property and the chapters would have flickered or gone blank. Same two gates as progress.ts. */
-@media (prefers-reduced-motion: reduce), (max-height: 619px) {
+@media (prefers-reduced-motion: reduce), (max-height: 619px), (max-width: 900px) and (max-height: 767px) {
   .v6-mo .v6-au__seal,
   .v6-mo .v6-au__turnt,
   .v6-mo .v6-gap__t,
@@ -1351,7 +1403,8 @@
    because where the scrub does NOT run --settle still resolves to 1 instantly and would paint the ground
    full graphite under type held at var(--ink). Black on near-black is not a worse animation, it is an
    unreadable chapter. */
-@media (min-height: 620px) and (prefers-reduced-motion: no-preference) {
+@media (min-height: 768px) and (prefers-reduced-motion: no-preference),
+       (min-width: 901px) and (min-height: 620px) and (prefers-reduced-motion: no-preference) {
   .v6-gap {
     background: color-mix(in oklab, var(--graphite) calc(var(--settle) * 100%), var(--paper));
     /* THE TYPE DOES NOT CROSS THE GROUND. Interpolating both on --settle put the ground at L 0.50 while the
@@ -1555,7 +1608,7 @@
    that stands in for the scrub wherever it does not run). scripts/mobile-motion-verify.ts fails if they
    drift apart.
    ═══════════════════════════════════════════════════════════════════════════════════ */
-@media (max-height: 619px), (prefers-reduced-motion: reduce) {
+@media (max-height: 619px), (max-width: 900px) and (max-height: 767px), (prefers-reduced-motion: reduce) {
   .v6-au, .v6-gap, .v6-st, .v6-rg, .v6-dr { height: auto; }
   .v6-au__pin, .v6-gap__pin, .v6-st__pin, .v6-rg__pin, .v6-dr__pin {
     position: static; height: auto; display: block;

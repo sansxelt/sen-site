@@ -35,7 +35,8 @@ const home = readFileSync("app/dev-preview/v6/home.tsx", "utf8");
 // selector regex then reports as a broken rule. This check exists to catch drift, not to manufacture some.
 const bare = css.replace(/\/\*[\s\S]*?\*\//g, "");
 const motionBlock = (() => {
-  const start = bare.lastIndexOf("@media (prefers-reduced-motion: reduce), (max-height: 619px)");
+  const start = bare.lastIndexOf(
+    "@media (prefers-reduced-motion: reduce), (max-height: 619px), (max-width: 900px) and (max-height: 767px)");
   if (start === -1) return "";
   let depth = 0;
   for (let i = bare.indexOf("{", start); i < bare.length; i++) {
@@ -171,8 +172,17 @@ ok("the short-circuit runs before the scroll listener is ever attached",
 //    because their queries are exact inverses. If the reveal's query ever picks up a condition the engine
 //    does not gate on, every scrubbed part on that viewport gets written by both.
 console.log("\n── the reveal and the scrub are exact inverses ──");
-const revealQuery = (css.match(/@media \(prefers-reduced-motion: reduce\), \(max-height: 619px\)/g) ?? []).length;
+// THE SCRUB NO LONGER STOPS AT ONE HEIGHT, so neither can the reveal. A wide window keeps its pins down
+// to 620px because SHORT-WINDOW DENSITY compensates there; a narrow one cannot, because that band carries
+// (min-width: 901px), so it stops at 768px exactly as it always did. Both clauses must appear here, and
+// the same two must appear in SHORT, or the reveal and the scrub write the same opacity on some viewport.
+const revealQuery = (css.match(
+  /@media \(prefers-reduced-motion: reduce\), \(max-height: 619px\), \(max-width: 900px\) and \(max-height: 767px\)/g,
+) ?? []).length;
 ok("the reveal is gated on exactly the engine's two conditions", revealQuery >= 1);
+ok("the reveal covers the narrow-and-short band the scrub gave up",
+  /\(max-width: 900px\) and \(max-height: 767px\)/.test(css)
+  && /\(max-width: 900px\) and \(max-height: 767px\)/.test(js));
 ok("the reveal no longer claims a width the scrub also runs at",
   !/@media \(max-width: 900px\), \(prefers-reduced-motion: reduce\), \(max-height: 619px\)/.test(css));
 

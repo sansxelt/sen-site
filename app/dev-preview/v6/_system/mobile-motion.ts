@@ -94,7 +94,7 @@ const REDUCED = "(prefers-reduced-motion: reduce)";
 // that band is a landscape phone, and a 1366x657 laptop at 125% scaling, which reports 1093x526.
 // chapters.css unpins the scenes below this height for that reason, and the
 // literal is repeated there in three media queries. See NOT ENOUGH ROOM TO PIN for the four gates.
-export const SHORT = "(max-height: 619px)";
+export const SHORT = "(max-height: 619px), (max-width: 900px) and (max-height: 767px)";
 
 /**
  * True where the scrubbed chapters do NOT run, so their parts need entry motion instead.
