@@ -31,7 +31,29 @@
 // viewport was responsible when it dies partway.
 import { chromium } from "playwright";
 
-const URL = process.argv.find((a) => /^https?:/.test(a)) || "http://localhost:3200/dev-preview/v6";
+// THE TARGET URL IS NOT ALLOWED TO FALL BACK SILENTLY.
+//
+// This read `process.argv.find(a => /^https?:/.test(a))`, so a file:// argument matched nothing and the
+// default localhost URL was used instead -- without a word. Every run of the fixture harness, which
+// passes
+// file:// pages built to have known behaviour, therefore measured the LIVE HOMEPAGE and compared it against
+// the fixtures' expectations. The whole instrument-validation exercise tested nothing, and its failures
+// were read as findings about the page.
+//
+// So: file:// is accepted, and an argument that looks like it was meant to be a target but cannot be
+// parsed is a hard error rather than a shrug.
+const urlArg = process.argv.slice(2).find((a) => !a.startsWith("--"));
+if (urlArg !== undefined) {
+  try { new URL(urlArg); } catch {
+    console.error(`  not a usable URL: ${urlArg}`);
+    process.exit(2);
+  }
+  if (!/^(https?|file):/.test(urlArg)) {
+    console.error(`  unsupported URL scheme: ${urlArg} (expected http, https or file)`);
+    process.exit(2);
+  }
+}
+const URL_UNDER_TEST = urlArg || "http://localhost:3200/dev-preview/v6";
 const CH = ["gap", "au", "st", "rg", "dr"];
 
 // --only=<substring> narrows the sweep while working on one band. It is a development convenience and
@@ -45,22 +67,29 @@ const ok = (n, c, d = "") => {
   if (!c) failures++;
 };
 
-// The bands the composition is built for. `pinned` is what the height gate should decide at this size:
-//   at least 620px tall AND wider than 900px -> the pinned, scrubbed film
-//   below either                             -> the stacked composition (a landscape phone, 125% zoom)
 const VIEWPORTS = [
-  { name: "1366x657 chromebook", w: 1366, h: 657, pinned: true },
-  { name: "1366x768 chromebook", w: 1366, h: 768, pinned: true },
-  { name: "1280x689 laptop", w: 1280, h: 689, pinned: true },
-  { name: "1280x800 laptop", w: 1280, h: 800, pinned: true },
-  { name: "1440x900 laptop", w: 1440, h: 900, pinned: true },
-  { name: "1680x1050 desktop", w: 1680, h: 1050, pinned: true },
-  { name: "2560x1440 wide", w: 2560, h: 1440, pinned: true },
-  { name: "834x1112 tablet", w: 834, h: 1112, pinned: true },
-  { name: "360x800 mobile", w: 360, h: 800, pinned: true },
-  { name: "390x844 mobile", w: 390, h: 844, pinned: true },
-  { name: "430x932 mobile", w: 430, h: 932, pinned: true },
-  { name: "1093x526 at 125%", w: 1093, h: 526, pinned: false },
+  // Grouped by the shape of the space rather than by device. Each class carries at least one geometry on
+  // BOTH sides of a gate where one exists, because a gate nobody tests the far side of is a gate nobody
+  // knows the behaviour of. `pinned` is what the height gates should decide here:
+  //   the film runs at >= 520px tall on the wide composition, >= 660px on the narrow one.
+  { cls: "narrow/tall", name: "360x800", w: 360, h: 800, pinned: true },
+  { cls: "narrow/tall", name: "390x844", w: 390, h: 844, pinned: true },
+  { cls: "narrow/tall", name: "430x932", w: 430, h: 932, pinned: true },
+  { cls: "narrow/short", name: "360x660", w: 360, h: 660, pinned: true },
+  { cls: "narrow/short", name: "390x700", w: 390, h: 700, pinned: true },
+  { cls: "narrow/short", name: "360x568", w: 360, h: 568, pinned: false },
+  { cls: "tablet", name: "768x1024", w: 768, h: 1024, pinned: true },
+  { cls: "tablet", name: "834x1112", w: 834, h: 1112, pinned: true },
+  { cls: "wide/short", name: "1093x525", w: 1093, h: 525, pinned: true },
+  { cls: "wide/short", name: "1093x614", w: 1093, h: 614, pinned: true },
+  { cls: "wide/short", name: "1242x597", w: 1242, h: 597, pinned: true },
+  { cls: "wide/short", name: "1366x500", w: 1366, h: 500, pinned: false },
+  { cls: "laptop", name: "1280x720", w: 1280, h: 720, pinned: true },
+  { cls: "laptop", name: "1366x657", w: 1366, h: 657, pinned: true },
+  { cls: "laptop", name: "1366x768", w: 1366, h: 768, pinned: true },
+  { cls: "laptop", name: "1440x900", w: 1440, h: 900, pinned: true },
+  { cls: "desktop/wide", name: "1680x1050", w: 1680, h: 1050, pinned: true },
+  { cls: "desktop/wide", name: "2560x1440", w: 2560, h: 1440, pinned: true },
 ];
 
 const started = Date.now();
@@ -86,18 +115,10 @@ const rows = [];
 // A listed entry that stops appearing is reported so it can be deleted. A list that only grows is a list
 // nobody prunes.
 const INHERITED = [
-  {
-    viewport: "360x800 mobile",
-    ch: "st",
-    cls: "v6-st__cond",
-    over: 5.5,
-    tolerance: 0.5,
-    measuredAt: "main@29bfe09f",
-    note: "Chapter 4's conditions travel 150px per slot, so an incoming statement is briefly below the "
-      + "pin at 360px wide. Transient -- it rests 64.38px inside -- but 1.60px of glyph ink crosses the "
-      + "edge during the travel, which is past this probe's 1px tolerance, so it is refused rather than "
-      + "excluded. Untouched by the compact-laptop and Authority work: identical on main and on branch.",
-  },
+  // EMPTY, AND THAT IS THE POINT. This carried one entry: .v6-st__cond overhanging its pin by 5.5px at
+  // 360x800, measured identically on main@29bfe09f and on the branch, listed so an already-shipping defect
+  // did not block unrelated work. The narrow density system closed it, the probe reported RESOLVED on the
+  // next full run, and the entry came out. A baseline that only ever grows is a baseline nobody prunes.
 ];
 const inheritedSeen = new Set();
 
@@ -107,7 +128,7 @@ if (only && SELECTED.length === 0) {
   process.exit(2);
 }
 
-console.log(`\n  v6 viewport probe  ->  ${URL}`);
+console.log(`\n  v6 viewport probe  ->  ${URL_UNDER_TEST}`);
 console.log(`  ${SELECTED.length} viewport(s), each at both motion preferences where that can differ`);
 if (only) console.log(`  FILTERED to "${only}" — this is NOT the full matrix\n`);
 else console.log("");
@@ -125,7 +146,7 @@ for (const vp of SELECTED) {
     const page = await ctx.newPage();
     const jsErrors = [];
     page.on("pageerror", (e) => jsErrors.push(String(e).slice(0, 100)));
-    await page.goto(URL, { waitUntil: "networkidle" });
+    await page.goto(URL_UNDER_TEST, { waitUntil: "networkidle" });
     await page.waitForTimeout(1400);
 
     const r = await page.evaluate(async (CH) => {
@@ -416,6 +437,7 @@ for (const vp of SELECTED) {
     }, CH);
 
     r.name = label;
+    r.cls = vp.cls;
     r.expectPinned = vp.pinned && !reduced;
     r.jsErrors = jsErrors;
     rows.push(r);

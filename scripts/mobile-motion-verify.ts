@@ -34,9 +34,13 @@ const home = readFileSync("app/dev-preview/v6/home.tsx", "utf8");
 // so the slice starts mid-comment, the opening /* is already behind it, and the strip leaves prose that the
 // selector regex then reports as a broken rule. This check exists to catch drift, not to manufacture some.
 const bare = css.replace(/\/\*[\s\S]*?\*\//g, "");
+// Read from the engine rather than restated here: this locator carried the gate's literal twice before,
+// and both times it was left pointing at a height the page had stopped using, which silently emptied
+// every check below it. See "the reveal and the scrub are exact inverses" at the foot of this file.
+const SHORT = (js.match(/export const SHORT = "([^"]+)"/) ?? [])[1] ?? "";
 const motionBlock = (() => {
-  const start = bare.lastIndexOf(
-    "@media (prefers-reduced-motion: reduce), (max-height: 619px), (max-width: 900px) and (max-height: 767px)");
+  if (!SHORT) return "";
+  const start = bare.lastIndexOf(`@media (prefers-reduced-motion: reduce), ${SHORT}`);
   if (start === -1) return "";
   let depth = 0;
   for (let i = bare.indexOf("{", start); i < bare.length; i++) {
@@ -172,17 +176,58 @@ ok("the short-circuit runs before the scroll listener is ever attached",
 //    because their queries are exact inverses. If the reveal's query ever picks up a condition the engine
 //    does not gate on, every scrubbed part on that viewport gets written by both.
 console.log("\n── the reveal and the scrub are exact inverses ──");
-// THE SCRUB NO LONGER STOPS AT ONE HEIGHT, so neither can the reveal. A wide window keeps its pins down
-// to 620px because SHORT-WINDOW DENSITY compensates there; a narrow one cannot, because that band carries
-// (min-width: 901px), so it stops at 768px exactly as it always did. Both clauses must appear here, and
-// the same two must appear in SHORT, or the reveal and the scrub write the same opacity on some viewport.
-const revealQuery = (css.match(
-  /@media \(prefers-reduced-motion: reduce\), \(max-height: 619px\), \(max-width: 900px\) and \(max-height: 767px\)/g,
-) ?? []).length;
-ok("the reveal is gated on exactly the engine's two conditions", revealQuery >= 1);
-ok("the reveal covers the narrow-and-short band the scrub gave up",
-  /\(max-width: 900px\) and \(max-height: 767px\)/.test(css)
-  && /\(max-width: 900px\) and \(max-height: 767px\)/.test(js));
+// THE SCRUB NO LONGER STOPS AT ONE HEIGHT, so neither can the reveal, and this check no longer spells
+// either of them out. It used to hard-code the literals, which meant every time the gate moved the test
+// had to be edited to agree with the thing it was supposed to be checking -- and twice it was edited to a
+// value that was already stale, so it passed against a page nobody was serving.
+//
+// The real contract is that the reveal runs in EXACTLY the places the scrub does not. progress.ts gates on
+// SHORT plus the reduced-motion query, so the stylesheet's reveal query must be those same two conditions.
+// Reading SHORT out of the source and comparing makes the invariant self-maintaining: move the gate and
+// this keeps testing the right thing, or fails loudly because the two really have drifted apart.
+ok("SHORT is readable from the engine source (a rename must not empty this check)", SHORT.length > 0);
+const expectedReveal = `@media (prefers-reduced-motion: reduce), ${SHORT}`;
+ok("the reveal is gated on exactly the engine's two conditions", css.includes(expectedReveal),
+  `expected "${expectedReveal}"`);
+// And the same two conditions unpin the scenes, so all three agree by construction rather than by hand.
+ok("the fallback unpins on exactly those conditions too",
+  css.includes(`@media ${SHORT}, (prefers-reduced-motion: reduce)`),
+  `expected "@media ${SHORT}, (prefers-reduced-motion: reduce)"`);
+// ── EVERY HEIGHT LITERAL IN THE STYLESHEET, because "all the gates" has been wrong four times ─────────
+// The file documents four gates that must agree. There are five. The fifth is written across two lines:
+//
+//     @media (min-width: 901px) and (prefers-reduced-motion: reduce),
+//            (min-width: 901px) and (max-height: 619px) {
+//
+// so every single-line search for the gate height walked straight past it, four separate times, and it sat
+// on the old value while the other four moved. It sets the type the stacked composition uses, so at 1366
+// wide the struck word stepped 109px -> 191px across a 20px change of window height -- the largest
+// discontinuity in the whole composition space, produced by a literal nobody could see.
+//
+// So this stops trusting anyone to enumerate the gates. Every height literal in every media query has to be
+// one the system actually declares. A sixth gate, on a third line, in a file nobody reads, fails here.
+const HEIGHT_LITERAL = /(?:max|min)-height:\s*(\d+)px/g;
+const declaredHeights = new Set<string>();
+for (const m of SHORT.matchAll(HEIGHT_LITERAL)) {
+  declaredHeights.add(m[1]);
+  declaredHeights.add(String(Number(m[1]) + 1));   // the min-height twin of each max-height
+}
+const usedHeights = new Map<string, number>();
+for (const q of bare.matchAll(/@media([^{]+)\{/g)) {
+  for (const h of q[1].matchAll(HEIGHT_LITERAL)) {
+    usedHeights.set(h[1], (usedHeights.get(h[1]) ?? 0) + 1);
+  }
+}
+// Not vacuous: it has to have found the gates before it can claim nothing else is there. This check was
+// written once with its backslashes eaten by a shell heredoc, so both sets came out empty and it passed
+// green on a deliberately reintroduced 619px. Mutation-tested since.
+ok("the height-literal scan found something to scan", declaredHeights.size >= 2 && usedHeights.size >= 2,
+  `declared ${declaredHeights.size}, used ${usedHeights.size}`);
+const strays = [...usedHeights.keys()].filter((h) => !declaredHeights.has(h));
+ok("every height literal in the stylesheet is one the engine declares",
+  strays.length === 0,
+  strays.length ? `${strays.join("px, ")}px used in a media query but not in SHORT` : "");
+
 ok("the reveal no longer claims a width the scrub also runs at",
   !/@media \(max-width: 900px\), \(prefers-reduced-motion: reduce\), \(max-height: 619px\)/.test(css));
 
