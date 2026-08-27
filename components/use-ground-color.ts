@@ -178,13 +178,11 @@ export function useGroundColor(
     const commit = (bg: string | null, dark: boolean) => setGround((g) =>
       g.bg === bg && g.dark === dark && g.resetKey === resetKey ? g : { bg, dark, resetKey });
 
-    const settle = () => {
-      raf = 0;
-      if (paused) return;
-
+    // Returns the colour it read, so step() below can tell whether the ground has stopped moving.
+    const settle = (): string | null => {
       if (window.scrollY <= topZone) {
         commit(null, atTopFallback);
-        return;
+        return null;
       }
 
       const y = Math.round(el.getBoundingClientRect().bottom) + 1;
@@ -202,7 +200,7 @@ export function useGroundColor(
       const bg = paintedBackground(from);
       if (!bg) {
         commit(null, atTopFallback);
-        return;
+        return null;
       }
 
       // THE MEASUREMENT OUTRANKS THE LABEL, and it has to. A declaration is fixed for the life of a
@@ -216,9 +214,52 @@ export function useGroundColor(
         : declared ? declared === "dark" : Boolean(from?.hasAttribute("data-nav-dark"));
 
       commit(bg, dark);
+      return bg;
     };
 
-    const onScroll = () => { if (!raf) raf = requestAnimationFrame(settle); };
+    // THE GROUND KEEPS MOVING AFTER THE LAST SCROLL EVENT, AND THIS USED TO STOP LISTENING BEFORE IT DID.
+    //
+    // Sampling on scroll alone is right for a page whose sections are flat colours: the ground under the bar
+    // changes only because the bar is over something else, and that only happens while scrolling. This page
+    // is not that page. Chapter 3 resolves its ground from paper to graphite off --settle, which derives
+    // from --p, which progress.ts eases toward its target on its OWN rAF loop with a 55ms time constant. So
+    // --p goes on changing for roughly a quarter of a second after the reader's hand stops, and every one of
+    // those frames repaints the ground -- with no scroll event to sample any of them.
+    //
+    // The bar was therefore left holding whichever colour the ground happened to be at the instant the last
+    // scroll event fired, which is the value from BEFORE the transition finished. Measured at the end of
+    // chapter 3: the ground had reached oklab lightness 0.145 and the bar was still painting 0.574, a hard
+    // horizontal edge across the top of the page between a mid-grey bar and a near-black chapter. Stopping
+    // anywhere mid-resolve reproduced it, and it never corrected itself, because nothing was scrolling.
+    //
+    // So the sampler now chases: after each scroll it keeps reading until the reading stops changing.
+    // CHASE_STABLE frames of an identical colour is "the ground has settled" -- comfortably longer than the
+    // easing tail at 60fps, and it costs nothing when there is nothing to chase, because a flat ground is
+    // already stable on the second frame. CHASE_MAX is a hard cap so a ground that animates forever cannot
+    // pin an rAF loop open; it bounds the chase at about a second and a half rather than trusting the page.
+    // commit() already de-dupes, so the extra frames re-render nothing while the colour is unchanged.
+    const CHASE_STABLE = 8;
+    const CHASE_MAX = 90;
+    let stableFor = 0;
+    let chased = 0;
+    let lastRead: string | null | undefined;
+
+    const step = () => {
+      raf = 0;
+      if (paused) return;
+      const bg = settle();
+      if (bg === lastRead) stableFor += 1;
+      else { stableFor = 0; lastRead = bg; }
+      chased += 1;
+      if (stableFor < CHASE_STABLE && chased < CHASE_MAX) raf = requestAnimationFrame(step);
+    };
+
+    const onScroll = () => {
+      // A new gesture restarts the chase: whatever it had decided was settled is now stale again.
+      stableFor = 0;
+      chased = 0;
+      if (!raf) raf = requestAnimationFrame(step);
+    };
 
     settle();
     window.addEventListener("scroll", onScroll, { passive: true });
