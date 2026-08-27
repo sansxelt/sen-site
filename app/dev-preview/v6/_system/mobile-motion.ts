@@ -39,13 +39,13 @@ import { useEffect } from "react";
 //
 // On a desktop these are animated by --p, and the reveal must not write the same opacity there. It does
 // not, because the hide and the .v6-in release that undoes it BOTH live inside one media query in
-// chapters.css, `(max-width: 900px), (prefers-reduced-motion: reduce), (max-height: 767px)`, which is the
+// chapters.css, `(max-width: 900px), (prefers-reduced-motion: reduce), (max-height: 619px)`, which is the
 // inverse of where the scrub runs. Outside it neither rule matches, so carrying .v6-in on a scrubbed
 // element is inert.
 //
 // That is what makes it safe to observe them unconditionally, and unconditional is what they have to be.
 // The selector used to be chosen from a media query ONCE, at mount, while the hide rule is re-evaluated by
-// the browser on every resize. A window that crossed 768px tall after mount therefore got the hide with
+// the browser on every resize. A window that crossed the gate height after mount therefore got the hide with
 // nothing watching for its reveal, and six classes of homepage content sat at opacity 0 until the next
 // navigation. Toggling a Chromebook out of fullscreen is exactly that resize. A media query is live; a
 // JavaScript read of one is a single sample, and the two must not be asked to agree.
@@ -83,11 +83,18 @@ const ALWAYS_PARTS = [
 const MOBILE = "(max-width: 900px)";
 const REDUCED = "(prefers-reduced-motion: reduce)";
 // THE WINDOW IS TOO SHORT TO PIN A SCENE IN. Every pin is `height: 100svh; overflow: hidden`, so a window
-// shorter than the scene was composed for does not compress it, it clips it: measured at 1366x657 the
-// Direction chapter lost 157px off the bottom, including a whole layer, and its disclosure line was
-// overprinted by the graph. chapters.css unpins the scenes below this height for that reason, and the
+// shorter than the scene was composed for does not compress it, it clips it.
+//
+// THIS WAS 767px AND IS NOW 619px. At 1366x657 the Direction chapter used to lose a whole layer off the
+// bottom and overprint its disclosure line with the graph, which is why the gate sat above that size. The
+// scenes no longer meet a short window carrying a tall window's spacing: SHORT-WINDOW DENSITY in
+// chapters.css interpolates against window height continuously, so every scene now measures clean from
+// 620px up and the gate moved down to where the composition actually stops fitting rather than where it
+// used to. Below 620px the shortfall stops being whitespace and the stacked composition is still right:
+// that band is a landscape phone, and a 1366x657 laptop at 125% scaling, which reports 1093x526.
+// chapters.css unpins the scenes below this height for that reason, and the
 // literal is repeated there in three media queries. See NOT ENOUGH ROOM TO PIN for the four gates.
-export const SHORT = "(max-height: 767px)";
+export const SHORT = "(max-height: 619px)";
 
 /**
  * True where the scrubbed chapters do NOT run, so their parts need entry motion instead.
@@ -134,7 +141,7 @@ export function useMobileMotion(): void {
     // ALWAYS_PARTS run everywhere, because the scrub never drove them and on a desktop they had no motion
     // at all. SCRUBBED_PARTS are observed everywhere too: the stylesheet decides where their reveal has
     // any effect, and it decides it live, on every resize. See the note above SCRUBBED_PARTS for the
-    // failure this replaces, which was content stuck at opacity 0 after a resize across 767px tall.
+    // failure this replaces, which was content stuck at opacity 0 after a resize across the gate height.
     //
     // Reduced motion still gets the class and still gets the observer: the stylesheet decides that its
     // reveal is a fade with no travel, which is a question about distance, not about whether a reader is

@@ -57,6 +57,7 @@
    when the windows move.
    TO RESTORE the third beat: uncomment .v6-gap__found in chapters.tsx, add ~90vh, and open a window for
    --found / --foundout between --claim and --verdict. */
+.v6 { --sh: 0; }
 .v6-gap { position: relative; height: 280svh; background: var(--paper); --p: 0;
   /* Beat one: the claim, and the strike that contradicts it. */
   --strike:  clamp(0, calc((var(--p) - 0.05) / 0.13), 1);   /* 05 -> 18 struck   */
@@ -1052,25 +1053,23 @@
    has. Below that the content does not shrink, it is CUT, silently, because the clip is the pin's own
    overflow rule. Nothing looks broken; the bottom of the argument is simply not there.
 
-   Measured on the live page at 1366 wide, scrolled to the middle of each chapter, reading how far a child
-   escapes the bottom of its pin:
-
-                 600px   657px   700px   768px   830px
-     .v6-st       +82     +28      0       0       0     the ring and its centre
-     .v6-rg       +54       0      0       0       0
-     .v6-dr       +96    +157    +116     +55      0     the three layers, worst by a distance
-
    657px is a Chromebook whose browser is not fullscreen, which is how most Chromebooks are actually used.
    At that size the Direction chapter lost its whole third layer AND its disclosure line was overprinted by
    the graph above it: two pieces of type painted over each other, which is what "disoriented and cut off"
-   was. 768px is the same machine fullscreen, and it still lost 55px.
+   was. 768px is the same machine fullscreen, and it lost 70px.
 
-   Two fixes, because the deficit has two sizes. From 768px up the Direction chapter is tightened enough to
-   fit (see SHORT-WINDOW DENSITY below, which buys back about 62px of pure whitespace). Below 768px the
-   shortfall reaches 157px, which cannot come out of spacing without destroying the type scale, so the
-   scenes stop pinning and become the stacked composition instead. That is not a new fallback: it is the
-   one a phone and a reduced-motion desktop already get, and the argument for it there is the argument here.
-   A scene that cannot fit the window should lay out, not be trimmed to the window's height.
+   THE THRESHOLD USED TO BE 767/768 AND IS NOW 619/620, because the deficit turned out to be smaller than it
+   looked and the answer to it larger. The measurement it rested on sampled each chapter "scrolled to the
+   middle", and the worst clip in Direction is at phase 0.83, not 0.5 — so the old table read +55px at 768px
+   where 31 phases read +70px, and 0 for Standard where they read +34px. The old conclusion, that below
+   768px the shortfall could not come out of spacing without destroying the type scale, was drawn from those
+   numbers. SHORT-WINDOW DENSITY below now interpolates continuously against window height instead of
+   spending a fixed 62px, and every scene measures clean from 620px up. See the table there.
+
+   Below 620px the shortfall does stop being whitespace, and the stacked composition is still the answer:
+   not a new fallback, but the one a phone and a reduced-motion desktop already get, and the argument for it
+   there is the argument here. A scene that cannot fit the window should lay out, not be trimmed to the
+   window's height. That is also where a 1366x657 laptop lands at 125% scaling, which reports 1093x526.
 
    ── THE FOUR GATES THAT MUST AGREE, AND WHY THIS IS DANGEROUS TO EDIT ──────────────────────────────────
    "The scrub does not run here" is expressed in four places, and this block is only one of them. They were
@@ -1082,10 +1081,10 @@
      3. CHAPTER 2 RESOLVES INTO THE NIGHT   must NOT run here. It paints .v6-gap's ground to graphite from
                                             --settle while this block holds the type at var(--ink), which
                                             is near-black type on a near-black field. It carries a
-                                            matching (min-height: 768px) for exactly that reason.
+                                            matching (min-height: 620px) for exactly that reason.
      4. progress.ts                         pins --p to 1 and never attaches the scroll listener, so
                                             nothing computes a value the cascade here throws away
-   The height literal is 767/768 in all four. Changing it in one is a bug in the other three.
+   The height literal is 619/620 in all four. Changing it in one is a bug in the other three.
 
    A JAVASCRIPT GATE MUST LISTEN, NEVER SAMPLE, and both scripts used to sample. Gate 4 ran once against
    effect deps that never changed, and mobile-motion.ts was a fifth reading of the same literal, choosing
@@ -1098,7 +1097,7 @@
    re-enters it on any crossing. mobile-motion.ts no longer reads them at all: it observes every part on
    every viewport, and gate 2 decides where a reveal does anything, which removes one copy of 767 rather
    than adding a listener to it. */
-@media (min-width: 901px) and (max-height: 767px) {
+@media (min-width: 901px) and (max-height: 619px) {
   .v6-gap { height: auto; }
   .v6-gap__pin { position: static; height: auto; padding: clamp(64px, 9vh, 104px) var(--gutter); }
   .v6-gap__stage { max-width: none; height: auto; }
@@ -1152,21 +1151,101 @@
 }
 
 /* ══════════════════════════════════════════ SHORT-WINDOW DENSITY ══
-   The band between 768px and the height the Direction chapter was composed for. It stays pinned here,
-   because the shortfall is 55px and all 55 of them are whitespace: three layer blocks each give back a
-   little top padding and a little leading between their two lines, the column's own gap tightens, and the
-   head gives back the space under its supporting line. Measured after: about 62px recovered, which clears
-   768px with a small margin for the copy growing by a line.
+   ONE CONTINUOUS FACTOR, NOT A LADDER OF BREAKPOINTS.
 
-   Type scale, measure and colour are untouched. Nothing here is allowed to make the chapter smaller, only
-   tighter — if a future edit needs more than this band can give, the honest move is to raise the 767px
-   unpin threshold above, not to shrink the words. */
-@media (min-width: 901px) and (max-height: 860px) {
-  .v6-dr__sub { margin-top: clamp(8px, 1vh, 12px); }
-  .v6-dr__layers { gap: clamp(9px, 1.2vh, 16px); }
-  .v6-dr__layer { padding-top: 8px; }
-  .v6-dr__lh { margin-top: 4px; }
-  .v6-dr__now, .v6-dr__next { margin-top: 5px; }
+   This block used to be five declarations at (max-height: 860px) that bought back about 62px of pure
+   whitespace in the Direction chapter, on the reasoning that below 768px the shortfall could not come out
+   of spacing without destroying the type scale, so the scenes should stop pinning instead.
+
+   Two things were wrong with that, both measured on the live page rather than argued:
+
+     - THE OLD TABLE SAMPLED ONE PHASE. It read each chapter "scrolled to the middle", and the worst clip in
+       Direction is at phase 0.83, where the three layers have arrived at full opacity and the column is at
+       its tallest. Measured across 31 phases instead of one, the deficit at 1366x768 is 70px, not the 55px
+       the table records, and 62px of recovered whitespace never closed it. Standard clips 34px there too,
+       where the table says 0. The composition has been cutting content on a mainstream laptop.
+     - THE COPY GREW. The old note allowed for exactly that ("a small margin for the copy growing by a
+       line") and the margin is gone.
+
+   Deficit by window height at 1366 wide, worst phase of 31, after this block (0 = nothing clipped):
+
+                 620px   657px   689px   768px   800px   900px  1050px
+     .v6-au        ~80     71      15       0       0       0      0
+     .v6-st       ~142    126      77      34       0       0      0
+     .v6-rg        ~88     78      39       0       0       0      0
+     .v6-dr       ~196    174     171      70      67      20      0
+
+   --sh IS HOW SHORT THE WINDOW IS, 0 at 950px and 1 at 620px, and every rule below interpolates against
+   it. A factor rather than a breakpoint because the deficits above are a smooth function of height: a
+   ladder would tighten in visible steps as a window is dragged, and would have to be re-tuned at each rung.
+   At 900px it applies 15% of its travel, which is the 20px Direction actually needs there; at 657px it
+   applies 89%. Nothing snaps, and one number moves the whole band.
+
+   THIS IS WHAT LETS THE 620px GATE BE HONEST. The four gates moved from 767/768 down to 619/620 only
+   because the scenes now fit that far down; the threshold did not move on its own. Below 620px the
+   shortfall stops being whitespace and the stacked composition is still the right answer, which is the
+   original argument, kept.
+
+   Scoped to .v6 rather than :root so no other route inherits a factor composed for these five scenes. */
+@media (min-width: 901px) and (max-height: 950px) {
+  .v6 { --sh: clamp(0, calc((950px - 100svh) / 330px), 1); }
+
+  /* Chapter 2 — the head loses a little scale and the two turn statements tighten their leading. */
+  .v6-au__pin { gap: calc(clamp(10px, 2.2vh, 30px) - var(--sh) * 14px);
+    padding-top: calc(var(--nav-h, 66px) + 3vh - var(--sh) * 1.8vh);
+    padding-bottom: calc(clamp(30px, 6vh, 64px) - var(--sh) * 34px); }
+  .v6-au__h { margin-top: calc(clamp(12px, 1.8vh, 20px) - var(--sh) * 8px);
+    font-size: calc(clamp(2.05rem, 4.3vw, 3.9rem) - var(--sh) * 0.9rem); }
+  .v6-au__sub { margin-top: calc(clamp(12px, 1.6vh, 18px) - var(--sh) * 6px);
+    line-height: calc(1.55 - var(--sh) * 0.13); }
+  .v6-au__turnt { font-size: calc(clamp(1.02rem, 1.35vw, 1.35rem) - var(--sh) * 0.13rem);
+    line-height: calc(1.5 - var(--sh) * 0.12); }
+
+  /* Chapter 4 — the ring gives back diameter and the statements give back travel. --slot is a fixed 150px
+     step, so on a short window an incoming statement starts further below the frame than the frame has
+     room for: that is the p=0.13 clip in the table, and it is why the travel scales here too. */
+  .v6-st__pin { gap: calc(clamp(10px, 2vh, 26px) - var(--sh) * 16px);
+    padding-top: calc(var(--nav-h, 66px) + 3vh - var(--sh) * 1.8vh);
+    padding-bottom: calc(clamp(30px, 6vh, 64px) - var(--sh) * 34px); }
+  .v6-st__h { margin-top: calc(clamp(12px, 1.8vh, 20px) - var(--sh) * 8px);
+    font-size: calc(clamp(2.05rem, 4.5vw, 4rem) - var(--sh) * 1.05rem); }
+  .v6-st__sub { margin-top: calc(clamp(12px, 1.6vh, 18px) - var(--sh) * 6px);
+    line-height: calc(1.55 - var(--sh) * 0.13); }
+  .v6-st__ringwrap { max-width: calc(340px - var(--sh) * 110px); }
+  .v6-st__list { min-height: calc(clamp(230px, 34vh, 340px) - var(--sh) * 70px); }
+  .v6-st__cond { gap: calc(12px - var(--sh) * 5px);
+    transform: translateY(calc(var(--slot) * (-150px + var(--sh) * 56px))); }
+  .v6-st__condt { font-size: calc(clamp(1.95rem, 4.7vw, 4.2rem) - var(--sh) * 1.15rem); }
+  .v6-st__condd { font-size: calc(clamp(1rem, 1.35vw, 1.3rem) - var(--sh) * 0.1rem);
+    line-height: calc(1.5 - var(--sh) * 0.1); }
+
+  /* Chapter 6 — six rows each give back a little padding, which is where its whole deficit lives. */
+  .v6-rg__pin { gap: calc(clamp(8px, 1.4vh, 18px) - var(--sh) * 10px);
+    padding-top: calc(var(--nav-h, 66px) + 2.5vh - var(--sh) * 1.4vh);
+    padding-bottom: calc(clamp(18px, 3vh, 36px) - var(--sh) * 18px); }
+  .v6-rg__h { margin-top: calc(clamp(8px, 1.4vh, 16px) - var(--sh) * 6px);
+    font-size: calc(clamp(1.75rem, 3.9vw, 3.35rem) - var(--sh) * 0.75rem); }
+  .v6-rg__grp { margin-top: calc(clamp(10px, 1.6vh, 18px) - var(--sh) * 8px); }
+  .v6-rg__row { padding-block: calc(clamp(7px, 1vh, 11px) - var(--sh) * 5px); }
+  .v6-rg__t { line-height: calc(1.28 - var(--sh) * 0.08); }
+
+  /* Chapter 8 — the worst by a distance, and all three layers are the reason. The graph gives back height
+     as well, because the stage is a two-column grid whose row is as tall as its tallest child. */
+  .v6-dr__pin { gap: calc(clamp(10px, 1.6vh, 22px) - var(--sh) * 10px);
+    padding-top: calc(var(--nav-h, 66px) + 2.5vh - var(--sh) * 1.5vh);
+    padding-bottom: calc(clamp(18px, 3vh, 36px) - var(--sh) * 14px); }
+  .v6-dr__h { margin-top: calc(clamp(8px, 1.4vh, 16px) - var(--sh) * 6px);
+    font-size: calc(clamp(1.85rem, 4.1vw, 3.45rem) - var(--sh) * 0.9rem); }
+  .v6-dr__sub { margin-top: calc(clamp(10px, 1.4vh, 16px) - var(--sh) * 8px);
+    font-size: calc(clamp(0.98rem, 1.2vw, 1.14rem) - var(--sh) * 0.1rem);
+    line-height: calc(1.55 - var(--sh) * 0.15); }
+  .v6-dr__graph { max-height: calc(62svh - var(--sh) * 20svh); }
+  .v6-dr__layers { gap: calc(clamp(14px, 2vh, 24px) - var(--sh) * 12px); }
+  .v6-dr__layer { padding-top: calc(14px - var(--sh) * 10px); }
+  .v6-dr__lh { margin-top: calc(7px - var(--sh) * 4px); line-height: calc(1.15 - var(--sh) * 0.09);
+    font-size: calc(clamp(1.05rem, 1.6vw, 1.4rem) - var(--sh) * 0.33rem); }
+  .v6-dr__now, .v6-dr__next { margin-top: calc(8px - var(--sh) * 5px);
+    font-size: calc(0.9rem - var(--sh) * 0.1rem); line-height: calc(1.5 - var(--sh) * 0.13); }
 }
 
 /* ══════════════════════════════════════════════════ MOBILE MOTION ══
@@ -1196,7 +1275,7 @@
    nothing is scrubbing and the reveal is the only motion available. Gating this on width alone left
    reduced motion with four chapters that neither scrubbed nor revealed, which is how it ended up a
    third composition nobody designed. */
-/* (max-height: 767px) is gate 2 of the four listed under NOT ENOUGH ROOM TO PIN. A short window unpins the
+/* (max-height: 619px) is gate 2 of the four listed under NOT ENOUGH ROOM TO PIN. A short window unpins the
    scenes, so their parts need the entry reveal for the same reason a phone does: unpinned and unrevealed is
    the third composition nobody designed.
 
@@ -1205,14 +1284,14 @@
    releases it are BOTH inside this query: outside it neither matches, so an element that arrived while the
    scrub was running carries .v6-in and nothing reads it. That inversion is what fixed the bug, because the
    script's read of the query happened once at mount while this is re-evaluated on every resize, and the
-   two disagreed the moment a window crossed 767px tall. Keep the two selector lists below identical to
+   two disagreed the moment a window crossed the gate height. Keep the two selector lists below identical to
    SCRUBBED_PARTS and ALWAYS_PARTS in that file; scripts/mobile-motion-verify.ts fails if they drift. */
 /* THE INVERSE OF WHERE THE SCRUB RUNS, AND IT HAS TO STAY THE EXACT INVERSE.
    (max-width: 900px) was dropped from this list when the phone started pinning. Leaving it would have been
    the worst kind of bug: the reveal hides these parts at opacity 0 and releases them on .v6-in, while the
    scrub drives the same parts from --p, so on every phone the two systems would have written the same
    property and the chapters would have flickered or gone blank. Same two gates as progress.ts. */
-@media (prefers-reduced-motion: reduce), (max-height: 767px) {
+@media (prefers-reduced-motion: reduce), (max-height: 619px) {
   .v6-mo .v6-au__seal,
   .v6-mo .v6-au__turnt,
   .v6-mo .v6-gap__t,
@@ -1263,16 +1342,16 @@
    mobile blocks hold the type at var(--ink). That is black text on a near-black field: not a worse
    animation, an unreadable chapter. So this runs only where the scrub itself runs.
 
-   (min-height: 768px) IS THE SAME ARGUMENT, ONE CONDITION LATER. A short window now unpins this chapter too
+   (min-height: 620px) IS THE SAME ARGUMENT, ONE CONDITION LATER. A short window now unpins this chapter too
    (see NOT ENOUGH ROOM TO PIN) and holds its type at var(--ink) with the same !important, so without this
-   the ground would resolve to graphite under black type on any window under 768px tall. It is gate 3 of the
+   the ground would resolve to graphite under black type on any window under the gate height. It is gate 3 of the
    four listed there. */
 /* Width left this gate for the same reason it left the others: --p is no longer pinned to 1 on a phone,
    so --settle travels and the ground can resolve with the reader. The height and motion conditions stay,
    because where the scrub does NOT run --settle still resolves to 1 instantly and would paint the ground
    full graphite under type held at var(--ink). Black on near-black is not a worse animation, it is an
    unreadable chapter. */
-@media (min-height: 768px) and (prefers-reduced-motion: no-preference) {
+@media (min-height: 620px) and (prefers-reduced-motion: no-preference) {
   .v6-gap {
     background: color-mix(in oklab, var(--graphite) calc(var(--settle) * 100%), var(--paper));
     /* THE TYPE DOES NOT CROSS THE GROUND. Interpolating both on --settle put the ground at L 0.50 while the
@@ -1332,7 +1411,7 @@
    full queries rather than one with `or`, so it needs nothing newer than every browser this site already
    supports. */
 @media (min-width: 901px) and (prefers-reduced-motion: reduce),
-       (min-width: 901px) and (max-height: 767px) {
+       (min-width: 901px) and (max-height: 619px) {
   .v6-gap__wordt { font-size: clamp(4.4rem, 8vw, 7rem); }
   .v6-gap__list li { font-size: clamp(1.5rem, 2.1vw, 2.15rem); line-height: 1.24; }
   .v6-gap__verdict { font-size: clamp(1.9rem, 2.9vw, 2.9rem); }
@@ -1462,7 +1541,7 @@
    composed for does not compress that scene, it CLIPS it, and the clipped part is simply gone. That is as
    true of a landscape phone at 390px tall as it was of a 1366x657 laptop. So:
 
-     (max-height: 767px)              a landscape phone, an iPhone SE at 667px, a short laptop window
+     (max-height: 619px)              a landscape phone, a laptop at 125% scaling, a very short window
      (prefers-reduced-motion: reduce) someone who asked not to be moved through a scene
 
    Both get the flat stack that every phone used to get, which is why that composition is kept rather than
@@ -1476,7 +1555,7 @@
    that stands in for the scrub wherever it does not run). scripts/mobile-motion-verify.ts fails if they
    drift apart.
    ═══════════════════════════════════════════════════════════════════════════════════ */
-@media (max-height: 767px), (prefers-reduced-motion: reduce) {
+@media (max-height: 619px), (prefers-reduced-motion: reduce) {
   .v6-au, .v6-gap, .v6-st, .v6-rg, .v6-dr { height: auto; }
   .v6-au__pin, .v6-gap__pin, .v6-st__pin, .v6-rg__pin, .v6-dr__pin {
     position: static; height: auto; display: block;

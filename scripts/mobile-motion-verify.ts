@@ -35,7 +35,7 @@ const home = readFileSync("app/dev-preview/v6/home.tsx", "utf8");
 // selector regex then reports as a broken rule. This check exists to catch drift, not to manufacture some.
 const bare = css.replace(/\/\*[\s\S]*?\*\//g, "");
 const motionBlock = (() => {
-  const start = bare.lastIndexOf("@media (prefers-reduced-motion: reduce), (max-height: 767px)");
+  const start = bare.lastIndexOf("@media (prefers-reduced-motion: reduce), (max-height: 619px)");
   if (start === -1) return "";
   let depth = 0;
   for (let i = bare.indexOf("{", start); i < bare.length; i++) {
@@ -171,10 +171,10 @@ ok("the short-circuit runs before the scroll listener is ever attached",
 //    because their queries are exact inverses. If the reveal's query ever picks up a condition the engine
 //    does not gate on, every scrubbed part on that viewport gets written by both.
 console.log("\n── the reveal and the scrub are exact inverses ──");
-const revealQuery = (css.match(/@media \(prefers-reduced-motion: reduce\), \(max-height: 767px\)/g) ?? []).length;
+const revealQuery = (css.match(/@media \(prefers-reduced-motion: reduce\), \(max-height: 619px\)/g) ?? []).length;
 ok("the reveal is gated on exactly the engine's two conditions", revealQuery >= 1);
 ok("the reveal no longer claims a width the scrub also runs at",
-  !/@media \(max-width: 900px\), \(prefers-reduced-motion: reduce\), \(max-height: 767px\)/.test(css));
+  !/@media \(max-width: 900px\), \(prefers-reduced-motion: reduce\), \(max-height: 619px\)/.test(css));
 
 console.log(fail === 0 ? `\nALL PASS  ${pass} passed, 0 failed` : `\nFAILURES  ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

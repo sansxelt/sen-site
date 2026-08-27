@@ -72,7 +72,7 @@ export function useScrollProgress(ref: RefObject<HTMLElement | null>, options?: 
     // scene, never a half-scrubbed one.
     //
     // AND THE GATE IS LIVE, WHICH IT WAS NOT. It ran once against deps that never changed, while
-    // chapters.css re-evaluates the identical queries on every resize. So a window that crossed 767px tall
+    // chapters.css re-evaluates the identical queries on every resize. So a window that crossed the gate height
     // after mount kept whichever branch it loaded with: re-entering fullscreen on a Chromebook left about
     // 13,100px of pinned scene frozen at --p: 1, and chapter 3's end state at that value is a BLANK right
     // column, because every condition's opacity is clamp(0, 3.235 - 5.88 * dist, 1) and all four are past
