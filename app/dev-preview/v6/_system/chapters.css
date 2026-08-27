@@ -829,56 +829,101 @@
 .v6-dr__disc { max-width: var(--max-wide); width: 100%; margin: 0 auto; font-size: 12.5px;
   line-height: 1.5; color: var(--wait-dk); }
 
-/* NARROW, AND STILL PINNED. */
+/* ══════════════════════ 8B. DIRECTION, NARROW: A SEQUENCE, NOT A SPREAD ══
+   THE PHONE WAS BEING SHOWN THE WHOLE CHAPTER AT ONCE.
+
+   The rows were `auto auto auto` and every part was permanently present, so a 390px screen carried the
+   heading, its lead paragraph, the link, a diagram and a layer simultaneously. Measured: the head took the
+   top 40% of the frame in EVERY frame of the scrub, which left the drawing 23svh -- its labels rendered
+   around 6px, below reading -- and the layer sentences a cramped strip underneath. Nothing owned the
+   stage, so nothing could be read properly, and the chapter read as a wide composition squeezed onto a
+   phone rather than a composition made for one.
+
+   Desktop is untouched. It has the room to show the drawing and the three layers together, and does.
+
+   Here the same content becomes four beats that each own the frame, in the order the argument is made:
+
+     0.00 - 0.20   the heading and its lead, alone and centred
+     0.18 - 0.66   the drawing, alone, at a size where its labels are legible; its four internal
+                   reveals (guarantees, systems, edges, deployment) are re-timed to run INSIDE this
+                   window rather than across the whole chapter, so the reader watches it assemble
+     0.68 - 1.00   Compile, Challenge and Accumulate, one at a time
+
+   THE THREE PARTS SHARE ONE GRID CELL. Rows sized to content cannot give the drawing the space the
+   heading has stopped using; overlapping them can. This is the same device chapter 3 uses for its
+   travellers and chapter 4 for its statements, so a phone meets one composition idea across the page
+   rather than three.
+
+   Nothing is dropped, nothing is re-worded, and no type shrinks: the drawing gets BIGGER here (23svh to
+   46svh) because it is no longer sharing the frame. */
 @media (max-width: 900px) {
+  .v6-dr {
+    /* Re-timed for the narrow sequence. Desktop keeps the windows declared on .v6-dr above: there the
+       drawing is beside the layers for the whole chapter, so its reveals are spread across all of it. */
+    --g1: clamp(0, calc((var(--p) - 0.26) / 0.10), 1);   /* the guarantees   */
+    --g2: clamp(0, calc((var(--p) - 0.35) / 0.10), 1);   /* the systems      */
+    --g3: clamp(0, calc((var(--p) - 0.44) / 0.10), 1);   /* the edges        */
+    --g4: clamp(0, calc((var(--p) - 0.53) / 0.09), 1);   /* the deployment   */
+    --g5: clamp(0, calc((var(--p) - 0.68) / 0.32), 1);   /* the three layers */
+    /* the beats' own presence, deliberately overlapping by a few percent so each hands over rather than
+       cutting -- the same crossfade the chapter above resolves its claim with */
+    --dhead:  clamp(0, calc((var(--p) - 0.17) / 0.07), 1);   /* the head leaves   */
+    --dgin:   clamp(0, calc((var(--p) - 0.18) / 0.07), 1);   /* the drawing lands */
+    --dgout:  clamp(0, calc((var(--p) - 0.62) / 0.07), 1);   /* and leaves        */
+    /* THE LAYERS NEED THEIR OWN GATE, not just their per-layer distance fade. Sharing a grid cell with
+       the head means an ungated container is ON from p=0: the first layer resolved to 0.3 opacity at the
+       top of the chapter and printed straight through the heading. Measured on the first attempt at this
+       composition -- the frames showed both at once and were unreadable. */
+    --dlin:   clamp(0, calc((var(--p) - 0.64) / 0.06), 1);   /* the layers arrive */
+  }
+
   .v6-dr__pin { padding: calc(var(--nav-h, 67px) + 1.4vh) var(--gutter) clamp(28px, 4.5vh, 48px);
-    grid-template-rows: auto auto auto; align-content: safe center;
+    grid-template-rows: minmax(0, 1fr) auto; align-content: stretch;
     gap: clamp(7px, 1.3vh, 16px); }
+
+  /* ONE CELL, THREE BEATS. */
+  .v6-dr__head, .v6-dr__stage { grid-row: 1; grid-column: 1; min-height: 0; }
+
+  .v6-dr__head { align-self: center; width: 100%;
+    opacity: calc(1 - var(--dhead));
+    transform: translateY(calc(var(--dhead) * -7svh)); }
   .v6-dr__h { font-size: clamp(1.5rem, 6.6vw, 2.15rem); max-width: 17ch; }
   .v6-dr__sub { font-size: clamp(0.86rem, 3.5vw, 1rem); line-height: 1.42; }
-  /* start, NOT center. This was centred and the stage is taller than the pin frame on a phone, so the
-     overflow was split across both edges and the graph printed upward THROUGH the heading. A grid that can
-     overflow must grow downward, where overflow:hidden clips it, never outward from the middle. */
-  .v6-dr__stage { grid-template-columns: 1fr; gap: clamp(6px, 1.1vh, 16px); align-content: start; }
-  /* THE DRAWING IS 900 UNITS WIDE AND ITS LABELS ARE THE CONTENT. Fitted to a 390px screen the whole thing
-     scales by 0.39, so 15px type rendered under 6px: the guarantee boxes, the system chips and the
-     deployment node were all present and none of them could be read. The diagram scrolls sideways in its
-     own track instead, at a width that keeps the labels legible (720 units puts them back near 12px).
-     The track wraps the drawing ONLY, never the stage: the stage also carries the three written layers,
-     and scoping the overflow there cut their sentences off at the right edge. The page itself must never
-     move sideways, which is what overscroll containment on this element protects. */
+
+  .v6-dr__stage { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr);
+    align-content: center; align-items: center; gap: 0; }
+  .v6-dr__graphwrap, .v6-dr__layers { grid-row: 1; grid-column: 1; min-height: 0; }
+
+  /* THE DRAWING, ALONE AND READABLE.
+     It keeps its own sideways track -- 900 units fitted to 390px scales the labels to about 6px, and the
+     track is what lets them stay near 12px -- but it no longer shares the frame, so it can be twice the
+     height it was. The mask is the affordance that says the track continues: a phone shows no scrollbar,
+     so without it the drawing simply stops at the right edge and reads as cut off. */
   .v6-dr__graphwrap { overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch;
-    /* AND IT HAS TO LOOK LIKE IT SCROLLS. The track was correct and completely silent about itself: the
-       drawing simply stopped at the right edge of the screen, which reads as a diagram that has been cut
-       off rather than one that continues. A phone shows no scrollbar to contradict that.
-       The mask is on the track's own border box, not on its content, so the fade stays pinned to the
-       visible right edge instead of travelling with the drawing. 24px, which is narrower than the empty
-       margin to the right of the last node, so scrolling to the end does not leave the deployment box
-       sitting in a haze. -webkit- included: iOS Safari is the browser this affordance exists for. */
+    align-self: center;
+    opacity: calc(var(--dgin) * (1 - var(--dgout)));
+    transform: translateY(calc((1 - var(--dgin)) * 5svh));
     -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
     mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent); }
-  /* The graph keeps its own sideways track, but it no longer has to hold the labels at reading size on its
-     own: pinned, the drawing gets the top half of the screen and the three layers swap beneath it, so the
-     track is shorter than it was and 620 units is enough. */
-  /* start, NOT the base's center. A grid item that is a scroll container has an automatic minimum size of
-     zero, so the graph's row was squeezed to 33px by the layers below it, and `align-items: center` then
-     centred a 194px drawing inside that 33px row: it overflowed 80px UPWARD through the heading and 80px
-     down through the layers. This is the second half of the same lesson as align-content above. */
-  .v6-dr__stage { align-items: start; }
-  .v6-dr__graph { max-height: 23svh; min-width: 560px; }
+  /* SIZED FROM THE STAGE IT NOW OWNS, not from a width cap. Constrained by min-width the drawing came
+     out 299px tall in a 600px stage and read as small in a frame it had to itself. Driving the height and
+     letting the width follow the 900x420 viewBox fills the beat and keeps the labels near 12px; the track
+     scrolls the remainder, which is what the mask above announces. */
+  /* SIZED BY min-width, NOT by height. Driving the height and letting width follow the 900x420 viewBox
+     looked right on paper and collapsed in practice: an SVG in a scroll container takes its width from
+     the container, so `width: auto` gave it the 350px of the screen and the drawing came out SMALLER
+     than the 23svh version it replaced. min-width drives the aspect ratio the other way and actually
+     fills the beat: 760 units puts it near 355px tall with labels around 12px. */
+  .v6-dr__graph { max-height: none; min-width: 760px; }
 
-  /* ONE LAYER AT A TIME, WHICH IS THE ONLY HONEST WAY THIS CHAPTER FITS A PHONE.
-     The graph plus three layers is about 600px of content and the pin frame leaves roughly 445px for the
-     stage. Everything cheaper than this was tried on paper first and each one loses something real:
-     shrinking the type puts the layer sentences under 11px, and dropping the DIRECTION line under each
-     layer would leave the chapter claiming today what it only plans, which is the exact overstatement the
-     rest of this site is written against.
-     So the layers travel instead, exactly as chapter 4's four statements already do on every viewport:
-     absolutely stacked, one centred at a time, driven by the same --g5 the reveal already used. The
-     desktop shows three at once because it has the room; the phone shows the same three in the same order,
-     one at a time. Nothing is dropped and nothing shrinks below reading size. */
-  .v6-dr__layers { position: relative; display: block;
-    min-height: clamp(180px, 25svh, 230px); }
+  /* ONE LAYER AT A TIME, which the desktop shows three of because it has the room. Same three, same
+     order, same words. --slot is where a layer sits relative to the reading position, in units of one
+     layer; max(x, -x) stands in for abs(), which is too new to depend on here. */
+  /* min-height RESTORED. Its layers are absolutely positioned, so without it the container is zero-high,
+     inset:0 resolves against nothing and all three beats collapse to the top of the stage. */
+  .v6-dr__layers { position: relative; display: block; align-self: center;
+    min-height: clamp(190px, 27svh, 250px);
+    opacity: var(--dlin); }
   .v6-dr__layer { position: absolute; inset: 0; display: grid; align-content: center;
     border-top: 0; padding-top: 0;
     --slot: calc((var(--g5) * 3) - var(--i) - 0.5);
@@ -886,9 +931,10 @@
     opacity: clamp(0, calc(2.7 - 4.8 * var(--dist)), 1);
     transform: translateY(calc(var(--slot) * -64px)); }
   .v6-dr__lk { font-size: 10px; letter-spacing: 0.13em; }
-  .v6-dr__lh { font-size: clamp(1rem, 4.2vw, 1.2rem); margin-top: 5px; }
-  .v6-dr__now, .v6-dr__next { font-size: clamp(0.8rem, 3.2vw, 0.9rem); line-height: 1.42; margin-top: 6px; }
-  .v6-dr__disc { margin-top: clamp(10px, 1.6vh, 20px); font-size: 0.68rem; }
+  .v6-dr__lh { font-size: clamp(1.05rem, 4.4vw, 1.3rem); margin-top: 5px; }
+  .v6-dr__now, .v6-dr__next { font-size: clamp(0.82rem, 3.3vw, 0.92rem); line-height: 1.45; margin-top: 7px; }
+
+  .v6-dr__disc { grid-row: 2; margin-top: clamp(10px, 1.6vh, 20px); font-size: 0.68rem; }
 }
 
 /* ══════════════════════════════════════ 6B. KNOWLEDGE ══ */
