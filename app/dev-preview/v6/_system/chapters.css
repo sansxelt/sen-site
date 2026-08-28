@@ -60,9 +60,9 @@
 .v6 { --sh: 0; }
 .v6-gap { position: relative; height: 280svh; background: var(--paper); --p: 0;
   /* Beat one: the claim, and the strike that contradicts it. */
-  --strike:  clamp(0, calc((var(--p) - 0.05) / 0.13), 1);   /* 05 -> 18 struck   */
-  --turn:    clamp(0, calc((var(--p) - 0.09) / 0.08), 1);   /* 09 -> 17 the line */
-  --claim:   clamp(0, calc((var(--p) - 0.40) / 0.14), 1);   /* 40 -> 54 out      */
+  --strike:  clamp(0, calc((var(--p) - 0.02) / 0.20), 1);   /* 02 -> 22 struck   */
+  --turn:    clamp(0, calc((var(--p) - 0.14) / 0.16), 1);   /* 14 -> 30 the line */
+  --claim:   clamp(0, calc((var(--p) - 0.30) / 0.22), 1);   /* 30 -> 52 out      */
   /* Retained for the still-commented third beat so restoring it needs no re-derivation. Nothing reads these
      while .v6-gap__found is out, and --found resolving to 0 keeps that traveller at its hidden rest state. */
   --found:   clamp(0, calc((var(--p) - 1.10) / 0.10), 1);
@@ -76,8 +76,8 @@
      Note this is the OPPOSITE of the overlap the original timings were written to remove. That one was a
      beat starting to leave before it had finished ARRIVING (--found/--foundout), which reads as a glitch.
      Two different beats trading one stage is a crossfade and wants the overlap. */
-  --verdict: clamp(0, calc((var(--p) - 0.44) / 0.14), 1);   /* 44 -> 58 in       */
-  --settle:  clamp(0, calc((var(--p) - 0.74) / 0.24), 1);   /* 74 -> 98          */
+  --verdict: clamp(0, calc((var(--p) - 0.34) / 0.26), 1);   /* 34 -> 60 in       */
+  --settle:  clamp(0, calc((var(--p) - 0.56) / 0.41), 1);   /* 56 -> 97          */
 }
 .v6-gap__pin { position: sticky; top: 0; height: 100svh; overflow: hidden;
   padding: calc(var(--nav-h, 66px) + 2vh) var(--gutter) 4vh; }
@@ -288,21 +288,30 @@
 
    Scoped to (min-height: 768px) so it can never reach the stacked composition below it, and left inside
    max-width: 900px so no laptop sees any of it. */
-@media (max-width: 900px) and (min-height: 768px) {
-  .v6-au { --aufit: clamp(0, calc((960px - 100svh) / 192px), 1); }
+@media (max-width: 900px) {
+  /* UNCAPPED AND UNGATED, for the same reason as --sh above. This stopped at 1 and only ran at or above
+     768px tall, so a 390x740 phone met chapter 2 with a tall window's spacing and lost 80px off the
+     bottom of its own pin. The ramp is unchanged where it already worked -- every window at or above 768px
+     resolves exactly as before -- and only shorter ones see past 1: 1.15 at 740px, 1.67 at 640px. */
+  .v6 { --mfit: clamp(0, calc((960px - 100svh) / 192px), 2.1); }
 
   /* spacing and leading, which is where the room is */
-  .v6-au__seal { padding-block: calc(clamp(7px, 1.15vh, 13px) - var(--aufit) * 6px); }
-  .v6-au__says { line-height: calc(1.38 - var(--aufit) * 0.08); }
-  .v6-au__sub { line-height: calc(1.45 - var(--aufit) * 0.07); }
-  .v6-au__turn { padding-top: calc(clamp(9px, 1.5vh, 16px) - var(--aufit) * 6px); }
-  .v6-au__turnt { line-height: calc(1.42 - var(--aufit) * 0.06); }
+  .v6-au__seal { padding-block: max(1px, calc(clamp(7px, 1.15vh, 13px) - var(--mfit) * 6px)); }
+  .v6-au__says { line-height: max(1.2, calc(1.38 - var(--mfit) * 0.1)); }
+  .v6-au__sub { line-height: max(1.24, calc(1.45 - var(--mfit) * 0.1)); }
+  .v6-au__turn { padding-top: max(2px, calc(clamp(9px, 1.5vh, 16px) - var(--mfit) * 7px)); }
+  .v6-au__turnt { line-height: max(1.24, calc(1.42 - var(--mfit) * 0.1));
+    font-size: max(0.8rem, calc(clamp(0.88rem, 3.6vw, 1.05rem) - var(--mfit) * 0.06rem)); }
 
   /* type, capped against the pin's height as well as the window's width */
-  .v6-au__h { font-size: calc(clamp(1.62rem, min(7.1vw, 3.95svh), 2.3rem) - var(--aufit) * 0.2rem); }
-  .v6-au__who { font-size: min(clamp(1.02rem, 4.6vw, 1.35rem), 2.35svh); }
-  .v6-au__says { font-size: min(clamp(0.8rem, 3.3vw, 0.94rem), 1.62svh); }
-  .v6-au__stamp { width: min(100%, 5.6svh); }
+  .v6-au__h { font-size: max(1.26rem, calc(clamp(1.62rem, min(7.1vw, 3.95svh), 2.3rem) - var(--mfit) * 0.24rem));
+    line-height: max(1.0, calc(1.06 - var(--mfit) * 0.04)); }
+  .v6-au__who { font-size: max(0.92rem, min(clamp(1.02rem, 4.6vw, 1.35rem), 2.35svh)); }
+  /* FLOORED. The svh cap stops the chapter outgrowing a short window, but uncapped below it took body
+     copy to 9.2px at 360x568 -- smaller than anything else on the page and past reading. A cap that can
+     shrink type without limit is how a scene ends up fitting a window nobody can read it on. */
+  .v6-au__says { font-size: max(0.78rem, min(clamp(0.8rem, 3.3vw, 0.94rem), 1.62svh)); }
+  .v6-au__stamp { width: max(30px, min(100%, 5.6svh)); }
 }
 
 /* ═══════════════════════════════════════════ 3. WHAT VERIFIED HAS TO MEAN ══
@@ -820,56 +829,104 @@
 .v6-dr__disc { max-width: var(--max-wide); width: 100%; margin: 0 auto; font-size: 12.5px;
   line-height: 1.5; color: var(--wait-dk); }
 
-/* NARROW, AND STILL PINNED. */
+/* ══════════════════════ 8B. DIRECTION, NARROW: A SEQUENCE, NOT A SPREAD ══
+   THE PHONE WAS BEING SHOWN THE WHOLE CHAPTER AT ONCE.
+
+   The rows were `auto auto auto` and every part was permanently present, so a 390px screen carried the
+   heading, its lead paragraph, the link, a diagram and a layer simultaneously. Measured: the head took the
+   top 40% of the frame in EVERY frame of the scrub, which left the drawing 23svh -- its labels rendered
+   around 6px, below reading -- and the layer sentences a cramped strip underneath. Nothing owned the
+   stage, so nothing could be read properly, and the chapter read as a wide composition squeezed onto a
+   phone rather than a composition made for one.
+
+   Desktop is untouched. It has the room to show the drawing and the three layers together, and does.
+
+   Here the same content becomes four beats that each own the frame, in the order the argument is made:
+
+     0.00 - 0.20   the heading and its lead, alone and centred
+     0.18 - 0.66   the drawing, alone, at a size where its labels are legible; its four internal
+                   reveals (guarantees, systems, edges, deployment) are re-timed to run INSIDE this
+                   window rather than across the whole chapter, so the reader watches it assemble
+     0.68 - 1.00   Compile, Challenge and Accumulate, one at a time
+
+   THE THREE PARTS SHARE ONE GRID CELL. Rows sized to content cannot give the drawing the space the
+   heading has stopped using; overlapping them can. This is the same device chapter 3 uses for its
+   travellers and chapter 4 for its statements, so a phone meets one composition idea across the page
+   rather than three.
+
+   Nothing is dropped, nothing is re-worded, and no type shrinks: the drawing gets BIGGER here (23svh to
+   46svh) because it is no longer sharing the frame. */
 @media (max-width: 900px) {
+  .v6-dr {
+    /* Re-timed for the narrow sequence. Desktop keeps the windows declared on .v6-dr above: there the
+       drawing is beside the layers for the whole chapter, so its reveals are spread across all of it. */
+    --g1: clamp(0, calc((var(--p) - 0.20) / 0.09), 1);   /* the guarantees   */
+    --g2: clamp(0, calc((var(--p) - 0.28) / 0.09), 1);   /* the systems      */
+    --g3: clamp(0, calc((var(--p) - 0.36) / 0.08), 1);   /* the edges        */
+    --g4: clamp(0, calc((var(--p) - 0.43) / 0.08), 1);   /* the deployment   */
+    --g5: clamp(0, calc((var(--p) - 0.54) / 0.46), 1);   /* the three layers */
+    /* the beats' own presence, deliberately overlapping by a few percent so each hands over rather than
+       cutting -- the same crossfade the chapter above resolves its claim with */
+    --dhead:  clamp(0, calc((var(--p) - 0.11) / 0.07), 1);   /* the head leaves   */
+    --dgin:   clamp(0, calc((var(--p) - 0.12) / 0.07), 1);   /* the drawing lands */
+    --dgout:  clamp(0, calc((var(--p) - 0.50) / 0.07), 1);   /* and leaves        */
+    /* THE LAYERS NEED THEIR OWN GATE, not just their per-layer distance fade. Sharing a grid cell with
+       the head means an ungated container is ON from p=0: the first layer resolved to 0.3 opacity at the
+       top of the chapter and printed straight through the heading. Measured on the first attempt at this
+       composition -- the frames showed both at once and were unreadable. */
+    --dlin:   clamp(0, calc((var(--p) - 0.52) / 0.06), 1);   /* the layers arrive */
+  }
+
   .v6-dr__pin { padding: calc(var(--nav-h, 67px) + 1.4vh) var(--gutter) clamp(28px, 4.5vh, 48px);
-    grid-template-rows: auto auto auto; align-content: safe center;
+    grid-template-rows: minmax(0, 1fr) auto; align-content: stretch;
     gap: clamp(7px, 1.3vh, 16px); }
+
+  /* ONE CELL, THREE BEATS. */
+  .v6-dr__head, .v6-dr__stage { grid-row: 1; grid-column: 1; min-height: 0; }
+
+  /* A SLOW DRIFT FROM THE FIRST NOTCH, so the opening beat answers the hand. Held perfectly still until
+     --dhead began, the heading gave three consecutive notches of literally zero movement at the top of
+     the chapter -- the longest dead run in it, and the reader scrolls into that before anything else. */
+  .v6-dr__head { align-self: center; width: 100%;
+    opacity: calc(1 - var(--dhead));
+    transform: translateY(calc(var(--p) * -2svh - var(--dhead) * 6svh)); }
   .v6-dr__h { font-size: clamp(1.5rem, 6.6vw, 2.15rem); max-width: 17ch; }
   .v6-dr__sub { font-size: clamp(0.86rem, 3.5vw, 1rem); line-height: 1.42; }
-  /* start, NOT center. This was centred and the stage is taller than the pin frame on a phone, so the
-     overflow was split across both edges and the graph printed upward THROUGH the heading. A grid that can
-     overflow must grow downward, where overflow:hidden clips it, never outward from the middle. */
-  .v6-dr__stage { grid-template-columns: 1fr; gap: clamp(6px, 1.1vh, 16px); align-content: start; }
-  /* THE DRAWING IS 900 UNITS WIDE AND ITS LABELS ARE THE CONTENT. Fitted to a 390px screen the whole thing
-     scales by 0.39, so 15px type rendered under 6px: the guarantee boxes, the system chips and the
-     deployment node were all present and none of them could be read. The diagram scrolls sideways in its
-     own track instead, at a width that keeps the labels legible (720 units puts them back near 12px).
-     The track wraps the drawing ONLY, never the stage: the stage also carries the three written layers,
-     and scoping the overflow there cut their sentences off at the right edge. The page itself must never
-     move sideways, which is what overscroll containment on this element protects. */
+
+  .v6-dr__stage { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr);
+    align-content: center; align-items: center; gap: 0; }
+  .v6-dr__graphwrap, .v6-dr__layers { grid-row: 1; grid-column: 1; min-height: 0; }
+
+  /* THE DRAWING, ALONE AND READABLE.
+     It keeps its own sideways track -- 900 units fitted to 390px scales the labels to about 6px, and the
+     track is what lets them stay near 12px -- but it no longer shares the frame, so it can be twice the
+     height it was. The mask is the affordance that says the track continues: a phone shows no scrollbar,
+     so without it the drawing simply stops at the right edge and reads as cut off. */
   .v6-dr__graphwrap { overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch;
-    /* AND IT HAS TO LOOK LIKE IT SCROLLS. The track was correct and completely silent about itself: the
-       drawing simply stopped at the right edge of the screen, which reads as a diagram that has been cut
-       off rather than one that continues. A phone shows no scrollbar to contradict that.
-       The mask is on the track's own border box, not on its content, so the fade stays pinned to the
-       visible right edge instead of travelling with the drawing. 24px, which is narrower than the empty
-       margin to the right of the last node, so scrolling to the end does not leave the deployment box
-       sitting in a haze. -webkit- included: iOS Safari is the browser this affordance exists for. */
+    align-self: center;
+    opacity: calc(var(--dgin) * (1 - var(--dgout)));
+    transform: translateY(calc((1 - var(--dgin)) * 5svh));
     -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
     mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent); }
-  /* The graph keeps its own sideways track, but it no longer has to hold the labels at reading size on its
-     own: pinned, the drawing gets the top half of the screen and the three layers swap beneath it, so the
-     track is shorter than it was and 620 units is enough. */
-  /* start, NOT the base's center. A grid item that is a scroll container has an automatic minimum size of
-     zero, so the graph's row was squeezed to 33px by the layers below it, and `align-items: center` then
-     centred a 194px drawing inside that 33px row: it overflowed 80px UPWARD through the heading and 80px
-     down through the layers. This is the second half of the same lesson as align-content above. */
-  .v6-dr__stage { align-items: start; }
-  .v6-dr__graph { max-height: 23svh; min-width: 560px; }
+  /* SIZED FROM THE STAGE IT NOW OWNS, not from a width cap. Constrained by min-width the drawing came
+     out 299px tall in a 600px stage and read as small in a frame it had to itself. Driving the height and
+     letting the width follow the 900x420 viewBox fills the beat and keeps the labels near 12px; the track
+     scrolls the remainder, which is what the mask above announces. */
+  /* SIZED BY min-width, NOT by height. Driving the height and letting width follow the 900x420 viewBox
+     looked right on paper and collapsed in practice: an SVG in a scroll container takes its width from
+     the container, so `width: auto` gave it the 350px of the screen and the drawing came out SMALLER
+     than the 23svh version it replaced. min-width drives the aspect ratio the other way and actually
+     fills the beat: 760 units puts it near 355px tall with labels around 12px. */
+  .v6-dr__graph { max-height: none; min-width: 760px; }
 
-  /* ONE LAYER AT A TIME, WHICH IS THE ONLY HONEST WAY THIS CHAPTER FITS A PHONE.
-     The graph plus three layers is about 600px of content and the pin frame leaves roughly 445px for the
-     stage. Everything cheaper than this was tried on paper first and each one loses something real:
-     shrinking the type puts the layer sentences under 11px, and dropping the DIRECTION line under each
-     layer would leave the chapter claiming today what it only plans, which is the exact overstatement the
-     rest of this site is written against.
-     So the layers travel instead, exactly as chapter 4's four statements already do on every viewport:
-     absolutely stacked, one centred at a time, driven by the same --g5 the reveal already used. The
-     desktop shows three at once because it has the room; the phone shows the same three in the same order,
-     one at a time. Nothing is dropped and nothing shrinks below reading size. */
-  .v6-dr__layers { position: relative; display: block;
-    min-height: clamp(180px, 25svh, 230px); }
+  /* ONE LAYER AT A TIME, which the desktop shows three of because it has the room. Same three, same
+     order, same words. --slot is where a layer sits relative to the reading position, in units of one
+     layer; max(x, -x) stands in for abs(), which is too new to depend on here. */
+  /* min-height RESTORED. Its layers are absolutely positioned, so without it the container is zero-high,
+     inset:0 resolves against nothing and all three beats collapse to the top of the stage. */
+  .v6-dr__layers { position: relative; display: block; align-self: center;
+    min-height: clamp(190px, 27svh, 250px);
+    opacity: var(--dlin); }
   .v6-dr__layer { position: absolute; inset: 0; display: grid; align-content: center;
     border-top: 0; padding-top: 0;
     --slot: calc((var(--g5) * 3) - var(--i) - 0.5);
@@ -877,9 +934,10 @@
     opacity: clamp(0, calc(2.7 - 4.8 * var(--dist)), 1);
     transform: translateY(calc(var(--slot) * -64px)); }
   .v6-dr__lk { font-size: 10px; letter-spacing: 0.13em; }
-  .v6-dr__lh { font-size: clamp(1rem, 4.2vw, 1.2rem); margin-top: 5px; }
-  .v6-dr__now, .v6-dr__next { font-size: clamp(0.8rem, 3.2vw, 0.9rem); line-height: 1.42; margin-top: 6px; }
-  .v6-dr__disc { margin-top: clamp(10px, 1.6vh, 20px); font-size: 0.68rem; }
+  .v6-dr__lh { font-size: clamp(1.05rem, 4.4vw, 1.3rem); margin-top: 5px; }
+  .v6-dr__now, .v6-dr__next { font-size: clamp(0.82rem, 3.3vw, 0.92rem); line-height: 1.45; margin-top: 7px; }
+
+  .v6-dr__disc { grid-row: 2; margin-top: clamp(10px, 1.6vh, 20px); font-size: 0.68rem; }
 }
 
 /* ══════════════════════════════════════ 6B. KNOWLEDGE ══ */
@@ -1030,8 +1088,12 @@
      inline-block sized to its own text, and the strike is drawn from -2% to 102% OF THAT BOX. Making the
      claim a grid blockified the inline-block to full column width, so the strike kept its 2% overhang of a
      box that was now the whole measure and ran about 30px past the full stop. justify-self restores the
-     shrink-to-fit without reintroducing an inline-block a grid would only blockify again. */
-  .v6-gap__word { justify-self: start; }
+     shrink-to-fit without reintroducing an inline-block a grid would only blockify again.
+     CENTER, NOT START. Both values shrink-wrap a grid item identically -- that is what fixes the strike --
+     but start also pins the word to the left edge while the label above it and the sentence below it stay
+     on text-align: center. Measured at 1093x525, the width a 1366x768 Chromebook reports at ChromeOS's
+     default 125% scaling, the word sat 359.5px left of a centre everything around it was still using. */
+  .v6-gap__word { justify-self: center; }
   .v6-gap__verdict { font-size: clamp(2.1rem, 9.4vw, 3.4rem); }
   .v6-gap__turn { font-size: clamp(1.05rem, 4.4vw, 1.3rem); }
   .v6-gap__verdictsay { font-size: clamp(1rem, 4vw, 1.2rem); }
@@ -1098,6 +1160,34 @@
     opacity: 1 !important; transform: none !important; transition: none !important; }
 }
 
+/* ═════════════════════════════ NARROW COMPOSITION, SHORT WINDOW ══
+   These read --mfit, the same factor chapter 2 uses, and they live down here rather than beside it for a
+   cascade reason worth stating: the per-chapter (max-width: 900px) blocks above set .v6-rg__row padding
+   with the shorthand, which beats a padding-block written earlier at equal specificity. Placed with
+   chapter 2 these resolved correctly and were then silently overwritten, which measured as no change at
+   all. They must stay after those blocks and before the fallback, which has to win over both. */
+@media (max-width: 900px) {
+  /* Chapters 4 and 6 read the same factor: it is one density system for the narrow composition, not a
+     per-chapter fix. Both only overrun below about 660px tall, so these resolve to nothing on a phone
+     of ordinary height and only engage where the window is genuinely short. */
+  /* THE SLOT TRAVEL HAS TO ANSWER TO HEIGHT, and at narrow widths it did not. The wide block scales this
+     against --sh; the narrow one set a flat -64px per slot, so a 660px window moved an incoming statement
+     exactly as far as a 932px window and it started 32px below a frame that had no 32px to give.
+     Measured at 360x660: the condition overhung its pin by 19.93px with 16.03px of glyph ink past the
+     edge, at phase 0.13, while every RESTING measurement of the same geometry read clean -- the overhang
+     only exists while the statement is travelling. min() because the value is negative and must never
+     cross zero and start pushing the wrong way. */
+  .v6-st__cond { gap: max(4px, calc(12px - var(--mfit) * 5px));
+    transform: translateY(calc(var(--slot) * min(-30px, calc(-64px + var(--mfit) * 22px)))); }
+  .v6-st__condt { line-height: max(1.02, calc(1.08 - var(--mfit) * 0.04)); }
+  .v6-st__condd { line-height: max(1.28, calc(1.5 - var(--mfit) * 0.12)); }
+  .v6-st__list { min-height: max(110px, calc(clamp(230px, 34vh, 340px) - var(--mfit) * 60px)); }
+  .v6-rg__row { padding-block: max(1px, calc(clamp(7px, 1vh, 11px) - var(--mfit) * 4px)); }
+  .v6-rg__grp { margin-top: max(2px, calc(clamp(10px, 1.6vh, 18px) - var(--mfit) * 7px)); }
+  .v6-rg__t { line-height: max(1.16, calc(1.28 - var(--mfit) * 0.07)); }
+  .v6-rg__cols { padding-bottom: max(2px, calc(8px - var(--mfit) * 5px)); }
+}
+
 /* ══════════════════════════════════════════ NOT ENOUGH ROOM TO PIN ══
    A PINNED SCENE IS A PROMISE ABOUT VERTICAL SPACE, AND ON A SHORT WINDOW THE PAGE COULD NOT KEEP IT.
 
@@ -1149,7 +1239,7 @@
    re-enters it on any crossing. mobile-motion.ts no longer reads them at all: it observes every part on
    every viewport, and gate 2 decides where a reveal does anything, which removes one copy of 767 rather
    than adding a listener to it. */
-@media (min-width: 901px) and (max-height: 619px) {
+@media (min-width: 901px) and (max-height: 519px) {
   .v6-gap { height: auto; }
   .v6-gap__pin { position: static; height: auto; padding: clamp(64px, 9vh, 104px) var(--gutter); }
   .v6-gap__stage { max-width: none; height: auto; }
@@ -1239,65 +1329,109 @@
    original argument, kept.
 
    Scoped to .v6 rather than :root so no other route inherits a factor composed for these five scenes. */
-@media (min-width: 901px) and (max-height: 950px) {
-  .v6 { --sh: clamp(0, calc((950px - 100svh) / 330px), 1); }
+@media (min-width: 901px) {
+  /* --sh IS NO LONGER CAPPED AT 1, AND EVERY VALUE IT DRIVES NOW HAS A FLOOR.
+     It reached 1 at 620px and stopped, which is exactly why 620 had to be the gate: below that the system
+     had nothing left to spend and the only remaining answer was to stop being a presentation at all.
+     Measured at 1093x525 -- the viewport a 1366x768 Chromebook reports at ChromeOS's default 125% display
+     scaling -- --sh was pinned at 1, had spent everything it had, and Direction still overran its pin by
+     117px. That is the whole reason a school Chromebook was served a flat stack.
 
-  /* Chapter 2 — the head loses a little scale and the two turn statements tighten their leading. */
-  .v6-au__pin { gap: calc(clamp(10px, 2.2vh, 30px) - var(--sh) * 14px);
-    padding-top: calc(var(--nav-h, 66px) + 3vh - var(--sh) * 1.8vh);
-    padding-bottom: calc(clamp(30px, 6vh, 64px) - var(--sh) * 34px); }
-  .v6-au__h { margin-top: calc(clamp(12px, 1.8vh, 20px) - var(--sh) * 8px);
-    font-size: calc(clamp(2.05rem, 4.3vw, 3.9rem) - var(--sh) * 0.9rem); }
-  .v6-au__sub { margin-top: calc(clamp(12px, 1.6vh, 18px) - var(--sh) * 6px);
-    line-height: calc(1.55 - var(--sh) * 0.13); }
-  .v6-au__turnt { font-size: calc(clamp(1.02rem, 1.35vw, 1.35rem) - var(--sh) * 0.13rem);
-    line-height: calc(1.5 - var(--sh) * 0.12); }
+     Letting the same linear ramp continue past 1 changes NOTHING at or above 620px: clamp's lower arm is
+     untouched, so every viewport there resolves below 1 exactly as it did before. Only shorter windows see
+     the extra travel -- 1.29 at 525px, 1.49 at 460px, ceiling 1.75.
 
-  /* Chapter 4 — the ring gives back diameter and the statements give back travel. --slot is a fixed 150px
-     step, so on a short window an incoming statement starts further below the frame than the frame has
-     room for: that is the p=0.13 clip in the table, and it is why the travel scales here too. */
-  .v6-st__pin { gap: calc(clamp(10px, 2vh, 26px) - var(--sh) * 16px);
-    padding-top: calc(var(--nav-h, 66px) + 3vh - var(--sh) * 1.8vh);
-    padding-bottom: calc(clamp(30px, 6vh, 64px) - var(--sh) * 34px); }
-  .v6-st__h { margin-top: calc(clamp(12px, 1.8vh, 20px) - var(--sh) * 8px);
-    font-size: calc(clamp(2.05rem, 4.5vw, 4rem) - var(--sh) * 1.05rem); }
-  .v6-st__sub { margin-top: calc(clamp(12px, 1.6vh, 18px) - var(--sh) * 6px);
-    line-height: calc(1.55 - var(--sh) * 0.13); }
-  .v6-st__ringwrap { max-width: calc(340px - var(--sh) * 110px); }
-  .v6-st__list { min-height: calc(clamp(230px, 34vh, 340px) - var(--sh) * 70px); }
-  .v6-st__cond { gap: calc(12px - var(--sh) * 5px);
-    transform: translateY(calc(var(--slot) * (-150px + var(--sh) * 56px))); }
-  .v6-st__condt { font-size: calc(clamp(1.95rem, 4.7vw, 4.2rem) - var(--sh) * 1.15rem); }
-  .v6-st__condd { font-size: calc(clamp(1rem, 1.35vw, 1.3rem) - var(--sh) * 0.1rem);
-    line-height: calc(1.5 - var(--sh) * 0.1); }
+     THE CEILING AND THE max() FLOORS ARE WHAT MAKE THAT SAFE. Unbounded, a gap of
+     clamp(10px, 1.6vh, 22px) - 1.29 * 10px resolves NEGATIVE, the declaration is thrown out as invalid,
+     and the property falls back to its uncompacted value -- the scene would get BIGGER exactly where it
+     had least room, and nothing would report an error. Every floor below is the smallest value that still
+     reads as composed rather than collapsed.
 
-  /* Chapter 6 — six rows each give back a little padding, which is where its whole deficit lives. */
-  .v6-rg__pin { gap: calc(clamp(8px, 1.4vh, 18px) - var(--sh) * 10px);
-    padding-top: calc(var(--nav-h, 66px) + 2.5vh - var(--sh) * 1.4vh);
-    padding-bottom: calc(clamp(18px, 3vh, 36px) - var(--sh) * 18px); }
-  .v6-rg__h { margin-top: calc(clamp(8px, 1.4vh, 16px) - var(--sh) * 6px);
-    font-size: calc(clamp(1.75rem, 3.9vw, 3.35rem) - var(--sh) * 0.75rem); }
-  .v6-rg__grp { margin-top: calc(clamp(10px, 1.6vh, 18px) - var(--sh) * 8px); }
-  .v6-rg__row { padding-block: calc(clamp(7px, 1vh, 11px) - var(--sh) * 5px); }
-  .v6-rg__t { line-height: calc(1.28 - var(--sh) * 0.08); }
+     The width clause is now only (min-width: 901px): the upper height bound came off because the ramp
+     resolves to 0 above 950px anyway, and a bound that does nothing is a bound someone has to reason about
+     later. */
+  .v6 { --sh: clamp(0, calc((950px - 100svh) / 330px), 1.75); }
 
-  /* Chapter 8 — the worst by a distance, and all three layers are the reason. The graph gives back height
-     as well, because the stage is a two-column grid whose row is as tall as its tallest child. */
-  .v6-dr__pin { gap: calc(clamp(10px, 1.6vh, 22px) - var(--sh) * 10px);
-    padding-top: calc(var(--nav-h, 66px) + 2.5vh - var(--sh) * 1.5vh);
-    padding-bottom: calc(clamp(18px, 3vh, 36px) - var(--sh) * 14px); }
-  .v6-dr__h { margin-top: calc(clamp(8px, 1.4vh, 16px) - var(--sh) * 6px);
-    font-size: calc(clamp(1.85rem, 4.1vw, 3.45rem) - var(--sh) * 0.9rem); }
-  .v6-dr__sub { margin-top: calc(clamp(10px, 1.4vh, 16px) - var(--sh) * 8px);
-    font-size: calc(clamp(0.98rem, 1.2vw, 1.14rem) - var(--sh) * 0.1rem);
-    line-height: calc(1.55 - var(--sh) * 0.15); }
-  .v6-dr__graph { max-height: calc(62svh - var(--sh) * 20svh); }
-  .v6-dr__layers { gap: calc(clamp(14px, 2vh, 24px) - var(--sh) * 12px); }
-  .v6-dr__layer { padding-top: calc(14px - var(--sh) * 10px); }
-  .v6-dr__lh { margin-top: calc(7px - var(--sh) * 4px); line-height: calc(1.15 - var(--sh) * 0.09);
-    font-size: calc(clamp(1.05rem, 1.6vw, 1.4rem) - var(--sh) * 0.33rem); }
-  .v6-dr__now, .v6-dr__next { margin-top: calc(8px - var(--sh) * 5px);
-    font-size: calc(0.9rem - var(--sh) * 0.1rem); line-height: calc(1.5 - var(--sh) * 0.13); }
+  /* Chapter 2 */
+  .v6-au__pin { gap: max(2px, calc(clamp(10px, 2.2vh, 30px) - var(--sh) * 14px));
+    padding-top: max(calc(var(--nav-h, 66px) + 0.6vh), calc(var(--nav-h, 66px) + 3vh - var(--sh) * 1.8vh));
+    padding-bottom: max(8px, calc(clamp(30px, 6vh, 64px) - var(--sh) * 34px)); }
+  .v6-au__h { margin-top: max(2px, calc(clamp(12px, 1.8vh, 20px) - var(--sh) * 8px));
+    font-size: max(1.62rem, calc(clamp(2.05rem, 4.3vw, 3.9rem) - var(--sh) * 0.9rem)); }
+  .v6-au__sub { margin-top: max(3px, calc(clamp(12px, 1.6vh, 18px) - var(--sh) * 6px));
+    font-size: max(0.9rem, calc(clamp(1rem, 1.25vw, 1.2rem) - var(--sh) * 0.08rem));
+    line-height: max(1.3, calc(1.55 - var(--sh) * 0.13)); }
+  .v6-au__seals { gap: max(8px, calc(clamp(16px, 2.4vw, 40px) - var(--sh) * 10px)); }
+  .v6-au__stamp { width: max(38px, calc(clamp(56px, 6.2vw, 92px) - var(--sh) * 16px));
+    margin-bottom: max(2px, calc(clamp(4px, 0.8vh, 10px) - var(--sh) * 5px)); }
+  .v6-au__seal { gap: max(2px, calc(clamp(6px, 0.9vh, 12px) - var(--sh) * 6px)); }
+  .v6-au__who { font-size: max(1rem, calc(clamp(1.15rem, 1.7vw, 1.7rem) - var(--sh) * 0.22rem));
+    line-height: max(1.04, calc(1.14 - var(--sh) * 0.08)); }
+  .v6-au__says { font-size: max(0.8rem, calc(clamp(0.9rem, 1.02vw, 1.05rem) - var(--sh) * 0.1rem));
+    line-height: max(1.3, calc(1.5 - var(--sh) * 0.14)); }
+  .v6-au__turn { padding-top: max(6px, calc(clamp(16px, 2.4vh, 30px) - var(--sh) * 16px));
+    gap: max(2px, calc(clamp(8px, 1.2vh, 16px) - var(--sh) * 9px)); }
+  .v6-au__turnt { font-size: max(0.88rem, calc(clamp(1.02rem, 1.35vw, 1.35rem) - var(--sh) * 0.13rem));
+    line-height: max(1.28, calc(1.5 - var(--sh) * 0.12)); }
+
+  /* Chapter 4. --slot is a fixed 150px step, so on a short window an incoming statement starts further
+     below the frame than the frame has room for; the travel scales with everything else. min() rather than
+     max() there because the value is negative and must never cross zero and start pushing the wrong way. */
+  .v6-st__pin { gap: max(2px, calc(clamp(10px, 2vh, 26px) - var(--sh) * 16px));
+    padding-top: max(calc(var(--nav-h, 66px) + 0.6vh), calc(var(--nav-h, 66px) + 3vh - var(--sh) * 1.8vh));
+    padding-bottom: max(8px, calc(clamp(30px, 6vh, 64px) - var(--sh) * 34px)); }
+  .v6-st__h { margin-top: max(2px, calc(clamp(12px, 1.8vh, 20px) - var(--sh) * 8px));
+    font-size: max(1.62rem, calc(clamp(2.05rem, 4.5vw, 4rem) - var(--sh) * 1.05rem)); }
+  .v6-st__sub { margin-top: max(3px, calc(clamp(12px, 1.6vh, 18px) - var(--sh) * 6px));
+    font-size: max(0.9rem, calc(clamp(1rem, 1.25vw, 1.2rem) - var(--sh) * 0.08rem));
+    line-height: max(1.3, calc(1.55 - var(--sh) * 0.13)); }
+  .v6-st__ringwrap { max-width: max(140px, calc(340px - var(--sh) * 110px)); }
+  .v6-st__list { min-height: max(120px, calc(clamp(230px, 34vh, 340px) - var(--sh) * 70px)); }
+  .v6-st__cond { gap: max(3px, calc(12px - var(--sh) * 5px));
+    transform: translateY(calc(var(--slot) * min(-46px, calc(-150px + var(--sh) * 56px)))); }
+  .v6-st__condt { font-size: max(1.5rem, calc(clamp(1.95rem, 4.7vw, 4.2rem) - var(--sh) * 1.15rem));
+    line-height: max(1.02, calc(1.08 - var(--sh) * 0.05)); }
+  .v6-st__condd { font-size: max(0.9rem, calc(clamp(1rem, 1.35vw, 1.3rem) - var(--sh) * 0.1rem));
+    line-height: max(1.3, calc(1.5 - var(--sh) * 0.1)); }
+
+  /* Chapter 6 */
+  .v6-rg__pin { gap: max(2px, calc(clamp(8px, 1.4vh, 18px) - var(--sh) * 10px));
+    padding-top: max(calc(var(--nav-h, 66px) + 0.6vh), calc(var(--nav-h, 66px) + 2.5vh - var(--sh) * 1.4vh));
+    padding-bottom: max(6px, calc(clamp(18px, 3vh, 36px) - var(--sh) * 18px)); }
+  .v6-rg__h { margin-top: max(2px, calc(clamp(8px, 1.4vh, 16px) - var(--sh) * 6px));
+    font-size: max(1.4rem, calc(clamp(1.75rem, 3.9vw, 3.35rem) - var(--sh) * 0.75rem)); }
+  .v6-rg__grp { margin-top: max(2px, calc(clamp(10px, 1.6vh, 18px) - var(--sh) * 8px)); }
+  .v6-rg__row { padding-block: max(2px, calc(clamp(7px, 1vh, 11px) - var(--sh) * 5px)); }
+  .v6-rg__t { font-size: max(0.86rem, calc(clamp(0.94rem, 1.15vw, 1.1rem) - var(--sh) * 0.06rem));
+    line-height: max(1.16, calc(1.28 - var(--sh) * 0.08)); }
+
+  /* Chapter 8, the worst by a distance: three layer blocks beside a graph, in one pin.
+     THE DEFICIT HERE IS WIDTH, WHICH A HEIGHT-DRIVEN FACTOR CANNOT SEE. The stage is 1.15fr of graph to
+     1fr of text, so the text column narrows with the window: 562px at 1366, 450px at 1093. Each layer
+     then wraps from about 104px tall to 131px, and three of those is 81px -- the entire overrun at 1093,
+     arriving on a window that had lost no height at all. Giving the text column a floor stops the
+     over-wrap and costs the graph width it can spare, and it is inert wherever 1fr already exceeds it. */
+  .v6-dr__stage { grid-template-columns: minmax(0, 1.15fr) minmax(min(100%, 34rem), 1fr); }
+  .v6-dr__pin { gap: max(2px, calc(clamp(10px, 1.6vh, 22px) - var(--sh) * 10px));
+    padding-top: max(calc(var(--nav-h, 66px) + 0.6vh), calc(var(--nav-h, 66px) + 2.5vh - var(--sh) * 1.5vh));
+    padding-bottom: max(6px, calc(clamp(18px, 3vh, 36px) - var(--sh) * 14px)); }
+  .v6-dr__h { margin-top: max(2px, calc(clamp(8px, 1.4vh, 16px) - var(--sh) * 6px));
+    font-size: max(1.38rem, calc(clamp(1.85rem, 4.1vw, 3.45rem) - var(--sh) * 1rem));
+    line-height: max(1.02, calc(1.07 - var(--sh) * 0.04)); }
+  .v6-dr__sub { margin-top: max(3px, calc(clamp(10px, 1.4vh, 16px) - var(--sh) * 8px));
+    font-size: max(0.88rem, calc(clamp(0.98rem, 1.2vw, 1.14rem) - var(--sh) * 0.1rem));
+    line-height: max(1.3, calc(1.55 - var(--sh) * 0.15)); }
+  .v6-dr__graph { max-height: max(26svh, calc(62svh - var(--sh) * 20svh)); }
+  .v6-dr__layers { gap: max(1px, calc(clamp(14px, 2vh, 24px) - var(--sh) * 12px)); }
+  .v6-dr__layer { padding-top: max(1px, calc(14px - var(--sh) * 10px)); }
+  .v6-dr__lk { font-size: max(9px, calc(10.5px - var(--sh) * 1px)); }
+  .v6-dr__lh { margin-top: max(2px, calc(7px - var(--sh) * 4px));
+    line-height: max(1.04, calc(1.15 - var(--sh) * 0.09));
+    font-size: max(0.92rem, calc(clamp(1.05rem, 1.6vw, 1.4rem) - var(--sh) * 0.33rem)); }
+  .v6-dr__now, .v6-dr__next { margin-top: max(2px, calc(8px - var(--sh) * 5px));
+    font-size: max(0.76rem, calc(0.9rem - var(--sh) * 0.12rem));
+    line-height: max(1.16, calc(1.5 - var(--sh) * 0.22)); }
+  .v6-dr__disc { margin-top: max(6px, calc(22px - var(--sh) * 14px)); }
 }
 
 /* ══════════════════════════════════════════════════ MOBILE MOTION ══
@@ -1343,7 +1477,7 @@
    the worst kind of bug: the reveal hides these parts at opacity 0 and releases them on .v6-in, while the
    scrub drives the same parts from --p, so on every phone the two systems would have written the same
    property and the chapters would have flickered or gone blank. Same two gates as progress.ts. */
-@media (prefers-reduced-motion: reduce), (max-height: 619px), (max-width: 900px) and (max-height: 767px) {
+@media (prefers-reduced-motion: reduce), (max-height: 519px), (max-width: 900px) and (max-height: 659px) {
   .v6-mo .v6-au__seal,
   .v6-mo .v6-au__turnt,
   .v6-mo .v6-gap__t,
@@ -1403,8 +1537,8 @@
    because where the scrub does NOT run --settle still resolves to 1 instantly and would paint the ground
    full graphite under type held at var(--ink). Black on near-black is not a worse animation, it is an
    unreadable chapter. */
-@media (min-height: 768px) and (prefers-reduced-motion: no-preference),
-       (min-width: 901px) and (min-height: 620px) and (prefers-reduced-motion: no-preference) {
+@media (min-height: 660px) and (prefers-reduced-motion: no-preference),
+       (min-width: 901px) and (min-height: 520px) and (prefers-reduced-motion: no-preference) {
   .v6-gap {
     background: color-mix(in oklab, var(--graphite) calc(var(--settle) * 100%), var(--paper));
     /* THE TYPE DOES NOT CROSS THE GROUND. Interpolating both on --settle put the ground at L 0.50 while the
@@ -1463,8 +1597,14 @@
    otherwise have stacked four display-size blocks in a column exactly as described above. Written as two
    full queries rather than one with `or`, so it needs nothing newer than every browser this site already
    supports. */
+/* THE FIFTH GATE, and it spent this whole change carrying the old height. It sets the type the STACKED
+   composition uses, so it has to match the gate that decides where the stack starts -- 519, not 619.
+   Left at 619 it dressed every pinned window between 520 and 619 in the fallback type scale: measured at
+   1366 wide, the struck word stepped 109px -> 191px across a 20px change of window height, which is the
+   largest single discontinuity anywhere in the composition space. It is written across two lines, which
+   is exactly why four separate passes over "every gate" missed it. */
 @media (min-width: 901px) and (prefers-reduced-motion: reduce),
-       (min-width: 901px) and (max-height: 619px) {
+       (min-width: 901px) and (max-height: 519px) {
   .v6-gap__wordt { font-size: clamp(4.4rem, 8vw, 7rem); }
   .v6-gap__list li { font-size: clamp(1.5rem, 2.1vw, 2.15rem); line-height: 1.24; }
   .v6-gap__verdict { font-size: clamp(1.9rem, 2.9vw, 2.9rem); }
@@ -1608,7 +1748,7 @@
    that stands in for the scrub wherever it does not run). scripts/mobile-motion-verify.ts fails if they
    drift apart.
    ═══════════════════════════════════════════════════════════════════════════════════ */
-@media (max-height: 619px), (max-width: 900px) and (max-height: 767px), (prefers-reduced-motion: reduce) {
+@media (max-height: 519px), (max-width: 900px) and (max-height: 659px), (prefers-reduced-motion: reduce) {
   .v6-au, .v6-gap, .v6-st, .v6-rg, .v6-dr { height: auto; }
   .v6-au__pin, .v6-gap__pin, .v6-st__pin, .v6-rg__pin, .v6-dr__pin {
     position: static; height: auto; display: block;
@@ -1632,7 +1772,8 @@
      the pin composes by travelling. svh, so it is correct at 667px and at a 390px landscape alike. */
   .v6-gap__claim, .v6-gap__verdictwrap { display: grid; align-content: center; min-height: 68svh; }
   .v6-gap__verdictwrap { min-height: 62svh; margin-top: 0; }
-  .v6-gap__word { justify-self: start; }
+  /* center for the same reason as the 900px block above: shrink-to-fit without hanging left. */
+  .v6-gap__word { justify-self: center; }
   /* The cross-fade above cannot run here, so the resolve into graphite is a static gradient instead. It
      sits under the content, over the empty foot of the chapter. */
   .v6-gap { position: relative; }
