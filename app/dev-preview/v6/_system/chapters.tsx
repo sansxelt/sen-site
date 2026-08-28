@@ -416,6 +416,16 @@ export function Product() {
     timers.current.push(setTimeout(() => setDone(true), after + RUN.length * 190 + 300));
   }, []);
 
+  // A THRESHOLD IS A FRACTION OF THE OBSERVED ELEMENT, NOT OF THE SCREEN.
+  //
+  // threshold: 0.45 asked for 45% of this section to be visible at once. The section is taller than a short
+  // window -- roughly 2.4x at 390px of height -- so 45% of it COULD NOT BE VISIBLE, the observer never
+  // reported an intersection, play() never ran, and the whole product demonstration rendered as an empty
+  // rectangle holding one prompt glyph. It is reachable live: rotate to landscape, leave fullscreen into a
+  // short window, or open split-screen, and a chapter that was correct a moment ago is blank.
+  //
+  // Expressed against the viewport instead, the trigger means what it was always meant to mean -- "the top
+  // of this has come properly into view" -- and cannot be defeated by an element that is merely tall.
   useEffect(() => {
     const el = root.current;
     if (!el) return;
@@ -423,10 +433,23 @@ export function Product() {
       for (const e of es) {
         if (e.isIntersecting && !played.current) { played.current = true; play(); }
       }
-    }, { threshold: 0.45 });
+    }, { threshold: 0, rootMargin: "0px 0px -35% 0px" });
     io.observe(el);
+
+    // The preference can change while the run is in flight -- a battery saver switching it on is enough --
+    // and the sample inside play() is taken once, at the start. Honour it from wherever the run has reached:
+    // drop the timers and show the finished output, which is where the animation was going anyway.
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const settle = () => {
+      if (!mq.matches) return;
+      timers.current.forEach(clearTimeout);
+      timers.current = [];
+      setTyped(CMD.length); setShown(RUN.length); setDone(true);
+    };
+    mq.addEventListener("change", settle);
+
     const t = timers.current;
-    return () => { io.disconnect(); t.forEach(clearTimeout); };
+    return () => { io.disconnect(); mq.removeEventListener("change", settle); t.forEach(clearTimeout); };
   }, [play]);
 
   const submit = (e: React.FormEvent) => {

@@ -640,6 +640,22 @@
 .v6-rx__f { position: relative; margin: 0; opacity: 0; transform: translateY(20px);
   transition: opacity 560ms var(--ease), transform 620ms var(--ease); }
 .v6-rx__f[data-on="true"] { opacity: 1; transform: none; }
+
+/* WHAT A READER WITH NO JAVASCRIPT SEES.
+   Both of these default to invisible and are released by an attribute React sets after an observer fires.
+   With scripting off nothing ever sets it, so Reach loses all seven surfaces that ARE the chapter: the
+   headline, the subheading and three bare labels survive with nothing underneath any of them. Measured:
+   .v6-rx__f sits at opacity 0 exactly. The terminal's exit codes are the milder case at opacity 0.25 --
+   legible but deliberately dimmed until the run finishes, which never happens without scripting.
+   NOT VERIFIABLE IN THE BROWSER HARNESS: neither Playwright's javaScriptEnabled:false nor CDP's
+   Emulation.setEmulatedMedia exposes the scripting feature, so (scripting: none) never matched under test.
+   The noscript block in layout.tsx is the mechanism that does not depend on it.
+   The reveal is decoration; the content is not, and the content should not be conditional on the decoration
+   having been able to run. */
+@media (scripting: none) {
+  .v6-rx__f { opacity: 1; transform: none; }
+  .v6-tm__exits .v6-tm__ex { opacity: 1; }
+}
 .v6-rx__fcap { font-family: var(--sans); font-weight: 600; font-size: 11px; letter-spacing: 0.14em;
   text-transform: uppercase; color: var(--ink-4); margin-bottom: 10px; }
 .v6-rx__fcap b { font-weight: 600; letter-spacing: 0.04em; color: var(--ink-2); margin-right: 8px; }
@@ -1239,7 +1255,8 @@
    re-enters it on any crossing. mobile-motion.ts no longer reads them at all: it observes every part on
    every viewport, and gate 2 decides where a reveal does anything, which removes one copy of 767 rather
    than adding a listener to it. */
-@media (min-width: 901px) and (max-height: 519px) {
+@media (min-width: 901px) and (max-height: 519px),
+       (min-width: 901px) and (prefers-reduced-motion: reduce) {
   .v6-gap { height: auto; }
   .v6-gap__pin { position: static; height: auto; padding: clamp(64px, 9vh, 104px) var(--gutter); }
   .v6-gap__stage { max-width: none; height: auto; }
@@ -1749,6 +1766,12 @@
    drift apart.
    ═══════════════════════════════════════════════════════════════════════════════════ */
 @media (max-height: 519px), (max-width: 900px) and (max-height: 659px), (prefers-reduced-motion: reduce) {
+  /* THE DENSITY RAMP STOPS WHERE THE PIN DOES. --sh exists to buy back room inside a 100svh pin by
+     compacting the scene into it. Once the pin is height:auto there is no room to buy and nothing to
+     overflow, but --sh is gated on (min-width: 901px) alone and kept ramping anyway, compacting a stacked
+     page that had already chosen to be tall -- and overwriting chapter 4's stacked fallback type scale on
+     the way. It is the sixth height gate in this file and the only one that did not stop here. */
+  .v6 { --sh: 0; }
   .v6-au, .v6-gap, .v6-st, .v6-rg, .v6-dr { height: auto; }
   .v6-au__pin, .v6-gap__pin, .v6-st__pin, .v6-rg__pin, .v6-dr__pin {
     position: static; height: auto; display: block;

@@ -245,6 +245,31 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
   // whichever panel is on screen: the open one, or the one still animating out
   const shown = open ?? exiting;
 
+  // THE BAR CHANGES FORM AT 940px, AND WHATEVER IS OPEN MUST NOT SURVIVE THE CROSSING.
+  //
+  // Two surfaces answer the same question at two widths: the desktop mega panel and the phone drawer. The
+  // width that decides which one exists can change with no reload -- one zoom step, entering fullscreen from
+  // a small window, leaving split-screen, an external display -- and neither surface was watching it.
+  //
+  // A mega panel open when the window narrows past 940 renders its four-column grid at roughly 50px per
+  // column, anchored to a bar that is position:fixed on the homepage, with its own trigger now display:none.
+  // A drawer open when the window widens past 940 keeps document.body.style.overflow = "hidden" over a
+  // desktop layout, so the page underneath cannot be scrolled and the close button that would release it is
+  // display:none too. Both are dead ends a reader cannot leave without reloading the page.
+  //
+  // CLOSING RATHER THAN CONVERTING is deliberate. A reader who opened a menu at one width did not ask to be
+  // handed the other form of it mid-gesture; dismissal is the one outcome that is never surprising. It fires
+  // only on a crossing, never at mount, so the surface a reader deliberately opened is never taken away.
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 940px)");
+    const sync = () => {
+      if (mq.matches) { setOpen(null); setExiting(null); setPreview(null); }
+      else setDrawer(false);
+    };
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   // THE BAR DOES NOT HIDE. It stays where it is and matches whatever is under it instead; see the ground
   // sampler below. Hiding it was a worse answer to the same problem — a bar that fights the page — and it
   // cost a menu that could open against a moving anchor.
