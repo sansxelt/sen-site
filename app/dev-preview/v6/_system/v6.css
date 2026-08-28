@@ -498,6 +498,38 @@
   .v6-nav__items, .v6-nav__signin { display: none; }
   .v6-nav__burger { display: inline-flex; }
 }
+
+/* ═══════════════ THE BAR IS ANCHORED TO THE VIEWPORT ON A PHONE, NOT TO THE FLOW ══
+   position: sticky keeps the bar IN NORMAL FLOW and offsets it against the scrollport. That holds while
+   the document scrolls normally, and stops holding the instant iOS rubber-bands past scrollTop 0: the
+   sticky constraint no longer applies, so the bar travels down the screen with the content and comes back
+   when the bounce settles. Reported from an iPhone, against Scale, whose bar stays locked.
+
+   AN EMULATED VIEWPORT CANNOT SEE THIS. Measured in headless Chromium the bar reads 0.00px of drift across
+   47 scroll positions and 0.00px across a viewport-height change, because emulation does not rubber-band.
+   The probe was right about everything it could observe and the behaviour was still wrong on the device.
+
+   fixed anchors to the viewport, so overscroll, momentum and Safari's toolbar collapsing all move the page
+   underneath a bar that does not move. The bar leaves normal flow when it does, which would pull the whole
+   page up by its own height, so #v6-main gives the space back -- the same custom property the chapters
+   already use to clear it, so the two cannot drift apart.
+
+   SCOPED THREE WAYS, deliberately narrow:
+     max-width: 940px   the breakpoint where this nav ALREADY becomes the mobile one (burger in, items out),
+                        so the bar changes position exactly where it changes form. Desktop is untouched.
+     :root:has(.v6-gap) .v6-gap is the homepage's own chapter and renders on no other route, so no other
+                        v6 route changes. Same :has idiom the file already uses for --nav-h.
+     the mega panel is not reachable here at all: below 940px .v6-nav__items and .v6-nav__signin are
+                        display:none and the burger opens .v6-drawer instead, which is its own
+                        position:fixed inset:0 overlay at z-index 90 and does not depend on the bar's
+                        positioning. Desktop keeps sticky, so the mega keeps anchoring to a flowed bar. */
+@media (max-width: 940px) {
+  :root:has(.v6-gap) .v6-nav { position: fixed; top: 0; left: 0; right: 0; }
+  /* Exactly the height the bar no longer occupies. --nav-h is MEASURED and published by the shell after
+     hydration; until then it is the 67px this same breakpoint declares above, which is what the bar really
+     measures here -- so first paint and hydrated paint agree and the spacer never disagrees with the bar. */
+  :root:has(.v6-gap) #v6-main { padding-top: var(--nav-h, 67px); }
+}
 @media (max-width: 560px) {
   /* Keep the enlarged wordmark AND both controls on one line down to 320px: the button gives back the
      padding rather than the wordmark giving back its size. */
