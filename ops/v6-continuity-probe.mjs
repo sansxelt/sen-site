@@ -159,16 +159,40 @@ for (const g of SELECTED) {
           if (key !== chapter) continue;                 // one scene per sample; boundaries handled apart
           chapterStuck = stuck;
           // (the ground colour is read once at the return below, not here)
-          for (const e of pin.querySelectorAll("*")) {
+          // KEYED BY POSITION, NOT BY CLASS NAME, and this was silently wrong.
+          //
+          // The key was the className, so every element sharing one collapsed to a single Map entry and
+          // each of the others was compared against a DIFFERENT ELEMENT. Measured in the Direction pin:
+          // 69 elements, 23 distinct class keys -- 20 of them stringifying to "[object SVGAnimatedString]"
+          // because an SVG node with no class falls through baseVal to the object itself, plus 8 edges,
+          // 3 guarantee groups, 3 system groups and 3 layers all sharing a name. The resulting deltas were
+          // around 14,000 with 226px of "movement" per element per notch, in a PINNED scene where nothing
+          // can move at all, and several came out byte-identical frame after frame.
+          //
+          // Every continuity number this probe produced for that chapter was noise, including the zero
+          // stalls it reported across a stretch a reader described as dead. DOM order is stable between
+          // frames; a class name is not unique.
+          const nodes = [...pin.querySelectorAll("*")];
+          for (let idx = 0; idx < nodes.length; idx++) {
+            const e = nodes[idx];
             const cs = getComputedStyle(e);
             if (cs.display === "none" || cs.visibility === "hidden") continue;
             const b = e.getBoundingClientRect();
             if (!b.width || !b.height) continue;
             let op = 1, n = e;
             while (n && n !== pin) { op *= parseFloat(getComputedStyle(n).opacity); n = n.parentElement; }
+            const cls = typeof e.className === "string"
+              ? e.className
+              : (e.className && typeof e.className.baseVal === "string" ? e.className.baseVal : "");
             items.push({
-              k: String((e.className && e.className.baseVal) || e.className || e.tagName).trim().slice(0, 30),
+              k: idx + "|" + (cls.trim().slice(0, 30) || e.tagName),
               x: (b.left + b.right) / 2, y: (b.top + b.bottom) / 2, w: b.width, h: b.height, o: op,
+              // A LINE DRAWING ITSELF IS MOTION A BOUNDING BOX CANNOT SEE. The Direction diagram draws its
+              // edges with stroke-dashoffset, which changes neither geometry nor opacity, so the probe read
+              // the whole edge beat as a dead frame and would have sent someone to re-time an animation
+              // that was running correctly. Same lesson as the oklab ground: if the page can express change
+              // in a property the signature does not sample, the signature will report stillness.
+              d: parseFloat(cs.strokeDashoffset) || 0,
             });
           }
           break;
@@ -251,7 +275,7 @@ for (const g of SELECTED) {
           if (!q) continue;
           compared++;
           const dy = s.stuck ? it.y - q.y : it.y - q.y + NOTCH;
-          geom += Math.abs(it.x - q.x) + Math.abs(dy)
+          geom += Math.abs(it.d - q.d) + Math.abs(it.x - q.x) + Math.abs(dy)
             + Math.abs(it.w - q.w) * 0.5 + Math.abs(it.h - q.h) * 0.5
             + Math.abs(it.o - q.o) * 200;
         }

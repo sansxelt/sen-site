@@ -49,6 +49,14 @@ const fixture = (variant) => `<!doctype html><meta charset="utf-8">
   <!-- 1. CONSTANT: one element travels linearly across the whole chapter. -->
   <section class="v6-gap ch" id="gap"><div class="v6-gap__pin pinbox"><div class="v6-gap__stage stage">
     <p class="mover" id="gapMover">constant</p><p class="note">linear travel, no holds</p>
+    <!-- SAME-CLASS SIBLINGS, DELIBERATELY. They never move. A signature keyed by class name collapses all
+         four into one entry and compares each against a different element, inventing motion out of their
+         differing positions -- which is exactly what happened in the real Direction pin, where 69 elements
+         shared 23 keys and produced 226px of "movement" per element in a scene that was standing still. -->
+    <span class="decoy" style="position:absolute;left:10px;top:20px">a</span>
+    <span class="decoy" style="position:absolute;left:10px;top:70px">b</span>
+    <span class="decoy" style="position:absolute;left:10px;top:120px">c</span>
+    <span class="decoy" style="position:absolute;left:10px;top:170px">d</span>
   </div></div></section>
 
   <!-- 2. DEAD INTERVAL: moves for p<0.2 and p>0.8, nothing in between. -->
@@ -201,6 +209,11 @@ if (Object.keys(r).length === 5) {
     r.au.longest >= r.gap.longest * 2,
     `dead-interval run ${r.au.longest} vs constant-motion run ${r.gap.longest}`);
   ok("CONSTANT motion reports a flat peak/median", r.gap.pm < 1.8, `peak/median ${r.gap.pm}`);
+  // The four static same-class siblings must contribute NOTHING. Keyed by class they collide and invent
+  // motion; the mover travels 300px over the chapter, so the per-notch mean stays small and flat. A mean
+  // in the hundreds or thousands here means the signature is comparing elements with each other again.
+  ok("same-class siblings do not invent motion", r.gap.mean < 60,
+    `mean ${r.gap.mean} per notch with four static same-class decoys present`);
 
   ok("a DEAD INTERVAL is detected as a run of stalls", r.au.longest >= 4,
     `longest dead run ${r.au.longest} (fixture holds still across 60% of the chapter)`);

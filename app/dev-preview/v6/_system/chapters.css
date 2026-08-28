@@ -860,21 +860,21 @@
   .v6-dr {
     /* Re-timed for the narrow sequence. Desktop keeps the windows declared on .v6-dr above: there the
        drawing is beside the layers for the whole chapter, so its reveals are spread across all of it. */
-    --g1: clamp(0, calc((var(--p) - 0.26) / 0.10), 1);   /* the guarantees   */
-    --g2: clamp(0, calc((var(--p) - 0.35) / 0.10), 1);   /* the systems      */
-    --g3: clamp(0, calc((var(--p) - 0.44) / 0.10), 1);   /* the edges        */
-    --g4: clamp(0, calc((var(--p) - 0.53) / 0.09), 1);   /* the deployment   */
-    --g5: clamp(0, calc((var(--p) - 0.68) / 0.32), 1);   /* the three layers */
+    --g1: clamp(0, calc((var(--p) - 0.20) / 0.09), 1);   /* the guarantees   */
+    --g2: clamp(0, calc((var(--p) - 0.28) / 0.09), 1);   /* the systems      */
+    --g3: clamp(0, calc((var(--p) - 0.36) / 0.08), 1);   /* the edges        */
+    --g4: clamp(0, calc((var(--p) - 0.43) / 0.08), 1);   /* the deployment   */
+    --g5: clamp(0, calc((var(--p) - 0.54) / 0.46), 1);   /* the three layers */
     /* the beats' own presence, deliberately overlapping by a few percent so each hands over rather than
        cutting -- the same crossfade the chapter above resolves its claim with */
-    --dhead:  clamp(0, calc((var(--p) - 0.17) / 0.07), 1);   /* the head leaves   */
-    --dgin:   clamp(0, calc((var(--p) - 0.18) / 0.07), 1);   /* the drawing lands */
-    --dgout:  clamp(0, calc((var(--p) - 0.62) / 0.07), 1);   /* and leaves        */
+    --dhead:  clamp(0, calc((var(--p) - 0.11) / 0.07), 1);   /* the head leaves   */
+    --dgin:   clamp(0, calc((var(--p) - 0.12) / 0.07), 1);   /* the drawing lands */
+    --dgout:  clamp(0, calc((var(--p) - 0.50) / 0.07), 1);   /* and leaves        */
     /* THE LAYERS NEED THEIR OWN GATE, not just their per-layer distance fade. Sharing a grid cell with
        the head means an ungated container is ON from p=0: the first layer resolved to 0.3 opacity at the
        top of the chapter and printed straight through the heading. Measured on the first attempt at this
        composition -- the frames showed both at once and were unreadable. */
-    --dlin:   clamp(0, calc((var(--p) - 0.64) / 0.06), 1);   /* the layers arrive */
+    --dlin:   clamp(0, calc((var(--p) - 0.52) / 0.06), 1);   /* the layers arrive */
   }
 
   .v6-dr__pin { padding: calc(var(--nav-h, 67px) + 1.4vh) var(--gutter) clamp(28px, 4.5vh, 48px);
@@ -884,9 +884,12 @@
   /* ONE CELL, THREE BEATS. */
   .v6-dr__head, .v6-dr__stage { grid-row: 1; grid-column: 1; min-height: 0; }
 
+  /* A SLOW DRIFT FROM THE FIRST NOTCH, so the opening beat answers the hand. Held perfectly still until
+     --dhead began, the heading gave three consecutive notches of literally zero movement at the top of
+     the chapter -- the longest dead run in it, and the reader scrolls into that before anything else. */
   .v6-dr__head { align-self: center; width: 100%;
     opacity: calc(1 - var(--dhead));
-    transform: translateY(calc(var(--dhead) * -7svh)); }
+    transform: translateY(calc(var(--p) * -2svh - var(--dhead) * 6svh)); }
   .v6-dr__h { font-size: clamp(1.5rem, 6.6vw, 2.15rem); max-width: 17ch; }
   .v6-dr__sub { font-size: clamp(0.86rem, 3.5vw, 1rem); line-height: 1.42; }
 
