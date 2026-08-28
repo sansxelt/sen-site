@@ -66,5 +66,19 @@ export const viewport: Viewport = {
 // were already signed in, on a page telling them so.
 export default async function V6Layout({ children }: { children: ReactNode }) {
   const session = await auth();
-  return <V6Shell authed={!!session?.user?.email}>{children}</V6Shell>;
+  return (
+    <>
+      {/* CONTENT THAT DOES NOT DEPEND ON SCRIPTING HAVING RUN.
+          Reach's seven surfaces default to opacity:0 and are released by a data attribute React sets after
+          an observer fires, so with scripting off the chapter keeps its headline and three bare labels and
+          loses everything underneath them. chapters.css answers this with @media (scripting: none), which is
+          the right declaration and is not supported everywhere; this is the mechanism that is. Both are
+          inert while scripting runs -- verified: with JS on, (scripting: none) does not match and the
+          figures stay at opacity 0 until the reveal releases them. */}
+      <noscript>
+        <style>{".v6-rx__f{opacity:1;transform:none}.v6-tm__exits .v6-tm__ex{opacity:1}"}</style>
+      </noscript>
+      <V6Shell authed={!!session?.user?.email}>{children}</V6Shell>
+    </>
+  );
 }

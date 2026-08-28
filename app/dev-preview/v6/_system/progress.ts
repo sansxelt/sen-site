@@ -25,6 +25,7 @@
 // media queries that decide that are listened to, so crossing one turns the engine on or off in place.
 import { useEffect, type RefObject } from "react";
 import { SHORT } from "./mobile-motion";
+import { registerEngine } from "./geometry";
 
 type Options = {
   /** Written on the element as this custom property. Defaults to "--p". */
@@ -57,6 +58,12 @@ export function useScrollProgress(ref: RefObject<HTMLElement | null>, options?: 
     // Tears down whatever the current branch built. Null while the value is pinned, because that branch
     // builds nothing at all.
     let stop: (() => void) | null = null;
+    // Set by whichever branch start() built, so a remap re-syncs the LIVE branch. Null while the value is
+    // pinned, because that branch has no target to re-read.
+    let resyncBranch: (() => void) | null = null;
+    // A remap scrolls the page itself. Suspended, kick() ignores that scroll instead of mistaking it for the
+    // reader's and feeding it back into the settle the remap is trying to finish.
+    let suspended = false;
 
     // THREE PLACES NOTHING READS THIS, so in none of them should it be computed.
     //
@@ -96,6 +103,7 @@ export function useScrollProgress(ref: RefObject<HTMLElement | null>, options?: 
     ];
 
     const start = () => {
+      resyncBranch = null;
       if (gates.some((m) => m.matches)) {
         el.style.setProperty(property, "1");
         onFrame?.(1);
@@ -151,8 +159,24 @@ export function useScrollProgress(ref: RefObject<HTMLElement | null>, options?: 
       };
 
       const kick = () => {
+        if (suspended) return;
         readTarget();
         if (!raf) raf = requestAnimationFrame(frame);
+      };
+
+      // ADOPT, DO NOT ANIMATE. Smoothing is right for scroll input, where the target moved because the
+      // reader moved. It is wrong for a geometry change, where the target moved because the PAGE did: easing
+      // a discontinuity plays the scene backwards through the narrative it just showed -- seals reopening,
+      // the ring undrawing -- for the ~165ms the tau costs. This is the instant adopt the engine already
+      // performs on a gate crossing via rendered = -1, applied to the one path that lacked it, and it writes
+      // the property synchronously so no stale or blank frame is ever painted.
+      resyncBranch = () => {
+        readTarget();
+        rendered = target;
+        el.style.setProperty(property, rendered.toFixed(4));
+        onFrame?.(rendered);
+        if (raf) { cancelAnimationFrame(raf); raf = 0; }
+        lastTime = 0;
       };
 
       kick();
@@ -174,9 +198,23 @@ export function useScrollProgress(ref: RefObject<HTMLElement | null>, options?: 
       start();
     };
 
+    // The geometry controller owns WHERE the reader is; this engine owns WHAT is painted there. Registering
+    // regardless of branch is deliberate: an unpinned composition still has to be re-anchored when the window
+    // changes, and its resync writes the finished value rather than re-reading a target it does not have.
+    const unregister = registerEngine({
+      el,
+      resync: () => {
+        if (resyncBranch) resyncBranch();
+        else { el.style.setProperty(property, "1"); onFrame?.(1); }
+      },
+      suspend: () => { suspended = true; },
+      resume: () => { suspended = false; },
+    });
+
     start();
     for (const m of gates) m.addEventListener("change", recheck);
     return () => {
+      unregister();
       for (const m of gates) m.removeEventListener("change", recheck);
       stop?.();
     };
