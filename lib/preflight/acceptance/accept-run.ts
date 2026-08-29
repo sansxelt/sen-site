@@ -18,7 +18,7 @@
 // be re-derived by the next caller.
 import { randomUUID } from "node:crypto";
 import { createRun, ownerActiveRunCount, ownerRunsToday, runWithSameKeyDifferentPayload, type GuaranteeBinding } from "../runs-db";
-import { gateLaunchCoverage, launchCoverageRefusalMessage } from "./launch-coverage";
+import { gateLaunchCoverage, launchCoverageRefusalMessage, launchCoverageAwaitingReviewMessage } from "./launch-coverage";
 import { estimateRunCredits, keyFingerprint, payloadFingerprint, buildSubmissionId } from "../flow-selection";
 import { keyCeilingRefusal } from "../key-spend";
 import { MAX_ACTIVE_RUNS_PER_OWNER, maxRunsPerDay } from "../limits";
@@ -182,6 +182,16 @@ export async function acceptVerificationRun(input: AcceptRunInput): Promise<Acce
   {
     const verdict = await gateLaunchCoverage(owner, contract.id, input.claim, flowIds);
 
+    if (verdict.gate === "awaiting_review") {
+      // The checks exist; nobody has approved them. Same position as a refusal -- above every hold, nothing
+      // reserved, nothing charged -- but a DIFFERENT answer, because the claim is not what is wrong. Sending
+      // claim_not_provable here is what made readers reword a sentence that was already correct.
+      await logKeyUsage(principal, { endpoint, status: 422, applicationId: id, creditsReserved: 0, creditsCharged: 0 });
+      return {
+        ok: false, error: "requirements_awaiting_review", status: 422,
+        message: launchCoverageAwaitingReviewMessage(verdict.suggested),
+      };
+    }
     if (verdict.gate === "refused") {
       // Nothing to release: this sits above every hold and above the free-pass claim.
       await logKeyUsage(principal, { endpoint, status: 422, applicationId: id, creditsReserved: 0, creditsCharged: 0 });

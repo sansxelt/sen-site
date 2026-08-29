@@ -38,12 +38,16 @@ export type LaunchCoverageInput = {
   requirements: string[];
   /** ONLY the flows this run will execute: the selected ids, intersected with what is enabled and approved. */
   flows: FlowLite[];
+  /** How many requirements exist and are enabled but still sit at 'suggested'. See AWAITING REVIEW below. */
+  awaitingReview?: number;
 };
 
 export type LaunchCoverageVerdict =
   | { gate: "passed" }
   /** No claim exists, so there is no proposition to test the plan against. See NO_CLAIM below. */
   | { gate: "no_claim" }
+  /** Requirements were derived and nobody has approved them yet. NOT a statement about the claim. */
+  | { gate: "awaiting_review"; suggested: number }
   | { gate: "refused"; missing: string[] };
 
 // WHY A BLANK CLAIM IS NOT A REFUSAL, AND NOT SILENTLY A PASS EITHER.
@@ -62,9 +66,35 @@ export type LaunchCoverageVerdict =
 // This is a real remaining hole and it is named rather than hidden: a contract created with no outcome
 // sentence is not gated, because nothing can gate it. The fix is upstream (require the outcome when a
 // system is connected), not here.
+// AWAITING REVIEW IS NOT A REFUSAL, AND CALLING IT ONE COST THIS PRODUCT EVERY FIRST RUN IT EVER HAD.
+//
+// requirementsInForce() keeps only rows that are enabled AND approved, which is correct: an unreviewed row
+// must not silently become an obligation. But when EVERY row is still 'suggested' that filter returns an
+// empty list, and coverageReport is then asked whether zero requirements can prove a claim. It answers no,
+// in the only vocabulary it has -- "no requirement preserves the expected value", "no requirement asserts it
+// after the persistence boundary", "no requirement carries that condition" -- and the caller renders that as
+// claim_not_provable. Which reads, to the person who wrote the claim, as "your sentence was too vague."
+//
+// It is not too vague. Measured on the production contracts, one application, twenty versions: every single
+// version derived five to nine requirements, and v20's included "Pro plan status must be retained when user
+// signs back in with the same account" -- the exact persistence and identity conditions the refusal said
+// were absent. Nineteen of the twenty sat at 'suggested'. The one that was approved, v19, passed. Across all
+// twenty-six gated contracts the correlation is perfect: approved passed, suggested refused.
+//
+// So the reader rewords the claim, because that is what the message told them to do, and nothing changes --
+// three distinct claim texts across eighteen versions in the data, none of it helping, because rewording
+// cannot approve a requirement. This state exists so the product says the true thing instead: the checks are
+// written, they are waiting for you, and the claim is fine.
+//
+// DELIBERATELY NARROW. It fires only when NOTHING is in force and something is pending. If even one
+// requirement is approved and coverage still fails, that is a real refusal about a real plan and it is
+// reported as one.
 export function decideLaunchCoverage(input: LaunchCoverageInput): LaunchCoverageVerdict {
   const claim = (input.claim ?? "").trim();
   if (!claim) return { gate: "no_claim" };
+
+  const awaiting = input.awaitingReview ?? 0;
+  if (input.requirements.length === 0 && awaiting > 0) return { gate: "awaiting_review", suggested: awaiting };
 
   const report = coverageReport(claim, input.requirements, input.flows);
   if (report.readyToLaunch) return { gate: "passed" };
@@ -92,6 +122,7 @@ export async function gateLaunchCoverage(
   return decideLaunchCoverage({
     claim,
     requirements: requirementsInForce(allRequirements),
+    awaitingReview: requirementsAwaitingReview(allRequirements),
     flows: selectRunnableFlows(allFlows, flowIds),
   });
 }
@@ -130,6 +161,23 @@ export function requirementsInForce(
   return allRequirements
     .filter((r) => r.enabled && ((r.review_state ?? "approved") === "approved"))
     .map((r) => r.requirement);
+}
+
+/** Requirements that are enabled and still waiting on the reviewer. 'rejected' is NOT counted: that was a
+ *  decision somebody made, not a step they have yet to take, and telling them to go approve a row they threw
+ *  away would be its own wrong message. Mirrors requirementsInForce so the two cannot disagree about what a
+ *  row's state means. */
+export function requirementsAwaitingReview(
+  allRequirements: { requirement: string; enabled: boolean; review_state?: string | null }[],
+): number {
+  return allRequirements.filter((r) => r.enabled && (r.review_state ?? "approved") === "suggested").length;
+}
+
+/** What to say when the checks exist and nobody has approved them. It has one job beyond being accurate:
+ *  stop the reader rewording a claim that was never the problem. */
+export function launchCoverageAwaitingReviewMessage(suggested: number): string {
+  const n = suggested === 1 ? "1 requirement" : `${suggested} requirements`;
+  return `Vraelis derived ${n} from this claim and none have been approved yet, so there is nothing in force to run. Nothing was charged. Review them and approve the ones that belong, then run again. The claim itself does not need rewording.`;
 }
 
 /** The customer-facing refusal. Same code as POST /v1/verifications so one vocabulary describes one

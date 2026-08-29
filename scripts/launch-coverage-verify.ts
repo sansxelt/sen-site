@@ -18,6 +18,7 @@
 import { readFileSync } from "node:fs";
 import {
   decideLaunchCoverage, launchCoverageRefusalMessage, selectRunnableFlows, requirementsInForce,
+  requirementsAwaitingReview, launchCoverageAwaitingReviewMessage,
 } from "../lib/preflight/acceptance/launch-coverage";
 import type { FlowLite } from "../lib/preflight/coverage";
 
@@ -202,6 +203,69 @@ console.log("\n── one gate, below every entrance ──");
     const call = src.match(/gateLaunchCoverage\([^)]*\)/);
     ok(`M5: ${label} passes a real claim to the gate`,
       !!call && !/,\s*null\s*,/.test(call[0]), call ? call[0] : "no call found");
+  }
+}
+
+console.log("");
+console.log("-- derived but unapproved is not a refusal --");
+{
+  // THE FAILURE THIS PINS. requirementsInForce keeps only approved rows, so a contract whose checks are all
+  // still "suggested" reached coverageReport with an EMPTY list. It answered, correctly for what it was
+  // asked, that no requirement preserves the value, asserts persistence, or carries identity -- and the
+  // caller rendered that as claim_not_provable. Measured on production contracts: one application, twenty
+  // versions, every one deriving five to nine good requirements, nineteen sitting at "suggested", and the
+  // single approved version passing. Seventeen contracts were telling their author to reword a claim that
+  // was already correct. After this change the same audit reports 0 refused and 17 awaiting review.
+  const AWAIT = decideLaunchCoverage({ claim: CLAIM, requirements: [], awaitingReview: 8, flows: [PROVING] });
+  ok("nothing in force + something pending reads as awaiting review", AWAIT.gate === "awaiting_review");
+  ok("it carries the count so the message can be specific",
+    AWAIT.gate === "awaiting_review" && AWAIT.suggested === 8, JSON.stringify(AWAIT));
+
+  // Backward compatibility: genuinely nothing derived is STILL a refusal, and must be.
+  ok("nothing in force and nothing pending is still a refusal",
+    decideLaunchCoverage({ claim: CLAIM, requirements: [], awaitingReview: 0, flows: [PROVING] }).gate === "refused");
+  ok("an absent awaitingReview behaves exactly as zero",
+    decideLaunchCoverage({ claim: CLAIM, requirements: [], flows: [PROVING] }).gate === "refused");
+
+  // NARROWNESS. One approved requirement means a plan IS in force, so a coverage failure is a real refusal.
+  ok("a plan that IS in force still refuses on its merits",
+    decideLaunchCoverage({ claim: CLAIM, requirements: REQS, awaitingReview: 5, flows: [WEAK] }).gate === "refused");
+
+  const rows = [
+    { requirement: "a", enabled: true, review_state: "suggested" },
+    { requirement: "b", enabled: true, review_state: "suggested" },
+    { requirement: "c", enabled: true, review_state: "approved" },
+    { requirement: "d", enabled: true, review_state: "rejected" },
+    { requirement: "e", enabled: false, review_state: "suggested" },
+  ];
+  ok("counts only rows that are enabled AND suggested", requirementsAwaitingReview(rows) === 2,
+    String(requirementsAwaitingReview(rows)));
+  ok("a rejected row is a decision, not a pending step",
+    requirementsAwaitingReview([{ requirement: "x", enabled: true, review_state: "rejected" }]) === 0);
+  ok("the two filters agree about the same rows", requirementsInForce(rows).length === 1);
+
+  const m = launchCoverageAwaitingReviewMessage(8);
+  ok("the message names the count", m.includes("8 requirements"), m);
+  ok("the message says nothing was charged", m.toLowerCase().includes("charged"));
+  ok("the message tells the reader NOT to reword the claim", m.includes("does not need rewording"), m);
+  const m1 = launchCoverageAwaitingReviewMessage(1);
+  ok("one requirement is not pluralised", m1.includes("1 requirement ") && !m1.includes("1 requirements"), m1);
+}
+
+console.log("");
+console.log("-- both entrances must HANDLE the new state, not fall through it --");
+{
+  // TypeScript cannot catch this. Both callers branch on "refused" and then keep going, so a state nobody
+  // handles is a state that LAUNCHES: a run that cannot prove anything, charged for. That is strictly worse
+  // than the bug being fixed, so it is asserted rather than reasoned about.
+  const acc = readFileSync("lib/preflight/acceptance/accept-run.ts", "utf8");
+  const rer = readFileSync("app/api/preflight/runs/[runId]/rerun/route.ts", "utf8");
+  for (const [label, src] of [["the acceptance service", acc], ["the rerun route", rer]] as const) {
+    const a = src.indexOf(String.fromCharCode(34) + "awaiting_review" + String.fromCharCode(34));
+    const r = src.indexOf(String.fromCharCode(34) + "refused" + String.fromCharCode(34));
+    ok(label + " handles awaiting_review", a !== -1);
+    ok(label + " answers it with its own error code", src.includes("requirements_awaiting_review"));
+    ok(label + " decides awaiting_review before refused", a !== -1 && r !== -1 && a < r);
   }
 }
 

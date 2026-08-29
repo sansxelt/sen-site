@@ -24,7 +24,7 @@ import { auth } from "@/auth";
 import { preflightEnabled, runsDisabled } from "@/lib/v-preflight-flags";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { getApplication, listFlows, getContractById } from "@/lib/v-applications";
-import { gateLaunchCoverage, launchCoverageRefusalMessage } from "@/lib/preflight/acceptance/launch-coverage";
+import { gateLaunchCoverage, launchCoverageRefusalMessage, launchCoverageAwaitingReviewMessage } from "@/lib/preflight/acceptance/launch-coverage";
 import { unsafeHttpsUrlReason } from "@/lib/safe-fetch";
 import { hold, refund } from "@/lib/v-credits";
 import { centsToCredits } from "@/lib/preflight/auto-recharge";
@@ -184,6 +184,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ runId: 
   {
     const rerunContract = await getContractById(owner, parent.contractId);
     const verdict = await gateLaunchCoverage(owner, parent.contractId, rerunContract?.source_prompt ?? null, flowIds);
+    if (verdict.gate === "awaiting_review") {
+      return NextResponse.json({
+        error: "requirements_awaiting_review",
+        message: launchCoverageAwaitingReviewMessage(verdict.suggested),
+      }, { status: 422 });
+    }
     if (verdict.gate === "refused") {
       return NextResponse.json({
         error: "claim_not_provable",

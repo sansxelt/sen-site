@@ -64,7 +64,7 @@ async function main() {
   const approved = rows.filter((c) => c.status === "approved");
   console.log(`contracts: ${rows.length} total, ${approved.length} approved\n`);
 
-  const tally = { passed: 0, refused: 0, no_claim: 0 };
+  const tally = { passed: 0, refused: 0, no_claim: 0, awaiting_review: 0 };
 
   for (const c of approved) {
     const [reqs, flows] = await Promise.all([
@@ -78,10 +78,15 @@ async function main() {
       .filter((f) => f.enabled && ((f.review_state ?? "approved") === "approved"))
       .map((f) => ({ name: f.name, role: f.role, steps: (Array.isArray(f.steps) ? f.steps : []) as never[] }));
 
-    const verdict = decideLaunchCoverage({ claim: c.source_prompt, requirements: liveReqs, flows: liveFlows });
+    const awaitingReview = ((reqs.data ?? []) as { enabled: boolean; review_state?: string }[])
+      .filter((r) => r.enabled && (r.review_state ?? "approved") === "suggested").length;
+    const verdict = decideLaunchCoverage({ claim: c.source_prompt, requirements: liveReqs, awaitingReview, flows: liveFlows });
     tally[verdict.gate]++;
 
-    const tag = verdict.gate === "passed" ? "PASS  " : verdict.gate === "no_claim" ? "NOCLAIM" : "REFUSE";
+    const tag = verdict.gate === "passed" ? "PASS  "
+      : verdict.gate === "no_claim" ? "NOCLAIM"
+      : verdict.gate === "awaiting_review" ? "REVIEW"
+      : "REFUSE";
     console.log(`${tag}  app=${c.application_id.slice(0, 12)} v${c.version}${c.kind === "guarantee" ? " (guarantee)" : ""}  ${c.user_id}`);
     console.log(`         claim: ${(c.source_prompt ?? "(none)").slice(0, 90)}`);
     console.log(`         ${liveReqs.length} requirements, ${liveFlows.length} runnable flows`);
@@ -93,7 +98,7 @@ async function main() {
   }
 
   console.log("─".repeat(70));
-  console.log(`would launch: ${tally.passed}    would be REFUSED: ${tally.refused}    ungated (no claim): ${tally.no_claim}`);
+  console.log(`would launch: ${tally.passed}    would be REFUSED: ${tally.refused}    awaiting review: ${tally.awaiting_review}    ungated (no claim): ${tally.no_claim}`);
   if (tally.refused) {
     console.log("\nA refusal here is the gate working, not a bug in it. For each one the choice is to fix the");
     console.log("contract so a journey actually proves the claim, or to accept that this contract never could.");
