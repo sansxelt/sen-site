@@ -43,6 +43,21 @@ const KNOWN = new Set([
 // honest without pretending a user agent is trustworthy.
 const BOT = /bot|crawl|spider|slurp|bingpreview|headlesschrome|lighthouse|monitoring|uptime|curl|wget|python-requests/i;
 
+// Article URLs are real landing pages and there are too many to allowlist by name. They collapse to a
+// CONSTANT section label rather than being recorded as sent, so the "never write a caller string" rule
+// still holds and the traffic stops disappearing into "other". Measured before this: 34 of 200 landings,
+// 17 per cent, were unattributed, on the one instrument that exists to say where people arrive.
+const SECTIONS: [string, string][] = [
+  ["/docs/", "/docs/:slug"],
+  ["/research/", "/research/:slug"],
+];
+
+function label(raw: string): string {
+  if (KNOWN.has(raw)) return raw;
+  for (const [prefix, name] of SECTIONS) if (raw.startsWith(prefix) && raw.length > prefix.length) return name;
+  return "other";
+}
+
 export async function POST(req: NextRequest) {
   const ua = req.headers.get("user-agent") ?? "";
   if (BOT.test(ua)) return NextResponse.json({ ok: true, skipped: "bot" });
@@ -58,7 +73,7 @@ export async function POST(req: NextRequest) {
   try { body = await req.json(); } catch { /* an empty beacon still counts as a visit to "other" */ }
 
   const raw = typeof body.path === "string" ? body.path.split("?")[0].split("#")[0] : "";
-  const path = KNOWN.has(raw) ? raw : "other";
+  const path = label(raw);
 
   await logEvent({
     eventType: EV_VISIT, actorType: "system", source: "web", route: path,

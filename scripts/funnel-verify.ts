@@ -81,7 +81,9 @@ console.log("\n── the anonymous endpoint cannot be used to write whatever it
   const s = strip(r);
   ok("the landing path is matched against a fixed list", /KNOWN\s*=\s*new Set\(/.test(s));
   ok("  and an unknown path is recorded as a constant, never as the caller's string",
-    /KNOWN\.has\(raw\) \? raw : "other"/.test(s));
+    s.includes("if (KNOWN.has(raw)) return raw;") && s.includes('return "other";')
+    // Section labels are constants declared in SECTIONS, never a slice of what the caller sent.
+    && /\["\/docs\/", "\/docs\/:slug"\]/.test(s) && !/return raw\.slice/.test(s));
   ok("  so no caller-supplied string ever reaches logEvent",
     !/route: (raw|body\.path)/.test(s));
   ok("obvious bots are skipped", /BOT\s*=\s*\//.test(s) && /BOT\.test\(ua\)/.test(s));
