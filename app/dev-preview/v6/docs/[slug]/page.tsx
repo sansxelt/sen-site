@@ -5,6 +5,7 @@ import { v6meta } from "../../_system/meta";
 import { DocShell, Blocks, DocCode } from "../../_content/docs-ui";
 import { DOCS, getDoc, adjacentDocs, docHeadings } from "../../_content/docs";
 import { V6_BASE } from "@/lib/v6-routes";
+import { robotsMeta } from "@/lib/stealth";
 
 const BASE = V6_BASE;
 // Real, runnable examples against the shipped API surface. Only pages where an example is genuinely truthful
@@ -60,7 +61,13 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const doc = getDoc(slug);
-  if (!doc) return {};
+  // AN UNRESOLVED SLUG MUST NOT INVITE INDEXING.
+  //
+  // The component below calls notFound(), and Next answers 200 rather than 404 for a STREAMED response.
+  // Metadata is resolved from THIS segment, not from app/not-found.tsx, so the noindex added there never
+  // reached these: /docs/<anything> and /research/<anything> answered 200 with index, follow and a
+  // not-found body. That is an unbounded indexable surface under two prefixes.
+  if (!doc) return { title: "Not found", robots: robotsMeta(false) };
   return v6meta({ title: doc.title, description: doc.summary, path: `/docs/${doc.slug}`, type: "article" });
 }
 

@@ -39,6 +39,10 @@ export default function Curtain() {
 // The exemption is decided from the path the VISITOR asked for, forwarded by proxy.ts, never from this
 // route's own path, which is the same for every curtained request. Everything except "/" stays noindex.
 export async function generateMetadata(): Promise<Metadata> {
+  // With stealth OFF this route 404s (see the component above), so nothing it serves may be indexable.
+  // robotsMeta(true, ...) returns index/follow once the curtain is lifted, which made the dead route
+  // advertise itself the moment the site went public.
+  if (!stealthConfigured()) return { title: "Not found", robots: robotsMeta(false) };
   const asked = (await headers()).get(CURTAIN_PATH_HEADER);
   return { robots: robotsMeta(true, { curtainVisible: asked === "/" }) };
 }

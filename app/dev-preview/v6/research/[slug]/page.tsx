@@ -7,6 +7,7 @@ import {
   articleBySlug, relatedArticles, publishedArticles, readingMinutes, formatDate,
   type Block,
 } from "@/app/rank/research/_articles";
+import { robotsMeta } from "@/lib/stealth";
 
 /* THE RESEARCH ARTICLE, IN DESIGN 06.
  *
@@ -31,7 +32,13 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const a = articleBySlug(slug);
-  if (!a) return v6meta({ title: "Not found", description: "This article does not exist.", path: "/research" });
+  // AN UNRESOLVED SLUG MUST NOT INVITE INDEXING.
+  //
+  // The component below calls notFound(), and Next answers 200 rather than 404 for a STREAMED response.
+  // Metadata is resolved from THIS segment, not from app/not-found.tsx, so the noindex added there never
+  // reached these: /docs/<anything> and /research/<anything> answered 200 with index, follow and a
+  // not-found body. That is an unbounded indexable surface under two prefixes.
+  if (!a) return { title: "Not found", robots: robotsMeta(false) };
   return v6meta({ title: a.title, description: a.summary, path: `/research/${a.slug}`, type: "article" });
 }
 
