@@ -73,7 +73,18 @@ function lintGate(): void {
     return;
   }
 
-  const rel = (p: string) => p.replace(/\\/g, "/").replace(/^.*?\/vraelis\//, "");
+  // Repo-relative, derived from where the runner is ACTUALLY running rather than from a folder name.
+  // This stripped everything up to "/vraelis/", which is the directory the author happened to have the
+  // checkout in. In any other checkout nothing matched, every key stayed an absolute path, every baseline
+  // lookup missed, and each file with errors read as a fresh 0 -> N regression. The lint gate was red for
+  // reasons that had nothing to do with the code, which is the one thing a no-regression gate must not do:
+  // a gate that is always red teaches people to ignore it. Measured here: 185 errors against a 186 baseline
+  // and zero real regressions, reported as a failure.
+  const ROOT = process.cwd().split(String.fromCharCode(92)).join("/") + "/";
+  const rel = (p: string) => {
+    const n = p.split(String.fromCharCode(92)).join("/");
+    return n.startsWith(ROOT) ? n.slice(ROOT.length) : n;
+  };
   const report = JSON.parse(out.slice(out.indexOf("["))) as {
     filePath: string; errorCount: number; warningCount: number;
   }[];
