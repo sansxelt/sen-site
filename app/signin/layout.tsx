@@ -1,6 +1,17 @@
 import type { ReactNode } from "react";
 import { SignInHeader } from "./signin-header";
 import { ProductSurface } from "@/app/_components/product-surface";
+import type { Metadata } from "next";
+import { robotsMeta } from "@/lib/stealth";
+
+// A SIGN-IN SURFACE IS NOT A SEARCH RESULT.
+//
+// These inherited the root layout's index/follow, so the account pages were advertised to crawlers the
+// moment the curtain lifted. A password-reset page in a search index is noise at best. The one that
+// actually mattered: /signin is the URL Google had cached under the RETIRED product's headline, so leaving
+// it indexable meant re-earning an entry for a page nobody should arrive at from search.
+export const metadata: Metadata = { robots: robotsMeta(false) };
+
 
 // vraelis.com is the only host now (the sansxel zone shell is retired), so /signin always renders the
 // clean, product-first surface. The root layout already provides the light body + vraelis stylesheets;

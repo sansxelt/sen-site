@@ -1,5 +1,24 @@
 import Link from "next/link";
 import { PUBLIC_HOW_IT_WORKS, GROUND_CSS } from "@/lib/v6-routes";
+import type { Metadata } from "next";
+import { robotsMeta } from "@/lib/stealth";
+
+// A NOT-FOUND RESPONSE MUST NEVER BE INDEXABLE, AND THE FRAMEWORK'S OWN GUARD DOES NOT SURVIVE HERE.
+//
+// notFound() is documented to inject <meta name="robots" content="noindex" /> precisely because Next
+// returns 200 rather than 404 for a STREAMED response (see the not-found file convention docs). That guard
+// is a default, and an explicit metadata export outranks it: the root layout declares index/follow for the
+// whole site, so every not-found response on this site was served as index, follow.
+//
+// Combined with the 200, that is an indexable junk surface. /docs/<anything> and /research/<anything> match
+// a dynamic segment, stream, call notFound(), and answer 200 with a page that invites indexing. Measured on
+// the live site the day it went public: /docs/nope and /research/nope both returned 200 with index, follow.
+//
+// robotsMeta rather than a literal, because this repo has fixed the same class of bug twice by insisting
+// that one function decides indexing. With stealth off it returns the noindex asked for; with stealth on it
+// returns noindex too, since the curtain exemption is only ever granted to the homepage.
+export const metadata: Metadata = { robots: robotsMeta(false) };
+
 
 /* THE 404, IN DESIGN 06.
  *
