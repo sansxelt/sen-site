@@ -10,11 +10,14 @@ import { decideRun, executeRun } from "../worker/preflight/execute-run";
 import { FakeRunStore } from "../worker/preflight/run-store-fake";
 import { FakeBrowserProvider } from "../worker/preflight/providers/fake";
 import { pickHealthRun, isLaunchHealthCandidate } from "../lib/preflight/target-url";
-import { toPublicDecision } from "../lib/preflight/public-decision";
+import { toPublicDecision, PAYLOAD_VERDICT, publicDecisionFromPayloadVerdict } from "../lib/preflight/public-decision";
 import { planReconcile } from "../lib/preflight/issues";
 import { estimateRunCredits } from "../lib/preflight/flow-selection";
 import type { FlowSpec, FlowResult } from "../worker/preflight/types";
 
+// Comments stripped before a source assertion, so a sentence describing the old bug never satisfies a
+// check that the bug is gone.
+const stripSrc = (s: string) => s.replace(/^\s*\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "");
 let pass = 0, fail = 0;
 const ok = (n: string, c: boolean, d = "") => { console.log(`${c ? "PASS" : "FAIL"}  ${n}${d ? `  (${d})` : ""}`); if (c) pass++; else fail++; };
 
@@ -212,6 +215,45 @@ async function spyRun(selectedFlowIds: unknown, runId: string, deploymentUrl: st
         /(toPublicDecision|runVerdict)\(\s*(state|r\.state|p\.state|run\.state|g\.latest\.state)/.test(code));
     }
   }
+
+  // ── The payload path, which is a SECOND way to reach a decision and was not covered above ───────────
+  //
+  // The surfaces above read a run's decision. The /api-runs routes answer with customer-safe LABELS
+  // instead, and the api-runtime workspace renders those. That surface was absent from SURFACES because
+  // it never calls toPublicDecision on a decision, and that is exactly how it came to carry its own
+  // inverted table mapping "REPAIR VERIFIED" to VERIFIED: a false Verified, live, inside the product
+  // whose entire promise is that it does not produce one.
+  {
+    ok('payload "REPAIR VERIFIED" is blocked, never verified',
+      publicDecisionFromPayloadVerdict("REPAIR VERIFIED") === "blocked",
+      String(publicDecisionFromPayloadVerdict("REPAIR VERIFIED")));
+    ok('payload "READY" is the ONLY label that reaches verified',
+      publicDecisionFromPayloadVerdict("READY") === "verified"
+      && Object.values(PAYLOAD_VERDICT).filter((l) => publicDecisionFromPayloadVerdict(l) === "verified").length === 1);
+    ok('payload "BLOCKED" is the confirmed failure', publicDecisionFromPayloadVerdict("BLOCKED") === "failed");
+    ok('payload "NEEDS REVIEW" is blocked', publicDecisionFromPayloadVerdict("NEEDS REVIEW") === "blocked");
+
+    // The property that makes the two impossible to drift apart: translating a decision out to its label
+    // and back must land on the same public answer as asking the mapper directly.
+    const carries = (d: string) => d !== "infra_failure" && d !== "not_verified";
+    ok("every payload label round-trips to the same answer as the decision it was made from",
+      Object.entries(PAYLOAD_VERDICT).filter(([d]) => carries(d)).every(
+        ([decision, label]) => publicDecisionFromPayloadVerdict(label) === toPublicDecision("completed", decision)));
+
+    // Labels that record the ABSENCE of a verdict must not be forced into one of the three.
+    ok("labels carrying no decision stay undecided",
+      publicDecisionFromPayloadVerdict("COULD NOT COMPLETE") === null
+      && publicDecisionFromPayloadVerdict("NOT VERIFIED") === null);
+
+    // And the surface must hold no table of its own to disagree with.
+    const ws = stripSrc(readFileSync("app/rank/app/systems/[id]/api-runtime/api-workspace.tsx", "utf8"));
+    ok("api-workspace asks the shared mapper", ws.includes("publicDecisionFromPayloadVerdict("));
+    ok("api-workspace declares no payload verdict table of its own",
+      !/"REPAIR VERIFIED"\s*:/.test(ws) && !/"READY"\s*:/.test(ws));
+    ok("api-workspace takes its label and its colour from one decision",
+      /DECISION_LABEL\[d\]/.test(ws) && /DECISION_INK\[d\]/.test(ws));
+  }
+
 
   console.log(`\n${pass}/${pass + fail} passed`);
   process.exit(fail ? 1 : 0);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { publicDecisionFromPayloadVerdict, type PublicDecision } from "@/lib/preflight/public-decision";
 
 // The complete customer API verification workspace. Customer vocabulary only — no internal step/decision
 // names, no fixture/canary terms. Talks only to the gated /api/preflight/apps/[id]/... routes.
@@ -33,19 +34,31 @@ const input: React.CSSProperties = { padding: "8px 10px", borderRadius: 8, borde
 const h2: React.CSSProperties = { fontSize: 15, fontWeight: 700, color: "var(--fg-1)", margin: "0 0 10px" };
 const label: React.CSSProperties = { fontSize: 12, color: "var(--fg-3)", display: "block", marginBottom: 4, fontWeight: 600 };
 
-function verdictTone(v: string): React.CSSProperties {
-  const map: Record<string, string> = { READY: "var(--ok)", "REPAIR VERIFIED": "var(--acc)", BLOCKED: "var(--err)", "NEEDS REVIEW": "var(--warn)" };
-  return { color: map[v] ?? "var(--fg-3)", fontWeight: 700 };
-}
+// THE DECISION SHOWN HERE COMES FROM THE SAME PLACE AS EVERY OTHER DECISION IN THE PRODUCT.
+//
+// This surface used to carry its own payload-to-public table and its own colour table, keyed on the raw
+// payload string, and the two disagreed with lib/preflight/public-decision.ts and with each other. A run
+// whose decision was repair_verified printed VERIFIED in accent white while a genuinely verified run
+// printed VERIFIED in green: two rows of one history list, the same word, different colours, and one of
+// them a false Verified over a run the API and the CI gate both call blocked.
+//
+// Both tables are gone. The label and the colour are now derived from one PublicDecision, so they cannot
+// disagree with each other, and that decision comes from the canonical translation, so neither can
+// disagree with the rest of the product.
+const DECISION_LABEL: Record<PublicDecision, string> = { verified: "VERIFIED", failed: "FAILED", blocked: "BLOCKED" };
+const DECISION_INK: Record<PublicDecision, string> = { verified: "var(--ok)", failed: "var(--err)", blocked: "var(--warn)" };
 
-// Display-layer translation of the /api-runs payload verdict (a stable internal API contract) into the
-// public decision vocabulary. Payload BLOCKED is the internal confirmed-failure decision -> "FAILED";
-// payload NEEDS REVIEW (no reliable conclusion) -> public "BLOCKED". Unknown/already-public strings
-// (NOT VERIFIED, COULD NOT COMPLETE) pass through unchanged. Keep in lockstep with verdictTone above.
-const PUBLIC_VERDICT: Record<string, string> = {
-  READY: "VERIFIED", "REPAIR VERIFIED": "VERIFIED", "NEEDS REVIEW": "BLOCKED", BLOCKED: "FAILED",
+/** The public label for a payload verdict. Labels that carry no decision (a run that could not complete,
+ *  or one with no decision recorded) are shown as themselves rather than forced into one of the three. */
+const publicVerdict = (v: string) => {
+  const d = publicDecisionFromPayloadVerdict(v);
+  return d ? DECISION_LABEL[d] : v;
 };
-const publicVerdict = (v: string) => PUBLIC_VERDICT[v] ?? v;
+
+const verdictTone = (v: string): React.CSSProperties => {
+  const d = publicDecisionFromPayloadVerdict(v);
+  return { color: d ? DECISION_INK[d] : "var(--fg-3)", fontWeight: 700 };
+};
 
 export function ApiWorkspace({ appId, initial, canEdit, canLaunch }: { appId: string; initial: Initial; canEdit: boolean; canLaunch: boolean }) {
   const base = `/api/preflight/apps/${appId}`;

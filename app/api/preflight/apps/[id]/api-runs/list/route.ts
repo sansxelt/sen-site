@@ -6,9 +6,10 @@ import { gateApiRuntimeApp, gateReasonResponse } from "@/lib/preflight/team-acce
 import { getApiTarget } from "@/lib/preflight/runtime/targets-db";
 import { listApiRuns } from "@/lib/preflight/runtime/api-run-store";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+// The customer-safe verdict labels are declared once, beside the decision mapping they are made from.
+import { PAYLOAD_VERDICT } from "@/lib/preflight/public-decision";
 
 export const runtime = "nodejs";
-const VERDICT: Record<string, string> = { ready: "READY", blocked: "BLOCKED", needs_review: "NEEDS REVIEW", repair_verified: "REPAIR VERIFIED", infra_failure: "COULD NOT COMPLETE", not_verified: "NOT VERIFIED" };
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -19,6 +20,6 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   if (!target) return NextResponse.json({ runs: [] });
   const runs = await listApiRuns(getSupabaseAdminClient(), owner, id, target.id);
   return NextResponse.json({
-    runs: runs.map((r) => ({ runId: r.runId, verdict: r.decision ? (VERDICT[r.decision] ?? "NOT VERIFIED") : "NOT VERIFIED", state: r.state, createdAt: r.createdAt })),
+    runs: runs.map((r) => ({ runId: r.runId, verdict: r.decision ? (PAYLOAD_VERDICT[r.decision] ?? "NOT VERIFIED") : "NOT VERIFIED", state: r.state, createdAt: r.createdAt })),
   });
 }

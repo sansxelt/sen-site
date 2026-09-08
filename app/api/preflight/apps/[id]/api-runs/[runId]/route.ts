@@ -8,15 +8,12 @@ import { gateApiRuntimeApp, gateReasonResponse } from "@/lib/preflight/team-acce
 import { getApiTarget } from "@/lib/preflight/runtime/targets-db";
 import { readApiRun } from "@/lib/preflight/runtime/api-run-store";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+// The customer-safe verdict labels are declared once, beside the decision mapping they are made from.
+import { PAYLOAD_VERDICT } from "@/lib/preflight/public-decision";
 
 export const runtime = "nodejs";
 const notFound = () => NextResponse.json({ error: "not_found" }, { status: 404 });
 
-// Customer-safe verdict labels — never the internal decision enum.
-const VERDICT: Record<string, string> = {
-  ready: "READY", blocked: "BLOCKED", needs_review: "NEEDS REVIEW", repair_verified: "REPAIR VERIFIED",
-  infra_failure: "COULD NOT COMPLETE", not_verified: "NOT VERIFIED",
-};
 // Sanitize a stored step detail so no internal reason enum surfaces. "request failed: blocked (x)" and
 // "request failed: unreachable" are internal transport phrasing — collapse to a neutral customer line.
 function safeDetail(d: string): string {
@@ -37,7 +34,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
   return NextResponse.json({
     runId: run.runId,
-    verdict: run.decision ? (VERDICT[run.decision] ?? "NOT VERIFIED") : "NOT VERIFIED",
+    verdict: run.decision ? (PAYLOAD_VERDICT[run.decision] ?? "NOT VERIFIED") : "NOT VERIFIED",
     state: run.state === "completed" ? "complete" : run.state === "failed" ? "incomplete" : run.state,
     createdAt: run.createdAt,
     // Expose only the customer-safe summary counters (never internal keys like matrix_hash/adapter_version).
