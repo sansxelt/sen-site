@@ -36,8 +36,14 @@ const MENUS: Menu[] = [
         { t: "Platform overview", d: "What the product does", href: BASE + "/platform" },
         { t: "What it can reach", d: "Browser and API today, and the ladder out", href: BASE + "/platform#coverage",
           preview: { eyebrow: "What it can reach", title: "The browser is where this started, not where it stops.", body: "Web applications and HTTP APIs are live. An SDK that carries signed evidence back, connected devices, and physical systems are direction, and each one says plainly that it is not built.", stat: "Live vs Direction" } },
-        { t: "Requirements", d: "What a change must not break", href: BASE + "/docs/responsibilities",
-          preview: { eyebrow: "Requirements", title: "One sentence the change is not allowed to break.", body: "Written by a person, held outside the code, and fixed before anything runs.", stat: "Held outside the code" } },
+        // FOUR NAMES FOR ONE THING, VISIBLE IN A SINGLE CLICK. This row read "Requirements", pointed at
+        // /docs/responsibilities, opened a page titled "Responsibilities", and the console the reader signs
+        // into calls the same object a Guarantee. The product has exactly one durable object here, it is
+        // called a guarantee in the schema (sql/vraelis-preflight-19-guarantees.sql), in lib/preflight and
+        // on the console's own nav, and "responsibility" was never a table, a column or a type anywhere.
+        // The label, the slug, the page title and the app now say the same word.
+        { t: "Guarantees", d: "The one sentence a change must not break", href: BASE + "/docs/guarantees",
+          preview: { eyebrow: "Guarantees", title: "One sentence the change is not allowed to break.", body: "Written by a person, held outside the code, and fixed before anything runs.", stat: "Held outside the code" } },
         { t: "Systems", d: "Everything you have connected", href: BASE + "/docs/systems" },
       ] },
       { h: "Verify", links: [

@@ -36,8 +36,14 @@ export const V6_DOCS = `${V6_BASE}/docs`;
 
 /** Where "see how this works" should land, in whichever generation is serving.
  *  Design 06 drops /how-it-works (superseded by /method and /platform); before promotion that page IS the
- *  explanation. Shared surfaces like the 404 render in both regimes and must not hardcode either. */
-export const PUBLIC_HOW_IT_WORKS = V6_BASE === "" ? "/method" : "/how-it-works";
+ *  explanation. Shared surfaces like the 404 render in both regimes and must not hardcode either.
+ *
+ *  IT POINTS AT THE MECHANISM NOW, NOT AT THE ESSAY. This resolved to /method, whose h1 is a statement
+ *  about how we think and whose eight chapters argue a position. So the site's one dominant call to
+ *  action, labelled "See how it works", answered a reader asking HOW with a manifesto. /platform is the
+ *  page that actually shows the loop: the object, the derivation, the approval, the run, the record.
+ *  /method keeps its place in the menus, for the reader who wants the argument after the mechanism. */
+export const PUBLIC_HOW_IT_WORKS = V6_BASE === "" ? "/platform" : "/how-it-works";
 
 /** True once design 06 is the site.
  *

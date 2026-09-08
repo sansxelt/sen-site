@@ -39,7 +39,7 @@ export default function Readme() {
       <section className="v6-sec v6-sec--tight v6-dark" data-nav-dark>
         <div className="v6-wrap v6-wrap--read" style={{ textAlign: "center" }}>
           <h2 className="v6-dl" style={{ marginInline: "auto" }}>Give agents more responsibility without giving up control.</h2>
-          <p className="v6-lead" style={{ margin: "18px auto 28px", textAlign: "center" }}>Vraelis follows AI software work from assigned responsibility to trusted completion, and keeps what your company learns along the way.</p>
+          <p className="v6-lead" style={{ margin: "18px auto 28px", textAlign: "center" }}>Vraelis checks AI software work against a guarantee a person approved, and keeps the evidence behind every decision.</p>
           <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href={v6SignInPath()} className="v6-btn v6-btn--brand v6-btn--lg">Open Vraelis <span className="v6-arw" aria-hidden>→</span></Link>
             <Link href={`${V6_BASE}/method`} className="v6-btn v6-btn--ghost v6-btn--lg" style={{ background: "transparent", color: "var(--g-fg)", borderColor: "var(--g-line-2)" }}>Read the Method</Link>

@@ -1,60 +1,72 @@
 // ═══════════════════════════════════════════════════════════════════════════
-//  PROVISIONAL POSITIONING. One file, one edit.
+//  POSITIONING. One file, one edit.
 // ═══════════════════════════════════════════════════════════════════════════
 //
-// The company category is NOT settled. Every string below is a placeholder for a decision that has not been
-// made yet, and none of it should be treated as the permanent name for what Vraelis is.
+// WHAT CHANGED, AND WHY IT HAD TO. This file used to open by declaring the category unsettled, and every
+// string in it was a placeholder. What it actually held was an argument: an eyebrow naming an institution
+// ("The independent authority for AI-built software") over a headline that spent both of its lines on a
+// thesis ("AI can build the software. It cannot be the final authority on whether it worked."). A first
+// time visitor read all of that and still did not know what they would type, what would happen, or what
+// would come back. Ten seconds of a stranger's attention went entirely on premise.
 //
-// This module exists so that changing the category is a single edit here, not a search across the site. It is
-// the ONLY place the high-level thesis is allowed to live. Everything that consumes it (the opening, the
-// closing, the footer statement, the page metadata, the Open Graph image) reads from these constants.
+// Meanwhile the clearest sentence the company owns, lib/social-card.ts's "Verifies software built with AI
+// actually works.", rendered only in link previews. The site was more legible when shared than when
+// visited, and an AI summarising it reported the positioning as inconsistent and offered two different
+// companies as candidates (see the note in app/rank/_components/rank-ui.tsx).
+//
+// So the rule now is the opposite of the old one: THE HEADLINE NAMES THE INPUT, THE ACTOR AND THE THREE
+// POSSIBLE ANSWERS. The argument still exists and is still good, but it is a chapter further down the page
+// for a reader who has already been told what the thing is. Nothing here asserts a role. The role is
+// something the refusal machinery on /platform earns.
 //
 // RULES FOR THIS FILE
 //   1. High-level claims about what the company IS go here, and nowhere else.
-//   2. Scene copy elsewhere on the site describes concrete, currently-working behaviour. It does not restate
-//      the thesis. If you find yourself repeating a line from this file inside a scene, delete it there.
-//   3. Nothing here may claim continuous monitoring, live agent tracking, automatic repair, or control of
-//      production. Vraelis holds a requirement outside the code, checks the running software against it when
-//      work is claimed complete, routes decisions to a person, rechecks a repair, and preserves the record.
-//      That is the whole of what is built.
-//
-// Candidate lines that have been tried and are NOT settled (do not re-lock onto any of them):
-//   "Control for AI-built software" / "Oversight for AI software agents" /
-//   "Vraelis keeps the company in control" / "from responsibility to trusted completion" /
-//   "autonomous reliability operator" / "software intent infrastructure"
+//   2. Every line must name something the product literally does. If a sentence would still read the same
+//      if the product worked completely differently, it does not belong here.
+//   3. Scene copy elsewhere describes concrete behaviour and does not restate the thesis.
+//   4. Nothing here may claim continuous monitoring, live agent tracking, automatic repair, or control of
+//      production. Vraelis holds a requirement outside the code, checks the running software against it
+//      when work is claimed complete, routes decisions to a person, rechecks a repair, and preserves the
+//      record. That is the whole of what is built.
+//   5. The three answers are Verified, Failed and Blocked, always in that order, always all three. Naming
+//      only the good one is how a verification product starts sounding like a green check.
 
 /** Short category label. Appears once, above the opening headline.
  *
- *  IT NAMES AN INSTITUTION RATHER THAN AN ACTIVITY, and that is the whole edit. "Independent verification
- *  for AI-built software" describes a service somebody could be buying already. "The independent authority"
- *  is a role, it is singular, and it is the thing chapter 2 then shows has never existed for ordinary
- *  software. The hero, that chapter and the closing now share one word, which is a motif rather than a
- *  repeat: the opening says AI cannot BE the authority, the second chapter says nobody else ever was.
- *
- *  WHAT THIS IS NOT CLAIMING. Not that independent verification of software has never existed: it plainly
- *  has, wherever a regulator built it (SOC 2, DO-178C, an IV&V facility). The claim is narrower and
- *  survives a reader who knows that, and chapter 2 states it in full. Nothing here widens it. */
-export const CATEGORY = "The independent authority for AI-built software";
+ *  IT NAMES THE ACTIVITY, NOT A ROLE. The previous label named an institution, which is a thing a company
+ *  becomes rather than a thing a visitor can buy, and it collided with the four other category sentences
+ *  live on other surfaces. This one is the same claim lib/social-card.ts already makes to every scraper,
+ *  in the grammatical form an eyebrow needs, so the page and the link preview finally agree. */
+export const CATEGORY = "Independent verification for AI-built software";
 
-/** THE COMPANY THESIS, as two clauses. The insight, not the mechanism: the thing that built the software
- *  cannot also be the authority on whether it worked. Everything below this line on the page is a
- *  mechanism around that idea, and no other section is allowed to restate it. */
+/** THE HEADLINE, as two clauses: the situation, then the answer.
+ *
+ *  Line one is the moment the buyer has already lived through and needs no explanation of. Line two names
+ *  the actor, the thing it looks at, and all three possible outcomes, so the entire decision surface is
+ *  known before the reader scrolls once. Between them they contain no metaphor and nothing to agree with:
+ *  a reader either recognises the first line or is not the customer. */
 export const HEADLINE: [string, string] = [
-  "AI can build the software.",
-  "It cannot be the final authority on whether it worked.",
+  "Your agent says it works.",
+  "Vraelis checks your live site and answers Verified, Failed, or Blocked.",
 ];
 
-/** ONE paragraph under the headline. It may describe the loop once, because this is the only place on the
- *  page that is allowed to. Under 45 words. */
+/** ONE paragraph under the headline: the loop, once, in the order it happens. Under 45 words.
+ *
+ *  Every clause is a thing in the code: the sentence is the claim on the reviewed plan, the steps come
+ *  from a fixed action vocabulary, approval is a separate hash-bound event, the browser is a real hosted
+ *  Chromium session driven against the pinned deployment, and the evidence is the per-step record,
+ *  screenshots, console errors and failed requests. No verb here is aspirational. */
 export const SUPPORT =
-  "Vraelis independently verifies the deployed outcome the business depends on. Give it a live application and one guarantee; it derives the checks, runs the real workflow in a browser, and returns evidence of what held, what failed, and whether the repair survived.";
+  "Give it a deployment URL and one sentence about what has to keep working. Vraelis writes the browser steps that would prove it, shows them to you for approval, then runs them on the real site and returns the evidence behind one decision.";
 
-/** Page title and meta description. Same discipline as CATEGORY: the title names the role, the description
- *  stays strictly inside what the product does. A search result is the one surface where an unsupportable
- *  claim travels furthest, so the description asserts nothing the run itself does not produce. */
-export const META_TITLE = "Vraelis | The independent authority for AI-built software";
+/** Page title and meta description.
+ *
+ *  A search result is the surface where an unsupportable claim travels furthest, so the description makes
+ *  exactly the claim the run itself produces and no larger one. It also has to survive being read with no
+ *  page around it, which is the second reason it names all three answers rather than only Verified. */
+export const META_TITLE = "Vraelis | Independent verification for AI-built software";
 export const META_DESCRIPTION =
-  "Software built by an agent has no authority behind it except the agent that wrote it. Vraelis independently verifies the deployed outcome the business depends on, and preserves the evidence across failures, repairs, and successful runs.";
+  "Your AI agent says the feature works. Vraelis checks your live deployment in a real browser and answers Verified, Failed, or Blocked, with the evidence behind it.";
 
 /**
  * Link-preview text. Re-exported from lib/social-card.ts, which is the single source for every surface:
@@ -68,8 +80,13 @@ export const OG_BEATS: [string, string, string] = ["The claim", "The evidence", 
 /** Closing scene. One statement, one short line. No recap, no feature list. */
 export const CLOSE_TITLE = "Ship what you can stand behind.";
 export const CLOSE_SAY =
-  "Vraelis independently verifies the deployed outcome the business depends on and preserves the evidence behind every failure, repair, and successful run.";
+  "One sentence about what has to keep working, checked on the deployment you actually shipped, with the evidence kept for every failure, repair and successful run.";
 
-/** The statement in the footer. */
+/** The statement in the footer.
+ *
+ *  THIS WAS DEAD FOR THE WHOLE OF THE LAST DESIGN. It was exported here and imported by nothing, because
+ *  the surface that used to carry it was removed and the export outlived it. It is one of the two
+ *  clearest sentences the company has written, so it is now rendered by _system/shell.tsx's footer rather
+ *  than sitting in this file being admired. If it goes unused again, delete it instead of leaving it. */
 export const FOOTER_STATEMENT =
   "Vraelis checks what AI agents build against what the business actually requires.";

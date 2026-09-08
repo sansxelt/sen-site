@@ -158,12 +158,20 @@ export default async function Overview() {
     <div className="wrap" style={{ maxWidth: 1080, paddingTop: "clamp(20px, 2.6vw, 32px)", paddingBottom: 80 }}>
       <style dangerouslySetInnerHTML={{ __html: OVERVIEW_CSS }} />
 
-      <OperationalState
-        criticals={criticalCount}
-        systemsAffected={systemsAffected}
-        pendingReviews={pendingR.value.length}
-        running={countsR.value.runningPasses}
-      />
+      {/* AN EMPTY ACCOUNT IS NOT AN OPERATIONAL STATE, AND SAYING SO COST THE PAGE ITS ONLY h1.
+          This rendered unconditionally, so somebody who had just signed up and connected nothing was told
+          "Nothing is failing and nothing is waiting on you" under a heading reading "Operational state".
+          Both are true and neither is useful, and worse, the Composer below carries its own h1 ("What
+          should be true?"), so the first screen of the product had TWO h1 elements and the abstract one
+          came first and larger. With nothing to report, the thing to do IS the page. */}
+      {!fullyEmpty && (
+        <OperationalState
+          criticals={criticalCount}
+          systemsAffected={systemsAffected}
+          pendingReviews={pendingR.value.length}
+          running={countsR.value.runningPasses}
+        />
+      )}
 
       {domainAccess.length > 0 && (
         <Link href="/organization" className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", color: "inherit", background: "var(--bg-2)", marginBottom: 26 }}>
@@ -184,11 +192,16 @@ export default async function Overview() {
         </>
       ) : (
         <>
+          {/* THE ACTION COMES BEFORE THE ARCHIVE. This sat LAST, under four tables, so the one thing the
+              product does was the last thing on the page and, on an account with any history at all, below
+              the fold. Starting a verification is the reason to open this page; the tables are what
+              happened the last time somebody did. Needs attention stays above it, because a critical
+              failure is the one thing that should interrupt starting new work. */}
           {issuesR.error ? <SectionError label="Needs attention" /> : <NeedsAttention items={attention} />}
+          <CompactComposer balance={bal} />
           {appsR.error || latestR.error ? <SectionError label="Systems" /> : <SystemsTable rows={systems} />}
           {pendingR.error ? <SectionError label="Pending review" /> : <PendingReview rows={pendingR.value} />}
           {runsR.error ? <SectionError label="Recent verifications" /> : <RecentVerificationsTable rows={settledRuns} />}
-          <CompactComposer balance={bal} />
         </>
       )}
 

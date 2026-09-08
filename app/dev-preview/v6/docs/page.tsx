@@ -8,7 +8,7 @@ import { V6_BASE } from "@/lib/v6-routes";
 const BASE = V6_BASE;
 export const metadata: Metadata = v6meta({
   title: "Documentation",
-  description: "Use and administer Vraelis: connect a system, assign responsibilities, run oversight, and read results.",
+  description: "Use and administer Vraelis: connect a system, write a guarantee, approve the plan that proves it, and read the decision.",
   path: "/docs",
 });
 

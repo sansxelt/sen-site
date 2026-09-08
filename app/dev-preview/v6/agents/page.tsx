@@ -39,11 +39,16 @@ const wrapRow: CSSProperties = {
    the work is claimed complete, and everything before that point is the agent's business, not this
    product's. The boundary moved out of DOES_NOT, where it was implied, and is now stated. */
 
+// ONE MORE OF THESE WAS NOT TRUE. "Deployment events from GitHub and Vercel" described an ingestion that
+// does not exist: v_deployments has github_webhook and vercel_webhook in its source enum, but no route
+// receives either, and the deployments route says so in its own header ("webhooks stamp it later"). What is
+// real is the deployment a run is pinned to, recorded at launch, which is what stops a decision drifting
+// onto a build it never touched. That is the honest version of the same sentence.
 const WORKS_FROM = [
   "The outcome a person approved, held outside the agent",
   "The claim that the work is finished",
   "The deployment that claim was made about",
-  "Deployment events from GitHub and Vercel",
+  "The exact deployment a run was pinned to, so a decision never drifts onto a newer build",
   "Execution evidence from the running software in a real browser",
   "The state the software is left in, re-checked across a fresh session",
 ];
@@ -58,7 +63,7 @@ const DOES_NOT = [
 /* ---------- the loop around the agent (signature) ---------- */
 
 const LOOP: { n: string; agent: string; vraelis: string; sig?: Sig; tag?: string }[] = [
-  { n: "01", agent: "Receives responsibility for real work.", vraelis: "Opens a durable record with the reviewed standard held outside the code.", sig: "go", tag: "Recorded" },
+  { n: "01", agent: "Is given real work to do.", vraelis: "Opens a guarantee: the sentence that has to stay true, held outside the code.", sig: "go", tag: "Recorded" },
   // Steps 02 and 03 said "Reads the submitted plan and maps the systems it will touch" and "Tracks the
   // changes and the external effects that appear". Neither happens. The honest answer is that Vraelis does
   // nothing at all while the work is underway, and saying so plainly is what makes step 04 mean anything.
@@ -67,7 +72,10 @@ const LOOP: { n: string; agent: string; vraelis: string; sig?: Sig; tag?: string
   { n: "04", agent: "Claims the work is complete.", vraelis: "This is where the check begins. The approved outcome becomes a browser plan a person signs off.", sig: "wait", tag: "Plan" },
   { n: "05", agent: "Reaches a sensitive or irreversible action.", vraelis: "Direction, not built: today a plan is approved or refused as a whole, with nothing inside it held back on its own.", sig: "wait", tag: "Direction" },
   { n: "06", agent: "Produces work that misses the requirement.", vraelis: "Turns the failure into a structured, recorded finding.", sig: "stop", tag: "Finding" },
-  { n: "07", agent: "Submits a repair for the finding.", vraelis: "Re-checks the repair independently against the same standard." },
+  // "Re-checks the repair" read as automatic, and nothing re-verifies on its own: a rerun is a separate run
+  // a person starts from the console (app/api/preflight/runs/[runId]/rerun, session-authenticated), and the
+  // public API has no rerun endpoint at all. The recheck is real; the trigger is a person.
+  { n: "07", agent: "Submits a repair for the finding.", vraelis: "Re-checks the repair against the same standard when someone starts the rerun. Nothing re-verifies on its own." },
   { n: "08", agent: "Asks to be marked done.", vraelis: "Accepts Verified, or returns Failed or Blocked.", sig: "go", tag: "Decided" },
 ];
 
@@ -79,7 +87,7 @@ const LOOP: { n: string; agent: string; vraelis: string; sig?: Sig; tag?: string
 // this needs that first). Same class of overclaim WORKS_FROM was corrected for above; matches the pattern
 // integrations/page.tsx already uses for its own DIRECTION list.
 const SENSITIVE: { t: string; d: string }[] = [
-  { t: "Changing what existing customers are charged", d: "Today, a plan is approved or refused as a whole — nothing inside it is held back on its own." },
+  { t: "Changing what existing customers are charged", d: "Today, a plan is approved or refused as a whole, and nothing inside it is held back on its own." },
   { t: "Deleting or exporting production data", d: "Today, an irreversible action inside an approved plan runs the same as any other step." },
   { t: "Granting broad access or API scope", d: "Today, a scope change is not treated differently from the rest of the plan." },
   { t: "Shipping an irreversible migration", d: "Today, nothing inside an approved plan is held back on its own." },
@@ -130,7 +138,7 @@ export default function Agents() {
       <PageHero
         kicker="For AI software agents"
         title="Oversight that works around the agent, not inside it."
-        lead="An agent that plans, writes, and repairs the work will also tell you it is finished. Vraelis stays outside that loop: it observes the work an agent produces, challenges what it cannot prove, and decides independently whether the responsibility is met."
+        lead="An agent that plans, writes, and repairs the work will also tell you it is finished. Vraelis stays outside that loop: it observes the work an agent produces, challenges what it cannot prove, and decides independently whether the guarantee still holds."
         cta={
           <>
             <CTA brand lg>Open Vraelis</CTA>
@@ -174,7 +182,7 @@ export default function Agents() {
         <div className="v6-wrap v6-wrap--wide">
           <Reveal>
             <SectionHead
-              eyebrow="From responsibility to completion"
+              eyebrow="From guarantee to decision"
               title="For every move the agent makes, Vraelis has a response."
               lead="Two lanes, one record. The agent does the work. Vraelis stays alongside it, turning each step into something observed, challenged, or decided."
             />
@@ -252,14 +260,23 @@ export default function Agents() {
         </div>
       </section>
 
-      {/* 4 ── Sensitive decisions, direction not live — see the SENSITIVE comment above for why ── */}
+      {/* 4 ── Sensitive decisions, direction not live. See the SENSITIVE comment above for why.
+
+          THE LABEL WAS DOING LESS WORK THAN THE COPY NEEDED. This section sits between two sections about
+          things that are live, and the only marker separating it from them was a small "Direction" eyebrow
+          in the same style every other section's eyebrow uses. The disclaimer was the first sentence of the
+          lead, where it reads as a caveat someone can skim past on the way to four confident cards. Every
+          card underneath already carries the page's actual Direction treatment (the amber Signal pill on a
+          dashed border); the section head now opens with the same pill, so the treatment that marks a card
+          as unbuilt marks the whole section before anyone reaches the first card. */}
       <section className="v6-sec">
         <div className="v6-wrap">
           <Reveal>
+            <p style={{ margin: "0 0 16px" }}><Signal state="wait">Direction, not built</Signal></p>
             <SectionHead
               eyebrow="Direction"
               title="Some decisions should never be an agent's to make alone."
-              lead="This is not built yet. Today Vraelis approves or refuses a plan as a whole, with nothing inside it singled out for its own hold. The direction is to raise exactly these moments to a person before they ship — not everything, and not nothing."
+              lead="None of this exists yet. Today Vraelis approves or refuses a plan as a whole, and nothing inside it is singled out for its own hold. The direction is to raise exactly these moments to a person before they ship, not everything and not nothing."
             />
           </Reveal>
           <div className="v6-grid3" style={{ marginTop: "clamp(28px,3vw,40px)" }}>
@@ -283,14 +300,14 @@ export default function Agents() {
             <SectionHead
               eyebrow="Findings, repair, completion"
               title="Failure is not the end of the record. It is part of it."
-              lead="When work misses the requirement, Vraelis records a structured finding, hands it back for repair, and re-checks the fix independently. Completion is accepted only when the standard passes."
+              lead="When work misses the requirement, Vraelis records a structured finding and writes the repair as a prompt a coding agent can act on. Start the rerun and the fix is judged against the same standard, as its own record. Completion is accepted only when the standard passes."
             />
           </Reveal>
           <div className="v6-grid3" style={{ marginTop: "clamp(28px,3vw,40px)" }}>
             {[
-              { s: "stop" as Sig, t: "Findings", d: "A contradiction, missing evidence, or an unsafe assumption becomes a recorded finding against the responsibility." },
-              { s: "wait" as Sig, t: "Repair handoff", d: "The finding goes back to the agent as a structured handoff, not a vague complaint about what went wrong." },
-              { s: "go" as Sig, t: "Independent recheck", d: "The repair is re-run against the same standard, as its own record. A later result never overwrites an earlier one." },
+              { s: "stop" as Sig, t: "Findings", d: "A contradiction, missing evidence, or an unsafe assumption becomes a recorded finding against the guarantee." },
+              { s: "wait" as Sig, t: "Repair prompt", d: "The finding comes back as a prompt written for a coding agent, not a vague complaint about what went wrong. Pasting it into the agent is your move, not an automatic handoff." },
+              { s: "go" as Sig, t: "Independent recheck", d: "Start the rerun and the repair is judged against the same standard, as its own record. A later result never overwrites an earlier one, and nothing re-verifies on its own." },
             ].map((c, i) => (
               <Reveal key={c.t} i={i}>
                 <div style={{ background: "var(--graphite-2)", border: "1px solid var(--g-line)", borderRadius: 14, padding: "clamp(20px,2.2vw,26px)", height: "100%" }}>
@@ -332,6 +349,15 @@ export default function Agents() {
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 18 }}>
                   {LIVE_SURFACES.map((c) => <Chip key={c}>{c}</Chip>)}
                 </div>
+                {/* A chip says a name and nothing else, so two of these were read as more than they are.
+                    GitHub and Vercel are deployment URLs a verification is pointed at; no route ingests an
+                    event from either (the deployments table has the webhook sources in its enum and nothing
+                    fills them). And the CLI exists and runs, but stops at review_required, because it posts
+                    without a reviewed_plan_id and does not yet approve or resubmit. Both facts belong beside
+                    the chips rather than in a footnote somewhere else. */}
+                <p style={{ margin: "18px 0 0", color: "var(--ink-3)", fontSize: 14, lineHeight: 1.55 }}>
+                  GitHub and Vercel are here as deployments a verification is pointed at, not as event feeds Vraelis subscribes to. The CLI runs today and stops where a plan still needs a person to approve it.
+                </p>
               </div>
             </Reveal>
             <Reveal style={{ flex: "1 1 320px", minWidth: 0 }} i={1}>
@@ -356,7 +382,7 @@ export default function Agents() {
           <Reveal>
             <h2 className="v6-dl" style={{ marginInline: "auto" }}>Let agents do more of the work. Keep the judgment independent.</h2>
             <p className="v6-lead" style={{ margin: "20px auto 30px", textAlign: "center" }}>
-              Vraelis follows a software agent from assigned responsibility to trusted completion, without ever having to take the agent&rsquo;s word for it.
+              Vraelis checks the software an agent produces against the guarantee it was given, without ever having to take the agent&rsquo;s word for it.
             </p>
             <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
               <CTA brand lg>Open Vraelis</CTA>

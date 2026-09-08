@@ -107,3 +107,10 @@
      the button is its own size again (see the .v6-btn--lg rule in v6.css). */
   .v6-end__cta { gap: 10px; }
 }
+
+/* The company statement, at directory scale rather than headline scale. It sits above the copyright row
+   and inside the same measure, so it reads as the footer explaining itself rather than as a second
+   closing scene competing with the real one above it. */
+.v6-foot2__say { max-width: var(--max-wide); margin: 0 auto; padding: 26px var(--gutter) 0;
+  font-size: 14px; line-height: 1.5; color: var(--g-fg-3); max-inline-size: 62ch; }
+@media (max-width: 640px) { .v6-foot2__say { padding-top: 20px; font-size: 13.5px; } }

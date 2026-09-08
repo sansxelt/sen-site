@@ -7,11 +7,16 @@ import { V6_BASE } from "@/lib/v6-routes";
 // Vraelis oversight that is live and self-serve today. Every request/response shape here is copied from the
 // shipped code (app/api/v1/verifications, cli/vraelis.mjs, lib/preflight/webhook-dispatch). Nothing is
 // documented that has not shipped; the responsibility / memory / agent APIs are marked Direction, not live.
+//
+// THE ONE THING TO RE-CHECK BEFORE EDITING ANY SNIPPET HERE: a POST with no reviewed_plan_id returns
+// review_required, not a running verification. The page shipped for a while claiming otherwise, and the CI
+// example built on that claim would have hung in a customer's pipeline forever. If the route's answer to a
+// bare submit ever changes again, this page and app/rank/app/api/page.tsx both have to move with it.
 
 export const metadata = v6meta({
   title: "Developers",
   description:
-    "Drive Vraelis verification from your own systems. Create a verification with a deployment and a claim over the API, read an explainable decision with evidence, gate CI on the exit code, and receive signed verification.completed webhooks.",
+    "Drive Vraelis verification from your own systems. Submit a deployment and a claim over the API, approve the plan Vraelis derives, read an explainable decision with evidence, gate CI on that decision, and receive signed verification.completed webhooks.",
   path: "/developers",
 });
 
@@ -100,7 +105,14 @@ function CopyScript() {
 }
 
 /* ---------------------------------------------------------------- sources --- */
-const CREATE = `# Create a verification: send the deployment and the claim.
+// THE FIRST POST DOES NOT START A RUN, and this page used to say it did. CREATE_RES showed
+// { verification_id, state: "running" } coming back from a bare submit, which has not been true since human
+// review became mandatory: app/api/v1/verifications/route.ts answers a submit with no reviewed_plan_id with
+// 202 { state: "review_required", reviewed_plan_id, requirements }, and nothing runs or is charged. The same
+// wrong shape had leaked into the CI example below, where destructuring verification_id off that response
+// produced undefined and a gate that could never ship. Every shape here is now read off the route handler
+// and matches the sequence the signed-in console documents (app/rank/app/api/page.tsx).
+const CREATE = `# 1. Submit the claim. Vraelis derives a plan and asks a person to review it before anything runs.
 curl -X POST https://vraelis.com/api/v1/verifications \\
   -H "x-api-key: $VRAELIS_API_KEY" \\
   -H "content-type: application/json" \\
@@ -111,18 +123,36 @@ curl -X POST https://vraelis.com/api/v1/verifications \\
   }'`;
 
 const CREATE_RES = `{
-  "verification_id": "vrf_9c1e0f2a41",
-  "state": "running",
-  "status_url": "/v1/verifications/vrf_9c1e0f2a41",
+  "state": "review_required",
+  "review_required": true,
   "claim": "A customer can upgrade to Pro and still have access after signing in again.",
   "requirements": [
     "Upgrading to Pro grants Pro access immediately",
     "Pro access is still present after signing out and back in"
   ],
-  "human_reviewed": false
+  "reviewed_plan_id": "rvp_3c9e26ef",
+  "reviewed_plan_expires_at": "2026-07-24T19:04:11.000Z",
+  "human_reviewed": false,
+  "message": "Vraelis built a plan that can prove this claim, and no person has reviewed it yet. Approve the reviewed plan, then resubmit with reviewed_plan_id to run exactly what was approved. Nothing was run and nothing was charged."
 }`;
 
-const READ = `# Poll until a decision lands. While the run is going, there is no decision yet.
+const APPROVE_RUN = `# 2. Approve the reviewed plan. A separate, audited event: holding the id is not approval.
+curl -X POST https://vraelis.com/api/v1/verifications/plans/rvp_3c9e26ef/approve \\
+  -H "x-api-key: $VRAELIS_API_KEY"
+#    -> { "reviewed_plan_id": "rvp_3c9e26ef", "approval_state": "approved", "already_approved": false }
+
+# 3. Resubmit the SAME deployment and claim with the approved plan id. This is the call that starts a run,
+#    and the first response that carries a verification_id.
+curl -X POST https://vraelis.com/api/v1/verifications \\
+  -H "x-api-key: $VRAELIS_API_KEY" \\
+  -H "content-type: application/json" \\
+  -d '{ "deployment_url": "https://staging.example.com",
+        "claim": "A customer can upgrade to Pro and still have access after signing in again.",
+        "reviewed_plan_id": "rvp_3c9e26ef" }'
+#    -> { "verification_id": "vrf_9c1e0f2a41", "state": "running",
+#         "status_url": "/v1/verifications/vrf_9c1e0f2a41", "human_reviewed": true }`;
+
+const READ = `# 4. Poll until a decision lands. While the run is going, there is no decision yet.
 curl https://vraelis.com/api/v1/verifications/vrf_9c1e0f2a41 \\
   -H "x-api-key: $VRAELIS_API_KEY"`;
 
@@ -149,7 +179,9 @@ const READ_RES = `{
     { "checking": "Access persists after re-auth", "result": "failed", "failed_at_step": 3 }
   ],
   "repair_prompt": "Pro entitlement is not re-read on session restore. On sign-in, load the subscription from the source of truth before rendering plan state, and confirm Pro survives a full sign-out and sign-in.",
-  "human_reviewed": false
+  "console_url": "https://app.vraelis.com/systems/app_5b7d/passes/9c1e0f2a41",
+  "reviewed_plan_id": "rvp_3c9e26ef",
+  "human_reviewed": true
 }`;
 
 const IDEM_ERR = `{
@@ -178,20 +210,6 @@ const DRY_RES = `{
   "human_reviewed": false
 }`;
 
-const APPROVE = `# 1. Approve the reviewed plan. A separate, audited event: holding the id is not approval.
-curl -X POST https://vraelis.com/api/v1/verifications/plans/rvp_3c9e26ef/approve \\
-  -H "x-api-key: $VRAELIS_API_KEY"
-#    -> { "reviewed_plan_id": "rvp_3c9e26ef", "approval_state": "approved", "already_approved": false }
-
-# 2. Run exactly what was reviewed. The paid run consumes the approved plan verbatim.
-curl -X POST https://vraelis.com/api/v1/verifications \\
-  -H "x-api-key: $VRAELIS_API_KEY" \\
-  -H "content-type: application/json" \\
-  -d '{ "deployment_url": "https://staging.example.com",
-        "claim": "A customer can upgrade to Pro and keep access after signing in again.",
-        "reviewed_plan_id": "rvp_3c9e26ef" }'
-#    -> the response carries "human_reviewed": true`;
-
 const CLI = `# One command. The exit code is the interface.
 export VRAELIS_API_KEY="<your key>"   # created at app.vraelis.com/api with "Launch runs" access
 
@@ -201,10 +219,14 @@ vraelis verify \\
   --wait
 
 # 0 verified   1 failed   2 blocked or could not run
-# --repair-prompt prints only the fix package, ready to paste into a coding agent`;
+# --repair-prompt prints only the fix package, ready to paste into a coding agent
+#
+# Direction, not built: a first verify call stops at review_required today. The CLI posts without a
+# reviewed_plan_id and does not yet approve or resubmit, so --wait cannot reach a decision on its own.
+# Approve the plan in the console's Review queue first.`;
 
 const GATE = `// gate.mjs: ship only on "verified". The exit code gates the deploy.
-// 0 verified   1 failed   2 blocked   3 no decision reached
+// 0 verified   1 failed   2 blocked   3 no decision reached   4 the plan still needs a person to approve it
 import { randomUUID } from "node:crypto";
 
 const API = "https://vraelis.com/api/v1/verifications";
@@ -213,13 +235,19 @@ const headers = {
   "x-api-key": process.env.VRAELIS_API_KEY,
   "idempotency-key": randomUUID(),
 };
+const request = { deployment_url: process.env.PREVIEW_URL, claim: process.env.VRAELIS_CLAIM };
+const post = (body) => fetch(API, { method: "POST", headers, body: JSON.stringify(body) });
 
-const created = await fetch(API, {
-  method: "POST",
-  headers,
-  body: JSON.stringify({ deployment_url: process.env.PREVIEW_URL, claim: process.env.VRAELIS_CLAIM }),
-});
-const { verification_id } = await created.json();
+// A submit with no reviewed_plan_id returns review_required, not a run: no verification_id, nothing charged.
+const planId = process.env.VRAELIS_REVIEWED_PLAN_ID;
+if (!planId) {
+  const plan = await (await post(request)).json();
+  console.error("Approve this plan before it can run: " + plan.reviewed_plan_id);
+  process.exit(4);
+}
+
+// The approved plan is what starts a run, and this response is the first to carry a verification_id.
+const { verification_id } = await (await post({ ...request, reviewed_plan_id: planId })).json();
 
 // While running, decision is absent; keep polling until it lands.
 let decision = null, out;
@@ -282,7 +310,7 @@ export default function DevelopersPage() {
       <PageHero
         kicker="Developers"
         title="Invoke the verification engine from your own systems."
-        lead="Send a deployment and a claim, get back an explainable decision with evidence. One call to start, one to read the result, and one exit code to gate a release on. Every shape below is copied from the shipped API."
+        lead="Send a deployment and a claim, approve the plan Vraelis derives from it, and get back an explainable decision with evidence. Four calls: submit, approve, run, read. Every shape below is copied from the shipped API."
         cta={<><CTA brand>Create an API key</CTA><EditorialLink href="#api">Read the API</EditorialLink></>}
       />
 
@@ -293,7 +321,7 @@ export default function DevelopersPage() {
             <SectionHead
               eyebrow="One capability, exposed"
               title="Verification is one capability inside broader oversight."
-              lead="Vraelis follows agent work from assigned responsibility to trusted completion. This API drives the part that is live and self-serve today: when something claims to be done, Vraelis proves the running software against the claim. The responsibility, memory, and agent-oversight APIs are direction, and are not documented here until they ship."
+              lead="A guarantee is one sentence about your software that has to stay true. This API drives the part that is live and self-serve today: submit a claim, approve the plan that would prove it, run it against your deployment, and read the decision. The guarantee, memory, and agent-oversight APIs are direction, and are not documented here until they ship."
             />
           </Reveal>
         </div>
@@ -305,8 +333,8 @@ export default function DevelopersPage() {
           <Reveal>
             <SectionHead
               eyebrow="The API"
-              title="Create a verification, read the decision."
-              lead="Two calls. Authenticate with an API key, POST a deployment and a claim, then poll the status URL until a decision lands. Base URL is https://vraelis.com."
+              title="Submit a claim, approve the plan, read the decision."
+              lead="Authenticate with an API key, POST a deployment and a claim, approve the plan that comes back, resubmit with the approved plan id to start the run, then poll the status URL until a decision lands. Base URL is https://vraelis.com."
             />
           </Reveal>
           <div style={{ marginTop: "clamp(32px,4vw,52px)" }}>
@@ -317,8 +345,14 @@ export default function DevelopersPage() {
               <Code lang="bash" src={CREATE} />
             </Reveal>
             <Reveal style={{ marginTop: 16 }}>
-              <p style={{ margin: "0 0 10px", color: "var(--g-fg-3)", fontSize: 13.5 }}>Returns <span className="v6-mono" style={{ color: "var(--g-fg-2)" }}>202</span> with the id, the derived requirements, and <span className="v6-mono" style={{ color: "var(--g-fg-2)" }}>human_reviewed: false</span>.</p>
+              <p style={{ margin: "0 0 10px", color: "var(--g-fg-3)", fontSize: 13.5 }}>Returns <span className="v6-mono" style={{ color: "var(--g-fg-2)" }}>202</span> with <span className="v6-mono" style={{ color: "var(--g-fg-2)" }}>state: &ldquo;review_required&rdquo;</span>, the derived requirements, and the reviewed plan to approve. No run started, nothing charged, and no verification id yet. The response also carries <span className="v6-mono" style={{ color: "var(--g-fg-2)" }}>contract_id</span> and <span className="v6-mono" style={{ color: "var(--g-fg-2)" }}>contract_version</span>.</p>
               <Code lang="json" src={CREATE_RES} />
+            </Reveal>
+            <Reveal style={{ marginTop: 28 }}>
+              <Note label="Approve">
+                A plan is approved as its own event, then run verbatim. The approve call records who approved which plan hash and when, and the run call takes the approved id and executes exactly that plan with no re-derivation. A plan that defines a guarantee can only be approved by a signed-in person, never by a key.
+              </Note>
+              <Code lang="bash" src={APPROVE_RUN} />
             </Reveal>
             <Reveal style={{ marginTop: 28 }}>
               <Note label="Read">
@@ -331,7 +365,7 @@ export default function DevelopersPage() {
             </Reveal>
             <Reveal style={{ marginTop: 28 }}>
               <Note label="Requirements">
-                Every response echoes the requirements Vraelis derived from your claim, and states <span className="v6-mono" style={{ color: "var(--g-fg)" }}>human_reviewed: false</span> plainly. A model reading a claim can misread it; the requirements are how you catch a confidently wrong verdict before you trust it.
+                Every response echoes the requirements Vraelis derived from your claim, and states whether a person approved them in <span className="v6-mono" style={{ color: "var(--g-fg)" }}>human_reviewed</span>. A model reading a claim can misread it; the requirements are what you are approving, and they are how you catch a confidently wrong verdict before you trust it.
               </Note>
               <Note label="Idempotency">
                 Send an <code style={{ fontFamily: "var(--mono)", color: "var(--g-fg)" }}>idempotency-key</code> header. A retry with the same key, deployment, and claim replays the original verification instead of starting and paying for a second one. The same key with a different claim is refused, so a changed request can never be answered with an earlier run.
@@ -359,9 +393,9 @@ export default function DevelopersPage() {
         <div className="v6-wrap">
           <Reveal>
             <SectionHead
-              eyebrow="Review before you spend"
-              title="Put a human decision before a paid run."
-              lead="A dry run synthesizes the plan, checks it can prove the claim, and charges nothing. When it can, it mints a reviewed plan you approve as a separate audited event. The paid run then executes exactly what was approved, and comes back marked human_reviewed."
+              eyebrow="Ask before you commit"
+              title="Find out whether the claim is provable, for nothing."
+              lead="A dry run derives the plan, checks it can actually prove the claim, and charges nothing. When it can, it mints the same reviewed plan you approve and run in steps 2 and 3 above. When it cannot, it says so with a repair prompt, and there is nothing to approve."
             />
           </Reveal>
           <Reveal style={{ marginTop: "clamp(28px,3.4vw,44px)" }}>
@@ -369,9 +403,6 @@ export default function DevelopersPage() {
           </Reveal>
           <Reveal style={{ marginTop: 16 }}>
             <Code lang="json" src={DRY_RES} />
-          </Reveal>
-          <Reveal style={{ marginTop: 16 }}>
-            <Code lang="bash" src={APPROVE} />
           </Reveal>
         </div>
       </section>
@@ -392,7 +423,7 @@ export default function DevelopersPage() {
             <SectionHead
               eyebrow="CLI"
               title="One command. The exit code is the interface."
-              lead="The vraelis CLI wraps the same endpoint for people and pipelines. In CI it is read by an if-statement far more often than by a person, so the exit code carries the verdict and everything else is decoration."
+              lead="The vraelis CLI wraps the same endpoint for people and pipelines. In CI it is read by an if-statement far more often than by a person, so the exit code carries the verdict and everything else is decoration. It cannot reach a verdict on its own yet, for the reason set out below."
             />
           </Reveal>
           {/* minmax(0,1fr): without an explicit track the implicit column sizes to the code block's
@@ -410,6 +441,15 @@ export default function DevelopersPage() {
               </ul>
               <p style={{ margin: "18px 0 0", color: "var(--g-fg-3)", fontSize: 13.5, lineHeight: 1.6, maxWidth: "62ch" }}>
                 The CLI collapses &ldquo;blocked&rdquo; and &ldquo;could not run&rdquo; into 2, because a gate should treat &ldquo;I could not check&rdquo; the same as &ldquo;no verdict.&rdquo; A hand-rolled gate that polls the API can split those out, exiting 3 when no decision is reached in the window.
+              </p>
+              {/* THE SAME DISCLOSURE THE SIGNED-IN CONSOLE CARRIES (app/rank/app/api/cli-section.tsx). The
+                  page listed three exit codes as though a single `verify --wait` reached one of them. It
+                  cannot: cli/vraelis.mjs posts without a reviewed_plan_id, so the API answers 202
+                  review_required, and the CLI neither approves the plan nor resubmits with its id. It reads
+                  started.json.verification_id, which is not on that response, and stops. Every public
+                  surface that names the CLI has to say this until the CLI submits the approval itself. */}
+              <p style={{ margin: "14px 0 0", color: "var(--wait-dk)", fontSize: 13.5, lineHeight: 1.6, maxWidth: "62ch" }}>
+                Direction, not built: a first <span className="v6-mono">verify</span> call stops at review_required today. The CLI posts without a reviewed plan id and does not yet approve the plan or resubmit with it, so <span className="v6-mono">--wait</span> cannot reach a decision on its own. Approve the plan in the console&rsquo;s Review queue first. The exit codes above are what the CLI returns once a decision is reachable.
               </p>
             </Reveal>
             <Reveal><Code lang="js" src={GATE} /></Reveal>
@@ -458,7 +498,7 @@ export default function DevelopersPage() {
             <SectionHead
               eyebrow="Integrations"
               title="GitHub, Vercel, and Slack, from the same primitives."
-              lead="Run the CLI in GitHub Actions to gate a deploy, point a verification at a Vercel preview or production URL, and route the result into Slack. Each one is the API, the CLI, or a webhook wired to a place you already work, not a separate product."
+              lead="Gate a deploy from GitHub Actions with the API and an approved plan, point a verification at a Vercel preview or production URL, and route the result into Slack. Each one is the API or a webhook wired to a place you already work, not a separate product."
             />
           </Reveal>
           <Reveal style={{ marginTop: 24 }}>
@@ -480,10 +520,10 @@ export default function DevelopersPage() {
                 {[
                   "POST /api/v1/verifications, create, dry-run, or run a reviewed plan",
                   "GET /api/v1/verifications/{id}, decision, evidence, repair prompt",
-                  "Reviewed-plan approval before a paid run",
-                  "The vraelis verify CLI and its CI exit codes",
+                  "POST /api/v1/verifications/plans/{id}/approve, the approval a run consumes",
+                  "The vraelis CLI, up to review_required",
                   "Signed verification.completed webhooks",
-                  "GitHub Actions, Vercel deployment URLs, Slack",
+                  "Vercel and GitHub deployment URLs as verification targets, Slack delivery",
                 ].map((t) => <li key={t} style={{ fontSize: 14.5, lineHeight: 1.55, color: "var(--ink-3)" }}>{t}</li>)}
               </ul>
             </Reveal>
@@ -491,7 +531,9 @@ export default function DevelopersPage() {
               <p style={{ marginBottom: 14 }}><Signal state="wait">Direction</Signal></p>
               <ul style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 9 }}>
                 {[
-                  "Responsibility and assignment APIs",
+                  "A CLI run that submits the approval and reaches a verdict on its own",
+                  "Re-verifying a repair from the API, without a person starting the rerun",
+                  "Guarantee and assignment APIs",
                   "Agent memory and reliability APIs",
                   "Continuous agent-activity ingestion",
                   "IDE, desktop, and MCP surfaces",
@@ -512,7 +554,7 @@ export default function DevelopersPage() {
           <Reveal>
             <h2 className="v6-dl" style={{ marginInline: "auto" }}>Wire the decision into the place you ship from.</h2>
             <p className="v6-lead" style={{ margin: "18px auto 28px", textAlign: "center" }}>
-              Start a verification from CI, gate on the exit code, and get the evidence pushed back. One key, real endpoints, no dashboard to watch.
+              Submit a claim from CI, approve the plan, gate on the decision, and get the evidence pushed back. One key, real endpoints, and a record you can open when a run comes back Failed.
             </p>
             <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
               <CTA brand lg>Create an API key</CTA>

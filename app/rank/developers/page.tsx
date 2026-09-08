@@ -10,9 +10,19 @@ export const metadata = ogMeta({
   embed: "developers",
 });
 
-// Illustrative CI gate. The endpoint shape is real (queue a run, poll it, read the decision); the exact
-// request/response envelope lives in the signed-in console as early access opens. Backtick-free inside the
-// template-literal consts so they sit safely in these strings.
+// Illustrative CI gate. Backtick-free inside the template-literal consts so they sit safely in these strings.
+//
+// THE OLD VERSION OF THIS SNIPPET WAS A TRAP, and it is worth writing down why so nobody restores it.
+// It did `const { verification_id } = await created.json()` on the FIRST POST and then polled that id. A
+// first POST with no reviewed_plan_id does not return a verification_id and has not returned one since
+// human review became mandatory: app/api/v1/verifications/route.ts answers 202 with
+// { state: "review_required", reviewed_plan_id, requirements } and launches nothing. So verification_id was
+// undefined, the poll went to /v1/verifications/undefined, and the gate hung until the loop ran out and then
+// exited 3 forever. A customer copying this got a pipeline that could never ship.
+//
+// The sequence below is the one the route actually implements and the one the signed-in console documents
+// (app/rank/app/api/page.tsx): submit, approve the derived plan as a separate event, resubmit with the
+// approved plan id, then poll for the decision. Verified against the route handler, not from memory.
 const GATE_YML = `# .github/workflows/verify.yml
 name: Vraelis Verification
 on: [deployment_status]
@@ -28,9 +38,12 @@ jobs:
         env:
           VRAELIS_API_KEY: \${{ secrets.VRAELIS_API_KEY }}
           VRAELIS_CLAIM: \${{ vars.VRAELIS_CLAIM }}
-          PREVIEW_URL: \${{ github.event.deployment_status.target_url }}`;
+          PREVIEW_URL: \${{ github.event.deployment_status.target_url }}
+          # The plan a person approved for this claim. Until it is set, the job stops at step 1.
+          VRAELIS_REVIEWED_PLAN_ID: \${{ vars.VRAELIS_REVIEWED_PLAN_ID }}`;
 
 const GATE_NODE = `// scripts/verify-gate.mjs -- ship only when the deployed build keeps its promise.
+// 0 verified   1 failed   2 blocked   3 no decision reached   4 the plan still needs a person to approve it
 import { randomUUID } from "node:crypto";
 
 const API = "https://vraelis.com/api/v1/verifications";
@@ -39,26 +52,41 @@ const headers = {
   "x-api-key": process.env.VRAELIS_API_KEY,
   "idempotency-key": randomUUID(),
 };
+const request = { deployment_url: process.env.PREVIEW_URL, claim: process.env.VRAELIS_CLAIM };
+const post = (body) => fetch(API, { method: "POST", headers, body: JSON.stringify(body) });
 
-// 1. Create a verification against the preview build.
-const created = await fetch(API, {
-  method: "POST", headers,
-  body: JSON.stringify({ deployment_url: process.env.PREVIEW_URL, claim: process.env.VRAELIS_CLAIM }),
-});
-if (!created.ok) { console.error("Vraelis request failed: " + created.status); process.exit(3); } // transport/config error
-const { verification_id } = await created.json();
+// 1. Submit the claim. With no reviewed_plan_id this answers 202 "review_required": Vraelis derived a plan,
+//    nothing ran, nothing was charged, and there is NO verification_id yet, only a reviewed plan to approve.
+const planId = process.env.VRAELIS_REVIEWED_PLAN_ID;
+if (!planId) {
+  const prepared = await post(request);
+  if (!prepared.ok) { console.error("Vraelis request failed: " + prepared.status); process.exit(3); }
+  const plan = await prepared.json();
+  console.error("A person has to approve this plan before it can run: " + plan.reviewed_plan_id);
+  (plan.requirements || []).forEach((r) => console.error("  " + r));
+  process.exit(4); // nothing ran, so this is not a verdict and must not be read as one
+}
 
-// 2. Poll until a DECISION lands. While the run is going, decision is null; keep polling.
+// 2. Approval happens outside this script: the Review queue in the console, or
+//    POST /v1/verifications/plans/{id}/approve. Holding the id is not approval.
+
+// 3. Resubmit the SAME deployment and claim with the approved plan. This runs exactly what was reviewed,
+//    and it is the first response that carries a verification_id.
+const started = await post({ ...request, reviewed_plan_id: planId });
+if (!started.ok) { console.error("Vraelis refused the run: " + started.status); process.exit(3); }
+const { verification_id } = await started.json(); // this response also carries human_reviewed: true
+
+// 4. Poll until a DECISION lands. While the run is going the body is just the id and the state.
 let decision = null, out;
 for (let i = 0; i < 120 && decision === null; i++) {
   await new Promise((r) => setTimeout(r, 5000));
   const res = await fetch(API + "/" + verification_id, { headers });
   if (!res.ok) { console.error("Vraelis request failed: " + res.status); process.exit(3); }
   out = await res.json();
-  decision = out.decision; // "verified" | "failed" | "blocked" | null
+  decision = out.decision ?? null; // "verified" | "failed" | "blocked", absent while still running
 }
 
-// 3. Gate on the DECISION, never the run state. A finished run is not a pass; only "verified" ships.
+// 5. Gate on the DECISION, never the run state. A finished run is not a pass; only "verified" ships.
 switch (decision) {
   case "verified": console.log("Verified"); process.exit(0);
   case "failed": console.error("Failed: the claim did not hold"); (out.failures || []).forEach((f) => console.error("  " + f.title)); process.exit(1);
@@ -75,13 +103,23 @@ function Code({ children, label = "shell" }: { children: string; label?: string 
   );
 }
 
+// WHAT A RUN ACTUALLY LEAVES BEHIND, read off the worker rather than described from memory. Two of these
+// rows used to promise a Playwright trace file. No trace is captured anywhere: worker/preflight/types.ts:149
+// defines ArtifactSink with the single method saveScreenshot, and the rest of the evidence is the per-step
+// record (StepObservation: url, status, expected, observed, timing) plus FlowEvidence, which is exactly
+// console errors and failed network requests. "Traces" was a word nobody could have delivered on.
+//
+// The rerun row also promised something that does not exist: an automatic recheck after a fix. A rerun is a
+// separate run a person starts (app/api/preflight/runs/[runId]/rerun, session-authenticated), there is no
+// rerun endpoint on the public API, and nothing re-verifies on its own.
 const RETURNS: [string, string][] = [
   ["The decision", "verified, failed, or blocked, from one explainable rule, never a numeric score."],
   ["Per-flow results", "Each approved flow with its pass or fail state and the step where it broke."],
   ["Issues with repro", "Each critical failure with its requirement, expected and observed behavior, and exact reproduction steps."],
-  ["Deterministic evidence", "Screenshots, step timelines, and sanitized console and network activity."],
-  ["Private artifacts", "Screenshots and traces live in a private bucket, reached only by a short-lived signed URL."],
-  ["A rerun diff", "After a fix, the same failed check reruns and reports whether the regression is closed."],
+  ["The step record", "Every step as the browser ran it: the URL, the response status, what was expected, what was observed, and how long it took."],
+  ["Private artifacts", "Screenshots live in a private bucket, reached only by a short-lived signed URL."],
+  ["Console and network", "Console errors and failed network requests captured during the run, alongside the steps that produced them."],
+  ["A repair prompt", "On a failure, the fix written as a prompt for a coding agent. Rerunning after the fix is something you start; nothing re-verifies on its own."],
 ];
 
 export default function DevelopersPage() {
@@ -113,7 +151,7 @@ export default function DevelopersPage() {
           <div className="sec-head" style={{ marginBottom: 20 }}>
             <p className="eyebrow">The CI gate</p>
             <h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)" }}>Stop the deploy when a critical flow fails.</h2>
-            <p>When your preview build goes live, launch a verification against it, wait for the decision, and ship only when it is Verified. Failed and Blocked stop the release; a run that merely finished is not a pass. One job, real evidence, no dashboard to watch.</p>
+            <p>When your preview build goes live, submit the claim, approve the plan Vraelis derives from it, then run that approved plan and ship only when the decision is Verified. Failed and Blocked stop the release; a run that merely finished is not a pass. Approval is a separate step on purpose, so a first submit prepares a plan rather than spending on one nobody read.</p>
           </div>
           {/*
             NOT AVAILABLE YET, and the page has to say so. API-key auth for these endpoints is built and
@@ -136,7 +174,7 @@ export default function DevelopersPage() {
               <Code label="node">{GATE_NODE}</Code>
             </div>
           </div>
-          <p style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)", margin: "14px 0 0" }}>Illustrative shape, not a working recipe. The exact request and response envelope opens in the signed-in console with early access.</p>
+          <p style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)", margin: "14px 0 0" }}>The request and response shapes above are copied from the shipped route, POST /api/v1/verifications. Running the whole path from a CI runner is what is still opening, which is why the notice above stands.</p>
         </div>
       </section>
 
@@ -166,7 +204,7 @@ export default function DevelopersPage() {
             <div>
               <p className="eyebrow">Private by construction</p>
               <h2 className="display" style={{ fontSize: "clamp(1.5rem, 2.6vw, 2rem)", marginBottom: 12 }}>Evidence stays scoped to your account.</h2>
-              <p className="lead-copy" style={{ marginBottom: 12 }}>Screenshots and traces live in a private bucket. There is no public URL. A request for an artifact is owner-checked against the run, then answered with a short-lived signed URL that expires in minutes. API keys are server-side secrets, shown once and stored only as a hash.</p>
+              <p className="lead-copy" style={{ marginBottom: 12 }}>Screenshots live in a private bucket. There is no public URL. A request for an artifact is owner-checked against the run, then answered with a short-lived signed URL that expires in minutes. The rest of the evidence, the step record and the console and network activity, is read through the same owner-checked report. API keys are server-side secrets, shown once and stored only as a hash.</p>
               <p style={{ fontSize: 13, color: "var(--fg-4)", lineHeight: 1.6 }}>You choose what a run can reach. Point it at a preview or staging deployment and keep Stripe in test mode. Vraelis drives your app from the outside, so a run can touch whatever that environment touches.</p>
             </div>
             <div>

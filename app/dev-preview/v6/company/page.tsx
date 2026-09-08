@@ -8,7 +8,7 @@ import { V6_BASE } from "@/lib/v6-routes";
 export const metadata = v6meta({
   title: "Company",
   description:
-    "Vraelis is independent oversight for AI software agents, from assigned responsibility to trusted completion. Our mission, the three-act story of how software work is changing, what we are building, and how to reach us.",
+    "Vraelis is independent verification for AI-built software: you write one guarantee, approve the plan that proves it, and a real browser checks it on your live deployment. Our mission, the three-act story of how software work is changing, what we are building, and how to reach us.",
   path: "/company",
   type: "website",
 });
@@ -125,7 +125,7 @@ export default function CompanyPage() {
       <PageHero
         kicker="Company"
         title="Independent oversight for AI software agents."
-        lead="Software is increasingly planned, written, and repaired by agents. Vraelis is the independent layer that follows that work from assigned responsibility to trusted completion, so companies can hand agents real responsibility without giving up control."
+        lead="Software is increasingly planned, written, and repaired by agents. Vraelis is the independent layer that checks the result against a guarantee a person approved, so companies can hand agents real work without giving up control."
         cta={<><CTA brand>Open Vraelis</CTA><EditorialLink href="#contact">Talk to us</EditorialLink></>}
       />
 

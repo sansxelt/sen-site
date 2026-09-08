@@ -11,6 +11,7 @@ import { useScrollProgress, entryProgress } from "./progress";
 import { Spectral } from "./spectral";
 import "./close.css";
 import { V6_BASE } from "@/lib/v6-routes";
+import { FOOTER_STATEMENT } from "./positioning";
 
 const BASE = V6_BASE;
 export function ClosingScene({
@@ -64,7 +65,14 @@ export function SiteFooter() {
         ))}
       </div>
 
+      {/* THE ONE SENTENCE, PUT BACK ON A PAGE. FOOTER_STATEMENT was exported and imported by nothing for the
+          whole of the last design: the surface that carried it was removed and the export outlived it, so
+          the clearest sentence the company owns rendered nowhere a visitor could reach. It returns HERE,
+          quiet and at directory scale, rather than as the upper block the note above rightly refuses. That
+          note is about two giant competing statements. This is one line of small print that says what the
+          company does, which is the thing a footer is actually for. */}
       <div className="v6-foot2__base">
+        <p className="v6-foot2__say">{FOOTER_STATEMENT}</p>
         <div className="v6-foot2__base-in">
           <span>© 2026 Vraelis</span>
           <div className="v6-foot2__legal">

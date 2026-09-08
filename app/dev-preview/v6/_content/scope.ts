@@ -27,7 +27,7 @@
 
 // What the product does today. Every line is something a reader could exercise this afternoon.
 export const LIVE: string[] = [
-  "A responsibility record with a reviewed standard held outside the code",
+  "A guarantee, held outside the code, with the plan that proves it approved by a person",
   "Execution of the running software in a real browser, with evidence",
   "A refusal to charge when no check could prove the claim, on every path that starts a run",
   "Human review, findings, and a repair package written for a coding agent",
