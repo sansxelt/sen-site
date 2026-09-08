@@ -169,7 +169,7 @@ export default async function BillingPage() {
         <BillingActions canceling={cancelAtEnd} hasSub={hasSub && !v1Plan} />
         <p style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)", marginTop: 16, marginBottom: 0, lineHeight: 1.6 }}>
           {v1Plan
-            ? "Cancelling or resuming a Builder, Pro or Scale plan opens the secure billing portal — use Change plan above."
+            ? "Cancelling or resuming a Builder, Pro or Scale plan opens the secure billing portal. Use Change plan above."
             : "Plan changes, cancellations, and resumptions happen here in Vraelis."}
         </p>
       </div>

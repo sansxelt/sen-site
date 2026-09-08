@@ -111,7 +111,7 @@ export function CliSection() {
           reviewed_plan_id, so a first `verify --wait` cannot reach a decision on its own. */}
       <p style={{ margin: "12px 0 0", fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.6 }}>
         Direction, not built: a first <code style={{ color: "var(--fg-3)" }}>verify</code> call stops here
-        today — the API now requires a person to approve the plan it derives before any run starts, and this
+        today. The API now requires a person to approve the plan it derives before any run starts, and this
         CLI does not yet submit that approval or resubmit it, so <code style={{ color: "var(--fg-3)" }}>--wait</code> cannot
         reach a decision on its own. Approve the plan from the console&apos;s Review queue first.
       </p>

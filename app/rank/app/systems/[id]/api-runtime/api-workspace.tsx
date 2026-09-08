@@ -213,7 +213,7 @@ export function ApiWorkspace({ appId, initial, canEdit, canLaunch }: { appId: st
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
             {creds.map((c) => (
               <div key={c.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 10px", border: "1px solid var(--line-1)", borderRadius: 8 }}>
-                <span style={{ fontSize: 13.5 }}><strong>{c.label}</strong> <span style={{ color: "var(--fg-4)" }}>· {c.scheme} · {c.secretMask}</span></span>
+                <span style={{ fontSize: 13.5 }}><strong>{c.label}</strong> <span style={{ color: "var(--fg-4)" }}>{c.scheme} / {c.secretMask}</span></span>
                 {canEdit && <button className="btn btn--ghost" style={btnSizeXs} onClick={() => removeCred(c.id)}>Remove</button>}
               </div>
             ))}
@@ -245,7 +245,7 @@ export function ApiWorkspace({ appId, initial, canEdit, canLaunch }: { appId: st
             {flows.map((f) => (
               <div key={f.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", border: "1px solid var(--line-1)", borderRadius: 8 }}>
                 {canLaunch && <input type="checkbox" checked={selected.includes(f.id)} onChange={(e) => setSelected((s) => e.target.checked ? [...s, f.id] : s.filter((x) => x !== f.id))} />}
-                <span style={{ fontSize: 13.5, flex: 1 }}><strong>{f.name}</strong> <span style={{ color: "var(--fg-4)" }}>· {f.priority} · {f.steps.length} steps</span></span>
+                <span style={{ fontSize: 13.5, flex: 1 }}><strong>{f.name}</strong> <span style={{ color: "var(--fg-4)" }}>{f.priority} / {f.steps.length} steps</span></span>
                 {canEdit && <button className="btn btn--ghost" style={btnSizeXs} onClick={() => deleteFlow(f.id)}>Delete</button>}
               </div>
             ))}
