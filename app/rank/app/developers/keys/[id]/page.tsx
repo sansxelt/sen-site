@@ -23,8 +23,10 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { listApiKeys } from "@/lib/v-api-keys";
 import { keyDetail } from "@/lib/preflight/key-detail";
-import { runVerdict, timeAgo } from "@/lib/preflight/home-verdict";
+import { timeAgo } from "@/lib/preflight/home-verdict";
 import { Ic, I } from "@/app/rank/_components/icons";
+import { Verdict } from "@/app/rank/_components/verdict";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
 export const metadata: Metadata = { title: "API key" };
 export const dynamic = "force-dynamic";
@@ -71,25 +73,37 @@ export default async function KeyDetailPage(ctx: { params: Promise<{ id: string 
   const maxDayRuns = d ? Math.max(1, ...d.daily.map((b) => b.runs)) : 1;
 
   return (
-    <div className="wrap" style={{ maxWidth: 1080, paddingTop: "clamp(20px, 2.6vw, 32px)", paddingBottom: 80 }}>
+    <Page measure="wide">
       {/* flex + fit-content, never inline-flex: an inline back link shares a line with the eyebrow that
           follows it. Founder rule, enforced by preflight-routes-verify, which caught this on the first run. */}
       <Link href="/developers" style={{ fontSize: 13, color: "var(--fg-4)", textDecoration: "none", display: "flex", width: "fit-content", alignItems: "center", gap: 6, marginBottom: 14 }}>
         <span aria-hidden>←</span> Developers
       </Link>
 
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 6 }}>
-        <div style={{ minWidth: 0 }}>
-          <p className="eyebrow" style={label}>API key</p>
-          <h1 className="display" style={{ fontSize: "clamp(1.55rem, 2.6vw, 2rem)", margin: "4px 0 8px", letterSpacing: "-0.025em" }}>{key.name || "Untitled key"}</h1>
-          <code style={{ fontFamily: "var(--font-code)", fontSize: 13, color: "var(--fg-4)" }}>{key.prefix}…</code>
-        </div>
-      </div>
-      <p style={{ margin: "0 0 6px", fontSize: 13, color: "var(--fg-4)" }}>
-        Created {new Date(key.created_at).toLocaleDateString()}
-        {key.last_used ? `, last used ${timeAgo(key.last_used)}` : ", never used"}
-        {d?.firstRunAt ? `, first verification ${timeAgo(d.firstRunAt)}` : ""}
-      </p>
+      {/* THIS PAGE RENDERED BOTH THINGS CALLED "EYEBROW", ON THE SAME ELEMENT.
+          `<p className="eyebrow" style={label}>` applied the CLASS (13px Geist, weight 600, sentence case)
+          and then overrode it with the local const object (10.5px Inter Tight, uppercase, 0.08em tracked) in
+          the same tag. The object won, so the class was decoration, and the kicker here matched neither the
+          one on Billing (which renders the class) nor anything else. There is one eyebrow now and
+          <PageHeader> is where it is chosen.
+          The prefix and the provenance line move into `lead` rather than staying as two loose lines under
+          the title: both were already subtitle metadata about the same key, and left where they were the
+          header's own bottom margin would have pushed them a clear 20px away from the name they describe.
+          Every word is the one that was there. */}
+      <PageHeader
+        eyebrow="API key"
+        title={key.name || "Untitled key"}
+        lead={
+          <>
+            <code style={{ fontFamily: "var(--font-code)", fontSize: 13, color: "var(--fg-4)" }}>{key.prefix}…</code>
+            {" Created "}{new Date(key.created_at).toLocaleDateString()}
+            {key.last_used ? `, last used ${timeAgo(key.last_used)}` : ", never used"}
+            {d?.firstRunAt ? `, first verification ${timeAgo(d.firstRunAt)}` : ""}
+          </>
+        }
+      />
+
+      <div style={{ paddingBottom: 80 }}>
       {key.scopes?.length ? (
         <div style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-5)", marginBottom: 24 }}>{key.scopes.join("  ")}</div>
       ) : <div style={{ marginBottom: 24 }} />}
@@ -202,9 +216,6 @@ export default async function KeyDetailPage(ctx: { params: Promise<{ id: string 
           ) : (
             <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-lg, 14px)", background: "var(--bg-1)", overflow: "hidden" }}>
               {d.usage.recentRuns.map((r, i) => {
-                const verdict = runVerdict(r.state, r.decision);
-                const tone = verdict.tone === "verified" ? "var(--go-ink)" : verdict.tone === "failed" ? "var(--stop-ink)"
-                  : verdict.tone === "blocked" ? "var(--wait-ink)" : "var(--fg-4)";
                 return (
                   // /records/<run> was a 404: /records is an alias of /activity and has no [id] segment, so
                   // every row here pointed at nothing. The report lives under its system, which needs the
@@ -213,7 +224,17 @@ export default async function KeyDetailPage(ctx: { params: Promise<{ id: string 
                   <Link key={r.id} href={r.applicationId ? `/systems/${r.applicationId}/passes/${r.id}` : `/verifications`} style={{ display: "grid", gridTemplateColumns: "auto 1fr auto auto", alignItems: "center", gap: 12, padding: "10px 16px", borderTop: i ? "1px solid var(--line-1)" : "none", color: "inherit", textDecoration: "none", fontSize: 12.5 }}>
                     <span style={{ fontFamily: "var(--font-code)", color: "var(--fg-5)" }}>{new Date(r.createdAt).toLocaleDateString()}</span>
                     <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--fg-3)" }}>{r.deploymentUrl || r.id.slice(0, 12)}</span>
-                    <span style={{ color: tone, fontWeight: 600 }}>{verdict.label}</span>
+                    {/* A TENTH HAND-ROLLED VERDICT, AND THE ONLY ONE THAT WAS NOT EVEN A BADGE.
+                        This ran runVerdict itself and then rebuilt the tone table by hand as a chain of
+                        ternaries, painting bare coloured text with no wash, no border and no mark. So the
+                        Verdicts tiles four sections up on this same page ("Verified 12, Failed 3, Blocked
+                        1", inked go/stop/wait) and the rows down here that those tiles are counted FROM were
+                        two different renderings of one answer. Worse, both undecided tones collapsed to
+                        --fg-4, so In progress and Not yet verified were indistinguishable on the row that
+                        was supposed to tell you which.
+                        <Verdict> takes the state and the decision and calls runVerdict itself, so this row
+                        cannot hold an opinion about a run that the CI gate and the API do not share. */}
+                    <Verdict state={r.state} decision={r.decision} size="sm" style={{ flex: "none" }} />
                     <span style={{ fontVariantNumeric: "tabular-nums", color: "var(--fg-2)", fontWeight: 600, minWidth: 62, textAlign: "right" }}>{r.chargedCents == null ? "on plan" : money(r.chargedCents)}</span>
                   </Link>
                 );
@@ -232,6 +253,7 @@ export default async function KeyDetailPage(ctx: { params: Promise<{ id: string 
           </p>
         </>
       )}
-    </div>
+      </div>
+    </Page>
   );
 }

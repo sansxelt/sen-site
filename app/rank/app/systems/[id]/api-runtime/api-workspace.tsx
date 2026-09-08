@@ -1,10 +1,31 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 import { publicDecisionFromPayloadVerdict, type PublicDecision } from "@/lib/preflight/public-decision";
+import { inputSm, lab } from "../../_connections/forms";
 
 // The complete customer API verification workspace. Customer vocabulary only — no internal step/decision
 // names, no fixture/canary terms. Talks only to the gated /api/preflight/apps/[id]/... routes.
+//
+// THIS FILE USED TO BE A SECOND DESIGN SYSTEM WITH A SAMPLE SIZE OF ONE PAGE.
+//
+// Six style constants at the top of it re-decided things the console had already decided, each by a small
+// amount, which is the amount that reads as a mistake rather than as a choice:
+//
+//   card      radius 14, against the .card class's radius token.
+//   btn       radius 9 on --bg-2, against .btn--ghost's radius token on --bg-1. Worse than the number: a
+//             style OBJECT cannot carry :hover, :active, :disabled or :focus-visible, so every button on
+//             this page was inert to the cursor and invisible to the keyboard, while the identical-looking
+//             buttons one tab away were not.
+//   input     radius 8 on --bg-2, where every other field in the product sits on the stylesheet's ground
+//             and lifts to --bg-1 when focused. The inline background and border also outranked
+//             authenticated.css's :focus rules, so these fields did not change on focus at all.
+//   h2        15px at weight 700, against the 16.5px at 600 its sibling sections use.
+//   label     12px sentence case, against the 10.5px uppercase used in twenty-two other files.
+//
+// They are the shared ones now. What is deliberately UNTOUCHED is everything below about the verdict:
+// publicDecisionFromPayloadVerdict, DECISION_LABEL and DECISION_INK were corrected in an earlier commit
+// after this surface printed a false VERIFIED, and correct code is not something to tidy.
 
 type Cred = { id: string; label: string; secretMask: string; scheme: string };
 type FlowStepUI = { action: string; credentialLabel?: string; method?: string; path?: string; body?: string; name?: string; value?: string; field?: string; into?: string; status?: number };
@@ -27,12 +48,15 @@ const ACTIONS: { id: string; label: string }[] = [
 ];
 const actionLabel = (id: string) => ACTIONS.find((a) => a.id === id)?.label ?? id;
 
-const card: React.CSSProperties = { border: "1px solid var(--line-2)", borderRadius: 14, padding: 18, background: "var(--bg-1)", marginBottom: 16 };
-const btn: React.CSSProperties = { padding: "8px 14px", borderRadius: 9, border: "1px solid var(--line-2)", background: "var(--bg-2)", color: "var(--fg-1)", fontSize: 13.5, fontWeight: 600, cursor: "pointer" };
-const btnPrimary: React.CSSProperties = { ...btn, background: "var(--acc)", color: "var(--fg-on-accent)", border: "1px solid var(--acc)" };
-const input: React.CSSProperties = { padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line-2)", background: "var(--bg-2)", color: "var(--fg-1)", fontSize: 13.5, width: "100%" };
-const h2: React.CSSProperties = { fontSize: 15, fontWeight: 700, color: "var(--fg-1)", margin: "0 0 10px" };
-const label: React.CSSProperties = { fontSize: 12, color: "var(--fg-3)", display: "block", marginBottom: 4, fontWeight: 600 };
+// `card` and `btnSize` are what is left once the classes carry the rest: a section's outer spacing, and the
+// compact size this dense workspace wants its controls at. Everything else — ground, border, radius, hover,
+// active, disabled, focus — belongs to .card and .btn, which is the point.
+const card: React.CSSProperties = { padding: "clamp(18px, 2.4vw, 24px)", marginBottom: 16 };
+const btnSize: React.CSSProperties = { padding: "8px 14px", fontSize: 13.5 };
+const btnSizeXs: React.CSSProperties = { padding: "4px 10px", fontSize: 12 };
+const input: React.CSSProperties = inputSm;
+const h2: React.CSSProperties = { fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16.5, color: "var(--fg-1)", margin: "0 0 10px" };
+const label: React.CSSProperties = lab;
 
 // THE DECISION SHOWN HERE COMES FROM THE SAME PLACE AS EVERY OTHER DECISION IN THE PRODUCT.
 //
@@ -61,6 +85,7 @@ const verdictTone = (v: string): React.CSSProperties => {
 };
 
 export function ApiWorkspace({ appId, initial, canEdit, canLaunch }: { appId: string; initial: Initial; canEdit: boolean; canLaunch: boolean }) {
+  const uid = useId();
   const base = `/api/preflight/apps/${appId}`;
   const [target, setTarget] = useState<Target>(initial.target);
   const [build, setBuild] = useState<Build>(initial.build);
@@ -146,24 +171,27 @@ export function ApiWorkspace({ appId, initial, canEdit, canLaunch }: { appId: st
 
   return (
     <div>
-      {msg && <div style={{ ...card, borderColor: "var(--acc-line)", background: "var(--acc-soft)", color: "var(--fg-2)", fontSize: 13.5 }}>{msg}</div>}
+      {msg && <div className="card" style={{ ...card, borderColor: "var(--acc-line)", background: "var(--acc-soft)", color: "var(--fg-2)", fontSize: 13.5 }}>{msg}</div>}
 
       {/* 1. Target + build identity */}
-      <section style={card}>
+      <section className="card" style={card}>
         <h2 style={h2}>API target</h2>
         <p style={{ color: "var(--fg-3)", fontSize: 13, marginTop: 0 }}>The API you want Vraelis to check.</p>
         {canEdit ? (
           <>
+            {/* None of these three labels was tied to its field, so clicking the word did nothing and a
+                screen reader read three unnamed controls. useId rather than fixed strings because this
+                workspace is a client component that can mount more than once in a tree. */}
             <div style={{ display: "grid", gap: 12, gridTemplateColumns: "1fr 1fr" }}>
-              <div><label style={label}>Environment</label>
-                <select value={envInput} onChange={(e) => setEnvInput(e.target.value)} style={input}>
+              <div><label style={label} htmlFor={`${uid}-env`}>Environment</label>
+                <select id={`${uid}-env`} value={envInput} onChange={(e) => setEnvInput(e.target.value)} style={input}>
                   <option value="production">Production</option><option value="staging">Staging</option><option value="preview">Preview</option>
                 </select>
               </div>
-              <div><label style={label}>Version (optional)</label><input style={input} value={versionInput} onChange={(e) => setVersionInput(e.target.value)} placeholder="v2.3.1 or a commit" /></div>
-              <div style={{ gridColumn: "1 / -1" }}><label style={label}>API base URL</label><input style={input} value={baseUrlInput} onChange={(e) => setBaseUrlInput(e.target.value)} placeholder="https://api.yourapp.com" /></div>
+              <div><label style={label} htmlFor={`${uid}-ver`}>Version (optional)</label><input id={`${uid}-ver`} style={input} value={versionInput} onChange={(e) => setVersionInput(e.target.value)} placeholder="v2.3.1 or a commit" /></div>
+              <div style={{ gridColumn: "1 / -1" }}><label style={label} htmlFor={`${uid}-base`}>API base URL</label><input id={`${uid}-base`} style={input} value={baseUrlInput} onChange={(e) => setBaseUrlInput(e.target.value)} placeholder="https://api.yourapp.com" /></div>
             </div>
-            <div style={{ marginTop: 12 }}><button style={btnPrimary} disabled={busy === "target"} onClick={saveTarget}>{target ? "Update target" : "Create API target"}</button></div>
+            <div style={{ marginTop: 12 }}><button className="btn" style={btnSize} disabled={busy === "target"} onClick={saveTarget}>{target ? "Update target" : "Create API target"}</button></div>
           </>
         ) : target ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 13.5, color: "var(--fg-2)" }}>
@@ -178,7 +206,7 @@ export function ApiWorkspace({ appId, initial, canEdit, canLaunch }: { appId: st
       </section>
 
       {/* 2. Credentials */}
-      <section style={card}>
+      <section className="card" style={card}>
         <h2 style={h2}>Credentials</h2>
         <p style={{ color: "var(--fg-3)", fontSize: 13, marginTop: 0 }}>Saved securely. You reference a credential by name in a flow and never see its value again.</p>
         {creds.length > 0 ? (
@@ -186,7 +214,7 @@ export function ApiWorkspace({ appId, initial, canEdit, canLaunch }: { appId: st
             {creds.map((c) => (
               <div key={c.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 10px", border: "1px solid var(--line-1)", borderRadius: 8 }}>
                 <span style={{ fontSize: 13.5 }}><strong>{c.label}</strong> <span style={{ color: "var(--fg-4)" }}>· {c.scheme} · {c.secretMask}</span></span>
-                {canEdit && <button style={{ ...btn, padding: "4px 10px", fontSize: 12 }} onClick={() => removeCred(c.id)}>Remove</button>}
+                {canEdit && <button className="btn btn--ghost" style={btnSizeXs} onClick={() => removeCred(c.id)}>Remove</button>}
               </div>
             ))}
           </div>
@@ -195,18 +223,21 @@ export function ApiWorkspace({ appId, initial, canEdit, canLaunch }: { appId: st
         )}
         {canEdit && (
           <>
+            {/* These three carried a placeholder and nothing else. A placeholder is not an accessible name
+                and it disappears the moment there is a value, so this row — which includes the one field in
+                the workspace that takes a secret — announced three unnamed boxes. */}
             <div style={{ display: "grid", gap: 10, gridTemplateColumns: "1fr 1fr 140px" }}>
-              <input style={input} value={credLabel} onChange={(e) => setCredLabel(e.target.value)} placeholder="Name (e.g. API token)" />
-              <input style={input} type="password" value={credSecret} onChange={(e) => setCredSecret(e.target.value)} placeholder="Value (hidden)" />
-              <select value={credScheme} onChange={(e) => setCredScheme(e.target.value)} style={input}><option value="bearer">Bearer token</option><option value="api_key">API key</option><option value="basic">Basic</option></select>
+              <input style={input} aria-label="Credential name" value={credLabel} onChange={(e) => setCredLabel(e.target.value)} placeholder="Name (e.g. API token)" />
+              <input style={input} aria-label="Credential value" type="password" value={credSecret} onChange={(e) => setCredSecret(e.target.value)} placeholder="Value (hidden)" />
+              <select aria-label="Credential scheme" value={credScheme} onChange={(e) => setCredScheme(e.target.value)} style={input}><option value="bearer">Bearer token</option><option value="api_key">API key</option><option value="basic">Basic</option></select>
             </div>
-            <div style={{ marginTop: 10 }}><button style={btn} disabled={busy === "cred" || !credLabel || !credSecret} onClick={addCred}>Save credential</button></div>
+            <div style={{ marginTop: 10 }}><button className="btn btn--ghost" style={btnSize} disabled={busy === "cred" || !credLabel || !credSecret} onClick={addCred}>Save credential</button></div>
           </>
         )}
       </section>
 
       {/* 3. Flows */}
-      <section style={card}>
+      <section className="card" style={card}>
         <h2 style={h2}>Flows</h2>
         <p style={{ color: "var(--fg-3)", fontSize: 13, marginTop: 0 }}>Each flow is a short sequence of checks against your API.</p>
         {flows.length > 0 ? (
@@ -215,7 +246,7 @@ export function ApiWorkspace({ appId, initial, canEdit, canLaunch }: { appId: st
               <div key={f.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", border: "1px solid var(--line-1)", borderRadius: 8 }}>
                 {canLaunch && <input type="checkbox" checked={selected.includes(f.id)} onChange={(e) => setSelected((s) => e.target.checked ? [...s, f.id] : s.filter((x) => x !== f.id))} />}
                 <span style={{ fontSize: 13.5, flex: 1 }}><strong>{f.name}</strong> <span style={{ color: "var(--fg-4)" }}>· {f.priority} · {f.steps.length} steps</span></span>
-                {canEdit && <button style={{ ...btn, padding: "4px 10px", fontSize: 12 }} onClick={() => deleteFlow(f.id)}>Delete</button>}
+                {canEdit && <button className="btn btn--ghost" style={btnSizeXs} onClick={() => deleteFlow(f.id)}>Delete</button>}
               </div>
             ))}
           </div>
@@ -226,7 +257,7 @@ export function ApiWorkspace({ appId, initial, canEdit, canLaunch }: { appId: st
       </section>
 
       {/* 4. Preview + launch */}
-      <section style={card}>
+      <section className="card" style={card}>
         <h2 style={h2}>Launch</h2>
         {!canLaunch ? (
           <p style={{ color: "var(--fg-4)", fontSize: 13 }}>You have view-only access. Ask an editor or the owner to run verification.</p>
@@ -243,8 +274,8 @@ export function ApiWorkspace({ appId, initial, canEdit, canLaunch }: { appId: st
               </ul>
             )}
             <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
-              <button style={btnPrimary} disabled={!preview.readiness.launchable || busy === "launch"} onClick={() => launch(false)}>{busy === "launch" ? "Running…" : "Run verification"}</button>
-              <button style={btn} disabled={!preview.readiness.launchable || busy === "launch"} onClick={() => launch(true)} title="Re-check only the selected flows against a newer build">Re-run selected</button>
+              <button className="btn" style={btnSize} disabled={!preview.readiness.launchable || busy === "launch"} onClick={() => launch(false)}>{busy === "launch" ? "Running…" : "Run verification"}</button>
+              <button className="btn btn--ghost" style={btnSize} disabled={!preview.readiness.launchable || busy === "launch"} onClick={() => launch(true)} title="Re-check only the selected flows against a newer build">Re-run selected</button>
             </div>
           </div>
         ) : <p style={{ color: "var(--fg-3)", fontSize: 13 }}>Select at least one flow to see the price and launch.</p>}
@@ -252,7 +283,7 @@ export function ApiWorkspace({ appId, initial, canEdit, canLaunch }: { appId: st
 
       {/* 5. Latest report (evidence-first) */}
       {run && (
-        <section style={card}>
+        <section className="card" style={card}>
           <h2 style={h2}>Result</h2>
           {/* Beta chip sits ON the verdict, not in a footnote. API checking works and passes our own tests,
               but no outside customer has run their API through it, so it must not read at the same
@@ -285,7 +316,7 @@ export function ApiWorkspace({ appId, initial, canEdit, canLaunch }: { appId: st
 
       {/* 6. History / lineage */}
       {history.length > 0 && (
-        <section style={card}>
+        <section className="card" style={card}>
           <h2 style={h2}>History</h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {history.map((h) => (
@@ -310,12 +341,12 @@ function FlowBuilder({ creds, actions, onSave, busy }: { creds: Cred[]; actions:
   const setStep = (i: number, patch: Partial<FlowStepUI>) => setSteps((s) => s.map((st, j) => j === i ? { ...st, ...patch } : st));
   const save = async () => { if (await onSave(name, steps, priority)) { setName(""); setSteps([]); setOpen(false); } };
 
-  if (!open) return <button style={btn} onClick={() => setOpen(true)}>+ New flow</button>;
+  if (!open) return <button className="btn btn--ghost" style={btnSize} onClick={() => setOpen(true)}>+ New flow</button>;
   return (
-    <div style={{ border: "1px dashed var(--line-2)", borderRadius: 10, padding: 14 }}>
+    <div style={{ border: "1px dashed var(--line-2)", borderRadius: "var(--r-sm)", padding: 14 }}>
       <div style={{ display: "grid", gap: 10, gridTemplateColumns: "1fr 160px", marginBottom: 10 }}>
-        <input style={input} value={name} onChange={(e) => setName(e.target.value)} placeholder="Flow name (e.g. Projects persist)" />
-        <select value={priority} onChange={(e) => setPriority(e.target.value)} style={input}><option value="critical">Critical</option><option value="important">Important</option><option value="informational">Informational</option></select>
+        <input style={input} aria-label="Flow name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Flow name (e.g. Projects persist)" />
+        <select aria-label="Flow priority" value={priority} onChange={(e) => setPriority(e.target.value)} style={input}><option value="critical">Critical</option><option value="important">Important</option><option value="informational">Informational</option></select>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
         {steps.map((s, i) => (
@@ -338,11 +369,11 @@ function FlowBuilder({ creds, actions, onSave, busy }: { creds: Cred[]; actions:
         </p>
       )}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
-        {actions.map((a) => <button key={a.id} style={{ ...btn, padding: "5px 9px", fontSize: 12 }} onClick={() => addStep(a.id)}>+ {a.label}</button>)}
+        {actions.map((a) => <button key={a.id} className="btn btn--ghost" style={{ padding: "5px 9px", fontSize: 12 }} onClick={() => addStep(a.id)}>+ {a.label}</button>)}
       </div>
       <div style={{ display: "flex", gap: 8 }}>
-        <button style={btnPrimary} disabled={busy || !name || steps.length === 0} onClick={save}>Save flow</button>
-        <button style={btn} onClick={() => { setOpen(false); setSteps([]); setName(""); }}>Cancel</button>
+        <button className="btn" style={btnSize} disabled={busy || !name || steps.length === 0} onClick={save}>Save flow</button>
+        <button className="btn btn--ghost" style={btnSize} onClick={() => { setOpen(false); setSteps([]); setName(""); }}>Cancel</button>
       </div>
     </div>
   );

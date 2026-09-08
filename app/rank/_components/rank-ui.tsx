@@ -74,6 +74,24 @@ const PUBLIC_LINKS = [
 // row here would be the exact failure the engine exists to catch.
 const APP_NAV: { group: string; items: { href: string; label: string; d: string }[] }[] = [
   { group: "Product", items: [
+    // "/app", NOT "/", AND THE REASON IS THE HOST THIS LIST DOES NOT KNOW.
+    //
+    // This was briefly "/" to save a redirect: on app.vraelis.com, proxy.ts:273 catches "/app" and answers
+    // a 308 to "/", so the most-clicked control in the product took a full-document hop instead of a
+    // client-side transition. The saving is real and the change is not, because APP_NAV is a module-level
+    // constant with no idea which host is rendering it, and the console does not only render on the app
+    // host: isAppPath (lib/app-routes.ts:39) is host-agnostic and true for "/app", and proxy.ts:368
+    // rewrites "/app" to the console on any host that is not *.vraelis.com. So on localhost and on every
+    // Vercel preview deployment the shell renders at "/app" while "/" is still the MARKETING home page,
+    // and Overview, the topbar's primary action and the post-workspace-switch redirect all navigated the
+    // reader out of the product. Production was fine; the two environments the team actually reviews work
+    // in were not.
+    //
+    // "/app" is correct everywhere, at the cost of one 308 in production. Getting both needs the href to
+    // be chosen per host, which means threading RankShell's `appHost` down through NavItems, MobileNav,
+    // AppTopbar and WorkspaceSwitcher — worth doing, but it is a routing change rather than a nav label,
+    // and scripts/app-shell-verify.ts reads these hrefs as string literals, so it has to be done with that
+    // gate in hand.
     { href: "/app", label: "Overview", d: I.grid },
     { href: "/systems", label: "Systems", d: I.layers },
     { href: "/guarantees", label: "Guarantees", d: I.shield },
@@ -452,6 +470,8 @@ function AppTopbar({ email, systems, pendingReviews }: { email: string | null; s
         )}
         {/* On phones this collapses to an icon square matching the burger, not a pill around a bare "+"
             text glyph: the glyph sat off-centre in its own padding and read as a stray character. */}
+        {/* "/app" for the same reason the Overview nav item uses it: this component does not know the host,
+            and "/" is the marketing home on every host except app.vraelis.com. */}
         <Link href="/app" className="btn vra-app-connect" aria-label="New verification">
           <span className="vra-app-connect__i" aria-hidden><Ic d={I.plus} size={15} sw={2.2} /></span>
           <span className="vra-app-connect__label">New verification</span>
@@ -517,6 +537,9 @@ function WorkspaceSwitcher() {
   useEffect(() => { fetch("/api/v/workspace/available").then((r) => (r.ok ? r.json() : null)).then(setData).catch(() => {}); }, []);
   if (!data || !data.available || data.available.length <= 1) return null; // only when the user belongs to >1 workspace
   const current = data.available.find((w) => w.id === data.selectedId) || data.available[0];
+  // A full reload is deliberate (the workspace cookie has to be read server-side on the way back in), and
+  // it lands on "/app" rather than "/" because off the app host "/" is the marketing home: switching
+  // workspace would have signed the reader out of the product in dev and on preview deployments.
   function select(id: string) { document.cookie = `vws=${id}; path=/; max-age=31536000; samesite=lax`; window.location.href = "/app"; }
   return (
     <div style={{ position: "relative", margin: "2px 0 14px" }}>
@@ -548,6 +571,9 @@ function useActiveNav() {
   const pathname = usePathname() || "";
   const aliasRoot = Object.keys(NAV_ALIASES).find((old) => pathname === old || pathname.startsWith(old + "/"));
   const effective = aliasRoot ? NAV_ALIASES[aliasRoot] : pathname;
+  // Overview is the one item matched exactly and never by prefix, because every console path would
+  // otherwise start with it. Both spellings light it up: the console is served at "/app" on localhost and
+  // on preview deployments, and at "/" on app.vraelis.com, and it is the same page either way.
   return (href: string) => href === "/app"
     ? (effective === "/app" || effective === "/")
     : (effective === href || effective.startsWith(href + "/"));
@@ -703,6 +729,13 @@ function MobileNav() {
 //     speed), not "did it work? click again". Pairs with the client-side nav + prefetch.
 // Reduced-motion disables all of it.
 const SHELL_UI_CSS = "@keyframes vraTextIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}"
+  // The skip link. Off-canvas until focused, then a real target at the top left. :focus rather than
+  // :focus-visible, for the reason given where it is rendered.
+  + ".rank-root .app-skip{position:fixed;top:8px;left:8px;z-index:200;transform:translateY(-160%);"
+  + "background:var(--fg-1);color:var(--bg-0);font-size:14px;font-weight:600;padding:11px 17px;"
+  + "border-radius:var(--r-sm);text-decoration:none;transition:transform 160ms cubic-bezier(0,0,.2,1)}"
+  + ".rank-root .app-skip:focus{transform:none;outline:2px solid var(--focus-ring);outline-offset:2px}"
+  + ".rank-root .app-main:focus{outline:none}"
   + ".rank-root .eyebrow:not(.rise),.rank-root .display:not(.rise),.rank-root .lead-copy:not(.rise){animation:vraTextIn 560ms cubic-bezier(0.22,1,0.36,1) both}"
   + ".rank-root .display:not(.rise){animation-delay:60ms}"
   + ".rank-root .lead-copy:not(.rise){animation-delay:120ms}"
@@ -774,6 +807,15 @@ export function RankShell({ signedIn = false, email = null, appHost = false, sys
           <style dangerouslySetInnerHTML={{ __html: SHELL_UI_CSS }} />
           <div style={{ position: "sticky", top: 0, zIndex: 50 }}><AppTopbar email={email} systems={systems} pendingReviews={pendingReviews} /></div>
           <div className="app-shell">
+            {/* THE CONSOLE HAD NO SKIP LINK, AND IT IS THE SURFACE THAT NEEDED ONE MOST.
+                The sidebar is a nav landmark with roughly twenty focusable controls in it, and it precedes
+                the content on EVERY page in the product, so a keyboard reader tabbed through the whole
+                menu again on every navigation. The public site has carried one since design 06
+                (v6/_system/shell.tsx:891); the signed-in product, where a reader navigates far more often,
+                did not. Same contract as that one, including :focus rather than :focus-visible, because a
+                skip link is only ever reached by keyboard and the heuristic can leave it parked off-canvas,
+                which is the single failure a skip link cannot have. */}
+            <a href="#app-main" className="app-skip">Skip to content</a>
             <AppSidebar />
             {/* THE CONSOLE DECLARES ITS GROUND ONCE, HERE. Nothing under app/rank said what theme it paints,
                 and 26 of the 46 console pages contain no <section> at all, so the topbar's sampler ran out of
@@ -781,7 +823,7 @@ export function RankShell({ signedIn = false, email = null, appHost = false, sys
                 between the page's #0A0A0B and a card's #121214 as the reader scrolled. <main> is the band
                 every console route actually has, it is graphite on every one of them, and useGroundColor
                 accepts a declaration on main for exactly this reason. */}
-            <main className="app-main" data-nav-theme="dark">{children}</main>
+            <main id="app-main" className="app-main" data-nav-theme="dark" tabIndex={-1}>{children}</main>
           </div>
           {/* Product only. The marketing site has nothing worth carrying between pages, and a notes button
               on a pricing page is furniture. Inside the shell rather than in a page, because the entire

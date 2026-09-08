@@ -157,8 +157,12 @@ ok("the preview is clearly labelled as a development preview, not customer recor
 console.log("\n── composer a11y: the final decision is announced, not swapped in silently ──");
 const runPanel = composer.slice(composer.indexOf("function RunPanel"));
 ok("RunPanel wraps the status in ONE persistent live region", /role="status" aria-live="polite" aria-atomic="true"/.test(runPanel));
+// The needle is the badge's CALL SHAPE, not the name of the variable inside it: the panel's hand-rolled
+// pill (which rendered {d.label} with its own tone table) is the shared <Verdict> now, and the property
+// under test — that the conclusion sits INSIDE the live region, so it is announced rather than swapped in
+// silently — is unchanged by which component draws it.
 ok("the decision pill and the running text share that live region (so the verdict is announced)",
-  before(runPanel, 'role="status" aria-live="polite"', "{d.label}") && before(runPanel, 'role="status" aria-live="polite"', "{statusText}"));
+  before(runPanel, 'role="status" aria-live="polite"', "<Verdict") && before(runPanel, 'role="status" aria-live="polite"', "{statusText}"));
 
 console.log("\n── composer states: a stale plan has a real, visible next action ──");
 const planPanel = composer.slice(composer.indexOf("function PlanPanel"), composer.indexOf("function RunPanel"));
@@ -222,12 +226,21 @@ console.log("\n── overflow + heading structure locked (verified live at 5 wi
 {
   const sections = readFileSync("app/rank/app/_components/overview-sections.tsx", "utf8");
   ok("the overview no longer greets the reader instead of reporting", !/Welcome back/.test(page));
-  ok("the operational state is the h1", /<h1 className="display"[^>]*>Operational state<\/h1>/.test(sections));
+  // In either form the heading is written in. <PageHeader> renders exactly one <h1 className="display">,
+  // so a page that adopted it still has an h1 — just not one spelled out in its own file. Counting only
+  // literal tags would have read the console's shared header component as a MISSING heading.
+  ok("the operational state is the h1",
+    /<h1 className="display"[^>]*>Operational state<\/h1>/.test(sections)
+    || /<PageHeader[^>]*\stitle="Operational state"/.test(sections));
   // Two h1s in page.tsx is correct: one for the signed-OUT hero and one for the signed-in overview, and a
   // request only ever renders one of them. What must never happen is a second h1 inside the signed-in tree.
+  // Comments are stripped first: these files now EXPLAIN <PageHeader> in prose above the call, and a
+  // sentence naming the component is not a second heading.
+  const headings = (s: string) =>
+    ((s.replace(/^\s*\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "").match(/<h1|<PageHeader/g)) ?? []).length;
   ok("exactly one h1 in the signed-in overview tree",
-    (sections.match(/<h1/g) ?? []).length === 1
-    && (readFileSync("app/rank/app/_components/composer.tsx", "utf8").match(/<h1/g) ?? []).length <= 1);
+    headings(sections) === 1
+    && headings(readFileSync("app/rank/app/_components/composer.tsx", "utf8")) <= 1);
 }
 ok("deployment references truncate rather than overflow (bounded width + ellipsis)", /maxWidth: "22ch"[\s\S]*textOverflow: "ellipsis"/.test(rec) || /textOverflow: "ellipsis"[\s\S]*maxWidth: "22ch"/.test(rec));
 ok("record rows constrain their text column (minWidth:0 + ellipsis) so long names cannot push the row wide",

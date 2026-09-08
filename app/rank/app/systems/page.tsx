@@ -5,8 +5,10 @@ import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "./setup-required";
 import { listApplicationsForMember, latestRunByAppForApps, type Application, type RunSummary } from "@/lib/v-applications";
 import { activateInvitesForEmail } from "@/lib/v-workspace";
-import { toPublicDecision } from "@/lib/preflight/public-decision";
-import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
+import { isActiveRun, systemProof } from "@/lib/preflight/home-verdict";
+import { I, EmptyIcon } from "@/app/rank/_components/icons";
+import { Verdict } from "@/app/rank/_components/verdict";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
 // The tab title said "Applications" while the h1 said Systems, on the same screen.
 export const metadata: Metadata = { title: "Systems" };
@@ -28,24 +30,24 @@ function timeAgo(iso: string | null | undefined): string {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-// Latest-run decision -> pill label + colours. The .pill class uppercases the label; the text always
-// accompanies the colour, so status is never conveyed by colour alone.
-// A run is "in progress" while it moves through the queue/execution states before a decision exists.
-const ACTIVE_RUN_STATES = new Set(["queued", "discovering", "running", "analyzing"]);
-const isActiveRun = (run: RunSummary | null | undefined): boolean => !!run && !run.decision && ACTIVE_RUN_STATES.has(run.state);
-
-// Delegates to the ONE canonical public-decision translator, so a run reads the SAME verdict here as on Home,
-// the result page, the API, and the webhook. repair_verified is public Blocked (a targeted repair rerun is not
-// the full verification) — never a teal "Verified" success treatment. `mark` carries the public decision so
-// the pill icon matches the label (no verified-repair wrench on a Blocked pill).
-function decisionStyle(run: RunSummary | null | undefined): { label: string; mark?: string; color: string; bg: string; border: string } {
-  const pub = run ? toPublicDecision(run.state, run.decision) : null;
-  if (pub === "verified") return { label: "Verified", mark: "verified", color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" };
-  if (pub === "failed") return { label: "Failed", mark: "failed", color: "var(--err)", bg: "rgba(194,84,12,0.08)", border: "rgba(194,84,12,0.28)" };
-  if (pub === "blocked") return { label: "Blocked", mark: "blocked", color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "rgba(194,131,26,0.3)" };
-  if (isActiveRun(run)) return { label: "In progress", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
-  return { label: "Not tested", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };
-}
+// THE PILL THAT USED TO LIVE HERE WAS THE WORST COPY OF THE PRODUCT'S ONE SIGNAL.
+//
+// A local decisionStyle() sat at the top of this file and painted its own badge. It delegated the DECISION
+// to toPublicDecision correctly, so the words were right, but everything around them was invented here:
+//
+//   COLOUR. Failed was rgba(194,84,12,0.08) on rgba(194,84,12,0.28) and Blocked's border was
+//   rgba(194,131,26,0.3). Those are the CREAM theme's inks, hardcoded onto a graphite surface. This is the
+//   most visited list in the product, so the pill a customer saw most often was the one furthest from the
+//   tokens. In progress was painted --acc-deep, which on this surface resolves to the headline white, so a
+//   run that had not finished yet shouted louder than one that had concluded.
+//
+//   WORDS. The undecided state was called "Not tested" here, against "No verdict", "No decision" and
+//   "Not yet verified" on four neighbouring pages, for the identical state.
+//
+// It is <Verdict> now, which renders runVerdict() and therefore cannot disagree with the API, the CI gate,
+// the webhooks or any other page. Nothing about the decision changed; only who is allowed to describe it.
+// isActiveRun is imported for the same reason: this file kept a private copy of the active-state set, which
+// is a second place for the worker's states to be listed and a second place to forget to update.
 
 // summary is a loose JSON blob; read the critical-flow counters defensively and only when both are present.
 function criticalFlows(summary: Record<string, unknown> | null | undefined): string | null {
@@ -65,7 +67,9 @@ function StatChip({ label, value, color }: { label: string; value: number; color
 }
 
 function SystemCard({ system, run }: { system: Application; run: RunSummary | undefined }) {
-  const st = decisionStyle(run);
+  // systemProof is the canonical read of what a SYSTEM has been shown to do, and it already answers for the
+  // no-run case, so the card no longer carries a null branch of its own.
+  const proof = systemProof(run ?? null);
   const last = timeAgo(run?.completed_at ?? run?.created_at);
   const crit = criticalFlows(run?.summary);
   const metaParts = [crit, last ? `Last run ${last}` : null].filter(Boolean);
@@ -77,19 +81,19 @@ function SystemCard({ system, run }: { system: Application; run: RunSummary | un
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, color: "var(--fg-1)", lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{system.name}</div>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)", marginTop: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{system.app_url}</div>
         </div>
-        <span className="pill" style={{ fontSize: 10, color: st.color, background: st.bg, borderColor: st.border, flex: "none" }}><DecisionMark decision={st.mark} />{st.label}</span>
+        <Verdict verdict={proof.verdict} style={{ flex: "none" }} />
       </div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: "auto" }}>
         <span style={{ fontSize: 12, color: "var(--fg-4)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{metaText}</span>
-        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--acc-deep)", display: "inline-flex", alignItems: "center", gap: 5, flex: "none" }}>Open <span aria-hidden>→</span></span>
+        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--acc-deep)", display: "inline-flex", alignItems: "center", gap: 5, flex: "none" }}>Open <span aria-hidden>&rarr;</span></span>
       </div>
     </Link>
   );
 }
 
 // Systems dashboard for Vraelis Preflight. Server component behind the preflight owner gate; every read
-// degrades to an empty state when the data layer has nothing (or the tables aren't migrated yet). No browser
-// execution or discovery lives here — a run is a later phase.
+// degrades to an empty state when the data layer has nothing (or the tables are not migrated yet). No browser
+// execution or discovery lives here: a run is a later phase.
 export default async function SystemsPage() {
   const caller = await requirePreflightOwner("/systems");
   // A token-less (email-match) invite activates on first Preflight visit so a newly-invited teammate sees
@@ -106,43 +110,48 @@ export default async function SystemsPage() {
   const untestedCount = apps.filter((a) => !latest[a.id]?.decision && !isActiveRun(latest[a.id])).length;
 
   return (
-    <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-      {/* header */}
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 24 }}>
-        <div>
-          {/* The nav says Systems and this page is what it opens, so it says Systems. "Vraelis Preflight"
-              was an internal programme name that no customer has ever been taught. */}
-          <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "0 0 10px" }}>Systems</h1>
-          <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.6, margin: 0, maxWidth: 560 }}>
-            Connect an AI-built system and Vraelis looks for failures in the flows you approve, before your users hit them.
-          </p>
-        </div>
-        <Link href="/systems/new" className="btn" style={{ flex: "none" }}>Connect a system <span aria-hidden>→</span></Link>
+    <Page>
+      {/* The nav says Systems and this page is what it opens, so it says Systems. "Vraelis Preflight" was an
+          internal programme name no customer has ever been taught. The h1 used to declare its own
+          clamp(1.7rem, 3vw, 2.4rem), one of six sizes across the console; the size is <PageHeader>'s now.
+          The old .wrap also carried paddingTop: clamp(24px, 3vw, 40px), which the shell has been overriding
+          with !important for as long as it has existed, so it is simply gone rather than moved. */}
+      <PageHeader
+        title="Systems"
+        lead="Connect an AI-built system and Vraelis looks for failures in the flows you approve, before your users hit them."
+        actions={<Link href="/systems/new" className="btn" style={{ flex: "none" }}>Connect a system <span aria-hidden>&rarr;</span></Link>}
+      />
+
+      {/* <Page> deliberately owns only the measure and the shell only overrides padding-TOP, so the tail room
+          this list has always had is kept here, on the content, rather than on the .wrap. */}
+      <div style={{ paddingBottom: 80 }}>
+        {apps.length === 0 ? (
+          <div className="empty">
+            <EmptyIcon d={I.layers} />
+            <h3>No systems yet</h3>
+            <p>A verification walks your live system the way a user would, then reports which of your approved critical flows broke. Connect your first system to begin.</p>
+            <Link href="/systems/new" className="btn">Connect a system</Link>
+          </div>
+        ) : (
+          <>
+            {/* The counters are unchanged; only the fourth one's NAME is. It called "Untested" the same state
+                the pill beside it called "Not tested" and home-verdict.ts calls "Not yet verified", which is
+                three names for one thing on one screen. Failed reads --stop-ink rather than --err for the
+                same reason: both resolve to #FF7A55 here, but only one of them is the signal vocabulary. */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 24 }}>
+              <StatChip label="Systems" value={apps.length} />
+              <StatChip label="Verified" value={readyCount} color={readyCount ? "var(--go-ink)" : undefined} />
+              <StatChip label="Failed" value={blockedCount} color={blockedCount ? "var(--stop-ink)" : undefined} />
+              <StatChip label="Not yet verified" value={untestedCount} />
+            </div>
+
+            {/* app cards */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(288px, 1fr))", gap: 12 }}>
+              {apps.map((a) => <SystemCard key={a.id} system={a} run={latest[a.id]} />)}
+            </div>
+          </>
+        )}
       </div>
-
-      {apps.length === 0 ? (
-        <div className="empty">
-          <EmptyIcon d={I.layers} />
-          <h3>No systems yet</h3>
-          <p>A verification walks your live system the way a user would, then reports which of your approved critical flows broke. Connect your first system to begin.</p>
-          <Link href="/systems/new" className="btn">Connect a system</Link>
-        </div>
-      ) : (
-        <>
-          {/* overview */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 24 }}>
-            <StatChip label="Systems" value={apps.length} />
-            <StatChip label="Verified" value={readyCount} color={readyCount ? "var(--go-ink)" : undefined} />
-            <StatChip label="Failed" value={blockedCount} color={blockedCount ? "var(--err)" : undefined} />
-            <StatChip label="Untested" value={untestedCount} />
-          </div>
-
-          {/* app cards */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(288px, 1fr))", gap: 12 }}>
-            {apps.map((a) => <SystemCard key={a.id} system={a} run={latest[a.id]} />)}
-          </div>
-        </>
-      )}
-    </div>
+    </Page>
   );
 }

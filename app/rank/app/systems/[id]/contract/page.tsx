@@ -16,6 +16,7 @@ import { categoryLabel, SEVERITY_LABELS, SEVERITY_COLORS } from "./labels";
 import { ProvenanceChip } from "./provenance-chip";
 import { PassPreview } from "./pass-preview";
 import { Ic, I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
 // The app's test-account role labels (meta.role, falling back to meta.label — the same resolution the
 // launch auth-readiness gate uses). This is the set a flow's sign-in step may target. Owner-scoped read.
@@ -273,14 +274,14 @@ export default async function ContractPage({ params }: { params: Promise<{ id: s
   const app = await getApplication(owner, id);
   if (!app) {
     return (
-      <div className="wrap" style={{ maxWidth: 720, paddingTop: 48, paddingBottom: 80 }}>
-        <div className="empty">
+      <Page measure="prose">
+        <div className="empty" style={{ marginBottom: 80 }}>
           <EmptyIcon d={I.slash} />
           <h3>App not found</h3>
           <p>This app doesn&apos;t exist, or it belongs to another account.</p>
           <Link href="/systems" className="btn">Your apps</Link>
         </div>
-      </div>
+      </Page>
     );
   }
 
@@ -298,7 +299,7 @@ export default async function ContractPage({ params }: { params: Promise<{ id: s
     ? await getApprovedContract(owner, id) : null;
 
   return (
-    <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
+    <Page>
       <nav aria-label="Breadcrumb" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 13, marginBottom: 14 }}>
         <Link href="/systems" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Systems</Link>
         <span aria-hidden style={{ color: "var(--fg-5)" }}>/</span>
@@ -307,37 +308,44 @@ export default async function ContractPage({ params }: { params: Promise<{ id: s
         <span style={{ color: "var(--fg-2)", fontWeight: 600 }}>Production Contract</span>
       </nav>
 
-      <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "6px 0 10px" }}>What this app must do</h1>
-      <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.6, margin: 0, maxWidth: 640 }}>
-        The approved definition of what the product promises. Vraelis tests these before you launch.
-      </p>
+      {/* The heading is unchanged, deliberately: scripts/app-shell-verify compares headings against the
+          words they were clicked by, and rewording one to suit a component is how a rename stops halfway.
+          Only the size moves, from this page's own clamp() to the one <PageHeader> sets for the console. */}
+      <PageHeader
+        title="What this app must do"
+        lead="The approved definition of what the product promises. Vraelis tests these before you launch."
+      />
 
-      <AppTabs appId={id} active="contract" />
+      {/* <Page> owns the measure and the shell owns padding-top, so the tail room this page has
+          always had stays here, on the body. */}
+      <div style={{ paddingBottom: 80 }}>
+        <AppTabs appId={id} active="contract" />
 
-      {prevApproved ? (
-        <div style={{ border: "1px solid var(--wait-line)", background: "var(--wait-wash)", color: "var(--wait-ink)", borderRadius: "var(--r-sm)", padding: "10px 14px", fontSize: 13, lineHeight: 1.55, marginBottom: 18 }}>
-          Draft v{contract!.version}. The approved v{prevApproved.version} remains the version runs verify against until you approve this one.
-        </div>
-      ) : null}
+        {prevApproved ? (
+          <div style={{ border: "1px solid var(--wait-line)", background: "var(--wait-wash)", color: "var(--wait-ink)", borderRadius: "var(--r-sm)", padding: "10px 14px", fontSize: 13, lineHeight: 1.55, marginBottom: 18 }}>
+            Draft v{contract!.version}. The approved v{prevApproved.version} remains the version runs verify against until you approve this one.
+          </div>
+        ) : null}
 
-      {contract ? (
-        contract.status === "approved" ? (
-          <ApprovedContract appId={id} contract={contract} reqs={reqs} flows={flows} canEdit={caps.canEditContract} />
-        ) : caps.canEditContract ? (
-          // DRAFT + editor: the full mutating editor (add/edit/delete reqs + flows, Approve).
-          <ContractEditor contractId={contract.id} appId={id} initial={reqs} status={contract.status} flows={flows} roles={roles} discoveryState={discovery?.state ?? null} />
+        {contract ? (
+          contract.status === "approved" ? (
+            <ApprovedContract appId={id} contract={contract} reqs={reqs} flows={flows} canEdit={caps.canEditContract} />
+          ) : caps.canEditContract ? (
+            // DRAFT + editor: the full mutating editor (add/edit/delete reqs + flows, Approve).
+            <ContractEditor contractId={contract.id} appId={id} initial={reqs} status={contract.status} flows={flows} roles={roles} discoveryState={discovery?.state ?? null} />
+          ) : (
+            // DRAFT + read-only member: never mount the mutating editor; show the record read-only.
+            <DraftReadOnly reqs={reqs} flows={flows} reason={readOnlyReason(caps.role)} />
+          )
         ) : (
-          // DRAFT + read-only member: never mount the mutating editor; show the record read-only.
-          <DraftReadOnly reqs={reqs} flows={flows} reason={readOnlyReason(caps.role)} />
-        )
-      ) : (
-        <div className="card" style={{ padding: "clamp(18px, 2.6vw, 26px)" }}>
-          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, color: "var(--fg-1)", marginBottom: 4 }}>Your contract is being prepared.</div>
-          <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55, margin: 0 }}>
-            The Production Contract for <strong style={{ color: "var(--fg-1)" }}>{app.name}</strong> is not ready yet. Refresh in a moment, or reconnect the app if this persists.
-          </p>
-        </div>
-      )}
-    </div>
+          <div className="card" style={{ padding: "clamp(18px, 2.6vw, 26px)" }}>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, color: "var(--fg-1)", marginBottom: 4 }}>Your contract is being prepared.</div>
+            <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55, margin: 0 }}>
+              The Production Contract for <strong style={{ color: "var(--fg-1)" }}>{app.name}</strong> is not ready yet. Refresh in a moment, or reconnect the app if this persists.
+            </p>
+          </div>
+        )}
+      </div>
+    </Page>
   );
 }

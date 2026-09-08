@@ -30,6 +30,8 @@ import { listGuaranteesForApps, guaranteeRunHistory, type Guarantee } from "@/li
 import { guaranteeStatusFrom, GUARANTEE_STATUS_LABEL, GUARANTEE_COVERAGE_NOTE } from "@/lib/preflight/guarantee-status";
 import { timeAgo } from "@/lib/preflight/home-verdict";
 import { Ic, I } from "@/app/rank/_components/icons";
+import { Verdict } from "@/app/rank/_components/verdict";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 import { SetupRequired } from "../systems/setup-required";
 
 export const metadata: Metadata = { title: "Guarantees" };
@@ -87,67 +89,74 @@ export default async function GuaranteesPage() {
   const verdictOf = new Map(verdicts);
 
   return (
-    <div className="wrap" style={{ maxWidth: 1080, paddingTop: "clamp(20px, 2.6vw, 32px)", paddingBottom: 80 }}>
-      <h1 className="display" style={{ fontSize: "clamp(1.55rem, 2.6vw, 2rem)", margin: "0 0 8px", letterSpacing: "-0.025em" }}>Guarantees</h1>
-      <p style={{ margin: "0 0 6px", fontSize: 14, color: "var(--fg-3)", lineHeight: 1.6, maxWidth: "62ch" }}>
-        A guarantee is an outcome one of your systems must keep true, written down with a proof plan that a
-        person approved.
-      </p>
-      <p style={{ margin: "0 0 24px", fontSize: 13, color: "var(--fg-4)", lineHeight: 1.6, maxWidth: "62ch" }}>
-        Approving a plan records what must stay true and who accepted it. Each guarantee shows its verdict from
-        its most recent verification. Re-checking automatically as each new deployment appears is not wired
-        up yet, so a guarantee is proven when you ask it to be. {GUARANTEE_COVERAGE_NOTE}
-      </p>
+    <Page>
+      {/* The heading was 32px at -0.025em tracking here and 38.4px on /systems, one sidebar click apart, and
+          the column was 1080 against that page's 1240, so the left edge moved as well. Both belong to the
+          shared components now. The second paragraph is not a `lead`: the lead is the one sentence that says
+          what this page is, and the standing coverage disclosure is a separate statement that has to keep
+          its own weight rather than be folded into the description of the page. */}
+      <PageHeader
+        title="Guarantees"
+        lead="A guarantee is an outcome one of your systems must keep true, written down with a proof plan that a person approved."
+      />
+      {/* <Page> owns the measure and the shell owns padding-top, so the tail room this page has
+          always had stays here, on the body. */}
+      <div style={{ paddingBottom: 80 }}>
+        <p style={{ margin: "0 0 24px", fontSize: 13, color: "var(--fg-4)", lineHeight: 1.6, maxWidth: "62ch" }}>
+          Approving a plan records what must stay true and who accepted it. Each guarantee shows its verdict from
+          its most recent verification. Re-checking automatically as each new deployment appears is not wired
+          up yet, so a guarantee is proven when you ask it to be. {GUARANTEE_COVERAGE_NOTE}
+        </p>
 
-      {guarantees.length > 0 ? (
-        <div className="card" style={{ padding: 0, overflow: "hidden", background: "var(--bg-1)" }}>
-          {guarantees.map((g, i) => {
-            const p = planPill(g);
-            return (
-              <Link key={g.id} href={`/systems/${g.application_id}/guarantees/${g.id}`}
-                style={{ display: "grid", gridTemplateColumns: "1fr auto auto", alignItems: "center", gap: 14, padding: "13px 16px", borderTop: i ? "1px solid var(--line-2)" : "none", color: "inherit", textDecoration: "none" }}
-                aria-label={`${g.title}, ${appName.get(g.application_id) ?? "system"}, ${p.label}`}>
-                <span style={{ minWidth: 0 }}>
-                  <span style={{ display: "block", fontSize: 14, fontWeight: 500, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{g.title}</span>
-                  <span style={{ display: "flex", gap: 10, marginTop: 3, flexWrap: "wrap", fontSize: 12, color: "var(--fg-4)" }}>
-                    <span>{appName.get(g.application_id) ?? "System"}</span>
-                    {g.plan_approved_at
-                      ? <span>Approved by {g.plan_approved_by || "a reviewer"} {timeAgo(g.plan_approved_at)}</span>
-                      : <span>No approved plan yet</span>}
+        {guarantees.length > 0 ? (
+          <div className="card" style={{ padding: 0, overflow: "hidden", background: "var(--bg-1)" }}>
+            {guarantees.map((g, i) => {
+              const p = planPill(g);
+              return (
+                <Link key={g.id} href={`/systems/${g.application_id}/guarantees/${g.id}`}
+                  style={{ display: "grid", gridTemplateColumns: "1fr auto auto", alignItems: "center", gap: 14, padding: "13px 16px", borderTop: i ? "1px solid var(--line-2)" : "none", color: "inherit", textDecoration: "none" }}
+                  aria-label={`${g.title}, ${appName.get(g.application_id) ?? "system"}, ${p.label}`}>
+                  <span style={{ minWidth: 0 }}>
+                    <span style={{ display: "block", fontSize: 14, fontWeight: 500, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{g.title}</span>
+                    <span style={{ display: "flex", gap: 10, marginTop: 3, flexWrap: "wrap", fontSize: 12, color: "var(--fg-4)" }}>
+                      <span>{appName.get(g.application_id) ?? "System"}</span>
+                      {g.plan_approved_at
+                        ? <span>Approved by {g.plan_approved_by || "a reviewer"} {timeAgo(g.plan_approved_at)}</span>
+                        : <span>No approved plan yet</span>}
+                    </span>
                   </span>
-                </span>
-                {/* The verdict leads, because "is this still true" is the question. The plan's state stays
-                    beside it: an approved plan with no proof and a proven guarantee are different things. */}
-                <span style={{ display: "flex", gap: 6, alignItems: "center", flex: "none" }}>
-                  {(() => {
-                    const st = verdictOf.get(g.id) ?? "unproven";
-                    const meta = GUARANTEE_STATUS_LABEL[st];
-                    const tone = meta.tone === "verified" ? { color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" }
-                      : meta.tone === "failed" ? { color: "var(--stop-ink)", bg: "var(--stop-wash)", border: "var(--stop-line)" }
-                      : meta.tone === "blocked" || meta.tone === "progress" ? { color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "var(--wait-line)" }
-                      : { color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };
-                    return <span className="pill" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: tone.color, background: tone.bg, borderColor: tone.border }}>{meta.label}</span>;
-                  })()}
-                  <span className="pill" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: p.color, background: p.bg, borderColor: p.border }}>{p.label}</span>
-                </span>
-                <span aria-hidden style={{ color: "var(--fg-5)", flex: "none" }}>→</span>
-              </Link>
-            );
-          })}
-        </div>
-      ) : (
-        <section aria-label="No guarantees yet" style={{ border: "1px dashed var(--line-3)", borderRadius: "var(--r-lg, 14px)", background: "var(--bg-2)", padding: "clamp(20px, 2.6vw, 30px)" }}>
-          <div style={{ color: "var(--fg-3)", marginBottom: 10 }}><Ic d={I.shield} size={22} /></div>
-          <h2 style={{ fontSize: 16, margin: "0 0 6px", color: "var(--fg-1)" }}>No guarantees defined yet</h2>
-          <p style={{ margin: "0 0 16px", fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.6, maxWidth: "58ch" }}>
-            A verification answers a question once. A guarantee writes the question down: open a system, name
-            the outcome it must always keep true, and approve the proof plan Vraelis derives for it.
-          </p>
-          <Link href={apps.length ? `/systems/${apps[0].id}` : "/systems"} className="btn btn--ghost">
-            {apps.length ? "Open a system to define one" : "Connect a system first"}
-          </Link>
-        </section>
-      )}
-    </div>
+                  {/* The verdict leads, because "is this still true" is the question. The plan's state stays
+                      beside it: an approved plan with no proof and a proven guarantee are different things. */}
+                  <span style={{ display: "flex", gap: 6, alignItems: "center", flex: "none" }}>
+                    {/* A tone ternary used to sit here rebuilding the go/wait/stop triad by hand, and it folded
+                        `progress` into the amber of `blocked`, so a guarantee whose verification was still
+                        running wore the same colour as one a person has to look at. GUARANTEE_STATUS_LABEL is
+                        already { label, tone } in the union <Verdict> takes, so nothing needs translating.
+                        The plan badge beside it keeps its own uppercase treatment on purpose: it answers a
+                        different question, and drawing it as a verdict would be a fourth thing to mistake for
+                        one. */}
+                    <Verdict verdict={GUARANTEE_STATUS_LABEL[verdictOf.get(g.id) ?? "unproven"]} />
+                    <span className="pill" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: p.color, background: p.bg, borderColor: p.border }}>{p.label}</span>
+                  </span>
+                  <span aria-hidden style={{ color: "var(--fg-5)", flex: "none" }}>&rarr;</span>
+                </Link>
+              );
+            })}
+          </div>
+        ) : (
+          <section aria-label="No guarantees yet" style={{ border: "1px dashed var(--line-3)", borderRadius: "var(--r-lg, 14px)", background: "var(--bg-2)", padding: "clamp(20px, 2.6vw, 30px)" }}>
+            <div style={{ color: "var(--fg-3)", marginBottom: 10 }}><Ic d={I.shield} size={22} /></div>
+            <h2 style={{ fontSize: 16, margin: "0 0 6px", color: "var(--fg-1)" }}>No guarantees defined yet</h2>
+            <p style={{ margin: "0 0 16px", fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.6, maxWidth: "58ch" }}>
+              A verification answers a question once. A guarantee writes the question down: open a system, name
+              the outcome it must always keep true, and approve the proof plan Vraelis derives for it.
+            </p>
+            <Link href={apps.length ? `/systems/${apps[0].id}` : "/systems"} className="btn btn--ghost">
+              {apps.length ? "Open a system to define one" : "Connect a system first"}
+            </Link>
+          </section>
+        )}
+      </div>
+    </Page>
   );
 }

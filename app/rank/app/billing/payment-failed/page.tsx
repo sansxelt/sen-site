@@ -5,6 +5,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { I, Ic } from "@/app/rank/_components/icons";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
 export const metadata: Metadata = { title: "Payment failed" };
 
@@ -16,14 +17,12 @@ const GUIDANCE: [string, string][] = [
 
 export default function PaymentFailedPage() {
   return (
-    <div className="wrap" style={{ maxWidth: 720, paddingTop: "clamp(24px, 3vw, 38px)", paddingBottom: 80 }}>
-      <div className="phead">
-        <div>
-          <p className="eyebrow">Billing</p>
-          <h1 className="display">Payment failed</h1>
-        </div>
-      </div>
+    // Same measure as /billing and the other two return routes, so a dunning link no longer lands you on a
+    // narrower page than the one it sends you back to.
+    <Page measure="prose">
+      <PageHeader eyebrow="Billing" title="Payment failed" />
 
+      <div style={{ paddingBottom: 80 }}>
       <div className="card" style={{ marginBottom: 18 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
           <span style={{ color: "var(--err)" }}><Ic d={I.alert} size={18} /></span>
@@ -55,6 +54,7 @@ export default function PaymentFailedPage() {
         <a href="mailto:help@vraelis.com" style={{ color: "var(--acc-deep)" }}>help@vraelis.com</a> with the
         approximate time of the attempt and we will sort it out.
       </p>
-    </div>
+      </div>
+    </Page>
   );
 }

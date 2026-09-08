@@ -4,10 +4,16 @@ import { requirePreflightOwner } from "@/lib/v-preflight-guard";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "../systems/setup-required";
 import { listAllRuns, type PassRow } from "@/lib/preflight/overview-db";
-import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
+import { I, EmptyIcon } from "@/app/rank/_components/icons";
+import { Verdict } from "@/app/rank/_components/verdict";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 import { runVerdict } from "@/lib/preflight/home-verdict";
 
-export const metadata: Metadata = { title: "Verification" };
+// The tab said "Verification" while the heading said "Verifications", and /verifications, which re-exports
+// this exact page, set "Verifications" of its own. So the same rendered page carried two different browser
+// tab titles depending on which URL you arrived by. The heading is the name the sidebar sends you here
+// under, so the tab follows the heading.
+export const metadata: Metadata = { title: "Verifications" };
 
 // Relative "3m ago / 4h ago / Jul 2". Server component, rendered once per request, so a wall-clock
 // relative time carries no hydration-mismatch risk.
@@ -36,7 +42,7 @@ const RUNNING_LABELS: Record<string, string> = {
 
 // A FALSE VERIFIED LIVED HERE.
 //
-// This function used to be a SECOND decision translator, switching on p.decision alone. It got two things
+// This file used to hold a SECOND decision translator, switching on p.decision alone. It got two things
 // wrong, and both produced the one error this company exists to prevent:
 //
 //   1. repair_verified rendered as a green "Verified". The canonical translator maps repair_verified to
@@ -45,20 +51,14 @@ const RUNNING_LABELS: Record<string, string> = {
 //   2. It ignored run state entirely. A run that FAILED or was CANCELLED while carrying decision='ready'
 //      rendered as a pass, when toPublicDecision refuses any non-completed state outright.
 //
-// There is now one translator. runVerdict delegates to toPublicDecision, so this page cannot disagree with
-// the Overview, the system page, or the API about what happened.
-const TONE: Record<string, { color: string; bg: string; border: string }> = {
-  verified: { color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" },
-  failed: { color: "var(--stop-ink)", bg: "var(--stop-wash)", border: "var(--stop-line)" },
-  blocked: { color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "var(--wait-line)" },
-  progress: { color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" },
-  unproven: { color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" },
-};
-
-function passStyle(p: PassRow): { label: string; color: string; bg: string; border: string; tone: string } {
-  const v = runVerdict(p.state, p.decision);
-  return { label: v.label, tone: v.tone, ...TONE[v.tone] };
-}
+// That was fixed by routing the local translator through runVerdict, which left this page holding a colour
+// table and a size for a badge eight other surfaces also drew. The colours agreed by luck rather than by
+// construction, and the badge rendered at 10px here against 10.5, 11 and 12.5 elsewhere. The pill is now
+// <Verdict>, so the label, the tone, the mark and the size all arrive from one place.
+//
+// runVerdict is still imported, and still called below, because this page does something the pill cannot:
+// it GROUPS rows by their public verdict. The heading a row sits under and the pill it wears must come from
+// the same answer, which is why both go through the shared translator rather than one asking the component.
 
 // The ink a count wears, keyed by the section it summarises. Only the three public verdicts get a colour;
 // Running and Not yet verified are states, not conclusions, so they stay neutral.
@@ -76,19 +76,18 @@ function StatChip({ label, value, color }: { label: string; value: number; color
 }
 
 function PassLine({ pass }: { pass: PassRow }) {
-  const st = passStyle(pass);
   const when = timeAgo(pass.completedAt ?? pass.createdAt);
   return (
     <Link
       href={`/systems/${pass.applicationId}/passes/${pass.id}`}
       style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 16px", textDecoration: "none", color: "inherit" }}
     >
-      {/* The mark is driven by the PUBLIC tone, not the raw decision: a repair_verified row reads Blocked,
-          so it must not carry the verified-repair wrench beside that word. */}
-      <span className="pill" style={{ fontSize: 10, color: st.color, background: st.bg, borderColor: st.border, flex: "none" }}><DecisionMark decision={st.tone} />{st.label}</span>
+      <Verdict state={pass.state} decision={pass.decision} style={{ flex: "none" }} />
       <span style={{ fontWeight: 600, fontSize: 14, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: "0 1 auto", minWidth: 0 }}>
         {pass.applicationName || "Untitled system"}
       </span>
+      {/* Lineage, not a verdict. "rerun" says how this run came to exist; it makes no claim about what it
+          found, so it keeps the plain .pill and stays out of the signal vocabulary. */}
       {pass.parentRunId && (
         <span className="pill" style={{ fontSize: 10, color: "var(--fg-4)", background: "var(--bg-2)", borderColor: "var(--line-2)", flex: "none" }}>rerun</span>
       )}
@@ -153,39 +152,40 @@ export default async function PassesPage() {
   ].filter((s) => s.rows.length > 0);
 
   return (
-    <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-      {/* header */}
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 24 }}>
-        <div>
-          <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "0 0 10px" }}>Verifications</h1>
-          <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.6, margin: 0, maxWidth: 560 }}>
-            Every verification run across your systems, newest first, grouped by the decision it produced.
-          </p>
-        </div>
-        <Link href="/systems/new" className="btn" style={{ flex: "none" }}>+ Connect app</Link>
-      </div>
+    <Page>
+      <PageHeader
+        title="Verifications"
+        lead="Every verification run across your systems, newest first, grouped by the decision it produced."
+        actions={<Link href="/systems/new" className="btn">+ Connect app</Link>}
+      />
 
-      {passes.length === 0 ? (
-        <div className="empty">
-          <EmptyIcon d={I.shield} />
-          <h3>Nothing verified yet</h3>
-          <p>Connect a system and run a verification in a real browser to get a decision.</p>
-          <Link href="/systems/new" className="btn">Connect an app</Link>
-        </div>
-      ) : (
-        <>
-          {/* Counts read from the SAME sections rendered below, so a chip can never disagree with the list
-              under it. They used to be six independent filters on raw decision strings, which is how a
-              "Verified (targeted rerun)" chip came to count runs the rest of the product calls Blocked. */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 24 }}>
-            {sections.map((s) => (
-              <StatChip key={s.label} label={s.label} value={s.rows.length} color={CHIP_INK[s.label]} />
-            ))}
+      {/* <Page> owns the measure and the shell overrides only padding-TOP, so the tail room this page has
+          always had is kept here, on the content. Every sibling page carries the same 80px; without it the
+          last row sat flush against the bottom of the window on this page alone. */}
+      <div style={{ paddingBottom: 80 }}>
+
+        {passes.length === 0 ? (
+          <div className="empty">
+            <EmptyIcon d={I.shield} />
+            <h3>Nothing verified yet</h3>
+            <p>Connect a system and run a verification in a real browser to get a decision.</p>
+            <Link href="/systems/new" className="btn">Connect an app</Link>
           </div>
+        ) : (
+          <>
+            {/* Counts read from the SAME sections rendered below, so a chip can never disagree with the list
+                under it. They used to be six independent filters on raw decision strings, which is how a
+                "Verified (targeted rerun)" chip came to count runs the rest of the product calls Blocked. */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 24 }}>
+              {sections.map((s) => (
+                <StatChip key={s.label} label={s.label} value={s.rows.length} color={CHIP_INK[s.label]} />
+              ))}
+            </div>
 
-          {sections.map((s) => <PassSection key={s.label} label={s.label} rows={s.rows} />)}
-        </>
-      )}
-    </div>
+            {sections.map((s) => <PassSection key={s.label} label={s.label} rows={s.rows} />)}
+          </>
+        )}
+      </div>
+    </Page>
   );
 }

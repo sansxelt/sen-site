@@ -76,7 +76,12 @@ for (const s of ["completed", "running", "queued", "failed", "cancelled"]) for (
 }
 ok("every decision maps to a public label via the shared translator", true);
 ok("a targeted repair rerun (repair_verified) renders the public Blocked conclusion, not Verified", runVerdict("completed", "repair_verified").label === "Blocked");
-ok("the page renders the verdict label from the translator, not a raw decision string", /verdict\.label/.test(page) && !/>\{run\.decision\}/.test(page));
+// `verdict` is runVerdict(run.state, run.decision) and the badge that draws it is the shared <Verdict>,
+// which takes the whole {label, tone} rather than the label alone — so `verdict.label` no longer appears
+// spelled out. What is under test is that the page renders the TRANSLATOR's answer and never the raw
+// internal decision string, and the negative half of that is what actually catches the defect.
+ok("the page renders the verdict label from the translator, not a raw decision string",
+  (/verdict\.label/.test(page) || /<Verdict verdict=\{verdict\}/.test(page)) && !/>\{run\.decision\}/.test(page));
 ok("no internal verdict string is rendered as user text", !/>ready<|>needs_review<|>repair_verified<|Production Pass/.test(page));
 ok('visible product language is "Verification", not "Pass"', /title: "Verification"/.test(page) && !/>Preflight run<|Production Pass/.test(page));
 
@@ -101,8 +106,18 @@ for (const [n, aria] of [["02", "Submitted claim"], ["03", "Outcome"], ["04", "E
 }
 // Two <h1> tags exist in source but in MUTUALLY EXCLUSIVE return paths (the not-found early return and the main
 // record), so any RENDERED page has exactly one h1 and the error state no longer starts its hierarchy at h3.
-ok("each rendered state has exactly one h1 (not-found + the record); sections use h2", (page.match(/<h1/g) ?? []).length === 2 && /<h1[^>]*>Verification not found<\/h1>/.test(page) && /<h2/.test(page));
-ok("the conclusion is conveyed by text, not colour alone (a labelled chip)", /<Chip tone=\{verdict\.tone\} label=\{verdict\.label\}/.test(page));
+// The record's own h1 is <PageHeader>'s now; the not-found state keeps a literal one because it is a 404
+// message rather than a page name. Two headings in source, one per rendered path, is still the invariant.
+// Comments are stripped before counting: the file now explains in prose WHY the 404's h1 stayed an h1
+// while the record's became a <PageHeader>, and naming the component in a sentence is not a heading.
+const pageCode = page.replace(/^\s*\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "");
+ok("each rendered state has exactly one h1 (not-found + the record); sections use h2",
+  ((pageCode.match(/<h1|<PageHeader/g) ?? []).length) === 2
+  && /<h1[^>]*>Verification not found<\/h1>/.test(page) && /<h2/.test(page));
+// The chip is the shared <Verdict> now, which carries the label as TEXT beside a tone-specific mark. That
+// is strictly more than the old Chip did: it adds a second non-colour channel rather than removing one.
+ok("the conclusion is conveyed by text, not colour alone (a labelled chip)",
+  /<Chip tone=\{verdict\.tone\} label=\{verdict\.label\}/.test(page) || /<Verdict verdict=\{verdict\}/.test(page));
 
 console.log("\n── Increment 2: submitted claim (plain text, source_prompt only, drift-honest contract) ──");
 ok("the claim renders as plain text (React-escaped; no HTML/Markdown renderer)", /\{claim\}/.test(page) && !/dangerouslySetInnerHTML/.test(page) && !/ReactMarkdown|remark|<Markdown/.test(page));
@@ -176,7 +191,10 @@ console.log("\n── Increment 5: immutable provenance (identity, reviewed plan
 const rpDb = readFileSync("lib/preflight/reviewed-plan-db.ts", "utf8");
 // 01 Verification record identity
 ok("the record identity block shows the run id and offers a copy control", /Verification \{shortId\(runId\)\}/.test(page) && /<CopyButton text=\{runId\} label="Copy id" \/>/.test(page));
-ok("the conclusion in the identity block goes through the shared translator (a Chip), never a recomputed verdict", /<Chip tone=\{verdict\.tone\} label=\{verdict\.label\} \/>/.test(page));
+// Same badge swap as above: the point is that the identity block reuses the ONE `verdict` this page
+// already derived from the translator, rather than recomputing a second answer beside the first.
+ok("the conclusion in the identity block goes through the shared translator (a Chip), never a recomputed verdict",
+  /<Chip tone=\{verdict\.tone\} label=\{verdict\.label\} \/>/.test(page) || /<Verdict verdict=\{verdict\} \/>/.test(page));
 ok("record identity shows the run's own created/completed timestamps (its real lifecycle)", /Created \{when\(run\.created_at\)\}/.test(page) && /Completed \{when\(run\.completed_at\)\}/.test(page));
 ok("the parent link, when present, points at the owner-authorized parent result route", page.includes("href={`/systems/${id}/passes/${run.parent_run_id}`}"));
 // 02 Reviewed-plan provenance — REAL persisted binding only

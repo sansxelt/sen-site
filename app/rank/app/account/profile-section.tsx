@@ -194,15 +194,23 @@ export function ProfileSection({ email, initialDisplayName, planBadge }: { email
 
         {/* name + email */}
         <div style={{ flex: "1 1 260px", minWidth: 240 }}>
-          <div style={label}>Display name</div>
+          {/* The kicker above the field WAS the label and was not one: a <div> cannot name an input, so this
+              field's accessible name came from an aria-label that duplicated the visible words. Making the
+              div a <label htmlFor> means the two can no longer say different things, and the duplicate
+              aria-label goes. Only 8 of 108 files in this console used htmlFor at all against 67 <label>
+              elements, so this is the pattern being repaired, not a one-off. */}
+          <label htmlFor="profile-display-name" style={{ ...label, display: "block" }}>Display name</label>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            {/* This field never set outline:"none", so its focus ring already worked. The inline border and
+                background still beat authenticated.css's :focus rule, which is why the field beside it in
+                the same card lit up on focus and this one did not. Both now answer to the stylesheet. */}
             <input
+              id="profile-display-name"
               value={name}
               onChange={(e) => { setName(e.target.value); setNameMsg(null); }}
               placeholder="How should we address you?"
               maxLength={60}
-              aria-label="Display name"
-              style={{ flex: "1 1 180px", minWidth: 160, padding: "9px 12px", borderRadius: 10, border: "1px solid var(--line-2)", background: "var(--bg-1)", fontSize: 14, color: "var(--fg-1)", fontFamily: "inherit" }}
+              style={{ flex: "1 1 180px", minWidth: 160, padding: "9px 12px", borderRadius: 10, borderWidth: 1, borderStyle: "solid", fontSize: 14, color: "var(--fg-1)", fontFamily: "inherit" }}
             />
             <button className="btn" style={{ padding: "9px 15px", fontSize: 13.5 }} disabled={savingName || name.trim() === savedName.trim()} onClick={saveName}>{savingName ? "Saving..." : "Save"}</button>
           </div>

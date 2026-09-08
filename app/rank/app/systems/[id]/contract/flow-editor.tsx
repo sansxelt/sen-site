@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { TestFlow, Severity } from "@/lib/v-applications";
 import { FLOW_ACTIONS, ACTION_LABELS, AUTH_FLOW_ACTIONS, MAX_STEPS, type FlowAction, type FlowStep } from "@/lib/preflight/flow-steps";
 import { Ic, I } from "@/app/rank/_components/icons";
+import { inputSm, lab } from "../../_connections/forms";
 
 // The MINIMUM real flow editor (S8A): name, optional goal, a role select (the app's test-account roles plus
 // an "Unauthenticated (no role)" default), and a STEP BUILDER that adds actions from FLOW_ACTIONS through a
@@ -15,9 +16,14 @@ import { Ic, I } from "@/app/rank/_components/icons";
 
 const NO_ROLE = "__none__"; // sentinel for the unauthenticated default in the role <select>
 
-const inputStyle: React.CSSProperties = { width: "100%", padding: "9px 12px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 13.5, fontFamily: "var(--font-sans)", outline: "none", boxSizing: "border-box" };
-const selectStyle: React.CSSProperties = { ...inputStyle, cursor: "pointer" };
-const lab: React.CSSProperties = { fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", display: "block", marginBottom: 6 };
+// This carried outline: "none" beside an inline border and background, and every control in the step
+// builder is spread from it. An inline outline outranks [data-surface="app"] :focus-visible however
+// specific the selector is, so the whole builder — a form whose entire purpose is being filled in field by
+// field, often by keyboard — never showed which field had focus. The shared object carries the geometry
+// only; _connections/forms.tsx explains why the border and background had to go at the same time. `lab` was
+// a copy of the same label object that file already exported.
+const inputStyle: React.CSSProperties = inputSm;
+const selectStyle: React.CSSProperties = { ...inputSm, cursor: "pointer" };
 const iconBtn: React.CSSProperties = { width: 26, height: 26, borderRadius: 6, border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-4)", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", flex: "none" };
 
 const SEVERITIES: Severity[] = ["critical", "important", "informational"];
@@ -264,7 +270,9 @@ export function FlowEditor({
 
       {/* step builder */}
       <div>
-        <label style={lab}>Steps</label>
+        {/* Not a <label>: it names the step list, and a label with no control is one a screen reader
+            announces with nothing attached and a click sends somewhere unpredictable. */}
+        <div style={lab}>Steps</div>
         {steps.length === 0 ? (
           <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, margin: "0 0 10px" }}>
             No steps yet. Add the actions Vraelis should perform, in order.

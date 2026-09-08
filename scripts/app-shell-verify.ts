@@ -118,10 +118,18 @@ for (const money of ["Plans", "Credits", "Billing", "Limits"]) {
   for (const [where, block] of [["sidebar", navBlock], ["account menu", menuBlock]] as const) {
     for (const g of Array.from(block.matchAll(/href: "([^"]+)", label: "([^"]+)"/g))) {
       const [, href, labelText] = g;
-      const file = IMPL[href] ?? (href === "/app" ? "app/rank/app/page.tsx" : `app/rank/app${href}/page.tsx`);
+      const file = IMPL[href] ?? `app/rank/app${href}/page.tsx`;
       if (!existsSync(file)) continue;                     // settings pages are checked by their own suites
-      const h1 = readFileSync(file, "utf8").match(/<h1[^>]*>([^<{]+)<\/h1>/);
-      if (!h1) continue;                                   // no literal h1 to compare (dynamic heading)
+      // THE HEADING, IN EITHER FORM IT IS WRITTEN IN.
+      //
+      // This read a literal <h1> only. Pages are moving onto the shared <PageHeader title="..."> (there
+      // were six different h1 sizes and fifteen content widths before it existed), and a page that adopts
+      // it has no literal h1 left in its own file. The `continue` below would then skip it SILENTLY, so
+      // the rename this assertion exists to catch could walk straight past a converted page. Both forms
+      // are read, and a page carrying neither is still skipped as genuinely dynamic.
+      const src = readFileSync(file, "utf8");
+      const h1 = src.match(/<h1[^>]*>([^<{]+)<\/h1>/) ?? src.match(/<PageHeader[^>]*\stitle="([^"]+)"/);
+      if (!h1) continue;                                   // no literal heading to compare (dynamic heading)
       const heading = h1[1].replace(/&amp;/g, "&").trim();
       checked.push(`${where}:${labelText}`);
       if (heading.toLowerCase() !== labelText.toLowerCase()) mismatched.push(`${where} "${labelText}" -> "${heading}"`);
@@ -231,6 +239,15 @@ ok("the public developers docs page exists", existsSync("app/rank/developers/pag
 ok("the authenticated developers console page exists", existsSync("app/rank/app/developers/page.tsx"));
 
 console.log("\n── increment 2: landmarks, current-page indication, shared nav body ──");
+// THE SKIP LINK, WHICH THE CONSOLE DID NOT HAVE.
+// The sidebar is a nav landmark holding roughly twenty focusable controls and it precedes the content on
+// every page, so without this a keyboard reader tabbed the entire menu again on every navigation. The
+// public site has had one since design 06; the product, where people navigate far more, had none.
+ok("a skip link is the first thing in the shell", /<a href="#app-main" className="app-skip">/.test(ui));
+ok("  and main is its target, and focusable so the jump actually moves focus",
+  /<main id="app-main"[^>]*tabIndex=\{-1\}/.test(ui));
+ok("  and it is visible when focused rather than only when focus-visible fires",
+  /\.app-skip:focus\{transform:none/.test(ui));
 ok("the sidebar is a labelled nav landmark", /<nav className="app-side" aria-label="Primary">/.test(ui));
 ok("the active nav item is announced with aria-current=page", /aria-current=\{on \? "page" : undefined\}/.test(ui));
 // The body is two shared pieces now, not one: the groups and the foot, because the two shells pin the foot

@@ -7,6 +7,7 @@ import { getApplication } from "@/lib/v-applications";
 import { getApiTarget, getLatestApiBuild, listApiFlows } from "@/lib/preflight/runtime/targets-db";
 import { listConnections } from "@/lib/preflight/connections-db";
 import { AppTabs } from "../app-tabs";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 import { ApiWorkspace } from "./api-workspace";
 
 // No descriptive static metadata: the title is exported before the server component runs its gate, so a
@@ -33,23 +34,31 @@ export default async function ApiRuntimePage({ params }: { params: Promise<{ id:
     .map((c) => ({ id: c.id, label: String((c.meta as { label?: string })?.label ?? "API credential"), secretMask: String((c.meta as { secret_mask?: string })?.secret_mask ?? "••••"), scheme: String((c.meta as { scheme?: string })?.scheme ?? "bearer") }));
 
   return (
-    <main style={{ maxWidth: 940, margin: "0 auto", padding: "0 20px 80px" }}>
-      <div style={{ paddingTop: 24 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--fg-1)", margin: 0 }}>{app.name}</h1>
-        <p style={{ color: "var(--fg-3)", fontSize: 14, marginTop: 4 }}>API verification</p>
+    // THIS PAGE STOOD IN A DIFFERENT PLACE FROM EVERY OTHER PAGE IN THE CONSOLE.
+    //
+    // It was a bare <main> with its own 940px measure and its own 20px gutter, so its left edge and its
+    // vertical origin both differed from the .wrap every sibling tab uses: clicking between Verifications
+    // and API visibly shifted the whole column, tab bar included. It was also a SECOND <main> nested inside
+    // the shell's own, which is a duplicate landmark that a screen-reader user navigates into by mistake.
+    //
+    // The heading was 22px at weight 700, the smallest and heaviest of the six h1s the console shipped, and
+    // "API verification" underneath it was the lead line it has always been.
+    <Page>
+      <PageHeader title={app.name} lead="API verification" />
+      <div style={{ paddingBottom: 80 }}>
+        <AppTabs appId={id} active="api" showApiTab />
+        <ApiWorkspace
+          appId={id}
+          canEdit={caps.canEditContract}
+          canLaunch={caps.canLaunch}
+          initial={{
+            target: target ? { id: target.id, label: target.label, environment: target.environment } : null,
+            build: build ? { baseUrl: build.base_url, version: build.version } : null,
+            flows: flows.map((f) => ({ id: f.id, name: f.name, priority: f.priority, enabled: f.enabled, steps: (f.steps as { action: string }[]) })),
+            credentials,
+          }}
+        />
       </div>
-      <AppTabs appId={id} active="api" showApiTab />
-      <ApiWorkspace
-        appId={id}
-        canEdit={caps.canEditContract}
-        canLaunch={caps.canLaunch}
-        initial={{
-          target: target ? { id: target.id, label: target.label, environment: target.environment } : null,
-          build: build ? { baseUrl: build.base_url, version: build.version } : null,
-          flows: flows.map((f) => ({ id: f.id, name: f.name, priority: f.priority, enabled: f.enabled, steps: (f.steps as { action: string }[]) })),
-          credentials,
-        }}
-      />
-    </main>
+    </Page>
   );
 }

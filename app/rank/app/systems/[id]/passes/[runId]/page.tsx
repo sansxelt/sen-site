@@ -18,6 +18,8 @@ import { RerunButton } from "./rerun-button";
 import { CopyButton } from "./copy-button";
 import { AutoRefresh } from "./auto-refresh";
 import { Ic, I, EmptyIcon } from "@/app/rank/_components/icons";
+import { Verdict } from "@/app/rank/_components/verdict";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 import { passPricingEnabled, rerunPriceCents } from "@/lib/preflight/pass-pricing";
 import { usdFromCents } from "@/lib/preflight/pass-pricing-format";
 import { gatePassLaunch } from "@/lib/preflight/entitlements-v1";
@@ -395,14 +397,18 @@ export default async function VerificationResultPage({ params }: { params: Promi
   // "does not exist" and "not yours" — the page never reveals whether another tenant's run exists.
   if (!detail || !internal || internal.applicationId !== id) {
     return (
-      <div className="wrap" style={{ maxWidth: 1080, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-        <div className="empty">
+      <Page>
+        {/* This h1 stays an h1 inside the .empty tile rather than becoming a <PageHeader>. It is a 404
+            message, not the name of a page: putting a 38px display title above an empty-state card that
+            already carries its own heading would say this page exists and is called "Verification not
+            found", which is the opposite of what the tile is there to say. */}
+        <div className="empty" style={{ marginBottom: 80 }}>
           <EmptyIcon d={I.slash} />
           <h1 style={{ ...h2Style, fontSize: "1.4rem" }}>Verification not found</h1>
           <p>This verification does not exist, or it belongs to another account.</p>
           <Link href={`/systems/${id}`} className="btn">Back to system</Link>
         </div>
-      </div>
+      </Page>
     );
   }
 
@@ -538,7 +544,7 @@ export default async function VerificationResultPage({ params }: { params: Promi
   if (repairIssues.length > 0) limitations.push("Repair guidance is a suggested fix, not a proven root-cause analysis.");
 
   return (
-    <div className="wrap" style={{ maxWidth: 1080, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
+    <Page>
       <nav aria-label="Breadcrumb" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 13, marginBottom: 18 }}>
         <Link href="/systems" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Systems</Link>
         <span aria-hidden style={{ color: "var(--fg-5)" }}>/</span>
@@ -547,404 +553,414 @@ export default async function VerificationResultPage({ params }: { params: Promi
         <span style={{ color: "var(--fg-2)", fontWeight: 600 }}>Verification</span>
       </nav>
 
-      {/* ── 01 CONTEXT: what was checked, where, when — the head of a proof-first page (no giant verdict banner) ── */}
-      <header style={{ display: "grid", gap: 12 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <div style={label}>Verification</div>
-          {hasConclusion ? <Chip tone={verdict.tone} label={verdict.label} /> : (
-            <span className="pill" style={{ fontSize: 10.5, color: "var(--fg-3)", background: "var(--bg-2)", borderColor: "var(--line-2)" }}>
-              {active ? runningStage(run.state) : verdict.label}
-            </span>
-          )}
-        </div>
-        <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(1.7rem, 3.4vw, 2.3rem)", letterSpacing: "-0.02em", lineHeight: 1.08, color: "var(--fg-1)", margin: 0, wordBreak: "break-word" }}>
-          {app?.name ?? "System"}
-        </h1>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 18px", ...metaText }}>
-          {run.deployment_url ? <a href={run.deployment_url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--fg-2)", textDecoration: "none", wordBreak: "break-all" }}>{run.deployment_url}</a> : null}
-          {deployCommit ? <span>commit {deployCommit}</span> : null}
-          {deployEnvLabel ? <span>{deployEnvLabel}</span> : null}
-          {contractVersion != null ? <span>Contract v{contractVersion}</span> : null}
-          <span title={when(completedIso)}>{active ? `Started ${ago(run.created_at)}` : `Completed ${ago(completedIso)}`}</span>
-          <span style={{ fontFamily: "var(--font-mono)", color: "var(--fg-4)" }} title={`Verification ${runId}`}>#{shortId(runId)}</span>
-          {active ? <span style={{ color: "var(--fg-4)" }}>Updates automatically</span> : null}
-        </div>
-      </header>
+      {/* ── 01 CONTEXT: what was checked, where, when — the head of a proof-first page (no giant verdict banner) ──
+          The word above the title was the local `label` object, 11px code-face uppercase, which is the OTHER
+          thing this console calls an eyebrow; the .eyebrow class <PageHeader> renders is the standard one.
+          The h1 set its own clamp(1.7rem, 3.4vw, 2.3rem), a seventh size that appeared on no other page.
+          The meta row moves into the lead and the conclusion into the header's action slot, so the verdict
+          sits on the title's baseline the way it does on the guarantee detail page. */}
+      <PageHeader
+        eyebrow="Verification"
+        title={app?.name ?? "System"}
+        lead={
+          <span style={{ display: "flex", flexWrap: "wrap", gap: "6px 18px", ...metaText }}>
+            {run.deployment_url ? <a href={run.deployment_url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--fg-2)", textDecoration: "none", wordBreak: "break-all" }}>{run.deployment_url}</a> : null}
+            {deployCommit ? <span>commit {deployCommit}</span> : null}
+            {deployEnvLabel ? <span>{deployEnvLabel}</span> : null}
+            {contractVersion != null ? <span>Contract v{contractVersion}</span> : null}
+            <span title={when(completedIso)}>{active ? `Started ${ago(run.created_at)}` : `Completed ${ago(completedIso)}`}</span>
+            <span style={{ fontFamily: "var(--font-mono)", color: "var(--fg-4)" }} title={`Verification ${runId}`}>#{shortId(runId)}</span>
+            {active ? <span style={{ color: "var(--fg-4)" }}>Updates automatically</span> : null}
+          </span>
+        }
+        actions={
+          // A live run reports its STAGE, which is not a verdict and must not be dressed as one. Anything
+          // else, conclusion or not, is <Verdict>: it already renders "Not yet verified" in the neutral tone
+          // for a run that reached no conclusion, which is what the old ternary's third branch spelled out.
+          active
+            ? <span className="pill" style={{ fontSize: 10.5, color: "var(--fg-3)", background: "var(--bg-2)", borderColor: "var(--line-2)" }}>{runningStage(run.state)}</span>
+            : <Verdict verdict={verdict} size="md" />
+        }
+      />
 
-      {/* INVALIDATED BY A VERIFIER DEFECT. The verdict above is preserved exactly as it was issued, because
-          a record that changes retroactively is worth less than one that is wrong but honest. What this
-          says is that it no longer counts, and why. Placed above the evidence so nobody reads the findings
-          as facts about their software before learning the run was ours. */}
-      {run.invalidation ? (
-        <div role="note" style={{ marginTop: 20, border: "1px solid var(--wait-line)", background: "var(--wait-wash)", borderRadius: "var(--r-md, 10px)", padding: "clamp(14px, 2vw, 20px)", display: "grid", gap: 8 }}>
-          <div style={{ ...label, color: "var(--wait-ink)" }}>Invalidated (verifier defect)</div>
-          <p style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.55, margin: 0, maxWidth: "68ch" }}>
-            {run.invalidation.reason ?? "This result was produced by a defect in Vraelis, not by the software under test."}
-          </p>
-          <p style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>
-            The decision and evidence below are kept exactly as they were issued, and are no longer counted toward this
-            system&apos;s current state, its open issues, or any guarantee.
-            {run.invalidation.ref ? <> Defect reference {run.invalidation.ref}.</> : null}
-            {run.invalidation.by ? <> Recorded by {run.invalidation.by}.</> : null}
-          </p>
-        </div>
-      ) : null}
+      {/* <Page> owns the measure and the shell owns padding-top, so the tail room this page has
+          always had stays here, on the body. */}
+      <div style={{ paddingBottom: 80 }}>
+        {/* INVALIDATED BY A VERIFIER DEFECT. The verdict above is preserved exactly as it was issued, because
+            a record that changes retroactively is worth less than one that is wrong but honest. What this
+            says is that it no longer counts, and why. Placed above the evidence so nobody reads the findings
+            as facts about their software before learning the run was ours. */}
+        {run.invalidation ? (
+          <div role="note" style={{ marginTop: 20, border: "1px solid var(--wait-line)", background: "var(--wait-wash)", borderRadius: "var(--r-md, 10px)", padding: "clamp(14px, 2vw, 20px)", display: "grid", gap: 8 }}>
+            <div style={{ ...label, color: "var(--wait-ink)" }}>Invalidated (verifier defect)</div>
+            <p style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.55, margin: 0, maxWidth: "68ch" }}>
+              {run.invalidation.reason ?? "This result was produced by a defect in Vraelis, not by the software under test."}
+            </p>
+            <p style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>
+              The decision and evidence below are kept exactly as they were issued, and are no longer counted toward this
+              system&apos;s current state, its open issues, or any guarantee.
+              {run.invalidation.ref ? <> Defect reference {run.invalidation.ref}.</> : null}
+              {run.invalidation.by ? <> Recorded by {run.invalidation.by}.</> : null}
+            </p>
+          </div>
+        ) : null}
 
-      <div style={{ display: "grid", gap: "clamp(20px, 3vw, 30px)", marginTop: "clamp(20px, 3vw, 30px)" }}>
+        <div style={{ display: "grid", gap: "clamp(20px, 3vw, 30px)", marginTop: "clamp(20px, 3vw, 30px)" }}>
 
-        {/* ── 02 SUBMITTED CLAIM — the outcome this verification checked. It is contract.source_prompt (the
-              SUBMITTED CLAIM behind this verification), NOT a stored guarantee object. The claim leads as plain,
-              readable text (React-escaped, no HTML/Markdown, no quote marks, no chat styling); the contract
-              identity + its CURRENT requirements sit beneath, labeled honestly (current, not an executed
-              snapshot). Omitted cleanly with a quiet note when the claim is absent. ── */}
-        {(claim || contract || requirements.length > 0) ? (
-          <Section n="02" title="What had to be true" aria="Submitted claim">
-            {/* THE STANDING PROMISE THIS RUN PROVES. Read from the run's own pin, so it says what this run
-                was bound to at launch rather than what the guarantee happens to say now. When the guarantee
-                has been re-approved since, the run is evidence for a definition that no longer stands, and
-                the record says so instead of letting an old result read as current proof. */}
-            {guarantee ? (
-              <div style={{ marginBottom: 14, display: "grid", gap: 4 }}>
-                <div style={label}>Guarantee</div>
-                <Link href={`/systems/${id}/guarantees/${guarantee.id}`} style={{ fontSize: 14, color: "var(--fg-1)", fontWeight: 600, textDecoration: "none", maxWidth: "60ch" }}>
-                  {guarantee.title} <span aria-hidden style={{ color: "var(--fg-5)", fontWeight: 400 }}>→</span>
-                </Link>
-                <p style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>
-                  {internal.guaranteePlanVersion != null ? <>Proved against approved plan v{internal.guaranteePlanVersion}. </> : null}
-                  {provesCurrentMeaning({ state: run.state, decision: run.decision, planHash: internal.guaranteePlanHash }, guarantee.approved_plan_hash)
-                    ? "This is still the guarantee's approved meaning."
-                    : "The guarantee has been re-approved since, so this record is evidence for a superseded definition and does not count toward its current state."}
-                </p>
-              </div>
-            ) : null}
-            {claim ? (
-              <p style={{ fontSize: "clamp(1.05rem, 1.9vw, 1.3rem)", color: "var(--fg-1)", lineHeight: 1.5, letterSpacing: "-0.005em", margin: 0, maxWidth: "60ch", wordBreak: "break-word", whiteSpace: "pre-line" }}>{claim}</p>
+          {/* ── 02 SUBMITTED CLAIM — the outcome this verification checked. It is contract.source_prompt (the
+                SUBMITTED CLAIM behind this verification), NOT a stored guarantee object. The claim leads as plain,
+                readable text (React-escaped, no HTML/Markdown, no quote marks, no chat styling); the contract
+                identity + its CURRENT requirements sit beneath, labeled honestly (current, not an executed
+                snapshot). Omitted cleanly with a quiet note when the claim is absent. ── */}
+          {(claim || contract || requirements.length > 0) ? (
+            <Section n="02" title="What had to be true" aria="Submitted claim">
+              {/* THE STANDING PROMISE THIS RUN PROVES. Read from the run's own pin, so it says what this run
+                  was bound to at launch rather than what the guarantee happens to say now. When the guarantee
+                  has been re-approved since, the run is evidence for a definition that no longer stands, and
+                  the record says so instead of letting an old result read as current proof. */}
+              {guarantee ? (
+                <div style={{ marginBottom: 14, display: "grid", gap: 4 }}>
+                  <div style={label}>Guarantee</div>
+                  <Link href={`/systems/${id}/guarantees/${guarantee.id}`} style={{ fontSize: 14, color: "var(--fg-1)", fontWeight: 600, textDecoration: "none", maxWidth: "60ch" }}>
+                    {guarantee.title} <span aria-hidden style={{ color: "var(--fg-5)", fontWeight: 400 }}>→</span>
+                  </Link>
+                  <p style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>
+                    {internal.guaranteePlanVersion != null ? <>Proved against approved plan v{internal.guaranteePlanVersion}. </> : null}
+                    {provesCurrentMeaning({ state: run.state, decision: run.decision, planHash: internal.guaranteePlanHash }, guarantee.approved_plan_hash)
+                      ? "This is still the guarantee's approved meaning."
+                      : "The guarantee has been re-approved since, so this record is evidence for a superseded definition and does not count toward its current state."}
+                  </p>
+                </div>
+              ) : null}
+              {claim ? (
+                <p style={{ fontSize: "clamp(1.05rem, 1.9vw, 1.3rem)", color: "var(--fg-1)", lineHeight: 1.5, letterSpacing: "-0.005em", margin: 0, maxWidth: "60ch", wordBreak: "break-word", whiteSpace: "pre-line" }}>{claim}</p>
+              ) : (
+                <Empty>The original submitted claim is not available for this historical record.</Empty>
+              )}
+              {(contractVersion != null || requirements.length > 0) ? (
+                <div style={{ marginTop: 6, display: "grid", gap: 8 }}>
+                  <div style={label}>{contractVersion != null ? `Current requirements for Contract v${contractVersion}` : "Current contract requirements"}</div>
+                  {contractDrifted ? (
+                    <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>The contract has changed since this verification. The requirements below reflect the current contract, not a historical text snapshot.</p>
+                  ) : requirements.length > 0 ? (
+                    <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>These are the current requirements associated with this contract. Historical requirement text was not separately snapshotted for this verification.</p>
+                  ) : null}
+                  {/* Current requirement TEXT only — no per-requirement pass mark (a current requirement is context,
+                      not proof this run checked it; the requirement->finding linkage is a later increment). */}
+                  {requirements.filter((r) => r.enabled).length > 0 ? (
+                    <ul style={{ margin: 0, padding: "0 0 0 18px", display: "grid", gap: 5, maxWidth: "68ch" }}>
+                      {requirements.filter((r) => r.enabled).map((r) => (
+                        <li key={r.id} style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5, wordBreak: "break-word" }}>{r.requirement}</li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              ) : null}
+            </Section>
+          ) : null}
+
+          {/* ── 03 OUTCOME — what ACTUALLY happened leads; the public conclusion is supporting metadata; a concise
+                "why" sits beneath. Scoped to the checked workflow, never generalized to the whole system. ── */}
+          <Section n="03" title="Outcome" aria="Outcome">
+            {active ? (
+              <p role="status" aria-live="polite" style={{ fontSize: 13.5, color: "var(--fg-4)", lineHeight: 1.55, margin: 0 }}>{runningStage(run.state)}. The conclusion is not final yet. This page updates on its own.</p>
             ) : (
-              <Empty>The original submitted claim is not available for this historical record.</Empty>
-            )}
-            {(contractVersion != null || requirements.length > 0) ? (
-              <div style={{ marginTop: 6, display: "grid", gap: 8 }}>
-                <div style={label}>{contractVersion != null ? `Current requirements for Contract v${contractVersion}` : "Current contract requirements"}</div>
-                {contractDrifted ? (
-                  <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>The contract has changed since this verification. The requirements below reflect the current contract, not a historical text snapshot.</p>
-                ) : requirements.length > 0 ? (
-                  <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>These are the current requirements associated with this contract. Historical requirement text was not separately snapshotted for this verification.</p>
+              <>
+                {observed ? <p style={{ fontSize: "clamp(15px, 1.7vw, 17px)", color: "var(--fg-1)", lineHeight: 1.55, margin: 0, maxWidth: "62ch", wordBreak: "break-word" }}>{observed}</p> : null}
+                <div style={{ display: "flex", alignItems: "center", gap: "6px 14px", flexWrap: "wrap", ...metaText, marginTop: 2 }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>{hasConclusion ? "Conclusion" : null}<Verdict verdict={verdict} /></span>
+                  {summaryLine ? <span>{summaryLine}</span> : null}
+                </div>
+                {why ? (
+                  <div style={{ marginTop: 2 }}>
+                    <div style={label}>Why Vraelis reached this conclusion</div>
+                    <p style={{ fontSize: 14, color: "var(--fg-2)", lineHeight: 1.55, margin: "4px 0 0", maxWidth: "64ch", wordBreak: "break-word" }}>{why}</p>
+                  </div>
                 ) : null}
-                {/* Current requirement TEXT only — no per-requirement pass mark (a current requirement is context,
-                    not proof this run checked it; the requirement->finding linkage is a later increment). */}
-                {requirements.filter((r) => r.enabled).length > 0 ? (
-                  <ul style={{ margin: 0, padding: "0 0 0 18px", display: "grid", gap: 5, maxWidth: "68ch" }}>
-                    {requirements.filter((r) => r.enabled).map((r) => (
-                      <li key={r.id} style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5, wordBreak: "break-word" }}>{r.requirement}</li>
+                {run.decision === "repair_verified" ? (
+                  <Empty>This is a separate targeted rerun record. The earlier verification it reran remains unchanged.</Empty>
+                ) : null}
+                {issues.length > 1 ? <Empty>This verification recorded {issues.length} findings.</Empty> : null}
+                {/* A quiet enumeration (title + severity + lineage) so no real failure is hidden and the Recurring
+                    vs first-seen lineage (issue.first_seen_run) stays visible. Full per-finding evidence is later. */}
+                {issues.length > 0 ? (
+                  <div style={{ display: "grid", gap: 8, marginTop: 4 }}>
+                    {issues.map((issue) => (
+                      <div key={issue.id} style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                        <span className="pill" style={{ fontSize: 10, color: SEV_COLOR[issue.severity] ?? "var(--fg-4)", borderColor: "var(--line-2)", background: "var(--bg-2)", flex: "none" }}>{SEV_LABEL[issue.severity] ?? issue.severity}</span>
+                        <span style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5, flex: "1 1 auto", minWidth: 0, wordBreak: "break-word" }}>{issue.title}</span>
+                        {issue.first_seen_run && issue.first_seen_run !== runId
+                          ? <span className="pill" style={{ fontSize: 10, color: "var(--wait-ink)", borderColor: "var(--wait-line)", background: "var(--wait-wash)", flex: "none" }} title="This finding was first detected in an earlier verification">Recurring</span>
+                          : <span className="pill" style={{ fontSize: 10, color: "var(--fg-4)", borderColor: "var(--line-2)", background: "var(--bg-2)", flex: "none" }} title="First detected in this verification">First seen here</span>}
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </>
+            )}
+          </Section>
+
+          {/* ── 04 EVIDENCE — the real proof for each finding: expected vs observed in prose, the screenshots large
+                (through the signed artifacts route ONLY), reproduction steps, a possible cause, and the raw
+                console/network inside a collapsed technical-details element. No storage path, session id, or raw
+                failure_message ever reaches the page. ── */}
+          <Section n="04" title="Evidence" aria="Evidence">
+            {issues.length > 0 ? (
+              <div style={{ display: "grid", gap: 14 }}>
+                {issues.map((issue, i) => {
+                  const m = metaForIssue(issue);
+                  const fname = m?.displayName ?? "";
+                  return <FindingEvidence key={issue.id} issue={issue} index={i} flowName={fname && !looksLikeId(fname) ? fname : null} screenshotIds={m?.screenshotIds ?? []} runId={runId} />;
+                })}
+              </div>
+            ) : (
+              <Empty>{active ? "Evidence is still being collected." : screenshotCount > 0 ? `${screenshotCount} screenshot${screenshotCount === 1 ? "" : "s"} were captured; they appear in the execution journey below.` : "No evidence was captured for this verification."}</Empty>
+            )}
+          </Section>
+
+          {/* ── 05 EXECUTION JOURNEY — each flow that ran, with its ORDERED step timeline (action, pass/fail, error
+                detail, real per-step ms — the only real timing, never a derived wall-clock), the authenticated-flow
+                panel (allowlisted owner-safe fields only), and the policy-permit line. Screenshots already shown
+                as a finding's evidence are not repeated here. ── */}
+          <Section n="05" title="Execution journey" aria="Execution journey">
+            {flows.length === 0 ? (
+              <Empty>{active ? "Waiting for the first flow to run." : "No flows were recorded for this verification."}</Empty>
+            ) : (
+              <div style={{ display: "grid", gap: 8 }}>
+                {flows.map((f, i) => (
+                  <FlowTimeline key={`${f.name}-${i}`} flow={f} displayName={flowName(f)} screenshotIds={shotsFor(f)} runId={runId} showShots={!shotsShownInFindings.has(f.name)} />
+                ))}
+              </div>
+            )}
+          </Section>
+
+          {/* ── 06 AFFECTED REQUIREMENTS — ONLY the requirement refs the findings actually stored, resolved to the
+                CURRENT contract text and linked back to the finding that raised each. No coverage matrix, no pass
+                marks; an unresolved ref becomes an honest "unavailable" entry, never a raw id or invented text. ── */}
+          <Section n="06" title="Affected requirements" aria="Affected requirements">
+            {affected.length === 0 ? (
+              <Empty>No specific requirements were flagged by the findings on this verification.</Empty>
+            ) : (
+              <>
+                <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>
+                  {contractVersion != null ? `Current requirements for Contract v${contractVersion} that a finding referenced. ` : ""}A verification does not mark a requirement passed; these are the ones its findings pointed at.
+                </p>
+                {affectedResolved.length > 0 ? (
+                  <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 8 }}>
+                    {affectedResolved.map((a) => (
+                      <li key={a.rid} style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap", borderLeft: "2px solid var(--line-3)", paddingLeft: 12 }}>
+                        <span style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5, flex: "1 1 auto", minWidth: 0, maxWidth: "68ch", wordBreak: "break-word" }}>{a.text}</span>
+                        <a href={`#finding-${a.findingId}`} style={{ fontSize: 12.5, color: "var(--acc-deep)", flex: "none", textDecoration: "none" }}>See finding {a.findingIndex + 1}</a>
+                      </li>
                     ))}
                   </ul>
                 ) : null}
+                {affectedUnavailable.length > 0 ? (
+                  <Empty>{affectedUnavailable.length} referenced requirement{affectedUnavailable.length === 1 ? "" : "s"} could not be resolved to current contract text. It may have been removed or renamed since this verification.</Empty>
+                ) : null}
+              </>
+            )}
+          </Section>
+
+          {/* ── 07 REPAIR HANDOFF — the REAL per-finding repair_prompt only: instructions for a coding agent, shown
+                as plain (React-escaped) text with its line breaks preserved and a copy control. Copying it changes
+                nothing; Vraelis verifies a repair, it never modifies the application from this page. No apply
+                action, no raw failure_message, no secret. A quiet honest fallback when there is none. ── */}
+          <Section n="07" title="Repair handoff" aria="Repair handoff">
+            {repairIssues.length === 0 ? (
+              <Empty>No repair guidance was generated for this verification.</Empty>
+            ) : (
+              <>
+                <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>Each prompt describes the observed failure and the requested repair for a coding agent. Copying it does not change your system; Vraelis verifies a repair, it does not modify your code from this page.</p>
+                <div style={{ display: "grid", gap: 12 }}>
+                  {repairIssues.map((iss) => (
+                    <div key={iss.id} style={{ display: "grid", gap: 8, border: "1px solid var(--line-2)", borderRadius: "var(--r-md, 10px)", background: "var(--bg-1)", padding: "12px 14px" }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={label}>Repair prompt for a coding agent</div>
+                          <div style={{ fontSize: 13, color: "var(--fg-2)", marginTop: 2, wordBreak: "break-word" }}>{iss.title}</div>
+                        </div>
+                        <CopyButton text={iss.repair_prompt as string} />
+                      </div>
+                      <pre style={{ margin: 0, fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.55, whiteSpace: "pre-wrap", wordBreak: "break-word", background: "var(--bg-2)", border: "1px solid var(--line-2)", borderRadius: 8, padding: "10px 12px", maxHeight: 340, overflow: "auto" }}>{iss.repair_prompt}</pre>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </Section>
+
+          {/* ── 08 REVERIFICATION — a read-only CTA into the EXISTING rerun/cancel flow (the page itself never
+                creates a run, reserves credit, or mutates state), plus the immutable lineage: parent -> this
+                record -> children, each a SEPARATE persisted run rendered through the canonical translator. A
+                later success never rewrites an earlier failure. ── */}
+          <Section n="08" title="Reverification" aria="Reverification">
+            {reverifyIntro ? <p style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.55, margin: 0, maxWidth: "64ch", wordBreak: "break-word" }}>{reverifyIntro}</p> : null}
+            {caps.canLaunch ? (
+              <div>
+                {terminal ? (
+                  run.decision === "repair_verified"
+                    ? <RerunButton appId={id} runId={runId} scope="critical" label="Run full critical verification" priceNote={rerunPriceNote} />
+                    : pub === "failed" ? <RerunButton appId={id} runId={runId} scope={hasFailures ? "failed" : "all"} label="Rerun the failed flows" priceNote={rerunPriceNote} />
+                    : <RerunButton appId={id} runId={runId} scope={hasFailures ? "failed" : "all"} label="Run another verification" priceNote={rerunPriceNote} />
+                ) : (
+                  // A running verification is NOT cancelled from this read-only record. This links to the run's
+                  // controls in the application, where cancellation keeps its own owner-checked confirmation flow;
+                  // the result page itself mutates nothing.
+                  <Link href={`/systems/${id}`} className="btn btn--ghost" style={{ justifySelf: "start" }}>View run controls</Link>
+                )}
+              </div>
+            ) : null}
+
+            {/* Immutable lineage — only shown when there is a parent or a child (a lone record needs no timeline). */}
+            {lineage.length > 1 ? (
+              <div style={{ marginTop: 6, display: "grid", gap: 8 }}>
+                <div style={label}>Verification history</div>
+                <div style={{ display: "grid", gap: 6 }}>
+                  {lineage.map((node) => {
+                    const nv = runVerdict(node.state, node.decision);
+                    const inner = (
+                      <>
+                        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-4)", flex: "none" }}>#{shortId(node.runId)}</span>
+                        {node.isCurrent ? <span style={{ fontSize: 12, color: "var(--fg-3)", fontWeight: 600, flex: "none" }}>This record</span> : null}
+                        <span style={{ fontSize: 12.5, color: "var(--fg-4)", flex: "1 1 auto" }} title={when(node.iso)}>{ago(node.iso)}</span>
+                        <Chip tone={nv.tone} label={nv.label} />
+                      </>
+                    );
+                    const rowStyle = { display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" as const, border: "1px solid var(--line-2)", borderRadius: "var(--r-md, 10px)", padding: "9px 13px", background: node.isCurrent ? "var(--bg-2)" : "var(--bg-1)" };
+                    return node.isCurrent
+                      ? <div key={node.runId} style={{ ...rowStyle, outline: "1px solid var(--acc-line)" }}>{inner}</div>
+                      : <Link key={node.runId} href={`/systems/${id}/passes/${node.runId}`} style={{ ...rowStyle, color: "inherit", textDecoration: "none" }}>{inner}</Link>;
+                  })}
+                </div>
+                <Empty>Every verification is a separate, immutable record. A later success does not overwrite an earlier failure, and a targeted repair check passing is not the same as a full Verified.</Empty>
               </div>
             ) : null}
           </Section>
-        ) : null}
 
-        {/* ── 03 OUTCOME — what ACTUALLY happened leads; the public conclusion is supporting metadata; a concise
-              "why" sits beneath. Scoped to the checked workflow, never generalized to the whole system. ── */}
-        <Section n="03" title="Outcome" aria="Outcome">
-          {active ? (
-            <p role="status" aria-live="polite" style={{ fontSize: 13.5, color: "var(--fg-4)", lineHeight: 1.55, margin: 0 }}>{runningStage(run.state)}. The conclusion is not final yet. This page updates on its own.</p>
-          ) : (
-            <>
-              {observed ? <p style={{ fontSize: "clamp(15px, 1.7vw, 17px)", color: "var(--fg-1)", lineHeight: 1.55, margin: 0, maxWidth: "62ch", wordBreak: "break-word" }}>{observed}</p> : null}
-              <div style={{ display: "flex", alignItems: "center", gap: "6px 14px", flexWrap: "wrap", ...metaText, marginTop: 2 }}>
-                {hasConclusion ? <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>Conclusion <Chip tone={verdict.tone} label={verdict.label} /></span> : <span>{verdict.label}</span>}
-                {summaryLine ? <span>{summaryLine}</span> : null}
+          {/* ── 09 PROVENANCE & IMMUTABLE HISTORY — a compact ledger of exactly what this record IS: its identity,
+                the reviewed plan / deployment / snapshot / contract it was BOUND to (pinned, never the latest),
+                the evidence retained, and the honest limits of what it can conclude. "Immutable" here means Vraelis
+                preserves the prior result rather than rewriting it after a repair — NOT a cryptographic claim. No
+                secret, token, session id, or storage path is ever a provenance value. ── */}
+          <Section n="09" title="Provenance" aria="Provenance and immutable history">
+            {/* Record identity */}
+            <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-md, 10px)", background: "var(--bg-1)", padding: "14px 16px", display: "grid", gap: 8 }}>
+              <div style={label}>This record</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 14px", alignItems: "center", fontSize: 12.5, color: "var(--fg-3)" }}>
+                <span style={{ fontFamily: "var(--font-mono)", color: "var(--fg-2)", wordBreak: "break-all", maxWidth: "100%" }} title={runId}>Verification {shortId(runId)}</span>
+                <CopyButton text={runId} label="Copy id" />
+                <Verdict verdict={verdict} />
+                {contractVersion != null ? <span>Contract v{contractVersion}</span> : null}
+                {run.parent_run_id ? <Link href={`/systems/${id}/passes/${run.parent_run_id}`} style={{ color: "var(--acc-deep)" }}>Parent verification →</Link> : null}
               </div>
-              {why ? (
-                <div style={{ marginTop: 2 }}>
-                  <div style={label}>Why Vraelis reached this conclusion</div>
-                  <p style={{ fontSize: 14, color: "var(--fg-2)", lineHeight: 1.55, margin: "4px 0 0", maxWidth: "64ch", wordBreak: "break-word" }}>{why}</p>
-                </div>
-              ) : null}
-              {run.decision === "repair_verified" ? (
-                <Empty>This is a separate targeted rerun record. The earlier verification it reran remains unchanged.</Empty>
-              ) : null}
-              {issues.length > 1 ? <Empty>This verification recorded {issues.length} findings.</Empty> : null}
-              {/* A quiet enumeration (title + severity + lineage) so no real failure is hidden and the Recurring
-                  vs first-seen lineage (issue.first_seen_run) stays visible. Full per-finding evidence is later. */}
-              {issues.length > 0 ? (
-                <div style={{ display: "grid", gap: 8, marginTop: 4 }}>
-                  {issues.map((issue) => (
-                    <div key={issue.id} style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                      <span className="pill" style={{ fontSize: 10, color: SEV_COLOR[issue.severity] ?? "var(--fg-4)", borderColor: "var(--line-2)", background: "var(--bg-2)", flex: "none" }}>{SEV_LABEL[issue.severity] ?? issue.severity}</span>
-                      <span style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5, flex: "1 1 auto", minWidth: 0, wordBreak: "break-word" }}>{issue.title}</span>
-                      {issue.first_seen_run && issue.first_seen_run !== runId
-                        ? <span className="pill" style={{ fontSize: 10, color: "var(--wait-ink)", borderColor: "var(--wait-line)", background: "var(--wait-wash)", flex: "none" }} title="This finding was first detected in an earlier verification">Recurring</span>
-                        : <span className="pill" style={{ fontSize: 10, color: "var(--fg-4)", borderColor: "var(--line-2)", background: "var(--bg-2)", flex: "none" }} title="First detected in this verification">First seen here</span>}
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-            </>
-          )}
-        </Section>
-
-        {/* ── 04 EVIDENCE — the real proof for each finding: expected vs observed in prose, the screenshots large
-              (through the signed artifacts route ONLY), reproduction steps, a possible cause, and the raw
-              console/network inside a collapsed technical-details element. No storage path, session id, or raw
-              failure_message ever reaches the page. ── */}
-        <Section n="04" title="Evidence" aria="Evidence">
-          {issues.length > 0 ? (
-            <div style={{ display: "grid", gap: 14 }}>
-              {issues.map((issue, i) => {
-                const m = metaForIssue(issue);
-                const fname = m?.displayName ?? "";
-                return <FindingEvidence key={issue.id} issue={issue} index={i} flowName={fname && !looksLikeId(fname) ? fname : null} screenshotIds={m?.screenshotIds ?? []} runId={runId} />;
-              })}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 16px", fontSize: 12, color: "var(--fg-4)" }}>
+                <span title={when(run.created_at)}>Created {when(run.created_at)}</span>
+                {run.completed_at ? <span title={when(run.completed_at)}>Completed {when(run.completed_at)}</span> : active ? <span>In progress</span> : null}
+              </div>
             </div>
-          ) : (
-            <Empty>{active ? "Evidence is still being collected." : screenshotCount > 0 ? `${screenshotCount} screenshot${screenshotCount === 1 ? "" : "s"} were captured; they appear in the execution journey below.` : "No evidence was captured for this verification."}</Empty>
-          )}
-        </Section>
 
-        {/* ── 05 EXECUTION JOURNEY — each flow that ran, with its ORDERED step timeline (action, pass/fail, error
-              detail, real per-step ms — the only real timing, never a derived wall-clock), the authenticated-flow
-              panel (allowlisted owner-safe fields only), and the policy-permit line. Screenshots already shown
-              as a finding's evidence are not repeated here. ── */}
-        <Section n="05" title="Execution journey" aria="Execution journey">
-          {flows.length === 0 ? (
-            <Empty>{active ? "Waiting for the first flow to run." : "No flows were recorded for this verification."}</Empty>
-          ) : (
-            <div style={{ display: "grid", gap: 8 }}>
-              {flows.map((f, i) => (
-                <FlowTimeline key={`${f.name}-${i}`} flow={f} displayName={flowName(f)} screenshotIds={shotsFor(f)} runId={runId} showShots={!shotsShownInFindings.has(f.name)} />
-              ))}
-            </div>
-          )}
-        </Section>
-
-        {/* ── 06 AFFECTED REQUIREMENTS — ONLY the requirement refs the findings actually stored, resolved to the
-              CURRENT contract text and linked back to the finding that raised each. No coverage matrix, no pass
-              marks; an unresolved ref becomes an honest "unavailable" entry, never a raw id or invented text. ── */}
-        <Section n="06" title="Affected requirements" aria="Affected requirements">
-          {affected.length === 0 ? (
-            <Empty>No specific requirements were flagged by the findings on this verification.</Empty>
-          ) : (
-            <>
-              <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>
-                {contractVersion != null ? `Current requirements for Contract v${contractVersion} that a finding referenced. ` : ""}A verification does not mark a requirement passed; these are the ones its findings pointed at.
-              </p>
-              {affectedResolved.length > 0 ? (
-                <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 8 }}>
-                  {affectedResolved.map((a) => (
-                    <li key={a.rid} style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap", borderLeft: "2px solid var(--line-3)", paddingLeft: 12 }}>
-                      <span style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5, flex: "1 1 auto", minWidth: 0, maxWidth: "68ch", wordBreak: "break-word" }}>{a.text}</span>
-                      <a href={`#finding-${a.findingId}`} style={{ fontSize: 12.5, color: "var(--acc-deep)", flex: "none", textDecoration: "none" }}>See finding {a.findingIndex + 1}</a>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-              {affectedUnavailable.length > 0 ? (
-                <Empty>{affectedUnavailable.length} referenced requirement{affectedUnavailable.length === 1 ? "" : "s"} could not be resolved to current contract text. It may have been removed or renamed since this verification.</Empty>
-              ) : null}
-            </>
-          )}
-        </Section>
-
-        {/* ── 07 REPAIR HANDOFF — the REAL per-finding repair_prompt only: instructions for a coding agent, shown
-              as plain (React-escaped) text with its line breaks preserved and a copy control. Copying it changes
-              nothing; Vraelis verifies a repair, it never modifies the application from this page. No apply
-              action, no raw failure_message, no secret. A quiet honest fallback when there is none. ── */}
-        <Section n="07" title="Repair handoff" aria="Repair handoff">
-          {repairIssues.length === 0 ? (
-            <Empty>No repair guidance was generated for this verification.</Empty>
-          ) : (
-            <>
-              <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>Each prompt describes the observed failure and the requested repair for a coding agent. Copying it does not change your system; Vraelis verifies a repair, it does not modify your code from this page.</p>
-              <div style={{ display: "grid", gap: 12 }}>
-                {repairIssues.map((iss) => (
-                  <div key={iss.id} style={{ display: "grid", gap: 8, border: "1px solid var(--line-2)", borderRadius: "var(--r-md, 10px)", background: "var(--bg-1)", padding: "12px 14px" }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-                      <div style={{ minWidth: 0 }}>
-                        <div style={label}>Repair prompt for a coding agent</div>
-                        <div style={{ fontSize: 13, color: "var(--fg-2)", marginTop: 2, wordBreak: "break-word" }}>{iss.title}</div>
-                      </div>
-                      <CopyButton text={iss.repair_prompt as string} />
-                    </div>
-                    <pre style={{ margin: 0, fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.55, whiteSpace: "pre-wrap", wordBreak: "break-word", background: "var(--bg-2)", border: "1px solid var(--line-2)", borderRadius: 8, padding: "10px 12px", maxHeight: 340, overflow: "auto" }}>{iss.repair_prompt}</pre>
+            {/* Reviewed-plan provenance — shown ONLY when the persisted run->plan binding proves it. */}
+            <div style={{ display: "grid", gap: 6 }}>
+              <div style={label}>Reviewed plan</div>
+              {reviewedPlan ? (
+                <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-md, 10px)", background: "var(--bg-1)", padding: "12px 14px", display: "grid", gap: 6 }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 14px", alignItems: "center", fontSize: 12.5, color: "var(--fg-3)" }}>
+                    <span style={{ fontFamily: "var(--font-mono)", color: "var(--fg-2)", wordBreak: "break-all" }} title={reviewedPlan.id}>Plan {shortId(reviewedPlan.id)}</span>
+                    <CopyButton text={reviewedPlan.id} label="Copy plan id" />
+                    {reviewedPlan.approvalState === "approved" ? <span style={{ color: "var(--acc-deep)", fontWeight: 600 }}>Approved</span> : <span>Pending approval</span>}
+                    {reviewedPlan.approvedAt ? <span title={when(reviewedPlan.approvedAt)}>Approved {when(reviewedPlan.approvedAt)}</span> : null}
+                    {reviewedPlan.approvalState === "approved" ? <span>Human review recorded</span> : null}
                   </div>
-                ))}
-              </div>
-            </>
-          )}
-        </Section>
-
-        {/* ── 08 REVERIFICATION — a read-only CTA into the EXISTING rerun/cancel flow (the page itself never
-              creates a run, reserves credit, or mutates state), plus the immutable lineage: parent -> this
-              record -> children, each a SEPARATE persisted run rendered through the canonical translator. A
-              later success never rewrites an earlier failure. ── */}
-        <Section n="08" title="Reverification" aria="Reverification">
-          {reverifyIntro ? <p style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.55, margin: 0, maxWidth: "64ch", wordBreak: "break-word" }}>{reverifyIntro}</p> : null}
-          {caps.canLaunch ? (
-            <div>
-              {terminal ? (
-                run.decision === "repair_verified"
-                  ? <RerunButton appId={id} runId={runId} scope="critical" label="Run full critical verification" priceNote={rerunPriceNote} />
-                  : pub === "failed" ? <RerunButton appId={id} runId={runId} scope={hasFailures ? "failed" : "all"} label="Rerun the failed flows" priceNote={rerunPriceNote} />
-                  : <RerunButton appId={id} runId={runId} scope={hasFailures ? "failed" : "all"} label="Run another verification" priceNote={rerunPriceNote} />
+                  {reviewedPlan.planHash ? (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 12px", alignItems: "center", fontSize: 12, color: "var(--fg-4)" }}>
+                      <span style={{ fontFamily: "var(--font-mono)", wordBreak: "break-all" }} title={reviewedPlan.planHash}>Plan hash {shortId(reviewedPlan.planHash)}</span>
+                      <CopyButton text={reviewedPlan.planHash} label="Copy hash" />
+                    </div>
+                  ) : null}
+                  {reviewedPlan.executionState === "consumed" ? <p style={{ fontSize: 12, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>This verification consumed the approved reviewed plan above.</p> : null}
+                </div>
               ) : (
-                // A running verification is NOT cancelled from this read-only record. This links to the run's
-                // controls in the application, where cancellation keeps its own owner-checked confirmation flow;
-                // the result page itself mutates nothing.
-                <Link href={`/systems/${id}`} className="btn btn--ghost" style={{ justifySelf: "start" }}>View run controls</Link>
+                <Empty>Reviewed-plan provenance is not available for this historical record.</Empty>
               )}
             </div>
-          ) : null}
 
-          {/* Immutable lineage — only shown when there is a parent or a child (a lone record needs no timeline). */}
-          {lineage.length > 1 ? (
-            <div style={{ marginTop: 6, display: "grid", gap: 8 }}>
-              <div style={label}>Verification history</div>
-              <div style={{ display: "grid", gap: 6 }}>
-                {lineage.map((node) => {
-                  const nv = runVerdict(node.state, node.decision);
-                  const inner = (
-                    <>
-                      <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-4)", flex: "none" }}>#{shortId(node.runId)}</span>
-                      {node.isCurrent ? <span style={{ fontSize: 12, color: "var(--fg-3)", fontWeight: 600, flex: "none" }}>This record</span> : null}
-                      <span style={{ fontSize: 12.5, color: "var(--fg-4)", flex: "1 1 auto" }} title={when(node.iso)}>{ago(node.iso)}</span>
-                      <Chip tone={nv.tone} label={nv.label} />
-                    </>
-                  );
-                  const rowStyle = { display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" as const, border: "1px solid var(--line-2)", borderRadius: "var(--r-md, 10px)", padding: "9px 13px", background: node.isCurrent ? "var(--bg-2)" : "var(--bg-1)" };
-                  return node.isCurrent
-                    ? <div key={node.runId} style={{ ...rowStyle, outline: "1px solid var(--acc-line)" }}>{inner}</div>
-                    : <Link key={node.runId} href={`/systems/${id}/passes/${node.runId}`} style={{ ...rowStyle, color: "inherit", textDecoration: "none" }}>{inner}</Link>;
-                })}
-              </div>
-              <Empty>Every verification is a separate, immutable record. A later success does not overwrite an earlier failure, and a targeted repair check passing is not the same as a full Verified.</Empty>
-            </div>
-          ) : null}
-        </Section>
-
-        {/* ── 09 PROVENANCE & IMMUTABLE HISTORY — a compact ledger of exactly what this record IS: its identity,
-              the reviewed plan / deployment / snapshot / contract it was BOUND to (pinned, never the latest),
-              the evidence retained, and the honest limits of what it can conclude. "Immutable" here means Vraelis
-              preserves the prior result rather than rewriting it after a repair — NOT a cryptographic claim. No
-              secret, token, session id, or storage path is ever a provenance value. ── */}
-        <Section n="09" title="Provenance" aria="Provenance and immutable history">
-          {/* Record identity */}
-          <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-md, 10px)", background: "var(--bg-1)", padding: "14px 16px", display: "grid", gap: 8 }}>
-            <div style={label}>This record</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 14px", alignItems: "center", fontSize: 12.5, color: "var(--fg-3)" }}>
-              <span style={{ fontFamily: "var(--font-mono)", color: "var(--fg-2)", wordBreak: "break-all", maxWidth: "100%" }} title={runId}>Verification {shortId(runId)}</span>
-              <CopyButton text={runId} label="Copy id" />
-              {hasConclusion ? <Chip tone={verdict.tone} label={verdict.label} /> : <span>{verdict.label}</span>}
-              {contractVersion != null ? <span>Contract v{contractVersion}</span> : null}
-              {run.parent_run_id ? <Link href={`/systems/${id}/passes/${run.parent_run_id}`} style={{ color: "var(--acc-deep)" }}>Parent verification →</Link> : null}
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 16px", fontSize: 12, color: "var(--fg-4)" }}>
-              <span title={when(run.created_at)}>Created {when(run.created_at)}</span>
-              {run.completed_at ? <span title={when(run.completed_at)}>Completed {when(run.completed_at)}</span> : active ? <span>In progress</span> : null}
-            </div>
-          </div>
-
-          {/* Reviewed-plan provenance — shown ONLY when the persisted run->plan binding proves it. */}
-          <div style={{ display: "grid", gap: 6 }}>
-            <div style={label}>Reviewed plan</div>
-            {reviewedPlan ? (
-              <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-md, 10px)", background: "var(--bg-1)", padding: "12px 14px", display: "grid", gap: 6 }}>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 14px", alignItems: "center", fontSize: 12.5, color: "var(--fg-3)" }}>
-                  <span style={{ fontFamily: "var(--font-mono)", color: "var(--fg-2)", wordBreak: "break-all" }} title={reviewedPlan.id}>Plan {shortId(reviewedPlan.id)}</span>
-                  <CopyButton text={reviewedPlan.id} label="Copy plan id" />
-                  {reviewedPlan.approvalState === "approved" ? <span style={{ color: "var(--acc-deep)", fontWeight: 600 }}>Approved</span> : <span>Pending approval</span>}
-                  {reviewedPlan.approvedAt ? <span title={when(reviewedPlan.approvedAt)}>Approved {when(reviewedPlan.approvedAt)}</span> : null}
-                  {reviewedPlan.approvalState === "approved" ? <span>Human review recorded</span> : null}
-                </div>
-                {reviewedPlan.planHash ? (
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 12px", alignItems: "center", fontSize: 12, color: "var(--fg-4)" }}>
-                    <span style={{ fontFamily: "var(--font-mono)", wordBreak: "break-all" }} title={reviewedPlan.planHash}>Plan hash {shortId(reviewedPlan.planHash)}</span>
-                    <CopyButton text={reviewedPlan.planHash} label="Copy hash" />
-                  </div>
-                ) : null}
-                {reviewedPlan.executionState === "consumed" ? <p style={{ fontSize: 12, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>This verification consumed the approved reviewed plan above.</p> : null}
-              </div>
-            ) : (
-              <Empty>Reviewed-plan provenance is not available for this historical record.</Empty>
-            )}
-          </div>
-
-          {/* Tested deployment + snapshot — PINNED to the run, never the latest. */}
-          <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-md, 10px)", background: "var(--bg-1)", padding: "14px 16px", display: "grid", gap: 8 }}>
-            <div style={{ ...label, display: "flex", alignItems: "center", gap: 6 }}><Ic d={I.deploy} size={13} sw={2} />Tested deployment</div>
-            {run.deployment_url ? <div style={{ fontFamily: "var(--font-mono)", fontSize: 13, fontWeight: 600, color: "var(--fg-1)", wordBreak: "break-all" }}>{run.deployment_url}</div> : null}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px", fontSize: 12.5, color: "var(--fg-3)" }}>
-              {deployEnvLabel ? <span className="pill" style={{ fontSize: 10 }}>{deployEnvLabel}</span> : null}
-              {deployProviderLabel ? <span>Provider: {deployProviderLabel}</span> : null}
-              {deployCommit ? <span>Commit {deployCommit}</span> : null}
-              {deployment?.branch ? <span style={{ overflowWrap: "anywhere", minWidth: 0 }}>Branch {deployment.branch}</span> : null}
-              {contextSnap ? <span>Context v{contextSnap.version}</span> : null}
-              <span title={when(completedIso)}>{active ? `Started ${when(run.created_at)}` : `Executed ${when(completedIso)}`}</span>
-            </div>
-            {!deploymentsReady ? (
-              <p style={{ fontSize: 12, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>Deployment identity is not recorded yet: apply <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5 }}>sql/vraelis-preflight-8-deployments.sql</span> (migration 8).</p>
-            ) : pins.deploymentId && !deployment ? (
-              <p style={{ fontSize: 12, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>The deployment recorded for this verification is no longer available. It is not replaced with a newer one.</p>
-            ) : null}
-            {deployment?.provider_deployment_id ? (
-              <details style={{ marginTop: 2 }}>
-                <summary style={{ cursor: "pointer", fontSize: 12.5, color: "var(--fg-4)", padding: "6px 0" }}>View technical details</summary>
-                <div style={{ fontSize: 12.5, color: "var(--fg-3)", wordBreak: "break-all", lineHeight: 1.5, marginTop: 6 }}>Provider deployment id: {deployment.provider_deployment_id}</div>
-              </details>
-            ) : null}
-          </div>
-
-          {/* Contract & requirements history */}
-          {contractVersion != null || contract ? (
-            <div style={{ display: "grid", gap: 5 }}>
-              <div style={label}>Contract history</div>
+            {/* Tested deployment + snapshot — PINNED to the run, never the latest. */}
+            <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-md, 10px)", background: "var(--bg-1)", padding: "14px 16px", display: "grid", gap: 8 }}>
+              <div style={{ ...label, display: "flex", alignItems: "center", gap: 6 }}><Ic d={I.deploy} size={13} sw={2} />Tested deployment</div>
+              {run.deployment_url ? <div style={{ fontFamily: "var(--font-mono)", fontSize: 13, fontWeight: 600, color: "var(--fg-1)", wordBreak: "break-all" }}>{run.deployment_url}</div> : null}
               <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px", fontSize: 12.5, color: "var(--fg-3)" }}>
-                {contractVersion != null ? <span>Recorded for this run: Contract v{contractVersion}</span> : null}
-                {contract && typeof contract.version === "number" ? <span>Current contract: v{contract.version}</span> : null}
+                {deployEnvLabel ? <span className="pill" style={{ fontSize: 10 }}>{deployEnvLabel}</span> : null}
+                {deployProviderLabel ? <span>Provider: {deployProviderLabel}</span> : null}
+                {deployCommit ? <span>Commit {deployCommit}</span> : null}
+                {deployment?.branch ? <span style={{ overflowWrap: "anywhere", minWidth: 0 }}>Branch {deployment.branch}</span> : null}
+                {contextSnap ? <span>Context v{contextSnap.version}</span> : null}
+                <span title={when(completedIso)}>{active ? `Started ${when(run.created_at)}` : `Executed ${when(completedIso)}`}</span>
               </div>
-              <p style={{ fontSize: 12, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>
-                {contractDrifted
-                  ? "The contract has changed since this verification. The requirement text shown above is loaded from the current contract and may differ from the text associated with this historical run."
-                  : "Requirement text is loaded from the current contract records; a historical requirement snapshot was not separately persisted for this verification."}
-              </p>
+              {!deploymentsReady ? (
+                <p style={{ fontSize: 12, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>Deployment identity is not recorded yet: apply <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5 }}>sql/vraelis-preflight-8-deployments.sql</span> (migration 8).</p>
+              ) : pins.deploymentId && !deployment ? (
+                <p style={{ fontSize: 12, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>The deployment recorded for this verification is no longer available. It is not replaced with a newer one.</p>
+              ) : null}
+              {deployment?.provider_deployment_id ? (
+                <details style={{ marginTop: 2 }}>
+                  <summary style={{ cursor: "pointer", fontSize: 12.5, color: "var(--fg-4)", padding: "6px 0" }}>View technical details</summary>
+                  <div style={{ fontSize: 12.5, color: "var(--fg-3)", wordBreak: "break-all", lineHeight: 1.5, marginTop: 6 }}>Provider deployment id: {deployment.provider_deployment_id}</div>
+                </details>
+              ) : null}
             </div>
-          ) : null}
 
-          {/* Evidence retained */}
-          <div style={{ display: "grid", gap: 5 }}>
-            <div style={label}>Evidence retained</div>
-            {anyEvidence ? (
-              <>
+            {/* Contract & requirements history */}
+            {contractVersion != null || contract ? (
+              <div style={{ display: "grid", gap: 5 }}>
+                <div style={label}>Contract history</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px", fontSize: 12.5, color: "var(--fg-3)" }}>
-                  {issues.length ? <span>{issues.length} finding{issues.length === 1 ? "" : "s"}</span> : null}
-                  {flows.length ? <span>{flows.length} flow{flows.length === 1 ? "" : "s"}</span> : null}
-                  {stepCount ? <span>{stepCount} step{stepCount === 1 ? "" : "s"}</span> : null}
-                  {screenshotCount ? <span>{screenshotCount} screenshot{screenshotCount === 1 ? "" : "s"}</span> : null}
-                  {consoleCount ? <span>{consoleCount} console error{consoleCount === 1 ? "" : "s"}</span> : null}
-                  {networkCount ? <span>{networkCount} network failure{networkCount === 1 ? "" : "s"}</span> : null}
+                  {contractVersion != null ? <span>Recorded for this run: Contract v{contractVersion}</span> : null}
+                  {contract && typeof contract.version === "number" ? <span>Current contract: v{contract.version}</span> : null}
                 </div>
-                <p style={{ fontSize: 12, color: "var(--fg-4)", margin: 0 }}>Screenshots and artifacts are accessible only through the owner-checked signed route.</p>
-              </>
-            ) : (
-              <Empty>{active ? "Evidence is still being collected." : "No evidence was retained for this record. That does not mean the workflow passed."}</Empty>
-            )}
-          </div>
+                <p style={{ fontSize: 12, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>
+                  {contractDrifted
+                    ? "The contract has changed since this verification. The requirement text shown above is loaded from the current contract and may differ from the text associated with this historical run."
+                    : "Requirement text is loaded from the current contract records; a historical requirement snapshot was not separately persisted for this verification."}
+                </p>
+              </div>
+            ) : null}
 
-          {/* Historical limitations — only those relevant to this record */}
-          <div style={{ display: "grid", gap: 5 }}>
-            <div style={label}>What this record can and cannot conclude</div>
-            <ul style={{ margin: 0, padding: "0 0 0 18px", display: "grid", gap: 4 }}>
-              {limitations.map((l, i) => <li key={i} style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, wordBreak: "break-word" }}>{l}</li>)}
-            </ul>
-          </div>
+            {/* Evidence retained */}
+            <div style={{ display: "grid", gap: 5 }}>
+              <div style={label}>Evidence retained</div>
+              {anyEvidence ? (
+                <>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px", fontSize: 12.5, color: "var(--fg-3)" }}>
+                    {issues.length ? <span>{issues.length} finding{issues.length === 1 ? "" : "s"}</span> : null}
+                    {flows.length ? <span>{flows.length} flow{flows.length === 1 ? "" : "s"}</span> : null}
+                    {stepCount ? <span>{stepCount} step{stepCount === 1 ? "" : "s"}</span> : null}
+                    {screenshotCount ? <span>{screenshotCount} screenshot{screenshotCount === 1 ? "" : "s"}</span> : null}
+                    {consoleCount ? <span>{consoleCount} console error{consoleCount === 1 ? "" : "s"}</span> : null}
+                    {networkCount ? <span>{networkCount} network failure{networkCount === 1 ? "" : "s"}</span> : null}
+                  </div>
+                  <p style={{ fontSize: 12, color: "var(--fg-4)", margin: 0 }}>Screenshots and artifacts are accessible only through the owner-checked signed route.</p>
+                </>
+              ) : (
+                <Empty>{active ? "Evidence is still being collected." : "No evidence was retained for this record. That does not mean the workflow passed."}</Empty>
+              )}
+            </div>
 
-          <Empty>This result is preserved as a separate historical record. Later verifications do not alter this conclusion.</Empty>
-          <Link href={`/systems/${id}`} className="btn btn--ghost" style={{ justifySelf: "start" }}>Back to {app?.name ?? "system"}</Link>
-        </Section>
+            {/* Historical limitations — only those relevant to this record */}
+            <div style={{ display: "grid", gap: 5 }}>
+              <div style={label}>What this record can and cannot conclude</div>
+              <ul style={{ margin: 0, padding: "0 0 0 18px", display: "grid", gap: 4 }}>
+                {limitations.map((l, i) => <li key={i} style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, wordBreak: "break-word" }}>{l}</li>)}
+              </ul>
+            </div>
+
+            <Empty>This result is preserved as a separate historical record. Later verifications do not alter this conclusion.</Empty>
+            <Link href={`/systems/${id}`} className="btn btn--ghost" style={{ justifySelf: "start" }}>Back to {app?.name ?? "system"}</Link>
+          </Section>
+        </div>
+
+        {active ? <AutoRefresh /> : null}
       </div>
-
-      {active ? <AutoRefresh /> : null}
-    </div>
+    </Page>
   );
 }

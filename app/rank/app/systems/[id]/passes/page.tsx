@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { toPublicDecision } from "@/lib/preflight/public-decision";
 import Link from "next/link";
 import { requirePreflightAppAccess } from "@/lib/v-preflight-guard";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
@@ -7,7 +6,9 @@ import { SetupRequired } from "../../setup-required";
 import { getApplication, type RunSummary } from "@/lib/v-applications";
 import { listRunsForApp } from "@/lib/preflight/runs-db";
 import { AppTabs } from "../app-tabs";
-import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
+import { I, EmptyIcon } from "@/app/rank/_components/icons";
+import { Verdict } from "@/app/rank/_components/verdict";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
 export const metadata: Metadata = { title: "Verifications" };
 
@@ -27,37 +28,26 @@ function timeAgo(iso: string | null | undefined): string {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-type Pill = { label: string; color: string; bg: string; border: string };
-
-// Decision AND text carry the status together (never colour alone). A run with no decision yet reflects
-// its lifecycle state as in-progress or untested, muted.
-// THIS SAID "Verified" FOR A RUN THE API, THE WEBHOOKS AND THE CI GATE ALL CALL BLOCKED.
+// A LOCAL runPill() USED TO LIVE HERE, AND ITS HISTORY IS WHY IT NO LONGER DOES.
 //
-// It mapped repair_verified to a green Verified. toPublicDecision maps it to blocked, because a targeted
-// repair rerun exercises only the flows that failed: it is evidence the repair worked, not evidence the
-// system's critical promises hold. Every other surface in this product says so, including the sibling
-// runPill on the system overview and the comment two files over that reads "repair_verified is public
-// Blocked". This one disagreed, in green, which is the one direction a verdict must never be wrong in.
-//
+// The first version said "Verified" for a run the API, the webhooks and the CI gate all call blocked: it
+// mapped repair_verified to a green Verified, when a targeted repair rerun exercises only the flows that
+// failed and is therefore evidence the repair worked, never evidence the system's critical promises hold.
 // It also read `decision` without ever looking at `state`, so a run that did not complete but carried a
-// decision from an earlier attempt rendered that decision as a settled verdict.
+// decision from an earlier attempt rendered that decision as a settled verdict. Both were fixed by handing
+// the decision to toPublicDecision.
 //
-// Both are gone: the shared mapper decides, and it is given the state.
-function runPill(decision: string | null, state: string): Pill {
-  const pub = toPublicDecision(state, decision);
-  if (pub === "verified") return { label: "Verified", color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" };
-  if (pub === "failed") return { label: "Failed", color: "var(--stop-ink)", bg: "var(--stop-wash)", border: "var(--stop-line)" };
-  if (pub === "blocked") return { label: "Blocked", color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "var(--wait-line)" };
-  const active = state === "queued" || state === "discovering" || state === "running" || state === "analyzing";
-  return { label: active ? "In progress" : "No decision", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };
-}
-
+// What survived the fix was the SHAPE of the mistake: a private table of labels and colours, sitting next
+// to seven other private tables that had each been corrected at a different time. This one still called the
+// undecided state "No decision" while the list page called it "Not tested" and home-verdict.ts calls it
+// "Not yet verified". <Verdict> renders runVerdict(), so there is nothing left here to correct or to drift.
 function RunRow({ appId, r }: { appId: string; r: RunSummary }) {
-  const p = runPill(r.decision, r.state);
   return (
     <Link href={`/systems/${appId}/passes/${r.id}`}
       style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 15px", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", textDecoration: "none" }}>
-      <span aria-hidden style={{ width: 9, height: 9, borderRadius: "50%", background: p.color, flex: "none" }} />
+      {/* The row used to lead with a 9px dot painted the pill's own colour. It was aria-hidden, so it said
+          nothing the pill does not, and the only way to keep it was for this file to hold a second copy of
+          the signal palette, which is the drift being removed. The pill carries the colour now. */}
       <div style={{ minWidth: 0, flex: 1 }}>
         <div style={{ fontSize: 13, color: "var(--fg-2)", fontWeight: 600 }}>{timeAgo(r.created_at) || "Verification"}</div>
         {r.deployment_url ? (
@@ -66,8 +56,8 @@ function RunRow({ appId, r }: { appId: string; r: RunSummary }) {
           </div>
         ) : null}
       </div>
-      <span className="pill" style={{ fontSize: 10.5, color: p.color, background: p.bg, borderColor: p.border, flex: "none" }}><DecisionMark decision={r.decision} />{p.label}</span>
-      <span aria-hidden style={{ color: "var(--fg-5)", flex: "none", fontSize: 13 }}>→</span>
+      <Verdict state={r.state} decision={r.decision} style={{ flex: "none" }} />
+      <span aria-hidden style={{ color: "var(--fg-5)", flex: "none", fontSize: 13 }}>&rarr;</span>
     </Link>
   );
 }
@@ -83,47 +73,57 @@ export default async function AppRunsPage({ params }: { params: Promise<{ id: st
   const app = await getApplication(owner, id);
   if (!app) {
     return (
-      <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-        <div className="empty">
+      <Page>
+        <div className="empty" style={{ marginBottom: 80 }}>
           <EmptyIcon d={I.slash} />
           <h3>System not found</h3>
           <p>This system doesn&apos;t exist, or it belongs to another account.</p>
           <Link href="/systems" className="btn">Back to systems</Link>
         </div>
-      </div>
+      </Page>
     );
   }
 
   const runs = await listRunsForApp(owner, id, 50);
 
   return (
-    <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
+    <Page>
       <nav aria-label="Breadcrumb" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 13, marginBottom: 14 }}>
         <Link href="/systems" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Systems</Link>
         <span aria-hidden style={{ color: "var(--fg-5)" }}>/</span>
         <span style={{ color: "var(--fg-2)", fontWeight: 600, maxWidth: 360, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app.name}</span>
       </nav>
 
-      <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "6px 0 10px" }}>{app.name}</h1>
-      <a href={app.app_url} target="_blank" rel="noopener noreferrer"
-        style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-4)", textDecoration: "none", wordBreak: "break-all" }}>
-        {app.app_url}
-      </a>
+      {/* Every /systems/[id] page set this same h1 to clamp(1.7rem, 3vw, 2.4rem), which is the 38.4px
+          member of the six-size set; <PageHeader> gives the whole console one. The deployment URL is the
+          lead line it always was, only now at the one size the component owns. */}
+      <PageHeader
+        title={app.name}
+        lead={
+          <a href={app.app_url} target="_blank" rel="noopener noreferrer"
+            style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-4)", textDecoration: "none", wordBreak: "break-all" }}>
+            {app.app_url}
+          </a>
+        }
+      />
 
-      <AppTabs appId={id} active="passes" />
+      {/* <Page> owns the measure and the shell owns padding-top, so the tail room stays here on the body. */}
+      <div style={{ paddingBottom: 80 }}>
+        <AppTabs appId={id} active="passes" />
 
-      {runs.length ? (
-        <div style={{ display: "grid", gap: 8 }}>
-          {runs.map((r) => <RunRow key={r.id} appId={id} r={r} />)}
-        </div>
-      ) : (
-        <div className="empty">
-          <EmptyIcon d={I.shield} />
-          <h3>No verifications yet</h3>
-          <p>A verification walks this app in a real browser against its contract and returns a decision with evidence. Once one runs, it shows here.</p>
-          <Link href={`/systems/${id}`} className="btn">Back to overview</Link>
-        </div>
-      )}
-    </div>
+        {runs.length ? (
+          <div style={{ display: "grid", gap: 8 }}>
+            {runs.map((r) => <RunRow key={r.id} appId={id} r={r} />)}
+          </div>
+        ) : (
+          <div className="empty">
+            <EmptyIcon d={I.shield} />
+            <h3>No verifications yet</h3>
+            <p>A verification walks this app in a real browser against its contract and returns a decision with evidence. Once one runs, it shows here.</p>
+            <Link href={`/systems/${id}`} className="btn">Back to overview</Link>
+          </div>
+        )}
+      </div>
+    </Page>
   );
 }

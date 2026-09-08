@@ -44,7 +44,17 @@ export function AccountRequests() {
       <div className="card">
         <div style={lbl}>Request a correction</div>
         <div style={desc}>Tell us what is inaccurate and we will review it.</div>
-        <textarea value={correction} onChange={(e) => setCorrection(e.target.value)} placeholder="What should be corrected?" rows={2} maxLength={1000} style={{ width: "100%", boxSizing: "border-box", padding: "10px 14px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, fontFamily: "var(--font-sans)", outline: "none", resize: "vertical", marginBottom: 10 }} />
+        {/* KEYBOARD FOCUS, RESTORED. This carried outline:"none" inline, which no stylesheet can beat: the
+            :focus-visible ring in authenticated.css lost to it regardless of pseudo-class, so tabbing into
+            the one field on this card landed you nowhere visible. The inline border-color and background
+            went with it for the same reason, one rule down: [data-surface="app"] input:focus,textarea:focus
+            darkens the border and lifts the ground, and an inline colour beat that too. Only the border
+            WIDTH and STYLE stay inline, because the app stylesheet sets border-color for fields and never
+            border-width, so dropping the whole shorthand would fall through to whatever the browser
+            happens to draw. The label is the placeholder's own words rather than a new one: this field has
+            no visible label, and inventing a second phrasing for it would be one more thing to keep in
+            sync. */}
+        <textarea id="account-correction" aria-label="What should be corrected?" value={correction} onChange={(e) => setCorrection(e.target.value)} placeholder="What should be corrected?" rows={2} maxLength={1000} style={{ width: "100%", boxSizing: "border-box", padding: "10px 14px", borderRadius: "var(--r-sm)", borderWidth: 1, borderStyle: "solid", color: "var(--fg-1)", fontSize: 14, fontFamily: "var(--font-sans)", resize: "vertical", marginBottom: 10 }} />
         <button onClick={() => submit("data_correction", correction)} disabled={!correction.trim() || busy === "data_correction"} className="btn btn--ghost" style={{ opacity: correction.trim() ? 1 : 0.55 }}>{busy === "data_correction" ? "Submitting…" : "Submit correction request"}</button>
       </div>
 

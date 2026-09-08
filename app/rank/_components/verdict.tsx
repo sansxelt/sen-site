@@ -67,11 +67,17 @@ export function Verdict({ state, decision = null, verdict, size = "sm", style }:
   const s = SIZE[size];
   return (
     <span
-      className="verdict"
+      // NOT `verdict`. public/vraelis/styles.css:553 already owns that name for the marketing site's
+      // verdict BAR (`display:flex; flex-direction:column; gap:11px`), and app/layout.tsx loads that sheet
+      // on every route including this one. The inline style below wins on `display` and `gap` but never
+      // declared `flex-direction`, so `column` survived the cascade and every badge in the console
+      // rendered its mark stacked on top of its word inside a 999px capsule. `flexDirection` is stated
+      // explicitly as well, so the badge stays a row even if something else claims this name later.
+      className="vra-verdict"
       // The label is the meaning; the mark reinforces it and the colour is third. Read aloud, this is the
       // same three words it is on screen, which is the property colour alone cannot give it.
       style={{
-        display: "inline-flex", alignItems: "center", gap: s.gap,
+        display: "inline-flex", flexDirection: "row", alignItems: "center", gap: s.gap,
         fontSize: s.fontSize, fontWeight: 600, lineHeight: 1.2, whiteSpace: "nowrap",
         padding: s.padding, borderRadius: 999,
         color: t.ink, background: t.wash, border: `1px solid ${t.line}`,

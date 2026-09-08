@@ -17,6 +17,7 @@ import { keySpentTodayCents } from "@/lib/preflight/key-spend";
 import { ownerActiveRunCount, ownerRunsToday } from "@/lib/preflight/runs-db";
 import { MAX_ACTIVE_RUNS_PER_OWNER, maxRunsPerDay } from "@/lib/preflight/limits";
 import { topupMaxDollars } from "@/lib/v-entitlements";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
 export const metadata: Metadata = { title: "Limits" };
 export const dynamic = "force-dynamic";
@@ -49,13 +50,20 @@ export default async function LimitsPage() {
   ];
 
   return (
-    <div className="wrap" style={{ maxWidth: 1080, paddingTop: "clamp(20px, 2.6vw, 32px)", paddingBottom: 80 }}>
-      <h1 className="display" style={{ fontSize: "clamp(1.55rem, 2.6vw, 2rem)", margin: "0 0 8px", letterSpacing: "-0.025em" }}>Limits</h1>
-      <p style={{ margin: "0 0 26px", fontSize: 14, color: "var(--fg-3)", lineHeight: 1.6, maxWidth: "62ch" }}>
-        What will refuse a request, and how close you are to it. These are the values the API checks before
-        a run starts, read from the same module the routes import, not a description of them.
-      </p>
+    // The same measure as /usage, deliberately. These two were split out of one page, they link to each
+    // other at the bottom of both, and they are adjacent in the sidebar, so the ceiling table and the
+    // consumption table sitting in different-width columns was the most visible version of the fifteen-
+    // widths problem in this cluster. Both were 1080 by coincidence; both are wide by decision.
+    //
+    // The h1 carried clamp(1.55rem, 2.6vw, 2rem) at -0.025em, byte-identical to /usage's and different from
+    // the eight pages at -0.022em. One component owns it now. Heading and lead wording are unchanged.
+    <Page measure="wide">
+      <PageHeader
+        title="Limits"
+        lead="What will refuse a request, and how close you are to it. These are the values the API checks before a run starts, read from the same module the routes import, not a description of them."
+      />
 
+      <div style={{ paddingBottom: 80 }}>
       <section aria-label="Account ceilings" style={{ marginBottom: 30 }}>
         <h2 style={{ ...label, marginBottom: 10 }}>This account</h2>
         <div className="card" style={{ padding: 0, overflow: "hidden", background: "var(--bg-1)" }}>
@@ -103,6 +111,7 @@ export default async function LimitsPage() {
         Need a higher ceiling? <Link href="/billing" style={{ color: "var(--acc-deep)" }}>Billing</Link> covers
         plans and invoicing. What you have actually consumed is on <Link href="/usage" style={{ color: "var(--acc-deep)" }}>Usage</Link>.
       </p>
-    </div>
+      </div>
+    </Page>
   );
 }

@@ -12,6 +12,7 @@ import { passPricingEnabled, planV1 } from "@/lib/preflight/pass-pricing";
 import { getPlanV1State } from "@/lib/preflight/entitlements-v1";
 import { liveV1Subscription } from "@/lib/v-billing";
 import { I, Ic } from "@/app/rank/_components/icons";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
 export const metadata: Metadata = { title: "Back from the billing portal" };
 
@@ -67,15 +68,12 @@ export default async function PortalReturnPage() {
   }
 
   return (
-    <div className="wrap" style={{ maxWidth: 720, paddingTop: "clamp(24px, 3vw, 38px)", paddingBottom: 80 }}>
-      <div className="phead">
-        <div>
-          <p className="eyebrow">Billing</p>
-          <h1 className="display">You&apos;re back in Vraelis</h1>
-          <p>{email}</p>
-        </div>
-      </div>
+    // The wording of the heading is exactly what it was; only its size and the column it sits in are now
+    // decided in one place rather than here.
+    <Page measure="prose">
+      <PageHeader eyebrow="Billing" title={<>You&apos;re back in Vraelis</>} lead={email} />
 
+      <div style={{ paddingBottom: 80 }}>
       <div className="card" style={{ marginBottom: 18 }}>
         <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 8 }}>Current plan</div>
         <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
@@ -100,6 +98,7 @@ export default async function PortalReturnPage() {
           <Link href="/plans" className="btn btn--ghost">Change plan</Link>
         </div>
       </div>
-    </div>
+      </div>
+    </Page>
   );
 }

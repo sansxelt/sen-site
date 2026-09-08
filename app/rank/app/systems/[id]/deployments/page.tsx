@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { toPublicDecision } from "@/lib/preflight/public-decision";
+import { systemProof } from "@/lib/preflight/home-verdict";
 import Link from "next/link";
 import { requirePreflightAppAccess } from "@/lib/v-preflight-guard";
 import { capabilities } from "@/lib/preflight/role-capabilities";
@@ -14,7 +14,9 @@ import {
 } from "@/lib/preflight/deployments-db";
 import { AppTabs } from "../app-tabs";
 import { RecordDeploymentForm } from "./record-deployment";
-import { I, Ic, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
+import { I, Ic, EmptyIcon } from "@/app/rank/_components/icons";
+import { Verdict } from "@/app/rank/_components/verdict";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
 export const metadata: Metadata = { title: "Deployments" };
 
@@ -44,23 +46,21 @@ function timeAgo(iso: string | null | undefined): string {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-type Pill = { label: string; color: string; bg: string; border: string };
-
-// Decision AND text carry the status together (never colour alone).
+// A LOCAL verdictPill() USED TO LIVE HERE. Its first version mapped repair_verified to a green "Verified"
+// while toPublicDecision, and therefore the API, the webhooks and the CI gate, called the same run blocked:
+// a targeted repair rerun exercises only the flows that failed, so it is evidence the repair worked, not
+// evidence the system's critical promises hold. It also ignored `state`, so a decision left over from an
+// earlier attempt of a run that never completed rendered as a settled verdict. Both were fixed by handing
+// the decision to the shared mapper, and <Verdict> is what remains once that is all a pill does.
 //
-// This mapped repair_verified to a green "Verified" while toPublicDecision, and therefore the API, the
-// webhooks and the CI gate, called the same run blocked. A targeted repair rerun exercises only the flows
-// that failed, so it is evidence the repair worked, not evidence the system's critical promises hold.
-// It also ignored `state`, so a decision left over from an earlier attempt of a run that never completed
-// was rendered as a settled verdict. The shared mapper decides now, and it is given the state.
-function verdictPill(decision: string | null, state: string): Pill {
-  const pub = toPublicDecision(state, decision);
-  if (pub === "verified") return { label: "Verified", color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" };
-  if (pub === "failed") return { label: "Failed", color: "var(--stop-ink)", bg: "var(--stop-wash)", border: "var(--stop-line)" };
-  if (pub === "blocked") return { label: "Blocked", color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "var(--wait-line)" };
-  const active = state === "queued" || state === "discovering" || state === "running" || state === "analyzing";
-  return { label: active ? "In progress" : "No decision", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };
-}
+// THE THREE HAND-WRITTEN ABSENCE LABELS ARE GONE WITH IT. This page said "No decision" for a run without
+// one, "Not tested" for a previous deployment nothing had verified, and "Unverified" in amber for a current
+// one. Three phrases and two tones for a single fact: no verdict exists. systemProof() answers for a null
+// run, so the ternaries that produced them collapse into one call, and the answer is the vocabulary's own
+// "Not yet verified" in the neutral tone the token file reserves for a state nobody should be alarmed by.
+//
+// The amber on "Unverified" is the one deliberate loss. It read as a warning colour on a fact that is not a
+// warning; the overview's "New deployment unverified" banner is where that alarm belongs and it still runs.
 
 type DeploymentGroup = { url: string; latest: RunSummary; passCount: number };
 
@@ -78,7 +78,6 @@ function groupByDeployment(runs: RunSummary[]): DeploymentGroup[] {
 }
 
 function DeploymentRow({ appId, g }: { appId: string; g: DeploymentGroup }) {
-  const p = verdictPill(g.latest.decision, g.latest.state);
   return (
     <Link href={`/systems/${appId}/passes/${g.latest.id}`}
       style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 15px", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", textDecoration: "none" }}>
@@ -91,8 +90,8 @@ function DeploymentRow({ appId, g }: { appId: string; g: DeploymentGroup }) {
           {g.latest.commit_sha ? `, commit ${g.latest.commit_sha.slice(0, 10)}` : ""}
         </div>
       </div>
-      <span className="pill" style={{ fontSize: 10.5, color: p.color, background: p.bg, borderColor: p.border, flex: "none" }}><DecisionMark decision={g.latest.decision} />{p.label}</span>
-      <span aria-hidden style={{ color: "var(--fg-5)", flex: "none", fontSize: 13 }}>→</span>
+      <Verdict state={g.latest.state} decision={g.latest.decision} style={{ flex: "none" }} />
+      <span aria-hidden style={{ color: "var(--fg-5)", flex: "none", fontSize: 13 }}>&rarr;</span>
     </Link>
   );
 }
@@ -109,14 +108,14 @@ export default async function AppDeploymentsPage({ params }: { params: Promise<{
   const app = await getApplication(owner, id);
   if (!app) {
     return (
-      <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-        <div className="empty">
+      <Page>
+        <div className="empty" style={{ marginBottom: 80 }}>
           <EmptyIcon d={I.slash} />
           <h3>System not found</h3>
           <p>This system doesn&apos;t exist, or it belongs to another account.</p>
           <Link href="/systems" className="btn">Back to systems</Link>
         </div>
-      </div>
+      </Page>
     );
   }
 
@@ -137,7 +136,6 @@ export default async function AppDeploymentsPage({ params }: { params: Promise<{
   // The last verified deployment: the newest COMPLETED pass that recorded both a decision and the
   // deployment URL it tested. Real rows only; absent before the first completed pass.
   const lastVerified = runs.find((r) => r.state === "completed" && r.decision && r.deployment_url) ?? null;
-  const lv = lastVerified ? verdictPill(lastVerified.decision, lastVerified.state) : null;
 
   // Verification status of a RECORDED deployment: the newest completed decided pass that tested this
   // identity (URL match; commits must agree only when both sides recorded one). Never invented.
@@ -155,167 +153,165 @@ export default async function AppDeploymentsPage({ params }: { params: Promise<{
   const comparisonLines = current && previous ? compareDeployments(previous, current) : [];
 
   return (
-    <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
+    <Page>
       <nav aria-label="Breadcrumb" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 13, marginBottom: 14 }}>
         <Link href="/systems" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Systems</Link>
         <span aria-hidden style={{ color: "var(--fg-5)" }}>/</span>
         <span style={{ color: "var(--fg-2)", fontWeight: 600, maxWidth: 360, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app.name}</span>
       </nav>
 
-      <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "6px 0 10px" }}>{app.name}</h1>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-        <a href={app.app_url} target="_blank" rel="noopener noreferrer"
-          style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-4)", textDecoration: "none", wordBreak: "break-all" }}>
-          {app.app_url}
-        </a>
-        {envLabel ? <span className="pill" style={{ fontSize: 10.5 }}>{envLabel}</span> : null}
-      </div>
+      {/* The URL and the environment pill are the header's lead line. They sit in a span rather than the
+          div they used to, because <PageHeader> renders the lead inside a paragraph and a div there is
+          invalid markup the parser will "fix" in a way nothing warns about. */}
+      <PageHeader
+        title={app.name}
+        lead={
+          <span style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <a href={app.app_url} target="_blank" rel="noopener noreferrer"
+              style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-4)", textDecoration: "none", wordBreak: "break-all" }}>
+              {app.app_url}
+            </a>
+            {envLabel ? <span className="pill" style={{ fontSize: 10.5 }}>{envLabel}</span> : null}
+          </span>
+        }
+      />
 
-      <AppTabs appId={id} active="deployments" />
+      {/* <Page> owns the measure and the shell owns padding-top, so the tail room this page has
+          always had stays here, on the body. */}
+      <div style={{ paddingBottom: 80 }}>
+        <AppTabs appId={id} active="deployments" />
 
-      {/* ── Migration-8 notice: deployment identity not active yet (honest, one line, full width) ──── */}
-      {!deploymentsReady ? (
-        <div role="status" style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "14px 16px", border: "1px solid var(--line-2)", borderLeft: "3px solid var(--wait-line)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", marginBottom: 20 }}>
-          <span style={{ color: "var(--wait-ink)", flex: "none", marginTop: 1 }}><Ic d={I.alert} size={17} sw={1.8} /></span>
-          <p style={{ fontSize: 13, color: "var(--fg-2)", lineHeight: 1.6, margin: 0 }}>
-            Deployment identity is not active yet: apply <span style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>sql/vraelis-preflight-8-deployments.sql</span> (migration 8).
-            Nothing is lost; the verification history below still shows every URL your verifications tested.
-          </p>
-        </div>
-      ) : null}
+        {/* ── Migration-8 notice: deployment identity not active yet (honest, one line, full width) ──── */}
+        {!deploymentsReady ? (
+          <div role="status" style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "14px 16px", border: "1px solid var(--line-2)", borderLeft: "3px solid var(--wait-line)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", marginBottom: 20 }}>
+            <span style={{ color: "var(--wait-ink)", flex: "none", marginTop: 1 }}><Ic d={I.alert} size={17} sw={1.8} /></span>
+            <p style={{ fontSize: 13, color: "var(--fg-2)", lineHeight: 1.6, margin: 0 }}>
+              Deployment identity is not active yet: apply <span style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>sql/vraelis-preflight-8-deployments.sql</span> (migration 8).
+              Nothing is lost; the verification history below still shows every URL your verifications tested.
+            </p>
+          </div>
+        ) : null}
 
-      {lastVerified && lv ? (
-        <div className="card" style={{ padding: "clamp(16px, 2.2vw, 22px)", marginBottom: 14 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-            <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>
-              Last verified deployment
+        {lastVerified ? (
+          <div className="card" style={{ padding: "clamp(16px, 2.2vw, 22px)", marginBottom: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>
+                Last verified deployment
+              </div>
+              <Verdict state={lastVerified.state} decision={lastVerified.decision} style={{ flex: "none" }} />
             </div>
-            <span className="pill" style={{ fontSize: 10.5, color: lv.color, background: lv.bg, borderColor: lv.border, flex: "none" }}><DecisionMark decision={lastVerified.decision} />{lv.label}</span>
-          </div>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 13.5, fontWeight: 600, color: "var(--fg-1)", marginTop: 10, wordBreak: "break-all" }}>
-            {lastVerified.deployment_url}
-          </div>
-          <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 6 }}>
-            <span title={when(lastVerified.completed_at ?? lastVerified.created_at)}>Completed {timeAgo(lastVerified.completed_at ?? lastVerified.created_at)}</span>
-            {lastVerified.commit_sha ? `, commit ${lastVerified.commit_sha.slice(0, 10)}` : ""}
-            {envLabel ? `, ${envLabel.toLowerCase()} environment` : ""}
-          </div>
-          {sourceLine ? (
-            <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 4 }}>
-              Source: <span style={{ fontFamily: "var(--font-mono)", color: "var(--fg-2)" }}>{sourceLine}</span>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 13.5, fontWeight: 600, color: "var(--fg-1)", marginTop: 10, wordBreak: "break-all" }}>
+              {lastVerified.deployment_url}
             </div>
-          ) : null}
-          <div style={{ marginTop: 12 }}>
-            <Link href={`/systems/${id}/passes/${lastVerified.id}`}
-              style={{ fontSize: 13, fontWeight: 600, color: "var(--acc-deep)", textDecoration: "none" }}>
-              View verification report →
-            </Link>
+            <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 6 }}>
+              <span title={when(lastVerified.completed_at ?? lastVerified.created_at)}>Completed {timeAgo(lastVerified.completed_at ?? lastVerified.created_at)}</span>
+              {lastVerified.commit_sha ? `, commit ${lastVerified.commit_sha.slice(0, 10)}` : ""}
+              {envLabel ? `, ${envLabel.toLowerCase()} environment` : ""}
+            </div>
+            {sourceLine ? (
+              <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 4 }}>
+                Source: <span style={{ fontFamily: "var(--font-mono)", color: "var(--fg-2)" }}>{sourceLine}</span>
+              </div>
+            ) : null}
+            <div style={{ marginTop: 12 }}>
+              <Link href={`/systems/${id}/passes/${lastVerified.id}`}
+                style={{ fontSize: 13, fontWeight: 600, color: "var(--acc-deep)", textDecoration: "none" }}>
+                View verification report &rarr;
+              </Link>
+            </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
 
-      {/* ── Deployment comparison (S4): previous verified against the current recorded deployment ──── */}
-      {current && previous ? (
-        <div className="card" style={{ padding: "clamp(16px, 2.2vw, 22px)", marginBottom: 14 }}>
-          <div style={headLbl}>Deployment comparison</div>
-          <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 12, color: "var(--fg-4)", flex: "none", width: 128 }}>{previousRun ? "Previous verified" : "Previous"}</span>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-2)", minWidth: 0, wordBreak: "break-all", flex: "1 1 240px" }}>{previous.url}</span>
-              {previousRun ? (() => { const p = verdictPill(previousRun.decision, previousRun.state); return (
-                <span className="pill" style={{ fontSize: 10.5, color: p.color, background: p.bg, borderColor: p.border, flex: "none" }}><DecisionMark decision={previousRun.decision} />{p.label}</span>
-              ); })() : (
-                <span className="pill" style={{ fontSize: 10.5, color: "var(--fg-4)", background: "var(--bg-2)", borderColor: "var(--line-2)", flex: "none" }}>Not tested</span>
+        {/* ── Deployment comparison (S4): previous verified against the current recorded deployment ──── */}
+        {current && previous ? (
+          <div className="card" style={{ padding: "clamp(16px, 2.2vw, 22px)", marginBottom: 14 }}>
+            <div style={headLbl}>Deployment comparison</div>
+            <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 12, color: "var(--fg-4)", flex: "none", width: 128 }}>{previousRun ? "Previous verified" : "Previous"}</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-2)", minWidth: 0, wordBreak: "break-all", flex: "1 1 240px" }}>{previous.url}</span>
+                <Verdict verdict={systemProof(previousRun).verdict} style={{ flex: "none" }} />
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 12, color: "var(--fg-4)", flex: "none", width: 128 }}>Current</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, fontWeight: 600, color: "var(--fg-1)", minWidth: 0, wordBreak: "break-all", flex: "1 1 240px" }}>{current.url}</span>
+                <Verdict verdict={systemProof(currentRun).verdict} style={{ flex: "none" }} />
+              </div>
+            </div>
+            <div style={{ marginTop: 14 }}>
+              <div style={{ ...headLbl, fontSize: 10 }}>What changed</div>
+              {comparisonLines.length ? (
+                <ul style={{ margin: "8px 0 0", paddingLeft: 18, display: "grid", gap: 4 }}>
+                  {comparisonLines.map((c) => <li key={c} style={{ fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.5, wordBreak: "break-word" }}>{c}</li>)}
+                </ul>
+              ) : (
+                <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: "8px 0 0" }}>The recorded identity fields match; only the recording time differs.</p>
               )}
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 12, color: "var(--fg-4)", flex: "none", width: 128 }}>Current</span>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, fontWeight: 600, color: "var(--fg-1)", minWidth: 0, wordBreak: "break-all", flex: "1 1 240px" }}>{current.url}</span>
-              {currentRun ? (() => { const p = verdictPill(currentRun.decision, currentRun.state); return (
-                <span className="pill" style={{ fontSize: 10.5, color: p.color, background: p.bg, borderColor: p.border, flex: "none" }}><DecisionMark decision={currentRun.decision} />{p.label}</span>
-              ); })() : (
-                <span className="pill" style={{ fontSize: 10.5, color: "var(--wait-ink)", background: "var(--wait-wash)", borderColor: "var(--wait-line)", flex: "none" }}>Unverified</span>
-              )}
-            </div>
           </div>
-          <div style={{ marginTop: 14 }}>
-            <div style={{ ...headLbl, fontSize: 10 }}>What changed</div>
-            {comparisonLines.length ? (
-              <ul style={{ margin: "8px 0 0", paddingLeft: 18, display: "grid", gap: 4 }}>
-                {comparisonLines.map((c) => <li key={c} style={{ fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.5, wordBreak: "break-word" }}>{c}</li>)}
-              </ul>
-            ) : (
-              <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: "8px 0 0" }}>The recorded identity fields match; only the recording time differs.</p>
-            )}
-          </div>
-        </div>
-      ) : null}
+        ) : null}
 
-      {/* ── Recorded deployments (S4): the v_deployments identity rows, newest first ────────────────── */}
-      {deploymentsReady ? (
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
-            <div style={{ ...headLbl, display: "flex", alignItems: "center", gap: 7 }}><Ic d={I.deploy} size={13} sw={2} />Recorded deployments ({recorded.length})</div>
-            {caps.canManageDeployments ? <RecordDeploymentForm appId={id} /> : null}
-          </div>
-          {recorded.length ? (
-            <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", overflow: "hidden" }}>
-              {recorded.map((d, i) => {
-                const vr = verifyingRun(d);
-                const p = vr ? verdictPill(vr.decision, vr.state) : null;
-                return (
-                  <div key={d.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "11px 14px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", flexWrap: "wrap" }}>
-                    <div style={{ minWidth: 0, flex: "1 1 280px" }}>
-                      <div style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-1)", fontWeight: 600, wordBreak: "break-all" }}>{d.url}</div>
-                      <div style={{ fontSize: 11.5, color: "var(--fg-4)", marginTop: 3 }}>
-                        <span title={when(d.detected_at)}>{SOURCE_LABELS[d.source] ?? d.source} {timeAgo(d.detected_at)}</span>
-                        {d.commit_sha ? `, commit ${d.commit_sha.slice(0, 10)}` : ""}
-                        {d.branch ? `, ${d.branch}` : ""}
+        {/* ── Recorded deployments (S4): the v_deployments identity rows, newest first ────────────────── */}
+        {deploymentsReady ? (
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
+              <div style={{ ...headLbl, display: "flex", alignItems: "center", gap: 7 }}><Ic d={I.deploy} size={13} sw={2} />Recorded deployments ({recorded.length})</div>
+              {caps.canManageDeployments ? <RecordDeploymentForm appId={id} /> : null}
+            </div>
+            {recorded.length ? (
+              <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", overflow: "hidden" }}>
+                {recorded.map((d, i) => {
+                  const vr = verifyingRun(d);
+                  return (
+                    <div key={d.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "11px 14px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", flexWrap: "wrap" }}>
+                      <div style={{ minWidth: 0, flex: "1 1 280px" }}>
+                        <div style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-1)", fontWeight: 600, wordBreak: "break-all" }}>{d.url}</div>
+                        <div style={{ fontSize: 11.5, color: "var(--fg-4)", marginTop: 3 }}>
+                          <span title={when(d.detected_at)}>{SOURCE_LABELS[d.source] ?? d.source} {timeAgo(d.detected_at)}</span>
+                          {d.commit_sha ? `, commit ${d.commit_sha.slice(0, 10)}` : ""}
+                          {d.branch ? `, ${d.branch}` : ""}
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: 7, flex: "none", alignItems: "center" }}>
+                        {d.environment && ENV_LABELS[d.environment] ? <span className="pill" style={{ fontSize: 10 }}>{ENV_LABELS[d.environment]}</span> : null}
+                        <Verdict verdict={systemProof(vr).verdict} />
                       </div>
                     </div>
-                    <div style={{ display: "flex", gap: 7, flex: "none", alignItems: "center" }}>
-                      {d.environment && ENV_LABELS[d.environment] ? <span className="pill" style={{ fontSize: 10 }}>{ENV_LABELS[d.environment]}</span> : null}
-                      {p && vr ? (
-                        <span className="pill" style={{ fontSize: 10.5, color: p.color, background: p.bg, borderColor: p.border }}><DecisionMark decision={vr.decision} />{p.label}</span>
-                      ) : (
-                        <span className="pill" style={{ fontSize: 10.5, color: "var(--wait-ink)", background: "var(--wait-wash)", borderColor: "var(--wait-line)" }}>Unverified</span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0 }}>
-              No deployments recorded yet. Every new verification records the deployment it tests
-              automatically; you can also record one by hand when you ship.
-            </p>
-          )}
-        </div>
-      ) : null}
+                  );
+                })}
+              </div>
+            ) : (
+              <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0 }}>
+                No deployments recorded yet. Every new verification records the deployment it tests
+                automatically; you can also record one by hand when you ship.
+              </p>
+            )}
+          </div>
+        ) : null}
 
-      {/* ── Pass history by deployment URL (pre-S4 view; every URL a pass has tested) ───────────────── */}
-      <div style={{ ...headLbl, marginBottom: 12 }}>Verification history by deployment</div>
-      {groups.length ? (
-        <div style={{ display: "grid", gap: 8 }}>
-          {groups.map((g) => <DeploymentRow key={g.url} appId={id} g={g} />)}
-        </div>
-      ) : (
-        <div className="empty">
-          <EmptyIcon d={I.deploy} />
-          <h3>No deployments recorded</h3>
-          <p>Every verification records the deployment URL it ran against. Run one from the overview and that deployment appears here with its verdict.</p>
-          <Link href={`/systems/${id}`} className="btn">Run a verification from the overview</Link>
-        </div>
-      )}
+        {/* ── Pass history by deployment URL (pre-S4 view; every URL a pass has tested) ───────────────── */}
+        <div style={{ ...headLbl, marginBottom: 12 }}>Verification history by deployment</div>
+        {groups.length ? (
+          <div style={{ display: "grid", gap: 8 }}>
+            {groups.map((g) => <DeploymentRow key={g.url} appId={id} g={g} />)}
+          </div>
+        ) : (
+          <div className="empty">
+            <EmptyIcon d={I.deploy} />
+            <h3>No deployments recorded</h3>
+            <p>Every verification records the deployment URL it ran against. Run one from the overview and that deployment appears here with its verdict.</p>
+            <Link href={`/systems/${id}`} className="btn">Run a verification from the overview</Link>
+          </div>
+        )}
 
-      <div className="card" style={{ marginTop: 20, padding: "clamp(16px, 2.2vw, 20px)", background: "var(--bg-2)" }}>
-        <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14.5, color: "var(--fg-1)", marginBottom: 6 }}>Deployment guards are planned</div>
-        <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, margin: 0 }}>
-          Automatic verifications on every new deployment, with a hold on Failed verdicts, are planned but not built yet.
-          For now, this page is a history of the deployments your verifications have tested.
-        </p>
+        <div className="card" style={{ marginTop: 20, padding: "clamp(16px, 2.2vw, 20px)", background: "var(--bg-2)" }}>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14.5, color: "var(--fg-1)", marginBottom: 6 }}>Deployment guards are planned</div>
+          <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, margin: 0 }}>
+            Automatic verifications on every new deployment, with a hold on Failed verdicts, are planned but not built yet.
+            For now, this page is a history of the deployments your verifications have tested.
+          </p>
+        </div>
       </div>
-    </div>
+    </Page>
   );
 }

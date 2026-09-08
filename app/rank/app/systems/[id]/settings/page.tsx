@@ -11,6 +11,7 @@ import { AppTabs } from "../app-tabs";
 import { EditApplicationForm } from "./edit-application";
 import { DeleteApplication } from "./delete-application";
 import { I, EmptyIcon } from "@/app/rank/_components/icons";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
 export const metadata: Metadata = { title: "System settings" };
 
@@ -82,14 +83,14 @@ export default async function AppSettingsPage({ params }: { params: Promise<{ id
   const app = await getApplication(owner, id);
   if (!app) {
     return (
-      <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-        <div className="empty">
+      <Page>
+        <div className="empty" style={{ marginBottom: 80 }}>
           <EmptyIcon d={I.slash} />
           <h3>System not found</h3>
           <p>This system doesn&apos;t exist, or it belongs to another account.</p>
           <Link href="/systems" className="btn">Back to systems</Link>
         </div>
-      </div>
+      </Page>
     );
   }
 
@@ -120,146 +121,157 @@ export default async function AppSettingsPage({ params }: { params: Promise<{ id
   if (extras.contextSources.length === 0) gaps.push({ what: "No product definition sources", why: "A build prompt, PRD, or requirements doc sharpens the Production Contract Vraelis derives." });
 
   return (
-    <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
+    <Page>
       <nav aria-label="Breadcrumb" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 13, marginBottom: 14 }}>
         <Link href="/systems" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Systems</Link>
         <span aria-hidden style={{ color: "var(--fg-5)" }}>/</span>
         <span style={{ color: "var(--fg-2)", fontWeight: 600, maxWidth: 360, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app.name}</span>
       </nav>
 
-      <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "6px 0 10px" }}>{app.name}</h1>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-        <a href={app.app_url} target="_blank" rel="noopener noreferrer"
-          style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-4)", textDecoration: "none", wordBreak: "break-all" }}>
-          {app.app_url}
-        </a>
-        {envLabel ? <span className="pill" style={{ fontSize: 10.5 }}>{envLabel}</span> : null}
-      </div>
+      {/* The URL and the environment pill are the header's lead line, not a second header. They sit in a
+          span rather than the div they used to, because <PageHeader> renders the lead inside a paragraph
+          and a div there is invalid markup that React will not warn about but the parser will fix badly. */}
+      <PageHeader
+        title={app.name}
+        lead={
+          <span style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <a href={app.app_url} target="_blank" rel="noopener noreferrer"
+              style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-4)", textDecoration: "none", wordBreak: "break-all" }}>
+              {app.app_url}
+            </a>
+            {envLabel ? <span className="pill" style={{ fontSize: 10.5 }}>{envLabel}</span> : null}
+          </span>
+        }
+      />
 
-      <AppTabs appId={id} active="settings" />
+      {/* <Page> owns the measure and the shell owns padding-top, so the tail room this page has
+          always had stays here, on the body. */}
+      <div style={{ paddingBottom: 80 }}>
+        <AppTabs appId={id} active="settings" />
 
-      {/* ── Edit application (EDITOR+); read-only members see the same fields as a facts card ─────────── */}
-      {caps.canEditSettings ? (
-        <EditApplicationForm
-          appId={id}
-          initial={{ name: app.name, appUrl: app.app_url, environment: extras.environment ?? "", description: currentDescription }}
-        />
-      ) : (
-        <div className="card" style={{ padding: "clamp(18px, 2.4vw, 24px)" }}>
-          <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16.5, color: "var(--fg-1)", margin: 0 }}>System settings</h2>
-          <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.55, margin: "8px 0 0", maxWidth: 640 }}>
-            View-only. Ask an editor or the owner to change these settings.
-          </p>
-          <div style={{ display: "grid", gap: 11, marginTop: 16 }}>
-            <KV k="Name" v={app.name} />
-            <KV k="Deployment target URL" v={app.app_url} />
-            <KV k="Environment" v={envLabel} />
-            <KV k="Description" v={currentDescription || null} />
+        {/* ── Edit application (EDITOR+); read-only members see the same fields as a facts card ─────────── */}
+        {caps.canEditSettings ? (
+          <EditApplicationForm
+            appId={id}
+            initial={{ name: app.name, appUrl: app.app_url, environment: extras.environment ?? "", description: currentDescription }}
+          />
+        ) : (
+          <div className="card" style={{ padding: "clamp(18px, 2.4vw, 24px)" }}>
+            <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16.5, color: "var(--fg-1)", margin: 0 }}>System settings</h2>
+            <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.55, margin: "8px 0 0", maxWidth: 640 }}>
+              View-only. Ask an editor or the owner to change these settings.
+            </p>
+            <div style={{ display: "grid", gap: 11, marginTop: 16 }}>
+              <KV k="Name" v={app.name} />
+              <KV k="Deployment target URL" v={app.app_url} />
+              <KV k="Environment" v={envLabel} />
+              <KV k="Description" v={currentDescription || null} />
+            </div>
+          </div>
+        )}
+
+        {/* ── Application details (read-only facts the form does not own) ──────────────────────────────── */}
+        <div className="card" style={{ padding: "clamp(18px, 2.4vw, 24px)", marginTop: 18 }}>
+          <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16.5, color: "var(--fg-1)", margin: 0 }}>System details</h2>
+          <div style={{ display: "grid", gap: 11, marginTop: 14 }}>
+            <KV k="Builder" v={builderLabel} />
+            <KV k="Framework" v={app.framework} />
+            <KV k="Connected" v={when(app.created_at)} />
           </div>
         </div>
-      )}
 
-      {/* ── Application details (read-only facts the form does not own) ──────────────────────────────── */}
-      <div className="card" style={{ padding: "clamp(18px, 2.4vw, 24px)", marginTop: 18 }}>
-        <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16.5, color: "var(--fg-1)", margin: 0 }}>System details</h2>
-        <div style={{ display: "grid", gap: 11, marginTop: 14 }}>
-          <KV k="Builder" v={builderLabel} />
-          <KV k="Framework" v={app.framework} />
-          <KV k="Connected" v={when(app.created_at)} />
-        </div>
-      </div>
-
-      {/* ── Connections: compact summary; management lives on the Connections tab ──────────────────── */}
-      <section style={sectionStyle} aria-label="Connections">
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 4 }}>
-          <div style={headLbl}>Connections ({connections.length})</div>
-          <Link href={`/systems/${id}/settings/connections`} style={{ fontSize: 12.5, fontWeight: 600, color: "var(--acc-deep)", textDecoration: "none" }}>
-            Manage connections
-          </Link>
-        </div>
-        <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, margin: 0, maxWidth: 640 }}>
-          {connections.length
-            ? `${otherConnections.length} connection${otherConnections.length === 1 ? "" : "s"} and ${testAccounts.length} test account${testAccounts.length === 1 ? "" : "s"} on file.`
-            : "No connections recorded, so verifications run with only the system URL."}{" "}
-          Editing metadata, health checks, disconnecting, and the audit history live on the Connections tab.
-        </p>
-
-        {extras.contextSources.length ? (
-          <>
-            <div style={{ ...headLbl, margin: "20px 0 10px" }}>Product definition sources ({extras.contextSources.length})</div>
-            <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", overflow: "hidden" }}>
-              {extras.contextSources.map((src, i) => (
-                <div key={`${src.kind}-${i}`} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "10px 14px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-                    <span className="pill" style={{ fontSize: 9.5, flex: "none" }}>{CONTEXT_KIND_LABELS[src.kind] ?? src.kind}</span>
-                    <span style={{ fontSize: 13, color: "var(--fg-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{src.name}</span>
-                  </div>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-4)", flex: "none" }}>{src.chars.toLocaleString("en-US")} chars</span>
-                </div>
-              ))}
-            </div>
-          </>
-        ) : null}
-      </section>
-
-      {/* ── Test boundaries ─────────────────────────────────────────────────────────────────────────── */}
-      <section style={sectionStyle} aria-label="Test boundaries">
-        <div style={{ ...headLbl, marginBottom: 4 }}>Test boundaries</div>
-        <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, margin: "0 0 14px", maxWidth: 640 }}>
-          {b
-            ? "What verifications on this system are permitted to do. Set at connect time; every permit is off unless the owner turned it on."
-            : "No boundaries were recorded for this system, so Vraelis treats every permit as off, the most conservative default."}
-        </p>
-        {b ? (
-          <>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 14, fontSize: 13, marginBottom: 12, maxWidth: 640 }}>
-              <span style={{ color: "var(--fg-4)", flex: "none" }}>Allowed domains</span>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: b.allowed_domains.length ? "var(--fg-1)" : "var(--fg-4)", textAlign: "right", wordBreak: "break-all" }}>
-                {b.allowed_domains.length ? b.allowed_domains.join(", ") : "Not set"}
-              </span>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 8 }}>
-              <PermitRow label="Account creation" on={b.permit_account_creation} />
-              <PermitRow label="Test database writes" on={b.permit_db_writes} />
-              <PermitRow label="Test email delivery" on={b.permit_email} />
-              <PermitRow label="Test-mode purchases" on={b.permit_test_purchases} />
-              <PermitRow label="File upload" on={b.permit_file_upload} />
-            </div>
-          </>
-        ) : null}
-        <div style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.6, padding: "12px 14px", borderRadius: "var(--r-sm)", background: "var(--bg-2)", border: "1px solid var(--line-2)", marginTop: 12, maxWidth: 640 }}>
-          Always enforced, not configurable: Vraelis never performs destructive actions, never uses live
-          payment methods, and never deletes production data.
-        </div>
-      </section>
-
-      {/* ── What's missing ──────────────────────────────────────────────────────────────────────────── */}
-      <section style={sectionStyle} aria-label="Missing context">
-        <div style={{ ...headLbl, marginBottom: 4 }}>Missing from this system</div>
-        {gaps.length ? (
-          <>
-            <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, margin: "0 0 12px", maxWidth: 640 }}>
-              Each gap below narrows what a verification can cover. Add connections and test accounts
-              any time from the <Link href={`/systems/${id}/settings/connections`} style={{ color: "var(--acc-deep)", fontWeight: 600 }}>Connections tab</Link>.
-            </p>
-            <div style={{ display: "grid", gap: 8 }}>
-              {gaps.map((g) => (
-                <div key={g.what} style={{ display: "flex", gap: 12, alignItems: "baseline", padding: "11px 14px", border: "1px solid var(--line-2)", borderLeft: "3px solid var(--wait-line)", borderRadius: "var(--r-sm)", background: "var(--bg-1)" }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: "var(--wait-ink)", flex: "none" }}>{g.what}</span>
-                  <span style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5 }}>{g.why}</span>
-                </div>
-              ))}
-            </div>
-          </>
-        ) : (
-          <p style={{ fontSize: 13, color: "var(--acc-deep)", fontWeight: 600, margin: 0 }}>
-            Nothing is missing. Every kind of context Vraelis can use today is on file for this system.
+        {/* ── Connections: compact summary; management lives on the Connections tab ──────────────────── */}
+        <section style={sectionStyle} aria-label="Connections">
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 4 }}>
+            <div style={headLbl}>Connections ({connections.length})</div>
+            <Link href={`/systems/${id}/settings/connections`} style={{ fontSize: 12.5, fontWeight: 600, color: "var(--acc-deep)", textDecoration: "none" }}>
+              Manage connections
+            </Link>
+          </div>
+          <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, margin: 0, maxWidth: 640 }}>
+            {connections.length
+              ? `${otherConnections.length} connection${otherConnections.length === 1 ? "" : "s"} and ${testAccounts.length} test account${testAccounts.length === 1 ? "" : "s"} on file.`
+              : "No connections recorded, so verifications run with only the system URL."}{" "}
+            Editing metadata, health checks, disconnecting, and the audit history live on the Connections tab.
           </p>
-        )}
-      </section>
 
-      {/* ── Deletion (ADMIN+ only; its own card at the bottom, so hidden entirely for non-admins) ──────── */}
-      {caps.canDeleteApplication ? <DeleteApplication appId={id} appName={app.name} /> : null}
-    </div>
+          {extras.contextSources.length ? (
+            <>
+              <div style={{ ...headLbl, margin: "20px 0 10px" }}>Product definition sources ({extras.contextSources.length})</div>
+              <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", overflow: "hidden" }}>
+                {extras.contextSources.map((src, i) => (
+                  <div key={`${src.kind}-${i}`} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "10px 14px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                      <span className="pill" style={{ fontSize: 9.5, flex: "none" }}>{CONTEXT_KIND_LABELS[src.kind] ?? src.kind}</span>
+                      <span style={{ fontSize: 13, color: "var(--fg-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{src.name}</span>
+                    </div>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-4)", flex: "none" }}>{src.chars.toLocaleString("en-US")} chars</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : null}
+        </section>
+
+        {/* ── Test boundaries ─────────────────────────────────────────────────────────────────────────── */}
+        <section style={sectionStyle} aria-label="Test boundaries">
+          <div style={{ ...headLbl, marginBottom: 4 }}>Test boundaries</div>
+          <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, margin: "0 0 14px", maxWidth: 640 }}>
+            {b
+              ? "What verifications on this system are permitted to do. Set at connect time; every permit is off unless the owner turned it on."
+              : "No boundaries were recorded for this system, so Vraelis treats every permit as off, the most conservative default."}
+          </p>
+          {b ? (
+            <>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 14, fontSize: 13, marginBottom: 12, maxWidth: 640 }}>
+                <span style={{ color: "var(--fg-4)", flex: "none" }}>Allowed domains</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: b.allowed_domains.length ? "var(--fg-1)" : "var(--fg-4)", textAlign: "right", wordBreak: "break-all" }}>
+                  {b.allowed_domains.length ? b.allowed_domains.join(", ") : "Not set"}
+                </span>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 8 }}>
+                <PermitRow label="Account creation" on={b.permit_account_creation} />
+                <PermitRow label="Test database writes" on={b.permit_db_writes} />
+                <PermitRow label="Test email delivery" on={b.permit_email} />
+                <PermitRow label="Test-mode purchases" on={b.permit_test_purchases} />
+                <PermitRow label="File upload" on={b.permit_file_upload} />
+              </div>
+            </>
+          ) : null}
+          <div style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.6, padding: "12px 14px", borderRadius: "var(--r-sm)", background: "var(--bg-2)", border: "1px solid var(--line-2)", marginTop: 12, maxWidth: 640 }}>
+            Always enforced, not configurable: Vraelis never performs destructive actions, never uses live
+            payment methods, and never deletes production data.
+          </div>
+        </section>
+
+        {/* ── What's missing ──────────────────────────────────────────────────────────────────────────── */}
+        <section style={sectionStyle} aria-label="Missing context">
+          <div style={{ ...headLbl, marginBottom: 4 }}>Missing from this system</div>
+          {gaps.length ? (
+            <>
+              <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, margin: "0 0 12px", maxWidth: 640 }}>
+                Each gap below narrows what a verification can cover. Add connections and test accounts
+                any time from the <Link href={`/systems/${id}/settings/connections`} style={{ color: "var(--acc-deep)", fontWeight: 600 }}>Connections tab</Link>.
+              </p>
+              <div style={{ display: "grid", gap: 8 }}>
+                {gaps.map((g) => (
+                  <div key={g.what} style={{ display: "flex", gap: 12, alignItems: "baseline", padding: "11px 14px", border: "1px solid var(--line-2)", borderLeft: "3px solid var(--wait-line)", borderRadius: "var(--r-sm)", background: "var(--bg-1)" }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "var(--wait-ink)", flex: "none" }}>{g.what}</span>
+                    <span style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5 }}>{g.why}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <p style={{ fontSize: 13, color: "var(--acc-deep)", fontWeight: 600, margin: 0 }}>
+              Nothing is missing. Every kind of context Vraelis can use today is on file for this system.
+            </p>
+          )}
+        </section>
+
+        {/* ── Deletion (ADMIN+ only; its own card at the bottom, so hidden entirely for non-admins) ──────── */}
+        {caps.canDeleteApplication ? <DeleteApplication appId={id} appName={app.name} /> : null}
+      </div>
+    </Page>
   );
 }

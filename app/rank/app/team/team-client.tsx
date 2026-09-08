@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Ic, I } from "@/app/rank/_components/icons";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
 type Role = "owner" | "admin" | "editor" | "viewer" | "client_viewer";
 type Member = { id: string; user_id: string | null; email: string; role: Role; status: "pending" | "active" | "revoked"; created_at: string; invite_expires_at?: string | null; can_manage_billing?: boolean };
@@ -45,7 +46,20 @@ function expiryLabel(iso?: string | null): string | null {
 }
 
 const cardHead = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: "30px 0 12px" } as const;
-const input = { padding: "10px 13px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, outline: "none" } as const;
+// ONE OBJECT, FIVE CONTROLS, AND NO KEYBOARD FOCUS ON ANY OF THEM.
+//
+// This shape carried outline:"none" inline, and it is spread onto the invite field, three <select>s and the
+// ownership-transfer confirmation box. An inline outline beats every stylesheet rule regardless of
+// pseudo-class, so authenticated.css's :focus-visible ring could never paint: someone tabbing through the
+// page that hands other people access to a workspace could not see where they were. The inline border-color
+// and background beat the :focus rule in the same file for the same reason, so the fields did not respond to
+// focus at all.
+//
+// All three are gone. Border WIDTH and STYLE stay, because [data-surface="app"] input,textarea,select sets
+// border-COLOR for fields and never declares a border, and <select> in particular is covered by no other
+// rule in the sheet, so dropping the shorthand entirely would fall through to whatever the browser draws.
+// Colour, ground, focus ring and focus border are the stylesheet's now.
+const input = { padding: "10px 13px", borderRadius: "var(--r-sm)", borderWidth: 1, borderStyle: "solid", color: "var(--fg-1)", fontSize: 14 } as const;
 
 function RolePill({ role }: { role: Role }) {
   const c = role === "owner" ? "var(--acc-deep)" : role === "client_viewer" ? "var(--fg-4)" : "var(--fg-2)";
@@ -132,16 +146,17 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
   }
 
   return (
-    <div className="wrap" style={{ maxWidth: 880, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-      <div className="phead">
-        <div>
-          <p className="eyebrow">Workspace</p>
-          <h1 className="display">Team</h1>
-          <p>Run verifications with your team and share client-ready reports, without exposing private controls.</p>
-        </div>
-        <Link href="/activity" className="btn btn--ghost">Workspace activity →</Link>
-      </div>
+    // Same measure as the read-only view in team/page.tsx, which is the other component that renders this
+    // same URL. They each hardcoded 880 and now state one intention instead.
+    <Page measure="prose">
+      <PageHeader
+        eyebrow="Workspace"
+        title="Team"
+        lead="Run verifications with your team and share client-ready reports, without exposing private controls."
+        actions={<Link href="/activity" className="btn btn--ghost">Workspace activity →</Link>}
+      />
 
+      <div style={{ paddingBottom: 80 }}>
       <div className="card" style={{ marginBottom: 18, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <div>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16 }}>{ctx.workspace?.name ?? "Your workspace"}</div>
@@ -241,9 +256,12 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
         <>
           <div style={cardHead}>Invite a member or client</div>
           <div className="card" style={{ marginBottom: 18 }}>
+            {/* Neither control had a name. The card head above them is a styled <div>, so a screen reader
+                reached an unlabelled text box followed by an unlabelled combo box on the form that grants
+                people access to a workspace. The names are the words already on the card, not new ones. */}
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <input value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="teammate@company.com" onKeyDown={(e) => { if (e.key === "Enter" && !busy) invite(); }} style={{ ...input, flex: "1 1 240px" }} />
-              <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value as Role)} style={input as React.CSSProperties}>{INVITABLE.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}</select>
+              <input aria-label="Invite by email address" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="teammate@company.com" onKeyDown={(e) => { if (e.key === "Enter" && !busy) invite(); }} style={{ ...input, flex: "1 1 240px" }} />
+              <select aria-label="Role for the invited member" value={inviteRole} onChange={(e) => setInviteRole(e.target.value as Role)} style={input as React.CSSProperties}>{INVITABLE.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}</select>
               <button onClick={invite} disabled={busy} className="btn" style={{ opacity: busy ? 0.6 : 1 }}>{busy ? "Inviting…" : "Invite"}</button>
             </div>
             <p style={{ fontSize: 12, color: "var(--fg-5)", margin: "10px 0 0", lineHeight: 1.55 }}>{ROLE_DESC[inviteRole]}</p>
@@ -268,7 +286,9 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
               )}
               {m.role === "owner" || !canManage ? <RolePill role={m.role} /> : (
                 <>
-                  <select value={m.role} onChange={(e) => setRole(m.id, e.target.value as Role)} style={{ ...input, padding: "6px 10px", fontSize: 12.5 } as React.CSSProperties}>{INVITABLE.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}</select>
+                  {/* One of these renders per member, so a bare "Role" would announce the same name a
+                      dozen times over. It names the person it acts on. */}
+                  <select aria-label={`Role for ${m.email}`} value={m.role} onChange={(e) => setRole(m.id, e.target.value as Role)} style={{ ...input, padding: "6px 10px", fontSize: 12.5 } as React.CSSProperties}>{INVITABLE.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}</select>
                   <button onClick={() => revoke(m.id)} className="btn btn--ghost" style={{ padding: "6px 11px", fontSize: 12.5, gap: 6 }}><Ic d={I.slash} size={12} sw={2.2} />Revoke</button>
                 </>
               )}
@@ -396,9 +416,11 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
               <>
                 {transfer.blocked && <div style={{ fontSize: 12.5, color: "var(--fg-2)", padding: "12px 14px", background: "var(--bg-2)", borderRadius: "var(--r-sm)", lineHeight: 1.6, marginBottom: 12 }}>This workspace has active team billing. The new owner must accept billing responsibility before ownership can transfer, they&apos;ll set up their own team seats, then your subscription is canceled.</div>}
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
-                  <select value={tgt} onChange={(e) => setTgt(e.target.value)} style={{ ...input, flex: "1 1 240px" } as React.CSSProperties}>{transfer.eligible.map((m) => <option key={m.id} value={m.id}>{m.email} ({ROLE_LABEL[m.role]})</option>)}</select>
+                  <select aria-label="Member to transfer ownership to" value={tgt} onChange={(e) => setTgt(e.target.value)} style={{ ...input, flex: "1 1 240px" } as React.CSSProperties}>{transfer.eligible.map((m) => <option key={m.id} value={m.id}>{m.email} ({ROLE_LABEL[m.role]})</option>)}</select>
                 </div>
-                <label style={{ display: "block" }}><span style={{ display: "block", fontSize: 12, color: "var(--fg-4)", marginBottom: 5 }}>Type the workspace name <strong style={{ color: "var(--fg-2)" }}>{transfer.workspaceName}</strong> to confirm</span><input value={confirmName} onChange={(e) => setConfirmName(e.target.value)} placeholder={transfer.workspaceName} style={{ ...input, width: "100%" }} /></label>
+                {/* The wrapping <label> already names this box, so it needs an htmlFor/id pair rather than an
+                    aria-label: the association is what was missing, not the words. */}
+                <label htmlFor="transfer-confirm-name" style={{ display: "block" }}><span style={{ display: "block", fontSize: 12, color: "var(--fg-4)", marginBottom: 5 }}>Type the workspace name <strong style={{ color: "var(--fg-2)" }}>{transfer.workspaceName}</strong> to confirm</span><input id="transfer-confirm-name" value={confirmName} onChange={(e) => setConfirmName(e.target.value)} placeholder={transfer.workspaceName} style={{ ...input, width: "100%" }} /></label>
                 <button onClick={doTransfer} disabled={tBusy || confirmName.trim() !== transfer.workspaceName.trim()} className="btn" style={{ marginTop: 12, opacity: tBusy || confirmName.trim() !== transfer.workspaceName.trim() ? 0.5 : 1 }}>{tBusy ? (transfer.blocked ? "Requesting…" : "Transferring…") : (transfer.blocked ? "Request transfer" : "Transfer ownership")}</button>
                 {tMsg && <p style={{ fontSize: 12.5, color: tMsg.kind === "ok" ? "var(--acc-deep)" : "var(--money)", margin: "10px 0 0" }}>{tMsg.text}</p>}
               </>
@@ -406,6 +428,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
           </div>
         </>
       )}
-    </div>
+      </div>
+    </Page>
   );
 }

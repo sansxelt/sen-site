@@ -5,6 +5,7 @@ import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "../systems/setup-required";
 import { listAllIssues, type IssueRow } from "@/lib/preflight/overview-db";
 import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
 export const metadata: Metadata = { title: "Issues" };
 
@@ -143,54 +144,57 @@ export default async function IssuesPage() {
   const highCount = open.filter((i) => i.severity === "high").length;
 
   return (
-    <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-      {/* header */}
-      <div style={{ marginBottom: 24 }}>
-        <p className="eyebrow">Vraelis Preflight</p>
-        <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "6px 0 10px" }}>Issues</h1>
-        <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.6, margin: 0, maxWidth: 560 }}>
-          Failures found by real browser runs of your app, each with the evidence to fix it.
-        </p>
-      </div>
+    <Page>
+      <PageHeader
+        eyebrow="Vraelis Preflight"
+        title="Issues"
+        lead="Failures found by real browser runs of your app, each with the evidence to fix it."
+      />
 
-      {open.length === 0 && resolved.length === 0 ? (
-        <NoOpenIssues />
-      ) : (
-        <>
-          {/* counts */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 24 }}>
-            <StatChip label="Open" value={open.length} color={open.length ? "var(--fg-1)" : undefined} />
-            <StatChip label="Critical" value={criticalCount} color={criticalCount ? "var(--stop-ink)" : undefined} />
-            <StatChip label="High" value={highCount} color={highCount ? "var(--wait-ink)" : undefined} />
-            <StatChip label="Resolved" value={resolved.length} color={resolved.length ? "var(--acc-deep)" : undefined} />
-          </div>
+      {/* <Page> owns the measure and the shell overrides only padding-TOP, so the tail room this page has
+          always had is kept here, on the content. Every sibling page carries the same 80px; without it the
+          last row sat flush against the bottom of the window on this page alone. */}
+      <div style={{ paddingBottom: 80 }}>
 
-          {/* open issues, most severe first (listAllIssues sorts by severity) */}
-          <section style={{ marginBottom: 32 }}>
-            <SectionHeading>Open</SectionHeading>
-            {open.length === 0 ? (
-              <NoOpenIssues />
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {open.map((issue) => <OpenIssueRow key={issue.id} issue={issue} />)}
-              </div>
-            )}
-          </section>
+        {open.length === 0 && resolved.length === 0 ? (
+          <NoOpenIssues />
+        ) : (
+          <>
+            {/* counts */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 24 }}>
+              <StatChip label="Open" value={open.length} color={open.length ? "var(--fg-1)" : undefined} />
+              <StatChip label="Critical" value={criticalCount} color={criticalCount ? "var(--stop-ink)" : undefined} />
+              <StatChip label="High" value={highCount} color={highCount ? "var(--wait-ink)" : undefined} />
+              <StatChip label="Resolved" value={resolved.length} color={resolved.length ? "var(--acc-deep)" : undefined} />
+            </div>
 
-          {/* resolved history */}
-          {resolved.length > 0 ? (
-            <section>
-              <SectionHeading>Resolved</SectionHeading>
-              {resolved.length === 30 ? (
-                <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "0 0 10px" }}>Showing the 30 most recently recorded.</p>
-              ) : null}
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {resolved.map((issue) => <ResolvedIssueRow key={issue.id} issue={issue} />)}
-              </div>
+            {/* open issues, most severe first (listAllIssues sorts by severity) */}
+            <section style={{ marginBottom: 32 }}>
+              <SectionHeading>Open</SectionHeading>
+              {open.length === 0 ? (
+                <NoOpenIssues />
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {open.map((issue) => <OpenIssueRow key={issue.id} issue={issue} />)}
+                </div>
+              )}
             </section>
-          ) : null}
-        </>
-      )}
-    </div>
+
+            {/* resolved history */}
+            {resolved.length > 0 ? (
+              <section>
+                <SectionHeading>Resolved</SectionHeading>
+                {resolved.length === 30 ? (
+                  <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "0 0 10px" }}>Showing the 30 most recently recorded.</p>
+                ) : null}
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {resolved.map((issue) => <ResolvedIssueRow key={issue.id} issue={issue} />)}
+                </div>
+              </section>
+            ) : null}
+          </>
+        )}
+      </div>
+    </Page>
   );
 }

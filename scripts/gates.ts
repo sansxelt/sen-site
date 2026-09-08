@@ -142,6 +142,9 @@ const SUITES = [
   "phase2-tenant-money", "phase2-hardening", "phase2-corrections",
   "phase3-settings-authz", "phase3-oauth-identity", "phase4-assurance",
   "phase41-autopay", "phase41-docs", "phase41-cookie", "db-target-policy",
+  // The console draws ONE signal. This suite is what stops a tenth private pill appearing: it was nine
+  // separate implementations in four colour vocabularies, two of which were rendering a false Verified.
+  "console-signal",
 ];
 const DOCKER_SUITES = ["phase2-credit-concurrency", "phase3-payment-cap", "rls-preflight"];
 

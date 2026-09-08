@@ -9,6 +9,7 @@ import { getApplication } from "@/lib/v-applications";
 import { listRepairs, type RepairRow } from "@/lib/preflight/overview-db";
 import { AppTabs } from "../app-tabs";
 import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
 // Generic title: exported before the gate runs. See app/rank/app/repairs/page.tsx.
 export const metadata: Metadata = { title: "Vraelis" };
@@ -31,6 +32,11 @@ function timeAgo(iso: string | null | undefined): string {
 
 // Repair lifecycle pill: label AND colour together, never colour alone.
 // suggested -> applied_by_user -> verified (or failed).
+//
+// DELIBERATELY NOT <Verdict>. This is the lifecycle of one repair, not the public conclusion of a run: two
+// of its four states (Suggested, Applied) have no verdict meaning at all, and a repair that verified is not
+// a system that verified, which is exactly the confusion toPublicDecision maps repair_verified to blocked
+// to prevent. It already draws on the canonical go/stop triads, so there is no colour drift to remove here.
 type Pill = { label: string; color: string; bg: string; border: string };
 const STATUS_PILLS: Record<string, Pill> = {
   suggested: { label: "Suggested", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" },
@@ -79,50 +85,60 @@ export default async function AppRepairsPage({ params }: { params: Promise<{ id:
   const app = await getApplication(owner, id);
   if (!app) {
     return (
-      <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-        <div className="empty">
+      <Page>
+        <div className="empty" style={{ marginBottom: 80 }}>
           <EmptyIcon d={I.slash} />
           <h3>System not found</h3>
           <p>This system doesn&apos;t exist, or it belongs to another account.</p>
           <Link href="/systems" className="btn">Back to systems</Link>
         </div>
-      </div>
+      </Page>
     );
   }
 
   const repairs = (await listRepairs(owner)).filter((r) => r.applicationId === id);
 
   return (
-    <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
+    <Page>
       <nav aria-label="Breadcrumb" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 13, marginBottom: 14 }}>
         <Link href="/systems" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Systems</Link>
         <span aria-hidden style={{ color: "var(--fg-5)" }}>/</span>
         <span style={{ color: "var(--fg-2)", fontWeight: 600, maxWidth: 360, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app.name}</span>
       </nav>
 
-      <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "6px 0 10px" }}>{app.name}</h1>
-      <a href={app.app_url} target="_blank" rel="noopener noreferrer"
-        style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-4)", textDecoration: "none", wordBreak: "break-all" }}>
-        {app.app_url}
-      </a>
+      {/* One h1 size for the console, set by <PageHeader>, instead of the clamp(1.7rem, 3vw, 2.4rem) every
+          /systems/[id] page repeated. The deployment URL is the lead line it has always been. */}
+      <PageHeader
+        title={app.name}
+        lead={
+          <a href={app.app_url} target="_blank" rel="noopener noreferrer"
+            style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-4)", textDecoration: "none", wordBreak: "break-all" }}>
+            {app.app_url}
+          </a>
+        }
+      />
 
-      <AppTabs appId={id} active="repairs" />
+      {/* <Page> owns the measure and the shell owns padding-top, so the tail room this page has
+          always had stays here, on the body. */}
+      <div style={{ paddingBottom: 80 }}>
+        <AppTabs appId={id} active="repairs" />
 
-      {repairs.length ? (
-        <div style={{ display: "grid", gap: 8 }}>
-          {repairs.map((r) => <RepairRowView key={r.id} appId={id} r={r} />)}
-        </div>
-      ) : (
-        <div className="empty">
-          <EmptyIcon d={I.wrench} />
-          {/* Same correction as /repairs: nothing writes v_repairs, so "the result is recorded here" was a
-              promise with no writer behind it. The repair prompt lives on the issue and the rerun is its own
-              verification linked by parent_run_id. */}
-          <h3>Repairs are recorded on issues and verifications</h3>
-          <p>Each failure on this system carries a repair prompt for your builder, on the issue itself. Rerun after a fix and the result is kept as its own verification, linked to the one it repairs.</p>
-          <Link href={`/systems/${id}/issues`} className="btn">View issues</Link>
-        </div>
-      )}
-    </div>
+        {repairs.length ? (
+          <div style={{ display: "grid", gap: 8 }}>
+            {repairs.map((r) => <RepairRowView key={r.id} appId={id} r={r} />)}
+          </div>
+        ) : (
+          <div className="empty">
+            <EmptyIcon d={I.wrench} />
+            {/* Same correction as /repairs: nothing writes v_repairs, so "the result is recorded here" was a
+                promise with no writer behind it. The repair prompt lives on the issue and the rerun is its own
+                verification linked by parent_run_id. */}
+            <h3>Repairs are recorded on issues and verifications</h3>
+            <p>Each failure on this system carries a repair prompt for your builder, on the issue itself. Rerun after a fix and the result is kept as its own verification, linked to the one it repairs.</p>
+            <Link href={`/systems/${id}/issues`} className="btn">View issues</Link>
+          </div>
+        )}
+      </div>
+    </Page>
   );
 }

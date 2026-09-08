@@ -16,6 +16,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { CliSection } from "../api/cli-section";
 import { Ic, I } from "@/app/rank/_components/icons";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
 export const metadata: Metadata = { title: "Command line" };
 export const dynamic = "force-dynamic";
@@ -37,13 +38,17 @@ export default async function CliPage() {
   if (!email) redirect("/signin?callbackUrl=%2Fcli");
 
   return (
-    <div className="wrap" style={{ maxWidth: 1080, paddingTop: "clamp(20px, 2.6vw, 32px)", paddingBottom: 80 }}>
-      <h1 className="display" style={{ fontSize: "clamp(1.55rem, 2.6vw, 2rem)", margin: "0 0 8px", letterSpacing: "-0.025em" }}>Command line</h1>
-      <p style={{ margin: "0 0 26px", fontSize: 14, color: "var(--fg-3)", lineHeight: 1.6, maxWidth: "64ch" }}>
-        Everything here runs Vraelis from outside this console: a terminal, a CI job, or an agent. They all
-        spend the same balance and land in the same records, so a run started from a pipeline is not a
-        second class of run.
-      </p>
+    // 32px at tracking -0.025em was one of the six h1 sizes, and this page sat two rows below Integrations
+    // in the same sidebar group, which rendered at 38.4px. Clicking between two neighbours changed the size
+    // of the title. <PageHeader> owns it; the wording is what the sidebar says and is checked against it by
+    // scripts/app-shell-verify.ts, so it stays exactly as written.
+    <Page measure="wide">
+      <PageHeader
+        title="Command line"
+        lead="Everything here runs Vraelis from outside this console: a terminal, a CI job, or an agent. They all spend the same balance and land in the same records, so a run started from a pipeline is not a second class of run."
+      />
+
+      <div style={{ paddingBottom: 80 }}>
 
       <section aria-label="Interfaces" style={{ marginBottom: 34 }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
@@ -67,6 +72,7 @@ export default async function CliPage() {
         Every interface here needs an API key.
         <Link href="/developers" style={{ color: "var(--acc-deep)" }}>Create one on Developers</Link>.
       </p>
-    </div>
+      </div>
+    </Page>
   );
 }

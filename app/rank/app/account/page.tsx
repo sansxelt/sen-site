@@ -9,6 +9,7 @@ import { balance } from "@/lib/v-credits";
 import { recentAccountEvents } from "@/lib/v-events";
 import { getDisplayName } from "@/lib/v-account-profile";
 import { SignOutButton } from "../../_components/rank-ui";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 import { DeleteAccount } from "./delete-account";
 import { AccountRequests } from "./account-requests";
 import { ProfileSection } from "./profile-section";
@@ -50,14 +51,19 @@ export default async function AccountPage() {
   );
 
   return (
-    <div className="wrap" style={{ maxWidth: 940, paddingTop: "clamp(24px, 3vw, 36px)", paddingBottom: 80 }}>
-      <div className="phead">
-        <div>
-          <p className="eyebrow">Account</p>
-          <h1 className="display">Account</h1>
-        </div>
-      </div>
+    // 940 was this page's own number, one of fifteen hardcoded widths across the console, so the left edge
+    // of the content moved every time you clicked between Account and its neighbours. This page is settings
+    // read as sentences rather than a table, so it takes the prose measure.
+    <Page measure="prose">
+      {/* The eyebrow is the .eyebrow CLASS, which it already was. It is called out because credits/page.tsx
+          twenty lines apart rendered this same kicker BOTH ways: the class here, and a local 10.5px
+          uppercase Inter Tight object below. Going through <PageHeader> means a page can no longer pick. */}
+      <PageHeader eyebrow="Account" title="Account" />
 
+      {/* <Page> owns the measure and the shell owns padding-TOP (rank-ui.tsx injects it with !important, so
+          the inline paddingTop this page used to carry never rendered at all). The tail room was real, so it
+          moves onto the content rather than staying on a .wrap that no longer exists here. */}
+      <div style={{ paddingBottom: 80 }}>
       {/* profile: picture (private-bucket upload / replace / remove), display name, read-only email */}
       <ProfileSection email={email} initialDisplayName={displayName} planBadge={`${planName} plan`} />
 
@@ -112,6 +118,7 @@ export default async function AccountPage() {
         </div>
         <DeleteAccount />
       </div>
-    </div>
+      </div>
+    </Page>
   );
 }

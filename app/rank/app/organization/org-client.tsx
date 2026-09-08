@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Ic, I } from "@/app/rank/_components/icons";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
 type OrgRole = "owner" | "admin" | "billing_admin" | "member" | "viewer";
 type OrgMember = { id: string; email: string; role: OrgRole; status: "pending" | "active" | "revoked"; can_manage_billing: boolean };
@@ -31,23 +32,35 @@ type Ctx = {
 const ROLE_LABEL: Record<OrgRole, string> = { owner: "Owner", admin: "Organization admin", billing_admin: "Account billing admin", member: "Member", viewer: "Viewer" };
 const INVITABLE: OrgRole[] = ["admin", "billing_admin", "member", "viewer"];
 const cardHead = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: "30px 0 12px" } as const;
-const input = { padding: "10px 13px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, outline: "none" } as const;
+// THE WORST-AFFECTED OBJECT IN THE CLUSTER. This one shape is spread onto ten inputs and six selects on the
+// page that configures single sign-on, verified domains and who may join an organization, and it carried
+// outline:"none" inline. An inline outline cannot be beaten by any stylesheet rule at any specificity, so
+// authenticated.css's :focus-visible ring never painted on ANY of them: sixteen controls, on the most
+// security-consequential form in the product, with no keyboard focus indicator at all. The inline
+// border-color and background beat the sheet's :focus rule for the same reason.
+//
+// Removed. Border WIDTH and STYLE stay, because [data-surface="app"] input,textarea,select sets border-color
+// for fields and never declares a border, and <select> is covered by nothing else in the sheet at all, so
+// dropping the shorthand outright would fall through to the browser's own control chrome.
+const input = { padding: "10px 13px", borderRadius: "var(--r-sm)", borderWidth: 1, borderStyle: "solid", color: "var(--fg-1)", fontSize: 14 } as const;
 const when = (iso: string) => { const d = new Date(iso); const m = Math.round((Date.now() - d.getTime()) / 60000); if (m < 1) return "just now"; if (m < 60) return `${m}m ago`; const h = Math.round(m / 60); if (h < 24) return `${h}h ago`; const days = Math.round(h / 24); return days < 30 ? `${days}d ago` : d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }); };
 
 export function OrgClient({ email, ctx, activity, domainAccess = [], sso = null }: { email: string; ctx: Ctx; activity: AuditEntry[]; domainAccess?: DomainAccessOption[]; sso?: SsoView | null }) {
   const org = ctx.organization;
   return (
-    <div className="wrap" style={{ maxWidth: 880, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-      <div className="phead">
-        <div>
-          <p className="eyebrow">Account layer</p>
-          <h1 className="display">Organization</h1>
-          <p>Organizations let larger teams govern multiple workspaces, domains, members, billing admins, and audit trails from one account.</p>
-        </div>
-        {org ? <Link href="/activity" className="btn btn--ghost">Activity →</Link> : null}
+    // Prose, the same as /team, which this page sits directly beneath in the sidebar and links to from its
+    // own card. Both hardcoded 880; neither decides it now.
+    <Page measure="prose">
+      <PageHeader
+        eyebrow="Account layer"
+        title="Organization"
+        lead="Organizations let larger teams govern multiple workspaces, domains, members, billing admins, and audit trails from one account."
+        actions={org ? <Link href="/activity" className="btn btn--ghost">Activity →</Link> : null}
+      />
+      <div style={{ paddingBottom: 80 }}>
+        {org ? <OrgView email={email} ctx={ctx} activity={activity} sso={sso} /> : domainAccess.length ? <JoinCard options={domainAccess} /> : <CreateOrg />}
       </div>
-      {org ? <OrgView email={email} ctx={ctx} activity={activity} sso={sso} /> : domainAccess.length ? <JoinCard options={domainAccess} /> : <CreateOrg />}
-    </div>
+    </Page>
   );
 }
 
@@ -102,7 +115,7 @@ function CreateOrg() {
       <div style={cardHead}>Create an organization</div>
       <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 0 14px", lineHeight: 1.6, maxWidth: 560 }}>Organizations help larger teams govern multiple workspaces, domains, billing admins, and audit trails. SSO and provisioning can be added on top of this layer later. Creating one is optional, your workspaces keep working exactly as they do today.</p>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Acme Inc." onKeyDown={(e) => { if (e.key === "Enter" && !busy) create(); }} style={{ ...input, flex: "1 1 240px" }} />
+        <input aria-label="Organization name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Acme Inc." onKeyDown={(e) => { if (e.key === "Enter" && !busy) create(); }} style={{ ...input, flex: "1 1 240px" }} />
         <button onClick={create} disabled={busy || !name.trim()} className="btn" style={{ opacity: busy || !name.trim() ? 0.6 : 1 }}>{busy ? "Creating…" : "Create organization"}</button>
       </div>
       {err && <p style={{ fontSize: 12.5, color: "var(--money)", margin: "10px 0 0" }}>{err}</p>}
@@ -215,7 +228,12 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
         )}
         {ctx.canManage && ctx.linkableWorkspaces.length > 0 && (
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--line-1)" }}>
-            <select value={linkWs} onChange={(e) => setLinkWs(e.target.value)} style={{ ...input, flex: "1 1 220px" }}>
+            {/* SIX SELECTS ON THIS PAGE HAD NO ACCESSIBLE NAME AT ALL. A <select> takes no placeholder, so
+                unlike the text fields beside them there was not even a hint to fall back on: each one
+                announced itself as nothing but its current value, on the page that decides who may join an
+                organization and which identity provider signs them in. Each name below is the words already
+                printed above or inside the control, so nothing new is being claimed. */}
+            <select aria-label="Workspace to link to this organization" value={linkWs} onChange={(e) => setLinkWs(e.target.value)} style={{ ...input, flex: "1 1 220px" }}>
               <option value="">Link a workspace you own…</option>
               {ctx.linkableWorkspaces.map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
             </select>
@@ -244,8 +262,8 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
         {ctx.canManage && (
           <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--line-1)" }}>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <input value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="member@company.com" onKeyDown={(e) => { if (e.key === "Enter" && !mBusy) addMember(); }} style={{ ...input, flex: "1 1 220px" }} />
-              <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value as OrgRole)} style={input as React.CSSProperties}>{INVITABLE.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}</select>
+              <input aria-label="Add a member by email address" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="member@company.com" onKeyDown={(e) => { if (e.key === "Enter" && !mBusy) addMember(); }} style={{ ...input, flex: "1 1 220px" }} />
+              <select aria-label="Role for the added member" value={inviteRole} onChange={(e) => setInviteRole(e.target.value as OrgRole)} style={input as React.CSSProperties}>{INVITABLE.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}</select>
               <button onClick={addMember} disabled={mBusy} className="btn" style={{ opacity: mBusy ? 0.6 : 1 }}>{mBusy ? "Adding…" : "Add member"}</button>
             </div>
             {mMsg && <p style={{ fontSize: 12.5, color: "var(--money)", margin: "8px 0 0" }}>{mMsg}</p>}
@@ -267,7 +285,7 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
         )}
         {ctx.canManage && (
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", paddingTop: domains.length ? 14 : 0, borderTop: domains.length ? "1px solid var(--line-1)" : "none" }}>
-            <input value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="acme.com" onKeyDown={(e) => { if (e.key === "Enter" && !dBusy) addDomain(); }} style={{ ...input, flex: "1 1 220px" }} />
+            <input aria-label="Domain to verify" value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="acme.com" onKeyDown={(e) => { if (e.key === "Enter" && !dBusy) addDomain(); }} style={{ ...input, flex: "1 1 220px" }} />
             <button onClick={addDomain} disabled={dBusy} className="btn" style={{ opacity: dBusy ? 0.6 : 1 }}>{dBusy ? "Adding…" : "Add domain"}</button>
           </div>
         )}
@@ -281,12 +299,12 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
         {ctx.canManage ? (
           <>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-              <select value={joinMode} onChange={(e) => setJoinMode(e.target.value as JoinMode)} style={input as React.CSSProperties}>
+              <select aria-label="Verified domain access mode" value={joinMode} onChange={(e) => setJoinMode(e.target.value as JoinMode)} style={input as React.CSSProperties}>
                 <option value="disabled">Disabled, no domain access</option>
                 <option value="request">Request, admin approves</option>
                 <option value="auto_member">Auto-join as member</option>
               </select>
-              <select value={defaultRole} onChange={(e) => setDefaultRole(e.target.value as "member" | "viewer")} style={input as React.CSSProperties}>
+              <select aria-label="Default role for people who join by domain" value={defaultRole} onChange={(e) => setDefaultRole(e.target.value as "member" | "viewer")} style={input as React.CSSProperties}>
                 <option value="member">Default role: Member</option>
                 <option value="viewer">Default role: Viewer</option>
               </select>
@@ -518,31 +536,35 @@ function SsoCard({ sso, pausedDomains = [] }: { sso: SsoView; pausedDomains?: st
           <div style={{ paddingTop: sso.providers.length ? 14 : 0, borderTop: sso.providers.length ? "1px solid var(--line-1)" : "none" }}>
             <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 8 }}>Add or update a provider</div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <select value={type} onChange={(e) => setType(e.target.value as SsoType)} style={input as React.CSSProperties}>
+              <select aria-label="Single sign-on protocol" value={type} onChange={(e) => setType(e.target.value as SsoType)} style={input as React.CSSProperties}>
                 <option value="oidc">OIDC (live)</option>
                 <option value="saml">SAML (scaffold)</option>
               </select>
-              <select value={domain} onChange={(e) => setDomain(e.target.value)} style={input as React.CSSProperties}>
+              <select aria-label="Verified domain this provider signs in" value={domain} onChange={(e) => setDomain(e.target.value)} style={input as React.CSSProperties}>
                 {sso.verifiedDomains.map((d) => <option key={d} value={d}>{d}</option>)}
               </select>
-              <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Display name (optional)" style={{ ...input, flex: "1 1 180px" }} />
+              <input aria-label="Provider display name (optional)" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Display name (optional)" style={{ ...input, flex: "1 1 180px" }} />
             </div>
             {type === "oidc" ? (
               <>
-                <label style={lbl}>OIDC discovery URL</label>
-                <input value={discoveryUrl} onChange={(e) => setDiscoveryUrl(e.target.value)} placeholder="https://idp.example.com/.well-known/openid-configuration" style={{ ...input, width: "100%", boxSizing: "border-box" }} />
+                {/* These two <label> elements were the only ones on the page, and neither was tied to
+                    anything: a <label> with no htmlFor and no wrapped control names nothing, it is just
+                    small uppercase text. The pair below the label had no name at all, so the OIDC form read
+                    as one titled field followed by two anonymous boxes, one of which is a client secret. */}
+                <label style={lbl} htmlFor="sso-oidc-discovery">OIDC discovery URL</label>
+                <input id="sso-oidc-discovery" value={discoveryUrl} onChange={(e) => setDiscoveryUrl(e.target.value)} placeholder="https://idp.example.com/.well-known/openid-configuration" style={{ ...input, width: "100%", boxSizing: "border-box" }} />
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
-                  <input value={clientId} onChange={(e) => setClientId(e.target.value)} placeholder="Client ID" style={{ ...input, flex: "1 1 200px" }} />
-                  <input value={clientSecret} onChange={(e) => setClientSecret(e.target.value)} placeholder="Client secret (write-only)" type="password" style={{ ...input, flex: "1 1 200px" }} />
+                  <input aria-label="OIDC client ID" value={clientId} onChange={(e) => setClientId(e.target.value)} placeholder="Client ID" style={{ ...input, flex: "1 1 200px" }} />
+                  <input aria-label="OIDC client secret" value={clientSecret} onChange={(e) => setClientSecret(e.target.value)} placeholder="Client secret (write-only)" type="password" style={{ ...input, flex: "1 1 200px" }} />
                 </div>
               </>
             ) : (
               <>
-                <label style={lbl}>IdP issuer / entity ID</label>
-                <input value={issuer} onChange={(e) => setIssuer(e.target.value)} placeholder="https://idp.example.com/saml/metadata" style={{ ...input, width: "100%", boxSizing: "border-box" }} />
+                <label style={lbl} htmlFor="sso-saml-issuer">IdP issuer / entity ID</label>
+                <input id="sso-saml-issuer" value={issuer} onChange={(e) => setIssuer(e.target.value)} placeholder="https://idp.example.com/saml/metadata" style={{ ...input, width: "100%", boxSizing: "border-box" }} />
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
-                  <input value={ssoUrl} onChange={(e) => setSsoUrl(e.target.value)} placeholder="IdP SSO URL" style={{ ...input, flex: "1 1 200px" }} />
-                  <input value={cert} onChange={(e) => setCert(e.target.value)} placeholder="Certificate fingerprint (SHA-256)" style={{ ...input, flex: "1 1 200px" }} />
+                  <input aria-label="IdP SSO URL" value={ssoUrl} onChange={(e) => setSsoUrl(e.target.value)} placeholder="IdP SSO URL" style={{ ...input, flex: "1 1 200px" }} />
+                  <input aria-label="Certificate fingerprint (SHA-256)" value={cert} onChange={(e) => setCert(e.target.value)} placeholder="Certificate fingerprint (SHA-256)" style={{ ...input, flex: "1 1 200px" }} />
                 </div>
               </>
             )}

@@ -72,9 +72,19 @@ for (const [name, src] of [["applications list", list], ["application detail", d
   ok(`${name}: no retired teal repair treatment (no accent-dim/border, no #0A7B54, no TONE_REPAIR)`, !/--accent-dim|--accent-border|#0A7B54|TONE_REPAIR/.test(src));
   ok(`${name}: never labels a repair_verified record "Verified"`, !/repair_verified[\s\S]{0,60}"Verified"|repair_verified[\s\S]{0,60}label: "Verified"/.test(src));
 }
-ok("the list delegates its verdict pill to the canonical translator", /toPublicDecision\(run\.state, run\.decision\)/.test(list));
-ok("the detail delegates its hero + pill to the canonical translator", /toPublicDecision\(state, decision\)/.test(detail) && /toPublicDecision\(latest\?\.state \?\? "completed", decision\)/.test(detail));
-ok("the list pill icon comes from the public decision, not the raw internal decision (no verified-repair wrench on Blocked)", /DecisionMark decision=\{st\.mark\}/.test(list) && !/DecisionMark decision=\{run\?\.decision\}/.test(list));
+// THE DELEGATION, NOT ONE SPELLING OF IT. Both pages reach toPublicDecision through lib/preflight/
+// home-verdict now (systemProof on the list, runVerdict for the detail's hero), and their pills are the
+// shared <Verdict>, whose whole job is rendering runVerdict(). Reading for the old literal call would
+// report a false alarm on a page that delegates harder than it used to. What is still forbidden — a local
+// decision table, the retired teal, a repair_verified branch labelled "Verified" — is asserted above.
+const DELEGATES = /(toPublicDecision|runVerdict|systemProof)\(/;
+ok("the list delegates its verdict pill to the canonical translator", DELEGATES.test(list));
+ok("the detail delegates its hero + pill to the canonical translator", DELEGATES.test(detail));
+// The mark is no longer chosen per page at all: <Verdict> keys it off the TONE table, which is keyed on the
+// public decision, so a raw internal decision cannot reach an icon. The assertion that matters is the
+// negative one — no page may pick a mark from the internal decision string.
+ok("the list pill icon comes from the public decision, not the raw internal decision (no verified-repair wrench on Blocked)",
+  (/DecisionMark decision=\{st\.mark\}/.test(list) || /<Verdict\b/.test(list)) && !/DecisionMark decision=\{run\??\.?decision\}/.test(list));
 ok("the detail explains the repair scope in words (targeted repair passed, full verification required)", /Targeted repair check passed\. A full critical verification is still required/.test(detail));
 
 console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Mark, ComingLater } from "../_connections/brand";
 import { GithubForm, TwoFieldForm, input, lab, help, type Conn } from "../_connections/forms";
+import { PageHeader } from "@/app/rank/_components/page-header";
 
 // The production-context onboarding workspace. Vraelis assembles a context graph around the application:
 // product intent -> source -> deployment -> data/auth -> billing/services -> test boundaries. Three honest
@@ -284,12 +285,13 @@ export default function ConnectWorkspace() {
 
   return (
     <div>
-      {/* header + progress */}
+      {/* header + progress. The heading is unchanged; only the clamp(1.7rem, 3vw, 2.4rem) it used to set for
+          itself is gone, because that was one of the six h1 sizes the console shipped with. */}
       <div style={{ marginBottom: 22 }}>
-        <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "0 0 8px" }}>Connect your system</h1>
-        <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.6, margin: 0, maxWidth: 640 }}>
-          Give Vraelis the context required to test the exact product, deployment, data layer, and user journeys you intend to ship.
-        </p>
+        <PageHeader
+          title="Connect your system"
+          lead="Give Vraelis the context required to test the exact product, deployment, data layer, and user journeys you intend to ship."
+        />
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14 }}>
           <div aria-hidden style={{ flex: "0 1 220px", height: 6, borderRadius: 99, background: "var(--bg-3)", overflow: "hidden" }}>
             <div style={{ width: `${Math.round((recDone / recommended.length) * 100)}%`, height: "100%", background: "var(--acc-deep)", borderRadius: 99, transition: "width 200ms ease" }} />
@@ -665,6 +667,11 @@ function ProductDefinition({ sources, onAdd, onRemove, readTextFile, promptAdded
 }
 
 function TestAccounts({ accounts, onAdd, onRemove }: { accounts: TestAccount[]; onAdd: (a: TestAccount) => void; onRemove: (i: number) => void }) {
+  // These four labels were the only ones on this workspace with no htmlFor, and one of them names a password
+  // field. Clicking the word did nothing and a screen reader read an unlabelled input, on the one form in
+  // the product that takes a credential. useId rather than fixed strings so the ids stay unique if this card
+  // is ever rendered more than once.
+  const uid = useId();
   const [openForm, setOpenForm] = useState(false);
   const [label, setLabel] = useState(ROLE_PRESETS[0]);
   const [username, setUsername] = useState("");
@@ -702,14 +709,14 @@ function TestAccounts({ accounts, onAdd, onRemove }: { accounts: TestAccount[]; 
       {openForm ? (
         <div style={{ borderTop: "1px solid var(--line-1)", paddingTop: 12, display: "grid", gap: 10 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }} className="cols-stack">
-            <div><label style={lab}>Role</label>
-              <select value={label} onChange={(e) => setLabel(e.target.value)} style={{ ...input, appearance: "none", cursor: "pointer" }}>
+            <div><label style={lab} htmlFor={`${uid}-role`}>Role</label>
+              <select id={`${uid}-role`} value={label} onChange={(e) => setLabel(e.target.value)} style={{ ...input, appearance: "none", cursor: "pointer" }}>
                 {ROLE_PRESETS.map((r) => <option key={r} value={r}>{r}</option>)}
               </select>
             </div>
-            <div><label style={lab}>Usage scope</label><input value={scope} onChange={(e) => setScope(e.target.value)} maxLength={200} style={input} /><p style={help}>Describes where the account may be used. Plain metadata: no passwords here.</p></div>
-            <div><label style={lab}>Username / email</label><input value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="off" style={input} /></div>
-            <div><label style={lab}>Password</label><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" style={input} /></div>
+            <div><label style={lab} htmlFor={`${uid}-scope`}>Usage scope</label><input id={`${uid}-scope`} value={scope} onChange={(e) => setScope(e.target.value)} maxLength={200} style={input} /><p style={help}>Describes where the account may be used. Plain metadata: no passwords here.</p></div>
+            <div><label style={lab} htmlFor={`${uid}-user`}>Username / email</label><input id={`${uid}-user`} value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="off" style={input} /></div>
+            <div><label style={lab} htmlFor={`${uid}-pass`}>Password</label><input id={`${uid}-pass`} type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" style={input} /></div>
           </div>
           <p style={help}>Sent once over TLS, sealed server-side, and never shown again, not even to you. Test accounts are excluded from saved drafts.</p>
           <button type="button" className="btn" disabled={!ok} style={{ justifySelf: "start", opacity: ok ? 1 : 0.55 }}

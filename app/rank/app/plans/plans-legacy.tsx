@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
 // Early-access plans surface. Vraelis is priced by the Production Pass ($10 base, five flows included,
 // $2 per additional flow), never per seat and never in per-flow credits. The old credit-bundle tier
@@ -34,15 +35,18 @@ export default function PlansPage() {
   }
 
   return (
-    <div className="wrap" style={{ maxWidth: 1100, paddingTop: "clamp(24px, 3vw, 38px)", paddingBottom: 80 }}>
-      <div className="phead">
-        <div>
-          <p className="eyebrow">Plans</p>
-          <h1 className="display">Priced by the run, not the seat</h1>
-          <p>Run your AI-built system through a real verification. Every verification includes browser execution, evidence, issue tracking, and an explainable decision.</p>
-        </div>
-        {signedIn && <button onClick={manageBilling} disabled={busy} className="btn btn--ghost">{busy ? "Opening…" : "Manage billing"}</button>}
-      </div>
+    // This file is the pre-cutover page kept byte-identical on purpose, so it is changed here only where
+    // plans-v1.tsx is: the two are the same URL under a flag, and they carried DIFFERENT widths (1100 here,
+    // 1180 there), so flipping VRAELIS_PASS_PRICING moved the page. They now share one measure and one
+    // header. Every price, blurb and disclaimer below is untouched.
+    <Page measure="wide">
+      <PageHeader
+        eyebrow="Plans"
+        title="Priced by the run, not the seat"
+        lead="Run your AI-built system through a real verification. Every verification includes browser execution, evidence, issue tracking, and an explainable decision."
+        actions={signedIn ? <button onClick={manageBilling} disabled={busy} className="btn btn--ghost">{busy ? "Opening…" : "Manage billing"}</button> : null}
+      />
+      <div style={{ paddingBottom: 80 }}>
       {note && <p style={{ color: "var(--fg-3)", fontSize: 13, marginBottom: 14 }}>{note}</p>}
 
       <div className="tile-grid cols-2">
@@ -93,6 +97,7 @@ export default function PlansPage() {
       <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 28, lineHeight: 1.6, textAlign: "center", maxWidth: 620, marginInline: "auto" }}>
         Early access: accounts currently run on included balance while per-verification checkout rolls out. You are never charged for a verification that did not execute.
       </p>
-    </div>
+      </div>
+    </Page>
   );
 }

@@ -16,6 +16,8 @@ import type { PassRow, IssueRow, RepairRow } from "@/lib/preflight/overview-db";
 import type { PendingReviewRow } from "@/lib/preflight/reviewed-plan-db";
 import { Ic, I } from "@/app/rank/_components/icons";
 import { runVerdict, systemProof, timeAgo, type Verdict } from "@/lib/preflight/home-verdict";
+import { Verdict as VerdictBadge } from "@/app/rank/_components/verdict";
+import { PageHeader } from "@/app/rank/_components/page-header";
 import { DeploymentReference } from "./home-records";
 
 const label: CSSProperties = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: 0 };
@@ -33,19 +35,25 @@ function SectionHead({ text, count, href, hrefLabel, note }: { text: string; cou
   );
 }
 
-function Pill({ v }: { v: Verdict }) {
-  const tone: Record<string, [string, string, string]> = {
-    verified: ["var(--go-ink)", "var(--go-wash)", "var(--go-line)"],
-    failed: ["var(--stop-ink)", "var(--stop-wash)", "var(--stop-line)"],
-    blocked: ["var(--wait-ink)", "var(--wait-wash)", "var(--wait-line)"],
-    progress: ["var(--fg-3)", "var(--bg-2)", "var(--line-2)"],
-    unproven: ["var(--fg-4)", "var(--bg-2)", "var(--line-2)"],
-  };
-  const [color, background, borderColor] = tone[v.tone];
-  return (
-    <span className="pill" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color, background, borderColor, flex: "none" }}>{v.label}</span>
-  );
-}
+// THE NINTH COPY OF THE PILL, DELETED.
+//
+// This file used to carry its own `Pill` with its own tone table, and it was the smallest of the nine: 10px,
+// weight 700, uppercase, against .pill's own var(--fs-micro) that it overrode. Two of the three tables it
+// agreed with and one it did not, because `unproven` was inked --fg-4 here and --fg-3 in home-records, so a
+// system nobody had checked was a shade quieter on the Overview than on the same row rendered elsewhere.
+//
+// Nothing about that was a decision anyone made. It is what nine hand-rolled copies of one badge converge
+// to. <Verdict> is now the only place the ink, the wash, the mark and the size are chosen, so this file can
+// no longer disagree with the rest of the product about what Blocked looks like. The rows here hold an
+// already-derived Verdict (systemProof / runVerdict), so they pass it straight through rather than handing
+// the component a state and a decision to re-derive.
+//
+// flex:"none" is kept at every call site: each badge sits in a flex row beside a name that is allowed to
+// grow, and without it the badge is the thing that shrinks and wraps its own label.
+//
+// The component is imported under an alias only because `Verdict` is already the NAME OF THE TYPE this
+// module's exported row shapes are declared with (AttentionItem.systemVerdict, SystemRow.verdict). Renaming
+// those would change this module's public surface for no gain.
 
 // ── 0. Operational state ──────────────────────────────────────────────────────────────────────────────
 //
@@ -60,13 +68,25 @@ export function OperationalState({ criticals, systemsAffected, pendingReviews, r
   if (pendingReviews > 0) parts.push(`${pendingReviews} proof plan${pendingReviews === 1 ? " is" : "s are"} awaiting review.`);
   if (running > 0) parts.push(`${running} verification${running === 1 ? " is" : "s are"} running.`);
   const clear = parts.length === 0;
+  // THE OVERVIEW'S h1 WAS ITS OWN SIZE, AND IT WAS THE SMALLEST IN THE CONSOLE. This rendered at
+  // clamp(1.5rem, 2.5vw, 1.95rem) with letter-spacing -0.028em, which resolves to 31.2px: the sixth distinct
+  // h1 size in the app and the only one below 32. The first page a signed-in customer sees therefore had a
+  // quieter title than every page they could click to from it, which is backwards. <PageHeader> owns the
+  // size, the weight and the tracking now, and the wording is untouched.
+  //
+  // The lead keeps its one conditional: --fg-2 when something is actually wrong, --fg-3 when nothing is.
+  // PageHeader's lead paragraph is --fg-3 by default, so the emphasised case carries its own colour on an
+  // inner span rather than being flattened. That contrast IS the signal on a page whose whole job is to say
+  // whether anything needs you, and dropping it to save a span would have quietly removed it.
   return (
-    <header style={{ marginBottom: 26 }}>
-      <h1 className="display" style={{ fontSize: "clamp(1.5rem, 2.5vw, 1.95rem)", margin: "0 0 6px", letterSpacing: "-0.028em" }}>Operational state</h1>
-      <p style={{ margin: 0, fontSize: 14.5, color: clear ? "var(--fg-3)" : "var(--fg-2)", lineHeight: 1.6, maxWidth: "64ch" }}>
-        {clear ? "Nothing is failing and nothing is waiting on you." : parts.join(" ")}
-      </p>
-    </header>
+    <PageHeader
+      title="Operational state"
+      lead={
+        <span style={clear ? undefined : { color: "var(--fg-2)" }}>
+          {clear ? "Nothing is failing and nothing is waiting on you." : parts.join(" ")}
+        </span>
+      }
+    />
   );
 }
 
@@ -105,7 +125,7 @@ export function NeedsAttention({ items }: { items: AttentionItem[] }) {
               <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 5, flexWrap: "wrap" }}>
                 <span className="pill" style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: SEV_COLOR[issue.severity] ?? "var(--fg-4)", background: "var(--bg-2)", borderColor: "var(--line-2)", flex: "none" }}>{issue.severity}</span>
                 <span style={{ fontSize: 13, color: "var(--fg-2)", fontWeight: 500 }}>{issue.applicationName || "System"}</span>
-                {systemVerdict ? <Pill v={systemVerdict} /> : null}
+                {systemVerdict ? <VerdictBadge verdict={systemVerdict} size="sm" style={{ flex: "none" }} /> : null}
               </div>
               <div style={{ fontSize: 14.5, color: "var(--fg-1)", fontWeight: 500, lineHeight: 1.4 }}>{issue.title || "A blocking issue needs attention"}</div>
               <div style={{ display: "flex", gap: 14, marginTop: 7, flexWrap: "wrap", fontSize: 12, color: "var(--fg-4)" }}>
@@ -153,7 +173,7 @@ export function SystemsTable({ rows }: { rows: SystemRow[] }) {
             {/* data-l carries the column name so the narrow layout can print it before the value. Without it
                 a phone showed a column of bare em dashes with nothing saying what was missing. */}
             <span data-l="Guarantees" style={{ fontVariantNumeric: "tabular-nums", color: s.guarantees ? "var(--fg-2)" : "var(--fg-5)" }}>{s.guarantees || "n/a"}</span>
-            <span data-l="Latest"><Pill v={s.verdict} /></span>
+            <span data-l="Latest"><VerdictBadge verdict={s.verdict} size="sm" style={{ flex: "none" }} /></span>
             <span data-l="Critical" style={{ fontVariantNumeric: "tabular-nums", color: s.criticals ? "var(--stop-ink)" : "var(--fg-5)" }}>{s.criticals || "n/a"}</span>
             <span data-l="Last proven" style={{ color: "var(--fg-4)" }}>{s.lastProven ? timeAgo(s.lastProven) : "n/a"}</span>
           </Link>
@@ -209,7 +229,7 @@ export function RecentVerificationsTable({ rows }: { rows: PassRow[] }) {
           const href = r.applicationId ? `/systems/${r.applicationId}/passes/${r.id}` : "/verifications";
           return (
             <Link key={r.id} href={href} className="vra-tbl__row" aria-label={`${v.label}, ${r.applicationName || "verification"}`}>
-              <span><Pill v={v} /></span>
+              <span><VerdictBadge verdict={v} size="sm" style={{ flex: "none" }} /></span>
               <span style={{ minWidth: 0 }}>
                 <span style={{ display: "block", fontSize: 13.5, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.applicationName || "Verification"}</span>
                 {r.parentRunId ? <span style={{ fontSize: 11.5, color: "var(--fg-4)" }}>Reverification of an earlier run</span> : null}

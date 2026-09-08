@@ -12,6 +12,7 @@ import { listMembers, canManageMembers, ROLE_LABEL, activateInvitesForEmail } fr
 import { AppTabs } from "../app-tabs";
 import { TeamPanel } from "./team-panel";
 import { I, EmptyIcon } from "@/app/rank/_components/icons";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
 export const metadata: Metadata = { title: "Team" };
 
@@ -41,14 +42,14 @@ export default async function AppTeamPage({ params }: { params: Promise<{ id: st
   const app = access ? await getApplication(access.owner, id) : null;
   if (!access || !app) {
     return (
-      <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-        <div className="empty">
+      <Page>
+        <div className="empty" style={{ marginBottom: 80 }}>
           <EmptyIcon d={I.slash} />
           <h3>System not found</h3>
           <p>This system doesn&apos;t exist, or you don&apos;t have access to it.</p>
           <Link href="/systems" className="btn">Back to systems</Link>
         </div>
-      </div>
+      </Page>
     );
   }
 
@@ -61,26 +62,33 @@ export default async function AppTeamPage({ params }: { params: Promise<{ id: st
     : [];
 
   return (
-    <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
+    <Page>
       <nav aria-label="Breadcrumb" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 13, marginBottom: 14 }}>
         <Link href="/systems" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Systems</Link>
         <span aria-hidden style={{ color: "var(--fg-5)" }}>/</span>
         <span style={{ color: "var(--fg-2)", fontWeight: 600, maxWidth: 360, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app.name}</span>
       </nav>
 
-      <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "6px 0 10px" }}>{app.name}</h1>
-      <p style={{ fontSize: 14, color: "var(--fg-3)", margin: 0 }}>
-        Your role: <span style={{ fontWeight: 600, color: "var(--fg-1)" }}>{ROLE_LABEL[access.role]}</span>
-      </p>
+      {/* The role line was a hand-set 14px paragraph directly under a hand-set h1. Both are the component's
+          now, which is the whole point: this page states what it is called and who is reading it, not how
+          big either should be. */}
+      <PageHeader
+        title={app.name}
+        lead={<>Your role: <span style={{ fontWeight: 600, color: "var(--fg-1)" }}>{ROLE_LABEL[access.role]}</span></>}
+      />
 
-      <AppTabs appId={id} active="team" />
+      {/* <Page> owns the measure and the shell owns padding-top, so the tail room this page has
+          always had stays here, on the body. */}
+      <div style={{ paddingBottom: 80 }}>
+        <AppTabs appId={id} active="team" />
 
-      {manage && ws ? (
-        <TeamPanel appId={id} initialMembers={members} />
-      ) : (
-        <ReadOnlyRoster appId={id} yourRole={ROLE_LABEL[access.role]} />
-      )}
-    </div>
+        {manage && ws ? (
+          <TeamPanel appId={id} initialMembers={members} />
+        ) : (
+          <ReadOnlyRoster appId={id} yourRole={ROLE_LABEL[access.role]} />
+        )}
+      </div>
+    </Page>
   );
 }
 

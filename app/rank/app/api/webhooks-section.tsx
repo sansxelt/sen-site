@@ -75,8 +75,18 @@ export function WebhooksSection() {
         </div>
       )}
 
+      {/* KEYBOARD FOCUS, RESTORED. This field carried inline outline:"none" alongside an inline border and
+          background, and that combination beats authenticated.css:179-196 whatever the pseudo-class, so
+          tabbing to the one input on this section produced no visible change at all. The resting look belongs
+          to the stylesheet now, which is what makes the focus state reachable in the first place.
+          type="text" is load-bearing rather than decorative: tokens.css styles `input[type="text"]`, and an
+          <input> with no type attribute does not match that selector, so dropping the inline border without
+          stating the type would leave a border-COLOR with no border to colour. inputMode keeps the URL
+          keyboard on a phone.
+          The accessible name is an aria-label, not a new visible <label>: this section has never shown one
+          and adding a caption here would be a layout change rather than the focus fix that was asked for. */}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
-        <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://your-app.com/webhooks/vraelis" style={{ flex: 1, minWidth: 240, padding: "11px 14px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, outline: "none" }} />
+        <input aria-label="Webhook endpoint URL" type="text" inputMode="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://your-app.com/webhooks/vraelis" style={{ flex: 1, minWidth: 240, padding: "11px 14px", borderRadius: "var(--r-sm)", fontSize: 14 }} />
         <button onClick={create} disabled={busy || !url.trim()} className="btn">{busy ? "Adding…" : "Add webhook"}</button>
       </div>
       {err && <p style={{ color: "var(--err)", fontSize: 13, marginBottom: 12 }}>{err}</p>}
@@ -90,7 +100,13 @@ export function WebhooksSection() {
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{ fontFamily: "var(--font-code, monospace)", fontSize: 13, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{h.url}</div>
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-4)", marginTop: 4 }}>
-                  <span className="pill" style={h.enabled ? { background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" } : { color: "var(--fg-4)" }}>{h.enabled ? "enabled" : "disabled"}</span>
+                  {/* NOT a <Verdict>: enabled/disabled is a switch on an endpoint, not a conclusion about a
+                      deployment, and it must not borrow that vocabulary. It does take the signal palette,
+                      because the enabled state was --acc-deep on --acc-soft, which is #FAFAFA on 6% white:
+                      the exact same colourless badge the Connected pill on /connections was carrying. An
+                      endpoint that is live and one that is switched off now differ by hue, not by six
+                      hundredths of an alpha channel. */}
+                  <span className="pill" style={h.enabled ? { background: "var(--go-wash)", color: "var(--go-ink)", borderColor: "var(--go-line)" } : { color: "var(--fg-4)" }}>{h.enabled ? "enabled" : "disabled"}</span>
                   {h.last_success_at ? " Last sent " + new Date(h.last_success_at).toLocaleDateString() : h.last_failure_at ? " Last failed " + new Date(h.last_failure_at).toLocaleDateString() : " No deliveries yet"}
                 </div>
               </div>

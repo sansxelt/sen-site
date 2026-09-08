@@ -7,6 +7,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { inputSm } from "../../../_connections/forms";
 
 type AccountConn = { id: string; provider: string; label: string };
 type Link = { provider: string; accountConnectionId: string; selection: Record<string, unknown> };
@@ -29,7 +30,12 @@ const SELECTION_FIELD: Record<string, SelectionField | null> = {
 };
 
 const headLbl = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--fg-4)" };
-const input = { width: "100%", padding: "9px 12px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", fontSize: 13.5, color: "var(--fg-1)", outline: "none" } as const;
+// The ninth private copy of the field style, and the ninth with outline: "none" written beside an inline
+// border and background. Together those three beat every :focus and :focus-visible rule in
+// authenticated.css, so neither the project picker nor the repo box showed a keyboard user where they were.
+// _connections/forms.tsx already exported this object; the note there explains why removing the outline
+// alone would have restored a ring around a control that still did not react to focus in any other way.
+const input = inputSm;
 
 export function AppConnectionLinks({ appId, accountConnections, links, canManage }: {
   appId: string; accountConnections: AccountConn[]; links: Link[]; canManage: boolean;
@@ -120,8 +126,10 @@ function LinkRow({ conn, link, base, canManage, onDone }: {
         </div>
       ) : field ? (
         <div style={{ flex: "1 1 200px", minWidth: 0 }}>
-          <label style={{ fontSize: 11, color: "var(--fg-4)" }}>{field.label}</label>
-          <input value={sel} onChange={(e) => setSel(e.target.value)} placeholder={field.placeholder} disabled={!canManage || busy} style={input} />
+          {/* The picker branch above already ties its label to its control with selectId; this branch did
+              not, so the same words were clickable on a Supabase row and inert on a Vercel one. */}
+          <label htmlFor={selectId} style={{ fontSize: 11, color: "var(--fg-4)" }}>{field.label}</label>
+          <input id={selectId} value={sel} onChange={(e) => setSel(e.target.value)} placeholder={field.placeholder} disabled={!canManage || busy} style={input} />
         </div>
       ) : (
         <div style={{ flex: 1, fontSize: 12.5, color: "var(--fg-4)" }}>{linked ? "Used by this app." : "Not used by this app yet."}</div>

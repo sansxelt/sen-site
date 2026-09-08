@@ -42,6 +42,7 @@ import { MAX_ACTIVE_RUNS_PER_OWNER, maxRunsPerDay } from "@/lib/preflight/limits
 import { topupMaxDollars } from "@/lib/v-entitlements";
 import { timeAgo } from "@/lib/preflight/home-verdict";
 import { Ic, I } from "@/app/rank/_components/icons";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
 export const metadata: Metadata = { title: "Usage" };
 export const dynamic = "force-dynamic";
@@ -90,13 +91,23 @@ export default async function UsagePage() {
   const hasApi = apiAccessAllowed(plan, email, planV1?.plan);
 
   return (
-    <div className="wrap" style={{ maxWidth: 1080, paddingTop: "clamp(20px, 2.6vw, 32px)", paddingBottom: 80 }}>
-      <h1 className="display" style={{ fontSize: "clamp(1.55rem, 2.6vw, 2rem)", margin: "0 0 8px", letterSpacing: "-0.025em" }}>Usage</h1>
-      <p style={{ margin: "0 0 26px", fontSize: 14, color: "var(--fg-3)", lineHeight: 1.6, maxWidth: "62ch" }}>
-        What this account has consumed, which credential did it, and the limits a request is checked against
-        before it runs.
-      </p>
+    // THE WIDE MEASURE, BECAUSE THIS PAGE IS EVIDENCE. The five-column key table, the 30-day bar chart and
+    // the four-up stat rows all need the room; the rest of this cluster is settings read as sentences and
+    // takes the prose one. Two named intentions, and this page states which it is.
+    //
+    // The h1 declared its own clamp(1.55rem, 2.6vw, 2rem) at letterSpacing -0.025em, which was one of six
+    // sizes and two trackings across the console. .display and .phead h1 decide it now. The lead paragraph
+    // was hand-rolled at 14px with a 62ch measure and a 26px margin; PageHeader's lead is 14.5px at 62ch,
+    // so it moves half a pixel and stops being this page's decision. The wording is untouched.
+    <Page measure="wide">
+      <PageHeader
+        title="Usage"
+        lead="What this account has consumed, which credential did it, and the limits a request is checked against before it runs."
+      />
 
+      {/* The shell forces padding-TOP on .wrap with !important, so the inline paddingTop here never rendered
+          and is gone rather than moved. The tail room did render, so it sits on the content. */}
+      <div style={{ paddingBottom: 80 }}>
       <section aria-label="Balance and consumption" style={{ marginBottom: 30 }}>
         <h2 style={{ ...label, marginBottom: 10 }}>Right now</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 10 }}>
@@ -317,6 +328,7 @@ export default async function UsagePage() {
     letter-spacing:.07em;text-transform:uppercase;color:var(--fg-5)}
 }
       `}</style>
-    </div>
+      </div>
+    </Page>
   );
 }

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { WebhooksSection } from "./webhooks-section";
 import { CliSection } from "./cli-section";
 import { Ic, I, EmptyIcon } from "@/app/rank/_components/icons";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
 type Key = { id: string; prefix: string; scopes: string[]; last_used: string | null; created_at: string; name?: string | null;
   /** The key's daily spend limit in cents, or null for a key with no limit. Shown beside what it has spent. */
@@ -147,24 +148,39 @@ export default function ApiKeysPage() {
   const cardHead = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 } as const;
 
   return (
-    <div className="wrap" style={{ maxWidth: 820, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-      <div className="phead">
-        <div>
-          {/* The nav says Developers and this is what it opens, so this says Developers. The eyebrow used to
-              carry that word while the heading named two of the things on the page, which reads as a
-              different destination than the one that was clicked. The CLI is here too, and it is neither an
-              API nor a webhook. */}
-          <h1 className="display">Developers</h1>
-          <p>Operate Vraelis from CI, an agent or a terminal: API keys, the command line, and signed webhooks. Launch verifications, gate the deploy on the decision, and read the evidence back.</p>
-        </div>
-      </div>
+    // 820 was already the prose measure by coincidence; it is the prose measure by NAME now, so the next
+    // person to touch this page cannot nudge it to 860 without saying why. The inline paddingTop is dropped
+    // because the shell overrides it with !important and it never rendered; the tail room moves inward.
+    <Page measure="prose">
+      {/* The nav says Developers and this is what it opens, so this says Developers. The eyebrow used to
+          carry that word while the heading named two of the things on the page, which reads as a different
+          destination than the one that was clicked. The CLI is here too, and it is neither an API nor a
+          webhook. scripts/app-shell-verify.ts compares this exact title against the sidebar label, in both
+          the sidebar and the account menu, so the wording is load-bearing and stays as it is. */}
+      <PageHeader
+        title="Developers"
+        lead="Operate Vraelis from CI, an agent or a terminal: API keys, the command line, and signed webhooks. Launch verifications, gate the deploy on the decision, and read the evidence back."
+      />
+
+      <div style={{ paddingBottom: 80 }}>
 
       {/* create */}
       <div className="card" style={{ marginBottom: 18 }}>
         <div className="field">
-          <span className="lbl">Create an API key</span>
+          {/* A <span> is not a label. This one sat directly above the field and read as one, but clicking it
+              did nothing and a screen reader announced the input as unlabelled, so the field's only name was
+              its placeholder, which disappears the moment you type. It is a real <label> bound by htmlFor. */}
+          <label className="lbl" htmlFor="key-name">Create an API key</label>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <input value={keyName} onChange={(e) => setKeyName(e.target.value)} placeholder="Name it, e.g. Production or Zapier" maxLength={40} onKeyDown={(e) => { if (e.key === "Enter" && !busy) create(); }} style={{ flex: 1, minWidth: 220, padding: "11px 14px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, outline: "none" }} />
+            {/* KEYBOARD FOCUS, RESTORED. This carried outline:"none" inline, which no stylesheet rule can
+                beat, so tabbing to it produced no visible change whatsoever: a WCAG 2.4.11 failure on the
+                first field of the developer console. The inline border and background went with it, because
+                they were beating authenticated.css:179-196 too, which is what dims the border to
+                --line-strong and lifts the ground to --bg-1 on focus.
+                type="text" is not decoration: tokens.css styles `input[type="text"]`, and an <input> with no
+                type attribute does not match that selector, so removing the inline border without it would
+                have left the field with a border-COLOR and no border. */}
+            <input id="key-name" type="text" value={keyName} onChange={(e) => setKeyName(e.target.value)} placeholder="Name it, e.g. Production or Zapier" maxLength={40} onKeyDown={(e) => { if (e.key === "Enter" && !busy) create(); }} style={{ flex: 1, minWidth: 220, padding: "11px 14px", borderRadius: "var(--r-sm)", fontSize: 14 }} />
             <button onClick={create} disabled={busy} className="btn" style={{ opacity: busy ? 0.6 : 1 }}>{busy ? "Creating…" : "Create key"}</button>
           </div>
           <div style={{ display: "grid", gap: 6, marginTop: 12 }}>
@@ -186,10 +202,14 @@ export default function ApiKeysPage() {
           */}
           {preflightAccess === "launch" && (
             <div style={{ display: "grid", gap: 6, marginTop: 12 }}>
-              <span style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>Daily spend limit</span>
+              <label htmlFor="key-daily-limit" style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>Daily spend limit</label>
               <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                <span style={{ fontSize: 14, color: "var(--fg-3)" }}>$</span>
-                <input value={dailyLimit} onChange={(e) => setDailyLimit(e.target.value.replace(/[^0-9.]/g, ""))} inputMode="decimal" placeholder="No limit" style={{ width: 120, padding: "9px 11px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, outline: "none" }} />
+                <span aria-hidden style={{ fontSize: 14, color: "var(--fg-3)" }}>$</span>
+                {/* Same focus fix as the field above, and the same reason for type="text": this one is
+                    deliberately not type="number" (the onChange strips everything but digits and a dot, which
+                    a number input fights), so it needs the attribute stated to pick up the shared form
+                    styling. inputMode keeps the numeric keypad on a phone. */}
+                <input id="key-daily-limit" type="text" value={dailyLimit} onChange={(e) => setDailyLimit(e.target.value.replace(/[^0-9.]/g, ""))} inputMode="decimal" placeholder="No limit" style={{ width: 120, padding: "9px 11px", borderRadius: "var(--r-sm)", fontSize: 14 }} />
                 <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>per day, resets at midnight UTC</span>
               </div>
               <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>Caps what this one key can spend, on top of your account limits. Leave empty for no key limit. It can only ever lower what the key can spend, never raise it.</span>
@@ -476,6 +496,7 @@ export default function ApiKeysPage() {
       <CliSection />
 
       <div id="webhooks" style={{ scrollMarginTop: 80 }}><WebhooksSection /></div>
-    </div>
+      </div>
+    </Page>
   );
 }

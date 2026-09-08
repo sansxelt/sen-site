@@ -9,6 +9,7 @@ import { OwnPaymentPanel } from "./checkout-own";
 import { customCheckoutEnabled } from "@/lib/custom-checkout";
 import { billingReturnUrls, stripeReturnUrl, topupReturnUrl } from "@/lib/return-urls";
 import { PlanPriceV1, V1RenewalTerms, v1Blurb, v1Included } from "./checkout-v1";
+import { PageHeader } from "@/app/rank/_components/page-header";
 
 export const metadata: Metadata = { title: "Checkout" };
 
@@ -92,6 +93,13 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
 .vra-back:hover{border-color:var(--line-3);color:var(--fg-1);background:var(--bg-2)}
 .vra-back:focus-visible{outline:2px solid var(--fg-1);outline-offset:2px}
       `}</style>
+      {/* DELIBERATELY NOT <Page>. The two named measures are for the console's single content column;
+          this .wrap is not a child of .app-main at all (it sits inside a .section, which is why this page's
+          own paddingTop is the one inline padding in the cluster that really renders) and 960 is the width
+          of a two-column checkout, not of a page. Prose would collapse the order summary against the
+          payment panel and wide would stretch the payment panel to roughly 700px, so adopting either would
+          be redesigning a purchase screen to satisfy a rule that is not about it. The heading it shares
+          with every other page IS consolidated, above. */}
       <div className="wrap" style={{ maxWidth: 960 }}>
         {/* A PILL, NOT A WHISPER. This was 13.5px of --fg-3 with no shape: on a payment screen, the one
             control that is not "give us money" was the faintest thing on the page, and it sat directly
@@ -104,10 +112,25 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0,0.82fr) minmax(0,1.18fr)", gap: "clamp(24px, 4vw, 48px)", alignItems: "start" }} className="cols-stack">
           {/* order summary */}
           <div>
-            <p className="eyebrow">Checkout</p>
-            <h1 className="display" style={{ fontSize: "clamp(1.9rem, 3.4vw, 2.6rem)" }}>{title}</h1>
-            {plan ? <p style={{ fontSize: 14.5, color: "var(--fg-3)", marginTop: 6, marginBottom: 0, lineHeight: 1.5 }}>{plan.blurb} Independently verify the outcome your system has to deliver, and get a decision with the exact failures to fix, with evidence you can act on, share, and export.</p> : null}
-            {v1Plan ? <p style={{ fontSize: 14.5, color: "var(--fg-3)", marginTop: 6, marginBottom: 0, lineHeight: 1.5 }}>{v1Blurb(v1Plan)} Independently verify the outcome your system has to deliver, and get a decision with the exact failures to fix, with evidence you can act on and share.</p> : null}
+            {/* This h1 declared clamp(1.9rem, 3.4vw, 2.6rem), which tops out at 41.6px: the largest of the
+                six h1 sizes in the console, and the only one a customer meets with their card out. Walking
+                Plans -> Checkout meant the page title jumped from 32px to 41.6px and the eyebrow above it
+                stayed the same size, so the two pages did not look like one flow. It is <PageHeader>'s size
+                now. The heading TEXT is untouched: it is computed above and still says the price, which is
+                the whole point of the line.
+
+                The two blurbs were 14.5px/1.5 with a 6px top margin, which is what PageHeader's `lead` is
+                (14.5px/1.55 at 62ch), so they pass through it rather than staying two more hand-rolled
+                paragraphs. Only one can ever be non-null: `plan` is undefined whenever v1Plan is set. */}
+            <PageHeader
+              eyebrow="Checkout"
+              title={title}
+              lead={
+                plan ? <>{plan.blurb} Independently verify the outcome your system has to deliver, and get a decision with the exact failures to fix, with evidence you can act on, share, and export.</>
+                : v1Plan ? <>{v1Blurb(v1Plan)} Independently verify the outcome your system has to deliver, and get a decision with the exact failures to fix, with evidence you can act on and share.</>
+                : undefined
+              }
+            />
             {plan ? <PlanPrice plan={plan.plan} cycle={cycle} /> : null}
             {v1Plan ? <PlanPriceV1 plan={v1Plan} cycle={cycle} /> : null}
 

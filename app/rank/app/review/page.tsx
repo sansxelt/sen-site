@@ -20,6 +20,7 @@ import { listPendingReviews } from "@/lib/preflight/reviewed-plan-db";
 import { timeAgo } from "@/lib/preflight/home-verdict";
 import { DeploymentReference } from "../_components/home-records";
 import { Ic, I } from "@/app/rank/_components/icons";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
 export const metadata: Metadata = { title: "Review" };
 export const dynamic = "force-dynamic";
@@ -33,44 +34,57 @@ export default async function ReviewPage() {
   const pending = ready ? await listPendingReviews(email.toLowerCase()) : [];
 
   return (
-    <div className="wrap" style={{ maxWidth: 1080, paddingTop: "clamp(20px, 2.6vw, 32px)", paddingBottom: 80 }}>
-      <h1 className="display" style={{ fontSize: "clamp(1.55rem, 2.6vw, 2rem)", margin: "0 0 8px", letterSpacing: "-0.025em" }}>Review</h1>
-      <p style={{ margin: "0 0 24px", fontSize: 14, color: "var(--fg-3)", lineHeight: 1.6, maxWidth: "62ch" }}>
-        Vraelis derives the requirements and journeys it would run. A person approves them before anything
-        runs or is charged. Reviewing is free.
-      </p>
+    <Page>
+      <PageHeader
+        title="Review"
+        lead={<>
+          Vraelis derives the requirements and journeys it would run. A person approves them before anything
+          runs or is charged. Reviewing is free.
+        </>}
+      />
 
-      {pending.length > 0 ? (
-        <div className="card" style={{ padding: 0, overflow: "hidden", background: "var(--bg-1)" }}>
-          {pending.map((p, i) => (
-            <Link key={p.id} href={`/review/${p.id}`}
-              style={{ display: "grid", gridTemplateColumns: "1fr auto auto", alignItems: "center", gap: 14, padding: "13px 16px", borderTop: i ? "1px solid var(--line-2)" : "none", color: "inherit", textDecoration: "none" }}
-              aria-label={`Review plan: ${p.claim}`}>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 500, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.claim || "Untitled claim"}</div>
-                <div style={{ display: "flex", gap: 8, marginTop: 3, flexWrap: "wrap", alignItems: "center", fontSize: 12, color: "var(--fg-4)" }}>
-                  <DeploymentReference url={p.deploymentUrl} />
-                  <span>Created {timeAgo(p.createdAt)}</span>
-                  <span>{p.requirements} requirement{p.requirements === 1 ? "" : "s"}</span>
-                  <span>{p.flows} journey{p.flows === 1 ? "" : "s"}</span>
+      {/* <Page> owns the measure and the shell overrides only padding-TOP, so the tail room this page has
+          always had is kept here, on the content. Every sibling page carries the same 80px; without it the
+          last row sat flush against the bottom of the window on this page alone. */}
+      <div style={{ paddingBottom: 80 }}>
+
+        {pending.length > 0 ? (
+          <div className="card" style={{ padding: 0, overflow: "hidden", background: "var(--bg-1)" }}>
+            {pending.map((p, i) => (
+              <Link key={p.id} href={`/review/${p.id}`}
+                style={{ display: "grid", gridTemplateColumns: "1fr auto auto", alignItems: "center", gap: 14, padding: "13px 16px", borderTop: i ? "1px solid var(--line-2)" : "none", color: "inherit", textDecoration: "none" }}
+                aria-label={`Review plan: ${p.claim}`}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.claim || "Untitled claim"}</div>
+                  <div style={{ display: "flex", gap: 8, marginTop: 3, flexWrap: "wrap", alignItems: "center", fontSize: 12, color: "var(--fg-4)" }}>
+                    <DeploymentReference url={p.deploymentUrl} />
+                    <span>Created {timeAgo(p.createdAt)}</span>
+                    <span>{p.requirements} requirement{p.requirements === 1 ? "" : "s"}</span>
+                    <span>{p.flows} journey{p.flows === 1 ? "" : "s"}</span>
+                  </div>
                 </div>
-              </div>
-              <span className="pill" style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--wait-ink)", background: "var(--wait-wash)", borderColor: "var(--wait-line)", flex: "none" }}>Awaiting review</span>
-              <span aria-hidden style={{ color: "var(--fg-5)", flex: "none" }}>→</span>
-            </Link>
-          ))}
-        </div>
-      ) : (
-        <section aria-label="Nothing awaiting review" style={{ border: "1px dashed var(--line-3)", borderRadius: "var(--r-lg, 14px)", background: "var(--bg-2)", padding: "clamp(20px, 2.6vw, 30px)" }}>
-          <div style={{ color: "var(--fg-3)", marginBottom: 10 }}><Ic d={I.eye} size={22} /></div>
-          <h2 style={{ fontSize: 16, margin: "0 0 6px", color: "var(--fg-1)" }}>Nothing is waiting on you</h2>
-          <p style={{ margin: "0 0 16px", fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.6, maxWidth: "58ch" }}>
-            When you name an outcome, Vraelis writes the requirements and browser journeys that would prove it
-            and holds them here for your approval. Nothing runs, and nothing is charged, until you approve.
-          </p>
-          <Link href="/app" className="btn btn--ghost">Name an outcome to verify</Link>
-        </section>
-      )}
-    </div>
+                {/* Not a <Verdict>. Nothing has been verified here and nothing has run: this row is a plan
+                    waiting on a person, and the closed verdict vocabulary has no word for that. "Blocked" is
+                    the nearest and it would be a lie, because a plan awaiting review is not a conclusion
+                    about anyone's software. It keeps the plain .pill until a shared status primitive exists
+                    that can carry size and shape without carrying the product's one signal. */}
+                <span className="pill" style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--wait-ink)", background: "var(--wait-wash)", borderColor: "var(--wait-line)", flex: "none" }}>Awaiting review</span>
+                <span aria-hidden style={{ color: "var(--fg-5)", flex: "none" }}>→</span>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <section aria-label="Nothing awaiting review" style={{ border: "1px dashed var(--line-3)", borderRadius: "var(--r-lg, 14px)", background: "var(--bg-2)", padding: "clamp(20px, 2.6vw, 30px)" }}>
+            <div style={{ color: "var(--fg-3)", marginBottom: 10 }}><Ic d={I.eye} size={22} /></div>
+            <h2 style={{ fontSize: 16, margin: "0 0 6px", color: "var(--fg-1)" }}>Nothing is waiting on you</h2>
+            <p style={{ margin: "0 0 16px", fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.6, maxWidth: "58ch" }}>
+              When you name an outcome, Vraelis writes the requirements and browser journeys that would prove it
+              and holds them here for your approval. Nothing runs, and nothing is charged, until you approve.
+            </p>
+            <Link href="/app" className="btn btn--ghost">Name an outcome to verify</Link>
+          </section>
+        )}
+      </div>
+    </Page>
   );
 }

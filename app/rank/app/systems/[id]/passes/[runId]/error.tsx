@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { I, EmptyIcon } from "@/app/rank/_components/icons";
+import { Page } from "@/app/rank/_components/page-header";
 
 // Error boundary for the run report. Nothing technical is rendered; the error
 // goes to the console only. Next 16.2 passes unstable_retry (re-fetches the
@@ -23,8 +24,8 @@ export default function RunReportError({
   const retry = unstable_retry ?? reset;
 
   return (
-    <div className="wrap" style={{ maxWidth: 960, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-      <div className="empty">
+    <Page>
+      <div className="empty" style={{ marginBottom: 80 }}>
         <EmptyIcon d={I.alert} />
         <h3>The report could not be loaded.</h3>
         <p>Your run data is safe. This page just failed to render on our side. Try again, or head back to the overview.</p>
@@ -33,6 +34,6 @@ export default function RunReportError({
           <Link href="/app" className="btn btn--ghost">Back to overview</Link>
         </div>
       </div>
-    </div>
+    </Page>
   );
 }

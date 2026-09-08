@@ -15,6 +15,7 @@ import { BillingActions, PaymentMethodButton } from "./billing-actions";
 import { TeamBillingPanel } from "./team-billing-panel";
 import { TechnicalDetails } from "./technical-details";
 import { I, Ic, EmptyIcon } from "@/app/rank/_components/icons";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
 export const metadata: Metadata = { title: "Billing" };
 
@@ -98,16 +99,25 @@ export default async function BillingPage() {
     : periodLabel ? `Renews ${periodLabel}.` : "Active.";
 
   return (
-    <div className="wrap" style={{ maxWidth: 820, paddingTop: "clamp(24px, 3vw, 38px)", paddingBottom: 80 }}>
-      <div className="phead">
-        <div>
-          <p className="eyebrow">Account</p>
-          <h1 className="display">Billing</h1>
-          <p>{email}</p>
-        </div>
-        <Link href="/plans" className="btn btn--ghost">Change plan</Link>
-      </div>
+    // 820 is exactly what the prose measure is, so this page's width does not move; what changes is that it
+    // is no longer this page's own private number. The heading, the eyebrow and the email line under it were
+    // three hand-rolled elements whose size, weight and margin were decided here; they are decided once now.
+    //
+    // THE EYEBROW HERE IS THE ORIGINAL. This file rendered <p className="eyebrow">Account</p> while
+    // connections/page.tsx rendered a local const object at 10.5px uppercase Inter Tight, so the identical
+    // kicker on two adjacent sidebar pages appeared in two typefaces. PageHeader renders the class, which is
+    // the correct one; the wording is untouched.
+    <Page measure="prose">
+      <PageHeader
+        eyebrow="Account"
+        title="Billing"
+        lead={email}
+        actions={<Link href="/plans" className="btn btn--ghost">Change plan</Link>}
+      />
 
+      {/* The shell overrides padding-TOP with !important, so the inline paddingTop this page carried never
+          rendered and is simply gone. The tail room did render, so it moves onto the content. */}
+      <div style={{ paddingBottom: 80 }}>
       {/* Failed-payment banner: shown whenever the subscription is in Stripe dunning. */}
       {pastDue && (
         <div className="card" style={{ marginBottom: 18, borderColor: "var(--err)" }}>
@@ -228,6 +238,7 @@ export default async function BillingPage() {
         ["Stripe subscription", liveV1?.subscriptionId ?? sub?.stripe_subscription_id ?? ""],
         ["Stripe customer", liveV1?.customerId ?? ""],
       ]} />
-    </div>
+      </div>
+    </Page>
   );
 }

@@ -5,8 +5,16 @@ import { auth } from "@/auth";
 import { workspaceActivity, organizationActivity, type AuditEntry } from "@/lib/v-audit";
 import { getPrimaryOrganization, canViewOrganizationAudit } from "@/lib/v-organization";
 import { AuditExport } from "./audit-export";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
-export const metadata: Metadata = { title: "Activity & trust" };
+// THE TAB AND THE HEADING DISAGREED, AND WHICH ONE YOU GOT DEPENDED ON THE URL.
+//
+// This page renders <h1>Records</h1> and is what the sidebar's "Records" item opens, but its tab said
+// "Activity & trust", the name from before the rename. /records re-exports this same component with its own
+// metadata reading "Records", so the identical page put two different names in the browser tab depending on
+// whether you arrived by the old /activity bookmark or the current /records link. The heading is the name
+// the navigation promises, so the tab matches it. The heading itself is untouched.
+export const metadata: Metadata = { title: "Records" };
 
 const when = (iso: string) => {
   const d = new Date(iso);
@@ -82,57 +90,61 @@ export default async function AuditPage() {
   const orgEvents = org && canOrgAudit ? await organizationActivity(email, org.id, 60) : [];
 
   return (
-    <div className="wrap" style={{ maxWidth: 880, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-      <div className="phead">
-        <div>
-          <h1 className="display">Records</h1>
-          <p>A read-only trail of everything that happens in your workspace: verifications, balance, billing, team access, and governance.</p>
+    <Page measure="prose">
+      <PageHeader
+        title="Records"
+        lead="A read-only trail of everything that happens in your workspace: verifications, balance, billing, team access, and governance."
+        actions={<Link href="/enterprise" className="btn btn--ghost">Trust overview →</Link>}
+      />
+
+      {/* <Page> owns the measure and the shell overrides only padding-TOP, so the tail room this page has
+          always had is kept here, on the content. Every sibling page carries the same 80px; without it the
+          last row sat flush against the bottom of the window on this page alone. */}
+      <div style={{ paddingBottom: 80 }}>
+
+        <div className="card" style={{ background: "var(--bg-2)", marginBottom: 18 }}>
+          <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>Vraelis records your verification runs, balance top-ups, exports, billing changes, team access, and governance events, organization changes, domain verification, SSO, ownership transfers. Activity never includes payment details, Stripe identifiers, invite or DNS tokens, token hashes, webhook secrets, OIDC codes, SAML assertions, or raw run evidence.</p>
         </div>
-        <Link href="/enterprise" className="btn btn--ghost">Trust overview →</Link>
+
+        {/* Export */}
+        <div style={cardHead}>Audit export</div>
+        <AuditExport showOrg={!!(org && canOrgAudit)} />
+        <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "10px 0 0", lineHeight: 1.6 }}>Export the governance trail as sanitized CSV or JSON for your own records. Organization-wide governance, verified domains, OIDC SSO, and scheduled exports with retention controls are part of the enterprise trust layer, <Link href="/contact" style={{ color: "var(--go-ink)" }}>talk to us about enterprise requirements →</Link></p>
+
+        {/* Trust controls */}
+        <div style={cardHead}>Trust controls</div>
+        <div className="tile-grid cols-2" style={{ gap: 10 }}>
+          {TRUST_CONTROLS.map(([t, d, href]) => (
+            <Link key={t + d} href={href} className="card" style={{ textDecoration: "none", color: "inherit", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "13px 16px" }}>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 14 }}>{t}</div>
+                <div style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 1 }}>{d}</div>
+              </div>
+              <span style={{ color: "var(--acc-deep)", fontSize: 13 }}>→</span>
+            </Link>
+          ))}
+        </div>
+
+        {/* Workspace activity */}
+        <div style={cardHead}>Workspace activity</div>
+        <EventList events={events}
+          empty="System connections, verification launches and completions, credit top-ups, exports, billing actions, invites, and role changes are recorded here as you work."
+          action={{ href: "/systems", label: "Go to systems" }} />
+
+        {/* Organization activity */}
+        {org && canOrgAudit && (
+          <>
+            <div style={cardHead}>Organization activity, {org.name}</div>
+            <EventList events={orgEvents}
+              empty="Organization, domain, SSO, and provisioning changes are recorded here. Verify a domain or invite a member and the event shows up immediately."
+              action={{ href: "/organization", label: "Manage organization" }} />
+            <p style={{ fontSize: 11, color: "var(--fg-5)", margin: "10px 0 0", lineHeight: 1.6 }}>Account-level governance events. Organization and workspace activity can be exported as sanitized CSV or JSON above. Scheduled exports and retention controls are planned.</p>
+          </>
+        )}
+        {org && !canOrgAudit && (
+          <p style={{ fontSize: 12, color: "var(--fg-5)", margin: "18px 0 0", lineHeight: 1.6 }}>Organization-level activity is visible to organization owners and admins.</p>
+        )}
       </div>
-
-      <div className="card" style={{ background: "var(--bg-2)", marginBottom: 18 }}>
-        <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>Vraelis records your verification runs, balance top-ups, exports, billing changes, team access, and governance events, organization changes, domain verification, SSO, ownership transfers. Activity never includes payment details, Stripe identifiers, invite or DNS tokens, token hashes, webhook secrets, OIDC codes, SAML assertions, or raw run evidence.</p>
-      </div>
-
-      {/* Export */}
-      <div style={cardHead}>Audit export</div>
-      <AuditExport showOrg={!!(org && canOrgAudit)} />
-      <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "10px 0 0", lineHeight: 1.6 }}>Export the governance trail as sanitized CSV or JSON for your own records. Organization-wide governance, verified domains, OIDC SSO, and scheduled exports with retention controls are part of the enterprise trust layer, <Link href="/contact" style={{ color: "var(--go-ink)" }}>talk to us about enterprise requirements →</Link></p>
-
-      {/* Trust controls */}
-      <div style={cardHead}>Trust controls</div>
-      <div className="tile-grid cols-2" style={{ gap: 10 }}>
-        {TRUST_CONTROLS.map(([t, d, href]) => (
-          <Link key={t + d} href={href} className="card" style={{ textDecoration: "none", color: "inherit", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "13px 16px" }}>
-            <div>
-              <div style={{ fontWeight: 600, fontSize: 14 }}>{t}</div>
-              <div style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 1 }}>{d}</div>
-            </div>
-            <span style={{ color: "var(--acc-deep)", fontSize: 13 }}>→</span>
-          </Link>
-        ))}
-      </div>
-
-      {/* Workspace activity */}
-      <div style={cardHead}>Workspace activity</div>
-      <EventList events={events}
-        empty="System connections, verification launches and completions, credit top-ups, exports, billing actions, invites, and role changes are recorded here as you work."
-        action={{ href: "/systems", label: "Go to systems" }} />
-
-      {/* Organization activity */}
-      {org && canOrgAudit && (
-        <>
-          <div style={cardHead}>Organization activity, {org.name}</div>
-          <EventList events={orgEvents}
-            empty="Organization, domain, SSO, and provisioning changes are recorded here. Verify a domain or invite a member and the event shows up immediately."
-            action={{ href: "/organization", label: "Manage organization" }} />
-          <p style={{ fontSize: 11, color: "var(--fg-5)", margin: "10px 0 0", lineHeight: 1.6 }}>Account-level governance events. Organization and workspace activity can be exported as sanitized CSV or JSON above. Scheduled exports and retention controls are planned.</p>
-        </>
-      )}
-      {org && !canOrgAudit && (
-        <p style={{ fontSize: 12, color: "var(--fg-5)", margin: "18px 0 0", lineHeight: 1.6 }}>Organization-level activity is visible to organization owners and admins.</p>
-      )}
-    </div>
+    </Page>
   );
 }

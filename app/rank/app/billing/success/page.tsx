@@ -11,6 +11,7 @@ import { getStripe, isStripeConfigured } from "@/lib/stripe";
 import { PLAN_CATALOG_V1 } from "@/lib/preflight/pass-pricing";
 import { v1Included, type V1Cycle } from "../../checkout/checkout-v1";
 import { ActivationPoller, type PlanDisplay } from "./activation-poller";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
 export const metadata: Metadata = { title: "Payment received" };
 
@@ -47,15 +48,13 @@ export default async function BillingSuccessPage({ searchParams }: { searchParam
   }
 
   return (
-    <div className="wrap" style={{ maxWidth: 720, paddingTop: "clamp(24px, 3vw, 38px)", paddingBottom: 80 }}>
-      <div className="phead">
-        <div>
-          <p className="eyebrow">Billing</p>
-          <h1 className="display">Payment received</h1>
-          <p>{email}</p>
-        </div>
+    // The moment after a payment is the worst place for the page to change shape, and this one was 720 wide
+    // against /billing's 820, so confirming a charge and then looking at the bill were two different columns.
+    <Page measure="prose">
+      <PageHeader eyebrow="Billing" title="Payment received" lead={email} />
+      <div style={{ paddingBottom: 80 }}>
+        <ActivationPoller expectedPlan={expectedPlan} expectedCycle={expectedCycle} plans={plans} />
       </div>
-      <ActivationPoller expectedPlan={expectedPlan} expectedCycle={expectedCycle} plans={plans} />
-    </div>
+    </Page>
   );
 }

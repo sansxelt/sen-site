@@ -8,6 +8,7 @@ import { workspaceOrganizationLink } from "@/lib/v-organization";
 import { TeamClient } from "./team-client";
 import { TeamBillingPanel } from "../billing/team-billing-panel";
 import { I, EmptyIcon } from "@/app/rank/_components/icons";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
 export const metadata: Metadata = { title: "Team" };
 
@@ -30,8 +31,16 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
     const [view, summary, billingAdmin] = await Promise.all([sharedTeamView(selected), workspaceProjectSummaries(selected), isBillingAdminMember(selected.id, email)]);
     const baBilling = billingAdmin ? await teamSeatState(selected.id) : null;
     return (
-      <div className="wrap" style={{ maxWidth: 880, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-        <div className="phead"><div><p className="eyebrow">Workspace: {selected.name}</p><h1 className="display">Team</h1><p>{view.clientSafe ? "Client-safe access, shared reports only." : "Read-only view of this shared workspace."}</p></div></div>
+      // The read-only view of a shared workspace and the owner's own view (team-client.tsx) are two
+      // different components rendering the same route, and they each declared 880 separately. They share
+      // the prose measure now, so switching workspaces cannot move the page.
+      //
+      // The heading stays the literal word "Team", which is what scripts/app-shell-verify.ts compares
+      // against the sidebar label; it now reaches that check through <PageHeader title="Team"> instead of a
+      // literal h1, which is the second form that check reads.
+      <Page measure="prose">
+        <PageHeader eyebrow={`Workspace: ${selected.name}`} title="Team" lead={view.clientSafe ? "Client-safe access, shared reports only." : "Read-only view of this shared workspace."} />
+        <div style={{ paddingBottom: 80 }}>
         <div className="card" style={{ background: "var(--bg-2)", marginBottom: 18 }}><div style={{ fontSize: 13.5, color: "var(--fg-2)" }}><strong style={{ color: "var(--fg-1)" }}>Workspace: {selected.name}</strong> | Role: {ROLE_LABEL[selected.role]}{billingAdmin ? " | Billing admin" : ""} | {view.clientSafe ? "Client-safe access" : "Read-only"}</div></div>
 
         {baBilling ? (
@@ -75,7 +84,8 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
             <p style={{ fontSize: 12, color: "var(--fg-5)" }}>Read-only, switch to your personal workspace to manage your own team. Member management for shared workspaces stays with the workspace owner.</p>
           </>
         )}
-      </div>
+        </div>
+      </Page>
     );
   }
 

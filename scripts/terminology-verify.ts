@@ -225,7 +225,11 @@ const stripped = new Map(surfaces.map((p) => [p, stripComments(read(p))]));
 
   // The positive half, so a future sweep cannot satisfy the above by deleting labels instead of fixing them.
   const systemsPage = read("app/rank/app/systems/page.tsx");
-  ok("/systems still titles itself Systems", />\s*Systems\s*</.test(systemsPage));
+  // In either form the heading is written in. The page moved onto the shared <PageHeader title="…">, which
+  // renders the same <h1 className="display">, so reading only the literal `>Systems<` would have called a
+  // rename on a page that never renamed itself. `title=` may sit on its own line, hence [^>]* over newlines.
+  ok("/systems still titles itself Systems",
+    />\s*Systems\s*</.test(systemsPage) || /<PageHeader[^>]*\stitle="Systems"/.test(systemsPage));
 }
 
 console.log(`\n${pass}/${pass + fail} passed  (${surfaces.length} files scanned; cli/src ${existsSync("cli/src") ? "included" : "absent, skipped"})`);

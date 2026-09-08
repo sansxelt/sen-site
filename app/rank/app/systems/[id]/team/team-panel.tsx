@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { fieldSm } from "../../_connections/forms";
 
 // Member management for one application's team (owner/admin only — the server gates this; the panel only
 // renders when canManage is true). Invite by email + role, change a member's role, remove a member. Every
@@ -20,10 +21,13 @@ const INVITE_ROLES: { value: string; label: string; blurb: string }[] = [
 ];
 const ROLE_LABEL: Record<string, string> = { owner: "Owner", admin: "Admin", editor: "Editor", viewer: "Viewer", client_viewer: "Client viewer" };
 
-const inputStyle = {
-  padding: "9px 12px", fontSize: 13.5, color: "var(--fg-1)", background: "var(--bg-1)",
-  border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", outline: "none",
-} as const;
+// This carried outline: "none" beside an inline border and background, and every control on this panel is
+// spread from it: the invite email box, the invite role select, and the role select on every roster row.
+// An inline outline beats [data-surface="app"] :focus-visible whatever the pseudo-class costs in
+// specificity, so a keyboard user changing a teammate's permissions could not see which row they were on.
+// fieldSm is the shared object with no width of its own, which is what these flex rows need; the note in
+// _connections/forms.tsx explains why the border and background had to go with the outline.
+const inputStyle = fieldSm;
 
 export function TeamPanel({ appId, initialMembers }: { appId: string; initialMembers: Member[] }) {
   const router = useRouter();

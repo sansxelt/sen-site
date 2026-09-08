@@ -11,7 +11,7 @@
 // re-seals through the secrets route; nothing is ever displayed back), and every failure message states
 // what did and did not happen.
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Mark, ComingLater, PROVIDER_MARK } from "../../../_connections/brand";
 import { GithubForm, TwoFieldForm, input, lab, help, type Conn } from "../../../_connections/forms";
@@ -75,6 +75,9 @@ function TestAccountForm({ initialLabel, initialScope, submitLabel, busy, onSubm
   initialLabel: string; initialScope: string; submitLabel: string; busy: boolean;
   onSubmit: (v: { label: string; username: string; password: string; scope: string }) => void;
 }) {
+  // None of these four labels was tied to its field, and one of them names a password box. This form is
+  // rendered once per connection card, so the ids have to be per-instance rather than fixed strings.
+  const uid = useId();
   const [label, setLabel] = useState(initialLabel);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -83,10 +86,10 @@ function TestAccountForm({ initialLabel, initialScope, submitLabel, busy, onSubm
   return (
     <div style={{ display: "grid", gap: 10 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }} className="cols-stack">
-        <div><label style={lab}>Role label</label><input value={label} onChange={(e) => setLabel(e.target.value)} maxLength={60} style={input} /></div>
-        <div><label style={lab}>Usage scope</label><input value={scope} onChange={(e) => setScope(e.target.value)} maxLength={200} style={input} /><p style={help}>Plain metadata: no passwords here.</p></div>
-        <div><label style={lab}>Username / email</label><input value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="off" style={input} /></div>
-        <div><label style={lab}>Password</label><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" style={input} /></div>
+        <div><label style={lab} htmlFor={`${uid}-role`}>Role label</label><input id={`${uid}-role`} value={label} onChange={(e) => setLabel(e.target.value)} maxLength={60} style={input} /></div>
+        <div><label style={lab} htmlFor={`${uid}-scope`}>Usage scope</label><input id={`${uid}-scope`} value={scope} onChange={(e) => setScope(e.target.value)} maxLength={200} style={input} /><p style={help}>Plain metadata: no passwords here.</p></div>
+        <div><label style={lab} htmlFor={`${uid}-user`}>Username / email</label><input id={`${uid}-user`} value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="off" style={input} /></div>
+        <div><label style={lab} htmlFor={`${uid}-pass`}>Password</label><input id={`${uid}-pass`} type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" style={input} /></div>
       </div>
       <p style={help}>Sent once over TLS, sealed server-side (AES-256-GCM), and never shown again, not even to you.</p>
       <button type="button" className="btn" disabled={!ok} style={{ justifySelf: "start", opacity: ok ? 1 : 0.55 }}

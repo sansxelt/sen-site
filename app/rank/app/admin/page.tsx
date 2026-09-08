@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { I, EmptyIcon } from "@/app/rank/_components/icons";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
 type Audit = { id: string; user_id: string | null; test_id: string | null; event_type: string; actor_type: string; source: string | null; route: string | null; metadata: Record<string, unknown>; created_at: string };
 type DReq = { id: string; user_id: string; request_type: string; status: string; message: string | null; admin_note: string | null; created_at: string };
@@ -49,19 +50,28 @@ export default function AdminPage() {
     loadDreqs();
   }
 
+  // The refusal was its own seventh h1 size (a flat 1.6rem, no clamp, no tracking) on its own sixteenth
+  // width (640). It is a page like any other and gets the page header, so the moment a staff member's access
+  // is revoked they are not also told so in a typeface the console does not otherwise use.
   if (forbidden) {
-    return <div className="wrap" style={{ maxWidth: 640, paddingTop: 60 }}><h1 className="display" style={{ fontSize: "1.6rem" }}>Not authorized</h1><p className="lead-copy">This page is for Vraelis admins.</p></div>;
+    return (
+      <Page measure="prose">
+        <PageHeader title="Not authorized" lead="This page is for Vraelis admins." />
+      </Page>
+    );
   }
 
   return (
-    <div className="wrap" style={{ maxWidth: 1000, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-      <div className="phead">
-        <div>
-          <p className="eyebrow">Admin</p>
-          <h1 className="display">Admin</h1>
-          <p>Where people fall out of the funnel, plus user data requests and recent audit activity.</p>
-        </div>
-      </div>
+    // 1000 was the fourteenth of fifteen hardcoded widths. This page is stacked tables and row lists, so it
+    // takes `wide`. The inline paddingTop never rendered (the shell sets it with !important); the tail room
+    // was real and moves onto the content.
+    <Page measure="wide">
+      {/* Both words are kept exactly as they were, redundant kicker included. "Admin" over "Admin" reads
+          oddly, but this is an internal surface and renaming either half is a copy decision, not a
+          consolidation, and it is not one this pass is entitled to make. */}
+      <PageHeader eyebrow="Admin" title="Admin" lead="Where people fall out of the funnel, plus user data requests and recent audit activity." />
+
+      <div style={{ paddingBottom: 80 }}>
 
       {/* THE FUNNEL. First on the page because before there are customers it is the only thing here that
           answers a question worth acting on: which step people stop at. Percentages are of the STEP ABOVE,
@@ -135,7 +145,14 @@ export default function AdminPage() {
                 <button onClick={() => reqAction(d.id, { status: "rejected" })} className="btn btn--ghost" style={{ fontSize: 12.5, padding: "6px 12px" }}>Rejected</button>
               </div>
               <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
-                <input value={dnote[d.id] || ""} onChange={(e) => setDnote((n) => ({ ...n, [d.id]: e.target.value }))} placeholder="Add an admin note" style={{ flex: 1, minWidth: 200, padding: "8px 12px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 13, outline: "none" }} />
+                {/* Inline outline:"none" plus an inline border and background, which together beat every
+                    :focus and :focus-visible rule in authenticated.css, so this field had no visible
+                    keyboard focus at all. The resting look is the stylesheet's now, and type="text" is what
+                    makes tokens.css's `input[type="text"]` rule apply: a bare <input> does not match that
+                    selector, so removing the inline border without it leaves a border-COLOR and no border.
+                    The name is an aria-label because this row has never shown a caption; adding a visible
+                    one would be a layout change rather than the focus fix. */}
+                <input aria-label="Admin note" type="text" value={dnote[d.id] || ""} onChange={(e) => setDnote((n) => ({ ...n, [d.id]: e.target.value }))} placeholder="Add an admin note" style={{ flex: 1, minWidth: 200, padding: "8px 12px", borderRadius: "var(--r-sm)", fontSize: 13 }} />
                 <button onClick={() => { if ((dnote[d.id] || "").trim()) { reqAction(d.id, { note: dnote[d.id] }); setDnote((n) => ({ ...n, [d.id]: "" })); } }} className="btn btn--ghost" style={{ fontSize: 12.5, padding: "6px 12px" }}>Save note</button>
               </div>
             </div>
@@ -170,6 +187,7 @@ export default function AdminPage() {
           })}
         </div>
       )}
-    </div>
+      </div>
+    </Page>
   );
 }

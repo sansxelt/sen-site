@@ -228,7 +228,12 @@ ok("banner renders ABOVE the tested-deployment detail (the decision is never car
 ok("the VERDICT computation never reads the newer deployment (the banner cannot replace the decision)", (() => {
   // Scope strictly to the verdict/hero/subParts block — NOT the later CommandState, which legitimately
   // reads newerDeploy for the state ribbon (that does not change the decision).
-  const start = health.indexOf("let hero");
+  //
+  // The block opens with whichever line derives the hero. It used to be `let hero` followed by a
+  // five-branch ladder; it is now one call to the shared translator. Anchoring on the old spelling made
+  // this assertion silently unrunnable (indexOf returned -1) rather than false, which is the failure mode
+  // a scoped source check has to avoid: it would have reported red without ever reading the block.
+  const start = ["const heroVerdict", "let hero"].map((a) => health.indexOf(a)).find((i) => i !== -1) ?? -1;
   const end = health.indexOf("const criticalEligibleIds", start);
   return start !== -1 && end > start && !health.slice(start, end).includes("newerDeploy");
 })());
@@ -276,8 +281,14 @@ ok("Record new deployment affordance wired to the form component",
 ok("comparison renders previous verified against current with the pure diff",
   tab.includes("Deployment comparison") && tab.includes("Previous verified")
   && tab.includes("compareDeployments(previous, current)"));
+// "Unverified" was this page's own word for a deployment no run has decided on. It was one of four names
+// the console used for that single state, and lib/preflight/home-verdict.ts had already settled it as
+// "Not yet verified" — which is what systemProof() returns for a null run and what <Verdict> now draws
+// here. The requirement was never the word: it is that the status is MATCHED to the deployment
+// (verifyingRun) and DERIVED rather than asserted, and both halves are checked below.
 ok("current verification status is honest: matched decided pass or Unverified, never invented",
-  tab.includes("verifyingRun") && tab.includes(">Unverified</span>"));
+  tab.includes("verifyingRun")
+  && (tab.includes(">Unverified</span>") || /<Verdict verdict=\{systemProof\(currentRun\)\.verdict\}/.test(tab)));
 ok("owner/member-gated server component (requirePreflightAppAccess or requirePreflightOwner, + getApplication)",
   (tab.includes("requirePreflightAppAccess(") || tab.includes("requirePreflightOwner(")) && tab.includes("getApplication("));
 

@@ -12,6 +12,7 @@ import { listPendingReviews, type PendingReviewRow } from "@/lib/preflight/revie
 import { listGuaranteesForApps } from "@/lib/preflight/guarantees-db";
 import { toPublicDecision } from "@/lib/preflight/public-decision";
 import { systemProof, isActiveRun } from "@/lib/preflight/home-verdict";
+import { Page } from "@/app/rank/_components/page-header";
 import { Composer } from "./_components/composer";
 import { CompactComposer } from "./_components/compact-composer";
 import { SectionError } from "./_components/home-records";
@@ -154,8 +155,22 @@ export default async function Overview() {
   const fullyEmpty = !anyError && apps.length === 0 && runsR.value.length === 0
     && countsR.value.runningPasses === 0 && attention.length === 0 && pendingR.value.length === 0;
 
+  // THE MEASURE, AND THE PADDING THAT NEVER RENDERED.
+  //
+  // This was maxWidth 1080, one of fifteen hardcoded content widths across the console, so the left edge of
+  // the page moved when you clicked away from the Overview and moved again when you came back. <Page> takes
+  // the `wide` measure, which is the one for lists and tables and is what every other records page now uses.
+  //
+  // The inline paddingTop went with it because it was never doing anything: rank-ui.tsx injects
+  // `.rank-root .app-main>.wrap { padding-top: clamp(12px,1.6vw,20px) !important }`, so the shell has owned
+  // the top of this page the whole time. The paddingBottom WAS real (it is the tail room under the last
+  // table), so it moves onto the content rather than being dropped with the .wrap that carried it.
+  //
+  // No <PageHeader> here on purpose: the Overview's h1 belongs to <OperationalState>, which is deliberately
+  // skipped on an empty account, and hoisting the heading up here would render it unconditionally again.
   return (
-    <div className="wrap" style={{ maxWidth: 1080, paddingTop: "clamp(20px, 2.6vw, 32px)", paddingBottom: 80 }}>
+    <Page measure="wide">
+      <div style={{ paddingBottom: 80 }}>
       <style dangerouslySetInnerHTML={{ __html: OVERVIEW_CSS }} />
 
       {/* AN EMPTY ACCOUNT IS NOT AN OPERATIONAL STATE, AND SAYING SO COST THE PAGE ITS ONLY h1.
@@ -210,6 +225,7 @@ export default async function Overview() {
       {isAdmin(email) && (
         <p style={{ marginTop: 28 }}><Link href="/app/admin" style={{ fontSize: 12, color: "var(--fg-5)", textDecoration: "none" }}>Admin</Link></p>
       )}
-    </div>
+      </div>
+    </Page>
   );
 }

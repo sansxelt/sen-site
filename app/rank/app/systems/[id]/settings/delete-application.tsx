@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { inputSm } from "../../_connections/forms";
 
 // Owner delete for an application. Calls the owner-gated DELETE /api/preflight/apps?id=... route; the
 // server re-derives the owner from the session and deleteApplication() is owner-scoped (a zero-row delete
@@ -9,11 +10,12 @@ import { useRouter } from "next/navigation";
 // is a destructive, irreversible action, so it requires a typed confirmation (the app's name) before the
 // button enables. On success we leave the (now-gone) app and return to the applications list.
 
-const inputStyle = {
-  width: "100%", padding: "9px 12px", fontSize: 13.5,
-  color: "var(--fg-1)", background: "var(--bg-1)", border: "1px solid var(--line-2)",
-  borderRadius: "var(--r-sm)", outline: "none",
-} as const;
+// A private copy with outline: "none" plus an inline border and background used to live here, and it beat
+// every :focus and :focus-visible rule in authenticated.css. On this field in particular that mattered: it
+// is the confirmation for an irreversible delete, so a keyboard user was typing a system's name into a
+// control with no indication that it was the thing receiving their keystrokes. The shared object carries
+// the geometry only; _connections/forms.tsx explains why all three declarations had to go together.
+const inputStyle = inputSm;
 
 export function DeleteApplication({ appId, appName }: { appId: string; appName: string }) {
   const router = useRouter();
@@ -63,14 +65,19 @@ export function DeleteApplication({ appId, appName }: { appId: string; appName: 
         </button>
       ) : (
         <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 12, maxWidth: 420 }}>
-          <label style={{ fontSize: 12.5, color: "var(--fg-2)" }}>
+          {/* The label was floating: no htmlFor, and the field carried an aria-label instead. That gives a
+              screen reader a name but leaves the visible sentence pointing at nothing, so clicking the words
+              did not focus the field and the two were only related by proximity. Tying them properly makes
+              the aria-label redundant, and a redundant one would override the visible text as the field's
+              accessible name, so it goes. */}
+          <label htmlFor="delete-confirm" style={{ fontSize: 12.5, color: "var(--fg-2)" }}>
             Type the system name <strong style={{ color: "var(--fg-1)" }}>{appName}</strong> to confirm.
           </label>
           <input
+            id="delete-confirm"
             value={confirmText}
             onChange={(e) => setConfirmText(e.target.value)}
             placeholder={appName}
-            aria-label="Type the system name to confirm deletion"
             style={inputStyle}
             autoFocus
           />

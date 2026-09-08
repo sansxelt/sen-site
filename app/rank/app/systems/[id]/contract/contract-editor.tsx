@@ -7,6 +7,7 @@ import { categoryLabel, SEVERITY_LABELS as SEV_LABEL, SEVERITY_COLORS as SEV_COL
 import { ProvenanceChip } from "./provenance-chip";
 import { FlowsSection } from "./flows-section";
 import { Ic, I } from "@/app/rank/_components/icons";
+import { field, input, lab } from "../../_connections/forms";
 
 // Client editor for a Production Contract's requirements. Optimistic local state: every toggle / severity
 // change / delete updates the UI immediately and persists in the background; a failed write reverts the
@@ -16,10 +17,16 @@ import { Ic, I } from "@/app/rank/_components/icons";
 
 const SEVERITIES: Severity[] = ["critical", "important", "informational"];
 
-const inputStyle: React.CSSProperties = { width: "100%", padding: "10px 13px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, fontFamily: "var(--font-sans)", outline: "none", boxSizing: "border-box" };
-const selectStyle: React.CSSProperties = { padding: "7px 10px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-2)", fontSize: 12.5, fontFamily: "var(--font-sans)", outline: "none", cursor: "pointer" };
+// Both of these carried outline: "none" next to an inline border and background, so nothing on this editor
+// — the requirement box, the category box, the severity select on every row — ever showed a keyboard focus
+// ring: an inline outline outranks [data-surface="app"] :focus-visible however specific the selector is.
+// The severity select in particular is the control this page exists for, and it was operable by keyboard
+// with no indication of which row was selected. They spread from the shared geometry objects now; the note
+// in _connections/forms.tsx explains why the border and the background had to be removed with the outline
+// rather than after it. `lab` was a fourth copy of the same label object and is imported instead.
+const inputStyle: React.CSSProperties = { ...input, padding: "10px 13px" };
+const selectStyle: React.CSSProperties = { ...field, padding: "7px 10px", fontSize: 12.5, cursor: "pointer" };
 const deleteBtnStyle: React.CSSProperties = { width: 26, height: 26, borderRadius: 6, border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-4)", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", flex: "none" };
-const lab: React.CSSProperties = { fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", display: "block", marginBottom: 6 };
 const catHead: React.CSSProperties = { fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 6 };
 
 function SevPill({ severity }: { severity: Severity }) {
@@ -344,7 +351,7 @@ export function ContractEditor({ contractId, appId, initial, status, flows, role
                           maxLength={2000}
                           autoFocus
                           onKeyDown={(e) => { if (e.key === "Escape") cancelEdit(); }}
-                          style={{ width: "100%", padding: "8px 10px", fontSize: 14, color: "var(--fg-1)", background: "var(--bg-1)", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", outline: "none", resize: "vertical", fontFamily: "var(--font-sans)" }}
+                          style={{ ...input, padding: "8px 10px", resize: "vertical" }}
                         />
                         <div style={{ display: "flex", gap: 8 }}>
                           <button type="button" className="btn" onClick={() => saveEdit(r)} style={{ padding: "6px 12px", fontSize: 12.5 }}>Save</button>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { inputSm, lab } from "../../_connections/forms";
 
 // Owner edit form for an application's core settings: name, deployment target URL, environment,
 // description. PATCHes the owner-gated /api/preflight/apps/[id] route; the server re-validates ownership
@@ -10,16 +11,13 @@ import { useRouter } from "next/navigation";
 // server-rendered sections below. Changing the target shows a confirmation first (previous reports are
 // never modified; the new deployment stays unverified until a Production Pass completes).
 
-const inputStyle = {
-  width: "100%", padding: "9px 12px", fontSize: 13.5,
-  color: "var(--fg-1)", background: "var(--bg-1)", border: "1px solid var(--line-2)",
-  borderRadius: "var(--r-sm)", outline: "none",
-} as const;
-const monoInput = { ...inputStyle, fontFamily: "var(--font-mono)" } as const;
-const labelStyle = {
-  display: "block", fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em",
-  textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 5,
-} as const;
+// These were private copies carrying outline: "none" plus an inline border and background, which together
+// beat every :focus and :focus-visible rule in authenticated.css: this form, which changes the URL that
+// every future verification runs against, had no visible keyboard focus on any of its four fields. The
+// shared objects in _connections/forms.tsx carry the geometry and nothing else; that file explains why all
+// three declarations had to go at once rather than just the outline.
+const inputStyle = inputSm;
+const monoInput = { ...inputSm, fontFamily: "var(--font-mono)" } as const;
 
 type Initial = { name: string; appUrl: string; environment: string; description: string };
 
@@ -90,13 +88,13 @@ export function EditApplicationForm({ appId, initial }: { appId: string; initial
       <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16.5, color: "var(--fg-1)", margin: 0 }}>Edit system</h2>
 
       <div>
-        <label htmlFor="edit-name" style={labelStyle}>Name</label>
+        <label htmlFor="edit-name" style={lab}>Name</label>
         <input id="edit-name" type="text" required maxLength={140} value={name}
           onChange={(e) => { setName(e.target.value); setOk(null); setConfirming(false); }} style={inputStyle} />
       </div>
 
       <div>
-        <label htmlFor="edit-url" style={labelStyle}>Deployment target URL</label>
+        <label htmlFor="edit-url" style={lab}>Deployment target URL</label>
         <input id="edit-url" type="url" required value={appUrl}
           onChange={(e) => { setAppUrl(e.target.value); setOk(null); setConfirming(false); }}
           placeholder="https://my-app.example.com" style={monoInput} />
@@ -107,7 +105,7 @@ export function EditApplicationForm({ appId, initial }: { appId: string; initial
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
         <div>
-          <label htmlFor="edit-env" style={labelStyle}>Environment</label>
+          <label htmlFor="edit-env" style={lab}>Environment</label>
           <select id="edit-env" value={environment}
             onChange={(e) => { setEnvironment(e.target.value); setOk(null); setConfirming(false); }}
             style={{ ...inputStyle, fontFamily: "inherit" }}>
@@ -120,7 +118,7 @@ export function EditApplicationForm({ appId, initial }: { appId: string; initial
       </div>
 
       <div>
-        <label htmlFor="edit-desc" style={labelStyle}>Description</label>
+        <label htmlFor="edit-desc" style={lab}>Description</label>
         <textarea id="edit-desc" rows={3} value={description}
           onChange={(e) => { setDescription(e.target.value); setOk(null); setConfirming(false); }}
           placeholder="A short summary of what this system does."

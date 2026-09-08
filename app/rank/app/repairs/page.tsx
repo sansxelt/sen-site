@@ -8,6 +8,7 @@ import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "../systems/setup-required";
 import { listRepairs, type RepairRow } from "@/lib/preflight/overview-db";
 import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
 // Generic title, for the same reason app/rank/app/systems/[id]/api-runtime/page.tsx keeps one: metadata is
 // exported before the server component runs its gate, so a descriptive title announces a page that answers
@@ -33,6 +34,25 @@ function timeAgo(iso: string | null | undefined): string {
 
 // Repair status -> pill label + colours. The label always accompanies the colour, so status is never
 // conveyed by colour alone.
+//
+// DELIBERATELY NOT <Verdict>, and this is the one place on these pages where that call is worth arguing.
+//
+// A repair's status describes the REPAIR record (suggested -> applied_by_user -> verified / failed). A
+// verdict describes a verification RUN. Two of the four words collide, and the collision is the trap: a
+// repair whose status is "verified" is exactly the case the canonical translator calls BLOCKED, because a
+// targeted rerun proving one fix is not the system being proven. Rendering it with the shared component
+// would put the product's green Verified badge on the very thing three separate postmortems in this
+// codebase exist to stop it being confused with.
+//
+// The other direction fails too: <Verdict> renders only Verified / Failed / Blocked / In progress / Not yet
+// verified, so "Suggested" and "Awaiting verification" could only reach it by inventing a sixth and seventh
+// name for a vocabulary that is deliberately closed. Either the labels lie or the vocabulary opens, and
+// both are worse than a repair status keeping its own small pill.
+//
+// What SHOULD eventually happen here is a shared status-pill primitive that owns size and shape without
+// owning meaning, so a repair, an issue and a plan can stop each hand-rolling the geometry. That is a
+// different component from this one, and inventing it while eight surfaces are mid-consolidation would be
+// a second unreviewed shared thing.
 const STATUS_STYLE: Record<string, { label: string; color: string; bg: string; border: string }> = {
   suggested: { label: "Suggested", color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" },
   applied_by_user: { label: "Awaiting verification", color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "var(--wait-line)" },
@@ -117,41 +137,44 @@ export default async function RepairsPage() {
   const other = repairs.filter((r) => !known.has(r.status));
 
   return (
-    <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-      {/* header */}
-      <div style={{ marginBottom: 24 }}>
-        <p className="eyebrow">Vraelis Preflight</p>
-        <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "6px 0 10px" }}>Repairs</h1>
-        <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.6, margin: 0, maxWidth: 620 }}>
-          A repair is a fix prompt for your builder plus the rerun that shows whether the failure still reproduces. Vraelis does not modify your code in V1.
-        </p>
-      </div>
+    <Page>
+      <PageHeader
+        eyebrow="Vraelis Preflight"
+        title="Repairs"
+        lead="A repair is a fix prompt for your builder plus the rerun that shows whether the failure still reproduces. Vraelis does not modify your code in V1."
+      />
 
-      {repairs.length === 0 ? (
-        <div className="empty">
-          <EmptyIcon d={I.wrench} />
-          {/* THIS PAGE CANNOT FILL ITSELF, so it no longer says it will. v_repairs is a writerless table —
-              read in three places, inserted by nothing — and the old copy promised "Vraelis reruns the exact
-              failed check and records the result here", which was a commitment the system had no code to
-              keep. An empty state that describes a mechanism that does not exist is worse than no page: the
-              user waits for rows instead of going where the artifacts actually are.
-              The two things it described ARE real, just recorded elsewhere: the repair prompt is written onto
-              each issue (v_issues.repair_prompt, rendered as the repair handoff on the report), and the
-              rerun is a verification linked by parent_run_id, shown in the run's lineage. So this points at
-              both instead of inventing a third home for them. */}
-          <h3>Repairs are recorded on issues and verifications</h3>
-          <p>Every failure carries a repair prompt you can hand to your builder, on the issue itself. When you rerun after a fix, the result is kept as its own verification, linked to the one it repairs. This index stays empty until repair tracking is a separate record.</p>
-          <Link href="/issues" className="btn">View issues</Link>
-        </div>
-      ) : (
-        <>
-          <Section heading="Awaiting verification" rows={byStatus("applied_by_user")} />
-          <Section heading="Suggested" rows={byStatus("suggested")} />
-          <Section heading="Verified" rows={byStatus("verified")} />
-          <Section heading="Failed" rows={byStatus("failed")} />
-          <Section heading="Other" rows={other} />
-        </>
-      )}
-    </div>
+      {/* <Page> owns the measure and the shell overrides only padding-TOP, so the tail room this page has
+          always had is kept here, on the content. Every sibling page carries the same 80px; without it the
+          last row sat flush against the bottom of the window on this page alone. */}
+      <div style={{ paddingBottom: 80 }}>
+
+        {repairs.length === 0 ? (
+          <div className="empty">
+            <EmptyIcon d={I.wrench} />
+            {/* THIS PAGE CANNOT FILL ITSELF, so it no longer says it will. v_repairs is a writerless table —
+                read in three places, inserted by nothing — and the old copy promised "Vraelis reruns the exact
+                failed check and records the result here", which was a commitment the system had no code to
+                keep. An empty state that describes a mechanism that does not exist is worse than no page: the
+                user waits for rows instead of going where the artifacts actually are.
+                The two things it described ARE real, just recorded elsewhere: the repair prompt is written onto
+                each issue (v_issues.repair_prompt, rendered as the repair handoff on the report), and the
+                rerun is a verification linked by parent_run_id, shown in the run's lineage. So this points at
+                both instead of inventing a third home for them. */}
+            <h3>Repairs are recorded on issues and verifications</h3>
+            <p>Every failure carries a repair prompt you can hand to your builder, on the issue itself. When you rerun after a fix, the result is kept as its own verification, linked to the one it repairs. This index stays empty until repair tracking is a separate record.</p>
+            <Link href="/issues" className="btn">View issues</Link>
+          </div>
+        ) : (
+          <>
+            <Section heading="Awaiting verification" rows={byStatus("applied_by_user")} />
+            <Section heading="Suggested" rows={byStatus("suggested")} />
+            <Section heading="Verified" rows={byStatus("verified")} />
+            <Section heading="Failed" rows={byStatus("failed")} />
+            <Section heading="Other" rows={other} />
+          </>
+        )}
+      </div>
+    </Page>
   );
 }

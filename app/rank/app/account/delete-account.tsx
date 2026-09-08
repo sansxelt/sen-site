@@ -42,7 +42,13 @@ export function DeleteAccount() {
           </ul>
           <div style={{ fontSize: 13.5, color: "var(--fg-2)", marginBottom: 10 }}>Type <b style={{ color: "var(--fg-1)" }}>DELETE MY ACCOUNT</b> to confirm.</div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            <input value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="DELETE MY ACCOUNT" autoComplete="off" style={{ flex: 1, minWidth: 200, padding: "10px 14px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, outline: "none" }} />
+            {/* The most destructive field in the console had no visible keyboard focus at all: inline
+                outline:"none" beat authenticated.css's :focus-visible ring, and the inline border and
+                background beat its :focus treatment, so someone tabbing here could not tell they were about
+                to type the confirmation phrase. All three are gone; border width and style stay because the
+                stylesheet colours field borders without ever declaring one. The accessible name repeats the
+                instruction directly above it rather than inventing a shorter one. */}
+            <input id="delete-confirm" aria-label="Type DELETE MY ACCOUNT to confirm" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="DELETE MY ACCOUNT" autoComplete="off" style={{ flex: 1, minWidth: 200, padding: "10px 14px", borderRadius: "var(--r-sm)", borderWidth: 1, borderStyle: "solid", color: "var(--fg-1)", fontSize: 14 }} />
             <button onClick={submit} disabled={confirm !== "DELETE MY ACCOUNT" || busy} className="btn" style={{ background: "var(--err)", borderColor: "var(--err)", boxShadow: "none", opacity: confirm === "DELETE MY ACCOUNT" && !busy ? 1 : 0.5 }}>{busy ? "Submitting…" : "Submit request"}</button>
             <button onClick={() => { setOpen(false); setConfirm(""); setErr(""); }} className="btn btn--ghost">Cancel</button>
           </div>

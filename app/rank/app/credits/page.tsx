@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { AutoRechargePanel } from "./auto-recharge-panel";
 import { planLabel, isOnAPaidPlan } from "@/lib/plan-label";
 import { passPriceCents, PASS_INCLUDED_FLOWS } from "@/lib/preflight/pass-pricing";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 import Link from "next/link";
 
 const RECOMMENDED = [9, 39, 99, 299, 999];
@@ -24,7 +25,19 @@ const RULES: [string, string][] = [
   ["Larger volumes", "Invoicing is available for teams that need more than a single top-up."],
 ];
 
-const eyebrow = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 } as const;
+// THE SECOND "EYEBROW", RENAMED TO WHAT IT ACTUALLY IS.
+//
+// This page carried both of the console's two competing definitions of the word, twenty lines apart: the
+// .eyebrow CLASS (13px Geist, sentence case) on the page header at :133, and this local object (10.5px
+// uppercase, code face) on the section kickers below it. Two things called "eyebrow" in one file is how the
+// identical kicker ended up in two typefaces on adjacent sidebar pages.
+//
+// The page header now goes through <PageHeader eyebrow="...">, which renders the class and is the only
+// correct one. What is left here is not an eyebrow at all: it is the small uppercase label that heads a
+// CARD SECTION, the same object /usage, /limits and /billing each declare under the name `label`. It keeps
+// its rendering exactly and takes that name, so nothing on screen moves and the word "eyebrow" now means
+// one thing in this file.
+const sectionLabel = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 } as const;
 const BEFORE_KEY = "vraelis:balance-before-topup";
 
 const bigNum = { fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "clamp(2.1rem, 4vw, 2.7rem)", letterSpacing: "-0.03em", lineHeight: 1 } as const;
@@ -123,19 +136,20 @@ export default function CreditsPage() {
   }
 
   return (
-    <div className="wrap" style={{ maxWidth: 880, paddingTop: "clamp(24px, 3vw, 38px)", paddingBottom: 80 }}>
-      <div className="phead">
-        <div>
-          {/* Headed by the name it is clicked by. It used to read "Top up credits", which is what you DO
-              here and not what this page IS, so arriving from the account menu's "Credits" landed you on a
-              heading that did not repeat the word you pressed. Topping up is still the point, and the
-              button below still says so. */}
-          <p className="eyebrow">Billing</p>
-          <h1 className="display">Credits</h1>
-          <p>Your balance pays for validating your AI-built app before it ships. Each verification draws from it and only settles when it actually executes. Per-verification pricing is rolling out; your balance keeps its full purchase value through the change.</p>
-        </div>
-      </div>
+    // 880 was this page's own width, between /billing's 820 and /plans' 1180, so walking Plans -> Credits ->
+    // Billing moved the left edge twice. This is a form read as sentences, so it takes the prose measure.
+    <Page measure="prose">
+      {/* Headed by the name it is clicked by. It used to read "Top up credits", which is what you DO
+          here and not what this page IS, so arriving from the account menu's "Credits" landed you on a
+          heading that did not repeat the word you pressed. Topping up is still the point, and the
+          button below still says so. */}
+      <PageHeader
+        eyebrow="Billing"
+        title="Credits"
+        lead="Your balance pays for validating your AI-built app before it ships. Each verification draws from it and only settles when it actually executes. Per-verification pricing is rolling out; your balance keeps its full purchase value through the change."
+      />
 
+      <div style={{ paddingBottom: 80 }}>
       {isOnAPaidPlan(planV1, plan) && (
         <div className="card" style={{ marginBottom: 22, background: "var(--bg-2)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
           <div style={{ fontSize: 13.5, color: "var(--fg-2)" }}>You&apos;re on the <strong style={{ color: "var(--fg-1)" }}>{planLabel(planV1, plan)}</strong> plan. Your plan&apos;s monthly allowance renews on its own; nothing here is charged unless you choose a top-up beyond it.</div>
@@ -166,25 +180,67 @@ export default function CreditsPage() {
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.5fr) minmax(0,1fr)", gap: 18, alignItems: "start" }} className="cols-stack">
         {/* picker */}
         <div className="card">
-          <div style={eyebrow}>Recommended packs</div>
-          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 10, marginBottom: 26 }}>
+          <div style={sectionLabel} id="credits-packs-label">Recommended packs</div>
+          <div role="group" aria-labelledby="credits-packs-label" style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 10, marginBottom: 26 }}>
+            {/* THE SELECTED PACK WAS ALL BUT INVISIBLE, ON THE ONE SCREEN WHERE THE SELECTION IS THE PURCHASE.
+                On graphite, the whole difference between the chosen pack and the four beside it was:
+                  - border rgba(255,255,255,0.32) against rgba(255,255,255,0.14), 1.5px either way;
+                  - a 3px halo of --acc-soft, which is rgba(255,255,255,0.06) and reads as nothing;
+                  - a fill of that same 6% white;
+                  - and a price in --acc-deep, which authenticated.css resolves to #FAFAFA, BYTE-IDENTICAL
+                    to the --fg-1 the unselected price already used. So the loudest signal in the group,
+                    the number itself, changed by exactly zero pixels.
+                Someone tabbing or clicking through five packs could not tell which one Continue was about
+                to charge them for, and the panel on the right quietly said the answer instead.
+
+                The fix spends contrast the page already owns rather than introducing a colour. The chosen
+                pack lifts onto --bg-3 (a surface step, not a state colour: nothing here has passed or
+                failed), takes the strongest hairline in the token set, and carries a real ring at
+                --acc-line-2 instead of a 6% one. The price goes to --fg-1 and the credits line brightens
+                from --fg-4 to --fg-2, so the card differs in ground, edge and type weight at once and not
+                by alpha alone.
+
+                And it is announced, not only painted: aria-pressed means a screen reader says which pack is
+                selected, which no amount of contrast can do. aria-pressed rather than role="radio",
+                deliberately. These are five buttons and Tab moves between them; declaring a radiogroup would
+                promise arrow-key navigation and a roving tabindex that are not implemented here, and a
+                keyboard contract a page announces but does not honour is worse than the plain one it
+                already had. */}
             {RECOMMENDED.map((a) => {
               const on = !usingCustom && amount === a;
               return (
-                <button key={a} onClick={() => setAmount(a)} style={{ flex: "0 1 150px", textAlign: "center", padding: "16px 14px", borderRadius: "var(--r-lg)", cursor: "pointer", border: `1.5px solid ${on ? "var(--acc-line-2)" : "var(--line-2)"}`, background: on ? "var(--acc-soft)" : "var(--bg-1)", boxShadow: on ? "0 0 0 3px var(--acc-soft)" : "var(--shadow-sm)", transition: "all .15s ease" }}>
-                  <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 21, color: on ? "var(--acc-deep)" : "var(--fg-1)" }}>${a.toLocaleString()}</div>
-                  <div style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-4)", marginTop: 3 }}>{(a * RATE).toLocaleString()} credits</div>
+                <button key={a} type="button" aria-pressed={on} onClick={() => setAmount(a)}
+                  style={{
+                    flex: "0 1 150px", textAlign: "center", padding: "16px 14px", borderRadius: "var(--r-lg)", cursor: "pointer",
+                    border: `1.5px solid ${on ? "var(--line-strong)" : "var(--line-2)"}`,
+                    background: on ? "var(--bg-3)" : "var(--bg-1)",
+                    boxShadow: on ? "0 0 0 3px var(--acc-line-2)" : "var(--shadow-sm)",
+                    transition: "all .15s ease",
+                  }}>
+                  <div style={{ fontFamily: "var(--font-display)", fontWeight: on ? 700 : 600, fontSize: 21, color: on ? "var(--fg-1)" : "var(--fg-2)" }}>${a.toLocaleString()}</div>
+                  <div style={{ fontFamily: "var(--font-code)", fontSize: 12, color: on ? "var(--fg-2)" : "var(--fg-4)", marginTop: 3 }}>{(a * RATE).toLocaleString()} credits</div>
                 </button>
               );
             })}
           </div>
 
           <div className="field">
-            <span className="lbl">Or a custom amount</span>
+            {/* A <span> cannot name a field. This one looked like a label, sat where a label sits, and was
+                one of the 67 <label>-shaped elements in this console that no input was actually tied to.
+                htmlFor/id makes the association real, so clicking the words focuses the box and a screen
+                reader reads them as its name. */}
+            <label className="lbl" htmlFor="credits-custom-amount">Or a custom amount</label>
             <div style={{ position: "relative", maxWidth: 440 }}>
-              <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 22, color: "var(--fg-4)" }}>$</span>
-              <input type="text" inputMode="numeric" value={custom} onChange={(e) => setCustom(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))} placeholder="0"
-                style={{ width: "100%", boxSizing: "border-box", padding: "16px 16px 16px 36px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 24, outline: "none" }} />
+              <span aria-hidden style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 22, color: "var(--fg-4)" }}>$</span>
+              {/* The single most consequential field on this page had no visible keyboard focus at all:
+                  inline outline:"none" beat authenticated.css's :focus-visible ring whatever the pseudo-
+                  class, so tabbing out of the pack buttons into the amount box was silent. The inline
+                  border-color and background go with it so the stylesheet's :focus treatment lands too.
+                  Border width and style stay because the app sheet colours field borders and never
+                  declares one. The left padding also stays: that is not a resting look, it is the room the
+                  $ sign is positioned into. */}
+              <input id="credits-custom-amount" type="text" inputMode="numeric" value={custom} onChange={(e) => setCustom(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))} placeholder="0"
+                style={{ width: "100%", boxSizing: "border-box", padding: "16px 16px 16px 36px", borderRadius: "var(--r-sm)", borderWidth: 1, borderStyle: "solid", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 24 }} />
             </div>
             {!valid && usingCustom && <span style={{ color: "var(--err)", fontSize: 12.5 }}>Enter an amount between ${MIN} and ${MAX.toLocaleString()}.</span>}
             <span className="hint">Min ${MIN}, max ${MAX.toLocaleString()} per top-up.</span>
@@ -198,7 +254,7 @@ export default function CreditsPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }} className="sticky-side">
           <div className="card" style={{ minHeight: 214, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
             <div>
-              <div style={eyebrow}>Your balance</div>
+              <div style={sectionLabel}>Your balance</div>
               <div style={{ ...bigNum, color: "var(--fg-1)" }}>{bal !== null ? bal.toLocaleString() : "-"}</div>
               <div style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 6 }}>credits available</div>
             </div>
@@ -207,7 +263,7 @@ export default function CreditsPage() {
 
           <div className="card" style={{ minHeight: 214, borderColor: "var(--acc-line)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
             <div>
-              <div style={eyebrow}>You&apos;ll receive</div>
+              <div style={sectionLabel}>You&apos;ll receive</div>
               <div style={{ ...bigNum, color: valid ? "var(--acc-deep)" : "var(--fg-4)" }}>{credits.toLocaleString()}</div>
               <div style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 6 }}>credits for ${valid ? effective.toLocaleString() : "0"}</div>
             </div>
@@ -237,7 +293,7 @@ export default function CreditsPage() {
 
       {/* rules */}
       <div style={{ marginTop: 30 }}>
-        <div style={eyebrow}>How your balance works</div>
+        <div style={sectionLabel}>How your balance works</div>
         <div className="tile-grid cols-4">
           {RULES.map(([t, d]) => (
             <div key={t} className="acard" style={{ gap: 6 }}>
@@ -247,6 +303,7 @@ export default function CreditsPage() {
           ))}
         </div>
       </div>
-    </div>
+      </div>
+    </Page>
   );
 }

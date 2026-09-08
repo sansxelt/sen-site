@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requirePreflightOwner } from "@/lib/v-preflight-guard";
+import { Page } from "@/app/rank/_components/page-header";
 import ConnectWorkspace from "./connect-form";
 
 // Matches the CTA that opens it: /systems says "Connect a system", so the tab does too.
@@ -13,9 +14,13 @@ export default async function ConnectAppPage() {
   await requirePreflightOwner("/systems/new");
 
   return (
-    <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-      <Link href="/systems" style={{ display: "flex", width: "fit-content", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← Your apps</Link>
-      <ConnectWorkspace />
-    </div>
+    <Page>
+      <Link href="/systems" style={{ display: "flex", width: "fit-content", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>&larr; Your apps</Link>
+      {/* <Page> owns the measure and the shell owns padding-top, so the tail room this page has always had
+          stays here, on the body. The h1 itself moved into the workspace's own <PageHeader>. */}
+      <div style={{ paddingBottom: 80 }}>
+        <ConnectWorkspace />
+      </div>
+    </Page>
   );
 }

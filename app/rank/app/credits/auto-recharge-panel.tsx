@@ -33,9 +33,15 @@ const dollars = (c: number | null | undefined) => (c == null ? "" : (c / 100).to
 const cents = (v: string) => Math.round(Number(v) * 100);
 
 const label = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--fg-4)" };
+// These three fields never carried outline:"none", so unlike the ones on the page above them their focus
+// ring already worked. What they DID carry was an inline border-color and background, which beat
+// [data-surface="app"] input:focus in authenticated.css, so the field on the page above lifted its ground
+// and darkened its edge on focus and these did not. One form on one page behaving two ways is the same
+// defect as one badge in four colours, just quieter. Colour comes from the stylesheet now; only the border
+// WIDTH and STYLE stay here, because the app sheet sets border-color for fields and never declares a border.
 const field: React.CSSProperties = {
-  width: "100%", padding: "9px 11px", fontSize: 14, color: "var(--fg-1)", background: "var(--bg-1)",
-  border: "1px solid var(--line-2)", borderRadius: 8, fontVariantNumeric: "tabular-nums",
+  width: "100%", padding: "9px 11px", fontSize: 14, color: "var(--fg-1)",
+  borderWidth: 1, borderStyle: "solid", borderRadius: 8, fontVariantNumeric: "tabular-nums",
 };
 
 export function AutoRechargePanel() {
@@ -139,28 +145,34 @@ export function AutoRechargePanel() {
         ) : null}
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12, marginBottom: 14 }}>
-          <label style={{ display: "block" }}>
+          {/* THE ACCESSIBLE NAME AND THE VISIBLE ONE WERE DIFFERENT WORDS. Each of these wrapped its input in
+              a <label> AND set an aria-label, and aria-label wins: the field a sighted person reads as
+              "When balance reaches" announced itself as "Trigger balance in dollars", so someone using
+              speech and someone using their eyes were being told to fill in differently-named boxes on a
+              form that arranges recurring charges. htmlFor/id ties each field to the words actually on
+              screen and the aria-labels are gone, so there is only one name per field. */}
+          <label htmlFor="recharge-trigger" style={{ display: "block" }}>
             <span style={{ ...label, display: "block", marginBottom: 5 }}>When balance reaches</span>
             <div style={{ position: "relative" }}>
-              <span style={{ position: "absolute", left: 11, top: 9, fontSize: 14, color: "var(--fg-4)" }}>$</span>
-              <input inputMode="decimal" value={trigger} onChange={(e) => setTrigger(e.target.value)}
-                style={{ ...field, paddingLeft: 22 }} placeholder="5.00" aria-label="Trigger balance in dollars" />
+              <span aria-hidden style={{ position: "absolute", left: 11, top: 9, fontSize: 14, color: "var(--fg-4)" }}>$</span>
+              <input id="recharge-trigger" inputMode="decimal" value={trigger} onChange={(e) => setTrigger(e.target.value)}
+                style={{ ...field, paddingLeft: 22 }} placeholder="5.00" />
             </div>
           </label>
-          <label style={{ display: "block" }}>
+          <label htmlFor="recharge-target" style={{ display: "block" }}>
             <span style={{ ...label, display: "block", marginBottom: 5 }}>Top up to</span>
             <div style={{ position: "relative" }}>
-              <span style={{ position: "absolute", left: 11, top: 9, fontSize: 14, color: "var(--fg-4)" }}>$</span>
-              <input inputMode="decimal" value={target} onChange={(e) => setTarget(e.target.value)}
-                style={{ ...field, paddingLeft: 22 }} placeholder="50.00" aria-label="Top up to, in dollars" />
+              <span aria-hidden style={{ position: "absolute", left: 11, top: 9, fontSize: 14, color: "var(--fg-4)" }}>$</span>
+              <input id="recharge-target" inputMode="decimal" value={target} onChange={(e) => setTarget(e.target.value)}
+                style={{ ...field, paddingLeft: 22 }} placeholder="50.00" />
             </div>
           </label>
-          <label style={{ display: "block" }}>
+          <label htmlFor="recharge-cap" style={{ display: "block" }}>
             <span style={{ ...label, display: "block", marginBottom: 5 }}>Never more than, per month</span>
             <div style={{ position: "relative" }}>
-              <span style={{ position: "absolute", left: 11, top: 9, fontSize: 14, color: "var(--fg-4)" }}>$</span>
-              <input inputMode="decimal" value={cap} onChange={(e) => setCap(e.target.value)}
-                style={{ ...field, paddingLeft: 22 }} placeholder="200.00" aria-label="Monthly limit in dollars" />
+              <span aria-hidden style={{ position: "absolute", left: 11, top: 9, fontSize: 14, color: "var(--fg-4)" }}>$</span>
+              <input id="recharge-cap" inputMode="decimal" value={cap} onChange={(e) => setCap(e.target.value)}
+                style={{ ...field, paddingLeft: 22 }} placeholder="200.00" />
             </div>
           </label>
         </div>

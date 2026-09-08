@@ -7,6 +7,7 @@ import {
   passPriceCents, rerunPriceCents, type PlanV1,
 } from "@/lib/preflight/pass-pricing";
 import { usdFromCents, effectiveMonthlyUsd , planHeadline, planCapacity } from "@/lib/preflight/pass-pricing-format";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
 // Signed-in plans surface for the _v1 cutover: the SAME approved ladder as /pricing (pricing-v1.tsx),
 // plus account state: the current plan is marked, the current subscription month's usage is shown when
@@ -55,15 +56,21 @@ export default function PlansV1({ initialCycle = "monthly" }: { initialCycle?: C
   const resetsOn = usage?.windowEnd ? new Date(usage.windowEnd).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : null;
 
   return (
-    <div className="wrap" style={{ maxWidth: 1180, paddingTop: "clamp(24px, 3vw, 38px)", paddingBottom: 80 }}>
-      <div className="phead">
-        <div>
-          <p className="eyebrow">Plans</p>
-          <h1 className="display">Priced by the run, not the seat</h1>
-          <p>Run your AI-built system through a real verification. Every verification includes browser execution, evidence, issue tracking, and an explainable decision.</p>
-        </div>
-        {signedIn && <button onClick={manageBilling} disabled={busy} className="btn btn--ghost">{busy ? "Opening…" : "Manage billing"}</button>}
-      </div>
+    // WIDE, not prose. This is the one page in the settings cluster that is a four-across comparison rather
+    // than something read as sentences, and the prose measure would stack the ladder into a column. 1180 was
+    // its own number and plans-legacy.tsx, the flag-off twin of this very page, used 1100, so flipping
+    // VRAELIS_PASS_PRICING moved the page 80px. One measure, both branches.
+    //
+    // The heading wording is EXACTLY as it was, including the fact that it is not the word "Plans": the nav
+    // check compares plans/page.tsx, which holds no literal heading, so this page keeps its sentence.
+    <Page measure="wide">
+      <PageHeader
+        eyebrow="Plans"
+        title="Priced by the run, not the seat"
+        lead="Run your AI-built system through a real verification. Every verification includes browser execution, evidence, issue tracking, and an explainable decision."
+        actions={signedIn ? <button onClick={manageBilling} disabled={busy} className="btn btn--ghost">{busy ? "Opening…" : "Manage billing"}</button> : null}
+      />
+      <div style={{ paddingBottom: 80 }}>
       {note && <p style={{ color: "var(--fg-3)", fontSize: 13, marginBottom: 14 }}>{note}</p>}
 
       {catalogPlan && (
@@ -238,6 +245,7 @@ export default function PlansV1({ initialCycle = "monthly" }: { initialCycle?: C
         monthly allowance resets each subscription month. Annual plans are charged up front and release usage
         monthly. Payments are processed by Stripe.
       </p>
-    </div>
+      </div>
+    </Page>
   );
 }

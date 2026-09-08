@@ -137,10 +137,15 @@ async function spyRun(selectedFlowIds: unknown, runId: string, deploymentUrl: st
     !/TONE_REPAIR|--accent-dim|--accent-border|#0A7B54/.test(report) && /full critical verification is still required/i.test(report));
   // The overview + list now DELEGATE to the canonical translator (no TONE_REPAIR, no teal): repair_verified is
   // public Blocked, consistent with Home/Results/API/webhook, with the scope explained in the subline.
+  // Both now reach toPublicDecision through home-verdict rather than importing it directly: the overview's
+  // hero is runVerdict(state, decision) and the list's pill is systemProof(run), both of which are that one
+  // mapper with a label attached. The delegation is what is asserted, so either spelling of it passes; what
+  // stays forbidden is the retired teal and, on the overview, losing the sentence that explains the scope.
+  const DELEGATES = /(toPublicDecision|runVerdict|systemProof)\(/;
   ok("CANONICAL: the overview delegates repair_verified to the public translator (Blocked, no retired teal)",
-    (() => { const ov = readFileSync("app/rank/app/systems/[id]/page.tsx", "utf8"); return !/TONE_REPAIR|--accent-dim|--accent-border|#0A7B54/.test(ov) && /toPublicDecision\(latest\?\.state \?\? "completed", decision\)/.test(ov) && /Targeted repair check passed/.test(ov); })());
+    (() => { const ov = readFileSync("app/rank/app/systems/[id]/page.tsx", "utf8"); return !/TONE_REPAIR|--accent-dim|--accent-border|#0A7B54/.test(ov) && DELEGATES.test(ov) && /Targeted repair check passed/.test(ov); })());
   ok("CANONICAL: the applications list delegates repair_verified to the public translator (Blocked, no teal)",
-    (() => { const list = readFileSync("app/rank/app/systems/page.tsx", "utf8"); return !/--accent-dim|--accent-border|#0A7B54/.test(list) && /toPublicDecision\(run\.state, run\.decision\)/.test(list); })());
+    (() => { const list = readFileSync("app/rank/app/systems/page.tsx", "utf8"); return !/--accent-dim|--accent-border|#0A7B54/.test(list) && DELEGATES.test(list); })());
   ok("C: the report states a full critical verification is still required", report.includes("full critical verification is still required before Vraelis can return Verified"));
   ok("CTA: the repair-verified report offers Run full critical verification", report.includes('scope="critical"') && report.includes("Run full critical verification"));
   // Evidence-first: each blocker shows its lineage (new here vs recurring from an earlier run) from the
@@ -204,15 +209,29 @@ async function spyRun(selectedFlowIds: unknown, runId: string, deploymentUrl: st
       const src = readFileSync(f, "utf8");
       const code = src.replace(/^\s*\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "");
       // runVerdict (lib/preflight/home-verdict) delegates to toPublicDecision and is documented to, so a
-      // surface reaching the mapper through it is not deciding for itself either.
-      ok(`${f} asks the shared mapper`, code.includes("toPublicDecision(") || code.includes("runVerdict("));
+      // surface reaching the mapper through it is not deciding for itself either. systemProof() and the
+      // shared <Verdict> badge are the same delegation one more layer out: systemProof calls runVerdict,
+      // and app/rank/_components/verdict.tsx exists ONLY to render runVerdict() — it holds no decision
+      // logic and cannot be given a label by its caller unless that label came from the mapper too.
+      //
+      // THIS LIST WAS WIDENED, NOT LOOSENED. These pages stopped calling the mapper by name because the
+      // pill moved into one component; the alternative was keeping a vestigial runVerdict() call in a file
+      // that no longer derives anything, purely to satisfy a regex, which is how a green gate stops
+      // meaning anything. What must stay true is that the file does not decide for itself, and the two
+      // assertions below still enforce exactly that.
+      ok(`${f} asks the shared mapper`,
+        /(toPublicDecision|runVerdict|systemProof)\(/.test(code) || /<Verdict[\s/>]/.test(code));
       // The exact shape that was wrong: a branch keyed on repair_verified that returns a Verified label.
       ok(`${f} does not decide repair_verified for itself`,
         !/repair_verified"?\s*\)?\s*return\s*\{\s*label:\s*"Verified"/.test(code) &&
         !/decision === "repair_verified"[\s\S]{0,120}label: "Verified"/.test(code));
-      // A pill built from `decision` alone cannot know a run never finished.
+      // A pill built from `decision` alone cannot know a run never finished. <Verdict decision={…} /> with
+      // no `state` is that same defect wearing the shared component, so the badge form is accepted ONLY
+      // when it is handed the state, or handed a verdict systemProof already derived from a whole run.
       ok(`${f} passes the run state to the mapper`,
-        /(toPublicDecision|runVerdict)\(\s*(state|r\.state|p\.state|run\.state|g\.latest\.state)/.test(code));
+        /(toPublicDecision|runVerdict|systemProof)\(\s*(state|r\.state|p\.state|run\.state|g\.latest\.state)/.test(code)
+        || /<Verdict\b[^>]*\sstate=\{/.test(code)
+        || /<Verdict\b[^>]*\sverdict=\{systemProof\(/.test(code));
     }
   }
 

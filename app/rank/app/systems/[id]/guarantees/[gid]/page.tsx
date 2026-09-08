@@ -12,6 +12,8 @@ import { guaranteeStatusFrom, lastProvenRun } from "@/lib/preflight/guarantee-st
 import { findLivePendingPlanForClaim } from "@/lib/preflight/reviewed-plan-db";
 import { toPublicDecision } from "@/lib/preflight/public-decision";
 import { Ic, I, EmptyIcon } from "@/app/rank/_components/icons";
+import { Verdict } from "@/app/rank/_components/verdict";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 import { GuaranteeStatusPill } from "../../guarantee-ui";
 import { DerivePlanButton, ApprovePlanButton, RegenerateButton, VerifyGuaranteeButton } from "./guarantee-plan";
 
@@ -69,14 +71,14 @@ export default async function GuaranteeDetailPage({ params }: { params: Promise<
   const app = access ? await getApplication(owner, id) : null;
   if (!access || !g || !app || g.application_id !== id) {
     return (
-      <div className="wrap" style={{ maxWidth: 900, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-        <div className="empty">
+      <Page measure="prose">
+        <div className="empty" style={{ marginBottom: 80 }}>
           <EmptyIcon d={I.slash} />
           <h3>Guarantee not found</h3>
           <p>This guarantee does not exist, or you do not have access to it.</p>
           <Link href={`/systems/${id}`} className="btn">Back to the system</Link>
         </div>
-      </div>
+      </Page>
     );
   }
 
@@ -101,7 +103,7 @@ export default async function GuaranteeDetailPage({ params }: { params: Promise<
   const pendingReqs = pending?.plan.requirements?.map((r) => r.text) ?? [];
 
   return (
-    <div className="wrap" style={{ maxWidth: 900, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
+    <Page measure="prose">
       <nav aria-label="Breadcrumb" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 13, marginBottom: 18 }}>
         <Link href="/systems" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Systems</Link>
         <span aria-hidden style={{ color: "var(--fg-5)" }}>/</span>
@@ -110,18 +112,20 @@ export default async function GuaranteeDetailPage({ params }: { params: Promise<
         <span style={{ color: "var(--fg-2)", fontWeight: 600 }}>Guarantee</span>
       </nav>
 
-      <header style={{ display: "grid", gap: 12 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <div style={label}>Guarantee</div>
-          <GuaranteeStatusPill planState={g.plan_state} status={status} />
-        </div>
-        <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(1.5rem, 3vw, 2.1rem)", letterSpacing: "-0.02em", lineHeight: 1.15, color: "var(--fg-1)", margin: 0, maxWidth: "36ch", wordBreak: "break-word" }}>
-          {g.title}
-        </h1>
-        {g.scope ? <p style={{ fontSize: 14, color: "var(--fg-3)", lineHeight: 1.55, margin: 0, maxWidth: "64ch" }}>{g.scope}</p> : null}
-      </header>
+      {/* THE WORD ABOVE THE TITLE WAS THE OTHER "EYEBROW".
+          It was the local `label` object: 10.5px, code face, uppercase, 0.08em tracked. The .eyebrow CLASS
+          is 13px in the display face, sentence case, and adjacent pages in this console rendered the two
+          within one click of each other. <PageHeader> renders the class, which is the standard; the local
+          object stays only for the section kickers further down, which are section kickers and not the
+          page's own name. The h1 dropped its own clamp(1.5rem, 3vw, 2.1rem) with it. */}
+      <PageHeader
+        eyebrow="Guarantee"
+        title={g.title}
+        lead={g.scope || undefined}
+        actions={<GuaranteeStatusPill planState={g.plan_state} status={status} />}
+      />
 
-      <div style={{ display: "grid", gap: "clamp(20px, 3vw, 30px)", marginTop: "clamp(20px, 3vw, 30px)" }}>
+      <div style={{ display: "grid", gap: "clamp(20px, 3vw, 30px)", paddingBottom: 80 }}>
 
         {/* ── Author: derive + approve, or review the prepared plan (editor+, session-only) ── */}
         {notApproved && canEdit ? (
@@ -209,20 +213,22 @@ export default async function GuaranteeDetailPage({ params }: { params: Promise<
                   </p>
                 ) : null}
                 <div style={{ display: "grid", gap: 8 }}>
-                  {history.map((r) => {
-                    const pub = toPublicDecision(r.state, r.decision);
-                    const tone = pub === "verified" ? "var(--go-ink)" : pub === "failed" ? "var(--stop-ink)" : pub === "blocked" ? "var(--wait-ink)" : "var(--fg-4)";
-                    return (
-                      <Link key={r.id} href={`/systems/${id}/passes/${r.id}`} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", textDecoration: "none" }}>
-                        <span aria-hidden style={{ width: 9, height: 9, borderRadius: "50%", background: tone, flex: "none" }} />
-                        <div style={{ minWidth: 0, flex: 1 }}>
-                          <div style={{ fontSize: 13, color: "var(--fg-2)", fontWeight: 600 }} title={when(r.created_at)}>{ago(r.completed_at ?? r.created_at) || "Verification"}</div>
-                          {r.deployment_url ? <div style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>{r.deployment_url}</div> : null}
-                        </div>
-                        <span aria-hidden style={{ color: "var(--fg-5)", flex: "none", fontSize: 13 }}>→</span>
-                      </Link>
-                    );
-                  })}
+                  {/* THIS HISTORY SAID ITS VERDICT IN COLOUR AND IN NOTHING ELSE.
+                      Each row led with a 9px dot tinted by a fourth hand-written go/stop/wait ternary, and
+                      the dot was aria-hidden, so the run's outcome reached a sighted reader who can tell
+                      amber from orange and nobody else. Every sibling history in the console — the system
+                      overview, /passes, /deployments — carries the verdict in words. This one now does too,
+                      from the same component, which also removes the ternary. */}
+                  {history.map((r) => (
+                    <Link key={r.id} href={`/systems/${id}/passes/${r.id}`} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", textDecoration: "none" }}>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ fontSize: 13, color: "var(--fg-2)", fontWeight: 600 }} title={when(r.created_at)}>{ago(r.completed_at ?? r.created_at) || "Verification"}</div>
+                        {r.deployment_url ? <div style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>{r.deployment_url}</div> : null}
+                      </div>
+                      <Verdict state={r.state} decision={r.decision} style={{ flex: "none" }} />
+                      <span aria-hidden style={{ color: "var(--fg-5)", flex: "none", fontSize: 13 }}>&rarr;</span>
+                    </Link>
+                  ))}
                 </div>
               </div>
             )}
@@ -230,6 +236,6 @@ export default async function GuaranteeDetailPage({ params }: { params: Promise<
         ) : null}
 
       </div>
-    </div>
+    </Page>
   );
 }

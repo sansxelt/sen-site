@@ -4,19 +4,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { I, Ic } from "@/app/rank/_components/icons";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
 export const metadata: Metadata = { title: "Checkout cancelled" };
 
 export default function BillingCancelledPage() {
   return (
-    <div className="wrap" style={{ maxWidth: 720, paddingTop: "clamp(24px, 3vw, 38px)", paddingBottom: 80 }}>
-      <div className="phead">
-        <div>
-          <p className="eyebrow">Billing</p>
-          <h1 className="display">Checkout cancelled</h1>
-        </div>
-      </div>
+    // 720 was this page's own width and 820 is /billing's, so returning from a cancelled checkout moved the
+    // left edge of the page. The three return routes and /billing now share one measure; they are read as
+    // sentences, so it is the prose one.
+    <Page measure="prose">
+      <PageHeader eyebrow="Billing" title="Checkout cancelled" />
 
+      <div style={{ paddingBottom: 80 }}>
       <div className="card">
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
           <span style={{ color: "var(--fg-3)" }}><Ic d={I.slash} size={18} /></span>
@@ -35,6 +35,7 @@ export default function BillingCancelledPage() {
           <a href="mailto:help@vraelis.com" style={{ color: "var(--acc-deep)" }}>help@vraelis.com</a> and we will give you a straight answer.
         </p>
       </div>
-    </div>
+      </div>
+    </Page>
   );
 }

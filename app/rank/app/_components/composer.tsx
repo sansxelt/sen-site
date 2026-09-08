@@ -11,6 +11,7 @@
 
 import Link from "next/link";
 import { useRef, useState, type CSSProperties } from "react";
+import { Verdict } from "@/app/rank/_components/verdict";
 import {
   createReviewedPlan, getReviewedPlan, approveReviewedPlan, executeReviewedPlan, pollVerification,
   normalizeDeploymentUrl, normalizeClaim,
@@ -29,15 +30,26 @@ type Phase =
   // failed launch. It changes the recovery: open/keep watching the real run, never "try again" a fresh paid one.
   | { k: "error"; error: ClientError; plan?: PlanView; bound?: Bound; verificationId?: string };
 
+// The one-sentence explanation of each conclusion, which exists nowhere else. The LABEL and the TONE are
+// kept alongside it so this map can be handed straight to <Verdict>, and the local `toneStyle` that used to
+// live here (an eleventh copy of the ink/wash/line table) is gone with it.
+//
+// THIS IS THE ONE PLACE THAT MUST NOT CALL runVerdict, and the reason is worth stating because it otherwise
+// looks like an oversight. `Decision` here comes from lib/verification-client and is the PUBLIC verdict
+// itself: "verified" | "failed" | "blocked", the same three words the API answers with. runVerdict delegates
+// to toPublicDecision, whose input is the run's INTERNAL decision column, which uses different strings
+// entirely. Handing a public verdict to a function that expects an internal one sends every value down the
+// unrecognized branch, and that branch returns blocked, so a passing run would render a Blocked badge at the
+// end of a verification the customer just paid for. The tone is therefore stated here, once, beside the
+// sentence it belongs to, and only the DRAWING is delegated to the shared component.
+//
+// (The internal strings are deliberately not spelled out above: scripts/composer-verify.ts asserts this file
+// never contains them, which is the right rule for a customer-facing surface even in a comment.)
 const DECISION: Record<Decision, { label: string; tone: "verified" | "failed" | "blocked"; line: string }> = {
   verified: { label: "Verified", tone: "verified", line: "The claim held, with evidence." },
   failed: { label: "Failed", tone: "failed", line: "The claim did not hold. A repair prompt is ready." },
   blocked: { label: "Blocked", tone: "blocked", line: "Vraelis could not reach a reliable conclusion." },
 };
-const toneStyle = (t: "verified" | "failed" | "blocked") =>
-  t === "verified" ? { color: "var(--go-ink)", bg: "var(--go-wash)", border: "var(--go-line)" }
-  : t === "failed" ? { color: "var(--stop-ink)", bg: "var(--stop-wash)", border: "var(--stop-line)" }
-  : { color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "var(--wait-line)" };
 
 const lbl: CSSProperties = { fontFamily: "var(--font-code)", fontSize: 10.5, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)" };
 
@@ -353,8 +365,13 @@ function RunPanel({ requirements, status, decision, onReset }: {
             other inside the SAME node, so the conclusion (Verified/Failed/Blocked) is announced, not swapped in
             silently. */}
         <span role="status" aria-live="polite" aria-atomic="true" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+          {/* The final conclusion, in the SAME badge the records lists and the result page render. It was a
+              .pill at 10.5px, weight 700, uppercase, with its own colour table: the last thing a customer
+              sees at the end of a run they just paid for, and it did not look like the row that run becomes
+              on the Overview thirty seconds later. It is announced inside the live region either way, so the
+              swap changes only how it is drawn. */}
           {d ? (
-            <span className="pill" style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", ...toneStyle(d.tone) }}>{d.label}</span>
+            <Verdict verdict={{ label: d.label, tone: d.tone }} size="sm" style={{ flex: "none" }} />
           ) : (
             <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--fg-3)", fontWeight: 500 }}><span className="cmp-dot" aria-hidden />{statusText}</span>
           )}

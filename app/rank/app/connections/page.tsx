@@ -8,6 +8,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { I, EmptyIcon } from "@/app/rank/_components/icons";
+import { Page, PageHeader } from "@/app/rank/_components/page-header";
 import { PROVIDER_LABELS as ALL_PROVIDER_LABELS, featureUse } from "@/lib/preflight/connection-display";
 
 const PROVIDER_LABELS: Record<string, string> = {
@@ -46,8 +47,13 @@ const KNOWN_OAUTH = ["github", "vercel", "sentry", "stripe_test", "supabase"] as
 // how "stored, not yet used in verification" quietly turns into an advertised feature.
 const PER_APP_KINDS = ["slack", "webhook", "custom_deploy", "custom_auth", "openapi", "test_account"] as const;
 
-const eyebrow = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 } as const;
-
+// THE LOCAL `eyebrow` OBJECT IS GONE, AND IT IS THE ONE THE COMPONENT COMMENT NAMES.
+//
+// There were two unrelated things in this codebase both called "eyebrow": the .eyebrow CLASS (13px Geist,
+// weight 600, sentence case) and a local const object (10.5px Inter Tight, uppercase, 0.08em tracked). This
+// file rendered the object and Billing, one sidebar click away, rendered the class, so the identical kicker
+// in the identical position appeared in two typefaces, two sizes and two cases depending on which page you
+// were on. <PageHeader> renders the class, which is the correct one; the object was the drift.
 function whenUtc(iso: string | null | undefined): string {
   if (!iso) return "";
   try { return new Date(iso).toISOString().slice(0, 10); } catch { return ""; }
@@ -185,19 +191,32 @@ export default function ConnectionsPage() {
   const byProvider = new Map((conns ?? []).map((c) => [c.provider, c]));
 
   return (
-    <div className="wrap" style={{ maxWidth: 900, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-      <p style={eyebrow}>Account</p>
-      <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "0 0 10px" }}>Integrations</h1>
-      <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.6, margin: "0 0 24px", maxWidth: 620 }}>
-        Authorize a provider once for your whole account. Vraelis holds a read-only token, sealed with
-        AES-256-GCM, never a password. Every system then uses it, choosing its own repo or project.
-      </p>
+    // The prose measure: this page is a short stack of provider cards read as sentences, not a table. It was
+    // hardcoded to 900, one of fifteen widths in the console. The inline paddingTop is dropped rather than
+    // carried over because the shell overrides it with !important and it has never rendered; the tail room
+    // moves onto the content, which is where it was actually doing something.
+    <Page measure="prose">
+      <PageHeader
+        eyebrow="Account"
+        title="Integrations"
+        lead="Authorize a provider once for your whole account. Vraelis holds a read-only token, sealed with AES-256-GCM, never a password. Every system then uses it, choosing its own repo or project."
+      />
 
+      <div style={{ paddingBottom: 80 }}>
+
+      {/* THE BANNER WAS PAINTED IN A RED THAT EXISTS NOWHERE ELSE IN THIS PRODUCT.
+          The failure branch was rgba(178,58,58,...), a light-theme red carried over from the cream surface,
+          used for the border and the wash while the TEXT was --stop-ink (#FF7A55). So the one banner that
+          tells you an authorization failed drew its frame in one red and its words in another, neither of
+          which matched the Failed pill three inches away. Both halves are --stop-* now, which is the same
+          ink/wash/line triple <Verdict> paints Failed with.
+          The success branch had the mirror-image bug in the other direction: --go-wash behind --go-ink,
+          framed in --acc-line, which is plain 20% white. Green wash, green words, white frame. */}
       {msg ? (
         <div role={msg.ok ? "status" : "alert"} style={{
           borderRadius: "var(--r-sm)", padding: "11px 15px", fontSize: 13.5, lineHeight: 1.5, marginBottom: 20,
-          border: `1px solid ${msg.ok ? "var(--acc-line)" : "rgba(178,58,58,0.25)"}`,
-          background: msg.ok ? "var(--go-wash)" : "rgba(178,58,58,0.08)",
+          border: `1px solid ${msg.ok ? "var(--go-line)" : "var(--stop-line)"}`,
+          background: msg.ok ? "var(--go-wash)" : "var(--stop-wash)",
           color: msg.ok ? "var(--go-ink)" : "var(--stop-ink)",
         }}>{msg.text}</div>
       ) : null}
@@ -207,11 +226,26 @@ export default function ConnectionsPage() {
           const c = byProvider.get(kind);
           const label = PROVIDER_LABELS[kind] ?? kind;
           return (
-            <div key={kind} className="card" style={{ padding: 18, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", borderColor: c ? "var(--acc-line)" : "var(--line-2)" }}>
+            // CONNECTED AND NOT CONNECTED DIFFERED BY 6% OF ONE ALPHA CHANNEL.
+            //
+            // The card border was --acc-line (rgba(255,255,255,0.20)) when connected and --line-2
+            // (rgba(255,255,255,0.14)) when not: the same white, six hundredths apart, which is not a
+            // distinction anyone can see and is certainly not one you can see at a glance down a list of five
+            // providers. The connected card now carries --go-line, so the difference is a colour rather than
+            // an alpha, and it is the SAME green the pill inside it uses.
+            <div key={kind} className="card" style={{ padding: 18, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", borderColor: c ? "var(--go-line)" : "var(--line-2)" }}>
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 9, flexWrap: "wrap" }}>
                   <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15.5, color: "var(--fg-1)" }}>{label}</span>
-                  {c ? <span className="pill" style={{ fontSize: 9.5, color: "var(--acc-deep)", background: "var(--acc-soft)", borderColor: "var(--acc-line)" }}>Connected</span> : null}
+                  {/* NOT a <Verdict>. "Connected" is a fact about an OAuth token, not a conclusion about a
+                      deployment, and the vocabulary <Verdict> renders is Verified / Failed / Blocked /
+                      In progress / Not yet verified. Putting a sixth word through it would be exactly the
+                      drift that component exists to stop.
+                      What it does borrow is the signal palette, because the old pill had none: --acc-deep on
+                      --acc-soft is #FAFAFA on 6% white, so the badge that says a provider is live was drawn
+                      in the headline colour with no colour in it at all, at 9.5px, which is the smallest
+                      type on the page. It is the go triple now, at .pill's own size. */}
+                  {c ? <span className="pill" style={{ color: "var(--go-ink)", background: "var(--go-wash)", borderColor: "var(--go-line)" }}>Connected</span> : null}
                 </div>
                 <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 3, lineHeight: 1.5 }}>
                   {c
@@ -240,10 +274,17 @@ export default function ConnectionsPage() {
         })}
       </div>
 
+      {/* A HAND-ROLLED EMPTY STATE THAT PUT A 46px TILE NEXT TO A 13px SENTENCE.
+          <EmptyIcon> renders .empty__icon, which is a 46px rounded tile sized for the centred column of the
+          .empty block. This laid it out as a flex ROW against a 13px line of body text, so the icon was three
+          and a half times the height of the words beside it and read as a broken image rather than a state.
+          .empty is the block that tile was drawn for, and it is what the empty key list and the empty webhook
+          list on /developers already use. Same words, split at the full stop that was already in them. */}
       {conns !== null && conns.length === 0 ? (
-        <div style={{ marginTop: 22, display: "flex", alignItems: "center", gap: 10, color: "var(--fg-4)", fontSize: 13 }}>
+        <div className="empty" style={{ marginTop: 22 }}>
           <EmptyIcon d={I.key} />
-          <span>Nothing connected yet. Connecting a provider here makes it available to all of your systems.</span>
+          <h3>Nothing connected yet</h3>
+          <p>Connecting a provider here makes it available to all of your systems.</p>
         </div>
       ) : null}
 
@@ -268,6 +309,7 @@ export default function ConnectionsPage() {
           ))}
         </div>
       </section>
-    </div>
+      </div>
+    </Page>
   );
 }
