@@ -39,7 +39,8 @@
   grid-template-columns: minmax(0, 1.15fr) minmax(360px, 0.85fr);
   gap: clamp(70px, 10vw, 190px);
   align-items: center;
-  padding: clamp(54px, 8vh, 94px) 2.5vw;
+  align-self: start;
+  padding: clamp(46px, 6vh, 72px) 2.5vw clamp(54px, 7vh, 84px);
 }
 
 .v6-pr__marks {
