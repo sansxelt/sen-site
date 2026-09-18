@@ -39,6 +39,7 @@ export const V6_EXACT: Record<string, string> = {
   "/subprocessors": "/dev-preview/v6/subprocessors",
   "/security": "/dev-preview/v6/security",
   "/company": "/dev-preview/v6/company",
+  "/partnerships/reddit": "/dev-preview/v6/partnerships/reddit",
   "/platform": "/dev-preview/v6/platform",
   "/method": "/dev-preview/v6/method",
   "/agents": "/dev-preview/v6/agents",

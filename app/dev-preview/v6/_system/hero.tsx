@@ -39,10 +39,10 @@ export function Hero() {
               the Direction chapter keep the long form, where there is room for it. */}
           <EditorialLink href={`${V6_BASE}/platform#current`}>What is built</EditorialLink>
         </div>
-        <a className="v6-h__partnership" href="https://www.reddit.com/" target="_blank" rel="noopener noreferrer"
-          aria-label="Vraelis partnered with Reddit in 2026. Visit Reddit.">
+        <a className="v6-h__partnership" href={`${V6_BASE}/partnerships/reddit`}
+          aria-label="Read the Vraelis and Reddit partnership record.">
           <strong>Vraelis × Reddit</strong>
-          <span>Partnered 2026&nbsp; ↗</span>
+          <span>Partnership record&nbsp; →</span>
         </a>
       </div>
     </section>

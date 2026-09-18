@@ -116,6 +116,7 @@ const MENUS: Menu[] = [
     groups: [
       { h: "Company", links: [
         { t: "About Vraelis", d: "Who is building this", href: BASE + "/company" },
+        { t: "Reddit partnership", d: "Advertising partnership record", href: BASE + "/partnerships/reddit" },
         { t: "Who it is for", d: "And who it is not for yet", href: BASE + "/company#who" },
         { t: "How this is different", d: "Against the categories, not the companies", href: BASE + "/company#different",
           preview: { eyebrow: "How this is different", title: "Four things it is not, and what it does instead.", body: "Not the agent's own report, not a test suite, not monitoring. And it refuses rather than guesses: when no check could prove the claim, the answer is Blocked and nothing is charged.", stat: "Stated against categories" } },
