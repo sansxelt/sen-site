@@ -21,6 +21,19 @@ export type Entry = { date: string; tag: "go" | "wait"; tagLabel: string; title:
 
 export const CHANGELOG: Entry[] = [
   {
+    date: "2026-09-18",
+    tag: "go",
+    tagLabel: "Shipped",
+    title: "The TypeScript SDK now follows the verification primitive",
+    body: [
+      "The SDK can prepare an immutable verification plan, record its approval as a separate event, launch exactly that approved plan with an idempotency key, and read the running or completed result with its decision, evidence, failures and repair guidance.",
+      "The workflow keeps review and execution separate in client code instead of making an integration reconstruct the HTTP sequence itself. Offline package tests cover both module formats, request paths, plan binding, retry keys and the terminal decision shape.",
+    ],
+    note: "The package is built and tested in the repository but is still private and has not been published to npm.",
+    href: "/developers",
+    hrefLabel: "Read the developer guide",
+  },
+  {
     date: "2026-09-17",
     tag: "go",
     tagLabel: "Established",

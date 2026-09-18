@@ -21,6 +21,33 @@ ok(typeof esm.Vraelis === "function", "ESM: Vraelis exported");
 ok(typeof esm.VraelisAPIError === "function", "ESM: VraelisAPIError exported");
 ok(typeof esm.verifyWebhookSignature === "function", "ESM: verifyWebhookSignature exported");
 
+console.log("\n[verification workflow — offline]");
+const calls = [];
+const responses = [
+  { state: "review_required", reviewed_plan_id: "rvp_test", requirements: ["Access persists"], human_reviewed: false, review_required: true, claim: "Access persists after sign-in", contract_id: "ctr_test", contract_version: 1, message: "Review required" },
+  { reviewed_plan_id: "rvp_test", approval_state: "approved", already_approved: false },
+  { verification_id: "vrf_test", state: "running", status_url: "/v1/verifications/vrf_test", human_reviewed: true },
+  { verification_id: "vrf_test", state: "completed", decision: "Verified", requirements: ["Access persists"], failures: [], evidence: [], repair_prompt: null, console_url: "https://app.vraelis.com/systems/test/passes/test", human_reviewed: true, decision_status: "current", contract_review_status: "human_reviewed", requirement_order: "reviewed_plan", claim: "Access persists after sign-in" },
+];
+const client = new esm.Vraelis({
+  apiKey: "vr_live_smoke",
+  baseUrl: "https://sdk.test",
+  fetch: async (url, init) => {
+    calls.push({ url: String(url), init });
+    return new Response(JSON.stringify(responses.shift()), { status: 200, headers: { "content-type": "application/json" } });
+  },
+});
+const verificationInput = { deployment_url: "https://app.example.com", claim: "Access persists after sign-in" };
+const plan = await client.verifications.prepare(verificationInput, { idempotencyKey: "idem_prepare" });
+await client.verifications.approvePlan(plan.reviewed_plan_id);
+const run = await client.verifications.run({ ...verificationInput, reviewed_plan_id: plan.reviewed_plan_id }, { idempotencyKey: "idem_run" });
+const result = await client.verifications.get(run.verification_id);
+ok(calls[0].url === "https://sdk.test/api/v1/verifications", "prepare uses the verification endpoint");
+ok(calls[0].init.headers["Idempotency-Key"] === "idem_prepare", "prepare forwards its idempotency key");
+ok(calls[1].url.endsWith("/api/v1/verifications/plans/rvp_test/approve"), "approval is a distinct API event");
+ok(JSON.parse(calls[2].init.body).reviewed_plan_id === "rvp_test" && calls[2].init.headers["Idempotency-Key"] === "idem_run", "run binds the approved plan and retry key");
+ok(result.state === "completed" && result.decision === "Verified", "get returns the evidence-backed terminal decision");
+
 console.log("\n[CJS require]");
 const cjs = require("../dist/index.cjs");
 ok(typeof cjs.Vraelis === "function", "CJS: Vraelis exported");

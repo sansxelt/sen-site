@@ -161,3 +161,88 @@ export interface EvaluationExport {
 export interface CreditsResult {
   [key: string]: unknown;
 }
+
+// ── Verification primitive ──
+export interface PrepareVerificationInput {
+  deployment_url: string;
+  claim: string;
+  /** Include the coverage diagnostics used to decide whether the claim is provable. */
+  diagnostic?: boolean;
+}
+
+export interface VerificationRequestOptions {
+  /** Binds retries to the same payload and prevents duplicate preparation or spend. */
+  idempotencyKey?: string;
+}
+
+export interface VerificationPlan {
+  state: "review_required";
+  claim: string;
+  requirements: string[];
+  human_reviewed: false;
+  review_required: true;
+  contract_id: string;
+  contract_version: number;
+  reviewed_plan_id?: string;
+  reviewed_plan_expires_at?: string;
+  message: string;
+}
+
+export interface VerificationPlanApproval {
+  reviewed_plan_id: string;
+  approval_state: "approved";
+  already_approved: boolean;
+}
+
+export interface RunVerificationInput extends PrepareVerificationInput {
+  reviewed_plan_id: string;
+}
+
+export interface VerificationRunning {
+  verification_id: string;
+  state: "running";
+  status_url: string;
+  claim?: string;
+  requirements?: string[];
+  reviewed_plan_id?: string;
+  human_reviewed?: boolean;
+}
+
+export type VerificationDecision = "Verified" | "Failed" | "Blocked";
+
+export interface VerificationFailure {
+  severity: string | null;
+  title: string | null;
+  expected: string | null;
+  observed: string | null;
+  reproduce: string | null;
+}
+
+export interface VerificationEvidence {
+  checking: string | null;
+  result: string | null;
+  failed_at_step: number | null;
+}
+
+export interface VerificationCompleted {
+  verification_id: string;
+  state: "completed";
+  decision: VerificationDecision;
+  claim: string | null;
+  requirements: string[];
+  failures: VerificationFailure[];
+  evidence: VerificationEvidence[];
+  repair_prompt: string | null;
+  console_url: string;
+  human_reviewed: boolean;
+  reviewed_plan_id?: string;
+  reviewed_by?: string;
+  reviewed_at?: string;
+  guarantee_id?: string | null;
+  reverification_of?: string | null;
+  decision_status: "current" | "legacy";
+  contract_review_status: string;
+  requirement_order: string;
+}
+
+export type VerificationResult = VerificationRunning | VerificationCompleted;

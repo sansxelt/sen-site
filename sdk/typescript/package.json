@@ -1,7 +1,7 @@
 {
   "name": "@vraelis/sdk",
-  "version": "0.1.0",
-  "description": "Official TypeScript SDK for the Vraelis human-evaluation API — create sandbox evaluations, fetch Decision Package v2 results, export, and verify webhooks.",
+  "version": "0.2.0",
+  "description": "Official TypeScript SDK for Vraelis verification, evidence-backed decisions, evaluations, exports, and signed webhooks.",
   "private": true,
   "license": "MIT",
   "author": "Vraelis",

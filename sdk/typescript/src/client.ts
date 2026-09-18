@@ -7,6 +7,13 @@ import type {
   EvaluationExport,
   EvaluationResult,
   ExportTier,
+  PrepareVerificationInput,
+  RunVerificationInput,
+  VerificationPlan,
+  VerificationPlanApproval,
+  VerificationRequestOptions,
+  VerificationResult,
+  VerificationRunning,
 } from "./types";
 
 const DEFAULT_BASE_URL = "https://vraelis.com";
@@ -34,10 +41,10 @@ export class Vraelis {
     this._fetch = f;
   }
 
-  private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  private async request<T>(method: string, path: string, body?: unknown, extraHeaders?: Record<string, string>): Promise<T> {
     const res = await this._fetch(`${this.baseUrl}${path}`, {
       method,
-      headers: { "X-Api-Key": this.apiKey, "Content-Type": "application/json" },
+      headers: { "X-Api-Key": this.apiKey, "Content-Type": "application/json", ...extraHeaders },
       body: body != null ? JSON.stringify(body) : undefined,
     });
     const text = await res.text();
@@ -74,6 +81,21 @@ export class Vraelis {
     /** Export the per-option breakdown as a CSV string. */
     exportCsv: (id: string): Promise<string> =>
       this.requestText("GET", `/api/v1/tests/${encodeURIComponent(id)}/export?format=csv`),
+  };
+
+  readonly verifications = {
+    /** Build the exact requirements and flows a person must review. Nothing runs and nothing is charged. */
+    prepare: (input: PrepareVerificationInput, opts?: VerificationRequestOptions): Promise<VerificationPlan> =>
+      this.request<VerificationPlan>("POST", "/api/v1/verifications", input, opts?.idempotencyKey ? { "Idempotency-Key": opts.idempotencyKey } : undefined),
+    /** Record approval of one immutable reviewed plan. Approval is separate from execution. */
+    approvePlan: (reviewedPlanId: string): Promise<VerificationPlanApproval> =>
+      this.request<VerificationPlanApproval>("POST", `/api/v1/verifications/plans/${encodeURIComponent(reviewedPlanId)}/approve`),
+    /** Launch exactly the approved plan. The same deployment URL and claim used to prepare it are required. */
+    run: (input: RunVerificationInput, opts?: VerificationRequestOptions): Promise<VerificationRunning> =>
+      this.request<VerificationRunning>("POST", "/api/v1/verifications", input, opts?.idempotencyKey ? { "Idempotency-Key": opts.idempotencyKey } : undefined),
+    /** Read a running verification or its terminal decision and evidence. */
+    get: (id: string): Promise<VerificationResult> =>
+      this.request<VerificationResult>("GET", `/api/v1/verifications/${encodeURIComponent(id)}`),
   };
 
   readonly credits = {

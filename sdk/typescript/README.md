@@ -1,6 +1,6 @@
 # @vraelis/sdk
 
-Official TypeScript SDK for the [Vraelis](https://vraelis.com) human-evaluation API — create sandbox evaluations, fetch **Decision Package v2** results, export JSON/CSV, and verify signed webhooks.
+Official TypeScript SDK for [Vraelis](https://vraelis.com). Prepare and approve a verification plan, run exactly what was reviewed, read the evidence-backed decision, create sandbox evaluations, export results, and verify signed webhooks.
 
 > **Status: SDK starter.** This package is included in the Vraelis repository and ready for npm publishing later. It is **not published to npm yet** — use it locally (see below). When published, install with `npm install @vraelis/sdk`.
 
@@ -33,6 +33,36 @@ const { Vraelis } = require("@vraelis/sdk");     // CommonJS
 Requires Node 18+ (uses the global `fetch` and the `crypto` module). On older Node, pass a `fetch` implementation in the client options.
 
 ## Quickstart
+
+### Verify a live system
+
+```ts
+import { Vraelis } from "@vraelis/sdk";
+
+const vraelis = new Vraelis({ apiKey: process.env.VRAELIS_API_KEY! });
+const input = {
+  deployment_url: "https://app.example.com",
+  claim: "A customer can upgrade to Pro and retain access after signing in again.",
+};
+
+// 1. Build the exact plan. Nothing runs and nothing is charged.
+const plan = await vraelis.verifications.prepare(input, {
+  idempotencyKey: crypto.randomUUID(),
+});
+
+// 2. Approval is a separate, durable event.
+if (!plan.reviewed_plan_id) throw new Error("The claim could not produce a reviewable plan.");
+await vraelis.verifications.approvePlan(plan.reviewed_plan_id);
+
+// 3. Run exactly the approved plan, then read the decision and evidence.
+const run = await vraelis.verifications.run({ ...input, reviewed_plan_id: plan.reviewed_plan_id });
+const result = await vraelis.verifications.get(run.verification_id);
+if (result.state === "completed") console.log(result.decision, result.evidence);
+```
+
+An API key may approve an ordinary verification plan. A plan that defines a standing guarantee requires a signed-in person and cannot be approved by an API key.
+
+### Human evaluation sandbox
 
 ```ts
 import { Vraelis } from "@vraelis/sdk";
@@ -80,6 +110,10 @@ const credits = await vraelis.credits.get();
 
 | Method | Description |
 | --- | --- |
+| `verifications.prepare(input, options)` | Build an immutable plan for review; does not run or charge. |
+| `verifications.approvePlan(id)` | Record approval of that exact plan. |
+| `verifications.run(input, options)` | Execute the approved plan. |
+| `verifications.get(id)` | Read a running state or the terminal decision and evidence. |
 | `evaluations.create(input)` | Create + launch an evaluation (`sandbox: true` for test mode). |
 | `evaluations.get(id)` | Status, results, and the Decision Package v2. |
 | `evaluations.exportJson(id, { tier })` | Export JSON; tiers `summary` \| `standard` \| `scale`. |
