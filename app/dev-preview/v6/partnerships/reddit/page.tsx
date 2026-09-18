@@ -61,11 +61,6 @@ export default function RedditPartnershipPage() {
           </div>
         </section>
 
-        <footer className="v6-pr__foot">
-          <p>Advertising partnership for audience reach through Reddit Ads.</p>
-          <time dateTime="2026-09-14">Established September 14, 2026</time>
-        </footer>
-
       </div>
     </main>
   );
