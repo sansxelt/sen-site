@@ -1,4 +1,5 @@
 import { v6meta } from "../../_system/meta";
+import "./partnership.css";
 
 export const metadata = v6meta({
   title: "Reddit partnership",
@@ -12,68 +13,59 @@ export const metadata = v6meta({
 
 const FACTS = [
   ["Partner", "Reddit"],
-  ["Date", "September 14, 2026"],
-  ["Focus", "Audience reach and Reddit Ads"],
+  ["Established", "September 14, 2026"],
+  ["Focus", "Audience reach through Reddit Ads"],
 ] as const;
 
 export default function RedditPartnershipPage() {
   return (
-    <>
-      <section className="v6-sec v6-sec--tight">
-        <div className="v6-wrap">
-          <div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
-              <p className="v6-eyebrow" style={{ margin: 0 }}>Partnership record</p>
-              <span className="v6-eyebrow" style={{ margin: 0, padding: "8px 11px", border: "1px solid var(--line-2)", borderRadius: 999 }}>
-                Partnered 2026
-              </span>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", gap: "clamp(34px, 7vw, 100px)", alignItems: "end", marginTop: "clamp(28px, 5vw, 64px)" }}>
-              <div>
-                <h1 className="v6-dl" style={{ margin: 0 }}>Vraelis × Reddit</h1>
-                <p className="v6-lead" style={{ marginTop: 20, maxWidth: "38rem" }}>
-                  Vraelis entered an advertising partnership with Reddit focused on reaching and engaging relevant audiences through Reddit Ads.
-                </p>
-              </div>
-              <dl style={{ margin: 0, borderTop: "1px solid var(--line-2)" }}>
-                {FACTS.map(([term, value]) => (
-                  <div key={term} style={{ display: "grid", gridTemplateColumns: "90px 1fr", gap: 20, padding: "16px 0", borderBottom: "1px solid var(--line-2)" }}>
-                    <dt className="v6-eyebrow" style={{ margin: 0 }}>{term}</dt>
-                    <dd style={{ margin: 0, color: "var(--ink)", fontSize: 15 }}>{value}</dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          </div>
-        </div>
-      </section>
+    <main className="v6-pr">
+      <div className="v6-wrap">
+        <header className="v6-pr__mast">
+          <p className="v6-pr__index">Partnership record</p>
+          <p className="v6-pr__date">September 14, 2026</p>
+        </header>
 
-      <section className="v6-sec">
-        <div className="v6-wrap" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", gap: "clamp(34px, 7vw, 100px)" }}>
-          <div>
-            <p className="v6-eyebrow">The record</p>
-            <h2 className="v6-dm" style={{ margin: "12px 0 16px" }}>What the partnership means.</h2>
-            <p className="v6-body" style={{ maxWidth: "58ch" }}>
-              The relationship gives Vraelis a direct path to develop its presence and advertising work on Reddit. Any specific campaign or measured result will be named only after it exists.
-            </p>
+        <section className="v6-pr__hero" aria-labelledby="partnership-title">
+          <div className="v6-pr__identity">
+            <p className="v6-pr__overline">Vraelis and Reddit</p>
+            <h1 id="partnership-title">A partnership built around reaching the right audiences.</h1>
           </div>
-          <div>
-            <p className="v6-eyebrow">The boundary</p>
-            <h2 className="v6-dm" style={{ margin: "12px 0 16px" }}>No claim beyond the partnership.</h2>
-            <p className="v6-body" style={{ maxWidth: "58ch" }}>
-              This record does not claim campaign performance, exclusivity, private user-data access or a Reddit endorsement of Vraelis products.
+
+          <div className="v6-pr__introduction">
+            <p>
+              Vraelis partnered with Reddit to build its presence and connect with relevant audiences through Reddit Ads.
             </p>
-            <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginTop: 22 }}>
-              <a href="https://www.reddit.com/" target="_blank" rel="noopener noreferrer" className="v6-plink">
-                Visit Reddit&nbsp; ↗
+            <div className="v6-pr__links" aria-label="Partnership links">
+              <a href="https://www.reddit.com/" target="_blank" rel="noopener noreferrer">
+                Visit Reddit <span aria-hidden="true">↗</span>
               </a>
-              <a href="https://www.business.reddit.com/" target="_blank" rel="noopener noreferrer" className="v6-plink">
-                Reddit for Business&nbsp; ↗
+              <a href="https://www.business.reddit.com/" target="_blank" rel="noopener noreferrer">
+                Reddit for Business <span aria-hidden="true">↗</span>
               </a>
             </div>
           </div>
-        </div>
-      </section>
-    </>
+        </section>
+
+        <dl className="v6-pr__facts">
+          {FACTS.map(([term, value], index) => (
+            <div className="v6-pr__fact" key={term}>
+              <dt><span>{String(index + 1).padStart(2, "0")}</span>{term}</dt>
+              <dd>{value}</dd>
+            </div>
+          ))}
+        </dl>
+
+        <section className="v6-pr__record" aria-labelledby="record-heading">
+          <p className="v6-pr__record-label">The record</p>
+          <div className="v6-pr__record-copy">
+            <h2 id="record-heading">What the relationship covers.</h2>
+            <p>
+              The partnership supports Vraelis&apos;s audience development and advertising work on Reddit. Public campaign work and measured outcomes will be added here when they exist.
+            </p>
+          </div>
+        </section>
+      </div>
+    </main>
   );
 }
