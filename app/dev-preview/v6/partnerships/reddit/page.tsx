@@ -1,4 +1,5 @@
 import { v6meta } from "../../_system/meta";
+import { MARK_PATH, MARK_VIEWBOX } from "@/lib/brand-mark";
 import "./partnership.css";
 
 export const metadata = v6meta({
@@ -11,61 +12,59 @@ export const metadata = v6meta({
   ogDescription: "A 2026 advertising partnership focused on audience reach through Reddit Ads.",
 });
 
-const FACTS = [
-  ["Relationship", "Advertising partnership"],
-  ["Focus", "Audience reach through Reddit Ads"],
-  ["Record", "Established September 14, 2026"],
-] as const;
+function VraelisMark() {
+  return <svg viewBox={MARK_VIEWBOX} role="img" aria-label="Vraelis"><path d={MARK_PATH} fill="currentColor" /></svg>;
+}
+
+function RedditMark() {
+  return (
+    <svg viewBox="0 0 64 64" role="img" aria-label="Reddit">
+      <path d="M42.5 18.5 45 8l8.5 2.25" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="55" cy="11" r="4" fill="none" stroke="currentColor" strokeWidth="3" />
+      <path d="M14.5 27.5c4-6.5 10-9.5 17.5-9.5s13.5 3 17.5 9.5c5.5-.75 9.5 2.25 9.5 7 0 3-1.75 5.25-4.5 6.5.25 1 .5 2 .5 3 0 10-10.25 18-23 18S9 54 9 44c0-1 .25-2 .5-3-2.75-1.25-4.5-3.5-4.5-6.5 0-4.75 4-7.75 9.5-7Z" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="23" cy="39" r="3" fill="currentColor" />
+      <circle cx="41" cy="39" r="3" fill="currentColor" />
+      <path d="M22 49c3 2.5 6.25 3.75 10 3.75S39 51.5 42 49" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 export default function RedditPartnershipPage() {
   return (
     <main className="v6-pr" data-nav-dark data-nav-theme="dark">
       <div className="v6-pr__wrap">
         <header className="v6-pr__mast">
-          <p className="v6-pr__index">Partnership record · 01</p>
-          <p className="v6-pr__date">Vraelis / Reddit / 2026</p>
+          <p className="v6-pr__index">Partnership record</p>
+          <p className="v6-pr__date">September 14, 2026</p>
         </header>
 
         <section className="v6-pr__hero" aria-labelledby="partnership-title">
           <div className="v6-pr__identity">
-            <p className="v6-pr__overline">Audience and advertising</p>
-            <h1 id="partnership-title">Vraelis <span>×</span> Reddit</h1>
-            <p className="v6-pr__statement">A partnership for reaching the right audiences.</p>
-            <p className="v6-pr__introduction">
-              Vraelis partnered with Reddit to develop its presence and connect with relevant communities through Reddit Ads.
-            </p>
-            <div className="v6-pr__links" aria-label="Partnership links">
-              <a href="https://www.reddit.com/" target="_blank" rel="noopener noreferrer">
-                Visit Reddit <span aria-hidden="true">↗</span>
-              </a>
-              <a href="https://www.business.reddit.com/" target="_blank" rel="noopener noreferrer">
-                Reddit for Business <span aria-hidden="true">↗</span>
-              </a>
+            <div className="v6-pr__marks" aria-label="Vraelis and Reddit">
+              <span><VraelisMark /></span>
+              <i aria-hidden="true">×</i>
+              <span><RedditMark /></span>
             </div>
+            <h1 id="partnership-title">Vraelis <span>×</span> Reddit</h1>
           </div>
 
-          <aside className="v6-pr__date-card" aria-label="Partnership established September 14, 2026">
-            <div className="v6-pr__orbit" aria-hidden="true">
-              <span>V</span>
-              <i>×</i>
-              <span>R</span>
+          <div className="v6-pr__story">
+            <p className="v6-pr__overline">Audience and advertising</p>
+            <h2>A direct path to relevant communities.</h2>
+            <p>
+              Vraelis partnered with Reddit to develop its presence and reach engaged audiences through Reddit Ads.
+            </p>
+            <div className="v6-pr__links" aria-label="Partnership links">
+              <a href="https://www.reddit.com/" target="_blank" rel="noopener noreferrer">Visit Reddit <span aria-hidden="true">↗</span></a>
+              <a href="https://www.business.reddit.com/" target="_blank" rel="noopener noreferrer">Reddit for Business <span aria-hidden="true">↗</span></a>
             </div>
-            <div className="v6-pr__date-lockup">
-              <p>Established</p>
-              <strong>09.14</strong>
-              <span>2026</span>
-            </div>
-          </aside>
+          </div>
         </section>
 
-        <dl className="v6-pr__facts">
-          {FACTS.map(([term, value], index) => (
-            <div className="v6-pr__fact" key={term}>
-              <dt><span>{String(index + 1).padStart(2, "0")}</span>{term}</dt>
-              <dd>{value}</dd>
-            </div>
-          ))}
-        </dl>
+        <footer className="v6-pr__foot">
+          <p>Advertising partnership for audience reach through Reddit Ads.</p>
+          <time dateTime="2026-09-14">Established September 14, 2026</time>
+        </footer>
 
       </div>
     </main>
