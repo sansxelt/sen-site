@@ -47,7 +47,7 @@ export const CATEGORY = "Independent verification for AI-built systems";
  *  a reader either recognises the first line or is not the customer. */
 export const HEADLINE: [string, string] = [
   "Your agent says it works.",
-  "Vraelis checks the live system and answers Verified, Failed, or Blocked.",
+  "Vraelis checks it.",
 ];
 
 /** ONE paragraph under the headline: the loop, once, in the order it happens. Under 45 words.
