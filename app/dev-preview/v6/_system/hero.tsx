@@ -41,8 +41,9 @@ export function Hero() {
         </div>
         <a className="v6-h__partnership" href={`${V6_BASE}/partnerships/reddit`}
           aria-label="Read the Vraelis and Reddit partnership record.">
+          <span className="v6-h__partnership-label">Partnership record</span>
           <strong>Vraelis × Reddit</strong>
-          <span>Partnership record&nbsp; →</span>
+          <span className="v6-h__partnership-meta">Partnered in 2026&nbsp; ↗</span>
         </a>
       </div>
     </section>
