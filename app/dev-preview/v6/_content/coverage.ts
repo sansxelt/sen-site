@@ -45,7 +45,7 @@ export type Surface = {
 
 /** The one idea the ladder rests on. Stated once, here, so no page re-argues it. */
 export const COVERAGE_THESIS =
-  "The model does not change from one kind of system to the next. A requirement is written down and held outside the code, the running system is exercised against it under controlled conditions, what happened is captured as evidence, and a decision is made by something other than the thing that did the work. What changes is only how the system is reached and what counts as evidence once you are there. That is why the list below is a reach problem rather than a second product.";
+  "Vraelis holds the requirement outside the system, exercises what is running, captures what happened, and returns an independent decision. That model stays the same across web apps, APIs, native software and physical systems. Only the connection and the evidence change.";
 
 /** Ordered deliberately: what is real first, then outward by how far it is from what is real. */
 export const SURFACES: readonly Surface[] = [

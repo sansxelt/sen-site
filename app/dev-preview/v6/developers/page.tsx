@@ -16,7 +16,7 @@ import { V6_BASE } from "@/lib/v6-routes";
 export const metadata = v6meta({
   title: "Developers",
   description:
-    "Drive Vraelis verification from your own systems. Submit a deployment and a claim over the API, approve the plan Vraelis derives, read an explainable decision with evidence, gate CI on that decision, and receive signed verification.completed webhooks.",
+    "Use the Vraelis API, CLI and webhooks to submit checks, approve plans, read evidence-backed decisions and gate automation.",
   path: "/developers",
 });
 
@@ -310,7 +310,7 @@ export default function DevelopersPage() {
       <PageHero
         kicker="Developers"
         title="Invoke the verification engine from your own systems."
-        lead="Send a deployment and a claim, approve the plan Vraelis derives from it, and get back an explainable decision with evidence. Four calls: submit, approve, run, read. Every shape below is copied from the shipped API."
+        lead="Send a live app or HTTP API and a claim, approve the plan Vraelis derives, and get back an explainable decision with evidence. Four calls: submit, approve, run, read."
         cta={<><CTA brand>Create an API key</CTA><EditorialLink href="#api">Read the API</EditorialLink></>}
       />
 
@@ -497,8 +497,8 @@ export default function DevelopersPage() {
           <Reveal>
             <SectionHead
               eyebrow="Integrations"
-              title="GitHub, Vercel, and Slack, from the same primitives."
-              lead="Gate a deploy from GitHub Actions with the API and an approved plan, point a verification at a Vercel preview or production URL, and route the result into Slack. Each one is the API or a webhook wired to a place you already work, not a separate product."
+              title="API, CLI and webhooks are the product boundary."
+              lead="Start and read verification through the API, gate automation with the CLI, and send signed decisions into the systems you already operate. GitHub, Vercel and Slack are examples of those primitives in use, not the center of Vraelis."
             />
           </Reveal>
           <Reveal style={{ marginTop: 24 }}>
@@ -536,7 +536,7 @@ export default function DevelopersPage() {
                   "Guarantee and assignment APIs",
                   "Agent memory and reliability APIs",
                   "Continuous agent-activity ingestion",
-                  "IDE, desktop, and MCP surfaces",
+                  "An SDK for native applications, devices and physical systems",
                 ].map((t) => <li key={t} style={{ fontSize: 14.5, lineHeight: 1.55, color: "var(--ink-3)" }}>{t}</li>)}
               </ul>
               <p style={{ margin: "14px 0 0", fontSize: 13, color: "var(--ink-4)", lineHeight: 1.55 }}>

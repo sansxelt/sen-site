@@ -21,11 +21,11 @@ import { V6_BASE } from "@/lib/v6-routes";
 export const metadata: Metadata = v6meta({
   title: "Platform",
   description:
-    "How Vraelis proves one guarantee: the plan a person approves, the real browser run against your live deployment, the evidence it captures, and the single decision it ends on.",
+    "How Vraelis checks a live web application or HTTP API: one guarantee, one approved plan, one evidence-backed decision.",
   path: "/platform",
   ogTitle: "The Vraelis platform",
   ogDescription:
-    "One guarantee, one approved plan, one real browser run against the deployment you pinned, and one decision: Verified, Failed, or Blocked.",
+    "One guarantee, one approved plan, and one evidence-backed decision: Verified, Failed, or Blocked.",
 });
 
 const BASE = V6_BASE;
@@ -340,8 +340,8 @@ export default function Platform() {
         // the loop itself, in the order it happens, in the product's own words. Three short sentences rather
         // than one long clause: the h1 wraps to two lines at every width the hero is used at, and a reader
         // scanning it gets the whole loop from the line breaks alone.
-        title="Write one guarantee. Approve the plan. A real browser proves it on your live deployment."
-        lead="This is the mechanism, in the order it runs. Vraelis crawls the system you connect, derives the requirements and browser journeys your guarantee implies, and shows you that plan. You approve it, a hosted Chromium browser drives the pinned deployment step by step, and the run ends on one of three words with the screenshots and the step record kept behind it."
+        title="One guarantee. One approved plan. One decision with evidence."
+        lead="Connect a live web app or HTTP API. Vraelis derives a check from the outcome you need, asks a person to approve it, runs the check, and returns Verified, Failed, or Blocked with the record attached."
         cta={
           <>
             <CTA brand lg>Open Vraelis</CTA>

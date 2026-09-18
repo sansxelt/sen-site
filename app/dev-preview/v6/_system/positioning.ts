@@ -37,7 +37,7 @@
  *  becomes rather than a thing a visitor can buy, and it collided with the four other category sentences
  *  live on other surfaces. This one is the same claim lib/social-card.ts already makes to every scraper,
  *  in the grammatical form an eyebrow needs, so the page and the link preview finally agree. */
-export const CATEGORY = "Independent verification for AI-built software";
+export const CATEGORY = "Independent verification for AI-built systems";
 
 /** THE HEADLINE, as two clauses: the situation, then the answer.
  *
@@ -47,7 +47,7 @@ export const CATEGORY = "Independent verification for AI-built software";
  *  a reader either recognises the first line or is not the customer. */
 export const HEADLINE: [string, string] = [
   "Your agent says it works.",
-  "Vraelis checks your live site and answers Verified, Failed, or Blocked.",
+  "Vraelis checks the live system and answers Verified, Failed, or Blocked.",
 ];
 
 /** ONE paragraph under the headline: the loop, once, in the order it happens. Under 45 words.
@@ -57,16 +57,16 @@ export const HEADLINE: [string, string] = [
  *  Chromium session driven against the pinned deployment, and the evidence is the per-step record,
  *  screenshots, console errors and failed requests. No verb here is aspirational. */
 export const SUPPORT =
-  "Give it a deployment URL and one sentence about what has to keep working. Vraelis writes the browser steps that would prove it, shows them to you for approval, then runs them on the real site and returns the evidence behind one decision.";
+  "Connect a live app or HTTP API and state what must keep working. Approve the check; Vraelis runs it and returns one decision with the evidence behind it.";
 
 /** Page title and meta description.
  *
  *  A search result is the surface where an unsupportable claim travels furthest, so the description makes
  *  exactly the claim the run itself produces and no larger one. It also has to survive being read with no
  *  page around it, which is the second reason it names all three answers rather than only Verified. */
-export const META_TITLE = "Vraelis | Independent verification for AI-built software";
+export const META_TITLE = "Vraelis | Independent verification for AI-built systems";
 export const META_DESCRIPTION =
-  "Your AI agent says the feature works. Vraelis checks your live deployment in a real browser and answers Verified, Failed, or Blocked, with the evidence behind it.";
+  "Vraelis checks AI-built web applications and HTTP APIs and answers Verified, Failed, or Blocked, with the evidence behind the decision.";
 
 /**
  * Link-preview text. Re-exported from lib/social-card.ts, which is the single source for every surface:
@@ -80,7 +80,7 @@ export const OG_BEATS: [string, string, string] = ["The claim", "The evidence", 
 /** Closing scene. One statement, one short line. No recap, no feature list. */
 export const CLOSE_TITLE = "Ship what you can stand behind.";
 export const CLOSE_SAY =
-  "One sentence about what has to keep working, checked on the deployment you actually shipped, with the evidence kept for every failure, repair and successful run.";
+  "One requirement held outside the system, one approved check, and one decision with the evidence attached.";
 
 /** The statement in the footer.
  *
