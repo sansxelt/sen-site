@@ -3,17 +3,17 @@ import { v6meta } from "../../_system/meta";
 export const metadata = v6meta({
   title: "Reddit partnership",
   description:
-    "The public record of Vraelis's 2026 partnership with Reddit, centered on advertising data and work through Reddit's advertising platform.",
+    "The public record of Vraelis's 2026 advertising partnership with Reddit, focused on reaching and engaging audiences through Reddit Ads.",
   path: "/partnerships/reddit",
   type: "website",
   ogTitle: "Vraelis × Reddit",
-  ogDescription: "A 2026 partnership centered on advertising data and Reddit Ads.",
+  ogDescription: "A 2026 advertising partnership focused on audience reach through Reddit Ads.",
 });
 
 const FACTS = [
   ["Partner", "Reddit"],
   ["Date", "September 14, 2026"],
-  ["Focus", "Advertising data and Reddit Ads"],
+  ["Focus", "Audience reach and Reddit Ads"],
 ] as const;
 
 export default function RedditPartnershipPage() {
@@ -32,7 +32,7 @@ export default function RedditPartnershipPage() {
               <div>
                 <h1 className="v6-dl" style={{ margin: 0 }}>Vraelis × Reddit</h1>
                 <p className="v6-lead" style={{ marginTop: 20, maxWidth: "38rem" }}>
-                  Vraelis entered a partnership with Reddit centered on advertising data and work through Reddit&apos;s advertising platform.
+                  Vraelis entered an advertising partnership with Reddit focused on reaching and engaging relevant audiences through Reddit Ads.
                 </p>
               </div>
               <dl style={{ margin: 0, borderTop: "1px solid var(--line-2)" }}>
@@ -54,7 +54,7 @@ export default function RedditPartnershipPage() {
             <p className="v6-eyebrow">The record</p>
             <h2 className="v6-dm" style={{ margin: "12px 0 16px", color: "var(--g-fg)" }}>What the partnership means.</h2>
             <p className="v6-body" style={{ color: "var(--g-fg-2)", maxWidth: "58ch" }}>
-              The relationship gives Vraelis a formal path to work with Reddit&apos;s advertising data and advertising capabilities. Any specific integration, campaign or measured result will be named only after it exists.
+              The relationship gives Vraelis a direct path to develop its presence and advertising work on Reddit. Any specific campaign or measured result will be named only after it exists.
             </p>
           </div>
           <div>
