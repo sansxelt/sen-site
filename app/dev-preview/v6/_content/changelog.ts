@@ -17,9 +17,41 @@
 // are read together and cannot disagree. A changelog is a record of the past; a roadmap sitting inside one
 // eventually reads as though it already happened. The single Direction entry at the foot of this file is the
 // exception and is dated, because on that date the direction itself was the news.
-export type Entry = { date: string; tag: "go" | "wait"; tagLabel: string; title: string; body: string[]; note?: string };
+export type Entry = { date: string; tag: "go" | "wait"; tagLabel: string; title: string; body: string[]; note?: string; href?: string; hrefLabel?: string };
 
 export const CHANGELOG: Entry[] = [
+  {
+    date: "2026-09-17",
+    tag: "go",
+    tagLabel: "Established",
+    title: "Vraelis and Reddit",
+    body: [
+      "Vraelis established an advertising relationship with Reddit to develop its presence and reach relevant communities through Reddit Ads. The published record names the date and scope without claiming endorsement, exclusivity, campaign performance or private user-data access.",
+    ],
+    href: "/partnerships/reddit",
+    hrefLabel: "Read the partnership record",
+  },
+  {
+    date: "2026-09-07",
+    tag: "go",
+    tagLabel: "Shipped",
+    title: "Verified now means the evidence earned it",
+    body: [
+      "The console could briefly render Verified while a decision was still being derived, and the same signal was drawn nine different ways across the product. The premature result is gone and the decision state now comes from one shared system.",
+      "The public launch was tightened at the same time: missing routes stop inviting search engines to index them, attribution no longer collapses a large share of visits into other, and the repository check runs against the same code that is deployed.",
+    ],
+  },
+  {
+    date: "2026-08-25",
+    tag: "go",
+    tagLabel: "Hardened",
+    title: "The launch paths were re-attacked before they were trusted",
+    body: [
+      "An independent security pass and follow-up review closed cross-tenant reads, incomplete session revocation, weak sign-in limits, unsafe outbound requests, origin gaps, unbounded resources and payment decisions that could rely on model output alone.",
+      "Database privilege changes were rehearsed against staging, applied in an ordered production migration and paired with rollback verification. Credit holds, expirations and payment caps now use atomic database operations rather than read-then-write decisions.",
+    ],
+    note: "This records the reviewed launch surface. It is not a claim that future code or every dependency is free of defects.",
+  },
   {
     date: "2026-08-10",
     tag: "go",

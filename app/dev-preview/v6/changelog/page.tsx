@@ -34,6 +34,7 @@ export default function Changelog() {
                 <div>
                   <h2 className="v6-clog__t">{e.title}</h2>
                   <div className="v6-clog__b">{e.body.map((p, i) => <p key={i}>{p}</p>)}</div>
+                  {e.href ? <p style={{ marginTop: 18 }}><ProseLink href={`${BASE}${e.href}`}>{e.hrefLabel ?? "Read the record"}</ProseLink></p> : null}
                   {/* THE LABEL FOLLOWS THE ENTRY, IT IS NOT ALWAYS "DIRECTION".
                       It was hardcoded, which silently meant a SHIPPED entry could not carry a caveat: the
                       note would have been introduced as Direction, i.e. the page would have announced a
