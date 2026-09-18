@@ -12,29 +12,27 @@ export const metadata = v6meta({
 });
 
 const FACTS = [
-  ["Partner", "Reddit"],
-  ["Established", "September 14, 2026"],
+  ["Relationship", "Advertising partnership"],
   ["Focus", "Audience reach through Reddit Ads"],
+  ["Record", "Established September 14, 2026"],
 ] as const;
 
 export default function RedditPartnershipPage() {
   return (
-    <main className="v6-pr">
-      <div className="v6-wrap">
+    <main className="v6-pr" data-nav-dark data-nav-theme="dark">
+      <div className="v6-pr__wrap">
         <header className="v6-pr__mast">
-          <p className="v6-pr__index">Partnership record</p>
-          <p className="v6-pr__date">September 14, 2026</p>
+          <p className="v6-pr__index">Partnership record · 01</p>
+          <p className="v6-pr__date">Vraelis / Reddit / 2026</p>
         </header>
 
         <section className="v6-pr__hero" aria-labelledby="partnership-title">
           <div className="v6-pr__identity">
-            <p className="v6-pr__overline">Vraelis and Reddit</p>
-            <h1 id="partnership-title">A partnership built around reaching the right audiences.</h1>
-          </div>
-
-          <div className="v6-pr__introduction">
-            <p>
-              Vraelis partnered with Reddit to build its presence and connect with relevant audiences through Reddit Ads.
+            <p className="v6-pr__overline">Audience and advertising</p>
+            <h1 id="partnership-title">Vraelis <span>×</span> Reddit</h1>
+            <p className="v6-pr__statement">A partnership for reaching the right audiences.</p>
+            <p className="v6-pr__introduction">
+              Vraelis partnered with Reddit to develop its presence and connect with relevant communities through Reddit Ads.
             </p>
             <div className="v6-pr__links" aria-label="Partnership links">
               <a href="https://www.reddit.com/" target="_blank" rel="noopener noreferrer">
@@ -45,6 +43,19 @@ export default function RedditPartnershipPage() {
               </a>
             </div>
           </div>
+
+          <aside className="v6-pr__date-card" aria-label="Partnership established September 14, 2026">
+            <div className="v6-pr__orbit" aria-hidden="true">
+              <span>V</span>
+              <i>×</i>
+              <span>R</span>
+            </div>
+            <div className="v6-pr__date-lockup">
+              <p>Established</p>
+              <strong>09.14</strong>
+              <span>2026</span>
+            </div>
+          </aside>
         </section>
 
         <dl className="v6-pr__facts">
@@ -56,15 +67,6 @@ export default function RedditPartnershipPage() {
           ))}
         </dl>
 
-        <section className="v6-pr__record" aria-labelledby="record-heading">
-          <p className="v6-pr__record-label">The record</p>
-          <div className="v6-pr__record-copy">
-            <h2 id="record-heading">What the relationship covers.</h2>
-            <p>
-              The partnership supports Vraelis&apos;s audience development and advertising work on Reddit. Public campaign work and measured outcomes will be added here when they exist.
-            </p>
-          </div>
-        </section>
       </div>
     </main>
   );

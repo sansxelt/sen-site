@@ -57,7 +57,7 @@ export const V6_IS_LIVE = V6_BASE === "";
 /* ── THE GROUND A ROUTE OPENS ON ───────────────────────────────────────────────────────────────────────
  *
  * Three grounds exist and every document is one of them:
- *   graphite  the product, the auth round-trip, the v6 homepage and the docs environment
+ *   graphite  the product, the auth round-trip, the v6 homepage, partnership records and the docs environment
  *   paper     every other v6 route, which opens on a white page hero
  *   cream     the previous generation of the marketing site
  *
@@ -79,12 +79,13 @@ export const GROUND_CSS: Record<Ground, { bg: string; scheme: "dark" | "light" }
   cream: { bg: "#FAF8F4", scheme: "light" },
 };
 
-/** Which ground a v6 route opens on. The homepage opens on a black hero and the docs environment is night;
- *  every other v6 route opens on a page hero. Shared with the shell so the nav bar and the document canvas
+/** Which ground a v6 route opens on. The homepage and partnership records open on black, and the docs
+ *  environment is night; every other v6 route opens on a page hero. Shared with the shell so the nav bar and the document canvas
  *  can never disagree about what colour the top of the page is. */
 export function v6GroundAtTop(pathname: string): Ground {
   if (pathname === V6_BASE || pathname === V6_BASE + "/" || pathname === "/") return "graphite";
   if (pathname.startsWith(V6_BASE + "/docs")) return "graphite";
+  if (pathname.startsWith(V6_BASE + "/partnerships/")) return "graphite";
   return "paper";
 }
 export const V6_COMPANY = `${V6_BASE}/company`;
