@@ -48,24 +48,29 @@ export default function RedditPartnershipPage() {
         </div>
       </section>
 
-      <section className="v6-sec v6-dark" data-nav-dark>
+      <section className="v6-sec">
         <div className="v6-wrap" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", gap: "clamp(34px, 7vw, 100px)" }}>
           <div>
             <p className="v6-eyebrow">The record</p>
-            <h2 className="v6-dm" style={{ margin: "12px 0 16px", color: "var(--g-fg)" }}>What the partnership means.</h2>
-            <p className="v6-body" style={{ color: "var(--g-fg-2)", maxWidth: "58ch" }}>
+            <h2 className="v6-dm" style={{ margin: "12px 0 16px" }}>What the partnership means.</h2>
+            <p className="v6-body" style={{ maxWidth: "58ch" }}>
               The relationship gives Vraelis a direct path to develop its presence and advertising work on Reddit. Any specific campaign or measured result will be named only after it exists.
             </p>
           </div>
           <div>
             <p className="v6-eyebrow">The boundary</p>
-            <h2 className="v6-dm" style={{ margin: "12px 0 16px", color: "var(--g-fg)" }}>No claim beyond the partnership.</h2>
-            <p className="v6-body" style={{ color: "var(--g-fg-2)", maxWidth: "58ch" }}>
+            <h2 className="v6-dm" style={{ margin: "12px 0 16px" }}>No claim beyond the partnership.</h2>
+            <p className="v6-body" style={{ maxWidth: "58ch" }}>
               This record does not claim campaign performance, exclusivity, private user-data access or a Reddit endorsement of Vraelis products.
             </p>
-            <a href="https://www.business.reddit.com/" target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", marginTop: 22, color: "var(--g-fg)", textDecoration: "none", borderBottom: "1px solid var(--g-line)", paddingBottom: 5 }}>
-              Visit Reddit for Business&nbsp; ↗
-            </a>
+            <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginTop: 22 }}>
+              <a href="https://www.reddit.com/" target="_blank" rel="noopener noreferrer" className="v6-plink">
+                Visit Reddit&nbsp; ↗
+              </a>
+              <a href="https://www.business.reddit.com/" target="_blank" rel="noopener noreferrer" className="v6-plink">
+                Reddit for Business&nbsp; ↗
+              </a>
+            </div>
           </div>
         </div>
       </section>

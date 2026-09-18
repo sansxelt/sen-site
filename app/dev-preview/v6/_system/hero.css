@@ -56,8 +56,8 @@
    470px to 545px handover above absorbs. */
 .v6-h__h1 { font-family: var(--display); font-weight: 400; letter-spacing: -0.012em; line-height: 1.04;
   font-synthesis-weight: none;
-  color: var(--g-fg); margin: clamp(10px, 2vh, 24px) 0 0; font-size: clamp(2.05rem, 4.35vw, 3.95rem);
-  max-width: 22ch; text-wrap: balance; }
+  color: var(--g-fg); margin: clamp(10px, 2vh, 24px) 0 0; font-size: clamp(2.35rem, 5.8vw, 5.25rem);
+  max-width: 18ch; text-wrap: balance; }
 .v6-h__h1 .lead-clause { color: var(--g-fg-3); }
 .v6-h__say { margin: clamp(12px, 2.2vh, 26px) 0 0; max-width: 62ch;
   font-size: clamp(1rem, 1.2vw, 1.16rem); line-height: 1.6; color: var(--g-fg-2); }
@@ -80,7 +80,7 @@
   /* Same correction one breakpoint down: 8vh clears 40px only above 500px of height, so a phone held
      sideways got a constant here too. */
   .v6-h { min-height: calc(100svh - var(--nav-h, 62px)); padding-block: clamp(20px, 8vh, 72px); }
-  .v6-h__h1 { font-size: clamp(1.85rem, 7.6vw, 2.6rem); max-width: 17ch; }
+  .v6-h__h1 { font-size: clamp(2.1rem, 9vw, 3.15rem); max-width: 16ch; }
   .v6-h__say { font-size: 1rem; max-width: 42ch; }
 }
 
