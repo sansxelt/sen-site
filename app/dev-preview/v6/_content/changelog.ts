@@ -21,6 +21,17 @@ export type Entry = { date: string; tag: "go" | "wait"; tagLabel: string; title:
 
 export const CHANGELOG: Entry[] = [
   {
+    date: "2026-09-27",
+    tag: "wait",
+    tagLabel: "In conversation",
+    title: "Vraelis and ByteDance",
+    body: [
+      "ByteDance’s AI partnerships team reached out on August 17 about helping builders reduce model costs with its Seed models. The conversation is active and nothing is finalized; the record says exactly that and claims no endorsement, agreement or integration.",
+    ],
+    href: "/partnerships/bytedance",
+    hrefLabel: "Read the record",
+  },
+  {
     date: "2026-09-18",
     tag: "go",
     tagLabel: "Shipped",

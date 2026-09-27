@@ -39,12 +39,21 @@ export function Hero() {
               the Direction chapter keep the long form, where there is room for it. */}
           <EditorialLink href={`${V6_BASE}/platform#current`}>What is built</EditorialLink>
         </div>
-        <a className="v6-h__partnership" href={`${V6_BASE}/partnerships/reddit`}
-          aria-label="Read the Vraelis and Reddit partnership record.">
-          <span className="v6-h__partnership-label">Partnership record</span>
-          <strong>Vraelis × Reddit</strong>
-          <span className="v6-h__partnership-meta">Partnered in 2026&nbsp; ↗</span>
-        </a>
+        <div className="v6-h__partnerships">
+          <a className="v6-h__partnership" href={`${V6_BASE}/partnerships/reddit`}
+            aria-label="Read the Vraelis and Reddit partnership record.">
+            <span className="v6-h__partnership-label">Partnership record</span>
+            <strong>Vraelis × Reddit</strong>
+            <span className="v6-h__partnership-meta">Partnered in 2026&nbsp; ↗</span>
+          </a>
+          {/* An active conversation, labelled as one. It is not a partnership until it is signed. */}
+          <a className="v6-h__partnership" href={`${V6_BASE}/partnerships/bytedance`}
+            aria-label="Read the record of the Vraelis and ByteDance conversation.">
+            <span className="v6-h__partnership-label">Partnership conversation</span>
+            <strong>Vraelis × ByteDance</strong>
+            <span className="v6-h__partnership-meta">In conversation since August 2026&nbsp; ↗</span>
+          </a>
+        </div>
       </div>
     </section>
   );

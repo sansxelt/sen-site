@@ -62,7 +62,9 @@
 .v6-h__say { margin: clamp(12px, 2.2vh, 26px) 0 0; max-width: 62ch;
   font-size: clamp(1rem, 1.2vw, 1.16rem); line-height: 1.6; color: var(--g-fg-2); }
 .v6-h__cta { margin-top: clamp(16px, 3.4vh, 44px); display: flex; align-items: center; gap: 26px; flex-wrap: wrap; }
-.v6-h__partnership { position: absolute; top: 2px; right: var(--gutter); width: clamp(260px, 25vw, 360px);
+.v6-h__partnerships { position: absolute; top: 2px; right: var(--gutter); width: clamp(260px, 25vw, 360px);
+  display: grid; gap: 28px; }
+.v6-h__partnership {
   display: grid; gap: 12px; padding-top: 20px; border-top: 1px solid var(--g-line);
   color: var(--g-fg); text-decoration: none; }
 .v6-h__partnership-label { color: var(--g-fg-3); font-size: 0.7rem; font-weight: 600;
@@ -78,7 +80,7 @@
   .v6-h__h1 { max-width: 18ch; }
 }
 @media (max-width: 980px) {
-  .v6-h__partnership { position: static; margin-top: clamp(26px, 4vh, 40px); width: min(100%, 360px); }
+  .v6-h__partnerships { position: static; margin-top: clamp(26px, 4vh, 40px); width: min(100%, 360px); gap: 22px; }
 }
 @media (max-width: 720px) {
   /* Same correction one breakpoint down: 8vh clears 40px only above 500px of height, so a phone held
