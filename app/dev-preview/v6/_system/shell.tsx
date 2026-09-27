@@ -117,7 +117,7 @@ const MENUS: Menu[] = [
       { h: "Company", links: [
         { t: "About Vraelis", d: "Who is building this", href: BASE + "/company" },
         { t: "Reddit partnership", d: "Audience and advertising record", href: BASE + "/partnerships/reddit" },
-        { t: "ByteDance conversation", d: "Seed models, not yet finalized", href: BASE + "/partnerships/bytedance" },
+        { t: "ByteDance conversation", d: "TikTok's parent company, not yet final", href: BASE + "/partnerships/bytedance" },
         { t: "Who it is for", d: "And who it is not for yet", href: BASE + "/company#who" },
         { t: "How this is different", d: "Against the categories, not the companies", href: BASE + "/company#different",
           preview: { eyebrow: "How this is different", title: "Four things it is not, and what it does instead.", body: "Not the agent's own report, not a test suite, not monitoring. And it refuses rather than guesses: when no check could prove the claim, the answer is Blocked and nothing is charged.", stat: "Stated against categories" } },

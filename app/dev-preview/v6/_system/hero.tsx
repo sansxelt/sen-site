@@ -51,6 +51,7 @@ export function Hero() {
             aria-label="Read the record of the Vraelis and ByteDance conversation.">
             <span className="v6-h__partnership-label">Partnership conversation</span>
             <strong>Vraelis × ByteDance</strong>
+            <span className="v6-h__partnership-note">The company behind TikTok</span>
             <span className="v6-h__partnership-meta">In conversation since August 2026&nbsp; ↗</span>
           </a>
         </div>

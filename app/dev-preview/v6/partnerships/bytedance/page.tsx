@@ -8,11 +8,11 @@ import "./bytedance.css";
 export const metadata = v6meta({
   title: "ByteDance partnership conversation",
   description:
-    "The public record of ByteDance's August 2026 outreach to Vraelis about its Seed model family. The conversation is active; no partnership has been finalized.",
+    "The public record of ByteDance's (the company behind TikTok) August 2026 outreach to Vraelis about its Seed model family. The conversation is active; no partnership has been finalized.",
   path: "/partnerships/bytedance",
   type: "website",
   ogTitle: "Vraelis × ByteDance",
-  ogDescription: "An active conversation with ByteDance's AI team about its Seed models. Not yet finalized.",
+  ogDescription: "An active conversation with the AI team at ByteDance, the company behind TikTok, about its Seed models. Not yet finalized.",
 });
 
 function VraelisMark() {
@@ -50,10 +50,10 @@ export default function ByteDancePartnershipPage() {
           </div>
 
           <div className="v6-pr__story">
-            <p className="v6-pr__overline">AI models</p>
+            <p className="v6-pr__overline">AI models, from the company behind TikTok</p>
             <h2>A conversation about the models underneath.</h2>
             <p>
-              ByteDance’s AI partnerships team reached out to Vraelis about helping builders reduce model
+              ByteDance, the company behind TikTok, reached out to Vraelis through its AI partnerships team about helping builders reduce model
               costs with its Seedream, Seedance and Seed LLM models. The conversation is active. No
               partnership has been finalized, and this record will say so until one is.
             </p>

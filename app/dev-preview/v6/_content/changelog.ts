@@ -26,7 +26,7 @@ export const CHANGELOG: Entry[] = [
     tagLabel: "In conversation",
     title: "Vraelis and ByteDance",
     body: [
-      "ByteDance’s AI partnerships team reached out on August 17 about helping builders reduce model costs with its Seed models. The conversation is active and nothing is finalized; the record says exactly that and claims no endorsement, agreement or integration.",
+      "ByteDance, the company behind TikTok, reached out through its AI partnerships team on August 17 about helping builders reduce model costs with its Seed models. The conversation is active and nothing is finalized; the record says exactly that and claims no endorsement, agreement or integration.",
     ],
     href: "/partnerships/bytedance",
     hrefLabel: "Read the record",
