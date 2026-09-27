@@ -22,14 +22,14 @@ export type Entry = { date: string; tag: "go" | "wait"; tagLabel: string; title:
 export const CHANGELOG: Entry[] = [
   {
     date: "2026-09-27",
-    tag: "wait",
-    tagLabel: "In conversation",
+    tag: "go",
+    tagLabel: "Established",
     title: "Vraelis and ByteDance",
     body: [
-      "ByteDance, the company behind TikTok, reached out through its AI partnerships team on August 17 about helping builders reduce model costs with its Seed models. The conversation is active and nothing is finalized; the record says exactly that and claims no endorsement, agreement or integration.",
+      "Vraelis and ByteDance, the company behind TikTok, are now official partners. ByteDance’s AI partnerships team first reached out on August 17 about its Seed models. The published record names the date and scope without claiming endorsement, exclusivity or private data access.",
     ],
     href: "/partnerships/bytedance",
-    hrefLabel: "Read the record",
+    hrefLabel: "Read the partnership record",
   },
   {
     date: "2026-09-18",

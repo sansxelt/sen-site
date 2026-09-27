@@ -46,13 +46,13 @@ export function Hero() {
             <strong>Vraelis × Reddit</strong>
             <span className="v6-h__partnership-meta">Partnered in 2026&nbsp; ↗</span>
           </a>
-          {/* An active conversation, labelled as one. It is not a partnership until it is signed. */}
+          {/* Official partnership, recorded in the same form as Reddit's. */}
           <a className="v6-h__partnership" href={`${V6_BASE}/partnerships/bytedance`}
-            aria-label="Read the record of the Vraelis and ByteDance conversation.">
-            <span className="v6-h__partnership-label">Partnership conversation</span>
+            aria-label="Read the Vraelis and ByteDance partnership record.">
+            <span className="v6-h__partnership-label">Partnership record</span>
             <strong>Vraelis × ByteDance</strong>
             <span className="v6-h__partnership-note">The company behind TikTok</span>
-            <span className="v6-h__partnership-meta">In conversation since August 2026&nbsp; ↗</span>
+            <span className="v6-h__partnership-meta">Partnered in 2026&nbsp; ↗</span>
           </a>
         </div>
       </div>

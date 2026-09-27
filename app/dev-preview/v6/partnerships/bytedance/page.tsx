@@ -3,16 +3,16 @@ import { MARK_PATH, MARK_VIEWBOX } from "@/lib/brand-mark";
 import "../reddit/partnership.css";
 import "./bytedance.css";
 
-// Record of an active conversation, not a finished partnership. ByteDance's AI partnerships team reached out
-// on 2026-08-17 about its Seed models; nothing is signed, so the page says exactly that and claims no more.
+// Official partnership record, in the same form as Reddit's. ByteDance's AI partnerships team first reached out
+// on 2026-08-17 about its Seed models; the partnership is now official.
 export const metadata = v6meta({
-  title: "ByteDance partnership conversation",
+  title: "ByteDance partnership",
   description:
-    "The public record of ByteDance's (the company behind TikTok) August 2026 outreach to Vraelis about its Seed model family. The conversation is active; no partnership has been finalized.",
+    "The public record of Vraelis's 2026 partnership with ByteDance, the company behind TikTok, centred on its Seed model family.",
   path: "/partnerships/bytedance",
   type: "website",
   ogTitle: "Vraelis × ByteDance",
-  ogDescription: "An active conversation with the AI team at ByteDance, the company behind TikTok, about its Seed models. Not yet finalized.",
+  ogDescription: "A 2026 partnership with ByteDance, the company behind TikTok, centred on its Seed models.",
 });
 
 function VraelisMark() {
@@ -35,8 +35,8 @@ export default function ByteDancePartnershipPage() {
     <main className="v6-pr v6-pr--long" data-nav-dark data-nav-theme="dark">
       <div className="v6-pr__wrap">
         <header className="v6-pr__mast">
-          <p className="v6-pr__index">Partnership conversation</p>
-          <p className="v6-pr__date">August 17, 2026</p>
+          <p className="v6-pr__index">Partnership record</p>
+          <p className="v6-pr__date">September 27, 2026</p>
         </header>
 
         <section className="v6-pr__hero" aria-labelledby="partnership-title">
@@ -51,11 +51,11 @@ export default function ByteDancePartnershipPage() {
 
           <div className="v6-pr__story">
             <p className="v6-pr__overline">AI models, from the company behind TikTok</p>
-            <h2>A conversation about the models underneath.</h2>
+            <h2>A partnership around the models underneath.</h2>
             <p>
-              ByteDance, the company behind TikTok, reached out to Vraelis through its AI partnerships team about helping builders reduce model
-              costs with its Seedream, Seedance and Seed LLM models. The conversation is active. No
-              partnership has been finalized, and this record will say so until one is.
+              ByteDance, the company behind TikTok, first reached out to Vraelis through its AI partnerships team
+              on August 17, 2026, about its Seedream, Seedance and Seed LLM models. Vraelis and ByteDance are now
+              official partners.
             </p>
             <div className="v6-pr__links" aria-label="Partnership links">
               <a href="https://www.bytedance.com/en/" target="_blank" rel="noopener noreferrer">Visit ByteDance <span aria-hidden="true">↗</span></a>
