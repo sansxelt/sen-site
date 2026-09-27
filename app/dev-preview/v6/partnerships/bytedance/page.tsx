@@ -1,6 +1,7 @@
 import { v6meta } from "../../_system/meta";
 import { MARK_PATH, MARK_VIEWBOX } from "@/lib/brand-mark";
 import "../reddit/partnership.css";
+import "./bytedance.css";
 
 // Record of an active conversation, not a finished partnership. ByteDance's AI partnerships team reached out
 // on 2026-08-17 about its Seed models; nothing is signed, so the page says exactly that and claims no more.
@@ -31,7 +32,7 @@ function ByteDanceMark() {
 
 export default function ByteDancePartnershipPage() {
   return (
-    <main className="v6-pr" data-nav-dark data-nav-theme="dark">
+    <main className="v6-pr v6-pr--long" data-nav-dark data-nav-theme="dark">
       <div className="v6-pr__wrap">
         <header className="v6-pr__mast">
           <p className="v6-pr__index">Partnership conversation</p>
@@ -45,7 +46,7 @@ export default function ByteDancePartnershipPage() {
               <i aria-hidden="true">×</i>
               <span><ByteDanceMark /></span>
             </div>
-            <h1 id="partnership-title">Vraelis <span>×</span> ByteDance</h1>
+            <h1 id="partnership-title">Vraelis <span>×</span><br />ByteDance</h1>
           </div>
 
           <div className="v6-pr__story">

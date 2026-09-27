@@ -1,0 +1,6 @@
+/* "ByteDance" is far longer than "Reddit": the shared one-line title would run into the story column, so this
+   record sets its title on two lines at the same display size. */
+.v6-pr--long .v6-pr__identity h1 { white-space: normal; }
+@media (max-width: 620px) {
+  .v6-pr--long .v6-pr__identity h1 { font-size: clamp(3.4rem, 15vw, 6rem); }
+}
