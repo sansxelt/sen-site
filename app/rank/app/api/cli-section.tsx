@@ -5,8 +5,9 @@
 // on and one that can be operated from a terminal, from CI, or by an agent — which is what it actually is.
 //
 // EVERYTHING BELOW IS READ OFF THE REAL BINARY. The flags, the exit codes and the JSON keys are the ones
-// cli/vraelis.mjs implements, not an aspirational surface: one command (verify), three exit codes, and the
-// two flags that make it useful to something other than a human (--json, --repair-prompt).
+// cli/vraelis.mjs implements, not an aspirational surface: verify and recheck, three exit codes, the two
+// flags that make it useful to something other than a human (--json, --repair-prompt), and init, which
+// plugs it into the coding assistants over MCP.
 //
 // THE INSTALL LINE HAS TO BE ONE A STRANGER CAN RUN.
 //
@@ -32,21 +33,27 @@ const INSTALL_UNIX = `curl -fsS https://vraelis.com/install | sh`;
 const INSTALL_WINDOWS = `irm https://vraelis.com/install.ps1 | iex`;
 
 const AFTER_INSTALL = `vraelis login
+vraelis init      # plug Vraelis into Claude Code, Codex, Copilot, Cursor...
+
 vraelis verify \\
   --url https://your-preview.example.com \\
-  --claim "A customer can upgrade to Pro and still have access after signing back in" \
-  --wait`;
+  --claim "A signed-in user can cancel their plan from Billing and then sees Cancelled" \\
+  --wait
+# prints the plan and an approval link, waits for you to approve, then runs
+
+vraelis recheck vrf_... --wait   # after a fix: same approved plan, no new approval`;
 
 const CI = `# In CI: gate the deploy on the DECISION, not on the command finishing.
 curl -fsS https://vraelis.com/install | sh
 vraelis verify --url "$PREVIEW_URL" --claim "$CLAIM" --wait --json > result.json
+# The approval link is printed to the log; the job waits until a person approves.
 # exit 0 verified   exit 1 failed   exit 2 blocked, or could not run
 #
 # Blocked is not a pass. A run that merely finished is not a pass.
 # Only exit 0 should ship.
 
 # On a failure, hand the repair prompt straight to a coding agent:
-vraelis verify --url "$PREVIEW_URL" --claim "$CLAIM" --wait --repair-prompt | claude -p`;
+vraelis result "$(jq -r .verification_id result.json)" --repair-prompt | claude -p`;
 
 const label = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--fg-4)" };
 
@@ -55,7 +62,8 @@ const FLAGS: [string, string][] = [
   ["--json", "Emit one JSON object instead of human output. This is the mode for CI and for agents."],
   ["--repair-prompt", "On failure, print ONLY the repair prompt, ready to pipe into a coding agent."],
   ["--idempotency-key", "Reuse a key so a retry returns the original verification instead of starting, and paying for, a second one."],
-  ["--timeout", "How long --wait waits before giving up. Default 900 seconds."],
+  ["--timeout", "How long --wait waits (for approval and for the decision) before giving up. Default 900 seconds."],
+  ["--no-open", "Print the approval link without opening a browser."],
 ];
 
 export function CliSection() {
@@ -106,14 +114,21 @@ export function CliSection() {
         what you type, a paste that did nothing is indistinguishable from a key that was refused.
       </p>
 
-      {/* Direction, not built: the API now requires a person to approve the plan it derives before any run
-          starts (see /api/v1/verifications), and this CLI does not yet submit that approval or resubmit with
-          reviewed_plan_id, so a first `verify --wait` cannot reach a decision on its own. */}
+      {/* THE APPROVAL IS A PERSON'S, AND THE CLI NOW WAITS FOR IT. A key cannot approve a plan (the approve
+          route refuses every key), so verify prints the plan and the approval link, opens it when someone is
+          at the terminal, and runs the moment the plan reads approved. This paragraph used to say the CLI
+          could not reach a decision on its own; that was true until it learned to wait. */}
       <p style={{ margin: "12px 0 0", fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.6 }}>
-        Direction, not built: a first <code style={{ color: "var(--fg-3)" }}>verify</code> call stops here
-        today. The API now requires a person to approve the plan it derives before any run starts, and this
-        CLI does not yet submit that approval or resubmit it, so <code style={{ color: "var(--fg-3)" }}>--wait</code> cannot
-        reach a decision on its own. Approve the plan from the console&apos;s Review queue first.
+        A person approves each new plan. <code style={{ color: "var(--fg-3)" }}>verify</code> prints the requirements
+        and an approval link, opens it in your browser when you are at the terminal, and starts the run as soon as
+        you approve. No key can approve a plan, including this one. After a fix,{" "}
+        <code style={{ color: "var(--fg-3)" }}>recheck</code> runs the same approved plan again without asking, for 24
+        hours after the approval and up to 10 times, on the same site.
+      </p>
+      <p style={{ margin: "12px 0 0", fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.6 }}>
+        <code style={{ color: "var(--fg-3)" }}>vraelis init</code> connects the coding assistants on your machine over
+        MCP, so the agent can ask for the check itself and read what broke. Setup for each assistant, and for
+        ChatGPT and Claude, is at <a href="https://vraelis.com/agents" style={{ color: "var(--fg-2)" }}>vraelis.com/agents</a>.
       </p>
 
       <div style={{ marginTop: 22, border: "1px solid var(--line-2)", borderRadius: "var(--r-lg, 14px)", overflow: "hidden", background: "var(--bg-1)" }}>

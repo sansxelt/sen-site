@@ -477,8 +477,221 @@ async function main() {
     ok("  and at one the package actually ships", pkg.files.includes(pkg.bin.vraelis));
   }
 
+  await agentLoop();
+
   console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}  ${pass} passed, ${fail} failed`);
   process.exit(fail === 0 ? 0 : 1);
+}
+
+// ── THE AGENT LOOP: approval, re-check, MCP, init ─────────────────────────────────────────────────────
+//
+// A scripted API that behaves like the real one after human approval became mandatory: the first POST
+// returns a plan waiting for a person, the plan reads pending once and approved after, the second POST (with
+// reviewed_plan_id) starts the run, and the run is done on its first poll. `seen` records every call so the
+// tests can assert the ORDER, which is the contract: nothing runs before a person approves.
+function agentApi({ decision = "verified", recheck = { status: 202 } } = {}) {
+  const seen = { calls: [], posts: [] };
+  let planReads = 0;
+  const server = createServer((req, res) => {
+    let raw = "";
+    req.on("data", (c) => (raw += c));
+    req.on("end", () => {
+      const body = raw ? JSON.parse(raw) : null;
+      seen.calls.push(`${req.method} ${req.url}`);
+      const send = (status, obj) => { res.writeHead(status, { "content-type": "application/json" }); res.end(JSON.stringify(obj)); };
+      if (req.method === "POST" && req.url === "/v1/verifications") {
+        seen.posts.push(body);
+        if (!body.reviewed_plan_id) {
+          return send(202, { state: "review_required", reviewed_plan_id: "rvp_1", approve_url: "https://app.example.test/review/rvp_1", reviewed_plan_expires_at: new Date(Date.now() + 3600e3).toISOString(), requirements: ["Billing shows a Cancel button", "After cancelling, the plan reads Cancelled"] });
+        }
+        return send(202, { verification_id: "vrf_run2", state: "running", requirements: ["Billing shows a Cancel button"] });
+      }
+      if (req.method === "GET" && req.url === "/v1/verifications/plans/rvp_1") {
+        planReads++;
+        return send(200, { reviewed_plan_id: "rvp_1", approval_state: planReads >= 2 ? "approved" : "pending", execution_state: "unconsumed", expires_at: new Date(Date.now() + 3600e3).toISOString(), flows: [{ name: "Cancel from Billing", goal: "Plan reads Cancelled", steps: 6 }] });
+      }
+      if (req.method === "POST" && /^\/v1\/verifications\/vrf_\w+\/recheck$/.test(req.url)) {
+        seen.posts.push(body);
+        if (recheck.status >= 400) return send(recheck.status, { error: { code: recheck.code, message: recheck.message } });
+        return send(202, { verification_id: "vrf_run3", state: "running", recheck_of: "vrf_run2", claim: "A user can cancel", deployment_url: "https://x.example.com", rechecks_left: 9 });
+      }
+      if (req.method === "GET" && /^\/v1\/verifications\/vrf_\w+$/.test(req.url)) {
+        const id = req.url.split("/").pop();
+        return send(200, decision === "verified"
+          ? { ...VERIFIED, verification_id: id, claim: "A user can cancel", console_url: "https://app.example.test/r/1" }
+          : { ...FAILED, verification_id: id, claim: "A user can cancel", console_url: "https://app.example.test/r/1" });
+      }
+      send(404, { error: { code: "not_found", message: `no route ${req.url}` } });
+    });
+  });
+  return { server, seen };
+}
+
+async function withAgentApi(opts, fn) {
+  const { server, seen } = agentApi(opts);
+  await new Promise((r) => server.listen(0, "127.0.0.1", r));
+  try { return await fn(server.address().port, seen); } finally { server.close(); }
+}
+
+/** Speak MCP to `vraelis mcp` over real pipes, one JSON-RPC message per line. */
+function mcpSession(port, env = {}) {
+  const p = spawn(process.execPath, [CLI, "mcp"], {
+    env: { ...process.env, VRAELIS_API_KEY: "vr_live_test", VRAELIS_BASE_URL: `http://127.0.0.1:${port}`, VRAELIS_NO_BROWSER: "1", VRAELIS_MCP_WAIT_MS: "20000", ...env },
+  });
+  let out = "", nextId = 1;
+  const pending = new Map();
+  const lines = [];
+  p.stdout.on("data", (d) => {
+    out += d;
+    let nl;
+    while ((nl = out.indexOf("\n")) >= 0) {
+      const line = out.slice(0, nl); out = out.slice(nl + 1);
+      lines.push(line);
+      try { const m = JSON.parse(line); pending.get(m.id)?.(m); pending.delete(m.id); } catch { /* asserted via `lines` */ }
+    }
+  });
+  p.stderr.on("data", () => {});
+  const request = (method, params) => new Promise((resolve) => {
+    const id = nextId++;
+    pending.set(id, resolve);
+    p.stdin.write(JSON.stringify({ jsonrpc: "2.0", id, method, params }) + "\n");
+  });
+  const notify = (method, params) => p.stdin.write(JSON.stringify({ jsonrpc: "2.0", method, params }) + "\n");
+  const close = () => new Promise((resolve) => { p.on("close", resolve); p.stdin.end(); });
+  return { request, notify, close, lines };
+}
+
+async function agentLoop() {
+  console.log("\n── a person approves, then it runs ──");
+  await withAgentApi({}, async (port, seen) => {
+    const r = await run(["verify", "--url", "https://x.example.com", "--claim", "A user can cancel their plan", "--wait"], { VRAELIS_NO_BROWSER: "1" }, port);
+    ok("verify waits for approval and then exits 0 on verified", r.code === 0, `got ${r.code}\n${r.err.slice(-400)}`);
+    ok("the approval link is shown to the person", /app\.example\.test\/review\/rvp_1/.test(r.err));
+    ok("the requirements being approved are shown", /After cancelling, the plan reads Cancelled/.test(r.err));
+    ok("nothing runs before approval: the run POST comes after the plan read approved",
+      seen.calls.indexOf("GET /v1/verifications/plans/rvp_1") < seen.calls.lastIndexOf("POST /v1/verifications")
+      && seen.calls.filter((c) => c === "GET /v1/verifications/plans/rvp_1").length >= 2, seen.calls.join(" | "));
+    ok("the run POST names exactly the approved plan", seen.posts[1]?.reviewed_plan_id === "rvp_1", JSON.stringify(seen.posts[1]));
+    ok("the CLI never calls the approve endpoint", !seen.calls.some((c) => /approve/.test(c)));
+  });
+  await withAgentApi({ decision: "failed" }, async (port) => {
+    const r = await run(["verify", "--url", "https://x.example.com", "--claim", "A user can cancel their plan", "--wait"], { VRAELIS_NO_BROWSER: "1" }, port);
+    ok("a failed verification tells you how to re-check after the fix", r.code === 1 && /vraelis recheck vrf_run2 --wait/.test(r.err), r.err.slice(-300));
+  });
+
+  console.log("\n── re-check after a fix ──");
+  await withAgentApi({}, async (port, seen) => {
+    const r = await run(["recheck", "vrf_run2", "--wait"], {}, port);
+    ok("recheck runs the approved plan again and exits 0 on verified", r.code === 0, `got ${r.code}\n${r.err.slice(-300)}`);
+    ok("it asks the API for a re-check of that verification", seen.calls.includes("POST /v1/verifications/vrf_run2/recheck"));
+    ok("it says how many re-checks the approval has left", /9 re-check/.test(r.err));
+  });
+  await withAgentApi({ recheck: { status: 409, code: "recheck_window_closed", message: "The approval behind this verification is more than 24 hours old." } }, async (port) => {
+    const r = await run(["recheck", "vrf_run2", "--wait"], {}, port);
+    ok("a refused re-check exits 2 with the API's reason", r.code === 2 && /24 hours/.test(r.err), `got ${r.code} ${r.err.slice(0, 200)}`);
+  });
+  {
+    const r = await run(["recheck", "not-an-id"], {}, 1);
+    ok("recheck without a vrf_ id is a usage error, exit 2", r.code === 2);
+  }
+
+  console.log("\n── MCP: what the coding assistants talk to ──");
+  await withAgentApi({}, async (port, seen) => {
+    const s = mcpSession(port);
+    const init = await s.request("initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "test", version: "1" } });
+    s.notify("notifications/initialized");
+    ok("initialize answers with the client's protocol version and a tools capability",
+      init.result?.protocolVersion === "2025-06-18" && !!init.result?.capabilities?.tools, JSON.stringify(init).slice(0, 200));
+    ok("the server tells the model when to use it", /before you tell the user it is done/.test(init.result?.instructions ?? ""));
+    const list = await s.request("tools/list", {});
+    const names = (list.result?.tools ?? []).map((t) => t.name).sort();
+    ok("it offers verify, status and recheck", JSON.stringify(names) === JSON.stringify(["vraelis_recheck", "vraelis_status", "vraelis_verify"]), names.join(","));
+    ok("no tool can approve a plan", !names.some((n) => /approve/.test(n)));
+    ok("every tool declares an input schema", (list.result?.tools ?? []).every((t) => t.inputSchema?.type === "object"));
+
+    const bad = await s.request("tools/call", { name: "vraelis_verify", arguments: { deployment_url: "http://localhost:3000", claim: "A user can cancel their plan" } });
+    ok("localhost is refused with a reason, as a tool error", bad.result?.isError === true && /https/.test(bad.result.content[0].text));
+
+    const first = await s.request("tools/call", { name: "vraelis_verify", arguments: { deployment_url: "https://x.example.com", claim: "A user can cancel their plan" } });
+    const text1 = first.result?.content?.[0]?.text ?? "";
+    ok("the first answer is WAITING FOR APPROVAL with the link", /WAITING FOR APPROVAL/.test(text1) && /review\/rvp_1/.test(text1), text1.slice(0, 300));
+    ok("it tells the agent it cannot approve", /cannot approve it yourself/i.test(text1));
+    ok("it shows the journeys the person is approving", /Cancel from Billing/.test(text1));
+    const job = /id "(job_\d+)"/.exec(text1)?.[1];
+
+    let text = "", guard = 0;
+    while (!/^(VERIFIED|FAILED|BLOCKED)/.test(text) && guard++ < 10) {
+      const st = await s.request("tools/call", { name: "vraelis_status", arguments: { id: job } });
+      text = st.result?.content?.[0]?.text ?? "";
+    }
+    ok("once approved, the check runs by itself and status ends VERIFIED", /^VERIFIED/.test(text), text.slice(0, 200));
+    ok("the MCP server never called approve either", !seen.calls.some((c) => /approve/.test(c)));
+
+    const unknown = await s.request("no/such/method", {});
+    ok("an unknown method is a JSON-RPC error, not a crash", unknown.error?.code === -32601);
+    await s.close();
+    ok("stdout carried nothing but JSON-RPC", s.lines.every((l) => { try { return JSON.parse(l).jsonrpc === "2.0"; } catch { return false; } }), s.lines.find((l) => { try { JSON.parse(l); return false; } catch { return true; } }));
+  });
+  await withAgentApi({ decision: "failed" }, async (port) => {
+    const s = mcpSession(port);
+    await s.request("initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "test", version: "1" } });
+    const r = await s.request("tools/call", { name: "vraelis_status", arguments: { id: "vrf_run2" } });
+    const t = r.result?.content?.[0]?.text ?? "";
+    ok("a FAILED result tells the agent what broke and to re-check, not to claim success",
+      /^FAILED/.test(t) && /expected: Pro is active/.test(t) && /vraelis_recheck/.test(t) && /Do not tell the user this works/.test(t), t.slice(0, 300));
+    const rc = await s.request("tools/call", { name: "vraelis_recheck", arguments: { verification_id: "vrf_run2" } });
+    ok("vraelis_recheck starts a re-check and follows it", /^(FAILED|RUNNING)/.test(rc.result?.content?.[0]?.text ?? ""), rc.result?.content?.[0]?.text?.slice(0, 200));
+    await s.close();
+  });
+  {
+    const { mkdtempSync, rmSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
+    const empty = mkdtempSync(join(tmpdir(), "vraelis-mcp-nokey-"));
+    const s = mcpSession(1, { VRAELIS_API_KEY: "", HOME: empty, USERPROFILE: empty });
+    await s.request("initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "test", version: "1" } });
+    const r = await s.request("tools/call", { name: "vraelis_verify", arguments: { deployment_url: "https://x.example.com", claim: "A user can cancel their plan" } });
+    ok("with no key, the tool says to run vraelis login", r.result?.isError === true && /vraelis login/.test(r.result.content[0].text));
+    await s.close();
+    rmSync(empty, { recursive: true, force: true });
+  }
+
+  console.log("\n── init plugs it into the assistants ──");
+  {
+    const { mkdtempSync, rmSync, mkdirSync, writeFileSync, readFileSync: rf } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
+    const home = mkdtempSync(join(tmpdir(), "vraelis-init-home-"));
+    const project = mkdtempSync(join(tmpdir(), "vraelis-init-proj-"));
+    // A Cursor config that already has someone else's server, which init must keep.
+    mkdirSync(join(home, ".cursor"), { recursive: true });
+    writeFileSync(join(home, ".cursor", "mcp.json"), JSON.stringify({ mcpServers: { other: { command: "other" } } }));
+    writeFileSync(join(project, "AGENTS.md"), "# Project\n\nExisting rules.\n");
+    const runIn = (args) => new Promise((resolve) => {
+      const p = spawn(process.execPath, [CLI, ...args], { cwd: project, env: { ...process.env, HOME: home, USERPROFILE: home, APPDATA: join(home, "AppData"), VRAELIS_API_KEY: "vr_live_test", PATH: "" } });
+      let err = ""; p.stderr.on("data", (d) => (err += d)); p.stdout.on("data", () => {});
+      p.on("close", (code) => resolve({ code, err }));
+    });
+    const r1 = await runIn(["init", "cursor", "gemini", "codex"]);
+    const cursor = JSON.parse(rf(join(home, ".cursor", "mcp.json"), "utf8"));
+    ok("init exits 0", r1.code === 0, r1.err.slice(-300));
+    ok("Cursor gets a vraelis server that runs `mcp`", cursor.mcpServers?.vraelis?.args?.includes("mcp"), JSON.stringify(cursor));
+    ok("and the server that was already there is kept", cursor.mcpServers?.other?.command === "other");
+    const gemini = JSON.parse(rf(join(home, ".gemini", "settings.json"), "utf8"));
+    ok("Gemini CLI gets it under mcpServers", gemini.mcpServers?.vraelis?.args?.includes("mcp"));
+    const toml = rf(join(home, ".codex", "config.toml"), "utf8");
+    ok("Codex gets an [mcp_servers.vraelis] table", /\[mcp_servers\.vraelis\]/.test(toml) && /"mcp"/.test(toml), toml);
+    await runIn(["init", "cursor", "gemini", "codex"]);
+    const toml2 = rf(join(home, ".codex", "config.toml"), "utf8");
+    ok("running init twice does not duplicate the Codex table", (toml2.match(/\[mcp_servers\.vraelis\]/g) ?? []).length === 1, toml2);
+    const agents = rf(join(project, "AGENTS.md"), "utf8");
+    ok("AGENTS.md keeps its own content and gains the verify rule once",
+      /Existing rules\./.test(agents) && (agents.match(/vraelis:start/g) ?? []).length === 1 && /vraelis_verify/.test(agents), agents);
+    ok("GEMINI.md gets the rule for Gemini", /vraelis_verify/.test(rf(join(project, "GEMINI.md"), "utf8")));
+    ok("the rule says never to approve its own plan", /Never try to approve/.test(agents));
+    rmSync(home, { recursive: true, force: true });
+    rmSync(project, { recursive: true, force: true });
+  }
 }
 
 main();
