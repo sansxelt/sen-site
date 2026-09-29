@@ -56,8 +56,9 @@ const ALLOWLIST: { file: string; allowed: string }[] = [
     allowed: "payload strings appear as translation-map KEYS only (payload verdict -> public verdict / colour); the rendered strings are the public vocabulary" },
   { file: "lib/preflight/oauth/vercel-deploy.ts",
     allowed: 'Vercel deployment-state "READY" (platform vocabulary in the deployments query, not a Vraelis verdict)' },
-  { file: "sdk/typescript/",
-    allowed: "retired Rank SDK published schema (different product; retirement decision pending) — entire tree exempt" },
+  // sdk/typescript/ WAS EXEMPT here as the "retired Rank SDK". It was rewritten as the verification SDK
+  // (@vraelis/sdk 0.3.0: prepare, getPlan, waitForApproval, run, waitForResult, recheck, get), so the
+  // exemption was removed on 2026-09-28 and its source is now scanned like every other surface below.
 ];
 const isAllowlisted = (p: string) => ALLOWLIST.some((a) =>
   a.file.endsWith("/") ? norm(p).includes(a.file) : norm(p).endsWith(a.file));
@@ -75,7 +76,9 @@ function walk(dir: string, out: string[] = []): string[] {
   }
   return out;
 }
-const trees = ["app/rank", "components", "cli/src", "app/dev-preview/v6"].filter((d) => existsSync(d));
+// sdk/typescript/src and its examples, NOT the package root: dist/ is build output and node_modules is not
+// ours, and scanning either would test someone else's strings.
+const trees = ["app/rank", "components", "cli/src", "app/dev-preview/v6", "sdk/typescript/src", "sdk/typescript/examples"].filter((d) => existsSync(d));
 const surfaces = [...trees.flatMap((d) => walk(d)), "lib/email.ts", "lib/v-lifecycle.ts", "lib/preflight/pass-pricing.ts"];
 const stripped = new Map(surfaces.map((p) => [p, stripComments(read(p))]));
 

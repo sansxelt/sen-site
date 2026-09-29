@@ -22,19 +22,16 @@ import { SOCIAL_DESCRIPTION, SOCIAL_IMAGE, SOCIAL_TITLE } from "./social-card";
 // sameAs is the corroboration hook: the profiles that are demonstrably the same entity. Only accounts the
 // company actually controls belong here.
 //
-// CHECKED AGAINST THE LIVE PROFILES, because this comment used to assert the opposite and was wrong.
-// It said the retired positioning was still live on them and that a crawler reconciling them against this
-// file would find them disagreeing. Both profiles resolve, both link back to vraelis.com, and neither
-// mentions the retired product: LinkedIn reads "Stealth." and X reads "Stealth Mode".
+// CHECKED AGAINST THE LIVE PROFILES, and corrected twice. An earlier version of this comment said the
+// retired positioning was still live on them; it was not. A later one listed the X profile beside LinkedIn.
+// On 2026-09-28 that profile's address returned 404, so it was corroborating nothing and pointing crawlers at a
+// missing page. LinkedIn is the only profile confirmed to exist, so it is the only one listed. Facebook and
+// Instagram are unconfirmed and are not listed either. Add a profile here only after opening it and seeing
+// that it is the company's own.
 //
-// So the disagreement is gone and a different gap is in its place, and it is the one that matters for
-// entity resolution. This file publishes a real sentence; both corroborating profiles publish nothing.
-// sameAs only corroborates if the thing it points at says something to corroborate, so an identity graph
-// with two silent endpoints is a claim with no second source. That is why a search for the name still
-// returns an unrelated game character: nothing outside this repo says what the company is.
-//
-// Still not a deploy. Fixing it is a login on each profile and one sentence, the same sentence this file
-// publishes, which is why SOCIAL_DESCRIPTION is the single place it is written.
+// The gap that matters for entity resolution is unchanged: sameAs only corroborates if the profile it
+// points at says something to corroborate. Fixing that is a login on the profile and one sentence, the same
+// sentence this file publishes, which is why SOCIAL_DESCRIPTION is the single place it is written.
 export const ORGANIZATION = {
   name: SOCIAL_TITLE,
   url: "https://vraelis.com",
@@ -42,7 +39,6 @@ export const ORGANIZATION = {
   description: SOCIAL_DESCRIPTION,
   sameAs: [
     "https://www.linkedin.com/company/vraelis",
-    "https://x.com/vraelis",
   ],
 } as const;
 

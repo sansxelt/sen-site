@@ -47,7 +47,7 @@ const CONTROLS: [string, string][] = [
   ["Validated OIDC sign-in", "The id_token is validated on signature, issuer, audience, and nonce, and the email domain must match the verified organization domain before access is granted."],
   ["Governed domain provisioning", "A verified-domain match maps a user into the organization at a safe role. It never grants workspace, project, billing, or API access on its own."],
   ["Payments isolated to Stripe", "Card data is processed by Stripe. Vraelis never sees card numbers. Your billing overview stays in Vraelis."],
-  ["The builder does not self-approve", "An agent cannot mark its own work trusted. Proof comes from exercising the running software and computing a decision on the evidence, not from the agent's report."],
+  ["The builder does not self-approve", "Whoever did the work cannot mark it trusted, and an API key cannot approve a plan: the approve endpoint refuses every key and returns a link for a person. Proof comes from exercising the running software and computing a decision on the evidence, not from the builder's report."],
 ];
 
 /* identity and access, described honestly */
@@ -72,7 +72,7 @@ export default function SecurityPage() {
       <PageHero
         kicker="Security"
         title="Security built around independent oversight."
-        lead="Vraelis judges work that agents produce, so the party doing the work is never the party that approves it. This is how access, secrets, and evidence are handled today, and an honest account of what is not yet in place."
+        lead="Vraelis checks work that someone says is done, so the party that did the work is never the party that approves the check. This is how access, secrets, and evidence are handled today, and an honest account of what is not yet in place."
         cta={<><CTA brand>Open Vraelis</CTA><EditorialLink href="#status">See system status</EditorialLink></>}
       />
 
@@ -209,7 +209,7 @@ export default function SecurityPage() {
         <div className="v6-wrap" style={{ textAlign: "center", maxWidth: 720 }}>
           <Reveal>
             <h2 className="v6-dl" style={{ marginInline: "auto" }}>Oversight you can inspect, not take on faith.</h2>
-            <p className="v6-lead" style={{ margin: "18px auto 28px", textAlign: "center" }}>The same standard we hold agent work to is the one we hold ourselves to: describe what is real, and show the seams.</p>
+            <p className="v6-lead" style={{ margin: "18px auto 28px", textAlign: "center" }}>The same standard we hold every claim to is the one we hold ourselves to: describe what is real, and show the seams.</p>
             <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
               <CTA brand lg>Open Vraelis</CTA>
               <EditorialLink href={`${BASE}/company#contact`}>Contact the team</EditorialLink>

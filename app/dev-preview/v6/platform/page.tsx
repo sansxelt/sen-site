@@ -8,9 +8,16 @@ import { SURFACES, COVERAGE_THESIS, COVERAGE_RULE } from "../_content/coverage";
 import { V6_BASE } from "@/lib/v6-routes";
 
 // Platform overview (design 06). This is the MECHANISM page, and since the homepage's primary call to action
-// lands here it has to deliver the loop in the opening rather than a slogan: a guarantee is written, a plan
-// is derived and approved, a real hosted browser drives the pinned deployment, and the run ends on one of
-// three words. LIGHT = framing; GRAPHITE = live work.
+// lands here it has to deliver the loop in the opening rather than a slogan: one sentence about a deployed
+// web app, a plan derived from it and approved by a person, a real hosted browser on the live app, and one
+// of three words, with the evidence. LIGHT = framing; GRAPHITE = live work.
+//
+// 2026-09-28: THE CLAIM IS THE OBJECT NOW, NOT THE GUARANTEE. The public story was locked on one function,
+// described narrowly, for a wide audience. A guarantee still exists in the console (a claim saved so it can
+// be checked again) and is mentioned once as that. HTTP APIs left the headline, the coverage ladder lost
+// everything past the browser, and the two expanded Direction blocks (sensitive steps held for a person,
+// memory across guarantees) left #current, because both described a much larger product than the one a
+// reader can use today.
 //
 // THE PAGE USED TO SELL AN OBJECT THE PRODUCT DOES NOT HAVE. Every heading, the metadata and the signature
 // panel were built on "responsibility", a noun with no table, no column and no type anywhere in this
@@ -21,11 +28,11 @@ import { V6_BASE } from "@/lib/v6-routes";
 export const metadata: Metadata = v6meta({
   title: "Platform",
   description:
-    "How Vraelis checks a live web application or HTTP API: one guarantee, one approved plan, one evidence-backed decision.",
+    "How Vraelis checks a deployed web app, or a connected device through its web control panel: one sentence about what should work, one plan a person approves, one real browser run on the live app, and one decision with the evidence.",
   path: "/platform",
   ogTitle: "The Vraelis platform",
   ogDescription:
-    "One guarantee, one approved plan, and one evidence-backed decision: Verified, Failed, or Blocked.",
+    "One sentence, one approved plan, and one decision from the live app: Verified, Failed, or Blocked.",
 });
 
 const BASE = V6_BASE;
@@ -107,29 +114,25 @@ function GBar({ left, right }: { left: ReactNode; right?: ReactNode }) {
 // "trace" is the kind of word a reader arrives expecting to be able to open. The line now lists the four
 // things that are genuinely captured.
 const RECORD_FACTS: [string, string][] = [
-  ["Systems affected", "Stripe / billing / dashboard"],
-  ["Work being judged", "Add usage-based billing to the dashboard"],
+  ["Deployment", "https://app.example.com"],
+  ["Asked from", "The console, the CLI, CI, or an AI assistant"],
   ["Evidence", "Screenshots, step record, console and network errors"],
-  ["History", "Every state preserved, nothing overwritten"],
+  ["History", "Every run preserved, nothing overwritten"],
 ];
 
+// THE LIFE OF ONE CHECK, in the states it really passes through. Rewritten 2026-09-28: the previous list
+// followed a usage-billing guarantee and included "Assumption challenged" and "Decision required", which
+// were the sensitive-step hold that /platform#current itself listed as not built. Every row below is a
+// thing the product does today, in the order it does it, for an ordinary claim anyone could write.
 const RECORD_STATES: { t: string; d: string; sig?: Sig; tag?: string }[] = [
-  { t: "Guarantee written", d: "One sentence the business depends on is recorded before any work is judged.", sig: "go", tag: "Recorded" },
-  { t: "Guarantee approved", d: "A person approves what must remain true. It is held outside the code, where the agent cannot move it." },
-  // THE SAME TWO CLAIMS THE MOCK FEED BELOW WAS REMOVED FOR. These read "Plan observed: 6 steps, touching
-  // Stripe and the billing service" and "Activity tracked: 7 files changed. One Stripe price and one usage
-  // meter created through the API." Both describe ingesting an agent's plan and its code and API effects,
-  // which this product does not do and which the Direction column on this same page says it does not do.
-  // Removing the feed and leaving these would have moved the false claim rather than retired it.
-  // What is here instead is the step that genuinely exists between the standard and the run: a dry run
-  // mints a plan, a person approves that exact plan, and the paid execution consumes it unchanged.
-  { t: "Plan approved", d: "A dry run derives the checks and the browser flow. A person approves that exact plan, and the paid run consumes it unchanged." },
-  { t: "Run recorded", d: "A real browser drives the live deployment. Each step is recorded as it happens, with the evidence it produced." },
-  { t: "Assumption challenged", d: "“Existing customers keep their current price” is contested until it is proven.", sig: "wait", tag: "Needs proof" },
-  { t: "Finding raised", d: "The usage meter is not enforced on the free plan. Recorded against the guarantee.", sig: "stop", tag: "Finding" },
-  { t: "Decision required", d: "The new pricing cannot ship until a person approves the change.", sig: "wait", tag: "Review" },
-  { t: "Repair re-checked", d: "The fix is re-run against the same guarantee in a real browser, as its own record." },
-  { t: "Completion accepted", d: "The guarantee now holds, checked independently. Earlier records stay intact.", sig: "go", tag: "Verified" },
+  { t: "Claim written", d: "One sentence about what the app should do, from you, a teammate, a CI job, or an AI assistant.", sig: "go", tag: "Recorded" },
+  { t: "Plan written", d: "Vraelis turns the sentence into requirements and the browser steps that would prove them. A claim no check could prove is refused, and nothing is charged." },
+  { t: "Plan approved", d: "A person approves that exact plan with one click. An API key cannot approve it, so no script or agent signs off on its own check." },
+  { t: "Run recorded", d: "A real browser drives the deployed app. Each step records what it expected and what it observed, with screenshots." },
+  { t: "Failed", d: "After cancelling, Billing still showed Active. Expected Cancelled, observed Active.", sig: "stop", tag: "Failed" },
+  { t: "Repair prompt", d: "What should have happened, what happened instead, and how to reproduce it, written for whoever fixes it: a person or a coding agent.", sig: "wait", tag: "Handed back" },
+  { t: "Re-checked", d: "Once the fix is deployed, the same approved plan runs again as its own record, with no new approval inside 24 hours." },
+  { t: "Verified", d: "The claim held on the live app. The earlier Failed run is kept, not overwritten.", sig: "go", tag: "Verified" },
 ];
 
 function RecordObject() {
@@ -143,21 +146,18 @@ function RecordObject() {
       <GBar
         left={
           <span className="v6-kicker" style={{ color: "var(--g-fg-3)" }}>
-            The shape of one guarantee
+            The shape of one check
           </span>
         }
         right={<Signal state="go">Verified</Signal>}
       />
-      {/* THE HEADLINE OF THIS PANEL USED TO BE THE TASK, "Add usage-based billing to the customer
-          dashboard", with the guarantee demoted into the fact row beside it as "Reviewed standard". That is
-          backwards: the task is what an agent was asked to do and it changes, while the guarantee is the
-          durable object the record hangs off and the thing a person actually writes. The guarantee is the
-          headline now and the task moved into the facts, where it belongs as context. */}
+      {/* THE HEADLINE OF THIS PANEL IS THE CLAIM, the one sentence a person writes and the thing the record
+          hangs off. It is an ordinary product behaviour on purpose, not an agent task. */}
       <p style={{ margin: 0, color: "var(--g-fg)", fontSize: "clamp(1.15rem,1.7vw,1.4rem)", fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.25 }}>
-        Existing customers are never overcharged when usage billing ships.
+        A signed-in user can cancel their plan from Billing and then sees Cancelled.
       </p>
       <p style={{ margin: "8px 0 0", color: "var(--g-fg-2)", fontSize: 14.5, lineHeight: 1.5 }}>
-        Everything Vraelis learns about this guarantee accumulates here, in one place, in order.
+        Every run of this check lands on one record, in order.
       </p>
 
       {/* accumulated context */}
@@ -213,17 +213,19 @@ function RecordObject() {
 
 /* ============================ section-scoped data ============================ */
 
-// THESE WERE TASK TITLES UNDER A HEADING THAT PROMISED THE DURABLE OBJECT. "Add usage-based billing to the
-// dashboard" is a job somebody gave an agent, not something that can hold or fail, so a row of them carrying
-// Verified and Blocked pills was showing a verdict on the wrong noun. Each line is now a guarantee: one
-// sentence that is either still true of the running software or is not. The pills are unchanged because the
-// vocabulary was already right; In review is a plan waiting on a person, which /docs/systems is careful to
-// say is not a verdict.
+// EXAMPLE CLAIMS, ACROSS ORDINARY PRODUCT BEHAVIOUR. Each line is one sentence that is either true of the
+// running app or is not, which is the only kind of line a check can hold. They were guarantees about billing
+// and tenant exports; they now span what anyone responsible for a web app writes down: sign-up, sign-in,
+// checkout, an invite with the right role, a form that saves, one customer not seeing another's data, and a
+// connected device checked through its control panel.
+// In review is a plan waiting on a person, which /docs/systems is careful to say is not a verdict.
 const WORK: { t: string; sys: string; state: Sig; label: string }[] = [
-  { t: "Existing customers are never overcharged when usage billing ships", sys: "Stripe / billing", state: "wait", label: "In review" },
-  { t: "A paid customer keeps Pro access after signing back in", sys: "auth / api", state: "go", label: "Verified" },
-  { t: "An export contains only the requesting account's data", sys: "api / storage", state: "stop", label: "Blocked" },
-  { t: "A new account reaches the dashboard without help", sys: "web / onboarding", state: "go", label: "Verified" },
+  { t: "A new visitor can sign up and reach the dashboard", sys: "sign-up / onboarding", state: "go", label: "Verified" },
+  { t: "A paid customer keeps Pro access after signing back in", sys: "checkout / sign-in", state: "go", label: "Verified" },
+  { t: "An invited teammate joins with the Editor role, not Admin", sys: "team / roles", state: "wait", label: "In review" },
+  { t: "The contact form saves and shows a confirmation", sys: "forms", state: "stop", label: "Failed" },
+  { t: "One customer never sees another customer's invoices", sys: "billing / accounts", state: "wait", label: "Blocked" },
+  { t: "After an operator presses Return home, the drone shows Landed, and still does after a reload", sys: "fleet control panel", state: "wait", label: "In review" },
 ];
 
 // WHAT A RUN IS ACTUALLY GIVEN, and every line is a gate that exists in the product today rather than a
@@ -232,8 +234,8 @@ const WORK: { t: string; sys: string; state: Sig; label: string }[] = [
 // and consumed unchanged by the paid execution.
 const RUN_INPUTS: { t: string; d: string }[] = [
   { t: "A deployment it can reach", d: "The hostname is resolved before the run is admitted, above the credit hold, so a mistyped address costs nothing rather than buying a report that the address was wrong." },
-  { t: "A guarantee, in one sentence", d: "Written by a person and held outside the code, so the standard a change is judged against cannot be edited by the work being judged." },
-  { t: "A plan that was approved", d: "Minted by a dry run, reviewed, then consumed exactly as approved. Vraelis declines to charge when it cannot build a check that would prove the claim." },
+  { t: "A claim, in one sentence", d: "What a user can do and what should be true afterwards. It is held outside the code, so the standard the change is judged against cannot be edited by the work being judged." },
+  { t: "A plan a person approved", d: "Derived from the claim, reviewed, then run exactly as approved. Vraelis declines to charge when it cannot build a check that would prove the claim." },
 ];
 
 // THE STATES A RUN REALLY MOVES THROUGH. These are the run states in lib/preflight, not an illustration of
@@ -242,38 +244,15 @@ const RUN_INPUTS: { t: string; d: string }[] = [
 const RUN_STATES: { t: string; d: string; sig?: Sig; tag?: string }[] = [
   { t: "Queued", d: "Admitted, and waiting for a worker to lease it." },
   { t: "Running", d: "A real browser is driving the live deployment, one approved step at a time." },
-  { t: "Verified", d: "The guarantee held, and the evidence behind that decision is kept with the record.", sig: "go", tag: "Verified" },
-  { t: "Failed", d: "The guarantee did not hold. The evidence and a repair prompt are written onto the issue.", sig: "stop", tag: "Failed" },
+  { t: "Verified", d: "The claim held, and the evidence behind that decision is kept with the record.", sig: "go", tag: "Verified" },
+  { t: "Failed", d: "The claim did not hold. The evidence and a repair prompt go back to whoever asked.", sig: "stop", tag: "Failed" },
   { t: "Blocked", d: "No verdict could be reached, so none is reported. Nothing is recorded as proven.", sig: "wait", tag: "Blocked" },
 ];
 
 const FINDINGS: { claim: string; reality: string; sig: Sig; tag: string }[] = [
-  { claim: "“Usage billing is complete.”", reality: "The usage meter is not enforced on the free plan.", sig: "stop", tag: "Contradiction" },
-  { claim: "“Existing customers keep their price.”", reality: "No evidence was produced. The assumption is unproven.", sig: "wait", tag: "Missing evidence" },
-  { claim: "“Checkout works end to end.”", reality: "Access was not granted after a successful payment.", sig: "stop", tag: "Failed check" },
-];
-
-// DIRECTION, NOT LIVE. Same overclaim as agents/page.tsx's SENSITIVE section: a plan is approved or refused
-// as a whole today, and nothing inside it is singled out for its own hold. These three stay as concrete
-// examples of what that would look like, not as live queue items.
-const REVIEW: { t: string; who: string }[] = [
-  { t: "Approve the new pricing before it ships to existing customers", who: "Billing owner" },
-  { t: "Confirm the data export is allowed for this account", who: "Security" },
-  { t: "Accept the irreversible migration on the auth service", who: "Engineering lead" },
-];
-
-// DIRECTION, NOT LIVE, and it renders only inside #current for that reason. These seven are what an
-// accumulated understanding would hold, not what the product holds today: _content/scope.ts files reliability
-// memory under Horizon and says of it "Not built". They had their own section in the selling flow, which made
-// the least true claim on the page also the most prominent one.
-const MEMORY = [
-  "Company requirements",
-  "Architecture boundaries",
-  "Recurring failures",
-  "Approved decisions",
-  "Repair history",
-  "Agent behavior",
-  "Trusted completion standards",
+  { claim: "“Users can cancel their plan from Billing.”", reality: "After cancelling, Billing still showed Active.", sig: "stop", tag: "Failed" },
+  { claim: "“Invited teammates join as Editors.”", reality: "The invite was accepted and the teammate was given Admin.", sig: "stop", tag: "Failed" },
+  { claim: "“Checkout grants Pro access.”", reality: "The test account could not sign in, so no answer was given.", sig: "wait", tag: "Blocked" },
 ];
 
 const KNOWLEDGE: [string, string, string][] = [
@@ -334,18 +313,14 @@ export default function Platform() {
     <>
       <PageHero
         kicker="The platform"
-        // THE OPENING HAD TO STOP BEING A SLOGAN. It read "One system that follows every responsibility you
-        // hand an agent", which named an object the product does not have and described no mechanism. This
-        // page is where the homepage's primary call to action lands, so the first thing a reader sees is now
-        // the loop itself, in the order it happens, in the product's own words. Three short sentences rather
-        // than one long clause: the h1 wraps to two lines at every width the hero is used at, and a reader
-        // scanning it gets the whole loop from the line breaks alone.
-        title="One guarantee. One approved plan. One decision with evidence."
-        lead="Connect a live web app or HTTP API. Vraelis derives a check from the outcome you need, asks a person to approve it, runs the check, and returns Verified, Failed, or Blocked with the record attached."
+        // THE OPENING IS THE LOOP, in the order it happens, in the product's own words. Three short sentences
+        // rather than one long clause: a reader scanning it gets the whole loop from the line breaks alone.
+        title="One sentence. One approved plan. One answer from the live app."
+        lead="Write what your deployed web app, or a device it controls, should do. Vraelis turns it into a plan, a person approves it, a real browser tries it on the live app, and you get Verified, Failed, or Blocked with the evidence. Start it from the console, the CLI, CI, or an AI assistant."
         cta={
           <>
             <CTA brand lg>Open Vraelis</CTA>
-            <EditorialLink href={`${BASE}/agents`}>How agents are handled</EditorialLink>
+            <EditorialLink href={`${BASE}/integrations`}>Ways to use it</EditorialLink>
           </>
         }
       />
@@ -355,9 +330,9 @@ export default function Platform() {
         <div className="v6-wrap v6-wrap--wide">
           <Reveal>
             <SectionHead
-              eyebrow="One record per guarantee"
-              title="Everything Vraelis knows lives on one object."
-              lead="Not eight disconnected tools. One guarantee is one durable record, and it accumulates the context, the approved plan, the run, the findings, the decisions, the repairs, the evidence, the completion, and the full history."
+              eyebrow="One record per check"
+              title="Everything about a check lives on one record."
+              lead="The claim, the plan a person approved, each run in a real browser, what broke, the repair prompt, the re-check, and the decision, kept in order. A later run never overwrites an earlier one."
             />
           </Reveal>
           <Reveal media style={{ marginTop: "clamp(28px,3.4vw,44px)" }}>
@@ -372,19 +347,19 @@ export default function Platform() {
           <div style={wrapRow}>
             <Reveal style={{ flex: "1 1 340px", minWidth: 0 }}>
               <SectionHead
-                eyebrow="Guarantee"
-                title="Start from the outcome, not the code."
-                lead="A company does not care which files changed. It cares whether something it depends on still holds. Every record begins with one plainly stated guarantee, written by a person and kept outside the code the agent is changing."
+                eyebrow="The claim"
+                title="Start from what should work, not from the code."
+                lead="Vraelis does not read your code. It starts from one plain sentence about what a user can do and what should be true afterwards, and checks that on the running app. Save a claim as a guarantee in the console and it can be checked again later."
               />
             </Reveal>
             <Reveal style={{ flex: "1 1 320px", minWidth: 0 }} i={1}>
               <div className="v6-card">
-                <Kicker>What must remain true</Kicker>
+                <Kicker>What should work</Kicker>
                 <p style={{ margin: "12px 0 0", color: "var(--ink)", fontSize: "1.15rem", fontWeight: 600, lineHeight: 1.35, letterSpacing: "-0.015em" }}>
-                  Existing customers are never overcharged when usage billing ships.
+                  An invited teammate can join the workspace and gets the Editor role, not Admin.
                 </p>
                 <div style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid var(--line)", display: "grid", gap: 10 }}>
-                  {[["Guarantee", "Stated as an outcome"], ["Approval", "Reviewed by a person"], ["Location", "Held outside the code"]].map(([k, v]) => (
+                  {[["Claim", "One sentence, an outcome"], ["Approval", "A person, once"], ["Target", "A public https deployment"]].map(([k, v]) => (
                     <div key={k} style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 14 }}>
                       <span className="v6-mono" style={{ color: "var(--ink-4)", fontSize: 12, letterSpacing: "0.06em", textTransform: "uppercase" }}>{k}</span>
                       <span style={{ color: "var(--ink-2)", textAlign: "right" }}>{v}</span>
@@ -402,9 +377,9 @@ export default function Platform() {
         <div className="v6-wrap">
           <Reveal>
             <SectionHead
-              eyebrow="Work"
-              title="Every guarantee, and where each one stands."
-              lead="The work surface is the portfolio view: every guarantee you have written, the system it is held against, and how its most recent run decided, in one decision vocabulary."
+              eyebrow="Checks"
+              title="Every claim, and where each one stands."
+              lead="The console lists every claim you have checked on an app and how its latest run decided, in one decision vocabulary. The rows below are examples."
             />
           </Reveal>
           <Reveal media style={{ marginTop: "clamp(28px,3vw,40px)" }}>
@@ -450,8 +425,8 @@ export default function Platform() {
           <Reveal>
             <SectionHead
               eyebrow="Run activity"
-              title="What Vraelis observes is the run, not the agent."
-              lead="A check begins at the point work is claimed complete. From there a real browser drives the live deployment and each step is recorded as it happens, with its evidence attached. Plans, code changes and tool calls are not ingested while an agent is working."
+              title="What Vraelis observes is the running app, not the builder."
+              lead="A check begins when someone says the work is done. From there a real browser drives the live deployment and each step is recorded as it happens, with its evidence attached. Vraelis does not read code, diffs or tool calls, and it does not watch anyone while they work."
             />
           </Reveal>
 
@@ -506,23 +481,18 @@ export default function Platform() {
           <Reveal style={{ marginTop: 22 }}>
             <p style={{ color: "var(--g-fg-2)", fontSize: 14.5, maxWidth: "72ch", margin: 0 }}>
               Verified, Failed and Blocked are the only three answers a run can end on, and they are the same
-              three the API, the CI gate and the webhooks return. Blocked means no verdict could be reached,
-              which is the answer that keeps the other two worth having.{" "}
+              three the console, the CLI, the API, the MCP tools and the webhooks return. Blocked means no
+              verdict could be reached, which is the answer that keeps the other two worth having.{" "}
               <Link href={`${BASE}/docs/run-activity`} className="v6-plink">How a run is recorded</Link>
             </p>
           </Reveal>
         </div>
       </section>
 
-      {/* THE DIRECTION SECTION THAT USED TO SIT HERE HAS MOVED INTO #current.
-          It was the fifth section of the selling flow, between the run and the findings, and its lead opened
-          "This is not built yet". A reader walking the page in order was being shown a capability that does
-          not exist in the same rhythm, the same card, and the same position as the ones that do, with only
-          the word Direction to tell the two apart. Marking is not the same as separating. It now sits under
-          "What Vraelis does today, and what it does not", where the whole frame of the section is that
-          everything in it is a plan, and where the Direction column already carries the one-line version.
-          The consequence for the page rhythm is deliberate: run activity and findings are now two graphite
-          sections back to back, which reads as one dark run covering the execution and what it surfaced. */}
+      {/* A DIRECTION SECTION USED TO SIT HERE, in the selling flow between the run and the findings. It moved
+          into #current and was then removed from the page entirely on 2026-09-28 with the rest of the
+          larger-product story. Run activity and findings are two graphite sections back to back on purpose:
+          one dark run covering the execution and what it surfaced. */}
 
       {/* 6 ── Findings (GRAPHITE) ── */}
       <section className="v6-sec v6-dark" data-nav-dark>
@@ -530,8 +500,8 @@ export default function Platform() {
           <Reveal>
             <SectionHead
               eyebrow="Findings"
-              title="Where a claim and the evidence disagree."
-              lead="A finding is what remains when an agent's confidence meets what the software actually does. Contradictions, missing evidence, and unsafe assumptions are recorded against the guarantee, not buried in a log."
+              title="Where a claim and the live app disagree."
+              lead="When the app does not do what the sentence says, the run records what was expected, what was observed, and how to reproduce it. When the run cannot decide, it says Blocked and gives the reason, rather than guessing."
             />
           </Reveal>
           <div style={{ marginTop: "clamp(28px,3vw,40px)", display: "flex", flexDirection: "column", gap: 14 }}>
@@ -559,27 +529,27 @@ export default function Platform() {
           <div style={wrapRow}>
             <Reveal style={{ flex: "1 1 340px", minWidth: 0 }}>
               <SectionHead
-                eyebrow="Repair, live today"
-                title="A fix is finished when the guarantee holds, checked independently."
-                lead="This is the verification engine, one part of oversight. It holds the guarantee outside the code and proves the running software against it in a real browser. A repair is not done because the agent changed something. It is done when the guarantee passes again, as its own record, without overwriting the earlier ones."
+                eyebrow="Fix and re-check, live today"
+                title="A fix is finished when the check passes again."
+                lead="On Failed, Vraelis writes a repair prompt for whoever fixes it, a person or a coding agent. Deploy the fix and re-check: the same approved plan runs again with no new approval, within 24 hours of the approval and up to 10 times, on the same site. It passes as its own record, and the earlier Failed stays."
               />
               <div style={{ marginTop: 24 }}>
-                <EditorialLink href={`${BASE}/agents`}>How Vraelis challenges an agent&rsquo;s claim</EditorialLink>
+                <EditorialLink href={`${BASE}/docs/recheck`}>How a re-check works</EditorialLink>
               </div>
             </Reveal>
             <Reveal media style={{ flex: "1 1 340px", minWidth: 0 }} i={1}>
               <GPanel style={{ boxShadow: "var(--sh-md)" }}>
-                <GBar left={<span className="v6-kicker" style={{ color: "var(--g-fg-3)" }}>Guarantee, held outside the code</span>} />
+                <GBar left={<span className="v6-kicker" style={{ color: "var(--g-fg-3)" }}>The claim, held outside the code</span>} />
                 <p style={{ margin: 0, color: "var(--g-fg)", fontSize: "1.1rem", fontWeight: 600, lineHeight: 1.35 }}>
                   A paid customer keeps Pro access after signing back in.
                 </p>
                 <div style={{ marginTop: 18, display: "flex", flexDirection: "column" }}>
                   {[
-                    ["The agent claimed", "checkout complete", "none"],
+                    ["The work claimed", "checkout complete", "none"],
                     ["Payment", "succeeded", "none"],
                     ["Access", "not granted", "stop"],
-                    ["First repair", "did not survive sign-in", "stop"],
-                    ["Later repair", "independently Verified", "go"],
+                    ["First fix, re-checked", "did not survive sign-in", "stop"],
+                    ["Second fix, re-checked", "Verified", "go"],
                   ].map(([k, v, tone], i) => (
                     <div key={k} style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "11px 0", borderTop: i === 0 ? "none" : "1px solid var(--g-line)" }}>
                       <span style={{ color: "var(--g-fg-2)", fontSize: 14 }}>{k}</span>
@@ -604,13 +574,13 @@ export default function Platform() {
             <SectionHead
               eyebrow="Completion"
               title="Completion is a decision, not a claim."
-              lead="When an agent says it is done, Vraelis returns one of three states. The agent that produced the work does not get to certify it."
+              lead="When someone says it works, Vraelis returns one of three answers. Whoever produced the work does not get to certify it."
             />
           </Reveal>
           <div className="v6-grid3" style={{ marginTop: "clamp(28px,3vw,40px)" }}>
             {[
-              { s: "go" as Sig, t: "Verified", d: "The guarantee holds, checked independently against the plan a person approved." },
-              { s: "stop" as Sig, t: "Failed", d: "The software does not meet the guarantee. The gap is recorded as evidence." },
+              { s: "go" as Sig, t: "Verified", d: "The claim holds on the live app, checked against the plan a person approved." },
+              { s: "stop" as Sig, t: "Failed", d: "The app does not do what the claim says. The gap is recorded as evidence, with a repair prompt." },
               { s: "stop" as Sig, t: "Blocked", d: "No verdict could be reached, so none is reported. Nothing is recorded as proven." },
             ].map((c, i) => (
               <Reveal key={c.t} i={i}>
@@ -624,13 +594,10 @@ export default function Platform() {
         </div>
       </section>
 
-      {/* THE MEMORY SECTION THAT USED TO SIT HERE HAS MOVED INTO #current.
-          It argued that the product's real value is accumulated, company-specific understanding, in the
-          present tense, on the selling flow of the page, while _content/scope.ts files that same capability
-          under Horizon and says of it "Not built". The strongest claim on the page was the one thing the
-          product does not do, and it sat between Completion and Knowledge with no marking at all. What is
-          true today, that every run is preserved and nothing is overwritten, is already said by Completion
-          and by the History fact on the record panel, so nothing true was lost by moving it. */}
+      {/* A MEMORY SECTION USED TO SIT HERE, arguing in the present tense for accumulated understanding the
+          product does not have. It moved into #current and was removed on 2026-09-28. What is true today,
+          that every run is preserved and nothing is overwritten, is said by Completion and by the History
+          fact on the record panel. */}
 
       {/* 10 ── Knowledge ── */}
       <section className="v6-sec v6-sec--sunk">
@@ -657,15 +624,16 @@ export default function Platform() {
       </section>
 
       {/* 10b ── What Vraelis can reach ──
-          The site described one surface, a web application in a browser, and never said whether that was the
-          thesis or the beachhead. Every line comes from _content/coverage.ts, which carries the rule that
-          governs them: a surface is Live only after a real failing case ran end to end on it. */}
+          Two surfaces are live, both through a real browser: deployed web apps, and connected devices through
+          the web control panel that runs them. Device-level checks and native apps are Next, not built, and
+          say so. Every line comes from _content/coverage.ts, which carries the rule that governs them: a
+          surface is Live only after a real failing case ran end to end on it. */}
       <section className="v6-sec v6-sec--sunk" id="coverage">
         <div className="v6-wrap">
           <Reveal>
             <SectionHead
               eyebrow="What it can reach"
-              title="The browser is where this started, not where it stops."
+              title="Web apps, and the devices they control."
               lead={COVERAGE_THESIS}
             />
           </Reveal>
@@ -675,10 +643,10 @@ export default function Platform() {
                 <li style={{ display: "grid", gap: 10, paddingBlock: "clamp(20px,2.2vw,26px)", borderTop: "1px solid var(--line-2)" }}>
                   <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap" }}>
                     <h3 className="v6-dm" style={{ margin: 0 }}>{s.name}</h3>
-                    <Signal state={s.tier === "Live" ? "go" : "wait"}>{s.tier}</Signal>
+                    <Signal state={s.tier === "Live" ? "go" : s.tier === "Next" ? "wait" : "stop"}>{s.tier === "Next" ? "Next, not built" : s.tier}</Signal>
                   </div>
                   <p className="v6-body" style={{ maxWidth: "70ch" }}>{s.reach}</p>
-                  {/* The half a reader can check, and on a Direction row the half that says it is not built. */}
+                  {/* The half a reader can check, and on a Next or Not covered row what happens instead. */}
                   <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.55, color: "var(--ink-4)", maxWidth: "70ch" }}>{s.today}</p>
                 </li>
               </Reveal>
@@ -702,7 +670,7 @@ export default function Platform() {
               // NOT "on the left" and "on the right". The two cards sit side by side on a desktop and stack
               // on a phone, so the directions named a layout half the readers do not have. The cards carry
               // their own labels, Live today and Direction, and those are true in both arrangements.
-              lead="The verification engine is real and in use. Everything under Direction is a plan, and each line says what actually happens today instead. Next, Later and Horizon say how much of a line already stands, not when it lands. Nothing there is a delivery date, and nothing under Live today is coming soon."
+              lead="The check is real and in use. Everything under Direction is a gap in that same check, and each line says what actually happens today instead. Next and Later say how much of a line already stands, not when it lands. Nothing there is a delivery date, and nothing under Live today is coming soon."
             />
           </Reveal>
           <div style={{ ...wrapRow, marginTop: "clamp(28px,3vw,40px)" }}>
@@ -730,60 +698,9 @@ export default function Platform() {
             </p>
           </Reveal>
 
-          {/* TWO DIRECTION LINES, EXPANDED, INSIDE THE SECTION THAT FRAMES THEM.
-              Both of these were full sections in the selling flow above, and the reasoning for moving them
-              is at the two places they were cut from. They live here rather than as sections of their own
-              because this is the only part of the page where a reader has already been told, in the lead and
-              in the standing rule, that everything in front of them is a plan. They are set as h3 under the
-              section's h2 for that reason: subordinate to "what it does not", not a peer of the mechanism
-              sections. Each one opens on the words "Not built", because a Direction pill is a colour and the
-              sentence is the thing that survives being skimmed. */}
-          {[
-            {
-              k: "boundary",
-              h: "Human judgment at the boundary.",
-              p: "Not built. Most oversight can be mechanical and some of it cannot. Today a person approves or refuses a plan as a whole, and no step inside an approved plan is held on its own. The direction is to raise exactly the sensitive and irreversible moments to a person, deliberately and rarely, instead of holding the whole plan or none of it.",
-              right: (
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  {REVIEW.map((r) => (
-                    <div key={r.t} className="v6-card" style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", justifyContent: "space-between", padding: "clamp(16px,1.8vw,20px)", borderStyle: "dashed", borderColor: "var(--line-2)" }}>
-                      <div style={{ minWidth: 0, flex: "1 1 240px" }}>
-                        <div style={{ color: "var(--ink)", fontWeight: 600, fontSize: 15.5, lineHeight: 1.35 }}>{r.t}</div>
-                        <div className="v6-mono" style={{ marginTop: 5, color: "var(--ink-4)", fontSize: 12, letterSpacing: "0.05em", textTransform: "uppercase" }}>Decides: {r.who}</div>
-                      </div>
-                      <Signal state="wait">Direction</Signal>
-                    </div>
-                  ))}
-                </div>
-              ),
-            },
-            {
-              k: "memory",
-              h: "Memory that makes the next guarantee faster to judge.",
-              p: "Not built. Today every run against a guarantee is preserved, with the plan that was approved, the step record, the screenshots and the decision, and nothing is overwritten. Nothing reads that history back. The direction is that what Vraelis learns on one guarantee sharpens the judgment on the next, so the accumulated, company-specific understanding is worth more than any single verdict.",
-              right: (
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  {MEMORY.map((m, i) => (
-                    <div key={m} style={{ display: "flex", gap: 16, alignItems: "center", padding: "12px 2px", borderTop: i === 0 ? "none" : "1px solid var(--line)" }}>
-                      <span className="v6-mono" style={{ color: "var(--ink-4)", fontSize: 12.5 }}>{String(i + 1).padStart(2, "0")}</span>
-                      <span style={{ color: "var(--ink-2)", fontSize: "1.02rem", fontWeight: 500, letterSpacing: "-0.01em" }}>{m}</span>
-                    </div>
-                  ))}
-                </div>
-              ),
-            },
-          ].map((d, i) => (
-            <Reveal key={d.k} i={Math.min(i + 1, 3)}>
-              <div style={{ ...wrapRow, marginTop: "clamp(30px,3.4vw,48px)", paddingTop: "clamp(24px,2.8vw,36px)", borderTop: "1px solid var(--line-2)" }}>
-                <div style={{ flex: "1 1 320px", minWidth: 0 }}>
-                  <Signal state="wait">Direction</Signal>
-                  <h3 className="v6-dm" style={{ margin: "14px 0 0" }}>{d.h}</h3>
-                  <p className="v6-body" style={{ marginTop: 12, maxWidth: "62ch" }}>{d.p}</p>
-                </div>
-                <div style={{ flex: "1 1 320px", minWidth: 0 }}>{d.right}</div>
-              </div>
-            </Reveal>
-          ))}
+          {/* THE TWO EXPANDED DIRECTION BLOCKS THAT SAT HERE ARE GONE (2026-09-28). One held sensitive steps
+              inside an approved plan for a person; the other read the history of one guarantee into the
+              next. Both were marked Not built and both described a larger product than the one on this page. */}
         </div>
       </section>
 
@@ -792,13 +709,13 @@ export default function Platform() {
       <section className="v6-sec v6-sec--tight">
         <div className="v6-wrap" style={{ textAlign: "center", maxWidth: 760 }}>
           <Reveal>
-            <h2 className="v6-dl" style={{ marginInline: "auto" }}>Let an agent do the work. Keep the sentence it is not allowed to break.</h2>
+            <h2 className="v6-dl" style={{ marginInline: "auto" }}>Say what should work. Let the live app answer.</h2>
             <p className="v6-lead" style={{ margin: "20px auto 30px", textAlign: "center" }}>
-              One guarantee, one plan you approved, one real browser run on your live deployment, and one decision with the evidence kept.
+              One sentence, one plan you approved, one real browser run on your live deployment, and one decision with the evidence kept.
             </p>
             <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
               <CTA brand lg>Open Vraelis</CTA>
-              <CTA href={`${BASE}/agents`} ghost lg>How agents are handled</CTA>
+              <CTA href={`${BASE}/integrations`} ghost lg>Ways to use it</CTA>
             </div>
           </Reveal>
         </div>

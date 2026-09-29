@@ -8,7 +8,7 @@ import { V6_BASE } from "@/lib/v6-routes";
 export const metadata = v6meta({
   title: "Research",
   description:
-    "The methodology behind trusting agent work: why builders cannot remain their only judges, responsibility versus implementation, evidence versus confidence, human judgment at boundaries, repair verification, preserved failure history, and earned autonomy.",
+    "The methodology behind trusting a claim that software works: why builders cannot remain their only judges, evidence versus confidence, human judgment at the boundary, repair verification, preserved failure history, and the questions still open.",
   path: "/research",
   type: "website",
 });
@@ -248,8 +248,8 @@ export default function ResearchPage() {
     <>
       <PageHero
         kicker="Research"
-        title="The methods behind trusting agent work."
-        lead="Vraelis is building the practice of independent oversight for software agents. This page describes the methodology we use today and the questions we are still working through. It does not claim results we have not earned."
+        title="The methods behind trusting a claim that something works."
+        lead="Vraelis checks whether live software does what someone says it does. This page describes the methodology we use today and the questions we are still working through. It does not claim results we have not earned."
         cta={<><CTA brand>Open Vraelis</CTA><EditorialLink href={`${BASE}/method`}>Read the Method</EditorialLink></>}
       />
 
@@ -260,7 +260,7 @@ export default function ResearchPage() {
             <SectionHead
               eyebrow="Our stance"
               title="A builder cannot remain the only judge of its own work."
-              lead="An agent that plans, writes, and repairs a system will also report that it is finished. Someone independent has to decide whether that claim holds. The directions below are how we approach that decision, and where our thinking is still open."
+              lead="Whoever plans, writes, and repairs a system, a person, a team or an agent, will also report that it is finished. Someone independent has to decide whether that claim holds. The directions below are how we approach that decision, and where our thinking is still open."
             />
           </Reveal>
           <div className="v6-know">
@@ -285,7 +285,7 @@ export default function ResearchPage() {
             <SectionHead
               eyebrow="How we read a claim"
               title="A completion claim is not evidence."
-              lead="Before Vraelis accepts that work is done, it separates what an agent asserts from what the running software actually shows."
+              lead="Before Vraelis accepts that work is done, it separates what the builder asserts from what the running software actually shows."
             />
           </Reveal>
           <Reveal media className="v6-grid3">
@@ -351,8 +351,8 @@ export default function ResearchPage() {
           <Reveal>
             <SectionHead
               eyebrow="Where this goes"
-              title="Oversight is a practice, not a finished science."
-              lead="The methodology here is what we apply now. As agents take on more, the standard has to move with them. That work is ongoing, and it is written down elsewhere too."
+              title="Checking is a practice, not a finished science."
+              lead="The methodology here is what we apply now. As software changes, and as more of it runs devices, the standard has to move with it. That work is ongoing, and it is written down elsewhere too."
             />
             <div style={{ marginTop: 26, display: "flex", gap: 22, flexWrap: "wrap" }}>
               <EditorialLink href={`${BASE}/method`}>Read the Vraelis Method</EditorialLink>

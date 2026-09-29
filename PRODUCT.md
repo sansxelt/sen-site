@@ -8,69 +8,90 @@ web
 
 ## Users
 
-Technical founders and engineering teams who ship software built with or by AI coding agents
-(Cursor, Claude Code, Replit, Lovable, and similar). The situation: an agent reports that a change
-is done, and the team needs independent proof that the deployed software actually does what the
-business requires before it ships. Secondary users are automated: CI pipelines and the coding agents
-themselves, which consume the same verification over an API, CLI, and webhooks.
+Anyone who ships a web app, or answers for one, and can say in one sentence what it should do:
+developers, product teams, agencies checking client sites, founders and no-code builders, and QA. The
+situation is the same for all of them: someone says a change works (a teammate, a client, a contractor,
+an AI coding agent, or the reader themselves), and they want the live app to answer before they rely on
+it. Teams that run connected devices (drones, robots, fleets) from a web control panel are a named
+area. Automated callers use the same check: CI pipelines through the API and CLI, and AI coding
+assistants over MCP. Those are ways in, not the definition of the user.
 
 ## Product Purpose
 
-Vraelis independently verifies that AI built software still does what the business requires. A user
-states an outcome that must be true on a deployed application; Vraelis derives the requirements,
-validates a proof plan that can prove the claim, executes the approved plan against the pinned
-deployment through a real browser, and returns an evidence backed decision. Success is a trustworthy
-Verified: when Vraelis says Verified, people can rely on it. The most important internal metric is a
-rare, measured false Verified rate. A trust product survives being cautious; it cannot survive
-confidently approving broken software.
+Vraelis checks whether a deployed web app does what someone says it does. A person, a pipeline or an
+AI assistant hands it one sentence about what should work on a public https deployment; Vraelis turns
+the sentence into requirements and the browser steps that would prove them; a person approves that
+plan once; a real browser runs it on the live app; and the answer is Verified, Failed or Blocked, with
+the evidence (steps, screenshots, console errors, failed requests) and, on Failed, a repair prompt.
+After a fix, the same approved plan can be re-checked without a new approval, within limits. A
+connected device is checked the same way, through the web control panel that runs it. Success is a
+trustworthy Verified: when Vraelis says Verified, people can rely on it. The most important internal
+metric is a rare, measured false Verified rate. A trust product survives being cautious; it cannot
+survive confidently approving broken software.
 
 ## Positioning
 
+Narrow about the function, wide about the audience. The category line is "Verification on the live
+app", and the headline is "Say what should work. Vraelis checks it on the live app." No public line
+names a specific assistant or makes the product about one kind of builder; AI assistants over MCP are
+one of four channels beside the console, the CLI and CI.
+
 The mechanism a neighboring product cannot truthfully copy: Vraelis checks from outside the
-application, with no SDK, no test files, and no source access, so it does not inherit the assumptions
-the mistake came from. Its input is a business outcome stated in one sentence, not an authored test
-suite. It returns one explainable decision bound to the exact build, with deterministic evidence, and
-it preserves every verification as a separate historical record that a later pass never overwrites. A
-coding agent cannot mark its own work complete, and it cannot game a verification it does not control.
+application, with no SDK in the app, no test files, and no source access, so it does not inherit the
+assumptions the mistake came from. Its input is one sentence about what should work, not an authored
+test suite. A person approves the plan and an API key cannot, so the tool that asked for a check never
+signs off on it. It returns one explainable decision with deterministic evidence, and it preserves
+every verification as a separate historical record that a later run never overwrites.
 
 ## Operating Context
 
-The loop: connect a deployed web application and state the outcome that must be true; Vraelis derives
-the requirements the claim implies and shows them; it validates a reviewed proof plan and the user
-approves the exact plan; it executes against the pinned deployment through a real isolated browser; it
-returns a decision with evidence (step trace, screenshots, console output, failed network requests);
-on failure it packages what should have happened, what happened instead, reproduction, and evidence
-as a repair prompt for the coding agent; it independently reverifies the repaired deployment; each run
-is preserved as a separate immutable record. The same verification is reachable by people in the app
-and by software over the API, CLI, CI gate, and outbound webhooks.
+The loop: verify, approve, run, re-check. A claim arrives with a public https deployment URL, from the
+console, the CLI (`vraelis verify --url URL --claim "..." --wait`), the API (`POST /v1/verifications`),
+or an AI assistant over MCP (`vraelis_verify`). Vraelis derives the requirements and a browser plan and
+returns an approval link (`app.vraelis.com/review/...`, `approve_url` in the API). A person approves the
+exact plan; `POST /v1/verifications/plans/{id}/approve` refuses every API key with 403
+`plan_requires_human`. The approved plan runs against the live app through a real isolated browser and
+returns a decision with evidence; on failure it packages expected against observed, reproduction and
+evidence as a repair prompt that goes back to whoever asked. After the fix is deployed,
+`POST /v1/verifications/{id}/recheck` (`vraelis recheck`, `vraelis_recheck`) runs the same approved plan
+again without a new approval, within 24 hours of the approval, at most 10 times, on the same scheme and
+host. Every run, a re-check included, is billed as one verification, and each run is preserved as a
+separate immutable record (`recheck_of` links a re-check to the run it repeats).
 
 ## Capabilities and Constraints
 
-Today, live: specific business critical workflows in deployed web applications, driven through a real
-browser from outside, with a Postgres backed run queue, an isolated browser worker, and private,
-owner scoped evidence reached only by short lived signed URLs.
+Today, live: deployed web applications, and connected devices checked through their web control
+panels, driven through a real browser from outside, with a Postgres backed run queue, an isolated
+browser worker, and private, owner scoped evidence reached only by short lived signed URLs. Ways in:
+the console; the CLI, installed by script (`curl -fsS https://vraelis.com/install | sh`, or
+`irm https://vraelis.com/install.ps1 | iex` on Windows) with `verify`, `recheck`, `result`, `init`,
+`mcp`, `login`, `logout` and `status`; the v1 API for CI; and the MCP server, local (`vraelis mcp`, set
+up by `vraelis init`) and hosted (`https://vraelis.com/mcp`, OAuth for ChatGPT and Claude, or an
+`x-api-key` header). Signed `verification.completed` webhooks and Slack delivery carry the result.
 
-Canonical public decision vocabulary, identical across the app, API, CI gate, and webhooks:
-**Verified, Failed, Blocked.** A targeted repair check renders publicly as Blocked until a full
-critical verification returns Verified. The mapping lives in `lib/preflight/public-decision.ts`
-(ready to verified, blocked to failed, needs_review and repair_verified to blocked).
+Canonical public decision vocabulary, identical across the app, CLI, API, MCP tools, CI gate and
+webhooks: **Verified, Failed, Blocked.** A targeted repair check renders publicly as Blocked until a
+full verification returns Verified. The mapping lives in `lib/preflight/public-decision.ts` (ready to
+verified, blocked to failed, needs_review and repair_verified to blocked).
 
 Explicit boundaries the product does not cross today: it does not edit code; it does not diagnose the
-source level cause (the coding agent does that, Vraelis independently checks the repair); it does not
-introspect payment processors, databases, or email directly, only browser observed outcomes. API key
-triggers and CI gating are in early access, built and typechecked but not fully proven end to end in
-production, and the site must say so.
+source level cause (whoever fixes it does that, Vraelis independently re-checks the fix); it does not
+read code, diffs or tool calls, or watch anyone while they work; it does not introspect payment
+processors, databases, or email directly, only browser observed outcomes; for a connected device it
+sees only what the control panel shows. HTTP API checks are a beta in the signed-in console only. The
+CLI and the TypeScript SDK (`@vraelis/sdk` 0.3.0) are not published to npm.
 
-Direction, not today's coverage. Next: durable Guarantees, additional evidence sources, and
-deployment triggered reverification. Horizon: independent proof infrastructure for AI built systems
-and the companies they run.
+Direction, not today's coverage, and labelled as such wherever it appears. Next: device level checks
+that read a drone, robot or fleet directly (firmware, sensors, telemetry), and native mobile and desktop
+apps; plus the gaps in the check itself listed on /platform#current. Vraelis verifies defined behaviour
+against stated requirements; it does not certify that any system is safe.
 
 Legacy terminology to retire from every public surface: "Production Pass" (old product name); the old
-decision labels READY, NEEDS REVIEW, REPAIR VERIFIED; and the retired human evaluation product
-(candidate evaluation, audience fit, Decision Package, qualified human judgment). Audit note: the
-current homepage and developers page already use the canonical vocabulary; the residual legacy
-language survives on the /demo and /free-report pages, in the orphaned pass-demo component, and in the
-flag gated legacy pricing branch.
+decision labels READY, NEEDS REVIEW, REPAIR VERIFIED; the retired human evaluation product (candidate
+evaluation, audience fit, Decision Package, qualified human judgment); and, since 2026-09-28, the
+category "independent verification for AI-built systems", "state what must keep working", business
+guarantees as the pitch, and the Compile, Challenge and Accumulate roadmap. A guarantee remains a
+console concept: a claim saved so it can be checked again.
 
 ## Brand Commitments
 
@@ -79,8 +100,8 @@ verification). Identity: light first, warm paper and emerald, shared with the au
 application so the public site and the product feel like one company. Type: Geist as the display and
 body face, with a technical monospace for data and labels. Voice: serious, operational, and honest,
 under one rule enforced across the site: every sentence describes something that works today or is
-explicitly marked as direction. Taglines in use: "AI builds. Vraelis proves." and "AI says it's done.
-Vraelis proves it." Copy avoids em dashes, en dashes, middots, and dash separators (a standing user
+explicitly marked as direction. Taglines in use: "Say what should work. Vraelis checks it on the live
+app." and, for link previews, "Checks your live app does what you say it does." Copy avoids em dashes, en dashes, middots, and dash separators (a standing user
 rule): use plain punctuation, slashes, or rewording.
 
 ## Evidence on Hand

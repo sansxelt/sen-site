@@ -1,5 +1,5 @@
 import { v6meta } from "../_system/meta";
-import { PageHero, Reveal, SectionHead, CTA, EditorialLink, ProseLink } from "../_system/ui";
+import { PageHero, Reveal, SectionHead, CTA, ProseLink } from "../_system/ui";
 import { V6_BASE } from "@/lib/v6-routes";
 import {
   PLAN_CATALOG_V1, FREE_TIER, PASS_INCLUDED_FLOWS, EXTRA_FLOW_CENTS, passPriceCents,
@@ -66,9 +66,11 @@ const n2 = (i: number) => String(i + 1).padStart(2, "0");
 // journey as a flow, so the row that defines depth names both words once rather than leaving a reader to
 // work out on their own whether they are two different things being sold.
 const WHAT_A_VERIFICATION_IS: [string, string][] = [
-  ["One system, verified once", "A verification covers a single connected system end to end: deriving the checks from your guarantee, running the real journeys in a browser, and returning the evidence. It is not metered per page, per assertion, or per minute."],
+  ["One system, verified once", "A verification covers a single connected system end to end: deriving the checks from your claim, running the real journeys in a browser, and returning the evidence. It is not metered per page, per assertion, or per minute."],
   ["Journeys are the depth of a verification", "A journey is one path through the product, and it is what the plan cards count as a flow. Higher plans allow more journeys in a single verification, which is how one verification covers more of a system rather than more systems."],
   ["A refused run costs nothing", "When Vraelis cannot build a test that would prove your claim, it says so and charges nothing. You are never billed for a verification that could not have been evidence."],
+  // Added 2026-09-28 with the re-check endpoint, because "no new approval" is easy to misread as "free".
+  ["A re-check is one verification", "Running the same approved plan again after a fix needs no new approval for 24 hours, and it is billed as one verification, the same as the first run. It does not matter whether a person, a CI job or an AI assistant started it."],
 ];
 
 const HONEST: [string, string][] = [

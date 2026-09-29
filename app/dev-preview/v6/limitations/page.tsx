@@ -1,5 +1,5 @@
 import { v6meta } from "../_system/meta";
-import { PageHero, Reveal, SectionHead, Signal, EditorialLink, ProseLink } from "../_system/ui";
+import { PageHero, Reveal, SectionHead, Signal, ProseLink } from "../_system/ui";
 import { V6_BASE } from "@/lib/v6-routes";
 
 export const metadata = v6meta({
@@ -30,17 +30,24 @@ const n2 = (i: number) => String(i + 1).padStart(2, "0");
 
 // Every entry here is a real, current property of the system. This page is worthless the moment it becomes
 // marketing about being humble, so nothing goes on it that is not actually true today.
+// UPDATED 2026-09-28. HTTP APIs were listed as simply "Supported", beside web apps. HTTP API checks are a
+// beta, reachable only from the signed-in console, and this is the one place the public site says so.
+// Connected devices were added the same day, to the same standard as /platform#coverage: through the web
+// control panel today, the device itself not built.
 const RUNTIMES: [string, "go" | "wait" | "stop", string][] = [
   ["Deployed web applications", "go", "Supported and proven in production"],
-  ["HTTP APIs", "go", "Supported"],
+  ["Connected devices, through their web control panel", "go", "Supported through the panel"],
+  ["HTTP APIs", "wait", "Beta, in the signed-in console only"],
+  ["Device firmware, sensors and telemetry, read directly", "stop", "Not built yet"],
   ["Mobile applications", "stop", "Not supported"],
   ["Desktop applications", "stop", "Not supported"],
+  ["Localhost and private addresses", "stop", "Refused before a run"],
 ];
 
 const NEEDS_HELP: [string, string][] = [
   ["Sign-in that requires a human", "A one-time code sent to a phone, a CAPTCHA, or a hardware key cannot be completed by a run. Give Vraelis a test identity that signs in with a password, or a preview environment where the challenge is disabled."],
   ["Destructive actions", "A run will not delete an account or cancel a live subscription unless a flow explicitly permits it. That guard is on by default, so a journey ending in deletion will stop short until you say otherwise."],
-  ["Anything outside the deployment", "Vraelis drives your application from the outside, exactly as a person would. It cannot read your database directly, inspect your logs, or reason about code it never sees. If a failure leaves no trace in the interface, a run cannot observe it."],
+  ["Anything outside the deployment", "Vraelis drives your application from the outside, exactly as a person would. It cannot read your database directly, inspect your logs, or reason about code it never sees. For a connected device it sees what the control panel shows, not the device. If a failure leaves no trace in the interface, a run cannot observe it."],
 ];
 
 const BINDING: [string, string][] = [
@@ -50,7 +57,9 @@ const BINDING: [string, string][] = [
 ];
 
 const REVIEW: [string, string][] = [
-  ["A model may author a requirement. Only a person may review it.", "Vraelis derives requirements from your guarantee, and those requirements are marked as machine-authored and awaiting review. They do not become binding because the system produced them."],
+  ["A model may author a requirement. Only a person may review it.", "Vraelis derives requirements from your claim, and those requirements are marked as machine-authored and awaiting review. They do not become binding because the system produced them."],
+  ["An API key cannot approve a plan", "The approve endpoint refuses every API key with plan_requires_human and returns the approval link. The CLI, a CI job or an AI assistant can ask for a check; a person approves it."],
+  ["A re-check has limits", "The same approved plan runs again without a new approval only within 24 hours of the approval, at most 10 times, and on the same scheme and host. Past that, a new check needs a new approval. Each re-check is billed as one verification."],
   ["An unreviewed plan does not run", "Submit a claim and Vraelis returns the plan it would execute, marked review required, and runs nothing. A person approves the exact plan, and execution then runs precisely that."],
   ["Discovery may propose, not rewrite", "Re-running discovery against an approved contract will not edit what was already approved. It refuses rather than quietly changing the meaning a past verification was measured against."],
 ];

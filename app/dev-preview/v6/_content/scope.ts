@@ -26,14 +26,21 @@
 // of it is already standing; they promise nothing about when.
 
 // What the product does today. Every line is something a reader could exercise this afternoon.
+//
+// REWRITTEN 2026-09-28 around the one function the public story is locked on. Lines that described the
+// check as "a guarantee" first, or put HTTP APIs beside web apps as an equal, are gone: a guarantee is a
+// console concept (a claim saved so it can be checked again) and HTTP API checks are a signed-in beta, which
+// /limitations says in one line. What was added is what shipped: the MCP server, the approval link, and the
+// re-check of an approved plan.
 export const LIVE: string[] = [
-  "A guarantee, held outside the code, with the plan that proves it approved by a person",
-  "Execution of the running software in a real browser, with evidence",
+  "One sentence about a deployed web app, turned into a plan a person approves before anything runs",
+  "Connected devices such as drones, robots and fleets, checked through the web control panel that runs them",
+  "A real browser run on the live app, with steps, screenshots, console errors and failed requests",
+  "Verified / Failed / Blocked, with a repair prompt on Failed and every run preserved",
   "A refusal to charge when no check could prove the claim, on every path that starts a run",
-  "Human review, findings, and a repair package written for a coding agent",
-  "Verified / Failed / Blocked decisions, with history preserved",
-  "Deployed web applications and HTTP APIs",
-  "API, an installable CLI, webhooks, GitHub, Vercel, and Slack",
+  "A re-check of the same approved plan after a fix, within 24 hours of the approval, up to 10 times, on the same site",
+  "The console, an installable CLI, the API for CI, and an MCP server for AI assistants, local and hosted",
+  "Signed webhooks and Slack delivery",
 ];
 
 export type Tier = "Next" | "Later" | "Horizon";
@@ -43,41 +50,37 @@ export type DirectionItem = [string, string, Tier];
 // Written in tier order, because the tier is the only ranking on this list and a reader scanning the column
 // should not have to reassemble it from a shuffled set of labels.
 //
-// Six became eleven when the source these were written from was read properly: five honest boundaries were
-// not on the page at all, and four of them are things a customer meets in their first week. A gap a reader
-// finds out about after paying is worse than the same gap printed here.
+// GAPS IN THE CHECK, AND THE ONE AREA IT IS GROWING INTO. Until 2026-09-28 this list ran out to a Horizon
+// tier: live agent activity, surfaces beyond the browser, and autonomy earned from a record. Those were
+// destinations for a much larger company, and printed beside the live list they read as the product, so
+// they left the public story. The same day the founder named connected devices as the niche: they are checked
+// through their web control panels today (see LIVE), and reading the device itself is the first Next line
+// below, with native apps beside it. The rest is the honest list of places the check is not finished, each
+// with the true present tense. "The repair reaches your coding agent on its own" left this list too: over
+// MCP and the CLI the repair prompt now goes straight back to whoever asked.
 export const DIRECTION: DirectionItem[] = [
+  ["Device-level checks: firmware, sensors and telemetry read from the device itself",
+    "Not built yet. Today a drone, robot or fleet is checked through the web control panel that runs it, and Vraelis sees only what that panel shows. Nothing reads the device directly.",
+    "Next"],
+  ["Native mobile and desktop apps",
+    "Not built yet. Today the boundary is what a real browser can open, and a native binary is outside it.",
+    "Next"],
   ["The command line installs with npm install",
-    "Today it installs from a script served as plain text, on macOS, Linux and Windows. The package is prepared and is not published, so npm install does not reach it.",
+    "Today it installs from a script served as plain text, on macOS, Linux and Windows. The package is prepared and is not published, so npm install does not reach it. The TypeScript SDK is in the same state.",
     "Next"],
   ["A plan is rehearsed before a person is asked to approve it",
     "Today a plan goes from prepared to approved with nothing having tried to run it in between. The rehearsal that refuses to mint a plan which cannot pass is an operator script, outside the product.",
     "Next"],
   ["Every run asserts a value no earlier run could have left behind",
-    "Today a plan can assert a value an earlier run wrote, so software that has stopped saving can still come back Verified. Clearing that state is a script somebody runs.",
+    "Today a plan can assert a value an earlier run wrote, so an app that has stopped saving can still come back Verified. Clearing that state is a script somebody runs.",
     "Next"],
-  ["An outcome sentence is required when a system is connected",
-    "Today a contract that never named an outcome has no claim to gate, so its launches are recorded as ungated rather than counted as having passed.",
-    "Next"],
-  ["The repair reaches your coding agent on its own",
-    "Today a failure writes a repair package onto the issue: what should have happened, what happened instead, and the evidence. Vraelis does not send it anywhere. You copy it.",
-    "Later"],
   ["A repair is a durable record of its own",
-    "Today the repair table exists and nothing writes to it, so the surfaces that read it are switched off. The repair package itself is real and lives on the issue and on the run report.",
+    "Today the repair table exists and nothing writes to it, so the surfaces that read it are switched off. The repair prompt itself is real and lives on the issue, on the run report, and in the answer an AI assistant or the CLI receives.",
     "Later"],
   ["A new deployment is noticed, and rechecked without being asked",
-    "Today Vraelis reads the deployment you point it at when a run is launched. Nothing watches for the next one, and every recheck is started by a person.",
+    "Today Vraelis reads the deployment you point it at when a run is launched. Nothing watches for the next one. A re-check is started by a person, a CI job or an AI assistant.",
     "Later"],
-  ["One page per guarantee, showing every failure, repair and recheck in order",
-    "Today each run records the guarantee and the exact approved meaning it was proved against. No surface puts that history in a line yet.",
+  ["One page per saved claim, showing every failure, fix and re-check in order",
+    "Today each run records the claim and the exact approved plan it was proved against, and a re-check points back at the run it repeats. No surface puts that history in a line yet.",
     "Later"],
-  ["Live agent activity read as it happens",
-    "Today a check begins at the point work is claimed complete. Plans, code changes and tool calls are not ingested while an agent is working.",
-    "Horizon"],
-  ["Surfaces beyond a browser, and beside the agent",
-    "Today the boundary is what a real browser and an HTTP client can observe from outside. Mobile, desktop and native applications are not covered.",
-    "Horizon"],
-  ["Reliability memory, and autonomy earned from a record",
-    "Not built. How much an agent may be trusted to do alone should be a conclusion drawn from what it has actually got right, rather than a setting somebody chooses.",
-    "Horizon"],
 ];

@@ -12,7 +12,7 @@ import { robotsMeta } from "@/lib/stealth";
 const v6Public = process.env.NEXT_PUBLIC_VRAELIS_V6_PUBLIC === "1";
 
 // Root metadata for the design-06 public rebuild. Every positioning string here is imported, not written in
-// place: the company category is still being decided, and changing it must be one edit in
+// place: the positioning was locked on 2026-09-28, and changing it must still be one edit in
 // _system/positioning.ts rather than a sweep across the site. Preview routes stay noindex; the values are
 // real so the Discord / Slack / X / LinkedIn / browser previews can be inspected and approved.
 export const metadata: Metadata = {
@@ -25,8 +25,8 @@ export const metadata: Metadata = {
   applicationName: "Vraelis",
   category: "technology",
   keywords: [
-    "AI agents", "AI-built software", "software agents", "agent supervision",
-    "code review for AI", "AI software", "agent reliability", "verification",
+    "verification", "web app testing", "live app verification", "real browser testing",
+    "acceptance testing", "deployment verification", "MCP", "AI coding assistants",
   ],
   authors: [{ name: "Vraelis" }],
   creator: "Vraelis",

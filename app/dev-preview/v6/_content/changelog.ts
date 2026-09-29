@@ -21,6 +21,20 @@ export type Entry = { date: string; tag: "go" | "wait"; tagLabel: string; title:
 
 export const CHANGELOG: Entry[] = [
   {
+    date: "2026-09-28",
+    tag: "go",
+    tagLabel: "Shipped",
+    title: "Vraelis now answers coding agents directly",
+    body: [
+      "Vraelis runs as an MCP server, so an AI coding assistant can ask for a check after it changes a web app and read the answer itself. Locally, the CLI starts it with vraelis mcp. Hosted, it lives at https://vraelis.com/mcp for ChatGPT and Claude, which sign in with OAuth: the person signs in to Vraelis and clicks Allow, which creates an API key named after the connector that they can revoke under Developers. In ChatGPT and Claude the result shows as a Vraelis card with the status, the claim, the requirements, what broke, and a button that opens the approval page.",
+      "There are three tools, vraelis_verify, vraelis_status and vraelis_recheck, and none of them can approve a plan. vraelis init writes the MCP setup for the assistants it finds on the machine and adds a short rule to the project's AGENTS.md telling the assistant to verify before it says it is done.",
+      "Every check that waits on a person now returns an approval link, and the CLI prints it, opens it when a person is at the terminal, waits, and runs. API keys can no longer approve plans at all: the approve endpoint answers 403 plan_requires_human with the link. After a fix, POST /v1/verifications/{id}/recheck runs the same approved plan again without a new approval, within 24 hours of the approval, up to 10 times, on the same site, and each re-check is billed as one verification. The TypeScript SDK moved to 0.3.0 with getPlan, waitForApproval and recheck.",
+    ],
+    note: "The SDK is still unpublished, and the CLI still installs by script rather than from npm.",
+    href: "/agents",
+    hrefLabel: "Set up an AI assistant",
+  },
+  {
     date: "2026-09-27",
     tag: "go",
     tagLabel: "Established",

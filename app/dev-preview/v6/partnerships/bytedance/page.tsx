@@ -57,6 +57,10 @@ export default function ByteDancePartnershipPage() {
               on August 17, 2026, about its Seedream, Seedance and Seed LLM models. Vraelis and ByteDance are now
               official partners.
             </p>
+            {/* ONE FACTUAL LINE, added 2026-09-28 and nothing more: Trae, ByteDance's AI coding editor, is one of
+                the assistants `vraelis init` supports over MCP. It is not a claim about the partnership's scope
+                and says nothing about endorsement, testing or any other ByteDance product. */}
+            <p>Vraelis connects to Trae, ByteDance&rsquo;s AI coding editor, over MCP.</p>
             <div className="v6-pr__links" aria-label="Partnership links">
               <a href="https://www.bytedance.com/en/" target="_blank" rel="noopener noreferrer">Visit ByteDance <span aria-hidden="true">↗</span></a>
               <a href="https://seed.bytedance.com/en/" target="_blank" rel="noopener noreferrer">ByteDance Seed <span aria-hidden="true">↗</span></a>

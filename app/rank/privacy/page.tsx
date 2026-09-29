@@ -12,7 +12,7 @@ export default function PrivacyPage() {
   return (
     <LegalShell eyebrow="Legal" title="Privacy" updated="Updated June 2026">
       <H>Overview</H>
-      <P>Vraelis is independent verification for AI-built software: you connect an application, define what it must do in production, and Vraelis runs those requirements against your exact build and environment and captures the evidence. This page explains how data is handled when you use the website, app, verification runs, API, webhooks, and exports at vraelis.com. We have kept it plain and specific to what the product actually does.</P>
+      <P>Vraelis checks whether a deployed web application does what someone says it does: you describe what it should do in a sentence, approve the plan Vraelis writes from it, and a real browser runs that plan against your live deployment and captures the evidence. This page explains how data is handled when you use the website, app, verification runs, API, webhooks, and exports at vraelis.com. We have kept it plain and specific to what the product actually does.</P>
 
       <H>Data we collect</H>
       <Ul items={[

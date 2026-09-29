@@ -23,6 +23,7 @@ export function Blocks({ blocks }: { blocks: Block[] }) {
           case "ul": return <ul key={i}>{b.items.map((it, j) => <li key={j}>{it}</li>)}</ul>;
           case "steps": return <ol key={i}>{b.items.map((it, j) => <li key={j}>{it}</li>)}</ol>;
           case "note": return <div className="v6-note" key={i}><b>{b.label}</b>{b.text}</div>;
+          case "code": return <DocCode key={i} label={b.label} code={b.text} />;
           default: return null;
         }
       })}

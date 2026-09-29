@@ -84,7 +84,8 @@ console.log("\n── ONE embed, for every surface, forever ──");
 const socialCardSrc = readFileSync("lib/social-card.ts", "utf8");
 const ogMeta = readFileSync("lib/og-meta.ts", "utf8");
 
-const OFFICIAL_DESC = "Verifies software built with AI actually works";
+// Updated 2026-09-28 to the founder's locked sentence. It names what the product does, not who it is for.
+const OFFICIAL_DESC = "Checks your live app does what you say it does";
 ok("the shared card states the official sentence", socialCardSrc.includes(OFFICIAL_DESC));
 ok("the official description fits the 50-character limit", OFFICIAL_DESC.length <= 50, `${OFFICIAL_DESC.length} chars`);
 
@@ -244,7 +245,11 @@ console.log("\n== the company describes itself once, and only when it is public 
   ok("there is an entity graph", /"@type": "Organization"/.test(entity) && /"@type": "WebSite"/.test(entity));
   ok("it reuses the ONE sentence rather than writing a second description",
     /SOCIAL_DESCRIPTION/.test(entity) && !/description: "/.test(strip(entity)));
-  ok("it names only profiles the company controls", /linkedin\.com\/company\/vraelis/.test(entity) && /x\.com\/vraelis/.test(entity));
+  // x.com/vraelis returned 404 on 2026-09-28, and Facebook and Instagram are unconfirmed. A sameAs entry
+  // that points at a missing profile corroborates nothing, so only LinkedIn may be listed.
+  ok("it names only profiles the company controls",
+    /linkedin\.com\/company\/vraelis/.test(entity)
+    && !/x\.com\/vraelis|twitter\.com|facebook\.com|instagram\.com/.test(strip(entity)));
   ok("the root layout emits it", /entityJsonLd\(\)/.test(rootLayout2));
   // The stealth branch returns before the body that carries the graph, so a curtained page never claims an
   // identity it is not showing.

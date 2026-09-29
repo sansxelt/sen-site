@@ -15,6 +15,44 @@ database access. They are labelled where they appear. Do not quote them as curre
 `scripts/preflight-launch-readiness.ts`. Nothing about external customers or revenue changed, and no
 count below is revised upward.
 
+## 0. Changed 2026-09-28 (read this first)
+
+**Positioning locked by the founder.** Narrow on WHAT, wide on WHO. What it does: someone writes one
+sentence about what a deployed web app should do; Vraelis writes a plan; a person approves it; a real
+browser tries it on the live app; the answer is Verified, Failed or Blocked with the evidence, and a
+re-check after a fix. Who: anyone who ships or answers for a web app (developers, teams, agencies, no-code
+builders, QA, CI, and AI coding agents). AI assistants are one CHANNEL beside the console, the CLI and
+CI/API, never the identity. Hero: "Say what should work. Vraelis checks it on the live app." Robots, drones,
+physical systems and the Compile/Challenge/Accumulate roadmap are off public pages. Section 1 below still
+describes the customer as AI-agent companies; read it as one audience among several.
+
+**Built that day:**
+- **Only a person approves a plan.** `POST /v1/verifications/plans/{id}/approve` refuses every API key
+  (403 `plan_requires_human` + `approve_url`). Every response that leaves a plan waiting carries
+  `approve_url` (`app.vraelis.com/review/{id}`).
+- **Re-checks.** `POST /v1/verifications/{vrf}/recheck` re-runs a person-approved plan after a fix with no
+  new approval: 24 h from the approval, 10 re-checks, same origin only (a different host would let an agent
+  aim approved journeys at a copy it controls). Rules in `lib/preflight/recheck.ts` (pure, tested by
+  `scripts/recheck-verify.ts`); money through the unchanged `acceptVerificationRun`; lineage via
+  `parent_run_id`, which `GET /v1/verifications/{id}` now reports as `recheck_of` and walks up to report the
+  approval the re-check stands on.
+- **CLI 0.3.0** (`cli/vraelis.mjs`): `verify` waits for the person's approval (prints and opens the link),
+  then runs; `recheck`, `result`, `init` (writes MCP config for Claude Code, Codex, Gemini CLI, Copilot,
+  Cursor, prints Trae's, adds a verify-before-done rule to AGENTS.md/CLAUDE.md/GEMINI.md), and `mcp`, a
+  stdio MCP server with three tools (`vraelis_verify`, `vraelis_status`, `vraelis_recheck`; none approves).
+  `scripts/cli-verify-test.mjs` covers it, including a real JSON-RPC session.
+- **Hosted MCP** at `vraelis.com/mcp` (`app/api/mcp/route.ts`, rewritten by proxy.ts) for ChatGPT and
+  claude.ai, with OAuth 2.1 + PKCE + dynamic registration + Client ID Metadata Documents
+  (`lib/mcp/oauth.ts`, `app/api/oauth/*`, `/oauth/authorize` handler, `/oauth/consent` screen). No new
+  tables: the access token IS a Vraelis API key named "<client> connector", revocable under Developers.
+  Stateless: a check is found again by URL + claim (`findLatestPlanForClaim`). Answers carry
+  `structuredContent` and an MCP Apps card (`lib/mcp/widget.ts`, `ui://vraelis/check-v1.html`).
+  `scripts/mcp-verify.ts` tests the OAuth and the drift between the two MCP servers' tool definitions.
+- **SDK 0.3.0**: `approvePlan` and the retired `evaluations` removed; lowercase decisions; `getPlan`,
+  `recheck`, `waitForApproval`, `waitForResult`.
+- **Real demos** on the homepage (`_system/demos.tsx`, `_content/demos.ts`): replays of production runs on
+  Vraelis's own demo apps, with the runs' own screenshots and step timings. Never add a scripted run there.
+
 ---
 
 ## 1. What Vraelis is

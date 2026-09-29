@@ -14,8 +14,12 @@
 
 export const SOCIAL_TITLE = "Vraelis";
 
-/** One sentence. Every embed. Do not fork this per page. */
-export const SOCIAL_DESCRIPTION = "Verifies software built with AI actually works.";
+/** One sentence. Every embed. Do not fork this per page.
+ *
+ *  It says what the product does and nothing about who it is for (founder, 2026-09-28): a developer, an
+ *  agency, a founder and an AI coding agent all read the same card, so it names the function and leaves the
+ *  audience open. scripts/email-embeds-verify.ts pins this exact wording and its length. */
+export const SOCIAL_DESCRIPTION = "Checks your live app does what you say it does.";
 
 /** The square Vraelis mark, the same artwork the favicon is generated from. */
 export const SOCIAL_IMAGE = "https://vraelis.com/icon-original.png";
@@ -53,7 +57,7 @@ export const SOCIAL_EMBEDS = {
   /** The developer surfaces: the same product, named by how you reach it. */
   developers: {
     title: "Vraelis for developers",
-    description: "Verify a deployed application from your CI, the command line, or the API.",
+    description: "Verify a deployed app from the CLI, CI, the API, or an AI assistant over MCP.",
   },
 } as const;
 

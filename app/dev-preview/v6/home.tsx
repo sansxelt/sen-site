@@ -2,24 +2,32 @@
 
 // Homepage, design 06 phase 2R.
 //
-// Seven chapters, each a full-screen scene with one dominant idea and one dominant visual. Backgrounds
-// alternate at every boundary so the page reads as changes of atmosphere rather than as stacked modules:
+// Full-screen chapters, each with one dominant idea and one dominant visual. Backgrounds alternate at every
+// boundary so the page reads as changes of atmosphere rather than as stacked modules:
 //
-//   1 opening        graphite   headline, one line, one action, one cropped visual
+//   1 opening        graphite   headline, one line, one action
 //   2 the authority  graphite   the absence the company exists inside: five seals, one that never closes
 //   3 the gap        stone      one word at full scale, losing its authority
-//   4 the standard   graphite   what Verified has to mean: four refusals closing a ring
-//   5 the product    graphite   the real CLI: one command, three exit codes, no false green
-//   6 the register   graphite   the zoom out: one guarantee becomes the whole operating surface
-//   7 reach          stone      one result fanning into the stack a company runs
-//     knowledge      sunk       the writing behind the product, as a publication
+//   4 the product    graphite   the real CLI: one command, three exit codes, no false green. THIS IS THE
+//                               RUN ON THE PAGE: Product in _system/chapters.tsx shows one check going from
+//                               sentence to approval to a Failed answer with its evidence.
+//   5 the standard   graphite   what Verified has to mean: four refusals closing a ring
+//     devices        sunk       connected devices through their web control panels; device-level is Next
+//   6 the loop       graphite   sentence, approval, live run, answer, fix and re-check, with who acts
+//   7 reach          stone      the four ways in (console, CLI, CI and API, AI assistants) and where the
+//                               answer lands
 //   8 closing        graphite   one statement, one line, two actions
 //
+// The Direction chapter (Compile, Challenge, Accumulate, and a durable graph of guarantees) and the
+// illustrative business-guarantee register were removed on 2026-09-28, when the public story was locked on
+// one function: a sentence about a deployed web app, checked on the live app, answered with evidence.
+//
 // Explanation deliberately does NOT live here. /platform, /agents, /method, /research and /docs carry it.
-// The company category is unsettled and every positioning string comes from _system/positioning.ts.
+// Every positioning string comes from _system/positioning.ts.
 import { Hero } from "./_system/hero";
-import { Authority, Gap, Standard, Product, Register, Reach, Direction } from "./_system/chapters";
+import { Authority, Gap, Standard, Product, Devices, Loop, Reach } from "./_system/chapters";
 import { ClosingScene } from "./_system/close";
+import { Demos } from "./_system/demos";
 import { useMobileMotion } from "./_system/mobile-motion";
 
 export default function Home() {
@@ -30,6 +38,11 @@ export default function Home() {
   return (
     <>
       <Hero />
+      {/* REAL RUNS, FIRST. The founder asked for real product demos: what it is for, shown working. These are
+          production verification records replayed step by step with the runs' own screenshots and timings
+          (_content/demos.ts), so the first thing below the promise is the product keeping it. Never add a
+          scripted run here; a demo that did not happen is the one thing this section cannot contain. */}
+      <Demos />
       {/* THE ONE CHAPTER THAT ARGUES ABOUT THE WORLD RATHER THAN ABOUT THE PRODUCT, and the reason it sits
           here rather than deeper: everything below this line is a mechanism, and a mechanism only reads as
           groundbreaking if the reader already knows what is missing. It names the absence (every serious
@@ -47,11 +60,15 @@ export default function Home() {
           Product (the CLI: one command, three answers) moves AHEAD of Standard so the first thing after
           the bridge is proof rather than more argument. Nothing else moved, and no copy changed. */}
       <Gap />
+      {/* THE RUN. Product is the one chapter that shows a check happening end to end, and it stays exactly
+          here, straight after the bridge, so the first thing after the argument is proof. */}
       <Product />
       <Standard />
-      <Register />
+      {/* A named area, not the identity: connected devices through their web control panels, with the
+          device-level line marked Next. Light, between two graphite chapters. */}
+      <Devices />
+      <Loop />
       <Reach />
-      <Direction />
       <ClosingScene />
     </>
   );

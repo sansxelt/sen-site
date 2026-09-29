@@ -1,24 +1,37 @@
 import type { Metadata } from "next";
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties } from "react";
 import { v6meta } from "../_system/meta";
 import { PageHero, Reveal, SectionHead, CTA, EditorialLink, Signal, Kicker } from "../_system/ui";
+import { Code, CopyScript } from "../_system/code";
 import { V6_BASE } from "@/lib/v6-routes";
 
-// Agents page (design 06). Framing: how Vraelis works AROUND software agents, from assigned responsibility to
-// trusted completion. TRUTH: Vraelis does NOT read an agent's private reasoning. It works from observable,
-// available activity: submitted plans, code changes, tool and API effects, external events, agent claims, and
-// execution evidence, measured against human-reviewed standards. Deeper, continuous in-agent oversight is
-// clearly marked as Direction. The verification engine is real, and is one capability. LIGHT = framing;
-// GRAPHITE = live agent work.
+// AI ASSISTANTS (design 06), at /agents. THE SETUP GUIDE, and one page among the ways to use Vraelis.
+//
+// Rewritten 2026-09-28. This page used to describe "oversight around AI software agents": what Vraelis would
+// and would not observe of an agent's work, a sensitive-decision hold marked Direction, and a Direction card
+// that listed "MCP and agent tools" as not built. MCP is built now, `vraelis init` prints a link to this
+// exact route when it finishes, and a reader who follows that link needs setup, not a thesis. So the order
+// is: what the assistant can do with Vraelis, the loop it runs, the approval rule, then setup, recommended
+// first and by hand per assistant after.
+//
+// IT IS NOT THE PITCH (founder, 2026-09-28). Vraelis checks a deployed web app against one sentence for
+// anyone who ships one; an AI assistant is one of four ways to start that check, beside the console, the CLI
+// and CI. Nothing here says the product is for assistants, and no assistant is claimed as tested or endorsed.
+// Each setup line is the one cli/vraelis.mjs writes (ASSISTANTS in that file), so if the CLI changes a path
+// or a command, this page changes with it.
+//
+// FACTS THIS PAGE LEANS ON, and where they live: the three tools and their rules (lib/mcp/tools.ts and the
+// copy in cli/vraelis.mjs), the approval refusal (app/api/v1/verifications/plans/[id]/approve/route.ts),
+// the re-check limits (lib/preflight/recheck.ts: 24 hours, 10 re-checks, same scheme and host), the hosted
+// server and its OAuth key naming (app/api/mcp/route.ts, app/oauth/authorize/page.tsx), and the card
+// (lib/mcp/widget.ts).
 
 export const metadata: Metadata = v6meta({
-  title: "Agents",
+  title: "AI assistants",
   description:
-    "How Vraelis provides oversight around AI software agents: observing the plan, tracking changes, challenging assumptions, routing sensitive decisions to review, and accepting completion only when it is proven.",
+    "Connect Vraelis to an AI assistant over MCP, so it can check a change on your deployed web app in a real browser and get back Verified, Failed or Blocked with the evidence. Setup for Claude Code, Codex, Gemini CLI, GitHub Copilot, Cursor, Trae, ChatGPT and Claude.",
   path: "/agents",
-  ogTitle: "Oversight around AI software agents",
-  ogDescription:
-    "Vraelis works around software agents from the outcome a person approved and the evidence the running software leaves behind: the claim, the run, findings, repair, and independent completion.",
+  ogTitle: "Vraelis in your AI assistant",
 });
 
 const BASE = V6_BASE;
@@ -31,93 +44,82 @@ const wrapRow: CSSProperties = {
   alignItems: "stretch",
 };
 
-/* ---------- truthful inputs ----------
-   THE HEADING SAID "truthful inputs" AND THREE OF THE SEVEN WERE NOT TRUE. This list claimed Vraelis works
-   from submitted plans, from code changes and diffs, and from the tool and API effects the work produces.
-   None of the three are ingested. It is the same overclaim the mock activity feed on /platform was removed
-   for, and the same one the Direction column on that page contradicts by name. A check begins at the point
-   the work is claimed complete, and everything before that point is the agent's business, not this
-   product's. The boundary moved out of DOES_NOT, where it was implied, and is now stated. */
+/* ---------- the three tools, and what none of them can do ---------- */
 
-// ONE MORE OF THESE WAS NOT TRUE. "Deployment events from GitHub and Vercel" described an ingestion that
-// does not exist: v_deployments has github_webhook and vercel_webhook in its source enum, but no route
-// receives either, and the deployments route says so in its own header ("webhooks stamp it later"). What is
-// real is the deployment a run is pinned to, recorded at launch, which is what stops a decision drifting
-// onto a build it never touched. That is the honest version of the same sentence.
-const WORKS_FROM = [
-  "The outcome a person approved, held outside the agent",
-  "The claim that the work is finished",
-  "The deployment that claim was made about",
-  "The exact deployment a run was pinned to, so a decision never drifts onto a newer build",
-  "Execution evidence from the running software in a real browser",
-  "The state the software is left in, re-checked across a fresh session",
-];
-const DOES_NOT = [
-  "Watch an agent while it works",
-  "Read a submitted plan, a diff, or a tool call",
-  "Read an agent's private chain of thought",
-  "Trust a claim because it sounds confident",
-  "Treat a passing self-test as independent proof",
+const TOOLS: [string, string][] = [
+  ["vraelis_verify", "The live https URL and one sentence about what should now work. The first time, it returns the approval link for a person."],
+  ["vraelis_status", "Where a check is, from its job_ or vrf_ id: preparing, waiting for approval, running, or the decision. It waits briefly for news before answering."],
+  ["vraelis_recheck", "After a fix is deployed, the same approved plan again, from its vrf_ id. No new approval inside the limits below."],
 ];
 
-/* ---------- the loop around the agent (signature) ---------- */
+const CANNOT = [
+  "Approve a plan. The first check of a claim waits for a person at the link.",
+  "Re-check more than 24 hours after the approval, more than 10 times, or on a different site.",
+  "Check localhost or a private address. The change has to be deployed somewhere public; a preview URL is enough.",
+];
+
+/* ---------- the loop, in two lanes ---------- */
 
 const LOOP: { n: string; agent: string; vraelis: string; sig?: Sig; tag?: string }[] = [
-  { n: "01", agent: "Is given real work to do.", vraelis: "Opens a guarantee: the sentence that has to stay true, held outside the code.", sig: "go", tag: "Recorded" },
-  // Steps 02 and 03 said "Reads the submitted plan and maps the systems it will touch" and "Tracks the
-  // changes and the external effects that appear". Neither happens. The honest answer is that Vraelis does
-  // nothing at all while the work is underway, and saying so plainly is what makes step 04 mean anything.
-  { n: "02", agent: "Submits a plan for how it will proceed.", vraelis: "Nothing. A plan an agent writes for itself is not read, and the work is not watched." },
-  { n: "03", agent: "Changes code and calls tools and APIs.", vraelis: "Still nothing. Diffs and tool calls are not ingested while the work is underway." },
-  { n: "04", agent: "Claims the work is complete.", vraelis: "This is where the check begins. The approved outcome becomes a browser plan a person signs off.", sig: "wait", tag: "Plan" },
-  { n: "05", agent: "Reaches a sensitive or irreversible action.", vraelis: "Direction, not built: today a plan is approved or refused as a whole, with nothing inside it held back on its own.", sig: "wait", tag: "Direction" },
-  { n: "06", agent: "Produces work that misses the requirement.", vraelis: "Turns the failure into a structured, recorded finding.", sig: "stop", tag: "Finding" },
-  // "Re-checks the repair" read as automatic, and nothing re-verifies on its own: a rerun is a separate run
-  // a person starts from the console (app/api/preflight/runs/[runId]/rerun, session-authenticated), and the
-  // public API has no rerun endpoint at all. The recheck is real; the trigger is a person.
-  { n: "07", agent: "Submits a repair for the finding.", vraelis: "Re-checks the repair against the same standard when someone starts the rerun. Nothing re-verifies on its own." },
-  { n: "08", agent: "Asks to be marked done.", vraelis: "Accepts Verified, or returns Failed or Blocked.", sig: "go", tag: "Decided" },
+  { n: "01", agent: "Finishes a change and deploys it.", vraelis: "Nothing yet. Vraelis does not read the code or watch the assistant work." },
+  { n: "02", agent: "Calls vraelis_verify with the live URL and one sentence about what should now work.", vraelis: "Writes a plan: the requirements the sentence implies and the browser steps that would prove them.", sig: "wait", tag: "Plan" },
+  { n: "03", agent: "Hands you the approval link.", vraelis: "Waits for a person. No tool and no API key can approve a plan.", sig: "wait", tag: "Needs you" },
+  { n: "04", agent: "Calls vraelis_status while it waits.", vraelis: "Runs the approved plan in a real browser on the deployed app." },
+  { n: "05", agent: "Reads the answer.", vraelis: "Returns Verified, Failed or Blocked, with the evidence. On Failed: what broke, expected against observed, and a repair prompt.", sig: "go", tag: "Decided" },
+  { n: "06", agent: "Fixes the cause and redeploys to the same site.", vraelis: "Keeps the failed run on the record. Nothing is overwritten." },
+  { n: "07", agent: "Calls vraelis_recheck.", vraelis: "Runs the same approved plan again, with no new click, within 24 hours of the approval and up to 10 times.", sig: "go", tag: "Re-check" },
+  { n: "08", agent: "Is told to say it works only on Verified.", vraelis: "That instruction ships with the tools, and vraelis init writes the same rule into the project." },
 ];
 
-/* ---------- review + integrations ---------- */
+/* ---------- setup ---------- */
 
-// DIRECTION, NOT LIVE. This used to describe these four as things Vraelis already holds for a person, which
-// nothing in the product does: a plan is approved or refused as a whole today (step 04), and nothing inside
-// it is singled out on its own (see scope.ts's own Horizon item, "Live agent activity read as it happens" —
-// this needs that first). Same class of overclaim WORKS_FROM was corrected for above; matches the pattern
-// integrations/page.tsx already uses for its own DIRECTION list.
-const SENSITIVE: { t: string; d: string }[] = [
-  { t: "Changing what existing customers are charged", d: "Today, a plan is approved or refused as a whole, and nothing inside it is held back on its own." },
-  { t: "Deleting or exporting production data", d: "Today, an irreversible action inside an approved plan runs the same as any other step." },
-  { t: "Granting broad access or API scope", d: "Today, a scope change is not treated differently from the rest of the plan." },
-  { t: "Shipping an irreversible migration", d: "Today, nothing inside an approved plan is held back on its own." },
+const INIT = `# 1. Install the CLI. macOS and Linux:
+curl -fsS https://vraelis.com/install | sh
+# Windows (PowerShell):
+irm https://vraelis.com/install.ps1 | iex
+
+# 2. Sign in once. Paste a key with "Launch runs" access, created at app.vraelis.com/developers.
+vraelis login
+
+# 3. From your project folder: set up every assistant found on this machine.
+vraelis init
+# or name them: claude, codex, gemini, copilot, cursor, trae, all
+vraelis init claude codex`;
+
+const INIT_DOES = [
+  "Writes the MCP setup for the assistants it finds: Claude Code, Codex, Gemini CLI, GitHub Copilot in VS Code and the Copilot CLI, and Cursor.",
+  "For Trae, which keeps its MCP list inside the app, prints the JSON to paste.",
+  "Adds a short rule to the project's AGENTS.md: verify before you say it's done. It adds the same rule to CLAUDE.md or GEMINI.md when you chose those assistants and the file does not already import AGENTS.md, and to .trae/rules/project_rules.md for Trae.",
+  "Tells you to restart the assistant, or reload the window, so the tools load.",
 ];
 
-const LIVE_SURFACES = ["Vraelis web app", "API", "CLI", "GitHub", "Vercel", "Slack", "Webhooks"];
-const DIRECTION_SURFACES = ["Cursor / VS Code", "Desktop", "Browser companion", "Mobile approvals", "MCP and agent tools"];
+// The plain stdio entry Cursor and Trae both read. Built from an object so the rendered JSON is always valid.
+const MCP_SERVERS = JSON.stringify({ mcpServers: { vraelis: { command: "vraelis", args: ["mcp"] } } }, null, 2);
 
-function Chip({ children, soon = false }: { children: ReactNode; soon?: boolean }) {
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        padding: "7px 13px",
-        borderRadius: 999,
-        border: `1px solid ${soon ? "var(--line)" : "var(--line-2)"}`,
-        background: soon ? "transparent" : "var(--surface)",
-        color: soon ? "var(--ink-4)" : "var(--ink-2)",
-        fontSize: 13.5,
-        fontWeight: 500,
-        ...(soon ? { borderStyle: "dashed" as const } : {}),
-      }}
-    >
-      {children}
-    </span>
-  );
-}
+const MANUAL: { name: string; note: string; lang: string; src: string }[] = [
+  { name: "Claude Code", note: "The terminal and the VS Code extension share one configuration, so one command covers both.",
+    lang: "bash", src: "claude mcp add --scope user vraelis -- vraelis mcp" },
+  { name: "Codex", note: "The CLI and the IDE extension share one configuration.",
+    lang: "bash", src: "codex mcp add vraelis -- vraelis mcp" },
+  { name: "Gemini CLI", note: "One command.",
+    lang: "bash", src: "gemini mcp add vraelis vraelis mcp" },
+  { name: "GitHub Copilot in VS Code", note: "Add this to your user or workspace mcp.json.",
+    lang: "json", src: JSON.stringify({ servers: { vraelis: { type: "stdio", command: "vraelis", args: ["mcp"] } } }, null, 2) },
+  { name: "GitHub Copilot CLI", note: "Add this to ~/.copilot/mcp-config.json.",
+    lang: "json", src: JSON.stringify({ mcpServers: { vraelis: { type: "local", command: "vraelis", args: ["mcp"], tools: ["*"] } } }, null, 2) },
+  { name: "Cursor", note: "Add this to ~/.cursor/mcp.json.",
+    lang: "json", src: MCP_SERVERS },
+  { name: "Trae", note: "In Trae, open Settings > MCP > Add > Configure manually, and paste this.",
+    lang: "json", src: MCP_SERVERS },
+  { name: "ChatGPT", note: "ChatGPT connects to the hosted server over the web. Turn on developer mode (Settings, Apps and Connectors, Advanced), add a connector with this URL, and choose OAuth. ChatGPT sends you to Vraelis to sign in and click Allow.",
+    lang: "text", src: "https://vraelis.com/mcp" },
+  { name: "Claude (claude.ai and desktop)", note: "Settings > Connectors > Add custom connector, with this URL. Claude sends you to Vraelis to sign in and click Allow.",
+    lang: "text", src: "https://vraelis.com/mcp" },
+  { name: "Any other MCP client", note: "Run the local server over stdio, or connect to the hosted server over HTTP with your API key in an x-api-key header.",
+    lang: "text", src: "stdio   vraelis mcp\nHTTP    https://vraelis.com/mcp   with header  x-api-key: <your key>" },
+];
 
-function InputList({ items, tone }: { items: string[]; tone: Sig }) {
+function List({ items, tone }: { items: string[]; tone: Sig }) {
   return (
     <ul style={{ listStyle: "none", margin: "18px 0 0", padding: 0, display: "flex", flexDirection: "column", gap: 12 }}>
       {items.map((t) => (
@@ -136,40 +138,47 @@ export default function Agents() {
   return (
     <>
       <PageHero
-        kicker="For AI software agents"
-        title="Oversight that works around the agent, not inside it."
-        lead="An agent that plans, writes, and repairs the work will also tell you it is finished. Vraelis stays outside that loop: it observes the work an agent produces, challenges what it cannot prove, and decides independently whether the guarantee still holds."
+        kicker="AI assistants"
+        title="Let your AI assistant check its work on the live app."
+        lead="When an assistant finishes a change to your web app, it can ask Vraelis to try it on the deployed site and get back Verified, Failed or Blocked, with the evidence. You approve each new check once. Set it up with one command, or add the server by hand."
         cta={
           <>
-            <CTA brand lg>Open Vraelis</CTA>
-            <EditorialLink href={`${BASE}/platform`}>See the full platform</EditorialLink>
+            <CTA href="#setup" brand lg>Set it up</CTA>
+            <EditorialLink href={`${BASE}/integrations`}>Other ways to use Vraelis</EditorialLink>
           </>
         }
       />
 
-      {/* 1 ── Truthful inputs: what Vraelis can actually see ── */}
+      {/* 1 ── What the assistant can do, and what it cannot ── */}
       <section className="v6-sec" style={{ paddingTop: "clamp(12px,2vw,28px)" }}>
         <div className="v6-wrap">
           <Reveal>
             <SectionHead
-              eyebrow="What Vraelis works from"
-              title="Observable work, not private reasoning."
-              lead="Vraelis is honest about what it can see, and about when. It does not watch an agent work. It waits until the work is claimed complete, then judges the running software against a standard a person approved, from the evidence that software leaves behind."
+              eyebrow="One of four ways in"
+              title="The same check, called by the assistant."
+              lead="It is the check the console, the CLI and CI run: one sentence about the deployed app, a plan a person approves, a real browser on the live site, and one answer with the evidence. Over MCP the assistant gets three tools. Vraelis looks at the deployed app, not at the assistant's code."
             />
           </Reveal>
           <div style={{ ...wrapRow, marginTop: "clamp(28px,3vw,40px)" }}>
             <Reveal style={{ flex: "1 1 320px", minWidth: 0 }}>
               <div className="v6-card" style={{ height: "100%" }}>
-                <Signal state="go">Available activity, live today</Signal>
-                <InputList items={WORKS_FROM} tone="go" />
+                <Signal state="go">Three tools</Signal>
+                <ul style={{ listStyle: "none", margin: "18px 0 0", padding: 0, display: "flex", flexDirection: "column", gap: 14 }}>
+                  {TOOLS.map(([name, d]) => (
+                    <li key={name}>
+                      <span className="v6-mono" style={{ display: "block", fontSize: 13.5, color: "var(--ink)", fontWeight: 600 }}>{name}</span>
+                      <span style={{ display: "block", marginTop: 4, fontSize: 14.5, lineHeight: 1.5, color: "var(--ink-2)" }}>{d}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </Reveal>
             <Reveal style={{ flex: "1 1 320px", minWidth: 0 }} i={1}>
               <div className="v6-card" style={{ height: "100%" }}>
-                <Kicker>What Vraelis does not do</Kicker>
-                <InputList items={DOES_NOT} tone="wait" />
+                <Kicker>What no tool can do</Kicker>
+                <List items={CANNOT} tone="wait" />
                 <p style={{ margin: "20px 0 0", paddingTop: 16, borderTop: "1px solid var(--line)", color: "var(--ink-3)", fontSize: 14, lineHeight: 1.55 }}>
-                  Deeper, continuous oversight that runs alongside the agent as it reasons is on the roadmap, marked as Direction, not described as live.
+                  Every run, a re-check included, is billed to your Vraelis account as one verification.
                 </p>
               </div>
             </Reveal>
@@ -177,14 +186,14 @@ export default function Agents() {
         </div>
       </section>
 
-      {/* 2 ── The loop around the agent (GRAPHITE signature) ── */}
+      {/* 2 ── The loop, in two lanes (GRAPHITE) ── */}
       <section className="v6-sec v6-dark" data-nav-dark>
         <div className="v6-wrap v6-wrap--wide">
           <Reveal>
             <SectionHead
-              eyebrow="From guarantee to decision"
-              title="For every move the agent makes, Vraelis has a response."
-              lead="Two lanes, one record. The agent does the work. Vraelis stays alongside it, turning each step into something observed, challenged, or decided."
+              eyebrow="In the loop"
+              title="From the assistant's done to a decision."
+              lead="Two lanes. The assistant does the work and asks. Vraelis writes the plan, waits for your approval, runs it on the live app, and answers."
             />
           </Reveal>
 
@@ -192,8 +201,8 @@ export default function Agents() {
             <div style={{ background: "var(--graphite-2)", border: "1px solid var(--g-line)", borderRadius: 16, padding: "clamp(6px,1.4vw,20px) clamp(16px,2.2vw,28px)" }}>
               {/* lane header (desktop only labels; each row also self-labels for narrow screens) */}
               <div style={{ display: "flex", flexWrap: "wrap", gap: 16, padding: "14px 0", borderBottom: "1px solid var(--g-line)" }}>
-                <span className="v6-mono" style={{ flex: "1 1 260px", minWidth: 0, fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--g-fg-3)" }}>The agent</span>
-                <span className="v6-mono" style={{ flex: "1 1 260px", minWidth: 0, fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--go-dk)" }}>Vraelis oversight</span>
+                <span className="v6-mono" style={{ flex: "1 1 260px", minWidth: 0, fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--g-fg-3)" }}>The assistant</span>
+                <span className="v6-mono" style={{ flex: "1 1 260px", minWidth: 0, fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--go-dk)" }}>Vraelis</span>
               </div>
 
               {LOOP.map((s) => (
@@ -217,42 +226,29 @@ export default function Agents() {
         </div>
       </section>
 
-      {/* 3 ── Challenge a claim (real engine) ── */}
+      {/* 3 ── The approval rule ── */}
       <section className="v6-sec v6-sec--sunk">
         <div className="v6-wrap">
           <div style={wrapRow}>
             <Reveal style={{ flex: "1 1 340px", minWidth: 0 }}>
               <SectionHead
-                eyebrow="Challenge, live today"
-                title="A claim is not proof. Vraelis makes the agent earn it."
-                lead="When an agent says the work is done, Vraelis holds the requirement outside the code and drives the running software in a real browser to see what actually happens. When evidence and confidence disagree, evidence wins."
+                eyebrow="The approval rule"
+                title="The assistant does the work. A person approves the check."
+                lead="The first check of a claim needs a person to approve Vraelis's plan, with one click at the link the assistant hands you. No tool can approve a plan, and the API refuses every API key with plan_requires_human. After a fix, the assistant can re-check the same approved plan without another click: within 24 hours of the approval, at most 10 times, and only on the same site, meaning the same scheme and host."
               />
-              <div style={{ marginTop: 24 }}>
-                <EditorialLink href={`${BASE}/platform`}>See how the record accumulates evidence</EditorialLink>
-              </div>
             </Reveal>
             <Reveal media style={{ flex: "1 1 340px", minWidth: 0 }} i={1}>
               <div className="v6-dark" data-nav-dark style={{ background: "var(--graphite-2)", border: "1px solid var(--g-line)", borderRadius: 16, padding: "clamp(20px,2.4vw,30px)", boxShadow: "var(--sh-md)" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", paddingBottom: 16, marginBottom: 18, borderBottom: "1px solid var(--g-line)" }}>
-                  <span className="v6-kicker" style={{ color: "var(--g-fg-3)" }}>Agent claim, put to the test</span>
+                  <span className="v6-kicker" style={{ color: "var(--g-fg-3)" }}>In ChatGPT and Claude</span>
+                  <Signal state="wait">Waiting for approval</Signal>
                 </div>
-                <p style={{ margin: 0, color: "var(--g-fg-2)", fontSize: "1.05rem", fontStyle: "italic" }}>&ldquo;Checkout works. A paid customer gets Pro access.&rdquo;</p>
-                <div style={{ marginTop: 18, display: "flex", flexDirection: "column" }}>
-                  {[
-                    ["Payment", "succeeded", "none"],
-                    ["Access after checkout", "not granted", "stop"],
-                    ["First repair", "did not survive sign-in", "stop"],
-                    ["Later repair", "independently Verified", "go"],
-                  ].map(([k, v, tone], i) => (
-                    <div key={k} style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "11px 0", borderTop: i === 0 ? "none" : "1px solid var(--g-line)" }}>
-                      <span style={{ color: "var(--g-fg-2)", fontSize: 14 }}>{k}</span>
-                      <span style={{ color: tone === "stop" ? "var(--stop-dk)" : tone === "go" ? "var(--go-dk)" : "var(--g-fg)", fontSize: 14, fontWeight: 600, textAlign: "right" }}>{v}</span>
-                    </div>
-                  ))}
-                </div>
-                <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--g-line)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-                  <Signal state="go">Verified / 72c98e</Signal>
-                  <span className="v6-mono" style={{ color: "var(--g-fg-3)", fontSize: 12 }}>earlier records preserved</span>
+                <p style={{ margin: 0, color: "var(--g-fg-2)", fontSize: "1.05rem", fontStyle: "italic" }}>&ldquo;A signed-in user can cancel their plan from Billing and then sees Cancelled.&rdquo;</p>
+                <p style={{ margin: "16px 0 0", color: "var(--g-fg-2)", fontSize: 14.5, lineHeight: 1.55 }}>
+                  On the hosted server the answer also shows as a Vraelis card: the status, the claim, the requirements, what broke, and a Review and approve button that opens the approval page.
+                </p>
+                <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--g-line)" }}>
+                  <span className="v6-mono" style={{ color: "var(--g-fg-3)", fontSize: 12 }}>app.vraelis.com/review/rvp_3c9e26ef</span>
                 </div>
               </div>
             </Reveal>
@@ -260,32 +256,61 @@ export default function Agents() {
         </div>
       </section>
 
-      {/* 4 ── Sensitive decisions, direction not live. See the SENSITIVE comment above for why.
-
-          THE LABEL WAS DOING LESS WORK THAN THE COPY NEEDED. This section sits between two sections about
-          things that are live, and the only marker separating it from them was a small "Direction" eyebrow
-          in the same style every other section's eyebrow uses. The disclaimer was the first sentence of the
-          lead, where it reads as a caveat someone can skim past on the way to four confident cards. Every
-          card underneath already carries the page's actual Direction treatment (the amber Signal pill on a
-          dashed border); the section head now opens with the same pill, so the treatment that marks a card
-          as unbuilt marks the whole section before anyone reaches the first card. */}
-      <section className="v6-sec">
+      {/* 4 ── Setup, recommended (GRAPHITE) ── the anchor the hero button points at. */}
+      <section className="v6-sec v6-dark" id="setup" data-nav-dark>
         <div className="v6-wrap">
           <Reveal>
-            <p style={{ margin: "0 0 16px" }}><Signal state="wait">Direction, not built</Signal></p>
             <SectionHead
-              eyebrow="Direction"
-              title="Some decisions should never be an agent's to make alone."
-              lead="None of this exists yet. Today Vraelis approves or refuses a plan as a whole, and nothing inside it is singled out for its own hold. The direction is to raise exactly these moments to a person before they ship, not everything and not nothing."
+              eyebrow="Set it up"
+              title="Install, sign in, run vraelis init."
+              lead="Start here. vraelis init finds the assistants on your machine and writes their setup for you. The lines further down are the same setup by hand, for when you want to see it or init cannot reach an assistant."
             />
           </Reveal>
-          <div className="v6-grid3" style={{ marginTop: "clamp(28px,3vw,40px)" }}>
-            {SENSITIVE.map((s, i) => (
-              <Reveal key={s.t} i={i % 3}>
-                <div className="v6-gcard" style={{ height: "100%", borderStyle: "dashed", borderColor: "var(--line-2)" }}>
-                  <div style={{ marginBottom: 12 }}><Signal state="wait">Direction</Signal></div>
-                  <h3>{s.t}</h3>
-                  <p>{s.d}</p>
+          <div style={{ marginTop: "clamp(28px,3.4vw,44px)", display: "grid", gridTemplateColumns: "minmax(0,1fr)", gap: 24 }}>
+            <Reveal><Code lang="bash" src={INIT} /></Reveal>
+            <Reveal>
+              <p className="v6-kicker" style={{ color: "var(--g-fg-3)", margin: 0 }}>What vraelis init does</p>
+              <ul style={{ listStyle: "none", margin: "14px 0 0", padding: 0, display: "grid", gap: 10, maxWidth: "72ch" }}>
+                {INIT_DOES.map((t) => (
+                  <li key={t} style={{ display: "flex", gap: 11, alignItems: "flex-start", color: "var(--g-fg-2)", fontSize: 14.5, lineHeight: 1.55 }}>
+                    <span aria-hidden style={{ marginTop: 7, width: 7, height: 7, borderRadius: 999, background: "var(--go-dk)", flex: "none" }} />
+                    <span>{t}</span>
+                  </li>
+                ))}
+              </ul>
+              {/* WINDOWS GETS ITS OWN LINE because the manual commands below do not work there as written.
+                  The installer puts a vraelis.cmd on the PATH, and many assistants start an MCP server
+                  without a shell, so they cannot launch a .cmd. init registers node and the script path
+                  directly instead (serverLaunch in cli/vraelis.mjs). */}
+              <p style={{ margin: "18px 0 0", color: "var(--wait-dk)", fontSize: 14, lineHeight: 1.6, maxWidth: "72ch" }}>
+                On Windows, use vraelis init rather than the lines below. It registers node and the script path directly, because many assistants cannot launch the installer&rsquo;s vraelis.cmd.
+              </p>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* 5 ── Setup by hand, per assistant ── */}
+      <section className="v6-sec" id="manual">
+        <div className="v6-wrap">
+          <Reveal>
+            <SectionHead
+              eyebrow="By hand"
+              title="The same setup, one assistant at a time."
+              lead="Assistants on your machine run the local server, vraelis mcp, which the CLI provides. ChatGPT and Claude on the web cannot start a local process, so they connect to the hosted server at https://vraelis.com/mcp and sign in with OAuth. Allow creates an API key named after the connector, which you can revoke any time under Developers in the console."
+            />
+          </Reveal>
+          <div style={{ marginTop: "clamp(28px,3vw,40px)", display: "flex", flexDirection: "column" }}>
+            {MANUAL.map((m, i) => (
+              <Reveal key={m.name} i={Math.min(i, 3)}>
+                <div style={{ ...wrapRow, paddingBlock: "clamp(20px,2.2vw,26px)", borderTop: "1px solid var(--line-2)" }}>
+                  <div style={{ flex: "1 1 260px", minWidth: 0 }}>
+                    <h3 className="v6-dm" style={{ margin: 0 }}>{m.name}</h3>
+                    <p className="v6-body" style={{ marginTop: 8, maxWidth: "46ch" }}>{m.note}</p>
+                  </div>
+                  <div style={{ flex: "1 1 380px", minWidth: 0 }}>
+                    <Code lang={m.lang} src={m.src} />
+                  </div>
                 </div>
               </Reveal>
             ))}
@@ -293,104 +318,24 @@ export default function Agents() {
         </div>
       </section>
 
-      {/* 5 ── Findings, repair, completion ── */}
-      <section className="v6-sec v6-dark" data-nav-dark>
-        <div className="v6-wrap">
-          <Reveal>
-            <SectionHead
-              eyebrow="Findings, repair, completion"
-              title="Failure is not the end of the record. It is part of it."
-              lead="When work misses the requirement, Vraelis records a structured finding and writes the repair as a prompt a coding agent can act on. Start the rerun and the fix is judged against the same standard, as its own record. Completion is accepted only when the standard passes."
-            />
-          </Reveal>
-          <div className="v6-grid3" style={{ marginTop: "clamp(28px,3vw,40px)" }}>
-            {[
-              { s: "stop" as Sig, t: "Findings", d: "A contradiction, missing evidence, or an unsafe assumption becomes a recorded finding against the guarantee." },
-              { s: "wait" as Sig, t: "Repair prompt", d: "The finding comes back as a prompt written for a coding agent, not a vague complaint about what went wrong. Pasting it into the agent is your move, not an automatic handoff." },
-              { s: "go" as Sig, t: "Independent recheck", d: "Start the rerun and the repair is judged against the same standard, as its own record. A later result never overwrites an earlier one, and nothing re-verifies on its own." },
-            ].map((c, i) => (
-              <Reveal key={c.t} i={i}>
-                <div style={{ background: "var(--graphite-2)", border: "1px solid var(--g-line)", borderRadius: 14, padding: "clamp(20px,2.2vw,26px)", height: "100%" }}>
-                  <Signal state={c.s}>{c.t}</Signal>
-                  <p style={{ margin: "14px 0 0", color: "var(--g-fg-2)", fontSize: 15, lineHeight: 1.55 }}>{c.d}</p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-          <Reveal style={{ marginTop: "clamp(26px,3vw,38px)" }}>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 14, alignItems: "center", padding: "clamp(18px,2vw,24px)", background: "var(--graphite-3)", border: "1px solid var(--g-line)", borderRadius: 14 }}>
-              <span style={{ color: "var(--g-fg)", fontSize: "1.05rem", fontWeight: 600, flex: "1 1 240px", minWidth: 0 }}>
-                Completion is independently accepted or blocked.
-              </span>
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <Signal state="go">Verified</Signal>
-                <Signal state="stop">Failed</Signal>
-                <Signal state="stop">Blocked</Signal>
-              </div>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* 6 ── Where agents run: live vs direction ── */}
-      <section className="v6-sec">
-        <div className="v6-wrap">
-          <Reveal>
-            <SectionHead
-              eyebrow="Where the work lands"
-              title="Vraelis meets agent work where it already happens."
-              lead="Oversight reaches an agent through the surfaces its work already flows through. Running deeper and continuously inside the agent itself is the direction, not a claim about today."
-            />
-          </Reveal>
-          <div style={{ ...wrapRow, marginTop: "clamp(28px,3vw,40px)" }}>
-            <Reveal style={{ flex: "1 1 320px", minWidth: 0 }}>
-              <div className="v6-card" style={{ height: "100%" }}>
-                <Signal state="go">Live today</Signal>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 18 }}>
-                  {LIVE_SURFACES.map((c) => <Chip key={c}>{c}</Chip>)}
-                </div>
-                {/* A chip says a name and nothing else, so two of these were read as more than they are.
-                    GitHub and Vercel are deployment URLs a verification is pointed at; no route ingests an
-                    event from either (the deployments table has the webhook sources in its enum and nothing
-                    fills them). And the CLI exists and runs, but stops at review_required, because it posts
-                    without a reviewed_plan_id and does not yet approve or resubmit. Both facts belong beside
-                    the chips rather than in a footnote somewhere else. */}
-                <p style={{ margin: "18px 0 0", color: "var(--ink-3)", fontSize: 14, lineHeight: 1.55 }}>
-                  GitHub and Vercel are here as deployments a verification is pointed at, not as event feeds Vraelis subscribes to. The CLI runs today and stops where a plan still needs a person to approve it.
-                </p>
-              </div>
-            </Reveal>
-            <Reveal style={{ flex: "1 1 320px", minWidth: 0 }} i={1}>
-              <div className="v6-card" style={{ height: "100%" }}>
-                <Signal state="wait">Direction</Signal>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 18 }}>
-                  {DIRECTION_SURFACES.map((c) => <Chip key={c} soon>{c}</Chip>)}
-                </div>
-                <p style={{ margin: "18px 0 0", color: "var(--ink-3)", fontSize: 14, lineHeight: 1.55 }}>
-                  Continuous, in-agent oversight and reading of live agent activity are being built. We will describe them as live only when they are.
-                </p>
-              </div>
-            </Reveal>
-          </div>
-        </div>
-      </section>
-
-      {/* 7 ── Close ── */}
+      {/* 6 ── Close ── */}
       <hr className="v6-rule" />
       <section className="v6-sec v6-sec--tight">
         <div className="v6-wrap" style={{ textAlign: "center", maxWidth: 760 }}>
           <Reveal>
-            <h2 className="v6-dl" style={{ marginInline: "auto" }}>Let agents do more of the work. Keep the judgment independent.</h2>
+            <h2 className="v6-dl" style={{ marginInline: "auto" }}>Let the assistant ask. Let the live app answer.</h2>
             <p className="v6-lead" style={{ margin: "20px auto 30px", textAlign: "center" }}>
-              Vraelis checks the software an agent produces against the guarantee it was given, without ever having to take the agent&rsquo;s word for it.
+              The same check runs from the console, the CLI and CI. The assistant is one more way to start it, and the approval stays with a person.
             </p>
             <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
               <CTA brand lg>Open Vraelis</CTA>
-              <CTA href={`${BASE}/platform`} ghost lg>Explore the platform</CTA>
+              <CTA href={`${BASE}/integrations`} ghost lg>Other ways to use it</CTA>
             </div>
           </Reveal>
         </div>
       </section>
+
+      <CopyScript />
     </>
   );
 }

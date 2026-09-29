@@ -8,7 +8,7 @@ import { V6_BASE } from "@/lib/v6-routes";
 export const metadata = v6meta({
   title: "Company",
   description:
-    "Vraelis is independent verification for AI-built software: you write one guarantee, approve the plan that proves it, and a real browser checks it on your live deployment. Our mission, the three-act story of how software work is changing, what we are building, and how to reach us.",
+    "Vraelis checks whether live software does what someone says it does: one sentence about a deployed web app, or a device it controls, a plan a person approves, and a real browser run with the evidence. Who it is for, how it is different, what is built, and how to reach us.",
   path: "/company",
   type: "website",
 });
@@ -29,32 +29,38 @@ const ANCHOR: CSSProperties = {};
 // questions, which is help@.
 const CONTACT_EMAIL = "help@vraelis.com";
 
+// WIDE ON WHO, NARROW ON WHAT (founder, 2026-09-28). This used to be a story about agents outrunning their
+// reviewers, which made the company sound like it was for one kind of builder. The gap is the same whoever
+// built the thing, so the story now names all of them and keeps the function exact.
 const WHY: string[] = [
-  "For most of software's history, the same people who wrote a system also reviewed it, tested it, and decided it was ready. That worked because the work moved at human speed, and human judgment was always in the loop.",
-  "Agents changed the ratio. They now plan, build, and repair systems faster than the people nominally reviewing them can keep up, and the agent doing the work is still the one reporting that it is done. Speed went up. Independent judgment did not.",
-  "Vraelis exists to restore that judgment as a separate function. Not to slow agents down, but to make their completions mean something: a claim that has been checked against the running software by something other than the agent that produced it.",
+  "For most of software's history, the people who built a system also decided it was ready. That held while the work moved at human speed and someone could always be asked what they had checked.",
+  "Now more of it ships faster than anyone reviews it: from small teams, from agencies shipping client sites, from founders on no-code tools, and from AI agents that write a change and then report it done. Speed went up. The check at the end did not.",
+  "Vraelis exists to put that check back as a separate step: a claim tried on the live app by something other than whoever made it, with the evidence attached.",
 ];
 
 type Act = { label: string; sig?: "go" | "wait"; sigLabel?: string; title: string; body: string };
 const ACTS: Act[] = [
   {
     label: "Past",
-    title: "Humans owned the judgment.",
+    title: "Builders owned the judgment.",
     body: "People wrote, reviewed, tested, and shipped. Shipping something you had not checked was a deliberate choice, because the work and the judgment about it lived in the same hands.",
   },
   {
     label: "Present",
     sig: "go",
     sigLabel: "Live",
-    title: "Agents outran their reviewers.",
-    body: "Agents now plan, build, and repair systems faster than anyone reviewing them, and the builder still grades its own work. Vraelis puts an independent check back where that judgment used to be.",
+    title: "The work outran the checking.",
+    body: "Teams, agencies, founders and AI agents ship faster than anyone checks by hand, and whoever did the work still reports that it is done. Vraelis puts an independent check on the live app, where that judgment used to be.",
   },
+  // THE FUTURE ACT IS THE DEVICE LINE, stated to the site's standard. It used to read "Oversight follows the
+  // autonomy", a destination for a much larger company. The founder named connected devices as the niche on
+  // 2026-09-28: the panel check is live, reading the device itself is Next and not built.
   {
-    label: "Future",
+    label: "Next",
     sig: "wait",
-    sigLabel: "Direction",
-    title: "Oversight follows the autonomy.",
-    body: "As agents take on more responsibility across the stack, independent oversight follows them everywhere, so autonomy is earned against evidence and contracts the moment the record slips.",
+    sigLabel: "Next",
+    title: "The check follows software onto what it controls.",
+    body: "More software now runs hardware: drones, robots and fleets operated from web control panels. Vraelis checks those panels today, through the same real browser. Reading the device itself, its firmware, sensors and telemetry, is next and not built yet.",
   },
 ];
 
@@ -73,21 +79,24 @@ const ACTS: Act[] = [
 // customer, because the second thing would be an invented number. The "not for" half is deliberate: an
 // audience section that excludes nobody has not said anything, and two of the three exclusions below are
 // the honest edges of the product rather than a positioning move.
+// REWRITTEN 2026-09-28 FOR A WIDE AUDIENCE. The "fits" rows were companies whose software is written by
+// agents; the audience is anyone responsible for a web app, with pipelines, AI assistants and connected
+// device teams as ways in rather than the definition.
 const FOR: [string, string][] = [
-  ["Companies whose production software is now partly written by agents",
-    "The work arrives faster than anyone can review it by hand, and the thing that wrote it is also the thing reporting it is done."],
-  ["Where at least one outcome is not allowed to quietly break",
-    "The upgrade that has to grant access, the deactivation that has to remove it everywhere, the export that has to contain one tenant's records and no one else's."],
-  ["And where someone is accountable when it does",
-    "A person who would have to answer for the failure, and who currently has the agent's own word that it will not happen."],
+  ["Anyone who ships, or answers for, a web app",
+    "Developers, product teams, agencies checking client sites, founders and no-code builders, and QA. If you can say in one sentence what the app should do, Vraelis can check it on the live app."],
+  ["Pipelines and AI assistants that need an answer rather than a guess",
+    "A CI job can gate a release on the decision, and an AI coding assistant can check its own change over MCP before it says it is done. A person still approves each new plan."],
+  ["Teams that run connected devices from a web panel",
+    "Drones, robots and fleets operated through a control panel or dashboard. Vraelis checks what the panel reports after an operator action. Reading the device itself is next and not built."],
 ];
 const NOT_FOR: [string, string][] = [
-  ["Anyone who wants the agent watched while it works",
-    "A check begins when work is claimed complete. Reading an agent's activity as it happens is direction, and is not built."],
+  ["Anyone who wants the builder watched while they work",
+    "A check begins when someone says the work is done. Vraelis does not read code or watch a person or an agent while they work."],
   ["Anyone who wants a test suite written for them",
-    "Vraelis holds one business sentence outside the code and checks the deployed result against it. It does not author or maintain your tests."],
-  ["Anyone who needs a native mobile or desktop application covered",
-    "The boundary today is what a real browser and an HTTP client can observe from outside."],
+    "Vraelis holds one sentence outside the code and checks the deployed result against it. It does not author or maintain your tests."],
+  ["Anyone who needs a native app, or the device itself, checked today",
+    "The boundary today is what a real browser can open. Native mobile and desktop apps, and firmware, sensors and telemetry read from a device, are next and not built."],
 ];
 
 // HOW THIS IS DIFFERENT. Each contrast is against a real category a reader is already paying for, and each
@@ -95,10 +104,10 @@ const NOT_FOR: [string, string][] = [
 // or characterises anyone else's product as bad, because a claim about somebody else's software is a claim
 // this company cannot show evidence for, and the whole argument here is about evidence.
 const DIFFERENT: [string, string][] = [
-  ["It is not the agent's own report",
-    "The system that wrote the work does not get to be the authority on whether it worked. The check is run by something else, against the deployed result, and the separation is structural rather than a matter of prompting."],
+  ["It is not the builder's own report",
+    "Whoever wrote the work, a person or an agent, does not get to be the authority on whether it worked. The check is run by something else, against the deployed result, and the separation is structural: an API key cannot approve the plan."],
   ["It is not a test suite",
-    "A suite is written alongside the code, often by the same process, and passes in a pipeline against mocks. Vraelis holds one sentence in business language outside the code and drives the running deployment against it."],
+    "A suite is written alongside the code, often by the same process, and passes in a pipeline against mocks. Vraelis holds one sentence in plain language outside the code and drives the running deployment against it."],
   ["It is not monitoring",
     "Monitoring reports that something broke once your users have already found it. This is a decision made before that, on the deployment you are about to trust."],
   ["It refuses rather than guesses",
@@ -107,16 +116,12 @@ const DIFFERENT: [string, string][] = [
 
 const PRINCIPLES: [string, string, string][] = [
   ["01", "We ship what is real.", "Live capabilities and directions are labeled separately, on the site and in the product. We would rather show an honest gap than imply a finished one."],
-  ["02", "The judge is independent of the builder.", "Nothing an agent produces is trusted because the agent says so. Completion is a decision made on evidence by something other than the author."],
-  ["03", "History is preserved.", "Failures and repairs are kept, not overwritten. The record is the point, because trust compounds from what a system has survived."],
-  // WRITTEN AS INTENT, BECAUSE NONE OF IT IS BUILT. This was in the flat present tense, in a list headed
-  // "the commitments the product is held to", two sections above the same page's own Direction column
-  // rendering "Reliability memory, and autonomy earned from a record. Not built." A reader met the
-  // capability as a current fact and then, further down, as a Horizon item. Nothing in the repository
-  // measures an agent's record: every hit for autonomy outside this copy is a research article.
-  // The second sentence had the same problem about reach. Independence today is a real browser and an HTTP
-  // client, which is what /platform#coverage says, and this page's own "not for" row repeats.
-  ["04", "Autonomy should be earned.", "How much an agent may do alone should be a conclusion drawn from responsibilities it has actually met, not a setting somebody chooses, and independent oversight should follow the work onto whatever it runs on. Neither is built: nothing in the product measures that record today, and the reach today is a real browser and an HTTP client."],
+  ["02", "The judge is independent of the builder.", "Nothing anyone produces is trusted because they say so. Completion is a decision made on evidence by something other than the author."],
+  ["03", "History is preserved.", "Failures and fixes are kept, not overwritten. A later Verified never erases the Failed that came before it."],
+  // WAS "Autonomy should be earned", written as intent because none of it is built. It described a larger
+  // product than the one the public story was locked on (2026-09-28). What replaces it is a commitment the
+  // code already keeps: a person approves every new plan, and a key cannot.
+  ["04", "A person approves the check.", "Whoever asks for a check, a teammate, a pipeline or an AI assistant, a person approves its plan before it runs, and an API key cannot. After a fix, the same plan may be re-checked within 24 hours without asking again."],
 ];
 
 export default function CompanyPage() {
@@ -124,8 +129,8 @@ export default function CompanyPage() {
     <>
       <PageHero
         kicker="Company"
-        title="Independent oversight for AI software agents."
-        lead="Software is increasingly planned, written, and repaired by agents. Vraelis is the independent layer that checks the result against a guarantee a person approved, so companies can hand agents real work without giving up control."
+        title="We check whether live software does what someone says it does."
+        lead="Software ships faster than anyone can check it by hand, from teams, agencies, founders and AI agents alike. Vraelis is the independent check on the live app: one sentence about what should work, a plan a person approves, and an answer with the evidence."
         cta={<><CTA brand>Open Vraelis</CTA><EditorialLink href="#contact">Talk to us</EditorialLink></>}
       />
 
@@ -150,7 +155,7 @@ export default function CompanyPage() {
             <SectionHead
               eyebrow="Three acts"
               title="How the work is changing, and what has to follow it."
-              lead="The story of software is a story about where judgment lives. It has moved, and oversight has to move with it."
+              lead="The story of software is a story about where the checking happens. It has moved, and the check has to move with it."
             />
           </Reveal>
           <Reveal media className="v6-grid3">
@@ -175,7 +180,7 @@ export default function CompanyPage() {
           <Reveal>
             <SectionHead
               eyebrow="Who it is for"
-              title="One outcome that cannot be allowed to break, and an agent that keeps touching it."
+              title="Anyone who can say what should work, on a live app."
             />
           </Reveal>
           <div className="v6-rows" style={{ marginTop: "clamp(24px,2.6vw,34px)" }}>
@@ -244,8 +249,8 @@ export default function CompanyPage() {
           <Reveal>
             <SectionHead
               eyebrow="Product direction"
-              title="One capability today, one system over time."
-              lead="Vraelis starts from a working verification engine and expands outward into full oversight. We ship what is real and label the rest as direction, and every direction line says what happens today instead. Next, Later and Horizon say how much of a line already stands, not when it lands."
+              title="What is built, and what is next."
+              lead="The check is real and in use. We label the rest as direction, and every direction line says what happens today instead. Next and Later say how much of a line already stands, not when it lands."
             />
           </Reveal>
           <div className="v6-cn" style={{ marginTop: "clamp(28px,3vw,40px)" }}>
@@ -333,8 +338,8 @@ export default function CompanyPage() {
       <section className="v6-sec v6-sec--tight">
         <div className="v6-wrap" style={{ textAlign: "center", maxWidth: 760 }}>
           <Reveal>
-            <h2 className="v6-dl" style={{ marginInline: "auto" }}>Give agents more responsibility without giving up control.</h2>
-            <p className="v6-lead" style={{ margin: "20px auto 30px", textAlign: "center" }}>Independent oversight, from the moment work is assigned to the moment it can be trusted. That is the whole mission.</p>
+            <h2 className="v6-dl" style={{ marginInline: "auto" }}>Know it works before you say it does.</h2>
+            <p className="v6-lead" style={{ margin: "20px auto 30px", textAlign: "center" }}>One independent check on the live app, with the evidence attached. That is the whole mission.</p>
             <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
               <CTA brand lg>Open Vraelis</CTA>
               <CTA href={`${BASE}/research`} ghost lg>Read our research</CTA>

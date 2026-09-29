@@ -17,7 +17,7 @@ export default function TermsPage() {
       <P>These terms cover your use of Vraelis at vraelis.com. By creating an account or using the product, you agree to them. If you do not agree, do not use the service.</P>
 
       <H>What Vraelis provides</H>
-      <P>Vraelis is independent verification for AI-built software. You connect an application, define what it must do in production, and Vraelis returns a structured result:</P>
+      <P>Vraelis checks whether a deployed web application does what someone says it does. You describe what it should do, approve the plan Vraelis writes from that, and Vraelis returns a structured result:</P>
       <Ul items={[
         "A verification: your requirements executed against your exact build and environment, with the evidence captured from each run.",
         "A truthful verification decision and the issues found, tracked across releases.",

@@ -27,30 +27,41 @@ const BASE = V6_BASE;
 // The line continuations are "\\", not "\". A backslash at the end of a line inside a template literal is a
 // LineContinuation: it eats itself AND the newline, so the previous block rendered as one unbroken line with
 // no backslashes in it. app/dev-preview/v6/developers/page.tsx already had this right.
+//
+// UPDATED 2026-09-28. The submit example now shows approve_url, the link a person opens, because an API key
+// can no longer approve a plan. The completion example used to read back { "id", "evidence": { "screenshots":
+// 4, "steps": 14 } }, a shape the route has never returned; it now shows the real field names from
+// GET /v1/verifications/{id}, trimmed.
 const EXAMPLES: Record<string, [string, string]> = {
-  "getting-started": ["Submit a claim and get a plan for review", `curl -X POST https://vraelis.com/api/v1/verifications \\
+  "getting-started": ["Submit a claim and get a plan for a person to approve", `curl -X POST https://vraelis.com/api/v1/verifications \\
   -H "x-api-key: $VRAELIS_API_KEY" \\
   -H "content-type: application/json" \\
   -d '{ "deployment_url": "https://app.example.com",
-        "claim": "A paid customer keeps Pro access after signing back in." }'
+        "claim": "A signed-in user can cancel their plan from Billing and then sees Cancelled." }'
 
-# 202. Nothing ran and nothing was charged: no plan has been approved yet.
+# 202. Nothing ran and nothing was charged: no person has approved the plan yet.
 {
   "state": "review_required",
   "review_required": true,
   "human_reviewed": false,
   "reviewed_plan_id": "rvp_3c9e26ef",
-  "requirements": ["Signing back in keeps Pro access", "..."]
+  "approve_url": "https://app.vraelis.com/review/rvp_3c9e26ef",
+  "requirements": ["Cancelling from Billing ends the plan", "Billing then shows Cancelled", "..."]
 }
 
-# Approve that plan, then resubmit the same claim with "reviewed_plan_id" to run exactly what was approved.`],
+# A person approves at approve_url. Then resubmit the same claim with "reviewed_plan_id" to run it.`],
   "completion": ["Read a decision", `GET /v1/verifications/vrf_ff9d6c0d
 
 {
-  "id": "vrf_ff9d6c0d",
+  "verification_id": "vrf_ff9d6c0d",
+  "state": "completed",
   "decision": "verified",
   "claim": "A paid customer keeps Pro access after signing back in.",
-  "evidence": { "screenshots": 4, "steps": 14 }
+  "evidence": [
+    { "checking": "Pro access after signing back in", "result": "passed", "failed_at_step": null }
+  ],
+  "recheck_of": null,
+  "human_reviewed": true
 }`],
 };
 

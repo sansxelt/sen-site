@@ -32,8 +32,8 @@ function Card({ eyebrow, title, verdict }: { eyebrow: string; title: string; ver
 const brandCard = () => (
   <Card
     eyebrow="Vraelis"
-    title="AI says it is done. Vraelis proves it."
-    verdict="Verifies software built with AI actually works."
+    title="Say what should work. Vraelis checks it."
+    verdict="Checks your live app does what you say it does."
   />
 );
 

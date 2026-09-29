@@ -28,70 +28,75 @@ type MLink = { t: string; d?: string; href: string; preview?: Preview };
 type Group = { h: string; links: MLink[] };
 type Menu = { label: string; groups: Group[]; feature: Preview & { href: string; cta: string } };
 
+// REWRITTEN 2026-09-28 with the public story. The second menu was "Agents", with a Direction group for
+// continuous agent activity and autonomy from a track record; it is now "Integrations", the four ways to
+// start a check side by side, because an AI assistant is one channel and not the identity. Connected devices
+// are named where coverage is, honestly: through their web control panels today, device-level checks next.
 const MENUS: Menu[] = [
   {
     label: "Platform",
     groups: [
       { h: "Understand", links: [
         { t: "Platform overview", d: "What the product does", href: BASE + "/platform" },
-        { t: "What it can reach", d: "Browser and API today, and the ladder out", href: BASE + "/platform#coverage",
-          preview: { eyebrow: "What it can reach", title: "The browser is where this started, not where it stops.", body: "Web applications and HTTP APIs are live. An SDK that carries signed evidence back, connected devices, and physical systems are direction, and each one says plainly that it is not built.", stat: "Live vs Direction" } },
+        { t: "What it can reach", d: "Web apps, and devices through their panels", href: BASE + "/platform#coverage",
+          preview: { eyebrow: "What it can reach", title: "The browser is where this started, not where it stops.", body: "Deployed web apps are live, and so are connected devices checked through the web control panel that runs them. Checks that read a device itself, its firmware, sensors or telemetry, are next and not built yet.", stat: "Live vs Next" } },
         // FOUR NAMES FOR ONE THING, VISIBLE IN A SINGLE CLICK. This row read "Requirements", pointed at
         // /docs/responsibilities, opened a page titled "Responsibilities", and the console the reader signs
-        // into calls the same object a Guarantee. The product has exactly one durable object here, it is
-        // called a guarantee in the schema (sql/vraelis-preflight-19-guarantees.sql), in lib/preflight and
-        // on the console's own nav, and "responsibility" was never a table, a column or a type anywhere.
-        // The label, the slug, the page title and the app now say the same word.
-        { t: "Guarantees", d: "The one sentence a change must not break", href: BASE + "/docs/guarantees",
-          preview: { eyebrow: "Guarantees", title: "One sentence the change is not allowed to break.", body: "Written by a person, held outside the code, and fixed before anything runs.", stat: "Held outside the code" } },
+        // into calls the same object a Guarantee. The label, the slug, the page title and the app now say the
+        // same word, and since 2026-09-28 the description says what a guarantee is in the public story: a
+        // claim saved so it can be checked again.
+        { t: "Guarantees", d: "A claim saved to check again", href: BASE + "/docs/guarantees",
+          preview: { eyebrow: "Guarantees", title: "A claim, saved so it can be checked again.", body: "The same sentence and the plan a person approved for it, held outside the code.", stat: "Held outside the code" } },
         { t: "Systems", d: "Everything you have connected", href: BASE + "/docs/systems" },
       ] },
       { h: "Verify", links: [
-        { t: "Execution", d: "A real browser on the live software", href: BASE + "/docs/run-activity",
-          preview: { eyebrow: "Execution", title: "A real browser drives the running software.", body: "Not a mock, and not the agent's account of itself. What the run does is captured as it goes.", stat: "Real browser" } },
-        { t: "Findings", d: "What the evidence does not support", href: BASE + "/docs/findings" },
+        { t: "Execution", d: "A real browser on the live app", href: BASE + "/docs/run-activity",
+          preview: { eyebrow: "Execution", title: "A real browser drives the running app.", body: "Not a mock, and not anyone's account of their own work. What the run does is captured as it goes.", stat: "Real browser" } },
+        { t: "Findings", d: "What broke, and how to reproduce it", href: BASE + "/docs/findings" },
         { t: "Completion", d: "Verified, Failed, or Blocked", href: BASE + "/docs/completion",
           preview: { eyebrow: "Completion", title: "Three answers, and the third is the honest one.", body: "Verified, Failed, or Blocked. Blocked is the one most tools refuse to say.", stat: "Three outcomes" } },
       ] },
       { h: "Resolve", links: [
-        { t: "Review", d: "Decisions that need a person", href: BASE + "/docs/review" },
-        { t: "Repair", d: "Handoff and independent recheck", href: BASE + "/docs/repair" },
-        { t: "Integrations", d: "GitHub, Vercel, Slack", href: BASE + "/integrations" },
+        { t: "Approving a plan", d: "The step only a person takes", href: BASE + "/docs/review" },
+        { t: "Repair", d: "The repair prompt, and where it goes", href: BASE + "/docs/repair" },
+        { t: "Re-checks", d: "The same plan again after a fix", href: BASE + "/docs/recheck" },
       ] },
     ],
     feature: { eyebrow: "One real run", title: "Approved by a person, executed exactly as approved.",
-      body: "A plan minted by a dry run, reviewed, then consumed unchanged by the paid execution.",
+      body: "A plan written from one sentence, approved at a link, then run unchanged on the live app.",
       stat: "vrf_ff9d6c0d", href: BASE + "/platform", cta: "See the platform" },
   },
   {
-    label: "Agents",
+    label: "Integrations",
     groups: [
-      { h: "Coding agents", links: [
-        { t: "How agent work is read", d: "Plans, changes, and claims", href: BASE + "/agents" },
-        { t: "Claimed complete", d: "Where a check begins", href: BASE + "/docs/completion" },
-      ] },
-      { h: "Agent workflows", links: [
-        { t: "API", d: "Create and read verifications", href: BASE + "/developers#api" },
+      { h: "Start a check", links: [
+        { t: "Console", d: "Write, approve and read in the app", href: BASE + "/docs/getting-started" },
         { t: "CLI", d: "One command, one exit code", href: BASE + "/developers#cli" },
-        { t: "Webhooks", d: "verification.completed", href: BASE + "/developers#webhooks" },
+        { t: "CI and the API", d: "Gate a release on the decision", href: BASE + "/developers#api" },
+        { t: "AI assistants", d: "Setup over MCP", href: BASE + "/agents" },
       ] },
-      { h: "Direction", links: [
-        { t: "Continuous agent activity", d: "Not available yet", href: BASE + "/platform#current",
-          preview: { eyebrow: "Direction", title: "Reading an agent's work as it happens.", body: "Not built. Today a check begins at the point the work is claimed complete.", stat: "Not available" } },
-        { t: "Autonomy from track record", d: "Not available yet", href: BASE + "/platform#current",
-          preview: { eyebrow: "Direction", title: "Autonomy earned from a record.", body: "Not built. How much an agent may do alone should be a conclusion, not a setting.", stat: "Not available" } },
+      { h: "Deliver the answer", links: [
+        { t: "Webhooks", d: "verification.completed", href: BASE + "/developers#webhooks" },
+        { t: "Slack, GitHub and Vercel", d: "Where a decision lands", href: BASE + "/integrations" },
+      ] },
+      { h: "The loop", links: [
+        { t: "Verify, approve, run, re-check", d: "The whole loop", href: BASE + "/docs/the-loop",
+          preview: { eyebrow: "The loop", title: "One approval from a person, then re-checks without one.", body: "A person approves the first check of a claim. After a fix, the same plan runs again with no new click, within 24 hours and up to 10 times, on the same site.", stat: "24 hours, 10 re-checks" } },
+        { t: "Approving a plan", d: "Why an API key cannot", href: BASE + "/docs/review" },
       ] },
     ],
-    feature: { eyebrow: "Honest boundary", title: "Vraelis does not watch an agent work.",
-      body: "It holds a requirement outside the code and checks the running software when the work is claimed done.",
-      stat: "What is actually built", href: BASE + "/agents", cta: "How agents are handled" },
+    feature: { eyebrow: "Four ways in", title: "One check, from wherever you work.",
+      body: "The console, the CLI, CI and AI assistants send the same sentence and get back the same answer.",
+      stat: "Console, CLI, CI, MCP", href: BASE + "/integrations", cta: "Ways to use it" },
   },
   {
     label: "Resources",
     groups: [
       { h: "Learn", links: [
-        { t: "Documentation", d: "Use and administer Vraelis", href: BASE + "/docs",
-          preview: { eyebrow: "Documentation", title: "Nine pages, each with one outcome.", body: "Getting started, the systems you connect, oversight, and what is kept once the work is done.", stat: "9 pages" } },
+        // No page count here. "Nine pages" was right until the next page was added, and a menu that
+        // miscounts the docs is the drift docs-ui.tsx already warns about.
+        { t: "Documentation", d: "Use Vraelis", href: BASE + "/docs",
+          preview: { eyebrow: "Documentation", title: "One outcome per page.", body: "Getting started, the loop, AI assistants, approving a plan, re-checks, and what is kept once a run is done.", stat: "Setup to re-check" } },
         { t: "Vraelis Method", d: "The worldview behind the product", href: BASE + "/method" },
         { t: "README", d: "Why Vraelis exists", href: BASE + "/readme" },
       ] },
@@ -108,7 +113,7 @@ const MENUS: Menu[] = [
       ] },
     ],
     feature: { eyebrow: "The Vraelis Method", title: "The builder cannot be the only judge.",
-      body: "Eight positions on how software built by agents earns trust.",
+      body: "Eight positions on how to trust software that says it works.",
       stat: "8 positions", href: BASE + "/method", cta: "Read the Method" },
   },
   {
@@ -120,9 +125,9 @@ const MENUS: Menu[] = [
         { t: "ByteDance partnership", d: "TikTok's parent company, Seed models", href: BASE + "/partnerships/bytedance" },
         { t: "Who it is for", d: "And who it is not for yet", href: BASE + "/company#who" },
         { t: "How this is different", d: "Against the categories, not the companies", href: BASE + "/company#different",
-          preview: { eyebrow: "How this is different", title: "Four things it is not, and what it does instead.", body: "Not the agent's own report, not a test suite, not monitoring. And it refuses rather than guesses: when no check could prove the claim, the answer is Blocked and nothing is charged.", stat: "Stated against categories" } },
+          preview: { eyebrow: "How this is different", title: "Four things it is not, and what it does instead.", body: "Not the builder's own report, not a test suite, not monitoring. And it refuses rather than guesses: when no check could prove the claim, the answer is Blocked and nothing is charged.", stat: "Stated against categories" } },
         { t: "Why Vraelis exists", d: "The README", href: BASE + "/readme",
-          preview: { eyebrow: "Why Vraelis exists", title: "Software used to be trusted because humans held the loop.", body: "That loop is changing. Agents now plan, change code, and repair their own failures faster than any review process built for people.", stat: "README" } },
+          preview: { eyebrow: "Why Vraelis exists", title: "Done used to mean someone checked.", body: "Software now ships faster than anyone can check it by hand, from teams, agencies, founders and AI agents alike. Vraelis puts one independent check on the live app.", stat: "README" } },
         { t: "Contact", d: "Talk to the team", href: BASE + "/company#contact" },
       ] },
       { h: "Trust", links: [
@@ -144,7 +149,7 @@ const MENUS: Menu[] = [
         { t: "Changelog", d: "What shipped, dated", href: BASE + "/changelog" },
       ] },
     ],
-    feature: { eyebrow: "Vraelis", title: "Independent proof that software built by agents does what the business needs.",
+    feature: { eyebrow: "Vraelis", title: "Independent proof that live software does what someone says it does.",
       body: "Built in the open, with the boundary between what works and what does not stated on the site rather than in a footnote.",
       stat: "Verification engine operational", href: BASE + "/company", cta: "About the company" },
   },

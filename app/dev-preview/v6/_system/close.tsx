@@ -43,7 +43,7 @@ const COLS: [string, [string, string][]][] = [
   // "What is built" and "In public" are the two pages a sceptical reader actually wants, and neither was
   // reachable from the footer: the live-versus-planned list sat behind two differently-named submenu
   // entries, and the incident record had no inbound link anywhere on the site.
-  ["Product", [[`${BASE}/platform`, "Platform"], [`${BASE}/platform#coverage`, "What it can reach"], [`${BASE}/platform#current`, "What is built"], [`${BASE}/agents`, "Agents"], [`${BASE}/integrations`, "Integrations"], [`${BASE}/pricing`, "Pricing"], [`${BASE}/enterprise`, "Enterprise"]]],
+  ["Product", [[`${BASE}/platform`, "Platform"], [`${BASE}/platform#coverage`, "What it can reach"], [`${BASE}/platform#current`, "What is built"], [`${BASE}/integrations`, "Ways to use it"], [`${BASE}/agents`, "AI assistants"], [`${BASE}/pricing`, "Pricing"], [`${BASE}/enterprise`, "Enterprise"]]],
   ["Developers", [[`${BASE}/developers`, "Documentation"], [`${BASE}/developers#api`, "API"], [`${BASE}/developers#cli`, "CLI"], [`${BASE}/developers#webhooks`, "Webhooks"]]],
   ["Company", [[`${BASE}/company#who`, "Who it is for"], [`${BASE}/company#different`, "How this is different"], [`${BASE}/partnerships/reddit`, "Reddit partnership"], [`${BASE}/partnerships/bytedance`, "ByteDance partnership"], [`${BASE}/research`, "Research"], [`${BASE}/method`, "Method"], [`${BASE}/method#in-public`, "In public"], [`${BASE}/readme`, "README"], [`${BASE}/changelog`, "Changelog"], [`${BASE}/company`, "About"]]],
   // "Contact" pointed at an anchor on the company page. It is now a page, because a contact anchor is where
@@ -70,13 +70,14 @@ export function SiteFooter() {
           the clearest sentence the company owns rendered nowhere a visitor could reach. It returns HERE,
           quiet and at directory scale, rather than as the upper block the note above rightly refuses. That
           note is about two giant competing statements. This is one line of small print that says what the
-          company does, which is the thing a footer is actually for. */}
+          company does, which is the thing a footer is actually for.
+          LINKEDIN IS THE ONLY SOCIAL LINK, because it is the only profile confirmed to exist. The X address
+          returned 404 on 2026-09-28 and was removed from here and from lib/entity.ts the same day. */}
       <div className="v6-foot2__base">
         <p className="v6-foot2__say">{FOOTER_STATEMENT}</p>
         <div className="v6-foot2__base-in">
           <span>© 2026 Vraelis</span>
           <div className="v6-foot2__legal">
-            <a href="https://x.com/vraelis" target="_blank" rel="noreferrer">X</a>
             <a href="https://www.linkedin.com/company/vraelis" target="_blank" rel="noreferrer">LinkedIn</a>
             <Link href={`${BASE}/security`}>Security</Link>
             <Link href={`${BASE}/privacy`}>Privacy</Link>
