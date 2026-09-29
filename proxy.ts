@@ -245,7 +245,10 @@ export default function proxy(req: NextRequest) {
   const curtainExempt =
     path === "/v1" || path.startsWith("/v1/") ||
     path.startsWith("/api/") || path === "/yc" ||
-    path === "/og" || path.startsWith("/og/");
+    path === "/og" || path.startsWith("/og/") ||
+    // The hosted MCP server and its OAuth discovery documents are machine endpoints, like /v1: a
+    // connector reading them behind the curtain would get the curtain's HTML and give up.
+    path === "/mcp" || path.startsWith("/.well-known/oauth-");
   if (
     !curtainExempt && stealthConfigured() &&
     !verifyStealthCookie(req.cookies.get(STEALTH_COOKIE)?.value)
@@ -264,6 +267,19 @@ export default function proxy(req: NextRequest) {
   //     Runs before the host split because the public API answers identically on either host: a caller
   //     should never have to know which hostname the dashboard happens to live on.
   if (path === "/v1" || path.startsWith("/v1/")) return go(req, "/api" + path, "rewrite");
+
+  // 01) The hosted MCP server (ChatGPT, claude.ai) and the two OAuth discovery documents a connector reads
+  //     after /mcp answers 401. Same reasoning as /v1: rewritten, not redirected, and before the host split,
+  //     so a connector gets the same answer on either host. The path-suffixed discovery forms
+  //     (/.well-known/oauth-protected-resource/mcp) are what RFC 9728 clients try first for a resource with
+  //     a path, so both spellings land on the same document.
+  if (path === "/mcp") return go(req, "/api/mcp", "rewrite");
+  if (path === "/.well-known/oauth-protected-resource" || path.startsWith("/.well-known/oauth-protected-resource/")) {
+    return go(req, "/api/oauth/protected-resource", "rewrite");
+  }
+  if (path === "/.well-known/oauth-authorization-server" || path.startsWith("/.well-known/oauth-authorization-server/")) {
+    return go(req, "/api/oauth/metadata", "rewrite");
+  }
 
   // 0) app.vraelis.com: ONLY the signed-in product, at clean paths (no /app prefix).
   //    Auth pages live on the main host; API routes serve both hosts unchanged.
