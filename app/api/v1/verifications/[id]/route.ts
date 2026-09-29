@@ -18,8 +18,9 @@ import { appHostUrl } from "@/lib/app-routes";
 import { getContractById } from "@/lib/v-applications";
 import { requirementsForRun } from "@/lib/preflight/requirements-for-run";
 import { getReviewedPlanByRunId } from "@/lib/preflight/reviewed-plan-db";
+import { findApprovalRoot } from "@/lib/preflight/recheck";
 import { apiError, requestId } from "../../_lib";
-import { toRunId, toPublicDecision } from "../_shared";
+import { toRunId, toVerificationId, toPublicDecision } from "../_shared";
 
 export const runtime = "nodejs";
 
@@ -62,7 +63,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   // Order comes from the immutable reviewed plan when this run consumed one, and is reported as incomplete
   // rather than invented when it does not exist to be read.
   const reqs = await requirementsForRun(access.owner, runId, contract?.id ?? null);
-  const reviewedPlan = await getReviewedPlanByRunId(access.owner, runId);
+  // A re-check consumed no plan of its own: it re-ran the plan its chain's first run consumed, under that
+  // plan's approval. So the review this run stands on is found by walking up to that run, and only when the
+  // run really is a re-check (it has a parent). A run with no plan and no parent reports unreviewed, as before.
+  const reviewedPlan = (await getReviewedPlanByRunId(access.owner, runId))
+    ?? (detail.run.parent_run_id ? (await findApprovalRoot(access.owner, runId))?.plan ?? null : null);
 
   // THE DURABLE RELATIONSHIP, RETURNED. An agent that launched a verification over the API could read the
   // decision and the evidence and had no way to learn which standing promise it belonged to, whether it was
@@ -109,6 +114,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     // The repair relationship. Present when this run re-verified an earlier one; null for a first attempt.
     reverification_of: detail.run.parent_run_id ?? null,
     ...(detail.run.parent_run_id ? { reverification_of_url: `${consoleBase}/systems/${access.applicationId}/passes/${detail.run.parent_run_id}` } : {}),
+    // The same relationship in the id space a caller holds. reverification_of predates it and carries the raw
+    // run id; it stays for existing callers.
+    recheck_of: detail.run.parent_run_id ? toVerificationId(detail.run.parent_run_id) : null,
     // Where a person looks. An API result that cannot be opened is a dead end for the human the agent is
     // reporting to.
     console_url: recordUrl,

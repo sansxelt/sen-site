@@ -41,7 +41,7 @@ export default async function ReviewPlanPage({ params }: { params: Promise<{ id:
 
   // The single true sentence about this plan's standing, in the order that matters to a reviewer.
   const standing = consumed ? "This plan has already been used for a verification."
-    : approved ? "Approved. It can now be used for a paid verification."
+    : approved ? "Approved. Whatever asked for this check (a coding agent, the CLI, or CI) can run it now, and can re-check it after a fix for the next 24 hours."
     : expired ? "This plan expired before it was approved. Name the outcome again to mint a fresh one."
     : "Awaiting your review.";
 

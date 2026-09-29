@@ -111,6 +111,7 @@
     "discovery:test": "tsx scripts/preflight-discovery-verify.ts",
     "merge:test": "tsx scripts/preflight-contract-merge-verify.ts",
     "reviewed-plan:test": "tsx scripts/preflight-reviewed-plan-verify.ts",
+    "recheck:test": "tsx scripts/recheck-verify.ts",
     "provenance:integrity:test": "tsx scripts/preflight-provenance-integrity-verify.ts",
     "integrity:test": "tsx scripts/integrity-verify.ts",
     "provenance:census": "tsx scripts/provenance-census.ts",

@@ -558,6 +558,18 @@ export async function listChildRuns(owner: string, parentRunId: string): Promise
 // A single run's lite summary (state, decision, timestamps) for lineage — READ-ONLY, owner-scoped, same shape
 // as a child. Returns null for a missing or non-owned run, so a parent that belongs to another tenant (or was
 // deleted) never leaks its existence and the lineage simply omits it.
+/** The run this one re-verifies, or null. Owner-scoped, and null (not an error) before migration 3 adds
+ *  the column, so a walk up the lineage simply stops where the record does. */
+export async function getRunParentId(owner: string, runId: string): Promise<string | null> {
+  if (!isDatabaseConfigured()) return null;
+  try {
+    const { data, error } = await db().from("v_preflight_runs")
+      .select("parent_run_id").eq("user_id", norm(owner)).eq("id", runId).maybeSingle();
+    if (error || !data) return null;
+    return ((data as { parent_run_id?: string | null }).parent_run_id as string) ?? null;
+  } catch { return null; }
+}
+
 export async function getRunLite(owner: string, runId: string): Promise<ChildRun | null> {
   if (!isDatabaseConfigured()) return null;
   const { data } = await db().from("v_preflight_runs")

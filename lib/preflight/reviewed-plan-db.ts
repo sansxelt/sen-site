@@ -194,6 +194,35 @@ export async function findLivePendingPlanForClaim(owner: string, deploymentUrl: 
   } catch { return null; }
 }
 
+// The newest plain (non-guarantee) plan for a claim + deployment, in ANY state, owner-scoped. The hosted MCP
+// server keeps no job table: a check it started is found again by what it was about, and this row's state
+// says where that check is (waiting for a person, approved and not yet run, or run as run_id).
+export type LatestPlanRow = {
+  id: string; approvalState: "pending" | "approved"; executionState: "unconsumed" | "consuming" | "consumed";
+  expiresAt: string; runId: string | null; createdAt: string; plan: PlannedVerification;
+};
+export async function findLatestPlanForClaim(owner: string, deploymentUrl: string, claim: string): Promise<LatestPlanRow | null> {
+  if (!isDatabaseConfigured()) return null;
+  try {
+    const s = getSupabaseAdminClient();
+    const base = () => s.from(TABLE as never).select("id, approval_state, execution_state, expires_at, run_id, created_at, plan")
+      .eq("user_id", norm(owner))
+      .eq("deployment_fp", deploymentFingerprint(deploymentUrl))
+      .eq("claim_fp", claimFingerprint(claim));
+    // Same scoping rule as mint and findLivePendingPlanForClaim: .is(col, null), never .eq(col, null).
+    let r = await base().is("guarantee_id", null).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (r.error && /guarantee_id/i.test(r.error.message ?? "")) r = await base().order("created_at", { ascending: false }).limit(1).maybeSingle();
+    const d = r.data as { id?: string; approval_state?: string; execution_state?: string; expires_at?: string; run_id?: string | null; created_at?: string; plan?: PlannedVerification } | null;
+    if (!d?.id || !d.plan) return null;
+    return {
+      id: String(d.id),
+      approvalState: d.approval_state === "approved" ? "approved" : "pending",
+      executionState: d.execution_state === "consumed" ? "consumed" : d.execution_state === "consuming" ? "consuming" : "unconsumed",
+      expiresAt: String(d.expires_at ?? ""), runId: d.run_id ?? null, createdAt: String(d.created_at ?? ""), plan: d.plan,
+    };
+  } catch { return null; }
+}
+
 // ── The review queue ──────────────────────────────────────────────────────────────────────────────────────
 //
 // Every plan this tenant has minted that is still WAITING FOR A PERSON: pending approval, not yet consumed,

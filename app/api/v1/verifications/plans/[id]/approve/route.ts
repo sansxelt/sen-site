@@ -5,10 +5,18 @@
 // Idempotent: approving an already-approved plan returns the existing approval (already_approved: true). A
 // changed plan is a different plan_hash, which means a new reviewed plan and a new approval — never a mutation
 // of this one. Requires the same run:create scope as launching, because approval is what authorizes the spend.
+//
+// ONLY A SIGNED-IN PERSON APPROVES. An API key used to be allowed to approve an ordinary verification's plan,
+// on the reasoning that the key belongs to the owner. The keys that call this now belong to coding agents
+// (the CLI, the MCP server, CI), and the product's promise is that the agent that did the work is not the
+// one that signs off on the check. So a key gets 403 plan_requires_human with the review link, and the agent
+// hands that link to its person. Re-running an approved plan after a fix needs no new approval: see
+// POST /v1/verifications/{id}/recheck.
 import { resolvePrincipal, logKeyUsage, PREFLIGHT_SCOPES } from "@/lib/preflight/api-principal";
 import { approveReviewedPlan, getReviewedPlanView } from "@/lib/preflight/reviewed-plan-db";
 import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { apiError, requestId } from "@/app/api/v1/_lib";
+import { planApproveUrl } from "@/app/api/v1/verifications/_approve-url";
 
 export const runtime = "nodejs";
 
@@ -33,6 +41,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const view = await getReviewedPlanView(p.principal.email, id);
   if (view && (view as { guarantee_id?: string | null }).guarantee_id && p.principal.via !== "session") {
     return Response.json({ error: { code: "guarantee_plan_requires_human", message: "This plan defines a guarantee. Only a signed-in person can approve it. Open it under Review.", request_id: rid } }, { status: 403, headers: { "X-Request-Id": rid } });
+  }
+  if (p.principal.via !== "session") {
+    await logKeyUsage(p.principal, { endpoint: "POST /v1/verifications/plans/:id/approve", status: 403 });
+    const approveUrl = planApproveUrl(req, id);
+    return Response.json({
+      error: { code: "plan_requires_human", message: `Only a signed-in person can approve a plan. Ask them to open ${approveUrl} and approve it.`, request_id: rid },
+      approve_url: approveUrl,
+    }, { status: 403, headers: { "X-Request-Id": rid } });
   }
 
   // The approving principal, recorded for audit: the public key prefix when a key approved, else the email.

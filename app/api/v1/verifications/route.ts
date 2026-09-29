@@ -47,6 +47,7 @@ import { mintReviewedPlan, getReviewedPlan, consumeReviewedPlan, markReviewedPla
 import { createHash } from "crypto";
 import { apiError, requestId } from "../_lib";
 import { toVerificationId } from "./_shared";
+import { planApproveUrl } from "./_approve-url";
 
 export const runtime = "nodejs";
 export const maxDuration = 300; // crawl + synthesis + at most two bounded corrections; inside the worker budget
@@ -183,7 +184,7 @@ export async function POST(req: Request) {
       ...coverageTelemetry(claim, resolution, diagnostic),
       human_reviewed: false,
       // The reviewed-plan handle to approve, then submit to a paid run. Present only when the plan is launchable.
-      ...(reviewed ? { reviewed_plan_id: reviewed.id, reviewed_plan_expires_at: reviewed.expiresAt, approval_required: true } : {}),
+      ...(reviewed ? { reviewed_plan_id: reviewed.id, reviewed_plan_expires_at: reviewed.expiresAt, approval_required: true, approve_url: planApproveUrl(req, reviewed.id) } : {}),
     }, { status: 200, headers: { "X-Request-Id": rid } });
   }
 
@@ -326,9 +327,11 @@ export async function POST(req: Request) {
     review_required: true,
     contract_id: prepared.contractId,
     contract_version: prepared.contractVersion,
-    ...(minted ? { reviewed_plan_id: minted.id, reviewed_plan_expires_at: minted.expiresAt } : {}),
+    // Where the person approves it. An API key cannot: the agent that asked for the check hands this link to
+    // its person, waits until GET /v1/verifications/plans/{id} reads approved, then resubmits.
+    ...(minted ? { reviewed_plan_id: minted.id, reviewed_plan_expires_at: minted.expiresAt, approve_url: planApproveUrl(req, minted.id) } : {}),
     message: minted
-      ? "Vraelis built a plan that can prove this claim, and no person has reviewed it yet. Approve the reviewed plan, then resubmit with reviewed_plan_id to run exactly what was approved. Nothing was run and nothing was charged."
+      ? "Vraelis built a plan that can prove this claim, and no person has reviewed it yet. A person approves it at approve_url; then resubmit with reviewed_plan_id to run exactly what was approved. Nothing was run and nothing was charged."
       : "Vraelis built a plan that can prove this claim, and no person has reviewed it yet. Approve the requirements on this contract before running it. Nothing was run and nothing was charged.",
   }, { status: 202, headers: { "X-Request-Id": rid } });
 }

@@ -38,8 +38,9 @@ export function ApprovePlan({ planId }: { planId: string }) {
         {busy ? "Approving…" : "Approve this plan"}
       </button>
       <span style={{ fontSize: 12.5, color: "var(--fg-4)", maxWidth: "44ch", lineHeight: 1.5 }}>
-        Approving records you as the reviewer of this exact plan. It does not start a run and does not spend
-        credits.
+        Approving records you as the reviewer of this exact plan. It does not charge anything by itself. If a
+        coding agent or the CLI asked for this check, it starts the run once you approve, and each run is one
+        verification.
       </span>
       {err && <p role="alert" style={{ width: "100%", margin: 0, fontSize: 13, color: "var(--stop-ink)" }}>{err}</p>}
     </div>

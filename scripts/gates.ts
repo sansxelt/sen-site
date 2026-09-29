@@ -145,6 +145,9 @@ const SUITES = [
   // The console draws ONE signal. This suite is what stops a tenth private pill appearing: it was nine
   // separate implementations in four colour vocabularies, two of which were rendering a false Verified.
   "console-signal",
+  // A coding agent may run an approved plan again after a fix without asking the person again. This suite
+  // is what keeps that from becoming the agent approving its own work.
+  "recheck",
 ];
 const DOCKER_SUITES = ["phase2-credit-concurrency", "phase3-payment-cap", "rls-preflight"];
 

@@ -5,6 +5,7 @@ import { resolvePrincipal, PREFLIGHT_SCOPES } from "@/lib/preflight/api-principa
 import { getReviewedPlanView } from "@/lib/preflight/reviewed-plan-db";
 import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { apiError, requestId } from "@/app/api/v1/_lib";
+import { planApproveUrl } from "@/app/api/v1/verifications/_approve-url";
 
 export const runtime = "nodejs";
 
@@ -36,5 +37,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     requirements: (v.plan.requirements ?? []).map((r) => r.text),
     flows: (v.plan.flows ?? []).map((f) => ({ name: f.name, goal: f.goal, steps: (f.steps ?? []).length })),
     human_reviewed: v.approval_state === "approved",
+    // Where a person approves it while it is still pending. Absent once approved, consumed or expired, so a
+    // caller never forwards a link that can no longer be acted on.
+    ...(v.approval_state === "pending" && v.execution_state === "unconsumed" && new Date(v.expires_at).getTime() > Date.now()
+      ? { approve_url: planApproveUrl(req, v.id) } : {}),
   }, { status: 200, headers: { "X-Request-Id": rid } });
 }
