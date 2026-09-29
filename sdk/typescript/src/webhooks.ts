@@ -45,27 +45,22 @@ export function verifyWebhookSignature(opts: VerifyWebhookOptions): boolean {
   }
 }
 
+/** The body of a `verification.completed` delivery, sent once when a verification finishes. */
 export interface VraelisWebhookEvent {
-  event: string; // e.g. "test.completed"
-  delivery_id: string;
-  created_at: string;
+  event: "verification.completed";
+  /** The raw run id. The API's verification id for it is `vrf_${run_id}`. */
+  run_id: string;
+  application_id: string;
+  decision: "verified" | "failed" | "blocked";
+  flows_total: number;
+  flows_passed: number;
+  deployment_url: string | null;
+  /** ISO timestamp. */
+  completed_at: string;
+  /** Where a person opens the full record, or null. */
+  report_url: string | null;
+  /** Unique per delivery; also sent as the X-Vraelis-Delivery header. */
+  delivery_id?: string;
+  /** True on a sample delivery sent from the dashboard. */
   test_event?: boolean;
-  mode?: "sandbox" | "production";
-  test: {
-    id: string;
-    title: string;
-    status: string;
-    completed_at: string | null;
-    votes_valid: number;
-    votes_filtered: number;
-    winner: { option: string; pct: number } | null;
-    inconclusive: boolean;
-  };
-  decision_package?: Record<string, unknown> | null;
-  links: {
-    report_url: string;
-    public_report_url: string | null;
-    export_json: string;
-    export_csv: string;
-  };
 }
