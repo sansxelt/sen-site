@@ -34,6 +34,22 @@ function toStored(d: Row): StoredReviewedPlan {
   };
 }
 
+// Give an expired, never-approved, never-run plan a fresh window. Conditional on all three at write time, so a
+// person approving it or a launch consuming it in the same instant wins and this changes nothing. Returns the
+// new expiry, or null when the row no longer qualifies (or the write failed) and the caller keeps what it had.
+async function renewExpiredPendingPlan(
+  s: ReturnType<typeof getSupabaseAdminClient>, id: string, nowMs: number, ttlMs: number,
+): Promise<string | null> {
+  const nowIso = new Date(nowMs).toISOString();
+  const expiresAt = new Date(nowMs + ttlMs).toISOString();
+  const r = await s.from(TABLE as never)
+    .update({ expires_at: expiresAt, updated_at: nowIso } as never)
+    .eq("id", id).eq("approval_state", "pending").eq("execution_state", "unconsumed").lte("expires_at", nowIso)
+    .select("id,expires_at").maybeSingle();
+  if (r.error || !r.data) return null;
+  return (r.data as { expires_at: string }).expires_at;
+}
+
 // ── Mint (dry run) ────────────────────────────────────────────────────────────────────────────────────────
 // Persist the resolved plan as an immutable, pending reviewed plan and return its handle. Idempotent: an
 // identical live (unconsumed) plan for the same tenant returns the existing handle instead of a duplicate row.
@@ -74,7 +90,18 @@ export async function mintReviewedPlan(input: {
   };
 
   const live = await findLive();
-  if (live) return { id: live.id, expiresAt: live.expires_at, reused: true };
+  if (live) {
+    if (new Date(live.expires_at).getTime() > input.nowMs) return { id: live.id, expiresAt: live.expires_at, reused: true };
+    // AN EXPIRED PLAN STILL HOLDS THE ONE LIVE SLOT. uq_v_reviewed_plans_live only excludes consumed rows, so
+    // an unconsumed plan past its expiry kept matching here: every later dry run of the same claim got the
+    // dead handle back, with an approve_url that opened on "expired", and a fresh insert would only collide
+    // with it. A plan nobody has approved is renewed in place: same id, same plan (the hash matched), a new
+    // window, and it still waits for a person. An APPROVED plan is not touched, because resetting it would
+    // erase who approved it; it keeps the old behaviour until an 'expired' state exists in the index.
+    const renewed = await renewExpiredPendingPlan(s, live.id, input.nowMs, input.ttlMs);
+    if (renewed) return { id: live.id, expiresAt: renewed, reused: true };
+    return { id: live.id, expiresAt: live.expires_at, reused: true };
+  }
 
   const id = `rvp_${randomUUID()}`;
   const nowIso = new Date(input.nowMs).toISOString();
