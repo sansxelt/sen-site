@@ -19,23 +19,26 @@ export const WIDGET_HTML = `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Vraelis check</title>
 <style>
+  /* The console's palette (design 07, 2026-09-30): zinc neutrals, one cobalt accent for the action, and green,
+     amber and red for results only. The button used to be the Verified green, so "Review and approve" looked
+     like a pass before anything had run. */
   :root {
-    --bg: #fbfaf7; --panel: #ffffff; --fg: #17181a; --fg2: #4a4d52; --fg3: #7a7e85; --line: #e6e3dc;
-    --go: #0f7a55; --go-bg: #e6f4ee; --stop: #b42318; --stop-bg: #fdecea; --hold: #9a6700; --hold-bg: #fdf3dc;
-    --wait: #3d4a5c; --wait-bg: #eef1f5; --accent: #0f7a55;
+    --bg: #f7f7f8; --panel: #ffffff; --fg: #0a0a0b; --fg2: #3f3f46; --fg3: #6b6b74; --line: #e4e4e7;
+    --go: #067647; --go-bg: #ecfdf3; --stop: #b42318; --stop-bg: #fef3f2; --stop-line: #fecdca; --hold: #9a5b00; --hold-bg: #fef7e6;
+    --wait: #3f3f46; --wait-bg: #f4f4f5; --accent: #3e63dd; --on-accent: #ffffff;
   }
   :root[data-theme="dark"] {
-    --bg: #111214; --panel: #17191c; --fg: #eceae4; --fg2: #b9bcc2; --fg3: #8a8e95; --line: #2a2d31;
-    --go: #4cc793; --go-bg: #12281f; --stop: #f07b6e; --stop-bg: #2c1614; --hold: #e3b341; --hold-bg: #2a220f;
-    --wait: #a9b6c8; --wait-bg: #1c2129; --accent: #4cc793;
+    --bg: #0e0f11; --panel: #16171a; --fg: #f4f4f5; --fg2: #d4d4d8; --fg3: #a1a1aa; --line: #2a2b30;
+    --go: #4ade9c; --go-bg: #10261c; --stop: #ff8a80; --stop-bg: #2c1614; --stop-line: #4a2320; --hold: #f2b75a; --hold-bg: #2a220f;
+    --wait: #d4d4d8; --wait-bg: #1f2024; --accent: #9eb1ff; --on-accent: #0a0a0b;
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; background: transparent; color: var(--fg); font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+  html, body { margin: 0; background: transparent; color: var(--fg); font: 14px/1.5 "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; }
   .top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .mark { width: 18px; height: 18px; flex: none; }
   .brand { font-weight: 600; letter-spacing: 0.01em; }
-  .pill { margin-left: auto; font: 600 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.06em; text-transform: uppercase; padding: 6px 9px; border-radius: 999px; }
+  .pill { margin-left: auto; font-size: 12.5px; font-weight: 600; line-height: 1; padding: 5px 9px; border-radius: 6px; }
   .pill[data-s="verified"] { color: var(--go); background: var(--go-bg); }
   .pill[data-s="failed"], .pill[data-s="error"] { color: var(--stop); background: var(--stop-bg); }
   .pill[data-s="blocked"] { color: var(--hold); background: var(--hold-bg); }
@@ -43,16 +46,15 @@ export const WIDGET_HTML = `<!doctype html>
   .claim { margin: 12px 0 2px; font-size: 15px; font-weight: 600; }
   .url { color: var(--fg3); font-size: 12.5px; word-break: break-all; }
   .note { margin: 10px 0 0; color: var(--fg2); }
-  h3 { margin: 14px 0 6px; font: 600 10.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg3); }
+  h3 { margin: 14px 0 6px; font-size: 12.5px; font-weight: 600; line-height: 1.3; color: var(--fg3); }
   ol, ul { margin: 0; padding-left: 20px; }
   li { margin: 3px 0; color: var(--fg2); }
-  .fail { border-left: 2px solid var(--stop); padding: 4px 0 4px 10px; margin: 8px 0; }
+  .fail { background: var(--stop-bg); border: 1px solid var(--stop-line); border-radius: 8px; padding: 8px 10px; margin: 8px 0; }
   .fail b { color: var(--fg); }
   .kv { font-size: 12.5px; color: var(--fg2); }
   .kv span { color: var(--fg3); }
   .row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; align-items: center; }
-  .btn { appearance: none; border: 0; cursor: pointer; background: var(--accent); color: #fff; font: 600 13.5px/1 inherit; padding: 10px 14px; border-radius: 10px; text-decoration: none; }
-  :root[data-theme="dark"] .btn { color: #0b1a14; }
+  .btn { appearance: none; border: 0; cursor: pointer; background: var(--accent); color: var(--on-accent); font: 600 13.5px/1 inherit; padding: 10px 14px; border-radius: 8px; text-decoration: none; }
   .link { color: var(--fg2); font-size: 13px; }
   .muted { color: var(--fg3); font-size: 12px; margin-top: 10px; }
   .spin { display: inline-block; width: 10px; height: 10px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: s 0.9s linear infinite; vertical-align: -1px; margin-right: 6px; }
