@@ -3,14 +3,20 @@
 // in an email that disagrees with the number on the invoice is the kind of thing customers screenshot.
 import { creditsToCents } from "./preflight/auto-recharge";
 import { passPriceCents, PASS_INCLUDED_FLOWS } from "./preflight/pass-pricing";
-// The company category, imported rather than restated. positioning.ts declares itself the only place the
-// high-level thesis may live, and the header below had drifted off it: it carried its own hand-written
-// restatement, from a generation of positioning that file has since moved past. Every email carries this
-// header, so a stale copy here was the most-sent sentence the company owns.
+// The product sentence, imported rather than restated. positioning.ts declares itself the only place the
+// high-level thesis may live, and this file had drifted off it twice: the header carried a category label
+// from an older generation, and the welcome email described the company with a sentence that file has since
+// retired. The emails that explain what Vraelis does (welcome, activation, win-back, invite) now print
+// SUPPORT or FOOTER_STATEMENT, so a positioning change reaches the inbox with no edit here.
 //
-// scripts/email-embeds-verify.ts asserts the old sentence appears in this file. It has to assert on the
-// import and the interpolation instead, or it is checking that a copy exists rather than that it agrees.
-import { CATEGORY } from "@/app/dev-preview/v6/_system/positioning";
+// scripts/email-embeds-verify.ts asserts on this import and on the rendered welcome email, not on a copy of
+// a sentence, so it checks that the emails agree with positioning.ts rather than that a string exists.
+import { SUPPORT, FOOTER_STATEMENT } from "@/app/dev-preview/v6/_system/positioning";
+// The chrome and the atoms every template is built from. See lib/email/shell.ts for the design rules.
+import {
+  shell, h1, p, small, strong, link, mailto, button, status, details, list, code, quote,
+  escapeHtml, textPreview, SUPPORT_EMAIL, type DetailValue,
+} from "./email/shell";
 
 let resendClient: Resend | null = null;
 
@@ -80,162 +86,32 @@ export function isEmailConfigured() {
 // Templates
 // ---------------------------------------------------------------------------
 
-/**
- * baseHtml, standard email chrome for every transactional message.
- * Header: small Vraelis wordmark + tagline.
- * Body: the template's own content, rendered inside a white card.
- * Footer: dense contact block (all 3 departmental inboxes), legal
- *         links, copyright.  Sits below the signature so it never
- *         crowds the message itself.
- */
-function baseHtml(content: string) {
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="color-scheme" content="light">
-  <meta name="supported-color-schemes" content="light">
-  <!--
-    Mobile tuning, the main transactional email clients that respect
-    <style> + @media are Apple Mail, Gmail iOS/Android (native apps),
-    Outlook iOS. Gmail Web strips the head-level style block on some
-    templates, so inline styles stay the baseline; this block just
-    sharpens things where support exists.
-  -->
-  <style>
-    @media only screen and (max-width: 480px) {
-      .vrl-outer       { padding: 16px 8px !important; }
-      .vrl-card        { padding: 22px 20px 20px !important; border-radius: 16px !important; }
-      .vrl-h1          { font-size: 20px !important; line-height: 1.3 !important; }
-      .vrl-btn         { display: block !important; width: 100% !important; box-sizing: border-box !important; margin: 0 0 10px !important; text-align: center !important; }
-      .vrl-btn-spacer  { display: none !important; }
-      .vrl-details-label { width: auto !important; display: block !important; padding-bottom: 2px !important; }
-      .vrl-details-value { display: block !important; padding-top: 0 !important; padding-bottom: 10px !important; }
-      .vrl-footer-links a { display: inline-block; }
-      .vrl-message-body { padding: 14px !important; }
-    }
-  </style>
-</head>
-<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
-  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" class="vrl-outer" style="background:#f4f4f5;padding:32px 16px;">
-    <tr><td align="center">
-      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:600px;">
+// THE CHROME LIVES IN lib/email/shell.ts. Every template below is a headline, one or two short paragraphs,
+// a details table where there are facts to state, at most one primary button, and fine print. The footer
+// says why the recipient got the email; these are the reasons, stated once. (With no reason given, the
+// shell says "You are receiving this because you have a Vraelis account.")
+const REASON_BILLING = "You are receiving this because of a billing change on your Vraelis account.";
+// The nurture emails promise a working opt-out by reply. Replies route to help@, which a person reads (see
+// the sender policy above), so the promise is kept.
+const REASON_NUDGE = "You are receiving this because you have a Vraelis account. If you would rather not get emails like this, reply and we will stop.";
 
-        <!-- ── Brand header ──────────────────────────────────── -->
-        <tr><td style="padding:0 4px 20px;">
-          <span style="font-size:18px;font-weight:700;color:#0a0a0a;letter-spacing:-0.02em;">Vraelis</span>
-          <span style="margin-left:10px;font-size:11px;font-weight:500;color:#737373;letter-spacing:0.06em;text-transform:uppercase;">${CATEGORY}</span>
-        </td></tr>
-
-        <!-- ── Message card ──────────────────────────────────── -->
-        <tr><td class="vrl-card" style="background:#ffffff;border:1px solid #e5e5e5;border-radius:20px;padding:36px 36px 32px;">
-          ${content}
-        </td></tr>
-
-        <!-- ── Contact block ─────────────────────────────────── -->
-        <tr><td style="padding:22px 4px 0;">
-          <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
-            <tr><td style="padding-bottom:10px;font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#525252;">
-              Reach out
-            </td></tr>
-            <tr><td style="font-size:13px;color:#525252;line-height:1.7;">
-              General support · <a href="mailto:help@vraelis.com" style="color:#0a0a0a;text-decoration:none;border-bottom:1px solid #d4d4d4;">help@vraelis.com</a><br>
-              Privacy &amp; data · <a href="mailto:privacy@vraelis.com" style="color:#0a0a0a;text-decoration:none;border-bottom:1px solid #d4d4d4;">privacy@vraelis.com</a><br>
-              Teams &amp; sales · <a href="mailto:sales@vraelis.com" style="color:#0a0a0a;text-decoration:none;border-bottom:1px solid #d4d4d4;">sales@vraelis.com</a>
-            </td></tr>
-          </table>
-        </td></tr>
-
-        <!-- ── Legal footer ──────────────────────────────────── -->
-        <tr><td style="padding:22px 4px 0;border-top:1px solid #e5e5e5;margin-top:22px;">
-          <p class="vrl-footer-links" style="margin:16px 0 0;font-size:11px;line-height:1.9;color:#a3a3a3;word-break:break-word;">
-            <a href="https://vraelis.com" style="color:#737373;text-decoration:none;">vraelis.com</a>
-             · <a href="https://vraelis.com/method" style="color:#737373;text-decoration:none;">Product</a>
-             · <a href="https://vraelis.com/pricing" style="color:#737373;text-decoration:none;">Pricing</a>
-             · <a href="https://vraelis.com/privacy" style="color:#737373;text-decoration:none;">Privacy</a>
-             · <a href="https://vraelis.com/terms" style="color:#737373;text-decoration:none;">Terms</a>
-             · <a href="https://vraelis.com/contact" style="color:#737373;text-decoration:none;">Contact</a>
-          </p>
-          <p style="margin:10px 0 0;font-size:11px;color:#a3a3a3;line-height:1.7;">
-            © ${new Date().getFullYear()} Vraelis. All rights reserved.<br>
-            You&apos;re receiving this because an account or subscription event happened on vraelis.com.
-          </p>
-        </td></tr>
-
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`;
-}
-
-// ── Shared template atoms ─────────────────────────────────────────────────
-
-const KICKER_STYLE = "margin:0 0 8px;font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#737373;";
-const KICKER_RED   = "margin:0 0 8px;font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#b91c1c;";
-// Headlines shrink to 20px on narrow screens via the .vrl-h1 class in baseHtml's <style>.
-const H1_STYLE     = "margin:0 0 16px;font-size:24px;font-weight:600;color:#0a0a0a;line-height:1.25;letter-spacing:-0.01em;";
-const BODY_STYLE   = "margin:0 0 18px;font-size:14px;line-height:1.7;color:#404040;";
-const META_STYLE   = "margin:0 0 4px;font-size:13px;line-height:1.7;color:#737373;";
-// Buttons stack full-width on narrow screens via the .vrl-btn class.
-const BTN_STYLE    = "display:inline-block;background:#0a0a0a;color:#ffffff !important;font-size:14px;font-weight:500;padding:12px 22px;border-radius:14px;text-decoration:none;";
-const BTN_LIGHT    = "display:inline-block;background:#f4f4f5;color:#0a0a0a !important;font-size:14px;font-weight:500;padding:12px 22px;border-radius:14px;text-decoration:none;border:1px solid #e5e5e5;";
-const HR_STYLE     = "height:1px;line-height:1px;background:#e5e5e5;margin:24px 0;";
-const NOTE_STYLE   = "margin:20px 0 0;padding:14px 16px;background:#fafafa;border:1px solid #e5e5e5;border-radius:12px;font-size:12px;color:#525252;line-height:1.65;";
-const NOTE_WARN    = "margin:20px 0 0;padding:14px 16px;background:#fff1f2;border:1px solid #fecdd3;border-radius:12px;font-size:12px;color:#9f1239;line-height:1.65;";
-
-/**
- * HTML-escape a string for safe interpolation into our inline email
- * templates.  The templates intentionally do not use a rendering
- * library, so anywhere user-supplied text (subjects, names, messages,
- * channel labels) lands in an `${...}` hole, run it through this first.
- *
- * Escapes the five HTML-sensitive characters.  `&` must be first so we
- * don't double-escape entities produced by the later replacements.
- */
-function escapeHtml(value: unknown): string {
-  const str = typeof value === "string" ? value : String(value ?? "");
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-function detailsTable(rows: Array<[string, string]>): string {
-  return `<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 22px;border-collapse:separate;">
-    ${rows.map(([label, value]) => `
-      <tr>
-        <td class="vrl-details-label" style="padding:8px 0;font-size:13px;color:#737373;width:140px;border-bottom:1px solid #f4f4f5;vertical-align:top;">${escapeHtml(label)}</td>
-        <td class="vrl-details-value" style="padding:8px 0;font-size:13px;color:#0a0a0a;font-weight:500;border-bottom:1px solid #f4f4f5;vertical-align:top;word-break:break-word;">${escapeHtml(value)}</td>
-      </tr>
-    `).join("")}
-  </table>`;
-}
+const BILLING_URL = "https://app.vraelis.com/billing";
 
 // ── Account templates (from hello@) ────────────────────────────────────────
 
 export function welcomeHtml(name?: string) {
   const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
-  return baseHtml(`
-    <p style="${KICKER_STYLE}">Welcome to Vraelis</p>
-    <h1 class="vrl-h1" style="${H1_STYLE}">Your account is live.</h1>
-    <p style="${BODY_STYLE}">${greeting} your Vraelis account is set up, with your first verification included. Vraelis is the independent verification layer for work performed by AI: give it a deployed app and the outcome that should be true, and it checks the live result in a real browser, then returns the evidence behind its decision.</p>
-    <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">Your first verification:</strong></p>
-    <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
-      <li>Give Vraelis your deployed app and the outcome that should be true.</li>
-      <li>It derives the checks, shows you the exact plan to approve, then runs it in a real browser.</li>
-      <li>Get verified, failed, or blocked, with evidence and a repair prompt.</li>
-    </ul>
-    <a href="https://app.vraelis.com" class="vrl-btn" style="${BTN_STYLE}">Verify an outcome</a>
-    <span class="vrl-btn-spacer">&nbsp;</span>
-    <a href="https://vraelis.com/method" class="vrl-btn" style="${BTN_LIGHT}">How it works</a>
-    <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Didn&apos;t create this account?</strong> You can safely ignore this email, the signup won&apos;t charge you anything and we won&apos;t email you again. If you&apos;re seeing emails you didn&apos;t expect, contact <a href="mailto:help@vraelis.com" style="color:#0a0a0a;">help@vraelis.com</a>.
-    </div>
-  `);
+  return shell(`
+    ${h1("Your Vraelis account is ready")}
+    ${p(`${greeting} your account is set up, and your first verification is included.`)}
+    ${p(escapeHtml(SUPPORT))}
+    ${button("https://app.vraelis.com", "Verify an outcome")}
+    ${small(`New to Vraelis? ${link("https://vraelis.com/method", "See how it works")}.`)}
+    ${small(`If you did not create this account, you can ignore this email. Signing up does not charge you anything, and we will not email you again. If you keep getting emails you did not expect, contact ${mailto(SUPPORT_EMAIL)}.`)}
+  `, {
+    preheader: "Your account is set up, and your first verification is included.",
+    reason: "You are receiving this because this email address was used to create a Vraelis account.",
+  });
 }
 
 // THERE IS NO WAVED ROLLOUT, SO THERE IS NO EMAIL ABOUT ONE.
@@ -247,50 +123,48 @@ export function welcomeHtml(name?: string) {
 // codebase than missing from it, because the next person to need a signup email finds it and sends it.
 export function verifyAccountHtml(name: string, verifyUrl: string, expiryLabel: string) {
   const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
-  return baseHtml(`
-    <p style="${KICKER_STYLE}">Confirm your email</p>
-    <h1 class="vrl-h1" style="${H1_STYLE}">One click and your account is live.</h1>
-    <p style="${BODY_STYLE}">${greeting} to finish creating your Vraelis account, confirm your email address by tapping the button below. This makes sure nobody else signed you up by mistake, and it&apos;s the only thing between you and the full product.</p>
-    <a href="${verifyUrl}" class="vrl-btn" style="${BTN_STYLE}">Confirm email</a>
-    <div style="${HR_STYLE}"></div>
-    <p style="${META_STYLE}">The link <strong style="color:#0a0a0a;">expires in ${expiryLabel}</strong>. If it does, head back to the signup page and we&apos;ll send a fresh one.</p>
-    <p style="${META_STYLE}" style="margin-top:14px;">Link not working? Copy and paste this URL into your browser:</p>
-    <p style="margin:4px 0 0;font-size:12px;color:#0a0a0a;word-break:break-all;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;">${verifyUrl}</p>
-    <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Didn&apos;t sign up for Vraelis?</strong> Ignore this email, without clicking the link, your account never gets created and we won&apos;t message you again. If you&apos;re seeing signup confirmations you didn&apos;t request, email <a href="mailto:help@vraelis.com" style="color:#0a0a0a;">help@vraelis.com</a>.
-    </div>
-  `);
+  return shell(`
+    ${h1("Confirm your email address")}
+    ${p(`${greeting} confirm your email address to finish creating your Vraelis account. This makes sure nobody signed you up by mistake.`)}
+    ${button(verifyUrl, "Confirm email")}
+    ${small(`The link expires in ${strong(escapeHtml(expiryLabel))}. If it expires, go back to the sign-up page and we will send a new one.`)}
+    ${small("If the button does not work, paste this link into your browser:")}
+    ${code(verifyUrl)}
+    ${small(`If you did not sign up for Vraelis, ignore this email. The account is not created unless the link is used, and we will not email you again. If you keep getting confirmations you did not request, email ${mailto(SUPPORT_EMAIL)}.`)}
+  `, {
+    preheader: `Confirm your email address to finish creating your Vraelis account. The link expires in ${expiryLabel}.`,
+    reason: "You are receiving this because this email address was used to sign up for Vraelis.",
+  });
 }
 
 export function passwordResetHtml(resetUrl: string) {
-  return baseHtml(`
-    <p style="${KICKER_STYLE}">Password Reset</p>
-    <h1 class="vrl-h1" style="${H1_STYLE}">Choose a new password.</h1>
-    <p style="${BODY_STYLE}">Someone, hopefully you, asked to reset the password on your Vraelis account. Click the button below to pick a new one. The link is <strong style="color:#0a0a0a;">single-use</strong> and expires in <strong style="color:#0a0a0a;">one hour</strong>.</p>
-    <a href="${resetUrl}" class="vrl-btn" style="${BTN_STYLE}">Reset password</a>
-    <div style="${HR_STYLE}"></div>
-    <p style="${META_STYLE}">Link not working? Copy and paste this URL into your browser:</p>
-    <p style="margin:4px 0 0;font-size:12px;color:#0a0a0a;word-break:break-all;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;">${resetUrl}</p>
-    <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Didn&apos;t ask for this?</strong> You can safely ignore this email, your password won&apos;t change without someone clicking the link. If you&apos;re seeing repeated reset requests, email <a href="mailto:help@vraelis.com" style="color:#0a0a0a;">help@vraelis.com</a> and we&apos;ll lock the account while we investigate.
-    </div>
-  `);
+  return shell(`
+    ${h1("Reset your password")}
+    ${p(`We received a request to reset the password for your Vraelis account. Use the button below to choose a new one. The link works ${strong("once")} and expires in ${strong("one hour")}.`)}
+    ${button(resetUrl, "Reset password")}
+    ${small("If the button does not work, paste this link into your browser:")}
+    ${code(resetUrl)}
+    ${small(`If you did not ask for this, you can ignore this email. Your password does not change unless the link is used. If you keep getting reset requests, email ${mailto(SUPPORT_EMAIL)} and we will lock the account while we look into it.`)}
+  `, {
+    preheader: "Use this link to choose a new password. It works once and expires in one hour.",
+    reason: "You are receiving this because a password reset was requested for your Vraelis account.",
+  });
 }
 
 export function contactConfirmHtml(name: string, subject: string) {
   const safeName    = escapeHtml(name);
   const safeSubject = escapeHtml(subject);
   const greeting    = safeName ? `Hi ${safeName},` : "Hi,";
-  return baseHtml(`
-    <p style="${KICKER_STYLE}">Message Received</p>
-    <h1 class="vrl-h1" style="${H1_STYLE}">We got your note.</h1>
-    <p style="${BODY_STYLE}">${greeting} thanks for reaching out. We received your message about <strong style="color:#0a0a0a;">${safeSubject}</strong> and someone on the team will follow up to your email address directly, usually within one business day.</p>
-    <p style="${BODY_STYLE}">If you have more to add, just reply to this email. Your reply lands in the right queue automatically.</p>
-    <a href="https://vraelis.com/contact" class="vrl-btn" style="${BTN_LIGHT}">Back to contact</a>
-    <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Didn&apos;t submit this form?</strong> You can safely ignore this email, we&apos;ll process it as a mistake if we don&apos;t hear back. No further messages will be sent unless you reach out again.
-    </div>
-  `);
+  return shell(`
+    ${h1("We received your message")}
+    ${p(`${greeting} thanks for writing to us about ${strong(safeSubject)}. Someone on the team will reply to this email address, usually within one business day.`)}
+    ${p("To add anything, reply to this email. Your reply goes to the same team.")}
+    ${small(`Our other addresses are listed at ${link("https://vraelis.com/contact", "vraelis.com/contact")}.`)}
+    ${small("If you did not send this message, you can ignore this email. We will not contact you again unless you write to us.")}
+  `, {
+    preheader: `We received your message about ${subject} and will reply by email, usually within one business day.`,
+    reason: "You are receiving this because this email address was entered in the contact form on vraelis.com.",
+  });
 }
 
 export function supportHtml(opts: {
@@ -300,29 +174,23 @@ export function supportHtml(opts: {
   message:  string;
   channel?: string | null;
 }) {
-  // Every field here comes from an unauthenticated contact form, so
-  // every field is escaped before interpolation. Without this, HTML in
-  // subject/message would render as markup inside ops' mail client.
+  // Every field here comes from an unauthenticated contact form, so every field is escaped before it
+  // reaches HTML: the subject here, and the rest inside details() and quote(), which escape what they are
+  // given. Without this, HTML in subject/message would render as markup inside ops' mail client.
   const safeSubject = escapeHtml(opts.subject);
-  const safeName    = escapeHtml(opts.name || "(no name)");
-  const safeEmail   = escapeHtml(opts.email);
-  const safeMessage = escapeHtml(opts.message);
-  const safeChannel = opts.channel ? escapeHtml(opts.channel) : "";
-  const channelRow = safeChannel
-    ? `<tr><td style="padding:4px 0;font-size:13px;color:#737373;">Channel</td><td style="padding:4px 0;font-size:13px;color:#0a0a0a;">${safeChannel}</td></tr>`
-    : "";
-  return baseHtml(`
-    <p style="margin:0 0 8px;font-size:13px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#737373;">Support Request</p>
-    <h1 class="vrl-h1" style="margin:0 0 24px;font-size:20px;font-weight:600;color:#0a0a0a;line-height:1.3;word-break:break-word;">${safeSubject}</h1>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
-      ${channelRow}
-      <tr><td style="padding:4px 0;font-size:13px;color:#737373;width:80px;">From</td><td style="padding:4px 0;font-size:13px;color:#0a0a0a;">${safeName}</td></tr>
-      <tr><td style="padding:4px 0;font-size:13px;color:#737373;">Email</td><td style="padding:4px 0;font-size:13px;color:#0a0a0a;">${safeEmail}</td></tr>
-    </table>
-    <div class="vrl-message-body" style="background:#f5f5f5;border:1px solid #e5e5e5;border-radius:14px;padding:16px;">
-      <p style="margin:0;font-size:14px;line-height:1.7;color:#404040;white-space:pre-wrap;word-break:break-word;overflow-wrap:break-word;">${safeMessage}</p>
-    </div>
-  `);
+  const rows: Array<[string, DetailValue]> = [];
+  if (opts.channel) rows.push(["Channel", opts.channel]);
+  rows.push(["From", opts.name || "(no name)"]);
+  rows.push(["Email", { html: link(`mailto:${opts.email}`, escapeHtml(opts.email)) }]);
+  return shell(`
+    ${h1(safeSubject)}
+    ${details(rows)}
+    ${quote(opts.message)}
+  `, {
+    preheader: `${opts.name || opts.email}: ${opts.message}`.slice(0, 140),
+    reason: `Sent from the contact form on vraelis.com. Replying goes to ${opts.email}.`,
+    support: false,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -353,8 +221,8 @@ export async function sendWelcomeEmail(email: string, name?: string) {
 // app/global-error.tsx, and it survived here for the same reason it survived there, which is that nobody
 // re-reads a file that keeps working. Design 06 has no serif wordmark, no warm ground, and reserves green
 // to mean "a verification held", so the primary button in a nudge was wearing the product's success
-// colour. They go through baseHtml and the shared style atoms now, so a customer who gets a receipt and a
-// nudge in the same week gets them from the same company, and the next brand change is one edit.
+// colour. They go through the shared shell (lib/email/shell.ts) now, so a customer who gets a receipt and
+// a nudge in the same week gets them from the same company, and the next brand change is one edit.
 //
 // Activation nudge: sent once by the lifecycle cron (lib/v-lifecycle.ts) to accounts that signed up but
 // haven't run their first verification. One job: get them to run their first one.
@@ -364,15 +232,16 @@ function checkActivationHtml(): string {
   // that redirects is fine; printing the redirecting URL as the visible text is telling the reader a
   // page name that no longer exists.
   const learn = "https://vraelis.com/method";
-  return baseHtml(`
-    <p style="${KICKER_STYLE}">Your first verification</p>
-    <h1 class="vrl-h1" style="${H1_STYLE}">Your first verification is waiting.</h1>
-    <p style="${BODY_STYLE}">You signed up but haven't run a verification yet. Give Vraelis your deployed app and the outcome that should be true, and it checks the live result in a real browser, then returns the evidence behind its decision.</p>
-    <a href="${run}" class="vrl-btn" style="${BTN_STYLE}">Verify an outcome</a>
-    <div style="${HR_STYLE}"></div>
-    <p style="${META_STYLE}">Want to see how it works first? <a href="${learn}" style="color:#0a0a0a;">vraelis.com/method</a></p>
-    <div style="${NOTE_STYLE}">You're getting this because you created a Vraelis account. If you'd rather not get product nudges, just reply and we'll stop.</div>
-  `);
+  return shell(`
+    ${h1("Run your first verification")}
+    ${p("You signed up for Vraelis but have not run a verification yet.")}
+    ${p(escapeHtml(SUPPORT))}
+    ${button(run, "Verify an outcome")}
+    ${small(`Want to see how it works first? ${link(learn, "vraelis.com/method")}`)}
+  `, {
+    preheader: "You signed up for Vraelis but have not run a verification yet.",
+    reason: REASON_NUDGE,
+  });
 }
 
 export async function sendCheckActivationEmail(email: string) {
@@ -415,19 +284,27 @@ export function lowCreditsHtml(remaining: number): string {
   const out = remaining <= 0;
   const left = money(creditsToCents(Math.max(0, remaining)));
   const price = money(passPriceCents(PASS_INCLUDED_FLOWS));
-  const headline = out ? "You've used what you had." : `You're ${left} short of another verification.`;
+  // The headline used to read "You're $14.90 short of another verification" for a balance of $14.90, which
+  // is the amount LEFT, not the shortfall (that is ten cents). The headline now states the consequence and
+  // the two real numbers sit in the table underneath.
+  const headline = out ? "Your Vraelis balance is empty" : "Your balance does not cover another verification";
   const lead = out
-    ? `Your Vraelis balance is empty, which means you've been putting real releases in front of a browser before your users saw them. A verification is ${price}. Add balance or pick a plan to keep going.`
-    : `You have ${left} left and a verification is ${price}, so the next one won't launch. Add balance or pick a plan to keep verifying what your AI ships.`;
-  return baseHtml(`
-    <p style="${KICKER_STYLE}">Balance</p>
-    <h1 class="vrl-h1" style="${H1_STYLE}">${headline}</h1>
-    <p style="${BODY_STYLE}">${lead} Vraelis is priced by the verification, not the seat: every one includes real-browser execution, evidence, and an explainable decision.</p>
-    <a href="${plans}" class="vrl-btn" style="${BTN_STYLE}">See plans</a>
-    <div style="${HR_STYLE}"></div>
-    <p style="${META_STYLE}">Prefer to pay per verification? <a href="${credits}" style="color:#0a0a0a;">Add balance</a>.</p>
-    <div style="${NOTE_STYLE}">You're getting this because you have a Vraelis account. If you'd rather not get product nudges, just reply and we'll stop.</div>
-  `);
+    ? `Your Vraelis balance is empty, and a verification costs ${price}. Add balance or choose a plan to keep going.`
+    : `You have ${left} left and a verification costs ${price}, so the next one will not start. Add balance or choose a plan to keep going.`;
+  return shell(`
+    ${h1(headline)}
+    ${p(lead)}
+    ${details([
+      ["Balance", left],
+      ["One verification", price],
+    ])}
+    ${p("Vraelis is priced by the verification, not the seat. Every verification includes a real browser run, the evidence, and an explainable decision.")}
+    ${button(plans, "See plans")}
+    ${small(`Prefer to pay per verification? ${link(credits, "Add balance")}.`)}
+  `, {
+    preheader: out ? `Your balance is empty. A verification costs ${price}.` : `You have ${left} left. A verification costs ${price}.`,
+    reason: REASON_NUDGE,
+  });
 }
 
 export async function sendLowCreditsEmail(email: string, remaining: number) {
@@ -457,13 +334,15 @@ export async function sendLowCreditsEmail(email: string, remaining: number) {
 export function winbackHtml(remaining: number): string {
   const run = "https://app.vraelis.com";
   const left = money(creditsToCents(Math.max(0, remaining)));
-  return baseHtml(`
-    <p style="${KICKER_STYLE}">Your balance is still here</p>
-    <h1 class="vrl-h1" style="${H1_STYLE}">You still have ${left} of Vraelis balance.</h1>
-    <p style="${BODY_STYLE}">You tried Vraelis a while back, then things went quiet. Your ${left} is still here. Next time your AI ships something users will touch, run a verification first: give Vraelis the outcome that should be true, it derives the checks, shows you the exact plan to approve, then runs it in a real browser, with evidence and a repair prompt.</p>
-    <a href="${run}" class="vrl-btn" style="${BTN_STYLE}">Verify an outcome</a>
-    <div style="${NOTE_STYLE}">You're getting this because you have a Vraelis account. If you'd rather not get product nudges, just reply and we'll stop.</div>
-  `);
+  return shell(`
+    ${h1(`You still have ${left} of Vraelis balance`)}
+    ${p(`You tried Vraelis a while back. Your ${left} balance is still on your account.`)}
+    ${p(`Before your next release goes out, run a verification. ${escapeHtml(SUPPORT)}`)}
+    ${button(run, "Verify an outcome")}
+  `, {
+    preheader: `Your ${left} Vraelis balance is still on your account.`,
+    reason: REASON_NUDGE,
+  });
 }
 
 export async function sendWinbackEmail(email: string, remaining: number) {
@@ -537,7 +416,7 @@ export async function sendContactConfirmEmail(
     await resend.emails.send({
       from: fromForInbox(inbox),
       to: email,
-      subject: `We received your message, ${subject}`,
+      subject: `We received your message: ${subject}`,
       html: contactConfirmHtml(name, subject),
     });
   } catch (error) {
@@ -619,206 +498,205 @@ export async function sendSupportEmail(opts: {
 
 export function pwResetConfirmHtml(name: string) {
   const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
-  return baseHtml(`
-    <p style="${KICKER_STYLE}">Password Updated</p>
-    <h1 class="vrl-h1" style="${H1_STYLE}">Your password was reset.</h1>
-    <p style="${BODY_STYLE}">${greeting} your Vraelis password was just changed. If that was you, you&apos;re all set, this email is just confirmation. Your active sessions on other devices will need to sign in again the next time you use them.</p>
-    <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">While you&apos;re thinking about security:</strong></p>
-    <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
-      <li>Use a password manager if you don&apos;t already, we strongly recommend it.</li>
-      <li>If you reused this password elsewhere, change it there too.</li>
-      <li>Turn on two-factor auth on the email tied to your Vraelis account; that email is the key to everything.</li>
-    </ul>
-    <div style="${NOTE_WARN}">
-      <strong style="color:#9f1239;">If that wasn&apos;t you</strong>, email <a href="mailto:help@vraelis.com" style="color:#9f1239;font-weight:600;">help@vraelis.com</a> immediately. We can lock the account, reverse the change, and walk through how to secure it while we investigate.
-    </div>
-  `);
+  return shell(`
+    ${h1("Your password was reset")}
+    ${p(`${greeting} the password for your Vraelis account was just changed. If you made this change, there is nothing else to do. Other devices will need to sign in again the next time they are used.`)}
+    ${p(`${strong("If this was not you")}, email ${mailto(SUPPORT_EMAIL)} now. We can lock the account, reverse the change, and help you secure it while we look into it.`)}
+    ${small("A few habits that help: use a password manager, change this password anywhere else you used it, and turn on two-factor authentication for the email address tied to your Vraelis account. That inbox is the key to everything else.")}
+  `, {
+    preheader: `The password for your Vraelis account was changed. If this was not you, email ${SUPPORT_EMAIL} now.`,
+    reason: "You are receiving this because the password on your Vraelis account was changed.",
+  });
 }
 
 export function accountDeletedHtml(name: string) {
   const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
-  return baseHtml(`
-    <p style="${KICKER_STYLE}">Account Deleted</p>
-    <h1 class="vrl-h1" style="${H1_STYLE}">Your account has been removed.</h1>
-    <p style="${BODY_STYLE}">${greeting} your Vraelis account and associated data have been deleted. Confirming exactly what was removed, so there&apos;s no ambiguity:</p>
-    <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
-      <li><strong style="color:#0a0a0a;">Profile and credentials</strong>, your email, password hash, and preferences.</li>
-      <li><strong style="color:#0a0a0a;">API keys</strong>, all keys revoked. Any integrations using them will immediately stop working.</li>
-      <li><strong style="color:#0a0a0a;">Saved outputs and history</strong>, gone from our systems (may persist in backups for up to 30 days, purged per our data policy).</li>
-      <li><strong style="color:#0a0a0a;">Active subscriptions</strong>, cancelled. No further charges will hit your card.</li>
-    </ul>
-    <p style="${BODY_STYLE}">You won&apos;t receive further account or billing emails. Changed your mind? You&apos;re welcome back any time, nothing&apos;s permanent on our side.</p>
-    <a href="https://vraelis.com" class="vrl-btn" style="${BTN_LIGHT}">Visit vraelis.com</a>
-    <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Questions about data or privacy?</strong> For anything involving your data, what was stored, what&apos;s in backups, export requests, email <a href="mailto:privacy@vraelis.com" style="color:#0a0a0a;">privacy@vraelis.com</a>. We respond to privacy requests within 72 hours.
-    </div>
-  `);
+  return shell(`
+    ${h1("Your Vraelis account has been deleted")}
+    ${p(`${greeting} your Vraelis account and its data have been deleted. This is exactly what was removed:`)}
+    ${details([
+      ["Profile and credentials", "Your email address, password hash, and preferences"],
+      ["API keys", "All revoked. Integrations that use them stop working immediately."],
+      ["Saved outputs and history", "Removed from our systems. Backups may hold a copy for up to 30 days before it is purged under our data policy."],
+      ["Subscriptions", "Cancelled. No further charges will be made to your card."],
+    ])}
+    ${p("You will not receive further account or billing emails. You are welcome to create a new account at any time.")}
+    ${small(`For questions about your data, including what was stored, what is in backups, or an export request, email ${mailto("privacy@vraelis.com")}. We respond to privacy requests within 72 hours.`)}
+  `, {
+    preheader: "Your account, API keys, and saved history have been removed, and no further charges will be made.",
+    reason: "You are receiving this because your Vraelis account was deleted. This is the last account email we will send.",
+  });
 }
 
 export function subscriptionActivatedHtml(name: string, planName: string, cycle: string, amountLabel: string) {
   const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
+  const plan = escapeHtml(planName);
   const periodLabel = cycle === "yearly" ? "annual" : "monthly";
-  return baseHtml(`
-    <p style="${KICKER_STYLE}">Subscription Active</p>
-    <h1 class="vrl-h1" style="${H1_STYLE}">Welcome to Vraelis ${planName}.</h1>
-    <p style="${BODY_STYLE}">${greeting} your ${periodLabel} subscription is live. Paid features are available immediately, no waiting, no activation step.</p>
-
-    ${detailsTable([
-      ["Plan",          planName],
-      ["Billing cycle", cycle === "yearly" ? "Yearly" : "Monthly"],
-      ["Amount",        amountLabel],
-      ["Next charge",   cycle === "yearly" ? "In 12 months" : "In 1 month"],
-    ])}
-
-    <a href="https://app.vraelis.com" class="vrl-btn" style="${BTN_STYLE}">Open workspace</a>
-    <span class="vrl-btn-spacer">&nbsp;</span>
-    <a href="https://app.vraelis.com/billing" class="vrl-btn" style="${BTN_LIGHT}">Manage billing</a>
-    <div style="${NOTE_STYLE}">
-      A Stripe receipt with the full invoice is on its way separately. For plan changes, cancellations, or downgrades, head to <a href="https://app.vraelis.com/billing" style="color:#0a0a0a;">app.vraelis.com/billing</a>, all changes are self-serve and take effect immediately. For help, email <a href="mailto:help@vraelis.com" style="color:#0a0a0a;">help@vraelis.com</a>.
-    </div>
-  `);
+  const rows: Array<[string, DetailValue]> = [
+    ["Plan",          planName],
+    ["Billing cycle", cycle === "yearly" ? "Yearly" : "Monthly"],
+  ];
+  // amountLabelFor() returns "" for a plan key outside both catalogues. A blank row reads as a missing
+  // charge; no row reads as nothing to show.
+  if (amountLabel) rows.push(["Amount", amountLabel]);
+  rows.push(["Next charge", cycle === "yearly" ? "In 12 months" : "In 1 month"]);
+  return shell(`
+    ${h1(`Welcome to Vraelis ${plan}`)}
+    ${status("success", `Your ${periodLabel} ${plan} subscription is active.`)}
+    ${p(`${greeting} paid features are available now. There is no activation step.`)}
+    ${details(rows)}
+    ${button("https://app.vraelis.com", "Open Vraelis")}
+    ${small(`Stripe sends a receipt with the full invoice separately. To change, downgrade, or cancel your plan, go to ${link(BILLING_URL, "app.vraelis.com/billing")}. Every change there is self-serve.`)}
+  `, {
+    preheader: `Your ${planName} subscription is active. Paid features are available now.`,
+    reason: REASON_BILLING,
+  });
 }
 
 export function subscriptionCancellationScheduledHtml(name: string, planName: string, endsOn: string) {
   const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
-  return baseHtml(`
-    <p style="${KICKER_STYLE}">Cancellation Scheduled</p>
-    <h1 class="vrl-h1" style="${H1_STYLE}">Your ${planName} plan ends on ${endsOn}.</h1>
-    <p style="${BODY_STYLE}">${greeting} we&apos;ve scheduled your cancellation. This is just a confirmation, no action needed from you.</p>
-
-    ${detailsTable([
-      ["Plan",        planName],
+  const plan = escapeHtml(planName);
+  const ends = escapeHtml(endsOn);
+  return shell(`
+    ${h1(`Your ${plan} plan ends on ${ends}`)}
+    ${p(`${greeting} your cancellation is scheduled. This is a confirmation, and there is nothing else you need to do.`)}
+    ${details([
+      ["Plan",         planName],
       ["Access until", endsOn],
-      ["Next step",   "Drops to Free on that date"],
-      ["Charges",     "No further charges will be made"],
+      ["After that",   "Your account moves to the Free plan"],
+      ["Charges",      "No further charges will be made"],
     ])}
-
-    <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">What happens next:</strong></p>
-    <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
-      <li>You keep every paid feature until <strong style="color:#0a0a0a;">${endsOn}</strong>.</li>
-      <li>On that date, your account drops to the Free plan automatically. Nothing is deleted, just the paid features pause.</li>
-      <li>All your systems, past verifications, results, and API keys stay exactly where they are.</li>
-    </ul>
-
-    <a href="https://app.vraelis.com/billing" class="vrl-btn" style="${BTN_STYLE}">Resume subscription</a>
-    <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Didn&apos;t schedule this cancellation?</strong> Head to <a href="https://app.vraelis.com/billing" style="color:#0a0a0a;">app.vraelis.com/billing</a> and tap Resume subscription, it&apos;s one click and fully reverses this email. If you suspect your account is compromised, email <a href="mailto:help@vraelis.com" style="color:#0a0a0a;">help@vraelis.com</a> immediately.
-    </div>
-  `);
+    ${p(`You keep every paid feature until ${strong(ends)}. After that your account moves to the Free plan automatically. Nothing is deleted: your systems, past verifications, results, and API keys stay where they are.`)}
+    ${button(BILLING_URL, "Resume subscription")}
+    ${small(`If you did not schedule this, use Resume subscription above. It reverses the cancellation in one click. If you think someone else has access to your account, email ${mailto(SUPPORT_EMAIL)} now.`)}
+  `, {
+    preheader: `You keep ${planName} until ${endsOn}. After that your account moves to the Free plan, with no further charges.`,
+    reason: REASON_BILLING,
+  });
 }
 
+// THE EMAIL THE FOUNDER SAW. It had a kicker, a list of bold labels, two buttons of equal weight and a
+// tinted note, which is four competing voices for one fact. It now states the fact (headline), the new
+// state (status row), what that means (details), and one action. Every fact in it is one the old email
+// already stated; nothing new is claimed.
 export function subscriptionEndedHtml(name: string, planName: string) {
   const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
-  return baseHtml(`
-    <p style="${KICKER_STYLE}">Plan Reset to Free</p>
-    <h1 class="vrl-h1" style="${H1_STYLE}">Your ${planName} plan has ended.</h1>
-    <p style="${BODY_STYLE}">${greeting} your paid period is over and your account is now on the Free plan. This could be because you scheduled a cancellation that just hit, or because payment retries ran out after a failed charge.</p>
-    <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">Here&apos;s what changes:</strong></p>
-    <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
-      <li><strong style="color:#0a0a0a;">Kept:</strong> your account, systems, past verifications and results, and profile settings, all intact.</li>
-      <li><strong style="color:#0a0a0a;">Paused:</strong> paid-plan features (higher monthly verification volume, more connected systems, and team seats).</li>
-      <li><strong style="color:#0a0a0a;">Charges:</strong> nothing further will be charged unless you pick a plan again.</li>
-    </ul>
-    <a href="https://vraelis.com/pricing" class="vrl-btn" style="${BTN_STYLE}">Pick a plan again</a>
-    <span class="vrl-btn-spacer">&nbsp;</span>
-    <a href="https://app.vraelis.com" class="vrl-btn" style="${BTN_LIGHT}">Keep using Free</a>
-    <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Was this unexpected?</strong> If your plan ended because a charge failed, it&apos;s usually a card issue (expired, frozen, different bank). Update the card at <a href="https://app.vraelis.com/billing" style="color:#0a0a0a;">app.vraelis.com/billing</a> and resubscribe. For billing concerns, email <a href="mailto:help@vraelis.com" style="color:#0a0a0a;">help@vraelis.com</a>.
-    </div>
-  `);
+  const plan = escapeHtml(planName);
+  return shell(`
+    ${h1(`Your ${plan} plan has ended`)}
+    ${status("notice", "Your account is now on the Free plan.")}
+    ${p(`${greeting} your paid period is over. This happens when a scheduled cancellation takes effect, or when payment retries run out after a failed charge.`)}
+    ${details([
+      ["Previous plan", planName],
+      ["Current plan",  "Free"],
+      ["Kept",          "Your account, systems, past verifications and results, and settings"],
+      ["Paused",        "Paid plan features: higher monthly verification volume, more connected systems, and team seats"],
+      ["Charges",       "None, unless you choose a plan again"],
+    ])}
+    ${button("https://vraelis.com/pricing", "Choose a plan")}
+    ${small(`You can also keep using the Free plan at ${link("https://app.vraelis.com", "app.vraelis.com")}.`)}
+    ${small(`If a charge failed, it is usually the card: it expired, was frozen, or was replaced by a new one. Update it at ${link(BILLING_URL, "app.vraelis.com/billing")}, then choose a plan again.`)}
+  `, {
+    preheader: "Your account is now on the Free plan. Your systems and past verifications are kept.",
+    reason: REASON_BILLING,
+  });
 }
 
 export function paymentFailedHtml(name: string, planName: string) {
   const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
-  return baseHtml(`
-    <p style="${KICKER_RED}">Action Needed · Payment Failed</p>
-    <h1 class="vrl-h1" style="${H1_STYLE}">We couldn&apos;t charge your card.</h1>
-    <p style="${BODY_STYLE}">${greeting} a charge for your <strong style="color:#0a0a0a;">${planName}</strong> subscription just failed. Stripe will retry the card automatically a few more times over the next week, but if the card&apos;s expired, blocked, or doesn&apos;t have funds, the retries won&apos;t succeed either.</p>
-    <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">Fastest fix:</strong> add or switch the payment method now.</p>
-    <a href="https://app.vraelis.com/billing" class="vrl-btn" style="${BTN_STYLE}">Update payment method</a>
-    <p style="${BODY_STYLE}" style="margin-top:22px;"><strong style="color:#0a0a0a;">What happens if retries keep failing:</strong></p>
-    <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
-      <li>After all retries exhaust, your plan drops to Free, paid features pause but nothing is deleted.</li>
-      <li>You can re-subscribe at any time; your data and history stay.</li>
-      <li>No credit goes unused, Stripe prorates any partial period cleanly.</li>
-    </ul>
-    <div style="${NOTE_WARN}">
-      <strong style="color:#9f1239;">Common causes to check:</strong> expired card, recent fraud block from your bank, international transaction limit, or an insufficient-funds alert from your bank app. If you need help reading the decline reason, email <a href="mailto:help@vraelis.com" style="color:#9f1239;font-weight:600;">help@vraelis.com</a>.
-    </div>
-  `);
+  const plan = escapeHtml(planName);
+  return shell(`
+    ${h1("We could not charge your card")}
+    ${status("problem", `Payment failed for your ${plan} plan.`)}
+    ${p(`${greeting} the latest charge for your ${strong(plan)} subscription did not go through. Update your payment method to keep the plan active.`)}
+    ${details([
+      ["Plan",            planName],
+      ["Retries",         "Stripe retries the card automatically a few more times over the next week"],
+      ["If retries fail", "Your plan moves to Free and paid features pause. Nothing is deleted, and you can subscribe again at any time."],
+    ])}
+    ${button(BILLING_URL, "Update payment method")}
+    ${small("Retries will not help if the card has expired, has been blocked by your bank for suspected fraud, has hit an international transaction limit, or does not have the funds.")}
+    ${small(`If you need help reading the decline reason, email ${mailto(SUPPORT_EMAIL)}.`)}
+  `, {
+    preheader: `Update your payment method to keep your ${planName} plan. Stripe will retry the card automatically.`,
+    reason: REASON_BILLING,
+  });
+}
+
+// Stripe reports the brand as a lowercase key. Printed as the card says it, not shouted.
+const CARD_BRANDS: Record<string, string> = {
+  visa: "Visa", mastercard: "Mastercard", amex: "American Express", discover: "Discover",
+  jcb: "JCB", diners: "Diners Club", unionpay: "UnionPay",
+};
+function cardBrand(brand: string): string {
+  return CARD_BRANDS[(brand || "").toLowerCase()] ?? (brand || "Card").toUpperCase();
 }
 
 export function paymentMethodUpdatedHtml(name: string, brand: string, last4: string) {
   const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
-  return baseHtml(`
-    <p style="${KICKER_STYLE}">Payment Method Updated</p>
-    <h1 class="vrl-h1" style="${H1_STYLE}">New card on file.</h1>
-    <p style="${BODY_STYLE}">${greeting} you just updated your default payment method. Future renewals will charge the new card automatically.</p>
-
-    ${detailsTable([
-      ["Card",        `${brand.toUpperCase()} ending in ${last4}`],
-      ["Used for",    "All future subscription charges"],
+  const card = `${cardBrand(brand)} ending in ${last4}`;
+  return shell(`
+    ${h1("Your payment method was updated")}
+    ${p(`${greeting} your default payment method was changed. Future renewals will be charged to this card.`)}
+    ${details([
+      ["Card",         card],
+      ["Used for",     "All future subscription charges"],
       ["Takes effect", "Immediately"],
     ])}
-
-    <a href="https://app.vraelis.com/billing" class="vrl-btn" style="${BTN_LIGHT}">Review billing</a>
-    <div style="${NOTE_WARN}">
-      <strong style="color:#9f1239;">If you didn&apos;t make this change</strong>, email <a href="mailto:help@vraelis.com" style="color:#9f1239;font-weight:600;">help@vraelis.com</a> immediately. Someone else may have access to your account, we can lock it and revert the card while we investigate.
-    </div>
-  `);
+    ${button(BILLING_URL, "Review billing")}
+    ${p(`${strong("If you did not make this change")}, email ${mailto(SUPPORT_EMAIL)} now. Someone else may have access to your account, and we can lock it and revert the card while we look into it.`)}
+  `, {
+    preheader: `${card} is now the default payment method on your Vraelis account.`,
+    reason: REASON_BILLING,
+  });
 }
 
 // ── Renewal templates (NEW, tied to invoice.paid / invoice.upcoming) ──────
 
 export function renewalSucceededHtml(name: string, planName: string, amountLabel: string, periodEnd: string, invoiceUrl: string | null) {
   const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
-  return baseHtml(`
-    <p style="${KICKER_STYLE}">Renewal Successful</p>
-    <h1 class="vrl-h1" style="${H1_STYLE}">Your ${planName} subscription just renewed.</h1>
-    <p style="${BODY_STYLE}">${greeting} this email is your receipt. The charge went through cleanly and your plan continues without interruption.</p>
-
-    ${detailsTable([
+  const plan = escapeHtml(planName);
+  return shell(`
+    ${h1(`Your ${plan} plan renewed`)}
+    ${status("success", `Payment of ${escapeHtml(amountLabel)} received.`)}
+    ${p(`${greeting} this email is your receipt. The charge went through and your plan continues without interruption.`)}
+    ${details([
       ["Plan",         planName],
-      ["Amount",       amountLabel],
+      ["Amount paid",  amountLabel],
       ["Next renewal", periodEnd],
     ])}
-
-    ${invoiceUrl
-      ? `<a href="${invoiceUrl}" class="vrl-btn" style="${BTN_STYLE}">View full invoice</a><span class="vrl-btn-spacer">&nbsp;</span><a href="https://app.vraelis.com/billing" class="vrl-btn" style="${BTN_LIGHT}">Manage billing</a>`
-      : `<a href="https://app.vraelis.com/billing" class="vrl-btn" style="${BTN_STYLE}">Manage billing</a>`
-    }
-    <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Want to cancel or downgrade?</strong> No hassle, head to <a href="https://app.vraelis.com/billing" style="color:#0a0a0a;">app.vraelis.com/billing</a>. Cancellation stops future charges immediately; downgrades take effect at the next renewal so you keep paid features until then. Questions: <a href="mailto:help@vraelis.com" style="color:#0a0a0a;">help@vraelis.com</a>.
-    </div>
-  `);
+    ${invoiceUrl ? button(invoiceUrl, "View invoice") : button(BILLING_URL, "Manage billing")}
+    ${small(`To change, downgrade, or cancel, go to ${link(BILLING_URL, "app.vraelis.com/billing")}. Cancelling stops future charges immediately. A downgrade takes effect at the next renewal, so you keep paid features until then.`)}
+  `, {
+    preheader: `Receipt for your ${planName} renewal: ${amountLabel} paid. Next renewal ${periodEnd}.`,
+    reason: REASON_BILLING,
+  });
 }
 
 export function renewalUpcomingHtml(name: string, planName: string, amountLabel: string, chargeDate: string) {
   const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
-  return baseHtml(`
-    <p style="${KICKER_STYLE}">Renewal in 7 Days</p>
-    <h1 class="vrl-h1" style="${H1_STYLE}">Heads up, your ${planName} plan renews next week.</h1>
-    <p style="${BODY_STYLE}">${greeting} this is an automated heads-up so there are no surprises. In a week we&apos;ll charge the card on file to renew your subscription.</p>
-
-    ${detailsTable([
+  const plan = escapeHtml(planName);
+  const date = escapeHtml(chargeDate);
+  return shell(`
+    ${h1(`Your ${plan} plan renews on ${date}`)}
+    ${p(`${greeting} this is a reminder so the charge is not a surprise. On ${date}, we will charge the card on file to renew your subscription.`)}
+    ${details([
       ["Plan",         planName],
       ["Renewal date", chargeDate],
       ["Amount",       amountLabel],
     ])}
-
-    <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">Want to make a change before the charge?</strong> You have a few options:</p>
-    <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
-      <li><strong style="color:#0a0a0a;">Nothing to do</strong> if the plan&apos;s still working for you, just ignore this email.</li>
-      <li><strong style="color:#0a0a0a;">Downgrade or switch plans</strong>, takes effect at renewal, no proration surprise.</li>
-      <li><strong style="color:#0a0a0a;">Cancel</strong>, you keep full access until the renewal date, then drop to Free.</li>
-      <li><strong style="color:#0a0a0a;">Update the card</strong> if the one on file is about to expire.</li>
-    </ul>
-
-    <a href="https://app.vraelis.com/billing" class="vrl-btn" style="${BTN_STYLE}">Manage billing</a>
-    <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Billing questions?</strong> Email <a href="mailto:help@vraelis.com" style="color:#0a0a0a;">help@vraelis.com</a>. For plan / team / enterprise questions, <a href="mailto:sales@vraelis.com" style="color:#0a0a0a;">sales@vraelis.com</a> handles those directly.
-    </div>
-  `);
+    ${p("If the plan still works for you, there is nothing to do. Before the renewal you can:")}
+    ${list([
+      "Switch or downgrade plans. The change takes effect at renewal.",
+      "Cancel. You keep full access until the renewal date, then move to the Free plan.",
+      "Update the card, if the one on file is about to expire.",
+    ])}
+    ${button(BILLING_URL, "Manage billing")}
+    ${small(`For plan, team, or enterprise questions, email ${mailto("sales@vraelis.com")}.`)}
+  `, {
+    preheader: `Your ${planName} plan renews on ${chargeDate} for ${amountLabel}. Nothing to do if you want to keep it.`,
+    reason: REASON_BILLING,
+  });
 }
 
 // ── Send helpers ───────────────────────────────────────────────────────────
@@ -926,7 +804,7 @@ export async function sendRenewalSucceededEmail(opts: {
   try {
     await resend.emails.send({
       from: fromBilling, to: opts.email,
-      subject: `Renewal successful, ${opts.planName} (${opts.amountLabel})`,
+      subject: `Receipt for your Vraelis ${opts.planName} renewal (${opts.amountLabel})`,
       html: renewalSucceededHtml(opts.name, opts.planName, opts.amountLabel, opts.periodEnd, opts.invoiceUrl ?? null),
     });
   } catch (err) { console.error("sendRenewalSucceededEmail failed:", err); }
@@ -940,7 +818,7 @@ export async function sendRenewalUpcomingEmail(opts: {
   try {
     await resend.emails.send({
       from: fromBilling, to: opts.email,
-      subject: `Heads up, your ${opts.planName} plan renews on ${opts.chargeDate}`,
+      subject: `Your Vraelis ${opts.planName} plan renews on ${opts.chargeDate}`,
       html: renewalUpcomingHtml(opts.name, opts.planName, opts.amountLabel, opts.chargeDate),
     });
   } catch (err) { console.error("sendRenewalUpcomingEmail failed:", err); }
@@ -959,8 +837,9 @@ export async function sendNewsletterEmail(opts: {
   to:       string;
   subject:  string;
   /** Full rendered inner content, will be wrapped in the standard
-      baseHtml chrome (header, contact block, legal footer) so every
-      newsletter matches the transactional look. */
+      shell (wordmark header, footer) so every newsletter matches the
+      transactional look. Bare h1/h2/p/li/a inside it are styled by the
+      shell's .vx-body rules. */
   bodyHtml: string;
 }): Promise<void> {
   const resend = getResend();
@@ -971,7 +850,9 @@ export async function sendNewsletterEmail(opts: {
       replyTo: "help@vraelis.com",
       to:      opts.to,
       subject: opts.subject,
-      html:    baseHtml(opts.bodyHtml),
+      // The caller passes no preview line, so the first paragraph of the body is used, which is what the
+      // reader sees first anyway. The opt-out is the same working reply-to-stop the nudges carry.
+      html:    shell(opts.bodyHtml, { preheader: textPreview(opts.bodyHtml), reason: REASON_NUDGE }),
     });
   } catch (err) {
     console.error("sendNewsletterEmail failed:", err);
@@ -1002,28 +883,34 @@ export type InviteDelivery = "sent" | "not_configured" | "failed";
 
 export function inviteHtml(opts: Omit<InviteEmail, "to">) {
   const isProject = opts.type === "project";
-  const context = escapeHtml((isProject ? opts.projectName : opts.workspaceName) || "a Vraelis workspace");
-  const roleLabel = INVITE_ROLE_LABEL[opts.role] ?? escapeHtml(opts.role);
+  const rawContext = (isProject ? opts.projectName : opts.workspaceName) || "a Vraelis workspace";
+  const context = escapeHtml(rawContext);
+  const rawRole = INVITE_ROLE_LABEL[opts.role] ?? opts.role;
+  const roleLabel = escapeHtml(rawRole);
   const clientSafe = opts.role === "client_viewer";
+  const verb = isProject ? "review" : "join";
+  // The workspace case used to add "You'll join this workspace as Editor." straight after a sentence that
+  // had just said so. It says it once now.
   const access = clientSafe
-    ? "You'll have client-safe access to this team's shared reports: read-only, with no access to private workspace controls."
+    ? " You will have client-safe access to this team's shared reports: read-only, with no access to private workspace controls."
     : isProject
       // The object a customer connects is a System everywhere a user can see it, and proxy.ts redirects
       // the old route to prove it. This sentence still named it the schema's way, in an email whose link
       // lands on a page titled Systems. The table keeps its own name; this is copy, not schema.
       // scripts/terminology-verify.ts now scans this file so the two cannot drift apart again.
-      ? `You'll have ${roleLabel} access to this team's systems and reports.`
-      : `You'll join this workspace as ${roleLabel}.`;
-  return baseHtml(`
-    <p style="${KICKER_STYLE}">${isProject ? "Project invite" : "Workspace invite"}</p>
-    <h1 class="vrl-h1" style="${H1_STYLE}">You were invited to ${isProject ? "review " : ""}${context}.</h1>
-    <p style="${BODY_STYLE}">You&apos;ve been invited to ${isProject ? "review" : "join"} <strong style="color:#0a0a0a;">${context}</strong> as <strong style="color:#0a0a0a;">${roleLabel}</strong>. ${access}</p>
-    <p style="${BODY_STYLE}">Vraelis independently verifies AI-built software: give it a deployed app and the outcome that should be true, it derives the checks, shows you the exact plan to approve, then runs it in a real browser and returns the evidence behind its decision.</p>
-    <a href="${opts.acceptUrl}" class="vrl-btn" style="${BTN_STYLE}">${isProject ? "View project" : "Accept invite"}</a>
-    <div style="${HR_STYLE}"></div>
-    <p style="${META_STYLE}">Sign in with <strong style="color:#0a0a0a;">this email address</strong> to access the ${isProject ? "project" : "workspace"}. Your invite activates automatically.</p>
-    <div style="${NOTE_STYLE}">If you were not expecting this invite, you can ignore this email.</div>
-  `);
+      ? ` You will have ${roleLabel} access to this team's systems and reports.`
+      : "";
+  return shell(`
+    ${h1(`You were invited to ${verb} ${context}`)}
+    ${p(`You have been invited to ${verb} ${strong(context)} on Vraelis as ${strong(roleLabel)}.${access}`)}
+    ${p(escapeHtml(FOOTER_STATEMENT))}
+    ${button(opts.acceptUrl, isProject ? "View project" : "Accept invite")}
+    ${small(`Sign in with this email address to open the ${isProject ? "project" : "workspace"}. The invite activates automatically.`)}
+    ${small("If you were not expecting this invite, you can ignore this email.")}
+  `, {
+    preheader: `You have been invited to ${verb} ${rawContext} on Vraelis as ${rawRole}.`,
+    reason: "You are receiving this because someone invited this email address to Vraelis.",
+  });
 }
 
 // Returns a delivery status; never throws (the invite is already saved by the caller).

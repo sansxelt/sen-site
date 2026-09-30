@@ -8,8 +8,13 @@
 // owner has Twilio configured, as a bonus — never required. Fire-and-forget:
 // these helpers never throw into a lead handler (a notification failure must
 // not 500 the conversation).
+//
+// Each email is written once as an OwnerNotice and goes out as plain text plus
+// an HTML part in the shared Vraelis email shell (lib/email/shell.ts). The copy
+// is plain and specific: no dashes, no hype, and every sentence is one these
+// alerts already said.
 
-import { sendOwnerAlert } from "./vraelis-email";
+import { sendOwnerNotice } from "./vraelis-email";
 import { notifyOwnerNewLead } from "./vraelis-sms";
 
 const ORIGIN = "https://vraelis.com";
@@ -34,16 +39,27 @@ export async function notifyOwnerPlanLapse(
 ): Promise<void> {
   try {
     if (status === "past_due") {
-      await sendOwnerAlert({
-        ownerEmail,
+      await sendOwnerNotice(ownerEmail, {
         subject: "Action needed: your Vraelis payment didn't go through",
-        body: `A renewal payment for your Vraelis plan failed.\n\nYour agent keeps working for a few days, but text & voice will pause if it isn't fixed. Update your card here:\n${ACCOUNT_URL}`,
+        heading: "Your payment did not go through",
+        preheader: "Update your card to keep text and voice running for your agent.",
+        status: { tone: "problem", text: "A renewal payment for your Vraelis plan failed." },
+        paragraphs: [
+          "Your agent keeps working for a few days, but text and voice will pause if the payment is not fixed.",
+        ],
+        action: { label: "Update your card", url: ACCOUNT_URL },
       });
     } else {
-      await sendOwnerAlert({
-        ownerEmail,
+      await sendOwnerNotice(ownerEmail, {
         subject: "Your Vraelis plan has ended",
-        body: `Your Vraelis plan has ended. Your agent still captures leads over chat, email, and the web — but text/voice and your agent number are paused.\n\nReactivate anytime to turn them back on:\n${ACCOUNT_URL}`,
+        heading: "Your Vraelis plan has ended",
+        preheader: "Text, voice, and your agent number are paused. Your agent still captures leads over chat, email, and the web.",
+        status: { tone: "problem", text: "Text, voice, and your agent number are paused." },
+        paragraphs: [
+          "Your agent still captures leads over chat, email, and the web.",
+          "Reactivate at any time to turn text and voice back on.",
+        ],
+        action: { label: "Reactivate your plan", url: ACCOUNT_URL },
       });
     }
   } catch {
@@ -59,11 +75,16 @@ export async function notifyOwnerNewLeadEvent(
   lead: { id: string; name?: string | null; contact_email?: string | null; contact_phone?: string | null; message?: string | null },
 ): Promise<void> {
   const who = leadLabel(lead);
-  const snippet = lead.message ? `\n\n"${lead.message.slice(0, 200)}"` : "";
-  await sendOwnerAlert({
-    ownerEmail,
+  await sendOwnerNotice(ownerEmail, {
     subject: `New lead: ${who}`,
-    body: `Your agent just picked up a new lead — ${who}.${snippet}\n\nYour agent is already replying. See the conversation:\n${leadUrl(lead.id)}`,
+    heading: `New lead: ${who}`,
+    preheader: `Your agent just picked up ${who} and is already replying.`,
+    paragraphs: [
+      `Your agent just picked up a new lead: ${who}.`,
+      "Your agent is already replying.",
+    ],
+    quote: lead.message ? lead.message.slice(0, 200) : null,
+    action: { label: "See the conversation", url: leadUrl(lead.id) },
   });
   // Bonus SMS (no-op unless Twilio + owner phone are set).
   await notifyOwnerNewLead(ownerEmail, {
@@ -87,19 +108,28 @@ export async function notifyOwnerStatusEvent(
   const who = leadLabel(lead);
 
   if (nextStatus === "needs_owner") {
-    await sendOwnerAlert({
-      ownerEmail,
+    await sendOwnerNotice(ownerEmail, {
       subject: `Your agent needs you: ${who}`,
-      body: `Your agent flagged ${who} for you — it hit something it couldn't handle on its own and is waiting on you.\n\nOpen the conversation and take over:\n${leadUrl(lead.id)}`,
+      heading: "Your agent needs you",
+      preheader: `Your agent flagged ${who} for you and is waiting on you.`,
+      paragraphs: [
+        `Your agent flagged ${who} for you. It hit something it could not handle on its own and is waiting on you.`,
+        "Open the conversation to take over.",
+      ],
+      action: { label: "Open the conversation", url: leadUrl(lead.id) },
     });
     return;
   }
 
   if (nextStatus === "booking_ready") {
-    await sendOwnerAlert({
-      ownerEmail,
-      subject: `Hot lead — ready to move: ${who}`,
-      body: `${who} is ready to book or pay. Your agent is handling it, but this is your warmest lead right now.\n\nSee the conversation:\n${leadUrl(lead.id)}`,
+    await sendOwnerNotice(ownerEmail, {
+      subject: `Ready to book or pay: ${who}`,
+      heading: `${who} is ready to book or pay`,
+      preheader: `${who} is ready to book or pay. Your agent is handling it.`,
+      paragraphs: [
+        "Your agent is handling it, but this is your warmest lead right now.",
+      ],
+      action: { label: "See the conversation", url: leadUrl(lead.id) },
     });
     return;
   }

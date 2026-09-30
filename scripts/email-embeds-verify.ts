@@ -11,6 +11,8 @@ import { robotsMeta } from "../lib/stealth";
 import {
   SOCIAL_EMBEDS, socialCardFor, SOCIAL_IMAGE, SOCIAL_IMAGE_WIDTH, SOCIAL_IMAGE_HEIGHT, SOCIAL_IMAGE_ALT,
 } from "../lib/social-card";
+import { welcomeHtml } from "../lib/email";
+import { SUPPORT } from "../app/dev-preview/v6/_system/positioning";
 
 // robotsMeta reads STEALTH_MODE at call time, so the behavioural assertions below can drive it both ways.
 // The original value is restored afterwards; nothing else in the suite depends on it, but a check that
@@ -38,7 +40,21 @@ for (const [term, where] of [
   ok(`no "${term}" in Vraelis emails (${where})`, !email.includes(term));
 }
 // The current identity should actually appear, not just the absence of the old one.
-ok("emails carry the current positioning", /independent verification layer for work performed by AI/.test(email));
+//
+// This used to require the sentence "independent verification layer for work performed by AI" to be present
+// in lib/email.ts, which pinned a hand-written copy of an older positioning in place: positioning.ts has
+// since moved past it, and lib/email.ts's own header asked for this check to move to the import. So it now
+// asserts three things, all stronger than a substring: the emails import the product sentence from
+// positioning.ts, the RENDERED welcome email actually prints it, and the retired sentence is gone.
+{
+  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  ok("emails take the product sentence from positioning.ts, not a retyped copy",
+    /import \{[^}]*\bSUPPORT\b[^}]*\} from "@\/app\/dev-preview\/v6\/_system\/positioning"/.test(email));
+  ok("  and the rendered welcome email prints it", welcomeHtml("Maya").includes(esc(SUPPORT)));
+  ok("  and the retired positioning sentence is gone from the emails",
+    !/independent verification layer for work performed by AI/i.test(email));
+}
 ok('emails use the "verify an outcome" action', /Verify an outcome/i.test(email));
 
 console.log("\n── emails claim nothing the product does not do ──");

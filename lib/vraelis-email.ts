@@ -5,6 +5,9 @@
 // verified sender.
 
 import { Resend } from "resend";
+// The same shell as every other Vraelis email (lib/email/shell.ts), so an owner alert and a billing receipt
+// look like they came from the same company.
+import { shell, h1, p, button, status, quote, escapeHtml, type StatusTone } from "./email/shell";
 
 let resendClient: Resend | null = null;
 function getResend() {
@@ -48,13 +51,49 @@ export function inboundReplyTo(intakeKey: string | null | undefined): string | n
   return `reply+${key}@vraelis.com`;
 }
 
-function escapeHtml(value: string) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+// ── Owner notices ────────────────────────────────────────────────────
+// An alert to the workspace owner, written once as structure and rendered twice: a plain-text part (what
+// these always sent) and an HTML part in the shared shell. Every string here is plain text; the HTML
+// renderer escapes it, so a lead's name or message can never become markup in the owner's inbox.
+export type OwnerNotice = {
+  subject: string;
+  /** The headline. */
+  heading: string;
+  /** Hidden inbox preview line. */
+  preheader: string;
+  /** A one-line state, shown as a status row (HTML) or the first line (text). */
+  status?: { tone: StatusTone; text: string } | null;
+  paragraphs: string[];
+  /** Someone else's words (a lead's message), shown quoted after the first paragraph. */
+  quote?: string | null;
+  action?: { label: string; url: string } | null;
+};
+
+export function ownerNoticeText(n: OwnerNotice): string {
+  const parts: string[] = [];
+  if (n.status) parts.push(n.status.text);
+  n.paragraphs.forEach((t, i) => {
+    parts.push(t);
+    if (i === 0 && n.quote) parts.push(`"${n.quote}"`);
+  });
+  if (n.paragraphs.length === 0 && n.quote) parts.push(`"${n.quote}"`);
+  if (n.action) parts.push(`${n.action.label}:\n${n.action.url}`);
+  return parts.join("\n\n");
+}
+
+export function ownerNoticeHtml(n: OwnerNotice): string {
+  const body = n.paragraphs.map((t, i) => p(escapeHtml(t)) + (i === 0 && n.quote ? quote(n.quote) : "")).join("");
+  return shell(`
+    ${h1(escapeHtml(n.heading))}
+    ${n.status ? status(n.status.tone, escapeHtml(n.status.text)) : ""}
+    ${body}${n.paragraphs.length === 0 && n.quote ? quote(n.quote) : ""}
+    ${n.action ? button(n.action.url, escapeHtml(n.action.label)) : ""}
+  `, { preheader: n.preheader });
+}
+
+/** Sends an OwnerNotice as a multipart email. Fire-and-forget like sendOwnerAlert. */
+export async function sendOwnerNotice(ownerEmail: string, n: OwnerNotice): Promise<void> {
+  await sendOwnerAlert({ ownerEmail, subject: n.subject, body: ownerNoticeText(n), html: ownerNoticeHtml(n) });
 }
 
 // Booking confirmation to the lead + a heads-up to the owner.
@@ -71,20 +110,32 @@ export async function sendBookingConfirmation(opts: {
   if (!from) return;
   const who = opts.leadName ? ` ${opts.leadName}` : "";
   try {
+    // The lead's copy is a plain note in the business's voice, not a Vraelis-branded email: the lead booked
+    // with the business, and replies go to the owner.
     if (opts.leadEmail) {
       await resend.emails.send({
         from,
         to: opts.leadEmail,
         replyTo: opts.ownerEmail,
-        subject: `You're booked with ${opts.businessName || "us"} — ${opts.slotLabel}`,
-        text: `Hi${who}, you're booked for ${opts.slotLabel}. We're looking forward to it — reply here if you need to change anything.`,
+        subject: `You're booked with ${opts.businessName || "us"}: ${opts.slotLabel}`,
+        text: `Hi${who}, you're booked for ${opts.slotLabel}. We're looking forward to it. Reply here if you need to change anything.`,
       });
     }
+    const booked: OwnerNotice = {
+      subject: `New booking: ${opts.slotLabel}`,
+      heading: `New booking: ${opts.slotLabel}`,
+      preheader: `${opts.leadName || opts.leadEmail || "A lead"} just booked ${opts.slotLabel}.`,
+      paragraphs: [
+        `${opts.leadName || opts.leadEmail || "A lead"} just booked ${opts.slotLabel}.`,
+        ...(opts.leadEmail ? [`Email: ${opts.leadEmail}`] : []),
+      ],
+    };
     await resend.emails.send({
       from,
       to: opts.ownerEmail,
-      subject: `New booking — ${opts.slotLabel}`,
-      text: `${opts.leadName || opts.leadEmail || "A lead"} just booked ${opts.slotLabel}.${opts.leadEmail ? ` Email: ${opts.leadEmail}.` : ""}`,
+      subject: booked.subject,
+      text: ownerNoticeText(booked),
+      html: ownerNoticeHtml(booked),
     });
   } catch (error) {
     console.error("sendBookingConfirmation failed:", error);
@@ -101,6 +152,8 @@ export async function sendOwnerAlert(opts: {
   ownerEmail: string;
   subject: string;
   body: string;
+  /** Optional HTML part. The plain-text body is always sent alongside it. */
+  html?: string;
 }): Promise<void> {
   const resend = getResend();
   if (!resend || !opts.ownerEmail) return;
@@ -112,6 +165,7 @@ export async function sendOwnerAlert(opts: {
       to: opts.ownerEmail,
       subject: opts.subject,
       text: opts.body,
+      ...(opts.html ? { html: opts.html } : {}),
     });
   } catch (error) {
     console.error("sendOwnerAlert failed:", error);
@@ -131,7 +185,9 @@ export async function sendLeadReply(opts: {
   if (!from) return { sent: false, reason: "sender_not_configured" };
   if (!opts.to) return { sent: false, reason: "no_recipient" };
 
-  const bodyHtml = `<div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#1b1a16;white-space:pre-wrap;">${escapeHtml(
+  // A plain letter in the business's voice, deliberately without the Vraelis shell: it is the business
+  // answering its own lead. Only the type follows the shared stack.
+  const bodyHtml = `<div style="font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#3F3F46;white-space:pre-wrap;">${escapeHtml(
     opts.replyText,
   )}</div>`;
 
