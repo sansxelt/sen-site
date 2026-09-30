@@ -7,6 +7,7 @@ import { stealthConfigured, robotsMeta, verifyStealthCookie, STEALTH_COOKIE } fr
 import { StealthScreen } from "./_components/stealth-screen";
 import { socialCard, SOCIAL_TITLE, SOCIAL_DESCRIPTION } from "../lib/social-card";
 import { entityJsonLd } from "../lib/entity";
+import { META_DESCRIPTION } from "./dev-preview/v6/_system/positioning";
 import { GROUND_CSS, type Ground } from "../lib/v6-routes";
 import { GROUND_HEADER } from "../proxy";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -54,8 +55,9 @@ const vraelisMetadata: Metadata = {
     default: "Vraelis",
     template: "%s | Vraelis",
   },
-  description:
-    "Write one sentence about what your web app, or a device it controls, should do. Vraelis tries it in a real browser on the live app and answers Verified, Failed, or Blocked, with the evidence.",
+  // The same description the homepage uses (positioning.ts), so a page without its own metadata does not
+  // describe the product in the retired verdict-first wording.
+  description: META_DESCRIPTION,
   alternates: { canonical: "https://vraelis.com" },
   // Favicon + apple icon come from app/icon.tsx and app/apple-icon.tsx (the Vraelis mark), auto-detected
   // by Next and served at hashed URLs so the tab icon cache-busts on change. Do NOT set `icons` here —
