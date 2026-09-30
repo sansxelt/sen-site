@@ -75,7 +75,7 @@ export default async function PortalReturnPage() {
 
       <div style={{ paddingBottom: 80 }}>
       <div className="card" style={{ marginBottom: 18 }}>
-        <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 8 }}>Current plan</div>
+        <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 8 }}>Current plan</div>
         <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
           <span style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 600, color: "var(--fg-1)" }}>{planName}</span>
           {cycle ? <span className="badge-now">{cycle}</span> : null}

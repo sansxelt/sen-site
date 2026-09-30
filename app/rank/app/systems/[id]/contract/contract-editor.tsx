@@ -27,11 +27,11 @@ const SEVERITIES: Severity[] = ["critical", "important", "informational"];
 const inputStyle: React.CSSProperties = { ...input, padding: "10px 13px" };
 const selectStyle: React.CSSProperties = { ...field, padding: "7px 10px", fontSize: 12.5, cursor: "pointer" };
 const deleteBtnStyle: React.CSSProperties = { width: 26, height: 26, borderRadius: 6, border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-4)", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", flex: "none" };
-const catHead: React.CSSProperties = { fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 6 };
+const catHead: React.CSSProperties = { fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 6 };
 
 function SevPill({ severity }: { severity: Severity }) {
   return (
-    <span className="pill" style={{ color: SEV_COLOR[severity], borderColor: "var(--line-2)", background: "var(--bg-2)", display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11 }}>
+    <span className="pill" style={{ color: SEV_COLOR[severity], borderColor: "var(--line-2)", background: "var(--bg-2)", display: "inline-flex", alignItems: "center", gap: 6 }}>
       <span aria-hidden style={{ width: 6, height: 6, borderRadius: "50%", background: SEV_COLOR[severity], flex: "none" }} />
       {SEV_LABEL[severity]}
     </span>
@@ -290,7 +290,7 @@ export function ContractEditor({ contractId, appId, initial, status, flows, role
               <li key={r.id} style={{ display: "flex", alignItems: "flex-start", gap: 14, padding: "13px 0", borderTop: idx > 0 ? "1px solid var(--line-1)" : "none" }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
-                    <span className="pill" style={{ color: "var(--acc-deep)", borderColor: "var(--acc-line)", background: "var(--acc-soft)", fontSize: 10.5, fontFamily: "var(--font-mono)", letterSpacing: "0.05em", textTransform: "uppercase" }}>Suggested</span>
+                    <span className="pill" style={{ color: "var(--acc-deep)", borderColor: "var(--acc-line)", background: "var(--acc-soft)", fontSize: 12.5, fontFamily: "var(--font-mono)" }}>Suggested</span>
                     <SevPill severity={r.severity} />
                     <ProvenanceChip source={r.source} origin={r.origin} />
                   </div>
@@ -339,7 +339,7 @@ export function ContractEditor({ contractId, appId, initial, status, flows, role
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
                       <SevPill severity={r.severity} />
                       <ProvenanceChip source={r.source} origin={r.origin} />
-                      {!r.enabled ? <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-5)" }}>Disabled</span> : null}
+                      {!r.enabled ? <span style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-5)" }}>Disabled</span> : null}
                     </div>
                     {editingId === r.id ? (
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>

@@ -182,7 +182,7 @@ export function ProductExploded({ product }: Props) {
           <div
             style={{
               fontSize: 11,
-              fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+              fontFamily: "var(--font-brand-mono), ui-monospace, monospace",
               letterSpacing: "0.18em",
               textTransform: "uppercase",
               color: `${accent}b3`,
@@ -271,7 +271,7 @@ export function ProductExploded({ product }: Props) {
                   <span
                     style={{
                       fontSize: 10,
-                      fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+                      fontFamily: "var(--font-brand-mono), ui-monospace, monospace",
                       color: accent,
                       letterSpacing: "0.14em",
                       opacity: 0.8,

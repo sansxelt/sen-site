@@ -51,7 +51,7 @@ const DECISION: Record<Decision, { label: string; tone: "verified" | "failed" | 
   blocked: { label: "Blocked", tone: "blocked", line: "Vraelis could not reach a reliable conclusion." },
 };
 
-const lbl: CSSProperties = { fontFamily: "var(--font-code)", fontSize: 10.5, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)" };
+const lbl: CSSProperties = { fontFamily: "var(--font-code)", fontSize: 12.5, fontWeight: 600, color: "var(--fg-3)" };
 
 function expiryText(iso: string | null): string {
   if (!iso) return "";
@@ -203,6 +203,7 @@ export function Composer({ balance }: { balance: number }) {
           requirements={phase.k === "running" ? phase.requirements : phase.v.requirements}
           status={phase.k === "done" ? "done" : phase.v?.state === "completed" ? "settling" : "running"}
           decision={phase.k === "done" ? phase.v.decision : null}
+          recordHref={phase.k === "done" ? recordPath(phase.v.consoleUrl) : "/verifications"}
           onReset={reset}
         />
       )}
@@ -269,7 +270,7 @@ function PlanPanel({ plan, balance, busy, stale, canReview, onReview, onApprove,
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderBottom: "1px solid var(--line-2)", background: "var(--bg-2)", flexWrap: "wrap" }}>
         <span style={lbl}>Proof plan</span>
         <span style={{ flex: 1 }} />
-        <span aria-live="polite" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase",
+        <span aria-live="polite" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 700,
           color: approved ? "var(--go-ink)" : "var(--fg-3)", padding: "3px 9px", borderRadius: 6,
           background: approved ? "var(--acc-soft)" : "var(--bg-3)", border: `1px solid ${approved ? "var(--acc-line)" : "var(--line-2)"}` }}>
           {approved ? "Approved" : "Pending approval"}
@@ -351,8 +352,16 @@ function PlanPanel({ plan, balance, busy, stale, canReview, onReview, onApprove,
   );
 }
 
-function RunPanel({ requirements, status, decision, onReset }: {
-  requirements: string[]; status: "running" | "settling" | "done"; decision: Decision | null; onReset: () => void;
+// "Open the record" used to go to the Verifications LIST, so the button at the end of a run dropped the
+// person one click away from the run they had just watched. The API returns the run's console address; the
+// path is used so the link stays on whichever host (app.vraelis.com, localhost, a preview) is serving this.
+function recordPath(consoleUrl: string | null): string {
+  if (!consoleUrl) return "/verifications";
+  try { return new URL(consoleUrl).pathname; } catch { return "/verifications"; }
+}
+
+function RunPanel({ requirements, status, decision, recordHref, onReset }: {
+  requirements: string[]; status: "running" | "settling" | "done"; decision: Decision | null; recordHref: string; onReset: () => void;
 }) {
   const statusText = status === "running" ? "Running in a real browser" : status === "settling" ? "Settling the decision" : decision ? DECISION[decision].label : "Completed";
   const d = status === "done" && decision ? DECISION[decision] : null;
@@ -389,7 +398,7 @@ function RunPanel({ requirements, status, decision, onReset }: {
         <div style={{ padding: "12px 16px", borderTop: "1px solid var(--line-2)", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <span style={{ fontSize: 13.5, color: "var(--fg-2)" }}>{d.line}</span>
           <span style={{ flex: 1 }} />
-          <Link href="/verifications" style={{ fontSize: 13, fontWeight: 600, color: "var(--acc-deep)" }}>Open the record <span aria-hidden>→</span></Link>
+          <Link href={recordHref} style={{ fontSize: 13, fontWeight: 600, color: "var(--acc-deep)" }}>Open the record <span aria-hidden>→</span></Link>
           <button className="btn btn--ghost" onClick={onReset} style={{ padding: "7px 14px", fontSize: 13 }}>New verification</button>
         </div>
       )}

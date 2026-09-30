@@ -162,7 +162,7 @@ export default async function Overview() {
   // the `wide` measure, which is the one for lists and tables and is what every other records page now uses.
   //
   // The inline paddingTop went with it because it was never doing anything: rank-ui.tsx injects
-  // `.rank-root .app-main>.wrap { padding-top: clamp(28px,3.4vw,48px) !important }`, so the shell has owned
+  // a padding-top rule on the page .wrap (see SHELL_UI_CSS in rank-ui.tsx), so the shell has owned
   // the top of this page the whole time. The paddingBottom WAS real (it is the tail room under the last
   // table), so it moves onto the content rather than being dropped with the .wrap that carried it.
   //
@@ -213,7 +213,7 @@ export default async function Overview() {
               happened the last time somebody did. Needs attention stays above it, because a critical
               failure is the one thing that should interrupt starting new work. */}
           {issuesR.error ? <SectionError label="Needs attention" /> : <NeedsAttention items={attention} />}
-          <CompactComposer balance={bal} />
+          <div style={{ marginBottom: 36 }}><CompactComposer balance={bal} /></div>
           {appsR.error || latestR.error ? <SectionError label="Systems" /> : <SystemsTable rows={systems} />}
           {pendingR.error ? <SectionError label="Pending review" /> : <PendingReview rows={pendingR.value} />}
           {runsR.error ? <SectionError label="Recent verifications" /> : <RecentVerificationsTable rows={settledRuns} />}

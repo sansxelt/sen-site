@@ -348,8 +348,12 @@ console.log("\n── the mobile drawer is not trapped inside the top bar ──
   // any page where the sampler has no reading — so a filter can still land on the header, and the portal is
   // still exactly as necessary as it was. The invariant is "a blur is reachable here", not "the blur is
   // unconditional", so the assertion now matches either form.
-  ok("the top bar can still carry the backdrop-filter that made the portal necessary",
-    /backdropFilter:[^,\n]*blur\(/.test(header));
+  // READ AGAIN on 2026-09-30, when the blur did leave the header: the light console's top bar is a fixed
+  // opaque white band (background var(--bg-1)), so there is nothing behind it to blur. As the note above
+  // says, the portal stays correct either way and is kept. What this now pins is the reason the blur could
+  // go: the bar is opaque, so it never needed one.
+  ok("the top bar is opaque chrome, so it needs no backdrop-filter",
+    /background: "var\(--bg-1\)"/.test(header) && !/backdropFilter:[^,\n]*blur\(/.test(header));
 }
 
 console.log("\n── the Repairs surface is hidden, not deleted ──");

@@ -61,7 +61,7 @@ const ERR_CSS = `
   display:flex; align-items:center; justify-content:center;
   padding:clamp(40px,8vw,96px) clamp(20px,5vw,64px);
   background:#0A0A0B; color:#C4C5C9;
-  font-family:var(--font-geist-sans),-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  font-family:var(--font-brand-sans),-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
 }
 .verr-stack{ width:100%; max-width:620px; }
 .verr-kicker{
@@ -96,7 +96,7 @@ const ERR_CSS = `
   transition:color 140ms ease, border-color 140ms ease;
 }
 .verr-link:hover{ color:#FAFAFA; border-color:rgba(255,255,255,.5); }
-.verr-ref{ margin:22px 0 0; font-family:var(--font-geist-mono),ui-monospace,SFMono-Regular,Menlo,monospace;
+.verr-ref{ margin:22px 0 0; font-family:var(--font-brand-mono),ui-monospace,SFMono-Regular,Menlo,monospace;
   font-size:11.5px; color:#8E9095; }
 .verr-cta:focus-visible, .verr-link:focus-visible, .verr-mail:focus-visible{
   outline:2px solid #FAFAFA; outline-offset:3px; border-radius:4px;

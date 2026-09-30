@@ -204,9 +204,9 @@ function HubCore() {
       textAlign: "center", gap: 3,
     }}>
       <div style={{ width: 26, height: 26, borderRadius: 6, background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.28)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: "rgba(167,139,250,0.85)" }}>◈</div>
-      <div style={{ fontFamily: "var(--font-geist-mono), monospace", fontSize: 7.5, fontWeight: 700, letterSpacing: "0.14em", color: "rgba(167,139,250,0.85)", textTransform: "uppercase" }}>Workshop</div>
+      <div style={{ fontFamily: "var(--font-brand-mono), monospace", fontSize: 7.5, fontWeight: 700, letterSpacing: "0.14em", color: "rgba(167,139,250,0.85)", textTransform: "uppercase" }}>Workshop</div>
       <div style={{ width: 20, height: 0.5, background: "rgba(167,139,250,0.25)" }} />
-      <div style={{ fontFamily: "var(--font-geist-mono), monospace", fontSize: 7.5, letterSpacing: "0.12em", color: "rgba(167,139,250,0.48)", textTransform: "uppercase" }}>Memory</div>
+      <div style={{ fontFamily: "var(--font-brand-mono), monospace", fontSize: 7.5, letterSpacing: "0.12em", color: "rgba(167,139,250,0.48)", textTransform: "uppercase" }}>Memory</div>
     </div>
   );
 }
@@ -278,7 +278,7 @@ export function HowItConnects() {
 
   const nodeLabel = (label: string, sub: string, color: string) => (
     <div style={{ textAlign: "center" }}>
-      <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color, fontFamily: "var(--font-geist-mono), monospace" }}>{label}</div>
+      <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color, fontFamily: "var(--font-brand-mono), monospace" }}>{label}</div>
       <div style={{ marginTop: 3, fontSize: 10, color: "#3a3a44" }}>{sub}</div>
     </div>
   );
@@ -329,7 +329,7 @@ export function HowItConnects() {
                 <MiniLens size={76} />
               </div>
               {nodeLabel("Sees", "Augmented visual", "rgba(140,215,255,0.80)")}
-              <div style={{ display: "inline-block", padding: "1.5px 6px", borderRadius: 100, border: "1px solid rgba(100,180,255,0.14)", background: "rgba(100,180,255,0.05)", fontSize: 8, color: "rgba(100,180,255,0.52)", fontFamily: "var(--font-geist-mono), monospace", letterSpacing: "0.10em" }}>coming soon</div>
+              <div style={{ display: "inline-block", padding: "1.5px 6px", borderRadius: 100, border: "1px solid rgba(100,180,255,0.14)", background: "rgba(100,180,255,0.05)", fontSize: 8, color: "rgba(100,180,255,0.52)", fontFamily: "var(--font-brand-mono), monospace", letterSpacing: "0.10em" }}>coming soon</div>
             </motion.div>
 
             {/* Phone — middle left */}

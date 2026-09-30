@@ -66,7 +66,7 @@ function DesktopMock() {
           top: 60,
           left: 20,
           right: 220,
-          fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+          fontFamily: "var(--font-brand-mono), ui-monospace, monospace",
           fontSize: 10,
           lineHeight: 1.9,
           color: "rgba(255,255,255,0.15)",

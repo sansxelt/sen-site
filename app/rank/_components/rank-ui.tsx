@@ -284,7 +284,7 @@ function Footer() {
   // minHeight + inline-flex gives each footer link a >=24px touch target (the text stays put; the hit area
   // grows vertically). Paired with the tighter col gap above so total row rhythm is unchanged.
   const a = { color: "var(--fg-3)", textDecoration: "none", fontSize: 13.5, display: "inline-flex", alignItems: "center", minHeight: 24 } as const;
-  const head = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 4 } as const;
+  const head = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 4 } as const;
   const Col = ({ title, links }: { title: string; links: [string, string][] }) => (
     <div style={col}><div style={head}>{title}</div>
       {links.map(([href, label]) => <Link key={href} href={href} style={a}>{label}</Link>)}
@@ -339,16 +339,11 @@ function AppTopbar({ email, systems, pendingReviews }: { email: string | null; s
   const [menu, setMenu] = useState(false);
   const pathname = usePathname() || "";
   useEffect(() => { setMenu(false); }, [pathname]);
-  // SAME HOOK AS BOTH MARKETING SHELLS, so "the bar matches the page" is one behaviour and not three
-  // opinions. This bar was a fixed var(--chrome-veil): correct on the graphite the product usually paints
-  // and wrong the moment a surface underneath is anything else. atTopFallback is dark because every console
-  // route opens on the product's graphite, so the first frame needs no measurement to be right.
+  // THE BAR IS CHROME, AND CHROME IS WHITE. It used to sample the ground under it so it could match a
+  // graphite page. The console is light now (2026-09-30), and a light product's top bar is a fixed white
+  // band with a hairline under it, the way Vanta, Tailscale and Stripe draw theirs: the page scrolls under a
+  // bar that never changes colour, so there is nothing left to measure.
   const barRef = useRef<HTMLElement>(null);
-  const ground = useGroundColor(barRef, { atTopFallback: true, paused: menu });
-  // Same question as the public nav: is the bar solid. A sampled colour used to be assumed solid, and the
-  // console is where that hurt most, because most of its pages are cards over graphite with no band under
-  // the sample line at all.
-  const opaque = isOpaqueColor(ground.bg);
   const menuBtn = useRef<HTMLButtonElement>(null);
   const menuPanel = useRef<HTMLDivElement>(null);
   useDismiss(menu, () => setMenu(false), { panel: menuPanel, trigger: menuBtn });
@@ -404,14 +399,8 @@ function AppTopbar({ email, systems, pendingReviews }: { email: string | null; s
   const item = { display: "flex", alignItems: "center", gap: 9, padding: "8px 10px", borderRadius: 9, fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" } as const;
   const itemIcon = { display: "inline-flex", color: "var(--fg-4)", flex: "none" } as const;
   return (
-    <header ref={barRef} style={{ display: "flex", alignItems: "center", gap: 16, height: 64, padding: "0 var(--gutter)", borderBottom: "1px solid var(--line-1)",
-      // The measured ground when there is one; the veil is the fallback for the first frame and for a
-      // browser with no JS, so the bar is never left transparent.
-      background: ground.bg ?? "var(--chrome-veil)",
-      // Blur only while translucent, which is the veil fallback: an exact match has nothing to blur and the
-      // layer costs more than it shows. Same reasoning as the public nav above.
-      backdropFilter: opaque ? "none" : "blur(12px)",
-      WebkitBackdropFilter: opaque ? "none" : "blur(12px)" }}>
+    <header ref={barRef} style={{ display: "flex", alignItems: "center", gap: 16, height: 64, padding: "0 var(--gutter)", borderBottom: "1px solid var(--line-2)",
+      background: "var(--bg-1)" }}>
       {/* Mobile-only hamburger: opens the accessible nav drawer. Hidden at desktop/tablet widths (CSS). */}
       <MobileNav />
       {/* in-app logo returns to the APP home (app.vraelis.com/); leaving the product entirely is the
@@ -479,7 +468,7 @@ function AppTopbar({ email, systems, pendingReviews }: { email: string | null; s
           // contract are intentionally omitted because Tab is the real behaviour.
           <div ref={menuPanel} id="acct-menu" style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, width: 232, background: "var(--bg-1)", border: "1px solid var(--line-2)", borderRadius: 14, boxShadow: "var(--shadow-lg)", padding: 8, zIndex: 60 }}>
             <div style={{ padding: "8px 10px 10px", borderBottom: "1px solid var(--line-1)", marginBottom: 6 }}>
-              <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-4)" }}>Signed in</div>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" }}>Signed in</div>
               {/* THE NAME FIRST, THEN THE ADDRESS. This showed the email alone, so an account that had set a
                   display name was still identified by a mailbox. The name is what a person answers to and
                   what the account page already collects; the email stays underneath because on a shared or
@@ -505,8 +494,9 @@ function AppTopbar({ email, systems, pendingReviews }: { email: string | null; s
             {ACCOUNT_MENU_FOOT.map((l) => (
               <Link key={l.href} href={l.href} style={item}><span style={itemIcon}><Ic d={l.d} size={15} sw={1.8} /></span>{l.label}</Link>
             ))}
-            <button onClick={() => signOut({ callbackUrl: signOutTarget() })} style={{ ...item, width: "100%", textAlign: "left", color: "var(--err)", background: "transparent", border: "none", cursor: "pointer", fontFamily: "inherit" }}>
-              <span style={{ ...itemIcon, color: "var(--err)" }}><Ic d={I.signout} size={15} sw={1.8} /></span>Sign out
+            {/* Signing out is not a failure, so it does not wear the failure colour. */}
+            <button onClick={() => signOut({ callbackUrl: signOutTarget() })} style={{ ...item, width: "100%", textAlign: "left", background: "transparent", border: "none", cursor: "pointer", fontFamily: "inherit" }}>
+              <span style={itemIcon}><Ic d={I.signout} size={15} sw={1.8} /></span>Sign out
             </button>
           </div>
         )}
@@ -595,7 +585,7 @@ function NavFoot({ onNavigate, drawer = false }: { onNavigate?: () => void; draw
   return (
     <div className={`app-side__foot${drawer ? " app-side__foot--drawer" : ""}`}>
       <a href="https://vraelis.com" className="slink" style={{ color: "var(--fg-3)" }} onClick={onNavigate}><span className="slink__i" aria-hidden><Ic d={I.back} /></span>Back to site</a>
-      <button onClick={() => signOut({ callbackUrl: signOutTarget() })} className="slink" style={{ color: "var(--fg-3)", width: "100%", background: "none", border: "none", cursor: "pointer", textAlign: "left", fontFamily: "inherit", fontSize: 15.5, fontWeight: 500 }}><span className="slink__i" aria-hidden><Ic d={I.signout} /></span>Sign out</button>
+      <button onClick={() => signOut({ callbackUrl: signOutTarget() })} className="slink" style={{ color: "var(--fg-3)", width: "100%", background: "none", border: "none", cursor: "pointer", textAlign: "left", fontFamily: "inherit", fontSize: "inherit", fontWeight: 500 }}><span className="slink__i" aria-hidden><Ic d={I.signout} /></span>Sign out</button>
     </div>
   );
 }
@@ -736,7 +726,10 @@ const SHELL_UI_CSS = "@keyframes vraTextIn{from{opacity:0;transform:translateY(1
   // pages still carry). It WAS clamp(12px,1.6vw,20px), meant to remove dead space under the topbar; at the
   // app's 0.89 zoom that left 11 to 18px, and every page title sat on the topbar's border (founder,
   // 2026-09-29: "the entire page is right on the border", on almost all console pages). Real room now.
-  + ".rank-root .app-main>.wrap{padding-top:clamp(28px,3.4vw,48px)!important}"
+  // The page's .wrap is NOT a direct child of <main>: app/rank/app/layout.tsx mounts a second ProductSurface,
+  // so the tree is main > div[data-surface] > .wrap, and the first version of this rule (main>.wrap) matched
+  // no page at all. Both shapes are named so a page rendered without that layout is covered too.
+  + ".rank-root .app-main>.wrap,.rank-root .app-main>[data-surface=\"app\"]>.wrap{padding-top:clamp(28px,3.4vw,48px)!important}"
   // The wordmark is ONE component, but the two shells render at different zooms (0.89 in the app, 0.99 on
   // the site), so an identical 21px renders ~10% smaller in the app and the logo visibly changes size when
   // you cross between them. Scale it back up inside the app by exactly the ratio between the two zooms, so
@@ -810,9 +803,9 @@ export function RankShell({ signedIn = false, email = null, appHost = false, sys
                 and 26 of the 46 console pages contain no <section> at all, so the topbar's sampler ran out of
                 ancestors to ask and settled on whatever card happened to be under it: the bar flickered
                 between the page's #0A0A0B and a card's #121214 as the reader scrolled. <main> is the band
-                every console route actually has, it is graphite on every one of them, and useGroundColor
-                accepts a declaration on main for exactly this reason. */}
-            <main id="app-main" className="app-main" data-nav-theme="dark" tabIndex={-1}>{children}</main>
+                every console route actually has, it is the light console ground on every one of them, and
+                useGroundColor accepts a declaration on main for exactly this reason. */}
+            <main id="app-main" className="app-main" data-nav-theme="light" tabIndex={-1}>{children}</main>
           </div>
           {/* Product only. The marketing site has nothing worth carrying between pages, and a notes button
               on a pricing page is furniture. Inside the shell rather than in a page, because the entire

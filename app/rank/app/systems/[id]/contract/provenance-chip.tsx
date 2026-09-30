@@ -21,7 +21,7 @@ export function ProvenanceChip({ source, origin }: { source: string | null | und
     >
       {label}
       {qualifier ? (
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 9.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-5)" }}>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-5)" }}>
           {qualifier}
         </span>
       ) : null}

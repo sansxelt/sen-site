@@ -66,7 +66,7 @@ function ChartFrame({ title, children }: { title?: string; children: React.React
         <div
           style={{
             fontSize: 12,
-            fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+            fontFamily: "var(--font-brand-mono), ui-monospace, monospace",
             letterSpacing: "0.14em",
             textTransform: "uppercase",
             color: "rgba(168,196,255,0.75)",

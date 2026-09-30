@@ -1,6 +1,5 @@
 ﻿import type { Metadata } from "next";
-import { GeistMono } from "geist/font/mono";
-import { GeistSans } from "geist/font/sans";
+import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import "./globals.css";
 
 import { cookies, headers } from "next/headers";
@@ -11,6 +10,14 @@ import { entityJsonLd } from "../lib/entity";
 import { GROUND_CSS, type Ground } from "../lib/v6-routes";
 import { GROUND_HEADER } from "../proxy";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+
+// THE TYPE. IBM Plex Sans for everything people read, IBM Plex Mono for machine text (IDs, URLs, code).
+// Replaced Geist, Inter Tight and Instrument Serif on 2026-09-30: that trio is the default look of a generated
+// site, and the founder read it as exactly that. Both faces are SIL OFL and self-hosted by next/font, so
+// there is no request to Google at runtime. Every stylesheet reads the two variables below and nothing
+// names a family directly, so changing the face again is an edit to these two calls only.
+const brandSans = IBM_Plex_Sans({ subsets: ["latin"], variable: "--font-brand-sans", display: "swap" });
+const brandMono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-brand-mono", display: "swap" });
 
 // There used to be a second brand here (an AI-memory chatbot) with its own metadata and JSON-LD, selected
 // per request. isVraelisRequest() has returned a constant true for a long time, so none of it was ever
@@ -93,16 +100,16 @@ export default async function RootLayout({
   // direct hit that skipped the proxy) falls back to the previous site's cream, which is what every
   // unmapped legacy path is.
   const g = (await headers()).get(GROUND_HEADER);
-  const ground: Ground = g === "graphite" || g === "paper" ? g : "cream";
+  const ground: Ground = g === "console" || g === "graphite" || g === "paper" ? g : "cream";
 
   if (stealthConfigured() && !verifyStealthCookie((await cookies()).get(STEALTH_COOKIE)?.value)) {
     return (
       // The curtain is graphite, so the canvas is painted graphite too. Left cream, the overscroll gutter
       // and the strip below a short viewport flashed warm paper around a near-black screen.
-      <html lang="en" data-theme="dark" style={{ colorScheme: "dark", background: "#0A0A0B" }} className={`${GeistSans.variable} ${GeistMono.variable} h-full`}>
+      <html lang="en" data-theme="dark" style={{ colorScheme: "dark", background: "#0A0A0B" }} className={`${brandSans.variable} ${brandMono.variable} h-full`}>
         <body className="min-h-full" style={{ background: "#0A0A0B" }}>
-          <link rel="stylesheet" href="/vraelis/tokens.css?v=20" />
-          <link rel="stylesheet" href="/vraelis/styles.css?v=54" />
+          <link rel="stylesheet" href="/vraelis/tokens.css?v=21" />
+          <link rel="stylesheet" href="/vraelis/styles.css?v=55" />
           {/* THE CURTAIN IS THE ONLY THING MOST MACHINES EVER SEE, AND IT SAID NOTHING ABOUT THE COMPANY.
               This branch returned before the JSON-LD below, so every crawler and every AI summariser
               fetching vraelis.com got "Not open yet" and no structured self-description at all. Asked what
@@ -148,22 +155,17 @@ export default async function RootLayout({
         // half that actually caused the flash: it is what the browser uses for its own canvas, the
         // overscroll region and native controls, all before the page exists.
         style={{ colorScheme: GROUND_CSS[ground].scheme, background: GROUND_CSS[ground].bg }}
-        className={`${GeistSans.variable} ${GeistMono.variable} h-full`}
+        className={`${brandSans.variable} ${brandMono.variable} h-full`}
       >
         <body className="min-h-full" style={{ background: GROUND_CSS[ground].bg }}>
           {/* The public stylesheets load for every request. They define the LIGHT half of the brand; the
               product and the auth round-trip load public/vraelis/authenticated.css on top of these and
               resolve the same token names to graphite (see app/_components/product-surface.tsx). tokens
               before styles. */}
-          {/* Display + body render in Geist (self-hosted via next/font, so no
-              external font fetch and nothing to fail at load). tokens.css still
-              pulls JetBrains Mono + Instrument Serif from Google for code/accents. */}
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
           {/* ?v bust: bump on every CSS change so browsers don't serve a
               stale cached stylesheet (the static file URL is otherwise fixed). */}
-          <link rel="stylesheet" href="/vraelis/tokens.css?v=20" />
-          <link rel="stylesheet" href="/vraelis/styles.css?v=54" />
+          <link rel="stylesheet" href="/vraelis/tokens.css?v=21" />
+          <link rel="stylesheet" href="/vraelis/styles.css?v=55" />
           {/* WHO THIS IS, for machines. Emitted only when the site is actually public: publishing an
               identity graph on a page whose entire body reads "Not open yet." asks to be indexed as a
               company with no content, which is the impression this document already refuses to leave.

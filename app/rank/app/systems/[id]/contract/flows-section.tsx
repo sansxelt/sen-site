@@ -11,7 +11,7 @@ import { Ic, I } from "@/app/rank/_components/icons";
 // state; a failed enable-toggle or delete reverts and surfaces an inline message. Flows freeze with the
 // contract, so this section is only rendered on a draft (the approved page renders a read-only list).
 
-const catHead: React.CSSProperties = { fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 6 };
+const catHead: React.CSSProperties = { fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 6 };
 const SEV_LABEL: Record<Severity, string> = { critical: "Critical", important: "Important", informational: "Informational" };
 
 function stepCount(f: TestFlow): number { return Array.isArray(f.steps) ? f.steps.length : 0; }
@@ -20,7 +20,7 @@ function RoleChip({ flow }: { flow: TestFlow }) {
   const auth = flowRequiresAuth((flow.steps as { action: string }[]) ?? []);
   const label = flow.role || (auth ? "Authenticated" : "Unauthenticated");
   return (
-    <span className="pill" style={{ color: auth ? "var(--acc-deep)" : "var(--fg-4)", borderColor: auth ? "var(--acc-line)" : "var(--line-2)", background: auth ? "var(--acc-soft)" : "var(--bg-2)", display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11 }}>
+    <span className="pill" style={{ color: auth ? "var(--acc-deep)" : "var(--fg-4)", borderColor: auth ? "var(--acc-line)" : "var(--line-2)", background: auth ? "var(--acc-soft)" : "var(--bg-2)", display: "inline-flex", alignItems: "center", gap: 6 }}>
       <Ic d={auth ? I.lock : I.user} size={12} sw={1.9} /> {label}
     </span>
   );
@@ -133,7 +133,7 @@ export function FlowsSection({ contractId, initial, roles }: { contractId: strin
               <li key={f.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "11px 0", borderTop: idx > 0 ? "1px solid var(--acc-line)" : "none" }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 3 }}>
-                    <span className="pill" style={{ color: "var(--acc-deep)", borderColor: "var(--acc-line)", background: "var(--bg-1)", fontSize: 10.5, fontFamily: "var(--font-mono)", letterSpacing: "0.05em", textTransform: "uppercase" }}>Suggested</span>
+                    <span className="pill" style={{ color: "var(--acc-deep)", borderColor: "var(--acc-line)", background: "var(--bg-1)", fontSize: 12.5, fontFamily: "var(--font-mono)" }}>Suggested</span>
                     <RoleChip flow={f} />
                     <span style={{ fontSize: 11.5, color: "var(--fg-4)" }}>{stepCount(f)} step{stepCount(f) === 1 ? "" : "s"}</span>
                   </div>
@@ -166,7 +166,7 @@ export function FlowsSection({ contractId, initial, roles }: { contractId: strin
                   <RoleChip flow={f} />
                   <span style={{ fontSize: 11.5, color: "var(--fg-4)" }}>{SEV_LABEL[(f.priority as Severity) ?? "important"]}</span>
                   <span style={{ fontSize: 11.5, color: "var(--fg-4)" }}>{stepCount(f)} step{stepCount(f) === 1 ? "" : "s"}</span>
-                  {!f.enabled ? <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-5)" }}>Disabled</span> : null}
+                  {!f.enabled ? <span style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-5)" }}>Disabled</span> : null}
                 </div>
                 <div style={{ fontSize: 14, color: "var(--fg-1)", lineHeight: 1.5, wordBreak: "break-word" }}>{f.name}</div>
                 {f.goal ? <div style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5, marginTop: 2 }}>{f.goal}</div> : null}

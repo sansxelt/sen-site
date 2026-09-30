@@ -10,7 +10,7 @@ import { Ic, I } from "@/app/rank/_components/icons";
 import { GuaranteeStatusPill } from "./guarantee-ui";
 import { AddGuarantee } from "./add-guarantee";
 
-const headLbl = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--fg-4)" };
+const headLbl = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" };
 const sectionStyle = { borderTop: "1px solid var(--line-1)", paddingTop: 22, marginTop: 26 } as const;
 
 function subtitle(planState: string): string {

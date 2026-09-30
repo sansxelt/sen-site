@@ -17,37 +17,37 @@ import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-
  * company into a PCI scope it has no reason to enter. Every product that appears to have its own payment
  * screen is doing exactly this.
  *
- * THE STYLING IS RESTATED, NOT IMPORTED. Our stylesheet cannot cross into Stripe's iframe, so the design 06
+ * THE STYLING IS RESTATED, NOT IMPORTED. Our stylesheet cannot cross into Stripe's iframe, so the console's
  * values are written out below through the Appearance API. Same trade as public/vraelis/authenticated.css
  * and the stealth curtain: keep it in step with the token layer by hand, because nothing can do it for us.
  */
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "");
 
-// Design 06, restated for the iframe. Graphite grounds, near-white ink, contrast (never a hue) for the
-// primary action, and the same hairlines. `night` is the closest base so the browser's own autofill and
-// dropdown chrome inside the frame stays dark too.
+// The light console, restated for the iframe: white fields on the console's grey page, zinc ink, the cobalt
+// accent for the primary action and focus, and the console's red for errors. The frame cannot read our CSS
+// variables, so the face is named directly; without IBM Plex Sans installed it falls back to the system sans.
 const APPEARANCE: Appearance = {
-  theme: "night",
+  theme: "stripe",
   variables: {
-    colorPrimary: "#FAFAFA",
-    colorBackground: "#0A0A0B",
-    colorText: "#FAFAFA",
-    colorTextSecondary: "#C4C5C9",
-    colorTextPlaceholder: "#8E9095",
-    colorDanger: "#FF7A55",
-    fontFamily: "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif",
+    colorPrimary: "#3E63DD",
+    colorBackground: "#FFFFFF",
+    colorText: "#0A0A0B",
+    colorTextSecondary: "#52525B",
+    colorTextPlaceholder: "#6B6B74",
+    colorDanger: "#B42318",
+    fontFamily: "'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif",
     fontSizeBase: "15px",
-    borderRadius: "10px",
+    borderRadius: "8px",
     spacingUnit: "4px",
   },
   rules: {
-    ".Input": { backgroundColor: "#0A0A0B", border: "1px solid rgba(255,255,255,0.14)", boxShadow: "none" },
-    ".Input:focus": { border: "1px solid rgba(255,255,255,0.34)", boxShadow: "none" },
-    ".Tab": { backgroundColor: "#121214", border: "1px solid rgba(255,255,255,0.14)", boxShadow: "none" },
-    ".Tab--selected": { backgroundColor: "#1B1C1F", border: "1px solid rgba(255,255,255,0.34)", color: "#FAFAFA" },
-    ".Label": { color: "#C4C5C9", fontWeight: "500" },
-    ".Error": { color: "#FF7A55" },
+    ".Input": { backgroundColor: "#FFFFFF", border: "1px solid rgba(10,10,11,0.18)", boxShadow: "0 1px 2px rgba(16,24,40,0.05)" },
+    ".Input:focus": { border: "1px solid #3E63DD", boxShadow: "0 0 0 3px rgba(62,99,221,0.12)" },
+    ".Tab": { backgroundColor: "#FFFFFF", border: "1px solid rgba(10,10,11,0.10)", boxShadow: "0 1px 2px rgba(16,24,40,0.05)" },
+    ".Tab--selected": { backgroundColor: "#FFFFFF", border: "1px solid #3E63DD", color: "#0A0A0B" },
+    ".Label": { color: "#3F3F46", fontWeight: "500" },
+    ".Error": { color: "#B42318" },
   },
 };
 

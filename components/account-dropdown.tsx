@@ -131,7 +131,7 @@ export function AccountDropdown({ email, image, isAdmin = false }: Props) {
     color: "#5CE5D5",
     fontSize: 13,
     fontWeight: 600,
-    fontFamily: '"Inter Tight", sans-serif',
+    fontFamily: "var(--font-brand-sans), sans-serif",
     letterSpacing: "-0.01em",
     cursor: "pointer",
     transition: "border-color 150ms, opacity 150ms",
@@ -159,7 +159,7 @@ export function AccountDropdown({ email, image, isAdmin = false }: Props) {
         border: "1.5px solid rgba(92,229,213,0.28)",
         display: "flex", alignItems: "center", justifyContent: "center",
         color: "#5CE5D5", fontSize: size * 0.38, fontWeight: 600,
-        fontFamily: '"Inter Tight", sans-serif',
+        fontFamily: "var(--font-brand-sans), sans-serif",
       }}>
         {initial}
       </div>
@@ -217,7 +217,7 @@ export function AccountDropdown({ email, image, isAdmin = false }: Props) {
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{
                   fontSize: 13.5, fontWeight: 600, color: "#ECEFF4",
-                  fontFamily: '"Inter Tight", sans-serif',
+                  fontFamily: "var(--font-brand-sans), sans-serif",
                   letterSpacing: "-0.015em", textTransform: "capitalize",
                   overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                 }}>
@@ -226,7 +226,7 @@ export function AccountDropdown({ email, image, isAdmin = false }: Props) {
                 <div style={{
                   fontSize: 11.5, color: "#5A6478", marginTop: 2,
                   overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                  fontFamily: '"Inter Tight", sans-serif',
+                  fontFamily: "var(--font-brand-sans), sans-serif",
                 }} title={email}>
                   {email}
                 </div>
@@ -249,7 +249,7 @@ export function AccountDropdown({ email, image, isAdmin = false }: Props) {
                     padding: "8px 16px",
                     fontSize: 13, color: "#C7CDD7",
                     textDecoration: "none",
-                    fontFamily: '"Inter Tight", sans-serif',
+                    fontFamily: "var(--font-brand-sans), sans-serif",
                     transition: "background 120ms, color 120ms",
                   }}
                   onMouseEnter={(e) => {
@@ -279,7 +279,7 @@ export function AccountDropdown({ email, image, isAdmin = false }: Props) {
                   padding: "8px 16px",
                   fontSize: 13, color: "#5CE5D5",
                   textDecoration: "none",
-                  fontFamily: '"Inter Tight", sans-serif',
+                  fontFamily: "var(--font-brand-sans), sans-serif",
                   transition: "background 120ms",
                 }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(92,229,213,0.06)"; }}
@@ -305,7 +305,7 @@ export function AccountDropdown({ email, image, isAdmin = false }: Props) {
                 fontSize: 13, color: "#5A6478",
                 background: "transparent", border: "none",
                 cursor: "pointer", textAlign: "left",
-                fontFamily: '"Inter Tight", sans-serif',
+                fontFamily: "var(--font-brand-sans), sans-serif",
                 transition: "background 120ms, color 120ms",
               }}
               onMouseEnter={(e) => {
@@ -333,7 +333,7 @@ export function AccountDropdown({ email, image, isAdmin = false }: Props) {
                 fontSize: 13, color: "#5A6478",
                 background: "transparent", border: "none",
                 cursor: "pointer", textAlign: "left",
-                fontFamily: '"Inter Tight", sans-serif',
+                fontFamily: "var(--font-brand-sans), sans-serif",
                 transition: "background 120ms, color 120ms",
               }}
               onMouseEnter={(e) => {

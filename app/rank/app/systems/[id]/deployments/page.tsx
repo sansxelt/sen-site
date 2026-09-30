@@ -22,7 +22,7 @@ export const metadata: Metadata = { title: "Deployments" };
 
 const ENV_LABELS: Record<string, string> = { preview: "Preview", staging: "Staging", production: "Production" };
 const SOURCE_LABELS: Record<string, string> = { manual: "Recorded manually", github_webhook: "GitHub webhook", vercel_webhook: "Vercel webhook" };
-const headLbl = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--fg-4)" };
+const headLbl = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" };
 
 // Stable UTC render (used as a hover title): "2026-07-02 14:31 UTC".
 function when(iso: string | null | undefined): string {
@@ -183,7 +183,7 @@ export default async function AppDeploymentsPage({ params }: { params: Promise<{
 
         {/* ── Migration-8 notice: deployment identity not active yet (honest, one line, full width) ──── */}
         {!deploymentsReady ? (
-          <div role="status" style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "14px 16px", border: "1px solid var(--line-2)", borderLeft: "3px solid var(--wait-line)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", marginBottom: 20 }}>
+          <div role="status" style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "14px 16px", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", marginBottom: 20 }}>
             <span style={{ color: "var(--wait-ink)", flex: "none", marginTop: 1 }}><Ic d={I.alert} size={17} sw={1.8} /></span>
             <p style={{ fontSize: 13, color: "var(--fg-2)", lineHeight: 1.6, margin: 0 }}>
               Deployment identity is not active yet: apply <span style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>sql/vraelis-preflight-8-deployments.sql</span> (migration 8).
@@ -195,7 +195,7 @@ export default async function AppDeploymentsPage({ params }: { params: Promise<{
         {lastVerified ? (
           <div className="card" style={{ padding: "clamp(16px, 2.2vw, 22px)", marginBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-              <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" }}>
                 Last verified deployment
               </div>
               <Verdict state={lastVerified.state} decision={lastVerified.decision} style={{ flex: "none" }} />

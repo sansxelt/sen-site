@@ -20,17 +20,27 @@ import { Verdict as VerdictBadge } from "@/app/rank/_components/verdict";
 import { PageHeader } from "@/app/rank/_components/page-header";
 import { DeploymentReference } from "./home-records";
 
-const label: CSSProperties = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: 0 };
-const SEV_COLOR: Record<string, string> = { critical: "var(--stop-ink)", high: "var(--wait-ink)", medium: "var(--fg-3)", low: "var(--fg-4)" };
+// A SECTION HAS A HEADING, NOT A LABEL. These were 10.5px tracked capitals in the meta grey, so after the h1
+// the page had no second level at all, only micro-caps. Real sentence-case headings, with the count as a
+// quiet number beside them rather than in brackets.
+const heading: CSSProperties = { fontSize: 15.5, fontWeight: 600, letterSpacing: "-0.005em", color: "var(--fg-1)", margin: 0 };
+// Severity is a word, not a second colour. The verdict badge beside it already carries the state, so
+// painting severity too put three warm marks on one row. Only critical keeps the failure ink, because
+// critical is the one severity that means "this is failing now".
+const SEV_INK: Record<string, string> = { critical: "var(--stop-ink)", high: "var(--fg-1)", medium: "var(--fg-3)", low: "var(--fg-4)" };
+const SEV_WORD: Record<string, string> = { critical: "Critical", high: "High", medium: "Medium", low: "Low" };
 
 function SectionHead({ text, count, href, hrefLabel, note }: { text: string; count?: number; href?: string; hrefLabel?: string; note?: string }) {
   return (
-    <div style={{ marginBottom: 10 }}>
+    <div style={{ marginBottom: 12 }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
-        <h2 style={label}>{text}{typeof count === "number" ? ` (${count})` : ""}</h2>
-        {href && hrefLabel ? <Link href={href} style={{ fontSize: 13, color: "var(--acc-deep)", flex: "none", textDecoration: "none" }}>{hrefLabel} <span aria-hidden>→</span></Link> : null}
+        <h2 style={heading}>
+          {text}
+          {typeof count === "number" ? <span style={{ marginLeft: 8, fontWeight: 500, color: "var(--fg-4)", fontVariantNumeric: "tabular-nums" }}>{count}</span> : null}
+        </h2>
+        {href && hrefLabel ? <Link href={href} style={{ fontSize: 13.5, fontWeight: 500, color: "var(--acc-deep)", flex: "none", textDecoration: "none" }}>{hrefLabel} <span aria-hidden>→</span></Link> : null}
       </div>
-      {note ? <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--fg-4)" }}>{note}</p> : null}
+      {note ? <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--fg-4)" }}>{note}</p> : null}
     </div>
   );
 }
@@ -79,8 +89,10 @@ export function OperationalState({ criticals, systemsAffected, pendingReviews, r
   // inner span rather than being flattened. That contrast IS the signal on a page whose whole job is to say
   // whether anything needs you, and dropping it to save a span would have quietly removed it.
   return (
+    // "Operational state" was the title here, which is an operator's phrase for what this page is. It is the
+    // Overview in the sidebar, so it is the Overview on the page.
     <PageHeader
-      title="Operational state"
+      title="Overview"
       lead={
         <span style={clear ? undefined : { color: "var(--fg-2)" }}>
           {clear ? "Nothing is failing and nothing is waiting on you." : parts.join(" ")}
@@ -112,29 +124,36 @@ export type AttentionItem = {
 export function NeedsAttention({ items }: { items: AttentionItem[] }) {
   if (!items.length) return null;
   return (
-    <section aria-label="Needs attention" style={{ marginBottom: 30 }}>
-      <SectionHead text="Needs attention" count={items.length} href="/verifications" hrefLabel="All failures" />
-      <div style={{ display: "grid", gap: 8 }}>
-        {items.map(({ issue, lastProven, systemVerdict }) => {
+    <section aria-label="Needs attention" style={{ marginBottom: 36 }}>
+      <SectionHead text="Needs attention" count={items.length} href="/verifications" hrefLabel="All verifications" />
+      {/* ONE CARD, DIVIDED ROWS. Each issue used to be its own card with a 3px coloured bar down its left
+          edge, and four of them stacked read as a column of warning stripes. The founder called them "weird
+          bars on the left". A list of problems is a list: one surface, hairlines between rows, and the
+          single colour on each row is the verdict badge. */}
+      <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+        {items.map(({ issue, lastProven, systemVerdict }, i) => {
           const recurring = Boolean(issue.firstSeenRun && issue.lastSeenRun && issue.firstSeenRun !== issue.lastSeenRun);
           const href = issue.applicationId ? `/systems/${issue.applicationId}/issues` : "/verifications";
           return (
-            <Link key={issue.id} href={href}
-              style={{ display: "block", padding: "13px 16px", border: "1px solid var(--line-2)", borderLeft: `3px solid ${SEV_COLOR[issue.severity] ?? "var(--fg-4)"}`, borderRadius: "var(--r-sm, 8px)", background: "var(--bg-1)", color: "inherit", textDecoration: "none" }}
+            <Link key={issue.id} href={href} className="vra-attn"
+              style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", gap: 16, alignItems: "center", padding: "14px 18px", borderTop: i ? "1px solid var(--line-1)" : "none", color: "inherit", textDecoration: "none" }}
               aria-label={`${issue.severity} issue on ${issue.applicationName || "a system"}: ${issue.title}`}>
-              <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 5, flexWrap: "wrap" }}>
-                <span className="pill" style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: SEV_COLOR[issue.severity] ?? "var(--fg-4)", background: "var(--bg-2)", borderColor: "var(--line-2)", flex: "none" }}>{issue.severity}</span>
-                <span style={{ fontSize: 13, color: "var(--fg-2)", fontWeight: 500 }}>{issue.applicationName || "System"}</span>
-                {systemVerdict ? <VerdictBadge verdict={systemVerdict} size="sm" style={{ flex: "none" }} /> : null}
-              </div>
-              <div style={{ fontSize: 14.5, color: "var(--fg-1)", fontWeight: 500, lineHeight: 1.4 }}>{issue.title || "A blocking issue needs attention"}</div>
-              <div style={{ display: "flex", gap: 14, marginTop: 7, flexWrap: "wrap", fontSize: 12, color: "var(--fg-4)" }}>
-                <span>Found {timeAgo(issue.createdAt)}</span>
-                {/* Absent means "no verified run inside the window this page loaded", which is NOT the same
-                    claim as "never verified". Say the weaker, true thing. */}
-                {lastProven ? <span>Last proven {timeAgo(lastProven)}</span> : <span>No verified run in recent history</span>}
-                {recurring ? <span style={{ color: "var(--wait-ink)" }}>Seen again after an earlier run</span> : null}
-              </div>
+              <span style={{ minWidth: 0 }}>
+                <span style={{ display: "block", fontSize: 14.5, color: "var(--fg-1)", fontWeight: 500, lineHeight: 1.4 }}>{issue.title || "A blocking issue needs attention"}</span>
+                <span style={{ display: "flex", gap: 8, marginTop: 5, flexWrap: "wrap", fontSize: 13, color: "var(--fg-4)", alignItems: "center" }}>
+                  <span style={{ color: SEV_INK[issue.severity] ?? "var(--fg-3)", fontWeight: 600 }}>{SEV_WORD[issue.severity] ?? issue.severity}</span>
+                  <span aria-hidden>·</span>
+                  <span style={{ color: "var(--fg-2)" }}>{issue.applicationName || "System"}</span>
+                  <span aria-hidden>·</span>
+                  <span>Found {timeAgo(issue.createdAt)}</span>
+                  {/* Absent means "no verified run inside the window this page loaded", which is NOT the same
+                      claim as "never verified". Say the weaker, true thing. */}
+                  <span aria-hidden>·</span>
+                  {lastProven ? <span>Last verified {timeAgo(lastProven)}</span> : <span>No verified run in recent history</span>}
+                  {recurring ? <><span aria-hidden>·</span><span style={{ color: "var(--fg-2)", fontWeight: 500 }}>Came back after an earlier run</span></> : null}
+                </span>
+              </span>
+              {systemVerdict ? <VerdictBadge verdict={systemVerdict} size="sm" style={{ flex: "none" }} /> : null}
             </Link>
           );
         })}
@@ -157,12 +176,12 @@ export type SystemRow = {
 export function SystemsTable({ rows }: { rows: SystemRow[] }) {
   if (!rows.length) return null;
   return (
-    <section aria-label="Systems" style={{ marginBottom: 30 }}>
-      <SectionHead text="Systems" count={rows.length} href="/systems" hrefLabel="Open Systems"
-        note="Latest verification, not full system coverage." />
+    <section aria-label="Systems" style={{ marginBottom: 36 }}>
+      <SectionHead text="Systems" count={rows.length} href="/systems" hrefLabel="All systems"
+        note="Each row shows the latest verification of that system, not everything it does." />
       <div className="card vra-tbl" style={{ padding: 0, overflow: "hidden", background: "var(--bg-1)" }}>
         <div className="vra-tbl__head" role="presentation">
-          <span>System</span><span>Guarantees</span><span>Latest result</span><span>Critical issues</span><span>Last proven</span>
+          <span>System</span><span>Guarantees</span><span>Latest result</span><span>Critical issues</span><span>Last verified</span>
         </div>
         {rows.map((s) => (
           <Link key={s.id} href={`/systems/${s.id}`} className="vra-tbl__row" aria-label={`${s.name}, latest verification ${s.verdict.label}`}>
@@ -172,10 +191,11 @@ export function SystemsTable({ rows }: { rows: SystemRow[] }) {
             </span>
             {/* data-l carries the column name so the narrow layout can print it before the value. Without it
                 a phone showed a column of bare em dashes with nothing saying what was missing. */}
-            <span data-l="Guarantees" style={{ fontVariantNumeric: "tabular-nums", color: s.guarantees ? "var(--fg-2)" : "var(--fg-5)" }}>{s.guarantees || "n/a"}</span>
+            {/* A count of zero is 0. "n/a" said the number did not apply, when it was simply nothing. */}
+            <span data-l="Guarantees" style={{ fontVariantNumeric: "tabular-nums", color: s.guarantees ? "var(--fg-2)" : "var(--fg-4)" }}>{s.guarantees}</span>
             <span data-l="Latest"><VerdictBadge verdict={s.verdict} size="sm" style={{ flex: "none" }} /></span>
-            <span data-l="Critical" style={{ fontVariantNumeric: "tabular-nums", color: s.criticals ? "var(--stop-ink)" : "var(--fg-5)" }}>{s.criticals || "n/a"}</span>
-            <span data-l="Last proven" style={{ color: "var(--fg-4)" }}>{s.lastProven ? timeAgo(s.lastProven) : "n/a"}</span>
+            <span data-l="Critical" style={{ fontVariantNumeric: "tabular-nums", color: s.criticals ? "var(--stop-ink)" : "var(--fg-4)", fontWeight: s.criticals ? 600 : 400 }}>{s.criticals}</span>
+            <span data-l="Last verified" style={{ color: "var(--fg-4)" }}>{s.lastProven ? timeAgo(s.lastProven) : "Not yet"}</span>
           </Link>
         ))}
       </div>
@@ -189,12 +209,12 @@ export function SystemsTable({ rows }: { rows: SystemRow[] }) {
 export function PendingReview({ rows }: { rows: PendingReviewRow[] }) {
   if (!rows.length) return null;
   return (
-    <section aria-label="Pending review" style={{ marginBottom: 30 }}>
-      <SectionHead text="Pending review" count={rows.length} href="/review" hrefLabel="Open Review" />
-      <div style={{ display: "grid", gap: 8 }}>
-        {rows.map((p) => (
-          <Link key={p.id} href={`/review/${p.id}`}
-            style={{ display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 14, padding: "13px 16px", border: "1px solid var(--wait-line)", borderRadius: "var(--r-sm, 8px)", background: "var(--bg-1)", color: "inherit", textDecoration: "none" }}>
+    <section aria-label="Plans waiting for approval" style={{ marginBottom: 36 }}>
+      <SectionHead text="Plans waiting for you" count={rows.length} href="/review" hrefLabel="All plans" />
+      <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+        {rows.map((p, i) => (
+          <Link key={p.id} href={`/review/${p.id}`} className="vra-attn"
+            style={{ display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 14, padding: "14px 18px", borderTop: i ? "1px solid var(--line-1)" : "none", color: "inherit", textDecoration: "none" }}>
             <span style={{ minWidth: 0 }}>
               <span style={{ display: "block", fontSize: 14, fontWeight: 500, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.claim || "Untitled claim"}</span>
               <span style={{ display: "flex", gap: 10, marginTop: 3, flexWrap: "wrap", fontSize: 12, color: "var(--fg-4)", alignItems: "center" }}>
@@ -204,7 +224,7 @@ export function PendingReview({ rows }: { rows: PendingReviewRow[] }) {
                 <span>{p.flows} journey{p.flows === 1 ? "" : "s"}</span>
               </span>
             </span>
-            <span style={{ fontSize: 13, color: "var(--wait-ink)", fontWeight: 600, flex: "none" }}>Review plan <span aria-hidden>→</span></span>
+            <span style={{ fontSize: 13.5, color: "var(--acc-deep)", fontWeight: 600, flex: "none" }}>Review plan <span aria-hidden>→</span></span>
           </Link>
         ))}
       </div>
@@ -218,7 +238,7 @@ export function PendingReview({ rows }: { rows: PendingReviewRow[] }) {
 export function RecentVerificationsTable({ rows }: { rows: PassRow[] }) {
   if (!rows.length) return null;
   return (
-    <section aria-label="Recent verifications" style={{ marginBottom: 30 }}>
+    <section aria-label="Recent verifications" style={{ marginBottom: 36 }}>
       <SectionHead text="Recent verifications" href="/verifications" hrefLabel="View all" />
       <div className="card vra-tbl vra-tbl--runs" style={{ padding: 0, overflow: "hidden", background: "var(--bg-1)" }}>
         <div className="vra-tbl__head" role="presentation">
@@ -231,8 +251,8 @@ export function RecentVerificationsTable({ rows }: { rows: PassRow[] }) {
             <Link key={r.id} href={href} className="vra-tbl__row" aria-label={`${v.label}, ${r.applicationName || "verification"}`}>
               <span><VerdictBadge verdict={v} size="sm" style={{ flex: "none" }} /></span>
               <span style={{ minWidth: 0 }}>
-                <span style={{ display: "block", fontSize: 13.5, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.applicationName || "Verification"}</span>
-                {r.parentRunId ? <span style={{ fontSize: 11.5, color: "var(--fg-4)" }}>Reverification of an earlier run</span> : null}
+                <span style={{ display: "block", fontSize: 14, color: "var(--fg-1)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.applicationName || "Verification"}</span>
+                {r.parentRunId ? <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>Re-check of an earlier run</span> : null}
               </span>
               <span data-l="Journeys" style={{ fontVariantNumeric: "tabular-nums", color: "var(--fg-3)" }}>{r.flowsTotal > 0 ? `${r.flowsPassed}/${r.flowsTotal}` : "n/a"}</span>
               <span data-l="When" style={{ color: "var(--fg-4)" }}>{timeAgo(r.completedAt ?? r.createdAt)}</span>
@@ -248,14 +268,15 @@ export function RecentVerificationsTable({ rows }: { rows: PassRow[] }) {
 // readable list instead of five crushed columns. Column headers are presentation-only: each row is a single
 // link with its own aria-label, so a screen reader is not asked to navigate a table that is really a menu.
 export const OVERVIEW_CSS = `
-.vra-tbl__head{display:grid;gap:14px;padding:9px 16px;border-bottom:1px solid var(--line-2);background:var(--bg-2);
-  font-family:var(--font-code);font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--fg-5)}
-.vra-tbl__row{display:grid;gap:14px;align-items:center;padding:11px 16px;color:inherit;text-decoration:none;font-size:13px;
+.vra-tbl__head{display:grid;gap:14px;padding:10px 18px;border-bottom:1px solid var(--line-2);background:var(--bg-2);
+  font-size:12.5px;font-weight:500;color:var(--fg-4)}
+.vra-tbl__row{display:grid;gap:14px;align-items:center;padding:12px 18px;color:inherit;text-decoration:none;font-size:14px;
   border-top:1px solid var(--line-1);transition:background 120ms ease}
 .vra-tbl__row:first-of-type{border-top:none}
-.vra-tbl__row:hover{background:var(--bg-2)}
-.vra-tbl .vra-tbl__head,.vra-tbl .vra-tbl__row{grid-template-columns:minmax(0,2.4fr) 82px 118px 96px 104px}
-.vra-tbl--runs .vra-tbl__head,.vra-tbl--runs .vra-tbl__row{grid-template-columns:104px minmax(0,2.6fr) 86px 92px}
+.vra-tbl__row:hover,.vra-attn:hover{background:var(--bg-2)}
+.vra-attn{transition:background 120ms ease}
+.vra-tbl .vra-tbl__head,.vra-tbl .vra-tbl__row{grid-template-columns:minmax(0,2.4fr) 96px 124px 112px 112px}
+.vra-tbl--runs .vra-tbl__head,.vra-tbl--runs .vra-tbl__row{grid-template-columns:112px minmax(0,2.6fr) 90px 96px}
 /* Narrow: the header row cannot survive, so each cell prints its own column name from data-l and the row
    becomes a labelled stack. The name cell keeps the full width and drops its label, because it is the
    subject of the row rather than one of its fields. */
@@ -263,32 +284,33 @@ export const OVERVIEW_CSS = `
   .vra-tbl__head{display:none}
   .vra-tbl .vra-tbl__row,.vra-tbl--runs .vra-tbl__row{grid-template-columns:1fr;gap:7px;padding:14px 16px}
   .vra-tbl__row>[data-l]{display:flex;align-items:center;justify-content:space-between;gap:14px}
-  .vra-tbl__row>[data-l]::before{content:attr(data-l);font-family:var(--font-code);font-size:10px;
-    letter-spacing:.07em;text-transform:uppercase;color:var(--fg-5)}
+  .vra-tbl__row>[data-l]::before{content:attr(data-l);font-size:12.5px;color:var(--fg-4)}
 }
 `;
 
 // ── 5. Empty account ──────────────────────────────────────────────────────────────────────────────────
 
+// The four steps as the composer above actually runs them. Step 1 used to be "Connect a system", which the
+// form above never asks for, so the first instruction a new account read disagreed with the form in front
+// of it.
 const STEPS = [
-  { icon: I.layers, t: "Connect a system", d: "Point Vraelis at the public URL of something you shipped." },
-  { icon: I.list, t: "State what must be true", d: "Describe the outcome a real user should be able to reach." },
-  { icon: I.eye, t: "Review the proof plan", d: "Vraelis writes the requirements and journeys. You approve them. Free." },
-  { icon: I.vote, t: "Get a decision", d: "A real browser run, evidence, and a repair prompt if it fails." },
+  { icon: I.list, t: "Say what should work", d: "The live URL, and one sentence about what a real user should be able to do there." },
+  { icon: I.eye, t: "Approve the plan", d: "Vraelis writes the steps that would prove it. You read them and approve. Writing a plan is free." },
+  { icon: I.layers, t: "It runs on the live app", d: "A real browser follows the plan and records every step, a screenshot, console errors and failed requests." },
+  { icon: I.vote, t: "Fix and check again", d: "If something broke you get what was expected, what happened, and a repair prompt. Re-check without a new approval." },
 ];
 
 export function EmptyOverview() {
   return (
-    <section aria-label="Getting started" style={{ border: "1px dashed var(--line-3)", borderRadius: "var(--r-lg, 14px)", background: "var(--bg-2)", padding: "clamp(18px, 2.4vw, 26px)" }}>
-      <h2 style={{ ...label, marginBottom: 6 }}>How this works</h2>
-      <p style={{ margin: "0 0 18px", fontSize: 14, color: "var(--fg-3)", maxWidth: "56ch", lineHeight: 1.55 }}>
-        Nothing has been verified yet, so there is no operational state to report. Name a deployment and the
-        outcome it must keep true above.
+    <section aria-label="How it works" className="card" style={{ padding: "clamp(18px, 2.4vw, 26px)" }}>
+      <h2 style={{ ...heading, marginBottom: 6 }}>How it works</h2>
+      <p style={{ margin: "0 0 18px", fontSize: 14, color: "var(--fg-3)", maxWidth: "60ch", lineHeight: 1.55 }}>
+        Nothing has been checked yet. Start with the form above: a live URL and one sentence about what should work.
       </p>
       <ol style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 2 }}>
         {STEPS.map((s, i) => (
           <li key={i} style={{ display: "grid", gridTemplateColumns: "auto auto 1fr", gap: 12, alignItems: "start", padding: "10px 0", borderTop: i ? "1px solid var(--line-2)" : "none" }}>
-            <span style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-5)", fontWeight: 600, marginTop: 2 }}>{i + 1}</span>
+            <span style={{ fontSize: 13, color: "var(--fg-4)", fontWeight: 600, marginTop: 1, fontVariantNumeric: "tabular-nums" }}>{i + 1}</span>
             <span style={{ color: "var(--fg-3)", marginTop: 1 }}><Ic d={s.icon} size={16} /></span>
             <span>
               <span style={{ fontSize: 14, fontWeight: 600, color: "var(--fg-1)" }}>{s.t}</span>

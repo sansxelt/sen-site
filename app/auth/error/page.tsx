@@ -37,7 +37,7 @@ export default async function AuthErrorPage({
   return (
     <section style={{ maxWidth: 560, margin: "0 auto", padding: "clamp(24px, 4vw, 40px) clamp(16px, 4vw, 24px) 80px" }}>
       <div className="card" style={{ padding: "clamp(24px, 4vw, 40px)" }}>
-        <p style={{ fontFamily: "var(--font-code)", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.14em", color: "var(--fg-4)", margin: 0 }}>
+        <p style={{ fontFamily: "var(--font-code)", fontSize: 12.5, fontWeight: 600, color: "var(--fg-4)", margin: 0 }}>
           Auth error
         </p>
         <h1 style={{ marginTop: 10, fontSize: 28, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--fg-1)", lineHeight: 1.15 }}>

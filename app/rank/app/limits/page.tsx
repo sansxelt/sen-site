@@ -22,7 +22,7 @@ import { Page, PageHeader } from "@/app/rank/_components/page-header";
 export const metadata: Metadata = { title: "Limits" };
 export const dynamic = "force-dynamic";
 
-const label = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--fg-4)", margin: 0 };
+const label = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: 0 };
 const money = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
 export default async function LimitsPage() {

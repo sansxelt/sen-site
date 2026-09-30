@@ -49,7 +49,7 @@ export function ComingLater({ names }: { names: string[] }) {
   return (
     <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, marginTop: 2 }}>
       <span style={{ fontSize: 11.5, color: "var(--fg-5)" }}>Coming later:</span>
-      {names.map((n) => <span key={n} className="pill" style={{ fontSize: 10, color: "var(--fg-4)", background: "var(--bg-2)", borderColor: "var(--line-2)" }}>{n}</span>)}
+      {names.map((n) => <span key={n} className="pill" style={{ color: "var(--fg-4)", background: "var(--bg-2)", borderColor: "var(--line-2)" }}>{n}</span>)}
     </div>
   );
 }

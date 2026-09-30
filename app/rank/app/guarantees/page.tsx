@@ -136,7 +136,7 @@ export default async function GuaranteesPage() {
                         different question, and drawing it as a verdict would be a fourth thing to mistake for
                         one. */}
                     <Verdict verdict={GUARANTEE_STATUS_LABEL[verdictOf.get(g.id) ?? "unproven"]} />
-                    <span className="pill" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: p.color, background: p.bg, borderColor: p.border }}>{p.label}</span>
+                    <span className="pill" style={{ fontSize: 12.5, fontWeight: 700, color: p.color, background: p.bg, borderColor: p.border }}>{p.label}</span>
                   </span>
                   <span aria-hidden style={{ color: "var(--fg-5)", flex: "none" }}>&rarr;</span>
                 </Link>

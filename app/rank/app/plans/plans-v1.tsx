@@ -67,7 +67,7 @@ export default function PlansV1({ initialCycle = "monthly" }: { initialCycle?: C
       <PageHeader
         eyebrow="Plans"
         title="Priced by the run, not the seat"
-        lead="Run your AI-built system through a real verification. Every verification includes browser execution, evidence, issue tracking, and an explainable decision."
+        lead="Check what you built against what it should do, on the live app. Every verification includes browser execution, evidence, issue tracking, and an explainable decision."
         actions={signedIn ? <button onClick={manageBilling} disabled={busy} className="btn btn--ghost">{busy ? "Opening…" : "Manage billing"}</button> : null}
       />
       <div style={{ paddingBottom: 80 }}>
@@ -102,7 +102,7 @@ export default function PlansV1({ initialCycle = "monthly" }: { initialCycle?: C
             Protects {FREE_TIER.maxGuarantees} active guarantee
           </div>
           <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>A real decision on your own app before paying anything. No card required.</div>
-          <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-5)", marginTop: 4 }}>Included</div>
+          <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-5)", marginTop: 4 }}>Included</div>
           <ul className="price__feat">
             <li>{FREE_TIER.lifetimePasses} verification, up to {FREE_TIER.flowsPerPass} critical flows</li>
             <li>{FREE_TIER.maxApplications} connected system</li>
@@ -152,7 +152,7 @@ export default function PlansV1({ initialCycle = "monthly" }: { initialCycle?: C
               </div>
               <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>{PLAN_BLURBS[p.key]}</div>
               {/* And the capacity that pays for it, stated rather than implied. */}
-              <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-5)", marginTop: 4 }}>Included</div>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-5)", marginTop: 4 }}>Included</div>
               <ul className="price__feat">
                 {planCapacity(p).map((f) => <li key={f}>{f}</li>)}
               </ul>
@@ -221,7 +221,7 @@ export default function PlansV1({ initialCycle = "monthly" }: { initialCycle?: C
           than something a tier buys, so they are said here, in one place, where they read as a floor
           instead of a feature. */}
       <div style={{ marginTop: 30, border: "1px solid var(--line-2)", borderRadius: "var(--r-lg, 14px)", background: "var(--bg-1)", padding: "18px 20px" }}>
-        <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 10 }}>On every plan, including Free</div>
+        <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 10 }}>On every plan, including Free</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "10px 22px" }}>
           {[
             ["Real-browser evidence", "Screenshots and traces from the deployment itself, not a mock."],

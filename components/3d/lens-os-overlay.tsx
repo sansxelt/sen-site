@@ -71,7 +71,7 @@ export function LensOSOverlay({
           gap: 7,
           marginBottom: 10,
           fontSize: 10,
-          fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+          fontFamily: "var(--font-brand-mono), ui-monospace, monospace",
           letterSpacing: "0.18em",
           color: "rgba(168,196,255,0.7)",
           textTransform: "uppercase",
@@ -106,7 +106,7 @@ export function LensOSOverlay({
             <span
               style={{
                 fontSize: 9,
-                fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+                fontFamily: "var(--font-brand-mono), ui-monospace, monospace",
                 letterSpacing: "0.14em",
                 color: "rgba(255,255,255,0.45)",
                 textTransform: "uppercase",
@@ -119,7 +119,7 @@ export function LensOSOverlay({
                 fontSize: 12,
                 fontWeight: 500,
                 color: p.accent,
-                fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+                fontFamily: "var(--font-brand-mono), ui-monospace, monospace",
                 letterSpacing: "0.04em",
               }}
             >

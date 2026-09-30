@@ -63,7 +63,7 @@ function flowStatus(state: string): { label: string; tone: ToneKey } {
   return { label: state ? state.charAt(0).toUpperCase() + state.slice(1) : "Pending", tone: "unproven" };
 }
 
-const SEV_COLOR: Record<string, string> = { critical: "var(--stop-ink)", high: "var(--wait-ink)", medium: "var(--fg-3)", low: "var(--fg-4)" };
+const SEV_COLOR: Record<string, string> = { critical: "var(--stop-ink)", high: "var(--fg-1)", medium: "var(--fg-3)", low: "var(--fg-4)" };
 const SEV_LABEL: Record<string, string> = { critical: "Critical", high: "High", medium: "Medium", low: "Low" };
 const ENV_LABELS: Record<string, string> = { preview: "Preview", staging: "Staging", production: "Production" };
 const DEPLOY_PROVIDER_LABELS: Record<string, string> = { vercel: "Vercel", railway: "Railway", netlify: "Netlify", custom: "Custom" };
@@ -171,13 +171,13 @@ function composeObservedOutcome(pub: string | null, decision: string | null, sum
     : "Vraelis could not reach a reliable conclusion. Detailed blocking evidence is unavailable for this record.";
 }
 
-const label = { fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: 0 } as const;
+const label = { fontFamily: "var(--font-mono)", fontSize: 12.5, fontWeight: 600, color: "var(--fg-4)", margin: 0 } as const;
 const h2Style = { fontFamily: "var(--font-display)", fontWeight: 650, fontSize: "clamp(1.15rem, 2vw, 1.4rem)", color: "var(--fg-1)", margin: 0 } as const;
 const metaText = { fontSize: 13, color: "var(--fg-3)" } as const;
 
 function Chip({ tone, label: text, size = 10.5 }: { tone: ToneKey; label: string; size?: number }) {
   const t = TONE[tone];
-  return <span className="pill" style={{ fontSize: size, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: t.color, background: t.bg, borderColor: t.border, flex: "none" }}>{text}</span>;
+  return <span className="pill" style={{ fontSize: size, fontWeight: 700, color: t.color, background: t.bg, borderColor: t.border, flex: "none" }}>{text}</span>;
 }
 
 // Each locked section: a labelled region with an ordered h2. Sections that have no data render their own quiet
@@ -279,15 +279,15 @@ function FindingEvidence({ issue, index, flowName, screenshotIds, runId }: { iss
   const observed = humanObserved(issue) || "The flow did not complete.";
   const hasTechnical = Boolean(issue.observed) || consoleErrors.length > 0 || networkFailures.length > 0 || requirementRefs.length > 0;
   return (
-    <div id={`finding-${issue.id}`} style={{ border: "1px solid var(--line-2)", borderLeft: `3px solid ${sevColor}`, borderRadius: "var(--r-md, 10px)", background: "var(--bg-1)", padding: "clamp(16px, 2.4vw, 22px)", scrollMarginTop: "16px" }}>
+    <div id={`finding-${issue.id}`} style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-md, 10px)", background: "var(--bg-1)", padding: "clamp(16px, 2.4vw, 22px)", scrollMarginTop: "16px" }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "clamp(15px, 1.7vw, 17px)", lineHeight: 1.35, color: "var(--fg-1)", margin: 0, flex: "1 1 280px", minWidth: 0, wordBreak: "break-word" }}>{index + 1}. {issue.title}</h3>
         <div style={{ display: "flex", gap: 6, flex: "none", flexWrap: "wrap" }}>
-          <span className="pill" style={{ fontSize: 10, color: sevColor, borderColor: "var(--line-2)", background: "var(--bg-2)" }}>{SEV_LABEL[issue.severity] ?? issue.severity}</span>
-          <span className="pill" style={{ fontSize: 10, color: "var(--fg-3)", borderColor: "var(--line-2)", background: "var(--bg-2)" }}>{catLabel(issue.category)}</span>
+          <span className="pill" style={{ color: sevColor, borderColor: "var(--line-2)", background: "var(--bg-2)" }}>{SEV_LABEL[issue.severity] ?? issue.severity}</span>
+          <span className="pill" style={{ color: "var(--fg-3)", borderColor: "var(--line-2)", background: "var(--bg-2)" }}>{catLabel(issue.category)}</span>
           {issue.first_seen_run && issue.first_seen_run !== runId
-            ? <span className="pill" style={{ fontSize: 10, color: "var(--wait-ink)", borderColor: "var(--wait-line)", background: "var(--wait-wash)" }} title="First detected in an earlier verification">Recurring</span>
-            : <span className="pill" style={{ fontSize: 10, color: "var(--fg-4)", borderColor: "var(--line-2)", background: "var(--bg-2)" }} title="First detected in this verification">First seen here</span>}
+            ? <span className="pill" style={{ color: "var(--wait-ink)", borderColor: "var(--wait-line)", background: "var(--wait-wash)" }} title="First detected in an earlier verification">Recurring</span>
+            : <span className="pill" style={{ color: "var(--fg-4)", borderColor: "var(--line-2)", background: "var(--bg-2)" }} title="First detected in this verification">First seen here</span>}
         </div>
       </div>
       {flowName ? <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5, margin: "6px 0 0" }}>Seen while running the &quot;{flowName}&quot; flow in a real browser.</p> : null}
@@ -297,7 +297,7 @@ function FindingEvidence({ issue, index, flowName, screenshotIds, runId }: { iss
       </div>
       {screenshotIds.length ? <div style={{ marginTop: 16 }}><div style={{ ...label, display: "flex", alignItems: "center", gap: 6 }}><Ic d={I.camera} size={13} sw={2} />Evidence</div><div style={{ marginTop: 8 }}><ScreenshotGrid runId={runId} ids={screenshotIds} /></div></div> : null}
       {repro.length ? <div style={{ marginTop: 16 }}><div style={label}>How to reproduce</div><ol style={{ margin: "8px 0 0", padding: "0 0 0 18px", display: "grid", gap: 5 }}>{repro.map((r, i) => <li key={i} style={{ fontSize: 13, color: "var(--fg-2)", lineHeight: 1.5, wordBreak: "break-word" }}>{r.replace(/^\d+\.\s*/, "")}</li>)}</ol></div> : null}
-      {issue.likely_cause ? <div style={{ marginTop: 16, borderLeft: "3px solid var(--line-2)", paddingLeft: 12 }}><div style={label}>Possible cause (interpretation)</div><p style={{ fontSize: 13, color: "var(--fg-2)", lineHeight: 1.55, margin: "6px 0 0", wordBreak: "break-word" }}>{issue.likely_cause}</p></div> : null}
+      {issue.likely_cause ? <div style={{ marginTop: 16, paddingLeft: 12 }}><div style={label}>Possible cause (interpretation)</div><p style={{ fontSize: 13, color: "var(--fg-2)", lineHeight: 1.55, margin: "6px 0 0", wordBreak: "break-word" }}>{issue.likely_cause}</p></div> : null}
       {hasTechnical ? (
         <details style={{ marginTop: 14, border: "1px solid var(--line-2)", borderRadius: 8, padding: "10px 14px" }}>
           <summary style={{ cursor: "pointer", fontSize: 13, color: "var(--fg-4)", padding: "6px 0" }}>View technical details</summary>
@@ -326,7 +326,7 @@ function FlowTimeline({ flow, displayName, screenshotIds, runId, showShots }: { 
     <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-md, 10px)", background: "var(--bg-1)", padding: "12px 16px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
         <span style={{ fontSize: 13.5, fontWeight: failed ? 600 : 500, color: failed ? "var(--fg-1)" : "var(--fg-2)", flex: "1 1 auto", minWidth: 0, wordBreak: "break-word" }}>{displayName}</span>
-        {auth ? <span className="pill" style={{ fontSize: 10, color: "var(--fg-3)", borderColor: "var(--line-2)", background: "var(--bg-2)" }}>Authenticated</span> : null}
+        {auth ? <span className="pill" style={{ color: "var(--fg-3)", borderColor: "var(--line-2)", background: "var(--bg-2)" }}>Authenticated</span> : null}
         <Chip tone={st.tone} label={st.label} />
         <span style={{ fontSize: 12, color: "var(--fg-5)", flex: "none" }}>{flow.steps.length} step{flow.steps.length === 1 ? "" : "s"}</span>
       </div>
@@ -578,7 +578,7 @@ export default async function VerificationResultPage({ params }: { params: Promi
           // else, conclusion or not, is <Verdict>: it already renders "Not yet verified" in the neutral tone
           // for a run that reached no conclusion, which is what the old ternary's third branch spelled out.
           active
-            ? <span className="pill" style={{ fontSize: 10.5, color: "var(--fg-3)", background: "var(--bg-2)", borderColor: "var(--line-2)" }}>{runningStage(run.state)}</span>
+            ? <span className="pill" style={{ color: "var(--fg-3)", background: "var(--bg-2)", borderColor: "var(--line-2)" }}>{runningStage(run.state)}</span>
             : <Verdict verdict={verdict} size="md" />
         }
       />
@@ -687,11 +687,11 @@ export default async function VerificationResultPage({ params }: { params: Promi
                   <div style={{ display: "grid", gap: 8, marginTop: 4 }}>
                     {issues.map((issue) => (
                       <div key={issue.id} style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                        <span className="pill" style={{ fontSize: 10, color: SEV_COLOR[issue.severity] ?? "var(--fg-4)", borderColor: "var(--line-2)", background: "var(--bg-2)", flex: "none" }}>{SEV_LABEL[issue.severity] ?? issue.severity}</span>
+                        <span className="pill" style={{ color: SEV_COLOR[issue.severity] ?? "var(--fg-4)", borderColor: "var(--line-2)", background: "var(--bg-2)", flex: "none" }}>{SEV_LABEL[issue.severity] ?? issue.severity}</span>
                         <span style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5, flex: "1 1 auto", minWidth: 0, wordBreak: "break-word" }}>{issue.title}</span>
                         {issue.first_seen_run && issue.first_seen_run !== runId
-                          ? <span className="pill" style={{ fontSize: 10, color: "var(--wait-ink)", borderColor: "var(--wait-line)", background: "var(--wait-wash)", flex: "none" }} title="This finding was first detected in an earlier verification">Recurring</span>
-                          : <span className="pill" style={{ fontSize: 10, color: "var(--fg-4)", borderColor: "var(--line-2)", background: "var(--bg-2)", flex: "none" }} title="First detected in this verification">First seen here</span>}
+                          ? <span className="pill" style={{ color: "var(--wait-ink)", borderColor: "var(--wait-line)", background: "var(--wait-wash)", flex: "none" }} title="This finding was first detected in an earlier verification">Recurring</span>
+                          : <span className="pill" style={{ color: "var(--fg-4)", borderColor: "var(--line-2)", background: "var(--bg-2)", flex: "none" }} title="First detected in this verification">First seen here</span>}
                       </div>
                     ))}
                   </div>
@@ -748,7 +748,7 @@ export default async function VerificationResultPage({ params }: { params: Promi
                 {affectedResolved.length > 0 ? (
                   <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 8 }}>
                     {affectedResolved.map((a) => (
-                      <li key={a.rid} style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap", borderLeft: "2px solid var(--line-3)", paddingLeft: 12 }}>
+                      <li key={a.rid} style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap", paddingBottom: 8, borderBottom: "1px solid var(--line-1)" }}>
                         <span style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5, flex: "1 1 auto", minWidth: 0, maxWidth: "68ch", wordBreak: "break-word" }}>{a.text}</span>
                         <a href={`#finding-${a.findingId}`} style={{ fontSize: 12.5, color: "var(--acc-deep)", flex: "none", textDecoration: "none" }}>See finding {a.findingIndex + 1}</a>
                       </li>

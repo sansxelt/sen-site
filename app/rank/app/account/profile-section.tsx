@@ -160,7 +160,7 @@ export function ProfileSection({ email, initialDisplayName, planBadge }: { email
   }
 
   const initial = (savedName || email).slice(0, 1).toUpperCase();
-  const label = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 6 } as const;
+  const label = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 6 } as const;
   const note = (m: Msg) => m && <div role="status" style={{ fontSize: 12.5, color: m.kind === "err" ? "var(--err)" : "var(--acc-deep)", marginTop: 6 }}>{m.text}</div>;
 
   return (

@@ -48,7 +48,7 @@ export function V1RenewalTerms({ plan, cycle }: { plan: PlanV1; cycle: V1Cycle }
   ];
   return (
     <div className="card" style={{ marginTop: 14, padding: 20 }}>
-      <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Renewal and cancellation</div>
+      <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 12 }}>Renewal and cancellation</div>
       <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 }}>
         {lines.map((x) => (
           <li key={x} style={{ display: "flex", gap: 10, fontSize: 13, color: "var(--fg-3)", alignItems: "flex-start", lineHeight: 1.5 }}>

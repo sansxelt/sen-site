@@ -26,20 +26,13 @@ function timeAgo(iso: string | null | undefined): string {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-// Severity accent used for the row's left border. Unknown severities fall back to the medium tone.
-const SEVERITY_COLOR: Record<string, string> = {
-  critical: "var(--stop-ink)",
-  high: "var(--wait-ink)",
-  medium: "var(--fg-3)",
-  low: "var(--fg-4)",
-};
-
 // Severity pill tones. The .pill class uppercases the label, so status is always conveyed by text,
 // never by colour alone.
 function severityTone(severity: string): { color: string; bg: string; border: string } {
   switch (severity) {
     case "critical": return { color: "var(--stop-ink)", bg: "var(--stop-wash)", border: "var(--stop-line)" };
-    case "high": return { color: "var(--wait-ink)", bg: "var(--wait-wash)", border: "var(--wait-line)" };
+    // High is a severity, not "a person is needed", so it does not borrow Blocked's amber.
+    case "high": return { color: "var(--fg-1)", bg: "var(--bg-2)", border: "var(--line-3)" };
     case "low": return { color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };
     default: return { color: "var(--fg-3)", bg: "var(--bg-2)", border: "var(--line-2)" };
   }
@@ -54,7 +47,7 @@ function StatChip({ label, value, color }: { label: string; value: number; color
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 3, padding: "11px 16px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", minWidth: 92 }}>
       <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 22, lineHeight: 1, color: color ?? "var(--fg-1)" }}>{value}</span>
-      <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-4)" }}>{label}</span>
+      <span style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-4)" }}>{label}</span>
     </div>
   );
 }
@@ -65,21 +58,20 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
   );
 }
 
-// One open issue. The 3px left border carries the severity colour; the severity pill carries the same
-// state as text. firstSeenRun / lastSeenRun are run ids (no per-run timestamp is exposed here), so the
+// One open issue. The severity pill carries the severity as text; the row has no coloured edge, because a
+// stack of coloured edges read as warning stripes rather than as a list. firstSeenRun / lastSeenRun are run ids (no per-run timestamp is exposed here), so the
 // only honest time we can show is when the issue row was created: one "opened X ago".
 function OpenIssueRow({ issue }: { issue: IssueRow }) {
-  const accent = SEVERITY_COLOR[issue.severity] ?? SEVERITY_COLOR.medium;
   const tone = severityTone(issue.severity);
   const opened = timeAgo(issue.createdAt);
   return (
     <Link
       href={`/systems/${issue.applicationId}`}
       className="card card--hover"
-      style={{ display: "flex", flexDirection: "column", gap: 8, padding: "14px 16px", borderLeft: `3px solid ${accent}`, textDecoration: "none", color: "inherit" }}
+      style={{ display: "flex", flexDirection: "column", gap: 8, padding: "14px 16px", textDecoration: "none", color: "inherit" }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-        <span className="pill" style={{ fontSize: 10, color: tone.color, background: tone.bg, borderColor: tone.border }}>{issue.severity}</span>
+        <span className="pill" style={{ color: tone.color, background: tone.bg, borderColor: tone.border }}>{issue.severity}</span>
         {issue.category ? <span className="pill" style={{ fontSize: 10 }}>{humanizeCategory(issue.category)}</span> : null}
       </div>
       <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--fg-1)", lineHeight: 1.35 }}>{issue.title}</div>
@@ -102,10 +94,10 @@ function ResolvedIssueRow({ issue }: { issue: IssueRow }) {
     <Link
       href={href}
       className="card card--hover"
-      style={{ display: "flex", flexDirection: "column", gap: 8, padding: "12px 16px", borderLeft: "3px solid var(--line-2)", textDecoration: "none", color: "inherit", background: "var(--bg-2)" }}
+      style={{ display: "flex", flexDirection: "column", gap: 8, padding: "12px 16px", textDecoration: "none", color: "inherit", background: "var(--bg-2)" }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-        <span className="pill" style={{ fontSize: 10, color: "var(--acc-deep)", background: "var(--acc-soft)", borderColor: "var(--acc-line)" }}><DecisionMark decision="resolved" />Resolved</span>
+        <span className="pill" style={{ color: "var(--acc-deep)", background: "var(--acc-soft)", borderColor: "var(--acc-line)" }}><DecisionMark decision="resolved" />Resolved</span>
         <span className="pill" style={{ fontSize: 10 }}>{issue.severity}</span>
         {issue.category ? <span className="pill" style={{ fontSize: 10 }}>{humanizeCategory(issue.category)}</span> : null}
       </div>

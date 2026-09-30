@@ -68,7 +68,7 @@ export default async function ReviewPage() {
                     the nearest and it would be a lie, because a plan awaiting review is not a conclusion
                     about anyone's software. It keeps the plain .pill until a shared status primitive exists
                     that can carry size and shape without carrying the product's one signal. */}
-                <span className="pill" style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--wait-ink)", background: "var(--wait-wash)", borderColor: "var(--wait-line)", flex: "none" }}>Awaiting review</span>
+                <span className="pill" style={{ fontSize: 12.5, fontWeight: 700, color: "var(--wait-ink)", background: "var(--wait-wash)", borderColor: "var(--wait-line)", flex: "none" }}>Awaiting review</span>
                 <span aria-hidden style={{ color: "var(--fg-5)", flex: "none" }}>→</span>
               </Link>
             ))}

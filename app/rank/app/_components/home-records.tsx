@@ -22,7 +22,7 @@ const TONE: Record<Tone, { color: string; bg: string; border: string }> = {
   unproven: { color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" },
 };
 
-const headLbl: CSSProperties = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" };
+const headLbl: CSSProperties = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" };
 const rowLink: CSSProperties = { display: "grid", alignItems: "center", color: "inherit", textDecoration: "none" };
 
 // The mark comes from the PUBLIC tone (verified/failed/blocked), never the raw internal decision — so a
@@ -30,7 +30,7 @@ const rowLink: CSSProperties = { display: "grid", alignItems: "center", color: "
 function VerdictPill({ verdict }: { verdict: Verdict }) {
   const t = TONE[verdict.tone];
   return (
-    <span className="pill" style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: t.color, background: t.bg, borderColor: t.border, flex: "none", display: "inline-flex", alignItems: "center", gap: 5 }}>
+    <span className="pill" style={{ fontSize: 12.5, fontWeight: 700, color: t.color, background: t.bg, borderColor: t.border, flex: "none", display: "inline-flex", alignItems: "center", gap: 5 }}>
       <DecisionMark decision={verdict.tone} />{verdict.label}
     </span>
   );
@@ -77,7 +77,7 @@ export function SectionError({ label }: { label: string }) {
 
 // ── Needs attention ───────────────────────────────────────────────────────────────────────────────────
 
-const SEV_COLOR: Record<string, string> = { critical: "var(--stop-ink)", high: "var(--wait-ink)", medium: "var(--fg-3)", low: "var(--fg-4)" };
+const SEV_COLOR: Record<string, string> = { critical: "var(--stop-ink)", high: "var(--fg-1)", medium: "var(--fg-3)", low: "var(--fg-4)" };
 
 export function HomeAttention({ issues, error }: { issues: IssueRow[]; error?: boolean }) {
   if (error) return <SectionError label="Needs attention" />;
@@ -90,9 +90,9 @@ export function HomeAttention({ issues, error }: { issues: IssueRow[]; error?: b
           const href = iss.applicationId ? `/systems/${iss.applicationId}/issues` : "/verifications";
           return (
             <Link key={iss.id} href={href}
-              style={{ ...rowLink, gridTemplateColumns: "auto 1fr auto auto", gap: 12, padding: "11px 14px", border: "1px solid var(--line-2)", borderLeft: `3px solid ${SEV_COLOR[iss.severity] ?? "var(--fg-4)"}`, borderRadius: "var(--r-sm, 8px)", background: "var(--bg-1)" }}
+              style={{ ...rowLink, gridTemplateColumns: "auto 1fr auto auto", gap: 12, padding: "11px 14px", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm, 8px)", background: "var(--bg-1)" }}
               aria-label={`${iss.title}${iss.applicationName ? `, ${iss.applicationName}` : ""}, ${iss.severity} severity`}>
-              <span className="pill" aria-hidden style={{ fontSize: 10, color: SEV_COLOR[iss.severity] ?? "var(--fg-4)", borderColor: "var(--line-2)", background: "var(--bg-2)", flex: "none" }}>{iss.severity}</span>
+              <span className="pill" aria-hidden style={{ color: SEV_COLOR[iss.severity] ?? "var(--fg-4)", borderColor: "var(--line-2)", background: "var(--bg-2)", flex: "none" }}>{iss.severity}</span>
               <span style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 500, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{iss.title || "A blocking issue needs attention"}</span>
               <span style={{ fontSize: 12, color: "var(--fg-4)", flex: "none", maxWidth: "18ch", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{iss.applicationName}</span>
               <span aria-hidden style={{ color: "var(--fg-5)", flex: "none" }}>→</span>

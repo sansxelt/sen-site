@@ -27,7 +27,7 @@ type Readiness = { requiresAuth: boolean; ok: boolean; roles: RoleReadiness[]; r
 type Preview = { selectedCount: number; eligibleCount: number; decision: Decision; readiness: Readiness | null };
 
 const box: React.CSSProperties = { border: "1px solid var(--line-2)", borderRadius: "var(--r-md, 12px)", background: "var(--bg-2)", padding: "14px 16px" };
-const lab: React.CSSProperties = { fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)" };
+const lab: React.CSSProperties = { fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-4)" };
 const price: React.CSSProperties = { fontSize: 22, fontWeight: 700, color: "var(--fg-1)", fontVariantNumeric: "tabular-nums" };
 
 export function PassPreview({ appId, flowIds }: { appId: string; flowIds?: string[] }) {

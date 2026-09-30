@@ -39,7 +39,7 @@ const OAUTH_REASONS: Record<string, string> = {
 function StoredNotUsedChip({ provider }: { provider: string }) {
   if (!isStoredNotYetUsed(provider)) return null;
   return (
-    <span className="pill" style={{ fontSize: 9.5, flex: "none", color: "var(--fg-4)", background: "var(--bg-2)", borderColor: "var(--line-2)" }}>
+    <span className="pill" style={{ flex: "none", color: "var(--fg-4)", background: "var(--bg-2)", borderColor: "var(--line-2)" }}>
       Stored, not yet used in verification
     </span>
   );
@@ -55,11 +55,11 @@ const STATE_PILL: Record<string, { color: string; bg: string; bd: string }> = {
 
 function StatePill({ state }: { state: ConnectionState }) {
   const c = STATE_PILL[state] ?? { color: "var(--fg-4)", bg: "var(--bg-2)", bd: "var(--line-2)" };
-  return <span className="pill" style={{ fontSize: 9.5, flex: "none", color: c.color, background: c.bg, borderColor: c.bd }}>{stateLabel(state)}</span>;
+  return <span className="pill" style={{ flex: "none", color: c.color, background: c.bg, borderColor: c.bd }}>{stateLabel(state)}</span>;
 }
 
 const ghostBtn = { padding: "6px 11px", fontSize: 12 } as const;
-const headLbl = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--fg-4)" };
+const headLbl = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" };
 
 type Msg = { kind: "ok" | "err"; text: string };
 
@@ -118,7 +118,7 @@ function ReadOnlyCard({ c }: { c: SafeConnection }) {
             <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14.5, color: "var(--fg-1)" }}>
               {isTestAccount ? (m.label || "Test account") : (PROVIDER_LABELS[c.provider] ?? c.provider)}
             </span>
-            <span className="pill" style={{ fontSize: 9.5, flex: "none" }}>{PROVIDER_GROUP[c.provider] ?? "Connection"}</span>
+            <span className="pill" style={{ flex: "none" }}>{PROVIDER_GROUP[c.provider] ?? "Connection"}</span>
             {!isTestAccount ? <StoredNotUsedChip provider={c.provider} /> : null}
           </div>
         </div>
@@ -323,7 +323,7 @@ export function ConnectionsManager({ appId, connections, canManage = true }: { a
               <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14.5, color: "var(--fg-1)" }}>
                 {isTestAccount ? (m.label || "Test account") : (PROVIDER_LABELS[c.provider] ?? c.provider)}
               </span>
-              <span className="pill" style={{ fontSize: 9.5, flex: "none" }}>{PROVIDER_GROUP[c.provider] ?? "Connection"}</span>
+              <span className="pill" style={{ flex: "none" }}>{PROVIDER_GROUP[c.provider] ?? "Connection"}</span>
               {!isTestAccount ? <StoredNotUsedChip provider={c.provider} /> : null}
             </div>
           </div>

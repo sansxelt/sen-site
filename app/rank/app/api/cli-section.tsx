@@ -55,7 +55,7 @@ vraelis verify --url "$PREVIEW_URL" --claim "$CLAIM" --wait --json > result.json
 # On a failure, hand the repair prompt straight to a coding agent:
 vraelis result "$(jq -r .verification_id result.json)" --repair-prompt | claude -p`;
 
-const label = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--fg-4)" };
+const label = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" };
 
 const FLAGS: [string, string][] = [
   ["--wait", "Wait for the verdict. Without it the command prints the id and exits 0 immediately, which means started, not verified."],

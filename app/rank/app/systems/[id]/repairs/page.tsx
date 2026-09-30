@@ -68,7 +68,7 @@ function RepairRowView({ appId, r }: { appId: string; r: RepairRow }) {
           Verification run <span aria-hidden>→</span>
         </Link>
       ) : null}
-      <span className="pill" style={{ fontSize: 10.5, color: p.color, background: p.bg, borderColor: p.border, flex: "none" }}><DecisionMark decision={r.status} />{p.label}</span>
+      <span className="pill" style={{ color: p.color, background: p.bg, borderColor: p.border, flex: "none" }}><DecisionMark decision={r.status} />{p.label}</span>
     </div>
   );
 }

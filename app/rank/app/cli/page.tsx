@@ -21,7 +21,7 @@ import { Page, PageHeader } from "@/app/rank/_components/page-header";
 export const metadata: Metadata = { title: "Command line" };
 export const dynamic = "force-dynamic";
 
-const label = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--fg-4)", margin: 0 };
+const label = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: 0 };
 
 // Each of these is a real, shipped surface. Nothing aspirational: an interface list that includes things
 // that do not exist yet is the same lie as a nav item that leads nowhere, and this product is the last one

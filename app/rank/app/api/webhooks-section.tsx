@@ -66,7 +66,7 @@ export function WebhooksSection() {
 
       {fresh && (
         <div className="card" style={{ marginBottom: 18, borderColor: "var(--acc-line)", background: "var(--acc-soft)" }}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 8 }}>Signing secret. Store it now</div>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--acc-deep)", marginBottom: 8 }}>Signing secret. Store it now</div>
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
             <code style={{ flex: 1, fontFamily: "var(--font-code, monospace)", fontSize: 13, color: "var(--fg-1)", wordBreak: "break-all", background: "var(--bg-1)", border: "1px solid var(--line-2)", borderRadius: 8, padding: "10px 12px" }}>{fresh.secret}</code>
             <button onClick={copySecret} className="btn btn--ghost" style={{ whiteSpace: "nowrap" }}>{copied ? "Copied ✓" : "Copy"}</button>

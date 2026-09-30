@@ -31,7 +31,7 @@ import { Page, PageHeader } from "@/app/rank/_components/page-header";
 export const metadata: Metadata = { title: "API key" };
 export const dynamic = "force-dynamic";
 
-const label = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--fg-4)", margin: 0 };
+const label = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: 0 };
 const money = (c: number | null | undefined) => (c == null ? "n/a" : `$${(c / 100).toFixed(2)}`);
 
 /** Seconds, said the way a person says them. 9s, 1m 12s, never 0.15 minutes. */

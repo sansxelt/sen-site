@@ -129,8 +129,10 @@ console.log("\n── the page frame is shared too ──");
   // The 61 dead paddingTop values existed because the shell overrides them with !important. A page that
   // adopts <Page> and keeps one is carrying a line that cannot do anything.
   const ui = readFileSync("app/rank/_components/rank-ui.tsx", "utf8");
+  // The page .wrap sits inside the nested ProductSurface (main > div[data-surface] > .wrap), so the rule has
+  // to name that shape. The first version named only main>.wrap and matched no page at all.
   ok("the shell still owns the top padding (which is why pages must not set it)",
-    /app-main>\.wrap\{padding-top:[^}]*!important\}/.test(ui));
+    /app-main>\[data-surface=\\"app\\"\]>\.wrap\{padding-top:[^}]*!important\}/.test(ui));
 }
 
 console.log(fail === 0 ? `\nALL PASS  ${pass} passed, 0 failed` : `\nFAILURES  ${pass} passed, ${fail} failed`);

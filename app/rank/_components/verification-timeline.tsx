@@ -102,7 +102,7 @@ export function VerificationTimeline() {
           display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap",
         }}>
           <span style={{
-            fontFamily: "var(--font-code)", fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase",
+            fontFamily: "var(--font-code)", fontSize: 12.5,
             color: done ? "var(--acc-deep)" : "var(--fg-5)",
             transition: "color .3s ease",
           }}>{done ? "Verified" : "Running"}</span>

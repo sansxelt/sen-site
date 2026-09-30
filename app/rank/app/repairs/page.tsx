@@ -61,7 +61,7 @@ const STATUS_STYLE: Record<string, { label: string; color: string; bg: string; b
 };
 
 // Severity pill colours match the run report (app/rank/app/systems/[id]/passes/[runId]/page.tsx).
-const SEV_COLOR: Record<string, string> = { critical: "var(--err)", high: "var(--wait-ink)", medium: "var(--fg-3)", low: "var(--fg-4)" };
+const SEV_COLOR: Record<string, string> = { critical: "var(--err)", high: "var(--fg-1)", medium: "var(--fg-3)", low: "var(--fg-4)" };
 const SEV_LABEL: Record<string, string> = { critical: "Critical", high: "High", medium: "Medium", low: "Low" };
 
 function RepairRowItem({ repair }: { repair: RepairRow }) {
@@ -78,13 +78,13 @@ function RepairRowItem({ repair }: { repair: RepairRow }) {
 
   const body = (
     <>
-      <span className="pill" style={{ fontSize: 10, color: st.color, background: st.bg, borderColor: st.border, flex: "none" }}><DecisionMark decision={repair.status} />{st.label}</span>
+      <span className="pill" style={{ color: st.color, background: st.bg, borderColor: st.border, flex: "none" }}><DecisionMark decision={repair.status} />{st.label}</span>
       <div style={{ minWidth: 0, flex: "1 1 260px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14.5, color: "var(--fg-1)", lineHeight: 1.35, minWidth: 0, wordBreak: "break-word" }}>
             {repair.issueTitle || "Untitled issue"}
           </span>
-          <span className="pill" style={{ fontSize: 10, color: sevColor, borderColor: "var(--line-2)", background: "var(--bg-2)", flex: "none" }}>
+          <span className="pill" style={{ color: sevColor, borderColor: "var(--line-2)", background: "var(--bg-2)", flex: "none" }}>
             {SEV_LABEL[repair.issueSeverity] ?? repair.issueSeverity}
           </span>
         </div>
@@ -110,7 +110,7 @@ function Section({ heading, rows }: { heading: string; rows: RepairRow[] }) {
   if (!rows.length) return null;
   return (
     <section style={{ marginBottom: 26 }}>
-      <h2 style={{ fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: "0 0 10px" }}>
+      <h2 style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, fontWeight: 600, color: "var(--fg-4)", margin: "0 0 10px" }}>
         {heading} <span style={{ color: "var(--fg-5)" }}>({rows.length})</span>
       </h2>
       <div style={{ display: "grid", gap: 8 }}>

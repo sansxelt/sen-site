@@ -39,7 +39,7 @@ export default function PaymentFailedPage() {
         </div>
       </div>
 
-      <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Common causes</div>
+      <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 12 }}>Common causes</div>
       <div className="tile-grid cols-3" style={{ marginBottom: 18 }}>
         {GUIDANCE.map(([t, d]) => (
           <div key={t} className="acard" style={{ gap: 6 }}>

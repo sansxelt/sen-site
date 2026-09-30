@@ -6,7 +6,7 @@
 .v6-demo__in { max-width: var(--max-wide); width: 100%; margin-inline: auto; padding-inline: var(--gutter); }
 .v6-demo__head { max-width: 62ch; margin-bottom: clamp(24px, 3.6vh, 42px); }
 .v6-demo__head .v6-eyebrow { color: var(--g-fg-3); }
-.v6-demo__h { margin: clamp(10px, 1.6vh, 18px) 0 0; font-family: var(--display); font-weight: 400;
+.v6-demo__h { margin: clamp(10px, 1.6vh, 18px) 0 0; font-family: var(--display); font-weight: var(--display-w);
   font-synthesis-weight: none; letter-spacing: -0.012em; line-height: 1.06;
   font-size: clamp(1.95rem, 4.5vw, 3.9rem); color: var(--g-fg); text-wrap: balance; }
 .v6-demo__lead { margin: 14px 0 0; font-size: 1.02rem; line-height: 1.6; color: var(--g-fg-2); }
@@ -28,7 +28,7 @@
 @media (max-width: 900px) { .v6-demo__stage { grid-template-columns: minmax(0, 1fr); } }
 
 .v6-demo__k { margin: 0; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--g-fg-3); }
-.v6-demo__claim { margin: 8px 0 0; font-family: var(--display); font-weight: 400; font-synthesis-weight: none;
+.v6-demo__claim { margin: 8px 0 0; font-family: var(--display); font-weight: var(--display-w); font-synthesis-weight: none;
   font-size: clamp(1.35rem, 2.2vw, 1.8rem); line-height: 1.2; color: var(--g-fg); text-wrap: pretty; }
 .v6-demo__app { margin: 10px 0 0; font-size: 0.9rem; color: var(--g-fg-3); }
 .v6-demo__app a { color: var(--g-fg-2); text-underline-offset: 3px; }

@@ -45,7 +45,7 @@ function expiryLabel(iso?: string | null): string | null {
   return "expires " + new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-const cardHead = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: "30px 0 12px" } as const;
+const cardHead = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: "30px 0 12px" } as const;
 // ONE OBJECT, FIVE CONTROLS, AND NO KEYBOARD FOCUS ON ANY OF THEM.
 //
 // This shape carried outline:"none" inline, and it is spread onto the invite field, three <select>s and the
@@ -63,7 +63,7 @@ const input = { padding: "10px 13px", borderRadius: "var(--r-sm)", borderWidth: 
 
 function RolePill({ role }: { role: Role }) {
   const c = role === "owner" ? "var(--acc-deep)" : role === "client_viewer" ? "var(--fg-4)" : "var(--fg-2)";
-  return <span className="pill" style={{ fontSize: 10.5, color: c, borderColor: "var(--line-2)" }}>{ROLE_LABEL[role]}</span>;
+  return <span className="pill" style={{ color: c, borderColor: "var(--line-2)" }}>{ROLE_LABEL[role]}</span>;
 }
 
 export function TeamClient({ email, initial, billing, transfer, orgLink }: { email: string; initial: Ctx; billing: Billing; transfer: TransferInfo; orgLink?: { id: string; name: string } | null }) {
@@ -193,7 +193,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
           <p style={{ fontSize: 14.5, color: "var(--fg-1)", margin: "0 0 6px", fontWeight: 600 }}>You&apos;ve been asked to become owner of {transfer.incoming.workspaceName}.</p>
           <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 12px", lineHeight: 1.6 }}>To accept, set up team billing for this workspace. Your subscription takes over once active, and the previous owner&apos;s subscription is then canceled. Client viewers stay free.</p>
           <button onClick={acceptIncoming} disabled={aBusy} className="btn" style={{ opacity: aBusy ? 0.6 : 1 }}>{aBusy ? "Starting…" : "Accept ownership and set up billing"}</button>
-          {aMsg && <p style={{ fontSize: 12.5, color: "var(--money)", margin: "10px 0 0" }}>{aMsg}</p>}
+          {aMsg && <p style={{ fontSize: 12.5, color: "var(--err)", margin: "10px 0 0" }}>{aMsg}</p>}
         </div>
       )}
 
@@ -213,10 +213,10 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
               <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17 }}>{billing.used} paid seat{billing.used === 1 ? "" : "s"} used{billing.limit != null ? ` of ${billing.limit}` : ""}</div>
               <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 3 }}>Admin, Editor, and Viewer are paid seats. <strong style={{ color: "var(--fg-2)" }}>Client viewers are free</strong> and can only access client-safe reports.</div>
             </div>
-            {(billing.hasSubscription || billing.status) ? <span className="pill" style={{ fontSize: 10.5, color: billing.status === "past_due" || billing.status === "unpaid" ? "var(--money)" : "var(--acc-deep)" }}>{statusLabel(billing.status)}</span> : null}
+            {(billing.hasSubscription || billing.status) ? <span className="pill" style={{ color: billing.status === "past_due" || billing.status === "unpaid" ? "var(--err)" : "var(--acc-deep)" }}>{statusLabel(billing.status)}</span> : null}
           </div>
-          {billing.overLimit && <p style={{ fontSize: 12.5, color: "var(--money)", margin: "10px 0 0", lineHeight: 1.5 }}>You&apos;re over your seat limit. Add seats to invite more internal collaborators, or change roles to Client viewer. Existing members keep their access.</p>}
-          {(billing.status === "past_due" || billing.status === "unpaid") && <p style={{ fontSize: 12.5, color: "var(--money)", margin: "10px 0 0", lineHeight: 1.5 }}>Use Manage team billing to update your payment method.</p>}
+          {billing.overLimit && <p style={{ fontSize: 12.5, color: "var(--err)", margin: "10px 0 0", lineHeight: 1.5 }}>You&apos;re over your seat limit. Add seats to invite more internal collaborators, or change roles to Client viewer. Existing members keep their access.</p>}
+          {(billing.status === "past_due" || billing.status === "unpaid") && <p style={{ fontSize: 12.5, color: "var(--err)", margin: "10px 0 0", lineHeight: 1.5 }}>Use Manage team billing to update your payment method.</p>}
           <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "10px 0 0", lineHeight: 1.6 }}>Pending invites don&apos;t count until accepted. Team seats are for additional internal collaborators; client viewers are always free.</p>
 
           {billing.configured && billing.hasSubscription && (
@@ -266,7 +266,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
             </div>
             <p style={{ fontSize: 12, color: "var(--fg-5)", margin: "10px 0 0", lineHeight: 1.55 }}>{ROLE_DESC[inviteRole]}</p>
             <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "8px 0 0" }}>Invite links expire after 7 days; resending creates a new secure link. Invites also activate when the recipient signs in with the invited email.</p>
-            {msg && <p style={{ fontSize: 12.5, color: msg.kind === "ok" ? "var(--acc-deep)" : "var(--money)", margin: "10px 0 0" }}>{msg.text}</p>}
+            {msg && <p style={{ fontSize: 12.5, color: msg.kind === "ok" ? "var(--acc-deep)" : "var(--err)", margin: "10px 0 0" }}>{msg.text}</p>}
           </div>
         </>
       )}
@@ -277,7 +277,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
         {active.map((m, i) => (
           <div key={m.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "13px 16px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", flexWrap: "wrap" }}>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 14, color: "var(--fg-1)", fontWeight: 500 }}>{m.email}{m.email === email ? " (you)" : ""}{m.can_manage_billing && m.role !== "owner" ? <span className="pill" style={{ fontSize: 9.5, marginLeft: 8, color: "var(--acc-deep)" }}>Billing admin</span> : null}</div>
+              <div style={{ fontSize: 14, color: "var(--fg-1)", fontWeight: 500 }}>{m.email}{m.email === email ? " (you)" : ""}{m.can_manage_billing && m.role !== "owner" ? <span className="pill" style={{ marginLeft: 8, color: "var(--acc-deep)" }}>Billing admin</span> : null}</div>
               <div style={{ fontSize: 11.5, color: "var(--fg-4)", marginTop: 2 }}>Joined {new Date(m.created_at).toLocaleDateString()}</div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
@@ -308,7 +308,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
           <div className="card" style={{ marginBottom: 18 }}>
             {pending.map((m, i) => (
               <div key={m.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "10px 0", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", flexWrap: "wrap" }}>
-                <div style={{ fontSize: 13.5, color: "var(--fg-2)" }}>{m.email} <RolePill role={m.role} /> <span style={{ fontSize: 11.5, color: expiryLabel(m.invite_expires_at) === "expired" ? "var(--money)" : "var(--fg-5)" }}>| {expiryLabel(m.invite_expires_at) ?? "activates on sign-in"}</span></div>
+                <div style={{ fontSize: 13.5, color: "var(--fg-2)" }}>{m.email} <RolePill role={m.role} /> <span style={{ fontSize: 11.5, color: expiryLabel(m.invite_expires_at) === "expired" ? "var(--err)" : "var(--fg-5)" }}>| {expiryLabel(m.invite_expires_at) ?? "activates on sign-in"}</span></div>
                 {canManage && <span style={{ display: "flex", gap: 6 }}><button onClick={() => resend(m.id)} className="btn btn--ghost" style={{ padding: "5px 10px", fontSize: 12 }}>Resend invite</button><button onClick={() => revoke(m.id)} className="btn btn--ghost" style={{ padding: "5px 10px", fontSize: 12 }}>Cancel</button></span>}
               </div>
             ))}
@@ -330,7 +330,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
                   {p.members.map((m, i) => (
                     <div key={m.email} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "7px 0", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", flexWrap: "wrap" }}>
                       <span style={{ fontSize: 13, color: "var(--fg-2)" }}>{m.email}</span>
-                      <span style={{ display: "flex", alignItems: "center", gap: 8 }}><span className="pill" style={{ fontSize: 10, color: "var(--fg-4)" }}>{PROJ_ROLE_LABEL[m.role]}</span>{m.status === "pending" ? <span style={{ fontSize: 11, color: "var(--fg-5)" }}>pending</span> : null}</span>
+                      <span style={{ display: "flex", alignItems: "center", gap: 8 }}><span className="pill" style={{ color: "var(--fg-4)" }}>{PROJ_ROLE_LABEL[m.role]}</span>{m.status === "pending" ? <span style={{ fontSize: 11, color: "var(--fg-5)" }}>pending</span> : null}</span>
                     </div>
                   ))}
                 </div>
@@ -422,7 +422,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
                     aria-label: the association is what was missing, not the words. */}
                 <label htmlFor="transfer-confirm-name" style={{ display: "block" }}><span style={{ display: "block", fontSize: 12, color: "var(--fg-4)", marginBottom: 5 }}>Type the workspace name <strong style={{ color: "var(--fg-2)" }}>{transfer.workspaceName}</strong> to confirm</span><input id="transfer-confirm-name" value={confirmName} onChange={(e) => setConfirmName(e.target.value)} placeholder={transfer.workspaceName} style={{ ...input, width: "100%" }} /></label>
                 <button onClick={doTransfer} disabled={tBusy || confirmName.trim() !== transfer.workspaceName.trim()} className="btn" style={{ marginTop: 12, opacity: tBusy || confirmName.trim() !== transfer.workspaceName.trim() ? 0.5 : 1 }}>{tBusy ? (transfer.blocked ? "Requesting…" : "Transferring…") : (transfer.blocked ? "Request transfer" : "Transfer ownership")}</button>
-                {tMsg && <p style={{ fontSize: 12.5, color: tMsg.kind === "ok" ? "var(--acc-deep)" : "var(--money)", margin: "10px 0 0" }}>{tMsg.text}</p>}
+                {tMsg && <p style={{ fontSize: 12.5, color: tMsg.kind === "ok" ? "var(--acc-deep)" : "var(--err)", margin: "10px 0 0" }}>{tMsg.text}</p>}
               </>
             )}
           </div>

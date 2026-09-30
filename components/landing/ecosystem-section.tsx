@@ -173,7 +173,7 @@ export function EcosystemSection({ signedIn }: { signedIn: boolean }) {
             <span
               key={node.id}
               style={{
-                fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+                fontFamily: "var(--font-brand-mono), ui-monospace, monospace",
                 fontSize: 11,
                 color: node.center ? "rgba(168,196,255,0.55)" : "rgba(255,255,255,0.28)",
                 letterSpacing: "0.10em",
@@ -201,7 +201,7 @@ export function EcosystemSection({ signedIn }: { signedIn: boolean }) {
           <p
             style={{
               marginTop: 14,
-              fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+              fontFamily: "var(--font-brand-mono), ui-monospace, monospace",
               fontSize: 11,
               color: "rgba(255,255,255,0.22)",
               letterSpacing: "0.12em",

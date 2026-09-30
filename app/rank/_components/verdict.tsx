@@ -44,10 +44,11 @@ const TONE: Record<Tone, { ink: string; wash: string; line: string; mark: string
 };
 
 /** Two sizes, and only two. Every intermediate value in the old implementations existed to compensate for
- *  the shell's global zoom rather than to say anything. */
+ *  the shell's global zoom rather than to say anything. The small one was 11px, which the 0.89 app zoom
+ *  rendered below 10; 12px is the floor now. */
 const SIZE = {
-  sm: { fontSize: 11, padding: "3px 8px", gap: 5, mark: 11 },
-  md: { fontSize: 12.5, padding: "5px 11px", gap: 6, mark: 13 },
+  sm: { fontSize: 12, padding: "3px 8px", gap: 5, mark: 12 },
+  md: { fontSize: 13, padding: "5px 11px", gap: 6, mark: 13 },
 } as const;
 
 export type VerdictProps = {
@@ -79,7 +80,9 @@ export function Verdict({ state, decision = null, verdict, size = "sm", style }:
       style={{
         display: "inline-flex", flexDirection: "row", alignItems: "center", gap: s.gap,
         fontSize: s.fontSize, fontWeight: 600, lineHeight: 1.2, whiteSpace: "nowrap",
-        padding: s.padding, borderRadius: 999,
+        // A rounded rectangle, not a capsule: a verdict is a result stamped on a row, and the pill shape is
+        // now kept for nothing, so a tag can never be mistaken for one.
+        padding: s.padding, borderRadius: 6,
         color: t.ink, background: t.wash, border: `1px solid ${t.line}`,
         ...style,
       }}

@@ -51,7 +51,7 @@ function CanvasFrame({ children, aspectRatio }: { children: React.ReactNode; asp
       <div
         style={{
           fontSize: 11,
-          fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+          fontFamily: "var(--font-brand-mono), ui-monospace, monospace",
           letterSpacing: "0.14em",
           textTransform: "uppercase",
           color: "rgba(168,196,255,0.65)",
@@ -136,7 +136,7 @@ export function CanvasRenderer({ source }: { source: string }) {
                     fill={n.color ?? "#f5f5f7"}
                     fontWeight={n.weight ?? 400}
                     textAnchor={n.align === "center" ? "middle" : n.align === "right" ? "end" : "start"}
-                    fontFamily="var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif"
+                    fontFamily="var(--font-brand-sans), ui-sans-serif, system-ui, sans-serif"
                   >
                     {n.content}
                   </text>

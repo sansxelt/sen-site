@@ -32,7 +32,7 @@ export function ZoneShell({
       minHeight: "100vh",
       background: "#0A0F18",
       color: "#ECEFF4",
-      fontFamily: '"Inter Tight", var(--font-geist-sans), sans-serif',
+      fontFamily: "var(--font-brand-sans), sans-serif",
     }}>
       <style>{`.zone-shell-dark h1,.zone-shell-dark h2,.zone-shell-dark h3,.zone-shell-dark h4{color:#ECEFF4;}`}</style>
       <header style={{
@@ -48,7 +48,7 @@ export function ZoneShell({
         <Link href="/home" style={{
           fontSize: 19, fontWeight: 600, letterSpacing: "-0.025em",
           color: "#ECEFF4", textDecoration: "none",
-          fontFamily: '"Inter Tight", sans-serif',
+          fontFamily: "var(--font-brand-sans), sans-serif",
         }}>
           vraelis<span style={{ color: "#0E9E6C" }}>.</span>
         </Link>
@@ -56,7 +56,7 @@ export function ZoneShell({
           <Link href={backHref} style={{
             fontSize: 13, color: "#9AA3B2", textDecoration: "none",
             letterSpacing: "-0.005em", transition: "color 150ms",
-            fontFamily: '"Inter Tight", sans-serif',
+            fontFamily: "var(--font-brand-sans), sans-serif",
           }}>
             {backLabel}
           </Link>

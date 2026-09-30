@@ -66,7 +66,7 @@ export function AccountRequests() {
             <div key={r.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "11px 0", borderTop: i === 0 ? "none" : "1px solid var(--line-1)" }}>
               <span style={{ fontSize: 13.5, color: "var(--fg-1)" }}>{TYPE_LABEL[r.request_type] ?? r.request_type}</span>
               <span style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                <span className="pill" style={{ fontSize: 10.5, background: r.status === "completed" ? "var(--acc-soft)" : "var(--bg-2)", color: r.status === "completed" ? "var(--acc-deep)" : "var(--fg-3)" }}>{r.status.replace(/_/g, " ")}</span>
+                <span className="pill" style={{ background: r.status === "completed" ? "var(--acc-soft)" : "var(--bg-2)", color: r.status === "completed" ? "var(--acc-deep)" : "var(--fg-3)" }}>{r.status.replace(/_/g, " ")}</span>
                 <span style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)" }}>{new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
               </span>
             </div>

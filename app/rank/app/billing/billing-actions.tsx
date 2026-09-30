@@ -17,7 +17,7 @@ export function BillingActions({ canceling, hasSub }: { canceling: boolean; hasS
 
   return (
     <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-      <Link href="/plans" className="btn">Change plan</Link>
+      <Link href="/plans" className="btn btn--ghost">Change plan</Link>
       {hasSub && (canceling
         ? <button onClick={() => setCancel(true)} disabled={busy} className="btn btn--ghost">{busy ? "…" : "Resume subscription"}</button>
         : <button onClick={() => setCancel(false)} disabled={busy} className="btn btn--ghost">{busy ? "…" : "Cancel subscription"}</button>)}
@@ -42,7 +42,7 @@ export function PaymentMethodButton() {
 
   return (
     <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-      <button onClick={open} disabled={busy} className="btn">{busy ? "Opening…" : "Update payment method"}</button>
+      <button onClick={open} disabled={busy} className="btn btn--ghost">{busy ? "Opening…" : "Update payment method"}</button>
       {msg && <span style={{ fontSize: 13, color: "var(--fg-3)" }}>{msg}</span>}
     </div>
   );

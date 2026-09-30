@@ -29,15 +29,21 @@ export function CompactComposer({ balance }: { balance: number }) {
             ? (region.current.querySelector("input,textarea") as HTMLElement).focus()
             : undefined);
         }}
+        // A solid card, not a dashed placeholder. The dashed grey box read as an unfinished slot in the page,
+        // and it is the one action the product exists for.
+        className="vra-attn"
         style={{
-          display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "14px 16px",
-          border: "1px dashed var(--line-3)", borderRadius: "var(--r-lg, 14px)", background: "var(--bg-2)",
+          display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "14px 18px",
+          border: "1px solid var(--line-2)", borderRadius: 10, background: "var(--bg-1)", boxShadow: "var(--shadow-card)",
           color: "var(--fg-2)", fontSize: 14, fontFamily: "inherit", cursor: "pointer", textAlign: "left",
         }}
       >
-        <span aria-hidden style={{ display: "inline-flex", color: "var(--fg-3)" }}><Ic d={I.plus} size={16} sw={2} /></span>
-        <span style={{ fontWeight: 500 }}>New verification</span>
-        <span style={{ color: "var(--fg-5)", fontSize: 12.5 }}>Name a deployment and the outcome to check</span>
+        <span aria-hidden style={{ display: "inline-grid", placeItems: "center", width: 28, height: 28, borderRadius: 7, background: "var(--acc-soft)", color: "var(--acc)", flex: "none" }}><Ic d={I.plus} size={15} sw={2.2} /></span>
+        <span style={{ minWidth: 0 }}>
+          <span style={{ display: "block", fontWeight: 600, color: "var(--fg-1)" }}>New verification</span>
+          <span style={{ display: "block", color: "var(--fg-4)", fontSize: 13, marginTop: 1 }}>A live URL and one sentence about what should work</span>
+        </span>
+        <span aria-hidden style={{ marginLeft: "auto", color: "var(--acc-deep)", fontWeight: 600, fontSize: 13.5, flex: "none" }}>Start →</span>
       </button>
     );
   }

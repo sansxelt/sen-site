@@ -39,7 +39,7 @@ const DOC_KINDS = ["prompt", "prd", "requirements", "readme", "risks", "roles"];
 
 const AUTHOR_LABELS: Record<string, string> = { owner: "Owner", system: "System" };
 
-const headLbl = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--fg-4)" };
+const headLbl = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" };
 const sectionStyle = { borderTop: "1px solid var(--line-1)", paddingTop: 22, marginTop: 26 } as const;
 const mono = { fontFamily: "var(--font-mono)" } as const;
 
@@ -82,7 +82,7 @@ function SourceRows({ sources }: { sources: ContextGraph["sources"] }) {
       {sources.map((src, i) => (
         <div key={`${src.kind}-${src.name}-${i}`} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "10px 14px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-            <span className="pill" style={{ fontSize: 9.5, flex: "none" }}>{KIND_LABELS[src.kind] ?? src.kind}</span>
+            <span className="pill" style={{ flex: "none" }}>{KIND_LABELS[src.kind] ?? src.kind}</span>
             <span style={{ fontSize: 13, color: "var(--fg-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{src.name}</span>
           </div>
           <span style={{ ...mono, fontSize: 11, color: "var(--fg-4)", flex: "none" }}>{src.chars.toLocaleString("en-US")} chars</span>
@@ -204,7 +204,7 @@ export default async function AppContextPage({ params }: { params: Promise<{ id:
 
         {/* ── Migration-7 notice: versioning not active yet (honest, full width) ─────────────────────── */}
         {!versioningActive ? (
-          <div role="status" style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "14px 16px", border: "1px solid var(--line-2)", borderLeft: "3px solid var(--wait-line)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", marginBottom: 24 }}>
+          <div role="status" style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "14px 16px", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", marginBottom: 24 }}>
             <span style={{ color: "var(--wait-ink)", flex: "none", marginTop: 1 }}><Ic d={I.alert} size={17} sw={1.8} /></span>
             <p style={{ fontSize: 13, color: "var(--fg-2)", lineHeight: 1.6, margin: 0 }}>
               Context versioning is not active yet: apply <span style={{ ...mono, fontSize: 12 }}>sql/vraelis-preflight-7-context-snapshots.sql</span> (migration 7).
@@ -250,7 +250,7 @@ export default async function AppContextPage({ params }: { params: Promise<{ id:
         {/* ── Stale-context notice: latest snapshot vs the approved contract's pinned snapshot ───────── */}
         {stale && staleDiff && pinnedSnap && approvedContract ? (
           <section style={sectionStyle} aria-label="Context changed since the approved contract">
-            <div style={{ padding: "14px 16px", border: "1px solid var(--line-2)", borderLeft: "3px solid var(--wait-line)", borderRadius: "var(--r-sm)", background: "var(--bg-1)" }}>
+            <div style={{ padding: "14px 16px", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                 <span style={{ color: "var(--wait-ink)" }}><Ic d={I.alert} size={15} sw={2} /></span>
                 <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--wait-ink)" }}>Context has changed since the approved contract</span>
@@ -325,7 +325,7 @@ export default async function AppContextPage({ params }: { params: Promise<{ id:
                   {g.connections.map((c, i) => (
                     <div key={`${c.provider}-${i}`} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "10px 14px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-                        <span className="pill" style={{ fontSize: 9.5, flex: "none" }}>{PROVIDER_LABELS[c.provider] ?? c.provider}</span>
+                        <span className="pill" style={{ flex: "none" }}>{PROVIDER_LABELS[c.provider] ?? c.provider}</span>
                         <span style={{ fontSize: 13, color: "var(--fg-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {c.summary ?? (c.provider === "test_account" ? "Sealed credential on file" : "Recorded")}
                         </span>
@@ -357,7 +357,7 @@ export default async function AppContextPage({ params }: { params: Promise<{ id:
               </p>
               <div style={{ display: "grid", gap: 8 }}>
                 {gaps.map((gap) => (
-                  <div key={gap.what} style={{ display: "flex", gap: 12, alignItems: "baseline", padding: "11px 14px", border: "1px solid var(--line-2)", borderLeft: "3px solid var(--wait-line)", borderRadius: "var(--r-sm)", background: "var(--bg-1)" }}>
+                  <div key={gap.what} style={{ display: "flex", gap: 12, alignItems: "baseline", padding: "11px 14px", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)" }}>
                     <span style={{ fontSize: 13, fontWeight: 600, color: "var(--wait-ink)", flex: "none" }}>{gap.what}</span>
                     <span style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5 }}>{gap.why}</span>
                   </div>

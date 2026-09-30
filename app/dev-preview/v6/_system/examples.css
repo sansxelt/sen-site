@@ -8,7 +8,7 @@
   grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: clamp(28px, 5vw, 88px); align-items: center; }
 
 /* the idea, and the index */
-.v6-ex__h { margin: clamp(10px, 1.6vh, 18px) 0 0; font-family: var(--display); font-weight: 400; font-synthesis-weight: none;
+.v6-ex__h { margin: clamp(10px, 1.6vh, 18px) 0 0; font-family: var(--display); font-weight: var(--display-w); font-synthesis-weight: none;
   letter-spacing: -0.012em; line-height: 1.06; font-size: clamp(1.9rem, 3.6vw, 3.3rem); color: var(--ink); max-width: 15ch; text-wrap: balance; }
 .v6-ex__index { list-style: none; margin: clamp(20px, 3.4vh, 36px) 0 0; padding: 0; border-top: 1px solid var(--line); }
 .v6-ex__ix { appearance: none; width: 100%; display: flex; gap: 14px; align-items: baseline; text-align: left; cursor: pointer;
@@ -29,7 +29,7 @@
 .v6-ex__card[data-on="true"] { opacity: 1; visibility: visible; transform: none; transition: opacity .45s var(--ease), transform .55s var(--ease), visibility 0s; }
 .v6-ex__kind { margin: 0; display: flex; gap: 14px; align-items: baseline; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
 .v6-ex__kind span { color: var(--ink-4); }
-.v6-ex__say { margin: 14px 0 0; font-family: var(--display); font-weight: 400; font-synthesis-weight: none; color: var(--ink);
+.v6-ex__say { margin: 14px 0 0; font-family: var(--display); font-weight: var(--display-w); font-synthesis-weight: none; color: var(--ink);
   font-size: clamp(1.55rem, 2.7vw, 2.5rem); line-height: 1.14; letter-spacing: -0.01em; text-wrap: pretty; }
 .v6-ex__cols { margin-top: clamp(20px, 3.4vh, 34px); display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: clamp(18px, 3vw, 40px);
   padding-top: clamp(16px, 2.4vh, 24px); border-top: 1px solid var(--line); }

@@ -47,7 +47,7 @@ import { Page, PageHeader } from "@/app/rank/_components/page-header";
 export const metadata: Metadata = { title: "Usage" };
 export const dynamic = "force-dynamic";
 
-const label = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--fg-4)", margin: 0 };
+const label = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: 0 };
 const money = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
 function Stat({ k, v, sub }: { k: string; v: string; sub?: string }) {
@@ -316,7 +316,7 @@ export default async function UsagePage() {
 
       <style>{`
 .vra-usage-tbl__head{display:grid;gap:14px;padding:9px 16px;border-bottom:1px solid var(--line-2);background:var(--bg-2);
-  font-family:var(--font-code);font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--fg-5)}
+  font-size:12.5px;font-weight:500;color:var(--fg-4)}
 .vra-usage-tbl__row{display:grid;gap:14px;align-items:center;padding:12px 16px;font-size:13px;border-top:1px solid var(--line-1)}
 .vra-usage-tbl__row:first-of-type{border-top:none}
 .vra-usage-tbl__head,.vra-usage-tbl__row{grid-template-columns:minmax(0,2fr) 92px 148px 104px 104px}
@@ -325,7 +325,7 @@ export default async function UsagePage() {
   .vra-usage-tbl__row{grid-template-columns:1fr;gap:7px}
   .vra-usage-tbl__row>[data-l]{display:flex;align-items:center;justify-content:space-between;gap:14px}
   .vra-usage-tbl__row>[data-l]::before{content:attr(data-l);font-family:var(--font-code);font-size:10px;
-    letter-spacing:.07em;text-transform:uppercase;color:var(--fg-5)}
+    color:var(--fg-4)}
 }
       `}</style>
       </div>

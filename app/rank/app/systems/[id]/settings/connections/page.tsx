@@ -103,7 +103,7 @@ export default async function AppConnectionsPage({ params }: { params: Promise<{
 
         {/* ── Audit history: the last 10 connection events for this application ─────────────────────────── */}
         <section aria-label="Connection activity" style={{ borderTop: "1px solid var(--line-1)", paddingTop: 22, marginTop: 26 }}>
-          <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 4 }}>
+          <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 4 }}>
             Connection activity
           </div>
           <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, margin: "0 0 12px", maxWidth: 640 }}>
@@ -117,7 +117,7 @@ export default async function AppConnectionsPage({ params }: { params: Promise<{
                 return (
                   <div key={e.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "10px 14px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-                      <span className="pill" style={{ fontSize: 9.5, flex: "none" }}>{CONNECTION_EVENT_LABELS[e.event_type] ?? e.event_type}</span>
+                      <span className="pill" style={{ flex: "none" }}>{CONNECTION_EVENT_LABELS[e.event_type] ?? e.event_type}</span>
                       <span style={{ fontSize: 13, color: "var(--fg-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {provider ? (PROVIDER_LABELS[provider] ?? provider) : "Connection"}
                       </span>

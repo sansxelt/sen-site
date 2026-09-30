@@ -29,7 +29,7 @@ const SELECTION_FIELD: Record<string, SelectionField | null> = {
   stripe_test: null, sentry: null,
 };
 
-const headLbl = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--fg-4)" };
+const headLbl = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" };
 // The ninth private copy of the field style, and the ninth with outline: "none" written beside an inline
 // border and background. Together those three beat every :focus and :focus-visible rule in
 // authenticated.css, so neither the project picker nor the repo box showed a keyboard user where they were.

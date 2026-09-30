@@ -85,7 +85,7 @@ export function TeamPanel({ appId, initialMembers }: { appId: string; initialMem
     } catch { setErr("Network error. The member was not removed."); }
   }
 
-  const headLbl = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--fg-4)" };
+  const headLbl = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" };
 
   return (
     <div style={{ maxWidth: 720 }}>
@@ -128,11 +128,11 @@ export function TeamPanel({ appId, initialMembers }: { appId: string; initialMem
               <div key={m.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 16px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", flexWrap: "wrap" }}>
                 <div style={{ minWidth: 0, display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ fontSize: 14, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.email}{m.you ? " (you)" : ""}</span>
-                  {m.status === "pending" ? <span className="pill" style={{ fontSize: 9.5, color: "var(--fg-4)" }}>Pending</span> : null}
+                  {m.status === "pending" ? <span className="pill" style={{ color: "var(--fg-4)" }}>Pending</span> : null}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, flex: "0 0 auto" }}>
                   {isOwner || m.you ? (
-                    <span className="pill" style={{ fontSize: 10.5, color: "var(--fg-4)" }}>{ROLE_LABEL[m.role] ?? m.role}</span>
+                    <span className="pill" style={{ color: "var(--fg-4)" }}>{ROLE_LABEL[m.role] ?? m.role}</span>
                   ) : (
                     <>
                       <select value={m.role} onChange={(e) => changeRole(m.id, e.target.value)} aria-label={`Role for ${m.email}`} style={{ ...inputStyle, padding: "5px 8px", fontSize: 12.5, cursor: "pointer" }}>

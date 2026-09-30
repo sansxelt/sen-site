@@ -41,7 +41,7 @@ export const input = { ...field, width: "100%" };
 /** The same two in the compact size the denser forms use. Same rule: geometry only, never colour. */
 export const fieldSm = { ...field, padding: "9px 12px", fontSize: 13.5 };
 export const inputSm = { ...fieldSm, width: "100%" };
-export const lab = { fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase" as const, color: "var(--fg-4)", display: "block", marginBottom: 7 };
+export const lab = { fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-4)", display: "block", marginBottom: 7 };
 export const help = { fontSize: 12, color: "var(--fg-4)", margin: "6px 0 0", lineHeight: 1.5 };
 
 export type Conn = Record<string, string>;

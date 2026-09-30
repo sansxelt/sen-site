@@ -61,7 +61,7 @@ function StatChip({ label, value, color }: { label: string; value: number; color
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 3, padding: "11px 16px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", minWidth: 92 }}>
       <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 22, lineHeight: 1, color: color ?? "var(--fg-1)" }}>{value}</span>
-      <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-4)" }}>{label}</span>
+      <span style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-4)" }}>{label}</span>
     </div>
   );
 }
@@ -118,7 +118,7 @@ export default async function SystemsPage() {
           with !important for as long as it has existed, so it is simply gone rather than moved. */}
       <PageHeader
         title="Systems"
-        lead="Connect an AI-built system and Vraelis looks for failures in the flows you approve, before your users hit them."
+        lead="Everything you have pointed Vraelis at: web apps, and the panels that control your devices. Each card shows its latest result."
         actions={<Link href="/systems/new" className="btn" style={{ flex: "none" }}>Connect a system <span aria-hidden>&rarr;</span></Link>}
       />
 

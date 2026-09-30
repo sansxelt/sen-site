@@ -138,7 +138,7 @@ function InvalidState() {
         Try signing in
       </Link>
       <div style={{ marginTop: 24 }}>
-        <p style={{ fontFamily: "var(--font-code)", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--fg-4)", margin: "0 0 4px" }}>Or resend</p>
+        <p style={{ fontFamily: "var(--font-code)", fontSize: 12.5, fontWeight: 600, color: "var(--fg-4)", margin: "0 0 4px" }}>Or resend</p>
         <ResendVerification />
       </div>
     </>

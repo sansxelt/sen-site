@@ -135,7 +135,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
             {v1Plan ? <PlanPriceV1 plan={v1Plan} cycle={cycle} /> : null}
 
             <div className="card" style={{ marginTop: 22, padding: 20 }}>
-              <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>{plan || v1Plan ? "What's included" : "How your balance works"}</div>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 12 }}>{plan || v1Plan ? "What's included" : "How your balance works"}</div>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 }}>
                 {included.map((x) => (
                   <li key={x} style={{ display: "flex", gap: 10, fontSize: 13.5, color: "var(--fg-2)", alignItems: "flex-start", lineHeight: 1.4 }}>

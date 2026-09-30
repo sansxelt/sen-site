@@ -3,7 +3,7 @@
 .v6-phero__k { color: var(--brand-ink); }
 /* Page-hero headline: the display serif, for the reason set out beside --display in v6.css. Weight 400 and
    near-zero tracking are not preferences here, they are what the face requires. */
-.v6-phero h1 { font-family: var(--display); font-weight: 400; letter-spacing: -0.012em; line-height: 1.06; color: var(--ink); font-size: clamp(2.6rem,4.8vw,4.1rem); margin: 16px 0 0; max-width: 18ch; }
+.v6-phero h1 { font-family: var(--display); font-weight: var(--display-w); letter-spacing: -0.012em; line-height: 1.06; color: var(--ink); font-size: clamp(2.6rem,4.8vw,4.1rem); margin: 16px 0 0; max-width: 18ch; }
 .v6-phero__lead { font-size: clamp(1.1rem,1.4vw,1.35rem); line-height: 1.5; color: var(--ink-2); margin: 22px 0 0; max-width: 58ch; }
 /* PageHero owns hero button scale, so routes cannot drift by passing or forgetting `lg` (Platform and Agents
    rendered 50px buttons while Developers and Integrations rendered 44px). */
@@ -17,7 +17,7 @@
 /* Chapter headings. /method, /readme and the docs are the most editorial surfaces on the site, so this is
    where a serif earns its place rather than decorating. h3 below stays sans: at 1.2rem this face goes
    spindly, and a card title is interface, not editorial. */
-.v6-prose h2 { font-family: var(--display); font-weight: 400; letter-spacing: -0.008em; font-size: clamp(1.65rem,2.4vw,2.1rem); color: var(--ink); margin-top: 46px; line-height: 1.2; }
+.v6-prose h2 { font-family: var(--display); font-weight: var(--display-w); letter-spacing: -0.008em; font-size: clamp(1.65rem,2.4vw,2.1rem); color: var(--ink); margin-top: 46px; line-height: 1.2; }
 /* AN ANCHORED HEADING LEADS IN WITH PADDING, NOT MARGIN, AND THAT IS THE WHOLE FIX.
    html { scroll-padding-top: var(--nav-h) } in app/globals.css aligns the BORDER BOX of the target with the
    bottom edge of the bar. A margin sits outside the border box, so the 46px of lead-in above the heading

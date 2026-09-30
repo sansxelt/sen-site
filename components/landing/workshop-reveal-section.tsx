@@ -314,7 +314,7 @@ function WorkshopPanel({ activeTab }: { activeTab: number }) {
               <div key={i} style={{ width: 9.5, height: 9.5, borderRadius: "50%", background: c }} />
             ))}
           </div>
-          <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.30)", fontFamily: "var(--font-geist-mono), monospace", letterSpacing: "0.07em" }}>
+          <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.30)", fontFamily: "var(--font-brand-mono), monospace", letterSpacing: "0.07em" }}>
             Vraelis workshop
           </span>
           <div style={{ display: "flex", gap: 4 }}>
@@ -519,7 +519,7 @@ export function WorkshopRevealSection() {
           {/* Headline */}
           <div style={{ width: "100%", maxWidth: "min(860px, 92vw)", padding: "0 24px 20px", textAlign: "center" }}>
             <div style={{
-              fontSize: 11, fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+              fontSize: 11, fontFamily: "var(--font-brand-mono), ui-monospace, monospace",
               letterSpacing: "0.14em", textTransform: "uppercase",
               color: "rgba(255,255,255,0.20)", marginBottom: 12,
             }}>

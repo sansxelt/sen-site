@@ -75,7 +75,7 @@ export default async function AccountPage() {
       </div>
 
       {/* manage */}
-      <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Manage</div>
+      <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 12 }}>Manage</div>
       <div className="tile-grid cols-2" style={{ marginBottom: 26 }}>
         {linkCard("/plans", "Plan", paid ? "Change plan, see what's included, or switch cycle." : "Upgrade to unlock monthly credits and higher limits.")}
         {linkCard("/billing", "Billing", "Subscription status, renewal, cancel or resume, payment.")}
@@ -87,7 +87,7 @@ export default async function AccountPage() {
       {/* account activity (your own audit trail) */}
       {activity.length > 0 && (
         <>
-          <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Recent account activity</div>
+          <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 12 }}>Recent account activity</div>
           <div className="card" style={{ marginBottom: 26, padding: "6px 18px" }}>
             {activity.map((e, i) => (
               <div key={e.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "11px 0", borderTop: i === 0 ? "none" : "1px solid var(--line-1)" }}>
@@ -100,14 +100,14 @@ export default async function AccountPage() {
       )}
 
       {/* data & privacy requests */}
-      <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Data &amp; privacy</div>
+      <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 12 }}>Data &amp; privacy</div>
       <p style={{ fontSize: 13.5, color: "var(--fg-3)", marginTop: -4, marginBottom: 14, maxWidth: 620, lineHeight: 1.55 }}>Submit a request to export, correct, or delete your data. Requests are reviewed manually, and some records may be retained where required. See <Link href="/data-rights" style={{ color: "var(--acc-deep)" }}>Data rights</Link>.</p>
       <div style={{ marginBottom: 26 }}>
         <AccountRequests />
       </div>
 
       {/* security */}
-      <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Security</div>
+      <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 12 }}>Security</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <div className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
           <div>

@@ -290,7 +290,7 @@ export function ApiWorkspace({ appId, initial, canEdit, canLaunch }: { appId: st
               confidence as the browser verdict on the same screen. */}
           <div style={{ fontSize: 20, ...verdictTone(run.verdict), marginBottom: 4, display: "flex", alignItems: "center", gap: 9, flexWrap: "wrap" }}>
             {publicVerdict(run.verdict)}
-            <span className="pill" style={{ fontSize: 9.5, background: "var(--bg-2)", color: "var(--fg-4)", borderColor: "var(--line-2)", fontFamily: "var(--font-code)", letterSpacing: "0.06em" }}>BETA</span>
+            <span className="pill" style={{ background: "var(--bg-2)", color: "var(--fg-4)", borderColor: "var(--line-2)", fontFamily: "var(--font-code)", letterSpacing: "0.06em" }}>BETA</span>
           </div>
           <div style={{ fontSize: 12, color: "var(--fg-4)", marginBottom: 12, lineHeight: 1.5 }}>
             API checking is new. Treat this as a signal to look at, not a gate to release on.

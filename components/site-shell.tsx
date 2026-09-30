@@ -67,7 +67,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
         borderBottom: "1px solid rgba(199,205,215,0.06)",
       }}>
         {/* Wordmark */}
-        <Link href="/home" style={{ display: "inline-flex", alignItems: "center", textDecoration: "none", color: "#ECEFF4", fontSize: 19, fontWeight: 600, letterSpacing: "-0.025em", fontFamily: '"Inter Tight", sans-serif' }}>
+        <Link href="/home" style={{ display: "inline-flex", alignItems: "center", textDecoration: "none", color: "#ECEFF4", fontSize: 19, fontWeight: 600, letterSpacing: "-0.025em", fontFamily: "var(--font-brand-sans), sans-serif" }}>
           vraelis<span style={{ color: "#5CE5D5" }}>.</span>
         </Link>
 

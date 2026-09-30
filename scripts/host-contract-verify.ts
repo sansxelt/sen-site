@@ -188,17 +188,11 @@ ok("proxy.ts is what answers it, on both hosts",
   const surfaceTokens = [...authRules.matchAll(/--bg-\d:\s*(#[0-9a-fA-F]{6})/g)].map((m) => m[1]);
   ok(`no surface token is pure black (${surfaceTokens.length} grounds)`,
     surfaceTokens.length >= 4 && !surfaceTokens.some((c) => /^#000000$/i.test(c)), surfaceTokens.join(" "));
-  // Design 06 has no accent hue: the primary action is contrast. An accent that is a colour is an accent
-  // competing with the state signals, which is the one thing colour is reserved for here.
-  const accent = (authRules.match(/--acc:\s*(#[0-9a-fA-F]{6})/) ?? [])[1] ?? "";
-  const accentDeep = (authRules.match(/--acc-deep:\s*(#[0-9a-fA-F]{6})/) ?? [])[1] ?? "";
-  const isNeutral = (hex: string) => {
-    const h = hex.replace("#", "");
-    const [r, g, b] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16));
-    return Math.max(r, g, b) - Math.min(r, g, b) <= 6;
-  };
-  ok("the primary action is contrast, not a hue", !!accent && isNeutral(accent), accent);
-  ok("the accent text colour is contrast, not a hue", !!accentDeep && isNeutral(accentDeep), accentDeep);
+  // THE ACCENT, AND WHAT IT MAY NOT BE. Design 06 had no accent hue: the primary action was contrast. The light
+  // console (2026-09-30) has exactly one, cobalt, for the things a person acts on. The reason design 06 gave
+  // for having none still holds, so it is asserted as a property instead: the accent must sit far enough
+  // from all three state hues that an action can never be read as a verdict. hueOf is declared below; these
+  // run after it.
   // The three state triads are the ONLY colour, and each needs its ink, wash and hairline.
   for (const s of ["go", "wait", "stop"]) {
     ok(`the ${s} state is a full triad (ink, wash, line)`,
@@ -221,6 +215,15 @@ ok("proxy.ts is what answers it, on both hosts",
     !!blocked && !!failed && !!verified && new Set([blocked, failed, verified]).size === 3);
   const hb = hueOf(blocked);
   ok("blocked is an amber, not a red", hb > 30 && hb < 90, `hue ${hb.toFixed(0)}deg`);
+  const accent = grab("acc"), accentDeep = grab("acc-deep");
+  const apart = (a: number, b: number) => Math.min(Math.abs(a - b), 360 - Math.abs(a - b));
+  for (const [what, hex] of [["the accent fill", accent], ["the accent text colour", accentDeep]] as const) {
+    const h = hueOf(hex);
+    const nearest = Math.min(apart(h, hueOf(verified)), apart(h, hueOf(blocked)), apart(h, hueOf(failed)));
+    ok(`${what} is one hue, at least 60deg from every state colour`, !!hex && nearest >= 60, `${hex} hue ${h.toFixed(0)}deg, nearest state ${nearest.toFixed(0)}deg`);
+  }
+  ok("there is ONE accent: the fill and the text colour are the same hue", Math.abs(hueOf(accent) - hueOf(accentDeep)) < 12,
+    `${accent} vs ${accentDeep}`);
   // Browser focus rings vanish against graphite, so the surface defines its own.
   ok("keyboard focus is defined on the product ground",
     /:focus-visible \{ outline: 2px solid var\(--focus-ring\)/.test(authCss));
@@ -251,8 +254,15 @@ ok("proxy.ts is what answers it, on both hosts",
     /export function v6GroundAtTop/.test(readFileSync("lib/v6-routes.ts", "utf8"))
     && /v6GroundAtTop/.test(proxySrc)
     && /v6GroundAtTop/.test(readFileSync("app/dev-preview/v6/_system/shell.tsx", "utf8")));
+  // The pinned canvas must agree with the ground the proxy resolves for the product, or the first frame and
+  // the second disagree, which is the flash this whole block exists to prevent.
+  const consoleGround = readFileSync("lib/v6-routes.ts", "utf8").match(/console: \{ bg: "(#[0-9A-Fa-f]{6})", scheme: "(light|dark)" \}/);
+  const surfaceSrc = readFileSync("app/_components/product-surface.tsx", "utf8");
   ok("the product surface pins its canvas in the document, not only in the linked sheet",
-    /color-scheme: dark !important/.test(readFileSync("app/_components/product-surface.tsx", "utf8")));
+    !!consoleGround && surfaceSrc.includes(`background: ${consoleGround[1]} !important; color-scheme: ${consoleGround[2]} !important`),
+    consoleGround ? `${consoleGround[1]} ${consoleGround[2]}` : "no console ground");
+  ok("the proxy sends the product and sign-in to that ground",
+    /target\.startsWith\("\/rank\/app"\)\) return "console"/.test(proxySrc) && /target === "\/signin"[^\n]*return "console"/.test(proxySrc));
 }
 
 console.log("\n── retired product surfaces are not reachable or indexable ──");

@@ -47,25 +47,18 @@
   --stop: #B03A22;   --stop-ink:#8C2E19;   --stop-dk: #FF7A55;   /* it failed */
 
   /* type */
-  --sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-  --mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
-  /* ── WHY THERE IS A THIRD FACE, AND WHY IT IS NOT A REPLACEMENT FOR THE FIRST ──────────────────────
-     The complaint was that the site reads as generated, and the type was the strongest remaining reason.
-     The cause was NOT the choice of Geist on its own. It was that every headline on the site, all seven
-     declarations of it, was the same recipe: the sans, at weight 600, with letter-spacing between -0.02em
-     and -0.04em. That is the framework default look, on a site deployed to the framework's own host, and
-     swapping Geist for Inter or Plex would have kept the recipe exactly and changed nothing. The system had
-     one voice and it was the default one.
-     So the fix is contrast, not substitution. Display and chapter headings take an editorial serif; the
-     interface, the body copy and the labels stay on the sans, which is restrained and correct for them; and
-     machine text stays mono, which is the one typographic decision this system already made deliberately.
-     Instrument Serif is ALREADY loaded on every page of this site (public/vraelis/tokens.css, rendered by
-     app/layout.tsx for every request), so this costs no new font request, no new package and no licence:
-     it is SIL OFL. Nothing here adds a dependency.
-     IT HAS ONE WEIGHT, 400. Anything that sets 600 on it gets a browser-synthesised fake bold, which is
-     exactly the smeared look this change exists to avoid, so every rule that uses it sets weight 400 and
-     the synthesis is switched off below. A serif also must not carry the sans's tight tracking. */
-  --display: "Instrument Serif", ui-serif, Georgia, "Times New Roman", serif;
+  --sans: var(--font-brand-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --mono: var(--font-brand-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* ── ONE FAMILY, NO SERIF ──────────────────────────────────────────────────────────────────────────
+     Until 2026-09-30 the headlines were Instrument Serif over a Geist interface. The founder read that pair
+     as "made by AI", and it is: Geist for the UI plus Instrument Serif for the headline is the default recipe
+     of a generated landing page in 2026. A company that sells trust in what it checks cannot look like a
+     template, so display type is now the same IBM Plex Sans as the interface, set at --display-w with only
+     slight negative tracking. Hierarchy comes from size and weight, not from a second face. Machine text
+     (IDs, URLs, code) stays on Plex Mono. The rules below still read var(--display) so the tier stays
+     addressable in one place. */
+  --display: var(--font-brand-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --display-w: 500;
 
   /* layout + motion */
   --gutter: clamp(20px, 4vw, 64px);
@@ -129,9 +122,9 @@
 /* The display tier. Serif, weight 400, tracking near zero: a high-contrast serif set at the sans's -0.03em
    collides with itself at these sizes. Sizes and line-heights are nudged up rather than left alone, because
    this face runs smaller on the body than the sans at the same nominal size. */
-.v6-d2xl { font-family: var(--display); font-weight: 400; letter-spacing: -0.012em; line-height: 1.04; font-size: clamp(2.9rem, 5.4vw, 4.8rem); color: var(--ink); margin: 0; text-wrap: balance; }
-.v6-dxl  { font-family: var(--display); font-weight: 400; letter-spacing: -0.010em; line-height: 1.08; font-size: clamp(2.25rem, 4vw, 3.6rem); color: var(--ink); margin: 0; text-wrap: balance; }
-.v6-dl   { font-family: var(--display); font-weight: 400; letter-spacing: -0.008em; line-height: 1.12; font-size: clamp(1.8rem, 3.1vw, 2.7rem); color: var(--ink); margin: 0; text-wrap: balance; }
+.v6-d2xl { font-family: var(--display); font-weight: var(--display-w); letter-spacing: -0.012em; line-height: 1.04; font-size: clamp(2.9rem, 5.4vw, 4.8rem); color: var(--ink); margin: 0; text-wrap: balance; }
+.v6-dxl  { font-family: var(--display); font-weight: var(--display-w); letter-spacing: -0.010em; line-height: 1.08; font-size: clamp(2.25rem, 4vw, 3.6rem); color: var(--ink); margin: 0; text-wrap: balance; }
+.v6-dl   { font-family: var(--display); font-weight: var(--display-w); letter-spacing: -0.008em; line-height: 1.12; font-size: clamp(1.8rem, 3.1vw, 2.7rem); color: var(--ink); margin: 0; text-wrap: balance; }
 /* No faked bold, anywhere the display face is used. Instrument Serif ships one weight; without this a
    stray font-weight:600 from a parent or a <strong> renders a smeared synthetic bold. */
 .v6-d2xl, .v6-dxl, .v6-dl, .v6-phero h1, .v6-prose h2 { font-synthesis-weight: none; }

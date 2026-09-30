@@ -68,7 +68,7 @@ export function ResetPasswordForm() {
   if (sent) {
     return (
       <div className="card" style={{ padding: "clamp(22px, 4vw, 32px)" }}>
-        <p style={{ fontFamily: "var(--font-code)", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.14em", color: "var(--fg-4)", margin: 0 }}>
+        <p style={{ fontFamily: "var(--font-code)", fontSize: 12.5, fontWeight: 600, color: "var(--fg-4)", margin: 0 }}>
           Check your inbox
         </p>
         <h2 style={{ marginTop: 10, fontSize: 20, fontWeight: 700, color: "var(--fg-1)" }}>

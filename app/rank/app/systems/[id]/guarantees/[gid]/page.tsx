@@ -36,7 +36,7 @@ function ago(iso: string | null): string {
   const d = Math.floor(h / 24); return `${d} day${d === 1 ? "" : "s"} ago`;
 }
 
-const label = { fontFamily: "var(--font-code)", fontSize: 10.5, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--fg-4)", margin: 0 } as const;
+const label = { fontFamily: "var(--font-code)", fontSize: 12.5, fontWeight: 600, color: "var(--fg-4)", margin: 0 } as const;
 const h2Style = { fontFamily: "var(--font-display)", fontWeight: 650, fontSize: "clamp(1.15rem, 2vw, 1.4rem)", color: "var(--fg-1)", margin: 0 } as const;
 
 function Section({ n, title, children }: { n: string; title: string; children: ReactNode }) {

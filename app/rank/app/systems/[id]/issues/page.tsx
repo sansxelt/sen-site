@@ -45,7 +45,7 @@ function IssueRowView({ appId, issue, resolved }: { appId: string; issue: IssueR
   const p = sevPill(issue.severity);
   const body = (
     <>
-      <span className="pill" style={{ fontSize: 10, color: p.color, background: p.bg, borderColor: p.border, flex: "none" }}>{p.label}</span>
+      <span className="pill" style={{ color: p.color, background: p.bg, borderColor: p.border, flex: "none" }}>{p.label}</span>
       <div style={{ minWidth: 0, flex: 1 }}>
         <div style={{ fontSize: 13.5, fontWeight: 600, color: resolved ? "var(--fg-3)" : "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {issue.title || "Untitled issue"}
@@ -54,7 +54,7 @@ function IssueRowView({ appId, issue, resolved }: { appId: string; issue: IssueR
           {[catLabel(issue.category), timeAgo(issue.createdAt)].filter(Boolean).join(", ")}
         </div>
       </div>
-      {resolved ? <span className="pill" style={{ fontSize: 10, color: "var(--acc-deep)", background: "var(--acc-soft)", borderColor: "var(--acc-line)", flex: "none" }}><DecisionMark decision="resolved" />Resolved</span> : null}
+      {resolved ? <span className="pill" style={{ color: "var(--acc-deep)", background: "var(--acc-soft)", borderColor: "var(--acc-line)", flex: "none" }}><DecisionMark decision="resolved" />Resolved</span> : null}
       {issue.lastSeenRun ? <span aria-hidden style={{ color: "var(--fg-5)", flex: "none", fontSize: 13 }}>→</span> : null}
     </>
   );

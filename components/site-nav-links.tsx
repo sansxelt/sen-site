@@ -25,7 +25,7 @@ export function SiteNavLinks({ links }: { links: NavLink[] }) {
               letterSpacing: "-0.005em",
               fontWeight: active ? 500 : 400,
               transition: "color 120ms",
-              fontFamily: '"Inter Tight", sans-serif',
+              fontFamily: "var(--font-brand-sans), sans-serif",
             }}
             className="vra-nav-link"
           >

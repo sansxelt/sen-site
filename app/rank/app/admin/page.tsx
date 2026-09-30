@@ -77,7 +77,7 @@ export default function AdminPage() {
           answers a question worth acting on: which step people stop at. Percentages are of the STEP ABOVE,
           not of visits, so the drop that matters is the one you read directly. */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "0 0 12px", flexWrap: "wrap" }}>
-        <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>Funnel</div>
+        <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" }}>Funnel</div>
         <div className="seg" style={{ marginLeft: "auto" }}>
           {WINDOWS.map((d) => <button key={d} onClick={() => setDays(d)} className={days === d ? "on" : ""}>{d}d</button>)}
         </div>
@@ -109,7 +109,7 @@ export default function AdminPage() {
           })}
           {Object.keys(funnel.decisions).length > 0 ? (
             <div style={{ display: "flex", gap: 14, flexWrap: "wrap", padding: "11px 16px", borderTop: "1px solid var(--line-1)", background: "var(--bg-2)" }}>
-              <span style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>Decisions</span>
+              <span style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" }}>Decisions</span>
               {Object.entries(funnel.decisions).map(([d, n]) => (
                 <span key={d} style={{ fontSize: 12.5, color: "var(--fg-3)", textTransform: "capitalize" }}>{d} <b style={{ color: "var(--fg-1)" }}>{n}</b></span>
               ))}
@@ -124,7 +124,7 @@ export default function AdminPage() {
       )}
 
       {/* data requests (admin only, gated server-side by isAdmin) */}
-      <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: "0 0 12px" }}>Data requests</div>
+      <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: "0 0 12px" }}>Data requests</div>
       {dreqs.length === 0 ? (
         <div className="empty"><EmptyIcon d={I.mail} /><h3>No data requests</h3><p>Export, correction, and account-deletion requests from users appear here for manual review.</p></div>
       ) : (
@@ -133,7 +133,7 @@ export default function AdminPage() {
             <div key={d.id} className="card" style={{ padding: 16 }}>
               <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                 <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14, color: "var(--fg-1)" }}>{DREQ_TYPE[d.request_type] ?? d.request_type}</span>
-                <span className="pill" style={{ fontSize: 10.5, background: d.status === "completed" ? "var(--acc-soft)" : d.status === "rejected" || d.status === "cancelled" ? "var(--bg-2)" : "var(--bg-1)", color: d.status === "completed" ? "var(--acc-deep)" : "var(--fg-3)" }}>{d.status.replace(/_/g, " ")}</span>
+                <span className="pill" style={{ background: d.status === "completed" ? "var(--acc-soft)" : d.status === "rejected" || d.status === "cancelled" ? "var(--bg-2)" : "var(--bg-1)", color: d.status === "completed" ? "var(--acc-deep)" : "var(--fg-3)" }}>{d.status.replace(/_/g, " ")}</span>
                 <span style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)" }}>{d.user_id}</span>
                 <span style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-5)", marginLeft: "auto" }}>{new Date(d.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
               </div>
@@ -161,7 +161,7 @@ export default function AdminPage() {
       )}
 
       {/* audit activity (admin only, data is gated server-side by isAdmin) */}
-      <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: "36px 0 12px" }}>Audit activity</div>
+      <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: "36px 0 12px" }}>Audit activity</div>
       <div className="seg" style={{ marginBottom: 14 }}>
         {ACTORS.map((a) => <button key={a} onClick={() => setActor(a)} className={actor === a ? "on" : ""} style={{ textTransform: "capitalize" }}>{a}</button>)}
       </div>

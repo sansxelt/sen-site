@@ -41,14 +41,14 @@ function PlatformVisual() {
               <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: c }} />
             ))}
           </div>
-          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.24)", fontFamily: "var(--font-geist-mono), monospace", letterSpacing: "0.06em" }}>
+          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.24)", fontFamily: "var(--font-brand-mono), monospace", letterSpacing: "0.06em" }}>
             Vraelis api · v1
           </span>
           <div style={{ width: 44 }} />
         </div>
 
         {/* Code body */}
-        <div style={{ padding: "16px 18px", fontFamily: "var(--font-geist-mono), monospace" }}>
+        <div style={{ padding: "16px 18px", fontFamily: "var(--font-brand-mono), monospace" }}>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.20)", marginBottom: 12 }}>
             POST /v1/chat/completions
           </div>
@@ -132,7 +132,7 @@ export function PlatformTeaserSection() {
               border: "1px solid rgba(255,172,51,0.22)",
               background: "rgba(255,172,51,0.06)",
               fontSize: 11,
-              fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+              fontFamily: "var(--font-brand-mono), ui-monospace, monospace",
               letterSpacing: "0.12em", color: "rgba(255,172,51,0.72)",
             }}
           >

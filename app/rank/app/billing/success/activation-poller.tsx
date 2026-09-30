@@ -130,7 +130,7 @@ export function ActivationPoller({ expectedPlan, expectedCycle, plans }: {
   return (
     <div className="card">
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-        <span style={{ color: "var(--money)" }}><Ic d={I.clock} size={18} /></span>
+        <span style={{ color: "var(--fg-3)" }}><Ic d={I.clock} size={18} /></span>
         <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16 }}>Payment received, activation still completing</span>
       </div>
       <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 0 10px", lineHeight: 1.6, maxWidth: 580 }}>

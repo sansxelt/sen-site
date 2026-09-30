@@ -21,7 +21,7 @@ import { Page, PageHeader } from "@/app/rank/_components/page-header";
 export const metadata: Metadata = { title: "Review plan" };
 export const dynamic = "force-dynamic";
 
-const label = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--fg-4)" };
+const label = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" };
 
 export default async function ReviewPlanPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth();

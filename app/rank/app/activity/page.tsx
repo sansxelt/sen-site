@@ -33,7 +33,7 @@ const absWhen = (iso: string) => {
   try { return new Date(iso).toISOString().slice(0, 16).replace("T", " ") + " UTC"; } catch { return ""; }
 };
 
-const cardHead = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: "28px 0 12px" } as const;
+const cardHead = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: "28px 0 12px" } as const;
 
 // Event trail with a purposeful empty state: what will appear here, plus the one action that starts
 // filling it (never a bare card).
@@ -57,8 +57,8 @@ function EventList({ events, empty, action }: { events: AuditEntry[]; empty: str
               {e.subject ? <span style={{ color: "var(--fg-3)", fontWeight: 400 }}>, “{e.subject}”</span> : null}
             </div>
             <div style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", marginTop: 3, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-              <span className="pill" style={{ fontSize: 9.5, color: e.actor === "System" ? "var(--fg-4)" : "var(--acc-deep)" }}>{e.actor}</span>
-              <span className="pill" style={{ fontSize: 9.5, color: "var(--fg-4)" }}>{e.category}</span>
+              <span className="pill" style={{ color: e.actor === "System" ? "var(--fg-4)" : "var(--acc-deep)" }}>{e.actor}</span>
+              <span className="pill" style={{ color: "var(--fg-4)" }}>{e.category}</span>
               {e.context ? <span>{e.context}</span> : null}
             </div>
           </div>

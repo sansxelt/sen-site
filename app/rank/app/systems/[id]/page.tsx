@@ -63,7 +63,7 @@ type Tone = { fg: string; bg: string; line: string };
 const TONE_READY: Tone = { fg: "var(--acc-deep)", bg: "var(--acc-soft)", line: "var(--acc-line)" };
 const TONE_REVIEW: Tone = { fg: "var(--wait-ink)", bg: "var(--wait-wash)", line: "var(--wait-line)" };
 
-const SEV_COLOR: Record<string, string> = { critical: "var(--stop-ink)", high: "var(--wait-ink)", medium: "var(--fg-3)", low: "var(--fg-4)" };
+const SEV_COLOR: Record<string, string> = { critical: "var(--stop-ink)", high: "var(--fg-1)", medium: "var(--fg-3)", low: "var(--fg-4)" };
 const SEV_LABEL: Record<string, string> = { critical: "Critical", high: "High", medium: "Medium", low: "Low" };
 
 // A LOCAL runPill() AND A PRIVATE COPY OF ACTIVE_RUN_STATES USED TO LIVE HERE.
@@ -76,7 +76,7 @@ const SEV_LABEL: Record<string, string> = { critical: "Critical", high: "High", 
 // worker's active states rather than from a second copy of that set kept in a page.
 
 // Uppercase section label, matching the dashboard's section headers.
-const headLbl = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--fg-4)" };
+const headLbl = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" };
 // Every section after the hero: whitespace plus a single hairline, no wrapper card.
 const sectionStyle = { borderTop: "1px solid var(--line-1)", paddingTop: 22, marginTop: 26 } as const;
 
@@ -328,7 +328,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
             <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", border: "1px solid var(--line-2)", borderRadius: 10, background: "var(--bg-1)" }}>
               <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0.4, color: "var(--fg-4)" }}>WEB</span>
               {/* Uppercased in CSS, not in the string, so the reader still hears the vocabulary's own words. */}
-              <span style={{ fontSize: 13.5, fontWeight: 700, textTransform: "uppercase", color: "var(--fg-2)" }}>{heroVerdict.label}</span>
+              <span style={{ fontSize: 13.5, fontWeight: 700, color: "var(--fg-2)" }}>{heroVerdict.label}</span>
             </div>
             <Link href={`/systems/${id}/api-runtime`} style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", border: "1px solid var(--line-2)", borderRadius: 10, background: "var(--bg-1)" }}>
               <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0.4, color: "var(--fg-4)" }}>API</span>
@@ -342,7 +342,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
             different deployment exists and offers the one honest way forward: run a pass against it. ── */}
         {newerDeploy ? (
           <section aria-label="New deployment unverified"
-            style={{ border: "1px solid var(--wait-line)", borderLeft: "4px solid var(--wait-ink)", borderRadius: "var(--r-md)", background: "var(--wait-wash)", padding: "16px 18px", marginBottom: 14 }}>
+            style={{ border: "1px solid var(--wait-line)", borderRadius: "var(--r-md)", background: "var(--wait-wash)", padding: "16px 18px", marginBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span aria-hidden style={{ display: "inline-flex", color: "var(--wait-ink)" }}><Ic d={I.deploy} size={15} sw={2} /></span>
               <span style={{ fontFamily: "var(--font-display)", fontWeight: 650, fontSize: 15, color: "var(--wait-ink)" }}>New deployment unverified</span>
@@ -451,8 +451,8 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
             <div style={{ display: "grid", gap: 8 }}>
               {blockers.map((iss) => (
                 <Link key={iss.id} href={`/systems/${id}/passes/${latest.id}`}
-                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", border: "1px solid var(--line-2)", borderLeft: `3px solid ${SEV_COLOR[iss.severity] ?? "var(--fg-4)"}`, borderRadius: "var(--r-sm)", background: "var(--bg-1)", textDecoration: "none", color: "inherit" }}>
-                  <span className="pill" style={{ fontSize: 10, color: SEV_COLOR[iss.severity] ?? "var(--fg-4)", borderColor: "var(--line-2)", background: "var(--bg-2)", flex: "none" }}>{SEV_LABEL[iss.severity] ?? iss.severity}</span>
+                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", textDecoration: "none", color: "inherit" }}>
+                  <span className="pill" style={{ color: SEV_COLOR[iss.severity] ?? "var(--fg-4)", borderColor: "var(--line-2)", background: "var(--bg-2)", flex: "none" }}>{SEV_LABEL[iss.severity] ?? iss.severity}</span>
                   <span style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 500, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{iss.title}</span>
                   <span aria-hidden style={{ color: "var(--fg-5)", flex: "none", fontSize: 13 }}>→</span>
                 </Link>
@@ -489,8 +489,8 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
                 <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14.5, color: "var(--fg-1)" }}>Production Contract</span>
                 {contract ? (
                   contractApproved
-                    ? <span className="pill" style={{ fontSize: 10.5, color: TONE_READY.fg, background: TONE_READY.bg, borderColor: TONE_READY.line }}><DecisionMark decision="approved" />Approved</span>
-                    : <span className="pill" style={{ fontSize: 10.5, color: TONE_REVIEW.fg, background: TONE_REVIEW.bg, borderColor: TONE_REVIEW.line }}>Draft</span>
+                    ? <span className="pill" style={{ color: TONE_READY.fg, background: TONE_READY.bg, borderColor: TONE_READY.line }}><DecisionMark decision="approved" />Approved</span>
+                    : <span className="pill" style={{ color: TONE_REVIEW.fg, background: TONE_REVIEW.bg, borderColor: TONE_REVIEW.line }}>Draft</span>
                 ) : null}
               </div>
               <div style={{ fontSize: 12.5, color: "var(--fg-3)", marginTop: 4 }}>
@@ -514,7 +514,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
         {repairsSurfaceEnabled() && verifiedRepairCount > 0 ? (
           <Link href={`/systems/${id}/repairs`}
             style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14, padding: "12px 18px", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", textDecoration: "none" }}>
-            <span className="pill" style={{ fontSize: 10.5, color: TONE_READY.fg, background: TONE_READY.bg, borderColor: TONE_READY.line, flex: "none" }}><DecisionMark decision="verified" />Verified</span>
+            <span className="pill" style={{ color: TONE_READY.fg, background: TONE_READY.bg, borderColor: TONE_READY.line, flex: "none" }}><DecisionMark decision="verified" />Verified</span>
             <span style={{ fontSize: 13, color: "var(--fg-2)", fontWeight: 500, flex: 1 }}>
               {verifiedRepairCount} verified repair{verifiedRepairCount === 1 ? "" : "s"} on this system
             </span>

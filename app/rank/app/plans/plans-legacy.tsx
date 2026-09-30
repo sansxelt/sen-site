@@ -43,7 +43,7 @@ export default function PlansPage() {
       <PageHeader
         eyebrow="Plans"
         title="Priced by the run, not the seat"
-        lead="Run your AI-built system through a real verification. Every verification includes browser execution, evidence, issue tracking, and an explainable decision."
+        lead="Check what you built against what it should do, on the live app. Every verification includes browser execution, evidence, issue tracking, and an explainable decision."
         actions={signedIn ? <button onClick={manageBilling} disabled={busy} className="btn btn--ghost">{busy ? "Opening…" : "Manage billing"}</button> : null}
       />
       <div style={{ paddingBottom: 80 }}>

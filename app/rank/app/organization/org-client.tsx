@@ -31,7 +31,7 @@ type Ctx = {
 
 const ROLE_LABEL: Record<OrgRole, string> = { owner: "Owner", admin: "Organization admin", billing_admin: "Account billing admin", member: "Member", viewer: "Viewer" };
 const INVITABLE: OrgRole[] = ["admin", "billing_admin", "member", "viewer"];
-const cardHead = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: "30px 0 12px" } as const;
+const cardHead = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: "30px 0 12px" } as const;
 // THE WORST-AFFECTED OBJECT IN THE CLUSTER. This one shape is spread onto ten inputs and six selects on the
 // page that configures single sign-on, verified domains and who may join an organization, and it carried
 // outline:"none" inline. An inline outline cannot be beaten by any stylesheet rule at any specificity, so
@@ -118,7 +118,7 @@ function CreateOrg() {
         <input aria-label="Organization name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Acme Inc." onKeyDown={(e) => { if (e.key === "Enter" && !busy) create(); }} style={{ ...input, flex: "1 1 240px" }} />
         <button onClick={create} disabled={busy || !name.trim()} className="btn" style={{ opacity: busy || !name.trim() ? 0.6 : 1 }}>{busy ? "Creating…" : "Create organization"}</button>
       </div>
-      {err && <p style={{ fontSize: 12.5, color: "var(--money)", margin: "10px 0 0" }}>{err}</p>}
+      {err && <p style={{ fontSize: 12.5, color: "var(--err)", margin: "10px 0 0" }}>{err}</p>}
     </div>
   );
 }
@@ -208,7 +208,7 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18 }}>{org.name}</div>
           <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 3 }}>{activeCount} member{activeCount === 1 ? "" : "s"} | {ctx.linkedWorkspaces.length} linked workspace{ctx.linkedWorkspaces.length === 1 ? "" : "s"} | You are {ROLE_LABEL[ctx.myRole ?? "member"]}</div>
         </div>
-        <span className="pill" style={{ fontSize: 10.5, color: "var(--acc-deep)" }}>{ctx.canManage ? "Manage" : "Read-only"}</span>
+        <span className="pill" style={{ color: "var(--acc-deep)" }}>{ctx.canManage ? "Manage" : "Read-only"}</span>
       </div>
 
       {/* Linked workspaces */}
@@ -253,7 +253,7 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
                 <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 2 }}>{m.status === "pending" ? "Pending | " : ""}{ROLE_LABEL[m.role]}</div>
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <span className="pill" style={{ fontSize: 10, color: m.role === "owner" ? "var(--acc-deep)" : "var(--fg-4)" }}>{ROLE_LABEL[m.role]}</span>
+                <span className="pill" style={{ color: m.role === "owner" ? "var(--acc-deep)" : "var(--fg-4)" }}>{ROLE_LABEL[m.role]}</span>
                 {ctx.canManage && m.role !== "owner" && m.email !== email ? <button onClick={() => revoke(m.id)} className="btn btn--ghost" style={{ padding: "4px 10px", fontSize: 11.5, gap: 5 }}><Ic d={I.slash} size={11} sw={2.2} />Revoke</button> : null}
               </div>
             </div>
@@ -266,7 +266,7 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
               <select aria-label="Role for the added member" value={inviteRole} onChange={(e) => setInviteRole(e.target.value as OrgRole)} style={input as React.CSSProperties}>{INVITABLE.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}</select>
               <button onClick={addMember} disabled={mBusy} className="btn" style={{ opacity: mBusy ? 0.6 : 1 }}>{mBusy ? "Adding…" : "Add member"}</button>
             </div>
-            {mMsg && <p style={{ fontSize: 12.5, color: "var(--money)", margin: "8px 0 0" }}>{mMsg}</p>}
+            {mMsg && <p style={{ fontSize: 12.5, color: "var(--err)", margin: "8px 0 0" }}>{mMsg}</p>}
             <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "8px 0 0", lineHeight: 1.6 }}>Account billing admins can view account-level billing context but cannot open a workspace&apos;s payment portal without workspace billing permission.</p>
           </div>
         )}
@@ -289,7 +289,7 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
             <button onClick={addDomain} disabled={dBusy} className="btn" style={{ opacity: dBusy ? 0.6 : 1 }}>{dBusy ? "Adding…" : "Add domain"}</button>
           </div>
         )}
-        {dErr && <p style={{ fontSize: 12.5, color: "var(--money)", margin: "10px 0 0" }}>{dErr}</p>}
+        {dErr && <p style={{ fontSize: 12.5, color: "var(--err)", margin: "10px 0 0" }}>{dErr}</p>}
       </div>
 
       {/* Verified domain access (provisioning) */}
@@ -313,7 +313,7 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
             </div>
             {requests.length > 0 && (
               <div style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid var(--line-1)" }}>
-                <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 10 }}>Domain access requests</div>
+                <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 10 }}>Domain access requests</div>
                 {requests.map((r, i) => (
                   <div key={r.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "10px 0", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", flexWrap: "wrap" }}>
                     <div style={{ minWidth: 0 }}>
@@ -322,7 +322,7 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
                     </div>
                     <div style={{ display: "flex", gap: 8 }}>
                       <button onClick={() => decide(r.id, "approve")} className="btn" style={{ padding: "5px 12px", fontSize: 12.5 }}>Approve</button>
-                      <button onClick={() => decide(r.id, "reject")} className="btn btn--ghost" style={{ padding: "5px 12px", fontSize: 12.5, color: "var(--money)" }}>Reject</button>
+                      <button onClick={() => decide(r.id, "reject")} className="btn btn--ghost" style={{ padding: "5px 12px", fontSize: 12.5, color: "var(--err)" }}>Reject</button>
                     </div>
                   </div>
                 ))}
@@ -424,12 +424,12 @@ function DomainRow({ d, token, canManage, onVerified, onToken, onRemoved, onHeal
     <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", padding: "13px 15px", background: "var(--bg-1)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
         <span style={{ fontFamily: "var(--font-code)", fontSize: 13.5, color: "var(--fg-1)", fontWeight: 600 }}>{d.domain}</span>
-        <span className="pill" style={{ fontSize: 10, color: verified ? "var(--go-ink)" : "var(--fg-4)" }}>{verified ? "Verified" : "Unverified"}</span>
+        <span className="pill" style={{ color: verified ? "var(--go-ink)" : "var(--fg-4)" }}>{verified ? "Verified" : "Unverified"}</span>
       </div>
 
       {!verified && (
         <div style={{ marginTop: 10 }}>
-          <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-5)", marginBottom: 5 }}>DNS TXT record</div>
+          <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-5)", marginBottom: 5 }}>DNS TXT record</div>
           <div style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-2)", wordBreak: "break-all", lineHeight: 1.7 }}>
             Name: {token?.name ?? `_vraelis-challenge.${d.domain}`}<br />
             Value: {token ? token.value : <span style={{ color: "var(--fg-5)" }}>Token hidden for security. Regenerate a new token if you lost it.</span>}
@@ -446,10 +446,10 @@ function DomainRow({ d, token, canManage, onVerified, onToken, onRemoved, onHeal
           <div style={{ marginTop: 8 }}>
             <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>{reverif ? "Verified, but Vraelis could not confirm the DNS TXT record on recent checks." : "Domain verified and recently checked. SSO and provisioning rules can use this domain."}</p>
             <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 5, display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <span className="pill" style={{ fontSize: 9.5, color: healthBad ? "var(--money)" : "var(--acc-deep)" }}>{healthLabel}</span>
+              <span className="pill" style={{ color: healthBad ? "var(--err)" : "var(--acc-deep)" }}>{healthLabel}</span>
               {d.last_checked_at ? <span>Last checked {when(d.last_checked_at)}</span> : <span>Not checked yet</span>}
             </div>
-            {reverif && <p style={{ fontSize: 11.5, color: "var(--money)", margin: "6px 0 0", lineHeight: 1.6 }}>SSO and automatic provisioning are paused for NEW users on this domain until it is re-checked. Existing members keep access.</p>}
+            {reverif && <p style={{ fontSize: 11.5, color: "var(--err)", margin: "6px 0 0", lineHeight: 1.6 }}>SSO and automatic provisioning are paused for NEW users on this domain until it is re-checked. Existing members keep access.</p>}
           </div>
         );
       })()}
@@ -459,11 +459,11 @@ function DomainRow({ d, token, canManage, onVerified, onToken, onRemoved, onHeal
           {!verified && <button onClick={verify} disabled={!!busy} className="btn" style={{ padding: "6px 13px", fontSize: 12.5, opacity: busy ? 0.6 : 1 }}>{busy === "verify" ? "Checking DNS…" : "Verify DNS"}</button>}
           {!verified && <button onClick={regen} disabled={!!busy} className="btn btn--ghost" style={{ padding: "6px 13px", fontSize: 12.5 }}>{busy === "regen" ? "…" : "Regenerate token"}</button>}
           {verified && <button onClick={recheck} disabled={!!busy} className="btn" style={{ padding: "6px 13px", fontSize: 12.5, opacity: busy ? 0.6 : 1 }}>{busy === "recheck" ? "Re-checking…" : "Re-check DNS"}</button>}
-          <button onClick={remove} disabled={!!busy} className="btn btn--ghost" style={{ padding: "6px 13px", fontSize: 12.5, color: "var(--money)", gap: 6 }}>{busy === "remove" ? "…" : <><Ic d={I.trash} size={12} sw={2.2} />Remove</>}</button>
+          <button onClick={remove} disabled={!!busy} className="btn btn--ghost" style={{ padding: "6px 13px", fontSize: 12.5, color: "var(--err)", gap: 6 }}>{busy === "remove" ? "…" : <><Ic d={I.trash} size={12} sw={2.2} />Remove</>}</button>
         </div>
       )}
       {!verified && canManage && <p style={{ fontSize: 10.5, color: "var(--fg-5)", margin: "8px 0 0", lineHeight: 1.6 }}>Regenerate only if you lost the original DNS value, it invalidates the previous token.</p>}
-      {msg && <p style={{ fontSize: 12, color: msg.kind === "ok" ? "var(--acc-deep)" : msg.kind === "err" ? "var(--money)" : "var(--fg-3)", margin: "10px 0 0", lineHeight: 1.6 }}>{msg.text}</p>}
+      {msg && <p style={{ fontSize: 12, color: msg.kind === "ok" ? "var(--acc-deep)" : msg.kind === "err" ? "var(--err)" : "var(--fg-3)", margin: "10px 0 0", lineHeight: 1.6 }}>{msg.text}</p>}
     </div>
   );
 }
@@ -499,7 +499,7 @@ function SsoCard({ sso, pausedDomains = [] }: { sso: SsoView; pausedDomains?: st
     if (j.ok) { window.location.reload(); return; }
     setMsg({ kind: "err", text: j.error === "saml_not_enabled" ? "SAML assertion sign-in isn't enabled yet, use OIDC." : j.error === "incomplete_config" ? "Complete the OIDC config before enabling." : "Action failed." });
   }
-  const lbl = { fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.05em", textTransform: "uppercase" as const, color: "var(--fg-5)", display: "block", margin: "10px 0 4px" };
+  const lbl = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-5)", display: "block", margin: "10px 0 4px" };
 
   return (
     <>
@@ -513,9 +513,9 @@ function SsoCard({ sso, pausedDomains = [] }: { sso: SsoView; pausedDomains?: st
               <div key={p.id} style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", padding: "12px 14px", background: "var(--bg-1)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                   <span style={{ fontWeight: 600, fontSize: 14 }}>{p.type.toUpperCase()} | {p.domain}</span>
-                  <span className="pill" style={{ fontSize: 10, color: p.status === "active" ? "var(--acc-deep)" : "var(--fg-4)" }}>{p.status === "active" ? "Active" : p.status === "error" ? "Error" : "Disabled"}</span>
+                  <span className="pill" style={{ color: p.status === "active" ? "var(--acc-deep)" : "var(--fg-4)" }}>{p.status === "active" ? "Active" : p.status === "error" ? "Error" : "Disabled"}</span>
                 </div>
-                {paused.has(p.domain) && <p style={{ fontSize: 11.5, color: "var(--money)", margin: "8px 0 0", lineHeight: 1.6 }}>SSO for this domain is paused for new sign-ins until domain ownership is re-confirmed. Re-check DNS for this domain above to restore it.</p>}
+                {paused.has(p.domain) && <p style={{ fontSize: 11.5, color: "var(--err)", margin: "8px 0 0", lineHeight: 1.6 }}>SSO for this domain is paused for new sign-ins until domain ownership is re-confirmed. Re-check DNS for this domain above to restore it.</p>}
                 {p.type === "oidc" ? (
                   <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 6, wordBreak: "break-all", lineHeight: 1.7 }}>Redirect URI: {sso.redirectUriBase}/{p.id}/callback<br />Client ID: {p.client_id ?? "-"} | Secret: {p.hasSecret ? "stored ✓" : "missing"}</div>
                 ) : (
@@ -523,7 +523,7 @@ function SsoCard({ sso, pausedDomains = [] }: { sso: SsoView; pausedDomains?: st
                 )}
                 <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
                   {p.status !== "active" ? <button onClick={() => act("enable", p.id)} className="btn" style={{ padding: "5px 12px", fontSize: 12 }} disabled={p.type === "saml"}>Enable</button> : <button onClick={() => act("disable", p.id)} className="btn btn--ghost" style={{ padding: "5px 12px", fontSize: 12 }}>Disable</button>}
-                  <button onClick={() => act("delete", p.id)} className="btn btn--ghost" style={{ padding: "5px 12px", fontSize: 12, color: "var(--money)", gap: 6 }}><Ic d={I.trash} size={12} sw={2.2} />Delete</button>
+                  <button onClick={() => act("delete", p.id)} className="btn btn--ghost" style={{ padding: "5px 12px", fontSize: 12, color: "var(--err)", gap: 6 }}><Ic d={I.trash} size={12} sw={2.2} />Delete</button>
                 </div>
               </div>
             ))}
@@ -534,7 +534,7 @@ function SsoCard({ sso, pausedDomains = [] }: { sso: SsoView; pausedDomains?: st
           <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: 0 }}>Add and verify a domain above before configuring SSO.</p>
         ) : (
           <div style={{ paddingTop: sso.providers.length ? 14 : 0, borderTop: sso.providers.length ? "1px solid var(--line-1)" : "none" }}>
-            <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 8 }}>Add or update a provider</div>
+            <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 8 }}>Add or update a provider</div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <select aria-label="Single sign-on protocol" value={type} onChange={(e) => setType(e.target.value as SsoType)} style={input as React.CSSProperties}>
                 <option value="oidc">OIDC (live)</option>
@@ -574,7 +574,7 @@ function SsoCard({ sso, pausedDomains = [] }: { sso: SsoView; pausedDomains?: st
             </div>
           </div>
         )}
-        {msg && <p style={{ fontSize: 12.5, color: msg.kind === "ok" ? "var(--acc-deep)" : "var(--money)", margin: "12px 0 0" }}>{msg.text}</p>}
+        {msg && <p style={{ fontSize: 12.5, color: msg.kind === "ok" ? "var(--acc-deep)" : "var(--err)", margin: "12px 0 0" }}>{msg.text}</p>}
       </div>
     </>
   );

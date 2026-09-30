@@ -37,7 +37,7 @@ const RULES: [string, string][] = [
 // CARD SECTION, the same object /usage, /limits and /billing each declare under the name `label`. It keeps
 // its rendering exactly and takes that name, so nothing on screen moves and the word "eyebrow" now means
 // one thing in this file.
-const sectionLabel = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 } as const;
+const sectionLabel = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 12 } as const;
 const BEFORE_KEY = "vraelis:balance-before-topup";
 
 const bigNum = { fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "clamp(2.1rem, 4vw, 2.7rem)", letterSpacing: "-0.03em", lineHeight: 1 } as const;
@@ -146,7 +146,7 @@ export default function CreditsPage() {
       <PageHeader
         eyebrow="Billing"
         title="Credits"
-        lead="Your balance pays for validating your AI-built app before it ships. Each verification draws from it and only settles when it actually executes. Per-verification pricing is rolling out; your balance keeps its full purchase value through the change."
+        lead="Your balance pays for verifications. Each verification draws from it and only settles when it actually executes. Per-verification pricing is rolling out; your balance keeps its full purchase value through the change."
       />
 
       <div style={{ paddingBottom: 80 }}>

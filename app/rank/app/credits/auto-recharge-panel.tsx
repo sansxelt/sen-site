@@ -32,7 +32,7 @@ type Settings = {
 const dollars = (c: number | null | undefined) => (c == null ? "" : (c / 100).toFixed(2));
 const cents = (v: string) => Math.round(Number(v) * 100);
 
-const label = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--fg-4)" };
+const label = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" };
 // These three fields never carried outline:"none", so unlike the ones on the page above them their focus
 // ring already worked. What they DID carry was an inline border-color and background, which beat
 // [data-surface="app"] input:focus in authenticated.css, so the field on the page above lifted its ground
@@ -99,7 +99,7 @@ export function AutoRechargePanel() {
             was never going to be legible from three filled-in inputs. */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
           <span className="pill" style={{
-            fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase",
+            fontSize: 12.5, fontWeight: 700,
             color: s.enabled ? "var(--go-ink)" : "var(--fg-4)",
             background: s.enabled ? "var(--go-wash)" : "var(--bg-2)",
             borderColor: s.enabled ? "var(--go-line)" : "var(--line-2)",

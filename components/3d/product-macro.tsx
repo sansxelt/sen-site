@@ -86,7 +86,7 @@ export function ProductMacro({
           <div
             style={{
               fontSize: 11,
-              fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+              fontFamily: "var(--font-brand-mono), ui-monospace, monospace",
               letterSpacing: "0.18em",
               textTransform: "uppercase",
               color: `${accent}b3`,
@@ -143,7 +143,7 @@ export function ProductMacro({
                   <dt
                     style={{
                       fontSize: 9,
-                      fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+                      fontFamily: "var(--font-brand-mono), ui-monospace, monospace",
                       letterSpacing: "0.16em",
                       textTransform: "uppercase",
                       color: "rgba(255,255,255,0.4)",
@@ -156,7 +156,7 @@ export function ProductMacro({
                     style={{
                       fontSize: 13,
                       color: accent,
-                      fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+                      fontFamily: "var(--font-brand-mono), ui-monospace, monospace",
                       margin: 0,
                       letterSpacing: "0.02em",
                     }}

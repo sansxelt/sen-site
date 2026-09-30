@@ -55,7 +55,7 @@ export function WhisperSection() {
                 borderRadius: 100,
                 border: "1px solid rgba(168,196,255,0.14)",
                 background: "rgba(168,196,255,0.04)",
-                fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+                fontFamily: "var(--font-brand-mono), ui-monospace, monospace",
                 fontSize: 10,
                 letterSpacing: "0.14em",
                 textTransform: "uppercase",

@@ -69,8 +69,8 @@ const CHIP_INK: Record<string, string | undefined> = {
 function StatChip({ label, value, color }: { label: string; value: number; color?: string }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 3, padding: "11px 16px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", minWidth: 92 }}>
-      <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 22, lineHeight: 1, color: color ?? "var(--fg-1)" }}>{value}</span>
-      <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-4)" }}>{label}</span>
+      <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 22, lineHeight: 1, color: color ?? "var(--fg-1)", fontVariantNumeric: "tabular-nums" }}>{value}</span>
+      <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>{label}</span>
     </div>
   );
 }
@@ -89,7 +89,7 @@ function PassLine({ pass }: { pass: PassRow }) {
       {/* Lineage, not a verdict. "rerun" says how this run came to exist; it makes no claim about what it
           found, so it keeps the plain .pill and stays out of the signal vocabulary. */}
       {pass.parentRunId && (
-        <span className="pill" style={{ fontSize: 10, color: "var(--fg-4)", background: "var(--bg-2)", borderColor: "var(--line-2)", flex: "none" }}>rerun</span>
+        <span className="pill" style={{ color: "var(--fg-4)", background: "var(--bg-2)", borderColor: "var(--line-2)", flex: "none" }}>rerun</span>
       )}
       {pass.flowsTotal > 0 && (
         <span style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-3)", flex: "none", whiteSpace: "nowrap" }}>
@@ -107,8 +107,8 @@ function PassLine({ pass }: { pass: PassRow }) {
 function PassSection({ label, rows }: { label: string; rows: PassRow[] }) {
   return (
     <section style={{ marginBottom: 24 }}>
-      <h2 style={{ fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 600, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", margin: "0 0 8px 2px" }}>
-        {label} ({rows.length})
+      <h2 style={{ fontSize: 15.5, fontWeight: 600, color: "var(--fg-1)", margin: "0 0 10px 2px" }}>
+        {label} <span style={{ marginLeft: 6, fontWeight: 500, color: "var(--fg-4)" }}>{rows.length}</span>
       </h2>
       <div className="card" style={{ padding: 0, overflow: "hidden" }}>
         {rows.map((p, i) => (
@@ -148,7 +148,8 @@ export default async function PassesPage() {
     { label: "Blocked", rows: terminal.filter((p) => publicOf(p) === "blocked") },
     { label: "Verified", rows: terminal.filter((p) => publicOf(p) === "verified") },
     { label: "Not yet verified", rows: terminal.filter((p) => publicOf(p) === "unproven" || publicOf(p) === "progress") },
-    { label: "Invalidated (verifier defect)", rows: invalidated },
+    // Plain words for a run Vraelis threw out because the fault was in Vraelis, not in the app it checked.
+    { label: "Discarded, a fault in Vraelis", rows: invalidated },
   ].filter((s) => s.rows.length > 0);
 
   return (
@@ -156,7 +157,9 @@ export default async function PassesPage() {
       <PageHeader
         title="Verifications"
         lead="Every verification run across your systems, newest first, grouped by the decision it produced."
-        actions={<Link href="/systems/new" className="btn">+ Connect app</Link>}
+        // One filled button per view, and it belongs to New verification in the top bar. Connecting a system
+        // is secondary here, and the product says "system", not "app".
+        actions={<Link href="/systems/new" className="btn btn--ghost">Connect a system</Link>}
       />
 
       {/* <Page> owns the measure and the shell overrides only padding-TOP, so the tail room this page has
@@ -169,7 +172,7 @@ export default async function PassesPage() {
             <EmptyIcon d={I.shield} />
             <h3>Nothing verified yet</h3>
             <p>Connect a system and run a verification in a real browser to get a decision.</p>
-            <Link href="/systems/new" className="btn">Connect an app</Link>
+            <Link href="/systems/new" className="btn">Connect a system</Link>
           </div>
         ) : (
           <>

@@ -67,7 +67,7 @@
   color: var(--g-fg);
   font-family: var(--display);
   font-size: clamp(5.1rem, 10.5vw, 11.5rem);
-  font-weight: 400;
+  font-weight: var(--display-w);
   font-synthesis-weight: none;
   letter-spacing: -0.03em;
   line-height: 0.84;

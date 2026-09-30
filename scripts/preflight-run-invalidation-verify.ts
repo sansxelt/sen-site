@@ -132,7 +132,8 @@ console.log("\n── the history list does not file it as an application failur
   ok("invalidated runs are separated before grouping", /const invalidated = passes\.filter\(\(p\) => !!p\.invalidatedAt\)/.test(list));
   ok("the verdict sections are built from the remainder",
     /const live = passes\.filter\(\(p\) => !p\.invalidatedAt\)/.test(list) && /const running = live\.filter/.test(list));
-  ok("they get their own labelled section", /Invalidated \(verifier defect\)/.test(list));
+  // Plain words since 2026-09-30: the section says whose fault the discarded run was.
+  ok("they get their own labelled section", /label: "Discarded, a fault in Vraelis", rows: invalidated/.test(list));
   ok("the run list carries the invalidation",
     /invalidatedAt: \(r\.invalidated_at as string\)/.test(readFileSync("lib/preflight/overview-db.ts", "utf8")));
 }

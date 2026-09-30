@@ -45,7 +45,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
 
         {baBilling ? (
           <div style={{ marginBottom: 18 }}>
-            <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Team billing</div>
+            <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 12 }}>Team billing</div>
             <TeamBillingPanel workspaceName={selected.name} billing={baBilling} canManage={false} />
           </div>
         ) : null}
@@ -53,7 +53,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
         {view.clientSafe ? (
           <>
             <p style={{ fontSize: 13.5, color: "var(--fg-3)", marginBottom: 14 }}>Client viewers can access client-safe reports only.</p>
-            <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Shared with you</div>
+            <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 12 }}>Shared with you</div>
             {summary.projects.length === 0 ? (
               <div className="empty">
                 <EmptyIcon d={I.folder} />
@@ -66,19 +66,19 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
           </>
         ) : (
           <>
-            <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Members</div>
+            <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 12 }}>Members</div>
             <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-lg)", overflow: "hidden", background: "var(--bg-1)", marginBottom: 18 }}>
               {(view.members ?? []).filter((m) => m.status === "active").map((m, i) => (
                 <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8, padding: "12px 16px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)" }}>
                   <span style={{ fontSize: 14, color: "var(--fg-1)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.email}{m.email === email.trim().toLowerCase() ? " (you)" : ""}</span>
-                  <span className="pill" style={{ fontSize: 10.5, color: "var(--fg-4)" }}>{ROLE_LABEL[m.role]}</span>
+                  <span className="pill" style={{ color: "var(--fg-4)" }}>{ROLE_LABEL[m.role]}</span>
                 </div>
               ))}
             </div>
             {view.projects.length > 0 && (
               <>
-                <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Program access</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 18 }}>{view.projects.map((p) => <div key={p.project_id} className="card"><div style={{ fontWeight: 600, marginBottom: 6 }}>{p.project_name}</div>{p.members.map((mm) => <div key={mm.email} style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8, fontSize: 13, color: "var(--fg-2)", padding: "4px 0" }}><span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{mm.email}</span><span className="pill" style={{ fontSize: 10, color: "var(--fg-4)" }}>{mm.role}</span></div>)}</div>)}</div>
+                <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 12 }}>Program access</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 18 }}>{view.projects.map((p) => <div key={p.project_id} className="card"><div style={{ fontWeight: 600, marginBottom: 6 }}>{p.project_name}</div>{p.members.map((mm) => <div key={mm.email} style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8, fontSize: 13, color: "var(--fg-2)", padding: "4px 0" }}><span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{mm.email}</span><span className="pill" style={{ color: "var(--fg-4)" }}>{mm.role}</span></div>)}</div>)}</div>
               </>
             )}
             <p style={{ fontSize: 12, color: "var(--fg-5)" }}>Read-only, switch to your personal workspace to manage your own team. Member management for shared workspaces stays with the workspace owner.</p>

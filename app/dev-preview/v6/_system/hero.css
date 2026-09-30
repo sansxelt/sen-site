@@ -54,9 +54,12 @@
    line-height moves, 0.98 to 1.04, because 0.98 is below this face's own ascender-to-descender clearance
    and the lines would touch. On a three-line headline that is about 18px taller at the top clamp, which the
    470px to 545px handover above absorbs. */
-.v6-h__h1 { font-family: var(--display); font-weight: 400; letter-spacing: -0.012em; line-height: 1.04;
+/* IBM Plex Sans (2026-09-30) sets about 20% wider than Instrument Serif did, so at the old 5.25rem cap the
+   first line ran under the partnership column on a 1440 screen. The cap came down to 4.4rem; the line count
+   and so the pinned block height stay the same. */
+.v6-h__h1 { font-family: var(--display); font-weight: var(--display-w); letter-spacing: -0.012em; line-height: 1.04;
   font-synthesis-weight: none;
-  color: var(--g-fg); margin: clamp(10px, 2vh, 24px) 0 0; font-size: clamp(2.35rem, 5.8vw, 5.25rem);
+  color: var(--g-fg); margin: clamp(10px, 2vh, 24px) 0 0; font-size: clamp(2.35rem, 4.7vw, 4.4rem);
   max-width: 18ch; text-wrap: balance; }
 .v6-h__h1 .lead-clause { color: var(--g-fg-3); }
 .v6-h__say { margin: clamp(12px, 2.2vh, 26px) 0 0; max-width: 62ch;
@@ -70,7 +73,7 @@
 .v6-h__partnership-label { color: var(--g-fg-3); font-size: 0.7rem; font-weight: 600;
   letter-spacing: 0.13em; text-transform: uppercase; }
 .v6-h__partnership strong { font-family: var(--display); font-size: clamp(1.55rem, 2.35vw, 2.25rem);
-  font-weight: 400; line-height: 1.05; letter-spacing: -0.01em; }
+  font-weight: var(--display-w); line-height: 1.05; letter-spacing: -0.01em; }
 .v6-h__partnership-meta { color: var(--g-fg-2); font-size: 0.88rem; letter-spacing: 0.01em; white-space: nowrap; }
 .v6-h__partnership-note { color: var(--g-fg-2); font-size: 0.88rem; margin-top: -6px; }
 .v6-h__partnership:hover .v6-h__partnership-meta { color: var(--g-fg); }

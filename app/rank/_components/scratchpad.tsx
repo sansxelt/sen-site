@@ -164,12 +164,13 @@ export function inspect(t: string): Notice[] {
 // wrong one: --go-ink is the green that means Verified. In a product whose entire claim rests on what
 // green means, spending it on a zoom button blurs the one vocabulary that cannot afford to blur.
 //
-// So these are the window-control colours everybody already reads as close, minimise and zoom. They say
-// "this is a window", which is exactly what they are for, and they leave the verdict palette alone.
+// They were the macOS red, amber and green for a while, which fixed that and introduced a different problem:
+// three state-coloured dots on every page of a product whose colours mean verdicts, drawn as a mockup of
+// someone else's operating system. They are neutral now. The controls keep their shapes and labels.
 const LIGHTS = {
-  close: { base: "#FF5F57", hot: "#FF8A84" },
-  min:   { base: "#FEBC2E", hot: "#FFD067" },
-  zoom:  { base: "#28C840", hot: "#5BE06E" },
+  close: { base: "#D4D4D8", hot: "#A1A1AA" },
+  min:   { base: "#D4D4D8", hot: "#A1A1AA" },
+  zoom:  { base: "#D4D4D8", hot: "#A1A1AA" },
 };
 
 export function Scratchpad() {
@@ -253,17 +254,16 @@ export function Scratchpad() {
           position: "fixed", right: 18, bottom: 18, zIndex: 70,
           display: "flex", alignItems: "center", gap: 8,
           padding: "9px 13px", borderRadius: 10, cursor: "pointer",
-          fontFamily: "var(--font-code)", fontSize: 12, letterSpacing: "0.02em",
+          fontSize: 13, fontWeight: 500,
           color: open ? "var(--fg-1)" : "var(--fg-3)",
           background: "var(--bg-1)", border: "1px solid var(--line-2)",
           boxShadow: "var(--shadow-lg)",
         }}
       >
-        <span aria-hidden style={{ color: "var(--go-ink)" }}>{">"}</span>
-        notes
+        Notes
         {/* A quiet mark that there is something in here, so a closed panel is never mistaken for an empty
             one. Not a count: the number of characters in your scratchpad is nobody's headline. */}
-        {!open && text.trim() ? <span aria-hidden style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--go-ink)" }} /> : null}
+        {!open && text.trim() ? <span aria-hidden style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--acc)" }} /> : null}
       </button>
 
       {open ? (

@@ -7,7 +7,7 @@ export function TechnicalDetails({ items }: { items: [label: string, value: stri
   if (rows.length === 0) return null;
   return (
     <details style={{ marginTop: 26 }}>
-      <summary style={{ cursor: "pointer", fontFamily: "var(--font-code)", fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-5)" }}>
+      <summary style={{ cursor: "pointer", fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-5)" }}>
         Technical details
       </summary>
       <div style={{ marginTop: 10, border: "1px solid var(--line-1)", borderRadius: "var(--r-sm)", background: "var(--bg-2)", padding: "10px 14px", display: "grid", gap: 6 }}>

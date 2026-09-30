@@ -33,32 +33,32 @@ function PlanCard({ plan, cycle, subAlign = "left" }: { plan: PricingPlan; cycle
     <div className="flex h-full flex-col p-6" style={{ borderRadius: 28, border: "1px solid rgba(199,205,215,0.10)", background: "rgba(14,20,33,0.95)" }}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <div style={{ fontSize: 14, fontWeight: 600, color: "#ECEFF4", fontFamily: '"Inter Tight", sans-serif', letterSpacing: "-0.01em" }}>{plan.name}</div>
-          <div style={{ marginTop: 2, fontSize: 11, color: "#5A6478", fontFamily: '"Inter Tight", sans-serif' }}>{plan.note}</div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "#ECEFF4", fontFamily: "var(--font-brand-sans), sans-serif", letterSpacing: "-0.01em" }}>{plan.name}</div>
+          <div style={{ marginTop: 2, fontSize: 11, color: "#5A6478", fontFamily: "var(--font-brand-sans), sans-serif" }}>{plan.note}</div>
         </div>
         {plan.badge && (
-          <span style={{ flexShrink: 0, borderRadius: 100, background: "#ECEFF4", padding: "2px 10px", fontSize: 10, fontWeight: 600, color: "#0A0F18", fontFamily: '"Inter Tight", sans-serif', letterSpacing: "0.01em" }}>
+          <span style={{ flexShrink: 0, borderRadius: 100, background: "#ECEFF4", padding: "2px 10px", fontSize: 10, fontWeight: 600, color: "#0A0F18", fontFamily: "var(--font-brand-sans), sans-serif", letterSpacing: "0.01em" }}>
             {plan.badge}
           </span>
         )}
       </div>
 
       <div style={{ marginTop: 20 }}>
-        <div style={{ fontSize: 24, fontWeight: 600, letterSpacing: "-0.025em", color: "#ECEFF4", transition: "all 300ms", fontFamily: '"Inter Tight", sans-serif' }}>
+        <div style={{ fontSize: 24, fontWeight: 600, letterSpacing: "-0.025em", color: "#ECEFF4", transition: "all 300ms", fontFamily: "var(--font-brand-sans), sans-serif" }}>
           {mainLabel}
         </div>
         {subLabel && (
-          <div style={{ marginTop: 2, fontSize: 11, color: "#5A6478", textAlign: subAlign === "right" ? "right" : "left", transition: "all 300ms", fontFamily: '"Inter Tight", sans-serif' }}>
+          <div style={{ marginTop: 2, fontSize: 11, color: "#5A6478", textAlign: subAlign === "right" ? "right" : "left", transition: "all 300ms", fontFamily: "var(--font-brand-sans), sans-serif" }}>
             {showYearly ? `or ${subLabel}` : subLabel}
           </div>
         )}
       </div>
 
-      <p style={{ marginTop: 12, fontSize: 12, lineHeight: 1.6, color: "#5A6478", fontFamily: '"Inter Tight", sans-serif' }}>{plan.description}</p>
+      <p style={{ marginTop: 12, fontSize: 12, lineHeight: 1.6, color: "#5A6478", fontFamily: "var(--font-brand-sans), sans-serif" }}>{plan.description}</p>
 
       <ul style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
         {plan.points.map((point) => (
-          <li key={point} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12, color: "#C7CDD7", fontFamily: '"Inter Tight", sans-serif' }}>
+          <li key={point} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12, color: "#C7CDD7", fontFamily: "var(--font-brand-sans), sans-serif" }}>
             <div style={{ width: 5, height: 5, flexShrink: 0, borderRadius: "50%", background: "rgba(199,205,215,0.25)" }} />
             {point}
           </li>
@@ -68,7 +68,7 @@ function PlanCard({ plan, cycle, subAlign = "left" }: { plan: PricingPlan; cycle
       <button
         onClick={handleCta}
         disabled={loading}
-        style={{ marginTop: "auto", display: "block", width: "100%", borderRadius: 12, border: "1px solid rgba(199,205,215,0.12)", background: "rgba(199,205,215,0.05)", padding: "10px 16px", textAlign: "center", fontSize: 12, fontWeight: 500, color: "#ECEFF4", cursor: loading ? "wait" : "pointer", opacity: loading ? 0.5 : 1, transition: "background 150ms", fontFamily: '"Inter Tight", sans-serif' }}
+        style={{ marginTop: "auto", display: "block", width: "100%", borderRadius: 12, border: "1px solid rgba(199,205,215,0.12)", background: "rgba(199,205,215,0.05)", padding: "10px 16px", textAlign: "center", fontSize: 12, fontWeight: 500, color: "#ECEFF4", cursor: loading ? "wait" : "pointer", opacity: loading ? 0.5 : 1, transition: "background 150ms", fontFamily: "var(--font-brand-sans), sans-serif" }}
       >
         {loading ? "Redirecting…" : showYearly ? `${plan.ctaLabel} · Yearly` : plan.ctaLabel}
       </button>
@@ -147,7 +147,7 @@ function CardPack({
         <span style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.18em", color: "#5A6478", fontFamily: '"JetBrains Mono", monospace' }}>
           {label}
         </span>
-        <p style={{ fontSize: 11, color: "#5A6478", fontFamily: '"Inter Tight", sans-serif' }}>
+        <p style={{ fontSize: 11, color: "#5A6478", fontFamily: "var(--font-brand-sans), sans-serif" }}>
           {labelAlign === "right"
             ? `${plans.length} total · Click any card to browse`
             : `Click any card to browse · ${plans.length} total`}
@@ -203,7 +203,7 @@ function CycleToggle({ cycle, onChange }: { cycle: Cycle; onChange: (c: Cycle) =
             style={{
               borderRadius: 100, padding: "6px 16px", border: "none",
               fontSize: 12, fontWeight: 500, cursor: "pointer",
-              fontFamily: '"Inter Tight", sans-serif',
+              fontFamily: "var(--font-brand-sans), sans-serif",
               transition: "all 200ms",
               ...(cycle === c
                 ? { background: "#ECEFF4", color: "#0A0F18" }

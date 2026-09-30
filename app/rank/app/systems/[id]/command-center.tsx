@@ -70,10 +70,10 @@ export function CommandCenter({
       <div style={{ display: "flex", gap: "clamp(16px, 3vw, 32px)", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap" }}>
         {/* Verdict — the thesis of the strip, in the decision tone at hero scale. */}
         <div style={{ minWidth: 0, flex: "1 1 320px" }}>
-          <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.09em", textTransform: "uppercase", color: tone.fg, opacity: 0.85 }}>Decision</div>
+          <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: tone.fg, opacity: 0.85 }}>Decision</div>
           {/* Uppercased in CSS rather than in the string, so the accessible name stays the vocabulary's own
               "Verified" / "Not yet verified" while the hero still reads in caps. */}
-          <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(2rem, 4.2vw, 3rem)", lineHeight: 1.04, letterSpacing: "-0.01em", textTransform: "uppercase", color: tone.fg, marginTop: 8 }}>{verdict.label}</div>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(2rem, 4.2vw, 3rem)", lineHeight: 1.04, letterSpacing: "-0.01em", color: tone.fg, marginTop: 8 }}>{verdict.label}</div>
           {subline ? <p style={{ fontSize: 14.5, color: "var(--fg-1)", lineHeight: 1.5, margin: "10px 0 0", maxWidth: "52ch" }}>{subline}</p> : null}
         </div>
 
@@ -81,7 +81,7 @@ export function CommandCenter({
             A read-only member sees an honest view-only note in this column instead of a control they
             can't use — the verdict + ribbon still read exactly the same. */}
         <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6, maxWidth: 320 }}>
-          <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.09em", textTransform: "uppercase", color: tone.fg, opacity: 0.7 }}>Next</div>
+          <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: tone.fg, opacity: 0.7 }}>Next</div>
           {showReadOnlyNote ? (
             <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.5, margin: "2px 0 0" }}>
               View-only access. Ask an editor to {isLaunch ? "run a verification" : "update the contract"}.
@@ -113,7 +113,7 @@ export function CommandCenter({
       {ribbon.length > 0 ? (
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "6px 26px", marginTop: 18, paddingTop: 14, borderTop: `1px solid ${tone.line}` }}>
           {ribbon.map((f) => (
-            <span key={f.key} style={{ fontFamily: "var(--font-code)", fontSize: 11, letterSpacing: "0.04em", textTransform: "uppercase", color: RIBBON_COLOR[f.tone] }}>{f.text}</span>
+            <span key={f.key} style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: RIBBON_COLOR[f.tone] }}>{f.text}</span>
           ))}
         </div>
       ) : null}

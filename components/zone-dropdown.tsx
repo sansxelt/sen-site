@@ -35,7 +35,7 @@ export function ZoneDropdown({ signedIn }: Props) {
           background: "#ECEFF4", color: "#0A0F18",
           fontSize: 14, fontWeight: 500, letterSpacing: "-0.005em",
           textDecoration: "none", borderRadius: 4,
-          fontFamily: '"Inter Tight", sans-serif',
+          fontFamily: "var(--font-brand-sans), sans-serif",
           transition: "opacity 150ms",
         }}
         onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "0.88"; }}

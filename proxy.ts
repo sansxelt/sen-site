@@ -111,8 +111,8 @@ export const GROUND_HEADER = "x-vraelis-ground";
 export const CURTAIN_PATH_HEADER = "x-vraelis-curtained-path";
 
 function groundFor(target: string): Ground {
-  if (target.startsWith("/rank/app")) return "graphite";                 // the signed-in product
-  if (target === "/signin" || target === "/signup" || target.startsWith("/auth/")) return "graphite";
+  if (target.startsWith("/rank/app")) return "console";                  // the signed-in product
+  if (target === "/signin" || target === "/signup" || target.startsWith("/auth/")) return "console";
   if (target === "/dev-preview/v6" || target.startsWith("/dev-preview/v6/")) {
     return v6GroundAtTop(target.slice("/dev-preview/v6".length) || "/");
   }

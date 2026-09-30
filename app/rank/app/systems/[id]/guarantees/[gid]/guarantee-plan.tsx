@@ -136,7 +136,7 @@ export function VerifyGuaranteeButton({
 }
 
 function NotProvableCard({ np, onRetry, busy }: { np: NotProvable; onRetry: () => void; busy: boolean }) {
-  const label = { fontFamily: "var(--font-code)", fontSize: 10.5, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--wait-ink)", margin: 0 };
+  const label = { fontFamily: "var(--font-code)", fontSize: 12.5, fontWeight: 600, color: "var(--wait-ink)", margin: 0 };
   return (
     <div style={{ border: "1px solid var(--wait-line)", background: "var(--wait-wash)", borderRadius: "var(--r-md, 10px)", padding: "clamp(16px, 2.2vw, 22px)", display: "grid", gap: 10 }}>
       <div style={label}>Not provable yet</div>

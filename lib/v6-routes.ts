@@ -56,8 +56,9 @@ export const V6_IS_LIVE = V6_BASE === "";
 
 /* ── THE GROUND A ROUTE OPENS ON ───────────────────────────────────────────────────────────────────────
  *
- * Three grounds exist and every document is one of them:
- *   graphite  the product, the auth round-trip, the v6 homepage, partnership records and the docs environment
+ * Four grounds exist and every document is one of them:
+ *   console   the signed-in product, sign-in and the auth round-trip (light since 2026-09-30)
+ *   graphite  the v6 homepage, partnership records and the docs environment
  *   paper     every other v6 route, which opens on a white page hero
  *   cream     the previous generation of the marketing site
  *
@@ -71,9 +72,10 @@ export const V6_IS_LIVE = V6_BASE === "";
  * right background and colour scheme on the opening tag. The v6 shell still pins the same value with an
  * !important rule, which is belt and braces rather than duplication: the shell knows the CLIENT-side route
  * after a soft navigation, where no new document is requested and no header exists. */
-export type Ground = "graphite" | "paper" | "cream";
+export type Ground = "console" | "graphite" | "paper" | "cream";
 
 export const GROUND_CSS: Record<Ground, { bg: string; scheme: "dark" | "light" }> = {
+  console: { bg: "#F7F7F8", scheme: "light" },
   graphite: { bg: "#0A0A0B", scheme: "dark" },
   paper: { bg: "#FFFFFF", scheme: "light" },
   cream: { bg: "#FAF8F4", scheme: "light" },

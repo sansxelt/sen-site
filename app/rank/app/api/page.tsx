@@ -144,8 +144,8 @@ export default function ApiKeysPage() {
     load();
   }
 
-  const slbl = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: "28px 0 12px" } as const;
-  const cardHead = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 } as const;
+  const slbl = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: "28px 0 12px" } as const;
+  const cardHead = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 12 } as const;
 
   return (
     // 820 was already the prose measure by coincidence; it is the prose measure by NAME now, so the next
@@ -184,7 +184,7 @@ export default function ApiKeysPage() {
             <button onClick={create} disabled={busy} className="btn" style={{ opacity: busy ? 0.6 : 1 }}>{busy ? "Creating…" : "Create key"}</button>
           </div>
           <div style={{ display: "grid", gap: 6, marginTop: 12 }}>
-            <span style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>Preflight access</span>
+            <span style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" }}>Preflight access</span>
             {PREFLIGHT_ACCESS.map((a) => (
               <label key={a.id} style={{ display: "flex", gap: 9, alignItems: "flex-start", padding: "9px 11px", border: `1px solid ${preflightAccess === a.id ? "var(--acc-line)" : "var(--line-2)"}`, background: preflightAccess === a.id ? "var(--acc-soft)" : "transparent", borderRadius: "var(--r-sm)", cursor: "pointer" }}>
                 <input type="radio" name="preflight-access" checked={preflightAccess === a.id} onChange={() => setPreflightAccess(a.id)} style={{ marginTop: 3 }} />
@@ -202,7 +202,7 @@ export default function ApiKeysPage() {
           */}
           {preflightAccess === "launch" && (
             <div style={{ display: "grid", gap: 6, marginTop: 12 }}>
-              <label htmlFor="key-daily-limit" style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>Daily spend limit</label>
+              <label htmlFor="key-daily-limit" style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" }}>Daily spend limit</label>
               <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                 <span aria-hidden style={{ fontSize: 14, color: "var(--fg-3)" }}>$</span>
                 {/* Same focus fix as the field above, and the same reason for type="text": this one is
@@ -245,7 +245,7 @@ export default function ApiKeysPage() {
 
       {fresh && (
         <div className="card" style={{ marginBottom: 20, borderColor: "var(--acc-line)", background: "var(--acc-soft)" }}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 8 }}>Your new key. Copy it now, it won&apos;t be shown again</div>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--acc-deep)", marginBottom: 8 }}>Your new key. Copy it now, it won&apos;t be shown again</div>
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
             <code style={{ flex: 1, fontFamily: "var(--font-code)", fontSize: 13, color: "var(--fg-1)", wordBreak: "break-all", background: "var(--bg-1)", border: "1px solid var(--line-2)", borderRadius: "var(--r-xs)", padding: "10px 12px" }}>{fresh}</code>
             <button onClick={() => { navigator.clipboard?.writeText(fresh); setCopied(true); setTimeout(() => setCopied(false), 1400); }} className="btn btn--ghost" style={{ whiteSpace: "nowrap" }}>{copied ? "Copied ✓" : "Copy"}</button>
@@ -258,7 +258,7 @@ export default function ApiKeysPage() {
           */}
           {freshGrant && (
             <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--acc-line)" }}>
-              <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 6 }}>This key can</div>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 6 }}>This key can</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
                 {freshGrant.scopes.map((s) => (
                   <span key={s} style={{ fontFamily: "var(--font-code)", fontSize: 11, padding: "3px 8px", borderRadius: 999, border: "1px solid var(--line-2)", background: "var(--bg-1)", color: s.startsWith("preflight:") ? "var(--acc-deep)" : "var(--fg-4)" }}>{s}</span>
@@ -296,13 +296,13 @@ export default function ApiKeysPage() {
         {spend && spend.total.runs > 0 ? (
           <div style={{ display: "flex", gap: 26, flexWrap: "wrap", alignItems: "baseline", padding: "12px 16px", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-2)", marginBottom: 12 }}>
             <div>
-              <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-5)" }}>Charged to API keys, all time</div>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-5)" }}>Charged to API keys, all time</div>
               <div style={{ fontSize: 19, fontWeight: 600, color: "var(--fg-1)", marginTop: 3, fontVariantNumeric: "tabular-nums" }}>${(spend.total.chargedCents / 100).toFixed(2)}</div>
               <div style={{ fontSize: 11, color: "var(--fg-5)", marginTop: 2 }}>{spend.total.runs} verification{spend.total.runs === 1 ? "" : "s"}{spend.total.flowUnits ? `, ${spend.total.flowUnits} journeys` : ""}</div>
             </div>
             {spend.revokedKeys.chargedCents > 0 || spend.revokedKeys.runs > 0 ? (
               <div>
-                <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-5)" }}>By keys you have revoked</div>
+                <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-5)" }}>By keys you have revoked</div>
                 <div style={{ fontSize: 19, fontWeight: 600, color: "var(--fg-2)", marginTop: 3, fontVariantNumeric: "tabular-nums" }}>${(spend.revokedKeys.chargedCents / 100).toFixed(2)}</div>
                 <div style={{ fontSize: 11, color: "var(--fg-5)", marginTop: 2 }}>
                   {spend.revoked.map((r) => r.prefix ?? "a deleted key").slice(0, 3).join(", ")}{spend.revoked.length > 3 ? ` and ${spend.revoked.length - 3} more` : ""}
@@ -361,7 +361,7 @@ export default function ApiKeysPage() {
                       ["Requests (all time)", reqs.toLocaleString(), k.last_used ? `last ${fmt(k.last_used)}` : "never used"],
                     ].map(([l, v, sub]) => (
                       <div key={l} style={{ minWidth: 0 }}>
-                        <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-5)" }}>{l}</div>
+                        <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-5)" }}>{l}</div>
                         <div style={{ fontSize: 17, fontWeight: 600, color: "var(--fg-1)", marginTop: 3, fontVariantNumeric: "tabular-nums" }}>{v}</div>
                         {sub ? <div style={{ fontSize: 11, color: "var(--fg-5)", marginTop: 2 }}>{sub}</div> : null}
                       </div>
@@ -381,7 +381,7 @@ export default function ApiKeysPage() {
                       number a customer has to take on trust, which is the opposite of this product. */}
                   {usage && usage.recentRuns.length > 0 ? (
                     <div style={{ marginTop: 12 }}>
-                      <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-5)", marginBottom: 6 }}>Verifications this key launched</div>
+                      <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-5)", marginBottom: 6 }}>Verifications this key launched</div>
                       <div style={{ display: "grid", gap: 4 }}>
                         {usage.recentRuns.slice(0, 8).map((r) => (
                           // Same dead /records/<run> link as the key detail page; the report is under its system.
@@ -486,7 +486,7 @@ export default function ApiKeysPage() {
 
       {/* docs. id="ci-gate" is the target of the "See the CI gate" button above: the CURL below IS the CI
           integration (launch a verification, poll for the decision, ship only when it is Verified). */}
-      <div id="ci-gate" style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12, marginTop: 28, scrollMarginTop: 80 }}>Quickstart: gate a deploy from CI</div>
+      <div id="ci-gate" style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 12, marginTop: 28, scrollMarginTop: 80 }}>Quickstart: gate a deploy from CI</div>
       <div className="codebar"><i /><i /><i /><span>shell</span></div>
       <pre className="codeblock"><code>{CURL}</code></pre>
       <p style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-5)", marginTop: 14, lineHeight: 1.6 }}>

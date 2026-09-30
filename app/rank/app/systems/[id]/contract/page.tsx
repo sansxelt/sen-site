@@ -61,11 +61,11 @@ function when(iso: string): string {
   try { return new Date(iso).toISOString().slice(0, 16).replace("T", " ") + " UTC"; } catch { return ""; }
 }
 
-const smallLabel: React.CSSProperties = { fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" };
+const smallLabel: React.CSSProperties = { fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-4)" };
 
 function SevPill({ severity }: { severity: Severity }) {
   return (
-    <span className="pill" style={{ color: SEVERITY_COLORS[severity], borderColor: "var(--line-2)", background: "var(--bg-2)", display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11 }}>
+    <span className="pill" style={{ color: SEVERITY_COLORS[severity], borderColor: "var(--line-2)", background: "var(--bg-2)", display: "inline-flex", alignItems: "center", gap: 6 }}>
       <span aria-hidden style={{ width: 6, height: 6, borderRadius: "50%", background: SEVERITY_COLORS[severity], flex: "none" }} />
       {SEVERITY_LABELS[severity]}
     </span>
@@ -93,7 +93,7 @@ function ApprovedContract({ appId, contract, reqs, flows, canEdit }: { appId: st
       <div className="card" style={{ padding: "clamp(16px, 2.2vw, 22px)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
-            <span className="pill" style={{ color: "var(--acc-deep)", borderColor: "var(--acc-line)", background: "var(--acc-soft)", fontSize: 11 }}><DecisionMark decision="approved" />Approved</span>
+            <span className="pill" style={{ color: "var(--acc-deep)", borderColor: "var(--acc-line)", background: "var(--acc-soft)" }}><DecisionMark decision="approved" />Approved</span>
             <span style={smallLabel}>Contract v{contract.version}</span>
           </div>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16.5, color: "var(--fg-1)", lineHeight: 1.4 }}>
@@ -158,7 +158,7 @@ function ApprovedContract({ appId, contract, reqs, flows, canEdit }: { appId: st
               return (
                 <li key={f.id} style={{ padding: "14px 0", borderTop: idx > 0 ? "1px solid var(--line-1)" : "none", opacity: f.enabled ? 1 : 0.55 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 6 }}>
-                    <span className="pill" style={{ color: auth ? "var(--acc-deep)" : "var(--fg-4)", borderColor: auth ? "var(--acc-line)" : "var(--line-2)", background: auth ? "var(--acc-soft)" : "var(--bg-2)", display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11 }}>
+                    <span className="pill" style={{ color: auth ? "var(--acc-deep)" : "var(--fg-4)", borderColor: auth ? "var(--acc-line)" : "var(--line-2)", background: auth ? "var(--acc-soft)" : "var(--bg-2)", display: "inline-flex", alignItems: "center", gap: 6 }}>
                       <Ic d={auth ? I.lock : I.user} size={12} sw={1.9} /> {f.role || (auth ? "Authenticated" : "Unauthenticated")}
                     </span>
                     <span style={{ fontSize: 12, color: "var(--fg-4)" }}>{SEVERITY_LABELS[(f.priority as Severity) ?? "important"]}</span>
@@ -196,7 +196,7 @@ function DraftReadOnly({ reqs, flows, reason }: { reqs: ContractRequirement[]; f
     <div>
       <div className="card" style={{ padding: "clamp(16px, 2.2vw, 22px)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
-          <span className="pill" style={{ color: "var(--fg-3)", borderColor: "var(--line-2)", background: "var(--bg-2)", fontSize: 11 }}>Draft</span>
+          <span className="pill" style={{ color: "var(--fg-3)", borderColor: "var(--line-2)", background: "var(--bg-2)" }}>Draft</span>
           <span style={smallLabel}>View only</span>
         </div>
         <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16.5, color: "var(--fg-1)", lineHeight: 1.4 }}>
@@ -246,7 +246,7 @@ function DraftReadOnly({ reqs, flows, reason }: { reqs: ContractRequirement[]; f
               return (
                 <li key={f.id} style={{ padding: "14px 0", borderTop: idx > 0 ? "1px solid var(--line-1)" : "none", opacity: f.enabled ? 1 : 0.55 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 6 }}>
-                    <span className="pill" style={{ color: auth ? "var(--acc-deep)" : "var(--fg-4)", borderColor: auth ? "var(--acc-line)" : "var(--line-2)", background: auth ? "var(--acc-soft)" : "var(--bg-2)", display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11 }}>
+                    <span className="pill" style={{ color: auth ? "var(--acc-deep)" : "var(--fg-4)", borderColor: auth ? "var(--acc-line)" : "var(--line-2)", background: auth ? "var(--acc-soft)" : "var(--bg-2)", display: "inline-flex", alignItems: "center", gap: 6 }}>
                       <Ic d={auth ? I.lock : I.user} size={12} sw={1.9} /> {f.role || (auth ? "Authenticated" : "Unauthenticated")}
                     </span>
                     <span style={{ fontSize: 12, color: "var(--fg-4)" }}>{SEVERITY_LABELS[(f.priority as Severity) ?? "important"]}</span>

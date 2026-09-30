@@ -37,7 +37,7 @@ function guaranteeIsDraft(planState: string): boolean {
 export function GuaranteeStatusPill({ planState, status }: { planState: string; status: GuaranteeStatus }) {
   if (guaranteeIsDraft(planState)) {
     return (
-      <span className="pill" style={{ fontSize: 10.5, color: "var(--fg-4)", background: "var(--bg-2)", borderColor: "var(--line-2)", flex: "none" }}>
+      <span className="pill" style={{ color: "var(--fg-4)", background: "var(--bg-2)", borderColor: "var(--line-2)", flex: "none" }}>
         <span aria-hidden style={{ display: "inline-flex", marginRight: 3 }}><Ic d={I.dash} size={11} sw={2.4} /></span>Draft
       </span>
     );

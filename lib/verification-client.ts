@@ -54,6 +54,8 @@ export type Verification = {
   evidence: Evidence[];
   repairPrompt: string | null;
   humanReviewed: boolean;
+  /** Where this run's record lives in the console. Present once there is a verdict. */
+  consoleUrl: string | null;
 };
 
 // Errors are mapped once, here, so every surface says the same thing about the same failure and no component
@@ -210,6 +212,7 @@ export async function getVerification(id: string, opts: { signal?: AbortSignal }
         : [],
       repairPrompt: typeof b.repair_prompt === "string" ? b.repair_prompt : null,
       humanReviewed: b.human_reviewed === true,
+      consoleUrl: typeof b.console_url === "string" ? b.console_url : null,
     },
   };
 }

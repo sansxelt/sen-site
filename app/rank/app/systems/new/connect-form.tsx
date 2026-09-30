@@ -57,7 +57,7 @@ function Badge({ kind }: { kind: "required" | "recommended" | "optional" }) {
   const c = kind === "required" ? { color: "var(--stop-ink)", bg: "var(--stop-wash)", bd: "var(--stop-line)" }
     : kind === "recommended" ? { color: "var(--acc-deep)", bg: "var(--acc-soft)", bd: "var(--acc-line)" }
     : { color: "var(--fg-4)", bg: "var(--bg-2)", bd: "var(--line-2)" };
-  return <span className="pill" style={{ fontSize: 9.5, color: c.color, background: c.bg, borderColor: c.bd }}>{kind}</span>;
+  return <span className="pill" style={{ color: c.color, background: c.bg, borderColor: c.bd }}>{kind}</span>;
 }
 
 // A manual-connection card: monogram + purpose + status, expanding to its metadata form. Connected state
@@ -426,15 +426,15 @@ export default function ConnectWorkspace() {
         {/* sticky summary rail */}
         <aside className="sticky-side" style={{ position: "sticky", top: 84, display: "grid", gap: 14 }}>
           <div className="card" style={{ display: "grid", gap: 12, padding: 18 }}>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)" }}>Connection summary</div>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-4)" }}>Connection summary</div>
             <div style={{ display: "grid", gap: 7 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--fg-2)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Required</div>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--fg-2)" }}>Required</div>
               {summaryRow("System URL", urlOk)}
               {summaryRow("System name", nameOk)}
               {summaryRow("Ownership authorization", own)}
             </div>
             <div style={{ display: "grid", gap: 7, borderTop: "1px solid var(--line-1)", paddingTop: 10 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--fg-2)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Recommended</div>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--fg-2)" }}>Recommended</div>
               {recommended.map(([l, v]) => summaryRow(l, v))}
             </div>
             <p style={{ fontSize: 12, color: "var(--fg-4)", lineHeight: 1.55, margin: 0, borderTop: "1px solid var(--line-1)", paddingTop: 10 }}>
@@ -568,7 +568,7 @@ function ProductDefinition({ sources, onAdd, onRemove, readTextFile, promptAdded
     <div style={{ display: "grid", gap: 14 }}>
       {/* primary: prompt status + product summary */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-        <span className="pill" style={{ fontSize: 10, color: promptAdded ? "var(--acc-deep)" : "var(--fg-4)", background: promptAdded ? "var(--acc-soft)" : "var(--bg-2)", borderColor: promptAdded ? "var(--acc-line)" : "var(--line-2)" }}>
+        <span className="pill" style={{ color: promptAdded ? "var(--acc-deep)" : "var(--fg-4)", background: promptAdded ? "var(--acc-soft)" : "var(--bg-2)", borderColor: promptAdded ? "var(--acc-line)" : "var(--line-2)" }}>
           Original build prompt: {promptAdded ? "Added" : "Missing"}
         </span>
         {!promptAdded ? <span style={{ fontSize: 12, color: "var(--fg-4)" }}>Paste it in section 01 above; it is the strongest single source.</span> : null}
@@ -615,7 +615,7 @@ function ProductDefinition({ sources, onAdd, onRemove, readTextFile, promptAdded
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                   <span style={{ fontWeight: 600, fontSize: 13, color: "var(--fg-1)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</span>
-                  <span className="pill" style={{ fontSize: 9.5, color: "var(--fg-4)", background: "var(--bg-2)", borderColor: "var(--line-2)" }}>{KIND_LABELS[s.kind] ?? s.kind}</span>
+                  <span className="pill" style={{ color: "var(--fg-4)", background: "var(--bg-2)", borderColor: "var(--line-2)" }}>{KIND_LABELS[s.kind] ?? s.kind}</span>
                 </div>
                 <div style={{ fontSize: 11.5, color: "var(--fg-4)", marginTop: 2 }}>Added {agoLabel(s.added)}, {charLabel((s.content ?? "").length)}</div>
               </div>

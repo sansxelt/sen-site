@@ -1,147 +1,121 @@
 /* ──────────────────────────────────────────────────────────────────────────────────────────────────────
-   VRAELIS — AUTHENTICATED token layer (design 06)
+   VRAELIS — AUTHENTICATED token layer (design 07, the light console)
    Scoped to [data-surface="app"]. Loaded only inside the authenticated + auth layouts.
 
-   WHAT THIS FILE REPLACED, AND WHY IT MATTERS.
+   WHAT THIS FILE DOES, AND THE RULE IT KEEPS.
 
-   The previous version of this file declared a complete private vocabulary: --a-ground, --a-raised,
-   --a-text, --a-accent, --a-verified, a --c-* console family, and a .vconsole component. It was carefully
-   specified and completely dead. Nothing referenced it: zero uses of --a-*, zero of --c-*, zero of
-   .vconsole. Meanwhile the product's ~2,200 token calls all resolved against the PUBLIC tokens in
-   styles.css, so app.vraelis.com had never actually had a theme. It was rendering the marketing brand and
-   had been the entire time.
+   It remaps the LIVE vocabulary the product components actually read (--bg-*, --fg-*, --acc*, --line-*,
+   --ok/--warn/--err, the state triads, --shadow-*) and introduces no private names. An earlier version
+   declared a careful theme nothing referenced, so the product had never been themed at all.
+   scripts/contrast-verify.ts now fails if a token declared below is unused, and measures every pair the
+   product renders, so this file cannot rot back into a theme nothing wears.
 
-   That is the failure this file is built not to repeat: a theme is only real if it redefines the names the
-   components ACTUALLY use. So this file remaps the LIVE vocabulary (--bg-*, --fg-*, --acc*, --line-*,
-   --ok/--warn/--err, --shadow-*) and introduces no new names at all. If a token below stops being used the
-   product changes appearance immediately and visibly, which is the only reliable way to keep a theme honest.
+   WHY LIGHT, AS OF 2026-09-30.
 
-   WHY GRAPHITE.
+   Design 06 made the console graphite: one near-black plane, white type, and no hue anywhere except a
+   verdict. The founder's verdict on it was that it was "too bland" with "the colours weirdly put", and that
+   it should feel like Vanta or Tailscale. Both of those are light consoles, and the audit behind this change
+   found why the graphite one read as bland: page and card differed by 1.06:1, shadows were invisible, the
+   three grey steps were one grey, and when nothing was failing the page had no colour at all.
 
-   Design 06's grammar assigns surfaces by what they carry: light surfaces carry company framing, knowledge
-   and research; graphite surfaces carry runs, evidence, findings, and consequential decisions. The signed-in
-   product is nothing but runs, evidence, findings and decisions, so it is graphite by the system's own rule
-   rather than by taste. The marketing site keeps its light/graphite alternation; this is the far end of it.
+   So the grammar is now the one serious B2B consoles share. A light grey page, white cards with a hairline
+   and a faint shadow, white chrome. ONE brand accent, cobalt, for the things a person acts on: the primary
+   button, links, focus, the current page in the sidebar. And the three state colours, still reserved for
+   state and nothing else: green means it held, amber means a person is needed, red means it failed.
 
-   WHY THERE IS NO GREEN BUTTON ANY MORE.
-
-   Design 06 has no accent hue. The primary action is contrast (white on black, black on white), and colour
-   is reserved so completely that green, amber and red mean only "it held", "a person is needed" and "it
-   failed". An emerald "Sign in" button spends the exact signal the product sells. So --acc becomes near
-   white here, --fg-on-accent becomes near black, and the three state colours become their on-dark variants.
-
-   Values are lifted from app/dev-preview/v6/_system/v6.css. They are duplicated rather than imported
-   because that file is scoped under .v6 and loading the public design system inside the product would drag
-   its layout, motion and component rules in with it. Keep the two in step by hand.
+   The public site keeps its own graphite and paper; the product is its own place.
    ────────────────────────────────────────────────────────────────────────────────────────────────────── */
 
 [data-surface="app"] {
   /* ── Ground and surfaces ─────────────────────────────────────────────────────────────────────────────
-     Elevation goes LIGHTER, which is the opposite of the light theme this replaces: on a near-black ground
-     a "recessed" well cannot be darker without becoming a hole, so depth is carried upward instead.
-     --graphite / --graphite-2 / --graphite-3 are taken verbatim from v6.css; --bg-2 is the one interpolated
-     step, sitting just above the ground so an alternating band still reads without competing with a card. */
-  --bg-0: #0A0A0B;   /* page ground        (v6 --graphite)   */
-  --bg-1: #121214;   /* cards, panels      (v6 --graphite-2) */
-  --bg-2: #0E0E10;   /* recessed wells, alternating sections (interpolated) */
-  --bg-3: #1B1C1F;   /* hovered rows       (v6 --graphite-3) */
+     Cards are white on a light grey page, so depth reads without a shadow doing all the work. --bg-2 is the
+     recessed well (table headers, code, inputs at rest) and --bg-3 the hovered row. */
+  --bg-0: #F7F7F8;   /* page ground */
+  --bg-1: #FFFFFF;   /* cards, panels, the top bar and the sidebar */
+  --bg-2: #F4F4F5;   /* recessed wells */
+  --bg-3: #F0F0F2;   /* hovered rows */
 
   /* ── Type ────────────────────────────────────────────────────────────────────────────────────────────
-     Three real steps, not five. The light theme graded --fg-1..--fg-5 to place warm inks on cream; on
-     graphite the useful distinctions collapse to headline / body / meta, so --fg-4 and --fg-5 resolve to
-     the same measured grey rather than inventing two more that would fail contrast in order to look softer. */
-  --fg-1: #FAFAFA;   /* headlines   ~19:1  (v6 --g-fg)   */
-  --fg-2: #C4C5C9;   /* body        ~11:1  (v6 --g-fg-2) */
-  --fg-3: #8E9095;   /* secondary   ~6.2:1 (v6 --g-fg-3) */
-  --fg-4: #8E9095;   /* meta / labels — the same measured grey, not a softer failing one */
-  --fg-5: #8E9095;   /* fine print  — likewise */
-  --fg-on-accent: #0A0A0B;  /* ink ON the primary action, which is now white */
+     Three real steps and a meta grey. Neutral zinc, not the warm cream inks of the old public theme. */
+  --fg-1: #0A0A0B;   /* headlines          18.5:1 on the page */
+  --fg-2: #3F3F46;   /* body               ~9:1  */
+  --fg-3: #52525B;   /* secondary          ~7:1  */
+  --fg-4: #6B6B74;   /* meta and labels    4.9:1 on the page, 5.3:1 on a card */
+  --fg-5: #6B6B74;   /* fine print, the same measured grey rather than a softer failing one */
+  --fg-on-accent: #FFFFFF;
 
-  /* ── The primary action ──────────────────────────────────────────────────────────────────────────────
-     Contrast, not hue, all the way down.
-     --acc-deep was briefly mapped to the green signal, on the assumption that its ~150 uses were mostly
-     confirmation messages. Rendered, they were not: they are section links, "View all" arrows, list
-     markers, a running-state dot, and one decorative word in a headline. Only 39 of them meant a verdict.
-     A page where every link and label is the same green the product uses for "this held" is a page that
-     has spent its only signal on navigation, so the accent is plain contrast here and the 39 real ones
-     were moved onto the go triad explicitly. */
-  --acc: #FAFAFA;
-  --acc-deep: #FAFAFA;
-  --acc-glow: rgba(255, 255, 255, 0.18);
-  --acc-soft: rgba(255, 255, 255, 0.06);    /* neutral wash: decoration may not borrow a state colour */
-  --acc-line: rgba(255, 255, 255, 0.20);
-  --acc-line-2: rgba(255, 255, 255, 0.32);
+  /* ── The accent ──────────────────────────────────────────────────────────────────────────────────────
+     Cobalt. Chosen to sit well away from all three state hues, so an action can never be mistaken for a
+     verdict. --acc fills (white text on it measures 5.2:1), --acc-deep is link and label ink (6:1 on the
+     page), --acc-deepest is the hovered fill. */
+  --acc: #3E63DD;
+  --acc-deep: #3451D1;
+  --acc-deepest: #2F47B8;
+  --acc-glow: rgba(62, 99, 221, 0.22);
+  --acc-soft: rgba(62, 99, 221, 0.08);
+  --acc-line: rgba(62, 99, 221, 0.28);
+  --acc-line-2: rgba(62, 99, 221, 0.50);
 
   /* ── State, and only state ───────────────────────────────────────────────────────────────────────────
-     The on-dark variants. Blocked stays amber rather than red: it is the honest third answer, not a
-     failure, and colouring it like one trains people to read "no verdict" as "broken". */
-  --ok:   #4ADE9C;   /* it held            (v6 --go-dk)   */
-  --warn: #F2B75A;   /* a person is needed (v6 --wait-dk) */
-  --err:  #FF7A55;   /* it failed          (v6 --stop-dk) */
-  --money: #F2B75A;
-  /* --bg-elev, --rec and --rec-glow used to be declared here. The usage census in scripts/contrast-verify
-     found the product references none of them, so they are gone rather than carried. That census is the
-     whole reason this file cannot rot back into a theme nothing wears. */
+     Blocked stays amber rather than red: it is the honest third answer, not a failure, and colouring it
+     like one trains people to read "no verdict" as "broken". Failed is a true red now; on graphite it was a
+     coral that sat 24 degrees from Blocked's amber. */
+  --ok:   #067647;   /* it held            */
+  --warn: #9A5B00;   /* a person is needed */
+  --err:  #B42318;   /* it failed          */
 
-  /* The same three triads on graphite. Ink is the on-dark signal; the wash is that ink at low alpha rather
-     than a mixed opaque tint, so a badge sits on whatever surface it lands on without seaming against it. */
-  --go-ink:   #4ADE9C;  --go-wash:   rgba(74, 222, 156, 0.10);  --go-line:   rgba(74, 222, 156, 0.30);
-  --wait-ink: #F2B75A;  --wait-wash: rgba(242, 183, 90, 0.10);  --wait-line: rgba(242, 183, 90, 0.30);
-  --stop-ink: #FF7A55;  --stop-wash: rgba(255, 122, 85, 0.10);  --stop-line: rgba(255, 122, 85, 0.30);
+  /* Each state is an ink, the wash it sits on and the hairline around them. Opaque washes on light, so a
+     badge reads the same on a card and on the page. */
+  --go-ink:   #067647;  --go-wash:   #ECFDF3;  --go-line:   #ABEFC6;
+  --wait-ink: #9A5B00;  --wait-wash: #FEF7E6;  --wait-line: #F5D79E;
+  --stop-ink: #B42318;  --stop-wash: #FEF3F2;  --stop-line: #FECDCA;
 
-  /* ── Structure ───────────────────────────────────────────────────────────────────────────────────────
-     On graphite, borders do the work shadows did on paper. */
-  --line-1: rgba(255, 255, 255, 0.09);
-  --line-2: rgba(255, 255, 255, 0.14);
-  --line-3: rgba(255, 255, 255, 0.22);
-  --line-strong: rgba(255, 255, 255, 0.34);
-  --focus-ring: #FAFAFA;
-  --chrome-veil: rgba(10, 10, 11, 0.88);
+  /* ── Structure ─────────────────────────────────────────────────────────────────────────────────────── */
+  --line-1: rgba(10, 10, 11, 0.06);
+  --line-2: rgba(10, 10, 11, 0.10);
+  --line-3: rgba(10, 10, 11, 0.18);
+  --line-strong: rgba(10, 10, 11, 0.30);
+  --focus-ring: #3E63DD;
+  --chrome-veil: rgba(255, 255, 255, 0.92);
 
   /* ── Elevation ───────────────────────────────────────────────────────────────────────────────────────
-     The light theme's shadows were tinted ink on cream and are simply invisible here. Rather than delete
-     them (95 components ask for them) they become a deeper black, which is what actually reads as "raised"
-     on a near-black ground. */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.40);
-  --shadow-md: 0 1px 2px rgba(0, 0, 0, 0.40), 0 14px 32px -18px rgba(0, 0, 0, 0.70);
-  --shadow-lg: 0 2px 8px rgba(0, 0, 0, 0.45), 0 44px 84px -40px rgba(0, 0, 0, 0.80);
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.40), 0 10px 28px -14px rgba(0, 0, 0, 0.60);
-  --shadow-win: 0 2px 6px rgba(0, 0, 0, 0.45), 0 44px 80px -34px rgba(0, 0, 0, 0.80);
+     Faint and cool. A card is lifted by one pixel of shadow and its hairline, never by a glow. */
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --shadow-md: 0 1px 2px rgba(16, 24, 40, 0.05), 0 8px 20px -10px rgba(16, 24, 40, 0.12);
+  --shadow-lg: 0 2px 6px rgba(16, 24, 40, 0.06), 0 24px 48px -20px rgba(16, 24, 40, 0.20);
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04);
+  --shadow-win: 0 2px 6px rgba(16, 24, 40, 0.06), 0 32px 64px -28px rgba(16, 24, 40, 0.24);
 
   /* The boundary paints its own ground. It deliberately does NOT set a min-height: the document is already
-     graphite (see --canvas below), and a 100dvh wrapper nested inside another one forces a scrollbar on
+     painted (see --canvas below), and a 100dvh wrapper nested inside another one forces a scrollbar on
      pages that fit. The boundary is allowed to appear more than once in a tree. */
   background: var(--bg-0);
   color: var(--fg-2);
 }
 
 /* Paint the document itself as well. A wrapper cannot reach the browser canvas, so without this the area
-   below a short page and the overscroll gutter stay public cream.
-
-   These set the variables the root layout's inline paint reads, rather than the properties directly: the
-   layout paints html and body inline so the canvas is right on the first frame, and an inline declaration
-   beats any stylesheet. Setting --canvas here means the same first-frame paint resolves to graphite for
-   the product without this file having to fight the cascade with !important. */
+   below a short page and the overscroll gutter keep whatever the previous route painted. These set the
+   variables the root layout's inline paint reads, so the first frame resolves to the console ground. */
 html:has([data-surface="app"]) {
-  --canvas: #0A0A0B;
-  --canvas-scheme: dark;
+  --canvas: #F7F7F8;
+  --canvas-scheme: light;
 }
 
-/* ── The primary action, corrected ─────────────────────────────────────────────────────────────────────
-   styles.css builds .btn from --acc / --acc-deep and finishes it with a hardcoded emerald inner shadow.
-   The token remap handles the ground; these rules handle what tokens cannot reach: the hover (which must
-   not become the green state colour) and that baked-in emerald glow. */
+/* ── The primary action ────────────────────────────────────────────────────────────────────────────────
+   styles.css builds .btn from --acc-deep and finishes it with a hardcoded emerald inner shadow. The token
+   remap handles the ground; these rules handle what tokens cannot reach. */
 [data-surface="app"] .btn {
   background: var(--acc);
   border-color: var(--acc);
   color: var(--fg-on-accent);
-  box-shadow: 0 1px 1.5px rgba(0, 0, 0, 0.45);
-  font-weight: 550;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  font-weight: 600;
+  border-radius: 8px;
 }
 [data-surface="app"] .btn:hover,
 [data-surface="app"] .btn:active {
-  background: #FFFFFF;
-  border-color: #FFFFFF;
+  background: var(--acc-deepest);
+  border-color: var(--acc-deepest);
   color: var(--fg-on-accent);
 }
 [data-surface="app"] .btn:disabled:hover,
@@ -150,79 +124,58 @@ html:has([data-surface="app"]) {
   background: var(--acc);
   border-color: var(--acc);
 }
-/* The secondary action is the inverse: the surface itself, outlined. */
+/* The secondary action: a white button with a hairline. */
 [data-surface="app"] .btn--ghost {
   background: var(--bg-1);
   border: 1px solid var(--line-3);
   color: var(--fg-1);
-  box-shadow: none;
+  box-shadow: var(--shadow-sm);
 }
 [data-surface="app"] .btn--ghost:hover {
-  background: var(--bg-3);
+  background: var(--bg-2);
   border-color: var(--line-strong);
   color: var(--fg-1);
 }
 
 /* ── Form fields ───────────────────────────────────────────────────────────────────────────────────────
-   Quiet until focused, then unmistakably active. The focus ring is white, never a state colour: a field
-   under the cursor has not passed or failed anything. */
+   White fields with a hairline; focus is the accent ring, never a state colour, because a field under the
+   cursor has not passed or failed anything. */
 [data-surface="app"] input,
 [data-surface="app"] textarea,
 [data-surface="app"] select {
-  background: var(--bg-0);
+  background: var(--bg-1);
   color: var(--fg-1);
-  border-color: var(--line-2);
+  border-color: var(--line-3);
   caret-color: var(--fg-1);
 }
 [data-surface="app"] input::placeholder,
-[data-surface="app"] textarea::placeholder { color: var(--fg-3); opacity: 1; }
+[data-surface="app"] textarea::placeholder { color: var(--fg-4); opacity: 1; }
 [data-surface="app"] input:focus,
 [data-surface="app"] textarea:focus,
 [data-surface="app"] select:focus {
-  border-color: var(--line-strong);
+  border-color: var(--acc);
+  box-shadow: 0 0 0 3px var(--acc-soft);
   background: var(--bg-1);
 }
-/* Chrome paints autofilled fields a fixed pale yellow, which on graphite is a bright band across the form.
-   No property disables it; the long inset shadow is the standard way to cover it. */
-[data-surface="app"] input:-webkit-autofill,
-[data-surface="app"] input:-webkit-autofill:hover,
-[data-surface="app"] input:-webkit-autofill:focus {
-  -webkit-text-fill-color: var(--fg-1);
-  -webkit-box-shadow: 0 0 0 1000px var(--bg-1) inset;
-  caret-color: var(--fg-1);
-}
 
-/* Keyboard focus must be visible on graphite; the browser default is not. */
 [data-surface="app"] :focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 
 /* ── Atmosphere carried over from the public hero ──────────────────────────────────────────────────────
-   The auth layout paints .glow and .grid-faint, both authored for cream. Left alone they put a warm bloom
-   and a dark-on-light grid over graphite. The grid inverts to a hairline white; the bloom is removed rather
-   than re-tinted, because design 06 does not use one. */
+   The auth layout paints .glow and .grid-faint. The bloom is removed; the grid stays a faint hairline. */
 [data-surface="app"] .glow,
 [data-surface="app"] .glow--bleed { display: none; }
 [data-surface="app"] .grid-faint {
   background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+    linear-gradient(to right, rgba(10, 10, 11, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(10, 10, 11, 0.035) 1px, transparent 1px);
 }
 
-[data-surface="app"] ::selection { background: rgba(255, 255, 255, 0.16); }
+[data-surface="app"] ::selection { background: var(--acc-glow); }
 
-/* An eyebrow is a label, not a verdict. styles.css colours it with the accent, which on this surface is
-   the green that means "it held" — so every section kicker on every page announced itself as a passing
-   state. Same for the active nav icon. */
-[data-surface="app"] .eyebrow { color: var(--fg-3); }
-[data-surface="app"] .slink.on .slink__i { color: var(--fg-1); }
+/* An eyebrow is a label, not a link. */
+[data-surface="app"] .eyebrow { color: var(--fg-4); }
 
-/* ── Shared components that carry light-only values ────────────────────────────────────────────────────
-   styles.css is authored for cream, so a handful of its rules bake in values no token can reach: ink-tinted
-   shadows, a white shimmer, an emerald gradient. Each one below is a rule the product actually uses; the
-   classes it does not use (.bento, .tile--*, .price--hot, .vra-prose, .empty__icon, --paper-grad) are
-   deliberately left alone rather than pre-emptively themed, so this list stays short enough to audit. */
-
-/* The italic serif was the previous brand's only flourish. Design 06 sets a headline in one voice at one
-   weight, so inside the product .em stops being a flourish and becomes ordinary emphasis. */
+/* The italic serif was the previous brand's only flourish; inside the product .em is ordinary emphasis. */
 [data-surface="app"] .em {
   font-family: inherit;
   font-style: normal;
@@ -231,56 +184,111 @@ html:has([data-surface="app"]) {
   font-size: inherit;
 }
 
-/* Hover lift: an ink shadow on cream is nothing on graphite. Depth comes from the border instead. */
-[data-surface="app"] .card--hover:hover {
-  border-color: var(--line-3);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35), 0 18px 40px -16px rgba(0, 0, 0, 0.65);
+/* ── Type in the console ───────────────────────────────────────────────────────────────────────────────
+   One page title size, sentence-case labels, and no tracked micro-capitals except table column heads.
+   Uppercase 10px labels on every section were the loudest "generated dashboard" tell in the audit. */
+[data-surface="app"] .phead h1,
+[data-surface="app"] .display { font-weight: 600; letter-spacing: -0.012em; }
+[data-surface="app"] .phead h1 { font-size: clamp(1.55rem, 2.4vw, 1.9rem); }
+[data-surface="app"] .pill {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 500;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: var(--bg-2);
+  color: var(--fg-3);
+}
+[data-surface="app"] .stat__l {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 500;
 }
 
-/* Segmented control: the selected pill was a white chip with an ink shadow. */
-[data-surface="app"] .seg { background: var(--bg-0); }
-[data-surface="app"] .seg button.on {
-  background: var(--bg-3);
-  color: var(--fg-1);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.10);
+/* ── The shell ─────────────────────────────────────────────────────────────────────────────────────────
+   White chrome around a grey page. The sidebar was 15.5px items under 11px tracked capitals, so the menu
+   was louder than the data; it is now 14px items under quiet sentence-case group names, and the current
+   page is marked in the accent rather than a second grey. */
+[data-surface="app"] .app-side { background: var(--bg-1); border-right-color: var(--line-2); padding: 16px 12px; gap: 2px; }
+[data-surface="app"] .app-side__group {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--fg-4);
+  padding: 16px 10px 6px;
 }
-/* A yearly discount is a price, not a verdict. It was carrying the green that means "this held". */
+[data-surface="app"] .app-side__foot { background: var(--bg-1); }
+[data-surface="app"] .slink { font-size: 14px; font-weight: 500; padding: 7px 10px; border-radius: 7px; gap: 10px; color: var(--fg-2); }
+[data-surface="app"] .slink:hover { background: var(--bg-2); color: var(--fg-1); }
+[data-surface="app"] .slink.on { background: var(--acc-soft); color: var(--fg-1); box-shadow: none; }
+[data-surface="app"] .slink__i { width: 18px; height: 18px; color: var(--fg-4); }
+[data-surface="app"] .slink.on .slink__i { color: var(--acc); }
+[data-surface="app"] .app-drawer { background: var(--bg-1); }
+[data-surface="app"] .app-drawer-scrim { background: rgba(10, 10, 11, 0.28); }
+
+/* Scrollbars: the browser default on a light page is fine; this only keeps the thumb quiet. */
+[data-surface="app"] * { scrollbar-color: rgba(10, 10, 11, 0.22) transparent; }
+
+/* ── Shared components that carry values no token can reach ────────────────────────────────────────── */
+
+/* Hover lift: depth comes from the border and one soft shadow. */
+[data-surface="app"] .card--hover:hover {
+  border-color: var(--line-3);
+  box-shadow: var(--shadow-md);
+}
+
+/* Segmented control: the selected option is a white chip on the grey well. */
+[data-surface="app"] .seg { background: var(--bg-2); }
+[data-surface="app"] .seg button.on {
+  background: var(--bg-1);
+  color: var(--fg-1);
+  box-shadow: 0 0 0 1px var(--line-2), var(--shadow-sm);
+}
+/* A yearly discount is a price, not a verdict. */
 [data-surface="app"] .seg__save { color: var(--fg-3); }
 
 /* ── The pricing table ─────────────────────────────────────────────────────────────────────────────────
-   Three things here could not follow the tokens.
-
-   The "Most popular" badge is painted with a gradient from --acc to --acc-deep and white text. On this
-   surface both of those ARE white, so the badge rendered as a blank white capsule with its label
-   invisible inside it. Contrast has to come from the ground instead: white capsule, ink text. */
+   The "Most popular" badge is painted with a gradient from --acc to --acc-deep and white text; on this
+   surface that is the cobalt pair, which is correct. The card around it only needs a stronger edge. */
 [data-surface="app"] .price--hot {
-  border-color: var(--line-3);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.40), 0 44px 84px -40px rgba(0, 0, 0, 0.70);
+  border-color: var(--acc-line-2);
+  box-shadow: var(--shadow-md);
 }
 [data-surface="app"] .price--hot::before {
-  background: var(--fg-1);
+  background: var(--acc);
   color: var(--fg-on-accent);
 }
 
-/* The feature tick is an SVG data URI with its stroke colour written into the URL (#0A7B54), so no token
-   could ever reach it and every plan list stayed emerald. Same icon, on-surface stroke. A list marker is
-   decoration, so it does not get a state colour either. */
+/* The feature tick is an SVG data URI with its stroke colour written into the URL, so no token can reach
+   it. Same icon, neutral stroke: a list marker is decoration and does not get a state colour. */
 [data-surface="app"] .price__feat li::before {
-  background-color: var(--acc-soft);
+  background-color: var(--bg-2);
   border-color: var(--line-2);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FAFAFA' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233F3F46' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
 }
 
-/* Loading shimmer: a 60% white sweep is a strobe on near-black. */
+/* Empty states are a solid card. The dashed outline read as an unfinished slot in the layout. */
+[data-surface="app"] .empty { border-style: solid; border-color: var(--line-2); background: var(--bg-1); }
+[data-surface="app"] .empty__icon { background: var(--bg-2); color: var(--fg-3); border-color: var(--line-2); }
+
+/* Loading shimmer. */
 [data-surface="app"] .skel::after {
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.07), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
 }
 
-/* The code block was #16202B, a blue-black. Design 06 is explicit that dark surfaces are near black and
-   never a blue-grey, and next to real graphite that cast reads as a different product's panel. */
+/* Code: a light well with dark ink, and the brand mono. */
 [data-surface="app"] .codeblock {
-  background: var(--bg-1);
+  background: var(--bg-2);
   color: var(--fg-1);
   border: 1px solid var(--line-2);
   box-shadow: none;
+  font-family: var(--font-brand-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
+[data-surface="app"] code,
+[data-surface="app"] kbd { font-family: var(--font-brand-mono), ui-monospace, SFMono-Regular, Menlo, monospace; }

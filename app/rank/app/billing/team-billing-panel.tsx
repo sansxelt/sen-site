@@ -40,7 +40,7 @@ export function TeamBillingPanel({ workspaceName, billing, canManage = true }: {
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17 }}>{workspaceName}</div>
           <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 3 }}>{billing.used} paid seat{billing.used === 1 ? "" : "s"}{billing.limit != null ? ` of ${billing.limit}` : ""} | Admin, Editor, Viewer are paid. <strong style={{ color: "var(--fg-2)" }}>Client viewers are free.</strong></div>
         </div>
-        {(billing.hasSubscription || billing.status) ? <span className="pill" style={{ fontSize: 10.5, color: payIssue ? "var(--money)" : "var(--acc-deep)" }}>{statusLabel(billing.status)}</span> : null}
+        {(billing.hasSubscription || billing.status) ? <span className="pill" style={{ color: payIssue ? "var(--err)" : "var(--acc-deep)" }}>{statusLabel(billing.status)}</span> : null}
       </div>
 
       {!billing.configured ? (
@@ -48,10 +48,10 @@ export function TeamBillingPanel({ workspaceName, billing, canManage = true }: {
       ) : billing.hasSubscription ? (
         <>
           <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: "12px 0 0", lineHeight: 1.6 }}>Interval: <strong style={{ color: "var(--fg-1)" }}>{billing.interval === "yearly" ? "Annual" : billing.interval === "monthly" ? "Monthly" : "-"}</strong>{billing.periodEnd ? ` | Next renewal ${new Date(billing.periodEnd).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}` : ""} | {billing.billingOwnerIsCurrentOwner ? "You are the billing owner" : "Billing owner: current workspace owner"}.</p>
-          {billing.overLimit && <p style={{ fontSize: 12.5, color: "var(--money)", margin: "8px 0 0" }}>You&apos;re over your seat limit. Existing members keep access.</p>}
+          {billing.overLimit && <p style={{ fontSize: 12.5, color: "var(--err)", margin: "8px 0 0" }}>You&apos;re over your seat limit. Existing members keep access.</p>}
           {payIssue && (
-            <div style={{ border: "1px solid var(--money)", background: "color-mix(in srgb, var(--money) 7%, transparent)", borderRadius: "var(--r-sm)", padding: "11px 13px", margin: "12px 0 0" }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--money)" }}>Payment needs attention</div>
+            <div style={{ border: "1px solid var(--err)", background: "color-mix(in srgb, var(--err) 7%, transparent)", borderRadius: "var(--r-sm)", padding: "11px 13px", margin: "12px 0 0" }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--err)" }}>Payment needs attention</div>
               <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: "4px 0 0", lineHeight: 1.6 }}>Your last team-seat charge didn&apos;t go through. Members keep access for now, but seats can be suspended if it stays unpaid. Update your payment method to keep your team active.</p>
             </div>
           )}
@@ -61,7 +61,7 @@ export function TeamBillingPanel({ workspaceName, billing, canManage = true }: {
           </div>
 
           {/* Native invoice list */}
-          <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", margin: "20px 0 8px" }}>Invoices</div>
+          <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: "20px 0 8px" }}>Invoices</div>
           {invoices === null ? (
             <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: 0 }}>Loading invoices…</p>
           ) : invoices.length === 0 ? (
@@ -82,12 +82,12 @@ export function TeamBillingPanel({ workspaceName, billing, canManage = true }: {
         </>
       ) : canManage ? (
         <div style={{ marginTop: 14 }}>
-          <Link href="/team" className="btn">Set up team seats →</Link>
+          <Link href="/team" className="btn btn--ghost">Set up team seats →</Link>
         </div>
       ) : (
         <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "12px 0 0" }}>Team billing hasn&apos;t been set up by the workspace owner yet.</p>
       )}
-      {err && <p style={{ fontSize: 12.5, color: "var(--money)", margin: "10px 0 0" }}>{err}</p>}
+      {err && <p style={{ fontSize: 12.5, color: "var(--err)", margin: "10px 0 0" }}>{err}</p>}
       <p style={{ fontSize: 11, color: "var(--fg-5)", margin: "12px 0 0", lineHeight: 1.6 }}>Payments are securely processed by Stripe. Your complete billing overview, plan, seats, renewal dates, and invoices, stays here in Vraelis. The secure billing portal is used only to update payment methods, tax settings, or billing address.</p>
     </div>
   );

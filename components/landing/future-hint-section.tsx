@@ -89,7 +89,7 @@ export function FutureHintSection() {
                 <span
                   style={{
                     fontSize: 10,
-                    fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+                    fontFamily: "var(--font-brand-mono), ui-monospace, monospace",
                     letterSpacing: "0.14em",
                     textTransform: "uppercase",
                     padding: "3px 8px",

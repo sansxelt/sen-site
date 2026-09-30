@@ -19,11 +19,13 @@ import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
 export const metadata: Metadata = { title: "Billing" };
 
-const REASON: Record<string, string> = { signup: "Welcome credits", monthly_reset: "Monthly plan credits", topup: "Credit top-up", pack: "Credit pack", hold: "Verification launch", refund: "Unfilled refund", reward: "Participation reward" };
+const REASON: Record<string, string> = { signup: "Welcome credits", monthly_reset: "Monthly plan credits", topup: "Credit top-up", pack: "Credit pack", hold: "Verification launch", refund: "Unfilled refund", reward: "Participation reward", yc_reviewer_demo_grant: "Reviewer credit grant" };
+// A ledger code nobody mapped still reads as words rather than as a database key: "some_grant" -> "Some grant".
+const reasonLabel = (r: string) => REASON[r] ?? (r.charAt(0).toUpperCase() + r.slice(1)).replace(/_/g, " ");
 
 const INVOICE_STATUS: Record<string, { label: string; color: string }> = {
-  paid: { label: "Paid", color: "var(--acc-deep)" },
-  open: { label: "Open", color: "var(--money)" },
+  paid: { label: "Paid", color: "var(--go-ink)" },
+  open: { label: "Open", color: "var(--wait-ink)" },
   void: { label: "Void", color: "var(--fg-4)" },
   uncollectible: { label: "Uncollectible", color: "var(--err)" },
 };
@@ -136,12 +138,12 @@ export default async function BillingPage() {
 
       <div className="tile-grid cols-2" style={{ marginBottom: 18 }}>
         <div className="card" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)" }}>Plan</div>
+          <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" }}>Plan</div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
             <span style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 600, color: "var(--fg-1)" }}>{planName}</span>
             {displayCycle ? <span className="badge-now">{displayCycle}</span> : null}
           </div>
-          <p style={{ fontSize: 13.5, color: cancelAtEnd ? "var(--money)" : pastDue ? "var(--err)" : "var(--fg-3)", marginTop: 4, marginBottom: 0 }}>{statusLine}</p>
+          <p style={{ fontSize: 13.5, color: cancelAtEnd ? "var(--wait-ink)" : pastDue ? "var(--err)" : "var(--fg-3)", marginTop: 4, marginBottom: 0 }}>{statusLine}</p>
           {v1Plan ? (
             <p style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 6, marginBottom: 0, lineHeight: 1.5 }}>
               Includes {v1Plan.passesPerMonth} verifications a month, up to {v1Plan.flowsPerPass} flows verified per run{v1Plan.maxApplications === null ? "" : `, ${v1Plan.maxApplications} connected systems`}.
@@ -149,20 +151,20 @@ export default async function BillingPage() {
           ) : null}
         </div>
         <div className="card" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)" }}>Credit balance</div>
+          <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" }}>Credit balance</div>
           <div style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 600, color: "var(--fg-1)" }}>{bal.toLocaleString()}<span style={{ fontSize: 13, color: "var(--fg-4)", fontWeight: 500, marginLeft: 8 }}>credits</span></div>
           <p style={{ fontSize: 13.5, color: "var(--fg-3)", marginTop: 4 }}><Link href="/credits" style={{ color: "var(--acc-deep)" }}>Top up →</Link></p>
         </div>
       </div>
 
       <div className="card" style={{ marginBottom: 18 }}>
-        <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 8 }}>Payment method</div>
+        <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 8 }}>Payment method</div>
         <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 0 14px", maxWidth: 540 }}>Keep a payment method on file for plan renewals and credit top-ups, and view your invoices. Payments are securely processed by Stripe, we never see your card details, and your complete billing state stays here in Vraelis.</p>
         <PaymentMethodButton />
       </div>
 
       <div className="card" style={{ marginBottom: 28 }}>
-        <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 14 }}>Subscription</div>
+        <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 14 }}>Subscription</div>
         {/* Builder/Pro/Scale (v1Plan) has no row in v_subscriptions, so /api/v/cancel 404s "no_subscription"
             for it — hasSub stayed true here only for the status line above. The button is scoped to the
             legacy path it actually works against; v1 cancels through the portal via Change plan instead. */}
@@ -176,7 +178,7 @@ export default async function BillingPage() {
 
       {/* Native payment history: Stripe invoices rendered in-app; the hosted invoice page is only the
           line-item detail fallback. */}
-      <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Payment history</div>
+      <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 12 }}>Payment history</div>
       {invoices.length === 0 ? (
         <div className="empty" style={{ marginBottom: 28 }}><EmptyIcon d={I.card} /><h3>No payments yet</h3><p>Plan invoices and their receipts will appear here after your first charge.</p></div>
       ) : (
@@ -204,7 +206,7 @@ export default async function BillingPage() {
       )}
 
       {/* Team seats (workspace billing, owner / billing-admin detail) */}
-      <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Team seats</div>
+      <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 12 }}>Team seats</div>
       {(teamAccess === "owner" || teamAccess === "billing_admin") && teamBilling ? (
         <div style={{ marginBottom: 28 }}><TeamBillingPanel workspaceName={teamWsName} billing={teamBilling} canManage={teamAccess === "owner"} /></div>
       ) : teamAccess === "member" ? (
@@ -218,14 +220,14 @@ export default async function BillingPage() {
         </div>
       )}
 
-      <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Recent credit activity</div>
+      <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 12 }}>Recent credit activity</div>
       {ledger.length === 0 ? (
         <div className="empty"><EmptyIcon d={I.clock} /><h3>No activity yet</h3><p>Credit grants, holds, refunds and rewards will show up here once you start testing.</p></div>
       ) : (
         <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-lg)", overflow: "hidden", background: "var(--bg-1)", boxShadow: "var(--shadow-sm)" }}>
           {ledger.map((l, i) => (
             <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, padding: "13px 18px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)" }}>
-              <div><div style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 500 }}>{REASON[l.reason] ?? l.reason}</div><div style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", marginTop: 2 }}>{new Date(l.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div></div>
+              <div><div style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 500 }}>{reasonLabel(l.reason)}</div><div style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", marginTop: 2 }}>{new Date(l.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div></div>
               <div style={{ fontFamily: "var(--font-code)", fontSize: 14.5, fontWeight: 600, color: l.delta >= 0 ? "var(--acc-deep)" : "var(--fg-3)" }}>{l.delta >= 0 ? "+" : ""}{l.delta}</div>
             </div>
           ))}

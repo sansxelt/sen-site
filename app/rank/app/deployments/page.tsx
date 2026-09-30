@@ -151,7 +151,7 @@ export default async function DeploymentsPage() {
         {lastVerified ? (
           <div className="card" style={{ padding: "clamp(16px, 2.2vw, 22px)", marginBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-              <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" }}>
                 Last verified deployment
               </div>
               {/* The one verdict on this page that is a conclusion rather than a row in a list, so it takes
@@ -208,7 +208,7 @@ export default async function DeploymentsPage() {
             {/* NOT a <Verdict>. "Planned" is this company talking about its own roadmap, not a conclusion
                 about the customer's software, and the verdict vocabulary has no word for it. Handing it the
                 product's one signal component would put the shape that means "we checked this" on a promise. */}
-            <span className="pill" style={{ fontSize: 10, color: "var(--fg-4)", background: "var(--bg-2)", borderColor: "var(--line-2)", flex: "none" }}>Planned</span>
+            <span className="pill" style={{ color: "var(--fg-4)", background: "var(--bg-2)", borderColor: "var(--line-2)", flex: "none" }}>Planned</span>
           </div>
           <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.6, margin: 0, maxWidth: 640 }}>
             Automated verify-on-deploy and deploy blocking are not active yet. Today, every verification
