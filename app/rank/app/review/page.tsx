@@ -74,7 +74,7 @@ export default async function ReviewPage() {
             ))}
           </div>
         ) : (
-          <section aria-label="Nothing awaiting review" style={{ border: "1px dashed var(--line-3)", borderRadius: "var(--r-lg, 14px)", background: "var(--bg-2)", padding: "clamp(20px, 2.6vw, 30px)" }}>
+          <section aria-label="Nothing awaiting review" style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-lg, 14px)", background: "var(--bg-1)", boxShadow: "var(--shadow-card)", padding: "clamp(20px, 2.6vw, 30px)" }}>
             <div style={{ color: "var(--fg-3)", marginBottom: 10 }}><Ic d={I.eye} size={22} /></div>
             <h2 style={{ fontSize: 16, margin: "0 0 6px", color: "var(--fg-1)" }}>Nothing is waiting on you</h2>
             <p style={{ margin: "0 0 16px", fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.6, maxWidth: "58ch" }}>

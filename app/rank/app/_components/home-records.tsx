@@ -244,7 +244,7 @@ const STEPS = [
 
 export function EmptyHome() {
   return (
-    <section aria-label="Getting started" style={{ border: "1px dashed var(--line-3)", borderRadius: "var(--r-lg, 14px)", background: "var(--bg-2)", padding: "clamp(18px, 2.4vw, 26px)" }}>
+    <section aria-label="Getting started" style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-lg, 14px)", background: "var(--bg-1)", boxShadow: "var(--shadow-card)", padding: "clamp(18px, 2.4vw, 26px)" }}>
       <h2 style={{ ...headLbl, marginBottom: 4 }}>Getting started</h2>
       <p style={{ margin: "0 0 18px", fontSize: 14, color: "var(--fg-3)", maxWidth: "54ch", lineHeight: 1.55 }}>
         Nothing has been verified yet. Name a deployment and the outcome it should prove above; your records

@@ -247,7 +247,7 @@ export default async function UsagePage() {
             })}
           </div>
         ) : (
-          <div style={{ border: "1px dashed var(--line-3)", borderRadius: "var(--r-lg, 14px)", background: "var(--bg-2)", padding: "clamp(18px, 2.4vw, 26px)" }}>
+          <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-lg, 14px)", background: "var(--bg-1)", boxShadow: "var(--shadow-card)", padding: "clamp(18px, 2.4vw, 26px)" }}>
             <div style={{ color: "var(--fg-3)", marginBottom: 8 }}><Ic d={I.key} size={20} /></div>
             <p style={{ margin: "0 0 14px", fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.6, maxWidth: "56ch" }}>
               No API keys yet. A key lets CI, an agent or the CLI launch and read verifications with the same
