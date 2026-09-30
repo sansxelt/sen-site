@@ -11,13 +11,20 @@
 // Not a <details> element: the trigger has to disappear when open (a disclosure that keeps its summary
 // visible wastes the row it was trying to save) and focus has to move into the form, neither of which the
 // native element does.
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Composer } from "./composer";
 import { Ic, I } from "@/app/rank/_components/icons";
 
-export function CompactComposer({ balance }: { balance: number }) {
-  const [open, setOpen] = useState(false);
+export function CompactComposer({ balance, defaultOpen = false }: { balance: number; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen);
   const region = useRef<HTMLDivElement>(null);
+  // Opened from the top bar: bring the form into view and put the cursor in its first field.
+  useEffect(() => {
+    if (!defaultOpen) return;
+    const el = region.current;
+    el?.scrollIntoView({ block: "start", behavior: "smooth" });
+    (el?.querySelector("input,textarea") as HTMLElement | null)?.focus({ preventScroll: true });
+  }, [defaultOpen]);
 
   if (!open) {
     return (

@@ -237,7 +237,7 @@ export function Composer({ balance }: { balance: number }) {
       {/* Balance line, quiet, only at rest. Never a fabricated dollar cost the backend did not return. */}
       {phase.k === "compose" && balance > 0 && (
         <div style={{ marginTop: 16, paddingTop: 13, borderTop: "1px solid var(--line-2)", fontSize: 12.5, color: "var(--fg-4)" }}>
-          Balance <b style={{ color: "var(--fg-2)", fontFamily: "var(--font-code)" }}>{balance.toLocaleString()}</b>.
+          Balance <b style={{ color: "var(--fg-2)", fontVariantNumeric: "tabular-nums" }}>{balance.toLocaleString()} credits</b>.
           Reviewing a plan is free. You are charged only when an approved verification runs. Nothing runs, nothing charged.
         </div>
       )}
@@ -345,7 +345,7 @@ function PlanPanel({ plan, balance, busy, stale, canReview, onReview, onApprove,
         <button className="btn btn--ghost" onClick={onReset} style={{ flex: "none" }} disabled={!!busy}>Discard</button>
         <span style={{ flex: 1 }} />
         <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>
-          {approved ? "Approved" : "Approval and running are separate steps"}. Balance <b style={{ color: "var(--fg-2)", fontFamily: "var(--font-code)" }}>{balance.toLocaleString()}</b>. Charged only when it runs.
+          {approved ? "Approved" : "Approval and running are separate steps"}. Balance <b style={{ color: "var(--fg-2)", fontVariantNumeric: "tabular-nums" }}>{balance.toLocaleString()} credits</b>. Charged only when it runs.
         </span>
       </div>
     </div>

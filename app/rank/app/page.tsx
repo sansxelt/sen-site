@@ -45,7 +45,10 @@ async function guaranteesForMemberApps(apps: Application[]) {
   return groups.flat();
 }
 
-export default async function Overview() {
+export default async function Overview({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  // ?new=1 is what the top bar's "New verification" button links to. It used to link to this same page with
+  // nothing else, so on the Overview the product's primary button did nothing a person could see.
+  const openNew = (await searchParams).new === "1";
   const session = await auth();
   const email = session?.user?.email;
 
@@ -213,7 +216,8 @@ export default async function Overview() {
               happened the last time somebody did. Needs attention stays above it, because a critical
               failure is the one thing that should interrupt starting new work. */}
           {issuesR.error ? <SectionError label="Needs attention" /> : <NeedsAttention items={attention} />}
-          <div style={{ marginBottom: 36 }}><CompactComposer balance={bal} /></div>
+          {/* key remounts the composer when the button is pressed while already on this page, so it opens. */}
+          <div style={{ marginBottom: 36 }}><CompactComposer key={openNew ? "new" : "rest"} balance={bal} defaultOpen={openNew} /></div>
           {appsR.error || latestR.error ? <SectionError label="Systems" /> : <SystemsTable rows={systems} />}
           {pendingR.error ? <SectionError label="Pending review" /> : <PendingReview rows={pendingR.value} />}
           {runsR.error ? <SectionError label="Recent verifications" /> : <RecentVerificationsTable rows={settledRuns} />}

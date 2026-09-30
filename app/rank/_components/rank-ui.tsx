@@ -448,8 +448,10 @@ function AppTopbar({ email, systems, pendingReviews }: { email: string | null; s
         {/* On phones this collapses to an icon square matching the burger, not a pill around a bare "+"
             text glyph: the glyph sat off-centre in its own padding and read as a stray character. */}
         {/* "/app" for the same reason the Overview nav item uses it: this component does not know the host,
-            and "/" is the marketing home on every host except app.vraelis.com. */}
-        <Link href="/app" className="btn vra-app-connect" aria-label="New verification">
+            and "/" is the marketing home on every host except app.vraelis.com. ?new=1 opens the composer
+            there (the proxy keeps the query across its /app redirect), so the button does something even
+            when you are already on the Overview. */}
+        <Link href="/app?new=1" className="btn vra-app-connect" aria-label="New verification">
           <span className="vra-app-connect__i" aria-hidden><Ic d={I.plus} size={15} sw={2.2} /></span>
           <span className="vra-app-connect__label">New verification</span>
         </Link>
