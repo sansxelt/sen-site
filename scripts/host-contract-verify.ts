@@ -167,11 +167,14 @@ ok("proxy.ts is what answers it, on both hosts",
   ok("the shared component carries a cache-busting version", /authenticated\.css\?v=\d+/.test(surface));
   for (const [what, file] of [
     ["the signed-in shell", "app/rank/_components/rank-ui.tsx"],
-    ["the auth round-trip", "app/auth/layout.tsx"],
-    ["sign-in", "app/signin/layout.tsx"],
+    ["the account screens' frame (sign-in and every /auth screen)", "app/_components/auth-frame.tsx"],
     ["the authenticated layout", "app/rank/app/layout.tsx"],
   ] as const) {
     ok(`${what} mounts the boundary through ProductSurface`, /<ProductSurface>/.test(readFileSync(file, "utf8")));
+  }
+  // Sign-in and the auth round-trip reach the boundary through the shared frame, so both must render it.
+  for (const [what, file] of [["the auth round-trip", "app/auth/layout.tsx"], ["sign-in", "app/signin/layout.tsx"]] as const) {
+    ok(`${what} renders the shared account frame`, /<AuthFrame>/.test(readFileSync(file, "utf8")));
   }
   // The chrome is part of the product. Mounted only deeper, the topbar and sidebar rendered OUTSIDE the
   // boundary and the product came up graphite inside a cream frame with an emerald button.
