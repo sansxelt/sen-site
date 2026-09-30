@@ -732,10 +732,11 @@ const SHELL_UI_CSS = "@keyframes vraTextIn{from{opacity:0;transform:translateY(1
   + ".rank-root a.card,.rank-root a.acard,.rank-root a.price{transition:transform 150ms cubic-bezier(0.22,1,0.36,1),border-color 150ms ease,box-shadow 150ms ease}"
   + ".rank-root a.card:hover,.rank-root a.acard:hover{transform:translateY(-1px);border-color:var(--acc-line)}"
   + ".rank-root a.card:active,.rank-root a.acard:active{transform:translateY(0) scale(0.995)}"
-  // Tighten the top of every app page. Pages set paddingTop inline on their .wrap
-  // (clamp up to 40px), which felt like dead space under the topbar; override it once
-  // here (a stylesheet !important beats the inline value) so all /app pages match.
-  + ".rank-root .app-main>.wrap{padding-top:clamp(12px,1.6vw,20px)!important}"
+  // The top of every app page, set once here (a stylesheet !important beats the inline paddingTop sixty-one
+  // pages still carry). It WAS clamp(12px,1.6vw,20px), meant to remove dead space under the topbar; at the
+  // app's 0.89 zoom that left 11 to 18px, and every page title sat on the topbar's border (founder,
+  // 2026-09-29: "the entire page is right on the border", on almost all console pages). Real room now.
+  + ".rank-root .app-main>.wrap{padding-top:clamp(28px,3.4vw,48px)!important}"
   // The wordmark is ONE component, but the two shells render at different zooms (0.89 in the app, 0.99 on
   // the site), so an identical 21px renders ~10% smaller in the app and the logo visibly changes size when
   // you cross between them. Scale it back up inside the app by exactly the ratio between the two zooms, so

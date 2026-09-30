@@ -26,7 +26,7 @@
 // the words should be.
 //
 // A NOTE ON TOP PADDING, because it wastes an hour otherwise: rank-ui.tsx injects
-// `.rank-root .app-main>.wrap { padding-top: clamp(12px,1.6vw,20px) !important }`. Sixty-one pages carry an
+// `.rank-root .app-main>.wrap { padding-top: clamp(28px,3.4vw,48px) !important }`. Sixty-one pages carry an
 // inline paddingTop that therefore never renders. Do not add another one here; the shell owns it.
 import type { ReactNode } from "react";
 

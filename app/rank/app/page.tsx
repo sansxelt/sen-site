@@ -162,7 +162,7 @@ export default async function Overview() {
   // the `wide` measure, which is the one for lists and tables and is what every other records page now uses.
   //
   // The inline paddingTop went with it because it was never doing anything: rank-ui.tsx injects
-  // `.rank-root .app-main>.wrap { padding-top: clamp(12px,1.6vw,20px) !important }`, so the shell has owned
+  // `.rank-root .app-main>.wrap { padding-top: clamp(28px,3.4vw,48px) !important }`, so the shell has owned
   // the top of this page the whole time. The paddingBottom WAS real (it is the tail room under the last
   // table), so it moves onto the content rather than being dropped with the .wrap that carried it.
   //
