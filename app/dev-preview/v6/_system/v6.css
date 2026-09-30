@@ -23,28 +23,36 @@
   --line:    rgba(10,10,11,0.10);
   --line-2:  rgba(10,10,11,0.17);
 
-  /* ---- dark surfaces: near black, never a blue-grey ---- */
-  --graphite:   #0A0A0B;
-  --graphite-2: #121214;
-  --graphite-3: #1B1C1F;
-  --g-fg:    #FAFAFA;   /* ~19:1 */
-  --g-fg-2:  #C4C5C9;   /* ~11:1 */
-  --g-fg-3:  #8E9095;   /* ~6.2:1 */
-  --g-line:  rgba(255,255,255,0.12);
-  --g-line-2:rgba(255,255,255,0.20);
+  /* ---- the former dark ramp, now light (2026-09-30) ----
+     ONE GROUND, EVERYWHERE. The console went light, and the founder's rule is that the whole product moves
+     with it by the same amount: the homepage, the docs and every page, not a white app beside a half-black
+     site. Every "dark" band, card and label on the site reads these tokens, so they are remapped here rather
+     than rewritten in two hundred places: a former dark band is the grey alternating band, a card on it is
+     white, and its type is the same ink as everywhere else. The names stay so the markup keeps its meaning
+     (a band that stands apart from its neighbours); only the values changed. */
+  --graphite:   #F4F4F5;   /* was #0A0A0B: a band, now the same grey as --sunk */
+  --graphite-2: #FFFFFF;   /* was #121214: a card on that band */
+  --graphite-3: #F4F4F5;   /* was #1B1C1F: an inset inside a card */
+  --g-fg:    #0A0A0B;
+  --g-fg-2:  #2E2F33;
+  --g-fg-3:  #5B5D63;
+  --g-line:  rgba(10,10,11,0.10);
+  --g-line-2:rgba(10,10,11,0.17);
 
   /* ---- "brand" is contrast, not hue. There is no accent colour in this system: the primary action is
      black on white and white on black, and the ONLY colour anywhere on the site is a state signal. ---- */
   --brand:     #0A0A0B;
   --brand-ink: #2E2F33;   /* neutral, for labels that used to carry the accent */
-  --brand-dk:  #FAFAFA;
+  --brand-dk:  #0A0A0B;   /* was #FAFAFA, the primary action on a dark band */
   --brand-soft:rgba(10,10,11,0.06);
   --brand-line:rgba(10,10,11,0.20);
 
   /* ---- signals: the only colour that ever appears, and it always means a state ---- */
-  --go:   #0B7C55;   --go-ink:  #06603F;   --go-dk:   #4ADE9C;   /* it held */
-  --wait: #A96A12;   --wait-ink:#7E4E0C;   --wait-dk: #F2B75A;   /* a person is needed */
-  --stop: #B03A22;   --stop-ink:#8C2E19;   --stop-dk: #FF7A55;   /* it failed */
+  /* the -dk variants were the same signals tuned for a black ground; with no black ground left they are the
+     light-ground values, so a signal reads the same on every band */
+  --go:   #0B7C55;   --go-ink:  #06603F;   --go-dk:   #0B7C55;   /* it held */
+  --wait: #A96A12;   --wait-ink:#7E4E0C;   --wait-dk: #A96A12;   /* a person is needed */
+  --stop: #B03A22;   --stop-ink:#8C2E19;   --stop-dk: #B03A22;   /* it failed */
 
   /* type */
   --sans: var(--font-brand-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
@@ -113,7 +121,8 @@
 .v6-sec--sunk { background: var(--sunk); }
 /* Two sections on the same ground read as one band, so the second one does not add its own top padding:
    stacked, the two paddings left a gap twice the normal section rhythm with nothing in it. */
-.v6-sec--sunk + .v6-sec--sunk, .v6-dark + .v6-dark { padding-top: 0; }
+.v6-sec--sunk + .v6-sec--sunk, .v6-dark + .v6-dark,
+.v6-sec--sunk + .v6-dark, .v6-dark + .v6-sec--sunk { padding-top: 0; }
 .v6-sec--tight { padding-block: clamp(52px, 7vw, 96px); }
 .v6-rule { height: 1px; background: var(--line); border: 0; margin: 0; }
 
@@ -456,19 +465,21 @@
    the nav, opening it over the dark hero also painted the wordmark white-on-white. It is now the same
    graphite surface the desktop menus open, carrying the same groups, link titles and descriptions, as
    accordion sections. Its own foreground colours are pinned here so no nav theme state can bleed in. */
-.v6-drawer { position: fixed; inset: 0; z-index: 90; background: #08080A; color: var(--g-fg-2); display: flex; flex-direction: column; animation: v6DrawerIn 240ms var(--ease) both; overflow: hidden; }
+/* background and colour from the same tokens as its children, so the sheet and its type cannot disagree: a
+   fixed #08080A here drew ink links on a black sheet on every light page (2026-09-30) */
+.v6-drawer { position: fixed; inset: 0; z-index: 90; background: var(--surface); color: var(--ink-2); display: flex; flex-direction: column; animation: v6DrawerIn 240ms var(--ease) both; overflow: hidden; }
 @keyframes v6DrawerIn { from { opacity: 0; } to { opacity: 1; } }
 .v6-drawer__top { display: flex; align-items: center; justify-content: space-between; padding: 13px var(--gutter); border-bottom: 1px solid var(--g-line); flex: none; }
 /* The drawer states its own brand colour: it is always night, whatever theme the bar behind it holds. */
 .v6-nav .v6-drawer .v6-brand { color: var(--g-fg); }
-.v6-drawer__x { width: 44px; height: 44px; border-radius: var(--r-md); border: 1px solid var(--g-line-2); background: rgba(255,255,255,0.06); color: var(--g-fg); display: grid; place-items: center; cursor: pointer; }
+.v6-drawer__x { width: 44px; height: 44px; border-radius: var(--r-md); border: 1px solid var(--line-2); background: var(--brand-soft); color: var(--ink); display: grid; place-items: center; cursor: pointer; }
 .v6-drawer__x:focus-visible { outline: 2px solid var(--g-fg); outline-offset: 2px; }
 .v6-drawer__body { padding: 2px var(--gutter) 24px; display: flex; flex-direction: column; flex: 1; overflow-y: auto; }
 /* SIDE BY SIDE, NOT ONE ON TOP OF THE OTHER. These are two short labels, and stacked as full-width blocks
    ten pixels apart they read as one control that has been cut in half rather than as a choice between
    signing in and opening the app. On a row they are about 250px of the 350 available. Open Vraelis takes
    the larger share because it is the primary action; signed in, it is the only child and fills the row. */
-.v6-drawer__foot { flex: none; padding: 14px var(--gutter) calc(18px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--g-line); background: #08080A; display: flex; gap: 10px; }
+.v6-drawer__foot { flex: none; padding: 14px var(--gutter) calc(18px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); background: var(--surface); display: flex; gap: 10px; }
 .v6-drawer__foot .v6-btn { justify-content: center; flex: 1 1 0; min-width: 0; }
 .v6-drawer__foot .v6-btn--brand { flex-grow: 1.6; }
 /* Inside the drawer the actions take the night treatment regardless of the bar's theme. Specificity matches
@@ -488,7 +499,7 @@
 @keyframes v6SecIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 .v6-drawer__grp-h { font-family: var(--sans); font-size: 11.5px; font-weight: 600; letter-spacing: 0; color: var(--g-fg-3); margin: 0 0 6px; }
 .v6-drawer__glink { display: block; text-decoration: none; padding: 9px 10px; margin: 0 -10px; border-radius: var(--r-md); }
-.v6-drawer__glink:active { background: rgba(255,255,255,0.06); }
+.v6-drawer__glink:active { background: var(--brand-soft); }
 .v6-drawer__glink:focus-visible { outline: 2px solid var(--g-fg); outline-offset: -2px; }
 .v6-drawer__glt { display: block; font-size: 15.5px; font-weight: 600; color: var(--g-fg); letter-spacing: -0.012em; }
 .v6-drawer__gld { display: block; font-size: 12.5px; color: #9A9CA1; margin-top: 2px; line-height: 1.4; }

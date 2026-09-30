@@ -13,7 +13,7 @@
   display: flex;
   align-items: center;
   overflow: hidden;
-  background: var(--graphite);
+  background: var(--paper);   /* the homepage opens on white, like every other page (2026-09-30) */
   color: var(--g-fg-2);
   /* A FLOOR ABOVE THE vh TERM IS NOT A FLOOR, IT IS A CONSTANT. This was clamp(56px, 9vh, 120px), and 9vh
      only clears 56px above 622px of viewport height, so on every short viewport the clamp resolved to a
@@ -30,7 +30,7 @@
 
 /* a clean ground, not a lit one: the radial read as a smudge sitting behind the headline */
 .v6-h__field { position: absolute; inset: 0; z-index: 0; pointer-events: none;
-  background: linear-gradient(180deg, #0C0C0E 0%, var(--graphite) 55%, #060607 100%); }
+  background: var(--paper); } /* white, with the rest of the site (2026-09-30); it was a black gradient */
 
 /* ---- content plane ---- */
 .v6-h__inner { position: relative; z-index: 3; width: 100%; max-width: var(--max-wide);

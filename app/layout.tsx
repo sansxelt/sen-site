@@ -122,10 +122,10 @@ export default async function RootLayout({
 
   if (stealthConfigured() && !verifyStealthCookie((await cookies()).get(STEALTH_COOKIE)?.value)) {
     return (
-      // The curtain is graphite, so the canvas is painted graphite too. Left cream, the overscroll gutter
-      // and the strip below a short viewport flashed warm paper around a near-black screen.
-      <html lang="en" data-theme="dark" style={{ colorScheme: "dark", background: "#0A0A0B" }} className={`${brandSans.variable} ${brandMono.variable} h-full`}>
-        <body className="min-h-full" style={{ background: "#0A0A0B" }}>
+      // The curtain is white, like the rest of the product since 2026-09-30, so the canvas is painted white
+      // too; the overscroll gutter and the strip below a short viewport match the screen.
+      <html lang="en" data-theme="light" style={{ colorScheme: "light", background: "#FFFFFF" }} className={`${brandSans.variable} ${brandMono.variable} h-full`}>
+        <body className="min-h-full" style={{ background: "#FFFFFF" }}>
           <link rel="stylesheet" href="/vraelis/tokens.css?v=21" />
           <link rel="stylesheet" href="/vraelis/styles.css?v=55" />
           {/* THE CURTAIN IS THE ONLY THING MOST MACHINES EVER SEE, AND IT SAID NOTHING ABOUT THE COMPANY.

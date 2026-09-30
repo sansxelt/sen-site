@@ -324,7 +324,14 @@ html:has([data-surface="app"]) {
 /* Code frames: no window-control dots. Three coloured circles on a terminal block are decoration borrowed
    from a macOS window, and nothing else in the console draws one. The label moves to the left edge. */
 [data-surface="app"] .codebar i { display: none; }
-[data-surface="app"] .codebar span { margin-left: 0; }
+[data-surface="app"] .codebar span { margin-left: 0; color: var(--fg-4); }
+/* The bar over a code well was still the old navy (#1C2733) above a light well. It is the well's own grey
+   now, split from it by a hairline, and the syntax colours are the light-ground ones the site uses. */
+[data-surface="app"] .codebar { background: var(--bg-2); border: 1px solid var(--line-2); border-bottom-color: var(--line-1); }
+[data-surface="app"] .codebar + .codeblock { border-top: 0; }
+[data-surface="app"] .codeblock .tk-key { color: var(--fg-1); font-weight: 600; }
+[data-surface="app"] .codeblock .tk-str { color: var(--acc-deepest); }
+[data-surface="app"] .codeblock .tk-com { color: var(--fg-4); }
 
 /* Records: the "Show more" row is a plain link-coloured row, not a disclosure triangle. */
 [data-surface="app"] .rec-more > summary::-webkit-details-marker { display: none; }

@@ -38,7 +38,7 @@ export const metadata: Metadata = { robots: robotsMeta(false) };
  * a signal on a typo.
  */
 export default function NotFound() {
-  const g = GROUND_CSS.graphite;
+  const g = GROUND_CSS.paper;
   return (
     <main className="v404">
       <style>{`html, body { background: ${g.bg} !important; color-scheme: ${g.scheme} !important; }` + NF_CSS}</style>
@@ -66,14 +66,14 @@ export default function NotFound() {
 }
 
 const NF_CSS = `
-/* Design 06, written out. This page renders from the ROOT layout, which never loads the v6 stylesheet, so
+/* Design 06, written out, light since 2026-09-30 like the rest of the product. This page renders from the ROOT layout, which never loads the v6 stylesheet, so
    the values are restated here the same way the stealth curtain restates them. Keep in step by hand. */
 .v404{
   position:relative; min-height:100svh;
   display:flex; align-items:center; justify-content:center;
   overflow:hidden; isolation:isolate;
   padding:clamp(40px,8vw,96px) clamp(20px,5vw,64px);
-  background:#0A0A0B; color:#C4C5C9;
+  background:#FFFFFF; color:#2E2F33;
 }
 
 /* Left-set, like every other design 06 opening. The numeral sits behind the text as a quiet mark of scale
@@ -83,33 +83,33 @@ const NF_CSS = `
 
 .v404-kicker{
   margin:0 0 18px; font-size:13px; font-weight:500;
-  letter-spacing:.14em; text-transform:uppercase; color:#8E9095;
+  letter-spacing:0; color:#5B5D63;
 }
 .v404-head{
   margin:0; font-weight:600; letter-spacing:-.032em; line-height:1.02;
-  font-size:clamp(2.3rem,4.6vw,3.6rem); color:#FAFAFA; text-wrap:balance;
+  font-size:clamp(2.3rem,4.6vw,3.6rem); color:#0A0A0B; text-wrap:balance;
 }
 .v404-body{
   margin:20px 0 0; max-width:52ch;
-  font-size:clamp(1rem,1.2vw,1.08rem); line-height:1.6; color:#C4C5C9; text-wrap:pretty;
+  font-size:clamp(1rem,1.2vw,1.08rem); line-height:1.6; color:#2E2F33; text-wrap:pretty;
 }
 
 .v404-actions{ display:flex; flex-wrap:wrap; align-items:center; gap:22px; margin-top:34px; }
-/* Contrast, not hue: the primary action is white on graphite, the way it is everywhere else now. */
+/* Contrast, not hue: the primary action is black on white, the way it is everywhere else now. */
 .v404-cta{
   display:inline-flex; align-items:center; justify-content:center;
-  background:#FAFAFA; color:#0A0A0B; text-decoration:none;
+  background:#0A0A0B; color:#FFFFFF; text-decoration:none;
   font-size:15px; font-weight:550; letter-spacing:-.01em;
   padding:12px 22px; border-radius:11px;
   transition:background 140ms cubic-bezier(0,0,.2,1);
 }
-.v404-cta:hover{ background:#FFFFFF; }
+.v404-cta:hover{ background:#1B1C1F; }
 .v404-link{
-  font-size:14.5px; color:#C4C5C9; text-decoration:none;
-  border-bottom:1px solid rgba(255,255,255,.22); padding-bottom:2px;
+  font-size:14.5px; color:#2E2F33; text-decoration:none;
+  border-bottom:1px solid rgba(10,10,11,.22); padding-bottom:2px;
   transition:color 140ms ease, border-color 140ms ease;
 }
-.v404-link:hover{ color:#FAFAFA; border-color:rgba(255,255,255,.5); }
+.v404-link:hover{ color:#0A0A0B; border-color:rgba(10,10,11,.5); }
 
 /* The numeral, as a watermark. Sized off the viewport and clipped by the page, so it reads as scale rather
    than as content. Hidden from assistive tech; the h1 already says it. */
@@ -118,7 +118,7 @@ const NF_CSS = `
   right:clamp(-28px,-2vw,0px); bottom:clamp(-40px,-4vw,-12px);
   font-weight:600; letter-spacing:-.06em; line-height:.75;
   font-size:clamp(11rem,34vw,30rem);
-  color:rgba(255,255,255,.038);
+  color:rgba(10,10,11,.038);
 }
 @media (max-width:760px){ .v404-num{ right:auto; left:50%; transform:translateX(-50%); bottom:-6vh; } }
 

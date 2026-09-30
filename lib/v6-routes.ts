@@ -58,7 +58,8 @@ export const V6_IS_LIVE = V6_BASE === "";
  *
  * Four grounds exist and every document is one of them:
  *   console   the signed-in product, sign-in and the auth round-trip (light since 2026-09-30)
- *   graphite  the v6 homepage, partnership records and the docs environment
+ *   graphite  unused since 2026-09-30, when the homepage, partnership records and docs went white; kept
+ *             so a stale header value still resolves
  *   paper     every other v6 route, which opens on a white page hero
  *   cream     the previous generation of the marketing site
  *
@@ -84,10 +85,10 @@ export const GROUND_CSS: Record<Ground, { bg: string; scheme: "dark" | "light" }
 /** Which ground a v6 route opens on. The homepage and partnership records open on black, and the docs
  *  environment is night; every other v6 route opens on a page hero. Shared with the shell so the nav bar and the document canvas
  *  can never disagree about what colour the top of the page is. */
-export function v6GroundAtTop(pathname: string): Ground {
-  if (pathname === V6_BASE || pathname === V6_BASE + "/" || pathname === "/") return "graphite";
-  if (pathname.startsWith(V6_BASE + "/docs")) return "graphite";
-  if (pathname.startsWith(V6_BASE + "/partnerships/")) return "graphite";
+// Every v6 route opens on white since 2026-09-30. The homepage, the partnership records and the docs opened
+// on graphite; the founder asked for one ground across the console, the docs and the site, so there is no
+// dark route left to announce. The parameter stays so callers keep asking per route.
+export function v6GroundAtTop(_pathname: string): Ground {
   return "paper";
 }
 export const V6_COMPANY = `${V6_BASE}/company`;

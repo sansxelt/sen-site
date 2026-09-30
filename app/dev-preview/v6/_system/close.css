@@ -21,8 +21,7 @@
   padding: clamp(20px, 13vh, 168px) 0 clamp(18px, 12vh, 144px); }
 .v6-end__field { position: absolute; inset: 0; pointer-events: none;
   background:
-    radial-gradient(1300px 780px at 74% 18%, rgba(255,255,255,0.055), transparent 70%),
-    linear-gradient(170deg, #141517, var(--graphite) 62%, #060607); }
+    var(--graphite); } /* the grey band, flat: the black gradient went with the dark ground (2026-09-30) */
 .v6-end__in { position: relative; z-index: 2; width: 100%; max-width: var(--max-wide);
   margin-inline: auto; padding-inline: var(--gutter); }
 
