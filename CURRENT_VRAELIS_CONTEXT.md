@@ -45,6 +45,12 @@ and native apps, SDKs, rule readiness. Not covered: localhost and private addres
   as Markdown, `/llms.txt` and `/llms-full.txt` (both 404 while the stealth curtain is on).
 - The top bar's "New verification" links to `/app?new=1`, which opens the composer.
 
+**One ground everywhere (2026-09-30, founder's rule).** If the console is white, every surface is white by the
+same amount: the homepage, the docs, every page, the 404, the error page and the curtain. The site's former dark
+ramp (`--graphite`, `--g-fg*`, `--g-line*`, `--go-dk` and friends) is remapped to light values in `v6.css`, so a
+`.v6-dark` band is now the grey alternating band and its cards are white. Any future change of look goes through
+all of those surfaces in one pass, checked by a runtime audit over every page rather than by eye.
+
 **Layout contracts (2026-09-30, later the same day):**
 - Site: one page column. `--max` in `v6.css` is 1320px and `.v6-wrap--wide` is no longer used, so every
   heading on every page starts on the same x. The nav bar spans the viewport but pads its contents onto that
