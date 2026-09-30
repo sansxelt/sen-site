@@ -15,7 +15,13 @@ export type Block =
   | { t: "note"; label: string; text: string }
   // A real, copyable command or payload inside the article. Rendered by the same DocCode block the per-page
   // example uses, so a setup page can show its commands in the order a reader runs them.
-  | { t: "code"; label: string; text: string };
+  | { t: "code"; label: string; text: string }
+  // A REAL CONSOLE SCREENSHOT, cropped to the part the text is about, with numbered marks. Captured from the
+  // demo account's own runs (2026-09-30), never mocked up. x and y are percentages of the image, and each
+  // mark's label is printed under it, so the numbers carry meaning without the picture.
+  | { t: "figure"; src: string; alt: string; width: number; height: number; caption: string; marks?: { x: number; y: number; label: string }[] }
+  // The surfaces list from _content/coverage.ts, so the docs and the site read one source.
+  | { t: "surfaces" };
 
 export type Doc = {
   slug: string;
@@ -23,12 +29,15 @@ export type Doc = {
   title: string;
   summary: string;
   outcome: string;
+  /** What this does NOT do, in one sentence. Linear's docs carry one on every page; ours say where the
+   *  product stops so nobody finds out from a failed run. */
+  limit?: string;
   blocks: Block[];
   related?: string[];
 };
 
 // Sidebar group order. DOCS below is written in this order too, because previous and next follow the array.
-export const DOC_GROUPS = ["Getting started", "Ways to use it", "The check", "The record"];
+export const DOC_GROUPS = ["Getting started", "Ways to run", "The check", "The record"];
 
 export const DOCS: Doc[] = [
   {
@@ -37,6 +46,7 @@ export const DOCS: Doc[] = [
     title: "Getting started with Vraelis",
     summary: "Write one sentence about your deployed app, approve the plan, and read your first decision.",
     outcome: "You have run one check on your live app and read its answer.",
+    limit: "Vraelis checks what a browser can reach on a public address. It does not read your code, your database or a device's firmware.",
     blocks: [
       { t: "p", text: "Vraelis checks whether a deployed web app does what someone says it does. You write one sentence about what should work, a person approves the plan Vraelis writes from it, and a real browser tries it on the live app. The answer is Verified, Failed or Blocked, with the evidence. This guide takes you from an empty account to that first answer." },
       { t: "h2", text: "1. Name the deployed app" },
@@ -48,9 +58,17 @@ export const DOCS: Doc[] = [
       { t: "p", text: "Vraelis turns the sentence into requirements and the browser steps that would prove them, and shows you both. Nothing runs until a person approves that exact plan. If no check could prove the claim, Vraelis says so and charges nothing." },
       { t: "h2", text: "4. Read the answer" },
       { t: "p", text: "Verified means the claim held on the live app. Failed means it did not, with what was expected, what was observed, and a repair prompt. Blocked means no decision could be reached, so none is claimed. Every answer carries its steps, screenshots, console errors and failed requests." },
+      { t: "figure", src: "/docs/run-report-head.webp", width: 1678, height: 648,
+        alt: "The top of a real run report in the Vraelis console: the Notewell app, its live address, when it completed, a Failed badge, and the sentence that had to be true.",
+        caption: "The top of a real run report, from a check of a notes app.",
+        marks: [
+          { x: 62, y: 39.8, label: "Which live app was checked, and when." },
+          { x: 88.3, y: 45.7, label: "The answer." },
+          { x: 83, y: 81, label: "The sentence that had to be true, exactly as it was approved." },
+        ] },
       { t: "note", label: "Four ways in", text: "The same check runs from the console, the CLI, CI through the API, and AI assistants over MCP. Start in whichever you already have open." },
     ],
-    related: ["the-loop", "ai-assistants"],
+    related: ["the-loop", "what-you-can-check", "ai-assistants"],
   },
   {
     slug: "the-loop",
@@ -58,6 +76,7 @@ export const DOCS: Doc[] = [
     title: "Verify, approve, run, re-check",
     summary: "The whole loop, in the order it happens, in each of the ways to run it.",
     outcome: "You know every step between a claim and a trusted answer, and who takes each one.",
+    limit: "No step can be skipped: nothing runs before a person approves the plan.",
     blocks: [
       { t: "p", text: "Every check follows the same loop, whether it starts in the console, the CLI, a CI job or an AI assistant. The names differ by channel; the steps and the rules do not." },
       { t: "steps", items: [
@@ -78,11 +97,27 @@ export const DOCS: Doc[] = [
     related: ["review", "recheck"],
   },
   {
+    slug: "what-you-can-check",
+    group: "Getting started",
+    title: "What you can check",
+    summary: "Every kind of thing Vraelis is for, and whether it works today.",
+    outcome: "You know whether Vraelis can check what you built, today.",
+    limit: "A surface is listed as Live only after a real failing case ran end to end on it.",
+    blocks: [
+      { t: "p", text: "Vraelis is for anything people build and ship: websites, web and desktop apps, SDKs, and connected devices such as drones and robots. Today it checks what a real browser can reach. The list below says, for each kind, whether it works now." },
+      { t: "surfaces" },
+      { t: "h2", text: "Readiness is evidence, not certification" },
+      { t: "p", text: "When readiness checks ship, each result will say which rule it was checked against, on what date, and whether a person still needs to look. That is evidence for your auditor or counsel. It is not a certification, and it is not legal advice." },
+    ],
+    related: ["getting-started", "the-loop"],
+  },
+  {
     slug: "ai-assistants",
-    group: "Ways to use it",
+    group: "Ways to run",
     title: "Connect an AI assistant",
     summary: "Let an assistant check its change on the live app over MCP, and hand you the approval.",
     outcome: "Your assistant can call Vraelis, and you know what it can and cannot do with it.",
+    limit: "An assistant can ask for a check and read the answer. It cannot approve the plan.",
     blocks: [
       { t: "p", text: "An AI assistant that supports MCP can call Vraelis after it changes your web app. It gets three tools: vraelis_verify to ask for a check, vraelis_status to read where it is, and vraelis_recheck to run the same approved plan after a fix. No tool can approve a plan; the assistant hands you the link." },
       { t: "h2", text: "Set up with vraelis init" },
@@ -104,6 +139,7 @@ export const DOCS: Doc[] = [
     title: "Approving a plan",
     summary: "The one step only a person can take, and why an API key cannot.",
     outcome: "You can approve a plan, and you know why a script or an assistant cannot.",
+    limit: "An approval covers one plan on one site. It does not approve changes to that plan.",
     blocks: [
       { t: "p", text: "Before the first run of a claim, a person approves the plan Vraelis wrote from it: the requirements it will judge and the browser steps that will prove them. The approval is its own recorded event, saying who approved which plan and when. The run then executes exactly that plan." },
       { t: "h2", text: "Where the approval happens" },
@@ -127,6 +163,7 @@ export const DOCS: Doc[] = [
     title: "Run activity",
     summary: "What a verification did, step by step, with the evidence it captured.",
     outcome: "You can follow what a verification run observed, step by step, with its evidence.",
+    limit: "The record shows what the browser saw. It does not include a video or a Playwright trace.",
     blocks: [
       { t: "p", text: "Run activity is the record of one verification: the approved plan it executed, the journeys it drove in a real browser, what each step expected against what it observed, and the evidence captured along the way." },
       { t: "h2", text: "What appears here" },
@@ -139,6 +176,14 @@ export const DOCS: Doc[] = [
         "Execution evidence: screenshots, console errors, and failed network requests.",
         "The decision the run reached, and the repair prompt behind a failure.",
       ] },
+      { t: "figure", src: "/docs/run-journey-failed-step.webp", width: 1678, height: 680,
+        alt: "A journey in a real run report: Create and persist a note across sign-out and sign-in, marked Failed, run as the member test account, with step 1 passed and step 2, signing in, failed after 20.5 seconds.",
+        caption: "One journey from a real failed run. The error detail under the failed step opens to show what the browser saw.",
+        marks: [
+          { x: 40.5, y: 28.4, label: "The journey, and whether it held." },
+          { x: 59.9, y: 47, label: "The test account it ran as." },
+          { x: 25, y: 82.4, label: "The step that failed, and how long it took." },
+        ] },
       { t: "note", label: "Honest boundary", text: "A check begins when someone says the work is done. Vraelis does not read code, diffs or tool calls, and it does not watch anyone while they work." },
     ],
     related: ["completion", "findings"],
@@ -149,6 +194,7 @@ export const DOCS: Doc[] = [
     title: "Completion",
     summary: "Verified, Failed, or Blocked, with the evidence behind it.",
     outcome: "You can trust, or refuse to trust, a claim that something works.",
+    limit: "Verified means the approved plan held on that run. It is not a promise about the next deploy.",
     blocks: [
       { t: "p", text: "Completion is the decision at the end of a run. It is one of three answers, and the third is the one most tools refuse to give." },
       { t: "ul", items: [
@@ -157,6 +203,14 @@ export const DOCS: Doc[] = [
         "Blocked: no honest decision could be reached, so none is claimed.",
       ] },
       { t: "p", text: "The same three words come back in the console, the CLI's exit code, the API, the MCP tools and the webhooks. A claim is accepted when the live app shows it, not when someone says it is done." },
+      { t: "figure", src: "/docs/run-outcome-verified.webp", width: 1678, height: 388,
+        alt: "The outcome section of a real Verified run: the checked workflow completed with the expected result, a Verified badge, 2 of 2 critical flows passed, and the reason.",
+        caption: "The outcome of a real Verified run.",
+        marks: [
+          { x: 51.5, y: 43.8, label: "The answer in plain words." },
+          { x: 39.9, y: 61.3, label: "How many journeys held." },
+          { x: 49.6, y: 88.9, label: "Why Vraelis reached it." },
+        ] },
     ],
     related: ["repair", "recheck"],
   },
@@ -166,10 +220,19 @@ export const DOCS: Doc[] = [
     title: "Findings",
     summary: "What broke, in terms a person or a coding agent can act on.",
     outcome: "You can read what a failed run found and route it to whoever fixes it.",
+    limit: "A finding says what the live app did. It does not say which line of code caused it.",
     blocks: [
       { t: "p", text: "A finding is what a run records when the live app does not do what the claim says: the requirement that failed, what was expected, what was observed, the steps to reproduce it, and the step it failed at." },
       { t: "h2", text: "A finding is not a guess" },
       { t: "p", text: "Each finding carries what Vraelis observed in the browser and why it was raised, so the next step is a fix, not a mystery. When a run cannot decide, for example because a test account cannot sign in, the answer is Blocked with the reason rather than a finding." },
+      { t: "figure", src: "/docs/overview-needs-attention.webp", width: 1678, height: 644,
+        alt: "The Needs attention list on the console Overview: four findings on the Notewell app, one critical and three high, each with when it was found and a Failed badge for the app's latest result.",
+        caption: "Findings on the console Overview, from real runs of a notes app.",
+        marks: [
+          { x: 55.6, y: 20.5, label: "What failed, in plain words." },
+          { x: 67, y: 27.8, label: "Severity, the app, and when it was found. Came back means it failed again after an earlier run." },
+          { x: 87.1, y: 24.2, label: "The app's latest result." },
+        ] },
     ],
     related: ["repair", "recheck"],
   },
@@ -179,8 +242,18 @@ export const DOCS: Doc[] = [
     title: "Repair",
     summary: "A repair prompt for whoever fixes it, and a re-check that proves the fix.",
     outcome: "You can turn a Failed into a checked fix.",
+    limit: "Vraelis writes the prompt and checks the fix. It never edits your code.",
     blocks: [
       { t: "p", text: "When a run fails, Vraelis writes a repair prompt: what should have happened, what happened instead, how to reproduce it, and the evidence. It is written so a person or a coding agent can act on it directly." },
+      { t: "figure", src: "/docs/run-repair-prompt.webp", width: 1678, height: 998,
+        alt: "The repair handoff on a real failed run: a repair prompt for a coding agent stating what was being checked, what happened instead, and numbered steps to reproduce, with a Copy repair prompt button.",
+        caption: "A real repair prompt. It is plain text, so it pastes into any coding agent.",
+        marks: [
+          { x: 80.2, y: 29.5, label: "Copy it for a person or a coding agent." },
+          { x: 23.8, y: 45.3, label: "What was being checked." },
+          { x: 23.2, y: 55.5, label: "What happened instead." },
+          { x: 19.7, y: 65.9, label: "How to reproduce it, step by step." },
+        ] },
       { t: "h2", text: "The division of labor" },
       { t: "p", text: "Whoever fixes it diagnoses the cause and makes the change. Vraelis does not edit code. Once the fix is deployed, a re-check runs the same approved plan again as its own run, and an earlier record is never overwritten." },
       { t: "note", label: "Where the prompt goes", text: "Back to whoever asked: in the answer an AI assistant gets over MCP, in the CLI's output (--repair-prompt prints only the prompt), in the API response, and on the run report. A re-check is started by a person, a CI job or an assistant. Nothing re-checks on its own." },
@@ -194,6 +267,7 @@ export const DOCS: Doc[] = [
     title: "Re-checks",
     summary: "Run the same approved plan again after a fix, without a new approval.",
     outcome: "You can prove a fix on the live app without asking for approval again.",
+    limit: "A re-check runs the plan that was approved. To check something new, start a new verification.",
     blocks: [
       { t: "p", text: "A re-check runs every journey of an approved plan again, against the live app, after a fix has been deployed. It returns a new verification id and points back at the run it repeats; the earlier record is never touched. It runs all the journeys, not only the failed ones, because a run over a subset can only prove a repair, not the whole claim." },
       { t: "h2", text: "When no new approval is needed" },
@@ -219,6 +293,7 @@ export const DOCS: Doc[] = [
     title: "Systems",
     summary: "Every app you have connected, and how the last run on each one decided.",
     outcome: "You can see where every connected app stands.",
+    limit: "A system's label is its latest run, not a measure of everything the app does.",
     blocks: [
       { t: "p", text: "A system is one deployed app you check with Vraelis. Systems is the index of them: every app you have connected, each with the decision from its most recent verification." },
       { t: "h2", text: "What a system holds" },
@@ -250,6 +325,7 @@ export const DOCS: Doc[] = [
     title: "Guarantees",
     summary: "A claim saved so it can be checked again.",
     outcome: "You can keep a claim and check it again later against the same approved meaning.",
+    limit: "A guarantee is not checked on a schedule. A person, a CI job or an assistant starts each run.",
     blocks: [
       { t: "p", text: "A guarantee is a claim you save in the console so it can be checked again: the same sentence, held outside the code, with the plan a person approved for it. It is useful for the things that have to keep working as the app changes, such as sign-in, checkout, or one customer never seeing another's data." },
       { t: "h2", text: "Writing a claim worth keeping" },
@@ -271,6 +347,7 @@ export const DOCS: Doc[] = [
     title: "Memory",
     summary: "What is kept after every run, and what is not read back.",
     outcome: "You know exactly what Vraelis keeps about each check.",
+    limit: "History is kept and shown. It is never used to judge the next run.",
     blocks: [
       { t: "p", text: "Every run is kept: the plan that was approved, the step by step record, the screenshots, the decision it reached, and the repair prompt behind a failure. A re-check points back at the run it repeats. A later Verified does not erase an earlier Failed, so the history of how a claim came to hold stays intact." },
       { t: "note", label: "Honest boundary", text: "Vraelis keeps the full history and shows it to you. It does not use that history to judge the next run." },
@@ -291,4 +368,25 @@ export function adjacentDocs(slug: string) {
 }
 export function docHeadings(doc: Doc) {
   return doc.blocks.filter((b): b is Extract<Block, { t: "h2" }> => b.t === "h2").map((b) => b.text);
+}
+
+/** The page as Markdown, for the Copy as Markdown button and for AI assistants that read docs. Figures
+ *  become their alt text and numbered labels, so nothing a picture says is lost in text. */
+export function docToMarkdown(doc: Doc, surfaces: { name: string; brief: string; tier: string }[] = []): string {
+  const out: string[] = [`# ${doc.title}`, "", doc.summary, "", `Outcome: ${doc.outcome}`];
+  if (doc.limit) out.push("", `What it does not do: ${doc.limit}`);
+  for (const b of doc.blocks) {
+    out.push("");
+    switch (b.t) {
+      case "p": out.push(b.text); break;
+      case "h2": out.push(`## ${b.text}`); break;
+      case "ul": out.push(...b.items.map((i) => `- ${i}`)); break;
+      case "steps": out.push(...b.items.map((i, n) => `${n + 1}. ${i}`)); break;
+      case "note": out.push(`> **${b.label}.** ${b.text}`); break;
+      case "code": out.push(`${b.label}:`, "", "```", b.text, "```"); break;
+      case "figure": out.push(`[Screenshot: ${b.alt}]`, ...(b.marks ?? []).map((m, n) => `${n + 1}. ${m.label}`)); break;
+      case "surfaces": out.push(...surfaces.map((x) => `- **${x.name}** (${x.tier}): ${x.brief}`)); break;
+    }
+  }
+  return out.join("\n") + "\n";
 }

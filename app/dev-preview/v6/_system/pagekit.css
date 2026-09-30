@@ -402,3 +402,37 @@
 .v6 .btn--ghost:hover:not(:disabled) {
   background: transparent !important; color: var(--go) !important; border-color: var(--go) !important;
 }
+
+/* ── Docs: screenshots, surfaces, copy (2026-09-30) ─────────────────────────────────────────────────────
+   Real console crops sit on a light card inside the night docs, because the console IS light: showing it
+   inverted or dimmed would misrepresent the product. Marks are the one accent colour, numbered, and the
+   numbers repeat as an ordered list in the caption. */
+.v6-docsenv .v6-docs__fig { margin: 30px 0 8px; }
+.v6-docsenv .v6-docs__shot { position: relative; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.12);
+  background: #F7F7F8; }
+.v6-docsenv .v6-docs__shot img { display: block; width: 100%; height: auto; }
+.v6-docsenv .v6-docs__mark { position: absolute; transform: translate(-50%, -50%); width: 24px; height: 24px; border-radius: 50%;
+  background: #3E63DD; color: #fff; font: 600 12.5px/24px var(--sans); text-align: center;
+  box-shadow: 0 0 0 3px rgba(62,99,221,0.25), 0 2px 6px rgba(0,0,0,0.25); }
+.v6-docsenv .v6-docs__fig figcaption { margin-top: 12px; font-size: 14px; line-height: 1.55; color: var(--g-fg-3); }
+.v6-docsenv .v6-docs__fig figcaption p { margin: 0; }
+.v6-docsenv .v6-docs__fig figcaption ol { display: block; margin: 8px 0 0; padding-left: 22px; color: var(--g-fg-2); list-style: decimal outside; }
+.v6-docsenv .v6-docs__fig figcaption li { margin: 2px 0; padding-left: 2px; display: list-item; }
+.v6-docsenv .v6-docs__fig figcaption li::before { content: none; }
+.v6-docsenv .v6-docs__fig figcaption li::marker { color: #9EB1FF; font-weight: 600; }
+@media (max-width: 640px) { .v6-docsenv .v6-docs__mark { width: 20px; height: 20px; font-size: 11px; line-height: 20px; } }
+
+.v6-docsenv .v6-docs__surfaces { list-style: none; margin: 22px 0 8px; padding: 0; border: 1px solid rgba(255,255,255,0.10); border-radius: 12px; overflow: hidden; }
+.v6-docsenv .v6-docs__surfaces li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 14px; padding: 14px 16px;
+  border-top: 1px solid rgba(255,255,255,0.08); margin: 0; }
+.v6-docsenv .v6-docs__surfaces li:first-child { border-top: 0; }
+.v6-docsenv .v6-docs__surfaces .n { color: var(--g-fg); font-weight: 600; }
+.v6-docsenv .v6-docs__surfaces .t { justify-self: end; font-size: 12.5px; font-weight: 600; color: var(--g-fg-3); white-space: nowrap; }
+.v6-docsenv .v6-docs__surfaces .t[data-tier="live"] { color: #0A0A0B; background: #FAFAFA; border-radius: 5px; padding: 2px 8px; }
+.v6-docsenv .v6-docs__surfaces .b { grid-column: 1 / -1; color: var(--g-fg-2); font-size: 14.5px; line-height: 1.5; }
+
+.v6-docsenv .v6-docs__meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.v6-docsenv .v6-docs__copy { font: 500 13px/1 var(--sans); color: var(--g-fg-2); background: transparent; cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.16); border-radius: 7px; padding: 7px 11px; }
+.v6-docsenv .v6-docs__copy:hover { color: var(--g-fg); border-color: rgba(255,255,255,0.3); }
+.v6-docsenv .v6-docs__copy:focus-visible { outline: 2px solid #9EB1FF; outline-offset: 2px; }

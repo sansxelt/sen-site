@@ -7,6 +7,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { docsByGroup, type Block } from "./docs";
+import { SURFACES } from "./coverage";
 import { V6_BASE, V6_HOME } from "@/lib/v6-routes";
 import { MARK_PATH, MARK_VIEWBOX } from "@/lib/brand-mark";
 
@@ -24,10 +25,60 @@ export function Blocks({ blocks }: { blocks: Block[] }) {
           case "steps": return <ol key={i}>{b.items.map((it, j) => <li key={j}>{it}</li>)}</ol>;
           case "note": return <div className="v6-note" key={i}><b>{b.label}</b>{b.text}</div>;
           case "code": return <DocCode key={i} label={b.label} code={b.text} />;
+          case "figure": return <DocFigure key={i} block={b} />;
+          case "surfaces": return <DocSurfaces key={i} />;
           default: return null;
         }
       })}
     </>
+  );
+}
+
+/** A real console screenshot with numbered marks. The labels are printed under the image as an ordered list,
+ *  so the marks are a pointer, not the only place the meaning lives (and a screen reader gets the list). */
+function DocFigure({ block }: { block: Extract<Block, { t: "figure" }> }) {
+  return (
+    <figure className="v6-docs__fig">
+      <div className="v6-docs__shot">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={block.src} alt={block.alt} width={block.width} height={block.height} loading="lazy" decoding="async" />
+        {block.marks?.map((m, i) => (
+          <span key={i} className="v6-docs__mark" aria-hidden style={{ left: `${m.x}%`, top: `${m.y}%` }}>{i + 1}</span>
+        ))}
+      </div>
+      <figcaption>
+        <p>{block.caption}</p>
+        {block.marks?.length ? <ol>{block.marks.map((m, i) => <li key={i}>{m.label}</li>)}</ol> : null}
+      </figcaption>
+    </figure>
+  );
+}
+
+/** What Vraelis can check, from the same list the homepage and /platform read. */
+function DocSurfaces() {
+  return (
+    <ul className="v6-docs__surfaces">
+      {SURFACES.map((x) => (
+        <li key={x.name}>
+          <span className="n">{x.name}</span>
+          <span className="t" data-tier={x.tier === "Live" ? "live" : "other"}>{x.tier === "Next" ? "Not built yet" : x.tier}</span>
+          <span className="b">{x.brief}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** Copies the page as Markdown, for pasting into an AI assistant or a ticket. */
+export function CopyMarkdown({ markdown }: { markdown: string }) {
+  const [done, setDone] = useState<"idle" | "copied" | "failed">("idle");
+  return (
+    <button type="button" className="v6-docs__copy" onClick={() => {
+      navigator.clipboard.writeText(markdown).then(() => setDone("copied"), () => setDone("failed"));
+      window.setTimeout(() => setDone("idle"), 2200);
+    }}>
+      {done === "copied" ? "Copied" : done === "failed" ? "Copy failed" : "Copy as Markdown"}
+    </button>
   );
 }
 

@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { v6meta } from "../../_system/meta";
-import { DocShell, Blocks, DocCode } from "../../_content/docs-ui";
-import { DOCS, getDoc, adjacentDocs, docHeadings } from "../../_content/docs";
+import { DocShell, Blocks, DocCode, CopyMarkdown } from "../../_content/docs-ui";
+import { DOCS, getDoc, adjacentDocs, docHeadings, docToMarkdown } from "../../_content/docs";
+import { SURFACES } from "../../_content/coverage";
 import { V6_BASE } from "@/lib/v6-routes";
 import { robotsMeta } from "@/lib/stealth";
 
@@ -92,10 +93,14 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
     <DocShell activeSlug={slug} toc={headings}>
       <div className="v6-docs__article">
         <article className="v6-prose">
-          <div className="v6-docs__meta"><span className="v6-kicker">{doc.group}</span></div>
+          <div className="v6-docs__meta">
+            <span className="v6-kicker">{doc.group}</span>
+            <CopyMarkdown markdown={docToMarkdown(doc, SURFACES.map((x) => ({ name: x.name, brief: x.brief, tier: x.tier === "Next" ? "Not built yet" : x.tier })))} />
+          </div>
           <h1 className="v6-dl">{doc.title}</h1>
           <p className="v6-lead" style={{ marginTop: 14 }}>{doc.summary}</p>
           <div className="v6-note" style={{ marginTop: 22 }}><b>Outcome</b>{doc.outcome}</div>
+          {doc.limit ? <div className="v6-note v6-docs__limit" style={{ marginTop: 10 }}><b>What it does not do</b>{doc.limit}</div> : null}
           <Blocks blocks={doc.blocks} />
           {EXAMPLES[slug] ? <DocCode label={EXAMPLES[slug][0]} code={EXAMPLES[slug][1]} /> : null}
           {doc.related?.length ? (
