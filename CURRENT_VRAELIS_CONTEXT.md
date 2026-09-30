@@ -15,6 +15,39 @@ database access. They are labelled where they appear. Do not quote them as curre
 `scripts/preflight-launch-readiness.ts`. Nothing about external customers or revenue changed, and no
 count below is revised upward.
 
+## 00. Changed 2026-09-29 and 2026-09-30 (read this first)
+
+**Direction (founder, 2026-09-29).** Vraelis is a verification company: software that checks what people
+build (websites, web and desktop apps including Electron, SDKs, connected devices such as drones and robots)
+does what they meant, talks back to the AI agent that built it, and next checks behaviour against US and EU
+rules as READINESS evidence. Never "compliant" or "certified", never legal advice (FTC v. accessiBe, 2025).
+Narrow on function, broad on audience. Partnerships follow the product. The research, the recommendation
+(lead the niche with connected-device readiness, built on one engine), the 12-week MVP and the founder's open
+decisions are in the private artifact https://claude.ai/artifact/BckQm7G6bEriBMcF27ZaJV.
+
+**What is live and what is not:** `app/dev-preview/v6/_content/coverage.ts` is the one list. The homepage's
+"What you can check", /platform#coverage, /docs/what-you-can-check and /llms.txt all read it. Live: deployed
+web apps, and devices through their web control panel. Not built yet: device-level checks, desktop/Electron
+and native apps, SDKs, rule readiness. Not covered: localhost and private addresses.
+
+**Design 07 (2026-09-30):**
+- Type: IBM Plex Sans and Plex Mono everywhere (site, console, emails), as committed woff2 files in
+  `app/fonts` loaded by next/font/local as `--font-brand-sans` / `--font-brand-mono`. No Google fetch at build
+  or at runtime. Geist, Inter Tight and Instrument Serif are gone; site display type is Plex at `--display-w`.
+- The console is LIGHT (`public/vraelis/authenticated.css`): grey page, white cards and chrome, one cobalt
+  accent (#3E63DD) for actions only, green, amber and red for verdicts only. A new "console" ground in
+  `lib/v6-routes.ts` makes the first frame light. No coloured left bars, sentence-case labels, and the verdict
+  badge is a 6px-radius stamp. The page `.wrap` sits inside a nested ProductSurface, so shell rules must target
+  `.app-main>[data-surface="app"]>.wrap`.
+- Emails: every message renders through `lib/email/shell.ts` (one card, one cobalt button, a details table,
+  status rows problem / success / notice, a preheader, a footer saying why it was sent).
+- Docs: annotated real console crops (`public/docs/*.webp`), a "What it does not do" line on every page, Copy
+  as Markdown, `/llms.txt` and `/llms-full.txt` (both 404 while the stealth curtain is on).
+- The top bar's "New verification" links to `/app?new=1`, which opens the composer.
+
+**Deploy lesson:** 5cda325f failed on Vercel because an edit made after the type check broke tsc. Run tsc and
+the full static suite immediately before every commit.
+
 ## 0. Changed 2026-09-28 (read this first)
 
 **Positioning locked by the founder.** Narrow on WHAT, wide on WHO. What it does: someone writes one
