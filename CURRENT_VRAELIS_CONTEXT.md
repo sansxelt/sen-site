@@ -45,6 +45,25 @@ and native apps, SDKs, rule readiness. Not covered: localhost and private addres
   as Markdown, `/llms.txt` and `/llms-full.txt` (both 404 while the stealth curtain is on).
 - The top bar's "New verification" links to `/app?new=1`, which opens the composer.
 
+**Layout contracts (2026-09-30, later the same day):**
+- Site: one page column. `--max` in `v6.css` is 1320px and `.v6-wrap--wide` is no longer used, so every
+  heading on every page starts on the same x. The nav bar spans the viewport but pads its contents onto that
+  column, so the wordmark lines up with the headlines. Article pages (method, README) pass `read` to
+  `PageHero` so the title sits in the reading column with the text.
+- Docs are a separate shell (own header and rail, no marketing nav or footer), built after Linear's docs.
+- Console: `Page measure="prose"` keeps the wide page's left edge and only limits width, so titles never jump
+  sideways between neighbouring pages. Section headings use `SECTION_TITLE` from
+  `app/rank/_components/page-header.tsx`. Top-level pages carry no eyebrow over the title; detail pages (a
+  run, a guarantee, an API key) keep theirs. Bump `AUTHENTICATED_CSS ?v=` whenever authenticated.css changes.
+- Reviewed plans: mint reuses a plan only inside its window; an expired, never-approved plan is renewed in
+  place (`renewExpiredPendingPlan`). Approved plans that expire unrun are still returned; the clean fix needs
+  an "expired" execution state excluded from `uq_v_reviewed_plans_live` (a migration, not applied).
+
+**Planned, not built: promise coverage.** The founder's product brief idea, researched and planned in the
+product definition artifact: import existing specs, four sign-up questions, a promise map (build status and
+proof status), "done means verified", three new MCP tools, a 5 to 7 week MVP for agencies with a six-week stop
+rule. It waits on the founder's decision.
+
 **Deploy lesson:** 5cda325f failed on Vercel because an edit made after the type check broke tsc. Run tsc and
 the full static suite immediately before every commit.
 
