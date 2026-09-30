@@ -246,7 +246,7 @@ const ok = Boolean(signature) && timingSafeEqual(Buffer.from(signature), Buffer.
 function Note({ label, children }: { label: string; children: ReactNode }) {
   return (
     <p style={{ margin: "0 0 22px", color: "var(--g-fg-2)", fontSize: 15, lineHeight: 1.62, maxWidth: "62ch" }}>
-      <span className="v6-mono" style={{ color: "var(--go-dk)", fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", marginRight: 10 }}>{label}</span>
+      <span className="v6-mono" style={{ color: "var(--go-dk)", fontSize: 11.5, marginRight: 10 }}>{label}</span>
       {children}
     </p>
   );

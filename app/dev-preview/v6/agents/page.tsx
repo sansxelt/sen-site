@@ -188,7 +188,7 @@ export default function Agents() {
 
       {/* 2 ── The loop, in two lanes (GRAPHITE) ── */}
       <section className="v6-sec v6-dark" data-nav-dark>
-        <div className="v6-wrap v6-wrap--wide">
+        <div className="v6-wrap">
           <Reveal>
             <SectionHead
               eyebrow="In the loop"
@@ -201,8 +201,8 @@ export default function Agents() {
             <div style={{ background: "var(--graphite-2)", border: "1px solid var(--g-line)", borderRadius: 16, padding: "clamp(6px,1.4vw,20px) clamp(16px,2.2vw,28px)" }}>
               {/* lane header (desktop only labels; each row also self-labels for narrow screens) */}
               <div style={{ display: "flex", flexWrap: "wrap", gap: 16, padding: "14px 0", borderBottom: "1px solid var(--g-line)" }}>
-                <span className="v6-mono" style={{ flex: "1 1 260px", minWidth: 0, fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--g-fg-3)" }}>The assistant</span>
-                <span className="v6-mono" style={{ flex: "1 1 260px", minWidth: 0, fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--go-dk)" }}>Vraelis</span>
+                <span className="v6-mono" style={{ flex: "1 1 260px", minWidth: 0, fontSize: 11.5, color: "var(--g-fg-3)" }}>The assistant</span>
+                <span className="v6-mono" style={{ flex: "1 1 260px", minWidth: 0, fontSize: 11.5, color: "var(--go-dk)" }}>Vraelis</span>
               </div>
 
               {LOOP.map((s) => (

@@ -62,10 +62,15 @@
 
   /* layout + motion */
   --gutter: clamp(20px, 4vw, 64px);
-  --max: 1200px;
+  /* One content column for every page. The homepage chapters were drawn at 1320 and the inner pages at
+     1200, so moving between them shifted every left edge by 60px, and the wide record sections on the inner
+     pages jutted out of their own page. */
+  --max: 1320px;
   --max-wide: 1320px;
   --max-read: 720px;
-  --sec: clamp(72px, 9vw, 132px);
+  /* Tighter since 2026-09-30: at 132px a section and its neighbour sat a screen apart, part of why the
+     founder read the site as zoomed in. */
+  --sec: clamp(64px, 7.5vw, 108px);
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
   --sh-sm: 0 1px 2px rgba(20,22,28,0.06), 0 1px 3px rgba(20,22,28,0.05);
@@ -122,14 +127,14 @@
 /* The display tier. Serif, weight 400, tracking near zero: a high-contrast serif set at the sans's -0.03em
    collides with itself at these sizes. Sizes and line-heights are nudged up rather than left alone, because
    this face runs smaller on the body than the sans at the same nominal size. */
-.v6-d2xl { font-family: var(--display); font-weight: var(--display-w); letter-spacing: -0.012em; line-height: 1.04; font-size: clamp(2.9rem, 5.4vw, 4.8rem); color: var(--ink); margin: 0; text-wrap: balance; }
-.v6-dxl  { font-family: var(--display); font-weight: var(--display-w); letter-spacing: -0.010em; line-height: 1.08; font-size: clamp(2.25rem, 4vw, 3.6rem); color: var(--ink); margin: 0; text-wrap: balance; }
-.v6-dl   { font-family: var(--display); font-weight: var(--display-w); letter-spacing: -0.008em; line-height: 1.12; font-size: clamp(1.8rem, 3.1vw, 2.7rem); color: var(--ink); margin: 0; text-wrap: balance; }
+.v6-d2xl { font-family: var(--display); font-weight: var(--display-w); letter-spacing: -0.012em; line-height: 1.04; font-size: clamp(2.6rem, 4.6vw, 4rem); color: var(--ink); margin: 0; text-wrap: balance; }
+.v6-dxl  { font-family: var(--display); font-weight: var(--display-w); letter-spacing: -0.010em; line-height: 1.08; font-size: clamp(2.1rem, 3.4vw, 3rem); color: var(--ink); margin: 0; text-wrap: balance; }
+.v6-dl   { font-family: var(--display); font-weight: var(--display-w); letter-spacing: -0.008em; line-height: 1.14; font-size: clamp(1.7rem, 2.6vw, 2.3rem); color: var(--ink); margin: 0; text-wrap: balance; }
 /* No faked bold, anywhere the display face is used. Instrument Serif ships one weight; without this a
    stray font-weight:600 from a parent or a <strong> renders a smeared synthetic bold. */
 .v6-d2xl, .v6-dxl, .v6-dl, .v6-phero h1, .v6-prose h2 { font-synthesis-weight: none; }
 .v6-dm   { font-family: var(--sans); font-weight: 600; letter-spacing: -0.018em; line-height: 1.16; font-size: clamp(1.3rem, 2vw, 1.7rem); color: var(--ink); margin: 0; }
-.v6-lead { font-size: clamp(1.08rem, 1.35vw, 1.3rem); line-height: 1.55; color: var(--ink-2); margin: 0; max-width: 60ch; }
+.v6-lead { font-size: clamp(1.02rem, 1.15vw, 1.14rem); line-height: 1.6; color: var(--ink-2); margin: 0; max-width: 60ch; }
 .v6-body { font-size: 1rem; line-height: 1.62; color: var(--ink-3); margin: 0; }
 /* Quiet sans label, sentence case. The old treatment was a tiny all-caps mono eyebrow with a drawn rule
    repeated above every heading, which is the single strongest "AI startup" tell in the type system. */
@@ -138,8 +143,10 @@
 /* mono survives only for machine text: identifiers, values, timestamps, code */
 /* Small labels are SANS. Geist Mono at 10-12px reads as machine output and made every caption on the site
    look robotic. Mono is now reserved for things that genuinely are machine text: identifiers and code. */
-.v6-kicker { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--ink-4); }
+/* Sentence case (2026-09-30). Tracked 11px capitals over every block were the loudest generated-site tell
+   left on the site. */
+.v6-kicker { font-family: var(--sans); font-size: 12.5px; font-weight: 500; letter-spacing: 0;
+  text-transform: none; color: var(--ink-4); }
 .v6-mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 .v6-head { display: flex; flex-direction: column; gap: 18px; max-width: 760px; }
 
@@ -188,7 +195,7 @@
 .v6-dark .v6-elink:focus-visible, [data-nav-dark] .v6-elink:focus-visible { outline-color: var(--g-fg); }
 
 /* signal pills: trusted / review / stopped */
-.v6-sig { display: inline-flex; align-items: center; gap: 7px; padding: 4px 11px 4px 9px; border-radius: var(--r-pill); font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; white-space: nowrap; }
+.v6-sig { display: inline-flex; align-items: center; gap: 7px; padding: 3px 9px 3px 8px; border-radius: 6px; font-family: var(--sans); font-size: 12.5px; font-weight: 600; letter-spacing: 0; text-transform: none; white-space: nowrap; }
 .v6-sig__dot { width: 7px; height: 7px; border-radius: var(--r-pill); background: currentColor; flex: none; }
 .v6-sig--go   { color: var(--go-ink);   background: rgba(11,124,85,0.09);  border: 1px solid rgba(11,124,85,0.28); }
 .v6-sig--wait { color: var(--wait-ink); background: rgba(169,106,18,0.09); border: 1px solid rgba(169,106,18,0.28); }
@@ -284,7 +291,10 @@
    wordmark and the links kept crossfading over 90ms would have been worse than leaving it alone: instead of
    a bar that lags as a whole, you would get a bar that is half changed, which reads as a rendering fault
    rather than as a transition. The bar turns over in ONE frame or not at all. */
-.v6-nav__in { display: flex; align-items: center; gap: 8px; padding: 13px var(--gutter);
+.v6-nav__in { display: flex; align-items: center; gap: 8px;
+  /* the bar spans the viewport, its contents sit on the page column: the wordmark lines up with every
+     headline below it and the button with the right edge of the content */
+  padding: 13px max(var(--gutter), calc((100% - var(--max)) / 2 + var(--gutter)));
   background: transparent; border-bottom: 1px solid transparent; }
 /* The page is the drama; the bar is not. Solid, on both grounds: over a white chapter a translucent bar
    let the section's own eyebrow and headline ghost through the nav links, and over a black chapter it
@@ -318,17 +328,14 @@
   font-family: var(--sans); font-weight: 700; font-size: clamp(20px, 1.5vw, 24px);
   letter-spacing: -0.03em; color: var(--ink); text-decoration: none; line-height: 1; white-space: nowrap;
   display: inline-flex; align-items: center; flex: none;
-  /* the gutter puts ~58px between the edge and the wordmark but only 16px between the wordmark and the
-     first trigger, which reads as the logo being shoved right. Pull it back so both gaps are close. */
-  /* edge-to-wordmark and wordmark-to-first-trigger both land near 38px at desktop. The trigger's own
-     14px padding plus the bar's 8px gap already supply most of the right-hand space. */
-  margin-left: calc(var(--gutter) / -3); padding-right: 16px;
+  /* no negative margin: the wordmark sits on the page column, level with the headlines below it */
+  padding-right: 16px;
   /* optical: "Vraelis" carries no descender, so its glyph box sits a touch high on the shared centre line */
   transform: translateY(0.02em); }
 .v6-nav[data-theme="dark"] .v6-brand { color: var(--g-fg); }
 .v6-nav__items { display: flex; align-items: center; gap: 2px; min-width: 0; }
 /* No pill, no rounded hover plate, no outlined active box. State is carried by colour alone. */
-.v6-nav__item { font-size: 14.5px; font-weight: 500; color: var(--ink-3); text-decoration: none; white-space: nowrap;
+.v6-nav__item { font-size: 14px; font-weight: 500; color: var(--ink-3); text-decoration: none; white-space: nowrap;
   background: none; border: 0; cursor: pointer; font-family: var(--sans); padding: 8px 14px; display: inline-flex;
   align-items: center; }
 .v6-nav__item:hover, .v6-nav__item[aria-current="page"], .v6-nav__item[aria-expanded="true"] { color: var(--ink); }
@@ -402,8 +409,7 @@
 .v6-mega__grid { animation: v6MegaSwap 220ms var(--ease) both; display: grid; grid-template-columns: repeat(3, minmax(0,1fr)) minmax(0,1.15fr);
   gap: clamp(28px,3.4vw,64px); max-width: var(--max-wide); margin-inline: auto;
   padding: clamp(34px,3.2vw,52px) var(--gutter) clamp(36px,3.6vw,56px); }
-.v6-mega__col-h { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.15em;
-  text-transform: uppercase; color: #8E9095; margin: 0 0 16px; }
+.v6-mega__col-h { font-family: var(--sans); font-size: 11.5px; font-weight: 600; letter-spacing: 0; color: #8E9095; margin: 0 0 16px; }
 .v6-mega__link { display: block; text-decoration: none; padding: 9px 10px; margin: 0 -10px; border-radius: var(--r-md);
   transition: background 140ms ease; }
 .v6-mega__link:hover { background: rgba(255,255,255,0.06); }
@@ -414,10 +420,10 @@
 .v6-mega__feature { border-left: 1px solid rgba(255,255,255,0.13); padding-left: clamp(24px,2.4vw,40px);
   display: flex; flex-direction: column; min-height: 232px; }
 .v6-mega__fin { animation: v6MegaFade 200ms var(--ease) both; }
-.v6-mega__fstat { display: inline-block; margin-top: 16px; font-family: var(--sans); font-size: 11px;
-  font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #8E9095;
+.v6-mega__fstat { display: inline-block; margin-top: 16px; font-family: var(--sans); font-size: 11.5px;
+  font-weight: 600; letter-spacing: 0; color: #8E9095;
   border: 1px solid rgba(255,255,255,0.16); border-radius: var(--r-pill); padding: 5px 12px; }
-.v6-mega__fe { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #8E9095; }
+.v6-mega__fe { font-family: var(--sans); font-size: 11.5px; font-weight: 600; letter-spacing: 0; color: #8E9095; }
 .v6-mega__feature h4 { color: #FAFAFA; font-size: clamp(1.2rem,1.5vw,1.5rem); font-weight: 600; margin: 14px 0 0;
   letter-spacing: -0.022em; line-height: 1.12; }
 .v6-mega__feature p { font-size: 13.5px; line-height: 1.55; margin: 12px 0 0; color: #B9BBC0; }
@@ -477,7 +483,7 @@
 .v6-drawer__sec-h:focus-visible { outline: 2px solid var(--g-fg); outline-offset: -2px; border-radius: var(--r-md); }
 .v6-drawer__sec-b { padding: 2px 2px 18px; display: flex; flex-direction: column; gap: 18px; animation: v6SecIn 220ms var(--ease) both; }
 @keyframes v6SecIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
-.v6-drawer__grp-h { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--g-fg-3); margin: 0 0 6px; }
+.v6-drawer__grp-h { font-family: var(--sans); font-size: 11.5px; font-weight: 600; letter-spacing: 0; color: var(--g-fg-3); margin: 0 0 6px; }
 .v6-drawer__glink { display: block; text-decoration: none; padding: 9px 10px; margin: 0 -10px; border-radius: var(--r-md); }
 .v6-drawer__glink:active { background: rgba(255,255,255,0.06); }
 .v6-drawer__glink:focus-visible { outline: 2px solid var(--g-fg); outline-offset: -2px; }

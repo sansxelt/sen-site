@@ -30,7 +30,7 @@ export const metadata = v6meta({
 
 const BASE = V6_BASE;
 const CARD = { background: "var(--graphite-2)", border: "1px solid var(--g-line)", borderRadius: 14, padding: "clamp(20px,2.2vw,26px)" } as const;
-const LABEL = { margin: 0, fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--g-fg-3)" };
+const LABEL = { margin: 0, fontSize: 12, color: "var(--g-fg-3)" };
 const P = { margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--g-fg-2)" } as const;
 const ROW = { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "16px 0", borderBottom: "1px solid var(--g-line)" } as const;
 

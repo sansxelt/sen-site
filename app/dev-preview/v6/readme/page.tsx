@@ -33,7 +33,7 @@ export default function Readme() {
         <div className="v6-wrap v6-wrap--read">
           {ACTS.map(([act, head, body], i) => (
             <div key={act} style={{ paddingTop: i === 0 ? 0 : "clamp(36px,4vw,56px)", marginTop: i === 0 ? 0 : "clamp(36px,4vw,56px)", borderTop: i === 0 ? "none" : "1px solid var(--line)" }}>
-              <span className="v6-mono" style={{ fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--brand-ink)" }}>{act}</span>
+              <span className="v6-mono" style={{ fontSize: 12, color: "var(--brand-ink)" }}>{act}</span>
               <h2 className="v6-dl" style={{ margin: "14px 0 16px" }}>{head}</h2>
               <p style={{ fontSize: "1.12rem", lineHeight: 1.62, color: "var(--ink-2)", margin: 0 }}>{body}</p>
             </div>

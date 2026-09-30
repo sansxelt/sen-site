@@ -130,7 +130,7 @@ export default function SecurityPage() {
 
       {/* Architecture and data handling (graphite) */}
       <section className="v6-sec v6-dark" data-nav-dark>
-        <div className="v6-wrap v6-wrap--wide">
+        <div className="v6-wrap">
           <Reveal>
             <SectionHead
               eyebrow="Architecture and data handling"

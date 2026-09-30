@@ -98,6 +98,11 @@ export function Demos() {
 
   // Where each journey's steps start in the run's single running count.
   const starts = run.journeys.map((_, j) => run.journeys.slice(0, j).reduce((a, x) => a + x.steps.length, 0));
+  // The step the replay is on, shown inside the browser frame while it runs. The frame used to sit empty
+  // with a small "step 3 of 11" line until the end, which read as a broken image. The run saves one
+  // screenshot, of its final state, so that is still the only picture shown, and only at the end.
+  const current = allSteps(run)[Math.min(shown, total - 1)];
+  const progress = total ? Math.round((Math.min(shown, total) / total) * 100) : 0;
   return (
     <section ref={root} id="real-runs" className="v6-demo" aria-labelledby="v6-demo-h">
       <div className="v6-demo__in">
@@ -175,8 +180,10 @@ export function Demos() {
                   <Image src={run.shot} alt={`${run.shotCaption} Screenshot saved by the run.`} sizes="(max-width: 900px) 100vw, 640px" className="v6-demo__shot" />
                 ) : (
                   <div className="v6-demo__running">
-                    <span className="v6-demo__pulse" aria-hidden="true" />
-                    <span className="v6-mono">A real browser is on step {Math.min(shown + 1, total)} of {total}</span>
+                    <span className="v6-demo__stepno v6-mono">Step {Math.min(shown + 1, total)} of {total}</span>
+                    <span className="v6-demo__now">{current?.say}</span>
+                    <span className="v6-demo__prog" aria-hidden="true"><span style={{ width: `${progress}%` }} /></span>
+                    <span className="v6-demo__note">The screenshot the run saved appears at the end.</span>
                   </div>
                 )}
               </div>

@@ -4,7 +4,7 @@
 .v6-ex { position: relative; height: calc(var(--n, 6) * 62svh + 100svh); background: var(--paper); color: var(--ink-2); }
 .v6-ex__pin { position: sticky; top: 0; height: 100svh; display: flex; flex-direction: column; justify-content: center;
   padding: calc(var(--nav-h, 62px) + clamp(8px, 2vh, 24px)) var(--gutter) clamp(18px, 3vh, 34px); overflow: hidden; }
-.v6-ex__in { width: 100%; max-width: var(--max-wide); margin-inline: auto; display: grid;
+.v6-ex__in { width: 100%; max-width: calc(var(--max-wide) - 2 * var(--gutter)); margin-inline: auto; display: grid;
   grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: clamp(28px, 5vw, 88px); align-items: center; }
 
 /* the idea, and the index */
@@ -27,13 +27,13 @@
   opacity: 0; visibility: hidden; transform: translateY(18px);
   transition: opacity .45s var(--ease), transform .55s var(--ease), visibility 0s linear .45s; }
 .v6-ex__card[data-on="true"] { opacity: 1; visibility: visible; transform: none; transition: opacity .45s var(--ease), transform .55s var(--ease), visibility 0s; }
-.v6-ex__kind { margin: 0; display: flex; gap: 14px; align-items: baseline; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+.v6-ex__kind { margin: 0; display: flex; gap: 14px; align-items: baseline; font-size: 12px; letter-spacing: 0; color: var(--ink-3); }
 .v6-ex__kind span { color: var(--ink-4); }
 .v6-ex__say { margin: 14px 0 0; font-family: var(--display); font-weight: var(--display-w); font-synthesis-weight: none; color: var(--ink);
   font-size: clamp(1.55rem, 2.7vw, 2.5rem); line-height: 1.14; letter-spacing: -0.01em; text-wrap: pretty; }
 .v6-ex__cols { margin-top: clamp(20px, 3.4vh, 34px); display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: clamp(18px, 3vw, 40px);
   padding-top: clamp(16px, 2.4vh, 24px); border-top: 1px solid var(--line); }
-.v6-ex__lab { margin: 0 0 10px; font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-4); }
+.v6-ex__lab { margin: 0 0 10px; font-family: var(--sans); font-size: 11.5px; font-weight: 600; letter-spacing: 0; color: var(--ink-4); }
 .v6-ex__does { margin: 0; padding: 0; list-style: none; counter-reset: s; }
 .v6-ex__does li { counter-increment: s; display: grid; grid-template-columns: 1.6rem minmax(0, 1fr); gap: 6px; padding: 6px 0;
   font-size: 0.98rem; line-height: 1.45; color: var(--ink-2); }

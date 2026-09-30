@@ -88,8 +88,7 @@
    too low in the frame. */
 .v6-gap__t { position: absolute; left: 0; right: 0; top: 50%; text-align: center; will-change: transform; }
 
-.v6-gap__label { font-family: var(--sans); font-weight: 600; font-size: 12px; letter-spacing: 0.16em;
-  text-transform: uppercase; color: var(--ink-4); margin: 0; }
+.v6-gap__label { font-family: var(--sans); font-weight: 600; font-size: 12px; letter-spacing: 0; color: var(--ink-4); margin: 0; }
 .v6-gap__word { position: relative; display: inline-block; margin: clamp(8px, 1.8vh, 20px) 0 0; }
 /* THE DISPLAY FACE, FINISHING A MIGRATION THAT STOPPED HALF WAY.
    The serif tier was introduced for exactly this job ("display and chapter headings take an editorial
@@ -191,7 +190,7 @@
   stroke-dashoffset: calc(251.33px * (1 - var(--c))); }
 .v6-au__seal[data-open="true"] .v6-au__arc { --max: 0.62; stroke: var(--g-fg-3); }
 .v6-au__field { margin: 0; font-family: var(--sans); font-weight: 600; font-size: 12px;
-  letter-spacing: 0.14em; text-transform: uppercase; color: var(--g-fg-3); }
+  letter-spacing: 0; color: var(--g-fg-3); }
 .v6-au__who { margin: 0; font-family: var(--display); font-weight: var(--display-w); font-synthesis-weight: none;
   letter-spacing: -0.008em; line-height: 1.14; font-size: clamp(1.15rem, 1.7vw, 1.7rem); color: var(--g-fg); }
 /* The slot that carries a name in the other four carries a rule and one word here. The rule is the point:
@@ -376,7 +375,7 @@
 /* the counter must be GONE before the conclusion is legible; at a plain 1-done both were half-lit in
    the same spot and printed through each other */
 .v6-st__count { margin: 0; font-family: var(--sans); font-weight: 600; font-size: 12px;
-  letter-spacing: 0.14em; text-transform: uppercase; color: var(--g-fg-3);
+  letter-spacing: 0; color: var(--g-fg-3);
   opacity: clamp(0, calc(1 - var(--done) * 3.5), 1); }
 .v6-st__count span { color: var(--g-fg); }
 .v6-st__verdict { position: absolute; inset: 0; display: grid; place-content: center; margin: 0;
@@ -556,12 +555,11 @@
    they are separate grids that line up only because the numbers match. */
 .v6-rg__cols { display: grid; grid-template-columns: minmax(0, 1fr) 8rem;
   gap: clamp(10px, 1.4vw, 20px); padding-bottom: 8px; border-bottom: 1px solid var(--g-line);
-  font-family: var(--sans); font-weight: 600; font-size: 10px; letter-spacing: 0.16em;
-  text-transform: uppercase; color: var(--g-fg-3); }
+  font-family: var(--sans); font-weight: 600; font-size: 11.5px; letter-spacing: 0; color: var(--g-fg-3); }
 
 .v6-rg__grp { margin-top: clamp(10px, 1.6vh, 18px); }
-.v6-rg__gh { margin: 0 0 4px; font-family: var(--sans); font-weight: 600; font-size: 10px;
-  letter-spacing: 0.18em; text-transform: uppercase; color: var(--g-fg-3); }
+.v6-rg__gh { margin: 0 0 4px; font-family: var(--sans); font-weight: 600; font-size: 11.5px;
+  letter-spacing: 0; color: var(--g-fg-3); }
 
 .v6-rg__row { display: grid; grid-template-columns: minmax(0, 1fr) 8rem;
   gap: clamp(10px, 1.4vw, 20px); align-items: start;
@@ -632,8 +630,7 @@
 .v6-rx__stage { grid-column: 1 / -1; margin: clamp(30px, 4vw, 52px) 0 clamp(14px, 1.8vw, 22px);
   display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 18px; }
 .v6-rx__stage:first-of-type { margin-top: 0; }
-.v6-rx__stage span { font-family: var(--sans); font-weight: 600; font-size: 11px; letter-spacing: 0.18em;
-  text-transform: uppercase; color: var(--ink-4); }
+.v6-rx__stage span { font-family: var(--sans); font-weight: 600; font-size: 11.5px; letter-spacing: 0; color: var(--ink-4); }
 .v6-rx__stage::after { content: ""; height: 1px; background: var(--line-2); }
 
 /* every fragment shares only its reveal and its reference chip; construction is per surface */
@@ -656,8 +653,7 @@
   .v6-rx__f { opacity: 1; transform: none; }
   .v6-tm__exits .v6-tm__ex { opacity: 1; }
 }
-.v6-rx__fcap { font-family: var(--sans); font-weight: 600; font-size: 11px; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--ink-4); margin-bottom: 10px; }
+.v6-rx__fcap { font-family: var(--sans); font-weight: 600; font-size: 11.5px; letter-spacing: 0; color: var(--ink-4); margin-bottom: 10px; }
 .v6-rx__fcap b { font-weight: 600; letter-spacing: 0.04em; color: var(--ink-2); margin-right: 8px; }
 .v6-rx__ref { display: inline-block; font-size: 12px; letter-spacing: 0.02em; color: var(--ink-3);
   background: var(--sunk); border: 1px solid var(--line); border-radius: 4px; padding: 2px 8px; }
@@ -711,8 +707,7 @@
   border-bottom: 19px solid var(--ink); }
 .v6-rx__depn { margin: 0; display: flex; align-items: baseline; gap: 12px; font-family: var(--sans);
   font-weight: 600; font-size: clamp(1rem, 1.2vw, 1.12rem); color: var(--ink); }
-.v6-rx__depn em { font-style: normal; font-weight: 600; font-size: 10px; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--ink-4); border: 1px solid var(--line-2); border-radius: 4px;
+.v6-rx__depn em { font-style: normal; font-weight: 600; font-size: 11.5px; letter-spacing: 0; color: var(--ink-4); border: 1px solid var(--line-2); border-radius: 4px;
   padding: 2px 7px; }
 .v6-rx__depsay { margin: 6px 0 0; font-size: 0.92rem; color: var(--ink-3); }
 
@@ -751,8 +746,7 @@
   background: var(--ink); color: var(--paper); font-family: var(--sans); font-weight: 700; font-size: 14px; }
 .v6-rx__who { margin: 0; display: flex; align-items: baseline; gap: 8px; font-family: var(--sans);
   font-weight: 600; font-size: 0.98rem; color: var(--ink); }
-.v6-rx__who em { font-style: normal; font-weight: 600; font-size: 9px; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--ink-4); background: var(--sunk); border-radius: 3px; padding: 2px 5px; }
+.v6-rx__who em { font-style: normal; font-weight: 600; font-size: 11.5px; letter-spacing: 0; color: var(--ink-4); background: var(--sunk); border-radius: 3px; padding: 2px 5px; }
 .v6-rx__said { margin: 6px 0 0; font-size: 0.92rem; line-height: 1.55; color: var(--ink-3); }
 .v6-rx__said .v6-rx__ref { margin-top: 4px; }
 
@@ -761,8 +755,7 @@
   padding: clamp(20px, 2.4vw, 28px) var(--gutter) 0; border-top: 1px solid var(--line);
   display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: clamp(16px, 3vw, 44px);
   align-items: start; }
-.v6-rx__nexth { margin: 0; font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--ink-4); }
+.v6-rx__nexth { margin: 0; font-family: var(--sans); font-size: 11.5px; font-weight: 600; letter-spacing: 0; color: var(--ink-4); }
 .v6-rx__soons { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 28px; }
 .v6-rx__soons li { font-size: 15px; color: var(--ink-4); }
 
@@ -827,8 +820,8 @@
   opacity: calc(0.12 + 0.88 * var(--on));
   transform: translateY(calc((1 - var(--on)) * 12px));
   padding-top: 14px; border-top: 1px solid var(--g-line); }
-.v6-dr__lk { margin: 0; font-family: var(--sans); font-weight: 600; font-size: 10.5px;
-  letter-spacing: 0.18em; text-transform: uppercase; color: var(--g-fg-3); }
+.v6-dr__lk { margin: 0; font-family: var(--sans); font-weight: 600; font-size: 11.5px;
+  letter-spacing: 0; color: var(--g-fg-3); }
 .v6-dr__lh { margin: 7px 0 0; font-family: var(--sans); font-weight: 600; letter-spacing: -0.026em;
   line-height: 1.15; font-size: clamp(1.05rem, 1.6vw, 1.4rem); color: var(--g-fg); }
 .v6-dr__now, .v6-dr__next { margin: 8px 0 0; font-size: 0.9rem; line-height: 1.5; }
@@ -836,8 +829,7 @@
 .v6-dr__next { color: var(--g-fg-3); }
 /* every future line is prefixed with the word Direction, so no sentence can be read out of context */
 .v6-dr__now span, .v6-dr__next span { display: inline-block; margin-right: 9px;
-  font-family: var(--sans); font-weight: 600; font-size: 9.5px; letter-spacing: 0.14em;
-  text-transform: uppercase; border: 1px solid var(--g-line-2); border-radius: 3px; padding: 1px 6px;
+  font-family: var(--sans); font-weight: 600; font-size: 11.5px; letter-spacing: 0; border: 1px solid var(--g-line-2); border-radius: 3px; padding: 1px 6px;
   vertical-align: 1px; }
 .v6-dr__now span { color: var(--go-dk); border-color: rgba(74,222,156,0.4); }
 .v6-dr__next span { color: var(--wait-dk); border-color: rgba(242,183,90,0.4); }
@@ -972,8 +964,7 @@
    clipped by the section's overflow rather than moving to its own line */
 .v6-kn__run { margin: 0; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 18px;
   padding-bottom: 14px; border-bottom: 1px solid var(--line);
-  font-family: var(--sans); font-weight: 600; font-size: 10.5px; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--ink-4); }
+  font-family: var(--sans); font-weight: 600; font-size: 11.5px; letter-spacing: 0; color: var(--ink-4); }
 
 /* the Method sheet: a document on the grey ground, with the edge of the pages under it showing */
 .v6-kn__sheet { position: relative; z-index: 2; grid-column: 1 / span 8; grid-row: 1;
@@ -1022,15 +1013,15 @@
   align-self: start; margin: clamp(-130px, -7.5vw, -60px) 0 0;
   background: var(--graphite); padding: clamp(18px, 2vw, 24px) clamp(20px, 2.2vw, 28px);
   box-shadow: 0 30px 66px -46px rgba(0,0,0,0.8); }
-.v6-kn__ex figcaption { font-family: var(--sans); font-weight: 600; font-size: 10.5px;
-  letter-spacing: 0.17em; text-transform: uppercase; color: var(--g-fg-3); margin-bottom: 14px; }
+.v6-kn__ex figcaption { font-family: var(--sans); font-weight: 600; font-size: 11.5px;
+  letter-spacing: 0; color: var(--g-fg-3); margin-bottom: 14px; }
 .v6-kn__ex pre { margin: 0; font-family: var(--mono); font-size: clamp(12px, 0.88vw, 12.8px);
   line-height: 1.7; color: var(--g-fg-2); overflow-x: auto; }
 
 /* the changelog: a dated rail, not a card. Hairlines and dates, running down the right. */
 .v6-kn__rail { position: relative; margin-top: clamp(26px, 3vw, 42px); display: block; text-decoration: none; }
-.v6-kn__railh { margin: 0 0 6px; font-family: var(--sans); font-weight: 600; font-size: 10.5px;
-  letter-spacing: 0.17em; text-transform: uppercase; color: var(--ink-4); }
+.v6-kn__railh { margin: 0 0 6px; font-family: var(--sans); font-weight: 600; font-size: 11.5px;
+  letter-spacing: 0; color: var(--ink-4); }
 .v6-kn__rl { list-style: none; margin: 0; padding: 0; }
 .v6-kn__rl li { display: grid; gap: 3px; padding: 13px 0; border-bottom: 1px solid var(--line); }
 .v6-kn__rd { font-size: 11.5px; letter-spacing: 0.02em; color: var(--ink-4); font-variant-numeric: tabular-nums; }

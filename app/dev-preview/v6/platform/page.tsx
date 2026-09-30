@@ -175,7 +175,7 @@ function RecordObject() {
               padding: "12px 14px",
             }}
           >
-            <div className="v6-mono" style={{ fontSize: 10.5, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--g-fg-3)" }}>{k}</div>
+            <div className="v6-mono" style={{ fontSize: 11.5, color: "var(--g-fg-3)" }}>{k}</div>
             <div style={{ marginTop: 5, color: "var(--g-fg)", fontSize: 13.5, lineHeight: 1.4 }}>{v}</div>
           </div>
         ))}
@@ -221,12 +221,12 @@ function RecordObject() {
 // connected device checked through its control panel.
 // In review is a plan waiting on a person, which /docs/systems is careful to say is not a verdict.
 const WORK: { t: string; sys: string; state: Sig; label: string }[] = [
-  { t: "A new visitor can sign up and reach the dashboard", sys: "sign-up / onboarding", state: "go", label: "Verified" },
-  { t: "A paid customer keeps Pro access after signing back in", sys: "checkout / sign-in", state: "go", label: "Verified" },
-  { t: "An invited teammate joins with the Editor role, not Admin", sys: "team / roles", state: "wait", label: "In review" },
-  { t: "The contact form saves and shows a confirmation", sys: "forms", state: "stop", label: "Failed" },
-  { t: "One customer never sees another customer's invoices", sys: "billing / accounts", state: "wait", label: "Blocked" },
-  { t: "After an operator presses Return home, the drone shows Landed, and still does after a reload", sys: "fleet control panel", state: "wait", label: "In review" },
+  { t: "A new visitor can sign up and reach the dashboard", sys: "Sign-up and onboarding", state: "go", label: "Verified" },
+  { t: "A paid customer keeps Pro access after signing back in", sys: "Checkout and sign-in", state: "go", label: "Verified" },
+  { t: "An invited teammate joins with the Editor role, not Admin", sys: "Team and roles", state: "wait", label: "In review" },
+  { t: "The contact form saves and shows a confirmation", sys: "Forms", state: "stop", label: "Failed" },
+  { t: "One customer never sees another customer's invoices", sys: "Billing and accounts", state: "wait", label: "Blocked" },
+  { t: "After an operator presses Return home, the drone shows Landed, and still does after a reload", sys: "Fleet control panel", state: "wait", label: "In review" },
 ];
 
 // WHAT A RUN IS ACTUALLY GIVEN, and every line is a gate that exists in the product today rather than a
@@ -284,7 +284,7 @@ function Planned({ items }: { items: DirectionItem[] }) {
           <span>
             <span style={{ display: "block", fontSize: 15, lineHeight: 1.5, color: "var(--ink-2)" }}>
               {t}
-              <span className="v6-mono" style={{ marginLeft: 8, fontSize: 10.5, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--ink-4)", whiteSpace: "nowrap" }}>{tier}</span>
+              <span className="v6-mono" style={{ marginLeft: 8, fontSize: 11.5, color: "var(--ink-4)", whiteSpace: "nowrap" }}>{tier}</span>
             </span>
             <span style={{ display: "block", fontSize: 13.5, lineHeight: 1.55, color: "var(--ink-4)", marginTop: 4 }}>{now}</span>
           </span>
@@ -328,7 +328,7 @@ export default function Platform() {
 
       {/* 1 ── Signature: the durable record everything happens on ── */}
       <section className="v6-sec" style={{ paddingTop: "clamp(12px,2vw,28px)" }}>
-        <div className="v6-wrap v6-wrap--wide">
+        <div className="v6-wrap">
           <Reveal>
             <SectionHead
               eyebrow="One record per check"
@@ -362,7 +362,7 @@ export default function Platform() {
                 <div style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid var(--line)", display: "grid", gap: 10 }}>
                   {[["Claim", "One sentence, an outcome"], ["Approval", "A person, once"], ["Target", "A public https deployment"]].map(([k, v]) => (
                     <div key={k} style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 14 }}>
-                      <span className="v6-mono" style={{ color: "var(--ink-4)", fontSize: 12, letterSpacing: "0.06em", textTransform: "uppercase" }}>{k}</span>
+                      <span className="v6-mono" style={{ color: "var(--ink-4)", fontSize: 12 }}>{k}</span>
                       <span style={{ color: "var(--ink-2)", textAlign: "right" }}>{v}</span>
                     </div>
                   ))}
@@ -400,7 +400,7 @@ export default function Platform() {
                 >
                   <div style={{ minWidth: 0, flex: "1 1 260px" }}>
                     <div style={{ color: "var(--ink)", fontWeight: 600, fontSize: "1.02rem", letterSpacing: "-0.01em" }}>{w.t}</div>
-                    <div className="v6-mono" style={{ marginTop: 4, color: "var(--ink-4)", fontSize: 12, letterSpacing: "0.05em" }}>{w.sys}</div>
+                    <div style={{ marginTop: 4, color: "var(--ink-4)", fontSize: 13 }}>{w.sys}</div>
                   </div>
                   <Signal state={w.state}>{w.label}</Signal>
                 </div>
@@ -467,7 +467,7 @@ export default function Platform() {
                         <p style={{ margin: "5px 0 0", color: "var(--g-fg-2)", fontSize: 14, lineHeight: 1.55 }}>{s.d}</p>
                       </div>
                       {s.sig ? <Signal state={s.sig}>{s.tag}</Signal> : (
-                        <span className="v6-mono" style={{ color: "var(--g-fg-3)", fontSize: 12 }}>in flight</span>
+                        <span className="v6-mono" style={{ color: "var(--g-fg-3)", fontSize: 12 }}>In flight</span>
                       )}
                     </li>
                   ))}
@@ -560,7 +560,7 @@ export default function Platform() {
                 </div>
                 <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--g-line)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                   <Signal state="go">Verified / 72c98e</Signal>
-                  <span className="v6-mono" style={{ color: "var(--g-fg-3)", fontSize: 12 }}>earlier records preserved</span>
+                  <span className="v6-mono" style={{ color: "var(--g-fg-3)", fontSize: 12 }}>Earlier records preserved</span>
                 </div>
               </GPanel>
             </Reveal>

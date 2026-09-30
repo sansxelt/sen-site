@@ -8,7 +8,7 @@
 .v6-demo__head .v6-eyebrow { color: var(--g-fg-3); }
 .v6-demo__h { margin: clamp(10px, 1.6vh, 18px) 0 0; font-family: var(--display); font-weight: var(--display-w);
   font-synthesis-weight: none; letter-spacing: -0.012em; line-height: 1.06;
-  font-size: clamp(1.95rem, 4.5vw, 3.9rem); color: var(--g-fg); text-wrap: balance; }
+  font-size: clamp(1.9rem, 3.6vw, 3.1rem); color: var(--g-fg); text-wrap: balance; }
 .v6-demo__lead { margin: 14px 0 0; font-size: 1.02rem; line-height: 1.6; color: var(--g-fg-2); }
 
 /* tabs */
@@ -30,7 +30,7 @@
   padding: clamp(18px, 2.4vw, 30px); }
 @media (max-width: 900px) { .v6-demo__stage { grid-template-columns: minmax(0, 1fr); } }
 
-.v6-demo__k { margin: 0; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--g-fg-3); }
+.v6-demo__k { margin: 0; font-family: var(--sans); font-size: 12.5px; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--g-fg-3); }
 .v6-demo__claim { margin: 8px 0 0; font-family: var(--display); font-weight: var(--display-w); font-synthesis-weight: none;
   font-size: clamp(1.35rem, 2.2vw, 1.8rem); line-height: 1.2; color: var(--g-fg); text-wrap: pretty; }
 .v6-demo__app { margin: 10px 0 0; font-size: 0.9rem; color: var(--g-fg-3); }
@@ -78,7 +78,13 @@
 .v6-demo__shot { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; animation: v6-demo-in .45s ease-out; }
 @keyframes v6-demo-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 .v6-demo__running { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 12px;
-  font-size: 12px; color: var(--g-fg-3); }
+  padding: 24px; text-align: center; font-size: 12px; color: var(--g-fg-3); }
+.v6-demo__stepno { font-size: 12px; color: var(--g-fg-3); }
+.v6-demo__now { max-width: 30ch; font-family: var(--sans); font-size: clamp(1.05rem, 1.6vw, 1.3rem); font-weight: 500; line-height: 1.35; color: var(--g-fg); }
+.v6-demo__prog { width: min(240px, 70%); height: 3px; border-radius: 3px; background: rgba(255,255,255,0.10); overflow: hidden; }
+.v6-demo__prog > span { display: block; height: 100%; background: var(--g-fg-2); transition: width .35s ease; }
+.v6-demo__note { font-size: 12px; color: var(--g-fg-3); }
+@media (prefers-reduced-motion: reduce) { .v6-demo__prog > span { transition: none; } }
 .v6-demo__pulse { width: 10px; height: 10px; border-radius: 50%; background: var(--g-fg-2); animation: v6-demo-blink 1.1s ease-in-out infinite; opacity: .6; }
 .v6-demo__caption { margin: 8px 2px 0; font-size: 0.82rem; color: var(--g-fg-3); min-height: 1.3em; }
 

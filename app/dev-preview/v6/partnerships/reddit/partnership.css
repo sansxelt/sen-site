@@ -28,8 +28,7 @@
   color: var(--g-fg-3);
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 }
 
 .v6-pr__date { font-weight: 400; font-variant-numeric: tabular-nums; }

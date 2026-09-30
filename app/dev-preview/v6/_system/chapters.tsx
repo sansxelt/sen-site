@@ -12,7 +12,8 @@ import { MARK_PATH, MARK_VIEWBOX } from "@/lib/brand-mark";
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { useScrollProgress, entryProgress } from "./progress";
 import { Spectral } from "./spectral";
-import { Reveal, SectionHead, Signal, Kicker, EditorialLink } from "./ui";
+import { Reveal, SectionHead, Kicker, EditorialLink } from "./ui";
+import "./coverage.css";
 import Link from "next/link";
 import { DOCS } from "../_content/docs";
 import { CHANGELOG } from "../_content/changelog";
@@ -567,7 +568,8 @@ export function Devices() {
         </Reveal>
         <div className="v6-grid3">
           <Reveal className="v6-gcard">
-            <p style={{ margin: "0 0 14px" }}><Signal state="go">Works today</Signal></p>
+            {/* A roadmap tier, not a result, so the neutral tier chip rather than a state colour. */}
+            <p style={{ margin: "0 0 14px" }}><span className="v6-tier" data-tier="live">Works today</span></p>
             <h3>Through the control panel</h3>
             <p>Vraelis opens the device&rsquo;s web control panel or dashboard in a real browser, takes the action the claim names, and checks what the panel reports afterwards, including after a reload.</p>
           </Reveal>
@@ -576,8 +578,8 @@ export function Devices() {
             <h3>&ldquo;After an operator presses Return home, the drone shows Landed, and still does after a reload.&rdquo;</h3>
             <p>You see every step the browser took on the panel, a screenshot, and anything that went wrong, like any other check.</p>
           </Reveal>
-          <Reveal className="v6-gcard" i={2} style={{ borderStyle: "dashed" }}>
-            <p style={{ margin: "0 0 14px" }}><Signal state="wait">Next, not built yet</Signal></p>
+          <Reveal className="v6-gcard" i={2}>
+            <p style={{ margin: "0 0 14px" }}><span className="v6-tier" data-tier="next">Not built yet</span></p>
             <h3>Checks on the device itself</h3>
             <p>Reading firmware, sensors or telemetry directly is not built. Today Vraelis sees only what the control panel shows, and it does not certify that any device is safe.</p>
           </Reveal>

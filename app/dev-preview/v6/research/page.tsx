@@ -33,7 +33,7 @@ function ExpectedObserved() {
         {rows.map(([sig, label, text]) => (
           <div key={label} style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
             <span aria-hidden style={{ width: 8, height: 8, borderRadius: 999, background: sig === "go" ? "var(--go-dk)" : "var(--stop-dk)", flex: "none", alignSelf: "center" }} />
-            <span style={{ fontFamily: "var(--mono)", fontSize: 11.5, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--g-fg-3)", minWidth: 68 }}>{label}</span>
+            <span style={{ fontFamily: "var(--mono)", fontSize: 11.5, color: "var(--g-fg-3)", minWidth: 68 }}>{label}</span>
             <span style={{ flex: "1 1 170px", minWidth: 0, fontSize: 14, lineHeight: 1.45, color: sig === "go" ? "var(--g-fg)" : "var(--stop-dk)" }}>{text}</span>
           </div>
         ))}
@@ -280,7 +280,7 @@ export default function ResearchPage() {
 
       {/* Evidence exhibit (graphite: technical content) */}
       <section className="v6-sec v6-dark" data-nav-dark>
-        <div className="v6-wrap v6-wrap--wide">
+        <div className="v6-wrap">
           <Reveal>
             <SectionHead
               eyebrow="How we read a claim"

@@ -70,8 +70,8 @@
 .v6-h__partnership {
   display: grid; gap: 12px; padding-top: 20px; border-top: 1px solid var(--g-line);
   color: var(--g-fg); text-decoration: none; }
-.v6-h__partnership-label { color: var(--g-fg-3); font-size: 0.7rem; font-weight: 600;
-  letter-spacing: 0.13em; text-transform: uppercase; }
+.v6-h__partnership-label { color: var(--g-fg-3); font-size: 11.5px; font-weight: 600;
+  letter-spacing: 0; }
 .v6-h__partnership strong { font-family: var(--display); font-size: clamp(1.55rem, 2.35vw, 2.25rem);
   font-weight: var(--display-w); line-height: 1.05; letter-spacing: -0.01em; }
 .v6-h__partnership-meta { color: var(--g-fg-2); font-size: 0.88rem; letter-spacing: 0.01em; white-space: nowrap; }

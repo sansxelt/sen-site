@@ -152,7 +152,7 @@ export default function CompanyPage() {
 
       {/* Three acts (graphite) */}
       <section className="v6-sec v6-dark" data-nav-dark>
-        <div className="v6-wrap v6-wrap--wide">
+        <div className="v6-wrap">
           <Reveal>
             <SectionHead
               eyebrow="Three acts"
@@ -164,7 +164,7 @@ export default function CompanyPage() {
             {ACTS.map((a) => (
               <div key={a.label} style={{ background: "var(--graphite-2)", border: "1px solid var(--g-line)", borderRadius: 14, padding: "clamp(22px,2.4vw,28px)", display: "flex", flexDirection: "column" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 14 }}>
-                  <span style={{ fontFamily: "var(--mono)", fontSize: 11.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--g-fg-3)" }}>{a.label}</span>
+                  <span style={{ fontFamily: "var(--mono)", fontSize: 11.5, color: "var(--g-fg-3)" }}>{a.label}</span>
                   {a.sig ? <Signal state={a.sig}>{a.sigLabel}</Signal> : null}
                 </div>
                 <h3 style={{ margin: "0 0 10px", fontSize: "clamp(1.1rem,1.5vw,1.32rem)", fontWeight: 600, letterSpacing: "-0.015em", color: "var(--g-fg)" }}>{a.title}</h3>
@@ -269,7 +269,7 @@ export default function CompanyPage() {
                   <span>
                     <span style={{ display: "block" }}>
                       {t}
-                      <span className="v6-mono" style={{ marginLeft: 8, fontSize: 10.5, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--ink-4)", whiteSpace: "nowrap" }}>{tier}</span>
+                      <span className="v6-mono" style={{ marginLeft: 8, fontSize: 11.5, color: "var(--ink-4)", whiteSpace: "nowrap" }}>{tier}</span>
                     </span>
                     <span style={{ display: "block", marginTop: 4, fontSize: 13.5, lineHeight: 1.55, color: "var(--ink-4)" }}>{now}</span>
                   </span>
