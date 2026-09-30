@@ -3,6 +3,7 @@ import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { v6meta } from "../_system/meta";
 import { PageHero, Reveal, SectionHead, CTA, EditorialLink, Signal, Kicker } from "../_system/ui";
+import "../_system/coverage.css";
 import { LIVE, DIRECTION, type DirectionItem } from "../_content/scope";
 import { SURFACES, COVERAGE_THESIS, COVERAGE_RULE } from "../_content/coverage";
 import { V6_BASE } from "@/lib/v6-routes";
@@ -581,7 +582,8 @@ export default function Platform() {
             {[
               { s: "go" as Sig, t: "Verified", d: "The claim holds on the live app, checked against the plan a person approved." },
               { s: "stop" as Sig, t: "Failed", d: "The app does not do what the claim says. The gap is recorded as evidence, with a repair prompt." },
-              { s: "stop" as Sig, t: "Blocked", d: "No verdict could be reached, so none is reported. Nothing is recorded as proven." },
+              // Blocked is amber everywhere else in the product: it is the honest third answer, not a failure.
+              { s: "wait" as Sig, t: "Blocked", d: "No verdict could be reached, so none is reported. Nothing is recorded as proven." },
             ].map((c, i) => (
               <Reveal key={c.t} i={i}>
                 <div style={{ background: "var(--graphite-2)", border: "1px solid var(--g-line)", borderRadius: 14, padding: "clamp(20px,2.2vw,26px)", height: "100%" }}>
@@ -643,7 +645,8 @@ export default function Platform() {
                 <li style={{ display: "grid", gap: 10, paddingBlock: "clamp(20px,2.2vw,26px)", borderTop: "1px solid var(--line-2)" }}>
                   <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap" }}>
                     <h3 className="v6-dm" style={{ margin: 0 }}>{s.name}</h3>
-                    <Signal state={s.tier === "Live" ? "go" : s.tier === "Next" ? "wait" : "stop"}>{s.tier === "Next" ? "Next, not built" : s.tier}</Signal>
+                    {/* A roadmap tier is not a result, so it does not wear a result colour (same chip as the homepage). */}
+                    <span className="v6-tier" data-tier={s.tier === "Live" ? "live" : s.tier === "Next" ? "next" : "out"}>{s.tier === "Next" ? "Not built yet" : s.tier}</span>
                   </div>
                   <p className="v6-body" style={{ maxWidth: "70ch" }}>{s.reach}</p>
                   {/* The half a reader can check, and on a Next or Not covered row what happens instead. */}

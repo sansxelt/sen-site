@@ -20,3 +20,9 @@
   .v6-cov__row { grid-template-columns: minmax(0, 1fr); gap: 6px; padding: 16px 18px; }
   .v6-cov__status { justify-self: start; order: -1; }
 }
+
+/* The same tier as a standalone chip, for /platform's full list of surfaces. */
+.v6-tier { display: inline-block; font-size: 13px; font-weight: 600; line-height: 1.2; white-space: nowrap; padding: 4px 9px;
+  border-radius: 6px; border: 1px solid var(--line); color: var(--ink-4); }
+.v6-tier[data-tier="live"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+.v6-tier[data-tier="next"], .v6-tier[data-tier="out"] { border-color: transparent; padding-inline: 0; font-weight: 500; }
