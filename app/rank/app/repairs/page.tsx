@@ -139,7 +139,6 @@ export default async function RepairsPage() {
   return (
     <Page>
       <PageHeader
-        eyebrow="Vraelis Preflight"
         title="Repairs"
         lead="A repair is a fix prompt for your builder plus the rerun that shows whether the failure still reproduces. Vraelis does not modify your code in V1."
       />

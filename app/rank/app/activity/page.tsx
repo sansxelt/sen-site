@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 import { workspaceActivity, organizationActivity, type AuditEntry } from "@/lib/v-audit";
 import { getPrimaryOrganization, canViewOrganizationAudit } from "@/lib/v-organization";
 import { AuditExport } from "./audit-export";
-import { Page, PageHeader } from "@/app/rank/_components/page-header";
+import { Page, PageHeader, SECTION_TITLE } from "@/app/rank/_components/page-header";
 
 // THE TAB AND THE HEADING DISAGREED, AND WHICH ONE YOU GOT DEPENDED ON THE URL.
 //
@@ -33,7 +33,12 @@ const absWhen = (iso: string) => {
   try { return new Date(iso).toISOString().slice(0, 16).replace("T", " ") + " UTC"; } catch { return ""; }
 };
 
-const cardHead = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: "28px 0 12px" } as const;
+// Section titles use the console's one section style. These were 12.5px grey code type, so "Workspace
+// activity" read as a caption rather than as the heading of the thing this page exists to show.
+const cardHead = { ...SECTION_TITLE, margin: "32px 0 12px" } as const;
+// The trail is read newest first and the first screen is what gets read. A hundred rows rendered in one
+// column made the page 4,800px tall; the rest stays one click away, with nothing hidden from the export.
+const FIRST_ROWS = 20;
 
 // Event trail with a purposeful empty state: what will appear here, plus the one action that starts
 // filling it (never a bare card).
@@ -47,9 +52,7 @@ function EventList({ events, empty, action }: { events: AuditEntry[]; empty: str
       </div>
     );
   }
-  return (
-    <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-lg)", overflow: "hidden", background: "var(--bg-1)", boxShadow: "var(--shadow-sm)" }}>
-      {events.map((e, i) => (
+  const row = (e: AuditEntry, i: number) => (
         <div key={e.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 18px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", flexWrap: "wrap" }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 14, color: "var(--fg-1)", fontWeight: 500 }}>
@@ -64,7 +67,18 @@ function EventList({ events, empty, action }: { events: AuditEntry[]; empty: str
           </div>
           <span title={absWhen(e.when)} style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)", whiteSpace: "nowrap" }}>{when(e.when)}</span>
         </div>
-      ))}
+  );
+  const first = events.slice(0, FIRST_ROWS);
+  const rest = events.slice(FIRST_ROWS);
+  return (
+    <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-lg)", overflow: "hidden", background: "var(--bg-1)", boxShadow: "var(--shadow-sm)" }}>
+      {first.map(row)}
+      {rest.length > 0 ? (
+        <details className="rec-more">
+          <summary style={{ cursor: "pointer", padding: "11px 18px", borderTop: "1px solid var(--line-1)", fontSize: 13, fontWeight: 500, color: "var(--acc-deep)", listStyle: "none" }}>Show {rest.length} more</summary>
+          {rest.map((e, i) => row(e, i + 1))}
+        </details>
+      ) : null}
     </div>
   );
 }
@@ -102,17 +116,29 @@ export default async function AuditPage() {
           last row sat flush against the bottom of the window on this page alone. */}
       <div style={{ paddingBottom: 80 }}>
 
-        <div className="card" style={{ background: "var(--bg-2)", marginBottom: 18 }}>
-          <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>Vraelis records your verification runs, balance top-ups, exports, billing changes, team access, and governance events, organization changes, domain verification, SSO, ownership transfers. Activity never includes payment details, Stripe identifiers, invite or DNS tokens, token hashes, webhook secrets, OIDC codes, SAML assertions, or raw run evidence.</p>
-        </div>
+        {/* The trail first: it is what this page is named for. It used to sit under an info panel, the export
+            and an eight-card index, below the first screen. */}
+        <h2 style={{ ...cardHead, marginTop: 0 }}>Workspace activity</h2>
+        <EventList events={events}
+          empty="System connections, verification launches and completions, credit top-ups, exports, billing actions, invites, and role changes are recorded here as you work."
+          action={{ href: "/systems", label: "Go to systems" }} />
+        <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "10px 0 0", lineHeight: 1.6 }}>Activity never includes payment details, Stripe identifiers, invite or DNS tokens, token hashes, webhook secrets, OIDC codes, SAML assertions, or raw run evidence.</p>
 
-        {/* Export */}
-        <div style={cardHead}>Audit export</div>
+        {/* Organization activity */}
+        {org && canOrgAudit && (
+          <>
+            <h2 style={cardHead}>Organization activity, {org.name}</h2>
+            <EventList events={orgEvents}
+              empty="Organization, domain, SSO, and provisioning changes are recorded here. Verify a domain or invite a member and the event shows up immediately."
+              action={{ href: "/organization", label: "Manage organization" }} />
+          </>
+        )}
+
+        <h2 style={cardHead}>Export</h2>
         <AuditExport showOrg={!!(org && canOrgAudit)} />
-        <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "10px 0 0", lineHeight: 1.6 }}>Export the governance trail as sanitized CSV or JSON for your own records. Organization-wide governance, verified domains, OIDC SSO, and scheduled exports with retention controls are part of the enterprise trust layer, <Link href="/contact" style={{ color: "var(--go-ink)" }}>talk to us about enterprise requirements →</Link></p>
+        <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "10px 0 0", lineHeight: 1.6 }}>Sanitized CSV or JSON for your own records. Scheduled exports and retention controls are planned; if you need them now, <Link href="/contact" style={{ color: "var(--acc-deep)" }}>tell us what you need</Link>.</p>
 
-        {/* Trust controls */}
-        <div style={cardHead}>Trust controls</div>
+        <h2 style={cardHead}>Trust controls</h2>
         <div className="tile-grid cols-2" style={{ gap: 10 }}>
           {TRUST_CONTROLS.map(([t, d, href]) => (
             <Link key={t + d} href={href} className="card" style={{ textDecoration: "none", color: "inherit", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "13px 16px" }}>
@@ -125,22 +151,6 @@ export default async function AuditPage() {
           ))}
         </div>
 
-        {/* Workspace activity */}
-        <div style={cardHead}>Workspace activity</div>
-        <EventList events={events}
-          empty="System connections, verification launches and completions, credit top-ups, exports, billing actions, invites, and role changes are recorded here as you work."
-          action={{ href: "/systems", label: "Go to systems" }} />
-
-        {/* Organization activity */}
-        {org && canOrgAudit && (
-          <>
-            <div style={cardHead}>Organization activity, {org.name}</div>
-            <EventList events={orgEvents}
-              empty="Organization, domain, SSO, and provisioning changes are recorded here. Verify a domain or invite a member and the event shows up immediately."
-              action={{ href: "/organization", label: "Manage organization" }} />
-            <p style={{ fontSize: 11, color: "var(--fg-5)", margin: "10px 0 0", lineHeight: 1.6 }}>Account-level governance events. Organization and workspace activity can be exported as sanitized CSV or JSON above. Scheduled exports and retention controls are planned.</p>
-          </>
-        )}
         {org && !canOrgAudit && (
           <p style={{ fontSize: 12, color: "var(--fg-5)", margin: "18px 0 0", lineHeight: 1.6 }}>Organization-level activity is visible to organization owners and admins.</p>
         )}

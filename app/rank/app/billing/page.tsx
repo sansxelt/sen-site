@@ -15,7 +15,7 @@ import { BillingActions, PaymentMethodButton } from "./billing-actions";
 import { TeamBillingPanel } from "./team-billing-panel";
 import { TechnicalDetails } from "./technical-details";
 import { I, Ic, EmptyIcon } from "@/app/rank/_components/icons";
-import { Page, PageHeader } from "@/app/rank/_components/page-header";
+import { Page, PageHeader, SECTION_TITLE } from "@/app/rank/_components/page-header";
 
 export const metadata: Metadata = { title: "Billing" };
 
@@ -111,7 +111,6 @@ export default async function BillingPage() {
     // the correct one; the wording is untouched.
     <Page measure="prose">
       <PageHeader
-        eyebrow="Account"
         title="Billing"
         lead={email}
         actions={<Link href="/plans" className="btn btn--ghost">Change plan</Link>}
@@ -178,7 +177,7 @@ export default async function BillingPage() {
 
       {/* Native payment history: Stripe invoices rendered in-app; the hosted invoice page is only the
           line-item detail fallback. */}
-      <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 12 }}>Payment history</div>
+      <h2 style={{ ...SECTION_TITLE, margin: "32px 0 12px" }}>Payment history</h2>
       {invoices.length === 0 ? (
         <div className="empty" style={{ marginBottom: 28 }}><EmptyIcon d={I.card} /><h3>No payments yet</h3><p>Plan invoices and their receipts will appear here after your first charge.</p></div>
       ) : (
@@ -206,7 +205,7 @@ export default async function BillingPage() {
       )}
 
       {/* Team seats (workspace billing, owner / billing-admin detail) */}
-      <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 12 }}>Team seats</div>
+      <h2 style={{ ...SECTION_TITLE, margin: "32px 0 12px" }}>Team seats</h2>
       {(teamAccess === "owner" || teamAccess === "billing_admin") && teamBilling ? (
         <div style={{ marginBottom: 28 }}><TeamBillingPanel workspaceName={teamWsName} billing={teamBilling} canManage={teamAccess === "owner"} /></div>
       ) : teamAccess === "member" ? (
@@ -220,7 +219,7 @@ export default async function BillingPage() {
         </div>
       )}
 
-      <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 12 }}>Recent credit activity</div>
+      <h2 style={{ ...SECTION_TITLE, margin: "32px 0 12px" }}>Recent credit activity</h2>
       {ledger.length === 0 ? (
         <div className="empty"><EmptyIcon d={I.clock} /><h3>No activity yet</h3><p>Credit grants, holds, refunds and rewards will show up here once you start testing.</p></div>
       ) : (

@@ -58,7 +58,7 @@ export default async function AccountPage() {
       {/* The eyebrow is the .eyebrow CLASS, which it already was. It is called out because credits/page.tsx
           twenty lines apart rendered this same kicker BOTH ways: the class here, and a local 10.5px
           uppercase Inter Tight object below. Going through <PageHeader> means a page can no longer pick. */}
-      <PageHeader eyebrow="Account" title="Account" />
+      <PageHeader title="Account" />
 
       {/* <Page> owns the measure and the shell owns padding-TOP (rank-ui.tsx injects it with !important, so
           the inline paddingTop this page used to carry never rendered at all). The tail room was real, so it

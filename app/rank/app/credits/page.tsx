@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { AutoRechargePanel } from "./auto-recharge-panel";
 import { planLabel, isOnAPaidPlan } from "@/lib/plan-label";
 import { passPriceCents, PASS_INCLUDED_FLOWS } from "@/lib/preflight/pass-pricing";
-import { Page, PageHeader } from "@/app/rank/_components/page-header";
+import { Page, PageHeader, SECTION_TITLE } from "@/app/rank/_components/page-header";
 import Link from "next/link";
 
 const RECOMMENDED = [9, 39, 99, 299, 999];
@@ -144,7 +144,6 @@ export default function CreditsPage() {
           heading that did not repeat the word you pressed. Topping up is still the point, and the
           button below still says so. */}
       <PageHeader
-        eyebrow="Billing"
         title="Credits"
         lead="Your balance pays for verifications. Each verification draws from it and only settles when it actually executes. Per-verification pricing is rolling out; your balance keeps its full purchase value through the change."
       />
@@ -181,7 +180,7 @@ export default function CreditsPage() {
         {/* picker */}
         <div className="card">
           <div style={sectionLabel} id="credits-packs-label">Recommended packs</div>
-          <div role="group" aria-labelledby="credits-packs-label" style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 10, marginBottom: 26 }}>
+          <div role="group" aria-labelledby="credits-packs-label" style={{ display: "grid", gap: 8, marginBottom: 26 }}>
             {/* THE SELECTED PACK WAS ALL BUT INVISIBLE, ON THE ONE SCREEN WHERE THE SELECTION IS THE PURCHASE.
                 On graphite, the whole difference between the chosen pack and the four beside it was:
                   - border rgba(255,255,255,0.32) against rgba(255,255,255,0.14), 1.5px either way;
@@ -206,19 +205,22 @@ export default function CreditsPage() {
                 promise arrow-key navigation and a roving tabindex that are not implemented here, and a
                 keyboard contract a page announces but does not honour is worse than the plain one it
                 already had. */}
+            {/* ONE PACK PER ROW. Five packs in a centred wrap came out as two, two and a lone fifth in the
+                middle of the card; rows keep the ladder in price order and every pack the same size. The
+                chosen row takes the accent edge and wash, which on the light console is a visible change. */}
             {RECOMMENDED.map((a) => {
               const on = !usingCustom && amount === a;
               return (
                 <button key={a} type="button" aria-pressed={on} onClick={() => setAmount(a)}
                   style={{
-                    flex: "0 1 150px", textAlign: "center", padding: "16px 14px", borderRadius: "var(--r-lg)", cursor: "pointer",
-                    border: `1.5px solid ${on ? "var(--line-strong)" : "var(--line-2)"}`,
-                    background: on ? "var(--bg-3)" : "var(--bg-1)",
-                    boxShadow: on ? "0 0 0 3px var(--acc-line-2)" : "var(--shadow-sm)",
-                    transition: "all .15s ease",
+                    display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12,
+                    textAlign: "left", padding: "12px 16px", borderRadius: "var(--r-md)", cursor: "pointer",
+                    border: `1.5px solid ${on ? "var(--acc)" : "var(--line-2)"}`,
+                    background: on ? "var(--acc-soft)" : "var(--bg-1)",
+                    transition: "border-color .15s ease, background .15s ease",
                   }}>
-                  <div style={{ fontFamily: "var(--font-display)", fontWeight: on ? 700 : 600, fontSize: 21, color: on ? "var(--fg-1)" : "var(--fg-2)" }}>${a.toLocaleString()}</div>
-                  <div style={{ fontFamily: "var(--font-code)", fontSize: 12, color: on ? "var(--fg-2)" : "var(--fg-4)", marginTop: 3 }}>{(a * RATE).toLocaleString()} credits</div>
+                  <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17, color: "var(--fg-1)" }}>${a.toLocaleString()}</span>
+                  <span style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: on ? "var(--fg-2)" : "var(--fg-4)" }}>{(a * RATE).toLocaleString()} credits</span>
                 </button>
               );
             })}
@@ -293,8 +295,8 @@ export default function CreditsPage() {
 
       {/* rules */}
       <div style={{ marginTop: 30 }}>
-        <div style={sectionLabel}>How your balance works</div>
-        <div className="tile-grid cols-4">
+        <h2 style={{ ...SECTION_TITLE, margin: "0 0 12px" }}>How your balance works</h2>
+        <div className="tile-grid cols-2">
           {RULES.map(([t, d]) => (
             <div key={t} className="acard" style={{ gap: 6 }}>
               <div className="acard__t" style={{ fontSize: 14.5 }}>{t}</div>

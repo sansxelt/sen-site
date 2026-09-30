@@ -14,6 +14,7 @@
 // charge to be traceable to an agreement, and the checkbox is what consent_at records. Unticking it is the
 // same as switching the feature off, which is why they are one control and not two.
 import { useEffect, useState } from "react";
+import { SECTION_TITLE } from "@/app/rank/_components/page-header";
 
 type Settings = {
   enabled: boolean;
@@ -92,7 +93,7 @@ export function AutoRechargePanel() {
 
   return (
     <section aria-label="Automatic top-up" style={{ marginTop: 30 }}>
-      <div style={{ ...label, marginBottom: 12 }}>Automatic top-up</div>
+      <h2 style={{ ...SECTION_TITLE, marginBottom: 12 }}>Automatic top-up</h2>
 
       <div className="card" style={{ background: "var(--bg-1)", padding: "clamp(16px, 2.4vw, 22px)" }}>
         {/* STATE FIRST. Whether this is armed is the thing a person opening the page needs to know, and it

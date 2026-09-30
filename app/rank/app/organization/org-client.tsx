@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Ic, I } from "@/app/rank/_components/icons";
-import { Page, PageHeader } from "@/app/rank/_components/page-header";
+import { Page, PageHeader, SECTION_TITLE } from "@/app/rank/_components/page-header";
 
 type OrgRole = "owner" | "admin" | "billing_admin" | "member" | "viewer";
 type OrgMember = { id: string; email: string; role: OrgRole; status: "pending" | "active" | "revoked"; can_manage_billing: boolean };
@@ -31,7 +31,11 @@ type Ctx = {
 
 const ROLE_LABEL: Record<OrgRole, string> = { owner: "Owner", admin: "Organization admin", billing_admin: "Account billing admin", member: "Member", viewer: "Viewer" };
 const INVITABLE: OrgRole[] = ["admin", "billing_admin", "member", "viewer"];
-const cardHead = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: "30px 0 12px" } as const;
+// Two styles, because this one was doing two jobs. Between cards it is a section heading, in the console's one
+// section style. Inside a card it is a quiet label with no top margin: the old shared 30px top margin is what
+// left an empty band at the top of every card that opened with a label.
+const cardHead = { ...SECTION_TITLE, margin: "32px 0 12px" } as const;
+const cardLabel = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: "0 0 12px" } as const;
 // THE WORST-AFFECTED OBJECT IN THE CLUSTER. This one shape is spread onto ten inputs and six selects on the
 // page that configures single sign-on, verified domains and who may join an organization, and it carried
 // outline:"none" inline. An inline outline cannot be beaten by any stylesheet rule at any specificity, so
@@ -52,7 +56,6 @@ export function OrgClient({ email, ctx, activity, domainAccess = [], sso = null 
     // own card. Both hardcoded 880; neither decides it now.
     <Page measure="prose">
       <PageHeader
-        eyebrow="Account layer"
         title="Organization"
         lead="Organizations let larger teams govern multiple workspaces, domains, members, billing admins, and audit trails from one account."
         actions={org ? <Link href="/activity" className="btn btn--ghost">Activity →</Link> : null}
@@ -78,7 +81,7 @@ function JoinCard({ options }: { options: DomainAccessOption[] }) {
   }
   return (
     <>
-      <div style={cardHead}>Verified domain access</div>
+      <h2 style={cardHead}>Verified domain access</h2>
       {options.map((o) => {
         const st = state[o.id];
         return (
@@ -112,7 +115,7 @@ function CreateOrg() {
   }
   return (
     <div className="card">
-      <div style={cardHead}>Create an organization</div>
+      <div style={cardLabel}>Create an organization</div>
       <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 0 14px", lineHeight: 1.6, maxWidth: 560 }}>Organizations help larger teams govern multiple workspaces, domains, billing admins, and audit trails. SSO and provisioning can be added on top of this layer later. Creating one is optional, your workspaces keep working exactly as they do today.</p>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <input aria-label="Organization name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Acme Inc." onKeyDown={(e) => { if (e.key === "Enter" && !busy) create(); }} style={{ ...input, flex: "1 1 240px" }} />
@@ -212,7 +215,7 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
       </div>
 
       {/* Linked workspaces */}
-      <div style={cardHead}>Linked workspaces</div>
+      <h2 style={cardHead}>Linked workspaces</h2>
       <div className="card">
         {ctx.linkedWorkspaces.length === 0 ? (
           <p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>No workspaces linked yet. Linking keeps billing workspace-level, it only groups workspaces under this organization for governance.</p>
@@ -243,7 +246,7 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
       </div>
 
       {/* Members */}
-      <div style={cardHead}>Organization members</div>
+      <h2 style={cardHead}>Organization members</h2>
       <div className="card">
         <div style={{ display: "flex", flexDirection: "column" }}>
           {ctx.members.filter((m) => m.status !== "revoked").map((m, i) => (
@@ -273,7 +276,7 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
       </div>
 
       {/* Domains */}
-      <div style={cardHead}>Domains</div>
+      <h2 style={cardHead}>Domains</h2>
       <div className="card">
         <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "0 0 14px", lineHeight: 1.6 }}>Verify a domain to prepare your organization for future SSO and automated provisioning. Adding a domain does not auto-add users yet.</p>
         {domains.length > 0 && (
@@ -293,7 +296,7 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
       </div>
 
       {/* Verified domain access (provisioning) */}
-      <div style={cardHead}>Verified domain access</div>
+      <h2 style={cardHead}>Verified domain access</h2>
       <div className="card">
         <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "0 0 14px", lineHeight: 1.6 }}>People who sign in with a verified company domain can request access to this organization. {joinMode === "auto_member" ? "Auto-join is on: " : "Admins approve requests before access is granted."}{joinMode === "auto_member" ? "anyone who signs in with a verified domain email can join as a member. Workspace and project access still require separate permissions." : ""} Joining never grants workspace, project, billing, or API access, those are managed separately. Domain-based access depends on verified domain ownership; if verification becomes stale, new joins are paused for that domain until it is re-checked.</p>
         {ctx.canManage ? (
@@ -341,7 +344,7 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
       {/* Organization activity */}
       {ctx.canManage && (
         <>
-          <div style={cardHead}>Organization activity</div>
+          <h2 style={cardHead}>Organization activity</h2>
           <div className="card">
             {activity.length === 0 ? (
               <p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>
@@ -364,7 +367,7 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
       )}
 
       {/* Enterprise / SSO readiness */}
-      <div style={cardHead}>Enterprise readiness</div>
+      <h2 style={cardHead}>Enterprise readiness</h2>
       <div className="card" style={{ background: "var(--bg-2)" }}>
         <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, marginBottom: 6 }}>OIDC SSO is available | SCIM is not enabled yet</div>
         <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0, lineHeight: 1.7 }}>OIDC single sign-on can be configured above for any verified domain. SAML configuration is a scaffold (assertion sign-in coming later), and SCIM provisioning is not enabled yet. SSO authenticates users into the organization only, workspace and project access stay separate. <Link href="/contact" style={{ color: "var(--go-ink)" }}>Contact us for enterprise SSO requirements →</Link></p>
@@ -503,7 +506,7 @@ function SsoCard({ sso, pausedDomains = [] }: { sso: SsoView; pausedDomains?: st
 
   return (
     <>
-      <div style={cardHead}>Enterprise SSO</div>
+      <h2 style={cardHead}>Enterprise SSO</h2>
       <div className="card">
         <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "0 0 14px", lineHeight: 1.6 }}>Configure SSO for verified organization domains. Users who authenticate through your identity provider are mapped into the organization according to your provisioning settings. <strong style={{ color: "var(--fg-2)" }}>SSO authenticates users into the organization. Workspace and project permissions remain separate.</strong></p>
 

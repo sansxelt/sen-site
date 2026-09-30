@@ -10,7 +10,7 @@ import { Page, PageHeader } from "@/app/rank/_components/page-header";
 export function SetupRequired() {
   return (
     <Page measure="prose">
-      <PageHeader eyebrow="Vraelis Preflight" title="Preflight setup required" />
+      <PageHeader title="Setup required" />
       <div className="card" style={{ display: "flex", flexDirection: "column", gap: 12, padding: "clamp(18px, 2.6vw, 26px)", marginBottom: 80 }}>
         <p style={{ fontSize: 14, color: "var(--fg-2)", lineHeight: 1.6, margin: 0 }}>
           The Preflight database migration has not been applied. This surface is available to internal

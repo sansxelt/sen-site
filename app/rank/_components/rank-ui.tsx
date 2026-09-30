@@ -399,13 +399,15 @@ function AppTopbar({ email, systems, pendingReviews }: { email: string | null; s
   const item = { display: "flex", alignItems: "center", gap: 9, padding: "8px 10px", borderRadius: 9, fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" } as const;
   const itemIcon = { display: "inline-flex", color: "var(--fg-4)", flex: "none" } as const;
   return (
-    <header ref={barRef} style={{ display: "flex", alignItems: "center", gap: 16, height: 64, padding: "0 var(--gutter)", borderBottom: "1px solid var(--line-2)",
+    // Left padding 22px = the sidebar's 12px padding + a link's 10px, so the wordmark starts on the same x as
+    // the sidebar's icons and group labels. With the page gutter plus a nudge it sat ~40px right of them.
+    <header ref={barRef} style={{ display: "flex", alignItems: "center", gap: 16, height: 64, padding: "0 var(--gutter) 0 22px", borderBottom: "1px solid var(--line-2)",
       background: "var(--bg-1)" }}>
       {/* Mobile-only hamburger: opens the accessible nav drawer. Hidden at desktop/tablet widths (CSS). */}
       <MobileNav />
       {/* in-app logo returns to the APP home (app.vraelis.com/); leaving the product entirely is the
-          sidebar's "Back to site" -> https://vraelis.com. Small left nudge centers over the sidebar. */}
-      <span style={{ marginLeft: 14, marginTop: 4, display: "inline-flex", alignItems: "center" }}><Brand href="/" /></span>
+          sidebar's "Back to site" -> https://vraelis.com. */}
+      <span style={{ marginTop: 4, display: "inline-flex", alignItems: "center" }}><Brand href="/" /></span>
       <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
         {/* Plan + balance at a glance, right in the bar — no menu dig. Two matched pills (per founder): the
             plan by its FULL NAME (accent-tinted, ties to the brand avatar) -> /plans, and the credits pill

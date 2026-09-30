@@ -39,10 +39,20 @@ const MEASURE = { wide: 1240, prose: 820 } as const;
 export type Measure = keyof typeof MEASURE;
 
 export function Page({ measure = "wide", children }: { measure?: Measure; children: ReactNode }) {
-  // .wrap carries the responsive gutter and the shell's top padding. maxWidth is set here rather than in
-  // the stylesheet because it is the one thing that legitimately differs between the two measures.
-  return <div className="wrap" style={{ maxWidth: MEASURE[measure] }}>{children}</div>;
+  // .wrap carries the responsive gutter and the shell's top padding. Both measures sit in the SAME outer
+  // column, so they share a left edge: a prose page used to be its own narrower .wrap, centred by margin
+  // auto, and the title jumped 190px sideways between Plans (wide) and Credits (prose) in the same group.
+  // The prose measure now only limits how far the content runs to the right.
+  return (
+    <div className="wrap" style={{ maxWidth: MEASURE.wide }}>
+      {measure === "prose" ? <div style={{ maxWidth: `calc(${MEASURE.prose}px - 2 * var(--gutter))` }}>{children}</div> : children}
+    </div>
+  );
 }
+
+/** A section title inside a console page. The overview's size and weight, used everywhere a page splits
+ *  into sections, so a section reads the same on every page. */
+export const SECTION_TITLE = { fontSize: 15.5, fontWeight: 600, letterSpacing: "-0.005em", color: "var(--fg-1)", margin: 0 } as const;
 
 export function PageHeader({
   eyebrow, title, lead, actions,

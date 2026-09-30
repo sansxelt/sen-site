@@ -197,7 +197,6 @@ export default function ConnectionsPage() {
     // moves onto the content, which is where it was actually doing something.
     <Page measure="prose">
       <PageHeader
-        eyebrow="Account"
         title="Integrations"
         lead="Authorize a provider once for your whole account. Vraelis holds a read-only token, sealed with AES-256-GCM, never a password. Every system then uses it, choosing its own repo or project."
       />

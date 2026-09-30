@@ -17,7 +17,7 @@ import { keySpentTodayCents } from "@/lib/preflight/key-spend";
 import { ownerActiveRunCount, ownerRunsToday } from "@/lib/preflight/runs-db";
 import { MAX_ACTIVE_RUNS_PER_OWNER, maxRunsPerDay } from "@/lib/preflight/limits";
 import { topupMaxDollars } from "@/lib/v-entitlements";
-import { Page, PageHeader } from "@/app/rank/_components/page-header";
+import { Page, PageHeader, SECTION_TITLE } from "@/app/rank/_components/page-header";
 
 export const metadata: Metadata = { title: "Limits" };
 export const dynamic = "force-dynamic";
@@ -65,7 +65,7 @@ export default async function LimitsPage() {
 
       <div style={{ paddingBottom: 80 }}>
       <section aria-label="Account ceilings" style={{ marginBottom: 30 }}>
-        <h2 style={{ ...label, marginBottom: 10 }}>This account</h2>
+        <h2 style={{ ...SECTION_TITLE, marginBottom: 10 }}>This account</h2>
         <div className="card" style={{ padding: 0, overflow: "hidden", background: "var(--bg-1)" }}>
           {CEILINGS.map(([k, v, why, now], i) => (
             <div key={k} style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", gap: 14, padding: "13px 16px", borderTop: i ? "1px solid var(--line-2)" : "none", alignItems: "baseline" }}>
@@ -82,7 +82,7 @@ export default async function LimitsPage() {
 
       {keys.length > 0 ? (
         <section aria-label="Per key" style={{ marginBottom: 30 }}>
-          <h2 style={{ ...label, marginBottom: 10 }}>Per key</h2>
+          <h2 style={{ ...SECTION_TITLE, marginBottom: 10 }}>Per key</h2>
           <div className="card" style={{ padding: 0, overflow: "hidden", background: "var(--bg-1)" }}>
             {keys.map((k, i) => {
               const ceiling = k.daily_ceiling_cents ?? null;

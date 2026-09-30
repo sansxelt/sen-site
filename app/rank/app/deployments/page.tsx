@@ -138,7 +138,6 @@ export default async function DeploymentsPage() {
   return (
     <Page>
       <PageHeader
-        eyebrow="Vraelis Preflight"
         title="Deployments"
         lead="The deployments your verifications have tested, with the latest verdict for each."
       />

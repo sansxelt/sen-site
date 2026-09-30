@@ -42,7 +42,7 @@ import { MAX_ACTIVE_RUNS_PER_OWNER, maxRunsPerDay } from "@/lib/preflight/limits
 import { topupMaxDollars } from "@/lib/v-entitlements";
 import { timeAgo } from "@/lib/preflight/home-verdict";
 import { Ic, I } from "@/app/rank/_components/icons";
-import { Page, PageHeader } from "@/app/rank/_components/page-header";
+import { Page, PageHeader, SECTION_TITLE } from "@/app/rank/_components/page-header";
 
 export const metadata: Metadata = { title: "Usage" };
 export const dynamic = "force-dynamic";
@@ -109,7 +109,7 @@ export default async function UsagePage() {
           and is gone rather than moved. The tail room did render, so it sits on the content. */}
       <div style={{ paddingBottom: 80 }}>
       <section aria-label="Balance and consumption" style={{ marginBottom: 30 }}>
-        <h2 style={{ ...label, marginBottom: 10 }}>Right now</h2>
+        <h2 style={{ ...SECTION_TITLE, marginBottom: 10 }}>Right now</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 10 }}>
           <Stat k="Credits available" v={bal.toLocaleString()} sub={`${planLabel(planV1?.plan, plan)} plan`} />
           <Stat k="Verifications running" v={`${active} / ${MAX_ACTIVE_RUNS_PER_OWNER}`} sub="At once" />
@@ -127,7 +127,7 @@ export default async function UsagePage() {
           the key detail page uses, so the account total and the sum of its keys cannot disagree. */}
       {acct && acct.runs > 0 ? (
         <section aria-label="Spend" style={{ marginBottom: 30 }}>
-          <h2 style={{ ...label, marginBottom: 10 }}>Spend</h2>
+          <h2 style={{ ...SECTION_TITLE, marginBottom: 10 }}>Spend</h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 10 }}>
             <Stat k="This month" v={money(acct.months.thisMonth.chargedCents)}
               sub={`${acct.months.thisMonth.runs} verification${acct.months.thisMonth.runs === 1 ? "" : "s"}`} />
@@ -166,7 +166,7 @@ export default async function UsagePage() {
           rather than overruled: five separate active days before anything is drawn. */}
       {acct && acct.verdicts.decided > 0 ? (
         <section aria-label="Verdicts" style={{ marginBottom: 30 }}>
-          <h2 style={{ ...label, marginBottom: 10 }}>Verdicts</h2>
+          <h2 style={{ ...SECTION_TITLE, marginBottom: 10 }}>Verdicts</h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 10, marginBottom: 12 }}>
             <Stat k="Verified" v={String(acct.verdicts.verified)} />
             <Stat k="Failed" v={String(acct.verdicts.failed)} />
@@ -215,7 +215,7 @@ export default async function UsagePage() {
 
       <section aria-label="API keys" style={{ marginBottom: 30 }}>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, marginBottom: 4 }}>
-          <h2 style={label}>API keys ({keys.length})</h2>
+          <h2 style={SECTION_TITLE}>API keys ({keys.length})</h2>
           <Link href="/developers" style={{ fontSize: 13, color: "var(--acc-deep)", textDecoration: "none" }}>Manage keys <span aria-hidden>→</span></Link>
         </div>
         <p style={{ margin: "0 0 10px", fontSize: 12, color: "var(--fg-4)" }}>Requests are an exact all-time count per key, not a sample.</p>
@@ -265,7 +265,7 @@ export default async function UsagePage() {
 
       {usage.byEndpoint.length > 0 && (
         <section aria-label="Endpoints" style={{ marginBottom: 30 }}>
-          <h2 style={{ ...label, marginBottom: 10 }}>Where the requests went</h2>
+          <h2 style={{ ...SECTION_TITLE, marginBottom: 10 }}>Where the requests went</h2>
           <div className="card" style={{ padding: 0, overflow: "hidden", background: "var(--bg-1)" }}>
             {usage.byEndpoint.slice(0, 8).map((e, i) => (
               <div key={`${e.method} ${e.endpoint}`} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 14, padding: "11px 16px", borderTop: i ? "1px solid var(--line-2)" : "none", alignItems: "center" }}>
@@ -281,7 +281,7 @@ export default async function UsagePage() {
 
       {hooks.endpoints > 0 && (
         <section aria-label="Webhooks" style={{ marginBottom: 30 }}>
-          <h2 style={{ ...label, marginBottom: 10 }}>Webhook delivery</h2>
+          <h2 style={{ ...SECTION_TITLE, marginBottom: 10 }}>Webhook delivery</h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10 }}>
             <Stat k="Endpoints" v={String(hooks.endpoints)} />
             <Stat k="Delivered" v={hooks.success.toLocaleString()} />
@@ -292,7 +292,7 @@ export default async function UsagePage() {
       )}
 
       <section aria-label="Limits">
-        <h2 style={{ ...label, marginBottom: 4 }}>Limits</h2>
+        <h2 style={{ ...SECTION_TITLE, marginBottom: 4 }}>Limits</h2>
         {/* Quoted from lib/preflight/limits.ts, which the launch and rerun routes import. A page that
             restated these would eventually promise a ceiling the API does not enforce. */}
         <p style={{ margin: "0 0 10px", fontSize: 12, color: "var(--fg-4)" }}>These are the values the API checks before a run starts, not a description of them.</p>

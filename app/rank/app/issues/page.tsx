@@ -54,7 +54,7 @@ function StatChip({ label, value, color }: { label: string; value: number; color
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
-    <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--fg-2)", margin: "0 0 10px" }}>{children}</h2>
+    <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15.5, letterSpacing: "-0.005em", color: "var(--fg-1)", margin: "0 0 10px" }}>{children}</h2>
   );
 }
 
@@ -138,7 +138,6 @@ export default async function IssuesPage() {
   return (
     <Page>
       <PageHeader
-        eyebrow="Vraelis Preflight"
         title="Issues"
         lead="Failures found by real browser runs of your app, each with the evidence to fix it."
       />

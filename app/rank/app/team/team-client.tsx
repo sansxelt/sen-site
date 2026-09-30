@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Ic, I } from "@/app/rank/_components/icons";
-import { Page, PageHeader } from "@/app/rank/_components/page-header";
+import { Page, PageHeader, SECTION_TITLE } from "@/app/rank/_components/page-header";
 
 type Role = "owner" | "admin" | "editor" | "viewer" | "client_viewer";
 type Member = { id: string; user_id: string | null; email: string; role: Role; status: "pending" | "active" | "revoked"; created_at: string; invite_expires_at?: string | null; can_manage_billing?: boolean };
@@ -45,7 +45,11 @@ function expiryLabel(iso?: string | null): string | null {
   return "expires " + new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-const cardHead = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: "30px 0 12px" } as const;
+// Two styles, because this one was doing two jobs. Between cards it is a section heading, in the console's one
+// section style. Inside a card it is a quiet label with no top margin: the old shared 30px top margin is what
+// left an empty band at the top of every card that opened with a label.
+const cardHead = { ...SECTION_TITLE, margin: "32px 0 12px" } as const;
+const cardLabel = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: "0 0 12px" } as const;
 // ONE OBJECT, FIVE CONTROLS, AND NO KEYBOARD FOCUS ON ANY OF THEM.
 //
 // This shape carried outline:"none" inline, and it is spread onto the invite field, three <select>s and the
@@ -150,7 +154,6 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
     // same URL. They each hardcoded 880 and now state one intention instead.
     <Page measure="prose">
       <PageHeader
-        eyebrow="Workspace"
         title="Team"
         lead="Run verifications with your team and share client-ready reports, without exposing private controls."
         actions={<Link href="/activity" className="btn btn--ghost">Workspace activity →</Link>}
@@ -166,7 +169,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
 
       {/* Governance / enterprise readiness */}
       <div className="card" style={{ marginBottom: 18, background: "var(--bg-2)" }}>
-        <div style={cardHead}>Built for governed production verification</div>
+        <div style={cardLabel}>Built for governed production verification</div>
         <ul style={{ margin: "10px 0 0", padding: 0, listStyle: "none", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "8px 18px" }}>
           {/* "Client-safe report sharing" removed: a client VIEWER ROLE exists, but sending a report by
               link to someone with no account does not. Same false claim was on /enterprise. */}
@@ -189,7 +192,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
       {/* Incoming ownership transfer (you are the target) */}
       {transfer.incoming && (
         <div className="card" style={{ marginBottom: 18, borderColor: "var(--acc-line-2)", background: "var(--acc-soft)" }}>
-          <div style={cardHead}>Ownership transfer</div>
+          <div style={cardLabel}>Ownership transfer</div>
           <p style={{ fontSize: 14.5, color: "var(--fg-1)", margin: "0 0 6px", fontWeight: 600 }}>You&apos;ve been asked to become owner of {transfer.incoming.workspaceName}.</p>
           <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 12px", lineHeight: 1.6 }}>To accept, set up team billing for this workspace. Your subscription takes over once active, and the previous owner&apos;s subscription is then canceled. Client viewers stay free.</p>
           <button onClick={acceptIncoming} disabled={aBusy} className="btn" style={{ opacity: aBusy ? 0.6 : 1 }}>{aBusy ? "Starting…" : "Accept ownership and set up billing"}</button>
@@ -209,7 +212,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
         <div className="card" style={{ marginBottom: 18 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
             <div>
-              <div style={cardHead}>Team seats</div>
+              <div style={cardLabel}>Team seats</div>
               <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17 }}>{billing.used} paid seat{billing.used === 1 ? "" : "s"} used{billing.limit != null ? ` of ${billing.limit}` : ""}</div>
               <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 3 }}>Admin, Editor, and Viewer are paid seats. <strong style={{ color: "var(--fg-2)" }}>Client viewers are free</strong> and can only access client-safe reports.</div>
             </div>
@@ -254,7 +257,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
       {/* Invite */}
       {canManage && (
         <>
-          <div style={cardHead}>Invite a member or client</div>
+          <h2 style={cardHead}>Invite a member or client</h2>
           <div className="card" style={{ marginBottom: 18 }}>
             {/* Neither control had a name. The card head above them is a styled <div>, so a screen reader
                 reached an unlabelled text box followed by an unlabelled combo box on the form that grants
@@ -272,7 +275,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
       )}
 
       {/* Members */}
-      <div style={cardHead}>Members</div>
+      <h2 style={cardHead}>Members</h2>
       <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-lg)", overflow: "hidden", background: "var(--bg-1)", marginBottom: 18 }}>
         {active.map((m, i) => (
           <div key={m.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "13px 16px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", flexWrap: "wrap" }}>
@@ -304,7 +307,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
       {/* Pending */}
       {pending.length > 0 && (
         <>
-          <div style={cardHead}>Pending invites</div>
+          <h2 style={cardHead}>Pending invites</h2>
           <div className="card" style={{ marginBottom: 18 }}>
             {pending.map((m, i) => (
               <div key={m.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "10px 0", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", flexWrap: "wrap" }}>
@@ -319,7 +322,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
       {/* Program access overview (owner/admin) */}
       {canManage && ctx.projectAccess.length > 0 && (
         <>
-          <div style={cardHead}>Program access</div>
+          <h2 style={cardHead}>Program access</h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 18 }}>
             {ctx.projectAccess.map((p) => (
               <div key={p.project_id} className="card">
@@ -343,7 +346,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
       {/* Project-level shares */}
       {ctx.sharedProjects.length > 0 && (
         <>
-          <div style={cardHead}>Projects shared with you</div>
+          <h2 style={cardHead}>Projects shared with you</h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 18 }}>
             {ctx.sharedProjects.map((p) => (
               <div key={p.project_id} className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
@@ -361,7 +364,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
       {/* Shared with you (workspace-level) */}
       {ctx.shared.length > 0 && (
         <>
-          <div style={cardHead}>Workspaces shared with you</div>
+          <h2 style={cardHead}>Workspaces shared with you</h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 18 }}>
             {ctx.shared.map((w) => (
               <div key={w.workspace_id} className="card">
@@ -388,7 +391,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
       )}
 
       {/* Roles legend */}
-      <div style={cardHead}>Roles</div>
+      <h2 style={cardHead}>Roles</h2>
       <div className="card" style={{ background: "var(--bg-2)" }}>
         {(["owner", "admin", "editor", "viewer", "client_viewer"] as Role[]).map((r, i) => (
           <div key={r} style={{ display: "flex", gap: 12, padding: "9px 0", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", alignItems: "baseline" }}>
@@ -402,7 +405,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
       {/* Transfer ownership (owner only) */}
       {isOwner && (
         <>
-          <div style={{ ...cardHead, marginTop: 30 }}>Transfer ownership</div>
+          <h2 style={cardHead}>Transfer ownership</h2>
           <div className="card" style={{ borderColor: "var(--line-2)" }}>
             <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 12px", lineHeight: 1.6 }}>Transfer ownership of <strong style={{ color: "var(--fg-1)" }}>{transfer.workspaceName}</strong> to another active internal member. They become Owner; you become Admin. Billing, API keys, and client data are not exposed.</p>
             {transfer.pending ? (

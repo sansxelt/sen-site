@@ -142,7 +142,13 @@ html:has([data-surface="app"]) {
    cursor has not passed or failed anything. */
 [data-surface="app"] input,
 [data-surface="app"] textarea,
-[data-surface="app"] select {
+[data-surface="app"] select,
+/* tokens.css paints input[type=text], input[type=email] and textarea grey at the same specificity and later
+   in the cascade, so without these the credits amount box and every other typed field sat grey on a white
+   card while selects and number fields beside them were white. */
+[data-surface="app"] input[type="text"],
+[data-surface="app"] input[type="email"],
+[data-surface="app"] textarea[class] {
   background: var(--bg-1);
   color: var(--fg-1);
   border-color: var(--line-3);
@@ -314,3 +320,7 @@ html:has([data-surface="app"]) {
 }
 [data-surface="app"] code,
 [data-surface="app"] kbd { font-family: var(--font-brand-mono), ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+/* Records: the "Show more" row is a plain link-coloured row, not a disclosure triangle. */
+[data-surface="app"] .rec-more > summary::-webkit-details-marker { display: none; }
+[data-surface="app"] .rec-more[open] > summary { display: none; }
