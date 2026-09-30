@@ -76,7 +76,8 @@ const SEV_LABEL: Record<string, string> = { critical: "Critical", high: "High", 
 // worker's active states rather than from a second copy of that set kept in a page.
 
 // Uppercase section label, matching the dashboard's section headers.
-const headLbl = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" };
+// Section headings on the system page, the same weight and size as the Overview's (overview-sections.tsx).
+const headLbl = { fontSize: 15.5, fontWeight: 600, color: "var(--fg-1)" };
 // Every section after the hero: whitespace plus a single hairline, no wrapper card.
 const sectionStyle = { borderTop: "1px solid var(--line-1)", paddingTop: 22, marginTop: 26 } as const;
 

@@ -31,7 +31,7 @@ export function AddGuarantee({ appId }: { appId: string }) {
   }
 
   if (!open) {
-    return <button className="btn" style={{ fontSize: 13, padding: "8px 14px" }} onClick={() => setOpen(true)}>+ Add a guarantee</button>;
+    return <button className="btn btn--ghost" style={{ fontSize: 13, padding: "8px 14px" }} onClick={() => setOpen(true)}>+ Add a guarantee</button>;
   }
 
   return (

@@ -10,7 +10,8 @@ import { Ic, I } from "@/app/rank/_components/icons";
 import { GuaranteeStatusPill } from "./guarantee-ui";
 import { AddGuarantee } from "./add-guarantee";
 
-const headLbl = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" };
+// Matches the system page's section headings.
+const headLbl = { fontSize: 15.5, fontWeight: 600, color: "var(--fg-1)" };
 const sectionStyle = { borderTop: "1px solid var(--line-1)", paddingTop: 22, marginTop: 26 } as const;
 
 function subtitle(planState: string): string {
