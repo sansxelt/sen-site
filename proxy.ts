@@ -56,6 +56,10 @@ export const V6_EXACT: Record<string, string> = {
   "/data-rights": "/dev-preview/v6/data-rights",
   "/trademark": "/dev-preview/v6/trademark",
   "/readme": "/dev-preview/v6/readme",
+  // The cookie and acceptable use policies (2026-09-30). /acceptable-use was already linked from the sign-up
+  // agreement and /cookies from the account screens' footer, both 404ing until these pages existed.
+  "/cookies": "/dev-preview/v6/cookies",
+  "/acceptable-use": "/dev-preview/v6/acceptable-use",
 };
 
 export const CLEAN_EXACT: Record<string, string> = {

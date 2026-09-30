@@ -37,6 +37,7 @@ const KNOWN = new Set([
   "/", "/platform", "/method", "/agents", "/pricing", "/developers", "/docs", "/research",
   "/changelog", "/company", "/security", "/enterprise", "/limitations", "/integrations",
   "/contact", "/readme", "/privacy", "/terms", "/refunds", "/subprocessors", "/data-rights", "/trademark",
+  "/cookies", "/acceptable-use",
 ]);
 
 // Obvious automated traffic. Not a security control and not treated as one: it keeps the count roughly

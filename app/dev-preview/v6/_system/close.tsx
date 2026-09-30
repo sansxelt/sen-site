@@ -12,6 +12,7 @@ import { Spectral } from "./spectral";
 import "./close.css";
 import { V6_BASE } from "@/lib/v6-routes";
 import { FOOTER_STATEMENT } from "./positioning";
+import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
 
 const BASE = V6_BASE;
 export function ClosingScene({
@@ -52,7 +53,9 @@ const COLS: [string, [string, string][]][] = [
   ["Company", [[`${BASE}/company`, "About"], [`${BASE}/company#who`, "Who it is for"], [`${BASE}/company#different`, "How this is different"], [`${BASE}/partnerships/reddit`, "Reddit partnership"], [`${BASE}/partnerships/bytedance`, "ByteDance partnership"]]],
   // "Contact" pointed at an anchor on the company page. It is now a page, because a contact anchor is where
   // a contact route goes to be quietly missing.
-  ["Trust", [[`${BASE}/security`, "Security"], [`${BASE}/limitations`, "Limitations"], [`${BASE}/privacy`, "Privacy"], [`${BASE}/terms`, "Terms"], [`${BASE}/data-rights`, "Data rights"], [`${BASE}/subprocessors`, "Subprocessors"], [`${BASE}/trademark`, "Trademark"], [`${BASE}/contact`, "Contact"]]],
+  // Cookies and Acceptable use joined on 2026-09-30 with the privacy choices; the column also ends with the
+  // "Privacy choices" control itself (rendered below, since it opens a dialog rather than going anywhere).
+  ["Trust", [[`${BASE}/security`, "Security"], [`${BASE}/limitations`, "Limitations"], [`${BASE}/privacy`, "Privacy"], [`${BASE}/cookies`, "Cookies"], [`${BASE}/terms`, "Terms"], [`${BASE}/acceptable-use`, "Acceptable use"], [`${BASE}/data-rights`, "Data rights"], [`${BASE}/subprocessors`, "Subprocessors"], [`${BASE}/trademark`, "Trademark"], [`${BASE}/contact`, "Contact"]]],
 ];
 
 export function SiteFooter() {
@@ -65,6 +68,7 @@ export function SiteFooter() {
           <div className="v6-foot2__col" key={h}>
             <p className="v6-foot2__h">{h}</p>
             {links.map(([href, label]) => <Link key={label} href={href}>{label}</Link>)}
+            {h === "Trust" && <PrivacyChoicesButton />}
           </div>
         ))}
       </div>
@@ -85,7 +89,10 @@ export function SiteFooter() {
             <a href="https://www.linkedin.com/company/vraelis" target="_blank" rel="noreferrer">LinkedIn</a>
             <Link href={`${BASE}/security`}>Security</Link>
             <Link href={`${BASE}/privacy`}>Privacy</Link>
+            <Link href={`${BASE}/cookies`}>Cookies</Link>
             <Link href={`${BASE}/terms`}>Terms</Link>
+            <Link href={`${BASE}/acceptable-use`}>Acceptable use</Link>
+            <PrivacyChoicesButton />
           </div>
         </div>
       </div>

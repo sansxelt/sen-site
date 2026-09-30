@@ -369,6 +369,12 @@
   border-top: 1px solid var(--line-1); vertical-align: top; line-height: 1.5; }
 .v6-lg__tname { color: var(--ink) !important; font-weight: 600; white-space: nowrap; }
 .v6-lg__treg { white-space: nowrap; }
+/* The cookie policy's tables: five columns in the reading column, so a smaller size, and machine names in
+   the mono face that wrap anywhere (__Secure-authjs.pkce.code_verifier has no space to break at). */
+.v6-lg__table--cookies { min-width: 640px; }
+.v6-lg__table--cookies td { font-size: 13.5px; }
+.v6-lg__tcode { font-family: var(--mono); font-size: 12.5px !important; color: var(--ink) !important; overflow-wrap: anywhere; min-width: 150px; }
+.v6-lg__tablewrap:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
 
 .v6-signin { padding-top: calc(var(--nav-h) + clamp(6px, 1vw, 16px)); padding-bottom: clamp(32px, 5vw, 64px); }
 .v6-signin__wrap { max-width: 560px; }
