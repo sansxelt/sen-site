@@ -37,8 +37,11 @@
 //      answer, with its evidence and on Failed a repair prompt, goes back to whoever asked, including an AI
 //      assistant; after a fix the same approved plan can be re-checked within its limits; every run is kept.
 //      That is the whole of what is built.
-//   5. The three answers are Verified, Failed and Blocked, always in that order, always all three. Naming
-//      only the good one is how a verification product starts sounding like a green check.
+//   5. THE PRODUCT IS NOT ITS THREE ANSWERS (founder, 2026-09-29: "stop putting the entire product on
+//      verified, blocked or failed"). The answer's vocabulary is Verified, Failed and Blocked, and wherever a
+//      result is actually shown (a replayed run, the docs, the API) it is named that way. But the pitch is
+//      what Vraelis DOES: it tries the sentence on the live app and shows exactly what happened. Nothing here
+//      leads with the trichotomy, and a line that exists only to list the three answers does not belong.
 //   6. NARROW ABOUT THE FUNCTION, WIDE ABOUT THE AUDIENCE (founder, 2026-09-28). Say exactly what it does:
 //      one sentence, one approved plan, one real browser run on the live app, one answer with evidence.
 //      Never make a line here about who uses it. Developers, product teams, agencies, founders, QA, CI and AI
@@ -71,22 +74,21 @@ export const HEADLINE: [string, string] = [
 /** ONE paragraph under the headline: the loop, once, in the order it happens. Under 45 words.
  *
  *  Every clause is a thing in the code: the sentence is the claim on the reviewed plan, the plan is derived
- *  from it, approval is a separate event a person makes, and the browser is a real hosted Chromium session
- *  driven against the deployment. "The device it controls" is rule 7: a device is checked through the web
- *  app that controls it, which is exactly what "a real browser tries it on the live app" does. The four
- *  channels (console, CLI, CI, AI assistant) are named by the Reach chapter directly below rather than
- *  here, which is what keeps this under 45 words. No verb here is aspirational. */
+ *  from it, approval is a separate event a person makes, the browser is a real hosted Chromium session driven
+ *  against the deployment, and "every step, a screenshot and what went wrong" is the evidence a run records.
+ *  "The device it controls" is rule 7: a device is checked through the web app that controls it. It ends on
+ *  what the reader SEES, not on a list of verdicts (rule 5). No verb here is aspirational. */
 export const SUPPORT =
-  "Write one sentence about what your app, or the device it controls, should do. Vraelis turns it into a plan you approve, and a real browser tries it on the live app. You get Verified, Failed or Blocked, with the evidence.";
+  "Write one sentence about what your app, or the device it controls, should do. Vraelis turns it into a plan you approve, tries it on the live app in a real browser, and shows you every step, a screenshot, and anything that went wrong.";
 
 /** Page title and meta description.
  *
  *  A search result is the surface where an unsupportable claim travels furthest, so the description makes
- *  exactly the claim the run itself produces and no larger one. It also has to survive being read with no
- *  page around it, which is the second reason it names all three answers rather than only Verified. */
+ *  exactly the claim the run itself produces and no larger one: it tries the sentence and shows what
+ *  happened. It does not promise a green result, and it does not lead with the verdict words (rule 5). */
 export const META_TITLE = "Vraelis | Checks your live app does what you say it does";
 export const META_DESCRIPTION =
-  "Write one sentence about what your web app, or a device it controls, should do. Vraelis tries it in a real browser on the live app and answers Verified, Failed, or Blocked, with the evidence.";
+  "Write one sentence about what your web app, or a device it controls, should do. Vraelis tries it in a real browser on the live app and shows you exactly what happened, step by step.";
 
 /**
  * Link-preview text. Re-exported from lib/social-card.ts, which is the single source for every surface:

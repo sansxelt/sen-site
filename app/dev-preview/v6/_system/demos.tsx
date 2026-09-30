@@ -13,7 +13,7 @@
    Reduced motion: everything is shown at once, and nothing moves. */
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { DEMOS, EXAMPLE_CLAIMS, LIMITS, type Demo, type DemoRun } from "../_content/demos";
+import { DEMOS, type Demo, type DemoRun } from "../_content/demos";
 import "./demos.css";
 
 const MIN_BEAT = 140;
@@ -68,11 +68,25 @@ export function Demos() {
     return () => { io.disconnect(); t.forEach(clearTimeout); };
   }, [play, run]);
 
-  const choose = (d: number, r = 0) => {
+  const choose = useCallback((d: number, r = 0) => {
     setDemoIdx(d); setRunIdx(r);
     started.current = true;
     play(DEMOS[d].runs[r]);
-  };
+  }, [play]);
+
+  // #run-<key> (linked from the examples above) opens that run and brings the player into view.
+  useEffect(() => {
+    const open = () => {
+      const key = window.location.hash.startsWith("#run-") ? window.location.hash.slice(5) : "";
+      const d = DEMOS.findIndex((x) => x.key === key);
+      if (d < 0) return;
+      choose(d);
+      root.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+    open();
+    window.addEventListener("hashchange", open);
+    return () => window.removeEventListener("hashchange", open);
+  }, [choose]);
 
   const onTabKey = (e: React.KeyboardEvent) => {
     if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
@@ -85,14 +99,14 @@ export function Demos() {
   // Where each journey's steps start in the run's single running count.
   const starts = run.journeys.map((_, j) => run.journeys.slice(0, j).reduce((a, x) => a + x.steps.length, 0));
   return (
-    <section ref={root} className="v6-demo" aria-labelledby="v6-demo-h">
+    <section ref={root} id="real-runs" className="v6-demo" aria-labelledby="v6-demo-h">
       <div className="v6-demo__in">
         <div className="v6-demo__head">
           <p className="v6-eyebrow">Real runs</p>
           <h2 id="v6-demo-h" className="v6-demo__h">Watch it check a live app.</h2>
           <p className="v6-demo__lead">
-            Three real verifications, replayed from their records. Every step, timing, screenshot and verdict
-            here came from the run, on Vraelis demo apps you can open yourself.
+            Three real checks, replayed from their records. Every step, timing, screenshot and result here
+            came from the run, on Vraelis demo apps you can open yourself.
           </p>
         </div>
 
@@ -188,22 +202,6 @@ export function Demos() {
         </div>
 
         <p className="v6-demo__take">{demo.takeaway}</p>
-
-        <div className="v6-demo__examples">
-          <div className="v6-demo__exhead">
-            <p className="v6-demo__k v6-mono">What else it can check</p>
-            <p className="v6-demo__exnote">Examples of sentences, not recorded runs. Anything a person can do and see in a browser.</p>
-          </div>
-          <ul className="v6-demo__exlist">
-            {EXAMPLE_CLAIMS.map((c) => (
-              <li key={c.area}>
-                <p className="v6-demo__exarea v6-mono">{c.area}</p>
-                <p className="v6-demo__exs">{c.sentence}</p>
-              </li>
-            ))}
-          </ul>
-          <p className="v6-demo__limits">{LIMITS}</p>
-        </div>
       </div>
     </section>
   );

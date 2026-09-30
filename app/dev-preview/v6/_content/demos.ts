@@ -170,18 +170,3 @@ export const DEMOS: Demo[] = [
     takeaway: "Creating the project looked fine on screen. One reload later it was gone, which is the kind of bug nobody notices until a customer does.",
   },
 ];
-
-// WHAT IT CAN CHECK. These are EXAMPLES of sentences, not recorded runs, and the section that renders them
-// says so. Each one is built only from things a browser can do and see (open, click, type, reload, sign in as
-// a test role, switch roles, sign out, read the page and the address), which is the whole of what a plan can
-// ask the browser to do.
-export const EXAMPLE_CLAIMS: { area: string; sentence: string }[] = [
-  { area: "Payments and plans", sentence: "After paying, the account shows Pro, and still does after signing out and back in." },
-  { area: "Accounts", sentence: "A new visitor can create an account and land on their dashboard." },
-  { area: "Saving work", sentence: "A project someone creates is still there after a reload." },
-  { area: "Access", sentence: "Someone who is signed out and opens /dashboard is sent to sign in." },
-  { area: "Roles", sentence: "A viewer can open the report but cannot delete it." },
-  { area: "Cancelling", sentence: "Cancelling from Billing changes the plan to Cancelled, and it stays Cancelled." },
-];
-
-export const LIMITS = "It checks what a browser can do and see. It does not read your database, your inbox, or your payment provider directly.";

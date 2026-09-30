@@ -574,7 +574,7 @@ export function Devices() {
           <Reveal className="v6-gcard" i={1}>
             <p style={{ margin: "0 0 14px" }}><Kicker>An example claim</Kicker></p>
             <h3>&ldquo;After an operator presses Return home, the drone shows Landed, and still does after a reload.&rdquo;</h3>
-            <p>The answer is Verified, Failed or Blocked, with the steps, screenshots, console errors and failed requests, like any other check.</p>
+            <p>You see every step the browser took on the panel, a screenshot, and anything that went wrong, like any other check.</p>
           </Reveal>
           <Reveal className="v6-gcard" i={2} style={{ borderStyle: "dashed" }}>
             <p style={{ margin: "0 0 14px" }}><Signal state="wait">Next, not built yet</Signal></p>
