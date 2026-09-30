@@ -40,8 +40,11 @@ function DocFigure({ block }: { block: Extract<Block, { t: "figure" }> }) {
   return (
     <figure className="v6-docs__fig">
       <div className="v6-docs__shot">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={block.src} alt={block.alt} width={block.width} height={block.height} loading="lazy" decoding="async" />
+        {/* The crop opens at full size in a new tab: on a phone the column is narrower than the text in it. */}
+        <a href={block.src} target="_blank" rel="noopener" aria-label={`Open the screenshot at full size: ${block.alt}`}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={block.src} alt={block.alt} width={block.width} height={block.height} loading="lazy" decoding="async" />
+        </a>
         {block.marks?.map((m, i) => (
           <span key={i} className="v6-docs__mark" aria-hidden style={{ left: `${m.x}%`, top: `${m.y}%` }}>{i + 1}</span>
         ))}
