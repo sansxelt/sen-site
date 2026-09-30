@@ -203,6 +203,29 @@ export default function SecurityPage() {
         </div>
       </section>
 
+      {/* Reporting a security issue. /contact has pointed here ("use the disclosure route on security") since it
+          was written, and this page had no such route. It uses the support inbox that already exists rather
+          than a security@ address nobody reads, and it promises nothing the company cannot keep: no response
+          time, no reward, no legal safe harbour. /.well-known/security.txt points at this section. */}
+      <section className="v6-sec v6-sec--sunk" id="report">
+        <div className="v6-wrap">
+          <Reveal>
+            <SectionHead
+              eyebrow="Report a security issue"
+              title="Tell us, and a person reads it."
+              lead="Email help@vraelis.com with Security in the subject line. Say what you found, the address where it happens, and the steps to reproduce it."
+            />
+          </Reveal>
+          <Reveal>
+            <ul style={{ margin: "clamp(22px,2.4vw,30px) 0 0", paddingLeft: 20, listStyle: "disc", maxWidth: 720, display: "grid", gap: 8, fontSize: 15.5, lineHeight: 1.6, color: "var(--ink-2)" }}>
+              <li>Test only against accounts you own, and stop as soon as you can show the problem.</li>
+              <li>Do not open, change or keep another customer&apos;s data. If you reach some by accident, tell us and delete it.</li>
+              <li>Give us a reasonable chance to fix it before you publish anything.</li>
+            </ul>
+          </Reveal>
+        </div>
+      </section>
+
       {/* Close */}
       <hr className="v6-rule" />
       <section className="v6-sec v6-sec--tight">

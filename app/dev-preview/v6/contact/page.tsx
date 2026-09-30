@@ -51,7 +51,7 @@ export default function V6Contact() {
           <Reveal>
             <p className="v6-note">
               Reporting a security issue? Please use the disclosure route on{" "}
-              <ProseLink href={`${BASE}/security`}>security</ProseLink> rather than a general address.
+              <ProseLink href={`${BASE}/security#report`}>security</ProseLink> rather than a general address.
             </p>
           </Reveal>
         </div>
