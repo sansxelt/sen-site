@@ -321,6 +321,11 @@ html:has([data-surface="app"]) {
 [data-surface="app"] code,
 [data-surface="app"] kbd { font-family: var(--font-brand-mono), ui-monospace, SFMono-Regular, Menlo, monospace; }
 
+/* Code frames: no window-control dots. Three coloured circles on a terminal block are decoration borrowed
+   from a macOS window, and nothing else in the console draws one. The label moves to the left edge. */
+[data-surface="app"] .codebar i { display: none; }
+[data-surface="app"] .codebar span { margin-left: 0; }
+
 /* Records: the "Show more" row is a plain link-coloured row, not a disclosure triangle. */
 [data-surface="app"] .rec-more > summary::-webkit-details-marker { display: none; }
 [data-surface="app"] .rec-more[open] > summary { display: none; }

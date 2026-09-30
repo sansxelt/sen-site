@@ -7,7 +7,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { I, EmptyIcon } from "@/app/rank/_components/icons";
 import { Page, PageHeader } from "@/app/rank/_components/page-header";
 import { PROVIDER_LABELS as ALL_PROVIDER_LABELS, featureUse } from "@/lib/preflight/connection-display";
 
@@ -263,7 +262,7 @@ export default function ConnectionsPage() {
                   {busy === c.id ? "Disconnecting…" : "Disconnect"}
                 </button>
               ) : (
-                <button type="button" className="btn" style={{ flex: "none", opacity: connecting === kind ? 0.6 : 1 }}
+                <button type="button" className="btn btn--ghost" style={{ flex: "none", opacity: connecting === kind ? 0.6 : 1 }}
                   disabled={connecting === kind} onClick={() => connect(kind)}>
                   {connecting === kind ? "Connecting…" : `Connect ${label}`}
                 </button>
@@ -273,19 +272,8 @@ export default function ConnectionsPage() {
         })}
       </div>
 
-      {/* A HAND-ROLLED EMPTY STATE THAT PUT A 46px TILE NEXT TO A 13px SENTENCE.
-          <EmptyIcon> renders .empty__icon, which is a 46px rounded tile sized for the centred column of the
-          .empty block. This laid it out as a flex ROW against a 13px line of body text, so the icon was three
-          and a half times the height of the words beside it and read as a broken image rather than a state.
-          .empty is the block that tile was drawn for, and it is what the empty key list and the empty webhook
-          list on /developers already use. Same words, split at the full stop that was already in them. */}
-      {conns !== null && conns.length === 0 ? (
-        <div className="empty" style={{ marginTop: 22 }}>
-          <EmptyIcon d={I.key} />
-          <h3>Nothing connected yet</h3>
-          <p>Connecting a provider here makes it available to all of your systems.</p>
-        </div>
-      ) : null}
+      {/* No separate "Nothing connected yet" block: every provider row above already says Not connected,
+          so a second empty state under them only repeated it at twice the size. */}
 
       {/* The other half of the surface. These are not buttons: they are set on an application, so sending
           someone to a Connect button here would land them somewhere they cannot finish. */}

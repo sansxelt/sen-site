@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Ic, I } from "@/app/rank/_components/icons";
+import { SECTION_TITLE } from "@/app/rank/_components/page-header";
 
 type Hook = { id: string; url: string; enabled: boolean; failure_count: number; last_success_at: string | null; last_failure_at: string | null };
 type Delivery = { id: string; test_id: string | null; event: string; status: string; response_status: number | null; error: string | null; attempts: number; created_at: string };
@@ -60,7 +61,7 @@ export function WebhooksSection() {
   return (
     <div style={{ marginTop: 40, borderTop: "1px solid var(--line-1)", paddingTop: 32 }}>
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 6 }}>
-        <h2 className="display" style={{ fontSize: "clamp(1.4rem, 2.4vw, 1.8rem)" }}>Webhooks</h2>
+        <h2 style={SECTION_TITLE}>Webhooks</h2>
       </div>
       <p className="lead-copy" style={{ marginBottom: 18 }}>Get a signed <code style={{ fontFamily: "var(--font-code, monospace)", fontSize: 13 }}>verification.completed</code> event pushed to your app the moment a verification finishes. Then pull results from the export endpoint. <a href="https://vraelis.com/developers" style={{ color: "var(--acc-deep)" }}>Docs →</a></p>
 

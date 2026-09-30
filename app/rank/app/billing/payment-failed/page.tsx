@@ -5,7 +5,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { I, Ic } from "@/app/rank/_components/icons";
-import { Page, PageHeader } from "@/app/rank/_components/page-header";
+import { Page, PageHeader, SECTION_TITLE } from "@/app/rank/_components/page-header";
 
 export const metadata: Metadata = { title: "Payment failed" };
 
@@ -39,7 +39,7 @@ export default function PaymentFailedPage() {
         </div>
       </div>
 
-      <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 12 }}>Common causes</div>
+      <h2 style={{ ...SECTION_TITLE, margin: "32px 0 12px" }}>Common causes</h2>
       <div className="tile-grid cols-3" style={{ marginBottom: 18 }}>
         {GUIDANCE.map(([t, d]) => (
           <div key={t} className="acard" style={{ gap: 6 }}>

@@ -9,7 +9,7 @@ import { balance } from "@/lib/v-credits";
 import { recentAccountEvents } from "@/lib/v-events";
 import { getDisplayName } from "@/lib/v-account-profile";
 import { SignOutButton } from "../../_components/rank-ui";
-import { Page, PageHeader } from "@/app/rank/_components/page-header";
+import { Page, PageHeader, SECTION_TITLE } from "@/app/rank/_components/page-header";
 import { DeleteAccount } from "./delete-account";
 import { AccountRequests } from "./account-requests";
 import { ProfileSection } from "./profile-section";
@@ -75,7 +75,7 @@ export default async function AccountPage() {
       </div>
 
       {/* manage */}
-      <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 12 }}>Manage</div>
+      <h2 style={{ ...SECTION_TITLE, margin: "32px 0 12px" }}>Manage</h2>
       <div className="tile-grid cols-2" style={{ marginBottom: 26 }}>
         {linkCard("/plans", "Plan", paid ? "Change plan, see what's included, or switch cycle." : "Upgrade to unlock monthly credits and higher limits.")}
         {linkCard("/billing", "Billing", "Subscription status, renewal, cancel or resume, payment.")}
@@ -87,7 +87,7 @@ export default async function AccountPage() {
       {/* account activity (your own audit trail) */}
       {activity.length > 0 && (
         <>
-          <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 12 }}>Recent account activity</div>
+          <h2 style={{ ...SECTION_TITLE, margin: "32px 0 12px" }}>Recent account activity</h2>
           <div className="card" style={{ marginBottom: 26, padding: "6px 18px" }}>
             {activity.map((e, i) => (
               <div key={e.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "11px 0", borderTop: i === 0 ? "none" : "1px solid var(--line-1)" }}>
@@ -100,14 +100,14 @@ export default async function AccountPage() {
       )}
 
       {/* data & privacy requests */}
-      <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 12 }}>Data &amp; privacy</div>
+      <h2 style={{ ...SECTION_TITLE, margin: "32px 0 12px" }}>Data &amp; privacy</h2>
       <p style={{ fontSize: 13.5, color: "var(--fg-3)", marginTop: -4, marginBottom: 14, maxWidth: 620, lineHeight: 1.55 }}>Submit a request to export, correct, or delete your data. Requests are reviewed manually, and some records may be retained where required. See <Link href="/data-rights" style={{ color: "var(--acc-deep)" }}>Data rights</Link>.</p>
       <div style={{ marginBottom: 26 }}>
         <AccountRequests />
       </div>
 
       {/* security */}
-      <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 12 }}>Security</div>
+      <h2 style={{ ...SECTION_TITLE, margin: "32px 0 12px" }}>Security</h2>
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <div className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
           <div>

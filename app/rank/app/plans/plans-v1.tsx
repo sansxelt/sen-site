@@ -65,7 +65,7 @@ export default function PlansV1({ initialCycle = "monthly" }: { initialCycle?: C
     // check compares plans/page.tsx, which holds no literal heading, so this page keeps its sentence.
     <Page measure="wide">
       <PageHeader
-        title="Priced by the run, not the seat"
+        title="Plans"
         lead="Check what you built against what it should do, on the live app. Every verification includes browser execution, evidence, issue tracking, and an explainable decision."
         actions={signedIn ? <button onClick={manageBilling} disabled={busy} className="btn btn--ghost">{busy ? "Opening…" : "Manage billing"}</button> : null}
       />
@@ -128,7 +128,7 @@ export default function PlansV1({ initialCycle = "monthly" }: { initialCycle?: C
         {PLAN_CATALOG_V1.map((p) => {
           const isCurrent = p.key === currentPlan;
           return (
-            <div key={p.key} className={p.key === "pro_v1" ? "price price--hot" : "price"} style={isCurrent ? { borderColor: "var(--acc-line-2)" } : undefined}>
+            <div key={p.key} className="price" style={isCurrent ? { borderColor: "var(--acc-line-2)" } : undefined}>
               <div className="price__name" style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 {p.name}{isCurrent && <span className="badge-now">Current plan</span>}
               </div>
