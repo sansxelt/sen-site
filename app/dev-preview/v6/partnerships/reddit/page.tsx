@@ -45,7 +45,9 @@ export default function RedditPartnershipPage() {
               <i aria-hidden="true">×</i>
               <span><RedditMark /></span>
             </div>
-            <h1 id="partnership-title">Vraelis <span>×</span> Reddit</h1>
+            {/* Two lines, like the ByteDance record. On one line, at this size in IBM Plex Sans (wider than the serif
+                it replaced on 2026-09-30), the name ran under the right-hand column on a 1440 screen. */}
+            <h1 id="partnership-title">Vraelis <span>×</span><br />Reddit</h1>
           </div>
 
           <div className="v6-pr__story">
