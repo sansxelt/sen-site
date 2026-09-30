@@ -41,7 +41,7 @@
 .v6-ex__catch { margin: 0; font-size: 1.02rem; line-height: 1.5; color: var(--ink); }
 .v6-ex__rec { display: inline-block; margin-top: 14px; font-size: 0.9rem; font-weight: 500; color: var(--ink); text-underline-offset: 3px; }
 .v6-ex__rec:hover { color: var(--ink-2); }
-.v6-ex__limit { width: 100%; max-width: var(--max-wide); margin: clamp(14px, 2.4vh, 26px) auto 0; font-size: 0.8rem; color: var(--ink-4); }
+.v6-ex__limit { width: 100%; max-width: calc(var(--max-wide) - 2 * var(--gutter)); margin: clamp(14px, 2.4vh, 26px) auto 0; font-size: 0.8rem; color: var(--ink-4); }
 
 /* phones that pin: the idea and a compact index above one example */
 @media (max-width: 900px) {
