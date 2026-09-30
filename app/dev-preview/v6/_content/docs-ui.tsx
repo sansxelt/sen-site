@@ -1,14 +1,12 @@
 "use client";
 
-// The documentation environment. Night mode, and deliberately its own product rather than a lighter
-// continuation of the marketing pages: near-black ground, a lifted reading surface, a dark left rail, and a
-// right table of contents on article pages. The rail becomes a real drawer on a phone instead of a squeezed
-// column above the article.
+// The documentation environment. Night mode, its own header and rail, a reading column at documentation
+// sizes, and a right-hand "On this page" list on articles. The rail becomes a drawer on a phone.
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { docsByGroup, type Block } from "./docs";
 import { SURFACES } from "./coverage";
-import { V6_BASE, V6_HOME } from "@/lib/v6-routes";
+import { V6_BASE, V6_HOME, V6_APP, V6_SIGNIN } from "@/lib/v6-routes";
 import { MARK_PATH, MARK_VIEWBOX } from "@/lib/brand-mark";
 
 const BASE = V6_BASE;
@@ -76,11 +74,11 @@ function DocSurfaces() {
 export function CopyMarkdown({ markdown }: { markdown: string }) {
   const [done, setDone] = useState<"idle" | "copied" | "failed">("idle");
   return (
-    <button type="button" className="v6-docs__copy" onClick={() => {
+    <button type="button" className="v6-docs__copy" title="Copy this page as Markdown, for an AI assistant or a ticket" onClick={() => {
       navigator.clipboard.writeText(markdown).then(() => setDone("copied"), () => setDone("failed"));
       window.setTimeout(() => setDone("idle"), 2200);
     }}>
-      {done === "copied" ? "Copied" : done === "failed" ? "Copy failed" : "Copy as Markdown"}
+      {done === "copied" ? "Copied" : done === "failed" ? "Copy failed" : "Copy page"}
     </button>
   );
 }
@@ -96,12 +94,25 @@ export function DocCode({ label, code }: { label: string; code: string }) {
   );
 }
 
-export function DocShell({ activeSlug = "", toc = [], children }: {
-  activeSlug?: string; toc?: string[]; children: React.ReactNode;
+/* THE DOCS SHELL (rebuilt 2026-09-30, after Linear's docs).
+
+   The docs used to live under the marketing site's menu and above its four-column footer, at the marketing
+   site's type sizes, which the founder read as "zoomed in" and "weird" next to Linear. Docs are a tool, so
+   they get a tool's frame: their own slim header (the mark, "Docs", where you are, Copy page, the way into
+   the product), a quiet rail, a reading column at documentation sizes, an "On this page" list that follows
+   the scroll, and a single line of footer. V6Shell leaves out its nav and footer on /docs for this. */
+export function DocShell({ activeSlug = "", toc = [], crumb, markdown, children }: {
+  activeSlug?: string; toc?: string[];
+  /** The group and the page title, shown as the breadcrumb in the header. */
+  crumb?: [string, string];
+  /** The page as Markdown, for the header's Copy page button. */
+  markdown?: string;
+  children: React.ReactNode;
 }) {
   const groups = docsByGroup();
   const [drawer, setDrawer] = useState(false);
   const [query, setQuery] = useState("");
+  const [active, setActive] = useState<string>(toc[0] ? dslug(toc[0]) : "");
 
   // Lock the page behind the drawer, and let Escape dismiss it.
   useEffect(() => {
@@ -113,54 +124,68 @@ export function DocShell({ activeSlug = "", toc = [], children }: {
     return () => { document.body.style.overflow = prev; document.removeEventListener("keydown", onKey); };
   }, [drawer]);
 
-  // A rail this short needs no index. The page count that used to be stated here went stale the moment the
-  // registry changed and was wrong by three, so the number lives in docs.ts and nowhere else. Substring over
-  // title and group, so typing "repair" or "oversight" both narrow the rail.
+  // "On this page" follows the reader: the last heading that has scrolled past the header is the active one.
+  const tocKey = toc.join("|");
+  useEffect(() => {
+    const ids = tocKey ? tocKey.split("|").map(dslug) : [];
+    if (!ids.length) return;
+    const onScroll = () => {
+      let current = ids[0];
+      for (const id of ids) {
+        const el = document.getElementById(id);
+        if (el && el.getBoundingClientRect().top < 120) current = id;
+      }
+      setActive(current);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [tocKey]);
+
+  // Substring over title and group, so typing "repair" or "record" both narrow the rail.
   const q = query.trim().toLowerCase();
   const shown = useMemo(() => groups
     .map((g) => ({ ...g, docs: g.docs.filter((d) =>
       !q || d.title.toLowerCase().includes(q) || g.group.toLowerCase().includes(q)) }))
     .filter((g) => g.docs.length), [groups, q]);
 
-  // data-nav-band says this div speaks for the GROUND, not only for its own text. The nav's sampler stopped
-  // trusting every element that carries data-nav-dark, because two page-level cards carry it for their text
-  // treatment and the bar was taking their colour over a white section. Sections and the site footer are
-  // band-level by their tag; the docs environment is the one genuine band that is a div, so it opts in.
-  // See components/use-ground-color.ts.
   return (
     <div className="v6-docsenv" data-nav-band data-nav-dark data-nav-theme="dark" data-drawer={drawer}>
-      {/* NOT inside v6-wrap. Docs is a product surface, not a section of the marketing page: the rail runs
-          the full height flush to the viewport edge, the way a tool does, rather than sitting inset inside
-          a centred marketing container. */}
-      <div className={`v6-docs ${toc.length ? "v6-docs--article" : ""}`}>
-        <button type="button" className="v6-docs__open" onClick={() => setDrawer(true)} aria-expanded={drawer}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden><path d="M3 6h18M3 12h18M3 18h18" /></svg>
-          Documentation
-        </button>
-        <button type="button" className="v6-docs__close" aria-label="Close documentation navigation" onClick={() => setDrawer(false)}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden><path d="M6 6l12 12M6 18L18 6" /></svg>
-        </button>
+      <header className="v6-dh">
+        <div className="v6-dh__brand">
+          <button type="button" className="v6-dh__menu" onClick={() => setDrawer((d) => !d)} aria-expanded={drawer}
+            aria-label={drawer ? "Close documentation navigation" : "Open documentation navigation"}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+              <path d={drawer ? "M6 6l12 12M6 18L18 6" : "M4 7h16M4 12h16M4 17h16"} />
+            </svg>
+          </button>
+          <Link href={V6_HOME} className="v6-dh__mark" aria-label="Vraelis home">
+            <svg viewBox={MARK_VIEWBOX} aria-hidden><path d={MARK_PATH} fill="currentColor" /></svg>
+          </Link>
+          <Link href={`${BASE}/docs`} className="v6-dh__docs">Docs</Link>
+        </div>
+        {crumb ? (
+          <nav className="v6-dh__crumb" aria-label="Breadcrumb">
+            <span>{crumb[0]}</span>
+            <span aria-hidden className="v6-dh__sep">/</span>
+            <span aria-current="page">{crumb[1]}</span>
+          </nav>
+        ) : <span className="v6-dh__crumb" />}
+        <div className="v6-dh__actions">
+          {markdown ? <CopyMarkdown markdown={markdown} /> : null}
+          <Link href={V6_SIGNIN} className="v6-dh__signin">Sign in</Link>
+          <Link href={V6_APP} className="v6-dh__open">Open Vraelis</Link>
+        </div>
+      </header>
 
+      <div className={`v6-docs ${toc.length ? "v6-docs--article" : ""}`}>
         <aside className="v6-docs__side" aria-label="Documentation sections">
-          {/* The rail owns its own head. Without one there is nowhere for identity or search to live, which
-              is why the previous version opened cold on a group label. */}
-          {/* The mark carries the way home; "Docs" names where you are.
-              It used to read "Docs Vraelis", two words of similar weight sitting next to each other, which
-              made the rail's head say the company name a second time and left the section label small.
-              The wordmark is gone and the mark takes its place, so the escape route survives, and Docs is
-              now sized like the heading it is. */}
-          <div className="v6-docs__brand">
-            <Link href={V6_HOME} className="v6-docs__brandmark" aria-label="Vraelis home">
-              <svg viewBox={MARK_VIEWBOX} aria-hidden><path d={MARK_PATH} fill="currentColor" /></svg>
-            </Link>
-            <Link href={`${BASE}/docs`} className="v6-docs__brandname">Docs</Link>
-          </div>
           <div className="v6-docs__search">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
               <circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" />
             </svg>
             <input type="search" value={query} onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search documentation" aria-label="Search documentation" />
+              placeholder="Search docs" aria-label="Search documentation" />
           </div>
 
           <nav aria-label="Documentation sections list" className="v6-docs__nav">
@@ -178,18 +203,30 @@ export function DocShell({ activeSlug = "", toc = [], children }: {
           </nav>
 
           <div className="v6-docs__railfoot">
-            <Link href={`${BASE}/developers`}>Developers</Link>
+            <Link href={`${BASE}/developers`}>API and CLI</Link>
             <Link href={`${BASE}/changelog`}>Changelog</Link>
-            <Link href={`${BASE}/company#contact`}>Contact</Link>
+            <Link href={`${BASE}/company#contact`}>Contact support</Link>
           </div>
         </aside>
 
-        <div className="v6-docs__main">{children}</div>
+        <div className="v6-docs__main">
+          {children}
+          <footer className="v6-docs__foot">
+            <span>© 2026 Vraelis</span>
+            <Link href={V6_HOME}>vraelis.com</Link>
+            <Link href={`${BASE}/security`}>Security</Link>
+            <Link href={`${BASE}/privacy`}>Privacy</Link>
+            <Link href={`${BASE}/terms`}>Terms</Link>
+          </footer>
+        </div>
 
         {toc.length ? (
           <aside className="v6-docs__toc" aria-label="On this page">
             <p className="v6-docs__toc-h">On this page</p>
-            {toc.map((h) => <a key={h} href={`#${dslug(h)}`}>{h}</a>)}
+            {toc.map((h) => {
+              const id = dslug(h);
+              return <a key={h} href={`#${id}`} aria-current={active === id ? "location" : undefined}>{h}</a>;
+            })}
           </aside>
         ) : null}
       </div>

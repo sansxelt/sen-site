@@ -880,6 +880,10 @@ export function V6Shell({ children, authed = false }: { children: ReactNode; aut
   const pathname = usePathname() || "";
   const groundName = v6GroundAtTop(pathname);
   const ground = groundName === "graphite" ? "dark" : "light";
+  // The docs carry their own header and a one-line footer (_content/docs-ui.tsx), like Linear's. Under the
+  // marketing menu and above the four-column marketing footer they read as a page about a tool rather than
+  // the tool's manual.
+  const isDocs = pathname === BASE + "/docs" || pathname.startsWith(BASE + "/docs/");
   return (
     <div className="v6" data-route-theme={ground}>
       {/* The final safety canvas, behind even the shell. The root layout paints html/body cream inline for
@@ -896,9 +900,9 @@ export function V6Shell({ children, authed = false }: { children: ReactNode; aut
       {/* Nine focus stops sit in the nav before any content. Keyboard and screen-reader users get one stop to
           jump past them; it is invisible until focused. */}
       <a href="#v6-main" className="v6-skip">Skip to content</a>
-      <V6Nav authed={authed} />
+      {isDocs ? null : <V6Nav authed={authed} />}
       <main id="v6-main" tabIndex={-1}><RouteTransition>{children}</RouteTransition></main>
-      <SiteFooter />
+      {isDocs ? null : <SiteFooter />}
     </div>
   );
 }

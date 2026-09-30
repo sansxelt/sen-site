@@ -86,197 +86,175 @@
 
 /* docs shell */
 /* ============================================================================
-   DOCUMENTATION, NIGHT MODE.
-   A separate serious product, not a lighter extension of the marketing page.
-   Near-black ground, one lifted reading surface, dark left rail, central reading
-   column, right table of contents on articles. The whole subtree opts in with
-   .v6-docsenv, which also carries [data-nav-dark] so the bar flips over it.
+   DOCS (rebuilt 2026-09-30, after Linear's docs)
+   The docs are a tool, so they get a tool's frame: their own slim header (the marketing menu and footer are
+   left out on /docs by V6Shell), a quiet rail, a reading column at documentation sizes, an "On this page"
+   list that follows the scroll, an even previous/next pair, and a one-line footer. Sizes follow Linear's:
+   32px titles, 22px section heads, 15.5px body. The old ones (48px titles, 17px body) read as zoomed in.
+   The whole subtree opts in with .v6-docsenv.
    ========================================================================== */
-.v6-docsenv { background: #0A0A0B; color: var(--g-fg-2); min-height: 100vh; }
+.v6-docsenv { --docs-h: 56px; background: #0A0A0B; color: #C4C5C9; min-height: 100vh; }
 .v6-docsenv ::selection { background: rgba(255,255,255,0.16); }
 
-/* FULL-BLEED, not inside the marketing wrap. The rail runs the full viewport height flush to the left
-   edge; content sits on the page ground rather than inside a card. That single change is most of the
-   difference between reading as a tool and reading as a page about a tool. */
-/* NO --nav-h FALLBACK ANYWHERE IN THIS FILE, IN ANY OF THE EIGHT PLACES IT USED TO CARRY ONE.
-   Every one of them said `var(--nav-h, 66px)` while app/globals.css said `var(--nav-h, 5.125rem)`, which is
-   82px, for the anchor offset on the same documents in the same pre-hydration window: two guesses at one
-   number, 16px apart, and neither of them measured. v6.css now declares --nav-h for any document containing
-   a V6 shell, before any JavaScript runs, and the shell's ResizeObserver still overwrites it with the real
-   height after hydration. Every selector in this file is a .v6 class, so it can only ever render inside such
-   a document. A fallback here would now be a third answer to a question that has one. */
-.v6-docs { display: grid; grid-template-columns: 276px minmax(0, 1fr);
-  align-items: start; min-height: calc(100svh - var(--nav-h)); }
-.v6-docs--article { grid-template-columns: 276px minmax(0, 1fr) 232px; }
+/* ---- header ---- */
+.v6-dh { position: sticky; top: 0; z-index: 90; height: var(--docs-h); display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) auto; align-items: center;
+  background: rgba(10,10,11,0.92); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255,255,255,0.08); }
+.v6-dh__brand { display: flex; align-items: center; gap: 10px; height: 100%; padding: 0 20px;
+  border-right: 1px solid rgba(255,255,255,0.08); }
+.v6-dh__mark { display: inline-flex; color: #FAFAFA; text-decoration: none; }
+.v6-dh__mark svg { width: 18px; height: 18px; display: block; }
+.v6-dh__mark:hover { opacity: 0.75; }
+.v6-dh__docs { font-family: var(--sans); font-size: 15px; font-weight: 600; letter-spacing: -0.01em; color: #FAFAFA; text-decoration: none; }
+.v6-dh__menu { display: none; place-items: center; width: 34px; height: 34px; margin-left: -8px; border: 0; border-radius: 8px;
+  background: transparent; color: #E6E7E9; cursor: pointer; }
+.v6-dh__menu:hover { background: rgba(255,255,255,0.06); }
+.v6-dh__crumb { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 0 28px; font-size: 13.5px;
+  color: #8E9095; white-space: nowrap; overflow: hidden; }
+.v6-dh__crumb [aria-current] { color: #E6E7E9; overflow: hidden; text-overflow: ellipsis; }
+.v6-dh__sep { color: #55575C; }
+.v6-dh__actions { display: flex; align-items: center; gap: 8px; padding: 0 20px; }
+.v6-dh__signin { font-size: 13.5px; color: #C4C5C9; text-decoration: none; padding: 7px 9px; border-radius: 7px; }
+.v6-dh__signin:hover { color: #FAFAFA; background: rgba(255,255,255,0.05); }
+.v6-dh__open { font-family: var(--sans); font-size: 13px; font-weight: 600; line-height: 1; color: #0A0A0B; background: #FAFAFA;
+  border-radius: 7px; padding: 9px 12px; text-decoration: none; }
+.v6-dh__open:hover { background: #FFFFFF; }
+.v6-docsenv .v6-docs__copy { font-family: var(--sans); font-size: 13px; font-weight: 500; line-height: 1; color: #C4C5C9;
+  background: transparent; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); border-radius: 7px; padding: 8px 11px; }
+.v6-docsenv .v6-docs__copy:hover { color: #FAFAFA; border-color: rgba(255,255,255,0.24); }
+.v6-dh a:focus-visible, .v6-dh button:focus-visible, .v6-docsenv .v6-docs__copy:focus-visible { outline: 2px solid #9EB1FF; outline-offset: 2px; }
 
-/* ---- left rail: no horizontal scrollbar, no coloured progress bar ---- */
-.v6-docs__side { position: sticky; top: var(--nav-h); align-self: start;
-  height: calc(100svh - var(--nav-h));
-  display: flex; flex-direction: column;
-  border-right: 1px solid rgba(255,255,255,0.08);
-  overflow: hidden; }
-.v6-docs__nav { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.18) transparent; padding: 14px 12px 20px; }
-.v6-docs__nav::-webkit-scrollbar { width: 6px; height: 0; }
-.v6-docs__nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.16); border-radius: 99px; }
+/* ---- frame ---- */
+.v6-docs { display: grid; grid-template-columns: 260px minmax(0, 1fr); align-items: start; min-height: calc(100svh - var(--docs-h)); }
+.v6-docs--article { grid-template-columns: 260px minmax(0, 1fr) 220px; }
 
-/* the rail's own head: identity, then search */
-.v6-docs__brand { display: flex; align-items: center; gap: 10px; padding: 18px 18px 14px; }
-/* The mark is the home link. Sized to the cap height of the word beside it so the two read as one lockup
-   rather than an icon parked next to a heading. */
-.v6-docs__brandmark { display: inline-flex; flex: none; color: #FAFAFA; text-decoration: none;
-  transition: opacity 140ms ease; }
-.v6-docs__brandmark svg { width: 19px; height: 19px; display: block; }
-.v6-docs__brandmark:hover { opacity: 0.72; }
-.v6-docs__brandname { font-family: var(--sans); font-weight: 600; font-size: 21px; letter-spacing: -0.03em;
-  line-height: 1; color: #FAFAFA; text-decoration: none; }
-.v6-docs__search { position: relative; padding: 0 12px 8px; }
-.v6-docs__search svg { position: absolute; left: 23px; top: 9px; color: #6E7075; pointer-events: none; }
-.v6-docs__search input { width: 100%; background: rgba(255,255,255,0.045); color: #E6E7E9;
-  border: 1px solid rgba(255,255,255,0.09); border-radius: 7px; padding: 7px 10px 7px 30px;
-  font-family: var(--sans); font-size: 13px; outline: none; }
-.v6-docs__search input::placeholder { color: #6E7075; }
-.v6-docs__search input:focus { border-color: rgba(255,255,255,0.22); background: rgba(255,255,255,0.06); }
-.v6-docs__empty { font-size: 13px; color: #7E8085; padding: 6px 12px; margin: 0; }
-.v6-docs__railfoot { display: flex; flex-wrap: wrap; gap: 12px; padding: 12px 18px 16px;
-  border-top: 1px solid rgba(255,255,255,0.07); }
-.v6-docs__railfoot a { font-size: 12.5px; color: #8E9095; text-decoration: none; }
-.v6-docs__railfoot a:hover { color: #E6E7E9; }
-.v6-docs__side::-webkit-scrollbar { width: 6px; height: 0; }
-.v6-docs__side::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.16); border-radius: 99px; }
-.v6-docs__side::-webkit-scrollbar-track { background: transparent; }
-.v6-docs__group { margin-bottom: 24px; }
-.v6-docs__group-h { font-family: var(--sans); font-size: 10.5px; font-weight: 600; letter-spacing: 0.15em;
-  text-transform: uppercase; color: #7E8085; margin: 0 0 10px; padding-inline: 12px; }
-/* no negative margin: it made every link 24px wider than the rail, so the hover plate was clipped by
-   the rail's own overflow rather than sitting inside it */
-/* break-word, not anywhere: `anywhere` breaks mid-word even when the word would fit on its own line, which
-   is what turned the collision above into "Gettin / g / starte / d with" instead of visible overflow. A
-   title now wraps at spaces, and only a single unbreakable word longer than the rail is ever split. */
-.v6-docs__link { display: block; font-size: 14px; color: #B9BBC0; text-decoration: none; padding: 7px 12px;
-  border-radius: 8px; overflow-wrap: break-word;
-  transition: color 140ms ease, background 140ms ease; }
-.v6-docs__link:hover { color: #FAFAFA; background: rgba(255,255,255,0.06); }
-.v6-docs__link[aria-current="page"] { color: #FAFAFA; background: rgba(255,255,255,0.10); font-weight: 600; }
+/* ---- left rail ---- */
+.v6-docs__side { position: sticky; top: var(--docs-h); align-self: start; height: calc(100svh - var(--docs-h));
+  display: flex; flex-direction: column; border-right: 1px solid rgba(255,255,255,0.08); }
+.v6-docs__search { position: relative; padding: 16px 14px 6px; }
+.v6-docs__search svg { position: absolute; left: 25px; top: 26px; color: #6E7075; pointer-events: none; }
+.v6-docs__search input { width: 100%; height: 34px; background: rgba(255,255,255,0.04); color: #E6E7E9;
+  border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 0 10px 0 32px; font-family: var(--sans); font-size: 13.5px; outline: none; }
+.v6-docs__search input::placeholder { color: #8E9095; }
+.v6-docs__search input:focus { border-color: rgba(158,177,255,0.55); background: rgba(255,255,255,0.06); }
+.v6-docs__nav { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 4px 10px 16px; scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.16) transparent; }
+.v6-docs__group { margin-top: 16px; }
+.v6-docs__group-h { font-family: var(--sans); font-size: 12.5px; font-weight: 500; letter-spacing: 0; text-transform: none;
+  color: #8E9095; margin: 0 0 4px; padding: 0 10px; }
+.v6-docs__link { display: block; font-size: 13.5px; line-height: 1.35; color: #B9BBC0; text-decoration: none; padding: 6px 10px; border-radius: 6px; }
+.v6-docs__link:hover { color: #FAFAFA; background: rgba(255,255,255,0.05); }
+.v6-docs__link[aria-current="page"] { color: #FAFAFA; background: rgba(255,255,255,0.08); font-weight: 500; }
+.v6-docs__link:focus-visible, .v6-docs__railfoot a:focus-visible { outline: 2px solid #9EB1FF; outline-offset: -2px; }
+.v6-docs__empty { font-size: 13px; color: #7E8085; padding: 6px 10px; margin: 0; }
+.v6-docs__railfoot { display: grid; gap: 1px; padding: 10px 10px 14px; border-top: 1px solid rgba(255,255,255,0.08); }
+.v6-docs__railfoot a { font-size: 13px; color: #8E9095; text-decoration: none; padding: 6px 10px; border-radius: 6px; }
+.v6-docs__railfoot a:hover { color: #E6E7E9; background: rgba(255,255,255,0.05); }
 
-/* ---- reading column on a lifted surface ---- */
-.v6-docs__main { min-width: 0; padding: clamp(30px, 4vw, 56px) clamp(24px, 4vw, 64px) clamp(72px, 9vw, 120px); }
-.v6-docs__article { max-width: 78ch; }
-.v6-docsenv .v6-prose, .v6-docsenv .v6-docs__main { color: var(--g-fg-2); }
-.v6-docsenv :is(h1, h2, h3, h4) { color: #FAFAFA; }
-.v6-docsenv .v6-lead { color: #C4C5C9; }
-.v6-docsenv .v6-eyebrow { color: #8E9095; }
-/* No card. Body copy sits directly on the page ground: the bordered surface cost horizontal room twice,
-   once at the border and again at up to 52px of internal padding, inside an already narrow column, and
-   made every article read as a page within a page. */
-.v6-docs__toc-h { font-family: var(--sans); font-size: 10.5px; font-weight: 600; letter-spacing: 0.15em;
-  text-transform: uppercase; color: #7E8085; margin: 0 0 12px; }
-.v6-docs__meta { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+/* ---- reading column ---- */
+.v6-docs__main { min-width: 0; padding: 44px clamp(24px, 5vw, 80px) 28px; }
+.v6-docs__article { max-width: 700px; }
+.v6-docsenv .v6-docs__article h1 { font-family: var(--sans); font-size: 32px; line-height: 1.2; font-weight: 600;
+  letter-spacing: -0.02em; color: #FAFAFA; margin: 0; }
+.v6-docsenv .v6-docs__article .v6-docs__lead { font-size: 16.5px; line-height: 1.6; color: #A1A3A9; margin: 12px 0 0; max-width: 62ch; }
+.v6-docsenv .v6-docs__article h2 { font-family: var(--sans); font-size: 22px; line-height: 1.3; font-weight: 600;
+  letter-spacing: -0.015em; color: #FAFAFA; margin: 44px 0 12px; padding-top: 0; scroll-margin-top: calc(var(--docs-h) + 20px); }
+/* The base .v6-prose spacing (22px between every block, 46px above every heading) stacked on top of these
+   and left 100px gaps between sections. Inside the docs each element sets its own margins. */
+.v6-docsenv .v6-docs__article > * + * { margin-top: 0; }
+.v6-docsenv .v6-docs__article h3 { font-size: 17px; line-height: 1.4; font-weight: 600; color: #FAFAFA; margin: 28px 0 8px; }
+.v6-docsenv .v6-docs__article p { font-size: 15.5px; line-height: 1.7; color: #C4C5C9; margin: 0 0 16px; }
+.v6-docsenv .v6-docs__article :is(ul, ol) { display: block; margin: 0 0 16px; padding-left: 22px; }
+.v6-docsenv .v6-docs__article li { font-size: 15.5px; line-height: 1.65; color: #C4C5C9; margin: 6px 0; }
+.v6-docsenv .v6-docs__article li > a { display: inline; min-height: 0; }
+.v6-docsenv .v6-docs__article a { color: #FAFAFA; text-decoration: underline; text-decoration-color: rgba(255,255,255,0.35); text-underline-offset: 3px; }
+.v6-docsenv .v6-docs__article a:hover { text-decoration-color: #FAFAFA; }
+.v6-docsenv .v6-docs__article strong { color: #FAFAFA; }
+.v6-docsenv .v6-docs__article code { font-family: var(--mono); font-size: 0.88em; padding: 0.1em 0.35em; border-radius: 5px;
+  background: rgba(255,255,255,0.07); color: #FAFAFA; }
+.v6-docsenv .v6-docs__article .v6-note { margin: 20px 0; padding: 14px 16px; border-radius: 10px; font-size: 14.5px; line-height: 1.6;
+  color: #C4C5C9; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); max-width: none; }
+.v6-docsenv .v6-docs__article .v6-note b { display: block; margin-bottom: 4px; font-family: var(--sans); font-size: 13.5px;
+  font-weight: 600; letter-spacing: 0; text-transform: none; color: #FAFAFA; }
 
-/* ---- right table of contents ---- */
-.v6-docs__toc { position: sticky; top: calc(var(--nav-h) + 34px); align-self: start;
-  border-left: 1px solid rgba(255,255,255,0.10); padding-left: 20px; margin-right: clamp(16px, 2vw, 32px);
-  max-height: calc(100svh - var(--nav-h) - 60px); overflow-y: auto; }
-.v6-docs__toc a { display: block; font-size: 13px; line-height: 1.4; color: #8E9095; text-decoration: none;
-  padding: 7px 0; transition: color 140ms ease; }
-.v6-docs__toc a:hover { color: #FAFAFA; }
+/* The outcome and the limit, as one quiet two-row panel under the title. */
+.v6-docsenv .v6-docs__article .v6-docs__facts { margin: 24px 0 28px; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; background: rgba(255,255,255,0.02); }
+.v6-docs__facts > div { display: grid; grid-template-columns: 104px minmax(0, 1fr); gap: 16px; padding: 12px 16px; }
+.v6-docs__facts > div + div { border-top: 1px solid rgba(255,255,255,0.06); }
+.v6-docs__facts dt { margin: 0; font-size: 13px; line-height: 1.55; color: #8E9095; }
+.v6-docs__facts dd { margin: 0; font-size: 14.5px; line-height: 1.55; color: #E6E7E9; }
 
-/* ---- prose on night ---- */
-.v6-docsenv .v6-prose p { color: #C4C5C9; }
-.v6-docsenv .v6-prose li { color: #C4C5C9; }
-.v6-docsenv .v6-prose h2 { color: #FAFAFA; }
-/* .v6-prose .v6-note sets a dark ink colour for the light pages; on night that rendered dark-on-dark. */
-.v6-docsenv .v6-prose .v6-note { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.10);
-  border-radius: 12px; padding: 18px 20px; color: #C4C5C9; }
-.v6-docsenv .v6-prose .v6-note b { color: #FAFAFA; font-family: var(--sans); font-size: 14px;
-  font-weight: 600; letter-spacing: 0; }
-.v6-docsenv .v6-prose a { color: #FAFAFA; }
-/* Related is a list of standalone destinations, not inline prose links, so they get a real target */
-.v6-docsenv .v6-prose li > a { display: inline-flex; align-items: center; min-height: 26px; }
-.v6-docsenv .v6-prose code { background: rgba(255,255,255,0.08); color: #FAFAFA; }
-.v6-docsenv .v6-prose strong { color: #FAFAFA; }
-.v6-docs__code { background: #08080A; border: 1px solid rgba(255,255,255,0.10); border-radius: 12px;
-  padding: 18px 20px; margin: 22px 0 0; overflow-x: auto; }
-/* THE BLOCK SCROLLS; THE COMMAND DOES NOT BREAK. This wrapped instead, with overflow-wrap:anywhere, which
-   on a phone split the endpoint as "verificatio / ns \" and restarted continuation lines at column 0, so a
-   curl example lost both its URL and its indentation. These are samples people copy and run: a line break
-   invented by the viewport is a change to the thing being copied. The card already carries overflow-x, so
-   the wide line scrolls inside it and the page itself never moves sideways. */
-.v6-docs__code pre { margin: 0; font-family: var(--mono); font-size: 13px; line-height: 1.65; color: #C4C5C9;
-  white-space: pre; }
+/* ---- code ---- */
+.v6-docs__code { background: #08080A; border: 1px solid rgba(255,255,255,0.10); border-radius: 10px; margin: 20px 0; overflow: hidden; }
+.v6-docs__code-h { font-family: var(--sans); font-size: 12.5px; font-weight: 500; letter-spacing: 0; text-transform: none;
+  color: #8E9095; margin: 0; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.v6-docs__code pre { margin: 0; padding: 14px; font-family: var(--mono); font-size: 13px; line-height: 1.65; color: #C4C5C9;
+  overflow-x: auto; white-space: pre; }
+.v6-docs__code pre:focus-visible { outline: 2px solid #9EB1FF; outline-offset: -2px; }
 .v6-docs__code .k { color: #FAFAFA; }
-.v6-docs__code-h { font-family: var(--sans); font-size: 10.5px; font-weight: 600; letter-spacing: 0.15em;
-  text-transform: uppercase; color: #7E8085; margin: 0 0 10px; }
 
-/* ---- index cards, restrained ----
-   Each card draws its OWN dividing lines, as INSET shadows, and the first row and first column suppress
-   theirs so nothing doubles against the container border.
-   Two earlier techniques failed here. A coloured container showing through 1px gaps only looks right when
-   the cards fill every track: nine cards in a four-column grid left one card on the last row and 788px of
-   exposed line-colour beside it, reading as a broken filled panel. Outer (non-inset) shadows failed too,
-   because a shadow is painted outside the border box and the next card's own background paints straight
-   over it, so every internal line vanished. An inset line is drawn inside the card that owns it, so no
-   sibling can cover it and an unfilled track is simply page ground.
-   Three columns or one, never two: nine pages tile exactly either way, and a middle two-column step would
-   strand a card on a row of its own. */
-.v6-docsenv .v6-grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0;
-  background: none; border: 1px solid rgba(255,255,255,0.09); border-radius: 14px; overflow: hidden; }
-.v6-docsenv .v6-gcard { background: #101012; padding: clamp(20px, 2.2vw, 26px); border: 0; border-radius: 0;
-  box-shadow: inset 1px 0 0 rgba(255,255,255,0.09), inset 0 1px 0 rgba(255,255,255,0.09);
-  transition: background 150ms ease; }
-/* first column keeps only its top line, first row only its left line, the corner neither */
-.v6-docsenv .v6-grid3 > :nth-child(3n+1) { box-shadow: inset 0 1px 0 rgba(255,255,255,0.09); }
-.v6-docsenv .v6-grid3 > :nth-child(-n+3) { box-shadow: inset 1px 0 0 rgba(255,255,255,0.09); }
-.v6-docsenv .v6-grid3 > :first-child { box-shadow: none; }
-.v6-docsenv .v6-gcard:hover { background: #16161A; }
-@media (max-width: 1100px) {
-  .v6-docsenv .v6-grid3 { grid-template-columns: minmax(0, 1fr); }
-  .v6-docsenv .v6-grid3 > * { box-shadow: inset 0 1px 0 rgba(255,255,255,0.09); }
-  .v6-docsenv .v6-grid3 > :first-child { box-shadow: none; }
-}
-.v6-docsenv .v6-gcard :is(h2, h3) { font-size: 1.06rem; font-weight: 600; color: #FAFAFA; margin: 0 0 6px;
-  letter-spacing: -0.014em; line-height: 1.3; }
-.v6-docsenv .v6-gcard p { font-size: 13.5px; line-height: 1.5; color: #9A9CA1; margin: 0; }
+/* ---- on this page ---- */
+.v6-docs__toc { position: sticky; top: calc(var(--docs-h) + 44px); align-self: start; margin-top: 44px; padding: 0 20px 24px 0;
+  max-height: calc(100svh - var(--docs-h) - 88px); overflow-y: auto; scrollbar-width: none; }
+.v6-docs__toc-h { font-family: var(--sans); font-size: 12.5px; font-weight: 500; letter-spacing: 0; text-transform: none;
+  color: #8E9095; margin: 0 0 10px; }
+.v6-docs__toc a { display: block; font-size: 13px; line-height: 1.4; color: #8E9095; text-decoration: none; padding: 5px 0 5px 12px;
+  border-left: 1px solid rgba(255,255,255,0.10); }
+.v6-docs__toc a:hover { color: #E6E7E9; }
+.v6-docs__toc a[aria-current="location"] { color: #FAFAFA; border-left-color: #FAFAFA; }
 
-/* ---- prev / next ----
-   Named __pager, NOT __nav. It was __nav, which is also the left rail's list, and the two rules collided:
-   this block sits later in the sheet, so the rail inherited `display:flex` in ROW direction and laid its
-   four groups out side by side inside a 276px column. Every link then wrapped to roughly one character per
-   line, the fourth group overflowed the rail, and `.v6-docs__nav a` drew a bordered box around each one.
-   One shared class name, an entire navigation destroyed. Two surfaces, two names. */
-.v6-docs__pager { display: flex; justify-content: space-between; gap: 16px; margin-top: 56px; padding-top: 26px;
-  border-top: 1px solid rgba(255,255,255,0.10); }
-.v6-docs__pager a { display: flex; flex-direction: column; gap: 4px; text-decoration: none; padding: 14px 18px;
-  border: 1px solid rgba(255,255,255,0.10); border-radius: 12px; min-width: 0; transition: border-color 150ms ease, background 150ms ease; }
-.v6-docs__pager a:hover { border-color: rgba(255,255,255,0.22); background: rgba(255,255,255,0.04); }
-.v6-docs__pager .l { font-family: var(--sans); font-size: 10.5px; font-weight: 600; letter-spacing: 0.14em;
-  text-transform: uppercase; color: #7E8085; }
-.v6-docs__pager .t { font-size: 15px; font-weight: 600; color: #FAFAFA; }
-.v6-docs__pager a.is-next { text-align: right; margin-left: auto; align-items: flex-end; }
+/* ---- previous / next, and the footer ----
+   Named __pager, NOT __nav: __nav is the rail's list, and one shared name once laid the whole rail out as a row. */
+.v6-docsenv .v6-docs__article .v6-docs__pager { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 56px; max-width: 700px; }
+.v6-docs__pager a { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 14px 16px; text-decoration: none;
+  border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; transition: border-color 150ms ease, background 150ms ease; }
+.v6-docs__pager a:hover { border-color: rgba(255,255,255,0.18); background: rgba(255,255,255,0.03); }
+.v6-docsenv .v6-docs__article .v6-docs__pager a { text-decoration: none; }
+.v6-docs__pager a:focus-visible { outline: 2px solid #9EB1FF; outline-offset: 2px; }
+.v6-docs__pager .l { font-size: 12.5px; color: #8E9095; }
+.v6-docs__pager .t { font-size: 14.5px; font-weight: 500; color: #FAFAFA; }
+.v6-docs__pager a.is-next { grid-column: 2; text-align: right; align-items: flex-end; }
+.v6-docs__foot { display: flex; flex-wrap: wrap; gap: 8px 18px; max-width: 700px; margin-top: 64px; padding-top: 18px;
+  border-top: 1px solid rgba(255,255,255,0.08); font-size: 12.5px; color: #8E9095; }
+.v6-docs__foot a { color: #8E9095; text-decoration: none; }
+.v6-docs__foot a:hover { color: #E6E7E9; }
 
-/* ---- mobile: the rail becomes a drawer, never a squeezed column ---- */
-/* Both drawer controls are hidden on desktop. Without an explicit rule the close button defaulted to
-   inline-block, which made it a GRID ITEM and pushed the rail into column 2 and the article into the
-   210px table-of-contents column. */
-.v6-docs__close { display: none; }
-.v6-docs__open { display: none; align-items: center; gap: 10px; width: 100%; margin-bottom: 20px;
-  padding: 13px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.12);
-  background: #111113; color: #FAFAFA; font-family: var(--sans); font-size: 14.5px; font-weight: 600; cursor: pointer; }
-@media (max-width: 1100px) { .v6-docs--article { grid-template-columns: 232px minmax(0, 1fr); }
-  .v6-docs__toc { display: none; } }
+/* ---- related pages: a quiet list, not underlined prose links ---- */
+.v6-docsenv .v6-docs__article ul.v6-docs__related { list-style: none; padding: 0; margin: 0; }
+.v6-docsenv .v6-docs__article .v6-docs__related li { margin: 2px 0; }
+.v6-docsenv .v6-docs__article .v6-docs__related a { color: #C4C5C9; text-decoration: none; font-size: 15px; }
+.v6-docsenv .v6-docs__article .v6-docs__related a:hover { color: #FAFAFA; }
+
+/* ---- the docs home ---- */
+.v6-docs__index { margin-top: 8px; }
+.v6-docs__row { display: grid; gap: 2px; margin: 0 -12px; padding: 11px 12px; border-radius: 8px; text-decoration: none; }
+.v6-docsenv .v6-docs__article .v6-docs__row { text-decoration: none; }
+.v6-docs__row:hover { background: rgba(255,255,255,0.04); }
+.v6-docs__row .t { font-size: 15px; font-weight: 500; color: #FAFAFA; }
+.v6-docs__row .s { font-size: 14px; line-height: 1.5; color: #8E9095; }
+
+/* ---- narrower screens: the table of contents goes first, then the rail becomes a drawer ---- */
+@media (max-width: 1100px) { .v6-docs--article { grid-template-columns: 240px minmax(0, 1fr); } .v6-docs__toc { display: none; }
+  .v6-dh { grid-template-columns: 240px minmax(0, 1fr) auto; } }
 @media (max-width: 880px) {
-  .v6-docs, .v6-docs--article { grid-template-columns: 1fr; }
-  .v6-docs__main { order: 1; }
-  .v6-docs__open { display: inline-flex; order: 0; }
-  .v6-docs__side { order: 0; position: fixed; inset: 0; z-index: 95; max-height: none; margin: 0;
-    background: #0A0A0B; padding: 84px var(--gutter) 32px; overflow-y: auto;
+  .v6-dh { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .v6-dh__brand { border-right: 0; padding: 0 8px 0 16px; }
+  .v6-dh__menu { display: inline-grid; }
+  .v6-dh__crumb { padding: 0 8px; }
+  .v6-dh__crumb > span:not([aria-current]) { display: none; }
+  .v6-dh__actions { padding: 0 14px 0 0; }
+  .v6-dh__signin, .v6-docsenv .v6-dh .v6-docs__copy { display: none; }
+  .v6-docs, .v6-docs--article { grid-template-columns: minmax(0, 1fr); }
+  .v6-docs__main { padding: 28px 18px 24px; }
+  /* Full-screen under the sticky header (header z 90 above this z 80), with the header height as padding. */
+  .v6-docs__side { position: fixed; inset: 0; z-index: 80; height: 100%; min-height: 0; max-height: none; padding-top: var(--docs-h); background: #0A0A0B; border-right: 0;
     transform: translateX(-100%); transition: transform 240ms var(--ease); visibility: hidden; }
   .v6-docsenv[data-drawer="true"] .v6-docs__side { transform: none; visibility: visible; }
-  .v6-docs__close { position: fixed; top: 18px; right: var(--gutter); z-index: 96; width: 44px; height: 44px;
-    border-radius: 10px; border: 1px solid rgba(255,255,255,0.14); background: #111113; color: #FAFAFA;
-    display: none; place-items: center; cursor: pointer; }
-  .v6-docsenv[data-drawer="true"] .v6-docs__close { display: grid; }
-  .v6-docs__link { min-height: 44px; display: flex; align-items: center; font-size: 15.5px; }
+  .v6-docs__link { min-height: 44px; display: flex; align-items: center; font-size: 15px; }
+  .v6-docs__facts > div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .v6-docs__pager { grid-template-columns: minmax(0, 1fr); }
+  .v6-docs__pager a.is-next { grid-column: auto; }
 }
 @media (prefers-reduced-motion: reduce) { .v6-docs__side { transition: none !important; } }
 
@@ -432,8 +410,3 @@
 .v6-docsenv .v6-docs__surfaces .t[data-tier="live"] { color: #0A0A0B; background: #FAFAFA; border-radius: 5px; padding: 2px 8px; }
 .v6-docsenv .v6-docs__surfaces .b { grid-column: 1 / -1; color: var(--g-fg-2); font-size: 14.5px; line-height: 1.5; }
 
-.v6-docsenv .v6-docs__meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.v6-docsenv .v6-docs__copy { font: 500 13px/1 var(--sans); color: var(--g-fg-2); background: transparent; cursor: pointer;
-  border: 1px solid rgba(255,255,255,0.16); border-radius: 7px; padding: 7px 11px; }
-.v6-docsenv .v6-docs__copy:hover { color: var(--g-fg); border-color: rgba(255,255,255,0.3); }
-.v6-docsenv .v6-docs__copy:focus-visible { outline: 2px solid #9EB1FF; outline-offset: 2px; }

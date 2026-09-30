@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { v6meta } from "../../_system/meta";
-import { DocShell, Blocks, DocCode, CopyMarkdown } from "../../_content/docs-ui";
+import { DocShell, Blocks, DocCode } from "../../_content/docs-ui";
 import { DOCS, getDoc, adjacentDocs, docHeadings, docToMarkdown } from "../../_content/docs";
 import { SURFACES } from "../../_content/coverage";
 import { V6_BASE } from "@/lib/v6-routes";
@@ -90,29 +90,30 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
   const { prev, next } = adjacentDocs(slug);
   const headings = docHeadings(doc);
   return (
-    <DocShell activeSlug={slug} toc={headings}>
+    <DocShell activeSlug={slug} toc={headings} crumb={[doc.group, doc.title]}
+      markdown={docToMarkdown(doc, SURFACES.map((x) => ({ name: x.name, brief: x.brief, tier: x.tier === "Next" ? "Not built yet" : x.tier })))}>
       <div className="v6-docs__article">
         <article className="v6-prose">
-          <div className="v6-docs__meta">
-            <span className="v6-kicker">{doc.group}</span>
-            <CopyMarkdown markdown={docToMarkdown(doc, SURFACES.map((x) => ({ name: x.name, brief: x.brief, tier: x.tier === "Next" ? "Not built yet" : x.tier })))} />
-          </div>
-          <h1 className="v6-dl">{doc.title}</h1>
-          <p className="v6-lead" style={{ marginTop: 14 }}>{doc.summary}</p>
-          <div className="v6-note" style={{ marginTop: 22 }}><b>Outcome</b>{doc.outcome}</div>
-          {doc.limit ? <div className="v6-note v6-docs__limit" style={{ marginTop: 10 }}><b>What it does not do</b>{doc.limit}</div> : null}
+          <h1>{doc.title}</h1>
+          <p className="v6-docs__lead">{doc.summary}</p>
+          {/* One quiet panel, two rows. These were two heavy boxes stacked under the title. */}
+          <dl className="v6-docs__facts">
+            <div><dt>Outcome</dt><dd>{doc.outcome}</dd></div>
+            {doc.limit ? <div><dt>Does not do</dt><dd>{doc.limit}</dd></div> : null}
+          </dl>
           <Blocks blocks={doc.blocks} />
           {EXAMPLES[slug] ? <DocCode label={EXAMPLES[slug][0]} code={EXAMPLES[slug][1]} /> : null}
           {doc.related?.length ? (
             <>
-              <h2 style={{ marginTop: 46 }}>Related</h2>
-              <ul>{doc.related.map((r) => { const rd = getDoc(r); return rd ? <li key={r}><Link href={`${BASE}/docs/${rd.slug}`}>{rd.title}</Link></li> : null; })}</ul>
+              <h2 id="related">Related</h2>
+              <ul className="v6-docs__related">{doc.related.map((r) => { const rd = getDoc(r); return rd ? <li key={r}><Link href={`${BASE}/docs/${rd.slug}`}>{rd.title}<span aria-hidden> →</span></Link></li> : null; })}</ul>
             </>
           ) : null}
-          <div className="v6-docs__pager">
-            {prev ? <Link href={`${BASE}/docs/${prev.slug}`}><span className="l">Previous</span><span className="t">{prev.title}</span></Link> : <span />}
-            {next ? <Link className="is-next" href={`${BASE}/docs/${next.slug}`}><span className="l">Next</span><span className="t">{next.title}</span></Link> : <span />}
-          </div>
+          {/* Previous and next as an even pair across the column. It was one lone box floating right. */}
+          <nav className="v6-docs__pager" aria-label="Previous and next page">
+            {prev ? <Link href={`${BASE}/docs/${prev.slug}`}><span className="l">← Previous</span><span className="t">{prev.title}</span></Link> : <span />}
+            {next ? <Link className="is-next" href={`${BASE}/docs/${next.slug}`}><span className="l">Next →</span><span className="t">{next.title}</span></Link> : <span />}
+          </nav>
         </article>
       </div>
     </DocShell>
