@@ -37,6 +37,8 @@ const ACCENT = "#3451D1";
 const TONES = {
   problem: { fg: "#B42318", bg: "#FEF3F2", border: "#FECDCA" },
   success: { fg: "#067647", bg: "#ECFDF3", border: "#ABEFC6" },
+  // A change that is neither good nor bad news, such as a plan ending on schedule.
+  notice: { fg: "#3F3F46", bg: "#F4F4F5", border: "#E4E4E7" },
 } as const;
 export type StatusTone = keyof typeof TONES;
 
