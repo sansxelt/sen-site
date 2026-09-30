@@ -76,7 +76,9 @@ console.log("\n── the composer stays primary; a section failure cannot take 
 // read, and one line when there is. The durable rule is that a way to create a verification is ALWAYS on
 // the page, in both branches.
 ok("the empty account still gets the full composer", /fullyEmpty \? \([\s\S]{0,400}?<Composer balance=\{bal\} \/>/.test(page));
-ok("a populated account still gets a creation surface, compact", /<CompactComposer balance=\{bal\} \/>/.test(page));
+// Props may be added (defaultOpen, a remount key for ?new=1 from the top bar), so the check is that the compact
+// surface is rendered with the account's balance, not the exact attribute list.
+ok("a populated account still gets a creation surface, compact", /<CompactComposer [^>]*balance=\{bal\}[^>]*\/>/.test(page));
 ok("the compact surface opens the same composer, not a second implementation",
   /<Composer balance=\{balance\} \/>/.test(readFileSync("app/rank/app/_components/compact-composer.tsx", "utf8")));
 ok("record groups are loaded with independent failure isolation", /async function settle</.test(page) && (page.match(/settle\(/g) ?? []).length >= 4);
