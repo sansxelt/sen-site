@@ -4,9 +4,8 @@ import Link from "next/link";
 import type { KeyUsage, KeySpendSummary } from "@/lib/preflight/key-usage";
 import { useEffect, useState } from "react";
 import { WebhooksSection } from "./webhooks-section";
-import { CliSection } from "./cli-section";
 import { Ic, I, EmptyIcon } from "@/app/rank/_components/icons";
-import { Page, PageHeader } from "@/app/rank/_components/page-header";
+import { Page, PageHeader, SECTION_TITLE } from "@/app/rank/_components/page-header";
 
 type Key = { id: string; prefix: string; scopes: string[]; last_used: string | null; created_at: string; name?: string | null;
   /** The key's daily spend limit in cents, or null for a key with no limit. Shown beside what it has spent. */
@@ -144,7 +143,8 @@ export default function ApiKeysPage() {
     load();
   }
 
-  const slbl = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: "28px 0 12px" } as const;
+  // Section titles between cards use the console's one heading style; cardHead stays the quiet in-card label.
+  const slbl = { ...SECTION_TITLE, margin: "32px 0 12px" } as const;
   const cardHead = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 12 } as const;
 
   return (
@@ -417,7 +417,7 @@ export default function ApiKeysPage() {
         <>
           {u.usage && (
             <>
-              <div style={slbl}>API usage</div>
+              <h2 style={slbl}>API usage</h2>
               <div className="tile-grid cols-4" style={{ marginBottom: 14 }}>
                 <div className="stat"><div className="stat__l">Total requests</div><div className="stat__v tnum">{u.usage.total.toLocaleString()}</div></div>
                 <div className="stat"><div className="stat__l">Last 24 hours</div><div className="stat__v tnum">{u.usage.last24h.toLocaleString()}</div></div>
@@ -443,7 +443,7 @@ export default function ApiKeysPage() {
 
           {u.webhook && (
             <>
-              <div style={slbl}>Webhook reliability</div>
+              <h2 style={slbl}>Webhook reliability</h2>
               {u.webhook.endpoints > 0 ? (
                 <div className="tile-grid cols-4" style={{ marginBottom: 14 }}>
                   <div className="stat"><div className="stat__l">Deliveries</div><div className="stat__v tnum">{u.webhook.total.toLocaleString()}</div><div className="stat__s">{u.webhook.endpoints} endpoint{u.webhook.endpoints === 1 ? "" : "s"}</div></div>
@@ -459,7 +459,7 @@ export default function ApiKeysPage() {
 
           {u.recent && u.recent.length > 0 && (
             <>
-              <div style={slbl}>Recent developer activity</div>
+              <h2 style={slbl}>Recent developer activity</h2>
               <div className="card" style={{ marginBottom: 8 }}>
                 <div style={{ display: "flex", flexDirection: "column" }}>
                   {u.recent.map((e, i) => {
@@ -486,14 +486,22 @@ export default function ApiKeysPage() {
 
       {/* docs. id="ci-gate" is the target of the "See the CI gate" button above: the CURL below IS the CI
           integration (launch a verification, poll for the decision, ship only when it is Verified). */}
-      <div id="ci-gate" style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 12, marginTop: 28, scrollMarginTop: 80 }}>Quickstart: gate a deploy from CI</div>
+      <h2 id="ci-gate" style={{ ...SECTION_TITLE, margin: "32px 0 12px", scrollMarginTop: 80 }}>Quickstart: gate a deploy from CI</h2>
       <div className="codebar"><i /><i /><i /><span>shell</span></div>
       <pre className="codeblock"><code>{CURL}</code></pre>
       <p style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-5)", marginTop: 14, lineHeight: 1.6 }}>
         Verifications launched over the API draw on the same account balance as the web app. Auth via <code style={{ color: "var(--fg-3)" }}>X-Api-Key</code> or <code style={{ color: "var(--fg-3)" }}>Authorization: Bearer</code>.
       </p>
 
-      <CliSection />
+      {/* The command line has its own page in the sidebar, and this page used to render that whole page a
+          second time here, install lines, flags and all. One line points to it instead. */}
+      <div className="card" style={{ marginTop: 24, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+        <div>
+          <div style={{ fontSize: 14.5, fontWeight: 600, color: "var(--fg-1)" }}>Command line</div>
+          <div style={{ fontSize: 13, color: "var(--fg-3)", marginTop: 2 }}>Install the CLI, verify from a terminal or CI, and connect a coding assistant with vraelis init.</div>
+        </div>
+        <Link href="/cli" className="btn btn--ghost">Open the command line guide</Link>
+      </div>
 
       <div id="webhooks" style={{ scrollMarginTop: 80 }}><WebhooksSection /></div>
       </div>
