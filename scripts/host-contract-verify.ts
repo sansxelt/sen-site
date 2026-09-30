@@ -188,11 +188,11 @@ ok("proxy.ts is what answers it, on both hosts",
   const surfaceTokens = [...authRules.matchAll(/--bg-\d:\s*(#[0-9a-fA-F]{6})/g)].map((m) => m[1]);
   ok(`no surface token is pure black (${surfaceTokens.length} grounds)`,
     surfaceTokens.length >= 4 && !surfaceTokens.some((c) => /^#000000$/i.test(c)), surfaceTokens.join(" "));
-  // THE ACCENT, AND WHAT IT MAY NOT BE. Design 06 had no accent hue: the primary action was contrast. The light
-  // console (2026-09-30) has exactly one, cobalt, for the things a person acts on. The reason design 06 gave
-  // for having none still holds, so it is asserted as a property instead: the accent must sit far enough
-  // from all three state hues that an action can never be read as a verdict. hueOf is declared below; these
-  // run after it.
+  // THE ACCENT, AND WHAT IT MAY NOT BE. The console's accent was cobalt for one day and is ink again, the same
+  // as the site (2026-09-30): the founder read blue buttons as a different product. What is asserted is the
+  // reason behind either choice, as a property: an action can never be read as a verdict, so the accent is
+  // either achromatic ink or a hue at least 60deg from all three state colours. hueOf is declared below;
+  // these run after it.
   // The three state triads are the ONLY colour, and each needs its ink, wash and hairline.
   for (const s of ["go", "wait", "stop"]) {
     ok(`the ${s} state is a full triad (ink, wash, line)`,
@@ -217,12 +217,21 @@ ok("proxy.ts is what answers it, on both hosts",
   ok("blocked is an amber, not a red", hb > 30 && hb < 90, `hue ${hb.toFixed(0)}deg`);
   const accent = grab("acc"), accentDeep = grab("acc-deep");
   const apart = (a: number, b: number) => Math.min(Math.abs(a - b), 360 - Math.abs(a - b));
+  // Chroma, 0..1: how far a colour is from grey. Under 0.04 there is no hue to confuse with a state.
+  const chromaOf = (hex: string) => {
+    const h = hex.replace("#", "");
+    const c = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
+    return Math.max(...c) - Math.min(...c);
+  };
   for (const [what, hex] of [["the accent fill", accent], ["the accent text colour", accentDeep]] as const) {
     const h = hueOf(hex);
     const nearest = Math.min(apart(h, hueOf(verified)), apart(h, hueOf(blocked)), apart(h, hueOf(failed)));
-    ok(`${what} is one hue, at least 60deg from every state colour`, !!hex && nearest >= 60, `${hex} hue ${h.toFixed(0)}deg, nearest state ${nearest.toFixed(0)}deg`);
+    const neutral = !!hex && chromaOf(hex) < 0.04;
+    ok(`${what} cannot be read as a state: neutral ink, or a hue at least 60deg from every state colour`,
+      !!hex && (neutral || nearest >= 60), `${hex} chroma ${hex ? chromaOf(hex).toFixed(3) : "?"}, hue ${h.toFixed(0)}deg, nearest state ${nearest.toFixed(0)}deg`);
   }
-  ok("there is ONE accent: the fill and the text colour are the same hue", Math.abs(hueOf(accent) - hueOf(accentDeep)) < 12,
+  ok("there is ONE accent: the fill and the text colour are the same colour family",
+    (chromaOf(accent) < 0.04 && chromaOf(accentDeep) < 0.04) || Math.abs(hueOf(accent) - hueOf(accentDeep)) < 12,
     `${accent} vs ${accentDeep}`);
   // Browser focus rings vanish against graphite, so the surface defines its own.
   ok("keyboard focus is defined on the product ground",

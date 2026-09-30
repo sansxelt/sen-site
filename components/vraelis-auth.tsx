@@ -13,7 +13,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { useState, type CSSProperties, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import {
   getAuthErrorMessage,
   getSafeRedirectPath,
@@ -24,19 +24,6 @@ import {
 type AuthMode = "signup" | "signin";
 type Tone = "error" | "info" | "success";
 type Status = { message: string; tone: Tone };
-
-const inputStyle: CSSProperties = {
-  width: "100%",
-  borderRadius: "var(--r-sm)",
-  border: "1px solid var(--line-2)",
-  background: "var(--bg-0)",
-  padding: "12px 14px",
-  fontSize: 14.5,
-  color: "var(--fg-1)",
-  outline: "none",
-  fontFamily: "var(--font-sans)",
-  boxSizing: "border-box",
-};
 
 function GoogleIcon() {
   return (
@@ -51,29 +38,10 @@ function GoogleIcon() {
 
 function GitHubIcon() {
   return (
-    <svg aria-hidden viewBox="0 0 24 24" style={{ width: 18, height: 18, fill: "var(--fg-1)" }}>
+    <svg aria-hidden viewBox="0 0 24 24" style={{ width: 18, height: 18, fill: "currentColor" }}>
       <path d="M12 .5a12 12 0 0 0-3.79 23.39c.6.11.82-.26.82-.58v-2.04c-3.34.73-4.04-1.42-4.04-1.42-.55-1.38-1.33-1.75-1.33-1.75-1.09-.74.08-.73.08-.73 1.2.09 1.83 1.23 1.83 1.23 1.08 1.84 2.82 1.31 3.5 1 .11-.78.42-1.31.77-1.61-2.66-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.39 1.23-3.23-.12-.3-.53-1.52.12-3.17 0 0 1.01-.32 3.3 1.23A11.48 11.48 0 0 1 12 6.3c1.02 0 2.05.14 3.01.4 2.29-1.55 3.29-1.23 3.29-1.23.66 1.65.25 2.87.13 3.17.77.84 1.23 1.92 1.23 3.23 0 4.61-2.81 5.62-5.49 5.92.43.38.82 1.1.82 2.22v3.3c0 .32.21.7.83.58A12 12 0 0 0 12 .5Z" />
     </svg>
   );
-}
-
-function statusStyle(tone: Tone): CSSProperties {
-  const map: Record<Tone, { bg: string; border: string; color: string }> = {
-    success: { bg: "var(--go-wash)", border: "var(--go-line)", color: "var(--go-ink)" },
-    error: { bg: "var(--stop-wash)", border: "var(--stop-line)", color: "var(--stop-ink)" },
-    info: { bg: "var(--bg-2)", border: "var(--line-2)", color: "var(--fg-3)" },
-  };
-  const c = map[tone];
-  return {
-    marginTop: 16,
-    borderRadius: "var(--r-xs)",
-    border: `1px solid ${c.border}`,
-    background: c.bg,
-    color: c.color,
-    padding: "11px 14px",
-    fontSize: 13,
-    lineHeight: 1.5,
-  };
 }
 
 export function VraelisSignIn({
@@ -166,97 +134,77 @@ export function VraelisSignIn({
     }
   }
 
+  const switchTo = (m: AuthMode) => { setMode(m); setStatus(null); };
+
+  // THE FORM, REBUILT (2026-09-30). A floating card with a segmented toggle, placeholder-only fields and a
+  // blue button is gone. Labels sit above the fields, the primary action is ink like every other primary
+  // action in the product, providers are plain outlined rows, and switching between signing in and creating
+  // an account is a sentence at the foot, the way people expect it.
   return (
-    <div style={{ width: "min(440px, 100%)", margin: "0 auto" }}>
-      {/* No wordmark in this header. Every surface that renders the form already puts one in its own
-          chrome, so a second one directly beneath it read as the page saying its own name twice. */}
+    <div className="auth-form">
       {showHeader ? (
-      <div style={{ textAlign: "center", marginBottom: 18 }}>
-        <h1 className="display" style={{ fontSize: "clamp(1.6rem, 3.4vw, 2.2rem)", marginBottom: 8 }}>
-          {mode === "signup" ? "Create your Vraelis account." : "Your Vraelis account."}
-        </h1>
-        <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.55 }}>
-          {mode === "signup" ? "One account across the console, the CLI, and the API." : "The same account across the console, the CLI, and the API."}
-        </p>
-      </div>
+        <div className="auth-form__head">
+          <h1>{mode === "signup" ? "Create your account" : "Sign in to Vraelis"}</h1>
+          <p>{mode === "signup" ? "Free to start, no card required. One account for the console, the CLI and the API." : "Welcome back. One account for the console, the CLI and the API."}</p>
+        </div>
       ) : null}
 
-      <div className="card" style={{ padding: "20px 24px 24px", borderRadius: "var(--r-xl)", boxShadow: "var(--shadow-lg)" }}>
-        {/* mode toggle */}
-        <div className="seg" style={{ display: "flex", width: "100%", marginBottom: 16 }}>
-          {(["signin", "signup"] as AuthMode[]).map((m) => (
-            <button key={m} type="button" onClick={() => { setMode(m); setStatus(null); }} className={mode === m ? "on" : ""} style={{ flex: 1 }}>
-              {m === "signin" ? "Sign in" : "Create account"}
+      <div className="auth-form__providers">
+        {oauthProviders.map((opt) => {
+          const providerBusy = busy === opt.provider;
+          return (
+            <button key={opt.provider} type="button" className="auth-form__provider"
+              onClick={() => void handleOAuth(opt.provider)} disabled={providerBusy || needsConsent}>
+              {opt.provider === "google" ? <GoogleIcon /> : <GitHubIcon />}
+              {providerBusy ? "Redirecting…" : `Continue with ${opt.label}`}
             </button>
-          ))}
-        </div>
+          );
+        })}
+      </div>
 
-        {/* Clickwrap consent — gates every signup method (email + OAuth). */}
+      <div className="auth-form__or"><span>or</span></div>
+
+      <form onSubmit={handleEmailAuth} className="auth-form__fields">
         {mode === "signup" && (
-          <label style={{ display: "flex", gap: 9, alignItems: "flex-start", marginBottom: 16, fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, cursor: "pointer" }}>
-            <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} style={{ marginTop: 2, width: 15, height: 15, flex: "none", accentColor: "var(--fg-1)", cursor: "pointer" }} />
-            <span>I agree to the <Link href={`${legalBase}/terms`} target="_blank" style={{ color: "var(--fg-1)", textDecoration: "underline", textUnderlineOffset: 2 }}>Terms</Link> and <Link href={`${legalBase}/privacy`} target="_blank" style={{ color: "var(--fg-1)", textDecoration: "underline", textUnderlineOffset: 2 }}>Privacy Policy</Link>.</span>
+          <label className="auth-form__field">
+            <span>Name</span>
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" disabled={emailBusy} required minLength={1} />
+          </label>
+        )}
+        <label className="auth-form__field">
+          <span>Email</span>
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" disabled={emailBusy} required />
+        </label>
+        <label className="auth-form__field">
+          <span className="auth-form__labelrow">
+            Password
+            {mode === "signin" ? <Link href="/auth/reset-password" className="auth-form__forgot">Forgot password?</Link> : null}
+          </span>
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+            autoComplete={mode === "signup" ? "new-password" : "current-password"} disabled={emailBusy} required minLength={8} />
+          {mode === "signup" ? <span className="auth-form__hint">At least 8 characters.</span> : null}
+        </label>
+
+        {/* Clickwrap consent: it gates every way of creating an account, email and providers alike. */}
+        {mode === "signup" && (
+          <label className="auth-form__consent">
+            <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
+            <span>I agree to the <Link href={`${legalBase}/terms`} target="_blank">Terms</Link>, the <Link href={`${legalBase}/privacy`} target="_blank">Privacy Policy</Link> and the <Link href={`${legalBase}/acceptable-use`} target="_blank">Acceptable Use Policy</Link>.</span>
           </label>
         )}
 
-        {/* OAuth */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {oauthProviders.map((opt) => {
-            const providerBusy = busy === opt.provider;
-            const primary = opt.provider === "google";
-            return (
-              <button
-                key={opt.provider}
-                type="button"
-                onClick={() => void handleOAuth(opt.provider)}
-                disabled={providerBusy || needsConsent}
-                style={{
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 10, width: "100%",
-                  borderRadius: "var(--r-sm)", border: `1px solid ${primary ? "var(--line-3)" : "var(--line-2)"}`,
-                  background: "var(--bg-1)", padding: "12px 14px", fontSize: 14.5, fontWeight: 600, color: "var(--fg-1)",
-                  cursor: providerBusy ? "wait" : needsConsent ? "not-allowed" : "pointer", boxShadow: primary ? "var(--shadow-sm)" : "none",
-                  opacity: needsConsent ? 0.55 : 1,
-                }}
-              >
-                {opt.provider === "google" ? <GoogleIcon /> : <GitHubIcon />}
-                {providerBusy ? "Redirecting…" : `Continue with ${opt.label}`}
-              </button>
-            );
-          })}
-        </div>
+        <button type="submit" className="auth-form__submit" disabled={emailBusy || needsConsent}>
+          {busy === "signup" ? "Creating account…" : busy === "signin" ? "Signing in…" : mode === "signup" ? "Create account" : "Sign in"}
+        </button>
+        {mode === "signup" ? <p className="auth-form__note">We will email you a link to confirm your address before your first sign-in.</p> : null}
+      </form>
 
-        {/* divider */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "16px 0 14px" }}>
-          <span style={{ flex: 1, height: 1, background: "var(--line-1)" }} />
-          <span style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", letterSpacing: "0.04em" }}>or with email</span>
-          <span style={{ flex: 1, height: 1, background: "var(--line-1)" }} />
-        </div>
+      {status ? <div className="auth-form__status" data-tone={status.tone} role={status.tone === "error" ? "alert" : "status"}>{status.message}</div> : null}
 
-        {/* email/password */}
-        <form onSubmit={handleEmailAuth} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {mode === "signup" && (
-            <input type="text" aria-label="Name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" disabled={emailBusy} required minLength={1} style={inputStyle} />
-          )}
-          <input type="email" aria-label="Email address" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email address" disabled={emailBusy} required style={inputStyle} />
-          <input type="password" aria-label="Password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" disabled={emailBusy} required minLength={8} style={inputStyle} />
-          <button type="submit" className="btn" disabled={emailBusy || needsConsent} style={{ width: "100%", justifyContent: "center", marginTop: 2, opacity: (emailBusy || needsConsent) ? 0.7 : 1 }}>
-            {busy === "signup" ? "Creating account…" : busy === "signin" ? "Signing in…" : mode === "signup" ? "Create account" : "Sign in"}
-          </button>
-          {mode === "signup" && <p style={{ fontSize: 12, color: "var(--fg-4)", textAlign: "center", margin: "2px 0 0", lineHeight: 1.5 }}>We&apos;ll email you a verification link to confirm your address before your first sign-in.</p>}
-          {mode === "signin" && (
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <Link href="/auth/reset-password" style={{ fontSize: 12, color: "var(--fg-4)", textDecoration: "none" }}>
-                Forgot password?
-              </Link>
-            </div>
-          )}
-        </form>
-
-        {status && <div style={statusStyle(status.tone)}>{status.message}</div>}
-      </div>
-
-      <p style={{ textAlign: "center", marginTop: 16, fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-5)" }}>
-        Free to start. No card required.
+      <p className="auth-form__switch">
+        {mode === "signup"
+          ? <>Already have an account? <button type="button" onClick={() => switchTo("signin")}>Sign in</button></>
+          : <>New to Vraelis? <button type="button" onClick={() => switchTo("signup")}>Create an account</button></>}
       </p>
     </div>
   );

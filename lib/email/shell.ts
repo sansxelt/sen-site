@@ -8,7 +8,7 @@
 //     sells credibility, so its mail should read the same way.
 //   - Header is the wordmark as text. There is no hosted logo image on vraelis.com meant for mail, and a
 //     blocked image is worse than no image.
-//   - ONE accent (#3451D1), used for the primary button and for links. White on it is 6.5:1.
+//   - ONE accent, ink (#0A0A0B), used for the primary button and for links, as on the site and the console.
 //   - State colour only where the email reports a state, as a one-line status row. Headings are never
 //     coloured.
 //   - At most one primary button per email. Secondary actions are plain links.
@@ -32,7 +32,7 @@ const BODY = "#3F3F46";
 const MUTED = "#71717A";
 const LINE = "#E4E4E7";
 const PAGE = "#F4F4F5";
-const ACCENT = "#3451D1";
+const ACCENT = "#0A0A0B"; // ink, like the site and the console (was cobalt until 2026-09-30)
 
 const TONES = {
   problem: { fg: "#B42318", bg: "#FEF3F2", border: "#FECDCA" },

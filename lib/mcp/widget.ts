@@ -19,18 +19,18 @@ export const WIDGET_HTML = `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Vraelis check</title>
 <style>
-  /* The console's palette (design 07, 2026-09-30): zinc neutrals, one cobalt accent for the action, and green,
+  /* The console's palette (design 07, 2026-09-30): zinc neutrals, one ink accent for the action, and green,
      amber and red for results only. The button used to be the Verified green, so "Review and approve" looked
      like a pass before anything had run. */
   :root {
     --bg: #f7f7f8; --panel: #ffffff; --fg: #0a0a0b; --fg2: #3f3f46; --fg3: #6b6b74; --line: #e4e4e7;
     --go: #067647; --go-bg: #ecfdf3; --stop: #b42318; --stop-bg: #fef3f2; --stop-line: #fecdca; --hold: #9a5b00; --hold-bg: #fef7e6;
-    --wait: #3f3f46; --wait-bg: #f4f4f5; --accent: #3e63dd; --on-accent: #ffffff;
+    --wait: #3f3f46; --wait-bg: #f4f4f5; --accent: #0a0a0b; --on-accent: #ffffff;
   }
   :root[data-theme="dark"] {
     --bg: #0e0f11; --panel: #16171a; --fg: #f4f4f5; --fg2: #d4d4d8; --fg3: #a1a1aa; --line: #2a2b30;
     --go: #4ade9c; --go-bg: #10261c; --stop: #ff8a80; --stop-bg: #2c1614; --stop-line: #4a2320; --hold: #f2b75a; --hold-bg: #2a220f;
-    --wait: #d4d4d8; --wait-bg: #1f2024; --accent: #9eb1ff; --on-accent: #0a0a0b;
+    --wait: #d4d4d8; --wait-bg: #1f2024; --accent: #fafafa; --on-accent: #0a0a0b;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; background: transparent; color: var(--fg); font: 14px/1.5 "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }

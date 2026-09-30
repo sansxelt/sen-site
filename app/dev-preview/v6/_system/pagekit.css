@@ -92,9 +92,9 @@
 .v6-code pre { margin: 0; padding: clamp(14px,1.6vw,20px); overflow-x: auto; }
 .v6-code code { font-family: var(--mono); font-size: 12.5px; line-height: 1.7; color: var(--g-fg); white-space: pre; background: none; padding: 0; }
 /* Light code (2026-09-30): the old palette was tuned for a black block, and its gold strings measured 1.6:1 on
-   the grey one. Keywords take weight rather than a state colour, strings the console's cobalt, comments the
-   meta grey. */
-.v6-code .k { color: var(--ink); font-weight: 600; } .v6-code .s { color: #2F47B8; } .v6-code .c { color: var(--ink-4); } .v6-code .p { color: var(--ink-3); }
+   the grey one. Keywords take weight rather than a state colour, strings a step lighter than the ink,
+   comments the meta grey. */
+.v6-code .k { color: var(--ink); font-weight: 600; } .v6-code .s { color: #52525B; } .v6-code .c { color: var(--ink-4); } .v6-code .p { color: var(--ink-3); }
 
 /* docs shell */
 /* ============================================================================
@@ -139,7 +139,7 @@
 .v6-docsenv .v6-docs__copy { font-family: var(--sans); font-size: 13px; font-weight: 500; line-height: 1; color: #2E2F33;
   background: transparent; cursor: pointer; border: 1px solid rgba(10,10,11,0.12); border-radius: 7px; padding: 8px 11px; }
 .v6-docsenv .v6-docs__copy:hover { color: #0A0A0B; border-color: rgba(10,10,11,0.24); }
-.v6-dh a:focus-visible, .v6-dh button:focus-visible, .v6-docsenv .v6-docs__copy:focus-visible { outline: 2px solid #3451D1; outline-offset: 2px; }
+.v6-dh a:focus-visible, .v6-dh button:focus-visible, .v6-docsenv .v6-docs__copy:focus-visible { outline: 2px solid #0A0A0B; outline-offset: 2px; }
 
 /* ---- frame ---- */
 .v6-docs { display: grid; grid-template-columns: 260px minmax(0, 1fr); align-items: start; min-height: calc(100svh - var(--docs-h)); }
@@ -153,7 +153,7 @@
 .v6-docs__search input { width: 100%; height: 34px; background: rgba(10,10,11,0.04); color: #111214;
   border: 1px solid rgba(10,10,11,0.08); border-radius: 8px; padding: 0 10px 0 32px; font-family: var(--sans); font-size: 13.5px; outline: none; }
 .v6-docs__search input::placeholder { color: #5B5D63; }
-.v6-docs__search input:focus { border-color: rgba(52,81,209,0.45); background: rgba(10,10,11,0.06); }
+.v6-docs__search input:focus { border-color: rgba(10,10,11,0.30); background: rgba(10,10,11,0.06); }
 .v6-docs__nav { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 4px 10px 16px; scrollbar-width: thin;
   scrollbar-color: rgba(10,10,11,0.16) transparent; }
 /* Sections are dropdowns: the header is a button with a chevron that turns when the section is open. No
@@ -171,7 +171,7 @@
 .v6-docs__link { display: block; font-size: 13.5px; line-height: 1.35; color: #3A3C40; text-decoration: none; padding: 6px 10px; border-radius: 6px; }
 .v6-docs__link:hover { color: #0A0A0B; background: rgba(10,10,11,0.05); }
 .v6-docs__link[aria-current="page"] { color: #0A0A0B; background: rgba(10,10,11,0.08); font-weight: 500; }
-.v6-docs__link:focus-visible, .v6-docs__railfoot a:focus-visible { outline: 2px solid #3451D1; outline-offset: -2px; }
+.v6-docs__link:focus-visible, .v6-docs__railfoot a:focus-visible { outline: 2px solid #0A0A0B; outline-offset: -2px; }
 .v6-docs__empty { font-size: 13px; color: #6A6C71; padding: 6px 10px; margin: 0; }
 .v6-docs__railfoot { display: grid; gap: 1px; padding: 10px 10px 14px; }
 .v6-docs__railfoot a { font-size: 13px; color: #5B5D63; text-decoration: none; padding: 6px 10px; border-radius: 6px; }
@@ -216,7 +216,7 @@
   color: #5B5D63; margin: 0; padding: 10px 14px; border-bottom: 1px solid rgba(10,10,11,0.08); }
 .v6-docs__code pre { margin: 0; padding: 14px; font-family: var(--mono); font-size: 13px; line-height: 1.65; color: #2E2F33;
   overflow-x: auto; white-space: pre; }
-.v6-docs__code pre:focus-visible { outline: 2px solid #3451D1; outline-offset: -2px; }
+.v6-docs__code pre:focus-visible { outline: 2px solid #0A0A0B; outline-offset: -2px; }
 .v6-docs__code .k { color: #0A0A0B; }
 
 /* ---- on this page ---- */
@@ -236,7 +236,7 @@
   border: 1px solid rgba(10,10,11,0.08); border-radius: 10px; transition: border-color 150ms ease, background 150ms ease; }
 .v6-docs__pager a:hover { border-color: rgba(10,10,11,0.18); background: rgba(10,10,11,0.03); }
 .v6-docsenv .v6-docs__article .v6-docs__pager a { text-decoration: none; }
-.v6-docs__pager a:focus-visible { outline: 2px solid #3451D1; outline-offset: 2px; }
+.v6-docs__pager a:focus-visible { outline: 2px solid #0A0A0B; outline-offset: 2px; }
 .v6-docs__pager .l { font-size: 12.5px; color: #5B5D63; }
 .v6-docs__pager .t { font-size: 14.5px; font-weight: 500; color: #0A0A0B; }
 .v6-docs__pager a.is-next { grid-column: 2; text-align: right; align-items: flex-end; }
@@ -426,14 +426,14 @@
   background: #F7F7F8; }
 .v6-docsenv .v6-docs__shot img { display: block; width: 100%; height: auto; }
 .v6-docsenv .v6-docs__mark { position: absolute; transform: translate(-50%, -50%); width: 24px; height: 24px; border-radius: 50%;
-  background: #3E63DD; color: #fff; font: 600 12.5px/24px var(--sans); text-align: center;
-  box-shadow: 0 0 0 3px rgba(62,99,221,0.25), 0 2px 6px rgba(10,10,11,0.10); }
+  background: #0A0A0B; color: #fff; font: 600 12.5px/24px var(--sans); text-align: center;
+  box-shadow: 0 0 0 3px rgba(10,10,11,0.14), 0 2px 6px rgba(10,10,11,0.10); }
 .v6-docsenv .v6-docs__fig figcaption { margin-top: 12px; font-size: 14px; line-height: 1.55; color: var(--g-fg-3); }
 .v6-docsenv .v6-docs__fig figcaption p { margin: 0; }
 .v6-docsenv .v6-docs__fig figcaption ol { display: block; margin: 8px 0 0; padding-left: 22px; color: var(--g-fg-2); list-style: decimal outside; }
 .v6-docsenv .v6-docs__fig figcaption li { margin: 2px 0; padding-left: 2px; display: list-item; }
 .v6-docsenv .v6-docs__fig figcaption li::before { content: none; }
-.v6-docsenv .v6-docs__fig figcaption li::marker { color: #3451D1; font-weight: 600; }
+.v6-docsenv .v6-docs__fig figcaption li::marker { color: #0A0A0B; font-weight: 600; }
 @media (max-width: 640px) { .v6-docsenv .v6-docs__mark { width: 20px; height: 20px; font-size: 11px; line-height: 20px; } }
 
 .v6-docsenv .v6-docs__surfaces { list-style: none; margin: 22px 0 8px; padding: 0; border: 1px solid rgba(10,10,11,0.10); border-radius: 12px; overflow: hidden; }

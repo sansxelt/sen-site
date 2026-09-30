@@ -30,7 +30,7 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY 
 const APPEARANCE: Appearance = {
   theme: "stripe",
   variables: {
-    colorPrimary: "#3E63DD",
+    colorPrimary: "#0A0A0B",
     colorBackground: "#FFFFFF",
     colorText: "#0A0A0B",
     colorTextSecondary: "#52525B",
@@ -43,9 +43,9 @@ const APPEARANCE: Appearance = {
   },
   rules: {
     ".Input": { backgroundColor: "#FFFFFF", border: "1px solid rgba(10,10,11,0.18)", boxShadow: "0 1px 2px rgba(16,24,40,0.05)" },
-    ".Input:focus": { border: "1px solid #3E63DD", boxShadow: "0 0 0 3px rgba(62,99,221,0.12)" },
+    ".Input:focus": { border: "1px solid #0A0A0B", boxShadow: "0 0 0 3px rgba(10,10,11,0.10)" },
     ".Tab": { backgroundColor: "#FFFFFF", border: "1px solid rgba(10,10,11,0.10)", boxShadow: "0 1px 2px rgba(16,24,40,0.05)" },
-    ".Tab--selected": { backgroundColor: "#FFFFFF", border: "1px solid #3E63DD", color: "#0A0A0B" },
+    ".Tab--selected": { backgroundColor: "#FFFFFF", border: "1px solid #0A0A0B", color: "#0A0A0B" },
     ".Label": { color: "#3F3F46", fontWeight: "500" },
     ".Error": { color: "#B42318" },
   },

@@ -45,16 +45,18 @@
   --fg-on-accent: #FFFFFF;
 
   /* ── The accent ──────────────────────────────────────────────────────────────────────────────────────
-     Cobalt. Chosen to sit well away from all three state hues, so an action can never be mistaken for a
-     verdict. --acc fills (white text on it measures 5.2:1), --acc-deep is link and label ink (6:1 on the
-     page), --acc-deepest is the hovered fill. */
-  --acc: #3E63DD;
-  --acc-deep: #3451D1;
-  --acc-deepest: #2F47B8;
-  --acc-glow: rgba(62, 99, 221, 0.22);
-  --acc-soft: rgba(62, 99, 221, 0.08);
-  --acc-line: rgba(62, 99, 221, 0.28);
-  --acc-line-2: rgba(62, 99, 221, 0.50);
+     Ink, the same as the site (2026-09-30). It was cobalt, which made the console and sign-in the only blue
+     surfaces in a product whose site, docs and emails act in black: the founder read the blue buttons as a
+     different product. Having no hue still keeps an action well away from the three state colours. --acc
+     fills (white on it is 19:1), --acc-deep is link and label ink, --acc-deepest is the hovered fill, and the
+     soft, line and glow steps are the same ink at low alpha, so selected rows and focus read as neutral. */
+  --acc: #0A0A0B;
+  --acc-deep: #0A0A0B;
+  --acc-deepest: #2E2F33;
+  --acc-glow: rgba(10, 10, 11, 0.14);
+  --acc-soft: rgba(10, 10, 11, 0.06);
+  --acc-line: rgba(10, 10, 11, 0.20);
+  --acc-line-2: rgba(10, 10, 11, 0.34);
 
   /* ── State, and only state ───────────────────────────────────────────────────────────────────────────
      Blocked stays amber rather than red: it is the honest third answer, not a failure, and colouring it
@@ -75,7 +77,7 @@
   --line-2: rgba(10, 10, 11, 0.10);
   --line-3: rgba(10, 10, 11, 0.18);
   --line-strong: rgba(10, 10, 11, 0.30);
-  --focus-ring: #3E63DD;
+  --focus-ring: #0A0A0B;
   --chrome-veil: rgba(255, 255, 255, 0.92);
 
   /* ── Elevation ───────────────────────────────────────────────────────────────────────────────────────
@@ -336,3 +338,67 @@ html:has([data-surface="app"]) {
 /* Records: the "Show more" row is a plain link-coloured row, not a disclosure triangle. */
 [data-surface="app"] .rec-more > summary::-webkit-details-marker { display: none; }
 [data-surface="app"] .rec-more[open] > summary { display: none; }
+
+/* ── Sign-in and account screens (2026-09-30) ───────────────────────────────────────────────────────────
+   Two plain halves: the form on white, and on a wide screen the site's grey band holding a real recorded
+   run. Ink for the primary action, outlined rows for providers, labels above fields. */
+[data-surface="app"] .auth-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); min-height: 100dvh; background: #FFFFFF; }
+[data-surface="app"] .auth-split__form { display: flex; flex-direction: column; min-width: 0; padding: 0 clamp(20px, 5vw, 64px); }
+[data-surface="app"] .auth-split__head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 22px 0; }
+[data-surface="app"] .auth-split__brand { font-size: 20px; font-weight: 700; letter-spacing: -0.03em; color: var(--fg-1); text-decoration: none; }
+[data-surface="app"] .auth-split__back { font-size: 13.5px; font-weight: 500; color: var(--fg-3); text-decoration: none; }
+[data-surface="app"] .auth-split__back:hover { color: var(--fg-1); }
+[data-surface="app"] .auth-split__main { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: clamp(16px, 4vh, 48px) 0; }
+[data-surface="app"] .auth-split__foot { display: flex; gap: 18px; margin: 0; padding: 20px 0 24px; font-size: 12.5px; }
+[data-surface="app"] .auth-split__foot a { color: var(--fg-4); text-decoration: none; }
+[data-surface="app"] .auth-split__foot a:hover { color: var(--fg-1); }
+[data-surface="app"] .auth-split__side { background: #F4F4F5; border-left: 1px solid var(--line-2); display: flex; align-items: center;
+  justify-content: center; padding: clamp(32px, 5vw, 72px); min-width: 0; }
+[data-surface="app"] .auth-split__sidein { width: min(560px, 100%); }
+[data-surface="app"] .auth-split__kicker { margin: 0 0 8px; font-size: 13px; font-weight: 500; color: var(--fg-4); }
+[data-surface="app"] .auth-split__title { margin: 0 0 22px; font-size: clamp(1.3rem, 1.9vw, 1.65rem); line-height: 1.2; font-weight: 600;
+  letter-spacing: -0.015em; color: var(--fg-1); max-width: 24ch; }
+@media (max-width: 980px) {
+  [data-surface="app"] .auth-split { grid-template-columns: minmax(0, 1fr); }
+  [data-surface="app"] .auth-split__side { display: none; }
+}
+
+[data-surface="app"] .auth-form { width: min(380px, 100%); margin: 0 auto; }
+[data-surface="app"] .auth-form__head { margin-bottom: 24px; }
+[data-surface="app"] .auth-form__head h1 { margin: 0; font-size: 26px; line-height: 1.2; font-weight: 600; letter-spacing: -0.02em; color: var(--fg-1); }
+[data-surface="app"] .auth-form__head p { margin: 8px 0 0; font-size: 14px; line-height: 1.55; color: var(--fg-3); }
+[data-surface="app"] .auth-form__providers { display: grid; gap: 10px; }
+[data-surface="app"] .auth-form__provider { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;
+  min-height: 44px; padding: 10px 14px; border: 1px solid var(--line-3); border-radius: 9px; background: #FFFFFF;
+  font: 600 14px/1 var(--font-brand-sans), sans-serif; color: var(--fg-1); cursor: pointer; transition: background 140ms ease, border-color 140ms ease; }
+[data-surface="app"] .auth-form__provider:hover:not(:disabled) { background: #F7F7F8; border-color: var(--line-strong); }
+[data-surface="app"] .auth-form__provider:disabled { opacity: 0.5; cursor: not-allowed; }
+[data-surface="app"] .auth-form__or { display: flex; align-items: center; gap: 12px; margin: 20px 0; font-size: 12.5px; color: var(--fg-4); }
+[data-surface="app"] .auth-form__or::before, [data-surface="app"] .auth-form__or::after { content: ""; flex: 1; height: 1px; background: var(--line-2); }
+[data-surface="app"] .auth-form__fields { display: grid; gap: 14px; }
+[data-surface="app"] .auth-form__field { display: grid; gap: 6px; }
+[data-surface="app"] .auth-form__field > span:first-child, [data-surface="app"] .auth-form__labelrow { font-size: 13px; font-weight: 500; color: var(--fg-2); }
+[data-surface="app"] .auth-form__labelrow { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+[data-surface="app"] .auth-form__forgot { font-size: 12.5px; font-weight: 500; color: var(--fg-3); text-decoration: none; }
+[data-surface="app"] .auth-form__forgot:hover { color: var(--fg-1); text-decoration: underline; }
+[data-surface="app"] .auth-form__field input { width: 100%; box-sizing: border-box; min-height: 42px; padding: 9px 12px; border: 1px solid var(--line-3);
+  border-radius: 9px; background: #FFFFFF; font: 400 14.5px/1.4 var(--font-brand-sans), sans-serif; color: var(--fg-1); }
+[data-surface="app"] .auth-form__field input:focus { outline: none; border-color: var(--fg-1); box-shadow: 0 0 0 3px rgba(10,10,11,0.08); }
+[data-surface="app"] .auth-form__hint { font-size: 12px; color: var(--fg-4); }
+[data-surface="app"] .auth-form__consent { display: flex; gap: 10px; align-items: flex-start; font-size: 12.5px; line-height: 1.5; color: var(--fg-3); cursor: pointer; }
+[data-surface="app"] .auth-form__consent input { margin-top: 2px; width: 15px; height: 15px; flex: none; accent-color: var(--fg-1); }
+[data-surface="app"] .auth-form__consent a { color: var(--fg-1); text-decoration: underline; text-underline-offset: 2px; }
+[data-surface="app"] .auth-form__submit { width: 100%; min-height: 44px; padding: 11px 16px; border: 0; border-radius: 9px; background: var(--fg-1);
+  color: #FFFFFF; font: 600 14.5px/1 var(--font-brand-sans), sans-serif; cursor: pointer; transition: background 140ms ease; }
+[data-surface="app"] .auth-form__submit:hover:not(:disabled) { background: #2E2F33; }
+[data-surface="app"] .auth-form__submit:disabled { opacity: 0.5; cursor: not-allowed; }
+[data-surface="app"] .auth-form__submit:focus-visible, [data-surface="app"] .auth-form__provider:focus-visible { outline: 2px solid var(--fg-1); outline-offset: 2px; }
+[data-surface="app"] .auth-form__note { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--fg-4); }
+[data-surface="app"] .auth-form__status { margin-top: 16px; padding: 10px 12px; border-radius: 8px; font-size: 13px; line-height: 1.5;
+  border: 1px solid var(--line-2); background: #F7F7F8; color: var(--fg-2); }
+[data-surface="app"] .auth-form__status[data-tone="error"] { background: var(--stop-wash); border-color: var(--stop-line); color: var(--stop-ink); }
+[data-surface="app"] .auth-form__status[data-tone="success"] { background: var(--go-wash); border-color: var(--go-line); color: var(--go-ink); }
+[data-surface="app"] .auth-form__switch { margin: 24px 0 0; font-size: 13.5px; color: var(--fg-3); }
+[data-surface="app"] .auth-form__switch button { padding: 0; border: 0; background: none; font: inherit; font-weight: 600; color: var(--fg-1);
+  text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+[data-surface="app"] .auth-form--wide { width: min(460px, 100%); }
