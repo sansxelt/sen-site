@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { ProductSurface } from "@/app/_components/product-surface";
 import { RecordPreview } from "@/components/record-preview";
+import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
 
 // THE ACCOUNT SCREENS' FRAME: sign-in, create account, verify email, reset password, the auth errors and the
 // two-step code (2026-09-30). One frame for all of them, so moving from signing up to confirming an address
@@ -19,8 +20,10 @@ export function AuthFrame({ children }: { children: ReactNode }) {
             <a href="/" className="auth-split__back"><span aria-hidden>←</span> Back to site</a>
           </div>
           <main className="auth-split__main">{children}</main>
-          <p className="auth-split__foot">
-            <a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/cookies">Cookies</a><a href="/security">Security</a>
+          {/* flex-wrap inline: five links and a button no longer fit one row on a phone. */}
+          <p className="auth-split__foot" style={{ flexWrap: "wrap", rowGap: 8 }}>
+            <a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/cookies">Cookies</a>
+            <a href="/acceptable-use">Acceptable use</a><a href="/security">Security</a><PrivacyChoicesButton />
           </p>
         </div>
         <aside className="auth-split__side" aria-label="What a Vraelis check looks like">

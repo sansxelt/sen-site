@@ -9,6 +9,7 @@ import { usePathname } from "next/navigation";
 import { SiteFooter } from "./close";
 import { useGroundColor } from "@/components/use-ground-color";
 import { V6_BASE, V6_HOME, V6_APP, v6SignInPath, v6GroundAtTop, v6ShouldPrefetch, GROUND_CSS } from "@/lib/v6-routes";
+import { analyticsAllowed, onPrivacyChoiceChange } from "@/lib/privacy-choice";
 
 // FOLLOWS THE PROMOTION FLAG. These were hardcoded to "/dev-preview/v6", which is precisely the mistake
 // lib/v6-routes.ts was written to prevent: it says every V6 destination lives there so promotion is one
@@ -134,7 +135,9 @@ const MENUS: Menu[] = [
         { t: "Security", d: "Architecture and data handling", href: BASE + "/security",
           preview: { eyebrow: "Security", title: "How the engine is built and what it can reach.", body: "Data handling, isolation, and the boundary of what a single run is allowed to touch.", stat: "Architecture" } },
         { t: "Privacy", href: "/privacy" },
+        { t: "Cookies", href: BASE + "/cookies" },
         { t: "Terms", href: "/terms" },
+        { t: "Acceptable use", href: BASE + "/acceptable-use" },
         { t: "Subprocessors", href: "/subprocessors" },
       ] },
       { h: "Updates", links: [
@@ -848,22 +851,35 @@ function useHashLandsWhereItSays() {
  *
  * sendBeacon first, because it survives the page being closed mid-flight; fetch with keepalive is the
  * fallback. Both are fire-and-forget: a failed analytics call must be invisible to the reader.
+ *
+ * ONLY WITH CONSENT (2026-09-30). The count and its sessionStorage marker belong to the Analytics category of
+ * the privacy choices, so nothing is stored or sent until that is on. A first visit answers the question
+ * after the page has mounted, so the landing path is captured at mount and the visit is sent when (and if)
+ * Analytics is turned on, still recording where the person arrived rather than where they chose.
  */
 function useVisitBeacon() {
   useEffect(() => {
-    try {
-      if (sessionStorage.getItem("v6.visited") === "1") return;
-      sessionStorage.setItem("v6.visited", "1");
-    } catch {
-      return; // storage disabled (private mode): skip, rather than beacon on every mount forever
+    const landing = window.location.pathname;
+    let done = false;
+    function send() {
+      if (done || !analyticsAllowed()) return;
+      done = true;
+      try {
+        if (sessionStorage.getItem("v6.visited") === "1") return;
+        sessionStorage.setItem("v6.visited", "1");
+      } catch {
+        return; // storage disabled (private mode): skip, rather than beacon on every mount forever
+      }
+      const body = JSON.stringify({ path: landing });
+      try {
+        if (navigator.sendBeacon?.("/api/v/funnel", new Blob([body], { type: "application/json" }))) return;
+      } catch { /* fall through to fetch */ }
+      void fetch("/api/v/funnel", {
+        method: "POST", body, keepalive: true, headers: { "content-type": "application/json" },
+      }).catch(() => {});
     }
-    const body = JSON.stringify({ path: window.location.pathname });
-    try {
-      if (navigator.sendBeacon?.("/api/v/funnel", new Blob([body], { type: "application/json" }))) return;
-    } catch { /* fall through to fetch */ }
-    void fetch("/api/v/funnel", {
-      method: "POST", body, keepalive: true, headers: { "content-type": "application/json" },
-    }).catch(() => {});
+    send();
+    return onPrivacyChoiceChange(send);
   }, []);
 }
 

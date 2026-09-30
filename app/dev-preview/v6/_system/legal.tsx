@@ -35,6 +35,7 @@ function Ul({ items }: { items: ReactNode[] }) {
 // well, so the rewrite stopped protecting anything and started sending a reader who clicked "billing
 // settings" to a dashboard overview instead. That is on Refunds and Terms, the pages someone reads while
 // disputing a charge, which is the worst place to make navigation vaguer.
+// /cookies and /acceptable-use exist only in this tree, so unpromoted they must point into it or they 404.
 const V6_EQUIVALENT: Record<string, string> = V6_BASE === ""
   ? { "/refunds": "/refunds", "/terms": "/terms", "/privacy": "/privacy" }
   : {
@@ -42,6 +43,8 @@ const V6_EQUIVALENT: Record<string, string> = V6_BASE === ""
       "/refunds": `${V6_BASE}/refunds`,
       "/terms": `${V6_BASE}/terms`,
       "/privacy": `${V6_BASE}/privacy`,
+      "/cookies": `${V6_BASE}/cookies`,
+      "/acceptable-use": `${V6_BASE}/acceptable-use`,
       "/billing": `${V6_BASE}/app`,
     };
 

@@ -19,6 +19,7 @@ import { useGroundColor, isOpaqueColor } from "@/components/use-ground-color";
 import { Reveal } from "@/components/reveal";
 import { Scratchpad } from "./scratchpad";
 import { useDismiss } from "./use-dismiss";
+import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
 
 // Research sits between Developers and Enterprise for now. The fuller restructure toward
 // Product / Developers / Research / Pricing belongs with the verification-first redesign
@@ -305,7 +306,7 @@ function Footer() {
         <Col title="Product" links={productLinks} />
         <Col title="Developers" links={[["/developers", "Developer overview"], ["/developers#cli", "CLI and CI"], ["/research", "Research"], ["/signin?callbackUrl=%2Fapi", "API & webhooks"]]} />
         <Col title="Account" links={[["/app", "Dashboard"], ["/account", "Account"], ["/billing", "Billing"], ["/signin", "Sign in"]]} />
-        <Col title="Legal" links={[["/enterprise", "Enterprise & security"], ["/privacy", "Privacy"], ["/terms", "Terms"], ["/refunds", "Refunds"], ["/data-rights", "Data rights"], ["/subprocessors", "Subprocessors"], ["/trademark", "Trademark"], ["/contact", "Contact"]]} />
+        <Col title="Legal" links={[["/enterprise", "Enterprise & security"], ["/privacy", "Privacy"], ["/cookies", "Cookies"], ["/terms", "Terms"], ["/acceptable-use", "Acceptable use"], ["/refunds", "Refunds"], ["/data-rights", "Data rights"], ["/subprocessors", "Subprocessors"], ["/trademark", "Trademark"], ["/contact", "Contact"]]} />
       </div>
       <div className="wrap" style={{ padding: "0 var(--gutter) 32px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, borderTop: "1px solid var(--line-1)", paddingTop: 24 }}>
         <span style={{ fontSize: 13, color: "var(--fg-4)" }}>© 2026 Vraelis. All rights reserved.</span>
@@ -585,11 +586,19 @@ function NavGroups({ onNavigate }: { onNavigate?: () => void }) {
     </>
   );
 }
+// The foot button look, shared by Privacy choices and Sign out so the two rows cannot drift apart. No
+// fontSize here: the Sign out button carried fontSize "inherit", which beat .slink's 14px and set it larger
+// than the Back to site link directly above it. Left to .slink, all three rows match.
+const FOOT_BUTTON = { color: "var(--fg-3)", width: "100%", background: "none", border: "none", cursor: "pointer", textAlign: "left", fontFamily: "inherit", fontWeight: 500 } as const;
 function NavFoot({ onNavigate, drawer = false }: { onNavigate?: () => void; drawer?: boolean }) {
   return (
     <div className={`app-side__foot${drawer ? " app-side__foot--drawer" : ""}`}>
       <a href="https://vraelis.com" className="slink" style={{ color: "var(--fg-3)" }} onClick={onNavigate}><span className="slink__i" aria-hidden><Ic d={I.back} /></span>Back to site</a>
-      <button onClick={() => signOut({ callbackUrl: signOutTarget() })} className="slink" style={{ color: "var(--fg-3)", width: "100%", background: "none", border: "none", cursor: "pointer", textAlign: "left", fontFamily: "inherit", fontSize: "inherit", fontWeight: 500 }}><span className="slink__i" aria-hidden><Ic d={I.signout} /></span>Sign out</button>
+      {/* Where the console reopens the privacy choices. Here rather than only in the account menu because
+          the foot is the one place the desktop sidebar and the phone drawer share. Closing the drawer first
+          hands the dialog a clean page to sit over. */}
+      <PrivacyChoicesButton className="slink" style={FOOT_BUTTON} onClick={onNavigate}><span className="slink__i" aria-hidden><Ic d={I.lock} /></span>Privacy choices</PrivacyChoicesButton>
+      <button onClick={() => signOut({ callbackUrl: signOutTarget() })} className="slink" style={FOOT_BUTTON}><span className="slink__i" aria-hidden><Ic d={I.signout} /></span>Sign out</button>
     </div>
   );
 }

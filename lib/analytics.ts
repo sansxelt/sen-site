@@ -16,8 +16,32 @@
 //   NEXT_PUBLIC_META_PIXEL_ID              — client Pixel (same id, public)
 //   GA4_MEASUREMENT_ID, GA4_API_SECRET     — GA4 Measurement Protocol
 //   NEXT_PUBLIC_GA4_MEASUREMENT_ID         — client gtag (same id, public)
+//
+// ── CONSENT, CHECKED HERE, ON EVERY EVENT (2026-09-30) ────────────────────────────────────────────────
+//
+// The header above was written for a funnel that sent every event unconditionally. With the Meta variables
+// set (they are in the environment `vercel env pull` produces), that meant a hash of every new account's
+// email address went to Meta, while the privacy page said Vraelis did not share personal information for
+// advertising. Nothing is sent now unless the REQUEST BEING SERVED carries that person's
+// own "Advertising measurement" choice in the vraelis_privacy cookie and no Global Privacy Control header
+// (lib/privacy-choice.ts advertisingConsentFromRequest). Both providers sit behind the same gate. The
+// cookie policy and the dialog name Meta only, because the GA4 variables are unset in that environment; set
+// them and both texts (app/_content/legal.tsx, app/_components/privacy-choices.tsx) have to name Google too.
+//
+// Reading the choice from the request, rather than trusting a flag from the caller, is what makes the gate
+// hold for every call site without each one having to remember it. It also decides the cases where the
+// data is about someone other than the person in front of the browser: a Stripe webhook, a Twilio SMS
+// webhook and a third-party intake POST carry no vraelis_privacy cookie, so a lead's or a buyer's contact
+// details are never reported from those paths. That is correct, not a gap: those people never saw the
+// choice. The consequence for callers: only call this from a request made BY the person the event is about.
+//
+// There is no client Pixel or gtag. NEXT_PUBLIC_META_PIXEL_ID and NEXT_PUBLIC_GA4_MEASUREMENT_ID are read by
+// nothing in this repo; the cookie policy says no advertising pixels or tags are placed, and loading one
+// would need its own consent gate in the page first (see app/_components/consented-measurement.tsx).
 
 import { createHash, randomUUID } from "node:crypto";
+import { headers } from "next/headers";
+import { advertisingConsentFromRequest } from "./privacy-choice";
 
 // Our internal event names → (Meta standard event, GA4 event name).
 export type FunnelEvent =
@@ -106,13 +130,28 @@ async function sendGa4(event: FunnelEvent, input: TrackInput): Promise<void> {
   );
 }
 
+/** The current request's advertising consent. Anything unreadable (no request scope, a webhook, a cron) is
+ *  a no. headers() is called synchronously on entry, so the request is captured before the caller returns
+ *  its response, which fire-and-forget callers do immediately. */
+async function requestAllowsAdvertising(): Promise<boolean> {
+  try {
+    const h = await headers();
+    return advertisingConsentFromRequest(h.get("cookie"), h.get("sec-gpc"));
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Record a server-side conversion to Meta + GA4. Best-effort and non-blocking:
  * never throws, so it's safe to await (or fire-and-forget) inside auth/payment/
- * lead paths. No-ops if neither provider is configured.
+ * lead paths. No-ops if neither provider is configured, AND unless the request
+ * being served carries the person's advertising consent (see the header).
  */
 export async function trackServer(event: FunnelEvent, input: TrackInput = {}): Promise<void> {
+  const consent = requestAllowsAdvertising();
   try {
+    if (!(await consent)) return;
     await Promise.allSettled([sendMeta(event, input), sendGa4(event, input)]);
   } catch {
     // never let analytics break the real flow

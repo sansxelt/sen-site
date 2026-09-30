@@ -1,0 +1,196 @@
+/* PRIVACY CHOICES: the dialog, the bar on legal pages, and the "Privacy choices" control in each footer.
+ *
+ * EXPLICIT VALUES, NOT TOKENS. This renders over the site (v6.css tokens), the docs (pagekit.css), the
+ * account screens and the console (authenticated.css), and those name the same tokens differently. So the
+ * values are written out once here, matching what all of them resolve to on the one light ground: white
+ * card, ink text, ink for the buttons, a hairline, a 12px radius, IBM Plex through --font-brand-sans (set
+ * on <html> by the root layout). Ink is the only accent, as everywhere else in the product.
+ *
+ * Every selector is under .vr-pc or .vr-pc-trigger, so nothing here reaches the page, and the global
+ * element rules in tokens.css (h2, p, a) are overridden inside it rather than relied on. */
+
+.vr-pc {
+  --vr-pc-ink: #0A0A0B;
+  --vr-pc-ink-2: #2E2F33;
+  --vr-pc-ink-3: #52525B;
+  --vr-pc-line: rgba(10, 10, 11, 0.10);
+  --vr-pc-line-2: rgba(10, 10, 11, 0.18);
+  --vr-pc-sunk: #F4F4F5;
+  font-family: var(--font-brand-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  color: var(--vr-pc-ink);
+}
+.vr-pc *, .vr-pc *::before, .vr-pc *::after { box-sizing: border-box; }
+.vr-pc :is(button, a, input):focus-visible { outline: 2px solid #0A0A0B; outline-offset: 2px; }
+
+/* ── The dialog ─────────────────────────────────────────────────────────────────────────────────────── */
+.vr-pc__dialog {
+  position: fixed; inset: 0; margin: auto; padding: 0;
+  width: min(520px, calc(100% - 24px)); height: fit-content; max-height: calc(100dvh - 24px);
+  background: #FFFFFF; color: var(--vr-pc-ink);
+  border: 1px solid var(--vr-pc-line); border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(16, 24, 40, 0.06), 0 24px 56px -18px rgba(16, 24, 40, 0.30);
+  overflow: hidden; overscroll-behavior: contain;
+  font-family: var(--font-brand-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-size: 14px; line-height: 1.55; text-align: left;
+}
+.vr-pc__dialog[open] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; animation: vr-pc-in 180ms ease-out both; }
+.vr-pc__dialog::backdrop { background: rgba(10, 10, 11, 0.40); }
+/* Nothing behind a dialog that has to be answered should scroll away underneath it. */
+html:has(.vr-pc__dialog[open]) { overflow: hidden; }
+
+.vr-pc__top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 22px 0; min-height: 40px; }
+.vr-pc__brand { font-size: 16px; font-weight: 700; letter-spacing: -0.03em; color: var(--vr-pc-ink); }
+.vr-pc__x {
+  display: inline-grid; place-items: center; width: 36px; height: 36px; padding: 0; margin: 0;
+  background: #FFFFFF; color: var(--vr-pc-ink); border: 1px solid var(--vr-pc-line-2); border-radius: 8px; cursor: pointer;
+}
+.vr-pc__x:hover { background: var(--vr-pc-sunk); }
+
+.vr-pc__scroll { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 14px 22px 4px; }
+.vr-pc .vr-pc__title {
+  margin: 0 0 8px; font-size: 21px; line-height: 1.25; font-weight: 600; letter-spacing: -0.02em; color: var(--vr-pc-ink); outline: none;
+}
+.vr-pc .vr-pc__lead { margin: 0; font-size: 14px; line-height: 1.55; color: var(--vr-pc-ink-2); }
+.vr-pc .vr-pc__gpc {
+  margin: 14px 0 0; padding: 10px 12px; font-size: 13px; line-height: 1.5; color: var(--vr-pc-ink);
+  background: var(--vr-pc-sunk); border: 1px solid var(--vr-pc-line); border-radius: 8px;
+}
+
+.vr-pc__cats { margin: 16px 0 12px; }
+.vr-pc__cat { padding: 14px 0; border-top: 1px solid var(--vr-pc-line); }
+.vr-pc__row { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 4px; }
+.vr-pc .vr-pc__h { margin: 0; font-size: 14.5px; line-height: 1.35; font-weight: 600; letter-spacing: -0.005em; color: var(--vr-pc-ink); cursor: default; }
+.vr-pc label.vr-pc__h { cursor: pointer; }
+.vr-pc__always { font-size: 12.5px; font-weight: 500; color: var(--vr-pc-ink-3); white-space: nowrap; }
+.vr-pc .vr-pc__p { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--vr-pc-ink-3); }
+
+/* A switch, not a checkbox: role="switch" on a real input, so keyboard and screen readers get the native
+   control and the label toggles it. Grey when off, ink when on, a white thumb either way. */
+.vr-pc__switch {
+  appearance: none; -webkit-appearance: none; flex: none; position: relative; margin: 0;
+  width: 38px; height: 22px; border-radius: 999px; cursor: pointer;
+  background: #D4D4D8; border: 1px solid rgba(10, 10, 11, 0.12);
+  transition: background-color 140ms ease;
+}
+.vr-pc__switch::after {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%;
+  background: #FFFFFF; box-shadow: 0 1px 2px rgba(10, 10, 11, 0.25); transition: transform 140ms ease;
+}
+.vr-pc__switch:checked { background: var(--vr-pc-ink); border-color: var(--vr-pc-ink); }
+.vr-pc__switch:checked::after { transform: translateX(16px); }
+.vr-pc__switch:disabled { cursor: not-allowed; opacity: 0.45; }
+
+.vr-pc .vr-pc__links { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 4px 0 16px; font-size: 13px; }
+.vr-pc .vr-pc__links a { color: var(--vr-pc-ink); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(10, 10, 11, 0.35); }
+.vr-pc .vr-pc__links a:hover { text-decoration-color: var(--vr-pc-ink); }
+
+/* THE TWO ANSWERS: one class, so they cannot drift apart in size or weight. */
+.vr-pc__actions {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  padding: 14px 22px 20px; background: #FFFFFF; border-top: 1px solid var(--vr-pc-line);
+}
+.vr-pc__btn {
+  appearance: none; margin: 0; min-height: 44px; padding: 10px 14px; border-radius: 8px; cursor: pointer;
+  background: var(--vr-pc-ink); color: #FFFFFF; border: 1px solid var(--vr-pc-ink);
+  font: inherit; font-size: 14px; font-weight: 600; line-height: 1.2; letter-spacing: -0.005em; text-align: center;
+  transition: background-color 140ms ease;
+}
+.vr-pc__btn:hover { background: var(--vr-pc-ink-2); }
+
+/* ── The bar, on legal pages only ──────────────────────────────────────────────────────────────────── */
+.vr-pc__bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000;
+  background: #FFFFFF; color: var(--vr-pc-ink);
+  border-top: 1px solid var(--vr-pc-line-2);
+  box-shadow: 0 -12px 32px -16px rgba(16, 24, 40, 0.22);
+  font-size: 14px; line-height: 1.5;
+}
+.vr-pc__bar-in {
+  max-width: 1320px; margin-inline: auto; padding: 14px clamp(16px, 4vw, 64px) calc(14px + env(safe-area-inset-bottom, 0px));
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 12px 24px;
+}
+.vr-pc .vr-pc__bar-title { margin: 0 0 2px; font-size: 14.5px; line-height: 1.35; font-weight: 600; letter-spacing: -0.005em; color: var(--vr-pc-ink); }
+.vr-pc .vr-pc__bar-p { margin: 0; font-size: 13px; line-height: 1.5; color: var(--vr-pc-ink-3); }
+.vr-pc .vr-pc__gpc--bar { margin-top: 8px; padding: 6px 10px; font-size: 12.5px; }
+.vr-pc__more {
+  appearance: none; margin: 0; padding: 0; background: none; border: 0; cursor: pointer;
+  font: inherit; color: var(--vr-pc-ink); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(10, 10, 11, 0.35);
+}
+.vr-pc__more:hover { text-decoration-color: var(--vr-pc-ink); }
+.vr-pc__chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.vr-pc__chip {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 6px 10px 6px 8px;
+  border: 1px solid var(--vr-pc-line-2); border-radius: 8px; background: #FFFFFF; cursor: pointer;
+  font-size: 13px; font-weight: 500; color: var(--vr-pc-ink); white-space: nowrap;
+}
+.vr-pc__actions--bar { padding: 0; border: 0; background: none; grid-template-columns: repeat(2, minmax(136px, 1fr)); }
+/* The page keeps room under its last line for the bar, so nothing on a policy is ever hidden behind it. */
+html:has(.vr-pc__bar) body { padding-bottom: var(--vr-pc-bar-h, 0px); }
+
+@media (max-width: 1080px) {
+  .vr-pc__bar-in { grid-template-columns: minmax(0, 1fr) auto; }
+  .vr-pc__bar-text { grid-column: 1 / -1; }
+}
+/* On a phone the three bordered chips did not fit one row ("Advertising" ran into its own border at 390px),
+   so they drop the border and sit as three plain switch-and-label pairs, which fit one row at 360px and wrap
+   onto a second row rather than overflow on anything narrower. Each keeps a 32px tall hit area. */
+@media (max-width: 640px) {
+  .vr-pc__bar-in { grid-template-columns: minmax(0, 1fr); gap: 10px; padding-top: 12px; }
+  .vr-pc__chips { gap: 4px 16px; }
+  .vr-pc__chip { padding: 0; border: 0; min-height: 32px; font-size: 13px; gap: 7px; background: none; }
+  .vr-pc__chip .vr-pc__switch { width: 32px; height: 19px; }
+  .vr-pc__chip .vr-pc__switch::after { width: 13px; height: 13px; }
+  .vr-pc__chip .vr-pc__switch:checked::after { transform: translateX(13px); }
+  .vr-pc__actions--bar { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 480px) {
+  .vr-pc__dialog { width: calc(100% - 16px); max-height: calc(100dvh - 16px); }
+  .vr-pc__top { padding: 14px 16px 0; }
+  .vr-pc__scroll { padding: 10px 16px 2px; }
+  .vr-pc .vr-pc__title { font-size: 19px; }
+  .vr-pc__actions { padding: 12px 16px 16px; gap: 8px; }
+  .vr-pc__btn { padding-inline: 8px; }
+}
+@media (max-height: 640px) {
+  .vr-pc__cat { padding: 10px 0; }
+  .vr-pc__cats { margin: 12px 0 8px; }
+}
+
+/* Hidden but read aloud: the result of saving. */
+.vr-pc__sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+@keyframes vr-pc-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .vr-pc__dialog[open] { animation: none; }
+  .vr-pc__switch, .vr-pc__switch::after, .vr-pc__btn { transition: none; }
+}
+@media print { .vr-pc { display: none; } html:has(.vr-pc__bar) body { padding-bottom: 0; } }
+
+/* ── The "Privacy choices" control, wherever it sits ────────────────────────────────────────────────────
+   A button made to look like the links beside it. The reset is inside :where() so it has no specificity,
+   and each footer's rule below (and the console sidebar's own inline style) wins without a fight. Kept here
+   rather than beside each footer's link rules so every place the control appears is visible in one file. */
+:where(.vr-pc-trigger) {
+  appearance: none; margin: 0; padding: 0; background: none; border: 0; border-radius: 0;
+  font: inherit; color: inherit; text-align: left; cursor: pointer;
+}
+.vr-pc-trigger:focus-visible { outline: 2px solid #0A0A0B; outline-offset: 2px; }
+
+/* The site footer: the Trust column, and the legal row at the very bottom. Same values as their links. */
+.v6-foot2__col .vr-pc-trigger { font-size: 14.5px; color: var(--g-fg-2); display: inline-flex; align-items: center; min-height: 34px; transition: color 140ms ease; }
+.v6-foot2__col .vr-pc-trigger:hover { color: var(--g-fg); }
+.v6-foot2__legal .vr-pc-trigger { font-size: 13.5px; color: var(--g-fg-3); display: inline-flex; align-items: center; justify-content: center; min-height: 24px; }
+.v6-foot2__legal .vr-pc-trigger:hover { color: var(--g-fg-2); }
+@media (pointer: coarse), (max-width: 640px) {
+  .v6-foot2__legal .vr-pc-trigger, .v6-foot2__col .vr-pc-trigger { min-height: 44px; }
+}
+@media (max-width: 520px) { .v6-foot2__col .vr-pc-trigger { font-size: 14px; } }
+
+/* The docs' one-line footer. */
+.v6-docs__foot .vr-pc-trigger { color: #5B5D63; }
+.v6-docs__foot .vr-pc-trigger:hover { color: #111214; }
+
+/* The account screens' footer (sign-in and every /auth screen). The footer is a <p>, so authenticated.css
+   underlines its links as links inside a sentence; the control is underlined the same way to match them. */
+[data-surface="app"] .auth-split__foot .vr-pc-trigger { color: var(--fg-4); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+[data-surface="app"] .auth-split__foot .vr-pc-trigger:hover { color: var(--fg-1); }

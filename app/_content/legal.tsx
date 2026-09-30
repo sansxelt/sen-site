@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-/* The one copy of the Privacy and Terms text.
+/* The one copy of the Privacy and Terms text (and, since 2026-09-30, the cookie and acceptable use policies).
 
    These pages existed only under the rank tree, styled with rank's design tokens. The V6 preview needed
    them too, and the wrong fix would have been to paste the text into a second pair of files: legal copy that
@@ -19,7 +19,7 @@ export type LegalPrims = {
   S: (p: { children: ReactNode }) => ReactNode;
 };
 
-export const PRIVACY_UPDATED = "Updated June 2026";
+export const PRIVACY_UPDATED = "Updated September 2026";
 export const SUBPROCESSORS_UPDATED = "Updated July 2026";
 export const SUBPROCESSORS_INTRO = "The third-party services Vraelis relies on to run the product. Verification runs against your connected application use our hosting and browser-execution infrastructure, and any AI assessment is sent to the AI model provider.";
 
@@ -34,7 +34,7 @@ export const SUBPROCESSORS: { name: string; purpose: string; data: string; regio
   { name: "Resend", purpose: "Transactional email (verification, receipts)", data: "Email address, message content", region: "United States" },
   { name: "Google / GitHub", purpose: "Optional single sign-on", data: "Email and basic profile, only if you use it", region: "United States" },
 ];
-export const TERMS_UPDATED = "Updated July 2026";
+export const TERMS_UPDATED = "Updated September 2026";
 export const REFUNDS_UPDATED = "Updated July 2026";
 export const REFUNDS_INTRO = "Plain terms for how your balance, subscriptions, and cancellations work. This policy is part of the Terms.";
 
@@ -67,7 +67,13 @@ export function PrivacyBody({ H, P, Ul, A }: LegalPrims) {
         "Prevent spam, fraud, and abuse.",
         "Keep the service reliable and secure.",
         "Respond to support, privacy, and account requests.",
+        "Only if you turn them on in Privacy choices: measure how fast pages load, count anonymous visits, and report a sign-up to an advertising platform so we can see whether an ad worked.",
       ]} />
+
+      <H>Cookies, browser storage, and your choices</H>
+      <P>Vraelis uses the cookies and browser storage the service needs to work: keeping you signed in, protecting sign-in and payments, and remembering your privacy choice. Three further categories are optional and stay off unless you turn them on: preferences, analytics, and advertising measurement. The first time you visit, Vraelis asks you to choose, and &ldquo;Essential only&rdquo; is always one click. You can read this policy and the other legal pages before choosing.</P>
+      <P>Your choice is saved in a cookie called vraelis_privacy for six months and applies on vraelis.com and app.vraelis.com. Change it at any time from Privacy choices, in the footer of every page, under the sign-in form, and in the console sidebar. Turning a category off removes what it stored in your browser and stops it from storing or sending anything more. The <A href="/cookies">cookie policy</A> lists every cookie and storage item, who sets it, what it does, and how long it lasts.</P>
+      <P>If your browser sends a Global Privacy Control signal, Vraelis treats it as an opt out of every optional category for as long as the signal is on. The page checks it before loading anything optional, and the server checks it before reporting a sign-up.</P>
 
       <H>Payments</H>
       <P>Payments are processed by Stripe. Vraelis does not store full card numbers. We may retain billing records where needed for accounting, fraud prevention, or legal reasons.</P>
@@ -91,7 +97,9 @@ export function PrivacyBody({ H, P, Ul, A }: LegalPrims) {
         "Payment processing, handled by Stripe.",
         "Email delivery, for sign-in verification and account messages.",
         "Security, logging, and monitoring tools.",
+        "Performance measurement by Vercel Speed Insights, only if you turn on Analytics.",
       ]} />
+      <P>If you turn on Advertising measurement, Meta also receives the sign-up report described in the <A href="/cookies">cookie policy</A>. With it off, nothing is sent to Meta.</P>
 
       <H>California privacy notice</H>
       <P>If you are a California resident, this section describes how Vraelis handles personal information. We are a small product and may not meet the thresholds that trigger every California privacy obligation, but we want to be transparent.</P>
@@ -99,10 +107,10 @@ export function PrivacyBody({ H, P, Ul, A }: LegalPrims) {
         "Categories of personal information we collect: identifiers such as name and email; account and authentication data; commercial information such as plan, balance, and billing or payment status; internet and usage activity such as verification activity and logs; and limited inferences used only for abuse detection.",
         "Purposes: to operate the product, run verification, generate reports, manage billing, prevent abuse, and provide support.",
         "Sources: directly from you, automatically as you use the product, and from your sign-in and payment providers.",
-        "Service providers and third parties: hosting, database, authentication, payments (Stripe), email, and security or logging providers, used to operate the service.",
+        "Service providers and third parties: hosting, database, authentication, payments (Stripe), email, and security or logging providers, used to operate the service; and Meta, only if you turn on Advertising measurement.",
         "Rights that may apply: to know or access the personal information we hold, to request deletion, to request correction, to opt out where applicable, to limit the use of sensitive information where applicable, and to not be discriminated against for exercising these rights.",
       ]} />
-      <P>Vraelis does not sell personal information or share it for cross-context behavioral advertising.</P>
+      <P>Vraelis does not sell personal information. It shares personal information for cross-context behavioral advertising only if you turn on Advertising measurement, and then only this: when you create an account, a hashed copy of your email address goes to Meta with a note that a sign-up happened. It is off unless you turn it on, you can turn it off at any time from Privacy choices, and a Global Privacy Control signal turns it off automatically.</P>
       <P>If California privacy rights apply to you, you can submit a request from your <A href="/account">account settings</A> or contact us at <A href="mailto:privacy@vraelis.com">privacy@vraelis.com</A> to request access, deletion, correction, or other available rights. Requests are reviewed manually.</P>
 
       <H>EU, EEA, and UK privacy rights</H>
@@ -112,7 +120,7 @@ export function PrivacyBody({ H, P, Ul, A }: LegalPrims) {
       <Ul items={[
         "Contract, to provide the service you sign up for.",
         "Legitimate interests, to secure the product and prevent abuse.",
-        "Consent, where an optional choice requires it.",
+        "Consent, for the optional cookie categories (preferences, analytics, and advertising measurement). You can withdraw it at any time from Privacy choices.",
         "Legal obligations, for billing, tax, and accounting where needed.",
       ]} />
       <P>Your rights include access, correction, deletion, restriction, portability, objection, withdrawing consent where applicable, and complaining to a supervisory authority. Data may be processed in the United States or by United States based providers.</P>
@@ -170,6 +178,7 @@ export function TermsBody({ H, P, Ul, A, S }: LegalPrims) {
         "Using Vraelis to mislead people or to present its output as a guarantee.",
         "Attempting to access private reports, API keys, billing, or other users' data without permission.",
       ]} />
+      <P>The <A href="/acceptable-use">Acceptable use policy</A> sets out in more detail what Vraelis may and may not be used for, including checking only systems you own or are authorized to test. It is part of these terms.</P>
 
       <H>Disclaimer of warranties</H>
       <P><S>The service and all outputs are provided &ldquo;as is&rdquo; and &ldquo;as available,&rdquo; without warranties of any kind, whether express or implied, including the implied warranties of MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, and NON-INFRINGEMENT.</S> We do not warrant that the service will be uninterrupted or error-free, or that any score, recommendation, or flag is accurate, complete, or reliable.</P>
@@ -237,6 +246,156 @@ export function RefundsBody({ H, P, Ul, A, S }: LegalPrims) {
 
       <H>Contact</H>
       <P>Questions about a charge or this policy? Email <A href="mailto:help@vraelis.com">help@vraelis.com</A>. See also our <A href="/terms">Terms</A> and <A href="/privacy">Privacy Policy</A>.</P>
+    </>
+  );
+}
+
+/* ── COOKIE POLICY ───────────────────────────────────────────────────────────────────────────────────────
+   Every row below was inventoried from the code on 2026-09-30, not from a template: the Auth.js cookie
+   names from auth.ts and @auth/core's defaults, the rest from each cookies.set / localStorage.setItem call
+   site. A cookie or storage key added to the product belongs here in the same change, and an optional one
+   also belongs in lib/privacy-choice.ts under its category. scripts/privacy-consent-verify.ts checks both. */
+export const COOKIES_UPDATED = "Updated September 2026";
+export const COOKIES_INTRO = "This page lists every cookie and every item of browser storage that vraelis.com and app.vraelis.com set, who sets it, what it is for, and how long it lasts. It also explains your choices and how to change them.";
+
+export type CookieRow = { name: string; setBy: string; purpose: string; category: "Essential" | "Preferences" | "Analytics" | "Advertising"; duration: string };
+
+export const COOKIES: CookieRow[] = [
+  { name: "vraelis_privacy", setBy: "Vraelis", purpose: "Remembers your privacy choices so you are not asked on every page. Shared by vraelis.com and app.vraelis.com.", category: "Essential", duration: "6 months" },
+  { name: "__Secure-authjs.session-token", setBy: "Vraelis (sign-in)", purpose: "Keeps you signed in. Shared by vraelis.com and app.vraelis.com so the console can see your session. Scripts on the page cannot read it.", category: "Essential", duration: "30 days, renewed while you use Vraelis" },
+  { name: "__Host-authjs.csrf-token", setBy: "Vraelis (sign-in)", purpose: "Protects sign-in against cross-site request forgery.", category: "Essential", duration: "Until you close the browser" },
+  { name: "__Secure-authjs.callback-url", setBy: "Vraelis (sign-in)", purpose: "Remembers which page to return you to after you sign in.", category: "Essential", duration: "Until you close the browser" },
+  { name: "__Secure-authjs.pkce.code_verifier", setBy: "Vraelis (sign-in)", purpose: "Secures the handoff when you sign in with Google or GitHub.", category: "Essential", duration: "15 minutes" },
+  { name: "sx_signup_claim", setBy: "Vraelis", purpose: "Lets the browser where you started an email sign-up sign you in once you confirm your address, even if you open the link on another device.", category: "Essential", duration: "24 hours" },
+  { name: "v_sso_oidc", setBy: "Vraelis", purpose: "Secures the handoff when you sign in through your organization's single sign-on.", category: "Essential", duration: "10 minutes" },
+  { name: "vws", setBy: "Vraelis", purpose: "Remembers which workspace you are working in, if you belong to more than one. Set when you switch workspace.", category: "Essential", duration: "1 year" },
+  { name: "vr_oauth_<provider>, vr_oauth_acct_<provider>, vr_pkce_<provider>, vr_oauth_popup", setBy: "Vraelis", purpose: "Secure the handoff when you connect an integration such as GitHub or Vercel.", category: "Essential", duration: "10 minutes" },
+  { name: "vr_stealth", setBy: "Vraelis", purpose: "Preview access. Lets a browser that was given access see the site while it is not yet public.", category: "Essential", duration: "30 days" },
+  { name: "__stripe_mid, __stripe_sid", setBy: "Stripe", purpose: "Fraud prevention. Set on the Vraelis domain by Stripe's payment script, which loads only on the checkout page.", category: "Essential", duration: "1 year; 30 minutes" },
+];
+
+export const STORAGE: CookieRow[] = [
+  { name: "vraelis:scratchpad", setBy: "Console, local storage", purpose: "The notes you type in the scratchpad panel. They stay in this browser and are never sent to Vraelis.", category: "Essential", duration: "Until you delete them" },
+  { name: "vraelis:scratchpad-open, vraelis:scratchpad-view", setBy: "Console, local storage", purpose: "Whether the scratchpad panel is open, and how it is shown.", category: "Preferences", duration: "Until you clear it or turn Preferences off" },
+  { name: "vraelis-connect-draft-v1", setBy: "Console, local storage", purpose: "Keeps an unfinished form for connecting a system, so a reload does not lose it.", category: "Essential", duration: "Until you submit or clear the form" },
+  { name: "vraelis-flow-draft-<id>", setBy: "Console, local storage", purpose: "Keeps a new flow you are still writing.", category: "Essential", duration: "Until you save or discard it" },
+  { name: "vraelis-oauth", setBy: "Console, local storage", purpose: "Passes the result of an integration's sign-in window back to the console.", category: "Essential", duration: "Until the next connection replaces it" },
+  { name: "vraelis:balance-before-topup", setBy: "Console, session storage", purpose: "Your balance before a top-up, to confirm the purchase arrived.", category: "Essential", duration: "Until you close the tab" },
+  { name: "v6.visited", setBy: "Website, session storage", purpose: "Marks that this tab's one anonymous visit was counted, so it is not counted twice.", category: "Analytics", duration: "Until you close the tab" },
+  { name: "__paypal_storage__", setBy: "PayPal, local storage", purpose: "Written by PayPal's script, which loads only on the checkout page when PayPal is offered, for PayPal's own buttons.", category: "Essential", duration: "Until you clear it" },
+  { name: "fieldline-fleet-broken, fieldline-fleet-fixed", setBy: "Practice drone panel, local storage", purpose: "The state of the simulated drone panel at /api/fixtures/drone, a demonstration target. Only if you open it.", category: "Essential", duration: "Until you clear it" },
+];
+
+/** `table` renders the COOKIES and STORAGE rows in the surface's own table style, like the other primitives. */
+export function CookiesBody({ H, P, Ul, A, S, table }: LegalPrims & { table: (rows: CookieRow[], label: string) => ReactNode }) {
+  return (
+    <>
+      <H>Your choices</H>
+      <P>The first time you visit, Vraelis asks you to choose. Essential cookies are always on, because sign-in, security, and payments cannot work without them. Everything else is off until you turn it on:</P>
+      <Ul items={[
+        <><S>Preferences.</S> Remembering display choices on this browser, such as the language you pick and whether the console notes panel is open.</>,
+        <><S>Analytics.</S> Vercel Speed Insights and an anonymous visit count, described below.</>,
+        <><S>Advertising measurement.</S> Reporting a sign-up to Meta, described below.</>,
+      ]} />
+      <P>You can read this page, the privacy policy, and the other legal pages before choosing. Everywhere else on Vraelis, including sign-in and the console, you are asked first. &ldquo;Essential only&rdquo; and &ldquo;Save my choices&rdquo; are equal options, and saving with nothing turned on is the same as essential only.</P>
+
+      <H>How to change your choice</H>
+      <P>Open Privacy choices at any time. It is in the footer of every page on vraelis.com, at the foot of the documentation, under the sign-in form, and in the console sidebar. Your choice is kept in the vraelis_privacy cookie for six months and applies on vraelis.com and app.vraelis.com alike. After six months, or if you clear your cookies, you are asked again.</P>
+      <P>Turning a category off removes what it stored in this browser and stops it from storing or sending anything more. It cannot recall a measurement or a report that was already sent while it was on.</P>
+
+      <H>Global Privacy Control</H>
+      <P>If your browser sends a Global Privacy Control signal, Vraelis treats it as an opt out of every optional category for as long as the signal is on. The switches stay off, Speed Insights and the visit count do not run, and the server checks the signal (the Sec-GPC header) before it would report a sign-up. Essential cookies are not affected.</P>
+
+      <H>Cookies</H>
+      <P>Names are as set on vraelis.com. A cookie whose name begins with __Secure- or __Host- is only ever sent over an encrypted connection.</P>
+      {table(COOKIES, "Cookies Vraelis uses")}
+
+      <H>Browser storage</H>
+      <P>Some features keep data in your browser&apos;s local storage or session storage instead of a cookie. Unlike a cookie, it is not sent to Vraelis with each request.</P>
+      {table(STORAGE, "Browser storage Vraelis uses")}
+
+      <H>Analytics</H>
+      <P><S>Vercel Speed Insights.</S> With Analytics on, a script from Vercel, our hosting provider, measures how quickly each page loads and responds and sends those timings with the page address, browser, device type, operating system, connection type, and country. Vercel describes it as not tied to any individual visitor or IP address, and it sets no cookies. Turn Analytics off and nothing more is sent, even from a page that is already open.</P>
+      <P><S>Visit count.</S> With Analytics on, Vraelis records one anonymous visit per browser tab, with only the page you landed on. A marker in session storage (v6.visited) stops the same tab being counted twice. No cookie, account, or device detail is recorded with it, and your IP address is used only to limit how often a visit can be written, never stored with it.</P>
+
+      <H>Advertising measurement</H>
+      <P>Vraelis places no advertising cookies, pixels, or tags on its pages. With Advertising measurement on, and only then, when you create an account the Vraelis server tells Meta that a sign-up happened and includes a SHA-256 hash of your email address, so Meta can match it to an ad it showed you. The server reads your choice, and any Global Privacy Control signal, from the request that creates the account. With it off, nothing is sent.</P>
+      <P>Some US state privacy laws may treat this as sharing personal information for cross-context behavioral advertising. That is why it is off unless you turn it on, and why Global Privacy Control turns it off.</P>
+
+      <H>Payments</H>
+      <P>Checkout is handled by Stripe, with PayPal as an alternative, and their scripts load only on the checkout page. Stripe&apos;s script sets the two Stripe cookies in the table above on the Vraelis domain to help detect fraud, and Stripe&apos;s payment form runs in frames served from Stripe&apos;s own domains, which set Stripe&apos;s own cookies there. PayPal&apos;s script keeps the __paypal_storage__ item listed above in this site&apos;s local storage, and if you pay with PayPal, its window comes from paypal.com and sets PayPal&apos;s own cookies. Those are governed by Stripe&apos;s and PayPal&apos;s own cookie policies. They are needed to take a payment safely, so they are essential, and nothing from either loads anywhere else on Vraelis.</P>
+
+      <H>Signing in with Google or GitHub</H>
+      <P>If you choose to sign in with Google or GitHub, you are sent to their sign-in page, which sets their own cookies under their own policies. Vraelis receives your email address and basic profile from them, as described in the <A href="/privacy">privacy policy</A>.</P>
+
+      <H>Contact</H>
+      <P>Questions about cookies or this page? Email <A href="mailto:help@vraelis.com">help@vraelis.com</A>. See also the <A href="/privacy">privacy policy</A>.</P>
+    </>
+  );
+}
+
+/* ── ACCEPTABLE USE POLICY ───────────────────────────────────────────────────────────────────────────────
+   Linked from the sign-up agreement (components/vraelis-auth.tsx) before this page existed, so every account
+   created since then agreed to a document that returned a 404. The Terms now say this policy is part of
+   them. Written for what the product actually does: it drives a real browser against systems the customer
+   names, and a plan runs only after a person approves it. */
+export const ACCEPTABLE_USE_UPDATED = "Updated September 2026";
+export const ACCEPTABLE_USE_INTRO = "Vraelis drives a real browser against the web apps and device control panels you point it at, and a plan runs only after a person approves it. That is a real capability, so this policy says plainly what you may and may not use it for. It is part of the Terms, and it applies however you use Vraelis: the website, the console, the API, the CLI, or an AI assistant connected to your account.";
+
+export function AcceptableUseBody({ H, P, Ul, A }: LegalPrims) {
+  return (
+    <>
+      <H>Check only what you own or are authorized to test</H>
+      <P>Point Vraelis only at systems you own, or that their owner has authorized you to test. When you connect a system, Vraelis asks you to confirm this, and confirming it for a system you have no right to test breaks this policy. If you test for a client, keep a record of their permission.</P>
+      <Ul items={[
+        "Fine: your own apps, staging environments, and device control panels.",
+        "Fine: a client's system, when the client has authorized you to test it.",
+        "Not fine: a competitor's site, a public service you only use, or anything you were not invited to test.",
+      ]} />
+
+      <H>Do not attack, overload, or get around protections</H>
+      <Ul items={[
+        "Do not use Vraelis to attack, exploit, or break into any system, or to probe for weaknesses in a system you are not authorized to test. That includes Vraelis itself; security research on Vraelis is welcome through the reporting route below.",
+        "Do not use it to overload a service, flood forms, or run load or stress tests against systems you do not own.",
+        "Do not bypass access controls, CAPTCHAs, paywalls, rate limits, or plan limits, whether on the systems you check or on Vraelis.",
+        "Do not use it to scrape or harvest content or data from third-party sites, or to collect information about other people.",
+        "Do not try to make runs reach internal networks or addresses that Vraelis blocks.",
+      ]} />
+
+      <H>Credentials and test accounts</H>
+      <Ul items={[
+        "Give Vraelis only accounts and credentials you are entitled to use for testing, such as test users you created for it.",
+        "Do not use someone else's account, leaked or stolen credentials, or a real customer's account.",
+        "Use test payment modes and test data wherever you can.",
+      ]} />
+
+      <H>What you write and submit</H>
+      <Ul items={[
+        "Claims, plans, test data, and notes must not contain unlawful content, content that infringes someone else's rights, malware, or material that harasses, threatens, or exploits anyone.",
+        "Do not submit regulated or highly sensitive personal data you are not permitted to share, and do not put other people's personal data in test data unless you have the right to.",
+      ]} />
+
+      <H>Do not use Vraelis to harm others</H>
+      <Ul items={[
+        "No fraud, spam, phishing, or deceptive activity, including creating fake accounts, reviews, or sign-ups on other services.",
+        "Do not present a Vraelis result as a certification, a guarantee, or an endorsement by Vraelis.",
+        "Do not let an AI assistant or any automation connected to your account do anything this policy forbids. What it does with your account is your responsibility.",
+      ]} />
+
+      <H>Approvals are yours</H>
+      <P>A plan runs only after a person approves it. Approving a plan means you have read what it will do and are authorized to do that to that system. Do not approve plans without reading them, and do not share your account so someone else can approve for you.</P>
+
+      <H>Reporting a problem</H>
+      <P>If you find a security issue in Vraelis, report it as described on the <A href="/security#report">security page</A>: email <A href="mailto:help@vraelis.com">help@vraelis.com</A> with Security in the subject line. If you believe someone is using Vraelis against a system you run, email the same address with what you saw and when, and we will look into it.</P>
+
+      <H>What happens if this policy is broken</H>
+      <P>We may stop a run, suspend or close the account involved, and revoke its API keys, with or without notice depending on the risk. Serious or repeated breaches can lead to a permanent ban. Where the law requires it, we cooperate with the authorities.</P>
+
+      <H>Changes</H>
+      <P>We may update this policy as the product changes. The date at the top shows when it last changed.</P>
+
+      <H>Contact</H>
+      <P>Questions about this policy? Email <A href="mailto:help@vraelis.com">help@vraelis.com</A>. See also the <A href="/terms">Terms</A>.</P>
     </>
   );
 }

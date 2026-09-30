@@ -26,12 +26,19 @@
 // ends. Monospace with a fixed gutter makes all of that legible, and the product already ships a CLI, so
 // the register is the product's own rather than a costume.
 import { useCallback, useEffect, useRef, useState } from "react";
+import { preferencesAllowed } from "@/lib/privacy-choice";
 
 const KEY = "vraelis:scratchpad";
 const OPEN_KEY = "vraelis:scratchpad-open";
 // Window state persists alongside the text. Minimising something and finding it maximised again on the
 // next page is the panel forgetting a decision you made, which is the same failure as losing the note.
 const VIEW_KEY = "vraelis:scratchpad-view";
+// THE NOTE AND THE WINDOW ARE DIFFERENT KINDS OF STORAGE (2026-09-30). The note is the feature itself: you
+// typed it so it would be kept, and it is listed as essential in the cookie policy. Whether the panel is open
+// and how it is shown are display choices, the Preferences category of the privacy choices, so those two
+// keys are read and written only while Preferences is on, and the privacy dialog removes them when it is
+// turned off (lib/privacy-choice.ts PREFERENCE_LOCAL_KEYS lists both). Off, the panel still keeps its state
+// across in-app navigation, because the shell holding it does not remount; only a reload resets it.
 
 // Generous, and bounded. localStorage is a shared, small quota per origin, and an unbounded text area is
 // how one runaway paste evicts everything else the product stores there.
@@ -193,9 +200,11 @@ export function Scratchpad() {
   useEffect(() => {
     try {
       setText(localStorage.getItem(KEY) ?? "");
-      setOpen(localStorage.getItem(OPEN_KEY) === "1");
-      const v = localStorage.getItem(VIEW_KEY);
-      if (v === "min" || v === "zoom" || v === "normal") setView(v);
+      if (preferencesAllowed()) {
+        setOpen(localStorage.getItem(OPEN_KEY) === "1");
+        const v = localStorage.getItem(VIEW_KEY);
+        if (v === "min" || v === "zoom" || v === "normal") setView(v);
+      }
     } catch { /* private mode, or storage disabled: the panel still works, it just will not persist */ }
     setReady(true);
   }, []);
@@ -206,12 +215,12 @@ export function Scratchpad() {
   }, [text, ready]);
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || !preferencesAllowed()) return;
     try { localStorage.setItem(OPEN_KEY, open ? "1" : "0"); } catch { /* ignored */ }
   }, [open, ready]);
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || !preferencesAllowed()) return;
     try { localStorage.setItem(VIEW_KEY, view); } catch { /* ignored */ }
   }, [view, ready]);
 

@@ -10,7 +10,8 @@ import { entityJsonLd } from "../lib/entity";
 import { META_DESCRIPTION } from "./dev-preview/v6/_system/positioning";
 import { GROUND_CSS, type Ground } from "../lib/v6-routes";
 import { GROUND_HEADER } from "../proxy";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+import { PrivacyChoices } from "./_components/privacy-choices";
+import { ConsentedMeasurement } from "./_components/consented-measurement";
 
 // THE TYPE. IBM Plex Sans for everything people read, IBM Plex Mono for machine text (IDs, URLs, code).
 // Replaced Geist, Inter Tight and Instrument Serif on 2026-09-30: that trio is the default look of a generated
@@ -196,8 +197,15 @@ export default async function RootLayout({
               proving what a phone can render fast. Speed Insights reports field LCP, CLS and INP from
               the hardware people actually hold.
               Deliberately NOT inside the stealth branch above: the curtain is a static screen with no
-              product on it, and measuring it would report the curtain's numbers as the site's. */}
-          <SpeedInsights />
+              product on it, and measuring it would report the curtain's numbers as the site's.
+              ONLY WITH CONSENT (2026-09-30): it loads once the person turns Analytics on in the privacy
+              choices, and stops sending the moment they turn it off. See consented-measurement.tsx. */}
+          <ConsentedMeasurement />
+          {/* THE PRIVACY CHOICES, ONCE, FOR EVERY SURFACE: the site, the docs, sign-in and /auth, and the
+              console on app.vraelis.com all render through this branch. Not in the curtain branch above,
+              which shows nothing of the product and so has nothing to ask about. A blocking dialog until a
+              choice exists, except on the legal pages, which get a bar so they can be read first. */}
+          <PrivacyChoices />
         </body>
       </html>
   );

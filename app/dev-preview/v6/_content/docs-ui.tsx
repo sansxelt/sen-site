@@ -8,6 +8,7 @@ import { docsByGroup, type Block } from "./docs";
 import { SURFACES } from "./coverage";
 import { V6_BASE, V6_HOME, V6_APP, V6_SIGNIN } from "@/lib/v6-routes";
 import { MARK_PATH, MARK_VIEWBOX } from "@/lib/brand-mark";
+import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
 
 const BASE = V6_BASE;
 export const dslug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -262,7 +263,10 @@ export function DocShell({ activeSlug = "", toc = [], crumb, markdown, children 
             <Link href={V6_HOME}>vraelis.com</Link>
             <Link href={`${BASE}/security`}>Security</Link>
             <Link href={`${BASE}/privacy`}>Privacy</Link>
+            <Link href={`${BASE}/cookies`}>Cookies</Link>
             <Link href={`${BASE}/terms`}>Terms</Link>
+            <Link href={`${BASE}/acceptable-use`}>Acceptable use</Link>
+            <PrivacyChoicesButton />
           </footer>
         </div>
 
