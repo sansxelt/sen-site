@@ -19,7 +19,7 @@ import type { ReactNode } from "react";
  * otherwise survives in browser caches and the CDN, which shows up as a half-themed page rather than a
  * clean failure.
  */
-export const AUTHENTICATED_CSS = "/vraelis/authenticated.css?v=12";
+export const AUTHENTICATED_CSS = "/vraelis/authenticated.css?v=13";
 
 export function ProductSurface({ children }: { children: ReactNode }) {
   return (
