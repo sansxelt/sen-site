@@ -59,7 +59,7 @@
 .rp__btn--ghost { background: #FFFFFF; color: var(--rp-ink); border: 1px solid var(--rp-line2); padding: 4px 10px; }
 .rp__prompt { margin: 0; padding: 10px 12px; background: var(--rp-well); border: 1px solid var(--rp-line); border-radius: 8px;
   font-family: var(--font-brand-mono), ui-monospace, Menlo, monospace; font-size: 11.5px; line-height: 1.6; color: var(--rp-ink2);
-  white-space: pre-wrap; }
+  white-space: pre-wrap; max-height: 132px; overflow: auto; scrollbar-width: thin; }
 
 .rp__replay { position: absolute; right: 14px; bottom: 14px; display: none; }
 .rp:hover .rp__replay, .rp__replay:focus-visible { display: inline-flex; }

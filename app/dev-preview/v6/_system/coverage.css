@@ -26,3 +26,7 @@
   border-radius: 6px; border: 1px solid var(--line); color: var(--ink-4); }
 .v6-tier[data-tier="live"] { background: var(--ink); color: #fff; border-color: var(--ink); }
 .v6-tier[data-tier="next"], .v6-tier[data-tier="out"] { border-color: transparent; padding-inline: 0; font-weight: 500; }
+
+/* Homepage, 2026-09-30: the head is centred like the sections above it, so the note and link follow. */
+.v6-cov__note { margin-inline: auto; text-align: center; }
+.v6-cov__more { display: flex; justify-content: center; margin-top: 18px; }

@@ -1,60 +1,82 @@
 "use client";
 
-// CHAPTER 1 — the opening.
+// CHAPTER 1: the opening, rebuilt 2026-09-30.
 //
-// One category label, one headline, one sentence, one action, on a full-height graphite field. The
-// operational landscape that used to sit in the bottom band is gone: it competed with the type and did not
-// earn the room it took. Positioning copy comes from _system/positioning.ts and is provisional.
-import { CTA, EditorialLink } from "./ui";
-import { CATEGORY, HEADLINE, SUPPORT } from "./positioning";
-import { PUBLIC_HOW_IT_WORKS, V6_BASE } from "@/lib/v6-routes";
+// The founder's read of the last one: too much text, and nothing that looked like the product. So the first
+// screen is now three things, centred: one headline, one line, one field that takes the reader's own
+// address. Under them sit the two partnership records (kept as records, not a moving logo strip, which the
+// founder ruled out as looking generated), and the product itself: a console window replaying real runs
+// (_system/run-window.tsx) that rises out of the tinted band.
+//
+// THE FIELD IS REAL. It sends the address to the console's connect page (/systems/new?url=), which carries
+// it through sign-in and prefills it. Nothing runs from here: the connect page still asks for the sentence,
+// and a person still approves the plan. A bare "example.com" is given https:// on the way; anything else is
+// left to the connect form to judge.
+import { useState, type FormEvent } from "react";
+import { HEADLINE, SUPPORT } from "./positioning";
+import { RunWindow } from "./run-window";
+import { V6_APP, V6_BASE } from "@/lib/v6-routes";
 import "./hero.css";
 
+const CONNECT = `${V6_APP}/systems/new`;
+
+function normalise(raw: string): string {
+  const v = raw.trim();
+  if (!v) return "";
+  return /^[a-z][a-z0-9+.-]*:\/\//i.test(v) ? v : `https://${v}`;
+}
+
 export function Hero() {
+  const [url, setUrl] = useState("");
+  const submit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const v = normalise(url);
+    window.location.assign(v ? `${CONNECT}?url=${encodeURIComponent(v)}` : CONNECT);
+  };
+
   return (
-    <section className="v6-h" data-nav-dark data-nav-theme="dark">
-      <div className="v6-h__field" aria-hidden />
-      <div className="v6-h__inner">
-        <p className="v6-eyebrow v6-h__eyebrow">{CATEGORY}</p>
-        <h1 className="v6-h__h1">
-          <span className="v6-mask"><span className="v6-mask__in lead-clause">{HEADLINE[0]}</span></span>
-          <span className="v6-mask"><span className="v6-mask__in" style={{ animationDelay: "170ms" }}>{HEADLINE[1]}</span></span>
-        </h1>
-        <p className="v6-h__say">{SUPPORT}</p>
-        {/* One dominant action. The secondary link has been "See the proof" and then "Watch it run"; both
-            were a second decision offered before the reader had a reason to make one, and both are gone.
-            The header already carries Open Vraelis and Sign in. A second Open button here sent a visitor
-            who has never signed in straight into an app that can only ask them to sign in, and it spent the
-            page's one dominant action on a destination the header already owns. The hero's job is to earn
-            the next scroll, so it points at how the thing works.
-            THE QUIET LINK BESIDE IT IS DIFFERENT IN KIND, and it is a founder decision (2026-08-23): the
-            live-versus-planned list is the page a serious reader wants first and it was reachable only
-            through submenus. This is not a second call to action; it is the site's honesty, offered on the
-            first screen. Same name the menus and the footer use, so it reads as one destination. */}
-        <div className="v6-h__cta">
-          <CTA brand lg href={PUBLIC_HOW_IT_WORKS}>See how it works</CTA>
-          {/* The short spelling, which is the footer's. The long one ("What is built, and what is next")
-              is 231px and cannot share a phone line with the button no matter what the button gives up, so
-              on the one screen every visitor sees it was the thing forcing the pair to stack. The menus and
-              the Direction chapter keep the long form, where there is room for it. */}
-          <EditorialLink href={`${V6_BASE}/platform#current`}>What is built</EditorialLink>
-        </div>
-        <div className="v6-h__partnerships">
-          <a className="v6-h__partnership" href={`${V6_BASE}/partnerships/reddit`}
-            aria-label="Read the Vraelis and Reddit partnership record.">
-            <span className="v6-h__partnership-label">Partnership record</span>
-            <strong>Vraelis × Reddit</strong>
-            <span className="v6-h__partnership-meta">Partnered in 2026&nbsp; ↗</span>
+    <section className="v6-h" data-nav-theme="light" aria-labelledby="v6-h-h1">
+      <div className="v6-h__band">
+        <div className="v6-h__grid" aria-hidden />
+        <div className="v6-h__inner">
+          <a className="v6-h__pill" href="#devices">
+            <span className="v6-h__pilltag">Live</span>
+            <span className="v6-h__pilltxt">Drones, robots and fleets, checked through their control panel</span>
+            <span className="v6-h__pillarw" aria-hidden>→</span>
           </a>
-          {/* Official partnership, recorded in the same form as Reddit's. */}
-          <a className="v6-h__partnership" href={`${V6_BASE}/partnerships/bytedance`}
-            aria-label="Read the Vraelis and ByteDance partnership record.">
-            <span className="v6-h__partnership-label">Partnership record</span>
-            <strong>Vraelis × ByteDance</strong>
-            <span className="v6-h__partnership-note">The company behind TikTok</span>
-            <span className="v6-h__partnership-meta">Partnered in 2026&nbsp; ↗</span>
-          </a>
+          <h1 id="v6-h-h1" className="v6-h__h1">
+            <span className="v6-mask"><span className="v6-mask__in">{HEADLINE[0]}</span></span>
+            <span className="v6-mask"><span className="v6-mask__in" style={{ animationDelay: "150ms" }}>{HEADLINE[1]}</span></span>
+          </h1>
+          <p className="v6-h__say">{SUPPORT}</p>
+
+          <form className="v6-h__form" action={CONNECT} method="get" onSubmit={submit}>
+            <label htmlFor="v6-h-url" className="v6-h__sr">The address of your live app</label>
+            <input
+              id="v6-h-url" name="url" type="text" inputMode="url" autoComplete="url" spellCheck={false}
+              placeholder="https://your-app.com" value={url} onChange={(e) => setUrl(e.target.value)}
+            />
+            <button type="submit">Check it <span aria-hidden>→</span></button>
+          </form>
+
+          <div className="v6-h__partners" aria-label="Partnership records">
+            <a className="v6-h__partner" href={`${V6_BASE}/partnerships/reddit`} aria-label="Read the Vraelis and Reddit partnership record.">
+              <span className="v6-h__plabel">Partnership record</span>
+              <strong>Vraelis × Reddit</strong>
+              <span className="v6-h__pmeta">Partnered in 2026 <span aria-hidden>↗</span></span>
+            </a>
+            <a className="v6-h__partner" href={`${V6_BASE}/partnerships/bytedance`} aria-label="Read the Vraelis and ByteDance partnership record.">
+              <span className="v6-h__plabel">Partnership record</span>
+              <strong>Vraelis × ByteDance</strong>
+              <span className="v6-h__pmeta">The company behind TikTok · 2026 <span aria-hidden>↗</span></span>
+            </a>
+          </div>
         </div>
+      </div>
+
+      <div className="v6-h__stage">
+        <RunWindow />
+        <p className="v6-h__stagecap">Real runs on Vraelis demo apps, replayed at their recorded pace. Pick one on the left.</p>
       </div>
     </section>
   );

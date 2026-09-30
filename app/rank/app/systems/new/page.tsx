@@ -10,8 +10,16 @@ export const metadata: Metadata = { title: "Connect a system" };
 // Production-context onboarding workspace for Vraelis Preflight. Gated so a guessed URL redirects out when
 // the flag is off. The page records intent + context only — no discovery or browser execution runs here.
 // Wide layout: the workspace inside renders grouped connection sections with a sticky summary rail.
-export default async function ConnectAppPage() {
-  await requirePreflightOwner("/systems/new");
+// ?url= comes from the address field on the homepage. It is only a prefill: the form still validates it, and
+// it survives sign-in because the return path carries it. Anything that is not a plain https address is
+// dropped here rather than put in front of the reader.
+function prefillUrl(raw: string | string[] | undefined): string {
+  return typeof raw === "string" && /^https:\/\/[^\s<>"']{3,300}$/.test(raw) ? raw : "";
+}
+
+export default async function ConnectAppPage({ searchParams }: { searchParams: Promise<{ url?: string | string[] }> }) {
+  const prefill = prefillUrl((await searchParams).url);
+  await requirePreflightOwner(prefill ? `/systems/new?url=${encodeURIComponent(prefill)}` : "/systems/new");
 
   return (
     <Page>
@@ -19,7 +27,7 @@ export default async function ConnectAppPage() {
       {/* <Page> owns the measure and the shell owns padding-top, so the tail room this page has always had
           stays here, on the body. The h1 itself moved into the workspace's own <PageHeader>. */}
       <div style={{ paddingBottom: 80 }}>
-        <ConnectWorkspace />
+        <ConnectWorkspace initialUrl={prefill} />
       </div>
     </Page>
   );

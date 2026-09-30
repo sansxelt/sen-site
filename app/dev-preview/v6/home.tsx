@@ -1,50 +1,40 @@
 "use client";
 
-// Homepage, tightened 2026-09-29.
+// Homepage, rebuilt 2026-09-30.
 //
-// The founder's call: the idea is general, so the page is short, it does not rest the whole product on its
-// three answers (Verified, Failed, Blocked), and it gets SPECIFIC as the reader scrolls. Seven sections:
+// The founder's read of the page before this: the first screen had too much text and no product, and the
+// rest was too much text, not enough actual UI, and not cool enough (references: Vanta, Gusto, axiom). So
+// the page now SHOWS the product and says very little:
 //
-//   1 opening         graphite   say what should work; Vraelis checks it on the live app; partnerships
-//   2 for example     paper      pinned: one concrete example per scroll step, a kind of product, the
-//                                sentence, what the browser does, what it catches (_system/examples.tsx)
-//   3 real runs       graphite   production runs replayed with their own screenshots and timings
-//                                (_system/demos.tsx); never a scripted run
-//   4 devices         sunk       connected devices through their web control panels; device-level is Next
-//   5 how it works    paper      four cards: sentence, approval, live run, fix and re-check (_system/how.tsx)
-//   6 what you can    sunk       every kind of thing Vraelis is for, each labelled Live, Not built yet or
-//     check                      Not covered, read from _content/coverage.ts (_system/coverage.tsx, 2026-09-30)
-//   7 closing         graphite   one statement, two actions
+//   1 opening     a tinted band: one headline, one line, the address field, the two partnership records,
+//                 and a console window replaying the real production runs (_system/hero.tsx, run-window.tsx)
+//   2 surfaces    tinted cards, each one line and a working piece of the product: web apps, devices through
+//                 their control panel, the AI agent tools, plan approval, the terminal, and readiness (Next)
+//                 (_system/surfaces.tsx)
+//   3 coverage    every kind of thing Vraelis is for, each labelled Live, Next or Not covered, read from
+//                 _content/coverage.ts (_system/coverage.tsx)
+//   4 closing     one statement, two actions
 //
-// REMOVED FROM THE HOMEPAGE that day, still in _system/chapters.tsx and still used or restorable:
-// Authority and Gap (the argument for an independent check), Product (the terminal and its exit codes),
-// Standard (the four refusals and "Verified is the most dangerous word"), Loop (the five-screen walk
-// through a run, now the four cards) and Reach (the four ways in, now named in the first card). The page
-// explained the argument before showing anything; now it shows, and /platform, /method, /agents and /docs
-// carry the explanation for a reader who asks for it.
+// REMOVED that day and still in the tree: Examples (_system/examples.tsx), Real runs (_system/demos.tsx, now
+// the hero window), Devices (_system/chapters.tsx, now a card) and HowItWorks (_system/how.tsx). /platform,
+// /method, /agents and /docs carry the explanation for a reader who asks for it.
 //
 // Every positioning string comes from _system/positioning.ts.
 import { Hero } from "./_system/hero";
-import { Devices } from "./_system/chapters";
+import { Surfaces } from "./_system/surfaces";
 import { ClosingScene } from "./_system/close";
-import { Demos } from "./_system/demos";
-import { Examples } from "./_system/examples";
-import { HowItWorks } from "./_system/how";
 import { Coverage } from "./_system/coverage";
 import { useMobileMotion } from "./_system/mobile-motion";
 
 export default function Home() {
   // Gives the scroll chapters' parts entry motion on screens where they unpin. Kept mounted even though
-  // most of those chapters left this page: scripts/mobile-motion-verify.ts requires it, and it is a no-op
-  // for parts that are not present.
+  // those chapters left this page: scripts/mobile-motion-verify.ts requires it, and it is a no-op for parts
+  // that are not present.
   useMobileMotion();
   return (
     <>
       <Hero />
-      <Examples />
-      <Demos />
-      <Devices />
-      <HowItWorks />
+      <Surfaces />
       <Coverage />
       <ClosingScene />
     </>

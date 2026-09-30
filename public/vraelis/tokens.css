@@ -37,12 +37,14 @@
      electrochemistry. Reserved for: primary action, one specific
      status indicator, a hairline accent on the active grid cell.
      ═══════════════════════════════════════════════════════════════════ */
-  --acc:           #5CE5D5;
-  --acc-deep:      #2BB5A3;
-  --acc-glow:      rgba(92, 229, 213, 0.40);
-  --acc-soft:      rgba(92, 229, 213, 0.06);
-  --acc-line:      rgba(92, 229, 213, 0.30);
-  --acc-line-2:    rgba(92, 229, 213, 0.55);
+  /* ink since 2026-09-30, like every other surface; the old cyan here reached links and focus rings on
+     pages that set no accent of their own */
+  --acc:           #0A0A0B;
+  --acc-deep:      #0A0A0B;
+  --acc-glow:      rgba(10, 10, 11, 0.14);
+  --acc-soft:      rgba(10, 10, 11, 0.06);
+  --acc-line:      rgba(10, 10, 11, 0.20);
+  --acc-line-2:    rgba(10, 10, 11, 0.34);
 
   /* Semantic — restrained, used for status not decoration */
   --ok:            #5CE5D5;      /* same as accent — system is healthy */

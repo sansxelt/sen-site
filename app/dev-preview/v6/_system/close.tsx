@@ -25,14 +25,18 @@ export function ClosingScene({
   const root = useRef<HTMLElement>(null);
   useScrollProgress(root, { measure: entryProgress(0.9) });
   return (
-    <section className="v6-end" data-nav-dark data-nav-theme="dark" ref={root}>
-      <div className="v6-end__field" aria-hidden />
+    // The ending is the site's one ink panel (2026-09-30): the page stays white around it, the way the
+    // sign-in screen's brand panel sits beside a white form, so the ground is the same everywhere and ink
+    // is the signature, not a dark theme.
+    <section className="v6-end" data-nav-theme="light" ref={root}>
       <div className="v6-end__in">
-        <Spectral as="h2" className="v6-end__h" sv="clamp(0, calc((var(--p) - 0.12) / 0.82), 1)" text={title} />
-        <p className="v6-end__say">{say}</p>
-        <div className="v6-end__cta">
-          <CTA brand lg>Open Vraelis</CTA>
-          <EditorialLink href={`${BASE}/company#contact`}>Talk to the team</EditorialLink>
+        <div className="v6-end__card">
+          <Spectral as="h2" className="v6-end__h" sv="clamp(0, calc((var(--p) - 0.12) / 0.82), 1)" text={title} />
+          <p className="v6-end__say">{say}</p>
+          <div className="v6-end__cta">
+            <CTA brand lg>Open Vraelis</CTA>
+            <EditorialLink href={`${BASE}/contact`}>Talk to the team</EditorialLink>
+          </div>
         </div>
       </div>
     </section>

@@ -21,13 +21,13 @@ const TIER_LABEL: Record<CoverageTier, string> = { Live: "Live", Next: "Not buil
 
 export function Coverage() {
   return (
-    <section className="v6-sec v6-sec--sunk" id="what-you-can-check" data-nav-theme="light">
+    <section className="v6-sec" id="what-you-can-check" data-nav-theme="light">
       <div className="v6-wrap">
         <Reveal>
           <SectionHead
-            eyebrow="What you can check"
+            align="center"
             title="Anything a browser can reach, today."
-            lead="The rest of what Vraelis is for is on this list too, labelled for exactly where it is."
+            lead="And everything else Vraelis is for, labelled for exactly where it is."
           />
         </Reveal>
         <Reveal className="v6-cov" i={1}>
@@ -41,7 +41,7 @@ export function Coverage() {
             ))}
           </ul>
           <p className="v6-cov__note">{COVERAGE_RULE}</p>
-          <div style={{ marginTop: 18 }}>
+          <div className="v6-cov__more">
             <EditorialLink href={`${V6_BASE}/platform#coverage`}>Each one in detail</EditorialLink>
           </div>
         </Reveal>

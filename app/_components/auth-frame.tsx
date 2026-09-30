@@ -6,9 +6,9 @@ import { RecordPreview } from "@/components/record-preview";
 // two-step code (2026-09-30). One frame for all of them, so moving from signing up to confirming an address
 // never changes the page around the form.
 //
-// Two plain halves. The form sits on white with the wordmark above it. On a wide screen the right half is the
-// grey band the site uses, holding a real recorded verification as the console shows it, so the first thing
-// a new account sees is the product rather than a pattern. On a phone the right half is dropped.
+// Two halves. The form sits on white with the wordmark above it. On a wide screen the right half is the ink
+// brand panel, the same one that closes every page of the site: the headline, a real recorded check as the
+// console shows it, and the two partnership records. On a phone the right half is dropped.
 export function AuthFrame({ children }: { children: ReactNode }) {
   return (
     <ProductSurface>
@@ -23,11 +23,16 @@ export function AuthFrame({ children }: { children: ReactNode }) {
             <a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/cookies">Cookies</a><a href="/security">Security</a>
           </p>
         </div>
-        <aside className="auth-split__side" aria-label="What a Vraelis verification looks like">
+        <aside className="auth-split__side" aria-label="What a Vraelis check looks like">
           <div className="auth-split__sidein">
-            <p className="auth-split__kicker">A real run, as the console shows it</p>
-            <p className="auth-split__title">Say what should work. See whether it did, with the evidence.</p>
+            <p className="auth-split__title">Know what you built does what you meant.</p>
+            <p className="auth-split__kicker">A real check on a Vraelis demo app, as the console shows it.</p>
             <RecordPreview compact />
+            <div className="auth-split__partners">
+              <span>Partnership records</span>
+              <a href="/partnerships/reddit">Vraelis × Reddit</a>
+              <a href="/partnerships/bytedance">Vraelis × ByteDance</a>
+            </div>
           </div>
         </aside>
       </div>

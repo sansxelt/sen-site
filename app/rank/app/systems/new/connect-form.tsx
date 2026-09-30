@@ -103,10 +103,10 @@ function Section({ n, title, sub, children }: { n: number; title: string; sub: s
   );
 }
 
-export default function ConnectWorkspace() {
+export default function ConnectWorkspace({ initialUrl = "" }: { initialUrl?: string }) {
   const router = useRouter();
   // Section 1: identity
-  const [appUrl, setAppUrl] = useState(""); const [name, setName] = useState("");
+  const [appUrl, setAppUrl] = useState(initialUrl); const [name, setName] = useState("");
   const [environment, setEnvironment] = useState(""); const [builder, setBuilder] = useState("");
   const [prompt, setPrompt] = useState("");
   // Section 3 primary field: the short product summary (state + draft key keep the historical name

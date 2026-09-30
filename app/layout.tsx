@@ -126,8 +126,8 @@ export default async function RootLayout({
       // too; the overscroll gutter and the strip below a short viewport match the screen.
       <html lang="en" data-theme="light" style={{ colorScheme: "light", background: "#FFFFFF" }} className={`${brandSans.variable} ${brandMono.variable} h-full`}>
         <body className="min-h-full" style={{ background: "#FFFFFF" }}>
-          <link rel="stylesheet" href="/vraelis/tokens.css?v=21" />
-          <link rel="stylesheet" href="/vraelis/styles.css?v=55" />
+          <link rel="stylesheet" href="/vraelis/tokens.css?v=22" />
+          <link rel="stylesheet" href="/vraelis/styles.css?v=56" />
           {/* THE CURTAIN IS THE ONLY THING MOST MACHINES EVER SEE, AND IT SAID NOTHING ABOUT THE COMPANY.
               This branch returned before the JSON-LD below, so every crawler and every AI summariser
               fetching vraelis.com got "Not open yet" and no structured self-description at all. Asked what
@@ -182,8 +182,8 @@ export default async function RootLayout({
               before styles. */}
           {/* ?v bust: bump on every CSS change so browsers don't serve a
               stale cached stylesheet (the static file URL is otherwise fixed). */}
-          <link rel="stylesheet" href="/vraelis/tokens.css?v=21" />
-          <link rel="stylesheet" href="/vraelis/styles.css?v=55" />
+          <link rel="stylesheet" href="/vraelis/tokens.css?v=22" />
+          <link rel="stylesheet" href="/vraelis/styles.css?v=56" />
           {/* WHO THIS IS, for machines. Emitted only when the site is actually public: publishing an
               identity graph on a page whose entire body reads "Not open yet." asks to be indexed as a
               company with no content, which is the impression this document already refuses to leave.

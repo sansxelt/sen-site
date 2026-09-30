@@ -53,13 +53,19 @@
 //      operator action goes in through a real browser, and Vraelis checks the state the system reports
 //      afterwards. Reading the device itself (firmware, sensors, telemetry) is NOT built and is labelled Next
 //      wherever it appears. Nothing here may imply otherwise.
+//   8. THE PRODUCT DIRECTION IS CHANGING, SO THE PITCH IS THE OUTCOME, NOT THE ANSWER WORDS (founder,
+//      2026-09-30: "stop with the verified blocked and failed thing, remember we are changing product
+//      direction"). The public pitch is what a creator gets: knowing that what they built does what they
+//      meant, checked on the live product, with what broke handed to them or their agent. Verified, Failed
+//      and Blocked stay the product's vocabulary inside the console, the API and the docs, and the homepage
+//      does not print them: a replayed run says "Found a problem" or "Did what the sentence says".
 
 /** Short category label. Appears once, above the opening headline.
  *
  *  IT NAMES THE ACTIVITY AND WHERE IT HAPPENS, NOT A ROLE AND NOT AN AUDIENCE. Earlier labels named an
  *  institution, then a class of software ("AI-built systems"). Both told a reader who the company thought it
  *  was rather than what it would do for them. "On the live app" is the part a reader can check. */
-export const CATEGORY = "Verification on the live app";
+export const CATEGORY = "Verification for what you build";
 
 /** THE HEADLINE, as two clauses: the input, then the answer.
  *
@@ -67,8 +73,8 @@ export const CATEGORY = "Verification on the live app";
  *  reader is, a developer, an agency, a founder or someone running an AI assistant, the first line is theirs
  *  to say, and nothing in either line narrows who may say it. */
 export const HEADLINE: [string, string] = [
-  "Say what should work.",
-  "Vraelis checks it on the live app.",
+  "Know what you built",
+  "does what you meant.",
 ];
 
 /** ONE paragraph under the headline: the loop, once, in the order it happens. Under 45 words.
@@ -79,16 +85,16 @@ export const HEADLINE: [string, string] = [
  *  "The device it controls" is rule 7: a device is checked through the web app that controls it. It ends on
  *  what the reader SEES, not on a list of verdicts (rule 5). No verb here is aspirational. */
 export const SUPPORT =
-  "Write one sentence about what your app, or the device it controls, should do. Vraelis turns it into a plan you approve, tries it on the live app in a real browser, and shows you every step, a screenshot, and anything that went wrong.";
+  "Say what your web app, or the device it controls, should do. Vraelis checks it on the live product in a real browser, shows you exactly what happened, and hands anything broken to you or your AI agent.";
 
 /** Page title and meta description.
  *
  *  A search result is the surface where an unsupportable claim travels furthest, so the description makes
  *  exactly the claim the run itself produces and no larger one: it tries the sentence and shows what
  *  happened. It does not promise a green result, and it does not lead with the verdict words (rule 5). */
-export const META_TITLE = "Vraelis | Checks your live app does what you say it does";
+export const META_TITLE = "Vraelis | Know what you built does what you meant";
 export const META_DESCRIPTION =
-  "Write one sentence about what your web app, or a device it controls, should do. Vraelis tries it in a real browser on the live app and shows you exactly what happened, step by step.";
+  "Say what your web app, or a device it controls, should do. Vraelis checks it in a real browser on the live product, shows you exactly what happened, and hands anything broken to you or your AI agent.";
 
 /**
  * Link-preview text. Re-exported from lib/social-card.ts, which is the single source for every surface:
@@ -102,7 +108,7 @@ export const OG_BEATS: [string, string, string] = ["The claim", "The evidence", 
 /** Closing scene. One statement, one short line. No recap, no feature list. */
 export const CLOSE_TITLE = "Ship what you can stand behind.";
 export const CLOSE_SAY =
-  "One sentence about what should work, one plan you approve, and one decision from the live app, with the evidence attached.";
+  "Say what should work, approve the plan, and see it checked on the live product, with everything it saw attached.";
 
 /** The statement in the footer.
  *
