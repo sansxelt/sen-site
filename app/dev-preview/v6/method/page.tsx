@@ -181,6 +181,7 @@ export default function Method() {
   return (
     <>
       <PageHero
+        read
         kicker="The Vraelis Method"
         title="How we think about trusting software that says it works."
         lead="Eight positions that decide how the product is built. They are opinionated on purpose."

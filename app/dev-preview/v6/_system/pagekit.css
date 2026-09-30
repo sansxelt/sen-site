@@ -4,7 +4,7 @@
 /* Page-hero headline: the display serif, for the reason set out beside --display in v6.css. Weight 400 and
    near-zero tracking are not preferences here, they are what the face requires. */
 .v6-phero h1 { font-family: var(--display); font-weight: var(--display-w); letter-spacing: -0.012em; line-height: 1.08; color: var(--ink); font-size: clamp(2.3rem,4vw,3.4rem); margin: 16px 0 0; max-width: 22ch; text-wrap: balance; }
-.v6-phero__lead { font-size: clamp(1.1rem,1.4vw,1.35rem); line-height: 1.5; color: var(--ink-2); margin: 22px 0 0; max-width: 58ch; }
+.v6-phero__lead { font-size: clamp(1.1rem,1.4vw,1.35rem); line-height: 1.5; color: var(--ink-2); margin: 22px 0 0; max-width: 58ch; text-wrap: pretty; }
 /* PageHero owns hero button scale, so routes cannot drift by passing or forgetting `lg` (Platform and Agents
    rendered 50px buttons while Developers and Integrations rendered 44px). */
 .v6-phero__cta { margin-top: 30px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
@@ -58,6 +58,10 @@
 .v6-row { display: grid; grid-template-columns: auto minmax(0,1fr); gap: clamp(18px,3vw,44px); align-items: baseline; padding: clamp(22px,2.6vw,32px) 0; border-top: 1px solid var(--line); }
 .v6-rows > .v6-reveal:first-child .v6-row, .v6-rows > .v6-row:first-child { border-top: none; }
 .v6-row__n { font-family: var(--mono); font-size: 13px; color: var(--brand-ink); padding-top: 3px; }
+/* Rows led by a status chip rather than a number: every row is its own grid, so an auto first column made
+   "Fits" and "Not yet" rows start their titles at different x. One fixed column lines them up. */
+.v6-rows--chips .v6-row { grid-template-columns: 84px minmax(0,1fr); }
+@media (max-width: 560px) { .v6-rows--chips .v6-row { grid-template-columns: minmax(0,1fr); gap: 10px; } }
 .v6-row__t { font-size: clamp(1.15rem,1.6vw,1.45rem); font-weight: 600; letter-spacing: -0.015em; color: var(--ink); margin: 0 0 8px; }
 .v6-row__d { font-size: 15.5px; line-height: 1.6; color: var(--ink-3); margin: 0; max-width: 62ch; }
 /* The rows were written for a light ground and then used on graphite: three sections on /pricing and
@@ -263,7 +267,7 @@
 .v6-clog__entry { display: grid; grid-template-columns: 160px minmax(0,1fr); gap: clamp(18px,3vw,44px); padding: clamp(28px,3vw,44px) 0; border-top: 1px solid var(--line); }
 .v6-clog__date { font-family: var(--mono); font-size: 13px; color: var(--ink-3); }
 .v6-clog__tag { margin-top: 10px; }
-.v6-clog__t { font-size: clamp(1.3rem,2vw,1.65rem); font-weight: 600; letter-spacing: -0.02em; color: var(--ink); margin: 0 0 12px; }
+.v6-clog__t { font-size: clamp(1.3rem,2vw,1.6rem); font-weight: 600; letter-spacing: -0.015em; line-height: 1.25; color: var(--ink); margin: 0 0 12px; text-wrap: balance; }
 .v6-clog__b { font-size: 1rem; line-height: 1.6; color: var(--ink-2); }
 .v6-clog__b p { margin: 0 0 12px; }
 

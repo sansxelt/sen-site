@@ -317,7 +317,7 @@ export default function ResearchPage() {
           which is the wrong way round: they are the most considered thing here. */}
       <hr className="v6-rule" />
       <section className="v6-sec v6-sec--tight">
-        <div className="v6-wrap v6-wrap--read">
+        <div className="v6-wrap">
           <Reveal>
             <SectionHead
               eyebrow="Notes"
@@ -326,7 +326,7 @@ export default function ResearchPage() {
             />
           </Reveal>
           <Reveal>
-            <div style={{ display: "grid", gap: 2, marginTop: 26 }}>
+            <div style={{ display: "grid", gap: 2, marginTop: 26, maxWidth: 880 }}>
               {publishedArticles().map((a) => (
                 <Link key={a.slug} href={`${BASE}/research/${a.slug}`} className="v6-elink"
                   style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 20, padding: "18px 0", borderBottom: "1px solid var(--line)" }}>
@@ -347,7 +347,7 @@ export default function ResearchPage() {
       {/* Close */}
       <hr className="v6-rule" />
       <section className="v6-sec v6-sec--tight">
-        <div className="v6-wrap v6-wrap--read">
+        <div className="v6-wrap">
           <Reveal>
             <SectionHead
               eyebrow="Where this goes"

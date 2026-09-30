@@ -242,13 +242,14 @@ const expected = "sha256=" + createHmac("sha256", process.env.VRAELIS_SECRET_KEY
 
 const ok = Boolean(signature) && timingSafeEqual(Buffer.from(signature), Buffer.from(expected));`;
 
-/* small labelled row used inside the graphite sections */
+/* small labelled block used inside the graphite sections. The label is a short heading on its own line: run
+   inline, a tiny green mono word sat inside the first line of the paragraph and read as part of the sentence. */
 function Note({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <p style={{ margin: "0 0 22px", color: "var(--g-fg-2)", fontSize: 15, lineHeight: 1.62, maxWidth: "62ch" }}>
-      <span className="v6-mono" style={{ color: "var(--go-dk)", fontSize: 11.5, marginRight: 10 }}>{label}</span>
-      {children}
-    </p>
+    <div style={{ margin: "0 0 24px", maxWidth: "62ch" }}>
+      <p style={{ margin: "0 0 6px", color: "var(--g-fg)", fontSize: 14, fontWeight: 600 }}>{label}</p>
+      <p style={{ margin: 0, color: "var(--g-fg-2)", fontSize: 15, lineHeight: 1.62 }}>{children}</p>
+    </div>
   );
 }
 
@@ -487,7 +488,7 @@ export default function DevelopersPage() {
           <div className="v6-grid3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%,320px),1fr))" }}>
             <Reveal className="v6-gcard">
               <p style={{ marginBottom: 14 }}><Signal state="go">Live today</Signal></p>
-              <ul style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 9 }}>
+              <ul style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 9, listStyle: "disc" }}>
                 {[
                   "POST /api/v1/verifications, create, dry-run, or run an approved plan",
                   "GET /api/v1/verifications/plans/{id}, the plan, its approval state, and approve_url while it is pending",
@@ -502,7 +503,7 @@ export default function DevelopersPage() {
             </Reveal>
             <Reveal className="v6-gcard" i={1}>
               <p style={{ marginBottom: 14 }}><Signal state="wait">Direction</Signal></p>
-              <ul style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 9 }}>
+              <ul style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 9, listStyle: "disc" }}>
                 {[
                   "The CLI and the TypeScript SDK on npm. Both are built; neither is published.",
                   "Device-level checks that read a drone or robot directly, its firmware, sensors and telemetry. Not built yet; today a device is checked through its web control panel.",

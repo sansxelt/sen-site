@@ -163,8 +163,8 @@ export default function CompanyPage() {
           <Reveal media className="v6-grid3">
             {ACTS.map((a) => (
               <div key={a.label} style={{ background: "var(--graphite-2)", border: "1px solid var(--g-line)", borderRadius: 14, padding: "clamp(22px,2.4vw,28px)", display: "flex", flexDirection: "column" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 14 }}>
-                  <span style={{ fontFamily: "var(--mono)", fontSize: 11.5, color: "var(--g-fg-3)" }}>{a.label}</span>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 14, minHeight: 28 }}>
+                  <span style={{ fontSize: 13, color: "var(--g-fg-3)" }}>{a.label}</span>
                   {a.sig ? <Signal state={a.sig}>{a.sigLabel}</Signal> : null}
                 </div>
                 <h3 style={{ margin: "0 0 10px", fontSize: "clamp(1.1rem,1.5vw,1.32rem)", fontWeight: 600, letterSpacing: "-0.015em", color: "var(--g-fg)" }}>{a.title}</h3>
@@ -185,7 +185,7 @@ export default function CompanyPage() {
               title="Anyone who can say what should work, on a live app."
             />
           </Reveal>
-          <div className="v6-rows" style={{ marginTop: "clamp(24px,2.6vw,34px)" }}>
+          <div className="v6-rows v6-rows--chips" style={{ marginTop: "clamp(24px,2.6vw,34px)" }}>
             {FOR.map(([t, d], i) => (
               <Reveal key={t} i={i}>
                 <div className="v6-row">
@@ -341,7 +341,7 @@ export default function CompanyPage() {
         <div className="v6-wrap" style={{ textAlign: "center", maxWidth: 760 }}>
           <Reveal>
             <h2 className="v6-dl" style={{ marginInline: "auto" }}>Know it works before you say it does.</h2>
-            <p className="v6-lead" style={{ margin: "20px auto 30px", textAlign: "center" }}>One independent check on the live app, with the evidence attached. That is the whole mission.</p>
+            <p className="v6-lead" style={{ margin: "20px auto 30px", textAlign: "center", textWrap: "balance" }}>One independent check on the live app, with the evidence attached. That is the whole mission.</p>
             <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
               <CTA brand lg>Open Vraelis</CTA>
               <CTA href={`${BASE}/research`} ghost lg>Read our research</CTA>

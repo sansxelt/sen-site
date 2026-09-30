@@ -111,6 +111,9 @@
 .v6-wrap--read { max-width: var(--max-read); }
 .v6-sec { padding-block: var(--sec); position: relative; }
 .v6-sec--sunk { background: var(--sunk); }
+/* Two sections on the same ground read as one band, so the second one does not add its own top padding:
+   stacked, the two paddings left a gap twice the normal section rhythm with nothing in it. */
+.v6-sec--sunk + .v6-sec--sunk, .v6-dark + .v6-dark { padding-top: 0; }
 .v6-sec--tight { padding-block: clamp(52px, 7vw, 96px); }
 .v6-rule { height: 1px; background: var(--line); border: 0; margin: 0; }
 
@@ -134,7 +137,7 @@
    stray font-weight:600 from a parent or a <strong> renders a smeared synthetic bold. */
 .v6-d2xl, .v6-dxl, .v6-dl, .v6-phero h1, .v6-prose h2 { font-synthesis-weight: none; }
 .v6-dm   { font-family: var(--sans); font-weight: 600; letter-spacing: -0.018em; line-height: 1.16; font-size: clamp(1.3rem, 2vw, 1.7rem); color: var(--ink); margin: 0; }
-.v6-lead { font-size: clamp(1.02rem, 1.15vw, 1.14rem); line-height: 1.6; color: var(--ink-2); margin: 0; max-width: 60ch; }
+.v6-lead { font-size: clamp(1.02rem, 1.15vw, 1.14rem); line-height: 1.6; color: var(--ink-2); margin: 0; max-width: 60ch; text-wrap: pretty; }
 .v6-body { font-size: 1rem; line-height: 1.62; color: var(--ink-3); margin: 0; }
 /* Quiet sans label, sentence case. The old treatment was a tiny all-caps mono eyebrow with a drawn rule
    repeated above every heading, which is the single strongest "AI startup" tell in the type system. */

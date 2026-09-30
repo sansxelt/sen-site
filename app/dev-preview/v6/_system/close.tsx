@@ -44,8 +44,12 @@ const COLS: [string, [string, string][]][] = [
   // reachable from the footer: the live-versus-planned list sat behind two differently-named submenu
   // entries, and the incident record had no inbound link anywhere on the site.
   ["Product", [[`${BASE}/platform`, "Platform"], [`${BASE}/platform#coverage`, "What it can reach"], [`${BASE}/platform#current`, "What is built"], [`${BASE}/integrations`, "Ways to use it"], [`${BASE}/agents`, "AI assistants"], [`${BASE}/pricing`, "Pricing"], [`${BASE}/enterprise`, "Enterprise"]]],
-  ["Developers", [[`${BASE}/developers`, "Documentation"], [`${BASE}/developers#api`, "API"], [`${BASE}/developers#cli`, "CLI"], [`${BASE}/developers#webhooks`, "Webhooks"]]],
-  ["Company", [[`${BASE}/company#who`, "Who it is for"], [`${BASE}/company#different`, "How this is different"], [`${BASE}/partnerships/reddit`, "Reddit partnership"], [`${BASE}/partnerships/bytedance`, "ByteDance partnership"], [`${BASE}/research`, "Research"], [`${BASE}/method`, "Method"], [`${BASE}/method#in-public`, "In public"], [`${BASE}/readme`, "README"], [`${BASE}/changelog`, "Changelog"], [`${BASE}/company`, "About"]]],
+  // Documentation is the docs, not the developers page: the docs were rebuilt as their own section and this
+  // link still pointed at the API overview.
+  ["Developers", [[`${BASE}/docs`, "Documentation"], [`${BASE}/developers#api`, "API"], [`${BASE}/developers#cli`, "CLI"], [`${BASE}/developers#webhooks`, "Webhooks"]]],
+  // Resources split out of Company, which held ten links beside a column of four. Same split as the nav.
+  ["Resources", [[`${BASE}/research`, "Research"], [`${BASE}/method`, "Method"], [`${BASE}/method#in-public`, "In public"], [`${BASE}/readme`, "README"], [`${BASE}/changelog`, "Changelog"]]],
+  ["Company", [[`${BASE}/company`, "About"], [`${BASE}/company#who`, "Who it is for"], [`${BASE}/company#different`, "How this is different"], [`${BASE}/partnerships/reddit`, "Reddit partnership"], [`${BASE}/partnerships/bytedance`, "ByteDance partnership"]]],
   // "Contact" pointed at an anchor on the company page. It is now a page, because a contact anchor is where
   // a contact route goes to be quietly missing.
   ["Trust", [[`${BASE}/security`, "Security"], [`${BASE}/limitations`, "Limitations"], [`${BASE}/privacy`, "Privacy"], [`${BASE}/terms`, "Terms"], [`${BASE}/data-rights`, "Data rights"], [`${BASE}/subprocessors`, "Subprocessors"], [`${BASE}/trademark`, "Trademark"], [`${BASE}/contact`, "Contact"]]],
@@ -74,7 +78,7 @@ export function SiteFooter() {
           LINKEDIN IS THE ONLY SOCIAL LINK, because it is the only profile confirmed to exist. The X address
           returned 404 on 2026-09-28 and was removed from here and from lib/entity.ts the same day. */}
       <div className="v6-foot2__base">
-        <p className="v6-foot2__say">{FOOTER_STATEMENT}</p>
+        <p className="v6-foot2__say"><span>{FOOTER_STATEMENT}</span></p>
         <div className="v6-foot2__base-in">
           <span>© 2026 Vraelis</span>
           <div className="v6-foot2__legal">

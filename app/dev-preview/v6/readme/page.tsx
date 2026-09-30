@@ -25,6 +25,7 @@ export default function Readme() {
   return (
     <>
       <PageHero
+        read
         kicker="README"
         title="Why Vraelis exists."
         lead="Software used to be trusted because someone checked it before saying it was done. That step is disappearing. Vraelis puts it back, on the live app."

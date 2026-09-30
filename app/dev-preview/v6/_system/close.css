@@ -54,7 +54,7 @@
 /* ---------------------------------------------------------------- footer --- */
 .v6-foot2 { background: var(--graphite-2); color: var(--g-fg-2); border-top: 1px solid var(--g-line); }
 .v6-foot2__lower { max-width: var(--max-wide); margin-inline: auto; padding: clamp(46px,6vh,72px) var(--gutter) clamp(28px,3.5vh,40px);
-  display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: clamp(24px,3vw,52px); }
+  display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: clamp(24px,3vw,52px); }
 .v6-foot2__h { font-family: var(--sans); font-size: 13px; font-weight: 600; color: var(--g-fg); margin: 0 0 16px; letter-spacing: -0.005em; }
 .v6-foot2__col { display: flex; flex-direction: column; gap: 2px; }
 .v6-foot2__col a { font-size: 14.5px; color: var(--g-fg-2); text-decoration: none; display: inline-flex; align-items: center; min-height: 34px; transition: color 140ms ease; }
@@ -111,6 +111,9 @@
 /* The company statement, at directory scale rather than headline scale. It sits above the copyright row
    and inside the same measure, so it reads as the footer explaining itself rather than as a second
    closing scene competing with the real one above it. */
+/* The measure lives on the inner span: max-inline-size on the paragraph itself replaced its max-width, so
+   the whole block shrank to 62ch and margin auto centred it in the page, away from the copyright line. */
 .v6-foot2__say { max-width: var(--max-wide); margin: 0 auto; padding: 26px var(--gutter) 0;
-  font-size: 14px; line-height: 1.5; color: var(--g-fg-3); max-inline-size: 62ch; }
+  font-size: 14px; line-height: 1.5; color: var(--g-fg-3); }
+.v6-foot2__say > span { display: block; max-width: 62ch; }
 @media (max-width: 640px) { .v6-foot2__say { padding-top: 20px; font-size: 13.5px; } }

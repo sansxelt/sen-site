@@ -25,21 +25,23 @@ const BASE = V6_BASE;
 // verification price from passPriceCents, which is the function that charges for one.
 const money = (cents: number) => `$${(cents / 100).toLocaleString("en-US")}`;
 
+// Light cards on the light section. They were graphite cards left over from when this section was dark, so
+// the page put black slabs on white and the black buttons inside them nearly vanished.
 const CARD = {
-  background: "var(--graphite-2)", border: "1px solid var(--g-line)",
-  borderRadius: 14, padding: "clamp(22px,2.4vw,28px)",
+  background: "var(--paper)", border: "1px solid var(--line-2)",
+  borderRadius: 12, padding: "clamp(22px,2.4vw,28px)",
 } as const;
-const H3 = { margin: "0 0 8px", fontSize: "1.12rem", fontWeight: 600, letterSpacing: "-0.015em", color: "var(--g-fg)" } as const;
-const P = { margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--g-fg-2)" } as const;
+const H3 = { margin: "0 0 8px", fontSize: "1.12rem", fontWeight: 600, letterSpacing: "-0.015em", color: "var(--ink)" } as const;
+const P = { margin: 0, fontSize: 14.5, lineHeight: 1.6, color: "var(--ink-2)" } as const;
 // The three inline styles that were repeated verbatim on the plan cards and the enterprise card. They are
 // lifted here because there are now four bands using them rather than two, and four copies of a price
 // style is how one of them ends up a different size after a later edit touches only the card in front of
 // whoever is editing.
-const AMOUNT = { margin: "0 0 4px", fontSize: "2rem", fontWeight: 600, letterSpacing: "-0.03em", color: "var(--g-fg)" } as const;
+const AMOUNT = { margin: "0 0 4px", fontSize: "2rem", fontWeight: 600, letterSpacing: "-0.03em", color: "var(--ink)" } as const;
 // marginLeft: the word space inside the span is 14px wide next to a 32px figure, so "$0" and its caption
 // read as one word ("$0to see") without it.
-const AMOUNT_UNIT = { fontSize: 14, fontWeight: 400, color: "var(--g-fg-3)", marginLeft: 4 } as const;
-const HEADLINE = { margin: "0 0 12px", fontSize: 15, fontWeight: 600, color: "var(--g-fg)" } as const;
+const AMOUNT_UNIT = { fontSize: 14, fontWeight: 400, letterSpacing: 0, color: "var(--ink-3)", marginLeft: 6 } as const;
+const HEADLINE = { margin: "0 0 12px", fontSize: 15, fontWeight: 600, color: "var(--ink)" } as const;
 const FEATURES = { margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 6 } as const;
 
 // ONE THREE-CARD GRID PER PAGE, AND ON THIS PAGE IT IS THE PLANS.
@@ -90,7 +92,7 @@ export default function V6Pricing() {
         lead="A verification is one complete check of one system: the plan, the real browser run, and the evidence behind the decision. The first one is free. After that, buy a single verification on its own, or take a plan, which sets how many you run each month and how much of a system one may cover."
       />
 
-      <section className="v6-sec">
+      <section className="v6-sec" style={{ paddingTop: "clamp(12px,2vw,28px)" }}>
         <div className="v6-wrap">
           {/* THE FREE TIER WAS NOWHERE ON THIS PAGE, AND IT IS THE STRONGEST THING WE CAN PUT IN FRONT OF A
               STRANGER. One verification, no card, against their own deployed system, ending in a real
@@ -167,7 +169,7 @@ export default function V6Pricing() {
                     which plan is right depends on how many guarantees a team is protecting, and the card
                     already says that in a number. Three identical buttons let the numbers decide. */}
                 <div style={{ marginTop: 20 }}>
-                  <CTA href={`/checkout?plan=${p.key}&cycle=monthly`}>Choose {p.name}</CTA>
+                  <CTA ghost href={`/checkout?plan=${p.key}&cycle=monthly`}>Choose {p.name}</CTA>
                 </div>
               </div>
             ))}
@@ -193,7 +195,7 @@ export default function V6Pricing() {
                 each journey beyond that is {money(EXTRA_FLOW_CENTS)}. Buy one when you need one. Nothing
                 renews, and a run Vraelis refuses to build still costs nothing.
               </p>
-              <CTA>Run a single verification</CTA>
+              <CTA ghost>Run a single verification</CTA>
             </div>
           </Reveal>
           {/* THE TIER THAT WAS NOT ON THE PAGE. An agency, a platform team, or anyone with a procurement
@@ -215,7 +217,7 @@ export default function V6Pricing() {
                 across a team, owner-anchored billing, and audit activity you can export. Invoicing, a
                 signed agreement and a security review are all available. Written quotes, not a calculator.
               </p>
-              <CTA href="mailto:sales@vraelis.com?subject=Vraelis%20Enterprise">Talk to sales</CTA>
+              <CTA ghost href="mailto:sales@vraelis.com?subject=Vraelis%20Enterprise">Talk to sales</CTA>
             </div>
           </Reveal>
           <Reveal>
@@ -223,7 +225,6 @@ export default function V6Pricing() {
               Yearly billing is available at checkout, and a plan that runs out early can be topped up with
               single verifications at the pay as you go price.
             </p>
-            <div style={{ marginTop: 16 }}><CTA ghost>Open Vraelis</CTA></div>
           </Reveal>
         </div>
       </section>

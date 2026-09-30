@@ -151,8 +151,8 @@ export default function IntegrationsPage() {
 
       {/* ── Honest note ── */}
       <section className="v6-sec">
-        <div className="v6-wrap v6-wrap--read">
-          <Reveal>
+        <div className="v6-wrap">
+          <Reveal style={{ maxWidth: 720 }}>
             <Kicker>The rule</Kicker>
             <h2 className="v6-dm" style={{ margin: "12px 0 16px" }}>A way in appears here only after it ships.</h2>
             <p className="v6-body">
