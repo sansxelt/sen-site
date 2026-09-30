@@ -54,7 +54,8 @@ export default async function ConsentPage({ searchParams }: { searchParams: Prom
     "See or change your billing.",
   ];
   const li = { fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.55, margin: "0 0 6px" } as const;
-  const label = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--fg-4)", margin: "0 0 8px" };
+  // Sentence case, like every label in the console this page belongs to.
+  const label = { fontSize: 13, fontWeight: 600, color: "var(--fg-2)", margin: "0 0 8px" };
 
   return (
     <div style={{ width: "min(460px, 100%)", margin: "0 auto" }}>
