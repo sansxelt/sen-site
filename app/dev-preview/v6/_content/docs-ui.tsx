@@ -101,6 +101,28 @@ export function DocCode({ label, code }: { label: string; code: string }) {
    they get a tool's frame: their own slim header (the mark, "Docs", where you are, Copy page, the way into
    the product), a quiet rail, a reading column at documentation sizes, an "On this page" list that follows
    the scroll, and a single line of footer. V6Shell leaves out its nav and footer on /docs for this. */
+/** Previous and next, the same pair at the top of the article and at its foot. On top it is a compact pair
+ *  beside the section name, so moving on does not need a scroll to the end; at the foot it is two even cards. */
+export function DocPager({ prev, next, place }: {
+  prev?: { slug: string; title: string } | null; next?: { slug: string; title: string } | null; place: "top" | "bottom";
+}) {
+  if (!prev && !next) return null;
+  if (place === "top") {
+    return (
+      <nav className="v6-docs__pagetop" aria-label="Previous and next page">
+        {prev ? <Link href={`${BASE}/docs/${prev.slug}`} title={`Previous: ${prev.title}`}><span aria-hidden>←</span><span className="t">{prev.title}</span></Link> : null}
+        {next ? <Link href={`${BASE}/docs/${next.slug}`} title={`Next: ${next.title}`}><span className="t">{next.title}</span><span aria-hidden>→</span></Link> : null}
+      </nav>
+    );
+  }
+  return (
+    <nav className="v6-docs__pager" aria-label="Previous and next page">
+      {prev ? <Link href={`${BASE}/docs/${prev.slug}`}><span className="l">← Previous</span><span className="t">{prev.title}</span></Link> : <span />}
+      {next ? <Link className="is-next" href={`${BASE}/docs/${next.slug}`}><span className="l">Next →</span><span className="t">{next.title}</span></Link> : <span />}
+    </nav>
+  );
+}
+
 export function DocShell({ activeSlug = "", toc = [], crumb, markdown, children }: {
   activeSlug?: string; toc?: string[];
   /** The group and the page title, shown as the breadcrumb in the header. */
@@ -113,6 +135,13 @@ export function DocShell({ activeSlug = "", toc = [], crumb, markdown, children 
   const [drawer, setDrawer] = useState(false);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState<string>(toc[0] ? dslug(toc[0]) : "");
+  // SECTIONS ARE DROPDOWNS. The section holding the page being read starts open and the rest start closed;
+  // on the docs index, where nothing is being read, all start open. A search opens every section it
+  // matches in, so a result is never hidden inside a closed one.
+  const activeGroup = groups.find((g) => g.docs.some((d) => d.slug === activeSlug))?.group ?? null;
+  const [open, setOpen] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(groups.map((g) => [g.group, activeGroup === null || g.group === activeGroup])));
+  const toggle = (g: string) => setOpen((o) => ({ ...o, [g]: !o[g] }));
 
   // Lock the page behind the drawer, and let Escape dismiss it.
   useEffect(() => {
@@ -159,9 +188,13 @@ export function DocShell({ activeSlug = "", toc = [], crumb, markdown, children 
               <path d={drawer ? "M6 6l12 12M6 18L18 6" : "M4 7h16M4 12h16M4 17h16"} />
             </svg>
           </button>
-          <Link href={V6_HOME} className="v6-dh__mark" aria-label="Vraelis home">
+          {/* The way home was a bare 18px mark that read as decoration. The wordmark goes to the homepage and
+              says so; "Docs" beside it goes to the docs index. */}
+          <Link href={V6_HOME} className="v6-dh__mark" title="Back to vraelis.com">
             <svg viewBox={MARK_VIEWBOX} aria-hidden><path d={MARK_PATH} fill="currentColor" /></svg>
+            <span className="v6-dh__word">Vraelis</span>
           </Link>
+          <span className="v6-dh__slash" aria-hidden>/</span>
           <Link href={`${BASE}/docs`} className="v6-dh__docs">Docs</Link>
         </div>
         {crumb ? (
@@ -189,20 +222,33 @@ export function DocShell({ activeSlug = "", toc = [], crumb, markdown, children 
           </div>
 
           <nav aria-label="Documentation sections list" className="v6-docs__nav">
-            {shown.map((g) => (
-              <div className="v6-docs__group" key={g.group}>
-                <p className="v6-docs__group-h">{g.group}</p>
-                {g.docs.map((d) => (
-                  <Link key={d.slug} href={`${BASE}/docs/${d.slug}`} className="v6-docs__link"
-                    onClick={() => { setDrawer(false); setQuery(""); }}
-                    aria-current={d.slug === activeSlug ? "page" : undefined}>{d.title}</Link>
-                ))}
-              </div>
-            ))}
+            {shown.map((g) => {
+              const isOpen = q ? true : open[g.group] !== false;
+              const id = `docs-group-${dslug(g.group)}`;
+              return (
+                <div className="v6-docs__group" key={g.group} data-open={isOpen}>
+                  <button type="button" className="v6-docs__group-h" aria-expanded={isOpen} aria-controls={id}
+                    onClick={() => toggle(g.group)}>
+                    <span>{g.group}</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                      <path d="M9 6l6 6-6 6" />
+                    </svg>
+                  </button>
+                  <div id={id} className="v6-docs__group-list" hidden={!isOpen}>
+                    {g.docs.map((d) => (
+                      <Link key={d.slug} href={`${BASE}/docs/${d.slug}`} className="v6-docs__link"
+                        onClick={() => { setDrawer(false); setQuery(""); }}
+                        aria-current={d.slug === activeSlug ? "page" : undefined}>{d.title}</Link>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
             {!shown.length ? <p className="v6-docs__empty">No page matches that.</p> : null}
           </nav>
 
           <div className="v6-docs__railfoot">
+            <Link href={V6_HOME}>← Back to vraelis.com</Link>
             <Link href={`${BASE}/developers`}>API and CLI</Link>
             <Link href={`${BASE}/changelog`}>Changelog</Link>
             <Link href={`${BASE}/company#contact`}>Contact support</Link>
