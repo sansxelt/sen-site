@@ -1,5 +1,5 @@
 ﻿import type { Metadata } from "next";
-import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
 import { cookies, headers } from "next/headers";
@@ -13,11 +13,27 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 
 // THE TYPE. IBM Plex Sans for everything people read, IBM Plex Mono for machine text (IDs, URLs, code).
 // Replaced Geist, Inter Tight and Instrument Serif on 2026-09-30: that trio is the default look of a generated
-// site, and the founder read it as exactly that. Both faces are SIL OFL and self-hosted by next/font, so
-// there is no request to Google at runtime. Every stylesheet reads the two variables below and nothing
-// names a family directly, so changing the face again is an edit to these two calls only.
-const brandSans = IBM_Plex_Sans({ subsets: ["latin"], variable: "--font-brand-sans", display: "swap" });
-const brandMono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-brand-mono", display: "swap" });
+// site, and the founder read it as exactly that. Both faces are SIL OFL (app/fonts/OFL.txt), and the Latin
+// files are COMMITTED in app/fonts rather than pulled through next/font/google: that loader downloads from
+// Google during the build, and a failed download fails the whole production build. Local files cannot.
+// Every stylesheet reads the two variables below and nothing names a family directly, so changing the face
+// again is an edit to these two calls only.
+const brandSans = localFont({
+  src: "./fonts/ibm-plex-sans-latin-var.woff2",
+  weight: "100 700",
+  style: "normal",
+  variable: "--font-brand-sans",
+  display: "swap",
+});
+const brandMono = localFont({
+  src: [
+    { path: "./fonts/ibm-plex-mono-latin-400.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/ibm-plex-mono-latin-500.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/ibm-plex-mono-latin-600.woff2", weight: "600", style: "normal" },
+  ],
+  variable: "--font-brand-mono",
+  display: "swap",
+});
 
 // There used to be a second brand here (an AI-memory chatbot) with its own metadata and JSON-LD, selected
 // per request. isVraelisRequest() has returned a constant true for a long time, so none of it was ever
