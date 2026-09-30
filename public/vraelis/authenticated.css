@@ -263,6 +263,23 @@ html:has([data-surface="app"]) {
 [data-surface="app"] .price--hot::before {
   background: var(--acc);
   color: var(--fg-on-accent);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  border-radius: 6px;
+}
+/* The small plan and cycle badges ("Current plan", "Monthly") were tracked capitals in the accent; they
+   are sentence-case labels like every other badge in the console now. */
+[data-surface="app"] .badge-now {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  border-radius: 6px;
+  padding: 2px 8px;
 }
 
 /* The feature tick is an SVG data URI with its stroke colour written into the URL, so no token can reach

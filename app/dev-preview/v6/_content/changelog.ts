@@ -21,6 +21,19 @@ export type Entry = { date: string; tag: "go" | "wait"; tagLabel: string; title:
 
 export const CHANGELOG: Entry[] = [
   {
+    date: "2026-09-30",
+    tag: "go",
+    tagLabel: "Shipped",
+    title: "A lighter console, one typeface, and docs with real screenshots",
+    body: [
+      "The console is now light: a grey page with white cards, one blue for the things you act on, and green, amber and red kept for results only. Section titles are real headings, the coloured bars down the left of issue rows are gone, and the button at the end of a run opens that run rather than the list of runs.",
+      "The site, the console and every email now use IBM Plex Sans and IBM Plex Mono. Emails share one plain layout: what happened, the details in a table, one action, and why you received it.",
+      "The homepage and the docs list everything Vraelis is for, each marked Live, Not built yet or Not covered, from the same list /platform uses. Five docs pages now carry annotated screenshots from real runs, every page says in one sentence what it does not do, and each can be copied as Markdown. /llms.txt indexes the docs for AI assistants.",
+    ],
+    href: "/docs/what-you-can-check",
+    hrefLabel: "What you can check",
+  },
+  {
     date: "2026-09-28",
     tag: "go",
     tagLabel: "Shipped",

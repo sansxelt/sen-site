@@ -129,8 +129,10 @@ export default function CompanyPage() {
     <>
       <PageHero
         kicker="Company"
-        title="We check whether live software does what someone says it does."
-        lead="Software ships faster than anyone can check it by hand, from teams, agencies, founders and AI agents alike. Vraelis is the independent check on the live app: one sentence about what should work, a plan a person approves, and an answer with the evidence."
+        // A verification company for anything people build (founder, 2026-09-29), stated at the size of what is
+        // live today: software, and devices through the panel that runs them.
+        title="We check that what people build does what they meant."
+        lead="Software and connected devices ship faster than anyone can check them by hand, whether a team, an agency, a founder or an AI agent built them. Vraelis is the independent check on the live product: one sentence about what should work, a plan a person approves, and an answer with the evidence."
         cta={<><CTA brand>Open Vraelis</CTA><EditorialLink href="#contact">Talk to us</EditorialLink></>}
       />
 

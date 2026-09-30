@@ -36,7 +36,9 @@ const P = { margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--g-fg-2)" } a
 // style is how one of them ends up a different size after a later edit touches only the card in front of
 // whoever is editing.
 const AMOUNT = { margin: "0 0 4px", fontSize: "2rem", fontWeight: 600, letterSpacing: "-0.03em", color: "var(--g-fg)" } as const;
-const AMOUNT_UNIT = { fontSize: 14, fontWeight: 400, color: "var(--g-fg-3)" } as const;
+// marginLeft: the word space inside the span is 14px wide next to a 32px figure, so "$0" and its caption
+// read as one word ("$0to see") without it.
+const AMOUNT_UNIT = { fontSize: 14, fontWeight: 400, color: "var(--g-fg-3)", marginLeft: 4 } as const;
 const HEADLINE = { margin: "0 0 12px", fontSize: 15, fontWeight: 600, color: "var(--g-fg)" } as const;
 const FEATURES = { margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 6 } as const;
 
