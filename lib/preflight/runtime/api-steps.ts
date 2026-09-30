@@ -13,7 +13,7 @@
 // (http_request/http_auth/assert_status/assert_json/assert_schema/extract/verify_persisted/set_header) or a
 // fixture/canary term. That is asserted by the test suite.
 
-import { redactSecretyValue } from "../connections-db";
+import { redactSecretyValue } from "../redact";
 import type { ApiStep } from "./api-adapter";
 
 // The customer-authorable API actions (plain-language ids; NOT the internal ApiStep names).

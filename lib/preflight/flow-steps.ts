@@ -11,7 +11,9 @@
 // Any step value that looks credential-shaped (the connections redact/secret-detect) is REJECTED here so a
 // credential can never be typed into a flow and stored in plaintext.
 
-import { redactSecretyValue } from "./connections-db";
+// From the pure module, not connections-db: this file is imported by the browser-side flow editor, and
+// connections-db pulls in the secret vault (node:crypto) and the database client.
+import { redactSecretyValue } from "./redact";
 
 // The customer-authorable actions. A curated safe subset of the worker StepAction union (spec: "Do not
 // expose raw Playwright selectors as the primary editing experience"). navigate/click/fill/assert_*/refresh

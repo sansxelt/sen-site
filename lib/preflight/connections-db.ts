@@ -36,10 +36,11 @@ const SECRETY_KEYS = ["password", "secret", "token", "api_key", "apikey", "priva
 // free-text field (notes, scope, url) is redacted before storage. Prose passwords can never be reliably
 // detected — the UI says so next to every free-text field — but well-known token FORMATS can be:
 // Stripe sk/rk keys, GitHub tokens, JWTs, AWS access keys, private-key blocks, and explicit "password:" pairs.
-const SECRETY_VALUE = /(sk|rk)_(live|test)_[A-Za-z0-9]{8,}|gh[pousr]_[A-Za-z0-9]{20,}|eyJ[A-Za-z0-9_-]{10,}\.eyJ|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----|(password|passwd|pwd)\s*[:=]\s*\S+/i;
-export function redactSecretyValue(v: string): string {
-  return SECRETY_VALUE.test(v) ? v.replace(new RegExp(SECRETY_VALUE.source, "gi"), "[redacted by Vraelis: looked like a credential]") : v;
-}
+// The guard itself lives in ./redact, a pure module with no server imports, so browser-side code (the flow
+// editor) can use it without pulling this file and the secret vault into the client bundle. Re-exported
+// here so existing server callers keep their import. There used to be two copies of the regex.
+import { redactSecretyValue } from "./redact";
+export { redactSecretyValue };
 export function sanitizeConnectionMeta(meta: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(meta ?? {})) {
