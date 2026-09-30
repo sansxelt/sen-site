@@ -58,7 +58,7 @@ export function Code({ lang, src }: { lang: string; src: string }) {
           data-v6-copy
           aria-label={`Copy ${lang} snippet`}
           style={{
-            fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase",
+            fontFamily: "var(--sans)", fontSize: 12.5, fontWeight: 500,
             color: "var(--g-fg-3)", background: "transparent", border: "1px solid var(--g-line)",
             borderRadius: 6, padding: "4px 11px", minHeight: 28, cursor: "pointer",
           }}
@@ -66,7 +66,8 @@ export function Code({ lang, src }: { lang: string; src: string }) {
           Copy
         </button>
       </div>
-      <pre><code>{segs.map((s, i) => (typeof s === "string" ? s : <span key={i} className={s[1]}>{s[0]}</span>))}</code></pre>
+      {/* tabIndex so keyboard users can scroll a line wider than the block (axe scrollable-region-focusable). */}
+      <pre tabIndex={0}><code>{segs.map((s, i) => (typeof s === "string" ? s : <span key={i} className={s[1]}>{s[0]}</span>))}</code></pre>
     </div>
   );
 }

@@ -639,10 +639,10 @@ export default function Platform() {
               lead={COVERAGE_THESIS}
             />
           </Reveal>
-          <ul style={{ listStyle: "none", margin: "clamp(28px,3vw,40px) 0 0", padding: 0, display: "flex", flexDirection: "column", gap: 0 }}>
+          <div role="list" style={{ listStyle: "none", margin: "clamp(28px,3vw,40px) 0 0", padding: 0, display: "flex", flexDirection: "column", gap: 0 }}>
             {SURFACES.map((s, i) => (
               <Reveal key={s.name} i={Math.min(i, 3)}>
-                <li style={{ display: "grid", gap: 10, paddingBlock: "clamp(20px,2.2vw,26px)", borderTop: "1px solid var(--line-2)" }}>
+                <div role="listitem" style={{ display: "grid", gap: 10, paddingBlock: "clamp(20px,2.2vw,26px)", borderTop: "1px solid var(--line-2)" }}>
                   <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap" }}>
                     <h3 className="v6-dm" style={{ margin: 0 }}>{s.name}</h3>
                     {/* A roadmap tier is not a result, so it does not wear a result colour (same chip as the homepage). */}
@@ -651,10 +651,10 @@ export default function Platform() {
                   <p className="v6-body" style={{ maxWidth: "70ch" }}>{s.reach}</p>
                   {/* The half a reader can check, and on a Next or Not covered row what happens instead. */}
                   <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.55, color: "var(--ink-4)", maxWidth: "70ch" }}>{s.today}</p>
-                </li>
+                </div>
               </Reveal>
             ))}
-          </ul>
+          </div>
           <Reveal>
             <p className="v6-body" style={{ marginTop: "clamp(22px,2.4vw,32px)", maxWidth: "72ch", paddingTop: "clamp(20px,2.2vw,26px)", borderTop: "1px solid var(--line-2)" }}>
               {COVERAGE_RULE}

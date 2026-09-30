@@ -19,7 +19,10 @@
 .v6-demo__tab:hover { color: var(--g-fg); border-color: var(--g-line-2); }
 .v6-demo__tab[aria-selected="true"] { color: var(--graphite); background: var(--g-fg); border-color: var(--g-fg); }
 .v6-demo__tab:focus-visible, .v6-demo__run:focus-visible, .v6-demo__replay:focus-visible { outline: 2px solid var(--g-fg); outline-offset: 2px; }
-.v6-demo__tabn { font-size: 11px; opacity: .7; }
+/* No opacity: at .7 the inactive tab numbers measured 3.5:1 on graphite (axe color-contrast, found by
+   scripts/readiness-probe.ts on 2026-09-30). The meta grey alone is 6.2:1. */
+.v6-demo__tabn { font-size: 11px; color: var(--g-fg-3); }
+.v6-demo__tab[aria-selected="true"] .v6-demo__tabn { color: var(--ink-3, #5B5D63); }
 
 /* stage */
 .v6-demo__stage { display: grid; grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr); gap: clamp(20px, 3vw, 44px);
@@ -31,7 +34,8 @@
 .v6-demo__claim { margin: 8px 0 0; font-family: var(--display); font-weight: var(--display-w); font-synthesis-weight: none;
   font-size: clamp(1.35rem, 2.2vw, 1.8rem); line-height: 1.2; color: var(--g-fg); text-wrap: pretty; }
 .v6-demo__app { margin: 10px 0 0; font-size: 0.9rem; color: var(--g-fg-3); }
-.v6-demo__app a { color: var(--g-fg-2); text-underline-offset: 3px; }
+/* Underlined, because its colour alone is only 1.85:1 against the sentence around it (axe link-in-text-block). */
+.v6-demo__app a { color: var(--g-fg-2); text-decoration: underline; text-decoration-color: rgba(255,255,255,0.35); text-underline-offset: 3px; }
 .v6-demo__app a:hover { color: var(--g-fg); }
 
 .v6-demo__runs { display: inline-flex; gap: 0; margin-top: 16px; border: 1px solid var(--g-line); border-radius: 10px; overflow: hidden; }

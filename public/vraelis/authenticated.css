@@ -232,6 +232,11 @@ html:has([data-surface="app"]) {
 [data-surface="app"] .app-drawer { background: var(--bg-1); }
 [data-surface="app"] .app-drawer-scrim { background: rgba(10, 10, 11, 0.28); }
 
+/* A link inside a sentence is underlined: its colour alone is too close to the text around it for anyone
+   who cannot tell the two apart (axe link-in-text-block). Links styled as buttons are left alone. */
+[data-surface="app"] p a:not(.btn),
+[data-surface="app"] li a:not(.btn) { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
 /* Scrollbars: the browser default on a light page is fine; this only keeps the thumb quiet. */
 [data-surface="app"] * { scrollbar-color: rgba(10, 10, 11, 0.22) transparent; }
 

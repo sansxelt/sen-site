@@ -782,7 +782,7 @@ export default async function VerificationResultPage({ params }: { params: Promi
                         </div>
                         <CopyButton text={iss.repair_prompt as string} />
                       </div>
-                      <pre style={{ margin: 0, fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.55, whiteSpace: "pre-wrap", wordBreak: "break-word", background: "var(--bg-2)", border: "1px solid var(--line-2)", borderRadius: 8, padding: "10px 12px", maxHeight: 340, overflow: "auto" }}>{iss.repair_prompt}</pre>
+                      <pre tabIndex={0} style={{ margin: 0, fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.55, whiteSpace: "pre-wrap", wordBreak: "break-word", background: "var(--bg-2)", border: "1px solid var(--line-2)", borderRadius: 8, padding: "10px 12px", maxHeight: 340, overflow: "auto" }}>{iss.repair_prompt}</pre>
                     </div>
                   ))}
                 </div>

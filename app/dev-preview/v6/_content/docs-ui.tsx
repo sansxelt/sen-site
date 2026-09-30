@@ -90,7 +90,8 @@ export function DocCode({ label, code }: { label: string; code: string }) {
   return (
     <div className="v6-docs__code">
       <p className="v6-docs__code-h">{label}</p>
-      <pre>{code}</pre>
+      {/* tabIndex: a long line scrolls sideways, and keyboard users can only scroll what can take focus. */}
+      <pre tabIndex={0}>{code}</pre>
     </div>
   );
 }

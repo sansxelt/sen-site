@@ -70,7 +70,7 @@ export function CommandCenter({
       <div style={{ display: "flex", gap: "clamp(16px, 3vw, 32px)", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap" }}>
         {/* Verdict — the thesis of the strip, in the decision tone at hero scale. */}
         <div style={{ minWidth: 0, flex: "1 1 320px" }}>
-          <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: tone.fg, opacity: 0.85 }}>Decision</div>
+          <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: tone.fg }}>Decision</div>
           {/* Uppercased in CSS rather than in the string, so the accessible name stays the vocabulary's own
               "Verified" / "Not yet verified" while the hero still reads in caps. */}
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(2rem, 4.2vw, 3rem)", lineHeight: 1.04, letterSpacing: "-0.01em", color: tone.fg, marginTop: 8 }}>{verdict.label}</div>
@@ -81,7 +81,8 @@ export function CommandCenter({
             A read-only member sees an honest view-only note in this column instead of a control they
             can't use — the verdict + ribbon still read exactly the same. */}
         <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6, maxWidth: 320 }}>
-          <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: tone.fg, opacity: 0.7 }}>Next</div>
+          {/* No opacity: at 0.7 the label measured 3.6:1 on the state wash (axe color-contrast). */}
+          <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: tone.fg }}>Next</div>
           {showReadOnlyNote ? (
             <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.5, margin: "2px 0 0" }}>
               View-only access. Ask an editor to {isLaunch ? "run a verification" : "update the contract"}.

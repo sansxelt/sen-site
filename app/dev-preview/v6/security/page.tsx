@@ -159,19 +159,19 @@ export default function SecurityPage() {
               lead="What is live today, and what is still a direction. We separate the two rather than blur them."
             />
           </Reveal>
-          <ul style={{ listStyle: "none", margin: "clamp(28px,3vw,40px) 0 0", padding: 0 }}>
+          <div role="list" style={{ listStyle: "none", margin: "clamp(28px,3vw,40px) 0 0", padding: 0 }}>
             {IDENTITY.map(([t, state, label, d], i) => (
               <Reveal key={t} i={i}>
-                <li style={{ padding: "clamp(20px,2.4vw,28px) 0", borderTop: i ? "1px solid var(--line)" : "none" }}>
+                <div role="listitem" style={{ padding: "clamp(20px,2.4vw,28px) 0", borderTop: i ? "1px solid var(--line)" : "none" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
                     <span style={{ fontSize: "clamp(1.05rem,1.4vw,1.25rem)", fontWeight: 600, color: "var(--ink)", letterSpacing: "-0.015em" }}>{t}</span>
                     <Signal state={state}>{label}</Signal>
                   </div>
                   <p style={{ margin: "8px 0 0", fontSize: 15, lineHeight: 1.6, color: "var(--ink-3)", maxWidth: "64ch" }}>{d}</p>
-                </li>
+                </div>
               </Reveal>
             ))}
-          </ul>
+          </div>
         </div>
       </section>
 
@@ -185,16 +185,16 @@ export default function SecurityPage() {
               lead="We describe what Vraelis actually does. We do not claim formal certifications, and we do not display compliance seals."
             />
           </Reveal>
-          <ul style={{ listStyle: "none", margin: "clamp(28px,3vw,40px) 0 0", padding: 0, maxWidth: 820 }}>
+          <div role="list" style={{ listStyle: "none", margin: "clamp(28px,3vw,40px) 0 0", padding: 0, maxWidth: 820 }}>
             {LIMITS.map((t, i) => (
               <Reveal key={t} i={i}>
-                <li style={{ display: "flex", gap: 14, padding: "16px 0", borderTop: i ? "1px solid var(--line)" : "none" }}>
+                <div role="listitem" style={{ display: "flex", gap: 14, padding: "16px 0", borderTop: i ? "1px solid var(--line)" : "none" }}>
                   <span aria-hidden style={{ flex: "none", width: 7, height: 7, borderRadius: 999, border: "1px solid var(--ink-4)", marginTop: 9 }} />
                   <span style={{ fontSize: 15.5, lineHeight: 1.6, color: "var(--ink-2)" }}>{t}</span>
-                </li>
+                </div>
               </Reveal>
             ))}
-          </ul>
+          </div>
           <Reveal>
             <p style={{ margin: "clamp(24px,2.6vw,32px) 0 0", fontSize: 14, lineHeight: 1.7, color: "var(--ink-3)", maxWidth: 720 }}>
               If your organization needs specific compliance attestations, talk to the team about requirements before you rely on Vraelis for them.
