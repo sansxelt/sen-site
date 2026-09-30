@@ -33,7 +33,7 @@ export const metadata: Metadata = v6meta({
   path: "/platform",
   ogTitle: "The Vraelis platform",
   ogDescription:
-    "One sentence, one approved plan, and one decision from the live app: Verified, Failed, or Blocked.",
+    "One sentence, one approved plan, one real run on the live app, and everything it saw.",
 });
 
 const BASE = V6_BASE;
@@ -481,9 +481,9 @@ export default function Platform() {
               translate through, so a reader here and a machine reading the API are told the same thing. */}
           <Reveal style={{ marginTop: 22 }}>
             <p style={{ color: "var(--g-fg-2)", fontSize: 14.5, maxWidth: "72ch", margin: 0 }}>
-              Verified, Failed and Blocked are the only three answers a run can end on, and they are the same
-              three the console, the CLI, the API, the MCP tools and the webhooks return. Blocked means no
-              verdict could be reached, which is the answer that keeps the other two worth having.{" "}
+              Every run ends in a plain answer with the evidence behind it, and the console, the CLI, the API,
+              the MCP tools and the webhooks all return the same one. When no answer can be reached, the run says
+              so instead of guessing, which is what keeps the other answers worth having.{" "}
               <Link href={`${BASE}/docs/run-activity`} className="v6-plink">How a run is recorded</Link>
             </p>
           </Reveal>
@@ -574,16 +574,16 @@ export default function Platform() {
           <Reveal>
             <SectionHead
               eyebrow="Completion"
-              title="Completion is a decision, not a claim."
-              lead="When someone says it works, Vraelis returns one of three answers. Whoever produced the work does not get to certify it."
+              title="Done is something the live app shows."
+              lead="When someone says it works, Vraelis checks and shows what happened. Whoever produced the work does not get to mark it done."
             />
           </Reveal>
           <div className="v6-grid3" style={{ marginTop: "clamp(28px,3vw,40px)" }}>
             {[
-              { s: "go" as Sig, t: "Verified", d: "The claim holds on the live app, checked against the plan a person approved." },
-              { s: "stop" as Sig, t: "Failed", d: "The app does not do what the claim says. The gap is recorded as evidence, with a repair prompt." },
+              { s: "go" as Sig, t: "It works", d: "The sentence holds on the live app, checked against the plan a person approved." },
+              { s: "stop" as Sig, t: "It does not", d: "The app does not do what the sentence says. The gap is recorded as evidence, with a repair prompt." },
               // Blocked is amber everywhere else in the product: it is the honest third answer, not a failure.
-              { s: "wait" as Sig, t: "Blocked", d: "No verdict could be reached, so none is reported. Nothing is recorded as proven." },
+              { s: "wait" as Sig, t: "It could not tell", d: "No answer could be reached, so none is reported. Nothing is recorded as proven." },
             ].map((c, i) => (
               <Reveal key={c.t} i={i}>
                 <div style={{ background: "var(--graphite-2)", border: "1px solid var(--g-line)", borderRadius: 14, padding: "clamp(20px,2.2vw,26px)", height: "100%" }}>

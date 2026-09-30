@@ -82,6 +82,8 @@ export function RunWindow() {
   const [copied, setCopied] = useState(false);
   const timers = useRef<number[]>([]);
   const started = useRef(false);
+  // Once the reader picks a run, replays, or copies, the window stops choosing for them.
+  const touched = useRef(false);
 
   const e = ENTRIES[sel];
   const steps = useMemo(() => e.run.journeys.flatMap((j) => j.steps), [e]);
@@ -124,7 +126,20 @@ export function RunWindow() {
     box.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
   }, [shown, done]);
 
-  const choose = (i: number) => { setSel(i); started.current = true; play(i); list.current?.scrollTo({ top: 0 }); };
+  const choose = (i: number, byReader = true) => {
+    if (byReader) touched.current = true;
+    setSel(i); started.current = true; play(i); list.current?.scrollTo({ top: 0 });
+  };
+
+  // THE STORY, ONCE: the checkout that forgets, then the same check after the fix. When the first replay
+  // ends and the reader has not taken over, the window moves on to the fixed run by itself, one time.
+  useEffect(() => {
+    if (!done || sel !== 0 || touched.current) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const t = window.setTimeout(() => { if (!touched.current) choose(1, false); }, 7000);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [done, sel]);
   const copy = async () => {
     if (!prompt) return;
     try { await navigator.clipboard.writeText(prompt); setCopied(true); } catch { /* clipboard refused: the text is on screen to select */ }
@@ -139,14 +154,14 @@ export function RunWindow() {
   const address = `${host(e.demo.url)}${at === "/" ? "" : at}`;
 
   return (
-    <div ref={root} className="rw" data-state={state}>
+    <div ref={root} className="rw" data-state={state} onPointerDown={() => { touched.current = true; }} onKeyDown={() => { touched.current = true; }}>
       <div className="rw__top">
         <span className="rw__brand">
           <span className="rw__mark" aria-hidden>V</span>
           <span className="rw__crumb">Checks <span aria-hidden>/</span> <b>{appName(e.demo)}</b></span>
         </span>
         <span className="rw__rec v6-mono">Run {RUN_IDS[e.id] ?? ""} · {fmtDate(e.run.recorded)} 2026</span>
-        <button type="button" className="rw__replay" onClick={() => play(sel)}>
+        <button type="button" className="rw__replay" onClick={() => { touched.current = true; play(sel); }}>
           <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden><path d="M3 8a5 5 0 1 0 1.6-3.7M3 2.5v2.6h2.6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
           Replay
         </button>
@@ -254,7 +269,7 @@ export function RunWindow() {
             <div className="rw__prompt">
               <div className="rw__ph">
                 <span>Repair prompt for your coding agent</span>
-                <button type="button" className="rw__copy" onClick={copy}>{copied ? "Copied" : "Copy"}</button>
+                <button type="button" className="rw__copy" onClick={() => { touched.current = true; void copy(); }}>{copied ? "Copied" : "Copy"}</button>
               </div>
               <pre className="v6-mono">{prompt}</pre>
             </div>

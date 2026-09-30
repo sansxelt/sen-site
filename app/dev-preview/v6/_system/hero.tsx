@@ -16,6 +16,8 @@ import { useState, type FormEvent } from "react";
 import { HEADLINE, SUPPORT } from "./positioning";
 import { RunWindow } from "./run-window";
 import { V6_APP, V6_BASE } from "@/lib/v6-routes";
+import { hrefWithLocale } from "@/lib/i18n/locales";
+import { currentLocale } from "@/lib/i18n/client";
 import "./hero.css";
 
 const CONNECT = `${V6_APP}/systems/new`;
@@ -31,7 +33,8 @@ export function Hero() {
   const submit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const v = normalise(url);
-    window.location.assign(v ? `${CONNECT}?url=${encodeURIComponent(v)}` : CONNECT);
+    // The language rides along, like on every other link (components/language-controller.tsx).
+    window.location.assign(hrefWithLocale(v ? `${CONNECT}?url=${encodeURIComponent(v)}` : CONNECT, currentLocale(), window.location.href));
   };
 
   return (

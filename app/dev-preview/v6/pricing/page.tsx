@@ -121,7 +121,7 @@ export default function V6Pricing() {
                   {FREE_TIER.flowsPerPass} journeys
                 </li>
                 <li style={P}>{FREE_TIER.maxApplications} connected system</li>
-                <li style={P}>A full Verified, Failed or Blocked decision, with screenshots and the step record</li>
+                <li style={P}>The full answer, with screenshots and the step record</li>
                 {/* Free is the ONE tier without the API, now that every paid plan has it. Stated on the card
                     rather than discovered when a key is refused. */}
                 <li style={P}>Console only, no API or CLI</li>

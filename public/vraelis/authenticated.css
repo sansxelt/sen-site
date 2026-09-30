@@ -415,3 +415,8 @@ html:has([data-surface="app"]) {
 [data-surface="app"] .auth-form__switch button { padding: 0; border: 0; background: none; font: inherit; font-weight: 600; color: var(--fg-1);
   text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 [data-surface="app"] .auth-form--wide { width: min(460px, 100%); }
+/* The round-trip screens (verify email, reset password, errors) were built as a bordered card inside their
+   own padded column. Inside the account frame that read as a box in a box beside the flat sign-in form, so
+   the frame flattens them: same page, same form width, no second container. */
+[data-surface="app"] .auth-form--wide > div { max-width: none !important; padding: 0 !important; margin: 0 !important; }
+[data-surface="app"] .auth-form--wide .card { border: 0 !important; background: transparent !important; box-shadow: none !important; padding: 0 !important; }

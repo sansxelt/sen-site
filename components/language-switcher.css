@@ -1,0 +1,43 @@
+/* The language switch. Self-contained values, so it renders the same on the site's tokens and the
+   console's. Ink on white by default; data-tone="dark" for the ink panels. */
+.lsw { position: relative; display: inline-flex; font-family: inherit; }
+.lsw__btn {
+  display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 10px 0 9px;
+  border: 1px solid rgba(10,10,11,0.14); border-radius: 8px; background: #FFFFFF; color: #2E2F33;
+  font-family: inherit; font-size: 13px; font-weight: 500; line-height: 1; cursor: pointer; white-space: nowrap;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.lsw__btn:hover { border-color: rgba(10,10,11,0.28); color: #0A0A0B; }
+.lsw__btn:focus-visible { outline: 2px solid #0A0A0B; outline-offset: 2px; }
+.lsw__globe { flex: none; color: #5B5D63; }
+.lsw__chev { flex: none; color: #6A6C71; transition: transform 0.15s ease; }
+.lsw[data-open="true"] .lsw__chev { transform: rotate(180deg); }
+
+.lsw__menu {
+  position: absolute; z-index: 60; left: 0; width: 264px; padding: 10px;
+  background: #FFFFFF; color: #0A0A0B; border: 1px solid rgba(10,10,11,0.12); border-radius: 12px;
+  box-shadow: 0 18px 44px -18px rgba(15,19,25,0.35), 0 2px 6px rgba(15,19,25,0.06);
+}
+.lsw[data-place="up"] .lsw__menu { bottom: calc(100% + 8px); }
+.lsw[data-place="down"] .lsw__menu { top: calc(100% + 8px); }
+.lsw[data-align="right"] .lsw__menu { left: auto; right: 0; }
+.lsw__head { margin: 2px 6px 2px; font-size: 13px; font-weight: 600; }
+.lsw__note { margin: 0 6px 8px; font-size: 12px; line-height: 1.4; color: #6A6C71; }
+.lsw__list { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
+.lsw__opt {
+  display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 32px; padding: 0 8px;
+  border: 0; border-radius: 7px; background: transparent; color: #2E2F33; font-family: inherit; font-size: 13px; font-weight: 400; line-height: 1.2;
+  text-align: left; cursor: pointer;
+}
+.lsw__opt:hover { background: #F4F4F5; color: #0A0A0B; }
+.lsw__opt[aria-checked="true"] { background: #F4F4F5; color: #0A0A0B; font-weight: 600; }
+.lsw__opt:focus-visible { outline: 2px solid #0A0A0B; outline-offset: -2px; }
+
+.lsw[data-tone="dark"] .lsw__btn { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.18); color: #E4E4E7; }
+.lsw[data-tone="dark"] .lsw__btn:hover { background: rgba(255,255,255,0.12); color: #FFFFFF; }
+.lsw[data-tone="dark"] .lsw__btn:focus-visible { outline-color: #FAFAFA; }
+.lsw[data-tone="dark"] .lsw__globe, .lsw[data-tone="dark"] .lsw__chev { color: #A1A1AA; }
+
+@media (max-width: 480px) {
+  .lsw__menu { width: min(264px, calc(100vw - 32px)); }
+}

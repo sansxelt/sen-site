@@ -79,6 +79,20 @@ function DronePanel() {
 }
 
 export function Surfaces() {
+  // Cards rise in as they reach the screen. The hidden state is only applied once this has run (sf-anim),
+  // so without script, or with reduced motion (surfaces.css), every card is simply there.
+  const grid = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = grid.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const cards = [...el.querySelectorAll<HTMLElement>(".sf-card")];
+    el.classList.add("sf-anim");
+    const io = new IntersectionObserver((es) => {
+      for (const e of es) if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+    }, { threshold: 0.12, rootMargin: "0px 0px -6% 0px" });
+    cards.forEach((c) => io.observe(c));
+    return () => io.disconnect();
+  }, []);
   return (
     <section className="v6-sf" aria-labelledby="v6-sf-h" data-nav-theme="light">
       <div className="v6-sf__in">
@@ -87,7 +101,7 @@ export function Surfaces() {
           <p className="v6-sf__lead">Websites, web apps and the devices they run. Start it from the console, your terminal or your AI agent.</p>
         </div>
 
-        <div className="v6-sf__grid">
+        <div ref={grid} className="v6-sf__grid">
           {/* Web apps */}
           <article className="sf-card">
             <div className="sf-card__txt">

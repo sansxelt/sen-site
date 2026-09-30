@@ -53,8 +53,8 @@ const MENUS: Menu[] = [
         { t: "Execution", d: "A real browser on the live app", href: BASE + "/docs/run-activity",
           preview: { eyebrow: "Execution", title: "A real browser drives the running app.", body: "Not a mock, and not anyone's account of their own work. What the run does is captured as it goes.", stat: "Real browser" } },
         { t: "Findings", d: "What broke, and how to reproduce it", href: BASE + "/docs/findings" },
-        { t: "Completion", d: "Verified, Failed, or Blocked", href: BASE + "/docs/completion",
-          preview: { eyebrow: "Completion", title: "Three answers, and the third is the honest one.", body: "Verified, Failed, or Blocked. Blocked is the one most tools refuse to say.", stat: "Three outcomes" } },
+        { t: "Completion", d: "What a check tells you", href: BASE + "/docs/completion",
+          preview: { eyebrow: "Completion", title: "An answer you can check.", body: "It worked, it did not, or it could not tell, with the evidence. Saying it could not tell is what most tools skip.", stat: "Evidence attached" } },
       ] },
       { h: "Resolve", links: [
         { t: "Approving a plan", d: "The step only a person takes", href: BASE + "/docs/review" },

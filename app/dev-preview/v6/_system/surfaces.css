@@ -20,6 +20,10 @@
   scroll-margin-top: 90px;
 }
 .sf-card--wide { grid-column: span 2; }
+.sf-anim .sf-card { transition: opacity 0.6s var(--ease), transform 0.6s var(--ease); }
+.sf-anim .sf-card:not(.in) { opacity: 0; transform: translateY(18px); }
+.sf-anim .sf-card:nth-child(3n+2) { transition-delay: 70ms; }
+.sf-anim .sf-card:nth-child(3n) { transition-delay: 140ms; }
 .sf-card--row { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 40px; padding: 30px 30px; }
 .sf-card--row .sf-card__txt { flex: 0 1 380px; }
 .sf-card__txt h3 { margin: 10px 0 0; font-family: var(--display); font-weight: 500; font-size: 1.45rem; letter-spacing: -0.02em; line-height: 1.15; color: var(--ink); }
@@ -86,7 +90,7 @@
 .sf-drone__craft[data-s="Landing"], .sf-drone__craft[data-s="Landed"] { left: 10%; top: 70%; }
 .sf-drone__craft[data-s="Landed"] { background: #3FCF8E; box-shadow: 0 0 0 5px rgba(63,207,142,0.16); }
 .sf-drone__side { padding: 14px 14px 12px; display: flex; flex-direction: column; gap: 10px; }
-.sf-drone__craftname { margin: 0; font-weight: 600; font-size: 12.5px; }
+.sf-drone__craftname { margin: 0; font-weight: 600; font-size: 12.5px; color: #EEF1F5; }
 .sf-drone__stats { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .sf-drone__stats div { padding: 7px 9px; border: 1px solid #232B37; border-radius: 8px; background: #141922; }
 .sf-drone__stats dt { font-size: 10px; color: #7D8694; }
@@ -140,7 +144,12 @@
 
 @media (max-width: 1080px) {
   .v6-sf__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .sf-card--wide { grid-column: 1 / -1; }
+  /* two columns: the four single cards pair up first, then the wide devices card and readiness */
+  .sf-card--wide { grid-column: 1 / -1; order: 2; }
+  .sf-card--row { order: 3; }
+}
+@media (max-width: 720px) {
+  .sf-card--wide, .sf-card--row { order: 0; }
 }
 @media (max-width: 720px) {
   .v6-sf__grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
@@ -151,6 +160,7 @@
   .sf-drone__map { min-height: 150px; border-right: 0; border-bottom: 1px solid #232B37; }
 }
 @media (prefers-reduced-motion: reduce) {
+  .sf-anim .sf-card, .sf-anim .sf-card:not(.in) { opacity: 1; transform: none; transition: none; }
   .sf-web__cursor { animation: none; }
   .sf-drone__craft { transition: none; }
 }

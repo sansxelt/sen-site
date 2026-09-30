@@ -29,7 +29,7 @@ import { V6_BASE } from "@/lib/v6-routes";
 export const metadata: Metadata = v6meta({
   title: "AI assistants",
   description:
-    "Connect Vraelis to an AI assistant over MCP, so it can check a change on your deployed web app in a real browser and get back Verified, Failed or Blocked with the evidence. Setup for Claude Code, Codex, Gemini CLI, GitHub Copilot, Cursor, Trae, ChatGPT and Claude.",
+    "Connect Vraelis to an AI assistant over MCP, so it can check a change on your deployed web app in a real browser and get back what happened, with the evidence. Setup for Claude Code, Codex, Gemini CLI, GitHub Copilot, Cursor, Trae, ChatGPT and Claude.",
   path: "/agents",
   ogTitle: "Vraelis in your AI assistant",
 });
@@ -140,7 +140,7 @@ export default function Agents() {
       <PageHero
         kicker="AI assistants"
         title="Let your AI assistant check its work on the live app."
-        lead="When an assistant finishes a change to your web app, it can ask Vraelis to try it on the deployed site and get back Verified, Failed or Blocked, with the evidence. You approve each new check once. Set it up with one command, or add the server by hand."
+        lead="When an assistant finishes a change to your web app, it can ask Vraelis to try it on the deployed site and get back what happened, with the evidence and a repair prompt when something broke. You approve each new check once. Set it up with one command, or add the server by hand."
         cta={
           <>
             <CTA href="#setup" brand lg>Set it up</CTA>
