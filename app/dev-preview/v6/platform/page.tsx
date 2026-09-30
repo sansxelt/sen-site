@@ -611,7 +611,7 @@ export default function Platform() {
               lead="Not footer links. Authored surfaces that explain how Vraelis thinks, how it works, and what it has shipped."
             />
           </Reveal>
-          <div className="v6-grid3">
+          <div className="v6-grid3 v6-grid5">
             {KNOWLEDGE.map(([t, d, href], i) => (
               <Reveal key={t} i={i % 3}>
                 <Link href={href} className="v6-gcard" style={{ display: "block", textDecoration: "none", height: "100%" }}>

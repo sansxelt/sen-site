@@ -10,9 +10,10 @@ export const metadata = v6meta({
 });
 
 const BASE = V6_BASE;
-const CARD = { background: "var(--graphite-2)", border: "1px solid var(--g-line)", borderRadius: 14, padding: "clamp(22px,2.4vw,28px)" } as const;
-const H3 = { margin: "0 0 8px", fontSize: "1.12rem", fontWeight: 600, letterSpacing: "-0.015em", color: "var(--g-fg)" } as const;
-const P = { margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--g-fg-2)" } as const;
+// Light cards on the light page, as on /pricing: these were graphite cards left over from a dark section.
+const CARD = { background: "var(--paper)", border: "1px solid var(--line-2)", borderRadius: 12, padding: "clamp(22px,2.4vw,28px)" } as const;
+const H3 = { margin: "0 0 8px", fontSize: "1.12rem", fontWeight: 600, letterSpacing: "-0.015em", color: "var(--ink)" } as const;
+const P = { margin: 0, fontSize: 14.5, lineHeight: 1.6, color: "var(--ink-2)" } as const;
 
 // Addresses are the ones the product already uses. A contact page inventing a new alias is a contact page
 // with a dead address on it.
@@ -44,7 +45,7 @@ export default function V6Contact() {
               <div key={addr} style={CARD}>
                 <h3 style={H3}>{role}</h3>
                 <p style={{ ...P, marginBottom: 8 }}>{d}</p>
-                <a href={`mailto:${addr}`} style={{ fontSize: 14, color: "var(--g-fg)", textDecoration: "underline", textUnderlineOffset: 3 }}>{addr}</a>
+                <a href={`mailto:${addr}`} style={{ fontSize: 14.5, color: "var(--ink)", textDecoration: "underline", textUnderlineOffset: 3 }}>{addr}</a>
               </div>
             ))}
           </Reveal>

@@ -8,9 +8,11 @@ export const metadata = v6meta({
   type: "website",
 });
 
-const CARD = { background: "var(--graphite-2)", border: "1px solid var(--g-line)", borderRadius: 14, padding: "clamp(22px,2.4vw,28px)" } as const;
-const H3 = { margin: "0 0 8px", fontSize: "1.12rem", fontWeight: 600, letterSpacing: "-0.015em", color: "var(--g-fg)" } as const;
-const P = { margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--g-fg-2)" } as const;
+// Light cards for a light section. Graphite cards here were left from a dark design and sat as black slabs on
+// the white page.
+const LIGHT_CARD = { background: "var(--paper)", border: "1px solid var(--line-2)", borderRadius: 12, padding: "clamp(22px,2.4vw,28px)" } as const;
+const LIGHT_H3 = { margin: "0 0 8px", fontSize: "1.12rem", fontWeight: 600, letterSpacing: "-0.015em", color: "var(--ink)" } as const;
+const LIGHT_P = { margin: 0, fontSize: 14.5, lineHeight: 1.6, color: "var(--ink-2)" } as const;
 
 const RULES: [string, string][] = [
   ["You may say you use Vraelis", "Reference the name in plain text to describe that your system is verified with Vraelis. No permission needed, no logo licence required."],
@@ -30,7 +32,7 @@ export default function V6Trademark() {
         <div className="v6-wrap">
           <SectionHead eyebrow="Usage" title="Three rules." />
           <Reveal media className="v6-grid3">
-            {RULES.map(([t, d]) => (<div key={t} style={CARD}><h3 style={H3}>{t}</h3><p style={P}>{d}</p></div>))}
+            {RULES.map(([t, d]) => (<div key={t} style={LIGHT_CARD}><h3 style={LIGHT_H3}>{t}</h3><p style={LIGHT_P}>{d}</p></div>))}
           </Reveal>
           <Reveal>
             <p className="v6-note">Questions about a specific use, including press and partner materials: help@vraelis.com.</p>

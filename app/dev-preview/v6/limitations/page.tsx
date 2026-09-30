@@ -1,6 +1,7 @@
 import { v6meta } from "../_system/meta";
-import { PageHero, Reveal, SectionHead, Signal, ProseLink } from "../_system/ui";
+import { PageHero, Reveal, SectionHead, ProseLink } from "../_system/ui";
 import { V6_BASE } from "@/lib/v6-routes";
+import "../_system/coverage.css";
 
 export const metadata = v6meta({
   title: "Limitations",
@@ -11,9 +12,11 @@ export const metadata = v6meta({
 });
 
 const BASE = V6_BASE;
-const CARD = { background: "var(--graphite-2)", border: "1px solid var(--g-line)", borderRadius: 14, padding: "clamp(22px,2.4vw,28px)" } as const;
-const H3 = { margin: "0 0 8px", fontSize: "1.12rem", fontWeight: 600, letterSpacing: "-0.015em", color: "var(--g-fg)" } as const;
-const P = { margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--g-fg-2)" } as const;
+// Light cards for a light section. Graphite cards here were left from a dark design and sat as black slabs on
+// the white page.
+const LIGHT_CARD = { background: "var(--paper)", border: "1px solid var(--line-2)", borderRadius: 12, padding: "clamp(22px,2.4vw,28px)" } as const;
+const LIGHT_H3 = { margin: "0 0 8px", fontSize: "1.12rem", fontWeight: 600, letterSpacing: "-0.015em", color: "var(--ink)" } as const;
+const LIGHT_P = { margin: 0, fontSize: 14.5, lineHeight: 1.6, color: "var(--ink-2)" } as const;
 
 // ONE THREE-CARD GRID PER PAGE, AND ON THIS PAGE IT IS THE BINDING SECTION.
 //
@@ -34,14 +37,17 @@ const n2 = (i: number) => String(i + 1).padStart(2, "0");
 // beta, reachable only from the signed-in console, and this is the one place the public site says so.
 // Connected devices were added the same day, to the same standard as /platform#coverage: through the web
 // control panel today, the device itself not built.
-const RUNTIMES: [string, "go" | "wait" | "stop", string][] = [
-  ["Deployed web applications", "go", "Supported and proven in production"],
-  ["Connected devices, through their web control panel", "go", "Supported through the panel"],
-  ["HTTP APIs", "wait", "Beta, in the signed-in console only"],
-  ["Device firmware, sensors and telemetry, read directly", "stop", "Not built yet"],
-  ["Mobile applications", "stop", "Not supported"],
-  ["Desktop applications", "stop", "Not supported"],
-  ["Localhost and private addresses", "stop", "Refused before a run"],
+// UPDATED 2026-09-30. The same three tiers the coverage list uses (live, next, out), not verdict colours: red
+// and amber mean a check failed or was blocked, and "Mobile applications" in red read as a failure rather
+// than as something not built. Mobile and desktop now say "Not built yet", as /platform#coverage does.
+const RUNTIMES: [string, "live" | "next" | "out", string][] = [
+  ["Deployed web applications", "live", "Supported and proven in production"],
+  ["Connected devices, through their web control panel", "live", "Supported through the panel"],
+  ["HTTP APIs", "next", "Beta, in the signed-in console only"],
+  ["Device firmware, sensors and telemetry, read directly", "next", "Not built yet"],
+  ["Mobile applications", "next", "Not built yet"],
+  ["Desktop applications", "next", "Not built yet"],
+  ["Localhost and private addresses", "out", "Refused before a run"],
 ];
 
 const NEEDS_HELP: [string, string][] = [
@@ -78,12 +84,12 @@ export default function V6Limitations() {
           <SectionHead eyebrow="Coverage" title="What Vraelis can verify today." />
           <Reveal>
             <div style={{ display: "grid", gap: 10 }}>
-              {RUNTIMES.map(([label, state, note]) => (
+              {RUNTIMES.map(([label, tier, note]) => (
                 // flexWrap + minWidth:0 so a long label and its signal stack on a phone instead of pushing the
                 // pill past the viewport edge, where it was clipped by 3px at 390.
-                <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "6px 16px", padding: "14px 0", borderBottom: "1px solid var(--g-line)" }}>
+                <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "6px 16px", padding: "14px 0", borderBottom: "1px solid var(--line)" }}>
                   <span style={{ fontSize: 15, color: "var(--ink)", minWidth: 0 }}>{label}</span>
-                  <Signal state={state}>{note}</Signal>
+                  <span className="v6-tier" data-tier={tier}>{note}</span>
                 </div>
               ))}
             </div>
@@ -114,7 +120,7 @@ export default function V6Limitations() {
         <div className="v6-wrap">
           <SectionHead eyebrow="How strong the binding is" title="What a verification is actually evidence of." />
           <Reveal media className="v6-grid3">
-            {BINDING.map(([t, d]) => (<div key={t} style={CARD}><h3 style={H3}>{t}</h3><p style={P}>{d}</p></div>))}
+            {BINDING.map(([t, d]) => (<div key={t} style={LIGHT_CARD}><h3 style={LIGHT_H3}>{t}</h3><p style={LIGHT_P}>{d}</p></div>))}
           </Reveal>
         </div>
       </section>

@@ -76,6 +76,11 @@
 .v6-dark .v6-row__d,  [data-nav-dark] .v6-row__d  { color: var(--g-fg-2); }
 
 .v6-grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%,260px),1fr)); gap: 16px; margin-top: clamp(36px,4vw,52px); }
+/* Five cards: auto-fit put four on a row and left the fifth alone under them. Five across on a wide screen,
+   three then two on a medium one, one column on a phone. */
+.v6-grid5 { grid-template-columns: repeat(5, minmax(0,1fr)); }
+@media (max-width: 1100px) { .v6-grid5 { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+@media (max-width: 640px) { .v6-grid5 { grid-template-columns: minmax(0,1fr); } }
 .v6-gcard { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: clamp(22px,2.4vw,28px); }
 .v6-gcard :is(h2, h3) { font-size: 1.15rem; font-weight: 600; color: var(--ink); letter-spacing: -0.015em; margin: 0 0 8px; }
 .v6-gcard p { font-size: 14px; line-height: 1.55; color: var(--ink-3); margin: 0; }

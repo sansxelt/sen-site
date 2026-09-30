@@ -14,6 +14,11 @@ const BASE = V6_BASE;
 const CARD = { background: "var(--graphite-2)", border: "1px solid var(--g-line)", borderRadius: 14, padding: "clamp(22px,2.4vw,28px)" } as const;
 const H3 = { margin: "0 0 8px", fontSize: "1.12rem", fontWeight: 600, letterSpacing: "-0.015em", color: "var(--g-fg)" } as const;
 const P = { margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--g-fg-2)" } as const;
+// Light cards for a light section. Graphite cards here were left from a dark design and sat as black slabs on
+// the white page.
+const LIGHT_CARD = { background: "var(--paper)", border: "1px solid var(--line-2)", borderRadius: 12, padding: "clamp(22px,2.4vw,28px)" } as const;
+const LIGHT_H3 = { margin: "0 0 8px", fontSize: "1.12rem", fontWeight: 600, letterSpacing: "-0.015em", color: "var(--ink)" } as const;
+const LIGHT_P = { margin: 0, fontSize: 14.5, lineHeight: 1.6, color: "var(--ink-2)" } as const;
 
 const RIGHTS: [string, string][] = [
   ["Access and export", "Ask and you get what is held about you: your account, your connected systems, your verifications and their evidence. Write to privacy@vraelis.com."],
@@ -39,7 +44,7 @@ export default function V6DataRights() {
         <div className="v6-wrap">
           <SectionHead eyebrow="Your rights" title="Three you can exercise today." />
           <Reveal media className="v6-grid3">
-            {RIGHTS.map(([t, d]) => (<div key={t} style={CARD}><h3 style={H3}>{t}</h3><p style={P}>{d}</p></div>))}
+            {RIGHTS.map(([t, d]) => (<div key={t} style={LIGHT_CARD}><h3 style={LIGHT_H3}>{t}</h3><p style={LIGHT_P}>{d}</p></div>))}
           </Reveal>
         </div>
       </section>
