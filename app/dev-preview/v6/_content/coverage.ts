@@ -40,6 +40,8 @@ export type Surface = {
   /** The true present tense. On a Next row this must say, plainly, that it is not built. */
   readonly today: string;
   readonly tier: CoverageTier;
+  /** One line for compact lists (the homepage's "What you can check"). Same claim as `reach`, shorter. */
+  readonly brief: string;
 };
 
 /** The one idea the section rests on. Stated once, here, so no page re-argues it. */
@@ -53,30 +55,53 @@ export const SURFACES: readonly Surface[] = [
     reach: "A real browser drives the running app the way a person would, on the public https address you name: production, staging or a preview deployment.",
     today: "This is the surface the product was proven on, and every verification so far ran here.",
     tier: "Live",
+    brief: "A real browser on the public address you name: production, staging or a preview deployment.",
   },
   {
     name: "Connected devices, through their web control panel",
     reach: "Drones, robots, fleets and other connected hardware, checked through the web control panel or dashboard that runs them. An operator action goes in, for example Return home, and Vraelis checks the state the system reports afterwards: the drone shows Landed, and still does after a reload.",
     today: "Live, because the control panel is a web app: it is the same real-browser check. Vraelis sees what the panel shows and nothing the panel does not.",
     tier: "Live",
+    brief: "Drones, robots and fleets, through the web panel that runs them.",
   },
   {
     name: "Device-level checks",
     reach: "Reading the device itself rather than its panel: firmware, sensors, telemetry, command receipt, state transitions and timing, on robots, drones and industrial equipment.",
     today: "Next, not built yet. Nothing in the product reads a device directly today. Vraelis verifies defined behaviour against stated requirements; it does not certify safety.",
     tier: "Next",
+    brief: "The device itself: its own API, telemetry and commands, not only its panel.",
   },
   {
-    name: "Native mobile and desktop applications",
-    reach: "The application as a user runs it, on the platform it ships to.",
+    // Electron named because the founder named it (2026-09-29): it is the desktop case most of the people
+    // this is for actually ship, and it is the one a browser engine can most plausibly drive.
+    name: "Desktop and native mobile applications",
+    reach: "The application as a user runs it, on the platform it ships to, starting with Electron desktop apps.",
     today: "Next, not built yet. Today Vraelis checks what a real browser can open, and a native binary is outside it.",
     tier: "Next",
+    brief: "Electron and native apps, run the way a user runs them.",
+  },
+  {
+    name: "SDKs and libraries",
+    reach: "An SDK or library as its users call it: its own examples run in a sandbox, with what each call returned compared against what it should return.",
+    today: "Next, not built yet. Today Vraelis can check an SDK only through a web app built on it.",
+    tier: "Next",
+    brief: "Your SDK's own examples, run and checked against what they should do.",
+  },
+  {
+    // Readiness is evidence about observed behaviour, mapped to named rules. It is never a certification and
+    // never legal advice, and no line may drift toward either (FTC v. accessiBe, 2025, is the precedent).
+    name: "Readiness for US and EU rules",
+    reach: "The behaviour those rules look at, checked on the live product: trackers that fire before consent, whether reject is as easy as accept, keyboard access, cancelling as easily as signing up, and default passwords on a device panel. Each result names the rule it was checked against and the date.",
+    today: "Next, not built yet. When it ships it is evidence for your auditor or counsel. It is not a certification and not legal advice.",
+    tier: "Next",
+    brief: "Consent, accessibility, cancellation and device security, as evidence for your auditor or counsel.",
   },
   {
     name: "Local and private addresses",
     reach: "localhost, private network addresses, and anything not served over public https.",
     today: "Refused before a run starts, and nothing is charged. Deploy the change somewhere public, a preview URL is enough, and check that.",
     tier: "Not covered",
+    brief: "localhost and private networks are refused before a run starts, and nothing is charged.",
   },
 ];
 

@@ -1,0 +1,22 @@
+/* What you can check. A divided list on one white surface, three columns on a wide screen (the thing, how
+   it is reached, its tier), stacked on a phone with the tier first so it is read before the promise.
+   Tiers: live is a filled ink chip; next and out are plain muted text. */
+.v6-cov { margin-top: clamp(28px, 3.4vw, 44px); }
+.v6-cov__list { list-style: none; margin: 0; padding: 0; background: var(--paper); border: 1px solid var(--line);
+  border-radius: var(--r-lg); overflow: hidden; }
+.v6-cov__row { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.9fr) 128px; gap: 20px; align-items: baseline;
+  padding: 16px 22px; border-top: 1px solid var(--line); }
+.v6-cov__row:first-child { border-top: 0; }
+.v6-cov__what { color: var(--ink); font-weight: 600; font-size: 15.5px; line-height: 1.4; }
+.v6-cov__how { color: var(--ink-3); font-size: 15px; line-height: 1.55; }
+.v6-cov__status { justify-self: end; font-size: 13px; font-weight: 600; white-space: nowrap; line-height: 1.2;
+  padding: 4px 9px; border-radius: 6px; border: 1px solid transparent; color: var(--ink-4); }
+.v6-cov__row[data-tier="live"] .v6-cov__status { background: var(--ink); color: #fff; border-color: var(--ink); }
+.v6-cov__row[data-tier="next"] .v6-cov__status,
+.v6-cov__row[data-tier="out"] .v6-cov__status { padding-inline: 0; font-weight: 500; }
+.v6-cov__row[data-tier="next"] .v6-cov__what { color: var(--ink-2); font-weight: 500; }
+.v6-cov__note { margin: 16px 2px 0; max-width: 72ch; font-size: 14px; line-height: 1.55; color: var(--ink-4); }
+@media (max-width: 760px) {
+  .v6-cov__row { grid-template-columns: minmax(0, 1fr); gap: 6px; padding: 16px 18px; }
+  .v6-cov__status { justify-self: start; order: -1; }
+}
