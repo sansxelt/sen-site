@@ -1,3 +1,4 @@
+import { EnterpriseAside } from "../_system/hero-asides";
 import { v6meta } from "../_system/meta";
 import { PageHero, Reveal, SectionHead, Signal, CTA, EditorialLink, ProseLink } from "../_system/ui";
 import { V6_BASE } from "@/lib/v6-routes";
@@ -39,6 +40,7 @@ export default function V6Enterprise() {
         kicker="Enterprise"
         title="Bring your own identity provider, and your own reviewers."
         lead="Vraelis is built so more than one person can hold a guarantee: your provider authenticates them, roles decide what they may change, and the evidence is readable by everyone who needs it without anyone sharing a login."
+        aside={<EnterpriseAside />}
       />
 
       <section className="v6-sec">

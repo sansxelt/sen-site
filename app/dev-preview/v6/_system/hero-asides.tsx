@@ -124,3 +124,57 @@ export function SecurityAside() {
     </Panel>
   );
 }
+
+/* Pricing: what one verification is, in the page's own definition (lead: "the plan, the real browser run,
+   and the evidence behind the decision. The first one is free."). */
+export function PricingAside() {
+  const lines = [
+    ["The plan", "Written from your sentence, approved by a person"],
+    ["The run", "A real browser on the live app, every step recorded"],
+    ["The evidence", "Screenshots, console errors and failed requests"],
+    ["When something broke", "What was expected, what happened, and a repair prompt"],
+  ];
+  return (
+    <Panel title="One verification">
+      <ul className="ha-checks">
+        {lines.map(([t, d]) => (
+          <li key={t}><span className="ha-tick" aria-hidden /><span><b>{t}</b><span>{d}</span></span></li>
+        ))}
+      </ul>
+      <p className="ha-foot">The first one is free, with no card.</p>
+    </Panel>
+  );
+}
+
+/* Enterprise: the path the page describes as operational (OIDC sign-on, owner, editor and viewer roles). */
+export function EnterpriseAside() {
+  return (
+    <Panel title="Single sign-on">
+      <div className="ha-flow">
+        <div className="ha-flow__node"><b>Your identity provider</b><span>Any OIDC provider</span></div>
+        <div className="ha-flow__arrow" aria-hidden>↓</div>
+        <div className="ha-flow__node ha-flow__node--ink"><b>Your Vraelis workspace</b><span>Members sign in through your provider</span></div>
+        <div className="ha-flow__arrow" aria-hidden>↓</div>
+        <div className="ha-flow__roles">
+          <span><b>Owner</b>billing and members</span>
+          <span><b>Editor</b>systems and runs</span>
+          <span><b>Viewer</b>reads the evidence</span>
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
+/* Research: the published articles, newest first, from the same registry the research index reads. */
+export function ResearchAside({ articles }: { articles: { slug: string; title: string; date: string }[] }) {
+  const fmt = (iso: string) => new Date(`${iso.slice(0, 10)}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+  return (
+    <Panel title="Published">
+      <ul className="ha-arts">
+        {articles.slice(0, 5).map((a) => (
+          <li key={a.slug}><a href={`${V6_BASE}/research/${a.slug}`}><b>{a.title}</b><span>{fmt(a.date)}</span></a></li>
+        ))}
+      </ul>
+    </Panel>
+  );
+}

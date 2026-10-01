@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { ResearchAside } from "../_system/hero-asides";
 import { v6meta } from "../_system/meta";
 import Link from "next/link";
 import { publishedArticles, formatDate, readingMinutes } from "@/app/rank/research/_articles";
@@ -251,6 +252,7 @@ export default function ResearchPage() {
         title="The methods behind trusting a claim that something works."
         lead="Vraelis checks whether live software does what someone says it does. This page describes the methodology we use today and the questions we are still working through. It does not claim results we have not earned."
         cta={<><CTA brand>Open Vraelis</CTA><EditorialLink href={`${BASE}/method`}>Read the Method</EditorialLink></>}
+        aside={<ResearchAside articles={publishedArticles().map((a) => ({ slug: a.slug, title: a.title, date: a.date }))} />}
       />
 
       {/* Stance + index of directions */}

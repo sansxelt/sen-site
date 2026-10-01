@@ -1,3 +1,4 @@
+import { PricingAside } from "../_system/hero-asides";
 import { v6meta } from "../_system/meta";
 import { PageHero, Reveal, SectionHead, CTA, ProseLink } from "../_system/ui";
 import { V6_BASE } from "@/lib/v6-routes";
@@ -90,6 +91,7 @@ export default function V6Pricing() {
         kicker="Pricing"
         title="Priced per verification, not per seat."
         lead="A verification is one complete check of one system: the plan, the real browser run, and the evidence behind the decision. The first one is free. After that, buy a single verification on its own, or take a plan, which sets how many you run each month and how much of a system one may cover."
+        aside={<PricingAside />}
       />
 
       <section className="v6-sec" style={{ paddingTop: "clamp(12px,2vw,28px)" }}>
