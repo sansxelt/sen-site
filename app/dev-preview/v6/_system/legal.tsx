@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { V6_BASE } from "@/lib/v6-routes";
+import { EnglishOnlyNotice } from "@/components/english-only-notice";
 
 /* V6 primitives for the legal pages. The words come from app/_content/legal.tsx, which both this surface
    and the rank surface render; only the styling is decided here. */
@@ -69,7 +70,10 @@ export function LegalPage({ title, updated, children }: {
         <p className="v6-eyebrow">Legal</p>
         <h1 className="v6-lg__title">{title}</h1>
         <p className="v6-lg__upd">{updated}</p>
-        {children}
+        {/* A legal document is not machine-translated: the English text is the one that applies. The reader
+            is told so in their language, and the document itself is left alone by the translator. */}
+        <EnglishOnlyNotice />
+        <div data-no-translate>{children}</div>
       </div>
     </section>
   );

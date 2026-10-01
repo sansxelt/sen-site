@@ -9,6 +9,7 @@ import { SURFACES } from "./coverage";
 import { V6_BASE, V6_HOME, V6_APP, V6_SIGNIN } from "@/lib/v6-routes";
 import { MARK_PATH, MARK_VIEWBOX } from "@/lib/brand-mark";
 import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 const BASE = V6_BASE;
 export const dslug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -249,6 +250,7 @@ export function DocShell({ activeSlug = "", toc = [], crumb, markdown, children 
           </nav>
 
           <div className="v6-docs__railfoot">
+            <LanguageSwitcher placement="up" className="v6-docs__lang" />
             <Link href={V6_HOME}>← Back to vraelis.com</Link>
             <Link href={`${BASE}/developers`}>API and CLI</Link>
             <Link href={`${BASE}/changelog`}>Changelog</Link>

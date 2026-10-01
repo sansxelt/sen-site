@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { ProductSurface } from "@/app/_components/product-surface";
 import { RecordPreview } from "@/components/record-preview";
 import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 // THE ACCOUNT SCREENS' FRAME: sign-in, create account, verify email, reset password, the auth errors and the
 // two-step code (2026-09-30). One frame for all of them, so moving from signing up to confirming an address
@@ -17,7 +18,10 @@ export function AuthFrame({ children }: { children: ReactNode }) {
         <div className="auth-split__form">
           <div className="auth-split__head">
             <a href="/" className="auth-split__brand">Vraelis</a>
-            <a href="/" className="auth-split__back"><span aria-hidden>←</span> Back to site</a>
+            <span className="auth-split__tools">
+              <LanguageSwitcher placement="down" align="right" />
+              <a href="/" className="auth-split__back"><span aria-hidden>←</span> Back to site</a>
+            </span>
           </div>
           <main className="auth-split__main">{children}</main>
           {/* flex-wrap inline: five links and a button no longer fit one row on a phone. */}

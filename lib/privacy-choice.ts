@@ -48,13 +48,16 @@ export const PRIVACY_CHANGE_EVENT = "vraelis:privacy-change";
  * matching *Allowed() helper before writing it. scripts/privacy-consent-verify.ts holds the two lists and
  * the policy to each other.
  *
- * The language switcher is expected to be the next entry under preferences. */
+ * The language switch (lib/i18n/client.ts) stores the chosen language under preferences. */
 export const PREFERENCE_LOCAL_KEYS: readonly string[] = [
   "vraelis:scratchpad-open", // the console notes panel: open or closed
   "vraelis:scratchpad-view", // the console notes panel: docked, floating or expanded
+  "vraelis-locale",          // the language picked in the language switch
 ];
-/** Preference cookies (none yet). Cleared host-only and on .vraelis.com, since either may have been set. */
-export const PREFERENCE_COOKIE_NAMES: readonly string[] = [];
+/** Preference cookies. Cleared host-only and on .vraelis.com, since either may have been set. */
+export const PREFERENCE_COOKIE_NAMES: readonly string[] = [
+  "vraelis_language",        // the language picked in the language switch, shared by vraelis.com and app.vraelis.com
+];
 export const ANALYTICS_SESSION_KEYS: readonly string[] = [
   "v6.visited", // marks that this tab already counted its one anonymous visit (app/dev-preview/v6/_system/shell.tsx)
 ];

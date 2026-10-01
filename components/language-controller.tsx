@@ -21,7 +21,10 @@ import { useLocale } from "@/lib/i18n/client";
 type Catalogue = Record<string, string>;
 type TextRecord = { source: string; lead: string; trail: string; applied: string };
 
-const SKIP = "[data-no-translate],input,textarea,select,script,style,noscript,code,pre,kbd,samp,[contenteditable='true']";
+// Elements whose subtree (text and attributes) is never touched, and the extra form controls whose TEXT is
+// left alone (a typed value, an option list) while their placeholder and label are still translated.
+const ELEMENT_SKIP = "[data-no-translate],script,style,noscript,code,pre,kbd,samp,[contenteditable='true']";
+const SKIP = `${ELEMENT_SKIP},input,textarea,select`;
 const ATTRS = ["aria-label", "title", "placeholder"] as const;
 const PROTECTED = new Set(["Vraelis", "Reddit", "ByteDance", "TikTok", "GitHub", "Google", "Vercel", "Stripe", "Supabase", "Sentry", "Slack", "MCP", "CLI", "API"]);
 
@@ -59,14 +62,18 @@ function translateText(node: Text, cat: Catalogue, locale: Locale) {
     rec = { source: current, lead: node.data.match(/^\s*/)?.[0] ?? "", trail: node.data.match(/\s*$/)?.[0] ?? "", applied: current };
     texts.set(node, rec);
   }
-  const next = lookup(rec.source, cat, locale);
+  // English plurals built in JSX ({n} journey{n === 1 ? "" : "s"}) render the "s" as its own text node right
+  // after the word. Glued to a translated word it makes "percorsos", so in another language it is dropped
+  // and the translated word stands alone.
+  const pluralTail = locale !== "en" && rec.source === "s" && node.previousSibling?.nodeType === Node.TEXT_NODE;
+  const next = pluralTail ? "" : lookup(rec.source, cat, locale);
   rec.applied = next;
-  const data = rec.lead + next + rec.trail;
+  const data = pluralTail ? "" : rec.lead + next + rec.trail;
   if (node.data !== data) node.data = data;
 }
 
 function translateAttrs(el: Element, cat: Catalogue, locale: Locale) {
-  if (skipped(el)) return;
+  if (el.closest(ELEMENT_SKIP)) return;
   let map = attrs.get(el);
   for (const a of ATTRS) {
     const current = el.getAttribute(a);
@@ -84,11 +91,11 @@ function translateTree(root: Node, cat: Catalogue, locale: Locale) {
   if (root.nodeType === Node.TEXT_NODE) { translateText(root as Text, cat, locale); return; }
   if (root.nodeType !== Node.ELEMENT_NODE && root.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) return;
   if (root.nodeType === Node.ELEMENT_NODE) {
-    if (skipped(root as Element)) return;
+    if ((root as Element).closest(ELEMENT_SKIP)) return;
     translateAttrs(root as Element, cat, locale);
   }
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, {
-    acceptNode: (n) => (n.nodeType === Node.ELEMENT_NODE && (n as Element).matches(SKIP) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT),
+    acceptNode: (n) => (n.nodeType === Node.ELEMENT_NODE && (n as Element).matches(ELEMENT_SKIP) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT),
   });
   const found: Node[] = [];
   while (walker.nextNode()) found.push(walker.currentNode);
@@ -130,11 +137,24 @@ export function LanguageController() {
   useEffect(() => {
     let disposed = false;
     let observer: MutationObserver | undefined;
-    void load(locale).then((cat) => {
+    // NOT BEFORE THE PAGE HAS HYDRATED. This component hydrates with the root layout, but a page's streamed
+    // Suspense boundaries hydrate later, and React throws away (and re-renders) any server-rendered text it
+    // finds changed when it gets there. So the first pass waits for the load event and an idle moment, and
+    // two later sweeps pick up any boundary that hydrated after that without mutating the DOM.
+    const settled = new Promise<void>((resolve) => {
+      // Safari has no requestIdleCallback; a short timeout stands in for it there.
+      const ric = (window as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback;
+      const idle = () => (ric ? ric(() => resolve(), { timeout: 1200 }) : globalThis.setTimeout(resolve, 300));
+      if (document.readyState === "complete") idle();
+      else window.addEventListener("load", idle, { once: true });
+    });
+    const sweeps: number[] = [];
+    void Promise.all([load(locale), settled]).then(([cat]) => {
       if (disposed) return;
       translateTree(document.body, cat, locale);
       translateTitle(cat, locale);
       if (locale === "en") return; // back to English: everything is restored, nothing new needs watching
+      for (const ms of [1500, 4000]) sweeps.push(window.setTimeout(() => { if (!disposed) translateTree(document.body, cat, locale); }, ms));
       observer = new MutationObserver((records) => {
         for (const r of records) {
           if (r.type === "characterData") translateText(r.target as Text, cat, locale);
@@ -167,6 +187,7 @@ export function LanguageController() {
     document.addEventListener("click", onClick, true);
     return () => {
       disposed = true;
+      sweeps.forEach((t) => window.clearTimeout(t));
       observer?.disconnect();
       document.removeEventListener("pointerdown", onPointerDown, true);
       document.removeEventListener("click", onClick, true);

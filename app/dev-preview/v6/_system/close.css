@@ -76,6 +76,7 @@
 .v6-foot2__base-in span, .v6-foot2__base-in a { font-size: 13.5px; color: var(--g-fg-3); text-decoration: none; }
 .v6-foot2__base-in a:hover { color: var(--g-fg-2); }
 .v6-foot2__legal { display: flex; gap: 22px; flex-wrap: wrap; }
+.v6-foot2__lang { display: inline-flex; align-items: center; gap: 16px; }
 
 /* Touch targets. These are text-height links on desktop, which is fine for a pointer and too small for a
    thumb, so the hit area grows vertically on touch widths without moving the text. The old rules covered the

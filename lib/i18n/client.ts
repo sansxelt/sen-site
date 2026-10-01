@@ -5,22 +5,13 @@
 // choice travels and when it is remembered.
 import { useSyncExternalStore } from "react";
 import {
-  DEFAULT_LOCALE, LOCALE_COOKIE, LOCALE_COOKIE_MAX_AGE, LOCALE_STORAGE_KEY, hrefWithLocale, isLocale, localeFromHref,
+  DEFAULT_LOCALE, LOCALE_COOKIE, LOCALE_COOKIE_MAX_AGE, hrefWithLocale, isLocale, localeFromHref,
   type Locale,
 } from "./locales";
-// TEMPORARY until lib/privacy-choice.ts (the consent work) merges: the same reading of the same cookie.
-const PRIVACY_CHANGE_EVENT = "vraelis:privacy-change";
-function preferencesAllowed(): boolean {
-  try {
-    if ((navigator as Navigator & { globalPrivacyControl?: boolean }).globalPrivacyControl === true) return false;
-    const v = document.cookie.split(";").map((p) => p.trim()).find((p) => p.startsWith("vraelis_privacy="))?.split("=")[1] ?? "";
-    return v.startsWith("v1.") && v.split(".").includes("preferences");
-  } catch { return false; }
-}
-function privacyCookieDomain(hostname: string): string | null {
-  const h = (hostname || "").toLowerCase().replace(/\.$/, "");
-  return h === "vraelis.com" || h.endsWith(".vraelis.com") ? ".vraelis.com" : null;
-}
+import { PRIVACY_CHANGE_EVENT, preferencesAllowed, privacyCookieDomain } from "@/lib/privacy-choice";
+
+// Listed under Preferences in lib/privacy-choice.ts and on /cookies, which clear and describe it.
+const LOCALE_STORAGE_KEY = "vraelis-locale";
 
 function readStored(): Locale | null {
   if (!preferencesAllowed()) return null;
@@ -56,10 +47,8 @@ function remember(locale: Locale) {
   try {
     window.localStorage.setItem(LOCALE_STORAGE_KEY, locale);
     const domain = privacyCookieDomain(location.hostname);
-    document.cookie = [
-      `${LOCALE_COOKIE}=${locale}`, `Max-Age=${LOCALE_COOKIE_MAX_AGE}`, "Path=/", "SameSite=Lax",
-      domain ? `Domain=${domain}` : "", location.protocol === "https:" ? "Secure" : "",
-    ].filter(Boolean).join("; ");
+    // Spelled out (it is LOCALE_COOKIE) so scripts/privacy-consent-verify.ts can find it in the policy.
+    document.cookie = `vraelis_language=${locale}; Max-Age=${LOCALE_COOKIE_MAX_AGE}; Path=/; SameSite=Lax${domain ? `; Domain=${domain}` : ""}${location.protocol === "https:" ? "; Secure" : ""}`;
   } catch { /* storage refused: the URL still carries the language on this visit */ }
 }
 

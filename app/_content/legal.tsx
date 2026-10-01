@@ -268,6 +268,7 @@ export const COOKIES: CookieRow[] = [
   { name: "__Secure-authjs.pkce.code_verifier", setBy: "Vraelis (sign-in)", purpose: "Secures the handoff when you sign in with Google or GitHub.", category: "Essential", duration: "15 minutes" },
   { name: "sx_signup_claim", setBy: "Vraelis", purpose: "Lets the browser where you started an email sign-up sign you in once you confirm your address, even if you open the link on another device.", category: "Essential", duration: "24 hours" },
   { name: "v_sso_oidc", setBy: "Vraelis", purpose: "Secures the handoff when you sign in through your organization's single sign-on.", category: "Essential", duration: "10 minutes" },
+  { name: "vraelis_language", setBy: "Vraelis", purpose: "The language you picked in the language switch, so the site, the docs and the console open in it. Shared by vraelis.com and app.vraelis.com. Set only if Preferences is on.", category: "Preferences", duration: "6 months" },
   { name: "vws", setBy: "Vraelis", purpose: "Remembers which workspace you are working in, if you belong to more than one. Set when you switch workspace.", category: "Essential", duration: "1 year" },
   { name: "vr_oauth_<provider>, vr_oauth_acct_<provider>, vr_pkce_<provider>, vr_oauth_popup", setBy: "Vraelis", purpose: "Secure the handoff when you connect an integration such as GitHub or Vercel.", category: "Essential", duration: "10 minutes" },
   { name: "vr_stealth", setBy: "Vraelis", purpose: "Preview access. Lets a browser that was given access see the site while it is not yet public.", category: "Essential", duration: "30 days" },
@@ -277,6 +278,7 @@ export const COOKIES: CookieRow[] = [
 export const STORAGE: CookieRow[] = [
   { name: "vraelis:scratchpad", setBy: "Console, local storage", purpose: "The notes you type in the scratchpad panel. They stay in this browser and are never sent to Vraelis.", category: "Essential", duration: "Until you delete them" },
   { name: "vraelis:scratchpad-open, vraelis:scratchpad-view", setBy: "Console, local storage", purpose: "Whether the scratchpad panel is open, and how it is shown.", category: "Preferences", duration: "Until you clear it or turn Preferences off" },
+  { name: "vraelis-locale", setBy: "Website and console, local storage", purpose: "The same language choice, kept in this browser. Set only if Preferences is on.", category: "Preferences", duration: "Until you clear it or turn Preferences off" },
   { name: "vraelis-connect-draft-v1", setBy: "Console, local storage", purpose: "Keeps an unfinished form for connecting a system, so a reload does not lose it.", category: "Essential", duration: "Until you submit or clear the form" },
   { name: "vraelis-flow-draft-<id>", setBy: "Console, local storage", purpose: "Keeps a new flow you are still writing.", category: "Essential", duration: "Until you save or discard it" },
   { name: "vraelis-oauth", setBy: "Console, local storage", purpose: "Passes the result of an integration's sign-in window back to the console.", category: "Essential", duration: "Until the next connection replaces it" },

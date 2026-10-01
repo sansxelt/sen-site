@@ -137,7 +137,11 @@ console.log("\n── in a browser: what saving writes, and what GPC and a refus
   session.setItem("v6.visited", "1");
   const kept = lib.savePrivacyChoice(choice(false, true, false));
   ok("saving reports that the browser kept it", kept === true);
-  ok("the written cookie carries every attribute", /^vraelis_privacy=v1\.analytics; Max-Age=15552000; Path=\/; SameSite=Lax; Domain=\.vraelis\.com; Secure$/.test(written.at(-1) ?? ""), written.at(-1));
+  // The consent cookie is not always the last write: with Preferences off, the save also clears the
+  // preference cookies (the language switch's vraelis_language), so look for the consent cookie itself.
+  const consentWrite = written.filter((w) => w.startsWith("vraelis_privacy=")).at(-1);
+  ok("the written cookie carries every attribute", /^vraelis_privacy=v1\.analytics; Max-Age=15552000; Path=\/; SameSite=Lax; Domain=\.vraelis\.com; Secure$/.test(consentWrite ?? ""), consentWrite);
+  ok("  and Preferences off clears the language cookie on both hosts", written.some((w) => /^vraelis_language=; Max-Age=0; Path=\/; SameSite=Lax; Domain=\.vraelis\.com/.test(w)));
   ok("the page is told (so Speed Insights and the visit count can start)", events.includes(lib.PRIVACY_CHANGE_EVENT));
   ok("analytics on, preferences and advertising off", lib.analyticsAllowed() && !lib.preferencesAllowed() && !lib.advertisingAllowed());
   ok("preferences off removed the panel's window state", !local.has("vraelis:scratchpad-open") && !local.has("vraelis:scratchpad-view"));

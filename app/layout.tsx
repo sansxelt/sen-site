@@ -12,6 +12,7 @@ import { GROUND_CSS, type Ground } from "../lib/v6-routes";
 import { GROUND_HEADER } from "../proxy";
 import { PrivacyChoices } from "./_components/privacy-choices";
 import { ConsentedMeasurement } from "./_components/consented-measurement";
+import { LanguageController } from "@/components/language-controller";
 
 // THE TYPE. IBM Plex Sans for everything people read, IBM Plex Mono for machine text (IDs, URLs, code).
 // Replaced Geist, Inter Tight and Instrument Serif on 2026-09-30: that trio is the default look of a generated
@@ -206,6 +207,10 @@ export default async function RootLayout({
               which shows nothing of the product and so has nothing to ask about. A blocking dialog until a
               choice exists, except on the legal pages, which get a bar so they can be read first. */}
           <PrivacyChoices />
+          {/* ONE LANGUAGE, EVERYWHERE (2026-09-30): translates the page in the browser from
+              public/locales/<code>.json when a language other than English is chosen, on every surface this
+              branch renders. See components/language-controller.tsx and lib/i18n/locales.ts. */}
+          <LanguageController />
         </body>
       </html>
   );

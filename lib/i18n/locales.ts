@@ -31,17 +31,20 @@ export const LOCALES = {
 } as const;
 
 export type Locale = keyof typeof LOCALES;
-export const LOCALE_KEYS = Object.keys(LOCALES) as Locale[];
+/** The languages whose catalogue is complete. Only these are offered or honoured: picking a language whose
+ *  translation is half done would show a page that looks broken. Add a code here when its
+ *  public/locales/<code>.json lands complete. */
+export const READY_LOCALES: readonly Locale[] = ["en", "de", "es", "fr", "hi", "id", "it", "ja", "ko", "nl", "pt", "zh"];
+export const LOCALE_KEYS = (Object.keys(LOCALES) as Locale[]).filter((k) => READY_LOCALES.includes(k));
 export const DEFAULT_LOCALE: Locale = "en";
 
 export const LOCALE_PARAM = "lang";
 /** Remembered choice, shared by vraelis.com and app.vraelis.com. Preference storage only. */
 export const LOCALE_COOKIE = "vraelis_language";
-export const LOCALE_STORAGE_KEY = "vraelis-locale";
 export const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 180;
 
 export function isLocale(value: unknown): value is Locale {
-  return typeof value === "string" && Object.prototype.hasOwnProperty.call(LOCALES, value);
+  return typeof value === "string" && Object.prototype.hasOwnProperty.call(LOCALES, value) && READY_LOCALES.includes(value as Locale);
 }
 
 /** The same address with the language set on it. English is the default, so it removes the parameter. */

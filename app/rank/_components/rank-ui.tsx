@@ -20,6 +20,7 @@ import { Reveal } from "@/components/reveal";
 import { Scratchpad } from "./scratchpad";
 import { useDismiss } from "./use-dismiss";
 import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 // Research sits between Developers and Enterprise for now. The fuller restructure toward
 // Product / Developers / Research / Pricing belongs with the verification-first redesign
@@ -593,6 +594,8 @@ const FOOT_BUTTON = { color: "var(--fg-3)", width: "100%", background: "none", b
 function NavFoot({ onNavigate, drawer = false }: { onNavigate?: () => void; drawer?: boolean }) {
   return (
     <div className={`app-side__foot${drawer ? " app-side__foot--drawer" : ""}`}>
+      {/* The language switch: one switch for the console, the site and the docs (lib/i18n). */}
+      <div style={{ padding: "4px 8px 8px" }}><LanguageSwitcher placement="up" /></div>
       <a href="https://vraelis.com" className="slink" style={{ color: "var(--fg-3)" }} onClick={onNavigate}><span className="slink__i" aria-hidden><Ic d={I.back} /></span>Back to site</a>
       {/* Where the console reopens the privacy choices. Here rather than only in the account menu because
           the foot is the one place the desktop sidebar and the phone drawer share. Closing the drawer first
