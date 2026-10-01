@@ -421,3 +421,27 @@ html:has([data-surface="app"]) {
    the frame flattens them: same page, same form width, no second container. */
 [data-surface="app"] .auth-form--wide > div { max-width: none !important; padding: 0 !important; margin: 0 !important; }
 [data-surface="app"] .auth-form--wide .card { border: 0 !important; background: transparent !important; box-shadow: none !important; padding: 0 !important; }
+
+/* ── Two-step verification (2026-09-30) ────────────────────────────────────────────────────────────────
+   The sign-in code screen (components/two-step-challenge.tsx) is the .auth-form system above plus three
+   things: the code field set in mono and spaced so six digits read as a code, the other ways to verify as
+   plain underlined links, and the way out ("Sign in as someone else") as an outlined .auth-form__provider
+   with room above it. The Account page section (app/rank/app/account/two-step-section.tsx) adds the QR
+   frame and the recovery code grid; everything else there is .card, .btn and .btn--ghost. */
+[data-surface="app"] .auth-form__field input.two-step__code { font-family: var(--font-brand-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 18px; letter-spacing: 0.24em; }
+[data-surface="app"] .two-step__inline,
+[data-surface="app"] .two-step__alts button { padding: 0; border: 0; background: none; font: inherit; font-weight: 600; color: var(--fg-1);
+  text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+[data-surface="app"] .two-step__inline:disabled,
+[data-surface="app"] .two-step__alts button:disabled { opacity: 0.55; cursor: default; }
+[data-surface="app"] .two-step__alts { display: grid; justify-items: start; gap: 10px; margin-top: 22px; font-size: 13.5px; }
+[data-surface="app"] .two-step__leave { margin-top: 24px; }
+[data-surface="app"] .two-step-qr { display: block; flex: none; width: 184px; height: 184px; padding: 6px; box-sizing: border-box;
+  border: 1px solid var(--line-2); border-radius: 8px; background: #FFFFFF; }
+[data-surface="app"] .two-step-codes { display: grid; grid-template-columns: repeat(2, max-content); gap: 8px 32px; margin: 0; padding: 14px 18px;
+  list-style: none; border: 1px solid var(--line-2); border-radius: 8px; background: #FFFFFF;
+  font: 500 14.5px/1.4 var(--font-brand-mono), ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--fg-1); }
+@media (max-width: 420px) {
+  [data-surface="app"] .two-step-codes { grid-template-columns: minmax(0, 1fr); }
+}

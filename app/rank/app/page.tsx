@@ -13,6 +13,9 @@ import { listGuaranteesForApps } from "@/lib/preflight/guarantees-db";
 import { toPublicDecision } from "@/lib/preflight/public-decision";
 import { systemProof, isActiveRun } from "@/lib/preflight/home-verdict";
 import { Page } from "@/app/rank/_components/page-header";
+import { cookies } from "next/headers";
+import { readTwoStepStatus } from "@/lib/two-step-db";
+import { TwoStepNudge } from "./_components/two-step-nudge";
 import { Composer } from "./_components/composer";
 import { CompactComposer } from "./_components/compact-composer";
 import { SectionError } from "./_components/home-records";
@@ -27,6 +30,10 @@ export const metadata: Metadata = { title: "Overview" };
 // pin a session-less prerendered shell can be cached and shown to a signed-in user. It is also what makes a
 // workspace switch (a full navigation) always re-read fresh server state.
 export const dynamic = "force-dynamic";
+
+// Session cookie set by <TwoStepNudge>'s "Not now" (the same literal name is written there). No expiry, so it
+// lasts one browser session. Listed in the cookie policy, app/_content/legal.tsx.
+const TWO_STEP_NUDGE_COOKIE = "vr_two_step_nudge";
 
 // A record group is loaded independently and its failure is isolated: one section that cannot load must not
 // take down the rest. Each helper already degrades internally; this catches the unexpected throw on top.
@@ -76,7 +83,10 @@ export default async function Overview({ searchParams }: { searchParams: Promise
   const preflightReady = await preflightDbReady();
   const emptyCounts: OverviewCounts = { openCriticalIssues: 0, runningPasses: 0, verifiedRepairs: 0 };
 
-  const [bal, domainAccess] = await Promise.all([balance(email), getDomainAccessForEmail(email)]);
+  const [bal, domainAccess, twoStep, cookieJar] = await Promise.all([balance(email), getDomainAccessForEmail(email), readTwoStepStatus(email), cookies()]);
+  // Offer two-step verification until it is on, unless dismissed this browser session. A settings read that
+  // failed shows nothing: the offer is not worth an error on the Overview.
+  const offerTwoStep = twoStep.ok && !twoStep.status.enabled && cookieJar.get(TWO_STEP_NUDGE_COOKIE)?.value !== "dismissed";
 
   // Record groups, each settled so one failure degrades only its own section. Runs are fetched deeper than
   // shown because "last proven" is derived from the same window: a system's most recent VERIFIED run.
@@ -200,6 +210,8 @@ export default async function Overview({ searchParams }: { searchParams: Promise
           <span style={{ fontSize: 13, color: "var(--acc-deep)", whiteSpace: "nowrap" }}>{domainAccess[0].requestStatus === "pending" ? "View →" : "Request access →"}</span>
         </Link>
       )}
+
+      {offerTwoStep && <TwoStepNudge />}
 
       {fullyEmpty ? (
         // An empty account gets the form at full size: there is no state to read, so the only useful thing

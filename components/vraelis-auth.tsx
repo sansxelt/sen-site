@@ -84,7 +84,10 @@ export function VraelisSignIn({
     if (mode === "signup" && !agreed) { setStatus({ tone: "error", message: CONSENT_MSG }); return; }
     setBusy(provider);
     try {
-      await signIn(provider, { redirectTo: safeRedirect });
+      // The provider hands back to /signin rather than straight to the destination. /signin sends a
+      // signed-in person on to callbackUrl at once, and shows the code screen to one whose account has
+      // two-step verification on (a pending session reads as signed out anywhere else).
+      await signIn(provider, { redirectTo: `/signin?callbackUrl=${encodeURIComponent(safeRedirect)}` });
     } catch (error) {
       console.error("Provider auth failed:", error);
       setBusy(null);
@@ -123,6 +126,13 @@ export function VraelisSignIn({
       });
       if (result?.error) throw new Error(result.error);
       setPassword("");
+      // The password was right. If the account has two-step verification on, the session is pending and the
+      // next screen is the code, which /signin renders; otherwise carry on as before.
+      const session = await fetch("/api/auth/session", { cache: "no-store" }).then((r) => r.json()).catch(() => null) as { twoStep?: { pending?: boolean } } | null;
+      if (session?.twoStep?.pending) {
+        window.location.assign(`/signin?callbackUrl=${encodeURIComponent(safeRedirect)}`);
+        return;
+      }
       setStatus({ tone: "success", message: "Signing you in." });
       router.push(result?.url ?? safeRedirect);
       router.refresh();

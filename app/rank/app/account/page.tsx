@@ -13,6 +13,8 @@ import { Page, PageHeader, SECTION_TITLE } from "@/app/rank/_components/page-hea
 import { DeleteAccount } from "./delete-account";
 import { AccountRequests } from "./account-requests";
 import { ProfileSection } from "./profile-section";
+import { TwoStepSection } from "./two-step-section";
+import { readTwoStepStatus } from "@/lib/two-step-db";
 
 export const metadata: Metadata = { title: "Account" };
 
@@ -26,6 +28,9 @@ const ACTIVITY_LABEL: Record<string, string> = {
   export_downloaded: "Export downloaded", data_export_requested: "Data export requested",
   data_correction_requested: "Correction requested", account_delete_requested: "Account deletion requested",
   privacy_question_submitted: "Privacy question submitted",
+  two_step_enabled: "Two-step verification method added", two_step_method_removed: "Two-step verification method removed",
+  two_step_disabled: "Two-step verification turned off", two_step_recovery_regenerated: "New recovery codes created",
+  two_step_recovery_used: "Recovery code used",
 };
 
 export default async function AccountPage() {
@@ -34,7 +39,7 @@ export default async function AccountPage() {
   if (!email) redirect("/signin?callbackUrl=%2Fapp%2Faccount");
 
   await ensureProfile(email, session.user?.name ?? undefined);
-  const [bal, plan, planV1, sub, activity, displayName] = await Promise.all([balance(email), getPlan(email), getPlanV1State(email.toLowerCase()).catch(() => null), getSubscription(email), recentAccountEvents(email, 8), getDisplayName(email)]);
+  const [bal, plan, planV1, sub, activity, displayName, twoStep] = await Promise.all([balance(email), getPlan(email), getPlanV1State(email.toLowerCase()).catch(() => null), getSubscription(email), recentAccountEvents(email, 8), getDisplayName(email), readTwoStepStatus(email)]);
   // ONE decision, shared with /usage, /billing and the top bar. This page used to read only the legacy
   // v_subscriptions row, which a versioned-plan subscriber does not have, so a paying account was told it
   // was on "Free" here while /billing told it "Scale".
@@ -73,6 +78,11 @@ export default async function AccountPage() {
         <div className="stat"><div className="stat__l">Credit balance</div><div className="stat__v tnum">{bal.toLocaleString()}</div><div className="stat__s">Funds verifications</div></div>
         <div className="stat"><div className="stat__l">Monthly credits</div><div className="stat__v tnum">{(sub?.monthly_credits ?? 0).toLocaleString()}</div><div className="stat__s">{planV1?.plan ? "Not used on this plan. Allowance is metered in flows, see Usage" : paid ? "Refreshed each cycle" : "Included with a monthly plan"}</div></div>
       </div>
+
+      {/* two-step verification: optional, and offered high on the page rather than filed under Security at the
+          foot, because the whole point is that people see it. The Overview nudge links here (#two-step).
+          null = the settings could not be read; the section says so instead of showing "Off". */}
+      <TwoStepSection email={email} initial={twoStep.ok ? twoStep.status : null} />
 
       {/* manage */}
       <h2 style={{ ...SECTION_TITLE, margin: "32px 0 12px" }}>Manage</h2>
