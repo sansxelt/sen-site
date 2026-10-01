@@ -71,7 +71,7 @@ export function ProseLink({ href, children }: { href: string; children: ReactNod
 }
 
 export function Signal({ state, children }: { state: "go" | "wait" | "stop"; children: ReactNode }) {
-  return <span className={`v6-sig v6-sig--${state}`}><span className="v6-sig__dot" aria-hidden />{children}</span>;
+  return <span className={`v6-sig v6-sig--${state}`}>{children}</span>;
 }
 
 export function Kicker({ children }: { children: ReactNode }) {

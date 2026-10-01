@@ -99,7 +99,13 @@ function Run({ k }: { k: number }) {
         <ol className="ss-steps">
           {STEPS.map((s, i) => {
             const st = i < shown ? (s.ok ? "ok" : "fail") : i === shown ? "now" : "wait";
-            return <li key={i} data-s={st}><i aria-hidden /><span className="ss-steps__t">{s.say}</span><span className="ss-mono">{i < shown ? fmt(s.ms) : ""}</span></li>;
+            return (
+              <li key={i} data-s={st}>
+                <span className="ss-mono">{String(i + 1).padStart(2, "0")}</span>
+                <span className="ss-steps__t">{s.say}</span>
+                <span className="ss-mono">{st === "fail" ? <><span className="ss-steps__f">Failed</span> {fmt(s.ms)}</> : st === "ok" ? fmt(s.ms) : st === "now" ? "Running" : ""}</span>
+              </li>
+            );
           })}
         </ol>
         <div className="ss-browser">

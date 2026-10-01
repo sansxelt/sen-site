@@ -19,7 +19,7 @@ import "./hero-asides.css";
 function Panel({ title, meta, children, dark = false }: { title: string; meta?: string; children: ReactNode; dark?: boolean }) {
   return (
     <div className="ha" data-dark={dark ? "true" : "false"}>
-      <div className="ha__bar"><span className="ha__dots" aria-hidden><i /><i /><i /></span><span className="ha__title">{title}</span>{meta ? <span className="ha__meta">{meta}</span> : null}</div>
+      <div className="ha__bar"><span className="ha__title">{title}</span>{meta ? <span className="ha__meta">{meta}</span> : null}</div>
       <div className="ha__body">{children}</div>
     </div>
   );
@@ -117,8 +117,8 @@ export function SecurityAside() {
   return (
     <Panel title="In place today">
       <ul className="ha-checks">
-        {items.map(([t, d]) => (
-          <li key={t}><span className="ha-tick" aria-hidden /><span><b>{t}</b><span>{d}</span></span></li>
+        {items.map(([t, d], i) => (
+          <li key={t}><span className="ha-tick v6-mono" aria-hidden>{String(i + 1).padStart(2, "0")}</span><span><b>{t}</b><span>{d}</span></span></li>
         ))}
       </ul>
     </Panel>
@@ -137,8 +137,8 @@ export function PricingAside() {
   return (
     <Panel title="One verification">
       <ul className="ha-checks">
-        {lines.map(([t, d]) => (
-          <li key={t}><span className="ha-tick" aria-hidden /><span><b>{t}</b><span>{d}</span></span></li>
+        {lines.map(([t, d], i) => (
+          <li key={t}><span className="ha-tick v6-mono" aria-hidden>{String(i + 1).padStart(2, "0")}</span><span><b>{t}</b><span>{d}</span></span></li>
         ))}
       </ul>
       <p className="ha-foot">The first one is free, with no card.</p>

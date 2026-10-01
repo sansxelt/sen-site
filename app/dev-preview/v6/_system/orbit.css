@@ -11,13 +11,13 @@
   position: absolute; left: 50%; top: 50%; width: clamp(92px, 9.5vw, 150px); aspect-ratio: 1 / 1;
   padding: 0; border: 0; border-radius: 16px; overflow: hidden; cursor: pointer; background: #141416;
   box-shadow: 0 24px 50px -24px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.10) inset;
-  opacity: calc(0.42 + var(--d, 1) * 0.58);
+  /* the back of the ring is a touch dimmer, for depth; nothing fades when a tile is pointed at (founder) */
+  opacity: calc(0.84 + var(--d, 1) * 0.16);
   transition: opacity 300ms var(--ease), box-shadow 300ms var(--ease), width 320ms var(--ease);
   will-change: transform;
 }
 .v6-or__tile img { object-fit: cover; transition: transform 500ms var(--ease); }
 .v6-or__tile::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: 0 0 0 1px rgba(255,255,255,0.10) inset; pointer-events: none; }
-.v6-or__field[data-hold="1"] .v6-or__tile:not([data-on="true"]) { opacity: calc(0.22 + var(--d, 1) * 0.3); }
 .v6-or__field[data-hold="1"] .v6-or__tile[data-on="true"] { width: clamp(132px, 13.5vw, 214px); opacity: 1; z-index: 60 !important;
   box-shadow: 0 40px 80px -30px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.28) inset; }
 .v6-or__field[data-hold="1"] .v6-or__tile[data-on="true"] img { transform: scale(1.06); }

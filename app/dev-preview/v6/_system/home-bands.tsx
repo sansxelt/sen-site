@@ -70,7 +70,7 @@ export function AgentsBand() {
           </div>
         </div>
         <div className="v6-ag__term" role="img" aria-label="Terminal: install the Vraelis CLI, connect a coding agent, and check a preview deploy">
-          <div className="v6-ag__bar"><i /><i /><i /><span>terminal</span></div>
+          <div className="v6-ag__bar"><span>terminal</span></div>
           <pre>
             <span className="c"># install</span>{"\n"}
             <span className="p">$</span> curl -fsS https://vraelis.com/install | sh{"\n\n"}

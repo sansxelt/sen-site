@@ -32,6 +32,16 @@ type MLink = { t: string; d?: string; href: string; preview?: Preview };
 type Group = { h: string; links: MLink[] };
 type Menu = { label: string; groups: Group[]; feature: Preview & { href: string; cta: string } };
 
+// THE MENU'S PICTURE (2026-10-01, after scale.com's menus: big plain links on the left, one large rounded
+// film on the right). Each top-level menu loops a few seconds of real footage, muted, cut from the homepage
+// film's own sources (public/home/menu, credits in app/film/CREDITS.md).
+const MENU_MEDIA: Record<string, { src: string; poster: string }> = {
+  Platform: { src: "/home/menu/platform.mp4", poster: "/home/menu/platform.jpg" },
+  Integrations: { src: "/home/menu/integrations.mp4", poster: "/home/menu/integrations.jpg" },
+  Resources: { src: "/home/menu/resources.mp4", poster: "/home/menu/resources.jpg" },
+  Company: { src: "/home/menu/company.mp4", poster: "/home/menu/company.jpg" },
+};
+
 // REWRITTEN 2026-09-28 with the public story. The second menu was "Agents", with a Direction group for
 // continuous agent activity and autonomy from a track record; it is now "Integrations", the four ways to
 // start a check side by side, because an AI assistant is one channel and not the identity. Connected devices
@@ -199,11 +209,12 @@ function MegaShell({ index, state, preview, onPreview, onNavigate }: {
   onPreview: (p: Preview | null) => void; onNavigate: () => void;
 }) {
   const menu = MENUS[index];
-  const shown: Preview = preview ?? menu.feature;
+  const media = MENU_MEDIA[menu.label];
+  void preview;
   return (
     <div className="v6-mega" data-state={state}>
       <div className="v6-mega__panel">
-        <div className="v6-mega__grid" key={menu.label}>
+        <div className="v6-mega__grid" key={menu.label} style={{ ["--mega-cols" as string]: menu.groups.length }}>
           {menu.groups.map((col) => (
             <div key={col.h} className="v6-mega__col">
               <p className="v6-mega__col-h">{col.h}</p>
@@ -211,21 +222,14 @@ function MegaShell({ index, state, preview, onPreview, onNavigate }: {
                 <Link key={l.t} href={l.href} className="v6-mega__link" onClick={onNavigate}
                   onMouseEnter={() => onPreview(l.preview ?? null)} onFocus={() => onPreview(l.preview ?? null)}>
                   <span className="v6-mega__lt">{l.t}</span>
-                  {l.d ? <span className="v6-mega__ld">{l.d}</span> : null}
                 </Link>
               ))}
             </div>
           ))}
-          <div className="v6-mega__feature">
-            <div className="v6-mega__fin" key={menu.label + shown.title}>
-              <span className="v6-mega__fe">{shown.eyebrow}</span>
-              <h4>{shown.title}</h4>
-              <p>{shown.body}</p>
-            </div>
-            <Link href={menu.feature.href} className="v6-mega__fcta" onClick={onNavigate}>
-              {menu.feature.cta}<span className="v6-arw" aria-hidden>&rarr;</span>
-            </Link>
-          </div>
+          <Link href={menu.feature.href} className="v6-mega__media" onClick={onNavigate} key={menu.label + "-media"}>
+            {media ? <video className="v6-mega__video" src={media.src} poster={media.poster} autoPlay muted loop playsInline preload="none" aria-hidden /> : null}
+            <span className="v6-mega__cap">{menu.feature.title}<span className="v6-arw" aria-hidden>&rarr;</span></span>
+          </Link>
         </div>
       </div>
     </div>

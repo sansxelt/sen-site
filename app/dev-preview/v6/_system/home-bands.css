@@ -17,7 +17,6 @@
 .v6-ag__term { border-radius: 16px; overflow: hidden; background: #0E0E10; border: 1px solid rgba(255,255,255,0.10);
   box-shadow: 0 40px 100px -50px rgba(0,0,0,0.95); }
 .v6-ag__bar { display: flex; align-items: center; gap: 6px; height: 38px; padding: 0 14px; background: #161618; border-bottom: 1px solid rgba(255,255,255,0.07); }
-.v6-ag__bar i { width: 9px; height: 9px; border-radius: 50%; background: rgba(255,255,255,0.14); }
 .v6-ag__bar span { margin-left: 8px; font-family: var(--mono); font-size: 11.5px; color: #8E9095; }
 .v6-ag__term pre { margin: 0; padding: 20px 22px; font-family: var(--mono); font-size: clamp(12px, 1vw, 13.5px); line-height: 1.75; color: #E4E4E7; white-space: pre-wrap; word-break: break-word; }
 .v6-ag__term .c, .v6-ag__term .p { color: #74767C; }

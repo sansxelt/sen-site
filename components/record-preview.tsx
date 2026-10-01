@@ -78,8 +78,8 @@ export function RecordPreview({ replay = false, compact = false }: { replay?: bo
       <div className="rp__bar">
         <span className="rp__crumb"><span className="rp__crumbk">Checks</span><span aria-hidden>/</span><span className="rp__host">{HOST}</span></span>
         {done
-          ? <span className="rp__chip rp__chip--fail"><span aria-hidden className="rp__dot" />Found a problem</span>
-          : <span className="rp__chip rp__chip--run"><span aria-hidden className="rp__dot" />Checking</span>}
+          ? <span className="rp__chip rp__chip--fail">Found a problem</span>
+          : <span className="rp__chip rp__chip--run">Checking</span>}
       </div>
 
       <div className="rp__head">

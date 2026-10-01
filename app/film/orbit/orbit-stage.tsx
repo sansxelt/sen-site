@@ -31,10 +31,10 @@ type Env = { src: string; yaw: number; gain: number; sun: [number, number]; sunI
 // yaw turns each panorama so its best part sits behind the drone while it is on screen. sun is the (u, v)
 // of the panorama's brightest region, measured from the image, for the one directional light.
 const ENVS: Env[] = [
-  { src: "/film/asset/env-modern-buildings-night.jpg", yaw: 0.0, gain: 0.78, sun: [0.289, 0.305], sunI: 0.5, sunC: "#D6DEFF", led: 1 },
-  { src: "/film/asset/env-autoshop-01.jpg", yaw: 0.0, gain: 0.86, sun: [0.355, 0.152], sunI: 0.9, sunC: "#F2F5FF", led: 0.6 },
-  { src: "/film/asset/env-bambanani-sunset.jpg", yaw: 0.0, gain: 0.96, sun: [0.568, 0.32], sunI: 2.2, sunC: "#FFD6A8", led: 0 },
-  { src: "/film/asset/env-kiara-3-morning.jpg", yaw: 0.0, gain: 1.0, sun: [0.613, 0.371], sunI: 2.6, sunC: "#FFF4E2", led: 0 },
+  { src: "/film/asset/env16-modern-buildings-night.jpg", yaw: 0.0, gain: 0.78, sun: [0.289, 0.305], sunI: 0.5, sunC: "#D6DEFF", led: 1 },
+  { src: "/film/asset/env16-autoshop-01.jpg", yaw: 0.0, gain: 0.86, sun: [0.355, 0.152], sunI: 0.9, sunC: "#F2F5FF", led: 0.6 },
+  { src: "/film/asset/env16-bambanani-sunset.jpg", yaw: 0.0, gain: 0.96, sun: [0.568, 0.32], sunI: 2.2, sunC: "#FFD6A8", led: 0 },
+  { src: "/film/asset/env16-kiara-3-morning.jpg", yaw: 0.0, gain: 1.0, sun: [0.613, 0.371], sunI: 2.6, sunC: "#FFF4E2", led: 0 },
 ];
 // Each wipe starts here and lasts WIPE seconds; the place before it holds until then.
 const WIPES = [2.25, 4.55, 6.85];
@@ -65,8 +65,8 @@ function droneAt(t: number) {
 function cameraAt(t: number) {
   const u = ease(k01(t, 0, LENGTH));
   const a = lerp(0.55, 0.55 + Math.PI * 1.45, u);
-  const r = lerp(5.9, 5.0, u);
-  const y = lerp(0.22, 0.5, u) - ease(k01(t, LENGTH - 1.5, LENGTH)) * 0.45;
+  const r = lerp(5.9, 5.2, u);
+  const y = lerp(1.25, 1.55, u) - ease(k01(t, LENGTH - 1.5, LENGTH)) * 0.5;
   return new THREE.Vector3(Math.sin(a) * r, y, Math.cos(a) * r);
 }
 
@@ -84,7 +84,10 @@ varying vec3 vDir;
 vec2 eq(vec3 d, float yaw) {
   float c = cos(yaw), s = sin(yaw);
   vec3 r = vec3(c * d.x - s * d.z, d.y, s * d.x + c * d.z);
-  return vec2(atan(r.z, r.x) * 0.15915494 + 0.5, asin(clamp(r.y, -1.0, 1.0)) * 0.31830989 + 0.5);
+  // The panoramas are 16k wide and cropped to the band the camera can see, +30 to -40 degrees of elevation
+  // (scratchpad hdri/tonemap.py), so v is remapped into that band and held at its edges outside it.
+  float v = asin(clamp(r.y, -1.0, 1.0)) * 0.31830989 + 0.5;
+  return vec2(atan(r.z, r.x) * 0.15915494 + 0.5, clamp((v - 0.2777778) / 0.3888889, 0.0005, 0.9995));
 }
 void main() {
   vec3 d = normalize(vDir);
@@ -128,7 +131,7 @@ function World({ film, drive }: { film: React.MutableRefObject<FilmState>; drive
     vertexShader: VERT, fragmentShader: FRAG, side: THREE.BackSide, depthWrite: false, toneMapped: false,
     uniforms: {
       tA: { value: textures[0] }, tB: { value: textures[1] }, yA: { value: 0 }, yB: { value: 0 }, gA: { value: 1 }, gB: { value: 1 },
-      edge: { value: 0 }, k: { value: 0 }, seam: { value: 0 }, capture: { value: 0 }, lod: { value: 1.7 },
+      edge: { value: 0 }, k: { value: 0 }, seam: { value: 0 }, capture: { value: 0 }, lod: { value: 0.9 },
     },
   }), [textures]);
   const cube = useMemo(() => {
@@ -153,8 +156,9 @@ function World({ film, drive }: { film: React.MutableRefObject<FilmState>; drive
     // camera
     const pos = cameraAt(t);
     camera.position.copy(pos);
-    // aimed below the drone, so it rides above the middle of the frame with the horizon behind it
-    aimRightOfCentre(camera, new THREE.Vector3(0, d.y - 0.42, 0), 0.17 * pos.length());
+    // The homepage headline sits centred over the film (scale.com's hero), so the drone holds the middle of
+    // the frame a little below centre, looked down on, so its propellers read as spinning fans.
+    camera.lookAt(new THREE.Vector3(0, d.y + 0.72, 0));
     camera.updateMatrixWorld();
 
     // the wipe travels across what the camera sees

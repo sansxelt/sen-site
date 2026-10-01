@@ -174,9 +174,9 @@ export function RunWindow() {
             {ENTRIES.map((x, i) => (
               <li key={x.id}>
                 <button type="button" className="rw__item" aria-pressed={i === sel} onClick={() => choose(i)}>
-                  <span className="rw__idot" data-f={x.run.failure ? "found" : "held"} aria-hidden />
                   <span className="rw__iname">{x.name}</span>
-                  <span className="rw__imeta">{appName(x.demo)} · {fmtDate(x.run.recorded)}</span>
+                  {/* The outcome in words, coloured because the colour IS the outcome; no dot beside it. */}
+                  <span className="rw__imeta"><span data-f={x.run.failure ? "found" : "held"}>{x.run.failure ? "Found a problem" : "Held"}</span>{` · ${fmtDate(x.run.recorded)}`}</span>
                 </button>
               </li>
             ))}
@@ -187,7 +187,6 @@ export function RunWindow() {
         <div className="rw__main">
           <div className="rw__status">
             <span className="rw__chip" data-s={state}>
-              <span className="rw__cdot" aria-hidden />
               {state === "run" ? "Checking the live app" : state === "found" ? "Found a problem" : "Did what the sentence says"}
             </span>
             <span className="rw__stat v6-mono">
@@ -212,11 +211,14 @@ export function RunWindow() {
                     const i = starts[ji] + k;
                     const st = i < shown ? (s.ok ? "ok" : "fail") : i === shown && !done ? "now" : "wait";
                     return (
+                      // No status icons (founder, 2026-10-01: no dots). The outcome is said in words, and only a
+                      // failure is coloured, because that is the one row a reader has to find.
                       <li key={k} className="rw__step" data-s={st}>
-                        <span className="rw__sico" aria-hidden />
                         <span className="rw__sn v6-mono">{String(i + 1).padStart(2, "0")}</span>
                         <span className="rw__st">{s.say}</span>
-                        <span className="rw__sms v6-mono">{i < shown ? fmtMs(s.ms) : ""}</span>
+                        <span className="rw__sms v6-mono">
+                          {st === "fail" ? <><span className="rw__sf">Failed</span> {fmtMs(s.ms)}</> : st === "ok" ? fmtMs(s.ms) : st === "now" ? <span className="rw__snow">Running</span> : ""}
+                        </span>
                       </li>
                     );
                   })}
@@ -229,7 +231,6 @@ export function RunWindow() {
         <div className="rw__side">
           <div className="rw__browser">
             <div className="rw__bbar">
-              <span className="rw__bdots" aria-hidden><i /><i /><i /></span>
               <span className="rw__addr v6-mono">{address}</span>
             </div>
             <div className="rw__view">

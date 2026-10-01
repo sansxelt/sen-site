@@ -9,9 +9,6 @@
 .v6 .ha[data-dark="true"] { background: #0E0E10; border-color: rgba(255,255,255,0.10); color: #E4E4E7; }
 .v6 .ha__bar { display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 14px; border-bottom: 1px solid rgba(255,255,255,0.09); background: #17171A; }
 .v6 .ha[data-dark="true"] .ha__bar { background: #141416; border-bottom-color: rgba(255,255,255,0.08); }
-.v6 .ha__dots { display: inline-flex; gap: 5px; }
-.v6 .ha__dots i { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.15); }
-.v6 .ha[data-dark="true"] .ha__dots i { background: rgba(255,255,255,0.18); }
 .v6 .ha__title { font-family: var(--mono); font-size: 12px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .v6 .ha[data-dark="true"] .ha__title { color: #A1A1AA; }
 .v6 .ha__meta { margin-left: auto; font-size: 12px; color: var(--ink-4); }
@@ -52,8 +49,8 @@
 .v6 .ha-checks li:last-child { border-bottom: 0; padding-bottom: 0; }
 .v6 .ha-checks b { display: block; font-size: 14px; font-weight: 600; color: var(--ink); }
 .v6 .ha-checks li > span:last-child > span { display: block; margin-top: 2px; font-size: 13px; line-height: 1.5; color: var(--ink-3); }
-.v6 .ha-tick { flex: none; position: relative; width: 18px; height: 18px; margin-top: 1px; border-radius: 50%; background: #FAFAFA; }
-.v6 .ha-tick::after { content: ""; position: absolute; left: 6.2px; top: 3.6px; width: 4px; height: 8px; border: solid #0A0A0B; border-width: 0 1.7px 1.7px 0; transform: rotate(45deg); }
+/* numbered, not ticked: no decorative dots (founder, 2026-10-01) */
+.v6 .ha-tick { flex: none; width: 22px; padding-top: 2px; font-size: 11.5px; color: var(--ink-4); }
 
 .v6 .ha-flow { display: grid; justify-items: stretch; gap: 6px; }
 .v6 .ha-flow__node { display: grid; gap: 2px; padding: 12px 14px; border: 1px solid rgba(255,255,255,0.11); border-radius: 12px; background: #18181B; }

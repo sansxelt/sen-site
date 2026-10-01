@@ -41,11 +41,16 @@ function useBladeGeometry() {
   }, []);
 }
 
+// How a camera sees a spinning blade: in one exposure it sweeps an arc, so it reads as a smear of itself
+// rather than a crisp shape or nothing. SMEAR copies of each blade, fanned back along the direction of spin,
+// fade in with speed while the solid blade fades out. At rest you see two blades; flying, a soft fan.
+const SMEAR = [0.1, 0.22, 0.36, 0.52, 0.7];
+
 function Propeller({ dir, drive, blade }: { dir: 1 | -1; drive: React.MutableRefObject<Drive>; blade: THREE.BufferGeometry }) {
   const hub = useRef<THREE.Group>(null);
   const disc = useRef<THREE.MeshBasicMaterial>(null);
-  const mat = useRef<THREE.MeshPhysicalMaterial>(null);
-  const mat2 = useRef<THREE.MeshPhysicalMaterial>(null);
+  const solid = useRef<(THREE.MeshPhysicalMaterial | null)[]>([]);
+  const smear = useRef<(THREE.MeshBasicMaterial | null)[]>([]);
   useFrame((_, frameDt) => {
     const s = drive.current.spin;
     const dt = drive.current.dt ?? Math.min(frameDt, 0.05);
@@ -53,19 +58,24 @@ function Propeller({ dir, drive, blade }: { dir: 1 | -1; drive: React.MutableRef
       if (drive.current.rot !== undefined) hub.current.rotation.y = dir * drive.current.rot;
       else hub.current.rotation.y += dir * dt * (1.5 + s * 64);
     }
-    // At speed the eye sees a disc, not blades: fade one in as the other fades out.
-    if (disc.current) disc.current.opacity = 0.16 * s;
-    // At full speed a blade is a faint smear, not a shape: a camera at 1/30 s never freezes one.
-    if (mat.current) mat.current.opacity = 1 - 0.93 * s;
-    if (mat2.current) mat2.current.opacity = 1 - 0.93 * s;
+    if (disc.current) disc.current.opacity = 0.1 * s;
+    solid.current.forEach((m) => { if (m) m.opacity = 1 - 0.72 * s; });
+    smear.current.forEach((m, i) => { if (m) m.opacity = Math.max(0, s - 0.15) * (0.3 - (i % SMEAR.length) * 0.045); });
   });
   return (
     <group>
       <group ref={hub}>
-        {[0, Math.PI].map((r) => (
-          <mesh key={r} geometry={blade} rotation={[0, r, 0.1 * dir]}>
-            <meshPhysicalMaterial ref={r ? mat2 : mat} color={INK_2} roughness={0.3} metalness={0.15} clearcoat={0.8} transparent opacity={1} />
-          </mesh>
+        {[0, Math.PI].map((r, bi) => (
+          <group key={r}>
+            <mesh geometry={blade} rotation={[0, r, 0.1 * dir]}>
+              <meshPhysicalMaterial ref={(m) => { solid.current[bi] = m; }} color={INK_2} roughness={0.3} metalness={0.15} clearcoat={0.8} transparent opacity={1} />
+            </mesh>
+            {SMEAR.map((off, k) => (
+              <mesh key={k} geometry={blade} rotation={[0, r - dir * off, 0.1 * dir]}>
+                <meshBasicMaterial ref={(m) => { smear.current[bi * SMEAR.length + k] = m; }} color="#3A3D45" transparent opacity={0} depthWrite={false} />
+              </mesh>
+            ))}
+          </group>
         ))}
         <mesh position={[0, 0.012, 0]}>
           <cylinderGeometry args={[0.045, 0.05, 0.035, 28]} />
@@ -74,7 +84,7 @@ function Propeller({ dir, drive, blade }: { dir: 1 | -1; drive: React.MutableRef
       </group>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.004, 0]}>
         <circleGeometry args={[0.52, 72]} />
-        <meshBasicMaterial ref={disc} color="#30333A" transparent opacity={0.13} depthWrite={false} />
+        <meshBasicMaterial ref={disc} color="#30333A" transparent opacity={0.1} depthWrite={false} />
       </mesh>
     </group>
   );
