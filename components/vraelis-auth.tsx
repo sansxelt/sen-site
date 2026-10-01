@@ -45,7 +45,7 @@ function GitHubIcon() {
 }
 
 export function VraelisSignIn({
-  callbackUrl = "/account",
+  callbackUrl = "/app",
   initialMode = "signin",
   // Defaults ON, so /signin is unchanged. The V6 surface supplies its own heading and would otherwise
   // stack two of them on the same screen, pushing the form
@@ -62,7 +62,7 @@ export function VraelisSignIn({
   legalBase?: string;
 }) {
   const router = useRouter();
-  const safeRedirect = getSafeRedirectPath(callbackUrl) || "/account";
+  const safeRedirect = getSafeRedirectPath(callbackUrl) || "/app";
   // Defaults to sign-in, but a signup-intent CTA (homepage "Start free")
   // opens straight in create-account mode so a brand-new user doesn't land
   // on a "Welcome back" sign-in screen.

@@ -131,11 +131,11 @@ export default async function AppIssuesPage({ params }: { params: Promise<{ id: 
             <Link href={`/systems/${id}`} className="btn">Back to overview</Link>
           </div>
         ) : (
-          <div style={{ display: "grid", gap: 28 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: 28 }}>
             <section>
               <h2 style={sectionHead}>Open ({open.length})</h2>
               {open.length ? (
-                <div style={{ display: "grid", gap: 8 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: 8 }}>
                   {open.map((i) => <IssueRowView key={i.id} appId={id} issue={i} />)}
                 </div>
               ) : (
@@ -145,7 +145,7 @@ export default async function AppIssuesPage({ params }: { params: Promise<{ id: 
             {resolvedIssues.length ? (
               <section>
                 <h2 style={sectionHead}>Resolved ({resolvedIssues.length})</h2>
-                <div style={{ display: "grid", gap: 8 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: 8 }}>
                   {resolvedIssues.map((i) => <IssueRowView key={i.id} appId={id} issue={i} resolved />)}
                 </div>
               </section>

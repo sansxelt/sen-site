@@ -267,8 +267,14 @@ export async function applicationCapReached(owner: string, planKey: string | nul
   const cap = plan ? plan.maxApplications : FREE_TIER.maxApplications;
   if (cap === null) return false;
   if (!isDatabaseConfigured()) return false;
+  // The lane application is not a system the person made: it is where every check started from the
+  // Overview composer, the CLI or an agent is filed (lib/preflight/verification-lane.ts, LANE_BUILDER). It
+  // used to count, so a brand-new free account's first Overview check used up its one system and "Connect a
+  // system" was then refused (console audit P0-3, 2026-10-01). builder is null for most systems, and SQL's
+  // NULL <> 'x' is not true, so the filter has to name null explicitly.
   const { count, error } = await db().from("v_applications" as never)
-    .select("id", { count: "exact", head: true }).eq("user_id", norm(owner));
+    .select("id", { count: "exact", head: true }).eq("user_id", norm(owner))
+    .or("builder.is.null,builder.neq.vraelis_api");
   if (error) return false;
   return (count ?? 0) >= cap;
 }

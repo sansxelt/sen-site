@@ -23,9 +23,9 @@ export function AutoSigninClient({
 }) {
   useEffect(() => {
     const forwardToSignIn = () => {
-      window.location.href = getSignInPath(
-        email ? `/account?email=${encodeURIComponent(email)}` : "/account",
-      );
+      // The Overview, not Account settings: a new account's first screen is the product (console audit
+      // P0-2, 2026-10-01). Google and GitHub sign-ups already landed there; email sign-ups now do too.
+      window.location.href = getSignInPath("/app");
     };
 
     if (!email || !token) {
@@ -43,7 +43,7 @@ export function AutoSigninClient({
         });
         if (cancelled) return;
         if (res?.ok) {
-          window.location.href = "/account";
+          window.location.href = "/app";
           return;
         }
         forwardToSignIn();

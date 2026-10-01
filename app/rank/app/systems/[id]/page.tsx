@@ -224,7 +224,10 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
   const critTotal = latest ? num(latest.summary?.critical_total) : 0;
   const critPassed = latest ? num(latest.summary?.critical_passed) : 0;
   const subParts: string[] = [];
-  if (decision === "blocked" && blockers.length > 0) subParts.push(`${blockers.length} critical failure${blockers.length === 1 ? "" : "s"}`);
+  // "blocking", not "critical": blockers are every open failure that stops a Verified decision, and most are
+  // high severity, not critical. Calling four of them "critical" beside an Overview counting one critical issue
+  // was a verification product miscounting its own severities (console audit P0-5, 2026-10-01).
+  if (decision === "blocked" && blockers.length > 0) subParts.push(`${blockers.length} blocking failure${blockers.length === 1 ? "" : "s"}`);
   if (latest && !latestActive && critTotal > 0) subParts.push(`${critPassed} of ${critTotal} critical flows passed`);
   // WHY A RUN WITH EVERY CRITICAL FLOW PASSING IS NOT "VERIFIED".
   //
@@ -449,7 +452,9 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
               <div style={{ ...headLbl, display: "flex", alignItems: "center", gap: 7 }}><Ic d={I.alert} size={13} sw={2} />Open failures ({blockers.length})</div>
               <Link href={`/systems/${id}/issues`} style={{ fontSize: 13, color: "var(--acc-deep)", textDecoration: "none" }}>All issues →</Link>
             </div>
-            <div style={{ display: "grid", gap: 8 }}>
+            {/* minmax(0, 1fr): a grid item's default min-width is its content, so one long no-wrap title
+                widened the row past a 390px phone and the whole page zoomed out (console audit P0-4). */}
+            <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: 8 }}>
               {blockers.map((iss) => (
                 <Link key={iss.id} href={`/systems/${id}/passes/${latest.id}`}
                   style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", textDecoration: "none", color: "inherit" }}>

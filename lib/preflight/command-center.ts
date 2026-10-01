@@ -58,7 +58,7 @@ export function nextAction(s: CommandState): NextAction {
   }
   // 5. Blocked: inspect the blocker (the single most urgent state).
   if (s.decision === "blocked" && s.latestRunId) {
-    return { label: "Inspect failure", href: `${app}/passes/${s.latestRunId}`, why: s.blockerCount > 0 ? `${s.blockerCount} critical failure${s.blockerCount === 1 ? "" : "s"} to resolve.` : "This deployment failed verification.", tone: "primary" };
+    return { label: "Inspect failure", href: `${app}/passes/${s.latestRunId}`, why: s.blockerCount > 0 ? `${s.blockerCount} blocking failure${s.blockerCount === 1 ? "" : "s"} to resolve.` : "This deployment failed verification.", tone: "primary" };
   }
   // 6. A repair was verified but the full critical verification is still owed -> earn READY. LAUNCHES the
   //    full critical suite (not a link to a page that can't run it).

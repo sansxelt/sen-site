@@ -86,6 +86,11 @@ function ApprovedContract({ appId, contract, reqs, flows, canEdit }: { appId: st
   const enabled = reqs.filter((r) => r.enabled);
   const critical = enabled.filter((r) => r.severity === "critical");
   const criticalCovered = critical.filter((r) => coveredBy(r.id) > 0).length;
+  // Coverage can only be counted when flows name the requirements they check. Plans minted from one sentence
+  // carry no requirement_ids yet, so every requirement read "Not covered by any flow yet" in red above flows
+  // that had run and passed: a false zero (console audit P0-6, 2026-10-01). Without the link, say what is
+  // known instead: how many approved flows check this contract.
+  const linked = approvedFlows.some((f) => Array.isArray(f.requirement_ids) && f.requirement_ids.length > 0);
 
   return (
     <div>
@@ -97,7 +102,9 @@ function ApprovedContract({ appId, contract, reqs, flows, canEdit }: { appId: st
             <span style={smallLabel}>Contract v{contract.version}</span>
           </div>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16.5, color: "var(--fg-1)", lineHeight: 1.4 }}>
-            {critical.length} critical requirement{critical.length === 1 ? "" : "s"}, {criticalCovered} covered by approved flows
+            {linked
+              ? `${critical.length} critical requirement${critical.length === 1 ? "" : "s"}, ${criticalCovered} covered by approved flows`
+              : `${critical.length} critical requirement${critical.length === 1 ? "" : "s"}, checked by ${approvedFlows.length} approved flow${approvedFlows.length === 1 ? "" : "s"}`}
           </div>
           <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.55, margin: "6px 0 0" }}>
             {contract.approved_at ? (
@@ -129,7 +136,7 @@ function ApprovedContract({ appId, contract, reqs, flows, canEdit }: { appId: st
                     {!r.enabled ? <span style={smallLabel}>Disabled, not tested</span> : null}
                   </div>
                   <div style={{ fontSize: 14.5, color: "var(--fg-1)", lineHeight: 1.55, wordBreak: "break-word" }}>{r.requirement}</div>
-                  {r.enabled ? (
+                  {r.enabled && linked ? (
                     <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 7, fontSize: 12.5 }}>
                       {n > 0
                         ? <span style={{ color: "var(--fg-4)" }}>Covered by {n} approved flow{n === 1 ? "" : "s"}</span>

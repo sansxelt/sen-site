@@ -15,7 +15,8 @@ export default async function VerifiedPage({
 }) {
   const params = await searchParams;
   const email  = params.email ?? "";
-  const signInHref = getSignInPath(email ? `/account?email=${encodeURIComponent(email)}` : "/account");
+  // Into the product, not Account settings (console audit P0-2).
+  const signInHref = getSignInPath("/app");
 
   return (
     <div style={{ maxWidth: 520, margin: "0 auto", padding: "clamp(24px, 4vw, 40px) clamp(16px, 4vw, 24px) 80px" }}>
@@ -32,12 +33,11 @@ export default async function VerifiedPage({
         </p>
 
         <div style={{ marginTop: 24, display: "flex", gap: 12, flexWrap: "wrap" }}>
-          <Link href={signInHref} className="btn" style={{ flex: 1, minWidth: 130 }}>Sign in</Link>
-          <Link href="/pricing" className="btn btn--ghost" style={{ flex: 1, minWidth: 120 }}>See pricing</Link>
+          <Link href={signInHref} className="btn" style={{ flex: 1, minWidth: 130 }}>Sign in and open Vraelis</Link>
         </div>
 
         <p style={{ marginTop: 24, borderTop: "1px solid var(--line-2)", paddingTop: 20, fontSize: 12.5, lineHeight: 1.5, color: "var(--fg-4)" }}>
-          You&apos;ll also get a welcome email from hello@vraelis.com with getting-started tips.
+          You&apos;ll also get a welcome email from hello@vraelis.com.
         </p>
       </div>
     </div>
