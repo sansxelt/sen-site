@@ -145,7 +145,7 @@ export default function CreditsPage() {
           button below still says so. */}
       <PageHeader
         title="Credits"
-        lead="Your balance pays for verifications. Each verification draws from it and only settles when it actually executes. Per-verification pricing is rolling out; your balance keeps its full purchase value through the change."
+        lead="Your balance pays for verifications. Each verification draws from it and only settles when it actually executes."
       />
 
       <div style={{ paddingBottom: 80 }}>

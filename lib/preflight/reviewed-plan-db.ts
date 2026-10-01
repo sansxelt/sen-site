@@ -392,3 +392,19 @@ export async function releaseReviewedPlan(owner: string, id: string, nowMs: numb
     .update({ execution_state: "unconsumed", updated_at: nowIso } as never)
     .eq("id", id).eq("user_id", norm(owner)).eq("execution_state", "consuming");
 }
+
+/** For the Overview's setup checklist: has this owner ever had a plan written, and ever approved one. Two
+ *  head counts, owner-scoped, any state and any age, because the checklist asks whether a step has EVER been
+ *  done, not whether something is pending now. Degrades to "not yet" on a read error: the checklist then
+ *  shows a step still to do, which is the harmless direction. */
+export async function planProgress(owner: string): Promise<{ written: boolean; approved: boolean }> {
+  if (!isDatabaseConfigured()) return { written: false, approved: false };
+  try {
+    const s = getSupabaseAdminClient();
+    const [all, approved] = await Promise.all([
+      s.from(TABLE as never).select("id", { count: "exact", head: true }).eq("user_id", norm(owner)),
+      s.from(TABLE as never).select("id", { count: "exact", head: true }).eq("user_id", norm(owner)).eq("approval_state", "approved"),
+    ]);
+    return { written: !all.error && (all.count ?? 0) > 0, approved: !approved.error && (approved.count ?? 0) > 0 };
+  } catch { return { written: false, approved: false }; }
+}

@@ -255,8 +255,10 @@ console.log("\n── the record says which promise it proves, and whether that 
   const list = readFileSync("app/rank/app/guarantees/page.tsx", "utf8").replace(/\s+/g, " ");
   ok("the guarantees page no longer says verification is unwired",
     !/Re-checking a guarantee automatically against each new deployment is not wired up yet/.test(list));
-  ok("it still says automatic re-checking is not wired",
-    /automatically as each new deployment appears is not wired up yet/.test(list));
+  // 2026-10-01: the internal phrase "not wired up yet" left customer copy (console audit P1-14). The claim
+  // it guarded stands: nothing here may say re-checks happen automatically; it says they happen on request.
+  ok("it says a guarantee is re-checked on request, and never claims it happens automatically",
+    /checked again when you ask for it/.test(list) && !/automatically (re-?check|on each|as each)/i.test(list.replace(/not wired up yet/g, "")));
   // And now that a verdict is reachable, the page must actually show one rather than only the plan's state.
   // Was /guaranteeStatus\(/, which stopped matching when the page moved to the function that actually
   // checks which meaning a run proved — a rename, not a regression. Pinned to the stronger property now.

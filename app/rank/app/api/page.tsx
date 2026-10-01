@@ -62,7 +62,7 @@ curl https://vraelis.com/api/v1/verifications/VERIFICATION_ID -H "X-Api-Key: YOU
 // answering when they mint a key.
 type PreflightAccess = "none" | "read" | "launch";
 const PREFLIGHT_ACCESS: { id: PreflightAccess; label: string; hint: string; scopes: string[] }[] = [
-  { id: "none", label: "No Preflight access", hint: "Verifications and credits only. The safe default.", scopes: [] },
+  { id: "none", label: "Verifications only", hint: "Verifications and credits only. The safe default.", scopes: [] },
   { id: "read", label: "Read reports", hint: "Price a verification and read run reports. Cannot launch a run or spend anything.", scopes: ["preflight:preview", "preflight:run:read"] },
   { id: "launch", label: "Launch runs", hint: "Everything above, plus launching a verification. This key can spend your credits.", scopes: ["preflight:preview", "preflight:run:read", "preflight:run:create"] },
 ];
@@ -184,7 +184,7 @@ export default function ApiKeysPage() {
             <button onClick={create} disabled={busy} className="btn" style={{ opacity: busy ? 0.6 : 1 }}>{busy ? "Creating…" : "Create key"}</button>
           </div>
           <div style={{ display: "grid", gap: 6, marginTop: 12 }}>
-            <span style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" }}>Preflight access</span>
+            <span style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" }}>Run access</span>
             {PREFLIGHT_ACCESS.map((a) => (
               <label key={a.id} style={{ display: "flex", gap: 9, alignItems: "flex-start", padding: "9px 11px", border: `1px solid ${preflightAccess === a.id ? "var(--acc-line)" : "var(--line-2)"}`, background: preflightAccess === a.id ? "var(--acc-soft)" : "transparent", borderRadius: "var(--r-sm)", cursor: "pointer" }}>
                 <input type="radio" name="preflight-access" checked={preflightAccess === a.id} onChange={() => setPreflightAccess(a.id)} style={{ marginTop: 3 }} />
@@ -270,7 +270,7 @@ export default function ApiKeysPage() {
                 </p>
               ) : (
                 <p style={{ margin: 0, fontSize: 12.5, color: "var(--wait-ink)" }}>
-                  This key cannot launch verifications. To give it that, revoke it and create a new one with Preflight access set to &ldquo;Launch runs&rdquo;.
+                  This key cannot launch verifications. To give it that, revoke it and create a new one with run access set to &ldquo;Launch runs&rdquo;.
                 </p>
               )}
             </div>

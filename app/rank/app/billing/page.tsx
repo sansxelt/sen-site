@@ -19,7 +19,7 @@ import { Page, PageHeader, SECTION_TITLE } from "@/app/rank/_components/page-hea
 
 export const metadata: Metadata = { title: "Billing" };
 
-const REASON: Record<string, string> = { signup: "Welcome credits", monthly_reset: "Monthly plan credits", topup: "Credit top-up", pack: "Credit pack", hold: "Verification launch", refund: "Unfilled refund", reward: "Participation reward", yc_reviewer_demo_grant: "Reviewer credit grant" };
+const REASON: Record<string, string> = { signup: "Welcome credits", monthly_reset: "Monthly plan credits", topup: "Credit top-up", pack: "Credit pack", hold: "Verification launch", refund: "Unfilled refund", reward: "Participation reward", yc_reviewer_demo_grant: "Credit grant" };
 // A ledger code nobody mapped still reads as words rather than as a database key: "some_grant" -> "Some grant".
 const reasonLabel = (r: string) => REASON[r] ?? (r.charAt(0).toUpperCase() + r.slice(1)).replace(/_/g, " ");
 

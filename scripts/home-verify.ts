@@ -93,6 +93,10 @@ ok("the degraded state is plain language with a keyboard-reachable retry, no raw
 console.log("\n── empty account shows deliberate onboarding, not fake records ──");
 ok("fully-empty is only true when nothing failed to load (a failure is degraded, not empty)", /const fullyEmpty = !anyError &&/.test(page));
 ok("the empty account renders the onboarding workflow", /<EmptyOverview \/>/.test(page) && /export function EmptyOverview/.test(sec));
+// The setup checklist (2026-10-01): every step is read from a stored row, and two-step rides inside it while
+// setup is unfinished rather than as a banner above the first action.
+ok("the Overview renders the setup checklist from stored rows until setup is complete",
+  /<SetupChecklist state=\{setup\} \/>/.test(page) && /planProgress\(owner\)/.test(page) && /showSetup = !anyError && !setupComplete\(setup\)/.test(page));
 ok("onboarding explains the real four-step workflow", /Name the deployed build/.test(rec) && /State what must be true/.test(rec) && /Review the proof plan/.test(rec) && /Run the verification/.test(rec));
 ok("empty sections collapse to null rather than showing empty shells", /if \(!issues\.length\) return null;/.test(rec) && /if \(!rows\.length\) return null;/.test(rec) && /if \(!systems\.length\) return null;/.test(rec));
 

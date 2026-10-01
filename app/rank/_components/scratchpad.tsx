@@ -254,7 +254,11 @@ export function Scratchpad() {
     <>
       {/* The launcher. Bottom right, above nothing else the product puts there, and it stays put while the
           panel is open so the same target closes it. */}
+      {/* On a phone the floating launcher sat over labels, buttons and the last line of cards (console audit
+          P1-18), so it is hidden there; notes stay a desktop affordance. */}
+      <style>{"@media (max-width: 760px) { .vra-notes-launcher { display: none !important; } }"}</style>
       <button
+        className="vra-notes-launcher"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-controls="vra-scratchpad"

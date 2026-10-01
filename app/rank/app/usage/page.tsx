@@ -200,8 +200,8 @@ export default async function UsagePage() {
             </div>
           ) : (
             <p style={{ margin: 0, fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.6 }}>
-              A chart needs {CHART_MIN_ACTIVE_DAYS} separate days of activity before it shows a shape rather
-              than a few bars. There {activeDays(acct.daily) === 1 ? "has been 1 day" : `have been ${activeDays(acct.daily)} days`} in the last 30.
+              {/* One string, no counts in it, so every language can carry it whole. CHART_MIN_ACTIVE_DAYS still decides when the chart appears. */}
+              The chart appears after a few days with activity.
             </p>
           )}
           {acct.verdicts.invalidated > 0 ? (

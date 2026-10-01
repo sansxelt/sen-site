@@ -399,7 +399,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
             <span style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.5 }}>{ROLE_DESC[r]}</span>
           </div>
         ))}
-        <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "12px 0 0", lineHeight: 1.6 }}>Team seats are collaboration access, not paid seat billing. Billing stays with the workspace owner. Client viewers never see billing, API keys, webhooks, screening, source details, or collection-link management.</p>
+        <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "12px 0 0", lineHeight: 1.6 }}>Billing stays with the workspace owner. Client viewers never see billing, API keys, webhooks or source details.</p>
       </div>
 
       {/* Transfer ownership (owner only) */}

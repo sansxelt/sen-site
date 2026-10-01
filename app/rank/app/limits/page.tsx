@@ -60,7 +60,7 @@ export default async function LimitsPage() {
     <Page measure="wide">
       <PageHeader
         title="Limits"
-        lead="What will refuse a request, and how close you are to it. These are the values the API checks before a run starts, read from the same module the routes import, not a description of them."
+        lead="What will refuse a request, and how close you are to it. These are the exact values checked before a run starts."
       />
 
       <div style={{ paddingBottom: 80 }}>

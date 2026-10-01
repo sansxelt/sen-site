@@ -104,8 +104,8 @@ export default async function GuaranteesPage() {
       <div style={{ paddingBottom: 80 }}>
         <p style={{ margin: "0 0 24px", fontSize: 13, color: "var(--fg-4)", lineHeight: 1.6, maxWidth: "62ch" }}>
           Approving a plan records what must stay true and who accepted it. Each guarantee shows its verdict from
-          its most recent verification. Re-checking automatically as each new deployment appears is not wired
-          up yet, so a guarantee is proven when you ask it to be. {GUARANTEE_COVERAGE_NOTE}
+          its most recent verification. A guarantee is checked again when you ask for it, from here, the CLI or your
+          agent. {GUARANTEE_COVERAGE_NOTE}
         </p>
 
         {guarantees.length > 0 ? (

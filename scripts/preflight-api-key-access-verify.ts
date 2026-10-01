@@ -96,7 +96,7 @@ function scopeTests() {
 
   // The console is the only place a key is minted, so the choice has to exist there too.
   const ui = read("app/rank/app/api/page.tsx");
-  ok("the console offers a Preflight access choice at creation", /Preflight access/.test(ui));
+  ok("the console offers a run access choice at creation", />Run access</.test(ui));
   ok("the console defaults to NO preflight access", /useState<PreflightAccess>\("none"\)/.test(ui));
   ok("the console warns that a launch key can spend credits", /can spend your credits/.test(ui));
 }

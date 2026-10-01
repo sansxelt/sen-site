@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { ensureProfile } from "@/lib/v-db";
 import { ensureSignupGrant, balance } from "@/lib/v-credits";
@@ -8,7 +9,9 @@ import { getDomainAccessForEmail } from "@/lib/v-organization";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { listApplicationsForMember, latestRunByAppForApps, type Application, type RunSummary } from "@/lib/v-applications";
 import { listAllRuns, listAllIssues, listRepairs, overviewCounts, type PassRow, type IssueRow, type RepairRow, type OverviewCounts } from "@/lib/preflight/overview-db";
-import { listPendingReviews, type PendingReviewRow } from "@/lib/preflight/reviewed-plan-db";
+import { listPendingReviews, planProgress, type PendingReviewRow } from "@/lib/preflight/reviewed-plan-db";
+import { listApiKeys } from "@/lib/api-keys";
+import { SetupChecklist, setupComplete, type SetupState } from "./_components/setup-checklist";
 import { listGuaranteesForApps } from "@/lib/preflight/guarantees-db";
 import { toPublicDecision } from "@/lib/preflight/public-decision";
 import { systemProof, isActiveRun } from "@/lib/preflight/home-verdict";
@@ -59,22 +62,9 @@ export default async function Overview({ searchParams }: { searchParams: Promise
   const session = await auth();
   const email = session?.user?.email;
 
-  if (!email) {
-    return (
-      <section className="section" style={{ borderBottom: "none" }}>
-        <div className="wrap" style={{ maxWidth: 520, textAlign: "center" }}>
-          <p className="eyebrow" style={{ justifyContent: "center" }}>Workspace</p>
-          <h1 className="display" style={{ fontSize: "clamp(1.9rem, 4vw, 2.8rem)", marginBottom: 14 }}>
-            Prove what your build <span className="em">claims</span>.
-          </h1>
-          <p className="lead-copy" style={{ margin: "0 auto 26px" }}>
-            Sign in to name a deployed outcome and get a decision, backed by evidence, before your users find the failures.
-          </p>
-          <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Sign in</Link>
-        </div>
-      </section>
-    );
-  }
+  // Signed out, the Overview is the sign-in page. It used to render the whole console chrome around a sign-in
+  // card whose headline matched nothing on the site (console audit P1-20).
+  if (!email) redirect("/signin?callbackUrl=%2Fapp");
 
   await ensureProfile(email, session.user?.name ?? undefined);
   await ensureSignupGrant(email);
@@ -165,6 +155,22 @@ export default async function Overview({ searchParams }: { searchParams: Promise
   const settledRuns = runsR.value.filter((r) => !isActiveRun(r)).slice(0, 8);
 
   const anyError = appsR.error || countsR.error || runsR.error || issuesR.error || latestR.error;
+
+  // THE SETUP CHECKLIST. Each step is read from a stored row (setup-checklist.tsx says which), so the card
+  // can never claim progress that did not happen. It shows until the five required steps are done.
+  const [progress, keys] = await Promise.all([
+    preflightReady ? planProgress(owner) : Promise.resolve({ written: false, approved: false }),
+    listApiKeys(email),
+  ]);
+  const setup: SetupState = {
+    address: apps.length > 0,
+    sentence: progress.written,
+    approval: progress.approved,
+    run: runsR.value.some((r) => r.state === "completed"),
+    agent: keys.some((k) => !!k.last_used_at),
+    twoStep: twoStep.ok ? twoStep.status.enabled : null,
+  };
+  const showSetup = !anyError && !setupComplete(setup);
   const fullyEmpty = !anyError && apps.length === 0 && runsR.value.length === 0
     && countsR.value.runningPasses === 0 && attention.length === 0 && pendingR.value.length === 0;
 
@@ -211,14 +217,17 @@ export default async function Overview({ searchParams }: { searchParams: Promise
         </Link>
       )}
 
-      {offerTwoStep && <TwoStepNudge />}
+      {/* While setup is unfinished, two-step verification is its optional last step rather than a banner
+          above the only thing a new account can do (console audit P1-1). */}
+      {showSetup ? <SetupChecklist state={setup} /> : offerTwoStep && <TwoStepNudge />}
 
       {fullyEmpty ? (
         // An empty account gets the form at full size: there is no state to read, so the only useful thing
         // on the page is the way to create some.
         <>
           <div style={{ marginBottom: 26 }}><Composer balance={bal} /></div>
-          <EmptyOverview />
+          {/* The static four-step list only when the checklist is not already showing the same steps. */}
+          {showSetup ? null : <EmptyOverview />}
         </>
       ) : (
         <>

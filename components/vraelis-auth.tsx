@@ -76,7 +76,6 @@ export function VraelisSignIn({
 
   const emailBusy = busy === "signup" || busy === "signin";
   // Clickwrap: creating an account (email OR OAuth) requires agreeing to Terms + Privacy.
-  const needsConsent = mode === "signup" && !agreed;
   const CONSENT_MSG = "Please agree to the Terms and Privacy Policy to continue.";
 
   async function handleOAuth(provider: OauthProvider) {
@@ -164,7 +163,7 @@ export function VraelisSignIn({
           const providerBusy = busy === opt.provider;
           return (
             <button key={opt.provider} type="button" className="auth-form__provider"
-              onClick={() => void handleOAuth(opt.provider)} disabled={providerBusy || needsConsent}>
+              onClick={() => void handleOAuth(opt.provider)} disabled={providerBusy}>
               {opt.provider === "google" ? <GoogleIcon /> : <GitHubIcon />}
               {providerBusy ? "Redirecting…" : `Continue with ${opt.label}`}
             </button>
@@ -203,7 +202,9 @@ export function VraelisSignIn({
           </label>
         )}
 
-        <button type="submit" className="auth-form__submit" disabled={emailBusy || needsConsent}>
+        {/* Enabled before the terms box is ticked: greyed-out buttons with no reason given read as broken
+            (console audit P1-22). Pressing one without agreeing says why, in the status line below. */}
+        <button type="submit" className="auth-form__submit" disabled={emailBusy}>
           {busy === "signup" ? "Creating account…" : busy === "signin" ? "Signing in…" : mode === "signup" ? "Create account" : "Sign in"}
         </button>
         {mode === "signup" ? <p className="auth-form__note">We will email you a link to confirm your address before your first sign-in.</p> : null}

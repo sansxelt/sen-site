@@ -187,8 +187,9 @@ function Section({ n, title, aria, children }: { n: string; title: string; aria:
   return (
     <section aria-label={aria} style={{ borderTop: "1px solid var(--line-2)", paddingTop: 22, display: "grid", gap: 12 }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-5)", fontWeight: 600 }}>{n}</span>
-        <h2 style={h2Style}>{title}</h2>
+        {/* The section numbers ran 02 to 09 with no 01, which read as a page with a piece missing (console
+            audit P1-6). The headings carry the order; n stays in the signature for the sections' own names. */}
+        <h2 style={h2Style} data-n={n}>{title}</h2>
       </div>
       {children}
     </section>
@@ -362,7 +363,7 @@ function FlowTimeline({ flow, displayName, screenshotIds, runId, showShots }: { 
                     <div style={{ fontSize: 13, color: "var(--fg-1)", lineHeight: 1.45, wordBreak: "break-word" }}>{stepText(s.action, s.target)}</div>
                     {stepFailed && s.observed ? <details style={{ marginTop: 4 }}><summary style={{ cursor: "pointer", fontSize: 12, color: "var(--fg-4)", padding: "4px 0" }}>Error detail</summary><div style={{ fontSize: 12, color: "var(--fg-3)", wordBreak: "break-all", lineHeight: 1.5, marginTop: 4 }}>{s.observed}</div></details> : null}
                   </div>
-                  <span style={{ fontSize: 11, color: "var(--fg-5)", flex: "none", marginTop: 2 }}>{s.ms != null ? `${s.ms} ms` : ""}</span>
+                  <span style={{ fontSize: 11, color: "var(--fg-5)", flex: "none", marginTop: 2 }}>{s.ms != null ? (s.ms >= 1000 ? `${(s.ms / 1000).toFixed(1)} s` : `${s.ms} ms`) : ""}</span>
                 </li>
               );
             })}
@@ -577,9 +578,14 @@ export default async function VerificationResultPage({ params }: { params: Promi
           // A live run reports its STAGE, which is not a verdict and must not be dressed as one. Anything
           // else, conclusion or not, is <Verdict>: it already renders "Not yet verified" in the neutral tone
           // for a run that reached no conclusion, which is what the old ternary's third branch spelled out.
+          // A run invalidated as a fault in Vraelis is not a verdict about the customer's software, so its header
+          // says Discarded in the neutral tone rather than wearing the red Failed it was issued with (console
+          // audit P1-7). The verdict as issued is still shown in the record below, under the invalidation note.
           active
             ? <span className="pill" style={{ color: "var(--fg-3)", background: "var(--bg-2)", borderColor: "var(--line-2)" }}>{runningStage(run.state)}</span>
-            : <Verdict verdict={verdict} size="md" />
+            : run.invalidation
+              ? <span className="pill" style={{ color: "var(--fg-3)", background: "var(--bg-2)", borderColor: "var(--line-2)" }}>Discarded</span>
+              : <Verdict verdict={verdict} size="md" />
         }
       />
 
@@ -599,8 +605,10 @@ export default async function VerificationResultPage({ params }: { params: Promi
             <p style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>
               The decision and evidence below are kept exactly as they were issued, and are no longer counted toward this
               system&apos;s current state, its open issues, or any guarantee.
-              {run.invalidation.ref ? <> Defect reference {run.invalidation.ref}.</> : null}
-              {run.invalidation.by ? <> Recorded by {run.invalidation.by}.</> : null}
+              {/* The defect reference stays visible on purpose: it is how a customer can quote the fault back to us
+                  (scripts/preflight-run-invalidation-verify.ts). The staff email that recorded it does not belong
+                  on a customer's page (console audit P1-6); it stays in the stored record. */}
+              {run.invalidation.ref ? <> Reference {run.invalidation.ref}.</> : null}
             </p>
           </div>
         ) : null}
@@ -714,7 +722,7 @@ export default async function VerificationResultPage({ params }: { params: Promi
                 })}
               </div>
             ) : (
-              <Empty>{active ? "Evidence is still being collected." : screenshotCount > 0 ? `${screenshotCount} screenshot${screenshotCount === 1 ? "" : "s"} were captured; they appear in the execution journey below.` : "No evidence was captured for this verification."}</Empty>
+              <Empty>{active ? "Evidence is still being collected." : screenshotCount > 0 ? `${screenshotCount} screenshot${screenshotCount === 1 ? " was" : "s were"} captured; they appear in the execution journey below.` : "No evidence was captured for this verification."}</Empty>
             )}
           </Section>
 
@@ -737,10 +745,11 @@ export default async function VerificationResultPage({ params }: { params: Promi
           {/* ── 06 AFFECTED REQUIREMENTS — ONLY the requirement refs the findings actually stored, resolved to the
                 CURRENT contract text and linked back to the finding that raised each. No coverage matrix, no pass
                 marks; an unresolved ref becomes an honest "unavailable" entry, never a raw id or invented text. ── */}
+          {/* Shown only when a finding referenced a requirement: an empty "Affected requirements" heading on a
+              failed run read as a promise the page did not keep (console audit P1-6). */}
+          {affected.length === 0 ? null : (
           <Section n="06" title="Affected requirements" aria="Affected requirements">
-            {affected.length === 0 ? (
-              <Empty>No specific requirements were flagged by the findings on this verification.</Empty>
-            ) : (
+            {(
               <>
                 <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>
                   {contractVersion != null ? `Current requirements for Contract v${contractVersion} that a finding referenced. ` : ""}A verification does not mark a requirement passed; these are the ones its findings pointed at.
@@ -761,11 +770,15 @@ export default async function VerificationResultPage({ params }: { params: Promi
               </>
             )}
           </Section>
+          )}
 
           {/* ── 07 REPAIR HANDOFF — the REAL per-finding repair_prompt only: instructions for a coding agent, shown
                 as plain (React-escaped) text with its line breaks preserved and a copy control. Copying it changes
                 nothing; Vraelis verifies a repair, it never modifies the application from this page. No apply
                 action, no raw failure_message, no secret. A quiet honest fallback when there is none. ── */}
+          {/* On a passed run there is nothing to repair, so the section is left out. On a failed or blocked run
+              it always shows, and says plainly when no repair guidance exists rather than inventing one. */}
+          {repairIssues.length === 0 && pub === "verified" ? null : (
           <Section n="07" title="Repair handoff" aria="Repair handoff">
             {repairIssues.length === 0 ? (
               <Empty>No repair guidance was generated for this verification.</Empty>
@@ -789,6 +802,7 @@ export default async function VerificationResultPage({ params }: { params: Promi
               </>
             )}
           </Section>
+          )}
 
           {/* ── 08 REVERIFICATION — a read-only CTA into the EXISTING rerun/cancel flow (the page itself never
                 creates a run, reserves credit, or mutates state), plus the immutable lineage: parent -> this

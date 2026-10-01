@@ -188,6 +188,13 @@ export default function proxy(req: NextRequest) {
   const isAppHost = host === "app.vraelis.com" || host.startsWith("app.localhost");
   const isProd = host.endsWith("vraelis.com");
 
+  // THE FILM RENDERERS ARE A DEVELOPMENT TOOL (app/film). Their pages call notFound() outside development,
+  // but the root layout has already streamed by then, so the answer was the 404 page with status 200 and the
+  // renderer's own title. Outside development the whole tree is a plain 404 before anything renders.
+  if (process.env.NODE_ENV !== "development" && (path === "/film" || path.startsWith("/film/"))) {
+    return new NextResponse("Not found", { status: 404, headers: { "x-robots-tag": "noindex" } });
+  }
+
   // ── CSRF, FIRST, BEFORE ANY HOST BRANCHING ──────────────────────────────────────────────────────────
   //
   // This check used to sit further down, next to the main-host /api/ passthrough. That made it INERT on

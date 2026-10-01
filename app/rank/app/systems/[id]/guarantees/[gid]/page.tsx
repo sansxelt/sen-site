@@ -168,8 +168,8 @@ export default async function GuaranteeDetailPage({ params }: { params: Promise<
           <Section n="01" title="Approved proof plan">
             <RequirementList items={approvedReqs} />
             <p style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>
-              {g.plan_approved_by ? <>Approved by {g.plan_approved_by}{g.plan_approved_at ? <> on <span title={when(g.plan_approved_at)}>{ago(g.plan_approved_at)}</span></> : null}, plan v{g.plan_version}.</> : <>Approved plan v{g.plan_version}.</>}
-              {" "}Reverification runs this exact plan against each new deployment; a changed definition returns it for re-approval.
+              {g.plan_approved_by ? <>Approved by {g.plan_approved_by}{g.plan_approved_at ? <>, <span title={when(g.plan_approved_at)}>{ago(g.plan_approved_at)}</span></> : null}, plan v{g.plan_version}.</> : <>Approved plan v{g.plan_version}.</>}
+              {" "}Each re-check runs this exact plan; a changed definition returns it for re-approval.
             </p>
             {canEdit ? <div style={{ marginTop: 4 }}><RegenerateButton appId={id} guaranteeId={gid} approved={true} /></div> : null}
           </Section>
@@ -202,8 +202,7 @@ export default async function GuaranteeDetailPage({ params }: { params: Promise<
             {history.length === 0 ? (
               <p style={{ fontSize: 14, color: "var(--fg-3)", lineHeight: 1.55, margin: 0, maxWidth: "64ch" }}>
                 Never verified. Once this guarantee runs against a deployment, its decision and the evidence
-                behind it show here. Re-checking automatically as new deployments appear is not wired up
-                yet, so it is reverified when you ask it to be.
+                behind it show here. It is checked again whenever you ask for it.
               </p>
             ) : (
               <div style={{ display: "grid", gap: 10 }}>
