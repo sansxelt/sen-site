@@ -272,14 +272,6 @@ export function oneTimeCode(value: string): string {
   </table>`;
 }
 
-/**
- * A one-time code, set large, centred and spaced so it can be read off one screen and typed into another.
- * It is the action of the email, so a message that carries one needs no button. Text is escaped.
- */
-export function oneTimeCode(value: string): string {
-  return `<p style="margin:4px 0 20px;padding:14px 16px;background:${PAGE};border:1px solid ${LINE};border-radius:6px;font-family:${MONO};font-size:28px;font-weight:600;line-height:1.2;letter-spacing:0.2em;text-align:center;color:${INK};">${escapeHtml(value)}</p>`;
-}
-
 /** A quoted block of someone else's words (a support message, a lead's note). Text is escaped. */
 export function quote(text: string): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;border-collapse:separate;">
