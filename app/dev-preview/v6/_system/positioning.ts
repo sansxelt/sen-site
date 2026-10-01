@@ -87,6 +87,11 @@ export const HEADLINE: [string, string] = [
 export const SUPPORT =
   "Say what your web app, or the device it controls, should do. Vraelis checks it on the live product in a real browser, shows you exactly what happened, and hands anything broken to you or your AI agent.";
 
+/** The one line under the headline over the homepage film. Short on purpose (founder, 2026-10-01: the
+ *  opening should read like Anduril, Palantir and axiom, a headline and a line, not a paragraph). SUPPORT
+ *  stays the fuller sentence for the welcome email and anywhere there is room to explain. */
+export const HERO_LINE = "Live checks for web apps, and the devices they control.";
+
 /** Page title and meta description.
  *
  *  A search result is the surface where an unsupportable claim travels furthest, so the description makes

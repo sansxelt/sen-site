@@ -8,9 +8,9 @@ import { V6_BASE } from "@/lib/v6-routes";
 import "./steps.css";
 
 const STEPS: [string, string][] = [
-  ["Say what should work", "One sentence about your web app, or the device it controls. From the console, your terminal or your AI agent."],
-  ["Approve the plan", "Vraelis writes the steps that would prove it. Nothing runs, and nothing is charged, until a person approves them."],
-  ["See what happened", "A real browser runs the plan on the live product. You get every step and a screenshot, and a repair prompt when something broke."],
+  ["Say what should work", "One sentence, from the console, your terminal or your AI agent."],
+  ["Approve the plan", "Nothing runs until a person says yes."],
+  ["See what happened", "Every step, a screenshot, and a repair prompt when something breaks."],
 ];
 
 export function Steps() {

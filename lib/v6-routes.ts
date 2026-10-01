@@ -88,7 +88,11 @@ export const GROUND_CSS: Record<Ground, { bg: string; scheme: "dark" | "light" }
 // Every v6 route opens on white since 2026-09-30. The homepage, the partnership records and the docs opened
 // on graphite; the founder asked for one ground across the console, the docs and the site, so there is no
 // dark route left to announce. The parameter stays so callers keep asking per route.
-export function v6GroundAtTop(_pathname: string): Ground {
+// 2026-10-01: the homepage opens on its film, a dark full-bleed video like Anduril and Palantir (founder), so
+// the homepage alone opens on graphite; every other route stays white.
+export function v6GroundAtTop(pathname: string): Ground {
+  const p = (pathname || "/").replace(/\/+$/, "") || "/";
+  if (p === "/" || p === "/dev-preview/v6") return "graphite";
   return "paper";
 }
 export const V6_COMPANY = `${V6_BASE}/company`;

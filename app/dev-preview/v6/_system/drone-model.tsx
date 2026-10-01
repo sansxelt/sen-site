@@ -1,0 +1,222 @@
+"use client";
+
+/* THE DRONE ITSELF, shared by the homepage scene (_system/drone-scene.tsx) and the film renderer
+   (app/film/drone). It has no clock of its own: whoever mounts it writes a Drive each frame (height, rotor
+   speed, attitude), so the homepage can follow the pointer and the film can be rendered frame by frame at an
+   exact time.
+
+   One procedural folding-arm quadcopter in the family look of the sansxel renders: glossy ink hull with
+   clearcoat, steel motor bells, composite arms, curved two-blade propellers that blur into a disc at speed. */
+import { useMemo, useRef } from "react";
+import { useFrame } from "@react-three/fiber";
+import { RoundedBox } from "@react-three/drei";
+import * as THREE from "three";
+
+export const INK = "#121318";
+export const INK_2 = "#1C1E24";
+export const STEEL = "#B4BAC4";
+export const GLASS = "#0A1018";
+export const SCALE = 0.86;
+export const FOOT_Y = -0.24;            // the feet, relative to the drone origin, before SCALE
+export const PAD_TOP = FOOT_Y * SCALE;   // the drone lands with its feet on the pad
+
+/** What the drone does this frame. dt, when given, replaces the frame clock (the film renders exact steps). */
+export type Drive = { y: number; spin: number; yaw: number; pitch: number; roll: number; dt?: number };
+export const newDrive = (): Drive => ({ y: 0, spin: 0, yaw: 0, pitch: 0, roll: 0 });
+
+/** A tapered, slightly curved blade, as a thin extruded plan form. Shared by all eight blades. */
+function useBladeGeometry() {
+  return useMemo(() => {
+    const s = new THREE.Shape();
+    s.moveTo(0.04, -0.03);
+    s.bezierCurveTo(0.16, -0.075, 0.36, -0.06, 0.5, -0.016);
+    s.quadraticCurveTo(0.52, 0, 0.5, 0.012);
+    s.bezierCurveTo(0.38, 0.04, 0.17, 0.05, 0.04, 0.03);
+    s.closePath();
+    const g = new THREE.ExtrudeGeometry(s, { depth: 0.008, bevelEnabled: true, bevelThickness: 0.002, bevelSize: 0.002, bevelSegments: 2, curveSegments: 24 });
+    g.rotateX(-Math.PI / 2);
+    return g;
+  }, []);
+}
+
+function Propeller({ dir, drive, blade }: { dir: 1 | -1; drive: React.MutableRefObject<Drive>; blade: THREE.BufferGeometry }) {
+  const hub = useRef<THREE.Group>(null);
+  const disc = useRef<THREE.MeshBasicMaterial>(null);
+  const mat = useRef<THREE.MeshPhysicalMaterial>(null);
+  useFrame((_, frameDt) => {
+    const s = drive.current.spin;
+    const dt = drive.current.dt ?? Math.min(frameDt, 0.05);
+    if (hub.current) hub.current.rotation.y += dir * dt * (1.5 + s * 64);
+    // At speed the eye sees a disc, not blades: fade one in as the other fades out.
+    if (disc.current) disc.current.opacity = 0.13 * s;
+    if (mat.current) mat.current.opacity = 1 - 0.8 * s;
+  });
+  return (
+    <group>
+      <group ref={hub}>
+        {[0, Math.PI].map((r) => (
+          <mesh key={r} geometry={blade} rotation={[0, r, 0.1 * dir]}>
+            <meshPhysicalMaterial ref={r ? undefined : mat} color={INK_2} roughness={0.3} metalness={0.15} clearcoat={0.8} transparent opacity={1} />
+          </mesh>
+        ))}
+        <mesh position={[0, 0.012, 0]}>
+          <cylinderGeometry args={[0.045, 0.05, 0.035, 28]} />
+          <meshPhysicalMaterial color={STEEL} metalness={1} roughness={0.2} />
+        </mesh>
+      </group>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.004, 0]}>
+        <circleGeometry args={[0.52, 72]} />
+        <meshBasicMaterial ref={disc} color="#30333A" transparent opacity={0.13} depthWrite={false} />
+      </mesh>
+    </group>
+  );
+}
+
+/** A rounded arm laid from one point to another. */
+function Arm({ from, to }: { from: THREE.Vector3; to: THREE.Vector3 }) {
+  const { mid, len, rot } = useMemo(() => {
+    const d = new THREE.Vector3().subVectors(to, from);
+    const yaw = Math.atan2(d.x, d.z);
+    const pitch = -Math.atan2(d.y, Math.hypot(d.x, d.z));
+    return { mid: new THREE.Vector3().addVectors(from, to).multiplyScalar(0.5), len: d.length(), rot: new THREE.Euler(pitch, yaw, 0, "YXZ") };
+  }, [from, to]);
+  return (
+    <group position={mid} rotation={rot}>
+      <RoundedBox args={[0.11, 0.075, len]} radius={0.032} smoothness={6} castShadow>
+        <meshPhysicalMaterial color={INK_2} metalness={0.35} roughness={0.38} clearcoat={0.7} clearcoatRoughness={0.2} />
+      </RoundedBox>
+    </group>
+  );
+}
+
+export function DroneModel({ drive }: { drive: React.MutableRefObject<Drive> }) {
+  const root = useRef<THREE.Group>(null);
+  const body = useRef<THREE.Group>(null);
+  const blade = useBladeGeometry();
+  // Folding-arm layout: front arms sweep forward and sit a little higher, rear arms sweep back and lower.
+  const rotors = useMemo(() => {
+    const v = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
+    return [
+      { from: v(0.36, 0.06, 0.42), at: v(1.12, 0.1, 0.92), dir: 1 as const },
+      { from: v(-0.36, 0.06, 0.42), at: v(-1.12, 0.1, 0.92), dir: -1 as const },
+      { from: v(0.36, -0.03, -0.46), at: v(1.12, 0.0, -0.94), dir: -1 as const },
+      { from: v(-0.36, -0.03, -0.46), at: v(-1.12, 0.0, -0.94), dir: 1 as const },
+    ];
+  }, []);
+  useFrame(() => {
+    const d = drive.current;
+    if (root.current) { root.current.position.y = d.y; root.current.rotation.y = d.yaw; }
+    if (body.current) { body.current.rotation.x = d.pitch; body.current.rotation.z = d.roll; }
+  });
+  const hull = { color: INK, metalness: 0.45, roughness: 0.26, clearcoat: 1, clearcoatRoughness: 0.06, envMapIntensity: 1.4 } as const;
+  return (
+    <group ref={root} scale={SCALE}>
+      <group ref={body}>
+        {/* hull: a rounded core, a domed top cover and a rounded nose */}
+        <RoundedBox args={[0.84, 0.26, 1.5]} radius={0.12} smoothness={8} castShadow>
+          <meshPhysicalMaterial {...hull} />
+        </RoundedBox>
+        <mesh position={[0, 0.1, -0.06]} scale={[0.4, 0.1, 0.7]} castShadow>
+          <sphereGeometry args={[1, 64, 32]} />
+          <meshPhysicalMaterial {...hull} color="#16171D" roughness={0.18} />
+        </mesh>
+        <mesh position={[0, 0.0, 0.66]} scale={[0.4, 0.13, 0.22]} castShadow>
+          <sphereGeometry args={[1, 64, 32]} />
+          <meshPhysicalMaterial {...hull} />
+        </mesh>
+        {/* steel accent along the top cover */}
+        <mesh position={[0, 0.198, -0.06]} scale={[0.012, 0.006, 0.5]}>
+          <sphereGeometry args={[1, 16, 16]} />
+          <meshPhysicalMaterial color={STEEL} metalness={1} roughness={0.2} />
+        </mesh>
+        {/* side air vents */}
+        {[-1, 1].map((side) => (
+          <group key={side} position={[side * 0.421, 0.0, -0.1]}>
+            {[0, 1, 2, 3].map((n) => (
+              <mesh key={n} position={[0, 0, -0.18 + n * 0.09]}>
+                <boxGeometry args={[0.006, 0.07, 0.05]} />
+                <meshPhysicalMaterial color="#050506" roughness={0.9} />
+              </mesh>
+            ))}
+          </group>
+        ))}
+        {/* forward sensors */}
+        {[-0.13, 0.13].map((x) => (
+          <mesh key={x} position={[x, 0.04, 0.86]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.035, 0.035, 0.01, 32]} />
+            <meshPhysicalMaterial color={GLASS} roughness={0.02} metalness={0.3} clearcoat={1} clearcoatRoughness={0} />
+          </mesh>
+        ))}
+        {/* rear seam: the battery */}
+        <mesh position={[0, 0.131, -0.5]}>
+          <boxGeometry args={[0.46, 0.008, 0.02]} />
+          <meshPhysicalMaterial color={STEEL} metalness={1} roughness={0.3} />
+        </mesh>
+        {/* gimbal and camera, under the nose */}
+        <group position={[0, -0.05, 0.78]}>
+          <mesh>
+            <boxGeometry args={[0.2, 0.06, 0.12]} />
+            <meshPhysicalMaterial color={INK_2} metalness={0.4} roughness={0.35} />
+          </mesh>
+          <mesh position={[0, -0.075, 0.03]} castShadow>
+            <sphereGeometry args={[0.085, 48, 48]} />
+            <meshPhysicalMaterial {...hull} />
+          </mesh>
+          <mesh position={[0, -0.075, 0.112]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.048, 0.048, 0.02, 48]} />
+            <meshPhysicalMaterial color={GLASS} metalness={0.3} roughness={0.02} clearcoat={1} clearcoatRoughness={0} />
+          </mesh>
+          <mesh position={[0, -0.075, 0.123]} rotation={[Math.PI / 2, 0, 0]}>
+            <torusGeometry args={[0.05, 0.006, 12, 48]} />
+            <meshPhysicalMaterial color={STEEL} metalness={1} roughness={0.2} />
+          </mesh>
+        </group>
+
+        {rotors.map((r, i) => (
+          <group key={i}>
+            <Arm from={r.from} to={r.at} />
+            <group position={r.at}>
+              <mesh castShadow>
+                <cylinderGeometry args={[0.105, 0.115, 0.13, 48]} />
+                <meshPhysicalMaterial {...hull} />
+              </mesh>
+              <mesh position={[0, 0.085, 0]}>
+                <cylinderGeometry args={[0.09, 0.1, 0.045, 48]} />
+                <meshPhysicalMaterial color={STEEL} metalness={1} roughness={0.22} />
+              </mesh>
+              <group position={[0, 0.125, 0]}>
+                <Propeller dir={r.dir} drive={drive} blade={blade} />
+              </group>
+              {/* leg, down to the shared foot line */}
+              <mesh position={[0, (FOOT_Y - r.at.y - 0.065) / 2 - 0.0325, 0]}>
+                <cylinderGeometry args={[0.026, 0.034, Math.abs(FOOT_Y - r.at.y) - 0.065, 20]} />
+                <meshPhysicalMaterial color={INK_2} metalness={0.3} roughness={0.45} />
+              </mesh>
+              <mesh position={[0, FOOT_Y - r.at.y + 0.014, 0]} scale={[1, 0.45, 1]}>
+                <sphereGeometry args={[0.05, 24, 24]} />
+                <meshPhysicalMaterial color="#2B2E35" roughness={0.85} />
+              </mesh>
+            </group>
+          </group>
+        ))}
+      </group>
+    </group>
+  );
+}
+
+/** The home pad: a low matte disc with a lighter inset. Light on the page, dark in the film. */
+export function Pad({ tone = "light" }: { tone?: "light" | "dark" }) {
+  const [base, inset] = tone === "dark" ? ["#0E0F12", "#15171B"] : ["#E4E4E0", "#ECECE8"];
+  return (
+    <group position={[0, PAD_TOP - 0.02, 0]} scale={[SCALE, 1, SCALE]}>
+      <mesh receiveShadow>
+        <cylinderGeometry args={[1.95, 2.0, 0.04, 96]} />
+        <meshPhysicalMaterial color={base} roughness={tone === "dark" ? 0.55 : 0.8} metalness={tone === "dark" ? 0.2 : 0} envMapIntensity={tone === "dark" ? 0.12 : 1} />
+      </mesh>
+      <mesh position={[0, 0.021, 0]} receiveShadow>
+        <cylinderGeometry args={[1.25, 1.25, 0.004, 96]} />
+        <meshPhysicalMaterial color={inset} roughness={0.6} envMapIntensity={tone === "dark" ? 0.12 : 1} />
+      </mesh>
+    </group>
+  );
+}

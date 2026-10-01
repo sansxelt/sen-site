@@ -597,7 +597,10 @@
    `backwards` still applies the FROM keyframe before the animation starts, so there is no flash of
    unstyled entry, and afterwards the element returns to its own style: opacity 1, transform none. The
    final rendered result is identical, and the containing block disappears. */
-.v6-page { animation: v6PageIn 340ms var(--ease) backwards; min-height: 100dvh; }
+.v6-page { animation: v6PageIn 340ms var(--ease) backwards; min-height: 100dvh; background: var(--paper); }
+/* ^ The page paints its own white since the homepage opens on a dark film (2026-10-01): the document ground
+   there is graphite so the top never flashes white, and a section without a background of its own would
+   otherwise show that black, which is exactly what the coverage list did. */
 .v6-reveal { opacity: 0; transform: translateY(14px); transition: opacity 560ms var(--ease), transform 560ms var(--ease); transition-delay: calc(var(--i,0) * 66ms); }
 .v6-reveal.in { opacity: 1; transform: none; }
 .v6-reveal--m { transform: translateY(22px) scale(0.99); } .v6-reveal--m.in { transform: none; }
@@ -783,3 +786,21 @@
 /* The wordmark pin stays and is now self-adjusting rather than a patch: --ink resolves light inside a dark
    drawer by the block above, so this reads correctly on both grounds. */
 .v6-drawer .v6-brand { color: var(--ink); }
+
+/* The language pill on the dark bar over the homepage film. */
+.v6-nav[data-theme="dark"] .v6-nav__lang.lsw .lsw__btn { background: rgba(255,255,255,0.08); color: #FAFAFA; }
+.v6-nav[data-theme="dark"] .v6-nav__lang.lsw .lsw__btn:hover { background: rgba(255,255,255,0.14); }
+.v6-nav[data-theme="dark"] .v6-nav__lang.lsw .lsw__chev { color: #A1A1AA; }
+.v6-nav[data-theme="dark"] .v6-nav__lang.lsw .lsw__btn:focus-visible { outline-color: #FAFAFA; }
+
+/* GENUINELY DARK SURFACES GET THE DARK TOKENS BACK (2026-10-01).
+   The universal light change remapped --g-fg and friends to ink, because every former dark band had become
+   light. The homepage film and the bar over it are dark for real, so inside them the tokens mean what they
+   used to: light type on black. Scoped to these surfaces only; the drawer and every other band stay light. */
+.v6-h,
+.v6-nav[data-theme="dark"] .v6-nav__in,
+.v6-nav[data-theme="dark"] .v6-mega__panel {
+  --g-fg: #FAFAFA; --g-fg-2: #C9CBD1; --g-fg-3: #A1A1AA;
+  --g-line: rgba(255,255,255,0.12); --g-line-2: rgba(255,255,255,0.2);
+  --graphite: #0A0A0B; --graphite-2: #121316; --brand-dk: #FAFAFA;
+}
