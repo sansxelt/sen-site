@@ -20,8 +20,10 @@ export const SCALE = 0.86;
 export const FOOT_Y = -0.24;            // the feet, relative to the drone origin, before SCALE
 export const PAD_TOP = FOOT_Y * SCALE;   // the drone lands with its feet on the pad
 
-/** What the drone does this frame. dt, when given, replaces the frame clock (the film renders exact steps). */
-export type Drive = { y: number; spin: number; yaw: number; pitch: number; roll: number; dt?: number };
+/** What the drone does this frame. dt, when given, replaces the frame clock (the film renders exact steps).
+ *  rot, when given, is the rotors' absolute angle, so a film can render the same instant twice (a dissolve)
+ *  and get the same frame. led (0 to 1) lights the navigation lights; t is the clock their strobe reads. */
+export type Drive = { y: number; spin: number; yaw: number; pitch: number; roll: number; dt?: number; rot?: number; led?: number; t?: number };
 export const newDrive = (): Drive => ({ y: 0, spin: 0, yaw: 0, pitch: 0, roll: 0 });
 
 /** A tapered, slightly curved blade, as a thin extruded plan form. Shared by all eight blades. */
@@ -43,20 +45,26 @@ function Propeller({ dir, drive, blade }: { dir: 1 | -1; drive: React.MutableRef
   const hub = useRef<THREE.Group>(null);
   const disc = useRef<THREE.MeshBasicMaterial>(null);
   const mat = useRef<THREE.MeshPhysicalMaterial>(null);
+  const mat2 = useRef<THREE.MeshPhysicalMaterial>(null);
   useFrame((_, frameDt) => {
     const s = drive.current.spin;
     const dt = drive.current.dt ?? Math.min(frameDt, 0.05);
-    if (hub.current) hub.current.rotation.y += dir * dt * (1.5 + s * 64);
+    if (hub.current) {
+      if (drive.current.rot !== undefined) hub.current.rotation.y = dir * drive.current.rot;
+      else hub.current.rotation.y += dir * dt * (1.5 + s * 64);
+    }
     // At speed the eye sees a disc, not blades: fade one in as the other fades out.
-    if (disc.current) disc.current.opacity = 0.13 * s;
-    if (mat.current) mat.current.opacity = 1 - 0.8 * s;
+    if (disc.current) disc.current.opacity = 0.16 * s;
+    // At full speed a blade is a faint smear, not a shape: a camera at 1/30 s never freezes one.
+    if (mat.current) mat.current.opacity = 1 - 0.93 * s;
+    if (mat2.current) mat2.current.opacity = 1 - 0.93 * s;
   });
   return (
     <group>
       <group ref={hub}>
         {[0, Math.PI].map((r) => (
           <mesh key={r} geometry={blade} rotation={[0, r, 0.1 * dir]}>
-            <meshPhysicalMaterial ref={r ? undefined : mat} color={INK_2} roughness={0.3} metalness={0.15} clearcoat={0.8} transparent opacity={1} />
+            <meshPhysicalMaterial ref={r ? mat2 : mat} color={INK_2} roughness={0.3} metalness={0.15} clearcoat={0.8} transparent opacity={1} />
           </mesh>
         ))}
         <mesh position={[0, 0.012, 0]}>
@@ -67,6 +75,43 @@ function Propeller({ dir, drive, blade }: { dir: 1 | -1; drive: React.MutableRef
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.004, 0]}>
         <circleGeometry args={[0.52, 72]} />
         <meshBasicMaterial ref={disc} color="#30333A" transparent opacity={0.13} depthWrite={false} />
+      </mesh>
+    </group>
+  );
+}
+
+/** Navigation lights under the motor pods, as on a real aircraft: red on the left, green on the right, white
+ *  at the back, and a white strobe on top that flashes once a second. Dark unless drive.led is set. */
+const NAV = [
+  { at: [-1.12, -0.085, 0.92], color: [1, 0.12, 0.08] },
+  { at: [1.12, -0.085, 0.92], color: [0.15, 1, 0.35] },
+  { at: [-1.12, -0.175, -0.94], color: [1, 0.96, 0.9] },
+  { at: [1.12, -0.175, -0.94], color: [1, 0.96, 0.9] },
+] as const;
+function NavLights({ drive }: { drive: React.MutableRefObject<Drive> }) {
+  const mats = useRef<(THREE.MeshBasicMaterial | null)[]>([]);
+  const strobe = useRef<THREE.MeshBasicMaterial>(null);
+  const group = useRef<THREE.Group>(null);
+  useFrame(() => {
+    const k = drive.current.led ?? 0;
+    if (group.current) group.current.visible = k > 0;
+    if (k <= 0) return;
+    NAV.forEach((n, i) => mats.current[i]?.color.setRGB(n.color[0] * 4 * k, n.color[1] * 4 * k, n.color[2] * 4 * k));
+    const ph = ((drive.current.t ?? 0) % 1 + 1) % 1;
+    const f = ph < 0.06 ? 9 * k : ph > 0.14 && ph < 0.2 ? 5 * k : 0;
+    strobe.current?.color.setRGB(f, f, f);
+  });
+  return (
+    <group ref={group} visible={false}>
+      {NAV.map((n, i) => (
+        <mesh key={i} position={n.at as unknown as [number, number, number]}>
+          <sphereGeometry args={[0.03, 16, 16]} />
+          <meshBasicMaterial ref={(m) => { mats.current[i] = m; }} toneMapped={false} />
+        </mesh>
+      ))}
+      <mesh position={[0, 0.21, -0.32]}>
+        <sphereGeometry args={[0.022, 16, 16]} />
+        <meshBasicMaterial ref={strobe} toneMapped={false} color="black" />
       </mesh>
     </group>
   );
@@ -172,6 +217,7 @@ export function DroneModel({ drive }: { drive: React.MutableRefObject<Drive> }) 
           </mesh>
         </group>
 
+        <NavLights drive={drive} />
         {rotors.map((r, i) => (
           <group key={i}>
             <Arm from={r.from} to={r.at} />

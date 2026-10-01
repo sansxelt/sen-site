@@ -2,10 +2,14 @@
 
 // CHAPTER 1: the opening, as a film (2026-10-01).
 //
-// The founder: open on a video, as Anduril, Palantir and axiom do. The film is our own drone, rendered frame
-// by frame (app/film/drone) and encoded to MP4: a close look at a rotor spinning up on its pad, the lift-off,
-// a slow orbit, the return and the landing. It fills the screen; a headline, one short line, the address
-// field and the two partnership records sit over its dark left side. Few words, on purpose.
+// The founder: open on a video, as Anduril, Palantir and axiom do, and make it real (notes, 2026-10-01). The
+// film climbs in scale through things that are run from software: a dev board on a bench; our drone holding
+// in the air while the camera circles it and four real places sweep in behind it (app/film/orbit, rendered
+// frame by frame over Poly Haven panoramas); a real hand catching a drone; the controller; a person at a
+// laptop with the Vraelis console open on the drone's control panel, its plan waiting for approval, which is
+// that plan's true state; a pickup at dusk; an airliner landing. Real footage is Pexels-licensed (credits in
+// app/film/CREDITS.md). Nothing in it claims a result. A headline, one short line, the address field and the
+// two partnership records sit over its dark left side. Few words, on purpose.
 //
 // Phones get the 720p cut. Reduced motion shows the poster and does not play. The film can always be
 // paused, because anything that moves for more than five seconds must be (WCAG 2.2.2).
@@ -58,9 +62,9 @@ export function Hero() {
   return (
     <section className="v6-h" data-nav-dark data-nav-theme="dark" aria-labelledby="v6-h-h1">
       <div className="v6-h__media" aria-hidden>
-        <video ref={video} className="v6-h__video" autoPlay muted loop playsInline preload="auto" poster="/home/drone-film-poster.jpg">
-          <source src="/home/drone-film-720.mp4" type="video/mp4" media="(max-width: 900px)" />
-          <source src="/home/drone-film.mp4" type="video/mp4" />
+        <video ref={video} className="v6-h__video" autoPlay muted loop playsInline preload="auto" poster="/home/film-poster.jpg">
+          <source src="/home/film-720.mp4" type="video/mp4" media="(max-width: 900px)" />
+          <source src="/home/film.mp4" type="video/mp4" />
         </video>
         <div className="v6-h__shade" />
       </div>

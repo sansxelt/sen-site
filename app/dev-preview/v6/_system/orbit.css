@@ -1,0 +1,64 @@
+/* WHAT IT CHECKS, AS AN ORBIT (orbit.tsx). Tiles ride an ellipse around the headline; the front of the ring
+   is larger and brighter, the back smaller and dimmer. */
+.v6-or { position: relative; background: var(--paper); overflow: hidden; }
+.v6-or__field { position: relative; height: max(720px, 100vh); height: max(720px, 100svh); }
+.v6-or__field::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(640px 360px at 50% 50%, rgba(255,255,255,0.05), transparent 72%);
+}
+
+.v6-or__tile {
+  position: absolute; left: 50%; top: 50%; width: clamp(92px, 9.5vw, 150px); aspect-ratio: 1 / 1;
+  padding: 0; border: 0; border-radius: 16px; overflow: hidden; cursor: pointer; background: #141416;
+  box-shadow: 0 24px 50px -24px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.10) inset;
+  opacity: calc(0.42 + var(--d, 1) * 0.58);
+  transition: opacity 300ms var(--ease), box-shadow 300ms var(--ease), width 320ms var(--ease);
+  will-change: transform;
+}
+.v6-or__tile img { object-fit: cover; transition: transform 500ms var(--ease); }
+.v6-or__tile::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: 0 0 0 1px rgba(255,255,255,0.10) inset; pointer-events: none; }
+.v6-or__field[data-hold="1"] .v6-or__tile:not([data-on="true"]) { opacity: calc(0.22 + var(--d, 1) * 0.3); }
+.v6-or__field[data-hold="1"] .v6-or__tile[data-on="true"] { width: clamp(132px, 13.5vw, 214px); opacity: 1; z-index: 60 !important;
+  box-shadow: 0 40px 80px -30px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.28) inset; }
+.v6-or__field[data-hold="1"] .v6-or__tile[data-on="true"] img { transform: scale(1.06); }
+.v6-or__tile:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 4px; }
+
+.v6-or__copy { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 30; width: min(640px, 86vw);
+  text-align: center; pointer-events: none; }
+.v6-or__copy a { pointer-events: auto; }
+.v6-or__h { margin: 0; font-family: var(--display); font-weight: 500; font-size: clamp(2.2rem, 4.6vw, 4.2rem); line-height: 1.04; letter-spacing: -0.035em; color: var(--ink); }
+.v6-or__l1 { display: block; color: var(--ink-3); }
+/* The word slot and "works." share one line box: both top-aligned at the same line height, so their
+   baselines meet (aligned by baseline, the clipped slot sat a few pixels high). */
+.v6-or__l2 { display: inline-flex; align-items: flex-start; justify-content: center; gap: 0.26em; white-space: nowrap; line-height: 1.14; }
+.v6-or__end { line-height: 1.14; }
+.v6-or__slot { position: relative; display: inline-block; height: 1.14em; overflow: hidden; transition: width 360ms var(--ease); }
+.v6-or__w { position: absolute; left: 0; top: 0; line-height: 1.14; white-space: nowrap; color: var(--ink); transform: translateY(105%); opacity: 0;
+  transition: transform 420ms var(--ease), opacity 300ms var(--ease); }
+.v6-or__w[data-on="true"] { transform: none; opacity: 1; }
+.v6-or__measure { position: absolute; visibility: hidden; white-space: nowrap; pointer-events: none; left: -9999px; }
+.v6-or__d { margin: 20px auto 18px; max-width: 46ch; font-size: clamp(0.98rem, 1.1vw, 1.08rem); line-height: 1.55; color: var(--ink-3); }
+
+@media (max-width: 700px) {
+  .v6-or__field { height: 640px; }
+  .v6-or__tile { width: 74px; border-radius: 12px; }
+  .v6-or__field[data-hold="1"] .v6-or__tile[data-on="true"] { width: 104px; }
+  .v6-or__h { font-size: clamp(1.9rem, 8.4vw, 2.6rem); }
+  .v6-or__d { font-size: 0.95rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .v6-or__w, .v6-or__slot, .v6-or__tile { transition: none !important; }
+}
+
+/* Other languages swap a whole sentence (orbit.tsx). The slot holds the tallest of them in one grid cell. */
+.v6-or__whole { display: grid; }
+.v6-or__s { grid-area: 1 / 1; opacity: 0; transform: translateY(14px); transition: opacity 360ms var(--ease), transform 420ms var(--ease); text-wrap: balance; }
+.v6-or__s[data-on="true"] { opacity: 1; transform: none; }
+
+/* On a phone the tiles ring the headline closely; a dark pool behind the words keeps them readable. */
+@media (max-width: 700px) {
+  .v6-or__field { height: 720px; }
+  .v6-or__copy { width: 80vw; }
+  .v6-or__copy::before { content: ""; position: absolute; inset: -30px -18px; z-index: -1; border-radius: 40px;
+    background: radial-gradient(closest-side, rgba(10,10,11,0.92), rgba(10,10,11,0.6) 70%, transparent); }
+}

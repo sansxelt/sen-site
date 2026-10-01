@@ -102,3 +102,6 @@ _tmp-*
 .agents/
 .claude/skills/
 skills-lock.json
+
+# Film renderer source plates (app/film): local only, never committed or served in production
+.film-assets/

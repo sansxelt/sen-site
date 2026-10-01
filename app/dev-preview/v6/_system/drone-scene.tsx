@@ -4,7 +4,7 @@
 
    The interactive version of the drone (_system/drone-model.tsx) in a light studio: real reflections from
    light panels, a soft contact shadow on a low round pad, and a camera and yaw that follow the pointer a
-   little. Where the hero shows the film (public/home/drone-film.mp4) this is not mounted; it stays for the
+   little. Where the hero shows the film (public/home/film.mp4) this is not mounted; it stays for the
    places the page wants the drone live.
 
    THE MOTION IS THE PRODUCT'S DEVICE STORY, NOT A RESULT. It hovers, comes home to its pad, lands, lets the
