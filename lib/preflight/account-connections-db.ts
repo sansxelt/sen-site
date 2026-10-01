@@ -8,8 +8,16 @@
 // boundary in plaintext (openAccountToken is EXECUTOR/VERIFY-only). Degrades safely when migration 15 is not
 // yet applied: reads return [], the opener returns null, writes report "unavailable" — so this can deploy
 // before the SQL runs and simply does nothing until the tables exist.
+//
+// NOT EVERY ROW IS AN INTEGRATION. Two-step verification settings live in this table too, as the one row with
+// provider = TWO_STEP_PROVIDER ("two_step"), because no migration could add a table for them (see
+// lib/two-step-db.ts, the only module that reads or writes that row). Every function here excludes it: it is
+// never listed, never revocable through the connections API (that would turn two-step verification off
+// without a code), never re-sealed as an OAuth token, and never opened (it also carries meta.oauth = false,
+// which openAccountToken already refuses).
 import { getSupabaseAdminClient, isDatabaseConfigured } from "../supabase-admin";
 import { sealSecret, openSecret, maskSecretValue, vaultConfigured } from "./secret-vault";
+import { TWO_STEP_PROVIDER } from "../two-step";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
 function db() { return getSupabaseAdminClient(); }
@@ -42,9 +50,11 @@ export async function listAccountConnections(owner: string): Promise<AccountConn
   const { data, error } = await db().from("v_account_connections")
     .select("id, provider, status, meta, last_verified_at, created_at")
     .eq("user_id", norm(owner))
+    .neq("provider", TWO_STEP_PROVIDER)
     .order("created_at", { ascending: true });
   if (error) return []; // includes the missing-table case (pre-migration): degrade to "nothing connected"
-  return (data as Record<string, unknown>[]).map((r) => ({
+  // Filtered again here, so a query edit that drops the .neq cannot put the two-step row on a page.
+  return (data as Record<string, unknown>[]).filter((r) => r.provider !== TWO_STEP_PROVIDER).map((r) => ({
     id: String(r.id), provider: String(r.provider ?? ""), status: String(r.status ?? "connected"),
     meta: (r.meta as Record<string, unknown>) ?? {},
     last_verified_at: (r.last_verified_at as string) ?? null, created_at: String(r.created_at ?? ""),
@@ -59,6 +69,7 @@ export async function addAccountOAuthConnection(
   input: { accessToken: string; refreshToken?: string; scope?: string; expiresIn?: number; account?: string },
 ): Promise<{ id: string } | { error: string }> {
   if (!isDatabaseConfigured()) return { error: "unavailable" };
+  if (provider === TWO_STEP_PROVIDER) return { error: "unsupported_provider" };
   if (!vaultConfigured()) return { error: "vault_unconfigured" };
   const accessToken = (input.accessToken || "").trim();
   if (!accessToken) return { error: "credentials_required" };
@@ -108,6 +119,7 @@ export async function updateAccountOAuthTokens(
   input: { accessToken: string; refreshToken?: string; expiresIn?: number; scope?: string },
 ): Promise<boolean> {
   if (!isDatabaseConfigured() || !vaultConfigured()) return false;
+  if (provider === TWO_STEP_PROVIDER) return false;
   const accessToken = (input.accessToken || "").trim();
   if (!accessToken) return false;
   const sealed = sealSecret({
@@ -133,7 +145,7 @@ export async function updateAccountOAuthTokens(
 export async function removeAccountConnection(owner: string, connectionId: string): Promise<boolean> {
   if (!isDatabaseConfigured()) return false;
   const { data, error } = await db().from("v_account_connections").delete()
-    .eq("user_id", norm(owner)).eq("id", connectionId).select("id");
+    .eq("user_id", norm(owner)).eq("id", connectionId).neq("provider", TWO_STEP_PROVIDER).select("id");
   return !error && Array.isArray(data) && data.length > 0;
 }
 
@@ -145,11 +157,14 @@ export async function openAccountToken(
   by: { connectionId: string } | { provider: string },
 ): Promise<{ accessToken: string; refreshToken?: string; expiresAt?: string; provider: string } | null> {
   if (!isDatabaseConfigured()) return null;
-  let q = db().from("v_account_connections").select("encrypted_ref, provider, meta").eq("user_id", norm(owner));
+  let q = db().from("v_account_connections").select("encrypted_ref, provider, meta").eq("user_id", norm(owner))
+    .neq("provider", TWO_STEP_PROVIDER);
   q = "connectionId" in by ? q.eq("id", by.connectionId) : q.eq("provider", by.provider);
   const { data } = await q.maybeSingle();
   const row = data as { encrypted_ref?: string; provider?: string; meta?: { oauth?: boolean; expires_at?: string } } | null;
-  if (!row?.encrypted_ref || row.meta?.oauth !== true) return null;
+  // meta.oauth must be true: the two-step row carries oauth:false, so it fails here even if the filter above
+  // were ever removed.
+  if (!row?.encrypted_ref || row.meta?.oauth !== true || row.provider === TWO_STEP_PROVIDER) return null;
   const opened = openSecret(row.encrypted_ref);
   const accessToken = String(opened.access_token ?? "");
   if (!accessToken) return null;

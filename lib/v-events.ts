@@ -72,6 +72,8 @@ const ACCOUNT_EVENT_TYPES = [
   "webhook_endpoint_deleted", "webhook_secret_rotated", "webhook_test_sent",
   "public_report_enabled", "public_report_disabled", "public_report_regenerated", "export_downloaded",
   "data_export_requested", "data_correction_requested", "account_delete_requested", "privacy_question_submitted",
+  // Two-step verification changes (lib/two-step-db.ts), so a change the owner did not make shows up here.
+  "two_step_enabled", "two_step_method_removed", "two_step_disabled", "two_step_recovery_regenerated", "two_step_recovery_used",
 ];
 export async function recentAccountEvents(userId: string, limit = 10): Promise<EventRow[]> {
   if (!userId || !isDatabaseConfigured()) return [];

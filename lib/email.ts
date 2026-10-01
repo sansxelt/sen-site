@@ -14,7 +14,7 @@ import { passPriceCents, PASS_INCLUDED_FLOWS } from "./preflight/pass-pricing";
 import { SUPPORT, FOOTER_STATEMENT } from "@/app/dev-preview/v6/_system/positioning";
 // The chrome and the atoms every template is built from. See lib/email/shell.ts for the design rules.
 import {
-  shell, h1, p, small, strong, link, mailto, button, status, details, list, code, quote,
+  shell, h1, p, small, strong, link, mailto, button, status, details, list, code, quote, oneTimeCode,
   escapeHtml, textPreview, SUPPORT_EMAIL, type DetailValue,
 } from "./email/shell";
 
@@ -376,6 +376,56 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string) {
     });
   } catch (error) {
     console.error("sendPasswordResetEmail failed:", error);
+  }
+}
+
+// ── Two-step verification codes (from hello@) ──────────────────────────────────────────────────────────
+//
+// The code IS the action, so there is no button: one large code, how long it works, and what to do if the
+// reader did not ask for it. The purpose changes only the first sentence; the code itself is bound to its
+// purpose on the server (lib/two-step.ts), so a code sent to finish signing in cannot change settings.
+export type TwoStepEmailPurpose = "sign_in" | "enable_email" | "confirm";
+
+const TWO_STEP_LEAD: Record<TwoStepEmailPurpose, string> = {
+  sign_in: "Enter this code to finish signing in to Vraelis.",
+  enable_email: "Enter this code to turn on email codes for two-step verification.",
+  confirm: "Enter this code to confirm a change to your two-step verification settings.",
+};
+
+export function twoStepCodeHtml(code: string, purpose: TwoStepEmailPurpose) {
+  const notYou = purpose === "sign_in"
+    ? `If you did not try to sign in, someone may know your password. ${link("https://vraelis.com/auth/reset-password", "Choose a new password")} so the old one stops working. Without this code they cannot finish signing in.`
+    : `If you did not ask for this, sign in and review two-step verification on your Account page, or email ${mailto(SUPPORT_EMAIL)}.`;
+  return shell(`
+    ${h1("Your verification code")}
+    ${p(TWO_STEP_LEAD[purpose])}
+    ${oneTimeCode(code)}
+    ${small(`The code works for ${strong("10 minutes")} and only once. Never share it with anyone, including anyone who says they work at Vraelis.`)}
+    ${small(notYou)}
+  `, {
+    preheader: `${TWO_STEP_LEAD[purpose]} It works for 10 minutes.`,
+    reason: "You are receiving this because a verification code was requested for your Vraelis account.",
+  });
+}
+
+// Returns whether the message was handed to the mail provider. Unlike the other senders, the caller NEEDS
+// the answer: the sign-in screen tells the person a code is on its way, and must not say so when it is not.
+export async function sendTwoStepCodeEmail(email: string, code: string, purpose: TwoStepEmailPurpose): Promise<boolean> {
+  const resend = getResend();
+  if (!resend) return false;
+  try {
+    const { error } = await resend.emails.send({
+      from:    fromAccount,
+      replyTo: "help@vraelis.com",
+      to:      email,
+      subject: `${code} is your Vraelis verification code`,
+      html:    twoStepCodeHtml(code, purpose),
+    });
+    if (error) { console.error("sendTwoStepCodeEmail failed:", error.message); return false; }
+    return true;
+  } catch (error) {
+    console.error("sendTwoStepCodeEmail failed:", error);
+    return false;
   }
 }
 

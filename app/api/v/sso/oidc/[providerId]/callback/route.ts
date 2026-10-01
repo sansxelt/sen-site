@@ -31,7 +31,12 @@ export async function GET(req: Request, context: { params: Promise<{ providerId:
   if (!prov.ok) return fail(prov.error === "join_disabled" ? "sso_disabled" : "provision_failed");
 
   const cookie = await mintSsoSession(validated.email);
-  const res = NextResponse.redirect("https://app.vraelis.com/organization", { status: 302 });
+  // An account with two-step verification on is not signed in yet: the code screen comes first, then the
+  // organization page it was going to.
+  const next = cookie.twoStepPending
+    ? "https://vraelis.com/signin?callbackUrl=%2Forganization"
+    : "https://app.vraelis.com/organization";
+  const res = NextResponse.redirect(next, { status: 302 });
   res.cookies.set({ name: cookie.name, value: cookie.value, ...(cookie.options as object) });
   res.cookies.delete("v_sso_oidc");
   return res;

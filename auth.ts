@@ -13,6 +13,9 @@ import { sendWelcomeEmail } from "./lib/email";
 import { getUserProfileByEmail, syncUserProfileIdentity } from "./lib/user-profile";
 import { trackServer } from "./lib/analytics";
 import { getUserCredentialByEmail, verifyPassword } from "./lib/user-credentials";
+import {
+  stampTwoStepOnSignIn, settlePendingOnRead, advanceTwoStep, pendingSessionView, isTwoStepPending,
+} from "./lib/two-step-session";
 
 // Single-domain architecture — vraelis.com only.
 // Strip AUTH_URL/NEXTAUTH_URL so NextAuth infers the base URL from the
@@ -198,10 +201,14 @@ const authResult = NextAuth(() => {
     // device signs out every device. That is a deliberate behaviour change and the safe direction —
     // per-device revocation would need server-side sessions, which is a migration of the whole auth
     // surface rather than a fix.
+    //
+    // EXCEPT a sign-in still waiting for its second step (twoStep "pending"): it never became a session, so
+    // leaving it ("Sign in as someone else" on the code screen) has nothing to revoke. Bumping there would
+    // sign the real owner out of every device each time someone holding only the password gave up.
     async signOut(message) {
-      const token = (message as { token?: { email?: unknown } }).token;
+      const token = (message as { token?: { email?: unknown; twoStep?: unknown } }).token;
       const email = typeof token?.email === "string" ? token.email : "";
-      if (email) await bumpTokenVersion(email, "sign_out");
+      if (email && token?.twoStep !== "pending") await bumpTokenVersion(email, "sign_out");
     },
   },
   callbacks: {
@@ -311,7 +318,7 @@ const authResult = NextAuth(() => {
 
       return Response.redirect(signInUrl);
     },
-    async jwt({ account, token }) {
+    async jwt({ account, token, trigger, session }) {
       if (account?.provider) {
         token.provider = account.provider;
       }
@@ -326,8 +333,21 @@ const authResult = NextAuth(() => {
         if (account) {
           // Fresh sign-in: stamp the current version.
           token.tv = await currentTokenVersion(email);
+          // TWO-STEP VERIFICATION. `account` is present on the sign-in request of EVERY provider (the
+          // password and auto-signin credentials path, Google, GitHub) and on no request after it, so this is
+          // the one place a new session is born. If the account has two-step verification on, the token is
+          // born PENDING and grants nothing until a code is checked below. A settings read that fails holds
+          // the sign-in pending too; it never waives the step. See lib/two-step-session.ts.
+          await stampTwoStepOnSignIn(token, email);
         } else if (!(await tokenVersionIsCurrent(email, token.tv))) {
           return null;
+        }
+
+        // A pending sign-in moves forward ONLY through a session update, and the code is verified here, on the
+        // server, against the stored secret. The update data is untrusted input from the browser: it can ask
+        // for a check, never set a field. Any other read just ages the pending state out after 15 minutes.
+        if (isTwoStepPending(token)) {
+          return trigger === "update" ? advanceTwoStep(token, email, session) : settlePendingOnRead(token);
         }
       }
 
@@ -357,6 +377,16 @@ const authResult = NextAuth(() => {
       return `${baseUrl}/account`;
     },
     async session({ session, token }) {
+      // A SIGN-IN WAITING FOR ITS SECOND STEP IS NOT SIGNED IN. The session goes out with no user at all, so
+      // every `session?.user?.email` check in the product treats it as signed out without being touched.
+      //
+      // `user` is set to undefined EXPLICITLY rather than left off, and that is load-bearing: next-auth's
+      // server-side auth() wraps this callback as `{ user: token, ...session }` (node_modules/next-auth/lib/
+      // index.js), so a session returned WITHOUT a user key would come back from auth() carrying the whole
+      // token, email included, as its user. An own `user: undefined` wins the spread; JSON then drops it.
+      if (isTwoStepPending(token)) {
+        return { expires: session.expires, user: undefined, twoStep: pendingSessionView(token) } as unknown as typeof session;
+      }
       if (session.user) {
         session.user.id = typeof token.sub === "string" ? token.sub : "";
         session.user.provider =
@@ -369,5 +399,7 @@ const authResult = NextAuth(() => {
   };
 });
 
-export const { handlers, auth, signIn, signOut } = authResult;
+// unstable_update is how POST /api/auth/two-step moves a pending sign-in forward (a session update, which
+// reaches the jwt callback above with trigger "update").
+export const { handlers, auth, signIn, signOut, unstable_update } = authResult;
 export const { GET, POST } = authResult.handlers;

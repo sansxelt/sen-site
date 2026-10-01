@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AuthPanel, OAuthSection } from "@/components/auth-panel";
 import { VraelisSignIn } from "@/components/vraelis-auth";
+import { TwoStepChallenge } from "@/components/two-step-challenge";
 import { getSafeRedirectPath } from "@/lib/auth-ui";
 import { getZone, ZONE_THEME } from "@/lib/zone";
 import { isVraelisRequest } from "@/lib/site-host";
@@ -36,6 +37,21 @@ export default async function SignInPage({
   // came in — not as a `||` fallback on the output.
   if (session?.user?.email) {
     redirect(getSafeRedirectPath(callbackUrl ?? "/app"));
+  }
+
+  // The password (or Google, GitHub, SSO) was accepted and the account has two-step verification on: the
+  // session is PENDING and carries no user, so everything else treats it as signed out. This is the one page
+  // that looks further. The code screen replaces the form until a code is checked; then the person goes on
+  // to where they were headed. See lib/two-step-session.ts.
+  if (session?.twoStep?.pending) {
+    return (
+      <TwoStepChallenge
+        callbackUrl={getSafeRedirectPath(callbackUrl ?? "/app")}
+        methods={session.twoStep.methods}
+        emailHint={session.twoStep.emailHint}
+        emailSentAt={session.twoStep.emailSentAt}
+      />
+    );
   }
 
   // Vraelis gets its own light, centered, green-accent sign-in surface

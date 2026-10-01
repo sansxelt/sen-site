@@ -7,6 +7,7 @@
 // app must belong to the owner before a link is written. Degrades safely (returns []/null/no-op) when
 // migration 15 is not yet applied.
 import { getSupabaseAdminClient, isDatabaseConfigured } from "../supabase-admin";
+import { TWO_STEP_PROVIDER } from "../two-step";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
 function db() { return getSupabaseAdminClient(); }
@@ -35,6 +36,9 @@ export async function linkAppToAccountConnection(
   selection: Record<string, unknown> = {},
 ): Promise<{ id: string } | { error: string }> {
   if (!isDatabaseConfigured()) return { error: "unavailable" };
+  // The two-step verification row shares v_account_connections but is not an integration (see
+  // account-connections-db.ts): nothing may link an app to it.
+  if (provider === TWO_STEP_PROVIDER) return { error: "connection_not_found" };
   if (!(await ownsApplication(owner, applicationId))) return { error: "not_found" };
   // Verify the account connection belongs to the owner + provider (no cross-account linking).
   const { data: acct } = await db().from("v_account_connections").select("id")

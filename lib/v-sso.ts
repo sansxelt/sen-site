@@ -7,6 +7,8 @@
 
 import crypto from "crypto";
 import { currentTokenVersion } from "./v-session-revocation";
+import { stampTwoStepOnSignIn, isTwoStepPending } from "./two-step-session";
+import type { JWT } from "next-auth/jwt";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { logEvent } from "./v-events";
 import { getPrimaryOrganization, canManageOrganization, applyDomainProvisioning, emailDomain, domainTrustState, type ProvOrg, type DomainDefaultRole } from "./v-organization";
@@ -313,14 +315,23 @@ export async function provisionSsoLogin(email: string, organizationId: string): 
 // Enforcement is unchanged and lives where it belongs — the jwt callback in auth.ts validates `tv` on
 // every request, so this is a stronger guarantee than checking only at mint time: revoking mid-session
 // still kills the session on its next use.
-export async function mintSsoSession(email: string): Promise<{ name: string; value: string; options: Record<string, unknown> }> {
+//
+// TWO-STEP VERIFICATION, for the same reason as `tv`: this path never reaches the jwt callback, so it applies
+// the sign-in gate itself. An account with two-step verification on gets a PENDING token (a signed-out session
+// everywhere except /signin), and `twoStepPending` tells the callback route to send the person to the code
+// screen rather than into the product. The organization's IdP may have its own second factor; the account's
+// own setting still applies, exactly as it does for Google and GitHub.
+export async function mintSsoSession(email: string): Promise<{ name: string; value: string; options: Record<string, unknown>; twoStepPending: boolean }> {
   const { encode } = await import("@auth/core/jwt");
   const tv = await currentTokenVersion(norm(email));
+  const token: JWT = { email: norm(email), sub: norm(email), name: norm(email).split("@")[0], provider: "sso", tv };
+  await stampTwoStepOnSignIn(token, norm(email));
   const value = await encode({
-    token: { email: norm(email), sub: norm(email), name: norm(email).split("@")[0], provider: "sso", tv },
+    token,
     secret: process.env.AUTH_SECRET as string,
     salt: SESSION_COOKIE,
     maxAge: SESSION_MAX_AGE,
   });
-  return { name: SESSION_COOKIE, value, options: { httpOnly: true, secure: true, sameSite: "lax", path: "/", domain: ".vraelis.com", maxAge: SESSION_MAX_AGE } };
+  const twoStepPending = isTwoStepPending(token);
+  return { name: SESSION_COOKIE, value, options: { httpOnly: true, secure: true, sameSite: "lax", path: "/", domain: ".vraelis.com", maxAge: SESSION_MAX_AGE }, twoStepPending };
 }
