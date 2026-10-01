@@ -15,6 +15,37 @@ database access. They are labelled where they appear. Do not quote them as curre
 `scripts/preflight-launch-readiness.ts`. Nothing about external customers or revenue changed, and no
 count below is revised upward.
 
+## 000. Shipped the evening of 2026-09-30 (read this first)
+
+All on main and deployed; production smoke 22/22 after each deploy.
+
+- **One look, ink.** Every surface uses one accent, ink (#0A0A0B). The root public/vraelis/styles.css and
+  tokens.css still carried emerald and cyan accents, which is where the green hover came from; both are ink.
+- **Homepage (8436c042).** A centred headline ("Know what you built / does what you meant."), an address field
+  that prefills the connect form through sign-in (/systems/new?url=), the two partnership records, and a
+  console window that replays the four recorded production runs, with the repair prompt from the product's own
+  builder. Below it, cards with working pieces of the product (the drone fixture panel, the MCP tools, plan
+  approval, the CLI, readiness marked Next). The marketing pitch no longer prints Verified, Failed or Blocked
+  (positioning.ts rule 8); the console, API, CLI and docs keep them as the literal answers.
+- **Sign-in and account screens.** One flat form beside an ink brand panel; verify email, reset password and
+  the errors use the same frame.
+- **Privacy consent (4d80a640).** A required choice on every page except the legal ones (lib/privacy-choice.ts,
+  cookie vraelis_privacy). New /cookies and /acceptable-use pages. Meta sign-up reporting now needs the
+  Advertising choice and no Global Privacy Control (it previously ran for everyone); Speed Insights and the visit
+  count need Analytics.
+- **Twelve languages (3e7fcd3d, top-ups 5fd83a57 and bd180529).** One switch for the site, docs, sign-in and
+  console; the page is translated in the browser from public/locales/<code>.json. The language rides ?lang= and
+  is remembered only with the Preferences choice. Legal documents stay in English with a translated note.
+- **Two-step verification (832acebf).** Optional: authenticator app, email codes, recovery codes; a pending
+  sign-in counts as signed out until the code is checked. Depends on VRAELIS_SECRET_KEY: rotating it locks out
+  everyone who turned it on.
+- **Email (61c54239).** One open column that follows the reader's light or dark mail theme; no card or bars.
+
+Still owner-side from this evening: Overlym's privacy rule is pushed but not deployed (needs a promote); a
+lawyer's read of the new policies; whether Meta belongs on /subprocessors; whether to log consent on the server;
+the two-step policy calls (old sessions stay signed in, enabling does not sign out other devices, turning it off
+sends no email, the attempt budget can be burned by someone with the password).
+
 ## 00. Changed 2026-09-29 and 2026-09-30 (read this first)
 
 **Direction (founder, 2026-09-29).** Vraelis is a verification company: software that checks what people
