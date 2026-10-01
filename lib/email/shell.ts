@@ -2,37 +2,45 @@
 // the atoms below, so a customer who gets a receipt and a security notice in the same week gets them from
 // the same company, and the next design change is one edit here.
 //
-// THE DESIGN, AND WHY EACH RULE EXISTS
-//   - Light only. One white card on a #F4F4F5 page, 1px #E4E4E7 border, 8px radius. No shadow, gradient,
-//     emoji or icon: receipts from Stripe, Linear and Vanta look like documents, and a verification company
-//     sells credibility, so its mail should read the same way.
-//   - Header is the wordmark as text. There is no hosted logo image on vraelis.com meant for mail, and a
-//     blocked image is worse than no image.
-//   - ONE accent, ink (#0A0A0B), used for the primary button and for links, as on the site and the console.
-//   - State colour only where the email reports a state, as a one-line status row. Headings are never
-//     coloured.
-//   - At most one primary button per email. Secondary actions are plain links.
-//   - Every email carries a hidden preheader, which is the line an inbox shows under the subject. Without
-//     one the preview is whatever text comes first, which was the wordmark.
+// REBUILT 2026-09-30, founder: next to the mail Anthropic sends, ours looked like a web page in a box, and it
+// ignored the reader's dark mode. It was four frames around three lines: a grey page, a bordered card, a
+// header bar with the wordmark, a footer bar. Now:
+//
+//   - ONE OPEN COLUMN, 520px, left aligned, on the mail app's own background. No page colour, no card, no
+//     bars. The mark and wordmark sit at the top like a letterhead, then the heading, the content, and a
+//     quiet footer under a single hairline.
+//   - IT FOLLOWS THE READER'S THEME. color-scheme is "light dark". The light design paints white, so a client
+//     that neither darkens mail nor reads our styles still shows a readable letter; in dark mode the page
+//     colour is cleared and the message sits on the client's own dark background. Apple Mail, iOS Mail and Outlook for Mac honour the
+//     prefers-color-scheme block below and get our dark palette; Outlook.com and the Outlook apps get it
+//     through [data-ogsc]/[data-ogsb]; the Gmail apps darken mail themselves, and a design with no page
+//     colour and plain ink text is what their inversion handles cleanly. Gmail on the web never darkens
+//     mail, so there it is the light design.
+//   - ONE accent, ink, for the one primary button and for links, as on the site and the console. In dark
+//     mode it turns to near white, so the button stays the brightest thing on the screen.
+//   - State colour only where the email reports a state, as a one-line status row.
+//   - A one-time code is the action of its email, set large in mono on a soft panel (oneTimeCode).
+//   - Every email carries a hidden preheader, the line an inbox shows under the subject.
 //
 // MAIL CLIENT NOTES
-//   - Layout is tables with inline styles. The <style> block only sharpens clients that honour it (Apple
-//     Mail, iOS, Gmail apps); nothing depends on it.
-//   - Outlook on Windows renders with Word: it ignores max-width (hence the fixed 560 ghost table), ignores
+//   - Layout is tables with inline styles; the <style> block only adds dark mode and small-screen spacing.
+//     Every element whose colour changes in dark mode carries a vx-* class for it.
+//   - Outlook on Windows renders with Word: it ignores max-width (hence the fixed 520 ghost table), ignores
 //     padding on <a> (hence mso-padding-alt on the button cell), and falls back to Times New Roman when the
-//     FIRST font in a stack is missing rather than trying the next one (hence the mso font override).
-//   - color-scheme is "light only" so clients that auto-darken leave the card alone instead of inverting it
-//     into something nobody designed.
+//     FIRST font in a stack is missing (hence the mso font override).
+//   - The mark is a table cell with a background and a letter, not an image: a blocked image is worse than
+//     no image, and there is no hosted logo meant for mail.
 
 export const FONT = "'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
 export const MONO = "'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace";
 
+// Light palette (inline). The dark palette is in the <style> block, keyed to the vx-* classes.
 const INK = "#0A0A0B";
 const BODY = "#3F3F46";
 const MUTED = "#71717A";
 const LINE = "#E4E4E7";
-const PAGE = "#F4F4F5";
-const ACCENT = "#0A0A0B"; // ink, like the site and the console (was cobalt until 2026-09-30)
+const SOFT = "#F4F4F5";
+const ACCENT = "#0A0A0B";
 
 const TONES = {
   problem: { fg: "#B42318", bg: "#FEF3F2", border: "#FECDCA" },
@@ -74,12 +82,34 @@ export const DEFAULT_REASON = "You are receiving this because you have a Vraelis
 // Filler after the preheader so an inbox preview does not run on into the body text.
 const PREHEADER_PAD = "&#847;&zwnj;&nbsp;".repeat(60);
 
+// The dark palette, once, for the three ways clients ask for it.
+const DARK = `
+  .vx-bg { background: transparent !important; }
+  .vx-ink { color: #FAFAFA !important; }
+  .vx-text { color: #D4D4D8 !important; }
+  .vx-muted, .vx-muted a { color: #A1A1AA !important; }
+  .vx-rule { border-color: #2E2F33 !important; }
+  .vx-soft { background: #1B1B1E !important; border-color: #2E2F33 !important; }
+  .vx-mark { background: #FAFAFA !important; color: #0A0A0B !important; }
+  .vx-btn { background: #FAFAFA !important; }
+  .vx-btn a { color: #0A0A0B !important; }
+  a.vx-link { color: #FAFAFA !important; }
+  .vx-problem { background: #2A1513 !important; border-color: #5C2620 !important; color: #FDA29B !important; }
+  .vx-success { background: #0F2419 !important; border-color: #1F4D35 !important; color: #75E0A7 !important; }
+  .vx-notice { background: #1B1B1E !important; border-color: #2E2F33 !important; color: #D4D4D8 !important; }`;
+// The same rules for Outlook.com and the Outlook apps, which mark a dark-mode message with [data-ogsc].
+const OGSC = DARK.trim().split("\n").map((line) => {
+  const [selectors, rule] = line.trim().split("{");
+  return `${selectors.split(",").map((s) => `[data-ogsc] ${s.trim()}`).join(", ")} {${rule}`;
+}).join("\n    ");
+
 export function shell(content: string, opts: ShellOptions): string {
   const reason = escapeHtml(opts.reason ?? DEFAULT_REASON);
+  const foot = `margin:0 0 4px;font-family:${FONT};font-size:12.5px;line-height:1.6;color:${MUTED};`;
   const footLink = `color:${MUTED};text-decoration:underline;`;
   const supportLine = opts.support === false
     ? ""
-    : `<p style="margin:0 0 4px;font-family:${FONT};font-size:12px;line-height:1.6;color:${MUTED};">Questions? Email <a href="mailto:${SUPPORT_EMAIL}" style="${footLink}">${SUPPORT_EMAIL}</a>.</p>`;
+    : `<p class="vx-muted" style="${foot}">Questions? Email <a href="mailto:${SUPPORT_EMAIL}" style="${footLink}">${SUPPORT_EMAIL}</a>.</p>`;
   return `<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
@@ -88,26 +118,28 @@ export function shell(content: string, opts: ShellOptions): string {
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="x-apple-disable-message-reformatting">
   <meta name="format-detection" content="telephone=no,date=no,address=no,email=no,url=no">
-  <meta name="color-scheme" content="light only">
-  <meta name="supported-color-schemes" content="light only">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
   <title>Vraelis</title>
   <!--[if mso]>
   <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
   <style>table,td,th,p,a,h1,li,span,div{font-family:'Segoe UI',Arial,sans-serif !important;}</style>
   <![endif]-->
   <style>
-    :root { color-scheme: light only; supported-color-schemes: light only; }
+    :root { color-scheme: light dark; supported-color-schemes: light dark; }
     body { margin: 0; padding: 0; width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
     table { border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
     a { color: ${ACCENT}; }
-    .vx-body h1 { margin: 0 0 16px; font-size: 22px; font-weight: 600; line-height: 1.3; letter-spacing: -0.01em; color: ${INK}; }
-    .vx-body h2 { margin: 24px 0 8px; font-size: 16px; font-weight: 600; line-height: 1.4; color: ${INK}; }
-    .vx-body p, .vx-body li { font-size: 15px; line-height: 1.6; color: ${BODY}; }
-    .vx-body p { margin: 0 0 16px; }
+    @media (prefers-color-scheme: dark) {${DARK}
+    }
+    ${OGSC}
+    [data-ogsb] .vx-bg { background: transparent !important; }
+    [data-ogsb] .vx-soft { background: #1B1B1E !important; }
+    [data-ogsb] .vx-mark, [data-ogsb] .vx-btn { background: #FAFAFA !important; }
     @media only screen and (max-width: 600px) {
-      .vx-outer { padding: 16px 12px !important; }
-      .vx-pad { padding-left: 24px !important; padding-right: 24px !important; }
-      .vx-h1 { font-size: 20px !important; }
+      .vx-outer { padding: 28px 20px 36px !important; }
+      .vx-h1 { font-size: 22px !important; }
+      .vx-otp { font-size: 28px !important; letter-spacing: 0.16em !important; }
     }
     @media only screen and (max-width: 480px) {
       .vx-dt { display: block !important; width: auto !important; padding: 10px 0 0 !important; }
@@ -115,20 +147,31 @@ export function shell(content: string, opts: ShellOptions): string {
     }
   </style>
 </head>
-<body style="margin:0;padding:0;background:${PAGE};">
-  <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;color:${PAGE};">${escapeHtml(opts.preheader)}${PREHEADER_PAD}</div>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${PAGE};">
-    <tr><td align="center" class="vx-outer" style="padding:40px 16px;">
-      <!--[if mso]><table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" align="center"><tr><td><![endif]-->
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background:#FFFFFF;border:1px solid ${LINE};border-radius:8px;border-collapse:separate;">
-        <tr><td class="vx-pad" style="padding:20px 32px;border-bottom:1px solid ${LINE};font-family:${FONT};font-size:16px;font-weight:600;line-height:24px;color:${INK};">Vraelis</td></tr>
-        <tr><td class="vx-pad vx-body" style="padding:32px 32px 16px;font-family:${FONT};font-size:15px;line-height:1.6;color:${BODY};">
+<body class="vx-bg" style="margin:0;padding:0;background:#FFFFFF;">
+  <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">${escapeHtml(opts.preheader)}${PREHEADER_PAD}</div>
+  <table class="vx-bg" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#FFFFFF" style="background:#FFFFFF;">
+    <tr><td align="center" class="vx-outer" style="padding:48px 24px 56px;">
+      <!--[if mso]><table role="presentation" width="520" cellpadding="0" cellspacing="0" border="0" align="center"><tr><td><![endif]-->
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;">
+        <tr><td style="padding:0 0 36px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;">
+            <tr>
+              <td class="vx-mark" width="26" height="26" align="center" valign="middle" bgcolor="${INK}" style="width:26px;height:26px;border-radius:7px;background:${INK};font-family:${FONT};font-size:14px;font-weight:700;line-height:26px;color:#FFFFFF;text-align:center;">V</td>
+              <td class="vx-ink" style="padding-left:10px;font-family:${FONT};font-size:16px;font-weight:600;letter-spacing:-0.01em;line-height:26px;color:${INK};">Vraelis</td>
+            </tr>
+          </table>
+        </td></tr>
+        <tr><td class="vx-text" style="font-family:${FONT};font-size:15px;line-height:1.6;color:${BODY};">
           ${content}
         </td></tr>
-        <tr><td class="vx-pad" style="padding:20px 32px 24px;border-top:1px solid ${LINE};">
-          <p style="margin:0 0 4px;font-family:${FONT};font-size:12px;line-height:1.6;color:${MUTED};">${reason}</p>
-          ${supportLine}
-          <p style="margin:0;font-family:${FONT};font-size:12px;line-height:1.6;color:${MUTED};">Vraelis &middot; <a href="https://vraelis.com" style="${footLink}">vraelis.com</a> &middot; <a href="https://vraelis.com/privacy" style="${footLink}">Privacy</a> &middot; <a href="https://vraelis.com/terms" style="${footLink}">Terms</a></p>
+        <tr><td style="padding:24px 0 0;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr><td class="vx-rule" style="padding:20px 0 0;border-top:1px solid ${LINE};">
+              <p class="vx-muted" style="${foot}">${reason}</p>
+              ${supportLine}
+              <p class="vx-muted" style="${foot}margin:0;">Vraelis &middot; <a href="https://vraelis.com" style="${footLink}">vraelis.com</a> &middot; <a href="https://vraelis.com/privacy" style="${footLink}">Privacy</a> &middot; <a href="https://vraelis.com/terms" style="${footLink}">Terms</a></p>
+            </td></tr>
+          </table>
         </td></tr>
       </table>
       <!--[if mso]></td></tr></table><![endif]-->
@@ -141,27 +184,27 @@ export function shell(content: string, opts: ShellOptions): string {
 // ── Atoms. Each takes HTML that is already safe; callers escape anything that came from outside. ───────
 
 export function h1(html: string): string {
-  return `<h1 class="vx-h1" style="margin:0 0 16px;font-family:${FONT};font-size:22px;font-weight:600;line-height:1.3;letter-spacing:-0.01em;color:${INK};word-break:break-word;">${html}</h1>`;
+  return `<h1 class="vx-h1 vx-ink" style="margin:0 0 14px;font-family:${FONT};font-size:24px;font-weight:600;line-height:1.25;letter-spacing:-0.02em;color:${INK};word-break:break-word;">${html}</h1>`;
 }
 
 /** Body paragraph, 15px. */
 export function p(html: string): string {
-  return `<p style="margin:0 0 16px;font-family:${FONT};font-size:15px;line-height:1.6;color:${BODY};">${html}</p>`;
+  return `<p class="vx-text" style="margin:0 0 16px;font-family:${FONT};font-size:15px;line-height:1.6;color:${BODY};">${html}</p>`;
 }
 
-/** Secondary text, 13px muted: fallbacks, "did not request this", fine print. */
+/** Secondary text, 13.5px muted: fallbacks, "did not request this", fine print. */
 export function small(html: string): string {
-  return `<p style="margin:0 0 12px;font-family:${FONT};font-size:13px;line-height:1.6;color:${MUTED};">${html}</p>`;
+  return `<p class="vx-muted" style="margin:0 0 12px;font-family:${FONT};font-size:13.5px;line-height:1.6;color:${MUTED};">${html}</p>`;
 }
 
 /** Emphasis inside body copy. */
 export function strong(html: string): string {
-  return `<strong style="font-weight:600;color:${INK};">${html}</strong>`;
+  return `<strong class="vx-ink" style="font-weight:600;color:${INK};">${html}</strong>`;
 }
 
 /** An inline link in the accent colour, underlined so it does not rely on colour alone. */
 export function link(href: string, label: string): string {
-  return `<a href="${escapeHtml(href)}" style="color:${ACCENT};text-decoration:underline;">${label}</a>`;
+  return `<a class="vx-link" href="${escapeHtml(href)}" style="color:${ACCENT};text-decoration:underline;text-underline-offset:2px;">${label}</a>`;
 }
 
 /** A mailto link, printed as the address itself. */
@@ -175,18 +218,18 @@ export function mailto(address: string): string {
  * whole click target. One per email.
  */
 export function button(href: string, label: string): string {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 24px;border-collapse:separate;">
-    <tr><td align="center" bgcolor="${ACCENT}" style="border-radius:6px;background:${ACCENT};mso-padding-alt:12px 20px;">
-      <a href="${escapeHtml(href)}" target="_blank" style="display:inline-block;padding:12px 20px;font-family:${FONT};font-size:15px;font-weight:600;line-height:20px;color:#FFFFFF;text-decoration:none;border-radius:6px;">${label}</a>
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 28px;border-collapse:separate;">
+    <tr><td class="vx-btn" align="center" bgcolor="${ACCENT}" style="border-radius:8px;background:${ACCENT};mso-padding-alt:12px 22px;">
+      <a href="${escapeHtml(href)}" target="_blank" style="display:inline-block;padding:12px 22px;font-family:${FONT};font-size:15px;font-weight:600;line-height:20px;color:#FFFFFF;text-decoration:none;border-radius:8px;">${label}</a>
     </td></tr>
   </table>`;
 }
 
-/** One-line status box for emails that report a state (a failed payment, an ended plan, a paid receipt). */
+/** One-line status row for emails that report a state (a failed payment, an ended plan, a paid receipt). */
 export function status(tone: StatusTone, html: string): string {
   const t = TONES[tone];
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;border-collapse:separate;">
-    <tr><td style="padding:10px 14px;background:${t.bg};border:1px solid ${t.border};border-radius:6px;font-family:${FONT};font-size:14px;font-weight:500;line-height:1.5;color:${t.fg};">${html}</td></tr>
+    <tr><td class="vx-${tone}" style="padding:11px 14px;background:${t.bg};border:1px solid ${t.border};border-radius:8px;font-family:${FONT};font-size:14px;font-weight:500;line-height:1.5;color:${t.fg};">${html}</td></tr>
   </table>`;
 }
 
@@ -201,28 +244,38 @@ export function details(rows: Array<[string, DetailValue]>): string {
     const edge = i === 0 ? "" : `border-top:1px solid ${LINE};`;
     const v = typeof value === "string" ? escapeHtml(value) : value.html;
     return `<tr>
-      <td class="vx-dt" width="148" style="${cell}${edge}width:148px;padding:10px 16px 10px 0;color:${MUTED};">${escapeHtml(label)}</td>
-      <td class="vx-dd" style="${cell}${edge}padding:10px 0;color:${INK};word-break:break-word;">${v}</td>
+      <td class="vx-dt vx-muted vx-rule" width="148" style="${cell}${edge}width:148px;padding:10px 16px 10px 0;color:${MUTED};">${escapeHtml(label)}</td>
+      <td class="vx-dd vx-ink vx-rule" style="${cell}${edge}padding:10px 0;color:${INK};word-break:break-word;">${v}</td>
     </tr>`;
   }).join("");
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 24px;border-top:1px solid ${LINE};border-bottom:1px solid ${LINE};border-collapse:collapse;">${body}</table>`;
+  return `<table class="vx-rule" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 24px;border-top:1px solid ${LINE};border-bottom:1px solid ${LINE};border-collapse:collapse;">${body}</table>`;
 }
 
 /** A short bulleted list in body type. Items are HTML. */
 export function list(items: string[]): string {
-  return `<ul style="margin:0 0 16px;padding:0 0 0 20px;font-family:${FONT};font-size:15px;line-height:1.6;color:${BODY};">${items
+  return `<ul class="vx-text" style="margin:0 0 16px;padding:0 0 0 20px;font-family:${FONT};font-size:15px;line-height:1.6;color:${BODY};">${items
     .map((i) => `<li style="margin:0 0 6px;">${i}</li>`).join("")}</ul>`;
 }
 
-/** A URL or code shown for copying, in mono, breaking anywhere so it never widens the card. */
+/** A URL or code shown for copying, in mono, breaking anywhere so it never widens the column. */
 export function code(text: string): string {
-  return `<p style="margin:0 0 16px;padding:10px 12px;background:${PAGE};border:1px solid ${LINE};border-radius:6px;font-family:${MONO};font-size:12px;line-height:1.6;color:${INK};word-break:break-all;">${escapeHtml(text)}</p>`;
+  return `<p class="vx-soft vx-ink" style="margin:0 0 16px;padding:10px 12px;background:${SOFT};border:1px solid ${LINE};border-radius:8px;font-family:${MONO};font-size:12.5px;line-height:1.6;color:${INK};word-break:break-all;">${escapeHtml(text)}</p>`;
+}
+
+/**
+ * A one-time code, set large in mono and spaced so it can be read off one screen and typed into another.
+ * It is the action of its email, so a message that carries one needs no button. Text is escaped.
+ */
+export function oneTimeCode(value: string): string {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 24px;border-collapse:separate;">
+    <tr><td class="vx-soft vx-ink vx-otp" style="padding:18px 22px;background:${SOFT};border:1px solid ${SOFT};border-radius:12px;font-family:${MONO};font-size:32px;font-weight:600;line-height:1.2;letter-spacing:0.2em;color:${INK};">${escapeHtml(value)}</td></tr>
+  </table>`;
 }
 
 /** A quoted block of someone else's words (a support message, a lead's note). Text is escaped. */
 export function quote(text: string): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;border-collapse:separate;">
-    <tr><td style="padding:14px 16px;background:${PAGE};border:1px solid ${LINE};border-radius:6px;font-family:${FONT};font-size:14px;line-height:1.6;color:${BODY};white-space:pre-wrap;word-break:break-word;">${escapeHtml(text)}</td></tr>
+    <tr><td class="vx-soft vx-text" style="padding:14px 16px;background:${SOFT};border:1px solid ${LINE};border-radius:8px;font-family:${FONT};font-size:14px;line-height:1.6;color:${BODY};white-space:pre-wrap;word-break:break-word;">${escapeHtml(text)}</td></tr>
   </table>`;
 }
 
