@@ -12,47 +12,45 @@
    ============================================================================ */
 
 .v6 {
-  /* ---- light surfaces: white and neutral grey. No warm cast. ---- */
-  --paper:   #FFFFFF;   /* page ground */
-  --surface: #FFFFFF;   /* raised */
-  --sunk:    #F4F4F5;   /* recessed / alternating band */
-  --ink:     #0A0A0B;   /* near black */
-  --ink-2:   #2E2F33;   /* body */
-  --ink-3:   #5B5D63;   /* secondary, 5.9:1 on the grey band */
-  --ink-4:   #6A6C71;   /* meta, 4.7:1 on the grey band, 5.0:1 on white */
-  --line:    rgba(10,10,11,0.10);
-  --line-2:  rgba(10,10,11,0.17);
+  /* ---- ONE GROUND, EVERYWHERE, AND IT IS BLACK (2026-10-01) ----
+     The founder: the homepage opens on a black film, so the whole website is black, as anduril.com and
+     palantir.com are, and the console with it (the same-everywhere rule, see feedback-universal-theme). The
+     site was written against two ramps, a light one (--paper, --ink...) and a dark one (--graphite, --g-fg...),
+     and every rule reads one or the other. Both now resolve to the same black palette, so no band, card or
+     label can come out light, and the names keep their meaning: --sunk and --graphite are still a band that
+     stands apart, by a step of black rather than by a different colour.
+     Text steps measured on --paper: --ink 19:1, --ink-2 12:1, --ink-3 8:1, --ink-4 6:1 (5.5:1 on a card). */
+  --paper:   #0A0A0B;   /* page ground */
+  --surface: #121214;   /* raised: a card, a panel, a sheet */
+  --sunk:    #0F0F11;   /* the alternating band */
+  --ink:     #FAFAFA;   /* headlines */
+  --ink-2:   #C9CBD1;   /* body */
+  --ink-3:   #A1A3A9;   /* secondary */
+  --ink-4:   #8E9095;   /* meta */
+  --line:    rgba(255,255,255,0.10);
+  --line-2:  rgba(255,255,255,0.17);
 
-  /* ---- the former dark ramp, now light (2026-09-30) ----
-     ONE GROUND, EVERYWHERE. The console went light, and the founder's rule is that the whole product moves
-     with it by the same amount: the homepage, the docs and every page, not a white app beside a half-black
-     site. Every "dark" band, card and label on the site reads these tokens, so they are remapped here rather
-     than rewritten in two hundred places: a former dark band is the grey alternating band, a card on it is
-     white, and its type is the same ink as everywhere else. The names stay so the markup keeps its meaning
-     (a band that stands apart from its neighbours); only the values changed. */
-  --graphite:   #F4F4F5;   /* was #0A0A0B: a band, now the same grey as --sunk */
-  --graphite-2: #FFFFFF;   /* was #121214: a card on that band */
-  --graphite-3: #F4F4F5;   /* was #1B1C1F: an inset inside a card */
-  --g-fg:    #0A0A0B;
-  --g-fg-2:  #2E2F33;
-  --g-fg-3:  #5B5D63;
-  --g-line:  rgba(10,10,11,0.10);
-  --g-line-2:rgba(10,10,11,0.17);
+  --graphite:   #0A0A0B;
+  --graphite-2: #121214;
+  --graphite-3: #1B1C1F;
+  --g-fg:    #FAFAFA;
+  --g-fg-2:  #C9CBD1;
+  --g-fg-3:  #A1A3A9;
+  --g-line:  rgba(255,255,255,0.12);
+  --g-line-2:rgba(255,255,255,0.20);
 
-  /* ---- "brand" is contrast, not hue. There is no accent colour in this system: the primary action is
-     black on white and white on black, and the ONLY colour anywhere on the site is a state signal. ---- */
-  --brand:     #0A0A0B;
-  --brand-ink: #2E2F33;   /* neutral, for labels that used to carry the accent */
-  --brand-dk:  #0A0A0B;   /* was #FAFAFA, the primary action on a dark band */
-  --brand-soft:rgba(10,10,11,0.06);
-  --brand-line:rgba(10,10,11,0.20);
+  /* ---- "brand" is contrast, not hue. The primary action is white on black; the ONLY colour anywhere on
+     the site is a state signal. ---- */
+  --brand:     #FAFAFA;
+  --brand-ink: #C9CBD1;
+  --brand-dk:  #FAFAFA;
+  --brand-soft:rgba(255,255,255,0.07);
+  --brand-line:rgba(255,255,255,0.22);
 
-  /* ---- signals: the only colour that ever appears, and it always means a state ---- */
-  /* the -dk variants were the same signals tuned for a black ground; with no black ground left they are the
-     light-ground values, so a signal reads the same on every band */
-  --go:   #0B7C55;   --go-ink:  #06603F;   --go-dk:   #0B7C55;   /* it held */
-  --wait: #A96A12;   --wait-ink:#7E4E0C;   --wait-dk: #A96A12;   /* a person is needed */
-  --stop: #B03A22;   --stop-ink:#8C2E19;   --stop-dk: #B03A22;   /* it failed */
+  /* ---- signals: the only colour that ever appears, and it always means a state. Tuned for black. ---- */
+  --go:   #3FCF8E;   --go-ink:  #4ADE9C;   --go-dk:   #4ADE9C;   /* it held */
+  --wait: #F2B75A;   --wait-ink:#F2B75A;   --wait-dk: #F2B75A;   /* a person is needed */
+  --stop: #FF7A55;   --stop-ink:#FF8A6A;   --stop-dk: #FF7A55;   /* it failed */
 
   /* type */
   --sans: var(--font-brand-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
@@ -81,9 +79,9 @@
   --sec: clamp(64px, 7.5vw, 108px);
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
-  --sh-sm: 0 1px 2px rgba(20,22,28,0.06), 0 1px 3px rgba(20,22,28,0.05);
-  --sh-md: 0 12px 34px -14px rgba(20,22,28,0.22);
-  --sh-lg: 0 40px 90px -36px rgba(15,19,25,0.4);
+  --sh-sm: 0 1px 2px rgba(0,0,0,0.5);
+  --sh-md: 0 12px 34px -14px rgba(0,0,0,0.75);
+  --sh-lg: 0 40px 90px -36px rgba(0,0,0,0.9);
 
   /* Corner radii, four tiers by intent, so the next control cannot invent an eighth value. This file
      carried seven distinct values across thirteen declarations and no token defined any of them. Two groups
@@ -110,7 +108,7 @@
    the incoming page's entrance plays over, which is why dark->dark navigation no longer flashes white. */
 .v6[data-route-theme="dark"] { background: var(--graphite); }
 .v6 *, .v6 *::before, .v6 *::after { box-sizing: border-box; }
-.v6 ::selection { background: var(--brand-soft); }
+.v6 ::selection { background: #FAFAFA; color: #0A0A0B; }
 .v6 img, .v6 svg, .v6 video { max-width: 100%; display: block; }
 
 /* ---------------------------------------------------------------- layout --- */
@@ -165,16 +163,16 @@
 /* ------------------------------------------------------------- actions ----- */
 .v6-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; box-sizing: border-box;
   padding: 12px 20px; border-radius: var(--r-md); font-size: 15px; font-weight: 600; letter-spacing: -0.005em; text-decoration: none; cursor: pointer;
-  border: 1px solid var(--ink); background: var(--ink); color: #fff; font-family: var(--sans);
+  border: 1px solid var(--ink); background: var(--ink); color: var(--paper); font-family: var(--sans);
   transition: transform 130ms var(--ease-out), background 160ms ease, border-color 160ms ease, box-shadow 160ms ease, color 160ms ease; }
-.v6-btn:hover { background: #000; border-color: #000; }
+.v6-btn:hover { background: #E4E4E7; border-color: #E4E4E7; }
 .v6-btn:active { transform: scale(0.985); }
 .v6-btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
 .v6-btn .v6-arw { transition: transform 180ms var(--ease-out); }
 .v6-btn:hover .v6-arw { transform: translateX(3px); }
 .v6-btn--lg { min-height: 50px; padding: 15px 26px; font-size: 16px; }
 .v6-btn--brand { background: var(--brand); border-color: var(--brand); }
-.v6-btn--brand:hover { background: var(--brand-ink); border-color: var(--brand-ink); }
+.v6-btn--brand:hover { background: #E4E4E7; border-color: #E4E4E7; }
 /* On a dark ground the primary action inverts. --brand is near-black, so without this the CTA was
    black on black in the opening. One rule, keyed to the marker every dark surface already sets.
    The dark drawer is the third selector because it is a dark ground that carries no marker: [data-nav-dark]
@@ -187,8 +185,9 @@
   background: var(--g-fg); border-color: var(--g-fg); color: var(--graphite); }
 [data-nav-dark] .v6-btn--brand:hover, .v6-dark .v6-btn--brand:hover,
 .v6-nav[data-theme="dark"] .v6-drawer .v6-btn--brand:hover {
-  background: #fff; border-color: #fff; color: var(--graphite); }
+  background: #E4E4E7; border-color: #E4E4E7; color: var(--graphite); }
 .v6-btn--ghost { background: transparent; color: var(--ink); border-color: var(--line-2); }
+.v6-btn--ghost:hover { background: rgba(255,255,255,0.06); }
 .v6-btn--ghost:hover { background: transparent; border-color: var(--ink); }
 .v6-elink { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; color: var(--ink); text-decoration: none; cursor: pointer; }
 .v6-elink .v6-elink__t { background-image: linear-gradient(var(--brand), var(--brand)); background-position: 0 100%; background-repeat: no-repeat; background-size: 0% 1.5px; padding-bottom: 3px; transition: background-size 220ms var(--ease); }
@@ -209,9 +208,9 @@
 /* signal pills: trusted / review / stopped */
 .v6-sig { display: inline-flex; align-items: center; gap: 7px; padding: 3px 9px 3px 8px; border-radius: 6px; font-family: var(--sans); font-size: 12.5px; font-weight: 600; letter-spacing: 0; text-transform: none; white-space: nowrap; }
 .v6-sig__dot { width: 7px; height: 7px; border-radius: var(--r-pill); background: currentColor; flex: none; }
-.v6-sig--go   { color: var(--go-ink);   background: rgba(11,124,85,0.09);  border: 1px solid rgba(11,124,85,0.28); }
-.v6-sig--wait { color: var(--wait-ink); background: rgba(169,106,18,0.09); border: 1px solid rgba(169,106,18,0.28); }
-.v6-sig--stop { color: var(--stop-ink); background: rgba(176,58,34,0.09);  border: 1px solid rgba(176,58,34,0.28); }
+.v6-sig--go   { color: var(--go-ink);   background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.32); }
+.v6-sig--wait { color: var(--wait-ink); background: rgba(240,180,74,0.12); border: 1px solid rgba(240,180,74,0.32); }
+.v6-sig--stop { color: var(--stop-ink); background: rgba(255,122,85,0.12); border: 1px solid rgba(255,122,85,0.32); }
 /* Keyed off [data-nav-dark] as well as .v6-dark. Every graphite surface already marks itself with that
    attribute so the nav can flip over it, which makes it the reliable signal for "this ground is dark". The
    closing scene is graphite but carries no .v6-dark class, so its Shipped pill was rendering the light-surface
@@ -227,7 +226,7 @@
 
 /* Skip link: off-canvas until it takes focus, then it lands as a real button above the nav. */
 .v6-skip { position: fixed; top: 8px; left: 8px; z-index: 100; transform: translateY(-160%);
-  background: var(--ink); color: #fff; font-family: var(--sans); font-size: 14px; font-weight: 600;
+  background: var(--ink); color: var(--paper); font-family: var(--sans); font-size: 14px; font-weight: 600;
   padding: 12px 18px; border-radius: var(--r-md); text-decoration: none;
   transition: transform 160ms var(--ease-out); }
 /* :focus, not :focus-visible. The link is only ever reachable by keyboard, and relying on the heuristic left
@@ -312,15 +311,15 @@
    let the section's own eyebrow and headline ghost through the nav links, and over a black chapter it
    read as a lighter grey strip. White ground gets a white bar with dark text; black ground gets a black
    bar with white text. Nothing shows through either. */
-.v6-nav[data-scrolled="true"] .v6-nav__in { background: #FFFFFF; backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom-color: var(--line); }
-.v6-nav[data-theme="light"] .v6-nav__in { background: #FFFFFF; }
+.v6-nav[data-scrolled="true"] .v6-nav__in { background: var(--paper); backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom-color: var(--line); }
+.v6-nav[data-theme="light"] .v6-nav__in { background: var(--paper); }
 /* Solid, and identical at scrollY 0. The ground under the bar at the top of the page IS black, so a
    translucent plate over it only ever read as a lighter grey strip sitting on the hero. */
 .v6-nav[data-theme="dark"] .v6-nav__in { background: #0A0A0B; backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom-color: transparent; }
 .v6-nav[data-theme="dark"][data-scrolled="true"] .v6-nav__in { border-bottom-color: rgba(255,255,255,0.10); }
 .v6-nav[data-open="true"] .v6-nav__in { backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom-color: transparent; }
 .v6-nav[data-open="true"][data-theme="dark"] .v6-nav__in { background: #08080A; }
-.v6-nav[data-open="true"][data-theme="light"] .v6-nav__in { background: #FFFFFF; }
+.v6-nav[data-open="true"][data-theme="light"] .v6-nav__in { background: var(--paper); }
 /* The wordmark is the largest thing in the bar by a clear margin (roughly 2x the nav links) and it is the
    axis everything else is centred on. It never wraps and never shrinks, and the bar's own height is still set
    by the taller button, so growing the type does not grow the header or push a link off the edge.
@@ -366,7 +365,7 @@
    surface that is only ever reached by touch. These are the bar's numbers and they belong to the bar's row. */
 .v6-nav__in .v6-btn { min-height: 38px; padding: 8px 16px; font-size: 14px; }
 .v6-nav[data-theme="dark"] .v6-nav__in .v6-btn { background: var(--g-fg); border-color: var(--g-fg); color: var(--graphite); }
-.v6-nav[data-theme="dark"] .v6-nav__in .v6-btn:hover { background: #fff; border-color: #fff; }
+.v6-nav[data-theme="dark"] .v6-nav__in .v6-btn:hover { background: #E4E4E7; border-color: #E4E4E7; }
 .v6-nav__burger { display: none; width: 40px; height: 40px; border-radius: var(--r-md); border: 1px solid var(--line-2); background: var(--surface); color: var(--ink); align-items: center; justify-content: center; cursor: pointer; }
 .v6-nav[data-theme="dark"] .v6-nav__burger { background: rgba(255,255,255,0.06); border-color: var(--g-line); color: var(--g-fg); }
 
@@ -389,7 +388,7 @@
 .v6-nav[data-open="true"][data-theme="dark"] .v6-nav__signin:hover { color: #FAFAFA; }
 .v6-nav[data-open="true"][data-theme="light"] .v6-nav__signin:hover { color: var(--ink); }
 .v6-nav[data-open="true"][data-theme="dark"] .v6-btn { background: #FAFAFA; border-color: #FAFAFA; color: #0A0A0B; }
-.v6-nav[data-open="true"][data-theme="light"] .v6-btn { background: var(--ink); border-color: var(--ink); color: #fff; }
+.v6-nav[data-open="true"][data-theme="light"] .v6-btn { background: var(--ink); border-color: var(--ink); color: var(--paper); }
 /* Focus ring is brand indigo, never a signal colour, and is stated for each bar treatment. */
 .v6-nav__item:focus-visible, .v6-nav__signin:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: var(--r-md); }
 .v6-nav[data-theme="dark"] .v6-nav__item:focus-visible,
@@ -411,7 +410,7 @@
    near-black panel with light text. It never forces one treatment onto the other. */
 .v6-mega__panel { transform-origin: 50% 0; }
 .v6-nav[data-theme="dark"] .v6-mega__panel { background: #08080A; border-bottom: 1px solid rgba(255,255,255,0.14); }
-.v6-nav[data-theme="light"] .v6-mega__panel { background: #FFFFFF; border-bottom: 1px solid var(--line); }
+.v6-nav[data-theme="light"] .v6-mega__panel { background: var(--paper); border-bottom: 1px solid var(--line); }
 .v6-mega[data-state="in"] .v6-mega__panel { animation: v6MegaIn 260ms cubic-bezier(0.22,1,0.36,1) both; }
 .v6-mega[data-state="out"] .v6-mega__panel { animation: v6MegaOut 190ms cubic-bezier(0.4,0,1,1) both; pointer-events: none; }
 @keyframes v6MegaIn  { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
@@ -456,7 +455,7 @@
 .v6-nav[data-theme="light"] .v6-mega__feature p { color: var(--ink-3); }
 .v6-nav[data-theme="light"] .v6-mega__fcta { color: var(--ink); }
 .v6-nav[data-theme="light"] .v6-mega__feature { border-left-color: var(--line-2); }
-.v6-nav[data-theme="light"] .v6-mega__link:hover { background: rgba(10,10,11,0.05); }
+.v6-nav[data-theme="light"] .v6-mega__link:hover { background: rgba(255,255,255,0.06); }
 .v6-nav[data-theme="light"] .v6-mega__link:focus-visible,
 .v6-nav[data-theme="light"] .v6-mega__fcta:focus-visible { outline-color: var(--ink); }
 
@@ -486,7 +485,7 @@
 /* Inside the drawer the actions take the night treatment regardless of the bar's theme. Specificity matches
    the .v6-nav[data-theme] button rules, so these must stay AFTER that block: source order decides the tie. */
 .v6-nav .v6-drawer .v6-btn--brand { background: var(--g-fg); border-color: var(--g-fg); color: var(--graphite); }
-.v6-nav .v6-drawer .v6-btn--brand:hover { background: #fff; border-color: #fff; color: var(--graphite); }
+.v6-nav .v6-drawer .v6-btn--brand:hover { background: #E4E4E7; border-color: #E4E4E7; color: var(--graphite); }
 .v6-nav .v6-drawer .v6-btn--ghost { background: transparent; border-color: var(--g-line-2); color: var(--g-fg); }
 /* accordion sections: one per top-level desktop menu */
 .v6-drawer__sec { border-bottom: 1px solid var(--g-line); }
@@ -645,7 +644,7 @@
    second one without failing anywhere a test could see it.
    The transparent ends stay at 6% and 80%. background-repeat is default, so the tile has to meet itself in
    transparency to travel seamlessly, and moving those two stops would retime the whole pass. */
-.v6-spec { --spec-hl: rgba(10,10,11,0.9); }
+.v6-spec { --spec-hl: rgba(250,250,250,0.9); }
 .v6-dark .v6-spec, [data-nav-dark] .v6-spec { --spec-hl: rgba(250,250,250,0.9); }
 .v6-spec__fx::after {
   content: attr(data-text);
@@ -804,3 +803,30 @@
   --g-line: rgba(255,255,255,0.12); --g-line-2: rgba(255,255,255,0.2);
   --graphite: #0A0A0B; --graphite-2: #121316; --brand-dk: #FAFAFA;
 }
+
+/* ── THE PHONE MENU, REDRAWN (2026-10-01) ─────────────────────────────────────────────────────────────────
+   Reported from an iPhone: it looked off, and the page scrolled behind it (that half is fixed in shell.tsx,
+   which pins the body while the menu is open). The look: section heads were heavy 20px bold over a dense
+   list, and the foot squeezed the language switch and both actions into one row, so "Create account" broke
+   onto two lines and the three controls were three different heights. Now: lighter, larger section heads;
+   links as clean rows with their one-line description; the two actions side by side at the same height,
+   never wrapping, and the language switch on its own line under them. Black, like every surface. */
+.v6-drawer { background: #0A0A0B; color: #C9CBD1; }
+.v6-drawer__top { padding: 12px var(--gutter); border-bottom-color: rgba(255,255,255,0.08); }
+.v6-nav .v6-drawer .v6-drawer__x { width: 40px; height: 40px; background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); color: #FAFAFA; }
+.v6-drawer__body { padding: 6px var(--gutter) 28px; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.v6-drawer__sec { border-bottom-color: rgba(255,255,255,0.08); }
+.v6-drawer__sec-h { min-height: 62px; padding: 18px 0; font-size: 22px; font-weight: 500; letter-spacing: -0.022em; color: #FAFAFA; }
+.v6-drawer__sec-h svg { color: #8E9095; }
+.v6-drawer__sec-b { gap: 22px; padding: 0 0 24px; }
+.v6-drawer__grp-h { font-size: 12px; font-weight: 500; color: #8E9095; margin: 0 0 2px; }
+.v6-drawer__glink { padding: 9px 0; margin: 0; border-radius: 0; }
+.v6-drawer__glink:active { background: transparent; opacity: 0.7; }
+.v6-drawer__glt { font-size: 16px; font-weight: 500; color: #FAFAFA; letter-spacing: -0.01em; }
+.v6-drawer__gld { font-size: 13px; color: #8E9095; margin-top: 3px; }
+.v6-drawer__foot { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center;
+  padding: 14px var(--gutter) calc(14px + env(safe-area-inset-bottom, 0px)); background: #0A0A0B; border-top-color: rgba(255,255,255,0.08); }
+.v6-nav .v6-drawer .v6-drawer__foot .v6-btn { min-height: 46px; padding: 12px 14px; white-space: nowrap; font-size: 15px; }
+/* signed in, the only action fills the row */
+.v6-drawer__foot > .v6-btn--brand:nth-child(2) { grid-column: 1 / -1; }
+.v6-drawer__foot > .v6-drawer__lang { grid-column: 1 / -1; order: 2; justify-self: start; margin: 0; }

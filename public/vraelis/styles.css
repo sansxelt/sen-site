@@ -10,7 +10,13 @@
 html { scroll-behavior: smooth; overflow-x: clip; }
 body { margin: 0; overflow-x: clip; max-width: 100%; }
 
-/* ── LIGHT THEME — warm paper, green primary, soft depth ─────────── */
+/* ── ONE BLACK GROUND (2026-10-01) ──────────────────────────────────────────────────────────────────────
+   This root stylesheet loads on every page, so its tokens are what anything outside the v6 site and the
+   console wears: the legal pages, the previous generation's surviving routes, the auth round-trip before
+   the console layer loads. It was warm paper. The founder made the whole product black (the homepage film,
+   anduril.com and palantir.com as the reference, and the console with it), so these are the console's
+   black values from authenticated.css, one palette for every surface. Text steps on --bg-0: --fg-1 19:1,
+   --fg-2 13:1, --fg-3 7.6:1, --fg-4 5.6:1. */
 :root {
   --font-sans: var(--font-brand-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   --font-display: var(--font-brand-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
@@ -19,63 +25,52 @@ body { margin: 0; overflow-x: clip; max-width: 100%; }
   --r-md: 13px;
 
   /* surfaces */
-  --bg-0: #FAF8F4;   /* warm paper floor */
-  --bg-1: #FFFFFF;   /* cards, panels */
-  --bg-2: #F1EEE7;   /* recessed wells, alt sections */
-  --bg-3: #F4F1EA;   /* hovered rows */
-  --bg-elev: rgba(0,0,0,0.015);
+  --bg-0: #0A0A0B;   /* page */
+  --bg-1: #141416;   /* cards, panels */
+  --bg-2: #1A1A1D;   /* recessed wells */
+  --bg-3: #1F1F23;   /* hovered rows */
+  --bg-elev: rgba(255,255,255,0.02);
 
-  /* warm ink foregrounds — tuned for contrast on cream */
-  --fg-1: #1B1A16;   /* headlines */
-  --fg-2: #35322B;   /* body — ~10:1 */
-  --fg-3: #565249;   /* secondary — ~6:1 */
-  --fg-4: #54504A;   /* meta / labels — darkened for legibility (~7:1) */
-  --fg-5: #6B645A;   /* fine print — darkened from decorative-only (~5:1) */
-  --fg-on-accent: #FFFFFF;
+  --fg-1: #FAFAFA;   /* headlines */
+  --fg-2: #D4D4D8;   /* body */
+  --fg-3: #A1A1AA;   /* secondary */
+  --fg-4: #8E8E96;   /* meta and labels */
+  --fg-5: #8E8E96;   /* fine print, the same measured grey */
+  --fg-on-accent: #0A0A0B;
 
-  /* primary: ink, the same as the site and the console (2026-09-30). This root stylesheet loads on every
-     page, and its old emerald accent was what turned an unstyled link or button green on hover. Green is
-     a state colour (--ok, --go-*), never an action. */
-  --acc: #0A0A0B;
-  --acc-deep: #0A0A0B;
-  --acc-deepest: #2E2F33;
-  --acc-glow: rgba(10,10,11,0.14);
-  --acc-soft: rgba(10,10,11,0.06);
-  --acc-line: rgba(10,10,11,0.20);
-  --acc-line-2: rgba(10,10,11,0.34);
+  /* the action is white on black; green is a state colour (--ok, --go-*), never an action */
+  --acc: #FAFAFA;
+  --acc-deep: #FAFAFA;
+  --acc-deepest: #D4D4D8;
+  --acc-glow: rgba(255,255,255,0.16);
+  --acc-soft: rgba(255,255,255,0.07);
+  --acc-line: rgba(255,255,255,0.22);
+  --acc-line-2: rgba(255,255,255,0.36);
 
-  --ok: #0E9E6C;
-  --warn: #C2680C;
-  --err: #DC2626;
+  --ok: #3DD68C;
+  --warn: #F5B94D;
+  --err: #FF6B5B;
 
-  /* ── State triads ─────────────────────────────────────────────────────────────
-     A state is almost never one colour: it is an ink, the wash it sits on, and the
-     hairline around them. Those three travelled the product as loose hex literals
-     (#B45309 / #FEF6E7 / #F3DFB0 and friends, ~140 of them), which is why the
-     product could not be rethemed without editing ninety-five files. Named here,
-     one theme swap moves every badge, banner and pill at once.
-     These light values are the literals they replace, unchanged, so nothing that
-     already renders on cream shifts. */
-  --go-ink:    #0A7B54;  --go-wash:   #EAF5F0;  --go-line:   #C4DED3;
-  --wait-ink:  #B45309;  --wait-wash: #FEF6E7;  --wait-line: #F3DFB0;
-  --stop-ink:  #C0392B;  --stop-wash: #FBEBEA;  --stop-line: #F0C7C2;
-  --rec: #DC2626;
-  --rec-glow: rgba(220,38,38,0.4);
+  /* ── State triads: an ink, the wash it sits on, and the hairline around them ── */
+  --go-ink:    #4ADE9C;  --go-wash:   rgba(61,214,140,0.12);  --go-line:   rgba(61,214,140,0.32);
+  --wait-ink:  #F5B94D;  --wait-wash: rgba(245,185,77,0.12);  --wait-line: rgba(245,185,77,0.32);
+  --stop-ink:  #FF7B6B;  --stop-wash: rgba(255,107,91,0.12);  --stop-line: rgba(255,107,91,0.34);
+  --rec: #FF6B5B;
+  --rec-glow: rgba(255,107,91,0.4);
 
-  /* hairlines on light */
-  --line-1: rgba(28,27,24,0.08);
-  --line-2: rgba(28,27,24,0.12);
-  --line-3: rgba(28,27,24,0.20);
-  --line-strong: rgba(28,27,24,0.32);
-  --focus-ring: var(--acc);
+  /* hairlines on black */
+  --line-1: rgba(255,255,255,0.06);
+  --line-2: rgba(255,255,255,0.10);
+  --line-3: rgba(255,255,255,0.16);
+  --line-strong: rgba(255,255,255,0.28);
+  --focus-ring: #FAFAFA;
 
-  /* The translucent ground under a sticky bar. Named because the app topbar and the auth header each had
-     their own copy of the cream literal, so neither followed the product onto graphite. */
-  --chrome-veil: rgba(250, 248, 244, 0.88);
+  /* The translucent ground under a sticky bar. */
+  --chrome-veil: rgba(10,10,11,0.86);
 
-  /* soft elevation */
-  --shadow-card: 0 1px 2px rgba(28,27,24,0.04), 0 10px 28px -14px rgba(28,27,24,0.12);
-  --shadow-win:  0 2px 6px rgba(28,27,24,0.05), 0 44px 80px -34px rgba(28,27,24,0.22);
+  /* elevation on black: shadows are deep and the hairline does the edge */
+  --shadow-card: 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-win:  0 2px 6px rgba(0,0,0,0.5), 0 44px 80px -34px rgba(0,0,0,0.85);
 }
 .display {
   font-family: var(--font-display);
@@ -172,7 +167,7 @@ summary::-webkit-details-marker { display: none; }
   box-shadow: var(--shadow-card);
   transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
 }
-.card--hover:hover { border-color: var(--line-3); transform: translateY(-2px); box-shadow: 0 2px 4px rgba(28,27,24,0.05), 0 18px 40px -16px rgba(28,27,24,0.18); }
+.card--hover:hover { border-color: var(--line-3); transform: translateY(-2px); box-shadow: 0 2px 4px rgba(0,0,0,0.45), 0 18px 40px -16px rgba(0,0,0,0.8); }
 .card--acc { background: var(--acc-soft); border-color: var(--acc-line); box-shadow: none; }
 
 /* hairline grid background block */
@@ -338,13 +333,13 @@ summary::-webkit-details-marker { display: none; }
   display: flex; flex-direction: column; gap: 12px;
   transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
 }
-.bento .tile:hover { transform: translateY(-2px); border-color: var(--line-3); box-shadow: 0 2px 4px rgba(28,27,24,0.05), 0 18px 40px -16px rgba(28,27,24,0.18); }
+.bento .tile:hover { transform: translateY(-2px); border-color: var(--line-3); box-shadow: 0 2px 4px rgba(0,0,0,0.45), 0 18px 40px -16px rgba(0,0,0,0.8); }
 .tile.span3 { grid-column: span 3; } .tile.span2 { grid-column: span 2; } .tile.span4 { grid-column: span 4; }
 .tile.span6 { grid-column: span 6; }
-.bento .tile--accent { background: linear-gradient(150deg, var(--acc-deep) 0%, var(--acc-deepest) 100%); border-color: transparent; color: #fff; }
-.tile--accent h3, .tile--accent p { color: rgba(255,255,255,0.94); }
+.bento .tile--accent { background: linear-gradient(150deg, var(--acc-deep) 0%, var(--acc-deepest) 100%); border-color: transparent; color: #0A0A0B; }
+.tile--accent h3, .tile--accent p { color: rgba(10,10,11,0.94); }
 .bento .tile--ink { background: var(--fg-1); border-color: transparent; }
-.tile--ink h3 { color: #fff; } .tile--ink p { color: rgba(255,255,255,0.62); }
+.tile--ink h3 { color: #0A0A0B; } .tile--ink p { color: rgba(10,10,11,0.66); }
 
 /* avatar initials */
 .av {
@@ -468,24 +463,24 @@ summary::-webkit-details-marker { display: none; }
 :root {
   --r-lg: 16px;
   --r-xl: 22px;
-  --shadow-sm: 0 1px 2px rgba(28,27,24,0.05);
-  --shadow-md: 0 1px 2px rgba(28,27,24,0.04), 0 14px 32px -18px rgba(28,27,24,0.18);
-  --shadow-lg: 0 2px 8px rgba(28,27,24,0.05), 0 44px 84px -40px rgba(28,27,24,0.26);
-  --paper-grad: radial-gradient(120% 90% at 50% -8%, #FFFFFF 0%, var(--bg-0) 46%);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.45);
+  --shadow-md: 0 1px 2px rgba(0,0,0,0.45), 0 14px 32px -18px rgba(0,0,0,0.75);
+  --shadow-lg: 0 2px 8px rgba(0,0,0,0.5), 0 44px 84px -40px rgba(0,0,0,0.9);
+  --paper-grad: radial-gradient(120% 90% at 50% -8%, #18181B 0%, var(--bg-0) 46%);
   /* tighter vertical rhythm — was clamp(80,11vw,144), which left big dead gaps */
   --section-y: clamp(60px, 7.5vw, 104px);
   /* app topbar height — the sidebar sticks exactly below it so it never slides */
   --app-topbar-h: 64px;
   /* slightly stronger hairlines so cards read as substantial, not flimsy */
-  --line-2: rgba(28,27,24,0.13);
-  --line-3: rgba(28,27,24,0.22);
+  --line-2: rgba(255,255,255,0.10);
+  --line-3: rgba(255,255,255,0.16);
 }
 
 /* the redesigned faces actually load now (see app/layout.tsx font link) */
 .display, h1, h2, h3, .eyebrow { font-family: var(--font-display); }
 
 /* a primary control should feel like a real, slightly-raised object */
-.btn { box-shadow: 0 1px 1.5px rgba(10,123,84,0.22), inset 0 1px 0 rgba(255,255,255,0.14); font-weight: 500; }
+.btn { box-shadow: 0 1px 1.5px rgba(0,0,0,0.4); font-weight: 500; }
 .btn--ghost, .btn--quiet { box-shadow: none; }
 .btn--ghost { box-shadow: var(--shadow-sm); }
 
@@ -611,7 +606,7 @@ summary::-webkit-details-marker { display: none; }
 /* The active pill is geometrically centred in the track (equal gap above/below). Its shadow must radiate
    EVENLY — a downward y-offset throws the soft blur out the bottom edge, darkening the lower gap so the
    pill reads as sitting low with clean grey above it. Keep y-offset 0 so it lifts without looking bottom-heavy. */
-.seg button.on { background: var(--bg-1); color: var(--fg-1); box-shadow: 0 0 0 1px rgba(28,27,24,0.05), 0 0 6px -1px rgba(28,27,24,0.14); }
+.seg button.on { background: var(--bg-1); color: var(--fg-1); box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 0 6px -1px rgba(0,0,0,0.5); }
 /* Keep the focus ring hugging the rounded pill instead of a low, offset square. */
 .seg button:focus-visible { outline-offset: -2px; }
 .seg__save { font-family: var(--font-code); font-size: 11px; color: var(--acc-deep); margin-left: 6px; }
@@ -637,7 +632,7 @@ summary::-webkit-details-marker { display: none; }
 .price--hot { border-color: var(--acc-line-2); box-shadow: 0 2px 8px rgba(14,158,108,0.08), 0 44px 84px -40px rgba(14,158,108,0.3); }
 .price--hot::before {
   content: "Most popular"; position: absolute; top: -11px; left: clamp(22px,2.4vw,30px);
-  background: linear-gradient(90deg, var(--acc-deep), var(--acc-deepest)); color: #fff;
+  background: linear-gradient(90deg, var(--acc-deep), var(--acc-deepest)); color: #0A0A0B;
   font-family: var(--font-code); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase;
   padding: 4px 11px; border-radius: 99px;
 }

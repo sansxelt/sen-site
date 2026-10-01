@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 /* THE PRODUCT THEME BOUNDARY.
  *
  * One component, three mount points: the signed-in app (app/rank/app), the auth round-trip (app/auth), and
- * sign-in itself (app/signin). Everything inside renders on the light console token layer in
+ * sign-in itself (app/signin). Everything inside renders on the black console token layer in
  * public/vraelis/authenticated.css; everything outside keeps the public tokens from styles.css.
  *
  * It exists as a component rather than as three copies of a <link> and a <div> because the previous
@@ -19,7 +19,7 @@ import type { ReactNode } from "react";
  * otherwise survives in browser caches and the CDN, which shows up as a half-themed page rather than a
  * clean failure.
  */
-export const AUTHENTICATED_CSS = "/vraelis/authenticated.css?v=19";
+export const AUTHENTICATED_CSS = "/vraelis/authenticated.css?v=20";
 
 export function ProductSurface({ children }: { children: ReactNode }) {
   return (
@@ -35,7 +35,7 @@ export function ProductSurface({ children }: { children: ReactNode }) {
        *
        * This <style> is part of the HTML payload, so it applies while the document is being parsed, with no
        * network in the way. Same device the v6 shell uses for its route canvas, for the same reason. */}
-      <style>{"html, body { background: #F7F7F8 !important; color-scheme: light !important; }"}</style>
+      <style>{"html, body { background: #0A0A0B !important; color-scheme: dark !important; }"}</style>
       {/* precedence IS WHAT MAKES THE SHEET BLOCKING. Without it React treats this as an ordinary element:
           no hoisting into the head, and no suspending the tree that needs it. On a hard load that is
           survivable, because the inline <style> above has already pinned the canvas. On a SOFT navigation

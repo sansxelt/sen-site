@@ -724,8 +724,12 @@ button.bg-zinc-900, a.bg-zinc-900, input.bg-zinc-900 {
    anything about the section itself. Adding a per-element offset back for one stubborn anchor would silently
    reintroduce the double, so do not. */
 
+/* One selection everywhere (2026-10-01): inverted, white with black text, readable on every black surface.
+   Both colours are set, never only the background: a rule that left the text colour to the cascade is how
+   selected text went white on a pale tint on one page and black on black on another. */
 ::selection {
-  background: rgba(255, 255, 255, 0.18);
+  background: #FAFAFA;
+  color: #0A0A0B;
 }
 
 /* ─────────────────────────────────────────────────────────────────────

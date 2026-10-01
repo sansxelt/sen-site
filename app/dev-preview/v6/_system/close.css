@@ -25,7 +25,7 @@
   margin-inline: auto; padding-inline: var(--gutter); }
 /* The ink panel: centred, with a faint dot grid and a soft light from the top, the hero band's texture in
    negative. */
-.v6-end__card { position: relative; overflow: hidden; isolation: isolate; border-radius: 28px; background: #0A0A0B;
+.v6-end__card { position: relative; overflow: hidden; isolation: isolate; border-radius: 28px; background: #111113; border: 1px solid rgba(255,255,255,0.08);
   padding: clamp(64px, 9vw, 124px) clamp(24px, 5vw, 72px); display: flex; flex-direction: column; align-items: center; text-align: center; }
 .v6-end__card::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
   background-image: radial-gradient(rgba(255,255,255,0.16) 1px, transparent 1.2px); background-size: 22px 22px;
@@ -56,7 +56,7 @@
   display: inline-flex; align-items: center; }
 .v6-end__third:hover { color: var(--g-fg); }
 .v6-end .v6-btn { background: #FAFAFA; border-color: #FAFAFA; color: #0A0A0B; min-height: 52px; padding: 16px 28px; font-size: 16px; }
-.v6-end .v6-btn:hover { background: #FFFFFF; border-color: #FFFFFF; }
+.v6-end .v6-btn:hover { background: #E4E4E7; border-color: #E4E4E7; }
 .v6-end .v6-btn:focus-visible, .v6-end .v6-elink:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
 .v6-end .v6-elink { color: #FAFAFA; }
 .v6-end .v6-elink .v6-arw { color: #FAFAFA; }

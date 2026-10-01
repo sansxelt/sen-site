@@ -35,7 +35,7 @@
   font-size: clamp(1.35rem, 2.2vw, 1.8rem); line-height: 1.2; color: var(--g-fg); text-wrap: pretty; }
 .v6-demo__app { margin: 10px 0 0; font-size: 0.9rem; color: var(--g-fg-3); }
 /* Underlined, because its colour alone is only 1.85:1 against the sentence around it (axe link-in-text-block). */
-.v6-demo__app a { color: var(--g-fg-2); text-decoration: underline; text-decoration-color: rgba(10,10,11,0.35); text-underline-offset: 3px; }
+.v6-demo__app a { color: var(--g-fg-2); text-decoration: underline; text-decoration-color: rgba(255,255,255,0.35); text-underline-offset: 3px; }
 .v6-demo__app a:hover { color: var(--g-fg); }
 
 .v6-demo__runs { display: inline-flex; gap: 0; margin-top: 16px; border: 1px solid var(--g-line); border-radius: 10px; overflow: hidden; }
@@ -53,7 +53,7 @@
 .v6-demo__steps ol { list-style: none; margin: 0; padding: 0; }
 .v6-demo__step { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 10px; align-items: baseline;
   padding: 5px 0; font-size: 0.92rem; line-height: 1.4; color: var(--g-fg-3); transition: color .25s; }
-.v6-demo__step + .v6-demo__step { border-top: 1px solid rgba(10,10,11,0.06); }
+.v6-demo__step + .v6-demo__step { border-top: 1px solid rgba(255,255,255,0.07); }
 .v6-demo__mark { width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--g-line-2); transform: translateY(-1px); }
 .v6-demo__step[data-s="ok"] { color: var(--g-fg-2); }
 .v6-demo__step[data-s="ok"] .v6-demo__mark { background: var(--go-dk); border-color: var(--go-dk); }
@@ -65,23 +65,23 @@
 @keyframes v6-demo-blink { 50% { background: var(--g-fg); } }
 
 /* browser */
-.v6-demo__browser { border: 1px solid var(--g-line-2); border-radius: 10px; overflow: hidden; background: #FFFFFF;
-  box-shadow: 0 30px 60px -40px rgba(10,10,11,0.18); }
+.v6-demo__browser { border: 1px solid var(--g-line-2); border-radius: 10px; overflow: hidden; background: #121214;
+  box-shadow: 0 30px 60px -40px rgba(0,0,0,0.7); }
 .v6-demo__bar { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px;
-  padding: 8px 10px; border-bottom: 1px solid var(--g-line); background: #F4F4F5; }
+  padding: 8px 10px; border-bottom: 1px solid var(--g-line); background: #1B1B1F; }
 .v6-demo__addr { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px;
-  color: var(--g-fg-2); background: rgba(10,10,11,0.05); border-radius: 6px; padding: 5px 10px; }
+  color: var(--g-fg-2); background: rgba(255,255,255,0.06); border-radius: 6px; padding: 5px 10px; }
 .v6-demo__replay { appearance: none; background: none; border: 1px solid var(--g-line-2); color: var(--g-fg-2);
   border-radius: 6px; padding: 4px 10px; font: 500 12px/1.2 var(--sans); cursor: pointer; }
 .v6-demo__replay:hover { color: var(--g-fg); border-color: var(--g-fg-3); }
-.v6-demo__view { position: relative; aspect-ratio: 16 / 10; background: #FAFAFA; }
+.v6-demo__view { position: relative; aspect-ratio: 16 / 10; background: #0E0E10; }
 .v6-demo__shot { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; animation: v6-demo-in .45s ease-out; }
 @keyframes v6-demo-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 .v6-demo__running { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 12px;
   padding: 24px; text-align: center; font-size: 12px; color: var(--g-fg-3); }
 .v6-demo__stepno { font-size: 12px; color: var(--g-fg-3); }
 .v6-demo__now { max-width: 30ch; font-family: var(--sans); font-size: clamp(1.05rem, 1.6vw, 1.3rem); font-weight: 500; line-height: 1.35; color: var(--g-fg); }
-.v6-demo__prog { width: min(240px, 70%); height: 3px; border-radius: 3px; background: rgba(10,10,11,0.10); overflow: hidden; }
+.v6-demo__prog { width: min(240px, 70%); height: 3px; border-radius: 3px; background: rgba(255,255,255,0.12); overflow: hidden; }
 .v6-demo__prog > span { display: block; height: 100%; background: var(--g-fg-2); transition: width .35s ease; }
 .v6-demo__note { font-size: 12px; color: var(--g-fg-3); }
 @media (prefers-reduced-motion: reduce) { .v6-demo__prog > span { transition: none; } }

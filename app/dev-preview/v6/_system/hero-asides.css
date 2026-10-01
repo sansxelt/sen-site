@@ -1,25 +1,26 @@
 /* The right half of the inner page heroes (hero-asides.tsx). A window panel in the same language as the
-   homepage console: white, hairline, soft shadow; terminal panels are ink. */
+   console: a raised black card with a white hairline (black everywhere since 2026-10-01); terminal panels
+   are a step darker, and the one primary node is the inverted white. */
 .v6 .ha {
-  background: #FFFFFF; border: 1px solid rgba(10,10,11,0.10); border-radius: 16px; overflow: hidden;
-  box-shadow: 0 2px 4px rgba(15,19,25,0.04), 0 30px 60px -32px rgba(15,19,25,0.30);
+  background: #121214; border: 1px solid rgba(255,255,255,0.11); border-radius: 16px; overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1), 0 30px 60px -32px rgba(0,0,0,0.72);
   font-size: 13.5px; color: var(--ink);
 }
-.v6 .ha[data-dark="true"] { background: #0A0A0B; border-color: #0A0A0B; color: #E4E4E7; }
-.v6 .ha__bar { display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 14px; border-bottom: 1px solid rgba(10,10,11,0.08); background: #FAFAFA; }
+.v6 .ha[data-dark="true"] { background: #0E0E10; border-color: rgba(255,255,255,0.10); color: #E4E4E7; }
+.v6 .ha__bar { display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 14px; border-bottom: 1px solid rgba(255,255,255,0.09); background: #17171A; }
 .v6 .ha[data-dark="true"] .ha__bar { background: #141416; border-bottom-color: rgba(255,255,255,0.08); }
 .v6 .ha__dots { display: inline-flex; gap: 5px; }
-.v6 .ha__dots i { width: 8px; height: 8px; border-radius: 50%; background: rgba(10,10,11,0.14); }
+.v6 .ha__dots i { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.15); }
 .v6 .ha[data-dark="true"] .ha__dots i { background: rgba(255,255,255,0.18); }
 .v6 .ha__title { font-family: var(--mono); font-size: 12px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .v6 .ha[data-dark="true"] .ha__title { color: #A1A1AA; }
 .v6 .ha__meta { margin-left: auto; font-size: 12px; color: var(--ink-4); }
 .v6 .ha__body { padding: 18px 20px 20px; }
 
-.v6 .ha-rec .rp { box-shadow: 0 2px 4px rgba(15,19,25,0.04), 0 30px 60px -32px rgba(15,19,25,0.30); }
+.v6 .ha-rec .rp { box-shadow: 0 2px 4px rgba(0,0,0,0.1), 0 30px 60px -32px rgba(0,0,0,0.72); }
 
 .v6 .ha-ways { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.v6 .ha-ways li { display: grid; gap: 6px; padding: 12px 14px; border: 1px solid rgba(10,10,11,0.09); border-radius: 12px; background: #FAFAFA; }
+.v6 .ha-ways li { display: grid; gap: 6px; padding: 12px 14px; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; background: #18181B; }
 .v6 .ha-ways__k { font-size: 13px; font-weight: 600; color: var(--ink); }
 .v6 .ha-ways__c { font-family: var(--mono); font-size: 12px; line-height: 1.5; color: var(--ink-2); word-break: break-word; }
 .v6 .ha-ways__n { font-size: 12px; color: var(--ink-4); }
@@ -36,38 +37,38 @@
 .v6 .ha-partners { display: grid; gap: 12px; }
 .v6 .ha-partner {
   display: grid; gap: 6px; padding: 22px 24px; border-radius: 16px; text-decoration: none; color: var(--ink);
-  background: linear-gradient(180deg, #F5F5F3, #EFEFEC); border: 1px solid rgba(10,10,11,0.07);
+  background: linear-gradient(180deg, #161618, #111113); border: 1px solid rgba(255,255,255,0.08);
   transition: transform 0.2s var(--ease), border-color 0.15s var(--ease-out);
 }
-.v6 .ha-partner:hover { transform: translateY(-1px); border-color: rgba(10,10,11,0.18); }
+.v6 .ha-partner:hover { transform: translateY(-1px); border-color: rgba(255,255,255,0.2); }
 .v6 .ha-partner:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 .v6 .ha-partner__l { font-size: 12px; font-weight: 600; color: var(--ink-4); }
 .v6 .ha-partner strong { font-family: var(--display); font-weight: 500; font-size: 1.7rem; letter-spacing: -0.02em; line-height: 1.15; }
 .v6 .ha-partner__m { font-size: 13px; color: var(--ink-3); }
 
 .v6 .ha-checks { list-style: none; margin: 0; padding: 0; display: grid; }
-.v6 .ha-checks li { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(10,10,11,0.07); }
+.v6 .ha-checks li { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
 .v6 .ha-checks li:first-child { padding-top: 2px; }
 .v6 .ha-checks li:last-child { border-bottom: 0; padding-bottom: 0; }
 .v6 .ha-checks b { display: block; font-size: 14px; font-weight: 600; color: var(--ink); }
 .v6 .ha-checks li > span:last-child > span { display: block; margin-top: 2px; font-size: 13px; line-height: 1.5; color: var(--ink-3); }
-.v6 .ha-tick { flex: none; position: relative; width: 18px; height: 18px; margin-top: 1px; border-radius: 50%; background: #0A0A0B; }
-.v6 .ha-tick::after { content: ""; position: absolute; left: 6.2px; top: 3.6px; width: 4px; height: 8px; border: solid #fff; border-width: 0 1.7px 1.7px 0; transform: rotate(45deg); }
+.v6 .ha-tick { flex: none; position: relative; width: 18px; height: 18px; margin-top: 1px; border-radius: 50%; background: #FAFAFA; }
+.v6 .ha-tick::after { content: ""; position: absolute; left: 6.2px; top: 3.6px; width: 4px; height: 8px; border: solid #0A0A0B; border-width: 0 1.7px 1.7px 0; transform: rotate(45deg); }
 
 .v6 .ha-flow { display: grid; justify-items: stretch; gap: 6px; }
-.v6 .ha-flow__node { display: grid; gap: 2px; padding: 12px 14px; border: 1px solid rgba(10,10,11,0.10); border-radius: 12px; background: #FAFAFA; }
+.v6 .ha-flow__node { display: grid; gap: 2px; padding: 12px 14px; border: 1px solid rgba(255,255,255,0.11); border-radius: 12px; background: #18181B; }
 .v6 .ha-flow__node b { font-size: 14px; font-weight: 600; color: var(--ink); }
 .v6 .ha-flow__node span { font-size: 12.5px; color: var(--ink-3); }
-.v6 .ha-flow__node--ink { background: #0A0A0B; border-color: #0A0A0B; }
-.v6 .ha-flow__node--ink b { color: #FAFAFA; }
-.v6 .ha-flow__node--ink span { color: #A1A1AA; }
+.v6 .ha-flow__node--ink { background: #FAFAFA; border-color: #FAFAFA; }
+.v6 .ha-flow__node--ink b { color: #0A0A0B; }
+.v6 .ha-flow__node--ink span { color: #52525B; }
 .v6 .ha-flow__arrow { text-align: center; color: var(--ink-4); font-size: 14px; line-height: 1; }
 .v6 .ha-flow__roles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
-.v6 .ha-flow__roles span { display: grid; gap: 2px; padding: 10px 12px; border: 1px solid rgba(10,10,11,0.10); border-radius: 10px; font-size: 12px; color: var(--ink-3); }
+.v6 .ha-flow__roles span { display: grid; gap: 2px; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.11); border-radius: 10px; font-size: 12px; color: var(--ink-3); }
 .v6 .ha-flow__roles b { font-size: 13px; font-weight: 600; color: var(--ink); }
 
 .v6 .ha-arts { list-style: none; margin: 0; padding: 0; }
-.v6 .ha-arts li + li { border-top: 1px solid rgba(10,10,11,0.07); }
+.v6 .ha-arts li + li { border-top: 1px solid rgba(255,255,255,0.08); }
 .v6 .ha-arts a { display: grid; gap: 3px; padding: 12px 2px; text-decoration: none; color: var(--ink); }
 .v6 .ha-arts a:hover b { text-decoration: underline; text-underline-offset: 3px; }
 .v6 .ha-arts b { font-size: 14px; font-weight: 600; line-height: 1.35; }

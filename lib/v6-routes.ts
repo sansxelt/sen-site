@@ -57,11 +57,13 @@ export const V6_IS_LIVE = V6_BASE === "";
 /* ── THE GROUND A ROUTE OPENS ON ───────────────────────────────────────────────────────────────────────
  *
  * Four grounds exist and every document is one of them:
- *   console   the signed-in product, sign-in and the auth round-trip (light since 2026-09-30)
- *   graphite  unused since 2026-09-30, when the homepage, partnership records and docs went white; kept
- *             so a stale header value still resolves
- *   paper     every other v6 route, which opens on a white page hero
+ *   console   the signed-in product, sign-in and the auth round-trip
+ *   graphite  every v6 route
+ *   paper     the 404, the error page and the curtain
  *   cream     the previous generation of the marketing site
+ * Since 2026-10-01 the first three are the same black (the founder: the website is black, as anduril.com
+ * and palantir.com are, and the console with it). They stay separate names so each caller keeps asking for
+ * its own ground and a future change can split them again in one place.
  *
  * This has to be known BEFORE the page renders, not by the shell inside it. The browser paints its first
  * frame from the colour scheme on <html> before any stylesheet or inline <style> has been parsed, so a
@@ -76,9 +78,11 @@ export const V6_IS_LIVE = V6_BASE === "";
 export type Ground = "console" | "graphite" | "paper" | "cream";
 
 export const GROUND_CSS: Record<Ground, { bg: string; scheme: "dark" | "light" }> = {
-  console: { bg: "#F7F7F8", scheme: "light" },
+  console: { bg: "#0A0A0B", scheme: "dark" },
   graphite: { bg: "#0A0A0B", scheme: "dark" },
-  paper: { bg: "#FFFFFF", scheme: "light" },
+  // "paper" is black too since 2026-10-01: the 404, the error page and the curtain still ask for it by name,
+  // and the whole product is one black ground now, so no surface can open on white.
+  paper: { bg: "#0A0A0B", scheme: "dark" },
   cream: { bg: "#FAF8F4", scheme: "light" },
 };
 
@@ -88,12 +92,11 @@ export const GROUND_CSS: Record<Ground, { bg: string; scheme: "dark" | "light" }
 // Every v6 route opens on white since 2026-09-30. The homepage, the partnership records and the docs opened
 // on graphite; the founder asked for one ground across the console, the docs and the site, so there is no
 // dark route left to announce. The parameter stays so callers keep asking per route.
-// 2026-10-01: the homepage opens on its film, a dark full-bleed video like Anduril and Palantir (founder), so
-// the homepage alone opens on graphite; every other route stays white.
-export function v6GroundAtTop(pathname: string): Ground {
-  const p = (pathname || "/").replace(/\/+$/, "") || "/";
-  if (p === "/" || p === "/dev-preview/v6") return "graphite";
-  return "paper";
+// 2026-10-01: the homepage opens on its film, a dark full-bleed video like Anduril and Palantir, and the
+// founder's rule is one ground everywhere, so EVERY v6 route opens on graphite now, and the console with it
+// (see the console ground above). The parameter stays so callers keep asking per route.
+export function v6GroundAtTop(_pathname: string): Ground {
+  return "graphite";
 }
 export const V6_COMPANY = `${V6_BASE}/company`;
 

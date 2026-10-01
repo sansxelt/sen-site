@@ -60,45 +60,45 @@ const ERR_CSS = `
   position:relative; min-height:100svh;
   display:flex; align-items:center; justify-content:center;
   padding:clamp(40px,8vw,96px) clamp(20px,5vw,64px);
-  background:#FFFFFF; color:#2E2F33;
+  background:#0A0A0B; color:#C9CBD1;
   font-family:var(--font-brand-sans),-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
 }
 .verr-stack{ width:100%; max-width:620px; }
 .verr-kicker{
   margin:0 0 18px; font-size:13px; font-weight:500;
-  letter-spacing:0; color:#5B5D63;
+  letter-spacing:0; color:#A1A3A9;
 }
 .verr-head{
   margin:0; font-weight:600; letter-spacing:-.032em; line-height:1.04;
-  font-size:clamp(2rem,4.2vw,3.1rem); color:#0A0A0B; text-wrap:balance;
+  font-size:clamp(2rem,4.2vw,3.1rem); color:#FAFAFA; text-wrap:balance;
 }
 .verr-body{
   margin:20px 0 0; max-width:54ch;
-  font-size:clamp(1rem,1.2vw,1.08rem); line-height:1.6; color:#2E2F33; text-wrap:pretty;
+  font-size:clamp(1rem,1.2vw,1.08rem); line-height:1.6; color:#C9CBD1; text-wrap:pretty;
 }
 /* The support address is the one thing on the page a person may need to act on, so it is underlined at rest
    rather than on hover. A link nobody can see is not a link. */
-.verr-mail{ color:#0A0A0B; text-decoration:none; border-bottom:1px solid rgba(10,10,11,.4); padding-bottom:1px; }
-.verr-mail:hover{ border-color:#0A0A0B; }
+.verr-mail{ color:#FAFAFA; text-decoration:none; border-bottom:1px solid rgba(255,255,255,0.44); padding-bottom:1px; }
+.verr-mail:hover{ border-color:#FAFAFA; }
 .verr-actions{ display:flex; flex-wrap:wrap; align-items:center; gap:22px; margin-top:34px; }
 /* Contrast, not hue. The primary action is black on white, as everywhere else since 2026-09-30. */
 .verr-cta{
   display:inline-flex; align-items:center; justify-content:center;
-  background:#0A0A0B; color:#FFFFFF; border:0; cursor:pointer;
+  background:#FAFAFA; color:#0A0A0B; border:0; cursor:pointer;
   font-family:inherit; font-size:15px; font-weight:550; letter-spacing:-.01em;
   padding:12px 22px; border-radius:11px;
   transition:background 140ms cubic-bezier(0,0,.2,1);
 }
-.verr-cta:hover{ background:#1B1C1F; }
+.verr-cta:hover{ background:#E4E4E7; }
 .verr-link{
-  font-size:14.5px; color:#2E2F33; text-decoration:none;
-  border-bottom:1px solid rgba(10,10,11,.22); padding-bottom:2px;
+  font-size:14.5px; color:#C9CBD1; text-decoration:none;
+  border-bottom:1px solid rgba(255,255,255,0.242); padding-bottom:2px;
   transition:color 140ms ease, border-color 140ms ease;
 }
-.verr-link:hover{ color:#0A0A0B; border-color:rgba(10,10,11,.5); }
+.verr-link:hover{ color:#FAFAFA; border-color:rgba(255,255,255,0.55); }
 .verr-ref{ margin:22px 0 0; font-family:var(--font-brand-mono),ui-monospace,SFMono-Regular,Menlo,monospace;
-  font-size:11.5px; color:#5B5D63; }
+  font-size:11.5px; color:#A1A3A9; }
 .verr-cta:focus-visible, .verr-link:focus-visible, .verr-mail:focus-visible{
-  outline:2px solid #0A0A0B; outline-offset:3px; border-radius:4px;
+  outline:2px solid #FAFAFA; outline-offset:3px; border-radius:4px;
 }
 `;

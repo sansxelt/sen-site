@@ -192,8 +192,8 @@ const ST_CSS = `
   display:flex; align-items:center; justify-content:center;
   overflow:hidden; isolation:isolate;
   padding:clamp(40px,8vw,96px) clamp(20px,5vw,64px);
-  background:#FFFFFF;                 /* --graphite */
-  color:#0A0A0B;                      /* --g-fg */
+  background:#0A0A0B;                 /* --graphite */
+  color:#FAFAFA;                      /* --g-fg */
 }
 
 /* Left-aligned, not centred. V6 opens on a left-set headline in a wide field; centring it here would be a
@@ -207,19 +207,19 @@ const ST_CSS = `
 .vst-kicker{
   margin:0 0 18px;
   font-size:13px; font-weight:500; letter-spacing:.14em; text-transform:uppercase;
-  color:#5B5D63;                      /* --g-fg-3 */
+  color:#A1A3A9;                      /* --g-fg-3 */
 }
 .vst-head{
   margin:0;
   font-weight:600; letter-spacing:-.032em; line-height:1.0;
   font-size:clamp(2.7rem,5vw,4.4rem); /* v6-d2xl */
-  color:#0A0A0B;
+  color:#FAFAFA;
   text-wrap:balance;
 }
 .vst-body{
   margin:20px 0 0; max-width:56ch;
   font-size:clamp(1rem,1.2vw,1.1rem); line-height:1.6;
-  color:#2E2F33;                      /* --g-fg-2 */
+  color:#C9CBD1;                      /* --g-fg-2 */
   text-wrap:pretty;
 }
 
@@ -227,7 +227,7 @@ const ST_CSS = `
 .vst-stack::after{
   content:""; display:block; margin-top:34px;
   height:1px; width:100%; max-width:220px;
-  background:rgba(10,10,11,0.12);  /* --g-line */
+  background:rgba(255,255,255,0.132);  /* --g-line */
 }
 
 .vst-in{ animation:vst-rise .62s cubic-bezier(.22,1,.36,1) both; }

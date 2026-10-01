@@ -370,7 +370,9 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
   // navigation) keeps its declared theme's own background rather than resolving var(--nav-bg) to nothing
   // and going transparent.
   const sampled = ground.resetKey === pathname;
-  const dark = sampled ? ground.dark : routeDark;
+  // Every surface is black since 2026-10-01, so the bar is always the dark bar. The sampler still runs: its
+  // reading is the exact ground colour the bar takes (navBg), so a band a step lighter is matched exactly.
+  const dark = sampled ? ground.dark || true : routeDark || true;
   const navBg = sampled ? ground.bg : null;
 
   // Colour transitions are suppressed for the first frames so the correct initial theme never animates in.
@@ -523,8 +525,18 @@ function MobileNav({ authed, onClose }: { authed: boolean; onClose: () => void }
   // descriptions the desktop panel shows, on the same night surface.
   const [openSec, setOpenSec] = useState<number | null>(0);
   useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    // THE PAGE BEHIND MUST NOT SCROLL (founder, from an iPhone, 2026-10-01: "they can scroll the page and
+    // this at the same time"). overflow: hidden on <body> alone is ignored by iOS Safari, which scrolls the
+    // document anyway, so the body is pinned in place at its current offset and released to the same offset
+    // on close. The drawer's own list scrolls inside itself and does not chain to the page.
+    const html = document.documentElement, body = document.body;
+    const y = window.scrollY;
+    const prev = { ho: html.style.overflow, bo: body.style.overflow, bp: body.style.position, bt: body.style.top, bw: body.style.width };
+    html.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = `-${y}px`;
+    body.style.width = "100%";
     const focusables = () => Array.from(panel.current?.querySelectorAll<HTMLElement>('a[href],button:not([disabled])') ?? []);
     // Focus the close button, not the first link: landing on the wordmark drew a focus ring around the logo,
     // which read as a rendering bug when the drawer was opened by tapping.
@@ -538,7 +550,13 @@ function MobileNav({ authed, onClose }: { authed: boolean; onClose: () => void }
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     };
     document.addEventListener("keydown", onKey);
-    return () => { document.body.style.overflow = prev; document.removeEventListener("keydown", onKey); };
+    return () => {
+      html.style.overflow = prev.ho; body.style.overflow = prev.bo; body.style.position = prev.bp;
+      body.style.top = prev.bt; body.style.width = prev.bw;
+      // instant, not smooth: html { scroll-behavior: smooth } would otherwise animate back from the top
+      window.scrollTo({ top: y, behavior: "instant" });
+      document.removeEventListener("keydown", onKey);
+    };
   }, [onClose]);
 
   return (

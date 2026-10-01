@@ -666,7 +666,7 @@
 .v6-rx__ghrow.is-sub { border-bottom: 1px solid var(--line-2); border-top: 1px solid var(--line);
   padding-block: 12px; background: var(--sunk); }
 .v6-rx__ghtick { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 999px;
-  background: var(--go); color: #fff; font-size: 12px; line-height: 1; }
+  background: var(--go); color: #0A0A0B; font-size: 12px; line-height: 1; }
 .v6-rx__ghrow.is-sub .v6-rx__ghtick { background: none; }
 .v6-rx__ghname { font-family: var(--sans); font-weight: 600; font-size: clamp(1rem, 1.2vw, 1.1rem); color: var(--ink); }
 .v6-rx__ghstate { font-family: var(--sans); font-weight: 600; font-size: 0.94rem; color: var(--go-ink); }

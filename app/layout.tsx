@@ -124,12 +124,12 @@ export default async function RootLayout({
 
   if (stealthConfigured() && !verifyStealthCookie((await cookies()).get(STEALTH_COOKIE)?.value)) {
     return (
-      // The curtain is white, like the rest of the product since 2026-09-30, so the canvas is painted white
+      // The curtain is black, like the rest of the product since 2026-10-01, so the canvas is painted black
       // too; the overscroll gutter and the strip below a short viewport match the screen.
-      <html lang="en" data-theme="light" style={{ colorScheme: "light", background: "#FFFFFF" }} className={`${brandSans.variable} ${brandMono.variable} h-full`}>
-        <body className="min-h-full" style={{ background: "#FFFFFF" }}>
-          <link rel="stylesheet" href="/vraelis/tokens.css?v=22" />
-          <link rel="stylesheet" href="/vraelis/styles.css?v=56" />
+      <html lang="en" data-theme="dark" style={{ colorScheme: "dark", background: "#0A0A0B" }} className={`${brandSans.variable} ${brandMono.variable} h-full`}>
+        <body className="min-h-full" style={{ background: "#0A0A0B" }}>
+          <link rel="stylesheet" href="/vraelis/tokens.css?v=23" />
+          <link rel="stylesheet" href="/vraelis/styles.css?v=57" />
           {/* THE CURTAIN IS THE ONLY THING MOST MACHINES EVER SEE, AND IT SAID NOTHING ABOUT THE COMPANY.
               This branch returned before the JSON-LD below, so every crawler and every AI summariser
               fetching vraelis.com got "Not open yet" and no structured self-description at all. Asked what
@@ -184,8 +184,8 @@ export default async function RootLayout({
               before styles. */}
           {/* ?v bust: bump on every CSS change so browsers don't serve a
               stale cached stylesheet (the static file URL is otherwise fixed). */}
-          <link rel="stylesheet" href="/vraelis/tokens.css?v=22" />
-          <link rel="stylesheet" href="/vraelis/styles.css?v=56" />
+          <link rel="stylesheet" href="/vraelis/tokens.css?v=23" />
+          <link rel="stylesheet" href="/vraelis/styles.css?v=57" />
           {/* WHO THIS IS, for machines. Emitted only when the site is actually public: publishing an
               identity graph on a page whose entire body reads "Not open yet." asks to be indexed as a
               company with no content, which is the impression this document already refuses to leave.

@@ -1,5 +1,5 @@
 /* ──────────────────────────────────────────────────────────────────────────────────────────────────────
-   VRAELIS — AUTHENTICATED token layer (design 07, the light console)
+   VRAELIS — AUTHENTICATED token layer (design 08, the black console, 2026-10-01; design 07 was light)
    Scoped to [data-surface="app"]. Loaded only inside the authenticated + auth layouts.
 
    WHAT THIS FILE DOES, AND THE RULE IT KEEPS.
@@ -28,65 +28,64 @@
 
 [data-surface="app"] {
   /* ── Ground and surfaces ─────────────────────────────────────────────────────────────────────────────
-     Cards are white on a light grey page, so depth reads without a shadow doing all the work. --bg-2 is the
-     recessed well (table headers, code, inputs at rest) and --bg-3 the hovered row. */
-  --bg-0: #F7F7F8;   /* page ground */
-  --bg-1: #FFFFFF;   /* cards, panels, the top bar and the sidebar */
-  --bg-2: #F4F4F5;   /* recessed wells */
-  --bg-3: #F0F0F2;   /* hovered rows */
+     BLACK SINCE 2026-10-01 (design 08). The founder made the whole product black with the homepage film, as
+     anduril.com and palantir.com are, and the console moves with the site (feedback-universal-theme). The
+     graphite console of design 06 read as bland for measured reasons: page and card 1.06:1 apart, invisible
+     shadows, three greys that were one grey, no colour when nothing failed. Each is answered here: cards sit
+     a real step above the page AND carry a visible hairline (the edge does the work a shadow cannot on
+     black), the four text steps are distinct, and state colours are tuned bright for black. */
+  --bg-0: #0A0A0B;   /* page ground */
+  --bg-1: #141416;   /* cards, panels, the top bar and the sidebar */
+  --bg-2: #1A1A1D;   /* recessed wells */
+  --bg-3: #1F1F23;   /* hovered rows */
 
-  /* ── Type ────────────────────────────────────────────────────────────────────────────────────────────
-     Three real steps and a meta grey. Neutral zinc, not the warm cream inks of the old public theme. */
-  --fg-1: #0A0A0B;   /* headlines          18.5:1 on the page */
-  --fg-2: #3F3F46;   /* body               ~9:1  */
-  --fg-3: #52525B;   /* secondary          ~7:1  */
-  --fg-4: #6B6B74;   /* meta and labels    4.9:1 on the page, 5.3:1 on a card */
-  --fg-5: #6B6B74;   /* fine print, the same measured grey rather than a softer failing one */
-  --fg-on-accent: #FFFFFF;
+  /* ── Type: four real steps ───────────────────────────────────────────────────────────────────────────── */
+  --fg-1: #FAFAFA;   /* headlines          19:1 on the page */
+  --fg-2: #D4D4D8;   /* body               13:1 */
+  --fg-3: #A1A1AA;   /* secondary          7.6:1 */
+  --fg-4: #8E8E96;   /* meta and labels    5.6:1 on the page, 5.1:1 on a card */
+  --fg-5: #8E8E96;   /* fine print, the same measured grey rather than a softer failing one */
+  --fg-on-accent: #0A0A0B;
 
   /* ── The accent ──────────────────────────────────────────────────────────────────────────────────────
-     Ink, the same as the site (2026-09-30). It was cobalt, which made the console and sign-in the only blue
-     surfaces in a product whose site, docs and emails act in black: the founder read the blue buttons as a
-     different product. Having no hue still keeps an action well away from the three state colours. --acc
-     fills (white on it is 19:1), --acc-deep is link and label ink, --acc-deepest is the hovered fill, and the
-     soft, line and glow steps are the same ink at low alpha, so selected rows and focus read as neutral. */
-  --acc: #0A0A0B;
-  --acc-deep: #0A0A0B;
-  --acc-deepest: #2E2F33;
-  --acc-glow: rgba(10, 10, 11, 0.14);
-  --acc-soft: rgba(10, 10, 11, 0.06);
-  --acc-line: rgba(10, 10, 11, 0.20);
-  --acc-line-2: rgba(10, 10, 11, 0.34);
+     White, the inverse of the ink it was: the primary action is white on black, as on the site. Having no
+     hue keeps an action well away from the three state colours. */
+  --acc: #FAFAFA;
+  --acc-deep: #FAFAFA;
+  --acc-deepest: #E4E4E7;
+  --acc-glow: rgba(255, 255, 255, 0.16);
+  --acc-soft: rgba(255, 255, 255, 0.07);
+  --acc-line: rgba(255, 255, 255, 0.22);
+  --acc-line-2: rgba(255, 255, 255, 0.36);
 
   /* ── State, and only state ───────────────────────────────────────────────────────────────────────────
-     Blocked stays amber rather than red: it is the honest third answer, not a failure, and colouring it
-     like one trains people to read "no verdict" as "broken". Failed is a true red now; on graphite it was a
-     coral that sat 24 degrees from Blocked's amber. */
-  --ok:   #067647;   /* it held            */
-  --warn: #9A5B00;   /* a person is needed */
-  --err:  #B42318;   /* it failed          */
+     Blocked stays amber rather than red: it is the honest third answer, not a failure. */
+  --ok:   #3DD68C;   /* it held            */
+  --warn: #F5B94D;   /* a person is needed */
+  --err:  #FF6B5B;   /* it failed          */
 
-  /* Each state is an ink, the wash it sits on and the hairline around them. Opaque washes on light, so a
-     badge reads the same on a card and on the page. */
-  --go-ink:   #067647;  --go-wash:   #ECFDF3;  --go-line:   #ABEFC6;
-  --wait-ink: #9A5B00;  --wait-wash: #FEF7E6;  --wait-line: #F5D79E;
-  --stop-ink: #B42318;  --stop-wash: #FEF3F2;  --stop-line: #FECDCA;
+  /* Each state is an ink, the wash it sits on and the hairline around them. Translucent washes on black,
+     so a badge reads the same on a card and on the page. */
+  --go-ink:   #4ADE9C;  --go-wash:   rgba(61, 214, 140, 0.12);  --go-line:   rgba(61, 214, 140, 0.32);
+  --wait-ink: #F5B94D;  --wait-wash: rgba(245, 185, 77, 0.12);  --wait-line: rgba(245, 185, 77, 0.32);
+  --stop-ink: #FF7B6B;  --stop-wash: rgba(255, 107, 91, 0.12);  --stop-line: rgba(255, 107, 91, 0.34);
 
   /* ── Structure ─────────────────────────────────────────────────────────────────────────────────────── */
-  --line-1: rgba(10, 10, 11, 0.06);
-  --line-2: rgba(10, 10, 11, 0.10);
-  --line-3: rgba(10, 10, 11, 0.18);
-  --line-strong: rgba(10, 10, 11, 0.30);
-  --focus-ring: #0A0A0B;
-  --chrome-veil: rgba(255, 255, 255, 0.92);
+  --line-1: rgba(255, 255, 255, 0.06);
+  --line-2: rgba(255, 255, 255, 0.10);
+  --line-3: rgba(255, 255, 255, 0.16);
+  --line-strong: rgba(255, 255, 255, 0.28);
+  --focus-ring: #FAFAFA;
+  --chrome-veil: rgba(10, 10, 11, 0.86);
 
   /* ── Elevation ───────────────────────────────────────────────────────────────────────────────────────
-     Faint and cool. A card is lifted by one pixel of shadow and its hairline, never by a glow. */
-  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
-  --shadow-md: 0 1px 2px rgba(16, 24, 40, 0.05), 0 8px 20px -10px rgba(16, 24, 40, 0.12);
-  --shadow-lg: 0 2px 6px rgba(16, 24, 40, 0.06), 0 24px 48px -20px rgba(16, 24, 40, 0.20);
-  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04);
-  --shadow-win: 0 2px 6px rgba(16, 24, 40, 0.06), 0 32px 64px -28px rgba(16, 24, 40, 0.24);
+     On black a shadow only deepens; the hairline is what lifts a card. A faint top highlight gives a
+     raised surface its edge. */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --shadow-md: 0 1px 2px rgba(0, 0, 0, 0.45), 0 8px 20px -10px rgba(0, 0, 0, 0.7);
+  --shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.5), 0 24px 48px -20px rgba(0, 0, 0, 0.85);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  --shadow-win: 0 2px 6px rgba(0, 0, 0, 0.5), 0 32px 64px -28px rgba(0, 0, 0, 0.9);
 
   /* The boundary paints its own ground. It deliberately does NOT set a min-height: the document is already
      painted (see --canvas below), and a 100dvh wrapper nested inside another one forces a scrollbar on
@@ -99,8 +98,8 @@
    below a short page and the overscroll gutter keep whatever the previous route painted. These set the
    variables the root layout's inline paint reads, so the first frame resolves to the console ground. */
 html:has([data-surface="app"]) {
-  --canvas: #F7F7F8;
-  --canvas-scheme: light;
+  --canvas: #0A0A0B;
+  --canvas-scheme: dark;
 }
 
 /* ── The primary action ────────────────────────────────────────────────────────────────────────────────
@@ -110,7 +109,7 @@ html:has([data-surface="app"]) {
   background: var(--acc);
   border-color: var(--acc);
   color: var(--fg-on-accent);
-  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
   font-weight: 600;
   border-radius: 8px;
 }
@@ -126,7 +125,7 @@ html:has([data-surface="app"]) {
   background: var(--acc);
   border-color: var(--acc);
 }
-/* The secondary action: a white button with a hairline. */
+/* The secondary action: a raised black button with a hairline. */
 [data-surface="app"] .btn--ghost {
   background: var(--bg-1);
   border: 1px solid var(--line-3);
@@ -174,11 +173,11 @@ html:has([data-surface="app"]) {
 [data-surface="app"] .glow--bleed { display: none; }
 [data-surface="app"] .grid-faint {
   background-image:
-    linear-gradient(to right, rgba(10, 10, 11, 0.035) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(10, 10, 11, 0.035) 1px, transparent 1px);
+    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
 }
 
-[data-surface="app"] ::selection { background: var(--acc-glow); }
+[data-surface="app"] ::selection { background: #FAFAFA; color: #0A0A0B; }
 
 /* An eyebrow is a label, not a link. */
 [data-surface="app"] .eyebrow { color: var(--fg-4); }
@@ -238,15 +237,15 @@ html:has([data-surface="app"]) {
 [data-surface="app"] .slink__i { width: 18px; height: 18px; color: var(--fg-4); }
 [data-surface="app"] .slink.on .slink__i { color: var(--acc); }
 [data-surface="app"] .app-drawer { background: var(--bg-1); }
-[data-surface="app"] .app-drawer-scrim { background: rgba(10, 10, 11, 0.28); }
+[data-surface="app"] .app-drawer-scrim { background: rgba(0, 0, 0, 0.6); }
 
 /* A link inside a sentence is underlined: its colour alone is too close to the text around it for anyone
    who cannot tell the two apart (axe link-in-text-block). Links styled as buttons are left alone. */
 [data-surface="app"] p a:not(.btn),
 [data-surface="app"] li a:not(.btn) { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
 
-/* Scrollbars: the browser default on a light page is fine; this only keeps the thumb quiet. */
-[data-surface="app"] * { scrollbar-color: rgba(10, 10, 11, 0.22) transparent; }
+/* Scrollbars: a quiet thumb on black. */
+[data-surface="app"] * { scrollbar-color: rgba(255, 255, 255, 0.22) transparent; }
 
 /* ── Shared components that carry values no token can reach ────────────────────────────────────────── */
 
@@ -327,8 +326,8 @@ html:has([data-surface="app"]) {
    from a macOS window, and nothing else in the console draws one. The label moves to the left edge. */
 [data-surface="app"] .codebar i { display: none; }
 [data-surface="app"] .codebar span { margin-left: 0; color: var(--fg-4); }
-/* The bar over a code well was still the old navy (#1C2733) above a light well. It is the well's own grey
-   now, split from it by a hairline, and the syntax colours are the light-ground ones the site uses. */
+/* The bar over a code well is the well's own ground, split from it by a hairline; keywords take weight, not
+   a hue, as on the site. */
 [data-surface="app"] .codebar { background: var(--bg-2); border: 1px solid var(--line-2); border-bottom-color: var(--line-1); }
 [data-surface="app"] .codebar + .codeblock { border-top: 0; }
 [data-surface="app"] .codeblock .tk-key { color: var(--fg-1); font-weight: 600; }
@@ -340,9 +339,9 @@ html:has([data-surface="app"]) {
 [data-surface="app"] .rec-more[open] > summary { display: none; }
 
 /* ── Sign-in and account screens (2026-09-30) ───────────────────────────────────────────────────────────
-   Two plain halves: the form on white, and on a wide screen the site's grey band holding a real recorded
-   run. Ink for the primary action, outlined rows for providers, labels above fields. */
-[data-surface="app"] .auth-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); min-height: 100dvh; background: #FFFFFF; }
+   Two plain halves: the form on the black page, and on a wide screen a raised panel holding a real recorded
+   run. White for the primary action, outlined rows for providers, labels above fields. */
+[data-surface="app"] .auth-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); min-height: 100dvh; background: var(--bg-0); }
 [data-surface="app"] .auth-split__form { display: flex; flex-direction: column; min-width: 0; padding: 0 clamp(20px, 5vw, 64px); }
 [data-surface="app"] .auth-split__head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 22px 0; }
 [data-surface="app"] .auth-split__brand { font-size: 20px; font-weight: 700; letter-spacing: -0.03em; color: var(--fg-1); text-decoration: none; }
@@ -353,8 +352,8 @@ html:has([data-surface="app"]) {
 [data-surface="app"] .auth-split__foot { display: flex; gap: 18px; margin: 0; padding: 20px 0 24px; font-size: 12.5px; }
 [data-surface="app"] .auth-split__foot a { color: var(--fg-4); text-decoration: none; }
 [data-surface="app"] .auth-split__foot a:hover { color: var(--fg-1); }
-/* The ink brand panel: the same panel that closes every public page (dot grid, light from the top). */
-[data-surface="app"] .auth-split__side { position: relative; isolation: isolate; overflow: hidden; background: #0A0A0B; display: flex; align-items: center;
+/* The brand panel: the same panel that closes every public page (dot grid, light from the top). */
+[data-surface="app"] .auth-split__side { position: relative; isolation: isolate; overflow: hidden; background: #111113; border: 1px solid var(--line-2); display: flex; align-items: center;
   justify-content: center; padding: clamp(28px, 4vw, 56px); min-width: 0; margin: 10px; border-radius: 22px; }
 [data-surface="app"] .auth-split__side::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
   background-image: radial-gradient(rgba(255,255,255,0.16) 1px, transparent 1.2px); background-size: 22px 22px; opacity: 0.45;
@@ -383,9 +382,9 @@ html:has([data-surface="app"]) {
 [data-surface="app"] .auth-form__head p { margin: 8px 0 0; font-size: 14px; line-height: 1.55; color: var(--fg-3); }
 [data-surface="app"] .auth-form__providers { display: grid; gap: 10px; }
 [data-surface="app"] .auth-form__provider { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;
-  min-height: 44px; padding: 10px 14px; border: 1px solid var(--line-3); border-radius: 9px; background: #FFFFFF;
+  min-height: 44px; padding: 10px 14px; border: 1px solid var(--line-3); border-radius: 9px; background: var(--bg-1);
   font: 600 14px/1 var(--font-brand-sans), sans-serif; color: var(--fg-1); cursor: pointer; transition: background 140ms ease, border-color 140ms ease; }
-[data-surface="app"] .auth-form__provider:hover:not(:disabled) { background: #F7F7F8; border-color: var(--line-strong); }
+[data-surface="app"] .auth-form__provider:hover:not(:disabled) { background: var(--bg-3); border-color: var(--line-strong); }
 [data-surface="app"] .auth-form__provider:disabled { opacity: 0.5; cursor: not-allowed; }
 [data-surface="app"] .auth-form__or { display: flex; align-items: center; gap: 12px; margin: 20px 0; font-size: 12.5px; color: var(--fg-4); }
 [data-surface="app"] .auth-form__or::before, [data-surface="app"] .auth-form__or::after { content: ""; flex: 1; height: 1px; background: var(--line-2); }
@@ -396,20 +395,20 @@ html:has([data-surface="app"]) {
 [data-surface="app"] .auth-form__forgot { font-size: 12.5px; font-weight: 500; color: var(--fg-3); text-decoration: none; }
 [data-surface="app"] .auth-form__forgot:hover { color: var(--fg-1); text-decoration: underline; }
 [data-surface="app"] .auth-form__field input { width: 100%; box-sizing: border-box; min-height: 42px; padding: 9px 12px; border: 1px solid var(--line-3);
-  border-radius: 9px; background: #FFFFFF; font: 400 14.5px/1.4 var(--font-brand-sans), sans-serif; color: var(--fg-1); }
-[data-surface="app"] .auth-form__field input:focus { outline: none; border-color: var(--fg-1); box-shadow: 0 0 0 3px rgba(10,10,11,0.08); }
+  border-radius: 9px; background: var(--bg-1); font: 400 14.5px/1.4 var(--font-brand-sans), sans-serif; color: var(--fg-1); }
+[data-surface="app"] .auth-form__field input:focus { outline: none; border-color: var(--fg-1); box-shadow: 0 0 0 3px rgba(255,255,255,0.10); }
 [data-surface="app"] .auth-form__hint { font-size: 12px; color: var(--fg-4); }
 [data-surface="app"] .auth-form__consent { display: flex; gap: 10px; align-items: flex-start; font-size: 12.5px; line-height: 1.5; color: var(--fg-3); cursor: pointer; }
 [data-surface="app"] .auth-form__consent input { margin-top: 2px; width: 15px; height: 15px; flex: none; accent-color: var(--fg-1); }
 [data-surface="app"] .auth-form__consent a { color: var(--fg-1); text-decoration: underline; text-underline-offset: 2px; }
 [data-surface="app"] .auth-form__submit { width: 100%; min-height: 44px; padding: 11px 16px; border: 0; border-radius: 9px; background: var(--fg-1);
-  color: #FFFFFF; font: 600 14.5px/1 var(--font-brand-sans), sans-serif; cursor: pointer; transition: background 140ms ease; }
-[data-surface="app"] .auth-form__submit:hover:not(:disabled) { background: #2E2F33; }
+  color: #0A0A0B; font: 600 14.5px/1 var(--font-brand-sans), sans-serif; cursor: pointer; transition: background 140ms ease; }
+[data-surface="app"] .auth-form__submit:hover:not(:disabled) { background: #E4E4E7; }
 [data-surface="app"] .auth-form__submit:disabled { opacity: 0.5; cursor: not-allowed; }
 [data-surface="app"] .auth-form__submit:focus-visible, [data-surface="app"] .auth-form__provider:focus-visible { outline: 2px solid var(--fg-1); outline-offset: 2px; }
 [data-surface="app"] .auth-form__note { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--fg-4); }
 [data-surface="app"] .auth-form__status { margin-top: 16px; padding: 10px 12px; border-radius: 8px; font-size: 13px; line-height: 1.5;
-  border: 1px solid var(--line-2); background: #F7F7F8; color: var(--fg-2); }
+  border: 1px solid var(--line-2); background: var(--bg-2); color: var(--fg-2); }
 [data-surface="app"] .auth-form__status[data-tone="error"] { background: var(--stop-wash); border-color: var(--stop-line); color: var(--stop-ink); }
 [data-surface="app"] .auth-form__status[data-tone="success"] { background: var(--go-wash); border-color: var(--go-line); color: var(--go-ink); }
 [data-surface="app"] .auth-form__switch { margin: 24px 0 0; font-size: 13.5px; color: var(--fg-3); }
@@ -438,9 +437,9 @@ html:has([data-surface="app"]) {
 [data-surface="app"] .two-step__alts { display: grid; justify-items: start; gap: 10px; margin-top: 22px; font-size: 13.5px; }
 [data-surface="app"] .two-step__leave { margin-top: 24px; }
 [data-surface="app"] .two-step-qr { display: block; flex: none; width: 184px; height: 184px; padding: 6px; box-sizing: border-box;
-  border: 1px solid var(--line-2); border-radius: 8px; background: #FFFFFF; }
+  border: 1px solid var(--line-2); border-radius: 8px; background: #FFFFFF; } /* a QR code keeps its white quiet zone */
 [data-surface="app"] .two-step-codes { display: grid; grid-template-columns: repeat(2, max-content); gap: 8px 32px; margin: 0; padding: 14px 18px;
-  list-style: none; border: 1px solid var(--line-2); border-radius: 8px; background: #FFFFFF;
+  list-style: none; border: 1px solid var(--line-2); border-radius: 8px; background: var(--bg-2);
   font: 500 14.5px/1.4 var(--font-brand-mono), ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--fg-1); }
 @media (max-width: 420px) {
   [data-surface="app"] .two-step-codes { grid-template-columns: minmax(0, 1fr); }

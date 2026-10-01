@@ -11,7 +11,7 @@
 .v6-cov__how { color: var(--ink-3); font-size: 15px; line-height: 1.55; }
 .v6-cov__status { justify-self: end; font-size: 13px; font-weight: 600; white-space: nowrap; line-height: 1.2;
   padding: 4px 9px; border-radius: 6px; border: 1px solid transparent; color: var(--ink-4); }
-.v6-cov__row[data-tier="live"] .v6-cov__status { background: var(--ink); color: #fff; border-color: var(--ink); }
+.v6-cov__row[data-tier="live"] .v6-cov__status { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .v6-cov__row[data-tier="next"] .v6-cov__status,
 .v6-cov__row[data-tier="out"] .v6-cov__status { padding-inline: 0; font-weight: 500; }
 .v6-cov__row[data-tier="next"] .v6-cov__what { color: var(--ink-2); font-weight: 500; }
@@ -24,7 +24,7 @@
 /* The same tier as a standalone chip, for /platform's full list of surfaces. */
 .v6-tier { display: inline-block; font-size: 13px; font-weight: 600; line-height: 1.2; white-space: nowrap; padding: 4px 9px;
   border-radius: 6px; border: 1px solid var(--line); color: var(--ink-4); }
-.v6-tier[data-tier="live"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+.v6-tier[data-tier="live"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .v6-tier[data-tier="next"], .v6-tier[data-tier="out"] { border-color: transparent; padding-inline: 0; font-weight: 500; }
 
 /* Homepage, 2026-09-30: the head is centred like the sections above it, so the note and link follow. */
