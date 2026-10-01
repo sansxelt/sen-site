@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import Link from "next/link";
+import { CompanyAside } from "../_system/hero-asides";
 import { v6meta } from "../_system/meta";
 import { PageHero, Reveal, SectionHead, CTA, EditorialLink, Signal, Prose } from "../_system/ui";
 import { LIVE, DIRECTION } from "../_content/scope";
@@ -134,6 +135,7 @@ export default function CompanyPage() {
         title="We check that what people build does what they meant."
         lead="Software and connected devices ship faster than anyone can check them by hand, whether a team, an agency, a founder or an AI agent built them. Vraelis is the independent check on the live product: one sentence about what should work, a plan a person approves, and an answer with the evidence."
         cta={<><CTA brand>Open Vraelis</CTA><EditorialLink href="#contact">Talk to us</EditorialLink></>}
+        aside={<CompanyAside />}
       />
 
       {/* Why we exist */}

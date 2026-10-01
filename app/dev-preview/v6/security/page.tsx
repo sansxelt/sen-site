@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { SecurityAside } from "../_system/hero-asides";
 import { v6meta } from "../_system/meta";
 import { PageHero, Reveal, SectionHead, Signal, CTA, EditorialLink } from "../_system/ui";
 import { V6_BASE } from "@/lib/v6-routes";
@@ -74,6 +75,7 @@ export default function SecurityPage() {
         title="Security built around independent oversight."
         lead="Vraelis checks work that someone says is done, so the party that did the work is never the party that approves the check. This is how access, secrets, and evidence are handled today, and an honest account of what is not yet in place."
         cta={<><CTA brand>Open Vraelis</CTA><EditorialLink href="#status">See system status</EditorialLink></>}
+        aside={<SecurityAside />}
       />
 
       {/* The model */}

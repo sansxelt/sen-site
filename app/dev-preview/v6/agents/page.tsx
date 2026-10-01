@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
+import { AgentsAside } from "../_system/hero-asides";
 import { v6meta } from "../_system/meta";
 import { PageHero, Reveal, SectionHead, CTA, EditorialLink, Signal, Kicker } from "../_system/ui";
 import { Code, CopyScript } from "../_system/code";
@@ -147,6 +148,7 @@ export default function Agents() {
             <EditorialLink href={`${BASE}/integrations`}>Other ways to use Vraelis</EditorialLink>
           </>
         }
+        aside={<AgentsAside />}
       />
 
       {/* 1 ── What the assistant can do, and what it cannot ── */}

@@ -73,8 +73,8 @@
   /* One content column for every page. The homepage chapters were drawn at 1320 and the inner pages at
      1200, so moving between them shifted every left edge by 60px, and the wide record sections on the inner
      pages jutted out of their own page. */
-  --max: 1320px;
-  --max-wide: 1320px;
+  --max: 1600px;
+  --max-wide: 1600px;
   --max-read: 720px;
   /* Tighter since 2026-09-30: at 132px a section and its neighbour sat a screen apart, part of why the
      founder read the site as zoomed in. */
@@ -354,6 +354,7 @@
 .v6-nav[data-theme="dark"] .v6-nav__item { color: var(--g-fg-2); }
 .v6-nav[data-theme="dark"] .v6-nav__item:hover, .v6-nav[data-theme="dark"] .v6-nav__item[aria-expanded="true"] { color: var(--g-fg); }
 .v6-nav__right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex: none; }
+.v6-nav__lang { margin-right: 4px; }
 .v6-nav__signin { font-size: 14.5px; font-weight: 500; color: var(--ink-3); text-decoration: none; padding: 8px 12px; white-space: nowrap; }
 .v6-nav__signin:hover { color: var(--ink); }
 .v6-nav[data-theme="dark"] .v6-nav__signin { color: var(--g-fg-2); } .v6-nav[data-theme="dark"] .v6-nav__signin:hover { color: var(--g-fg); }
@@ -510,7 +511,12 @@
 @media (max-width: 940px) {
   .v6-nav__items, .v6-nav__signin { display: none; }
   .v6-nav__burger { display: inline-flex; }
+  /* The language pill keeps its flag and gives up its name; the drawer carries the full switch. */
+  .v6-nav__lang .lsw__label { display: none; }
+  .v6-nav__lang .lsw__btn { padding: 0 10px; }
 }
+@media (max-width: 420px) { .v6-nav__lang { display: none; } }
+.v6-drawer__lang { margin-right: auto; }
 
 /* ═══════════════ THE BAR IS ANCHORED TO THE VIEWPORT ON A PHONE, NOT TO THE FLOW ══
    position: sticky keeps the bar IN NORMAL FLOW and offsets it against the scrollport. That holds while

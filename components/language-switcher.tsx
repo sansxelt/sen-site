@@ -1,77 +1,137 @@
 "use client";
 
-// THE LANGUAGE SWITCH. One component, placed in the site footer, the docs rail, the sign-in screen and the
-// console, all reading and writing the same store (lib/i18n/client.ts), so changing it in any of them
-// changes the language everywhere.
+// THE LANGUAGE SWITCH. One component, placed in the site header and footer, the docs rail, the sign-in
+// screen and the console, all reading and writing the same store (lib/i18n/client.ts), so changing it in any
+// of them changes the language everywhere.
+//
+// Each language shows its country flag, as Overlym's does (founder, 2026-10-01). The flags are the MIT
+// flag-icons SVGs served from /flags (public/flags/README.md), so the switch makes no third-party request,
+// and emoji flags are not used because Windows renders them as two letters.
+//
+// THE MENU IS PORTALLED TO <body> AND PLACED AGAINST THE VIEWPORT. It used to hang off the button, so inside
+// the console sidebar (which clips its overflow) half of it was cut away. Now it opens below or above the
+// button, whichever has room, and is pulled back inside the screen edges.
 //
 // The language names are written in their own language and are never translated ([data-no-translate]),
 // so a reader who cannot read the current language can still find theirs.
-import { useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { LOCALES, LOCALE_KEYS, type Locale } from "@/lib/i18n/locales";
 import { setLocale, useLocale } from "@/lib/i18n/client";
 import "./language-switcher.css";
 
-export function LanguageSwitcher({ tone = "light", placement = "up", align = "left", className = "" }: {
-  tone?: "light" | "dark"; placement?: "up" | "down"; align?: "left" | "right"; className?: string;
+const FLAG: Record<Locale, string> = {
+  en: "us", es: "es", fr: "fr", de: "de", pt: "br", it: "it", nl: "nl", ja: "jp", ko: "kr", zh: "cn", hi: "in", id: "id",
+};
+
+function Flag({ locale, size = 18 }: { locale: Locale; size?: number }) {
+  // Tiny static SVGs: they scale cleanly and gain nothing from image optimisation.
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img className="lsw__flag" src={`/flags/${FLAG[locale]}.svg`} width={size} height={Math.round(size * 0.75)} alt="" aria-hidden decoding="async" />;
+}
+
+const MENU_W = 340;
+const GAP = 8;
+
+export function LanguageSwitcher({ tone = "light", variant = "box", placement = "up", className = "", labelHidden = false }: {
+  tone?: "light" | "dark";
+  /** "box" (rounded rectangle, footers and rails) or "pill" (the header, like Overlym's). */
+  variant?: "box" | "pill";
+  /** Preferred side; the menu flips when that side has no room. */
+  placement?: "up" | "down";
+  className?: string;
+  /** Flag only on the button (the name is still announced). */
+  labelHidden?: boolean;
+  /** Kept for callers from before the menu was portalled; the menu now finds its own side. */
+  align?: "left" | "right";
 }) {
   const locale = useLocale();
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ left: number; top: number; up: boolean } | null>(null);
   const root = useRef<HTMLDivElement>(null);
+  const btn = useRef<HTMLButtonElement>(null);
+  const menu = useRef<HTMLDivElement>(null);
   const menuId = useId();
+
+  const place = useCallback(() => {
+    const b = btn.current?.getBoundingClientRect();
+    if (!b) return;
+    const h = menu.current?.offsetHeight ?? 360;
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const roomBelow = vh - b.bottom - GAP, roomAbove = b.top - GAP;
+    const up = placement === "up" ? (roomAbove >= h || roomAbove > roomBelow) : !(roomBelow >= h || roomBelow > roomAbove);
+    const w = Math.min(MENU_W, vw - 16);
+    // Line the menu up with the button's left edge, or its right edge when the button sits in the right half.
+    let left = b.left + b.width / 2 > vw / 2 ? b.right - w : b.left;
+    left = Math.max(8, Math.min(left, vw - w - 8));
+    const top = up ? Math.max(8, b.top - GAP - h) : Math.min(b.bottom + GAP, vh - h - 8);
+    setPos({ left, top, up });
+  }, [placement]);
+
+  useLayoutEffect(() => { if (open) place(); }, [open, place]);
 
   useEffect(() => {
     if (!open) return;
-    root.current?.querySelector<HTMLButtonElement>('[role="menuitemradio"][aria-checked="true"]')?.focus();
-    const onDown = (e: PointerEvent) => { if (!root.current?.contains(e.target as Node)) setOpen(false); };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      setOpen(false);
-      root.current?.querySelector<HTMLButtonElement>(".lsw__btn")?.focus();
+    menu.current?.querySelector<HTMLButtonElement>('[role="menuitemradio"][aria-checked="true"]')?.focus();
+    const onDown = (e: PointerEvent) => {
+      const t = e.target as Node;
+      if (!root.current?.contains(t) && !menu.current?.contains(t)) setOpen(false);
     };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setOpen(false); btn.current?.focus(); } };
+    const onMove = () => place();
     document.addEventListener("pointerdown", onDown);
     document.addEventListener("keydown", onKey);
-    return () => { document.removeEventListener("pointerdown", onDown); document.removeEventListener("keydown", onKey); };
-  }, [open]);
+    window.addEventListener("resize", onMove);
+    window.addEventListener("scroll", onMove, true);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("keydown", onKey);
+      window.removeEventListener("resize", onMove);
+      window.removeEventListener("scroll", onMove, true);
+    };
+  }, [open, place]);
 
-  const choose = (next: Locale) => {
-    setLocale(next);
-    setOpen(false);
-    root.current?.querySelector<HTMLButtonElement>(".lsw__btn")?.focus();
-  };
+  const choose = (next: Locale) => { setLocale(next); setOpen(false); btn.current?.focus(); };
+
+  const panel = open ? (
+    <div ref={menu} id={menuId} className="lsw__menu" role="menu" aria-label="Language" data-up={pos?.up ? "true" : "false"}
+      style={{ left: pos?.left ?? -9999, top: pos?.top ?? -9999, width: Math.min(MENU_W, typeof window === "undefined" ? MENU_W : window.innerWidth - 16) }}
+      onBlur={(e) => {
+        const next = e.relatedTarget as Node | null;
+        if (next && !menu.current?.contains(next) && !root.current?.contains(next)) setOpen(false);
+      }}
+      onKeyDown={(e) => {
+        if (!["ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)) return;
+        e.preventDefault();
+        const items = Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="menuitemradio"]'));
+        const i = items.indexOf(document.activeElement as HTMLButtonElement);
+        const step = e.key === "ArrowDown" ? 2 : e.key === "ArrowUp" ? -2 : e.key === "ArrowRight" ? 1 : -1;
+        const n = e.key === "Home" ? 0 : e.key === "End" ? items.length - 1 : (i + step + items.length) % items.length;
+        items[n]?.focus();
+      }}>
+      <p className="lsw__head">Language</p>
+      <p className="lsw__note">The site, the docs and the console. Legal pages stay in English.</p>
+      <div className="lsw__list" data-no-translate>
+        {LOCALE_KEYS.map((key) => (
+          <button key={key} type="button" role="menuitemradio" aria-checked={locale === key} className="lsw__opt" onClick={() => choose(key)}>
+            <Flag locale={key} />
+            <span lang={LOCALES[key].htmlLang}>{LOCALES[key].label}</span>
+            {locale === key ? <svg className="lsw__tick" viewBox="0 0 12 12" width="12" height="12" aria-hidden><path d="M2.5 6.3 5 8.7l4.5-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg> : null}
+          </button>
+        ))}
+      </div>
+    </div>
+  ) : null;
 
   return (
-    <div ref={root} className={`lsw ${className}`} data-tone={tone} data-place={placement} data-align={align} data-open={open}
-      onBlur={(e) => { if (e.relatedTarget && !e.currentTarget.contains(e.relatedTarget as Node)) setOpen(false); }}>
-      <button type="button" className="lsw__btn" aria-haspopup="menu" aria-expanded={open} aria-controls={menuId}
+    <div ref={root} className={`lsw ${className}`} data-tone={tone} data-variant={variant} data-open={open}>
+      <button ref={btn} type="button" className="lsw__btn" aria-haspopup="menu" aria-expanded={open} aria-controls={open ? menuId : undefined}
         aria-label={`Language: ${LOCALES[locale].label}`} onClick={() => setOpen((v) => !v)}>
-        <svg className="lsw__globe" viewBox="0 0 16 16" width="15" height="15" aria-hidden>
-          <circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" strokeWidth="1.3" />
-          <path d="M1.9 8h12.2M8 1.75c1.7 1.8 2.55 3.9 2.55 6.25S9.7 12.45 8 14.25C6.3 12.45 5.45 10.35 5.45 8S6.3 3.55 8 1.75Z" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-        </svg>
-        <span data-no-translate lang={LOCALES[locale].htmlLang}>{LOCALES[locale].label}</span>
+        <Flag locale={locale} />
+        {labelHidden ? null : <span className="lsw__label" data-no-translate lang={LOCALES[locale].htmlLang}>{LOCALES[locale].label}</span>}
         <svg className="lsw__chev" viewBox="0 0 12 12" width="11" height="11" aria-hidden><path d="M3 4.5 6 7.5l3-3" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
       </button>
-      {open ? (
-        <div id={menuId} className="lsw__menu" role="menu" aria-label="Language" onKeyDown={(e) => {
-          if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) return;
-          e.preventDefault();
-          const items = Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="menuitemradio"]'));
-          const i = items.indexOf(document.activeElement as HTMLButtonElement);
-          const n = e.key === "Home" ? 0 : e.key === "End" ? items.length - 1 : (i + (e.key === "ArrowDown" ? 1 : -1) + items.length) % items.length;
-          items[n]?.focus();
-        }}>
-          <p className="lsw__head">Language</p>
-          <p className="lsw__note">The site, the docs and the console. Legal pages stay in English.</p>
-          <div className="lsw__list" data-no-translate>
-            {LOCALE_KEYS.map((key) => (
-              <button key={key} type="button" role="menuitemradio" aria-checked={locale === key} className="lsw__opt" onClick={() => choose(key)}>
-                <span lang={LOCALES[key].htmlLang}>{LOCALES[key].label}</span>
-                {locale === key ? <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden><path d="M2.5 6.3 5 8.7l4.5-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg> : null}
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : null}
+      {panel && typeof document !== "undefined" ? createPortal(panel, document.body) : null}
     </div>
   );
 }

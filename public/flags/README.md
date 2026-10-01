@@ -1,0 +1,1 @@
+Twelve country flags from flag-icons v7.3.2, https://github.com/lipis/flag-icons/tree/v7.3.2/flags/4x3. MIT licensed; see LICENSE.txt. Original SVGs retained. Bundled locally so the language selector needs no third-party requests.

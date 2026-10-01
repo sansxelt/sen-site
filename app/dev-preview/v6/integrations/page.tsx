@@ -1,3 +1,4 @@
+import { IntegrationsAside } from "../_system/hero-asides";
 import { Reveal, PageHero, SectionHead, CTA, EditorialLink, Signal, Kicker } from "../_system/ui";
 import { v6meta } from "../_system/meta";
 import { V6_BASE } from "@/lib/v6-routes";
@@ -113,8 +114,9 @@ export default function IntegrationsPage() {
       <PageHero
         kicker="Ways to use it"
         title="One check, four ways to start it."
-        lead="Start a check from the console, the CLI, a CI pipeline, or an AI assistant. Each one sends the same sentence, waits for the same one-click approval from a person, and gets back the same Verified, Failed or Blocked, with the evidence. Everything on this page works today."
+        lead="Start a check from the console, the CLI, a CI pipeline, or an AI assistant. Each one sends the same sentence, waits for the same one-click approval from a person, and gets back the same answer, with the evidence. Everything on this page works today."
         cta={<><CTA brand>Open Vraelis</CTA><EditorialLink href={`${BASE}/developers`}>Developer docs</EditorialLink></>}
+        aside={<IntegrationsAside />}
       />
 
       {/* ── The four channels ── */}

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { DevelopersAside } from "../_system/hero-asides";
 import { Reveal, PageHero, SectionHead, CTA, EditorialLink, Signal } from "../_system/ui";
 import { Code, CopyScript } from "../_system/code";
 import { v6meta } from "../_system/meta";
@@ -269,6 +270,7 @@ export default function DevelopersPage() {
         title="Start a check from your own tools."
         lead="Send a deployment URL and one sentence about what should work. A person approves the plan at a link, the run starts, and you read back Verified, Failed or Blocked with the evidence. Five calls: submit, approve, run, read, re-check."
         cta={<><CTA brand>Create an API key</CTA><EditorialLink href="#api">Read the API</EditorialLink></>}
+        aside={<DevelopersAside />}
       />
 
       {/* framing: four ways in, one check */}

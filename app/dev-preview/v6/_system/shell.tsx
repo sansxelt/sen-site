@@ -10,6 +10,7 @@ import { SiteFooter } from "./close";
 import { useGroundColor } from "@/components/use-ground-color";
 import { V6_BASE, V6_HOME, V6_APP, v6SignInPath, v6GroundAtTop, v6ShouldPrefetch, GROUND_CSS } from "@/lib/v6-routes";
 import { analyticsAllowed, onPrivacyChoiceChange } from "@/lib/privacy-choice";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 // FOLLOWS THE PROMOTION FLAG. These were hardcoded to "/dev-preview/v6", which is precisely the mistake
 // lib/v6-routes.ts was written to prevent: it says every V6 destination lives there so promotion is one
@@ -20,6 +21,8 @@ import { analyticsAllowed, onPrivacyChoiceChange } from "@/lib/privacy-choice";
 // pointed into the preview namespace, so the promoted site navigated back out of itself.
 const BASE = V6_BASE;
 const SIGNIN = v6SignInPath();
+// Account creation is the same screen in its sign-up mode, landing in the console afterwards.
+const SIGNUP = `${SIGNIN}&mode=signup`;
 
 // Three top-level items open a menu; Company is a plain link. Research and Developers were promoted to the
 // top bar in phase 1 and are demoted back into the menus that already carry them, so the closed bar stays
@@ -494,8 +497,14 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
           </div>
         ) : null}
         <div className="v6-nav__right">
+          {/* THE RIGHT SIDE, LIKE OVERLYM'S (founder, 2026-10-01): the language as a flag pill, then Sign in and
+              Create account for a visitor, or Open Vraelis for someone already signed in. It used to carry
+              one button, which left the bar looking unfinished on a wide screen. */}
+          <LanguageSwitcher variant="pill" placement="down" className="v6-nav__lang" />
           {authed ? null : <Link href={SIGNIN} className="v6-nav__signin">Sign in</Link>}
-          <Link href={authed ? V6_APP : SIGNIN} prefetch={v6ShouldPrefetch(authed ? V6_APP : SIGNIN) ? undefined : false} className="v6-btn v6-btn--brand">Open Vraelis</Link>
+          {authed
+            ? <Link href={V6_APP} prefetch={v6ShouldPrefetch(V6_APP) ? undefined : false} className="v6-btn v6-btn--brand">Open Vraelis</Link>
+            : <Link href={SIGNUP} className="v6-btn v6-btn--brand">Create account</Link>}
           <button className="v6-nav__burger" aria-label="Open navigation" aria-haspopup="dialog" onClick={() => setDrawer(true)}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
           </button>
@@ -577,8 +586,11 @@ function MobileNav({ authed, onClose }: { authed: boolean; onClose: () => void }
         ))}
       </div>
       <div className="v6-drawer__foot">
+        <LanguageSwitcher placement="up" className="v6-drawer__lang" />
         {authed ? null : <Link href={SIGNIN} className="v6-btn v6-btn--ghost" onClick={onClose}>Sign in</Link>}
-        <Link href={authed ? V6_APP : SIGNIN} prefetch={v6ShouldPrefetch(authed ? V6_APP : SIGNIN) ? undefined : false} className="v6-btn v6-btn--brand" onClick={onClose}>Open Vraelis <span className="v6-arw" aria-hidden>→</span></Link>
+        {authed
+          ? <Link href={V6_APP} prefetch={v6ShouldPrefetch(V6_APP) ? undefined : false} className="v6-btn v6-btn--brand" onClick={onClose}>Open Vraelis <span className="v6-arw" aria-hidden>→</span></Link>
+          : <Link href={SIGNUP} className="v6-btn v6-btn--brand" onClick={onClose}>Create account <span className="v6-arw" aria-hidden>→</span></Link>}
       </div>
     </div>
   );

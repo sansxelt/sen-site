@@ -80,18 +80,23 @@ export function Kicker({ children }: { children: ReactNode }) {
 
 // read: an article page (method, readme) whose body sits in the centred reading column. The title goes in
 // the same column, so the page does not start on the left edge and then jump 300px right for the text.
-export function PageHero({ kicker, title, lead, cta, dark = false, read = false }: {
-  kicker?: string; title: ReactNode; lead?: ReactNode; cta?: ReactNode; dark?: boolean; read?: boolean;
+// aside: a real piece of the product on the right half (_system/hero-asides.tsx). Without one the hero is
+// text alone, which on a wide screen left half of the first screen empty (founder, 2026-10-01).
+export function PageHero({ kicker, title, lead, cta, dark = false, read = false, aside }: {
+  kicker?: string; title: ReactNode; lead?: ReactNode; cta?: ReactNode; dark?: boolean; read?: boolean; aside?: ReactNode;
 }) {
   return (
     <section className={`v6-sec v6-phero ${dark ? "v6-dark" : ""}`} data-nav-theme={dark ? "dark" : "light"} {...(dark ? { "data-nav-dark": "" } : {})}>
       {/* v6-wrap, not --wide: the hero sat on the 1320 grid while every body section below used 1200, so the
           page jogged 58px to the left at the first section boundary on six of seven routes. */}
-      <div className={read ? "v6-wrap v6-wrap--read" : "v6-wrap"}>
-        {kicker ? <p className="v6-eyebrow v6-phero__k">{kicker}</p> : null}
-        <h1>{title}</h1>
-        {lead ? <p className="v6-phero__lead">{lead}</p> : null}
-        {cta ? <div className="v6-phero__cta">{cta}</div> : null}
+      <div className={`${read ? "v6-wrap v6-wrap--read" : "v6-wrap"}${aside ? " v6-phero__split" : ""}`}>
+        <div className="v6-phero__text">
+          {kicker ? <p className="v6-eyebrow v6-phero__k">{kicker}</p> : null}
+          <h1>{title}</h1>
+          {lead ? <p className="v6-phero__lead">{lead}</p> : null}
+          {cta ? <div className="v6-phero__cta">{cta}</div> : null}
+        </div>
+        {aside ? <div className="v6-phero__aside">{aside}</div> : null}
       </div>
     </section>
   );

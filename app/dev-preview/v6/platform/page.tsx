@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
+import { PlatformAside } from "../_system/hero-asides";
 import { v6meta } from "../_system/meta";
 import { PageHero, Reveal, SectionHead, CTA, EditorialLink, Signal, Kicker } from "../_system/ui";
 import "../_system/coverage.css";
@@ -317,7 +318,8 @@ export default function Platform() {
         // THE OPENING IS THE LOOP, in the order it happens, in the product's own words. Three short sentences
         // rather than one long clause: a reader scanning it gets the whole loop from the line breaks alone.
         title="One sentence. One approved plan. One answer from the live app."
-        lead="Write what your deployed web app, or a device it controls, should do. Vraelis turns it into a plan, a person approves it, a real browser tries it on the live app, and you get Verified, Failed, or Blocked with the evidence. Start it from the console, the CLI, CI, or an AI assistant."
+        lead="Write what your deployed web app, or a device it controls, should do. Vraelis turns it into a plan, a person approves it, a real browser tries it on the live app, and you see exactly what happened, with the evidence. Start it from the console, the CLI, CI, or an AI assistant."
+        aside={<PlatformAside />}
         cta={
           <>
             <CTA brand lg>Open Vraelis</CTA>
