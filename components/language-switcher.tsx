@@ -33,7 +33,7 @@ function Flag({ locale, size = 18 }: { locale: Locale; size?: number }) {
 const MENU_W = 340;
 const GAP = 8;
 
-export function LanguageSwitcher({ tone = "light", variant = "box", placement = "up", className = "", labelHidden = false }: {
+export function LanguageSwitcher({ tone = "light", variant = "box", placement = "up", className = "", labelHidden = false, toTop = false }: {
   tone?: "light" | "dark";
   /** "box" (rounded rectangle, footers and rails) or "pill" (the header, like Overlym's). */
   variant?: "box" | "pill";
@@ -42,6 +42,9 @@ export function LanguageSwitcher({ tone = "light", variant = "box", placement = 
   className?: string;
   /** Flag only on the button (the name is still announced). */
   labelHidden?: boolean;
+  /** Scroll back to the top after a language is picked (the site footer: founder, 2026-10-01, the page
+   *  should be read from its start in the new language rather than from the footer). */
+  toTop?: boolean;
   /** Kept for callers from before the menu was portalled; the menu now finds its own side. */
   align?: "left" | "right";
 }) {
@@ -91,7 +94,14 @@ export function LanguageSwitcher({ tone = "light", variant = "box", placement = 
     };
   }, [open, place]);
 
-  const choose = (next: Locale) => { setLocale(next); setOpen(false); btn.current?.focus(); };
+  const choose = (next: Locale) => {
+    setLocale(next); setOpen(false);
+    if (toTop) {
+      const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      window.scrollTo({ top: 0, behavior: smooth ? "smooth" : "auto" });
+      btn.current?.focus({ preventScroll: true });
+    } else btn.current?.focus();
+  };
 
   const panel = open ? (
     <div ref={menu} id={menuId} className="lsw__menu" role="menu" aria-label="Language" data-up={pos?.up ? "true" : "false"}

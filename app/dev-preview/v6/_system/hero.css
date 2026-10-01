@@ -1,43 +1,26 @@
 /* ============================================================================
-   CHAPTER 1: the opening (rebuilt 2026-09-30).
+   CHAPTER 1: the opening (2026-10-01).
 
-   A tinted band carrying a centred headline, one line, the address field and
-   the two partnership records; the console window rises out of the band's
-   bottom edge. Ink is the only colour that is not a state.
+   A tinted band: text on the left, the 3D drone on the right. One visual.
    ============================================================================ */
 
-.v6-h {
-  position: relative;
-  background: var(--paper);
-  color: var(--ink-2);
-  isolation: isolate;
-}
+.v6-h { position: relative; background: var(--paper); color: var(--ink-2); isolation: isolate; }
 
-/* The band stops partway down the window, so the window reads as lifted out of it. */
 .v6-h__band {
-  position: relative;
-  padding: clamp(40px, 6.5vh, 88px) 0 clamp(250px, 30vw, 380px);
+  position: relative; overflow: hidden;
+  padding: clamp(28px, 4.5vh, 64px) 0 clamp(40px, 6vh, 80px);
   background:
-    radial-gradient(90% 70% at 50% 0%, #FFFFFF 0%, rgba(255,255,255,0) 60%),
-    linear-gradient(180deg, #F3F3F1 0%, #ECECE9 100%);
+    radial-gradient(60% 80% at 75% 45%, #FFFFFF 0%, rgba(255,255,255,0) 70%),
+    linear-gradient(180deg, #F4F4F2 0%, #EDEDEA 100%);
   border-bottom: 1px solid rgba(10,10,11,0.06);
-  overflow: hidden;
-}
-/* A faint dot grid, masked to the centre, so the band has texture without a picture. */
-.v6-h__grid {
-  position: absolute; inset: 0; pointer-events: none;
-  background-image: radial-gradient(rgba(10,10,11,0.13) 1px, transparent 1.2px);
-  background-size: 22px 22px;
-  -webkit-mask-image: radial-gradient(70% 60% at 50% 38%, #000 0%, transparent 75%);
-          mask-image: radial-gradient(70% 60% at 50% 38%, #000 0%, transparent 75%);
-  opacity: 0.55;
 }
 
-.v6-h__inner {
-  position: relative; z-index: 1;
+.v6-h__in {
   max-width: var(--max); margin-inline: auto; padding-inline: var(--gutter);
-  display: flex; flex-direction: column; align-items: center; text-align: center;
+  display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr); align-items: center;
+  gap: clamp(16px, 3vw, 48px); min-height: clamp(520px, 72vh, 700px);
 }
+.v6-h__text { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: flex-start; }
 
 .v6-h__pill {
   display: inline-flex; align-items: center; gap: 10px; max-width: 100%;
@@ -58,19 +41,18 @@
 .v6-h__h1 {
   margin: 26px 0 0;
   font-family: var(--display); font-weight: 500; font-synthesis-weight: none;
-  font-size: clamp(2.6rem, 6vw, 5.25rem);
+  font-size: clamp(2.4rem, 4.05vw, 4.4rem);
   line-height: 1.02; letter-spacing: -0.035em;
   color: var(--ink);
 }
 .v6-h__say {
-  margin: 20px auto 0; max-width: 64ch;
-  font-size: clamp(1.02rem, 1.3vw, 1.2rem); line-height: 1.55; color: var(--ink-3);
-  text-wrap: balance;
+  margin: 20px 0 0; max-width: 52ch;
+  font-size: clamp(1.02rem, 1.25vw, 1.18rem); line-height: 1.55; color: var(--ink-3);
 }
 
 .v6-h__form {
   display: flex; align-items: center; gap: 6px;
-  width: min(100%, 520px); margin-top: 28px; padding: 6px 6px 6px 16px;
+  width: min(100%, 500px); margin-top: 28px; padding: 6px 6px 6px 16px;
   background: #FFFFFF; border: 1px solid rgba(10,10,11,0.14); border-radius: 14px;
   box-shadow: 0 1px 2px rgba(15,19,25,0.05), 0 12px 28px -18px rgba(15,19,25,0.35);
   transition: border-color 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out);
@@ -91,16 +73,12 @@
 .v6-h__form button:hover { background: #2E2F33; }
 .v6-h__form button:focus-visible { outline: 2px solid #0A0A0B; outline-offset: 3px; }
 .v6-h__sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.v6-h__fine { margin: 14px 0 0; font-size: 13px; color: var(--ink-4); }
 
 /* The two records, side by side and still. They are records, so they keep their label and their year. */
-.v6-h__partners {
-  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;
-  width: min(100%, 640px); margin-top: 28px;
-}
+.v6-h__partners { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: min(100%, 560px); margin-top: 28px; }
 .v6-h__partner {
   display: grid; gap: 4px; justify-items: start; text-align: left;
-  padding: 12px 18px 13px; border-radius: 14px;
+  padding: 12px 16px 13px; border-radius: 14px;
   background: rgba(255,255,255,0.72); border: 1px solid rgba(10,10,11,0.09);
   color: var(--ink); text-decoration: none;
   transition: background 0.15s var(--ease-out), border-color 0.15s var(--ease-out), transform 0.2s var(--ease);
@@ -108,26 +86,28 @@
 .v6-h__partner:hover { background: #FFFFFF; border-color: rgba(10,10,11,0.2); transform: translateY(-1px); }
 .v6-h__partner:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 .v6-h__plabel { font-size: 11.5px; font-weight: 600; color: var(--ink-4); }
-.v6-h__partner strong { font-family: var(--display); font-size: 1.22rem; font-weight: 500; letter-spacing: -0.015em; line-height: 1.2; }
+.v6-h__partner strong { font-family: var(--display); font-size: 1.18rem; font-weight: 500; letter-spacing: -0.015em; line-height: 1.2; }
 .v6-h__pmeta { font-size: 12.5px; color: var(--ink-3); }
 
-/* The window overlaps the band's bottom edge by most of the band's bottom padding. */
-.v6-h__stage {
-  position: relative; z-index: 2;
-  max-width: calc(var(--max) + 2 * var(--gutter)); margin: calc(-1 * clamp(210px, 26vw, 330px)) auto 0;
-  padding-inline: var(--gutter);
-}
-.v6-h__stagecap { margin: 16px 0 0; text-align: center; font-size: 13px; color: var(--ink-4); }
+/* The drone. It bleeds a little past its column so the pad's shadow is never clipped. */
+.v6-h__visual { position: relative; align-self: stretch; min-height: 460px; margin-right: calc(-1 * var(--gutter)); }
+.v6 .dr-host { position: absolute; inset: -6% -4% -8% -10%; }
+.v6 .dr-host canvas { touch-action: pan-y; }
+.v6 .dr-host--wait { background: radial-gradient(40% 32% at 52% 60%, rgba(10,10,11,0.07), transparent 70%); }
 
+@media (max-width: 980px) {
+  .v6-h__in { grid-template-columns: minmax(0, 1fr); min-height: 0; gap: 8px; }
+  .v6-h__visual { min-height: 0; height: clamp(300px, 62vw, 460px); margin-right: 0; order: 2; }
+  .v6 .dr-host { inset: -4% -6% -2% -6%; }
+}
 @media (max-width: 720px) {
-  .v6-h__band { padding: 40px 0 200px; }
-  .v6-h__h1 { font-size: clamp(1.9rem, 8.3vw, 3.2rem); letter-spacing: -0.03em; margin-top: 22px; }
+  .v6-h__band { padding: 28px 0 24px; }
+  .v6-h__h1 { font-size: clamp(2.1rem, 9vw, 3.1rem); letter-spacing: -0.03em; margin-top: 22px; }
   .v6-h__say { font-size: 1rem; }
   .v6-h__pilltxt { font-size: 12.5px; }
-  .v6-h__form { margin-top: 26px; padding-left: 14px; }
+  .v6-h__form { margin-top: 24px; padding-left: 14px; }
   .v6-h__form button { padding: 0 16px; font-size: 14.5px; }
-  .v6-h__partners { grid-template-columns: minmax(0, 1fr); gap: 8px; margin-top: 30px; }
-  .v6-h__stage { margin-top: -160px; }
+  .v6-h__partners { grid-template-columns: minmax(0, 1fr); gap: 8px; margin-top: 22px; }
 }
 
 .v6-mask { display: block; overflow: hidden; padding-bottom: 0.09em; margin-bottom: -0.05em; }

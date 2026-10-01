@@ -1,6 +1,12 @@
 "use client";
 
-// Homepage, rebuilt 2026-09-30.
+// Homepage, rebuilt 2026-09-30, calmed 2026-10-01.
+//
+// 2026-10-01: the founder read the page as too many visuals; the one he wanted was a drone. The opening is
+// now text beside a single 3D drone, the six-card grid became three lines (_system/steps.tsx), and the run
+// replay window moved to the Platform hero. _system/surfaces.tsx and run-window.tsx stay in the tree.
+//
+// Before that, 2026-09-30:
 //
 // The founder's read of the page before this: the first screen had too much text and no product, and the
 // rest was too much text, not enough actual UI, and not cool enough (references: Vanta, Gusto, axiom). So
@@ -21,7 +27,7 @@
 //
 // Every positioning string comes from _system/positioning.ts.
 import { Hero } from "./_system/hero";
-import { Surfaces } from "./_system/surfaces";
+import { Steps } from "./_system/steps";
 import { ClosingScene } from "./_system/close";
 import { Coverage } from "./_system/coverage";
 import { useMobileMotion } from "./_system/mobile-motion";
@@ -34,7 +40,7 @@ export default function Home() {
   return (
     <>
       <Hero />
-      <Surfaces />
+      <Steps />
       <Coverage />
       <ClosingScene />
     </>

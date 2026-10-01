@@ -14,6 +14,10 @@
 .lsw__flag { flex: none; display: block; width: 18px; height: 13.5px; border-radius: 2px; object-fit: cover;
   box-shadow: 0 0 0 1px rgba(10,10,11,0.12); }
 .lsw__label { max-width: 140px; overflow: hidden; text-overflow: ellipsis; }
+/* Host pages style their own spans (the site footer gives every span a 44px tap height on a phone, which
+   pushed this label out of the button), so the switch resets what it needs at a higher specificity. */
+.lsw .lsw__btn .lsw__label { min-height: 0; min-width: 0; padding: 0; margin: 0; display: block; font-size: inherit; line-height: 1.2; color: inherit; }
+.lsw .lsw__btn > * { flex: none; }
 .lsw__chev { flex: none; color: #6A6C71; transition: transform 0.15s ease; }
 .lsw[data-open="true"] .lsw__chev { transform: rotate(180deg); }
 

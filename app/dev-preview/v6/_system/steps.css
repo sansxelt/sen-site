@@ -1,0 +1,13 @@
+.v6-st3 { background: var(--paper); padding: clamp(72px, 8vw, 120px) 0 clamp(24px, 3vw, 40px); }
+.v6-st3__in { max-width: var(--max); margin-inline: auto; padding-inline: var(--gutter); }
+.v6-st3__head { display: flex; align-items: baseline; justify-content: space-between; gap: 24px; flex-wrap: wrap; margin-bottom: clamp(28px, 3.5vw, 48px); }
+.v6-st3__h { margin: 0; font-family: var(--display); font-weight: 500; letter-spacing: -0.03em; line-height: 1.05; font-size: clamp(2rem, 3.6vw, 3.2rem); color: var(--ink); }
+.v6-st3__list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(20px, 3vw, 48px); }
+.v6-st3__list li { padding-top: 22px; border-top: 1px solid var(--line-2); }
+.v6-st3__n { font-family: var(--mono); font-size: 12.5px; color: var(--ink-4); }
+.v6-st3__list h3 { margin: 12px 0 0; font-family: var(--display); font-weight: 500; font-size: 1.4rem; letter-spacing: -0.02em; line-height: 1.2; color: var(--ink); }
+.v6-st3__list p { margin: 10px 0 0; font-size: 15.5px; line-height: 1.6; color: var(--ink-3); max-width: 40ch; }
+@media (max-width: 860px) {
+  .v6-st3__list { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .v6-st3__list li { padding: 18px 0 14px; }
+}

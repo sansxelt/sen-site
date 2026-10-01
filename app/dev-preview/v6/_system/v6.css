@@ -512,8 +512,8 @@
   .v6-nav__items, .v6-nav__signin { display: none; }
   .v6-nav__burger { display: inline-flex; }
   /* The language pill keeps its flag and gives up its name; the drawer carries the full switch. */
-  .v6-nav__lang .lsw__label { display: none; }
-  .v6-nav__lang .lsw__btn { padding: 0 10px; }
+  .v6-nav__lang.lsw .lsw__btn .lsw__label { display: none; }
+  .v6-nav__lang.lsw .lsw__btn { padding: 0 10px; }
 }
 @media (max-width: 420px) { .v6-nav__lang { display: none; } }
 .v6-drawer__lang { margin-right: auto; }

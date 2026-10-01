@@ -90,7 +90,7 @@ export function SiteFooter() {
         <p className="v6-foot2__say"><span>{FOOTER_STATEMENT}</span></p>
         <div className="v6-foot2__base-in">
           {/* The language switch: the same one the docs, sign-in and the console carry. */}
-          <span className="v6-foot2__lang"><LanguageSwitcher placement="up" /><span>© 2026 Vraelis</span></span>
+          <span className="v6-foot2__lang"><LanguageSwitcher placement="up" toTop /><span>© 2026 Vraelis</span></span>
           <div className="v6-foot2__legal">
             <a href="https://www.linkedin.com/company/vraelis" target="_blank" rel="noreferrer">LinkedIn</a>
             <Link href={`${BASE}/security`}>Security</Link>
