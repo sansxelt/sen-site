@@ -11,10 +11,9 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { isCalendarConfigured, consentUrl } from "@/lib/vraelis-calendar";
+import { CAL_STATE_COOKIE, isCalendarConfigured, consentUrl } from "@/lib/vraelis-calendar";
 
 const ORIGIN = "https://vraelis.com";
-export const CAL_STATE_COOKIE = "vr_cal_state";
 
 export async function GET() {
   const session = await auth();

@@ -10,9 +10,8 @@ import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { auth } from "@/auth";
-import { exchangeCode } from "@/lib/vraelis-calendar";
+import { CAL_STATE_COOKIE, exchangeCode } from "@/lib/vraelis-calendar";
 import { setWorkspaceCalendar } from "@/lib/vraelis-db";
-import { CAL_STATE_COOKIE } from "../connect/route";
 
 const ORIGIN = "https://vraelis.com";
 

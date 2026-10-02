@@ -10,6 +10,10 @@
 //      https://vraelis.com/api/vraelis/calendar/callback
 //   4. Set env GOOGLE_CALENDAR_CLIENT_ID / GOOGLE_CALENDAR_CLIENT_SECRET.
 
+// The httpOnly cookie that carries the connect route's single-use state nonce to the callback. Here rather than
+// in the connect route because a route file may export only its handlers and route config.
+export const CAL_STATE_COOKIE = "vr_cal_state";
+
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 const REDIRECT = "https://vraelis.com/api/vraelis/calendar/callback";
 const SCOPES = [

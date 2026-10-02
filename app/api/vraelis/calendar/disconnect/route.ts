@@ -14,8 +14,6 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { setWorkspaceCalendar } from "@/lib/vraelis-db";
 
-const ORIGIN = "https://vraelis.com";
-
 export async function POST() {
   const session = await auth();
   const email = session?.user?.email;
@@ -30,6 +28,3 @@ export function GET() {
     { status: 405, headers: { Allow: "POST", "Cache-Control": "no-store" } },
   );
 }
-
-// Referenced so the redirect target stays greppable alongside the connect flow, which still redirects.
-export const DISCONNECT_RETURN = `${ORIGIN}/v/account?calendar=disconnected`;

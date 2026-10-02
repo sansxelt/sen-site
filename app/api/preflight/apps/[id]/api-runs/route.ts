@@ -34,8 +34,9 @@ export const maxDuration = 120;
 const API_FETCH_TIMEOUT_MS = envInt("API_FETCH_TIMEOUT_MS", { min: 1_000, max: 60_000, fallback: 15_000 });
 const API_FETCH_MAX_BYTES = envInt("API_FETCH_MAX_BYTES", { min: 64 * 1024, max: 32 * 1024 * 1024, fallback: 2_000_000 });
 
-/** Thrown when a response exceeds the byte cap. A distinct type so callers cannot mistake it for content. */
-export class ResponseTooLargeError extends Error {
+/** Thrown when a response exceeds the byte cap. A distinct type so callers cannot mistake it for content.
+ *  Not exported: a route file may export only its handlers and route config (a webpack build fails otherwise). */
+class ResponseTooLargeError extends Error {
   readonly transportKind = "response_too_large";
   constructor(max: number) {
     super(`response exceeded ${max} bytes`);
