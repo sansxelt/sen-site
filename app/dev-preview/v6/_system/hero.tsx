@@ -12,8 +12,9 @@
 // Phones get the 720p cut. Reduced motion shows the poster and does not play. The film can always be
 // paused, because anything that moves for more than five seconds must be (WCAG 2.2.2).
 //
-// THE FIELD IS REAL. It sends the address to the console's connect page (/systems/new?url=), which carries
-// it through sign-in and prefills it. Nothing runs from here: a person still approves the plan.
+// THE FIELD IS REAL. It sends the address to the console's two-field composer (/app?new=1&url=), which
+// carries it through sign-in and opens with it filled in. It used to land on the six-section connect form
+// (console audit P1-2). Nothing runs from here: a person still approves the plan.
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { HEADLINE, HERO_LINE } from "./positioning";
 import { V6_APP, V6_BASE } from "@/lib/v6-routes";
@@ -21,7 +22,7 @@ import { hrefWithLocale } from "@/lib/i18n/locales";
 import { currentLocale } from "@/lib/i18n/client";
 import "./hero.css";
 
-const CONNECT = `${V6_APP}/systems/new`;
+const COMPOSE = V6_APP;
 
 function normalise(raw: string): string {
   const v = raw.trim();
@@ -54,7 +55,7 @@ export function Hero() {
     e.preventDefault();
     const v = normalise(url);
     // The language rides along, like on every other link (components/language-controller.tsx).
-    window.location.assign(hrefWithLocale(v ? `${CONNECT}?url=${encodeURIComponent(v)}` : CONNECT, currentLocale(), window.location.href));
+    window.location.assign(hrefWithLocale(v ? `${COMPOSE}?new=1&url=${encodeURIComponent(v)}` : `${COMPOSE}?new=1`, currentLocale(), window.location.href));
   };
 
   return (
@@ -80,7 +81,8 @@ export function Hero() {
 
       <div className="v6-h__below">
         <p className="v6-h__say">{HERO_LINE}</p>
-        <form className="v6-h__form" action={CONNECT} method="get" onSubmit={submit}>
+        <form className="v6-h__form" action={COMPOSE} method="get" onSubmit={submit}>
+          <input type="hidden" name="new" value="1" />
           <label htmlFor="v6-h-url" className="v6-h__sr">The address of your live app</label>
           <input
             id="v6-h-url" name="url" type="text" inputMode="url" autoComplete="url" spellCheck={false}

@@ -15,7 +15,7 @@ import { useEffect, useRef, useState } from "react";
 import { Composer } from "./composer";
 import { Ic, I } from "@/app/rank/_components/icons";
 
-export function CompactComposer({ balance, defaultOpen = false, surface }: { balance: number; defaultOpen?: boolean; surface?: string | null }) {
+export function CompactComposer({ balance, defaultOpen = false, surface, initialUrl }: { balance: number; defaultOpen?: boolean; surface?: string | null; initialUrl?: string }) {
   const [open, setOpen] = useState(defaultOpen);
   const region = useRef<HTMLDivElement>(null);
   // Opened from the top bar: bring the form into view and put the cursor in its first field.
@@ -57,7 +57,7 @@ export function CompactComposer({ balance, defaultOpen = false, surface }: { bal
 
   return (
     <div ref={region}>
-      <Composer balance={balance} surface={surface} />
+      <Composer balance={balance} surface={surface} initialUrl={initialUrl} />
       <button
         onClick={() => setOpen(false)}
         style={{ marginTop: 10, background: "none", border: "none", color: "var(--fg-4)", fontSize: 12.5, cursor: "pointer", fontFamily: "inherit", padding: 0 }}

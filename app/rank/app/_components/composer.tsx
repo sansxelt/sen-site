@@ -70,9 +70,10 @@ const EXAMPLES: Record<string, { url: string; claim: string }> = {
   panel: { url: "your-control-panel.example.com", claim: "Pressing Return home on the panel brings the drone back, and its status still reads Landed after a reload." },
 };
 
-export function Composer({ balance, surface }: { balance: number; surface?: string | null }) {
+export function Composer({ balance, surface, initialUrl }: { balance: number; surface?: string | null; initialUrl?: string }) {
   const ex = EXAMPLES[surface ?? ""] ?? EXAMPLES.web;
-  const [deployment, setDeployment] = useState("");
+  // Prefilled when the address came from the homepage field (?url=), so it is never typed twice.
+  const [deployment, setDeployment] = useState(initialUrl ?? "");
   const [claim, setClaim] = useState("");
   const [phase, setPhase] = useState<Phase>({ k: "compose" });
   const abort = useRef<AbortController | null>(null);

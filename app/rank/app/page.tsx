@@ -61,13 +61,22 @@ async function guaranteesForMemberApps(apps: Application[]) {
 export default async function Overview({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   // ?new=1 is what the top bar's "New verification" button links to. It used to link to this same page with
   // nothing else, so on the Overview the product's primary button did nothing a person could see.
-  const openNew = (await searchParams).new === "1";
+  const sp = await searchParams;
+  // ?url= is the homepage's address field (hero.tsx): the address arrives in the two-field composer, opened,
+  // instead of on the six-section connect form (console audit P1-2). Only an address-shaped string is kept.
+  const rawUrl = typeof sp.url === "string" ? sp.url.trim() : "";
+  const initialUrl = rawUrl && rawUrl.length <= 2048 && !/\s/.test(rawUrl) ? rawUrl : "";
+  const openNew = sp.new === "1" || !!initialUrl;
   const session = await auth();
   const email = session?.user?.email;
 
   // Signed out, the Overview is the sign-in page. It used to render the whole console chrome around a sign-in
-  // card whose headline matched nothing on the site (console audit P1-20).
-  if (!email) redirect("/signin?callbackUrl=%2Fapp");
+  // card whose headline matched nothing on the site (console audit P1-20). The composer's address rides
+  // through sign-in, so a visitor who typed it on the homepage does not have to type it again.
+  if (!email) {
+    const back = initialUrl ? `/app?new=1&url=${encodeURIComponent(initialUrl)}` : openNew ? "/app?new=1" : "/app";
+    redirect(`/signin?callbackUrl=${encodeURIComponent(back)}`);
+  }
 
   await ensureProfile(email, session.user?.name ?? undefined);
   await ensureSignupGrant(email);
@@ -242,7 +251,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
         // An empty account gets the form at full size: there is no state to read, so the only useful thing
         // on the page is the way to create some.
         <>
-          <div style={{ marginBottom: 26 }}><Composer balance={bal} surface={onboarding?.surface} /></div>
+          <div style={{ marginBottom: 26 }}><Composer balance={bal} surface={onboarding?.surface} initialUrl={initialUrl} /></div>
           {/* The static four-step list only when the checklist is not already showing the same steps. */}
           {showSetup ? null : <EmptyOverview />}
         </>
@@ -255,7 +264,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
               failure is the one thing that should interrupt starting new work. */}
           {issuesR.error ? <SectionError label="Needs attention" /> : <NeedsAttention items={attention} />}
           {/* key remounts the composer when the button is pressed while already on this page, so it opens. */}
-          <div style={{ marginBottom: 36 }}><CompactComposer key={openNew ? "new" : "rest"} balance={bal} defaultOpen={openNew} surface={onboarding?.surface} /></div>
+          <div style={{ marginBottom: 36 }}><CompactComposer key={openNew ? "new" : "rest"} balance={bal} defaultOpen={openNew} surface={onboarding?.surface} initialUrl={initialUrl} /></div>
           {appsR.error || latestR.error ? <SectionError label="Systems" /> : <SystemsTable rows={systems} />}
           {pendingR.error ? <SectionError label="Pending review" /> : <PendingReview rows={pendingR.value} />}
           {runsR.error ? <SectionError label="Recent verifications" /> : <RecentVerificationsTable rows={settledRuns} />}
