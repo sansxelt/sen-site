@@ -8,7 +8,7 @@
 }
 
 .v6-or__tile {
-  position: absolute; left: 50%; top: 50%; width: clamp(92px, 9.5vw, 150px); aspect-ratio: 1 / 1;
+  position: absolute; left: 50%; top: 50%; width: clamp(92px, 9.5vw, 150px); aspect-ratio: var(--ar, 1);
   padding: 0; border: 0; border-radius: 16px; overflow: hidden; cursor: pointer; background: #141416;
   box-shadow: 0 24px 50px -24px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.10) inset;
   /* the back of the ring is a touch dimmer, for depth; nothing fades when a tile is pointed at (founder) */

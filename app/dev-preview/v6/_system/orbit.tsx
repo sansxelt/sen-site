@@ -8,9 +8,9 @@
 
    THE WORDS ARE HELD TO WHAT IS LIVE. Web apps and agents are checked directly; a device, a vehicle or an
    aircraft is only checked through the web panel that runs it (_content/coverage.ts), so every device word
-   names the panel ("drone panel", "fleet console"), never the machine. The pictures are our own demo apps,
-   our own drone render, our own product, and stock footage stills under a free commercial licence
-   (public/home/orbit/CREDITS.md).
+   names the panel ("drone panel", "fleet console"), never the machine. The pictures are real photographs
+   under a free commercial licence (public/home/orbit/CREDITS.md); the founder found the first set, cut from
+   our own screenshots and renders, poor next to scale.com's.
 
    Motion: one slow revolution a minute, paused on hover or focus, and not at all with reduced motion. The
    tiles are buttons, so the orbit can be stepped through with the keyboard. */
@@ -21,20 +21,24 @@ import { useLocale } from "@/lib/i18n/client";
 import { V6_BASE } from "@/lib/v6-routes";
 import "./orbit.css";
 
-type Tile = { word: string; src: string; alt: string };
+type Tile = { word: string; src: string; alt: string; ar: number };
 
+// Real photographs, each cut to the shape it was taken in (ar = width / height), as scale.com's are. Sources
+// and licences: public/home/orbit/CREDITS.md.
 export const ORBIT: Tile[] = [
-  { word: "checkout", src: "/home/orbit/checkout.jpg", alt: "The pricing page of Lumen Notes, a Vraelis demo app" },
-  { word: "drone panel", src: "/home/orbit/drone.jpg", alt: "A quadcopter holding in the air" },
-  { word: "sign-up", src: "/home/orbit/signup.jpg", alt: "The sign-in page of Notewell, a Vraelis demo app built with Lovable" },
-  { word: "device panel", src: "/home/orbit/board.jpg", alt: "A small microcontroller board" },
-  { word: "agent's change", src: "/home/orbit/agent.jpg", alt: "A coding agent calling the Vraelis verify tool" },
-  { word: "fleet console", src: "/home/orbit/fleet.jpg", alt: "The Fieldline fleet console, a Vraelis demo fixture" },
-  { word: "client's site", src: "/home/orbit/client.jpg", alt: "The landing page of Notewell, a Vraelis demo app" },
-  { word: "vehicle portal", src: "/home/orbit/truck.jpg", alt: "A pickup truck on a road at dusk" },
-  { word: "release", src: "/home/orbit/release.jpg", alt: "A deploy pipeline running the Vraelis command" },
-  { word: "dashboard", src: "/home/orbit/dashboard.jpg", alt: "The project dashboard of a Vraelis demo fixture" },
-  { word: "flight dashboard", src: "/home/orbit/plane.jpg", alt: "An aircraft on a runway at dusk" },
+  { word: "checkout", src: "/home/orbit/photo-checkout.jpg", alt: "A card held to a card reader", ar: 1 },
+  { word: "drone panel", src: "/home/orbit/photo-drone.jpg", alt: "A drone against an evening sky", ar: 0.8 },
+  { word: "sign-up", src: "/home/orbit/photo-signup.jpg", alt: "Hands on a laptop keyboard in the dark", ar: 1.2 },
+  { word: "device panel", src: "/home/orbit/photo-device.jpg", alt: "A circuit board inside a device", ar: 1 },
+  { word: "agent's change", src: "/home/orbit/photo-agent.jpg", alt: "Code on a laptop screen", ar: 1.2 },
+  { word: "fleet console", src: "/home/orbit/photo-fleet.jpg", alt: "A person flying a drone at dusk", ar: 0.8 },
+  { word: "client's site", src: "/home/orbit/photo-client.jpg", alt: "A person working at two monitors", ar: 1.2 },
+  { word: "vehicle portal", src: "/home/orbit/photo-vehicle.jpg", alt: "A truck on a road at dusk", ar: 1.2 },
+  { word: "release", src: "/home/orbit/photo-release.jpg", alt: "A server rack lit green", ar: 0.8 },
+  { word: "dashboard", src: "/home/orbit/photo-dashboard.jpg", alt: "A person reading a dashboard", ar: 1 },
+  { word: "flight dashboard", src: "/home/orbit/photo-flight.jpg", alt: "An airliner's flight deck at night", ar: 0.8 },
+  { word: "robot console", src: "/home/orbit/photo-robot.jpg", alt: "A robot arm building a lattice", ar: 1 },
+  { word: "mission console", src: "/home/orbit/photo-mission.jpg", alt: "An operations room at night", ar: 1.2 },
 ];
 
 const REV_MS = 64000;
@@ -109,7 +113,7 @@ export function Orbit() {
       <div ref={field} className="v6-or__field" data-hold="0">
         {ORBIT.map((t, i) => (
           <button
-            key={t.word} type="button" className="v6-or__tile" data-on={i === shown}
+            key={t.word} type="button" className="v6-or__tile" data-on={i === shown} style={{ ["--ar" as string]: t.ar }}
             ref={(b) => { tiles.current[i] = b; }}
             onMouseEnter={() => hold(i)} onMouseLeave={() => hold(null)}
             onFocus={() => hold(i)} onBlur={() => hold(null)}
