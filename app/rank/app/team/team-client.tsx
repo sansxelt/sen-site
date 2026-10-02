@@ -163,7 +163,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
       <div className="card" style={{ marginBottom: 18, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <div>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16 }}>{ctx.workspace?.name ?? "Your workspace"}</div>
-          <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 2 }}>{active.length} member{active.length === 1 ? "" : "s"} | You are {ROLE_LABEL[ctx.myRole]}</div>
+          <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 2 }}>{active.length} member{active.length === 1 ? "" : "s"}. You are {ROLE_LABEL[ctx.myRole]}.</div>
         </div>
       </div>
 
@@ -213,14 +213,14 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
           <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "10px 0 0", lineHeight: 1.6 }}>Pending invites don&apos;t count until accepted. Team seats are for additional internal collaborators; client viewers are always free.</p>
 
           {billing.configured && billing.hasSubscription && (
-            <p style={{ fontSize: 12, color: "var(--fg-3)", margin: "10px 0 0" }}>Billing interval: <strong style={{ color: "var(--fg-1)" }}>{billing.interval === "yearly" ? "Annual" : billing.interval === "monthly" ? "Monthly" : "-"}</strong> | {billing.billingOwnerIsCurrentOwner ? "You are the billing owner" : "Billing owner: current workspace owner"}. Change your plan, billing interval, or payment method in Manage team billing.</p>
+            <p style={{ fontSize: 12, color: "var(--fg-3)", margin: "10px 0 0" }}>Billing interval: <strong style={{ color: "var(--fg-1)" }}>{billing.interval === "yearly" ? "Annual" : billing.interval === "monthly" ? "Monthly" : "Not set"}</strong>. {billing.billingOwnerIsCurrentOwner ? "You are the billing owner" : "Billing owner: current workspace owner"}. Change your plan, billing interval, or payment method in Manage team billing.</p>
           )}
 
           {billing.configured && !billing.hasSubscription && (
             <div style={{ marginTop: 14 }}>
               <div className="seg" style={{ marginBottom: 8 }}>
                 <button className={seatInterval === "monthly" ? "on" : ""} onClick={() => setSeatInterval("monthly")}>Monthly</button>
-                <button className={seatInterval === "yearly" ? "on" : ""} disabled={!billing.yearlyConfigured} onClick={() => billing.yearlyConfigured && setSeatInterval("yearly")} style={{ opacity: billing.yearlyConfigured ? 1 : 0.45, cursor: billing.yearlyConfigured ? "pointer" : "not-allowed" }}>Annual{savings && savings > 0 ? ` | save ${savings}%` : ""}</button>
+                <button className={seatInterval === "yearly" ? "on" : ""} disabled={!billing.yearlyConfigured} onClick={() => billing.yearlyConfigured && setSeatInterval("yearly")} style={{ opacity: billing.yearlyConfigured ? 1 : 0.45, cursor: billing.yearlyConfigured ? "pointer" : "not-allowed" }}>Annual{savings && savings > 0 ? `, save ${savings}%` : ""}</button>
               </div>
               {!billing.yearlyConfigured && <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "0 0 6px" }}>Annual team billing is not configured yet.</p>}
               {priceLabel && <div style={{ fontSize: 13.5, color: "var(--fg-2)", fontWeight: 500 }}>{priceLabel}</div>}

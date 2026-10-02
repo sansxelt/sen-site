@@ -251,7 +251,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
         // An empty account gets the form at full size: there is no state to read, so the only useful thing
         // on the page is the way to create some.
         <>
-          <div style={{ marginBottom: 26 }}><Composer balance={bal} surface={onboarding?.surface} initialUrl={initialUrl} /></div>
+          <div style={{ marginBottom: 26 }}><Composer balance={bal} surface={onboarding?.surface} initialUrl={initialUrl} asPageHeading /></div>
           {/* The static four-step list only when the checklist is not already showing the same steps. */}
           {showSetup ? null : <EmptyOverview />}
         </>

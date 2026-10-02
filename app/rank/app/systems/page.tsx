@@ -72,7 +72,8 @@ function SystemCard({ system, run }: { system: Application; run: RunSummary | un
   const proof = systemProof(run ?? null);
   const last = timeAgo(run?.completed_at ?? run?.created_at);
   const crit = criticalFlows(run?.summary);
-  const metaParts = [crit, last ? `Last run ${last}` : null].filter(Boolean);
+  // Lower case after a comma (audit P2-13); a capital only when it starts the line.
+  const metaParts = [crit, last ? `${crit ? "last" : "Last"} run ${last}` : null].filter(Boolean);
   const metaText = metaParts.length ? metaParts.join(", ") : "No verification yet";
   return (
     <Link href={`/systems/${system.id}`} className="card card--hover" style={{ display: "flex", flexDirection: "column", gap: 14, textDecoration: "none", color: "inherit", padding: 18 }}>
@@ -118,7 +119,7 @@ export default async function SystemsPage() {
           with !important for as long as it has existed, so it is simply gone rather than moved. */}
       <PageHeader
         title="Systems"
-        lead="Everything you have pointed Vraelis at: web apps, and the panels that control your devices. Each card shows its latest result."
+        lead="Your web apps and device control panels, each with its latest result."
         actions={<Link href="/systems/new" className="btn" style={{ flex: "none" }}>Connect a system <span aria-hidden>&rarr;</span></Link>}
       />
 

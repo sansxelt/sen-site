@@ -70,7 +70,10 @@ const EXAMPLES: Record<string, { url: string; claim: string }> = {
   panel: { url: "your-control-panel.example.com", claim: "Pressing Return home on the panel brings the drone back, and its status still reads Landed after a reload." },
 };
 
-export function Composer({ balance, surface, initialUrl }: { balance: number; surface?: string | null; initialUrl?: string }) {
+export function Composer({ balance, surface, initialUrl, asPageHeading = false }: { balance: number; surface?: string | null; initialUrl?: string; asPageHeading?: boolean }) {
+  // The title is the page's h1 only on an empty account, where the composer IS the page. Opened inside a
+  // populated Overview it sits under the page's own h1, so it is an h2 there (audit P2-2: two h1s).
+  const Title = asPageHeading ? "h1" : "h2";
   const ex = EXAMPLES[surface ?? ""] ?? EXAMPLES.web;
   // Prefilled when the address came from the homepage field (?url=), so it is never typed twice.
   const [deployment, setDeployment] = useState(initialUrl ?? "");
@@ -148,9 +151,9 @@ export function Composer({ balance, surface, initialUrl }: { balance: number; su
   return (
     <section className="card" aria-label="New verification" style={{ background: "var(--bg-1)", padding: "clamp(22px, 3vw, 30px)", boxShadow: "var(--shadow-md)" }}>
       <div style={lbl}>New verification</div>
-      <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3.4vw, 2.15rem)", letterSpacing: "-0.03em", margin: "8px 0 6px", lineHeight: 1.05 }}>
+      <Title className="display" style={{ fontSize: "clamp(1.7rem, 3.4vw, 2.15rem)", letterSpacing: "-0.03em", margin: "8px 0 6px", lineHeight: 1.05 }}>
         What should be <span className="em">true</span>?
-      </h1>
+      </Title>
       <p style={{ margin: "0 0 20px", color: "var(--fg-3)", fontSize: 14, maxWidth: "56ch", lineHeight: 1.55 }}>
         Name a deployed build and the outcome it claims. Vraelis derives the plan it would run, shows it to you
         to approve, then runs a real browser and returns a decision backed by evidence.
@@ -248,7 +251,8 @@ export function Composer({ balance, surface, initialUrl }: { balance: number; su
       {phase.k === "compose" && balance > 0 && (
         <div style={{ marginTop: 16, paddingTop: 13, borderTop: "1px solid var(--line-2)", fontSize: 12.5, color: "var(--fg-4)" }}>
           Balance <b style={{ color: "var(--fg-2)", fontVariantNumeric: "tabular-nums" }}>{balance.toLocaleString()} credits</b>.
-          Reviewing a plan is free. You are charged only when an approved verification runs. Nothing runs, nothing charged.
+          {/* "Free to review" is said once, beside the button above; this line only adds the balance and when it is spent. */}
+          You are charged only when an approved verification runs.
         </div>
       )}
 
