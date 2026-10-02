@@ -110,6 +110,13 @@ export default async function KeyDetailPage(ctx: { params: Promise<{ id: string 
 
       {!d ? (
         <p style={{ fontSize: 13.5, color: "var(--fg-3)" }}>This key&apos;s history could not be read just now. Nothing has changed; try again shortly.</p>
+      ) : !key.last_used && d.runs === 0 && (d.usage.requests?.total ?? 0) === 0 ? (
+        // A key nobody has used yet: one sentence instead of eight "n/a" tiles and an empty chart (audit P2-9).
+        <div className="empty" style={{ padding: "clamp(22px, 3vw, 34px)" }}>
+          <h3 style={{ fontSize: 16 }}>This key has not been used yet</h3>
+          <p style={{ fontSize: 13 }}>Once your coding agent, the CLI or your CI calls Vraelis with it, its spend, verdicts and timings show here.</p>
+          <Link href="/cli" className="btn btn--ghost">Set up the CLI</Link>
+        </div>
       ) : (
         <>
           {/* ── SPEND, first, because it is the question ─────────────────────────────────────────────── */}
