@@ -78,7 +78,7 @@ const MENUS: Menu[] = [
         { t: "Slack", d: "Where a decision lands", href: BASE + "/integrations", pic: "slack" },
       ] },
       { h: "The loop", col: 2, links: [
-        { t: "Verify, approve, run, re-check", d: "The whole loop", href: BASE + "/docs/the-loop", pic: "the-loop" },
+        { t: "The whole loop", d: "Verify, approve, run, re-check", href: BASE + "/docs/the-loop", pic: "the-loop" },
       ] },
     ],
   },
@@ -98,7 +98,7 @@ const MENUS: Menu[] = [
       { h: "Trust", col: 2, links: [
         { t: "Security", d: "Architecture and data handling", href: BASE + "/security" },
         { t: "System status", d: "What is operational", href: BASE + "/security#status" },
-        { t: "What is built, and what is next", d: "The live list beside the planned one", href: BASE + "/platform#current" },
+        { t: "What is built", d: "The live list beside the planned one", href: BASE + "/platform#current" },
       ] },
     ],
     cards: [
@@ -121,7 +121,7 @@ const MENUS: Menu[] = [
         { t: "ByteDance partnership", d: "TikTok's parent company, Seed models", href: BASE + "/partnerships/bytedance", pic: "bytedance-partnership" },
       ] },
       { h: "Updates", col: 2, links: [
-        { t: "What is built, and what is next", d: "The live list beside the planned one", href: BASE + "/platform#current", pic: "what-is-built" },
+        { t: "What is built", d: "The live list beside the planned one", href: BASE + "/platform#current", pic: "what-is-built" },
         // The strongest evidence section on the site had zero inbound links: it sat at the foot of /method.
         { t: "In public", d: "Reported incidents, sourced", href: BASE + "/method#in-public", pic: "in-public" },
         { t: "Changelog", d: "What shipped, dated", href: BASE + "/changelog", pic: "changelog" },
