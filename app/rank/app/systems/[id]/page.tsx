@@ -12,7 +12,7 @@ import { listRunsForApp, issuesResolvedByRun } from "@/lib/preflight/runs-db";
 import { isActiveRun, runVerdict } from "@/lib/preflight/home-verdict";
 import { unverifiedNewerDeployment } from "@/lib/preflight/deployments-db";
 import { pickHealthRun, isLaunchHealthCandidate } from "@/lib/preflight/target-url";
-import { listAllIssues, listRepairs } from "@/lib/preflight/overview-db";
+import { listAllIssues, listRepairs, claimsForContracts } from "@/lib/preflight/overview-db";
 import { apiBetaVisible } from "@/lib/preflight/api-beta-gate";
 import { repairsSurfaceEnabled } from "@/lib/v-preflight-flags";
 import { getApiStatus } from "@/lib/preflight/runtime/platform-status";
@@ -93,20 +93,25 @@ function KV({ k, v }: { k: string; v: string | null }) {
   );
 }
 
-function RunRow({ appId, r }: { appId: string; r: RunSummary }) {
+function RunRow({ appId, r, claim }: { appId: string; r: RunSummary; claim: string | null }) {
   return (
     <Link href={`/systems/${appId}/passes/${r.id}`} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", textDecoration: "none" }}>
       {/* The row led with a 9px dot painted the pill's own colour. It was aria-hidden, so it said nothing
-          the pill does not, and keeping it meant keeping a second copy of the signal palette in this file. */}
+          the pill does not, and keeping it meant keeping a second copy of the signal palette in this file.
+          It leads with the sentence the run checked now (audit P1-4); when and where sit under it. */}
       <div style={{ minWidth: 0, flex: 1 }}>
-        <div style={{ fontSize: 13, color: "var(--fg-2)", fontWeight: 600 }} title={when(r.created_at)}>{timeAgo(r.created_at) || "Verification"}</div>
-        {r.deployment_url ? (
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>
-            {r.deployment_url}
-          </div>
-        ) : null}
+        <div style={{ display: "-webkit-box", WebkitBoxOrient: "vertical", WebkitLineClamp: 2, overflow: "hidden", fontSize: 13.5, lineHeight: 1.4, color: "var(--fg-1)", fontWeight: 600 }} title={when(r.created_at)}>
+          {claim || timeAgo(r.created_at) || "Verification"}
+        </div>
+        <div style={{ fontSize: 11.5, color: "var(--fg-4)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>
+          {claim ? <span>{timeAgo(r.created_at)}</span> : null}
+          {claim && r.deployment_url ? <span aria-hidden> · </span> : null}
+          {r.deployment_url ? <span style={{ fontFamily: "var(--font-mono)" }}>{r.deployment_url}</span> : null}
+        </div>
       </div>
-      <Verdict state={r.state} decision={r.decision} style={{ flex: "none" }} />
+      {r.invalidated_at
+        ? <span className="pill" style={{ flex: "none", color: "var(--fg-3)", background: "var(--bg-2)", borderColor: "var(--line-2)" }}>Discarded</span>
+        : <Verdict state={r.state} decision={r.decision} style={{ flex: "none" }} />}
       <span aria-hidden style={{ color: "var(--fg-5)", flex: "none", fontSize: 13 }}>&rarr;</span>
     </Link>
   );
@@ -151,6 +156,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
     listRepairs(owner),
     apiVisible ? getApiStatus(owner, id) : Promise.resolve(null),
   ]);
+  const claims = await claimsForContracts(owner, runs.slice(0, 5).map((r) => r.contract_id ?? ""));
   let reqs: ContractRequirement[] = [];
   let flows: TestFlow[] = [];
   if (contract) [reqs, flows] = await Promise.all([listRequirements(owner, contract.id), listFlows(owner, contract.id)]);
@@ -426,7 +432,9 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
             Hidden only when a newer-deployment banner already renders its own launch control (no double button);
             in every other state — including BLOCKED with no newer deployment — this is the launch affordance. */}
         {caps.canLaunch && contractApproved && !latestActive && !newerDeploy && (decision === "repair_verified" ? criticalEligibleIds.length > 0 : eligibleFlowIds.length > 0) ? (
-          <section aria-label="Verify this deployment" style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", gap: "clamp(12px, 2vw, 20px)" }}>
+          // One card: the button, what it does, and what it costs, with room above it (audit P1-10: the button
+          // touched the line above, and the preview floated mid-row beside an empty half).
+          <section aria-label="Verify this deployment" className="card" style={{ marginTop: 12, padding: "16px 18px", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "clamp(12px, 2vw, 20px)" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start" }}>
               <LaunchPassButton
                 appId={id}
@@ -439,7 +447,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
                   : "Runs a full verification against the current deployment and returns a decision with evidence."}
               </p>
             </div>
-            <div style={{ maxWidth: 420, flex: "1 1 300px" }}>
+            <div style={{ flex: "0 1 380px", minWidth: 0 }}>
               <PassPreview appId={id} flowIds={decision === "repair_verified" ? criticalEligibleIds : eligibleFlowIds} />
             </div>
           </section>
@@ -475,7 +483,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
           </div>
           {runs.length ? (
             <div style={{ display: "grid", gap: 8 }}>
-              {runs.slice(0, 5).map((r) => <RunRow key={r.id} appId={app.id} r={r} />)}
+              {runs.slice(0, 5).map((r) => <RunRow key={r.id} appId={app.id} r={r} claim={claims.get(r.contract_id ?? "") ?? null} />)}
             </div>
           ) : (
             <p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>Not verified yet. Once a run finishes, its decision and the evidence behind it show here.</p>

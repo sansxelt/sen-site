@@ -159,11 +159,18 @@ function categoryFor(t: string): string {
   return "Workspace";
 }
 
-export type AuditEntry = { id: string; label: string; when: string; actor: string; context: string; category: string; subject?: string };
+export type AuditEntry = {
+  id: string; label: string; when: string; actor: string; context: string; category: string; subject?: string;
+  /** The system a verification event belongs to, and where its record opens (audit P1-19). Shown on the
+   *  page only; the export lists its own fields and never carries a path. */
+  system?: string; href?: string;
+};
 
 type Row = { id: string; user_id: string | null; test_id?: string | null; event_type: string; actor_type: string; metadata: Record<string, unknown> | null; created_at: string };
 
-function toEntry(r: Row, uid: string, titles?: Map<string, string>): AuditEntry {
+type Objects = { apps: Map<string, string>; claims: Map<string, string>; contractApp: Map<string, string> };
+
+function toEntry(r: Row, uid: string, titles?: Map<string, string>, objects?: Objects): AuditEntry {
   const md = (r.metadata ?? {}) as Record<string, unknown>;
   const context = SAFE_KEYS
     .filter((k) => md[k] != null && typeof md[k] !== "object" && !looksSensitive(String(md[k])))
@@ -176,7 +183,59 @@ function toEntry(r: Row, uid: string, titles?: Map<string, string>): AuditEntry 
     id: r.id, label: AUDIT_LABELS[r.event_type] ?? r.event_type, when: r.created_at, actor, context,
     category: categoryFor(r.event_type),
     ...(title ? { subject: title.length > 60 ? title.slice(0, 57) + "…" : title } : {}),
+    ...objectOf(md, objects),
   };
+}
+
+// WHAT A VERIFICATION EVENT WAS ABOUT. preflight_* events carry application_id (and run_id for runs), so
+// the row can name the system, say the sentence the run checked, and open its record. Read only for the
+// caller's own systems and runs; anything else stays as before, unnamed and unlinked.
+function objectOf(md: Record<string, unknown>, objects?: Objects): Pick<AuditEntry, "subject" | "system" | "href"> {
+  // A plan approval records its contract, not its system; the contract says which system it belongs to.
+  const appId = typeof md.application_id === "string" ? md.application_id
+    : typeof md.contract_id === "string" ? objects?.contractApp.get(md.contract_id) ?? null : null;
+  const runId = typeof md.run_id === "string" ? md.run_id : null;
+  const system = appId ? objects?.apps.get(appId) : undefined;
+  if (!appId || !system) return {};
+  const claim = runId ? objects?.claims.get(runId) : undefined;
+  return {
+    system,
+    ...(claim ? { subject: claim.length > 90 ? claim.slice(0, 87) + "…" : claim } : {}),
+    href: runId ? `/systems/${appId}/passes/${runId}` : `/systems/${appId}`,
+  };
+}
+
+async function readObjects(s: ReturnType<typeof getSupabaseAdminClient>, uid: string, rows: Row[]): Promise<Objects> {
+  const apps = new Map<string, string>(), claims = new Map<string, string>(), contractApp = new Map<string, string>();
+  const contractIds = [...new Set(rows.map((r) => (r.metadata ?? {}).contract_id).filter((v): v is string => typeof v === "string"))];
+  if (contractIds.length) {
+    const { data } = await s.from("v_production_contracts" as never).select("id,application_id").eq("user_id", uid).in("id", contractIds);
+    for (const c of (data as unknown as { id: string; application_id: string | null }[]) ?? []) if (c.application_id) contractApp.set(c.id, c.application_id);
+  }
+  const appIds = [...new Set([
+    ...rows.map((r) => (r.metadata ?? {}).application_id).filter((v): v is string => typeof v === "string"),
+    ...contractApp.values(),
+  ])];
+  const runIds = [...new Set(rows.map((r) => (r.metadata ?? {}).run_id).filter((v): v is string => typeof v === "string"))];
+  if (appIds.length) {
+    const { data } = await s.from("v_applications" as never).select("id,name").eq("user_id", uid).in("id", appIds);
+    for (const a of (data as unknown as { id: string; name: string }[]) ?? []) apps.set(a.id, a.name);
+  }
+  if (runIds.length) {
+    const { data: runs } = await s.from("v_preflight_runs" as never).select("id,contract_id").eq("user_id", uid).in("id", runIds);
+    const byContract = new Map<string, string[]>();
+    for (const r of (runs as unknown as { id: string; contract_id: string | null }[]) ?? []) {
+      if (r.contract_id) byContract.set(r.contract_id, [...(byContract.get(r.contract_id) ?? []), r.id]);
+    }
+    if (byContract.size) {
+      const { data: cs } = await s.from("v_production_contracts" as never).select("id,source_prompt").eq("user_id", uid).in("id", [...byContract.keys()]);
+      for (const c of (cs as unknown as { id: string; source_prompt: string | null }[]) ?? []) {
+        const text = (c.source_prompt ?? "").replace(/\s+/g, " ").trim();
+        if (text) for (const runId of byContract.get(c.id) ?? []) claims.set(runId, text);
+      }
+    }
+  }
+  return { apps, claims, contractApp };
 }
 
 export async function workspaceActivity(email: string, limit = 40): Promise<AuditEntry[]> {
@@ -201,7 +260,8 @@ export async function workspaceActivity(email: string, limit = 40): Promise<Audi
       const { data: ts } = await s.from("v_tests" as never).select("id,title").in("id", testIds).eq("user_id", uid);
       for (const t of (ts as unknown as { id: string; title: string }[]) ?? []) titles.set(t.id, t.title);
     }
-    return rows.map((r) => toEntry(r, uid, titles));
+    const objects = await readObjects(s, uid, rows);
+    return rows.map((r) => toEntry(r, uid, titles, objects));
   } catch { return []; }
 }
 

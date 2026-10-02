@@ -25,9 +25,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requirePreflightOwner } from "@/lib/v-preflight-guard";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
-import { listApplicationsForMember, type Application } from "@/lib/v-applications";
+import { listApplicationsForMember, latestRunByApp, type Application } from "@/lib/v-applications";
 import { listGuaranteesForApps, guaranteeRunHistory, type Guarantee } from "@/lib/preflight/guarantees-db";
-import { guaranteeStatusFrom, GUARANTEE_STATUS_LABEL, GUARANTEE_COVERAGE_NOTE } from "@/lib/preflight/guarantee-status";
+import { guaranteeStatusFrom, guaranteeFreshness, GUARANTEE_STATUS_LABEL, GUARANTEE_COVERAGE_NOTE } from "@/lib/preflight/guarantee-status";
 import { timeAgo } from "@/lib/preflight/home-verdict";
 import { Ic, I } from "@/app/rank/_components/icons";
 import { Verdict } from "@/app/rank/_components/verdict";
@@ -82,9 +82,16 @@ export default async function GuaranteesPage() {
   // Only runs proving the CURRENT meaning count. approveGuaranteePlan overwrites approved_plan_hash in
   // place, so reading the newest run's verdict without checking which meaning it executed republishes an
   // old result as evidence for a promise nothing has ever proven.
+  // Each system's own latest run, read per owner like the guarantees themselves.
+  const systemLatest: Awaited<ReturnType<typeof latestRunByApp>> = Object.assign({}, ...(await Promise.all(
+    Array.from(byOwner.entries()).map(([ownerId, ids]) => latestRunByApp(ownerId, ids)),
+  )));
   const verdicts = await Promise.all(guarantees.map(async (g) => {
     const history = await guaranteeRunHistory(g.user_id, g.id);
-    return [g.id, guaranteeStatusFrom(history, g.plan_state, g.approved_plan_hash)] as const;
+    return [g.id, {
+      status: guaranteeStatusFrom(history, g.plan_state, g.approved_plan_hash),
+      fresh: guaranteeFreshness(history, g.approved_plan_hash, systemLatest[g.application_id]),
+    }] as const;
   }));
   const verdictOf = new Map(verdicts);
 
@@ -123,6 +130,9 @@ export default async function GuaranteesPage() {
                       {g.plan_approved_at
                         ? <span>Approved by {g.plan_approved_by || "a reviewer"} {timeAgo(g.plan_approved_at)}</span>
                         : <span>No approved plan yet</span>}
+                      {/* When the verdict was earned, and whether the system has been checked since (P1-8). */}
+                      {verdictOf.get(g.id)?.fresh.at ? <span>Last checked {timeAgo(verdictOf.get(g.id)!.fresh.at!)}</span> : null}
+                      {verdictOf.get(g.id)?.fresh.olderThanSystem ? <span style={{ color: "var(--wait-ink)" }}>Older than this system&apos;s latest verification</span> : null}
                     </span>
                   </span>
                   {/* The verdict leads, because "is this still true" is the question. The plan's state stays
@@ -135,7 +145,7 @@ export default async function GuaranteesPage() {
                         The plan badge beside it keeps its own uppercase treatment on purpose: it answers a
                         different question, and drawing it as a verdict would be a fourth thing to mistake for
                         one. */}
-                    <Verdict verdict={GUARANTEE_STATUS_LABEL[verdictOf.get(g.id) ?? "unproven"]} />
+                    <Verdict verdict={GUARANTEE_STATUS_LABEL[verdictOf.get(g.id)?.status ?? "unproven"]} />
                     <span className="pill" style={{ fontSize: 12.5, fontWeight: 700, color: p.color, background: p.bg, borderColor: p.border }}>{p.label}</span>
                   </span>
                   <span aria-hidden style={{ color: "var(--fg-5)", flex: "none" }}>&rarr;</span>

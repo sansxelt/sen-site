@@ -52,13 +52,18 @@ function EventList({ events, empty, action }: { events: AuditEntry[]; empty: str
       </div>
     );
   }
-  const row = (e: AuditEntry, i: number) => (
-        <div key={e.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 18px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", flexWrap: "wrap" }}>
-          <div style={{ minWidth: 0 }}>
+  // A row that is about a system or a run names it and opens it (audit P1-19: "Verification launched / You /
+  // Workspace" said what happened and never to what, and nothing was a link).
+  const row = (e: AuditEntry, i: number) => {
+    const style = { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 18px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", flexWrap: "wrap", color: "inherit", textDecoration: "none" } as const;
+    const body = (
+      <>
+          <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ fontSize: 14, color: "var(--fg-1)", fontWeight: 500 }}>
               {e.label}
-              {e.subject ? <span style={{ color: "var(--fg-3)", fontWeight: 400 }}>, “{e.subject}”</span> : null}
+              {e.system ? <span style={{ color: "var(--fg-2)" }}>, {e.system}</span> : null}
             </div>
+            {e.subject ? <div style={{ fontSize: 13, color: "var(--fg-3)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.subject}</div> : null}
             <div style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", marginTop: 3, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
               <span className="pill" style={{ color: e.actor === "System" ? "var(--fg-4)" : "var(--acc-deep)" }}>{e.actor}</span>
               <span className="pill" style={{ color: "var(--fg-4)" }}>{e.category}</span>
@@ -66,8 +71,12 @@ function EventList({ events, empty, action }: { events: AuditEntry[]; empty: str
             </div>
           </div>
           <span title={absWhen(e.when)} style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)", whiteSpace: "nowrap" }}>{when(e.when)}</span>
-        </div>
-  );
+      </>
+    );
+    return e.href
+      ? <Link key={e.id} href={e.href} className="rec-row" style={style}>{body}</Link>
+      : <div key={e.id} style={style}>{body}</div>;
+  };
   const first = events.slice(0, FIRST_ROWS);
   const rest = events.slice(FIRST_ROWS);
   return (
@@ -104,7 +113,8 @@ export default async function AuditPage() {
   const orgEvents = org && canOrgAudit ? await organizationActivity(email, org.id, 60) : [];
 
   return (
-    <Page measure="prose">
+    // The wide measure: the rows carry a sentence now, and the narrow column left half the page empty (P1-19).
+    <Page>
       <PageHeader
         title="Records"
         lead="A read-only trail of everything that happens in your workspace: verifications, balance, billing, team access, and governance."

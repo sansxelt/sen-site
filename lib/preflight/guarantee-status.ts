@@ -73,6 +73,25 @@ export function guaranteeStatusFrom(
   return decision;
 }
 
+/**
+ * WHEN THE VERDICT WAS EARNED, and whether the system has been checked since (audit P1-8). A guarantee's
+ * verdict comes from the newest run that proved its current meaning, which can be weeks older than the
+ * system's own latest run: a green "Verified" then sat beside a system whose latest decision was Failed, and
+ * the screen gave two answers to "is this true?". Saying when, and saying that the system was checked again
+ * afterwards, makes both answers true at once. Null `at` means no run has proved the current meaning.
+ */
+export function guaranteeFreshness(
+  historyNewestFirst: (GuaranteeRunEvidence & { id: string; created_at: string; completed_at: string | null })[],
+  approvedPlanHash: string | null,
+  systemLatest: { id: string; created_at: string } | null | undefined,
+): { at: string | null; olderThanSystem: boolean } {
+  const latest = historyNewestFirst.find((r) => provesCurrentMeaning(r, approvedPlanHash));
+  if (!latest) return { at: null, olderThanSystem: false };
+  const olderThanSystem = !!systemLatest && systemLatest.id !== latest.id
+    && Date.parse(systemLatest.created_at) > Date.parse(latest.created_at);
+  return { at: latest.completed_at ?? latest.created_at, olderThanSystem };
+}
+
 /** Layered on top of the run history: a repair that is under way but has not produced a result yet.
  *  Kept separate because it is the only state that needs a fact from outside the runs themselves. */
 export function withRepairInProgress(status: GuaranteeStatus, repairOpen: boolean): GuaranteeStatus {
