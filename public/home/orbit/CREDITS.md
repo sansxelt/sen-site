@@ -19,6 +19,5 @@ Pexels License: https://www.pexels.com/license/ . Unsplash License: https://unsp
 | photo-vehicle.jpg | vehicle portal | Sergei Skrynnik | https://www.pexels.com/photo/photo-of-a-truck-with-white-lights-11053643/ |
 | photo-release.jpg | release | Tyler (Unsplash) | https://unsplash.com/photos/a-rack-of-electronic-equipment-in-a-dark-room-OnI_TNcIv9U |
 | photo-dashboard.jpg | dashboard | Mikhail Nilov | https://www.pexels.com/photo/woman-in-front-of-a-computer-screen-7534101/ |
-| photo-flight.jpg | flight dashboard | Larisa Andreou | https://www.pexels.com/photo/backlit-instrument-panel-of-an-airplane-cockpit-9497767/ |
 | photo-robot.jpg | robot console | Danny Pérez (Unsplash) | https://unsplash.com/photos/V6lpEsglnVE |
 | photo-mission.jpg | mission console | Sergii | https://www.pexels.com/photo/a-person-inside-a-ship-control-room-14606488/ |

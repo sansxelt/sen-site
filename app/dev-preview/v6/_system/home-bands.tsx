@@ -5,7 +5,9 @@
    THE STATEMENT is the one sentence the page stops for, revealed word by word as it crosses the screen
    (scale.com's "90% of..." card, adapted: we have no customer number to state, so it states the problem and
    the answer instead). It needs no evidence beyond the product, because each clause is a thing the product
-   does: the agent asks, Vraelis checks the live product, a person approves.
+   does, in the order it does them: the agent says done, a person approves the plan, Vraelis checks the live
+   product. (It said "a person signs off" last, after the check, until 2026-10-01; nothing runs before the
+   approval.)
 
    THE AGENTS BAND shows the three real ways a coding agent reaches Vraelis, in the CLI's own words
    (cli/vraelis.mjs usage) and the MCP tools' own names (lib/mcp/tools.ts). */
@@ -15,7 +17,7 @@ import { useScrollProgress } from "./progress";
 import { V6_BASE, V6_DOCS } from "@/lib/v6-routes";
 import "./home-bands.css";
 
-const STATEMENT = "Your coding agent says it is done. Vraelis checks it on the live product, and a person signs off.";
+const STATEMENT = "Your coding agent says it is done. A person approves the plan, and Vraelis checks it on the live product.";
 
 export function Statement() {
   const root = useRef<HTMLElement>(null);
@@ -62,8 +64,8 @@ export function AgentsBand() {
     <section className="v6-ag" aria-labelledby="v6-ag-h" data-nav-dark data-nav-theme="dark">
       <div className="v6-ag__in">
         <div className="v6-ag__txt">
-          <h2 id="v6-ag-h" className="v6-ag__h">Built for builders, and their agents.</h2>
-          <p className="v6-ag__d">Claude Code, Codex, Cursor, Copilot and others can ask for a check before they say done. They can never approve one.</p>
+          <h2 id="v6-ag-h" className="v6-ag__h">Your agent can ask. Only a person approves.</h2>
+          <p className="v6-ag__d">Claude Code, Codex, Cursor and Copilot can ask for a check before they say done.</p>
           <div className="v6-ag__cta">
             <Link className="v6-btn v6-btn--brand" href={`${V6_BASE}/agents`}>Set up your agent <span className="v6-arw" aria-hidden>→</span></Link>
             <Link className="v6-btn v6-btn--ghost" href={V6_DOCS}>Read the docs</Link>
@@ -98,7 +100,7 @@ export function Proof({ children }: { children: React.ReactNode }) {
       <div className="v6-pf__in">
         <div className="v6-pf__head">
           <h2 id="v6-pf-h" className="v6-pf__h">Real runs, replayed.</h2>
-          <p className="v6-pf__d">Four production checks on Vraelis demo apps, at the pace they ran.</p>
+          <p className="v6-pf__d">Four production checks on Vraelis demo apps, with their recorded timings.</p>
         </div>
         {children}
       </div>

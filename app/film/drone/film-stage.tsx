@@ -23,7 +23,10 @@ import * as THREE from "three";
 import { DroneModel, Pad, PAD_TOP, SCALE, newDrive, type Drive } from "@/app/dev-preview/v6/_system/drone-model";
 import { muxMp4, type Sample } from "../mp4";
 
-const W = 1920, H = 1080, FPS = 30, LENGTH = 16;
+// ?portrait renders the phone cut (1080x1920), as app/film/orbit does.
+const PORTRAIT = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("portrait");
+const W = PORTRAIT ? 1080 : 1920, H = PORTRAIT ? 1920 : 1080, FPS = 30, LENGTH = 16;
+const FOV = PORTRAIT ? 52 : 32;
 const BG = "#08090B";
 const HOVER = 1.15;
 
@@ -54,11 +57,14 @@ function rotorWorld(d: { y: number; yaw: number }) {
   return local.add(new THREE.Vector3(0, d.y, 0));
 }
 
-/** Aim so the subject sits right of centre, leaving the left of the frame for the headline. */
-function aimRightOfCentre(camera: THREE.Camera, subject: THREE.Vector3, shift: number) {
-  const view = new THREE.Vector3().subVectors(subject, camera.position).normalize();
-  const left = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), view).normalize();
-  camera.lookAt(subject.clone().addScaledVector(left, shift));
+/** Aim so the subject sits centred and low, a quarter of the frame below its middle: the homepage centres
+ *  its headline on the film (since 2026-10-01), so the drone belongs under it, never behind it. */
+const HALF_FOV = THREE.MathUtils.degToRad(FOV / 2);
+// On a phone the headline sits near the top of its frame, so the drone goes a little lower than on a desktop.
+const LOW = PORTRAIT ? 0.42 : 0.5;
+function aimBelowHeadline(camera: THREE.Camera, subject: THREE.Vector3) {
+  const lift = camera.position.distanceTo(subject) * Math.tan(HALF_FOV) * LOW;
+  camera.lookAt(subject.clone().add(new THREE.Vector3(0, lift, 0)));
 }
 
 type FilmState = { t: number };
@@ -76,23 +82,23 @@ function Director({ drive, film }: { drive: React.MutableRefObject<Drive>; film:
       const u = k01(t, 0, 4.5);
       const dir = new THREE.Vector3(0.55, 0.12, 1).normalize();
       camera.position.copy(hub).addScaledVector(dir, lerp(1.9, 1.35, u)).add(new THREE.Vector3(0, -0.05, 0));
-      aimRightOfCentre(camera, hub, 0.32);
+      aimBelowHeadline(camera, hub);
     } else if (t < 8) {
       // 2. low and wide as it lifts off
       const u = ease(k01(t, 4.5, 8));
       camera.position.set(lerp(-3.4, -2.9, u), lerp(0.05, 0.55, u), lerp(5.2, 4.6, u));
-      aimRightOfCentre(camera, body.clone().add(new THREE.Vector3(0, 0.25, 0)), 1.25);
+      aimBelowHeadline(camera, body.clone().add(new THREE.Vector3(0, 0.25, 0)));
     } else if (t < 12) {
       // 3. a slow orbit while it hovers
       const u = k01(t, 8, 12);
       const a = lerp(0.55, 1.05, u), r = 5.6;
       camera.position.set(Math.sin(a) * r, lerp(1.7, 2.0, u), Math.cos(a) * r);
-      aimRightOfCentre(camera, body, 1.35);
+      aimBelowHeadline(camera, body);
     } else {
       // 4. high and wide as it comes home and lands
       const u = k01(t, 12, 16);
       camera.position.set(lerp(3.6, 4.0, u), lerp(4.4, 4.8, u), lerp(4.9, 5.5, u));
-      aimRightOfCentre(camera, new THREE.Vector3(0, d.y * 0.6, 0), 1.6);
+      aimBelowHeadline(camera, new THREE.Vector3(0, d.y * 0.6, 0));
     }
   });
   return null;
@@ -137,7 +143,7 @@ function Recorder({ film }: { film: React.MutableRefObject<FilmState> }) {
           },
           error: (e) => { throw e; },
         });
-        encoder.configure({ codec: width > 1280 ? "avc1.640033" : "avc1.64001f", width, height, bitrate, framerate: FPS, latencyMode: "quality", avc: { format: "avc" } });
+        encoder.configure({ codec: width * height > 1280 * 720 ? "avc1.640033" : "avc1.64001f", width, height, bitrate, framerate: FPS, latencyMode: "quality", avc: { format: "avc" } });
         const frames = LENGTH * FPS;
         for (let i = 0; i < frames; i++) {
           const t = i / FPS;
@@ -181,7 +187,7 @@ export function FilmStage() {
         dpr={1}
         shadows
         style={{ width: W, height: H }}
-        camera={{ position: [4, 2, 6], fov: 32, near: 0.05, far: 80 }}
+        camera={{ position: [4, 2, 6], fov: FOV, near: 0.05, far: 80 }}
         gl={{ antialias: true, preserveDrawingBuffer: true, powerPreference: "high-performance" }}
         scene={{ background: new THREE.Color(BG), fog }}
       >

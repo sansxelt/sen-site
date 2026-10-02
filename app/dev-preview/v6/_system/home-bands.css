@@ -2,7 +2,8 @@
 
 .v6-stm { background: var(--paper); padding: clamp(40px, 6vw, 96px) var(--gutter); }
 .v6-stm__card {
-  max-width: var(--max); margin: 0 auto; border-radius: 28px; padding: clamp(40px, 7vw, 120px) clamp(28px, 6vw, 110px);
+  /* the same edges as every other panel on the page (it was 64px wider each side above about 1730px) */
+  max-width: calc(var(--max) - 2 * var(--gutter)); margin: 0 auto; border-radius: 28px; padding: clamp(40px, 7vw, 120px) clamp(28px, 6vw, 110px);
   background: radial-gradient(120% 140% at 0% 0%, #17171A 0%, #0F0F11 60%); border: 1px solid rgba(255,255,255,0.08);
 }
 .v6-stm__t { margin: 0; max-width: 24ch; font-family: var(--display); font-weight: 500; font-size: clamp(2rem, 4.4vw, 4.4rem); line-height: 1.08; letter-spacing: -0.035em; }

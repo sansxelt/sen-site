@@ -13,9 +13,14 @@
    our own screenshots and renders, poor next to scale.com's.
 
    Motion: one slow revolution a minute, paused on hover or focus, and not at all with reduced motion. The
-   tiles are buttons, so the orbit can be stepped through with the keyboard. */
+   tiles are buttons, so the orbit can be stepped through with the keyboard. The headline holds its word until
+   a tile is pointed at, tapped or focused, as scale.com's does (it used to change word every 2.6 s on its
+   own). A tap holds a tile and a second tap, or a tap anywhere else, lets it go.
+
+   (The airliner's flight deck left the ring 2026-10-01: next to "flight dashboard" it said we check an
+   aircraft's instruments, and only web panels are live.) */
 import Image from "next/image";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent, type PointerEvent } from "react";
 import { EditorialLink } from "./ui";
 import { useLocale } from "@/lib/i18n/client";
 import { V6_BASE } from "@/lib/v6-routes";
@@ -36,7 +41,6 @@ export const ORBIT: Tile[] = [
   { word: "vehicle portal", src: "/home/orbit/photo-vehicle.jpg", alt: "A truck on a road at dusk", ar: 1.2 },
   { word: "release", src: "/home/orbit/photo-release.jpg", alt: "A server rack lit green", ar: 0.8 },
   { word: "dashboard", src: "/home/orbit/photo-dashboard.jpg", alt: "A person reading a dashboard", ar: 1 },
-  { word: "flight dashboard", src: "/home/orbit/photo-flight.jpg", alt: "An airliner's flight deck at night", ar: 0.8 },
   { word: "robot console", src: "/home/orbit/photo-robot.jpg", alt: "A robot arm building a lattice", ar: 1 },
   { word: "mission console", src: "/home/orbit/photo-mission.jpg", alt: "An operations room at night", ar: 1.2 },
 ];
@@ -47,10 +51,9 @@ export function Orbit() {
   const field = useRef<HTMLDivElement>(null);
   const tiles = useRef<(HTMLButtonElement | null)[]>([]);
   const measure = useRef<HTMLSpanElement>(null);
-  const [active, setActive] = useState(0);
   const [held, setHeld] = useState<number | null>(null);
   const [wordW, setWordW] = useState<number | null>(null);
-  const shown = held ?? active;
+  const shown = held ?? 0;
   // In English only the noun swaps, as on scale.com. Other languages do not put the noun in the same place
   // (German: "Wissen, dass Ihr Checkout funktioniert"), so there each tile swaps a whole sentence, which the
   // page translator translates as one string.
@@ -66,7 +69,7 @@ export function Orbit() {
     const el = field.current;
     if (!el) return;
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let raf = 0, last = performance.now(), phase = 0, visible = true, auto = 0;
+    let raf = 0, last = performance.now(), phase = 0, visible = true;
     const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; }, { threshold: 0 });
     io.observe(el);
     const place = () => {
@@ -87,12 +90,7 @@ export function Orbit() {
     const frame = (now: number) => {
       const dt = Math.min(64, now - last); last = now;
       const hovering = el.dataset.hold === "1";
-      if (!still && visible && !hovering) {
-        phase += (dt / REV_MS) * Math.PI * 2;
-        // With nothing held, the word follows the tile nearest the front every few seconds.
-        auto += dt;
-        if (auto > 2600) { auto = 0; setActive((a) => (a + 1) % ORBIT.length); }
-      }
+      if (!still && visible && !hovering) phase += (dt / REV_MS) * Math.PI * 2;
       place();
       raf = requestAnimationFrame(frame);
     };
@@ -107,6 +105,20 @@ export function Orbit() {
     setHeld(i);
     if (field.current) field.current.dataset.hold = i === null ? "0" : "1";
   };
+  // A pointer hovering holds a tile; a touch does not hover, so there a tap holds it and a second tap lets go.
+  const onEnter = (i: number) => (e: PointerEvent) => { if (e.pointerType === "mouse") hold(i); };
+  const onLeave = (e: PointerEvent) => { if (e.pointerType === "mouse") hold(null); };
+  const onClick = (i: number) => (e: MouseEvent) => {
+    if ((e.nativeEvent as globalThis.PointerEvent).pointerType === "mouse") return; // the hover already holds it
+    hold(held === i ? null : i);
+  };
+  // A tap anywhere outside the ring lets a held tile go.
+  useEffect(() => {
+    if (held === null) return;
+    const away = (e: globalThis.PointerEvent) => { if (!field.current?.contains(e.target as Node)) hold(null); };
+    document.addEventListener("pointerdown", away);
+    return () => document.removeEventListener("pointerdown", away);
+  }, [held]);
 
   return (
     <section className="v6-or" aria-labelledby="v6-or-h" data-nav-dark data-nav-theme="dark">
@@ -115,9 +127,9 @@ export function Orbit() {
           <button
             key={t.word} type="button" className="v6-or__tile" data-on={i === shown} style={{ ["--ar" as string]: t.ar }}
             ref={(b) => { tiles.current[i] = b; }}
-            onMouseEnter={() => hold(i)} onMouseLeave={() => hold(null)}
-            onFocus={() => hold(i)} onBlur={() => hold(null)}
-            onClick={() => hold(held === i ? null : i)}
+            onPointerEnter={onEnter(i)} onPointerLeave={onLeave}
+            onFocus={(e) => { if (e.currentTarget.matches(":focus-visible")) hold(i); }} onBlur={() => hold(null)}
+            onClick={onClick(i)}
             aria-label={`Know your ${t.word} works.`} aria-pressed={i === shown}
           >
             <Image src={t.src} alt={t.alt} fill sizes="200px" />
@@ -125,14 +137,17 @@ export function Orbit() {
         ))}
 
         <div className="v6-or__copy">
+          {/* One stable sentence for screen readers and search; the moving words below are a picture of it. */}
           <h2 id="v6-or-h" className="v6-or__h">
+            <span className="v6-or__sr">Know your checkout, sign-up, release and device panels work.</span>
+            <span className="v6-or__vis" aria-hidden>
             {en ? (
               <>
                 <span className="v6-or__l1">Know your</span>
                 <span className="v6-or__l2">
-                  <span className="v6-or__slot" style={wordW ? { width: wordW } : undefined} aria-live="polite">
+                  <span className="v6-or__slot" style={wordW ? { width: wordW } : undefined}>
                     {ORBIT.map((t, i) => (
-                      <span key={t.word} className="v6-or__w" data-on={i === shown} aria-hidden={i !== shown}>{t.word}</span>
+                      <span key={t.word} className="v6-or__w" data-on={i === shown}>{t.word}</span>
                     ))}
                   </span>
                   <span className="v6-or__end">works.</span>
@@ -140,14 +155,15 @@ export function Orbit() {
                 <span ref={measure} className="v6-or__measure" aria-hidden>{ORBIT[shown].word}</span>
               </>
             ) : (
-              <span className="v6-or__whole" aria-live="polite">
+              <span className="v6-or__whole">
                 {ORBIT.map((t, i) => (
-                  <span key={t.word} className="v6-or__s" data-on={i === shown} aria-hidden={i !== shown}>{`Know your ${t.word} works.`}</span>
+                  <span key={t.word} className="v6-or__s" data-on={i === shown}>{`Know your ${t.word} works.`}</span>
                 ))}
               </span>
             )}
+            </span>
           </h2>
-          <p className="v6-or__d">Anything a browser can reach: web apps, your agent&apos;s work, and the panels that run devices.</p>
+          <p className="v6-or__d">Web apps at a public address, your agent&apos;s work, and the panels that run devices.</p>
           <EditorialLink href={`${V6_BASE}/platform#coverage`}>What it can check today</EditorialLink>
         </div>
       </div>

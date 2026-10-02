@@ -90,7 +90,7 @@ export const SUPPORT =
 /** The one line under the headline over the homepage film. Short on purpose (founder, 2026-10-01: the
  *  opening should read like Anduril, Palantir and axiom, a headline and a line, not a paragraph). SUPPORT
  *  stays the fuller sentence for the welcome email and anywhere there is room to explain. */
-export const HERO_LINE = "Live checks for web apps, and anything with a web control panel.";
+export const HERO_LINE = "Checks in a real browser, on live web apps and the panels that run devices.";
 
 /** Page title and meta description.
  *

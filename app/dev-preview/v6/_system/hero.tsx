@@ -9,7 +9,10 @@
 // (credits in app/film/CREDITS.md). Nothing in it claims a result. One centred sentence sits on it; the
 // orbit holds the drone below that sentence. Few words, on purpose.
 //
-// Phones get the 720p cut. Reduced motion shows the poster and does not play. The film can always be
+// Phones get their own cut, vertical (1080x1920): the rendered shots are rendered in portrait and the real
+// footage is cut to 9:16 where its subject is (scratchpad reel/compose-v.py). It fills the phone's first screen.
+// (They used to get a 720p cut stretched 1.9x into a 4:5 frame.) The poster is the film's first frame, so the
+// picture does not jump when it starts. Reduced motion shows the poster and does not play. The film can always be
 // paused, because anything that moves for more than five seconds must be (WCAG 2.2.2).
 //
 // THE FIELD IS REAL. It sends the address to the console's two-field composer (/app?new=1&url=), which
@@ -64,7 +67,7 @@ export function Hero() {
           opens on one main thing, not a clutter). The address field and the partnership records sit below. */}
       <div className="v6-h__frame">
         <video ref={video} className="v6-h__video" autoPlay muted loop playsInline preload="auto" poster="/home/film-poster.jpg" aria-hidden>
-          <source src="/home/film-720.mp4" type="video/mp4" media="(max-width: 900px)" />
+          <source src="/home/film-vertical.mp4" type="video/mp4" media="(max-width: 560px)" />
           <source src="/home/film.mp4" type="video/mp4" />
         </video>
         <div className="v6-h__shade" aria-hidden />

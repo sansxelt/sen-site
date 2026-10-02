@@ -109,6 +109,8 @@
 .v6[data-route-theme="dark"] { background: var(--graphite); }
 .v6 *, .v6 *::before, .v6 *::after { box-sizing: border-box; }
 .v6 ::selection { background: #FAFAFA; color: #0A0A0B; }
+/* white controls invert it, or a selection on them is white on white */
+.v6 .v6-btn--brand::selection, .v6 .v6-btn--brand *::selection { background: #0A0A0B; color: #FAFAFA; }
 .v6 img, .v6 svg, .v6 video { max-width: 100%; display: block; }
 
 /* ---------------------------------------------------------------- layout --- */
@@ -834,13 +836,15 @@
 /* ── THE MENU, AFTER SCALE.COM (2026-10-01) ────────────────────────────────────────────────────────────────
    Big plain links in their groups on the left, no descriptions; one large rounded film on the right with a
    one-line caption. The links are the menu; the picture is the mood. */
-.v6-mega__grid { grid-template-columns: repeat(var(--mega-cols, 3), minmax(0, auto)) minmax(360px, 1.6fr); column-gap: clamp(36px, 4vw, 80px); align-items: start; }
+/* The film has one size and one place in every menu (it used to move and resize with the link columns). */
+.v6-mega__grid { grid-template-columns: repeat(var(--mega-cols, 3), minmax(0, auto)) minmax(0, 1fr); column-gap: clamp(36px, 4vw, 80px); align-items: start; }
 .v6-mega__col-h { font-size: 13px; font-weight: 400; color: #8E9095; margin: 0 0 10px; }
 .v6-mega__link { padding: 6px 0; margin: 0; border-radius: 0; }
 .v6-mega__link:hover { background: transparent; }
 .v6-mega__lt { font-size: clamp(17px, 1.25vw, 20px); font-weight: 400; letter-spacing: -0.012em; color: #FAFAFA; transition: color 0.15s var(--ease-out); }
 .v6-mega__link:hover .v6-mega__lt { color: #A1A3A9; }
-.v6-mega__media { position: relative; display: block; overflow: hidden; border-radius: 16px; aspect-ratio: 16 / 8; background: #121214; text-decoration: none; isolation: isolate; }
+.v6-mega__media { position: relative; display: block; overflow: hidden; border-radius: 16px; aspect-ratio: 16 / 8; background: #121214; text-decoration: none; isolation: isolate;
+  width: min(620px, 42vw, 100%); justify-self: end; }
 .v6-mega__video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1; transition: transform 600ms var(--ease); }
 .v6-mega__media:hover .v6-mega__video { transform: scale(1.03); }
 .v6-mega__media::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(0deg, rgba(8,9,11,0.7), rgba(8,9,11,0) 45%); }

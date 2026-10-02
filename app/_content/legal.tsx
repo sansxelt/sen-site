@@ -287,6 +287,7 @@ export const STORAGE: CookieRow[] = [
   { name: "v6.visited", setBy: "Website, session storage", purpose: "Marks that this tab's one anonymous visit was counted, so it is not counted twice.", category: "Analytics", duration: "Until you close the tab" },
   { name: "__paypal_storage__", setBy: "PayPal, local storage", purpose: "Written by PayPal's script, which loads only on the checkout page when PayPal is offered, for PayPal's own buttons.", category: "Essential", duration: "Until you clear it" },
   { name: "fieldline-fleet-broken, fieldline-fleet-fixed", setBy: "Practice drone panel, local storage", purpose: "The state of the simulated drone panel at /api/fixtures/drone, a demonstration target. Only if you open it.", category: "Essential", duration: "Until you clear it" },
+  { name: "larkspur-mission-broken, larkspur-mission-fixed", setBy: "Practice mission console, local storage", purpose: "The state of the simulated mission console at /api/fixtures/strike, a demonstration target. Only if you open it.", category: "Essential", duration: "Until you clear it" },
 ];
 
 /** `table` renders the COOKIES and STORAGE rows in the surface's own table style, like the other primitives. */

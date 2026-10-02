@@ -23,13 +23,10 @@
     var(--graphite); } /* the grey band, flat: the black gradient went with the dark ground (2026-09-30) */
 .v6-end__in { position: relative; z-index: 2; width: 100%; max-width: var(--max-wide);
   margin-inline: auto; padding-inline: var(--gutter); }
-/* The ink panel: centred, with a faint dot grid and a soft light from the top, the hero band's texture in
-   negative. */
+/* The ink panel: centred, with a soft light from the top. (Its faint dot grid went 2026-10-01: decoration
+   with no meaning, see feedback-no-ai-dots.) */
 .v6-end__card { position: relative; overflow: hidden; isolation: isolate; border-radius: 28px; background: #111113; border: 1px solid rgba(255,255,255,0.08);
   padding: clamp(64px, 9vw, 124px) clamp(24px, 5vw, 72px); display: flex; flex-direction: column; align-items: center; text-align: center; }
-.v6-end__card::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-  background-image: radial-gradient(rgba(255,255,255,0.16) 1px, transparent 1.2px); background-size: 22px 22px;
-  -webkit-mask-image: radial-gradient(60% 70% at 50% 30%, #000, transparent 75%); mask-image: radial-gradient(60% 70% at 50% 30%, #000, transparent 75%); opacity: 0.5; }
 .v6-end__card::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
   background: radial-gradient(70% 60% at 50% -10%, rgba(255,255,255,0.13), transparent 70%); }
 .v6-end .v6-spec { --spec-hl: rgba(250,250,250,0.9); }

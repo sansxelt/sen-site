@@ -24,14 +24,25 @@ import { DroneModel, newDrive, type Drive } from "@/app/dev-preview/v6/_system/d
 import { encodeMp4, sliceBase64 } from "../encode";
 import { aimRightOfCentre, ease, k01, lerp, rotorAngle } from "../sets/kit";
 
-const W = 1920, H = 1080, FPS = 30;
+// ?portrait renders the phone cut: 1080x1920, a wider vertical field of view so the drone still fits across the
+// narrow frame, and the drone lower down, under the phone's headline, which sits near the top of its frame.
+const PORTRAIT = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("portrait");
+const W = PORTRAIT ? 1080 : 1920, H = PORTRAIT ? 1920 : 1080, FPS = 30;
+const FOV = PORTRAIT ? 50 : 30;
+/** Half the frame's horizontal field of view, in radians. */
+const HALF_W = Math.atan(Math.tan(THREE.MathUtils.degToRad(FOV / 2)) * (W / H));
+/** How far above the drone the camera aims: the drone sits a little below the centre on a desktop, lower on a phone. */
+// On a phone the camera also stands further off (the phone's frame shows about 85% of the cut's width, and the
+// drone must fit across it with room to spare), with its height and aim scaled to keep the same angle.
+const BACK = PORTRAIT ? 1.45 : 1;
+const AIM_ABOVE = PORTRAIT ? 1.15 * BACK : 0.72;
 export const LENGTH = 9.6;
 
 type Env = { src: string; yaw: number; gain: number; sun: [number, number]; sunI: number; sunC: string; led: number };
 // yaw turns each panorama so its best part sits behind the drone while it is on screen. sun is the (u, v)
 // of the panorama's brightest region, measured from the image, for the one directional light.
 const ENVS: Env[] = [
-  { src: "/film/asset/env16-modern-buildings-night.jpg", yaw: 0.0, gain: 0.78, sun: [0.289, 0.305], sunI: 0.5, sunC: "#D6DEFF", led: 1 },
+  { src: "/film/asset/env16-modern-buildings-night.jpg", yaw: -0.45, gain: 0.78, sun: [0.289, 0.305], sunI: 0.5, sunC: "#D6DEFF", led: 1 },
   { src: "/film/asset/env16-autoshop-01.jpg", yaw: 0.0, gain: 0.86, sun: [0.355, 0.152], sunI: 0.9, sunC: "#F2F5FF", led: 0.6 },
   { src: "/film/asset/env16-bambanani-sunset.jpg", yaw: 0.0, gain: 0.96, sun: [0.568, 0.32], sunI: 2.2, sunC: "#FFD6A8", led: 0 },
   { src: "/film/asset/env16-kiara-3-morning.jpg", yaw: 0.0, gain: 1.0, sun: [0.613, 0.371], sunI: 2.6, sunC: "#FFF4E2", led: 0 },
@@ -65,8 +76,8 @@ function droneAt(t: number) {
 function cameraAt(t: number) {
   const u = ease(k01(t, 0, LENGTH));
   const a = lerp(0.55, 0.55 + Math.PI * 1.45, u);
-  const r = lerp(5.9, 5.2, u);
-  const y = lerp(1.25, 1.55, u) - ease(k01(t, LENGTH - 1.5, LENGTH)) * 0.5;
+  const r = lerp(5.9, 5.2, u) * BACK;
+  const y = (lerp(1.25, 1.55, u) - ease(k01(t, LENGTH - 1.5, LENGTH)) * 0.5) * BACK;
   return new THREE.Vector3(Math.sin(a) * r, y, Math.cos(a) * r);
 }
 
@@ -97,7 +108,9 @@ void main() {
   x = atan(sin(x), cos(x));
   // On screen the new place travels across the frame behind its edge; in the cube capture that lights the
   // drone it is a plain crossfade, so the light changes as smoothly as the picture.
-  float m = capture > 0.5 ? k : (k <= 0.0 ? 0.0 : (k >= 1.0 ? 1.0 : 1.0 - smoothstep(-0.11, 0.11, x)));
+  // The edge sweeps from the high-angle side to the low one, so the side it has passed (x > 0) is the new place.
+  // (Until 2026-10-01 this was inverted: every change cut to the new place, wiped back to the old, then cut.)
+  float m = capture > 0.5 ? k : (k <= 0.0 ? 0.0 : (k >= 1.0 ? 1.0 : smoothstep(-0.11, 0.11, x)));
   vec3 col = mix(a, b, m);
   // a faint sweep of light along the edge, brightest at its core, never a hard bar
   float on = capture > 0.5 ? 0.0 : seam;
@@ -158,7 +171,7 @@ function World({ film, drive }: { film: React.MutableRefObject<FilmState>; drive
     camera.position.copy(pos);
     // The homepage headline sits centred over the film (scale.com's hero), so the drone holds the middle of
     // the frame a little below centre, looked down on, so its propellers read as spinning fans.
-    camera.lookAt(new THREE.Vector3(0, d.y + 0.72, 0));
+    camera.lookAt(new THREE.Vector3(0, d.y + AIM_ABOVE, 0));
     camera.updateMatrixWorld();
 
     // the wipe travels across what the camera sees
@@ -168,7 +181,9 @@ function World({ film, drive }: { film: React.MutableRefObject<FilmState>; drive
     u.tA.value = textures[a]; u.tB.value = textures[b];
     u.yA.value = A.yaw; u.yB.value = B.yaw; u.gA.value = A.gain; u.gB.value = B.gain;
     u.k.value = k;
-    u.edge.value = look - lerp(-1.15, 1.15, ease(k));
+    // 1.4 times the frame's half width (+-0.62 rad on a desktop, where the frame is +-0.45 rad wide), so the seam
+    // is on screen for most of the wipe.
+    u.edge.value = look - lerp(-HALF_W * 1.4, HALF_W * 1.4, ease(k));
     u.seam.value = k > 0 && k < 1 ? Math.sin(k * Math.PI) : 0;
 
     // light the drone with the world around it
@@ -241,7 +256,7 @@ export function OrbitStage() {
     <div style={{ width: W, height: H, background: "#000" }}>
       <Canvas
         frameloop="never" dpr={1} style={{ width: W, height: H }}
-        camera={{ position: [0, 0, 3.4], fov: 30, near: 0.05, far: 400 }}
+        camera={{ position: [0, 0, 3.4], fov: FOV, near: 0.05, far: 400 }}
         gl={{ antialias: true, preserveDrawingBuffer: true, powerPreference: "high-performance", toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.0 }}
       >
         <World film={film} drive={drive} />

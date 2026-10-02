@@ -61,7 +61,9 @@ const nextConfig: NextConfig = {
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
-      "upgrade-insecure-requests",
+      // upgrade-insecure-requests is NOT here while the policy is Report-Only: browsers ignore it in a
+      // report-only policy and log a console error on every page saying so. HSTS (below) already keeps
+      // every request on HTTPS. Add it back when this policy is promoted to enforcing.
       // Violations are POSTed here. Without a reporting sink, "Report-Only" observes nothing and the
       // documented plan to promote the policy after reviewing reports could never actually happen.
       "report-uri /api/csp-report",

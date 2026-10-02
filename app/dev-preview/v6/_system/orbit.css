@@ -1,7 +1,9 @@
 /* WHAT IT CHECKS, AS AN ORBIT (orbit.tsx). Tiles ride an ellipse around the headline; the front of the ring
    is larger and brighter, the back smaller and dimmer. */
-.v6-or { position: relative; background: var(--paper); overflow: hidden; }
-.v6-or__field { position: relative; height: max(720px, 100vh); height: max(720px, 100svh); }
+/* The field fits under the header (on a 720px-tall screen it ran under it), and a held tile may hang past its
+   foot instead of being cut square by the section's edge. */
+.v6-or { position: relative; background: var(--paper); overflow-x: clip; overflow-y: visible; }
+.v6-or__field { position: relative; height: max(620px, calc(100vh - var(--nav-h, 66px))); height: max(620px, calc(100svh - var(--nav-h, 66px))); }
 .v6-or__field::before {
   content: ""; position: absolute; inset: 0; pointer-events: none;
   background: radial-gradient(640px 360px at 50% 50%, rgba(255,255,255,0.05), transparent 72%);
@@ -23,9 +25,12 @@
 .v6-or__field[data-hold="1"] .v6-or__tile[data-on="true"] img { transform: scale(1.06); }
 .v6-or__tile:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 4px; }
 
-.v6-or__copy { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 30; width: min(640px, 86vw);
+.v6-or__copy { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 30; width: min(720px, 86vw);
   text-align: center; pointer-events: none; }
 .v6-or__copy a { pointer-events: auto; }
+.v6-or__sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* a column, so a word wider than the copy overflows both sides equally and the line stays centred */
+.v6-or__vis { display: flex; flex-direction: column; align-items: center; }
 .v6-or__h { margin: 0; font-family: var(--display); font-weight: 500; font-size: clamp(2.2rem, 4.6vw, 4.2rem); line-height: 1.04; letter-spacing: -0.035em; color: var(--ink); }
 .v6-or__l1 { display: block; color: var(--ink-3); }
 /* The word slot and "works." share one line box: both top-aligned at the same line height, so their

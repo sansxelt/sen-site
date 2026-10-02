@@ -140,7 +140,7 @@ export const DEMOS: Demo[] = [
     key: "projects",
     tab: "Project tracker",
     title: "A project that vanishes on reload",
-    app: "The Vraelis fixture dashboard, in its broken mode",
+    app: "Vraelis fixture dashboard, in its broken mode",
     url: "https://preflight-demo-ten.vercel.app/?mode=broken",
     claim: null,
     journeyName: "Create a project and check it persists",

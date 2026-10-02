@@ -90,10 +90,11 @@ const MENUS: Menu[] = [
         { t: "CLI", d: "One command, one exit code", href: BASE + "/developers#cli" },
         { t: "CI and the API", d: "Gate a release on the decision", href: BASE + "/developers#api" },
         { t: "AI assistants", d: "Setup over MCP", href: BASE + "/agents" },
+        { t: "GitHub Actions and Vercel", d: "Check a deploy, gate a release", href: BASE + "/integrations" },
       ] },
       { h: "Deliver the answer", links: [
         { t: "Webhooks", d: "verification.completed", href: BASE + "/developers#webhooks" },
-        { t: "Slack, GitHub and Vercel", d: "Where a decision lands", href: BASE + "/integrations" },
+        { t: "Slack", d: "Where a decision lands", href: BASE + "/integrations" },
       ] },
       { h: "The loop", links: [
         { t: "Verify, approve, run, re-check", d: "The whole loop", href: BASE + "/docs/the-loop",

@@ -16,7 +16,9 @@
   background: radial-gradient(60% 42% at 50% 46%, rgba(8,9,11,0.42), rgba(8,9,11,0) 70%), linear-gradient(0deg, rgba(8,9,11,0.35), rgba(8,9,11,0) 30%); }
 
 .v6-h__h1 {
-  margin: 0; padding: 0 var(--gutter); max-width: 18ch; text-align: center;
+  /* Each line is its own block, so the width only has to hold the longer one. 18ch included the side padding and
+     broke "does what you meant." onto a third line at 1280, 1366 and 1536 wide. */
+  margin: 0; padding: 0 var(--gutter); max-width: calc(20ch + 2 * var(--gutter)); text-align: center;
   font-family: var(--display); font-weight: 500; font-synthesis-weight: none;
   font-size: clamp(2.5rem, 5.4vw, 5.6rem); line-height: 1.02; letter-spacing: -0.035em;
   color: #FAFAFA; text-wrap: balance; text-shadow: 0 2px 30px rgba(0,0,0,0.25);
@@ -38,23 +40,28 @@
 .v6-h__form {
   display: flex; align-items: center; gap: 6px;
   width: min(100%, 520px); margin-top: 22px; padding: 6px 6px 6px 16px;
-  background: #FFFFFF; border: 1px solid rgba(255,255,255,0.4); border-radius: 14px;
-  transition: box-shadow 0.15s var(--ease-out);
+  /* Black like every surface, with the one white control on it ("Check it"). It was a white bar, the only
+     white surface on the page, and selected text vanished on it (white selection on white). */
+  background: #121214; border: 1px solid rgba(255,255,255,0.16); border-radius: 14px;
+  transition: box-shadow 0.15s var(--ease-out), border-color 0.15s var(--ease-out);
 }
-.v6-h__form:focus-within { box-shadow: 0 0 0 3px rgba(255,255,255,0.3); }
+.v6-h__form:hover { border-color: rgba(255,255,255,0.26); }
+.v6-h__form:focus-within { border-color: rgba(255,255,255,0.34); box-shadow: 0 0 0 3px rgba(255,255,255,0.18); }
 .v6 .v6-h__form input {
   -webkit-appearance: none; appearance: none; box-shadow: none; border-radius: 0; padding: 0;
   flex: 1; min-width: 0; height: 44px; border: 0; outline: 0; background: transparent;
-  font: 400 16px/1 var(--sans); color: #0A0A0B;
+  font: 400 16px/1 var(--sans); color: #FAFAFA;
 }
-.v6 .v6-h__form input::placeholder { color: #8B8D92; }
+.v6 .v6-h__form input::placeholder { color: #8E9095; }
 .v6-h__form button {
   flex: none; height: 44px; padding: 0 20px; border: 0; border-radius: 9px;
-  background: #0A0A0B; color: #FFFFFF; font: 600 15px/1 var(--sans); cursor: pointer;
+  background: #FAFAFA; color: #0A0A0B; font: 600 15px/1 var(--sans); cursor: pointer;
   display: inline-flex; align-items: center; gap: 8px; transition: background 0.15s var(--ease-out);
 }
-.v6-h__form button:hover { background: #2E2F33; }
-.v6-h__form button:focus-visible { outline: 2px solid #0A0A0B; outline-offset: 3px; }
+.v6-h__form button:hover { background: #E4E5E8; }
+.v6-h__form button:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
+/* The page's selection is white on black; on the white button it would vanish, so it inverts there. */
+.v6 .v6-h__form button::selection, .v6 .v6-h__form button *::selection { background: #0A0A0B; color: #FAFAFA; }
 .v6-h__sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 .v6-h__partners { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: min(100%, 520px); margin-top: 14px; }
@@ -73,8 +80,13 @@
   .v6-h__video { object-position: 50% 50%; }
 }
 @media (max-width: 560px) {
-  /* a 16:9 film in a tall frame keeps only a sliver of it; 4:5 keeps the whole drone and brings the field up */
-  .v6-h__frame { height: auto; aspect-ratio: 4 / 5; min-height: 0; place-items: start center; padding-top: 18%; }
+  /* The film fills the first screen, as on a desktop, so the field and the records sit below it (founder: the
+     first screen is one thing). Phones get the vertical cut (film-vertical.mp4, rendered in portrait), which
+     keeps the drone under the headline; the headline sits in the band that cut leaves clear, 18% down. */
+  .v6-h__frame { height: calc(100svh - var(--nav-h, 66px) - 10px); min-height: 520px; max-height: 900px;
+    place-items: start center; padding-top: calc(18svh - 14px); }
+  /* the headline sits near the top here, so the shade does too */
+  .v6-h__shade { background: linear-gradient(180deg, rgba(8,9,11,0.5), rgba(8,9,11,0.18) 42%, rgba(8,9,11,0) 60%), linear-gradient(0deg, rgba(8,9,11,0.35), rgba(8,9,11,0) 30%); }
   .v6-h__h1 { font-size: clamp(2rem, 9vw, 2.75rem); letter-spacing: -0.03em; }
   .v6-h__below { padding-top: 32px; }
   .v6-h__partners { grid-template-columns: minmax(0, 1fr); }

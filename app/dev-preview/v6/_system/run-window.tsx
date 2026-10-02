@@ -57,6 +57,9 @@ function lastPath(run: DemoRun, upto = Infinity): string {
   return opened.length ? String(opened[opened.length - 1]) : "/";
 }
 
+/** The page the run ended on keeps the demo's query (?mode=broken), or the repro opens the working app. */
+const withQuery = (u: string, demoUrl: string) => (u.includes("?") || !demoUrl.includes("?") ? u : `${u}?${demoUrl.split("?")[1]}`);
+
 /** The product's repair prompt, built from the recorded failure. */
 function promptFor(e: Entry): string | null {
   const f = e.run.failure;
@@ -68,7 +71,7 @@ function promptFor(e: Entry): string | null {
     requirement_refs: [], expected: f.expected, observed: f.observed,
     repro: steps.slice(0, at + 1).map((s, i) => `${i + 1}. ${s.say}`),
     possible_explanation: null,
-    evidence: { failed_step_index: at, failed_action: steps[at]?.say ?? "", console_errors: [], network_failures: [], current_url: `${e.demo.url.split("?")[0].replace(/\/$/, "")}${lastPath(e.run)}` },
+    evidence: { failed_step_index: at, failed_action: steps[at]?.say ?? "", console_errors: [], network_failures: [], current_url: withQuery(`${e.demo.url.split("?")[0].replace(/\/$/, "")}${lastPath(e.run)}`, e.demo.url) },
     status: "open",
   }, { appName: appName(e.demo), deploymentUrl: e.demo.url });
 }
@@ -160,7 +163,7 @@ export function RunWindow() {
           <span className="rw__mark" aria-hidden>V</span>
           <span className="rw__crumb">Checks <span aria-hidden>/</span> <b>{appName(e.demo)}</b></span>
         </span>
-        <span className="rw__rec v6-mono">Run {RUN_IDS[e.id] ?? ""} · {fmtDate(e.run.recorded)} 2026</span>
+        <span className="rw__rec v6-mono">Run {RUN_IDS[e.id] ?? ""} · {fmtDate(e.run.recorded)}, 2026</span>
         <button type="button" className="rw__replay" onClick={() => { touched.current = true; play(sel); }}>
           <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden><path d="M3 8a5 5 0 1 0 1.6-3.7M3 2.5v2.6h2.6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
           Replay
@@ -169,14 +172,14 @@ export function RunWindow() {
 
       <div className="rw__grid">
         <nav className="rw__rail" aria-label="Recorded runs">
-          <p className="rw__railh">Recent checks</p>
+          <p className="rw__railh">Recorded runs</p>
           <ul>
             {ENTRIES.map((x, i) => (
               <li key={x.id}>
                 <button type="button" className="rw__item" aria-pressed={i === sel} onClick={() => choose(i)}>
                   <span className="rw__iname">{x.name}</span>
                   {/* The outcome in words, coloured because the colour IS the outcome; no dot beside it. */}
-                  <span className="rw__imeta"><span data-f={x.run.failure ? "found" : "held"}>{x.run.failure ? "Found a problem" : "Held"}</span>{` · ${fmtDate(x.run.recorded)}`}</span>
+                  <span className="rw__imeta"><span data-f={x.run.failure ? "found" : "held"}>{x.run.failure ? "Found a problem" : "Did what the sentence says"}</span>{` · ${fmtDate(x.run.recorded)}`}</span>
                 </button>
               </li>
             ))}
@@ -217,7 +220,7 @@ export function RunWindow() {
                         <span className="rw__sn v6-mono">{String(i + 1).padStart(2, "0")}</span>
                         <span className="rw__st">{s.say}</span>
                         <span className="rw__sms v6-mono">
-                          {st === "fail" ? <><span className="rw__sf">Failed</span> {fmtMs(s.ms)}</> : st === "ok" ? fmtMs(s.ms) : st === "now" ? <span className="rw__snow">Running</span> : ""}
+                          {st === "fail" ? <><span className="rw__sf">Problem</span> {fmtMs(s.ms)}</> : st === "ok" ? fmtMs(s.ms) : st === "now" ? <span className="rw__snow">Running</span> : ""}
                         </span>
                       </li>
                     );
