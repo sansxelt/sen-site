@@ -120,7 +120,8 @@ export default async function SystemsPage() {
       <PageHeader
         title="Systems"
         lead="Your web apps and device control panels, each with its latest result."
-        actions={<Link href="/systems/new" className="btn" style={{ flex: "none" }}>Connect a system <span aria-hidden>&rarr;</span></Link>}
+        // A ghost: the top bar already holds the one primary action, "New verification" (audit P2-16).
+        actions={<Link href="/systems/new" className="btn btn--ghost" style={{ flex: "none" }}>Connect a system <span aria-hidden>&rarr;</span></Link>}
       />
 
       {/* <Page> deliberately owns only the measure and the shell only overrides padding-TOP, so the tail room
