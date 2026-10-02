@@ -291,27 +291,13 @@ export default async function UsagePage() {
         </section>
       )}
 
+      {/* The limits table lived here and on Limits; it lives on Limits only now, one link away (audit P2-10). */}
       <section aria-label="Limits">
         <h2 style={{ ...SECTION_TITLE, marginBottom: 4 }}>Limits</h2>
-        {/* Quoted from lib/preflight/limits.ts, which the launch and rerun routes import. A page that
-            restated these would eventually promise a ceiling the API does not enforce. */}
-        <p style={{ margin: "0 0 10px", fontSize: 12, color: "var(--fg-4)" }}>These are the values the API checks before a run starts, not a description of them.</p>
-        <div className="card" style={{ padding: 0, overflow: "hidden", background: "var(--bg-1)" }}>
-          {[
-            ["Verifications in flight", `${MAX_ACTIVE_RUNS_PER_OWNER} at once`, "A third is refused until one finishes."],
-            ["Verifications per day", `${dayCap} per UTC day`, "Checked before any credit is held."],
-            ["Single top-up", `$${topupMaxDollars().toLocaleString()}`, "Larger volumes are invoiced."],
-            ["Per-key daily spend", "Set per key", "A key without a cap can spend the whole balance."],
-          ].map(([k, v, why], i) => (
-            <div key={k} style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", gap: 14, padding: "12px 16px", borderTop: i ? "1px solid var(--line-2)" : "none", alignItems: "baseline" }}>
-              <span>
-                <span style={{ display: "block", fontSize: 13.5, color: "var(--fg-1)" }}>{k}</span>
-                <span style={{ fontSize: 12, color: "var(--fg-4)" }}>{why}</span>
-              </span>
-              <span style={{ fontSize: 13, color: "var(--fg-2)", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>{v}</span>
-            </div>
-          ))}
-        </div>
+        <p style={{ margin: 0, fontSize: 13, color: "var(--fg-3)" }}>
+          What a request is refused at, and how close you are, is on{" "}
+          <Link href="/limits" style={{ color: "var(--fg-1)", fontWeight: 600 }}>Limits</Link>.
+        </p>
       </section>
 
       <style>{`
