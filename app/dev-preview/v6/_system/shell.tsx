@@ -33,13 +33,15 @@ type Group = { h: string; links: MLink[] };
 type Menu = { label: string; groups: Group[]; feature: Preview & { href: string; cta: string } };
 
 // THE MENU'S PICTURE (2026-10-01, after scale.com's menus: big plain links on the left, one large rounded
-// film on the right). Each top-level menu loops a few seconds of real footage, muted, cut from the homepage
-// film's own sources (public/home/menu, credits in app/film/CREDITS.md).
+// film on the right). Each top-level menu loops eight seconds of real footage, muted and seamless, distinct
+// from the homepage film as scale.com's menu pictures are from its hero (public/home/menu, credits in
+// app/film/CREDITS.md): status keys in a control room, a circuit board, someone reading a screen, a drone
+// at dusk.
 const MENU_MEDIA: Record<string, { src: string; poster: string }> = {
-  Platform: { src: "/home/menu/platform.mp4", poster: "/home/menu/platform.jpg" },
-  Integrations: { src: "/home/menu/integrations.mp4", poster: "/home/menu/integrations.jpg" },
-  Resources: { src: "/home/menu/resources.mp4", poster: "/home/menu/resources.jpg" },
-  Company: { src: "/home/menu/company.mp4", poster: "/home/menu/company.jpg" },
+  Platform: { src: "/home/menu/platform-loop.mp4", poster: "/home/menu/platform-loop.jpg" },
+  Integrations: { src: "/home/menu/integrations-loop.mp4", poster: "/home/menu/integrations-loop.jpg" },
+  Resources: { src: "/home/menu/resources-loop.mp4", poster: "/home/menu/resources-loop.jpg" },
+  Company: { src: "/home/menu/company-loop.mp4", poster: "/home/menu/company-loop.jpg" },
 };
 
 // REWRITTEN 2026-09-28 with the public story. The second menu was "Agents", with a Direction group for
