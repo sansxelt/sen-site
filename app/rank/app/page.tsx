@@ -11,7 +11,10 @@ import { listApplicationsForMember, latestRunByAppForApps, type Application, typ
 import { listAllRuns, listAllIssues, listRepairs, overviewCounts, type PassRow, type IssueRow, type RepairRow, type OverviewCounts } from "@/lib/preflight/overview-db";
 import { listPendingReviews, planProgress, type PendingReviewRow } from "@/lib/preflight/reviewed-plan-db";
 import { listApiKeys } from "@/lib/api-keys";
-import { SetupChecklist, setupComplete, type SetupState } from "./_components/setup-checklist";
+import { SetupChecklist, setupComplete, type SetupState, type SetupShape } from "./_components/setup-checklist";
+import { OnboardingCard } from "./_components/onboarding-card";
+import { readOnboarding, AGENT_BUILDERS } from "@/lib/onboarding";
+import { getOrCreatePersonalWorkspace, listMembers } from "@/lib/v-workspace";
 import { listGuaranteesForApps } from "@/lib/preflight/guarantees-db";
 import { toPublicDecision } from "@/lib/preflight/public-decision";
 import { systemProof, isActiveRun } from "@/lib/preflight/home-verdict";
@@ -158,10 +161,21 @@ export default async function Overview({ searchParams }: { searchParams: Promise
 
   // THE SETUP CHECKLIST. Each step is read from a stored row (setup-checklist.tsx says which), so the card
   // can never claim progress that did not happen. It shows until the five required steps are done.
-  const [progress, keys] = await Promise.all([
+  const [progress, keys, onboarding] = await Promise.all([
     preflightReady ? planProgress(owner) : Promise.resolve({ written: false, approved: false }),
     listApiKeys(email),
+    readOnboarding(email),
   ]);
+  // What the onboarding answers change (lib/onboarding.ts): the checklist's order, a team or client step,
+  // and the composer's examples. The people step is done once anyone has been invited in that role.
+  const audience = onboarding?.audience === "team" || onboarding?.audience === "client" ? onboarding.audience : null;
+  const shape: SetupShape = { agentFirst: !!onboarding?.builder && AGENT_BUILDERS.has(onboarding.builder), audience };
+  let people: boolean | null = null;
+  if (audience) {
+    const ws = await getOrCreatePersonalWorkspace(email);
+    const members = ws ? await listMembers(ws.id) : [];
+    people = members.some((m) => (audience === "client" ? m.role === "client_viewer" : m.role !== "client_viewer"));
+  }
   const setup: SetupState = {
     address: apps.length > 0,
     sentence: progress.written,
@@ -169,6 +183,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
     run: runsR.value.some((r) => r.state === "completed"),
     agent: keys.some((k) => !!k.last_used_at),
     twoStep: twoStep.ok ? twoStep.status.enabled : null,
+    people,
   };
   const showSetup = !anyError && !setupComplete(setup);
   const fullyEmpty = !anyError && apps.length === 0 && runsR.value.length === 0
@@ -219,13 +234,15 @@ export default async function Overview({ searchParams }: { searchParams: Promise
 
       {/* While setup is unfinished, two-step verification is its optional last step rather than a banner
           above the only thing a new account can do (console audit P1-1). */}
-      {showSetup ? <SetupChecklist state={setup} /> : offerTwoStep && <TwoStepNudge />}
+      {/* Asked once, before the checklist it shapes; answering or skipping both put it away for good. */}
+      {showSetup && !onboarding ? <OnboardingCard /> : null}
+      {showSetup ? <SetupChecklist state={setup} shape={shape} /> : offerTwoStep && <TwoStepNudge />}
 
       {fullyEmpty ? (
         // An empty account gets the form at full size: there is no state to read, so the only useful thing
         // on the page is the way to create some.
         <>
-          <div style={{ marginBottom: 26 }}><Composer balance={bal} /></div>
+          <div style={{ marginBottom: 26 }}><Composer balance={bal} surface={onboarding?.surface} /></div>
           {/* The static four-step list only when the checklist is not already showing the same steps. */}
           {showSetup ? null : <EmptyOverview />}
         </>
@@ -238,7 +255,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
               failure is the one thing that should interrupt starting new work. */}
           {issuesR.error ? <SectionError label="Needs attention" /> : <NeedsAttention items={attention} />}
           {/* key remounts the composer when the button is pressed while already on this page, so it opens. */}
-          <div style={{ marginBottom: 36 }}><CompactComposer key={openNew ? "new" : "rest"} balance={bal} defaultOpen={openNew} /></div>
+          <div style={{ marginBottom: 36 }}><CompactComposer key={openNew ? "new" : "rest"} balance={bal} defaultOpen={openNew} surface={onboarding?.surface} /></div>
           {appsR.error || latestR.error ? <SectionError label="Systems" /> : <SystemsTable rows={systems} />}
           {pendingR.error ? <SectionError label="Pending review" /> : <PendingReview rows={pendingR.value} />}
           {runsR.error ? <SectionError label="Recent verifications" /> : <RecentVerificationsTable rows={settledRuns} />}

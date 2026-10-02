@@ -15,9 +15,22 @@ import Link from "next/link";
      agent      an API key has been used (the CLI and the hosted MCP connector both run on one)
    Two-step verification rides along as the optional last step while this card is up, rather than as a banner
    above the only thing a new account can do. The card disappears once the five required steps are done. */
-export type SetupState = { address: boolean; sentence: boolean; approval: boolean; run: boolean; agent: boolean; twoStep: boolean | null };
+export type SetupState = {
+  address: boolean; sentence: boolean; approval: boolean; run: boolean; agent: boolean; twoStep: boolean | null;
+  /** Set only when the person said a team or a client looks at the results (onboarding): has anyone been
+   *  invited in that role. Null hides the step. */
+  people?: boolean | null;
+};
+
+/** What the onboarding answers change here (lib/onboarding.ts): a coding-agent builder connects the agent
+ *  second rather than last, and a team or an agency gets the step that brings those people in. */
+export type SetupShape = { agentFirst?: boolean; audience?: "team" | "client" | null };
 
 type Step = { key: keyof SetupState; t: string; d: string; href: string; cta: string; optional?: boolean };
+const PEOPLE: Record<"team" | "client", Step> = {
+  team: { key: "people", t: "Invite a teammate", d: "They see the same systems and records. Only a person can approve a plan.", href: "/team", cta: "Invite", optional: true },
+  client: { key: "people", t: "Give your client read-only access", d: "A client viewer sees client-ready reports and nothing else, and is free.", href: "/team", cta: "Invite a client", optional: true },
+};
 const STEPS: Step[] = [
   { key: "address", t: "Add your live app's address", d: "A public https address: production, staging or a preview.", href: "/app?new=1", cta: "Add address" },
   { key: "sentence", t: "Say what should work", d: "One sentence. Vraelis writes the plan that would prove it, free.", href: "/app?new=1", cta: "Write it" },
@@ -31,11 +44,24 @@ export function setupComplete(s: SetupState) {
   return s.address && s.sentence && s.approval && s.run && s.agent;
 }
 
-export function SetupChecklist({ state }: { state: SetupState }) {
-  const required = STEPS.filter((x) => !x.optional);
+function stepsFor(shape: SetupShape): Step[] {
+  let steps = STEPS.slice();
+  if (shape.agentFirst) {
+    const agent = steps.find((x) => x.key === "agent")!;
+    steps = steps.filter((x) => x.key !== "agent");
+    steps.splice(1, 0, agent);
+  }
+  if (shape.audience) steps.splice(steps.length - 1, 0, PEOPLE[shape.audience]);
+  return steps;
+}
+
+export function SetupChecklist({ state, shape = {} }: { state: SetupState; shape?: SetupShape }) {
+  const all = stepsFor(shape);
+  const required = all.filter((x) => !x.optional);
   const done = required.filter((x) => state[x.key]).length;
-  const next = STEPS.find((x) => !state[x.key] && !(x.optional && state[x.key] === null));
-  const rows = STEPS.filter((x) => !(x.optional && state[x.key] === null));
+  const hidden = (x: Step) => x.optional && (state[x.key] === null || state[x.key] === undefined);
+  const next = all.find((x) => !state[x.key] && !hidden(x));
+  const rows = all.filter((x) => !hidden(x));
   return (
     <section className="card" aria-labelledby="setup-h" style={{ marginBottom: 28, padding: "clamp(18px, 2.4vw, 24px)" }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
@@ -51,9 +77,9 @@ export function SetupChecklist({ state }: { state: SetupState }) {
           const isNext = next?.key === x.key;
           return (
             <li key={x.key} style={{ display: "grid", gridTemplateColumns: "22px minmax(0, 1fr) auto", alignItems: "center", gap: 12, padding: "12px 0", borderTop: i ? "1px solid var(--line-1)" : "none" }}>
-              <span aria-hidden style={{ width: 18, height: 18, borderRadius: "50%", display: "grid", placeItems: "center",
-                background: isDone ? "var(--ok)" : "transparent", border: isDone ? "none" : `1.5px solid ${isNext ? "var(--fg-1)" : "var(--line-3)"}` }}>
-                {isDone ? <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#0A0A0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 6.2l2.3 2.3 4.7-5" /></svg> : null}
+              {/* Numbered, not ticked: the row already says Done in words (no decorative dots, founder). */}
+              <span aria-hidden style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: isNext ? "var(--fg-1)" : "var(--fg-4)" }}>
+                {String(i + 1).padStart(2, "0")}
               </span>
               <span style={{ minWidth: 0 }}>
                 <span style={{ display: "block", fontSize: 14, fontWeight: 600, color: isDone ? "var(--fg-3)" : "var(--fg-1)", textDecoration: isDone ? "line-through" : "none", textDecorationColor: "var(--line-3)" }}>

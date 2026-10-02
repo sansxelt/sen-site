@@ -62,7 +62,16 @@ function expiryText(iso: string | null): string {
   return `expires in ${Math.round(mins / 60)}h`;
 }
 
-export function Composer({ balance }: { balance: number }) {
+// The example in each field follows what the person said they check first (onboarding, lib/onboarding.ts).
+// A device is checked through its web control panel, so its example is an operator action and the state
+// the panel shows afterwards, the same shape coverage.ts describes.
+const EXAMPLES: Record<string, { url: string; claim: string }> = {
+  web: { url: "your-app.vercel.app", claim: "A signed-in user can create a record, and it is still there after signing out and back in." },
+  panel: { url: "your-control-panel.example.com", claim: "Pressing Return home on the panel brings the drone back, and its status still reads Landed after a reload." },
+};
+
+export function Composer({ balance, surface }: { balance: number; surface?: string | null }) {
+  const ex = EXAMPLES[surface ?? ""] ?? EXAMPLES.web;
   const [deployment, setDeployment] = useState("");
   const [claim, setClaim] = useState("");
   const [phase, setPhase] = useState<Phase>({ k: "compose" });
@@ -149,7 +158,7 @@ export function Composer({ balance }: { balance: number }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 15 }}>
         <label htmlFor="cmp-deploy" style={{ ...lbl, color: "var(--fg-2)" }}>Deployment to verify</label>
         <input id="cmp-deploy" className="cmp-inp" inputMode="url" spellCheck={false} autoCapitalize="off"
-          placeholder="your-app.vercel.app" value={deployment} disabled={busy}
+          placeholder={ex.url} value={deployment} disabled={busy}
           onChange={(e) => setDeployment(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && canReview) review(); }}
           aria-invalid={deployment.length > 0 && !urlOk} aria-describedby="cmp-deploy-h" />
@@ -159,7 +168,7 @@ export function Composer({ balance }: { balance: number }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 15 }}>
         <label htmlFor="cmp-claim" style={{ ...lbl, color: "var(--fg-2)" }}>What must be true</label>
         <textarea id="cmp-claim" className="cmp-inp" rows={3} spellCheck={false} disabled={busy}
-          placeholder="A signed-in user can create a record, and it is still there after signing out and back in."
+          placeholder={ex.claim}
           value={claim} onChange={(e) => setClaim(e.target.value)} style={{ resize: "vertical", minHeight: 66 }}
           aria-invalid={claim.length > 0 && !claimOk} aria-describedby="cmp-claim-h" />
         <span id="cmp-claim-h" style={{ fontSize: 12, color: claim.length > 0 && !claimOk ? "var(--stop-ink)" : "var(--fg-4)" }}>

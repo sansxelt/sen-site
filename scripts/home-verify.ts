@@ -75,12 +75,14 @@ console.log("\n── the composer stays primary; a section failure cannot take 
 // console is to start work, when it is usually to read state. It is now full size when there is nothing to
 // read, and one line when there is. The durable rule is that a way to create a verification is ALWAYS on
 // the page, in both branches.
-ok("the empty account still gets the full composer", /fullyEmpty \? \([\s\S]{0,400}?<Composer balance=\{bal\} \/>/.test(page));
+// Props may be added (the onboarding answers set the composer's examples), so the check is the component and
+// the balance, not the exact attribute list.
+ok("the empty account still gets the full composer", /fullyEmpty \? \([\s\S]{0,400}?<Composer balance=\{bal\}[^>]*\/>/.test(page));
 // Props may be added (defaultOpen, a remount key for ?new=1 from the top bar), so the check is that the compact
 // surface is rendered with the account's balance, not the exact attribute list.
 ok("a populated account still gets a creation surface, compact", /<CompactComposer [^>]*balance=\{bal\}[^>]*\/>/.test(page));
 ok("the compact surface opens the same composer, not a second implementation",
-  /<Composer balance=\{balance\} \/>/.test(readFileSync("app/rank/app/_components/compact-composer.tsx", "utf8")));
+  /<Composer balance=\{balance\}[^>]*\/>/.test(readFileSync("app/rank/app/_components/compact-composer.tsx", "utf8")));
 ok("record groups are loaded with independent failure isolation", /async function settle</.test(page) && (page.match(/settle\(/g) ?? []).length >= 4);
 ok("a caught load error is swallowed to a safe fallback, never surfaced raw", /catch \{ return \{ value: fallback, error: true \}; \}/.test(page));
 // Each record group renders EITHER its section or a degraded stand-in, chosen by its own settle() flag, so
@@ -96,7 +98,7 @@ ok("the empty account renders the onboarding workflow", /<EmptyOverview \/>/.tes
 // The setup checklist (2026-10-01): every step is read from a stored row, and two-step rides inside it while
 // setup is unfinished rather than as a banner above the first action.
 ok("the Overview renders the setup checklist from stored rows until setup is complete",
-  /<SetupChecklist state=\{setup\} \/>/.test(page) && /planProgress\(owner\)/.test(page) && /showSetup = !anyError && !setupComplete\(setup\)/.test(page));
+  /<SetupChecklist state=\{setup\}[^>]*\/>/.test(page) && /planProgress\(owner\)/.test(page) && /showSetup = !anyError && !setupComplete\(setup\)/.test(page));
 ok("onboarding explains the real four-step workflow", /Name the deployed build/.test(rec) && /State what must be true/.test(rec) && /Review the proof plan/.test(rec) && /Run the verification/.test(rec));
 ok("empty sections collapse to null rather than showing empty shells", /if \(!issues\.length\) return null;/.test(rec) && /if \(!rows\.length\) return null;/.test(rec) && /if \(!systems\.length\) return null;/.test(rec));
 
