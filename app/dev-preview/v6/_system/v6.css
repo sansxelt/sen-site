@@ -304,6 +304,10 @@
    wordmark and the links kept crossfading over 90ms would have been worse than leaving it alone: instead of
    a bar that lags as a whole, you would get a bar that is half changed, which reads as a rendering fault
    rather than as a transition. The bar turns over in ONE frame or not at all. */
+/* The bar is always on screen, but html's scroll-padding-top (globals.css) counts the strip it sits in as out
+   of view, so focusing anything in it from mid-page scrolled the page up (422px at 390x844). A negative
+   scroll margin of the same size puts its controls back inside the view the browser checks. */
+.v6-nav :is(a, button) { scroll-margin-top: calc(-1 * var(--nav-h, 5.125rem)); }
 .v6-nav__in { display: flex; align-items: center; gap: 8px;
   /* the bar spans the viewport, its contents sit on the page column: the wordmark lines up with every
      headline below it and the button with the right edge of the content */

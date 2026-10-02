@@ -204,6 +204,27 @@ export function RunWindow() {
     return () => { window.clearTimeout(t); window.removeEventListener("scroll", moveOn); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [done, sel]);
+  // STACKED, THE WINDOW ONLY GROWS. Each run holds its own finished height from its first frame, but the runs
+  // differ (the fixed run has no repair prompt, about 300px less), so moving on to a shorter run still pulled
+  // the next section up (layout shift 0.09 with the window's foot just below the screen). Stacked, the window
+  // keeps the tallest height it has had; a new width starts over.
+  useEffect(() => {
+    const el = root.current;
+    if (!el) return;
+    const mq = window.matchMedia(STACKED);
+    let tallest = 0, width = window.innerWidth;
+    const fit = () => {
+      if (window.innerWidth !== width) { width = window.innerWidth; tallest = 0; el.style.minHeight = ""; }
+      if (!mq.matches) { tallest = 0; el.style.minHeight = ""; return; }
+      const h = el.getBoundingClientRect().height;
+      if (h > tallest + 0.5) { tallest = h; el.style.minHeight = `${Math.ceil(h)}px`; }
+    };
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    window.addEventListener("resize", fit);
+    fit();
+    return () => { ro.disconnect(); window.removeEventListener("resize", fit); };
+  }, []);
   const copy = async () => {
     if (!prompt) return;
     try { await navigator.clipboard.writeText(prompt); setCopied(true); } catch { /* clipboard refused: the text is on screen to select */ }
