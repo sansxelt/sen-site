@@ -17,8 +17,9 @@
 
 .v6-h__h1 {
   /* Each line is its own block, so the width only has to hold the longer one. 18ch included the side padding and
-     broke "does what you meant." onto a third line at 1280, 1366 and 1536 wide. */
-  margin: 0; padding: 0 var(--gutter); max-width: calc(20ch + 2 * var(--gutter)); text-align: center;
+     broke "does what you meant." onto a third line at 1280, 1366 and 1536 wide; 26ch also holds the longer first
+     line most languages need ("Saber que lo que construiste"). */
+  margin: 0; padding: 0 var(--gutter); max-width: calc(26ch + 2 * var(--gutter)); text-align: center;
   font-family: var(--display); font-weight: 500; font-synthesis-weight: none;
   font-size: clamp(2.5rem, 5.4vw, 5.6rem); line-height: 1.02; letter-spacing: -0.035em;
   color: #FAFAFA; text-wrap: balance; text-shadow: 0 2px 30px rgba(0,0,0,0.25);
@@ -94,7 +95,10 @@
   .v6-h__pause { right: 14px; bottom: 14px; }
 }
 
-.v6-mask { display: block; overflow: hidden; padding-bottom: 0.09em; margin-bottom: -0.05em; }
+/* The reveal mask clips its line, so it keeps room above and below the glyphs: Hindi's vowel signs rise above
+   the line and dip below it, and a tight mask cut them off. */
+.v6-mask { display: block; overflow: hidden; padding: 0.2em 0 0.14em; margin: -0.2em 0 -0.1em; }
+:lang(hi) .v6-h__h1 { line-height: 1.22; }
 .v6-mask__in { display: block; animation: v6MaskIn 860ms cubic-bezier(0.22,1,0.36,1) both; animation-delay: 60ms; }
 @keyframes v6MaskIn { from { transform: translateY(112%); } to { transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { .v6-mask__in { animation: none !important; } }

@@ -25,7 +25,9 @@ type TextRecord = { source: string; lead: string; trail: string; applied: string
 // left alone (a typed value, an option list) while their placeholder and label are still translated.
 const ELEMENT_SKIP = "[data-no-translate],script,style,noscript,code,pre,kbd,samp,[contenteditable='true']";
 const SKIP = `${ELEMENT_SKIP},input,textarea,select`;
-const ATTRS = ["aria-label", "title", "placeholder"] as const;
+// data-text: the closing heading's light sweep paints its sentence from this attribute (spectral.tsx), so it
+// must be translated with the heading, or the English sentence sweeps across the translation. alt: image text.
+const ATTRS = ["aria-label", "title", "placeholder", "alt", "data-text"] as const;
 const PROTECTED = new Set(["Vraelis", "Reddit", "ByteDance", "TikTok", "GitHub", "Google", "Vercel", "Stripe", "Supabase", "Sentry", "Slack", "MCP", "CLI", "API"]);
 
 const texts = new WeakMap<Text, TextRecord>();

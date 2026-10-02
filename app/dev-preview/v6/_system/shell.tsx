@@ -3,7 +3,7 @@
 // Shared public shell for design 06: one nav, one Resources mega-menu, one mobile full-screen nav, one
 // footer, one route transition, used by every v6 route. Sticky nav goes transparent -> blurred on scroll and
 // flips to a dark treatment over graphite (live-work) sections. Client-side nav with prefetch (next/link).
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FocusEvent as ReactFocusEvent, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SiteFooter } from "./close";
@@ -258,6 +258,7 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
   const pathname = usePathname() || "";
   const navRef = useRef<HTMLElement>(null);
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const megaRef = useRef<HTMLDivElement>(null);
   const [scrolled, setScrolled] = useState(false);
   const [settled, setSettled] = useState(false);
   const [drawer, setDrawer] = useState(false);
@@ -471,6 +472,34 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
     return () => cancelAnimationFrame(id);
   }, [pathname]);
 
+  // THE KEYBOARD. The open menu's panel comes after all four buttons in the page, so Tab from an open button
+  // used to walk the other buttons and then out of the bar, leaving the panel open over the hero's address
+  // field for good. Now Tab from an open button goes into its panel, Tab off the panel's last link closes it
+  // and moves on to the next button, Shift+Tab walks back out the same way, and focus leaving the bar (or
+  // landing on another button) closes whatever is open.
+  const focusables = () => Array.from(megaRef.current?.querySelectorAll<HTMLElement>("a[href], button:not([disabled])") ?? []);
+  const onItemKey = (i: number) => (e: ReactKeyboardEvent) => {
+    if (e.key !== "Tab" || e.shiftKey || open !== i) return;
+    const first = focusables()[0];
+    if (first) { e.preventDefault(); first.focus(); }
+  };
+  const onMegaKey = (e: ReactKeyboardEvent) => {
+    if (e.key !== "Tab" || shown === null) return;
+    const list = focusables();
+    const at = list.indexOf(document.activeElement as HTMLElement);
+    if (e.shiftKey && at === 0) { e.preventDefault(); btnRefs.current[shown]?.focus(); return; }
+    if (!e.shiftKey && at === list.length - 1) {
+      e.preventDefault();
+      const i = shown;
+      close(i);
+      const next = btnRefs.current[i + 1] ?? navRef.current?.querySelector<HTMLElement>(".v6-nav__right a[href], .v6-nav__right button");
+      next?.focus();
+    }
+  };
+  const onNavBlur = (e: ReactFocusEvent) => {
+    if (open !== null && !navRef.current?.contains(e.relatedTarget as Node | null)) close(open);
+  };
+
   // Escape + click-outside
   useEffect(() => {
     if (open === null) return;
@@ -486,7 +515,7 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
     <nav ref={navRef} className="v6-nav" data-scrolled={scrolled} data-theme={dark ? "dark" : "light"}
       data-open={shown !== null} data-settled={settled} data-ground={navBg ? "1" : undefined}
       style={navBg ? ({ "--nav-bg": navBg } as CSSProperties) : undefined}
-      aria-label="Primary" onMouseLeave={scheduleClose}>
+      aria-label="Primary" onMouseLeave={scheduleClose} onBlur={onNavBlur}>
       <div className="v6-nav__in">
         <Brand />
         <div className="v6-nav__items">
@@ -494,13 +523,14 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
           {MENUS.map((m, i) => (
             <button key={m.label} type="button" ref={(el) => { btnRefs.current[i] = el; }}
               className="v6-nav__item" aria-expanded={open === i} aria-haspopup="true"
-              onClick={() => (open === i ? close(i) : openAt(i))} onMouseEnter={() => openAt(i)}>
+              onClick={() => (open === i ? close(i) : openAt(i))} onMouseEnter={() => openAt(i)}
+              onKeyDown={onItemKey(i)} onFocus={() => { if (open !== null && open !== i) close(open); }}>
               {m.label}
             </button>
           ))}
         </div>
         {shown !== null ? (
-          <div onMouseEnter={() => openAt(shown)} onMouseLeave={scheduleClose}>
+          <div ref={megaRef} onMouseEnter={() => openAt(shown)} onMouseLeave={scheduleClose} onKeyDown={onMegaKey}>
             <MegaShell index={shown} state={open === null ? "out" : "in"} preview={preview}
               onPreview={setPreview} onNavigate={() => close(shown)} />
           </div>
