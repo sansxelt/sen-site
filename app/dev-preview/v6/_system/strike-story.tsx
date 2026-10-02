@@ -23,7 +23,7 @@
    Desktop pins the scene and scrubs it from scroll (progress.ts). Phones, short screens and reduced motion
    get the chapters as plain blocks in their finished state. */
 import Image, { type StaticImageData } from "next/image";
-import { Fragment, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState, type RefObject } from "react";
 import { useScrollProgress } from "./progress";
 import { EditorialLink } from "./ui";
 import { AreaLayer, PictureLayer } from "./strike-map";
@@ -136,7 +136,7 @@ function Run({ r, k }: { r: StrikeRecord; k: number }) {
               <li key={i} data-s={st}>
                 <span className="sk-mono">{String(i + 1).padStart(2, "0")}</span>
                 <span className="sk-steps__t">{s.say}</span>
-                <span className="sk-mono">{st === "fail" ? <><span className="sk-steps__f">Failed</span> {fmt(s.ms)}</> : st === "ok" ? fmt(s.ms) : ""}</span>
+                <span className="sk-mono">{st === "fail" ? <><span className="sk-steps__f">Problem</span> {fmt(s.ms)}</> : st === "ok" ? fmt(s.ms) : ""}</span>
               </li>
             );
           })}
@@ -152,17 +152,21 @@ function Run({ r, k }: { r: StrikeRecord; k: number }) {
   );
 }
 
-function Finding({ r }: { r: StrikeRecord }) {
+function Finding({ r, inSheet }: { r: StrikeRecord; inSheet?: boolean }) {
   const run = r.run!;
   const f = run.failure;
   const steps = run.journeys.flatMap((j) => j.steps);
   const at = steps.findIndex((s) => !s.ok);
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(run.repairPrompt); setCopied(true); setTimeout(() => setCopied(false), 1600); } catch { /* clipboard refused: the prompt is on screen to select */ }
+  };
   return (
     <div className="sk-p">
       <div className="sk-p__bar">
         <span className="sk-p__mark">V</span><span>Record</span>
         <span className="sk-mono sk-dim" data-no-translate>{run.id.slice(0, 12)}</span>
-        <span className="sk-chip" data-s={f ? "stop" : "ok"}>{f ? "Found a problem" : "Held"}</span>
+        <span className="sk-chip" data-s={f ? "stop" : "ok"}>{f ? "Found a problem" : "Did what the sentence says"}</span>
       </div>
       <div className="sk-find">
         <div className="sk-find__l">
@@ -181,7 +185,7 @@ function Finding({ r }: { r: StrikeRecord }) {
           </div>
         </div>
         <div className="sk-prompt">
-          <div className="sk-prompt__h"><span>Repair prompt for a coding agent</span><span className="sk-mini">Copy</span></div>
+          <div className="sk-prompt__h"><span>Repair prompt for a coding agent</span><button type="button" className="sk-mini" onClick={() => void copy()} tabIndex={inSheet ? -1 : undefined}>{copied ? "Copied" : "Copy"}</button></div>
           <pre>{run.repairPrompt}</pre>
         </div>
       </div>
@@ -191,8 +195,51 @@ function Finding({ r }: { r: StrikeRecord }) {
 
 type Chapter = { eyebrow: string; t: string; d: string; link?: { href: string; label: string } };
 
+/**
+ * FITS THE SHEETS TO THE SCREEN. They are drawn at 880px, and on a laptop-height screen (1280x720, 1366x768)
+ * that ran them under the header and onto the chapter's own title. So the stage is zoomed down until the
+ * sheets, as the browser actually draws them in perspective, fit between the header and the copy, and moved
+ * to sit centred in that space. Measured again whenever the copy or the window changes size (a longer
+ * translation, the fonts arriving).
+ */
+function useFitStage(root: RefObject<HTMLElement | null>, stage: RefObject<HTMLDivElement | null>) {
+  useEffect(() => {
+    const el = root.current, st = stage.current;
+    const pin = el?.querySelector<HTMLElement>(".v6-sk__pin");
+    const copy = el?.querySelector<HTMLElement>(".v6-sk__copy");
+    if (!el || !st || !pin || !copy) return;
+    const union = () => {
+      const rs = Array.from(st.querySelectorAll<HTMLElement>(".v6-sk__sheet, .v6-sk__front")).map((s) => s.getBoundingClientRect());
+      return { top: Math.min(...rs.map((x) => x.top)), bottom: Math.max(...rs.map((x) => x.bottom)) };
+    };
+    let raf = 0;
+    const fit = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        if (getComputedStyle(pin).display === "none") return;
+        st.style.zoom = ""; st.style.translate = "";
+        const navH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--nav-h")) || 66;
+        // 36 below the header, not 14: the picture sheet comes forward and up by about 20px in the later chapters.
+        const lo = pin.getBoundingClientRect().top + navH + 36, hi = copy.getBoundingClientRect().top - 22;
+        const u = union();
+        const z = Math.max(0.5, Math.min(1, (hi - lo) / ((u.bottom - u.top) * 1.04)));
+        st.style.zoom = String(z);
+        const v = union();
+        // The zoomed element's own lengths are zoomed too, so the shift is given in its unzoomed pixels.
+        st.style.translate = `0 ${((lo + hi) / 2 - (v.top + v.bottom) / 2) / z}px`;
+      });
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(copy); ro.observe(pin);
+    return () => { ro.disconnect(); cancelAnimationFrame(raf); };
+  }, [root, stage]);
+}
+
 export function StrikeStory({ record: r, chapters, caption }: { record: StrikeRecord; chapters: Chapter[]; caption: string }) {
   const root = useRef<HTMLElement>(null);
+  const stage = useRef<HTMLDivElement>(null);
+  useFitStage(root, stage);
   const [p, setP] = useState(0);
   useScrollProgress(root, { onFrame: (v) => setP((old) => (Math.abs(old - v) > 0.002 || v === 0 || v === 1 ? v : old)) });
   const n = chapters.length;
@@ -201,44 +248,54 @@ export function StrikeStory({ record: r, chapters, caption }: { record: StrikeRe
   const k = clamp01(pos - idx) * 1.25; // finish each chapter a little before the next begins
   const finding = r.run?.failure ?? null;
 
-  const panel = (i: number, kk: number) =>
-    i === 0 ? <Terminal r={r} k={kk} /> : i === 1 ? <Plan r={r} k={kk} /> : i === 2 ? <Run r={r} k={kk} /> : <Finding r={r} />;
+  const panel = (i: number, kk: number, inSheet?: boolean) =>
+    i === 0 ? <Terminal r={r} k={kk} /> : i === 1 ? <Plan r={r} k={kk} /> : i === 2 ? <Run r={r} k={kk} /> : <Finding r={r} inSheet={inSheet} />;
+  // A keyboard reaching a later chapter's link scrolls the story to that chapter, so what has focus is on screen.
+  const showChapter = (i: number) => {
+    const el = root.current;
+    if (!el || i === idx) return;
+    const top = el.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: top + ((i + 0.4) / n) * (el.offsetHeight - window.innerHeight), behavior: "auto" });
+  };
   // The middle sheet follows the story: the sector the rule is about once the browser is in the console,
   // and the finding, on the contact it is about, in the last chapter.
   const sector = idx >= 2 ? "B3" : null;
   const mark = idx === 3 && finding ? { id: finding.contact, text: finding.shown } : null;
 
   return (
+    <>
     <section ref={root} className="v6-sk" aria-labelledby="v6-sk-h" data-nav-dark data-nav-theme="dark" style={{ height: `${n * 115 + 60}vh` }}>
       <h2 id="v6-sk-h" className="v6-sk__sr">How a check works</h2>
 
-      <div className="v6-sk__pin" aria-hidden>
-        <div className="v6-sk__stage">
+      {/* The sheets are pictures of the copy beside them, so only the copy is read out. */}
+      <div className="v6-sk__pin">
+        <div ref={stage} className="v6-sk__stage" aria-hidden>
           <div className="v6-sk__stack" data-ch={idx}>
             <div className="v6-sk__sheet v6-sk__sheet--area"><AreaLayer /><span className="v6-sk__tag sk-mono">Area of operations</span></div>
             <div className="v6-sk__sheet v6-sk__sheet--pic"><PictureLayer sector={sector} mark={mark} /><span className="v6-sk__tag sk-mono">Live picture</span></div>
-            <div className="v6-sk__sheet v6-sk__sheet--front">
-              {chapters.map((_, i) => (
-                <div key={i} className="v6-sk__panel" data-on={i === idx}>
-                  {/* Only the live chapter animates; the others hold their finished frame under the fade. */}
-                  {panel(i, i === idx ? Math.min(1, k) : i < idx ? 1 : 0)}
-                </div>
-              ))}
-            </div>
+          </div>
+          {/* The product's own output faces the reader, flat: text drawn on a tilted layer loses the thin
+              strokes of its letters (an r without its arm), and this is the text people read. */}
+          <div className="v6-sk__front">
+            {chapters.map((_, i) => (
+              <div key={i} className="v6-sk__panel" data-on={i === idx}>
+                {/* Only the live chapter animates; the others hold their finished frame under the fade. */}
+                {panel(i, i === idx ? Math.min(1, k) : i < idx ? 1 : 0, true)}
+              </div>
+            ))}
           </div>
         </div>
         <div className="v6-sk__copy">
           {chapters.map((c, i) => (
-            <div key={i} className="v6-sk__ch" data-on={i === idx}>
+            <div key={i} className="v6-sk__ch" data-on={i === idx} onFocus={() => showChapter(i)}>
               <p className="v6-sk__eb"><span className="sk-mono">{String(i + 1).padStart(2, "0")}</span>{c.eyebrow}</p>
-              <p className="v6-sk__t">{c.t}</p>
+              <h3 className="v6-sk__t">{c.t}</h3>
               <p className="v6-sk__d">{c.d}</p>
               {c.link && <EditorialLink href={c.link.href}>{c.link.label}</EditorialLink>}
             </div>
           ))}
-          <ol className="v6-sk__bars">{chapters.map((_, i) => <li key={i} data-on={i <= idx} />)}</ol>
+          <ol className="v6-sk__bars" aria-hidden>{chapters.map((_, i) => <li key={i} data-on={i <= idx} />)}</ol>
         </div>
-        <p className="v6-sk__cap">{caption}</p>
       </div>
 
       {/* Phones, short screens, reduced motion: the same chapters, finished, in reading order. */}
@@ -261,6 +318,9 @@ export function StrikeStory({ record: r, chapters, caption }: { record: StrikeRe
         <li className="v6-sk__cap">{caption}</li>
       </ol>
     </section>
+    {/* On a desktop the caption follows the pinned story instead of taking room from the sheets. */}
+    <p className="v6-sk__cap v6-sk__after">{caption}</p>
+    </>
   );
 }
 

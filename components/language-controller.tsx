@@ -35,6 +35,29 @@ const catalogues = new Map<Locale, Promise<Catalogue>>();
 const norm = (s: string) => s.replace(/\s+/g, " ").trim();
 const skipped = (el: Element | null) => !!el?.closest(SKIP);
 
+// NOTHING REACT HAS NOT HYDRATED YET. React tags every DOM element it hydrates (or creates) with a
+// "__reactFiber$<id>" property, and checks an element's text against the server render at that moment. A
+// page's Suspense boundaries hydrate late, at the lowest priority, often after the load event and the idle
+// moment the first pass waits for, and text changed before React gets there makes it throw the server HTML
+// away (minified error #418) and render that part again, in English. On vraelis.com every run that hit the
+// error had changed 136 to 171 such texts first, and every clean run none. So while the page is still
+// hydrating, a text or attribute whose element is untagged is left for a later pass.
+let hydrating = true;
+let pending = 0;
+let fiberKey: string | null = null;
+function awaitingHydration(el: Element | null): boolean {
+  if (!hydrating || !el) return false;
+  fiberKey ??= Object.keys(document.body).find((k) => k.startsWith("__reactFiber$")) ?? null;
+  if (!fiberKey || fiberKey in el) return false; // no React tag on the page at all: nothing to wait for
+  pending++;
+  return true;
+}
+// How long a pass keeps waiting on untagged elements. React never tags elements that a plain script made,
+// and they would wait forever, so after this the page counts as hydrated and they are translated too.
+const HYDRATION_WAIT_MS = 15000;
+// English as rendered is left alone until another language has been shown: an English visitor's page is never written to.
+let touched = false;
+
 function load(locale: Locale): Promise<Catalogue> {
   if (locale === "en") return Promise.resolve({});
   let p = catalogues.get(locale);
@@ -53,7 +76,7 @@ function lookup(source: string, cat: Catalogue, locale: Locale): string {
 }
 
 function translateText(node: Text, cat: Catalogue, locale: Locale) {
-  if (skipped(node.parentElement)) return;
+  if (skipped(node.parentElement) || awaitingHydration(node.parentElement)) return;
   const current = norm(node.data);
   let rec = texts.get(node);
   if (!rec || current !== rec.applied) {
@@ -74,6 +97,7 @@ function translateText(node: Text, cat: Catalogue, locale: Locale) {
 
 function translateAttrs(el: Element, cat: Catalogue, locale: Locale) {
   if (el.closest(ELEMENT_SKIP)) return;
+  if (!ATTRS.some((a) => el.hasAttribute(a)) || awaitingHydration(el)) return;
   let map = attrs.get(el);
   for (const a of ATTRS) {
     const current = el.getAttribute(a);
@@ -139,8 +163,9 @@ export function LanguageController() {
     let observer: MutationObserver | undefined;
     // NOT BEFORE THE PAGE HAS HYDRATED. This component hydrates with the root layout, but a page's streamed
     // Suspense boundaries hydrate later, and React throws away (and re-renders) any server-rendered text it
-    // finds changed when it gets there. So the first pass waits for the load event and an idle moment, and
-    // two later sweeps pick up any boundary that hydrated after that without mutating the DOM.
+    // finds changed when it gets there. So the first pass waits for the load event and an idle moment, skips
+    // whatever React has not hydrated even then (awaitingHydration, above) and comes back for it, and two
+    // later sweeps pick up anything else that changed without the observer seeing it.
     const settled = new Promise<void>((resolve) => {
       // Safari has no requestIdleCallback; a short timeout stands in for it there.
       const ric = (window as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback;
@@ -150,9 +175,21 @@ export function LanguageController() {
     });
     const sweeps: number[] = [];
     void Promise.all([load(locale), settled]).then(([cat]) => {
-      if (disposed) return;
-      translateTree(document.body, cat, locale);
-      translateTitle(cat, locale);
+      if (disposed || (locale === "en" && !touched)) return;
+      touched = true;
+      // A whole pass, then another every 300 ms while it had to leave text React has not hydrated yet.
+      const started = performance.now();
+      const pass = () => {
+        if (disposed) return;
+        pending = 0;
+        translateTree(document.body, cat, locale);
+        translateTitle(cat, locale);
+        if (!hydrating) return;
+        if (pending === 0) hydrating = false;
+        else if (performance.now() - started > HYDRATION_WAIT_MS) { hydrating = false; pass(); }
+        else sweeps.push(window.setTimeout(pass, 300));
+      };
+      pass();
       if (locale === "en") return; // back to English: everything is restored, nothing new needs watching
       for (const ms of [1500, 4000]) sweeps.push(window.setTimeout(() => { if (!disposed) translateTree(document.body, cat, locale); }, ms));
       observer = new MutationObserver((records) => {

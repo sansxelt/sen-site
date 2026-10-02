@@ -9,7 +9,7 @@
 
 .v6-sk__pin {
   position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden;
-  display: grid; grid-template-rows: minmax(0, 1fr) auto auto; justify-items: center;
+  display: grid; grid-template-rows: minmax(0, 1fr) auto; justify-items: center;
   padding: calc(var(--nav-h, 66px) + 3vh) var(--gutter) 3vh;
 }
 .v6-sk__pin::before {
@@ -40,13 +40,18 @@
 .v6-sk__stack[data-ch="2"] .v6-sk__sheet--pic { transform: translateZ(-100px) translate(-30px, -32px); }
 .v6-sk__stack[data-ch="3"] .v6-sk__sheet--pic { transform: translateZ(-70px) translate(-36px, -40px); border-color: rgba(255,255,255,0.3); }
 /* The product sits to the right and in front, so the left of the picture (the aircraft, sector B3, T-1 and
-   the bus) stays in view behind it. */
-.v6-sk__sheet--front {
-  inset: auto 0 0 auto; width: 64%; height: 87%;
+   the bus) stays in view behind it. It is outside the tilted stack and lies flat, facing the reader: text on
+   a tilted layer is drawn as a texture and loses the thin strokes of its letters. */
+.v6-sk__front {
+  position: absolute; right: -3%; bottom: -5%; width: 62%; height: 86%; z-index: 2; border-radius: 14px; overflow: hidden;
   background: #111113; border: 1px solid rgba(255,255,255,0.16);
   box-shadow: 0 60px 140px -60px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.03) inset, 0 1px 0 rgba(255,255,255,0.08) inset;
 }
-.v6-sk__tag { position: absolute; left: 14px; top: 11px; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.42); }
+/* Each sheet's name on a small plate. The picture's sits top left, over the grid letters of the sheet behind;
+   the area's sits bottom left, inside the row numbers, so the two never land on each other. */
+.v6-sk__tag { position: absolute; left: 12px; top: 10px; padding: 3px 7px; border-radius: 4px; background: rgba(10,13,18,0.88);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.08) inset; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.5); }
+.v6-sk__sheet--area .v6-sk__tag { top: auto; bottom: 10px; left: 40px; }
 .v6-sk__panel { position: absolute; inset: 0; opacity: 0; transition: opacity 420ms var(--ease); pointer-events: none; }
 .v6-sk__panel[data-on="true"] { opacity: 1; }
 
@@ -63,6 +68,10 @@
 .v6-sk__copy { position: relative; display: grid; width: min(880px, 100%); text-align: center; margin-top: 1vh; }
 .v6-sk__ch { grid-area: 1 / 1; display: grid; justify-items: center; align-content: start; opacity: 0; transform: translateY(10px); transition: opacity 360ms var(--ease), transform 360ms var(--ease); }
 .v6-sk__ch[data-on="true"] { opacity: 1; transform: none; }
+/* The four chapters share one cell; only the one on screen takes the pointer, or a click on its link would land
+   on a hidden chapter's link stacked above it. */
+.v6-sk__ch { pointer-events: none; }
+.v6-sk__ch[data-on="true"] { pointer-events: auto; }
 .v6-sk__ch .v6-elink { margin-top: 14px; }
 .v6-sk__eb { margin: 0; display: inline-flex; gap: 10px; font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
 .v6-sk__eb .sk-mono { color: var(--ink-4); letter-spacing: 0; }
@@ -72,6 +81,7 @@
 .v6-sk__bars li { width: 26px; height: 2px; border-radius: 2px; background: rgba(255,255,255,0.16); transition: background 300ms var(--ease); }
 .v6-sk__bars li[data-on="true"] { background: #FAFAFA; }
 .v6-sk__cap { position: relative; margin: 22px auto 0; max-width: 70ch; font-size: 12.5px; line-height: 1.5; color: var(--ink-4); text-align: center; }
+.v6-sk__after { margin: 0 auto; padding: 18px var(--gutter) clamp(48px, 8vh, 96px); background: var(--paper); }
 
 /* ── the front panels (the product, drawn the way the console draws it) ── */
 .sk-p { position: absolute; inset: 0; display: flex; flex-direction: column; font-size: 13px; color: #C9CBD1; text-align: left; }
@@ -138,7 +148,10 @@
 .sk-find__shot img { transform-origin: 0 0; }
 .sk-prompt { min-height: 0; display: flex; flex-direction: column; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; background: #0A0A0B; overflow: hidden; }
 .sk-prompt__h { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.07); font-size: 12px; font-weight: 600; color: #FAFAFA; }
-.sk-mini { font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.16); color: #C9CBD1; }
+.sk-mini { font: inherit; font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.16); color: #C9CBD1;
+  background: transparent; cursor: pointer; }
+.v6-sk__panel[data-on="true"] .sk-mini { pointer-events: auto; }
+.sk-mini:hover { border-color: rgba(255,255,255,0.32); color: #FAFAFA; }
 .sk-prompt pre { margin: 0; padding: 10px 12px; font-family: var(--mono); font-size: 10.5px; line-height: 1.6; color: #A1A3A9; white-space: pre-wrap; overflow: hidden;
   -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent); mask-image: linear-gradient(to bottom, #000 70%, transparent); }
 
@@ -146,7 +159,7 @@
 .v6-sk__flat { display: none; }
 @media (max-width: 900px), (max-height: 620px), (prefers-reduced-motion: reduce) {
   .v6-sk { height: auto !important; padding: clamp(64px, 10vw, 96px) 0; }
-  .v6-sk__pin { display: none; }
+  .v6-sk__pin, .v6-sk__after { display: none; }
   .v6-sk__flat { display: grid; gap: 56px; list-style: none; margin: 0 auto; padding: 0 var(--gutter); max-width: 760px; }
   .v6-sk__flat .v6-sk__t { font-size: clamp(1.5rem, 6vw, 2rem); }
   .v6-sk__flat .v6-sk__d { margin-left: 0; }
