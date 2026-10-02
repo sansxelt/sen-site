@@ -5,8 +5,9 @@
 //
 //   1 the film       one video in a rounded frame with one sentence on it: a board, our drone, the drone
 //                    through four real places, a real catch, the controller (_system/hero.tsx)
-//   2 how it works   one pinned scene, four chapters, every panel the product's own output for one recorded
-//                    run (_system/scroll-story.tsx)
+//   2 how it works   one pinned scene over a mission console's picture, four chapters, every panel the
+//                    product's own output for one real check of the Larkspur fixture (_system/strike-story.tsx,
+//                    data in _content/strike.ts); the founder asked for an attack-drone example, run for real
 //   3 the statement  one sentence, revealed as it crosses the screen (_system/home-bands.tsx)
 //   4 the orbit      what it checks, circling "Know your ___ works." (_system/orbit.tsx)
 //   5 real runs      the four recorded runs, replayed (_system/run-window.tsx inside home-bands' Proof)
@@ -17,7 +18,8 @@
 // _system/positioning.ts or beside the section that says it. Steps (_system/steps.tsx) and the coverage list
 // (_system/coverage.tsx) left this page; the coverage list is on /platform#coverage, linked from the orbit.
 import { Hero } from "./_system/hero";
-import { ScrollStory } from "./_system/scroll-story";
+import { StrikeStory } from "./_system/strike-story";
+import { STRIKE, STRIKE_CHAPTERS, STRIKE_CAPTION } from "./_content/strike";
 import { Statement, AgentsBand, Proof } from "./_system/home-bands";
 import { Orbit } from "./_system/orbit";
 import { RunWindow } from "./_system/run-window";
@@ -31,7 +33,7 @@ export default function Home() {
   return (
     <>
       <Hero />
-      <ScrollStory />
+      <StrikeStory record={STRIKE} chapters={STRIKE_CHAPTERS} caption={STRIKE_CAPTION} />
       <Statement />
       <Orbit />
       <Proof><RunWindow /></Proof>

@@ -1,0 +1,165 @@
+/* ============================================================================
+   HOW A CHECK WORKS, ON A MISSION CONSOLE (strike-story.tsx, 2026-10-01).
+   Three sheets in perspective hold the upper middle of the screen: the area of operations, the live picture,
+   and Vraelis's own output at the front. The chapter sits centred under them. Black, like every surface.
+   ============================================================================ */
+
+.v6-sk { position: relative; background: var(--paper); color: var(--ink-2); }
+.v6-sk__sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.v6-sk__pin {
+  position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden;
+  display: grid; grid-template-rows: minmax(0, 1fr) auto auto; justify-items: center;
+  padding: calc(var(--nav-h, 66px) + 3vh) var(--gutter) 3vh;
+}
+.v6-sk__pin::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(1000px 560px at 50% 36%, rgba(255,255,255,0.05), transparent 70%);
+}
+
+/* ── the sheets ── */
+.v6-sk__stage { position: relative; width: min(880px, 82vw); align-self: center; margin-bottom: 6.5vh; perspective: 2400px; perspective-origin: 50% 24%; }
+.v6-sk__stack {
+  position: relative; width: 100%; aspect-ratio: 16 / 9.6; transform-style: preserve-3d;
+  transform: rotateX(calc(17deg - var(--p, 0) * 6deg)) rotateY(calc(-19deg + var(--p, 0) * 11deg)) rotateZ(calc(3deg - var(--p, 0) * 2deg));
+  will-change: transform;
+}
+.v6-sk__sheet { position: absolute; inset: 0; border-radius: 14px; overflow: hidden; transform-style: preserve-3d;
+  transition: transform 700ms var(--ease), opacity 500ms var(--ease); }
+.v6-sk__sheet--area {
+  transform: translateZ(-240px) translate(-46px, -50px);
+  background: rgba(10,14,19,0.78); border: 1px solid rgba(255,255,255,0.14);
+}
+.v6-sk__sheet--pic {
+  transform: translateZ(-120px) translate(-23px, -25px);
+  background: linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.01) 60%);
+  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset;
+}
+/* once the browser is in the console the picture comes forward, and in the finding further still */
+.v6-sk__stack[data-ch="2"] .v6-sk__sheet--pic { transform: translateZ(-100px) translate(-30px, -32px); }
+.v6-sk__stack[data-ch="3"] .v6-sk__sheet--pic { transform: translateZ(-70px) translate(-36px, -40px); border-color: rgba(255,255,255,0.3); }
+/* The product sits to the right and in front, so the left of the picture (the aircraft, sector B3, T-1 and
+   the bus) stays in view behind it. */
+.v6-sk__sheet--front {
+  inset: auto 0 0 auto; width: 64%; height: 87%;
+  background: #111113; border: 1px solid rgba(255,255,255,0.16);
+  box-shadow: 0 60px 140px -60px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.03) inset, 0 1px 0 rgba(255,255,255,0.08) inset;
+}
+.v6-sk__tag { position: absolute; left: 14px; top: 11px; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.42); }
+.v6-sk__panel { position: absolute; inset: 0; opacity: 0; transition: opacity 420ms var(--ease); pointer-events: none; }
+.v6-sk__panel[data-on="true"] { opacity: 1; }
+
+/* the line art */
+.sm { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.sm text { font-family: var(--mono); }
+.sm__gl { fill: rgba(255,255,255,0.34); font-size: 10px; }
+.sm__lab { fill: #E8ECF1; font-size: 12px; font-family: var(--sans) !important; font-weight: 600; }
+.sm__flag { fill: #FF8A6A; font-size: 12.5px; font-family: var(--sans) !important; font-weight: 600; }
+
+/* ── the chapter ── */
+/* every chapter sits in the same grid cell, so the block is as tall as the tallest one and nothing below it
+   is ever overlapped by a chapter whose title wraps */
+.v6-sk__copy { position: relative; display: grid; width: min(880px, 100%); text-align: center; margin-top: 1vh; }
+.v6-sk__ch { grid-area: 1 / 1; display: grid; justify-items: center; align-content: start; opacity: 0; transform: translateY(10px); transition: opacity 360ms var(--ease), transform 360ms var(--ease); }
+.v6-sk__ch[data-on="true"] { opacity: 1; transform: none; }
+.v6-sk__ch .v6-elink { margin-top: 14px; }
+.v6-sk__eb { margin: 0; display: inline-flex; gap: 10px; font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
+.v6-sk__eb .sk-mono { color: var(--ink-4); letter-spacing: 0; }
+.v6-sk__t { margin: 10px 0 0; font-family: var(--display); font-weight: 500; font-size: clamp(1.7rem, 2.6vw, 2.5rem); letter-spacing: -0.03em; line-height: 1.1; color: var(--ink); text-wrap: balance; }
+.v6-sk__d { margin: 12px auto 0; max-width: 54ch; font-size: clamp(0.98rem, 1.1vw, 1.08rem); line-height: 1.55; color: var(--ink-3); }
+.v6-sk__bars { list-style: none; margin: 22px 0 0; padding: 0; grid-area: 2 / 1; justify-self: center; display: flex; gap: 6px; }
+.v6-sk__bars li { width: 26px; height: 2px; border-radius: 2px; background: rgba(255,255,255,0.16); transition: background 300ms var(--ease); }
+.v6-sk__bars li[data-on="true"] { background: #FAFAFA; }
+.v6-sk__cap { position: relative; margin: 22px auto 0; max-width: 70ch; font-size: 12.5px; line-height: 1.5; color: var(--ink-4); text-align: center; }
+
+/* ── the front panels (the product, drawn the way the console draws it) ── */
+.sk-p { position: absolute; inset: 0; display: flex; flex-direction: column; font-size: 13px; color: #C9CBD1; text-align: left; }
+.sk-p__bar { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,0.08); background: #161618; font-size: 13px; font-weight: 600; color: #FAFAFA; flex: none; }
+.sk-p__mark { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; background: #FAFAFA; color: #0A0A0B; font-size: 11.5px; font-weight: 700; }
+.sk-mono { font-family: var(--mono); font-weight: 400; }
+.sk-dim { color: #74767C; font-size: 11.5px; }
+.sk-k { margin: 0 0 8px; font-size: 11.5px; font-weight: 500; color: #8E9095; }
+.sk-note { margin: auto 0 0; padding-top: 12px; font-size: 12px; color: #8E9095; }
+.sk-chip { margin-left: auto; display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+.sk-chip[data-s="wait"] { color: #F5B94D; background: rgba(245,185,77,0.12); }
+.sk-chip[data-s="ok"] { color: #4ADE9C; background: rgba(61,214,140,0.12); }
+.sk-chip[data-s="run"] { color: #FAFAFA; background: rgba(255,255,255,0.08); }
+.sk-chip[data-s="stop"] { color: #FF8A6A; background: rgba(255,122,85,0.12); }
+
+/* terminal: the CLI's own colours */
+.sk-term { background: #0B0B0D; }
+.sk-term .sk-p__bar { background: #131315; justify-content: space-between; font-weight: 500; }
+.sk-term__body { margin: 0; padding: 14px 18px; flex: 1; min-height: 0; overflow: hidden; font-family: var(--mono); font-size: 11.5px; line-height: 1.62; color: #D7D9DE; white-space: pre-wrap; word-break: break-word;
+  -webkit-mask-image: linear-gradient(to bottom, #000 82%, transparent); mask-image: linear-gradient(to bottom, #000 82%, transparent); }
+.sk-term__cmd { color: #FAFAFA; }
+.sk-a1 { font-weight: 700; color: #FAFAFA; }
+.sk-a2 { color: #7B7E86; }
+.sk-a31 { color: #FF8A6A; }
+.sk-a32 { color: #4ADE9C; }
+.sk-a33 { color: #F5B94D; }
+.sk-a36 { color: #7CC7F2; }
+
+/* plan */
+.sk-plan { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 18px; padding: 16px 18px; flex: 1; min-height: 0; }
+.sk-plan ol, .sk-plan ul { list-style: none; margin: 0; padding: 0; }
+.sk-plan__req li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 12px; line-height: 1.4; color: #D7D9DE; }
+.sk-plan__req li .sk-mono { color: #74767C; font-size: 10.5px; padding-top: 1px; }
+.sk-plan__flows { display: flex; flex-direction: column; min-height: 0; }
+.sk-plan__flows li { display: flex; justify-content: space-between; gap: 10px; padding: 9px 11px; margin-bottom: 6px; border: 1px solid rgba(255,255,255,0.09); border-radius: 9px; background: #0D0D0F; font-size: 12px; line-height: 1.35; color: #FAFAFA; }
+.sk-plan__flows li .sk-mono { color: #8E9095; font-size: 11px; }
+
+/* run */
+.sk-run { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 14px; padding: 14px 16px; min-height: 0; flex: 1; }
+.sk-steps { list-style: none; margin: 0; padding: 0; min-height: 0; overflow: hidden; }
+.sk-steps li { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; align-items: start; gap: 9px; padding: 5px 0; font-size: 12px; line-height: 1.35; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.sk-steps li .sk-mono { font-size: 10.5px; color: #74767C; white-space: nowrap; }
+/* two lines, so a step reads whole ("Confirm T-3 Bus, civilian Do not engage is visible") */
+.sk-steps__t { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.sk-steps li[data-s="wait"] { opacity: 0.4; }
+.sk-steps li[data-s="now"] .sk-mono { color: #FAFAFA; }
+.sk-steps li[data-s="fail"], .sk-steps li[data-s="fail"] .sk-mono { color: #FF8A6A; }
+.sk-steps li[data-s="fail"] .sk-steps__t { font-weight: 600; }
+.sk-steps__f { font-family: var(--sans); font-weight: 600; margin-right: 3px; }
+.sk-browser { border: 1px solid rgba(255,255,255,0.10); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; background: #07090C; min-height: 0; }
+.sk-browser__bar { height: 26px; display: flex; align-items: center; padding: 0 9px; background: #1B1B1F; font-size: 10px; color: #8E9095; white-space: nowrap; overflow: hidden; }
+.sk-browser__view { position: relative; flex: 1; min-height: 0; }
+
+/* finding */
+.sk-find { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 16px; padding: 16px 18px; flex: 1; min-height: 0; }
+.sk-find__l { display: flex; flex-direction: column; min-height: 0; }
+.sk-diff { margin: 0 0 12px; display: grid; gap: 6px; }
+.sk-diff div { display: grid; grid-template-columns: 72px minmax(0, 1fr); font-size: 12.5px; line-height: 1.4; }
+.sk-diff dt { color: #8E9095; }
+.sk-diff dd { margin: 0; color: #FAFAFA; }
+.sk-diff dd[data-s="stop"] { color: #FF8A6A; }
+.sk-more { margin: -4px 0 12px; font-size: 11.5px; line-height: 1.45; color: #8E9095; }
+.sk-find__shot { position: relative; flex: 1; min-height: 90px; border: 1px solid rgba(255,255,255,0.1); border-radius: 9px; overflow: hidden; background: #07090C; }
+.sk-find__shot img { transform-origin: 0 0; }
+.sk-prompt { min-height: 0; display: flex; flex-direction: column; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; background: #0A0A0B; overflow: hidden; }
+.sk-prompt__h { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.07); font-size: 12px; font-weight: 600; color: #FAFAFA; }
+.sk-mini { font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.16); color: #C9CBD1; }
+.sk-prompt pre { margin: 0; padding: 10px 12px; font-family: var(--mono); font-size: 10.5px; line-height: 1.6; color: #A1A3A9; white-space: pre-wrap; overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent); mask-image: linear-gradient(to bottom, #000 70%, transparent); }
+
+/* ── phones, short screens, reduced motion: the chapters as plain blocks ── */
+.v6-sk__flat { display: none; }
+@media (max-width: 900px), (max-height: 620px), (prefers-reduced-motion: reduce) {
+  .v6-sk { height: auto !important; padding: clamp(64px, 10vw, 96px) 0; }
+  .v6-sk__pin { display: none; }
+  .v6-sk__flat { display: grid; gap: 56px; list-style: none; margin: 0 auto; padding: 0 var(--gutter); max-width: 760px; }
+  .v6-sk__flat .v6-sk__t { font-size: clamp(1.5rem, 6vw, 2rem); }
+  .v6-sk__flat .v6-sk__d { margin-left: 0; }
+  .v6-sk__flatp { position: relative; margin-top: 20px; border-radius: 14px; overflow: hidden; background: #111113; border: 1px solid rgba(255,255,255,0.14); }
+  /* the panels take their content's height here, instead of filling a fixed frame */
+  .v6-sk__flatp .sk-p { position: relative; inset: auto; }
+  .v6-sk__flatp .sk-term__body { max-height: 440px; }
+  .v6-sk__flatp .sk-browser__view { flex: none; aspect-ratio: 16 / 10; }
+  .v6-sk__flatp .sk-find__shot { flex: none; aspect-ratio: 16 / 9; }
+  .v6-sk__flatp .sk-prompt pre { max-height: 220px; }
+  .v6-sk__flatmap { position: relative; margin-top: 20px; aspect-ratio: 16 / 9.6; border-radius: 14px; overflow: hidden; background: #0A0E13; border: 1px solid rgba(255,255,255,0.14); }
+  .v6-sk__flat .v6-sk__cap { margin: 0; text-align: left; }
+}
+@media (max-width: 560px) {
+  .sk-plan, .sk-run, .sk-find { grid-template-columns: minmax(0, 1fr); }
+}
