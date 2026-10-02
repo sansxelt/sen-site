@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 
 export function BillingActions({ canceling, hasSub }: { canceling: boolean; hasSub: boolean }) {
@@ -16,8 +15,8 @@ export function BillingActions({ canceling, hasSub }: { canceling: boolean; hasS
   }
 
   return (
+    // No second "Change plan" here: the page header carries it (audit P2-11).
     <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-      <Link href="/plans" className="btn btn--ghost">Change plan</Link>
       {hasSub && (canceling
         ? <button onClick={() => setCancel(true)} disabled={busy} className="btn btn--ghost">{busy ? "…" : "Resume subscription"}</button>
         : <button onClick={() => setCancel(false)} disabled={busy} className="btn btn--ghost">{busy ? "…" : "Cancel subscription"}</button>)}
