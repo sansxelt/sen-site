@@ -242,17 +242,19 @@ export function RecentVerificationsTable({ rows }: { rows: PassRow[] }) {
       <SectionHead text="Recent verifications" href="/verifications" hrefLabel="View all" />
       <div className="card vra-tbl vra-tbl--runs" style={{ padding: 0, overflow: "hidden", background: "var(--bg-1)" }}>
         <div className="vra-tbl__head" role="presentation">
-          <span>Result</span><span>System</span><span>Journeys</span><span>When</span>
+          <span>Result</span><span>What was checked</span><span>Journeys</span><span>When</span>
         </div>
         {rows.map((r) => {
           const v = runVerdict(r.state, r.decision);
           const href = r.applicationId ? `/systems/${r.applicationId}/passes/${r.id}` : "/verifications";
+          // The sentence leads (audit P1-4); the system and the re-check relationship sit under it.
+          const sub = [r.claim ? r.applicationName : "", r.parentRunId ? "Re-check of an earlier run" : ""].filter(Boolean);
           return (
-            <Link key={r.id} href={href} className="vra-tbl__row" aria-label={`${v.label}, ${r.applicationName || "verification"}`}>
+            <Link key={r.id} href={href} className="vra-tbl__row" aria-label={`${v.label}, ${r.claim || r.applicationName || "verification"}`}>
               <span><VerdictBadge verdict={v} size="sm" style={{ flex: "none" }} /></span>
               <span style={{ minWidth: 0 }}>
-                <span style={{ display: "block", fontSize: 14, color: "var(--fg-1)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.applicationName || "Verification"}</span>
-                {r.parentRunId ? <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>Re-check of an earlier run</span> : null}
+                <span className="vra-claim">{r.claim || r.applicationName || "Verification"}</span>
+                {sub.length ? <span style={{ display: "block", marginTop: 2, fontSize: 12.5, color: "var(--fg-4)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sub.join(" · ")}</span> : null}
               </span>
               <span data-l="Journeys" style={{ fontVariantNumeric: "tabular-nums", color: "var(--fg-3)" }}>{r.flowsTotal > 0 ? `${r.flowsPassed}/${r.flowsTotal}` : "n/a"}</span>
               <span data-l="When" style={{ color: "var(--fg-4)" }}>{timeAgo(r.completedAt ?? r.createdAt)}</span>
@@ -273,6 +275,7 @@ export const OVERVIEW_CSS = `
 .vra-tbl__row{display:grid;gap:14px;align-items:center;padding:12px 18px;color:inherit;text-decoration:none;font-size:14px;
   border-top:1px solid var(--line-1);transition:background 120ms ease}
 .vra-tbl__row:first-of-type{border-top:none}
+.vra-claim{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;font-size:14px;line-height:1.4;color:var(--fg-1);font-weight:500}
 .vra-tbl__row:hover,.vra-attn:hover{background:var(--bg-2)}
 .vra-attn{transition:background 120ms ease}
 .vra-tbl .vra-tbl__head,.vra-tbl .vra-tbl__row{grid-template-columns:minmax(0,2.4fr) 96px 124px 112px 112px}

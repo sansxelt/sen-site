@@ -9,6 +9,8 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Page, PageHeader } from "@/app/rank/_components/page-header";
 import { PROVIDER_LABELS as ALL_PROVIDER_LABELS, featureUse } from "@/lib/preflight/connection-display";
+import Link from "next/link";
+import { Mark, PROVIDER_MARK } from "@/app/rank/app/systems/_connections/brand";
 
 const PROVIDER_LABELS: Record<string, string> = {
   github: "GitHub", vercel: "Vercel", supabase: "Supabase", stripe_test: "Stripe", sentry: "Sentry",
@@ -232,6 +234,8 @@ export default function ConnectionsPage() {
             // providers. The connected card now carries --go-line, so the difference is a colour rather than
             // an alpha, and it is the SAME green the pill inside it uses.
             <div key={kind} className="card" style={{ padding: 18, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", borderColor: c ? "var(--go-line)" : "var(--line-2)" }}>
+              {/* The provider's own mark (audit P1-17: the cards had none). */}
+              <Mark text={PROVIDER_MARK[kind] ?? kind} />
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 9, flexWrap: "wrap" }}>
                   <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15.5, color: "var(--fg-1)" }}>{label}</span>
@@ -282,18 +286,48 @@ export default function ConnectionsPage() {
           Set on each system
         </h2>
         <p style={{ fontSize: 13, color: "var(--fg-4)", margin: "6px 0 14px", lineHeight: 1.6, maxWidth: 620 }}>
-          These differ between systems, so they live on a system&rsquo;s Connections tab rather than here.
-          Open any system and choose Settings, then Connections.
+          These differ between systems, so they live on each system&rsquo;s Connections tab rather than here.{" "}
+          <Link href="/systems" style={{ color: "var(--fg-2)", fontWeight: 600 }}>Open your systems</Link>
         </p>
         <div style={{ display: "grid", gap: 8, gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))" }}>
           {PER_APP_KINDS.map((kind) => (
-            <div key={kind} className="card" style={{ padding: "12px 14px", borderColor: "var(--line-2)" }}>
-              <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 13.5, color: "var(--fg-1)" }}>
-                {ALL_PROVIDER_LABELS[kind] ?? kind}
+            <div key={kind} className="card" style={{ padding: "12px 14px", borderColor: "var(--line-2)", display: "flex", gap: 12, alignItems: "flex-start" }}>
+              {PROVIDER_MARK[kind] ? <Mark text={PROVIDER_MARK[kind]} /> : null}
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 13.5, color: "var(--fg-1)" }}>
+                  {ALL_PROVIDER_LABELS[kind] ?? kind}
+                </div>
+                <div style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 2, lineHeight: 1.5 }}>{featureUse(kind)}</div>
               </div>
-              <div style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 2, lineHeight: 1.5 }}>{featureUse(kind)}</div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* AI AGENTS (audit P1-17): both ways in exist, the CLI's local MCP server and the hosted one, and this
+          page never said so. Every line here is a fact the public agents guide (/agents) also states. */}
+      <section aria-labelledby="agents-heading" style={{ marginTop: 40 }}>
+        <h2 id="agents-heading" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, color: "var(--fg-1)", margin: 0 }}>
+          AI agents
+        </h2>
+        <p style={{ fontSize: 13, color: "var(--fg-4)", margin: "6px 0 14px", lineHeight: 1.6, maxWidth: 620 }}>
+          A coding agent can ask Vraelis for a check before it says done. It can never approve one.
+        </p>
+        <div style={{ display: "grid", gap: 8, gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))" }}>
+          <Link href="/cli" className="card" style={{ padding: "14px 16px", borderColor: "var(--line-2)", textDecoration: "none", display: "block" }}>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 13.5, color: "var(--fg-1)" }}>On your machine</div>
+            <div style={{ fontSize: 12.5, color: "var(--fg-3)", marginTop: 4, lineHeight: 1.55 }}>
+              Claude Code, Codex, Cursor, Copilot, Gemini CLI and Trae run the local server the CLI provides.
+            </div>
+            <code style={{ display: "inline-block", marginTop: 8, fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-2)" }}>vraelis init claude</code>
+          </Link>
+          <a href="https://vraelis.com/agents" className="card" style={{ padding: "14px 16px", borderColor: "var(--line-2)", textDecoration: "none", display: "block" }}>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 13.5, color: "var(--fg-1)" }}>On the web</div>
+            <div style={{ fontSize: 12.5, color: "var(--fg-3)", marginTop: 4, lineHeight: 1.55 }}>
+              ChatGPT and Claude connect to the hosted server and sign in with OAuth. Each connector gets its own API key, which you can revoke under Developers.
+            </div>
+            <code style={{ display: "inline-block", marginTop: 8, fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-2)" }}>https://vraelis.com/mcp</code>
+          </a>
         </div>
       </section>
       </div>

@@ -153,13 +153,16 @@ export function VerificationRecordRow({ run, top }: { run: PassRow; top: boolean
   const verdict = runVerdict(run.state, run.decision);
   const href = run.applicationId ? `/systems/${run.applicationId}/passes/${run.id}` : "/verifications";
   const flows = run.flowsTotal > 0 ? `${run.flowsPassed}/${run.flowsTotal} flows` : "";
-  const meta = [timeAgo(run.completedAt ?? run.createdAt), flows].filter(Boolean).join(", ");
+  // The sentence leads when the run has one (audit P1-4), and the system moves into the meta line.
+  const meta = [run.claim ? run.applicationName : "", timeAgo(run.completedAt ?? run.createdAt), flows].filter(Boolean).join(", ");
+  // Spoken: the system first, then the sentence, then when and how it went, then the outcome.
+  const spoken = [timeAgo(run.completedAt ?? run.createdAt), flows].filter(Boolean).join(", ");
   return (
     <Link href={href}
       style={{ ...rowLink, gridTemplateColumns: "1fr auto auto", gap: 16, padding: "13px 16px", borderTop: top ? "none" : "1px solid var(--line-2)" }}
-      aria-label={`${run.applicationName || "Verification"}${meta ? `, ${meta}` : ""}, ${verdict.label}`}>
+      aria-label={`${run.applicationName || "Verification"}${run.claim ? `, ${run.claim}` : ""}${spoken ? `, ${spoken}` : ""}, ${verdict.label}`}>
       <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 14, fontWeight: 500, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{run.applicationName || "Verification"}</div>
+        <div style={{ display: "-webkit-box", WebkitBoxOrient: "vertical", WebkitLineClamp: 2, overflow: "hidden", fontSize: 14, lineHeight: 1.4, fontWeight: 500, color: "var(--fg-1)" }}>{run.claim || run.applicationName || "Verification"}</div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2, flexWrap: "wrap" }}>
           {meta && <span style={{ fontSize: 12, color: "var(--fg-4)" }}>{meta}</span>}
           <DeploymentReference url={run.deploymentUrl} />

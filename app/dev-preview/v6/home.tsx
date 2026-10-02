@@ -3,8 +3,8 @@
 // Homepage, rebuilt 2026-10-01 from the founder's notes, with scale.com's homepage as the structural
 // reference (adapted, not copied) and anduril.com and palantir.com for the black ground and the film.
 //
-//   1 the film       one video, full bleed: a board, the drone through four real places, a real catch, the
-//                    controller, Vraelis on a laptop, a truck, a plane (_system/hero.tsx)
+//   1 the film       one video in a rounded frame with one sentence on it: a board, our drone, the drone
+//                    through four real places, a real catch, the controller (_system/hero.tsx)
 //   2 how it works   one pinned scene, four chapters, every panel the product's own output for one recorded
 //                    run (_system/scroll-story.tsx)
 //   3 the statement  one sentence, revealed as it crosses the screen (_system/home-bands.tsx)

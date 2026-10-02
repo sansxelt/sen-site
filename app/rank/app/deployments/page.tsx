@@ -151,7 +151,7 @@ export default async function DeploymentsPage() {
           <div className="card" style={{ padding: "clamp(16px, 2.2vw, 22px)", marginBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
               <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" }}>
-                Last verified deployment
+                Last checked deployment
               </div>
               {/* The one verdict on this page that is a conclusion rather than a row in a list, so it takes
                   the larger of the component's two sizes. Every pill below it is a list row and stays small. */}

@@ -15,13 +15,17 @@ import { Page, PageHeader } from "@/app/rank/_components/page-header";
 
 export const metadata: Metadata = { title: "Payment received" };
 
-export default async function BillingSuccessPage({ searchParams }: { searchParams: Promise<{ session_id?: string }> }) {
+export default async function BillingSuccessPage({ searchParams }: { searchParams: Promise<{ session_id?: string; provider?: string }> }) {
   const session = await auth();
   const email = session?.user?.email;
   if (!email) redirect(`/signin?callbackUrl=${encodeURIComponent("/billing/success")}`);
 
   const sp = await searchParams;
   const sessionId = typeof sp.session_id === "string" && /^cs_[A-Za-z0-9_]{8,}$/.test(sp.session_id) ? sp.session_id : null;
+  // A checkout always returns here carrying something: Stripe's session id, or PayPal's provider marker
+  // (app/api/paypal/create-subscription). Opened with neither, nobody just paid, and a page headed "Payment
+  // received" would be saying something untrue (audit P1-24), so it goes to the billing page instead.
+  if (!sessionId && sp.provider !== "paypal") redirect("/billing");
 
   // Display-only session lookup: which plan should this page SAY is activating. Ownership-checked
   // (metadata.user_id must be the signed-in owner) and never used to activate anything.

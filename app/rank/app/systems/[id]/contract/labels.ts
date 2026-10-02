@@ -17,7 +17,17 @@ const CATEGORY_LABELS: Record<string, string> = {
   responsive: "Mobile and responsive",
   auth: "Auth and sessions",
   billing: "Billing",
+  // Acronyms sentence case would mangle ("Ui", audit P1-12).
+  ui: "UI", ux: "UX", api: "API", seo: "SEO", sso: "SSO", a11y: "Accessibility",
 };
+
+/** A flow's role as a chip label: role names arrive lower case from plans ("member"), so they are given a
+ *  capital to sit beside "Authenticated" without looking like two vocabularies (audit P1-12). */
+export function roleLabel(role: string | null | undefined, authenticated: boolean): string {
+  const r = (role ?? "").trim();
+  if (!r) return authenticated ? "Authenticated" : "Unauthenticated";
+  return r.charAt(0).toUpperCase() + r.slice(1);
+}
 
 export function categoryLabel(raw: string | null | undefined): string {
   const key = (raw || "general").trim().toLowerCase();

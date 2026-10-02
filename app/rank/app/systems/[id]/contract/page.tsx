@@ -12,7 +12,7 @@ import { flowRequiresAuth } from "@/lib/preflight/flow-steps";
 import { ContractEditor } from "./contract-editor";
 import { NewDraftButton } from "./new-draft-button";
 import { AppTabs } from "../app-tabs";
-import { categoryLabel, SEVERITY_LABELS, SEVERITY_COLORS } from "./labels";
+import { categoryLabel, roleLabel, sourceChipInfo, SEVERITY_LABELS, SEVERITY_COLORS } from "./labels";
 import { ProvenanceChip } from "./provenance-chip";
 import { PassPreview } from "./pass-preview";
 import { Ic, I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
@@ -63,10 +63,18 @@ function when(iso: string): string {
 
 const smallLabel: React.CSSProperties = { fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-4)" };
 
+// When every requirement has the same source, the chip is said once beside the heading instead of on all of
+// them: thirteen "Vraelis inference" chips said one thing thirteen times (audit P1-12).
+function sharedSource(reqs: { source?: string | null; origin?: string | null }[]): { source: string | null | undefined; origin?: string | null } | null {
+  if (reqs.length < 2) return null;
+  const key = (r: { source?: string | null; origin?: string | null }) => { const c = sourceChipInfo(r.source, r.origin); return `${c.label}|${c.qualifier ?? ""}|${c.inferred}`; };
+  const k0 = key(reqs[0]);
+  return reqs.every((r) => key(r) === k0) ? { source: reqs[0].source, origin: reqs[0].origin } : null;
+}
+
 function SevPill({ severity }: { severity: Severity }) {
   return (
-    <span className="pill" style={{ color: SEVERITY_COLORS[severity], borderColor: "var(--line-2)", background: "var(--bg-2)", display: "inline-flex", alignItems: "center", gap: 6 }}>
-      <span aria-hidden style={{ width: 6, height: 6, borderRadius: "50%", background: SEVERITY_COLORS[severity], flex: "none" }} />
+    <span className="pill" style={{ color: SEVERITY_COLORS[severity], borderColor: "var(--line-2)", background: "var(--bg-2)", display: "inline-flex", alignItems: "center" }}>
       {SEVERITY_LABELS[severity]}
     </span>
   );
@@ -77,6 +85,7 @@ function SevPill({ severity }: { severity: Severity }) {
 // `canEdit` (caps.canEditContract, EDITOR+) gates the two mutating/editor-only affordances: the
 // "Create new draft" button and the launch-priced Pass preview. Read-only members see the record only.
 function ApprovedContract({ appId, contract, reqs, flows, canEdit }: { appId: string; contract: ProductionContract; reqs: ContractRequirement[]; flows: TestFlow[]; canEdit: boolean }) {
+  const shared = sharedSource(reqs);
   // "Approved flows" = the flows a run would actually execute: enabled, and review_state approved (the
   // column defaults to approved and may be absent before the Phase-2 migration).
   const approvedFlows = flows.filter((f) => f.enabled && ((f.review_state ?? "approved") === "approved"));
@@ -118,7 +127,10 @@ function ApprovedContract({ appId, contract, reqs, flows, canEdit }: { appId: st
 
       {/* requirement rows (flat, hairline-separated; no nested cards) */}
       <section style={{ marginTop: 28 }}>
-        <div style={{ ...smallLabel, marginBottom: 4 }}>Requirements ({reqs.length})</div>
+        <div style={{ ...smallLabel, marginBottom: 4, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <span>Requirements ({reqs.length})</span>
+          {shared ? <ProvenanceChip source={shared.source} origin={shared.origin} /> : null}
+        </div>
         {reqs.length === 0 ? (
           <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55, margin: "10px 0 0" }}>
             This contract was approved without requirements.
@@ -132,7 +144,7 @@ function ApprovedContract({ appId, contract, reqs, flows, canEdit }: { appId: st
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 7 }}>
                     <SevPill severity={r.severity} />
                     <span style={{ fontSize: 12, color: "var(--fg-4)" }}>{categoryLabel(r.category)}</span>
-                    <ProvenanceChip source={r.source} origin={r.origin} />
+                    {shared ? null : <ProvenanceChip source={r.source} origin={r.origin} />}
                     {!r.enabled ? <span style={smallLabel}>Disabled, not tested</span> : null}
                   </div>
                   <div style={{ fontSize: 14.5, color: "var(--fg-1)", lineHeight: 1.55, wordBreak: "break-word" }}>{r.requirement}</div>
@@ -166,7 +178,7 @@ function ApprovedContract({ appId, contract, reqs, flows, canEdit }: { appId: st
                 <li key={f.id} style={{ padding: "14px 0", borderTop: idx > 0 ? "1px solid var(--line-1)" : "none", opacity: f.enabled ? 1 : 0.55 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 6 }}>
                     <span className="pill" style={{ color: auth ? "var(--acc-deep)" : "var(--fg-4)", borderColor: auth ? "var(--acc-line)" : "var(--line-2)", background: auth ? "var(--acc-soft)" : "var(--bg-2)", display: "inline-flex", alignItems: "center", gap: 6 }}>
-                      <Ic d={auth ? I.lock : I.user} size={12} sw={1.9} /> {f.role || (auth ? "Authenticated" : "Unauthenticated")}
+                      <Ic d={auth ? I.lock : I.user} size={12} sw={1.9} /> {roleLabel(f.role, auth)}
                     </span>
                     <span style={{ fontSize: 12, color: "var(--fg-4)" }}>{SEVERITY_LABELS[(f.priority as Severity) ?? "important"]}</span>
                     <span style={{ fontSize: 12, color: "var(--fg-4)" }}>{steps} step{steps === 1 ? "" : "s"}</span>
@@ -199,6 +211,7 @@ function ApprovedContract({ appId, contract, reqs, flows, canEdit }: { appId: st
 // honest "draft, view-only" header (no coverage/approve/edit affordances, no Pass preview). The server already
 // 403s their mutations; this keeps the read content intact without offering any control.
 function DraftReadOnly({ reqs, flows, reason }: { reqs: ContractRequirement[]; flows: TestFlow[]; reason: string | null }) {
+  const shared = sharedSource(reqs);
   return (
     <div>
       <div className="card" style={{ padding: "clamp(16px, 2.2vw, 22px)" }}>
@@ -216,7 +229,10 @@ function DraftReadOnly({ reqs, flows, reason }: { reqs: ContractRequirement[]; f
 
       {/* requirement rows (read-only, matches the approved renderer) */}
       <section style={{ marginTop: 28 }}>
-        <div style={{ ...smallLabel, marginBottom: 4 }}>Requirements ({reqs.length})</div>
+        <div style={{ ...smallLabel, marginBottom: 4, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <span>Requirements ({reqs.length})</span>
+          {shared ? <ProvenanceChip source={shared.source} origin={shared.origin} /> : null}
+        </div>
         {reqs.length === 0 ? (
           <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55, margin: "10px 0 0" }}>
             This draft has no requirements yet.
@@ -228,7 +244,7 @@ function DraftReadOnly({ reqs, flows, reason }: { reqs: ContractRequirement[]; f
                 <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 7 }}>
                   <SevPill severity={r.severity} />
                   <span style={{ fontSize: 12, color: "var(--fg-4)" }}>{categoryLabel(r.category)}</span>
-                  <ProvenanceChip source={r.source} origin={r.origin} />
+                  {shared ? null : <ProvenanceChip source={r.source} origin={r.origin} />}
                   {!r.enabled ? <span style={smallLabel}>Disabled, not tested</span> : null}
                 </div>
                 <div style={{ fontSize: 14.5, color: "var(--fg-1)", lineHeight: 1.55, wordBreak: "break-word" }}>{r.requirement}</div>
@@ -254,7 +270,7 @@ function DraftReadOnly({ reqs, flows, reason }: { reqs: ContractRequirement[]; f
                 <li key={f.id} style={{ padding: "14px 0", borderTop: idx > 0 ? "1px solid var(--line-1)" : "none", opacity: f.enabled ? 1 : 0.55 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 6 }}>
                     <span className="pill" style={{ color: auth ? "var(--acc-deep)" : "var(--fg-4)", borderColor: auth ? "var(--acc-line)" : "var(--line-2)", background: auth ? "var(--acc-soft)" : "var(--bg-2)", display: "inline-flex", alignItems: "center", gap: 6 }}>
-                      <Ic d={auth ? I.lock : I.user} size={12} sw={1.9} /> {f.role || (auth ? "Authenticated" : "Unauthenticated")}
+                      <Ic d={auth ? I.lock : I.user} size={12} sw={1.9} /> {roleLabel(f.role, auth)}
                     </span>
                     <span style={{ fontSize: 12, color: "var(--fg-4)" }}>{SEVERITY_LABELS[(f.priority as Severity) ?? "important"]}</span>
                     <span style={{ fontSize: 12, color: "var(--fg-4)" }}>{steps} step{steps === 1 ? "" : "s"}</span>
@@ -312,7 +328,7 @@ export default async function ContractPage({ params }: { params: Promise<{ id: s
         <span aria-hidden style={{ color: "var(--fg-5)" }}>/</span>
         <Link href={`/systems/${id}`} style={{ color: "var(--fg-4)", textDecoration: "none", maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app.name}</Link>
         <span aria-hidden style={{ color: "var(--fg-5)" }}>/</span>
-        <span style={{ color: "var(--fg-2)", fontWeight: 600 }}>Production Contract</span>
+        <span style={{ color: "var(--fg-2)", fontWeight: 600 }}>Contract</span>
       </nav>
 
       {/* The heading is unchanged, deliberately: scripts/app-shell-verify compares headings against the

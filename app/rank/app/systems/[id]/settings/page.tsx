@@ -23,9 +23,12 @@ const BUILDER_LABELS: Record<string, string> = {
 
 const ENV_LABELS: Record<string, string> = { preview: "Preview", staging: "Staging", production: "Production" };
 
+// Every kind the connect form can save (connect-form.tsx KIND_LABELS), worded the same way. Six were
+// missing, so a saved source showed its raw key ("workflows", "auth_expect") here (audit P1-11).
 const CONTEXT_KIND_LABELS: Record<string, string> = {
-  prompt: "Build prompt", prd: "PRD", requirements: "Requirements",
-  readme: "README", risks: "Risks", roles: "Roles",
+  prompt: "Build prompt", summary: "Summary", prd: "PRD / spec", requirements: "Requirements", readme: "README",
+  goal: "User goal", roles: "User roles", workflows: "Workflows", data: "Data behavior",
+  auth_expect: "Authentication", billing_expect: "Billing", risks: "Known risks",
 };
 
 // Stable UTC render (no hydration mismatch): "2026-07-02 14:31 UTC".
@@ -183,7 +186,8 @@ export default async function AppSettingsPage({ params }: { params: Promise<{ id
         {/* ── Connections: compact summary; management lives on the Connections tab ──────────────────── */}
         <section style={sectionStyle} aria-label="Connections">
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 4 }}>
-            <div style={headLbl}>Connections ({connections.length})</div>
+            {/* No count here: it included test accounts, and the line below gives both numbers (P1-11). */}
+            <div style={headLbl}>Connections</div>
             <Link href={`/systems/${id}/settings/connections`} style={{ fontSize: 12.5, fontWeight: 600, color: "var(--acc-deep)", textDecoration: "none" }}>
               Manage connections
             </Link>

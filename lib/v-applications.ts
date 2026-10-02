@@ -70,6 +70,8 @@ export type RunSummary = {
   deployment_url: string | null; commit_sha: string | null; created_at: string; completed_at: string | null;
   /** Migration 24. Set when the verdict came from a verifier defect: preserved, but no longer counted. */
   invalidated_at?: string | null;
+  /** The contract the run checked; listRuns reads it so a list can show each run's sentence. */
+  contract_id?: string | null;
 };
 
 export type NewApplication = { name: string; appUrl: string; builder?: string; repo?: string; sourcePrompt?: string; ownershipConfirmed: boolean; workspaceId?: string | null };
@@ -838,7 +840,7 @@ export async function deleteFlow(userId: string, flowId: string): Promise<{ ok: 
 export async function listRuns(userId: string, applicationId: string, limit = 20): Promise<RunSummary[]> {
   if (!isDatabaseConfigured()) return [];
   const filter = webRuntimeFilter(await apiTargetIdsForOwner(userId));
-  let q = db().from("v_preflight_runs").select("id,application_id,state,decision,summary,deployment_url,commit_sha,created_at,completed_at").eq("user_id", norm(userId)).eq("application_id", applicationId);
+  let q = db().from("v_preflight_runs").select("id,application_id,contract_id,state,decision,summary,deployment_url,commit_sha,created_at,completed_at,invalidated_at").eq("user_id", norm(userId)).eq("application_id", applicationId);
   if (filter) q = q.or(filter);
   const { data } = await q.order("created_at", { ascending: false }).limit(limit);
   return (data as RunSummary[]) ?? [];

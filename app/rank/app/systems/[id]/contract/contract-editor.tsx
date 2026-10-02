@@ -31,8 +31,7 @@ const catHead: React.CSSProperties = { fontFamily: "var(--font-mono)", fontSize:
 
 function SevPill({ severity }: { severity: Severity }) {
   return (
-    <span className="pill" style={{ color: SEV_COLOR[severity], borderColor: "var(--line-2)", background: "var(--bg-2)", display: "inline-flex", alignItems: "center", gap: 6 }}>
-      <span aria-hidden style={{ width: 6, height: 6, borderRadius: "50%", background: SEV_COLOR[severity], flex: "none" }} />
+    <span className="pill" style={{ color: SEV_COLOR[severity], borderColor: "var(--line-2)", background: "var(--bg-2)", display: "inline-flex", alignItems: "center" }}>
       {SEV_LABEL[severity]}
     </span>
   );

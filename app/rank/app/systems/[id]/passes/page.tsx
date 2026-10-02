@@ -5,6 +5,7 @@ import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "../../setup-required";
 import { getApplication, type RunSummary } from "@/lib/v-applications";
 import { listRunsForApp } from "@/lib/preflight/runs-db";
+import { claimsForContracts } from "@/lib/preflight/overview-db";
 import { AppTabs } from "../app-tabs";
 import { I, EmptyIcon } from "@/app/rank/_components/icons";
 import { Verdict } from "@/app/rank/_components/verdict";
@@ -41,22 +42,28 @@ function timeAgo(iso: string | null | undefined): string {
 // to seven other private tables that had each been corrected at a different time. This one still called the
 // undecided state "No decision" while the list page called it "Not tested" and home-verdict.ts calls it
 // "Not yet verified". <Verdict> renders runVerdict(), so there is nothing left here to correct or to drift.
-function RunRow({ appId, r }: { appId: string; r: RunSummary }) {
+function RunRow({ appId, r, claim }: { appId: string; r: RunSummary; claim: string | null }) {
   return (
     <Link href={`/systems/${appId}/passes/${r.id}`}
       style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 15px", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", textDecoration: "none" }}>
       {/* The row used to lead with a 9px dot painted the pill's own colour. It was aria-hidden, so it said
           nothing the pill does not, and the only way to keep it was for this file to hold a second copy of
           the signal palette, which is the drift being removed. The pill carries the colour now. */}
+      {/* The sentence leads (audit P1-4); when and where sit under it. */}
       <div style={{ minWidth: 0, flex: 1 }}>
-        <div style={{ fontSize: 13, color: "var(--fg-2)", fontWeight: 600 }}>{timeAgo(r.created_at) || "Verification"}</div>
-        {r.deployment_url ? (
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 3 }}>
-            {r.deployment_url}
-          </div>
-        ) : null}
+        <div style={{ display: "-webkit-box", WebkitBoxOrient: "vertical", WebkitLineClamp: 2, overflow: "hidden", fontSize: 13.5, lineHeight: 1.4, color: "var(--fg-1)", fontWeight: 600 }}>
+          {claim || timeAgo(r.created_at) || "Verification"}
+        </div>
+        <div style={{ fontSize: 12, color: "var(--fg-4)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 3 }}>
+          {claim ? <span>{timeAgo(r.created_at)}</span> : null}
+          {claim && r.deployment_url ? <span aria-hidden> · </span> : null}
+          {r.deployment_url ? <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5 }}>{r.deployment_url}</span> : null}
+        </div>
       </div>
-      <Verdict state={r.state} decision={r.decision} style={{ flex: "none" }} />
+      {/* Discarded (a fault in Vraelis produced the verdict): neutral here, the verdict stays on the record. */}
+      {r.invalidated_at
+        ? <span className="pill" style={{ flex: "none", color: "var(--fg-3)", background: "var(--bg-2)", borderColor: "var(--line-2)" }}>Discarded</span>
+        : <Verdict state={r.state} decision={r.decision} style={{ flex: "none" }} />}
       <span aria-hidden style={{ color: "var(--fg-5)", flex: "none", fontSize: 13 }}>&rarr;</span>
     </Link>
   );
@@ -85,6 +92,7 @@ export default async function AppRunsPage({ params }: { params: Promise<{ id: st
   }
 
   const runs = await listRunsForApp(owner, id, 50);
+  const claims = await claimsForContracts(owner, runs.map((r) => r.contract_id ?? ""));
 
   return (
     <Page>
@@ -113,7 +121,7 @@ export default async function AppRunsPage({ params }: { params: Promise<{ id: st
 
         {runs.length ? (
           <div style={{ display: "grid", gap: 8 }}>
-            {runs.map((r) => <RunRow key={r.id} appId={id} r={r} />)}
+            {runs.map((r) => <RunRow key={r.id} appId={id} r={r} claim={claims.get(r.contract_id ?? "") ?? null} />)}
           </div>
         ) : (
           <div className="empty">

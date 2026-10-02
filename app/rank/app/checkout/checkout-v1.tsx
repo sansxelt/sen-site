@@ -51,9 +51,7 @@ export function V1RenewalTerms({ plan, cycle }: { plan: PlanV1; cycle: V1Cycle }
       <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginBottom: 12 }}>Renewal and cancellation</div>
       <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 }}>
         {lines.map((x) => (
-          <li key={x} style={{ display: "flex", gap: 10, fontSize: 13, color: "var(--fg-3)", alignItems: "flex-start", lineHeight: 1.5 }}>
-            <span style={{ width: 5, height: 5, flex: "none", marginTop: 7, borderRadius: "50%", background: "var(--acc-deep)" }} />{x}
-          </li>
+          <li key={x} style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.5 }}>{x}</li>
         ))}
       </ul>
     </div>

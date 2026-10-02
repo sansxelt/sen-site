@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { TestFlow, Severity } from "@/lib/v-applications";
 import { flowRequiresAuth } from "@/lib/preflight/flow-steps";
 import { FlowEditor } from "./flow-editor";
+import { roleLabel } from "./labels";
 import { Ic, I } from "@/app/rank/_components/icons";
 
 // The Flows section for a DRAFT contract: a list of authored flows (name, role chip, step count, enabled
@@ -18,7 +19,7 @@ function stepCount(f: TestFlow): number { return Array.isArray(f.steps) ? f.step
 
 function RoleChip({ flow }: { flow: TestFlow }) {
   const auth = flowRequiresAuth((flow.steps as { action: string }[]) ?? []);
-  const label = flow.role || (auth ? "Authenticated" : "Unauthenticated");
+  const label = roleLabel(flow.role, auth);
   return (
     <span className="pill" style={{ color: auth ? "var(--acc-deep)" : "var(--fg-4)", borderColor: auth ? "var(--acc-line)" : "var(--line-2)", background: auth ? "var(--acc-soft)" : "var(--bg-2)", display: "inline-flex", alignItems: "center", gap: 6 }}>
       <Ic d={auth ? I.lock : I.user} size={12} sw={1.9} /> {label}

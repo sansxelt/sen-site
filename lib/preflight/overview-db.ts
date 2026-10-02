@@ -20,9 +20,29 @@ async function appNames(owner: string, ids: string[]): Promise<Map<string, strin
   return out;
 }
 
+/**
+ * The sentence each run checked: its contract's source prompt, read for many contracts in one query. A
+ * contract with no sentence, or one that cannot be read, is simply absent, and the row falls back to the
+ * system's name. The audit (P1-4): every row read "date / address / Failed", and none said what was checked,
+ * which is the most important fact in the product.
+ */
+export async function claimsForContracts(owner: string, contractIds: string[]): Promise<Map<string, string>> {
+  const out = new Map<string, string>();
+  const ids = Array.from(new Set(contractIds.filter(Boolean)));
+  if (!ids.length || !isDatabaseConfigured()) return out;
+  const { data } = await db().from("v_production_contracts").select("id, source_prompt").eq("user_id", norm(owner)).in("id", ids);
+  for (const r of (data as Record<string, unknown>[] | null) ?? []) {
+    const s = typeof r.source_prompt === "string" ? r.source_prompt.replace(/\s+/g, " ").trim() : "";
+    if (s) out.set(String(r.id), s);
+  }
+  return out;
+}
+
 // ── Production Passes (owner-wide run history) ────────────────────────────────────────────────────────
 export type PassRow = {
   id: string; applicationId: string; applicationName: string;
+  /** What this run checked, in the customer's own sentence; null when its contract carries none. */
+  claim: string | null;
   state: string; decision: string | null;                       // ready | needs_review | blocked | null
   deploymentUrl: string | null; parentRunId: string | null;
   createdAt: string; completedAt: string | null;
@@ -42,7 +62,7 @@ export async function listAllRuns(owner: string, limit = 50): Promise<PassRow[]>
     // parent_run_id (migration 3) is what makes a run a REVERIFICATION of an earlier one. It was read below
     // through a cast but never selected, so PassRow.parentRunId was unconditionally null and every surface
     // that shows the repair relationship has silently shown nothing since the column was added.
-    .select("id, application_id, state, decision, summary, deployment_url, parent_run_id, created_at, completed_at, invalidated_at")
+    .select("id, application_id, contract_id, state, decision, summary, deployment_url, parent_run_id, created_at, completed_at, invalidated_at")
     .eq("user_id", norm(owner));
   if (filter) q = q.or(filter);
   // Also exclude runs on the internal canary app (e.g. its seeded web-baseline run), so no internal pass
@@ -51,13 +71,17 @@ export async function listAllRuns(owner: string, limit = 50): Promise<PassRow[]>
   const { data, error } = await q.order("created_at", { ascending: false }).limit(limit);
   if (error || !data) return [];
   const rows = data as Record<string, unknown>[];
-  const names = await appNames(owner, rows.map((r) => String(r.application_id ?? "")));
+  const [names, claims] = await Promise.all([
+    appNames(owner, rows.map((r) => String(r.application_id ?? ""))),
+    claimsForContracts(owner, rows.map((r) => String(r.contract_id ?? ""))),
+  ]);
   const num = (v: unknown) => (typeof v === "number" ? v : Number(v) || 0);
   return rows.map((r) => {
     const s = (r.summary as Record<string, unknown>) ?? {};
     return {
       id: String(r.id), applicationId: String(r.application_id ?? ""),
       applicationName: names.get(String(r.application_id ?? "")) ?? "",
+      claim: claims.get(String(r.contract_id ?? "")) ?? null,
       state: String(r.state ?? "draft"), decision: (r.decision as string) ?? null,
       deploymentUrl: (r.deployment_url as string) ?? null,
       parentRunId: (r as { parent_run_id?: string }).parent_run_id ?? null, // present after migration 3

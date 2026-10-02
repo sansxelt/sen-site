@@ -196,7 +196,7 @@ export default async function AppDeploymentsPage({ params }: { params: Promise<{
           <div className="card" style={{ padding: "clamp(16px, 2.2vw, 22px)", marginBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
               <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" }}>
-                Last verified deployment
+                Last checked deployment
               </div>
               <Verdict state={lastVerified.state} decision={lastVerified.decision} style={{ flex: "none" }} />
             </div>

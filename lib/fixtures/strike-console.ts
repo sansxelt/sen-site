@@ -20,14 +20,35 @@
 // of the page before any browser runs.
 export type StrikeMode = "broken" | "fixed";
 
-type Contact = { id: string; type: string; cls: "Hostile" | "Friendly" | "Civilian" | "Unknown"; sector: string; x: number; y: number };
-const CONTACTS: Contact[] = [
+export type StrikeContact = { id: string; type: string; cls: "Hostile" | "Friendly" | "Civilian" | "Unknown"; sector: string; x: number; y: number };
+type Contact = StrikeContact;
+// Exported with the map's geometry below so the homepage can draw the same picture the console shows
+// (_system/strike-map.tsx). One source, so the two can never disagree about where anything is.
+export const STRIKE_CONTACTS: Contact[] = [
   { id: "T-1", type: "Armoured vehicle", cls: "Hostile", sector: "B3", x: 196, y: 258 },
   { id: "T-2", type: "Patrol, 4 people", cls: "Friendly", sector: "D2", x: 500, y: 166 },
   { id: "T-3", type: "Bus, civilian", cls: "Civilian", sector: "B3", x: 238, y: 296 },
   { id: "T-4", type: "Vehicle, unidentified", cls: "Unknown", sector: "E3", x: 612, y: 282 },
 ];
-const ENGAGE0: Record<string, string> = { "T-1": "Hold", "T-2": "Do not engage", "T-3": "Do not engage", "T-4": "Hold" };
+const CONTACTS = STRIKE_CONTACTS;
+export const STRIKE_ENGAGE0: Record<string, string> = { "T-1": "Hold", "T-2": "Do not engage", "T-3": "Do not engage", "T-4": "Hold" };
+const ENGAGE0 = STRIKE_ENGAGE0;
+
+/** The live picture's terrain, in the map's own coordinates (viewBox 36 6 690 414). */
+export const STRIKE_MAP = {
+  viewBox: "36 6 690 414",
+  contours: [
+    "M-10 360 C 110 320, 230 380, 360 340 S 610 280, 850 320", "M-10 320 C 120 280, 240 340, 370 300 S 620 240, 850 280",
+    "M-10 270 C 130 230, 250 290, 380 250 S 630 190, 850 230", "M-10 210 C 140 170, 260 230, 390 190 S 640 130, 850 170",
+    "M-10 150 C 150 110, 270 170, 400 130 S 650 70, 850 110", "M-10 95 C 160 55, 280 115, 410 75 S 660 15, 850 55",
+  ],
+  river: "M-10 230 C 90 220, 160 260, 250 250 S 420 300, 520 330 S 720 360, 850 350",
+  road: "M60 420 L 300 280 L 470 250 L 620 170 L 850 120",
+  fov: "M96 92 L 330 250 L 150 360 Z",
+  aircraft: { id: "LARK-3", x: 96, y: 92, alt: "ALT 1,200 m" },
+  cols: ["A", "B", "C", "D", "E", "F"], rows: [1, 2, 3, 4], cell: { w: 140, h: 100, top: 20 },
+};
+const M = STRIKE_MAP;
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]!));
 
@@ -122,12 +143,12 @@ export function strikeConsoleHtml(mode: StrikeMode): string {
         </defs>
         <rect width="840" height="420" fill="#0a0e13"/>
         <g fill="none" stroke="#141c25" stroke-width="1.2">
-          <path d="M-10 360 C 110 320, 230 380, 360 340 S 610 280, 850 320"/><path d="M-10 320 C 120 280, 240 340, 370 300 S 620 240, 850 280"/>
-          <path d="M-10 270 C 130 230, 250 290, 380 250 S 630 190, 850 230"/><path d="M-10 210 C 140 170, 260 230, 390 190 S 640 130, 850 170"/>
-          <path d="M-10 150 C 150 110, 270 170, 400 130 S 650 70, 850 110"/><path d="M-10 95 C 160 55, 280 115, 410 75 S 660 15, 850 55"/>
+          ${M.contours.slice(0, 2).map((d) => `<path d="${d}"/>`).join("")}
+          ${M.contours.slice(2, 4).map((d) => `<path d="${d}"/>`).join("")}
+          ${M.contours.slice(4).map((d) => `<path d="${d}"/>`).join("")}
         </g>
-        <path d="M-10 230 C 90 220, 160 260, 250 250 S 420 300, 520 330 S 720 360, 850 350" fill="none" stroke="#12304a" stroke-width="7" opacity=".9"/>
-        <path d="M60 420 L 300 280 L 470 250 L 620 170 L 850 120" fill="none" stroke="#2a323d" stroke-width="3"/>
+        <path d="${M.river}" fill="none" stroke="#12304a" stroke-width="7" opacity=".9"/>
+        <path d="${M.road}" fill="none" stroke="#2a323d" stroke-width="3"/>
         <rect width="840" height="400" y="20" fill="url(#g)"/>
         ${grid}
         <rect x="140" y="220" width="140" height="100" fill="rgba(255,255,255,.025)" stroke="#2b3542" stroke-dasharray="4 5"/>

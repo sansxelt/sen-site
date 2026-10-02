@@ -77,29 +77,41 @@ function StatChip({ label, value, color }: { label: string; value: number; color
 
 function PassLine({ pass }: { pass: PassRow }) {
   const when = timeAgo(pass.completedAt ?? pass.createdAt);
+  let host = "";
+  try { host = pass.deploymentUrl ? new URL(pass.deploymentUrl).host : ""; } catch { host = pass.deploymentUrl ?? ""; }
+  // Two lines: what was checked, then where and how it went (audit P1-4). On a phone the second line
+  // wraps instead of cutting the system name to "N..." (P1-5).
+  const meta = [
+    pass.claim ? pass.applicationName || "Untitled system" : "",
+    pass.flowsTotal > 0 ? `${pass.flowsPassed}/${pass.flowsTotal} flows` : "",
+    host,
+  ].filter(Boolean);
   return (
     <Link
       href={`/systems/${pass.applicationId}/passes/${pass.id}`}
-      style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 16px", textDecoration: "none", color: "inherit" }}
+      style={{ display: "grid", gridTemplateColumns: "auto minmax(0, 1fr) auto", columnGap: 12, rowGap: 4, alignItems: "start", padding: "13px 16px", textDecoration: "none", color: "inherit" }}
     >
-      <Verdict state={pass.state} decision={pass.decision} style={{ flex: "none" }} />
-      <span style={{ fontWeight: 600, fontSize: 14, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: "0 1 auto", minWidth: 0 }}>
-        {pass.applicationName || "Untitled system"}
-      </span>
-      {/* Lineage, not a verdict. "rerun" says how this run came to exist; it makes no claim about what it
-          found, so it keeps the plain .pill and stays out of the signal vocabulary. */}
-      {pass.parentRunId && (
-        <span className="pill" style={{ color: "var(--fg-4)", background: "var(--bg-2)", borderColor: "var(--line-2)", flex: "none" }}>rerun</span>
-      )}
-      {pass.flowsTotal > 0 && (
-        <span style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-3)", flex: "none", whiteSpace: "nowrap" }}>
-          {pass.flowsPassed}/{pass.flowsTotal} flows
+      {/* A discarded run's verdict was produced by a fault in Vraelis, so it does not wear that verdict's
+          colour here (audit P1-7). The verdict itself is kept on the record. */}
+      {pass.invalidatedAt
+        ? <span className="pill" style={{ flex: "none", color: "var(--fg-3)", background: "var(--bg-2)", borderColor: "var(--line-2)" }}>Discarded</span>
+        : <Verdict state={pass.state} decision={pass.decision} style={{ flex: "none" }} />}
+      <span style={{ minWidth: 0 }}>
+        <span style={{ display: "-webkit-box", WebkitBoxOrient: "vertical", WebkitLineClamp: 2, overflow: "hidden", fontSize: 14, lineHeight: 1.4, fontWeight: 600, color: "var(--fg-1)" }}>
+          {pass.claim || pass.applicationName || "Untitled system"}
         </span>
-      )}
-      <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)", flex: "1 1 auto", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "right" }}>
-        {pass.deploymentUrl ?? ""}
+        <span style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "4px 10px", marginTop: 4, fontSize: 12.5, color: "var(--fg-4)" }}>
+          {/* Lineage, not a verdict. "rerun" says how this run came to exist; it makes no claim about what it
+              found, so it keeps the plain .pill and stays out of the signal vocabulary. */}
+          {pass.parentRunId && (
+            <span className="pill" style={{ color: "var(--fg-4)", background: "var(--bg-2)", borderColor: "var(--line-2)" }}>rerun</span>
+          )}
+          {meta.map((m, i) => (
+            <span key={i} style={i === meta.length - 1 && host ? { fontFamily: "var(--font-mono)", fontSize: 11.5, overflowWrap: "anywhere" } : undefined}>{m}</span>
+          ))}
+        </span>
       </span>
-      <span style={{ fontSize: 12, color: "var(--fg-4)", flex: "none", whiteSpace: "nowrap" }}>{when}</span>
+      <span style={{ fontSize: 12, color: "var(--fg-4)", whiteSpace: "nowrap", paddingTop: 2 }}>{when}</span>
     </Link>
   );
 }
