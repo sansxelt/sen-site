@@ -28,6 +28,8 @@
 //
 // The label a reader actually sees is the one in the bar above the block, so that is where the platform
 // goes. Two bars, two blocks, and neither can be mistaken for the other.
+import { CodeBar } from "./code-bar";
+
 const INSTALL_UNIX = `curl -fsS https://vraelis.com/install | sh`;
 
 const INSTALL_WINDOWS = `irm https://vraelis.com/install.ps1 | iex`;
@@ -56,6 +58,8 @@ vraelis verify --url "$PREVIEW_URL" --claim "$CLAIM" --wait --json > result.json
 vraelis result "$(jq -r .verification_id result.json)" --repair-prompt | claude -p`;
 
 const label = { fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" };
+// Inline code a touch smaller than the sentence around it; monospace at the same size reads larger (P2-7).
+const INLINE = { color: "var(--fg-3)", fontSize: "0.92em" } as const;
 
 const FLAGS: [string, string][] = [
   ["--wait", "Wait for the verdict. Without it the command prints the id and exits 0 immediately, which means started, not verified."],
@@ -77,13 +81,13 @@ export function CliSection() {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14 }}>
         <div>
-          <div className="codebar"><i /><i /><i /><span>macOS and Linux</span></div>
+          <CodeBar label="macOS and Linux" text={INSTALL_UNIX} />
           <pre className="codeblock"><code>{INSTALL_UNIX}</code></pre>
         </div>
         <div>
           {/* Named as PowerShell, not "Windows", because that is the app someone has to open. cmd.exe
               cannot run irm either, and a reader who tries it there gets a second error. */}
-          <div className="codebar"><i /><i /><i /><span>Windows, in PowerShell</span></div>
+          <CodeBar label="Windows, in PowerShell" text={INSTALL_WINDOWS} />
           <pre className="codeblock"><code>{INSTALL_WINDOWS}</code></pre>
         </div>
       </div>
@@ -91,14 +95,14 @@ export function CliSection() {
       <p style={{ margin: "14px 0 6px", fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.6 }}>
         Node 18 or newer. No sudo, no admin, and neither script edits your PATH or your shell profile.
         Both are plain text at those URLs if you would rather read one first:
-        <code style={{ color: "var(--fg-3)" }}>curl https://vraelis.com/install</code> or
-        <code style={{ color: "var(--fg-3)" }}>curl https://vraelis.com/install.ps1</code>.
+        <code style={INLINE}>curl https://vraelis.com/install</code> or
+        <code style={INLINE}>curl https://vraelis.com/install.ps1</code>.
         Or skip the installer entirely and run the file:
-        <code style={{ color: "var(--fg-3)" }}>curl -O https://vraelis.com/cli/vraelis.mjs</code>,
-        then <code style={{ color: "var(--fg-3)" }}>node vraelis.mjs verify ...</code>
+        <code style={INLINE}>curl -O https://vraelis.com/cli/vraelis.mjs</code>,
+        then <code style={INLINE}>node vraelis.mjs verify ...</code>
       </p>
 
-      <div className="codebar"><i /><i /><i /><span>then, on either</span></div>
+      <CodeBar label="then, on either" text={AFTER_INSTALL} />
       <pre className="codeblock"><code>{AFTER_INSTALL}</code></pre>
 
       {/* THE PASTE IS THE STEP THAT FAILS SILENTLY, so it gets its own line rather than a footnote.
@@ -110,7 +114,7 @@ export function CliSection() {
           were read. */}
       <p style={{ margin: "12px 0 0", fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.6 }}>
         On Windows, paste the key with a <strong style={{ color: "var(--fg-3)", fontWeight: 600 }}>right-click</strong>.
-        Ctrl+V does not work in every PowerShell window, and because <code style={{ color: "var(--fg-3)" }}>login</code> hides
+        Ctrl+V does not work in every PowerShell window, and because <code style={INLINE}>login</code> hides
         what you type, a paste that did nothing is indistinguishable from a key that was refused.
       </p>
 
@@ -119,14 +123,14 @@ export function CliSection() {
           at the terminal, and runs the moment the plan reads approved. This paragraph used to say the CLI
           could not reach a decision on its own; that was true until it learned to wait. */}
       <p style={{ margin: "12px 0 0", fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.6 }}>
-        A person approves each new plan. <code style={{ color: "var(--fg-3)" }}>verify</code> prints the requirements
+        A person approves each new plan. <code style={INLINE}>verify</code> prints the requirements
         and an approval link, opens it in your browser when you are at the terminal, and starts the run as soon as
         you approve. No key can approve a plan, including this one. After a fix,{" "}
-        <code style={{ color: "var(--fg-3)" }}>recheck</code> runs the same approved plan again without asking, for 24
+        <code style={INLINE}>recheck</code> runs the same approved plan again without asking, for 24
         hours after the approval and up to 10 times, on the same site.
       </p>
       <p style={{ margin: "12px 0 0", fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.6 }}>
-        <code style={{ color: "var(--fg-3)" }}>vraelis init</code> connects the coding assistants on your machine over
+        <code style={INLINE}>vraelis init</code> connects the coding assistants on your machine over
         MCP, so the agent can ask for the check itself and read what broke. Setup for each assistant, and for
         ChatGPT and Claude, is at <a href="https://vraelis.com/agents" style={{ color: "var(--fg-2)" }}>vraelis.com/agents</a>.
       </p>
@@ -152,12 +156,12 @@ export function CliSection() {
         ))}
       </div>
 
-      <div className="codebar"><i /><i /><i /><span>ci</span></div>
+      <CodeBar label="ci" text={CI} />
       <pre className="codeblock"><code>{CI}</code></pre>
 
       <p style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-5)", marginTop: 14, lineHeight: 1.6 }}>
         A CLI run spends the same credits as a console run and appears in Verifications and Records beside
-        them. The key needs the <code style={{ color: "var(--fg-3)" }}>Launch runs</code> scope.
+        them. The key needs the <code style={INLINE}>Launch runs</code> scope.
       </p>
     </section>
   );
