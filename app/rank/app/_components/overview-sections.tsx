@@ -140,17 +140,16 @@ export function NeedsAttention({ items }: { items: AttentionItem[] }) {
               aria-label={`${issue.severity} issue on ${issue.applicationName || "a system"}: ${issue.title}`}>
               <span style={{ minWidth: 0 }}>
                 <span style={{ display: "block", fontSize: 14.5, color: "var(--fg-1)", fontWeight: 500, lineHeight: 1.4 }}>{issue.title || "A blocking issue needs attention"}</span>
-                <span style={{ display: "flex", gap: 8, marginTop: 5, flexWrap: "wrap", fontSize: 13, color: "var(--fg-4)", alignItems: "center" }}>
+                {/* Spaced, not dotted: separator dots were left dangling at line ends when this wrapped on a
+                    phone (audit P2-3). */}
+                <span style={{ display: "flex", gap: "4px 14px", marginTop: 5, flexWrap: "wrap", fontSize: 13, color: "var(--fg-4)", alignItems: "center" }}>
                   <span style={{ color: SEV_INK[issue.severity] ?? "var(--fg-3)", fontWeight: 600 }}>{SEV_WORD[issue.severity] ?? issue.severity}</span>
-                  <span aria-hidden>·</span>
                   <span style={{ color: "var(--fg-2)" }}>{issue.applicationName || "System"}</span>
-                  <span aria-hidden>·</span>
                   <span>Found {timeAgo(issue.createdAt)}</span>
                   {/* Absent means "no verified run inside the window this page loaded", which is NOT the same
                       claim as "never verified". Say the weaker, true thing. */}
-                  <span aria-hidden>·</span>
                   {lastProven ? <span>Last verified {timeAgo(lastProven)}</span> : <span>No verified run in recent history</span>}
-                  {recurring ? <><span aria-hidden>·</span><span style={{ color: "var(--fg-2)", fontWeight: 500 }}>Came back after an earlier run</span></> : null}
+                  {recurring ? <span style={{ color: "var(--fg-2)", fontWeight: 500 }}>Came back after an earlier run</span> : null}
                 </span>
               </span>
               {systemVerdict ? <VerdictBadge verdict={systemVerdict} size="sm" style={{ flex: "none" }} /> : null}

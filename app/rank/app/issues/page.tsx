@@ -39,6 +39,10 @@ function severityTone(severity: string): { color: string; bg: string; border: st
 }
 
 // "broken_form_submit" -> "broken form submit"
+// One word per severity, capitalised the way every other console surface prints it (audit P2-6).
+const SEVERITY_WORD: Record<string, string> = { critical: "Critical", high: "High", medium: "Medium", low: "Low" };
+const severityWord = (s: string) => SEVERITY_WORD[s] ?? s.charAt(0).toUpperCase() + s.slice(1);
+
 function humanizeCategory(category: string): string {
   return category.replace(/_/g, " ");
 }
@@ -61,7 +65,7 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 // One open issue. The severity pill carries the severity as text; the row has no coloured edge, because a
 // stack of coloured edges read as warning stripes rather than as a list. firstSeenRun / lastSeenRun are run ids (no per-run timestamp is exposed here), so the
 // only honest time we can show is when the issue row was created: one "opened X ago".
-function OpenIssueRow({ issue }: { issue: IssueRow }) {
+function OpenIssueRow({ issue, showCategory }: { issue: IssueRow; showCategory: boolean }) {
   const tone = severityTone(issue.severity);
   const opened = timeAgo(issue.createdAt);
   return (
@@ -71,8 +75,8 @@ function OpenIssueRow({ issue }: { issue: IssueRow }) {
       style={{ display: "flex", flexDirection: "column", gap: 8, padding: "14px 16px", textDecoration: "none", color: "inherit" }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-        <span className="pill" style={{ color: tone.color, background: tone.bg, borderColor: tone.border }}>{issue.severity}</span>
-        {issue.category ? <span className="pill" style={{ fontSize: 10 }}>{humanizeCategory(issue.category)}</span> : null}
+        <span className="pill" style={{ color: tone.color, background: tone.bg, borderColor: tone.border }}>{severityWord(issue.severity)}</span>
+        {showCategory && issue.category ? <span className="pill" style={{ fontSize: 10 }}>{humanizeCategory(issue.category)}</span> : null}
       </div>
       <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--fg-1)", lineHeight: 1.35 }}>{issue.title}</div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
@@ -85,7 +89,7 @@ function OpenIssueRow({ issue }: { issue: IssueRow }) {
 
 // Resolved history stays visible but muted. When the resolving run is known the row links straight to
 // that run's report; otherwise it falls back to the application page.
-function ResolvedIssueRow({ issue }: { issue: IssueRow }) {
+function ResolvedIssueRow({ issue, showCategory }: { issue: IssueRow; showCategory: boolean }) {
   const href = issue.resolvedRun
     ? `/systems/${issue.applicationId}/passes/${issue.resolvedRun}`
     : `/systems/${issue.applicationId}`;
@@ -98,8 +102,8 @@ function ResolvedIssueRow({ issue }: { issue: IssueRow }) {
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
         <span className="pill" style={{ color: "var(--acc-deep)", background: "var(--acc-soft)", borderColor: "var(--acc-line)" }}><DecisionMark decision="resolved" />Resolved</span>
-        <span className="pill" style={{ fontSize: 10 }}>{issue.severity}</span>
-        {issue.category ? <span className="pill" style={{ fontSize: 10 }}>{humanizeCategory(issue.category)}</span> : null}
+        <span className="pill" style={{ fontSize: 10 }}>{severityWord(issue.severity)}</span>
+        {showCategory && issue.category ? <span className="pill" style={{ fontSize: 10 }}>{humanizeCategory(issue.category)}</span> : null}
       </div>
       <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14, color: "var(--fg-3)", lineHeight: 1.35 }}>{issue.title}</div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
@@ -166,7 +170,8 @@ export default async function IssuesPage() {
                 <NoOpenIssues />
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {open.map((issue) => <OpenIssueRow key={issue.id} issue={issue} />)}
+                  {/* The category only when it tells rows apart: the same chip on every row said nothing (P2-6). */}
+                  {open.map((issue) => <OpenIssueRow key={issue.id} issue={issue} showCategory={new Set(open.map((x) => x.category)).size > 1} />)}
                 </div>
               )}
             </section>
@@ -179,7 +184,7 @@ export default async function IssuesPage() {
                   <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "0 0 10px" }}>Showing the 30 most recently recorded.</p>
                 ) : null}
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {resolved.map((issue) => <ResolvedIssueRow key={issue.id} issue={issue} />)}
+                  {resolved.map((issue) => <ResolvedIssueRow key={issue.id} issue={issue} showCategory={new Set(resolved.map((x) => x.category)).size > 1} />)}
                 </div>
               </section>
             ) : null}
