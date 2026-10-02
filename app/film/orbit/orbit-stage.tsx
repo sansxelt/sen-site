@@ -26,6 +26,15 @@
    with a thin seam of light. The drone is lit by the place it is in: every frame the photograph is captured into
    a cube map at the drone and prefiltered (PMREM), so its reflections always show the world around it.
 
+   ONE PLACE IN THE FRAME (v4, 2026-10-01). The founder, on the photographic version: "everything should be
+   smooth... the scene can change. Someone could be grabbing it from a totally different angle, but the drone
+   should kind of stay in the same position." So the drone now holds one place in the frame from the first frame
+   to the last: the camera aims at it from one angle throughout and follows it with almost no lag, it keeps one
+   size once it is up, and only the world moves. The real
+   footage the film cuts to is framed to put its drone in the same place at the same size (scratchpad
+   reel/v4/catch.py), so even the hand that catches it, filmed from below, arrives around a drone that has not
+   moved.
+
    ?portrait renders the phone cut (1080x1920). Nothing renders on its own: window.__film.renderAt(t) draws one
    exact frame, and record() encodes the take with WebCodecs (../encode.ts) as a high-bitrate intermediate that
    the compositing step cuts and grades. */
@@ -45,10 +54,12 @@ export const LENGTH = 14.8;
 const FOV = PORTRAIT ? 50 : 30;
 /** Half the frame's horizontal field of view, in radians. */
 const HALF_W = Math.atan(Math.tan(THREE.MathUtils.degToRad(FOV / 2)) * (W / H));
-/** How far above the drone the camera aims, as an angle, so the drone sits low in the frame, under the headline:
- *  further on the pad, where the camera looks down on it and it fills more of the frame. */
-const AIM_PAD = THREE.MathUtils.degToRad(PORTRAIT ? 12 : 10);
-const AIM_FLY = THREE.MathUtils.degToRad(PORTRAIT ? 8.5 : 6.5);
+/** How far above the drone the camera aims, as an angle, so the drone sits low in the frame, under the headline.
+ *  One angle for the whole take, on the pad and in the air (v4): the drone keeps one place in the frame. */
+const AIM = THREE.MathUtils.degToRad(PORTRAIT ? 8.5 : 6.5);
+/** How far behind the drone the camera's turn runs (seconds). It was 0.12, a person's beat, and it let the drone
+ *  drift up to 7% of the frame off centre at the circle's fastest; this keeps it within 2%. */
+const LAG = 0.04;
 
 // ── THE WORLD IN METRES ───────────────────────────────────────────────────────────────────────────────────
 /** The photographs' camera height above the ground (a tripod). */
@@ -61,11 +72,13 @@ const REST_Y = -CAM_H - (PAD_TOP - 0.04) * M;
 const PAD_TOP_Y = REST_Y + PAD_TOP * M;
 /** Chest height, where it holds while it circles. */
 const HOVER_Y = -0.38;
-/** Where the pad is, around the camera (radians), and how far away. */
-const TH0 = 0.55;
-const D_PAD = PORTRAIT ? 2.1 : 1.85;
 /** The circle it flies around the camera, and how much of it. */
 const D_RING = PORTRAIT ? 2.9 : 2.4;
+/** Where the pad is, around the camera (radians), and how far away. A third further than the circle (v4): seen from
+ *  above on the pad, the drone stood up into the headline's second line at the circle's distance, so it sits a
+ *  little further off and comes in as it lifts. Its place in the frame never changes; it grows a little, once. */
+const TH0 = 0.55;
+const D_PAD = D_RING * 1.33;
 const SWEEP = Math.PI * 1.05;
 /** It faces the camera three quarters on from the pad, and holds that heading all the way round. */
 const YAW0 = TH0 + Math.PI - 0.6;
@@ -79,17 +92,25 @@ type Env = {
   shade: number; ao: number;
   /** Roughly how far the background is, for the depth of field (a room's walls, a horizon). */
   far: number;
+  /** How far from the camera the photographed ground is flat enough to take the sun's shadow (metres): it fades
+   *  out between the two. The ridge is the top of a cliff, and past five metres its ground is the village far
+   *  below, where the drone's shadow showed as a second drone (v4 review). */
+  ground: [number, number];
 };
 // Measured from the 16k HDRs (scratchpad hdri): the garage's light is diffuse (its brightest patch carries 1% of
 // the light), the plaza's is a floodlight across the river, the field's sun sits 3.8 degrees above the horizon,
 // and the ridge's carries 81% of the light from 21.5 degrees up. The plaza is held at 0.6: at 0.8 its lit
-// glass sat behind the centred headline and up to 43% of the letters' edges fell under 3:1 (audit, 2026-10-01). The ridge is turned so that sun is behind the
-// camera while the drone is there: the drone is lit from the front and its shadow falls on the rock beyond it.
+// glass sat behind the centred headline and up to 43% of the letters' edges fell under 3:1 (audit, 2026-10-01).
+// Since v4 it is also turned to face the river (yaw 2.69, from -0.45): the lit glass still put 20 to 45% of the
+// headline's box under 3:1, and the river at night, its bridge and the lights on the water, puts 3 to 5% there.
+// The ridge is turned so that sun is behind the camera while the drone is there: the drone is lit from the front
+// and its shadow falls on the rock beyond it; it is held at 0.88 so that sunlit rock stays behind the headline
+// at 3:1 or better as the camera tilts down to it at the end (v4).
 const ENVS: Env[] = [
-  { src: "/film/asset/env16b-autoshop-01.jpg", yaw: 0.0, gain: 0.9, sun: [0.693, 0.24], sunI: 0.5, sunC: "#F2F5FF", led: 0.6, shade: 0.18, ao: 0.62, far: 16 },
-  { src: "/film/asset/env16b-modern-buildings-night.jpg", yaw: -0.45, gain: 0.6, sun: [0.169, 0.477], sunI: 0.45, sunC: "#D6DEFF", led: 1, shade: 0.16, ao: 0.42, far: 60 },
-  { src: "/film/asset/env16b-bambanani-sunset.jpg", yaw: 0.0, gain: 0.96, sun: [0.6, 0.479], sunI: 1.9, sunC: "#FFD2A0", led: 0, shade: 0.42, ao: 0.32, far: 300 },
-  { src: "/film/asset/env16b-kiara-3-morning.jpg", yaw: -0.38, gain: 1.0, sun: [0.616, 0.38], sunI: 2.8, sunC: "#FFF4E2", led: 0, shade: 0.55, ao: 0.3, far: 300 },
+  { src: "/film/asset/env16b-autoshop-01.jpg", yaw: 0.0, gain: 0.9, sun: [0.693, 0.24], sunI: 0.5, sunC: "#F2F5FF", led: 0.6, shade: 0.18, ao: 0.62, far: 16, ground: [30, 40] },
+  { src: "/film/asset/env16b-modern-buildings-night.jpg", yaw: 2.69, gain: 0.6, sun: [0.169, 0.477], sunI: 0.45, sunC: "#D6DEFF", led: 1, shade: 0.16, ao: 0.42, far: 60, ground: [30, 40] },
+  { src: "/film/asset/env16b-bambanani-sunset.jpg", yaw: 0.0, gain: 0.96, sun: [0.6, 0.479], sunI: 1.9, sunC: "#FFD2A0", led: 0, shade: 0.42, ao: 0.32, far: 300, ground: [60, 80] },
+  { src: "/film/asset/env16b-kiara-3-morning.jpg", yaw: -0.38, gain: 0.88, sun: [0.616, 0.38], sunI: 2.8, sunC: "#FFF4E2", led: 0, shade: 0.55, ao: 0.3, far: 300, ground: [4.4, 5.2] },
 ];
 // Each wipe starts here and lasts WIPE seconds; the place before it holds until then.
 const WIPES = [6.7, 9.0, 11.3];
@@ -107,16 +128,18 @@ function envAt(t: number) {
 
 const spinAt = (t: number) => ease(k01(t, 0.8, 2.6));
 
-/** Where the drone is (world metres) at time t: on the pad, then up, then around the camera, then down. */
+/** Where the drone is (world metres) at time t: on the pad, then up, then around the camera, then a little down,
+ *  as the real drone after it comes down into a hand (35 cm since v4: at 55 the camera ended looking down at the
+ *  ridge's sunlit rock, behind the headline). */
 function dronePos(t: number) {
   const lift = ease(k01(t, 2.5, 4.8));
-  const out = ease(k01(t, 3.6, 5.8));
+  const near = ease(k01(t, 2.6, 5.0));
   // a sine ease: a slow, even circle (the cubic one peaked at 75 degrees a second, a whip pan)
   const go = 0.5 - 0.5 * Math.cos(Math.PI * k01(t, 4.4, LENGTH));
   const fall = ease(k01(t, LENGTH - 1.6, LENGTH));
   const th = TH0 + SWEEP * go;
-  const r = lerp(D_PAD, D_RING, out);
-  const y = lerp(REST_Y, HOVER_Y, lift) + Math.sin(t * 1.6) * 0.012 * lift - fall * 0.55;
+  const r = lerp(D_PAD, D_RING, near);
+  const y = lerp(REST_Y, HOVER_Y, lift) + Math.sin(t * 1.6) * 0.012 * lift - fall * 0.35;
   return new THREE.Vector3(Math.sin(th) * r, y, Math.cos(th) * r);
 }
 
@@ -226,6 +249,8 @@ function World({ film, drive, drone, pad }: {
   const blob = useRef<THREE.Mesh>(null);
   const blobMat = useRef<THREE.MeshBasicMaterial>(null);
   const blobTex = useMemo(() => blobTexture(), []);
+  // The sun's shadow fades out where the photographed ground stops being flat (Env.ground).
+  const groundFade = useMemo(() => ({ value: new THREE.Vector2(30, 40) }), []);
   const textures = useMemo(() => {
     const loader = new THREE.TextureLoader();
     return ENVS.map((e) => {
@@ -291,13 +316,12 @@ function World({ film, drive, drone, pad }: {
     // The pad belongs to the garage; it is out of frame before the first change.
     if (pad.current) pad.current.visible = t < WIPES[0];
 
-    // The camera stays where the photographs were taken and turns to follow the drone, a beat behind it, as a
-    // person does, with its aim a little above the drone so the drone sits under the headline.
+    // The camera stays where the photographs were taken and turns to follow the drone, just behind it, with its
+    // aim a little above the drone so the drone sits under the headline, in the same place all the way (v4).
     camera.position.set(0, 0, 0);
-    const aimAt = dronePos(t - 0.12);
+    const aimAt = dronePos(t - LAG);
     const dist = aimAt.length();
-    const aim = lerp(AIM_PAD, AIM_FLY, ease(k01(t, 2.8, 5.0)));
-    camera.lookAt(aimAt.clone().add(new THREE.Vector3(0, dist * Math.tan(aim), 0)));
+    camera.lookAt(aimAt.clone().add(new THREE.Vector3(0, dist * Math.tan(AIM), 0)));
     const sw = sway(t);
     camera.rotateY(sw.yaw);
     camera.rotateX(sw.pitch);
@@ -344,6 +368,7 @@ function World({ film, drive, drone, pad }: {
       shadowSun.current.target.updateMatrixWorld();
     }
     if (shadowMat.current) shadowMat.current.opacity = lerp(A.shade, B.shade, k);
+    groundFade.value.set(S.ground[0], S.ground[1]);
     // the contact shadow: darker and tighter the nearer the drone is to the ground
     const h = Math.max(0, p.y - REST_Y);
     if (blob.current && blobMat.current) {
@@ -362,7 +387,15 @@ function World({ film, drive, drone, pad }: {
       {/* the photographed ground: it only ever shows a shadow */}
       <mesh rotation-x={-Math.PI / 2} position={[0, -CAM_H, 0]} receiveShadow renderOrder={1}>
         <planeGeometry args={[80, 80]} />
-        <shadowMaterial ref={shadowMat} transparent opacity={0.3} depthWrite={false} />
+        <shadowMaterial ref={shadowMat} transparent opacity={0.3} depthWrite={false} onBeforeCompile={(sh) => {
+          sh.uniforms.groundFade = groundFade;
+          sh.vertexShader = sh.vertexShader
+            .replace("#include <common>", "#include <common>\nvarying vec2 vGround;")
+            .replace("#include <project_vertex>", "#include <project_vertex>\nvGround = (modelMatrix * vec4(transformed, 1.0)).xz;");
+          sh.fragmentShader = sh.fragmentShader
+            .replace("#include <common>", "#include <common>\nvarying vec2 vGround;\nuniform vec2 groundFade;")
+            .replace("#include <tonemapping_fragment>", "gl_FragColor.a *= 1.0 - smoothstep(groundFade.x, groundFade.y, length(vGround));\n#include <tonemapping_fragment>");
+        }} />
       </mesh>
       <mesh ref={blob} rotation-x={-Math.PI / 2} renderOrder={2}>
         <planeGeometry args={[1, 1]} />
@@ -383,7 +416,8 @@ function Recorder({ film }: { film: React.MutableRefObject<FilmState> }) {
     const renderAt = (t: number) => { film.current.t = Math.max(0, t); advance(t * 1000, true); };
     let out: Uint8Array | null = null;
     // Motion blur: each frame is the mean of SUB instants spread across 0.4 of a frame (a 144 degree shutter).
-    const SUB = 5, SHUTTER = 0.4;
+    // Ten since v4: with five, anything fast (a wipe's seam, a rotor tip) showed as five sharp copies, not a blur.
+    const SUB = 10, SHUTTER = 0.4;
     const api = {
       length: LENGTH, fps: FPS,
       ready: () => loaded.n >= ENVS.length,

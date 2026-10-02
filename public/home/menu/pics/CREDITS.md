@@ -4,8 +4,8 @@ Each link in the site's mega menus (`app/dev-preview/v6/_system/shell.tsx`, MENU
 1400x700 (the two Resources cards to 960x540). They come from three places:
 
 - **Frames of the homepage film** (`public/home/film.mp4`). The drone shots are our own render (app/film/orbit,
-  over Poly Haven CC0 panoramas). The board, catch and controller shots are Pexels footage, credited in
-  `app/film/CREDITS.md`.
+  over Poly Haven CC0 panoramas). The catch is Pexels footage, credited in `app/film/CREDITS.md`. Two pictures
+  are frames of the board and controller clips an earlier cut of the film used; their sources are below.
 - **Photographs** under the Pexels License (https://www.pexels.com/license/) or the Unsplash License
   (https://unsplash.com/license). Both allow free commercial use and modification without attribution; the
   sources are listed so every picture's origin is known. They were checked for readable brand marks and faces
@@ -35,12 +35,12 @@ Each link in the site's mega menus (`app/dev-preview/v6/_system/shell.tsx`, MENU
 | about.jpg | Pexels, Alparslan Uzun: https://www.pexels.com/photo/a-drone-flying-over-the-water-at-sunset-28226989/ |
 | who-it-is-for.jpg | Pexels, Sergei Skrynnik: https://www.pexels.com/photo/photo-of-a-truck-with-white-lights-11053643/ |
 | how-this-is-different.jpg | Unsplash, Danny Pérez: https://unsplash.com/photos/V6lpEsglnVE |
-| why-vraelis-exists.jpg | Homepage film, Pexels footage (cottonbro studio, the board) |
+| why-vraelis-exists.jpg | Pexels, cottonbro studio (the board, from the film's first cut): https://www.pexels.com/video/a-person-is-working-on-a-circuit-board-4709394/ |
 | contact.jpg | Pexels, Tamara Adeyemi: https://www.pexels.com/photo/submarine-control-room-with-operator-wearing-headset-33676251/ |
 | reddit-partnership.jpg | Pexels, Denys Mikhalevych: https://www.pexels.com/photo/an-aerial-photography-of-city-buildings-at-night-12534226/ |
 | bytedance-partnership.jpg | Pexels, Jaroslav Maléř: https://www.pexels.com/photo/man-holding-a-mobile-phone-in-the-dark-19949818/ |
 | what-is-built.jpg | Pexels, Stuffedbox NG: https://www.pexels.com/photo/silhouetted-drone-flying-on-the-background-of-a-sunset-sky-16238128/ |
 | in-public.jpg | Pexels, Alex Fu: https://www.pexels.com/photo/car-headlights-in-foggy-night-road-scene-30546867/ |
-| changelog.jpg | Homepage film, Pexels footage (cottonbro studio, the controller) |
+| changelog.jpg | Pexels, cottonbro studio (the controller, from the film's first cut): https://www.pexels.com/video/close-up-on-mans-hands-controlling-drone-on-controller-9950493/ |
 | card-drone-check.jpg | Our product: the Larkspur mission console during the real check vrf_51705517 |
 | card-method.jpg | Homepage film, Pexels footage (cottonbro studio, the hand catching a drone) |

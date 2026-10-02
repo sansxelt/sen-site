@@ -140,7 +140,7 @@
 .v6-dh__signin:hover { color: #FAFAFA; background: rgba(255,255,255,0.055); }
 .v6-dh__open { font-family: var(--sans); font-size: 13px; font-weight: 600; line-height: 1; color: #0A0A0B; background: #FAFAFA;
   border-radius: 7px; padding: 9px 12px; text-decoration: none; }
-.v6-dh__open:hover { background: #E4E4E7; }
+.v6-dh__open:hover { background: #E4E4E7; color: #0A0A0B; }
 .v6-docsenv .v6-docs__copy { font-family: var(--sans); font-size: 13px; font-weight: 500; line-height: 1; color: #C9CBD1;
   background: transparent; cursor: pointer; border: 1px solid rgba(255,255,255,0.132); border-radius: 7px; padding: 8px 11px; }
 .v6-docsenv .v6-docs__copy:hover { color: #FAFAFA; border-color: rgba(255,255,255,0.264); }

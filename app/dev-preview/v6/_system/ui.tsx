@@ -20,7 +20,10 @@ export function Reveal({ children, i = 0, media = false, className = "", style }
     if (typeof IntersectionObserver === "undefined") { el.classList.add("in"); return; }
     const io = new IntersectionObserver((es) => {
       for (const e of es) if (e.isIntersecting) { el.classList.add("in"); io.unobserve(el); }
-    }, { threshold: 0.14, rootMargin: "0px 0px -7% 0px" });
+    // Any part of it inside the top 92% of the screen. It used to need 14% of its own height in view, which a
+    // tall block never reaches on a phone: four research articles opened with half the first screen blank
+    // (site audit, 2026-10-01).
+    }, { threshold: 0, rootMargin: "0px 0px -8% 0px" });
     io.observe(el);
     return () => io.disconnect();
   }, []);

@@ -103,7 +103,7 @@ const NF_CSS = `
   padding:12px 22px; border-radius:11px;
   transition:background 140ms cubic-bezier(0,0,.2,1);
 }
-.v404-cta:hover{ background:#E4E4E7; }
+.v404-cta:hover{ background:#E4E4E7; color:#0A0A0B; }
 .v404-link{
   font-size:14.5px; color:#C9CBD1; text-decoration:none;
   border-bottom:1px solid rgba(255,255,255,0.242); padding-bottom:2px;

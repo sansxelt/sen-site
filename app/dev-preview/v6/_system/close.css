@@ -51,7 +51,7 @@
   display: inline-flex; align-items: center; }
 .v6-end__third:hover { color: var(--g-fg); }
 .v6-end .v6-btn { background: #FAFAFA; border-color: #FAFAFA; color: #0A0A0B; min-height: 52px; padding: 16px 28px; font-size: 16px; }
-.v6-end .v6-btn:hover { background: #E4E4E7; border-color: #E4E4E7; }
+.v6-end .v6-btn:hover { background: #E4E4E7; border-color: #E4E4E7; color: #0A0A0B; }
 .v6-end .v6-btn:focus-visible, .v6-end .v6-elink:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
 .v6-end .v6-elink { color: #FAFAFA; }
 .v6-end .v6-elink .v6-arw { color: #FAFAFA; }
