@@ -118,7 +118,8 @@ console.log("\n── a subscriber can get back off ──");
   // from the one page whose entire job is choosing a plan. It also still said "applications" for a page
   // renamed to Systems, which is the same halfway rename being cleaned up everywhere else.
   const plans = readFileSync("app/rank/app/plans/plans-v1.tsx", "utf8");
-  ok("the free card offers a way to cancel when you are subscribed", /Cancel in billing/.test(plans));
+  // Worded as the action it is since the console audit (P2-12): "Downgrade to Free", still opening billing.
+  ok("the free card offers a way to cancel when you are subscribed", /Downgrade to Free/.test(plans) && /onClick=\{manageBilling\}/.test(plans));
   ok("and no longer sends a subscriber sightseeing instead", !/Open applications/.test(plans));
 }
 
