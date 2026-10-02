@@ -19,6 +19,13 @@
   font-size: 13.5px;
 }
 
+/* Hidden copies that hold a box at the size of the longest thing it will show (run-window.tsx), all laid
+   in one grid cell with what is live, so nothing re-wraps or resizes as a run plays. The live copy fills
+   the cell and aligns its text inside it, so it does not move either (the pill hugs its words from the
+   cell's start, which stays put). */
+.v6 .rw__sz { visibility: hidden; }
+.v6 .rw__chips > *, .v6 .rw__stat > *, .v6 .rw__sms > *, .v6 .rw__cap > * { grid-area: 1 / 1; }
+
 /* ── top bar ─────────────────────────────────────────────────────────────── */
 .v6 .rw__top {
   display: flex; align-items: center; gap: 14px;
@@ -28,14 +35,14 @@
 }
 .v6 .rw__brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
 .v6 .rw__mark {
-  display: grid; place-items: center; width: 24px; height: 24px; border-radius: 7px;
+  display: grid; place-items: center; width: 24px; height: 24px; border-radius: 7px; flex: none;
   background: #FAFAFA; color: #0A0A0B; font-weight: 700; font-size: 12.5px; letter-spacing: -0.02em;
 }
 .v6 .rw__crumb { font-size: 13px; color: var(--ink-4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .v6 .rw__crumb b { color: var(--ink); font-weight: 600; }
 .v6 .rw__rec { margin-left: auto; font-size: 11.5px; color: var(--ink-4); white-space: nowrap; }
 .v6 .rw__replay {
-  display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 11px;
+  display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 11px; flex: none; white-space: nowrap;
   border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; background: #1B1B1F;
   font: 500 12.5px/1 var(--sans); color: var(--ink); cursor: pointer;
   transition: background 0.15s var(--ease-out), border-color 0.15s var(--ease-out);
@@ -72,19 +79,25 @@
 .v6 .rw__imeta [data-f="found"] { color: var(--stop-ink); }
 .v6 .rw__imeta [data-f="held"] { color: var(--go-ink); }
 .v6 .rw__imeta { grid-column: 1; font-size: 11.5px; color: var(--ink-4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* a date that wraps keeps its day and month together ("7月22日" split after the 7) */
+.v6 .rw__date { white-space: nowrap; }
 .v6 .rw__railnote { margin: auto 8px 0; padding-top: 14px; font-size: 11.5px; line-height: 1.5; color: var(--ink-4); }
 
 /* main */
 .v6 .rw__main { display: flex; flex-direction: column; min-width: 0; min-height: 0; padding: 18px 22px 0; }
-.v6 .rw__status { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+/* The pill's place and the counter are as wide as the longest thing each will show, so this line wraps
+   the same way in every state and on every run, in every language. */
+.v6 .rw__status { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; }
+.v6 .rw__chips { display: inline-grid; flex: none; }
+.v6 .rw__chips > * { justify-self: start; }
 .v6 .rw__chip {
-  display: inline-flex; align-items: center; gap: 8px; height: 28px; padding: 0 12px;
+  display: inline-flex; align-items: center; height: 28px; padding: 0 12px; white-space: nowrap;
   border-radius: 999px; font-size: 12.5px; font-weight: 600; color: var(--ink);
   background: #1B1B1F; border: 1px solid rgba(255,255,255,0.09);
 }
 .v6 .rw__chip[data-s="found"] { color: var(--stop-ink); background: rgba(255,122,85,0.12); border-color: rgba(255,122,85,0.32); }
 .v6 .rw__chip[data-s="held"] { color: var(--go-ink); background: rgba(52,211,153,0.12); border-color: rgba(52,211,153,0.32); }
-.v6 .rw__stat { font-size: 11.5px; color: var(--ink-4); }
+.v6 .rw__stat { display: inline-grid; flex: none; white-space: nowrap; text-align: right; font-size: 11.5px; color: var(--ink-4); }
 
 .v6 .rw__claim { margin: 16px 0 12px; padding: 14px 16px; border: 1px solid var(--rw-line); border-radius: 12px; background: var(--rw-soft); }
 .v6 .rw__k { margin: 0 0 5px; font-size: 11.5px; font-weight: 600; color: var(--ink-4); }
@@ -102,6 +115,8 @@
   -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent);
           mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent);
 }
+/* Where the list scrolls it takes keyboard focus (run-window.tsx); the fade at its foot would fade the ring. */
+.v6 .rw__steps:focus-visible { outline: 2px solid #FAFAFA; outline-offset: -2px; -webkit-mask-image: none; mask-image: none; }
 .v6 .rw__jn { margin: 12px 0 4px; font-size: 11.5px; font-weight: 600; color: var(--ink-4); }
 .v6 .rw__journey:first-child .rw__jn { margin-top: 4px; }
 .v6 .rw__steps ol { list-style: none; margin: 0; padding: 0; }
@@ -116,7 +131,7 @@
 .v6 .rw__sn { font-size: 11px; color: var(--ink-4); }
 .v6 .rw__step[data-s="now"] .rw__sn { color: var(--ink); }
 .v6 .rw__st { font-size: 13.5px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.v6 .rw__sms { font-size: 11.5px; color: var(--ink-4); min-width: 44px; text-align: right; white-space: nowrap; }
+.v6 .rw__sms { display: grid; font-size: 11.5px; color: var(--ink-4); min-width: 44px; text-align: right; white-space: nowrap; }
 .v6 .rw__snow { color: var(--ink-2); }
 /* the failure is the one coloured row: it is the row the reader came for */
 .v6 .rw__step[data-s="fail"] .rw__sn, .v6 .rw__step[data-s="fail"] .rw__st, .v6 .rw__step[data-s="fail"] .rw__sms { color: var(--stop-ink); }
@@ -144,9 +159,12 @@
 .v6 .rw__lnow { font-size: 14px; font-weight: 500; color: var(--ink); line-height: 1.35; }
 .v6 .rw__lbar { display: block; height: 3px; border-radius: 3px; background: rgba(255,255,255,0.09); overflow: hidden; margin-top: 4px; }
 .v6 .rw__lbar span { display: block; height: 100%; background: #FAFAFA; transition: width 0.3s var(--ease-out); }
-.v6 .rw__cap { margin: -4px 2px 0; font-size: 11.5px; color: var(--ink-4); line-height: 1.4; }
+.v6 .rw__cap { display: grid; margin: -4px 2px 0; font-size: 11.5px; color: var(--ink-4); line-height: 1.4; }
+.v6 .rw__cap > [data-on="false"] { visibility: hidden; }
 
 .v6 .rw__card { padding: 12px 14px; border: 1px solid var(--rw-line); border-radius: 12px; background: #17171A; flex: none; }
+/* Wide, the column is a fixed height and the card simply shows one or the other (stacked: see below). */
+.v6 .rw__card[data-on="false"] .rw__cdone, .v6 .rw__card[data-on="true"] .rw__cwait { display: none; }
 .v6 .rw__ch { display: flex; justify-content: space-between; gap: 10px; margin: 0 0 8px; font-size: 12.5px; font-weight: 600; color: var(--ink); }
 .v6 .rw__ch span { font-size: 11px; font-weight: 400; color: var(--ink-4); }
 .v6 .rw__diff { margin: 0; display: grid; gap: 6px; }
@@ -160,20 +178,27 @@
 .v6 .rw__prompt {
   display: flex; flex-direction: column; min-height: 0; flex: 1;
   border-radius: 12px; background: #0A0A0B; border: 1px solid rgba(255,255,255,0.08); color: #E4E4E7; overflow: hidden;
-  animation: rw-in 0.45s var(--ease) both;
 }
+/* In place from the run's first frame and shown when it ends (run-window.tsx), so it arrives without
+   moving anything. */
+.v6 .rw__prompt[data-on="false"] { visibility: hidden; }
+.v6 .rw__prompt[data-on="true"] { animation: rw-in 0.45s var(--ease) both; }
 .v6 .rw__ph { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 10px 9px 14px; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 12px; font-weight: 600; color: #FAFAFA; }
+/* the title gives way, not the button: "コピー" broke onto two lines when the two shared the squeeze */
+.v6 .rw__pt { min-width: 0; }
 .v6 .rw__copy {
+  flex: none; white-space: nowrap;
   height: 24px; padding: 0 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.18);
   background: rgba(255,255,255,0.06); color: #FAFAFA; font: 500 11.5px/1 var(--sans); cursor: pointer;
 }
 .v6 .rw__copy:hover { background: rgba(255,255,255,0.14); }
 .v6 .rw__copy:focus-visible { outline-color: #FFFFFF; }
 .v6 .rw__prompt pre {
-  margin: 0; padding: 10px 14px 14px; flex: 1; min-height: 0; overflow: auto;
+  margin: 0; padding: 10px 14px 14px; flex: 1; min-height: 0; overflow: auto; border-radius: 0 0 11px 11px;
   font-size: 10.5px; line-height: 1.55; white-space: pre-wrap; color: #D4D4D8;
   scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.2) transparent;
 }
+.v6 .rw__prompt pre:focus-visible { outline: 2px solid #FAFAFA; outline-offset: -2px; }
 
 /* ── narrower screens ────────────────────────────────────────────────────── */
 @media (max-width: 1180px) {
@@ -186,19 +211,45 @@
   .v6 .rw__rail li { flex: none; }
   .v6 .rw__item { width: auto; max-width: 240px; }
   .v6 .rw__railh, .v6 .rw__railnote { display: none; }
-  .v6 .rw__steps { max-height: 360px; flex: none; }
+  /* Every step shows. A list that scrolled inside the scrolling page swallowed swipes on touch. */
+  .v6 .rw__steps { max-height: none; overflow: visible; -webkit-mask-image: none; mask-image: none; flex: none; }
   .v6 .rw__side { border-left: 0; border-top: 1px solid var(--rw-line); }
+  /* The waiting line and the finding share one cell, the one not in use hidden, so the card is the size it
+     ends at from the first frame and the window below it does not move when the run ends. */
+  .v6 .rw__card { display: grid; }
+  .v6 .rw__card > * { grid-area: 1 / 1; }
+  .v6 .rw__card[data-on="false"] .rw__cdone, .v6 .rw__card[data-on="true"] .rw__cwait { display: block; visibility: hidden; }
+  /* The prompt's place shows from the first frame, dim like the steps not reached yet (a blank the size of
+     the prompt read as a hole in the window); its text and button arrive as it brightens. */
+  .v6 .rw__prompt { transition: opacity 0.45s var(--ease); }
+  .v6 .rw__prompt[data-on="false"] { visibility: visible; opacity: 0.42; }
+  .v6 .rw__prompt[data-on="false"] pre, .v6 .rw__prompt[data-on="false"] .rw__copy { visibility: hidden; }
+  .v6 .rw__prompt[data-on="true"] { animation: none; }
   .v6 .rw__prompt pre { max-height: 220px; }
   .v6 .rw__rec { display: none; }
 }
 @media (max-width: 560px) {
   .v6 .rw { border-radius: 14px; font-size: 13px; }
+  /* "Checks /" steps aside so the app's name fits beside Replay; a long name takes a second line. */
+  .v6 .rw__up { display: none; }
+  .v6 .rw__crumb { white-space: normal; line-height: 1.25; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  /* All four runs in two rows: the sideways strip showed two and nothing said there were more. */
+  .v6 .rw__rail ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); overflow: visible; padding-bottom: 0; }
+  .v6 .rw__rail li { min-width: 0; }
+  .v6 .rw__item { width: 100%; max-width: none; height: 100%; align-content: start; }
+  /* Two lines where needed, broken between phrases in Japanese ("チェックア / ウト" otherwise) and never
+     before a long vowel mark ("トラッカ / ー"). */
+  .v6 .rw__iname, .v6 .rw__imeta { white-space: normal; word-break: auto-phrase; line-break: strict; }
+  .v6 .rw__iname { text-wrap: balance; }
   .v6 .rw__main { padding: 14px 14px 0; }
+  /* the counter takes its own line under the pill */
+  .v6 .rw__stat { width: 100%; text-align: left; }
   .v6 .rw__steps { margin: 0 -14px; padding: 2px 14px 14px; }
   .v6 .rw__side { padding: 14px; }
   .v6 .rw__st { white-space: normal; }
   .v6 .rw__sms { min-width: 38px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .v6 .rw__shot, .v6 .rw__prompt { animation: none; }
+  .v6 .rw__shot, .v6 .rw__prompt[data-on] { animation: none; }
+  .v6 .rw__prompt { transition: none; }
 }

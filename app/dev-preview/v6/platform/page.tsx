@@ -8,6 +8,8 @@ import "../_system/coverage.css";
 import { LIVE, DIRECTION, type DirectionItem } from "../_content/scope";
 import { SURFACES, COVERAGE_THESIS, COVERAGE_RULE } from "../_content/coverage";
 import { V6_BASE } from "@/lib/v6-routes";
+import { Proof } from "../_system/home-bands";
+import { RunWindow } from "../_system/run-window";
 
 // Platform overview (design 06). This is the MECHANISM page, and since the homepage's primary call to action
 // lands here it has to deliver the loop in the opening rather than a slogan: one sentence about a deployed
@@ -343,6 +345,11 @@ export default function Platform() {
           </Reveal>
         </div>
       </section>
+
+      {/* 1b ── Real runs, replayed: four recorded checks, step by step. They were on the homepage until
+          2026-10-01; the homepage now shows one real check in depth, and these live beside the record they
+          come from. */}
+      <Proof><RunWindow /></Proof>
 
       {/* 2 ── Guarantee ── */}
       <section className="v6-sec v6-sec--sunk">

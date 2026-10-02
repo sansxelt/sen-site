@@ -9,6 +9,8 @@
 .v6-stm__t { margin: 0; max-width: 24ch; font-family: var(--display); font-weight: 500; font-size: clamp(2rem, 4.4vw, 4.4rem); line-height: 1.08; letter-spacing: -0.035em; }
 .v6-stm__t span { color: #3A3B40; transition: color 280ms var(--ease); }
 .v6-stm__t span[data-on="true"] { color: #FAFAFA; }
+/* a whole word in a language that does not space its words (home-bands.tsx, data-keep) */
+.v6-stm__t span[data-keep] { white-space: nowrap; }
 
 .v6-ag { background: var(--paper); padding: clamp(72px, 9vw, 140px) 0; }
 .v6-ag__in { max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(36px, 6vw, 110px); align-items: center; }
@@ -20,7 +22,13 @@
 .v6-ag__bar { display: flex; align-items: center; gap: 6px; height: 38px; padding: 0 14px; background: #161618; border-bottom: 1px solid rgba(255,255,255,0.07); }
 .v6-ag__bar span { margin-left: 8px; font-family: var(--mono); font-size: 11.5px; color: #8E9095; }
 .v6-ag__term pre { margin: 0; padding: 20px 22px; font-family: var(--mono); font-size: clamp(12px, 1vw, 13.5px); line-height: 1.75; color: #E4E4E7; white-space: pre-wrap; word-break: break-word; }
-.v6-ag__term .c, .v6-ag__term .p { color: #74767C; }
+/* Comments and prompts are the quiet part of a terminal but still small text: #74767C read at 4.2:1 on this
+   ground, #8E9095 (--ink-4) reads at about 6:1 and still sits well under the commands. */
+.v6-ag__term .c, .v6-ag__term .p { color: #8E9095; }
+/* Pieces that must not split: "exit 0 ships" (a narrow screen could break it between "exit" and "0", or leave
+   "ships" alone on a line), and each continuation backslash with the word before it. A narrow screen may wrap
+   a line around them, never through them. */
+.v6-ag__term .nw { white-space: nowrap; }
 .v6-ag__tools { list-style: none; margin: 0; padding: 14px 22px 20px; border-top: 1px solid rgba(255,255,255,0.07); display: grid; gap: 8px; }
 .v6-ag__tools li { display: flex; align-items: baseline; gap: 14px; font-size: 13px; color: #A1A3A9; }
 .v6-ag__tools code { flex: none; min-width: 132px; font-family: var(--mono); font-size: 12.5px; color: #FAFAFA; }
@@ -29,6 +37,11 @@
 }
 @media (max-width: 520px) {
   .v6-ag__tools li { flex-direction: column; gap: 2px; }
+  /* On a phone everything in the terminal starts 14px in (the bar's own padding) instead of 22px: the longest
+     command line ("curl ... install \", 41 characters) then fits whole down to a 360px screen. */
+  .v6-ag__bar span { margin-left: 0; }
+  .v6-ag__term pre { padding: 18px 14px; }
+  .v6-ag__tools { padding: 14px 14px 18px; }
 }
 @media (prefers-reduced-motion: reduce) { .v6-stm__t span { transition: none; } }
 
@@ -39,3 +52,28 @@
 .v6-pf__d { margin: 0; max-width: 40ch; font-size: clamp(1rem, 1.2vw, 1.1rem); line-height: 1.55; color: var(--ink-3); }
 .v6-stm__src { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .v6-stm__t { position: relative; }
+
+/* Japanese has no spaces, so the browser may break a heading anywhere, in the middle of a word. auto-phrase
+   breaks between phrases instead (Chrome 119 and later; other browsers keep today's breaks). This file loads
+   on the homepage, so the rule covers the homepage's other headings and the sentence under each of them too.
+   (The closing scene, on every page, has its own rule in close.css.) */
+/* The changelog row (ChangelogRow), after the one near the bottom of cursor.com: a plain heading, four dated
+   entries in a row, one link to the rest. */
+.v6-cl { background: var(--paper); padding: clamp(56px, 7vw, 112px) 0 clamp(24px, 3vw, 40px); }
+.v6-cl__in { max-width: calc(var(--max) - 2 * var(--gutter)); margin: 0 auto; padding: 0 var(--gutter); box-sizing: content-box; }
+.v6-cl__h { margin: 0 0 18px; font-family: var(--display); font-weight: 500; font-size: clamp(1.3rem, 1.6vw, 1.6rem); letter-spacing: -0.02em; color: #FAFAFA; }
+.v6-cl__list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.v6-cl__item { display: grid; gap: 8px; align-content: start; height: 100%; padding: 16px 18px 18px; border-radius: 12px; background: #121214;
+  border: 1px solid rgba(255,255,255,0.07); text-decoration: none; transition: border-color 160ms var(--ease-out), background 160ms var(--ease-out); }
+.v6-cl__item:hover { border-color: rgba(255,255,255,0.2); background: #151517; }
+.v6-cl__item:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
+.v6-cl__date { font-size: 13px; color: #8E9095; }
+.v6-cl__t { font-size: 15px; line-height: 1.4; color: #FAFAFA; }
+.v6-cl__more { display: inline-flex; margin-top: 18px; font-size: 15px; color: #FAFAFA; text-decoration: none; }
+.v6-cl__more:hover { color: #C9CBD1; }
+.v6-cl__arw { margin-left: 6px; transition: transform 180ms var(--ease-out); }
+.v6-cl__more:hover .v6-cl__arw { transform: translateX(3px); }
+.v6-cl__more:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; border-radius: 4px; }
+@media (max-width: 900px) { .v6-cl__list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .v6-cl__list { grid-template-columns: minmax(0, 1fr); } }
+:lang(ja) :is(h1, h2, h3, .v6-or__h, .v6-or__d, .v6-stm__t, .v6-sk__t, .v6-sk__d, .v6-ag__d, .v6-pf__d) { word-break: auto-phrase; }

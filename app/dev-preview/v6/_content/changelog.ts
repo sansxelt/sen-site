@@ -19,6 +19,9 @@
 // exception and is dated, because on that date the direction itself was the news.
 export type Entry = { date: string; tag: "go" | "wait"; tagLabel: string; title: string; body: string[]; note?: string; href?: string; hrefLabel?: string };
 
+/** An entry's anchor on /changelog: its date and title, so two entries on one day still differ. */
+export const entryId = (e: Entry) => `${e.date}-${e.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48)}`;
+
 export const CHANGELOG: Entry[] = [
   {
     date: "2026-09-30",

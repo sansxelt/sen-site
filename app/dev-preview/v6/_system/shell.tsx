@@ -3,7 +3,8 @@
 // Shared public shell for design 06: one nav, one Resources mega-menu, one mobile full-screen nav, one
 // footer, one route transition, used by every v6 route. Sticky nav goes transparent -> blurred on scroll and
 // flips to a dark treatment over graphite (live-work) sections. Client-side nav with prefetch (next/link).
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FocusEvent as ReactFocusEvent, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FocusEvent as ReactFocusEvent, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SiteFooter } from "./close";
@@ -24,153 +25,108 @@ const SIGNIN = v6SignInPath();
 // Account creation is the same screen in its sign-up mode, landing in the console afterwards.
 const SIGNUP = `${SIGNIN}&mode=signup`;
 
-// Three top-level items open a menu; Company is a plain link. Research and Developers were promoted to the
-// top bar in phase 1 and are demoted back into the menus that already carry them, so the closed bar stays
-// short and calm. Every menu has 2-3 named groups plus one editorial preview.
-type Preview = { eyebrow: string; title: string; body: string; stat?: string };
-type MLink = { t: string; d?: string; href: string; preview?: Preview };
-type Group = { h: string; links: MLink[] };
-type Menu = { label: string; groups: Group[]; feature: Preview & { href: string; cta: string } };
+// THE MENUS, AFTER SCALE.COM'S (founder, 2026-10-01: "hover over each of the subjects in the top"). Each menu
+// is at most two columns of big plain links under small grey group names, and a large rounded picture on the
+// right. Every link has its own picture, and pointing at a link (or focusing it) puts its picture in the
+// panel, the way scale.com's menus do. Resources shows two featured cards instead, as scale.com's does.
+// The founder also asked for the top of the site to be less crowded, so each menu was trimmed to two columns:
+// the legal pages left the Company menu (the footer carries them), and nothing is listed twice.
+//
+// The pictures (public/home/menu/pics, 1400x700) are frames of the homepage film or licensed photographs
+// (Pexels and Unsplash licences; sources in public/home/menu/pics/CREDITS.md).
+type MLink = { t: string; d?: string; href: string; pic?: string };
+type Group = { h: string; links: MLink[]; col?: 1 | 2 };
+type Card = { title: string; href: string; pic: string };
+type Menu = { label: string; groups: Group[]; cards?: Card[] };
 
-// THE MENU'S PICTURE (2026-10-01, after scale.com's menus: big plain links on the left, one large rounded
-// film on the right). Each top-level menu loops eight seconds of real footage, muted and seamless, distinct
-// from the homepage film as scale.com's menu pictures are from its hero (public/home/menu, credits in
-// app/film/CREDITS.md): status keys in a control room, a circuit board, someone reading a screen, a drone
-// at dusk.
-const MENU_MEDIA: Record<string, { src: string; poster: string }> = {
-  Platform: { src: "/home/menu/platform-loop.mp4", poster: "/home/menu/platform-loop.jpg" },
-  Integrations: { src: "/home/menu/integrations-loop.mp4", poster: "/home/menu/integrations-loop.jpg" },
-  Resources: { src: "/home/menu/resources-loop.mp4", poster: "/home/menu/resources-loop.jpg" },
-  Company: { src: "/home/menu/company-loop.mp4", poster: "/home/menu/company-loop.jpg" },
-};
-
-// REWRITTEN 2026-09-28 with the public story. The second menu was "Agents", with a Direction group for
-// continuous agent activity and autonomy from a track record; it is now "Integrations", the four ways to
-// start a check side by side, because an AI assistant is one channel and not the identity. Connected devices
-// are named where coverage is, honestly: through their web control panels today, device-level checks next.
 const MENUS: Menu[] = [
   {
     label: "Platform",
     groups: [
       { h: "Understand", links: [
-        { t: "Platform overview", d: "What the product does", href: BASE + "/platform" },
-        { t: "What it can reach", d: "Web apps, and devices through their panels", href: BASE + "/platform#coverage",
-          preview: { eyebrow: "What it can reach", title: "The browser is where this started, not where it stops.", body: "Deployed web apps are live, and so are connected devices checked through the web control panel that runs them. Checks that read a device itself, its firmware, sensors or telemetry, are next and not built yet.", stat: "Live vs Next" } },
-        // FOUR NAMES FOR ONE THING, VISIBLE IN A SINGLE CLICK. This row read "Requirements", pointed at
-        // /docs/responsibilities, opened a page titled "Responsibilities", and the console the reader signs
-        // into calls the same object a Guarantee. The label, the slug, the page title and the app now say the
-        // same word, and since 2026-09-28 the description says what a guarantee is in the public story: a
-        // claim saved so it can be checked again.
-        { t: "Guarantees", d: "A claim saved to check again", href: BASE + "/docs/guarantees",
-          preview: { eyebrow: "Guarantees", title: "A claim, saved so it can be checked again.", body: "The same sentence and the plan a person approved for it, held outside the code.", stat: "Held outside the code" } },
-        { t: "Systems", d: "Everything you have connected", href: BASE + "/docs/systems" },
+        { t: "Platform overview", d: "What the product does", href: BASE + "/platform", pic: "platform-overview" },
+        { t: "What it can reach", d: "Web apps, and devices through their panels", href: BASE + "/platform#coverage", pic: "what-it-can-reach" },
+        // One name for one thing: the label, the slug, the page title and the console all say Guarantee, and the
+        // description says what one is in the public story: a claim saved so it can be checked again.
+        { t: "Guarantees", d: "A claim saved to check again", href: BASE + "/docs/guarantees", pic: "guarantees" },
+        { t: "Systems", d: "Everything you have connected", href: BASE + "/docs/systems", pic: "systems" },
       ] },
-      { h: "Verify", links: [
-        { t: "Execution", d: "A real browser on the live app", href: BASE + "/docs/run-activity",
-          preview: { eyebrow: "Execution", title: "A real browser drives the running app.", body: "Not a mock, and not anyone's account of their own work. What the run does is captured as it goes.", stat: "Real browser" } },
-        { t: "Findings", d: "What broke, and how to reproduce it", href: BASE + "/docs/findings" },
-        { t: "Completion", d: "What a check tells you", href: BASE + "/docs/completion",
-          preview: { eyebrow: "Completion", title: "An answer you can check.", body: "It worked, it did not, or it could not tell, with the evidence. Saying it could not tell is what most tools skip.", stat: "Evidence attached" } },
+      { h: "Verify", col: 2, links: [
+        { t: "Execution", d: "A real browser on the live app", href: BASE + "/docs/run-activity", pic: "execution" },
+        { t: "Findings", d: "What broke, and how to reproduce it", href: BASE + "/docs/findings", pic: "findings" },
+        { t: "Completion", d: "What a check tells you", href: BASE + "/docs/completion", pic: "completion" },
       ] },
-      { h: "Resolve", links: [
-        { t: "Approving a plan", d: "The step only a person takes", href: BASE + "/docs/review" },
-        { t: "Repair", d: "The repair prompt, and where it goes", href: BASE + "/docs/repair" },
-        { t: "Re-checks", d: "The same plan again after a fix", href: BASE + "/docs/recheck" },
+      { h: "Resolve", col: 2, links: [
+        { t: "Approving a plan", d: "The step only a person takes", href: BASE + "/docs/review", pic: "approving-a-plan" },
+        { t: "Repair", d: "The repair prompt, and where it goes", href: BASE + "/docs/repair", pic: "repair" },
+        { t: "Re-checks", d: "The same plan again after a fix", href: BASE + "/docs/recheck", pic: "re-checks" },
       ] },
     ],
-    feature: { eyebrow: "One real run", title: "Approved by a person, executed exactly as approved.",
-      body: "A plan written from one sentence, approved at a link, then run unchanged on the live app.",
-      stat: "vrf_ff9d6c0d", href: BASE + "/platform", cta: "See the platform" },
   },
   {
     label: "Integrations",
     groups: [
       { h: "Start a check", links: [
-        { t: "Console", d: "Write, approve and read in the app", href: BASE + "/docs/getting-started" },
-        { t: "CLI", d: "One command, one exit code", href: BASE + "/developers#cli" },
-        { t: "CI and the API", d: "Gate a release on the decision", href: BASE + "/developers#api" },
-        { t: "AI assistants", d: "Setup over MCP", href: BASE + "/agents" },
-        { t: "GitHub Actions and Vercel", d: "Check a deploy, gate a release", href: BASE + "/integrations" },
+        { t: "Console", d: "Write, approve and read in the app", href: BASE + "/docs/getting-started", pic: "console" },
+        { t: "CLI", d: "One command, one exit code", href: BASE + "/developers#cli", pic: "cli" },
+        { t: "CI and the API", d: "Gate a release on the decision", href: BASE + "/developers#api", pic: "ci-and-the-api" },
+        { t: "AI assistants", d: "Setup over MCP", href: BASE + "/agents", pic: "ai-assistants" },
+        { t: "GitHub Actions and Vercel", d: "Check a deploy, gate a release", href: BASE + "/integrations", pic: "github-actions-and-vercel" },
       ] },
-      { h: "Deliver the answer", links: [
-        { t: "Webhooks", d: "verification.completed", href: BASE + "/developers#webhooks" },
-        { t: "Slack", d: "Where a decision lands", href: BASE + "/integrations" },
+      { h: "Deliver the answer", col: 2, links: [
+        { t: "Webhooks", d: "verification.completed", href: BASE + "/developers#webhooks", pic: "webhooks" },
+        { t: "Slack", d: "Where a decision lands", href: BASE + "/integrations", pic: "slack" },
       ] },
-      { h: "The loop", links: [
-        { t: "Verify, approve, run, re-check", d: "The whole loop", href: BASE + "/docs/the-loop",
-          preview: { eyebrow: "The loop", title: "One approval from a person, then re-checks without one.", body: "A person approves the first check of a claim. After a fix, the same plan runs again with no new click, within 24 hours and up to 10 times, on the same site.", stat: "24 hours, 10 re-checks" } },
-        { t: "Approving a plan", d: "Why an API key cannot", href: BASE + "/docs/review" },
+      { h: "The loop", col: 2, links: [
+        { t: "Verify, approve, run, re-check", d: "The whole loop", href: BASE + "/docs/the-loop", pic: "the-loop" },
       ] },
     ],
-    feature: { eyebrow: "Four ways in", title: "One check, from wherever you work.",
-      body: "The console, the CLI, CI and AI assistants send the same sentence and get back the same answer.",
-      stat: "Console, CLI, CI, MCP", href: BASE + "/integrations", cta: "Ways to use it" },
   },
   {
     label: "Resources",
     groups: [
       { h: "Learn", links: [
-        // No page count here. "Nine pages" was right until the next page was added, and a menu that
-        // miscounts the docs is the drift docs-ui.tsx already warns about.
-        { t: "Documentation", d: "Use Vraelis", href: BASE + "/docs",
-          preview: { eyebrow: "Documentation", title: "One outcome per page.", body: "Getting started, the loop, AI assistants, approving a plan, re-checks, and what is kept once a run is done.", stat: "Setup to re-check" } },
+        { t: "Documentation", d: "Use Vraelis", href: BASE + "/docs" },
         { t: "Vraelis Method", d: "The worldview behind the product", href: BASE + "/method" },
         { t: "README", d: "Why Vraelis exists", href: BASE + "/readme" },
+        { t: "Research", d: "Methodology and open questions", href: BASE + "/research" },
       ] },
-      { h: "Build", links: [
+      { h: "Build", col: 2, links: [
         { t: "Developer docs", d: "Build on the API", href: BASE + "/developers" },
         { t: "Changelog", d: "What shipped, dated", href: BASE + "/changelog" },
-        { t: "Research", d: "Methodology and open questions", href: BASE + "/research",
-          preview: { eyebrow: "Research", title: "How do you show the edge of a check?", body: "So that absence of evidence is never read as evidence of safety.", stat: "Open question" } },
       ] },
-      { h: "Trust", links: [
+      { h: "Trust", col: 2, links: [
         { t: "Security", d: "Architecture and data handling", href: BASE + "/security" },
         { t: "System status", d: "What is operational", href: BASE + "/security#status" },
         { t: "What is built, and what is next", d: "The live list beside the planned one", href: BASE + "/platform#current" },
       ] },
     ],
-    feature: { eyebrow: "The Vraelis Method", title: "The builder cannot be the only judge.",
-      body: "Eight positions on how to trust software that says it works.",
-      stat: "8 positions", href: BASE + "/method", cta: "Read the Method" },
+    cards: [
+      { title: "A real check of a mission console: the civilian bus was cleared too.", href: BASE + "/#how-a-check-works", pic: "card-drone-check" },
+      { title: "The Vraelis Method: the builder cannot be the only judge.", href: BASE + "/method", pic: "card-method" },
+    ],
   },
   {
     label: "Company",
     groups: [
       { h: "Company", links: [
-        { t: "About Vraelis", d: "Who is building this", href: BASE + "/company" },
-        { t: "Reddit partnership", d: "Audience and advertising record", href: BASE + "/partnerships/reddit" },
-        { t: "ByteDance partnership", d: "TikTok's parent company, Seed models", href: BASE + "/partnerships/bytedance" },
-        { t: "Who it is for", d: "And who it is not for yet", href: BASE + "/company#who" },
-        { t: "How this is different", d: "Against the categories, not the companies", href: BASE + "/company#different",
-          preview: { eyebrow: "How this is different", title: "Four things it is not, and what it does instead.", body: "Not the builder's own report, not a test suite, not monitoring. And it refuses rather than guesses: when no check could prove the claim, the answer is Blocked and nothing is charged.", stat: "Stated against categories" } },
-        { t: "Why Vraelis exists", d: "The README", href: BASE + "/readme",
-          preview: { eyebrow: "Why Vraelis exists", title: "Done used to mean someone checked.", body: "Software now ships faster than anyone can check it by hand, from teams, agencies, founders and AI agents alike. Vraelis puts one independent check on the live app.", stat: "README" } },
-        { t: "Contact", d: "Talk to the team", href: BASE + "/company#contact" },
+        { t: "About Vraelis", d: "Who is building this", href: BASE + "/company", pic: "about" },
+        { t: "Who it is for", d: "And who it is not for yet", href: BASE + "/company#who", pic: "who-it-is-for" },
+        { t: "How this is different", d: "Against the categories, not the companies", href: BASE + "/company#different", pic: "how-this-is-different" },
+        { t: "Why Vraelis exists", d: "The README", href: BASE + "/readme", pic: "why-vraelis-exists" },
+        { t: "Contact", d: "Talk to the team", href: BASE + "/company#contact", pic: "contact" },
       ] },
-      { h: "Trust", links: [
-        { t: "Security", d: "Architecture and data handling", href: BASE + "/security",
-          preview: { eyebrow: "Security", title: "How the engine is built and what it can reach.", body: "Data handling, isolation, and the boundary of what a single run is allowed to touch.", stat: "Architecture" } },
-        { t: "Privacy", href: "/privacy" },
-        { t: "Cookies", href: BASE + "/cookies" },
-        { t: "Terms", href: "/terms" },
-        { t: "Acceptable use", href: BASE + "/acceptable-use" },
-        { t: "Subprocessors", href: "/subprocessors" },
+      { h: "Partnerships", col: 2, links: [
+        { t: "Reddit partnership", d: "Audience and advertising record", href: BASE + "/partnerships/reddit", pic: "reddit-partnership" },
+        { t: "ByteDance partnership", d: "TikTok's parent company, Seed models", href: BASE + "/partnerships/bytedance", pic: "bytedance-partnership" },
       ] },
-      { h: "Updates", links: [
-        { t: "What is built, and what is next", d: "The live list beside the planned one", href: BASE + "/platform#current",
-          preview: { eyebrow: "What is built, and what is next", title: "Both halves, stated without decoration.", body: "Everything marked Direction is unbuilt, is labelled that way everywhere it appears on this site, and carries no date. A line moves left when it works, and the changelog records the day it did.", stat: "Live vs Direction" } },
-        // The strongest evidence section on the site had zero inbound links: it sat at the foot of /method,
-        // a page whose menu description promises a worldview, not a record.
-        { t: "In public", d: "Reported incidents, sourced", href: BASE + "/method#in-public",
-          preview: { eyebrow: "In public", title: "Three times this was tested by somebody else.", body: "Public, dated, reported incidents that bear on the positions. Vraelis was involved in none of them, and each entry says plainly what an independent check would and would not have done.", stat: "3 incidents, sourced" } },
-        { t: "System status", d: "What is operational", href: BASE + "/security#status",
-          preview: { eyebrow: "System status", title: "Verification engine operational.", body: "The engine that drives a real browser against a requirement is running.", stat: "Operational" } },
-        { t: "Changelog", d: "What shipped, dated", href: BASE + "/changelog" },
+      { h: "Updates", col: 2, links: [
+        { t: "What is built, and what is next", d: "The live list beside the planned one", href: BASE + "/platform#current", pic: "what-is-built" },
+        // The strongest evidence section on the site had zero inbound links: it sat at the foot of /method.
+        { t: "In public", d: "Reported incidents, sourced", href: BASE + "/method#in-public", pic: "in-public" },
+        { t: "Changelog", d: "What shipped, dated", href: BASE + "/changelog", pic: "changelog" },
       ] },
     ],
-    feature: { eyebrow: "Vraelis", title: "Independent proof that live software does what someone says it does.",
-      body: "Built in the open, with the boundary between what works and what does not stated on the site rather than in a footnote.",
-      stat: "Verification engine operational", href: BASE + "/company", cta: "About the company" },
   },
 ];
 
@@ -205,34 +161,64 @@ function Brand() {
 }
 
 // ONE persistent night shell. Switching top-level items keeps the shell open and crossfades only its
-// contents; hovering or focusing a link swaps the preview inside the same frame. The panel stays mounted
-// through its exit animation, so dismissing it animates rather than popping away.
-function MegaShell({ index, state, preview, onPreview, onNavigate }: {
-  index: number; state: "in" | "out"; preview: Preview | null;
-  onPreview: (p: Preview | null) => void; onNavigate: () => void;
-}) {
+// contents. Every picture of the open menu is mounted at once, so pointing at a link swaps the picture with no
+// wait; the one for the link last pointed at (or focused) shows, and the menu's first link's shows on opening.
+function MegaShell({ index, state, onNavigate }: { index: number; state: "in" | "out"; onNavigate: () => void }) {
   const menu = MENUS[index];
-  const media = MENU_MEDIA[menu.label];
-  void preview;
+  const pics = menu.groups.flatMap((g) => g.links).flatMap((l) => (l.pic ? [l.pic] : []));
+  const [pic, setPic] = useState<string | null>(pics[0] ?? null);
+  const [shownMenu, setShownMenu] = useState(index);
+  if (shownMenu !== index) { setShownMenu(index); setPic(pics[0] ?? null); }
+  const cols = ([1, 2] as const).map((c) => menu.groups.filter((g) => (g.col ?? 1) === c)).filter((c) => c.length > 0);
+  // The links start under the first item of the bar, as scale.com's do, not under the wordmark.
+  const grid = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const g = grid.current, first = document.querySelector<HTMLElement>(".v6-nav__item");
+    if (!g || !first) return;
+    const set = () => {
+      g.style.paddingLeft = "";
+      g.style.paddingLeft = `${Math.max(0, first.getBoundingClientRect().left - g.getBoundingClientRect().left)}px`;
+    };
+    set();
+    window.addEventListener("resize", set);
+    return () => window.removeEventListener("resize", set);
+  }, [index]);
   return (
     <div className="v6-mega" data-state={state}>
       <div className="v6-mega__panel">
-        <div className="v6-mega__grid" key={menu.label} style={{ ["--mega-cols" as string]: menu.groups.length }}>
-          {menu.groups.map((col) => (
-            <div key={col.h} className="v6-mega__col">
-              <p className="v6-mega__col-h">{col.h}</p>
-              {col.links.map((l) => (
-                <Link key={l.t} href={l.href} className="v6-mega__link" onClick={onNavigate}
-                  onMouseEnter={() => onPreview(l.preview ?? null)} onFocus={() => onPreview(l.preview ?? null)}>
-                  <span className="v6-mega__lt">{l.t}</span>
-                </Link>
+        <div ref={grid} className="v6-mega__grid" key={menu.label} data-cards={menu.cards ? "true" : undefined}>
+          {cols.map((groups, ci) => (
+            <div key={ci} className="v6-mega__col">
+              {groups.map((g) => (
+                <div key={g.h} className="v6-mega__grp">
+                  <p className="v6-mega__col-h">{g.h}</p>
+                  {g.links.map((l) => (
+                    <Link key={l.t} href={l.href} className="v6-mega__link" onClick={onNavigate}
+                      onMouseEnter={() => { if (l.pic) setPic(l.pic); }} onFocus={() => { if (l.pic) setPic(l.pic); }}>
+                      <span className="v6-mega__lt">{l.t}</span>
+                    </Link>
+                  ))}
+                </div>
               ))}
             </div>
           ))}
-          <Link href={menu.feature.href} className="v6-mega__media" onClick={onNavigate} key={menu.label + "-media"}>
-            {media ? <video className="v6-mega__video" src={media.src} poster={media.poster} autoPlay muted loop playsInline preload="none" aria-hidden /> : null}
-            <span className="v6-mega__cap">{menu.feature.title}<span className="v6-arw" aria-hidden>&rarr;</span></span>
-          </Link>
+          {menu.cards ? (
+            <div className="v6-mega__cards">
+              {menu.cards.map((c) => (
+                <Link key={c.href} href={c.href} className="v6-mega__card" onClick={onNavigate}>
+                  <span className="v6-mega__cpic"><Image src={`/home/menu/pics/${c.pic}.jpg`} alt="" fill sizes="(max-width: 1400px) 24vw, 340px" /></span>
+                  <span className="v6-mega__ct">{c.title}</span>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="v6-mega__media" aria-hidden>
+              {pics.map((p) => (
+                <Image key={p} src={`/home/menu/pics/${p}.jpg`} alt="" fill sizes="(max-width: 1440px) 49vw, 705px"
+                  className="v6-mega__pic" data-on={p === pic} loading="eager" />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -259,6 +245,7 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
   const navRef = useRef<HTMLElement>(null);
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const megaRef = useRef<HTMLDivElement>(null);
+  const burgerRef = useRef<HTMLButtonElement>(null);
   const [scrolled, setScrolled] = useState(false);
   const [settled, setSettled] = useState(false);
   const [drawer, setDrawer] = useState(false);
@@ -266,7 +253,6 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
   // mounted for the length of its exit is the whole fix for menus that used to vanish on dismiss.
   const [open, setOpen] = useState<number | null>(null);
   const [exiting, setExiting] = useState<number | null>(null);
-  const [preview, setPreview] = useState<Preview | null>(null);
   const closeT = useRef(0);
   const exitT = useRef(0);
   // whichever panel is on screen: the open one, or the one still animating out
@@ -290,7 +276,7 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 940px)");
     const sync = () => {
-      if (mq.matches) { setOpen(null); setExiting(null); setPreview(null); }
+      if (mq.matches) { setOpen(null); setExiting(null); }
       else setDrawer(false);
     };
     mq.addEventListener("change", sync);
@@ -440,7 +426,7 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
     window.clearTimeout(exitT.current);
     setExiting(null);
     // switching top-level items keeps the shell open and only crossfades its contents
-    setOpen((cur) => { if (cur !== i) setPreview(null); return i; });
+    setOpen(i);
   }, []);
   const scheduleClose = useCallback(() => { closeT.current = window.setTimeout(() => close(null), 160); }, [close]);
 
@@ -511,6 +497,27 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
     return () => { document.removeEventListener("keydown", onKey); document.removeEventListener("pointerdown", onDown, true); };
   }, [open, close]);
 
+  // THE DRAWER HANDS FOCUS BACK. It unmounts with focus inside it, which dropped a keyboard or screen-reader
+  // user on <body> with nothing to say where they were. Every close that leaves the reader on this page
+  // (Escape, the close button, a link to this page or a section of it) returns focus to the menu button
+  // that opened it. A link to another route does not: the new page is what comes next, and the route change
+  // owns focus from there. Crossing 940px closes it without moving focus, since the button is gone there.
+  //
+  // Focus moves BEFORE the drawer unmounts, while the control that was pressed still holds it, so the
+  // browser's rule for a scripted focus (draw a ring only if the element it leaves had one) reads the real
+  // input: a tap returns focus to the button with no ring, Escape or Enter returns it with one.
+  // preventScroll is load-bearing: a plain focus() on the sticky bar scrolls the page, because html's
+  // scroll-padding-top (app/globals.css) counts the strip the bar sits in as out of view. Measured on
+  // /platform at 390px: 1400 to 978 without it.
+  //
+  // Stable on purpose: MobileNav's effect depends on it. The inline arrow it replaces was a new function on
+  // every render, and the bar does re-render with the drawer open (pinning the body resets scrollY, which
+  // flips `scrolled`), so that effect released the body and pinned it again.
+  const closeDrawer = useCallback((returnFocus: boolean) => {
+    if (returnFocus) burgerRef.current?.focus({ preventScroll: true });
+    setDrawer(false);
+  }, [setDrawer]); // a state setter never changes; named because the compiler lint asks for it
+
   return (
     <nav ref={navRef} className="v6-nav" data-scrolled={scrolled} data-theme={dark ? "dark" : "light"}
       data-open={shown !== null} data-settled={settled} data-ground={navBg ? "1" : undefined}
@@ -531,8 +538,7 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
         </div>
         {shown !== null ? (
           <div ref={megaRef} onMouseEnter={() => openAt(shown)} onMouseLeave={scheduleClose} onKeyDown={onMegaKey}>
-            <MegaShell index={shown} state={open === null ? "out" : "in"} preview={preview}
-              onPreview={setPreview} onNavigate={() => close(shown)} />
+            <MegaShell index={shown} state={open === null ? "out" : "in"} onNavigate={() => close(shown)} />
           </div>
         ) : null}
         <div className="v6-nav__right">
@@ -544,17 +550,17 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
           {authed
             ? <Link href={V6_APP} prefetch={v6ShouldPrefetch(V6_APP) ? undefined : false} className="v6-btn v6-btn--brand">Open Vraelis</Link>
             : <Link href={SIGNUP} className="v6-btn v6-btn--brand">Create account</Link>}
-          <button className="v6-nav__burger" aria-label="Open navigation" aria-haspopup="dialog" onClick={() => setDrawer(true)}>
+          <button ref={burgerRef} className="v6-nav__burger" aria-label="Open navigation" aria-haspopup="dialog" onClick={() => setDrawer(true)}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
           </button>
         </div>
       </div>
-      {drawer ? <MobileNav authed={authed} onClose={() => setDrawer(false)} /> : null}
+      {drawer ? <MobileNav authed={authed} onClose={closeDrawer} /> : null}
     </nav>
   );
 }
 
-function MobileNav({ authed, onClose }: { authed: boolean; onClose: () => void }) {
+function MobileNav({ authed, onClose }: { authed: boolean; onClose: (returnFocus: boolean) => void }) {
   const panel = useRef<HTMLDivElement>(null);
   // One section open at a time, Platform first: the drawer used to flatten all twelve desktop groups into
   // one long list under headings like "Platform, Understand", which read as an index dump next to the
@@ -579,7 +585,12 @@ function MobileNav({ authed, onClose }: { authed: boolean; onClose: () => void }
     // which read as a rendering bug when the drawer was opened by tapping.
     (panel.current?.querySelector<HTMLElement>(".v6-drawer__x") ?? focusables()[0])?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") { onClose(); return; }
+      if (e.key === "Escape") {
+        // The language menu opens over the drawer, and Escape closes that menu alone. Both used to close.
+        if (document.querySelector(".lsw__menu")) return;
+        onClose(true);
+        return;
+      }
       if (e.key !== "Tab") return;
       const f = focusables(); if (!f.length) return;
       const first = f[0], last = f[f.length - 1];
@@ -596,11 +607,19 @@ function MobileNav({ authed, onClose }: { authed: boolean; onClose: () => void }
     };
   }, [onClose]);
 
+  // A link to another route closes the drawer on the way to a new page. One that keeps the reader here (this
+  // page, a section of it, or a new tab) also sends focus back to the menu button.
+  const follow = (e: ReactMouseEvent<HTMLAnchorElement>) => {
+    const to = new URL(e.currentTarget.href, window.location.href);
+    const newTab = e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0;
+    onClose(newTab || (to.origin === window.location.origin && to.pathname === window.location.pathname));
+  };
+
   return (
     <div ref={panel} className="v6-drawer" role="dialog" aria-modal="true" aria-label="Navigation">
       <div className="v6-drawer__top">
         <Brand />
-        <button className="v6-drawer__x" aria-label="Close navigation" onClick={onClose}>
+        <button className="v6-drawer__x" aria-label="Close navigation" onClick={() => onClose(true)}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M6 18L18 6" /></svg>
         </button>
       </div>
@@ -628,7 +647,7 @@ function MobileNav({ authed, onClose }: { authed: boolean; onClose: () => void }
                   <div key={col.h} className="v6-drawer__grp">
                     <p className="v6-drawer__grp-h">{col.h}</p>
                     {col.links.map((l) => (
-                      <Link key={l.t} href={l.href} className="v6-drawer__glink" onClick={onClose}>
+                      <Link key={l.t} href={l.href} className="v6-drawer__glink" onClick={follow}>
                         <span className="v6-drawer__glt">{l.t}</span>
                         {l.d ? <span className="v6-drawer__gld">{l.d}</span> : null}
                       </Link>
@@ -642,10 +661,10 @@ function MobileNav({ authed, onClose }: { authed: boolean; onClose: () => void }
       </div>
       <div className="v6-drawer__foot">
         <LanguageSwitcher placement="up" className="v6-drawer__lang" />
-        {authed ? null : <Link href={SIGNIN} className="v6-btn v6-btn--ghost" onClick={onClose}>Sign in</Link>}
+        {authed ? null : <Link href={SIGNIN} className="v6-btn v6-btn--ghost" onClick={follow}>Sign in</Link>}
         {authed
-          ? <Link href={V6_APP} prefetch={v6ShouldPrefetch(V6_APP) ? undefined : false} className="v6-btn v6-btn--brand" onClick={onClose}>Open Vraelis <span className="v6-arw" aria-hidden>→</span></Link>
-          : <Link href={SIGNUP} className="v6-btn v6-btn--brand" onClick={onClose}>Create account <span className="v6-arw" aria-hidden>→</span></Link>}
+          ? <Link href={V6_APP} prefetch={v6ShouldPrefetch(V6_APP) ? undefined : false} className="v6-btn v6-btn--brand" onClick={follow}>Open Vraelis <span className="v6-arw" aria-hidden>→</span></Link>
+          : <Link href={SIGNUP} className="v6-btn v6-btn--brand" onClick={follow}>Create account <span className="v6-arw" aria-hidden>→</span></Link>}
       </div>
     </div>
   );

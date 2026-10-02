@@ -55,6 +55,8 @@ export function LanguageSwitcher({ tone = "light", variant = "box", placement = 
   const btn = useRef<HTMLButtonElement>(null);
   const menu = useRef<HTMLDivElement>(null);
   const menuId = useId();
+  const wordId = useId();
+  const nameId = useId();
 
   const place = useCallback(() => {
     const b = btn.current?.getBoundingClientRect();
@@ -135,10 +137,18 @@ export function LanguageSwitcher({ tone = "light", variant = "box", placement = 
 
   return (
     <div ref={root} className={`lsw ${className}`} data-tone={tone} data-variant={variant} data-open={open}>
+      {/* THE BUTTON'S NAME IS TWO PIECES, EACH ONE THE TRANSLATOR CAN HANDLE. It was aria-label="Language:
+          Español", a string no catalogue can carry a key for, so it stayed English in every language. Now the
+          word is a text node of its own, hidden and read only through aria-labelledby, which the page
+          translator swaps like any other text, and the language's own name is the label beside the flag,
+          never translated. With labelHidden the name is still there for the label to point at, just hidden. */}
       <button ref={btn} type="button" className="lsw__btn" aria-haspopup="menu" aria-expanded={open} aria-controls={open ? menuId : undefined}
-        aria-label={`Language: ${LOCALES[locale].label}`} onClick={() => setOpen((v) => !v)}>
+        aria-labelledby={`${wordId} ${nameId}`} onClick={() => setOpen((v) => !v)}>
+        <span id={wordId} hidden>Language</span>
         <Flag locale={locale} />
-        {labelHidden ? null : <span className="lsw__label" data-no-translate lang={LOCALES[locale].htmlLang}>{LOCALES[locale].label}</span>}
+        {labelHidden
+          ? <span id={nameId} hidden data-no-translate lang={LOCALES[locale].htmlLang}>{LOCALES[locale].label}</span>
+          : <span id={nameId} className="lsw__label" data-no-translate lang={LOCALES[locale].htmlLang}>{LOCALES[locale].label}</span>}
         <svg className="lsw__chev" viewBox="0 0 12 12" width="11" height="11" aria-hidden><path d="M3 4.5 6 7.5l3-3" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
       </button>
       {panel && typeof document !== "undefined" ? createPortal(panel, document.body) : null}

@@ -19,6 +19,8 @@
    pushed this label out of the button), so the switch resets what it needs at a higher specificity. */
 .lsw .lsw__btn .lsw__label { min-height: 0; min-width: 0; padding: 0; margin: 0; display: block; font-size: inherit; line-height: 1.2; color: inherit; }
 .lsw .lsw__btn > * { flex: none; }
+/* The parts of the button's name that are only read, never shown, stay hidden whatever a host gives its spans. */
+.lsw .lsw__btn > [hidden] { display: none; }
 .lsw__chev { flex: none; color: #A1A1AA; transition: transform 0.15s ease; }
 .lsw[data-open="true"] .lsw__chev { transform: rotate(180deg); }
 

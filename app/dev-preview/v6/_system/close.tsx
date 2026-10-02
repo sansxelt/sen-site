@@ -5,7 +5,7 @@
 // rather than parking a card above the footer.
 import { useRef } from "react";
 import Link from "next/link";
-import { CTA, EditorialLink } from "./ui";
+import { CTA } from "./ui";
 import { CLOSE_TITLE, CLOSE_SAY } from "./positioning";
 import { useScrollProgress, entryProgress } from "./progress";
 import { Spectral } from "./spectral";
@@ -30,14 +30,16 @@ export function ClosingScene({
     // The ending is the site's one ink panel (2026-09-30): the page stays white around it, the way the
     // sign-in screen's brand panel sits beside a white form, so the ground is the same everywhere and ink
     // is the signature, not a dark theme.
-    <section className="v6-end" data-nav-theme="light" ref={root}>
+    // Since 2026-10-01 it ends the way cursor.com's homepage does (founder: "keep bottom like cursor.com"):
+    // the line, large and centred on the page itself, and one action. The card it sat in, the second line
+    // and the second link went; `say` is kept for pages that pass one.
+    <section className="v6-end" data-nav-theme="dark" ref={root}>
       <div className="v6-end__in">
         <div className="v6-end__card">
           <Spectral as="h2" className="v6-end__h" sv="clamp(0, calc((var(--p) - 0.12) / 0.82), 1)" text={title} />
-          <p className="v6-end__say">{say}</p>
+          {say !== CLOSE_SAY ? <p className="v6-end__say">{say}</p> : null}
           <div className="v6-end__cta">
             <CTA brand lg>Open Vraelis</CTA>
-            <EditorialLink href={`${BASE}/contact`}>Talk to the team</EditorialLink>
           </div>
         </div>
       </div>
@@ -92,12 +94,10 @@ export function SiteFooter() {
           {/* The language switch: the same one the docs, sign-in and the console carry. */}
           <span className="v6-foot2__lang"><LanguageSwitcher placement="up" toTop /><span>© 2026 Vraelis</span></span>
           <div className="v6-foot2__legal">
+            {/* Only what the columns above do not already hold: Security, Privacy, Cookies, Terms and
+                Acceptable use were repeated here from the Trust column (since 2026-10-01, as cursor.com's
+                bottom line carries only its own few items). */}
             <a href="https://www.linkedin.com/company/vraelis" target="_blank" rel="noreferrer">LinkedIn</a>
-            <Link href={`${BASE}/security`}>Security</Link>
-            <Link href={`${BASE}/privacy`}>Privacy</Link>
-            <Link href={`${BASE}/cookies`}>Cookies</Link>
-            <Link href={`${BASE}/terms`}>Terms</Link>
-            <Link href={`${BASE}/acceptable-use`}>Acceptable use</Link>
             <PrivacyChoicesButton />
           </div>
         </div>

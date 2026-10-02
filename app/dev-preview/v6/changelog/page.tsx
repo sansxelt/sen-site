@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { v6meta } from "../_system/meta";
 import { PageHero, Signal, ProseLink } from "../_system/ui";
-import { CHANGELOG } from "../_content/changelog";
+import { CHANGELOG, entryId } from "../_content/changelog";
 import { V6_BASE } from "@/lib/v6-routes";
 
 const BASE = V6_BASE;
@@ -26,7 +26,7 @@ export default function Changelog() {
         <div className="v6-wrap">
           <div className="v6-clog">
             {CHANGELOG.map((e) => (
-              <article key={e.date + e.title} className="v6-clog__entry">
+              <article key={e.date + e.title} id={entryId(e)} className="v6-clog__entry">
                 <div>
                   <div className="v6-clog__date">{fmt(e.date)}</div>
                   <div className="v6-clog__tag"><Signal state={e.tag}>{e.tagLabel}</Signal></div>

@@ -12,8 +12,9 @@
 // Phones get their own cut, vertical (1080x1920): the rendered shots are rendered in portrait and the real
 // footage is cut to 9:16 where its subject is (scratchpad reel/compose-v.py). It fills the phone's first screen.
 // (They used to get a 720p cut stretched 1.9x into a 4:5 frame.) The poster is the film's first frame, so the
-// picture does not jump when it starts. Reduced motion shows the poster and does not play. The film can always be
-// paused, because anything that moves for more than five seconds must be (WCAG 2.2.2).
+// picture does not jump when it starts. Reduced motion shows the poster and does not play, and does not download
+// the film either: neither source matches it, and the film is only fetched if that visitor presses play. The
+// film can always be paused, because anything that moves for more than five seconds must be (WCAG 2.2.2).
 //
 // THE FIELD IS REAL. It sends the address to the console's two-field composer (/app?new=1&url=), which
 // carries it through sign-in and opens with it filled in. It used to land on the six-section connect form
@@ -26,6 +27,11 @@ import { currentLocale } from "@/lib/i18n/client";
 import "./hero.css";
 
 const COMPOSE = V6_APP;
+// The two cuts and the screens each is for (hero.css switches the layout at the same width).
+const FILM = "/home/film.mp4";
+const FILM_PHONE = "/home/film-vertical.mp4";
+const PHONE = "(max-width: 560px)";
+const MOTION_OK = "(prefers-reduced-motion: no-preference)";
 
 function normalise(raw: string): string {
   const v = raw.trim();
@@ -51,7 +57,12 @@ export function Hero() {
   const toggle = () => {
     const v = video.current;
     if (!v) return;
-    if (v.paused) { void v.play(); setPlaying(true); } else { v.pause(); setPlaying(false); }
+    if (!v.paused) { v.pause(); setPlaying(false); return; }
+    // With reduced motion no source matched, so nothing is loaded yet: play fetches the cut this screen would
+    // have had. If the browser refuses, or a pause interrupts it, the button shows what the film is really doing.
+    if (!v.currentSrc) v.src = window.matchMedia(PHONE).matches ? FILM_PHONE : FILM;
+    setPlaying(true);
+    v.play().catch(() => setPlaying(!v.paused));
   };
 
   const submit = (e: FormEvent<HTMLFormElement>) => {
@@ -67,8 +78,8 @@ export function Hero() {
           opens on one main thing, not a clutter). The address field and the partnership records sit below. */}
       <div className="v6-h__frame">
         <video ref={video} className="v6-h__video" autoPlay muted loop playsInline preload="auto" poster="/home/film-poster.jpg" aria-hidden>
-          <source src="/home/film-vertical.mp4" type="video/mp4" media="(max-width: 560px)" />
-          <source src="/home/film.mp4" type="video/mp4" />
+          <source src={FILM_PHONE} type="video/mp4" media={`${PHONE} and ${MOTION_OK}`} />
+          <source src={FILM} type="video/mp4" media={MOTION_OK} />
         </video>
         <div className="v6-h__shade" aria-hidden />
         <h1 id="v6-h-h1" className="v6-h__h1">

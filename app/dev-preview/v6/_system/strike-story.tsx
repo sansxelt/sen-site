@@ -264,7 +264,7 @@ export function StrikeStory({ record: r, chapters, caption }: { record: StrikeRe
 
   return (
     <>
-    <section ref={root} className="v6-sk" aria-labelledby="v6-sk-h" data-nav-dark data-nav-theme="dark" style={{ height: `${n * 115 + 60}vh` }}>
+    <section ref={root} id="how-a-check-works" className="v6-sk" aria-labelledby="v6-sk-h" data-nav-dark data-nav-theme="dark" style={{ height: `${n * 115 + 60}vh` }}>
       <h2 id="v6-sk-h" className="v6-sk__sr">How a check works</h2>
 
       {/* The sheets are pictures of the copy beside them, so only the copy is read out. */}

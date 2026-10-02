@@ -25,10 +25,8 @@
   margin-inline: auto; padding-inline: var(--gutter); }
 /* The ink panel: centred, with a soft light from the top. (Its faint dot grid went 2026-10-01: decoration
    with no meaning, see feedback-no-ai-dots.) */
-.v6-end__card { position: relative; overflow: hidden; isolation: isolate; border-radius: 28px; background: #111113; border: 1px solid rgba(255,255,255,0.08);
-  padding: clamp(64px, 9vw, 124px) clamp(24px, 5vw, 72px); display: flex; flex-direction: column; align-items: center; text-align: center; }
-.v6-end__card::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-  background: radial-gradient(70% 60% at 50% -10%, rgba(255,255,255,0.13), transparent 70%); }
+/* No panel: since 2026-10-01 the line sits on the page itself with room around it, as cursor.com ends. */
+.v6-end__card { position: relative; padding: clamp(72px, 10vw, 150px) 0 clamp(64px, 8vw, 120px); display: flex; flex-direction: column; align-items: center; text-align: center; }
 .v6-end .v6-spec { --spec-hl: rgba(250,250,250,0.9); }
 
 /* the responsibility from the opening, now settled */
@@ -58,6 +56,9 @@
 .v6-end .v6-elink { color: #FAFAFA; }
 .v6-end .v6-elink .v6-arw { color: #FAFAFA; }
 .v6-end .v6-elink .v6-elink__t { background-image: linear-gradient(#FAFAFA, #FAFAFA); }
+/* Japanese: break the closing between phrases, not inside a word (it broke "言" / "える" and "見" / "た"). Here
+   rather than with the homepage's rule because this scene closes every page. Chrome 119 and later. */
+:lang(ja) :is(.v6-end__h, .v6-end__say) { word-break: auto-phrase; }
 
 /* ---------------------------------------------------------------- footer --- */
 .v6-foot2 { background: var(--graphite-2); color: var(--g-fg-2); border-top: 1px solid var(--g-line); }

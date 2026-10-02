@@ -44,11 +44,24 @@
 .v6-or__measure { position: absolute; visibility: hidden; white-space: nowrap; pointer-events: none; left: -9999px; }
 .v6-or__d { margin: 20px auto 18px; max-width: 46ch; font-size: clamp(0.98rem, 1.1vw, 1.08rem); line-height: 1.55; color: var(--ink-3); }
 
+/* The ring's pause button (orbit.tsx), drawn like the film's (hero.css .v6-h__pause) and on the same right edge
+   as it. It sits above every tile, a held one included, so a tile passing the corner never covers it. */
+.v6-or__pause {
+  position: absolute; right: calc(clamp(10px, 1.9vw, 36px) + 22px); bottom: 22px; z-index: 70;
+  display: grid; place-items: center; width: 38px; height: 38px; border-radius: 999px; cursor: pointer;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); color: #FAFAFA;
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+.v6-or__pause:hover { background: rgba(255,255,255,0.16); }
+.v6-or__pause:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
+@media (max-width: 560px) { .v6-or__pause { right: 24px; bottom: 14px; } }
+
 @media (max-width: 700px) {
   .v6-or__field { height: 640px; }
   .v6-or__tile { width: 74px; border-radius: 12px; }
   .v6-or__field[data-hold="1"] .v6-or__tile[data-on="true"] { width: 104px; }
-  .v6-or__h { font-size: clamp(1.9rem, 8.4vw, 2.6rem); }
+  /* small enough that the longest line ("mission console works.") keeps clear of the screen's edges at 320 */
+  .v6-or__h { font-size: clamp(1.7rem, 7.4vw, 2.6rem); }
   .v6-or__d { font-size: 0.95rem; }
 }
 @media (prefers-reduced-motion: reduce) {

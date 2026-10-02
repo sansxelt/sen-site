@@ -1,15 +1,16 @@
 # Homepage film: sources
 
-The film at `public/home/film.mp4` (with the 720p cut and the poster) is composed from the pieces below, and
-the four menu loops at `public/home/menu/` are listed after it. No credit is required by any of these licences; it is
-kept so the source of every frame is known.
+The film at `public/home/film.mp4` (with the vertical phone cut `film-vertical.mp4` and the poster) is composed
+from the pieces below. No credit is required by any of these licences; it is kept so the source of every frame is
+known. The mega menus' pictures have their own list, `public/home/menu/pics/CREDITS.md`.
 
 ## Rendered by Vraelis
-- The studio shot: our own drone model (`app/dev-preview/v6/_system/drone-model.tsx`), rendered by
-  `app/film/drone`.
-- The orbit: the same model, rendered by `app/film/orbit`. The four places behind it are 360 degree panoramas
-  from Poly Haven, CC0 (public domain): Modern Buildings Night, Autoshop 01, Bambanani Sunset, Kiara 3 Morning
-  (https://polyhaven.com), used at 16k so the background stays sharp at full screen.
+- The take: our own drone model (`app/dev-preview/v6/_system/drone-model.tsx`, satin finish), rendered by
+  `app/film/orbit` as one continuous shot: it takes off from a pad in a garage and circles the camera while the
+  place changes. The four places are 360 degree panoramas from Poly Haven, CC0 (public domain): Autoshop 01,
+  Modern Buildings Night, Bambanani Sunset, Kiara 3 Morning (https://polyhaven.com), used at 16k so the
+  background stays sharp at full screen. (The studio shot rendered by `app/film/drone` left the film on
+  2026-10-01, with the rest of the first version the founder found simulated.)
 
 ## Stock footage (Pexels License, https://www.pexels.com/license/)
 | Shot | Author | Source |
@@ -23,11 +24,5 @@ No identifiable faces, no readable brand badges (checked at 4K before use).
 The laptop, pickup and airliner shots were cut on 2026-10-01: the laptop read as staged, and the vehicle shots
 showed nothing being checked.
 
-## Menu loops (Pexels License)
-Eight-second seamless loops (forward then backward, or a short crossfade), 1024 wide, muted.
-| Menu | Author | Source |
-|---|---|---|
-| Platform: status keys in a control room | Media Hopper Studio | https://www.pexels.com/video/close-up-button-operation-in-dark-control-room-38958215/ |
-| Integrations: a circuit board | Tima Miroshnichenko | https://www.pexels.com/video/close-up-shot-of-a-printed-circuit-board-6754824/ |
-| Resources: someone reading a screen | Karolina Grabowska (Kaboompics) | https://www.pexels.com/video/head-shot-of-a-person-wearing-eyeglass-6346227/ |
-| Company: a drone at dusk | K | https://www.pexels.com/video/a-drone-flying-over-the-ocean-and-a-city-3723537/ |
+The four menu loops (Pexels) that were credited here left the site on 2026-10-01, when the menus took one
+picture per link instead, as scale.com's do.

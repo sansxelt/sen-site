@@ -82,11 +82,12 @@ type Env = {
 };
 // Measured from the 16k HDRs (scratchpad hdri): the garage's light is diffuse (its brightest patch carries 1% of
 // the light), the plaza's is a floodlight across the river, the field's sun sits 3.8 degrees above the horizon,
-// and the ridge's carries 81% of the light from 21.5 degrees up. The ridge is turned so that sun is behind the
+// and the ridge's carries 81% of the light from 21.5 degrees up. The plaza is held at 0.6: at 0.8 its lit
+// glass sat behind the centred headline and up to 43% of the letters' edges fell under 3:1 (audit, 2026-10-01). The ridge is turned so that sun is behind the
 // camera while the drone is there: the drone is lit from the front and its shadow falls on the rock beyond it.
 const ENVS: Env[] = [
   { src: "/film/asset/env16b-autoshop-01.jpg", yaw: 0.0, gain: 0.9, sun: [0.693, 0.24], sunI: 0.5, sunC: "#F2F5FF", led: 0.6, shade: 0.18, ao: 0.62, far: 16 },
-  { src: "/film/asset/env16b-modern-buildings-night.jpg", yaw: -0.45, gain: 0.8, sun: [0.169, 0.477], sunI: 0.45, sunC: "#D6DEFF", led: 1, shade: 0.16, ao: 0.42, far: 60 },
+  { src: "/film/asset/env16b-modern-buildings-night.jpg", yaw: -0.45, gain: 0.6, sun: [0.169, 0.477], sunI: 0.45, sunC: "#D6DEFF", led: 1, shade: 0.16, ao: 0.42, far: 60 },
   { src: "/film/asset/env16b-bambanani-sunset.jpg", yaw: 0.0, gain: 0.96, sun: [0.6, 0.479], sunI: 1.9, sunC: "#FFD2A0", led: 0, shade: 0.42, ao: 0.32, far: 300 },
   { src: "/film/asset/env16b-kiara-3-morning.jpg", yaw: -0.38, gain: 1.0, sun: [0.616, 0.38], sunI: 2.8, sunC: "#FFF4E2", led: 0, shade: 0.55, ao: 0.3, far: 300 },
 ];

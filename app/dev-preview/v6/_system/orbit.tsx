@@ -15,12 +15,15 @@
    Motion: one slow revolution a minute, paused on hover or focus, and not at all with reduced motion. The
    tiles are buttons, so the orbit can be stepped through with the keyboard. The headline holds its word until
    a tile is pointed at, tapped or focused, as scale.com's does (it used to change word every 2.6 s on its
-   own). A tap holds a tile and a second tap, or a tap anywhere else, lets it go.
+   own). A tap holds a tile and a second tap, or a tap anywhere else, lets it go. The ring also has its own
+   pause button, like the film's, because anything that moves for more than five seconds must be pausable
+   without having to point at it (WCAG 2.2.2); with reduced motion it starts paused and only that button
+   starts it.
 
    (The airliner's flight deck left the ring 2026-10-01: next to "flight dashboard" it said we check an
    aircraft's instruments, and only web panels are live.) */
 import Image from "next/image";
-import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent, type PointerEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type MouseEvent, type PointerEvent } from "react";
 import { EditorialLink } from "./ui";
 import { useLocale } from "@/lib/i18n/client";
 import { V6_BASE } from "@/lib/v6-routes";
@@ -47,6 +50,14 @@ export const ORBIT: Tile[] = [
 
 const REV_MS = 64000;
 
+// Read as a store, so the server renders a turning ring and the browser corrects it without a mismatch.
+const REDUCE = "(prefers-reduced-motion: reduce)";
+const onReduceChange = (cb: () => void) => {
+  const m = window.matchMedia(REDUCE);
+  m.addEventListener("change", cb);
+  return () => m.removeEventListener("change", cb);
+};
+
 export function Orbit() {
   const field = useRef<HTMLDivElement>(null);
   const tiles = useRef<(HTMLButtonElement | null)[]>([]);
@@ -54,6 +65,13 @@ export function Orbit() {
   const [held, setHeld] = useState<number | null>(null);
   const [wordW, setWordW] = useState<number | null>(null);
   const shown = held ?? 0;
+  // Paused by the ring's button, or by reduced motion until the button is pressed. The frame loop reads the
+  // ref; sync starts or stops the loop after anything it reads changes (the orbit effect fills it in).
+  const reduced = useSyncExternalStore(onReduceChange, () => window.matchMedia(REDUCE).matches, () => false);
+  const [choice, setChoice] = useState<boolean | null>(null);
+  const paused = choice ?? reduced;
+  const pausedRef = useRef(false);
+  const sync = useRef(() => {});
   // In English only the noun swaps, as on scale.com. Other languages do not put the noun in the same place
   // (German: "Wissen, dass Ihr Checkout funktioniert"), so there each tile swaps a whole sentence, which the
   // page translator translates as one string.
@@ -68,10 +86,7 @@ export function Orbit() {
   useEffect(() => {
     const el = field.current;
     if (!el) return;
-    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let raf = 0, last = performance.now(), phase = 0, visible = true;
-    const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; }, { threshold: 0 });
-    io.observe(el);
+    let raf = 0, last = 0, phase = 0, inView = false;
     const place = () => {
       const w = el.clientWidth, h = el.clientHeight;
       const rx = w * (w < 700 ? 0.42 : 0.4), ry = h * (w < 700 ? 0.44 : 0.36);
@@ -87,23 +102,42 @@ export function Orbit() {
         t.style.setProperty("--d", depth.toFixed(3));
       });
     };
+    // A frame is only asked for while the ring is on screen and free to turn. Off screen, paused or held, the
+    // loop stops instead of redrawing the same positions on the main thread, and a resize re-places the
+    // tiles once.
+    const turning = () => inView && !pausedRef.current && el.dataset.hold !== "1";
     const frame = (now: number) => {
-      const dt = Math.min(64, now - last); last = now;
-      const hovering = el.dataset.hold === "1";
-      if (!still && visible && !hovering) phase += (dt / REV_MS) * Math.PI * 2;
+      phase += (Math.max(0, Math.min(64, now - last)) / REV_MS) * Math.PI * 2; last = now;
       place();
-      raf = requestAnimationFrame(frame);
+      raf = turning() ? requestAnimationFrame(frame) : 0;
     };
+    sync.current = () => {
+      if (!turning()) { cancelAnimationFrame(raf); raf = 0; }
+      else if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); }
+    };
+    const io = new IntersectionObserver((es) => { inView = es[es.length - 1].isIntersecting; sync.current(); }, { threshold: 0 });
+    io.observe(el);
     place();
-    raf = requestAnimationFrame(frame);
-    const onResize = () => place();
+    const onResize = () => { if (!raf) place(); };
     window.addEventListener("resize", onResize);
-    return () => { cancelAnimationFrame(raf); io.disconnect(); window.removeEventListener("resize", onResize); };
+    return () => {
+      cancelAnimationFrame(raf); sync.current = () => {};
+      io.disconnect(); window.removeEventListener("resize", onResize);
+    };
   }, []);
+  useEffect(() => { pausedRef.current = paused; sync.current(); }, [paused]);
 
   const hold = (i: number | null) => {
     setHeld(i);
     if (field.current) field.current.dataset.hold = i === null ? "0" : "1";
+    sync.current();
+  };
+  // The button also lets go of a held tile, as any tap outside the tile does, so Play always turns the ring.
+  // The ref is set here too, so letting go does not start the loop for a frame before a pause lands.
+  const toggle = () => {
+    pausedRef.current = !paused;
+    setChoice(!paused);
+    if (held !== null) hold(null);
   };
   // A pointer hovering holds a tile; a touch does not hover, so there a tap holds it and a second tap lets go.
   const onEnter = (i: number) => (e: PointerEvent) => { if (e.pointerType === "mouse") hold(i); };
@@ -166,6 +200,12 @@ export function Orbit() {
           <p className="v6-or__d">Web apps at a public address, your agent&apos;s work, and the panels that run devices.</p>
           <EditorialLink href={`${V6_BASE}/platform#coverage`}>What it can check today</EditorialLink>
         </div>
+
+        <button type="button" className="v6-or__pause" onClick={toggle} aria-label={paused ? "Play the orbit" : "Pause the orbit"}>
+          {paused
+            ? <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden><path d="M5 3.2v9.6L12.5 8z" fill="currentColor" /></svg>
+            : <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden><path d="M5 3.5v9M11 3.5v9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>}
+        </button>
       </div>
     </section>
   );
