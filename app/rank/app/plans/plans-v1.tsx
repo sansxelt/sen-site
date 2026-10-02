@@ -118,7 +118,7 @@ export default function PlansV1({ initialCycle = "monthly" }: { initialCycle?: C
               being cleaned up everywhere else. */}
           {currentPlan ? (
             <button onClick={manageBilling} disabled={busy} className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }}>
-              {busy ? "Opening…" : "Cancel in billing"}
+              {busy ? "Opening…" : "Downgrade to Free"}
             </button>
           ) : (
             <Link className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href="/systems">Run your free verification</Link>
