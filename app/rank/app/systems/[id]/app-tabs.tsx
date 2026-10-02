@@ -37,8 +37,11 @@ function baseTabs(): { key: string; label: string; path: string }[] {
 export function AppTabs({ appId, active, showApiTab }: { appId: string; active: string; showApiTab?: boolean }) {
   const tabs = showApiTab ? [...baseTabs(), API_TAB] : baseTabs();
   return (
+    // The right edge fades, so on a phone, where only four of nine tabs fit, the strip reads as one that
+    // scrolls (audit P2-5). On a desktop that edge is empty space and nothing visible changes.
     <nav aria-label="System sections"
-      style={{ display: "flex", gap: 2, borderBottom: "1px solid var(--line-1)", marginTop: 22, marginBottom: 20, overflowX: "auto" }}>
+      style={{ display: "flex", gap: 2, borderBottom: "1px solid var(--line-1)", marginTop: 22, marginBottom: 20, overflowX: "auto",
+        WebkitMaskImage: "linear-gradient(to right, #000 calc(100% - 32px), transparent)", maskImage: "linear-gradient(to right, #000 calc(100% - 32px), transparent)" }}>
       {tabs.map((t) => {
         const isActive = t.key === active;
         return (

@@ -140,7 +140,9 @@ export default async function SystemsPage() {
                 the pill beside it called "Not tested" and home-verdict.ts calls "Not yet verified", which is
                 three names for one thing on one screen. Failed reads --stop-ink rather than --err for the
                 same reason: both resolve to #FF7A55 here, but only one of them is the signal vocabulary. */}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 24 }}>
+            {/* A grid, so a phone gets 2 by 2 instead of 3 and an orphan (audit P2-4); capped so the four stay
+                compact on a desktop. */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 10, marginBottom: 24, maxWidth: 680 }}>
               <StatChip label="Systems" value={apps.length} />
               <StatChip label="Verified" value={readyCount} color={readyCount ? "var(--go-ink)" : undefined} />
               <StatChip label="Failed" value={blockedCount} color={blockedCount ? "var(--stop-ink)" : undefined} />
