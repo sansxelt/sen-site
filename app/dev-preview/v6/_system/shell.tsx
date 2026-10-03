@@ -41,14 +41,8 @@ const SIGNUP = `${SIGNIN}&mode=signup`;
 // _content/sectors.ts, the one list the footer, the homepage and the sector pages read too. Nothing about a
 // sector is typed in this file.
 //
-// THE PICTURES. `pic` is a name in public/home/menu/pics (the first menus' set, 1400x700; sources in its
-// CREDITS.md) or a full public path (public/site/menu, made for this plan, and public/site/nav, made for these
-// menus; each folder has its CREDITS.md). A link's picture previews the page it opens where one exists: each
-// sector shows its own hero's source; AI assistants, API and CI, and Integrations show those pages' hero panels;
-// How a check works shows the Larkspur capture; Console shows a plan in the console and CLI the CLI's own help
-// screen. Nothing in a menu is a stock photograph (plan A1.3): where a page has no picture of its own, our own
-// film renders stand in (the ridge for what it can reach, the pad for what is built, the plaza at night for the
-// limitations), and the changelog card shows the newest entry's own picture.
+// Link pictures use the shared licensed photographs; the Resources card uses a
+// genuine screenshot from the recorded Larkspur check. Sources live with the assets.
 type MLink = { t: string; d?: string; href: string; pic?: string };
 type Group = { h: string; links: MLink[] };
 type Card = { label: string; title: string; href: string; pic: string };
@@ -59,7 +53,7 @@ const picSrc = (p: string) => (p.startsWith("/") ? p : `/home/menu/pics/${p}.jpg
 const PIC_SIZES = "(max-width: 1440px) 49vw, 705px";
 const CARD_SIZES = "(max-width: 1440px) 23vw, 330px";
 // A picture that does not load (a file not delivered yet, a deploy that lost one) shows this one instead of an
-// empty box: our own render, the drone over the garage floor.
+// empty box: the licensed photograph of a person working at a computer.
 const PIC_FALLBACK = "/site/photography/client.jpg";
 
 // The newest changelog entry, for the second Resources card. Read, never copied, so the card cannot go stale.
@@ -114,9 +108,9 @@ const MENUS: Menu[] = [
     ],
     // Larkspur is a simulated console Vraelis built itself, and the card says so. The changelog card names the
     // entry and no date: a partnership entry at the top of the feed must not put its date on a new surface. Its
-    // picture is the entry's own (`media`), so card and entry always agree; an entry without one shows our render.
+    // picture is the entry's own (`media`), so card and entry always agree; an entry without one shows the licensed fallback photograph.
     cards: [
-      { label: "A real check", title: "On a simulated console Vraelis built, confirming one target also cleared a civilian bus.", href: BASE + "/#how-a-check-works", pic: "/site/changelog/larkspur.png" },
+      { label: "A real check", title: "On a simulated console Vraelis built, confirming one target also cleared a civilian bus.", href: BASE + "/#how-a-check-works", pic: "/site/changelog/larkspur-run.png" },
       ...(LATEST ? [{ label: "Latest in the changelog", title: LATEST.title, href: `${BASE}/changelog#${entryId(LATEST)}`, pic: LATEST.media?.src ?? PIC_FALLBACK }] : []),
     ],
   },
