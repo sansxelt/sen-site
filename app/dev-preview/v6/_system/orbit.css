@@ -1,8 +1,11 @@
-/* WHAT IT CHECKS, AS AN ORBIT (orbit.tsx, rebuilt 2026-10-02 evening). Twenty-three real photographs, every one a
-   link. Where a mouse can point (from 1024px wide) they ride one ring around the words, placed by the script; the
-   front of the ring is larger and brighter, the back smaller and a little dimmer, and the middle of the top arc is
-   the far side, where a tile recedes out of sight and comes back. Everywhere else they are cards with their label
-   under the photo: two rows that swipe sideways on a phone, a grid above 700px. */
+/* WHAT IT CHECKS, AS AN ORBIT OF SUBJECTS (orbit.tsx, grouped by subject 2026-10-03). Fourteen subjects, every one
+   a link, each shown by its first photograph in a 4:3 frame with the subject's name on it. Where a mouse can point
+   (from 1024px wide) they ride
+   one ring around the words, placed by the script; the front of the ring is larger and brighter, the back smaller
+   and a little dimmer, and the middle of the top arc is the far side, where a tile recedes for a moment and comes
+   back. Holding one slows the ring to a stop, grows the tile and crossfades its photographs and the headline (all
+   driven by orbit.tsx; the crossfades are here). Everywhere else they are cards with their label under the photo:
+   two rows that swipe sideways on a phone, a centred grid above 700px. */
 
 /* isolation: the ring's own stacking order (a held tile at 60, its label at 80, the pause button at 90) stays inside
    the section, so none of it can paint over the sticky bar (nav.css, z-index 60) or an open menu. */
@@ -14,17 +17,17 @@
 .v6-or__sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 /* the display tier (plan A3: the homepage statement, the orbit and the closing share it) */
 .v6-or__h { margin: 0; font-family: var(--display); font-weight: 500; font-size: var(--t-display); line-height: 1.06; letter-spacing: -0.025em; color: var(--ink); }
-/* Every sentence sits in one grid cell, so the headline is always as tall as the tallest one and changing the word
-   moves nothing around it. The sentence that is not shown is transparent, not removed. Each sits at the foot of
-   the cell, so where a translation runs to more lines than the one shown, the spare room is above the headline,
-   not between it and the line under it. In English the cell is 10.5em wide: every one of the nineteen sentences
-   is then exactly two lines (measured in Plex at 64px: the longest needs 9.8em on two lines, the shortest is
-   11.2em on one), so no word leaves a gap at any width. */
+/* Every sentence sits in one grid cell, so the headline is always as tall as the tallest one and changing the subject
+   moves nothing around it. The sentence that is not shown is transparent, not removed. Each sits at the foot of the
+   cell, so where a translation runs to more lines than the one shown, the spare room is above the headline, not
+   between it and the line under it. In English the cell is 10.5em wide: every one of the eleven sentences is then
+   exactly two lines, so no subject leaves a gap at any width.
+   The change is a crossfade with no movement: the old sentence fades out at once and quickly, the new one fades in a
+   beat later and more slowly, so the two are never both half there for long. */
 .v6-or__vis { display: grid; }
 .v6-or__vis:lang(en) { max-width: 10.5em; margin-inline: auto; }
-.v6-or__s { grid-area: 1 / 1; align-self: end; text-wrap: balance; opacity: 0; transform: translateY(14px);
-  transition: opacity 320ms var(--ease), transform 420ms var(--ease); }
-.v6-or__s[data-on="true"] { opacity: 1; transform: none; }
+.v6-or__s { grid-area: 1 / 1; align-self: end; text-wrap: balance; opacity: 0; transition: opacity 200ms var(--ease-out); }
+.v6-or__s[data-on="true"] { opacity: 1; transition: opacity 420ms var(--ease) 80ms; }
 /* "Know your AI-built app works.": balancing breaks it after the hyphen ("Know your AI- / built app works.") at every
    width. Plain wrapping in a measure that holds "Know your AI-built" (8.2em) but not "Know your AI-built app" (10.0em)
    keeps the word whole, and the sentence stays one plain string for the translator. English only: a translation
@@ -33,9 +36,10 @@
 .v6-or__d { margin: 20px auto 18px; max-width: 46ch; font-size: var(--t-lead-s); line-height: 1.55; color: var(--ink-2); }
 
 /* ── The tiles as cards (phones, tablets, touch screens, narrow windows) ─────────────────────────────────── */
+/* A centred grid: rows of up to six, and a short last row sits in the middle, not hanging at the left. */
 .v6-or__tiles { list-style: none; box-sizing: border-box; margin: clamp(40px, 6vw, 64px) auto 0; padding: 0 clamp(16px, 4vw, 40px);
-  max-width: 1240px; display: grid; grid-template-columns: repeat(auto-fill, minmax(156px, 1fr)); gap: 28px 16px; }
-.v6-or__item { position: relative; min-width: 0; transition: opacity 260ms var(--ease); }
+  max-width: 1240px; display: flex; flex-wrap: wrap; justify-content: center; gap: 28px 16px; }
+.v6-or__item { position: relative; flex: 0 0 auto; width: clamp(150px, calc((100% - 80px) / 6), 200px); min-width: 0; transition: opacity 260ms var(--ease); }
 .v6-or__tile { position: relative; display: block; color: var(--ink); text-decoration: none; border-radius: 14px; -webkit-tap-highlight-color: transparent; }
 /* the site-wide a:hover rule would otherwise recolour the label (rules: hover keeps text readable) */
 .v6-or__tile:hover { color: var(--ink); }
@@ -43,12 +47,16 @@
    outline's width to whole pixels (1.89px drew as 1px on the front tile); adding just under a pixel rounds it up
    instead, so the ring is never thinner than 2px on screen. */
 .v6-or__tile:focus-visible { outline: calc(2px * var(--ik, 1) + 0.99px) solid #FAFAFA; outline-offset: calc(4px * var(--ik, 1)); }
-.v6-or__ph { position: relative; display: block; aspect-ratio: 5 / 4; overflow: hidden; border-radius: 12px; background: #141416; }
-.v6-or__ph img { object-fit: cover; }
-.v6-or__ph::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: 0 0 0 1px rgba(255,255,255,0.10) inset;
+.v6-or__ph { position: relative; display: block; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 12px; background: #141416; }
+/* A subject's photographs are stacked; the one in front is at full strength and the others wait at none. Holding a
+   tile in the ring brings the next one forward every 1.8s (orbit.tsx); letting go brings the first one back. */
+.v6-or__img { position: absolute; inset: 0; opacity: 0; transition: opacity 900ms var(--ease); }
+.v6-or__img[data-on="true"] { opacity: 1; }
+.v6-or__img img { object-fit: cover; }
+.v6-or__ph::after { content: ""; position: absolute; inset: 0; z-index: 2; border-radius: inherit; box-shadow: 0 0 0 1px rgba(255,255,255,0.10) inset;
   pointer-events: none; transition: box-shadow 260ms var(--ease); }
 .v6-or__tile:hover .v6-or__ph::after { box-shadow: 0 0 0 1px rgba(255,255,255,0.45) inset; }
-/* "Next" is a word on the photo, never a dot: the tile is not built yet (coverage.ts). */
+/* "Next" is a word on the photo, never a dot: the subject is not built yet (coverage.ts). */
 .v6-or__mark { position: absolute; z-index: 2; top: 8px; left: 8px; padding: 0 8px; border-radius: 6px; font-size: 12px; font-weight: 500;
   line-height: 20px; color: #FAFAFA; background: rgba(10,10,11,0.82); box-shadow: 0 0 0 1px rgba(255,255,255,0.24) inset; pointer-events: none; }
 .v6-or__cap { display: block; padding: 10px 2px 0; text-align: left; }
@@ -60,18 +68,18 @@
 /* The ring's label and its pause button exist only in the ring. */
 .v6-or__call, .v6-or__pause { display: none; }
 
-/* A phone: two rows that swipe sideways together (software above, the panels that run machines below; orbit.tsx
-   keeps them at the even and odd places). The row scrolls inside itself; the page never scrolls sideways. */
+/* A phone: two rows that swipe sideways together. The row scrolls inside itself; the page never scrolls sideways. */
 @media (max-width: 700px) {
   .v6-or__field { padding: 72px 0 56px; }
   /* small enough that the longest sentence keeps clear of the screen's edges at 320 */
   .v6-or__h { font-size: clamp(1.7rem, 7.4vw, 2.6rem); }
   .v6-or__d { font-size: 0.95rem; }
-  .v6-or__tiles { grid-template-columns: none; grid-auto-flow: column; grid-template-rows: auto auto; grid-auto-columns: 148px; gap: 22px 12px;
+  /* justify-content back to the start: centred, the overflowing columns would hang off the left edge, out of reach */
+  .v6-or__tiles { display: grid; grid-auto-flow: column; grid-template-rows: auto auto; grid-auto-columns: 148px; gap: 22px 12px; justify-content: start;
     margin-top: 36px; padding: 0 16px 6px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory;
     scroll-padding-inline: 16px; scrollbar-width: none; }
   .v6-or__tiles::-webkit-scrollbar { display: none; }
-  .v6-or__item { scroll-snap-align: start; }
+  .v6-or__item { width: auto; scroll-snap-align: start; }
 }
 /* Nothing can point here, so the headline never changes: it keeps only its own sentence's height. */
 @media (hover: none) {
@@ -79,46 +87,79 @@
 }
 
 /* ── The ring (a mouse, 1024px and wider) ───────────────────────────────────────────────────────────────── */
-/* The section is one screen under the bar, so every tile is in view at once at 1280x720 and up. The script places
-   each tile by transform alone (nothing it moves shifts the layout); until it runs, each tile stands at its place at
-   rest for a 1440x833 section, read from the --x/--y/--k/--fw/--fh it was rendered with (container units). */
+/* The section is one screen under the bar, so every tile is in view at once at 1280x720 and up. The words sit a
+   little above the middle (48%): the front of the ring, at the bottom, is its largest row and needs the room. The
+   script places each tile by transform alone (nothing it moves shifts the layout); until it runs, each tile stands
+   at its place at rest for a 1440x833 section, read from the --x/--y/--k/--fw/--fh it was rendered with (container
+   units). */
 @media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
   .v6-or__field { height: max(560px, calc(100vh - var(--nav-h, 67px))); height: max(560px, calc(100svh - var(--nav-h, 67px))); padding: 0; container-type: size; }
   .v6-or__field::before { content: ""; position: absolute; inset: 0; pointer-events: none;
-    background: radial-gradient(640px 360px at 50% 50%, rgba(255,255,255,0.05), transparent 72%); }
-  .v6-or__copy { position: absolute; left: 50%; top: 50%; width: min(760px, 62vw); padding: 0; transform: translate(-50%, -50%); pointer-events: none; }
+    background: radial-gradient(640px 360px at 50% 48%, rgba(255,255,255,0.05), transparent 72%); }
+  .v6-or__copy { position: absolute; left: 50%; top: 48%; width: min(760px, 62vw); padding: 0; transform: translate(-50%, -50%); pointer-events: none; }
   .v6-or__copy a { pointer-events: auto; }
   .v6-or__tiles { position: absolute; inset: 0; display: block; margin: 0; padding: 0; max-width: none; }
-  .v6-or__item { position: absolute; left: 0; top: 0; z-index: 20; width: calc(var(--fw, 12) * 1cqw); height: calc(var(--fh, 12) * 1cqw);
+  /* Before the script, a tile's size follows the section's tighter side (1.7287cqh is 1cqw at 1440x833), so a section
+     shorter for its width than the one the places were worked out for shrinks the tiles too and no two meet. */
+  .v6-or__item { position: absolute; left: 0; top: 0; z-index: 20; width: calc(var(--fw, 16) * min(1cqw, 1.7287cqh)); height: calc(var(--fh, 12) * min(1cqw, 1.7287cqh));
     transform: translate(calc(var(--x, 50) * 1cqw - 50%), calc(var(--y, 50) * 1cqh - 50%)) scale(var(--k, 1)); transform-origin: 50% 50%;
     /* the back of the ring a little dimmer, for depth; the photographs themselves stay at full strength. On the far
        side a tile fades out of sight (--vis). */
     opacity: calc(var(--vis, 1) * (0.8 + var(--d, 1) * 0.2)); will-change: transform; }
   .v6-or__tile { position: absolute; inset: 0; border-radius: 16px; box-shadow: 0 24px 50px -24px rgba(0,0,0,0.9); }
   .v6-or__ph { position: absolute; inset: 0; aspect-ratio: auto; border-radius: 16px; }
-  /* The label is the ring's own (.v6-or__call); this one stays in the page as the link's name. */
-  .v6-or__cap { display: none; }
-  /* The mark keeps its true size at every depth (the script writes --mk, the inverse of the tile's scale). */
+  /* At rest every tile carries its subject's name, so the ring reads as subjects before anything is pointed at (the
+     founder, 2026-10-03: "categorize them ... by each subject"). It keeps its true size at every depth (--mk, the
+     inverse of the tile's scale, written by orbit.tsx) and sits on a fade drawn in the tile, dark enough behind the
+     words for 4.5:1 over the brightest photograph. Held, it gives way to the ring's own label, which adds the page
+     the tile opens (.v6-or__call). The page name stays in the page, hidden, as part of the link's name. On the far
+     side it shrinks and fades with its photo, like the "Next" mark (--mk leaves out the far side's shrink). It is
+     painted with its tile, not on a layer of its own: fourteen more layers doubled the time of every frame
+     (measured over 20 s of drift, qa/orbit2/rv/rv-frames.mjs), while repainting a tile now and then, when its --mk
+     changes, cost nothing measurable. */
+  .v6-or__cap { display: block; position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; box-sizing: border-box; pointer-events: none;
+    padding: calc(28px * var(--mk, 1)) calc(12px * var(--mk, 1)) calc(9px * var(--mk, 1)); }
+  .v6-or__cap::before { content: ""; position: absolute; inset: 0; border-radius: 0 0 16px 16px;
+    background: linear-gradient(180deg, rgba(10,10,11,0) 0, rgba(10,10,11,0.86) calc(28px * var(--mk, 1)), rgba(10,10,11,0.9)); }
+  .v6-or__cap .v6-or__cw { position: relative; font-size: calc(13px * var(--mk, 1)); line-height: 1.3; transition: visibility 0s linear 180ms; }
+  .v6-or__cap .v6-or__cl { display: none; }
+  /* Held: the name goes at once and the ring's label takes its place; letting go, it comes back as the label has
+     faded (180ms). Its fade stays, under the held tile's own (data-foot, below), so the foot of the photo never
+     flashes lighter in between. Both are switched, not faded: a fade is an animation of its own, and the two added
+     a 60ms frame at the start of every hold (measured, qa/orbit2/o2-motion.mjs). The name is still the link's name
+     while hidden (aria-labelledby reads it). */
+  .v6-or__item[data-on="true"] .v6-or__cap .v6-or__cw { visibility: hidden; transition: none; }
+  /* The mark keeps its true size at every depth (the script writes --mk, the inverse of the tile's scale). Receding
+     onto the far side it shrinks and fades with its photo (--mk leaves out the far side's shrink), so a "Next" never
+     floats where its photo has faded; a fade of its own there repainted the tile every frame. */
   .v6-or__mark { top: calc(10px * var(--mk, 1)); left: calc(10px * var(--mk, 1)); transform-origin: 0 0; transform: scale(var(--mk, 1)); }
-  /* Receding onto the far side the photo shrinks but the mark would not, so it goes first (opacity clamps at 0):
-     never a "Next" floating where its photo has faded. */
-  .v6-or__item .v6-or__mark { opacity: calc((var(--vis, 1) - 0.6) * 2.5); }
-  /* Held: in front of every tile, at full strength, with a thin light edge of one true pixel (--ik undoes the scale). */
+  /* Held: in front of every tile, at full strength, with a thin light edge of one true pixel (--ik undoes the scale).
+     Its growth and slide are written by the script each frame (no transition here, so the two never fight). Its
+     shadow stays the same as the others': a deeper one is a large blur to draw again just as the ring starts to slow. */
   .v6-or__item[data-on="true"] { z-index: 60 !important; opacity: 1; }
   .v6-or__item[data-on="true"] .v6-or__ph::after { box-shadow: 0 0 0 calc(1px * var(--ik, 1)) rgba(255,255,255,0.6) inset; }
-  /* For a moment after a hold starts or ends, the tile eases to its place instead of jumping (orbit.tsx ease). */
-  .v6-or__item[data-settle] { transition: transform 320ms var(--ease), opacity 260ms var(--ease); }
+  /* Under a label on the photo, the foot of the photo darkens. It is drawn in the tile, so it grows with it and is
+     painted with the photo: as a fade on the label itself it cost a 60 to 130ms frame at the start of every hold
+     (measured, qa/orbit2/o2-motion.mjs). orbit.tsx sets data-foot and its size from the label's height: --foot is
+     the share of the photo it covers, --foot-solid where it turns fully dark (the label's top edge). */
+  .v6-or__ph::before { content: ""; position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; height: var(--foot, 40%); pointer-events: none;
+    background: linear-gradient(180deg, rgba(10,10,11,0) 0, rgba(10,10,11,0.92) var(--foot-solid, 35%), rgba(10,10,11,0.95)); opacity: 0;
+    transition: opacity 200ms var(--ease-out); }
+  .v6-or__item[data-foot] .v6-or__ph::before { opacity: 1; transition: opacity 240ms var(--ease-out) 60ms; }
 
   .v6-or__call { display: block; position: absolute; left: 0; top: 0; z-index: 80; box-sizing: border-box; max-width: 300px; padding: 10px 14px 11px;
     border-radius: 12px; background: #121214; box-shadow: 0 0 0 1px rgba(255,255,255,0.16) inset, 0 20px 44px -18px rgba(0,0,0,0.95);
-    text-align: left; pointer-events: none; opacity: 0; transition: opacity 180ms var(--ease-out); }
-  .v6-or__call[data-show="true"] { opacity: 1; }
-  /* On the photo: over its foot, on a dark fade, as wide as the tile. */
-  .v6-or__call[data-at="on"] { max-width: none; padding: 30px 12px 10px; border-radius: 0 0 16px 16px; box-shadow: none;
-    background: linear-gradient(180deg, rgba(10,10,11,0) 0, rgba(10,10,11,0.9) 30px, rgba(10,10,11,0.94)); }
+    text-align: left; text-decoration: none; color: #FAFAFA; pointer-events: none; opacity: 0; transition: opacity 180ms var(--ease-out); }
+  .v6-or__call[data-show="true"] { opacity: 1; transition: opacity 240ms var(--ease-out) 60ms; }
+  /* Outside the tile (under, above or beside it) the label is a link to the same page (orbit.tsx), so the pointer can
+     reach for its arrow without letting go of the tile; its edge lightens as the tile's does. On the photo the pointer
+     goes through it to the tile. The colour is set again on hover (the site-wide a:hover would recolour it). */
+  .v6-or__call[data-show="true"]:not([data-at="on"]) { pointer-events: auto; cursor: pointer; }
+  .v6-or__call:hover { color: #FAFAFA; box-shadow: 0 0 0 1px rgba(255,255,255,0.45) inset, 0 20px 44px -18px rgba(0,0,0,0.95); }
+  /* On the photo: over its foot, as wide as the tile grows to and from its left edge, on the fade the tile draws under
+     it (data-foot, above). */
+  .v6-or__call[data-at="on"] { max-width: none; padding: 12px 14px 11px; border-radius: 0; box-shadow: none; background: none; }
   .v6-or__call-w { display: block; font-size: 15px; font-weight: 500; line-height: 1.3; color: #FAFAFA; }
-  .v6-or__call-n { display: inline-block; margin-left: 8px; padding: 0 7px; border-radius: 6px; vertical-align: 1px; font-size: 11px; line-height: 18px;
-    font-weight: 500; color: #FAFAFA; box-shadow: 0 0 0 1px rgba(255,255,255,0.3) inset; }
   /* the arrow keeps to the end of the last line instead of wrapping onto a line of its own */
   .v6-or__call-t { display: flex; align-items: last baseline; gap: 6px; margin-top: 2px; font-size: 13px; line-height: 1.4; color: #C9CBD1; }
   .v6-or__arw { flex: none; }
@@ -132,11 +173,11 @@
   .v6-or__pause:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
 }
 
-/* Reduced motion: the ring stands still (orbit.tsx never turns it and lifts no tile), and words, tiles and labels
-   change at once: no zoom, no slide, no fade. There is nothing to pause. */
+/* Reduced motion: the ring stands still (orbit.tsx never turns it and grows no tile), the photographs never change,
+   and words, tiles and labels change at once: no zoom, no slide, no fade. There is nothing to pause. */
 @media (prefers-reduced-motion: reduce) {
-  .v6-or__s, .v6-or__item, .v6-or__item[data-settle], .v6-or__call, .v6-or__ph::after { transition: none !important; }
-  .v6-or__s { transform: none !important; }
+  .v6-or__s, .v6-or__s[data-on="true"], .v6-or__item, .v6-or__img, .v6-or__call, .v6-or__call[data-show="true"], .v6-or__ph::after, .v6-or__ph::before,
+  .v6-or__cap .v6-or__cw { transition: none !important; }
   .v6-or__pause { display: none !important; }
 }
 
@@ -144,7 +185,7 @@
 :lang(hi) .v6-or__h { line-height: 1.22; }
 /* Other languages (i18n QA, 2026-10-03): the "Next" mark stays one line, as "Next" does in English ("Als Nächstes",
    "次へ" and "अगला" wrapped onto two lines on a narrow tile in the ring), and a word longer than a card's caption
-   breaks inside the card instead of running past it ("Zielerfassungskonsole" ran 5px past the 144px caption on a
-   phone; the catalogue gives the longest ones soft hyphens). */
-.v6:not(:lang(en)) :is(.v6-or__mark, .v6-or__call-n) { white-space: nowrap; }
+   breaks inside the card instead of running past it (a long German compound ran past the 144px caption on a phone;
+   the catalogue gives the longest ones soft hyphens). */
+.v6:not(:lang(en)) .v6-or__mark { white-space: nowrap; }
 .v6:not(:lang(en)) .v6-or__cw { overflow-wrap: break-word; }

@@ -218,75 +218,65 @@ export const SOLUTION_SLUGS: readonly SolutionSlug[] = SECTORS.flatMap((s) => (s
 /** The /solutions index: the "All solutions" link in the footer and the menus. */
 export const SOLUTIONS_HREF = `${V6_BASE}/solutions`;
 
-/** The nineteen words the homepage orbit can put in its headline ("Know your <word> works.", _system/orbit.tsx),
- *  exactly as the headline spells them (rebuilt 2026-10-02 evening with the founder's subjects). Every one is
- *  checked today: a web app, an agent's work, or the web panel or console that runs a device, never the machine
- *  itself (coverage.ts). The orbit's four Next tiles (Electron apps, SDKs and scripts, the device itself, native
- *  mobile apps) are not words: they never reach the headline, and they link to the coverage list. */
+/** The eleven Live subjects of the homepage orbit (_system/orbit.tsx), by key. The orbit is grouped by subject
+ *  (rebuilt 2026-10-03 from the founder's direction: "categorize them, not by each, but by each subject"): one tile
+ *  per subject, each with its own sentence for the headline ("Know your mission software works.") and its own page.
+ *  Every one is checked today: a web app, or the web panel, console or portal that runs a device, never the machine
+ *  itself (coverage.ts). The orbit's three Next tiles (desktop and mobile apps, SDKs and scripts, devices and
+ *  firmware) are not keys here: they never reach the headline, and they link to the coverage list.
+ *
+ *  There is deliberately no "defense contractors" subject: the defense page says Vraelis cannot yet be used for US
+ *  Department of War contract work, so a contractors tile would invite exactly that work. "military" covers defense. */
 export type OrbitWord =
-  | "checkout"
-  | "banking app"
-  | "sign-up"
-  | "dashboard"
-  | "release"
-  | "agent's change"
-  | "AI-built app"
-  | "client's site"
-  | "benefits portal"
-  | "drone panel"
-  | "fleet console"
-  | "robot console"
-  | "robot fleet panel"
-  | "flight console"
-  | "vehicle portal"
-  | "device panel"
-  | "ground control console"
-  | "mission console"
-  | "targeting console";
+  | "military"
+  | "government"
+  | "commercial"
+  | "fintech"
+  | "robotics"
+  | "drones"
+  | "logistics"
+  | "saas"
+  | "ai-built-apps"
+  | "agencies"
+  | "developers";
 
 /** Where an orbit tile leads. `href` carries V6_BASE; `to` is the name of that page as the tile prints it under its
- *  word (a whole string for the translator, never assembled). */
+ *  subject (a whole string for the translator, never assembled). */
 export type OrbitRoute = { readonly href: string; readonly to: string };
 
-/** Where each orbit word leads: a sector page by slug, or the one page that shows the word best (a release to the
- *  CI guide, an agent's change to the AI assistants page, the targeting console to the Larkspur check, which is a
- *  simulated console Vraelis built, as its tile says). */
-export const ORBIT_ROUTE: Readonly<Record<OrbitWord, SolutionSlug | OrbitRoute>> = {
-  "checkout": "commerce",
-  "banking app": "commerce",
-  "sign-up": "saas",
-  "dashboard": "saas",
-  "release": { href: `${V6_BASE}/docs/ci`, to: "Gate a release in CI" },
-  "agent's change": { href: `${V6_BASE}/agents`, to: "AI assistants" },
-  "AI-built app": "ai-built-apps",
-  "client's site": "agencies",
-  "benefits portal": "public-sector",
-  "drone panel": "fleets",
-  "fleet console": "fleets",
-  "robot console": "fleets",
-  "robot fleet panel": "fleets",
-  "flight console": "fleets",
-  "vehicle portal": "fleets",
-  "device panel": "fleets",
-  "ground control console": "defense",
-  "mission console": "defense",
-  "targeting console": { href: `${V6_BASE}/use-cases/only-the-confirmed-target`, to: "Larkspur, a simulated console Vraelis built" },
+/** Where each orbit subject leads: a sector page by slug (its href read from SECTORS, so it can never drift), or a
+ *  page of its own, each with the page's name as the tile prints it. Several subjects share a sector page (the
+ *  three machine subjects all open Robotics and fleets). If a sector's menu label changes, change its `to` here. */
+export const ORBIT_ROUTE: Readonly<Record<OrbitWord, { readonly sector: SolutionSlug; readonly to: string } | OrbitRoute>> = {
+  "military": { sector: "defense", to: "Defense page" },
+  "government": { sector: "public-sector", to: "Public sector page" },
+  "commercial": { sector: "commerce", to: "Fintech and commerce page" },
+  "fintech": { sector: "commerce", to: "Fintech and commerce page" },
+  "robotics": { sector: "fleets", to: "Robotics and fleets page" },
+  "drones": { sector: "fleets", to: "Robotics and fleets page" },
+  "logistics": { sector: "fleets", to: "Robotics and fleets page" },
+  "saas": { sector: "saas", to: "SaaS product teams page" },
+  "ai-built-apps": { sector: "ai-built-apps", to: "AI-built apps page" },
+  "agencies": { sector: "agencies", to: "Agencies page" },
+  "developers": { href: `${V6_BASE}/developers`, to: "Developers page" },
 };
 
-const orbitEntry = (word: string) => (ORBIT_ROUTE as Readonly<Record<string, SolutionSlug | OrbitRoute | undefined>>)[word];
+const orbitEntry = (word: string) =>
+  (ORBIT_ROUTE as Readonly<Record<string, { readonly sector: SolutionSlug; readonly to: string } | OrbitRoute | undefined>>)[word];
 
-/** The sector page an orbit word leads to, or undefined for a word that leads elsewhere (release, agent's change,
- *  targeting console) or is not an orbit word. Takes a plain string so the orbit's tile type needs no cast. */
+/** The sector page an orbit subject leads to, or undefined for a subject that leads elsewhere (developers) or is not
+ *  an orbit subject. Takes a plain string so the orbit's tile type needs no cast. */
 export function orbitSector(word: string): Sector | undefined {
   const r = orbitEntry(word);
-  return typeof r === "string" ? sectorBySlug(r) : undefined;
+  return r && "sector" in r ? sectorBySlug(r.sector) : undefined;
 }
 
-/** Where an orbit word's tile leads and the name it prints for that page: a sector page by its menu label, or the
- *  word's own page. Undefined for a word that is not an orbit word. */
+/** Where an orbit subject's tile leads and the name it prints for that page. Undefined for a subject that is not an
+ *  orbit subject. */
 export function orbitRoute(word: string): OrbitRoute | undefined {
   const r = orbitEntry(word);
-  if (typeof r !== "string") return r;
-  const s = sectorBySlug(r);
-  return s ? { href: s.href, to: s.label } : undefined;
+  if (!r) return undefined;
+  if (!("sector" in r)) return r;
+  const s = sectorBySlug(r.sector);
+  return s ? { href: s.href, to: r.to } : undefined;
 }

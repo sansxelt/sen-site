@@ -11,9 +11,11 @@
 //                    Its caption says the same check runs on checkouts, sign-ups and fleet panels, and links
 //                    every sector (/solutions), so the page does not read as defense only
 //   3 the statement  one sentence, revealed as it crosses the screen (_system/home-bands.tsx)
-//   4 the orbit      23 real photographs of what it checks, circling "Know your ___ works."; each tile names and
-//                    opens its page, and four honest Next tiles open the coverage list (_system/orbit.tsx,
-//                    _content/sectors.ts)
+//   4 the orbit      fourteen subjects circling "Know your ___ works." (Military, Government, Commercial and
+//                    retail, Drones and aviation, ...), each a real photograph with the subject's name on it that
+//                    opens its page; pointing at one slows the ring to a stop, grows the tile, names the page it
+//                    opens and puts its sentence in the headline, and three honest Next tiles say "Not built yet"
+//                    and open the coverage list (_system/orbit.tsx, _content/sectors.ts)
 //   5 agents         the CLI and the MCP tools, in their own words (home-bands.tsx)
 //   6 changelog      the four latest dated entries, as near the bottom of cursor.com (home-bands.tsx)
 //   7 closing        one statement, one action, as cursor.com ends (_system/close.tsx)
