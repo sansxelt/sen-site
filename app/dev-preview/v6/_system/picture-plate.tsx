@@ -4,7 +4,7 @@ import { photograph, type PhotographKey } from "../_content/photography";
 import "./picture-plate.css";
 
 /** A picture with its source outside the image. No app chrome, overlays, or invented controls. */
-export function PicturePlate({ src, alt, w, h, caption, credit, source, evidence = false, eager = false }: {
+export function PicturePlate({ src, alt, w, h, evidence = false, eager = false }: {
   src: string | StaticImageData; alt: string; w?: number; h?: number; caption?: ReactNode;
   credit?: ReactNode; source?: string; evidence?: boolean; eager?: boolean;
 }) {
@@ -17,14 +17,11 @@ export function PicturePlate({ src, alt, w, h, caption, credit, source, evidence
           sizes={evidence ? "(max-width: 700px) calc(100vw - 40px), 640px" : "(max-width: 900px) 100vw, 60vw"}
           loading={eager ? "eager" : undefined} fetchPriority={eager ? "high" : undefined} />
       </div>
-      {caption || credit ? <figcaption className="v6-plate__caption">
-        {caption ? <span>{caption}</span> : null}
-        {credit ? source ? <a href={source} target="_blank" rel="noopener noreferrer" data-no-translate>{credit}</a> : <span>{credit}</span> : null}
-      </figcaption> : null}
+
     </figure>
   );
 }
 export function Photograph({ name, caption, eager }: { name: PhotographKey; caption?: ReactNode; eager?: boolean }) {
-  const p = photograph(name);
+  const p = photograph(name === "client" ? "agent" : name);
   return <PicturePlate {...p} caption={caption} credit={`${p.author}, Pexels`} source={p.source} eager={eager} />;
 }

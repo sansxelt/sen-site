@@ -23,10 +23,9 @@ export function photograph(key: PhotographKey) {
   return { ...p, src: `${ROOT}/${p.file}.jpg`, source: `https://www.pexels.com/photo/${p.id}/` };
 }
 export function photographHero(key: PhotographKey, position = "50% 50%") {
-  const p = photograph(key);
+  const p = photograph(key === "client" ? "agent" : key);
   return {
     picture: { src: p.src, portrait: p.src, alt: p.alt, position, portraitPosition: position },
-    credit: `${p.author}, Pexels`,
   };
 }
 

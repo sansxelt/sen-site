@@ -20,7 +20,7 @@
 .v6-h__video { z-index: -2; }
 /* just enough shade to hold white type over the brightest frames, centred where the sentence sits */
 .v6-h__shade { position: absolute; inset: 0; z-index: -1;
-  background: radial-gradient(60% 42% at 50% 46%, rgba(8,9,11,0.42), rgba(8,9,11,0) 70%), linear-gradient(0deg, rgba(8,9,11,0.35), rgba(8,9,11,0) 30%); }
+  background: radial-gradient(60% 42% at 50% 46%, rgba(8,9,11,0.6), rgba(8,9,11,0.2) 70%), linear-gradient(0deg, rgba(8,9,11,0.4), rgba(8,9,11,0.2)); }
 
 .v6-h__h1 {
   margin: 0; padding: 0 var(--gutter); max-width: 100%; text-align: center;
@@ -39,55 +39,8 @@
 .v6-h__pause:hover { background: rgba(255,255,255,0.16); }
 .v6-h__pause:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
 
-/* Below the frame: the line, the field, the two records, centred. */
-.v6-h__below { display: flex; flex-direction: column; align-items: center; text-align: center; padding: clamp(40px, 5vw, 72px) var(--gutter) clamp(16px, 2vw, 28px); }
-.v6-h__say { margin: 0; max-width: 46ch; font-size: clamp(1.05rem, 1.35vw, 1.25rem); line-height: 1.5; color: #C9CBD1; }
-.v6-h__form {
-  display: flex; align-items: center; gap: 6px;
-  width: min(100%, 520px); margin-top: 22px; padding: 6px 6px 6px 16px;
-  /* Black like every surface, with the one white control on it ("Check it"). It was a white bar, the only
-     white surface on the page, and selected text vanished on it (white selection on white). */
-  background: #121214; border: 1px solid rgba(255,255,255,0.16); border-radius: 14px;
-  transition: box-shadow 0.15s var(--ease-out), border-color 0.15s var(--ease-out);
-}
-.v6-h__form:hover { border-color: rgba(255,255,255,0.26); }
-/* Focus, as on every other field (plan A5): the form is the field's frame, so it takes the white border and the ring,
-   and the input draws no outline of its own. The old 34% border was about 3:1 against the page, the ring 1.6:1. Not
-   while the button has the focus: it has its own outline, and the two together drew a double white frame. */
-.v6-h__form:focus-within { border-color: #FAFAFA; box-shadow: 0 0 0 3px rgba(255,255,255,0.16); }
-.v6-h__form:has(button:focus-visible) { border-color: rgba(255,255,255,0.16); box-shadow: none; }
-.v6 .v6-h__form input {
-  -webkit-appearance: none; appearance: none; box-shadow: none; border-radius: 0; padding: 0;
-  flex: 1; min-width: 0; height: 44px; border: 0; outline: 0; background: transparent;
-  font: 400 16px/1 var(--sans); color: #FAFAFA;
-}
-.v6 .v6-h__form input::placeholder { color: #8E9095; }
-.v6-h__form button {
-  flex: none; height: 44px; padding: 0 20px; border: 0; border-radius: 9px;
-  background: #FAFAFA; color: #0A0A0B; font: 600 15px/1 var(--sans); cursor: pointer;
-  display: inline-flex; align-items: center; gap: 8px; transition: background 0.15s var(--ease-out);
-}
-.v6-h__form button:hover { background: #E4E5E8; }
-.v6-h__form button:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
-/* The page's selection is white on black; on the white button it would vanish, so it inverts there. */
-.v6 .v6-h__form button::selection, .v6 .v6-h__form button *::selection { background: #0A0A0B; color: #FAFAFA; }
-.v6-h__sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-
-.v6-h__partners { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: min(100%, 520px); margin-top: 14px; }
-.v6-h__partner {
-  display: grid; gap: 3px; justify-items: start; text-align: left; padding: 11px 15px 12px; border-radius: 12px;
-  background: #121214; border: 1px solid rgba(255,255,255,0.1); color: #FAFAFA; text-decoration: none;
-  transition: border-color 0.15s var(--ease-out), transform 0.2s var(--ease);
-}
-.v6-h__partner:hover { border-color: rgba(255,255,255,0.24); transform: translateY(-1px); }
-.v6-h__partner:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
-/* Reduced motion: the border still answers the pointer, the card no longer moves. */
-@media (prefers-reduced-motion: reduce) {
-  .v6-h__partner { transition: border-color 0.15s var(--ease-out); }
-  .v6-h__partner:hover { transform: none; }
-}
-.v6-h__plabel { font-size: 11.5px; font-weight: 500; color: #8E9095; }
-.v6-h__partner strong { font-family: var(--display); font-size: 1.05rem; font-weight: 500; letter-spacing: -0.012em; line-height: 1.25; }
+.v6-h__below { display: flex; align-items: center; justify-content: space-between; gap: 24px; max-width: 1200px; margin: auto; padding: 32px 0; }
+.v6-h__say { margin: 0; font-size: clamp(17px, 1.6vw, 23px); line-height: 1.5; color: #C9CBD1; }
 
 @media (max-width: 900px) {
   .v6-h__frame { height: min(76svh, 640px); min-height: 440px; }
@@ -105,9 +58,7 @@
      and 3.1:1 at 540). The old one, 0.18 at 42%, let them fall to 2.2:1. */
   .v6-h__shade { background: linear-gradient(180deg, rgba(8,9,11,0.5), rgba(8,9,11,0.39) 34%, rgba(8,9,11,0) 56%), linear-gradient(0deg, rgba(8,9,11,0.35), rgba(8,9,11,0) 30%); }
   .v6-h__h1 { max-width: 100%; padding: 0 14px; font-size: clamp(1.25rem, 6.5vw, 2.25rem); letter-spacing: -0.025em; }
-  .v6-h__below { padding-top: 32px; }
-  .v6-h__partners { grid-template-columns: minmax(0, 1fr); }
-  .v6-h__form button { padding: 0 16px; font-size: 14.5px; }
+  .v6-h__below { padding: 28px 10px; flex-direction: column; text-align: center; gap: 20px; }
   .v6-h__pause { right: 14px; bottom: 14px; }
 }
 
@@ -118,5 +69,3 @@
 .v6-mask__in { display: block; animation: v6MaskIn 860ms cubic-bezier(0.22,1,0.36,1) both; animation-delay: 60ms; }
 @keyframes v6MaskIn { from { transform: translateY(112%); } to { transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { .v6-mask__in { animation: none !important; } }
-
-.v6-h__credit { position: absolute; left: 22px; bottom: 26px; margin: 0; max-width: calc(100% - 100px); font-size: 11px; line-height: 1.5; color: rgba(255,255,255,.78); text-shadow: 0 1px 6px #000; }

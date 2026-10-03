@@ -68,7 +68,7 @@
 export const CATEGORY = "Verification for what you build";
 
 /** One concise homepage headline, without a forced line break. */
-export const HEADLINE = "Know what you built works";
+export const HEADLINE = "Know your systems work";
 
 /** ONE paragraph under the headline: the loop, once, in the order it happens. Under 45 words.
  *
@@ -90,7 +90,7 @@ export const HERO_LINE = "Checks in a real browser, on live web apps and the pan
  *  A search result is the surface where an unsupportable claim travels furthest, so the description makes
  *  exactly the claim the run itself produces and no larger one: it tries the sentence and shows what
  *  happened. It does not promise a green result, and it does not lead with the verdict words (rule 5). */
-export const META_TITLE = "Vraelis | Know what you built works";
+export const META_TITLE = "Vraelis | Know your systems work";
 export const META_DESCRIPTION =
   "Say what your web app, or a device it controls, should do. Vraelis checks it in a real browser on the live product, shows you exactly what happened, and hands anything broken to you or your AI agent.";
 

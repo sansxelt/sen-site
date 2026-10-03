@@ -92,3 +92,7 @@
 :is(:lang(ja), :lang(zh), :lang(ko)) .v6-ag__h { max-width: 18em; line-height: 1.22; }
 :lang(hi) :is(.v6-ag__h, .v6-cl__h) { line-height: 1.3; }
 :lang(hi) .v6-ag__h { line-height: 1.22; }
+
+[data-entry-motion="true"] :is(.v6-ag__txt,.v6-plate,.v6-cl__h,.v6-cl__list > li) { opacity: 0; transform: translateY(24px); transition: opacity 750ms ease, transform 850ms cubic-bezier(.22,1,.36,1); }
+[data-entry-motion="true"] :is(.v6-ag__txt,.v6-plate,.v6-cl__h,.v6-cl__list > li)[data-entered="true"] { opacity: 1; transform: none; }
+@media(prefers-reduced-motion:reduce) { [data-entry-motion="true"] :is(.v6-ag__txt,.v6-plate,.v6-cl__h,.v6-cl__list > li) { opacity: 1; transform: none; transition: none; } }

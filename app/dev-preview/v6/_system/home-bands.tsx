@@ -26,6 +26,22 @@ import { CHANGELOG, entryId } from "../_content/changelog";
 import "./home-bands.css";
 import { Photograph } from "./picture-plate";
 
+// Entry motion is enabled only after its observer exists; no-JS and reduced-motion stay visible.
+function useEntryMotion() {
+  const root = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = root.current;
+    if (!el || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => { if (entry.isIntersecting) { entry.target.setAttribute("data-entered", "true"); observer.unobserve(entry.target); } });
+    }, {threshold: .1});
+    el.dataset.entryMotion = "true";
+    el.querySelectorAll(".v6-ag__txt,.v6-plate,.v6-cl__h,.v6-cl__list > li").forEach(node => observer.observe(node));
+    return () => observer.disconnect();
+  }, []);
+  return root;
+}
+
 const STATEMENT = "Your coding agent says it is done. A person approves the plan, and Vraelis checks it on the live product.";
 
 /* The words of a language that does not space them (Japanese), found by the browser's own word segmenter, with
@@ -94,9 +110,10 @@ export function Statement() {
  *  entry. It reads the same list /changelog does, so it can never show something the changelog does not.
  *  The heading is a label, as cursor.com's is ("Changelog"), so it carries data-label and no full stop. */
 export function ChangelogRow() {
+  const root = useEntryMotion();
   const fmt = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
   return (
-    <section className="v6-cl v6-dark" aria-labelledby="v6-cl-h" data-nav-dark data-nav-theme="dark">
+    <section ref={root} className="v6-cl v6-dark" aria-labelledby="v6-cl-h" data-nav-dark data-nav-theme="dark">
       <div className="v6-cl__in">
         <h2 id="v6-cl-h" className="v6-cl__h" data-label="">Changelog</h2>
         <ul className="v6-cl__list">
@@ -116,8 +133,9 @@ export function ChangelogRow() {
 }
 
 export function AgentsBand() {
+  const root = useEntryMotion();
   return (
-    <section className="v6-ag v6-dark" aria-labelledby="v6-ag-h" data-nav-dark data-nav-theme="dark">
+    <section ref={root} className="v6-ag v6-dark" aria-labelledby="v6-ag-h" data-nav-dark data-nav-theme="dark">
       <div className="v6-ag__in">
         <div className="v6-ag__txt">
           {/* One sentence in one element, so the translator keeps it whole. It was followed by "Only a person
@@ -130,7 +148,7 @@ export function AgentsBand() {
             <CTA ghost href={`${V6_DOCS}/ai-assistants`}>Read the docs</CTA>
           </div>
         </div>
-        <Photograph name="client" />
+        <Photograph name="agent" />
       </div>
     </section>
   );

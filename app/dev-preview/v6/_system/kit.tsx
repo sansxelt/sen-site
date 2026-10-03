@@ -198,7 +198,7 @@ function HeroPanel({ panel, credit }: { panel: FrameHeroPanel; credit?: string }
  *   <FrameHero ... panel={{ kind: "node", label: "The three MCP tools", node: <McpTools /> }} />
  */
 export function FrameHero(props: FrameHeroProps) {
-  const { eyebrow, title, sub, primary, secondary, credit, id } = props;
+  const { eyebrow, title, sub, primary, secondary, id } = props;
   const kind = props.panel ? "panel" : "scene";
   return (
     // The section paints the page ground (kit.css) and carries all three dark markers on ONE line, because
@@ -206,12 +206,11 @@ export function FrameHero(props: FrameHeroProps) {
     <section id={id} className="v6-fh v6-dark" data-nav-dark data-nav-theme="dark" data-kind={kind}>
       <div className="v6-fh__frame">
         {props.panel ? (
-          <HeroPanel panel={props.panel} credit={credit} />
+          <HeroPanel panel={props.panel} />
         ) : (
           <>
             <FrameMedia><HeroPicture picture={props.picture} /></FrameMedia>
             <div className="v6-fh__shade" aria-hidden />
-            {credit ? <p className="v6-fh__credit">{credit}</p> : null}
           </>
         )}
         <div className="v6-fh__body">
@@ -385,7 +384,7 @@ export function MediaPanel(props: KitPicture & {
   bar?: KitBar; caption?: ReactNode; evidence?: boolean;
   aspect?: string; position?: string; sizes?: string; breakout?: 960 | 1024; eager?: boolean;
 }) {
-  const { src, alt, w, h, bar, caption, evidence = false, aspect, position, sizes, breakout, eager = false } = props;
+  const { src, alt, w, h, evidence = false, aspect, position, sizes, breakout, eager = false } = props;
   return (
     <figure className="v6-mp" data-out={evidence ? undefined : breakout} data-evidence={evidence ? "" : undefined}>
       <div className="v6-mp__shell">
@@ -396,11 +395,7 @@ export function MediaPanel(props: KitPicture & {
           style={aspect ? { aspectRatio: aspect, objectFit: "cover", objectPosition: position ?? "50% 0%" } : undefined}
         />
       </div>
-      {caption || bar ? <figcaption className="v6-mp__cap">
-        {bar?.left ? <span className="v6-mp__source" data-no-translate>{bar.left}</span> : null}
-        {bar?.right ? <span className="v6-mp__credit">{bar.right}</span> : null}
-        {caption ? <span className="v6-mp__description">{caption}</span> : null}
-      </figcaption> : null}
+
     </figure>
   );
 }

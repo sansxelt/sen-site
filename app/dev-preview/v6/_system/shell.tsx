@@ -53,8 +53,8 @@ const picSrc = (p: string) => (p.startsWith("/") ? p : `/home/menu/pics/${p}.jpg
 const PIC_SIZES = "(max-width: 1440px) 49vw, 705px";
 const CARD_SIZES = "(max-width: 1440px) 23vw, 330px";
 // A picture that does not load (a file not delivered yet, a deploy that lost one) shows this one instead of an
-// empty box: the licensed photograph of a person working at a computer.
-const PIC_FALLBACK = "/site/photography/client.jpg";
+// empty box: a genuine screenshot of the Larkspur demo.
+const PIC_FALLBACK = "/site/changelog/larkspur-run.png";
 
 // The newest changelog entry, for the second Resources card. Read, never copied, so the card cannot go stale.
 const LATEST = CHANGELOG[0];
@@ -64,7 +64,7 @@ const MENUS: Menu[] = [
     label: "Product",
     groups: [
       { h: "The check", links: [
-        { t: "Platform overview", d: "What the product does", href: BASE + "/platform", pic: "/site/photography/client.jpg" },
+        { t: "Platform overview", d: "What the product does", href: BASE + "/platform", pic: "/site/changelog/larkspur-run.png" },
         { t: "How a check works", d: "From one sentence to an answer with evidence", href: BASE + "/platform#how", pic: "/site/photography/groundstation.jpg" },
         { t: "What it can reach", d: "Web apps, and devices through their panels", href: BASE + "/platform#coverage", pic: "/site/photography/vehicle.jpg" },
         { t: "What is built", d: "The live list beside the planned one", href: BASE + "/platform#current", pic: "/site/photography/drone.jpg" },
@@ -74,7 +74,7 @@ const MENUS: Menu[] = [
         { t: "Console", d: "Write, approve and read in the app", href: BASE + "/docs/getting-started", pic: "/site/photography/signup.jpg" },
         { t: "CLI", d: "One command, one exit code", href: BASE + "/docs/cli", pic: "/site/photography/agent.jpg" },
         { t: "API and CI", d: "Gate a release on the answer", href: BASE + "/developers", pic: "/site/photography/agent.jpg" },
-        { t: "AI assistants", d: "Setup over MCP", href: BASE + "/agents", pic: "/site/photography/client.jpg" },
+        { t: "AI assistants", d: "Setup over MCP", href: BASE + "/agents", pic: "/site/changelog/larkspur-run.png" },
         { t: "Integrations", d: "Where a check starts and where the answer lands", href: BASE + "/integrations", pic: "/site/photography/firmware.jpg" },
       ] },
     ],
@@ -125,11 +125,11 @@ function menuPics(menu: Menu): string[] {
 
 // What the first look at each menu needs: its first link's picture, or the two cards. Fetched once the page has
 // settled on a desktop, so the first menu a reader opens shows its picture instead of an empty box.
-const WARM_PICS: { src: string; sizes: string }[] = MENUS.flatMap((m) =>
+const WARM_PICS: { src: string; sizes: string }[] = [...new Map(MENUS.flatMap((m) =>
   m.cards
     ? m.cards.map((c) => ({ src: picSrc(c.pic), sizes: CARD_SIZES }))
     : menuPics(m).slice(0, 1).map((p) => ({ src: picSrc(p), sizes: PIC_SIZES })),
-);
+).map(p => [p.src, p])).values()];
 
 function Brand() {
   const pathname = usePathname();

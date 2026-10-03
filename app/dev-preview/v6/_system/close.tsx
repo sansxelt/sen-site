@@ -122,6 +122,7 @@ export function SiteFooter() {
             {/* Only what the columns above do not already hold: Security, Privacy, Cookies, Terms and
                 Acceptable use were repeated here from the Trust column (since 2026-10-01, as cursor.com's
                 bottom line carries only its own few items). */}
+            <a href="/home/scenes/CREDITS.md">Image sources</a>
             <a href="https://www.linkedin.com/company/vraelis" target="_blank" rel="noreferrer">LinkedIn</a>
             <PrivacyChoicesButton />
           </div>
