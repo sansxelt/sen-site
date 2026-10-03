@@ -1,3 +1,4 @@
+import { photographHero } from "../_content/photography";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { v6meta } from "../_system/meta";
@@ -140,16 +141,7 @@ export default function CompanyPage() {
         secondary={{ label: "Read the README", href: `${BASE}/readme` }}
         // Our own render (app/film/orbit, plan A7.5): the drone on its pad in the garage. Never the hand catch,
         // which is stock footage of someone else's drone.
-        picture={{
-          src: "/site/hero/company.jpg",
-          portrait: "/site/hero/company-portrait.jpg",
-          alt: "Our drone on its landing pad on a garage floor, a render made for Vraelis.",
-          position: "50% 65%",
-          // 50% 50% keeps the pad clear of the headline on short phones (at 50% 35% it came within 9px of it). The
-          // widest frames that still show the portrait (480 to 560px wide, short) go back to 50% 35% in company.css,
-          // because 50% would lift the drone off the top of the frame there.
-          portraitPosition: "50% 50%",
-        }}
+        {...photographHero("drone")}
       />
 
       <section className="v6-sec co-mission" id="mission">

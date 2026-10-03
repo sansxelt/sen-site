@@ -100,6 +100,7 @@ export function Hero() {
           <span className="v6-mask"><span className="v6-mask__in">{HEADLINE[0]}</span></span>
           <span className="v6-mask"><span className="v6-mask__in" style={{ animationDelay: "150ms" }}>{HEADLINE[1]}</span></span>
         </h1>
+        <p className="v6-h__credit">Rendered scenes and real footage.</p>
         <button type="button" className="v6-h__pause" onClick={toggle} aria-label={playing ? "Pause the film" : "Play the film"}>
           {playing
             ? <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden><path d="M5 3.5v9M11 3.5v9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>

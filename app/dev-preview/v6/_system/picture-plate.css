@@ -1,0 +1,36 @@
+.v6-plate { margin: 0; min-width: 0; }
+.v6-plate__image { overflow: hidden; border-radius: 12px; background: #111214; }
+.v6-plate__image img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; }
+.v6-plate[data-kind="evidence"] { max-width: 640px; }
+.v6-plate[data-kind="evidence"] .v6-plate__image { border: 1px solid rgba(255,255,255,.12); border-radius: 6px; }
+.v6-plate[data-kind="evidence"] img { aspect-ratio: auto; object-fit: contain; }
+.v6-plate__caption { display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; margin-top: 14px;
+  font-family: var(--sans, inherit); font-size: 12px; line-height: 1.6; color: var(--ink-3, #a5a5ad); }
+.v6-plate__caption a { color: inherit; text-decoration: none; }
+.v6-plate__caption a:hover { color: var(--ink, #fafafa); text-decoration: underline; }
+.v6-plate__caption a:focus-visible { outline: 2px solid #fafafa; outline-offset: 4px; }
+.v6-evidence-list { display: grid; gap: 80px; }
+.v6-evidence-record { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(28px, 6vw, 96px); align-items: center; }
+.v6-evidence-record__text { min-width: 0; }
+.v6-evidence-record__text h3 { margin: 0 0 20px; font-family: var(--display); font-size: clamp(24px, 3vw, 36px); line-height: 1.2; font-weight: 500; }
+.v6-evidence-record__text > p { color: var(--ink-2); line-height: 1.65; max-width: 48ch; }
+.v6-evidence-record__text > .v6-elink { margin-top: 24px; }
+.v6-evidence-record__details { margin-top: 36px; border-top: 1px solid var(--hairline, #303033); padding-top: 18px; }
+.v6-evidence-record__details summary { cursor: pointer; font-size: 14px; color: var(--ink-2); }
+.v6-evidence-record__details[open] summary { margin-bottom: 24px; }
+.v6-evidence-record__details pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; line-height: 1.7; }
+@media (max-width: 900px) {
+  .v6-evidence-record { grid-template-columns: 1fr; gap: 28px; }
+  .v6-evidence-list { gap: 64px; }
+}
+
+.v6-reference { padding: 24px 0; border-top: 1px solid rgba(255,255,255,.14); min-width: 0; }
+.v6-reference__label { display: flex; flex-wrap: wrap; gap: 12px 24px; color: var(--ink-3); font-size: 12px; margin: 0 0 20px; }
+.v6-reference__body { min-width: 0; }
+.v6-reference__body pre { white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--mono); font-size: 13px; line-height: 1.7; margin: 0; }
+.v6-reference__caption { color: var(--ink-3); font-size: 12px; line-height: 1.65; margin-top: 18px; }
+.v6-mp .v6-mp__shell { padding: 0; border-radius: 6px; background: transparent; }
+.v6-mp .v6-mp__cap { display: flex; flex-wrap: wrap; gap: 6px 20px; line-height: 1.6; }
+.v6-mp__description { flex-basis: 100%; }
+.v6-sx-fixture .v6-mp { max-width: 560px; margin: 0 auto; }
+.v6-sx-fixture .v6-ff__links { justify-content: center; }

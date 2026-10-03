@@ -1,3 +1,4 @@
+import { photographHero } from "../_content/photography";
 import { v6meta } from "../_system/meta";
 import { SectionHead, Reveal } from "../_system/ui";
 import { FrameHero, DoesBox, Band, FeatureGrid, FeatureCard, CrossLinks, type CrossLink } from "../_system/kit";
@@ -74,27 +75,6 @@ const ROWS: CoverageRow[] = [
 ];
 const rowsIn = (g: Group) => ROWS.filter((r) => r.group === g);
 
-/** The hero's coded panel: every surface and where it stands, in the order of the list below it. */
-function CoverageBoard() {
-  return (
-    <div className="v6-lim-board">
-      <p className="v6-lim-board__head">
-        <span>What it can check</span>
-        <span>Today</span>
-      </p>
-      <ul className="v6-lim-board__list" role="list">
-        {GROUPS.flatMap(rowsIn).map((r) => (
-          <li className="v6-lim-board__row" key={r.name}>
-            <span className="v6-lim-board__name">{r.name}</span>
-            <span className="v6-lim-board__tier" data-tier={r.group}>{r.group}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-/* ── The summary ────────────────────────────────────────────────────────────────────────────────────────── */
 
 const DOES: string[] = [
   "Checks what a person can do in a web app, or in a device's web control panel, in a real browser.",
@@ -193,7 +173,7 @@ const sectorCard = (slug: "defense" | "fleets"): CrossLink => {
 // The Security card reads as it does everywhere it appears (/solutions/defense, /enterprise): one line and one
 // 16:10 picture per target across the site.
 const RELATED: CrossLink[] = [
-  { title: "Security", body: "What Vraelis stores, and how it is protected.", href: `${BASE}/security`, image: "/solutions/security-16x10.jpg" },
+  { title: "Security", body: "What Vraelis stores, and how it is protected.", href: `${BASE}/security`, image: "/site/photography/signup.jpg" },
   sectorCard("defense"),
   sectorCard("fleets"),
 ];
@@ -207,7 +187,7 @@ export default function V6Limitations() {
         sub="The edges of the product as it is today, in plain words. Each one is current, and most have a workaround."
         primary={{ label: "Start free", href: SIGNUP }}
         secondary={{ label: "See the coverage", href: "#coverage" }}
-        panel={{ kind: "node", label: "What Vraelis can check today", node: <CoverageBoard /> }}
+        {...photographHero("flight")}
       />
 
       <section className="v6-sec" id="does">

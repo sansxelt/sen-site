@@ -1,10 +1,11 @@
+import { photographHero } from "../_content/photography";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AltRows, Band, CrossLinks, FeatureCard, FeatureGrid, FrameHero } from "../_system/kit";
 import { SectionHead } from "../_system/ui";
 import { ClosingScene } from "../_system/close";
 import { Code, CopyScript } from "../_system/code";
-import { AgentsAside, LimitsLine, ProductPanel } from "../_system/hero-asides";
+import { LimitsLine, ProductPanel } from "../_system/hero-asides";
 import { v6meta } from "../_system/meta";
 import { STRIKE } from "../_content/strike";
 import { sectorBySlug } from "../_content/sectors";
@@ -146,7 +147,7 @@ export default function Agents() {
         sub="Claude Code, Codex, Cursor, Copilot and any MCP client can request a check of the live app before they say done. Only a person can approve the plan."
         primary={{ label: "Set it up", href: "#setup" }}
         secondary={{ label: "Read the setup guide", href: `${BASE}/docs/ai-assistants` }}
-        panel={{ kind: "node", label: "The three MCP tools", bar: { left: "vraelis.com/mcp", right: "MCP tools" }, node: <AgentsAside /> }}
+        {...photographHero("client")}
       />
 
       {/* ── Setup: the showcase. The commands, with Copy, beside what they set up. ── */}
@@ -268,8 +269,8 @@ export default function Agents() {
           <CrossLinks
             links={[
               { title: aiBuilt.label, body: aiBuilt.line, href: aiBuilt.href, image: aiBuilt.pics.card1610 },
-              { title: "Developers", body: "The CLI, the API and CI.", href: `${BASE}/developers`, image: "/site/card/developers-16x10.jpg" },
-              { title: "The setup guide", body: "Every assistant, line by line.", href: `${BASE}/docs/ai-assistants`, image: "/site/product/ai-assistants-guide-16x10.jpg" },
+              { title: "Developers", body: "The CLI, the API and CI.", href: `${BASE}/developers`, image: "/site/photography/agent.jpg" },
+              { title: "The setup guide", body: "Every assistant, line by line.", href: `${BASE}/docs/ai-assistants`, image: "/site/photography/client.jpg" },
             ]}
           />
         </div>

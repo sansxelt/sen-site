@@ -11,6 +11,7 @@ import "./_system/pagekit.css";
 import "./_system/docs.css";
 import "./_system/changelog.css";
 import "./_system/legal.css";
+import "./_system/picture-plate.css";
 import { V6Shell } from "./_system/shell";
 import { auth } from "@/auth";
 import { V6_ORIGIN } from "./_system/meta";

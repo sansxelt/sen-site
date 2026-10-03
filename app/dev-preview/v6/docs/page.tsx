@@ -22,9 +22,9 @@ export const metadata: Metadata = v6meta({
 // journey with its failed step, and the console's Command line page. They are decorative here (alt=""): each
 // card is a link named by its title, and the full captures, with their alt text, are on the pages they open.
 const START: { slug: string; src: string }[] = [
-  { slug: "getting-started", src: "/docs/card-getting-started.webp" },
-  { slug: "the-loop", src: "/docs/card-the-loop.webp" },
-  { slug: "ai-assistants", src: "/docs/card-ai-assistants.webp" },
+  { slug: "getting-started", src: "/site/photography/signup.jpg" },
+  { slug: "the-loop", src: "/site/photography/checkout.jpg" },
+  { slug: "ai-assistants", src: "/site/photography/client.jpg" },
 ];
 
 // One line each, as a reader would type it. Machine text, never translated.

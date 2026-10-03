@@ -39,6 +39,15 @@ export type Entry = {
 export const entryId = (e: Entry) => `${e.date}-${e.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48)}`;
 
 export const CHANGELOG: Entry[] = [
+  {
+    date: "2026-10-03", tag: "go", tagLabel: "Shipped",
+    title: "Real pictures, real evidence",
+    body: [
+      "The marketing site now uses licensed photographs and genuine screenshots of the software being checked. Rebuilt app windows and screenshots of the current Vraelis console have been removed from the homepage, product and sector pages, menus, cards, documentation and account entry screens.",
+      "The recorded examples keep their original run IDs, dates and evidence. Photographs carry their source separately, and the homepage film identifies its rendered scenes."
+    ],
+    href: "/use-cases", hrefLabel: "Read the records",
+  },
   // ── 2026-10-03 (UTC), the day the rebuilt site was pushed, written from the code ─────────────────────────────
   // Plan D, Batch 8: one entry for the rebuild, dated the push day in UTC (if the push slips past 2026-10-04 00:00
   // UTC, this date moves with it). Every fact is in _content/sectors.ts (the registry the Solutions menu, /solutions
@@ -61,12 +70,7 @@ export const CHANGELOG: Entry[] = [
     note: "Every check these pages show ran on Larkspur or on a Vraelis demo app, never on a customer's app.",
     href: "/solutions",
     hrefLabel: "See every sector",
-    media: {
-      src: "/site/changelog/solutions-index.png", w: 2284, h: 1574,
-      alt: "The Solutions page: the heading “One check, wherever software has to work.”, its lead, and the Sectors group, four cards for Defense, Robotics and fleets, Fintech and commerce and Public sector, each with its picture and one line.",
-      address: "vraelis.com/solutions",
-      label: "Captured 2026-10-03",
-    },
+
   },
   // ── 2026-10-02 to 2026-09-30 (UTC), written on 2026-10-02 from the code and the records ───────────────────
   // 10c6b20f, with bc0ae260, e761edc1, ef7a9c93 and 1ef74d43. Every fact is in _system/hero.tsx, app/film/CREDITS.md,
@@ -123,12 +127,7 @@ export const CHANGELOG: Entry[] = [
       "The answers shape the setup checklist. Someone who builds with a coding agent is asked to connect it second, not after reading the first record. A team is asked to invite a teammate, and an agency to give its client read-only access. The choices stay within what is built: a web app or a device's control panel can be checked, and a desktop or mobile app says it is not built yet.",
       "A guarantee now says when it was last checked, and says so when its system has been checked again since. In Records, an event about a check names its system, shows the sentence a run checked, and opens the record. The address field on the homepage opens the console's composer with the address already filled in.",
     ],
-    media: {
-      src: "/site/changelog/onboarding.png", w: 1876, h: 754,
-      alt: "The Set up Vraelis card on the console's Overview: What do you want to check first, How do you build and Who looks at the results, each with one-tap answers, then Save and Skip.",
-      address: "app.vraelis.com",
-      label: "Captured 2026-10-02",
-    },
+
   },
   // e626f96e (v6.css, pagekit.css, public/vraelis/authenticated.css and styles.css, app/globals.css, shell.tsx).
   {
@@ -140,12 +139,7 @@ export const CHANGELOG: Entry[] = [
       "The site, the docs, sign-in and the console now share one black ground. Cards sit a step above it with a visible hairline, the main action on a page is white, and text keeps clear steps of grey. It replaces the lighter console from September 30.",
       "The colours that carry a result were tuned for black, so a check that held, one that needs a person and one that failed still read apart. Selected text is inverted everywhere, and the phone menu no longer lets the page behind it scroll.",
     ],
-    media: {
-      src: "/site/changelog/console.png", w: 2360, h: 880,
-      alt: "The console on its black ground: the bar, the sidebar and the Systems page with one system, Notewell.",
-      address: "app.vraelis.com/systems",
-      label: "Captured 2026-10-02",
-    },
+
   },
   // 832acebf (5d136273) and b7a7103f: lib/two-step.ts (TOTP_DIGITS, EMAIL_CODE_TTL_S, RECOVERY_CODE_COUNT),
   // lib/two-step-db.ts, lib/two-step-session.ts, app/api/v/two-step/route.ts, account/two-step-section.tsx.
@@ -159,12 +153,7 @@ export const CHANGELOG: Entry[] = [
       "Once it is on, every way of signing in asks for a code: a password, Google, GitHub and single sign-on. The code is checked on the server, an emailed code works once and for ten minutes, and changing the setting later needs a current code.",
     ],
     note: "It is set for each account. An organization cannot require it of its members.",
-    media: {
-      src: "/site/changelog/two-step.png", w: 1402, h: 788,
-      alt: "The Two-step verification section of the Account page: Status Off, Authenticator app Not set up with a Set up button, and Email codes Off with a Turn on button. The account's email address is masked.",
-      address: "app.vraelis.com/account",
-      label: "Captured 2026-10-02",
-    },
+
   },
   // 3e7fcd3d: lib/i18n/locales.ts (READY_LOCALES), components/language-controller.tsx, lib/i18n/client.ts,
   // components/english-only-notice.tsx.
@@ -179,12 +168,7 @@ export const CHANGELOG: Entry[] = [
       "Legal pages stay in English, with a note in the reader's language that the English text is the one that applies.",
     ],
     note: "Pages are written in English and translated in the browser. A sentence that has no translation yet shows in English, never as a blank.",
-    media: {
-      src: "/site/changelog/languages.png", w: 1876, h: 856,
-      alt: "The console's setup checklist, read in Japanese.",
-      address: "app.vraelis.com/?lang=ja",
-      label: "Captured 2026-10-02",
-    },
+
   },
   // 4d80a640 (47884651): app/_components/privacy-choices.tsx, lib/privacy-choice.ts, /cookies and /acceptable-use.
   {
@@ -197,12 +181,7 @@ export const CHANGELOG: Entry[] = [
       "Essential only and Save my choices are the same size. A browser that sends Global Privacy Control keeps every optional category off. The legal pages ask in a bar at the foot of the page, so they can be read first.",
       "Privacy choices, in the footer of the site, the docs, the account screens and the console, opens the question again. A cookie policy lists every cookie and storage key the code sets, and the acceptable use policy has its own page.",
     ],
-    media: {
-      src: "/site/changelog/privacy.png", w: 1168, h: 1442,
-      alt: "The privacy choices dialog over the console: Essential is always on; Preferences, Analytics and Advertising measurement are off; Essential only and Save my choices are two buttons of the same size.",
-      address: "app.vraelis.com/systems",
-      label: "Captured 2026-10-02",
-    },
+
   },
   // ── the entries below were written before 2026-10-02 and stay exactly as written: they are records ───────────
   {

@@ -124,3 +124,5 @@
 .v6-mask__in { display: block; animation: v6MaskIn 860ms cubic-bezier(0.22,1,0.36,1) both; animation-delay: 60ms; }
 @keyframes v6MaskIn { from { transform: translateY(112%); } to { transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { .v6-mask__in { animation: none !important; } }
+
+.v6-h__credit { position: absolute; left: 22px; bottom: 26px; margin: 0; max-width: calc(100% - 100px); font-size: 11px; line-height: 1.5; color: rgba(255,255,255,.78); text-shadow: 0 1px 6px #000; }

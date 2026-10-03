@@ -1,3 +1,4 @@
+import { photograph, photographHero, SECTOR_PHOTOGRAPHS, USE_CASE_PHOTOGRAPHS } from "../_content/photography";
 // THE SECTOR PAGE (plan A9 T2) AND THE SOLUTIONS INDEX CARDS (T14). Revision 2, 2026-10-02. Owner: b5a.
 //
 //   import { SectorPageView, SolutionCards } from "../../_system/sector";
@@ -32,17 +33,15 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Fragment, type ReactNode } from "react";
 import {
-  Band, CrossLinks, DoesBox, FactRow, Faq, FeatureCard, FeatureGrid, FrameHero, MediaPanel, RecordSteps,
-  type CrossLink, type FaqItem, type FrameHeroProps, type KitBar,
+  Band, CrossLinks, DoesBox, FactRow, Faq, FeatureCard, FeatureGrid, FrameHero, MediaPanel,
+  type CrossLink, type FaqItem, type FrameHeroProps,
 } from "./kit";
 import { EditorialLink, ProseLink, SectionHead } from "./ui";
 import { ClosingScene } from "./close";
 import { Code, CopyScript } from "./code";
 import { RecordPanel } from "./record-panel";
-import { FixtureFrame } from "./fixture-frame";
 import { SECTOR_GROUPS, sectorBySlug, sectorsIn, type Sector } from "../_content/sectors";
 import { LIMITS_LINK, sectorPage, type SectorCross, type SectorPage, type SectorRecordView } from "../_content/sector-pages";
-import { RECORDS } from "../_content/use-cases";
 import { V6_BASE } from "@/lib/v6-routes";
 import "./sector.css";
 
@@ -50,61 +49,11 @@ const two = (n: number) => String(n).padStart(2, "0");
 
 /* ───────────────────────────────────────────────────────────────────────────────────────────── hero ── */
 
-/** Notewell's run (run 4fc6e52c), read from the record (_content/use-cases.ts, which reads _content/demos.ts). */
-const NOTES = RECORDS.notes;
-const NOTES_RUN = NOTES.runs[0];
-
-/** Notewell's second journey, as recorded (the public sector page's coded panel): the journey, its three steps
- *  with their timings, and what the run saw. The run's words are the record's (data-no-translate). */
-function JourneyPanel() {
-  const j = NOTES_RUN.journeys[1];
-  return (
-    <div className="v6-sx-jp">
-      <p className="v6-sx-jp__k">Journey 2 of 2</p>
-      <p className="v6-sx-jp__t" data-no-translate>{j.name}</p>
-      <RecordSteps steps={j.steps} />
-      <p className="v6-sx-jp__cap">{NOTES_RUN.shot.caption}</p>
-      <p className="v6-sx-jp__meta">
-        <span><span>Run</span> <span data-no-translate>{NOTES_RUN.id}</span></span>
-        <span><span>Recorded</span> <span data-no-translate>{NOTES_RUN.recorded}</span></span>
-      </p>
-    </div>
-  );
-}
-
-/** A run and its date for a panel's bar: "Run 4fc6e52c, recorded 2026-07-31", the id and date never translated. */
-function runLabel(run: string, recorded: string): ReactNode {
-  return <>Run <span data-no-translate>{run}</span>, recorded <span data-no-translate>{recorded}</span></>;
-}
-
 /** FrameHero's props for a sector: the registry says which kind of hero it has and where the files are; the page
  *  copy gives the words, the alt text, the positions, the bar and the credit. */
 function heroProps(page: SectorPage, sector: Sector): FrameHeroProps {
-  const { eyebrow, title, sub, primary, secondary, art } = page.hero;
-  const common = { eyebrow, title, sub, primary, secondary };
-  if (art.kind === "scene" && sector.pics.hero) {
-    return {
-      ...common,
-      picture: { src: sector.pics.hero, portrait: sector.pics.heroPortrait, alt: art.alt, position: art.position, portraitPosition: art.portraitPosition },
-      credit: art.credit,
-    };
-  }
-  if (art.kind === "panel" && sector.pics.heroPanel) {
-    const bar: KitBar = { left: art.bar.left, right: art.bar.run && art.bar.recorded ? runLabel(art.bar.run, art.bar.recorded) : undefined };
-    return {
-      ...common,
-      panel: { kind: "image", src: sector.pics.heroPanel, w: art.w, h: art.h, alt: art.alt, bar, evidence: art.evidence },
-      credit: art.credit,
-    };
-  }
-  if (art.kind === "journey") {
-    return {
-      ...common,
-      panel: { kind: "node", label: art.label, bar: { left: `${NOTES.address}/dashboard`, right: "Did what the sentence says" }, node: <JourneyPanel /> },
-    };
-  }
-  // The registry and the page copy disagree about the hero's kind: a build-time mistake, not a visitor's.
-  throw new Error(`sector ${page.slug}: hero art "${art.kind}" does not match the registry's pictures`);
+  const { eyebrow, title, sub, primary, secondary } = page.hero;
+  return { eyebrow, title, sub, primary, secondary, ...photographHero(SECTOR_PHOTOGRAPHS[sector.slug]) };
 }
 
 /* ──────────────────────────────────────────────────────────────────────────────────────── sections ── */
@@ -171,7 +120,7 @@ function Fixture({ page }: { page: SectorPage }) {
         <p className="v6-sx-sentence__k">{f.sentenceLabel}</p>
         <p className="v6-sx-sentence__t">{f.sentence}</p>
       </div>
-      <FixtureFrame narrow={<FixtureNarrow />} />
+      <FixtureNarrow />
     </Sec>
   );
 }
@@ -347,7 +296,7 @@ function crossLink(c: SectorCross): CrossLink {
     return { title: s.label, body: s.line, href: s.href, image: s.pics.card1610 };
   }
   if ("useCase" in c) {
-    return { title: c.title, body: c.body, href: `${V6_BASE}/use-cases/${c.useCase}`, image: `/site/card/${c.useCase}-16x10.jpg` };
+    return { title: c.title, body: c.body, href: `${V6_BASE}/use-cases/${c.useCase}`, image: photograph(USE_CASE_PHOTOGRAPHS[c.useCase]).src };
   }
   return { title: c.title, body: c.body, href: c.href, image: c.image };
 }

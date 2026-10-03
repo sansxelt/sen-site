@@ -290,7 +290,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     },
     cross: [
       { sector: "fleets" },
-      { title: "Security", body: "What Vraelis stores, and how it is protected.", href: `${BASE}/security`, image: "/solutions/security-16x10.jpg" },
+      { title: "Security", body: "What Vraelis stores, and how it is protected.", href: `${BASE}/security`, image: "/site/photography/signup.jpg" },
       LARKSPUR_RECORD,
     ],
     closing: { title: "Bring one sentence and a simulation build.", action: { label: "Talk to us", href: contact("defense") } },
@@ -378,7 +378,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     },
     cross: [
       { sector: "defense" },
-      { title: "What it can reach", body: "Web apps, and devices through the panels that run them.", href: `${BASE}/platform#coverage`, image: "/site/hero/platform.jpg" },
+      { title: "What it can reach", body: "Web apps, and devices through the panels that run them.", href: `${BASE}/platform#coverage`, image: "/site/photography/client.jpg" },
       LARKSPUR_RECORD,
     ],
     closing: { title: "Point it at your fleet's panel.", action: { label: "Talk to us", href: contact("fleets") } },
@@ -545,7 +545,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     },
     limits: { kind: "line", text: "It does not read your code, and native and desktop apps are not built yet." },
     cross: [
-      { title: "AI assistants", body: "Set up Vraelis in your coding agent, over MCP.", href: `${BASE}/agents`, image: "/site/card/agents-16x10.jpg" },
+      { title: "AI assistants", body: "Set up Vraelis in your coding agent, over MCP.", href: `${BASE}/agents`, image: "/site/photography/client.jpg" },
       { sector: "saas" },
       { useCase: "notes-that-survive-sign-out", title: "Notes that survive sign-out", body: "Two journeys from one sentence, step by step." },
     ],
@@ -626,7 +626,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     cross: [
       { sector: "commerce" },
       { sector: "ai-built-apps" },
-      { title: "Developers", body: "The CLI, the API and CI.", href: `${BASE}/developers`, image: "/site/card/developers-16x10.jpg" },
+      { title: "Developers", body: "The CLI, the API and CI.", href: `${BASE}/developers`, image: "/site/photography/agent.jpg" },
     ],
     closing: { title: "Write the sentence your customers would.", action: { label: "Start free", href: SIGNUP } },
   },
@@ -700,7 +700,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
       { sector: "saas" },
       // The /pricing "One verification is" strip, composed as a 16:10 card (public/site/card/CREDITS.md). No prices in
       // the picture: a picture of the plan cards would be a second price list that does not follow the library.
-      { title: "Pricing", body: "Listed plans, and what one verification includes.", href: `${BASE}/pricing`, image: "/site/card/pricing-16x10.jpg" },
+      { title: "Pricing", body: "Listed plans, and what one verification includes.", href: `${BASE}/pricing`, image: "/site/photography/checkout.jpg" },
     ],
     closing: { title: "Ship the handover with the evidence.", action: { label: "Start free", href: SIGNUP } },
   },

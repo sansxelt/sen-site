@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { ProductSurface } from "@/app/_components/product-surface";
-import { RecordPreview } from "@/components/record-preview";
+import { PicturePlate } from "@/app/dev-preview/v6/_system/picture-plate";
 import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
 import { LanguageSwitcher } from "@/components/language-switcher";
 
@@ -33,8 +33,11 @@ export function AuthFrame({ children }: { children: ReactNode }) {
         <aside className="auth-split__side" aria-label="What a Vraelis check looks like">
           <div className="auth-split__sidein">
             <p className="auth-split__title">Know what you built does what you meant.</p>
-            <p className="auth-split__kicker">A real check on a Vraelis demo app, as the console shows it.</p>
-            <RecordPreview compact />
+            <p className="auth-split__kicker">From a real recorded check of a Vraelis demo app.</p>
+            <PicturePlate src="/use-cases/checkout-before-plan.png" w={880} h={248}
+              alt="The Lumen Notes demo account after signing back in: Current plan shows Free."
+              evidence caption="Lumen Notes is a Vraelis demo app. Nothing in it is real and no payment is taken."
+              credit={<span data-no-translate>3fad10f5 / 2026-07-22 UTC</span>} />
             <div className="auth-split__partners">
               <span>Partnership records</span>
               <a href="/partnerships/reddit">Vraelis × Reddit</a>

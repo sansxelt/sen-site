@@ -24,6 +24,7 @@ import { CTA, EditorialLink } from "./ui";
 import { V6_BASE, V6_DOCS } from "@/lib/v6-routes";
 import { CHANGELOG, entryId } from "../_content/changelog";
 import "./home-bands.css";
+import { Photograph } from "./picture-plate";
 
 const STATEMENT = "Your coding agent says it is done. A person approves the plan, and Vraelis checks it on the live product.";
 
@@ -129,29 +130,7 @@ export function AgentsBand() {
             <CTA ghost href={`${V6_DOCS}/ai-assistants`}>Read the docs</CTA>
           </div>
         </div>
-        {/* A product panel (data-panel): the CLI's and the MCP tools' own words, which the word budget skips. */}
-        <div className="v6-ag__term" role="img" aria-label="Terminal: install the Vraelis CLI, connect a coding agent, and check a preview deploy" data-panel="">
-          <div className="v6-ag__bar"><span>terminal</span></div>
-          {/* The install is two real shell lines, the way the verify command already was: on a phone the one
-              long line wrapped before "sh" and left the pipe dangling, and this still runs exactly as copied.
-              Each continuation backslash is held to the word before it (.nw), so a very narrow screen can
-              wrap before the address but never leaves a "\" alone on a line. */}
-          <pre>
-            <span className="c"># install</span>{"\n"}
-            <span className="p">$</span> curl -fsS <span className="nw">https://vraelis.com/install \</span>{"\n"}
-            {"  "}| sh{"\n\n"}
-            <span className="c"># plug Vraelis into your coding agent</span>{"\n"}
-            <span className="p">$</span> vraelis init claude{"\n\n"}
-            <span className="c"># or check a preview from CI; only <span className="nw">exit 0 ships</span></span>{"\n"}
-            <span className="p">$</span> vraelis verify --url <span className="nw">&quot;$PREVIEW_URL&quot; \</span>{"\n"}
-            {"    "}--claim &quot;$CLAIM&quot; --wait
-          </pre>
-          <ul className="v6-ag__tools" aria-label="The tools your agent gets">
-            <li><code>vraelis_verify</code><span>Check a change on the live app</span></li>
-            <li><code>vraelis_status</code><span>Waiting for approval, running, or done</span></li>
-            <li><code>vraelis_recheck</code><span>The same approved check, after a fix</span></li>
-          </ul>
-        </div>
+        <Photograph name="client" />
       </div>
     </section>
   );

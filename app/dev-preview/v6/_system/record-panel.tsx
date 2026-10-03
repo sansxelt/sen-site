@@ -1,90 +1,12 @@
-// THE RECORD PANEL: ONE REAL RECORDED CHECK, IN TABS (plan A9 T2 step 4, S2; revision 2, 2026-10-02). Owner: b5b.
-//
-// ─── API (the sector pages wire this in; server-safe: import it from a server page) ─────────────────────────
-//
-//   import { RecordPanel } from "../../_system/record-panel";
-//
-//   <RecordPanel record="strike" />
-//       Larkspur, run vrf_51705517. Tabs: The sentence, The plan, The run, The finding.             (defense)
-//   <RecordPanel record="strike" views={["run", "finding"]} label="The Larkspur record" />
-//       A compact Larkspur panel: any of its views, in the order given.                              (fleets)
-//   <RecordPanel record="checkout" />
-//       Lumen Notes, runs 3fad10f5 and 588c48f7. Tabs: Before the fix, After the fix, The steps.     (commerce)
-//   <RecordPanel record="notes" />
-//       Notewell, run 4fc6e52c. Tabs: Journey 1, Journey 2, The screen.                              (ai-built-apps)
-//   <RecordPanel record="notes" views={["screen", "journey-2"]} />
-//       Notewell's screen, then journey 2 (signed out, /dashboard sent the browser to sign in).      (public sector)
-//   <RecordPanel record="projects" />
-//       The fixture dashboard, run de53ab8b. Tabs: The journey, The run, The finding.                (saas)
-//   <RecordPanel records={["checkout", "notes", "projects"]} />
-//       One tab per demo app (Lumen Notes, Notewell, Project tracker): the sentence, each run's
-//       outcome phrase, the first run's evidence crop, and a link to its use-case page.              (agencies)
-//
-// Props (exactly one of record and records):
-//   record   RecordKey: "strike" | "checkout" | "notes" | "projects".
-//   records  RecordKey[]: several records, one summary tab each, labelled with the app's name.
-//   views    RecordView[]: which tabs, in this order (with `record` only). Default per record, as above. A view
-//            the record cannot show is left out ("journey-2" on a one-journey run, "before" and "after" on a
-//            one-run record, "prompt" on a run that found nothing).
-//   height   passed to the kit's Tabs (default 520), which record-panel.css overrides at every width: from 900px
-//            up the box is a visible frame (the panel ground, a hairline, radius 16, 28px inside) as tall as its
-//            tallest view, so a short view sits inside one evidence window instead of over an empty band, and
-//            switching tabs still moves nothing (final review, 2026-10-02). Below 900px the views stack into one
-//            column, so the panel takes the open view's own height, as the kit's Tabs do on a phone. Measured for
-//            every view of every panel above at 1920, 1440, 1100, 1024, 900, 768 and 390 on 2026-10-02.
-//   label    the tab list's accessible name. Default "The <app> record" ("Three demo records" for `records`).
-//   initial  the view (or, with `records`, the record key) open on load. Default the first.
-//
-// Views (tab labels in quotes):
-//   "sentence"   "The sentence": the claim verbatim, the approval line where the record holds one, and Larkspur's
-//                CLI command as a reference block, with the line on what Larkspur is under the sentence. "The
-//                journey" where the record has no sentence (projects), with what the app is and the run's facts.
-//   "plan"       "The plan": the requirements (Larkspur's record holds nine; the demo records hold none) and the
-//                journeys with their planned step counts.
-//   "run"        "The run": every journey of the first run, each step with its timing, the step that found the
-//                problem marked "Found a problem"; the outcome, run id, date and duration beside it, and the
-//                record's note on its other journeys (Larkspur's two that could not press Confirm target).
-//   "journey-1", "journey-2"   "Journey 1", "Journey 2": one journey of the first run (Notewell).
-//   "finding"    "The finding": expected and observed in the record's words, the evidence crop, and the first
-//                eight lines of the repair prompt with Copy. On a run that found nothing: "The outcome".
-//   "screen"     "The screen": the run's evidence crop (at most 640 wide) with its caption, the outcome and facts.
-//   "before", "after"   "Before the fix", "After the fix": Lumen Notes' two runs, each with its outcome and facts,
-//                what it found (or that the same eleven steps found nothing), and the same strip of the account
-//                page.
-//   "steps"      "The steps": the eleven planned steps as the run before the fix took them, and a line on the
-//                run after the fix.
-//   "prompt"     "The repair prompt": the whole prompt, with Copy.
-// The CLI command and the repair prompt are reference blocks (Code, .v6-code): the prompt's own wording ("A check
-// of ... failed") is product output, which plan 0.3 allows there and only there.
-//
-// Wrapping: <section className="v6-sec" id="record"><div className="v6-wrap"><SectionHead .../><RecordPanel .../>
-// It carries data-panel on its outermost element (its record text does not count against the page's word
-// budget), wires the Copy buttons once (CopyScript), and adds no margin of its own above.
-//
-// Data: _content/use-cases.ts (RECORDS), which reads _content/strike.ts and _content/demos.ts and builds the
-// demo repair prompts with the product's builder, as _system/run-window.tsx does. For a FactRow beside it, read
-// the same record: `import { RECORDS } from "../../_content/use-cases"`.
-//
-// ─── The pieces ──────────────────────────────────────────────────────────────────────────────────────────────
-// The panel is built from the exported pieces below, which the use-case pages (use-cases/[slug]/page.tsx) also
-// use in their read layout, so a record looks the same wherever it appears: RecordClaim, RecordPlan, RunFacts,
-// RunSteps, RunFinding, RunShot, RunPrompt, Outcome, and the picture's measures shotWidth and shotShape. None of
-// them carries a margin of its own.
-//
-// Pictures: each evidence crop shows at its own size or smaller, never over 640. Its bar names the address the
-// run checked, kept whole (the recorded date wraps under it when both do not fit); on a crop too narrow for the
-// address (Larkspur's contact list, 250 wide) the bar names the app instead.
-//
-// Rules this keeps (plan 0.3, 0.4, 0.6): the record's own words (sentence, steps, expected, observed, prompt) are
-// data-no-translate and never retyped; outcomes read "Found a problem" or "Did what the sentence says", never a
-// verdict word; colour appears only on the step and the observation that found the problem; evidence crops are
-// shown at most 640 wide and never larger than their own pixels; no dots.
-import type { ReactNode } from "react";
-import { MediaPanel, RecordSteps, Tabs, type TabItem } from "./kit";
+// Real recorded checks, presented as plain text beside genuine evidence.
+// The sector pages use RecordPanel; use-case pages reuse the exported record pieces.
+// The record's steps and observations stay verbatim. No product UI is recreated.
+import { RecordSteps } from "./kit";
+import { PicturePlate } from "./picture-plate";
 import { EditorialLink, Signal } from "./ui";
-import { Code, CopyScript } from "./code";
+import { Code } from "./code";
 import {
-  FOUND, HELD, RECORDS, allSteps, secondsText,
+  FOUND, HELD, RECORDS, secondsText,
   type CheckRecord, type CheckRun, type RecordKey,
 } from "../_content/use-cases";
 import "./record-panel.css";
@@ -132,7 +54,7 @@ export function RecordClaim({ record, large = false }: { record: CheckRecord; la
         <blockquote className="v6-rp__q" data-no-translate>{record.claim}</blockquote>
       ) : (
         <>
-          <figcaption className="v6-rp__k">The record has no sentence, so this is the journey's recorded name.</figcaption>
+          <figcaption className="v6-rp__k">The record has no sentence, so this is the journey&apos;s recorded name.</figcaption>
           <blockquote className="v6-rp__q" data-no-translate>{record.journeyName}</blockquote>
         </>
       )}
@@ -240,20 +162,10 @@ export function shotShape(run: CheckRun, maxH?: number): "narrow" | "wide" {
  *  the right, the caption under it. Never wider than 640 or than its own pixels; `maxH` also keeps the picture
  *  under that height (a panel's fixed box), by narrowing it. A narrow crop's bar names the app instead of the
  *  address, which would be cut to a few letters there; the address stays in the record's first step. */
-export function RunShot({ record, run, eager = false, maxH }: { record: CheckRecord; run: CheckRun; eager?: boolean; maxH?: number }) {
+export function RunShot({ record, run, eager = false }: { record: CheckRecord; run: CheckRun; eager?: boolean; maxH?: number }) {
   const s = run.shot;
-  const shown = shotWidth(run, maxH);
-  const narrow = shotShape(run, maxH) === "narrow";
-  return (
-    <div className="v6-rp__shot" style={{ ["--shot-w" as string]: `${shown + 18}px` }}>
-      <MediaPanel
-        src={s.src} alt={s.alt} w={s.w} h={s.h} evidence eager={eager}
-        sizes={`(max-width: 700px) 100vw, ${shown}px`}
-        bar={{ left: narrow ? record.name : record.address, right: <>Recorded <span data-no-translate>{run.recorded}</span></> }}
-        caption={s.caption}
-      />
-    </div>
-  );
+  return <PicturePlate src={s.src} alt={s.alt} w={s.w} h={s.h} evidence eager={eager}
+    caption={s.caption} credit={<span data-no-translate>{record.name} / {run.id} / {run.recorded} UTC</span>} />;
 }
 
 /** The repair prompt as a reference block with Copy (Code). `lines` shows only the first lines, as the sector
@@ -265,209 +177,33 @@ export function RunPrompt({ run, lines }: { run: CheckRun; lines?: number }) {
   return <div className="v6-rp__prompt"><Code lang="Repair prompt" src={text} /></div>;
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────────────────── views ── */
-
-function SentenceView({ r }: { r: CheckRecord }) {
-  return (
-    <div className="v6-rp__view v6-rp__split" data-sentence="">
-      <div className="v6-rp__main v6-rp__claimset">
-        <RecordClaim record={r} />
-        {/* Where the record names its command (Larkspur), the app is named under the sentence: the side holds
-            the command. Larkspur is always said to be a simulated console Vraelis built (rules). */}
-        {r.cli ? <p className="v6-rp__note">{r.about}</p> : null}
-      </div>
-      {r.cli ? (
-        <div className="v6-rp__side v6-rp__cli">
-          <p className="v6-rp__k">The command that started the check</p>
-          <Code lang="bash" src={r.cli} />
-        </div>
-      ) : (
-        <div className="v6-rp__side">
-          <p className="v6-rp__k">The app</p>
-          <p className="v6-rp__note">{r.about}</p>
-          <RunFacts run={r.runs[0]} outcome />
-        </div>
-      )}
-    </div>
-  );
-}
-
-function PlanView({ r }: { r: CheckRecord }) {
-  return <div className="v6-rp__view"><RecordPlan record={r} /></div>;
-}
-
-function RunView({ r, journey }: { r: CheckRecord; journey?: number }) {
-  const run = r.runs[0];
-  const j = journey === undefined ? null : run.journeys[journey] ?? null;
-  const steps = j ? j.steps : allSteps(run);
-  const notes = j ? [j.note] : [run.failure?.more, ...(run.journeys.length === 1 ? [run.journeys[0].note] : [])];
-  return (
-    <div className="v6-rp__view v6-rp__split">
-      <div className="v6-rp__main"><RunSteps run={run} journey={journey} split={steps.length > 8} /></div>
-      <div className="v6-rp__side">
-        <RunFacts run={run} outcome />
-        {notes.filter(Boolean).map((n) => <p className="v6-rp__note" key={n}>{n}</p>)}
-      </div>
-    </div>
-  );
-}
-
-/* The finding: what it found, the picture and the first lines of the prompt. The record's note on its other
-   journeys is in "The run" beside the steps, so it is not repeated here (and the three fit the 520 box at every
-   width from 900px; record-panel.css lays them out by the picture's shape). */
-function FindingView({ r, run }: { r: CheckRecord; run: CheckRun }) {
-  if (!run.failure) return <ScreenView r={r} run={run} />;
-  return (
-    <div className="v6-rp__view v6-rp__three" data-shape={shotShape(run, 380)}
-      style={{ ["--shot-w" as string]: `${shotWidth(run, 380) + 18}px` }}>
-      <div className="v6-rp__cell v6-rp__c-find"><RunFinding run={run} more={false} /></div>
-      <div className="v6-rp__cell v6-rp__c-shot"><RunShot record={r} run={run} maxH={380} /></div>
-      <div className="v6-rp__cell v6-rp__c-prompt">
-        <RunPrompt run={run} lines={8} />
-        <div className="v6-rp__more"><EditorialLink href={r.href}>Read the whole record</EditorialLink></div>
-      </div>
-    </div>
-  );
-}
-
-/* One run and its screen: the outcome and the run's facts, then what it found (or the record's sentence on
-   it), beside the picture. The tab names the run ("Before the fix"), so the view does not say it again. */
-function ScreenView({ r, run }: { r: CheckRecord; run: CheckRun }) {
-  return (
-    <div className="v6-rp__view v6-rp__split" data-shot="">
-      <div className="v6-rp__side v6-rp__first">
-        <RunFacts run={run} outcome />
-        {run.failure ? <RunFinding run={run} more={false} /> : <p className="v6-rp__note">{run.note ?? r.takeaway}</p>}
-      </div>
-      <div className="v6-rp__main"><RunShot record={r} run={run} maxH={380} /></div>
-    </div>
-  );
-}
-
-function StepsView({ r }: { r: CheckRecord }) {
-  const before = r.runs[0];
-  const after = r.runs[1];
-  return (
-    <div className="v6-rp__view v6-rp__split">
-      <div className="v6-rp__main"><RunSteps run={before} split /></div>
-      <div className="v6-rp__side">
-        <p className="v6-rp__k">{before.label ?? "The run"}</p>
-        <RunFacts run={before} outcome />
-        {after ? (
-          <>
-            <p className="v6-rp__k v6-rp__gap">{after.label ?? "The next run"}</p>
-            <RunFacts run={after} outcome />
-            {after.note ? <p className="v6-rp__note">{after.note}</p> : null}
-          </>
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
-function PromptView({ r }: { r: CheckRecord }) {
-  return <div className="v6-rp__view"><RunPrompt run={r.runs.find((x) => x.prompt) ?? r.runs[0]} /></div>;
-}
-
-/** A record in one tab, for a set of records (agencies): the sentence, each run's outcome phrase, the evidence
- *  crop of the first run, and a link to its use-case page, where the rest of the record is. */
-function SummaryView({ r }: { r: CheckRecord }) {
-  const first = r.runs[0];
-  return (
-    <div className="v6-rp__view v6-rp__split" data-shot="">
-      <div className="v6-rp__side v6-rp__first">
-        <RecordClaim record={r} />
-        <ul className="v6-rp__outs" role="list">
-          {r.runs.map((run) => (
-            <li key={run.id}>
-              {run.label ? <span className="v6-rp__k">{run.label}</span> : null}
-              <span className="v6-rp__big"><Outcome run={run} /></span>
-              <span className="v6-rp__mono" data-no-translate>{run.id}</span>
-              <span className="v6-rp__mono" data-no-translate>{run.recorded}</span>
-              <span className="v6-rp__mono" data-no-translate>{secondsText(run.seconds)}</span>
-            </li>
-          ))}
-        </ul>
-        <div className="v6-rp__more"><EditorialLink href={r.href}>Read the record</EditorialLink></div>
-      </div>
-      <div className="v6-rp__main"><RunShot record={r} run={first} maxH={380} /></div>
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────────────────────────────────────────────── the panel ── */
-
-const VIEW_LABEL: Record<RecordView, (r: CheckRecord) => string> = {
-  sentence: (r) => (r.claim ? "The sentence" : "The journey"),
-  plan: () => "The plan",
-  run: () => "The run",
-  "journey-1": () => "Journey 1",
-  "journey-2": () => "Journey 2",
-  finding: (r) => (r.runs[0].failure ? "The finding" : "The outcome"),
-  screen: () => "The screen",
-  before: (r) => r.runs[0].label ?? "The first run",
-  after: (r) => r.runs[1]?.label ?? "The next run",
-  steps: () => "The steps",
-  prompt: () => "The repair prompt",
-};
-
-const CAN_SHOW: Record<RecordView, (r: CheckRecord) => boolean> = {
-  sentence: () => true,
-  plan: () => true,
-  run: () => true,
-  "journey-1": (r) => r.runs[0].journeys.length > 0,
-  "journey-2": (r) => r.runs[0].journeys.length > 1,
-  finding: () => true,
-  screen: () => true,
-  before: (r) => r.runs.length > 1,
-  after: (r) => r.runs.length > 1,
-  steps: () => true,
-  prompt: (r) => r.runs.some((x) => !!x.prompt),
-};
-
-function viewContent(view: RecordView, r: CheckRecord): ReactNode {
-  switch (view) {
-    case "sentence": return <SentenceView r={r} />;
-    case "plan": return <PlanView r={r} />;
-    case "run": return <RunView r={r} />;
-    case "journey-1": return <RunView r={r} journey={0} />;
-    case "journey-2": return <RunView r={r} journey={1} />;
-    case "finding": return <FindingView r={r} run={r.runs[0]} />;
-    case "screen": return <ScreenView r={r} run={r.runs[0]} />;
-    case "before": return <ScreenView r={r} run={r.runs[0]} />;
-    case "after": return <ScreenView r={r} run={r.runs[1]} />;
-    case "steps": return <StepsView r={r} />;
-    case "prompt": return <PromptView r={r} />;
-  }
-}
-
 type PanelProps = { height?: number; label?: string; initial?: string } & (
   | { record: RecordKey; views?: RecordView[]; records?: never }
   | { records: RecordKey[]; record?: never; views?: never }
 );
 
-/**
- * One real recorded check in the kit's Tabs, one height for every tab (from 900px the frame takes its tallest
- * view's height) so switching tabs never moves the page. See the API at the top of this file.
- */
+/** The record is an editorial explanation beside its actual evidence, never a replica of the app. */
 export function RecordPanel(props: PanelProps) {
-  const { height = 520, initial } = props;
-  let tabs: TabItem[];
-  let label: string;
-  if (props.records) {
-    const rs = props.records.map((k) => RECORDS[k]);
-    tabs = rs.map((r) => ({ id: r.key, label: r.tab, content: <SummaryView r={r} /> }));
-    label = props.label ?? "Three demo records";
-  } else {
-    const r = RECORDS[props.record];
-    const views = (props.views ?? DEFAULT_VIEWS[r.key]).filter((v) => CAN_SHOW[v](r));
-    tabs = views.map((v) => ({ id: v, label: VIEW_LABEL[v](r), content: viewContent(v, r) }));
-    label = props.label ?? `The ${r.name} record`;
-  }
-  return (
-    <div className="v6-rp" data-panel="">
-      <Tabs label={label} tabs={tabs} height={height} initial={initial} />
-      <CopyScript />
-    </div>
-  );
+  const records = props.records ?? [props.record];
+  return <div className="v6-evidence-list" aria-label={props.label}>
+    {records.map((key) => {
+      const r = RECORDS[key];
+      return r.runs.map((run) => <article className="v6-evidence-record" key={run.id}>
+        <div className="v6-evidence-record__text">
+          <h3>{r.name}</h3>
+          {run.label ? <p>{run.label}</p> : null}
+          <p>{run.note ?? r.takeaway}</p>
+          <RunFacts run={run} outcome />
+          <EditorialLink href={r.href}>Read the whole record</EditorialLink>
+          <details className="v6-evidence-record__details" data-panel="">
+            <summary>The sentence, the steps and the finding</summary>
+            <RecordClaim record={r} />
+            <RunSteps run={run} />
+            <RunFinding run={run} />
+          </details>
+        </div>
+        <RunShot record={r} run={run} />
+      </article>);
+    })}
+  </div>;
 }

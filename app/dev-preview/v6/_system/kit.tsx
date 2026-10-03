@@ -389,12 +389,6 @@ export function MediaPanel(props: KitPicture & {
   return (
     <figure className="v6-mp" data-out={evidence ? undefined : breakout} data-evidence={evidence ? "" : undefined}>
       <div className="v6-mp__shell">
-        {bar && (bar.left || bar.right) ? (
-          <div className="v6-mp__bar">
-            {bar.left ? <span className="v6-mp__addr" data-no-translate>{bar.left}</span> : null}
-            {bar.right ? <span className="v6-mp__tag">{bar.right}</span> : null}
-          </div>
-        ) : null}
         <Image
           className="v6-mp__img" src={src} alt={alt} width={w} height={h}
           sizes={sizes ?? (evidence ? "(max-width: 700px) 100vw, 640px" : "(max-width: 900px) 100vw, 75vw")}
@@ -402,7 +396,11 @@ export function MediaPanel(props: KitPicture & {
           style={aspect ? { aspectRatio: aspect, objectFit: "cover", objectPosition: position ?? "50% 0%" } : undefined}
         />
       </div>
-      {caption ? <figcaption className="v6-mp__cap">{caption}</figcaption> : null}
+      {caption || bar ? <figcaption className="v6-mp__cap">
+        {bar?.left ? <span className="v6-mp__source" data-no-translate>{bar.left}</span> : null}
+        {bar?.right ? <span className="v6-mp__credit">{bar.right}</span> : null}
+        {caption ? <span className="v6-mp__description">{caption}</span> : null}
+      </figcaption> : null}
     </figure>
   );
 }
@@ -582,7 +580,7 @@ export type CrossLink = { title: string; body: string; href: string; image?: str
  *   links    CrossLink[]: three. image is a 16:10 card picture (public/site/card/<slug>-16x10.jpg).
  *   heading  Default "Related".
  * Usage: <CrossLinks links={[{ title: "Platform overview", body: "What the product does", href: "/platform",
- *          image: "/site/card/platform-16x10.jpg" }, ...]} />
+ *          image: "/site/photography/client.jpg" }, ...]} />
  */
 export function CrossLinks({ links, heading = "Related" }: { links: CrossLink[]; heading?: string }) {
   return (

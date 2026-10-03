@@ -1,3 +1,4 @@
+import { photograph, SECTOR_PHOTOGRAPHS } from "./photography";
 // THE SECTORS, IN ONE PLACE (plan S1, revision 2, 2026-10-02).
 //
 // Every surface that lists sectors reads this file and nothing else: the footer's Solutions column
@@ -32,7 +33,7 @@
 //
 // Every href already carries V6_BASE (lib/v6-routes.ts), like every other v6 link: "/solutions/defense" when
 // the site is promoted, "/dev-preview/v6/solutions/defense" on the unpromoted preview server. A picture path is
-// a public URL ("/site/menu/defense.jpg", the file public/site/menu/defense.jpg), the same in both.
+// a public URL ("/site/photography/groundstation.jpg", the file public/site/photography/groundstation.jpg), the same in both.
 //
 // Strings are whole sentences for the DOM translator (components/language-controller.tsx keys on the exact
 // English text of each node): render `line` as one text node, never split around a link or a number.
@@ -99,10 +100,10 @@ export type Sector = {
   priority: SectorPriority;
 };
 
-/** Build a sector's card and menu paths from its slug: public/site/menu/<slug>.jpg, public/site/card/<slug>-4x3.jpg
- *  and public/site/card/<slug>-16x10.jpg (plan A7.5). */
+/** All list surfaces use the same licensed photograph for each sector. */
 function listPics(slug: SectorSlug) {
-  return { menu: `/site/menu/${slug}.jpg`, card43: `/site/card/${slug}-4x3.jpg`, card1610: `/site/card/${slug}-16x10.jpg` };
+  const src = photograph(SECTOR_PHOTOGRAPHS[slug]).src;
+  return { menu: src, card43: src, card1610: src };
 }
 
 /** Every sector, in display order: the "Sectors" group, then "Teams", Enterprise last. */
@@ -116,7 +117,7 @@ export const SECTORS: readonly Sector[] = [
     line: "Mission consoles, checked on a simulation or staging build.",
     // Scene: the Larkspur demo fixture in broken mode after Confirm target on T-1 (a fresh capture, credited
     // "Captured <date>, not from the run" on the page).
-    pics: { hero: "/site/hero/defense.jpg", heroPortrait: "/site/hero/defense-portrait.jpg", ...listPics("defense") },
+    pics: { hero: photograph(SECTOR_PHOTOGRAPHS["defense"]).src, heroPortrait: photograph(SECTOR_PHOTOGRAPHS["defense"]).src, ...listPics("defense") },
     priority: "P0",
   },
   {
@@ -127,7 +128,7 @@ export const SECTORS: readonly Sector[] = [
     href: `${V6_BASE}/solutions/fleets`,
     line: "The web panel that runs drones, robots and fleets.",
     // Scene: our own render, the drone over the field at sunset (app/film/orbit).
-    pics: { hero: "/site/hero/fleets.jpg", heroPortrait: "/site/hero/fleets-portrait.jpg", ...listPics("fleets") },
+    pics: { hero: photograph(SECTOR_PHOTOGRAPHS["fleets"]).src, heroPortrait: photograph(SECTOR_PHOTOGRAPHS["fleets"]).src, ...listPics("fleets") },
     priority: "P0",
   },
   {
@@ -138,7 +139,7 @@ export const SECTORS: readonly Sector[] = [
     href: `${V6_BASE}/solutions/commerce`,
     line: "Checkouts and plans, checked before a release.",
     // Panel: a capture of the Lumen Notes pricing page, shown at most 640 wide.
-    pics: { hero: null, heroPanel: "/site/hero/commerce-panel.png", ...listPics("commerce") },
+    pics: { hero: photograph(SECTOR_PHOTOGRAPHS["commerce"]).src, heroPortrait: photograph(SECTOR_PHOTOGRAPHS["commerce"]).src, ...listPics("commerce") },
     priority: "P1",
   },
   {
@@ -149,7 +150,7 @@ export const SECTORS: readonly Sector[] = [
     href: `${V6_BASE}/solutions/public-sector`,
     line: "Resident services, checked on staging with test identities.",
     // Coded panel: Notewell journey 2's recorded steps (_content/demos.ts), drawn by the page.
-    pics: { hero: null, ...listPics("public-sector") },
+    pics: { hero: photograph(SECTOR_PHOTOGRAPHS["public-sector"]).src, heroPortrait: photograph(SECTOR_PHOTOGRAPHS["public-sector"]).src, ...listPics("public-sector") },
     priority: "P2",
   },
   {
@@ -160,7 +161,7 @@ export const SECTORS: readonly Sector[] = [
     href: `${V6_BASE}/solutions/ai-built-apps`,
     line: "Apps an agent built, checked on the live app.",
     // Panel, evidence: notes-dashboard.png from run 4fc6e52c, cropped to the note list, never recoloured.
-    pics: { hero: null, heroPanel: "/site/hero/ai-built-apps-panel.png", ...listPics("ai-built-apps") },
+    pics: { hero: photograph(SECTOR_PHOTOGRAPHS["ai-built-apps"]).src, heroPortrait: photograph(SECTOR_PHOTOGRAPHS["ai-built-apps"]).src, ...listPics("ai-built-apps") },
     priority: "P0",
   },
   {
@@ -171,7 +172,7 @@ export const SECTORS: readonly Sector[] = [
     href: `${V6_BASE}/solutions/saas`,
     line: "Sign-up, roles, billing and the work customers save.",
     // Panel: the fixture dashboard right after creating "Test Project", before any reload.
-    pics: { hero: null, heroPanel: "/site/hero/saas-panel.png", ...listPics("saas") },
+    pics: { hero: photograph(SECTOR_PHOTOGRAPHS["saas"]).src, heroPortrait: photograph(SECTOR_PHOTOGRAPHS["saas"]).src, ...listPics("saas") },
     priority: "P2",
   },
   {
@@ -182,7 +183,7 @@ export const SECTORS: readonly Sector[] = [
     href: `${V6_BASE}/solutions/agencies`,
     line: "Client sites handed over with the evidence.",
     // Panel: a console capture of the team page with owner, editor and viewer roles (names masked).
-    pics: { hero: null, heroPanel: "/site/hero/agencies-panel.png", ...listPics("agencies") },
+    pics: { hero: photograph(SECTOR_PHOTOGRAPHS["agencies"]).src, heroPortrait: photograph(SECTOR_PHOTOGRAPHS["agencies"]).src, ...listPics("agencies") },
     priority: "P0",
   },
   {
@@ -193,7 +194,7 @@ export const SECTORS: readonly Sector[] = [
     href: `${V6_BASE}/enterprise`,
     line: "Single sign-on, roles, billing and audit export for teams.",
     // Panel: a console capture of the organization single sign-on settings (QA account).
-    pics: { hero: null, heroPanel: "/site/hero/enterprise-panel.png", ...listPics("enterprise") },
+    pics: { hero: photograph(SECTOR_PHOTOGRAPHS["enterprise"]).src, heroPortrait: photograph(SECTOR_PHOTOGRAPHS["enterprise"]).src, ...listPics("enterprise") },
     priority: "existing",
   },
 ];

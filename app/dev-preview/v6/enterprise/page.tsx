@@ -1,3 +1,4 @@
+import { photographHero } from "../_content/photography";
 import { Band, CrossLinks, FeatureCard, FeatureGrid, FrameHero } from "../_system/kit";
 import { EditorialLink, SectionHead, Signal } from "../_system/ui";
 import { ClosingScene } from "../_system/close";
@@ -69,15 +70,8 @@ export default function V6Enterprise() {
         sub="Members sign in through your provider, roles decide what each person may change, and the evidence stays readable to everyone who needs it."
         primary={{ label: "Talk to sales", href: SALES }}
         secondary={{ label: "Security", href: `${BASE}/security` }}
-        panel={{
-          kind: "image",
-          src: "/site/hero/enterprise-panel.png",
-          w: 1356,
-          h: 1142,
-          alt: "The Vraelis console's Records page: Export CSV and Export JSON, and the trust controls, including single sign-on with OIDC for verified domains, team roles and billing admins.",
-          bar: { left: "app.vraelis.com/records" },
-        }}
-        credit="Captured 2026-10-02"
+        {...photographHero("mission")}
+
       />
 
       {/* ── Where each capability stands: words, not chips. ── */}
@@ -146,8 +140,8 @@ export default function V6Enterprise() {
               on the sector pages). */}
           <CrossLinks
             links={[
-              { title: "Security", body: "What Vraelis stores, and how it is protected.", href: `${BASE}/security`, image: "/solutions/security-16x10.jpg" },
-              { title: "Pricing", body: "Listed plans, and what one verification includes.", href: `${BASE}/pricing`, image: "/site/card/pricing-16x10.jpg" },
+              { title: "Security", body: "What Vraelis stores, and how it is protected.", href: `${BASE}/security`, image: "/site/photography/signup.jpg" },
+              { title: "Pricing", body: "Listed plans, and what one verification includes.", href: `${BASE}/pricing`, image: "/site/photography/checkout.jpg" },
               { title: defense.label, body: defense.line, href: defense.href, image: defense.pics.card1610 },
             ]}
           />

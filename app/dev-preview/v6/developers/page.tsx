@@ -1,9 +1,10 @@
+import { photographHero } from "../_content/photography";
 import { Fragment } from "react";
 import { Band, FeatureCard, FeatureGrid, FrameHero } from "../_system/kit";
 import { SectionHead, EditorialLink } from "../_system/ui";
 import { ClosingScene } from "../_system/close";
 import { Code, CopyScript } from "../_system/code";
-import { DevelopersAside, LimitsLine, WAYS_IN } from "../_system/hero-asides";
+import { LimitsLine, WAYS_IN } from "../_system/hero-asides";
 import { v6meta } from "../_system/meta";
 import { STRIKE } from "../_content/strike";
 import { V6_BASE } from "@/lib/v6-routes";
@@ -109,12 +110,7 @@ export default function DevelopersPage() {
         sub="Send a deployment address and one sentence about what should work. A person approves the plan, a real browser runs it, and your tools read the answer."
         primary={{ label: "Create an API key", href: API_KEYS }}
         secondary={{ label: "Read the API", href: `${BASE}/docs/api` }}
-        panel={{
-          kind: "node",
-          label: "The CLI's own output for a check of Larkspur, a simulated mission console Vraelis built",
-          bar: { left: "vraelis.com/api/fixtures/strike", right: <>Simulated Larkspur console, run <span data-no-translate>{run.id.slice(0, 12)}</span></> },
-          node: <DevelopersAside />,
-        }}
+        {...photographHero("agent")}
       />
 
       {/* ── The API: one request and what comes back. ── */}

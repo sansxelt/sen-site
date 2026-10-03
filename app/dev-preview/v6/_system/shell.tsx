@@ -60,7 +60,7 @@ const PIC_SIZES = "(max-width: 1440px) 49vw, 705px";
 const CARD_SIZES = "(max-width: 1440px) 23vw, 330px";
 // A picture that does not load (a file not delivered yet, a deploy that lost one) shows this one instead of an
 // empty box: our own render, the drone over the garage floor.
-const PIC_FALLBACK = "platform-overview";
+const PIC_FALLBACK = "/site/photography/client.jpg";
 
 // The newest changelog entry, for the second Resources card. Read, never copied, so the card cannot go stale.
 const LATEST = CHANGELOG[0];
@@ -70,18 +70,18 @@ const MENUS: Menu[] = [
     label: "Product",
     groups: [
       { h: "The check", links: [
-        { t: "Platform overview", d: "What the product does", href: BASE + "/platform", pic: "platform-overview" },
-        { t: "How a check works", d: "From one sentence to an answer with evidence", href: BASE + "/platform#how", pic: "/site/menu/how-a-check-works.jpg" },
-        { t: "What it can reach", d: "Web apps, and devices through their panels", href: BASE + "/platform#coverage", pic: "re-checks" },
-        { t: "What is built", d: "The live list beside the planned one", href: BASE + "/platform#current", pic: "the-loop" },
-        { t: "Limitations", d: "What it does not do, in plain words", href: BASE + "/limitations", pic: "guarantees" },
+        { t: "Platform overview", d: "What the product does", href: BASE + "/platform", pic: "/site/photography/client.jpg" },
+        { t: "How a check works", d: "From one sentence to an answer with evidence", href: BASE + "/platform#how", pic: "/site/photography/groundstation.jpg" },
+        { t: "What it can reach", d: "Web apps, and devices through their panels", href: BASE + "/platform#coverage", pic: "/site/photography/vehicle.jpg" },
+        { t: "What is built", d: "The live list beside the planned one", href: BASE + "/platform#current", pic: "/site/photography/drone.jpg" },
+        { t: "Limitations", d: "What it does not do, in plain words", href: BASE + "/limitations", pic: "/site/photography/flight.jpg" },
       ] },
       { h: "Ways in", links: [
-        { t: "Console", d: "Write, approve and read in the app", href: BASE + "/docs/getting-started", pic: "/site/nav/console.jpg" },
-        { t: "CLI", d: "One command, one exit code", href: BASE + "/docs/cli", pic: "/site/nav/cli.jpg" },
-        { t: "API and CI", d: "Gate a release on the answer", href: BASE + "/developers", pic: "/site/menu/developers.jpg" },
-        { t: "AI assistants", d: "Setup over MCP", href: BASE + "/agents", pic: "/site/menu/agents.jpg" },
-        { t: "Integrations", d: "Where a check starts and where the answer lands", href: BASE + "/integrations", pic: "/site/menu/integrations.jpg" },
+        { t: "Console", d: "Write, approve and read in the app", href: BASE + "/docs/getting-started", pic: "/site/photography/signup.jpg" },
+        { t: "CLI", d: "One command, one exit code", href: BASE + "/docs/cli", pic: "/site/photography/agent.jpg" },
+        { t: "API and CI", d: "Gate a release on the answer", href: BASE + "/developers", pic: "/site/photography/agent.jpg" },
+        { t: "AI assistants", d: "Setup over MCP", href: BASE + "/agents", pic: "/site/photography/client.jpg" },
+        { t: "Integrations", d: "Where a check starts and where the answer lands", href: BASE + "/integrations", pic: "/site/photography/firmware.jpg" },
       ] },
     ],
   },
@@ -116,7 +116,7 @@ const MENUS: Menu[] = [
     // entry and no date: a partnership entry at the top of the feed must not put its date on a new surface. Its
     // picture is the entry's own (`media`), so card and entry always agree; an entry without one shows our render.
     cards: [
-      { label: "A real check", title: "On a simulated console Vraelis built, confirming one target also cleared a civilian bus.", href: BASE + "/#how-a-check-works", pic: "card-drone-check" },
+      { label: "A real check", title: "On a simulated console Vraelis built, confirming one target also cleared a civilian bus.", href: BASE + "/#how-a-check-works", pic: "/site/changelog/larkspur.png" },
       ...(LATEST ? [{ label: "Latest in the changelog", title: LATEST.title, href: `${BASE}/changelog#${entryId(LATEST)}`, pic: LATEST.media?.src ?? PIC_FALLBACK }] : []),
     ],
   },

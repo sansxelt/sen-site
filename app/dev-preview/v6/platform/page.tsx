@@ -1,9 +1,12 @@
+import { photographHero } from "../_content/photography";
 import type { Metadata } from "next";
 import { v6meta } from "../_system/meta";
 import { SectionHead, EditorialLink } from "../_system/ui";
-import { FrameHero, AltRows, MediaPanel, Compare, Band, CrossLinks, Tabs, type AltRow, type CompareRow, type CrossLink } from "../_system/kit";
+import { FrameHero, AltRows, Compare, Band, CrossLinks, Tabs, type AltRow, type CompareRow, type CrossLink } from "../_system/kit";
 import { ClosingScene } from "../_system/close";
-import { RunWindow } from "../_system/run-window";
+import { RecordPanel } from "../_system/record-panel";
+import { Photograph, PicturePlate } from "../_system/picture-plate";
+import { RECORDS } from "../_content/use-cases";
 import { LIVE, DIRECTION } from "../_content/scope";
 import { SURFACES, COVERAGE_RULE, type CoverageTier } from "../_content/coverage";
 import { sectorBySlug } from "../_content/sectors";
@@ -42,7 +45,7 @@ const SIGNUP = `${v6SignInPath()}&mode=signup`;
 const two = (n: number) => String(n).padStart(2, "0");
 
 /* ── #how: the four rows, each with a capture of the console (read only, nothing created or approved) ── */
-const captured = <>Captured <span data-no-translate>2026-10-02</span></>;
+
 
 const ROWS: AltRow[] = [
   {
@@ -50,57 +53,28 @@ const ROWS: AltRow[] = [
     title: "Write the sentence",
     body: "Say what a person should be able to do on your web app, or on a device's web control panel, and what should be true afterwards. Vraelis does not read your code. It starts from the sentence and checks the running app.",
     link: { label: "Write your first check", href: `${BASE}/docs/getting-started` },
-    media: (
-      <MediaPanel
-        src="/site/product/platform-sentence.png" w={1520} h={932}
-        alt="The composer in the Vraelis console, empty: a field for the deployment to verify, a field for what must be true, and the Review the proof plan button."
-        bar={{ left: "app.vraelis.com", right: captured }}
-      />
-    ),
+    media: <Photograph name="signup" />,
   },
   {
     id: "approve",
     title: "Approve the plan",
     body: "Vraelis turns the sentence into requirements and the browser journeys that would prove them. A person approves that exact plan before anything runs; an API key cannot. If no check could prove the sentence, nothing runs and nothing is charged.",
     link: { label: "How approval works", href: `${BASE}/docs/review` },
-    media: (
-      <MediaPanel
-        src="/site/product/platform-plan.png" w={1384} h={790}
-        alt="An approved proof plan in the Vraelis console: thirteen requirements for the Notewell demo app, then the approval line, with the approver's email hidden."
-        bar={{ left: "app.vraelis.com/systems/…/guarantees/…", right: captured }}
-        caption="No plan was waiting for approval, so this is an existing check's approved plan, the email hidden."
-      />
-    ),
+    media: <Photograph name="client" />,
   },
   {
     id: "run",
     title: "Run it on the live product",
     body: "A real browser runs the approved journeys on the address you named, one step at a time. An address that does not exist is refused before the run starts. Each step records what it expected and what it saw.",
     link: { label: "How a run is recorded", href: `${BASE}/docs/run-activity` },
-    media: (
-      <MediaPanel
-        src="/site/product/platform-run-steps.png" w={1592} h={798}
-        alt="A recorded run in the Vraelis console: the journey Create and persist a note across sign-out and sign-in, and its first five steps with their timings."
-        bar={{ left: "app.vraelis.com/systems/…/passes/…", right: captured }}
-        caption={<><span>From a check of Notewell, a Vraelis demo app, recorded 2026-07-31 (UTC).</span> <span className="v6-mono" data-no-translate>4fc6e52c</span></>}
-      />
-    ),
+    media: <PicturePlate src={RECORDS.notes.runs[0].shot.src} alt={RECORDS.notes.runs[0].shot.alt} w={480} h={480} evidence caption={RECORDS.notes.runs[0].shot.caption} credit={<span data-no-translate>4fc6e52c / 2026-07-31 UTC</span>} />,
   },
   {
     id: "evidence",
     title: "Read the evidence and the repair prompt",
     body: "The record keeps every step, the screenshots the run saved, and any console errors and failed requests. When it finds a problem, it writes a repair prompt for a person or a coding agent. After the fix, the same approved plan runs again as its own record.",
     link: { label: "How a re-check works", href: `${BASE}/docs/recheck` },
-    media: (
-      <MediaPanel
-        src="/site/product/platform-repair-prompt.png" w={1592} h={784}
-        alt="The repair handoff on a Notewell record that found a problem, in the Vraelis console: what was being checked, what happened instead, and the steps to reproduce, ready to copy for a coding agent."
-        bar={{ left: "app.vraelis.com/systems/…/passes/…", right: captured }}
-        // The record this capture shows (public/site/product/CREDITS.md): run a3745f3b, completed 2026-07-31 01:55 UTC
-        // as the console prints it. A recorded run names its record (plan 0.2), as row 03 does.
-        caption={<><span>From a check of Notewell that found a problem, recorded 2026-07-31 (UTC).</span> <span className="v6-mono" data-no-translate>a3745f3b</span></>}
-      />
-    ),
+    media: <PicturePlate src={RECORDS.projects.runs[0].shot.src} alt={RECORDS.projects.runs[0].shot.alt} w={640} h={354} evidence caption={RECORDS.projects.runs[0].shot.caption} credit={<span data-no-translate>de53ab8b / 2026-07-14 UTC</span>} />,
   },
 ];
 
@@ -134,21 +108,15 @@ export default function Platform() {
         sub="Write what your web app, or a device it controls, should do. A person approves the plan, and a real browser tries it on the live product."
         primary={{ label: "Start free", href: SIGNUP }}
         secondary={{ label: "See real runs", href: "#runs" }}
-        picture={{
-          src: "/site/hero/platform.jpg", portrait: "/site/hero/platform-portrait.jpg",
-          // The positions public/site/hero/CREDITS.md records for this render: at 50% 55% the drone sat under the
-          // eyebrow and the headline on short phone frames (375x600, 360x640, 390x520); 50% 80% keeps it clear.
-          position: "50% 60%", portraitPosition: "50% 80%",
-          alt: "A drone hovering over a garage floor, a render made for Vraelis.",
-        }}
+        {...photographHero("client")}
       />
 
       {/* #runs: the four recorded demo runs, replayed at their recorded pace. RunWindow is a product panel
           (data-panel), so its words do not count against the page's budget. */}
       <section className="v6-sec v6-pp-sec" id="runs">
         <div className="v6-wrap">
-          <SectionHead eyebrow="Recorded runs" title="Real runs, replayed." />
-          <RunWindow />
+          <SectionHead eyebrow="Recorded runs" title="Real checks. Recorded evidence." />
+          <RecordPanel records={["checkout", "notes", "projects"]} />
         </div>
       </section>
 

@@ -62,7 +62,6 @@ export type Doc = {
 // Sidebar group order. DOCS below is written in this order too, because previous and next follow the array.
 export const DOC_GROUPS = ["Getting started", "Ways to run", "The check", "The record"];
 
-const CAPTURED = "Captured 2026-10-02";
 
 // ── Reference material copied from /developers at 10c6b20f. Every shape is read off the route handlers
 //    (app/api/v1/verifications, cli/vraelis.mjs, lib/preflight/webhook-dispatch.ts); re-check them there
@@ -326,14 +325,6 @@ export const DOCS: Doc[] = [
       { t: "p", text: "Vraelis turns the sentence into requirements and the browser steps that would prove them, and shows you both. Nothing runs until a person approves that exact plan. If no check could prove the claim, Vraelis says so and charges nothing." },
       { t: "h2", text: "4. Read the answer" },
       { t: "p", text: "Verified means the claim held on the live app. Failed means it did not, with what was expected, what was observed, and a repair prompt. Blocked means no decision could be reached, so none is claimed. Every answer carries its steps, screenshots, console errors and failed requests." },
-      { t: "figure", src: "/docs/run-report-head.webp", width: 1678, height: 640, credit: CAPTURED,
-        alt: "The top of a real run report in the Vraelis console: the Notewell app, its live address, when it completed, a Failed badge, and the sentence that had to be true.",
-        caption: "The top of a real run report, from a check of a notes app.",
-        marks: [
-          { x: 61.5, y: 40, label: "Which live app was checked, and when." },
-          { x: 86.5, y: 46.4, label: "The answer." },
-          { x: 82.3, y: 81.9, label: "The sentence that had to be true, exactly as it was approved." },
-        ] },
       { t: "note", label: "Four ways in", text: "The same check runs from the console, the CLI, CI through the API, and AI assistants over MCP. Start in whichever you already have open." },
     ],
     related: ["the-loop", "what-you-can-check", "cli", "ai-assistants"],
@@ -638,14 +629,6 @@ export const DOCS: Doc[] = [
         "Execution evidence: screenshots, console errors, and failed network requests.",
         "The decision the run reached, and the repair prompt behind a failure.",
       ] },
-      { t: "figure", src: "/docs/run-journey-failed-step.webp", width: 1678, height: 682, credit: CAPTURED,
-        alt: "A journey in a real run report: Create and persist a note across sign-out and sign-in, marked Failed, run as the member test account, with step 1 passed and step 2, signing in, failed after 20.6 seconds.",
-        caption: "One journey from a real failed run. The error detail under the failed step opens to show what the browser saw.",
-        marks: [
-          { x: 41.3, y: 28.3, label: "The journey, and whether it held." },
-          { x: 58.9, y: 46.8, label: "The test account it ran as." },
-          { x: 25.7, y: 82, label: "The step that failed, and how long it took." },
-        ] },
       { t: "note", label: "Honest boundary", text: "A check begins when someone says the work is done. Vraelis does not read code, diffs or tool calls, and it does not watch anyone while they work." },
     ],
     related: ["completion", "findings"],
@@ -665,14 +648,6 @@ export const DOCS: Doc[] = [
         "Blocked: no honest decision could be reached, so none is claimed.",
       ] },
       { t: "p", text: "The same three words come back in the console, the CLI's exit code, the API, the MCP tools and the webhooks. A claim is accepted when the live app shows it, not when someone says it is done." },
-      { t: "figure", src: "/docs/run-outcome-verified.webp", width: 1678, height: 392, credit: CAPTURED,
-        alt: "The outcome section of a real Verified run: the checked workflow completed with the expected result, a Verified badge, 2 of 2 critical flows passed, and the reason.",
-        caption: "The outcome of a real Verified run.",
-        marks: [
-          { x: 52.6, y: 43.1, label: "The answer in plain words." },
-          { x: 39.3, y: 60.6, label: "How many journeys held." },
-          { x: 49.7, y: 87.6, label: "Why Vraelis reached it." },
-        ] },
     ],
     related: ["repair", "recheck"],
   },
@@ -687,14 +662,6 @@ export const DOCS: Doc[] = [
       { t: "p", text: "A finding is what a run records when the live app does not do what the claim says: the requirement that failed, what was expected, what was observed, the steps to reproduce it, and the step it failed at." },
       { t: "h2", text: "A finding is not a guess" },
       { t: "p", text: "Each finding carries what Vraelis observed in the browser and why it was raised, so the next step is a fix, not a mystery. When a run cannot decide, for example because a test account cannot sign in, the answer is Blocked with the reason rather than a finding." },
-      { t: "figure", src: "/docs/overview-needs-attention.webp", width: 1678, height: 644, credit: CAPTURED,
-        alt: "The Needs attention list on the console Overview: four findings on the Notewell app, one critical and three high, each with when it was found and a Failed badge for the app's latest result.",
-        caption: "Findings on the console Overview, from real runs of a notes app.",
-        marks: [
-          { x: 55.5, y: 20.5, label: "What failed, in plain words." },
-          { x: 63.7, y: 27.4, label: "Severity, the app, and when it was found. Came back means it failed again after an earlier run." },
-          { x: 85.8, y: 24.1, label: "The app's latest result." },
-        ] },
     ],
     related: ["repair", "recheck"],
   },
@@ -707,15 +674,6 @@ export const DOCS: Doc[] = [
     limit: "Vraelis writes the prompt and checks the fix. It never edits your code.",
     blocks: [
       { t: "p", text: "When a run fails, Vraelis writes a repair prompt: what should have happened, what happened instead, how to reproduce it, and the evidence. It is written so a person or a coding agent can act on it directly." },
-      { t: "figure", src: "/docs/run-repair-prompt.webp", width: 1678, height: 1000, credit: CAPTURED,
-        alt: "The repair handoff on a real failed run: a repair prompt for a coding agent stating what was being checked, what happened instead, and numbered steps to reproduce, with a Copy repair prompt button.",
-        caption: "A real repair prompt. It is plain text, so it pastes into any coding agent.",
-        marks: [
-          { x: 78.8, y: 29.5, label: "Copy it for a person or a coding agent." },
-          { x: 24.6, y: 45.1, label: "What was being checked." },
-          { x: 23.8, y: 55.5, label: "What happened instead." },
-          { x: 20.5, y: 65.8, label: "How to reproduce it, step by step." },
-        ] },
       { t: "h2", text: "The division of labor" },
       { t: "p", text: "Whoever fixes it diagnoses the cause and makes the change. Vraelis does not edit code. Once the fix is deployed, a re-check runs the same approved plan again as its own run, and an earlier record is never overwritten." },
       { t: "note", label: "Where the prompt goes", text: "Back to whoever asked: in the answer an AI assistant gets over MCP, in the CLI's output (`--repair-prompt` prints only the prompt), in the API response, and on the run report. A re-check is started by a person, a CI job or an assistant. Nothing re-checks on its own." },

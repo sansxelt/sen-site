@@ -1,3 +1,4 @@
+import { photographHero } from "../_content/photography";
 import { v6meta } from "../_system/meta";
 import { SectionHead, CTA, EditorialLink, ProseLink, Signal } from "../_system/ui";
 import { Band, FeatureCard, FeatureGrid, FrameHero } from "../_system/kit";
@@ -130,18 +131,8 @@ export default function SecurityPage() {
         sub="How access, secrets and evidence are handled today, where a check's data goes, and what is not in place yet."
         primary={{ label: "Talk to us", href: `${BASE}/contact?topic=enterprise` }}
         secondary={{ label: "See what is in place", href: "#status" }}
-        // A console capture made for this page (public/site/hero/CREDITS.md): a record's approved plan,
-        // read only, the approver's email masked. The plan asked for the Review page with a pending plan; minting
-        // one was not allowed, so the capture is a plan a person had already approved.
-        panel={{
-          kind: "image",
-          src: "/site/hero/security-panel.png",
-          w: 1356,
-          h: 754,
-          alt: "An approved plan in the Vraelis console: the requirements for the Notewell demo app, and the line naming who approved it, with their email hidden.",
-          bar: { left: "app.vraelis.com/systems/.../guarantees/..." },
-        }}
-        credit="Captured 2026-10-02"
+        {...photographHero("signup")}
+
       />
 
       <section className="v6-sec" id="commitments">

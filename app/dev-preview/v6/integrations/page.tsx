@@ -1,30 +1,16 @@
+import { photographHero } from "../_content/photography";
 import { CrossLinks, FrameHero, Band } from "../_system/kit";
 import { SectionHead, EditorialLink } from "../_system/ui";
 import { ClosingScene } from "../_system/close";
 import { Code, CopyScript } from "../_system/code";
-import { IntegrationsAside, LimitsLine } from "../_system/hero-asides";
+import { LimitsLine, WAYS_IN } from "../_system/hero-asides";
 import { v6meta } from "../_system/meta";
 import { V6_BASE, v6SignInPath } from "@/lib/v6-routes";
 import "./integrations.css";
 
-// INTEGRATIONS (plan C /integrations, template T1, revised 2026-10-02).
-//
-// Four channels: the console, the CLI, CI through the API, and AI assistants over MCP. They start the same check
-// and read the same answer, and none of them is the identity of the product (founder, 2026-09-28: narrow on the
-// function, wide on the audience). They are the hero's panel, said once: each row names a way in (a link to its
-// page in the docs), its entry point and what it does (WAYS_IN, _system/hero-asides.tsx). A "Four ways in" card
-// section used to follow the hero and repeated the panel item for item, so its words moved into the panel and the
-// section went (final review, 2026-10-02). Below the hero, where a check sits in a release (GitHub Actions,
-// Vercel) and where the answer goes (signed webhooks, Slack).
-//
-// WHAT EACH ONE IS, TRUTHFULLY (rules.md): GitHub Actions is the CLI run in a workflow step, and Vercel is a
-// deployment address a check points at. Neither is a built integration, so neither gets a mark: every name on
-// this page is text (no brand logos, plan 0.2). The webhook example is the payload lib/preflight/
-// webhook-dispatch.ts builds, with example values, and the headers it sends; a Slack address gets the same
-// facts as a message (buildSlackMessage). The CLI row says what its exit code means and nothing more:
-// 0 only when the claim held (cli/vraelis.mjs).
-//
-// The anchors /developers#api, #cli and #webhooks are linked from here and must survive there (plan 0.5).
+// Four ways to start the same check, explained as page content beneath the photograph.
+// GitHub Actions runs the CLI and Vercel supplies the deployment address; neither is
+// a separate built integration. The delivery example reflects webhook-dispatch.ts.
 
 export const metadata = v6meta({
   title: "Integrations",
@@ -66,8 +52,21 @@ export default function IntegrationsPage() {
         sub="Start a check from the console, the CLI, a pipeline or an AI assistant. Each gets back the same answer, with the evidence."
         primary={{ label: "Start free", href: SIGNUP }}
         secondary={{ label: "Read the docs", href: `${BASE}/docs` }}
-        panel={{ kind: "node", label: "The four ways to start a check", node: <IntegrationsAside /> }}
+        {...photographHero("firmware")}
       />
+
+      <section className="v6-sec" id="ways-in">
+        <div className="v6-wrap">
+          <SectionHead eyebrow="Four ways in" title="One check, four ways to start it." />
+          <div className="ig-two">
+            {WAYS_IN.map((way) => <div className="ig-two__item" key={way.key}>
+              <h3 className="ig-two__t">{way.name}</h3>
+              <p className="ig-two__d">{way.more}</p>
+              <div className="ig-two__link"><EditorialLink href={way.docs}>{way.who}</EditorialLink></div>
+            </div>)}
+          </div>
+        </div>
+      </section>
 
       {/* ── Where it fits in a release ── two names, two sentences, no marks. */}
       <section className="v6-sec" id="release">
@@ -127,12 +126,12 @@ export default function IntegrationsPage() {
       <section className="v6-sec ig-related">
         <div className="v6-wrap">
           {/* Every card has its 16:10 picture, as on /platform, /limitations and the sector pages, and each line is
-              the one the site uses for that target. The Documentation card is public/site/product/CREDITS.md's. */}
+              the one the site uses for that target. Photography sources are recorded in public/site/photography/CREDITS.md. */}
           <CrossLinks
             links={[
-              { title: "Developers", body: "The CLI, the API and CI.", href: `${BASE}/developers`, image: "/site/card/developers-16x10.jpg" },
-              { title: "AI assistants", body: "Set up Vraelis in your coding agent, over MCP.", href: `${BASE}/agents`, image: "/site/card/agents-16x10.jpg" },
-              { title: "Documentation", body: "Every way in, step by step.", href: `${BASE}/docs`, image: "/site/product/docs-16x10.jpg" },
+              { title: "Developers", body: "The CLI, the API and CI.", href: `${BASE}/developers`, image: "/site/photography/agent.jpg" },
+              { title: "AI assistants", body: "Set up Vraelis in your coding agent, over MCP.", href: `${BASE}/agents`, image: "/site/photography/client.jpg" },
+              { title: "Documentation", body: "Every way in, step by step.", href: `${BASE}/docs`, image: "/site/photography/agent.jpg" },
             ]}
           />
         </div>
