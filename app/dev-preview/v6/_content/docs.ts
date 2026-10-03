@@ -1,5 +1,6 @@
 // Typed, data-driven documentation content for design 06. The sidebar, previous/next, table of contents, and
-// per-page metadata are all generated from this array. Adding a page here adds it everywhere, no manual nav.
+// per-page metadata are all generated from this array. Adding a page here adds it everywhere, no manual nav:
+// the rail, the docs home, /llms.txt, /llms-full.txt and the sitemap all read DOCS.
 //
 // REORGANISED 2026-09-28 around the one thing the product does: one sentence about a deployed web app, a plan
 // a person approves, a real browser run on the live app, and one answer with the evidence, then a re-check
@@ -7,19 +8,41 @@
 // re-checks), "Review" became "Approving a plan" because an API key can no longer approve one, and a
 // guarantee is described as what it now is in the public story: a claim saved so it can be checked again.
 // Slugs that already existed were kept, so no inbound link broke.
+//
+// 2026-10-02 (plan C, batch 7): four pages joined "Ways to run" (cli, api, ci, webhooks). Their reference
+// material is copied from app/dev-preview/v6/developers/page.tsx as it stood at 10c6b20f (the request and
+// response shapes, the dry run, the gate script, the webhook verification code), which /developers no longer
+// carries; the CLI's options and the CI step are copied from the console's own Command line page
+// (app/rank/app/api/cli-section.tsx), which is read off the real binary. /docs/ai-assistants took the
+// per-assistant setup from /agents#manual, one h3 per assistant with the ids /agents links to. The five
+// console figures were re-shot from the black console, and their marks re-measured on the new files.
+//
+// INLINE MARKUP. Text in p, ul, steps, note and table cells may carry `code` (backticks) and [label](href)
+// links, and nothing else. A link sits after its sentence, never inside it: the translator keys on whole
+// text nodes, and a link in the middle of a sentence splits it into fragments (plan 0.6). Inline code is
+// machine text the translator skips.
+import { V6_BASE, v6ShouldPrefetch } from "@/lib/v6-routes";
+
 export type Block =
   | { t: "p"; text: string }
   | { t: "h2"; text: string }
+  // A sub-heading with a fixed id, so an anchor can be linked from elsewhere (/agents links the ten
+  // /docs/ai-assistants#<assistant> ids) and survives a change to the heading's words.
+  | { t: "h3"; text: string; id: string }
   | { t: "ul"; items: string[] }
   | { t: "steps"; items: string[] }
   | { t: "note"; label: string; text: string }
   // A real, copyable command or payload inside the article. Rendered by the same DocCode block the per-page
   // example uses, so a setup page can show its commands in the order a reader runs them.
   | { t: "code"; label: string; text: string }
+  // Reference rows: exit codes, options, variables. `label` names the table for assistive technology; the
+  // first cell of each row is its header. Cells take inline markup.
+  | { t: "table"; label: string; head: string[]; rows: string[][] }
   // A REAL CONSOLE SCREENSHOT, cropped to the part the text is about, with numbered marks. Captured from the
-  // demo account's own runs (2026-09-30), never mocked up. x and y are percentages of the image, and each
-  // mark's label is printed under it, so the numbers carry meaning without the picture.
-  | { t: "figure"; src: string; alt: string; width: number; height: number; caption: string; marks?: { x: number; y: number; label: string }[] }
+  // QA account's own runs in the black console (2026-10-02), never mocked up. x and y are percentages of the
+  // image (measured on the file, scratchpad qa/b7a-docs/capture.mjs), and each mark's label is printed under
+  // it, so the numbers carry meaning without the picture.
+  | { t: "figure"; src: string; alt: string; width: number; height: number; caption: string; credit?: string; marks?: { x: number; y: number; label: string }[] }
   // The surfaces list from _content/coverage.ts, so the docs and the site read one source.
   | { t: "surfaces" };
 
@@ -39,6 +62,250 @@ export type Doc = {
 // Sidebar group order. DOCS below is written in this order too, because previous and next follow the array.
 export const DOC_GROUPS = ["Getting started", "Ways to run", "The check", "The record"];
 
+const CAPTURED = "Captured 2026-10-02";
+
+// ── Reference material copied from /developers at 10c6b20f. Every shape is read off the route handlers
+//    (app/api/v1/verifications, cli/vraelis.mjs, lib/preflight/webhook-dispatch.ts); re-check them there
+//    before editing a line. The line continuations are "\\", not "\": see docs/[slug]/page.tsx.
+const API_CREATE = `# 1. Submit the claim. Vraelis writes a plan and asks a person to approve it before anything runs.
+curl -X POST https://vraelis.com/api/v1/verifications \\
+  -H "x-api-key: $VRAELIS_API_KEY" \\
+  -H "content-type: application/json" \\
+  -H "idempotency-key: $(uuidgen)" \\
+  -d '{
+    "deployment_url": "https://staging.example.com",
+    "claim": "A customer can upgrade to Pro and still have access after signing in again."
+  }'`;
+
+const API_CREATE_RES = `{
+  "state": "review_required",
+  "review_required": true,
+  "claim": "A customer can upgrade to Pro and still have access after signing in again.",
+  "requirements": [
+    "Upgrading to Pro grants Pro access immediately",
+    "Pro access is still present after signing out and back in"
+  ],
+  "reviewed_plan_id": "rvp_3c9e26ef",
+  "reviewed_plan_expires_at": "2026-09-28T19:04:11.000Z",
+  "approve_url": "https://app.vraelis.com/review/rvp_3c9e26ef",
+  "human_reviewed": false,
+  "message": "Vraelis built a plan that can prove this claim, and no person has reviewed it yet. A person approves it at approve_url; then resubmit with reviewed_plan_id to run exactly what was approved. Nothing was run and nothing was charged."
+}`;
+
+const API_APPROVE_RUN = `# 2. A person opens approve_url and approves the plan with one click. A key cannot:
+curl -X POST https://vraelis.com/api/v1/verifications/plans/rvp_3c9e26ef/approve \\
+  -H "x-api-key: $VRAELIS_API_KEY"
+#    -> 403 { "error": { "code": "plan_requires_human", ... },
+#             "approve_url": "https://app.vraelis.com/review/rvp_3c9e26ef" }
+
+# While you wait for the person, read the plan. approve_url is present while it is pending.
+curl https://vraelis.com/api/v1/verifications/plans/rvp_3c9e26ef \\
+  -H "x-api-key: $VRAELIS_API_KEY"
+#    -> { "reviewed_plan_id": "rvp_3c9e26ef", "approval_state": "pending",
+#         "approve_url": "https://app.vraelis.com/review/rvp_3c9e26ef", ... }
+
+# 3. Once approval_state reads "approved", resubmit the SAME deployment and claim with the plan id.
+#    This is the call that starts a run, and the first response that carries a verification_id.
+curl -X POST https://vraelis.com/api/v1/verifications \\
+  -H "x-api-key: $VRAELIS_API_KEY" \\
+  -H "content-type: application/json" \\
+  -d '{ "deployment_url": "https://staging.example.com",
+        "claim": "A customer can upgrade to Pro and still have access after signing in again.",
+        "reviewed_plan_id": "rvp_3c9e26ef" }'
+#    -> { "verification_id": "vrf_9c1e0f2a41", "state": "running",
+#         "status_url": "/v1/verifications/vrf_9c1e0f2a41", "human_reviewed": true }`;
+
+const API_READ = `# 4. Poll until a decision lands. While the run is going, there is no decision yet.
+curl https://vraelis.com/api/v1/verifications/vrf_9c1e0f2a41 \\
+  -H "x-api-key: $VRAELIS_API_KEY"`;
+
+const API_READ_RES = `{
+  "verification_id": "vrf_9c1e0f2a41",
+  "state": "completed",
+  "decision": "failed",
+  "claim": "A customer can upgrade to Pro and still have access after signing in again.",
+  "requirements": [
+    "Upgrading to Pro grants Pro access immediately",
+    "Pro access is still present after signing out and back in"
+  ],
+  "failures": [
+    {
+      "severity": "critical",
+      "title": "Pro access is lost after signing back in",
+      "expected": "The account still shows Pro after re-authenticating",
+      "observed": "The account reverted to the Free plan",
+      "reproduce": ["Upgrade to Pro", "Sign out", "Sign back in", "Open billing"]
+    }
+  ],
+  "evidence": [
+    { "checking": "Upgrade to Pro", "result": "passed", "failed_at_step": null },
+    { "checking": "Access persists after re-auth", "result": "failed", "failed_at_step": 3 }
+  ],
+  "repair_prompt": "Pro entitlement is not re-read on session restore. On sign-in, load the subscription from the source of truth before rendering plan state, and confirm Pro survives a full sign-out and sign-in.",
+  "console_url": "https://app.vraelis.com/systems/app_5b7d/passes/9c1e0f2a41",
+  "reviewed_plan_id": "rvp_3c9e26ef",
+  "recheck_of": null,
+  "human_reviewed": true
+}`;
+
+const API_RECHECK = `# 5. Deploy the fix, then run the same approved plan again. No new approval inside the window.
+curl -X POST https://vraelis.com/api/v1/verifications/vrf_9c1e0f2a41/recheck \\
+  -H "x-api-key: $VRAELIS_API_KEY"`;
+
+const API_RECHECK_RES = `{
+  "verification_id": "vrf_4be27d9c10",
+  "state": "running",
+  "status_url": "/v1/verifications/vrf_4be27d9c10",
+  "recheck_of": "vrf_9c1e0f2a41",
+  "human_reviewed": true,
+  "reviewed_plan_id": "rvp_3c9e26ef",
+  "rechecks_left": 9,
+  "recheck_window_ends_at": "2026-09-29T18:04:11.000Z"
+}`;
+
+const API_IDEM_ERR = `{
+  "error": {
+    "code": "idempotency_key_reused",
+    "message": "That idempotency key was already used for a different verification. Use a new key, or resend the original request exactly.",
+    "request_id": "req_5f3a90"
+  }
+}`;
+
+const API_DRY = `# Ask "is this claim provable against this build?" before spending anything.
+curl -X POST https://vraelis.com/api/v1/verifications \\
+  -H "x-api-key: $VRAELIS_API_KEY" \\
+  -H "content-type: application/json" \\
+  -d '{ "deployment_url": "https://staging.example.com",
+        "claim": "A customer can upgrade to Pro and keep access after signing in again.",
+        "dry_run": true }'`;
+
+const API_DRY_RES = `{
+  "dry_run": true,
+  "would_launch": true,
+  "requirements": ["Upgrading to Pro grants Pro access immediately", "..."],
+  "reviewed_plan_id": "rvp_3c9e26ef",
+  "reviewed_plan_expires_at": "2026-09-28T19:04:11.000Z",
+  "approval_required": true,
+  "approve_url": "https://app.vraelis.com/review/rvp_3c9e26ef",
+  "human_reviewed": false
+}`;
+
+const CLI_INSTALL = `# Install. macOS and Linux:
+curl -fsS https://vraelis.com/install | sh
+# Windows (PowerShell):
+irm https://vraelis.com/install.ps1 | iex
+
+# Sign in once. Paste a key with "Launch runs" access, created at app.vraelis.com/developers.
+vraelis login`;
+
+const CLI_VERIFY = `# Check a claim. Prints the plan and the approval link, opens the link when a person
+# is at the terminal, waits for the approval, runs, and exits on the decision.
+vraelis verify \\
+  --url https://staging.example.com \\
+  --claim "A customer can upgrade to Pro and keep access after signing in again" \\
+  --wait
+
+# After a fix is deployed to the same address: the same approved plan, with no
+# new approval within 24 hours of the approval, up to 10 times.
+vraelis recheck vrf_9c1e0f2a41 --wait`;
+
+// The console's own CI step (app/rank/app/api/cli-section.tsx), word for word.
+const CI_STEP = `# In CI: gate the deploy on the DECISION, not on the command finishing.
+curl -fsS https://vraelis.com/install | sh
+vraelis verify --url "$PREVIEW_URL" --claim "$CLAIM" --wait --json > result.json
+# The approval link is printed to the log; the job waits until a person approves.
+# exit 0 verified   exit 1 failed   exit 2 blocked, or could not run
+#
+# Blocked is not a pass. A run that merely finished is not a pass.
+# Only exit 0 should ship.
+
+# On a failure, hand the repair prompt straight to a coding agent:
+vraelis result "$(jq -r .verification_id result.json)" --repair-prompt | claude -p`;
+
+const CI_GATE = `// gate.mjs: ship only on "verified". The exit code gates the deploy.
+// 0 verified   1 failed   2 blocked   3 no decision reached   4 the plan still needs a person to approve it
+import { randomUUID } from "node:crypto";
+
+const API = "https://vraelis.com/api/v1/verifications";
+const headers = {
+  "content-type": "application/json",
+  "x-api-key": process.env.VRAELIS_API_KEY,
+  "idempotency-key": randomUUID(),
+};
+const request = { deployment_url: process.env.PREVIEW_URL, claim: process.env.VRAELIS_CLAIM };
+const post = (body) => fetch(API, { method: "POST", headers, body: JSON.stringify(body) });
+
+// A submit with no reviewed_plan_id returns review_required, not a run: no verification_id, nothing charged.
+// A key cannot approve the plan, so the job hands the link to a person and stops.
+const planId = process.env.VRAELIS_REVIEWED_PLAN_ID;
+if (!planId) {
+  const plan = await (await post(request)).json();
+  console.error("A person approves this plan first: " + plan.approve_url);
+  process.exit(4);
+}
+
+// The approved plan is what starts a run, and this response is the first to carry a verification_id.
+const { verification_id } = await (await post({ ...request, reviewed_plan_id: planId })).json();
+
+// While running, decision is absent; keep polling until it lands.
+let decision = null, out;
+for (let i = 0; i < 120 && decision === null; i++) {
+  await new Promise((r) => setTimeout(r, 5000));
+  out = await (await fetch(API + "/" + verification_id, { headers })).json();
+  decision = out.decision ?? null;
+}
+
+// Gate on the decision, never the run state. A finished run is not a pass.
+switch (decision) {
+  case "verified": process.exit(0);
+  case "failed":   process.exit(1);
+  case "blocked":  process.exit(2);
+  default:         process.exit(3); // no decision within the polling window
+}`;
+
+// The body an endpoint under Developers receives: buildVerificationPayload's fields, then the delivery_id
+// lib/v-webhooks.ts adds. Example values, as on /developers at 10c6b20f, plus that last line.
+const HOOK_PAYLOAD = `{
+  "event": "verification.completed",
+  "run_id": "9c1e0f2a41",
+  "application_id": "app_5b7d",
+  "decision": "failed",
+  "flows_total": 4,
+  "flows_passed": 3,
+  "deployment_url": "https://staging.example.com",
+  "completed_at": "2026-09-28T18:04:11.220Z",
+  "report_url": "https://app.vraelis.com/systems/app_5b7d/passes/9c1e0f2a41",
+  "delivery_id": "5f0c2e8a-1b7d-4c39-9e2a-0f2a41c1e9d6"
+}`;
+
+// Two changes from the /developers original, both read off lib/v-webhooks.ts: the key is the endpoint's own
+// signing secret (whsec_..., shown under Developers in the console), not a variable named like a Vraelis key,
+// and the lengths are compared first, because timingSafeEqual throws on buffers of different lengths.
+const HOOK_VERIFY = `// Verify the delivery: HMAC-SHA256 over \`\${timestamp}.\${rawBody}\`, keyed with the endpoint's
+// signing secret (whsec_...), which the console shows under Developers.
+import { createHmac, timingSafeEqual } from "node:crypto";
+
+const timestamp = req.headers["x-vraelis-timestamp"];
+const signature = req.headers["x-vraelis-signature"];   // "sha256=<hex>"
+const expected = "sha256=" + createHmac("sha256", process.env.VRAELIS_WEBHOOK_SECRET)
+  .update(\`\${timestamp}.\${rawBody}\`)
+  .digest("hex");
+
+const ok = Boolean(signature) && signature.length === expected.length
+  && timingSafeEqual(Buffer.from(signature), Buffer.from(expected));`;
+
+// The per-assistant setup, from /agents#manual at 10c6b20f, which took each line from ASSISTANTS in
+// cli/vraelis.mjs. The plain stdio entry Cursor and Trae both read is built from an object, so the rendered
+// JSON is always valid.
+const MCP_SERVERS = JSON.stringify({ mcpServers: { vraelis: { command: "vraelis", args: ["mcp"] } } }, null, 2);
+
+// The CLI's exit codes, as /developers listed them at 10c6b20f (cli/vraelis.mjs implements them).
+const CLI_EXITS: string[][] = [
+  ["`0`", "Verified. The claim held on the live app, with evidence."],
+  ["`1`", "Failed. The claim did not hold; a repair prompt is attached."],
+  ["`2`", "Blocked, or the tool could not run at all."],
+];
+
 export const DOCS: Doc[] = [
   {
     slug: "getting-started",
@@ -53,22 +320,23 @@ export const DOCS: Doc[] = [
       { t: "p", text: "Give Vraelis the public https address where the app runs: production, staging or a preview deployment. For a connected device, that is the web control panel or dashboard that runs it. Localhost and private addresses are refused before anything runs. You confirm ownership of the app before a check can start." },
       { t: "h2", text: "2. Write what should work" },
       { t: "p", text: "One sentence: what a user can do, and what should be true afterwards. \"A signed-in user can cancel their plan from Billing and then sees Cancelled\" is a good claim. \"Test the billing page\" is not, because it names no outcome." },
-      { t: "p", text: "The same works for a connected device, through the web control panel that runs it: \"After an operator presses Return home, the drone shows Landed, and still does after a reload.\" Vraelis checks what the panel reports. Reading the device itself, its firmware, sensors or telemetry, is next and not built yet." },
+      // The panel, not the aircraft: Vraelis sees what the control panel shows (plan 0.3, Devices).
+      { t: "p", text: "The same works for a connected device, through the web control panel that runs it: \"After an operator presses Return home, the panel shows Landed, and still does after a reload.\" Vraelis checks what the panel reports. Reading the device itself, its firmware, sensors or telemetry, is next and not built yet." },
       { t: "h2", text: "3. Approve the plan" },
       { t: "p", text: "Vraelis turns the sentence into requirements and the browser steps that would prove them, and shows you both. Nothing runs until a person approves that exact plan. If no check could prove the claim, Vraelis says so and charges nothing." },
       { t: "h2", text: "4. Read the answer" },
       { t: "p", text: "Verified means the claim held on the live app. Failed means it did not, with what was expected, what was observed, and a repair prompt. Blocked means no decision could be reached, so none is claimed. Every answer carries its steps, screenshots, console errors and failed requests." },
-      { t: "figure", src: "/docs/run-report-head.webp", width: 1678, height: 648,
+      { t: "figure", src: "/docs/run-report-head.webp", width: 1678, height: 640, credit: CAPTURED,
         alt: "The top of a real run report in the Vraelis console: the Notewell app, its live address, when it completed, a Failed badge, and the sentence that had to be true.",
         caption: "The top of a real run report, from a check of a notes app.",
         marks: [
-          { x: 62, y: 39.8, label: "Which live app was checked, and when." },
-          { x: 88.3, y: 45.7, label: "The answer." },
-          { x: 83, y: 81, label: "The sentence that had to be true, exactly as it was approved." },
+          { x: 61.5, y: 40, label: "Which live app was checked, and when." },
+          { x: 86.5, y: 46.4, label: "The answer." },
+          { x: 82.3, y: 81.9, label: "The sentence that had to be true, exactly as it was approved." },
         ] },
       { t: "note", label: "Four ways in", text: "The same check runs from the console, the CLI, CI through the API, and AI assistants over MCP. Start in whichever you already have open." },
     ],
-    related: ["the-loop", "what-you-can-check", "ai-assistants"],
+    related: ["the-loop", "what-you-can-check", "cli", "ai-assistants"],
   },
   {
     slug: "the-loop",
@@ -88,13 +356,13 @@ export const DOCS: Doc[] = [
       { t: "h2", text: "The same loop in each channel" },
       { t: "ul", items: [
         "Console: write the claim, approve under Review, read the result, and run it again from the result page.",
-        "CLI: vraelis verify --url URL --claim \"...\" --wait prints the approval link, waits for the approval, runs, and exits 0, 1 or 2. vraelis recheck vrf_... --wait runs the same plan after a fix.",
-        "API: POST /v1/verifications returns review_required and an approve_url. After the approval, resubmit with reviewed_plan_id to start the run, read GET /v1/verifications/{id}, and re-check with POST /v1/verifications/{id}/recheck.",
-        "AI assistants over MCP: vraelis_verify, then vraelis_status while the person approves and the run finishes, then vraelis_recheck after a fix.",
+        "CLI: `vraelis verify --url URL --claim \"...\" --wait` prints the approval link, waits for the approval, runs, and exits 0, 1 or 2. `vraelis recheck vrf_... --wait` runs the same plan after a fix.",
+        "API: `POST /v1/verifications` returns `review_required` and an `approve_url`. After the approval, resubmit with `reviewed_plan_id` to start the run, read `GET /v1/verifications/{id}`, and re-check with `POST /v1/verifications/{id}/recheck`.",
+        "AI assistants over MCP: `vraelis_verify`, then `vraelis_status` while the person approves and the run finishes, then `vraelis_recheck` after a fix.",
       ] },
       { t: "note", label: "Billing", text: "Every run is billed as one verification, a re-check included. A claim Vraelis refuses because no check could prove it costs nothing." },
     ],
-    related: ["review", "recheck"],
+    related: ["review", "recheck", "cli", "api"],
   },
   {
     slug: "what-you-can-check",
@@ -119,16 +387,210 @@ export const DOCS: Doc[] = [
     outcome: "Your assistant can call Vraelis, and you know what it can and cannot do with it.",
     limit: "An assistant can ask for a check and read the answer. It cannot approve the plan.",
     blocks: [
-      { t: "p", text: "An AI assistant that supports MCP can call Vraelis after it changes your web app. It gets three tools: vraelis_verify to ask for a check, vraelis_status to read where it is, and vraelis_recheck to run the same approved plan after a fix. No tool can approve a plan; the assistant hands you the link." },
+      { t: "p", text: "An AI assistant that supports MCP can call Vraelis after it changes your web app. It gets three tools: `vraelis_verify` to ask for a check, `vraelis_status` to read where it is, and `vraelis_recheck` to run the same approved plan after a fix. No tool can approve a plan; the assistant hands you the link." },
       { t: "h2", text: "Set up with vraelis init" },
       { t: "code", label: "Install, sign in, and set up the assistants on this machine", text: "curl -fsS https://vraelis.com/install | sh      # macOS and Linux\nirm https://vraelis.com/install.ps1 | iex        # Windows PowerShell\n\nvraelis login\nvraelis init                 # every assistant found on this machine\nvraelis init claude codex    # or name them: claude, codex, gemini, copilot, cursor, trae, all" },
-      { t: "p", text: "init writes the MCP setup for Claude Code, Codex, Gemini CLI, GitHub Copilot in VS Code and the Copilot CLI, and Cursor. For Trae it prints the JSON to paste under Settings > MCP > Add > Configure manually. It also adds a short rule to the project's AGENTS.md, verify before you say it's done, and to CLAUDE.md or GEMINI.md when those assistants are chosen and the file does not already import AGENTS.md. On Windows, use init rather than the manual lines: it registers node and the script path, because many assistants cannot launch the installer's vraelis.cmd." },
-      { t: "h2", text: "Set up by hand" },
-      { t: "code", label: "Local assistants run the server the CLI provides", text: "claude mcp add --scope user vraelis -- vraelis mcp     # Claude Code, terminal and VS Code\ncodex mcp add vraelis -- vraelis mcp                   # Codex, CLI and IDE extension\ngemini mcp add vraelis vraelis mcp                     # Gemini CLI" },
-      { t: "p", text: "GitHub Copilot in VS Code, the Copilot CLI, Cursor and Trae take a JSON entry instead, and the setup page lists each one. ChatGPT and Claude on the web connect to the hosted server at https://vraelis.com/mcp and sign in with OAuth: they send you to Vraelis to sign in and click Allow, which creates an API key named after the connector that you can revoke under Developers. Any other MCP client can run vraelis mcp over stdio, or reach the hosted server with an x-api-key header." },
+      { t: "p", text: "`vraelis init` writes the MCP setup for Claude Code, Codex, Gemini CLI, GitHub Copilot in VS Code and the Copilot CLI, and Cursor. For Trae it prints the JSON to paste under Settings > MCP > Add > Configure manually. It also adds a short rule to the project's AGENTS.md, verify before you say it's done, and to CLAUDE.md or GEMINI.md when those assistants are chosen and the file does not already import AGENTS.md. On Windows, use init rather than the manual lines: it registers node and the script path, because many assistants cannot launch the installer's vraelis.cmd." },
+      // ONE H3 PER ASSISTANT, WITH THE IDS /agents LINKS TO (plan C /agents and /docs/ai-assistants). The ids are
+      // fixed here rather than derived from the headings, so renaming an assistant cannot break a link.
+      { t: "h2", text: "Set up each assistant by hand" },
+      { t: "p", text: "Assistants on your machine run the local server, `vraelis mcp`, which the CLI provides. ChatGPT and Claude on the web cannot start a local process, so they connect to the hosted server at https://vraelis.com/mcp and sign in with OAuth. Allow creates an API key named after the connector, which you can revoke any time under Developers in the console." },
+      { t: "h3", id: "claude-code", text: "Claude Code" },
+      { t: "p", text: "The terminal and the VS Code extension share one configuration, so one command covers both." },
+      { t: "code", label: "Run in a terminal", text: "claude mcp add --scope user vraelis -- vraelis mcp" },
+      { t: "h3", id: "codex", text: "Codex" },
+      { t: "p", text: "The CLI and the IDE extension share one configuration." },
+      { t: "code", label: "Run in a terminal", text: "codex mcp add vraelis -- vraelis mcp" },
+      { t: "h3", id: "gemini-cli", text: "Gemini CLI" },
+      { t: "p", text: "One command." },
+      { t: "code", label: "Run in a terminal", text: "gemini mcp add vraelis vraelis mcp" },
+      { t: "h3", id: "copilot-in-vs-code", text: "GitHub Copilot in VS Code" },
+      { t: "p", text: "Add this to your user or workspace `mcp.json`." },
+      { t: "code", label: "JSON", text: JSON.stringify({ servers: { vraelis: { type: "stdio", command: "vraelis", args: ["mcp"] } } }, null, 2) },
+      { t: "h3", id: "copilot-cli", text: "GitHub Copilot CLI" },
+      { t: "p", text: "Add this to `~/.copilot/mcp-config.json`." },
+      { t: "code", label: "JSON", text: JSON.stringify({ mcpServers: { vraelis: { type: "local", command: "vraelis", args: ["mcp"], tools: ["*"] } } }, null, 2) },
+      { t: "h3", id: "cursor", text: "Cursor" },
+      { t: "p", text: "Add this to `~/.cursor/mcp.json`." },
+      { t: "code", label: "JSON", text: MCP_SERVERS },
+      { t: "h3", id: "trae", text: "Trae" },
+      { t: "p", text: "In Trae, open Settings > MCP > Add > Configure manually, and paste this." },
+      { t: "code", label: "JSON", text: MCP_SERVERS },
+      { t: "h3", id: "chatgpt", text: "ChatGPT" },
+      { t: "p", text: "ChatGPT connects to the hosted server over the web. Turn on developer mode (Settings, Apps and Connectors, Advanced), add a connector with this URL, and choose OAuth. ChatGPT sends you to Vraelis to sign in and click Allow." },
+      { t: "code", label: "Connector URL", text: "https://vraelis.com/mcp" },
+      { t: "h3", id: "claude", text: "Claude (claude.ai and desktop)" },
+      { t: "p", text: "Settings > Connectors > Add custom connector, with this URL. Claude sends you to Vraelis to sign in and click Allow." },
+      { t: "code", label: "Connector URL", text: "https://vraelis.com/mcp" },
+      { t: "h3", id: "any-mcp-client", text: "Any other MCP client" },
+      { t: "p", text: "Run the local server over stdio, or connect to the hosted server over HTTP with your API key in an `x-api-key` header." },
+      { t: "code", label: "Local or hosted", text: "stdio   vraelis mcp\nHTTP    https://vraelis.com/mcp   with header  x-api-key: <your key>" },
       { t: "note", label: "What no tool can do", text: "Approve a plan, re-check more than 24 hours after the approval or more than 10 times, or re-check on a different site. Every run, a re-check included, is one verification." },
     ],
-    related: ["the-loop", "recheck"],
+    related: ["the-loop", "recheck", "cli"],
+  },
+  {
+    slug: "cli",
+    group: "Ways to run",
+    title: "The command line",
+    summary: "Install the vraelis CLI, check a claim from a terminal, and read the decision from its exit code.",
+    outcome: "You can check a claim from a terminal or a script and act on its exit code.",
+    limit: "It does not approve plans; a person approves from the link it prints.",
+    blocks: [
+      { t: "p", text: "The vraelis CLI calls the same API. verify prints the plan and the approval link, opens the link when a person is at the terminal, waits for the approval, runs the check and exits on the decision. In CI the exit code is what an if-statement reads." },
+      { t: "h2", text: "Install and sign in" },
+      { t: "code", label: "macOS and Linux, or Windows in PowerShell", text: CLI_INSTALL },
+      { t: "p", text: "In CI and scripts, set `VRAELIS_API_KEY` instead of signing in. The environment takes precedence over a stored key, so a pipeline never uses a key someone left on the machine. [Create an API key](https://app.vraelis.com/developers)" },
+      { t: "h2", text: "Check a claim" },
+      { t: "code", label: "Verify, then re-check after a fix", text: CLI_VERIFY },
+      { t: "h2", text: "Exit codes" },
+      { t: "table", label: "Exit codes", head: ["Exit code", "What it means"], rows: CLI_EXITS },
+      { t: "p", text: "The CLI collapses “blocked” and “could not run” into 2, because a gate should treat “I could not check” the same as “no verdict.” A hand-rolled gate that polls the API can split those out, exiting 3 when no decision is reached in the window." },
+      { t: "h2", text: "Options" },
+      { t: "table", label: "Options", head: ["Option", "What it does"], rows: [
+        ["`--wait`", "Wait for the verdict. Without it the command prints the id and exits 0 immediately, which means started, not verified."],
+        ["`--json`", "Emit one JSON object instead of human output. This is the mode for CI and for agents."],
+        ["`--repair-prompt`", "On failure, print only the repair prompt, ready to pipe into a coding agent."],
+        ["`--idempotency-key`", "Reuse a key so a retry returns the original verification instead of starting, and paying for, a second one."],
+        ["`--timeout`", "How long `--wait` waits (for approval and for the decision) before giving up. Default 900 seconds."],
+        ["`--no-open`", "Print the approval link without opening a browser."],
+      ] },
+      { t: "h2", text: "Other commands" },
+      { t: "table", label: "Other commands", head: ["Command", "What it does"], rows: [
+        ["`vraelis result VRF_ID`", "Show a verification's decision."],
+        ["`vraelis init`", "Plug Vraelis into Claude Code, Codex, Gemini CLI, Copilot, Cursor or Trae, and tell them to verify before saying done."],
+        ["`vraelis mcp`", "Run the MCP server the assistants talk to. They start it for you."],
+        ["`vraelis status`", "Show which key is in use, where it came from, and whether it works."],
+        ["`vraelis logout`", "Forget the stored key."],
+      ] },
+      { t: "h2", text: "With no person at the terminal" },
+      { t: "p", text: "A CI job has no person at the terminal, and a key cannot approve a plan, so the first check of a claim waits on the link until someone approves it or `--timeout` runs out. Re-checks of that approved plan need no new approval within 24 hours of the approval, up to 10 times, on the same address. A new preview URL is a different address, so its first check waits for a person again." },
+      { t: "note", label: "Not on npm yet", text: "The CLI installs from the script above, on macOS, Linux and Windows. Its npm package is prepared and not published." },
+    ],
+    related: ["ci", "api", "ai-assistants"],
+  },
+  {
+    slug: "api",
+    group: "Ways to run",
+    title: "The API",
+    summary: "Submit a claim, have a person approve the plan, start the run, read the decision and re-check after a fix, over HTTP.",
+    outcome: "You can start a check from your own code and read the decision with its evidence.",
+    limit: "An API key cannot approve a plan: every key gets 403 plan_requires_human and the link a person opens.",
+    blocks: [
+      { t: "p", text: "Authenticate with an API key, POST a deployment and a claim, send the `approve_url` to a person, resubmit with the approved plan id to start the run, then poll until a decision lands. After a fix, re-check the same plan. Base URL is https://vraelis.com." },
+      { t: "h2", text: "Authenticate" },
+      { t: "p", text: "Every request carries your key in the `x-api-key` header. Keys are created in the app, shown once, and stored only as a hash. Launching or re-checking needs a key with launch access, because it spends. [Create an API key](https://app.vraelis.com/developers)" },
+      { t: "h2", text: "Submit the claim" },
+      { t: "code", label: "Request", text: API_CREATE },
+      { t: "p", text: "Returns `202` with `state: \"review_required\"`, the derived requirements, the plan to approve, and the `approve_url` a person opens. No run started, nothing charged, and no verification id yet. The response also carries `contract_id` and `contract_version`." },
+      { t: "code", label: "Response", text: API_CREATE_RES },
+      { t: "h2", text: "Approve, then start the run" },
+      { t: "p", text: "Only a signed-in person approves a plan, with one click at the `approve_url`. The approval is its own recorded event: who approved which plan, and when. Every API key is refused with `403 plan_requires_human` and the same link, so the tool that asked for the check can never sign off on it. The run then executes exactly the approved plan, with no re-derivation." },
+      { t: "code", label: "Approve, read the plan, then run it", text: API_APPROVE_RUN },
+      { t: "h2", text: "Read the decision" },
+      { t: "p", text: "Poll `GET /v1/verifications/{id}`. While running, the body is just the id and state. Once complete, `decision` is one of `verified`, `failed`, or `blocked`. `recheck_of` names the verification a re-check repeated, or is null." },
+      { t: "code", label: "Request", text: API_READ },
+      { t: "code", label: "Response", text: API_READ_RES },
+      { t: "h2", text: "Re-check after a fix" },
+      { t: "p", text: "After a Failed, deploy the fix and call `POST /v1/verifications/{id}/recheck`. It runs every journey of the same approved plan again and returns a new verification id; the earlier record is never touched. No new approval is needed within 24 hours of the approval, for at most 10 re-checks, on the same scheme and host. An optional `deployment_url` may name another path on that same site. Past those limits the API answers `recheck_window_closed` or `recheck_limit_reached`, and you start a new verification. Each re-check is billed as one verification." },
+      { t: "code", label: "Request", text: API_RECHECK },
+      { t: "code", label: "Response", text: API_RECHECK_RES },
+      { t: "h2", text: "Ask before you commit" },
+      { t: "p", text: "A dry run derives the plan, checks it can actually prove the claim, and charges nothing. When it can, it mints the same plan a person approves in step 2 above, with its `approve_url`. When it cannot, it says so with a repair prompt, and there is nothing to approve." },
+      { t: "code", label: "Request", text: API_DRY },
+      { t: "code", label: "Response", text: API_DRY_RES },
+      { t: "h2", text: "Requirements" },
+      { t: "p", text: "Every response echoes the requirements Vraelis derived from your claim, and states whether a person approved them in `human_reviewed`. A model reading a claim can misread it; the requirements are what the person is approving, and they are how you catch a confidently wrong verdict before you trust it." },
+      { t: "h2", text: "Idempotency" },
+      { t: "p", text: "Send an `idempotency-key` header. A retry with the same key, deployment, and claim replays the original verification instead of starting and paying for a second one. The same key with a different claim is refused, so a changed request can never be answered with an earlier run." },
+      { t: "code", label: "The same key with a different claim", text: API_IDEM_ERR },
+      { t: "h2", text: "Errors" },
+      { t: "p", text: "Errors share one envelope: `{ error: { code, message, request_id } }`, with the id also on the `X-Request-Id` header. A claim that cannot be proven returns `claim_not_provable` (422) with a repair prompt, and nothing is charged." },
+      { t: "h2", text: "What has shipped" },
+      { t: "p", text: "We will not document an endpoint we have not shipped. These are the ones that answer today." },
+      { t: "ul", items: [
+        "`POST /api/v1/verifications`, create, dry-run, or run an approved plan",
+        "`GET /api/v1/verifications/plans/{id}`, the plan, its approval state, and `approve_url` while it is pending",
+        "`GET /api/v1/verifications/{id}`, decision, evidence, repair prompt, `recheck_of`",
+        "`POST /api/v1/verifications/{id}/recheck`, the same approved plan after a fix",
+        "`POST /api/v1/verifications/plans/{id}/approve`, for a signed-in person only; every API key gets `403 plan_requires_human`",
+        "The vraelis CLI: `verify`, `recheck`, `result`, `init`, `mcp`",
+        "The MCP server, local (`vraelis mcp`) and hosted (`https://vraelis.com/mcp`)",
+        "Signed `verification.completed` webhooks, and Slack delivery",
+      ] },
+      { t: "note", label: "SDK", text: "A TypeScript SDK, @vraelis/sdk 0.3.0, wraps these calls as prepare, getPlan, waitForApproval, run, waitForResult, recheck and get. It is built and tested in the repository and is not yet published to npm, so it cannot be installed today." },
+    ],
+    related: ["cli", "ci", "webhooks"],
+  },
+  {
+    slug: "ci",
+    group: "Ways to run",
+    title: "Gate a release in CI",
+    summary: "Run a check from a CI job and ship only when the decision is verified.",
+    outcome: "A release goes out only when the claim held on the live app.",
+    limit: "A CI job cannot approve a plan. The first check of a claim waits until a person approves it at the link.",
+    blocks: [
+      { t: "p", text: "Gate on the decision, never the run state. A finished run is not a pass. In CI the exit code is what an if-statement reads." },
+      { t: "h2", text: "With the CLI" },
+      { t: "code", label: "A CI step", text: CI_STEP },
+      { t: "table", label: "Exit codes", head: ["Exit code", "What it means"], rows: CLI_EXITS },
+      { t: "p", text: "The job needs `VRAELIS_API_KEY` in its environment, from a key with launch access, and Node 18 or newer. The CLI does not open a browser in CI: the approval link goes to the log. [Create an API key](https://app.vraelis.com/developers)" },
+      { t: "h2", text: "The first check of a claim" },
+      { t: "p", text: "A CI job has no person at the terminal, and a key cannot approve a plan, so the first check of a claim waits on the link until someone approves it or `--timeout` runs out. Re-checks of that approved plan need no new approval within 24 hours of the approval, up to 10 times, on the same address. A new preview URL is a different address, so its first check waits for a person again. The gate below splits the two cases instead." },
+      { t: "h2", text: "A gate that calls the API" },
+      { t: "p", text: "The CLI collapses “blocked” and “could not run” into 2, because a gate should treat “I could not check” the same as “no verdict.” A hand-rolled gate that polls the API can split those out, exiting 3 when no decision is reached in the window." },
+      { t: "code", label: "gate.mjs", text: CI_GATE },
+      { t: "table", label: "The gate's exit codes", head: ["Exit code", "What it means"], rows: [
+        ["`0`", "verified"],
+        ["`1`", "failed"],
+        ["`2`", "blocked"],
+        ["`3`", "no decision reached"],
+        ["`4`", "the plan still needs a person to approve it"],
+      ] },
+      { t: "table", label: "What the gate reads", head: ["Variable", "What it holds"], rows: [
+        ["`VRAELIS_API_KEY`", "An API key with launch access."],
+        ["`PREVIEW_URL`", "The deployment to check."],
+        ["`VRAELIS_CLAIM`", "The sentence that has to hold."],
+        ["`VRAELIS_REVIEWED_PLAN_ID`", "The approved plan's id. Unset on the first run, so the gate prints the approval link and exits 4."],
+      ] },
+      { t: "note", label: "Honest boundary", text: "Nothing watches your deployments. A check runs when a person, a CI job or an AI assistant starts one, so put it before the release step." },
+    ],
+    related: ["cli", "api", "recheck"],
+  },
+  {
+    slug: "webhooks",
+    group: "Ways to run",
+    title: "Webhooks",
+    summary: "Get a signed verification.completed event when a verification finalizes, and check its signature.",
+    outcome: "Your systems get each decision as it lands, and can check it came from Vraelis.",
+    limit: "A delivery carries the decision, counts, ids and a link to the evidence, never a session id, token, credential or signed artifact URL.",
+    blocks: [
+      { t: "p", text: "Connect an endpoint and Vraelis POSTs a signed `verification.completed` event the moment a verification finalizes. It carries only owner-safe facts: the decision, flow counts, ids, and a link to the evidence. Never a session id, token, credential, or signed artifact URL." },
+      // TWO PLACES SEND THE EVENT, and both fire on every finished verification (dispatchWebhooks in
+      // worker/preflight/run-store-postgres.ts): the account's endpoints under Developers (lib/v-webhooks.ts:
+      // a whsec_ secret per endpoint, retries, x-vraelis-delivery) and a system's Webhook or Slack connections
+      // (lib/preflight/webhook-dispatch.ts: Slack formatting, no retries, signed with a key only Vraelis
+      // holds). /developers described them as one; every sentence below is read off those two files.
+      { t: "h2", text: "Add an endpoint" },
+      { t: "p", text: "Add it under Developers in the console. The endpoint gets its own signing secret, which starts with `whsec_`. The console shows it when you add the endpoint, Reveal shows it again, and Rotate replaces it. Send test posts a sample event marked `\"test_event\": true`. [Open Developers in the console](https://app.vraelis.com/developers#webhooks)" },
+      { t: "ul", items: [
+        "The address must be https on port 443, on a public host. Localhost and private addresses are refused.",
+        "A delivery that times out, or gets a 5xx or 429 answer, is tried again, up to five attempts in all. Deliveries lists the recent ones, and Retry sends a failed one again.",
+        "An account can have up to 10 endpoints. Every finished verification goes to each one that is enabled.",
+      ] },
+      { t: "h2", text: "The event" },
+      { t: "p", text: "One event, `verification.completed`, delivered with the headers `x-vraelis-event`, `x-vraelis-timestamp`, and `x-vraelis-signature`." },
+      { t: "p", text: "Each delivery also carries an `x-vraelis-delivery` header, with the same id as `delivery_id` in the body. A retry keeps that id, so a receiver can drop a repeat." },
+      { t: "code", label: "Example payload", text: HOOK_PAYLOAD },
+      { t: "h2", text: "Verify a delivery" },
+      { t: "p", text: "The signature is an HMAC over the raw body prefixed with the timestamp, so recompute over the exact bytes you received before trusting the payload." },
+      { t: "p", text: "Key the HMAC with the endpoint's signing secret, and keep the secret on your server, for example in an environment variable." },
+      { t: "code", label: "Node.js", text: HOOK_VERIFY },
+      { t: "h2", text: "Slack, and webhooks on one system" },
+      { t: "p", text: "A system can also send the event itself: add a Webhook or a Slack connection in its settings, under Connections. A Slack incoming webhook gets the event as a formatted message in your channel instead of raw JSON, with the decision, flows passed, and a link to the evidence." },
+      { t: "p", text: "These deliveries carry no `delivery_id` and are not retried, and a Webhook connection has no signing secret of its own. When a receiver has to check where a delivery came from, add its endpoint under Developers." },
+    ],
+    related: ["api", "ci", "completion"],
   },
   // "REVIEW" BECAME "APPROVING A PLAN", slug unchanged. On 2026-09-28 the approve endpoint stopped accepting
   // API keys altogether: the keys that call it now belong to CLIs, CI jobs and AI assistants, and the promise
@@ -145,11 +607,11 @@ export const DOCS: Doc[] = [
       { t: "h2", text: "Where the approval happens" },
       { t: "ul", items: [
         "In the console, under Review.",
-        "At the approval link a check returns: approve_url in the API, the link the CLI prints and opens, and the link an AI assistant hands you. It opens app.vraelis.com/review/ followed by the plan id.",
+        "At the approval link a check returns: `approve_url` in the API, the link the CLI prints and opens, and the link an AI assistant hands you. It opens `app.vraelis.com/review/` followed by the plan id.",
         "In ChatGPT and Claude, the Vraelis card carries a Review and approve button that opens the same page.",
       ] },
       { t: "h2", text: "Why an API key cannot approve" },
-      { t: "p", text: "POST /v1/verifications/plans/{id}/approve refuses every API key with 403 plan_requires_human and returns the approve_url, so the caller can hand it to a person. GET /v1/verifications/plans/{id} reads the plan and its approval_state, and carries approve_url while the plan is still pending." },
+      { t: "p", text: "`POST /v1/verifications/plans/{id}/approve` refuses every API key with `403 plan_requires_human` and returns the `approve_url`, so the caller can hand it to a person. `GET /v1/verifications/plans/{id}` reads the plan and its `approval_state`, and carries `approve_url` while the plan is still pending." },
       { t: "code", label: "What a key gets back", text: "POST /v1/verifications/plans/rvp_3c9e26ef/approve\n\n403\n{\n  \"error\": { \"code\": \"plan_requires_human\", \"message\": \"Only a signed-in person can approve a plan. ...\" },\n  \"approve_url\": \"https://app.vraelis.com/review/rvp_3c9e26ef\"\n}" },
       { t: "note", label: "Honest boundary", text: "A plan is approved or refused as a whole. Nothing inside an approved plan is singled out for its own hold." },
     ],
@@ -176,13 +638,13 @@ export const DOCS: Doc[] = [
         "Execution evidence: screenshots, console errors, and failed network requests.",
         "The decision the run reached, and the repair prompt behind a failure.",
       ] },
-      { t: "figure", src: "/docs/run-journey-failed-step.webp", width: 1678, height: 680,
-        alt: "A journey in a real run report: Create and persist a note across sign-out and sign-in, marked Failed, run as the member test account, with step 1 passed and step 2, signing in, failed after 20.5 seconds.",
+      { t: "figure", src: "/docs/run-journey-failed-step.webp", width: 1678, height: 682, credit: CAPTURED,
+        alt: "A journey in a real run report: Create and persist a note across sign-out and sign-in, marked Failed, run as the member test account, with step 1 passed and step 2, signing in, failed after 20.6 seconds.",
         caption: "One journey from a real failed run. The error detail under the failed step opens to show what the browser saw.",
         marks: [
-          { x: 40.5, y: 28.4, label: "The journey, and whether it held." },
-          { x: 59.9, y: 47, label: "The test account it ran as." },
-          { x: 25, y: 82.4, label: "The step that failed, and how long it took." },
+          { x: 41.3, y: 28.3, label: "The journey, and whether it held." },
+          { x: 58.9, y: 46.8, label: "The test account it ran as." },
+          { x: 25.7, y: 82, label: "The step that failed, and how long it took." },
         ] },
       { t: "note", label: "Honest boundary", text: "A check begins when someone says the work is done. Vraelis does not read code, diffs or tool calls, and it does not watch anyone while they work." },
     ],
@@ -203,13 +665,13 @@ export const DOCS: Doc[] = [
         "Blocked: no honest decision could be reached, so none is claimed.",
       ] },
       { t: "p", text: "The same three words come back in the console, the CLI's exit code, the API, the MCP tools and the webhooks. A claim is accepted when the live app shows it, not when someone says it is done." },
-      { t: "figure", src: "/docs/run-outcome-verified.webp", width: 1678, height: 388,
+      { t: "figure", src: "/docs/run-outcome-verified.webp", width: 1678, height: 392, credit: CAPTURED,
         alt: "The outcome section of a real Verified run: the checked workflow completed with the expected result, a Verified badge, 2 of 2 critical flows passed, and the reason.",
         caption: "The outcome of a real Verified run.",
         marks: [
-          { x: 51.5, y: 43.8, label: "The answer in plain words." },
-          { x: 39.9, y: 61.3, label: "How many journeys held." },
-          { x: 49.6, y: 88.9, label: "Why Vraelis reached it." },
+          { x: 52.6, y: 43.1, label: "The answer in plain words." },
+          { x: 39.3, y: 60.6, label: "How many journeys held." },
+          { x: 49.7, y: 87.6, label: "Why Vraelis reached it." },
         ] },
     ],
     related: ["repair", "recheck"],
@@ -225,13 +687,13 @@ export const DOCS: Doc[] = [
       { t: "p", text: "A finding is what a run records when the live app does not do what the claim says: the requirement that failed, what was expected, what was observed, the steps to reproduce it, and the step it failed at." },
       { t: "h2", text: "A finding is not a guess" },
       { t: "p", text: "Each finding carries what Vraelis observed in the browser and why it was raised, so the next step is a fix, not a mystery. When a run cannot decide, for example because a test account cannot sign in, the answer is Blocked with the reason rather than a finding." },
-      { t: "figure", src: "/docs/overview-needs-attention.webp", width: 1678, height: 644,
+      { t: "figure", src: "/docs/overview-needs-attention.webp", width: 1678, height: 644, credit: CAPTURED,
         alt: "The Needs attention list on the console Overview: four findings on the Notewell app, one critical and three high, each with when it was found and a Failed badge for the app's latest result.",
         caption: "Findings on the console Overview, from real runs of a notes app.",
         marks: [
-          { x: 55.6, y: 20.5, label: "What failed, in plain words." },
-          { x: 67, y: 27.8, label: "Severity, the app, and when it was found. Came back means it failed again after an earlier run." },
-          { x: 87.1, y: 24.2, label: "The app's latest result." },
+          { x: 55.5, y: 20.5, label: "What failed, in plain words." },
+          { x: 63.7, y: 27.4, label: "Severity, the app, and when it was found. Came back means it failed again after an earlier run." },
+          { x: 85.8, y: 24.1, label: "The app's latest result." },
         ] },
     ],
     related: ["repair", "recheck"],
@@ -245,18 +707,18 @@ export const DOCS: Doc[] = [
     limit: "Vraelis writes the prompt and checks the fix. It never edits your code.",
     blocks: [
       { t: "p", text: "When a run fails, Vraelis writes a repair prompt: what should have happened, what happened instead, how to reproduce it, and the evidence. It is written so a person or a coding agent can act on it directly." },
-      { t: "figure", src: "/docs/run-repair-prompt.webp", width: 1678, height: 998,
+      { t: "figure", src: "/docs/run-repair-prompt.webp", width: 1678, height: 1000, credit: CAPTURED,
         alt: "The repair handoff on a real failed run: a repair prompt for a coding agent stating what was being checked, what happened instead, and numbered steps to reproduce, with a Copy repair prompt button.",
         caption: "A real repair prompt. It is plain text, so it pastes into any coding agent.",
         marks: [
-          { x: 80.2, y: 29.5, label: "Copy it for a person or a coding agent." },
-          { x: 23.8, y: 45.3, label: "What was being checked." },
-          { x: 23.2, y: 55.5, label: "What happened instead." },
-          { x: 19.7, y: 65.9, label: "How to reproduce it, step by step." },
+          { x: 78.8, y: 29.5, label: "Copy it for a person or a coding agent." },
+          { x: 24.6, y: 45.1, label: "What was being checked." },
+          { x: 23.8, y: 55.5, label: "What happened instead." },
+          { x: 20.5, y: 65.8, label: "How to reproduce it, step by step." },
         ] },
       { t: "h2", text: "The division of labor" },
       { t: "p", text: "Whoever fixes it diagnoses the cause and makes the change. Vraelis does not edit code. Once the fix is deployed, a re-check runs the same approved plan again as its own run, and an earlier record is never overwritten." },
-      { t: "note", label: "Where the prompt goes", text: "Back to whoever asked: in the answer an AI assistant gets over MCP, in the CLI's output (--repair-prompt prints only the prompt), in the API response, and on the run report. A re-check is started by a person, a CI job or an assistant. Nothing re-checks on its own." },
+      { t: "note", label: "Where the prompt goes", text: "Back to whoever asked: in the answer an AI assistant gets over MCP, in the CLI's output (`--repair-prompt` prints only the prompt), in the API response, and on the run report. A re-check is started by a person, a CI job or an assistant. Nothing re-checks on its own." },
       { t: "note", label: "Preserved history", text: "Every result is kept. A later Verified does not erase an earlier Failed." },
     ],
     related: ["recheck", "completion"],
@@ -265,7 +727,7 @@ export const DOCS: Doc[] = [
     slug: "recheck",
     group: "The check",
     title: "Re-checks",
-    summary: "Run the same approved plan again after a fix, without a new approval.",
+    summary: "Run the same approved plan again after a fix, within its limits, without a new approval.",
     outcome: "You can prove a fix on the live app without asking for approval again.",
     limit: "A re-check runs the plan that was approved. To check something new, start a new verification.",
     blocks: [
@@ -276,10 +738,10 @@ export const DOCS: Doc[] = [
         "For at most 10 re-checks of that approval.",
         "On the same site: the same scheme and host. A different path on that site is allowed.",
       ] },
-      { t: "p", text: "Outside those limits the API answers recheck_window_closed or recheck_limit_reached. Start a new verification and a person approves its plan again." },
+      { t: "p", text: "Outside those limits the API answers `recheck_window_closed` or `recheck_limit_reached`. Start a new verification and a person approves its plan again." },
       { t: "h2", text: "How to start one" },
       { t: "code", label: "API, CLI and MCP", text: "POST /v1/verifications/vrf_9c1e0f2a41/recheck        # optional body: { \"deployment_url\": \"...\" }\n\nvraelis recheck vrf_9c1e0f2a41 --wait\n\nvraelis_recheck  { \"verification_id\": \"vrf_9c1e0f2a41\" }" },
-      { t: "p", text: "The response carries recheck_of, rechecks_left and recheck_window_ends_at, and GET /v1/verifications/{id} reports recheck_of on every run. A re-check needs a key with launch access, because it spends." },
+      { t: "p", text: "The response carries `recheck_of`, `rechecks_left` and `recheck_window_ends_at`, and `GET /v1/verifications/{id}` reports `recheck_of` on every run. A re-check needs a key with launch access, because it spends." },
       { t: "note", label: "Billing", text: "Each re-check is billed as one verification, the same as the first run." },
     ],
     related: ["repair", "review"],
@@ -366,9 +828,62 @@ export function adjacentDocs(slug: string) {
   const i = DOCS.findIndex((d) => d.slug === slug);
   return { prev: i > 0 ? DOCS[i - 1] : null, next: i >= 0 && i < DOCS.length - 1 ? DOCS[i + 1] : null };
 }
+/** The page's h2 headings, in order (kept for callers that want the flat list). */
 export function docHeadings(doc: Doc) {
   return doc.blocks.filter((b): b is Extract<Block, { t: "h2" }> => b.t === "h2").map((b) => b.text);
 }
+
+/** The id an h2 gets from its words. */
+export const dslug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+
+export type TocItem = { id: string; text: string; level: 2 | 3 };
+/** "On this page": every h2 (id from its words) and every h3 (its own fixed id), in reading order. */
+export function docOutline(doc: Doc): TocItem[] {
+  const out: TocItem[] = [];
+  for (const b of doc.blocks) {
+    if (b.t === "h2") out.push({ id: dslug(b.text), text: b.text, level: 2 });
+    else if (b.t === "h3") out.push({ id: b.id, text: b.text, level: 3 });
+  }
+  return out;
+}
+
+// ── INLINE MARKUP ────────────────────────────────────────────────────────────────────────────────────────
+export type Inline = { k: "text"; s: string } | { k: "code"; s: string } | { k: "link"; s: string; href: string };
+const INLINE_RE = /`([^`]+)`|\[([^\]]+)\]\(([^)\s]+)\)/g;
+/** Splits a line of docs text into plain text, `code` and [label](href) links. */
+export function inline(text: string): Inline[] {
+  const out: Inline[] = [];
+  let last = 0;
+  for (const m of text.matchAll(INLINE_RE)) {
+    const at = m.index ?? 0;
+    if (at > last) out.push({ k: "text", s: text.slice(last, at) });
+    out.push(m[1] !== undefined ? { k: "code", s: m[1] } : { k: "link", s: m[2], href: m[3] });
+    last = at + m[0].length;
+  }
+  if (last < text.length) out.push({ k: "text", s: text.slice(last) });
+  return out;
+}
+
+// THE CONSOLE'S FIRST PATH SEGMENTS (plan 0.5, reserved). On vraelis.com these answer with a redirect to
+// app.vraelis.com, and a prefetch that crosses origins is blocked by CORS: two console errors per link and
+// nothing fetched. v6ShouldPrefetch covers /app and /checkout; lib/ is not edited, so the docs check the
+// whole list here.
+const CONSOLE_FIRST = /^\/(systems|verifications|guarantees|review|records|usage|applications|passes|issues|repairs|deployments|activity|team|organization|api|connections|plans|credits|billing|account|checkout|limits|cli|admin|new|app)(?:[/?#]|$)/;
+/** The prefetch prop for a docs link: false for a console path, otherwise left to Next. Takes a clean path
+ *  ("/app") or one with V6_BASE in front. */
+export function docPrefetch(href: string): false | undefined {
+  const path = V6_BASE && href.startsWith(V6_BASE + "/") ? href.slice(V6_BASE.length) : href;
+  if (!path.startsWith("/")) return undefined;
+  return v6ShouldPrefetch(path) && !CONSOLE_FIRST.test(path) ? undefined : false;
+}
+
+const SITE = "https://vraelis.com";
+/** Inline markup as Markdown: code stays in backticks, and a site link becomes absolute, because the
+ *  Markdown is read away from the site (Copy page, /llms-full.txt). */
+function inlineMarkdown(text: string): string {
+  return inline(text).map((x) => (x.k === "code" ? `\`${x.s}\`` : x.k === "link" ? `[${x.s}](${x.href.startsWith("/") ? SITE + x.href : x.href})` : x.s)).join("");
+}
+const cell = (s: string) => inlineMarkdown(s).replace(/\|/g, "\\|");
 
 /** The page as Markdown, for the Copy as Markdown button and for AI assistants that read docs. Figures
  *  become their alt text and numbered labels, so nothing a picture says is lost in text. */
@@ -378,12 +893,14 @@ export function docToMarkdown(doc: Doc, surfaces: { name: string; brief: string;
   for (const b of doc.blocks) {
     out.push("");
     switch (b.t) {
-      case "p": out.push(b.text); break;
+      case "p": out.push(inlineMarkdown(b.text)); break;
       case "h2": out.push(`## ${b.text}`); break;
-      case "ul": out.push(...b.items.map((i) => `- ${i}`)); break;
-      case "steps": out.push(...b.items.map((i, n) => `${n + 1}. ${i}`)); break;
-      case "note": out.push(`> **${b.label}.** ${b.text}`); break;
+      case "h3": out.push(`### ${b.text}`); break;
+      case "ul": out.push(...b.items.map((i) => `- ${inlineMarkdown(i)}`)); break;
+      case "steps": out.push(...b.items.map((i, n) => `${n + 1}. ${inlineMarkdown(i)}`)); break;
+      case "note": out.push(`> **${b.label}.** ${inlineMarkdown(b.text)}`); break;
       case "code": out.push(`${b.label}:`, "", "```", b.text, "```"); break;
+      case "table": out.push(`| ${b.head.map(cell).join(" | ")} |`, `| ${b.head.map(() => "---").join(" | ")} |`, ...b.rows.map((r) => `| ${r.map(cell).join(" | ")} |`)); break;
       case "figure": out.push(`[Screenshot: ${b.alt}]`, ...(b.marks ?? []).map((m, n) => `${n + 1}. ${m.label}`)); break;
       case "surfaces": out.push(...surfaces.map((x) => `- **${x.name}** (${x.tier}): ${x.brief}`)); break;
     }

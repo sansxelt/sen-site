@@ -1,0 +1,41 @@
+/* /developers (plan C, template T1). The kit draws the hero, the cards and the band; the code blocks are
+   pagekit.css (.v6-code). This file lays out the request and its response, the two columns inside the band and
+   the exit-code table. Tokens only (plan A2). */
+
+/* The request in columns 1 to 7, its response in 8 to 12 (the request's lines are the longer ones). Stacked
+   below 1000px. Each has a small label above it. */
+.v6 .dv-pair { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--col-gap); row-gap: 24px; align-items: start; }
+.v6 .dv-pair figure { margin: 0; min-width: 0; }
+.v6 .dv-pair__req { grid-column: 1 / span 7; }
+.v6 .dv-pair__res { grid-column: 8 / span 5; }
+.v6 .dv-pair__h { margin: 0 0 10px; font-size: var(--t-label); font-weight: 600; line-height: 1.4; color: var(--ink-3); }
+.v6 .dv-more { margin-top: 32px; }
+
+/* The ways in follow the API section: one section's room between them rather than two. A card's line of code
+   wraps between its words only. */
+.v6 .dv-ways { padding-top: 0; }
+.v6 .dv-tok { white-space: nowrap; }
+
+/* Inside the band: the CLI gate on the left, the webhook on the right, each its own anchor. An anchor lands
+   32px under the bar (scroll-margin adds to the page's scroll-padding, which already clears the bar). */
+.v6 .dv-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: clamp(32px, 4.4vw, 64px); row-gap: 72px; align-items: start; }
+.v6 .dv-col { min-width: 0; scroll-margin-top: 32px; }
+.v6 .dv-col .v6-head { margin-bottom: 32px; }
+.v6 .dv-col__link { margin-top: 24px; }
+.v6 .dv-note { margin: 20px 0 0; display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 20px; row-gap: 4px;
+  max-width: 62ch; font-size: var(--t-small); line-height: 1.55; color: var(--ink-3); }
+.v6 .dv-id { font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
+
+/* The exit codes: reference material, so a plain table with hairlines and mono numerals; words, no colour. */
+.v6 .dv-exits { width: 100%; margin-top: 24px; border-collapse: collapse; font-size: 15px; line-height: 1.5; }
+.v6 .dv-exits__cap { caption-side: top; padding: 0 0 10px; text-align: left; font-size: var(--t-label); font-weight: 600; color: var(--ink-3); }
+.v6 .dv-exits th { padding: 0 16px 10px 0; text-align: left; font-size: var(--t-label); font-weight: 500; color: var(--ink-4); border-bottom: 1px solid var(--line); }
+.v6 .dv-exits td { padding: 14px 16px 14px 0; vertical-align: top; color: var(--ink-2); border-bottom: 1px solid var(--line-soft); }
+.v6 .dv-exits .dv-exits__n { width: 64px; font-family: var(--mono); font-size: var(--t-mono); color: var(--ink); }
+
+@media (max-width: 999px) {
+  .v6 .dv-pair__req, .v6 .dv-pair__res { grid-column: 1 / -1; }
+}
+@media (max-width: 899px) {
+  .v6 .dv-two { grid-template-columns: minmax(0, 1fr); }
+}

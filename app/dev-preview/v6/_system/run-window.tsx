@@ -18,6 +18,12 @@
    The answer words (Verified, Failed) are not printed here (positioning.ts rule 8). A finished run says
    what happened in plain words.
 
+   NO DOTS (site plan, revision 2, 2026-10-02). No step icons, no pills, no "·" separators: meta items sit
+   20px apart, the run's state is a plain word, and the one coloured row is the step that found the problem
+   (--stop-ink on a faint wash, labelled "Found a problem"). A run that held is said in words, not painted
+   green. The window is a product panel (data-panel on its outermost element), so the page's word budget
+   skips its text; counters and the record's own words are data-no-translate.
+
    THE WINDOW DOES NOT CHANGE SIZE BY ITSELF. Stacked on a phone it is as tall as what it shows, and what a
    finished run adds (the finding, the repair prompt) used to grow it under the reader and push the next
    section down by a third of the screen (CLS 0.39 at 390px, with no input). Now everything a run will show
@@ -64,7 +70,7 @@ const fmtMs = (ms: number) => (ms >= 1000 ? `${(ms / 1000).toFixed(1)} s` : `${m
 const day = (iso: string) => new Date(`${iso}T12:00:00Z`);
 const appName = (d: Demo) => d.app.split(",")[0];
 
-// The longest the step counter reads on any run ("18/18 steps · 17.4 s"). A hidden copy sits under the live
+// The longest the step counter reads on any run ("18/18 steps", "17.4 s"). A hidden copy sits under the live
 // counter, so the status line is laid out once and does not re-wrap as the numbers grow or the run changes.
 const WIDEST = ENTRIES
   .map((x) => ({ n: x.run.journeys.reduce((a, j) => a + j.steps.length, 0), s: x.run.seconds.toFixed(1) }))
@@ -239,7 +245,7 @@ export function RunWindow() {
   const address = `${host(e.demo.url)}${at === "/" ? "" : at}`;
 
   return (
-    <div ref={root} className="rw" data-state={state} onPointerDown={() => { touched.current = true; }} onKeyDown={() => { touched.current = true; }}>
+    <div ref={root} className="rw" data-panel="" data-state={state} onPointerDown={() => { touched.current = true; }} onKeyDown={() => { touched.current = true; }}>
       <div className="rw__top">
         <span className="rw__brand">
           <span className="rw__mark" aria-hidden>V</span>
@@ -247,7 +253,7 @@ export function RunWindow() {
           <span className="rw__crumb"><span className="rw__up">Checks <span aria-hidden>/</span> </span><b data-no-translate>{appName(e.demo)}</b></span>
         </span>
         {/* An identifier, not a sentence: translated, "Run" became a verb ("Ausführen"). */}
-        <span className="rw__rec v6-mono" data-no-translate>Run {RUN_IDS[e.id] ?? ""} · {recDate.format(day(e.run.recorded))}</span>
+        <span className="rw__rec v6-mono" data-no-translate><span>Run {RUN_IDS[e.id] ?? ""}</span><span>{recDate.format(day(e.run.recorded))}</span></span>
         <button type="button" className="rw__replay" onClick={() => { touched.current = true; play(sel); }}>
           <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden><path d="M3 8a5 5 0 1 0 1.6-3.7M3 2.5v2.6h2.6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
           Replay
@@ -262,8 +268,8 @@ export function RunWindow() {
               <li key={x.id}>
                 <button type="button" className="rw__item" aria-pressed={i === sel} onClick={() => choose(i)}>
                   <span className="rw__iname">{x.name}</span>
-                  {/* The outcome in words, coloured because the colour IS the outcome; no dot beside it. */}
-                  <span className="rw__imeta"><span data-f={x.run.failure ? "found" : "held"}>{x.run.failure ? "Found a problem" : "Did what the sentence says"}</span>{" · "}<span className="rw__date" data-no-translate>{railDate.format(day(x.run.recorded))}</span></span>
+                  {/* The outcome in words; only a found problem is coloured. No dot, no separator: the date sits 20px on. */}
+                  <span className="rw__imeta"><span data-f={x.run.failure ? "found" : "held"}>{x.run.failure ? "Found a problem" : "Did what the sentence says"}</span><span className="rw__date" data-no-translate>{railDate.format(day(x.run.recorded))}</span></span>
                 </button>
               </li>
             ))}
@@ -282,9 +288,10 @@ export function RunWindow() {
               <span className="rw__chip rw__sz" aria-hidden>Did what the sentence says</span>
               <span className="rw__chip" data-s={state}>{state === "run" ? "Checking the live app" : state === "found" ? "Found a problem" : "Did what the sentence says"}</span>
             </span>
-            <span className="rw__stat v6-mono">
-              <span className="rw__sz" aria-hidden>{WIDEST.n}/{WIDEST.n} steps · {`${WIDEST.s} s`}</span>
-              <span>{Math.min(shown, total)}/{total} steps · {done ? `${e.run.seconds.toFixed(1)} s` : `${(elapsed / 1000).toFixed(1)} s`}</span>
+            {/* A counter, not a sentence: machine text, never translated. */}
+            <span className="rw__stat v6-mono" data-no-translate>
+              <span className="rw__sz" aria-hidden><span>{`${WIDEST.n}/${WIDEST.n} steps`}</span><span>{`${WIDEST.s} s`}</span></span>
+              <span><span>{`${Math.min(shown, total)}/${total} steps`}</span><span>{done ? `${e.run.seconds.toFixed(1)} s` : `${(elapsed / 1000).toFixed(1)} s`}</span></span>
             </span>
           </div>
 
@@ -304,10 +311,10 @@ export function RunWindow() {
                   {j.steps.map((s, k) => {
                     const i = starts[ji] + k;
                     const st = i < shown ? (s.ok ? "ok" : "fail") : i === shown && !done ? "now" : "wait";
-                    const result = s.ok ? fmtMs(s.ms) : <><span className="rw__sf">Problem</span> {fmtMs(s.ms)}</>;
+                    const result = s.ok ? fmtMs(s.ms) : <><span className="rw__sf">Found a problem</span><span>{fmtMs(s.ms)}</span></>;
                     return (
-                      // No status icons (founder, 2026-10-01: no dots). The outcome is said in words, and only a
-                      // failure is coloured, because that is the one row a reader has to find.
+                      // No status icons (founder, 2026-10-01: no dots). The outcome is said in words, and only the
+                      // step that found the problem is coloured, because that is the one row a reader has to find.
                       <li key={k} className="rw__step" data-s={st}>
                         <span className="rw__sn v6-mono">{String(i + 1).padStart(2, "0")}</span>
                         <span className="rw__st" data-no-translate>{s.say}</span>
@@ -337,7 +344,7 @@ export function RunWindow() {
                 <Image src={e.run.shot} alt={`${e.run.shotCaption} The screenshot the run saved.`} sizes="(max-width: 900px) 92vw, 380px" className="rw__shot" />
               ) : (
                 <div className="rw__live">
-                  <span className="rw__lstep v6-mono">Step {Math.min(shown + 1, total)} of {total}</span>
+                  <span className="rw__lstep v6-mono" data-no-translate>{`Step ${Math.min(shown + 1, total)} of ${total}`}</span>
                   <span className="rw__lnow" data-no-translate>{current?.say}</span>
                   <span className="rw__lbar" aria-hidden><span style={{ width: `${Math.round((Math.min(shown, total) / total) * 100)}%` }} /></span>
                 </div>
@@ -360,7 +367,7 @@ export function RunWindow() {
             <div className="rw__cdone">
               {e.run.failure ? (
                 <>
-                  <p className="rw__ch">What it found <span className="v6-mono">{e.run.failure.at}</span></p>
+                  <p className="rw__ch"><span>What it found</span><span className="v6-mono" data-no-translate>{e.run.failure.at}</span></p>
                   <dl className="rw__diff">
                     <div><dt>Expected</dt><dd data-no-translate>{e.run.failure.expected}</dd></div>
                     <div><dt>Observed</dt><dd data-no-translate>{e.run.failure.observed}</dd></div>
@@ -368,8 +375,8 @@ export function RunWindow() {
                 </>
               ) : (
                 <>
-                  <p className="rw__ch">What it found</p>
-                  <p className="rw__none">Every step did what the plan expected, {total} of {total}.</p>
+                  <p className="rw__ch"><span>What it found</span><span className="v6-mono" data-no-translate>{`${total}/${total}`}</span></p>
+                  <p className="rw__none">Every step did what the plan expected.</p>
                 </>
               )}
             </div>
@@ -383,6 +390,8 @@ export function RunWindow() {
               <div className="rw__ph">
                 <span className="rw__pt" id={promptHead}>Repair prompt for your coding agent</span>
                 <button type="button" className="rw__copy" onClick={() => { touched.current = true; void copy(); }}>{copied ? "Copied" : "Copy"}</button>
+                {/* "Copied" appears only after a click, where the translation crawl never looks: seeded here. */}
+                <span hidden data-i18n-seed="">Copied</span>
               </div>
               {/* Named by its heading, which the translator reaches; it skips everything on a <pre>. */}
               <pre ref={pre} className="v6-mono" role="region" aria-labelledby={promptHead} tabIndex={promptScroll ? 0 : undefined}>{prompt}</pre>

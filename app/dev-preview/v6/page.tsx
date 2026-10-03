@@ -13,29 +13,17 @@ export const metadata: Metadata = {
     ogTitle: OG_TITLE,
     ogDescription: OG_DESCRIPTION,
   }),
-  // NAME THE PAGE, LIKE EVERY OTHER ROUTE DOES.
+  // THE FRONT DOOR CARRIES THE COMPANY LINE (plan C, 2026-10-02): "Vraelis | Know what you built does what you
+  // meant", replacing "Home | Vraelis". A search result and a tab both say what the company does, not "Home".
   //
-  // This was absolute, which existed to stop the site template suffixing a title that already ended in the
-  // company name and producing "Vraelis | ... | Vraelis". The real problem was upstream: every other page
-  // on the site reads "Platform | Vraelis", "Pricing | Vraelis", "Company | Vraelis", and the homepage was
-  // the single route that broke the pattern, with a title long enough to truncate in a tab to
-  // "Vraelis | Verification for AI-built sof...". A visitor with several tabs open could identify any page
-  // of this site except its front door.
-  //
-  // Naming it "Home" lets the layout's own "%s | Vraelis" template do the work, so the homepage now follows
-  // the same rule as everything else and the absolute override is no longer needed for anything.
-  //
-  // WRITTEN OUT IN FULL, BECAUSE THE TEMPLATE CANNOT REACH THIS PAGE. The layout's "%s | Vraelis" applies
-  // to CHILD segments, and this page sits in the same segment as the layout that declares it, so a bare
-  // "Home" here renders a tab that says only "Home". That is also the original reason this field was
-  // absolute and the reason META_TITLE carries the company name inside itself. Verified by rendering, not
-  // by reading the docs: /platform gets the suffix from the template, this route has to carry its own.
+  // ABSOLUTE, BECAUSE THE TEMPLATE CANNOT REACH THIS PAGE. The layout's "%s | Vraelis" applies to CHILD
+  // segments, and this page sits in the same segment as the layout that declares it, so a bare title here
+  // renders without the suffix. META_TITLE already carries the company name, which is also why it must not be
+  // suffixed: "Vraelis | ... | Vraelis".
   //
   // THE LINK PREVIEW IS UNAFFECTED. v6meta builds the social card from ogTitle, which is passed explicitly
-  // above; SOCIAL_TITLE is "Vraelis" and the one positioning sentence lives in SOCIAL_DESCRIPTION, neither
-  // of which this touches. Nothing shared to X, LinkedIn or Slack changes. This is the browser tab and the
-  // search result, and only those.
-  title: { absolute: "Home | Vraelis" },
+  // above. This is the browser tab and the search result, and only those.
+  title: { absolute: META_TITLE },
   // THE ONE PAGE THAT STAYS INDEXABLE WHILE THE CURTAIN IS DOWN.
   //
   // Asked for through robotsMeta rather than written as a robots object here, so indexing stays one

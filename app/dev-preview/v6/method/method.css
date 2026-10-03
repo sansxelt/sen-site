@@ -1,0 +1,44 @@
+/* ============================================================================
+   Vraelis public site: THE METHOD (plan T9 and C /method, revision 2, 2026-10-02). Scoped under .v6.
+
+   The Method is a read page: _system/read.css lays it out (the head, the 680 column, the contents list, the
+   cases in public, the end). This file holds only what is the Method's own.
+
+     chapters  each chapter is a <section id> that the contents list points at. Its 56px lead-in is PADDING,
+               so a contents link lands with the same 56px under the bar that .v6-prose h2[id] gives an article
+               heading (pagekit.css explains why a margin does not travel with the target). The first chapter
+               sits straight under the head and carries its lead-in as scroll-margin instead, as legal.css does.
+     numbers   a position's number is the section label over its title (.v6-read__act), and in the contents
+               list it hangs in one column; the two unnumbered items keep that column empty, so every title
+               in the list starts at the same x.
+     tests     a case names the position it tests, as a link back to it.
+   ============================================================================ */
+
+.v6-mt .v6-prose > .v6-mt__ch { padding-top: 56px; }
+.v6-mt .v6-prose > .v6-mt__ch + .v6-mt__ch { margin-top: 0; }
+.v6-mt .v6-prose > .v6-mt__ch:first-child { padding-top: 0; scroll-margin-top: 56px; }
+.v6-mt .v6-mt__ch > h2 { margin-top: 0; padding-top: 0; }
+.v6-mt .v6-mt__ch > .v6-read__act { margin-top: 0; }
+.v6-mt .v6-mt__ch > .v6-read__act + h2 { margin-top: 10px; }
+/* The cases are another kind of section than the positions, so 40px more air above them. The lead-in that travels
+   with the #in-public anchor stays the same 56. */
+.v6-mt .v6-prose > .v6-mt__ch + .v6-mt__public { margin-top: 40px; }
+
+/* ---- the cases, in public ----
+   They sit inside the prose, whose list rule (.v6-prose ol: an 18px indent, 9px apart, pagekit.css) outranks
+   read.css's .v6-read__cases on specificity. The cases are entries on hairlines, not a list in the text: no
+   indent, and the 40px read.css means between them. */
+.v6-mt .v6-prose .v6-read__cases { padding-left: 0; gap: 40px; }
+
+/* ---- the contents list ---- */
+.v6-mt__toc .v6-read__tocn { min-width: 2ch; }
+
+/* ---- a case's position, linked ---- */
+.v6 .v6-mt .v6-read__tests a { color: var(--ink-2); text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 3px;
+  transition: color var(--dur-1) var(--ease-out), text-decoration-color var(--dur-1) var(--ease-out); }
+.v6 .v6-mt .v6-read__tests a:hover { color: var(--ink); text-decoration-color: currentColor; }
+.v6 .v6-mt .v6-read__tests a:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 2px; border-radius: var(--r-sm); }
+
+@media (prefers-reduced-motion: reduce) {
+  .v6 .v6-mt .v6-read__tests a { transition: none; }
+}

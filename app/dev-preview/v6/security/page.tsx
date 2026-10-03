@@ -1,247 +1,278 @@
-import type { CSSProperties } from "react";
-import { SecurityAside } from "../_system/hero-asides";
 import { v6meta } from "../_system/meta";
-import { PageHero, Reveal, SectionHead, Signal, CTA, EditorialLink } from "../_system/ui";
+import { SectionHead, CTA, EditorialLink, ProseLink, Signal } from "../_system/ui";
+import { Band, FeatureCard, FeatureGrid, FrameHero } from "../_system/kit";
+import { ClosingScene } from "../_system/close";
 import { V6_BASE } from "@/lib/v6-routes";
+import "./security.css";
 
 export const metadata = v6meta({
   title: "Security",
   description:
-    "How Vraelis handles access, secrets, and evidence: owner-scoped access, separation of duties, private evidence with short-lived signed URLs, AES-256-GCM secrets at rest, hashed DNS tokens, sanitized audit export, and validated OIDC. Honest about what is not yet in place.",
+    "How Vraelis handles access, secrets and evidence today: where a check's data goes, how it is protected, single sign-on and roles, what is not built yet, and how to report a security issue.",
   path: "/security",
   type: "website",
 });
 
 const BASE = V6_BASE;
-// Empty on purpose. html { scroll-padding-top: var(--nav-h) } in app/globals.css already reserves the bar,
-// and scroll-padding on the scrollport ADDS to scroll-margin on the target rather than overriding it, so the
-// 88px that used to be here doubled the offset instead of setting it. /security#status landed 165px down
-// under a 67px bar. See the longer note on the same constant in ../company/page.tsx.
-const ANCHOR: CSSProperties = {};
 
-type SigState = "go" | "wait" | "stop";
+// THE SECURITY PAGE (plan T5, revision 2, 2026-10-02). In order: the frame with a real console capture, three
+// commitments (this page's one approval claim is the first of them, plan 0.3), what is in place (#status, linked
+// from the Resources menu), what is stored and how it is protected (a Band, each card naming where its evidence
+// lives), identity, what we do not claim, and how to report an issue (#report, linked from
+// /.well-known/security.txt and the acceptable use policy). The old hero aside (SecurityAside) is gone: the three
+// commitments say what it said.
+//
+// Every fact here is read from the code or the published policies: _content/legal.tsx (SUBPROCESSORS, the privacy
+// and cookie policies), the enterprise capability table, and the product contract (plan A8.3). Nothing here is a
+// certification, and the page says so.
 
-/* system status: what is actually operational */
-const STATUS: [string, SigState, string][] = [
-  ["Verification engine", "go", "Operational"],
-  ["Real-browser execution and evidence capture", "go", "Operational"],
-  ["Private evidence storage and signed URLs", "go", "Operational"],
+type State = "go" | "wait";
+
+// What is in place. Words, never colours: Operational, Preview, Not built yet (plan 0.2).
+const STATUS: [string, State, string][] = [
+  ["Checks in a real browser, with their evidence", "go", "Operational"],
+  ["Private evidence storage and signed links", "go", "Operational"],
+  ["Two-step verification", "go", "Operational"],
   ["OIDC single sign-on", "go", "Operational"],
+  ["Roles, and billing anchored to an owner", "go", "Operational"],
   ["Audit activity and sanitized export", "go", "Operational"],
   ["SAML single sign-on", "wait", "Preview"],
-  ["SCIM provisioning", "wait", "Planned"],
+  ["SCIM provisioning", "wait", "Not built yet"],
 ];
 
-/* the model: three principles */
-const MODEL: [string, string, string][] = [
-  ["01", "Owner-scoped access", "Every connected application carries an explicit owner, and an I own or authorized this confirmation is required before a run can touch it. Access is scoped to the people and identities that should have it, not opened to anyone who can reach the system."],
-  ["02", "Separation of duties", "A billing admin manages payment without owning data or members, and ownership transfer is a deliberate, guarded action. In the same spirit, the agent that builds a system does not approve its own proof; completion is judged on independent evidence."],
-  ["03", "Least authority over your environment", "You choose what a run can reach. Point Vraelis at a preview or staging deployment and keep external services in test mode. Vraelis drives the app from the outside, so a run touches only what that environment already touches."],
+// What is stored and how it is protected. Each card ends with where its evidence lives: the published policy
+// or page that says the same thing, so a reviewer can hold us to it. Checked 2026-10-02: the subprocessors table
+// (app/_content/legal.tsx SUBPROCESSORS), the privacy policy's own sentences (test credentials AES-256-GCM, API keys
+// as a hash, hashed abuse signals, no full card numbers), /docs/webhooks (which deliveries carry a secret the
+// receiver can check: only an endpoint added under Developers; corrected 2026-10-02), /data-rights (screenshots in a
+// private bucket behind short-lived signed URLs), /enterprise (the AES-256-GCM SSO secret) and lib/v-audit.ts with
+// app/api/v/audit/export (the export holds the activity rows only: never emails, tokens, secrets, API keys or Stripe
+// ids). The identity rows follow lib/v-sso.ts (the OIDC token checks, the safe-role provisioning, SAML's scaffold).
+const PRIVACY = { label: "Privacy policy", href: `${BASE}/privacy` };
+const SUBPROCESSORS = { label: "Subprocessors", href: `${BASE}/subprocessors` };
+const STORE: { title: string; body: string; evidence: { label: string; href: string } }[] = [
+  {
+    title: "Where a check's data goes",
+    body: "Anthropic writes the plan, Browserbase runs the browser and Supabase stores the record, all in the United States.",
+    evidence: SUBPROCESSORS,
+  },
+  {
+    title: "Evidence behind signed links",
+    body: "Screenshots and traces sit in a private bucket, opened only through short-lived signed links.",
+    evidence: { label: "Data rights", href: `${BASE}/data-rights` },
+  },
+  {
+    title: "Secrets encrypted at rest",
+    body: "Test sign-in credentials and single sign-on secrets are encrypted with AES-256-GCM.",
+    evidence: PRIVACY,
+  },
+  {
+    title: "API keys kept as a hash",
+    body: "The full key is shown once. After that, only its hash is stored.",
+    evidence: PRIVACY,
+  },
+  // Only an endpoint added under Developers has a secret the receiver holds (lib/v-webhooks.ts, a whsec_ secret per
+  // endpoint). A system's Webhook connection is signed with a key only Vraelis holds (lib/preflight/webhook-dispatch.ts),
+  // so its receiver cannot check the sender; /docs/webhooks says exactly that, so the card points there.
+  {
+    title: "Signed webhooks",
+    body: "Endpoints you add under Developers get their own signing secret, so your app can confirm the sender.",
+    evidence: { label: "Webhooks", href: `${BASE}/docs/webhooks` },
+  },
+  {
+    title: "Abuse signals are hashed",
+    body: "IP and device signals used to detect abuse are stored hashed, and reports never show them raw.",
+    evidence: PRIVACY,
+  },
+  {
+    title: "A sanitized audit export",
+    body: "CSV or JSON of activity rows, without emails, secrets, tokens, API keys or payment identifiers.",
+    evidence: { label: "Enterprise", href: `${BASE}/enterprise` },
+  },
+  {
+    title: "Card details stay with Stripe",
+    body: "Stripe processes payments. Vraelis does not store full card numbers.",
+    evidence: PRIVACY,
+  },
 ];
 
-/* architecture and data handling: defensible, real */
-const CONTROLS: [string, string][] = [
-  ["Owner-authorized signed URLs", "Screenshots and traces live in a private bucket. No public URL is ever produced. Reads go through short-lived signed URLs that only an authorized owner can mint."],
-  ["Secrets encrypted at rest", "An organization's OIDC client secret is encrypted at rest with AES-256-GCM. It is never returned to the client and never written to logs."],
-  ["DNS tokens are hashed", "Domain verification stores only the SHA-256 of the DNS TXT token. The raw token is shown once and never persisted."],
-  ["Sanitized audit export", "Governance activity exports as CSV or JSON against a whitelist of safe fields: no secrets, invite or DNS tokens, token hashes, Stripe identifiers, API keys, OIDC codes, SAML assertions, certificate bodies, full URLs, or IP and device data."],
-  ["Validated OIDC sign-in", "The id_token is validated on signature, issuer, audience, and nonce, and the email domain must match the verified organization domain before access is granted."],
-  ["Governed domain provisioning", "A verified-domain match maps a user into the organization at a safe role. It never grants workspace, project, billing, or API access on its own."],
-  ["Payments isolated to Stripe", "Card data is processed by Stripe. Vraelis never sees card numbers. Your billing overview stays in Vraelis."],
-  ["The builder does not self-approve", "Whoever did the work cannot mark it trusted, and an API key cannot approve a plan: the approve endpoint refuses every key and returns a link for a person. Proof comes from exercising the running software and computing a decision on the evidence, not from the builder's report."],
+// Identity: how people sign in and what they can reach. The states are in the table above; these say how.
+const IDENTITY: [string, string][] = [
+  ["OIDC single sign-on",
+    "Any verified domain can use OIDC. The sign-in token is checked for signature, issuer, audience and nonce, and the email domain must match before anyone is admitted."],
+  ["Domain provisioning",
+    "A verified-domain match brings a person into the organization at a safe role. It never grants billing or API access on its own."],
+  ["Roles",
+    "Owners, editors and viewers. Billing is anchored to the owner, and a billing admin manages payment without owning data or members."],
+  ["Two-step verification",
+    "Any account can turn on an authenticator app or email codes, with recovery codes for when neither is at hand."],
+  ["SAML and SCIM",
+    "SAML sign-in is in preview: the metadata endpoint exists, and assertion sign-in is not switched on. SCIM provisioning is not built yet."],
 ];
 
-/* identity and access, described honestly */
-const IDENTITY: [string, SigState, string, string][] = [
-  ["OIDC single sign-on", "go", "Available", "Organizations can configure OIDC for any verified domain, with full token validation and a domain-match requirement before a user is admitted."],
-  ["SAML single sign-on", "wait", "Preview", "The SP metadata endpoint exists, but assertion sign-in is not enabled yet, and we do not present it as if it were."],
-  ["SCIM provisioning", "wait", "Planned", "Automated provisioning and deprovisioning is planned for larger organizations. It is not live today."],
-  ["Domain provisioning", "go", "Governed", "A domain match maps users into the organization at a safe role and never grants elevated access by itself."],
+// What we do not claim. A plain numbered list, not a DoesBox (plan T5).
+const NOT_CLAIMED: string[] = [
+  "Vraelis holds no SOC 2 report or other formal attestation, and shows no compliance seals.",
+  "SAML sign-in is in preview and SCIM is not built yet. Neither is presented as live.",
+  "Scheduled audit exports and retention controls are not built yet.",
+  "There is no on-premises or air-gapped edition. Checks run on the services named above.",
+  "A check is evidence about one sentence on one deployment. It does not replace your own security review.",
 ];
 
-/* honest limits */
-const LIMITS: string[] = [
-  "No formal compliance certifications. Vraelis is not SOC 2 certified, and we will not display seals we have not earned.",
-  "SAML sign-in is in preview and SCIM is planned. Neither is presented as live.",
-  "Scheduled audit exports and retention controls are a direction, not a built feature.",
-  "Vraelis assesses and oversees. It is not a guarantee, and it does not replace your own security review of the environment you point it at.",
-];
+const two = (n: number) => String(n).padStart(2, "0");
 
 export default function SecurityPage() {
   return (
     <>
-      <PageHero
-        kicker="Security"
+      <FrameHero
+        eyebrow="Security"
         title="Security built around independent oversight."
-        lead="Vraelis checks work that someone says is done, so the party that did the work is never the party that approves the check. This is how access, secrets, and evidence are handled today, and an honest account of what is not yet in place."
-        cta={<><CTA brand>Open Vraelis</CTA><EditorialLink href="#status">See system status</EditorialLink></>}
-        aside={<SecurityAside />}
+        sub="How access, secrets and evidence are handled today, where a check's data goes, and what is not in place yet."
+        primary={{ label: "Talk to us", href: `${BASE}/contact?topic=enterprise` }}
+        secondary={{ label: "See what is in place", href: "#status" }}
+        // A console capture made for this page (public/site/hero/CREDITS.md): a record's approved plan,
+        // read only, the approver's email masked. The plan asked for the Review page with a pending plan; minting
+        // one was not allowed, so the capture is a plan a person had already approved.
+        panel={{
+          kind: "image",
+          src: "/site/hero/security-panel.png",
+          w: 1356,
+          h: 754,
+          alt: "An approved plan in the Vraelis console: the requirements for the Notewell demo app, and the line naming who approved it, with their email hidden.",
+          bar: { left: "app.vraelis.com/systems/.../guarantees/..." },
+        }}
+        credit="Captured 2026-10-02"
       />
 
-      {/* The model */}
-      <section className="v6-sec">
+      <section className="v6-sec" id="commitments">
         <div className="v6-wrap">
-          <Reveal>
-            <SectionHead
-              eyebrow="The model"
-              title="Access maps to who should have it, and the judge is separate from the builder."
-              lead="Three principles sit under everything below: scope access to the right people, keep sensitive duties apart, and give a run the least authority it needs."
+          <SectionHead eyebrow="Commitments" title="Three commitments every check keeps." />
+          <FeatureGrid span={4}>
+            <FeatureCard
+              label="01"
+              title="A person approves every plan."
+              body="An API key cannot approve one, and neither can an AI assistant. The approve endpoint refuses every key and returns a link for a person."
             />
-          </Reveal>
-          <div className="v6-rows">
-            {MODEL.map(([n, t, d], i) => (
-              <Reveal key={t} i={i}>
-                <div className="v6-row">
-                  <span className="v6-row__n">{n}</span>
-                  <div>
-                    <h3 className="v6-row__t">{t}</h3>
-                    <p className="v6-row__d">{d}</p>
-                  </div>
-                </div>
-              </Reveal>
-            ))}
+            <FeatureCard
+              label="02"
+              title="The judge is separate from the builder."
+              body="Whoever did the work does not mark it done. A real browser checks the live app, and the answer comes from what it recorded."
+            />
+            <FeatureCard
+              label="03"
+              title="Evidence is kept, not overwritten."
+              body="Every run keeps its steps, screenshots, console errors and failed requests. A re-check is a new record, and no run overwrites another."
+            />
+          </FeatureGrid>
+        </div>
+      </section>
+
+      {/* /security#status is linked from the Resources menu ("What is operational"): the id stays. */}
+      <section className="v6-sec" id="status">
+        <div className="v6-wrap">
+          <SectionHead
+            eyebrow="Status"
+            title="What is in place today."
+            lead="What you can use now, what is in preview, and what is not built yet."
+          />
+          <div className="sec-status">
+            <table className="sec-status__t">
+              <caption className="sec-status__cap">
+                Operational means you can use it today. Preview means it exists but is not switched on for sign-in.
+              </caption>
+              <thead>
+                <tr><th scope="col">Part</th><th scope="col">State</th></tr>
+              </thead>
+              <tbody>
+                {STATUS.map(([name, state, word]) => (
+                  <tr key={name}>
+                    <th scope="row">{name}</th>
+                    <td><Signal state={state}>{word}</Signal></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
 
-      {/* System status (graphite) */}
-      <section className="v6-sec v6-dark" data-nav-dark id="status" style={ANCHOR}>
-        <div className="v6-wrap">
-          <Reveal>
-            <SectionHead
-              eyebrow="System status"
-              title="What is operational."
-              lead="An honest read of what you can use today, what is in preview, and what is committed but not yet live."
-            />
-          </Reveal>
-          <Reveal media>
-            <div style={{ marginTop: "clamp(28px,3vw,40px)", maxWidth: 760, border: "1px solid var(--g-line)", borderRadius: 14, overflow: "hidden" }}>
-              {STATUS.map(([name, state, label], i) => (
-                <div key={name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "16px 20px", borderTop: i ? "1px solid var(--g-line)" : "none" }}>
-                  <span style={{ color: "var(--g-fg)", fontSize: 15, fontWeight: 500, minWidth: 0 }}>{name}</span>
-                  <Signal state={state}>{label}</Signal>
-                </div>
-              ))}
+      <Band id="storage">
+        <SectionHead eyebrow="Data handling" title="What we store, and how it is protected." />
+        <FeatureGrid span={3}>
+          {STORE.map((c) => (
+            <div className="v6-gcard sec-store" key={c.title}>
+              <h3>{c.title}</h3>
+              <p>{c.body}</p>
+              <p className="sec-store__ev">
+                <span>Evidence:</span> <ProseLink href={c.evidence.href}>{c.evidence.label}</ProseLink>
+              </p>
             </div>
-            <p style={{ margin: "16px 0 0", fontSize: 13, lineHeight: 1.6, color: "var(--g-fg-3)", maxWidth: 760 }}>
-              Operational means available to use today. Preview means present but not enabled for sign-in. Planned means committed direction, not a live feature.
-            </p>
-          </Reveal>
-        </div>
-      </section>
+          ))}
+        </FeatureGrid>
+      </Band>
 
-      {/* Architecture and data handling (graphite) */}
-      <section className="v6-sec v6-dark" data-nav-dark>
+      <section className="v6-sec" id="identity">
         <div className="v6-wrap">
-          <Reveal>
-            <SectionHead
-              eyebrow="Architecture and data handling"
-              title="What we store, and how it is protected."
-              lead="These are the controls in place now. Each one is a specific decision about where data lives and who can reach it."
-            />
-          </Reveal>
-          <Reveal media className="v6-grid3">
-            {CONTROLS.map(([t, d]) => (
-              <div key={t} style={{ background: "var(--graphite-2)", border: "1px solid var(--g-line)", borderRadius: 14, padding: "clamp(22px,2.4vw,28px)" }}>
-                <h3 style={{ margin: "0 0 8px", fontSize: "1.12rem", fontWeight: 600, letterSpacing: "-0.015em", color: "var(--g-fg)" }}>{t}</h3>
-                <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--g-fg-2)" }}>{d}</p>
-              </div>
-            ))}
-          </Reveal>
-        </div>
-      </section>
-
-      {/* Identity and access */}
-      <section className="v6-sec v6-sec--sunk">
-        <div className="v6-wrap">
-          <Reveal>
-            <SectionHead
-              eyebrow="Identity"
-              title="Single sign-on, described honestly."
-              lead="What is live today, and what is still a direction. We separate the two rather than blur them."
-            />
-          </Reveal>
-          <div role="list" style={{ listStyle: "none", margin: "clamp(28px,3vw,40px) 0 0", padding: 0 }}>
-            {IDENTITY.map(([t, state, label, d], i) => (
-              <Reveal key={t} i={i}>
-                <div role="listitem" style={{ padding: "clamp(20px,2.4vw,28px) 0", borderTop: i ? "1px solid var(--line)" : "none" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: "clamp(1.05rem,1.4vw,1.25rem)", fontWeight: 600, color: "var(--ink)", letterSpacing: "-0.015em" }}>{t}</span>
-                    <Signal state={state}>{label}</Signal>
-                  </div>
-                  <p style={{ margin: "8px 0 0", fontSize: 15, lineHeight: 1.6, color: "var(--ink-3)", maxWidth: "64ch" }}>{d}</p>
+          <SectionHead eyebrow="Identity" title="How people sign in, and what they can reach." />
+          <ol className="v6-rows sec-rows" role="list">
+            {IDENTITY.map(([t, d], i) => (
+              <li className="v6-row" key={t}>
+                <span className="v6-row__n" aria-hidden data-no-translate>{two(i + 1)}</span>
+                <div>
+                  <h3 className="v6-row__t">{t}</h3>
+                  <p className="v6-row__d">{d}</p>
                 </div>
-              </Reveal>
+              </li>
             ))}
+          </ol>
+        </div>
+      </section>
+
+      <section className="v6-sec" id="limits">
+        <div className="v6-wrap">
+          <SectionHead eyebrow="Limits" title="What we do not claim." />
+          <ol className="sec-limits" role="list">
+            {NOT_CLAIMED.map((t, i) => (
+              <li key={t}>
+                <span className="sec-limits__n" aria-hidden data-no-translate>{two(i + 1)}</span>
+                <span>{t}</span>
+              </li>
+            ))}
+          </ol>
+          <div className="sec-after">
+            <EditorialLink href={`${BASE}/limitations`}>Read the limitations</EditorialLink>
           </div>
         </div>
       </section>
 
-      {/* Honest limits */}
-      <section className="v6-sec">
-        <div className="v6-wrap">
-          <Reveal>
-            <SectionHead
-              eyebrow="Honest limits"
-              title="What we do not claim."
-              lead="We describe what Vraelis actually does. We do not claim formal certifications, and we do not display compliance seals."
-            />
-          </Reveal>
-          <div role="list" style={{ listStyle: "none", margin: "clamp(28px,3vw,40px) 0 0", padding: 0, maxWidth: 820 }}>
-            {LIMITS.map((t, i) => (
-              <Reveal key={t} i={i}>
-                <div role="listitem" style={{ display: "flex", gap: 14, padding: "16px 0", borderTop: i ? "1px solid var(--line)" : "none" }}>
-                  <span aria-hidden style={{ flex: "none", width: 7, height: 7, borderRadius: 999, border: "1px solid var(--ink-4)", marginTop: 9 }} />
-                  <span style={{ fontSize: 15.5, lineHeight: 1.6, color: "var(--ink-2)" }}>{t}</span>
-                </div>
-              </Reveal>
-            ))}
+      {/* /security#report: /.well-known/security.txt (Policy) and the acceptable use policy link here. It names the
+          support inbox that reaches a person, and promises nothing the company cannot keep: no response time, no
+          reward, no legal safe harbour. */}
+      <section className="v6-sec" id="report">
+        <div className="v6-wrap sec-report">
+          <SectionHead
+            eyebrow="Report a security issue"
+            title="Tell us, and a person reads it."
+            lead="Email help@vraelis.com with Security report in the subject. Say what you found, the address where it happens, and how to reproduce it."
+          />
+          <ul className="sec-report__rules" role="list">
+            <li>Test only against accounts you own, and stop as soon as you can show the problem.</li>
+            <li>Do not open, change or keep anyone else&apos;s data. If you reach some by accident, tell us and delete it.</li>
+            <li>Give us a reasonable chance to fix it before you publish anything.</li>
+          </ul>
+          {/* A ghost button: the closing's white button sits in the same screen, and a view carries one white button. */}
+          <div className="v6-actions sec-report__actions">
+            <CTA lg ghost href="mailto:help@vraelis.com?subject=Security%20report">Email help@vraelis.com</CTA>
+            {/* A static file, not a page: a plain link, so the router does not try to render it. */}
+            <a className="v6-elink" href="/.well-known/security.txt">
+              <span className="v6-elink__t" data-no-translate>/.well-known/security.txt</span>
+              <span className="v6-arw" aria-hidden>→</span>
+            </a>
           </div>
-          <Reveal>
-            <p style={{ margin: "clamp(24px,2.6vw,32px) 0 0", fontSize: 14, lineHeight: 1.7, color: "var(--ink-3)", maxWidth: 720 }}>
-              If your organization needs specific compliance attestations, talk to the team about requirements before you rely on Vraelis for them.
-            </p>
-          </Reveal>
         </div>
       </section>
 
-      {/* Reporting a security issue. /contact has pointed here ("use the disclosure route on security") since it
-          was written, and this page had no such route. It uses the support inbox that already exists rather
-          than a security@ address nobody reads, and it promises nothing the company cannot keep: no response
-          time, no reward, no legal safe harbour. /.well-known/security.txt points at this section. */}
-      <section className="v6-sec v6-sec--sunk" id="report">
-        <div className="v6-wrap">
-          <Reveal>
-            <SectionHead
-              eyebrow="Report a security issue"
-              title="Tell us, and a person reads it."
-              lead="Email help@vraelis.com with Security in the subject line. Say what you found, the address where it happens, and the steps to reproduce it."
-            />
-          </Reveal>
-          <Reveal>
-            <ul style={{ margin: "clamp(22px,2.4vw,30px) 0 0", paddingLeft: 20, listStyle: "disc", maxWidth: 720, display: "grid", gap: 8, fontSize: 15.5, lineHeight: 1.6, color: "var(--ink-2)" }}>
-              <li>Test only against accounts you own, and stop as soon as you can show the problem.</li>
-              <li>Do not open, change or keep another customer&apos;s data. If you reach some by accident, tell us and delete it.</li>
-              <li>Give us a reasonable chance to fix it before you publish anything.</li>
-            </ul>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* Close */}
-      <hr className="v6-rule" />
-      <section className="v6-sec v6-sec--tight">
-        <div className="v6-wrap" style={{ textAlign: "center", maxWidth: 720 }}>
-          <Reveal>
-            <h2 className="v6-dl" style={{ marginInline: "auto" }}>Oversight you can inspect, not take on faith.</h2>
-            <p className="v6-lead" style={{ margin: "18px auto 28px", textAlign: "center" }}>The same standard we hold every claim to is the one we hold ourselves to: describe what is real, and show the seams.</p>
-            <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-              <CTA brand lg>Open Vraelis</CTA>
-              <EditorialLink href={`${BASE}/company#contact`}>Contact the team</EditorialLink>
-            </div>
-          </Reveal>
-        </div>
-      </section>
+      <ClosingScene />
     </>
   );
 }

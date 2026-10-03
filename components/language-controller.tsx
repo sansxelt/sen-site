@@ -8,7 +8,8 @@
 // each piece up in public/locales/<code>.json by its English text, and swaps it in place, keeping the
 // original so switching back (or React re-rendering the node) is exact. aria-label, title and placeholder
 // are translated the same way. Then it watches for anything React adds or changes and translates only
-// that, so a replaying run or a menu opening costs a few nodes, not the whole page.
+// that, so a replaying run or a menu opening costs a few nodes, not the whole page. On a page load in another
+// language the site is not shown until it has been translated (app/layout.tsx and showPage, below).
 //
 // NOT TRANSLATED: code and terminal text, form inputs, anything marked [data-no-translate] (the legal
 // documents, whose English text is the one that applies, and user content such as names and URLs where a
@@ -16,7 +17,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { LOCALES, hrefWithLocale, isVraelisHost, localeFromHref, type Locale } from "@/lib/i18n/locales";
-import { useLocale } from "@/lib/i18n/client";
+import { currentLocale, useLocale } from "@/lib/i18n/client";
 
 type Catalogue = Record<string, string>;
 type TextRecord = { source: string; lead: string; trail: string; applied: string };
@@ -46,14 +47,52 @@ const skipped = (el: Element | null) => !!el?.closest(SKIP);
 // hydrating, a text or attribute whose element is untagged is left for a later pass.
 let hydrating = true;
 let pending = 0;
+let pendingShell = 0; // the part of `pending` inside the marketing shell, which is what decides when the page shows
 let fiberKey: string | null = null;
 function awaitingHydration(el: Element | null): boolean {
   if (!hydrating || !el) return false;
   fiberKey ??= Object.keys(document.body).find((k) => k.startsWith("__reactFiber$")) ?? null;
   if (!fiberKey || fiberKey in el) return false; // no React tag on the page at all: nothing to wait for
   pending++;
+  if (el.closest(SHELL)) pendingShell++;
   return true;
 }
+
+// THE PAGE SHOWS ONCE IT IS TRANSLATED (2026-10-02). In another language, app/layout.tsx hides the site's own pages
+// (the "shell" here: the marketing shell, the 404 page and the sign-in frame, I18N_GUARDED there) before they paint,
+// with a style element of this id, so the reader never watches English turn into their language and the hero
+// sentence or the plans jump when the text changes length. It comes off after the first pass that left nothing in
+// the shell untranslated, when there is no catalogue, or when the language is English after all; a timer in that
+// script takes it off at the latest. Removing it is idempotent.
+const SHELL = ".v6, .v404, .auth-split";
+const I18N_GUARD_ID = "vraelis-i18n-pending"; // the id app/layout.tsx gives it
+function showPage() { document.getElementById(I18N_GUARD_ID)?.remove(); }
+
+// Has React hydrated everything in the shell that a pass would write to (the same elements awaitingHydration looks
+// at: the parent of each text, and each element with a translated attribute)? Then the first pass need not wait for
+// the load event, which a page with a film holds back for seconds (the homepage's comes after the film has loaded)
+// while its shell sits hidden. Writing stays as careful as before: an untagged element is still skipped, and this
+// lets the first pass start early only once nothing in the shell is left untagged.
+function shellHydrated(): boolean {
+  const shells = document.querySelectorAll(SHELL);
+  fiberKey ??= Object.keys(document.body).find((k) => k.startsWith("__reactFiber$")) ?? null;
+  const key = fiberKey;
+  if (!shells.length) return false;
+  if (!key) return true; // no React tag on the page at all: nothing to wait for, as in awaitingHydration
+  for (const shell of shells) {
+    const walker = document.createTreeWalker(shell, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, {
+      acceptNode: (n) => (n.nodeType === Node.ELEMENT_NODE && (n as Element).matches(ELEMENT_SKIP) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT),
+    });
+    for (let n: Node | null = shell; n; n = walker.nextNode()) {
+      const el = n.nodeType === Node.TEXT_NODE
+        ? (skipped(n.parentElement) ? null : n.parentElement)
+        : (ATTRS.some((a) => (n as Element).hasAttribute(a)) ? (n as Element) : null);
+      if (el && !(key in el)) return false;
+    }
+  }
+  return true;
+}
+
 // How long a pass keeps waiting on untagged elements. React never tags elements that a plain script made,
 // and they would wait forever, so after this the page counts as hydrated and they are translated too.
 const HYDRATION_WAIT_MS = 15000;
@@ -64,7 +103,9 @@ function load(locale: Locale): Promise<Catalogue> {
   if (locale === "en") return Promise.resolve({});
   let p = catalogues.get(locale);
   if (!p) {
-    p = fetch(`/locales/${locale}.json`, { cache: "force-cache" })
+    // app/layout.tsx starts this fetch before the page has parsed, for the language it decided on; use it when it is this one.
+    const early = (window as typeof window & { __vraelisI18n?: { locale: string; catalogue: Promise<Catalogue> } }).__vraelisI18n;
+    p = early?.locale === locale ? early.catalogue : fetch(`/locales/${locale}.json`, { cache: "force-cache" })
       .then((r) => (r.ok ? (r.json() as Promise<Catalogue>) : {}))
       .catch(() => ({}));
     catalogues.set(locale, p);
@@ -81,7 +122,10 @@ function translateText(node: Text, cat: Catalogue, locale: Locale) {
   if (skipped(node.parentElement) || awaitingHydration(node.parentElement)) return;
   const current = norm(node.data);
   let rec = texts.get(node);
-  if (!rec || current !== rec.applied) {
+  // Compared normalised on both sides: norm() turns a no-break space (French before "?" and ":", U+00A0 and
+  // U+202F) into a plain one, so comparing against the raw translation read every such node as new English,
+  // rewrote the space and lost the node's English source (switching back then left it in the old language).
+  if (!rec || current !== norm(rec.applied)) {
     // First sight of this node, or React wrote new English into it since we last translated it.
     if (!current) return;
     rec = { source: current, lead: node.data.match(/^\s*/)?.[0] ?? "", trail: node.data.match(/\s*$/)?.[0] ?? "", applied: current };
@@ -163,29 +207,48 @@ export function LanguageController() {
   useEffect(() => {
     let disposed = false;
     let observer: MutationObserver | undefined;
+    const sweeps: number[] = [];
+    // English has nothing to wait for. Right after hydration this effect can still run with "en" while the store
+    // holds another language (React renders the server's value first, then the stored one), so the store decides.
+    if (locale === "en" && currentLocale() === "en") showPage();
     // NOT BEFORE THE PAGE HAS HYDRATED. This component hydrates with the root layout, but a page's streamed
     // Suspense boundaries hydrate later, and React throws away (and re-renders) any server-rendered text it
-    // finds changed when it gets there. So the first pass waits for the load event and an idle moment, skips
+    // finds changed when it gets there. So the first pass waits for the load event and an idle moment, or for
+    // React to have hydrated the whole marketing shell if that comes first (shellHydrated, above), skips
     // whatever React has not hydrated even then (awaitingHydration, above) and comes back for it, and two
     // later sweeps pick up anything else that changed without the observer seeing it.
     const settled = new Promise<void>((resolve) => {
+      let done = false;
+      const finish = () => { done = true; resolve(); };
       // Safari has no requestIdleCallback; a short timeout stands in for it there.
       const ric = (window as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback;
-      const idle = () => (ric ? ric(() => resolve(), { timeout: 1200 }) : globalThis.setTimeout(resolve, 300));
+      const idle = () => (ric ? ric(finish, { timeout: 1200 }) : globalThis.setTimeout(finish, 300));
       if (document.readyState === "complete") idle();
       else window.addEventListener("load", idle, { once: true });
+      if (locale === "en") return;
+      const poll = () => {
+        if (done || disposed || !document.querySelector(SHELL)) return;
+        if (shellHydrated()) finish();
+        else sweeps.push(window.setTimeout(poll, 100));
+      };
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", poll, { once: true });
+      else poll();
     });
-    const sweeps: number[] = [];
+    // No catalogue (it failed to load): nothing on the page will change, so there is nothing to wait for.
+    void load(locale).then((cat) => { if (!disposed && locale !== "en" && Object.keys(cat).length === 0) showPage(); });
     void Promise.all([load(locale), settled]).then(([cat]) => {
       if (disposed || (locale === "en" && !touched)) return;
       touched = true;
-      // A whole pass, then another every 300 ms while it had to leave text React has not hydrated yet.
+      // A whole pass, then another every 300 ms while it had to leave text React has not hydrated yet. The page
+      // shows after the first pass that left nothing in the shell for later.
       const started = performance.now();
       const pass = () => {
         if (disposed) return;
         pending = 0;
+        pendingShell = 0;
         translateTree(document.body, cat, locale);
         translateTitle(cat, locale);
+        if (pendingShell === 0) showPage();
         if (!hydrating) return;
         if (pending === 0) hydrating = false;
         else if (performance.now() - started > HYDRATION_WAIT_MS) { hydrating = false; pass(); }

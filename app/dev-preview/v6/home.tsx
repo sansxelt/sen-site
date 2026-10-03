@@ -7,9 +7,13 @@
 //                    through four real places, a real catch, the controller (_system/hero.tsx)
 //   2 how it works   one pinned scene over a mission console's picture, four chapters, every panel the
 //                    product's own output for one real check of the Larkspur fixture (_system/strike-story.tsx,
-//                    data in _content/strike.ts); the founder asked for an attack-drone example, run for real
+//                    data in _content/strike.ts); the founder asked for an attack-drone example, run for real.
+//                    Its caption says the same check runs on checkouts, sign-ups and fleet panels, and links
+//                    every sector (/solutions), so the page does not read as defense only
 //   3 the statement  one sentence, revealed as it crosses the screen (_system/home-bands.tsx)
-//   4 the orbit      what it checks, circling "Know your ___ works." (_system/orbit.tsx)
+//   4 the orbit      23 real photographs of what it checks, circling "Know your ___ works."; each tile names and
+//                    opens its page, and four honest Next tiles open the coverage list (_system/orbit.tsx,
+//                    _content/sectors.ts)
 //   5 agents         the CLI and the MCP tools, in their own words (home-bands.tsx)
 //   6 changelog      the four latest dated entries, as near the bottom of cursor.com (home-bands.tsx)
 //   7 closing        one statement, one action, as cursor.com ends (_system/close.tsx)

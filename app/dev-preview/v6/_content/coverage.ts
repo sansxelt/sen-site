@@ -48,7 +48,9 @@ export type Surface = {
 export const COVERAGE_THESIS =
   "Vraelis checks what a person can do through a web app, in a real browser, on the public address you name. That covers web apps themselves, and connected devices such as drones, robots and fleets through the control panel that runs them. It records what each step expected and what it observed, and answers from that.";
 
-/** What is real first, then what is next, then the edges a reader meets in their first week. */
+/** What is real first, then what is next, then the edges a reader meets in their first week.
+ *  2026-10-02 (site plan 0.3): device copy names what the panel shows, never "the drone" as the thing checked:
+ *  Vraelis sees the panel and nothing the panel does not show. */
 export const SURFACES: readonly Surface[] = [
   {
     name: "Deployed web applications",
@@ -59,7 +61,7 @@ export const SURFACES: readonly Surface[] = [
   },
   {
     name: "Connected devices, through their web control panel",
-    reach: "Drones, robots, fleets and other connected hardware, checked through the web control panel or dashboard that runs them. An operator action goes in, for example Return home, and Vraelis checks the state the system reports afterwards: the drone shows Landed, and still does after a reload.",
+    reach: "Drones, robots, fleets and other connected hardware, checked through the web control panel or dashboard that runs them. An operator action goes in, for example Return home, and Vraelis checks the state the system reports afterwards: the panel shows Landed, and still does after a reload.",
     today: "Live, because the control panel is a web app: it is the same real-browser check. Vraelis sees what the panel shows and nothing the panel does not.",
     tier: "Live",
     brief: "Drones, robots and fleets, through the web panel that runs them.",
@@ -105,6 +107,9 @@ export const SURFACES: readonly Surface[] = [
   },
 ];
 
-/** The standing promise about how a row moves. Printed under the list wherever it renders. */
+/** The standing promise about how a row moves. Printed under the list wherever it renders. Tightened 2026-10-02
+ *  (final review) from 40 words to 35 with every part kept: a real failing case, end to end, through the product,
+ *  on that surface, reported truthfully; never for code that exists or is close. It sits under the densest list on
+ *  /platform and /limitations, and those screens ran past the 180-word budget (plan A1.6). */
 export const COVERAGE_RULE =
-  "A surface is marked Live only after a real failing case has been driven end to end through the product on it and the product reported the failure truthfully. Not when the code exists, and not because it is close.";
+  "A surface is marked Live only after a real failing case ran end to end through the product on it, and the product reported the failure truthfully. Never because the code exists or is close.";

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PUBLIC_HOW_IT_WORKS, GROUND_CSS } from "@/lib/v6-routes";
+import { V6_BASE, V6_HOME, GROUND_CSS } from "@/lib/v6-routes";
 import type { Metadata } from "next";
 import { robotsMeta } from "@/lib/stealth";
 
@@ -17,7 +17,10 @@ import { robotsMeta } from "@/lib/stealth";
 // robotsMeta rather than a literal, because this repo has fixed the same class of bug twice by insisting
 // that one function decides indexing. With stealth off it returns the noindex asked for; with stealth on it
 // returns noindex too, since the curtain exemption is only ever granted to the homepage.
-export const metadata: Metadata = { robots: robotsMeta(false) };
+//
+// The title says what happened ("Page not found | Vraelis", through the root layout's template), so a tab or a
+// history entry left on this page is not mistaken for a real one.
+export const metadata: Metadata = { title: "Page not found", robots: robotsMeta(false) };
 
 
 /* THE 404, IN DESIGN 06.
@@ -33,8 +36,13 @@ export const metadata: Metadata = { robots: robotsMeta(false) };
  * The rule that stopped the white flash everywhere else is the same one applied here, stated locally
  * because this is the one page the router cannot describe in advance.
  *
+ * TWO WAYS OUT, THE WAY OUT FIRST (plan C, 2026-10-02): the white button goes home, and the ghost beside it
+ * goes to how a check works on /platform, both at the site's large button size. Nothing else is on the page:
+ * the giant "404" watermark that sat behind the text went with this pass, because the sentence already says it
+ * and a decoration that faint (1.08:1) is clutter on the one page whose job is to send the reader on.
+ *
  * The colour rule holds: nothing here is coloured, because nothing here is a state. A missing page is not a
- * failure the product detected, and dressing it in the red that means "this verification failed" would spend
+ * failure the product detected, and dressing it in the red that means "a check found a problem" would spend
  * a signal on a typo.
  */
 export default function NotFound() {
@@ -46,8 +54,7 @@ export default function NotFound() {
       <div className="v404-stack">
         <p className="v404-kicker v404-in v404-d1">Vraelis</p>
 
-        {/* One h1 carrying the whole meaning. The numeral is decorative and hidden from assistive tech, so
-            a screen reader hears the sentence rather than "four zero four" followed by it. */}
+        {/* One h1 carrying the whole meaning. */}
         <h1 className="v404-head v404-in v404-d2">This page does not exist.</h1>
 
         <p className="v404-body v404-in v404-d3">
@@ -55,81 +62,90 @@ export default function NotFound() {
         </p>
 
         <div className="v404-actions v404-in v404-d4">
-          <Link href="/" className="v404-cta">Back to Vraelis</Link>
-          <Link href={PUBLIC_HOW_IT_WORKS} className="v404-link">See how it works</Link>
+          <Link href={V6_HOME} className="v404-btn v404-cta">Back to Vraelis</Link>
+          <Link href={`${V6_BASE}/platform#how`} className="v404-btn v404-ghost">See how it works</Link>
         </div>
       </div>
-
-      <span className="v404-num" aria-hidden>404</span>
     </main>
   );
 }
 
 const NF_CSS = `
-/* Design 06, written out, light since 2026-09-30 like the rest of the product. This page renders from the ROOT layout, which never loads the v6 stylesheet, so
-   the values are restated here the same way the stealth curtain restates them. Keep in step by hand. */
+/* Design 06, written out. This page renders from the ROOT layout, which never loads the v6 stylesheet, so the
+   values are restated here: the black ground and text greys, the h1 tier of the type scale, and the large
+   button with its wipe (plan A3 and A5). Keep in step with _system/v6.css by hand. */
 .v404{
   position:relative; min-height:100svh;
   display:flex; align-items:center; justify-content:center;
   overflow:hidden; isolation:isolate;
   padding:clamp(40px,8vw,96px) clamp(20px,5vw,64px);
   background:#0A0A0B; color:#C9CBD1;
+  font-family:var(--font-brand-sans),-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
 }
 
-/* Left-set, like every other design 06 opening. The numeral sits behind the text as a quiet mark of scale
-   rather than as the headline: the sentence is the message, and a giant numeral competing with it is what
-   made the old page read as decoration first. */
+/* Left-set, like every other design 06 opening: the sentence is the message. */
 .v404-stack{ position:relative; z-index:1; width:100%; max-width:640px; }
 
 .v404-kicker{
-  margin:0 0 18px; font-size:13px; font-weight:500;
+  margin:0 0 16px; font-size:14px; font-weight:500; line-height:1.3;
   letter-spacing:0; color:#A1A3A9;
 }
+/* The h1 tier: 56 at 1440, 36 on a phone, weight 500. */
 .v404-head{
-  margin:0; font-weight:600; letter-spacing:-.032em; line-height:1.02;
-  font-size:clamp(2.3rem,4.6vw,3.6rem); color:#FAFAFA; text-wrap:balance;
+  margin:0; max-width:20ch; font-weight:500; letter-spacing:-.022em; line-height:1.06;
+  font-size:clamp(2.25rem,3.9vw,3.5rem); color:#FAFAFA; text-wrap:balance;
 }
+:is(:lang(ja),:lang(zh),:lang(ko)) .v404-head{ max-width:16em; letter-spacing:0; line-height:1.16; }
+:lang(ja) .v404-head{ word-break:auto-phrase; }
+:lang(hi) .v404-head{ line-height:1.22; }
 .v404-body{
   margin:20px 0 0; max-width:52ch;
-  font-size:clamp(1rem,1.2vw,1.08rem); line-height:1.6; color:#C9CBD1; text-wrap:pretty;
+  font-size:clamp(1.0625rem,1.39vw,1.25rem); line-height:1.5; color:#C9CBD1; text-wrap:pretty;
 }
 
-.v404-actions{ display:flex; flex-wrap:wrap; align-items:center; gap:22px; margin-top:34px; }
-/* Contrast, not hue: the primary action is black on white, the way it is everywhere else now. */
-.v404-cta{
-  display:inline-flex; align-items:center; justify-content:center;
-  background:#FAFAFA; color:#0A0A0B; text-decoration:none;
-  font-size:15px; font-weight:550; letter-spacing:-.01em;
-  padding:12px 22px; border-radius:11px;
-  transition:background 140ms cubic-bezier(0,0,.2,1);
+/* Two buttons at the large size, the white one first. They wrap rather than squeeze (German labels run long),
+   and on a phone each takes its share of the line. */
+.v404-actions{ display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-top:32px; }
+.v404-btn{
+  position:relative; isolation:isolate; overflow:hidden;
+  display:inline-flex; align-items:center; justify-content:center; box-sizing:border-box;
+  min-height:52px; padding:8px 26px; border-radius:8px; border:1px solid transparent;
+  font-family:inherit; font-size:16px; font-weight:600; letter-spacing:-.005em; line-height:1.2; text-align:center;
+  text-decoration:none; cursor:pointer;
+  transition:transform 130ms cubic-bezier(0,0,.2,1), background-color 160ms ease, border-color 160ms ease;
 }
-.v404-cta:hover{ background:#E4E4E7; color:#0A0A0B; }
-.v404-link{
-  font-size:14.5px; color:#C9CBD1; text-decoration:none;
-  border-bottom:1px solid rgba(255,255,255,0.242); padding-bottom:2px;
-  transition:color 140ms ease, border-color 140ms ease;
+.v404-btn:active{ transform:scale(.985); }
+.v404-btn:focus-visible{ outline:2px solid #FAFAFA; outline-offset:3px; }
+/* Primary: white, its label #0A0A0B in every state (the site-wide a:hover colour must not reach it), and a 10%
+   black wipe from the left on hover. */
+.v404-cta{ background:#FAFAFA; border-color:#FAFAFA; color:#0A0A0B; }
+.v404-cta::before{
+  content:""; position:absolute; inset:-1px; z-index:-1; pointer-events:none; border-radius:inherit;
+  background:rgba(10,10,11,.10); clip-path:inset(0 101% 0 0); transition:clip-path 420ms cubic-bezier(0,0,.2,1);
 }
-.v404-link:hover{ color:#FAFAFA; border-color:rgba(255,255,255,0.55); }
+.v404-cta:hover::before{ clip-path:inset(0 0 0 0); }
+.v404-cta:hover, .v404-cta:focus-visible{ background:#FAFAFA; color:#0A0A0B; }
+/* Ghost: the line lights and the ground lifts 5% on hover; the label stays white. */
+.v404-ghost{ background:transparent; border-color:rgba(255,255,255,.24); color:#FAFAFA; }
+.v404-ghost:hover, .v404-ghost:focus-visible{ background:rgba(255,255,255,.05); border-color:#FAFAFA; color:#FAFAFA; }
 
-/* The numeral, as a watermark. Sized off the viewport and clipped by the page, so it reads as scale rather
-   than as content. Hidden from assistive tech; the h1 already says it. */
-.v404-num{
-  position:absolute; z-index:0; pointer-events:none; user-select:none;
-  right:clamp(-28px,-2vw,0px); bottom:clamp(-40px,-4vw,-12px);
-  font-weight:600; letter-spacing:-.06em; line-height:.75;
-  font-size:clamp(11rem,34vw,30rem);
-  color:rgba(255,255,255,0.042);
+@media (max-width:560px){
+  .v404-actions{ gap:10px; }
+  .v404-btn{ min-height:44px; padding:6px 16px; font-size:15px; flex:1 1 auto; }
 }
-@media (max-width:760px){ .v404-num{ right:auto; left:50%; transform:translateX(-50%); bottom:-6vh; } }
 
-.v404-in{ animation:v404-rise .58s cubic-bezier(.22,1,.36,1) both; }
+.v404-in{ animation:v404-rise .52s cubic-bezier(.22,1,.36,1) both; }
 .v404-d1{ animation-delay:60ms; }
-.v404-d2{ animation-delay:130ms; }
-.v404-d3{ animation-delay:200ms; }
-.v404-d4{ animation-delay:270ms; }
+.v404-d2{ animation-delay:120ms; }
+.v404-d3{ animation-delay:180ms; }
+.v404-d4{ animation-delay:240ms; }
 @keyframes v404-rise{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:none; } }
 
 @media (prefers-reduced-motion: reduce){
   .v404-in{ animation:none !important; opacity:1; transform:none; }
+  .v404-btn{ transition:none; }
+  .v404-btn:active{ transform:none; }
+  .v404-cta::before{ content:none; }
+  .v404-cta:hover{ background:#E4E4E7; border-color:#E4E4E7; color:#0A0A0B; }
 }
 `;

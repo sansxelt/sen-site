@@ -1,7 +1,16 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+// THE ORDER OF THESE SIX IS PART OF THE CASCADE. nav.css, docs.css, changelog.css and legal.css were cut out
+// of v6.css and pagekit.css (2026-10-02) so each surface can be rebuilt in its own file, and their rules still
+// override the system and the page kit at equal specificity exactly as they did in place. Keep v6.css first,
+// nav.css right after it, then the page kit, then the docs, the changelog and the legal pages. (The served
+// layout chunk puts the client components' sheets, close.css and language-switcher.css, ahead of all six.)
 import "./_system/v6.css";
+import "./_system/nav.css";
 import "./_system/pagekit.css";
+import "./_system/docs.css";
+import "./_system/changelog.css";
+import "./_system/legal.css";
 import { V6Shell } from "./_system/shell";
 import { auth } from "@/auth";
 import { V6_ORIGIN } from "./_system/meta";

@@ -157,7 +157,7 @@ export function ScrollStory() {
   const k = clamp01(pos - idx) * 1.25; // finish each chapter a little before the next begins
 
   return (
-    <section ref={root} className="v6-ss" aria-labelledby="v6-ss-h" data-nav-dark data-nav-theme="dark">
+    <section ref={root} className="v6-ss v6-dark" aria-labelledby="v6-ss-h" data-nav-dark data-nav-theme="dark">
       <h2 id="v6-ss-h" className="v6-ss__sr">How a check works</h2>
 
       {/* Desktop: one pinned scene. */}

@@ -15,6 +15,7 @@
   --vr-pc-ink-3: #A1A1AA;
   --vr-pc-line: rgba(255,255,255,0.11);
   --vr-pc-line-2: rgba(255,255,255,0.198);
+  --vr-pc-line-strong: rgba(255,255,255,0.24);
   --vr-pc-sunk: #1F1F23;
   font-family: var(--font-brand-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   color: var(--vr-pc-ink);
@@ -22,10 +23,13 @@
 .vr-pc *, .vr-pc *::before, .vr-pc *::after { box-sizing: border-box; }
 .vr-pc :is(button, a, input):focus-visible { outline: 2px solid #FAFAFA; outline-offset: 2px; }
 
-/* ── The dialog ─────────────────────────────────────────────────────────────────────────────────────── */
+/* ── The dialog ───────────────────────────────────────────────────────────────────────────────────────
+   Anchored at the foot of the window, centred, 24px up (plan C, 2026-10-02): it asks its question without
+   sitting on the middle of the page, and it is still modal, so nothing behind it can be used until it is
+   answered. On a phone it becomes a sheet from the bottom edge (see the 560px block). */
 .vr-pc__dialog {
-  position: fixed; inset: 0; margin: auto; padding: 0;
-  width: min(520px, calc(100% - 24px)); height: fit-content; max-height: calc(100dvh - 24px);
+  position: fixed; inset: 0; margin: auto auto 24px; padding: 0;
+  width: min(560px, calc(100vw - 32px)); max-width: none; height: fit-content; max-height: 70vh;
   background: #141416; color: var(--vr-pc-ink);
   border: 1px solid var(--vr-pc-line); border-radius: 12px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.16), 0 24px 56px -18px rgba(0,0,0,0.78);
@@ -84,18 +88,20 @@ html:has(.vr-pc__dialog[open]) { overflow: hidden; }
 .vr-pc .vr-pc__links a { color: var(--vr-pc-ink); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(255,255,255,0.385); }
 .vr-pc .vr-pc__links a:hover { text-decoration-color: var(--vr-pc-ink); }
 
-/* THE TWO ANSWERS: one class, so they cannot drift apart in size or weight. */
+/* THE TWO ANSWERS: one class, so they cannot drift apart in size or weight. Both are the same quiet outlined
+   button, never a white one beside a grey one: refusing has to look exactly as easy as accepting, and the page
+   behind keeps its own single white button. */
 .vr-pc__actions {
   display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
   padding: 14px 22px 20px; background: #141416; border-top: 1px solid var(--vr-pc-line);
 }
 .vr-pc__btn {
   appearance: none; margin: 0; min-height: 44px; padding: 10px 14px; border-radius: 8px; cursor: pointer;
-  background: var(--vr-pc-ink); color: #141416; border: 1px solid var(--vr-pc-ink);
+  background: transparent; color: var(--vr-pc-ink); border: 1px solid var(--vr-pc-line-strong);
   font: inherit; font-size: 14px; font-weight: 600; line-height: 1.2; letter-spacing: -0.005em; text-align: center;
-  transition: background-color 140ms ease;
+  transition: background-color 160ms ease, border-color 160ms ease;
 }
-.vr-pc__btn:hover { background: var(--vr-pc-ink-2); }
+.vr-pc__btn:hover { background: rgba(255,255,255,0.05); border-color: var(--vr-pc-ink); color: var(--vr-pc-ink); }
 
 /* ── The bar, on legal pages only ──────────────────────────────────────────────────────────────────── */
 .vr-pc__bar {
@@ -143,12 +149,17 @@ html:has(.vr-pc__bar) body { padding-bottom: var(--vr-pc-bar-h, 0px); }
   .vr-pc__chip .vr-pc__switch:checked::after { transform: translateX(13px); }
   .vr-pc__actions--bar { grid-template-columns: 1fr 1fr; }
 }
+/* A phone: the dialog is a sheet from the bottom edge, full width, at most 80% of the screen, its foot clear of
+   the home indicator. */
+@media (max-width: 560px) {
+  .vr-pc__dialog { width: 100%; margin: auto 0 0; max-height: 80svh; border-radius: 16px 16px 0 0; border-bottom: 0; }
+  .vr-pc__actions { padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+}
 @media (max-width: 480px) {
-  .vr-pc__dialog { width: calc(100% - 16px); max-height: calc(100dvh - 16px); }
   .vr-pc__top { padding: 14px 16px 0; }
   .vr-pc__scroll { padding: 10px 16px 2px; }
   .vr-pc .vr-pc__title { font-size: 19px; }
-  .vr-pc__actions { padding: 12px 16px 16px; gap: 8px; }
+  .vr-pc__actions { padding: 12px 16px calc(16px + env(safe-area-inset-bottom, 0px)); gap: 8px; }
   .vr-pc__btn { padding-inline: 8px; }
 }
 @media (max-height: 640px) {

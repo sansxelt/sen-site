@@ -118,12 +118,15 @@ export function Hero() {
           />
           <button type="submit">Check it <span aria-hidden>→</span></button>
         </form>
-        <div className="v6-h__partners" aria-label="Partnership records">
-          <a className="v6-h__partner" href={`${V6_BASE}/partnerships/reddit`} aria-label="Read the Vraelis and Reddit partnership record.">
+        {/* Each link is named by the words it shows ("Partnership record Vraelis × Reddit"), so someone who says
+            what they see on it reaches it by voice (WCAG 2.5.3). The pair is a labelled group: a label on a plain
+            div is not exposed. */}
+        <div className="v6-h__partners" role="group" aria-label="Partnership records">
+          <a className="v6-h__partner" href={`${V6_BASE}/partnerships/reddit`}>
             <span className="v6-h__plabel">Partnership record</span>
             <strong>Vraelis × Reddit <span aria-hidden>↗</span></strong>
           </a>
-          <a className="v6-h__partner" href={`${V6_BASE}/partnerships/bytedance`} aria-label="Read the Vraelis and ByteDance partnership record.">
+          <a className="v6-h__partner" href={`${V6_BASE}/partnerships/bytedance`}>
             <span className="v6-h__plabel">Partnership record</span>
             <strong>Vraelis × ByteDance <span aria-hidden>↗</span></strong>
           </a>

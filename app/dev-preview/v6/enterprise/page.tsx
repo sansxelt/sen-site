@@ -1,23 +1,43 @@
-import { EnterpriseAside } from "../_system/hero-asides";
+import { Band, CrossLinks, FeatureCard, FeatureGrid, FrameHero } from "../_system/kit";
+import { EditorialLink, SectionHead, Signal } from "../_system/ui";
+import { ClosingScene } from "../_system/close";
 import { v6meta } from "../_system/meta";
-import { PageHero, Reveal, SectionHead, Signal, CTA, EditorialLink, ProseLink } from "../_system/ui";
+import { sectorBySlug } from "../_content/sectors";
 import { V6_BASE } from "@/lib/v6-routes";
+import "../_system/hero-asides.css";
+import "./enterprise.css";
+
+// ENTERPRISE (plan C /enterprise, the sales variant of template T1, revised 2026-10-02).
+//
+// This page absorbed the separate /sso page. SSO was never a product, it was one capability of working as a
+// team, and a page per capability is how a site ends up with twenty routes nobody maintains.
+//
+// WHAT IS SAID HERE, AND WHERE IT COMES FROM. OIDC single sign-on, roles, owner-anchored billing and audit export
+// are Operational; SAML is Preview and SCIM is Planned (plan A8.3, and /security says the same). The client
+// secret is stored with AES-256-GCM; a reviewer who approves a plan is never charged. Invoicing, a signed
+// agreement and a security review are on /pricing's Enterprise card. The hero is a capture of the console's
+// Records page (Export, and the Trust controls with single sign-on, team roles and billing admins), made for this
+// site on 2026-10-02 with the QA account and credited in public/site/hero/CREDITS.md: the plan asked for the
+// organization's single sign-on settings, which the QA account has no organization to show.
+//
+// The hero carries id="overview" only so enterprise.css can let its headline's long words wrap on a narrow phone
+// (the German "Identitätsanbieter" is wider than the 260px headline column at 320px).
+//
+// THE CAPABILITY TUPLES KEEP THEIR SHAPE: [label, state, word], the state "go" or "wait". scripts/
+// guarantee-cap-verify.ts reads every tuple whose state is "wait" from this file and fails /pricing if it ever
+// sells one of them, so a capability in preview can never be presented as shipped on the page that sells plans.
 
 export const metadata = v6meta({
   title: "Enterprise",
   description:
-    "Single sign-on, team roles, owner-anchored billing, audit export and a signed agreement. What is operational today, what is in preview, and what is planned, each labelled rather than blended together.",
+    "Single sign-on through your OIDC provider, team roles, owner-anchored billing and audit export, each labelled by where it stands today: operational, preview or planned.",
   path: "/enterprise",
   type: "website",
 });
 
 const BASE = V6_BASE;
-const CARD = { background: "var(--graphite-2)", border: "1px solid var(--g-line)", borderRadius: 14, padding: "clamp(22px,2.4vw,28px)" } as const;
-const H3 = { margin: "0 0 8px", fontSize: "1.12rem", fontWeight: 600, letterSpacing: "-0.015em", color: "var(--g-fg)" } as const;
-const P = { margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--g-fg-2)" } as const;
+const SALES = `${BASE}/contact?topic=enterprise`;
 
-// This page absorbed the separate /sso page. SSO was never a product, it was one capability of working as a
-// team, and a page per capability is how a site ends up with twenty routes nobody maintains.
 const CAPABILITY: [string, "go" | "wait" | "stop", string][] = [
   ["OIDC single sign-on", "go", "Operational"],
   ["Team roles: owner, editor, viewer", "go", "Operational"],
@@ -27,65 +47,114 @@ const CAPABILITY: [string, "go" | "wait" | "stop", string][] = [
   ["SCIM provisioning", "wait", "Planned"],
 ];
 
-const HOW: [string, string][] = [
-  ["Your identity provider, your rules", "Connect any OIDC provider. The client secret is encrypted at rest with AES-256-GCM, never returned to the browser, and never written to a log. Members sign in through your provider and land on the systems their role permits."],
-  ["Separation of duties, by construction", "A billing admin manages payment without owning data or members. Ownership transfer is a deliberate, guarded action rather than a settings toggle. The same principle runs through the product: whatever builds a system does not get to approve its own proof."],
-  ["Billing that follows the work", "A team shares connected systems and the owner pays, so a reviewer approving a plan never triggers a charge on their own account. Invoicing and a signed agreement are available above the largest listed plan."],
-];
+/* One plain line per capability, keyed by its label (the tuples above keep their three-part shape). */
+const MEANS: Record<string, string> = {
+  "OIDC single sign-on": "Any OIDC provider, for a verified domain.",
+  "Team roles: owner, editor, viewer": "A viewer reads the evidence without changing anything.",
+  "Owner-anchored billing": "Billing stays with the workspace owner.",
+  "Audit activity with sanitized export": "CSV or JSON, with secrets, tokens and payment identifiers left out.",
+  "SAML single sign-on": "The metadata endpoint exists. Sign-in with SAML is not enabled yet.",
+  "SCIM provisioning": "Automated provisioning is planned. It is not built yet.",
+};
+
+const defense = sectorBySlug("defense")!;
 
 export default function V6Enterprise() {
   return (
     <>
-      <PageHero
-        kicker="Enterprise"
+      <FrameHero
+        id="overview"
+        eyebrow="Enterprise"
         title="Bring your own identity provider, and your own reviewers."
-        lead="Vraelis is built so more than one person can hold a guarantee: your provider authenticates them, roles decide what they may change, and the evidence is readable by everyone who needs it without anyone sharing a login."
-        aside={<EnterpriseAside />}
+        sub="Members sign in through your provider, roles decide what each person may change, and the evidence stays readable to everyone who needs it."
+        primary={{ label: "Talk to sales", href: SALES }}
+        secondary={{ label: "Security", href: `${BASE}/security` }}
+        panel={{
+          kind: "image",
+          src: "/site/hero/enterprise-panel.png",
+          w: 1356,
+          h: 1142,
+          alt: "The Vraelis console's Records page: Export CSV and Export JSON, and the trust controls, including single sign-on with OIDC for verified domains, team roles and billing admins.",
+          bar: { left: "app.vraelis.com/records" },
+        }}
+        credit="Captured 2026-10-02"
       />
 
-      <section className="v6-sec">
+      {/* ── Where each capability stands: words, not chips. ── */}
+      <section className="v6-sec" id="capabilities">
         <div className="v6-wrap">
-          <SectionHead eyebrow="Where each capability stands" title="Operational, preview, or planned. Labelled." />
-          <Reveal>
-            <div style={{ display: "grid", gap: 10 }}>
-              {CAPABILITY.map(([label, state, note]) => (
-                // flexWrap + minWidth:0 so a long label and its signal stack on a phone instead of pushing the
-                // pill past the viewport edge, where it was clipped by 3px at 390.
-                <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "6px 16px", padding: "14px 0", borderBottom: "1px solid var(--g-line)" }}>
-                  <span style={{ fontSize: 15, color: "var(--ink)", minWidth: 0 }}>{label}</span>
-                  <Signal state={state}>{note}</Signal>
-                </div>
+          <SectionHead eyebrow="Where each capability stands" title="Operational, preview or planned. Labelled." />
+          <table className="en-cap">
+            <caption className="en-cap__cap">Enterprise capabilities and where each one stands today</caption>
+            <thead>
+              <tr>
+                <th scope="col">Capability</th>
+                <th scope="col">Where it stands</th>
+                <th scope="col">What that means</th>
+              </tr>
+            </thead>
+            <tbody>
+              {CAPABILITY.map(([label, state, word]) => (
+                <tr key={label}>
+                  <th scope="row">{label}</th>
+                  <td className="en-cap__state"><Signal state={state}>{word}</Signal></td>
+                  <td className="en-cap__means">{MEANS[label]}</td>
+                </tr>
               ))}
-            </div>
-          </Reveal>
+            </tbody>
+          </table>
         </div>
       </section>
 
-      <section className="v6-sec v6-dark" data-nav-dark>
+      {/* ── How it holds at team scale: the page's one Band. ── */}
+      <Band id="team">
+        <SectionHead eyebrow="How it works" title="Three things that hold at team scale." />
+        <FeatureGrid span={4}>
+          <FeatureCard
+            title="Your identity provider, your rules."
+            body="Connect any OIDC provider. The client secret is encrypted with AES-256-GCM, never returned to the browser and never written to a log."
+          />
+          <FeatureCard
+            title="Separation of duties."
+            body="A billing admin manages payment without owning data or members. Ownership moves only through a deliberate, guarded transfer, never a settings toggle."
+          />
+          <FeatureCard
+            title="Billing that follows the work."
+            body="The team shares its connected systems and the owner pays, so a reviewer who approves a plan is never charged on their own account."
+          />
+        </FeatureGrid>
+      </Band>
+
+      {/* ── The sales address, then the limits: two quiet lines. The address is the mailto, not another page. ── */}
+      <section className="v6-sec ha-limits en-lines">
         <div className="v6-wrap">
-          <SectionHead eyebrow="How it works" title="Three things that hold at team scale." />
-          <Reveal media className="v6-grid3">
-            {HOW.map(([t, d]) => (<div key={t} style={CARD}><h3 style={H3}>{t}</h3><p style={P}>{d}</p></div>))}
-          </Reveal>
-          <Reveal>
-            {/* THE ADDRESS, NOT A ROUTE TO IT. This sent an enterprise reader to /contact, which lists
-                three inboxes and asks them to pick. They already know what they are asking about, and the
-                contact page routes exactly this to sales@ anyway, so the extra hop only gives somebody
-                mid-evaluation another page to close. */}
-            <div style={{ marginTop: 28, display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
-              <CTA href="mailto:sales@vraelis.com?subject=Vraelis%20Enterprise" brand>Talk to sales</CTA>
-              <span style={{ fontSize: 14, color: "var(--g-fg-3)" }}>
-                or <ProseLink href={`${BASE}/contact`}>the other addresses</ProseLink> if it is not a commercial question.
-              </span>
-            </div>
-            <p className="v6-note">
-              Controls and data handling are on{" "}
-              <ProseLink href={`${BASE}/security`}>security</ProseLink>. Listed plans are on{" "}
-              <ProseLink href={`${BASE}/pricing`}>pricing</ProseLink>.
-            </p>
-          </Reveal>
+          <div className="ha-limits__row">
+            <p className="ha-limits__t">Invoicing, a signed agreement and a security review are available, with a written quote.</p>
+            <EditorialLink href="mailto:sales@vraelis.com?subject=Vraelis%20Enterprise"><span data-no-translate>sales@vraelis.com</span></EditorialLink>
+          </div>
+          <div className="ha-limits__row">
+            <p className="ha-limits__t">What Vraelis does not do yet is written down.</p>
+            <EditorialLink href={`${BASE}/limitations`}>Read the limitations</EditorialLink>
+          </div>
         </div>
       </section>
+
+      <section className="v6-sec en-related">
+        <div className="v6-wrap">
+          {/* Every card has its 16:10 picture, as on /platform, /limitations and the sector pages, and each card is
+              the one the site uses for that target, line and picture (Security as on /solutions/defense, Pricing as
+              on the sector pages). */}
+          <CrossLinks
+            links={[
+              { title: "Security", body: "What Vraelis stores, and how it is protected.", href: `${BASE}/security`, image: "/solutions/security-16x10.jpg" },
+              { title: "Pricing", body: "Listed plans, and what one verification includes.", href: `${BASE}/pricing`, image: "/site/card/pricing-16x10.jpg" },
+              { title: defense.label, body: defense.line, href: defense.href, image: defense.pics.card1610 },
+            ]}
+          />
+        </div>
+      </section>
+
+      <ClosingScene action={{ label: "Talk to sales", href: SALES }} />
     </>
   );
 }

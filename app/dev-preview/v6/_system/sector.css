@@ -1,0 +1,173 @@
+/* ============================================================================
+   THE SECTOR PAGES AND THE SOLUTIONS INDEX (plan A9 T2 and T14, revision 2, 2026-10-02). Owner: b5a.
+   Styles for _system/sector.tsx and _system/fixture-frame.tsx. Everything else on these pages is the kit
+   (kit.css) and the record panel (record-panel.css); this file only lays out what the kit has no block for:
+   the examples list, the limits line, the fixture frame, the MCP panel, the CI block, the public sector's
+   journey panel, and the /solutions cards.
+
+   Tokens only (v6.css): no new hex except the panel ground #0E0E10 that MediaPanel and FrameHero's panel kind
+   already use, and the fixture's own ground behind its frame before it loads. No dots of any kind. Colour only
+   where a record found a problem, which the kit and the record panel draw, not this file.
+   ============================================================================ */
+
+/* ---------------------------------------------------------------- examples ---
+   A mono label that says which sentences were run, then four sentences on hairlines, each with a mono index
+   (plan T2.5): 20/1.45 ink. The label is the section's h2, marked data-label: a label, not a headline. */
+.v6-sx-ex .v6-sx-ex__label { margin: 0 0 24px; max-width: 72ch; font-family: var(--mono); font-size: var(--t-mono); font-weight: 400;
+  line-height: 1.5; letter-spacing: 0; color: var(--ink-3); text-wrap: pretty; }
+.v6-sx-ex__list { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.v6-sx-ex__row { display: grid; grid-template-columns: 64px minmax(0, 1fr); align-items: baseline; padding: 24px 0;
+  border-bottom: 1px solid var(--line); }
+.v6-sx-ex__n { font-family: var(--mono); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-4); font-variant-numeric: tabular-nums; }
+.v6-sx-ex .v6-sx-ex__t { margin: 0; max-width: 58ch; font-size: 20px; line-height: 1.45; letter-spacing: -0.005em; color: var(--ink);
+  text-wrap: pretty; overflow-wrap: break-word; }
+@media (max-width: 640px) {
+  .v6-sx-ex__row { grid-template-columns: 36px minmax(0, 1fr); padding: 20px 0; }
+  .v6-sx-ex .v6-sx-ex__t { font-size: 18px; line-height: 1.5; }
+}
+
+/* ------------------------------------------------------------------ stance ---
+   Defense, "Our position": the kit's SectionHead and FeatureCards, nothing of its own but the headline's break,
+   which falls between its two sentences (sector.tsx sentenceLines). Each line still balances on a phone. */
+.v6-sx-stance .v6-sx-line { display: block; }
+
+/* ------------------------------------------------------------ limits line ---
+   One line linking /limitations, on the pages without a DoesBox (plan A1.7). The sentence and the link sit on
+   one row between two hairlines and wrap as whole items. It is a footnote to the section before it, so it takes
+   no rhythm of its own: the sections around it already leave a section's padding above and below the row. After
+   a band, which leaves none outside its surface, it keeps a section's padding on top. */
+.v6-sx-limit.v6-sec { padding-block: 0; }
+.v6-band + .v6-sx-limit.v6-sec { padding-top: var(--sec); }
+.v6-sx-limit__row { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 14px 40px;
+  padding: 28px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.v6-sx-limit .v6-sx-limit__t { margin: 0; max-width: 64ch; font-size: var(--t-read); line-height: 1.6; color: var(--ink-2); text-wrap: pretty; }
+
+/* -------------------------------------------------- the fixture's sentence ---
+   Fleets: the sentence for the Fieldline fixture, labelled as not run yet, above the fixture. */
+.v6-sx-sentence { margin: 0 0 24px; padding: 28px 32px; background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--r-card); }
+.v6-sx-sentence .v6-sx-sentence__k { margin: 0 0 10px; font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
+.v6-sx-sentence .v6-sx-sentence__t { margin: 0; max-width: 58ch; font-size: 20px; line-height: 1.45; color: var(--ink); text-wrap: pretty; }
+@media (max-width: 640px) {
+  .v6-sx-sentence { padding: 22px 20px; }
+  .v6-sx-sentence .v6-sx-sentence__t { font-size: 18px; line-height: 1.5; }
+}
+
+/* ------------------------------------------------------------ fixture frame ---
+   From 900px up: a two-option switch, then the real fixture in a MediaPanel-style shell (words-only bar, no
+   window dots) at a fixed 600px, so mounting the iframe or switching its mode moves nothing below it. Below
+   900px the switch and the frame are not shown and the page's capture and links take their place. */
+.v6-ff__modes { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; padding: 0; border: 0; min-width: 0; }
+.v6-ff__legend { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.v6-ff__mode { position: relative; display: inline-flex; align-items: center; min-height: 40px; padding: 0 18px; border: 1px solid var(--line-2);
+  border-radius: var(--r-md); cursor: pointer; font-family: var(--sans); font-size: 15px; font-weight: 500; line-height: 1.3; color: var(--ink-3);
+  transition: color var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out); }
+.v6-ff__mode:hover { color: var(--ink-2); border-color: var(--line-strong); }
+.v6-ff__mode[data-on] { color: var(--ink); border-color: #FAFAFA; }
+.v6-ff__mode:has(.v6-ff__radio:focus-visible) { outline: 2px solid #FAFAFA; outline-offset: 3px; }
+.v6-ff__radio { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.v6-ff__shell { margin: 0; padding: 8px; background: #0E0E10; border: 1px solid var(--line); border-radius: var(--r-card); }
+.v6-ff__bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; column-gap: 16px; row-gap: 2px;
+  min-height: 36px; padding: 8px 12px; margin: -8px -8px 8px; border-bottom: 1px solid var(--line-soft);
+  font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
+.v6-ff__addr { flex: 1 1 12ch; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.v6-ff__tag { flex: 0 1 auto; margin-left: auto; text-align: right; }
+/* The fixture's own ground (lib/fixtures/drone-console.ts), so the box reads as the console before it loads. */
+.v6-ff__view { height: 600px; overflow: hidden; border-radius: 10px; background: #0b0e13; }
+.v6-ff__frame { display: block; width: 100%; height: 100%; border: 0; }
+.v6-ff__narrow .v6-mp { max-width: 420px; }
+.v6-ff__links { display: flex; flex-wrap: wrap; gap: 12px 28px; margin: 24px 0 0; }
+@media (max-width: 899px) { .v6-ff__wide { display: none; } }
+@media (min-width: 900px) { .v6-ff__narrow { display: none; } }
+
+/* ---------------------------------------------------------------------- FAQ ---
+   Defense, "Working with Vraelis" (the kit's Faq). A closed answer is not shown, so it is not laid out either: in
+   current Chrome a closed <details> keeps layout boxes for its content, and anything that measures what is on
+   screen (the word budget among them) would count answers no reader can see. The browser shows exactly this. */
+.v6-sx-faq .v6-faq__item:not([open]) > .v6-faq__a { display: none; }
+
+/* ---------------------------------------------------------------- MCP panel ---
+   AI-built apps, how it fits: the agent's loop as one product panel. Each row: a mono index, the tool (or the
+   answer an API key gets) and what happens there. The panel ground and bar are MediaPanel's. */
+.v6-sx-mcp { margin: 0; background: #0E0E10; border: 1px solid var(--line); border-radius: var(--r-card); overflow: hidden; }
+.v6-sx-mcp__bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; column-gap: 16px; row-gap: 2px;
+  min-height: 36px; padding: 8px 20px; border-bottom: 1px solid var(--line-soft);
+  font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
+.v6-sx-mcp__addr { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.v6-sx-mcp__rows { margin: 0; padding: 0 20px; list-style: none; }
+.v6-sx-mcp__row { display: grid; grid-template-columns: 40px minmax(0, 17rem) minmax(0, 1fr); column-gap: 24px; row-gap: 6px;
+  align-items: baseline; padding: 24px 0; }
+.v6-sx-mcp__row + .v6-sx-mcp__row { border-top: 1px solid var(--line-soft); }
+.v6-sx-mcp__n { font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); font-variant-numeric: tabular-nums; }
+.v6-sx-mcp .v6-sx-mcp__key { padding: 0; background: none; border: 0; font-family: var(--mono); font-size: 14px; line-height: 1.5;
+  color: var(--ink); overflow-wrap: anywhere; }
+.v6-sx-mcp .v6-sx-mcp__t { margin: 0; max-width: 60ch; font-size: var(--t-read); line-height: 1.55; color: var(--ink-2); text-wrap: pretty; }
+@media (max-width: 760px) {
+  .v6-sx-mcp__rows { padding: 0 16px; }
+  .v6-sx-mcp__bar { padding: 8px 16px; }
+  .v6-sx-mcp__row { grid-template-columns: 28px minmax(0, 1fr); column-gap: 12px; padding: 20px 0; }
+  .v6-sx-mcp__t { grid-column: 2; }
+}
+
+/* --------------------------------------------------------------------- CI ---
+   SaaS, from CI: the command as a reference block (Code) beside what decides whether a release waits. */
+.v6-sx-ci { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--col-gap); row-gap: 24px; align-items: start; }
+.v6-sx-ci__code { grid-column: 1 / span 7; min-width: 0; }
+.v6-sx-ci .v6-sx-ci__note { grid-column: 8 / span 5; margin: 0; font-size: var(--t-read); line-height: 1.65; color: var(--ink-2); text-wrap: pretty; }
+@media (max-width: 899px) {
+  .v6-sx-ci { grid-template-columns: minmax(0, 1fr); }
+  .v6-sx-ci__code, .v6-sx-ci .v6-sx-ci__note { grid-column: 1; }
+}
+
+/* ------------------------------------------------- public sector's panel ---
+   The hero's coded panel: Notewell's second journey as recorded. RecordSteps (kit) draws the steps. */
+.v6-sx-jp .v6-sx-jp__k { margin: 0 0 8px; font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
+.v6-sx-jp .v6-sx-jp__t { margin: 0 0 20px; font-size: 20px; font-weight: 500; line-height: 1.35; letter-spacing: -0.005em; color: var(--ink); text-wrap: balance; }
+.v6-sx-jp .v6-sx-jp__cap { margin: 16px 0 0; font-size: 15px; line-height: 1.5; color: var(--ink-2); }
+.v6-sx-jp .v6-sx-jp__meta { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 10px 0 0; font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
+@media (max-width: 560px) {
+  .v6-sx-jp .v6-sx-jp__t { margin-bottom: 12px; font-size: 17px; }
+}
+/* From 1101px the panel rises level with the eyebrow instead of sitting as a strip in the frame's lower corner. */
+@media (min-width: 1101px) {
+  .v6 .v6-fh__nbody .v6-sx-jp .v6-rs__step { padding-top: 20px; padding-bottom: 20px; }
+  .v6 .v6-fh__nbody .v6-sx-jp .v6-sx-jp__t { margin-bottom: 28px; }
+  .v6 .v6-fh__nbody .v6-sx-jp .v6-sx-jp__cap { margin-top: 28px; }
+}
+
+/* ------------------------------------------------------ the solutions index ---
+   Two groups from the registry, "Sectors" then "Teams", four link cards each: a 4:3 picture, the name at 18/500
+   and the registry's one line at 14 ink-3 (plan T14). The cards are CrossLinks cards at 4:3, four across. */
+.v6-si { display: grid; row-gap: clamp(48px, 5vw, 72px); }
+/* The groups start a head's gap under the index hero's lead, not a whole section below it. */
+.v6-sec.v6-si-sec { padding-top: var(--head-gap); }
+.v6-si .v6-si__h { margin: 0 0 20px; font-family: var(--sans); font-size: 14px; font-weight: 500; line-height: 1.3; letter-spacing: 0; color: var(--ink-3); }
+.v6-si__grid { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--col-gap); grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.v6-si__grid > li { display: flex; min-width: 0; }
+.v6-si__card { display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0; padding: 20px; background: var(--surface);
+  border: 1px solid var(--line-soft); border-radius: var(--r-card); color: var(--ink); text-decoration: none;
+  transition: border-color var(--dur-1) var(--ease-out); }
+.v6-si__pic { position: relative; display: block; aspect-ratio: 4 / 3; overflow: hidden; border-radius: var(--r-media); background: #0E0E10; margin-bottom: 16px; }
+.v6-si__pic img { object-fit: cover; transition: transform var(--dur-4) var(--ease-out); }
+.v6-si .v6-si__t { margin: 0; font-family: var(--sans); font-size: var(--t-h5); font-weight: 500; line-height: 1.35; letter-spacing: -0.005em; color: var(--ink); text-wrap: balance; }
+.v6-si .v6-si__b { margin: 6px 0 0; font-size: var(--t-small); line-height: 1.55; color: var(--ink-3); text-wrap: pretty; }
+.v6-si__go { display: inline-block; margin-top: auto; padding-top: 16px; font-size: 16px; line-height: 1; color: var(--ink-3);
+  transition: transform var(--dur-2) var(--ease-out), color var(--dur-1) var(--ease-out); }
+a.v6-si__card:hover { border-color: var(--line-strong); color: var(--ink); }
+a.v6-si__card:hover .v6-si__pic img { transform: scale(1.03); }
+a.v6-si__card:hover .v6-si__go { transform: translateX(4px); color: var(--ink); }
+a.v6-si__card:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
+@media (max-width: 1099px) { .v6-si__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .v6-si__grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* --------------------------------------------------------- other scripts ---
+   Plan A3: the headings this file draws carry no negative tracking in Japanese, Chinese and Korean, and
+   Japanese breaks them between phrases. */
+:is(:lang(ja), :lang(zh), :lang(ko)) :is(.v6-si .v6-si__t, .v6-sx-jp .v6-sx-jp__t, .v6-sx-ex .v6-sx-ex__t) { letter-spacing: 0; }
+:lang(ja) :is(.v6-si__t, .v6-sx-jp__t) { word-break: auto-phrase; }
+:lang(hi) :is(.v6-sx-ex .v6-sx-ex__t, .v6-sx-sentence .v6-sx-sentence__t) { line-height: 1.6; }
+
+/* --------------------------------------------------------- reduced motion --- */
+@media (prefers-reduced-motion: reduce) {
+  .v6-ff__mode, .v6-si__card, .v6-si__pic img, .v6-si__go { transition: none !important; }
+  a.v6-si__card:hover .v6-si__pic img, a.v6-si__card:hover .v6-si__go { transform: none !important; }
+}

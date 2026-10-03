@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { v6meta } from "../../_system/meta";
 import { DocShell, Blocks, DocCode, DocPager } from "../../_content/docs-ui";
-import { DOCS, getDoc, adjacentDocs, docHeadings, docToMarkdown } from "../../_content/docs";
+import { DOCS, getDoc, adjacentDocs, docOutline, docToMarkdown } from "../../_content/docs";
 import { SURFACES } from "../../_content/coverage";
 import { V6_BASE } from "@/lib/v6-routes";
 import { robotsMeta } from "@/lib/stealth";
@@ -88,18 +88,14 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
   const doc = getDoc(slug);
   if (!doc) notFound();
   const { prev, next } = adjacentDocs(slug);
-  const headings = docHeadings(doc);
   return (
-    <DocShell activeSlug={slug} toc={headings} crumb={[doc.group, doc.title]}
+    <DocShell activeSlug={slug} toc={docOutline(doc)} crumb={[doc.group, doc.title]}
       markdown={docToMarkdown(doc, SURFACES.map((x) => ({ name: x.name, brief: x.brief, tier: x.tier === "Next" ? "Not built yet" : x.tier })))}>
       <div className="v6-docs__article">
         <article className="v6-prose">
-          {/* The section name and the way on, before the title: previous and next sit at the top as well as the
-              foot, so moving through the docs never needs a scroll to the end of a long page. */}
-          <div className="v6-docs__top">
-            <span className="v6-docs__section">{doc.group}</span>
-            <DocPager prev={prev} next={next} place="top" />
-          </div>
+          {/* The section name above the title. Previous and next are at the foot only: the compact pair that sat
+              here scrolled the page sideways on a phone (plan C, docs). */}
+          <p className="v6-docs__section">{doc.group}</p>
           <h1>{doc.title}</h1>
           <p className="v6-docs__lead">{doc.summary}</p>
           {/* One quiet panel, two rows. These were two heavy boxes stacked under the title. */}
@@ -115,7 +111,7 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
               <ul className="v6-docs__related">{doc.related.map((r) => { const rd = getDoc(r); return rd ? <li key={r}><Link href={`${BASE}/docs/${rd.slug}`}>{rd.title}<span aria-hidden> →</span></Link></li> : null; })}</ul>
             </>
           ) : null}
-          <DocPager prev={prev} next={next} place="bottom" />
+          <DocPager prev={prev} next={next} />
         </article>
       </div>
     </DocShell>

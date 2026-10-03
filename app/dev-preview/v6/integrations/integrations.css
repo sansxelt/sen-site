@@ -1,0 +1,36 @@
+/* /integrations (plan C, template T1). The kit draws the hero, the band and the related links, and the hero's
+   panel (the four ways in) is _system/hero-asides; this file only lays out the two blocks that are this page's
+   own: the two-up "in your release" pair and the delivery split inside the band. Tokens only (plan A2). */
+
+/* In your release: two names side by side on hairlines, each with its sentence and its link. Not cards: two
+   names do not make a grid, and the related links at the foot of the page are the page's one card row. */
+.v6 .ig-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--col-gap); row-gap: 40px; }
+.v6 .ig-two__item { min-width: 0; padding-top: 24px; border-top: 1px solid var(--line); }
+.v6 .ig-two__t { margin: 0; font-family: var(--sans); font-size: var(--t-h4); font-weight: 500; line-height: 1.3;
+  letter-spacing: -0.008em; color: var(--ink); }
+.v6 .ig-two__d { margin: 12px 0 0; max-width: 46ch; font-size: var(--t-read); line-height: 1.65; color: var(--ink-2); text-wrap: pretty; }
+.v6 .ig-two__link { margin-top: 20px; }
+
+/* Delivery, inside the band: the two ways an answer arrives on the left (columns 1 to 4), the delivery itself on
+   the right (6 to 12, wide enough for the report_url line without scrolling at 1440). One column below 900px,
+   words first. */
+.v6 .ig-deliver { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--col-gap); row-gap: 40px; align-items: start; }
+.v6 .ig-deliver__text { grid-column: 1 / span 4; min-width: 0; }
+.v6 .ig-deliver__code { grid-column: 6 / span 7; min-width: 0; margin: 0; }
+.v6 .ig-rows { margin: 0; display: grid; }
+.v6 .ig-row { padding: 20px 0; border-top: 1px solid var(--line); }
+.v6 .ig-row:first-child { padding-top: 0; border-top: 0; }
+.v6 .ig-row dt { font-size: var(--t-h5); font-weight: 500; line-height: 1.35; letter-spacing: -0.005em; color: var(--ink); }
+.v6 .ig-row dd { margin: 8px 0 0; max-width: 46ch; font-size: var(--t-body); line-height: 1.6; color: var(--ink-3); text-wrap: pretty; }
+.v6 .ig-deliver__link { margin-top: 24px; }
+.v6 .ig-cap { margin: 12px 0 0; max-width: 72ch; font-size: var(--t-label); line-height: 1.5; color: var(--ink-4); }
+
+/* The related links follow the limits line, which already leaves half a section above them. */
+.v6 .ig-related { padding-top: calc(var(--sec) * 0.5); }
+
+@media (max-width: 899px) {
+  .v6 .ig-deliver__text, .v6 .ig-deliver__code { grid-column: 1 / -1; }
+}
+@media (max-width: 760px) {
+  .v6 .ig-two { grid-template-columns: minmax(0, 1fr); }
+}

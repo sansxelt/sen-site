@@ -9,7 +9,7 @@ import { getZone, ZONE_THEME } from "@/lib/zone";
 import { isVraelisRequest } from "@/lib/site-host";
 
 export const metadata: Metadata = {
-  title: "Access",
+  title: "Sign in",
   description: "Sign in or create your account.",
   alternates: { canonical: "https://vraelis.com/signin" },
 };

@@ -1,5 +1,9 @@
 import { v6meta } from "../../_system/meta";
 import { MARK_PATH, MARK_VIEWBOX } from "@/lib/brand-mark";
+import { CrossLinks } from "../../_system/kit";
+import { ClosingScene } from "../../_system/close";
+import { CHANGELOG, entryId } from "../../_content/changelog";
+import { V6_BASE } from "@/lib/v6-routes";
 import "./partnership.css";
 
 export const metadata = v6meta({
@@ -11,6 +15,10 @@ export const metadata = v6meta({
   ogTitle: "Vraelis × Reddit",
   ogDescription: "A 2026 advertising partnership focused on audience reach through Reddit Ads.",
 });
+
+// The changelog entry for this record, read from the changelog itself so the link follows the entry's own anchor.
+// No date is printed on anything new here (plan 0.2): the record's own date line above is the record.
+const ENTRY = CHANGELOG.find((e) => e.href === "/partnerships/reddit");
 
 function VraelisMark() {
   return <svg viewBox={MARK_VIEWBOX} role="img" aria-label="Vraelis"><path d={MARK_PATH} fill="currentColor" /></svg>;
@@ -31,39 +39,62 @@ function RedditMark() {
 
 export default function RedditPartnershipPage() {
   return (
-    <main className="v6-pr" data-nav-dark data-nav-theme="dark">
-      <div className="v6-pr__wrap">
-        <header className="v6-pr__mast">
-          <p className="v6-pr__index">Partnership record</p>
-          <p className="v6-pr__date">September 14, 2026</p>
-        </header>
+    <>
+      {/* An <article>, not a <main>: the shell already renders the page's one <main> around this. It paints its own
+          dark ground (partnership.css), and v6-dark sits on the same line as data-nav-dark, which is what
+          design01-inc5-verify reads. */}
+      <article className="v6-pr v6-dark" data-nav-dark data-nav-theme="dark">
+        <div className="v6-pr__wrap">
+          <header className="v6-pr__mast">
+            <p className="v6-pr__index">Partnership record</p>
+            <p className="v6-pr__date">September 14, 2026</p>
+          </header>
 
-        <section className="v6-pr__hero" aria-labelledby="partnership-title">
-          <div className="v6-pr__identity">
-            <div className="v6-pr__marks" aria-label="Vraelis and Reddit">
-              <span><VraelisMark /></span>
-              <i aria-hidden="true">×</i>
-              <span><RedditMark /></span>
+          <section className="v6-pr__hero" aria-labelledby="partnership-title">
+            <div className="v6-pr__identity">
+              <div className="v6-pr__marks" role="img" aria-label="Vraelis and Reddit">
+                <span><VraelisMark /></span>
+                <i aria-hidden="true">×</i>
+                <span><RedditMark /></span>
+              </div>
+              {/* Two lines, like the ByteDance record. On one line, at this size in IBM Plex Sans (wider than the serif
+                  it replaced on 2026-09-30), the name ran under the right-hand column on a 1440 screen. The title is
+                  the two names, a label rather than a sentence, so it carries no full stop (data-label). */}
+              <h1 id="partnership-title" data-label="">Vraelis <span>×</span><br />Reddit</h1>
             </div>
-            {/* Two lines, like the ByteDance record. On one line, at this size in IBM Plex Sans (wider than the serif
-                it replaced on 2026-09-30), the name ran under the right-hand column on a 1440 screen. */}
-            <h1 id="partnership-title">Vraelis <span>×</span><br />Reddit</h1>
-          </div>
 
-          <div className="v6-pr__story">
-            <p className="v6-pr__overline">Audience and advertising</p>
-            <h2>A direct path to relevant communities.</h2>
-            <p>
-              Vraelis partnered with Reddit to reach the communities where people build and ship software, through Reddit Ads.
-            </p>
-            <div className="v6-pr__links" aria-label="Partnership links">
-              <a href="https://www.reddit.com/" target="_blank" rel="noopener noreferrer">Visit Reddit <span aria-hidden="true">↗</span></a>
-              <a href="https://www.business.reddit.com/" target="_blank" rel="noopener noreferrer">Reddit for Business <span aria-hidden="true">↗</span></a>
+            <div className="v6-pr__story">
+              <p className="v6-pr__overline">Audience and advertising</p>
+              <h2>A direct path to relevant communities.</h2>
+              <p>
+                Vraelis partnered with Reddit to reach the communities where people build and ship software, through Reddit Ads.
+              </p>
+              <div className="v6-pr__links" role="group" aria-label="Partnership links">
+                <a href="https://www.reddit.com/" target="_blank" rel="noopener noreferrer">Visit Reddit <span aria-hidden="true">↗</span></a>
+                <a href="https://www.business.reddit.com/" target="_blank" rel="noopener noreferrer">Reddit for Business <span aria-hidden="true">↗</span></a>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
+      </article>
 
-      </div>
-    </main>
+      <section className="v6-sec v6-pr-next">
+        <div className="v6-wrap">
+          <CrossLinks
+            links={[
+              {
+                title: ENTRY?.title ?? "Changelog",
+                body: "This partnership's entry in the changelog.",
+                href: ENTRY ? `${V6_BASE}/changelog#${entryId(ENTRY)}` : `${V6_BASE}/changelog`,
+              },
+              { title: "About Vraelis", body: "What Vraelis checks, and the commitments it keeps.", href: `${V6_BASE}/company` },
+              { title: "Vraelis × ByteDance", body: "The other partnership record.", href: `${V6_BASE}/partnerships/bytedance` },
+            ]}
+          />
+        </div>
+      </section>
+
+      <ClosingScene />
+    </>
   );
 }

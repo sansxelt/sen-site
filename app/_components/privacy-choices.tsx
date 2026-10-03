@@ -54,7 +54,7 @@ const CATEGORY: Record<OptionalCategory, { title: string; short: string; body: s
 };
 
 const ESSENTIAL_BODY =
-  "Keeps you signed in, protects sign-in and payments against forgery and fraud, and remembers this choice. While the site is in preview it also remembers your preview access.";
+  "Keeps you signed in, protects sign-in and payments against forgery and fraud, and remembers this choice.";
 
 export function PrivacyChoices() {
   const pathname = usePathname() || "";

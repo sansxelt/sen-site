@@ -58,4 +58,4 @@
 .lsw__opt:focus-visible { outline: 2px solid #FAFAFA; outline-offset: -2px; }
 .lsw__tick { flex: none; margin-left: auto; }
 
-@media (prefers-reduced-motion: reduce) { .lsw__menu { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .lsw__menu { animation: none; } .lsw__chev { transition: none; } }

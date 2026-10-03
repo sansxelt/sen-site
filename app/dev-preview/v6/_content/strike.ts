@@ -16,7 +16,9 @@
 // because the console kept T-1 confirmed from the first journey. The panel says so.
 import strikeConsole from "./demos/strike-console.png";
 import strikeContacts from "./demos/strike-contacts.png";
-import { STRIKE_LINKS, type StrikeRecord } from "../_system/strike-story";
+// From the server-safe module, never from the client story: a server page that reads STRIKE must not pull
+// the homepage scene into its bundle, and the chapter links must resolve on the server.
+import { STRIKE_LINKS, type StrikeRecord } from "./strike-links";
 
 export const STRIKE: StrikeRecord = {
   url: "https://vraelis.com/api/fixtures/strike?mode=broken",
@@ -134,14 +136,16 @@ export const STRIKE: StrikeRecord = {
   },
 };
 
-// The four chapters under the scene, and the line under it that says why a team would let Vraelis do this.
-// Every claim in them is in the record above: the rule is the claim, the plan was approved by a person,
-// the browser read every contact before and after confirming T-1, and the bus showed "Cleared to engage".
+// The four chapters under the scene, and the caption after it: what the example was, and that it is one
+// sector of several (plan S4). Every claim in them is in the record above: the rule is the claim, the plan
+// was approved by a person, the browser read T-1, T-2 and T-3 before and after confirming T-1, and the bus
+// showed "Cleared to engage". Larkspur is named as what it is, a simulated console Vraelis built itself, and
+// nothing here says where the record is kept beyond "the record".
 export const STRIKE_CHAPTERS = [
-  { eyebrow: "The rule", t: "Only the confirmed target is cleared.", d: "The mission team writes it as one sentence and hands it to Vraelis from the terminal, or their coding agent does.", link: STRIKE_LINKS.cli },
+  { eyebrow: "The rule", t: "Only the confirmed target is cleared.", d: "The rule goes to Vraelis as one sentence, from the terminal or from a coding agent.", link: STRIKE_LINKS.cli },
   { eyebrow: "The plan", t: "A person approves every step first.", d: "Vraelis writes the plan. Nothing touches the console until someone on the team says yes, and an agent never can.", link: STRIKE_LINKS.approval },
-  { eyebrow: "The run", t: "A browser works the console like an operator.", d: "On the simulation, never the aircraft: it reads every contact, confirms T-1, and reads them all again.", link: STRIKE_LINKS.coverage },
-  { eyebrow: "The finding", t: "The civilian bus was cleared too.", d: "Confirming T-1 also cleared T-3, the bus in the same grid square. The record keeps the step, the screen and a repair prompt for the team's agent." },
+  { eyebrow: "The run", t: "A browser works the console like an operator.", d: "On the simulation, never the aircraft: it reads the contacts, confirms T-1, and reads them again.", link: STRIKE_LINKS.coverage },
+  { eyebrow: "The finding", t: "The civilian bus was cleared too.", d: "Confirming T-1 also cleared T-3, the bus in the same grid square. The record keeps the step, the screen and a repair prompt." },
 ];
 
-export const STRIKE_CAPTION = "Vraelis does not make mission software. It checks it: on a simulation or a staging build, on steps a person approved, with the record kept in the team's own workspace. A real run on Larkspur, a Vraelis demo fixture.";
+export const STRIKE_CAPTION = "Vraelis does not make mission software. It checks it, on a simulation or a staging build, and keeps every step in the record. This was a real run on Larkspur, a simulated mission console Vraelis built itself. The same check runs on checkouts, sign-ups and fleet panels.";

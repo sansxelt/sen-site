@@ -1,282 +1,302 @@
-import { PricingAside } from "../_system/hero-asides";
+// /pricing (plan T6, C /pricing). In order: the compact IndexHero with the Monthly/Yearly switch under its lead;
+// the four plans (Free, Builder, Pro, Scale) at one height, with the page's only white button on Free; Pay as you
+// go and Enterprise as a row of two under them; the definition strip ("One verification is"); the questions; what
+// this pricing does and does not do; the closing.
 import { v6meta } from "../_system/meta";
-import { PageHero, Reveal, SectionHead, CTA, ProseLink } from "../_system/ui";
-import { V6_BASE } from "@/lib/v6-routes";
+import { CTA, EditorialLink, SectionHead } from "../_system/ui";
+import { DoesBox, Faq, IndexHero, type FaqItem } from "../_system/kit";
+import { ClosingScene } from "../_system/close";
+import { PricingSwitch, PricingToggle } from "../_system/pricing-toggle";
+import { V6_BASE, v6SignInPath } from "@/lib/v6-routes";
 import {
-  PLAN_CATALOG_V1, FREE_TIER, PASS_INCLUDED_FLOWS, EXTRA_FLOW_CENTS, passPriceCents,
+  PLAN_CATALOG_V1, FREE_TIER, PASS_INCLUDED_FLOWS, EXTRA_FLOW_CENTS, passPriceCents, type PlanV1,
 } from "@/lib/preflight/pass-pricing";
-import { planHeadline, planCapacity } from "@/lib/preflight/pass-pricing-format";
+import { usdFromCents, planHeadline, planCapacity } from "@/lib/preflight/pass-pricing-format";
+import "./pricing.css";
 
 export const metadata = v6meta({
   title: "Pricing",
   description:
-    "Vraelis is priced per verification, not per seat. A verification is one complete check of one system: the plan, the real browser run, and the evidence behind the decision. The first one is free, a single verification can be bought on its own, and plans set how many you run each month and how much of a system one may cover.",
+    "Vraelis is priced per verification, not per seat. A verification is one complete check of one system, and the first one is free, with no card.",
   path: "/pricing",
   type: "website",
 });
 
 const BASE = V6_BASE;
+// Account creation: the sign-in screen in its sign-up mode, the closing's default destination too (close.tsx).
+const SIGNUP = `${v6SignInPath()}&mode=signup`;
 
 // PRICES COME FROM THE BILLING CATALOG, NOT FROM THIS FILE.
 //
-// A pricing page holding its own copy of the numbers is a pricing page that eventually disagrees with what
-// the customer is charged, and nobody notices until someone is billed an amount the site never quoted.
-// PLAN_CATALOG_V1 is what checkout reads, so it is what this page renders. The same rule now covers the
-// two figures this page was missing outright: the free allowance comes from FREE_TIER and the single
-// verification price from passPriceCents, which is the function that charges for one.
-const money = (cents: number) => `$${(cents / 100).toLocaleString("en-US")}`;
+// A pricing page holding its own copy of the numbers is a pricing page that eventually disagrees with what the
+// customer is charged. PLAN_CATALOG_V1 is what checkout reads, so it is what this page renders; the free allowance
+// is FREE_TIER and the single verification is passPriceCents, the function that charges for one. The formatting is
+// the library's too (usdFromCents: whole dollars, "$1,490"). scripts/pricing-purchasable-verify.ts holds this page
+// to it: no dollar figure is typed here.
+const money = usdFromCents;
 
-// Light cards on the light section. They were graphite cards left over from when this section was dark, so
-// the page put black slabs on white and the black buttons inside them nearly vanished.
-const CARD = {
-  background: "var(--paper)", border: "1px solid var(--line-2)",
-  borderRadius: 12, padding: "clamp(22px,2.4vw,28px)",
-} as const;
-const H3 = { margin: "0 0 8px", fontSize: "1.12rem", fontWeight: 600, letterSpacing: "-0.015em", color: "var(--ink)" } as const;
-const P = { margin: 0, fontSize: 14.5, lineHeight: 1.6, color: "var(--ink-2)" } as const;
-// The three inline styles that were repeated verbatim on the plan cards and the enterprise card. They are
-// lifted here because there are now four bands using them rather than two, and four copies of a price
-// style is how one of them ends up a different size after a later edit touches only the card in front of
-// whoever is editing.
-const AMOUNT = { margin: "0 0 4px", fontSize: "2rem", fontWeight: 600, letterSpacing: "-0.03em", color: "var(--ink)" } as const;
-// marginLeft: the word space inside the span is 14px wide next to a 32px figure, so "$0" and its caption
-// read as one word ("$0to see") without it.
-const AMOUNT_UNIT = { fontSize: 14, fontWeight: 400, letterSpacing: 0, color: "var(--ink-3)", marginLeft: 6 } as const;
-const HEADLINE = { margin: "0 0 12px", fontSize: 15, fontWeight: 600, color: "var(--ink)" } as const;
-const FEATURES = { margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 6 } as const;
+// The largest listed plan's guarantee count, the point where Enterprise starts.
+const TOP_GUARANTEES = Math.max(...PLAN_CATALOG_V1.map((p) => p.maxGuarantees));
 
-// ONE THREE-CARD GRID PER PAGE, AND ON THIS PAGE IT IS THE PLANS.
-//
-// This route ran .v6-grid3 three times in a row: the plans, then What a verification is, then What this
-// pricing does not do. Three consecutive rows of three rounded cards is the shape every SaaS pricing page
-// has, and it makes the two prose sections look like tiers as well, which they are not. The plans are the
-// only thing here that is genuinely a set of comparable options, so they keep the grid and the prose
-// sections are set as rows instead.
-//
-// FREE, PAY AS YOU GO AND ENTERPRISE ARE BANDS, NOT A FOURTH COLUMN, for the same reason. .v6-grid3 is
-// auto-fit, so adding a fourth card would quietly retune the row to four narrower columns and take the
-// three-way plan comparison down with it. Full width bands above and below the three keep the ladder
-// readable from top to bottom and change no layout system.
-//
-// Both row sections here are graphite. .v6-row was authored for the light ground and now carries its own
-// [data-nav-dark] rebind in pagekit.css, so nothing on-dark is stated per page: a page that patched the
-// colours inline is exactly how the next dark row section would come to miss them.
-const n2 = (i: number) => String(i + 1).padStart(2, "0");
+// One line under each price: who the plan is for. Keyed by plan, so a plan added to the catalog fails the type
+// check here until it has its line, rather than rendering without one.
+const FOR: Record<PlanV1["key"], string> = {
+  builder_v1: "For one product moving toward launch.",
+  pro_v1: "For teams launching several apps.",
+  scale_v1: "For agencies and platforms checking at volume.",
+};
 
-// THE UNIT IS A VERIFICATION, AND ITS DEPTH IS MEASURED IN JOURNEYS.
-//
-// This page sold "passes", which is the internal billing noun escaping onto the public site: a pass is what
-// the ledger calls one charged run, and no visitor has ever arrived already knowing that. Every rendered
-// sentence here says verification now. The plan cards render the shared capacity copy, which still counts a
-// journey as a flow, so the row that defines depth names both words once rather than leaving a reader to
-// work out on their own whether they are two different things being sold.
-const WHAT_A_VERIFICATION_IS: [string, string][] = [
-  ["One system, verified once", "A verification covers a single connected system end to end: deriving the checks from your claim, running the real journeys in a browser, and returning the evidence. It is not metered per page, per assertion, or per minute."],
-  ["Journeys are the depth of a verification", "A journey is one path through the product, and it is what the plan cards count as a flow. Higher plans allow more journeys in a single verification, which is how one verification covers more of a system rather than more systems."],
-  ["A refused run costs nothing", "When Vraelis cannot build a test that would prove your claim, it says so and charges nothing. You are never billed for a verification that could not have been evidence."],
-  // Added 2026-09-28 with the re-check endpoint, because "no new approval" is easy to misread as "free".
-  ["A re-check is one verification", "Running the same approved plan again after a fix needs no new approval for 24 hours, and it is billed as one verification, the same as the first run. It does not matter whether a person, a CI job or an AI assistant started it."],
+// THE FREE CARD, FROM FREE_TIER: the constant the console's free card and the guarantee cap check read, so this
+// card cannot advertise an allowance the product does not grant. Each line is one whole string, so the translator
+// keys on the whole sentence (plan 0.6). The lines are worded for an allowance of one: FREE_TIER is `as const`, and
+// `satisfies 1` fails the type check if the library ever grants more, rather than the card printing "2 verification".
+// "Flows" here because the paid cards' lines (planCapacity) count a journey as a flow; the questions say so.
+// The old card's "The full answer, with screenshots and the step record" is not repeated here: the line under the
+// price says it is a real answer, the strip under the plans says what one holds, and "Is the first one free?" says
+// it again. With it, the second screen at 1440x900 ran past its word budget (188 of 180, plan A1.6).
+const FREE_HEAD = `Protects ${FREE_TIER.maxGuarantees satisfies 1} active guarantee`;
+const FREE_LINES = [
+  `${FREE_TIER.lifetimePasses satisfies 1} verification for the life of the account, up to ${FREE_TIER.flowsPerPass} flows`,
+  `${FREE_TIER.maxApplications satisfies 1} connected system`,
+  // Free is the one tier without the API, now that every paid plan has it. Stated here rather than discovered
+  // when a key is refused.
+  "Console only, no API or CLI",
 ];
 
-const HONEST: [string, string][] = [
-  ["No per-seat pricing", "Your team size is not the thing being measured. Invite whoever needs to read the evidence."],
-  ["Yearly is a discount, not a lock", "Monthly is the default. Yearly is ten months for twelve."],
-  ["Unused verifications do not roll over", "Said here rather than discovered at renewal. If that is the wrong shape for how you work, say so and it can change."],
+/** A price: the amount and its unit as two elements, never part of a sentence (plan 0.6). The amount is machine
+ *  text and is not translated; the unit is. cyc marks which billing cycle it belongs to (pricing.css shows one).
+ *  The units are words ("per month"), not "/month": the translation crawl files a string with no space and a slash
+ *  as machine text and never sends it to the translators, so "/month" would stay English on every locale, while
+ *  "per month" and "per verification" are already in all eleven catalogues. */
+function Price({ amount, unit, cyc }: { amount: string; unit?: string; cyc?: "monthly" | "yearly" }) {
+  return (
+    <p className="v6-pp__price" data-cyc={cyc}>
+      <span className="v6-pp__amt" data-no-translate>{amount}</span>
+      {unit ? <span className="v6-pp__unit">{unit}</span> : null}
+    </p>
+  );
+}
+
+// "One verification is": the four parts of what a verification buys. These were the hero's aside, word for word;
+// they are the page's definition now, set as a strip under the plans. The last one's label was "When something
+// broke" and now uses the pitch words (plan 0.3). The first is the page's one statement that a person approves the
+// plan (plan 0.3).
+const DEFINITION: [string, string][] = [
+  ["The plan", "Written from your sentence, approved by a person."],
+  ["The run", "A real browser on the live app, every step recorded."],
+  ["The evidence", "Screenshots, console errors and failed requests."],
+  ["If it finds a problem", "What was expected, what happened, and a repair prompt."],
+];
+
+// THE QUESTIONS. Every answer is this page's own copy as it stood before this rebuild (its lead, its cards, "What a
+// verification is" and "What this pricing does not do"), the console pricing page's own lines (a yearly plan is
+// charged up front and its allowance resets monthly), or the library, plus one fact from the product contract (plan
+// A8.3: a re-check runs within 24 hours of the approval, up to 10 times, on the same address). Nothing else is
+// claimed. A price is never inside a sentence (it stands beside a label); the counts that are (24 hours, 10 times,
+// the included journeys) are fixed facts or library constants rendered into one whole string, so the translator
+// still keys on the whole sentence.
+const FAQ: FaqItem[] = [
+  {
+    q: "What is one verification?",
+    a: "One complete check of one system: the plan, the real browser run, and the evidence behind the decision. It covers one connected system end to end, and it is not metered per page, per assertion or per minute.",
+  },
+  {
+    q: "Is the first one free?",
+    a: "Yes, with no card. It ends in the full answer, with screenshots and the step record. Free is console only, with no API or CLI.",
+  },
+  {
+    q: "What if no check could prove my sentence?",
+    a: "Then Vraelis says so and charges nothing. You are never billed for a verification that could not have been evidence.",
+  },
+  {
+    q: "Is a re-check charged?",
+    a: (
+      <>
+        <p>Yes, as one verification, the same as the first run, whether a person, a CI job or an AI assistant started it.</p>
+        <p>Within 24 hours of the approval, the same plan can run again up to 10 times on the same address with no new approval. A preview URL is a different address.</p>
+      </>
+    ),
+  },
+  {
+    q: "Can I pay yearly?",
+    a: "Yes. Monthly is the default, and yearly is ten months for twelve, charged up front. The allowance still resets each month, and unused verifications do not roll over.",
+  },
+  {
+    q: "What does an extra journey cost?",
+    a: (
+      <>
+        <p>A journey is one path through the product, and it is what the plan cards count as a flow. On a plan, each verification includes up to the number of flows its card shows.</p>
+        <p>{`On pay as you go, one verification includes up to ${PASS_INCLUDED_FLOWS} journeys, and each one beyond that is billed on its own.`}</p>
+        <p className="v6-pp__qprice">
+          <span>Each extra journey</span>
+          <span className="v6-pp__qamt" data-no-translate>{money(EXTRA_FLOW_CENTS)}</span>
+        </p>
+      </>
+    ),
+  },
+  {
+    q: "Do reviewers need a paid seat?",
+    a: "No. There is no per-seat pricing: your team size is not the thing being measured. Invite whoever needs to read the evidence.",
+  },
+  {
+    q: "What does Enterprise add?",
+    a: (
+      <>
+        <p>Volume above the listed plans, single sign-on through your own identity provider, roles across a team, owner-anchored billing, and audit activity you can export. Invoicing, a signed agreement and a security review are all available, with written quotes rather than a calculator.</p>
+        <div className="v6-pp__qlink"><EditorialLink href={`${BASE}/enterprise`}>Read about Enterprise</EditorialLink></div>
+      </>
+    ),
+  },
 ];
 
 export default function V6Pricing() {
   return (
     <>
-      <PageHero
-        kicker="Pricing"
-        title="Priced per verification, not per seat."
-        lead="A verification is one complete check of one system: the plan, the real browser run, and the evidence behind the decision. The first one is free. After that, buy a single verification on its own, or take a plan, which sets how many you run each month and how much of a system one may cover."
-        aside={<PricingAside />}
-      />
+      {/* The switch sits under the lead and the prices sit in the plans below it, so the toggle wraps both. Every
+          price is in the page twice, once per cycle; the toggle only says which set shows. */}
+      <PricingToggle className="v6-pp">
+        <IndexHero
+          compact
+          eyebrow="Pricing"
+          title="Priced per verification, not per seat."
+          lead="A verification is one complete check of one system. The first one is free, with no card."
+          actions={
+            <>
+              <PricingSwitch />
+              <p className="v6-pp__note">Yearly is ten months for twelve.</p>
+            </>
+          }
+        />
 
-      <section className="v6-sec" style={{ paddingTop: "clamp(12px,2vw,28px)" }}>
-        <div className="v6-wrap">
-          {/* THE FREE TIER WAS NOWHERE ON THIS PAGE, AND IT IS THE STRONGEST THING WE CAN PUT IN FRONT OF A
-              STRANGER. One verification, no card, against their own deployed system, ending in a real
-              decision with the screenshots and the step record behind it. That is the entire argument for
-              the product, made once, for nothing. The page opened on three monthly prices instead, so a
-              reader who was not ready to choose a subscription had no smaller step available and no way to
-              find out whether any of this works on their system. It leads the ladder now, for the same
-              reason the enterprise card had to exist at the other end: a price list that starts above where
-              the reader is standing is a price list they leave.
+        <section className="v6-sec v6-pp__plans" id="plans" aria-labelledby="plans-h">
+          <div className="v6-wrap">
+            {/* The section's heading, for the outline only: the cards under it say what they are. */}
+            <h2 className="v6-pp__sr" id="plans-h" data-label="">Plans</h2>
 
-              Every figure below is FREE_TIER, the same constant the guarantee cap route and the console free
-              card read, so this page cannot advertise an allowance the product does not actually grant. */}
-          <Reveal>
-            <div style={{ ...CARD, marginBottom: 16 }}>
-              <h3 style={{ ...H3, marginBottom: 6 }}>
-                Free: {FREE_TIER.lifetimePasses} full verification, no card
-              </h3>
-              <p style={AMOUNT}>
-                {money(0)}
-                <span style={AMOUNT_UNIT}> to see a real decision on your own system</span>
-              </p>
-              <p style={HEADLINE}>Protects {FREE_TIER.maxGuarantees} active guarantee</p>
-              <ul style={FEATURES}>
-                <li style={P}>
-                  {FREE_TIER.lifetimePasses} verification for the life of the account, up to{" "}
-                  {FREE_TIER.flowsPerPass} journeys
-                </li>
-                <li style={P}>{FREE_TIER.maxApplications} connected system</li>
-                <li style={P}>The full answer, with screenshots and the step record</li>
-                {/* Free is the ONE tier without the API, now that every paid plan has it. Stated on the card
-                    rather than discovered when a key is refused. */}
-                <li style={P}>Console only, no API or CLI</li>
-              </ul>
-              <div style={{ marginTop: 20 }}>
-                <CTA>Start free</CTA>
-              </div>
-            </div>
-          </Reveal>
-          <Reveal media className="v6-grid3">
-            {PLAN_CATALOG_V1.map((p) => (
-              <div key={p.key} style={CARD}>
-                <h3 style={H3}>{p.name}</h3>
-                <p style={AMOUNT}>
-                  {money(p.monthlyCents)}
-                  <span style={AMOUNT_UNIT}> per month</span>
-                </p>
-                <p style={{ ...P, marginBottom: 16 }}>{money(p.yearlyCents)} yearly, ten months for twelve.</p>
-                {/* THE PLAN COPY IS RENDERED, NOT RETYPED.
-                    The headline and the four lines under it were a verbatim third copy of the wording in
-                    lib/preflight/pass-pricing-format.ts, kept in step by hand. That was tried once already
-                    and the copies drifted without anyone noticing: API access was Scale-only and stated on
-                    none of the three surfaces that described a plan. The signed-in plans page and the
-                    console pricing page both render the shared helpers, so this one does too, and a plan
-                    can no longer be described two ways depending on which page you landed on.
-
-                    The headline is still the protected surface area rather than the run count, because
-                    nobody wants forty verifications: they want checkout to keep granting Pro access and
-                    users to keep being able to sign in. The capacity that pays for it is disclosed
-                    immediately underneath rather than behind a phrase like "fair use", since the first
-                    question anyone serious asks is whether one guarantee can trigger unbounded browser
-                    time, and the answer has to be a number on the card. */}
-                <p style={HEADLINE}>{planHeadline(p)}</p>
-                <ul style={FEATURES}>
-                  {planCapacity(p).map((line) => <li key={line} style={P}>{line}</li>)}
+            {/* FOUR PLANS AT ONE HEIGHT. Each card is a subgrid of six rows (name, price, who it is for, the
+                button, the guarantee headline, the capacity list), so the rows line up across the cards and
+                the buttons sit on one line. Not wrapped in Reveal: the plans are the first screen. */}
+            <ul className="v6-pp__grid" role="list">
+              <li className="v6-pp__card">
+                <h3 className="v6-pp__name">Free</h3>
+                <div className="v6-pp__prow"><Price amount={money(0)} /></div>
+                <p className="v6-pp__for">See a real answer on your own app.</p>
+                <div className="v6-pp__act">
+                  {/* The page's one white button. */}
+                  <CTA href={SIGNUP}>Start free</CTA>
+                </div>
+                <p className="v6-pp__head">{FREE_HEAD}</p>
+                <ul className="v6-pp__list" role="list">
+                  {FREE_LINES.map((line) => <li key={line}>{line}</li>)}
                 </ul>
-                {/* EVERY CARD NEEDS A WAY TO SAY YES.
-                    This page listed three plans, their prices and what each includes, and offered nothing to
-                    click. Someone who read it and decided on Pro had to sign in, land on the app overview,
-                    and go looking through Settings for where plans live. The checkout page takes the plan
-                    from the query and sends a signed-out visitor through sign-in and back, so one link
-                    serves both cases. */}
-                {/* NO RECOMMENDED TIER. The middle plan used to carry brand, which is the highlighted
-                    centre card every three-tier pricing page has, and it is a nudge rather than a fact:
-                    which plan is right depends on how many guarantees a team is protecting, and the card
-                    already says that in a number. Three identical buttons let the numbers decide. */}
-                <div style={{ marginTop: 20 }}>
-                  <CTA ghost href={`/checkout?plan=${p.key}&cycle=monthly`}>Choose {p.name}</CTA>
+              </li>
+
+              {PLAN_CATALOG_V1.map((p) => (
+                <li className="v6-pp__card" key={p.key}>
+                  <h3 className="v6-pp__name">{p.name}</h3>
+                  <div className="v6-pp__prow">
+                    <Price amount={money(p.monthlyCents)} unit="per month" cyc="monthly" />
+                    <Price amount={money(p.yearlyCents)} unit="per year" cyc="yearly" />
+                  </div>
+                  <p className="v6-pp__for">{FOR[p.key]}</p>
+                  {/* EVERY CARD HAS A WAY TO SAY YES, for the cycle on show. Checkout takes the plan and the cycle
+                      from the query and sends a signed-out visitor through sign-in and back. No recommended tier:
+                      the three buttons are the same ghost, and the numbers decide. */}
+                  <div className="v6-pp__act">
+                    <span data-cyc="monthly"><CTA ghost href={`/checkout?plan=${p.key}&cycle=monthly`}>Choose {p.name}</CTA></span>
+                    <span data-cyc="yearly"><CTA ghost href={`/checkout?plan=${p.key}&cycle=yearly`}>Choose {p.name}</CTA></span>
+                  </div>
+                  {/* The plan copy is rendered from the library, not retyped: the console's plans and pricing pages
+                      render the same two helpers, so a plan cannot be described two ways. */}
+                  <p className="v6-pp__head">{planHeadline(p)}</p>
+                  <ul className="v6-pp__list" role="list">
+                    {planCapacity(p).map((line) => <li key={line}>{line}</li>)}
+                  </ul>
+                </li>
+              ))}
+            </ul>
+
+            <div className="v6-pp__more">
+              {/* THE PRICE OF ONE RUN, where a plan is weighed against it. Both figures come from the functions
+                  that charge. */}
+              <div className="v6-pp__alt">
+                <h3 className="v6-pp__name">Pay as you go</h3>
+                <Price amount={money(passPriceCents(PASS_INCLUDED_FLOWS))} unit="per verification" />
+                <p className="v6-pp__for">No plan, and nothing renews.</p>
+                <ul className="v6-pp__list" role="list">
+                  <li>{`Up to ${PASS_INCLUDED_FLOWS} flows included`}</li>
+                  <li className="v6-pp__li-price">
+                    <span>Each extra flow</span>
+                    <span className="v6-pp__lamt" data-no-translate>{money(EXTRA_FLOW_CENTS)}</span>
+                  </li>
+                </ul>
+                <div className="v6-pp__act"><CTA ghost>Run a single verification</CTA></div>
+              </div>
+
+              {/* THE WAY PAST THE TOP PLAN, in the same units as the ladder. Only what /enterprise marks
+                  operational is offered here; anything that page marks as preview or planned is not sold on this
+                  one (scripts/guarantee-cap-verify.ts). Not "unlimited", and no price: what a contract costs depends
+                  on volume, browser time, systems, retention and support. */}
+              <div className="v6-pp__alt">
+                <h3 className="v6-pp__name">{`Enterprise: more than ${TOP_GUARANTEES} guarantees, or a contract`}</h3>
+                <p className="v6-pp__cap">Custom guarantee capacity</p>
+                <p className="v6-pp__for">Priced on a written quote.</p>
+                <ul className="v6-pp__list" role="list">
+                  <li>Single sign-on through your own identity provider</li>
+                  <li>Roles, owner-anchored billing and audit export</li>
+                </ul>
+                <div className="v6-pp__act">
+                  <CTA ghost href={`${BASE}/contact?topic=enterprise`}>Talk to sales</CTA>
+                  <a className="v6-pp__mail" href="mailto:sales@vraelis.com?subject=Vraelis%20Enterprise" data-no-translate>sales@vraelis.com</a>
                 </div>
               </div>
-            ))}
-          </Reveal>
-          {/* THE PRICE OF ONE RUN, PUT WHERE THAT COMPARISON IS ACTUALLY MADE.
-              The page carried the idea in a closing line, that a verification can be paid for on its own,
-              and never once carried the number. A reader weighing a monthly plan against a single run was
-              being asked to compare a price with a blank, and the blank always loses. It sits directly
-              under the plans because that is the moment the question gets asked, rather than below the
-              enterprise card where the reader has already been handed off to sales.
-
-              Both figures come from the functions that charge, not from this file. The console credits page
-              once quoted the early-access price from a typed literal while every charging path took the
-              public one, and it went unnoticed because nothing tied the sentence to the maths. */}
-          <Reveal>
-            <div style={{ ...CARD, marginTop: 16 }}>
-              <h3 style={{ ...H3, marginBottom: 6 }}>
-                Pay as you go: {money(passPriceCents(PASS_INCLUDED_FLOWS))} for one verification
-              </h3>
-              <p style={HEADLINE}>No plan, no monthly allowance</p>
-              <p style={{ ...P, marginBottom: 16 }}>
-                One verification covers up to {PASS_INCLUDED_FLOWS} journeys through a single system, and
-                each journey beyond that is {money(EXTRA_FLOW_CENTS)}. Buy one when you need one. Nothing
-                renews, and a run Vraelis refuses to build still costs nothing.
-              </p>
-              <CTA ghost>Run a single verification</CTA>
             </div>
-          </Reveal>
-          {/* THE TIER THAT WAS NOT ON THE PAGE. An agency, a platform team, or anyone with a procurement
-              process reads three self-serve cards, sees a ceiling and no way to say "we need more than
-              that, and we need a contract", and leaves. Every line here is something /enterprise marks
-              Operational: OIDC single sign-on, roles, owner-anchored billing, audit export. SAML is
-              Preview there and SCIM is Planned, so neither is sold here. A card that presents a preview as
-              shipped is the exact failure this product exists to catch, and enterprise buyers check. */}
-          <Reveal>
-            <div style={{ ...CARD, marginTop: 16 }}>
-              <h3 style={{ ...H3, marginBottom: 6 }}>
-                Enterprise: more than {PLAN_CATALOG_V1[PLAN_CATALOG_V1.length - 1].maxGuarantees} guarantees, or a contract
-              </h3>
-              {/* The last rung, in the same units as the other three. Not "Unlimited": what a contract
-                  costs depends on verification volume, browser time, systems, retention and support. */}
-              <p style={HEADLINE}>Custom guarantee capacity</p>
-              <p style={{ ...P, marginBottom: 16 }}>
-                Volume above the listed plans, single sign-on through your own identity provider, roles
-                across a team, owner-anchored billing, and audit activity you can export. Invoicing, a
-                signed agreement and a security review are all available. Written quotes, not a calculator.
-              </p>
-              <CTA ghost href="mailto:sales@vraelis.com?subject=Vraelis%20Enterprise">Talk to sales</CTA>
-            </div>
-          </Reveal>
-          <Reveal>
-            <p style={{ ...P, marginTop: 24 }}>
-              Yearly billing is available at checkout, and a plan that runs out early can be topped up with
-              single verifications at the pay as you go price.
-            </p>
-          </Reveal>
+          </div>
+        </section>
+      </PricingToggle>
+
+      <section className="v6-sec v6-pp__defsec" aria-labelledby="one-h">
+        <div className="v6-wrap">
+          <h2 className="v6-defs__h" id="one-h" data-label="">One verification is</h2>
+          <dl className="v6-defs">
+            {DEFINITION.map(([t, d], i) => (
+              <div className="v6-defs__cell" key={t}>
+                <dt className="v6-defs__t"><span className="v6-defs__n" aria-hidden data-no-translate>{String(i + 1).padStart(2, "0")}</span>{t}</dt>
+                <dd className="v6-defs__d">{d}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </section>
 
-      <section className="v6-sec v6-dark" data-nav-dark>
+      <section className="v6-sec v6-pp-faq" id="questions">
         <div className="v6-wrap">
-          <SectionHead eyebrow="What a verification is" title="One system, verified once, with the evidence kept." />
-          <div className="v6-rows">
-            {WHAT_A_VERIFICATION_IS.map(([t, d], i) => (
-              <Reveal key={t} i={i}>
-                <div className="v6-row">
-                  <span className="v6-row__n">{n2(i)}</span>
-                  <div>
-                    <h3 className="v6-row__t">{t}</h3>
-                    <p className="v6-row__d">{d}</p>
-                  </div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
+          <Faq items={FAQ} />
         </div>
       </section>
 
-      <section className="v6-sec">
+      <section className="v6-sec" id="plainly">
         <div className="v6-wrap">
-          <SectionHead eyebrow="Stated plainly" title="What this pricing does not do." />
-          {/* Light ground, so the row classes need no overrides here. */}
-          <div className="v6-rows">
-            {HONEST.map(([t, d], i) => (
-              <Reveal key={t} i={i}>
-                <div className="v6-row">
-                  <span className="v6-row__n">{n2(i)}</span>
-                  <div>
-                    <h3 className="v6-row__t">{t}</h3>
-                    <p className="v6-row__d">{d}</p>
-                  </div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-          <Reveal>
-            <p className="v6-note">
-              Running past the largest plan, or need invoicing, SSO and a signed agreement? That is the{" "}
-              <ProseLink href={`${BASE}/enterprise`}>enterprise</ProseLink> conversation. What Vraelis
-              cannot do yet is written down on{" "}
-              <ProseLink href={`${BASE}/limitations`}>limitations</ProseLink>.
-            </p>
-          </Reveal>
+          <SectionHead eyebrow="Stated plainly" title="What this pricing does, and what it does not." />
+          <DoesBox
+            titles={{ does: "What this pricing does", doesNot: "What this pricing does not do" }}
+            does={[
+              "Charges per verification: one complete check of one system.",
+              "Bills a re-check after a fix as one verification.",
+              "Lets a plan top up with single verifications at the pay as you go price.",
+            ]}
+            doesNot={[
+              "Charge per seat.",
+              "Charge for a check Vraelis could not build.",
+              "Roll unused verifications over to the next month.",
+              "Lock you into yearly billing.",
+            ]}
+            link={{ label: "Read what Vraelis cannot do yet", href: `${BASE}/limitations` }}
+          />
         </div>
       </section>
+
+      <ClosingScene title="Your first verification is free." />
     </>
   );
 }

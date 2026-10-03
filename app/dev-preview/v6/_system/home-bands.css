@@ -1,6 +1,10 @@
-/* The statement and the agents band (home-bands.tsx). */
+/* The homepage bands (home-bands.tsx): the statement, the agents band, the changelog row, and the proof band.
 
-.v6-stm { background: var(--paper); padding: clamp(40px, 6vw, 96px) var(--gutter); }
+   SPACING (plan C "/", 2026-10-02): no band of empty space taller than 160px between two sections, and no
+   section padding above --sec. Each band below states its own padding. The agents band and the changelog row
+   follow other .v6-dark bands, whose top padding v6.css would drop, so their rhythm lives on their inner box. */
+
+.v6-stm { background: var(--paper); padding: clamp(48px, 6vw, 88px) var(--gutter) clamp(24px, 2.8vw, 40px); }
 .v6-stm__card {
   /* the same edges as every other panel on the page (it was 64px wider each side above about 1730px) */
   max-width: calc(var(--max) - 2 * var(--gutter)); margin: 0 auto; border-radius: 28px; padding: clamp(40px, 7vw, 120px) clamp(28px, 6vw, 110px);
@@ -11,17 +15,22 @@
 .v6-stm__t span[data-on="true"] { color: #FAFAFA; }
 /* a whole word in a language that does not space its words (home-bands.tsx, data-keep) */
 .v6-stm__t span[data-keep] { white-space: nowrap; }
+.v6-stm__src { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.v6-stm__t { position: relative; }
 
-.v6-ag { background: var(--paper); padding: clamp(72px, 9vw, 140px) 0; }
-.v6-ag__in { max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(36px, 6vw, 110px); align-items: center; }
-.v6-ag__h { margin: 0; font-family: var(--display); font-weight: 500; font-size: clamp(2rem, 3.6vw, 3.4rem); line-height: 1.06; letter-spacing: -0.033em; color: var(--ink); max-width: 14ch; }
-.v6-ag__d { margin: 20px 0 0; max-width: 44ch; font-size: clamp(1rem, 1.2vw, 1.12rem); line-height: 1.55; color: var(--ink-3); }
-.v6-ag__cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+/* ── the agents band ── */
+.v6-ag { background: var(--paper); padding: 0; }
+.v6-ag__in { max-width: var(--max); margin: 0 auto; padding: clamp(48px, 5vw, 72px) var(--gutter); display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(36px, 6vw, 110px); align-items: center; }
+/* The section-head size (plan C "/": --t-h2, 40 at 1440, 28 on a phone). */
+.v6-ag__h { margin: 0; font-family: var(--display); font-weight: 500; font-size: var(--t-h2); line-height: 1.12; letter-spacing: -0.016em; color: var(--ink); max-width: 22ch; text-wrap: balance; }
+.v6-ag__d { margin: 16px 0 0; max-width: 44ch; font-size: var(--t-lead-s); line-height: 1.55; color: var(--ink-2); }
+.v6-ag__cta { margin-top: 32px; }
 .v6-ag__term { border-radius: 16px; overflow: hidden; background: #0E0E10; border: 1px solid rgba(255,255,255,0.10);
   box-shadow: 0 40px 100px -50px rgba(0,0,0,0.95); }
-.v6-ag__bar { display: flex; align-items: center; gap: 6px; height: 38px; padding: 0 14px; background: #161618; border-bottom: 1px solid rgba(255,255,255,0.07); }
-.v6-ag__bar span { margin-left: 8px; font-family: var(--mono); font-size: 11.5px; color: #8E9095; }
-.v6-ag__term pre { margin: 0; padding: 20px 22px; font-family: var(--mono); font-size: clamp(12px, 1vw, 13.5px); line-height: 1.75; color: #E4E4E7; white-space: pre-wrap; word-break: break-word; }
+/* the bar names the window in words, as MediaPanel's does: no window dots */
+.v6-ag__bar { display: flex; align-items: center; height: 38px; padding: 0 14px; background: #161618; border-bottom: 1px solid rgba(255,255,255,0.07); }
+.v6-ag__bar span { margin-left: 8px; font-family: var(--mono); font-size: 12px; color: #8E9095; }
+.v6-ag__term pre { margin: 0; padding: 20px 22px; font-family: var(--mono); font-size: 13px; line-height: 1.75; color: #E4E4E7; white-space: pre-wrap; word-break: break-word; }
 /* Comments and prompts are the quiet part of a terminal but still small text: #74767C read at 4.2:1 on this
    ground, #8E9095 (--ink-4) reads at about 6:1 and still sits well under the commands. */
 .v6-ag__term .c, .v6-ag__term .p { color: #8E9095; }
@@ -31,7 +40,7 @@
 .v6-ag__term .nw { white-space: nowrap; }
 .v6-ag__tools { list-style: none; margin: 0; padding: 14px 22px 20px; border-top: 1px solid rgba(255,255,255,0.07); display: grid; gap: 8px; }
 .v6-ag__tools li { display: flex; align-items: baseline; gap: 14px; font-size: 13px; color: #A1A3A9; }
-.v6-ag__tools code { flex: none; min-width: 132px; font-family: var(--mono); font-size: 12.5px; color: #FAFAFA; }
+.v6-ag__tools code { flex: none; min-width: 132px; font-family: var(--mono); font-size: 13px; color: #FAFAFA; }
 @media (max-width: 900px) {
   .v6-ag__in { grid-template-columns: minmax(0, 1fr); }
 }
@@ -40,40 +49,46 @@
   /* On a phone everything in the terminal starts 14px in (the bar's own padding) instead of 22px: the longest
      command line ("curl ... install \", 41 characters) then fits whole down to a 360px screen. */
   .v6-ag__bar span { margin-left: 0; }
-  .v6-ag__term pre { padding: 18px 14px; }
+  .v6-ag__term pre { padding: 18px 14px; font-size: 12px; }
   .v6-ag__tools { padding: 14px 14px 18px; }
 }
 @media (prefers-reduced-motion: reduce) { .v6-stm__t span { transition: none; } }
 
+/* ── the proof band (/platform) ── */
 .v6-pf { background: var(--paper); padding: clamp(72px, 9vw, 140px) 0 clamp(40px, 5vw, 72px); }
 .v6-pf__in { max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); }
 .v6-pf__head { display: flex; align-items: baseline; justify-content: space-between; gap: 24px; flex-wrap: wrap; margin-bottom: clamp(28px, 3.5vw, 48px); }
 .v6-pf__h { margin: 0; font-family: var(--display); font-weight: 500; font-size: clamp(2rem, 3.6vw, 3.4rem); line-height: 1.06; letter-spacing: -0.033em; color: var(--ink); }
 .v6-pf__d { margin: 0; max-width: 40ch; font-size: clamp(1rem, 1.2vw, 1.1rem); line-height: 1.55; color: var(--ink-3); }
-.v6-stm__src { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.v6-stm__t { position: relative; }
+
+/* ── the changelog row (ChangelogRow), after the one near the bottom of cursor.com: a quiet heading, four dated
+   entries in a row, one link to the rest (plan C "/": heading at --t-h3; cards on --surface, radius 16, the date
+   in mono 12 ink-4, the title 15/500; hover changes the border) ── */
+.v6-cl { background: var(--paper); padding: 0; }
+.v6-cl__in { max-width: calc(var(--max) - 2 * var(--gutter)); margin: 0 auto; padding: clamp(40px, 4.4vw, 64px) var(--gutter) 0; box-sizing: content-box; }
+.v6-cl__h { margin: 0 0 20px; font-family: var(--display); font-weight: 500; font-size: var(--t-h3); line-height: 1.2; letter-spacing: -0.012em; color: var(--ink); }
+.v6-cl__list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.v6-cl__item { display: grid; gap: 10px; align-content: start; height: 100%; padding: 20px 20px 22px; border-radius: var(--r-card, 16px); background: var(--surface);
+  border: 1px solid var(--line-soft); text-decoration: none; transition: border-color var(--dur-1, 160ms) var(--ease-out); }
+.v6-cl__item:hover { border-color: var(--line-strong); }
+.v6-cl__item:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
+.v6-cl__date { font-family: var(--mono); font-size: 12px; line-height: 1.45; color: var(--ink-4); }
+.v6-cl__t { font-size: 15px; font-weight: 500; line-height: 1.4; color: var(--ink); }
+.v6-cl__more { margin-top: 20px; }
+@media (max-width: 900px) { .v6-cl__list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .v6-cl__list { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .v6-cl__item { transition: none; } }
+/* The closing follows the changelog row as cursor.com's does: on this page its space above stays within the
+   section rhythm (--sec) instead of the 160px it takes elsewhere, so the two never sit across an empty band. */
+.v6 .v6-cl + .v6-end { padding-top: var(--sec); }
 
 /* Japanese has no spaces, so the browser may break a heading anywhere, in the middle of a word. auto-phrase
    breaks between phrases instead (Chrome 119 and later; other browsers keep today's breaks). This file loads
    on the homepage, so the rule covers the homepage's other headings and the sentence under each of them too.
    (The closing scene, on every page, has its own rule in close.css.) */
-/* The changelog row (ChangelogRow), after the one near the bottom of cursor.com: a plain heading, four dated
-   entries in a row, one link to the rest. */
-.v6-cl { background: var(--paper); padding: clamp(56px, 7vw, 112px) 0 clamp(24px, 3vw, 40px); }
-.v6-cl__in { max-width: calc(var(--max) - 2 * var(--gutter)); margin: 0 auto; padding: 0 var(--gutter); box-sizing: content-box; }
-.v6-cl__h { margin: 0 0 18px; font-family: var(--display); font-weight: 500; font-size: clamp(1.3rem, 1.6vw, 1.6rem); letter-spacing: -0.02em; color: #FAFAFA; }
-.v6-cl__list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-.v6-cl__item { display: grid; gap: 8px; align-content: start; height: 100%; padding: 16px 18px 18px; border-radius: 12px; background: #121214;
-  border: 1px solid rgba(255,255,255,0.07); text-decoration: none; transition: border-color 160ms var(--ease-out), background 160ms var(--ease-out); }
-.v6-cl__item:hover { border-color: rgba(255,255,255,0.2); background: #151517; }
-.v6-cl__item:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
-.v6-cl__date { font-size: 13px; color: #8E9095; }
-.v6-cl__t { font-size: 15px; line-height: 1.4; color: #FAFAFA; }
-.v6-cl__more { display: inline-flex; margin-top: 18px; font-size: 15px; color: #FAFAFA; text-decoration: none; }
-.v6-cl__more:hover { color: #C9CBD1; }
-.v6-cl__arw { margin-left: 6px; transition: transform 180ms var(--ease-out); }
-.v6-cl__more:hover .v6-cl__arw { transform: translateX(3px); }
-.v6-cl__more:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; border-radius: 4px; }
-@media (max-width: 900px) { .v6-cl__list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 520px) { .v6-cl__list { grid-template-columns: minmax(0, 1fr); } }
 :lang(ja) :is(h1, h2, h3, .v6-or__h, .v6-or__d, .v6-stm__t, .v6-sk__t, .v6-sk__d, .v6-ag__d, .v6-pf__d) { word-break: auto-phrase; }
+/* The bands' own headings at their tiers, with the other scripts' leading and no tracking (plan A3). */
+:is(:lang(ja), :lang(zh), :lang(ko)) :is(.v6-ag__h, .v6-cl__h) { letter-spacing: 0; line-height: 1.3; }
+:is(:lang(ja), :lang(zh), :lang(ko)) .v6-ag__h { max-width: 18em; line-height: 1.22; }
+:lang(hi) :is(.v6-ag__h, .v6-cl__h) { line-height: 1.3; }
+:lang(hi) .v6-ag__h { line-height: 1.22; }

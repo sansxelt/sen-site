@@ -1,11 +1,14 @@
 // /llms.txt: the plain-text index an AI assistant reads to learn what Vraelis is and where its docs live.
 //
 // Everything here is generated from the same sources the site renders (positioning.ts for the sentence,
-// coverage.ts for what works today, docs.ts for the pages), so it cannot say something the site does not.
+// coverage.ts for what works today, sectors.ts for the solutions, use-cases.ts for the recorded checks,
+// docs.ts for the pages), so it cannot say something the site does not.
 // The proxy's matcher skips *.txt, so this answers on every host without a rewrite.
 import { stealthConfigured, verifyStealthCookie } from "@/lib/stealth";
 import { SUPPORT } from "@/app/dev-preview/v6/_system/positioning";
 import { SURFACES } from "@/app/dev-preview/v6/_content/coverage";
+import { SECTORS } from "@/app/dev-preview/v6/_content/sectors";
+import { USE_CASES } from "@/app/dev-preview/v6/_content/use-cases";
 import { DOCS, DOC_GROUPS } from "@/app/dev-preview/v6/_content/docs";
 
 const SITE = "https://vraelis.com";
@@ -29,6 +32,20 @@ export function GET(req: Request) {
     "",
     ...SURFACES.map((s) => `- ${s.name} (${tier(s.tier)}): ${s.brief}`),
     "",
+    // The sector pages and the recorded checks, the same lists the menus, the footer and /solutions read. The
+    // URLs are built from the slug: s.href carries V6_BASE, which is a dev-preview path when the site is not
+    // promoted. Each use case keeps its outcome line, which says what was checked (Larkspur is named there as
+    // the simulated console Vraelis built), so a title is never read on its own as a real incident.
+    "## Solutions",
+    "",
+    ...SECTORS.map((s) => `- [${s.label}](${SITE}${s.slug === "enterprise" ? "/enterprise" : `/solutions/${s.slug}`}): ${s.line}`),
+    `- [All solutions](${SITE}/solutions)`,
+    "",
+    "## Use cases",
+    "",
+    ...USE_CASES.map((u) => `- [${u.title}](${SITE}/use-cases/${u.slug}): ${u.outcome}`),
+    `- [All use cases](${SITE}/use-cases)`,
+    "",
     ...DOC_GROUPS.flatMap((g) => [
       `## Docs: ${g}`,
       "",
@@ -39,7 +56,9 @@ export function GET(req: Request) {
     "",
     `- [Every docs page as Markdown](${SITE}/llms-full.txt)`,
     `- [Connect an AI assistant over MCP](${SITE}/agents)`,
-    `- [API and CLI](${SITE}/developers)`,
+    // The API and CLI reference moved from /developers to the docs on 2026-10-02 (plan C, llms routes).
+    `- [The API](${SITE}/docs/api)`,
+    `- [The command line](${SITE}/docs/cli)`,
     `- [What changed](${SITE}/changelog)`,
     "",
   ];

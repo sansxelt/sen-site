@@ -17,12 +17,194 @@
 // are read together and cannot disagree. A changelog is a record of the past; a roadmap sitting inside one
 // eventually reads as though it already happened. The single Direction entry at the foot of this file is the
 // exception and is dated, because on that date the direction itself was the news.
-export type Entry = { date: string; tag: "go" | "wait"; tagLabel: string; title: string; body: string[]; note?: string; href?: string; hrefLabel?: string };
+//
+// THE DATES ARE UTC (2026-10-02). An entry is dated from the commit that shipped it, read with
+// TZ=UTC git log --date=format-local:%Y-%m-%d, so a late-evening commit in California lands on the next day here,
+// exactly as the run records do. Within one day, the later commit sits higher. The text is written from what the
+// code does, never from the commit's subject line: "Hero film: the drone filmed, not simulated" (bc0ae260) shipped
+// a film whose drone is a render, and the entry below says so.
+export type Entry = {
+  date: string; tag: "go" | "wait"; tagLabel: string; title: string; body: string[]; note?: string; href?: string; hrefLabel?: string;
+  /** One real picture for the entry (plan T10): the console as captured, the film's first frame, or a run's own
+   *  screenshot, each a copy in public/site/changelog (sources in its CREDITS.md). src is that public path and w, h
+   *  its size in pixels; alt says what is visible. The bar the page draws above it is words only: `address` on the
+   *  left (machine text, never translated) and `label` on the right, a whole string such as "Captured 2026-10-02"
+   *  (a capture made for this page) or "Recorded 2026-10-02" (the run's own screenshot). `caption` is one sentence
+   *  under it and `run` the record's id, printed after the caption in mono. `evidence` marks a run's own
+   *  screenshot, which is never shown wider than 640px (plan 0.4). */
+  media?: { src: string; alt: string; w: number; h: number; address?: string; label?: string; caption?: string; run?: string; evidence?: boolean };
+};
 
 /** An entry's anchor on /changelog: its date and title, so two entries on one day still differ. */
 export const entryId = (e: Entry) => `${e.date}-${e.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48)}`;
 
 export const CHANGELOG: Entry[] = [
+  // ── 2026-10-03 (UTC), the day the rebuilt site was pushed, written from the code ─────────────────────────────
+  // Plan D, Batch 8: one entry for the rebuild, dated the push day in UTC (if the push slips past 2026-10-04 00:00
+  // UTC, this date moves with it). Every fact is in _content/sectors.ts (the registry the Solutions menu, /solutions
+  // and the footer read; Enterprise keeps /enterprise), _content/sector-pages.ts (each sector page's record view, a
+  // real recorded check), _content/use-cases.ts with use-cases/page.tsx (four records read from strike.ts and
+  // demos.ts, on Larkspur and the Vraelis demo apps), _content/docs.ts (the four "Ways to run" pages, whose
+  // reference material moved there from /developers) and _system/kit.tsx (FrameHero, the homepage film frame's
+  // size). The picture is a capture of /solutions made for this entry (public/site/changelog/CREDITS.md).
+  {
+    date: "2026-10-03",
+    tag: "go",
+    tagLabel: "Shipped",
+    title: "The site, rebuilt around sectors",
+    body: [
+      "The menu at the top now has Solutions, with a page for each sector and team Vraelis checks software for: Defense, Robotics and fleets, Fintech and commerce and Public sector, then AI-built apps, SaaS product teams and Agencies. Enterprise keeps its own page. /solutions lists all eight, and each sector page walks through a real recorded check.",
+      "Use cases, at /use-cases, tell four recorded checks step by step: the sentence, the plan, every step and what each run found. They ran on Larkspur, a simulated mission console Vraelis built, and on three Vraelis demo apps.",
+      "The docs gained four pages under Ways to run: the command line, the API, gating a release in CI, and webhooks. The request and response shapes, the dry run, the gate script and the webhook signature check, which used to sit on the developers page, now live there.",
+      "The product pages, every sector page, /company, /security and /limitations now open on one rounded frame, the same size as the homepage film's.",
+    ],
+    note: "Every check these pages show ran on Larkspur or on a Vraelis demo app, never on a customer's app.",
+    href: "/solutions",
+    hrefLabel: "See every sector",
+    media: {
+      src: "/site/changelog/solutions-index.png", w: 2284, h: 1574,
+      alt: "The Solutions page: the heading “One check, wherever software has to work.”, its lead, and the Sectors group, four cards for Defense, Robotics and fleets, Fintech and commerce and Public sector, each with its picture and one line.",
+      address: "vraelis.com/solutions",
+      label: "Captured 2026-10-03",
+    },
+  },
+  // ── 2026-10-02 to 2026-09-30 (UTC), written on 2026-10-02 from the code and the records ───────────────────
+  // 10c6b20f, with bc0ae260, e761edc1, ef7a9c93 and 1ef74d43. Every fact is in _system/hero.tsx, app/film/CREDITS.md,
+  // public/home/menu/pics/CREDITS.md and _system/shell.tsx (MENUS).
+  {
+    date: "2026-10-02",
+    tag: "go",
+    tagLabel: "Shipped",
+    title: "The homepage film, and menus with a picture for every link",
+    body: [
+      "The homepage film was remade. Our drone, a model rendered by Vraelis, lifts off a pad in a garage and circles the camera while photographed panoramas from Poly Haven change behind it. It holds one place and one size in the frame throughout.",
+      "The last shot, a hand catching a drone on a riverbank, is licensed stock footage from Pexels, reframed so that its drone sits where ours was. Phones get a vertical cut of the same film. With reduced motion on, the first frame stays still and the film is not downloaded, and the film can always be paused.",
+      "The menus at the top now show a picture beside their links, and it changes to the picture of the link you point at or focus. The pictures are frames of the film, licensed photographs and a screenshot from a real check. Near the end of the homepage, a row now lists the latest entries from this page.",
+    ],
+    note: "The film is an illustration. It shows no check and claims no result.",
+    media: {
+      src: "/site/changelog/film-first-frame.jpg", w: 1360, h: 765,
+      alt: "Our drone on its landing pad on a garage floor: the first frame of the homepage film, a render made for Vraelis.",
+      caption: "The film's first frame, cropped. Our drone is rendered by Vraelis, and the garage is a Poly Haven panorama.",
+    },
+  },
+  // 33313e75, with the fixture from dce43dc9 (lib/fixtures/strike-console.ts). Every fact is in _content/strike.ts,
+  // the record of run vrf_51705517.
+  {
+    date: "2026-10-02",
+    tag: "go",
+    tagLabel: "Shipped",
+    title: "A real check of a simulated mission console",
+    body: [
+      "Larkspur is a simulated mission console that Vraelis built and serves as a demo fixture. It tracks four contacts on a map and follows one rule: only a hostile contact the operator has confirmed may show Cleared to engage. In its broken mode, confirming T-1 also clears the civilian bus T-3, which is parked in the same grid square.",
+      "The homepage now walks through one real check of it, recorded on 2026-10-02: the command that asked for it, the plan a person approved, the steps the browser took and what it found. At step 8 the bus showed Cleared to engage. Every value shown comes from the run's own record.",
+    ],
+    note: "Nothing in Larkspur controls hardware. Vraelis does not make mission software: it checks it, on a simulation or a staging build.",
+    href: "/use-cases/only-the-confirmed-target",
+    hrefLabel: "Read the record",
+    media: {
+      src: "/site/changelog/larkspur-run.png", w: 962, h: 754, evidence: true,
+      alt: "The Larkspur console after the operator confirmed T-1: in the contact list, T-1, the armoured vehicle, and T-3, the civilian bus, both show Cleared to engage, and on the map both sit in grid square B3.",
+      address: "vraelis.com/api/fixtures/strike?mode=broken",
+      label: "Recorded 2026-10-02",
+      caption: "The run's own screenshot, cropped to the contacts and the map.",
+      run: "vrf_51705517",
+    },
+  },
+  // 496ca8a3 (lib/onboarding.ts, onboarding-card.tsx, setup-checklist.tsx), 09bbf949 (guaranteeFreshness and the
+  // record labels in lib/v-audit.ts) and 3f2e4463 (_system/hero.tsx: /app?new=1&url=).
+  {
+    date: "2026-10-02",
+    tag: "go",
+    tagLabel: "Shipped",
+    title: "Console onboarding questions, and guarantees that say when they were checked",
+    body: [
+      "The console's Overview now asks an account that is still setting up three questions, once: what you want to check first, how you build, and who looks at the results. Every answer is optional, and Save or Skip puts the card away for good.",
+      "The answers shape the setup checklist. Someone who builds with a coding agent is asked to connect it second, not after reading the first record. A team is asked to invite a teammate, and an agency to give its client read-only access. The choices stay within what is built: a web app or a device's control panel can be checked, and a desktop or mobile app says it is not built yet.",
+      "A guarantee now says when it was last checked, and says so when its system has been checked again since. In Records, an event about a check names its system, shows the sentence a run checked, and opens the record. The address field on the homepage opens the console's composer with the address already filled in.",
+    ],
+    media: {
+      src: "/site/changelog/onboarding.png", w: 1876, h: 754,
+      alt: "The Set up Vraelis card on the console's Overview: What do you want to check first, How do you build and Who looks at the results, each with one-tap answers, then Save and Skip.",
+      address: "app.vraelis.com",
+      label: "Captured 2026-10-02",
+    },
+  },
+  // e626f96e (v6.css, pagekit.css, public/vraelis/authenticated.css and styles.css, app/globals.css, shell.tsx).
+  {
+    date: "2026-10-01",
+    tag: "go",
+    tagLabel: "Shipped",
+    title: "Black site, docs and console",
+    body: [
+      "The site, the docs, sign-in and the console now share one black ground. Cards sit a step above it with a visible hairline, the main action on a page is white, and text keeps clear steps of grey. It replaces the lighter console from September 30.",
+      "The colours that carry a result were tuned for black, so a check that held, one that needs a person and one that failed still read apart. Selected text is inverted everywhere, and the phone menu no longer lets the page behind it scroll.",
+    ],
+    media: {
+      src: "/site/changelog/console.png", w: 2360, h: 880,
+      alt: "The console on its black ground: the bar, the sidebar and the Systems page with one system, Notewell.",
+      address: "app.vraelis.com/systems",
+      label: "Captured 2026-10-02",
+    },
+  },
+  // 832acebf (5d136273) and b7a7103f: lib/two-step.ts (TOTP_DIGITS, EMAIL_CODE_TTL_S, RECOVERY_CODE_COUNT),
+  // lib/two-step-db.ts, lib/two-step-session.ts, app/api/v/two-step/route.ts, account/two-step-section.tsx.
+  {
+    date: "2026-10-01",
+    tag: "go",
+    tagLabel: "Shipped",
+    title: "Two-step verification",
+    body: [
+      "An account can now turn on two-step verification from its Account page, with an authenticator app, codes sent by email, or both. Turning it on gives ten recovery codes, shown once.",
+      "Once it is on, every way of signing in asks for a code: a password, Google, GitHub and single sign-on. The code is checked on the server, an emailed code works once and for ten minutes, and changing the setting later needs a current code.",
+    ],
+    note: "It is set for each account. An organization cannot require it of its members.",
+    media: {
+      src: "/site/changelog/two-step.png", w: 1402, h: 788,
+      alt: "The Two-step verification section of the Account page: Status Off, Authenticator app Not set up with a Set up button, and Email codes Off with a Turn on button. The account's email address is masked.",
+      address: "app.vraelis.com/account",
+      label: "Captured 2026-10-02",
+    },
+  },
+  // 3e7fcd3d: lib/i18n/locales.ts (READY_LOCALES), components/language-controller.tsx, lib/i18n/client.ts,
+  // components/english-only-notice.tsx.
+  {
+    date: "2026-10-01",
+    tag: "go",
+    tagLabel: "Shipped",
+    title: "Twelve languages",
+    body: [
+      "One language switch now changes the site, the docs, sign-in and the console together. They read in English, German, Spanish, French, Hindi, Indonesian, Italian, Japanese, Korean, Dutch, Portuguese and Chinese.",
+      "The choice travels on every link, so a shared link opens in the language it was read in, including on the way into the console. A browser remembers it only when Preferences is on in the privacy choices.",
+      "Legal pages stay in English, with a note in the reader's language that the English text is the one that applies.",
+    ],
+    note: "Pages are written in English and translated in the browser. A sentence that has no translation yet shows in English, never as a blank.",
+    media: {
+      src: "/site/changelog/languages.png", w: 1876, h: 856,
+      alt: "The console's setup checklist, read in Japanese.",
+      address: "app.vraelis.com/?lang=ja",
+      label: "Captured 2026-10-02",
+    },
+  },
+  // 4d80a640 (47884651): app/_components/privacy-choices.tsx, lib/privacy-choice.ts, /cookies and /acceptable-use.
+  {
+    date: "2026-09-30",
+    tag: "go",
+    tagLabel: "Shipped",
+    title: "Privacy choices",
+    body: [
+      "Vraelis now asks before it stores or sends anything optional. The same question appears on the site, the docs, sign-in and the console, with three categories: Preferences, Analytics and Advertising measurement. Each stays off until a person turns it on.",
+      "Essential only and Save my choices are the same size. A browser that sends Global Privacy Control keeps every optional category off. The legal pages ask in a bar at the foot of the page, so they can be read first.",
+      "Privacy choices, in the footer of the site, the docs, the account screens and the console, opens the question again. A cookie policy lists every cookie and storage key the code sets, and the acceptable use policy has its own page.",
+    ],
+    media: {
+      src: "/site/changelog/privacy.png", w: 1168, h: 1442,
+      alt: "The privacy choices dialog over the console: Essential is always on; Preferences, Analytics and Advertising measurement are off; Essential only and Save my choices are two buttons of the same size.",
+      address: "app.vraelis.com/systems",
+      label: "Captured 2026-10-02",
+    },
+  },
+  // ── the entries below were written before 2026-10-02 and stay exactly as written: they are records ───────────
   {
     date: "2026-09-30",
     tag: "go",
@@ -194,7 +376,7 @@ export const CHANGELOG: Entry[] = [
     body: [
       "One line puts a vraelis command on the PATH, on macOS, Linux and Windows. It signs in and stores a key, says which credential is winning when a machine holds more than one, and exits 0, 1 or 2 for Verified, Failed and Blocked, so a deploy can be gated on the exit code alone. The installer is served as plain text so it can be read before it is run.",
     ],
-    note: "Installed by script. The npm package is prepared but is not published, so nothing here is available with npm install yet.",
+    note: "Installed by script. The npm package is prepared but not published yet, so the script is the only way to install it for now.",
   },
   {
     date: "2026-07-26",

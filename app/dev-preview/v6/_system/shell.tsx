@@ -1,13 +1,15 @@
 "use client";
 
-// Shared public shell for design 06: one nav, one Resources mega-menu, one mobile full-screen nav, one
-// footer, one route transition, used by every v6 route. Sticky nav goes transparent -> blurred on scroll and
-// flips to a dark treatment over graphite (live-work) sections. Client-side nav with prefetch (next/link).
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FocusEvent as ReactFocusEvent, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
+// Shared public shell for design 06: one bar (three menus and a Pricing link), one phone drawer, one footer,
+// one route transition, used by every v6 route. The bar stays put and takes the colour of whatever is under it.
+// Client-side navigation with prefetch (next/link).
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FocusEvent as ReactFocusEvent, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SiteFooter } from "./close";
+import { SECTOR_GROUPS, sectorsIn, SOLUTIONS_HREF } from "../_content/sectors";
+import { CHANGELOG, entryId } from "../_content/changelog";
 import { useGroundColor } from "@/components/use-ground-color";
 import { V6_BASE, V6_HOME, V6_APP, v6SignInPath, v6GroundAtTop, v6ShouldPrefetch, GROUND_CSS } from "@/lib/v6-routes";
 import { analyticsAllowed, onPrivacyChoiceChange } from "@/lib/privacy-choice";
@@ -25,110 +27,115 @@ const SIGNIN = v6SignInPath();
 // Account creation is the same screen in its sign-up mode, landing in the console afterwards.
 const SIGNUP = `${SIGNIN}&mode=signup`;
 
-// THE MENUS, AFTER SCALE.COM'S (founder, 2026-10-01: "hover over each of the subjects in the top"). Each menu
-// is at most two columns of big plain links under small grey group names, and a large rounded picture on the
-// right. Every link has its own picture, and pointing at a link (or focusing it) puts its picture in the
-// panel, the way scale.com's menus do. Resources shows two featured cards instead, as scale.com's does.
-// The founder also asked for the top of the site to be less crowded, so each menu was trimmed to two columns:
-// the legal pages left the Company menu (the footer carries them), and nothing is listed twice.
+// THE MENUS (plan S3, 2026-10-02). Left to right: Product, Solutions and Resources open a panel; Pricing is a
+// plain link. A panel is two groups of large plain links under small grey group names, and one picture on the
+// right that becomes the picture of whichever link is pointed at or focused, as scale.com's menus do (the
+// founder, 2026-10-01: "hover over each of the subjects in the top"). Resources shows two cards in that same
+// box instead. Every link keeps a one-line `d`, which only the phone drawer prints.
 //
-// The pictures (public/home/menu/pics, 1400x700) are frames of the homepage film or licensed photographs
-// (Pexels and Unsplash licences; sources in public/home/menu/pics/CREDITS.md).
+// ONE BOX, ONE HEIGHT, IN EVERY MENU. The picture (or the pair of cards) is min(705px, 49vw) wide and half as
+// tall, the links are always shorter than it, and the panel is that box plus its padding. Moving from one menu
+// to the next changes what is inside the panel, never its height or the box's place (nav.css, "the panel").
+//
+// THE SOLUTIONS MENU IS THE SECTOR REGISTRY. Its groups, names, links, lines and pictures are read from
+// _content/sectors.ts, the one list the footer, the homepage and the sector pages read too. Nothing about a
+// sector is typed in this file.
+//
+// THE PICTURES. `pic` is a name in public/home/menu/pics (the first menus' set, 1400x700; sources in its
+// CREDITS.md) or a full public path (public/site/menu, made for this plan, and public/site/nav, made for these
+// menus; each folder has its CREDITS.md). A link's picture previews the page it opens where one exists: each
+// sector shows its own hero's source; AI assistants, API and CI, and Integrations show those pages' hero panels;
+// How a check works shows the Larkspur capture; Console shows a plan in the console and CLI the CLI's own help
+// screen. Nothing in a menu is a stock photograph (plan A1.3): where a page has no picture of its own, our own
+// film renders stand in (the ridge for what it can reach, the pad for what is built, the plaza at night for the
+// limitations), and the changelog card shows the newest entry's own picture.
 type MLink = { t: string; d?: string; href: string; pic?: string };
-type Group = { h: string; links: MLink[]; col?: 1 | 2 };
-type Card = { title: string; href: string; pic: string };
-type Menu = { label: string; groups: Group[]; cards?: Card[] };
+type Group = { h: string; links: MLink[] };
+type Card = { label: string; title: string; href: string; pic: string };
+type Menu = { label: string; groups: Group[]; cards?: Card[]; foot?: MLink };
+
+const picSrc = (p: string) => (p.startsWith("/") ? p : `/home/menu/pics/${p}.jpg`);
+// The box is min(705px, 49vw) wide (nav.css); the two cards share it.
+const PIC_SIZES = "(max-width: 1440px) 49vw, 705px";
+const CARD_SIZES = "(max-width: 1440px) 23vw, 330px";
+// A picture that does not load (a file not delivered yet, a deploy that lost one) shows this one instead of an
+// empty box: our own render, the drone over the garage floor.
+const PIC_FALLBACK = "platform-overview";
+
+// The newest changelog entry, for the second Resources card. Read, never copied, so the card cannot go stale.
+const LATEST = CHANGELOG[0];
 
 const MENUS: Menu[] = [
   {
-    label: "Platform",
+    label: "Product",
     groups: [
-      { h: "Understand", links: [
+      { h: "The check", links: [
         { t: "Platform overview", d: "What the product does", href: BASE + "/platform", pic: "platform-overview" },
-        { t: "What it can reach", d: "Web apps, and devices through their panels", href: BASE + "/platform#coverage", pic: "what-it-can-reach" },
-        // One name for one thing: the label, the slug, the page title and the console all say Guarantee, and the
-        // description says what one is in the public story: a claim saved so it can be checked again.
-        { t: "Guarantees", d: "A claim saved to check again", href: BASE + "/docs/guarantees", pic: "guarantees" },
-        { t: "Systems", d: "Everything you have connected", href: BASE + "/docs/systems", pic: "systems" },
+        { t: "How a check works", d: "From one sentence to an answer with evidence", href: BASE + "/platform#how", pic: "/site/menu/how-a-check-works.jpg" },
+        { t: "What it can reach", d: "Web apps, and devices through their panels", href: BASE + "/platform#coverage", pic: "re-checks" },
+        { t: "What is built", d: "The live list beside the planned one", href: BASE + "/platform#current", pic: "the-loop" },
+        { t: "Limitations", d: "What it does not do, in plain words", href: BASE + "/limitations", pic: "guarantees" },
       ] },
-      { h: "Verify", col: 2, links: [
-        { t: "Execution", d: "A real browser on the live app", href: BASE + "/docs/run-activity", pic: "execution" },
-        { t: "Findings", d: "What broke, and how to reproduce it", href: BASE + "/docs/findings", pic: "findings" },
-        { t: "Completion", d: "What a check tells you", href: BASE + "/docs/completion", pic: "completion" },
-      ] },
-      { h: "Resolve", col: 2, links: [
-        { t: "Approving a plan", d: "The step only a person takes", href: BASE + "/docs/review", pic: "approving-a-plan" },
-        { t: "Repair", d: "The repair prompt, and where it goes", href: BASE + "/docs/repair", pic: "repair" },
-        { t: "Re-checks", d: "The same plan again after a fix", href: BASE + "/docs/recheck", pic: "re-checks" },
+      { h: "Ways in", links: [
+        { t: "Console", d: "Write, approve and read in the app", href: BASE + "/docs/getting-started", pic: "/site/nav/console.jpg" },
+        { t: "CLI", d: "One command, one exit code", href: BASE + "/docs/cli", pic: "/site/nav/cli.jpg" },
+        { t: "API and CI", d: "Gate a release on the answer", href: BASE + "/developers", pic: "/site/menu/developers.jpg" },
+        { t: "AI assistants", d: "Setup over MCP", href: BASE + "/agents", pic: "/site/menu/agents.jpg" },
+        { t: "Integrations", d: "Where a check starts and where the answer lands", href: BASE + "/integrations", pic: "/site/menu/integrations.jpg" },
       ] },
     ],
   },
   {
-    label: "Integrations",
-    groups: [
-      { h: "Start a check", links: [
-        { t: "Console", d: "Write, approve and read in the app", href: BASE + "/docs/getting-started", pic: "console" },
-        { t: "CLI", d: "One command, one exit code", href: BASE + "/developers#cli", pic: "cli" },
-        { t: "CI and the API", d: "Gate a release on the decision", href: BASE + "/developers#api", pic: "ci-and-the-api" },
-        { t: "AI assistants", d: "Setup over MCP", href: BASE + "/agents", pic: "ai-assistants" },
-        { t: "GitHub Actions and Vercel", d: "Check a deploy, gate a release", href: BASE + "/integrations", pic: "github-actions-and-vercel" },
-      ] },
-      { h: "Deliver the answer", col: 2, links: [
-        { t: "Webhooks", d: "verification.completed", href: BASE + "/developers#webhooks", pic: "webhooks" },
-        { t: "Slack", d: "Where a decision lands", href: BASE + "/integrations", pic: "slack" },
-      ] },
-      { h: "The loop", col: 2, links: [
-        { t: "The whole loop", d: "Verify, approve, run, re-check", href: BASE + "/docs/the-loop", pic: "the-loop" },
-      ] },
-    ],
+    label: "Solutions",
+    groups: SECTOR_GROUPS.map((g) => ({
+      h: g,
+      links: sectorsIn(g).map((s) => ({ t: s.label, d: s.line, href: s.href, pic: s.pics.menu })),
+    })),
+    foot: { t: "All solutions", href: SOLUTIONS_HREF },
   },
   {
     label: "Resources",
     groups: [
       { h: "Learn", links: [
-        { t: "Documentation", d: "Use Vraelis", href: BASE + "/docs" },
-        { t: "Vraelis Method", d: "The worldview behind the product", href: BASE + "/method" },
-        { t: "README", d: "Why Vraelis exists", href: BASE + "/readme" },
+        { t: "Documentation", d: "How to use Vraelis", href: BASE + "/docs" },
+        { t: "Developers", d: "The API, the CLI and webhooks", href: BASE + "/developers" },
         { t: "Research", d: "Methodology and open questions", href: BASE + "/research" },
-      ] },
-      { h: "Build", col: 2, links: [
-        { t: "Developer docs", d: "Build on the API", href: BASE + "/developers" },
+        { t: "Use cases", d: "Real checks, each with its record", href: BASE + "/use-cases" },
+        { t: "The Vraelis Method", d: "The worldview behind the product", href: BASE + "/method" },
         { t: "Changelog", d: "What shipped, dated", href: BASE + "/changelog" },
       ] },
-      { h: "Trust", col: 2, links: [
-        { t: "Security", d: "Architecture and data handling", href: BASE + "/security" },
-        { t: "System status", d: "What is operational", href: BASE + "/security#status" },
-        { t: "What is built", d: "The live list beside the planned one", href: BASE + "/platform#current" },
-      ] },
-    ],
-    cards: [
-      { title: "A real check of a mission console: the civilian bus was cleared too.", href: BASE + "/#how-a-check-works", pic: "card-drone-check" },
-      { title: "The Vraelis Method: the builder cannot be the only judge.", href: BASE + "/method", pic: "card-method" },
-    ],
-  },
-  {
-    label: "Company",
-    groups: [
       { h: "Company", links: [
-        { t: "About Vraelis", d: "Who is building this", href: BASE + "/company", pic: "about" },
-        { t: "Who it is for", d: "And who it is not for yet", href: BASE + "/company#who", pic: "who-it-is-for" },
-        { t: "How this is different", d: "Against the categories, not the companies", href: BASE + "/company#different", pic: "how-this-is-different" },
-        { t: "Why Vraelis exists", d: "The README", href: BASE + "/readme", pic: "why-vraelis-exists" },
-        { t: "Contact", d: "Talk to the team", href: BASE + "/company#contact", pic: "contact" },
+        { t: "About", d: "Who is building this", href: BASE + "/company" },
+        { t: "Contact", d: "A person reads every message", href: BASE + "/contact" },
+        { t: "Security", d: "Architecture and data handling", href: BASE + "/security" },
+        { t: "Reddit partnership", d: "Audience and advertising record", href: BASE + "/partnerships/reddit" },
+        { t: "ByteDance partnership", d: "TikTok's parent company, Seed models", href: BASE + "/partnerships/bytedance" },
       ] },
-      { h: "Partnerships", col: 2, links: [
-        { t: "Reddit partnership", d: "Audience and advertising record", href: BASE + "/partnerships/reddit", pic: "reddit-partnership" },
-        { t: "ByteDance partnership", d: "TikTok's parent company, Seed models", href: BASE + "/partnerships/bytedance", pic: "bytedance-partnership" },
-      ] },
-      { h: "Updates", col: 2, links: [
-        { t: "What is built", d: "The live list beside the planned one", href: BASE + "/platform#current", pic: "what-is-built" },
-        // The strongest evidence section on the site had zero inbound links: it sat at the foot of /method.
-        { t: "In public", d: "Reported incidents, sourced", href: BASE + "/method#in-public", pic: "in-public" },
-        { t: "Changelog", d: "What shipped, dated", href: BASE + "/changelog", pic: "changelog" },
-      ] },
+    ],
+    // Larkspur is a simulated console Vraelis built itself, and the card says so. The changelog card names the
+    // entry and no date: a partnership entry at the top of the feed must not put its date on a new surface. Its
+    // picture is the entry's own (`media`), so card and entry always agree; an entry without one shows our render.
+    cards: [
+      { label: "A real check", title: "On a simulated console Vraelis built, confirming one target also cleared a civilian bus.", href: BASE + "/#how-a-check-works", pic: "card-drone-check" },
+      ...(LATEST ? [{ label: "Latest in the changelog", title: LATEST.title, href: `${BASE}/changelog#${entryId(LATEST)}`, pic: LATEST.media?.src ?? PIC_FALLBACK }] : []),
     ],
   },
 ];
+const PRICING = { label: "Pricing", href: BASE + "/pricing" };
+const MEGA_ID = "v6-mega";
+
+/** Every picture of a menu's links, first link first, each once. */
+function menuPics(menu: Menu): string[] {
+  return [...new Set(menu.groups.flatMap((g) => g.links).flatMap((l) => (l.pic ? [l.pic] : [])))];
+}
+
+// What the first look at each menu needs: its first link's picture, or the two cards. Fetched once the page has
+// settled on a desktop, so the first menu a reader opens shows its picture instead of an empty box.
+const WARM_PICS: { src: string; sizes: string }[] = MENUS.flatMap((m) =>
+  m.cards
+    ? m.cards.map((c) => ({ src: picSrc(c.pic), sizes: CARD_SIZES }))
+    : menuPics(m).slice(0, 1).map((p) => ({ src: picSrc(p), sizes: PIC_SIZES })),
+);
 
 function Brand() {
   const pathname = usePathname();
@@ -160,24 +167,37 @@ function Brand() {
   );
 }
 
-// ONE persistent night shell. Switching top-level items keeps the shell open and crossfades only its
-// contents. Every picture of the open menu is mounted at once, so pointing at a link swaps the picture with no
-// wait; the one for the link last pointed at (or focused) shows, and the menu's first link's shows on opening.
+// ONE PERSISTENT PANEL. Switching top-level items keeps the panel open and fades in only its contents; the
+// picture box keeps its size and place. Every picture of the open menu is mounted at once, so pointing at a
+// link swaps the picture with no wait: the incoming one fades in over 240ms and settles from 1.015 to 1 over
+// 480ms (plan A6), and the link it belongs to stays lit. The first link's picture shows on opening.
 function MegaShell({ index, state, onNavigate }: { index: number; state: "in" | "out"; onNavigate: () => void }) {
   const menu = MENUS[index];
-  const pics = menu.groups.flatMap((g) => g.links).flatMap((l) => (l.pic ? [l.pic] : []));
+  const pics = menuPics(menu);
   const [pic, setPic] = useState<string | null>(pics[0] ?? null);
   const [shownMenu, setShownMenu] = useState(index);
+  // Pictures that failed to load, shown as PIC_FALLBACK instead.
+  const [lost, setLost] = useState<readonly string[]>([]);
   if (shownMenu !== index) { setShownMenu(index); setPic(pics[0] ?? null); }
-  const cols = ([1, 2] as const).map((c) => menu.groups.filter((g) => (g.col ?? 1) === c)).filter((c) => c.length > 0);
-  // The links start under the first item of the bar, as scale.com's do, not under the wordmark.
+  const point = (l: MLink) => { if (l.pic) setPic(l.pic); };
+  const srcOf = (p: string) => picSrc(lost.includes(p) ? PIC_FALLBACK : p);
+  const onLost = (p: string) => () => setLost((cur) => (p === PIC_FALLBACK || cur.includes(p) ? cur : [...cur, p]));
+  // The links start under the first item of the bar, as scale.com's do, not under the wordmark. Under 1200px that
+  // indent would squeeze the picture box in the menus with longer link names, so there every menu starts its
+  // links at the page gutter instead: the same in every menu, so nothing jumps between them. If a menu's links
+  // are still too wide for the box (a long translation), they give back what the box needs, down to the gutter.
   const grid = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const g = grid.current, first = document.querySelector<HTMLElement>(".v6-nav__item");
     if (!g || !first) return;
     const set = () => {
       g.style.paddingLeft = "";
-      g.style.paddingLeft = `${Math.max(0, first.getBoundingClientRect().left - g.getBoundingClientRect().left)}px`;
+      const gutter = parseFloat(getComputedStyle(g).paddingLeft) || 0;
+      const indent = window.innerWidth < 1200 ? gutter : Math.max(gutter, first.getBoundingClientRect().left - g.getBoundingClientRect().left);
+      g.style.paddingLeft = `${indent}px`;
+      const box = g.querySelector<HTMLElement>(".v6-mega__media, .v6-mega__cards");
+      const short = box ? Math.min(705, window.innerWidth * 0.49) - box.getBoundingClientRect().width : 0;
+      if (short > 0.5) g.style.paddingLeft = `${Math.max(gutter, indent - short)}px`;
     };
     set();
     window.addEventListener("resize", set);
@@ -187,35 +207,41 @@ function MegaShell({ index, state, onNavigate }: { index: number; state: "in" | 
     <div className="v6-mega" data-state={state}>
       <div className="v6-mega__panel">
         <div ref={grid} className="v6-mega__grid" key={menu.label} data-cards={menu.cards ? "true" : undefined}>
-          {cols.map((groups, ci) => (
-            <div key={ci} className="v6-mega__col">
-              {groups.map((g) => (
-                <div key={g.h} className="v6-mega__grp">
-                  <p className="v6-mega__col-h">{g.h}</p>
-                  {g.links.map((l) => (
-                    <Link key={l.t} href={l.href} className="v6-mega__link" onClick={onNavigate}
-                      onMouseEnter={() => { if (l.pic) setPic(l.pic); }} onFocus={() => { if (l.pic) setPic(l.pic); }}>
-                      <span className="v6-mega__lt">{l.t}</span>
+          {menu.groups.map((g, gi) => (
+            <div key={g.h} className="v6-mega__col">
+              <p className="v6-mega__col-h" id={`${MEGA_ID}-${index}-${gi}`}>{g.h}</p>
+              <ul className="v6-mega__list" aria-labelledby={`${MEGA_ID}-${index}-${gi}`}>
+                {g.links.map((l) => (
+                  <li key={l.t}>
+                    <Link href={l.href} className="v6-mega__link" data-on={l.pic !== undefined && l.pic === pic ? "true" : undefined}
+                      onClick={onNavigate} onMouseEnter={() => point(l)} onFocus={() => point(l)}>
+                      {l.t}
                     </Link>
-                  ))}
-                </div>
-              ))}
+                  </li>
+                ))}
+              </ul>
             </div>
           ))}
+          {menu.foot ? (
+            <Link href={menu.foot.href} className="v6-mega__foot" onClick={onNavigate}>
+              {menu.foot.t}<span className="v6-arw" aria-hidden="true">→</span>
+            </Link>
+          ) : null}
           {menu.cards ? (
             <div className="v6-mega__cards">
               {menu.cards.map((c) => (
                 <Link key={c.href} href={c.href} className="v6-mega__card" onClick={onNavigate}>
-                  <span className="v6-mega__cpic"><Image src={`/home/menu/pics/${c.pic}.jpg`} alt="" fill sizes="(max-width: 1400px) 24vw, 340px" /></span>
+                  <span className="v6-mega__cpic"><Image src={picSrc(c.pic)} alt="" fill sizes={CARD_SIZES} /></span>
+                  <span className="v6-mega__clabel">{c.label}</span>
                   <span className="v6-mega__ct">{c.title}</span>
                 </Link>
               ))}
             </div>
           ) : (
-            <div className="v6-mega__media" aria-hidden>
+            <div className="v6-mega__media" aria-hidden="true">
               {pics.map((p) => (
-                <Image key={p} src={`/home/menu/pics/${p}.jpg`} alt="" fill sizes="(max-width: 1440px) 49vw, 705px"
-                  className="v6-mega__pic" data-on={p === pic} loading="eager" />
+                <Image key={p} src={srcOf(p)} alt="" fill sizes={PIC_SIZES} className="v6-mega__pic" data-on={p === pic}
+                  loading="eager" onError={onLost(p)} />
               ))}
             </div>
           )}
@@ -243,7 +269,8 @@ function themeAtTop(pathname: string): boolean {
 export function V6Nav({ authed = false }: { authed?: boolean }) {
   const pathname = usePathname() || "";
   const navRef = useRef<HTMLElement>(null);
-  const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  // The bar's top items in order: the three menu buttons, then the Pricing link.
+  const itemRefs = useRef<(HTMLElement | null)[]>([]);
   const megaRef = useRef<HTMLDivElement>(null);
   const burgerRef = useRef<HTMLButtonElement>(null);
   const [scrolled, setScrolled] = useState(false);
@@ -257,6 +284,18 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
   const exitT = useRef(0);
   // whichever panel is on screen: the open one, or the one still animating out
   const shown = open ?? exiting;
+
+  // THE FIRST PICTURE OF EACH MENU IS FETCHED BEFORE ANYONE ASKS FOR IT. A panel mounts its pictures when it
+  // opens, so the first menu a reader opened showed an empty box until its picture arrived. A desktop page
+  // fetches the four first looks (WARM_PICS) once it has settled, or as soon as the pointer reaches the bar,
+  // at the size the panel asks for, so opening a menu finds them in the cache. A phone never shows the panel
+  // and fetches nothing.
+  const [warm, setWarm] = useState(false);
+  useEffect(() => {
+    if (!window.matchMedia("(min-width: 941px)").matches) return;
+    const t = window.setTimeout(() => setWarm(true), 2500);
+    return () => window.clearTimeout(t);
+  }, []);
 
   // THE BAR CHANGES FORM AT 940px, AND WHATEVER IS OPEN MUST NOT SURVIVE THE CROSSING.
   //
@@ -428,7 +467,17 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
     // switching top-level items keeps the shell open and only crossfades its contents
     setOpen(i);
   }, []);
-  const scheduleClose = useCallback(() => { closeT.current = window.setTimeout(() => close(null), 160); }, [close]);
+  // One pending close at a time: leaving the panel and the bar together used to start two, and coming back
+  // cleared only the second, so the first still closed the menu under the returning pointer.
+  const scheduleClose = useCallback(() => {
+    window.clearTimeout(closeT.current);
+    closeT.current = window.setTimeout(() => close(null), 160);
+  }, [close]);
+  // POINTING IS A MOUSE'S. Opening on hover, and closing when the pointer leaves, listen to pointer events and
+  // only to a mouse: a finger on a tablet held sideways "enters" and "leaves" with every tap, which opened a menu
+  // and then closed it again a moment later. Pointer events also come in one order, the leaving before the
+  // entering, so moving from an open panel straight onto another menu's button cancels the close it started.
+  const mouseOnly = (fn: () => void) => (e: ReactPointerEvent) => { if (e.pointerType === "mouse") fn(); };
 
   // THE BAR AND THE PAGE MUST TURN OVER IN THE SAME FRAME.
   //
@@ -458,11 +507,11 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
     return () => cancelAnimationFrame(id);
   }, [pathname]);
 
-  // THE KEYBOARD. The open menu's panel comes after all four buttons in the page, so Tab from an open button
+  // THE KEYBOARD. The open menu's panel comes after all the top items in the page, so Tab from an open button
   // used to walk the other buttons and then out of the bar, leaving the panel open over the hero's address
   // field for good. Now Tab from an open button goes into its panel, Tab off the panel's last link closes it
-  // and moves on to the next button, Shift+Tab walks back out the same way, and focus leaving the bar (or
-  // landing on another button) closes whatever is open.
+  // and moves on to the next top item (the next menu, or Pricing after Resources), Shift+Tab walks back out the
+  // same way, and focus leaving the bar (or landing on another top item) closes whatever is open.
   const focusables = () => Array.from(megaRef.current?.querySelectorAll<HTMLElement>("a[href], button:not([disabled])") ?? []);
   const onItemKey = (i: number) => (e: ReactKeyboardEvent) => {
     if (e.key !== "Tab" || e.shiftKey || open !== i) return;
@@ -473,24 +522,49 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
     if (e.key !== "Tab" || shown === null) return;
     const list = focusables();
     const at = list.indexOf(document.activeElement as HTMLElement);
-    if (e.shiftKey && at === 0) { e.preventDefault(); btnRefs.current[shown]?.focus(); return; }
+    if (e.shiftKey && at === 0) { e.preventDefault(); itemRefs.current[shown]?.focus(); return; }
     if (!e.shiftKey && at === list.length - 1) {
       e.preventDefault();
       const i = shown;
       close(i);
-      const next = btnRefs.current[i + 1] ?? navRef.current?.querySelector<HTMLElement>(".v6-nav__right a[href], .v6-nav__right button");
+      const next = itemRefs.current[i + 1] ?? navRef.current?.querySelector<HTMLElement>(".v6-nav__right a[href], .v6-nav__right button");
       next?.focus();
     }
   };
+  // Only focus that lands somewhere else closes the menu. A click on the panel's own ground (a group name, the
+  // picture) sends focus nowhere (relatedTarget is null), and that used to close the menu under the pointer; a
+  // click outside the bar is the pointerdown listener's to handle.
   const onNavBlur = (e: ReactFocusEvent) => {
-    if (open !== null && !navRef.current?.contains(e.relatedTarget as Node | null)) close(open);
+    const to = e.relatedTarget as Node | null;
+    if (open !== null && to && !navRef.current?.contains(to)) close(open);
   };
+  // A MOUSE OPENS A MENU BY POINTING, SO ITS CLICK NEVER CLOSES ONE. The pointer reaches a menu button before it
+  // can click it, so the menu is already open by then, and the click used to close it under the pointer: the
+  // reader who clicked "Product" to see Product got nothing. A mouse click now opens (or keeps open); a tap, a
+  // pen and the keyboard (Enter or Space, whose click has detail 0) still open and close it in turn.
+  const lastPointer = useRef("");
+  const onItemClick = (i: number) => (e: ReactMouseEvent) => {
+    const mouse = e.detail > 0 && lastPointer.current === "mouse";
+    if (open === i) { if (!mouse) close(i); }
+    else openAt(i);
+  };
+  // Pricing is a plain link: pointing at it or tabbing onto it closes whatever menu is open, as moving to any
+  // top item that is not the open one does.
+  const leaveMenus = () => { if (open !== null) close(open); };
 
-  // Escape + click-outside
+  // Escape + click-outside. Escape hands focus back to the menu's button only when focus was on that button or
+  // in its panel. A menu opened by pointing leaves focus wherever the reader had it (a field on the page, say),
+  // and Escape closing that menu must not pull focus up into the bar.
   useEffect(() => {
     if (open === null) return;
     const i = open;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { close(i); btnRefs.current[i]?.focus(); } };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      const a = document.activeElement;
+      const own = !!a && (a === itemRefs.current[i] || !!megaRef.current?.contains(a));
+      close(i);
+      if (own) itemRefs.current[i]?.focus();
+    };
     const onDown = (e: PointerEvent) => { if (!navRef.current?.contains(e.target as Node)) close(i); };
     document.addEventListener("keydown", onKey);
     document.addEventListener("pointerdown", onDown, true);
@@ -520,28 +594,50 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
 
   return (
     <nav ref={navRef} className="v6-nav" data-scrolled={scrolled} data-theme={dark ? "dark" : "light"}
-      data-open={shown !== null} data-settled={settled} data-ground={navBg ? "1" : undefined}
+      data-open={shown !== null} data-menu={open !== null ? "open" : undefined} data-settled={settled}
+      data-ground={navBg ? "1" : undefined}
       style={navBg ? ({ "--nav-bg": navBg } as CSSProperties) : undefined}
-      aria-label="Primary" onMouseLeave={scheduleClose} onBlur={onNavBlur}>
+      aria-label="Primary" onPointerLeave={mouseOnly(scheduleClose)} onBlur={onNavBlur} onPointerEnter={() => setWarm(true)}>
       <div className="v6-nav__in">
         <Brand />
         <div className="v6-nav__items">
-          {/* No caret on any item. Pointer users get hover; keyboard users open with Enter or Space. */}
+          {/* No caret on any item. A mouse opens a menu by pointing at it; a touch screen wide enough for this
+              bar (a tablet held sideways) has no pointing, so a tap opens and a second tap closes, and the
+              keyboard opens with Enter or Space. A menu button is a disclosure (aria-expanded, and aria-controls
+              while its panel exists), not an ARIA menu: the panel is a set of links, reached with Tab. While one
+              is open the other items dim (nav.css). */}
           {MENUS.map((m, i) => (
-            <button key={m.label} type="button" ref={(el) => { btnRefs.current[i] = el; }}
-              className="v6-nav__item" aria-expanded={open === i} aria-haspopup="true"
-              onClick={() => (open === i ? close(i) : openAt(i))} onMouseEnter={() => openAt(i)}
+            <button key={m.label} type="button" ref={(el) => { itemRefs.current[i] = el; }}
+              className="v6-nav__item" aria-expanded={open === i} aria-controls={open === i ? MEGA_ID : undefined}
+              onPointerDown={(e) => { lastPointer.current = e.pointerType; }} onClick={onItemClick(i)}
+              onPointerEnter={mouseOnly(() => openAt(i))}
               onKeyDown={onItemKey(i)} onFocus={() => { if (open !== null && open !== i) close(open); }}>
               {m.label}
             </button>
           ))}
+          <Link href={PRICING.href} ref={(el) => { itemRefs.current[MENUS.length] = el; }} className="v6-nav__item"
+            aria-current={pathname === PRICING.href ? "page" : undefined} onPointerEnter={mouseOnly(leaveMenus)} onFocus={leaveMenus}>
+            {PRICING.label}
+          </Link>
         </div>
+        {/* A panel on its way out stays on screen for its exit, and is inert for it: nothing in it can take focus
+            (a quick Tab from Pricing used to land in a panel about to unmount) or be read out while it fades. */}
         {shown !== null ? (
-          <div ref={megaRef} onMouseEnter={() => openAt(shown)} onMouseLeave={scheduleClose} onKeyDown={onMegaKey}>
+          <div ref={megaRef} id={MEGA_ID} inert={open === null}
+            onPointerEnter={mouseOnly(() => openAt(shown))} onPointerLeave={mouseOnly(scheduleClose)} onKeyDown={onMegaKey}>
             <MegaShell index={shown} state={open === null ? "out" : "in"} onNavigate={() => close(shown)} />
           </div>
         ) : null}
-        <div className="v6-nav__right">
+        {warm ? (
+          <div className="v6-mega__warm" aria-hidden="true">
+            {WARM_PICS.map((w) => (
+              <span key={w.src} className="v6-mega__warm-i"><Image src={w.src} alt="" fill sizes={w.sizes} loading="eager" fetchPriority="low" /></span>
+            ))}
+          </div>
+        ) : null}
+        {/* Pointing at the right-hand controls leaves the menus, as pointing at Pricing does: the language list
+            opening over a menu panel was two surfaces at once. */}
+        <div className="v6-nav__right" onPointerEnter={mouseOnly(leaveMenus)}>
           {/* THE RIGHT SIDE, LIKE OVERLYM'S (founder, 2026-10-01): the language as a flag pill, then Sign in and
               Create account for a visitor, or Open Vraelis for someone already signed in. It used to carry
               one button, which left the bar looking unfinished on a wide screen. */}
@@ -562,10 +658,11 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
 
 function MobileNav({ authed, onClose }: { authed: boolean; onClose: (returnFocus: boolean) => void }) {
   const panel = useRef<HTMLDivElement>(null);
-  // One section open at a time, Platform first: the drawer used to flatten all twelve desktop groups into
-  // one long list under headings like "Platform, Understand", which read as an index dump next to the
-  // desktop mega-menu. Each top-level item is now an accordion carrying the same groups, titles and
-  // descriptions the desktop panel shows, on the same night surface.
+  const pathname = usePathname() || "";
+  // One section open at a time, Product first: the drawer used to flatten every desktop group into one long
+  // list under headings like "Platform, Understand", which read as an index dump next to the desktop menus.
+  // Each menu is an accordion carrying the same groups and titles the desktop panel shows, each link with its
+  // one-line description, on the same black surface; Pricing follows as a plain row.
   const [openSec, setOpenSec] = useState<number | null>(0);
   useEffect(() => {
     // THE PAGE BEHIND MUST NOT SCROLL (founder, from an iPhone, 2026-10-01: "they can scroll the page and
@@ -654,10 +751,22 @@ function MobileNav({ authed, onClose }: { authed: boolean; onClose: (returnFocus
                     ))}
                   </div>
                 ))}
+                {m.foot ? (
+                  <Link href={m.foot.href} className="v6-drawer__more" onClick={follow}>
+                    {m.foot.t}<span className="v6-arw" aria-hidden="true">→</span>
+                  </Link>
+                ) : null}
               </div>
             ) : null}
           </section>
         ))}
+        {/* Pricing has no menu on a desktop, so it has no accordion here: one plain row at the size of the
+            section heads, with an arrow where they have a chevron (plan S3). */}
+        <Link href={PRICING.href} className="v6-drawer__row" onClick={follow}
+          aria-current={pathname === PRICING.href ? "page" : undefined}>
+          {PRICING.label}
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+        </Link>
       </div>
       <div className="v6-drawer__foot">
         <LanguageSwitcher placement="up" className="v6-drawer__lang" />
@@ -920,6 +1029,20 @@ function useHashLandsWhereItSays() {
   }, [pathname]);
 }
 
+/* SKIP TO CONTENT, ON THE DOCS. There <main> opens on the docs header and the sections rail (21 focus stops
+ * on /docs/cli before the article's first control), so the plain jump to #v6-main skipped nothing. On the docs
+ * the link goes to the article column instead: #docs-content if the docs shell names it, else the column by
+ * its class (.v6-docs__main, _content/docs-ui.tsx). The column takes focus as a target, not as a control
+ * (tabindex -1, no ring: nav.css), so the next Tab lands on the article's first link. Anywhere else, or if
+ * the column is missing, the link stays the plain jump to #v6-main. */
+function skipToDocsArticle(e: ReactMouseEvent<HTMLAnchorElement>) {
+  const col = document.getElementById("docs-content") ?? document.querySelector<HTMLElement>(".v6-docs__main");
+  if (!col) return;
+  e.preventDefault();
+  if (!col.hasAttribute("tabindex")) col.setAttribute("tabindex", "-1");
+  col.focus();
+}
+
 /**
  * ONE ANONYMOUS VISIT, ONCE PER TAB SESSION.
  *
@@ -1001,7 +1124,7 @@ export function V6Shell({ children, authed = false }: { children: ReactNode; aut
       <style>{`html, body { background: ${GROUND_CSS[groundName].bg} !important; color-scheme: ${GROUND_CSS[groundName].scheme} !important; }`}</style>
       {/* Nine focus stops sit in the nav before any content. Keyboard and screen-reader users get one stop to
           jump past them; it is invisible until focused. */}
-      <a href="#v6-main" className="v6-skip">Skip to content</a>
+      <a href="#v6-main" className="v6-skip" onClick={isDocs ? skipToDocsArticle : undefined}>Skip to content</a>
       {isDocs ? null : <V6Nav authed={authed} />}
       <main id="v6-main" tabIndex={-1}><RouteTransition>{children}</RouteTransition></main>
       {isDocs ? null : <SiteFooter />}

@@ -54,7 +54,11 @@
   transition: box-shadow 0.15s var(--ease-out), border-color 0.15s var(--ease-out);
 }
 .v6-h__form:hover { border-color: rgba(255,255,255,0.26); }
-.v6-h__form:focus-within { border-color: rgba(255,255,255,0.34); box-shadow: 0 0 0 3px rgba(255,255,255,0.18); }
+/* Focus, as on every other field (plan A5): the form is the field's frame, so it takes the white border and the ring,
+   and the input draws no outline of its own. The old 34% border was about 3:1 against the page, the ring 1.6:1. Not
+   while the button has the focus: it has its own outline, and the two together drew a double white frame. */
+.v6-h__form:focus-within { border-color: #FAFAFA; box-shadow: 0 0 0 3px rgba(255,255,255,0.16); }
+.v6-h__form:has(button:focus-visible) { border-color: rgba(255,255,255,0.16); box-shadow: none; }
 .v6 .v6-h__form input {
   -webkit-appearance: none; appearance: none; box-shadow: none; border-radius: 0; padding: 0;
   flex: 1; min-width: 0; height: 44px; border: 0; outline: 0; background: transparent;
@@ -80,6 +84,11 @@
 }
 .v6-h__partner:hover { border-color: rgba(255,255,255,0.24); transform: translateY(-1px); }
 .v6-h__partner:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
+/* Reduced motion: the border still answers the pointer, the card no longer moves. */
+@media (prefers-reduced-motion: reduce) {
+  .v6-h__partner { transition: border-color 0.15s var(--ease-out); }
+  .v6-h__partner:hover { transform: none; }
+}
 .v6-h__plabel { font-size: 11.5px; font-weight: 500; color: #8E9095; }
 .v6-h__partner strong { font-family: var(--display); font-size: 1.05rem; font-weight: 500; letter-spacing: -0.012em; line-height: 1.25; }
 

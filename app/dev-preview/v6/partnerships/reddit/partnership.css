@@ -1,13 +1,21 @@
-.v6-pr {
-  min-height: 100svh;
-  background: radial-gradient(1100px 760px at 72% 45%, rgba(255,255,255,0.045), transparent 72%), var(--graphite);
+/* THE RECORD (plan T11): an <article> inside the shell's <main>, which paints its own dark ground. It also carries
+   .v6-dark (design01-inc5-verify reads data-nav-dark and v6-dark on one source line); the doubled class keeps this
+   ground, the soft light included, ahead of .v6-dark's flat one wherever the two sheets land in the cascade.
+   It no longer holds a full screen open (min-height: 100svh), which left an empty band under the record; the
+   related links and the closing follow it now. The soft light fades back to the page ground before the record's
+   foot, so the record meets the section under it without a seam. */
+.v6-pr,
+.v6-pr.v6-dark {
+  background:
+    linear-gradient(180deg, rgba(10,10,11,0) 55%, var(--graphite) 100%),
+    radial-gradient(1100px 760px at 72% 45%, rgba(255,255,255,0.045), transparent 72%),
+    var(--graphite);
   color: var(--g-fg-2);
 }
 
 .v6-pr__wrap {
   width: 100%;
-  min-height: 100svh;
-  padding: calc(var(--nav-h, 66px) + clamp(28px, 4.8vh, 58px)) var(--gutter) clamp(28px, 4.5vh, 54px);
+  padding: calc(var(--nav-h, 66px) + clamp(28px, 4.8vh, 58px)) var(--gutter) 0;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
 }
@@ -107,7 +115,6 @@
 .v6-pr__links a:focus-visible { outline: 2px solid var(--g-fg); outline-offset: 5px; }
 
 @media (max-width: 950px) {
-  .v6-pr__wrap { min-height: auto; }
   .v6-pr__hero { grid-template-columns: 1fr; gap: 58px; padding-inline: 0; }
   .v6-pr__identity h1 { white-space: normal; font-size: clamp(5rem, 16vw, 9rem); }
   .v6-pr__story { justify-self: end; width: min(100%, 620px); }
@@ -124,3 +131,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) { .v6-pr__links a span { transition: none; } }
+
+/* After the record: the related links (CrossLinks), then the closing. A hairline at the column's edges marks where
+   the record ends, with less room above it than a full section would leave. */
+.v6 .v6-pr-next { padding-top: clamp(32px, 3.4vw, 48px); }
+.v6-pr-next .v6-xl { padding-top: clamp(40px, 4.4vw, 64px); border-top: 1px solid var(--line); }

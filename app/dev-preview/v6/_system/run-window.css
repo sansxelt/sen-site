@@ -1,18 +1,15 @@
-/* The console window (the recorded runs). Self-contained values on top of the v6 tokens; colour is state
-   only (green held, red found a problem), everything else is white on black, like the console. */
+/* The console window (the recorded runs). Self-contained values on top of the v6 tokens. White on black, like
+   the console; the one colour is --stop-ink, on the step that found the problem and on the words that say so
+   (site plan, revision 2: no dots, no pills, no separator characters, a run that held is not painted green).
+   Flat like the kit's panels: a 1px line and the card radius, no shadow. */
 
 .v6 .rw {
   --rw-line: rgba(255,255,255,0.1);
   --rw-soft: #17171A;
   position: relative;
   background: #121214;
-  border: 1px solid rgba(255,255,255,0.11);
-  border-radius: 18px;
-  box-shadow:
-    0 1px 0 rgba(255,255,255,0.05) inset,
-    0 2px 4px rgba(0,0,0,0.1),
-    0 24px 48px -24px rgba(0,0,0,0.53),
-    0 70px 120px -60px rgba(0,0,0,0.84);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card, 16px);
   overflow: hidden;
   text-align: left;
   color: var(--ink-2);
@@ -40,7 +37,7 @@
 }
 .v6 .rw__crumb { font-size: 13px; color: var(--ink-4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .v6 .rw__crumb b { color: var(--ink); font-weight: 600; }
-.v6 .rw__rec { margin-left: auto; font-size: 11.5px; color: var(--ink-4); white-space: nowrap; }
+.v6 .rw__rec { display: flex; gap: 20px; margin-left: auto; font-size: 11.5px; color: var(--ink-4); white-space: nowrap; }
 .v6 .rw__replay {
   display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 11px; flex: none; white-space: nowrap;
   border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; background: #1B1B1F;
@@ -51,10 +48,12 @@
 .v6 .rw__replay:focus-visible, .v6 .rw__item:focus-visible, .v6 .rw__copy:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 2px; }
 
 /* ── three columns ───────────────────────────────────────────────────────── */
+/* 590 tall: the checkout run's eleven steps fit the list under the sentence card without scrolling (the list is
+   394px at this height), so the run that opens the window is never a clipped list. */
 .v6 .rw__grid {
   display: grid;
   grid-template-columns: 236px minmax(0, 1fr) 372px;
-  height: 588px;
+  height: 590px;
 }
 
 /* rail */
@@ -77,9 +76,10 @@
 .v6 .rw__item[aria-pressed="true"] { background: #1F1F23; border-color: rgba(255,255,255,0.11); box-shadow: 0 1px 2px rgba(0,0,0,0.14); }
 .v6 .rw__iname { font-size: 13px; font-weight: 500; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .v6 .rw__imeta [data-f="found"] { color: var(--stop-ink); }
-.v6 .rw__imeta [data-f="held"] { color: var(--go-ink); }
-/* It wraps rather than clip: "Did what the sentence says" filled the line and the ellipsis hid the run's date. */
-.v6 .rw__imeta { grid-column: 1; font-size: 11.5px; line-height: 1.4; color: var(--ink-4); }
+.v6 .rw__imeta [data-f="held"] { color: var(--ink-3); }
+/* It wraps rather than clip: "Did what the sentence says" filled the line and the ellipsis hid the run's date.
+   The outcome and the date are two items 20px apart, never joined by a separator. */
+.v6 .rw__imeta { grid-column: 1; display: flex; flex-wrap: wrap; column-gap: 20px; font-size: 11.5px; line-height: 1.4; color: var(--ink-4); }
 /* a date that wraps keeps its day and month together ("7月22日" split after the 7) */
 .v6 .rw__date { white-space: nowrap; }
 .v6 .rw__railnote { margin: auto 8px 0; padding-top: 14px; font-size: 11.5px; line-height: 1.5; color: var(--ink-4); }
@@ -91,25 +91,29 @@
 .v6 .rw__status { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; }
 .v6 .rw__chips { display: inline-grid; flex: none; }
 .v6 .rw__chips > * { justify-self: start; }
+/* The run's state, as a plain mono word (the kit's state words): no pill, no wash, no dot. */
 .v6 .rw__chip {
-  display: inline-flex; align-items: center; height: 28px; padding: 0 12px; white-space: nowrap;
-  border-radius: 999px; font-size: 12.5px; font-weight: 600; color: var(--ink);
-  background: #1B1B1F; border: 1px solid rgba(255,255,255,0.09);
+  display: inline-flex; align-items: center; min-height: 28px; white-space: nowrap;
+  font-family: var(--mono); font-size: 12.5px; font-weight: 500; color: var(--ink-3);
 }
-.v6 .rw__chip[data-s="found"] { color: var(--stop-ink); background: rgba(255,122,85,0.12); border-color: rgba(255,122,85,0.32); }
-.v6 .rw__chip[data-s="held"] { color: var(--go-ink); background: rgba(52,211,153,0.12); border-color: rgba(52,211,153,0.32); }
+.v6 .rw__chip[data-s="found"] { color: var(--stop-ink); }
+.v6 .rw__chip[data-s="held"] { color: var(--ink); }
 .v6 .rw__stat { display: inline-grid; flex: none; white-space: nowrap; text-align: right; font-size: 11.5px; color: var(--ink-4); }
+/* the step count and the time: two items 20px apart */
+.v6 .rw__stat > * { display: flex; justify-content: flex-end; gap: 20px; }
 
 .v6 .rw__claim { margin: 16px 0 12px; padding: 14px 16px; border: 1px solid var(--rw-line); border-radius: 12px; background: var(--rw-soft); }
 .v6 .rw__k { margin: 0 0 5px; font-size: 11.5px; font-weight: 600; color: var(--ink-4); }
 .v6 .rw__say { margin: 0; font-size: 15px; line-height: 1.45; font-weight: 500; color: var(--ink); letter-spacing: -0.005em; }
-.v6 .rw__tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; }
-.v6 .rw__tags span {
-  font-size: 11.5px; color: var(--ink-3); padding: 3px 8px; border-radius: 6px;
-  background: #121214; border: 1px solid rgba(255,255,255,0.1);
-}
+/* what the run was given, as plain meta items 20px apart (no tags, no separators) */
+.v6 .rw__tags { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 10px 0 0; }
+.v6 .rw__tags span { font-size: 11.5px; line-height: 1.4; color: var(--ink-3); }
+.v6 .rw__tags span:last-child { font-family: var(--mono); font-size: 11px; color: var(--ink-4); }
 
+/* Positioned, so a step's offsetTop is measured inside the list (run-window.tsx keeps the running step in view
+   with it); unpositioned, it was measured from the window and the list jumped to its end as a replay began. */
 .v6 .rw__steps {
+  position: relative;
   flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
   margin: 0 -22px; padding: 2px 22px 18px;
   scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.2) transparent;
@@ -126,18 +130,21 @@
   display: grid; grid-template-columns: 24px minmax(0,1fr) auto; align-items: center; gap: 10px;
   min-height: 34px; padding: 6px 0;
   border-bottom: 1px solid rgba(255,255,255,0.07);
-  transition: opacity 0.25s var(--ease-out);
 }
-.v6 .rw__step[data-s="wait"] { opacity: 0.42; }
+/* A step the replay has not reached yet is quieter, but still readable text (ink-4 on the window, about 5.6:1):
+   a reader can read ahead. It used to be the whole row at 42% opacity, 2:1 for its number. */
+.v6 .rw__step[data-s="wait"] :is(.rw__sn, .rw__st, .rw__sms) { color: var(--ink-4); }
 .v6 .rw__sn { font-size: 11px; color: var(--ink-4); }
 .v6 .rw__step[data-s="now"] .rw__sn { color: var(--ink); }
-.v6 .rw__st { font-size: 13.5px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.v6 .rw__st { font-size: 13.5px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color 0.25s var(--ease-out); }
 .v6 .rw__sms { display: grid; font-size: 11.5px; color: var(--ink-4); min-width: 44px; text-align: right; white-space: nowrap; }
 .v6 .rw__snow { color: var(--ink-2); }
-/* the failure is the one coloured row: it is the row the reader came for */
+/* The step that found the problem is the one coloured row: it is the row the reader came for. The stop
+   colour on a faint wash that reaches 10px past the text on both sides, as the kit's RecordStep draws it. */
+.v6 .rw__step[data-s="fail"] { margin-inline: -10px; padding-inline: 10px; border-radius: 8px; border-bottom-color: transparent; background: rgba(255,122,85,0.08); }
 .v6 .rw__step[data-s="fail"] .rw__sn, .v6 .rw__step[data-s="fail"] .rw__st, .v6 .rw__step[data-s="fail"] .rw__sms { color: var(--stop-ink); }
 .v6 .rw__step[data-s="fail"] .rw__st { font-weight: 500; }
-.v6 .rw__sf { font-family: var(--sans); font-weight: 600; margin-right: 4px; }
+.v6 .rw__sf { font-family: var(--sans); font-weight: 600; margin-right: 10px; }
 
 /* side */
 .v6 .rw__side {
@@ -167,13 +174,13 @@
 /* Wide, the column is a fixed height and the card simply shows one or the other (stacked: see below). */
 .v6 .rw__card[data-on="false"] .rw__cdone, .v6 .rw__card[data-on="true"] .rw__cwait { display: none; }
 .v6 .rw__ch { display: flex; justify-content: space-between; gap: 10px; margin: 0 0 8px; font-size: 12.5px; font-weight: 600; color: var(--ink); }
-.v6 .rw__ch span { font-size: 11px; font-weight: 400; color: var(--ink-4); }
+.v6 .rw__ch .v6-mono { font-size: 11px; font-weight: 400; color: var(--ink-4); }
 .v6 .rw__diff { margin: 0; display: grid; gap: 6px; }
 .v6 .rw__diff div { display: grid; grid-template-columns: 70px minmax(0,1fr); gap: 8px; font-size: 12.5px; line-height: 1.4; }
 .v6 .rw__diff dt { color: var(--ink-4); }
 .v6 .rw__diff dd { margin: 0; color: var(--ink); }
 .v6 .rw__diff div + div dd { color: var(--stop-ink); }
-.v6 .rw__none { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--go-ink); }
+.v6 .rw__none { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--ink-2); }
 .v6 .rw__wait { margin: 0; font-size: 12.5px; color: var(--ink-4); }
 
 .v6 .rw__prompt {
@@ -230,7 +237,7 @@
   .v6 .rw__rec { display: none; }
 }
 @media (max-width: 560px) {
-  .v6 .rw { border-radius: 14px; font-size: 13px; }
+  .v6 .rw { font-size: 13px; }
   /* "Checks /" steps aside so the app's name fits beside Replay; a long name takes a second line. */
   .v6 .rw__up { display: none; }
   .v6 .rw__crumb { white-space: normal; line-height: 1.25; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
@@ -243,8 +250,9 @@
   .v6 .rw__iname, .v6 .rw__imeta { white-space: normal; word-break: auto-phrase; line-break: strict; }
   .v6 .rw__iname { text-wrap: balance; }
   .v6 .rw__main { padding: 14px 14px 0; }
-  /* the counter takes its own line under the pill */
+  /* the counter takes its own line under the state word, from the left */
   .v6 .rw__stat { width: 100%; text-align: left; }
+  .v6 .rw__stat > * { justify-content: flex-start; }
   .v6 .rw__steps { margin: 0 -14px; padding: 2px 14px 14px; }
   .v6 .rw__side { padding: 14px; }
   .v6 .rw__st { white-space: normal; }
@@ -252,5 +260,12 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .v6 .rw__shot, .v6 .rw__prompt[data-on] { animation: none; }
-  .v6 .rw__prompt { transition: none; }
+  .v6 .rw__prompt, .v6 .rw__st { transition: none; }
 }
+/* Other languages (i18n QA, 2026-10-03): a run's name takes a second line instead of an ellipsis, at every width
+   ("Checkout, prima della correzi…" on the desktop rail, which has the room), broken between phrases in Japanese and
+   never before a long vowel mark, as the phone rule above does. English is unchanged. */
+.v6:not(:lang(en)) .rw__iname { white-space: normal; line-break: strict; text-wrap: balance; }
+.v6:lang(ja) .rw__iname { word-break: auto-phrase; }
+/* Korean keeps its words whole here too (v6.css sets keep-all for Korean; the phone rule's auto-phrase would undo it). */
+.v6:lang(ko) :is(.rw__iname, .rw__imeta) { word-break: keep-all; }

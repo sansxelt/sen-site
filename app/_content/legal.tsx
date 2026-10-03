@@ -34,7 +34,9 @@ export const SUBPROCESSORS: { name: string; purpose: string; data: string; regio
   { name: "Resend", purpose: "Transactional email (verification, receipts)", data: "Email address, message content", region: "United States" },
   { name: "Google / GitHub", purpose: "Optional single sign-on", data: "Email and basic profile, only if you use it", region: "United States" },
 ];
-export const TERMS_UPDATED = "Updated September 2026";
+// October: on 2026-10-02 "API keys, webhooks, and exports" stopped saying the API is Scale-only. Every paid plan has
+// it (lib/v-entitlements.ts V1_API_PLANS, and /pricing lists "API, CLI and webhooks" on Builder, Pro and Scale).
+export const TERMS_UPDATED = "Updated October 2026";
 export const REFUNDS_UPDATED = "Updated July 2026";
 export const REFUNDS_INTRO = "Plain terms for how your balance, subscriptions, and cancellations work. This policy is part of the Terms.";
 
@@ -166,7 +168,7 @@ export function TermsBody({ H, P, Ul, A, S }: LegalPrims) {
       <P><S>A Vraelis result is evidence from a verification run. It is informational and directional, not a guarantee, a certification, or professional, legal, or financial advice.</S> A verification decision reflects how your exact build behaved against the requirements you defined, under the scenarios that were run; it does not certify that a system is bug-free, safe, or universally production-ready. You are solely responsible for the decisions you make and for anything you choose to ship. Do not rely on a Vraelis result as the sole basis for a decision, and do not present it as a guarantee of quality, safety, performance, or any business outcome.</P>
 
       <H>API keys, webhooks, and exports</H>
-      <P>API access is available on the Scale plan. API keys are secrets, and you are responsible for keeping them secure. Webhook events are signed so you can verify them. Handle exported data responsibly. Abuse, scraping, excessive requests, or attempts to bypass rate limits or entitlements may be throttled or blocked.</P>
+      <P>API access is available on every paid plan: Builder, Pro and Scale. API keys are secrets, and you are responsible for keeping them secure. Webhook events are signed so you can verify them. Handle exported data responsibly. Abuse, scraping, excessive requests, or attempts to bypass rate limits or entitlements may be throttled or blocked.</P>
 
       <H>Prohibited use</H>
       <Ul items={[
@@ -255,7 +257,9 @@ export function RefundsBody({ H, P, Ul, A, S }: LegalPrims) {
    names from auth.ts and @auth/core's defaults, the rest from each cookies.set / localStorage.setItem call
    site. A cookie or storage key added to the product belongs here in the same change, and an optional one
    also belongs in lib/privacy-choice.ts under its category. scripts/privacy-consent-verify.ts checks both. */
-export const COOKIES_UPDATED = "Updated September 2026";
+// October: rows were added on 2026-10-01 and 2026-10-02 (the language choice, two-step sign-in, the practice
+// mission console) and the preview cookie's purpose was corrected on 2026-10-02, so September was no longer true.
+export const COOKIES_UPDATED = "Updated October 2026";
 export const COOKIES_INTRO = "This page lists every cookie and every item of browser storage that vraelis.com and app.vraelis.com set, who sets it, what it is for, and how long it lasts. It also explains your choices and how to change them.";
 
 export type CookieRow = { name: string; setBy: string; purpose: string; category: "Essential" | "Preferences" | "Analytics" | "Advertising"; duration: string };
@@ -272,7 +276,7 @@ export const COOKIES: CookieRow[] = [
   { name: "vws", setBy: "Vraelis", purpose: "Remembers which workspace you are working in, if you belong to more than one. Set when you switch workspace.", category: "Essential", duration: "1 year" },
   { name: "vr_two_step_nudge", setBy: "Vraelis", purpose: "Remembers that you chose Not now on the console's offer to turn on two-step verification, so it stops asking until you close the browser. Set only when you choose Not now.", category: "Essential", duration: "Until you close the browser" },
   { name: "vr_oauth_<provider>, vr_oauth_acct_<provider>, vr_pkce_<provider>, vr_oauth_popup", setBy: "Vraelis", purpose: "Secure the handoff when you connect an integration such as GitHub or Vercel.", category: "Essential", duration: "10 minutes" },
-  { name: "vr_stealth", setBy: "Vraelis", purpose: "Preview access. Lets a browser that was given access see the site while it is not yet public.", category: "Essential", duration: "30 days" },
+  { name: "vr_stealth", setBy: "Vraelis", purpose: "Preview access. Set only while the site is closed to the public, for a browser given preview access. It is not set while the site is public.", category: "Essential", duration: "30 days" },
   { name: "__stripe_mid, __stripe_sid", setBy: "Stripe", purpose: "Fraud prevention. Set on the Vraelis domain by Stripe's payment script, which loads only on the checkout page.", category: "Essential", duration: "1 year; 30 minutes" },
 ];
 

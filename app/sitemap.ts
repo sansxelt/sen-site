@@ -51,6 +51,20 @@ const WEIGHT: Record<string, { p: number; f: Freq }> = {
   "/subprocessors": { p: 0.3, f: "yearly" },
   "/data-rights": { p: 0.3, f: "yearly" },
   "/trademark": { p: 0.3, f: "yearly" },
+  // Sectors (2026-10 site plan, S1): the solutions index and the seven sector pages, then the recorded checks.
+  "/solutions": { p: 0.8, f: "monthly" },
+  "/solutions/defense": { p: 0.8, f: "monthly" },
+  "/solutions/fleets": { p: 0.8, f: "monthly" },
+  "/solutions/commerce": { p: 0.8, f: "monthly" },
+  "/solutions/public-sector": { p: 0.8, f: "monthly" },
+  "/solutions/ai-built-apps": { p: 0.8, f: "monthly" },
+  "/solutions/saas": { p: 0.8, f: "monthly" },
+  "/solutions/agencies": { p: 0.8, f: "monthly" },
+  "/use-cases": { p: 0.5, f: "monthly" },
+  "/use-cases/only-the-confirmed-target": { p: 0.5, f: "monthly" },
+  "/use-cases/notes-that-survive-sign-out": { p: 0.5, f: "monthly" },
+  "/use-cases/checkout-that-forgets": { p: 0.5, f: "monthly" },
+  "/use-cases/project-that-vanishes": { p: 0.5, f: "monthly" },
 };
 
 // Never advertised, in either generation: a sign-in form and a checkout have nothing to index. /signin was

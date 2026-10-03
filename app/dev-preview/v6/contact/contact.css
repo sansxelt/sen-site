@@ -1,0 +1,99 @@
+/* ============================================================================
+   /contact (plan T12, revision 2). The form in columns 1 to 7 and the addresses in 9 to 12 from 1024px up,
+   stacked below that. Form fields follow plan A5 ("Form fields"): 48px inputs on --surface with a --line-2
+   border, radius 8, 16px text, a white focus border with a soft ring, labels 14/500 ink-2 eight pixels above,
+   fields twenty apart. The topic is a radio group drawn as bordered options with no circles; the chosen one
+   has a white border. Errors are words; the colour is the one that means something went wrong.
+   ============================================================================ */
+
+/* The hero leaves its own room below the lead, so the form starts close under it. */
+.v6 .ct { padding-top: clamp(8px, 1.4vw, 24px); }
+.ct__grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--col-gap); row-gap: 72px; align-items: start; }
+.ct__form { grid-column: 1 / span 7; min-width: 0; }
+.ct__aside { grid-column: 9 / -1; min-width: 0; }
+@media (max-width: 1023px) {
+  .ct__form, .ct__aside { grid-column: 1 / -1; }
+}
+
+/* ---- the addresses ---- */
+.ct__aside .ct__h { margin: 0 0 16px; font-family: var(--sans); font-size: 14px; font-weight: 500; line-height: 1.3; letter-spacing: 0; color: var(--ink-3); }
+.ct__list { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.ct__list li { display: flex; flex-direction: column; gap: 4px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+.ct__list a { align-self: flex-start; font-size: 17px; font-weight: 500; line-height: 1.45; color: var(--ink); text-decoration: none;
+  overflow-wrap: anywhere; background-image: linear-gradient(currentColor, currentColor); background-position: 0 100%;
+  background-repeat: no-repeat; background-size: 100% 1px; transition: background-size var(--dur-2) var(--ease-out); }
+/* The site-wide a:hover colour outranks a bare class: the address keeps its own colour on hover. */
+.ct__list a:hover { color: var(--ink); background-size: 100% 2px; }
+.ct__list a:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; border-radius: var(--r-sm); }
+.ct__list span { font-size: 15px; line-height: 1.55; color: var(--ink-3); }
+.ct__report { margin-top: 28px; }
+
+/* ---- the form ---- */
+.ct-form { position: relative; display: grid; gap: 20px; }
+.ct-form .ct-label { display: block; margin: 0 0 8px; padding: 0; font-family: var(--sans); font-size: 14px; font-weight: 500; line-height: 1.4;
+  letter-spacing: 0; color: var(--ink-2); }
+.ct-form .ct-opt { margin-left: 8px; font-weight: 400; color: var(--ink-4); }
+.ct-field { min-width: 0; }
+.ct-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px var(--col-gap); }
+@media (max-width: 640px) { .ct-pair { grid-template-columns: minmax(0, 1fr); } }
+
+.ct-form .ct-input { display: block; width: 100%; height: 48px; margin: 0; padding: 0 14px; box-sizing: border-box;
+  background: var(--surface); border: 1px solid var(--line-2); border-radius: var(--r-md);
+  font-family: var(--sans); font-size: 16px; line-height: 1.5; color: var(--ink); caret-color: var(--ink);
+  transition: border-color var(--dur-1) var(--ease-out), box-shadow var(--dur-1) var(--ease-out); }
+.ct-form .ct-input--area { height: auto; min-height: 160px; padding: 12px 14px; resize: vertical; line-height: 1.55; }
+.ct-form .ct-input:hover { border-color: var(--line-strong); }
+.ct-form .ct-input:focus { outline: none; border-color: #FAFAFA; box-shadow: 0 0 0 3px rgba(255,255,255,0.16); }
+.ct-form .ct-input[aria-invalid="true"] { border-color: var(--stop-ink); }
+.ct-form .ct-input[aria-invalid="true"]:focus { border-color: var(--stop-ink); box-shadow: 0 0 0 3px rgba(255,138,106,0.2); }
+
+/* The topic: native radios, visually hidden, each inside a 44px bordered option. Two a row; one below 360px. */
+.ct-topics { margin: 0; padding: 0; border: 0; min-width: 0; }
+.ct-topics__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 359px) { .ct-topics__grid { grid-template-columns: minmax(0, 1fr); } }
+.ct-topic { position: relative; display: flex; align-items: center; min-width: 0; min-height: 44px; padding: 10px 16px; box-sizing: border-box;
+  border: 1px solid var(--line-2); border-radius: var(--r-md); background: transparent; cursor: pointer;
+  font-size: 15px; font-weight: 500; line-height: 1.35; color: var(--ink-2); overflow-wrap: anywhere;
+  transition: border-color var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out), background-color var(--dur-1) var(--ease-out); }
+.ct-topic:hover { border-color: var(--line-strong); color: var(--ink); }
+.ct-topic[data-on] { border-color: #FAFAFA; background: rgba(255,255,255,0.05); color: var(--ink); }
+.ct-topic:has(input:focus-visible) { outline: 2px solid #FAFAFA; outline-offset: 3px; }
+.ct-topic:has(input[aria-invalid="true"]) { border-color: rgba(255,138,106,0.55); }
+/* The routing line keeps one line's height whether or not a topic is chosen, so a choice moves nothing. */
+.ct-form .ct-route { margin: 12px 0 0; min-height: 20px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  font-size: 13px; line-height: 20px; color: var(--ink-4); }
+.ct-route__to { font-family: var(--mono); font-size: var(--t-mono-s); color: var(--ink-3); }
+
+.ct-form .ct-err { margin: 8px 0 0; font-size: 14px; line-height: 1.5; color: var(--stop-ink); }
+.ct-form .ct-err--form { margin: 0; font-size: 15px; }
+/* "Choose a topic." takes the routing line's place and box (no topic is chosen while it shows, so that line is
+   empty): it sits right under the options, and choosing one swaps the two lines without moving anything. The
+   empty line folds to nothing rather than leaving the page, so it still announces the inbox when a topic is
+   chosen. */
+.ct-form .ct-topics:has(> .ct-err) > .ct-route { min-height: 0; margin-top: 0; }
+.ct-form .ct-topics > .ct-err { margin-top: 12px; line-height: 20px; }
+
+.ct-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 4px; }
+.ct-submit { appearance: none; -webkit-appearance: none; }
+/* While sending, the button stays focusable (aria-disabled, not disabled), so focus is not lost if the send fails. */
+.ct-submit[aria-disabled="true"] { cursor: progress; opacity: 0.72; }
+
+/* Visually hidden, still in the accessibility tree and focusable (the radios). */
+.ct-vh { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+/* The honeypot: out of sight, out of the accessibility tree (aria-hidden) and out of the tab order. */
+.ct-hp { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+
+/* ---- after sending ---- */
+.ct-sent { padding: clamp(28px, 3vw, 40px); background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--r-card); }
+.ct-sent:focus { outline: none; }
+.ct-sent:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
+.ct-sent .ct-sent__t { margin: 0; max-width: 26ch; font-family: var(--display); font-size: var(--t-h3); font-weight: 500; line-height: 1.25;
+  letter-spacing: -0.012em; color: var(--ink); text-wrap: balance; }
+:is(:lang(ja), :lang(zh), :lang(ko)) .ct-sent .ct-sent__t { max-width: 22em; letter-spacing: 0; line-height: 1.35; }
+:lang(hi) .ct-sent .ct-sent__t { line-height: 1.35; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ct-topic, .ct-form .ct-input, .ct__list a { transition: none !important; }
+}

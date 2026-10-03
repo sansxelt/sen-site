@@ -16,8 +16,10 @@
    and hand the decision to the vh terms, which govern from about 150px of height up. The ceilings are
    unchanged, so nothing moves on a tall window. min-height is deliberately untouched: the ending is meant
    to hold a screen, and the padding is what should yield when there is no screen to hold. */
+/* Plan A5 (2026-10-02): 160 above and 140 below at 1440, 96 and 88 at the floor. The space is the section's own
+   now, so the card inside it adds none. */
 .v6-end { position: relative; background: var(--paper); color: #D4D4D8;
-  padding: clamp(24px, 4vw, 56px) 0 clamp(48px, 6vw, 88px); }
+  padding: clamp(96px, 11vw, 160px) 0 clamp(88px, 9.7vw, 140px); }
 .v6-end__field { position: absolute; inset: 0; pointer-events: none;
   background:
     var(--graphite); } /* the grey band, flat: the black gradient went with the dark ground (2026-09-30) */
@@ -26,7 +28,7 @@
 /* The ink panel: centred, with a soft light from the top. (Its faint dot grid went 2026-10-01: decoration
    with no meaning, see feedback-no-ai-dots.) */
 /* No panel: since 2026-10-01 the line sits on the page itself with room around it, as cursor.com ends. */
-.v6-end__card { position: relative; padding: clamp(72px, 10vw, 150px) 0 clamp(64px, 8vw, 120px); display: flex; flex-direction: column; align-items: center; text-align: center; }
+.v6-end__card { position: relative; padding: 0; display: flex; flex-direction: column; align-items: center; text-align: center; }
 .v6-end .v6-spec { --spec-hl: rgba(250,250,250,0.9); }
 
 /* the responsibility from the opening, now settled */
@@ -39,31 +41,37 @@
 /* The display face, matching the opening. This heading and the hero are the two largest statements on the
    site and they sat in different type systems: the hero serif, the closing at the sans's weight 600. See
    the note above .v6-gap__wordt in chapters.css for the recipe and why the migration had missed these. */
+/* The display tier (plan A3): 64 at 1440, 40 on a phone, 1.04, -0.025em, 16ch. It was its own clamp up to
+   4.6rem. Japanese, Chinese, Korean and Hindi set their own leading and measure in v6.css ("Other scripts"). */
 .v6-end__h { font-family: var(--display); font-weight: var(--display-w); font-synthesis-weight: none;
-  letter-spacing: -0.012em; line-height: 1.04;
-  /* One step above the hero, not three: at 7.1rem it was twice any other headline on the page after the
-     2026-09-30 scale pass, and broke into three lines of 120px type. */
-  font-size: clamp(2.4rem, 5.2vw, 4.6rem); letter-spacing: -0.035em; color: #FAFAFA; margin: 0 auto; max-width: 14ch; text-wrap: balance; }
+  font-size: var(--t-display); line-height: 1.04; letter-spacing: -0.025em; color: #FAFAFA; margin: 0 auto; max-width: 16ch; text-wrap: balance; }
 .v6-end__say { font-size: clamp(1.04rem, 1.3vw, 1.24rem); line-height: 1.55; color: #A1A1AA;
   margin: clamp(20px, 2.6vh, 30px) auto 0; max-width: 52ch; text-wrap: balance; }
 .v6-end__cta { margin-top: clamp(30px, 4.4vh, 44px); display: flex; align-items: center; justify-content: center; gap: 26px; flex-wrap: wrap; }
 .v6-end__third { font-size: 15px; color: var(--g-fg-3); text-decoration: none; min-height: 32px;
   display: inline-flex; align-items: center; }
 .v6-end__third:hover { color: var(--g-fg); }
-.v6-end .v6-btn { background: #FAFAFA; border-color: #FAFAFA; color: #0A0A0B; min-height: 52px; padding: 16px 28px; font-size: 16px; }
-.v6-end .v6-btn:hover { background: #E4E4E7; border-color: #E4E4E7; color: #0A0A0B; }
+/* One white lg button (52 tall) at every width. The phone rule in v6.css that turns a large button into the
+   md size is there so a PAIR fits one line; the closing has one action, so it keeps its size. Scoped under .v6
+   because this file loads before v6.css on most routes and after it on the homepage. The plate stays white
+   on hover: the 10% wipe in v6.css is the hover. */
+.v6 .v6-end .v6-btn { background: #FAFAFA; border-color: #FAFAFA; color: #0A0A0B; min-height: 52px; padding: 8px 26px; font-size: 16px; }
+.v6 .v6-end .v6-btn:hover { background: #FAFAFA; border-color: #FAFAFA; color: #0A0A0B; }
 .v6-end .v6-btn:focus-visible, .v6-end .v6-elink:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
 .v6-end .v6-elink { color: #FAFAFA; }
 .v6-end .v6-elink .v6-arw { color: #FAFAFA; }
 .v6-end .v6-elink .v6-elink__t { background-image: linear-gradient(#FAFAFA, #FAFAFA); }
 /* Japanese: break the closing between phrases, not inside a word (it broke "言" / "える" and "見" / "た"). Here
    rather than with the homepage's rule because this scene closes every page. Chrome 119 and later. */
-:lang(ja) :is(.v6-end__h, .v6-end__say) { word-break: auto-phrase; }
+/* auto-phrase keeps a phrase whole; a phrase wider than the column (公開しましょう。 at 320px) may still break inside it. */
+:lang(ja) :is(.v6-end__h, .v6-end__say) { word-break: auto-phrase; overflow-wrap: anywhere; }
 
 /* ---------------------------------------------------------------- footer --- */
 .v6-foot2 { background: var(--graphite-2); color: var(--g-fg-2); border-top: 1px solid var(--g-line); }
+/* Six columns from 1200px, three from 941 to 1199, two at 940 and below, and on a phone full-width groups with
+   their links two across (plan S5). */
 .v6-foot2__lower { max-width: var(--max-wide); margin-inline: auto; padding: clamp(46px,6vh,72px) var(--gutter) clamp(28px,3.5vh,40px);
-  display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: clamp(24px,3vw,52px); }
+  display: grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap: 40px clamp(24px,2.6vw,48px); }
 .v6-foot2__h { font-family: var(--sans); font-size: 13px; font-weight: 600; color: var(--g-fg); margin: 0 0 16px; letter-spacing: -0.005em; }
 .v6-foot2__col { display: flex; flex-direction: column; gap: 2px; }
 .v6-foot2__col a { font-size: 14.5px; color: var(--g-fg-2); text-decoration: none; display: inline-flex; align-items: center; min-height: 34px; transition: color 140ms ease; }
@@ -87,6 +95,9 @@
   .v6-foot2__col a { min-height: 44px; }
 }
 
+@media (max-width: 1199px) {
+  .v6-foot2__lower { grid-template-columns: repeat(3, minmax(0,1fr)); }
+}
 @media (max-width: 940px) {
   .v6-foot2__lower { grid-template-columns: 1fr 1fr; gap: 26px 24px; }
 }

@@ -1,0 +1,181 @@
+/* ============================================================================
+   Vraelis public site: THE LEGAL PAGES (privacy, terms, cookies, acceptable use, refunds, subprocessors, data
+   rights, trademark). Scoped under .v6. Plan T13 (revision 2), rebuilt 2026-10-02 (phase 2, batch b7b).
+
+   layout.tsx imports v6.css, nav.css, pagekit.css, docs.css, changelog.css, legal.css, in that order, so these
+   rules come last. Every class here is .v6-lg*, used only by _system/legal.tsx and _system/legal-toc.tsx.
+
+   THE PAGE
+     from 1100px   a contents rail (240) beside a 720 body, the gap between them 40 to 80; the head and the
+                   end row sit in the body's column. Tables with more than four columns break out to 960 to
+                   the right, into the space the column grid leaves there.
+     below 1100px  one column, at most 720: the head, the contents folded in a box, the body, the end row.
+   Body 16/1.7 ink-2. h2 22/1.3/500, with 48 above it carried as PADDING, not margin: html's scroll-padding-top
+   (app/globals.css) lands an anchored heading's border box flush under the bar, so padding is what travels
+   down with it and becomes the space between the bar and the heading's words (pagekit.css has the long note).
+   ============================================================================ */
+
+.v6-lg {
+  --lg-toc: 240px;
+  --lg-gap: clamp(40px, 4.4vw, 80px);
+  --lg-body: 720px;
+  padding-top: clamp(48px, 6.7vw, 96px);
+  padding-bottom: var(--sec);
+}
+.v6-lg__grid, .v6-lg__doc { display: grid; grid-template-columns: minmax(0, var(--lg-body)); align-items: start; }
+.v6-lg__head, .v6-lg__doc, .v6-lg__body, .v6-lg__end { min-width: 0; }
+/* The query container the wide tables measure the column grid by (100cqw is the document's full width). */
+.v6-lg__doc { container-type: inline-size; }
+@media (min-width: 1100px) {
+  .v6-lg__grid, .v6-lg__doc {
+    grid-template-columns: calc(var(--lg-toc) + var(--lg-gap)) minmax(0, var(--lg-body)) minmax(0, 1fr);
+  }
+  .v6-lg__head, .v6-lg__end { grid-column: 2; }
+  .v6-lg__doc { grid-column: 1 / -1; }
+  .v6-lg__body { grid-column: 2; grid-row: 1; }
+}
+
+/* ── The head ── */
+.v6-lg__head { margin-bottom: 48px; }
+/* A translated title can be one long word ("Unterauftragsverarbeiter" is 24 letters): it breaks rather than push
+   the page sideways on a phone, hyphenated where the browser knows the language. Not in English, where a title is
+   never one word too long, and where hyphens: auto would cut words that merely reach the end of a line. */
+.v6-lg__title { margin-top: 16px; overflow-wrap: break-word; }
+.v6:not(:lang(en)) .v6-lg__title { -webkit-hyphens: auto; hyphens: auto; }
+.v6-lg__upd { margin: 16px 0 0; font-family: var(--mono); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-4); }
+/* The English-only notice (LegalNotice in legal-toc.tsx), for a reader in another language: a quiet card under the
+   Updated line. It hugs its sentence, so a translation of another length changes its width rather than the height
+   of the head; at desktop widths the sentence is one line in every language the site offers. */
+.v6-lg__note {
+  width: fit-content; max-width: 100%; margin: 24px 0 0; padding: 12px 14px;
+  border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface);
+  font-size: var(--t-small); line-height: 1.5; color: var(--ink-2); text-wrap: pretty;
+}
+
+/* ── The contents list: a rail from 1100px (legal-toc.tsx) ── */
+.v6-lg__toc { display: none; }
+@media (min-width: 1100px) {
+  .v6-lg__toc {
+    display: block; grid-column: 1; grid-row: 1; align-self: start; width: var(--lg-toc);
+    position: sticky; top: calc(var(--nav-h, 66px) + 32px);
+    max-height: calc(100vh - var(--nav-h, 66px) - 64px); overflow-y: auto; overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+  .v6-lg__tocm { display: none; }
+}
+.v6-lg__toch { margin: 0 0 14px; font-size: var(--t-label); font-weight: 600; line-height: 1.4; color: var(--ink-3); }
+.v6-lg__tocl { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--line); }
+.v6-lg__tocl li { margin: 0; }
+.v6 .v6-lg__toca {
+  display: block; margin-left: -1px; padding: 6px 0 6px 15px; border-left: 2px solid transparent;
+  font-size: var(--t-small); line-height: 1.45; color: var(--ink-3); text-decoration: none; text-wrap: pretty;
+  transition: color var(--dur-1) ease, border-color var(--dur-1) ease;
+}
+/* The label colour is set again on hover: the site-wide a:hover colour (public/vraelis/tokens.css) outranks a
+   plain class colour on a link. */
+.v6 .v6-lg__toca:hover { color: var(--ink); }
+.v6 .v6-lg__toca[aria-current] { color: var(--ink); border-left-color: #FAFAFA; }
+.v6 .v6-lg__toca:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 2px; border-radius: var(--r-sm); }
+
+/* ── The contents list folded, below 1100px ── */
+.v6-lg__tocm { margin: 0 0 40px; border: 1px solid var(--line); border-radius: var(--r-media); background: var(--surface); }
+.v6 .v6-lg__tocs {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 52px; padding: 0 18px;
+  list-style: none; cursor: pointer; font-size: 15px; font-weight: 500; line-height: 1.4; color: var(--ink);
+  border-radius: var(--r-media);
+}
+.v6 .v6-lg__tocs::-webkit-details-marker { display: none; }
+.v6 .v6-lg__tocs:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 2px; }
+/* The kit's FAQ marker: a plus drawn from two 1.5px bars, a quarter turn to a cross when open. */
+.v6-lg__tocx { position: relative; flex: none; width: 14px; height: 14px; color: var(--ink-3); transition: transform var(--dur-1) var(--ease-out); }
+.v6-lg__tocx::before, .v6-lg__tocx::after { content: ""; position: absolute; left: 0; top: 50%; width: 14px; height: 1.5px; margin-top: -0.75px; background: currentColor; }
+.v6-lg__tocx::after { transform: rotate(90deg); }
+.v6-lg__tocm[open] .v6-lg__tocx { transform: rotate(45deg); }
+.v6-lg__tocm .v6-lg__tocl { border-left: 0; padding: 4px 18px 14px; border-top: 1px solid var(--line-soft); }
+.v6 .v6-lg__tocm .v6-lg__toca { margin: 0; padding: 9px 0; border-left: 0; font-size: 15px; color: var(--ink-2); }
+.v6 .v6-lg__tocm .v6-lg__toca:hover { color: var(--ink); }
+
+/* ── The body ── */
+.v6-lg__body { font-size: var(--t-body); line-height: 1.7; color: var(--ink-2); }
+.v6-lg__h {
+  margin: 0 0 12px; padding-top: 48px;
+  font-family: var(--sans); font-size: clamp(1.25rem, 1.53vw, 1.375rem); font-weight: 500; line-height: 1.3;
+  letter-spacing: -0.01em; color: var(--ink); text-wrap: balance; font-synthesis-weight: none;
+}
+/* The first heading of a document starts it: no lead-in of its own (the head leaves 48 above it), so the
+   lead-in a contents link needs comes from scroll-margin instead, the same 48px below the bar as every other. */
+.v6-lg__body > .v6-lg__h:first-child { padding-top: 0; scroll-margin-top: 48px; }
+.v6-lg__p { margin: 0 0 16px; font-size: var(--t-body); line-height: 1.7; color: var(--ink-2); text-wrap: pretty; }
+.v6-lg__ul { list-style: none; margin: 0 0 16px; padding: 0 0 0 18px; display: flex; flex-direction: column; gap: 10px; }
+.v6-lg__li { font-size: var(--t-body); line-height: 1.7; color: var(--ink-2); text-wrap: pretty; }
+/* The prose lists' marker (pagekit.css): a 6 x 1px rule in ink-4 at x-height, in the list's 18px indent. No dots. */
+.v6-lg__li::before { content: ""; display: inline-block; width: 6px; height: 1px; margin: 0 12px 0 -18px; vertical-align: middle; background: var(--ink-4); }
+.v6-lg__s { color: var(--ink); font-weight: 600; }
+.v6 .v6-lg__a {
+  color: var(--ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px;
+  text-decoration-color: var(--line-strong); transition: text-decoration-color var(--dur-1) ease;
+}
+.v6 .v6-lg__a:hover { color: var(--ink); text-decoration-color: var(--ink); }
+.v6 .v6-lg__a:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 2px; border-radius: var(--r-sm); }
+
+/* ── Tables (LegalTable in legal.tsx) ── */
+.v6-lg__tw { width: 100%; margin: 8px 0 28px; overflow-x: auto; overscroll-behavior-x: contain; }
+.v6-lg__tw:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 4px; border-radius: var(--r-sm); }
+@media (min-width: 1100px) {
+  /* More than four columns: out to 960, or as far as the grid's spare column allows (none at 1100). */
+  .v6-lg__tw--wide { width: min(960px, calc(100cqw - var(--lg-toc) - var(--lg-gap))); }
+}
+.v6-lg__t { width: 100%; min-width: 560px; border-collapse: collapse; }
+.v6-lg__tw--wide .v6-lg__t { min-width: 720px; }
+.v6-lg__t th {
+  padding: 0 16px 12px 0; text-align: left; vertical-align: bottom; border-bottom: 1px solid var(--line);
+  font-size: var(--t-label); font-weight: 600; line-height: 1.4; color: var(--ink-3);
+}
+.v6-lg__t td {
+  padding: 14px 16px 14px 0; vertical-align: top; border-bottom: 1px solid var(--line-soft);
+  font-size: var(--t-small); line-height: 1.55; color: var(--ink-2);
+}
+.v6-lg__t :is(th, td):last-child { padding-right: 0; }
+.v6-lg__t td.v6-lg__tname { color: var(--ink); font-weight: 500; white-space: nowrap; }
+/* Machine names in the mono face, broken anywhere: __Secure-authjs.pkce.code_verifier has no space to break at. */
+.v6-lg__t td.v6-lg__tcode { min-width: 168px; font-family: var(--mono); font-size: var(--t-mono); color: var(--ink); overflow-wrap: anywhere; }
+.v6-lg__t td.v6-lg__tnw { white-space: nowrap; }
+.v6-lg__t td.v6-lg__tshort { min-width: 6.5em; }
+.v6-lg__tl { display: none; }
+@media (max-width: 640px) {
+  /* Each row its own block: the first cell as its title, then a label beside each value. */
+  .v6-lg__tw { overflow: visible; }
+  /* .v6-lg__tw in front, to outrank the wide table's 720px minimum above */
+  .v6-lg__tw .v6-lg__t, .v6-lg__t tbody, .v6-lg__t tr, .v6-lg__t td { display: block; width: auto; min-width: 0; }
+  .v6-lg__t thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .v6-lg__t tr { padding: 16px 0 14px; border-top: 1px solid var(--line); }
+  .v6-lg__t tr:last-child { border-bottom: 1px solid var(--line); }
+  .v6-lg__t td { display: grid; grid-template-columns: 84px minmax(0, 1fr); column-gap: 12px; padding: 3px 0; border: 0; }
+  .v6-lg__t td:first-child { display: block; padding: 0 0 8px; }
+  .v6-lg__t td.v6-lg__tname, .v6-lg__t td.v6-lg__tnw { white-space: normal; }
+  .v6-lg__t td.v6-lg__tname { font-size: var(--t-body); }
+  .v6-lg__tl { display: block; font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.9; color: var(--ink-4); }
+}
+
+/* ── The end row: where to write, and Privacy choices ── */
+.v6-lg__end {
+  margin-top: 64px; padding-top: 28px; border-top: 1px solid var(--line);
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 32px;
+}
+.v6-lg__endh { margin: 0; font-family: var(--sans); font-size: var(--t-body); font-weight: 600; line-height: 1.4; letter-spacing: 0; color: var(--ink); }
+.v6-lg__endacts { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+.v6 .v6-lg__mail {
+  font-size: 15px; line-height: 1.4; color: var(--ink); text-decoration: underline; text-decoration-thickness: 1px;
+  text-underline-offset: 3px; text-decoration-color: var(--line-strong); transition: text-decoration-color var(--dur-1) ease;
+}
+.v6 .v6-lg__mail:hover { color: var(--ink); text-decoration-color: var(--ink); }
+.v6 .v6-lg__mail:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 2px; border-radius: var(--r-sm); }
+
+/* ── Other scripts (plan A3): the h2 is a heading class of this file's own ── */
+.v6:is(:lang(ja), :lang(zh), :lang(ko)) .v6-lg__h { letter-spacing: 0; line-height: 1.4; }
+.v6:lang(ja) .v6-lg__h { word-break: auto-phrase; }
+.v6:lang(hi) .v6-lg__h { line-height: 1.4; }
+
+@media (prefers-reduced-motion: reduce) {
+  .v6 .v6-lg__toca, .v6-lg__tocx, .v6 .v6-lg__a, .v6 .v6-lg__mail { transition: none; }
+}

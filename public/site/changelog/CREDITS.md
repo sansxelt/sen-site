@@ -1,0 +1,37 @@
+# Changelog and research pictures: sources
+
+Twelve pictures. Eleven were made on 2026-10-02 by the changelog and research batch (b6b): one for each of the seven
+new entries on /changelog (`app/dev-preview/v6/_content/changelog.ts`, the `media` field), and the four evidence crops
+the research articles show (`app/dev-preview/v6/_content/research-figures.ts`). The twelfth, `solutions-index.png`, was
+captured on 2026-10-03 (UTC) for the entry "The site, rebuilt around sectors" (see the last row). Every row gives the file, what it
+shows, its source, what was checked, what was masked and its mean luminance (plan A7.4). Luminance is the Rec. 709
+luma of the encoded values, 0 to 255, with the share of white after it. SP is the session scratchpad.
+
+**Our own product, captured now (console, onboarding, two-step, languages, privacy).** Headless Chrome at 1180 CSS px
+wide and device pixel ratio 2, signed in as the QA account on the local console (http://localhost:3100, the same
+console code that serves app.vraelis.com), at the UTC time in the row. The capture was read only: every request
+other than GET, HEAD or OPTIONS was blocked (none was attempted), and nothing was clicked, typed or submitted, so
+no plan was created, approved or run and no setting changed. The Next.js development badge and the Notes launcher
+were hidden while capturing. Each picture is a crop of the page; the only change to the pixels is the masking,
+which paints a box with the ground around it. Wherever one is shown it is labelled "Captured 2026-10-02". Scripts:
+`SP/qa/b6b-resources/capture.mjs`, then `SP/qa/b6b-resources/crop.py`.
+
+**Recorded evidence (larkspur-run and the four research crops).** Crops of the screenshots the runs themselves
+recorded, in `app/dev-preview/v6/_content/demos/` (1280x800 each): cropped only, never recoloured, retouched or
+resized. Each crop was checked to be a pixel-exact sub-rectangle of its source (`SP/qa/b6b-resources/cropcheck.py`).
+They are shown at their own size and never wider than 640px (plan 0.4).
+
+| File | Size | What it shows | Source | Checked | Masked | Luminance |
+|---|---|---|---|---|---|---|
+| film-first-frame.jpg | 1360x765 | Our drone on its pad on a garage floor: the homepage film's first frame | `public/home/film-poster.jpg` (1920x1080, the film's first frame: our drone model rendered by `app/film/orbit` over the Poly Haven panorama Autoshop 01, CC0, https://polyhaven.com/a/autoshop_01), cut to x 90 to 1830 and y 100 to 1079 and scaled to 1360x765. The cut leaves out the back of the garage (stacked containers, a parked car). Not cut from `film.mp4`, and not the hand catch | No faces, no insignia, no brand marks, no third-party or personal data | Nothing | 92.4 (36%) |
+| larkspur-run.png | 962x754 | The Larkspur console after the operator confirmed T-1: T-1 and the civilian bus T-3 both show Cleared to engage, both in grid square B3 | `strike-console.png`, the screenshot run vrf_51705517 recorded on 2026-10-02; x 0 to 961, y 46 to 799. Larkspur is a simulated mission console Vraelis built (`lib/fixtures/strike-console.ts`); nothing in it is real | No faces, no insignia, flags or unit markings (generic map symbols), no brand marks, no third-party or personal data | Nothing | 17.0 (7%) |
+| onboarding.png | 1876x754 | The console Overview's "Set up Vraelis" card: three questions, Save and Skip. "A web app" is the card's own default | `/app`, captured 2026-10-02 10:25 UTC | No faces or marks; the coding tools are the product's own answer labels, in text | Nothing found in the region | 25.7 (10%) |
+| console.png | 2360x880 | The console on its black ground: the bar, the sidebar and the Systems page with the QA account's one system, Notewell (the Vraelis demo app), and that account's own last result | `/systems`, captured 2026-10-02 10:28 UTC, the top 440 CSS px | No faces or marks; the plan name and credit balance in the bar are the QA account's test data | The account picture in the bar | 19.3 (8%) |
+| two-step.png | 1402x788 | The Account page's two-step verification section, everything off | `/account`, captured 2026-10-02 10:26 UTC | No faces or marks; the authenticator apps are named in the product's own text | The account's email address | 22.1 (9%) |
+| languages.png | 1876x856 | The console's setup checklist read in Japanese, translated by the site's own language controller | `/app?lang=ja`, captured 2026-10-02 10:29 UTC | No faces or marks; no personal data in the region | Nothing found in the region | 24.2 (9%) |
+| privacy.png | 1168x1442 | The privacy choices dialog over the console, with no choice saved: Essential always on, the three optional categories off, two buttons of the same size | `/systems` with no saved choice, so the dialog opened on its own; captured 2026-10-02 10:31 UTC at 1180x1080 CSS px, cut to the dialog | No faces or marks; Vercel Speed Insights and Meta are named in the dialog's own text | Nothing found in the region | 27.2 (11%) |
+| research-checkout-before.png | 500x136 | Lumen Notes' account page after signing out and back in: Current plan: Free | `checkout-failed.png`, run 3fad10f5, recorded 2026-07-22 ("Before the fix"); x 210 to 709, y 166 to 301. Lumen Notes is a Vraelis demo app | No faces, marks or personal data | Nothing | 251.8 (99%) |
+| research-checkout-after.png | 500x136 | The same strip after the fix: Current plan: Pro | `checkout-verified.png`, run 588c48f7, recorded 2026-07-22 ("After the fix"); the same region | No faces, marks or personal data | Nothing | 251.8 (99%) |
+| research-notes-signed-out.png | 400x416 | Notewell's sign-in card, where the browser landed after opening /dashboard while signed out | `notes-signed-out.png`, run 4fc6e52c, recorded 2026-07-31 (that journey passed); x 440 to 839, y 230 to 645. Notewell is a Vraelis demo app built with Lovable | No faces, marks or personal data (the fields are empty) | Nothing | 231.3 (91%) |
+| research-projects-reload.png | 628x288 | The fixture dashboard after one reload: No projects yet | `projects-failed.png`, run de53ab8b, recorded 2026-07-14; x 326 to 953, y 74 to 361. The Vraelis fixture dashboard in its broken mode | No faces, marks or personal data | Nothing | 243.1 (95%) |
+| solutions-index.png | 2284x1574 | The Solutions page: the eyebrow, the heading "One check, wherever software has to work." with its lead, and the Sectors group's four cards (Defense, Robotics and fleets, Fintech and commerce, Public sector), each with its card picture and one line. Shown with the bar label "Captured 2026-10-03" | `/solutions` on the local site (http://localhost:3100, the same code that serves vraelis.com), captured 2026-10-03 00:37 UTC: headless Chrome at 1180x900 CSS px, device pixel ratio 2, reduced motion, the privacy choice set to essential only, every request other than GET, HEAD or OPTIONS blocked (none was attempted), the Next.js development badge hidden. Cut to x 19 to 1161 and y 70 to 857 CSS px (from just under the bar), crop only (checked pixel for pixel against the capture). Script: `SP/qa/p3/fix-company-resources/capture-solutions.mjs` | No faces or people. The bar, with its language flag and buttons, is outside the crop. The card pictures are the site's own (the Larkspur fixture capture, our drone render, the Lumen Notes demo app's pricing page, Notewell's recorded steps), credited in `public/site/card/CREDITS.md`; the prices inside the Lumen Notes card are that demo app's, not Vraelis's. No personal data | Nothing | 25.4 (10%) |

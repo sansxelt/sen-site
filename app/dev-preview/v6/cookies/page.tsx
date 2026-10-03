@@ -1,5 +1,5 @@
 import { v6meta } from "../_system/meta";
-import { LegalPage, V6_LEGAL_PRIMS } from "../_system/legal";
+import { LegalPage, LegalTable, V6_LEGAL_PRIMS, type LegalCol } from "../_system/legal";
 import { CookiesBody, COOKIES_INTRO, COOKIES_UPDATED, type CookieRow } from "@/app/_content/legal";
 
 export const metadata = v6meta({
@@ -9,28 +9,16 @@ export const metadata = v6meta({
   type: "website",
 });
 
-// Same table as Subprocessors. The wrapper is a focusable, labelled region because on a phone it scrolls
-// sideways, and a scroll container a keyboard cannot reach hides its right-hand columns from keyboard users.
+// Five columns, so the table breaks out to 960 beside the contents list where the page has the room, and each
+// row stands as its own block on a phone (LegalTable, _system/legal.tsx).
+const COLS: LegalCol[] = [
+  { label: "Name", kind: "code" }, { label: "Set by", kind: "short" }, { label: "Purpose" }, { label: "Category", kind: "nowrap" }, { label: "Duration", kind: "short" },
+];
+
 function CookieTable(rows: CookieRow[], label: string) {
   return (
-    <div className="v6-lg__tablewrap" role="region" aria-label={label} tabIndex={0}>
-      <table className="v6-lg__table v6-lg__table--cookies">
-        <thead>
-          <tr><th>Name</th><th>Set by</th><th>Purpose</th><th>Category</th><th>Duration</th></tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.name}>
-              <td className="v6-lg__tcode">{r.name}</td>
-              <td>{r.setBy}</td>
-              <td>{r.purpose}</td>
-              <td className="v6-lg__treg">{r.category}</td>
-              <td>{r.duration}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <LegalTable wide label={label} cols={COLS}
+      rows={rows.map((r) => ({ key: r.name, cells: [r.name, r.setBy, r.purpose, r.category, r.duration] }))} />
   );
 }
 

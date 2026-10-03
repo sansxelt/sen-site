@@ -1,0 +1,48 @@
+/* ============================================================================
+   /security (plan T5, revision 2). Only what the kit does not draw: the status table, the storage cards' evidence
+   line, the numbered list of what we do not claim, and the report section's rules. Black ground, A2 tokens, words
+   instead of colours: a state is a mono word (Signal), never a dot or a pill.
+   ============================================================================ */
+
+/* #status: a plain table, hairlines only. The state words are Signal (mono 12.5/500, ink-3). */
+.sec-status { max-width: 760px; }
+.sec-status__t { width: 100%; border-collapse: collapse; font-family: var(--sans); }
+.sec-status__t :is(th, td) { padding: 16px 0; text-align: left; vertical-align: baseline; border-bottom: 1px solid var(--line); }
+.sec-status__t thead th { padding-top: 0; padding-bottom: 12px; font-family: var(--mono); font-size: var(--t-mono-s); font-weight: 400;
+  line-height: 1.45; letter-spacing: 0; color: var(--ink-4); }
+.sec-status__t tbody th { padding-right: 24px; font-size: 16px; font-weight: 500; line-height: 1.5; color: var(--ink); }
+.sec-status__t :is(thead th, td):last-child { width: 30%; text-align: right; white-space: nowrap; }
+.sec-status .sec-status__cap { caption-side: bottom; padding-top: 16px; text-align: left; font-size: var(--t-label); line-height: 1.5; color: var(--ink-4); }
+@media (max-width: 560px) {
+  .sec-status__t :is(thead th, td):last-child { width: auto; }
+  .sec-status__t tbody th { font-size: 15px; padding-right: 16px; }
+}
+
+/* The storage cards: the shared hand-built card (.v6-gcard) in the Band, on the page ground like every card on
+   a band, each ending with where its evidence lives. */
+.v6-band .sec-store { background: var(--paper); }
+.sec-store { display: flex; flex-direction: column; min-width: 0; min-height: 220px; }
+.sec-store h3 { text-wrap: balance; }
+.sec-store p { text-wrap: pretty; }
+.sec-store .sec-store__ev { margin-top: auto; padding-top: 20px; font-size: 14px; line-height: 1.5; color: var(--ink-4); }
+.sec-store .sec-store__ev .v6-plink { color: var(--ink-2); }
+@media (max-width: 640px) { .sec-store { min-height: 0; } }
+
+/* Identity rows: the shared .v6-rows straight after the SectionHead, which already leaves --head-gap. */
+.v6-rows.sec-rows { margin: 0; padding: 0; list-style: none; }
+.sec-rows .v6-row__d { max-width: 64ch; }
+
+/* What we do not claim: a plain numbered list (mono numerals), hairlines between the lines. */
+.sec-limits { margin: 0; padding: 0; list-style: none; max-width: 820px; border-bottom: 1px solid var(--line); }
+.sec-limits > li { display: grid; grid-template-columns: 32px minmax(0, 1fr); column-gap: 12px; align-items: baseline;
+  padding: 18px 0; border-top: 1px solid var(--line); font-size: 16px; line-height: 1.6; color: var(--ink-2); }
+.sec-limits__n { font-family: var(--mono); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-4); font-variant-numeric: tabular-nums; }
+.sec-after { margin-top: 28px; }
+
+/* #report: the rules as a prose list (a 6x1 rule at x-height, no bullets), then the button and security.txt. */
+.sec-report__rules { margin: 0; padding: 0 0 0 18px; list-style: none; max-width: 680px; display: grid; gap: 10px; }
+.sec-report__rules > li { font-size: var(--t-read); line-height: 1.65; color: var(--ink-2); }
+.sec-report__rules > li::before { content: ""; display: inline-block; width: 6px; height: 1px; margin: 0 12px 0 -18px;
+  vertical-align: middle; background: var(--ink-4); }
+.sec-report__actions { margin-top: 32px; column-gap: 24px; }
+.sec-report__actions .v6-elink .v6-elink__t { font-family: var(--mono); font-size: var(--t-mono); font-weight: 500; }

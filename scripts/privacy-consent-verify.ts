@@ -362,7 +362,8 @@ console.log("\n── copy rules ──");
   const grey = (h: string) => { const [r, g, b] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16)); return Math.max(r, g, b) - Math.min(r, g, b) <= 12; };
   ok("the dialog uses no colour but greys and ink (no blue, no green)", colours.every(grey), colours.filter((c) => !grey(c)).join(","));
   ok("it respects reduced motion", /prefers-reduced-motion: reduce[\s\S]*animation: none/.test(css));
-  ok("it has visible focus rings", /:focus-visible \{ outline: 2px solid #0A0A0B/.test(css));
+  // The ring follows the ground: dark ink on the old light site, #FAFAFA since the site turned black (2026-10-01).
+  ok("it has visible focus rings", /:focus-visible \{ outline: 2px solid #(0A0A0B|FAFAFA)/.test(css));
   ok("it is set in IBM Plex through the brand variable", /font-family: var\(--font-brand-sans\)/.test(css));
 }
 

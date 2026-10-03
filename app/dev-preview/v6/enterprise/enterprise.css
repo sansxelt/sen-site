@@ -1,0 +1,33 @@
+/* /enterprise (plan C, the sales variant of T1). The kit draws the hero, the band, the cards and the related
+   links; this file is the capability table and the two quiet lines. Tokens only (plan A2). */
+
+/* The capability table: the capability, where it stands as a plain mono word (no chip, no dot, no colour: go and
+   wait are both ink-3), and one line on what that means. Three columns from 760px; below that each row stacks. */
+.v6 .en-cap { width: 100%; border-collapse: collapse; table-layout: fixed; border-top: 1px solid var(--line); }
+.v6 .en-cap__cap { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.v6 .en-cap thead th { padding: 14px 16px 14px 0; text-align: left; font-size: var(--t-label); font-weight: 500; line-height: 1.4;
+  color: var(--ink-4); border-bottom: 1px solid var(--line); }
+.v6 .en-cap thead th:nth-child(1) { width: 38%; }
+.v6 .en-cap thead th:nth-child(2) { width: 18%; }
+.v6 .en-cap tbody :is(th, td) { padding: 22px 16px 22px 0; text-align: left; vertical-align: baseline; border-bottom: 1px solid var(--line-soft); }
+.v6 .en-cap tbody th { font-size: var(--t-h5); font-weight: 500; line-height: 1.35; letter-spacing: -0.005em; color: var(--ink); }
+.v6 .en-cap .en-cap__means { font-size: 15px; line-height: 1.55; color: var(--ink-3); }
+
+/* The two lines after the band share the limits line's look (hero-asides.css): a hairline row each. */
+.v6 .en-lines .ha-limits__row + .ha-limits__row { margin-top: 24px; }
+
+/* The related links follow those lines, which already leave half a section above them. */
+.v6 .en-related { padding-top: calc(var(--sec) * 0.5); }
+
+/* The hero headline on a narrow phone wraps through the kit (kit.css, FrameHero at 560px and below). */
+
+@media (max-width: 759px) {
+  .v6 .en-cap thead { display: none; }
+  .v6 .en-cap, .v6 .en-cap tbody, .v6 .en-cap tr { display: block; width: 100%; }
+  .v6 .en-cap tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 16px; row-gap: 6px; padding: 18px 0;
+    border-bottom: 1px solid var(--line-soft); }
+  .v6 .en-cap tbody :is(th, td) { display: block; padding: 0; border: 0; }
+  .v6 .en-cap tbody th { grid-column: 1; }
+  .v6 .en-cap .en-cap__state { grid-column: 2; grid-row: 1; text-align: right; white-space: nowrap; }
+  .v6 .en-cap .en-cap__means { grid-column: 1 / -1; }
+}

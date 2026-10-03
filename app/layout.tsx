@@ -13,6 +13,62 @@ import { GROUND_HEADER } from "../proxy";
 import { PrivacyChoices } from "./_components/privacy-choices";
 import { ConsentedMeasurement } from "./_components/consented-measurement";
 import { LanguageController } from "@/components/language-controller";
+import { DEFAULT_LOCALE, LOCALE_COOKIE, LOCALE_PARAM, READY_LOCALES } from "../lib/i18n/locales";
+import { OPTIONAL_CATEGORIES, PRIVACY_COOKIE, PRIVACY_COOKIE_VERSION } from "../lib/privacy-choice";
+
+// A PAGE IN ANOTHER LANGUAGE IS PAINTED ONCE IT IS TRANSLATED (2026-10-02). Pages are rendered in English and
+// translated in the browser after they hydrate (components/language-controller.tsx). Painted first, the English
+// then changed length under the reader: the hero sentence and the pricing plans moved, a layout shift of 0.02 to
+// 0.09 on a phone against a budget of 0.01 (the 404 page and sign-in moved too). This script runs before the page
+// paints. When the visit is in another language it hides the site's own pages (I18N_GUARDED) with a style element,
+// which the controller removes as soon as they are translated, and starts fetching the catalogue, so the wait is as
+// short as the hydration allows. The timer is the floor under it: if the controller never gets there (its script
+// failed to load, say), the page shows anyway, in English. An English visit is never touched.
+// The language is decided exactly as lib/i18n/client.ts readLocale() decides it: ?lang= first, then the remembered
+// choice, which counts only where Preferences are allowed and the browser sends no GPC (lib/privacy-choice.ts),
+// then English. "vraelis-locale" is LOCALE_STORAGE_KEY in lib/i18n/client.ts. A style element rather than an
+// attribute on <html>: React compares <html>'s attributes when it hydrates, and an extra one is a mismatch. Every
+// element inside is hidden, not only the outer one, because a few set visibility: visible themselves (the open tab
+// panel). The console is not covered: it is out of this site's scope, and it keeps translating in place.
+// The marketing shell (app/dev-preview/v6/_system/shell.tsx), the 404 page (app/not-found.tsx) and the sign-in and
+// /auth frame (app/_components/auth-frame.tsx). The controller's SHELL is the same list.
+const I18N_GUARDED = [".v6", ".v404", ".auth-split"];
+const LANGUAGE_FIRST_PAINT = `(function (c) { try {
+  var ok = function (v) { return c.ready.indexOf(v) >= 0; };
+  var l = new URLSearchParams(location.search).get(c.param);
+  if (!ok(l)) {
+    l = null;
+    var jar = {}, all = document.cookie.split(";");
+    for (var i = 0; i < all.length; i++) {
+      var eq = all[i].indexOf("=");
+      if (eq < 0) continue;
+      var n = all[i].slice(0, eq).trim();
+      if (!(n in jar)) jar[n] = all[i].slice(eq + 1).trim();
+    }
+    var p = [];
+    try { p = decodeURIComponent(jar[c.privacy] || "").split("."); } catch (e) {}
+    var prefs = p[0] === c.version && p.indexOf("preferences") > 0 && navigator.globalPrivacyControl !== true;
+    for (var j = 1; j < p.length; j++) if (c.categories.indexOf(p[j]) < 0 || p.indexOf(p[j]) !== j) prefs = false;
+    if (prefs) {
+      l = jar[c.cookie];
+      if (!ok(l)) { try { l = localStorage.getItem(c.store); } catch (e) { l = null; } }
+      if (!ok(l)) l = null;
+    }
+  }
+  if (!l || l === c.def) return;
+  var s = document.createElement("style");
+  s.id = c.id;
+  s.textContent = c.css;
+  document.head.appendChild(s);
+  setTimeout(function () { if (s.parentNode) s.parentNode.removeChild(s); }, c.ms);
+  window.__vraelisI18n = { locale: l, catalogue: fetch("/locales/" + l + ".json", { cache: "force-cache", priority: "low" })
+    .then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; }) };
+} catch (e) {} })(${JSON.stringify({
+  ready: READY_LOCALES, def: DEFAULT_LOCALE, param: LOCALE_PARAM, cookie: LOCALE_COOKIE, store: "vraelis-locale",
+  privacy: PRIVACY_COOKIE, version: PRIVACY_COOKIE_VERSION, categories: OPTIONAL_CATEGORIES,
+  // The id the controller removes (I18N_GUARD_ID there), the rule it lifts, and the longest the page stays hidden.
+  id: "vraelis-i18n-pending", css: `${I18N_GUARDED.map((s) => `${s},${s} *`).join(",")}{visibility:hidden!important}`, ms: 2500,
+})});`;
 
 // THE TYPE. IBM Plex Sans for everything people read, IBM Plex Mono for machine text (IDs, URLs, code).
 // Replaced Geist, Inter Tight and Instrument Serif on 2026-09-30: that trio is the default look of a generated
@@ -178,6 +234,8 @@ export default async function RootLayout({
         className={`${brandSans.variable} ${brandMono.variable} h-full`}
       >
         <body className="min-h-full" style={{ background: GROUND_CSS[ground].bg }}>
+          {/* First in the body, so it has run before any of the page is parsed (LANGUAGE_FIRST_PAINT, above). */}
+          <script dangerouslySetInnerHTML={{ __html: LANGUAGE_FIRST_PAINT }} />
           {/* The public stylesheets load for every request. They define the LIGHT half of the brand; the
               product and the auth round-trip load public/vraelis/authenticated.css on top of these and
               resolve the same token names to graphite (see app/_components/product-surface.tsx). tokens

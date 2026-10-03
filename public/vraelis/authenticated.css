@@ -352,12 +352,9 @@ html:has([data-surface="app"]) {
 [data-surface="app"] .auth-split__foot { display: flex; gap: 18px; margin: 0; padding: 20px 0 24px; font-size: 12.5px; }
 [data-surface="app"] .auth-split__foot a { color: var(--fg-4); text-decoration: none; }
 [data-surface="app"] .auth-split__foot a:hover { color: var(--fg-1); }
-/* The brand panel: the same panel that closes every public page (dot grid, light from the top). */
+/* The brand panel: a raised panel with one soft light from the top. No dot grid (plan 0.4, 2026-10-02). */
 [data-surface="app"] .auth-split__side { position: relative; isolation: isolate; overflow: hidden; background: #111113; border: 1px solid var(--line-2); display: flex; align-items: center;
   justify-content: center; padding: clamp(28px, 4vw, 56px); min-width: 0; margin: 10px; border-radius: 22px; }
-[data-surface="app"] .auth-split__side::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-  background-image: radial-gradient(rgba(255,255,255,0.16) 1px, transparent 1.2px); background-size: 22px 22px; opacity: 0.45;
-  -webkit-mask-image: radial-gradient(70% 60% at 50% 20%, #000, transparent 75%); mask-image: radial-gradient(70% 60% at 50% 20%, #000, transparent 75%); }
 [data-surface="app"] .auth-split__side::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
   background: radial-gradient(70% 50% at 50% -8%, rgba(255,255,255,0.14), transparent 70%); }
 [data-surface="app"] .auth-split__sidein { width: min(540px, 100%); }

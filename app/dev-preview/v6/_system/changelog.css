@@ -1,0 +1,48 @@
+/* ============================================================================
+   Vraelis public site: THE CHANGELOG (plan T10, revision 2). Scoped under .v6.
+
+   Moved here verbatim from _system/pagekit.css on 2026-10-02 (phase 1) and rebuilt the same day (batch 6):
+   layout.tsx imports v6.css, nav.css, pagekit.css, docs.css, changelog.css, legal.css, in that order, so these
+   rules sit after the page kit at equal specificity.
+
+   Each entry is a grid: a 200px date column that holds its place under the bar while a long entry scrolls past,
+   a 64px gap, then a 680 body. 64px above and below, a hairline on top. The date is mono 13 in ink-3 and the tag
+   word under it mono 12 in ink-4, with no colour: "Shipped" is not a result. The title is at the h3 tier, a
+   picture (MediaPanel) sits 24 above and below, the body is the long-form 17/1.65 in ink-2, and a Boundary or
+   Direction note is a 13/600 label in a hairline box. On a phone the date sits above the title.
+   ============================================================================ */
+
+.v6-clog-sec { padding-bottom: var(--sec); }
+.v6-clog { margin: 0; }
+.v6-clog__entry { display: grid; grid-template-columns: 200px minmax(0, 680px); column-gap: 64px; padding: 64px 0; border-top: 1px solid var(--line); }
+.v6-clog__when { min-width: 0; }
+.v6-clog__stick { position: sticky; top: calc(var(--nav-h, 66px) + 32px); margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.v6-clog__date { font-family: var(--mono); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.v6-clog__tag { font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
+.v6-clog__main { min-width: 0; }
+.v6 .v6-clog__t { margin: 0; font-family: var(--display); font-weight: 500; font-size: var(--t-h3); line-height: 1.2; letter-spacing: -0.012em;
+  color: var(--ink); text-wrap: balance; overflow-wrap: break-word; }
+.v6-clog__media { margin: 24px 0; }
+.v6-clog__media[data-portrait] .v6-mp { max-width: 498px; }
+.v6-clog__run { margin-left: 20px; font-family: var(--mono); font-size: var(--t-mono-s); color: var(--ink-4); white-space: nowrap; }
+.v6-clog__b { margin-top: 16px; }
+.v6-clog__media + .v6-clog__b { margin-top: 0; }
+.v6 .v6-clog__b p { margin: 0; font-size: var(--t-read); line-height: 1.65; color: var(--ink-2); text-wrap: pretty; overflow-wrap: break-word; }
+.v6 .v6-clog__b p + p { margin-top: 16px; }
+.v6-clog__note { margin-top: 24px; padding: 16px; border: 1px solid var(--line-soft); border-radius: var(--r-media); font-size: 15px; line-height: 1.6; color: var(--ink-2); }
+.v6-clog__note b { display: block; margin-bottom: 4px; font-size: var(--t-label); font-weight: 600; line-height: 1.4; color: var(--ink); }
+.v6-clog__link { margin-top: 24px; }
+/* The closing note's hairline runs the full width, as every entry's does; the sentence keeps its own measure. */
+.v6-clog__end { padding-top: 64px; border-top: 1px solid var(--line); }
+.v6 .v6-clog__end p { margin: 0 0 20px; max-width: 64ch; font-size: var(--t-body); line-height: 1.6; color: var(--ink-3); }
+
+@media (max-width: 900px) {
+  .v6-clog__entry { grid-template-columns: minmax(0, 1fr); row-gap: 12px; padding: 48px 0; }
+  .v6-clog__stick { position: static; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 4px 20px; }
+  .v6-clog__end { padding-top: 48px; }
+}
+
+/* Other scripts (plan A3): the title measures in em and opens its leading; Hindi gets room for its marks. */
+:is(:lang(ja), :lang(zh), :lang(ko)) .v6 .v6-clog__t { letter-spacing: 0; line-height: 1.3; }
+:lang(ja) .v6 .v6-clog__t { word-break: auto-phrase; }
+:lang(hi) .v6 .v6-clog__t { line-height: 1.3; }

@@ -1,188 +1,145 @@
-import { IntegrationsAside } from "../_system/hero-asides";
-import { Reveal, PageHero, SectionHead, CTA, EditorialLink, Signal, Kicker } from "../_system/ui";
+import { CrossLinks, FrameHero, Band } from "../_system/kit";
+import { SectionHead, EditorialLink } from "../_system/ui";
+import { ClosingScene } from "../_system/close";
+import { Code, CopyScript } from "../_system/code";
+import { IntegrationsAside, LimitsLine } from "../_system/hero-asides";
 import { v6meta } from "../_system/meta";
-import { V6_BASE } from "@/lib/v6-routes";
+import { V6_BASE, v6SignInPath } from "@/lib/v6-routes";
+import "./integrations.css";
 
-// Integrations (design 06), titled "Ways to use it". Only surfaces that are actually shipped.
+// INTEGRATIONS (plan C /integrations, template T1, revised 2026-10-02).
 //
-// REWRITTEN 2026-09-28 around FOUR CHANNELS, SIDE BY SIDE: the console, the CLI, CI through the API, and AI
-// assistants over MCP. They start the same check and read the same answer, and none of them is the identity
-// of the product (founder, 2026-09-28: narrow on the function, wide on the audience). MCP used to sit on
-// this page under Direction, "Expose verification as a tool an agent can call"; it is built, local and
-// hosted, so it moved into the live set. The rest of that Direction list (an editor extension, a desktop
-// companion, mobile approvals) left the page with it, because nothing in the product is building toward them.
+// Four channels: the console, the CLI, CI through the API, and AI assistants over MCP. They start the same check
+// and read the same answer, and none of them is the identity of the product (founder, 2026-09-28: narrow on the
+// function, wide on the audience). They are the hero's panel, said once: each row names a way in (a link to its
+// page in the docs), its entry point and what it does (WAYS_IN, _system/hero-asides.tsx). A "Four ways in" card
+// section used to follow the hero and repeated the panel item for item, so its words moved into the panel and the
+// section went (final review, 2026-10-02). Below the hero, where a check sits in a release (GitHub Actions,
+// Vercel) and where the answer goes (signed webhooks, Slack).
 //
-// Below the channels sit the places an answer is delivered (webhooks, Slack) and the two platforms a check
-// is commonly pointed at (GitHub Actions, Vercel). Each says truthfully what it does today: GitHub is the CLI
-// or the API run from a workflow plus read-only repository metadata, Vercel is a deployment URL, and Slack
-// is an incoming webhook the owner pastes.
+// WHAT EACH ONE IS, TRUTHFULLY (rules.md): GitHub Actions is the CLI run in a workflow step, and Vercel is a
+// deployment address a check points at. Neither is a built integration, so neither gets a mark: every name on
+// this page is text (no brand logos, plan 0.2). The webhook example is the payload lib/preflight/
+// webhook-dispatch.ts builds, with example values, and the headers it sends; a Slack address gets the same
+// facts as a message (buildSlackMessage). The CLI row says what its exit code means and nothing more:
+// 0 only when the claim held (cli/vraelis.mjs).
+//
+// The anchors /developers#api, #cli and #webhooks are linked from here and must survive there (plan 0.5).
 
 export const metadata = v6meta({
-  title: "Ways to use it",
+  title: "Integrations",
   description:
-    "Four ways to start a Vraelis check and read the answer: the console, the CLI, CI through the API, and AI assistants over MCP. Plus signed webhooks, Slack, GitHub Actions and Vercel deployments.",
+    "Four ways to start a Vraelis check and read the answer: the console, the CLI, CI through the API, and AI assistants over MCP. Signed webhooks and Slack carry the answer to your team.",
   path: "/integrations",
 });
 
 const BASE = V6_BASE;
-type Item = { name: string; who: string; what: string; href?: string; hrefLabel?: string };
+const SIGNUP = `${v6SignInPath()}&mode=signup`;
 
-// The four channels. `who` is deliberately a situation, not a job title: the same person may use all four.
-const CHANNELS: Item[] = [
-  {
-    name: "Console",
-    who: "When you want to see it",
-    what: "Open Vraelis, name the deployed app, and write one sentence about what should work. Review the plan, approve it, and read the decision with its screenshots and step record. Every earlier run stays on the record.",
-    href: `${BASE}/docs/getting-started`,
-    hrefLabel: "Get started",
-  },
-  {
-    name: "CLI",
-    who: "From a terminal",
-    what: "vraelis verify prints the plan and the approval link, waits for a person to approve, runs, and exits 0, 1 or 2 for Verified, Failed or Blocked. vraelis recheck runs the same plan again after a fix.",
-    href: `${BASE}/developers#cli`,
-    hrefLabel: "See the CLI",
-  },
-  {
-    name: "CI and the API",
-    who: "From a pipeline",
-    what: "POST a deployment and a claim, hand the approve_url to a person, run the approved plan, and gate the release on the decision. Re-check the same plan after a fix. Authenticated with an x-api-key header.",
-    href: `${BASE}/developers#api`,
-    hrefLabel: "Read the API",
-  },
-  {
-    name: "AI assistants, over MCP",
-    who: "From the assistant that made the change",
-    what: "Claude Code, Codex, Gemini CLI, GitHub Copilot, Cursor and Trae run the local server; ChatGPT and Claude connect to the hosted one. The assistant calls vraelis_verify, hands you the approval link, and gets the answer back. It cannot approve a plan.",
-    href: `${BASE}/agents`,
-    hrefLabel: "Set up an assistant",
-  },
-];
+/* What a webhook endpoint receives: the headers deliverJson sends (user-agent left out) and the body
+   buildVerificationPayload builds (lib/preflight/webhook-dispatch.ts), with example values. The timestamp is the
+   delivery time in milliseconds, here the same instant as completed_at. */
+const DELIVERY = `POST https://example.com/hooks/vraelis
+content-type: application/json
+x-vraelis-event: verification.completed
+x-vraelis-timestamp: 1790618651220
+x-vraelis-signature: sha256=<hex>
 
-const DELIVERY: Item[] = [
-  {
-    name: "Webhooks",
-    who: "Where the answer goes",
-    what: "A signed verification.completed event is pushed the moment a run finalizes, carrying only owner-safe facts. Verify the HMAC signature over the raw body, then act on the decision.",
-    href: `${BASE}/developers#webhooks`,
-    hrefLabel: "Verify a delivery",
-  },
-  {
-    name: "Slack",
-    who: "Where the answer goes",
-    what: "Paste a Slack incoming webhook URL and every verification.completed arrives as a formatted message with the decision, the flows that passed, and a link to the evidence.",
-    href: `${BASE}/developers#webhooks`,
-    hrefLabel: "How webhooks work",
-  },
-  {
-    name: "GitHub Actions",
-    who: "Where a check runs",
-    what: "Run the CLI or call the API from a workflow after a deployment succeeds, and let the exit code stop a release. Connecting GitHub also lets Vraelis read repository metadata, read-only, with no code write access.",
-    href: `${BASE}/developers#cli`,
-    hrefLabel: "Gate a deploy in CI",
-  },
-  {
-    name: "Vercel",
-    who: "What a check points at",
-    what: "Point a check at a Vercel preview or production deployment URL, then gate promotion on the decision it returns.",
-    href: `${BASE}/developers#api`,
-    hrefLabel: "Create a verification",
-  },
-];
-
-function Card({ it, i }: { it: Item; i: number }) {
-  return (
-    <Reveal i={i % 4} className="v6-gcard">
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 6 }}>
-        <h3 style={{ margin: 0 }}>{it.name}</h3>
-        <Signal state="go">Live</Signal>
-      </div>
-      <p style={{ margin: "0 0 10px" }}><Kicker>{it.who}</Kicker></p>
-      <p>{it.what}</p>
-      {it.href ? (
-        <div style={{ marginTop: 16 }}>
-          <EditorialLink href={it.href}>{it.hrefLabel ?? "Learn more"}</EditorialLink>
-        </div>
-      ) : null}
-    </Reveal>
-  );
-}
+{
+  "event": "verification.completed",
+  "run_id": "9c1e0f2a41",
+  "application_id": "app_5b7d",
+  "decision": "failed",
+  "flows_total": 4,
+  "flows_passed": 3,
+  "deployment_url": "https://staging.example.com",
+  "completed_at": "2026-09-28T18:04:11.220Z",
+  "report_url": "https://app.vraelis.com/systems/app_5b7d/passes/9c1e0f2a41"
+}`;
 
 export default function IntegrationsPage() {
   return (
     <>
-      <PageHero
-        kicker="Ways to use it"
+      <FrameHero
+        eyebrow="Integrations"
         title="One check, four ways to start it."
-        lead="Start a check from the console, the CLI, a CI pipeline, or an AI assistant. Each one sends the same sentence, waits for the same one-click approval from a person, and gets back the same answer, with the evidence. Everything on this page works today."
-        cta={<><CTA brand>Open Vraelis</CTA><EditorialLink href={`${BASE}/developers`}>Developer docs</EditorialLink></>}
-        aside={<IntegrationsAside />}
+        sub="Start a check from the console, the CLI, a pipeline or an AI assistant. Each gets back the same answer, with the evidence."
+        primary={{ label: "Start free", href: SIGNUP }}
+        secondary={{ label: "Read the docs", href: `${BASE}/docs` }}
+        panel={{ kind: "node", label: "The four ways to start a check", node: <IntegrationsAside /> }}
       />
 
-      {/* ── The four channels ── */}
-      <section className="v6-sec">
+      {/* ── Where it fits in a release ── two names, two sentences, no marks. */}
+      <section className="v6-sec" id="release">
         <div className="v6-wrap">
-          <Reveal>
-            <SectionHead
-              eyebrow="Start a check"
-              title="The console, the CLI, CI, and your AI assistant."
-              lead="Pick whichever fits the moment. They are not tiers or plans, and a team usually uses more than one: the console to read, CI to gate a release, and an assistant to check its own change before it says it is done."
-            />
-          </Reveal>
-          <div className="v6-grid3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%,260px),1fr))" }}>
-            {CHANNELS.map((it, i) => <Card key={it.name} it={it} i={i} />)}
+          <SectionHead
+            eyebrow="In your release"
+            title="Where it fits in your release."
+            lead="Neither is a separate integration to install. GitHub Actions runs the CLI, and Vercel gives a check the address to open."
+          />
+          <div className="ig-two">
+            <div className="ig-two__item">
+              <h3 className="ig-two__t">GitHub Actions</h3>
+              <p className="ig-two__d">Run the CLI in a workflow step. The job passes only on exit code 0.</p>
+              <div className="ig-two__link"><EditorialLink href={`${BASE}/docs/ci`}>Gate a release in CI</EditorialLink></div>
+            </div>
+            <div className="ig-two__item">
+              <h3 className="ig-two__t">Vercel</h3>
+              <p className="ig-two__d">Point a check at a Vercel preview or production deployment URL.</p>
+              <div className="ig-two__link"><EditorialLink href={`${BASE}/docs/getting-started`}>Start a check</EditorialLink></div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── Where the answer goes ── */}
-      <section className="v6-sec v6-sec--sunk">
-        <div className="v6-wrap">
-          <Reveal>
-            <SectionHead
-              eyebrow="Deliver the answer"
-              title="Send the decision where the team already is."
-              lead="Each of these is the API, the CLI, or a webhook wired to a surface you already use. Not a marketplace of half-built connectors, the small set that actually works."
-            />
-          </Reveal>
-          <div className="v6-grid3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%,260px),1fr))" }}>
-            {DELIVERY.map((it, i) => <Card key={it.name} it={it} i={i} />)}
+      {/* ── Where the answer goes ── the page's one Band: the words on the left, the delivery itself on the right. */}
+      <Band id="delivery">
+        <SectionHead
+          eyebrow="Delivery"
+          title="Where the answer goes."
+          lead="When a run finishes, the answer can come to you: a signed event at your endpoint, or a message in a Slack channel."
+        />
+        <div className="ig-deliver">
+          <div className="ig-deliver__text">
+            <dl className="ig-rows">
+              <div className="ig-row">
+                <dt>Webhooks</dt>
+                <dd>A signed event goes to your endpoint when a run finishes. Recompute the signature over the raw body before you act on it.</dd>
+              </div>
+              <div className="ig-row">
+                <dt>Slack</dt>
+                <dd>Paste a Slack incoming webhook address and the same event arrives as a message, with the outcome and a link to the evidence.</dd>
+              </div>
+            </dl>
+            <div className="ig-deliver__link"><EditorialLink href={`${BASE}/docs/webhooks`}>Read the webhook guide</EditorialLink></div>
           </div>
+          <figure className="ig-deliver__code">
+            <Code lang="http" src={DELIVERY} />
+            <figcaption className="ig-cap">
+              Example values. Every delivery carries the outcome, the journey counts, the ids and a link to the evidence, never a token or a credential.
+            </figcaption>
+          </figure>
         </div>
-      </section>
+      </Band>
 
-      {/* ── Honest note ── */}
-      <section className="v6-sec">
+      <LimitsLine text="A way in appears here only after it ships." />
+
+      <section className="v6-sec ig-related">
         <div className="v6-wrap">
-          <Reveal style={{ maxWidth: 720 }}>
-            <Kicker>The rule</Kicker>
-            <h2 className="v6-dm" style={{ margin: "12px 0 16px" }}>A way in appears here only after it ships.</h2>
-            <p className="v6-body">
-              Nothing on this page is a placeholder for something that does not exist. The set is small on purpose, and it grows only when a new surface works end to end. That is the same standard the decisions themselves are held to.
-            </p>
-            <div style={{ marginTop: 22 }}>
-              <EditorialLink href={`${BASE}/developers`}>See how each one is built</EditorialLink>
-            </div>
-          </Reveal>
+          {/* Every card has its 16:10 picture, as on /platform, /limitations and the sector pages, and each line is
+              the one the site uses for that target. The Documentation card is public/site/product/CREDITS.md's. */}
+          <CrossLinks
+            links={[
+              { title: "Developers", body: "The CLI, the API and CI.", href: `${BASE}/developers`, image: "/site/card/developers-16x10.jpg" },
+              { title: "AI assistants", body: "Set up Vraelis in your coding agent, over MCP.", href: `${BASE}/agents`, image: "/site/card/agents-16x10.jpg" },
+              { title: "Documentation", body: "Every way in, step by step.", href: `${BASE}/docs`, image: "/site/product/docs-16x10.jpg" },
+            ]}
+          />
         </div>
       </section>
 
-      {/* ── Close ── */}
-      <hr className="v6-rule" />
-      <section className="v6-sec v6-sec--tight">
-        <div className="v6-wrap" style={{ textAlign: "center", maxWidth: 720 }}>
-          <Reveal>
-            <h2 className="v6-dl" style={{ marginInline: "auto" }}>Start from wherever you already work.</h2>
-            <p className="v6-lead" style={{ margin: "18px auto 28px", textAlign: "center" }}>
-              One sentence about what should work, one approval from a person, and an answer from the live app, in the tool you already have open.
-            </p>
-            <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-              <CTA brand lg>Open Vraelis</CTA>
-              <CTA href={`${BASE}/agents`} ghost lg>Set up an AI assistant</CTA>
-            </div>
-          </Reveal>
-        </div>
-      </section>
+      <ClosingScene title="Start from wherever you already work." />
+      <CopyScript />
     </>
   );
 }

@@ -101,7 +101,7 @@ export function Authority() {
   // seal can fall out of step with the row it belongs to.
   useScrollProgress(wrap);
   return (
-    <section className="v6-au" data-nav-dark data-nav-theme="dark" ref={wrap}>
+    <section className="v6-au v6-dark" data-nav-dark data-nav-theme="dark" ref={wrap}>
       <div className="v6-au__pin">
         <div className="v6-au__head">
           <p className="v6-eyebrow">What was never built</p>

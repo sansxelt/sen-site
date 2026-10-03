@@ -1,0 +1,260 @@
+/* THE RECORD PANEL AND THE USE-CASE PAGES (b5b, plan A9 T2 step 4, T3 and T15; revision 2, 2026-10-02).
+
+   Two blocks share this file because they show the same records: .v6-rp, the record panel in the kit's Tabs
+   (_system/record-panel.tsx), and .v6-uc, the use-case pages and their index (use-cases/). Tokens only, from
+   v6.css: no new colour, and colour only on what the run found (--stop-ink on the observation, as the kit's
+   RecordSteps does on the step). No dots, no shadows. Every piece carries no outer margin: the block that holds
+   it sets the gap. */
+
+/* =================================================================== the panel's pieces === */
+.v6-rp { min-width: 0; }
+.v6-rp__view { min-width: 0; }
+.v6-rp__stack { display: grid; gap: 28px; align-content: start; }
+
+/* A mono label (fact labels, the journey's name): 12/1.45 ink-4, sentence case. */
+.v6-rp__k { margin: 0; font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; letter-spacing: 0; color: var(--ink-4); }
+.v6-rp__note { margin: 0; max-width: 60ch; font-size: var(--t-small); line-height: 1.55; color: var(--ink-3); text-wrap: pretty; }
+.v6-rp__h { margin: 0 0 14px; font-family: var(--sans); font-size: 16px; font-weight: 600; line-height: 1.4; letter-spacing: 0; color: var(--ink); }
+.v6-rp__num, .v6-rp__mono { font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); font-variant-numeric: tabular-nums; }
+.v6-rp__gap { margin-top: 12px; }
+
+/* The sentence: a --surface card, the claim in ink, the approval as a mono record fact. */
+.v6-rp__claimset { display: grid; gap: 16px; align-content: start; }
+.v6-rp__claim { margin: 0; min-width: 0; background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--r-card); padding: 28px 32px; }
+.v6-rp__q { margin: 0; max-width: 46em; font-size: 19px; line-height: 1.5; color: var(--ink); text-wrap: pretty; overflow-wrap: break-word; }
+.v6-rp__claim[data-large] { padding: 32px; }
+.v6-rp__claim[data-large] .v6-rp__q { font-size: 22px; line-height: 1.45; }
+.v6-rp__claim .v6-rp__k + .v6-rp__q { margin-top: 12px; }
+.v6-rp__approved { margin: 16px 0 0; font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
+
+/* Run, recorded, took: a row of mono facts, 20px apart (no separators). */
+.v6-rp__facts { margin: 0; display: flex; flex-wrap: wrap; gap: 12px 24px; }
+.v6-rp__facts > div { min-width: 0; }
+.v6-rp__facts dt { font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
+.v6-rp__facts dd { margin: 3px 0 0; font-family: var(--mono); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.v6-rp__facts > div:has(.v6-rp__out) { flex-basis: 100%; }
+.v6-rp__big { display: block; }
+.v6-rp__big .v6-sig, .v6-rp__out .v6-sig { font-size: var(--t-mono); }
+
+/* The plan: requirements on the left, journeys on the right. */
+.v6-rp__plan { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--col-gap); row-gap: 32px; align-items: start; }
+.v6-rp__plan > .v6-rp__col { grid-column: 1 / -1; min-width: 0; max-width: 760px; }
+.v6-rp__plan[data-req] > .v6-rp__col:first-child { grid-column: 1 / span 7; max-width: none; }
+.v6-rp__plan[data-req] > .v6-rp__col:last-child { grid-column: 9 / span 4; max-width: none; }
+.v6-rp__reqs { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.v6-rp__reqs li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: baseline; font-size: 15px; line-height: 1.55; color: var(--ink-2); }
+.v6-rp__journeys { margin: 12px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--line-soft); }
+.v6-rp__journeys li { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--line-soft);
+  font-size: 15px; line-height: 1.5; color: var(--ink-2); }
+.v6-rp__journeys .v6-rp__num { flex: none; font-size: var(--t-mono); color: var(--ink-3); }
+.v6-rp__id { margin: 14px 0 0; display: flex; gap: 12px; font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
+
+/* Steps: the kit's RecordSteps, journey by journey; a long journey in two halves from 900px up. */
+.v6-rp__runs { display: grid; gap: 24px; min-width: 0; }
+.v6-rp__journey { min-width: 0; }
+.v6-rp__jname { margin: 0 0 10px; font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); overflow-wrap: anywhere; }
+.v6-rp__halves { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--col-gap); align-items: start; }
+
+/* What it found: where, then expected and observed in the record's words. */
+.v6-rp__finding { display: grid; gap: 16px; align-content: start; min-width: 0; }
+.v6-rp__at { margin: 0; font-family: var(--mono); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-3); }
+.v6-rp__eo { margin: 0; display: grid; gap: 14px; }
+.v6-rp__eo dt { font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
+.v6-rp__eo dd { margin: 4px 0 0; font-size: 15px; line-height: 1.5; color: var(--ink); overflow-wrap: anywhere; }
+.v6-rp__eo dd[data-tone="stop"] { color: var(--stop-ink); }
+
+/* An evidence crop: never wider than 640 (plan 0.4) or than its own pixels (--shot-w, set per picture). Its
+   bar's address is where the run happened, so it stays whole: when the address and the recorded date do not
+   fit one line, the date wraps under it, right-aligned (the kit bar's own wrap), instead of the address being
+   cut. A crop too narrow for its address names the app instead (RunShot). */
+.v6-rp__shot { width: 100%; max-width: min(640px, var(--shot-w, 640px)); min-width: 0; }
+.v6-rp__shot .v6-mp__addr { flex: 1 0 auto; max-width: 100%; }
+
+/* A repair prompt or a command is long running prose: it wraps instead of scrolling sideways. Copy still
+   copies the text exactly (the block's text is the source, byte for byte). */
+.v6-rp__prompt, .v6-rp__cli { min-width: 0; }
+.v6-rp__cli { display: grid; gap: 10px; }
+:is(.v6-rp, .v6-uc) .v6-code code { white-space: pre-wrap; overflow-wrap: anywhere; }
+.v6-rp__more { margin-top: 20px; }
+.v6-rp__aside { display: grid; gap: 12px; align-content: start; }
+
+/* Outcomes of a set of runs (the agencies panel). */
+.v6-rp__outs { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line-soft); }
+.v6-rp__outs li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 20px; padding: 12px 0; border-bottom: 1px solid var(--line-soft); }
+.v6-rp__outs .v6-rp__k { flex-basis: 100%; }
+.v6-rp__outs .v6-rp__big { flex-basis: 100%; }
+
+/* =================================================================== the panel's layouts === */
+/* split: the steps or the picture on one side, the facts on the other, on the twelve columns. */
+.v6-rp__split { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--col-gap); row-gap: 24px; align-items: start; }
+.v6-rp__split > .v6-rp__main { grid-column: 1 / span 8; grid-row: 1; min-width: 0; }
+.v6-rp__split > .v6-rp__side { grid-column: 10 / span 3; grid-row: 1; min-width: 0; display: grid; gap: 16px; align-content: start; }
+.v6-rp__split[data-shot] > .v6-rp__first { grid-column: 1 / span 5; }
+.v6-rp__split[data-shot] > .v6-rp__main { grid-column: 7 / span 6; }
+.v6-rp__split[data-sentence] > .v6-rp__main { grid-column: 1 / span 7; }
+.v6-rp__split[data-sentence] > .v6-rp__side { grid-column: 8 / span 5; }
+.v6-rp__split[data-shot] > .v6-rp__first .v6-rp__claim { padding: 22px 24px; }
+.v6-rp__split[data-shot] > .v6-rp__first .v6-rp__q { font-size: 17px; line-height: 1.55; }
+/* three: what it found, the picture, the prompt (the finding view). From 1100px three columns, a wide picture
+   given a little more room than the text beside it. */
+.v6-rp__three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px var(--col-gap); align-items: start; }
+.v6-rp__three[data-shape="wide"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1fr); }
+.v6-rp__cell { min-width: 0; }
+
+@media (max-width: 1099px) {
+  .v6-rp__split > .v6-rp__main { grid-column: 1 / span 8; }
+  .v6-rp__split > .v6-rp__side { grid-column: 9 / span 4; }
+  .v6-rp__split[data-sentence] > .v6-rp__main { grid-column: 1 / span 7; }
+  .v6-rp__split[data-sentence] > .v6-rp__side { grid-column: 8 / span 5; }
+}
+/* 900 to 1099px: the finding view in two columns, so all three stay compact. A narrow crop (Larkspur's contact
+   list) keeps its own width on the right, and the finding and the prompt share the left; a wide crop sits under
+   the finding, a little narrower, and the prompt takes the right. The box's height is the frame's below. */
+@media (min-width: 900px) and (max-width: 1099px) {
+  .v6-rp__three { row-gap: 24px; }
+  .v6-rp__three[data-shape="narrow"] { grid-template-columns: minmax(0, 1fr) var(--shot-w, 268px); }
+  .v6-rp__three[data-shape="narrow"] > .v6-rp__c-find { grid-area: 1 / 1; }
+  .v6-rp__three[data-shape="narrow"] > .v6-rp__c-prompt { grid-area: 2 / 1; }
+  .v6-rp__three[data-shape="narrow"] > .v6-rp__c-shot { grid-area: 1 / 2 / 3 / 3; }
+  .v6-rp__three[data-shape="wide"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .v6-rp__three[data-shape="wide"] > .v6-rp__c-find { grid-area: 1 / 1; }
+  .v6-rp__three[data-shape="wide"] > .v6-rp__c-shot { grid-area: 2 / 1; }
+  .v6-rp__three[data-shape="wide"] > .v6-rp__c-prompt { grid-area: 1 / 2 / 3 / 3; }
+  .v6-rp__three[data-shape="wide"] .v6-rp__shot { max-width: min(440px, var(--shot-w, 640px)); }
+}
+/* From 900px the box is a visible frame, the panel ground of MediaPanel and the code block, and it is as tall as
+   its tallest view instead of a fixed 520 (560 at 900 to 1099) (final review, 2026-10-02): an invisible fixed box
+   under a 171 to 466px view left the largest empty bands on the site, plain black with nothing around them. Every
+   view still shares the kit's one grid cell, so height:auto sizes the box to the tallest view and switching tabs
+   moves nothing below it (measured on all seven sector pages at 900, 1024, 1100, 1440 and 1920: no movement, no
+   sideways overflow). The space a shorter view leaves is now the inside of one evidence window. Below 900 the
+   views stack and the box takes the open view's own height (below). */
+@media (min-width: 900px) {
+  .v6-rp .v6-tabs__panels { height: auto; padding: 28px; background: #0E0E10; border: 1px solid var(--line); border-radius: var(--r-card); }
+}
+/* Below 900px every view is one column (the finding beside its picture down to 700px), so the panel takes
+   the open view's own height, exactly as the kit's Tabs do on a phone (kit.css, max-width 640px): a fixed 520
+   box would hide most of a stacked view behind a scroll. The reader's own tap changes the height, which is
+   not a layout shift. */
+@media (max-width: 899px) {
+  .v6-rp__split > .v6-rp__main, .v6-rp__split > .v6-rp__side,
+  .v6-rp__split[data-shot] > .v6-rp__first, .v6-rp__split[data-shot] > .v6-rp__main,
+  .v6-rp__split[data-sentence] > .v6-rp__main, .v6-rp__split[data-sentence] > .v6-rp__side,
+  .v6-rp__plan[data-req] > .v6-rp__col:first-child, .v6-rp__plan[data-req] > .v6-rp__col:last-child { grid-column: 1 / -1; grid-row: auto; }
+  .v6-rp__halves { grid-template-columns: minmax(0, 1fr); }
+  .v6-rp__halves > .v6-rs + .v6-rs { border-top: 0; }
+  .v6-rp__three, .v6-rp__three[data-shape="wide"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .v6-rp__three > .v6-rp__c-prompt { grid-column: 1 / -1; }
+}
+@media (min-width: 641px) and (max-width: 899px) {
+  .v6-rp .v6-tabs__panels { display: block; position: relative; height: auto; }
+  .v6-rp .v6-tabs__panel { position: absolute; top: 0; left: 0; right: 0; overflow: visible; }
+  .v6-rp .v6-tabs__panel[data-on="true"] { position: relative; }
+}
+@media (max-width: 699px) {
+  .v6-rp__three, .v6-rp__three[data-shape="wide"] { grid-template-columns: minmax(0, 1fr); }
+  .v6-rp__three > .v6-rp__c-prompt { grid-column: auto; }
+}
+@media (max-width: 560px) {
+  .v6-rp__claim, .v6-rp__claim[data-large], .v6-rp__split[data-shot] > .v6-rp__first .v6-rp__claim { padding: 22px 20px; }
+  .v6-rp__q { font-size: 17px; }
+  .v6-rp__claim[data-large] .v6-rp__q { font-size: 19px; }
+}
+.v6-rp__jnote { margin-top: 12px; }
+
+/* =================================================================== a use-case page (T3) === */
+/* A reading column (680, .v6-wrap--read): the head, then one section per part of the record. The h1 is the
+   read size (.v6-dread), section h2s the h3 size (.v6-dm), as on a read page (T9). */
+.v6-uc__head { padding-top: clamp(56px, 7.5vw, 112px); }
+.v6-uc__crumb { margin: 0 0 24px; font-size: var(--t-label); line-height: 1.5; color: var(--ink-3); }
+.v6 .v6-uc__crumb a { color: var(--ink-3); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px;
+  text-decoration-color: var(--line-strong); transition: color var(--dur-1) var(--ease-out), text-decoration-color var(--dur-1) var(--ease-out); }
+.v6 .v6-uc__crumb a:hover { color: var(--ink); text-decoration-color: currentColor; }
+.v6-uc__h1 { max-width: 22ch; }
+.v6-uc__outcome { margin: 20px 0 0; max-width: 60ch; font-size: 20px; line-height: 1.5; color: var(--ink-2); text-wrap: pretty; }
+.v6-uc__meta { margin: 32px 0 0; padding-top: 20px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 14px 20px; }
+.v6-uc__meta > div { min-width: 0; }
+.v6-uc__meta dt { font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
+.v6-uc__meta dd { margin: 3px 0 0; font-family: var(--mono); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-2); overflow-wrap: anywhere; }
+
+.v6-uc__body { padding-bottom: clamp(16px, 2vw, 32px); }
+.v6-uc__sec { margin-top: clamp(64px, 7vw, 96px); }
+.v6-uc .v6-uc__h2 { margin: 0 0 20px; max-width: 24ch; text-wrap: balance; }
+.v6-uc__lead { margin: 0 0 24px; max-width: 60ch; font-size: var(--t-read); line-height: 1.65; color: var(--ink-2); text-wrap: pretty; }
+.v6-uc__read { margin: 0; max-width: 64ch; font-size: var(--t-read); line-height: 1.65; color: var(--ink-2); text-wrap: pretty; }
+.v6-uc__block { margin-top: 28px; display: grid; gap: 10px; min-width: 0; }
+/* What it found, then its picture under it; a narrow crop (Larkspur's contact list, 250 wide) stands beside
+   the finding instead of leaving the column's right side empty, and goes under it again on a phone. */
+.v6-uc__found { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; align-items: start; min-width: 0; }
+.v6-uc__found > div { min-width: 0; }
+.v6-uc__found[data-shape="narrow"] { grid-template-columns: minmax(0, 1fr) var(--shot-w, 268px); column-gap: 40px; }
+@media (max-width: 640px) { .v6-uc__found[data-shape="narrow"] { grid-template-columns: minmax(0, 1fr); } }
+.v6-uc__label { margin: 0 0 12px; font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
+.v6-uc__after { margin-top: 16px; }
+.v6-uc__held { display: grid; gap: 10px; }
+.v6-uc__held .v6-uc__lead { margin: 0; }
+.v6-uc__big { margin: 0; }
+.v6-uc__big .v6-sig { font-size: 15px; }
+.v6-uc__open { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line-soft); }
+.v6-uc__open li { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 24px; padding: 16px 0;
+  border-bottom: 1px solid var(--line-soft); }
+.v6 .v6-uc__olink { font-size: 16px; font-weight: 500; line-height: 1.5; color: var(--ink); text-decoration: underline; text-decoration-thickness: 1px;
+  text-underline-offset: 4px; text-decoration-color: var(--line-strong); transition: text-decoration-color var(--dur-1) var(--ease-out); }
+.v6 .v6-uc__olink:hover { color: var(--ink); text-decoration-color: currentColor; }
+.v6 .v6-uc__olink:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; border-radius: var(--r-sm); }
+.v6-uc__oaddr { min-width: 0; font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); overflow-wrap: anywhere; }
+/* The related links sit closer to the record than a full section's rhythm. */
+.v6-uc__rel { padding-top: clamp(72px, 7vw, 104px); }
+
+@media (max-width: 560px) {
+  .v6-uc__outcome { font-size: 17px; line-height: 1.55; }
+  .v6-uc__meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 20px; }
+}
+
+/* ================================================================ the use-case index (T15) === */
+/* Four rows on hairlines: the date, the title (the row's one link, stretched over the row), what the app is,
+   and the outcome. A row's ground turns --surface on hover (plan A6, list row). */
+.v6-ucx { padding-top: clamp(8px, 1vw, 16px); }
+.v6-ucx__list { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.v6-ucx__row { position: relative; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--col-gap); row-gap: 10px;
+  align-items: baseline; padding: 32px 0; border-bottom: 1px solid var(--line); transition: background-color 140ms var(--ease-out); }
+.v6-ucx__row:hover { background: var(--surface); }
+.v6-ucx__date { grid-column: 1 / span 2; margin: 0; padding-left: 16px; font-family: var(--mono); font-size: var(--t-mono); line-height: 1.5;
+  color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.v6-ucx__main { grid-column: 3 / span 6; min-width: 0; }
+.v6-ucx .v6-ucx__t { margin: 0; font-family: var(--sans); font-size: var(--t-h4); font-weight: 500; line-height: 1.3; letter-spacing: -0.008em;
+  color: var(--ink); text-wrap: balance; }
+.v6 .v6-ucx__link { color: var(--ink); text-decoration: none; }
+.v6 .v6-ucx__link:hover { color: var(--ink); }
+.v6-ucx__link::after { content: ""; position: absolute; inset: 0; }
+.v6 .v6-ucx__link:focus-visible { outline: none; }
+.v6-ucx__row:has(.v6-ucx__link:focus-visible) { outline: 2px solid #FAFAFA; outline-offset: -2px; border-radius: var(--r-sm); }
+.v6-ucx__app { margin: 8px 0 0; max-width: 56ch; font-size: 15px; line-height: 1.55; color: var(--ink-3); text-wrap: pretty; }
+.v6-ucx__out { grid-column: 9 / span 3; min-width: 0; display: grid; gap: 6px; }
+.v6-ucx__word { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+.v6-ucx__k { font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
+.v6-ucx__id { margin: 0; font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
+.v6-ucx__go { grid-column: 12; justify-self: end; padding-right: 16px; font-size: 18px; line-height: 1; color: var(--ink-3);
+  transition: transform var(--dur-2) var(--ease), color var(--dur-1) var(--ease-out); }
+.v6-ucx__row:hover .v6-ucx__go { color: var(--ink); transform: translateX(4px); }
+.v6-ucx__note { margin: 28px 0 0; max-width: 64ch; font-size: var(--t-small); line-height: 1.55; color: var(--ink-3); }
+
+@media (max-width: 899px) {
+  .v6-ucx__row { grid-template-columns: minmax(0, 1fr) auto; padding: 24px 0; }
+  .v6-ucx__date, .v6-ucx__main, .v6-ucx__out { grid-column: 1; padding-left: 0; }
+  .v6-ucx__go { grid-column: 2; grid-row: 2; align-self: start; padding-right: 4px; }
+  .v6-ucx__row:hover { background: none; }
+}
+
+/* =========================================================================== other scripts === */
+/* Plan A3: the headings this file sets its own measure on, measured in em for Japanese, Chinese and Korean. */
+:is(:lang(ja), :lang(zh), :lang(ko)) .v6-uc .v6-uc__h1 { max-width: 18em; }
+:is(:lang(ja), :lang(zh), :lang(ko)) .v6-uc .v6-uc__h2 { max-width: 22em; }
+:is(:lang(ja), :lang(zh), :lang(ko)) .v6-ucx .v6-ucx__t { letter-spacing: 0; }
+:lang(ja) .v6-ucx .v6-ucx__t { word-break: auto-phrase; }
+:lang(hi) .v6-ucx .v6-ucx__t { line-height: 1.4; }
+
+@media (prefers-reduced-motion: reduce) {
+  .v6-ucx__row, .v6-ucx__go, .v6 .v6-uc__crumb a, .v6 .v6-uc__olink { transition: none !important; }
+  .v6-ucx__row:hover .v6-ucx__go { transform: none; }
+}

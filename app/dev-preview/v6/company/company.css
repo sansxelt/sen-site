@@ -1,0 +1,101 @@
+/* ============================================================================
+   /company (plan T4, revision 2). Only what the kit does not already draw: the two plain lists under
+   "Who it is for", the partnership lockup cards and the contact strip. Every size, colour and radius is an A2
+   token; the page ground is black and nothing here adds a dot, a status colour or a shadow.
+   ============================================================================ */
+
+/* The hero's portrait cut (FrameHero shows it at 560px and below). page.tsx places it at 50% 50%, which keeps the
+   pad clear of the headline on a phone. On the widest, shortest frames that still use it (a viewport of at least
+   7:10, such as 480x640 or 560x700) the picture overflows the frame by far more, and 50% would lift the drone off the
+   top of the frame: there it stays at 50% 35%. Only the position changes; the kit still draws the picture. */
+@media (max-width: 560px) and (min-aspect-ratio: 7/10) {
+  #company-hero .v6-fh__img { object-position: 50% 35%; }
+}
+
+/* Mission: one centred statement and its line, then one quieter sentence (defense, said once on this page) and
+   the link to the sector page under it. */
+.co-mission .v6-head { margin-bottom: 0; }
+.co-mission__more { display: flex; flex-direction: column; align-items: center; gap: 16px; max-width: 760px;
+  margin: 32px auto 0; text-align: center; }
+.co-mission .co-mission__line { margin: 0; max-width: 60ch; font-size: var(--t-body); line-height: 1.6; color: var(--ink-3);
+  text-wrap: pretty; }
+
+/* WHO IT IS FOR: two plain numbered lists side by side, on the page ground. Not a DoesBox (plan T4): no card,
+   no box, the same hairline rhythm as the rows further down. One column below 900px. */
+/* Side by side, the two columns share their rows (subgrid): the heads, the lists and the link cards line up across
+   the page even when one list runs a line longer than the other. */
+.co-fit { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto auto auto; column-gap: var(--col-gap); row-gap: 0; }
+.co-fit__col { min-width: 0; display: grid; grid-row: span 3; grid-template-rows: subgrid; align-content: start; }
+.co-fit .co-fit__h { margin: 0 0 12px; font-family: var(--sans); font-size: 16px; font-weight: 600; line-height: 1.4;
+  letter-spacing: 0; color: var(--ink); }
+.co-fit__list { margin: 0; padding: 0; list-style: none; border-bottom: 1px solid var(--line); }
+.co-fit__item { display: grid; grid-template-columns: 32px minmax(0, 1fr); column-gap: 12px; align-items: baseline;
+  padding: 20px 0; border-top: 1px solid var(--line); }
+.co-fit__n { font-family: var(--mono); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-4); font-variant-numeric: tabular-nums; }
+/* One plain sentence an item, at the reading size. */
+.co-fit .co-fit__t { margin: 0; max-width: 52ch; font-size: var(--t-read); font-weight: 400; line-height: 1.6; letter-spacing: 0; color: var(--ink-2); text-wrap: pretty; }
+/* Each list ends on a link card to the page that holds its detail. The card holds one line, so it does not keep
+   the card grid's 220px floor. */
+.co-fit__after { margin-top: 32px; display: flex; }
+.co-fit__after .v6-fc { flex: 1 1 auto; min-width: 0; min-height: 0; }
+@media (max-width: 899px) {
+  .co-fit { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; row-gap: 48px; }
+  .co-fit__col { display: block; grid-row: auto; }
+}
+
+/* The line under the 2x2. */
+.co-after { margin-top: 32px; }
+
+/* The commitments: the shared .v6-rows, straight after the SectionHead, which already leaves --head-gap. */
+.v6-rows.co-rows { margin: 0; padding: 0; list-style: none; }
+.co-rows .v6-row__d { max-width: 64ch; }
+
+/* PARTNERSHIP RECORDS: two link cards with text lockups (plan T4). No marks and no dates on a new surface
+   (plan 0.2, E6). Inside the Band they sit on the page ground, like every card on a band. */
+.co-pr { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--col-gap); }
+.co-pr > li { display: flex; min-width: 0; }
+.co-pr__card { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; min-height: 260px; padding: 32px;
+  background: var(--paper); border: 1px solid var(--line-soft); border-radius: var(--r-card);
+  color: var(--ink); text-decoration: none; transition: border-color var(--dur-1) var(--ease-out); }
+.co-pr .co-pr__l { font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; letter-spacing: 0; color: var(--ink-4); }
+.co-pr .co-pr__lock { margin: 28px 0 0; font-family: var(--display); font-size: var(--t-h2); font-weight: 500; font-synthesis-weight: none;
+  line-height: 1.12; letter-spacing: -0.016em; color: var(--ink); overflow-wrap: anywhere; }
+.co-pr .co-pr__x { color: var(--ink-3); }
+.co-pr .co-pr__d { margin: 12px 0 0; font-size: 15px; line-height: 1.6; color: var(--ink-3); }
+.co-pr__go { display: inline-block; margin-top: auto; padding-top: 24px; font-size: 16px; line-height: 1; color: var(--ink-3);
+  transition: transform var(--dur-2) var(--ease-out), color var(--dur-1) var(--ease-out); }
+/* The site-wide a:hover colour outranks a bare class on a link: the card states its own on hover. */
+a.co-pr__card:hover { border-color: var(--line-strong); color: var(--ink); }
+a.co-pr__card:hover .co-pr__go { transform: translateX(4px); color: var(--ink); }
+a.co-pr__card:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
+@media (max-width: 759px) {
+  .co-pr { grid-template-columns: minmax(0, 1fr); }
+  .co-pr__card { min-height: 0; padding: 24px; }
+  .co-pr .co-pr__lock { margin-top: 20px; }
+}
+
+/* THE CONTACT STRIP (#contact): the line and the form's button on the left, the three addresses on the right.
+   The addresses are links that keep their own colour on hover. */
+.co-contact { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--col-gap); row-gap: 40px; align-items: start; }
+.co-contact__text { grid-column: 1 / span 6; min-width: 0; }
+.co-contact__text .v6-head { margin-bottom: 32px; }
+.co-contact__list { grid-column: 8 / -1; min-width: 0; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.co-contact__list li { display: flex; flex-direction: column; gap: 4px; padding: 20px 0; border-bottom: 1px solid var(--line); }
+.co-contact__list a { align-self: flex-start; font-size: 17px; font-weight: 500; line-height: 1.45; color: var(--ink); text-decoration: none;
+  overflow-wrap: anywhere; background-image: linear-gradient(currentColor, currentColor); background-position: 0 100%;
+  background-repeat: no-repeat; background-size: 100% 1px; transition: background-size var(--dur-2) var(--ease-out); }
+.co-contact__list a:hover { color: var(--ink); background-size: 100% 2px; }
+.co-contact__list a:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; border-radius: var(--r-sm); }
+.co-contact__list span { font-size: 15px; line-height: 1.55; color: var(--ink-3); }
+@media (max-width: 899px) {
+  .co-contact__text, .co-contact__list { grid-column: 1 / -1; }
+}
+
+/* Other scripts (plan A3): the lockup is a heading at the h2 size, so it gets the h2 tier's overrides. */
+:is(:lang(ja), :lang(zh), :lang(ko)) .co-pr .co-pr__lock { letter-spacing: 0; line-height: 1.22; }
+:lang(hi) .co-pr .co-pr__lock { line-height: 1.22; }
+
+@media (prefers-reduced-motion: reduce) {
+  .co-pr__card, .co-pr__go, .co-contact__list a { transition: none !important; }
+  a.co-pr__card:hover .co-pr__go { transform: none !important; }
+}

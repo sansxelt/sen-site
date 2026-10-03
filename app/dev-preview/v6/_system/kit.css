@@ -1,0 +1,449 @@
+/* ============================================================================
+   THE COMPONENT KIT (plan A5, revision 2). Styles for _system/kit.tsx and _system/kit-client.tsx.
+
+   This file is imported by those two modules only, so it loads on the routes that use the kit and nowhere
+   else. Every size, colour, radius and duration is an A2 token from v6.css; a value written as a number here
+   is one the plan states as a number (a 64px hero inset, a 36px panel bar), not a token someone forgot.
+
+   Three rules hold for everything below:
+     - BLACK, AND NO DOTS. No status dots, no tick circles, no window dots, no dot grids, no middle-dot separators.
+       Colour appears only as --stop-ink on a finding (FactRow tone "stop", the step that found the problem).
+     - LABELS STAY READABLE ON HOVER. public/vraelis/tokens.css sets a:hover { color } at (0,1,1), which beats
+       a bare class on a link, so every link here states its own colour in the hover rule too.
+     - REDUCED MOTION MEANS NO TRANSFORMS. The block at the end turns off every scale, nudge and fade.
+
+   Local custom properties are either set in this file at the start of a line (--fh-base) or by kit.tsx and
+   kit-client.tsx as style props (--fh-s, --fh-pos, --fh-pos-p, --tabs-h), and every one set from script is read
+   with a fallback, so a page that never sets it still renders the plan's value. --cmp-bg is read the same way.
+   ============================================================================ */
+
+/* ============================================================== FrameHero ===
+   The homepage film frame (hero.css .v6-h and .v6-h__frame): the same inset, radius and three height rules, so
+   moving from the homepage to a page the frame does not move. The section paints the page ground around the
+   frame, as the homepage does, so the strips beside the frame and its rounded corners read as page and the bar
+   samples black. data-kind on the section says which of the two kinds it is:
+     scene  a full-bleed picture under a shade (the picture settles from 1.03 to 1 as the page scrolls);
+     panel  no picture: #0E0E10 with one soft light, and one real panel, on the right above 1100px (its bottom
+            edge runs off the frame) and across the top below that.
+   The body (eyebrow, h1, sub, actions) is the last thing in the frame and sits at its foot in both kinds, so the
+   sentence is in the same place on every page. */
+.v6-fh { position: relative; background: var(--paper); padding: 0 var(--frame-inset); }
+.v6-fh__frame {
+  /* The homepage frame's height at this width: hero.css writes it as height, min-height and max-height, and a
+     clamp is the same three rules in one value (min-height wins over max-height in both). Here it is a floor,
+     not a fixed height: a translated headline that needs more room grows the frame instead of being clipped.
+     807px at 1440x900, 1057px at 1536x1152. */
+  --fh-base: clamp(520px, calc(100svh - var(--nav-h, 66px) - var(--frame-inset)), max(1100px, 52vw));
+  position: relative; isolation: isolate; overflow: hidden; border-radius: var(--r-frame); background: #08090B;
+  min-height: var(--fh-base);
+  display: flex; flex-direction: column;
+}
+
+/* The scene picture. FrameMedia (kit-client) writes --fh-s from scroll: 1.03 at the top, 1 after 320px. The
+   <picture> from kit.tsx places its img absolutely over this layer (next/image's fill), and the cut's own
+   object-position comes in as --fh-pos (landscape) and --fh-pos-p (the portrait, at 560px and below). */
+.v6-fh__media { position: absolute; inset: 0; z-index: -2; transform: scale(var(--fh-s, 1.03)); transform-origin: 50% 50%; will-change: transform; }
+.v6-fh__img { object-fit: cover; object-position: var(--fh-pos, 50% 50%); }
+.v6-fh__shade { position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    linear-gradient(0deg, rgba(8,9,11,0.88) 0%, rgba(8,9,11,0.6) 30%, rgba(8,9,11,0) 62%),
+    linear-gradient(90deg, rgba(8,9,11,0.45) 0%, rgba(8,9,11,0) 55%); }
+/* A capture made now says so (plan 0.2), at the frame's top right on its own plate. */
+.v6-fh .v6-fh__credit { position: absolute; top: 20px; right: 24px; max-width: calc(100% - 48px); margin: 0; padding: 4px 8px;
+  border-radius: 6px; background: rgba(8,9,11,0.6); font-family: var(--mono); font-size: var(--t-mono-s); font-weight: 400;
+  line-height: 1.45; letter-spacing: 0; color: rgba(250,250,250,0.8); text-wrap: pretty; }
+
+/* 64px in from the frame (plan A5), or the page column's own left edge where that is further in, so on a wide
+   screen the headline lines up with the wordmark and every section below it instead of sitting 124px outside
+   them (1920). 100% here is the frame's width: the page column's edge, measured from the frame. The top margin
+   is auto, which is what holds the body at the frame's foot. */
+.v6-fh__body { position: relative; margin: auto 64px 64px; margin-left: max(64px, calc((100% - var(--max)) / 2 + var(--gutter))); max-width: 760px; }
+/* When the body needs more room than the frame has (a small phone, a long translation), the frame grows, and this
+   keeps the eyebrow off the frame's top edge (it touched it on /platform at 320x568): the same inset as the sides,
+   64, then 40 and 20 below. Nothing moves while the body fits. Not on the panel kind at 1100px and below, where the
+   panel above the body is in the flow and keeps its own margin. */
+.v6-fh[data-kind="scene"] .v6-fh__frame { padding-top: 64px; }
+@media (min-width: 1101px) { .v6-fh[data-kind="panel"] .v6-fh__frame { padding-top: 64px; } }
+.v6-fh .v6-fh__eyebrow { margin: 0 0 16px; font-family: var(--sans); font-size: 14px; font-weight: 500; line-height: 1.3;
+  letter-spacing: 0; color: rgba(250,250,250,0.78); }
+.v6-fh .v6-fh__h1 { margin: 0; max-width: 16ch; font-family: var(--display); font-weight: 500; font-synthesis-weight: none;
+  font-size: var(--t-display); line-height: 1.04; letter-spacing: -0.025em; color: #FAFAFA; text-wrap: balance; }
+/* A headline of two or three sentences: one sentence to a line (kit.tsx sentenceLines), each balanced on its own. */
+.v6-fh .v6-fh__line { display: block; }
+.v6-fh .v6-fh__sub { margin: 20px 0 0; max-width: 52ch; font-size: var(--t-lead); line-height: 1.5; color: rgba(250,250,250,0.84); text-wrap: pretty; }
+/* The pair wraps (a German label is long); on a phone each button also grows to share the line. */
+.v6-fh__actions { margin-top: 32px; display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+/* The ghost sits on a picture, not on the page: its label is pinned white in both states. */
+.v6-fh .v6-fh__actions .v6-btn--ghost, .v6-fh .v6-fh__actions .v6-btn--ghost:hover { color: #FAFAFA; }
+
+/* The panel kind. The light sits low on the right, behind where the panel stands. */
+.v6-fh[data-kind="panel"] .v6-fh__frame {
+  background: radial-gradient(70% 90% at 80% 100%, rgba(255,255,255,0.06), transparent 65%), #0E0E10; }
+.v6-fh__panel { position: absolute; right: 64px; bottom: 0; width: min(46%, 640px); max-height: calc(100% - 96px);
+  display: flex; flex-direction: column; }
+/* An image panel is a MediaPanel whose bottom edge runs off the frame: square bottom corners and no bottom
+   border, and the picture gives up height (cropped from its top left) when the frame is shorter than it. */
+.v6-fh__panel > .v6-mp { display: flex; flex-direction: column; min-height: 0; }
+.v6-fh__panel .v6-mp__shell { display: flex; flex-direction: column; min-height: 0; padding-bottom: 0; border-bottom: 0;
+  border-radius: var(--r-card) var(--r-card) 0 0; }
+.v6-fh__panel .v6-mp__bar { flex: none; }
+.v6-fh__panel .v6-mp__img { flex: 0 1 auto; min-height: 0; object-fit: cover; object-position: left top; border-radius: 10px 10px 0 0; }
+/* A coded panel: the same shell around any node. A node taller than the panel fades out at the foot rather than
+   ending on a cut line. Its bar is MediaPanel's (the same address and tag spans), flush with the shell; the
+   credit, when there is one, takes the bar's right side. */
+.v6-fh__node { margin: 0; display: flex; flex-direction: column; min-height: 0; overflow: hidden; background: #0E0E10;
+  border: 1px solid var(--line); border-bottom: 0; border-radius: var(--r-card) var(--r-card) 0 0; }
+.v6-fh__nbar { flex: none; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; column-gap: 16px;
+  row-gap: 2px; min-height: 36px; padding: 8px 12px; border-bottom: 1px solid var(--line-soft);
+  font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
+.v6-fh__nbody { flex: 1 1 auto; min-height: 0; overflow: hidden; padding: 24px 24px 32px;
+  -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 32px), transparent);
+  mask-image: linear-gradient(180deg, #000 calc(100% - 32px), transparent); }
+/* Above 1100px the body keeps clear of the panel: 560 wide at most, and never under it. */
+@media (min-width: 1101px) {
+  .v6-fh[data-kind="panel"] .v6-fh__body { max-width: 560px; margin-right: calc(64px + min(46%, 640px) + 48px); }
+}
+/* Below 1100px the panel moves to the top of the frame, at 46% (42% on a phone) of the frame's height. It is in
+   the flow there, so the body is always below it: a long headline grows the frame rather than running under the
+   panel. Every corner is round again, and an evidence image still shows no wider than 640px. */
+@media (max-width: 1100px) {
+  .v6-fh__panel { position: relative; right: auto; bottom: auto; width: auto; max-height: none;
+    height: calc(0.46 * var(--fh-base)); margin: 24px 24px 32px; }
+  .v6-fh__panel[data-evidence] { max-width: 640px; }
+  .v6-fh__panel > .v6-mp, .v6-fh__panel .v6-mp__shell, .v6-fh__node { flex: 1 1 auto; }
+  .v6-fh__panel .v6-mp__shell { padding-bottom: 8px; border-bottom: 1px solid var(--line); border-radius: var(--r-card); }
+  .v6-fh__panel .v6-mp__img { flex: 1 1 0; border-radius: 10px; }
+  .v6-fh__node { border-bottom: 1px solid var(--line); border-radius: var(--r-card); }
+}
+@media (max-width: 900px) {
+  .v6-fh__frame { --fh-base: max(440px, min(76svh, 640px)); }
+  .v6-fh[data-kind="scene"] .v6-fh__frame { padding-top: 40px; }
+  .v6-fh__body { margin: auto 40px 40px; }
+}
+@media (max-width: 560px) {
+  .v6-fh__frame { --fh-base: clamp(520px, calc(100svh - var(--nav-h, 66px) - 10px), 900px); }
+  .v6-fh[data-kind="scene"] .v6-fh__frame { padding-top: 20px; }
+  .v6-fh__img { object-position: var(--fh-pos-p, var(--fh-pos, 50% 50%)); }
+  .v6-fh__panel { height: calc(0.42 * var(--fh-base)); margin: 16px 16px 24px; }
+  .v6-fh__nbody { padding: 16px 16px 28px; }
+  /* On a phone the credit takes its own room at the top of the frame, in the flow: a body taller than the frame
+     (a small phone, a long translation) then grows the frame instead of printing the eyebrow over the credit
+     (defense at 320x568, 2026-10-02). It sits where it did, 12px from the top and right (the frame's 20px top
+     padding, less 8). */
+  .v6-fh .v6-fh__credit { position: relative; top: auto; right: auto; flex: none; align-self: flex-end;
+    max-width: calc(100% - 24px); margin: -8px 12px 16px; }
+  .v6-fh__body { margin: auto 20px 20px; }
+  /* On a phone the text covers most of the picture, so the shade reaches higher and the body carries its own scrim,
+     which fades out in the 48px above the eyebrow. Measured over the real pictures (herocheck): without them the
+     defense eyebrow sat on the capture's T-4 row at 360x740 and the fleets eyebrow on the sky at 320x568. */
+  .v6-fh__shade { background:
+      linear-gradient(0deg, rgba(8,9,11,0.9) 0%, rgba(8,9,11,0.72) 50%, rgba(8,9,11,0) 85%),
+      linear-gradient(90deg, rgba(8,9,11,0.45) 0%, rgba(8,9,11,0) 55%); }
+  .v6-fh[data-kind="scene"] .v6-fh__body::before { content: ""; position: absolute; z-index: -1; inset: -48px -20px -20px;
+    pointer-events: none; background: linear-gradient(0deg, rgba(8,9,11,0.6) 0%, rgba(8,9,11,0.6) calc(100% - 48px), rgba(8,9,11,0) 100%); }
+  /* A word wider than the 260px column at 320px (a German compound) wraps inside the frame instead of running under
+     its clipped edge; outside English it may hyphenate (12+ letter words only), as legal.css does for its titles. */
+  .v6-fh .v6-fh__h1 { font-size: 36px; line-height: 40px; letter-spacing: -0.022em; overflow-wrap: break-word; }
+  .v6:not(:lang(en)) .v6-fh .v6-fh__h1 { -webkit-hyphens: auto; hyphens: auto; hyphenate-limit-chars: 12 5 5; }
+  .v6-fh .v6-fh__sub { margin-top: 16px; font-size: 17px; line-height: 26px; }
+  .v6-fh__actions { margin-top: 24px; gap: 10px; }
+  /* Two md buttons (plan A5 buttons: md is 44 tall, 20 either side, 15/600) that share the line and wrap; a label
+     too long for one line wraps inside its button instead of pushing the page sideways. */
+  .v6 .v6-fh__actions .v6-btn { flex: 1 1 auto; height: auto; min-height: 44px; padding: 8px 20px; font-size: 15px; text-align: center; }
+}
+/* v6.css drops the top padding of a .v6-dark or --sunk section that follows another dark one. FrameHero carries
+   .v6-dark for the dark-ground markers, but it is a frame, not a band: the section after it keeps its rhythm. */
+.v6 .v6-fh + .v6-sec:is(.v6-dark, .v6-sec--sunk) { padding-top: var(--sec); }
+
+/* ============================================================== IndexHero ===
+   IndexHero is PageHero (./ui, styled in pagekit.css) under the plan's prop names. The compact variant only
+   takes room off the top (96 at desktop, scaling down with the normal one); the wrapper draws no box. */
+.v6-ih { display: contents; }
+.v6 .v6-ih--compact .v6-phero { padding-top: clamp(48px, 6.7vw, 96px); }
+
+/* ================================================================ FactRow ===
+   Four facts under the hero, on hairlines. Four across from 900px, two by two below, one column under 400. */
+.v6-fr { padding-top: 24px; }
+.v6-fr__row { margin: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.v6-fr__row[data-n="3"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.v6-fr__row[data-n="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.v6-fr__cell { min-width: 0; padding: 24px; border-left: 1px solid var(--line); }
+.v6-fr__cell:first-child { border-left: 0; padding-left: 0; }
+.v6-fr .v6-fr__l { margin: 0 0 8px; font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; letter-spacing: 0; color: var(--ink-4); }
+.v6-fr .v6-fr__v { margin: 0; font-size: 15px; line-height: 1.5; color: var(--ink); text-wrap: pretty; }
+.v6-fr .v6-fr__v[data-tone="stop"] { color: var(--stop-ink); }
+/* The source line: the sentence, the run id in its own mono element, then the link, 20px apart (plan 0.4: meta
+   items are separated by space, never by a dot). On a narrow screen they wrap as whole items. */
+.v6-fr .v6-fr__src { margin: 12px 0 0; display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 20px; row-gap: 4px;
+  font-size: var(--t-label); line-height: 1.5; color: var(--ink-4); }
+.v6-fr .v6-fr__id { font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; letter-spacing: 0; color: var(--ink-3); }
+@media (max-width: 899px) {
+  .v6-fr__row[data-n="4"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .v6-fr__row[data-n="4"] .v6-fr__cell:nth-child(3) { border-left: 0; padding-left: 0; }
+  .v6-fr__row[data-n="4"] .v6-fr__cell:nth-child(n+3) { border-top: 1px solid var(--line); }
+  .v6-fr__row[data-n="3"] { grid-template-columns: minmax(0, 1fr); }
+  .v6-fr__row[data-n="3"] .v6-fr__cell { border-left: 0; padding: 18px 0; }
+  .v6-fr__row[data-n="3"] .v6-fr__cell + .v6-fr__cell { border-top: 1px solid var(--line); }
+}
+@media (max-width: 399px) {
+  .v6-fr__row[data-n] { grid-template-columns: minmax(0, 1fr); }
+  .v6-fr__row[data-n] .v6-fr__cell { border-left: 0; padding: 18px 0; }
+  .v6-fr__row[data-n] .v6-fr__cell + .v6-fr__cell { border-top: 1px solid var(--line); }
+}
+
+/* ======================================================= FeatureGrid/Card ===
+   data-span is how many of the twelve columns one card takes: 4 (three across), 6 (two), 3 (four). */
+.v6-fg { display: grid; gap: var(--col-gap); grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.v6-fg[data-span="6"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.v6-fg[data-span="3"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+/* A card wrapped in <Reveal> (the grid's reveal prop) still fills its cell. */
+.v6-fg > .v6-reveal { display: flex; flex-direction: column; min-width: 0; }
+.v6-fg > .v6-reveal > .v6-fc { flex: 1 1 auto; }
+@media (max-width: 1099px) { .v6-fg[data-span="3"] { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 899px)  { .v6-fg[data-span="4"] { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 639px)  { .v6-fg[data-span] { grid-template-columns: minmax(0, 1fr); } }
+
+.v6-fc { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 220px; padding: 32px;
+  background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--r-card); overflow: hidden;
+  color: var(--ink-3); text-decoration: none; }
+.v6-fc[data-media] { min-height: 440px; }
+.v6-fc .v6-fc__label { display: block; margin: 0 0 16px; font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45;
+  letter-spacing: 0; color: var(--ink-4); }
+.v6-fc .v6-fc__t { margin: 0; font-family: var(--sans); font-size: var(--t-h4); font-weight: 500; line-height: 1.3;
+  letter-spacing: -0.008em; color: var(--ink); text-wrap: balance; }
+.v6-fc .v6-fc__b { margin: 10px 0 0; font-size: 15px; line-height: 1.6; color: var(--ink-3); text-wrap: pretty; }
+/* The picture bleeds off the right and bottom edges: the wrapper takes the card's padding back on those two
+   sides and sits at the foot of the card, at least 32px under the text. */
+.v6-fc__mwrap { margin: auto -32px -32px 0; padding-top: 32px; }
+.v6-fc__media { overflow: hidden; border-radius: var(--r-media) 0 0 0; border-top: 1px solid var(--line); border-left: 1px solid var(--line); background: var(--paper); }
+.v6-fc__media img { display: block; width: 100%; height: auto; max-height: 260px; object-fit: cover; object-position: left top; transform-origin: 0 0; }
+a.v6-fc { cursor: pointer; transition: border-color var(--dur-1) var(--ease-out); }
+a.v6-fc .v6-fc__media img { transition: transform var(--dur-4) var(--ease-out); }
+a.v6-fc:hover { border-color: var(--line-strong); color: var(--ink-3); }
+a.v6-fc:hover .v6-fc__media img { transform: scale(1.03); }
+a.v6-fc:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
+@media (max-width: 640px) {
+  .v6-fc, .v6-fc[data-media] { min-height: 0; padding: 24px; }
+  .v6-fc__mwrap { margin: auto -24px -24px 0; padding-top: 24px; }
+}
+
+/* ============================================================= MediaPanel ===
+   A real capture in a quiet shell. The bar names the address and what the picture is. It never draws window
+   dots: the bar is words only. The address gives way first (an ellipsis); a long right label, such as a credit,
+   wraps onto its own line, right-aligned, because a credit that is cut off no longer says what it has to. */
+.v6-mp { margin: 0; min-width: 0; }
+.v6-mp__shell { background: #0E0E10; border: 1px solid var(--line); border-radius: var(--r-card); padding: 8px; }
+.v6-mp__bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; column-gap: 16px; row-gap: 2px;
+  min-height: 36px; padding: 8px 12px; margin: -8px -8px 8px; border-bottom: 1px solid var(--line-soft);
+  font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
+.v6-mp__addr { flex: 1 1 12ch; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.v6-mp__tag { flex: 0 1 auto; min-width: 0; margin-left: auto; text-align: right; }
+.v6-mp__img { display: block; width: 100%; height: auto; border-radius: 10px; }
+.v6-mp .v6-mp__cap { margin: 12px 0 0; max-width: 72ch; font-size: var(--t-label); line-height: 1.5; color: var(--ink-4); }
+/* A recorded screenshot is near white: it never shows wider than 640px (plan 0.4). */
+.v6-mp[data-evidence] { max-width: 640px; }
+/* Breakout from a centred reading column (T3, T9): the figure is centred on its column and wider than it,
+   only where the viewport has room for the full width, so it can never push the page sideways. */
+@media (min-width: 1100px) { .v6-mp[data-out="960"] { width: 960px; margin-left: calc(50% - 480px); } }
+@media (min-width: 1164px) { .v6-mp[data-out="1024"] { width: 1024px; margin-left: calc(50% - 512px); } }
+@media (max-width: 560px) { .v6-mp__bar, .v6-fh__nbar { column-gap: 12px; padding: 8px 10px; } }
+
+/* ================================================================ AltRows ===
+   Text in columns 1-5 and the picture in 6-12, then the other way round. DOM order is always text, then
+   media, so a phone reads them in that order and the swap is only ever visual. */
+.v6-ar { margin: 0; padding: 0; list-style: none; display: grid; row-gap: var(--sec); }
+.v6-ar__row { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--col-gap); align-items: center; }
+.v6-ar__text { grid-column: 1 / span 5; grid-row: 1; min-width: 0; }
+.v6-ar__media { grid-column: 6 / span 7; grid-row: 1; min-width: 0; }
+.v6-ar__row:nth-child(even) .v6-ar__text { grid-column: 8 / span 5; }
+.v6-ar__row:nth-child(even) .v6-ar__media { grid-column: 1 / span 7; }
+.v6-ar .v6-ar__n { display: block; margin: 0; font-family: var(--mono); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-4); }
+.v6-ar .v6-ar__t { margin: 16px 0 0; font-family: var(--sans); font-size: var(--t-h3); font-weight: 500; line-height: 1.2;
+  letter-spacing: -0.012em; color: var(--ink); text-wrap: balance; }
+.v6-ar .v6-ar__b { margin: 14px 0 0; font-size: var(--t-read); line-height: 1.65; color: var(--ink-2); text-wrap: pretty; }
+.v6-ar__link { margin-top: 20px; }
+/* An evidence panel (640 at most) is narrower than the seven-column media cell: it keeps to the page column's
+   outer edge, so the space it leaves falls between the text and the picture. */
+.v6-ar__row:nth-child(odd) .v6-ar__media .v6-mp[data-evidence] { margin-left: auto; }
+@media (max-width: 899px) {
+  .v6-ar__row { grid-template-columns: minmax(0, 1fr); row-gap: 24px; }
+  .v6-ar__row .v6-ar__text, .v6-ar__row .v6-ar__media,
+  .v6-ar__row:nth-child(even) .v6-ar__text, .v6-ar__row:nth-child(even) .v6-ar__media { grid-column: 1; grid-row: auto; }
+  .v6-ar__row:nth-child(odd) .v6-ar__media .v6-mp[data-evidence] { margin-left: 0; }
+}
+
+/* =================================================================== Tabs ===
+   Every panel shares one grid cell, so the box never changes size when the tab does: a fixed height from 641px
+   up, with a taller panel scrolling inside it (the open panel is focusable, so a keyboard can scroll it). On a
+   phone the height is the open panel's own (plan A5) and the panel being left fades out over it. Panels
+   cross-fade on opacity alone. */
+.v6-tabs { min-width: 0; }
+/* The 4px of padding is room for the focus ring, which an overflow box would otherwise clip. The 1px line is a
+   background held inside that padding, so it ends exactly at the column edges and does not scroll with the tabs. */
+.v6-tabs__list { display: flex; gap: 28px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none;
+  padding: 4px 4px 0; margin: -4px -4px 0;
+  background: linear-gradient(var(--line), var(--line)) no-repeat left 4px bottom / calc(100% - 8px) 1px; }
+.v6-tabs__list::-webkit-scrollbar { display: none; }
+.v6 .v6-tabs__tab { flex: none; appearance: none; -webkit-appearance: none; margin: 0; padding: 10px 0; border: 0; border-radius: 0;
+  background: none; cursor: pointer; white-space: nowrap; font-family: var(--sans); font-size: 15px; font-weight: 500;
+  line-height: 1.5; letter-spacing: 0; color: var(--ink-3); box-shadow: inset 0 -2px 0 transparent;
+  transition: color var(--dur-1) var(--ease-out), box-shadow var(--dur-1) var(--ease-out); }
+.v6 .v6-tabs__tab:hover { color: var(--ink-2); }
+.v6 .v6-tabs__tab[aria-selected="true"] { color: var(--ink); box-shadow: inset 0 -2px 0 #FAFAFA; }
+.v6 .v6-tabs__tab:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 2px; border-radius: var(--r-sm); }
+.v6-tabs__panels { display: grid; grid-template-rows: minmax(0, 1fr); grid-template-columns: minmax(0, 1fr);
+  margin-top: 24px; height: var(--tabs-h, 520px); }
+.v6-tabs__panel { grid-area: 1 / 1; min-width: 0; min-height: 0; overflow: auto; overscroll-behavior: contain;
+  opacity: 0; visibility: hidden; transition: opacity 200ms var(--ease-out), visibility 0s linear 200ms; }
+.v6-tabs__panel[data-on="true"] { opacity: 1; visibility: visible; transition: opacity 200ms var(--ease-out), visibility 0s linear 0s; }
+.v6-tabs__panel:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 4px; border-radius: var(--r-sm); }
+@media (max-width: 640px) {
+  .v6-tabs__list { gap: 22px; }
+  .v6-tabs__panels { display: block; position: relative; height: auto; }
+  .v6-tabs__panel { position: absolute; top: 0; left: 0; right: 0; overflow: visible; }
+  .v6-tabs__panel[data-on="true"] { position: relative; }
+}
+
+/* ================================================================ DoesBox ===
+   What it does beside what it does not do, with a hairline between them. */
+.v6-db { background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--r-card); padding: 40px; }
+.v6-db__cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.v6-db__cols[data-n="1"] { grid-template-columns: minmax(0, 1fr); }
+.v6-db__col { min-width: 0; }
+.v6-db__cols:not([data-n="1"]) .v6-db__col:first-child { padding-right: 40px; }
+.v6-db__col + .v6-db__col { border-left: 1px solid var(--line); padding-left: 40px; }
+.v6-db .v6-db__h { margin: 0 0 20px; font-family: var(--sans); font-size: 16px; font-weight: 600; line-height: 1.4; letter-spacing: 0; color: var(--ink); }
+.v6-db__list { margin: 0; padding: 0; list-style: none; display: grid; gap: 14px; }
+.v6-db__item { display: grid; grid-template-columns: 28px minmax(0, 1fr); column-gap: 12px; align-items: baseline;
+  font-size: 15px; line-height: 1.6; color: var(--ink-2); }
+.v6-db__n { font-family: var(--mono); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-4); font-variant-numeric: tabular-nums; }
+.v6-db__link { margin-top: 24px; }
+@media (max-width: 720px) {
+  .v6-db { padding: 24px; }
+  .v6-db__cols { grid-template-columns: minmax(0, 1fr); }
+  .v6-db__cols:not([data-n="1"]) .v6-db__col:first-child { padding-right: 0; padding-bottom: 24px; }
+  .v6-db__col + .v6-db__col { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); padding-top: 24px; }
+}
+
+/* ================================================================ Compare ===
+   Words only: no icons, no colour, no ticks. The Vraelis column is told apart by its ink and a 2px rule
+   under its header. On a phone the table keeps its 720px and scrolls sideways under a pinned first column. */
+.v6-cmp { overflow-x: auto; overscroll-behavior-x: contain; }
+.v6-cmp:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 4px; border-radius: var(--r-sm); }
+.v6-cmp__t { width: 100%; min-width: 720px; border-collapse: collapse; table-layout: fixed; font-family: var(--sans); }
+.v6-cmp__t :is(th, td) { height: 64px; padding: 18px 16px; text-align: left; vertical-align: top; font-size: 15px; line-height: 1.5; }
+.v6-cmp__t thead :is(th, td) { vertical-align: bottom; border-bottom: 1px solid var(--line); }
+.v6-cmp__t thead td { width: 22%; }
+.v6-cmp__t thead th { font-weight: 600; color: var(--ink); }
+.v6-cmp__t thead th:first-of-type { box-shadow: inset 0 -2px 0 #FAFAFA; }
+.v6-cmp__t tbody tr + tr { border-top: 1px solid var(--line-soft); }
+.v6-cmp__t tbody th { font-weight: 500; color: var(--ink); }
+/* The row labels sit on the page column, like every other left edge on the page. */
+.v6-cmp__t tbody th, .v6-cmp__t thead td { padding-left: 0; }
+.v6-cmp__t tbody td { font-weight: 400; color: var(--ink-3); }
+.v6-cmp__t tbody td:first-of-type { color: var(--ink); }
+.v6-cmp__t tbody th, .v6-cmp__t thead td { position: sticky; left: 0; z-index: 1; background: var(--cmp-bg, var(--paper)); }
+.v6-band .v6-cmp { --cmp-bg: var(--surface); }
+.v6-cmp .v6-cmp__cap { caption-side: bottom; padding: 16px 0 0; text-align: left; font-size: var(--t-label); line-height: 1.5; color: var(--ink-4); }
+/* The caption belongs to the table, so it is as wide as the table. Where the table scrolls, it is pinned to
+   the left edge and held to the screen's width, so it reads without scrolling. */
+@media (max-width: 800px) {
+  .v6-cmp .v6-cmp__cap { position: sticky; left: 0; max-width: calc(100vw - 2 * var(--gutter)); }
+}
+
+/* ==================================================================== Faq ===
+   Native <details>. The title holds its place beside the list from 1024px; below that it sits on top. */
+.v6-faq { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--col-gap); align-items: start; }
+.v6-faq__head { grid-column: 1 / span 4; position: sticky; top: calc(var(--nav-h, 66px) + 32px); min-width: 0; }
+.v6-faq .v6-faq__t { margin: 0; max-width: 22ch; font-family: var(--display); font-weight: 500; font-synthesis-weight: none;
+  font-size: var(--t-h2); line-height: 1.12; letter-spacing: -0.016em; color: var(--ink); text-wrap: balance; }
+.v6-faq__list { grid-column: 5 / span 8; min-width: 0; border-bottom: 1px solid var(--line); }
+.v6-faq__item { border-top: 1px solid var(--line); }
+.v6 .v6-faq__q { display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 64px; padding: 20px 0;
+  cursor: pointer; list-style: none; font-size: 18px; font-weight: 500; line-height: 1.4; color: var(--ink); }
+.v6 .v6-faq__q::-webkit-details-marker { display: none; }
+.v6 .v6-faq__q:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 4px; border-radius: var(--r-sm); }
+.v6-faq__qt { min-width: 0; text-wrap: pretty; }
+/* The marker is a plus drawn from two 1.5px rules. It turns 45 degrees when the item is open. */
+.v6-faq__x { position: relative; flex: none; width: 14px; height: 14px; color: var(--ink-3); transition: transform var(--dur-1) var(--ease-out); }
+.v6-faq__x::before, .v6-faq__x::after { content: ""; position: absolute; left: 0; top: 50%; width: 14px; height: 1.5px; margin-top: -0.75px; background: currentColor; }
+.v6-faq__x::after { transform: rotate(90deg); }
+.v6-faq__item[open] .v6-faq__x { transform: rotate(45deg); }
+.v6-faq__q:hover .v6-faq__x { color: var(--ink); }
+.v6-faq__a { padding: 0 0 24px; max-width: 64ch; font-size: 16px; line-height: 1.65; color: var(--ink-2); }
+.v6-faq__a p { margin: 0; font-size: inherit; line-height: inherit; color: inherit; }
+.v6-faq__a p + p { margin-top: 12px; }
+@media (max-width: 1023px) {
+  .v6-faq { grid-template-columns: minmax(0, 1fr); row-gap: var(--head-gap); }
+  .v6-faq__head, .v6-faq__list { grid-column: 1; }
+  .v6-faq__head { position: static; }
+}
+
+/* ============================================================= CrossLinks ===
+   Three ways on, as link cards. One column on a phone. */
+.v6-xl .v6-xl__h { margin: 0 0 20px; font-family: var(--sans); font-size: 14px; font-weight: 500; line-height: 1.3; letter-spacing: 0; color: var(--ink-3); }
+.v6-xl__grid { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--col-gap); grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.v6-xl__grid[data-n="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.v6-xl__grid > li { display: flex; min-width: 0; }
+.v6-xl__card { display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0; padding: 20px; background: var(--surface);
+  border: 1px solid var(--line-soft); border-radius: var(--r-card); color: var(--ink); text-decoration: none;
+  transition: border-color var(--dur-1) var(--ease-out); }
+.v6-xl__pic { position: relative; display: block; aspect-ratio: 16 / 10; overflow: hidden; border-radius: var(--r-media); background: var(--paper); margin-bottom: 16px; }
+.v6-xl__pic img { object-fit: cover; transition: transform var(--dur-4) var(--ease-out); }
+.v6-xl .v6-xl__t { margin: 0; font-family: var(--sans); font-size: var(--t-h5); font-weight: 500; line-height: 1.35; letter-spacing: -0.005em; color: var(--ink); text-wrap: balance; }
+.v6-xl .v6-xl__b { margin: 6px 0 0; font-size: var(--t-small); line-height: 1.55; color: var(--ink-3); }
+.v6-xl__go { display: inline-block; margin-top: auto; padding-top: 16px; font-size: 16px; line-height: 1; color: var(--ink-3);
+  transition: transform var(--dur-2) var(--ease-out), color var(--dur-1) var(--ease-out); }
+a.v6-xl__card:hover { border-color: var(--line-strong); color: var(--ink); }
+a.v6-xl__card:hover .v6-xl__pic img { transform: scale(1.03); }
+a.v6-xl__card:hover .v6-xl__go { transform: translateX(4px); color: var(--ink); }
+a.v6-xl__card:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
+@media (max-width: 759px) { .v6-xl__grid[data-n] { grid-template-columns: minmax(0, 1fr); } }
+
+/* =================================================================== Band ===
+   A framed band at the film frame's inset and radius: --surface (no new ground, plan A2), with a hairline. The
+   section paints the page ground and the band is a surface inside it, like the hero's frame, so the bar keeps
+   sampling black over it. */
+.v6-band { position: relative; background: var(--paper); padding: 0 var(--frame-inset); }
+.v6-band__in { background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--r-frame); padding-block: var(--sec); }
+/* Cards on a band step back down to the page ground, so they still read as cards on the lighter surface. */
+.v6-band :is(.v6-fc, .v6-db, .v6-xl__card) { background: var(--paper); }
+
+/* ============================================================ RecordSteps ===
+   A run's steps as recorded: mono index, the step in the record's own words, and its time. The step that found
+   the problem is the one place colour appears: its text and "Found a problem" in --stop-ink on a faint wash. */
+.v6-rs { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line-soft); }
+.v6-rs__step { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; column-gap: 16px; align-items: baseline;
+  padding: 12px 16px; border-bottom: 1px solid var(--line-soft); }
+.v6-rs__n { font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); font-variant-numeric: tabular-nums; }
+.v6-rs__say { min-width: 0; font-size: 15px; line-height: 1.5; color: var(--ink-2); overflow-wrap: anywhere; }
+.v6-rs__ms { font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.v6-rs__step[data-ok="false"] { background: rgba(255,122,85,0.08); }
+.v6-rs__step[data-ok="false"] .v6-rs__say { color: var(--stop-ink); }
+.v6-rs__word { margin-left: 12px; white-space: nowrap; }
+@media (max-width: 560px) {
+  .v6-rs__step { grid-template-columns: 24px minmax(0, 1fr) auto; column-gap: 12px; padding: 12px 10px; }
+  .v6-rs__word { display: block; margin: 4px 0 0; }
+}
+
+/* ========================================================== OTHER SCRIPTS ===
+   Plan A3. Japanese, Chinese and Korean headings measure in em (a ch is the width of a Latin zero, so 16ch holds
+   far fewer of their characters than a reader expects), carry no negative tracking, and get more line height.
+   Hindi headings get room for the marks above and below the line. Every heading the kit draws is covered. */
+:is(:lang(ja), :lang(zh), :lang(ko)) .v6-fh .v6-fh__h1 { max-width: 14em; letter-spacing: 0; line-height: 1.14; }
+:is(:lang(ja), :lang(zh), :lang(ko)) .v6-faq .v6-faq__t { max-width: 18em; letter-spacing: 0; line-height: 1.22; }
+:is(:lang(ja), :lang(zh), :lang(ko)) .v6-ar .v6-ar__t { max-width: 22em; letter-spacing: 0; }
+:is(:lang(ja), :lang(zh), :lang(ko)) :is(.v6-fc .v6-fc__t, .v6-xl .v6-xl__t) { letter-spacing: 0; }
+:lang(hi) .v6-fh .v6-fh__h1, :lang(hi) .v6-faq .v6-faq__t { line-height: 1.22; }
+:lang(hi) .v6-ar .v6-ar__t { line-height: 1.3; }
+:lang(ja) :is(.v6-fh__h1, .v6-faq__t, .v6-ar__t, .v6-fc__t, .v6-xl__t) { word-break: auto-phrase; overflow-wrap: anywhere; }
+
+/* ========================================================= REDUCED MOTION ===
+   No scale, no nudge, no fade: colour and border changes become instant too. */
+@media (prefers-reduced-motion: reduce) {
+  .v6-fh__media { transform: none !important; will-change: auto; }
+  .v6-fc, .v6-fc__media img, .v6-xl__card, .v6-xl__pic img, .v6-xl__go, .v6-faq__x,
+  .v6 .v6-tabs__tab, .v6-tabs__panel { transition: none !important; }
+  a.v6-fc:hover .v6-fc__media img, a.v6-xl__card:hover .v6-xl__pic img, a.v6-xl__card:hover .v6-xl__go { transform: none !important; }
+}

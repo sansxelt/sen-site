@@ -1,10 +1,11 @@
-import type { CSSProperties } from "react";
-import { ResearchAside } from "../_system/hero-asides";
 import { v6meta } from "../_system/meta";
 import Link from "next/link";
 import { publishedArticles, formatDate, readingMinutes } from "@/app/rank/research/_articles";
-import { PageHero, Reveal, SectionHead, Signal, Prose, EditorialLink, Kicker, CTA } from "../_system/ui";
+import { SectionHead, EditorialLink } from "../_system/ui";
+import { IndexHero } from "../_system/kit";
+import { ClosingScene } from "../_system/close";
 import { V6_BASE } from "@/lib/v6-routes";
+import "./research.css";
 
 export const metadata = v6meta({
   title: "Research",
@@ -15,55 +16,16 @@ export const metadata = v6meta({
 });
 
 const BASE = V6_BASE;
-// Empty on purpose. html { scroll-padding-top: var(--nav-h) } in app/globals.css already reserves the bar,
-// and scroll-padding on the scrollport ADDS to scroll-margin on the target rather than overriding it, so the
-// 88px that used to be here doubled the offset instead of setting it. Every question anchor landed about
-// 153px down under a 67px bar. See the longer note on the same constant in ../company/page.tsx.
-const ANCHOR: CSSProperties = {};
 
-/* ---- the two evidence exhibits (conceptual, not measured) ---- */
-function ExpectedObserved() {
-  const rows: [string, string, string][] = [
-    ["go", "Expected", "Access remains after the customer signs back in."],
-    ["stop", "Observed", "Access is lost after the customer signs back in."],
-  ];
-  return (
-    <div style={{ background: "var(--graphite-2)", border: "1px solid var(--g-line)", borderRadius: 14, padding: "clamp(20px,2.2vw,26px)" }}>
-      <p className="v6-kicker" style={{ color: "var(--g-fg-3)" }}>Expected vs observed</p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 16 }}>
-        {rows.map(([sig, label, text]) => (
-          <div key={label} style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
-            <span aria-hidden style={{ width: 8, height: 8, borderRadius: 999, background: sig === "go" ? "var(--go-dk)" : "var(--stop-dk)", flex: "none", alignSelf: "center" }} />
-            <span style={{ fontFamily: "var(--mono)", fontSize: 11.5, color: "var(--g-fg-3)", minWidth: 68 }}>{label}</span>
-            <span style={{ flex: "1 1 170px", minWidth: 0, fontSize: 14, lineHeight: 1.45, color: sig === "go" ? "var(--g-fg)" : "var(--stop-dk)" }}>{text}</span>
-          </div>
-        ))}
-      </div>
-      <p style={{ margin: "16px 0 0", fontSize: 12, lineHeight: 1.5, color: "var(--g-fg-3)" }}>Illustration. A claim of done that the running software contradicts.</p>
-    </div>
-  );
-}
-
-function CoverageSplit() {
-  return (
-    <div style={{ background: "var(--graphite-2)", border: "1px solid var(--g-line)", borderRadius: 14, padding: "clamp(20px,2.2vw,26px)" }}>
-      <p className="v6-kicker" style={{ color: "var(--g-fg-3)" }}>Coverage of a completion claim</p>
-      <div style={{ marginTop: 16, display: "flex", height: 16, borderRadius: 8, overflow: "hidden", border: "1px solid var(--g-line)" }} aria-hidden>
-        <div style={{ flex: "3 1 0", background: "var(--go-dk)" }} />
-        <div style={{ flex: "2 1 0", background: "rgba(240,113,79,0.5)" }} />
-      </div>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginTop: 12, flexWrap: "wrap" }}>
-        <span style={{ fontFamily: "var(--mono)", fontSize: 11.5, color: "var(--go-dk)" }}>Proven by evidence</span>
-        <span style={{ fontFamily: "var(--mono)", fontSize: 11.5, color: "var(--stop-dk)" }}>Asserted, not proven</span>
-      </div>
-      <p style={{ margin: "16px 0 0", fontSize: 12, lineHeight: 1.5, color: "var(--g-fg-3)" }}>Illustration. Oversight measures how much of a claim is backed, and treats the rest as unproven rather than safe.</p>
-    </div>
-  );
-}
+// THE RESEARCH INDEX (plan T8, 2026-10-02): the articles as one list, the stance in one section, the eight
+// directions as one accordion, and the closing. It used to carry two lists of the same articles (a hero aside and
+// "Written at length"), two stance sections and two conceptual exhibits drawn with state colours and dots; the
+// articles are listed once now, and the exhibits are gone because nothing here is a recorded result.
 
 /* ---- the research directions ---- */
 type Dir = { id: string; n: string; title: string; blurb: string; body: string[]; now: string[]; open: string[] };
 
+// Every id is an anchor someone may hold (/research#earned-autonomy): they stay as they were.
 const DIRECTIONS: Dir[] = [
   {
     id: "independent-judgment",
@@ -109,7 +71,7 @@ const DIRECTIONS: Dir[] = [
     blurb: "The unit we trust is the observation.",
     body: [
       "Confidence is cheap. A model can report high certainty about an outcome it never observed. Evidence is a record of the software actually doing the thing, captured in a way a person can inspect later.",
-      "The unit Vraelis trusts is the observation, not the assurance. A green result should reduce to what was exercised, what was seen, and where the boundary of the check sat. The exhibit above is that reduction in miniature: what a claim asserted, set beside what the running software showed.",
+      "The unit Vraelis trusts is the observation, not the assurance. A result should reduce to what was exercised, what was seen, and where the boundary of the check sat.",
     ],
     now: [
       "Decisions are backed by execution against the live software, captured as inspectable evidence.",
@@ -185,7 +147,7 @@ const DIRECTIONS: Dir[] = [
       "Evaluator behavior is inspectable, kept separate from the application result.",
     ],
     open: [
-      "How to systematically detect evaluator error, distinct from application error, at scale.",
+      "How to detect evaluator error systematically, apart from application error, across many checks.",
     ],
   },
   {
@@ -207,162 +169,97 @@ const DIRECTIONS: Dir[] = [
   },
 ];
 
-// THE ANCHOR TARGET IS THE OUTER DIV, AND IT IS DELIBERATELY NOT INSIDE THE REVEAL.
-//
-// The id used to sit on the <article>, inside the Reveal, and the divider plus its 44 to 68px of leading
-// space sat on the Reveal itself. The browser resolves a fragment from getBoundingClientRect(), which
-// includes ancestor transforms, and .v6-reveal is translateY(14px) until it intersects (v6.css:416-417). So
-// a cold arrival at /research#earned-autonomy measured a box 14px lower than its laid-out position, scrolled
-// there, and then the reveal finished and moved the section out from under the reader. It also landed past
-// the divider, since that space belonged to an element the id was not on.
-//
-// The wrapper carries the id, the divider and the space, and is never transformed. The Reveal keeps the
-// animation and nothing else, so what the browser measures is what the page settles at.
-function Direction({ d, first }: { d: Dir; first: boolean }) {
+/** One direction: a native <details> in the page kit's question list. The id sits on the <details> itself, never
+ *  on a box that moves, so an arrival at /research#<id> lands on the direction's own row under the bar. */
+function Direction({ d }: { d: Dir }) {
   return (
-    <div id={d.id} style={first ? ANCHOR : { ...ANCHOR, borderTop: "1px solid var(--line)", paddingTop: "clamp(44px,5vw,68px)" }}>
-      <Reveal>
-        <article style={{ maxWidth: 840 }}>
-          <Kicker>Direction {d.n}</Kicker>
-          <h2 className="v6-dl" style={{ marginTop: 12 }}>{d.title}</h2>
-          <Prose className="" >
-            {d.body.map((p) => <p key={p}>{p}</p>)}
-          </Prose>
-          <div className="v6-cn" style={{ marginTop: "clamp(22px,2.4vw,30px)" }}>
-            <div className="v6-cn__col">
-              <p className="v6-cn__h"><Signal state="go">Current methodology</Signal></p>
-              <ul>{d.now.map((t) => <li key={t}>{t}</li>)}</ul>
-            </div>
-            <div className="v6-cn__col v6-cn__col--next">
-              <p className="v6-cn__h"><Signal state="wait">Open question</Signal></p>
-              <ul>{d.open.map((t) => <li key={t}>{t}</li>)}</ul>
-            </div>
+    <details id={d.id} className="v6-faq__item">
+      <summary className="v6-faq__q">
+        <span className="v6-faq__qt v6-rx__dq">
+          <span className="v6-rx__dn" aria-hidden data-no-translate>{d.n}</span>
+          <span className="v6-rx__dt">{d.title}</span>
+          <span className="v6-rx__db">{d.blurb}</span>
+        </span>
+        <span className="v6-faq__x" aria-hidden />
+      </summary>
+      <div className="v6-faq__a">
+        {d.body.map((p) => <p key={p}>{p}</p>)}
+        <div className="v6-rx__cols">
+          <div>
+            <p className="v6-rx__k">Current methodology</p>
+            <ul>{d.now.map((t) => <li key={t}>{t}</li>)}</ul>
           </div>
-        </article>
-      </Reveal>
-    </div>
+          <div>
+            {/* Two whole labels, chosen by count: never a plural "s" glued onto a word. */}
+            <p className="v6-rx__k">{d.open.length > 1 ? "Open questions" : "Open question"}</p>
+            <ul>{d.open.map((t) => <li key={t}>{t}</li>)}</ul>
+          </div>
+        </div>
+      </div>
+    </details>
   );
 }
 
 export default function ResearchPage() {
+  const articles = publishedArticles();
   return (
     <>
-      <PageHero
-        kicker="Research"
+      <IndexHero
+        eyebrow="Research"
         title="The methods behind trusting a claim that something works."
-        lead="Vraelis checks whether live software does what someone says it does. This page describes the methodology we use today and the questions we are still working through. It does not claim results we have not earned."
-        cta={<><CTA brand>Open Vraelis</CTA><EditorialLink href={`${BASE}/method`}>Read the Method</EditorialLink></>}
-        aside={<ResearchAside articles={publishedArticles().map((a) => ({ slug: a.slug, title: a.title, date: a.date }))} />}
+        lead="Vraelis checks whether live software does what someone says it does. These are the methods we use today, and the questions we have not closed."
       />
 
-      {/* Stance + index of directions */}
-      <section className="v6-sec v6-sec--sunk">
+      {/* THE ARTICLES, ONCE. A row per article, the whole row one link, newest first (publishedArticles). */}
+      <section className="v6-rx-list" aria-labelledby="rx-articles-h">
         <div className="v6-wrap">
-          <Reveal>
-            <SectionHead
-              eyebrow="Our stance"
-              title="A builder cannot remain the only judge of its own work."
-              lead="Whoever plans, writes, and repairs a system, a person, a team or an agent, will also report that it is finished. Someone independent has to decide whether that claim holds. The directions below are how we approach that decision, and where our thinking is still open."
-            />
-          </Reveal>
-          <div className="v6-know">
-            {DIRECTIONS.map((d, i) => (
-              <Reveal key={d.id} i={i % 4}>
-                <a className="v6-know__card" href={`#${d.id}`}>
-                  <span className="v6-mono" style={{ fontSize: 12, color: "var(--brand-ink)" }}>{d.n}</span>
-                  <h3 className="v6-know__t" style={{ marginTop: 8 }}>{d.title}</h3>
-                  <p className="v6-know__d">{d.blurb}</p>
-                  <span className="v6-know__go v6-arw" aria-hidden>&darr;</span>
-                </a>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Evidence exhibit (graphite: technical content) */}
-      <section className="v6-sec v6-dark" data-nav-dark>
-        <div className="v6-wrap">
-          <Reveal>
-            <SectionHead
-              eyebrow="How we read a claim"
-              title="A completion claim is not evidence."
-              lead="Before Vraelis accepts that work is done, it separates what the builder asserts from what the running software actually shows."
-            />
-          </Reveal>
-          <Reveal media className="v6-grid3">
-            <ExpectedObserved />
-            <CoverageSplit />
-          </Reveal>
-        </div>
-      </section>
-
-      {/* The directions */}
-      <section className="v6-sec">
-        <div className="v6-wrap">
-          <Reveal>
-            <SectionHead
-              eyebrow="Research directions"
-              title="Current methodology, and the open questions."
-              lead="Each direction is stated as what we do today and what we have not solved. The open questions are real. We would rather show them than pretend they are closed."
-            />
-          </Reveal>
-          <div style={{ display: "flex", flexDirection: "column", marginTop: "clamp(36px,4vw,56px)" }}>
-            {DIRECTIONS.map((d, i) => <Direction key={d.id} d={d} first={i === 0} />)}
-          </div>
-        </div>
-      </section>
-
-      {/* THE WRITING ITSELF.
-          This page argues the thesis; the articles are where it is worked out at length. Until now nothing
-          on the new site linked to them, so five published pieces were reachable only from a search result,
-          which is the wrong way round: they are the most considered thing here. */}
-      <hr className="v6-rule" />
-      <section className="v6-sec v6-sec--tight">
-        <div className="v6-wrap">
-          <Reveal>
-            <SectionHead
-              eyebrow="Notes"
-              title="Written at length."
-              lead="Each note takes one part of the argument and works it through, with the limits stated where they apply."
-            />
-          </Reveal>
-          <Reveal>
-            <div style={{ display: "grid", gap: 2, marginTop: 26, maxWidth: 880 }}>
-              {publishedArticles().map((a) => (
-                <Link key={a.slug} href={`${BASE}/research/${a.slug}`} className="v6-elink"
-                  style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 20, padding: "18px 0", borderBottom: "1px solid var(--line)" }}>
-                  <span style={{ minWidth: 0 }}>
-                    <span className="v6-elink__t" style={{ display: "block", fontSize: "1.08rem", fontWeight: 600 }}>{a.title}</span>
-                    <span style={{ display: "block", marginTop: 5, fontSize: 14, lineHeight: 1.55, color: "var(--ink-3)" }}>{a.summary}</span>
-                  </span>
-                  <span style={{ flex: "none", fontSize: 12.5, color: "var(--ink-4)", whiteSpace: "nowrap" }}>
-                    {formatDate(a.date)} / {readingMinutes(a)} min
-                  </span>
+          <h2 id="rx-articles-h" className="v6-rx__label" data-label="">Articles</h2>
+          <ol className="v6-rx__rows" role="list">
+            {articles.map((a) => (
+              <li key={a.slug}>
+                <Link className="v6-rx__row" href={`${BASE}/research/${a.slug}`}>
+                  <time className="v6-rx__date" dateTime={a.date}>{formatDate(a.date)}</time>
+                  <div className="v6-rx__main">
+                    <h3 className="v6-rx__t">{a.title}</h3>
+                    <p className="v6-rx__s">{a.summary}</p>
+                  </div>
+                  <span className="v6-rx__cat">{a.category}</span>
+                  <span className="v6-rx__time">{`${readingMinutes(a)} min`}</span>
                 </Link>
-              ))}
-            </div>
-          </Reveal>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
 
-      {/* Close */}
-      <hr className="v6-rule" />
-      <section className="v6-sec v6-sec--tight">
+      {/* THE STANCE, ONCE: what used to be "Our stance", "How we read a claim" and "Where this goes". */}
+      <section className="v6-sec" id="stance">
         <div className="v6-wrap">
-          <Reveal>
-            <SectionHead
-              eyebrow="Where this goes"
-              title="Checking is a practice, not a finished science."
-              lead="The methodology here is what we apply now. As software changes, and as more of it runs devices, the standard has to move with it. That work is ongoing, and it is written down elsewhere too."
-            />
-            <div style={{ marginTop: 26, display: "flex", gap: 22, flexWrap: "wrap" }}>
+          <div className="v6-rx__stance">
+            <SectionHead eyebrow="Our stance" title="A builder cannot remain the only judge of its own work." />
+            <p className="v6-rx__p">Whoever builds a system, a person, a team or an agent, will also report that it is finished. That report is a claim. Vraelis checks it against what the running software shows.</p>
+            <p className="v6-rx__p">Each direction below says what we do today and what we have not solved. Checking is a practice, not a finished science.</p>
+            <div className="v6-actions v6-rx__more">
               <EditorialLink href={`${BASE}/method`}>Read the Vraelis Method</EditorialLink>
               <EditorialLink href={`${BASE}/readme`}>Why Vraelis exists</EditorialLink>
             </div>
-          </Reveal>
+          </div>
         </div>
       </section>
+
+      {/* THE EIGHT DIRECTIONS, ONE ACCORDION. */}
+      <section className="v6-sec v6-rx-dirsec" id="directions">
+        <div className="v6-wrap">
+          <div className="v6-faq v6-rx-dirs">
+            <div className="v6-faq__head"><h2 className="v6-faq__t" data-label="">Methodology and open questions</h2></div>
+            <div className="v6-faq__list">
+              {DIRECTIONS.map((d) => <Direction key={d.id} d={d} />)}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <ClosingScene title="Check one claim on your own app." />
     </>
   );
 }

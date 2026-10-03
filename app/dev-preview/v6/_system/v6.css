@@ -73,10 +73,11 @@
      pages jutted out of their own page. */
   --max: 1600px;
   --max-wide: 1600px;
-  --max-read: 720px;
-  /* Tighter since 2026-09-30: at 132px a section and its neighbour sat a screen apart, part of why the
-     founder read the site as zoomed in. */
-  --sec: clamp(64px, 7.5vw, 108px);
+  /* The reading column's TEXT width: .v6-wrap--read adds the gutters outside it, .v6-prose is it. */
+  --max-read: 680px;
+  /* Section padding, 120 at 1440 and 72 on a phone (plan A2, 2026-10-02). It was 108 / 64 after the
+     2026-09-30 pass took it down from 132; the new scale sets bigger type, which needs the room back. */
+  --sec: clamp(72px, 8.4vw, 120px);
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
   --sh-sm: 0 1px 2px rgba(0,0,0,0.5);
@@ -91,8 +92,46 @@
      than 1px. A radius that draws a specific shape rather than stating a tier keeps its own number. */
   --r-sm:   3px;    /* a focus ring around inline text */
   --r-md:   8px;    /* a control: button, burger, close button, hover plate */
-  --r-lg:   14px;   /* a card or a panel */
+  --r-lg:   16px;   /* a card or a panel (14 until 2026-10-02; the same value as --r-card) */
   --r-pill: 999px;  /* a pill or a dot */
+
+  /* ---- THE 2026-10 DESIGN LANGUAGE (plan A2, revision 2). Every page and the kit read these names; add to
+     them, do not fork a near-copy. Sizes are written "desktop / phone" where they clamp. ---- */
+  /* lines. There are no new grounds: a Band is --surface with its cards on --paper, a hovered row and inline
+     code are --surface, and an alternating band is --sunk. (The draft's two extra greys, #111113 and #17171A,
+     were dropped in revision 2: one was a near copy of --sunk, the other is the panel-bar colour that
+     hero-asides.css and run-window.css already write as a literal.) */
+  --line-soft: rgba(255,255,255,0.07);          /* card borders, hairlines inside a card */
+  --line-strong: rgba(255,255,255,0.24);        /* ghost button border, hovered card border */
+  /* the frame: identical to the homepage film frame (hero.css) */
+  --frame-inset: clamp(10px, 1.9vw, 36px);      /* 27.4 at 1440, 10 at 390 */
+  --r-frame: clamp(14px, 1.4vw, 22px);          /* 20.2 at 1440, 14 at 390 */
+  --r-card: 16px;                               /* a card */
+  --r-media: 12px;                              /* a picture or a code block inside a card */
+  /* rhythm (--sec, 120 / 72, and --max-read, 680, are above) */
+  --head-gap: clamp(32px, 3.4vw, 48px);         /* section head to its content: 48 / 32 */
+  --col-gap: clamp(16px, 1.7vw, 24px);          /* twelve-column gap: 24 / 16 */
+  /* type: one family, sizes only (plan A3). Line height and tracking ride with the classes. */
+  --t-display: clamp(2.5rem, 4.45vw, 4rem);     /* 64 / 40: FrameHero h1, homepage statement, closing */
+  --t-h1: clamp(2.25rem, 3.9vw, 3.5rem);        /* 56 / 36: index page h1 */
+  --t-read-h1: clamp(2.125rem, 3.35vw, 3rem);   /* 48 / 34: article, legal, use case h1 */
+  --t-h2: clamp(1.75rem, 2.8vw, 2.5rem);        /* 40 / 28: section heads */
+  --t-h3: clamp(1.375rem, 1.95vw, 1.75rem);     /* 28 / 22: row titles, read-page h2 */
+  --t-h4: 1.25rem;                              /* 20: card titles */
+  --t-h5: 1.125rem;                             /* 18: small card titles, FAQ questions */
+  --t-lead: clamp(1.0625rem, 1.39vw, 1.25rem);  /* 20 / 17: hero lead */
+  --t-lead-s: clamp(1rem, 1.25vw, 1.125rem);    /* 18 / 16: section lead */
+  --t-read: 1.0625rem;                          /* 17: long-form body */
+  --t-body: 1rem;                               /* 16 */
+  --t-small: 0.875rem;                          /* 14: notes; card body is 15 */
+  --t-label: 0.8125rem;                         /* 13: small labels */
+  --t-mono: 0.8125rem;                          /* Plex Mono 13: ids, step numbers, commands */
+  --t-mono-s: 0.75rem;                          /* Plex Mono 12: fact labels, meta rows */
+  /* motion */
+  --dur-1: 160ms;   /* colour and border changes */
+  --dur-2: 220ms;   /* underlines, small moves */
+  --dur-3: 420ms;   /* the button wipe and arrow conveyor */
+  --dur-4: 700ms;   /* a slow image settle */
 
   background: var(--paper);
   color: var(--ink-2);
@@ -116,14 +155,30 @@
 /* ---------------------------------------------------------------- layout --- */
 .v6-wrap { width: 100%; max-width: var(--max); margin-inline: auto; padding-inline: var(--gutter); }
 .v6-wrap--wide { max-width: var(--max-wide); }
-.v6-wrap--read { max-width: var(--max-read); }
+/* The read column is 680 of TEXT (plan A4): the wrap carries the page gutters outside the measure, so the
+   column reads the same 680 at every width that has room for it, rather than 680 minus two gutters. */
+.v6-wrap--read { max-width: calc(var(--max-read) + 2 * var(--gutter)); }
 .v6-sec { padding-block: var(--sec); position: relative; }
 .v6-sec--sunk { background: var(--sunk); }
 /* Two sections on the same ground read as one band, so the second one does not add its own top padding:
    stacked, the two paddings left a gap twice the normal section rhythm with nothing in it. */
 .v6-sec--sunk + .v6-sec--sunk, .v6-dark + .v6-dark,
 .v6-sec--sunk + .v6-dark, .v6-dark + .v6-sec--sunk { padding-top: 0; }
-.v6-sec--tight { padding-block: clamp(52px, 7vw, 96px); }
+/* Three quarters of the section rhythm: 90 at 1440, 54 on a phone. */
+.v6-sec--tight { padding-block: calc(var(--sec) * 0.75); }
+/* Two plain sections in a row (both on the page ground) stacked 120 of bottom padding on 120 of top: 240px of
+   nothing between one block and the next eyebrow (review of 2026-10-02: 18 such bands). The second keeps a third
+   of its top padding, so a section boundary is 160 at 1440 and 96 on a phone: larger than the 120 between AltRows
+   rows, within the plan's 160 cap for an empty band. The selector weighs one class, the same as .v6-sec, so a page
+   that sets a section's padding itself (a limits line, a list that continues the section above it) keeps its own
+   value. Not after a PageHero, which ends on its own short padding, and not after a footnote section that takes
+   no padding of its own (sector.css .v6-sx-limit), because the section after it supplies the footnote's room. */
+:where(.v6-sec:not(.v6-dark, .v6-sec--sunk, .v6-phero, .v6-sx-limit)) + .v6-sec:where(:not(.v6-dark, .v6-sec--sunk)) { padding-top: calc(var(--sec) / 3); }
+/* The section before the closing gives up its bottom padding: the closing brings its own (96 to 160 above the
+   line), and the two stacked left 270 to 284px of nothing above the last headline. Weighted above a page's own
+   padding rule on purpose, since nothing should add room there. A sunk or dark section keeps its padding: its
+   ground has to end below its content. */
+.v6 .v6-sec:not(.v6-dark):not(.v6-sec--sunk):has(+ .v6-end) { padding-bottom: 0; }
 .v6-rule { height: 1px; background: var(--line); border: 0; margin: 0; }
 
 /* Dark section. [data-nav-dark] is the reliable marker: every dark surface sets it so the nav can flip over
@@ -133,51 +188,139 @@
 .v6-dark :is(h1,h2,h3,h4), [data-nav-dark] :is(h1,h2,h3,h4) { color: var(--g-fg); }
 .v6-dark .v6-lead, [data-nav-dark] .v6-lead { color: var(--g-fg-2); }
 .v6-dark .v6-kicker, [data-nav-dark] .v6-kicker { color: var(--g-fg-3); }
-.v6-dark .v6-eyebrow, [data-nav-dark] .v6-eyebrow { color: var(--g-fg-2); }
+.v6-dark .v6-eyebrow, [data-nav-dark] .v6-eyebrow { color: var(--g-fg-3); }
 
 /* ------------------------------------------------------------ typography --- */
-/* The display tier. Serif, weight 400, tracking near zero: a high-contrast serif set at the sans's -0.03em
-   collides with itself at these sizes. Sizes and line-heights are nudged up rather than left alone, because
-   this face runs smaller on the body than the sans at the same nominal size. */
-.v6-d2xl { font-family: var(--display); font-weight: var(--display-w); letter-spacing: -0.012em; line-height: 1.04; font-size: clamp(2.6rem, 4.6vw, 4rem); color: var(--ink); margin: 0; text-wrap: balance; }
-.v6-dxl  { font-family: var(--display); font-weight: var(--display-w); letter-spacing: -0.010em; line-height: 1.08; font-size: clamp(2.1rem, 3.4vw, 3rem); color: var(--ink); margin: 0; text-wrap: balance; }
-.v6-dl   { font-family: var(--display); font-weight: var(--display-w); letter-spacing: -0.008em; line-height: 1.14; font-size: clamp(1.7rem, 2.6vw, 2.3rem); color: var(--ink); margin: 0; text-wrap: balance; }
-/* No faked bold, anywhere the display face is used. Instrument Serif ships one weight; without this a
-   stray font-weight:600 from a parent or a <strong> renders a smeared synthetic bold. */
-.v6-d2xl, .v6-dxl, .v6-dl, .v6-phero h1, .v6-prose h2 { font-synthesis-weight: none; }
-.v6-dm   { font-family: var(--sans); font-weight: 600; letter-spacing: -0.018em; line-height: 1.16; font-size: clamp(1.3rem, 2vw, 1.7rem); color: var(--ink); margin: 0; }
-.v6-lead { font-size: clamp(1.02rem, 1.15vw, 1.14rem); line-height: 1.6; color: var(--ink-2); margin: 0; max-width: 60ch; text-wrap: pretty; }
-.v6-body { font-size: 1rem; line-height: 1.62; color: var(--ink-3); margin: 0; }
+/* THE TYPE SCALE (plan A3, 2026-10-02). One family; hierarchy is size and weight. Every size is a --t-* token
+   from the .v6 block, so a page that needs "a section head" asks for --t-h2 rather than inventing a clamp.
+     class        tier       1440 / 390   line   tracking   use
+     .v6-d2xl     display    64 / 40      1.04   -0.025em   the largest statement on a page
+     .v6-dxl      h1         56 / 36      1.06   -0.022em   an index page's h1
+     .v6-dread    read h1    48 / 34      1.08   -0.02em    the h1 of an article, the method, the readme, a
+                                                            legal page or a use case
+     .v6-dl       h2         40 / 28      1.12   -0.016em   section heads
+     .v6-dm       h3         28 / 22      1.2    -0.012em   row titles, a read page's h2
+     .v6-lead     lead-s     18 / 16      1.55              a section lead, 60ch
+     .v6-eyebrow  eyebrow    14, 500      1.3               above a heading, ink-3, sentence case
+     .v6-kicker   label      13, 600                        a small label, ink-4
+   The classes set size, weight, leading and tracking, and no measure: the unit that holds a heading sets its
+   width (SectionHead 22ch, PageHero 20ch, the closing 16ch). Japanese, Chinese, Korean and Hindi adjust
+   all of these below ("Other scripts").
+   Weights: 400 text, 500 headings, 600 buttons and small labels, 700 only the wordmark. */
+.v6-d2xl { font-family: var(--display); font-weight: var(--display-w); letter-spacing: -0.025em; line-height: 1.04; font-size: var(--t-display); color: var(--ink); margin: 0; text-wrap: balance; }
+.v6-dxl  { font-family: var(--display); font-weight: var(--display-w); letter-spacing: -0.022em; line-height: 1.06; font-size: var(--t-h1); color: var(--ink); margin: 0; text-wrap: balance; }
+.v6-dread { font-family: var(--display); font-weight: var(--display-w); letter-spacing: -0.02em; line-height: 1.08; font-size: var(--t-read-h1); color: var(--ink); margin: 0; text-wrap: balance; }
+.v6-dl   { font-family: var(--display); font-weight: var(--display-w); letter-spacing: -0.016em; line-height: 1.12; font-size: var(--t-h2); color: var(--ink); margin: 0; text-wrap: balance; }
+/* No faked bold anywhere a heading is set at weight 500: a stray font-weight:600 from a parent or a <strong>
+   would otherwise render a synthetic bold rather than the face's own. */
+.v6-d2xl, .v6-dxl, .v6-dread, .v6-dl, .v6-dm, .v6-phero h1, .v6-prose h2 { font-synthesis-weight: none; }
+.v6-dm   { font-family: var(--sans); font-weight: 500; letter-spacing: -0.012em; line-height: 1.2; font-size: var(--t-h3); color: var(--ink); margin: 0; }
+.v6-lead { font-size: var(--t-lead-s); line-height: 1.55; color: var(--ink-2); margin: 0; max-width: 60ch; text-wrap: pretty; }
+.v6-body { font-size: var(--t-body); line-height: 1.6; color: var(--ink-3); margin: 0; }
 /* Quiet sans label, sentence case. The old treatment was a tiny all-caps mono eyebrow with a drawn rule
    repeated above every heading, which is the single strongest "AI startup" tell in the type system. */
-.v6-eyebrow { font-family: var(--sans); font-size: 14px; font-weight: 600; letter-spacing: -0.005em;
-  color: var(--brand-ink); margin: 0; display: inline-block; }
+.v6-eyebrow { font-family: var(--sans); font-size: 14px; font-weight: 500; line-height: 1.3; letter-spacing: 0;
+  color: var(--ink-3); margin: 0; display: inline-block; }
 /* mono survives only for machine text: identifiers, values, timestamps, code */
 /* Small labels are SANS. Geist Mono at 10-12px reads as machine output and made every caption on the site
    look robotic. Mono is now reserved for things that genuinely are machine text: identifiers and code. */
 /* Sentence case (2026-09-30). Tracked 11px capitals over every block were the loudest generated-site tell
    left on the site. */
-.v6-kicker { font-family: var(--sans); font-size: 12.5px; font-weight: 500; letter-spacing: 0;
+.v6-kicker { font-family: var(--sans); font-size: var(--t-label); font-weight: 600; letter-spacing: 0;
   text-transform: none; color: var(--ink-4); }
 .v6-mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
-.v6-head { display: flex; flex-direction: column; gap: 18px; max-width: 760px; }
+/* SectionHead (ui.tsx): eyebrow, 16, h2, 16, lead, and the content under it starts --head-gap below (48 / 32).
+   The head carries that space as its own bottom margin, which collapses with a following block's top margin
+   (the page kit's .v6-rows, .v6-grid3 and .v6-know ask for the same --head-gap), so it is never added twice.
+   Max 760 wide; the h2 stops at 22ch, or 24ch centred. */
+.v6-head { display: flex; flex-direction: column; gap: 16px; max-width: 760px; margin-bottom: var(--head-gap); }
+.v6-head .v6-dl { max-width: 22ch; }
+.v6-head--center { margin-inline: auto; text-align: center; align-items: center; }
+.v6-head--center .v6-dl { max-width: 24ch; }
+.v6-head--center .v6-lead { margin-inline: auto; }
+
+/* OTHER SCRIPTS (plan A3 and 0.4, revision 2, 2026-10-02). The scale above is tuned for Latin type.
+   Japanese, Chinese and Korean set every character a full em wide, while a ch is the width of a "0", a little
+   over half an em in Plex, so a 16ch measure held about eight characters a line; and tracking that tightens
+   Latin crowds ideographs. Under :lang(ja), :lang(zh) and :lang(ko) every heading drops its tracking, the
+   heading measures turn into ems (display 14em, h1 16em, read h1 18em, h2 18em, h3 22em), and the leading
+   opens by a tenth (display 1.14, h1 1.16, read h1 1.18, h2 1.22, h3 1.3).
+   Devanagari hangs vowel signs above and below its headline stroke, so Hindi opens display, h1, read h1 and h2
+   to 1.22 and h3 to 1.3, the floor hero.css already gives the homepage's h1.
+   The language comes from <html lang>, which components/language-controller.tsx sets ("ja", "ko", "zh-CN",
+   "hi"); :lang(zh) matches "zh-CN". These rules name the type classes and the system's own heading units
+   (SectionHead, PageHero, prose, the closing), at a specificity above them; the kit does the same for its
+   components in kit.css. A heading drawn by a class of its own elsewhere gets the tracking rule through its h1
+   to h6 element, and adds its own measure and leading in its own file with these values (kit-guide-system.md,
+   "Other scripts"). The read h1 at 1.18 and the h3 tier at 1.3 extend the plan's Latin-plus-a-tenth pattern to
+   the two tiers its list leaves out. */
+.v6:is(:lang(ja), :lang(zh), :lang(ko)) :is(h1, h2, h3, h4, h5, h6, .v6-d2xl, .v6-dxl, .v6-dread, .v6-dl, .v6-dm) { letter-spacing: 0; }
+/* Japanese breaks a heading between phrases rather than inside a word ("単" / "位"), as the closing, the
+   homepage bands and the strike story already do (Chrome 119 and later; elsewhere it breaks as before). */
+.v6:lang(ja) :is(h1, h2, h3, .v6-d2xl, .v6-dxl, .v6-dread, .v6-dl, .v6-dm) { word-break: auto-phrase; }
+.v6:is(:lang(ja), :lang(zh), :lang(ko)) .v6-d2xl { line-height: 1.14; }
+.v6:is(:lang(ja), :lang(zh), :lang(ko)) .v6-dxl { line-height: 1.16; }
+.v6:is(:lang(ja), :lang(zh), :lang(ko)) .v6-dread { line-height: 1.18; }
+.v6:is(:lang(ja), :lang(zh), :lang(ko)) .v6-dl { line-height: 1.22; }
+.v6:is(:lang(ja), :lang(zh), :lang(ko)) .v6-dm { line-height: 1.3; }
+.v6:is(:lang(ja), :lang(zh), :lang(ko)) .v6-head .v6-dl { max-width: 18em; }
+/* PageHero and the prose column (pagekit.css) */
+.v6:is(:lang(ja), :lang(zh), :lang(ko)) .v6-phero h1 { line-height: 1.16; max-width: 16em; }
+.v6:is(:lang(ja), :lang(zh), :lang(ko)) .v6-phero .v6-wrap--read h1 { line-height: 1.18; max-width: 18em; }
+.v6:is(:lang(ja), :lang(zh), :lang(ko)) .v6-prose h2 { line-height: 1.3; }
+/* the closing line (close.css) */
+.v6:is(:lang(ja), :lang(zh), :lang(ko)) .v6-end .v6-end__h { line-height: 1.14; max-width: 14em; }
+/* Hindi: every h1 (FrameHero, PageHero, a read page, the docs) and the display and h2 tiers at 1.22 or more */
+.v6:lang(hi) :is(h1, .v6-d2xl, .v6-dxl, .v6-dread, .v6-dl, .v6-end__h) { line-height: 1.22; }
+.v6:lang(hi) :is(.v6-dm, .v6-prose h2) { line-height: 1.3; }
+/* Korean is set between words, never inside one (i18n QA, 2026-10-03). Left to the default, Chrome broke Hangul
+   anywhere, so phone headings read "교 / 전이" and "소프트웨 / 어를". keep-all breaks only at the spaces, as Korean
+   typesetting does, and a word too long for its box still breaks rather than run out of it. */
+.v6:lang(ko) { word-break: keep-all; overflow-wrap: break-word; }
+/* The kit's own headings (FrameHero, Faq, AltRows, FeatureCard, CrossLinks) carry the same overrides in kit.css,
+   beside the rules they adjust. */
 
 /* ------------------------------------------------------------- actions ----- */
-.v6-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; box-sizing: border-box;
-  padding: 12px 20px; border-radius: var(--r-md); font-size: 15px; font-weight: 600; letter-spacing: -0.005em; text-decoration: none; cursor: pointer;
+/* BUTTONS (plan A5, 2026-10-02). Three sizes, all radius 8, label weight 600:
+     .v6-btn--sm   36 tall, 14 either side, 14px
+     .v6-btn       44 tall, 20 either side, 15px   (the default, "md")
+     .v6-btn--lg   52 tall, 26 either side, 16px
+   The primary is the white plate with a #0A0A0B label IN EVERY STATE. One white button per view; the
+   secondary action is .v6-btn--ghost (or an EditorialLink).
+   Hover on the primary is a 10% black layer that wipes in from the left over 420ms, and the arrow is a
+   conveyor: CTA (ui.tsx) renders <span class="v6-arw"><span>→</span><span>→</span></span>, a 16px window in
+   which the first arrow leaves to the right while the second arrives from the left. A hand-written single
+   arrow (<span class="v6-arw">→</span>) still works and keeps the old nudge.
+   The wipe is clipped, not translated inside overflow:hidden: overflow clips at the padding box, which left
+   the 1px border outside the wipe as a light ring around a darker plate. The layer covers the border box
+   and reveals by clip-path instead, so nothing is clipped from the focus ring either. */
+.v6-btn { position: relative; isolation: isolate; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; box-sizing: border-box; text-align: center;
+  padding: 6px 20px; border-radius: var(--r-md); font-size: 15px; font-weight: 600; letter-spacing: -0.005em; text-decoration: none; cursor: pointer;
   border: 1px solid var(--ink); background: var(--ink); color: var(--paper); font-family: var(--sans);
-  transition: transform 130ms var(--ease-out), background 160ms ease, border-color 160ms ease, box-shadow 160ms ease, color 160ms ease; }
+  transition: transform 130ms var(--ease-out), background var(--dur-1) ease, border-color var(--dur-1) ease, box-shadow var(--dur-1) ease, color var(--dur-1) ease; }
+.v6-btn::before { content: ""; position: absolute; inset: -1px; z-index: -1; border-radius: inherit; pointer-events: none;
+  background: rgba(10,10,11,0.10); clip-path: inset(0 101% 0 0); transition: clip-path var(--dur-3) var(--ease-out); }
+.v6-btn:hover::before { clip-path: inset(0 0 0 0); }
 /* The label is set again on hover: the site-wide `a:hover { color: var(--acc) }` (public/vraelis/tokens.css, with
    --acc #FAFAFA from styles.css) outranks .v6-btn's colour and left a white label on this light grey, about 1.2:1
-   (site audit, 2026-10-01). The plate is always light here, so the label is always dark. */
-.v6-btn:hover { background: #E4E4E7; border-color: #E4E4E7; color: #0A0A0B; }
+   (site audit, 2026-10-01). The plate stays white under the wipe, so the label is always dark. */
+.v6-btn:hover { background: var(--ink); border-color: var(--ink); color: #0A0A0B; }
 .v6-btn:active { transform: scale(0.985); }
 .v6-btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
 .v6-btn .v6-arw { transition: transform 180ms var(--ease-out); }
 .v6-btn:hover .v6-arw { transform: translateX(3px); }
-.v6-btn--lg { min-height: 50px; padding: 15px 26px; font-size: 16px; }
+/* the conveyor: the window does not move, the two arrows in it do */
+.v6-btn .v6-arw:has(> span) { position: relative; display: inline-block; flex: none; width: 16px; height: 1.2em; overflow: hidden; transform: none; }
+.v6-btn .v6-arw > span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  transition: transform var(--dur-3) var(--ease-out); }
+.v6-btn:hover .v6-arw:has(> span) { transform: none; }
+.v6-btn .v6-arw > span + span { transform: translateX(-100%); }
+.v6-btn:hover .v6-arw > span:first-child { transform: translateX(100%); }
+.v6-btn:hover .v6-arw > span + span { transform: none; }
+.v6-btn--sm { min-height: 36px; padding: 4px 14px; font-size: 14px; }
+.v6-btn--lg { min-height: 52px; padding: 8px 26px; font-size: 16px; }
 .v6-btn--brand { background: var(--brand); border-color: var(--brand); }
-.v6-btn--brand:hover { background: #E4E4E7; border-color: #E4E4E7; color: #0A0A0B; }
+.v6-btn--brand:hover { background: var(--brand); border-color: var(--brand); color: #0A0A0B; }
 /* On a dark ground the primary action inverts. --brand is near-black, so without this the CTA was
    black on black in the opening. One rule, keyed to the marker every dark surface already sets.
    The dark drawer is the third selector because it is a dark ground that carries no marker: [data-nav-dark]
@@ -190,15 +333,26 @@
   background: var(--g-fg); border-color: var(--g-fg); color: var(--graphite); }
 [data-nav-dark] .v6-btn--brand:hover, .v6-dark .v6-btn--brand:hover,
 .v6-nav[data-theme="dark"] .v6-drawer .v6-btn--brand:hover {
-  background: #E4E4E7; border-color: #E4E4E7; color: var(--graphite); }
-.v6-btn--ghost { background: transparent; color: var(--ink); border-color: var(--line-2); }
-.v6-btn--ghost:hover { background: rgba(255,255,255,0.06); }
-.v6-btn--ghost:hover { background: transparent; border-color: var(--ink); }
+  background: var(--g-fg); border-color: var(--g-fg); color: #0A0A0B; }
+/* The ghost: the secondary action beside a primary, or the one action where white would be a second white
+   button in the same view. No wipe; the border lights and the ground lifts 5%. */
+.v6-btn--ghost { background: transparent; color: var(--ink); border-color: var(--line-strong); }
+.v6-btn--ghost::before { content: none; }
+.v6-btn--ghost:hover { background: rgba(255,255,255,0.05); border-color: var(--ink); color: var(--ink); }
+/* PAIRED ACTIONS WRAP (plan A3 and A5, revision 2). A primary and a ghost, or a primary and an EditorialLink,
+   sit in one row that wraps rather than squeezing: German labels run long, and a squeezed pair breaks its
+   labels over two lines inside the plates. .v6-actions is that row for any page (gap 12, wrapping); on a phone
+   each button in it takes flex: 1 1 auto, so a pair that fits one line shares it and a pair that does not
+   gives each button the full width. PageHero's row (.v6-phero__cta) and the kit's FrameHero row behave the
+   same. Any other row of actions a page draws for itself wraps too: the :has() rule below finds a button with
+   a second action after it and lets its row wrap, whatever the row is called. */
+.v6-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.v6 main :has(> .v6-btn ~ :is(.v6-btn, .v6-elink)) { flex-wrap: wrap; }
 .v6-elink { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; color: var(--ink); text-decoration: none; cursor: pointer; }
 .v6-elink .v6-elink__t { background-image: linear-gradient(var(--brand), var(--brand)); background-position: 0 100%; background-repeat: no-repeat; background-size: 0% 1.5px; padding-bottom: 3px; transition: background-size 220ms var(--ease); }
 .v6-elink:hover .v6-elink__t { background-size: 100% 1.5px; }
-.v6-elink .v6-arw { color: var(--brand-ink); transition: transform 180ms var(--ease-out); }
-.v6-elink:hover .v6-arw { transform: translateX(3px); }
+.v6-elink .v6-arw { color: var(--brand-ink); transition: transform var(--dur-2) var(--ease); }
+.v6-elink:hover .v6-arw { transform: translateX(4px); }
 .v6-elink:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; border-radius: var(--r-sm); }
 /* Dark grounds declare themselves with data-nav-dark, not only the .v6-dark class. Keying the inverted
    treatment solely on the class left the hero's and the closing scene's editorial links at --ink, which is
@@ -210,365 +364,54 @@
   background-image: linear-gradient(var(--g-fg), var(--g-fg)); }
 .v6-dark .v6-elink:focus-visible, [data-nav-dark] .v6-elink:focus-visible { outline-color: var(--g-fg); }
 
-/* signal pills: trusted / review / stopped */
-.v6-sig { display: inline-flex; align-items: center; gap: 7px; padding: 3px 9px 3px 8px; border-radius: 6px; font-family: var(--sans); font-size: 12.5px; font-weight: 600; letter-spacing: 0; text-transform: none; white-space: nowrap; }
-.v6-sig__dot { width: 7px; height: 7px; border-radius: var(--r-pill); background: currentColor; flex: none; }
-.v6-sig--go   { color: var(--go-ink);   background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.32); }
-.v6-sig--wait { color: var(--wait-ink); background: rgba(240,180,74,0.12); border: 1px solid rgba(240,180,74,0.32); }
-.v6-sig--stop { color: var(--stop-ink); background: rgba(255,122,85,0.12); border: 1px solid rgba(255,122,85,0.32); }
-/* Keyed off [data-nav-dark] as well as .v6-dark. Every graphite surface already marks itself with that
-   attribute so the nav can flip over it, which makes it the reliable signal for "this ground is dark". The
-   closing scene is graphite but carries no .v6-dark class, so its Shipped pill was rendering the light-surface
-   treatment on graphite at 2.16:1. Binding to the attribute fixes it there and for any graphite section added
-   later, without each one having to remember to opt in twice. */
-.v6-dark .v6-sig--go,   [data-nav-dark] .v6-sig--go   { color: var(--go-dk);   background: rgba(52,211,153,0.12); border-color: rgba(52,211,153,0.32); }
-.v6-dark .v6-sig--wait, [data-nav-dark] .v6-sig--wait { color: var(--wait-dk); background: rgba(240,180,74,0.12); border-color: rgba(240,180,74,0.32); }
-.v6-dark .v6-sig--stop, [data-nav-dark] .v6-sig--stop { color: var(--stop-dk); background: rgba(255,122,85,0.12); border-color: rgba(255,122,85,0.32); }
+/* STATE WORDS (plan A5, 2026-10-02). <Signal> (ui.tsx) renders a plain word in Plex Mono: no pill, no
+   border, no padding and no dot. The word carries the state; colour is kept only where it means a failure
+   (stop, in --stop-ink). "go" and "wait" read in ink-3, because outside a recorded run a green or amber chip
+   is decoration, and the site's rule is that colour means a finding. The same on every ground. */
+.v6-sig { display: inline-flex; align-items: center; padding: 0; border: 0; background: none; border-radius: 0;
+  font-family: var(--mono); font-size: 12.5px; font-weight: 500; line-height: 1.45; letter-spacing: 0; text-transform: none; white-space: nowrap; }
+.v6-sig--go, .v6-sig--wait { color: var(--ink-3); }
+.v6-sig--stop { color: var(--stop-ink); }
 
 /* --------------------------------------------------------------- cards ----- */
 .v6-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: clamp(20px,2.2vw,28px); }
 .v6-card--sunk { background: var(--sunk); border-color: transparent; }
 
-/* Skip link: off-canvas until it takes focus, then it lands as a real button above the nav. */
-.v6-skip { position: fixed; top: 8px; left: 8px; z-index: 100; transform: translateY(-160%);
-  background: var(--ink); color: var(--paper); font-family: var(--sans); font-size: 14px; font-weight: 600;
-  padding: 12px 18px; border-radius: var(--r-md); text-decoration: none;
-  transition: transform 160ms var(--ease-out); }
-/* :focus, not :focus-visible. The link is only ever reachable by keyboard, and relying on the heuristic left
-   it parked off-canvas in testing, which is the one failure mode a skip link cannot have. */
-.v6-skip:focus { transform: none; outline: 2px solid var(--brand-dk); outline-offset: 2px; }
 .v6 main:focus { outline: none; }
 
-/* ================================================================ NAV ====== */
-/* THE BAR'S HEIGHT, DECLARED BEFORE ANY JAVASCRIPT RUNS.
-   html { scroll-padding-top: var(--nav-h, 5.125rem) } in app/globals.css is what reserves the bar for every
-   in-page anchor on this site, and the browser performs its fragment scroll DURING PARSE. The ResizeObserver
-   in shell.tsx publishes --nav-h onto the document element, but it cannot run until hydration, so on a cold
-   load of a URL carrying a #hash the offset resolved to the 5.125rem fallback, 82px, against a bar that is
-   66px. Every such anchor landed 16px short and parked the bottom of the PRECEDING band under the bar. That
-   is the reported /platform#current symptom: a grey strip sitting over a white section on arrival.
+/* The bar, the mega menu, the phone drawer and the skip link live in _system/nav.css, imported right after this
+   file (layout.tsx). Two pieces of the bar's contract stay HERE, in the system sheet, because surfaces that are
+   not the bar depend on them and nav.css is rebuilt on its own (plan A2): */
 
-   The value is derived from the box model in this file, not measured in a browser.
-     desktop   .v6-nav__in is a single-line flex row, so its content height is its tallest item. That is the
-               Open Vraelis button: :320 gives it 14px type, which at the body's 1.5 line-height in
-               app/globals.css is 21px, plus 8px of padding twice, plus its own 1px border twice, so 39px,
-               which is taller than the 38px min-height in the same rule. Add the bar's 13px padding twice and
-               its 1px bottom border, both at :271-272, and the bar is 66px. Nothing else reaches that: the
-               wordmark is 34px at the ceiling of its clamp, and a nav item is 37.75px.
-     <= 940px  the items and the sign in link are hidden at :438-441 and the burger appears, fixed at 40px by
-               :323, 1px taller than the button, so the bar is 67px. That agrees with the 67px measured at
-               390x844 and recorded at :463. The two figures this codebase quotes are both right; they are
-               the two sides of this breakpoint, not a disagreement.
+/* 1. THE BAR'S HEIGHT, DECLARED BEFORE ANY JAVASCRIPT RUNS. FrameHero's frame, the legal and sign-in pages, the
+   FAQ's sticky title and html { scroll-padding-top } in app/globals.css all read --nav-h. The ResizeObserver in
+   shell.tsx publishes the measured height onto the document element after hydration and wins (an inline style
+   outranks this rule); this is the pre-hydration seed, so a cold load of a URL with a #hash lands its anchor
+   under the bar rather than at the 82px fallback, and nothing laid out with it moves when the measured value
+   arrives. The seed has to equal the measurement for that: the bar is 67px at every width (its right-hand
+   cluster is 40px tall: the language switch and the button on a desktop, the burger on a phone; plus 13px of
+   padding twice and the 1px bottom border), measured after hydration at 1920, 1440, 1100, 940, 768 and 390 on
+   /, /platform, /pricing, /company and /privacy, 2026-10-02. The desktop seed said 66 (from the bar before the
+   language switch joined it), so the legal pages' top padding and FrameHero's frame moved a pixel at hydration.
+   :has() stops matching when the shell unmounts, which hands /signin and the console back to their own
+   layouts' value. If the bar's box model changes (nav.css), measure it and change this one number. */
+:root:has(.v6) { --nav-h: 67px; }
 
-   THIS IS THE PRE-HYDRATION SEED, NOT A SECOND SOURCE OF TRUTH. The ResizeObserver stays and still wins: it
-   writes an inline style on the document element, which outranks any stylesheet rule, and it is what keeps
-   the value honest when the wordmark's clamp() or the viewport moves the real bar off these numbers. It also
-   unsets cleanly, because :has(.v6) stops matching the moment the shell unmounts, which hands /signin and
-   the console back to the 5.125rem their own layouts were tuned against.
-
-   :has() matches against the whole document, so this sets --nav-h for any document that contains a V6 shell
-   anywhere in it. That is correct today because no route mixes a V6 shell with another shell. If one ever
-   does, this has to become a declaration on the shell's own root element instead. */
-:root:has(.v6) { --nav-h: 66px; }
-@media (max-width: 940px) { :root:has(.v6) { --nav-h: 67px; } }
-
-.v6-nav { position: sticky; top: 0; z-index: 60; overflow-anchor: none; }
-/* THE BAR NEVER HIDES. It stays put and takes the colour of whatever is under it instead — see the ground
-   sampler in shell.tsx. Hiding it was a worse answer to the same problem (a bar that fights the page) and
-   it cost a mega panel that could open against a moving anchor, because .v6-mega is anchored at top:100%
-   of this element.
-
-   --nav-bg is written per scroll frame from the actual painted colour of the section under the bar, and
-   there is deliberately NO transition on it. That is not an omission: a hard cut at a section boundary is
-   one frame here because the ground changes in one frame, and chapter 2s slow resolve from paper to
-   graphite is slow here because the ground is. Matching the source beats animating toward it, and it is
-   the only way the bar is never seen catching up — which is what the rules below have always argued for. */
+/* 2. THE GROUND UNDER THE BAR. shell.tsx samples the painted colour of the section under the bar and writes it
+   to the bar as --nav-bg, with data-ground="1" once it has a reading. data-ground gates these rules, so a bar
+   that has not measured (no JavaScript, the first paint, the commit after a navigation) keeps its own
+   background rather than resolving the property to nothing and going transparent. The drawer is chrome on its
+   own sheet, so it never takes the sampled colour. !important because the bar's theme rules in nav.css set
+   their own backgrounds; nothing else in the site sets a background with !important on these two elements, so
+   where these rules sit in the cascade does not change what they do. */
 .v6-nav[data-ground="1"] .v6-nav__in { background: var(--nav-bg) !important; }
-/* The first paint must not animate, same reasoning as the theme swap below. */
-.v6-nav[data-settled="false"] { transition: none; }
-/* The initial theme is correct from the server-rendered markup, so it must not animate in. Crossing a
-   chapter boundary later gets the restrained transition. */
-.v6-nav[data-settled="false"] .v6-nav__in,
-.v6-nav[data-settled="false"] .v6-brand,
-.v6-nav[data-settled="false"] .v6-nav__item,
-.v6-nav[data-settled="false"] .v6-nav__signin,
-.v6-nav[data-settled="false"] .v6-btn { transition: none !important; }
-/* NO COLOUR TRANSITION ON THE BAR. It carried `transition: background 90ms linear, border-color 90ms
-   linear`, and because the bar is SOLID at every scroll position (see the rules below), that fade smoothed
-   exactly one thing: the light-to-dark swap at a section boundary. The page's ground changes in a single
-   frame as the boundary passes under the bar, so a 90ms crossfade on top of it is not a polish detail, it
-   IS the lag — the bar visibly finishes changing after the page already has.
-
-   The route-change case was fixed earlier by deriving the theme during render. This is the same defect on
-   the other two paths the founder hit: scrolling onto a differently-grounded section, and clicking the
-   wordmark to jump home. Both are instant for the page, so both are instant for the bar.
-
-   The bar's CONTENTS lose their colour fades for the same reason. Snapping the background while the
-   wordmark and the links kept crossfading over 90ms would have been worse than leaving it alone: instead of
-   a bar that lags as a whole, you would get a bar that is half changed, which reads as a rendering fault
-   rather than as a transition. The bar turns over in ONE frame or not at all. */
-/* The bar is always on screen, but html's scroll-padding-top (globals.css) counts the strip it sits in as out
-   of view, so focusing anything in it from mid-page scrolled the page up (422px at 390x844). A negative
-   scroll margin of the same size puts its controls back inside the view the browser checks. */
-.v6-nav :is(a, button) { scroll-margin-top: calc(-1 * var(--nav-h, 5.125rem)); }
-.v6-nav__in { display: flex; align-items: center; gap: 8px;
-  /* the bar spans the viewport, its contents sit on the page column: the wordmark lines up with every
-     headline below it and the button with the right edge of the content */
-  padding: 13px max(var(--gutter), calc((100% - var(--max)) / 2 + var(--gutter)));
-  background: transparent; border-bottom: 1px solid transparent; }
-/* The page is the drama; the bar is not. Solid, on both grounds: over a white chapter a translucent bar
-   let the section's own eyebrow and headline ghost through the nav links, and over a black chapter it
-   read as a lighter grey strip. White ground gets a white bar with dark text; black ground gets a black
-   bar with white text. Nothing shows through either. */
-.v6-nav[data-scrolled="true"] .v6-nav__in { background: var(--paper); backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom-color: var(--line); }
-.v6-nav[data-theme="light"] .v6-nav__in { background: var(--paper); }
-/* Solid, and identical at scrollY 0. The ground under the bar at the top of the page IS black, so a
-   translucent plate over it only ever read as a lighter grey strip sitting on the hero. */
-.v6-nav[data-theme="dark"] .v6-nav__in { background: #0A0A0B; backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom-color: transparent; }
-.v6-nav[data-theme="dark"][data-scrolled="true"] .v6-nav__in { border-bottom-color: rgba(255,255,255,0.10); }
-.v6-nav[data-open="true"] .v6-nav__in { backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom-color: transparent; }
-.v6-nav[data-open="true"][data-theme="dark"] .v6-nav__in { background: #08080A; }
-.v6-nav[data-open="true"][data-theme="light"] .v6-nav__in { background: var(--paper); }
-/* The wordmark is the largest thing in the bar by a clear margin (roughly 2x the nav links) and it is the
-   axis everything else is centred on. It never wraps and never shrinks, and the bar's own height is still set
-   by the taller button, so growing the type does not grow the header or push a link off the edge.
-   Wordmark only: no icon beside it. */
-/* THE WORDMARK WAS TWICE THE SIZE OF THE BAR IT SITS IN.
-   Measured on the live page: the mark rendered at 30.24px weight 700 beside nav items at 14.5px weight
-   500. That is 2.09x the size and two weight steps heavier, so the first thing the bar said was its own
-   name, loudly, on every page. A wordmark should lead the nav, not shout over it.
-   1.45x is the ratio it lands on now, which is where a company's own name sits when it is confident about
-   it. The tracking relaxes with the size: -0.038em is drawn for 30px and closes the counters up at 21px.
-   Weight stays at 700 because this IS the logo and there is no separate mark; what was wrong was the
-   scale, not the voice.
-   The clamp floor still keeps it legible at 320px, and --nav-h is MEASURED from this element rather than
-   hardcoded (see shell.tsx), so the bar and every chapter that sizes against it follow this down on their
-   own. Nothing else needed changing for the bar to get shorter with it. */
-.v6-brand {
-  font-family: var(--sans); font-weight: 700; font-size: clamp(20px, 1.5vw, 24px);
-  letter-spacing: -0.03em; color: var(--ink); text-decoration: none; line-height: 1; white-space: nowrap;
-  display: inline-flex; align-items: center; flex: none;
-  /* no negative margin: the wordmark sits on the page column, level with the headlines below it */
-  padding-right: 16px;
-  /* optical: "Vraelis" carries no descender, so its glyph box sits a touch high on the shared centre line */
-  transform: translateY(0.02em); }
-.v6-nav[data-theme="dark"] .v6-brand { color: var(--g-fg); }
-.v6-nav__items { display: flex; align-items: center; gap: 2px; min-width: 0; }
-/* No pill, no rounded hover plate, no outlined active box. State is carried by colour alone. */
-.v6-nav__item { font-size: 14px; font-weight: 500; color: var(--ink-3); text-decoration: none; white-space: nowrap;
-  background: none; border: 0; cursor: pointer; font-family: var(--sans); padding: 8px 14px; display: inline-flex;
-  align-items: center; }
-.v6-nav__item:hover, .v6-nav__item[aria-current="page"], .v6-nav__item[aria-expanded="true"] { color: var(--ink); }
-.v6-nav[data-theme="dark"] .v6-nav__item { color: var(--g-fg-2); }
-.v6-nav[data-theme="dark"] .v6-nav__item:hover, .v6-nav[data-theme="dark"] .v6-nav__item[aria-expanded="true"] { color: var(--g-fg); }
-.v6-nav__right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex: none; }
-.v6-nav__lang { margin-right: 4px; }
-.v6-nav__signin { font-size: 14.5px; font-weight: 500; color: var(--ink-3); text-decoration: none; padding: 8px 12px; white-space: nowrap; }
-.v6-nav__signin:hover { color: var(--ink); }
-.v6-nav[data-theme="dark"] .v6-nav__signin { color: var(--g-fg-2); } .v6-nav[data-theme="dark"] .v6-nav__signin:hover { color: var(--g-fg); }
-/* .v6-nav__in, NOT .v6-nav. MobileNav mounts INSIDE <nav class="v6-nav"> in shell.tsx, so anything scoped
-   to the bar's element also reached the drawer's pinned footer, two floors down and on a different surface.
-   Both rules did damage there. The dark one is (0,3,0) and beat .v6-btn--ghost's (0,1,0), so Sign in and
-   Open Vraelis rendered as two identical white pills with no primary and no secondary between them. The
-   sizing one is (0,2,0) and beat the base button's 44px min-height with the bar's own 38px, on the one
-   surface that is only ever reached by touch. These are the bar's numbers and they belong to the bar's row. */
-.v6-nav__in .v6-btn { min-height: 38px; padding: 8px 16px; font-size: 14px; }
-.v6-nav[data-theme="dark"] .v6-nav__in .v6-btn { background: var(--g-fg); border-color: var(--g-fg); color: var(--graphite); }
-.v6-nav[data-theme="dark"] .v6-nav__in .v6-btn:hover { background: #E4E4E7; border-color: #E4E4E7; color: #0A0A0B; }
-.v6-nav__burger { display: none; width: 40px; height: 40px; border-radius: var(--r-md); border: 1px solid var(--line-2); background: var(--surface); color: var(--ink); align-items: center; justify-content: center; cursor: pointer; }
-.v6-nav[data-theme="dark"] .v6-nav__burger { background: rgba(255,255,255,0.06); border-color: var(--g-line); color: var(--g-fg); }
-
-/* Resources open: the bar is sitting directly on the panel's light ground, so the WHOLE bar takes the light
-   treatment regardless of which section is behind it. Previously only the background switched while the
-   foreground colours stayed on their dark-section values, so opening the menu anywhere over graphite left the
-   wordmark and every nav link invisible against the bar's own background.
-   These rules must stay BELOW the entire [data-theme="dark"] block: the two selectors have identical
-   specificity, so source order is the only thing that decides which one wins. */
-.v6-nav[data-open="true"][data-theme="dark"] .v6-brand { color: #FAFAFA; }
-.v6-nav[data-open="true"][data-theme="light"] .v6-brand { color: var(--ink); }
-.v6-nav[data-open="true"][data-theme="dark"] .v6-nav__item { color: #B9BBC0; }
-.v6-nav[data-open="true"][data-theme="light"] .v6-nav__item { color: var(--ink-3); }
-.v6-nav[data-open="true"] .v6-nav__item:hover,
-.v6-nav[data-open="true"] .v6-nav__item[aria-current="page"],
-.v6-nav[data-open="true"][data-theme="dark"] .v6-nav__item[aria-expanded="true"] { color: #FAFAFA; }
-.v6-nav[data-open="true"][data-theme="light"] .v6-nav__item[aria-expanded="true"] { color: var(--ink); }
-.v6-nav[data-open="true"][data-theme="dark"] .v6-nav__signin { color: #B9BBC0; }
-.v6-nav[data-open="true"][data-theme="light"] .v6-nav__signin { color: var(--ink-3); }
-.v6-nav[data-open="true"][data-theme="dark"] .v6-nav__signin:hover { color: #FAFAFA; }
-.v6-nav[data-open="true"][data-theme="light"] .v6-nav__signin:hover { color: var(--ink); }
-.v6-nav[data-open="true"][data-theme="dark"] .v6-btn { background: #FAFAFA; border-color: #FAFAFA; color: #0A0A0B; }
-.v6-nav[data-open="true"][data-theme="light"] .v6-btn { background: var(--ink); border-color: var(--ink); color: var(--paper); }
-/* Focus ring is brand indigo, never a signal colour, and is stated for each bar treatment. The menu button
-   carries it too: closing the drawer hands focus back to it, so it is focused far more often than it was. */
-.v6-nav__item:focus-visible, .v6-nav__signin:focus-visible, .v6-nav__burger:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: var(--r-md); }
-.v6-nav[data-theme="dark"] .v6-nav__item:focus-visible,
-.v6-nav[data-theme="dark"] .v6-nav__signin:focus-visible,
-.v6-nav[data-theme="dark"] .v6-nav__burger:focus-visible { outline-color: var(--brand-dk); }
-.v6-nav[data-open="true"] .v6-nav__item:focus-visible,
-.v6-nav[data-open="true"] .v6-nav__signin:focus-visible { outline-color: var(--brand); }
-
-/* ---------------------------------------------------------------- mega-menu ---
-   Night panel: the open menu is a dark full-width surface regardless of which
-   section the bar is sitting over, so it always reads the same way and its text
-   is always white on near-black. It animates OUT as well as in; the previous
-   panel unmounted on close and simply vanished, which is what made dismissing a
-   menu feel broken.
-   ------------------------------------------------------------------------- */
-.v6-mega { position: absolute; top: 100%; left: 0; right: 0; z-index: 55; }
-/* No drop shadow. Over a white chapter the soft shadow spread a grey haze across the section below the
-   panel, which read as a rendering fault rather than as depth. The panel ends on a hard edge. */
-/* the panel takes the ground it opens over: white section, white panel with dark text; dark section,
-   near-black panel with light text. It never forces one treatment onto the other. */
-.v6-mega__panel { transform-origin: 50% 0; }
-.v6-nav[data-theme="dark"] .v6-mega__panel { background: #08080A; border-bottom: 1px solid rgba(255,255,255,0.14); }
-.v6-nav[data-theme="light"] .v6-mega__panel { background: var(--paper); border-bottom: 1px solid var(--line); }
-.v6-mega[data-state="in"] .v6-mega__panel { animation: v6MegaIn 260ms cubic-bezier(0.22,1,0.36,1) both; }
-.v6-mega[data-state="out"] .v6-mega__panel { animation: v6MegaOut 190ms cubic-bezier(0.4,0,1,1) both; pointer-events: none; }
-@keyframes v6MegaIn  { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
-@keyframes v6MegaOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-6px); } }
-/* switching top-level items keeps the shell and crossfades only what is inside it */
-@keyframes v6MegaSwap { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
-@keyframes v6MegaFade { from { opacity: 0; } to { opacity: 1; } }
-.v6-mega__grid { animation: v6MegaSwap 220ms var(--ease) both; display: grid; grid-template-columns: repeat(3, minmax(0,1fr)) minmax(0,1.15fr);
-  gap: clamp(28px,3.4vw,64px); max-width: var(--max-wide); margin-inline: auto;
-  padding: clamp(34px,3.2vw,52px) var(--gutter) clamp(36px,3.6vw,56px); }
-.v6-mega__col-h { font-family: var(--sans); font-size: 11.5px; font-weight: 600; letter-spacing: 0; color: #8E9095; margin: 0 0 16px; }
-.v6-mega__link { display: block; text-decoration: none; padding: 9px 10px; margin: 0 -10px; border-radius: var(--r-md);
-  transition: background 140ms ease; }
-.v6-mega__link:hover { background: rgba(255,255,255,0.06); }
-.v6-mega__link:focus-visible { outline: 2px solid #FAFAFA; outline-offset: -2px; }
-.v6-mega__lt { display: block; font-size: 15px; font-weight: 600; color: #FAFAFA; letter-spacing: -0.012em; }
-.v6-mega__ld { display: block; font-size: 12.5px; color: #9A9CA1; margin-top: 2px; line-height: 1.4; }
-/* editorial preview, not a card of muted text on a black card */
-.v6-mega__feature { border-left: 1px solid rgba(255,255,255,0.13); padding-left: clamp(24px,2.4vw,40px);
-  display: flex; flex-direction: column; min-height: 232px; }
-.v6-mega__fin { animation: v6MegaFade 200ms var(--ease) both; }
-.v6-mega__fstat { display: inline-block; margin-top: 16px; font-family: var(--sans); font-size: 11.5px;
-  font-weight: 600; letter-spacing: 0; color: #8E9095;
-  border: 1px solid rgba(255,255,255,0.16); border-radius: var(--r-pill); padding: 5px 12px; }
-.v6-mega__fe { font-family: var(--sans); font-size: 11.5px; font-weight: 600; letter-spacing: 0; color: #8E9095; }
-.v6-mega__feature h4 { color: #FAFAFA; font-size: clamp(1.2rem,1.5vw,1.5rem); font-weight: 600; margin: 14px 0 0;
-  letter-spacing: -0.022em; line-height: 1.12; }
-.v6-mega__feature p { font-size: 13.5px; line-height: 1.55; margin: 12px 0 0; color: #B9BBC0; }
-.v6-mega__fcta { display: inline-flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 24px;
-  font-size: 14px; font-weight: 600; color: #FAFAFA; text-decoration: none; }
-.v6-mega__fcta .v6-arw { transition: transform 180ms var(--ease-out); }
-.v6-mega__fcta:hover .v6-arw { transform: translateX(4px); }
-.v6-mega__fcta:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 4px; border-radius: var(--r-sm); }
-
-
-/* light-ground values for the same panel */
-.v6-nav[data-theme="light"] .v6-mega__col-h { color: var(--ink-4); }
-.v6-nav[data-theme="light"] .v6-mega__lt { color: var(--ink); }
-.v6-nav[data-theme="light"] .v6-mega__ld { color: var(--ink-3); }
-.v6-nav[data-theme="light"] .v6-mega__fe { color: var(--ink-4); }
-.v6-nav[data-theme="light"] .v6-mega__feature h4 { color: var(--ink); }
-.v6-nav[data-theme="light"] .v6-mega__feature p { color: var(--ink-3); }
-.v6-nav[data-theme="light"] .v6-mega__fcta { color: var(--ink); }
-.v6-nav[data-theme="light"] .v6-mega__feature { border-left-color: var(--line-2); }
-.v6-nav[data-theme="light"] .v6-mega__link:hover { background: rgba(255,255,255,0.06); }
-.v6-nav[data-theme="light"] .v6-mega__link:focus-visible,
-.v6-nav[data-theme="light"] .v6-mega__fcta:focus-visible { outline-color: var(--ink); }
-
-/* mobile full-screen nav */
-/* THE NIGHT PANEL, SAME AS THE DESKTOP MEGA-MENU. The drawer used to be a white surface holding a flat
-   dump of every desktop group under headings like "Platform, Understand", and because it renders inside
-   the nav, opening it over the dark hero also painted the wordmark white-on-white. It is now the same
-   graphite surface the desktop menus open, carrying the same groups, link titles and descriptions, as
-   accordion sections. Its own foreground colours are pinned here so no nav theme state can bleed in. */
-/* background and colour from the same tokens as its children, so the sheet and its type cannot disagree: a
-   fixed #08080A here drew ink links on a black sheet on every light page (2026-09-30) */
-.v6-drawer { position: fixed; inset: 0; z-index: 90; background: var(--surface); color: var(--ink-2); display: flex; flex-direction: column; animation: v6DrawerIn 240ms var(--ease) both; overflow: hidden; }
-@keyframes v6DrawerIn { from { opacity: 0; } to { opacity: 1; } }
-.v6-drawer__top { display: flex; align-items: center; justify-content: space-between; padding: 13px var(--gutter); border-bottom: 1px solid var(--g-line); flex: none; }
-/* The drawer states its own brand colour: it is always night, whatever theme the bar behind it holds. */
-.v6-nav .v6-drawer .v6-brand { color: var(--g-fg); }
-.v6-drawer__x { width: 44px; height: 44px; border-radius: var(--r-md); border: 1px solid var(--line-2); background: var(--brand-soft); color: var(--ink); display: grid; place-items: center; cursor: pointer; }
-.v6-drawer__x:focus-visible { outline: 2px solid var(--g-fg); outline-offset: 2px; }
-.v6-drawer__body { padding: 2px var(--gutter) 24px; display: flex; flex-direction: column; flex: 1; overflow-y: auto; }
-/* SIDE BY SIDE, NOT ONE ON TOP OF THE OTHER. These are two short labels, and stacked as full-width blocks
-   ten pixels apart they read as one control that has been cut in half rather than as a choice between
-   signing in and opening the app. On a row they are about 250px of the 350 available. Open Vraelis takes
-   the larger share because it is the primary action; signed in, it is the only child and fills the row. */
-.v6-drawer__foot { flex: none; padding: 14px var(--gutter) calc(18px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); background: var(--surface); display: flex; gap: 10px; }
-.v6-drawer__foot .v6-btn { justify-content: center; flex: 1 1 0; min-width: 0; }
-.v6-drawer__foot .v6-btn--brand { flex-grow: 1.6; }
-/* Inside the drawer the actions take the night treatment regardless of the bar's theme. Specificity matches
-   the .v6-nav[data-theme] button rules, so these must stay AFTER that block: source order decides the tie. */
-.v6-nav .v6-drawer .v6-btn--brand { background: var(--g-fg); border-color: var(--g-fg); color: var(--graphite); }
-.v6-nav .v6-drawer .v6-btn--brand:hover { background: #E4E4E7; border-color: #E4E4E7; color: var(--graphite); }
-.v6-nav .v6-drawer .v6-btn--ghost { background: transparent; border-color: var(--g-line-2); color: var(--g-fg); }
-/* accordion sections: one per top-level desktop menu */
-.v6-drawer__sec { border-bottom: 1px solid var(--g-line); }
-.v6-drawer__sec-h { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 16px 2px; min-height: 56px; background: none; border: 0; cursor: pointer; text-align: left;
-  font-family: var(--sans); font-size: 20px; font-weight: 600; letter-spacing: -0.02em; color: var(--g-fg); }
-.v6-drawer__sec-h svg { color: var(--g-fg-3); flex: none; transition: transform 200ms var(--ease); }
-.v6-drawer__sec[data-open="true"] .v6-drawer__sec-h svg { transform: rotate(180deg); }
-.v6-drawer__sec-h:focus-visible { outline: 2px solid var(--g-fg); outline-offset: -2px; border-radius: var(--r-md); }
-.v6-drawer__sec-b { padding: 2px 2px 18px; display: flex; flex-direction: column; gap: 18px; animation: v6SecIn 220ms var(--ease) both; }
-@keyframes v6SecIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
-.v6-drawer__grp-h { font-family: var(--sans); font-size: 11.5px; font-weight: 600; letter-spacing: 0; color: var(--g-fg-3); margin: 0 0 6px; }
-.v6-drawer__glink { display: block; text-decoration: none; padding: 9px 10px; margin: 0 -10px; border-radius: var(--r-md); }
-.v6-drawer__glink:active { background: var(--brand-soft); }
-.v6-drawer__glink:focus-visible { outline: 2px solid var(--g-fg); outline-offset: -2px; }
-.v6-drawer__glt { display: block; font-size: 15.5px; font-weight: 600; color: var(--g-fg); letter-spacing: -0.012em; }
-.v6-drawer__gld { display: block; font-size: 12.5px; color: #9A9CA1; margin-top: 2px; line-height: 1.4; }
+.v6-nav[data-ground="1"] .v6-mega__panel { background: var(--nav-bg) !important; }
+.v6-drawer, .v6-drawer * { --nav-bg: initial; }
 
 /* The v1 footer (.v6-foot*) lived here. The institutional footer in close.css (.v6-foot2*) replaced it in
    phase 1 and no v6 route renders the old markup any more, so these rules are deleted rather than left to
    rot and be copied forward by mistake. */
-@media (max-width: 940px) {
-  .v6-nav__items, .v6-nav__signin { display: none; }
-  .v6-nav__burger { display: inline-flex; }
-  /* The language pill keeps its flag and gives up its name; the drawer carries the full switch. */
-  .v6-nav__lang.lsw .lsw__btn .lsw__label { display: none; }
-  .v6-nav__lang.lsw .lsw__btn { padding: 0 10px; }
-}
-/* Three classes, not .v6-nav__lang alone. The switch's own .lsw { display: inline-flex } has the same
-   (0,1,0), and the page's CSS chunk carries a second copy of language-switcher.css that loads after this
-   file, so the bare class lost on source order: the pill stayed, and pushed the menu button into the gutter
-   at 360px and off the screen at 320px. */
-@media (max-width: 420px) { .v6-nav .v6-nav__lang.lsw { display: none; } }
-.v6-drawer__lang { margin-right: auto; }
-
-/* ═══════════════ THE BAR IS ANCHORED TO THE VIEWPORT ON A PHONE, NOT TO THE FLOW ══
-   position: sticky keeps the bar IN NORMAL FLOW and offsets it against the scrollport. That holds while
-   the document scrolls normally, and stops holding the instant iOS rubber-bands past scrollTop 0: the
-   sticky constraint no longer applies, so the bar travels down the screen with the content and comes back
-   when the bounce settles. Reported from an iPhone, against Scale, whose bar stays locked.
-
-   AN EMULATED VIEWPORT CANNOT SEE THIS. Measured in headless Chromium the bar reads 0.00px of drift across
-   47 scroll positions and 0.00px across a viewport-height change, because emulation does not rubber-band.
-   The probe was right about everything it could observe and the behaviour was still wrong on the device.
-
-   fixed anchors to the viewport, so overscroll, momentum and Safari's toolbar collapsing all move the page
-   underneath a bar that does not move. The bar leaves normal flow when it does, which would pull the whole
-   page up by its own height, so #v6-main gives the space back -- the same custom property the chapters
-   already use to clear it, so the two cannot drift apart.
-
-   SCOPED THREE WAYS, deliberately narrow:
-     max-width: 940px   the breakpoint where this nav ALREADY becomes the mobile one (burger in, items out),
-                        so the bar changes position exactly where it changes form. Desktop is untouched.
-     :root:has(.v6-gap) .v6-gap is the homepage's own chapter and renders on no other route, so no other
-                        v6 route changes. Same :has idiom the file already uses for --nav-h.
-     the mega panel is not reachable here at all: below 940px .v6-nav__items and .v6-nav__signin are
-                        display:none and the burger opens .v6-drawer instead, which is its own
-                        position:fixed inset:0 overlay at z-index 90 and does not depend on the bar's
-                        positioning. Desktop keeps sticky, so the mega keeps anchoring to a flowed bar. */
-@media (max-width: 940px) {
-  :root:has(.v6-gap) .v6-nav { position: fixed; top: 0; left: 0; right: 0; }
-  /* Exactly the height the bar no longer occupies. --nav-h is MEASURED and published by the shell after
-     hydration; until then it is the 67px this same breakpoint declares above, which is what the bar really
-     measures here -- so first paint and hydrated paint agree and the spacer never disagrees with the bar. */
-  :root:has(.v6-gap) #v6-main { padding-top: var(--nav-h, 67px); }
-}
 @media (max-width: 560px) {
-  /* Keep the enlarged wordmark AND both controls on one line down to 320px: the button gives back the
-     padding rather than the wordmark giving back its size. */
-  .v6-nav__in .v6-btn { padding: 8px 12px; }
-  .v6-brand { padding-right: 10px; }
-
   /* TWO ACTIONS SIT BESIDE EACH OTHER, NOT ON TOP OF EACH OTHER.
      Every call-to-action on the site is a pair, and the pair was sized for a desktop: 20 to 26px of gap,
      and 26px of padding either side of each button. On a 390px phone that leaves 350px of usable width
@@ -579,21 +422,29 @@
      Rows whose second label is a sentence ("See how it works around agents") still wrap, and should: they
      are past what one phone line can hold, and shrinking the type until they fit would be the worse
      outcome. */
-  /* EVERY SELECTOR HERE IS SCOPED UNDER .v6 ON PURPOSE. This file is imported FIRST (layout.tsx imports
-     v6.css, then pagekit.css; hero.css, close.css and chapters.css arrive later still with their
-     components), so an override written at the same specificity as the rule it is correcting loses the tie
-     on source order and silently does nothing. Measured: the unscoped version left the page-hero pair at
-     its desktop padding and the hero gap at 26px. One extra class on each selector settles it wherever the
+  /* EVERY SELECTOR HERE IS SCOPED UNDER .v6 ON PURPOSE. This file is early in the cascade and component
+     sheets land on both sides of it: measured on 2026-10-02, the layout chunk is close.css and
+     language-switcher.css, then v6.css, nav.css, pagekit.css, docs.css, changelog.css, legal.css, and a
+     page's own chunk (hero.css, kit.css, a second copy of close.css on the homepage) comes after all of
+     them. An override written at the same specificity as the rule it is correcting can lose the tie on
+     source order and silently do nothing. Measured: the unscoped version left the page-hero pair at its
+     desktop padding and the hero gap at 26px. One extra class on each selector settles it wherever the
      file happens to land in the cascade. */
+  /* On a phone a large button becomes the md size (44, 15px), with 16 either side rather than 20 so a pair
+     fits one line. */
   .v6 .v6-btn--lg,
-  .v6 .v6-phero__cta .v6-btn { min-height: 46px; padding: 13px 16px; font-size: 15px; }
-  .v6 .v6-h__cta, .v6 .v6-phero__cta, .v6 .v6-end__cta { gap: 10px; }
+  .v6 .v6-phero__cta .v6-btn { min-height: 44px; padding: 6px 16px; font-size: 15px; }
+  .v6 .v6-h__cta, .v6 .v6-phero__cta, .v6 .v6-end__cta, .v6 .v6-actions { gap: 10px; }
+  /* A pair of buttons shares the line when it fits and each takes the whole line when it does not (plan A3):
+     the row wraps first, because a flex item's basis here is its own label's width, and only then does each
+     button grow to fill its line. Only a row of two or more buttons: a lone button, or a button beside an
+     EditorialLink, keeps its own width, as the closing's single button does (close.css). */
+  .v6 :is(.v6-actions, .v6-phero__cta):has(> .v6-btn ~ .v6-btn) > .v6-btn { flex: 1 1 auto; }
 }
 /* Touch targets: editorial links and footer links are text-height on desktop, which is under the 44px touch
    guidance on a phone. Grow the hit area vertically without moving the text. */
 @media (max-width: 640px) {
   .v6-elink { min-height: 44px; }
-  .v6-drawer__glink { min-height: 44px; }
 }
 
 /* ============================================================== MOTION ===== */
@@ -615,9 +466,16 @@
 /* ^ The page paints its own white since the homepage opens on a dark film (2026-10-01): the document ground
    there is graphite so the top never flashes white, and a section without a background of its own would
    otherwise show that black, which is exactly what the coverage list did. */
-.v6-reveal { opacity: 0; transform: translateY(14px); transition: opacity 560ms var(--ease), transform 560ms var(--ease); transition-delay: calc(var(--i,0) * 66ms); }
-.v6-reveal.in { opacity: 1; transform: none; }
-.v6-reveal--m { transform: translateY(22px) scale(0.99); } .v6-reveal--m.in { transform: none; }
+/* REVEAL (plan A6, 2026-10-02): opacity 0 to 1 and 16px of rise over 520ms, 60ms apart for up to four
+   siblings (--i). NOTHING IN THE FIRST SCREEN IS EVER HIDDEN, and that is now true before hydration too:
+   a Reveal is VISIBLE BY DEFAULT. On mount, ui.tsx adds `in v6-reveal--now` to one that starts in the first
+   screen (shown, no transition) and `v6-reveal--wait` to one that starts below it, which hides it there, off
+   screen, until it scrolls in and gets `in`. The old default was hidden-until-JavaScript, so every first
+   screen opened with its reveals blank until hydration, and for good where scripting never ran. */
+.v6-reveal { transition: opacity 520ms var(--ease), transform 520ms var(--ease); transition-delay: calc(min(var(--i, 0), 3) * 60ms); }
+.v6-reveal--wait:not(.in) { opacity: 0; transform: translateY(16px); }
+.v6-reveal--m.v6-reveal--wait:not(.in) { transform: translateY(22px) scale(0.99); }
+.v6-reveal--now { transition: none; }
 
 /* ══════════════════════════════════════════════════════════ SCROLLBAR ══
    Nothing here any more. This used to override a brand-emerald scrollbar that globals.css painted on every
@@ -685,8 +543,12 @@
   .v6-page { animation: none !important; }
   .v6-reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
   .v6-btn:active { transform: none !important; }
-  .v6-drawer, .v6-drawer__sec-b { animation: none !important; }
-  .v6-drawer__sec-h svg { transition: none !important; }
+  /* Buttons: no wipe and no moving arrow. The primary's hover is a flat lighter grey instead, label still dark. */
+  .v6-btn::before { display: none; }
+  .v6 .v6-btn:not(.v6-btn--ghost):hover { background: #E4E4E7 !important; border-color: #E4E4E7 !important; color: #0A0A0B !important; }
+  .v6-btn .v6-arw, .v6-btn .v6-arw > span, .v6-elink .v6-arw { transition: none !important; }
+  .v6-btn:hover .v6-arw, .v6-btn:hover .v6-arw > span:first-child, .v6-elink:hover .v6-arw { transform: none !important; }
+  .v6-btn:hover .v6-arw > span + span { transform: translateX(-100%) !important; }
   .v6 * { scroll-behavior: auto !important; }
 }
 
@@ -747,129 +609,13 @@
 .v6-dark .v6-plink, [data-nav-dark] .v6-plink { background-image: linear-gradient(var(--g-fg), var(--g-fg)); }
 .v6-dark .v6-plink:focus-visible, [data-nav-dark] .v6-plink:focus-visible { outline-color: var(--g-fg); }
 
-/* ══════════════ THE PANEL AND THE DRAWER TAKE THE GROUND TOO ═══════════════
-   The bar reads the section under it; these hang off the bar and were still painting a fixed #08080A or
-   #FFFFFF from the theme flag. Over chapter 2's resolve that put a dark panel under a bar the colour of
-   paper — the two halves of one surface disagreeing, which is worse than either being wrong alone.
-   Same rule, same variable, and still no transition: they match the source rather than animating toward
-   it, so a hard cut is one frame and a slow resolve is slow. */
-.v6-nav[data-ground="1"] .v6-mega__panel { background: var(--nav-bg) !important; }
-/* THE DRAWER IS NOT CHROME OVER THE PAGE, IT REPLACES THE PAGE, so it does not take the ground — it
-   needs one definite surface that agrees with its own text. It was taking var(--surface), which is fixed,
-   while its links follow data-theme, which is not: over the graphite hero that was light type on a white
-   sheet, measured at 0.02 luma apart. Unreadable, and it predates the ground sampler. Tying both halves
-   to the same flag is what makes them unable to disagree. */
-.v6-drawer, .v6-drawer * { --nav-bg: initial; }
-
-/* ── THE DRAWER TAKES THE PAGE'S SIDE, BY SWAPPING TOKENS ────────────────────────────────────────────
-   The directory opened as a white sheet over a black page and vice versa, on both hosts, which is what
-   was reported. I had argued the opposite here — that a surface REPLACING the page owes it nothing — and
-   that was wrong about what a reader experiences: the drawer opens from the bar, over the page, while both
-   are still visible at its edges, so it reads as part of them and not as a separate document.
-   The first attempt at this failed instructively and is worth recording, because it is the trap: flipping
-   only `background` to the ground turned the sheet dark while every child kept `color: var(--ink)`, i.e.
-   ink type on a near-black sheet, measured 0.02 lightness apart. Patching the children one at a time is
-   how that bug reappears forever — I patched the wordmark and the arrow glyph stayed wrong.
-   So nothing here sets a colour. It rebinds the EIGHT TOKENS the drawer is already written against, and
-   every existing rule (`background: var(--surface)`, `color: var(--ink)`, the borders, the close button,
-   the section headings, the CTA) follows automatically and cannot disagree with the sheet it sits on. The
-   pairs are the palette's own light/graphite counterparts, so this introduces no new colour.
-   Driven by the bar's data-theme, which is derived from the MEASURED ground (see the sampler in
-   shell.tsx), so "page dark -> directory dark" needs no second source of truth.
-
-   IT WAS SIX, AND THE TWO THAT WERE MISSING ARE THE PARAGRAPH ABOVE PROVING ITSELF. A token the drawer
-   consumes but this block does not name keeps its light value on graphite, silently, and the child that
-   reads it is the only thing that looks wrong, which is what invites the patch that must not be made.
-   --ink-4 was missing, so the twelve group labels at .v6-drawer__sub-h (:429) stayed #6A6C71 on the
-   graphite sheet, 3.77:1, under the 4.5:1 minimum, on every dark ground on both hosts. --brand was
-   missing, so the focus ring on both footer buttons stayed near-black on near-black and a keyboard user
-   could not see where they were. Neither child gets a colour here. Both tokens do.
-   --ink-4 resolves to --g-fg-3, the same as --ink-3, on purpose: the graphite ramp has three foreground
-   steps to the light ramp's four, and the meta tier collapses upward into the secondary one rather than
-   inventing a fourth grey that would land below 4.5:1 again. */
-.v6-nav[data-theme="dark"] .v6-drawer {
-  --surface: var(--graphite);
-  --ink:     var(--g-fg);
-  --ink-2:   var(--g-fg-2);
-  --ink-3:   var(--g-fg-3);
-  --ink-4:   var(--g-fg-3);
-  --line:    var(--g-line);
-  --line-2:  var(--g-line-2);
-  --brand:   var(--brand-dk);
-}
-/* The wordmark pin stays and is now self-adjusting rather than a patch: --ink resolves light inside a dark
-   drawer by the block above, so this reads correctly on both grounds. */
-.v6-drawer .v6-brand { color: var(--ink); }
-
-/* The language pill on the dark bar over the homepage film. */
-.v6-nav[data-theme="dark"] .v6-nav__lang.lsw .lsw__btn { background: rgba(255,255,255,0.08); color: #FAFAFA; }
-.v6-nav[data-theme="dark"] .v6-nav__lang.lsw .lsw__btn:hover { background: rgba(255,255,255,0.14); }
-.v6-nav[data-theme="dark"] .v6-nav__lang.lsw .lsw__chev { color: #A1A1AA; }
-.v6-nav[data-theme="dark"] .v6-nav__lang.lsw .lsw__btn:focus-visible { outline-color: #FAFAFA; }
-
 /* GENUINELY DARK SURFACES GET THE DARK TOKENS BACK (2026-10-01).
    The universal light change remapped --g-fg and friends to ink, because every former dark band had become
    light. The homepage film and the bar over it are dark for real, so inside them the tokens mean what they
    used to: light type on black. Scoped to these surfaces only; the drawer and every other band stay light. */
-.v6-h,
-.v6-nav[data-theme="dark"] .v6-nav__in,
-.v6-nav[data-theme="dark"] .v6-mega__panel {
+/* (The bar's and the menu panel's half of this rule moved to nav.css with the rest of the navigation.) */
+.v6-h {
   --g-fg: #FAFAFA; --g-fg-2: #C9CBD1; --g-fg-3: #A1A1AA;
   --g-line: rgba(255,255,255,0.12); --g-line-2: rgba(255,255,255,0.2);
   --graphite: #0A0A0B; --graphite-2: #121316; --brand-dk: #FAFAFA;
 }
-
-/* ── THE PHONE MENU, REDRAWN (2026-10-01) ─────────────────────────────────────────────────────────────────
-   Reported from an iPhone: it looked off, and the page scrolled behind it (that half is fixed in shell.tsx,
-   which pins the body while the menu is open). The look: section heads were heavy 20px bold over a dense
-   list, and the foot squeezed the language switch and both actions into one row, so "Create account" broke
-   onto two lines and the three controls were three different heights. Now: lighter, larger section heads;
-   links as clean rows with their one-line description; the two actions side by side at the same height,
-   never wrapping, and the language switch on its own line under them. Black, like every surface. */
-.v6-drawer { background: #0A0A0B; color: #C9CBD1; }
-.v6-drawer__top { padding: 12px var(--gutter); border-bottom-color: rgba(255,255,255,0.08); }
-.v6-nav .v6-drawer .v6-drawer__x { width: 40px; height: 40px; background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); color: #FAFAFA; }
-.v6-drawer__body { padding: 6px var(--gutter) 28px; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
-.v6-drawer__sec { border-bottom-color: rgba(255,255,255,0.08); }
-.v6-drawer__sec-h { min-height: 62px; padding: 18px 0; font-size: 22px; font-weight: 500; letter-spacing: -0.022em; color: #FAFAFA; }
-.v6-drawer__sec-h svg { color: #8E9095; }
-.v6-drawer__sec-b { gap: 22px; padding: 0 0 24px; }
-.v6-drawer__grp-h { font-size: 12px; font-weight: 500; color: #8E9095; margin: 0 0 2px; }
-.v6-drawer__glink { padding: 9px 0; margin: 0; border-radius: 0; }
-.v6-drawer__glink:active { background: transparent; opacity: 0.7; }
-.v6-drawer__glt { font-size: 16px; font-weight: 500; color: #FAFAFA; letter-spacing: -0.01em; }
-.v6-drawer__gld { font-size: 13px; color: #8E9095; margin-top: 3px; }
-.v6-drawer__foot { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center;
-  padding: 14px var(--gutter) calc(14px + env(safe-area-inset-bottom, 0px)); background: #0A0A0B; border-top-color: rgba(255,255,255,0.08); }
-.v6-nav .v6-drawer .v6-drawer__foot .v6-btn { min-height: 46px; padding: 12px 14px; white-space: nowrap; font-size: 15px; }
-/* signed in, the only action fills the row */
-.v6-drawer__foot > .v6-btn--brand:nth-child(2) { grid-column: 1 / -1; }
-.v6-drawer__foot > .v6-drawer__lang { grid-column: 1 / -1; order: 2; justify-self: start; margin: 0; }
-
-/* ── THE MENU, AFTER SCALE.COM (2026-10-01) ────────────────────────────────────────────────────────────────
-   At most two columns of big plain links under small grey group names, and one large rounded picture on the
-   right that changes to the picture of whichever link is pointed at (shell.tsx, MegaShell). The picture keeps
-   one width and one place in every menu, as scale.com's does; its height follows the links. Resources shows two
-   featured cards there instead. */
-.v6-mega__grid { grid-template-columns: max-content max-content minmax(0, 1fr); column-gap: clamp(40px, 5vw, 96px); align-items: stretch; }
-.v6-mega__grid[data-cards] { align-items: start; }
-.v6-mega__col { display: grid; align-content: start; row-gap: 26px; }
-.v6-mega__col-h { font-size: 13px; font-weight: 400; color: #8E9095; margin: 0 0 8px; }
-.v6-mega__link { padding: 5px 0; margin: 0; border-radius: 0; }
-.v6-mega__link:hover { background: transparent; }
-.v6-mega__lt { font-size: clamp(17px, 1.3vw, 20px); font-weight: 400; letter-spacing: -0.012em; color: #FAFAFA; }
-.v6-mega__media { position: relative; overflow: hidden; border-radius: 14px; background: #121214; isolation: isolate;
-  width: min(705px, 49vw, 100%); min-height: 220px; justify-self: end; }
-/* The picture changes the moment a link is pointed at, as on scale.com, with only a short dissolve so the
-   change does not flash. */
-.v6-mega__pic { object-fit: cover; opacity: 0; transition: opacity 160ms var(--ease-out); }
-.v6-mega__pic[data-on="true"] { opacity: 1; }
-.v6-mega__cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: min(737px, 51vw, 100%); justify-self: end; }
-.v6-mega__card { display: grid; gap: 14px; align-content: start; padding: 12px 12px 16px; border-radius: 14px; background: #121214;
-  border: 1px solid rgba(255,255,255,0.08); color: #FAFAFA; text-decoration: none; transition: border-color 160ms var(--ease-out); }
-.v6-mega__card:hover { border-color: rgba(255,255,255,0.22); }
-.v6-mega__card:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
-.v6-mega__cpic { position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 9px; background: #0A0A0B; }
-.v6-mega__cpic img { object-fit: cover; }
-.v6-mega__ct { font-size: 14px; line-height: 1.45; color: #C9CBD1; }
-@media (prefers-reduced-motion: reduce) { .v6-mega__pic { transition: none; } }

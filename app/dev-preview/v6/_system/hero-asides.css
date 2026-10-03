@@ -1,6 +1,159 @@
-/* The right half of the inner page heroes (hero-asides.tsx). A window panel in the same language as the
-   console: a raised black card with a white hairline (black everywhere since 2026-10-01); terminal panels
-   are a step darker, and the one primary node is the inverted white. */
+/* The real pieces of the product beside a page's words (hero-asides.tsx). Two parts: the product pages' hero
+   panels and shared panels (2026-10-02, plan A5 and A7.5), then the older index-page asides, unchanged. */
+
+/* ================================================== THE PRODUCT PAGES' HERO PANELS ===
+   Each sits inside FrameHero's coded panel (kit.css .v6-fh__node), which gives it the shell, the bar and 24px of
+   padding, and fades a node that is taller than the panel. Words only: no dots, no icons, and colour only where
+   the CLI printed it. */
+
+/* /integrations: the four ways in. A mono number, the name (a link to its page in the docs) with its entry point
+   on the right, then what it does: the full line where the panel stands beside the headline (above 1100px), the
+   short line where the panel is a strip across the top of the frame (1100px and below), so all four rows fit its
+   height. On a phone the entry point gives way too. */
+.v6 .ha-w { margin: 0; padding: 0; list-style: none; }
+.v6 .ha-w__row { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; column-gap: 12px; row-gap: 4px;
+  align-items: baseline; padding: 16px 0; border-bottom: 1px solid var(--line-soft); }
+.v6 .ha-w__row:first-child { padding-top: 0; }
+.v6 .ha-w__row:last-child { padding-bottom: 0; border-bottom: 0; }
+.v6 .ha-w__n { font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); font-variant-numeric: tabular-nums; }
+/* The name is a link: a quiet underline that lights on hover. Its colour is stated on hover too, because
+   public/vraelis/tokens.css sets a:hover { color } and would otherwise win. */
+.v6 .ha-w__name { min-width: 0; justify-self: start; font-size: 16px; font-weight: 500; line-height: 1.4; color: var(--ink);
+  text-decoration: underline; text-decoration-color: var(--line-strong); text-decoration-thickness: 1px; text-underline-offset: 4px;
+  transition: text-decoration-color var(--dur-1) var(--ease-out); }
+.v6 .ha-w__name:hover { color: var(--ink); text-decoration-color: currentColor; }
+.v6 .ha-w__name:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; border-radius: var(--r-sm); }
+.v6 .ha-w__entry { min-width: 0; margin: 0; padding: 0; border: 0; background: none; font-family: var(--mono);
+  font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-3); text-align: right; overflow-wrap: anywhere; }
+.v6 .ha-w__who, .v6 .ha-w__more { grid-column: 2 / -1; font-size: 15px; line-height: 1.5; color: var(--ink-3); text-wrap: pretty; }
+.v6 .ha-w__more { display: none; }
+@media (min-width: 1101px) {
+  .v6 .ha-w__who { display: none; }
+  .v6 .ha-w__more { display: block; }
+}
+
+/* /agents: the three MCP tools, a name and a title each, then the rule. .ha-t is the box a short panel is measured
+   by (below); .ha-t__in lays out the list and the rule inside it. */
+.v6 .ha-t__in { display: grid; gap: 20px; align-content: start; }
+.v6 .ha-t__list { margin: 0; padding: 0; list-style: none; }
+.v6 .ha-t__row { display: grid; grid-template-columns: minmax(0, 17ch) minmax(0, 1fr); column-gap: 16px; row-gap: 4px;
+  align-items: baseline; padding: 16px 0; border-bottom: 1px solid var(--line-soft); }
+.v6 .ha-t__row:first-child { padding-top: 0; }
+.v6 .ha-t__name { margin: 0; padding: 0; border: 0; background: none; font-family: var(--mono); font-size: var(--t-mono);
+  line-height: 1.5; color: var(--ink); overflow-wrap: anywhere; }
+.v6 .ha-t__title { font-size: 15px; line-height: 1.5; color: var(--ink-3); }
+.v6 .ha-t__rule { margin: 0; font-size: 15px; line-height: 1.5; color: var(--ink-2); }
+
+/* /developers: the Larkspur CLI transcript, wrapped the way a terminal wraps it, in the colours it printed. */
+.v6 .ha-tx { margin: 0; font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.6; color: var(--ink-2);
+  white-space: pre-wrap; overflow-wrap: anywhere; }
+.v6 .ha-tx__cmd { color: var(--ink); }
+.v6 .ha-tx__p { color: var(--ink-4); }
+.v6 .ha-a1 { color: var(--ink); font-weight: 600; }
+.v6 .ha-a2 { color: var(--ink-4); }
+.v6 .ha-a31 { color: var(--stop-ink); }
+.v6 .ha-a32 { color: var(--go-ink); }
+.v6 .ha-a33 { color: var(--wait-ink); }
+.v6 .ha-a36 { color: #7CC7F2; }
+
+@media (max-width: 560px) {
+  .v6 .ha-w__row { grid-template-columns: 28px minmax(0, 1fr); row-gap: 2px; padding: 10px 0; }
+  .v6 .ha-w__who { font-size: 14px; }
+  .v6 .ha-w__entry { display: none; }
+  .v6 .ha-t__row { grid-template-columns: minmax(0, 1fr); padding: 12px 0; }
+  .v6 .ha-t__in { gap: 14px; }
+}
+
+/* HOW TALL THE TWO PANELS STAND (final review, 2026-10-02).
+   Above 1100px a coded panel rises from the frame's foot as tall as its content, at most the frame less 96px. With
+   short rows it was a strip in the bottom corner under an empty upper half (286px of an 806px frame on /agents).
+   There the rows open up, so the panel rises level with the headline at 1440x900; on a short window they stay
+   closer, so the last row is never cut. /integrations' rows carry their full line above 1100px, which is most of
+   its height. */
+@media (min-width: 1101px) {
+  .v6 .ha-t__row { grid-template-columns: minmax(0, 1fr); row-gap: 6px; }
+  .v6 .ha-t__name { font-size: 15px; }
+  .v6 .ha-t__rule { padding-top: 8px; }
+}
+@media (min-width: 1101px) and (min-height: 700px) {
+  .v6 .ha-t__row { padding: 28px 0; }
+  .v6 .ha-t__row:first-child { padding-top: 8px; }
+}
+@media (min-width: 1280px) and (min-height: 820px) {
+  .v6 .ha-w__row { padding: 24px 0; }
+  .v6 .ha-w__row:first-child { padding-top: 4px; }
+}
+/* At 1100px and below the panel is a strip across the top of the frame, a fixed share of its height (46%, 42% on a
+   phone), and a phone's browser bars make it shorter still. Each list is a size container there, measured by the
+   panel, and when its rows would not all fit they close up instead of running into the fade: /integrations keeps
+   the four names (and, on a tablet, their entry points) and drops the short line; /agents sets each tool's name
+   beside its title, so "None of them can approve a plan." stays in view. Above 1100px the panel takes its
+   content's height, so nothing is measured there. */
+@media (max-width: 1100px) {
+  .v6 .ha-w { height: 100%; container: ha-ways / size; }
+  .v6 .ha-t { height: 100%; container: ha-tools / size; }
+}
+@media (min-width: 561px) and (max-width: 1100px) {
+  @container ha-ways (max-height: 299px) {
+    .v6 .ha-w__who { display: none; }
+    .v6 .ha-w__row { padding-block: 12px; }
+  }
+  @container ha-tools (max-height: 195px) {
+    .v6 .ha-t__row { padding-block: 6px; }
+    .v6 .ha-t__in { gap: 10px; }
+  }
+}
+@media (max-width: 560px) {
+  @container ha-ways (max-height: 270px) {
+    .v6 .ha-w__who { display: none; }
+  }
+  @container ha-tools (max-height: 240px) {
+    .v6 .ha-t__row { grid-template-columns: max-content minmax(0, 1fr); column-gap: 12px; padding: 5px 0; }
+    .v6 .ha-t__name { font-size: 12.5px; }
+    .v6 .ha-t__title { font-size: 13.5px; line-height: 1.45; }
+    .v6 .ha-t__in { gap: 12px; }
+  }
+  /* The narrowest, shortest phones (320 wide): the titles would wrap and push the rule out of view, so the names
+     and the rule stay. */
+  @container ha-tools (max-width: 250px) and (max-height: 150px) {
+    .v6 .ha-t__title { display: none; }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .v6 .ha-w__name { transition: none; }
+}
+
+/* ================================================================ SHARED PANELS ===
+   ProductPanel: MediaPanel's shell (kit.css .v6-mp) around product text quoted as it is. The body reads like the
+   code block (mono 13/1.65) and wraps instead of scrolling; a cropped body fades out at its foot. */
+.v6 .ha-pp__body { padding: 12px 12px 8px; min-width: 0; }
+.v6 .ha-pp__body[data-crop] { max-height: var(--ha-crop, 360px); overflow: hidden;
+  -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 56px), transparent);
+  mask-image: linear-gradient(180deg, #000 calc(100% - 56px), transparent); }
+.v6 .ha-pp pre { margin: 0; font-family: var(--mono); font-size: var(--t-mono); line-height: 1.65; color: var(--ink-2);
+  white-space: pre-wrap; overflow-wrap: anywhere; }
+.v6 .ha-pp pre .k { color: var(--ink); font-weight: 600; }
+.v6 .ha-pp pre .s { color: #C9CBD1; }
+.v6 .ha-pp pre .c, .v6 .ha-pp pre .p { color: var(--ink-4); }
+
+/* LimitsLine: one sentence and its link, on a hairline, with half a section's room either side. After a plain
+   section it takes a third of a section above it instead, as v6.css gives the second of two plain sections, so the
+   boundary is 160 at 1440 (96 on a phone), not 180 (/agents, after #manual). */
+.v6 .ha-limits { padding-block: calc(var(--sec) * 0.5); }
+.v6 .v6-sec:not(.v6-dark, .v6-sec--sunk) + .ha-limits { padding-top: calc(var(--sec) / 3); }
+.v6 .ha-limits__row { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px 32px;
+  padding-top: 24px; border-top: 1px solid var(--line); }
+.v6 .ha-limits__t { margin: 0; max-width: 60ch; font-size: var(--t-lead-s); line-height: 1.55; color: var(--ink-2); text-wrap: pretty; }
+
+/* The code block's Copy button (code.tsx draws it as a 28px ghost with inline styles that read these two
+   properties): hover lights the border and the label, focus shows the ring. */
+.v6 .v6-code [data-v6-copy]:hover { --v6-copy-c: var(--ink); --v6-copy-b: #FAFAFA; }
+.v6 .v6-code [data-v6-copy]:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 2px; }
+
+/* ========================================================== THE INDEX-PAGE ASIDES ===
+   A window panel in the same language as the console: a raised black card with a white hairline (black
+   everywhere since 2026-10-01); terminal panels are a step darker, and the one primary node is the inverted
+   white. */
 .v6 .ha {
   background: #121214; border: 1px solid rgba(255,255,255,0.11); border-radius: 16px; overflow: hidden;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1), 0 30px 60px -32px rgba(0,0,0,0.72);
@@ -16,20 +169,8 @@
 
 .v6 .ha-rec .rp { box-shadow: 0 2px 4px rgba(0,0,0,0.1), 0 30px 60px -32px rgba(0,0,0,0.72); }
 
-.v6 .ha-ways { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.v6 .ha-ways li { display: grid; gap: 6px; padding: 12px 14px; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; background: #18181B; }
-.v6 .ha-ways__k { font-size: 13px; font-weight: 600; color: var(--ink); }
-.v6 .ha-ways__c { font-family: var(--mono); font-size: 12px; line-height: 1.5; color: var(--ink-2); word-break: break-word; }
-.v6 .ha-ways__n { font-size: 12px; color: var(--ink-4); }
 .v6 .ha-foot { margin: 14px 2px 0; font-size: 12.5px; line-height: 1.5; color: var(--ink-4); }
 .v6 .ha-foot--dark { color: #A1A1AA; margin-top: 2px; }
-
-.v6 .ha-term { margin: 0; font-family: var(--mono); font-size: 12.5px; line-height: 1.75; color: #E4E4E7; white-space: pre-wrap; word-break: break-word; }
-.v6 .ha-term .c, .v6 .ha-term .p { color: #8A8A93; }
-.v6 .ha-term .s { color: #D4D4D8; }
-.v6 .ha-term .k { color: #FAFAFA; }
-.v6 .ha-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08); }
-.v6 .ha-tools code { font-family: var(--mono); font-size: 12px; padding: 4px 8px; border-radius: 6px; background: rgba(255,255,255,0.08); color: #FAFAFA; }
 
 .v6 .ha-partners { display: grid; gap: 12px; }
 .v6 .ha-partner {

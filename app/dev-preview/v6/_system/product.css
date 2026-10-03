@@ -1,0 +1,73 @@
+/* ============================================================================================================
+   PRODUCT PAGES (site plan A9 T1, revision 2, 2026-10-02). Owner: b4a; b4d may read it, only b4a edits it.
+   What the kit (kit.css) has no block for on the product pages: the open-and-close marker, the "what is built"
+   lists (/platform#current, the site's one status source) and the line that links /limitations. The reach list
+   (/platform#coverage) and the tier word (.v6-tw) live in coverage.css with the other coverage styles.
+
+   Tokens only (v6.css). No dots of any kind: lists are numbered in mono, a disclosure is marked with a plus that
+   turns into a cross. No colour: nothing here is a finding.
+   ============================================================================================================ */
+
+/* ---------------------------------------------------------------- rhythm ---
+   Two sections on the same black ground do not stack two paddings: v6.css already drops the second one's top
+   padding for two sunk or two dark sections ("stacked, the two paddings left a gap twice the normal section
+   rhythm with nothing in it"). Every product section is on the page ground, so the same rule applies, keeping a
+   third of a section's padding so a section boundary still reads larger than the 120px between AltRows rows:
+   160 between sections at 1440, 96 on a phone. The last section before the closing gives up its bottom padding,
+   because the closing brings its own (96 to 160). */
+.v6-sec.v6-pp-sec + .v6-sec.v6-pp-sec { padding-top: calc(var(--sec) / 3); }
+.v6-sec.v6-pp-xl { padding-bottom: 0; }
+
+/* ------------------------------------------------------------ how it works ---
+   The console captures in the AltRows media are shown at most 640px wide, as the plan shows evidence: the crop is
+   taken at about that width, so the console's own type stays close to the size it is drawn at. An odd row's picture
+   keeps to the page column's outer edge, as an evidence panel does in AltRows. */
+.v6-pp-how .v6-ar__media .v6-mp { max-width: 640px; }
+.v6-pp-how .v6-ar__row:nth-child(odd) .v6-ar__media .v6-mp { margin-left: auto; }
+@media (max-width: 899px) { .v6-pp-how .v6-ar__row:nth-child(odd) .v6-ar__media .v6-mp { margin-left: 0; } }
+
+/* ------------------------------------------------------------------ marker ---
+   The kit Faq's plus (14px, two 1.5px strokes), for any <details> row on a product page. It turns 45 degrees when
+   its row is open. Instant with reduced motion. */
+.v6-pp-x { position: relative; flex: none; display: inline-block; width: 14px; height: 14px; color: var(--ink-3);
+  transition: transform var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out); }
+.v6-pp-x::before, .v6-pp-x::after { content: ""; position: absolute; left: 0; top: 50%; width: 14px; height: 1.5px; margin-top: -0.75px; background: currentColor; }
+.v6-pp-x::after { transform: rotate(90deg); }
+details[open] > summary .v6-pp-x { transform: rotate(45deg); }
+summary:hover .v6-pp-x { color: var(--ink); }
+@media (prefers-reduced-motion: reduce) { .v6-pp-x { transition: none; } }
+
+/* --------------------------------------------------------- what is built ---
+   Two numbered lists on hairlines (Live today, Not built yet), one in each panel of a kit Tabs (side by side, the
+   two full lists put more words in one screen than plan A1.6 allows). The lines come from _content/scope.ts and
+   nowhere else. A "Not built yet" line opens to what happens today instead (a native <details>). The list keeps
+   a reading measure (880px) inside the full-width panel. */
+.v6-pp-now__list { max-width: 880px; margin: 0; padding: 0; list-style: none; }
+.v6-pp-now__item { display: grid; grid-template-columns: 40px minmax(0, 1fr); align-items: baseline; padding: 14px 0; border-bottom: 1px solid var(--line-soft); }
+.v6-pp-now__item:first-child { padding-top: 4px; }
+.v6-pp-now__n { font-family: var(--mono); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-4); font-variant-numeric: tabular-nums; }
+.v6 .v6-pp-now__t { margin: 0; min-width: 0; font-size: 15px; line-height: 1.6; color: var(--ink-2); text-wrap: pretty; }
+.v6 .v6-pp-now__sum { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; list-style: none; cursor: pointer;
+  font-size: 15px; line-height: 1.6; color: var(--ink-2); }
+.v6 .v6-pp-now__sum::-webkit-details-marker { display: none; }
+.v6 .v6-pp-now__sum::marker { content: ""; }
+.v6 .v6-pp-now__sum:hover { color: var(--ink); }
+.v6 .v6-pp-now__sum:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 4px; border-radius: var(--r-sm); }
+.v6-pp-now__sum > span:first-child { min-width: 0; text-wrap: pretty; }
+/* Closed, the line under it is not laid out (Chrome keeps boxes for closed details content). */
+.v6-pp-now__d:not([open]) > :not(summary) { display: none; }
+/* the rule that governs both lists, as the last line of the "Not built yet" list: no number, quieter */
+.v6 .v6-pp-now__rule { max-width: 880px; margin: 0; padding: 16px 0 0 40px; font-size: var(--t-small); line-height: 1.6; color: var(--ink-4); text-wrap: pretty; }
+.v6 .v6-pp-now__today { margin: 8px 34px 4px 0; max-width: 60ch; font-size: 14px; line-height: 1.6; color: var(--ink-3); text-wrap: pretty; }
+@media (max-width: 560px) {
+  .v6-pp-now__item { grid-template-columns: 32px minmax(0, 1fr); }
+  .v6 .v6-pp-now__rule { padding-left: 32px; }
+}
+
+/* ------------------------------------------------------------ limits line ---
+   One line linking /limitations (plan A1.7 and T1.6): the sentence and the link on one row between two
+   hairlines, wrapping as whole items. It closes the section it sits in, 48px under that section's content. */
+.v6-pp-limit { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 14px 40px;
+  margin-top: 48px; padding: 24px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.v6 .v6-pp-limit__t { margin: 0; max-width: 64ch; font-size: var(--t-read); line-height: 1.6; color: var(--ink-2); text-wrap: pretty; }
+@media (max-width: 560px) { .v6-pp-limit { margin-top: 48px; padding: 24px 0; } }

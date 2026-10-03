@@ -1,10 +1,12 @@
 /* A verification record, drawn the way the console draws one. Own values, so it looks the same on the
-   site's tokens and on the product's. White on black for structure (2026-10-01), colour only for the result. */
+   site's tokens and on the product's. White on black for structure (2026-10-01), colour only for the result.
+   2026-10-02: no dots of any kind (no step rings or ticks, no "·" separators); the state is a plain word, and
+   the one coloured row is the step that found the problem. */
 .rp {
   --rp-ink: #FAFAFA; --rp-ink2: #C9CBD1; --rp-ink3: #A1A3A9; --rp-ink4: #8E9095;
   --rp-line: rgba(255,255,255,0.08); --rp-line2: rgba(255,255,255,0.14); --rp-well: #17171A;
-  --rp-go: #3FCF8E; --rp-go-wash: rgba(52,211,153,0.12); --rp-stop: #FF8A6A; --rp-stop-wash: rgba(255,122,85,0.12); --rp-stop-line: rgba(255,122,85,0.32);
-  --rp-wait: #F2B75A; --rp-wait-wash: rgba(240,180,74,0.12);
+  --rp-stop: #FF8A6A; --rp-stop-wash: rgba(255,122,85,0.08);
+  --rp-mono: var(--font-brand-mono), ui-monospace, Menlo, monospace;
   position: relative; width: 100%; background: #121214; color: var(--rp-ink2);
   border: 1px solid var(--rp-line2); border-radius: 14px;
   box-shadow: 0 1px 2px rgba(255,255,255,0.04), 0 24px 60px -30px rgba(255,255,255,0.24);
@@ -16,37 +18,32 @@
 .rp__crumb { display: inline-flex; align-items: center; gap: 7px; min-width: 0; font-size: 12.5px; color: var(--rp-ink3); }
 .rp__crumbk { color: var(--rp-ink3); }
 .rp__host { color: var(--rp-ink); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  font-family: var(--font-brand-mono), ui-monospace, Menlo, monospace; font-size: 12px; }
-.rp__chip { display: inline-flex; align-items: center; gap: 6px; flex: none; font-size: 12px; font-weight: 600;
-  padding: 3px 9px; border-radius: 6px; border: 1px solid; }
-.rp__dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-.rp__chip--fail { color: var(--rp-stop); background: var(--rp-stop-wash); border-color: var(--rp-stop-line); }
-.rp__chip--run { color: var(--rp-wait); background: var(--rp-wait-wash); border-color: rgba(240,180,74,0.32); }
-.rp__chip--run .rp__dot { animation: rpPulse 1.1s ease-in-out infinite; }
-@keyframes rpPulse { 50% { opacity: 0.25; } }
+  font-family: var(--rp-mono); font-size: 12px; }
+/* The state, as a word: no pill, no dot. Found a problem is the one coloured state. */
+.rp__state { flex: none; font-family: var(--rp-mono); font-size: 12px; font-weight: 500; line-height: 1.4; white-space: nowrap; color: var(--rp-ink3); }
+.rp__state--fail { color: var(--rp-stop); }
 
 .rp__head { padding: 16px 18px 12px; }
 .rp__label { margin: 0 0 4px; font-size: 11.5px; font-weight: 500; color: var(--rp-ink4); }
 .rp__claim { margin: 0; font-size: 15px; line-height: 1.4; font-weight: 600; color: var(--rp-ink); letter-spacing: -0.005em; }
-.rp__meta { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; font-size: 12px; color: var(--rp-ink4); }
+/* meta items 20px apart, never a separator character between them */
+.rp__meta { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 8px 0 0; font-size: 12px; color: var(--rp-ink4); }
+.rp__mono { font-family: var(--rp-mono); font-size: 11.5px; }
 
 .rp__steps { list-style: none; margin: 0; padding: 4px 10px 10px; border-top: 1px solid var(--rp-line); }
 .rp__step { display: flex; flex-direction: column; border-radius: 8px; transition: background 200ms ease, opacity 200ms ease; }
-.rp__srow { display: grid; grid-template-columns: 16px 22px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 6px 8px; }
-.rp__sico { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--rp-line2); box-sizing: border-box; }
-.rp__sn { font-family: var(--font-brand-mono), ui-monospace, Menlo, monospace; font-size: 11px; color: var(--rp-ink4); }
+.rp__srow { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 6px 8px; }
+.rp__sn { font-family: var(--rp-mono); font-size: 11px; color: var(--rp-ink4); }
 .rp__st { color: var(--rp-ink2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rp__sms { font-family: var(--font-brand-mono), ui-monospace, Menlo, monospace; font-size: 11px; color: var(--rp-ink4); min-width: 48px; text-align: right; }
+.rp__sms { font-family: var(--rp-mono); font-size: 11px; color: var(--rp-ink4); min-width: 48px; text-align: right; }
 .rp__step[data-state="todo"] { opacity: 0.42; }
-.rp__step[data-state="now"] .rp__sico { border-color: var(--rp-ink); border-top-color: transparent; animation: rpSpin 0.8s linear infinite; }
 .rp__step[data-state="now"] .rp__st { color: var(--rp-ink); font-weight: 500; }
-@keyframes rpSpin { to { transform: rotate(360deg); } }
-.rp__step[data-state="ok"] .rp__sico { border: 0; background: var(--rp-go); box-shadow: inset 0 0 0 3px #121214; outline: 1.5px solid var(--rp-go); outline-offset: -1.5px; }
 .rp__step[data-state="fail"] { background: var(--rp-stop-wash); }
-.rp__step[data-state="fail"] .rp__sico { border: 0; background: var(--rp-stop); }
-.rp__step[data-state="fail"] .rp__st { color: var(--rp-stop); font-weight: 600; }
-.rp__gap { display: block; padding: 2px 8px 4px 54px; font-size: 11.5px; color: var(--rp-ink4); }
-.rp__diff { display: grid; gap: 3px; padding: 0 10px 9px 54px; font-size: 12.5px; color: var(--rp-ink2); }
+.rp__step[data-state="fail"] .rp__sn, .rp__step[data-state="fail"] .rp__st, .rp__step[data-state="fail"] .rp__sms { color: var(--rp-stop); }
+.rp__step[data-state="fail"] .rp__st { font-weight: 600; }
+/* the gap line and the expected/observed pair line up with the step text (8 + 22 + 8) */
+.rp__gap { display: block; padding: 2px 8px 4px 38px; font-size: 11.5px; color: var(--rp-ink4); }
+.rp__diff { display: grid; gap: 3px; padding: 0 10px 9px 38px; font-size: 12.5px; color: var(--rp-ink2); }
 .rp__diff b { display: inline-block; width: 70px; font-weight: 600; color: var(--rp-ink); }
 
 .rp__repair { border-top: 1px solid var(--rp-line); padding: 12px 16px 16px; transition: opacity 300ms ease; }
@@ -58,8 +55,9 @@
   background: var(--rp-ink); color: #0A0A0B; }
 .rp__btn--ghost { background: transparent; color: var(--rp-ink); border: 1px solid var(--rp-line2); padding: 4px 10px; }
 .rp__prompt { margin: 0; padding: 10px 12px; background: var(--rp-well); border: 1px solid var(--rp-line); border-radius: 8px;
-  font-family: var(--font-brand-mono), ui-monospace, Menlo, monospace; font-size: 11.5px; line-height: 1.6; color: var(--rp-ink2);
+  font-family: var(--rp-mono); font-size: 11.5px; line-height: 1.6; color: var(--rp-ink2);
   white-space: pre-wrap; max-height: 132px; overflow: auto; scrollbar-width: thin; }
+.rp__prompt:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 2px; }
 
 .rp__replay { position: absolute; right: 14px; bottom: 14px; display: none; }
 .rp:hover .rp__replay, .rp__replay:focus-visible { display: inline-flex; }
@@ -68,10 +66,10 @@
 
 @media (prefers-reduced-motion: reduce) {
   .rp__step, .rp__repair { transition: none; }
-  .rp__chip--run .rp__dot, .rp__step[data-state="now"] .rp__sico { animation: none; }
 }
 @media (max-width: 520px) {
-  .rp__meta span:nth-child(n+5) { display: none; }
+  /* the date and the approval line step aside on a narrow card */
+  .rp__meta span:nth-child(n+3) { display: none; }
   .rp__sms { display: none; }
-  .rp__srow { grid-template-columns: 16px 22px minmax(0, 1fr); }
+  .rp__srow { grid-template-columns: 22px minmax(0, 1fr); }
 }

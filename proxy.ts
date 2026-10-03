@@ -60,6 +60,21 @@ export const V6_EXACT: Record<string, string> = {
   // agreement and /cookies from the account screens' footer, both 404ing until these pages existed.
   "/cookies": "/dev-preview/v6/cookies",
   "/acceptable-use": "/dev-preview/v6/acceptable-use",
+  // Sectors and recorded checks (2026-10 site plan, S1): the solutions index, the seven sector pages, the
+  // use-case index and the four use cases. Exact keys, like every entry here: a route not listed is not served.
+  "/solutions": "/dev-preview/v6/solutions",
+  "/solutions/defense": "/dev-preview/v6/solutions/defense",
+  "/solutions/fleets": "/dev-preview/v6/solutions/fleets",
+  "/solutions/commerce": "/dev-preview/v6/solutions/commerce",
+  "/solutions/public-sector": "/dev-preview/v6/solutions/public-sector",
+  "/solutions/ai-built-apps": "/dev-preview/v6/solutions/ai-built-apps",
+  "/solutions/saas": "/dev-preview/v6/solutions/saas",
+  "/solutions/agencies": "/dev-preview/v6/solutions/agencies",
+  "/use-cases": "/dev-preview/v6/use-cases",
+  "/use-cases/only-the-confirmed-target": "/dev-preview/v6/use-cases/only-the-confirmed-target",
+  "/use-cases/notes-that-survive-sign-out": "/dev-preview/v6/use-cases/notes-that-survive-sign-out",
+  "/use-cases/checkout-that-forgets": "/dev-preview/v6/use-cases/checkout-that-forgets",
+  "/use-cases/project-that-vanishes": "/dev-preview/v6/use-cases/project-that-vanishes",
 };
 
 export const CLEAN_EXACT: Record<string, string> = {

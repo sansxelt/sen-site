@@ -1,0 +1,366 @@
+/* ============================================================================
+   Vraelis public site: THE DOCS (the docs shell, rail, reading column, figures). Scoped under .v6.
+
+   Moved here VERBATIM from _system/pagekit.css on 2026-10-02 (phase 1 of the site plan), so this surface can
+   be rebuilt in its own file (plan batch 7). layout.tsx imports v6.css, nav.css, pagekit.css, docs.css,
+   changelog.css, legal.css, in that order, and these rules override the page kit at equal specificity, so the
+   order is part of the contract.
+
+   Rebuilt the same day (batch 7a): the docs home (plan T7), the docs h1 at its own size (A3: 36 / 30), no
+   pager above the title, tables and h3 for the reference pages, a Copy button on every snippet, the coverage
+   tiers as mono words instead of pills, and the five figures re-shot from the black console.
+   ============================================================================ */
+
+/* docs shell */
+/* ============================================================================
+   DOCS (rebuilt 2026-09-30, after Linear's docs)
+   The docs are a tool, so they get a tool's frame: their own slim header (the marketing menu and footer are
+   left out on /docs by V6Shell), a quiet rail, a reading column at documentation sizes, an "On this page"
+   list that follows the scroll, an even previous/next pair, and a one-line footer. Sizes follow Linear's:
+   22px section heads, 15.5px body; the title is the plan's docs size, 36px (30 on a phone). The whole
+   subtree opts in with .v6-docsenv. Black since 2026-10-01, with the console and the rest of the site.
+   ========================================================================== */
+/* --docs-h is the header's height. It is declared on its own line because scripts/design01-inc5-verify.ts
+   counts a custom property as defined in a file outside its list only when the declaration starts a line,
+   and every rule that reads it also carries the fallback, so nothing depends on where it is declared. */
+.v6-docsenv {
+  --docs-h: 56px;
+  background: #0A0A0B; color: #C9CBD1; min-height: 100vh; }
+/* WHERE A DOCS ANCHOR LANDS: 20px under the docs header (56 + 20). html's scroll-padding-top (app/globals.css)
+   is the marketing bar's height, --nav-h (67), and the docs have no bar, so they set their own here. The
+   headings carry no scroll-margin of their own: the browser ADDS the two (globals.css explains), which put
+   /docs/ai-assistants#codex 143px down, 87px under the header. */
+html:has(.v6-docsenv) { scroll-padding-top: 76px; }
+.v6-docsenv ::selection { background: #FAFAFA; color: #0A0A0B; }
+
+/* ---- header ---- */
+.v6-dh { position: sticky; top: 0; z-index: 90; height: var(--docs-h, 56px); display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) auto; align-items: center;
+  background: rgba(10,10,11,0.88); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255,255,255,0.088); }
+.v6-dh__brand { display: flex; align-items: center; gap: 10px; height: 100%; padding: 0 20px;
+  border-right: 1px solid rgba(255,255,255,0.088); }
+/* The mark and the wordmark together are the way home. */
+.v6-dh__mark { display: inline-flex; align-items: center; gap: 8px; color: #FAFAFA; text-decoration: none; }
+.v6-dh__mark svg { width: 18px; height: 18px; display: block; }
+.v6-dh__word { font-family: var(--sans); font-size: 15px; font-weight: 700; letter-spacing: -0.02em; }
+.v6-dh__mark:hover { opacity: 0.72; }
+.v6-dh__slash { color: #5B5D63; font-size: 15px; }
+.v6-dh__docs { font-family: var(--sans); font-size: 15px; font-weight: 600; letter-spacing: -0.01em; color: #FAFAFA; text-decoration: none; }
+.v6-dh__menu { display: none; place-items: center; width: 34px; height: 34px; margin-left: -8px; border: 0; border-radius: 8px;
+  background: transparent; color: #EDEDEF; cursor: pointer; }
+.v6-dh__menu:hover { background: rgba(255,255,255,0.066); }
+.v6-dh__crumb { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 0 28px; font-size: 13.5px;
+  color: #A1A3A9; white-space: nowrap; overflow: hidden; }
+.v6-dh__crumb [aria-current] { color: #EDEDEF; overflow: hidden; text-overflow: ellipsis; }
+.v6-dh__sep { color: #5B5D63; }
+.v6-dh__actions { display: flex; align-items: center; gap: 8px; padding: 0 20px; }
+.v6-dh__signin { font-size: 13.5px; color: #C9CBD1; text-decoration: none; padding: 7px 9px; border-radius: 7px; }
+.v6-dh__signin:hover { color: #FAFAFA; background: rgba(255,255,255,0.055); }
+.v6-dh__open { font-family: var(--sans); font-size: 13px; font-weight: 600; line-height: 1; color: #0A0A0B; background: #FAFAFA;
+  border-radius: 7px; padding: 9px 12px; text-decoration: none; white-space: nowrap; }
+.v6-dh__open:hover { background: #E4E4E7; color: #0A0A0B; }
+.v6-docsenv .v6-docs__copy { font-family: var(--sans); font-size: 13px; font-weight: 500; line-height: 1; color: #C9CBD1;
+  background: transparent; cursor: pointer; border: 1px solid rgba(255,255,255,0.132); border-radius: 7px; padding: 8px 11px; }
+.v6-docsenv .v6-docs__copy:hover { color: #FAFAFA; border-color: rgba(255,255,255,0.264); }
+.v6-dh a:focus-visible, .v6-dh button:focus-visible, .v6-docsenv .v6-docs__copy:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 2px; }
+
+/* ---- frame ---- */
+.v6-docs { display: grid; grid-template-columns: 260px minmax(0, 1fr); align-items: start; min-height: calc(100svh - var(--docs-h, 56px)); }
+.v6-docs--article { grid-template-columns: 260px minmax(0, 1fr) 220px; }
+
+/* ---- left rail ---- */
+.v6-docs__side { position: sticky; top: var(--docs-h, 56px); align-self: start; height: calc(100svh - var(--docs-h, 56px));
+  display: flex; flex-direction: column; border-right: 1px solid rgba(255,255,255,0.088); }
+.v6-docs__search { position: relative; padding: 16px 14px 6px; }
+.v6-docs__search svg { position: absolute; left: 25px; top: 26px; color: #8E9095; pointer-events: none; }
+.v6-docs__search input { width: 100%; height: 34px; background: rgba(255,255,255,0.044); color: #EDEDEF;
+  border: 1px solid rgba(255,255,255,0.088); border-radius: 8px; padding: 0 10px 0 32px; font-family: var(--sans); font-size: 13.5px; outline: none; }
+.v6-docs__search input::placeholder { color: #A1A3A9; }
+.v6-docs__search input:focus { border-color: rgba(255,255,255,0.33); background: rgba(255,255,255,0.066); }
+/* The site's focus ring. The lighter border alone was about 2.8:1 against the rail, too faint to find. */
+.v6-docs__search input:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 2px; }
+.v6-docs__nav { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 4px 10px 16px; scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.176) transparent; }
+/* Sections are dropdowns: the header is a button with a chevron that turns when the section is open. No
+   divider lines between them; the header row and a little space are the separation. */
+.v6-docs__group { margin-top: 10px; }
+.v6-docs__group-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%;
+  font-family: var(--sans); font-size: 12.5px; font-weight: 600; letter-spacing: 0; text-transform: none; text-align: left;
+  color: #A9ABB1; margin: 0 0 2px; padding: 7px 10px; background: none; border: 0; border-radius: 6px; cursor: pointer; }
+.v6-docs__group-h:hover { color: #FAFAFA; background: rgba(255,255,255,0.044); }
+.v6-docs__group-h:focus-visible { outline: 2px solid #FAFAFA; outline-offset: -2px; }
+.v6-docs__group-h svg { flex: none; color: #74767C; transition: transform 160ms ease; }
+.v6-docs__group[data-open="true"] .v6-docs__group-h svg { transform: rotate(90deg); }
+.v6-docs__group-list[hidden] { display: none; }
+@media (prefers-reduced-motion: reduce) { .v6-docs__group-h svg { transition: none; } }
+.v6-docs__link { display: block; font-size: 13.5px; line-height: 1.35; color: #B4B6BC; text-decoration: none; padding: 6px 10px; border-radius: 6px; }
+.v6-docs__link:hover { color: #FAFAFA; background: rgba(255,255,255,0.055); }
+.v6-docs__link[aria-current="page"] { color: #FAFAFA; background: rgba(255,255,255,0.088); font-weight: 500; }
+.v6-docs__link:focus-visible, .v6-docs__railfoot a:focus-visible { outline: 2px solid #FAFAFA; outline-offset: -2px; }
+/* The docs home, first in the rail, sits where a group header would. */
+.v6-docs__overview { margin-top: 6px; }
+.v6-docs__empty { font-size: 13px; color: #8E9095; padding: 6px 10px; margin: 0; }
+.v6-docs__railfoot { display: grid; gap: 1px; padding: 10px 10px 14px; }
+.v6-docs__railfoot a { font-size: 13px; color: #A1A3A9; text-decoration: none; padding: 6px 10px; border-radius: 6px; }
+.v6-docs__railfoot a:hover { color: #EDEDEF; background: rgba(255,255,255,0.055); }
+
+/* ---- reading column ---- */
+.v6-docs__main { min-width: 0; padding: 44px clamp(24px, 5vw, 80px) 28px; }
+.v6-docs__article { max-width: 700px; overflow-wrap: break-word; }
+/* The docs column is 700 and the article inside it fills it. .v6-prose is the marketing read column (--max-read,
+   680 since 2026-10-02) and must not narrow the docs. */
+.v6-docsenv .v6-docs__article .v6-prose { max-width: none; }
+/* The docs h1 (plan A3): 36 at desktop, 30 on a phone, 1.15, -0.018em, weight 500 like every heading. */
+.v6-docsenv .v6-docs__article h1 { font-family: var(--sans); font-size: 36px; line-height: 1.15; font-weight: 500;
+  letter-spacing: -0.018em; color: #FAFAFA; margin: 0; text-wrap: balance; }
+.v6-docsenv .v6-docs__article .v6-docs__lead { font-size: 16.5px; line-height: 1.6; color: #A9ABB1; margin: 12px 0 0; max-width: 62ch; }
+.v6-docsenv .v6-docs__article .v6-docs__section { font-size: 13px; line-height: 1.4; font-weight: 500; color: #A1A3A9; margin: 0 0 12px; }
+.v6-docsenv .v6-docs__article h2 { font-family: var(--sans); font-size: 22px; line-height: 1.3; font-weight: 500;
+  letter-spacing: -0.015em; color: #FAFAFA; margin: 44px 0 12px; padding-top: 0; }
+/* The base .v6-prose spacing (22px between every block, 46px above every heading) stacked on top of these
+   and left 100px gaps between sections. Inside the docs each element sets its own margins. */
+.v6-docsenv .v6-docs__article > * + * { margin-top: 0; }
+.v6-docsenv .v6-docs__article h3 { font-family: var(--sans); font-size: 18px; line-height: 1.35; font-weight: 500; letter-spacing: -0.005em;
+  color: #FAFAFA; margin: 32px 0 8px; }
+.v6-docsenv .v6-docs__article p { font-size: 15.5px; line-height: 1.7; color: #C9CBD1; margin: 0 0 16px; }
+.v6-docsenv .v6-docs__article :is(ul, ol) { display: block; margin: 0 0 16px; padding-left: 22px; }
+.v6-docsenv .v6-docs__article li { font-size: 15.5px; line-height: 1.65; color: #C9CBD1; margin: 6px 0; }
+.v6-docsenv .v6-docs__article li > a { display: inline; min-height: 0; }
+.v6-docsenv .v6-docs__article a { color: #FAFAFA; text-decoration: underline; text-decoration-color: rgba(255,255,255,0.385); text-underline-offset: 3px; }
+.v6-docsenv .v6-docs__article a:hover { color: #FAFAFA; text-decoration-color: #FAFAFA; }
+.v6-docsenv .v6-docs__article strong { color: #FAFAFA; }
+/* Inline code: the read-page treatment (plan T9), a touch smaller in the docs' 15.5px body. A long path may
+   break anywhere rather than push a phone column sideways. */
+.v6-docsenv .v6-docs__article code { font-family: var(--mono); font-size: 0.88em; padding: 0.1em 0.35em; border-radius: 5px;
+  background: #121214; border: 1px solid rgba(255,255,255,0.07); color: #FAFAFA; overflow-wrap: anywhere;
+  -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.v6-docsenv .v6-docs__article .v6-note { margin: 20px 0; padding: 14px 16px; border-radius: 10px; font-size: 14.5px; line-height: 1.6;
+  color: #C9CBD1; background: rgba(255,255,255,0.033); border: 1px solid rgba(255,255,255,0.088); max-width: none; }
+.v6-docsenv .v6-docs__article .v6-note b { display: block; margin-bottom: 4px; font-family: var(--sans); font-size: 13.5px;
+  font-weight: 600; letter-spacing: 0; text-transform: none; color: #FAFAFA; }
+
+/* The outcome and the limit, as one quiet two-row panel under the title. */
+.v6-docsenv .v6-docs__article .v6-docs__facts { margin: 24px 0 28px; border: 1px solid rgba(255,255,255,0.088); border-radius: 10px; background: rgba(255,255,255,0.022); }
+.v6-docs__facts > div { display: grid; grid-template-columns: 104px minmax(0, 1fr); gap: 16px; padding: 12px 16px; }
+.v6-docs__facts > div + div { border-top: 1px solid rgba(255,255,255,0.066); }
+.v6-docs__facts dt { margin: 0; font-size: 13px; line-height: 1.55; color: #A1A3A9; }
+.v6-docs__facts dd { margin: 0; font-size: 14.5px; line-height: 1.55; color: #EDEDEF; }
+
+/* ---- code: a label and a Copy button on one bar, then the snippet (plan A5, code block) ---- */
+.v6-docs__code { background: #121214; border: 1px solid rgba(255,255,255,0.11); border-radius: 10px; margin: 20px 0; overflow: hidden; }
+.v6-docs__code-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px;
+  padding: 0 7px 0 14px; border-bottom: 1px solid rgba(255,255,255,0.088); }
+.v6-docsenv .v6-docs__article .v6-docs__code-h { min-width: 0; margin: 0; padding: 9px 0; font-family: var(--sans); font-size: 12.5px;
+  line-height: 1.4; font-weight: 500; letter-spacing: 0; text-transform: none; color: #A1A3A9; }
+/* The 28px ghost of plan A5. min-width keeps the bar still when the word changes to "Copied". */
+.v6-docs__code-copy { flex: none; min-width: 64px; height: 28px; padding: 0 10px; font-family: var(--sans); font-size: 12.5px;
+  font-weight: 500; line-height: 1; color: #C9CBD1; background: transparent; border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 6px; cursor: pointer; transition: color 160ms ease, border-color 160ms ease; }
+.v6-docs__code-copy:hover { color: #FAFAFA; border-color: rgba(255,255,255,0.4); }
+.v6-docs__code-copy:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 2px; }
+.v6-docs__code pre { margin: 0; padding: 14px; font-family: var(--mono); font-size: 13px; line-height: 1.65; color: #C9CBD1;
+  overflow-x: auto; white-space: pre; }
+.v6-docs__code pre:focus-visible { outline: 2px solid #FAFAFA; outline-offset: -2px; }
+/* Comments step back to ink-4 (5.9:1 on the block). Nothing else is coloured. */
+.v6-docs__code .c { color: #8E9095; }
+@media (prefers-reduced-motion: reduce) { .v6-docs__code-copy { transition: none; } }
+
+/* ---- tables: exit codes, options, variables ---- */
+.v6-docsenv .v6-docs__article .v6-docs__table { margin: 18px 0 22px; overflow-x: auto; border: 1px solid rgba(255,255,255,0.088);
+  border-radius: 10px; }
+.v6-docsenv .v6-docs__article .v6-docs__table:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 2px; }
+.v6-docs__table table { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.55; }
+.v6-docs__table :is(th, td) { text-align: left; vertical-align: top; padding: 10px 14px; border-top: 1px solid rgba(255,255,255,0.066); }
+.v6-docs__table thead th { border-top: 0; font-size: 12.5px; font-weight: 500; line-height: 1.4; color: #A1A3A9; background: rgba(255,255,255,0.022); }
+.v6-docs__table tbody th { font-weight: 500; color: #FAFAFA; white-space: nowrap; }
+.v6-docs__table td { color: #C9CBD1; }
+.v6-docsenv .v6-docs__article .v6-docs__table tbody th code { overflow-wrap: normal; }
+
+/* ---- on this page ---- */
+.v6-docs__toc { position: sticky; top: calc(var(--docs-h, 56px) + 44px); align-self: start; margin-top: 44px; padding: 0 20px 24px 0;
+  max-height: calc(100svh - var(--docs-h, 56px) - 88px); overflow-y: auto; scrollbar-width: none; }
+.v6-docs__toc-h { font-family: var(--sans); font-size: 12.5px; font-weight: 500; letter-spacing: 0; text-transform: none;
+  color: #A1A3A9; margin: 0 0 10px; }
+.v6-docs__toc a { display: block; font-size: 13px; line-height: 1.4; color: #A1A3A9; text-decoration: none; padding: 5px 0 5px 12px;
+  border-left: 1px solid rgba(255,255,255,0.11); }
+.v6-docs__toc a.is-sub { padding-left: 24px; font-size: 12.5px; }
+.v6-docs__toc a:hover { color: #EDEDEF; }
+.v6-docs__toc a[aria-current="location"] { color: #FAFAFA; border-left-color: #FAFAFA; }
+
+/* ---- previous / next, and the footer ----
+   Named __pager, NOT __nav: __nav is the rail's list, and one shared name once laid the whole rail out as a row.
+   It is the only pager: the compact pair that also sat above the title pushed phones sideways (plan C). */
+.v6-docsenv .v6-docs__article .v6-docs__pager { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 56px; max-width: 700px; }
+.v6-docs__pager a { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 14px 16px; text-decoration: none;
+  border: 1px solid rgba(255,255,255,0.088); border-radius: 10px; transition: border-color 150ms ease, background 150ms ease; }
+.v6-docs__pager a:hover { border-color: rgba(255,255,255,0.198); background: rgba(255,255,255,0.033); }
+.v6-docsenv .v6-docs__article .v6-docs__pager a { text-decoration: none; }
+.v6-docs__pager a:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 2px; }
+.v6-docs__pager .l { font-size: 12.5px; color: #A1A3A9; }
+.v6-docs__pager .t { font-size: 14.5px; font-weight: 500; color: #FAFAFA; }
+.v6-docs__pager a.is-next { grid-column: 2; text-align: right; align-items: flex-end; }
+.v6-docs__foot { display: flex; flex-wrap: wrap; gap: 8px 18px; max-width: 700px; margin-top: 64px; padding-top: 18px;
+  border-top: 1px solid rgba(255,255,255,0.088); font-size: 12.5px; color: #A1A3A9; }
+.v6-docs__foot a { color: #A1A3A9; text-decoration: none; }
+.v6-docs__foot a:hover { color: #EDEDEF; }
+/* On the docs home the column is 900, so the footer's rule runs to the same edge as the content above it. */
+.v6-docs__main:has(.v6-docs__article--home) .v6-docs__foot { max-width: 900px; }
+
+/* ---- related pages: a quiet list, not underlined prose links ---- */
+.v6-docsenv .v6-docs__article ul.v6-docs__related { list-style: none; padding: 0; margin: 0; }
+.v6-docsenv .v6-docs__article .v6-docs__related li { margin: 2px 0; }
+.v6-docsenv .v6-docs__article .v6-docs__related a { color: #C9CBD1; text-decoration: none; font-size: 15px; }
+.v6-docsenv .v6-docs__article .v6-docs__related a:hover { color: #FAFAFA; }
+
+/* ---- the docs home (plan T7): start here, by interface, every page, ask a person ---- */
+.v6-docsenv .v6-docs__article--home { max-width: 900px; }
+.v6-docsenv .v6-docs__article .v6-docs__home { margin-top: 52px; }
+.v6-docsenv .v6-docs__article .v6-docs__home > h2 { margin: 0 0 16px; }
+/* Three cards, each a crop of the console it leads to. The crop bleeds off the card's right and bottom edges
+   (the FeatureCard media treatment, A5), so a line cut at the edge reads as a larger screen, not a fault. */
+.v6-docs__start { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.v6-docsenv .v6-docs__article .v6-docs__card { display: flex; flex-direction: column; min-width: 0; padding: 18px 0 0 18px; overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.088); border-radius: 12px; background: #0E0E10; text-decoration: none;
+  transition: border-color 160ms ease; }
+.v6-docsenv .v6-docs__article .v6-docs__card:hover { border-color: rgba(255,255,255,0.24); }
+.v6-docsenv .v6-docs__article .v6-docs__card:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 2px; }
+.v6-docs__card .t { padding-right: 18px; font-size: 15px; font-weight: 500; line-height: 1.35; color: #FAFAFA; }
+.v6-docs__card .s { padding-right: 18px; margin: 6px 0 18px; font-size: 13.5px; line-height: 1.5; color: #A1A3A9; }
+.v6-docs__card-media { display: block; margin-top: auto; aspect-ratio: 16 / 9; overflow: hidden; background: #0A0A0B;
+  border-top: 1px solid rgba(255,255,255,0.11); border-left: 1px solid rgba(255,255,255,0.11); border-top-left-radius: 8px; }
+.v6-docs__card-media img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: left top;
+  transform-origin: left top; transition: transform 700ms cubic-bezier(0,0,.2,1); }
+.v6-docs__card:hover .v6-docs__card-media img { transform: scale(1.03); }
+/* Four ways in, each with the one line a reader types. */
+.v6-docs__ways { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.v6-docsenv .v6-docs__article .v6-docs__way { display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 16px 18px;
+  border: 1px solid rgba(255,255,255,0.088); border-radius: 10px; text-decoration: none;
+  transition: border-color 160ms ease, background 160ms ease; }
+.v6-docsenv .v6-docs__article .v6-docs__way:hover { border-color: rgba(255,255,255,0.24); background: #121214; }
+.v6-docsenv .v6-docs__article .v6-docs__way:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 2px; }
+.v6-docs__way .t { font-size: 15px; font-weight: 500; line-height: 1.35; color: #FAFAFA; }
+.v6-docsenv .v6-docs__article .v6-docs__way .m { font-size: 12.5px; line-height: 1.5; color: #A1A3A9; background: none; border: 0;
+  padding: 0; border-radius: 0; overflow-wrap: break-word; }
+/* One word of a command never breaks inside (at a hyphen, say); the line wraps between words. */
+.v6-docs__way .m .w { white-space: nowrap; }
+/* Every page, by group. */
+.v6-docsenv .v6-docs__article .v6-docs__index h3 { margin: 28px 0 6px; }
+.v6-docsenv .v6-docs__article .v6-docs__index:first-of-type h3 { margin-top: 0; }
+.v6-docs__row { display: grid; gap: 2px; margin: 0 -12px; padding: 11px 12px; border-radius: 8px; text-decoration: none;
+  transition: background 140ms ease; }
+.v6-docsenv .v6-docs__article .v6-docs__row { text-decoration: none; }
+.v6-docs__row:hover { background: #121214; }
+.v6-docs__row:focus-visible { outline: 2px solid #FAFAFA; outline-offset: -2px; }
+.v6-docs__row .t { font-size: 15px; font-weight: 500; color: #FAFAFA; }
+.v6-docs__row .s { font-size: 14px; line-height: 1.5; color: #A1A3A9; }
+/* Ask a person: three rows on hairlines. */
+.v6-docsenv .v6-docs__article ul.v6-docs__ask { list-style: none; margin: 0; padding: 0; border-top: 1px solid rgba(255,255,255,0.088); }
+.v6-docsenv .v6-docs__article .v6-docs__ask li { margin: 0; border-bottom: 1px solid rgba(255,255,255,0.088); }
+.v6-docsenv .v6-docs__article .v6-docs__ask a { display: flex; align-items: baseline; justify-content: space-between; gap: 6px 16px;
+  flex-wrap: wrap; padding: 14px 8px; text-decoration: none; color: #FAFAFA; transition: background 140ms ease; }
+.v6-docsenv .v6-docs__article .v6-docs__ask a:hover { background: #121214; }
+.v6-docsenv .v6-docs__article .v6-docs__ask a:focus-visible { outline: 2px solid #FAFAFA; outline-offset: -2px; }
+.v6-docs__ask .t { font-size: 15.5px; font-weight: 500; }
+.v6-docs__ask .m { font-family: var(--mono); font-size: 13px; color: #A1A3A9; }
+.v6-docs__ask .a { color: #A1A3A9; transition: transform 220ms var(--ease), color 160ms ease; }
+.v6-docs__ask a:hover .a { color: #FAFAFA; transform: translateX(4px); }
+@media (prefers-reduced-motion: reduce) {
+  .v6-docs__card-media img, .v6-docs__ask .a { transition: none; }
+  .v6-docs__card:hover .v6-docs__card-media img, .v6-docs__ask a:hover .a { transform: none; }
+}
+/* Below 1000px the column is too narrow for three cards and four tiles side by side: the cards turn to rows
+   with the crop on the right, the tiles go two by two. */
+@media (max-width: 1000px) {
+  .v6-docs__start { grid-template-columns: minmax(0, 1fr); }
+  .v6-docsenv .v6-docs__article .v6-docs__card { display: grid; grid-template-columns: minmax(0, 1fr) 44%; grid-template-rows: auto 1fr;
+    column-gap: 18px; padding: 18px 0 0 18px; }
+  .v6-docs__card .t { grid-column: 1; padding-right: 0; }
+  .v6-docs__card .s { grid-column: 1; padding-right: 0; }
+  .v6-docs__card-media { grid-column: 2; grid-row: 1 / span 2; align-self: end; margin-top: 0; }
+  .v6-docs__ways { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ---- narrower screens: the table of contents goes first, then the rail becomes a drawer ---- */
+@media (max-width: 1100px) { .v6-docs--article { grid-template-columns: 240px minmax(0, 1fr); } .v6-docs__toc { display: none; }
+  .v6-dh { grid-template-columns: 240px minmax(0, 1fr) auto; } }
+@media (max-width: 880px) {
+  .v6-dh { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .v6-dh__brand { border-right: 0; padding: 0 8px 0 16px; }
+  .v6-dh__menu { display: inline-grid; }
+  .v6-dh__crumb { padding: 0 8px; }
+  .v6-dh__crumb > span:not([aria-current]) { display: none; }
+  .v6-dh__actions { padding: 0 14px 0 0; }
+  .v6-dh__signin, .v6-docsenv .v6-dh .v6-docs__copy { display: none; }
+  .v6-docs, .v6-docs--article { grid-template-columns: minmax(0, 1fr); }
+  .v6-docs__main { padding: 28px 18px 24px; }
+  /* Full-screen under the sticky header (header z 90 above this z 80), with the header height as padding. */
+  .v6-docs__side { position: fixed; inset: 0; z-index: 80; height: 100%; min-height: 0; max-height: none; padding-top: var(--docs-h, 56px); background: #0A0A0B; border-right: 0;
+    transform: translateX(-100%); transition: transform 240ms var(--ease); visibility: hidden; }
+  .v6-docsenv[data-drawer="true"] .v6-docs__side { transform: none; visibility: visible; }
+  .v6-docs__link { min-height: 44px; display: flex; align-items: center; font-size: 15px; }
+  .v6-docs__facts > div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  /* One card a row: the same specificity as the two-column rule above, which these once lost to. */
+  .v6-docsenv .v6-docs__article .v6-docs__pager { grid-template-columns: minmax(0, 1fr); }
+  .v6-docsenv .v6-docs__article .v6-docs__pager a.is-next { grid-column: auto; }
+}
+/* A phone (plan C, docs): the header keeps only the current page's title beside the mark, so the title has
+   room. The wordmark stays as the home link's name for a screen reader; "Docs" moves into the drawer
+   (Overview, first in the rail). */
+@media (max-width: 560px) {
+  .v6-dh__brand { gap: 8px; padding: 0 2px 0 14px; }
+  .v6-dh__word { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0);
+    white-space: nowrap; border: 0; }
+  .v6-dh__slash, .v6-dh__docs { display: none; }
+  .v6-dh__crumb { padding: 0 8px 0 6px; font-size: 14px; }
+  .v6-dh__actions { padding: 0 12px 0 0; }
+  .v6-docsenv .v6-docs__article h1 { font-size: 30px; }
+  .v6-docsenv .v6-docs__article--home h1 { font-size: 30px; }
+  .v6-docsenv .v6-docs__article .v6-docs__card { display: flex; padding: 16px 0 0 16px; }
+  .v6-docs__card .t, .v6-docs__card .s { padding-right: 16px; }
+  .v6-docs__card-media { margin-top: auto; }
+  .v6-docs__ways { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) { .v6-docs__side { transition: none !important; } }
+
+/* ── Docs: screenshots, surfaces (2026-09-30, re-shot 2026-10-02) ──────────────────────────────────────
+   Real console crops, from the black console since 2026-10-02, cropped and never recoloured. Marks are
+   numbered, white, and the numbers repeat as an ordered list in the caption, so a mark is a pointer and
+   never the only place the meaning lives. */
+.v6-docsenv .v6-docs__fig { margin: 30px 0 8px; }
+.v6-docsenv .v6-docs__shot { position: relative; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.132);
+  background: #0A0A0B; }
+.v6-docsenv .v6-docs__shot a { display: block; }
+.v6-docsenv .v6-docs__shot img { display: block; width: 100%; height: auto; }
+.v6-docsenv .v6-docs__shot a:focus-visible { outline: 2px solid #FAFAFA; outline-offset: -2px; }
+.v6-docsenv .v6-docs__mark { position: absolute; transform: translate(-50%, -50%); width: 24px; height: 24px; border-radius: 50%;
+  background: #FAFAFA; color: #0A0A0B; font: 600 12.5px/24px var(--sans); text-align: center; pointer-events: none;
+  box-shadow: 0 0 0 2px #0A0A0B; }
+.v6-docsenv .v6-docs__fig figcaption { margin-top: 12px; }
+.v6-docsenv .v6-docs__fig figcaption p { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 16px; margin: 0;
+  font-size: 14px; line-height: 1.55; color: #A1A3A9; }
+.v6-docsenv .v6-docs__fig .v6-docs__credit { font-family: var(--mono); font-size: 12px; line-height: 1.8; color: #8E9095; }
+.v6-docsenv .v6-docs__fig figcaption ol { display: block; margin: 8px 0 0; padding-left: 22px; color: #C9CBD1; list-style: decimal outside; }
+.v6-docsenv .v6-docs__fig figcaption li { margin: 2px 0; padding-left: 2px; display: list-item; font-size: 14px; line-height: 1.55; }
+.v6-docsenv .v6-docs__fig figcaption li::before { content: none; }
+.v6-docsenv .v6-docs__fig figcaption li::marker { color: #FAFAFA; font-weight: 600; }
+@media (max-width: 640px) { .v6-docsenv .v6-docs__mark { width: 20px; height: 20px; font-size: 11px; line-height: 20px; } }
+
+/* What Vraelis can check: name, tier, one line. The tier is a mono word, ink for Live and ink-3 otherwise:
+   a word, not a pill (plan C, docs). */
+.v6-docsenv .v6-docs__article ul.v6-docs__surfaces { list-style: none; margin: 22px 0 8px; padding: 0; border: 1px solid rgba(255,255,255,0.11);
+  border-radius: 12px; overflow: hidden; }
+.v6-docsenv .v6-docs__article .v6-docs__surfaces li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 14px; padding: 14px 16px;
+  border-top: 1px solid rgba(255,255,255,0.088); margin: 0; }
+.v6-docsenv .v6-docs__article .v6-docs__surfaces li:first-child { border-top: 0; }
+.v6-docsenv .v6-docs__article .v6-docs__surfaces li::before { content: none; }
+.v6-docsenv .v6-docs__surfaces .n { color: #FAFAFA; font-weight: 500; }
+.v6-docsenv .v6-docs__surfaces .t { justify-self: end; font-family: var(--mono); font-size: 12.5px; line-height: 1.9; font-weight: 500;
+  color: #A1A3A9; white-space: nowrap; }
+.v6-docsenv .v6-docs__surfaces .t[data-tier="live"] { color: #FAFAFA; }
+.v6-docsenv .v6-docs__surfaces .b { grid-column: 1 / -1; color: #C9CBD1; font-size: 14.5px; line-height: 1.5; }
+
+/* Other scripts (plan A3): no tracking on the docs headings, and room between their lines. */
+:is(:lang(ja), :lang(zh), :lang(ko)) .v6-docsenv .v6-docs__article :is(h1, h2, h3) { letter-spacing: 0; line-height: 1.35; }
+:lang(ja) .v6-docsenv .v6-docs__article :is(h1, h2, h3) { word-break: auto-phrase; }
+:lang(hi) .v6-docsenv .v6-docs__article :is(h1, h2, h3) { line-height: 1.35; }
