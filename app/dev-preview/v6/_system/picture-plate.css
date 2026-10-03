@@ -27,10 +27,12 @@
 .v6-reference { padding: 24px 0; border-top: 1px solid rgba(255,255,255,.14); min-width: 0; }
 .v6-reference__label { display: flex; flex-wrap: wrap; gap: 12px 24px; color: var(--ink-3); font-size: 12px; margin: 0 0 20px; }
 .v6-reference__body { min-width: 0; }
-.v6-reference__body pre { white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--mono); font-size: 13px; line-height: 1.7; margin: 0; }
+.v6-reference__body pre { white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--sans); font-size: 13px; line-height: 1.7; margin: 0; }
 .v6-reference__caption { color: var(--ink-3); font-size: 12px; line-height: 1.65; margin-top: 18px; }
 .v6-mp .v6-mp__shell { padding: 0; border-radius: 6px; background: transparent; }
 .v6-mp .v6-mp__cap { display: flex; flex-wrap: wrap; gap: 6px 20px; line-height: 1.6; }
 .v6-mp__description { flex-basis: 100%; }
 .v6-sx-fixture .v6-mp { max-width: 560px; margin: 0 auto; }
 .v6-sx-fixture .v6-ff__links { justify-content: center; }
+
+.v6-plate__metadata { display: inline-flex; flex-wrap: wrap; gap: 6px 16px; }

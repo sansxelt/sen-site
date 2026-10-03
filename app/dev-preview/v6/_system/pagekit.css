@@ -64,12 +64,12 @@
 .v6-prose ol:not([class]) { counter-reset: v6-prose-ol; padding-left: 22px; }
 .v6-prose ol:not([class]) > li { counter-increment: v6-prose-ol; }
 .v6-prose ol:not([class]) > li::before { content: counter(v6-prose-ol); display: inline-block; width: 22px; margin-left: -22px;
-  font-family: var(--mono); font-size: var(--t-mono); color: var(--ink-4); font-variant-numeric: tabular-nums; }
+  font-family: var(--sans); font-size: var(--t-mono); color: var(--ink-4); font-variant-numeric: tabular-nums; }
 .v6-prose strong { color: var(--ink); font-weight: 600; }
 .v6-prose a { color: var(--brand-ink); text-decoration: underline; text-underline-offset: 3px; }
 .v6-prose blockquote { border-left: 2px solid rgba(250,250,250,0.5); padding-left: 20px; color: var(--ink); font-size: 1.25rem; font-weight: 400; line-height: 1.45; }
 /* Inline code (plan T9): 0.92em mono on --surface, radius 6, a 1px --line-soft hairline. */
-.v6-prose code { font-family: var(--mono); font-size: 0.92em; background: var(--surface); border: 1px solid var(--line-soft); padding: 1px 6px; border-radius: 6px; color: var(--ink); }
+.v6-prose code { font-family: var(--sans); font-size: 0.92em; background: var(--surface); border: 1px solid var(--line-soft); padding: 1px 6px; border-radius: 6px; color: var(--ink); }
 .v6-prose figure { margin: 0; }
 .v6-prose .v6-note { background: var(--sunk); border: 1px solid var(--line-soft); border-radius: var(--r-media); padding: 16px 18px; font-size: 0.98rem; color: var(--ink-2); }
 /* The note label is a sentence-case sans label (2026-09-30), not tracked mono capitals. */
@@ -90,7 +90,7 @@
 /* No hairline follows the last row, so its bottom padding was only air added to the section's own (it left 192px
    under the /security identity rows, 2026-10-02). The list ends where its last line of text does. */
 .v6-rows > .v6-reveal:last-child .v6-row, .v6-rows > .v6-row:last-child { padding-bottom: 0; }
-.v6-row__n { font-family: var(--mono); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-4); padding-top: 3px; font-variant-numeric: tabular-nums; }
+.v6-row__n { font-family: var(--sans); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-4); padding-top: 3px; font-variant-numeric: tabular-nums; }
 /* Rows led by a state word rather than a number: every row is its own grid, so an auto first column made
    "Fits" and "Not yet" rows start their titles at different x. One fixed column lines them up. */
 .v6-rows--chips .v6-row { grid-template-columns: 84px minmax(0,1fr); }
@@ -124,14 +124,14 @@
    Copy button (code.tsx draws it as a 28px ghost); the code at 13/1.7 with 20 of padding. */
 .v6-code { background: #0E0E10; border: 1px solid var(--line); border-radius: var(--r-media); overflow: hidden; }
 .v6-code__bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; padding: 0 8px 0 16px; border-bottom: 1px solid var(--line-soft); }
-.v6-code__lang { font-family: var(--mono); font-size: var(--t-mono-s); color: var(--ink-4); letter-spacing: 0; }
+.v6-code__lang { font-family: var(--sans); font-size: var(--t-mono-s); color: var(--ink-4); letter-spacing: 0; }
 .v6-code pre { margin: 0; padding: 20px; overflow-x: auto; }
 /* The pre takes focus so a keyboard can scroll a long line (code.tsx). Its ring is drawn inside it: .v6-code clips
    everything outside its rounded box, so the global ring (outside, 2px off) kept only its top edge, which read as a
    divider under the bar. The radius is the box's inner one, at the foot (and all round when there is no bar). */
 .v6-code pre:focus-visible { outline: 2px solid #FAFAFA; outline-offset: -2px; border-radius: 0 0 calc(var(--r-media) - 1px) calc(var(--r-media) - 1px); }
 .v6-code pre:first-child:focus-visible { border-radius: calc(var(--r-media) - 1px); }
-.v6-code code { font-family: var(--mono); font-size: var(--t-mono); line-height: 1.7; color: var(--g-fg); white-space: pre; background: none; padding: 0; }
+.v6-code code { font-family: var(--sans); font-size: var(--t-mono); line-height: 1.7; color: var(--g-fg); white-space: pre; background: none; padding: 0; }
 /* Code (black since 2026-10-01): keywords take weight rather than a state colour, strings a step below the
    ink, comments the meta grey. */
 .v6-code .k { color: var(--ink); font-weight: 600; } .v6-code .s { color: #C9CBD1; } .v6-code .c { color: var(--ink-4); } .v6-code .p { color: var(--ink-3); }

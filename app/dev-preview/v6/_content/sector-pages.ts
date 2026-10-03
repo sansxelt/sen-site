@@ -159,7 +159,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     hero: {
       eyebrow: "Defense and national security",
       // The position, from the top (founder, 2026-10-02). The sub makes the page's one approval statement.
-      title: "Check mission software before anyone relies on it.",
+      title: "Check mission software before anyone relies on it",
       sub: "Write what the console must do. A person approves the plan, then a real browser works a simulation or staging build and records every step.",
       primary: { label: "Talk to us", href: contact("defense") },
       secondary: { label: "See the real check", href: "#record" },
@@ -194,17 +194,17 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     },
     problem: {
       eyebrow: "The problem",
-      title: "Acceptance checks the demo, not the build.",
+      title: "Acceptance checks the demo, not the build",
       items: [
-        { title: "The build changed after the demo.", body: "A walkthrough proves the version that was shown. Vraelis checks the address you name, when you ask, and records the address and the time." },
+        { title: "The build changed after the demo", body: "A walkthrough proves the version that was shown. Vraelis checks the address you name, when you ask, and records the address and the time." },
         // What a run keeps is said once, in the stance's third card.
-        { title: "A screenshot is not a record.", body: "A passing screen says nothing about the step before it, or about what the page shows after a reload." },
-        { title: "The fix is never checked again.", body: "After a fix, the same approved plan runs again. The re-check is its own record and points back at the run it repeats." },
+        { title: "A screenshot is not a record", body: "A passing screen says nothing about the step before it, or about what the page shows after a reload." },
+        { title: "The fix is never checked again", body: "After a fix, the same approved plan runs again. The re-check is its own record and points back at the run it repeats." },
       ],
     },
     record: {
       eyebrow: "A real check",
-      title: "The civilian bus was cleared too.",
+      title: "The civilian bus was cleared too",
       lead: "Larkspur is a simulated mission console Vraelis built. In its broken mode, confirming one contact clears every contact in its grid square. This is what Vraelis recorded.",
       view: "strike",
     },
@@ -215,7 +215,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     // the page's one approval statement, and Vraelis decides nothing about what a customer's system does.
     stance: {
       eyebrow: "Our position",
-      title: "The builder should not be the only judge.",
+      title: "The builder should not be the only judge",
       lead: "Where software helps decide what happens to people, the check should be independent and show what the software actually does, with evidence a person can read.",
       cards: [
         { title: "Checking, not building", body: "Vraelis checks software. It does not build weapons or mission software." },
@@ -224,7 +224,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
       ],
     },
     examples: {
-      label: "Examples. Only the first was run, on Larkspur, and it is quoted as written.",
+      label: "Examples, only the first was run, on Larkspur, and it is quoted as written",
       items: [
         { text: CLAIM.larkspur, run: true },
         { text: "Withdrawing the confirmation returns T-1 to Hold, and Confirm target works again." },
@@ -235,7 +235,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     band: {
       kind: "cards",
       eyebrow: "How it fits",
-      title: "Built for the simulation, not the aircraft.",
+      title: "Built for the simulation, not the aircraft",
       // Two cards: the third, "The record stays in order", is the stance's third card now.
       cards: [
         { title: "Simulation and staging", body: "Vraelis works only through a web page in a browser. Point it at a simulation or a staging build; it has no connection to hardware." },
@@ -245,7 +245,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     limits: {
       kind: "does",
       eyebrow: "Limits",
-      title: "What it does, and what it does not.",
+      title: "What it does, and what it does not",
       does: [
         "Checks what an operator can do in a web console, in a real browser.",
         "Writes a plan from your sentence before anything runs.",
@@ -293,7 +293,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
       { title: "Security", body: "What Vraelis stores, and how it is protected.", href: `${BASE}/security`, image: "/site/photography/signup.jpg" },
       LARKSPUR_RECORD,
     ],
-    closing: { title: "Bring one sentence and a simulation build.", action: { label: "Talk to us", href: contact("defense") } },
+    closing: { title: "Bring one sentence and a simulation build", action: { label: "Talk to us", href: contact("defense") } },
   },
 
   /* ────────────────────────────────────────────────────────────────────────────────────────── fleets (P0) ── */
@@ -306,7 +306,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     },
     hero: {
       eyebrow: "Robotics, drones and fleets",
-      title: "Check the panel that runs the fleet.",
+      title: "Check the panel that runs the fleet",
       sub: "Say what an operator action should do, such as Return home. Vraelis presses it in a real browser and checks what the panel reports afterwards, including after a reload.",
       primary: { label: "Talk to us", href: contact("fleets") },
       secondary: { label: "Try the fixture", href: "#fixture" },
@@ -319,16 +319,16 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     sections: ["problem", "fixture", "record", "examples", "band", "limits", "cross"],
     problem: {
       eyebrow: "The problem",
-      title: "Acknowledged is not executed.",
+      title: "Acknowledged is not executed",
       items: [
-        { title: "The panel confirms the wrong unit.", body: "The panel says Return home sent to SKY-01. Afterwards SKY-01 still shows Flying and SKY-10 shows Landed. Fieldline's broken mode has exactly this bug." },
-        { title: "The state does not survive a reload.", body: "A status that is right until the page reloads is a status the next operator never sees." },
-        { title: "One action changes more than it should.", body: "On Larkspur, confirming one contact cleared every contact in its grid square." },
+        { title: "The panel confirms the wrong unit", body: "The panel says Return home sent to SKY-01. Afterwards SKY-01 still shows Flying and SKY-10 shows Landed. Fieldline's broken mode has exactly this bug." },
+        { title: "The state does not survive a reload", body: "A status that is right until the page reloads is a status the next operator never sees." },
+        { title: "One action changes more than it should", body: "On Larkspur, confirming one contact cleared every contact in its grid square." },
       ],
     },
     fixture: {
       eyebrow: "Try it",
-      title: "Press Return home.",
+      title: "Press Return home",
       lead: "Fieldline is a simulated fleet console Vraelis serves for checks like this one. Nothing here is a real aircraft.",
       sentenceLabel: "The sentence for this fixture (not run yet)",
       sentence: "After the operator presses Return home for SKY-01, SKY-01 shows Landed at Pad A, and still does after a reload.",
@@ -336,12 +336,12 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     record: {
       // Not "A real check": the headline already starts with those words.
       eyebrow: "The record",
-      title: "A real check of a drone mission console.",
+      title: "A real check of a drone mission console",
       lead: "Larkspur is a simulated mission console Vraelis built. Confirming one target also cleared the civilian bus in the same grid square.",
       view: "strike-compact",
     },
     examples: {
-      label: "Examples. None of these has been run yet.",
+      label: "Examples, none of these has been run yet",
       items: [
         { text: "After the operator presses Return home for SKY-01, SKY-01 shows Landed at Pad A, and still does after a reload." },
         { text: "Emergency stop on one aircraft leaves every other aircraft's status unchanged." },
@@ -352,7 +352,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     band: {
       kind: "cards",
       eyebrow: "How it fits",
-      title: "Through the panel, today.",
+      title: "Through the panel, today",
       cards: [
         { title: "What the panel shows", body: "Vraelis reads what the panel shows after the action: the status, the location and the log. Reading the device itself is not built yet." },
         { title: "A person approves every plan", body: "Nothing presses a button until someone on your team approves the exact plan. An API key cannot approve one." },
@@ -362,7 +362,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     limits: {
       kind: "does",
       eyebrow: "Limits",
-      title: "What it does, and what it does not.",
+      title: "What it does, and what it does not",
       does: [
         "Presses the operator action in the panel, in a real browser.",
         "Reads what the panel reports afterwards, including after a reload.",
@@ -381,7 +381,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
       { title: "What it can reach", body: "Web apps, and devices through the panels that run them.", href: `${BASE}/platform#coverage`, image: "/site/photography/client.jpg" },
       LARKSPUR_RECORD,
     ],
-    closing: { title: "Point it at your fleet's panel.", action: { label: "Talk to us", href: contact("fleets") } },
+    closing: { title: "Point it at your fleet's panel", action: { label: "Talk to us", href: contact("fleets") } },
   },
 
   /* ──────────────────────────────────────────────────────────────────────────────────────── commerce (P1) ── */
@@ -394,7 +394,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     },
     hero: {
       eyebrow: "Fintech and commerce",
-      title: "Check the checkout before every release.",
+      title: "Check the checkout before every release",
       sub: "Write what a paying customer should get. On staging, in test mode, Vraelis buys with a test account, signs out and back in, and checks what is still there.",
       primary: { label: "Start free", href: SIGNUP },
       secondary: { label: "See the record", href: "#record" },
@@ -425,21 +425,21 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     },
     problem: {
       eyebrow: "The problem",
-      title: "Paid is not the same as kept.",
+      title: "Paid is not the same as kept",
       items: [
-        { title: "Access that does not survive a sign-in.", body: "On Lumen Notes, paying worked and the account showed Pro. After signing out and back in, “Pro” was not on the page." },
-        { title: "A plan change the account page never shows.", body: "Billing says one thing and the account page another. The check reads the page the customer reads." },
-        { title: "A receipt that disagrees with the checkout.", body: "Totals, discounts and plan names are compared on the pages a customer sees, step by step." },
+        { title: "Access that does not survive a sign-in", body: "On Lumen Notes, paying worked and the account showed Pro. After signing out and back in, “Pro” was not on the page." },
+        { title: "A plan change the account page never shows", body: "Billing says one thing and the account page another. The check reads the page the customer reads." },
+        { title: "A receipt that disagrees with the checkout", body: "Totals, discounts and plan names are compared on the pages a customer sees, step by step." },
       ],
     },
     record: {
       eyebrow: "A real check",
-      title: "After signing back in, the plan said Free.",
+      title: "After signing back in, the plan said Free",
       lead: "Lumen Notes is a Vraelis demo app. The same 11 planned steps ran before the fix and after it.",
       view: "checkout",
     },
     examples: {
-      label: "Examples. Only the first was run, on Lumen Notes, and it is quoted as written.",
+      label: "Examples, only the first was run, on Lumen Notes, and it is quoted as written",
       items: [
         { text: CLAIM.checkout, run: true },
         { text: "Cancelling from Billing changes the plan to Cancelled, and Billing still shows Cancelled after a reload." },
@@ -450,7 +450,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     band: {
       kind: "cards",
       eyebrow: "How it fits",
-      title: "Built for test mode and test accounts.",
+      title: "Built for test mode and test accounts",
       cards: [
         { title: "Test mode and test accounts", body: "Run it on a preview or staging deployment with your payment provider in test mode, and give Vraelis a test account." },
         { title: "A person approves every plan", body: "Nothing runs until someone on your team approves the exact plan. An API key cannot approve one." },
@@ -466,7 +466,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
       { sector: "ai-built-apps" },
       { useCase: "checkout-that-forgets", title: "A checkout that forgets", body: "Before the fix and after it, step by step." },
     ],
-    closing: { title: "Know the upgrade sticks.", action: { label: "Start free", href: SIGNUP } },
+    closing: { title: "Know the upgrade sticks", action: { label: "Start free", href: SIGNUP } },
   },
 
   /* ─────────────────────────────────────────────────────────────────────────────────── ai-built-apps (P0) ── */
@@ -479,7 +479,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     },
     hero: {
       eyebrow: "AI-built apps",
-      title: "Built by an agent. Checked on the live app.",
+      title: "Built by an agent, checked on the live app",
       sub: "Claude Code, Codex, Cursor and Copilot can ask Vraelis for a check before they report done. A person approves the plan; the answer goes back with a repair prompt.",
       primary: { label: "Set up your agent", href: `${BASE}/agents` },
       secondary: { label: "See the record", href: "#record" },
@@ -509,17 +509,17 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     },
     problem: {
       eyebrow: "The problem",
-      title: "Done is a claim, not a result.",
+      title: "Done is a claim, not a result",
       items: [
-        { title: "The agent checks what it wrote.", body: "Its tests come from the same reading of the task as its code. Vraelis starts from your sentence." },
-        { title: "Done means it compiled.", body: "A green build says nothing about what a user can do on the deployed app." },
-        { title: "The fix is reported, not checked.", body: "The re-check tool runs the same approved plan again and returns the new answer to the agent." },
+        { title: "The agent checks what it wrote", body: "Its tests come from the same reading of the task as its code. Vraelis starts from your sentence." },
+        { title: "Done means it compiled", body: "A green build says nothing about what a user can do on the deployed app." },
+        { title: "The fix is reported, not checked", body: "The re-check tool runs the same approved plan again and returns the new answer to the agent." },
       ],
     },
     band: {
       kind: "mcp",
       eyebrow: "How it fits",
-      title: "The agent asks, and the answer comes back.",
+      title: "The agent asks, and the answer comes back",
       // The approval is the hero sub's (the page's one statement) and the panel's second row; not again here.
       lead: "Three MCP tools, local or hosted.",
       rows: [
@@ -530,12 +530,12 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     },
     record: {
       eyebrow: "A real check",
-      title: "The note was still there after signing back in.",
+      title: "The note was still there after signing back in",
       lead: "Notewell is a demo app built with Lovable. Vraelis wrote two journeys from one sentence, and the check cleaned up after itself.",
       view: "notes",
     },
     examples: {
-      label: "Examples. The first was run on Notewell and is quoted as written; its plan also covered the second.",
+      label: "Examples, the first was run on Notewell and is quoted as written; its plan also covered the second",
       items: [
         { text: CLAIM.notewell, run: true },
         { text: "Signed out, opening /dashboard sends the browser to sign in." },
@@ -549,7 +549,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
       { sector: "saas" },
       { useCase: "notes-that-survive-sign-out", title: "Notes that survive sign-out", body: "Two journeys from one sentence, step by step." },
     ],
-    closing: { title: "Let the agent ask before it says done.", action: { label: "Set up your agent", href: `${BASE}/agents` } },
+    closing: { title: "Let the agent ask before it says done", action: { label: "Set up your agent", href: `${BASE}/agents` } },
   },
 
   /* ──────────────────────────────────────────────────────────────────────────────────────────── saas (P2) ── */
@@ -562,7 +562,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     },
     hero: {
       eyebrow: "SaaS product teams",
-      title: "Check the flows customers use every day.",
+      title: "Check the flows customers use every day",
       sub: "Sign-up, roles, billing and the work customers save. Write each as one sentence and check it on the deployed app before a release.",
       primary: { label: "Start free", href: SIGNUP },
       secondary: { label: "See the record", href: "#record" },
@@ -593,28 +593,28 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     },
     problem: {
       eyebrow: "The problem",
-      title: "It looked fine on screen.",
+      title: "It looked fine on screen",
       items: [
-        { title: "Saved until the next reload.", body: "On the fixture dashboard, a new project appeared on screen. After one reload the page said No projects yet." },
-        { title: "A setting that does not stick.", body: "A changed setting can look saved and be gone at the next sign-in. Say it must survive one, and the plan signs out and back in." },
-        { title: "A private page that opens for anyone.", body: "Notewell's check covered this, and it passed: signed out, /dashboard sent the browser to sign in." },
+        { title: "Saved until the next reload", body: "On the fixture dashboard, a new project appeared on screen. After one reload the page said No projects yet." },
+        { title: "A setting that does not stick", body: "A changed setting can look saved and be gone at the next sign-in. Say it must survive one, and the plan signs out and back in." },
+        { title: "A private page that opens for anyone", body: "Notewell's check covered this, and it passed: signed out, /dashboard sent the browser to sign in." },
       ],
     },
     record: {
       eyebrow: "A real check",
-      title: "The project was gone after one reload.",
+      title: "The project was gone after one reload",
       lead: "The Vraelis fixture dashboard, in its broken mode, keeps new projects in memory only. This is what the check recorded.",
       view: "projects",
     },
     ci: {
       eyebrow: "From CI",
-      title: "Gate the release on exit code 0.",
+      title: "Gate the release on exit code 0",
       lead: "Run the CLI in your pipeline against the preview deployment, with the sentence your customers would write.",
       code: 'vraelis verify --url "$PREVIEW_URL" --claim "$CLAIM" --wait',
       note: "Only exit code 0 ships. A new plan waits for a person. A re-check of an approved plan on the same host does not, within 24 hours and up to 10 times. Each new preview URL is a new host.",
     },
     examples: {
-      label: "Examples. None of these has been run yet.",
+      label: "Examples, none of these has been run yet",
       items: [
         { text: "A new visitor can sign up, confirm their email and reach an empty dashboard." },
         { text: "A viewer can open a project but does not see the Delete button." },
@@ -628,7 +628,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
       { sector: "ai-built-apps" },
       { title: "Developers", body: "The CLI, the API and CI.", href: `${BASE}/developers`, image: "/site/photography/agent.jpg" },
     ],
-    closing: { title: "Write the sentence your customers would.", action: { label: "Start free", href: SIGNUP } },
+    closing: { title: "Write the sentence your customers would", action: { label: "Start free", href: SIGNUP } },
   },
 
   /* ──────────────────────────────────────────────────────────────────────────────────────── agencies (P0) ── */
@@ -641,7 +641,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     },
     hero: {
       eyebrow: "Agencies and their clients",
-      title: "Hand over a site you have checked.",
+      title: "Hand over a site you have checked",
       sub: "Write what the client asked for, one sentence at a time. Vraelis checks each on the live build, so the handover comes with evidence, not a walkthrough.",
       primary: { label: "Start free", href: SIGNUP },
       secondary: { label: "See three records", href: "#record" },
@@ -660,16 +660,16 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     sections: ["problem", "record", "band", "examples", "limits", "cross"],
     problem: {
       eyebrow: "The problem",
-      title: "The client finds it after launch.",
+      title: "The client finds it after launch",
       items: [
-        { title: "The brief lives in a document nobody checks.", body: "Write each line of the brief as one sentence, and Vraelis checks it on the build the client will use." },
-        { title: "The demo was on your machine.", body: "Vraelis checks a public address, a preview or staging deployment, never localhost." },
-        { title: "Fixes arrive without proof.", body: "After a fix, the same approved plan runs again. Send the client the re-check with the fix." },
+        { title: "The brief lives in a document nobody checks", body: "Write each line of the brief as one sentence, and Vraelis checks it on the build the client will use." },
+        { title: "The demo was on your machine", body: "Vraelis checks a public address, a preview or staging deployment, never localhost." },
+        { title: "Fixes arrive without proof", body: "After a fix, the same approved plan runs again. Send the client the re-check with the fix." },
       ],
     },
     record: {
       eyebrow: "Three real checks",
-      title: "Three demo apps, checked for real.",
+      title: "Three demo apps, checked for real",
       // The project tracker's record has no sentence (A8.3), so the lead does not promise one for every record.
       lead: "Lumen Notes, Notewell and a project tracker are Vraelis demo apps. Each record keeps every step and what it found, and the sentence where the run had one.",
       view: "demos",
@@ -677,7 +677,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     band: {
       kind: "cards",
       eyebrow: "How it fits",
-      title: "Bring the client in.",
+      title: "Bring the client in",
       cards: [
         { title: "A viewer seat for the client", body: "The viewer role reads the evidence without anyone sharing a login." },
         { title: "Approving costs nothing", body: "A reviewer who approves a plan is never charged for it." },
@@ -686,7 +686,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
       ],
     },
     examples: {
-      label: "Examples. None of these has been run yet.",
+      label: "Examples, none of these has been run yet",
       items: [
         { text: "The contact form on the home page sends, and the thank-you page shows the visitor's name." },
         { text: "A visitor can book a table, and the confirmation page shows the date they chose." },
@@ -702,7 +702,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
       // the picture: a picture of the plan cards would be a second price list that does not follow the library.
       { title: "Pricing", body: "Listed plans, and what one verification includes.", href: `${BASE}/pricing`, image: "/site/photography/checkout.jpg" },
     ],
-    closing: { title: "Ship the handover with the evidence.", action: { label: "Start free", href: SIGNUP } },
+    closing: { title: "Ship the handover with the evidence", action: { label: "Start free", href: SIGNUP } },
   },
 
   /* ─────────────────────────────────────────────────────────────────────────────────── public-sector (P2) ── */
@@ -715,7 +715,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     },
     hero: {
       eyebrow: "Public sector",
-      title: "Check the service a resident actually uses.",
+      title: "Check the service a resident actually uses",
       sub: "Applications, sign-in and the page that confirms them, checked in a real browser on a staging copy with test identities, with a record for whoever signs it off.",
       primary: { label: "Talk to us", href: contact("public-sector") },
       secondary: { label: "What is not built yet", href: "#limits" },
@@ -739,21 +739,21 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     },
     problem: {
       eyebrow: "The problem",
-      title: "A form is a promise to a resident.",
+      title: "A form is a promise to a resident",
       items: [
-        { title: "A form that loses what was typed.", body: "A resident fills in several screens, goes back to check one, and finds it empty." },
-        { title: "Private pages that open without signing in.", body: "A signed-out visitor should meet a sign-in screen, never someone else's application." },
-        { title: "A reference-number page that never appears.", body: "The confirmation is the resident's only proof. On staging, the check submits with a test identity and waits for it." },
+        { title: "A form that loses what was typed", body: "A resident fills in several screens, goes back to check one, and finds it empty." },
+        { title: "Private pages that open without signing in", body: "A signed-out visitor should meet a sign-in screen, never someone else's application." },
+        { title: "A reference-number page that never appears", body: "The confirmation is the resident's only proof. On staging, the check submits with a test identity and waits for it." },
       ],
     },
     record: {
       eyebrow: "A real check",
-      title: "Signed out, the dashboard stayed closed.",
+      title: "Signed out, the dashboard stayed closed",
       lead: "Notewell is a demo app built with Lovable. Its second journey opened the dashboard while signed out, and it passed.",
       view: "notes-journey-2",
     },
     examples: {
-      label: "Examples. Notewell's run covered the first, and it passed. The others have not been run.",
+      label: "Examples, notewell's run covered the first, and it passed, the others have not been run",
       items: [
         { text: "Signed out, opening the dashboard sends the browser to sign in." },
         { text: "An application saved as a draft shows the same answers after signing out and back in." },
@@ -765,7 +765,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
       kind: "does",
       id: "limits",
       eyebrow: "Limits",
-      title: "What it does, and what is not built yet.",
+      title: "What it does, and what is not built yet",
       does: [
         "Checks a service the way a resident uses it, in a real browser.",
         "Reads what each page shows after every step, including after a reload.",
@@ -779,7 +779,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
       ],
     },
     cross: [],
-    closing: { title: "Bring one service and one sentence.", action: { label: "Talk to us", href: contact("public-sector") } },
+    closing: { title: "Bring one service and one sentence", action: { label: "Talk to us", href: contact("public-sector") } },
   },
 };
 
@@ -796,6 +796,6 @@ export const SOLUTIONS_INDEX = {
       "The same check for every sector: one sentence, a plan a person approves, a real browser on the live product, and a record of every step.",
   },
   eyebrow: "Solutions",
-  title: "One check, wherever software has to work.",
+  title: "One check, wherever software has to work",
   lead: "The same loop everywhere: one sentence, a plan a person approves, a real browser on the live product, and a record of every step.",
 } as const;

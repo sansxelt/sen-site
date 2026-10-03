@@ -45,7 +45,7 @@ summary:hover .v6-pp-x { color: var(--ink); }
 .v6-pp-now__list { max-width: 880px; margin: 0; padding: 0; list-style: none; }
 .v6-pp-now__item { display: grid; grid-template-columns: 40px minmax(0, 1fr); align-items: baseline; padding: 14px 0; border-bottom: 1px solid var(--line-soft); }
 .v6-pp-now__item:first-child { padding-top: 4px; }
-.v6-pp-now__n { font-family: var(--mono); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-4); font-variant-numeric: tabular-nums; }
+.v6-pp-now__n { font-family: var(--sans); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-4); font-variant-numeric: tabular-nums; }
 .v6 .v6-pp-now__t { margin: 0; min-width: 0; font-size: 15px; line-height: 1.6; color: var(--ink-2); text-wrap: pretty; }
 .v6 .v6-pp-now__sum { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; list-style: none; cursor: pointer;
   font-size: 15px; line-height: 1.6; color: var(--ink-2); }

@@ -127,7 +127,7 @@ export default function SecurityPage() {
     <>
       <FrameHero
         eyebrow="Security"
-        title="Security built around independent oversight."
+        title="Security built around independent oversight"
         sub="How access, secrets and evidence are handled today, where a check's data goes, and what is not in place yet."
         primary={{ label: "Talk to us", href: `${BASE}/contact?topic=enterprise` }}
         secondary={{ label: "See what is in place", href: "#status" }}
@@ -137,21 +137,21 @@ export default function SecurityPage() {
 
       <section className="v6-sec" id="commitments">
         <div className="v6-wrap">
-          <SectionHead eyebrow="Commitments" title="Three commitments every check keeps." />
+          <SectionHead eyebrow="Commitments" title="Three commitments every check keeps" />
           <FeatureGrid span={4}>
             <FeatureCard
               label="01"
-              title="A person approves every plan."
+              title="A person approves every plan"
               body="An API key cannot approve one, and neither can an AI assistant. The approve endpoint refuses every key and returns a link for a person."
             />
             <FeatureCard
               label="02"
-              title="The judge is separate from the builder."
+              title="The judge is separate from the builder"
               body="Whoever did the work does not mark it done. A real browser checks the live app, and the answer comes from what it recorded."
             />
             <FeatureCard
               label="03"
-              title="Evidence is kept, not overwritten."
+              title="Evidence is kept, not overwritten"
               body="Every run keeps its steps, screenshots, console errors and failed requests. A re-check is a new record, and no run overwrites another."
             />
           </FeatureGrid>
@@ -163,7 +163,7 @@ export default function SecurityPage() {
         <div className="v6-wrap">
           <SectionHead
             eyebrow="Status"
-            title="What is in place today."
+            title="What is in place today"
             lead="What you can use now, what is in preview, and what is not built yet."
           />
           <div className="sec-status">
@@ -188,7 +188,7 @@ export default function SecurityPage() {
       </section>
 
       <Band id="storage">
-        <SectionHead eyebrow="Data handling" title="What we store, and how it is protected." />
+        <SectionHead eyebrow="Data handling" title="What we store, and how it is protected" />
         <FeatureGrid span={3}>
           {STORE.map((c) => (
             <div className="v6-gcard sec-store" key={c.title}>
@@ -204,7 +204,7 @@ export default function SecurityPage() {
 
       <section className="v6-sec" id="identity">
         <div className="v6-wrap">
-          <SectionHead eyebrow="Identity" title="How people sign in, and what they can reach." />
+          <SectionHead eyebrow="Identity" title="How people sign in, and what they can reach" />
           <ol className="v6-rows sec-rows" role="list">
             {IDENTITY.map(([t, d], i) => (
               <li className="v6-row" key={t}>
@@ -221,7 +221,7 @@ export default function SecurityPage() {
 
       <section className="v6-sec" id="limits">
         <div className="v6-wrap">
-          <SectionHead eyebrow="Limits" title="What we do not claim." />
+          <SectionHead eyebrow="Limits" title="What we do not claim" />
           <ol className="sec-limits" role="list">
             {NOT_CLAIMED.map((t, i) => (
               <li key={t}>
@@ -243,7 +243,7 @@ export default function SecurityPage() {
         <div className="v6-wrap sec-report">
           <SectionHead
             eyebrow="Report a security issue"
-            title="Tell us, and a person reads it."
+            title="Tell us, and a person reads it"
             lead="Email help@vraelis.com with Security report in the subject. Say what you found, the address where it happens, and how to reproduce it."
           />
           <ul className="sec-report__rules" role="list">

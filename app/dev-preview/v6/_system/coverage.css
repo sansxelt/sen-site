@@ -40,7 +40,7 @@
    tier and marker 11-12; below that the name and the tier share the first line and the brief runs under them.
    ============================================================================================================ */
 /* The tier as a word, for any coverage list (b4d may use it on /limitations): Plex Mono 13, no chip. */
-.v6-tw { font-family: var(--mono); font-size: var(--t-mono); font-weight: 400; line-height: 1.5; color: var(--ink-3); white-space: nowrap; }
+.v6-tw { font-family: var(--sans); font-size: var(--t-mono); font-weight: 400; line-height: 1.5; color: var(--ink-3); white-space: nowrap; }
 .v6-tw[data-tier="live"] { color: var(--ink); }
 
 .v6-reach { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }

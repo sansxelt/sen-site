@@ -97,7 +97,7 @@ export function Surfaces() {
     <section className="v6-sf" aria-labelledby="v6-sf-h" data-nav-theme="light">
       <div className="v6-sf__in">
         <div className="v6-sf__head">
-          <h2 id="v6-sf-h" className="v6-sf__h">One check for what you ship.</h2>
+          <h2 id="v6-sf-h" className="v6-sf__h">One check for what you ship</h2>
           <p className="v6-sf__lead">Websites, web apps and the devices they run. Start it from the console, your terminal or your AI agent.</p>
         </div>
 

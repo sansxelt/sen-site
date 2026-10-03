@@ -48,7 +48,7 @@ export default function IntegrationsPage() {
     <>
       <FrameHero
         eyebrow="Integrations"
-        title="One check, four ways to start it."
+        title="One check, four ways to start it"
         sub="Start a check from the console, the CLI, a pipeline or an AI assistant. Each gets back the same answer, with the evidence."
         primary={{ label: "Start free", href: SIGNUP }}
         secondary={{ label: "Read the docs", href: `${BASE}/docs` }}
@@ -57,7 +57,7 @@ export default function IntegrationsPage() {
 
       <section className="v6-sec" id="ways-in">
         <div className="v6-wrap">
-          <SectionHead eyebrow="Four ways in" title="One check, four ways to start it." />
+          <SectionHead eyebrow="Four ways in" title="One check, four ways to start it" />
           <div className="ig-two">
             {WAYS_IN.map((way) => <div className="ig-two__item" key={way.key}>
               <h3 className="ig-two__t">{way.name}</h3>
@@ -73,7 +73,7 @@ export default function IntegrationsPage() {
         <div className="v6-wrap">
           <SectionHead
             eyebrow="In your release"
-            title="Where it fits in your release."
+            title="Where it fits in your release"
             lead="Neither is a separate integration to install. GitHub Actions runs the CLI, and Vercel gives a check the address to open."
           />
           <div className="ig-two">
@@ -95,7 +95,7 @@ export default function IntegrationsPage() {
       <Band id="delivery">
         <SectionHead
           eyebrow="Delivery"
-          title="Where the answer goes."
+          title="Where the answer goes"
           lead="When a run finishes, the answer can come to you: a signed event at your endpoint, or a message in a Slack channel."
         />
         <div className="ig-deliver">
@@ -137,7 +137,7 @@ export default function IntegrationsPage() {
         </div>
       </section>
 
-      <ClosingScene title="Start from wherever you already work." />
+      <ClosingScene title="Start from wherever you already work" />
       <CopyScript />
     </>
   );

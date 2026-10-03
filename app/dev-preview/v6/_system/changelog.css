@@ -17,14 +17,14 @@
 .v6-clog__entry { display: grid; grid-template-columns: 200px minmax(0, 680px); column-gap: 64px; padding: 64px 0; border-top: 1px solid var(--line); }
 .v6-clog__when { min-width: 0; }
 .v6-clog__stick { position: sticky; top: calc(var(--nav-h, 66px) + 32px); margin: 0; display: flex; flex-direction: column; gap: 8px; }
-.v6-clog__date { font-family: var(--mono); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-3); font-variant-numeric: tabular-nums; }
-.v6-clog__tag { font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
+.v6-clog__date { font-family: var(--sans); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.v6-clog__tag { font-family: var(--sans); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
 .v6-clog__main { min-width: 0; }
 .v6 .v6-clog__t { margin: 0; font-family: var(--display); font-weight: 500; font-size: var(--t-h3); line-height: 1.2; letter-spacing: -0.012em;
   color: var(--ink); text-wrap: balance; overflow-wrap: break-word; }
 .v6-clog__media { margin: 24px 0; }
 .v6-clog__media[data-portrait] .v6-mp { max-width: 498px; }
-.v6-clog__run { margin-left: 20px; font-family: var(--mono); font-size: var(--t-mono-s); color: var(--ink-4); white-space: nowrap; }
+.v6-clog__run { margin-left: 20px; font-family: var(--sans); font-size: var(--t-mono-s); color: var(--ink-4); white-space: nowrap; }
 .v6-clog__b { margin-top: 16px; }
 .v6-clog__media + .v6-clog__b { margin-top: 0; }
 .v6 .v6-clog__b p { margin: 0; font-size: var(--t-read); line-height: 1.65; color: var(--ink-2); text-wrap: pretty; overflow-wrap: break-word; }

@@ -83,7 +83,7 @@ export default async function UseCasePage({ params }: { params: Promise<{ slug: 
       <div className="v6-uc__body">
         <div className="v6-wrap v6-wrap--read">
           <section className="v6-uc__sec" aria-labelledby="uc-sentence">
-            <h2 id="uc-sentence" className="v6-dm v6-uc__h2">{r.claim ? "The sentence it was given." : "The journey it ran."}</h2>
+            <h2 id="uc-sentence" className="v6-dm v6-uc__h2">{r.claim ? "The sentence it was given" : "The journey it ran"}</h2>
             <RecordClaim record={r} large />
             {r.cli ? (
               <div className="v6-uc__block">
@@ -95,14 +95,14 @@ export default async function UseCasePage({ params }: { params: Promise<{ slug: 
 
           {planSection ? (
             <section className="v6-uc__sec" aria-labelledby="uc-plan">
-              <h2 id="uc-plan" className="v6-dm v6-uc__h2">The plan it ran.</h2>
+              <h2 id="uc-plan" className="v6-dm v6-uc__h2">The plan it ran</h2>
               <p className="v6-uc__lead">{uc.planNote}</p>
               <RecordPlan record={r} stacked />
             </section>
           ) : null}
 
           <section className="v6-uc__sec" aria-labelledby="uc-run">
-            <h2 id="uc-run" className="v6-dm v6-uc__h2">Every step the browser took.</h2>
+            <h2 id="uc-run" className="v6-dm v6-uc__h2">Every step the browser took</h2>
             {planSection ? null : <p className="v6-uc__lead">{uc.planNote}</p>}
             {multi && run.label ? <p className="v6-uc__label">{run.label}</p> : null}
             {/* A journey's note is printed under its steps unless the takeaway below already says it. */}
@@ -111,7 +111,7 @@ export default async function UseCasePage({ params }: { params: Promise<{ slug: 
           </section>
 
           <section className="v6-uc__sec" aria-labelledby="uc-found">
-            <h2 id="uc-found" className="v6-dm v6-uc__h2">{run.found ? "What it found." : "What it saw."}</h2>
+            <h2 id="uc-found" className="v6-dm v6-uc__h2">{run.found ? "What it found" : "What it saw"}</h2>
             <div className="v6-uc__found" data-shape={shape} style={{ ["--shot-w" as string]: `${shotWidth(run) + 18}px` }}>
               <div>
                 {run.failure ? (
@@ -129,7 +129,7 @@ export default async function UseCasePage({ params }: { params: Promise<{ slug: 
 
           {run.prompt ? (
             <section className="v6-uc__sec" aria-labelledby="uc-prompt">
-              <h2 id="uc-prompt" className="v6-dm v6-uc__h2">The repair prompt it wrote.</h2>
+              <h2 id="uc-prompt" className="v6-dm v6-uc__h2">The repair prompt it wrote</h2>
               <p className="v6-uc__lead">It is written for the coding agent that built the app: what was expected, what happened instead, and how to see it again.</p>
               <RunPrompt run={run} />
             </section>
@@ -137,7 +137,7 @@ export default async function UseCasePage({ params }: { params: Promise<{ slug: 
 
           {after ? (
             <section className="v6-uc__sec" aria-labelledby="uc-after">
-              <h2 id="uc-after" className="v6-dm v6-uc__h2">The run after the fix.</h2>
+              <h2 id="uc-after" className="v6-dm v6-uc__h2">The run after the fix</h2>
               {after.note ? <p className="v6-uc__lead">{after.note}</p> : null}
               <RunFacts run={after} outcome />
               <div className="v6-uc__block"><RunShot record={r} run={after} /></div>
@@ -145,7 +145,7 @@ export default async function UseCasePage({ params }: { params: Promise<{ slug: 
           ) : null}
 
           <section className="v6-uc__sec" aria-labelledby="uc-shows">
-            <h2 id="uc-shows" className="v6-dm v6-uc__h2">What this shows.</h2>
+            <h2 id="uc-shows" className="v6-dm v6-uc__h2">What this shows</h2>
             <p className="v6-uc__read">{r.takeaway}</p>
           </section>
 
@@ -153,7 +153,7 @@ export default async function UseCasePage({ params }: { params: Promise<{ slug: 
           {r.cli || r.runs.some((x) => x.prompt) ? <CopyScript /> : null}
 
           <section className="v6-uc__sec" aria-labelledby="uc-open">
-            <h2 id="uc-open" className="v6-dm v6-uc__h2">Open it yourself.</h2>
+            <h2 id="uc-open" className="v6-dm v6-uc__h2">Open it yourself</h2>
             <p className="v6-uc__lead">{r.about}</p>
             <ul className="v6-uc__open" role="list">
               {uc.open.map((o) => (

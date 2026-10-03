@@ -143,7 +143,7 @@ export default function Agents() {
     <>
       <FrameHero
         eyebrow="AI assistants"
-        title="Let your coding agent ask for a check."
+        title="Let your coding agent ask for a check"
         sub="Claude Code, Codex, Cursor, Copilot and any MCP client can request a check of the live app before they say done. Only a person can approve the plan."
         primary={{ label: "Set it up", href: "#setup" }}
         secondary={{ label: "Read the setup guide", href: `${BASE}/docs/ai-assistants` }}
@@ -155,7 +155,7 @@ export default function Agents() {
         <div className="v6-wrap">
           <SectionHead
             eyebrow="Set it up"
-            title="Install the CLI, sign in, and set up your assistants."
+            title="Install the CLI, sign in, and set up your assistants"
             lead="One command finds the assistants on this machine and writes their setup. Restart an assistant and its three tools are there."
           />
           <div className="ag-setup">
@@ -186,7 +186,7 @@ export default function Agents() {
         <div className="v6-wrap">
           <SectionHead
             eyebrow="How it works"
-            title="From a finished change to an answer."
+            title="From a finished change to an answer"
             lead="Three steps, in the order they happen. Vraelis looks at the deployed app, not at the agent's code."
           />
           <AltRows
@@ -218,21 +218,21 @@ export default function Agents() {
 
       {/* ── The rules that come with the tools: the page's one Band. ── */}
       <Band id="rules">
-        <SectionHead eyebrow="With the tools" title="The rules that ship with the tools." />
+        <SectionHead eyebrow="With the tools" title="The rules that ship with the tools" />
         <FeatureGrid span={4}>
           <FeatureCard
             label="01"
-            title="Re-checks have a window."
+            title="Re-checks have a window"
             body="After a fix, the same approved plan runs again within 24 hours of the approval, up to 10 times, on the same site. A preview URL is a different site."
           />
           <FeatureCard
             label="02"
-            title="Done means checked."
+            title="Done means checked"
             body="The tools tell the agent to say a change works only when the check did what the sentence says. The setup command writes the same rule into the project."
           />
           <FeatureCard
             label="03"
-            title="Every run is kept."
+            title="Every run is kept"
             body="Each run, a re-check included, counts as one verification on your account and keeps its steps and screenshots. A later run never overwrites it."
           />
         </FeatureGrid>
@@ -243,7 +243,7 @@ export default function Agents() {
         <div className="v6-wrap">
           <SectionHead
             eyebrow="Setup by hand"
-            title="Each assistant, step by step."
+            title="Each assistant, step by step"
             lead="One command covers most of them. The setup guide has the exact lines for each assistant, for when you want to add one by hand."
           />
           <ul className="ag-names" role="list">
@@ -276,7 +276,7 @@ export default function Agents() {
         </div>
       </section>
 
-      <ClosingScene title="Let the assistant ask. Let the live app answer." />
+      <ClosingScene title="Let the assistant ask, let the live app answer" />
       <CopyScript />
     </>
   );

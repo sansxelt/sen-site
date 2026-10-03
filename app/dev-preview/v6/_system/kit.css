@@ -50,7 +50,7 @@
     linear-gradient(90deg, rgba(8,9,11,0.45) 0%, rgba(8,9,11,0) 55%); }
 /* A capture made now says so (plan 0.2), at the frame's top right on its own plate. */
 .v6-fh .v6-fh__credit { position: absolute; top: 20px; right: 24px; max-width: calc(100% - 48px); margin: 0; padding: 4px 8px;
-  border-radius: 6px; background: rgba(8,9,11,0.6); font-family: var(--mono); font-size: var(--t-mono-s); font-weight: 400;
+  border-radius: 6px; background: rgba(8,9,11,0.6); font-family: var(--sans); font-size: var(--t-mono-s); font-weight: 400;
   line-height: 1.45; letter-spacing: 0; color: rgba(250,250,250,0.8); text-wrap: pretty; }
 
 /* 64px in from the frame (plan A5), or the page column's own left edge where that is further in, so on a wide
@@ -95,7 +95,7 @@
   border: 1px solid var(--line); border-bottom: 0; border-radius: var(--r-card) var(--r-card) 0 0; }
 .v6-fh__nbar { flex: none; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; column-gap: 16px;
   row-gap: 2px; min-height: 36px; padding: 8px 12px; border-bottom: 1px solid var(--line-soft);
-  font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
+  font-family: var(--sans); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
 .v6-fh__nbody { flex: 1 1 auto; min-height: 0; overflow: hidden; padding: 24px 24px 32px;
   -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 32px), transparent);
   mask-image: linear-gradient(180deg, #000 calc(100% - 32px), transparent); }
@@ -170,14 +170,14 @@
 .v6-fr__row[data-n="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .v6-fr__cell { min-width: 0; padding: 24px; border-left: 1px solid var(--line); }
 .v6-fr__cell:first-child { border-left: 0; padding-left: 0; }
-.v6-fr .v6-fr__l { margin: 0 0 8px; font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; letter-spacing: 0; color: var(--ink-4); }
+.v6-fr .v6-fr__l { margin: 0 0 8px; font-family: var(--sans); font-size: var(--t-mono-s); line-height: 1.45; letter-spacing: 0; color: var(--ink-4); }
 .v6-fr .v6-fr__v { margin: 0; font-size: 15px; line-height: 1.5; color: var(--ink); text-wrap: pretty; }
 .v6-fr .v6-fr__v[data-tone="stop"] { color: var(--stop-ink); }
 /* The source line: the sentence, the run id in its own mono element, then the link, 20px apart (plan 0.4: meta
    items are separated by space, never by a dot). On a narrow screen they wrap as whole items. */
 .v6-fr .v6-fr__src { margin: 12px 0 0; display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 20px; row-gap: 4px;
   font-size: var(--t-label); line-height: 1.5; color: var(--ink-4); }
-.v6-fr .v6-fr__id { font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; letter-spacing: 0; color: var(--ink-3); }
+.v6-fr .v6-fr__id { font-family: var(--sans); font-size: var(--t-mono-s); line-height: 1.45; letter-spacing: 0; color: var(--ink-3); }
 @media (max-width: 899px) {
   .v6-fr__row[data-n="4"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .v6-fr__row[data-n="4"] .v6-fr__cell:nth-child(3) { border-left: 0; padding-left: 0; }
@@ -208,7 +208,7 @@
   background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--r-card); overflow: hidden;
   color: var(--ink-3); text-decoration: none; }
 .v6-fc[data-media] { min-height: 440px; }
-.v6-fc .v6-fc__label { display: block; margin: 0 0 16px; font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45;
+.v6-fc .v6-fc__label { display: block; margin: 0 0 16px; font-family: var(--sans); font-size: var(--t-mono-s); line-height: 1.45;
   letter-spacing: 0; color: var(--ink-4); }
 .v6-fc .v6-fc__t { margin: 0; font-family: var(--sans); font-size: var(--t-h4); font-weight: 500; line-height: 1.3;
   letter-spacing: -0.008em; color: var(--ink); text-wrap: balance; }
@@ -236,7 +236,7 @@ a.v6-fc:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
 .v6-mp__shell { background: #0E0E10; border: 1px solid var(--line); border-radius: var(--r-card); padding: 8px; }
 .v6-mp__bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; column-gap: 16px; row-gap: 2px;
   min-height: 36px; padding: 8px 12px; margin: -8px -8px 8px; border-bottom: 1px solid var(--line-soft);
-  font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
+  font-family: var(--sans); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
 .v6-mp__addr { flex: 1 1 12ch; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .v6-mp__tag { flex: 0 1 auto; min-width: 0; margin-left: auto; text-align: right; }
 .v6-mp__img { display: block; width: 100%; height: auto; border-radius: 10px; }
@@ -258,7 +258,7 @@ a.v6-fc:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
 .v6-ar__media { grid-column: 6 / span 7; grid-row: 1; min-width: 0; }
 .v6-ar__row:nth-child(even) .v6-ar__text { grid-column: 8 / span 5; }
 .v6-ar__row:nth-child(even) .v6-ar__media { grid-column: 1 / span 7; }
-.v6-ar .v6-ar__n { display: block; margin: 0; font-family: var(--mono); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-4); }
+.v6-ar .v6-ar__n { display: block; margin: 0; font-family: var(--sans); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-4); }
 .v6-ar .v6-ar__t { margin: 16px 0 0; font-family: var(--sans); font-size: var(--t-h3); font-weight: 500; line-height: 1.2;
   letter-spacing: -0.012em; color: var(--ink); text-wrap: balance; }
 .v6-ar .v6-ar__b { margin: 14px 0 0; font-size: var(--t-read); line-height: 1.65; color: var(--ink-2); text-wrap: pretty; }
@@ -317,7 +317,7 @@ a.v6-fc:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
 .v6-db__list { margin: 0; padding: 0; list-style: none; display: grid; gap: 14px; }
 .v6-db__item { display: grid; grid-template-columns: 28px minmax(0, 1fr); column-gap: 12px; align-items: baseline;
   font-size: 15px; line-height: 1.6; color: var(--ink-2); }
-.v6-db__n { font-family: var(--mono); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-4); font-variant-numeric: tabular-nums; }
+.v6-db__n { font-family: var(--sans); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-4); font-variant-numeric: tabular-nums; }
 .v6-db__link { margin-top: 24px; }
 @media (max-width: 720px) {
   .v6-db { padding: 24px; }
@@ -416,9 +416,9 @@ a.v6-xl__card:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
 .v6-rs { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line-soft); }
 .v6-rs__step { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; column-gap: 16px; align-items: baseline;
   padding: 12px 16px; border-bottom: 1px solid var(--line-soft); }
-.v6-rs__n { font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); font-variant-numeric: tabular-nums; }
+.v6-rs__n { font-family: var(--sans); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); font-variant-numeric: tabular-nums; }
 .v6-rs__say { min-width: 0; font-size: 15px; line-height: 1.5; color: var(--ink-2); overflow-wrap: anywhere; }
-.v6-rs__ms { font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.v6-rs__ms { font-family: var(--sans); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .v6-rs__step[data-ok="false"] { background: rgba(255,122,85,0.08); }
 .v6-rs__step[data-ok="false"] .v6-rs__say { color: var(--stop-ink); }
 .v6-rs__word { margin-left: 12px; white-space: nowrap; }

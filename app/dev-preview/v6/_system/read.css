@@ -28,7 +28,7 @@
 .v6 .v6-read__crumb a:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
 .v6-read__crumb-sep { color: var(--ink-4); }
 .v6-read__eyebrow { margin: 0; font-size: 14px; font-weight: 500; line-height: 1.3; color: var(--ink-3); }
-.v6-read__meta { display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 14px 0 0; font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
+.v6-read__meta { display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 14px 0 0; font-family: var(--sans); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
 .v6 .v6-read__h1 { margin: 16px 0 0; max-width: 22ch; font-family: var(--display); font-weight: 500; font-size: var(--t-read-h1); line-height: 1.08;
   letter-spacing: -0.02em; color: var(--ink); text-wrap: balance; overflow-wrap: break-word; }
 .v6 .v6-read__deck { margin: 20px 0 0; max-width: 60ch; font-size: var(--t-lead); line-height: 1.5; color: var(--ink-2); text-wrap: pretty; }
@@ -37,7 +37,7 @@
 /* ---- body ---- */
 .v6-read__body .v6-prose { max-width: none; }
 /* A label over a section (the README's Past, Present and Next): mono 13, ink-4, and the h2 straight under it. */
-.v6 .v6-read__act { margin: 56px 0 0; font-family: var(--mono); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-4); }
+.v6 .v6-read__act { margin: 56px 0 0; font-family: var(--sans); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-4); }
 .v6 .v6-read__act + h2 { margin-top: 10px; padding-top: 0; }
 .v6 .v6-prose > .v6-read__act:first-child { margin-top: 0; }
 
@@ -57,7 +57,7 @@
 .v6-read__shot { max-width: 640px; }
 .v6-read__shot + .v6-read__shot { margin-top: 12px; }
 .v6 .v6-prose .v6-read__cap { margin: 12px 0 0; max-width: 64ch; font-size: var(--t-label); line-height: 1.5; color: var(--ink-4); }
-.v6-read__run { margin-left: 16px; font-family: var(--mono); font-size: var(--t-mono-s); color: var(--ink-4); white-space: nowrap; }
+.v6-read__run { margin-left: 16px; font-family: var(--sans); font-size: var(--t-mono-s); color: var(--ink-4); white-space: nowrap; }
 .v6-read__figlink { margin-top: 14px; }
 /* An EditorialLink inside the prose (a figure's "Read the record") keeps its own look: otherwise the prose's link
    rule (underlined, ink-2) outranks its single class and it reads unlike every other EditorialLink. */
@@ -78,7 +78,7 @@
 /* The ring sits inside the link: the list scrolls (overflow auto from 1200px), which would clip a ring drawn outside. */
 .v6 .v6-read__toclist a:focus-visible { outline: 2px solid #FAFAFA; outline-offset: -2px; border-radius: var(--r-sm); }
 .v6 .v6-read__toclist a:target-current { color: var(--ink); border-left-color: #FAFAFA; }
-.v6-read__tocn { flex: none; font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.6; color: var(--ink-4); }
+.v6-read__tocn { flex: none; font-family: var(--sans); font-size: var(--t-mono-s); line-height: 1.6; color: var(--ink-4); }
 
 @media (min-width: 1200px) {
   .v6-read__grid[data-toc] { grid-template-columns: minmax(0, 1fr) minmax(0, var(--max-read)) minmax(0, 1fr); justify-content: stretch; }
@@ -112,7 +112,7 @@
 .v6 .v6-read__case { padding-top: 24px; border-top: 1px solid var(--line); }
 .v6 .v6-read__casehead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
 .v6 .v6-prose .v6-read__casehead h3 { margin: 0; }
-.v6-read__when { font-family: var(--mono); font-size: var(--t-mono-s); color: var(--ink-4); }
+.v6-read__when { font-family: var(--sans); font-size: var(--t-mono-s); color: var(--ink-4); }
 .v6 .v6-prose .v6-read__case p { margin: 12px 0 0; }
 .v6 .v6-prose .v6-read__tests { font-size: var(--t-small); color: var(--ink-2); }
 .v6-read__k { margin-right: 10px; font-size: var(--t-label); font-weight: 600; color: var(--ink-3); }

@@ -23,12 +23,9 @@
   background: radial-gradient(60% 42% at 50% 46%, rgba(8,9,11,0.42), rgba(8,9,11,0) 70%), linear-gradient(0deg, rgba(8,9,11,0.35), rgba(8,9,11,0) 30%); }
 
 .v6-h__h1 {
-  /* Each line is its own block, so the width only has to hold the longer one. 18ch included the side padding and
-     broke "does what you meant." onto a third line at 1280, 1366 and 1536 wide; 26ch also holds the longer first
-     line most languages need ("Saber que lo que construiste"). */
-  margin: 0; padding: 0 var(--gutter); max-width: calc(26ch + 2 * var(--gutter)); text-align: center;
-  font-family: var(--display); font-weight: 500; font-synthesis-weight: none;
-  font-size: clamp(2.5rem, 5.4vw, 5.6rem); line-height: 1.02; letter-spacing: -0.035em;
+  margin: 0; padding: 0 var(--gutter); max-width: 100%; text-align: center;
+  font-family: var(--sans); font-weight: 500; font-synthesis-weight: none;
+  font-size: clamp(2rem, 5.1vw, 5rem); line-height: 1.12; letter-spacing: -0.025em;
   color: #FAFAFA; text-wrap: balance; text-shadow: 0 2px 30px rgba(0,0,0,0.25);
 }
 .v6-h__h1 .v6-mask { display: block; }
@@ -107,10 +104,7 @@
      the poster (sampled every 0.5 s, 320 to 540 wide: the brightest frames, around 10.5 s, hold 3.4:1 on phones
      and 3.1:1 at 540). The old one, 0.18 at 42%, let them fall to 2.2:1. */
   .v6-h__shade { background: linear-gradient(180deg, rgba(8,9,11,0.5), rgba(8,9,11,0.39) 34%, rgba(8,9,11,0) 56%), linear-gradient(0deg, rgba(8,9,11,0.35), rgba(8,9,11,0) 30%); }
-  /* Two lines at every phone width: the size follows the frame (10px inset each side, 16px pad), so the longer
-     line, "does what you meant." at about 9.8em, always fits. clamp(2rem, 9vw, 2.75rem) broke it onto a third
-     line at 360, 375 and 412 wide. */
-  .v6-h__h1 { max-width: none; padding: 0 16px; font-size: min(2.75rem, calc((100vw - 52px) / 9.8)); letter-spacing: -0.03em; }
+  .v6-h__h1 { max-width: 100%; padding: 0 14px; font-size: clamp(1.25rem, 6.5vw, 2.25rem); letter-spacing: -0.025em; }
   .v6-h__below { padding-top: 32px; }
   .v6-h__partners { grid-template-columns: minmax(0, 1fr); }
   .v6-h__form button { padding: 0 16px; font-size: 14.5px; }

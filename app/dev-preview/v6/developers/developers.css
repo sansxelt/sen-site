@@ -24,14 +24,14 @@
 .v6 .dv-col__link { margin-top: 24px; }
 .v6 .dv-note { margin: 20px 0 0; display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 20px; row-gap: 4px;
   max-width: 62ch; font-size: var(--t-small); line-height: 1.55; color: var(--ink-3); }
-.v6 .dv-id { font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
+.v6 .dv-id { font-family: var(--sans); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
 
 /* The exit codes: reference material, so a plain table with hairlines and mono numerals; words, no colour. */
 .v6 .dv-exits { width: 100%; margin-top: 24px; border-collapse: collapse; font-size: 15px; line-height: 1.5; }
 .v6 .dv-exits__cap { caption-side: top; padding: 0 0 10px; text-align: left; font-size: var(--t-label); font-weight: 600; color: var(--ink-3); }
 .v6 .dv-exits th { padding: 0 16px 10px 0; text-align: left; font-size: var(--t-label); font-weight: 500; color: var(--ink-4); border-bottom: 1px solid var(--line); }
 .v6 .dv-exits td { padding: 14px 16px 14px 0; vertical-align: top; color: var(--ink-2); border-bottom: 1px solid var(--line-soft); }
-.v6 .dv-exits .dv-exits__n { width: 64px; font-family: var(--mono); font-size: var(--t-mono); color: var(--ink); }
+.v6 .dv-exits .dv-exits__n { width: 64px; font-family: var(--sans); font-size: var(--t-mono); color: var(--ink); }
 
 @media (max-width: 999px) {
   .v6 .dv-pair__req, .v6 .dv-pair__res { grid-column: 1 / -1; }

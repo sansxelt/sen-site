@@ -5,14 +5,14 @@
 /* ── The hero's coded panel: the coverage list at a glance ─────────────────────────────────────────────── */
 .v6-lim-board { display: grid; }
 .v6-lim-board__head { margin: 0; display: flex; justify-content: space-between; gap: 16px; padding: 0 0 10px;
-  border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45;
+  border-bottom: 1px solid var(--line); font-family: var(--sans); font-size: var(--t-mono-s); line-height: 1.45;
   color: var(--ink-4); }
 .v6-lim-board__list { margin: 0; padding: 0; list-style: none; }
 .v6-lim-board__row { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 13px 0;
   border-bottom: 1px solid var(--line-soft); }
 .v6-lim-board__row:last-child { border-bottom: 0; }
 .v6-lim-board__name { min-width: 0; font-size: 15px; line-height: 1.45; color: var(--ink-2); overflow-wrap: anywhere; }
-.v6-lim-board__tier { flex: none; max-width: 45%; font-family: var(--mono); font-size: var(--t-mono); line-height: 1.45;
+.v6-lim-board__tier { flex: none; max-width: 45%; font-family: var(--sans); font-size: var(--t-mono); line-height: 1.45;
   color: var(--ink-3); text-align: right; }
 .v6-lim-board__tier[data-tier="Live"] { color: var(--ink); }
 @media (max-width: 560px) {
@@ -24,7 +24,7 @@
 .v6-lim-cov { display: grid; gap: 56px; }
 /* One closing hairline for the whole list, not one per group. */
 .v6-lim-cov__group:not(:last-child) .v6-lim-rows { border-bottom: 0; }
-.v6 .v6-lim-cov__label { margin: 0 0 16px; font-family: var(--mono); font-size: var(--t-mono); font-weight: 500;
+.v6 .v6-lim-cov__label { margin: 0 0 16px; font-family: var(--sans); font-size: var(--t-mono); font-weight: 500;
   line-height: 1.5; letter-spacing: 0; color: var(--ink-3); }
 
 /* ── Rows ──────────────────────────────────────────────────────────────────────────────────────────────── */
@@ -38,7 +38,7 @@
 .v6-lim-row__body { grid-column: 6 / span 7; min-width: 0; }
 .v6-lim-row__d { margin: 0; max-width: 64ch; font-size: var(--t-body); line-height: 1.6; color: var(--ink-2);
   overflow-wrap: break-word; text-wrap: pretty; }
-.v6-lim-row__ref { margin: 12px 0 0; font-family: var(--mono); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-3);
+.v6-lim-row__ref { margin: 12px 0 0; font-family: var(--sans); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-3);
   overflow-wrap: anywhere; }
 @media (max-width: 900px) {
   .v6-lim-row__in { grid-template-columns: minmax(0, 1fr); row-gap: 10px; padding: 24px 0; }

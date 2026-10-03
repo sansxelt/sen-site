@@ -191,7 +191,7 @@ export default async function V6Article({ params }: { params: Promise<{ slug: st
             ) : null}
             <aside className="v6-read__step" aria-labelledby="read-step-h">
               <div>
-                <h2 id="read-step-h" className="v6-read__steph">Check one claim on your own app.</h2>
+                <h2 id="read-step-h" className="v6-read__steph">Check one claim on your own app</h2>
                 <p>{SUPPORT}</p>
               </div>
               {/* A ghost: the closing's white button is in the same screen, and a view carries one white button. */}
@@ -201,7 +201,7 @@ export default async function V6Article({ params }: { params: Promise<{ slug: st
         </div>
       </section>
 
-      <ClosingScene title="Read what is built today." action={{ label: "What is built", href: `${V6_BASE}/platform#current` }} />
+      <ClosingScene title="Read what is built today" action={{ label: "What is built", href: `${V6_BASE}/platform#current` }} />
     </>
   );
 }

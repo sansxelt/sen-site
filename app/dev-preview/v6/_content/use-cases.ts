@@ -309,7 +309,7 @@ export const USE_CASES: UseCase[] = [
   {
     slug: "only-the-confirmed-target",
     record: "strike",
-    title: "Confirming one target also cleared the civilian bus.",
+    title: "Confirming one target also cleared the civilian bus",
     outcome: "Vraelis checked Larkspur, a simulated mission console it built itself. At step 8, the civilian bus T-3 showed Cleared to engage.",
     planNote: "Vraelis wrote the plan from the sentence before anything ran: what it would hold the console to, and three journeys to take.",
     metaTitle: "Only the confirmed target",
@@ -319,12 +319,12 @@ export const USE_CASES: UseCase[] = [
       { label: "Open Larkspur in its fixed mode", href: "/api/fixtures/strike?mode=fixed", address: "vraelis.com/api/fixtures/strike?mode=fixed" },
     ],
     sectors: ["defense", "fleets"],
-    closing: { title: "Check your console on a simulation build.", action: { label: "Talk to us", href: `${V6_BASE}/contact?topic=defense` } },
+    closing: { title: "Check your console on a simulation build", action: { label: "Talk to us", href: `${V6_BASE}/contact?topic=defense` } },
   },
   {
     slug: "notes-that-survive-sign-out",
     record: "notes",
-    title: "A note that survives signing out and back in.",
+    title: "A note that survives signing out and back in",
     // Steps 13 and 14 of journey 1 read the note again after signing back in. The clean-up is said once, by the
     // record's takeaway ("What this shows"), not here as well.
     outcome: "Vraelis checked Notewell, a demo app built with Lovable. It did what the sentence says: the note was still there after signing out and back in.",
@@ -335,12 +335,12 @@ export const USE_CASES: UseCase[] = [
       { label: "Open Notewell", href: "https://my-safe-note.lovable.app", address: "my-safe-note.lovable.app" },
     ],
     sectors: ["ai-built-apps", "public-sector", "saas"],
-    closing: { title: "Check what your agent built, on the live app." },
+    closing: { title: "Check what your agent built, on the live app" },
   },
   {
     slug: "checkout-that-forgets",
     record: "checkout",
-    title: "A checkout that forgets Pro after signing back in.",
+    title: "A checkout that forgets Pro after signing back in",
     outcome: "Paying worked and the account showed Pro. After signing out and back in, “Pro” was not on the page. After the fix, the same steps did what the sentence says.",
     planNote: "One journey of eleven planned steps. The run after the fix took the same steps.",
     metaTitle: "A checkout that forgets",
@@ -349,12 +349,12 @@ export const USE_CASES: UseCase[] = [
       { label: "Open Lumen Notes", href: "https://broken-checkout.vercel.app", address: "broken-checkout.vercel.app" },
     ],
     sectors: ["commerce", "saas", "agencies"],
-    closing: { title: "Know the upgrade sticks before a release." },
+    closing: { title: "Know the upgrade sticks before a release" },
   },
   {
     slug: "project-that-vanishes",
     record: "projects",
-    title: "A project that vanishes after one reload.",
+    title: "A project that vanishes after one reload",
     outcome: "On the Vraelis fixture dashboard, a new project looked fine on screen. One reload later it was gone, and the check found it at step 5 of 5.",
     planNote: "One journey of five planned steps.",
     metaTitle: "A project that vanishes",
@@ -363,7 +363,7 @@ export const USE_CASES: UseCase[] = [
       { label: "Open the fixture dashboard in its broken mode", href: "https://preflight-demo-ten.vercel.app/?mode=broken", address: "preflight-demo-ten.vercel.app/?mode=broken" },
     ],
     sectors: ["saas", "agencies", "ai-built-apps"],
-    closing: { title: "Check that saved work is still there." },
+    closing: { title: "Check that saved work is still there" },
   },
 ];
 

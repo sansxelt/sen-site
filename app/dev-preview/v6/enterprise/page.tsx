@@ -66,7 +66,7 @@ export default function V6Enterprise() {
       <FrameHero
         id="overview"
         eyebrow="Enterprise"
-        title="Bring your own identity provider, and your own reviewers."
+        title="Bring your own identity provider, and your own reviewers"
         sub="Members sign in through your provider, roles decide what each person may change, and the evidence stays readable to everyone who needs it."
         primary={{ label: "Talk to sales", href: SALES }}
         secondary={{ label: "Security", href: `${BASE}/security` }}
@@ -77,7 +77,7 @@ export default function V6Enterprise() {
       {/* ── Where each capability stands: words, not chips. ── */}
       <section className="v6-sec" id="capabilities">
         <div className="v6-wrap">
-          <SectionHead eyebrow="Where each capability stands" title="Operational, preview or planned. Labelled." />
+          <SectionHead eyebrow="Where each capability stands" title="Operational, preview or planned, labelled" />
           <table className="en-cap">
             <caption className="en-cap__cap">Enterprise capabilities and where each one stands today</caption>
             <thead>
@@ -102,18 +102,18 @@ export default function V6Enterprise() {
 
       {/* ── How it holds at team scale: the page's one Band. ── */}
       <Band id="team">
-        <SectionHead eyebrow="How it works" title="Three things that hold at team scale." />
+        <SectionHead eyebrow="How it works" title="Three things that hold at team scale" />
         <FeatureGrid span={4}>
           <FeatureCard
-            title="Your identity provider, your rules."
+            title="Your identity provider, your rules"
             body="Connect any OIDC provider. The client secret is encrypted with AES-256-GCM, never returned to the browser and never written to a log."
           />
           <FeatureCard
-            title="Separation of duties."
+            title="Separation of duties"
             body="A billing admin manages payment without owning data or members. Ownership moves only through a deliberate, guarded transfer, never a settings toggle."
           />
           <FeatureCard
-            title="Billing that follows the work."
+            title="Billing that follows the work"
             body="The team shares its connected systems and the owner pays, so a reviewer who approves a plan is never charged on their own account."
           />
         </FeatureGrid>

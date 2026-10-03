@@ -25,7 +25,7 @@ export default function UseCasesIndex() {
     <>
       <IndexHero
         eyebrow="Use cases"
-        title="Real checks, recorded step by step."
+        title="Real checks, recorded step by step"
         lead="Each one is a real run: what it was asked, the plan, every step, and what it found."
       />
 
@@ -62,7 +62,7 @@ export default function UseCasesIndex() {
         </div>
       </section>
 
-      <ClosingScene title="Check one sentence on your own app." />
+      <ClosingScene title="Check one sentence on your own app" />
     </>
   );
 }

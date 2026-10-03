@@ -459,7 +459,7 @@
 .v6-tm__bar { flex: none; display: grid; grid-template-columns: minmax(0, 1fr) auto;
   align-items: center; gap: 14px; padding: 10px 14px; border-bottom: 1px solid var(--g-line);
   background: linear-gradient(180deg, #17181B, #101113); cursor: default; }
-.v6-tm__title { font-family: var(--mono); font-size: 12px; color: var(--g-fg-3); text-align: center;
+.v6-tm__title { font-family: var(--sans); font-size: 12px; color: var(--g-fg-3); text-align: center;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* a real control, unlike the window buttons: it replays the run on demand, so playback never has to
    restart itself just because the reader scrolled past and came back */
@@ -475,7 +475,7 @@
    page keeps moving with it. */
 .v6-tm__body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: auto;
   padding: clamp(14px, 1.8vw, 22px); cursor: text;
-  font-family: var(--mono); font-size: clamp(12px, 1vw, 14px); line-height: 1.85; color: var(--g-fg-2); }
+  font-family: var(--sans); font-size: clamp(12px, 1vw, 14px); line-height: 1.85; color: var(--g-fg-2); }
 .v6-tm__line { margin: 0; white-space: pre-wrap; word-break: break-word; }
 .v6-tm__line b { color: var(--g-fg-3); font-weight: 400; }
 .v6-tm__line.is-cmd { color: var(--g-fg); }
@@ -504,7 +504,7 @@
 .v6-tm__ex.is-go { border-top-color: var(--go-dk); }
 .v6-tm__ex.is-stop { border-top-color: var(--stop-dk); }
 .v6-tm__ex.is-wait { border-top-color: var(--wait-dk); }
-.v6-tm__exc { margin: 0; font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; color: var(--g-fg-3); }
+.v6-tm__exc { margin: 0; font-family: var(--sans); font-size: 12px; letter-spacing: 0.06em; color: var(--g-fg-3); }
 .v6-tm__exn { margin: 5px 0 0; font-family: var(--sans); font-weight: 600; letter-spacing: -0.026em;
   font-size: clamp(1.1rem, 1.6vw, 1.45rem); color: var(--g-fg); }
 .v6-tm__ex.is-go .v6-tm__exn { color: var(--go-dk); }
@@ -660,7 +660,7 @@
 
 /* --- github check --- */
 .v6-rx__f--gh { grid-column: 1 / span 6; grid-row: 2; }
-.v6-rx__f--gh .v6-rx__fcap { font-family: var(--mono); text-transform: none; letter-spacing: 0; font-size: 12px; }
+.v6-rx__f--gh .v6-rx__fcap { font-family: var(--sans); text-transform: none; letter-spacing: 0; font-size: 12px; }
 .v6-rx__ghrow { display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 12px;
   border: 1px solid var(--line-2); border-bottom: 0; padding: 15px 18px; background: var(--paper); }
 .v6-rx__ghrow.is-sub { border-bottom: 1px solid var(--line-2); border-top: 1px solid var(--line);
@@ -678,7 +678,7 @@
 .v6-rx__f--cli { grid-column: 7 / span 6; grid-row: 2; align-self: end; margin-top: clamp(26px, 3.4vw, 52px); }
 .v6-rx__term { margin: 0; background: var(--graphite); border-radius: 8px; overflow: hidden;
   padding: clamp(16px, 1.8vw, 22px);
-  font-family: var(--mono); font-size: clamp(12px, 0.92vw, 13.5px); line-height: 1.85;
+  font-family: var(--sans); font-size: clamp(12px, 0.92vw, 13.5px); line-height: 1.85;
   color: var(--g-fg-2); box-shadow: 0 24px 50px -38px rgba(0,0,0,0.8); }
 /* the project sets a font-family on `code`, which beats inheritance from the `pre` and rendered
    every transcript and response body in the sans face. font: inherit puts them back on mono. */
@@ -692,10 +692,10 @@
 /* --- api response --- */
 .v6-rx__f--api { grid-column: 2 / span 5; grid-row: 4; }
 /* a request line is a path, not a label: it must not be upper-cased */
-.v6-rx__f--api .v6-rx__fcap { text-transform: none; letter-spacing: 0.01em; font-family: var(--mono); font-size: 12px; }
+.v6-rx__f--api .v6-rx__fcap { text-transform: none; letter-spacing: 0.01em; font-family: var(--sans); font-size: 12px; }
 .v6-rx__json { margin: 0; border: 1px solid var(--line-2); border-radius: 6px; background: var(--sunk);
   padding: clamp(14px, 1.6vw, 20px) clamp(16px, 1.8vw, 22px);
-  font-family: var(--mono); font-size: clamp(12px, 0.9vw, 13px); line-height: 1.8; color: var(--ink-2); }
+  font-family: var(--sans); font-size: clamp(12px, 0.9vw, 13px); line-height: 1.8; color: var(--ink-2); }
 .v6-rx__json code { font: inherit; white-space: pre; }
 
 /* --- deployment --- */
@@ -805,7 +805,7 @@
   letter-spacing: -0.012em; opacity: clamp(0, calc((var(--g1) * 3.4) - var(--i)), 1); }
 .v6-dr__n rect { fill: rgba(255,255,255,0.03); stroke: var(--g-line-2); stroke-width: 1.2;
   opacity: clamp(0, calc((var(--g2) * 3.4) - var(--i)), 1); }
-.v6-dr__n text { fill: var(--g-fg-2); font-family: var(--mono); font-size: 15px; text-anchor: middle;
+.v6-dr__n text { fill: var(--g-fg-2); font-family: var(--sans); font-size: 15px; text-anchor: middle;
   opacity: clamp(0, calc((var(--g2) * 3.4) - var(--i)), 1); }
 .v6-dr__dep rect { fill: rgba(255,255,255,0.06); stroke: var(--g-fg-3); stroke-width: 1.4;
   opacity: var(--g4); }
@@ -1015,7 +1015,7 @@
   box-shadow: 0 30px 66px -46px rgba(0,0,0,0.8); }
 .v6-kn__ex figcaption { font-family: var(--sans); font-weight: 600; font-size: 11.5px;
   letter-spacing: 0; color: var(--g-fg-3); margin-bottom: 14px; }
-.v6-kn__ex pre { margin: 0; font-family: var(--mono); font-size: clamp(12px, 0.88vw, 12.8px);
+.v6-kn__ex pre { margin: 0; font-family: var(--sans); font-size: clamp(12px, 0.88vw, 12.8px);
   line-height: 1.7; color: var(--g-fg-2); overflow-x: auto; }
 
 /* the changelog: a dated rail, not a card. Hairlines and dates, running down the right. */

@@ -132,7 +132,7 @@ html:has(.v6-docsenv) { scroll-padding-top: 76px; }
 .v6-docsenv .v6-docs__article strong { color: #FAFAFA; }
 /* Inline code: the read-page treatment (plan T9), a touch smaller in the docs' 15.5px body. A long path may
    break anywhere rather than push a phone column sideways. */
-.v6-docsenv .v6-docs__article code { font-family: var(--mono); font-size: 0.88em; padding: 0.1em 0.35em; border-radius: 5px;
+.v6-docsenv .v6-docs__article code { font-family: var(--sans); font-size: 0.88em; padding: 0.1em 0.35em; border-radius: 5px;
   background: #121214; border: 1px solid rgba(255,255,255,0.07); color: #FAFAFA; overflow-wrap: anywhere;
   -webkit-box-decoration-break: clone; box-decoration-break: clone; }
 .v6-docsenv .v6-docs__article .v6-note { margin: 20px 0; padding: 14px 16px; border-radius: 10px; font-size: 14.5px; line-height: 1.6;
@@ -159,7 +159,7 @@ html:has(.v6-docsenv) { scroll-padding-top: 76px; }
   border-radius: 6px; cursor: pointer; transition: color 160ms ease, border-color 160ms ease; }
 .v6-docs__code-copy:hover { color: #FAFAFA; border-color: rgba(255,255,255,0.4); }
 .v6-docs__code-copy:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 2px; }
-.v6-docs__code pre { margin: 0; padding: 14px; font-family: var(--mono); font-size: 13px; line-height: 1.65; color: #C9CBD1;
+.v6-docs__code pre { margin: 0; padding: 14px; font-family: var(--sans); font-size: 13px; line-height: 1.65; color: #C9CBD1;
   overflow-x: auto; white-space: pre; }
 .v6-docs__code pre:focus-visible { outline: 2px solid #FAFAFA; outline-offset: -2px; }
 /* Comments step back to ink-4 (5.9:1 on the block). Nothing else is coloured. */
@@ -262,7 +262,7 @@ html:has(.v6-docsenv) { scroll-padding-top: 76px; }
 .v6-docsenv .v6-docs__article .v6-docs__ask a:hover { background: #121214; }
 .v6-docsenv .v6-docs__article .v6-docs__ask a:focus-visible { outline: 2px solid #FAFAFA; outline-offset: -2px; }
 .v6-docs__ask .t { font-size: 15.5px; font-weight: 500; }
-.v6-docs__ask .m { font-family: var(--mono); font-size: 13px; color: #A1A3A9; }
+.v6-docs__ask .m { font-family: var(--sans); font-size: 13px; color: #A1A3A9; }
 .v6-docs__ask .a { color: #A1A3A9; transition: transform 220ms var(--ease), color 160ms ease; }
 .v6-docs__ask a:hover .a { color: #FAFAFA; transform: translateX(4px); }
 @media (prefers-reduced-motion: reduce) {
@@ -339,7 +339,7 @@ html:has(.v6-docsenv) { scroll-padding-top: 76px; }
 .v6-docsenv .v6-docs__fig figcaption { margin-top: 12px; }
 .v6-docsenv .v6-docs__fig figcaption p { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 16px; margin: 0;
   font-size: 14px; line-height: 1.55; color: #A1A3A9; }
-.v6-docsenv .v6-docs__fig .v6-docs__credit { font-family: var(--mono); font-size: 12px; line-height: 1.8; color: #8E9095; }
+.v6-docsenv .v6-docs__fig .v6-docs__credit { font-family: var(--sans); font-size: 12px; line-height: 1.8; color: #8E9095; }
 .v6-docsenv .v6-docs__fig figcaption ol { display: block; margin: 8px 0 0; padding-left: 22px; color: #C9CBD1; list-style: decimal outside; }
 .v6-docsenv .v6-docs__fig figcaption li { margin: 2px 0; padding-left: 2px; display: list-item; font-size: 14px; line-height: 1.55; }
 .v6-docsenv .v6-docs__fig figcaption li::before { content: none; }
@@ -355,7 +355,7 @@ html:has(.v6-docsenv) { scroll-padding-top: 76px; }
 .v6-docsenv .v6-docs__article .v6-docs__surfaces li:first-child { border-top: 0; }
 .v6-docsenv .v6-docs__article .v6-docs__surfaces li::before { content: none; }
 .v6-docsenv .v6-docs__surfaces .n { color: #FAFAFA; font-weight: 500; }
-.v6-docsenv .v6-docs__surfaces .t { justify-self: end; font-family: var(--mono); font-size: 12.5px; line-height: 1.9; font-weight: 500;
+.v6-docsenv .v6-docs__surfaces .t { justify-self: end; font-family: var(--sans); font-size: 12.5px; line-height: 1.9; font-weight: 500;
   color: #A1A3A9; white-space: nowrap; }
 .v6-docsenv .v6-docs__surfaces .t[data-tier="live"] { color: #FAFAFA; }
 .v6-docsenv .v6-docs__surfaces .b { grid-column: 1 / -1; color: #C9CBD1; font-size: 14.5px; line-height: 1.5; }

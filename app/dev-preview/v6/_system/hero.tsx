@@ -97,8 +97,7 @@ export function Hero() {
         </video>
         <div className="v6-h__shade" aria-hidden />
         <h1 id="v6-h-h1" className="v6-h__h1">
-          <span className="v6-mask"><span className="v6-mask__in">{HEADLINE[0]}</span></span>
-          <span className="v6-mask"><span className="v6-mask__in" style={{ animationDelay: "150ms" }}>{HEADLINE[1]}</span></span>
+          <span className="v6-mask"><span className="v6-mask__in">{HEADLINE}</span></span>
         </h1>
         <p className="v6-h__credit">Rendered scenes and real footage.</p>
         <button type="button" className="v6-h__pause" onClick={toggle} aria-label={playing ? "Pause the film" : "Play the film"}>

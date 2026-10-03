@@ -41,7 +41,7 @@ export default async function V6Contact({ searchParams }: { searchParams: Query 
     <>
       <IndexHero
         eyebrow="Contact"
-        title="Write to a person."
+        title="Write to a person"
         lead="Three addresses, each with a job, and a form that sends your message to the right one."
       />
       <section className="v6-sec ct">

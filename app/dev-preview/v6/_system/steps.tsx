@@ -18,7 +18,7 @@ export function Steps() {
     <section className="v6-st3" aria-labelledby="v6-st3-h" data-nav-theme="light">
       <div className="v6-st3__in">
         <div className="v6-st3__head">
-          <h2 id="v6-st3-h" className="v6-st3__h">How a check works.</h2>
+          <h2 id="v6-st3-h" className="v6-st3__h">How a check works</h2>
           <EditorialLink href={`${V6_BASE}/platform`}>Watch a real run</EditorialLink>
         </div>
         <ol className="v6-st3__list">

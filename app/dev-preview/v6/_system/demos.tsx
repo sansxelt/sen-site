@@ -108,7 +108,7 @@ export function Demos() {
       <div className="v6-demo__in">
         <div className="v6-demo__head">
           <p className="v6-eyebrow">Real runs</p>
-          <h2 id="v6-demo-h" className="v6-demo__h">Watch it check a live app.</h2>
+          <h2 id="v6-demo-h" className="v6-demo__h">Watch it check a live app</h2>
           <p className="v6-demo__lead">
             Three real checks, replayed from their records. Every step, timing, screenshot and result here
             came from the run, on Vraelis demo apps you can open yourself.

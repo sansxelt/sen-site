@@ -183,7 +183,7 @@ export default function V6Limitations() {
     <>
       <FrameHero
         eyebrow="Limitations"
-        title="What this cannot do, written down."
+        title="What this cannot do, written down"
         sub="The edges of the product as it is today, in plain words. Each one is current, and most have a workaround."
         primary={{ label: "Start free", href: SIGNUP }}
         secondary={{ label: "See the coverage", href: "#coverage" }}
@@ -192,7 +192,7 @@ export default function V6Limitations() {
 
       <section className="v6-sec" id="does">
         <div className="v6-wrap">
-          <SectionHead eyebrow="In short" title="What it does, and what it does not." />
+          <SectionHead eyebrow="In short" title="What it does, and what it does not" />
           <Reveal>
             <DoesBox
               does={DOES}
@@ -205,7 +205,7 @@ export default function V6Limitations() {
 
       <section className="v6-sec" id="coverage">
         <div className="v6-wrap">
-          <SectionHead eyebrow="Coverage" title="What it can check today, and what it cannot." />
+          <SectionHead eyebrow="Coverage" title="What it can check today, and what it cannot" />
           <div className="v6-lim-cov">
             {GROUPS.map((g) => (
               <div className="v6-lim-cov__group" key={g}>
@@ -220,13 +220,13 @@ export default function V6Limitations() {
 
       <section className="v6-sec" id="needs-you">
         <div className="v6-wrap">
-          <SectionHead eyebrow="Where a run needs you" title="What a run cannot do on its own." />
+          <SectionHead eyebrow="Where a run needs you" title="What a run cannot do on its own" />
           <Rows rows={NEEDS_YOU} />
         </div>
       </section>
 
       <Band id="evidence">
-        <SectionHead eyebrow="Evidence" title="What a check is evidence of." />
+        <SectionHead eyebrow="Evidence" title="What a check is evidence of" />
         <FeatureGrid span={6} reveal>
           {EVIDENCE.map(([t, b]) => <FeatureCard key={t} title={t} body={b} />)}
         </FeatureGrid>
@@ -234,7 +234,7 @@ export default function V6Limitations() {
 
       <section className="v6-sec" id="approval">
         <div className="v6-wrap">
-          <SectionHead eyebrow="Approval" title="The system will not approve its own work." />
+          <SectionHead eyebrow="Approval" title="The system will not approve its own work" />
           <Rows rows={APPROVAL} />
         </div>
       </section>
@@ -245,7 +245,7 @@ export default function V6Limitations() {
         </div>
       </section>
 
-      <ClosingScene title="Know the edges before you start." />
+      <ClosingScene title="Know the edges before you start" />
     </>
   );
 }

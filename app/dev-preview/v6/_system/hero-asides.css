@@ -15,7 +15,7 @@
   align-items: baseline; padding: 16px 0; border-bottom: 1px solid var(--line-soft); }
 .v6 .ha-w__row:first-child { padding-top: 0; }
 .v6 .ha-w__row:last-child { padding-bottom: 0; border-bottom: 0; }
-.v6 .ha-w__n { font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); font-variant-numeric: tabular-nums; }
+.v6 .ha-w__n { font-family: var(--sans); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); font-variant-numeric: tabular-nums; }
 /* The name is a link: a quiet underline that lights on hover. Its colour is stated on hover too, because
    public/vraelis/tokens.css sets a:hover { color } and would otherwise win. */
 .v6 .ha-w__name { min-width: 0; justify-self: start; font-size: 16px; font-weight: 500; line-height: 1.4; color: var(--ink);
@@ -23,7 +23,7 @@
   transition: text-decoration-color var(--dur-1) var(--ease-out); }
 .v6 .ha-w__name:hover { color: var(--ink); text-decoration-color: currentColor; }
 .v6 .ha-w__name:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; border-radius: var(--r-sm); }
-.v6 .ha-w__entry { min-width: 0; margin: 0; padding: 0; border: 0; background: none; font-family: var(--mono);
+.v6 .ha-w__entry { min-width: 0; margin: 0; padding: 0; border: 0; background: none; font-family: var(--sans);
   font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-3); text-align: right; overflow-wrap: anywhere; }
 .v6 .ha-w__who, .v6 .ha-w__more { grid-column: 2 / -1; font-size: 15px; line-height: 1.5; color: var(--ink-3); text-wrap: pretty; }
 .v6 .ha-w__more { display: none; }
@@ -39,13 +39,13 @@
 .v6 .ha-t__row { display: grid; grid-template-columns: minmax(0, 17ch) minmax(0, 1fr); column-gap: 16px; row-gap: 4px;
   align-items: baseline; padding: 16px 0; border-bottom: 1px solid var(--line-soft); }
 .v6 .ha-t__row:first-child { padding-top: 0; }
-.v6 .ha-t__name { margin: 0; padding: 0; border: 0; background: none; font-family: var(--mono); font-size: var(--t-mono);
+.v6 .ha-t__name { margin: 0; padding: 0; border: 0; background: none; font-family: var(--sans); font-size: var(--t-mono);
   line-height: 1.5; color: var(--ink); overflow-wrap: anywhere; }
 .v6 .ha-t__title { font-size: 15px; line-height: 1.5; color: var(--ink-3); }
 .v6 .ha-t__rule { margin: 0; font-size: 15px; line-height: 1.5; color: var(--ink-2); }
 
 /* /developers: the Larkspur CLI transcript, wrapped the way a terminal wraps it, in the colours it printed. */
-.v6 .ha-tx { margin: 0; font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.6; color: var(--ink-2);
+.v6 .ha-tx { margin: 0; font-family: var(--sans); font-size: var(--t-mono-s); line-height: 1.6; color: var(--ink-2);
   white-space: pre-wrap; overflow-wrap: anywhere; }
 .v6 .ha-tx__cmd { color: var(--ink); }
 .v6 .ha-tx__p { color: var(--ink-4); }
@@ -130,7 +130,7 @@
 .v6 .ha-pp__body[data-crop] { max-height: var(--ha-crop, 360px); overflow: hidden;
   -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 56px), transparent);
   mask-image: linear-gradient(180deg, #000 calc(100% - 56px), transparent); }
-.v6 .ha-pp pre { margin: 0; font-family: var(--mono); font-size: var(--t-mono); line-height: 1.65; color: var(--ink-2);
+.v6 .ha-pp pre { margin: 0; font-family: var(--sans); font-size: var(--t-mono); line-height: 1.65; color: var(--ink-2);
   white-space: pre-wrap; overflow-wrap: anywhere; }
 .v6 .ha-pp pre .k { color: var(--ink); font-weight: 600; }
 .v6 .ha-pp pre .s { color: #C9CBD1; }
@@ -162,7 +162,7 @@
 .v6 .ha[data-dark="true"] { background: #0E0E10; border-color: rgba(255,255,255,0.10); color: #E4E4E7; }
 .v6 .ha__bar { display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 14px; border-bottom: 1px solid rgba(255,255,255,0.09); background: #17171A; }
 .v6 .ha[data-dark="true"] .ha__bar { background: #141416; border-bottom-color: rgba(255,255,255,0.08); }
-.v6 .ha__title { font-family: var(--mono); font-size: 12px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.v6 .ha__title { font-family: var(--sans); font-size: 12px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .v6 .ha[data-dark="true"] .ha__title { color: #A1A1AA; }
 .v6 .ha__meta { margin-left: auto; font-size: 12px; color: var(--ink-4); }
 .v6 .ha__body { padding: 18px 20px 20px; }

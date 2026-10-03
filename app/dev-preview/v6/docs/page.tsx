@@ -107,7 +107,7 @@ export default function DocsIndex() {
         </section>
 
         <section className="v6-docs__home" aria-labelledby="ask-a-person">
-          <h2 id="ask-a-person">Ask a person.</h2>
+          <h2 id="ask-a-person">Ask a person</h2>
           <ul className="v6-docs__ask">
             {ASK.map((a) => (
               <li key={a.label}>

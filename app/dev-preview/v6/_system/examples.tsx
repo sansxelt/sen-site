@@ -51,7 +51,7 @@ export function Examples() {
         <div className="v6-ex__in">
           <div className="v6-ex__side">
             <p className="v6-eyebrow">For example</p>
-            <h2 id="v6-ex-h" className="v6-ex__h">One sentence. Any app, or the panel that runs a device.</h2>
+            <h2 id="v6-ex-h" className="v6-ex__h">One sentence, any app, or the panel that runs a device</h2>
             <ol className="v6-ex__index">
               {EXAMPLES.map((e, i) => (
                 <li key={e.key}>

@@ -62,7 +62,7 @@
 /* The routing line keeps one line's height whether or not a topic is chosen, so a choice moves nothing. */
 .ct-form .ct-route { margin: 12px 0 0; min-height: 20px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
   font-size: 13px; line-height: 20px; color: var(--ink-4); }
-.ct-route__to { font-family: var(--mono); font-size: var(--t-mono-s); color: var(--ink-3); }
+.ct-route__to { font-family: var(--sans); font-size: var(--t-mono-s); color: var(--ink-3); }
 
 .ct-form .ct-err { margin: 8px 0 0; font-size: 14px; line-height: 1.5; color: var(--stop-ink); }
 .ct-form .ct-err--form { margin: 0; font-size: 15px; }

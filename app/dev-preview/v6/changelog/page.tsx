@@ -49,7 +49,7 @@ export default function Changelog() {
       <IndexHero
         compact
         eyebrow="Changelog"
-        title="What Vraelis has shipped."
+        title="What Vraelis has shipped"
         lead="Dated milestones from the product, newest first. Each entry says what shipped, and where one points at the future, it says so."
       />
       <section className="v6-clog-sec">

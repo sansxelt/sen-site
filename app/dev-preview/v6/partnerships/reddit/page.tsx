@@ -65,7 +65,7 @@ export default function RedditPartnershipPage() {
 
             <div className="v6-pr__story">
               <p className="v6-pr__overline">Audience and advertising</p>
-              <h2>A direct path to relevant communities.</h2>
+              <h2>A direct path to relevant communities</h2>
               <p>
                 Vraelis partnered with Reddit to reach the communities where people build and ship software, through Reddit Ads.
               </p>

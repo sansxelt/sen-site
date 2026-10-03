@@ -8,7 +8,7 @@
 .sec-status { max-width: 760px; }
 .sec-status__t { width: 100%; border-collapse: collapse; font-family: var(--sans); }
 .sec-status__t :is(th, td) { padding: 16px 0; text-align: left; vertical-align: baseline; border-bottom: 1px solid var(--line); }
-.sec-status__t thead th { padding-top: 0; padding-bottom: 12px; font-family: var(--mono); font-size: var(--t-mono-s); font-weight: 400;
+.sec-status__t thead th { padding-top: 0; padding-bottom: 12px; font-family: var(--sans); font-size: var(--t-mono-s); font-weight: 400;
   line-height: 1.45; letter-spacing: 0; color: var(--ink-4); }
 .sec-status__t tbody th { padding-right: 24px; font-size: 16px; font-weight: 500; line-height: 1.5; color: var(--ink); }
 .sec-status__t :is(thead th, td):last-child { width: 30%; text-align: right; white-space: nowrap; }
@@ -36,7 +36,7 @@
 .sec-limits { margin: 0; padding: 0; list-style: none; max-width: 820px; border-bottom: 1px solid var(--line); }
 .sec-limits > li { display: grid; grid-template-columns: 32px minmax(0, 1fr); column-gap: 12px; align-items: baseline;
   padding: 18px 0; border-top: 1px solid var(--line); font-size: 16px; line-height: 1.6; color: var(--ink-2); }
-.sec-limits__n { font-family: var(--mono); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-4); font-variant-numeric: tabular-nums; }
+.sec-limits__n { font-family: var(--sans); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-4); font-variant-numeric: tabular-nums; }
 .sec-after { margin-top: 28px; }
 
 /* #report: the rules as a prose list (a 6x1 rule at x-height, no bullets), then the button and security.txt. */
@@ -45,4 +45,4 @@
 .sec-report__rules > li::before { content: ""; display: inline-block; width: 6px; height: 1px; margin: 0 12px 0 -18px;
   vertical-align: middle; background: var(--ink-4); }
 .sec-report__actions { margin-top: 32px; column-gap: 24px; }
-.sec-report__actions .v6-elink .v6-elink__t { font-family: var(--mono); font-size: var(--t-mono); font-weight: 500; }
+.sec-report__actions .v6-elink .v6-elink__t { font-family: var(--sans); font-size: var(--t-mono); font-weight: 500; }

@@ -30,7 +30,7 @@ export function StrikeStory({ record: r, chapters, caption }: { record: StrikeRe
               alt={i === 2 ? "Larkspur's simulated mission console as captured by the real browser run." : "The contact list from the run: T-1 and the civilian bus T-3 both show Cleared to engage."}
               evidence
               caption={i === 2 ? "From a check of Larkspur, a simulated mission console Vraelis built itself." : "The contact list, cut from the run's own screenshot. T-3 is the civilian bus."}
-              credit={<span data-no-translate>{run.id} / {run.recorded} UTC</span>}
+              credit={<span className="v6-plate__metadata" data-no-translate><span>{run.id}</span>{" "}<time>{run.recorded} UTC</time></span>}
             /> : null}
           </li>)}
         </ol>

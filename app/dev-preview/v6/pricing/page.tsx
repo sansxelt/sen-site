@@ -158,7 +158,7 @@ export default function V6Pricing() {
         <IndexHero
           compact
           eyebrow="Pricing"
-          title="Priced per verification, not per seat."
+          title="Priced per verification, not per seat"
           lead="A verification is one complete check of one system. The first one is free, with no card."
           actions={
             <>
@@ -277,7 +277,7 @@ export default function V6Pricing() {
 
       <section className="v6-sec" id="plainly">
         <div className="v6-wrap">
-          <SectionHead eyebrow="Stated plainly" title="What this pricing does, and what it does not." />
+          <SectionHead eyebrow="Stated plainly" title="What this pricing does, and what it does not" />
           <DoesBox
             titles={{ does: "What this pricing does", doesNot: "What this pricing does not do" }}
             does={[
@@ -296,7 +296,7 @@ export default function V6Pricing() {
         </div>
       </section>
 
-      <ClosingScene title="Your first verification is free." />
+      <ClosingScene title="Your first verification is free" />
     </>
   );
 }

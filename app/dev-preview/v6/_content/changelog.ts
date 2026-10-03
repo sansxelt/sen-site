@@ -370,7 +370,7 @@ export const CHANGELOG: Entry[] = [
     date: "2026-07-25",
     tag: "go",
     tagLabel: "Shipped",
-    title: "A model may author a requirement. Only a person may review it.",
+    title: "A model may author a requirement, but only a person may review it",
     body: [
       "Authorship and review became separate recorded facts. A requirement the system wrote is marked machine-authored and awaiting review, and there is no state in which it approves itself. Submitting a claim without an approved plan returns the plan for review and runs nothing.",
       "Running discovery again against an approved contract now refuses, rather than quietly rewriting the meaning an earlier verification was measured against.",

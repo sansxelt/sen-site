@@ -53,7 +53,7 @@ export default function Readme() {
             <header className="v6-read__head">
               <p className="v6-read__eyebrow">README</p>
               <p className="v6-read__meta"><span>{`${MINUTES} min read`}</span></p>
-              <h1 id="read-h1" className="v6-read__h1">Why Vraelis exists.</h1>
+              <h1 id="read-h1" className="v6-read__h1">Why Vraelis exists</h1>
               <p className="v6-read__deck">{DECK}</p>
             </header>
 
@@ -81,7 +81,7 @@ export default function Readme() {
             ]} />
             <aside className="v6-read__step" aria-labelledby="rm-step-h">
               <div>
-                <h2 id="rm-step-h" className="v6-read__steph">Check one claim on your own app.</h2>
+                <h2 id="rm-step-h" className="v6-read__steph">Check one claim on your own app</h2>
                 <p>{SUPPORT}</p>
               </div>
               {/* A ghost: the closing's white button is in the same screen, and a view carries one white button. */}
@@ -91,7 +91,7 @@ export default function Readme() {
         </div>
       </section>
 
-      <ClosingScene title="Read what is built today." action={{ label: "What is built", href: `${V6_BASE}/platform#current` }} />
+      <ClosingScene title="Read what is built today" action={{ label: "What is built", href: `${V6_BASE}/platform#current` }} />
     </>
   );
 }

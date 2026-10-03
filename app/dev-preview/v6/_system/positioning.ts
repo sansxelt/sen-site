@@ -67,15 +67,8 @@
  *  was rather than what it would do for them. "On the live app" is the part a reader can check. */
 export const CATEGORY = "Verification for what you build";
 
-/** THE HEADLINE, as two clauses: the input, then the answer.
- *
- *  Line one is the only thing a reader has to do. Line two names the actor and where it looks. Whoever the
- *  reader is, a developer, an agency, a founder or someone running an AI assistant, the first line is theirs
- *  to say, and nothing in either line narrows who may say it. */
-export const HEADLINE: [string, string] = [
-  "Know what you built",
-  "does what you meant.",
-];
+/** One concise homepage headline, without a forced line break. */
+export const HEADLINE = "Know what you built works";
 
 /** ONE paragraph under the headline: the loop, once, in the order it happens. Under 45 words.
  *
@@ -97,7 +90,7 @@ export const HERO_LINE = "Checks in a real browser, on live web apps and the pan
  *  A search result is the surface where an unsupportable claim travels furthest, so the description makes
  *  exactly the claim the run itself produces and no larger one: it tries the sentence and shows what
  *  happened. It does not promise a green result, and it does not lead with the verdict words (rule 5). */
-export const META_TITLE = "Vraelis | Know what you built does what you meant";
+export const META_TITLE = "Vraelis | Know what you built works";
 export const META_DESCRIPTION =
   "Say what your web app, or a device it controls, should do. Vraelis checks it in a real browser on the live product, shows you exactly what happened, and hands anything broken to you or your AI agent.";
 
@@ -111,7 +104,7 @@ export { SOCIAL_TITLE as OG_TITLE, SOCIAL_DESCRIPTION as OG_DESCRIPTION } from "
 export const OG_BEATS: [string, string, string] = ["The claim", "The evidence", "The decision"];
 
 /** Closing scene. One statement, one short line. No recap, no feature list. */
-export const CLOSE_TITLE = "Ship what you can stand behind.";
+export const CLOSE_TITLE = "Ship what you can stand behind";
 export const CLOSE_SAY =
   "Say what should work, approve the plan, and see it checked on the live product, with everything it saw attached.";
 

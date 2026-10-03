@@ -67,14 +67,14 @@ const ROWS: AltRow[] = [
     title: "Run it on the live product",
     body: "A real browser runs the approved journeys on the address you named, one step at a time. An address that does not exist is refused before the run starts. Each step records what it expected and what it saw.",
     link: { label: "How a run is recorded", href: `${BASE}/docs/run-activity` },
-    media: <PicturePlate src={RECORDS.notes.runs[0].shot.src} alt={RECORDS.notes.runs[0].shot.alt} w={480} h={480} evidence caption={RECORDS.notes.runs[0].shot.caption} credit={<span data-no-translate>4fc6e52c / 2026-07-31 UTC</span>} />,
+    media: <PicturePlate src={RECORDS.notes.runs[0].shot.src} alt={RECORDS.notes.runs[0].shot.alt} w={480} h={480} evidence caption={RECORDS.notes.runs[0].shot.caption} credit={<span data-no-translate>4fc6e52c, recorded 2026-07-31 UTC</span>} />,
   },
   {
     id: "evidence",
     title: "Read the evidence and the repair prompt",
     body: "The record keeps every step, the screenshots the run saved, and any console errors and failed requests. When it finds a problem, it writes a repair prompt for a person or a coding agent. After the fix, the same approved plan runs again as its own record.",
     link: { label: "How a re-check works", href: `${BASE}/docs/recheck` },
-    media: <PicturePlate src={RECORDS.projects.runs[0].shot.src} alt={RECORDS.projects.runs[0].shot.alt} w={640} h={354} evidence caption={RECORDS.projects.runs[0].shot.caption} credit={<span data-no-translate>de53ab8b / 2026-07-14 UTC</span>} />,
+    media: <PicturePlate src={RECORDS.projects.runs[0].shot.src} alt={RECORDS.projects.runs[0].shot.alt} w={640} h={354} evidence caption={RECORDS.projects.runs[0].shot.caption} credit={<span data-no-translate>de53ab8b, recorded 2026-07-14 UTC</span>} />,
   },
 ];
 
@@ -104,7 +104,7 @@ export default function Platform() {
     <>
       <FrameHero
         eyebrow="Platform"
-        title="One sentence. One approved plan. One answer from the live app."
+        title="One sentence, one approved plan, one answer from the live app"
         sub="Write what your web app, or a device it controls, should do. A person approves the plan, and a real browser tries it on the live product."
         primary={{ label: "Start free", href: SIGNUP }}
         secondary={{ label: "See real runs", href: "#runs" }}
@@ -115,7 +115,7 @@ export default function Platform() {
           (data-panel), so its words do not count against the page's budget. */}
       <section className="v6-sec v6-pp-sec" id="runs">
         <div className="v6-wrap">
-          <SectionHead eyebrow="Recorded runs" title="Real checks. Recorded evidence." />
+          <SectionHead eyebrow="Recorded runs" title="Real checks with recorded evidence" />
           <RecordPanel records={["checkout", "notes", "projects"]} />
         </div>
       </section>
@@ -124,7 +124,7 @@ export default function Platform() {
         <div className="v6-wrap">
           <SectionHead
             eyebrow="How it works"
-            title="From one sentence to an answer with evidence."
+            title="From one sentence to an answer with evidence"
             lead="It works the same from the console, the CLI, CI and AI assistants."
           />
           <AltRows rows={ROWS} />
@@ -133,7 +133,7 @@ export default function Platform() {
 
       <section className="v6-sec v6-pp-sec" id="compare">
         <div className="v6-wrap">
-          <SectionHead eyebrow="Other ways to check" title="How it compares." />
+          <SectionHead eyebrow="Other ways to check" title="How it compares" />
           <Compare columns={COMPARE_COLUMNS} rows={COMPARE_ROWS} />
         </div>
       </section>
@@ -141,7 +141,7 @@ export default function Platform() {
       {/* #coverage: one row per surface. The brief is on the row; how it is reached and what is true today
           open under it. The tier is a word: Live, Not built yet, Not covered. */}
       <Band id="coverage">
-        <SectionHead eyebrow="What it can reach" title="Web apps, and the devices they control." />
+        <SectionHead eyebrow="What it can reach" title="Web apps, and the devices they control" />
         <ul className="v6-reach" role="list">
           {SURFACES.map((s) => (
             <li className="v6-reach__row" key={s.name}>
@@ -170,7 +170,7 @@ export default function Platform() {
       {/* #current: THE SITE'S ONE STATUS SOURCE. Every line is _content/scope.ts; nothing here is retyped. */}
       <section className="v6-sec v6-pp-sec" id="current">
         <div className="v6-wrap">
-          <SectionHead eyebrow="What is built" title="What Vraelis does today, and what it does not." />
+          <SectionHead eyebrow="What is built" title="What Vraelis does today, and what it does not" />
           {/* Two lists, one tab each (kit Tabs): side by side, the two full lists put 264 words in one 900px
               screen (A1.6 allows 180). The tab labels say both halves at once; each panel is a fixed height,
               so switching moves nothing below it. */}
@@ -228,7 +228,7 @@ export default function Platform() {
         </div>
       </section>
 
-      <ClosingScene title="Say what should work. Let the live app answer." />
+      <ClosingScene title="Say what should work, let the live app answer" />
     </>
   );
 }

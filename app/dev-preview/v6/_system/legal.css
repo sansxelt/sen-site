@@ -42,7 +42,7 @@
    never one word too long, and where hyphens: auto would cut words that merely reach the end of a line. */
 .v6-lg__title { margin-top: 16px; overflow-wrap: break-word; }
 .v6:not(:lang(en)) .v6-lg__title { -webkit-hyphens: auto; hyphens: auto; }
-.v6-lg__upd { margin: 16px 0 0; font-family: var(--mono); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-4); }
+.v6-lg__upd { margin: 16px 0 0; font-family: var(--sans); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-4); }
 /* The English-only notice (LegalNotice in legal-toc.tsx), for a reader in another language: a quiet card under the
    Updated line. It hugs its sentence, so a translation of another length changes its width rather than the height
    of the head; at desktop widths the sentence is one line in every language the site offers. */
@@ -138,7 +138,7 @@
 .v6-lg__t :is(th, td):last-child { padding-right: 0; }
 .v6-lg__t td.v6-lg__tname { color: var(--ink); font-weight: 500; white-space: nowrap; }
 /* Machine names in the mono face, broken anywhere: __Secure-authjs.pkce.code_verifier has no space to break at. */
-.v6-lg__t td.v6-lg__tcode { min-width: 168px; font-family: var(--mono); font-size: var(--t-mono); color: var(--ink); overflow-wrap: anywhere; }
+.v6-lg__t td.v6-lg__tcode { min-width: 168px; font-family: var(--sans); font-size: var(--t-mono); color: var(--ink); overflow-wrap: anywhere; }
 .v6-lg__t td.v6-lg__tnw { white-space: nowrap; }
 .v6-lg__t td.v6-lg__tshort { min-width: 6.5em; }
 .v6-lg__tl { display: none; }
@@ -154,7 +154,7 @@
   .v6-lg__t td:first-child { display: block; padding: 0 0 8px; }
   .v6-lg__t td.v6-lg__tname, .v6-lg__t td.v6-lg__tnw { white-space: normal; }
   .v6-lg__t td.v6-lg__tname { font-size: var(--t-body); }
-  .v6-lg__tl { display: block; font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.9; color: var(--ink-4); }
+  .v6-lg__tl { display: block; font-family: var(--sans); font-size: var(--t-mono-s); line-height: 1.9; color: var(--ink-4); }
 }
 
 /* ── The end row: where to write, and Privacy choices ── */

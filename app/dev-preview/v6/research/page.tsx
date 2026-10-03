@@ -206,7 +206,7 @@ export default function ResearchPage() {
     <>
       <IndexHero
         eyebrow="Research"
-        title="The methods behind trusting a claim that something works."
+        title="The methods behind trusting a claim that something works"
         lead="Vraelis checks whether live software does what someone says it does. These are the methods we use today, and the questions we have not closed."
       />
 
@@ -236,7 +236,7 @@ export default function ResearchPage() {
       <section className="v6-sec" id="stance">
         <div className="v6-wrap">
           <div className="v6-rx__stance">
-            <SectionHead eyebrow="Our stance" title="A builder cannot remain the only judge of its own work." />
+            <SectionHead eyebrow="Our stance" title="A builder cannot remain the only judge of its own work" />
             <p className="v6-rx__p">Whoever builds a system, a person, a team or an agent, will also report that it is finished. That report is a claim. Vraelis checks it against what the running software shows.</p>
             <p className="v6-rx__p">Each direction below says what we do today and what we have not solved. Checking is a practice, not a finished science.</p>
             <div className="v6-actions v6-rx__more">
@@ -259,7 +259,7 @@ export default function ResearchPage() {
         </div>
       </section>
 
-      <ClosingScene title="Check one claim on your own app." />
+      <ClosingScene title="Check one claim on your own app" />
     </>
   );
 }

@@ -202,7 +202,7 @@ function InPublic() {
   return (
     <section id="in-public" className="v6-mt__ch v6-mt__public">
       <p className="v6-read__act">In public</p>
-      <h2>Three times this was tested by somebody else.</h2>
+      <h2>Three times this was tested by somebody else</h2>
       <p>{PUBLIC_LEAD}</p>
       <ol className="v6-read__cases" role="list">
         {CASES.map((c) => (
@@ -243,7 +243,7 @@ export default function Method() {
             <header className="v6-read__head">
               <p className="v6-read__eyebrow">The Vraelis Method</p>
               <p className="v6-read__meta"><span>{`${MINUTES} min read`}</span></p>
-              <h1 id="read-h1" className="v6-read__h1">How we think about trusting software that says it works.</h1>
+              <h1 id="read-h1" className="v6-read__h1">How we think about trusting software that says it works</h1>
               <p className="v6-read__deck">Eight positions that decide how the product is built. They are opinionated on purpose.</p>
             </header>
 
@@ -283,7 +283,7 @@ export default function Method() {
             ]} />
             <aside className="v6-read__step" aria-labelledby="mt-step-h">
               <div>
-                <h2 id="mt-step-h" className="v6-read__steph">Check one claim on your own app.</h2>
+                <h2 id="mt-step-h" className="v6-read__steph">Check one claim on your own app</h2>
                 <p>{SUPPORT}</p>
               </div>
               {/* A ghost: the closing's white button is in the same screen, and a view carries one white button. */}
@@ -293,7 +293,7 @@ export default function Method() {
         </div>
       </section>
 
-      <ClosingScene title="Read what is built today." action={{ label: "What is built", href: `${V6_BASE}/platform#current` }} />
+      <ClosingScene title="Read what is built today" action={{ label: "What is built", href: `${V6_BASE}/platform#current` }} />
     </>
   );
 }

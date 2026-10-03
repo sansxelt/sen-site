@@ -10,13 +10,13 @@
 .v6 .ag-fact:first-child { padding-top: 0; border-top: 0; }
 .v6 .ag-fact dt { font-size: var(--t-h5); font-weight: 500; line-height: 1.35; letter-spacing: -0.005em; color: var(--ink); }
 .v6 .ag-fact dd { margin: 8px 0 0; font-size: 15px; line-height: 1.6; color: var(--ink-3); text-wrap: pretty; }
-.v6 .ag-fact .ag-fact__v { display: inline-block; margin: 0; padding: 0; border: 0; background: none; font-family: var(--mono);
+.v6 .ag-fact .ag-fact__v { display: inline-block; margin: 0; padding: 0; border: 0; background: none; font-family: var(--sans);
   font-size: var(--t-mono); line-height: 1.5; color: var(--ink-2); overflow-wrap: anywhere; }
 
 /* The example call: each argument's name in mono, its value under it. */
 .v6 .ag-call { margin: 0; display: grid; gap: 16px; }
-.v6 .ag-call dt { font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
-.v6 .ag-call dd { margin: 4px 0 0; font-family: var(--mono); font-size: var(--t-mono); line-height: 1.65; color: #C9CBD1; overflow-wrap: anywhere; }
+.v6 .ag-call dt { font-family: var(--sans); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
+.v6 .ag-call dd { margin: 4px 0 0; font-family: var(--sans); font-size: var(--t-mono); line-height: 1.65; color: #C9CBD1; overflow-wrap: anywhere; }
 
 /* The ten assistants: two columns of hairline rows (one on a phone), each row one link into the setup guide.
    A row lights its ground on hover (plan A6, list rows) and keeps its own label colours, which the site-wide

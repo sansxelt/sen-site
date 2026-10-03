@@ -13,12 +13,12 @@
 /* ---------------------------------------------------------------- examples ---
    A mono label that says which sentences were run, then four sentences on hairlines, each with a mono index
    (plan T2.5): 20/1.45 ink. The label is the section's h2, marked data-label: a label, not a headline. */
-.v6-sx-ex .v6-sx-ex__label { margin: 0 0 24px; max-width: 72ch; font-family: var(--mono); font-size: var(--t-mono); font-weight: 400;
+.v6-sx-ex .v6-sx-ex__label { margin: 0 0 24px; max-width: 72ch; font-family: var(--sans); font-size: var(--t-mono); font-weight: 400;
   line-height: 1.5; letter-spacing: 0; color: var(--ink-3); text-wrap: pretty; }
 .v6-sx-ex__list { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
 .v6-sx-ex__row { display: grid; grid-template-columns: 64px minmax(0, 1fr); align-items: baseline; padding: 24px 0;
   border-bottom: 1px solid var(--line); }
-.v6-sx-ex__n { font-family: var(--mono); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-4); font-variant-numeric: tabular-nums; }
+.v6-sx-ex__n { font-family: var(--sans); font-size: var(--t-mono); line-height: 1.5; color: var(--ink-4); font-variant-numeric: tabular-nums; }
 .v6-sx-ex .v6-sx-ex__t { margin: 0; max-width: 58ch; font-size: 20px; line-height: 1.45; letter-spacing: -0.005em; color: var(--ink);
   text-wrap: pretty; overflow-wrap: break-word; }
 @media (max-width: 640px) {
@@ -45,7 +45,7 @@
 /* -------------------------------------------------- the fixture's sentence ---
    Fleets: the sentence for the Fieldline fixture, labelled as not run yet, above the fixture. */
 .v6-sx-sentence { margin: 0 0 24px; padding: 28px 32px; background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--r-card); }
-.v6-sx-sentence .v6-sx-sentence__k { margin: 0 0 10px; font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
+.v6-sx-sentence .v6-sx-sentence__k { margin: 0 0 10px; font-family: var(--sans); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
 .v6-sx-sentence .v6-sx-sentence__t { margin: 0; max-width: 58ch; font-size: 20px; line-height: 1.45; color: var(--ink); text-wrap: pretty; }
 @media (max-width: 640px) {
   .v6-sx-sentence { padding: 22px 20px; }
@@ -68,7 +68,7 @@
 .v6-ff__shell { margin: 0; padding: 8px; background: #0E0E10; border: 1px solid var(--line); border-radius: var(--r-card); }
 .v6-ff__bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; column-gap: 16px; row-gap: 2px;
   min-height: 36px; padding: 8px 12px; margin: -8px -8px 8px; border-bottom: 1px solid var(--line-soft);
-  font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
+  font-family: var(--sans); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
 .v6-ff__addr { flex: 1 1 12ch; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .v6-ff__tag { flex: 0 1 auto; margin-left: auto; text-align: right; }
 /* The fixture's own ground (lib/fixtures/drone-console.ts), so the box reads as the console before it loads. */
@@ -91,14 +91,14 @@
 .v6-sx-mcp { margin: 0; background: #0E0E10; border: 1px solid var(--line); border-radius: var(--r-card); overflow: hidden; }
 .v6-sx-mcp__bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; column-gap: 16px; row-gap: 2px;
   min-height: 36px; padding: 8px 20px; border-bottom: 1px solid var(--line-soft);
-  font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
+  font-family: var(--sans); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
 .v6-sx-mcp__addr { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .v6-sx-mcp__rows { margin: 0; padding: 0 20px; list-style: none; }
 .v6-sx-mcp__row { display: grid; grid-template-columns: 40px minmax(0, 17rem) minmax(0, 1fr); column-gap: 24px; row-gap: 6px;
   align-items: baseline; padding: 24px 0; }
 .v6-sx-mcp__row + .v6-sx-mcp__row { border-top: 1px solid var(--line-soft); }
-.v6-sx-mcp__n { font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); font-variant-numeric: tabular-nums; }
-.v6-sx-mcp .v6-sx-mcp__key { padding: 0; background: none; border: 0; font-family: var(--mono); font-size: 14px; line-height: 1.5;
+.v6-sx-mcp__n { font-family: var(--sans); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); font-variant-numeric: tabular-nums; }
+.v6-sx-mcp .v6-sx-mcp__key { padding: 0; background: none; border: 0; font-family: var(--sans); font-size: 14px; line-height: 1.5;
   color: var(--ink); overflow-wrap: anywhere; }
 .v6-sx-mcp .v6-sx-mcp__t { margin: 0; max-width: 60ch; font-size: var(--t-read); line-height: 1.55; color: var(--ink-2); text-wrap: pretty; }
 @media (max-width: 760px) {
@@ -120,10 +120,10 @@
 
 /* ------------------------------------------------- public sector's panel ---
    The hero's coded panel: Notewell's second journey as recorded. RecordSteps (kit) draws the steps. */
-.v6-sx-jp .v6-sx-jp__k { margin: 0 0 8px; font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
+.v6-sx-jp .v6-sx-jp__k { margin: 0 0 8px; font-family: var(--sans); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
 .v6-sx-jp .v6-sx-jp__t { margin: 0 0 20px; font-size: 20px; font-weight: 500; line-height: 1.35; letter-spacing: -0.005em; color: var(--ink); text-wrap: balance; }
 .v6-sx-jp .v6-sx-jp__cap { margin: 16px 0 0; font-size: 15px; line-height: 1.5; color: var(--ink-2); }
-.v6-sx-jp .v6-sx-jp__meta { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 10px 0 0; font-family: var(--mono); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
+.v6-sx-jp .v6-sx-jp__meta { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 10px 0 0; font-family: var(--sans); font-size: var(--t-mono-s); line-height: 1.45; color: var(--ink-4); }
 @media (max-width: 560px) {
   .v6-sx-jp .v6-sx-jp__t { margin-bottom: 12px; font-size: 17px; }
 }

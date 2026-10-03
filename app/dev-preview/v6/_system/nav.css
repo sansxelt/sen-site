@@ -194,7 +194,7 @@
 .v6-mega__cpic { position: relative; display: block; min-height: 0; overflow: hidden; border-radius: var(--r-media); background: var(--paper); }
 .v6-mega__cpic img { object-fit: cover; transition: transform var(--dur-4) var(--ease-out); }
 .v6-mega__card:hover .v6-mega__cpic img { transform: scale(1.03); }
-.v6-mega__clabel { margin: 14px 4px 0; font-family: var(--mono); font-size: 12px; line-height: 1.45; color: var(--ink-4); }
+.v6-mega__clabel { margin: 14px 4px 0; font-family: var(--sans); font-size: 12px; line-height: 1.45; color: var(--ink-4); }
 .v6-mega__ct { margin: 4px 4px 0; font-family: var(--sans); font-size: 15px; line-height: 1.45; color: #FAFAFA;
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
 /* Under 1100px the box is narrow enough that a whole sentence needs a fourth line before it would be cut; the

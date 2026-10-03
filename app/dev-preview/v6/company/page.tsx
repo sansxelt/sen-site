@@ -39,18 +39,18 @@ const DEFENSE = sectorBySlug("defense")!;
 const ACTS: { label: string; tier?: boolean; title: string; body: string }[] = [
   {
     label: "Past",
-    title: "Builders owned the judgment.",
+    title: "Builders owned the judgment",
     body: "People wrote, reviewed, tested and shipped their own work.",
   },
   {
     label: "Present",
-    title: "The work outran the checking.",
+    title: "The work outran the checking",
     body: "Teams and AI agents ship faster than anyone can review by hand. Vraelis checks the live app instead.",
   },
   {
     label: "Next",
     tier: true,
-    title: "The check follows software onto what it controls.",
+    title: "The check follows software onto what it controls",
     body: "Vraelis checks the web panels that run drones, robots and fleets today. Reading the device itself is not built yet.",
   },
 ];
@@ -72,25 +72,25 @@ const NOT_YET: string[] = [
 // How this is different: against categories a reader already pays for, never against a named product, and each
 // difference stated as a mechanism. "Uptime checks" names the category the old copy called monitoring (plan 0.3).
 const DIFFERENT: [string, string][] = [
-  ["It is not the builder's own report.",
+  ["It is not the builder's own report",
     "Whoever made the change, a person or an agent, does not decide whether it worked. Something else checks the deployed result."],
-  ["It is not a test suite.",
+  ["It is not a test suite",
     "A suite is written beside the code and often runs against mocks. Vraelis holds one plain sentence outside the code and checks the running app."],
-  ["It is not an uptime check.",
+  ["It is not an uptime check",
     "An uptime check says the page answered. Vraelis checks that what the sentence describes actually happens on the live app."],
-  ["It says no rather than guess.",
+  ["It says no rather than guess",
     "When no check could prove the sentence, Vraelis says so before anything runs, and nothing is charged."],
 ];
 
 // The commitments the product is held to. Row 04 is this page's one approval claim.
 const COMMITMENTS: [string, string][] = [
-  ["We ship what is real.",
+  ["We ship what is real",
     "What is built and what is not are labelled separately, on the site and in the product. We would rather show an honest gap than imply a finished one."],
-  ["The judge is independent of the builder.",
+  ["The judge is independent of the builder",
     "Nothing is trusted because its author says so. Whether work is done is decided on evidence, by something other than the author."],
-  ["History is kept.",
+  ["History is kept",
     "Failures and fixes are kept, not overwritten. A later run never erases the one before it."],
-  ["A person approves the check.",
+  ["A person approves the check",
     "Whoever asks for a check, a teammate, a pipeline or an AI assistant, a person approves its plan before it runs. An API key cannot."],
 ];
 
@@ -135,7 +135,7 @@ export default function CompanyPage() {
       <FrameHero
         id="company-hero"
         eyebrow="Company"
-        title="We check that what people build does what they meant."
+        title="We check that what people build does what they meant"
         sub="Software ships faster than anyone can check by hand. Vraelis is the independent check on the live product, with the evidence attached."
         primary={{ label: "Talk to us", href: `${BASE}/contact` }}
         secondary={{ label: "Read the README", href: `${BASE}/readme` }}
@@ -149,7 +149,7 @@ export default function CompanyPage() {
           <SectionHead
             align="center"
             eyebrow="Mission"
-            title="The builder can no longer be the only judge."
+            title="The builder can no longer be the only judge"
             lead="When a person or an agent says the work is done, something else should check it on the live app."
           />
           {/* Defense, said once on this page and lightly (founder update, 2026-10-02): one sector among several.
@@ -168,7 +168,7 @@ export default function CompanyPage() {
 
       <section className="v6-sec" id="acts">
         <div className="v6-wrap">
-          <SectionHead eyebrow="Three acts" title="Where the checking happens has moved." />
+          <SectionHead eyebrow="Three acts" title="Where the checking happens has moved" />
           <FeatureGrid span={4}>
             {ACTS.map((a) => (
               <FeatureCard
@@ -184,7 +184,7 @@ export default function CompanyPage() {
 
       <section className="v6-sec" id="who">
         <div className="v6-wrap">
-          <SectionHead eyebrow="Who it is for" title="Anyone who can say what should work, on a live app." />
+          <SectionHead eyebrow="Who it is for" title="Anyone who can say what should work, on a live app" />
           {/* Each list ends on the page that holds its detail. Under "Built for", the one link card to what is built
               (plan C /company): the live and direction lists live on /platform#current only, never copied here.
               Under "Not for yet", the one line to /limitations every page without a DoesBox carries (plan A1.7). */}
@@ -195,7 +195,7 @@ export default function CompanyPage() {
               after={(
                 <FeatureCard
                   label="What is built"
-                  title="What works today, and what is not built yet."
+                  title="What works today, and what is not built yet"
                   body="Each unfinished part says what happens today instead."
                   href={`${BASE}/platform#current`}
                 />
@@ -207,7 +207,7 @@ export default function CompanyPage() {
               after={(
                 <FeatureCard
                   label="Limitations"
-                  title="What a check cannot do, written down."
+                  title="What a check cannot do, written down"
                   body="Where a check stops today, stated before you rely on one."
                   href={`${BASE}/limitations`}
                 />
@@ -219,7 +219,7 @@ export default function CompanyPage() {
 
       <section className="v6-sec" id="different">
         <div className="v6-wrap">
-          <SectionHead eyebrow="How this is different" title="Four things it is not, and what it does instead." />
+          <SectionHead eyebrow="How this is different" title="Four things it is not, and what it does instead" />
           <FeatureGrid span={6}>
             {DIFFERENT.map(([t, d], i) => <FeatureCard key={t} label={two(i + 1)} title={t} body={d} />)}
           </FeatureGrid>
@@ -231,7 +231,7 @@ export default function CompanyPage() {
 
       <section className="v6-sec" id="commitments">
         <div className="v6-wrap">
-          <SectionHead eyebrow="How we build" title="The commitments the product is held to." />
+          <SectionHead eyebrow="How we build" title="The commitments the product is held to" />
           <ol className="v6-rows co-rows" role="list">
             {COMMITMENTS.map(([t, d], i) => (
               <li className="v6-row" key={t}>
@@ -249,7 +249,7 @@ export default function CompanyPage() {
       <Band id="partnerships">
         <SectionHead
           eyebrow="Partnerships"
-          title="Partnerships, on the record."
+          title="Partnerships, on the record"
           lead="Each record says what the partnership covers, and claims no endorsement."
         />
         <ul className="co-pr" role="list">
@@ -275,7 +275,7 @@ export default function CompanyPage() {
           <div className="co-contact__text">
             <SectionHead
               eyebrow="Contact"
-              title="A person reads every message."
+              title="A person reads every message"
               lead="Use the contact form, or write to the address that fits your question."
             />
             <div className="v6-actions">

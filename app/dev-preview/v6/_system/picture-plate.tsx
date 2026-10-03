@@ -26,5 +26,5 @@ export function PicturePlate({ src, alt, w, h, caption, credit, source, evidence
 }
 export function Photograph({ name, caption, eager }: { name: PhotographKey; caption?: ReactNode; eager?: boolean }) {
   const p = photograph(name);
-  return <PicturePlate {...p} caption={caption} credit={`${p.author} / Pexels`} source={p.source} eager={eager} />;
+  return <PicturePlate {...p} caption={caption} credit={`${p.author}, Pexels`} source={p.source} eager={eager} />;
 }

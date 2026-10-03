@@ -17,7 +17,7 @@
    Military covers defense.
 
    THE WORDS ARE HELD TO WHAT IS LIVE (_content/coverage.ts). Eleven subjects are checked today; each has one whole
-   sentence that becomes the headline while its tile is held ("Know your mission software works."). A device word
+   sentence that becomes the headline while its tile is held ("Know your mission software works"). A device word
    names the panel, console or portal, never the machine. Three subjects are Next, not built yet (desktop and mobile
    apps, SDKs and scripts, devices and firmware): they carry a "Next" mark, say "Not built yet", link to the coverage
    list, and never become the headline. Where each subject leads is the registry's ORBIT_ROUTE (_content/sectors.ts).
@@ -77,31 +77,31 @@ const pic = (name: string, alt: string, pos?: string): Photo => ({ src: `/home/o
 // several and rests at the side, not the front. As cards on a phone the even places make the top row and the odd
 // ones the bottom, so the first screen shows Commercial and retail, Drones and aviation, Developers and Government.
 export const ORBIT: readonly Tile[] = [
-  { word: "commercial", label: "Commercial and retail", sentence: "Know your checkout works.",
+  { word: "commercial", label: "Commercial and retail", sentence: "Know your checkout works",
     photos: [pic("checkout", "A card held to a card reader", "50% 65%")] },
-  { word: "drones", label: "Drones and aviation", sentence: "Know your drone panel works.",
+  { word: "drones", label: "Drones and aviation", sentence: "Know your drone panel works",
     photos: [pic("drone", "A drone against an evening sky"), pic("flight", "An airliner cockpit lit at night over a city"), pic("fleet", "A person flying a drone at dusk", "50% 22%")] },
-  { word: "developers", label: "Developers", sentence: "Know your release works.",
+  { word: "developers", label: "Developers", sentence: "Know your release works",
     photos: [pic("agent", "Code on a laptop screen"), pic("release", "A server rack lit green")] },
-  { word: "government", label: "Government", sentence: "Know your public service works.",
+  { word: "government", label: "Government", sentence: "Know your public service works",
     photos: [pic("public", "An arched hall inside a state capitol")] },
   { next: true, label: "Desktop and mobile apps",
     photos: [pic("electron", "A desktop editing app open on a laptop"), pic("mobile", "A phone held at night against city lights", "50% 62%")] },
-  { word: "fintech", label: "Fintech and banking", sentence: "Know your banking app works.",
+  { word: "fintech", label: "Fintech and banking", sentence: "Know your banking app works",
     photos: [pic("banking", "A hand holding a phone calculator over banknotes", "50% 58%")] },
-  { word: "robotics", label: "Robotics and manufacturing", sentence: "Know your robot console works.",
+  { word: "robotics", label: "Robotics and manufacturing", sentence: "Know your robot console works",
     photos: [pic("robot", "A robot arm building a lattice", "50% 60%"), pic("device", "A circuit board inside a device")] },
   { next: true, label: "SDKs and scripts", photos: [pic("script", "Python code that collects statuses on a dark screen")] },
-  { word: "ai-built-apps", label: "AI-built apps", sentence: "Know your AI-built app works.", narrow: true,
+  { word: "ai-built-apps", label: "AI-built apps", sentence: "Know your AI-built app works", narrow: true,
     photos: [pic("aiapp", "An app open on a tablet in low light")] },
-  { word: "logistics", label: "Logistics and vehicles", sentence: "Know your fleet portal works.",
+  { word: "logistics", label: "Logistics and vehicles", sentence: "Know your fleet portal works",
     photos: [pic("vehicle", "A truck on a road at dusk"), pic("robotfleet", "A row of delivery robots waiting on a pavement", "50% 55%")] },
   { next: true, label: "Devices and firmware", photos: [pic("firmware", "A small development board on a dark table")] },
-  { word: "military", label: "Military", sentence: "Know your mission software works.",
+  { word: "military", label: "Military", sentence: "Know your mission software works",
     photos: [pic("targeting", "A radar scope and a track readout on a console", "50% 45%"), pic("mission", "An operations room at night"), pic("groundstation", "A hand on a control stick beside a map display")] },
-  { word: "saas", label: "SaaS and startups", sentence: "Know your product works.",
+  { word: "saas", label: "SaaS and startups", sentence: "Know your product works",
     photos: [pic("dashboard", "A person reading a dashboard"), pic("signup", "Hands on a laptop keyboard in the dark")] },
-  { word: "agencies", label: "Agencies", sentence: "Know your client's site works.",
+  { word: "agencies", label: "Agencies", sentence: "Know your client's site works",
     photos: [pic("client", "A person working at two monitors")] },
 ];
 
@@ -857,7 +857,7 @@ export function Orbit() {
         <div ref={copy} className="v6-or__copy">
           {/* One stable sentence for screen readers and search; the sentence that changes is a picture of it. */}
           <h2 id="v6-or-h" className="v6-or__h">
-            <span className="v6-or__sr">Know your checkout, sign-up, release and device panels work.</span>
+            <span className="v6-or__sr">Know your checkout, sign-up, release and device panels work</span>
             <span className="v6-or__vis" aria-hidden="true">
               {LIVE.map((t, j) => (
                 <span key={t.word} className="v6-or__s" data-on={j === shown} data-narrow={t.narrow ? "" : undefined}>{t.sentence}</span>

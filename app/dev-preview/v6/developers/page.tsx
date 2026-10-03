@@ -106,7 +106,7 @@ export default function DevelopersPage() {
     <>
       <FrameHero
         eyebrow="Developers"
-        title="Start a check from your own tools."
+        title="Start a check from your own tools"
         sub="Send a deployment address and one sentence about what should work. A person approves the plan, a real browser runs it, and your tools read the answer."
         primary={{ label: "Create an API key", href: API_KEYS }}
         secondary={{ label: "Read the API", href: `${BASE}/docs/api` }}
@@ -118,7 +118,7 @@ export default function DevelopersPage() {
         <div className="v6-wrap">
           <SectionHead
             eyebrow="The API"
-            title="Submit a claim. Read the answer."
+            title="Submit a claim, read the answer"
             lead="Every request carries your API key in a header. The first POST returns a plan to approve, and nothing runs or is charged before that."
           />
           <div className="dv-pair" data-reference="">
@@ -138,7 +138,7 @@ export default function DevelopersPage() {
       {/* ── The four ways in, each with its line of code and its page in the docs. ── */}
       <section className="v6-sec dv-ways" id="ways">
         <div className="v6-wrap">
-          <SectionHead eyebrow="Four ways in" title="The same check from every tool." />
+          <SectionHead eyebrow="Four ways in" title="The same check from every tool" />
           <FeatureGrid span={3}>
             {WAYS_IN.map((w) => (
               <FeatureCard
@@ -157,7 +157,7 @@ export default function DevelopersPage() {
       <Band id="gate">
         <div className="dv-two">
           <div className="dv-col" id="cli">
-            <SectionHead eyebrow="CLI" title="One command. The exit code is the interface." lead="In a pipeline, the next step reads the exit code." />
+            <SectionHead eyebrow="CLI" title="One command, the exit code is the interface" lead="In a pipeline, the next step reads the exit code." />
             <Code lang="bash" src={GATE} />
             <table className="dv-exits" data-reference="">
               <caption className="dv-exits__cap">Exit codes</caption>
@@ -179,7 +179,7 @@ export default function DevelopersPage() {
           <div className="dv-col" id="webhooks">
             <SectionHead
               eyebrow="Webhooks"
-              title="Get the answer pushed to you."
+              title="Get the answer pushed to you"
               lead="When a run finishes, Vraelis sends a signed POST to your endpoint. Check the signature before you act on it."
             />
             <Code lang="http" src={HOOK} />
@@ -193,7 +193,7 @@ export default function DevelopersPage() {
 
       <LimitsLine text="We will not document an endpoint we have not shipped." />
 
-      <ClosingScene title="Put the check where you ship from." action={{ label: "Create an API key", href: API_KEYS }} />
+      <ClosingScene title="Put the check where you ship from" action={{ label: "Create an API key", href: API_KEYS }} />
       <CopyScript />
     </>
   );

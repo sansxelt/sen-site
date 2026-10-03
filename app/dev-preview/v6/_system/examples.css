@@ -37,7 +37,7 @@
 .v6-ex__does { margin: 0; padding: 0; list-style: none; counter-reset: s; }
 .v6-ex__does li { counter-increment: s; display: grid; grid-template-columns: 1.6rem minmax(0, 1fr); gap: 6px; padding: 6px 0;
   font-size: 0.98rem; line-height: 1.45; color: var(--ink-2); }
-.v6-ex__does li::before { content: counter(s, decimal-leading-zero); font-family: var(--mono); font-size: 11px; color: var(--ink-4); padding-top: 3px; }
+.v6-ex__does li::before { content: counter(s, decimal-leading-zero); font-family: var(--sans); font-size: 11px; color: var(--ink-4); padding-top: 3px; }
 .v6-ex__catch { margin: 0; font-size: 1.02rem; line-height: 1.5; color: var(--ink); }
 .v6-ex__rec { display: inline-block; margin-top: 14px; font-size: 0.9rem; font-weight: 500; color: var(--ink); text-underline-offset: 3px; }
 .v6-ex__rec:hover { color: var(--ink-2); }

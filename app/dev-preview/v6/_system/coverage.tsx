@@ -26,7 +26,7 @@ export function Coverage() {
         <Reveal>
           <SectionHead
             align="center"
-            title="What it can check today, and what it cannot."
+            title="What it can check today, and what it cannot"
             lead="And everything else Vraelis is for, labelled for exactly where it is."
           />
         </Reveal>

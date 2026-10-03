@@ -64,7 +64,7 @@ export default function ByteDancePartnershipPage() {
 
             <div className="v6-pr__story">
               <p className="v6-pr__overline">AI models, from the company behind TikTok</p>
-              <h2>A partnership around the models underneath.</h2>
+              <h2>A partnership around the models underneath</h2>
               <p>
                 ByteDance, the company behind TikTok, first reached out to Vraelis through its AI partnerships team
                 on August 17, 2026, about its Seedream, Seedance and Seed LLM models. Vraelis and ByteDance are now

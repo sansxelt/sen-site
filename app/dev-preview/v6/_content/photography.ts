@@ -26,7 +26,7 @@ export function photographHero(key: PhotographKey, position = "50% 50%") {
   const p = photograph(key);
   return {
     picture: { src: p.src, portrait: p.src, alt: p.alt, position, portraitPosition: position },
-    credit: `${p.author} / Pexels`,
+    credit: `${p.author}, Pexels`,
   };
 }
 

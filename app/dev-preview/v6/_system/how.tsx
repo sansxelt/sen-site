@@ -26,7 +26,7 @@ export function HowItWorks() {
     <section className="v6-sec" id="how" data-nav-theme="light" style={{ background: "var(--paper)" }}>
       <div className="v6-wrap">
         <Reveal>
-          <SectionHead eyebrow="How it works" title="From one sentence to the live app." />
+          <SectionHead eyebrow="How it works" title="From one sentence to the live app" />
         </Reveal>
         <div className="v6-grid3" role="list" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 230px), 1fr))" }}>
           {STEPS.map((s, i) => (

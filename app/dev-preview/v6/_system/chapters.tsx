@@ -105,7 +105,7 @@ export function Authority() {
       <div className="v6-au__pin">
         <div className="v6-au__head">
           <p className="v6-eyebrow">What was never built</p>
-          <h2 className="v6-au__h">Every discipline that matters has someone who is not the builder.</h2>
+          <h2 className="v6-au__h">Every discipline that matters has someone who is not the builder</h2>
           <p className="v6-au__sub">
             Where being wrong was expensive enough, the law built an authority and gave it a name.
             Everywhere else, the authority was the person who wrote the code.
@@ -274,7 +274,7 @@ export function Standard() {
       <div className="v6-st__pin">
         <div className="v6-st__head">
           <p className="v6-eyebrow">The standard</p>
-          <h2 className="v6-st__h">Verified is the most dangerous word this product can say.</h2>
+          <h2 className="v6-st__h">Verified is the most dangerous word this product can say</h2>
           <p className="v6-st__sub">
             So the useful question is not when Vraelis says it, but when it refuses to start at all. These
             four refusals run on the verification API, the path the CLI, CI and AI assistants take, before a
@@ -385,7 +385,7 @@ function reply(raw: string): Line[] {
         return [
           { k: "dim", t: "re-running the approved plan" },
           { k: "wait", t: "blocked: this sandbox has no verification to re-check" },
-          { k: "dim", t: "exit 2. blocked is not success, which is the whole point." },
+          { k: "dim", t: "exit 2, blocked is not success, which is the whole point" },
         ];
       }
       if (rest[0] !== "verify") return say(`vraelis: unknown command '${rest[0] ?? ""}'. try: vraelis verify`, "dim");
@@ -395,7 +395,7 @@ function reply(raw: string): Line[] {
         { k: "dim", t: "writing a plan from the claim" },
         { k: "out", t: "plan written, waiting for a person to approve it" },
         { k: "wait", t: "blocked: this sandbox cannot reach a deployment" },
-        { k: "dim", t: "exit 2. blocked is not success, which is the whole point." },
+        { k: "dim", t: "exit 2, blocked is not success, which is the whole point" },
       ];
     // Anything outside the implemented set is NOT answered with invented shell output. Fabricating a
     // filesystem or a result would be the exact thing this product exists to catch.
@@ -486,7 +486,7 @@ export function Product() {
       <div className="v6-tm__in">
         <div className="v6-tm__head">
           <p className="v6-eyebrow">The command</p>
-          <h2 className="v6-tm__h">One command. Three answers. No false green.</h2>
+          <h2 className="v6-tm__h">One command, three answers, no false green</h2>
         </div>
 
         <div className="v6-tm__win">
@@ -562,7 +562,7 @@ export function Devices() {
         <Reveal>
           <SectionHead
             eyebrow="Connected devices"
-            title="Drones, robots and fleets, checked through the panel that runs them."
+            title="Drones, robots and fleets, checked through the panel that runs them"
             lead="Most connected hardware is run from a web control panel. Vraelis checks it there, the same way it checks any web app: an operator action goes in, and a real browser reads the state the system reports afterwards."
           />
         </Reveal>
@@ -611,27 +611,27 @@ export function Devices() {
 type Step = { t: string; who: string };
 const STEPS: { h: string; rows: Step[] }[] = [
   { h: "Say what should work", rows: [
-    { t: "One sentence about the deployed app: a signed-in user can cancel their plan from Billing.",
+    { t: "One sentence about the deployed app: a signed-in user can cancel their plan from Billing",
       who: "Whoever asks" },
-    { t: "Vraelis turns it into a plan: what the sentence requires and the browser steps that prove it.",
+    { t: "Vraelis turns it into a plan: what the sentence requires and the browser steps that prove it",
       who: "Vraelis" },
   ] },
   { h: "Approve the plan", rows: [
-    { t: "A person reads the requirements and the steps, and approves with one click.",
+    { t: "A person reads the requirements and the steps, and approves with one click",
       who: "A person" },
-    { t: "An API key cannot approve a plan, so no script or agent signs off on its own check.",
+    { t: "An API key cannot approve a plan, so no script or agent signs off on its own check",
       who: "Rule" },
   ] },
   { h: "Try it on the live app", rows: [
-    { t: "A real browser opens the deployed app and follows the approved steps.",
+    { t: "A real browser opens the deployed app and follows the approved steps",
       who: "Vraelis" },
-    { t: "Verified, Failed or Blocked comes back with steps, screenshots, console errors and failed requests.",
+    { t: "Verified, Failed or Blocked comes back with steps, screenshots, console errors and failed requests",
       who: "Vraelis" },
   ] },
   { h: "Fix and re-check", rows: [
-    { t: "On Failed: expected against observed, and a repair prompt for whoever fixes it.",
+    { t: "On Failed: expected against observed, and a repair prompt for whoever fixes it",
       who: "Vraelis" },
-    { t: "After the fix, the same plan runs again with no new approval, for 24 hours, up to 10 times.",
+    { t: "After the fix, the same plan runs again with no new approval, for 24 hours, up to 10 times",
       who: "Rule" },
   ] },
 ];
@@ -644,7 +644,7 @@ export function Loop() {
       <div className="v6-rg__pin">
         <div className="v6-rg__head">
           <p className="v6-eyebrow">How a check runs</p>
-          <h2 className="v6-rg__h">From one sentence to one answer, on the live app.</h2>
+          <h2 className="v6-rg__h">From one sentence to one answer, on the live app</h2>
         </div>
 
         <div className="v6-rg__stage">
@@ -699,7 +699,7 @@ export function Reach() {
     <section className="v6-rx" data-nav-theme="light" ref={root}>
       <div className="v6-rx__head">
         <p className="v6-eyebrow">Where it lands</p>
-        <h2 className="v6-rx__h">One answer, wherever you work.</h2>
+        <h2 className="v6-rx__h">One answer, wherever you work</h2>
         <p className="v6-rx__sub">
           Start a check from the Vraelis console, the CLI, a CI job through the API, or an AI assistant over
           MCP. The answer comes back to the same place, and a webhook can send it on to your team.

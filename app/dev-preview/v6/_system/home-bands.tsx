@@ -123,7 +123,7 @@ export function AgentsBand() {
           {/* One sentence in one element, so the translator keeps it whole. It was followed by "Only a person
               approves." until 2026-10-02: the statement above already says a person approves the plan, and the
               page makes that claim once (plan 0.3). The terminal's "Waiting for approval" is product output. */}
-          <h2 id="v6-ag-h" className="v6-ag__h">Your agent can ask for a check.</h2>
+          <h2 id="v6-ag-h" className="v6-ag__h">Your agent can ask for a check</h2>
           <p className="v6-ag__d">Claude Code, Codex, Cursor and Copilot can ask Vraelis before they say done.</p>
           <div className="v6-actions v6-ag__cta">
             <CTA href={`${V6_BASE}/agents`}>Set up your agent</CTA>
@@ -146,7 +146,7 @@ export function Proof({ children }: { children: React.ReactNode }) {
     <section className="v6-pf" aria-labelledby="v6-pf-h" data-nav-theme="dark">
       <div className="v6-pf__in v6-dark" data-nav-dark data-nav-theme="dark">
         <div className="v6-pf__head">
-          <h2 id="v6-pf-h" className="v6-pf__h">Real runs, replayed.</h2>
+          <h2 id="v6-pf-h" className="v6-pf__h">Real runs, replayed</h2>
           <p className="v6-pf__d">Four production checks on Vraelis demo apps, with their recorded timings.</p>
         </div>
         {children}

@@ -37,7 +37,7 @@ export function AuthFrame({ children }: { children: ReactNode }) {
             <PicturePlate src="/use-cases/checkout-before-plan.png" w={880} h={248}
               alt="The Lumen Notes demo account after signing back in: Current plan shows Free."
               evidence caption="Lumen Notes is a Vraelis demo app. Nothing in it is real and no payment is taken."
-              credit={<span data-no-translate>3fad10f5 / 2026-07-22 UTC</span>} />
+              credit={<span data-no-translate>3fad10f5, recorded 2026-07-22 UTC</span>} />
             <div className="auth-split__partners">
               <span>Partnership records</span>
               <a href="/partnerships/reddit">Vraelis × Reddit</a>

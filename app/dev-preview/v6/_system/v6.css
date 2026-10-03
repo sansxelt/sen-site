@@ -54,14 +54,13 @@
 
   /* type */
   --sans: var(--font-brand-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-  --mono: var(--font-brand-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --mono: var(--sans);
   /* ── ONE FAMILY, NO SERIF ──────────────────────────────────────────────────────────────────────────
      Until 2026-09-30 the headlines were Instrument Serif over a Geist interface. The founder read that pair
      as "made by AI", and it is: Geist for the UI plus Instrument Serif for the headline is the default recipe
      of a generated landing page in 2026. A company that sells trust in what it checks cannot look like a
      template, so display type is now the same IBM Plex Sans as the interface, set at --display-w with only
-     slight negative tracking. Hierarchy comes from size and weight, not from a second face. Machine text
-     (IDs, URLs, code) stays on Plex Mono. The rules below still read var(--display) so the tier stays
+     slight negative tracking. Hierarchy comes from size and weight, not from a second face. Labels, metadata and technical references use the same sans face. The rules below still read var(--display) so the tier stays
      addressable in one place. */
   --display: var(--font-brand-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   --display-w: 500;
@@ -228,7 +227,7 @@
    left on the site. */
 .v6-kicker { font-family: var(--sans); font-size: var(--t-label); font-weight: 600; letter-spacing: 0;
   text-transform: none; color: var(--ink-4); }
-.v6-mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.v6-mono { font-family: var(--sans); font-variant-numeric: tabular-nums; }
 /* SectionHead (ui.tsx): eyebrow, 16, h2, 16, lead, and the content under it starts --head-gap below (48 / 32).
    The head carries that space as its own bottom margin, which collapses with a following block's top margin
    (the page kit's .v6-rows, .v6-grid3 and .v6-know ask for the same --head-gap), so it is never added twice.
@@ -369,7 +368,7 @@
    (stop, in --stop-ink). "go" and "wait" read in ink-3, because outside a recorded run a green or amber chip
    is decoration, and the site's rule is that colour means a finding. The same on every ground. */
 .v6-sig { display: inline-flex; align-items: center; padding: 0; border: 0; background: none; border-radius: 0;
-  font-family: var(--mono); font-size: 12.5px; font-weight: 500; line-height: 1.45; letter-spacing: 0; text-transform: none; white-space: nowrap; }
+  font-family: var(--sans); font-size: 12.5px; font-weight: 500; line-height: 1.45; letter-spacing: 0; text-transform: none; white-space: nowrap; }
 .v6-sig--go, .v6-sig--wait { color: var(--ink-3); }
 .v6-sig--stop { color: var(--stop-ink); }
 

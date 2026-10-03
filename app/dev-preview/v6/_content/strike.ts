@@ -142,10 +142,10 @@ export const STRIKE: StrikeRecord = {
 // showed "Cleared to engage". Larkspur is named as what it is, a simulated console Vraelis built itself, and
 // nothing here says where the record is kept beyond "the record".
 export const STRIKE_CHAPTERS = [
-  { eyebrow: "The rule", t: "Only the confirmed target is cleared.", d: "The rule goes to Vraelis as one sentence, from the terminal or from a coding agent.", link: STRIKE_LINKS.cli },
-  { eyebrow: "The plan", t: "A person approves every step first.", d: "Vraelis writes the plan. Nothing touches the console until someone on the team says yes, and an agent never can.", link: STRIKE_LINKS.approval },
-  { eyebrow: "The run", t: "A browser works the console like an operator.", d: "On the simulation, never the aircraft: it reads the contacts, confirms T-1, and reads them again.", link: STRIKE_LINKS.coverage },
-  { eyebrow: "The finding", t: "The civilian bus was cleared too.", d: "Confirming T-1 also cleared T-3, the bus in the same grid square. The record keeps the step, the screen and a repair prompt." },
+  { eyebrow: "The rule", t: "Only the confirmed target is cleared", d: "The rule goes to Vraelis as one sentence, from the terminal or from a coding agent.", link: STRIKE_LINKS.cli },
+  { eyebrow: "The plan", t: "A person approves every step first", d: "Vraelis writes the plan. Nothing touches the console until someone on the team says yes, and an agent never can.", link: STRIKE_LINKS.approval },
+  { eyebrow: "The run", t: "A browser works the console like an operator", d: "On the simulation, never the aircraft: it reads the contacts, confirms T-1, and reads them again.", link: STRIKE_LINKS.coverage },
+  { eyebrow: "The finding", t: "The civilian bus was cleared too", d: "Confirming T-1 also cleared T-3, the bus in the same grid square. The record keeps the step, the screen and a repair prompt." },
 ];
 
 export const STRIKE_CAPTION = "Vraelis does not make mission software. It checks it, on a simulation or a staging build, and keeps every step in the record. This was a real run on Larkspur, a simulated mission console Vraelis built itself. The same check runs on checkouts, sign-ups and fleet panels.";

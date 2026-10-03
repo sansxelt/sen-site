@@ -165,7 +165,7 @@ export function shotShape(run: CheckRun, maxH?: number): "narrow" | "wide" {
 export function RunShot({ record, run, eager = false }: { record: CheckRecord; run: CheckRun; eager?: boolean; maxH?: number }) {
   const s = run.shot;
   return <PicturePlate src={s.src} alt={s.alt} w={s.w} h={s.h} evidence eager={eager}
-    caption={s.caption} credit={<span data-no-translate>{record.name} / {run.id} / {run.recorded} UTC</span>} />;
+    caption={s.caption} credit={<span className="v6-plate__metadata" data-no-translate><span>{record.name}</span>{" "}<span>{run.id}</span>{" "}<time>{run.recorded} UTC</time></span>} />;
 }
 
 /** The repair prompt as a reference block with Copy (Code). `lines` shows only the first lines, as the sector

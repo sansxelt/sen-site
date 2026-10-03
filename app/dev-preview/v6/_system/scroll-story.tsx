@@ -29,10 +29,10 @@ const CLAIM = DEMO.claim ?? "";
 const CAPTION = `A real recorded run on ${DEMO.app.split(",")[0]}, a Vraelis demo app.`;
 
 const CHAPTERS = [
-  { t: "Say what should work.", d: "One sentence, from the console, your terminal or your coding agent." },
-  { t: "A person approves the plan.", d: "Vraelis writes the steps. Nothing runs until a person says yes, and an agent never can." },
-  { t: "A real browser checks the live product.", d: "Production, staging or a preview, used the way a person would." },
-  { t: "See exactly what happened.", d: "Every step, a screenshot, and a repair prompt your agent can act on." },
+  { t: "Say what should work", d: "One sentence, from the console, your terminal or your coding agent." },
+  { t: "A person approves the plan", d: "Vraelis writes the steps. Nothing runs until a person says yes, and an agent never can." },
+  { t: "A real browser checks the live product", d: "Production, staging or a preview, used the way a person would." },
+  { t: "See exactly what happened", d: "Every step, a screenshot, and a repair prompt your agent can act on." },
 ];
 
 const fmt = (ms: number) => (ms >= 1000 ? `${(ms / 1000).toFixed(1)} s` : `${ms} ms`);
