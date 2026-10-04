@@ -12,42 +12,24 @@ import "./orbit.css";
 
 // pos: where the 4:3 frame crops a photograph cut to another shape (CSS object-position), when the middle is wrong.
 type Photo = { readonly src: string; readonly alt: string; readonly pos?: string };
-// narrow: the sentence wraps in a narrower measure without balancing (orbit.css), so "AI-built" is never broken at
-// its hyphen. The sentence stays one plain string for the translator.
-type LiveTile = { word: OrbitWord; label: string; sentence: string; narrow?: true; next?: undefined; photos: readonly Photo[] };
-type NextTile = { next: true; label: string; word?: undefined; sentence?: undefined; narrow?: undefined; photos: readonly Photo[] };
+type LiveTile = { word: OrbitWord; label: string; next?: undefined; photos: readonly Photo[] };
+type NextTile = { next: true; label: string; word?: undefined; photos: readonly Photo[] };
 type Tile = LiveTile | NextTile;
 
 const pic = (name: string, alt: string, pos?: string): Photo => ({ src: `/home/orbit/photo-${name}.jpg`, alt, pos });
 
 // All subjects share the ring equally. The overview stays broad until a tile is hovered or focused.
 export const ORBIT: readonly Tile[] = [
-  { word: "commercial", label: "Commercial and retail", sentence: "Know your checkout works",
-    photos: [pic("checkout", "A card held to a card reader", "50% 65%")] },
-  { word: "drones", label: "Drones and aviation", sentence: "Know your drone panel works",
-    photos: [pic("drone", "A drone against an evening sky"), pic("flight", "An airliner cockpit lit at night over a city"), pic("fleet", "A person flying a drone at dusk", "50% 22%")] },
-  { word: "developers", label: "Developers", sentence: "Know your release works",
-    photos: [pic("agent", "Code on a laptop screen"), pic("release", "A server rack lit green")] },
-  { word: "government", label: "Government", sentence: "Know your public service works",
-    photos: [pic("public", "An arched hall inside a state capitol")] },
-  { next: true, label: "Desktop and mobile apps",
-    photos: [pic("electron", "A desktop editing app open on a laptop"), pic("mobile", "A phone held at night against city lights", "50% 62%")] },
-  { word: "fintech", label: "Fintech and banking", sentence: "Know your banking app works",
-    photos: [pic("banking", "A hand holding a phone calculator over banknotes", "50% 58%")] },
-  { word: "robotics", label: "Robotics and manufacturing", sentence: "Know your robot console works",
-    photos: [pic("robot", "A robot arm building a lattice", "50% 60%"), pic("device", "A circuit board inside a device")] },
-  { next: true, label: "SDKs and scripts", photos: [pic("script", "Python code that collects statuses on a dark screen")] },
-  { word: "ai-built-apps", label: "AI-built apps", sentence: "Know your AI-built app works", narrow: true,
-    photos: [pic("aiapp", "An app open on a tablet in low light")] },
-  { word: "logistics", label: "Logistics and vehicles", sentence: "Know your fleet portal works",
-    photos: [pic("vehicle", "A truck on a road at dusk"), pic("robotfleet", "A row of delivery robots waiting on a pavement", "50% 55%")] },
+  { word: "saas", label: "Web apps", photos: [pic("dashboard", "A dashboard on a screen")] },
+  { word: "drones", label: "Drones and aviation", photos: [pic("drone", "A drone against an evening sky")] },
+  { word: "government", label: "Government", photos: [pic("public", "An arched hall inside a state capitol")] },
+  { next: true, label: "Desktop and mobile apps", photos: [pic("electron", "A desktop editing app open on a laptop")] },
+  { word: "fintech", label: "Fintech and banking", photos: [pic("banking", "A hand holding a phone calculator over banknotes", "50% 58%")] },
+  { word: "robotics", label: "Robotics and manufacturing", photos: [pic("robot", "A robot arm building a lattice", "50% 60%")] },
+  { word: "ai-built-apps", label: "AI-built apps", photos: [pic("aiapp", "An app open on a tablet in low light")] },
+  { word: "logistics", label: "Logistics and vehicles", photos: [pic("vehicle", "A truck on a road at dusk")] },
   { next: true, label: "Devices and firmware", photos: [pic("firmware", "A small development board on a dark table")] },
-  { word: "military", label: "Military", sentence: "Know your mission software works",
-    photos: [pic("targeting", "A radar scope and a track readout on a console", "50% 45%"), pic("mission", "An operations room at night"), pic("groundstation", "A hand on a control stick beside a map display")] },
-  { word: "saas", label: "SaaS and startups", sentence: "Know your product works",
-    photos: [pic("dashboard", "A person reading a dashboard"), pic("signup", "Hands on a laptop keyboard in the dark")] },
-  { word: "agencies", label: "Agencies", sentence: "Know your client's site works",
-    photos: [pic("agent", "Code photographed on a laptop screen")] },
+  { word: "military", label: "Military", photos: [pic("targeting", "A radar scope and a track readout on a console", "50% 45%")] },
 ];
 
 
@@ -145,7 +127,7 @@ export function Orbit() {
 
   return <section ref={root} className="v6-or__field v6-dark" aria-labelledby="v6-or-h" data-nav-dark data-nav-theme="dark">
     <div className="v6-or__copy">
-      <h2 id="v6-or-h" className="v6-or__h"><span className="v6-or__s" data-on={selected === null}>{HEADLINE}</span>{ORBIT.map((t, i) => <span key={t.label} className="v6-or__s" data-on={i === selected}>{t.next ? t.label : t.sentence}</span>)}</h2>
+      <h2 id="v6-or-h" className="v6-or__h"><span className="v6-or__s" data-on={selected === null}>{HEADLINE}</span>{ORBIT.map((t, i) => <span key={t.label} className="v6-or__s" data-on={i === selected}>{t.label}</span>)}</h2>
       <p className="v6-or__d">{selected !== null && ORBIT[selected].next ? "Not built yet" : "From everyday apps to the software behind connected machines"}</p>
       <EditorialLink href={selected === null ? `${V6_BASE}/platform#coverage` : ROUTE[selected].href}>{selected === null ? "See every sector" : ORBIT[selected].next ? "See what is planned" : "Explore this subject"}</EditorialLink>
     </div>
