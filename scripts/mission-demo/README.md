@@ -9,6 +9,7 @@ To rebuild, serve the broken fixture locally (for example, `npm run dev -- --por
 ```sh
 npx playwright install ffmpeg
 node scripts/mission-demo/capture.cjs 'http://localhost:3100/api/fixtures/strike?mode=broken'
+node scripts/mission-demo/capture.cjs 'http://localhost:3100/api/fixtures/strike?mode=broken' --portrait
 ```
 
-Requires Chromium and system FFmpeg. Override `CHROMIUM_PATH` if needed. The script saves a JPEG poster and H.264 MP4, with video dimensions 1440×960. The homepage loads the video near the viewport, pauses when offscreen or the tab is hidden, honors reduced motion, and offers persistent playback and full-screen controls.
+Requires Chromium and system FFmpeg. Override `CHROMIUM_PATH` if needed. The script saves a JPEG poster and H.264 MP4, with video dimensions 1440×960 and 720×960. The portrait capture restyles the same fixture to put larger contact details and controls above the map; it does not alter the fixture behavior. The homepage loads the video near the viewport, pauses when offscreen or the tab is hidden, honors reduced motion, and offers persistent playback and full-screen controls.

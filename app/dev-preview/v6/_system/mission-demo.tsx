@@ -2,6 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 
+const CLEAR = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+const filmSource = () => matchMedia("(max-width: 560px)").matches
+  ? "/home/mission-demo-vertical.mp4" : "/home/mission-demo.mp4";
+
 /** A browser reenactment of the recorded Larkspur check, not a new engine run. */
 export function MissionDemo() {
   const video = useRef<HTMLVideoElement>(null);
@@ -17,7 +21,7 @@ export function MissionDemo() {
     wanted.current = !motion.matches;
     const sync = () => {
       if (visible.current && !document.hidden && wanted.current) {
-        if (!el.getAttribute("src")) el.src = "/home/mission-demo.mp4";
+        if (!el.getAttribute("src")) el.src = filmSource();
         el.play().catch(() => setPlaying(false));
       } else el.pause();
     };
@@ -42,7 +46,7 @@ export function MissionDemo() {
     if (!el) return;
     wanted.current = el.paused;
     if (wanted.current) {
-      if (!el.getAttribute("src")) el.src = "/home/mission-demo.mp4";
+      if (!el.getAttribute("src")) el.src = filmSource();
       el.play().catch(() => setPlaying(false));
     } else el.pause();
   };
@@ -53,10 +57,16 @@ export function MissionDemo() {
   };
 
   return <figure className="v6-mission-demo">
-    <video ref={video} muted loop playsInline preload="none" poster="/home/mission-demo-poster.jpg"
+    <div className="v6-mission-demo__screen">
+    <picture>
+      <source media="(max-width: 560px)" srcSet="/home/mission-demo-poster-vertical.jpg" />
+      <img src="/home/mission-demo-poster.jpg" alt="" loading="lazy" />
+    </picture>
+    <video ref={video} muted loop playsInline preload="none" poster={CLEAR}
       aria-label="Larkspur mission-console demo: confirming T-1 also clears civilian bus T-3."
       aria-describedby="mission-demo-description"
       onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onError={() => setUnavailable(true)} />
+    </div>
     <figcaption className="v6-mission-demo__bar">
       <p id="mission-demo-description">Browser reenactment of the October 2 recorded check. Simulated aircraft and contacts.</p>
       <div className="v6-mission-demo__controls">
