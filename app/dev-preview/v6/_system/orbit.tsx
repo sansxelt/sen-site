@@ -74,6 +74,7 @@ export function Orbit() {
     let width = 0, height = 0, tile = 140, perimeter = 1, phase = 0, speed = 1, visible = false, raf = 0, last = 0;
     let points: { x: number; y: number; length: number }[] = [];
     const lifts = ORBIT.map(() => 0);
+    const offsets = ORBIT.map(() => 0);
     const start = () => { if (!raf) { last = 0; raf = requestAnimationFrame(frame); } };
     wake.current = start;
     const measure = () => {
@@ -112,9 +113,11 @@ export function Orbit() {
           const target = diff === 0 ? 1 : diff === 1 ? -.7 : diff === 2 ? -.3 : 0;
           lifts[i] = reduced.matches ? 0 : lifts[i] + (target - lifts[i]) * (1 - Math.exp(-dt / 170));
           const lift = lifts[i], scale = lift >= 0 ? 1 + lift * .22 : 1 + lift * .15;
-          // Neighbours make space along the track, rather than fading out of it.
+          // Keep displacement continuous when the pointer leaves or selects another tile.
           const direction = h === null ? 0 : ((i - h + ORBIT.length) % ORBIT.length < ORBIT.length / 2 ? 1 : -1);
-          const p = position(phase + i * perimeter / ORBIT.length + (lift < 0 ? -lift * direction * 32 : 0));
+          const targetOffset = target < 0 ? -target * direction * 32 : 0;
+          offsets[i] = reduced.matches ? 0 : offsets[i] + (targetOffset - offsets[i]) * (1 - Math.exp(-dt / 170));
+          const p = position(phase + i * perimeter / ORBIT.length + offsets[i]);
           node.style.width = `${tile}px`;
           node.style.transform = `translate(${p.x - tile / 2}px, ${p.y - tile * .375}px) scale(${scale})`;
           node.style.filter = `blur(${lift < 0 ? -lift * 1.1 : 0}px)`;
@@ -130,7 +133,9 @@ export function Orbit() {
         const h = held.current;
         const d = h === null ? ORBIT.length : Math.min((i - h + ORBIT.length) % ORBIT.length, (h - i + ORBIT.length) % ORBIT.length);
         const target = d === 0 ? 1 : d === 1 ? -.7 : d === 2 ? -.3 : 0;
-        return Math.abs(lift - target) > .001;
+        const direction = h === null ? 0 : ((i - h + ORBIT.length) % ORBIT.length < ORBIT.length / 2 ? 1 : -1);
+        const targetOffset = target < 0 ? -target * direction * 32 : 0;
+        return Math.abs(lift - target) > .001 || Math.abs(offsets[i] - targetOffset) > .01;
       }));
       if (moving) raf = requestAnimationFrame(frame);
     };
