@@ -6,10 +6,10 @@ import { HEADLINE } from "./positioning";
 import "./hero.css";
 
 // The two cuts and the screens each is for (hero.css switches the layout at the same width).
-const FILM = "/home/systems-film-field.mp4";
-const FILM_PHONE = "/home/systems-film-field-vertical.mp4";
-const POSTER = "/home/systems-poster-field.jpg";
-const POSTER_PHONE = "/home/systems-poster-field-vertical.jpg";
+const FILM = "/home/systems-film-opening.mp4";
+const FILM_PHONE = "/home/systems-film-opening-vertical.mp4";
+const POSTER = "/home/systems-poster-opening.jpg";
+const POSTER_PHONE = "/home/systems-poster-opening-vertical.jpg";
 /** A clear pixel: the video's own poster, so the picture under it (each cut's first frame) shows through. */
 const CLEAR = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 const PHONE = "(max-width: 560px)";

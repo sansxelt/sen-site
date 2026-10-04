@@ -1,6 +1,6 @@
 # Systems film: real footage, original edit
 
-This 26-second silent loop connects industrial robotics, software, a military research robot, an MQ-9 training flight, an Apache flyby and live-fire training demonstration. It is an original edit; no Scale, Anduril or Palantir assets are used.
+This 25-second silent loop opens with an Apache live-fire training launch, then moves through an Apache flyby, an MQ-9 training flight, a military research robot, industrial robotics and software. The launch begins within the first second; the loading poster shows its ignition frame. It is an original edit; no Scale, Anduril or Palantir assets are used.
 
 The field shots illustrate the systems whose software matters. They do not depict Vraelis hardware, customers, deployed military capability or a relationship with the U.S. government. Vraelis currently checks live web apps and control panels in a real browser.
 
