@@ -1,0 +1,23 @@
+/* Progressive enhancement: without JS, motion permission, or enough height,
+   both slides remain in ordinary document flow. No wheel or touch interception. */
+.v6-opening { background: var(--paper); }
+.v6-opening[data-motion] { height: 240svh; }
+.v6-opening[data-motion] .v6-opening__pin { position: sticky; top: var(--nav-h, 66px); height: calc(100svh - var(--nav-h, 66px)); isolation: isolate; }
+.v6-opening[data-motion] .v6-opening__film,
+.v6-opening[data-motion] .v6-opening__statement { position: absolute; inset: 0; }
+.v6-opening[data-motion] .v6-opening__film { opacity: clamp(0, calc(1 - (var(--p, 0) - .24) / .24), 1); transform: translateY(calc(clamp(0, (var(--p, 0) - .24) / .24, 1) * -24px)); }
+.v6-opening[data-motion] .v6-opening__statement { opacity: clamp(0, calc((var(--p, 0) - .36) / .18), 1); transform: translateY(calc((1 - clamp(0, (var(--p, 0) - .36) / .18, 1)) * 24px)); pointer-events: none; }
+.v6-opening[data-motion] .v6-stm { height: 100%; padding: 0 var(--gutter); display: grid; align-items: center; }
+.v6-opening[data-motion] .v6-stm__card { width: 100%; min-height: min(68svh, 680px); display: grid; place-items: center; }
+.v6-opening .v6-stm__t { max-width: 28ch; text-align: center; margin-inline: auto; text-wrap: balance; }
+@media (max-width: 560px) {
+  .v6-opening[data-motion] { height: 215svh; }
+  .v6-opening[data-motion] .v6-stm__card { min-height: 62svh; padding: 32px 22px; border-radius: 18px; }
+  .v6-opening .v6-stm__t { font-size: clamp(1.6rem, 7vw, 2.4rem); line-height: 1.15; }
+}
+@media (prefers-reduced-motion: reduce), (max-height: 519px), (max-width: 900px) and (max-height: 659px) {
+  .v6-opening[data-motion] { height: auto; }
+  .v6-opening[data-motion] .v6-opening__pin { position: static; height: auto; }
+  .v6-opening[data-motion] .v6-opening__film,
+  .v6-opening[data-motion] .v6-opening__statement { position: static; opacity: 1; transform: none; }
+}

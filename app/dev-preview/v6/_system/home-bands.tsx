@@ -17,7 +17,7 @@
    (scripts/design01-inc5-verify.ts). v6.css drops the top padding of a .v6-dark section that follows another
    one, and these bands follow each other, so each band's own rhythm lives on its inner box, where that rule
    cannot reach it. */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import Link from "next/link";
 import { useScrollProgress } from "./progress";
 import { CTA, EditorialLink } from "./ui";
@@ -58,7 +58,7 @@ function unspacedWords(text: string): string[] {
   return out;
 }
 
-export function Statement() {
+export function Statement({ scrollRoot }: { scrollRoot?: RefObject<HTMLElement | null> }) {
   const root = useRef<HTMLElement>(null);
   const src = useRef<HTMLSpanElement>(null);
   // The sentence lives whole in a screen-reader span, which is what the page translator translates. The
@@ -81,8 +81,17 @@ export function Statement() {
   const count = useRef(words.length);
   useEffect(() => { count.current = words.length; }, [words.length]);
   // Progress runs while the card travels from the bottom of the screen to a little above the middle.
-  useScrollProgress(root, {
-    measure: (r, vh) => Math.min(1, Math.max(0, (vh * 0.92 - r.top) / (vh * 0.62))),
+  useScrollProgress(scrollRoot ?? root, {
+    property: "--statement-p",
+    measure: (r, vh) => {
+      if (scrollRoot?.current?.dataset.motion) {
+        const pin = scrollRoot.current.querySelector<HTMLElement>(".v6-opening__pin");
+        const height = pin?.offsetHeight ?? vh;
+        const progress = -r.top / Math.max(1, r.height - height);
+        return Math.min(1, Math.max(0, (progress - .48) / .36));
+      }
+      return Math.min(1, Math.max(0, (vh * .92 - r.top) / (vh * .62)));
+    },
     onFrame: (v) => setLit((old) => { const n = Math.round(v * count.current); return n === old ? old : n; }),
   });
   return (

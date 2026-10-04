@@ -3,10 +3,10 @@
 // Homepage: the existing film, editorial chapters with photographs and genuine evidence,
 // the subject orbit, agent setup, dated releases and the closing action.
 // Run evidence is never reconstructed as a product window.
-import { Hero } from "./_system/hero";
+import { Opening } from "./_system/opening";
 import { StrikeStory } from "./_system/strike-story";
 import { STRIKE, STRIKE_CHAPTERS, STRIKE_CAPTION } from "./_content/strike";
-import { Statement, AgentsBand, ChangelogRow } from "./_system/home-bands";
+import { AgentsBand, ChangelogRow } from "./_system/home-bands";
 import { Orbit } from "./_system/orbit";
 import { ClosingScene } from "./_system/close";
 import { useMobileMotion } from "./_system/mobile-motion";
@@ -17,8 +17,7 @@ export default function Home() {
   useMobileMotion();
   return (
     <>
-      <Hero />
-      <Statement />
+      <Opening />
       <StrikeStory record={STRIKE} chapters={STRIKE_CHAPTERS} caption={STRIKE_CAPTION} />
       <Orbit />
       <AgentsBand />
