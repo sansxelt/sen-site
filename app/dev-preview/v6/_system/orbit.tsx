@@ -40,7 +40,7 @@ function TopicSwap({ text }: { text: string }) {
     <AnimatePresence initial={false} mode="popLayout">
       <motion.span key={text} className="v6-or__topic"
         initial={{ y: reduced ? 0 : "100%" }} animate={{ y: 0 }} exit={{ y: reduced ? 0 : "-100%" }}
-        transition={{ duration: reduced ? 0 : .18, ease: [.22, 1, .36, 1] }}>
+        transition={{ duration: reduced ? 0 : .32, ease: [.22, 1, .36, 1] }}>
         {text}
       </motion.span>
     </AnimatePresence>

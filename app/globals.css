@@ -88,40 +88,35 @@
   box-sizing: border-box;
 }
 
-/* Visible scrollbars \u2014 a clear, grabbable thumb on a faint track so the
-   scroll control is obvious in every zone (works on both the light Vraelis
-   and dark Sansxel backgrounds).
-   FIXED DARK, NOT THEME-RELATIVE. This used to be a mid grey (120,120,128), which reads as a light-ish bar
-   on the light marketing pages and only looks "black" on dark surfaces like app.vraelis.com because the
-   background does the contrast work for it. The chrome itself is the same colour on every page now, so the
-   scrollbar reads as one consistent rail regardless of what page it's next to \u2014 the way Scale.ai's does. */
+/* Neutral scrollbars with visible resting contrast on each page ground. */
+:root {
+  --scroll-thumb: #66666E;
+  --scroll-thumb-hover: #4B4B53;
+  --scroll-thumb-active: #35353D;
+  --scroll-track: #E4E4E7;
+  scrollbar-gutter: stable;
+}
+:root[data-theme="dark"] {
+  --scroll-thumb: #81818B;
+  --scroll-thumb-hover: #A1A1AA;
+  --scroll-thumb-active: #C4C4CC;
+  --scroll-track: #171719;
+}
 * {
-  scrollbar-color: rgba(10, 10, 14, 0.62) rgba(10, 10, 14, 0.12);
+  scrollbar-color: var(--scroll-thumb) var(--scroll-track);
   scrollbar-width: auto;
 }
-*::-webkit-scrollbar        { width: 13px; height: 13px; }
-*::-webkit-scrollbar-track  {
-  background: rgba(10, 10, 14, 0.12);
+*::-webkit-scrollbar { width: 13px; height: 13px; }
+*::-webkit-scrollbar-track { background: var(--scroll-track); border-radius: 10px; }
+*::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
   border-radius: 10px;
+  border: 3px solid var(--scroll-track);
+  background-clip: padding-box;
 }
-*::-webkit-scrollbar-thumb  {
-  background: rgba(10, 10, 14, 0.62);
-  border-radius: 10px;
-  border: 3px solid transparent;
-  background-clip: content-box;
-  transition: background 160ms ease;
-}
-*::-webkit-scrollbar-thumb:hover  { background: rgba(10, 10, 14, 0.8);  background-clip: content-box; }
-*::-webkit-scrollbar-thumb:active { background: rgba(10, 10, 14, 0.95); background-clip: content-box; }
-*::-webkit-scrollbar-corner { background: transparent; }
-
-/* NO COLOURED SCROLLBAR ANYWHERE.
-   A block here used to paint the scrollbar brand emerald on every [data-theme="light"] document, which is
-   every document. Design 06 reserves colour so completely that green, amber and red mean only "it held",
-   "a person is needed" and "it failed" — and a scrollbar is not a state. It also meant the graphite
-   product, the auth screens and the stealth curtain all rendered a bright green bar down a near-black
-   page, because the neutraliser that existed only covered .v6 surfaces.
-   The grey above is the one definition, and it reads on both grounds. */
+*::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); }
+*::-webkit-scrollbar-thumb:active { background: var(--scroll-thumb-active); }
+*::-webkit-scrollbar-corner { background: var(--scroll-track); }
 
 /* ── WHERE AN ANCHORED SECTION LANDS, DECIDED IN EXACTLY ONE PLACE ──────────────────────────────────────
    scroll-padding-top on the scrollport and scroll-margin-top on the target are NOT alternatives. The browser
