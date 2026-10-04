@@ -1,0 +1,28 @@
+// Review of an existing public record using the real app chrome. No account, plan or run is created.
+const {chromium}=require('playwright');const path=require('node:path');const {spawn}=require('node:child_process');const {once}=require('node:events');
+let captureBrowser;
+const portrait=process.argv.includes('--portrait'),W=portrait?720:1440,H=portrait?960:900,suffix=portrait?'-vertical':'';
+const compactFixture=`.top{display:none}.wrap{height:460px;min-height:0;grid-template-columns:1fr 1fr;grid-template-rows:220px 240px}.wrap>.card:nth-child(2){grid-column:1/3;grid-row:1}.wrap>.card:first-child{grid-column:1;grid-row:2;border-right:1px solid #303030}.wrap>.card:nth-child(3){grid-column:2;grid-row:2;overflow:hidden;border-top:0}.map-toolbar{height:42px;padding:6px 10px}.map{min-height:0}.hd{padding:10px 12px 8px}.row{grid-template-columns:1fr;padding:5px 8px;gap:0}.who b{font-size:12px}.who small{font-size:11px}.eng{font-size:10px}.fields{padding:12px;gap:10px}.f strong{font-size:13px}.f span{font-size:10px}.f:nth-child(1),.f:nth-child(2){display:none}.f.wide{grid-column:1/3}.fields .f:last-child{grid-column:1/3}.actions{padding:0 12px 10px;gap:5px}.act{font-size:11px;padding:8px}.rule,.history,.toast{display:none}.object-label{font-size:12px}`;
+(async()=>{const b=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox','--enable-unsafe-swiftshader']});captureBrowser=b;const context=await b.newContext({viewport:{width:W,height:H},permissions:['clipboard-write']});
+// Prevent all account APIs and mutations during this capture. The source is public, already-recorded data.
+await context.route('**/*',async route=>{const req=route.request(),u=new URL(req.url());if(!['GET','HEAD','OPTIONS'].includes(req.method()))return route.abort();if(u.pathname.startsWith('/api/v/')||u.pathname.startsWith('/api/auth/')||u.pathname.startsWith('/api/workspace'))return route.fulfill({status:200,contentType:'application/json',body:'{}'});return route.continue()});
+const page=await context.newPage();await page.goto(process.argv[2]||'http://localhost:3100/dev-preview/recorded-app');await page.getByRole('button',{name:'Essential only',exact:true}).click();await page.getByRole('tab',{name:'Plan',exact:true}).waitFor();
+await page.addStyleTag({content:'nextjs-portal,[aria-label="Account menu"]{visibility:hidden!important}.recorded-app .app-side a[href="/verifications"]{background:#242424;color:#fafafa}'});
+await page.evaluate(()=>{const el=document.createElement('div');el.id='film-cursor';el.style.cssText='position:fixed;left:0;top:0;z-index:100;pointer-events:none;transform:translate(-50px,-50px)';el.innerHTML='<svg width="20" height="26" viewBox="0 0 22 28"><path d="M2 2v21l5-5 4 8 4-2-4-8h8z" fill="#fff" stroke="#111" stroke-width="1.4"/></svg>';document.body.append(el)});
+const events=[{at:3,selector:'#record-activity'},{at:7,selector:'#confirm',frame:true},{at:9,selector:'[data-id="T-3"]',frame:true},{at:12,selector:'#record-finding'},{at:16,selector:'#record-repair-prompt'},{at:18,selector:'#copy-repair'}];
+let next=0,prior={x:-50,y:-50},target=null,fixture=null;
+const out=path.resolve('public/home'),encoder=spawn('ffmpeg',['-y','-v','error','-f','image2pipe','-framerate','60','-i','pipe:0','-an','-vf','format=yuv420p','-c:v','libx264','-threads','2','-preset','slow','-crf','23','-movflags','+faststart',path.join(out,`app-check-replay${suffix}.mp4`)],{stdio:['pipe','inherit','inherit']});const done=once(encoder,'close');
+for(let n=0;n<1200;n++){const t=n/60,event=events[next];let cursor=prior;
+ if(event){const locator=event.frame?fixture?.locator(event.selector):page.locator(event.selector);if(!target&&locator){const box=await locator.boundingBox();target={x:box.x+box.width*.5,y:box.y+box.height*.5};}
+ if(target){const p=Math.max(0,Math.min(1,(t-event.at+.65)/.65)),e=1-Math.pow(1-p,3);cursor={x:prior.x+(target.x-prior.x)*e,y:prior.y+(target.y-prior.y)*e};}
+ if(t>=event.at){await locator.click();prior=target;cursor=prior;next++;target=null;
+ if(event.selector==='#record-activity'){await page.locator('#recorded-fixture').waitFor();fixture=await (await page.locator('#recorded-fixture').elementHandle()).contentFrame();await fixture.waitForFunction(()=>window.LARKSPUR_SCENE?.renderFrame);await fixture.addStyleTag({content:compactFixture});await fixture.getByRole('button',{name:'Reset simulation',exact:true}).evaluate(el=>el.click());}
+ if(event.selector==='#record-finding')fixture=null;
+ }}
+ if(fixture)await fixture.evaluate(t=>window.LARKSPUR_SCENE.renderFrame(t),t);
+ await page.evaluate(pos=>{document.getElementById('film-cursor').style.transform=`translate(${pos.x}px,${pos.y}px)`},cursor);
+ if(n===0)await page.screenshot({path:path.join(out,`app-check-replay-poster${suffix}.jpg`),type:'jpeg',quality:94});
+ if([300,600,840,1080].includes(n))await page.screenshot({path:`/tmp/app-replay-${portrait?'phone':'desktop'}-${n}.jpg`,type:'jpeg',quality:94});
+ const buffer=await page.screenshot({type:'jpeg',quality:94});if(!encoder.stdin.write(buffer))await once(encoder.stdin,'drain');if(n%240===0)console.log(`${portrait?'Phone':'Desktop'} ${n}/1200`);
+}
+encoder.stdin.end();const [code]=await done;if(code)throw Error('Encoding failed');await b.close();console.log('20 seconds, 1200 captured frames, 60 FPS')})().catch(async e=>{await captureBrowser?.close();console.error(e);process.exit(1)});

@@ -56,10 +56,10 @@ function symbol(cls: Contact["cls"], size = 22): string {
   // The standard battlefield convention, so the colour carries meaning: hostile red diamond, friendly blue
   // rectangle, neutral green square, unknown yellow quatrefoil.
   const s = size, h = s / 2;
-  if (cls === "Hostile") return `<svg width="${s}" height="${s}" viewBox="0 0 22 22"><path d="M11 1.5L20.5 11 11 20.5 1.5 11z" fill="rgba(255,90,90,.18)" stroke="#ff6b6b" stroke-width="1.6"/></svg>`;
-  if (cls === "Friendly") return `<svg width="${s + 6}" height="${s}" viewBox="0 0 28 22"><rect x="1.5" y="3.5" width="25" height="15" rx="1" fill="rgba(110,170,255,.18)" stroke="#6ea8ff" stroke-width="1.6"/></svg>`;
-  if (cls === "Civilian") return `<svg width="${s}" height="${s}" viewBox="0 0 22 22"><rect x="2.5" y="2.5" width="17" height="17" fill="rgba(80,210,140,.16)" stroke="#4fd28a" stroke-width="1.6"/></svg>`;
-  return `<svg width="${s}" height="${s}" viewBox="0 0 22 22"><path d="M11 2a4.5 4.5 0 014.2 2.9A4.5 4.5 0 0119.1 11a4.5 4.5 0 01-3.9 6.1A4.5 4.5 0 0111 20a4.5 4.5 0 01-4.2-2.9A4.5 4.5 0 012.9 11a4.5 4.5 0 013.9-6.1A4.5 4.5 0 0111 2z" fill="rgba(240,200,80,.16)" stroke="#f0c850" stroke-width="1.5"/></svg>`;
+  if (cls === "Hostile") return `<svg width="${s}" height="${s}" viewBox="0 0 22 22"><path d="M11 1.5L20.5 11 11 20.5 1.5 11z" fill="rgba(255,90,90,.18)" stroke="#8a8a8a" stroke-width="1.6"/></svg>`;
+  if (cls === "Friendly") return `<svg width="${s + 6}" height="${s}" viewBox="0 0 28 22"><rect x="1.5" y="3.5" width="25" height="15" rx="1" fill="rgba(110,170,255,.18)" stroke="#a2a2a2" stroke-width="1.6"/></svg>`;
+  if (cls === "Civilian") return `<svg width="${s}" height="${s}" viewBox="0 0 22 22"><rect x="2.5" y="2.5" width="17" height="17" fill="rgba(80,210,140,.16)" stroke="#b1b1b1" stroke-width="1.6"/></svg>`;
+  return `<svg width="${s}" height="${s}" viewBox="0 0 22 22"><path d="M11 2a4.5 4.5 0 014.2 2.9A4.5 4.5 0 0119.1 11a4.5 4.5 0 01-3.9 6.1A4.5 4.5 0 0111 20a4.5 4.5 0 01-4.2-2.9A4.5 4.5 0 012.9 11a4.5 4.5 0 013.9-6.1A4.5 4.5 0 0111 2z" fill="rgba(240,200,80,.16)" stroke="#c8c8c8" stroke-width="1.5"/></svg>`;
   void h;
 }
 
@@ -76,12 +76,12 @@ export function strikeConsoleHtml(mode: StrikeMode): string {
 <meta name="robots" content="noindex">
 <title>Larkspur Mission Console</title>
 <style>
-  :root { --bg:#11181c; --p:#1d292e; --line:#344148; --fg:#efefe8; --muted:#a5ada5; }
+  :root { --bg:#171717; --p:#272727; --line:#3f3f3f; --fg:#eeeeee; --muted:#ababab; }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--fg); font:14px/1.45 Arial,Helvetica,sans-serif; }
   button,input { font:inherit; }
   button { cursor:pointer; }
-  button:focus-visible,summary:focus-visible,a:focus-visible { outline:2px solid #d9d3ba; outline-offset:3px; }
+  button:focus-visible,summary:focus-visible,a:focus-visible { outline:2px solid #d2d2d2; outline-offset:3px; }
   .top { height:64px; display:flex; align-items:center; gap:24px; padding:0 24px; border-bottom:1px solid var(--line); }
   .brand { font-size:20px; font-weight:600; letter-spacing:-.5px; }
   .meta { color:var(--muted); font-size:14px; }
@@ -94,29 +94,29 @@ export function strikeConsoleHtml(mode: StrikeMode): string {
   .hd { display:flex; justify-content:space-between; padding:18px 20px 12px; color:var(--muted); font-size:13px; }
   .list { list-style:none; margin:0; padding:0 12px; }
   .row { display:grid; grid-template-columns:1fr auto; align-items:center; gap:12px; width:100%; padding:13px 10px; border:0; border-bottom:1px solid var(--line); background:transparent; color:var(--fg); text-align:left; border-radius:0; }
-  .row.sel { background:var(--p); box-shadow:inset 2px 0 #d6ccb3; }.row:hover { background:var(--p); }
+  .row.sel { background:var(--p); box-shadow:inset 2px 0 #cccccc; }.row:hover { background:var(--p); }
   .sym { display:none; }.who b { display:block; font-size:14px; font-weight:500; }.who small { color:var(--muted); font-size:12px; }
-  .eng { font-size:11px; color:var(--muted); white-space:nowrap; }.e-Cleared-to-engage { color:#d9bba1; }
+  .eng { font-size:11px; color:var(--muted); white-space:nowrap; }.e-Cleared-to-engage { color:#c0c0c0; }
   .rule { margin:14px 22px; font-size:11px; color:var(--muted); }
   .rule summary, .history summary { cursor:pointer; }.rule p { margin-bottom:0; }
   .map-toolbar { display:flex; align-items:center; justify-content:space-between; gap:16px; height:64px; padding:12px 20px; border-bottom:1px solid var(--line); }
   .map-toolbar h1 { font-size:17px; letter-spacing:-.3px; font-weight:500; margin:0; }
-  .view-controls { display:flex; align-items:center; gap:16px; }.view-switch { display:flex; padding:3px; background:#202622; border:1px solid var(--line); border-radius:5px; }
+  .view-controls { display:flex; align-items:center; gap:16px; }.view-switch { display:flex; padding:3px; background:#242424; border:1px solid var(--line); border-radius:5px; }
   .view-switch button { background:transparent; border:0; color:var(--muted); padding:6px 12px; border-radius:3px; font-size:12px; }
-  .view-switch button[aria-pressed=true] { color:#1a211c; background:#e7e8df; }
+  .view-switch button[aria-pressed=true] { color:#1f1f1f; background:#e7e7e7; }
   .layers { position:relative; }.layers summary { cursor:pointer; font-size:12px; list-style:none; }.layers summary::-webkit-details-marker { display:none; }
   .layer-panel { position:absolute; z-index:10; top:32px; right:0; width:210px; padding:18px; background:var(--bg); border:1px solid var(--line); box-shadow:0 10px 25px #0004; }
-  .layer-panel label { display:flex; justify-content:space-between; align-items:center; gap:10px; margin:0 0 14px; font-size:13px; }.layer-panel label:last-child { margin-bottom:0; }.layer-panel input { accent-color:#c9cbbf; }
+  .layer-panel label { display:flex; justify-content:space-between; align-items:center; gap:10px; margin:0 0 14px; font-size:13px; }.layer-panel label:last-child { margin-bottom:0; }.layer-panel input { accent-color:#cacaca; }
   .layer-panel .height-control { display:block; }.height-control input { width:100%; margin-top:12px; }
   .motion-control { border:0; padding:8px 0; background:transparent; color:var(--muted); font-size:12px; min-width:76px; }
-  .map { position:relative; flex:1; min-height:440px; background:#141d23; overflow:hidden; }
-  .map>svg { position:absolute; inset:0; width:100%; height:100%; background:#18201c; }.map[data-ready=true]>svg { display:none; }.map canvas { display:block; touch-action:none; }
-  .object-label { position:absolute; z-index:3; transform:translate(-50%,-50%); padding:4px 7px; border:1px solid #788a88; border-radius:3px; background:#15232be8; color:#efefe8; font-size:11px; box-shadow:0 2px 8px #0004; }.object-label.selected { background:#e8ded0; border-color:#e8ded0; color:#142029; }.object-leader { position:absolute; height:1px; background:#b7c4bcaa; transform-origin:0 50%; pointer-events:none; }.object-leader[hidden] { display:none; }
+  .map { position:relative; flex:1; min-height:440px; background:#1c1c1c; overflow:hidden; }
+  .map>svg { position:absolute; inset:0; width:100%; height:100%; background:#1e1e1e; }.map[data-ready=true]>svg { display:none; }.map canvas { display:block; touch-action:none; }
+  .object-label { position:absolute; z-index:3; transform:translate(-50%,-50%); padding:4px 7px; border:1px solid #868686; border-radius:3px; background:#212121e8; color:#eeeeee; font-size:11px; box-shadow:0 2px 8px #0004; }.object-label.selected { background:#dfdfdf; border-color:#dfdfdf; color:#1e1e1e; }.object-leader { position:absolute; height:1px; background:#c1c1c1aa; transform-origin:0 50%; pointer-events:none; }.object-leader[hidden] { display:none; }
   .camera-controls[hidden],.motion-control[hidden],.layers[hidden] { display:none!important; }
-  .camera-controls { position:absolute; right:18px; bottom:18px; display:flex; gap:1px; box-shadow:0 4px 20px #1a231c18; }.camera-controls button { border:1px solid #667775; background:#19262be8; color:#edf0e8; padding:10px 13px; font-size:13px; min-height:38px; }.camera-controls button:first-child { border-radius:4px 0 0 4px; }.camera-controls button:last-child { border-radius:0 4px 4px 0; }
-  .mlab { fill:#dfe5df; font:12px Arial; }.gl { fill:#68766c; font:11px Arial; }
+  .camera-controls { position:absolute; right:18px; bottom:18px; display:flex; gap:1px; box-shadow:0 4px 20px #21212118; }.camera-controls button { border:1px solid #737373; background:#242424e8; color:#efefef; padding:10px 13px; font-size:13px; min-height:38px; }.camera-controls button:first-child { border-radius:4px 0 0 4px; }.camera-controls button:last-child { border-radius:0 4px 4px 0; }
+  .mlab { fill:#e3e3e3; font:12px Arial; }.gl { fill:#727272; font:11px Arial; }
   .fields { display:grid; grid-template-columns:1fr 1fr; gap:20px; padding:16px 22px 22px; }.f.wide { grid-column:1/-1; }.f span { display:block; color:var(--muted); font-size:12px; margin-bottom:5px; }.f strong { font-size:16px; font-weight:500; }
-  .actions { display:grid; gap:8px; padding:0 22px 16px; }.act { border:1px solid #4b544c; background:transparent; color:var(--fg); font-size:13px; padding:12px; border-radius:3px; }.act.primary { background:#e8e9df; color:#172019; border-color:#e8e9df; }.act:disabled { opacity:.4; cursor:default; }
+  .actions { display:grid; gap:8px; padding:0 22px 16px; }.act { border:1px solid #525252; background:transparent; color:var(--fg); font-size:13px; padding:12px; border-radius:3px; }.act.primary { background:#e8e8e8; color:#1e1e1e; border-color:#e8e8e8; }.act:disabled { opacity:.4; cursor:default; }
   .toast { margin:0 22px 16px; min-height:16px; color:var(--muted); font-size:12px; }.history { margin:0 22px 22px; color:var(--muted); font-size:12px; }.log { list-style:none; padding:0; line-height:1.6; }.log li { margin:8px 0; }.log time { margin-right:10px; }
   .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
   @media(max-width:900px) {
@@ -160,23 +160,23 @@ export function strikeConsoleHtml(mode: StrikeMode): string {
     <div class="map" id="spatial-scene">
       <svg viewBox="36 6 690 414" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
         <defs>
-          <pattern id="g" width="140" height="100" patternUnits="userSpaceOnUse" x="0" y="20"><path d="M140 0H0V100" fill="none" stroke="#151c25" stroke-width="1"/></pattern>
+          <pattern id="g" width="140" height="100" patternUnits="userSpaceOnUse" x="0" y="20"><path d="M140 0H0V100" fill="none" stroke="#1b1b1b" stroke-width="1"/></pattern>
           <radialGradient id="fov" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(96 92) rotate(55) scale(300 170)"><stop offset="0" stop-color="rgba(160,190,220,.14)"/><stop offset="1" stop-color="rgba(160,190,220,0)"/></radialGradient>
         </defs>
-        <rect width="840" height="420" fill="#0a0e13"/>
-        <g fill="none" stroke="#141c25" stroke-width="1.2">
+        <rect width="840" height="420" fill="#0e0e0e"/>
+        <g fill="none" stroke="#1b1b1b" stroke-width="1.2">
           ${M.contours.slice(0, 2).map((d) => `<path d="${d}"/>`).join("")}
           ${M.contours.slice(2, 4).map((d) => `<path d="${d}"/>`).join("")}
           ${M.contours.slice(4).map((d) => `<path d="${d}"/>`).join("")}
         </g>
-        <path d="${M.river}" fill="none" stroke="#12304a" stroke-width="7" opacity=".9"/>
-        <path d="${M.road}" fill="none" stroke="#2a323d" stroke-width="3"/>
+        <path d="${M.river}" fill="none" stroke="#2b2b2b" stroke-width="7" opacity=".9"/>
+        <path d="${M.road}" fill="none" stroke="#313131" stroke-width="3"/>
         <rect width="840" height="400" y="20" fill="url(#g)"/>
         ${grid}
-        <rect x="140" y="220" width="140" height="100" fill="rgba(255,255,255,.025)" stroke="#2b3542" stroke-dasharray="4 5"/>
+        <rect x="140" y="220" width="140" height="100" fill="rgba(255,255,255,.025)" stroke="#343434" stroke-dasharray="4 5"/>
         <text x="148" y="236" class="gl">B3</text>
         <path d="M96 92 L 330 250 L 150 360 Z" fill="url(#fov)"/>
-        <g transform="translate(96 92)"><circle r="16" fill="none" stroke="#9fb3c8" stroke-opacity=".35"/><path d="M0 -9 L7 6 L0 3 L-7 6 Z" fill="#dfe7ef"/><text x="20" y="-8" class="mlab">LARK-3</text><text x="20" y="7" class="gl">ALT 1,200 m</text></g>
+        <g transform="translate(96 92)"><circle r="16" fill="none" stroke="#b0b0b0" stroke-opacity=".35"/><path d="M0 -9 L7 6 L0 3 L-7 6 Z" fill="#e6e6e6"/><text x="20" y="-8" class="mlab">LARK-3</text><text x="20" y="7" class="gl">ALT 1,200 m</text></g>
         ${marks}
       </svg>
       <div class="camera-controls" aria-label="Camera controls">

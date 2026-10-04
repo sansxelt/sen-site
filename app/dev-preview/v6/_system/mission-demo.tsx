@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 const CLEAR = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 const filmSource = () => matchMedia("(max-width: 560px)").matches
-  ? "/home/spatial-check-terrain-vertical.mp4" : "/home/spatial-check-terrain.mp4";
+  ? "/home/app-check-replay-vertical.mp4" : "/home/app-check-replay.mp4";
 
 /** A browser reenactment of the recorded Larkspur check, not a new engine run. */
 export function MissionDemo() {
@@ -74,11 +74,11 @@ export function MissionDemo() {
   return <figure className="v6-mission-demo">
     <div ref={screen} className="v6-mission-demo__screen">
     <picture>
-      <source media="(max-width: 560px)" srcSet="/home/spatial-check-terrain-poster-vertical.jpg" />
-      <img src="/home/spatial-check-terrain-poster.jpg" alt="" loading="lazy" />
+      <source media="(max-width: 560px)" srcSet="/home/app-check-replay-poster-vertical.jpg" />
+      <img src="/home/app-check-replay-poster.jpg" alt="" loading="lazy" />
     </picture>
     <video ref={video} muted loop playsInline preload="none" poster={CLEAR}
-      aria-label="Larkspur mission-console demo: confirming T-1 also clears civilian bus T-3."
+      aria-label="Vraelis app demo: review the Larkspur plan, browser activity, finding and repair prompt."
       aria-describedby="mission-demo-description"
       onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onError={() => setUnavailable(true)} />
     {exploring && <iframe className="v6-mission-demo__explore" src="/api/fixtures/strike?mode=broken" title="Larkspur software simulation" />}
@@ -92,7 +92,7 @@ export function MissionDemo() {
       {exploring ? <a href="/api/fixtures/strike?mode=broken" target="_blank" rel="noopener noreferrer" aria-label="Open simulation" title="Open simulation"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden><path d="M13 4h7v7M20 4 10 14M10 5H4v15h15v-6" fill="none" stroke="currentColor" strokeWidth="1.7" /></svg></a> : <button type="button" onClick={fullscreen} aria-label="Full screen" title="Full screen"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden><path d="M9 4H4v5M15 4h5v5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" strokeWidth="1.7" /></svg></button>}
     </div>
     </div>
-    <figcaption id="mission-demo-description" className="v6-mission-demo__description">Browser reenactment of the recorded software check. No real aircraft are connected.</figcaption>
+    <figcaption id="mission-demo-description" className="v6-mission-demo__description">Replay of the recorded check in Vraelis’s app interface. The mission console is a simulation.</figcaption>
     {unavailable && <p className="v6-mission-demo__error">The recording could not load. <a href="/api/fixtures/strike?mode=broken">Open the simulation</a>.</p>}
   </figure>;
 }

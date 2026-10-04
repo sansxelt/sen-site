@@ -853,3 +853,12 @@ export function RankShell({ signedIn = false, email = null, appHost = false, sys
     </div>
   );
 }
+
+/** Capture-only chrome for a replay of public recorded evidence. Does not authenticate a user. */
+export function RecordedAppShell({ children }: { children: ReactNode }) {
+  return <ProductSurface><div className="rank-root">
+    <style dangerouslySetInnerHTML={{ __html: SHELL_UI_CSS }} />
+    <AppTopbar email={null} systems={[]} pendingReviews={0} />
+    <div className="app-shell"><AppSidebar /><main className="app-main">{children}</main></div>
+  </div></ProductSurface>;
+}

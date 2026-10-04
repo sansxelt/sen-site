@@ -18,3 +18,12 @@ node scripts/mission-demo/capture.cjs 'http://localhost:3100/api/fixtures/strike
 Requires Chromium and FFmpeg. Output is `public/home/spatial-check-terrain*.mp4` and matching `spatial-check-terrain-poster*.jpg`, 1440×900 and 720×960, H.264, 60 fps, silent, faststart. The film switches 2D to 3D, confirms T-1, selects T-3, and resets. A single white pointer follows the real controls. No caption overlays, fake engine messages or status-pill clusters are added.
 
 Capture renders 1,080 distinct frames at exact 1/60-second simulation timestamps for an 18-second film, then pipes those images to FFmpeg. It does not use the wall-clock browser recorder or stretch software-rendered frames. This works without a hardware GPU during capture. The default Platform demo only decodes the video; 3D only loads on Explore. The live view caches static shadows, avoids moving unchanged DOM labels, caps device pixel ratio and reduces render resolution when sustained frame times exceed the 60 FPS budget. Runtime frame rate still depends on the visitor’s hardware and browser.
+
+
+## App recording, October 4 revision
+
+The homepage and Platform demo now show a review of the saved Larkspur check using the actual `AppTopbar`, `AppSidebar`, `ProductSurface`, `Page` and `PageHeader` components. The browser-style frame is illustrative and says Recorded demo. Plan requirements, date, duration, finding and repair prompt come from the published October 2 record; no new account, plan, approval or verification is created.
+
+The local-only `/dev-preview/recorded-app` capture route returns 404 in production. It contains only already-public record data and does not authenticate anyone. Account API reads and all non-read requests are blocked by the capture script. The film switches Plan, Activity, Finding and Repair prompt tabs with real clicks. The embedded mission fixture is reenacted; the final clipboard action copies the real stored repair prompt. Profile identity and developer tools are omitted from the capture.
+
+Run `node scripts/mission-demo/capture-app.cjs` and the same command with `--portrait` while the local dev server is running. Output is `app-check-replay*.mp4` and `app-check-replay-poster*.jpg`, 20 seconds at 60 FPS. The scene and its controls use neutral black, white and gray, with geometry and fixture behavior unchanged. The previous stand-alone scene capture script remains available for reproducing that earlier recording.
