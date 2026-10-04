@@ -42,7 +42,7 @@ function useEntryMotion() {
   return root;
 }
 
-const STATEMENT = "Mission software cannot afford guesswork. Vraelis helps defense teams verify live mission consoles and control panels before deployment.";
+const STATEMENT = "Critical software cannot afford guesswork. Vraelis helps teams across defense, robotics, finance and beyond verify live apps and control panels before deployment.";
 
 /* The words of a language that does not space them (Japanese), found by the browser's own word segmenter, with
    punctuation riding on the word before it. Cut by character instead, a phrase too long for a phone's line
