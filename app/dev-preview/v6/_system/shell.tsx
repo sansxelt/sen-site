@@ -1,6 +1,6 @@
 "use client";
 
-// Shared public shell for design 06: one bar (three menus and a Pricing link), one phone drawer, one footer,
+// Shared public shell for design 06: one bar (three menus, Docs and Pricing), one phone drawer, one footer,
 // one route transition, used by every v6 route. The bar stays put and takes the colour of whatever is under it.
 // Client-side navigation with prefetch (next/link).
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FocusEvent as ReactFocusEvent, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
@@ -8,8 +8,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SiteFooter } from "./close";
-import { SECTOR_GROUPS, sectorsIn, SOLUTIONS_HREF } from "../_content/sectors";
-import { CHANGELOG, entryId } from "../_content/changelog";
+import { SECTORS, SOLUTIONS_HREF } from "../_content/sectors";
 import { useGroundColor } from "@/components/use-ground-color";
 import { V6_BASE, V6_HOME, V6_APP, v6SignInPath, v6GroundAtTop, v6ShouldPrefetch, GROUND_CSS } from "@/lib/v6-routes";
 import { analyticsAllowed, onPrivacyChoiceChange } from "@/lib/privacy-choice";
@@ -27,22 +26,8 @@ const SIGNIN = v6SignInPath();
 // Account creation is the same screen in its sign-up mode, landing in the console afterwards.
 const SIGNUP = `${SIGNIN}&mode=signup`;
 
-// THE MENUS (plan S3, 2026-10-02). Left to right: Product, Solutions and Resources open a panel; Pricing is a
-// plain link. A panel is two groups of large plain links under small grey group names, and one picture on the
-// right that becomes the picture of whichever link is pointed at or focused, as scale.com's menus do (the
-// founder, 2026-10-01: "hover over each of the subjects in the top"). Resources shows two cards in that same
-// box instead. Every link keeps a one-line `d`, which only the phone drawer prints.
-//
-// ONE BOX, ONE HEIGHT, IN EVERY MENU. The picture (or the pair of cards) is min(705px, 49vw) wide and half as
-// tall, the links are always shorter than it, and the panel is that box plus its padding. Moving from one menu
-// to the next changes what is inside the panel, never its height or the box's place (nav.css, "the panel").
-//
-// THE SOLUTIONS MENU IS THE SECTOR REGISTRY. Its groups, names, links, lines and pictures are read from
-// _content/sectors.ts, the one list the footer, the homepage and the sector pages read too. Nothing about a
-// sector is typed in this file.
-//
-// Link pictures use the shared licensed photographs; the Resources card uses a
-// genuine screenshot from the recorded Larkspur check. Sources live with the assets.
+// Public navigation favors distinct destinations; detailed topics remain in their pages
+// and documentation. Menus use the licensed editorial images credited alongside the assets.
 type MLink = { t: string; d?: string; href: string; pic?: string };
 type Group = { h: string; links: MLink[] };
 type Card = { label: string; title: string; href: string; pic: string };
@@ -53,68 +38,50 @@ const picSrc = (p: string) => (p.startsWith("/") ? p : `/home/menu/pics/${p}.jpg
 const PIC_SIZES = "(max-width: 1440px) 49vw, 705px";
 const CARD_SIZES = "(max-width: 1440px) 23vw, 330px";
 // A picture that does not load (a file not delivered yet, a deploy that lost one) shows this one instead of an
-// empty box: a genuine screenshot of the Larkspur demo.
-const PIC_FALLBACK = "/site/changelog/larkspur-run.png";
+// empty box: a licensed editorial photograph of industrial robotics.
+const PIC_FALLBACK = "/home/menu/editorial/robotics.jpg";
 
-// The newest changelog entry, for the second Resources card. Read, never copied, so the card cannot go stale.
-const LATEST = CHANGELOG[0];
-
+const EDITORIAL = "/home/menu/editorial/";
 const MENUS: Menu[] = [
   {
     label: "Product",
     groups: [
-      { h: "The check", links: [
-        { t: "Platform overview", d: "What the product does", href: BASE + "/platform", pic: "/site/changelog/larkspur-run.png" },
-        { t: "How a check works", d: "From one sentence to an answer with evidence", href: BASE + "/platform#how", pic: "/site/photography/groundstation.jpg" },
-        { t: "What it can reach", d: "Web apps, and devices through their panels", href: BASE + "/platform#coverage", pic: "/site/photography/vehicle.jpg" },
-        { t: "What is built", d: "The live list beside the planned one", href: BASE + "/platform#current", pic: "/site/photography/drone.jpg" },
-        { t: "Limitations", d: "What it does not do, in plain words", href: BASE + "/limitations", pic: "/site/photography/flight.jpg" },
+      { h: "Platform", links: [
+        { t: "Overview", d: "What Vraelis checks and how it works", href: BASE + "/platform", pic: EDITORIAL + "robotics.jpg" },
+        { t: "Integrations", d: "Connect your development workflow", href: BASE + "/integrations", pic: "/site/photography/firmware.jpg" },
+        { t: "AI assistants", d: "Use Vraelis through MCP", href: BASE + "/agents", pic: "/site/photography/agent.jpg" },
       ] },
-      { h: "Ways in", links: [
-        { t: "Console", d: "Write, approve and read in the app", href: BASE + "/docs/getting-started", pic: "/site/photography/signup.jpg" },
-        { t: "CLI", d: "One command, one exit code", href: BASE + "/docs/cli", pic: "/site/photography/agent.jpg" },
-        { t: "API and CI", d: "Gate a release on the answer", href: BASE + "/developers", pic: "/site/photography/agent.jpg" },
-        { t: "AI assistants", d: "Setup over MCP", href: BASE + "/agents", pic: "/site/changelog/larkspur-run.png" },
-        { t: "Integrations", d: "Where a check starts and where the answer lands", href: BASE + "/integrations", pic: "/site/photography/firmware.jpg" },
+      { h: "Developers", links: [
+        { t: "Developer tools", d: "APIs, command line and webhooks", href: BASE + "/developers", pic: "/site/photography/agent.jpg" },
+        { t: "API", d: "Integrate checks into your software", href: BASE + "/docs/api", pic: "/site/photography/agent.jpg" },
+        { t: "CLI", d: "Run a check from your terminal", href: BASE + "/docs/cli", pic: "/site/photography/firmware.jpg" },
       ] },
     ],
   },
   {
     label: "Solutions",
-    groups: SECTOR_GROUPS.map((g) => ({
-      h: g,
-      links: sectorsIn(g).map((s) => ({ t: s.label, d: s.line, href: s.href, pic: s.pics.menu })),
-    })),
+    groups: [
+      { h: "Industries", links: SECTORS.filter(s => ["defense", "fleets", "commerce"].includes(s.slug)).map(s => ({ t:s.label,d:s.line,href:s.href,pic:s.slug === "defense" ? EDITORIAL + "aviation.jpg" : s.slug === "fleets" ? EDITORIAL + "robotics.jpg" : s.pics.menu })) },
+      { h: "Organizations", links: SECTORS.filter(s => ["public-sector", "enterprise"].includes(s.slug)).map(s => ({t:s.label,d:s.line,href:s.href,pic:s.slug === "enterprise" ? EDITORIAL + "robotics.jpg" : s.pics.menu})) },
+    ],
     foot: { t: "All solutions", href: SOLUTIONS_HREF },
   },
   {
     label: "Resources",
     groups: [
-      { h: "Learn", links: [
-        { t: "Documentation", d: "How to use Vraelis", href: BASE + "/docs" },
-        { t: "Developers", d: "The API, the CLI and webhooks", href: BASE + "/developers" },
-        { t: "Research", d: "Methodology and open questions", href: BASE + "/research" },
-        { t: "Use cases", d: "Real checks, each with its record", href: BASE + "/use-cases" },
-        { t: "The Vraelis Method", d: "The worldview behind the product", href: BASE + "/method" },
-        { t: "Changelog", d: "What shipped, dated", href: BASE + "/changelog" },
+      { h: "Explore", links: [
+        { t: "Research", d: "Our method and open questions", href: BASE + "/research", pic: EDITORIAL + "research.jpg" },
+        { t: "Changelog", d: "What shipped and when", href: BASE + "/changelog", pic: EDITORIAL + "robotics.jpg" },
       ] },
       { h: "Company", links: [
-        { t: "About", d: "Who is building this", href: BASE + "/company" },
-        { t: "Contact", d: "A person reads every message", href: BASE + "/contact" },
-        { t: "Security", d: "Architecture and data handling", href: BASE + "/security" },
-        { t: "Reddit partnership", d: "Audience and advertising record", href: BASE + "/partnerships/reddit" },
-        { t: "ByteDance partnership", d: "TikTok's parent company, Seed models", href: BASE + "/partnerships/bytedance" },
+        { t: "About", d: "Who is building Vraelis", href: BASE + "/company", pic: EDITORIAL + "robotics.jpg" },
+        { t: "Contact", d: "Talk to the team", href: BASE + "/contact", pic: EDITORIAL + "aviation.jpg" },
+        { t: "Security", d: "How we protect your data", href: BASE + "/security", pic: "/site/photography/firmware.jpg" },
       ] },
-    ],
-    // Larkspur is a simulated console Vraelis built itself, and the card says so. The changelog card names the
-    // entry and no date: a partnership entry at the top of the feed must not put its date on a new surface. Its
-    // picture is the entry's own (`media`), so card and entry always agree; an entry without one shows the licensed fallback photograph.
-    cards: [
-      { label: "A real check", title: "On a simulated console Vraelis built, confirming one target also cleared a civilian bus", href: BASE + "/#how-a-check-works", pic: "/site/changelog/larkspur-run.png" },
-      ...(LATEST ? [{ label: "Latest in the changelog", title: LATEST.title, href: `${BASE}/changelog#${entryId(LATEST)}`, pic: LATEST.media?.src ?? PIC_FALLBACK }] : []),
     ],
   },
 ];
+const DOCUMENTATION = {label:"Docs",href:BASE + "/docs"};
 const PRICING = { label: "Pricing", href: BASE + "/pricing" };
 const MEGA_ID = "v6-mega";
 
@@ -609,7 +576,11 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
               {m.label}
             </button>
           ))}
-          <Link href={PRICING.href} ref={(el) => { itemRefs.current[MENUS.length] = el; }} className="v6-nav__item"
+          <Link href={DOCUMENTATION.href} ref={(el) => { itemRefs.current[MENUS.length] = el; }} className="v6-nav__item"
+            aria-current={pathname === DOCUMENTATION.href || pathname?.startsWith(DOCUMENTATION.href + "/") ? "page" : undefined} onPointerEnter={(event) => mouseOnly(leaveMenus)(event)} onFocus={leaveMenus}>
+            {DOCUMENTATION.label}
+          </Link>
+          <Link href={PRICING.href} ref={(el) => { itemRefs.current[MENUS.length + 1] = el; }} className="v6-nav__item"
             aria-current={pathname === PRICING.href ? "page" : undefined} onPointerEnter={mouseOnly(leaveMenus)} onFocus={leaveMenus}>
             {PRICING.label}
           </Link>
@@ -756,6 +727,8 @@ function MobileNav({ authed, onClose }: { authed: boolean; onClose: (returnFocus
         ))}
         {/* Pricing has no menu on a desktop, so it has no accordion here: one plain row at the size of the
             section heads, with an arrow where they have a chevron (plan S3). */}
+        <Link href={DOCUMENTATION.href} className="v6-drawer__row" onClick={follow}
+          aria-current={pathname === DOCUMENTATION.href ? "page" : undefined}>{DOCUMENTATION.label}</Link>
         <Link href={PRICING.href} className="v6-drawer__row" onClick={follow}
           aria-current={pathname === PRICING.href ? "page" : undefined}>
           {PRICING.label}

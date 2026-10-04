@@ -208,7 +208,7 @@ console.log("\n── mounted once, where it covers the site, the docs, sign-in,
 console.log("\n── every surface has a way back to the choice ──");
 {
   const close = code("app/dev-preview/v6/_system/close.tsx");
-  ok("site footer: in the Trust column", /h === "Trust" && <PrivacyChoicesButton \/>/.test(close));
+  ok("site footer: one clear privacy choices entry", (close.match(/<PrivacyChoicesButton \/>/g) ?? []).length === 1);
   ok("site footer: in the bottom legal row", /v6-foot2__legal[\s\S]*<PrivacyChoicesButton \/>/.test(close));
   ok("docs footer", /v6-docs__foot[\s\S]{0,600}<PrivacyChoicesButton \/>/.test(code("app/dev-preview/v6/_content/docs-ui.tsx")));
   ok("sign-in and /auth footer", /auth-split__foot[\s\S]{0,500}<PrivacyChoicesButton \/>/.test(code("app/_components/auth-frame.tsx")));
