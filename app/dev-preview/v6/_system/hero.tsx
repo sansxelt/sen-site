@@ -1,6 +1,6 @@
 "use client";
 
-// An original inspection film, featuring our own simulated mission console.
+// An original edit of licensed live-action footage. Product evidence lives in the demo below.
 import { useEffect, useRef, useState } from "react";
 import { HEADLINE } from "./positioning";
 import { V6_APP } from "@/lib/v6-routes";
@@ -9,10 +9,10 @@ import "./hero.css";
 
 const COMPOSE = V6_APP;
 // The two cuts and the screens each is for (hero.css switches the layout at the same width).
-const FILM = "/home/inspection-film.mp4";
-const FILM_PHONE = "/home/inspection-film-vertical.mp4";
-const POSTER = "/home/inspection-poster.jpg";
-const POSTER_PHONE = "/home/inspection-poster-vertical.jpg";
+const FILM = "/home/field-film.mp4";
+const FILM_PHONE = "/home/field-film-vertical.mp4";
+const POSTER = "/home/field-poster.jpg";
+const POSTER_PHONE = "/home/field-poster-vertical.jpg";
 /** A clear pixel: the video's own poster, so the picture under it (each cut's first frame) shows through. */
 const CLEAR = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 const PHONE = "(max-width: 560px)";
@@ -58,13 +58,14 @@ export function Hero() {
 
   return (
     <section className="v6-h" data-nav-dark data-nav-theme="dark" aria-labelledby="v6-h-h1">
-      {/* THE FILM, IN A FRAME, WITH ONE SENTENCE ON IT (founder, 2026-10-01, against scale.com: the homepage
-          opens on one main thing, not a clutter). One direct action sits below. */}
+      <div className="v6-h__intro v6-wrap">
+        <h1 id="v6-h-h1" className="v6-h__h1"><span className="v6-mask"><span className="v6-mask__in">{HEADLINE}</span></span></h1>
+        <div className="v6-h__below">
+          <p className="v6-h__say">Checks for live web apps and device control panels.</p>
+          <CTA href={`${COMPOSE}?new=1`}>Start a check</CTA>
+        </div>
+      </div>
       <div className="v6-h__frame">
-        {/* The poster is a picture of its own, under the film, so a phone gets the first frame of its own cut: a
-            video can name one poster, and the desktop one, cropped to a phone, showed the drone at twice the size
-            the phone's film then starts at. The video's poster is a clear pixel, so this shows through until the
-            first frame is drawn, and stays when the film does not play (reduced motion). */}
         <picture className="v6-h__poster">
           <source media={PHONE} srcSet={POSTER_PHONE} />
           <img src={POSTER} alt="" fetchPriority="high" />
@@ -74,9 +75,6 @@ export function Hero() {
           <source src={FILM} type="video/mp4" media={MOTION_OK} />
         </video>
         <div className="v6-h__shade" aria-hidden />
-        <h1 id="v6-h-h1" className="v6-h__h1">
-          <span className="v6-mask"><span className="v6-mask__in">{HEADLINE}</span></span>
-        </h1>
         <button type="button" className="v6-h__pause" onClick={toggle} aria-label={playing ? "Pause the film" : "Play the film"}>
           {playing
             ? <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden><path d="M5 3.5v9M11 3.5v9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
@@ -84,10 +82,6 @@ export function Hero() {
         </button>
       </div>
 
-      <div className="v6-h__below">
-        <p className="v6-h__say">Checks for live web apps and device control panels</p>
-        <CTA href={`${COMPOSE}?new=1`}>Start a check</CTA>
-      </div>
     </section>
   );
 }

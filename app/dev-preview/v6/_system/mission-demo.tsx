@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 const CLEAR = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 const filmSource = () => matchMedia("(max-width: 560px)").matches
-  ? "/home/mission-demo-vertical.mp4" : "/home/mission-demo.mp4";
+  ? "/home/check-film-vertical.mp4" : "/home/check-film.mp4";
 
 /** A browser reenactment of the recorded Larkspur check, not a new engine run. */
 export function MissionDemo() {
@@ -59,8 +59,8 @@ export function MissionDemo() {
   return <figure className="v6-mission-demo">
     <div className="v6-mission-demo__screen">
     <picture>
-      <source media="(max-width: 560px)" srcSet="/home/mission-demo-poster-vertical.jpg" />
-      <img src="/home/mission-demo-poster.jpg" alt="" loading="lazy" />
+      <source media="(max-width: 560px)" srcSet="/home/check-film-poster-vertical.jpg" />
+      <img src="/home/check-film-poster.jpg" alt="" loading="lazy" />
     </picture>
     <video ref={video} muted loop playsInline preload="none" poster={CLEAR}
       aria-label="Larkspur mission-console demo: confirming T-1 also clears civilian bus T-3."
@@ -68,7 +68,7 @@ export function MissionDemo() {
       onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onError={() => setUnavailable(true)} />
     </div>
     <figcaption className="v6-mission-demo__bar">
-      <p id="mission-demo-description">Browser reenactment of the October 2 recorded check. Simulated aircraft and contacts.</p>
+      <p id="mission-demo-description">Larkspur simulation · Browser reenactment</p>
       <div className="v6-mission-demo__controls">
         <button type="button" onClick={toggle} disabled={unavailable}>{playing ? "Pause demo" : "Play demo"}</button>
         <button type="button" onClick={fullscreen}>Full screen</button>
