@@ -110,7 +110,7 @@ const MENUS: Menu[] = [
     // entry and no date: a partnership entry at the top of the feed must not put its date on a new surface. Its
     // picture is the entry's own (`media`), so card and entry always agree; an entry without one shows the licensed fallback photograph.
     cards: [
-      { label: "A real check", title: "On a simulated console Vraelis built, confirming one target also cleared a civilian bus", href: BASE + "/platform#how-a-check-works", pic: "/site/changelog/larkspur-run.png" },
+      { label: "A real check", title: "On a simulated console Vraelis built, confirming one target also cleared a civilian bus", href: BASE + "/#how-a-check-works", pic: "/site/changelog/larkspur-run.png" },
       ...(LATEST ? [{ label: "Latest in the changelog", title: LATEST.title, href: `${BASE}/changelog#${entryId(LATEST)}`, pic: LATEST.media?.src ?? PIC_FALLBACK }] : []),
     ],
   },

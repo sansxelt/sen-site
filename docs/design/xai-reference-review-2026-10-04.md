@@ -6,7 +6,7 @@ Observed navigation menus, pricing audience tabs, code language switching, copy 
 
 ## Applicable design decisions
 
-- Keep one coherent visual language in the opening film. Show real systems with one centered headline; product detail belongs on the Platform page.
+- Keep one coherent visual language in the opening film. Show real systems with one centered headline; the demonstration follows the introductory statement further down the homepage and is also available on the Platform page.
 - Connect the real-world imagery to the actual service in the following statement: live apps and control panels, without claiming Vraelis manufactures or operates the depicted hardware.
 - Use concise, specific copy and a clear destination for each action. Avoid explanatory columns beneath a visual that repeat its interface.
 - Developer, business and government audiences need distinct paths and useful information, rather than a larger-volume plan alone.
