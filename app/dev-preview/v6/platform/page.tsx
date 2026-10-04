@@ -4,6 +4,8 @@ import { v6meta } from "../_system/meta";
 import { SectionHead, EditorialLink } from "../_system/ui";
 import { FrameHero, AltRows, Compare, Band, CrossLinks, Tabs, type AltRow, type CompareRow, type CrossLink } from "../_system/kit";
 import { ClosingScene } from "../_system/close";
+import { StrikeStory } from "../_system/strike-story";
+import { STRIKE, STRIKE_CHAPTERS, STRIKE_CAPTION } from "../_content/strike";
 import { RecordPanel } from "../_system/record-panel";
 import { Photograph, PicturePlate } from "../_system/picture-plate";
 import { RECORDS } from "../_content/use-cases";
@@ -107,9 +109,11 @@ export default function Platform() {
         title="One sentence, one approved plan, one answer from the live app"
         sub="Write what your web app, or a device it controls, should do. A person approves the plan, and a real browser tries it on the live product."
         primary={{ label: "Start free", href: SIGNUP }}
-        secondary={{ label: "See real runs", href: "#runs" }}
+        secondary={{ label: "Watch a check", href: "#how-a-check-works" }}
         {...photographHero("client")}
       />
+
+      <StrikeStory record={STRIKE} chapters={STRIKE_CHAPTERS} caption={STRIKE_CAPTION} />
 
       {/* #runs: the four recorded demo runs, replayed at their recorded pace. RunWindow is a product panel
           (data-panel), so its words do not count against the page's budget. */}

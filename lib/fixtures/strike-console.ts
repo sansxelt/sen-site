@@ -76,7 +76,7 @@ export function strikeConsoleHtml(mode: StrikeMode): string {
 <meta name="robots" content="noindex">
 <title>Larkspur Mission Console</title>
 <style>
-  :root { --bg:#121615; --p:#1c211f; --line:#343a36; --fg:#efefe8; --muted:#a5ada5; }
+  :root { --bg:#11181c; --p:#1d292e; --line:#344148; --fg:#efefe8; --muted:#a5ada5; }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--fg); font:14px/1.45 Arial,Helvetica,sans-serif; }
   button,input { font:inherit; }
@@ -109,11 +109,11 @@ export function strikeConsoleHtml(mode: StrikeMode): string {
   .layer-panel label { display:flex; justify-content:space-between; align-items:center; gap:10px; margin:0 0 14px; font-size:13px; }.layer-panel label:last-child { margin-bottom:0; }.layer-panel input { accent-color:#c9cbbf; }
   .layer-panel .height-control { display:block; }.height-control input { width:100%; margin-top:12px; }
   .motion-control { border:0; padding:8px 0; background:transparent; color:var(--muted); font-size:12px; min-width:76px; }
-  .map { position:relative; flex:1; min-height:440px; background:#c9cec7; overflow:hidden; }
+  .map { position:relative; flex:1; min-height:440px; background:#141d23; overflow:hidden; }
   .map>svg { position:absolute; inset:0; width:100%; height:100%; background:#18201c; }.map[data-ready=true]>svg { display:none; }.map canvas { display:block; touch-action:none; }
-  .object-label { position:absolute; transform:translate(-50%,-100%); padding:4px 7px; border:1px solid #b2b9ae; border-radius:3px; background:#f0f0e5ed; color:#29342b; font-size:11px; box-shadow:0 2px 8px #29342b18; }.object-label.selected { background:#333e32; border-color:#333e32; color:#fff; }
+  .object-label { position:absolute; z-index:3; transform:translate(-50%,-50%); padding:4px 7px; border:1px solid #788a88; border-radius:3px; background:#15232be8; color:#efefe8; font-size:11px; box-shadow:0 2px 8px #0004; }.object-label.selected { background:#e8ded0; border-color:#e8ded0; color:#142029; }.object-leader { position:absolute; height:1px; background:#b7c4bcaa; transform-origin:0 50%; pointer-events:none; }.object-leader[hidden] { display:none; }
   .camera-controls[hidden],.motion-control[hidden],.layers[hidden] { display:none!important; }
-  .camera-controls { position:absolute; right:18px; bottom:18px; display:flex; gap:1px; box-shadow:0 4px 20px #1a231c18; }.camera-controls button { border:0; background:#eff0e7; color:#28342b; padding:10px 13px; font-size:13px; min-height:38px; }.camera-controls button:first-child { border-radius:4px 0 0 4px; }.camera-controls button:last-child { border-radius:0 4px 4px 0; }
+  .camera-controls { position:absolute; right:18px; bottom:18px; display:flex; gap:1px; box-shadow:0 4px 20px #1a231c18; }.camera-controls button { border:1px solid #667775; background:#19262be8; color:#edf0e8; padding:10px 13px; font-size:13px; min-height:38px; }.camera-controls button:first-child { border-radius:4px 0 0 4px; }.camera-controls button:last-child { border-radius:0 4px 4px 0; }
   .mlab { fill:#dfe5df; font:12px Arial; }.gl { fill:#68766c; font:11px Arial; }
   .fields { display:grid; grid-template-columns:1fr 1fr; gap:20px; padding:16px 22px 22px; }.f.wide { grid-column:1/-1; }.f span { display:block; color:var(--muted); font-size:12px; margin-bottom:5px; }.f strong { font-size:16px; font-weight:500; }
   .actions { display:grid; gap:8px; padding:0 22px 16px; }.act { border:1px solid #4b544c; background:transparent; color:var(--fg); font-size:13px; padding:12px; border-radius:3px; }.act.primary { background:#e8e9df; color:#172019; border-color:#e8e9df; }.act:disabled { opacity:.4; cursor:default; }

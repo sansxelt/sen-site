@@ -4,8 +4,6 @@
 // the subject orbit, agent setup, dated releases and the closing action.
 // Run evidence is never reconstructed as a product window.
 import { Hero } from "./_system/hero";
-import { StrikeStory } from "./_system/strike-story";
-import { STRIKE, STRIKE_CHAPTERS, STRIKE_CAPTION } from "./_content/strike";
 import { Statement, AgentsBand, ChangelogRow } from "./_system/home-bands";
 import { Orbit } from "./_system/orbit";
 import { ClosingScene } from "./_system/close";
@@ -18,7 +16,6 @@ export default function Home() {
   return (
     <>
       <Hero />
-      <StrikeStory record={STRIKE} chapters={STRIKE_CHAPTERS} caption={STRIKE_CAPTION} />
       <Statement />
       <Orbit />
       <AgentsBand />

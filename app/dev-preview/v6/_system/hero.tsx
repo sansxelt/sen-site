@@ -6,10 +6,10 @@ import { HEADLINE } from "./positioning";
 import "./hero.css";
 
 // The two cuts and the screens each is for (hero.css switches the layout at the same width).
-const FILM = "/home/systems-film-smooth.mp4";
-const FILM_PHONE = "/home/systems-film-smooth-vertical.mp4";
-const POSTER = "/home/systems-poster-smooth.jpg";
-const POSTER_PHONE = "/home/systems-poster-smooth-vertical.jpg";
+const FILM = "/home/systems-film-field.mp4";
+const FILM_PHONE = "/home/systems-film-field-vertical.mp4";
+const POSTER = "/home/systems-poster-field.jpg";
+const POSTER_PHONE = "/home/systems-poster-field-vertical.jpg";
 /** A clear pixel: the video's own poster, so the picture under it (each cut's first frame) shows through. */
 const CLEAR = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 const PHONE = "(max-width: 560px)";
@@ -70,7 +70,7 @@ export function Hero() {
         <h1 id="v6-h-h1" className="v6-h__h1">
           <span className="v6-mask"><span className="v6-mask__in">{HEADLINE}</span></span>
         </h1>
-        <span id="v6-h-film-context" className="v6-h__context">Industrial robotics and public-domain military training footage, followed by Vraelis’s simulated software check. Film sources: vraelis.com/home/systems-film-sources.txt.</span>
+        <span id="v6-h-film-context" className="v6-h__context">Industrial robotics and public-domain military training footage illustrate systems whose software matters. Film sources: vraelis.com/home/systems-film-sources.txt.</span>
         <button type="button" className="v6-h__pause" onClick={toggle} aria-label={playing ? "Pause the film" : "Play the film"}>
           {playing
             ? <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden><path d="M5 3.5v9M11 3.5v9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>

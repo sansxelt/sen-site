@@ -42,7 +42,7 @@ function useEntryMotion() {
   return root;
 }
 
-const STATEMENT = "Your coding agent says it is done. A person approves the plan, and Vraelis checks it on the live product.";
+const STATEMENT = "Behind every system is software. Vraelis checks the live apps and control panels people rely on.";
 
 /* The words of a language that does not space them (Japanese), found by the browser's own word segmenter, with
    punctuation riding on the word before it. Cut by character instead, a phrase too long for a phone's line
@@ -79,7 +79,7 @@ export function Statement() {
   const words = useMemo(() => (spaced ? text.split(/\s+/) : unspacedWords(text)), [text, spaced]);
   const [lit, setLit] = useState(0);
   const count = useRef(words.length);
-  count.current = words.length;
+  useEffect(() => { count.current = words.length; }, [words.length]);
   // Progress runs while the card travels from the bottom of the screen to a little above the middle.
   useScrollProgress(root, {
     measure: (r, vh) => Math.min(1, Math.max(0, (vh * 0.92 - r.top) / (vh * 0.62))),

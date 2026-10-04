@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 const CLEAR = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 const filmSource = () => matchMedia("(max-width: 560px)").matches
-  ? "/home/spatial-check-60-vertical.mp4" : "/home/spatial-check-60.mp4";
+  ? "/home/spatial-check-terrain-vertical.mp4" : "/home/spatial-check-terrain.mp4";
 
 /** A browser reenactment of the recorded Larkspur check, not a new engine run. */
 export function MissionDemo() {
@@ -74,8 +74,8 @@ export function MissionDemo() {
   return <figure className="v6-mission-demo">
     <div ref={screen} className="v6-mission-demo__screen">
     <picture>
-      <source media="(max-width: 560px)" srcSet="/home/spatial-check-60-poster-vertical.jpg" />
-      <img src="/home/spatial-check-60-poster.jpg" alt="" loading="lazy" />
+      <source media="(max-width: 560px)" srcSet="/home/spatial-check-terrain-poster-vertical.jpg" />
+      <img src="/home/spatial-check-terrain-poster.jpg" alt="" loading="lazy" />
     </picture>
     <video ref={video} muted loop playsInline preload="none" poster={CLEAR}
       aria-label="Larkspur mission-console demo: confirming T-1 also clears civilian bus T-3."
