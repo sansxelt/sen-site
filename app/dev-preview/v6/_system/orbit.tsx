@@ -4,6 +4,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { EditorialLink } from "./ui";
 import { HEADLINE } from "./positioning";
 import { useLocale } from "@/lib/i18n/client";
@@ -32,6 +33,19 @@ export const ORBIT: readonly Tile[] = [
 
 const ROUTE = ORBIT.map(t => orbitRoute(t.word) ?? { href: `${V6_BASE}/platform#coverage`, to: "What it can check today" });
 const RING = "(min-width: 1024px) and (hover: hover) and (pointer: fine)";
+
+function TopicSwap({ text }: { text: string }) {
+  const reduced = useReducedMotion();
+  return <span className="v6-or__topic-slot" aria-hidden="true">
+    <AnimatePresence initial={false} mode="popLayout">
+      <motion.span key={text} className="v6-or__topic"
+        initial={{ y: reduced ? 0 : "100%" }} animate={{ y: 0 }} exit={{ y: reduced ? 0 : "-100%" }}
+        transition={{ duration: reduced ? 0 : .18, ease: [.22, 1, .36, 1] }}>
+        {text}
+      </motion.span>
+    </AnimatePresence>
+  </span>;
+}
 
 export function Orbit() {
   const locale = useLocale();
@@ -125,11 +139,10 @@ export function Orbit() {
 
   return <section ref={root} className="v6-or__field v6-dark" aria-labelledby="v6-or-h" data-nav-dark data-nav-theme="dark">
     <div className="v6-or__copy">
-      {locale === "en" ? <h2 id="v6-or-h" className="v6-or__h" data-no-translate>
-        <span>Know your </span><span key={selected ?? "overview"} className="v6-or__topic">{selected === null ? "systems" : ORBIT[selected].phrase}</span><span> work.</span>
-      </h2> : <h2 id="v6-or-h" className="v6-or__h v6-or__h--translated">
-        <span className="v6-or__s" data-on={selected === null}>{HEADLINE}</span>
-        {ORBIT.map((t, i) => <span key={t.label} className="v6-or__s" data-on={i === selected}>{`Know your ${t.phrase} work.`}</span>)}
+      {locale === "en" ? <h2 id="v6-or-h" className="v6-or__h" aria-label={selected === null ? HEADLINE : `Know your ${ORBIT[selected].phrase} work.`} data-no-translate>
+        <span>Know your </span><TopicSwap text={selected === null ? "systems" : ORBIT[selected].phrase} /><span> work.</span>
+      </h2> : <h2 id="v6-or-h" className="v6-or__h v6-or__h--translated" aria-label={selected === null ? HEADLINE : `Know your ${ORBIT[selected].phrase} work.`}>
+        <TopicSwap text={selected === null ? HEADLINE : `Know your ${ORBIT[selected].phrase} work.`} />
       </h2>}
       <p className="v6-or__d">Checks for live web apps and device control panels</p>
       <EditorialLink href={selected === null ? `${V6_BASE}/platform#coverage` : ROUTE[selected].href}>{selected === null ? "See every sector" : "Explore this subject"}</EditorialLink>
