@@ -127,6 +127,18 @@ export function strikeConsoleHtml(mode: StrikeMode): string {
     .row { padding:14px 10px; }.eng { font-size:12px; }.who small { font-size:13px; }
   }
   @media(max-width:380px) { .map-toolbar h1 { display:none; }.map-toolbar { justify-content:flex-end; } }
+  .geography-active .wrap>.card:first-child,.geography-active .wrap>.card:nth-child(3){display:none}
+  .geography-active .wrap>.card:nth-child(2){grid-column:1/-1;grid-row:1/-1}
+  #workspace-fullscreen { min-width:28px; width:28px; font-size:20px; padding:4px 0; }
+  @media(max-width:380px){#scene-motion{display:none}}
+  #map-source { background:#242424; color:var(--fg); border:1px solid var(--line); border-radius:4px; padding:6px; font-size:12px; max-width:110px; }
+  #geography-map { position:absolute; inset:0; z-index:5; background:#1c1c1c; }
+  #geography-map[hidden] { display:none; }
+  .geography-status { position:absolute; z-index:8; top:12px; left:12px; padding:6px 9px; background:#171717e8; font-size:12px; max-width:calc(100% - 24px); }
+  .geography-status:empty { display:none; }
+  .map[data-geography=true] .camera-controls { z-index:7; bottom:44px; }
+  .maplibregl-ctrl-attrib { font:10px/16px Arial,sans-serif!important; }
+  @media(max-width:540px) { #map-source { max-width:90px; } .map-toolbar h1 { display:none; } .view-controls { gap:8px; } }
 </style>
 </head>
 <body>
@@ -143,6 +155,7 @@ export function strikeConsoleHtml(mode: StrikeMode): string {
   <section class="card" aria-labelledby="m-h">
     <div class="map-toolbar">
       <h1 id="m-h">North Ridge</h1>
+      <select id="map-source" aria-label="Map source"><option value="simulation">Simulation</option><option value="geography">Geography</option></select>
       <div class="view-controls">
         <div class="view-switch" aria-label="Map view">
           <button type="button" id="view-2d" data-view="2d" aria-pressed="false">2D</button>
@@ -155,6 +168,7 @@ export function strikeConsoleHtml(mode: StrikeMode): string {
           <label class="height-control">Terrain height <input id="relief" type="range" min="0" max="2" step="0.1" value="1"></label>
         </div></details>
         <button type="button" id="scene-motion" class="motion-control">Pause motion</button>
+        <button type="button" id="workspace-fullscreen" class="motion-control" aria-label="Full screen workspace">⛶</button>
       </div>
     </div>
     <div class="map" id="spatial-scene">
@@ -179,6 +193,7 @@ export function strikeConsoleHtml(mode: StrikeMode): string {
         <g transform="translate(96 92)"><circle r="16" fill="none" stroke="#b0b0b0" stroke-opacity=".35"/><path d="M0 -9 L7 6 L0 3 L-7 6 Z" fill="#e6e6e6"/><text x="20" y="-8" class="mlab">LARK-3</text><text x="20" y="7" class="gl">ALT 1,200 m</text></g>
         ${marks}
       </svg>
+      <div id="geography-map" hidden aria-label="Real geography map"></div>
       <div class="camera-controls" aria-label="Camera controls">
         <button type="button" id="camera-reset">Recenter</button>
         <button type="button" id="zoom-out" aria-label="Zoom out">−</button>
@@ -245,11 +260,19 @@ export function strikeConsoleHtml(mode: StrikeMode): string {
     note(c.id + " confirmation withdrawn."); $("toast").textContent = c.id + " back to hold"; save(); render();
   };
   $("reset").onclick = function () { s = start(); save(); render(); $("toast").textContent = "Simulation reset"; };
+  $("workspace-fullscreen").onclick = function () {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen?.().catch(function () {});
+  };
+  document.addEventListener("fullscreenchange", function () {
+    $("workspace-fullscreen").setAttribute("aria-label", document.fullscreenElement ? "Exit full screen" : "Full screen workspace");
+  });
   render();
 })();
 </script>
 <script>window.LARKSPUR_DATA = { contacts: ${JSON.stringify(CONTACTS)} };</script>
 <script type="module" src="/home/spatial/scene.js"></script>
+<script type="module" src="/home/geography/geography.js"></script>
 </body>
 </html>`;
 }

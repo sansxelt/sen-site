@@ -1,17 +1,12 @@
+/* Full-page anchors intentionally cross the marketing and app host boundaries. */
+/* eslint-disable @next/next/no-html-link-for-pages */
 import type { ReactNode } from "react";
-import strikeConsole from "@/app/dev-preview/v6/_content/demos/strike-console.png";
 import { ProductSurface } from "@/app/_components/product-surface";
-import { PicturePlate } from "@/app/dev-preview/v6/_system/picture-plate";
 import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
 import { LanguageSwitcher } from "@/components/language-switcher";
 
-// THE ACCOUNT SCREENS' FRAME: sign-in, create account, verify email, reset password, the auth errors and the
-// two-step code (2026-09-30). One frame for all of them, so moving from signing up to confirming an address
-// never changes the page around the form.
-//
-// Two halves. The form sits on the dark background with the wordmark above it. On a wide screen the right half is the ink
-// brand panel, the same one that closes every page of the site: the headline, a capture from a recorded check of the
-// Larkspur simulation, and the two partnership records. On a phone the right half is dropped.
+// Shared account entry frame. The form keeps the existing auth flows; the right
+// panel uses locally hosted field imagery and links to the recorded homepage check.
 export function AuthFrame({ children }: { children: ReactNode }) {
   return (
     <ProductSurface>
@@ -31,18 +26,14 @@ export function AuthFrame({ children }: { children: ReactNode }) {
             <a href="/acceptable-use">Acceptable use</a><a href="/security">Security</a><PrivacyChoicesButton />
           </p>
         </div>
-        <aside className="auth-split__side" aria-label="What a Vraelis check looks like">
+        <aside className="auth-split__side" aria-label="Vraelis">
+          {/* Static, locally hosted film poster. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="auth-split__scene" src="/home/systems-poster-opening.jpg" alt="" />
           <div className="auth-split__sidein">
-            <p className="auth-split__title">Know your systems work.</p>
-            <p className="auth-split__kicker">A recorded check of Larkspur, our attack drone simulation.</p>
-            <PicturePlate src={strikeConsole}
-              alt="Larkspur, Vraelis's simulated attack drone mission console, from a recorded browser check."
-              evidence eager />
-            <div className="auth-split__partners">
-              <span>Partnership records</span>
-              <a href="/partnerships/reddit">Vraelis × Reddit</a>
-              <a href="/partnerships/bytedance">Vraelis × ByteDance</a>
-            </div>
+            <p className="auth-split__title">Know your<br />systems work.</p>
+            <p className="auth-split__kicker">Software verification for the systems you rely on.</p>
+            <a className="auth-split__demo-link" href="/#how-a-check-works">See a check in action <span aria-hidden>→</span></a>
           </div>
         </aside>
       </div>

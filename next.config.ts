@@ -73,6 +73,10 @@ const nextConfig: NextConfig = {
     // /f/ embedding exclusion the moment this policy is promoted to enforcing.
     const csp = cspBase.join("; ");
     const cspFramed = [...cspBase, "frame-ancestors 'self'"].join("; ");
+    // Only the public geographic fixture fetches vector tiles and elevation.
+    const cspGeography = [...cspBase.map(rule => rule.startsWith("connect-src ")
+      ? rule + " https://tiles.openfreemap.org https://s3.amazonaws.com/elevation-tiles-prod/"
+      : rule), "frame-ancestors 'self'"].join("; ");
 
     const base = [
       // Two years, subdomains included. `preload` is deliberately OMITTED: submitting to the preload list
@@ -89,10 +93,15 @@ const nextConfig: NextConfig = {
 
     return [
       {
+        source: "/api/fixtures/strike",
+        headers: [...base, { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "Content-Security-Policy-Report-Only", value: cspGeography }],
+      },
+      {
         // SAMEORIGIN rather than DENY, and scoped to exclude /f/ below: the checkout, credits and settings
         // pages are the clickjacking targets the audit named, and none of them is ever framed by a
         // third party. The CSP here carries frame-ancestors to match.
-        source: "/((?!f/).*)",
+        source: "/((?!f/|api/fixtures/strike).*)",
         headers: [
           ...base,
           { key: "X-Frame-Options", value: "SAMEORIGIN" },

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 const CLEAR = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 const filmSource = () => matchMedia("(max-width: 560px)").matches
-  ? "/home/app-check-replay-vertical.mp4" : "/home/app-check-replay.mp4";
+  ? "/home/app-check-replay-vertical.mp4?v=workspace-20261004" : "/home/app-check-replay.mp4?v=workspace-20261004";
 
 /** A browser reenactment of the recorded Larkspur check, not a new engine run. */
 export function MissionDemo() {
@@ -72,16 +72,16 @@ export function MissionDemo() {
   };
 
   return <figure className="v6-mission-demo">
-    <div ref={screen} className="v6-mission-demo__screen">
+    <div ref={screen} className={`v6-mission-demo__screen${exploring ? " is-exploring" : ""}`}>
     <picture>
-      <source media="(max-width: 560px)" srcSet="/home/app-check-replay-poster-vertical.jpg" />
-      <img src="/home/app-check-replay-poster.jpg" alt="" loading="lazy" />
+      <source media="(max-width: 560px)" srcSet="/home/app-check-replay-poster-vertical.jpg?v=workspace-20261004" />
+      <img src="/home/app-check-replay-poster.jpg?v=workspace-20261004" alt="" loading="lazy" />
     </picture>
     <video ref={video} muted loop playsInline preload="none" poster={CLEAR}
       aria-label="Vraelis app demo: review the Larkspur plan, browser activity, finding and repair prompt."
       aria-describedby="mission-demo-description"
       onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onError={() => setUnavailable(true)} />
-    {exploring && <iframe className="v6-mission-demo__explore" src="/api/fixtures/strike?mode=broken" title="Larkspur software simulation" />}
+    {exploring && <iframe className="v6-mission-demo__explore" src="/api/fixtures/strike?mode=broken" title="Larkspur software simulation" allow="fullscreen" />}
     <div className="v6-mission-demo__controls">
       <button type="button" onClick={exploring ? watch : explore} aria-label={exploring ? "Watch film" : "Explore"} title={exploring ? "Watch film" : "Explore simulation"}>
         <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden>{exploring ? <path d="m10 5-7 7 7 7M3 12h17" fill="none" stroke="currentColor" strokeWidth="1.7" /> : <><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Zm0 9L4 7.5M12 12l8-4.5M12 12v9" fill="none" stroke="currentColor" strokeWidth="1.5" /></>}</svg>
@@ -89,7 +89,7 @@ export function MissionDemo() {
       {!exploring && <button type="button" onClick={toggle} disabled={unavailable} aria-label={playing ? "Pause demo" : "Play demo"} title={playing ? "Pause demo" : "Play demo"}>
         <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden>{playing ? <path d="M8 5v14M16 5v14" stroke="currentColor" strokeWidth="2" /> : <path d="m8 5 11 7-11 7Z" fill="currentColor" />}</svg>
       </button>}
-      {exploring ? <a href="/api/fixtures/strike?mode=broken" target="_blank" rel="noopener noreferrer" aria-label="Open simulation" title="Open simulation"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden><path d="M13 4h7v7M20 4 10 14M10 5H4v15h15v-6" fill="none" stroke="currentColor" strokeWidth="1.7" /></svg></a> : <button type="button" onClick={fullscreen} aria-label="Full screen" title="Full screen"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden><path d="M9 4H4v5M15 4h5v5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" strokeWidth="1.7" /></svg></button>}
+      <button type="button" onClick={fullscreen} aria-label="Full screen" title="Full screen"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden><path d="M9 4H4v5M15 4h5v5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" strokeWidth="1.7" /></svg></button>
     </div>
     </div>
     <figcaption id="mission-demo-description" className="v6-mission-demo__description">Replay of the recorded check in Vraelis’s app interface. The mission console is a simulation.</figcaption>

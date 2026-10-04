@@ -24,3 +24,8 @@
  .v6-mission-demo__controls, .v6-mission-demo__explore~.v6-mission-demo__controls { top:auto; bottom:-56px; left:0; transform:none; }
 }
 .v6-mission-demo__screen:fullscreen .v6-mission-demo__controls { top:auto; bottom:16px; left:16px; transform:none; }
+
+.v6-mission-demo__screen.is-exploring{aspect-ratio:auto;height:min(900px,calc(100svh - 100px));min-height:650px;background:#171717}
+.v6-mission-demo__screen.is-exploring .v6-mission-demo__controls{top:auto;left:16px;bottom:16px;transform:none}
+.v6-mission-demo__screen.is-exploring:fullscreen{height:100svh;min-height:0}
+@media(max-width:560px){.v6-mission-demo__screen.is-exploring{height:85svh;min-height:560px}.v6-mission-demo__screen.is-exploring .v6-mission-demo__controls{bottom:-56px}.v6-mission-demo__screen.is-exploring:fullscreen .v6-mission-demo__controls{bottom:16px}}

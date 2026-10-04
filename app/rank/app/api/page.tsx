@@ -152,16 +152,16 @@ export default function ApiKeysPage() {
     // person to touch this page cannot nudge it to 860 without saying why. The inline paddingTop is dropped
     // because the shell overrides it with !important and it never rendered; the tail room moves inward.
     <Page measure="prose">
-      {/* The nav says Developers and this is what it opens, so this says Developers. The eyebrow used to
-          carry that word while the heading named two of the things on the page, which reads as a different
-          destination than the one that was clicked. The CLI is here too, and it is neither an API nor a
-          webhook. scripts/app-shell-verify.ts compares this exact title against the sidebar label, in both
-          the sidebar and the account menu, so the wording is load-bearing and stays as it is. */}
       <PageHeader
-        title="Developers"
+        title="API and SDKs"
         lead="Operate Vraelis from CI, an agent or a terminal: API keys, the command line, and signed webhooks. Launch verifications, gate the deploy on the decision, and read the evidence back."
       />
 
+      <section className="card" style={{ padding: 20, marginBottom: 24 }} aria-labelledby="sdk-title">
+        <h2 id="sdk-title" style={{ fontSize: 15, margin: "0 0 8px" }}>TypeScript SDK</h2>
+        <p style={{ fontSize: 13, lineHeight: 1.6, color: "var(--fg-3)", margin: "0 0 12px" }}>The SDK is built and tested in the repository. It is not yet published to npm. Use the HTTP API for an integration you can deploy today.</p>
+        <a href="https://vraelis.com/docs/api" style={{ fontSize: 13 }}>Read the API and SDK documentation →</a>
+      </section>
       <div style={{ paddingBottom: 80 }}>
 
       {/* create */}

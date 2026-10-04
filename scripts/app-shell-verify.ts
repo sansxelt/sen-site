@@ -41,7 +41,7 @@ for (const gone of ["Applications", "Passes", "Issues", "Repairs", "Deployments"
   ok(`Product does not present ${gone} as a durable object`, !new RegExp(`label: "${gone}"`).test(product));
 }
 ok("the platform group presents the other ways to operate Vraelis",
-  /label: "Integrations"/.test(platform) && /label: "Developers"/.test(platform));
+  /label: "Connections"/.test(platform) && /label: "API and SDKs"/.test(platform));
 // The console is not the only interface, and that was findable only by scrolling down Developers.
 ok("platform names the command line as its own destination", /label: "Command line"/.test(platform));
 

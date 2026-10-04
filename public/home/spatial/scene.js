@@ -164,7 +164,7 @@ let previous=performance.now(),samples=0,elapsed=0;
 function render(now){
  requestAnimationFrame(render);
  const dt=Math.min((now-previous)/1000,.1);previous=now;
- if(!visible||document.hidden||(!running&&!dirty&&!cameraTransition)){samples=0;elapsed=0;return;}
+ if(host.dataset.geography==='true'||!visible||document.hidden||(!running&&!dirty&&!cameraTransition)){samples=0;elapsed=0;return;}
  draw(time+(running?dt:0));
  // Reduce pixel work on slower devices instead of deliberately dropping frames.
  // Only sample uninterrupted motion, so idle time and first-load compilation do not lower quality.

@@ -198,10 +198,16 @@ export default function ConnectionsPage() {
     // moves onto the content, which is where it was actually doing something.
     <Page measure="prose">
       <PageHeader
-        title="Integrations"
+        title="Connections"
         lead="Authorize a provider once for your whole account. Vraelis holds a read-only token, sealed with AES-256-GCM, never a password. Every system then uses it, choosing its own repo or project."
       />
 
+      <nav className="connection-paths" aria-label="Other connection methods">
+        <Link href="/systems"><strong>System connections</strong><span>Webhooks, OpenAPI and deployment endpoints</span></Link>
+        <Link href="/developers"><strong>API and SDKs</strong><span>Keys, scopes and webhook delivery</span></Link>
+        <Link href="/cli"><strong>Command line</strong><span>Run checks from your development workflow</span></Link>
+        <Link href="/systems"><strong>Device control panels</strong><span>Add a browser-accessible panel as a system to check</span></Link>
+      </nav>
       <div style={{ paddingBottom: 80 }}>
 
       {/* THE BANNER WAS PAINTED IN A RED THAT EXISTS NOWHERE ELSE IN THIS PRODUCT.

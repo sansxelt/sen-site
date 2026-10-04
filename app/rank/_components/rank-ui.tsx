@@ -108,8 +108,8 @@ const APP_NAV: { group: string; items: { href: string; label: string; d: string 
   // stated shape and they are not changing for one entry, but "you can run this from a terminal" was
   // findable only by scrolling most of the way down Developers, which meant knowing it existed first.
   { group: "Platform", items: [
-    { href: "/connections", label: "Integrations", d: I.key },
-    { href: "/developers", label: "Developers", d: I.code },
+    { href: "/connections", label: "Connections", d: I.key },
+    { href: "/developers", label: "API and SDKs", d: I.code },
     { href: "/cli", label: "Command line", d: I.terminal },
   ] },
   // SETTINGS IS WHERE MONEY LIVES, AND EACH QUESTION GETS ITS OWN ANSWER. This had Usage and Billing and
@@ -330,7 +330,7 @@ const ACCOUNT_MENU: { href: string; label: string; d: string }[] = [
   { href: "/systems", label: "Systems", d: I.layers },
   { href: "/plans", label: "Plans", d: I.layers },
   { href: "/credits", label: "Credits", d: I.coin },
-  { href: "/developers", label: "Developers", d: I.code },
+  { href: "/developers", label: "API and SDKs", d: I.code },
 ];
 const ACCOUNT_MENU_FOOT: { href: string; label: string; d: string }[] = [
   { href: "/account", label: "Account", d: I.user },
@@ -411,31 +411,7 @@ function AppTopbar({ email, systems, pendingReviews }: { email: string | null; s
           sidebar's "Back to site" -> https://vraelis.com. */}
       <span style={{ marginTop: 4, display: "inline-flex", alignItems: "center" }}><Brand href="/" /></span>
       <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
-        {/* Plan + balance at a glance, right in the bar — no menu dig. Two matched pills (per founder): the
-            plan by its FULL NAME (accent-tinted, ties to the brand avatar) -> /plans, and the credits pill
-            with a properly-centered coin + exact balance -> /credits. Hidden until /api/v/me resolves so it
-            never flashes a wrong number. Both share height/radius/shadow so they read as one status set. */}
-        {/* THE TOP BAR NO LONGER LEADS WITH MONEY.
-            It used to open with a plan badge and a credit balance, which made the most prominent facts in the
-            product "what you pay" and "what you have left". Cursor does not put a token balance at the centre
-            of the screen and neither does Linear. Both are still one click away, now inside the account menu
-            where the rest of the account lives, and neither the plan nor the balance was removed. */}
         <CommandPalette systems={systems} />
-        {/* PLAN AND BALANCE, BACK IN THE BAR AT THE FOUNDER'S REQUEST, but not leading it.
-            They were two large pills that opened the product, which made "what you pay" and "what you have
-            left" the headline facts of a verification tool. Then they moved into the account menu, which
-            hid a number people check constantly. This is the middle: plain text, after the command surface,
-            no pill, no state colour — a subscription tier is not a verification result, and the green here
-            means "it held". */}
-        {planLabelText !== null && (
-          <div className="vra-acct-readout">
-            <Link href="/plans" aria-label={`Your plan: ${planLabelText}`}>{planLabelText}</Link>
-            <span aria-hidden>/</span>
-            <Link href="/usage" aria-label={`${balanceLabel} credits available`}>
-              <span style={{ fontVariantNumeric: "tabular-nums" }}>{balanceLabel}</span> credits
-            </Link>
-          </div>
-        )}
         {/* Shown only when a plan is genuinely waiting for a person. A zero-state badge trains people to
             ignore the badge, which costs more than it ever gains. */}
         {pendingReviews > 0 && (
@@ -455,11 +431,11 @@ function AppTopbar({ email, systems, pendingReviews }: { email: string | null; s
             and "/" is the marketing home on every host except app.vraelis.com. ?new=1 opens the composer
             there (the proxy keeps the query across its /app redirect), so the button does something even
             when you are already on the Overview. */}
-        <Link href="/app?new=1" className="btn vra-app-connect" aria-label="New verification">
+        <Link href="/app?new=1" className="btn vra-app-connect" aria-label="Start a verification">
           <span className="vra-app-connect__i" aria-hidden><Ic d={I.plus} size={15} sw={2.2} /></span>
-          <span className="vra-app-connect__label">New verification</span>
+          <span className="vra-app-connect__label">Verify a system</span>
         </Link>
-        <button ref={menuBtn} onClick={() => setMenu((v) => !v)} aria-label="Account menu" aria-expanded={menu} aria-controls="acct-menu" style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px 6px 6px", borderRadius: 99, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", boxShadow: "var(--shadow-sm)" }}>
+        <button ref={menuBtn} onClick={() => setMenu((v) => !v)} aria-label="Account menu" aria-expanded={menu} aria-controls="acct-menu" style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px", borderRadius: 8, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", boxShadow: "var(--shadow-sm)" }}>
           {avatar ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={avatar} alt="" aria-hidden width={26} height={26} style={{ width: 26, height: 26, borderRadius: "50%", objectFit: "cover", display: "block" }} />
@@ -474,7 +450,7 @@ function AppTopbar({ email, systems, pendingReviews }: { email: string | null; s
           // contract are intentionally omitted because Tab is the real behaviour.
           <div ref={menuPanel} id="acct-menu" style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, width: 232, background: "var(--bg-1)", border: "1px solid var(--line-2)", borderRadius: 14, boxShadow: "var(--shadow-lg)", padding: 8, zIndex: 60 }}>
             <div style={{ padding: "8px 10px 10px", borderBottom: "1px solid var(--line-1)", marginBottom: 6 }}>
-              <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" }}>Signed in</div>
+              <div style={{ fontFamily: "inherit", fontSize: 12.5, color: "var(--fg-4)" }}>{who ? "Signed in" : "Account"}</div>
               {/* THE NAME FIRST, THEN THE ADDRESS. This showed the email alone, so an account that had set a
                   display name was still identified by a mailbox. The name is what a person answers to and
                   what the account page already collects; the email stays underneath because on a shared or
@@ -488,9 +464,10 @@ function AppTopbar({ email, systems, pendingReviews }: { email: string | null; s
               ) : (
                 <div style={{ fontSize: 13, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>{who || "your account"}</div>
               )}
-              {/* Where the two topbar pills went. Same values, same destinations, read from the same
-                  /api/v/me; they are account facts, so they sit with the account. The balance is a CREDIT
-                  COUNT, never cents and never dollars — do not format it as currency. */}
+              {acct && <div className="vra-account-summary">
+                <Link href="/plans"><span>Plan</span><strong>{planLabelText}</strong></Link>
+                <Link href="/credits"><span>Available credits</span><strong>{balanceLabel}</strong></Link>
+              </div>}
 
             </div>
             {ACCOUNT_MENU.map((l) => (
@@ -569,23 +546,20 @@ function useActiveNav() {
 // scroll, the drawer holds it OUTSIDE the scroll region entirely (see MobileNav for why).
 function NavGroups({ onNavigate }: { onNavigate?: () => void }) {
   const active = useActiveNav();
-  return (
-    <>
-      {APP_NAV.map((g) => (
-        <div key={g.group}>
-          <div className="app-side__group">{g.group}</div>
-          {g.items.map((it) => {
-            const on = active(it.href);
-            return (
-              <Link key={it.href} href={it.href} className={`slink${on ? " on" : ""}`} aria-current={on ? "page" : undefined} onClick={onNavigate}>
-                <span className="slink__i" aria-hidden><Ic d={it.d} /></span>{it.label}
-              </Link>
-            );
-          })}
-        </div>
-      ))}
-    </>
-  );
+  const pathname = usePathname();
+  const [disclosure, setDisclosure] = useState<{ path: string | null; open: boolean } | null>(null);
+  const settings = APP_NAV.find(g => g.group === "Settings")!;
+  const inSettings = settings.items.some(it => active(it.href));
+  const expanded = disclosure?.path === pathname ? disclosure.open : inSettings;
+  const links = (g: typeof APP_NAV[number]) => g.items.map(it => {
+    const on = active(it.href);
+    return <Link key={it.href} href={it.href} className={`slink${on ? " on" : ""}`} aria-current={on ? "page" : undefined} onClick={onNavigate}>
+      <span className="slink__i" aria-hidden><Ic d={it.d} /></span>{it.label}
+    </Link>;
+  });
+  return <>{APP_NAV.map(g => g.group === "Settings"
+    ? <div key={g.group} className="app-settings"><button className="app-settings-toggle" type="button" aria-expanded={expanded} onClick={() => setDisclosure({ path: pathname, open: !expanded })}>Settings<span aria-hidden>{expanded ? "−" : "+"}</span></button><div hidden={!expanded}>{links(g)}</div></div>
+    : <div key={g.group}><div className="app-side__group">{g.group === "Product" ? "Workspace" : g.group}</div>{links(g)}</div>)}</>;
 }
 // The foot button look, shared by Privacy choices and Sign out so the two rows cannot drift apart. No
 // fontSize here: the Sign out button carried fontSize "inherit", which beat .slink's 14px and set it larger
