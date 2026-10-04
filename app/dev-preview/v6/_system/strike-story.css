@@ -28,3 +28,17 @@
 @media(prefers-reduced-motion:reduce) { .v6-story .v6-story__text, .v6-story .v6-plate { opacity: 1 !important; transform: none !important; transition: none !important; } }
 
 .v6-story__intro { max-width: 64ch; margin: 0 0 40px; font-size: 17px; line-height: 1.6; color: var(--ink-2); }
+
+.v6-mission-demo { margin: 0 0 48px; overflow: hidden; border: 1px solid rgba(255,255,255,.16); border-radius: 16px; background: #05090e; }
+.v6-mission-demo video { display: block; width: 100%; aspect-ratio: 3 / 2; object-fit: contain; }
+.v6-mission-demo__bar { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 18px 24px; border-top: 1px solid rgba(255,255,255,.12); }
+.v6-mission-demo__bar p { margin: 0; max-width: 62ch; font-size: 13px; line-height: 1.5; color: var(--ink-3); }
+.v6-mission-demo__controls { display: flex; flex-shrink: 0; gap: 10px; }
+.v6-mission-demo button { min-height: 44px; padding: 0 14px; font: inherit; font-size: 13px; color: var(--ink); background: transparent; border: 1px solid rgba(255,255,255,.24); border-radius: 7px; cursor: pointer; }
+.v6-mission-demo button:hover { background: rgba(255,255,255,.08); }
+.v6-mission-demo button:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.v6-mission-demo__error { margin: 0; padding: 16px 24px; color: var(--ink-2); }
+@media (max-width: 600px) {
+ .v6-mission-demo { border-radius: 10px; }
+ .v6-mission-demo__bar { align-items: start; flex-direction: column; gap: 12px; padding: 16px; }
+}

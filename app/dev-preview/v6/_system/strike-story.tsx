@@ -5,6 +5,7 @@
 import { useEffect, useRef } from "react";
 import { EditorialLink } from "./ui";
 import { Photograph, PicturePlate } from "./picture-plate";
+import { MissionDemo } from "./mission-demo";
 import { STRIKE_LINKS, type StrikeRecord, type StrikeStep } from "../_content/strike-links";
 import { SOLUTIONS_HREF } from "../_content/sectors";
 import "./strike-story.css";
@@ -31,6 +32,7 @@ export function StrikeStory({ record: r, chapters }: { record: StrikeRecord; cha
       <div className="v6-wrap">
         <h2 id="v6-story-h" className="v6-story__label">How a check works</h2>
         <p className="v6-story__intro">Today, Vraelis checks live web apps and device control panels in a real browser. This example uses Larkspur, our simulated mission console.</p>
+        <MissionDemo />
         <ol className="v6-story__chapters">
           {chapters.map((c, i) => <li className="v6-story__chapter" key={c.eyebrow}>
             <div className="v6-story__text">
