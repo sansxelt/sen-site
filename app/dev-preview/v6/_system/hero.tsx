@@ -82,7 +82,7 @@ export function Hero() {
       </div>
 
       <div className="v6-h__below">
-        <p className="v6-h__say">From websites and apps to robots, drones and aircraft</p>
+        <p className="v6-h__say">Checks for live web apps and device control panels</p>
         <CTA href={`${COMPOSE}?new=1`}>Start a check</CTA>
       </div>
     </section>

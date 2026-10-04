@@ -1,8 +1,8 @@
 # Homepage orbit: photograph sources
 
-The orbit (`app/dev-preview/v6/_system/orbit.tsx`) shows ten main topics. Each tile uses one photograph;
+The orbit (`app/dev-preview/v6/_system/orbit.tsx`) shows eight current topics. Each tile uses one photograph;
 hovering pauses the ring and changes the topic phrase in the central sentence. The source table below
-also retains photographs used in earlier versions, including the checkout photograph that is no longer
+also retains photographs used in earlier versions, including checkout, desktop-app and firmware photographs that are no longer
 part of the orbit. The photographs are cropped from these sources. Each is
 free for commercial use under its site's licence, with no attribution required; it is recorded so the source of every
 picture is known. Checked for readable brand marks before use

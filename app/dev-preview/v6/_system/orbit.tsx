@@ -13,28 +13,24 @@ import "./orbit.css";
 
 // pos: where the 4:3 frame crops a photograph cut to another shape (CSS object-position), when the middle is wrong.
 type Photo = { readonly src: string; readonly alt: string; readonly pos?: string };
-type LiveTile = { word: OrbitWord; label: string; phrase: string; next?: undefined; photos: readonly Photo[] };
-type NextTile = { next: true; label: string; phrase: string; word?: undefined; photos: readonly Photo[] };
-type Tile = LiveTile | NextTile;
+type Tile = { word: OrbitWord; label: string; phrase: string; photos: readonly Photo[] };
 
 const pic = (name: string, alt: string, pos?: string): Photo => ({ src: `/home/orbit/photo-${name}.jpg`, alt, pos });
 
 // All subjects share the ring equally. The overview stays broad until a tile is hovered or focused.
 export const ORBIT: readonly Tile[] = [
   { word: "saas", label: "Web apps", phrase: "web apps", photos: [pic("dashboard", "A dashboard on a screen")] },
-  { word: "drones", label: "Drones and aviation", phrase: "drones and aviation systems", photos: [pic("drone", "A drone against an evening sky")] },
-  { word: "government", label: "Government", phrase: "public systems", photos: [pic("public", "An arched hall inside a state capitol")] },
-  { next: true, label: "Desktop and mobile apps", phrase: "desktop and mobile apps", photos: [pic("electron", "A desktop editing app open on a laptop")] },
-  { word: "fintech", label: "Fintech and banking", phrase: "banking systems", photos: [pic("banking", "A hand holding a phone calculator over banknotes", "50% 58%")] },
-  { word: "robotics", label: "Robotics and manufacturing", phrase: "robotic systems", photos: [pic("robot", "A robot arm building a lattice", "50% 60%")] },
+  { word: "drones", label: "Drones and aviation", phrase: "flight control panels", photos: [pic("drone", "A drone against an evening sky")] },
+  { word: "government", label: "Government", phrase: "public web apps", photos: [pic("public", "An arched hall inside a state capitol")] },
+  { word: "fintech", label: "Fintech and banking", phrase: "banking web apps", photos: [pic("banking", "A hand holding a phone calculator over banknotes", "50% 58%")] },
+  { word: "robotics", label: "Robotics and manufacturing", phrase: "robot control panels", photos: [pic("robot", "A robot arm building a lattice", "50% 60%")] },
   { word: "ai-built-apps", label: "AI-built apps", phrase: "AI-built apps", photos: [pic("aiapp", "An app open on a tablet in low light")] },
-  { word: "logistics", label: "Logistics and vehicles", phrase: "logistics systems", photos: [pic("vehicle", "A truck on a road at dusk")] },
-  { next: true, label: "Devices and firmware", phrase: "devices", photos: [pic("firmware", "A small development board on a dark table")] },
-  { word: "military", label: "Military", phrase: "mission systems", photos: [pic("targeting", "A radar scope and a track readout on a console", "50% 45%")] },
+  { word: "logistics", label: "Logistics and vehicles", phrase: "fleet portals", photos: [pic("vehicle", "A truck on a road at dusk")] },
+  { word: "military", label: "Military", phrase: "mission consoles", photos: [pic("targeting", "A radar scope and a track readout on a console", "50% 45%")] },
 ];
 
 
-const ROUTE = ORBIT.map(t => t.next ? { href: `${V6_BASE}/platform#coverage`, to: "Not built yet" } : orbitRoute(t.word) ?? { href: `${V6_BASE}/platform#coverage`, to: "What it can check today" });
+const ROUTE = ORBIT.map(t => orbitRoute(t.word) ?? { href: `${V6_BASE}/platform#coverage`, to: "What it can check today" });
 const RING = "(min-width: 1024px) and (hover: hover) and (pointer: fine)";
 
 export function Orbit() {
@@ -135,14 +131,14 @@ export function Orbit() {
         <span className="v6-or__s" data-on={selected === null}>{HEADLINE}</span>
         {ORBIT.map((t, i) => <span key={t.label} className="v6-or__s" data-on={i === selected}>{`Know your ${t.phrase} work.`}</span>)}
       </h2>}
-      <p className="v6-or__d">{selected !== null && ORBIT[selected].next ? "Not built yet" : "From everyday apps to the software behind connected machines"}</p>
-      <EditorialLink href={selected === null ? `${V6_BASE}/platform#coverage` : ROUTE[selected].href}>{selected === null ? "See every sector" : ORBIT[selected].next ? "See what is planned" : "Explore this subject"}</EditorialLink>
+      <p className="v6-or__d">Checks for live web apps and device control panels</p>
+      <EditorialLink href={selected === null ? `${V6_BASE}/platform#coverage` : ROUTE[selected].href}>{selected === null ? "See every sector" : "Explore this subject"}</EditorialLink>
     </div>
     <ul className="v6-or__tiles">
       {ORBIT.map((t, i) => <li key={t.label} ref={node => { tiles.current[i] = node; }} className="v6-or__item" data-on={i === selected}>
         <Link className="v6-or__tile" href={ROUTE[i].href} onPointerEnter={() => select(i)} onPointerLeave={release} onFocus={() => select(i)} onBlur={release}>
           <Image src={t.photos[0].src} alt={t.photos[0].alt} fill sizes="(max-width: 700px) 45vw, (max-width: 1023px) 30vw, 180px" style={{objectFit: "cover", objectPosition: t.photos[0].pos}} />
-          <span className="v6-or__name">{t.label}{t.next ? ", not built yet" : ""}</span>
+          <span className="v6-or__name">{t.label}</span>
         </Link>
       </li>)}
     </ul>

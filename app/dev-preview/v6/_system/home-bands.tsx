@@ -117,7 +117,7 @@ export function ChangelogRow() {
       <div className="v6-cl__in">
         <h2 id="v6-cl-h" className="v6-cl__h" data-label="">Changelog</h2>
         <ul className="v6-cl__list">
-          {CHANGELOG.slice(0, 4).map((e) => (
+          {CHANGELOG.filter(e => e.tag === "go").slice(0, 4).map((e) => (
             <li key={entryId(e)}>
               <Link href={`${V6_BASE}/changelog#${entryId(e)}`} className="v6-cl__item">
                 <span className="v6-cl__date" data-no-translate>{fmt(e.date)}</span>
