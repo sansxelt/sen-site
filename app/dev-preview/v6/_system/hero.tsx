@@ -6,17 +6,16 @@ import { HEADLINE } from "./positioning";
 import "./hero.css";
 
 // The two cuts and the screens each is for (hero.css switches the layout at the same width).
-const FILM = "/home/systems-film-spatial.mp4";
-const FILM_PHONE = "/home/systems-film-spatial-vertical.mp4";
-const POSTER = "/home/systems-poster-spatial.jpg";
-const POSTER_PHONE = "/home/systems-poster-spatial-vertical.jpg";
+const FILM = "/home/systems-film-smooth.mp4";
+const FILM_PHONE = "/home/systems-film-smooth-vertical.mp4";
+const POSTER = "/home/systems-poster-smooth.jpg";
+const POSTER_PHONE = "/home/systems-poster-smooth-vertical.jpg";
 /** A clear pixel: the video's own poster, so the picture under it (each cut's first frame) shows through. */
 const CLEAR = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 const PHONE = "(max-width: 560px)";
 const MOTION_OK = "(prefers-reduced-motion: no-preference)";
 
 export function Hero() {
-  const root = useRef<HTMLElement>(null);
   const video = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
   const wanted = useRef(true);
@@ -43,28 +42,6 @@ export function Hero() {
     return () => { observer.disconnect(); motion.removeEventListener("change", onMotion); document.removeEventListener("visibilitychange", sync); v.removeEventListener("play", onPlay); v.removeEventListener("pause", onPause); };
   }, []);
 
-
-  useEffect(() => {
-    const el = root.current;
-    if (!el) return;
-    const motion = matchMedia("(prefers-reduced-motion: reduce)");
-    let tick = 0;
-    const update = () => {
-      tick = 0;
-      const frame = el.querySelector<HTMLElement>(".v6-h__frame");
-      if (!frame) return;
-      const top = parseFloat(getComputedStyle(frame).top) || 0;
-      const progress = motion.matches ? 0 : Math.max(0, Math.min(1, (top - el.getBoundingClientRect().top) / Math.max(1, el.offsetHeight - frame.offsetHeight)));
-      el.style.setProperty("--hero-out", `${-progress * 55}svh`);
-    };
-    const schedule = () => { if (!tick) tick = requestAnimationFrame(update); };
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
-    motion.addEventListener("change", schedule);
-    update();
-    return () => { cancelAnimationFrame(tick); window.removeEventListener("scroll", schedule); window.removeEventListener("resize", schedule); motion.removeEventListener("change", schedule); };
-  }, []);
-
   const toggle = () => {
     const v = video.current;
     if (!v) return;
@@ -77,7 +54,7 @@ export function Hero() {
   };
 
   return (
-    <section ref={root} className="v6-h" data-nav-dark data-nav-theme="dark" aria-labelledby="v6-h-h1">
+    <section className="v6-h" data-nav-dark data-nav-theme="dark" aria-labelledby="v6-h-h1" aria-describedby="v6-h-film-context">
 
       <div className="v6-h__frame">
 
@@ -93,6 +70,7 @@ export function Hero() {
         <h1 id="v6-h-h1" className="v6-h__h1">
           <span className="v6-mask"><span className="v6-mask__in">{HEADLINE}</span></span>
         </h1>
+        <span id="v6-h-film-context" className="v6-h__context">Industrial robotics and public-domain military training footage, followed by Vraelis’s simulated software check. Film sources: vraelis.com/home/systems-film-sources.txt.</span>
         <button type="button" className="v6-h__pause" onClick={toggle} aria-label={playing ? "Pause the film" : "Play the film"}>
           {playing
             ? <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden><path d="M5 3.5v9M11 3.5v9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>

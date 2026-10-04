@@ -1,6 +1,6 @@
 # Homepage spatial simulation and film
 
-The homepage film is a silent browser recording of the working Larkspur fixture in broken mode. It reproduces the confirm-target interaction from production check `vrf_51705517-329b-4dcf-b9ce-4442e53439ed`, recorded October 2, 2026. It is a reenactment, not original session footage or a new verification-engine run. The original screenshot, contact crop and record remain separately available below the film.
+The homepage film is a silent browser recording of the working Larkspur fixture in broken mode. It reproduces the confirm-target interaction from production check `vrf_51705517-329b-4dcf-b9ce-4442e53439ed`, recorded October 2, 2026. It is a reenactment, not original session footage or a new verification-engine run. The original screenshot, contact crop and record remain unaltered in the existing recorded-check assets.
 
 The simulation uses original, locally rendered Three.js geometry: height-mapped terrain, sampled elevation contours, buildings, vehicles, a civilian bus, a patrol and an animated aircraft. It is fictional browser data, with no real aircraft, weapons, customer systems or operational mission data connected. The top bar labels it Simulation. The unchanged fixture logic clears civilian T-3 when confirming T-1 in broken mode; fixed mode clears only T-1.
 
@@ -15,4 +15,6 @@ node scripts/mission-demo/capture.cjs 'http://localhost:3100/api/fixtures/strike
 node scripts/mission-demo/capture.cjs 'http://localhost:3100/api/fixtures/strike?mode=broken' --portrait
 ```
 
-Requires Chromium and FFmpeg. Output is `public/home/spatial-check*.mp4` and matching `spatial-check-poster*.jpg`, 1440×900 and 720×960, H.264, 30 fps, silent, faststart. The film switches 2D to 3D, confirms T-1, selects T-3, and resets. A single white pointer follows the real controls. No caption overlays, fake engine messages or status-pill clusters are added.
+Requires Chromium and FFmpeg. Output is `public/home/spatial-check-60*.mp4` and matching `spatial-check-60-poster*.jpg`, 1440×900 and 720×960, H.264, 60 fps, silent, faststart. The film switches 2D to 3D, confirms T-1, selects T-3, and resets. A single white pointer follows the real controls. No caption overlays, fake engine messages or status-pill clusters are added.
+
+Capture renders 1,080 distinct frames at exact 1/60-second simulation timestamps for an 18-second film, then pipes those images to FFmpeg. It does not use the wall-clock browser recorder or stretch software-rendered frames. This works without a hardware GPU during capture. The default homepage only decodes the video; 3D only loads on Explore. The live view caches static shadows, avoids moving unchanged DOM labels, caps device pixel ratio and reduces render resolution when sustained frame times exceed the 60 FPS budget. Runtime frame rate still depends on the visitor’s hardware and browser.
