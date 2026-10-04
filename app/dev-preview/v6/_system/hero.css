@@ -11,7 +11,7 @@
   /* Over 2100px wide a fixed 1100px cap made the frame wider than 2:1, and the 16:9 film lost its foot, where
      the drone sits on its pad. The cap grows with the width, so the frame stays near the film's shape. */
   max-height: max(1100px, 52vw);
-  display: grid; place-items: center; background: #08090B;
+  display: grid; place-items: start center; padding-top: clamp(70px, 15svh, 175px); background: #070a0d;
 }
 /* The poster sits under the film (hero.tsx), and the film has no background of its own, so the poster shows
    until the film's first frame is drawn. Both are placed the same way at every width. */
@@ -20,7 +20,7 @@
 .v6-h__video { z-index: -2; }
 /* just enough shade to hold white type over the brightest frames, centred where the sentence sits */
 .v6-h__shade { position: absolute; inset: 0; z-index: -1;
-  background: radial-gradient(60% 42% at 50% 46%, rgba(8,9,11,0.6), rgba(8,9,11,0.2) 70%), linear-gradient(0deg, rgba(8,9,11,0.4), rgba(8,9,11,0.2)); }
+  background: linear-gradient(180deg, rgba(7,10,13,.2), rgba(7,10,13,0) 45%), linear-gradient(0deg, rgba(7,10,13,.16), transparent 24%); }
 
 .v6-h__h1 {
   margin: 0; padding: 0 var(--gutter); max-width: 100%; text-align: center;

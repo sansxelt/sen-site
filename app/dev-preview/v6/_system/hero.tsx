@@ -1,6 +1,6 @@
 "use client";
 
-// A photographic sequence from everyday software to connected machines.
+// An original inspection film, featuring our own simulated mission console.
 import { useEffect, useRef, useState } from "react";
 import { HEADLINE } from "./positioning";
 import { V6_APP } from "@/lib/v6-routes";
@@ -9,10 +9,10 @@ import "./hero.css";
 
 const COMPOSE = V6_APP;
 // The two cuts and the screens each is for (hero.css switches the layout at the same width).
-const FILM = "/home/systems-film.mp4";
-const FILM_PHONE = "/home/systems-film-vertical.mp4";
-const POSTER = "/home/systems-poster.jpg";
-const POSTER_PHONE = "/home/systems-poster-vertical.jpg";
+const FILM = "/home/inspection-film.mp4";
+const FILM_PHONE = "/home/inspection-film-vertical.mp4";
+const POSTER = "/home/inspection-poster.jpg";
+const POSTER_PHONE = "/home/inspection-poster-vertical.jpg";
 /** A clear pixel: the video's own poster, so the picture under it (each cut's first frame) shows through. */
 const CLEAR = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 const PHONE = "(max-width: 560px)";
@@ -37,9 +37,12 @@ export function Hero() {
     };
     const observer = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; sync(); });
     observer.observe(v);
+    const motion = matchMedia("(prefers-reduced-motion: reduce)");
+    const onMotion = () => { wanted.current = !motion.matches; sync(); };
+    motion.addEventListener("change", onMotion);
     document.addEventListener("visibilitychange", sync);
     sync();
-    return () => { observer.disconnect(); document.removeEventListener("visibilitychange", sync); v.removeEventListener("play", onPlay); v.removeEventListener("pause", onPause); };
+    return () => { observer.disconnect(); motion.removeEventListener("change", onMotion); document.removeEventListener("visibilitychange", sync); v.removeEventListener("play", onPlay); v.removeEventListener("pause", onPause); };
   }, []);
 
   const toggle = () => {
@@ -66,7 +69,7 @@ export function Hero() {
           <source media={PHONE} srcSet={POSTER_PHONE} />
           <img src={POSTER} alt="" fetchPriority="high" />
         </picture>
-        <video ref={video} className="v6-h__video" autoPlay muted loop playsInline preload="auto" poster={CLEAR} aria-hidden>
+        <video ref={video} className="v6-h__video" autoPlay muted loop playsInline preload="metadata" poster={CLEAR} aria-hidden>
           <source src={FILM_PHONE} type="video/mp4" media={`${PHONE} and ${MOTION_OK}`} />
           <source src={FILM} type="video/mp4" media={MOTION_OK} />
         </video>
