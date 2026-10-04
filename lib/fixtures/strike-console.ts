@@ -76,106 +76,88 @@ export function strikeConsoleHtml(mode: StrikeMode): string {
 <meta name="robots" content="noindex">
 <title>Larkspur Mission Console</title>
 <style>
-  :root { --bg:#07090c; --p:#0e1217; --p2:#131820; --line:#1f2731; --line2:#2b3542; --fg:#e8ecf1; --fg2:#a9b2bf; --fg3:#6f7a88;
-    --hostile:#ff6b6b; --friend:#6ea8ff; --civ:#4fd28a; --unk:#f0c850; }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--fg); font: 13px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; min-height: 100vh; }
-  .top { display: flex; align-items: center; gap: 18px; height: 46px; padding: 0 18px; border-bottom: 1px solid var(--line); background: #0a0d11; }
-  .brand { font-weight: 700; letter-spacing: .14em; font-size: 12px; }
-  .meta { display: flex; gap: 16px; color: var(--fg3); font: 11.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
-  .meta b { color: var(--fg2); font-weight: 500; }
-  .sim { margin-left: auto; font-size: 11.5px; color: var(--fg2); border: 1px solid var(--line2); padding: 5px 10px; border-radius: 6px; white-space: nowrap; }
-  .wrap { display: grid; grid-template-columns: 250px minmax(0, 1fr) 300px; gap: 10px; padding: 10px; height: calc(100vh - 46px - 30px); min-height: 560px; }
-  @media (max-width: 1100px) { .wrap { grid-template-columns: 1fr; height: auto; } }
-  .card { background: var(--p); border: 1px solid var(--line); border-radius: 8px; display: flex; flex-direction: column; min-height: 0; }
-  .hd { display: flex; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--line); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--fg3); }
-  .list { list-style: none; margin: 0; padding: 6px; display: grid; gap: 4px; }
-  .row { width: 100%; display: grid; grid-template-columns: 30px minmax(0,1fr) auto; align-items: center; gap: 8px; padding: 9px 8px; border-radius: 6px; border: 1px solid transparent; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
-  .row:hover { background: var(--p2); }
-  .row.sel { background: var(--p2); border-color: var(--line2); }
-  .sym { display: grid; place-items: center; }
-  .who b { display: block; font-size: 13px; } .who small { color: var(--fg3); font-size: 11.5px; }
-  .eng { font-size: 11px; font-weight: 600; white-space: nowrap; color: var(--fg2); }
-  .e-Cleared-to-engage { color: var(--hostile); }
-  .rule { margin: auto 10px 10px; padding: 10px; border: 1px solid var(--line); border-radius: 6px; color: var(--fg2); font-size: 12px; }
-  .map { position: relative; flex: 1; min-height: 420px; background: #0a0e13; overflow: hidden; }
-  .map svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .gl { fill: #3b4654; font: 11px ui-monospace, Menlo, monospace; }
-  .mlab { fill: #c9d1db; font: 600 11px ui-sans-serif, system-ui, sans-serif; }
-  .mk.sel .ring { opacity: 1; }
-  .foot { display: flex; gap: 18px; padding: 8px 12px; border-top: 1px solid var(--line); color: var(--fg3); font-size: 11.5px; }
-  .foot span { display: inline-flex; align-items: center; gap: 6px; }
-  .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; }
-  .f { border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; background: #0b0f14; }
-  .f.wide { grid-column: 1 / -1; }
-  .f span { display: block; color: var(--fg3); font-size: 11px; }
-  .f strong { font-size: 15px; font-weight: 600; }
-  .f strong.e-Cleared-to-engage { color: var(--hostile); }
-  .actions { display: grid; gap: 8px; padding: 0 12px 12px; }
-  button.act { font: 600 13px/1 inherit; padding: 11px 12px; border-radius: 6px; border: 1px solid var(--line2); background: var(--p2); color: var(--fg); cursor: pointer; }
-  button.act.primary { background: var(--fg); color: #07090c; border-color: var(--fg); }
-  button.act:disabled { opacity: .4; cursor: default; }
-  .toast { min-height: 18px; margin: 0 12px 10px; color: var(--fg2); font-size: 12px; }
-  .log { list-style: none; margin: 0; padding: 8px 12px 12px; font: 11.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--fg2); overflow: auto; }
-  .log li { padding: 4px 0; border-bottom: 1px solid #141a22; } .log time { color: var(--fg3); margin-right: 8px; }
-  footer { height: 30px; display: grid; place-items: center; color: var(--fg3); font-size: 11.5px; }
-
-  /* A map and a single inspector rail; no nested dashboard cards. */
-  :root { --bg:#111518; --p:#171b1e; --p2:#21272b; --line:#343b40; --line2:#596267; --fg:#f2f1ed; --fg2:#b6bcbf; --fg3:#8b959a; }
-  body { font-size:14px; }
-  .top { height:60px; background:var(--bg); border-bottom:1px solid var(--line); padding:0 24px; }
-  .brand { letter-spacing:.06em; font-size:14px; }
-  .meta { font:12px/1.3 ui-sans-serif,system-ui; }
-  .sim { border:0; border-radius:0; color:var(--fg3); padding:0; }
-  .wrap { grid-template-columns:minmax(0,1fr) 340px; grid-template-rows:340px minmax(0,1fr); height:calc(100vh - 90px); min-height:760px; padding:0; gap:0; }
-  .card { border:0; border-radius:0; background:var(--bg); }
+  :root { --bg:#121615; --p:#1c211f; --line:#343a36; --fg:#efefe8; --muted:#a5ada5; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:14px/1.45 Arial,Helvetica,sans-serif; }
+  button,input { font:inherit; }
+  button { cursor:pointer; }
+  button:focus-visible,summary:focus-visible,a:focus-visible { outline:2px solid #d9d3ba; outline-offset:3px; }
+  .top { height:64px; display:flex; align-items:center; gap:24px; padding:0 24px; border-bottom:1px solid var(--line); }
+  .brand { font-size:20px; font-weight:600; letter-spacing:-.5px; }
+  .meta { color:var(--muted); font-size:14px; }
+  .sim { margin-left:auto; color:var(--muted); font-size:12px; }
+  .wrap { display:grid; grid-template-columns:minmax(0,1fr) 340px; grid-template-rows:375px minmax(360px,1fr); height:calc(100svh - 64px); min-height:700px; }
+  .card { min-width:0; min-height:0; }
   .wrap>.card:first-child { grid-column:2; grid-row:1; border-left:1px solid var(--line); }
-  .wrap>.card:nth-child(2) { grid-column:1; grid-row:1 / 3; }
+  .wrap>.card:nth-child(2) { grid-column:1; grid-row:1/3; display:flex; flex-direction:column; }
   .wrap>.card:nth-child(3) { grid-column:2; grid-row:2; border-left:1px solid var(--line); border-top:1px solid var(--line); overflow:auto; }
-  .hd { padding:16px 20px; color:var(--fg3); font-size:11px; letter-spacing:.06em; }
-  .list { padding:0 12px; gap:0; }
-  .row { border-radius:0; grid-template-columns:24px minmax(0,1fr) auto; border:0; border-bottom:1px solid var(--line); padding:14px 8px; }
-  .row.sel { border-color:var(--line); background:var(--p2); box-shadow:inset 2px 0 #d8dedf; }
-  .who b { font-weight:500; }.who small { font-size:12px; }.eng { font-size:11px; font-weight:500; }
-  .rule { border:0; margin:8px 12px; padding:8px; font-size:11px; line-height:1.45; }
-  .map { min-height:0; background:#181e22; }
-  .map svg { opacity:.95; }
-  .foot { border:0; padding:16px 20px; background:var(--bg); gap:16px; font-size:11px; }
-  .fields { padding:16px 20px; gap:14px 20px; }
-  .f { padding:0; border:0; border-radius:0; background:transparent; }
-  .f span { margin-bottom:5px; }.f strong { font-size:16px; font-weight:500; }
-  .actions { padding:4px 20px 16px; gap:8px; }
-  button.act { border-radius:2px; font:500 13px/1.3 ui-sans-serif,system-ui; padding:12px; background:transparent; }
-  button.act.primary { background:#e4e7e6; }.toast { margin:0 20px 16px; }
-  .log { padding:0 20px 20px; font:12px/1.5 ui-sans-serif,system-ui; }.log li { border:0; }
-  footer { font-size:11px; height:30px; background:var(--bg); }
+  .hd { display:flex; justify-content:space-between; padding:18px 20px 12px; color:var(--muted); font-size:13px; }
+  .list { list-style:none; margin:0; padding:0 12px; }
+  .row { display:grid; grid-template-columns:1fr auto; align-items:center; gap:12px; width:100%; padding:13px 10px; border:0; border-bottom:1px solid var(--line); background:transparent; color:var(--fg); text-align:left; border-radius:0; }
+  .row.sel { background:var(--p); box-shadow:inset 2px 0 #d6ccb3; }.row:hover { background:var(--p); }
+  .sym { display:none; }.who b { display:block; font-size:14px; font-weight:500; }.who small { color:var(--muted); font-size:12px; }
+  .eng { font-size:11px; color:var(--muted); white-space:nowrap; }.e-Cleared-to-engage { color:#d9bba1; }
+  .rule { margin:14px 22px; font-size:11px; color:var(--muted); }
+  .rule summary, .history summary { cursor:pointer; }.rule p { margin-bottom:0; }
+  .map-toolbar { display:flex; align-items:center; justify-content:space-between; gap:16px; height:64px; padding:12px 20px; border-bottom:1px solid var(--line); }
+  .map-toolbar h1 { font-size:17px; letter-spacing:-.3px; font-weight:500; margin:0; }
+  .view-controls { display:flex; align-items:center; gap:16px; }.view-switch { display:flex; padding:3px; background:#202622; border:1px solid var(--line); border-radius:5px; }
+  .view-switch button { background:transparent; border:0; color:var(--muted); padding:6px 12px; border-radius:3px; font-size:12px; }
+  .view-switch button[aria-pressed=true] { color:#1a211c; background:#e7e8df; }
+  .layers { position:relative; }.layers summary { cursor:pointer; font-size:12px; list-style:none; }.layers summary::-webkit-details-marker { display:none; }
+  .layer-panel { position:absolute; z-index:10; top:32px; right:0; width:210px; padding:18px; background:var(--bg); border:1px solid var(--line); box-shadow:0 10px 25px #0004; }
+  .layer-panel label { display:flex; justify-content:space-between; align-items:center; gap:10px; margin:0 0 14px; font-size:13px; }.layer-panel label:last-child { margin-bottom:0; }.layer-panel input { accent-color:#c9cbbf; }
+  .layer-panel .height-control { display:block; }.height-control input { width:100%; margin-top:12px; }
+  .motion-control { border:0; padding:8px 0; background:transparent; color:var(--muted); font-size:12px; min-width:76px; }
+  .map { position:relative; flex:1; min-height:440px; background:#c9cec7; overflow:hidden; }
+  .map>svg { position:absolute; inset:0; width:100%; height:100%; background:#18201c; }.map[data-ready=true]>svg { display:none; }.map canvas { display:block; touch-action:none; }
+  .object-label { position:absolute; transform:translate(-50%,-100%); padding:4px 7px; border:1px solid #b2b9ae; border-radius:3px; background:#f0f0e5ed; color:#29342b; font-size:11px; box-shadow:0 2px 8px #29342b18; }.object-label.selected { background:#333e32; border-color:#333e32; color:#fff; }
+  .camera-controls[hidden],.motion-control[hidden],.layers[hidden] { display:none!important; }
+  .camera-controls { position:absolute; right:18px; bottom:18px; display:flex; gap:1px; box-shadow:0 4px 20px #1a231c18; }.camera-controls button { border:0; background:#eff0e7; color:#28342b; padding:10px 13px; font-size:13px; min-height:38px; }.camera-controls button:first-child { border-radius:4px 0 0 4px; }.camera-controls button:last-child { border-radius:0 4px 4px 0; }
+  .mlab { fill:#dfe5df; font:12px Arial; }.gl { fill:#68766c; font:11px Arial; }
+  .fields { display:grid; grid-template-columns:1fr 1fr; gap:20px; padding:16px 22px 22px; }.f.wide { grid-column:1/-1; }.f span { display:block; color:var(--muted); font-size:12px; margin-bottom:5px; }.f strong { font-size:16px; font-weight:500; }
+  .actions { display:grid; gap:8px; padding:0 22px 16px; }.act { border:1px solid #4b544c; background:transparent; color:var(--fg); font-size:13px; padding:12px; border-radius:3px; }.act.primary { background:#e8e9df; color:#172019; border-color:#e8e9df; }.act:disabled { opacity:.4; cursor:default; }
+  .toast { margin:0 22px 16px; min-height:16px; color:var(--muted); font-size:12px; }.history { margin:0 22px 22px; color:var(--muted); font-size:12px; }.log { list-style:none; padding:0; line-height:1.6; }.log li { margin:8px 0; }.log time { margin-right:10px; }
+  .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
   @media(max-width:900px) {
-    .top { padding:0 16px; }.meta { display:none; }.sim { max-width:55%; font-size:10px; text-align:right; }
-    .wrap { grid-template-columns:1fr; grid-template-rows:360px auto auto; min-height:0; height:auto; }
-    .wrap>.card:nth-child(2) { grid-column:1; grid-row:1; }
-    .wrap>.card:first-child { grid-column:1; grid-row:2; border:0; border-top:1px solid var(--line); }
-    .wrap>.card:nth-child(3) { grid-column:1; grid-row:3; border:0; border-top:1px solid var(--line); }
-    .foot { flex-wrap:wrap; gap:8px 16px; }.rule { margin-bottom:16px; }
-    footer { height:auto; min-height:44px; text-align:center; padding:10px 16px; }
+    .top { padding:0 16px; gap:16px; }.meta { display:none; }.brand { font-size:18px; }
+    .wrap { height:auto; min-height:0; grid-template-columns:1fr; grid-template-rows:500px auto auto; }
+    .wrap>.card:nth-child(2) { grid-column:1; grid-row:1; }.wrap>.card:first-child { grid-column:1; grid-row:2; border:0; }.wrap>.card:nth-child(3) { grid-column:1; grid-row:3; border:0; border-top:1px solid var(--line); }
+    .map-toolbar { height:60px; padding:10px 16px; gap:8px; }.view-controls { gap:12px; }.map-toolbar h1 { font-size:14px; }.motion-control { min-width:0; font-size:11px; }.view-switch button { padding:6px 9px; }.map { min-height:0; }
+    .row { padding:14px 10px; }.eng { font-size:12px; }.who small { font-size:13px; }
   }
-
+  @media(max-width:380px) { .map-toolbar h1 { display:none; }.map-toolbar { justify-content:flex-end; } }
 </style>
 </head>
 <body>
 <div class="top">
-  <span class="brand">LARKSPUR</span>
-  <span class="meta"><span>MISSION <b>NORTH RIDGE</b></span><span>AIRCRAFT <b>LARK-3</b></span><span>LINK <b>OK</b></span></span>
-  <span class="sim">Simulated mission. A Vraelis demo fixture, ${mode} mode.</span>
+  <span class="brand">Vraelis</span><span class="meta">Larkspur</span>
+  <span class="sim" title="Software simulation. No real aircraft or weapons are connected.">Simulation</span>
 </div>
 <div class="wrap">
   <aside class="card" aria-labelledby="c-h">
     <div class="hd"><span id="c-h">Contacts</span><span>4 tracked</span></div>
     <ul class="list" id="list">${rows}</ul>
-    <p class="rule">Only a contact classified Hostile and confirmed by the operator can be cleared to engage. Friendly and civilian contacts are never engaged.</p>
+    <details class="rule"><summary>Confirmation rule</summary><p>Only a contact classified Hostile and confirmed by the operator can be cleared to engage. Friendly and civilian contacts are never engaged.</p></details>
   </aside>
   <section class="card" aria-labelledby="m-h">
-    <div class="hd"><span id="m-h">Area of operations, North Ridge</span><span>Live picture</span></div>
-    <div class="map">
+    <div class="map-toolbar">
+      <h1 id="m-h">North Ridge</h1>
+      <div class="view-controls">
+        <div class="view-switch" aria-label="Map view">
+          <button type="button" id="view-2d" data-view="2d" aria-pressed="false">2D</button>
+          <button type="button" id="view-3d" data-view="3d" aria-pressed="true">3D</button>
+        </div>
+        <details class="layers"><summary>Layers</summary><div class="layer-panel">
+          <label>Terrain <input id="layer-terrain" type="checkbox" checked></label>
+          <label>Structures <input id="layer-structures" type="checkbox" checked></label>
+          <label>Flight path <input id="layer-routes" type="checkbox" checked></label>
+          <label class="height-control">Terrain height <input id="relief" type="range" min="0" max="2" step="0.1" value="1"></label>
+        </div></details>
+        <button type="button" id="scene-motion" class="motion-control">Pause motion</button>
+      </div>
+    </div>
+    <div class="map" id="spatial-scene">
       <svg viewBox="36 6 690 414" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
         <defs>
           <pattern id="g" width="140" height="100" patternUnits="userSpaceOnUse" x="0" y="20"><path d="M140 0H0V100" fill="none" stroke="#151c25" stroke-width="1"/></pattern>
@@ -197,8 +179,12 @@ export function strikeConsoleHtml(mode: StrikeMode): string {
         <g transform="translate(96 92)"><circle r="16" fill="none" stroke="#9fb3c8" stroke-opacity=".35"/><path d="M0 -9 L7 6 L0 3 L-7 6 Z" fill="#dfe7ef"/><text x="20" y="-8" class="mlab">LARK-3</text><text x="20" y="7" class="gl">ALT 1,200 m</text></g>
         ${marks}
       </svg>
+      <div class="camera-controls" aria-label="Camera controls">
+        <button type="button" id="camera-reset">Recenter</button>
+        <button type="button" id="zoom-out" aria-label="Zoom out">−</button>
+        <button type="button" id="zoom-in" aria-label="Zoom in">+</button>
+      </div>
     </div>
-    <div class="foot"><span>${symbol("Hostile", 12)} Hostile</span><span>${symbol("Friendly", 12)} Friendly</span><span>${symbol("Civilian", 12)} Civilian</span><span>${symbol("Unknown", 12)} Unknown</span><span>Shaded: sensor field of view</span></div>
   </section>
   <section class="card" aria-labelledby="s-h">
     <div class="hd"><span id="s-h">Selected contact</span><span id="selid">T-1</span></div>
@@ -215,11 +201,10 @@ export function strikeConsoleHtml(mode: StrikeMode): string {
       <button type="button" class="act" id="reset">Reset simulation</button>
     </div>
     <p class="toast" id="toast" role="status"></p>
-    <div class="hd" style="border-top:1px solid var(--line)">Operator log</div>
-    <ol class="log" id="log"><li><time>06:12</time>Mission North Ridge started. 4 contacts tracked.</li></ol>
+    <details class="history"><summary>Activity</summary><ol class="log" id="log"><li><time>06:12</time>Mission North Ridge started. 4 contacts tracked.</li></ol></details>
   </section>
 </div>
-<footer>Nothing here controls real hardware. The aircraft, the contacts and this log exist only in your browser.</footer>
+<p class="sr-only">Software simulation. No real aircraft or weapons are connected.</p>
 <script>
 (function () {
   var MODE = ${JSON.stringify(mode)};
@@ -263,6 +248,8 @@ export function strikeConsoleHtml(mode: StrikeMode): string {
   render();
 })();
 </script>
+<script>window.LARKSPUR_DATA = { contacts: ${JSON.stringify(CONTACTS)} };</script>
+<script type="module" src="/home/spatial/scene.js"></script>
 </body>
 </html>`;
 }

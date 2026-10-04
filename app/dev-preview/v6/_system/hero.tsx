@@ -3,16 +3,13 @@
 // Licensed real footage in the original, centered homepage film frame.
 import { useEffect, useRef, useState } from "react";
 import { HEADLINE } from "./positioning";
-import { V6_APP } from "@/lib/v6-routes";
-import { CTA, EditorialLink } from "./ui";
 import "./hero.css";
 
-const COMPOSE = V6_APP;
 // The two cuts and the screens each is for (hero.css switches the layout at the same width).
-const FILM = "/home/systems-film-defense.mp4";
-const FILM_PHONE = "/home/systems-film-defense-vertical.mp4";
-const POSTER = "/home/systems-poster-defense.jpg";
-const POSTER_PHONE = "/home/systems-poster-defense-vertical.jpg";
+const FILM = "/home/systems-film-spatial.mp4";
+const FILM_PHONE = "/home/systems-film-spatial-vertical.mp4";
+const POSTER = "/home/systems-poster-spatial.jpg";
+const POSTER_PHONE = "/home/systems-poster-spatial-vertical.jpg";
 /** A clear pixel: the video's own poster, so the picture under it (each cut's first frame) shows through. */
 const CLEAR = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 const PHONE = "(max-width: 560px)";
@@ -47,39 +44,25 @@ export function Hero() {
   }, []);
 
 
-  // The first scroll continues inside the same film, then hands over to the recorded check.
-  // CSS variables keep wheel/touch scrolling off React's render path.
   useEffect(() => {
     const el = root.current;
     if (!el) return;
     const motion = matchMedia("(prefers-reduced-motion: reduce)");
-    let frame = 0;
+    let tick = 0;
     const update = () => {
-      frame = 0;
-      const film = el.querySelector<HTMLElement>(".v6-h__frame");
-      if (!film) return;
-      const top = parseFloat(getComputedStyle(film).top) || 0;
-      const distance = el.offsetHeight - film.offsetHeight;
-      const progress = motion.matches ? 0 : Math.max(0, Math.min(1, (top - el.getBoundingClientRect().top) / Math.max(1, distance)));
-      el.style.setProperty("--hero-out", `${-Math.min(progress * 1.7, 1) * 80}svh`);
-      el.style.setProperty("--hero-in", `${Math.max(1 - progress * 1.55, 0) * 100}svh`);
-      el.dataset.continued = String(progress >= 0.38);
-      const context = el.querySelector<HTMLElement>(".v6-h__continuation");
-      if (context) context.inert = !motion.matches && progress < 0.38;
+      tick = 0;
+      const frame = el.querySelector<HTMLElement>(".v6-h__frame");
+      if (!frame) return;
+      const top = parseFloat(getComputedStyle(frame).top) || 0;
+      const progress = motion.matches ? 0 : Math.max(0, Math.min(1, (top - el.getBoundingClientRect().top) / Math.max(1, el.offsetHeight - frame.offsetHeight)));
+      el.style.setProperty("--hero-out", `${-progress * 55}svh`);
     };
-    const request = () => { if (!frame) frame = requestAnimationFrame(update); };
-    const resize = new ResizeObserver(request);
-    resize.observe(el);
-    window.addEventListener("scroll", request, { passive: true });
-    window.addEventListener("resize", request);
-    motion.addEventListener("change", request);
+    const schedule = () => { if (!tick) tick = requestAnimationFrame(update); };
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    motion.addEventListener("change", schedule);
     update();
-    return () => {
-      cancelAnimationFrame(frame); resize.disconnect();
-      window.removeEventListener("scroll", request);
-      window.removeEventListener("resize", request);
-      motion.removeEventListener("change", request);
-    };
+    return () => { cancelAnimationFrame(tick); window.removeEventListener("scroll", schedule); window.removeEventListener("resize", schedule); motion.removeEventListener("change", schedule); };
   }, []);
 
   const toggle = () => {
@@ -110,24 +93,12 @@ export function Hero() {
         <h1 id="v6-h-h1" className="v6-h__h1">
           <span className="v6-mask"><span className="v6-mask__in">{HEADLINE}</span></span>
         </h1>
-        <div className="v6-h__continuation">
-          <h2>Before software<br />becomes an action.</h2>
-          <p>Vraelis checks live web apps and control panels in a real browser. See it catch a mistake in our simulated drone mission.</p>
-          <div className="v6-h__actions">
-            <EditorialLink href="#how-a-check-works">Watch the check</EditorialLink>
-            <CTA href={`${COMPOSE}?new=1`}>Start a check</CTA>
-          </div>
-          <a className="v6-h__sources" href="/home/systems-film-sources.txt">Field footage · Vraelis software simulation</a>
-        </div>
-        <a className="v6-h__scroll" href="#hero-context">See what we check <span aria-hidden>↓</span></a>
-        <span className="v6-h__signature">Vraelis · Software verification</span>
         <button type="button" className="v6-h__pause" onClick={toggle} aria-label={playing ? "Pause the film" : "Play the film"}>
           {playing
             ? <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden><path d="M5 3.5v9M11 3.5v9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
             : <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden><path d="M5 3.2v9.6L12.5 8z" fill="currentColor" /></svg>}
         </button>
       </div>
-      <span id="hero-context" className="v6-h__anchor" aria-hidden />
     </section>
   );
 }

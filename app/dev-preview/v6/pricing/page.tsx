@@ -35,8 +35,6 @@ const SIGNUP = `${v6SignInPath()}&mode=signup`;
 // to it: no dollar figure is typed here.
 const money = usdFromCents;
 
-// The largest listed plan's guarantee count, the point where Enterprise starts.
-const TOP_GUARANTEES = Math.max(...PLAN_CATALOG_V1.map((p) => p.maxGuarantees));
 
 // One line under each price: who the plan is for. Keyed by plan, so a plan added to the catalog fails the type
 // check here until it has its line, rather than rendering without one.
@@ -142,7 +140,7 @@ const FAQ: FaqItem[] = [
     q: "What does Enterprise add?",
     a: (
       <>
-        <p>Volume above the listed plans, single sign-on through your own identity provider, roles across a team, owner-anchored billing, and audit activity you can export. Invoicing, a signed agreement and a security review are all available, with written quotes rather than a calculator.</p>
+        <p>For governments, regulated institutions and established organizations that need custom capacity or contract terms. Single sign-on through your own identity provider, roles across a team, owner-anchored billing, and audit activity you can export. Invoicing, a signed agreement and a security review are all available, with written quotes rather than a calculator.</p>
         <div className="v6-pp__qlink"><EditorialLink href={`${BASE}/enterprise`}>Read about Enterprise</EditorialLink></div>
       </>
     ),
@@ -238,9 +236,9 @@ export default function V6Pricing() {
                   one (scripts/guarantee-cap-verify.ts). Not "unlimited", and no price: what a contract costs depends
                   on volume, browser time, systems, retention and support. */}
               <div className="v6-pp__alt">
-                <h3 className="v6-pp__name">{`Enterprise: more than ${TOP_GUARANTEES} guarantees, or a contract`}</h3>
-                <p className="v6-pp__cap">Custom guarantee capacity</p>
-                <p className="v6-pp__for">Priced on a written quote.</p>
+                <h3 className="v6-pp__name">Enterprise</h3>
+                <p className="v6-pp__cap">For governments, regulated institutions and established organizations</p>
+                <p className="v6-pp__for">Custom capacity and contract terms, priced on a written quote.</p>
                 <ul className="v6-pp__list" role="list">
                   <li>Single sign-on through your own identity provider</li>
                   <li>Roles, owner-anchored billing and audit export</li>

@@ -51,6 +51,7 @@ export function StrikeStory({ record: r, chapters }: { record: StrikeRecord; cha
             <PicturePlate src={run.shots.run} alt="Original mission-console screenshot from the recorded check." evidence />
             <PicturePlate src={run.shots.failure} alt="Original contact list: the civilian bus T-3 also shows Cleared to engage." evidence />
           </div>
+          <p><a href="/home/systems-film-sources.txt">Homepage film sources</a></p>
           <p className="v6-story__record" data-no-translate>{run.id}</p>
         </details>}
         <div className="v6-story__foot"><EditorialLink href={SOLUTIONS_HREF}>See every sector</EditorialLink></div>

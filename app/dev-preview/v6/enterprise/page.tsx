@@ -31,7 +31,7 @@ import "./enterprise.css";
 export const metadata = v6meta({
   title: "Enterprise",
   description:
-    "Single sign-on through your OIDC provider, team roles, owner-anchored billing and audit export, each labelled by where it stands today: operational, preview or planned.",
+    "Verification for governments, regulated institutions and established organizations, with single sign-on, team roles, audit exports and custom capacity.",
   path: "/enterprise",
   type: "website",
 });
@@ -66,8 +66,8 @@ export default function V6Enterprise() {
       <FrameHero
         id="overview"
         eyebrow="Enterprise"
-        title="Bring your own identity provider, and your own reviewers"
-        sub="Members sign in through your provider, roles decide what each person may change, and the evidence stays readable to everyone who needs it."
+        title="Verification for your organization"
+        sub="For governments, regulated institutions and established organizations. Bring your identity provider and reviewers, with access controls, audit exports and capacity agreed for your needs."
         primary={{ label: "Talk to sales", href: SALES }}
         secondary={{ label: "Security", href: `${BASE}/security` }}
         {...photographHero("mission")}

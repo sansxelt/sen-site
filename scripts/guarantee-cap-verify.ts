@@ -93,7 +93,7 @@ console.log("\n── there is a way past the top self-serve tier ──");
   ];
   for (const f of SURFACES) {
     const src = readFileSync(f, "utf8");
-    ok(`${f.split("/").slice(-2).join("/")} offers an enterprise route`, /Enterprise: more than/.test(src));
+    ok(`${f.split("/").slice(-2).join("/")} offers an enterprise route`, /Enterprise/.test(src) && /Talk to sales/.test(src) && /sales@vraelis\.com/.test(src));
     ok("  and gives the address rather than another page to click", /sales@vraelis\.com/.test(src));
   }
   // ONLY WHAT /enterprise MARKS OPERATIONAL. SAML is Preview there and SCIM is Planned, and a card that

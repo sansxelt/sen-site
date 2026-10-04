@@ -118,14 +118,14 @@ export default function PricingV1({ initialCycle = "monthly" }: { initialCycle?:
           <div className="card" style={{ marginTop: 22, display: "flex", flexWrap: "wrap", alignItems: "center", gap: "16px clamp(20px, 3vw, 36px)" }}>
             <div style={{ flex: "1 1 380px", minWidth: 0 }}>
               <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 6 }}>
-                Enterprise: more than {PLAN_CATALOG_V1[PLAN_CATALOG_V1.length - 1].maxGuarantees} guarantees, or a contract
+                Enterprise
               </div>
               {/* The last rung, in the same units as the other four, so the ladder does not end mid
                   sentence. Not "Unlimited": what a contract costs depends on verification volume, browser
                   time, systems, retention and support, and a public number would underprice the first
                   serious customer or promise something nobody agreed to. */}
               <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, marginBottom: 6 }}>
-                Custom guarantee capacity
+                For governments, regulated institutions and established organizations
               </div>
               <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>
                 Volume above the listed plans, single sign-on through your own identity provider, roles
