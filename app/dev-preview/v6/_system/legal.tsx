@@ -1,5 +1,5 @@
 import { Suspense, isValidElement, type ReactElement, type ReactNode } from "react";
-import Link from "next/link";
+import { MarketingLink as Link } from "./entry-navigation";
 import { V6_BASE } from "@/lib/v6-routes";
 import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
 import {
@@ -76,7 +76,7 @@ function isConsolePath(href: string) {
 function A({ href, children }: { href: string; children: ReactNode }) {
   if (!href.startsWith("/")) return <a className="v6-lg__a" href={href}>{children}</a>;
   const to = localHref(href);
-  if (isConsolePath(to)) return <a className="v6-lg__a" href={to}>{children}</a>;
+  if (isConsolePath(to)) return <Link className="v6-lg__a" href={to} prefetch={false}>{children}</Link>;
   return <Link className="v6-lg__a" href={to}>{children}</Link>;
 }
 

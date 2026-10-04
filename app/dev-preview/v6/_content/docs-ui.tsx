@@ -7,10 +7,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { docsByGroup, inline, docPrefetch, dslug as slugOf, type Block, type TocItem } from "./docs";
 import { SURFACES } from "./coverage";
-import { V6_BASE, V6_HOME, V6_APP, V6_SIGNIN } from "@/lib/v6-routes";
+import { V6_BASE, V6_HOME, V6_SIGNIN, v6SignInPath } from "@/lib/v6-routes";
 import { MARK_PATH, MARK_VIEWBOX } from "@/lib/brand-mark";
 import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { useAppEntry, useMarketingHref, useMarketingSession } from "../_system/entry-navigation";
 
 const BASE = V6_BASE;
 export const dslug = slugOf;
@@ -18,8 +19,9 @@ export const dslug = slugOf;
 /** A link inside docs text. A site path gets the base and the console prefetch rule (docPrefetch); anything
  *  else (another host, mailto:, an anchor on this page) is a plain anchor. */
 function DocLink({ href, children }: { href: string; children: React.ReactNode }) {
-  if (!href.startsWith("/")) return <a href={href}>{children}</a>;
-  return <Link href={`${BASE}${href}`} prefetch={docPrefetch(href)}>{children}</Link>;
+  const destination = useMarketingHref(href.startsWith("/") ? `${BASE}${href}` : href);
+  if (!destination.startsWith("/")) return <a href={destination}>{children}</a>;
+  return <Link href={destination} prefetch={docPrefetch(destination)}>{children}</Link>;
 }
 
 /** Docs text with its inline markup (`code` and [label](href), see _content/docs.ts). Plain text stays one
@@ -214,6 +216,8 @@ export function DocShell({ activeSlug = "", toc = [], crumb, markdown, children 
   children: React.ReactNode;
 }) {
   const groups = docsByGroup();
+  const authed = useMarketingSession();
+  const appEntry = useAppEntry();
   const [drawer, setDrawer] = useState(false);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState<string>(toc[0]?.id ?? "");
@@ -349,8 +353,8 @@ export function DocShell({ activeSlug = "", toc = [], crumb, markdown, children 
         ) : <span className="v6-dh__crumb" />}
         <div className="v6-dh__actions">
           {markdown ? <CopyMarkdown markdown={markdown} /> : null}
-          <Link href={V6_SIGNIN} className="v6-dh__signin">Sign in</Link>
-          <Link href={V6_APP} prefetch={docPrefetch(V6_APP)} className="v6-dh__open">Open Vraelis</Link>
+          {!authed ? <Link href={V6_SIGNIN} className="v6-dh__signin">Sign in</Link> : null}
+          <Link href={authed ? appEntry : `${v6SignInPath()}&mode=signup`} prefetch={authed ? docPrefetch(appEntry) : undefined} className="v6-dh__open">{authed ? "Open Vraelis" : "Create account"}</Link>
         </div>
       </header>
 

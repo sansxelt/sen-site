@@ -13,6 +13,7 @@ import "./_system/changelog.css";
 import "./_system/legal.css";
 import "./_system/picture-plate.css";
 import { V6Shell } from "./_system/shell";
+import { EntryNavigation } from "./_system/entry-navigation";
 import { auth } from "@/auth";
 import { V6_ORIGIN } from "./_system/meta";
 import { META_TITLE, META_DESCRIPTION, OG_TITLE } from "./_system/positioning";
@@ -88,7 +89,9 @@ export default async function V6Layout({ children }: { children: ReactNode }) {
       <noscript>
         <style>{".v6-rx__f{opacity:1;transform:none}.v6-tm__exits .v6-tm__ex{opacity:1}"}</style>
       </noscript>
-      <V6Shell authed={!!session?.user?.email}>{children}</V6Shell>
+      <EntryNavigation authed={!!session?.user?.email}>
+        <V6Shell authed={!!session?.user?.email}>{children}</V6Shell>
+      </EntryNavigation>
     </>
   );
 }

@@ -15,11 +15,9 @@
 import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
 import { v6AppEntry, v6ShouldPrefetch } from "@/lib/v6-routes";
+import { useMarketingHref } from "./entry-navigation";
 
-// Stays inside V6. The old value left the preview for the previous design and called back to
-// /app, which does not exist, so a successful sign-in landed on a 404.
-// "Open Vraelis" goes to the APP, not to sign-in: a signed-in visitor was being shown a sign-in page
-// before their own console. A static page cannot know the session, so it does not try to - the app decides.
+// The session-aware link resolves product destinations before a visitor leaves marketing.
 const OPEN_APP = v6AppEntry();
 
 // NOTHING IN THE FIRST SCREEN IS EVER HIDDEN (plan A6, 2026-10-02). A Reveal renders VISIBLE, so the server
@@ -71,12 +69,10 @@ export function SectionHead({ eyebrow, title, lead, align = "left" }: {
 export function CTA({ href = OPEN_APP, children, brand = false, ghost = false, lg = false, sm = false }: {
   href?: string; children: ReactNode; brand?: boolean; ghost?: boolean; lg?: boolean; sm?: boolean;
 }) {
+  const destination = useMarketingHref(href);
   const cls = ["v6-btn", brand ? "v6-btn--brand" : "", ghost ? "v6-btn--ghost" : "", lg ? "v6-btn--lg" : sm ? "v6-btn--sm" : ""].filter(Boolean).join(" ");
   return (
-    // prefetch is switched off for the app and checkout paths only: they are 308'd to another origin in
-    // production and the prefetch is blocked by CORS. See v6ShouldPrefetch. This default href IS /app, so
-    // without it most pages on the site logged the error twice on load.
-    <Link href={href} prefetch={v6ShouldPrefetch(href) ? undefined : false} className={cls}>
+    <Link href={destination} prefetch={v6ShouldPrefetch(destination) ? undefined : false} className={cls}>
       {children}{!ghost && <span className="v6-arw" aria-hidden><span>→</span><span>→</span></span>}
     </Link>
   );
@@ -85,8 +81,9 @@ export function CTA({ href = OPEN_APP, children, brand = false, ghost = false, l
 // A STANDALONE next step. "Read the docs →", "See the full platform →". The arrow is the whole point: it
 // says this link is somewhere to go, and it belongs at the end of a line, not in the middle of one.
 export function EditorialLink({ href, children }: { href: string; children: ReactNode }) {
+  const destination = useMarketingHref(href);
   // The same prefetch guard as CTA: /app and /checkout are another origin in production (v6ShouldPrefetch).
-  return <Link href={href} prefetch={v6ShouldPrefetch(href) ? undefined : false} className="v6-elink"><span className="v6-elink__t">{children}</span><span className="v6-arw" aria-hidden>→</span></Link>;
+  return <Link href={destination} prefetch={v6ShouldPrefetch(destination) ? undefined : false} className="v6-elink"><span className="v6-elink__t">{children}</span><span className="v6-arw" aria-hidden>→</span></Link>;
 }
 
 // A link INSIDE a sentence. Same underline, no arrow, and it inherits the surrounding type rather than
@@ -98,7 +95,8 @@ export function EditorialLink({ href, children }: { href: string; children: Reac
 // inline-flex box that will not wrap with the text around it. There was no inline link component, which is
 // exactly why people reached for the CTA one.
 export function ProseLink({ href, children }: { href: string; children: ReactNode }) {
-  return <Link href={href} prefetch={v6ShouldPrefetch(href) ? undefined : false} className="v6-plink">{children}</Link>;
+  const destination = useMarketingHref(href);
+  return <Link href={destination} prefetch={v6ShouldPrefetch(destination) ? undefined : false} className="v6-plink">{children}</Link>;
 }
 
 // A state as a word (plan A5): Plex Mono, no pill, no border and no dot. go and wait read in ink-3; stop

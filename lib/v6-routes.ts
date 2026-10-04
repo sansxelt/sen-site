@@ -29,7 +29,8 @@ export const V6_BASE = process.env.NEXT_PUBLIC_VRAELIS_V6_PUBLIC === "1" ? "" : 
 // unpromoted the base is "/dev-preview/v6" and the link worked.
 export const V6_HOME = V6_BASE || "/";
 export const V6_APP = `${V6_BASE}/app`;
-export const V6_SIGNIN = `${V6_BASE}/signin`;
+// Authentication has one canonical surface, including when reviewing the marketing preview.
+export const V6_SIGNIN = "/signin";
 export const V6_PRIVACY = `${V6_BASE}/privacy`;
 export const V6_TERMS = `${V6_BASE}/terms`;
 export const V6_DOCS = `${V6_BASE}/docs`;

@@ -24,12 +24,10 @@
 .vr-pc :is(button, a, input):focus-visible { outline: 2px solid #FAFAFA; outline-offset: 2px; }
 
 /* ── The dialog ───────────────────────────────────────────────────────────────────────────────────────
-   Anchored at the foot of the window, centred, 24px up (plan C, 2026-10-02): it asks its question without
-   sitting on the middle of the page, and it is still modal, so nothing behind it can be used until it is
-   answered. On a phone it becomes a sheet from the bottom edge (see the 560px block). */
+   Centred on desktop with room on every edge. On a phone it becomes a bottom sheet. */
 .vr-pc__dialog {
-  position: fixed; inset: 0; margin: auto auto 24px; padding: 0;
-  width: min(560px, calc(100vw - 32px)); max-width: none; height: fit-content; max-height: 70vh;
+  position: fixed; inset: 0; margin: auto; padding: 0;
+  width: min(640px, calc(100vw - 48px)); max-width: none; height: fit-content; max-height: calc(100svh - 64px);
   background: #141416; color: var(--vr-pc-ink);
   border: 1px solid var(--vr-pc-line); border-radius: 12px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.16), 0 24px 56px -18px rgba(0,0,0,0.78);
@@ -50,7 +48,8 @@ html:has(.vr-pc__dialog[open]) { overflow: hidden; }
 }
 .vr-pc__x:hover { background: var(--vr-pc-sunk); }
 
-.vr-pc__scroll { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 14px 22px 4px; }
+.vr-pc__scroll { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 14px 22px 4px;
+  scrollbar-color: #81818B #171719; scrollbar-gutter: stable; }
 .vr-pc .vr-pc__title {
   margin: 0 0 8px; font-size: 21px; line-height: 1.25; font-weight: 600; letter-spacing: -0.02em; color: var(--vr-pc-ink); outline: none;
 }

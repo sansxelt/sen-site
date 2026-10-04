@@ -31,7 +31,7 @@
 // FactRow and Band, which bring their own. SectionHead (./ui) already leaves --head-gap under itself, so a kit
 // block goes straight after it with no margin of its own.
 import Image, { getImageProps, type StaticImageData } from "next/image";
-import Link from "next/link";
+import { MarketingLink as Link } from "./entry-navigation";
 import { Children, Fragment, type CSSProperties, type ReactNode } from "react";
 import { CTA, EditorialLink, PageHero, ProseLink, Reveal, Signal } from "./ui";
 import { FrameMedia } from "./kit-client";

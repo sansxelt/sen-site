@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Fragment } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { v6meta } from "../_system/meta";
 import { DocShell } from "../_content/docs-ui";
 import { docsByGroup, getDoc, docPrefetch } from "../_content/docs";
@@ -14,18 +13,8 @@ export const metadata: Metadata = v6meta({
   path: "/docs",
 });
 
-// THE DOCS HOME (plan T7). Three ways to start, each with a crop of the real console it leads to; the four
-// interfaces, each with the one line a reader types; every page under its group; and where to ask a person.
-// It was only the grouped list, which hid where a first-time reader should begin.
-//
-// The pictures are crops of the black console's own records (public/docs/CREDITS.md): a run report, a run's
-// journey with its failed step, and the console's Command line page. They are decorative here (alt=""): each
-// card is a link named by its title, and the full captures, with their alt text, are on the pages they open.
-const START: { slug: string; src: string }[] = [
-  { slug: "getting-started", src: "/site/photography/signup.jpg" },
-  { slug: "the-loop", src: "/site/photography/checkout.jpg" },
-  { slug: "ai-assistants", src: "/site/photography/client.jpg" },
-];
+// A compact starting point: the guide itself explains the next step.
+const START = ["getting-started", "the-loop", "ai-assistants"];
 
 // One line each, as a reader would type it. Machine text, never translated.
 const BY_INTERFACE: { name: string; slug: string; line: string }[] = [
@@ -52,16 +41,13 @@ export default function DocsIndex() {
         <section className="v6-docs__home" aria-labelledby="start-here">
           <h2 id="start-here">Start here</h2>
           <div className="v6-docs__start">
-            {START.map((s) => {
-              const d = getDoc(s.slug)!;
+            {START.map((slug) => {
+              const d = getDoc(slug)!;
               return (
-                <Link key={s.slug} href={`${BASE}/docs/${d.slug}`} className="v6-docs__card">
-                  <span className="t">{d.title}</span>
+                <Link key={slug} href={`${BASE}/docs/${d.slug}`} className="v6-docs__card">
+                  <span className="t">{slug === "the-loop" ? "How a check works" : d.title}</span>
                   <span className="s">{d.summary}</span>
-                  <span className="v6-docs__card-media">
-                    {/* In the first screen at desktop sizes, and the largest paint there: eager, not lazy. */}
-                    <Image src={s.src} alt="" width={800} height={450} sizes="(max-width: 720px) 90vw, 300px" loading="eager" />
-                  </span>
+                  <span className="v6-docs__card-arrow" aria-hidden>→</span>
                 </Link>
               );
             })}
