@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { EditorialLink } from "./ui";
+import { HEADLINE } from "./positioning";
 import { V6_BASE } from "@/lib/v6-routes";
 import { orbitRoute, type OrbitWord } from "../_content/sectors";
 import "./orbit.css";
@@ -19,10 +20,7 @@ type Tile = LiveTile | NextTile;
 
 const pic = (name: string, alt: string, pos?: string): Photo => ({ src: `/home/orbit/photo-${name}.jpg`, alt, pos });
 
-// In ring order. The three Next tiles are spread round the ring (4, 7, 10: the sides and the back at rest, never the
-// front), and Commercial and retail rests at the front, under its own headline. Military is one subject among
-// several and rests at the side, not the front. As cards on a phone the even places make the top row and the odd
-// ones the bottom, so the first screen shows Commercial and retail, Drones and aviation, Developers and Government.
+// All subjects share the ring equally. The overview stays broad until a tile is hovered or focused.
 export const ORBIT: readonly Tile[] = [
   { word: "commercial", label: "Commercial and retail", sentence: "Know your checkout works",
     photos: [pic("checkout", "A card held to a card reader", "50% 65%")] },
@@ -62,10 +60,10 @@ export function Orbit() {
   const held = useRef<number | null>(null);
   const stopped = useRef(false);
   const wake = useRef<() => void>(() => {});
-  const [selected, setSelected] = useState(0);
+  const [selected, setSelected] = useState<number | null>(null);
   const [paused, setPaused] = useState(false);
   const select = (i: number) => { held.current = i; setSelected(i); wake.current(); };
-  const release = () => { held.current = null; wake.current(); };
+  const release = () => { held.current = null; setSelected(null); wake.current(); };
 
   useEffect(() => {
     const el = root.current;
@@ -147,9 +145,9 @@ export function Orbit() {
 
   return <section ref={root} className="v6-or__field v6-dark" aria-labelledby="v6-or-h" data-nav-dark data-nav-theme="dark">
     <div className="v6-or__copy">
-      <h2 id="v6-or-h" className="v6-or__h">{ORBIT.map((t, i) => <span key={t.label} className="v6-or__s" data-on={i === selected}>{t.next ? t.label : t.sentence}</span>)}</h2>
-      <p className="v6-or__d">{ORBIT[selected].next ? "Not built yet" : "From everyday apps to the software behind connected machines"}</p>
-      <EditorialLink href={ROUTE[selected].href}>{ORBIT[selected].next ? "See what is planned" : "Explore this subject"}</EditorialLink>
+      <h2 id="v6-or-h" className="v6-or__h"><span className="v6-or__s" data-on={selected === null}>{HEADLINE}</span>{ORBIT.map((t, i) => <span key={t.label} className="v6-or__s" data-on={i === selected}>{t.next ? t.label : t.sentence}</span>)}</h2>
+      <p className="v6-or__d">{selected !== null && ORBIT[selected].next ? "Not built yet" : "From everyday apps to the software behind connected machines"}</p>
+      <EditorialLink href={selected === null ? `${V6_BASE}/platform#coverage` : ROUTE[selected].href}>{selected === null ? "See every sector" : ORBIT[selected].next ? "See what is planned" : "Explore this subject"}</EditorialLink>
     </div>
     <ul className="v6-or__tiles">
       {ORBIT.map((t, i) => <li key={t.label} ref={node => { tiles.current[i] = node; }} className="v6-or__item" data-on={i === selected}>
