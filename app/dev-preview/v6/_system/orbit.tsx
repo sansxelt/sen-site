@@ -71,7 +71,7 @@ export function Orbit() {
     const el = root.current;
     if (!el) return;
     const media = matchMedia(RING), reduced = matchMedia("(prefers-reduced-motion: reduce)");
-    let width = 0, height = 0, tile = 140, perimeter = 1, phase = 0, visible = false, raf = 0, last = 0;
+    let width = 0, height = 0, tile = 140, perimeter = 1, phase = 0, speed = 1, visible = false, raf = 0, last = 0;
     let points: { x: number; y: number; length: number }[] = [];
     const lifts = ORBIT.map(() => 0);
     const start = () => { if (!raf) { last = 0; raf = requestAnimationFrame(frame); } };
@@ -101,8 +101,11 @@ export function Orbit() {
       raf = 0;
       const dt = Math.min(40, last ? time - last : 0); last = time;
       if (media.matches && points.length) {
-        if (visible && !document.hidden && !reduced.matches && !stopped.current) phase += dt * .022;
         const h = held.current;
+        const targetSpeed = stopped.current || h !== null ? 0 : 1;
+        speed += (targetSpeed - speed) * (1 - Math.exp(-dt / 120));
+        if (Math.abs(speed - targetSpeed) < .001) speed = targetSpeed;
+        if (visible && !document.hidden && !reduced.matches) phase += dt * .022 * speed;
         ORBIT.forEach((_, i) => {
           const node = tiles.current[i]; if (!node) return;
           const diff = h === null ? ORBIT.length : Math.min((i - h + ORBIT.length) % ORBIT.length, (h - i + ORBIT.length) % ORBIT.length);
@@ -123,7 +126,7 @@ export function Orbit() {
         delete el.dataset.ready;
         tiles.current.forEach(node => { if (node) { node.style.width = ""; node.style.transform = ""; node.style.filter = ""; node.style.opacity = ""; } });
       }
-      const moving = media.matches && visible && !document.hidden && !reduced.matches && (!stopped.current || lifts.some((lift, i) => {
+      const moving = media.matches && visible && !document.hidden && !reduced.matches && (speed > 0 || (!stopped.current && held.current === null) || lifts.some((lift, i) => {
         const h = held.current;
         const d = h === null ? ORBIT.length : Math.min((i - h + ORBIT.length) % ORBIT.length, (h - i + ORBIT.length) % ORBIT.length);
         const target = d === 0 ? 1 : d === 1 ? -.7 : d === 2 ? -.3 : 0;
