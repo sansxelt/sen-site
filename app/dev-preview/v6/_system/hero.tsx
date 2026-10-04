@@ -1,6 +1,6 @@
 "use client";
 
-// An original edit of licensed live-action footage. Product evidence lives in the demo below.
+// Licensed real footage in the original, centered homepage film frame.
 import { useEffect, useRef, useState } from "react";
 import { HEADLINE } from "./positioning";
 import { V6_APP } from "@/lib/v6-routes";
@@ -58,14 +58,9 @@ export function Hero() {
 
   return (
     <section className="v6-h" data-nav-dark data-nav-theme="dark" aria-labelledby="v6-h-h1">
-      <div className="v6-h__intro v6-wrap">
-        <h1 id="v6-h-h1" className="v6-h__h1"><span className="v6-mask"><span className="v6-mask__in">{HEADLINE}</span></span></h1>
-        <div className="v6-h__below">
-          <p className="v6-h__say">Checks for live web apps and device control panels.</p>
-          <CTA href={`${COMPOSE}?new=1`}>Start a check</CTA>
-        </div>
-      </div>
+
       <div className="v6-h__frame">
+
         <picture className="v6-h__poster">
           <source media={PHONE} srcSet={POSTER_PHONE} />
           <img src={POSTER} alt="" fetchPriority="high" />
@@ -75,6 +70,9 @@ export function Hero() {
           <source src={FILM} type="video/mp4" media={MOTION_OK} />
         </video>
         <div className="v6-h__shade" aria-hidden />
+        <h1 id="v6-h-h1" className="v6-h__h1">
+          <span className="v6-mask"><span className="v6-mask__in">{HEADLINE}</span></span>
+        </h1>
         <button type="button" className="v6-h__pause" onClick={toggle} aria-label={playing ? "Pause the film" : "Play the film"}>
           {playing
             ? <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden><path d="M5 3.5v9M11 3.5v9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
@@ -82,6 +80,10 @@ export function Hero() {
         </button>
       </div>
 
+      <div className="v6-h__below">
+        <p className="v6-h__say">Checks for live web apps and device control panels</p>
+        <CTA href={`${COMPOSE}?new=1`}>Start a check</CTA>
+      </div>
     </section>
   );
 }
