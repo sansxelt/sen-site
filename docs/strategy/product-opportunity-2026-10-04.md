@@ -1,5 +1,7 @@
 # Vraelis: product opportunity and validation plan
 
+> Subsequent founder decision: defense is now the primary market. The broad-market-first recommendation below is superseded by [Defense product direction](defense-product-direction-2026-10-04.md). Competitor findings and capability limitations still apply.
+
 Assessment date: October 4, 2026. This is a strategy assessment, not a promise of features, revenue or valuation.
 
 ## Decision

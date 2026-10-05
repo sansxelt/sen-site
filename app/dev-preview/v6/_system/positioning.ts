@@ -1,3 +1,5 @@
+// 2026-10-04: founder selected defense as the primary market. This supersedes earlier broad-audience
+// positioning below; the browser boundary and evidence requirements remain unchanged.
 // ═══════════════════════════════════════════════════════════════════════════
 //  POSITIONING. One file, one edit.
 // ═══════════════════════════════════════════════════════════════════════════
@@ -65,7 +67,7 @@
  *  IT NAMES THE ACTIVITY AND WHERE IT HAPPENS, NOT A ROLE AND NOT AN AUDIENCE. Earlier labels named an
  *  institution, then a class of software ("AI-built systems"). Both told a reader who the company thought it
  *  was rather than what it would do for them. "On the live app" is the part a reader can check. */
-export const CATEGORY = "Verification for what you build";
+export const CATEGORY = "Software verification for defense";
 
 /** One concise homepage headline, without a forced line break. */
 export const HEADLINE = "Know your systems work.";
@@ -92,7 +94,7 @@ export const HERO_LINE = "Checks in a real browser, on live web apps and the pan
  *  happened. It does not promise a green result, and it does not lead with the verdict words (rule 5). */
 export const META_TITLE = "Vraelis | Know your systems work.";
 export const META_DESCRIPTION =
-  "Say what your web app, or a device it controls, should do. Vraelis checks it in a real browser on the live product, shows you exactly what happened, and hands anything broken to you or your AI agent.";
+  "External software verification for defense teams. Vraelis checks mission apps and web control panels against approved requirements in a real browser, with recorded evidence and repair prompts.";
 
 /**
  * Link-preview text. Re-exported from lib/social-card.ts, which is the single source for every surface:

@@ -18,16 +18,13 @@ type Tile = { word: OrbitWord; label: string; phrase: string; photos: readonly P
 
 const pic = (name: string, alt: string, pos?: string): Photo => ({ src: `/home/orbit/photo-${name}.jpg`, alt, pos });
 
-// All subjects share the ring equally. The overview stays broad until a tile is hovered or focused.
+// Defense is the primary focus. Existing coverage routes retain their actual capabilities.
 export const ORBIT: readonly Tile[] = [
-  { word: "saas", label: "Web apps", phrase: "web apps", photos: [pic("dashboard", "A dashboard on a screen")] },
+  { word: "military", label: "Mission consoles", phrase: "mission consoles", photos: [pic("targeting", "A radar scope and a track readout on a console", "50% 45%")] },
   { word: "drones", label: "Drones and aviation", phrase: "flight controls", photos: [pic("drone", "A drone against an evening sky")] },
-  { word: "government", label: "Government", phrase: "public web apps", photos: [pic("public", "An arched hall inside a state capitol")] },
-  { word: "fintech", label: "Fintech and banking", phrase: "banking apps", photos: [pic("banking", "A hand holding a phone calculator over banknotes", "50% 58%")] },
-  { word: "robotics", label: "Robotics and manufacturing", phrase: "robot controls", photos: [pic("robot", "A robot arm building a lattice", "50% 60%")] },
-  { word: "ai-built-apps", label: "AI-built apps", phrase: "AI-built apps", photos: [pic("aiapp", "An app open on a tablet in low light")] },
+  { word: "robotics", label: "Robotics", phrase: "robot controls", photos: [pic("robot", "A robot arm building a lattice", "50% 60%")] },
   { word: "logistics", label: "Logistics and vehicles", phrase: "fleet portals", photos: [pic("vehicle", "A truck on a road at dusk")] },
-  { word: "military", label: "Military", phrase: "mission consoles", photos: [pic("targeting", "A radar scope and a track readout on a console", "50% 45%")] },
+  { word: "government", label: "Government", phrase: "public web apps", photos: [pic("public", "An arched hall inside a state capitol")] },
 ];
 
 
@@ -144,8 +141,8 @@ export function Orbit() {
       </h2> : <h2 id="v6-or-h" className="v6-or__h v6-or__h--translated" aria-label={selected === null ? HEADLINE : `Know your ${ORBIT[selected].phrase} work.`}>
         <TopicSwap text={selected === null ? HEADLINE : `Know your ${ORBIT[selected].phrase} work.`} />
       </h2>}
-      <p className="v6-or__d">Checks for live web apps and device control panels</p>
-      <EditorialLink href={selected === null ? `${V6_BASE}/platform#coverage` : ROUTE[selected].href}>{selected === null ? "See every sector" : "Explore this subject"}</EditorialLink>
+      <p className="v6-or__d">Checks for mission apps and web control panels</p>
+      <EditorialLink href={selected === null ? `${V6_BASE}/platform#coverage` : ROUTE[selected].href}>{selected === null ? "See what we can check" : "Explore this subject"}</EditorialLink>
     </div>
     <ul className="v6-or__tiles">
       {ORBIT.map((t, i) => <li key={t.label} ref={node => { tiles.current[i] = node; }} className="v6-or__item" data-on={i === selected}>
