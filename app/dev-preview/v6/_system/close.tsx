@@ -12,7 +12,7 @@ import { Spectral } from "./spectral";
 import "./close.css";
 import { V6_BASE, v6SignInPath } from "@/lib/v6-routes";
 import { FOOTER_STATEMENT } from "./positioning";
-import { SECTORS, SOLUTIONS_HREF } from "../_content/sectors";
+import { PRIMARY_SECTORS, SOLUTIONS_HREF } from "../_content/sectors";
 import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
 import { LanguageSwitcher } from "@/components/language-switcher";
 
@@ -66,7 +66,7 @@ export function ClosingScene({
 // accessible through their indexes; secondary policies remain in a disclosure.
 const COLS: [string, [string, string][]][] = [
   ["Product", [[`${BASE}/platform`, "Platform"], [`${BASE}/integrations`, "Integrations"], [`${BASE}/agents`, "AI assistants"], [`${BASE}/pricing`, "Pricing"]]],
-  ["Solutions", [...SECTORS.filter(s => ["defense", "fleets", "commerce", "public-sector", "enterprise"].includes(s.slug)).map((s): [string, string] => [s.href, s.label]), [SOLUTIONS_HREF, "All solutions"]]],
+  ["Solutions", [...PRIMARY_SECTORS.map((s): [string, string] => [s.href, s.label]), [SOLUTIONS_HREF, "Explore solutions"]]],
   ["Resources", [[`${BASE}/docs`, "Documentation"], [`${BASE}/developers`, "Developer tools"], [`${BASE}/research`, "Research"], [`${BASE}/changelog`, "Changelog"]]],
   ["Company", [[`${BASE}/company`, "About"], [`${BASE}/contact`, "Contact"], [`${BASE}/partnerships/reddit`, "Reddit partnership"], [`${BASE}/partnerships/bytedance`, "ByteDance partnership"]]],
   ["Trust", [[`${BASE}/security`, "Security"], [`${BASE}/privacy`, "Privacy"], [`${BASE}/cookies`, "Cookies"], [`${BASE}/terms`, "Terms"], [`${BASE}/acceptable-use`, "Acceptable use"], [`${BASE}/limitations`, "Limitations"], [`${BASE}/refunds`, "Refunds"], [`${BASE}/data-rights`, "Data rights"], [`${BASE}/subprocessors`, "Subprocessors"], [`${BASE}/trademark`, "Trademark"]]],

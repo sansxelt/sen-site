@@ -192,12 +192,16 @@ export const SECTORS: readonly Sector[] = [
     short: "Enterprise",
     group: "Teams",
     href: `${V6_BASE}/enterprise`,
-    line: "Single sign-on, roles, billing and audit export for teams.",
+    line: "Access controls, audit exports and capacity for institutions and teams.",
     // Panel: a console capture of the organization single sign-on settings (QA account).
     pics: { hero: photograph(SECTOR_PHOTOGRAPHS["enterprise"]).src, heroPortrait: photograph(SECTOR_PHOTOGRAPHS["enterprise"]).src, ...listPics("enterprise") },
     priority: "existing",
   },
 ];
+
+/** Primary public navigation follows the founder's defense focus. The full registry still owns routes. */
+const PRIMARY_SLUGS: readonly SectorSlug[] = ["defense", "fleets", "enterprise"];
+export const PRIMARY_SECTORS: readonly Sector[] = SECTORS.filter(s => PRIMARY_SLUGS.includes(s.slug));
 
 /** The groups in print order. */
 export const SECTOR_GROUPS: readonly SectorGroup[] = ["Sectors", "Teams"];

@@ -8,7 +8,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SiteFooter } from "./close";
-import { SECTORS, SOLUTIONS_HREF } from "../_content/sectors";
+import { PRIMARY_SECTORS, SOLUTIONS_HREF } from "../_content/sectors";
 import { useGroundColor } from "@/components/use-ground-color";
 import { V6_BASE, V6_HOME, V6_APP, v6SignInPath, v6GroundAtTop, v6ShouldPrefetch, GROUND_CSS } from "@/lib/v6-routes";
 import { analyticsAllowed, onPrivacyChoiceChange } from "@/lib/privacy-choice";
@@ -47,8 +47,8 @@ const MENUS: Menu[] = [
     label: "Product",
     groups: [
       { h: "Platform", links: [
-        { t: "Overview", d: "What Vraelis checks and how it works", href: BASE + "/platform", pic: EDITORIAL + "robotics.jpg" },
-        { t: "Integrations", d: "Connect your development workflow", href: BASE + "/integrations", pic: "/site/photography/firmware.jpg" },
+        { t: "Overview", d: "Requirements, execution and evidence", href: BASE + "/platform", pic: EDITORIAL + "robotics.jpg" },
+        { t: "Integrations", d: "What each connection actually supplies", href: BASE + "/integrations", pic: "/site/photography/firmware.jpg" },
         { t: "AI assistants", d: "Use Vraelis through MCP", href: BASE + "/agents", pic: "/site/photography/agent.jpg" },
       ] },
       { h: "Developers", links: [
@@ -61,10 +61,10 @@ const MENUS: Menu[] = [
   {
     label: "Solutions",
     groups: [
-      { h: "Industries", links: SECTORS.filter(s => ["defense", "fleets", "commerce"].includes(s.slug)).map(s => ({ t:s.label,d:s.line,href:s.href,pic:s.slug === "defense" ? EDITORIAL + "aviation.jpg" : s.slug === "fleets" ? EDITORIAL + "robotics.jpg" : s.pics.menu })) },
-      { h: "Organizations", links: SECTORS.filter(s => ["public-sector", "enterprise"].includes(s.slug)).map(s => ({t:s.label,d:s.line,href:s.href,pic:s.slug === "enterprise" ? EDITORIAL + "robotics.jpg" : s.pics.menu})) },
+      { h: "Mission software", links: PRIMARY_SECTORS.filter(s => s.slug !== "enterprise").map(s => ({ t:s.label,d:s.line,href:s.href,pic:s.slug === "defense" ? EDITORIAL + "aviation.jpg" : s.slug === "fleets" ? EDITORIAL + "robotics.jpg" : s.pics.menu })) },
+      { h: "Organizations", links: PRIMARY_SECTORS.filter(s => s.slug === "enterprise").map(s => ({t:s.label,d:s.line,href:s.href,pic:s.slug === "enterprise" ? EDITORIAL + "robotics.jpg" : s.pics.menu})) },
     ],
-    foot: { t: "All solutions", href: SOLUTIONS_HREF },
+    foot: { t: "Explore solutions", href: SOLUTIONS_HREF },
   },
   {
     label: "Resources",

@@ -59,8 +59,8 @@ const ACTS: { label: string; tier?: boolean; title: string; body: string }[] = [
 // already a customer. The "not for yet" half is the honest edge of the product, so both halves always render.
 // One plain sentence an item (plan T4: two plain numbered lists): the two lists sit side by side in one screen.
 const FOR: string[] = [
-  "Developers, QA, product teams, agencies, founders and no-code builders who ship a web app.",
-  "CI pipelines that gate a release, and AI assistants that check their own change.",
+  "Defense-software teams checking mission apps on an unclassified simulation or staging build.",
+  "Developers and reviewers who need evidence for a release, from the console, CI or an AI assistant.",
   "Teams that run drones, robots and fleets from a web control panel.",
 ];
 const NOT_YET: string[] = [
@@ -72,14 +72,14 @@ const NOT_YET: string[] = [
 // How this is different: against categories a reader already pays for, never against a named product, and each
 // difference stated as a mechanism. "Uptime checks" names the category the old copy called monitoring (plan 0.3).
 const DIFFERENT: [string, string][] = [
-  ["It is not the builder's own report",
-    "Whoever made the change, a person or an agent, does not decide whether it worked. Something else checks the deployed result."],
-  ["It is not a test suite",
-    "A suite is written beside the code and often runs against mocks. Vraelis holds one plain sentence outside the code and checks the running app."],
-  ["It is not an uptime check",
-    "An uptime check says the page answered. Vraelis checks that what the sentence describes actually happens on the live app."],
-  ["It says no rather than guess",
-    "When no check could prove the sentence, Vraelis says so before anything runs, and nothing is charged."],
+  ["A requirement outside the implementation",
+    "The check begins with the behavior you require. A person reviews the proposed plan before it runs."],
+  ["Observed behavior on the running app",
+    "A browser exercises the approved steps on the address you provide. Each step records its expected and observed result."],
+  ["A failure you can inspect",
+    "The record keeps the steps, screenshots and available browser errors. A repair prompt gives a developer or agent a starting point."],
+  ["A stated boundary",
+    "Vraelis observes the interface. It does not infer that hardware executed a command from a panel that says it did."],
 ];
 
 // The commitments the product is held to. Row 04 is this page's one approval claim.
@@ -135,8 +135,8 @@ export default function CompanyPage() {
       <FrameHero
         id="company-hero"
         eyebrow="Company"
-        title="We check that what people build does what they meant"
-        sub="Software ships faster than anyone can check by hand. Vraelis is the independent check on the live product, with the evidence attached."
+        title="Independent verification for mission software"
+        sub="Vraelis checks mission apps and web control panels against approved requirements, with recorded evidence for every result."
         primary={{ label: "Talk to us", href: `${BASE}/contact` }}
         secondary={{ label: "Read the README", href: `${BASE}/readme` }}
         // Our own render (app/film/orbit, plan A7.5): the drone on its pad in the garage. Never the hand catch,
@@ -149,17 +149,12 @@ export default function CompanyPage() {
           <SectionHead
             align="center"
             eyebrow="Mission"
-            title="The builder can no longer be the only judge"
-            lead="When a person or an agent says the work is done, something else should check it on the live app."
+            title="A requirement needs evidence"
+            lead="A team needs to know what was exercised, what happened and what remains unverified. Vraelis makes that record inspectable."
           />
-          {/* Defense, said once on this page and lightly (founder update, 2026-10-02): one sector among several.
-              The line rests only on what is true: Vraelis checks software and builds no weapons or mission
-              software, and the judge is separate from the builder. No value judgment, no claim of defense work
-              beyond the simulated console Vraelis built itself. Whole sentences in one element for the
-              translator, then the link after them. The sector page carries the position in full. */}
           <div className="co-mission__more">
             <p className="co-mission__line">
-              Defense is one of the sectors Vraelis checks software for. Vraelis builds no weapons or mission software, and the check stays separate from whoever built the system.
+              We are focused on defense teams working with mission apps and web control panels. Verification starts with an unclassified simulation or staging build and stays separate from whoever built the software.
             </p>
             <EditorialLink href={DEFENSE.href}>How Vraelis works in defense</EditorialLink>
           </div>
@@ -184,7 +179,7 @@ export default function CompanyPage() {
 
       <section className="v6-sec" id="who">
         <div className="v6-wrap">
-          <SectionHead eyebrow="Who it is for" title="Anyone who can say what should work, on a live app" />
+          <SectionHead eyebrow="Who it is for" title="Teams responsible for mission software" />
           {/* Each list ends on the page that holds its detail. Under "Built for", the one link card to what is built
               (plan C /company): the live and direction lists live on /platform#current only, never copied here.
               Under "Not for yet", the one line to /limitations every page without a DoesBox carries (plan A1.7). */}
@@ -219,7 +214,7 @@ export default function CompanyPage() {
 
       <section className="v6-sec" id="different">
         <div className="v6-wrap">
-          <SectionHead eyebrow="How this is different" title="Four things it is not, and what it does instead" />
+          <SectionHead eyebrow="The workflow" title="What the verification is built around" />
           <FeatureGrid span={6}>
             {DIFFERENT.map(([t, d], i) => <FeatureCard key={t} label={two(i + 1)} title={t} body={d} />)}
           </FeatureGrid>

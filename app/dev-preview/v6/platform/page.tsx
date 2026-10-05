@@ -1,14 +1,11 @@
+import localFont from "next/font/local";
 import { photographHero } from "../_content/photography";
-import type { Metadata } from "next";
 import { v6meta } from "../_system/meta";
 import { SectionHead, EditorialLink } from "../_system/ui";
-import { FrameHero, AltRows, Compare, Band, CrossLinks, Tabs, type AltRow, type CompareRow, type CrossLink } from "../_system/kit";
+import { FrameHero, Compare, Band, CrossLinks, Tabs, type CompareRow, type CrossLink } from "../_system/kit";
 import { ClosingScene } from "../_system/close";
 import { StrikeStory } from "../_system/strike-story";
 import { STRIKE, STRIKE_CHAPTERS, STRIKE_CAPTION } from "../_content/strike";
-import { RecordPanel } from "../_system/record-panel";
-import { Photograph, PicturePlate } from "../_system/picture-plate";
-import { RECORDS } from "../_content/use-cases";
 import { LIVE, DIRECTION } from "../_content/scope";
 import { SURFACES, COVERAGE_RULE, type CoverageTier } from "../_content/coverage";
 import { sectorBySlug } from "../_content/sectors";
@@ -16,136 +13,86 @@ import { V6_BASE, v6SignInPath } from "@/lib/v6-routes";
 import "../_system/coverage.css";
 import "../_system/product.css";
 
-// THE PLATFORM PAGE (site plan A9 T1 and C /platform, revision 2, 2026-10-02). The mechanism page: what a check
-// is, shown with the product itself rather than described. In order:
-//   1. FrameHero, the scene kind (our render of a drone over the garage floor), the page's one approval claim;
-//   2. #runs      the four recorded demo runs, replayed from their records (RunWindow, a product panel);
-//   3. #how       four rows, each with a capture of the black console (public/site/product/platform-*.png,
-//                 captured read only on 2026-10-02; public/site/product/CREDITS.md);
-//   4. Compare    with categories of tools, never named products, words only;
-//   5. #coverage  the Band: the seven SURFACES rows from _content/coverage.ts, tier as a word;
-//   6. #current   the site's one status source: LIVE and DIRECTION from _content/scope.ts, one tab each
-//                 (side by side they broke the word budget), then the one line that links /limitations;
-//   7. CrossLinks to three sectors (the registry, _content/sectors.ts), and the closing.
-// No FactRow (plan T1 and A1.7: on a product page it would not quote a record) and no DoesBox (A1.7).
-// Sections on the same black ground do not stack two paddings (v6.css's own rule for two sunk or two dark
-// sections, applied here by product.css: .v6-pp-sec + .v6-pp-sec). The approval claim is said once, in the
-// hero; elsewhere it appears only as a step, a table cell or inside a product panel (plan 0.3). Every number
-// on the page is a permitted fact (plan A8.3) or a record's own.
-
-export const metadata: Metadata = v6meta({
+export const metadata = v6meta({
   title: "Platform",
-  description:
-    "How Vraelis checks a deployed web app, or a connected device through its web control panel: one sentence about what should work, one plan a person approves, one real browser run on the live app, and one decision with the evidence.",
+  description: "Verify mission apps and web control panels against approved requirements. Real browser execution, recorded evidence and the same check after a repair.",
   path: "/platform",
-  ogTitle: "The Vraelis platform",
-  ogDescription: "One sentence, one approved plan, one real run on the live app, and everything it saw.",
+  ogTitle: "Mission software verification | Vraelis",
+  ogDescription: "An approved requirement. An observed result. Evidence you can inspect.",
 });
 
+const platformFont = localFont({ src: "../../../fonts/manrope/Manrope-Variable.ttf", display: "swap", variable: "--font-platform", weight: "200 800" });
 const BASE = V6_BASE;
 const SIGNUP = `${v6SignInPath()}&mode=signup`;
 const two = (n: number) => String(n).padStart(2, "0");
 
-/* ── #how: the four rows, each with a capture of the console (read only, nothing created or approved) ── */
-
-
-const ROWS: AltRow[] = [
-  {
-    id: "write",
-    title: "Write the sentence",
-    body: "Say what a person should be able to do on your web app, or on a device's web control panel, and what should be true afterwards. Vraelis does not read your code. It starts from the sentence and checks the running app.",
-    link: { label: "Write your first check", href: `${BASE}/docs/getting-started` },
-    media: <Photograph name="signup" />,
-  },
-  {
-    id: "approve",
-    title: "Approve the plan",
-    body: "Vraelis turns the sentence into requirements and the browser journeys that would prove them. A person approves that exact plan before anything runs; an API key cannot. If no check could prove the sentence, nothing runs and nothing is charged.",
-    link: { label: "How approval works", href: `${BASE}/docs/review` },
-    media: <Photograph name="client" />,
-  },
-  {
-    id: "run",
-    title: "Run it on the live product",
-    body: "A real browser runs the approved journeys on the address you named, one step at a time. An address that does not exist is refused before the run starts. Each step records what it expected and what it saw.",
-    link: { label: "How a run is recorded", href: `${BASE}/docs/run-activity` },
-    media: <PicturePlate src={RECORDS.notes.runs[0].shot.src} alt={RECORDS.notes.runs[0].shot.alt} w={480} h={480} evidence caption={RECORDS.notes.runs[0].shot.caption} credit={<span data-no-translate>4fc6e52c, recorded 2026-07-31 UTC</span>} />,
-  },
-  {
-    id: "evidence",
-    title: "Read the evidence and the repair prompt",
-    body: "The record keeps every step, the screenshots the run saved, and any console errors and failed requests. When it finds a problem, it writes a repair prompt for a person or a coding agent. After the fix, the same approved plan runs again as its own record.",
-    link: { label: "How a re-check works", href: `${BASE}/docs/recheck` },
-    media: <PicturePlate src={RECORDS.projects.runs[0].shot.src} alt={RECORDS.projects.runs[0].shot.alt} w={640} h={354} evidence caption={RECORDS.projects.runs[0].shot.caption} credit={<span data-no-translate>de53ab8b, recorded 2026-07-14 UTC</span>} />,
-  },
+const WORKFLOW = [
+  { title: "Define the requirement", body: "Name the expected result and any reported state that must stay unchanged. Start with an unclassified simulation or staging build.", href: `${BASE}/docs/getting-started`, link: "Write a requirement" },
+  { title: "Review the exact plan", body: "Inspect the proposed requirements and browser journeys. A person approves them before execution; an API key cannot.", href: `${BASE}/docs/review`, link: "Review and approval" },
+  { title: "Observe the running app", body: "A real browser exercises the approved steps on the address you name. The record keeps what each step expected and observed.", href: `${BASE}/docs/run-activity`, link: "Run activity" },
+  { title: "Inspect the failure and re-check", body: "Read the available screenshots and browser errors. After a repair, re-run the approved plan within its limits and keep both records.", href: `${BASE}/docs/recheck`, link: "Re-check a repair" },
 ];
 
-/* ── Compare: categories of tools, never named products; words only (plan C /platform, kit Compare) ── */
-const COMPARE_COLUMNS = ["Vraelis", "Scripted end-to-end tests", "Manual QA", "Uptime checks"];
-const COMPARE_ROWS: CompareRow[] = [
-  { label: "What you write", cells: ["One sentence about the outcome", "A test script, and its upkeep", "A test plan or checklist", "A URL and a status to expect"] },
-  { label: "Who approves what runs", cells: ["A person approves the plan before it runs", "Whoever merges the test", "The tester", "Nobody; it runs on a schedule"] },
-  { label: "Where it runs", cells: ["The live deployment you name", "Usually a test environment", "Wherever the tester is", "The live deployment"] },
-  { label: "What comes back", cells: ["Every step, a screenshot, expected against observed", "Pass or fail, and logs", "Notes and screenshots", "Up or down, and response time"] },
-  { label: "After a fix", cells: ["The same approved plan runs again", "Re-run the suite", "Test it again by hand", "Not applicable"] },
-  { label: "For a coding agent", cells: ["A repair prompt over MCP or the CLI", "A failing test to read", "A message", "An alert"] },
+// Explain the scope of evidence. Do not imply that other test frameworks cannot exercise real deployments.
+const EVIDENCE_COLUMNS = ["Required behavior", "What the check can observe", "What that does not prove"];
+const EVIDENCE_ROWS: CompareRow[] = [
+  { label: "State change", cells: ["The approved action changes the intended reported state", "The values and controls visible in the browser", "That a physical device received or executed the command"] },
+  { label: "Persistence", cells: ["The required state remains after a reload or new session", "The result of the reload or sign-in steps in the plan", "Durability beyond the conditions and period exercised"] },
+  { label: "Permissions", cells: ["The supplied test role can or cannot reach a workflow", "The pages and actions exercised with that test identity", "Every permission or role that was not exercised"] },
 ];
 
-/* ── #coverage: the tier as a word. Next reads "Not built yet" (plan 0.2); the tiers themselves are coverage.ts's ── */
 const TIER_WORD: Record<CoverageTier, string> = { Live: "Live", Next: "Not built yet", "Not covered": "Not covered" };
 const TIER_KEY: Record<CoverageTier, string> = { Live: "live", Next: "next", "Not covered": "out" };
-
-/* ── CrossLinks: three sectors, read from the registry (never hand-listed) ── */
-const card = (slug: "defense" | "fleets" | "ai-built-apps"): CrossLink => {
+const card = (slug: "defense" | "fleets"): CrossLink => {
   const s = sectorBySlug(slug)!;
   return { title: s.label, body: s.line, href: s.href, image: s.pics.card1610 };
 };
 
 export default function Platform() {
   return (
-    <>
+    <div className={`${platformFont.variable} v6-platform`}>
       <FrameHero
-        eyebrow="Platform"
-        title="One sentence, one approved plan, one answer from the live app"
-        sub="Write what your web app, or a device it controls, should do. A person approves the plan, and a real browser tries it on the live product."
-        primary={{ label: "Start free", href: SIGNUP }}
-        secondary={{ label: "Watch a check", href: "#how-a-check-works" }}
-        {...photographHero("client")}
+        eyebrow="The platform"
+        title="Verify mission software before release"
+        sub="Check mission apps and web control panels against the behavior you require. An approved plan, real browser execution and evidence for the result."
+        primary={{ label: "Watch the check", href: "#how-a-check-works" }}
+        secondary={{ label: "Start a verification", href: SIGNUP }}
+        {...photographHero("groundstation")}
       />
 
       <StrikeStory record={STRIKE} chapters={STRIKE_CHAPTERS} caption={STRIKE_CAPTION} />
 
-      {/* #runs: the four recorded demo runs, replayed at their recorded pace. RunWindow is a product panel
-          (data-panel), so its words do not count against the page's budget. */}
-      <section className="v6-sec v6-pp-sec" id="runs">
-        <div className="v6-wrap">
-          <SectionHead eyebrow="Recorded runs" title="Real checks with recorded evidence" />
-          <RecordPanel records={["checkout", "notes", "projects"]} />
+      <section className="v6-sec v6-pp-sec" id="how">
+        <div className="v6-wrap v6-pp-workflow">
+          <div>
+            <SectionHead eyebrow="The workflow" title="From a requirement to a result you can inspect" lead="The same approved check, from the console, CLI, CI or an AI assistant." />
+          </div>
+          <ol className="v6-pp-flow" role="list">
+            {WORKFLOW.map((step, i) => (
+              <li key={step.title}>
+                <span className="v6-pp-flow__n" aria-hidden>{two(i + 1)}</span>
+                <div>
+                  <h3>{step.title}</h3>
+                  <p>{step.body}</p>
+                  <EditorialLink href={step.href}>{step.link}</EditorialLink>
+                </div>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
 
-      <section className="v6-sec v6-pp-sec v6-pp-how" id="how">
+      <section className="v6-sec v6-pp-sec" id="evidence-scope">
         <div className="v6-wrap">
-          <SectionHead
-            eyebrow="How it works"
-            title="From one sentence to an answer with evidence"
-            lead="It works the same from the console, the CLI, CI and AI assistants."
-          />
-          <AltRows rows={ROWS} />
-        </div>
-      </section>
-
-      <section className="v6-sec v6-pp-sec" id="compare">
-        <div className="v6-wrap">
-          <SectionHead eyebrow="Other ways to check" title="How it compares" />
-          <Compare columns={COMPARE_COLUMNS} rows={COMPARE_ROWS} />
+          <SectionHead eyebrow="Evidence and scope" title="Know what the record proves" lead="A reported state and a physical outcome are different evidence. Every check has a boundary." />
+          <Compare columns={EVIDENCE_COLUMNS} rows={EVIDENCE_ROWS} caption="Evidence and limits for the behavior exercised by an approved plan." />
         </div>
       </section>
 
       {/* #coverage: one row per surface. The brief is on the row; how it is reached and what is true today
           open under it. The tier is a word: Live, Not built yet, Not covered. */}
       <Band id="coverage">
-        <SectionHead eyebrow="What it can reach" title="Web apps, and the devices they control" />
+        <SectionHead eyebrow="What it can reach" title="What the check can reach" />
         <ul className="v6-reach" role="list">
           {SURFACES.map((s) => (
             <li className="v6-reach__row" key={s.name}>
@@ -226,13 +173,13 @@ export default function Platform() {
         </div>
       </section>
 
+
       <section className="v6-sec v6-pp-sec v6-pp-xl">
         <div className="v6-wrap">
-          <CrossLinks links={[card("defense"), card("fleets"), card("ai-built-apps")]} />
+          <CrossLinks links={[card("defense"), card("fleets"), { title: "Security", body: "Data handling, access and execution boundaries.", href: `${BASE}/security`, image: "/site/photography/firmware.jpg" }]} />
         </div>
       </section>
-
-      <ClosingScene title="Say what should work, let the live app answer" />
-    </>
+      <ClosingScene title="Verify the behavior you require" />
+    </div>
   );
 }

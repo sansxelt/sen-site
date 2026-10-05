@@ -72,7 +72,7 @@ export const DIRECTION: DirectionItem[] = [
     "Today a plan goes from prepared to approved with nothing having tried to run it in between. The rehearsal that refuses to mint a plan which cannot pass is an operator script, outside the product.",
     "Next"],
   ["Every run asserts a value no earlier run could have left behind",
-    "Today a plan can assert a value an earlier run wrote, so an app that has stopped saving can still come back as if it worked. Clearing that state is a script somebody runs.",
+    "New plans can use a value unique to each run, and the worker substitutes it during execution. Saved-guarantee checks reject certain fixed-value assertions. That protection is not yet enforced across every launch path.",
     "Next"],
   ["A repair is a durable record of its own",
     "Today the repair table exists and nothing writes to it, so the surfaces that read it are switched off. The repair prompt itself is real and lives on the issue, on the run report, and in the answer an AI assistant or the CLI receives.",

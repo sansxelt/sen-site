@@ -41,7 +41,7 @@ import { CTA, EditorialLink, ProseLink, SectionHead } from "./ui";
 import { ClosingScene } from "./close";
 import { Code, CopyScript } from "./code";
 import { RecordPanel } from "./record-panel";
-import { SECTOR_GROUPS, sectorBySlug, sectorsIn, type Sector } from "../_content/sectors";
+import { PRIMARY_SECTORS, sectorBySlug, type Sector } from "../_content/sectors";
 import { LIMITS_LINK, sectorPage, type SectorCross, type SectorPage, type SectorRecordView } from "../_content/sector-pages";
 import { V6_BASE } from "@/lib/v6-routes";
 import "./sector.css";
@@ -376,26 +376,24 @@ export function SectorPageView({ slug }: { slug: string }) {
  */
 export function SolutionCards() {
   return (
-    <div className="v6-si">
-      {SECTOR_GROUPS.map((g) => (
-        <div className="v6-si__group" key={g}>
-          <h2 className="v6-si__h" data-label="">{g}</h2>
-          <ul className="v6-si__grid" role="list">
-            {sectorsIn(g).map((s, i) => (
-              <li key={s.slug}>
-                <Link href={s.href} className="v6-si__card">
-                  <span className="v6-si__pic">
-                    <Image src={s.pics.card43} alt="" fill sizes="(max-width: 640px) 100vw, (max-width: 1099px) 50vw, 25vw" loading={g === "Sectors" && i < 4 ? "eager" : undefined} />
-                  </span>
-                  <h3 className="v6-si__t">{s.label}</h3>
-                  <p className="v6-si__b">{s.line}</p>
-                  <span className="v6-si__go" aria-hidden>→</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
+    <div className={`${sectorFont.variable} v6-sx v6-si`}>
+      <div className="v6-si__group">
+        <h2 className="v6-si__h" data-label="">Areas of focus</h2>
+        <ul className="v6-si__grid" role="list">
+          {PRIMARY_SECTORS.map((s) => (
+            <li key={s.slug}>
+              <Link href={s.href} className="v6-si__card">
+                <span className="v6-si__pic">
+                  <Image src={s.pics.card43} alt="" fill sizes="(max-width: 640px) 100vw, (max-width: 1099px) 50vw, 33vw" />
+                </span>
+                <h3 className="v6-si__t">{s.label}</h3>
+                <p className="v6-si__b">{s.line}</p>
+                <span className="v6-si__go" aria-hidden>→</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }

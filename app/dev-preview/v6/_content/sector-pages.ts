@@ -793,9 +793,9 @@ export const SOLUTIONS_INDEX = {
   meta: {
     title: "Solutions",
     description:
-      "The same check for every sector: one sentence, a plan a person approves, a real browser on the live product, and a record of every step.",
+      "Independent software verification for defense, robotics and institutional teams. Approved requirements, observed behavior and recorded evidence.",
   },
   eyebrow: "Solutions",
-  title: "One check, wherever software has to work",
-  lead: "The same loop everywhere: one sentence, a plan a person approves, a real browser on the live product, and a record of every step.",
+  title: "Mission software deserves an independent check",
+  lead: "Check mission apps and web control panels against the behavior you require. Start with an unclassified simulation or staging build.",
 } as const;
