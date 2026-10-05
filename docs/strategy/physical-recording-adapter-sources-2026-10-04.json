@@ -1,0 +1,21 @@
+{
+  "repository": "foxglove/mcap",
+  "commit": "60e73f4b4ec065c26324d71b57dfb53085008528",
+  "sources": [
+    {
+      "url": "https://raw.githubusercontent.com/foxglove/mcap/60e73f4b4ec065c26324d71b57dfb53085008528/website/docs/spec/index.md",
+      "sha256": "cb969b64fb6b7067a18e5d87834ed7784463b050d8f726e4d94bcc51773824c1",
+      "bytes": 32365
+    },
+    {
+      "url": "https://raw.githubusercontent.com/foxglove/mcap/60e73f4b4ec065c26324d71b57dfb53085008528/website/docs/spec/registry.md",
+      "sha256": "2bd4d5d6e7356b7259238c7e54acc4c0bb62545ff0d639b90984ac415d471ef1",
+      "bytes": 10370
+    },
+    {
+      "url": "https://raw.githubusercontent.com/foxglove/mcap/60e73f4b4ec065c26324d71b57dfb53085008528/typescript/core/README.md",
+      "sha256": "5ee6ba14aedbf7a00874f350d22c826736712a326b0a5d9bc983353a6f394005",
+      "bytes": 850
+    }
+  ]
+}

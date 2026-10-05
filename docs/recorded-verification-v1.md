@@ -4,7 +4,7 @@ Open `/verifications/recorded` in the Vraelis app. This local tool evaluates rep
 
 ## Workflow
 
-1. Import a JSON recording, or open an explicitly simulated example.
+1. Import a normalized JSON recording, import an uncompressed MCAP with supported JSON topics, or open an explicitly simulated example.
 2. Review the suggested asset and task, completion window, and optional assets that must stay unchanged. Source coverage and the shared clock are declarations from the file author.
 3. Confirm review and select **Verify recording**.
 4. Inspect each criterion and its cited source events. **Criteria met** applies only to these assertions and supplied evidence.
@@ -13,7 +13,7 @@ Open `/verifications/recorded` in the Vraelis app. This local tool evaluates rep
 
 ## Supported input
 
-Download the format example in the workspace. Version 1 supports UTF-8 JSON only (an optional byte-order mark is retained for hashing): at most 1 MB, 2,000 events, 100 coverage intervals and 20 unchanged assets. MCAP, ROS bag files and live connectors require adapters that are not included in this version.
+Download the format example in the workspace. The normalized recording format uses UTF-8 JSON (an optional byte-order mark is retained for hashing): at most 1 MB, 2,000 events, 100 coverage intervals and 20 unchanged assets. The MCAP importer described below supplies the same normalized data. ROS bag/CDR decoding and live connectors remain unsupported.
 
 ```json
 {
@@ -51,3 +51,13 @@ Any failed criterion makes the overall result failed. Otherwise, any inconclusiv
 ## Boundaries
 
 A file author can omit or fabricate events and coverage. Clock synchronization and source truth are not independently established. Device reports are not independent measurements of physical motion. A successful result cannot establish physical safety, certification, firmware correctness or the absence of other defects. A real pilot needs reviewed protocol mapping, trustworthy capture and a customer-defined requirement before these rules can support a release decision.
+
+## Native MCAP import
+
+Import an uncompressed `.mcap` file up to 5 MB. Review topic descriptions and preview payloads, then assign supported JSON topics to control, service or reported-device evidence. Topics default to skipped. Each selected payload needs `timeMs`, `assetId`, `taskId`, and one supported `state`; any payload `id` or `source` is ignored in favor of generated file references and the reviewed source mapping. MCAP log/publish times are not substituted for payload time.
+
+Import a companion UTF-8 JSON capture manifest up to 100 KB. It has the same `schemaVersion`, `runId`, `buildId`, `clock`, `window` and `coverage` fields as the example above, **without `events`**. Edit the downloadable manifest example to match your capture; it deliberately declares no coverage by default. The UI exposes that declaration before applying the mapping. Source coverage is still supplied by the author, not independently measured.
+
+The converter rejects selected malformed events, events outside declared coverage, unsupported encodings and compressed chunks. Limits are 100 channels, 10,000 messages, 20,000 inspected records and 2,000 selected task events. ROS 2 CDR, ROS 1 serialization, arbitrary payload field mappings and LZ4/Zstandard remain unsupported.
+
+After mapping, review the task criteria and evaluate normally. Exports set `sourceFormat` to `mcap`, include the original bytes in `sourceMcapBase64`, their SHA-256, and the reviewed `mapping`. They omit `sourceRawJson`, which applies to normalized JSON imports. Decode the base64 to recover the original binary file. Neither a container import nor a report hash authenticates the source or establishes physical behavior.

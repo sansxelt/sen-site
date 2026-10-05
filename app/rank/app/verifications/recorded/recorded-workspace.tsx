@@ -1,12 +1,18 @@
 "use client";
+import dynamic from "next/dynamic";
+import type { McapInspection, McapMapping } from "@/lib/recorded-verification/mcap";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { evaluateRecording, parseRecording, MAX_RECORDING_BYTES, type Recording, type Requirement, type Evaluation, type Finding } from "@/lib/recorded-verification/evaluate";
 import { EXAMPLE_REQUIREMENT, exampleRecording } from "@/lib/recorded-verification/examples";
 
-type Loaded = { recording: Recording; raw: string; name: string; example: boolean };
+const McapReview = dynamic(() => import("./mcap-review").then(m => m.McapReview), { loading: () => <p>Opening source mapping…</p> });
+type Loaded = { recording: Recording; raw: string; name: string; example: boolean; bytes?: Uint8Array; mapping?: McapMapping };
 type Result = { loaded: Loaded; evaluation: Evaluation };
 const LABEL: Record<Finding["verdict"], string> = { passed: "Criteria met", failed: "Mismatch found", inconclusive: "Not enough evidence" };
 const SOURCE = { control: "Control interface", service: "Service", device: "Device report" };
+function bytesToBase64(bytes: Uint8Array): string {
+  let text = ""; for (let i = 0; i < bytes.length; i += 16384) text += String.fromCharCode(...bytes.subarray(i, i + 16384)); return btoa(text);
+}
 function download(name: string, data: unknown) {
   const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
   const link = document.createElement("a"); link.href = url; link.download = name; link.click();
@@ -14,6 +20,8 @@ function download(name: string, data: unknown) {
 }
 const fingerprint = (r: Requirement) => JSON.stringify({ ...r, untouchedAssetIds: [...r.untouchedAssetIds].sort() });
 export function RecordedWorkspace() {
+  const [pendingMcap, setPendingMcap] = useState<{ inspection: McapInspection; bytes: Uint8Array; name: string } | null>(null);
+  const [importing, setImporting] = useState(false);
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [asset, setAsset] = useState(""); const [task, setTask] = useState("");
   const [seconds, setSeconds] = useState("10"); const [untouched, setUntouched] = useState("");
@@ -25,7 +33,7 @@ export function RecordedWorkspace() {
   useEffect(() => { const changed = () => setFullscreen(document.fullscreenElement === root.current); document.addEventListener("fullscreenchange", changed); return () => document.removeEventListener("fullscreenchange", changed); }, []);
   function criteriaChanged() { setApproved(false); setResult(null); setSelected(null); }
   function load(raw: string, name: string, example = false) {
-    importSequence.current++;
+    importSequence.current++; setPendingMcap(null); setImporting(false);
     try {
       const recording = parseRecording(raw); const request = recording.events.find(e => e.source === "control" && e.state === "requested");
       setLoaded({ recording, raw, name, example }); setAsset(request?.assetId ?? ""); setTask(request?.taskId ?? "");
@@ -37,9 +45,29 @@ export function RecordedWorkspace() {
   async function importFile(e: ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]; e.target.value = ""; if (!f) return;
     const sequence = ++importSequence.current;
-    if (f.size > MAX_RECORDING_BYTES) { setLoaded(null); setResult(null); setApproved(false); setError("Recordings must be smaller than 1 MB."); return; }
-    try { const raw = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(await f.arrayBuffer()); if (sequence === importSequence.current) load(raw, f.name); } catch { if (sequence === importSequence.current) { setLoaded(null); setResult(null); setApproved(false); setError("The file could not be read. Use a UTF-8 JSON recording."); } }
+    setLoaded(null); setResult(null); setApproved(false); setPendingMcap(null); setSelected(null); setError(""); setImporting(true);
+    try {
+      const isMcap = f.name.toLowerCase().endsWith(".mcap");
+      if (f.size > (isMcap ? 5_000_000 : MAX_RECORDING_BYTES)) throw new Error(isMcap ? "MCAP files can be up to 5 MB." : "JSON recordings can be up to 1 MB.");
+      const bytes = new Uint8Array(await f.arrayBuffer());
+      if (isMcap) {
+        const { inspectMcap } = await import("@/lib/recorded-verification/mcap");
+        if (sequence !== importSequence.current) return;
+        const inspection = inspectMcap(bytes); setPendingMcap({ inspection, bytes, name: f.name });
+      } else {
+        const raw = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes);
+        if (sequence === importSequence.current) load(raw, f.name);
+      }
+    } catch (e) { if (sequence === importSequence.current) setError(e instanceof Error ? e.message : "The recording could not be read."); }
+    finally { if (sequence === importSequence.current) setImporting(false); }
   }
+  function applyMcap(recording: Recording, mapping: McapMapping) {
+    if (!pendingMcap) return;
+    const original = pendingMcap;
+    load(JSON.stringify(recording), original.name);
+    setLoaded({ recording, raw: JSON.stringify(recording), name: original.name, example: false, bytes: original.bytes, mapping });
+  }
+
   function run() {
     if (!loaded || !approved) return;
     try {
@@ -57,8 +85,8 @@ export function RecordedWorkspace() {
     if (!result) return;
     setExporting(true);
     try {
-      const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(result.loaded.raw));
-      download("vraelis-recorded-verification.json", { reportVersion: 1, recordedLocallyAt: new Date().toISOString(), recordingName: result.loaded.name, simulationExample: result.loaded.example, sourceSha256: Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, "0")).join(""), scope: "Reported task states in this supplied JSON recording. Coverage and clock are declared by its author; physical behavior and authenticity are not established.", evaluation: result.evaluation, recording: result.loaded.recording, sourceRawJson: result.loaded.raw });
+      const digest = await crypto.subtle.digest("SHA-256", Uint8Array.from(result.loaded.bytes ?? new TextEncoder().encode(result.loaded.raw)));
+      download("vraelis-recorded-verification.json", { reportVersion: 1, recordedLocallyAt: new Date().toISOString(), recordingName: result.loaded.name, simulationExample: result.loaded.example, sourceSha256: Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, "0")).join(""), scope: "Reported task states in this supplied JSON recording. Coverage and clock are declared by its author; physical behavior and authenticity are not established.", evaluation: result.evaluation, recording: result.loaded.recording, sourceRawJson: result.loaded.bytes ? undefined : result.loaded.raw, sourceMcapBase64: result.loaded.bytes ? bytesToBase64(result.loaded.bytes) : undefined, sourceFormat: result.loaded.bytes ? "mcap" : "json", mapping: result.loaded.mapping });
     } catch { setError("Export failed. Try again in a browser that supports secure file exports."); } finally { setExporting(false); }
   }
   async function toggleFullscreen() {
@@ -77,8 +105,8 @@ export function RecordedWorkspace() {
       <div className="rv-scope"><span>Local evaluation</span><p>Your file stays in this browser tab. This evaluates recorded states, not physical safety.</p></div>
       <div className="rv-workspace">
         <aside className="rv-setup" aria-label="Recording and criteria">
-          <section><h2><span>01</span> Recording</h2><input ref={file} type="file" accept=".json,application/json" onChange={importFile} className="rv-file" tabIndex={-1} aria-label="Import a recording" />
-            <button className="rv-import" onClick={() => file.current?.click()}><strong>{loaded ? "Replace recording" : "Import recording"}</strong><span>JSON format, up to 1 MB</span></button>
+          <section><h2><span>01</span> Recording</h2><input ref={file} type="file" accept=".json,.mcap,application/json,application/octet-stream" onChange={importFile} className="rv-file" tabIndex={-1} aria-label="Import a recording" />
+            <button className="rv-import" onClick={() => file.current?.click()}><strong>{loaded ? "Replace recording" : "Import recording"}</strong><span>JSON 1 MB, MCAP 5 MB</span></button>
             {loaded && <div className="rv-file-info"><strong>{loaded.name}</strong><span>{loaded.example ? "Simulated example" : "Imported file"}</span><dl><div><dt>Run</dt><dd>{recording?.runId}</dd></div><div><dt>Build</dt><dd>{recording?.buildId}</dd></div><div><dt>Events</dt><dd>{recording?.events.length}</dd></div></dl></div>}
             <details className="rv-examples"><summary>Explore simulated examples</summary><div>{(["broken", "corrected", "missing"] as const).map(kind => <button key={kind} onClick={() => load(JSON.stringify(exampleRecording(kind), null, 2), `${kind}-handoff.json`, true)}>{kind === "broken" ? "Broken handoff" : kind === "corrected" ? "Corrected handoff" : "Missing device evidence"}</button>)}</div></details>
             <button className="rv-text-button" onClick={() => download("vraelis-example-recording.json", exampleRecording("corrected"))}>Download format example</button>
@@ -94,7 +122,7 @@ export function RecordedWorkspace() {
         </aside>
         <section className="rv-results" aria-label="Evaluation workspace">
           {error && <p className="rv-error" role="alert">{error}</p>}
-          {!recording ? <div className="rv-empty"><div className="rv-empty-symbol" aria-hidden><span /><span /><span /></div><h2>Follow the evidence.</h2><p>Import a task recording or explore an example. Review the criteria to see which sources agree and what remains unobserved.</p><button className="rv-button" onClick={() => load(JSON.stringify(exampleRecording("broken"), null, 2), "broken-handoff.json", true)}>Explore a broken handoff</button><p className="rv-small">Version 1 accepts normalized JSON. Native MCAP and live device connections are not supported here yet.</p></div> : <>
+          {pendingMcap ? <McapReview inspection={pendingMcap.inspection} name={pendingMcap.name} onReady={applyMcap} onCancel={() => { importSequence.current++; setPendingMcap(null); }} /> : importing ? <div className="rv-empty" role="status"><h2>Inspecting your recording…</h2><p>The file is read locally.</p></div> : !recording ? <div className="rv-empty"><div className="rv-empty-symbol" aria-hidden><span /><span /><span /></div><h2>Follow the evidence.</h2><p>Import a task recording or explore an example. Review the criteria to see which sources agree and what remains unobserved.</p><button className="rv-button" onClick={() => load(JSON.stringify(exampleRecording("broken"), null, 2), "broken-handoff.json", true)}>Explore a broken handoff</button><p className="rv-small">Accepts normalized JSON and uncompressed MCAP with JSON task-event topics. ROS CDR and live connections are not supported yet.</p></div> : <>
             <div className="rv-result-head" aria-live="polite"><div><p className="rv-kicker">{loaded?.example ? "Simulated recording" : "Imported recording"}</p><h2>{evaluation ? LABEL[evaluation.verdict] : "Ready for review"}</h2><p>{evaluation ? `${evaluation.findings.filter(f => f.verdict === "passed").length} of ${evaluation.findings.length} criteria met for this recording.` : "Review the criteria before evaluating this recording."}</p></div>{evaluation && <span className="rv-verdict" data-verdict={evaluation.verdict}>{evaluation.verdict === "passed" ? "Recorded criteria met" : evaluation.verdict === "failed" ? "Failed criteria" : "Inconclusive"}</span>}</div>
             <div className="rv-timeline" aria-label="Source timeline"><div className="rv-timeline-key"><span>Declared capture and events</span><span>{((recording.window.endMs - recording.window.startMs) / 1000).toFixed(1)} seconds</span></div>{(["control", "service", "device"] as const).map(source => <div className="rv-lane" key={source}><span>{SOURCE[source]}</span><div>{recording.coverage.filter(c => c.source === source).map((c, i) => <span key={i} className="rv-capture" aria-hidden style={{ left: `${(c.startMs - recording.window.startMs) / Math.max(1, recording.window.endMs - recording.window.startMs) * 100}%`, width: `${(c.endMs - c.startMs) / Math.max(1, recording.window.endMs - recording.window.startMs) * 100}%` }} />)}{recording.events.filter(e => e.source === source).map(e => <button key={e.id} title={`${e.assetId}: ${e.state}`} aria-label={`${SOURCE[source]} event ${e.id}: ${e.assetId}, ${e.state}`} onClick={() => { setTab("events"); setSelected(e.id); }} className={evidenceIds.has(e.id) ? "is-evidence" : ""} style={{ left: `${Math.max(1, Math.min(98, (e.timeMs - recording.window.startMs) / Math.max(1, recording.window.endMs - recording.window.startMs) * 100))}%` }} />)}{!recording.coverage.some(c => c.source === source) && <em>No captured source</em>}</div></div>)}</div>
             <div className="rv-tabs" aria-label="Evidence views">{(["findings", "events", "comparison"] as const).map(t => <button key={t} aria-pressed={tab === t} onClick={() => setTab(t)}>{t === "findings" ? "Criteria" : t === "events" ? "Source events" : "Compare runs"}</button>)}</div>

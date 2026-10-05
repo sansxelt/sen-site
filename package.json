@@ -136,11 +136,13 @@
     "launch:coverage:test": "tsx scripts/launch-coverage-verify.ts",
     "launch:gate:audit": "tsx ops/launch-gate-audit.ts",
     "signal:test": "tsx scripts/console-signal-verify.ts",
-    "recorded:verify:test": "tsx scripts/recorded-verification-verify.ts"
+    "recorded:verify:test": "tsx scripts/recorded-verification-verify.ts",
+    "recorded:mcap:test": "tsx scripts/recorded-mcap-verify.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
     "@auth/core": "^0.41.2",
+    "@mcap/core": "2.3.0",
     "@next/env": "16.2.3",
     "@paypal/react-paypal-js": "^8.9.2",
     "@react-three/drei": "^10.7.7",
