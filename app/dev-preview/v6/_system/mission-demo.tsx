@@ -101,7 +101,7 @@ export function MissionDemo() {
       aria-label="Vraelis app demo: review the Larkspur plan, browser activity, finding and repair prompt."
       aria-describedby="mission-demo-description"
       onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onError={() => setUnavailable(true)} />
-    {exploring && <iframe className="v6-mission-demo__explore" src="/api/fixtures/strike?mode=broken" title="Larkspur software simulation" allow="fullscreen" />}
+    {exploring && <iframe className="v6-mission-demo__explore" src="/api/fixtures/strike?mode=broken&ui=terrain-20261005" title="Larkspur software simulation" allow="fullscreen" />}
     <div className="v6-mission-demo__controls">
       <button type="button" onClick={exploring ? watch : explore} aria-label={exploring ? "Watch film" : "Explore"} title={exploring ? "Watch film" : "Explore simulation"}>
         <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden>{exploring ? <path d="m10 5-7 7 7 7M3 12h17" fill="none" stroke="currentColor" strokeWidth="1.7" /> : <><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Zm0 9L4 7.5M12 12l8-4.5M12 12v9" fill="none" stroke="currentColor" strokeWidth="1.5" /></>}</svg>
@@ -113,6 +113,6 @@ export function MissionDemo() {
     </div>
     </div>
     <figcaption id="mission-demo-description" className="v6-mission-demo__description">Replay of the recorded check in Vraelis’s app interface. The mission console is a simulation.</figcaption>
-    {unavailable && <p className="v6-mission-demo__error">The recording could not load. <a href="/api/fixtures/strike?mode=broken">Open the simulation</a>.</p>}
+    {unavailable && <p className="v6-mission-demo__error">The recording could not load. <a href="/api/fixtures/strike?mode=broken&ui=terrain-20261005">Open the simulation</a>.</p>}
   </figure>;
 }

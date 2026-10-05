@@ -110,7 +110,11 @@ export function strikeConsoleHtml(mode: StrikeMode): string {
   .layer-panel .height-control { display:block; }.height-control input { width:100%; margin-top:12px; }
   .motion-control { border:0; padding:8px 0; background:transparent; color:var(--muted); font-size:12px; min-width:76px; }
   .map { position:relative; flex:1; min-height:440px; background:#1c1c1c; overflow:hidden; }
-  .map>svg { position:absolute; inset:0; width:100%; height:100%; background:#1e1e1e; }.map[data-ready=true]>svg { display:none; }.map canvas { display:block; touch-action:none; }
+  /* The legacy 2D view is an explicit failure fallback, never a loading frame. */
+  .map>svg { display:none; position:absolute; inset:0; width:100%; height:100%; background:#1e1e1e; }.map[data-ready=fallback]>svg { display:block; }
+  .map canvas { display:block; touch-action:none; visibility:hidden; }.map[data-ready=true] canvas { visibility:visible; }
+  .scene-status { position:absolute; inset:0; display:grid; place-items:center; z-index:4; background:#111; color:#aaa; font-size:13px; pointer-events:none; }.map[data-ready=true] .scene-status { display:none; }
+  .map[data-ready=fallback] .scene-status { inset:auto 12px 12px; display:block; padding:8px 12px; background:#111d; }
   .object-label { position:absolute; z-index:3; transform:translate(-50%,-50%); padding:4px 7px; border:1px solid #868686; border-radius:3px; background:#212121e8; color:#eeeeee; font-size:11px; box-shadow:0 2px 8px #0004; }.object-label.selected { background:#dfdfdf; border-color:#dfdfdf; color:#1e1e1e; }.object-leader { position:absolute; height:1px; background:#c1c1c1aa; transform-origin:0 50%; pointer-events:none; }.object-leader[hidden] { display:none; }
   .camera-controls[hidden],.motion-control[hidden],.layers[hidden] { display:none!important; }
   .camera-controls { position:absolute; right:18px; bottom:18px; display:flex; gap:1px; box-shadow:0 4px 20px #21212118; }.camera-controls button { border:1px solid #737373; background:#242424e8; color:#efefef; padding:10px 13px; font-size:13px; min-height:38px; }.camera-controls button:first-child { border-radius:4px 0 0 4px; }.camera-controls button:last-child { border-radius:0 4px 4px 0; }
@@ -171,7 +175,8 @@ export function strikeConsoleHtml(mode: StrikeMode): string {
         <button type="button" id="workspace-fullscreen" class="motion-control" aria-label="Full screen workspace">⛶</button>
       </div>
     </div>
-    <div class="map" id="spatial-scene">
+    <div class="map" id="spatial-scene" data-ready="loading">
+      <div class="scene-status" role="status">Loading terrain</div>
       <svg viewBox="36 6 690 414" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
         <defs>
           <pattern id="g" width="140" height="100" patternUnits="userSpaceOnUse" x="0" y="20"><path d="M140 0H0V100" fill="none" stroke="#1b1b1b" stroke-width="1"/></pattern>
@@ -270,8 +275,20 @@ export function strikeConsoleHtml(mode: StrikeMode): string {
   render();
 })();
 </script>
-<script>window.LARKSPUR_DATA = { contacts: ${JSON.stringify(CONTACTS)} };</script>
-<script type="module" src="/home/spatial/scene.js"></script>
+<script>
+window.LARKSPUR_DATA = { contacts: ${JSON.stringify(CONTACTS)} };
+window.LARKSPUR_SCENE_UNAVAILABLE = function () {
+  var host = document.getElementById('spatial-scene');
+  if (host.dataset.ready === 'true') return;
+  host.dataset.ready = 'fallback';
+  host.querySelector('.scene-status').textContent = '3D unavailable. Showing the 2D view.';
+  document.getElementById('view-3d').disabled = true;
+  document.getElementById('view-3d').setAttribute('aria-pressed', 'false');
+  document.getElementById('view-2d').setAttribute('aria-pressed', 'true');
+  for (var selector of ['.layers', '.camera-controls', '#scene-motion']) document.querySelector(selector).hidden = true;
+};
+</script>
+<script type="module" src="/home/spatial/scene.js?v=controls-20261005" onerror="window.LARKSPUR_SCENE_UNAVAILABLE()"></script>
 <script type="module" src="/home/geography/geography.js"></script>
 </body>
 </html>`;

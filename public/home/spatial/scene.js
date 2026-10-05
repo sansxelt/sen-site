@@ -6,22 +6,15 @@ const capture = new URLSearchParams(location.search).get('capture') === '1';
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 let renderer;
 try { renderer = new THREE.WebGLRenderer({antialias:true,alpha:false}); }
-catch {
- document.getElementById('view-3d').disabled=true;
- document.getElementById('view-3d').setAttribute('aria-pressed','false');
- document.getElementById('view-2d').setAttribute('aria-pressed','true');
- document.querySelector('.layers').hidden=true;
- document.querySelector('.camera-controls').hidden=true;
- document.getElementById('scene-motion').hidden=true;
- host.dataset.ready='fallback';
-}
+catch { window.LARKSPUR_SCENE_UNAVAILABLE(); }
+
 if (renderer) {
 const scene = new THREE.Scene(); scene.background = new THREE.Color('#1c1c1c');
 renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;
 let renderScale=Math.min(devicePixelRatio,1.25);
 renderer.setPixelRatio(renderScale); renderer.shadowMap.enabled=true; renderer.shadowMap.autoUpdate=false; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-renderer.domElement.setAttribute('aria-label','Interactive terrain. Drag to rotate. Control-scroll to zoom. Select contacts using the list.');
-renderer.domElement.setAttribute('role','img'); host.prepend(renderer.domElement); host.dataset.ready='true';
+renderer.domElement.setAttribute('aria-label','Interactive terrain. Left-drag to rotate. Right-drag to pan. Scroll to zoom toward the pointer. Select contacts using the list.');
+renderer.domElement.setAttribute('role','img'); renderer.domElement.title='Left-drag to rotate. Right-drag to pan. Scroll to zoom.'; host.prepend(renderer.domElement);
 const camera = new THREE.OrthographicCamera(-40,40,25,-25,.1,250);
 let cameraTransition=null;
 const target = new THREE.Vector3(0,0,0); let yaw=.7, pitch=.85, dimension='3d', relief=1, running=!reduced.matches, dragging=false, moved=false, time=0, selected=document.querySelector('.row.sel')?.dataset.id || 'T-1', dirty=true;
@@ -123,7 +116,7 @@ scene.add(flight);
 const flightCurve = new THREE.CatmullRomCurve3([new THREE.Vector3(-24,8,-10),new THREE.Vector3(13,8,-13),new THREE.Vector3(22,8,12),new THREE.Vector3(-20,8,16)],true);
 function flightPoints(){return flightCurve.getPoints(200).map(p=>{p.y=elevation(p.x,p.z)+8;return p;});}
 const flightLine=new THREE.Line(new THREE.BufferGeometry().setFromPoints(flightPoints()),new THREE.LineBasicMaterial({color:'#bebebe',transparent:true,opacity:.72}));routes.add(flightLine);
-function setCamera(animate=false){dirty=true;const from=camera.position.clone(),fromQ=camera.quaternion.clone();cameraTransition=null;const radius=75;if(dimension==='2d')camera.position.set(target.x,80,target.z+.001);else camera.position.set(target.x+Math.sin(yaw)*Math.cos(pitch)*radius,Math.sin(pitch)*radius,target.z+Math.cos(yaw)*Math.cos(pitch)*radius);camera.lookAt(target);camera.updateProjectionMatrix();camera.updateMatrixWorld();if(animate&&!reduced.matches){cameraTransition={from,fromQ,to:camera.position.clone(),toQ:camera.quaternion.clone(),start:capture?time:performance.now()/1000};camera.position.copy(from);camera.quaternion.copy(fromQ);camera.updateMatrixWorld();}}
+function setCamera(animate=false){dirty=true;const from=camera.position.clone(),fromQ=camera.quaternion.clone();cameraTransition=null;const radius=75;if(dimension==='2d')camera.position.set(target.x,target.y+80,target.z+.001);else camera.position.set(target.x+Math.sin(yaw)*Math.cos(pitch)*radius,target.y+Math.sin(pitch)*radius,target.z+Math.cos(yaw)*Math.cos(pitch)*radius);camera.lookAt(target);camera.updateProjectionMatrix();camera.updateMatrixWorld();if(animate&&!reduced.matches){cameraTransition={from,fromQ,to:camera.position.clone(),toQ:camera.quaternion.clone(),start:capture?time:performance.now()/1000};camera.position.copy(from);camera.quaternion.copy(fromQ);camera.updateMatrixWorld();}}
 function select(id){dirty=true;selected=id;const o=objects.get(id);if(!o)return;selection.position.set(o.g.position.x,o.g.position.y-.1,o.g.position.z);host.querySelectorAll('.object-label').forEach(e=>{e.classList.toggle('selected',e.dataset.object===id);e.setAttribute('aria-pressed',String(e.dataset.object===id));});}
 function resize(){const w=host.clientWidth,h=host.clientHeight;renderer.setSize(w,h);renderer.shadowMap.needsUpdate=true;const aspect=w/h;camera.left=-27*aspect;camera.right=27*aspect;camera.top=27;camera.bottom=-27;setCamera();}
 new ResizeObserver(resize).observe(host);resize();select(selected);
@@ -134,16 +127,34 @@ document.getElementById('layer-terrain').onchange=e=>{terrain.visible=e.target.c
 document.getElementById('relief').oninput=e=>{relief=Number(e.target.value);updateTerrain();updateContours();updateGroves();roadDetails.forEach(({geo})=>{const p=geo.attributes.position;for(let i=0;i<p.count;i++)p.setY(i,elevation(p.getX(i),p.getZ(i))+.09);p.needsUpdate=true;geo.computeVertexNormals();});const lanePositions=laneGeometry.attributes.position;for(let i=0;i<lanePositions.count;i++)lanePositions.setY(i,elevation(lanePositions.getX(i),lanePositions.getZ(i))+.1);lanePositions.needsUpdate=true;flightLine.geometry.setFromPoints(flightPoints());for(const {building,x,z,h} of buildings)building.position.y=elevation(x,z)+h/2;for(const {g} of objects.values())g.position.y=elevation(g.position.x,g.position.z)+.15;const a=roadGeo.attributes.position;for(let i=0;i<a.count;i++)a.setY(i,elevation(a.getX(i),a.getZ(i))+.06);a.needsUpdate=true;roadGeo.computeVertexNormals();select(selected);};
 const motionButton=document.getElementById('scene-motion');function motionLabel(){motionButton.textContent=running?'Pause motion':'Play motion';motionButton.setAttribute('aria-pressed',String(running));}motionLabel();motionButton.onclick=()=>{running=!running;motionLabel();};reduced.addEventListener('change',()=>{running=!reduced.matches;motionLabel();});
 document.getElementById('camera-reset').onclick=()=>{target.set(0,0,0);yaw=.65;pitch=.72;camera.zoom=1;setCamera();};
-document.getElementById('zoom-in').onclick=()=>{camera.zoom=Math.min(3,camera.zoom*1.2);setCamera();};document.getElementById('zoom-out').onclick=()=>{camera.zoom=Math.max(.5,camera.zoom/1.2);setCamera();};
+document.getElementById('zoom-in').onclick=()=>{camera.zoom=Math.min(12,camera.zoom*1.2);setCamera();};document.getElementById('zoom-out').onclick=()=>{camera.zoom=Math.max(.25,camera.zoom/1.2);setCamera();};
 document.querySelectorAll('[data-id]').forEach(b=>b.addEventListener('click',()=>select(b.dataset.id)));
 new MutationObserver(()=>{const id=document.querySelector('.row.sel')?.dataset.id;if(id&&id!==selected)select(id);}).observe(document.getElementById('list'),{subtree:true,attributes:true,attributeFilter:['class']});
 document.addEventListener('input',()=>dirty=true);document.addEventListener('click',()=>dirty=true);
-let px=0,py=0;const canvas=renderer.domElement;
-canvas.onpointerdown=e=>{dragging=true;moved=false;px=e.clientX;py=e.clientY;canvas.setPointerCapture(e.pointerId);};
-canvas.onpointermove=e=>{if(!dragging)return;const dx=e.clientX-px,dy=e.clientY-py;if(Math.abs(dx)+Math.abs(dy)>2)moved=true;if(dimension==='3d'){yaw-=dx*.008;pitch=THREE.MathUtils.clamp(pitch+dy*.006,.2,1.35);}else{target.x-=dx*.045/camera.zoom;target.z-=dy*.045/camera.zoom;}px=e.clientX;py=e.clientY;setCamera();};
-canvas.onpointerup=e=>{dragging=false;if(moved)return;const r=canvas.getBoundingClientRect(),pointer=new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),ray=new THREE.Raycaster();ray.setFromCamera(pointer,camera);const hit=ray.intersectObjects(contacts.children,true)[0];if(hit){let obj=hit.object;while(obj&&!obj.userData.contact)obj=obj.parent;if(obj)document.querySelector('[data-id="'+obj.userData.contact+'"]').click();}};
-canvas.onpointercancel=()=>dragging=false;
-canvas.addEventListener('wheel',e=>{if(!e.ctrlKey&&!e.altKey)return;e.preventDefault();camera.zoom=THREE.MathUtils.clamp(camera.zoom*Math.exp(-e.deltaY*.001),.5,3);setCamera();},{passive:false});
+let px=0,py=0,dragButton=0;const canvas=renderer.domElement;
+const cameraRight=new THREE.Vector3(),cameraUp=new THREE.Vector3();
+function pan(dx,dy){
+ cameraRight.setFromMatrixColumn(camera.matrixWorld,0);
+ cameraUp.setFromMatrixColumn(camera.matrixWorld,1);
+ target.addScaledVector(cameraRight,-dx*(camera.right-camera.left)/(camera.zoom*canvas.clientWidth));
+ target.addScaledVector(cameraUp,dy*(camera.top-camera.bottom)/(camera.zoom*canvas.clientHeight));
+}
+canvas.oncontextmenu=e=>e.preventDefault();
+canvas.onpointerdown=e=>{if(e.button!==0&&e.button!==2)return;dragging=true;dragButton=e.button;moved=false;px=e.clientX;py=e.clientY;canvas.setPointerCapture(e.pointerId);};
+canvas.onpointermove=e=>{if(!dragging)return;const dx=e.clientX-px,dy=e.clientY-py;if(Math.abs(dx)+Math.abs(dy)>2)moved=true;if(dragButton===2||dimension==='2d')pan(dx,dy);else{yaw-=dx*.008;pitch=THREE.MathUtils.clamp(pitch+dy*.006,.2,1.35);}px=e.clientX;py=e.clientY;setCamera();};
+canvas.onpointerup=e=>{if(!dragging)return;dragging=false;if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);if(moved||dragButton!==0)return;const r=canvas.getBoundingClientRect(),pointer=new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),ray=new THREE.Raycaster();ray.setFromCamera(pointer,camera);const hit=ray.intersectObjects(contacts.children,true)[0];if(hit){let obj=hit.object;while(obj&&!obj.userData.contact)obj=obj.parent;if(obj)document.querySelector('[data-id="'+obj.userData.contact+'"]').click();}};
+canvas.onpointercancel=canvas.onlostpointercapture=()=>dragging=false;
+const zoomRay=new THREE.Raycaster(),zoomPointer=new THREE.Vector2(),zoomNormal=new THREE.Vector3(),zoomPlane=new THREE.Plane();
+function pointerOnViewPlane(e){
+ const r=canvas.getBoundingClientRect();zoomPointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);
+ camera.getWorldDirection(zoomNormal);zoomPlane.setFromNormalAndCoplanarPoint(zoomNormal,target);
+ zoomRay.setFromCamera(zoomPointer,camera);return zoomRay.ray.intersectPlane(zoomPlane,new THREE.Vector3());
+}
+canvas.addEventListener('wheel',e=>{
+ e.preventDefault();const before=pointerOnViewPlane(e),delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?canvas.clientHeight:1);
+ camera.zoom=THREE.MathUtils.clamp(camera.zoom*Math.exp(-delta*.001),.25,12);setCamera();
+ const after=pointerOnViewPlane(e);if(before&&after){target.add(before.sub(after));setCamera();}
+},{passive:false});
 let visible=true;new IntersectionObserver(([e])=>visible=e.isIntersecting).observe(host);
 const labelPositions=[...objects.values()].map(({g,c},i)=>{const leader=document.createElement('span');leader.className='object-leader';host.append(leader);return{g,el:host.querySelector('[data-object="'+c.id+'"]'),point:new THREE.Vector3(),leader,offset:[[-22,-30],[-20,-26],[22,10],[22,-25]][i]};});
 const flightPoint=new THREE.Vector3(),ahead=new THREE.Vector3();
@@ -159,6 +170,8 @@ function draw(at){
  if(viewChanged)for(const {g,el,point,leader,offset} of labelPositions){point.copy(g.position);point.y+=1.5;point.project(camera);const x=(point.x+1)/2*host.clientWidth,y=(-point.y+1)/2*host.clientHeight;el.style.left=(x+offset[0])+'px';el.style.top=(y+offset[1])+'px';el.hidden=point.z>1||point.x<-1||point.x>1||point.y<-1||point.y>1;leader.hidden=el.hidden;leader.style.left=x+'px';leader.style.top=y+'px';leader.style.width=Math.hypot(...offset)+'px';leader.style.transform='rotate('+Math.atan2(offset[1],offset[0])+'rad)';}
 
  renderer.render(scene,camera);
+ // Reveal only after the first complete frame, never the legacy map during module startup.
+ if(host.dataset.ready!=='true')host.dataset.ready='true';
 }
 let previous=performance.now(),samples=0,elapsed=0;
 function render(now){
