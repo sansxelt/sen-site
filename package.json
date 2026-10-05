@@ -135,7 +135,8 @@
     "lifecycle:nudge:test": "tsx scripts/lifecycle-nudge-verify.ts",
     "launch:coverage:test": "tsx scripts/launch-coverage-verify.ts",
     "launch:gate:audit": "tsx ops/launch-gate-audit.ts",
-    "signal:test": "tsx scripts/console-signal-verify.ts"
+    "signal:test": "tsx scripts/console-signal-verify.ts",
+    "recorded:verify:test": "tsx scripts/recorded-verification-verify.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",

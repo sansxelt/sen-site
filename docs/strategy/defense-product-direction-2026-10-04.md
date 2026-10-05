@@ -2,6 +2,8 @@
 
 Decision date: October 4, 2026. Founder-selected direction; supersedes the broad-market-first recommendation in the two preceding strategy assessments. Competitive findings and capability limitations from those assessments remain valid.
 
+**October 5 update:** the founder broadened the focus to software for physical systems, including robotics, fleets and industrial equipment alongside defense. The current recommendation and implementation boundaries are in [Physical systems product research](physical-systems-product-research-2026-10-05.md).
+
 ## The decision
 
 Defense is Vraelis's primary market and public homepage positioning. Focus product development on verification for mission applications and operator web control panels. The browser engine is reusable across other software, but its breadth is not the leading sales story.

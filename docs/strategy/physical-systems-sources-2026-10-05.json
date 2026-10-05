@@ -1,0 +1,334 @@
+{
+  "retrievedDateUTC": "2026-10-05",
+  "method": "Primary-source HTTP retrieval and HTML text extraction. Vendor claims not independently benchmarked.",
+  "sources": [
+    {
+      "key": "foxglove",
+      "requested": "https://docs.foxglove.dev/docs",
+      "url": "https://docs.foxglove.dev/docs",
+      "title": "Foxglove Documentation | Foxglove Docs",
+      "chars": 4134,
+      "textSha256": "cf406afcecc46cb8166fe6ef857efc38f8bf797aadfb0bc317d4296852f318a8",
+      "rawSha256": "161225a2e78c979039c50cc362864e8ff640dd6ca7d41e0b1546645ddbbbc8a0",
+      "reviewStatus": "Retrieved; source scope and comparison stated in report"
+    },
+    {
+      "key": "foxglove-platform",
+      "requested": "https://foxglove.dev/",
+      "url": "https://foxglove.dev/",
+      "title": "Foxglove: Agentic data platform for Physical AI",
+      "chars": 3755,
+      "textSha256": "ee73bfea4cb3581c9976faa29c3463ce180469211f122c9f46e91fff09a72201",
+      "rawSha256": "5583ebbf1773e3273e777a8e1b4008d15a532772dbb2624de17396fa4366b3ab",
+      "reviewStatus": "Retrieved; source scope and comparison stated in report"
+    },
+    {
+      "key": "formant",
+      "requested": "https://formant.io/",
+      "url": "https://www.formant.ai/",
+      "title": "Formant Robotics",
+      "chars": 3391,
+      "textSha256": "d4f373221fa0ca42ba08a2ff94253a6629711284246512e75b8f96bd52bba138",
+      "rawSha256": "7c7d6cf71f00986f8d09ab51a6a075eb027daf7010ad93b69c9bfa6e19bbb7ec",
+      "reviewStatus": "Retrieved; source scope and comparison stated in report"
+    },
+    {
+      "key": "inorbit",
+      "requested": "https://www.inorbit.ai/",
+      "url": "https://www.inorbit.ai/",
+      "title": "InOrbit.AI - We make robots work",
+      "chars": 2161,
+      "textSha256": "e5b98906551d087955cda14f6449e287f08830983ae8a838dd41517090b65d5e",
+      "rawSha256": "b9724a7a32386fbc393b167b259c8a0740b2631b592e291d0dfe78f2d68b3819",
+      "reviewStatus": "Retrieved; source scope and comparison stated in report"
+    },
+    {
+      "key": "ros-testing",
+      "requested": "https://docs.ros.org/en/rolling/Tutorials/Intermediate/Testing/Integration.html",
+      "url": "https://docs.ros.org/en/rolling/Tutorials/Intermediate/Testing/Integration.html",
+      "title": "Making sure you're not a bot!",
+      "chars": 1410,
+      "textSha256": "99f460fd9df11ed71a9f4e6dc7ebd9ad06f5089d0f4c730753c8b0b4ea1678e7",
+      "rawSha256": "dcc5758f28b1c8bbd913855e040b3eb1dfbd057babe24468706af1f0a1fb62d2",
+      "reviewStatus": "Bot challenge, not product documentation"
+    },
+    {
+      "key": "ros-launch-testing",
+      "requested": "https://docs.ros.org/en/rolling/p/launch_testing/",
+      "url": "https://docs.ros.org/en/rolling/p/launch_testing/",
+      "title": "Making sure you're not a bot!",
+      "chars": 1410,
+      "textSha256": "99f460fd9df11ed71a9f4e6dc7ebd9ad06f5089d0f4c730753c8b0b4ea1678e7",
+      "rawSha256": "cfdf7d99d0f1e7438b6cf75b1f1c58dca97fcb16c03fbe943804275f9fc02e39",
+      "reviewStatus": "Bot challenge, not product documentation"
+    },
+    {
+      "key": "gazebo",
+      "requested": "https://gazebosim.org/docs/latest/",
+      "url": "https://gazebosim.org/docs/latest/",
+      "title": "Index \u2014 Gazebo jetty documentation",
+      "chars": 130,
+      "textSha256": "2abbe4b7fbad5cdd54703470b32a5640a89e44ad402f6e6115a797d2e229ba60",
+      "rawSha256": "3de849578c71582f10f9a4a0ca1ef0bcfd21274f52668dd35330d27a49bdaf5d",
+      "reviewStatus": "Insufficient substantive content for scored capability comparison"
+    },
+    {
+      "key": "px4-simulation",
+      "requested": "https://docs.px4.io/main/en/simulation/",
+      "url": "https://docs.px4.io/main/en/simulation/",
+      "title": "Simulation | PX4 Guide (main)",
+      "chars": 19814,
+      "textSha256": "34ca327653481bb25701bc8cd6e43be295d35be87fb5060ff8caaa92051506c9",
+      "rawSha256": "953158dc7ce1ce710f8de672df666194f3b466541c16df01f22f6c6a2d8ed48f",
+      "reviewStatus": "Retrieved; source scope and comparison stated in report"
+    },
+    {
+      "key": "isaac-lab",
+      "requested": "https://isaac-sim.github.io/IsaacLab/main/index.html",
+      "url": "https://isaac-sim.github.io/IsaacLab/main/index.html",
+      "title": "Welcome to Isaac Lab! \u2014 Isaac Lab Documentation",
+      "chars": 8716,
+      "textSha256": "30066b7bce3c3b15109761202f3c2a55e657b8e55c841dac50a83599318fbc9e",
+      "rawSha256": "8b27e2db86743ce7fd01751d1dc45523301d5fa2b3c855fb0e3418e40673f2d8",
+      "reviewStatus": "Retrieved; source scope and comparison stated in report"
+    },
+    {
+      "key": "applied-simian",
+      "requested": "https://www.appliedintuition.com/products/simian",
+      "url": "https://www.appliedintuition.com/physical-ai",
+      "title": "Physical AI | Simulation, verification & validation | Applied Intuition",
+      "chars": 6395,
+      "textSha256": "92420c63a7b8dcb3a062a4f9d2e041fcf6c3bc5c8b3b7213402609c943dc5881",
+      "rawSha256": "10a9f2898d1561aca182c22f6ca62e980b77d4f427030a3e8b75daa4c7f85b9e",
+      "reviewStatus": "Retrieved; source scope and comparison stated in report"
+    },
+    {
+      "key": "mathworks-test",
+      "requested": "https://www.mathworks.com/products/simulink-test.html",
+      "url": "https://www.mathworks.com/products/simulink-test.html",
+      "title": "Simulink Test  - MATLAB",
+      "chars": 10231,
+      "textSha256": "180880b84a5b0c66442624ceecd14ddc13f796dcaf95bb9d9e1c90c44b0450a6",
+      "rawSha256": "34793f04c6b22faf7514ad8daa4eb90795e5b68bd7f9b59fbf89cec1008e4a10",
+      "reviewStatus": "Retrieved; source scope and comparison stated in report"
+    },
+    {
+      "key": "siemens-simit",
+      "requested": "https://www.siemens.com/global/en/products/automation/industry-software/simit.html",
+      "url": "https://www.siemens.com/global/en/products/automation/industry-software/simit.html",
+      "title": "",
+      "chars": 8415,
+      "textSha256": "a05d0989f30fe266f856f1d97910fcd28ee8963a18beb83e13b39e8d79f23233",
+      "rawSha256": "358547c94f15b43f29c73f23abc5be8f0d24dac5d3c9338580485024c29cad0a",
+      "reviewStatus": "Retrieved; source scope and comparison stated in report"
+    },
+    {
+      "key": "dspace-automationdesk",
+      "requested": "https://www.dspace.com/en/pub/home/products/sw/test_automation_software/automationdesk.cfm",
+      "url": "https://www.dspace.com/en/pub/home/products/sw/test_automation_software/automationdesk.cfm",
+      "title": "AutomationDesk - dSPACE",
+      "chars": 14030,
+      "textSha256": "04a37009b8a9eb28e6a566052a23142c4d732a4d3e0197f1166a040b93460fc0",
+      "rawSha256": "363934023ba38031fe651c0287e152e6921ccde2203f5bb7bac5a63c6f01ddbe",
+      "reviewStatus": "Retrieved; source scope and comparison stated in report"
+    },
+    {
+      "key": "rtamt",
+      "requested": "https://github.com/nickovic/rtamt",
+      "url": "https://github.com/nickovic/rtamt",
+      "title": "GitHub - nickovic/rtamt: Specification-based real-time monitoring library \u00b7 GitHub",
+      "chars": 18383,
+      "textSha256": "71e343d7d9cb075b8ced0ce06528896fe09509389058d24234432c1118c6d409",
+      "rawSha256": "d30ce2348877f1f88536bb4f2b2a628c5058ddcd5032c1e0d0f78ca29cdc0b1e",
+      "reviewStatus": "Retrieved; source scope and comparison stated in report"
+    },
+    {
+      "key": "opencenario",
+      "requested": "https://www.asam.net/standards/detail/openscenario/",
+      "url": "https://www.asam.net/standards/detail/openscenario/",
+      "title": "Detail",
+      "chars": 950,
+      "textSha256": "ef38bbf4e0bae7f3972ab1427cc155e65a94fdf0dadea14b03e77a0263901a91",
+      "rawSha256": "18d63c9070f190a71737ef817571808892a79406143caf7ecdb9a0e490a116de",
+      "reviewStatus": "Insufficient substantive content for scored capability comparison"
+    },
+    {
+      "key": "mcap",
+      "requested": "https://mcap.dev/",
+      "url": "https://mcap.dev/",
+      "title": "MCAP",
+      "chars": 1287,
+      "textSha256": "06bf96d00dba5966fd77bb621d5102cc6da985a7fc55b677428e455a2649f213",
+      "rawSha256": "b4f1dc7e22a66bbe03288b0281a470a7e3b97dc6747f8fdd8e73ac0a6cd41b2c",
+      "reviewStatus": "Retrieved; source scope and comparison stated in report"
+    },
+    {
+      "key": "inorbit-testing",
+      "requested": "https://www.inorbit.ai/robops",
+      "url": "https://www.inorbit.ai/robops",
+      "title": "RobOps",
+      "chars": 6007,
+      "textSha256": "978fa788c23603079d8c84cc498437f8b7acc51776d66bc4440fea720e247505",
+      "rawSha256": "6c46b10dcc61eb12ea0ca93523550d439cd23f33f21a8274a035d99364161fe0",
+      "reviewStatus": "Retrieved; source scope and comparison stated in report"
+    },
+    {
+      "key": "mabl",
+      "requested": "https://www.mabl.com/",
+      "url": "https://www.mabl.com/",
+      "title": "Agentic Testing for the Next Generation of Software | mabl",
+      "chars": 3463,
+      "textSha256": "4507ffbc556c52238d534a1eff69ee3cc43afef28ce90e4b52d1e0d7b6ef06f9",
+      "rawSha256": "8386d4bb02801400011c25321e816f9910efb5ce6af7660c1403b18beb6de537",
+      "reviewStatus": "Retrieved; source scope and comparison stated in report"
+    },
+    {
+      "key": "palantir-actions",
+      "requested": "https://www.palantir.com/docs/foundry/action-types/test-run/",
+      "url": "https://www.palantir.com/docs/foundry/action-types/test-run",
+      "title": "Action types \u2022 Test run \u2022 Palantir",
+      "chars": 5010,
+      "textSha256": "87a8fe30e6983ce251a8f8212061ee4669ff1383626fcb38b320f55b56a4e2c2",
+      "rawSha256": "ee1b6279635c2c26f3a5c277eeba5bdac3235df79875f94fc2e5e44fd5afe3e1",
+      "reviewStatus": "Retrieved; source scope and comparison stated in report"
+    },
+    {
+      "key": "ros-test-raw",
+      "requested": "https://raw.githubusercontent.com/ros2/launch/rolling/launch_testing/README.md",
+      "url": "https://raw.githubusercontent.com/ros2/launch/rolling/launch_testing/README.md",
+      "title": "",
+      "chars": 10336,
+      "textSha256": "79791d91c8016a334e0d67022a0496726aff82ec466833d132ed0ee7e3f5f1cc",
+      "rawSha256": "7f8ce612a227913be0a81f41440e63db63846aa3edc5c32fc7f64dea9aede3ef",
+      "reviewStatus": "Retrieved; source scope and comparison stated in report"
+    },
+    {
+      "key": "ros-actions-raw",
+      "requested": "https://raw.githubusercontent.com/ros2/design/gh-pages/articles/actions.md",
+      "url": "https://raw.githubusercontent.com/ros2/design/gh-pages/articles/actions.md",
+      "title": "",
+      "chars": 21181,
+      "textSha256": "150fe28d84bf105a5064f4d343c0030ca6eedad4e392c3dd63925cd2cdc85071",
+      "rawSha256": "0e0d16315c36782679e89f3202c447d93f549ef2064d370e5c6a6e29b965087d",
+      "reviewStatus": "Retrieved; source scope and comparison stated in report"
+    },
+    {
+      "key": "vda5050",
+      "requested": "https://github.com/VDA5050/VDA5050",
+      "url": "https://github.com/VDA5050/VDA5050",
+      "title": "GitHub - VDA5050/VDA5050: Official Specification document for the VDA 5050 \u00b7 GitHub",
+      "chars": 4312,
+      "textSha256": "1c37cfe21c9123a1fe5b77eed408952803f74c20a984c360d2b7252303fe4c8f",
+      "rawSha256": "82b340cd024a777991be4f02f27cddf9a331c721598d9ae6cc362c0009a0ce4d",
+      "reviewStatus": "Retrieved; source scope and comparison stated in report"
+    },
+    {
+      "key": "open-rmf",
+      "requested": "https://www.open-rmf.org/",
+      "url": "https://www.open-rmf.org/",
+      "title": "Open-RMF",
+      "chars": 1812,
+      "textSha256": "155a14a2ecccb4664f9373f1f80bf9189356cab1039d6e74b07b74c45ca2e33c",
+      "rawSha256": "dc8bf887bb166afb01472815edd4a24981d91ab1dff08ddcccd70722c9bbbaa3",
+      "reviewStatus": "Retrieved; source scope and comparison stated in report"
+    },
+    {
+      "key": "foxglove-agentic",
+      "requested": "https://foxglove.dev/blog/introducing-the-agentic-data-platform",
+      "error": "HTTP Error 404: Not Found",
+      "textSha256": null,
+      "rawSha256": null,
+      "reviewStatus": "Not retrieved"
+    },
+    {
+      "key": "foxglove-pricing",
+      "requested": "https://foxglove.dev/pricing",
+      "url": "https://foxglove.dev/pricing",
+      "title": "Pricing | Foxglove",
+      "chars": 8372,
+      "textSha256": "b0dd59c7b9e8f0f78a588bda7ceabf660ef2ec1bde6910d7f413ce458f6a5e54",
+      "rawSha256": "de4aac3535b0b6c8f2fc2218f6b9d2bfddaf152279675efd3826edd1f1bfe772",
+      "reviewStatus": "Retrieved; source scope and comparison stated in report"
+    },
+    {
+      "key": "formant-docs",
+      "requested": "https://docs.formant.io/",
+      "url": "https://docs.formant.io/",
+      "title": "Formant",
+      "chars": 1390,
+      "textSha256": "b2a440353ebdac5ace8265cde8b1dbdac19618f860d08c582b0645871189a39b",
+      "rawSha256": "319f45886a539f2d272a4b6ea629c9974fc030b13a5b5783d0542904d8cae0d9",
+      "reviewStatus": "Insufficient substantive content for scored capability comparison"
+    },
+    {
+      "key": "asam-xil",
+      "requested": "https://www.asam.net/standards/detail/xil/",
+      "url": "https://www.asam.net/standards/detail/xil/",
+      "title": "ASAM XIL",
+      "chars": 7447,
+      "textSha256": "fa5f0d6cabe2ce61ccbb972fc7301c702ea48011f6695a48f7b60fdbfff22d6e",
+      "rawSha256": "4aed213d971a6b955404d415e70d70e257e9eb824f709266748e85b0f07a52b2",
+      "reviewStatus": "Retrieved; source scope and comparison stated in report"
+    },
+    {
+      "key": "greenzie",
+      "requested": "https://www.greenzie.com/",
+      "url": "https://www.greenzie.com/",
+      "title": "Software for Commercial Robotic Lawn Mowers | Greenzie",
+      "chars": 2937,
+      "textSha256": "344010be5fae2bcd1ce4c4fb779c2dfd89f656f25171c4a969f7ddab7b05a0c6",
+      "rawSha256": "b3fd3991678e6010545c952829475279a1b199cde03b5a3df2a3344134cff5fb",
+      "reviewStatus": "Retrieved; source scope and comparison stated in report"
+    },
+    {
+      "key": "robotframework",
+      "requested": "https://robotframework.org/",
+      "url": "https://robotframework.org/",
+      "title": "Robot Framework",
+      "chars": 12456,
+      "textSha256": "d3453ba54b0a27998145c2eace0a540324ced7a5cd228683940eb6675652a055",
+      "rawSha256": "6c1a6ecf8d20d315b268421ef256622d8921dfc94b418b242cb184d261066189",
+      "reviewStatus": "Retrieved; source scope and comparison stated in report"
+    },
+    {
+      "key": "foxglove-agents",
+      "requested": "https://foxglove.dev/product/agents",
+      "url": "https://foxglove.dev/product/agents",
+      "title": "Agents | Foxglove",
+      "chars": 1507,
+      "textSha256": "94c37459d2cfd4f54ef3b322892a3e27c9cf3b9a6c05bbf435447c9f59d06bc1",
+      "rawSha256": "147ce21110c3049ce5f411b03fbe026c956e01ef7eb6a2cadbaa4173af55a8d0",
+      "reviewStatus": "Retrieved; source scope and comparison stated in report"
+    },
+    {
+      "key": "foxglove-agentic-correct",
+      "requested": "https://foxglove.dev/blog/introducing-the-agentic-data-platform-for-physical-ai",
+      "url": "https://foxglove.dev/blog/introducing-the-agentic-data-platform-for-physical-ai",
+      "title": "Introducing the Agentic Data Platform for Physical AI | Foxglove",
+      "chars": 8347,
+      "textSha256": "0da2fea3fd3489c713b13e48d77df43503ffafd91a505992b7a4adb200247f56",
+      "rawSha256": "e74601a2a303a50bf2ab1c3daace03b1ac94a20706aeda82df3f4d1f1b3801a4",
+      "reviewStatus": "Retrieved; source scope and comparison stated in report"
+    },
+    {
+      "key": "px4-survey",
+      "requested": "https://www.mcguirerobotics.com/px4_sim_research_report/",
+      "url": "https://www.mcguirerobotics.com/px4_sim_research_report/",
+      "title": "PX4 Simulation Integration Survey",
+      "chars": 55921,
+      "textSha256": "1c13b611a9e2980f380e66fdeab37cc20c96c666174864a9bc049ecb93f36dcb",
+      "rawSha256": "08edca90365131d89d64ab35a3a02f06cb0b9169fe904f542ced0e2caa6c7591",
+      "reviewStatus": "Retrieved; source scope and comparison stated in report"
+    },
+    {
+      "key": "vda5050-raw",
+      "requested": "https://raw.githubusercontent.com/VDA5050/VDA5050/main/VDA5050_EN.md",
+      "url": "https://raw.githubusercontent.com/VDA5050/VDA5050/main/VDA5050_EN.md",
+      "title": "",
+      "chars": 204790,
+      "textSha256": "7613f0653ad25c2be4beb3043a34273702db34376465095dfde02a6aa78d4fd2",
+      "rawSha256": "14b15417f875e5eb76d9a97c570dc1f020bede425256c2d5e444f9dcbc42f427",
+      "reviewStatus": "Retrieved; source scope and comparison stated in report"
+    }
+  ]
+}

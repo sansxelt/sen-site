@@ -98,6 +98,7 @@ const APP_NAV: { group: string; items: { href: string; label: string; d: string 
     { href: "/systems", label: "Systems", d: I.layers },
     { href: "/guarantees", label: "Guarantees", d: I.shield },
     { href: "/verifications", label: "Verifications", d: I.vote },
+    { href: "/verifications/recorded", label: "Recorded evidence", d: I.fileText },
     { href: "/review", label: "Review", d: I.eye },
     { href: "/records", label: "Records", d: I.fileText },
   ] },
@@ -535,9 +536,10 @@ function useActiveNav() {
   // Overview is the one item matched exactly and never by prefix, because every console path would
   // otherwise start with it. Both spellings light it up: the console is served at "/app" on localhost and
   // on preview deployments, and at "/" on app.vraelis.com, and it is the same page either way.
+  const matched = APP_NAV.flatMap(g => g.items).filter(it => it.href !== "/app" && (effective === it.href || effective.startsWith(it.href + "/"))).sort((a, b) => b.href.length - a.href.length)[0]?.href;
   return (href: string) => href === "/app"
     ? (effective === "/app" || effective === "/")
-    : (effective === href || effective.startsWith(href + "/"));
+    : href === matched;
 }
 
 // The nav body, shared byte-for-byte between the desktop sidebar and the mobile drawer, so the two can never
