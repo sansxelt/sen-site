@@ -1,4 +1,4 @@
-import { photograph, photographHero, SECTOR_PHOTOGRAPHS, USE_CASE_PHOTOGRAPHS } from "../_content/photography";
+import { photograph, SECTOR_PHOTOGRAPHS, USE_CASE_PHOTOGRAPHS } from "../_content/photography";
 // THE SECTOR PAGE (plan A9 T2) AND THE SOLUTIONS INDEX CARDS (T14). Revision 2, 2026-10-02. Owner: b5a.
 //
 //   import { SectorPageView, SolutionCards } from "../../_system/sector";
@@ -29,14 +29,15 @@ import { photograph, photographHero, SECTOR_PHOTOGRAPHS, USE_CASE_PHOTOGRAPHS } 
 // record text and machine text in data-no-translate; record panels marked data-panel; no dots; colour only where
 // a record found a problem; every sentence whole in one element, a link after its sentence and never inside it.
 import Image from "next/image";
+import localFont from "next/font/local";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Fragment, type ReactNode } from "react";
 import {
-  Band, CrossLinks, DoesBox, FactRow, Faq, FeatureCard, FeatureGrid, FrameHero, MediaPanel,
-  type CrossLink, type FaqItem, type FrameHeroProps,
+  Band, CrossLinks, DoesBox, FactRow, Faq, FeatureCard, FeatureGrid, MediaPanel,
+  type CrossLink, type FaqItem,
 } from "./kit";
-import { EditorialLink, ProseLink, SectionHead } from "./ui";
+import { CTA, EditorialLink, ProseLink, SectionHead } from "./ui";
 import { ClosingScene } from "./close";
 import { Code, CopyScript } from "./code";
 import { RecordPanel } from "./record-panel";
@@ -49,11 +50,26 @@ const two = (n: number) => String(n).padStart(2, "0");
 
 /* ───────────────────────────────────────────────────────────────────────────────────────────── hero ── */
 
-/** FrameHero's props for a sector: the registry says which kind of hero it has and where the files are; the page
- *  copy gives the words, the alt text, the positions, the bar and the credit. */
-function heroProps(page: SectorPage, sector: Sector): FrameHeroProps {
-  const { eyebrow, title, sub, primary, secondary } = page.hero;
-  return { eyebrow, title, sub, primary, secondary, ...photographHero(SECTOR_PHOTOGRAPHS[sector.slug]) };
+const sectorFont = localFont({ src: "../../../fonts/manrope/Manrope-Variable.ttf", display: "swap", variable: "--font-sector", weight: "200 800" });
+
+function SectorHero({ page, sector }: { page: SectorPage; sector: Sector }) {
+  const photo = photograph(SECTOR_PHOTOGRAPHS[sector.slug]);
+  return (
+    <section className="v6-sx-hero" aria-labelledby="sector-title" data-nav-theme="dark">
+      <div className="v6-sx-hero__copy">
+        <p className="v6-sx-hero__eyebrow">{page.hero.eyebrow}</p>
+        <h1 id="sector-title">{page.hero.title}</h1>
+        <p className="v6-sx-hero__lead">{page.hero.sub}</p>
+        <div className="v6-sx-hero__actions">
+          <CTA href={page.hero.primary.href} brand lg>{page.hero.primary.label}</CTA>
+          <EditorialLink href={page.hero.secondary.href}>{page.hero.secondary.label}</EditorialLink>
+        </div>
+      </div>
+      <figure className="v6-sx-hero__image">
+        <Image src={photo.src} alt={photo.alt} fill sizes="(max-width: 900px) 100vw, 48vw" priority />
+      </figure>
+    </section>
+  );
 }
 
 /* ──────────────────────────────────────────────────────────────────────────────────────── sections ── */
@@ -70,7 +86,10 @@ function Sec({ id, className, children, labelledBy }: { id?: string; className?:
 function Facts({ page }: { page: SectorPage }) {
   const f = page.facts;
   if (!f) return null;
-  return <FactRow items={f.items} source={{ text: f.source.text, id: f.source.ids.join(", "), href: f.source.href, label: f.source.label }} />;
+  return <details className="v6-sx-summary">
+    <summary>Check summary and run details</summary>
+    <FactRow items={f.items} source={{ text: f.source.text, id: f.source.ids.join(", "), href: f.source.href, label: f.source.label }} />
+  </details>;
 }
 
 function Problem({ page }: { page: SectorPage }) {
@@ -79,7 +98,7 @@ function Problem({ page }: { page: SectorPage }) {
     <Sec className="v6-sx-problem">
       <SectionHead eyebrow={p.eyebrow} title={p.title} />
       <FeatureGrid span={4}>
-        {p.items.map((it, i) => <FeatureCard key={it.title} label={<span data-no-translate>{two(i + 1)}</span>} title={it.title} body={it.body} />)}
+        {p.items.map((it) => <FeatureCard key={it.title} title={it.title} body={it.body} />)}
       </FeatureGrid>
     </Sec>
   );
@@ -128,15 +147,15 @@ function Fixture({ page }: { page: SectorPage }) {
 /** The worked example (#record): RecordPanel in the view the page asks for (record-panel.tsx documents each). */
 function recordPanel(view: SectorRecordView): ReactNode {
   switch (view) {
-    case "strike": return <RecordPanel record="strike" />;
-    case "strike-compact": return <RecordPanel record="strike" views={["run", "finding"]} label="The Larkspur record" />;
-    case "checkout": return <RecordPanel record="checkout" />;
-    case "notes": return <RecordPanel record="notes" />;
-    case "projects": return <RecordPanel record="projects" />;
-    case "demos": return <RecordPanel records={["checkout", "notes", "projects"]} />;
+    case "strike": return <RecordPanel compact record="strike" />;
+    case "strike-compact": return <RecordPanel compact record="strike" views={["run", "finding"]} label="The Larkspur record" />;
+    case "checkout": return <RecordPanel compact record="checkout" />;
+    case "notes": return <RecordPanel compact record="notes" />;
+    case "projects": return <RecordPanel compact record="projects" />;
+    case "demos": return <RecordPanel compact records={["checkout", "notes", "projects"]} />;
     // The screen first: the hero's coded panel already shows journey 2's steps, and the screen is the tall view, so
     // the framed box opens full rather than on three steps in a box sized for the picture.
-    case "notes-journey-2": return <RecordPanel record="notes" views={["screen", "journey-2"]} />;
+    case "notes-journey-2": return <RecordPanel compact record="notes" views={["screen", "journey-2"]} />;
   }
 }
 
@@ -146,6 +165,7 @@ function RecordSection({ page }: { page: SectorPage }) {
     <Sec id="record" className="v6-sx-record">
       <SectionHead eyebrow={r.eyebrow} title={r.title} lead={r.lead} />
       {recordPanel(r.view)}
+      <Facts page={page} />
     </Sec>
   );
 }
@@ -197,7 +217,8 @@ function Examples({ page }: { page: SectorPage }) {
   const id = `examples-${page.slug}`;
   return (
     <Sec className="v6-sx-ex" labelledBy={id}>
-      <h2 className="v6-sx-ex__label" id={id} data-label="">{e.label}</h2>
+      <SectionHead eyebrow="Example checks" title="Define what your software must do" />
+      <p className="v6-sx-ex__label" id={id}>{e.label}</p>
       <ol className="v6-sx-ex__list" role="list">
         {e.items.map((it, i) => (
           <li className="v6-sx-ex__row" key={it.text}>
@@ -239,19 +260,19 @@ function HowItFits({ page }: { page: SectorPage }) {
   if (!b) return null;
   if (b.kind === "mcp") {
     return (
-      <Band id="fit">
+      <Sec id="fit" className="v6-sx-fit">
         <SectionHead eyebrow={b.eyebrow} title={b.title} lead={b.lead} />
         <McpRows rows={b.rows} />
-      </Band>
+      </Sec>
     );
   }
   return (
-    <Band id="fit">
+    <Sec id="fit" className="v6-sx-fit">
       <SectionHead eyebrow={b.eyebrow} title={b.title} lead={b.lead} />
       <FeatureGrid span={b.cards.length === 4 ? 3 : b.cards.length === 2 ? 6 : 4}>
         {b.cards.map((c) => <FeatureCard key={c.title} title={c.title} body={c.body} />)}
       </FeatureGrid>
-    </Band>
+    </Sec>
   );
 }
 
@@ -305,7 +326,7 @@ function Related({ page }: { page: SectorPage }) {
   if (!page.cross.length) return null;
   const links = page.cross.map(crossLink);
   // Pictures only when every card has one: a row of two pictures and one bare card reads as broken.
-  const pictured = links.every((l) => l.image) ? links : links.map(({ image: _image, ...l }) => l);
+  const pictured = links.every((l) => l.image) ? links : links.map(l => ({ title: l.title, body: l.body, href: l.href }));
   return (
     <Sec className="v6-sx-cross">
       <CrossLinks links={pictured} />
@@ -336,9 +357,9 @@ export function SectorPageView({ slug }: { slug: string }) {
   const sector = sectorBySlug(slug);
   if (!page || !sector || sector.slug === "enterprise") notFound();
   return (
-    <div className="v6-sx" data-sector={page.slug}>
-      <FrameHero {...heroProps(page, sector)} />
-      {page.sections.map((key) => {
+    <div className={`v6-sx ${sectorFont.variable}`} data-sector={page.slug}>
+      <SectorHero page={page} sector={sector} />
+      {page.sections.filter(key => key !== "facts").map((key) => {
         const Block = SECTIONS[key];
         return <Block key={key} page={page} />;
       })}

@@ -177,7 +177,7 @@ export function RunPrompt({ run, lines }: { run: CheckRun; lines?: number }) {
   return <div className="v6-rp__prompt"><Code lang="Repair prompt" src={text} /></div>;
 }
 
-type PanelProps = { height?: number; label?: string; initial?: string } & (
+type PanelProps = { height?: number; label?: string; initial?: string; compact?: boolean } & (
   | { record: RecordKey; views?: RecordView[]; records?: never }
   | { records: RecordKey[]; record?: never; views?: never }
 );
@@ -193,16 +193,27 @@ export function RecordPanel(props: PanelProps) {
           <h3>{r.name}</h3>
           {run.label ? <p>{run.label}</p> : null}
           <p>{run.note ?? r.takeaway}</p>
-          <RunFacts run={run} outcome />
+          {props.compact ? <p className="v6-evidence-record__outcome"><Outcome run={run} /></p> : <RunFacts run={run} outcome />}
           <EditorialLink href={r.href}>Read the whole record</EditorialLink>
+          {!props.compact ? (
           <details className="v6-evidence-record__details" data-panel="">
             <summary>The sentence, the steps and the finding</summary>
             <RecordClaim record={r} />
             <RunSteps run={run} />
             <RunFinding run={run} />
           </details>
+          ) : null}
         </div>
         <RunShot record={r} run={run} />
+        {props.compact ? (
+          <details className="v6-evidence-record__details v6-evidence-record__full" data-panel="">
+            <summary>View recorded steps and findings</summary>
+            <RunFacts run={run} outcome />
+            <RecordClaim record={r} />
+            <RunSteps run={run} />
+            <RunFinding run={run} />
+          </details>
+        ) : null}
       </article>);
     })}
   </div>;

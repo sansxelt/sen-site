@@ -171,3 +171,68 @@ a.v6-si__card:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
   .v6-ff__mode, .v6-si__card, .v6-si__pic img, .v6-si__go { transition: none !important; }
   a.v6-si__card:hover .v6-si__pic img, a.v6-si__card:hover .v6-si__go { transform: none !important; }
 }
+
+/* Solution pages: a single editorial surface, generous headlines and restrained
+   evidence. Manrope is self-hosted under the SIL Open Font License. */
+.v6-sx { --sans: var(--font-sector), Arial, sans-serif; --display: var(--sans); font-family: var(--sans); }
+.v6-sx-hero { max-width: var(--max-wide); margin: 0 auto; padding: clamp(44px, 6vw, 100px) var(--gutter) 72px; display: grid; grid-template-columns: 1fr 1fr; gap: clamp(32px, 5vw, 88px); align-items: center; }
+.v6-sx-hero__eyebrow { margin: 0 0 26px; font-size: 14px; font-weight: 600; color: var(--ink-3); }
+.v6-sx-hero h1 { margin: 0; font-size: clamp(42px, 4.5vw, 76px); line-height: 1.06; font-weight: 500; letter-spacing: -.045em; max-width: 13ch; text-wrap: balance; }
+.v6-sx-hero__lead { font-size: clamp(17px, 1.35vw, 20px); line-height: 1.6; color: var(--ink-2); max-width: 43ch; margin: 28px 0 0; }
+.v6-sx-hero__actions { margin-top: 34px; display: flex; align-items: center; flex-wrap: wrap; gap: 20px 28px; }
+.v6-sx-hero__image { margin: 0; position: relative; aspect-ratio: 4 / 5; max-height: 640px; overflow: hidden; border-radius: 4px; }
+.v6-sx-hero__image img { object-fit: cover; }
+.v6-sx .v6-sec { padding-block: clamp(52px, 6vw, 96px); }
+.v6-sx .v6-wrap { max-width: 1280px; }
+.v6-sx .v6-head { max-width: 920px; gap: 18px; margin-bottom: 42px; }
+.v6-sx .v6-eyebrow { font-size: 13px; font-weight: 600; }
+.v6-sx .v6-dl { font-family: var(--sans); font-size: clamp(30px, 3.2vw, 52px); font-weight: 500; line-height: 1.13; letter-spacing: -.035em; max-width: 25ch; }
+.v6-sx .v6-lead { font-size: 17px; line-height: 1.65; max-width: 62ch; }
+.v6-sx :is(.v6-sx-problem,.v6-sx-fit,.v6-sx-stance) .v6-fg { gap: 32px; }
+.v6-sx :is(.v6-sx-problem,.v6-sx-fit,.v6-sx-stance) .v6-fc { background: transparent; border: 0; border-top: 1px solid var(--line-2); border-radius: 0; padding: 24px 0 0; }
+.v6-sx .v6-fc__t { font-size: 22px; font-weight: 500; line-height: 1.3; letter-spacing: -.02em; }
+.v6-sx .v6-fc__b { font-size: 16px; line-height: 1.65; max-width: 40ch; color: var(--ink-2); margin-top: 14px; }
+.v6-sx-record { background: #101011; }
+.v6-sx .v6-evidence-list { gap: 60px; }
+.v6-sx .v6-evidence-record { gap: 48px; align-items: start; }
+.v6-sx .v6-evidence-record + .v6-evidence-record { padding-top: 48px; border-top: 1px solid var(--line-2); }
+.v6-sx .v6-evidence-record__text h3 { font-family: var(--sans); font-size: 26px; letter-spacing: -.025em; margin-bottom: 14px; }
+.v6-sx .v6-evidence-record__text > p { font-size: 16px; }
+.v6-sx .v6-evidence-record__text > p:first-of-type { font-size: 13px; font-weight: 600; color: var(--ink-3); }
+.v6-sx .v6-rp__facts { margin-top: 24px; gap: 14px 24px; }
+.v6-sx .v6-rp__facts dt { font-size: 12px; }
+.v6-sx .v6-rp__facts dd { font-size: 14px; }
+.v6-sx-summary { margin-top: 40px; border-top: 1px solid var(--line-2); }
+.v6-sx-summary > summary { cursor: pointer; padding: 22px 0; font-size: 14px; color: var(--ink-2); }
+.v6-sx-summary .v6-facts { padding: 24px 0; }
+.v6-sx .v6-sx-ex__label { margin: -18px 0 28px; font-size: 14px; max-width: 70ch; }
+.v6-sx .v6-sx-ex__row { grid-template-columns: 40px minmax(0,1fr); }
+.v6-sx .v6-sx-ex__t { font-size: 18px; line-height: 1.55; }
+.v6-sx .v6-sx-limit.v6-sec { padding-block: 0; }
+.v6-sx .v6-sx-limit__t { font-size: 14px; }
+.v6-sx .v6-sx-limit__row { border-top: 0; }
+.v6-sx .v6-arw > span + span { display: none; }
+.v6-sx .v6-end { padding-block: 90px; }
+.v6-sx .v6-end__h { font-family: var(--sans); font-size: clamp(36px, 4vw, 60px); max-width: 24ch; }
+.v6-sx :is(summary,a):focus-visible { outline: 2px solid #fafafa; outline-offset: 4px; }
+@media (max-width: 900px) {
+ .v6-sx-hero { grid-template-columns: 1fr; padding-bottom: 32px; }
+ .v6-sx-hero h1 { max-width: 20ch; font-size: clamp(38px, 7vw, 64px); }
+ .v6-sx-hero__image { aspect-ratio: 16 / 10; max-height: none; }
+ .v6-sx .v6-evidence-record { grid-template-columns: 1fr; gap: 28px; }
+}
+@media (max-width: 640px) {
+ .v6-sx .v6-head { margin-bottom: 30px; }
+ .v6-sx-hero { padding-top: 40px; gap: 36px; }
+ .v6-sx-hero__eyebrow { margin-bottom: 20px; }
+ .v6-sx-hero__lead { margin-top: 22px; }
+ .v6-sx .v6-fg { display: grid; grid-template-columns: minmax(0,1fr); gap: 24px; }
+ .v6-sx .v6-fg > * { grid-column: 1; }
+ .v6-sx .v6-rp__facts { gap: 16px 20px; }
+}
+.v6-sx .v6-evidence-record__full { grid-column: 1 / -1; margin-top: 0; }
+.v6-sx .v6-evidence-record__full[open] { display: grid; gap: 24px; }
+.v6-sx .v6-evidence-record__full[open] > summary { margin-bottom: 0; }
+.v6-sx .v6-evidence-record__full .v6-rp__claim { border-radius: 4px; }
+.v6-sx .v6-evidence-record__outcome .v6-sig { font-size: 14px; }
+.v6-sx .v6-btn:hover .v6-arw > span:first-child { transform: none; }
