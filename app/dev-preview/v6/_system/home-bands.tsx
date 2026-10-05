@@ -42,7 +42,7 @@ function useEntryMotion() {
   return root;
 }
 
-const STATEMENT = "External software verification for defense, robotics and finance. Live apps and control panels, checked independently of their builder.";
+const STATEMENT = "External software verification for defense, robotics and finance. Catch failures in live apps and control panels that internal checks can miss.";
 
 /* The words of a language that does not space them (Japanese), found by the browser's own word segmenter, with
    punctuation riding on the word before it. Cut by character instead, a phrase too long for a phone's line
