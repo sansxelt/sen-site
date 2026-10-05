@@ -18,13 +18,13 @@ type Tile = { word: OrbitWord; label: string; phrase: string; photos: readonly P
 
 const pic = (name: string, alt: string, pos?: string): Photo => ({ src: `/home/orbit/photo-${name}.jpg`, alt, pos });
 
-// Defense is the primary focus. Existing coverage routes retain their actual capabilities.
+// Physical-system software is the focus; each subject links to its existing coverage.
 export const ORBIT: readonly Tile[] = [
   { word: "military", label: "Mission consoles", phrase: "mission consoles", photos: [pic("targeting", "A radar scope and a track readout on a console", "50% 45%")] },
   { word: "drones", label: "Drones and aviation", phrase: "flight controls", photos: [pic("drone", "A drone against an evening sky")] },
   { word: "robotics", label: "Robotics", phrase: "robot controls", photos: [pic("robot", "A robot arm building a lattice", "50% 60%")] },
-  { word: "logistics", label: "Logistics and vehicles", phrase: "fleet portals", photos: [pic("vehicle", "A truck on a road at dusk")] },
-  { word: "government", label: "Government", phrase: "public web apps", photos: [pic("public", "An arched hall inside a state capitol")] },
+  { word: "logistics", label: "Logistics and vehicles", phrase: "fleet controls", photos: [pic("vehicle", "A truck on a road at dusk")] },
+  { word: "government", label: "Public infrastructure", phrase: "infrastructure controls", photos: [pic("public", "An arched hall inside a state capitol")] },
 ];
 
 
@@ -141,8 +141,8 @@ export function Orbit() {
       </h2> : <h2 id="v6-or-h" className="v6-or__h v6-or__h--translated" aria-label={selected === null ? HEADLINE : `Know your ${ORBIT[selected].phrase} work.`}>
         <TopicSwap text={selected === null ? HEADLINE : `Know your ${ORBIT[selected].phrase} work.`} />
       </h2>}
-      <p className="v6-or__d">Checks for mission apps and web control panels</p>
-      <EditorialLink href={selected === null ? `${V6_BASE}/platform#coverage` : ROUTE[selected].href}>{selected === null ? "See what we can check" : "Explore this subject"}</EditorialLink>
+      <p className="v6-or__d">Independent verification for physical-system software</p>
+      <EditorialLink href={selected === null ? `${V6_BASE}/platform#coverage` : ROUTE[selected].href}>{selected === null ? "Explore verification" : "Explore this subject"}</EditorialLink>
     </div>
     <ul className="v6-or__tiles">
       {ORBIT.map((t, i) => <li key={t.label} ref={node => { tiles.current[i] = node; }} className="v6-or__item" data-on={i === selected}>
