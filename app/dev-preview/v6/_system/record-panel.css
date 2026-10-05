@@ -8,6 +8,9 @@
 
 /* =================================================================== the panel's pieces === */
 .v6-rp { min-width: 0; }
+.v6-evidence-current { margin: 0; min-width: 0; }
+.v6-evidence-current img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 4px; }
+.v6-evidence-current figcaption { margin-top: 12px; color: var(--ink-3); font-size: 13px; line-height: 1.6; }
 .v6-rp__view { min-width: 0; }
 .v6-rp__stack { display: grid; gap: 28px; align-content: start; }
 

@@ -153,3 +153,12 @@ Why these values:
   text block under 4.5:1 (3:1 for large text); the worst is 6.89:1, the German eyebrow on /company on a phone.
 - Batch 0a's mock checks (headline box at 1440x807, 390x720 and 768x1024; worst contrast 6.8:1) are in
   `SP/qa/b0/hero-mocks-0a-desk.jpg` and `hero-mocks-0a-phone.jpg`.
+
+## Current sector-page simulation capture
+
+`larkspur-current-console.png` is an actual browser capture of Vraelis's current
+Larkspur simulation at `/api/fixtures/strike?mode=broken&ui=terrain-20261005`,
+captured October 4, 2026 (Pacific time), after clicking Confirm target on T-1.
+It shows the current black-and-white 3D console, not a historical run artifact.
+Sector pages label this distinction explicitly. Original run images and records
+remain unchanged. No real hardware or customer deployment is depicted.

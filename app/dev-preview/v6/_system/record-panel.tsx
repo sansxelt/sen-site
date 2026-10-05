@@ -1,6 +1,7 @@
 // Real recorded checks, presented as plain text beside genuine evidence.
 // The sector pages use RecordPanel; use-case pages reuse the exported record pieces.
 // The record's steps and observations stay verbatim. No product UI is recreated.
+import Image from "next/image";
 import { RecordSteps } from "./kit";
 import { PicturePlate } from "./picture-plate";
 import { EditorialLink, Signal } from "./ui";
@@ -177,7 +178,7 @@ export function RunPrompt({ run, lines }: { run: CheckRun; lines?: number }) {
   return <div className="v6-rp__prompt"><Code lang="Repair prompt" src={text} /></div>;
 }
 
-type PanelProps = { height?: number; label?: string; initial?: string; compact?: boolean } & (
+type PanelProps = { height?: number; label?: string; initial?: string; compact?: boolean; currentSimulation?: boolean } & (
   | { record: RecordKey; views?: RecordView[]; records?: never }
   | { records: RecordKey[]; record?: never; views?: never }
 );
@@ -204,7 +205,14 @@ export function RecordPanel(props: PanelProps) {
           </details>
           ) : null}
         </div>
-        <RunShot record={r} run={run} />
+        {props.currentSimulation && key === "strike" ? (
+          <figure className="v6-evidence-current">
+            <Image src="/site/hero/larkspur-current-console.png" width={1440} height={936}
+              sizes="(max-width: 900px) 100vw, 48vw"
+              alt="Current Larkspur simulation in black and white: the 3D terrain and contact list show T-1 and civilian bus T-3 cleared after confirming T-1." />
+            <figcaption>Current Larkspur simulation, captured October 4, 2026. Original run screenshots are in the linked record.</figcaption>
+          </figure>
+        ) : <RunShot record={r} run={run} />}
         {props.compact ? (
           <details className="v6-evidence-record__details v6-evidence-record__full" data-panel="">
             <summary>View recorded steps and findings</summary>

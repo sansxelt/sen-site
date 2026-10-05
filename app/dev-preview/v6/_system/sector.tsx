@@ -147,8 +147,8 @@ function Fixture({ page }: { page: SectorPage }) {
 /** The worked example (#record): RecordPanel in the view the page asks for (record-panel.tsx documents each). */
 function recordPanel(view: SectorRecordView): ReactNode {
   switch (view) {
-    case "strike": return <RecordPanel compact record="strike" />;
-    case "strike-compact": return <RecordPanel compact record="strike" views={["run", "finding"]} label="The Larkspur record" />;
+    case "strike": return <RecordPanel compact record="strike" currentSimulation />;
+    case "strike-compact": return <RecordPanel compact record="strike" currentSimulation views={["run", "finding"]} label="The Larkspur record" />;
     case "checkout": return <RecordPanel compact record="checkout" />;
     case "notes": return <RecordPanel compact record="notes" />;
     case "projects": return <RecordPanel compact record="projects" />;
