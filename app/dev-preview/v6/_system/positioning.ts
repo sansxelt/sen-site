@@ -27,7 +27,7 @@ export const HERO_LINE = "Independent verification for the software behind physi
  *  happened. It does not promise a green result, and it does not lead with the verdict words (rule 5). */
 export const META_TITLE = "Vraelis | Know your systems work.";
 export const META_DESCRIPTION =
-  "Software verification for robotics, fleets and defense. Verify live control panels and inspect recorded task-state evidence independently of the builder.";
+  "Software verification for defense, infrastructure and robotics. Verify live control panels and inspect recorded task-state evidence independently of the builder.";
 
 /**
  * Link-preview text. Re-exported from lib/social-card.ts, which is the single source for every surface:

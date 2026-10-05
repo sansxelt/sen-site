@@ -62,8 +62,8 @@ const MENUS: Menu[] = [
   {
     label: "Solutions",
     groups: [
-      { h: "Physical systems", links: PRIMARY_SECTORS.filter(s => s.slug !== "enterprise").map(s => ({ t:s.label,d:s.line,href:s.href,pic:s.slug === "defense" ? EDITORIAL + "aviation.jpg" : s.slug === "fleets" ? EDITORIAL + "robotics.jpg" : s.pics.menu })) },
-      { h: "Organizations", links: PRIMARY_SECTORS.filter(s => s.slug === "enterprise").map(s => ({t:s.label,d:s.line,href:s.href,pic:s.slug === "enterprise" ? EDITORIAL + "robotics.jpg" : s.pics.menu})) },
+      { h: "Physical systems", links: PRIMARY_SECTORS.map(s => ({ t:s.label,d:s.line,href:s.href,pic:s.slug === "defense" ? EDITORIAL + "aviation.jpg" : s.slug === "fleets" ? EDITORIAL + "robotics.jpg" : s.pics.menu })) },
+      { h: "Organizations", links: [{ t: "Enterprise", d: "Governments, institutions and teams", href: BASE + "/enterprise", pic: EDITORIAL + "robotics.jpg" }] },
     ],
     foot: { t: "Explore solutions", href: SOLUTIONS_HREF },
   },

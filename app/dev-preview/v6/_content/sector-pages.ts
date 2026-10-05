@@ -307,7 +307,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     hero: {
       eyebrow: "Robotics, drones and fleets",
       title: "Verify the software behind your fleet",
-      sub: "Check operator actions on browser-based fleet consoles. Vraelis follows the workflow and verifies the resulting state, including after a reload.",
+      sub: "Verify robot task reports and control-panel workflows. Review recorded evidence today; use the API and developer tools for supported cloud workflows. Live robot adapters are not built.",
       primary: { label: "Talk to us", href: contact("fleets") },
       secondary: { label: "Try the fixture", href: "#fixture" },
       // Portrait 50% 75% (public/site/hero/CREDITS.md, "Using them"): at 50% the drone touches the eyebrow on short
@@ -797,5 +797,5 @@ export const SOLUTIONS_INDEX = {
   },
   eyebrow: "Solutions",
   title: "Physical systems depend on software that works",
-  lead: "For robotics, fleets, industrial equipment and defense. Start with a live control panel or a task recording, and inspect the evidence against your requirements.",
+  lead: "For defense, infrastructure and robotics. Start with a live control panel or a task recording, and inspect the evidence against your requirements.",
 } as const;

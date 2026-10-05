@@ -24,7 +24,7 @@ export const ORBIT: readonly Tile[] = [
   { word: "drones", label: "Drones and aviation", phrase: "flight controls", photos: [pic("drone", "A drone against an evening sky")] },
   { word: "robotics", label: "Robotics", phrase: "robot controls", photos: [pic("robot", "A robot arm building a lattice", "50% 60%")] },
   { word: "logistics", label: "Logistics and vehicles", phrase: "fleet controls", photos: [pic("vehicle", "A truck on a road at dusk")] },
-  { word: "government", label: "Public infrastructure", phrase: "infrastructure controls", photos: [pic("public", "An arched hall inside a state capitol")] },
+  { word: "government", label: "Infrastructure", phrase: "infrastructure controls", photos: [pic("public", "An arched hall inside a state capitol")] },
 ];
 
 

@@ -16,7 +16,7 @@ import "../_system/product.css";
 
 export const metadata = v6meta({
   title: "Platform",
-  description: "Verify software behind robotics, fleets and defense systems. Live control-panel execution and local recorded task-evidence review.",
+  description: "Verify software behind defense, infrastructure and robotics systems. Live control-panel execution and local recorded task-evidence review.",
   path: "/platform",
   ogTitle: "Physical-system software verification | Vraelis",
   ogDescription: "An approved requirement. An observed result. Evidence you can inspect.",
@@ -55,7 +55,7 @@ export default function Platform() {
       <FrameHero
         eyebrow="The platform"
         title="Verify the software behind physical systems"
-        sub="For robotics, fleets and defense teams. Verify live control panels or evaluate recorded task reports against reviewed criteria, with evidence for each result."
+        sub="For defense, infrastructure and robotics teams. Verify live control panels or evaluate recorded task reports against reviewed criteria, with evidence for each result."
         primary={{ label: "Watch the check", href: "#how-a-check-works" }}
         secondary={{ label: "Start a verification", href: SIGNUP }}
         {...photographHero("groundstation")}

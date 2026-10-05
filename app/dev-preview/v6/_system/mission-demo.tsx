@@ -16,6 +16,22 @@ export function MissionDemo() {
   const visible = useRef(false);
   const [playing, setPlaying] = useState(false);
   const [unavailable, setUnavailable] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const sync = () => setIsFullscreen(document.fullscreenElement === screen.current);
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && document.fullscreenElement === screen.current) {
+        document.exitFullscreen().catch(() => {});
+      }
+    };
+    document.addEventListener("fullscreenchange", sync);
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("fullscreenchange", sync);
+      document.removeEventListener("keydown", escape);
+    };
+  }, []);
 
   useEffect(() => {
     const el = video.current;
@@ -67,6 +83,10 @@ export function MissionDemo() {
   };
   const fullscreen = () => {
     const el = video.current as (HTMLVideoElement & { webkitEnterFullscreen?: () => void }) | null;
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+      return;
+    }
     if (screen.current?.requestFullscreen) screen.current.requestFullscreen().catch(() => {});
     else el?.webkitEnterFullscreen?.();
   };
@@ -89,7 +109,7 @@ export function MissionDemo() {
       {!exploring && <button type="button" onClick={toggle} disabled={unavailable} aria-label={playing ? "Pause demo" : "Play demo"} title={playing ? "Pause demo" : "Play demo"}>
         <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden>{playing ? <path d="M8 5v14M16 5v14" stroke="currentColor" strokeWidth="2" /> : <path d="m8 5 11 7-11 7Z" fill="currentColor" />}</svg>
       </button>}
-      <button type="button" onClick={fullscreen} aria-label="Full screen" title="Full screen"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden><path d="M9 4H4v5M15 4h5v5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" strokeWidth="1.7" /></svg></button>
+      <button type="button" onClick={fullscreen} aria-label={isFullscreen ? "Exit full screen" : "Full screen"} title={isFullscreen ? "Exit full screen" : "Full screen"} aria-pressed={isFullscreen}><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden><path d="M9 4H4v5M15 4h5v5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" strokeWidth="1.7" /></svg></button>
     </div>
     </div>
     <figcaption id="mission-demo-description" className="v6-mission-demo__description">Replay of the recorded check in Vraelis’s app interface. The mission console is a simulation.</figcaption>

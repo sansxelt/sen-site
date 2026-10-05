@@ -42,7 +42,7 @@ function useEntryMotion() {
   return root;
 }
 
-const STATEMENT = "Software verification for robotics, fleets and defense. Find failures in control software that internal systems can miss.";
+const STATEMENT = "Software verification for defense, infrastructure and robotics. Find failures in control software that internal systems can miss.";
 
 /* The words of a language that does not space them (Japanese), found by the browser's own word segmenter, with
    punctuation riding on the word before it. Cut by character instead, a phrase too long for a phone's line

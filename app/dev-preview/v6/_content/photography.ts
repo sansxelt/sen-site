@@ -30,7 +30,7 @@ export function photographHero(key: PhotographKey, position = "50% 50%") {
 }
 
 export const SECTOR_PHOTOGRAPHS: Record<string, PhotographKey> = {
-  defense: "groundstation", fleets: "vehicle", commerce: "checkout", "public-sector": "public",
+  defense: "groundstation", fleets: "vehicle", commerce: "checkout", "public-sector": "mission",
   "ai-built-apps": "aiapp", saas: "signup", agencies: "client", enterprise: "mission",
 };
 

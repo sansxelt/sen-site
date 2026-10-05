@@ -122,11 +122,11 @@ export const SECTORS: readonly Sector[] = [
   },
   {
     slug: "fleets",
-    label: "Robotics and fleets",
-    short: "Robotics and fleets",
+    label: "Robotics",
+    short: "Robotics",
     group: "Sectors",
     href: `${V6_BASE}/solutions/fleets`,
-    line: "The web panel that runs drones, robots and fleets.",
+    line: "Task-state evidence and control software for robots and fleets.",
     // Scene: our own render, the drone over the field at sunset (app/film/orbit).
     pics: { hero: photograph(SECTOR_PHOTOGRAPHS["fleets"]).src, heroPortrait: photograph(SECTOR_PHOTOGRAPHS["fleets"]).src, ...listPics("fleets") },
     priority: "P0",
@@ -144,11 +144,11 @@ export const SECTORS: readonly Sector[] = [
   },
   {
     slug: "public-sector",
-    label: "Public sector",
-    short: "Public sector",
+    label: "Infrastructure",
+    short: "Infrastructure",
     group: "Sectors",
-    href: `${V6_BASE}/solutions/public-sector`,
-    line: "Resident services, checked on staging with test identities.",
+    href: `${V6_BASE}/infrastructure`,
+    line: "Verification for software behind utilities, transport and industrial operations.",
     // Coded panel: Notewell journey 2's recorded steps (_content/demos.ts), drawn by the page.
     pics: { hero: photograph(SECTOR_PHOTOGRAPHS["public-sector"]).src, heroPortrait: photograph(SECTOR_PHOTOGRAPHS["public-sector"]).src, ...listPics("public-sector") },
     priority: "P2",
@@ -199,9 +199,9 @@ export const SECTORS: readonly Sector[] = [
   },
 ];
 
-/** Primary public navigation follows the founder's defense focus. The full registry still owns routes. */
-const PRIMARY_SLUGS: readonly SectorSlug[] = ["defense", "fleets", "enterprise"];
-export const PRIMARY_SECTORS: readonly Sector[] = SECTORS.filter(s => PRIMARY_SLUGS.includes(s.slug));
+/** Primary public navigation follows the three physical-system areas. The full registry still owns routes. */
+const PRIMARY_SLUGS: readonly SectorSlug[] = ["defense", "public-sector", "fleets"];
+export const PRIMARY_SECTORS: readonly Sector[] = PRIMARY_SLUGS.map(slug => SECTORS.find(s => s.slug === slug)!);
 
 /** The groups in print order. */
 export const SECTOR_GROUPS: readonly SectorGroup[] = ["Sectors", "Teams"];
@@ -251,15 +251,15 @@ export type OrbitRoute = { readonly href: string; readonly to: string };
 
 /** Where each orbit subject leads: a sector page by slug (its href read from SECTORS, so it can never drift), or a
  *  page of its own, each with the page's name as the tile prints it. Several subjects share a sector page (the
- *  three machine subjects all open Robotics and fleets). If a sector's menu label changes, change its `to` here. */
+ *  three machine subjects all open Robotics). If a sector's menu label changes, change its `to` here. */
 export const ORBIT_ROUTE: Readonly<Record<OrbitWord, { readonly sector: SolutionSlug; readonly to: string } | OrbitRoute>> = {
   "military": { sector: "defense", to: "Defense page" },
-  "government": { sector: "public-sector", to: "Public sector page" },
+  "government": { sector: "public-sector", to: "Infrastructure page" },
   "commercial": { sector: "commerce", to: "Fintech and commerce page" },
   "fintech": { sector: "commerce", to: "Fintech and commerce page" },
-  "robotics": { sector: "fleets", to: "Robotics and fleets page" },
-  "drones": { sector: "fleets", to: "Robotics and fleets page" },
-  "logistics": { sector: "fleets", to: "Robotics and fleets page" },
+  "robotics": { sector: "fleets", to: "Robotics page" },
+  "drones": { sector: "fleets", to: "Robotics page" },
+  "logistics": { sector: "fleets", to: "Robotics page" },
   "saas": { sector: "saas", to: "SaaS product teams page" },
   "ai-built-apps": { sector: "ai-built-apps", to: "AI-built apps page" },
   "agencies": { sector: "agencies", to: "Agencies page" },

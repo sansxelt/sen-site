@@ -11,7 +11,7 @@ export default function StartVerification() {
   return <Page measure="wide"><div className={`${font.className} verification-start`}>
     <p className="verification-start__eyebrow">Verification workspace</p>
     <h1>What evidence do you have?</h1>
-    <p className="verification-start__lead">Start with a recording or a live control panel.</p>
+    <p className="verification-start__lead">For defense, infrastructure and robotics. Start with a recording or a live control panel.</p>
     <div className="verification-start__choices">
       <article>
         <p className="verification-start__eyebrow">Local beta</p>
