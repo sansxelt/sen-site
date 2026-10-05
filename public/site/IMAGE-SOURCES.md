@@ -14,7 +14,7 @@ Editorial photographs and field footage illustrate the systems whose software ma
 - [Solution imagery](/solutions/CREDITS.md)
 ## October 5 homepage additions
 
-The interactive industry section and opening illustration are documented in
+The interactive industry section is documented in
 [Homepage photography credits](/home/editorial/CREDITS.md), including the Hoover
 Dam powerplant photograph and its CC BY-SA 2.0 license. Images illustrate subject
 areas rather than Vraelis deployments.
