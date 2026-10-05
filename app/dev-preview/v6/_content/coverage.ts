@@ -53,9 +53,16 @@ export const COVERAGE_THESIS =
  *  Vraelis sees the panel and nothing the panel does not show. */
 export const SURFACES: readonly Surface[] = [
   {
+    name: "Recorded task reports",
+    reach: "Import normalized JSON or uncompressed MCAP with flat JSON task-event topics into the local recorded-evidence workspace.",
+    today: "Local beta, exercised on simulated task recordings. Matches task and asset identity, evaluates reported-state order and capture coverage, compares recordings and exports source hashes. No live device connection, ROS CDR decoding or compressed MCAP support.",
+    tier: "Live",
+    brief: "Reported task states, reviewed locally against explicit criteria.",
+  },
+  {
     name: "Deployed web applications",
     reach: "A real browser drives the running app the way a person would, on the public https address you name: production, staging or a preview deployment.",
-    today: "This is the surface the product was proven on, and every verification so far ran here.",
+    today: "Live browser workflow, with an approved plan and recorded browser evidence.",
     tier: "Live",
     brief: "A real browser on the public address you name: production, staging or a preview deployment.",
   },
@@ -67,7 +74,7 @@ export const SURFACES: readonly Surface[] = [
     brief: "Drones, robots and fleets, through the web panel that runs them.",
   },
   {
-    name: "Device-level checks",
+    name: "Live device access",
     reach: "Reading the device itself rather than its panel: firmware, sensors, telemetry, command receipt, state transitions and timing, on robots, drones and industrial equipment.",
     today: "Next, not built yet. Nothing in the product reads a device directly today. Vraelis verifies defined behaviour against stated requirements; it does not certify safety.",
     tier: "Next",

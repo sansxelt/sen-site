@@ -428,13 +428,10 @@ function AppTopbar({ email, systems, pendingReviews }: { email: string | null; s
         )}
         {/* On phones this collapses to an icon square matching the burger, not a pill around a bare "+"
             text glyph: the glyph sat off-centre in its own padding and read as a stray character. */}
-        {/* "/app" for the same reason the Overview nav item uses it: this component does not know the host,
-            and "/" is the marketing home on every host except app.vraelis.com. ?new=1 opens the composer
-            there (the proxy keeps the query across its /app redirect), so the button does something even
-            when you are already on the Overview. */}
-        <Link href="/app?new=1" className="btn vra-app-connect" aria-label="Start a verification">
+        {/* Choose a local recorded-evidence review or the existing cloud browser workflow. */}
+        <Link href="/new" className="btn vra-app-connect" aria-label="Start a verification">
           <span className="vra-app-connect__i" aria-hidden><Ic d={I.plus} size={15} sw={2.2} /></span>
-          <span className="vra-app-connect__label">Verify a system</span>
+          <span className="vra-app-connect__label">Start verification</span>
         </Link>
         <button ref={menuBtn} onClick={() => setMenu((v) => !v)} aria-label="Account menu" aria-expanded={menu} aria-controls="acct-menu" style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px", borderRadius: 8, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", boxShadow: "var(--shadow-sm)" }}>
           {avatar ? (

@@ -33,6 +33,7 @@
 // /limitations says in one line. What was added is what shipped: the MCP server, the approval link, and the
 // re-check of an approved plan.
 export const LIVE: string[] = [
+  "Local recorded-evidence beta: evaluate task-state reports from JSON or uncompressed MCAP JSON topics, compare recordings and export source hashes. No account or upload required.",
   "One sentence about a deployed web app, turned into a plan a person approves before anything runs",
   "Connected devices such as drones, robots and fleets, checked through the web control panel that runs them",
   "A real browser run on the live app, with steps, screenshots, console errors and failed requests",
@@ -59,8 +60,8 @@ export type DirectionItem = [string, string, Tier];
 // with the true present tense. "The repair reaches your coding agent on its own" left this list too: over
 // MCP and the CLI the repair prompt now goes straight back to whoever asked.
 export const DIRECTION: DirectionItem[] = [
-  ["Device-level checks: firmware, sensors and telemetry read from the device itself",
-    "Not built yet. Today a drone, robot or fleet is checked through the web control panel that runs it, and Vraelis sees only what that panel shows. Nothing reads the device directly.",
+  ["Live device adapters and correlated control-panel, API and device execution",
+    "Not built yet. Browser verification and imported task-report evaluation are separate workflows. Nothing connects directly to hardware or correlates a live browser run with device telemetry. ROS CDR decoding and compressed MCAP are not supported.",
     "Next"],
   ["Native mobile and desktop apps",
     "Not built yet. Today the boundary is what a real browser can open, and a native binary is outside it.",

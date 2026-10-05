@@ -136,5 +136,5 @@ export function v6AppEntry(): string {
  * redirect to the app host, which is the intended destination.
  */
 export function v6ShouldPrefetch(href: string): boolean {
-  return !/^\/(app|checkout)(?:[/?#]|$)/.test(href);
+  return !/^\/(app|checkout|new|verifications)(?:[/?#]|$)/.test(href);
 }

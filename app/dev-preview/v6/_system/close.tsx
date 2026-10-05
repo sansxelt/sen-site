@@ -65,7 +65,7 @@ export function ClosingScene({
 // Main destinations stay visible. Detailed documentation and other solutions are
 // accessible through their indexes; secondary policies remain in a disclosure.
 const COLS: [string, [string, string][]][] = [
-  ["Product", [[`${BASE}/platform`, "Platform"], [`${BASE}/integrations`, "Integrations"], [`${BASE}/agents`, "AI assistants"], [`${BASE}/pricing`, "Pricing"]]],
+  ["Product", [[`${BASE}/platform`, "Platform"], ["/verifications/recorded", "Recorded evidence"], [`${BASE}/integrations`, "Integrations"], [`${BASE}/agents`, "AI assistants"], [`${BASE}/pricing`, "Pricing"]]],
   ["Solutions", [...PRIMARY_SECTORS.map((s): [string, string] => [s.href, s.label]), [SOLUTIONS_HREF, "Explore solutions"]]],
   ["Resources", [[`${BASE}/docs`, "Documentation"], [`${BASE}/developers`, "Developer tools"], [`${BASE}/research`, "Research"], [`${BASE}/changelog`, "Changelog"]]],
   ["Company", [[`${BASE}/company`, "About"], [`${BASE}/contact`, "Contact"], [`${BASE}/partnerships/reddit`, "Reddit partnership"], [`${BASE}/partnerships/bytedance`, "ByteDance partnership"]]],

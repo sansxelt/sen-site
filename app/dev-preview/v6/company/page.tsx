@@ -135,7 +135,7 @@ export default function CompanyPage() {
       <FrameHero
         id="company-hero"
         eyebrow="Company"
-        title="Independent verification for mission software"
+        title="Independent verification for physical-system software"
         sub="Vraelis checks mission apps and web control panels against approved requirements, with recorded evidence for every result."
         primary={{ label: "Talk to us", href: `${BASE}/contact` }}
         secondary={{ label: "Read the README", href: `${BASE}/readme` }}
@@ -154,7 +154,7 @@ export default function CompanyPage() {
           />
           <div className="co-mission__more">
             <p className="co-mission__line">
-              We are focused on defense teams working with mission apps and web control panels. Verification starts with an unclassified simulation or staging build and stays separate from whoever built the software.
+              We focus on the software behind robots, fleets, industrial equipment and defense systems. Our starting point is control-panel behavior and recorded task reports, evaluated independently of whoever built the software.
             </p>
             <EditorialLink href={DEFENSE.href}>How Vraelis works in defense</EditorialLink>
           </div>
@@ -179,7 +179,7 @@ export default function CompanyPage() {
 
       <section className="v6-sec" id="who">
         <div className="v6-wrap">
-          <SectionHead eyebrow="Who it is for" title="Teams responsible for mission software" />
+          <SectionHead eyebrow="Who it is for" title="Teams responsible for physical systems" />
           {/* Each list ends on the page that holds its detail. Under "Built for", the one link card to what is built
               (plan C /company): the live and direction lists live on /platform#current only, never copied here.
               Under "Not for yet", the one line to /limitations every page without a DoesBox carries (plan A1.7). */}

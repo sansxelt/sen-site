@@ -48,6 +48,7 @@ const MENUS: Menu[] = [
     groups: [
       { h: "Platform", links: [
         { t: "Overview", d: "Requirements, execution and evidence", href: BASE + "/platform", pic: EDITORIAL + "robotics.jpg" },
+        { t: "Recorded evidence", d: "Review task reports from JSON or MCAP", href: "/verifications/recorded", pic: EDITORIAL + "robotics.jpg" },
         { t: "Integrations", d: "What each connection actually supplies", href: BASE + "/integrations", pic: "/site/photography/firmware.jpg" },
         { t: "AI assistants", d: "Use Vraelis through MCP", href: BASE + "/agents", pic: "/site/photography/agent.jpg" },
       ] },
@@ -61,7 +62,7 @@ const MENUS: Menu[] = [
   {
     label: "Solutions",
     groups: [
-      { h: "Mission software", links: PRIMARY_SECTORS.filter(s => s.slug !== "enterprise").map(s => ({ t:s.label,d:s.line,href:s.href,pic:s.slug === "defense" ? EDITORIAL + "aviation.jpg" : s.slug === "fleets" ? EDITORIAL + "robotics.jpg" : s.pics.menu })) },
+      { h: "Physical systems", links: PRIMARY_SECTORS.filter(s => s.slug !== "enterprise").map(s => ({ t:s.label,d:s.line,href:s.href,pic:s.slug === "defense" ? EDITORIAL + "aviation.jpg" : s.slug === "fleets" ? EDITORIAL + "robotics.jpg" : s.pics.menu })) },
       { h: "Organizations", links: PRIMARY_SECTORS.filter(s => s.slug === "enterprise").map(s => ({t:s.label,d:s.line,href:s.href,pic:s.slug === "enterprise" ? EDITORIAL + "robotics.jpg" : s.pics.menu})) },
     ],
     foot: { t: "Explore solutions", href: SOLUTIONS_HREF },

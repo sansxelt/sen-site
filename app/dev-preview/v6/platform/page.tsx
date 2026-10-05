@@ -1,3 +1,4 @@
+import { RecordedEntry } from "../_system/recorded-entry";
 import localFont from "next/font/local";
 import { photographHero } from "../_content/photography";
 import { v6meta } from "../_system/meta";
@@ -15,9 +16,9 @@ import "../_system/product.css";
 
 export const metadata = v6meta({
   title: "Platform",
-  description: "Verify mission apps and web control panels against approved requirements. Real browser execution, recorded evidence and the same check after a repair.",
+  description: "Verify software behind robotics, fleets and defense systems. Live control-panel execution and local recorded task-evidence review.",
   path: "/platform",
-  ogTitle: "Mission software verification | Vraelis",
+  ogTitle: "Physical-system software verification | Vraelis",
   ogDescription: "An approved requirement. An observed result. Evidence you can inspect.",
 });
 
@@ -53,8 +54,8 @@ export default function Platform() {
     <div className={`${platformFont.variable} v6-platform`}>
       <FrameHero
         eyebrow="The platform"
-        title="Verify mission software before release"
-        sub="Check mission apps and web control panels against the behavior you require. An approved plan, real browser execution and evidence for the result."
+        title="Verify the software behind physical systems"
+        sub="For robotics, fleets and defense teams. Verify live control panels or evaluate recorded task reports against reviewed criteria, with evidence for each result."
         primary={{ label: "Watch the check", href: "#how-a-check-works" }}
         secondary={{ label: "Start a verification", href: SIGNUP }}
         {...photographHero("groundstation")}
@@ -82,6 +83,7 @@ export default function Platform() {
         </div>
       </section>
 
+      <RecordedEntry />
       <section className="v6-sec v6-pp-sec" id="evidence-scope">
         <div className="v6-wrap">
           <SectionHead eyebrow="Evidence and scope" title="Know what the record proves" lead="A reported state and a physical outcome are different evidence. Every check has a boundary." />

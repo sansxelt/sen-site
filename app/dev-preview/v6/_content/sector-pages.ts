@@ -796,6 +796,6 @@ export const SOLUTIONS_INDEX = {
       "Independent software verification for defense, robotics and institutional teams. Approved requirements, observed behavior and recorded evidence.",
   },
   eyebrow: "Solutions",
-  title: "Mission software deserves an independent check",
-  lead: "Check mission apps and web control panels against the behavior you require. Start with an unclassified simulation or staging build.",
+  title: "Physical systems depend on software that works",
+  lead: "For robotics, fleets, industrial equipment and defense. Start with a live control panel or a task recording, and inspect the evidence against your requirements.",
 } as const;

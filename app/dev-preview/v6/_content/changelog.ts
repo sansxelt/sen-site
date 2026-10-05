@@ -40,6 +40,14 @@ export const entryId = (e: Entry) => `${e.date}-${e.title.toLowerCase().replace(
 
 export const CHANGELOG: Entry[] = [
   {
+    date: "2026-10-05", tag: "go", tagLabel: "Shipped",
+    title: "Recorded task evidence, now in the app",
+    body: [
+      "Evaluate whether a request, service response, device report and control-panel report agree on the same task. Review criteria, inspect source events, compare recordings and export the original source with its SHA-256 hash.",
+      "The local beta accepts normalized JSON and uncompressed MCAP with flat JSON task-event topics. Files stay in your browser. Included examples are simulations, not customer evidence. Live hardware connections, ROS CDR decoding and compressed MCAP are not built.",
+    ], href: "/verifications/recorded", hrefLabel: "Open recorded evidence",
+  },
+  {
     date: "2026-10-03", tag: "go", tagLabel: "Shipped",
     title: "Real pictures, real evidence",
     body: [

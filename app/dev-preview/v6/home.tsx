@@ -3,6 +3,7 @@
 // Homepage: the existing film, editorial chapters with photographs and genuine evidence,
 // the subject orbit, agent setup, dated releases and the closing action.
 // Run evidence is never reconstructed as a product window.
+import { RecordedEntry } from "./_system/recorded-entry";
 import { Opening } from "./_system/opening";
 import { StrikeStory } from "./_system/strike-story";
 import { STRIKE, STRIKE_CHAPTERS, STRIKE_CAPTION } from "./_content/strike";
@@ -19,6 +20,7 @@ export default function Home() {
     <>
       <Opening />
       <StrikeStory record={STRIKE} chapters={STRIKE_CHAPTERS} caption={STRIKE_CAPTION} />
+      <RecordedEntry />
       <Orbit />
       <AgentsBand />
       <ChangelogRow />
