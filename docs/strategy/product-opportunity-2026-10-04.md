@@ -20,6 +20,7 @@ This audit does not establish current production migration state, a working fres
 
 | Product | What its source currently advertises | Implication for Vraelis |
 | --- | --- | --- |
+| [Palantir Ontology](https://www.palantir.com/docs/foundry/ontology/overview/) and [AIP Evals](https://www.palantir.com/docs/foundry/aip-evals/overview/) | Operational objects/links/actions, governed workflows, action test runs, function tests and AI evaluations | A general operational graph or governed action/evaluation layer would collide with an established platform. See the linked follow-up assessment. |
 | [mabl](https://www.mabl.com/) | An “independent verification layer between build and release,” web/mobile/API workflows, and requirements-to-results evidence | Independence, critical workflows and evidence are already direct competitor positioning. |
 | [TestSprite](https://www.testsprite.com/) | Real-browser and live-API execution; code/PRD context; failure evidence and suggested fixes; CLI/MCP; scheduled and PR-triggered runs | The agent-to-verifier-to-repair loop and testing the running app are already crowded. |
 | [Momentic](https://momentic.ai/) | Plain-English tests, recordings, repair and maintenance agents, application context, and a separate reviewer for AI action outcomes | Natural language, fresh review and screenshots are not defensible alone. |
@@ -31,7 +32,7 @@ This audit does not establish current production migration state, a working fres
 | [Foxglove](https://foxglove.dev/) | Live/recorded robotics data, MCAP/ROS tooling, custom panels, SDK/API/webhooks and deployment flexibility | Robotics visualization and telemetry already have specialized suppliers. Integrating evidence is a more plausible first move than replacing them. |
 | [Applied Intuition](https://www.appliedintuition.com/) | Vehicle intelligence, autonomy and physical-AI tooling across automotive and defense | A full simulator/physical-system verification strategy means entering a different, technically demanding market. |
 
-Palantir's AIP page returned essentially a client-rendered shell, and the requested Anduril Lattice URL redirected to a shell. They were not usable feature evidence in this review and are not scored as absent competitors.
+The initial Palantir AIP and Anduril Lattice marketing-page requests returned client-rendered shells. A subsequent official-documentation review found substantial Palantir Ontology, action-testing and AIP Evals capabilities. See [Palantir Ontology and market focus](palantir-ontology-and-market-focus-2026-10-04.md) for the sourced comparison and the recommendation to keep access broad while testing SaaS release workflows first. Anduril was not scored as an absent competitor.
 
 ### Price pressure
 
