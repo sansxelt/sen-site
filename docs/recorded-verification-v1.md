@@ -13,7 +13,7 @@ Open `/verifications/recorded` in the Vraelis app. This local tool evaluates rep
 
 ## Supported input
 
-Download the format example in the workspace. Version 1 supports JSON only: at most 1 MB, 2,000 events, 100 coverage intervals and 20 unchanged assets. MCAP, ROS bag files and live connectors require adapters that are not included in this version.
+Download the format example in the workspace. Version 1 supports UTF-8 JSON only (an optional byte-order mark is retained for hashing): at most 1 MB, 2,000 events, 100 coverage intervals and 20 unchanged assets. MCAP, ROS bag files and live connectors require adapters that are not included in this version.
 
 ```json
 {

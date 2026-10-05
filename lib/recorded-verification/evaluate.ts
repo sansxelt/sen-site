@@ -21,7 +21,7 @@ export const MAX_RECORDING_BYTES = 1_000_000;
 export function parseRecording(raw: string): Recording {
   if (new TextEncoder().encode(raw).length > MAX_RECORDING_BYTES) throw new Error("Recordings must be smaller than 1 MB.");
   let x: unknown;
-  try { x = JSON.parse(raw); } catch { throw new Error("Use a valid JSON recording. Download the example for the supported format."); }
+  try { x = JSON.parse(raw.replace(/^\uFEFF/, "")); } catch { throw new Error("Use a valid JSON recording. Download the example for the supported format."); }
   if (!obj(x) || x.schemaVersion !== 1 || x.clock !== "unix-ms" || !text(x.runId) || !text(x.buildId)) throw new Error("The recording needs schemaVersion 1, a run ID, a build ID and clock unix-ms.");
   if (!obj(x.window) || !time(x.window.startMs) || !time(x.window.endMs) || x.window.endMs < x.window.startMs) throw new Error("The recording window must have valid start and end times in milliseconds.");
   const startMs = x.window.startMs, endMs = x.window.endMs;

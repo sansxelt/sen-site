@@ -37,8 +37,8 @@ export function RecordedWorkspace() {
   async function importFile(e: ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]; e.target.value = ""; if (!f) return;
     const sequence = ++importSequence.current;
-    if (f.size > MAX_RECORDING_BYTES) { setError("Recordings must be smaller than 1 MB."); return; }
-    try { const raw = await f.text(); if (sequence === importSequence.current) load(raw, f.name); } catch { setError("The file could not be read. Try a JSON file from your device."); }
+    if (f.size > MAX_RECORDING_BYTES) { setLoaded(null); setResult(null); setApproved(false); setError("Recordings must be smaller than 1 MB."); return; }
+    try { const raw = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(await f.arrayBuffer()); if (sequence === importSequence.current) load(raw, f.name); } catch { if (sequence === importSequence.current) { setLoaded(null); setResult(null); setApproved(false); setError("The file could not be read. Use a UTF-8 JSON recording."); } }
   }
   function run() {
     if (!loaded || !approved) return;
