@@ -1,8 +1,7 @@
 "use client";
 
-// Homepage: cinematic opening, three focus areas, evaluated recording example,
+// Homepage: cinematic opening, three focus areas,
 // the app replay, engineering resources and a direct product entry.
-import { RecordedEntry } from "./_system/recorded-entry";
 import { Opening } from "./_system/opening";
 import { StrikeStory } from "./_system/strike-story";
 import { STRIKE, STRIKE_CHAPTERS, STRIKE_CAPTION } from "./_content/strike";
@@ -17,7 +16,6 @@ export default function Home() {
     <div className="home-page">
       <Opening />
       <PhysicalSystems />
-      <RecordedEntry homepage />
       <StrikeStory record={STRIKE} chapters={STRIKE_CHAPTERS} caption={STRIKE_CAPTION} />
       <EngineeringEntry />
       <HomepageClose />
