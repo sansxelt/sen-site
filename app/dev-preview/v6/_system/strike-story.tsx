@@ -11,7 +11,7 @@ export function StrikeStory({ record }: { record: StrikeRecord; chapters: Chapte
       <div className="v6-wrap">
         <div className="v6-story__heading">
           <h2 id="v6-story-h" className="v6-story__label">One confirmation.<br />Two contacts cleared.</h2>
-          <p className="v6-story__intro">The browser workflow finds mistakes in an operator’s control panel. In this recorded simulation, confirming T-1 also cleared a civilian contact. It shows what the panel did; the recording workflow compares supplied reports across sources.</p>
+          <p className="v6-story__intro">In this recorded control-panel simulation, confirming one contact also cleared a civilian contact. Watch the plan, recorded browser activity and finding in Vraelis.</p>
         </div>
         <MissionDemo />
       </div>

@@ -1,15 +1,12 @@
 "use client";
 
-// Homepage: the existing film, editorial chapters with photographs and genuine evidence,
-// the subject orbit, agent setup, dated releases and the closing action.
-// Run evidence is never reconstructed as a product window.
+// Homepage: cinematic opening, three focus areas, evaluated recording example,
+// the app replay, engineering resources and a direct product entry.
 import { RecordedEntry } from "./_system/recorded-entry";
 import { Opening } from "./_system/opening";
 import { StrikeStory } from "./_system/strike-story";
 import { STRIKE, STRIKE_CHAPTERS, STRIKE_CAPTION } from "./_content/strike";
-import { AgentsBand, ChangelogRow } from "./_system/home-bands";
-import { Orbit } from "./_system/orbit";
-import { ClosingScene } from "./_system/close";
+import { PhysicalSystems, EngineeringEntry, HomepageClose } from "./_system/homepage-sections";
 import { useMobileMotion } from "./_system/mobile-motion";
 
 export default function Home() {
@@ -17,14 +14,13 @@ export default function Home() {
   // requires it, and it is a no-op for parts that are not present.
   useMobileMotion();
   return (
-    <>
+    <div className="home-page">
       <Opening />
-      <RecordedEntry />
+      <PhysicalSystems />
+      <RecordedEntry homepage />
       <StrikeStory record={STRIKE} chapters={STRIKE_CHAPTERS} caption={STRIKE_CAPTION} />
-      <Orbit />
-      <AgentsBand />
-      <ChangelogRow />
-      <ClosingScene />
-    </>
+      <EngineeringEntry />
+      <HomepageClose />
+    </div>
   );
 }

@@ -1,24 +1,11 @@
 "use client";
 
-/* THE HOMEPAGE BANDS (2026-10-01): the statement, the agents band and the changelog row, plus the proof band
-   /platform uses.
-
-   THE STATEMENT is the one sentence the page stops for, revealed word by word as it crosses the screen
-   (scale.com's "90% of..." card, adapted: we have no customer number to state, so it states the problem and
-   the answer instead). It needs no evidence beyond the product, because each clause is a thing the product
-   does, in the order it does them: the agent says done, a person approves the plan, Vraelis checks the live
-   product. (It said "a person signs off" last, after the check, until 2026-10-01; nothing runs before the
-   approval.)
-
-   THE AGENTS BAND shows the three real ways a coding agent reaches Vraelis, in the CLI's own words
-   (cli/vraelis.mjs usage) and the MCP tools' own names (lib/mcp/tools.ts).
-
-   DARK GROUNDS (2026-10-02). Every band that declares data-nav-dark also carries .v6-dark on the same line
-   (scripts/design01-inc5-verify.ts). v6.css drops the top padding of a .v6-dark section that follows another
-   one, and these bands follow each other, so each band's own rhythm lives on its inner box, where that rule
-   cannot reach it. */
+/* Shared statement, agent entry, changelog and platform proof components.
+   The homepage uses only Statement; its physical-system illustration is conceptual.
+   Word revelation follows native scroll and preserves the full accessible sentence. */
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useScrollProgress } from "./progress";
 import { CTA, EditorialLink } from "./ui";
 import { V6_BASE, V6_DOCS } from "@/lib/v6-routes";
@@ -42,7 +29,7 @@ function useEntryMotion() {
   return root;
 }
 
-const STATEMENT = "Software verification for defense, infrastructure and robotics. Find failures in control software that internal systems can miss.";
+const STATEMENT = "Critical software needs an independent view. Vraelis finds where control software and device reports disagree.";
 
 /* The words of a language that does not space them (Japanese), found by the browser's own word segmenter, with
    punctuation riding on the word before it. Cut by character instead, a phrase too long for a phone's line
@@ -97,6 +84,13 @@ export function Statement({ scrollRoot }: { scrollRoot?: RefObject<HTMLElement |
   return (
     <section ref={root} className="v6-stm v6-dark" aria-label="What Vraelis does" data-nav-dark data-nav-theme="dark">
       <div className="v6-stm__card">
+        <div className="v6-stm__illustration" aria-hidden="true">
+          <div className="v6-stm__visual">
+            <div className="v6-stm__plane v6-stm__plane--photo"><Image src="/home/menu/editorial/robotics.jpg" alt="" width={1600} height={900} sizes="(max-width: 560px) 75vw, 440px" loading="lazy" /><span>The device</span></div>
+            <div className="v6-stm__plane v6-stm__plane--trace"><svg viewBox="0 0 440 260" fill="none"><path d="M32 190H110V112H205V72H316V164H408M32 218H110V148H205V104H316V196H408" stroke="currentColor" strokeWidth="1.2" /><path d="M110 32V230M205 32V230M316 32V230" stroke="currentColor" strokeOpacity=".25" /><rect x="94" y="96" width="32" height="32" stroke="currentColor" /><rect x="189" y="56" width="32" height="32" stroke="currentColor" /><rect x="300" y="148" width="32" height="32" stroke="currentColor" /></svg><span>The reported state</span></div>
+            <div className="v6-stm__plane v6-stm__plane--request"><svg viewBox="0 0 440 260" fill="none"><rect x="32" y="48" width="118" height="64" stroke="currentColor" /><rect x="290" y="148" width="118" height="64" stroke="currentColor" /><path d="M150 80H220V180H290M32 140H150M32 160H112M290 76H408M290 96H362" stroke="currentColor" /><path d="m277 172 13 8-13 8" stroke="currentColor" /></svg><span>The requested task</span></div>
+          </div>
+        </div>
         <p className="v6-stm__t">
           <span ref={src} className="v6-stm__src">{STATEMENT}</span>
           <span aria-hidden data-no-translate>

@@ -36,8 +36,8 @@ export const metadata: Metadata = {
   applicationName: "Vraelis",
   category: "technology",
   keywords: [
-    "verification", "web app testing", "live app verification", "real browser testing",
-    "acceptance testing", "deployment verification", "MCP", "AI coding assistants",
+    "physical systems", "control software", "task reports", "robotics software",
+    "defense software", "infrastructure software", "recorded evidence",
   ],
   authors: [{ name: "Vraelis" }],
   creator: "Vraelis",

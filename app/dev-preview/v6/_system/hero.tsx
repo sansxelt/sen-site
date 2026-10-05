@@ -71,6 +71,7 @@ export function Hero() {
           <span className="v6-mask"><span className="v6-mask__in">{HEADLINE}</span></span>
         </h1>
         <p className="v6-h__line">{HERO_LINE}</p>
+        <a className="v6-h__explore" href="#physical-systems">Explore Vraelis <span aria-hidden>↓</span></a>
         <span id="v6-h-film-context" className="v6-h__context">Industrial robotics and public-domain military training footage illustrate systems whose software matters. Film sources: vraelis.com/home/systems-film-sources.txt.</span>
         <button type="button" className="v6-h__pause" onClick={toggle} aria-label={playing ? "Pause the film" : "Play the film"}>
           {playing
