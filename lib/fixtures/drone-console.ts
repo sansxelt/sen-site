@@ -32,46 +32,46 @@ export function droneConsoleHtml(mode: DroneMode): string {
 <title>Fieldline Fleet Console</title>
 <style>
   :root {
-    --bg:#0b0e13; --bg2:#10141b; --panel:#141922; --panel2:#181e28; --line:#232b37; --line2:#2e3846;
-    --fg:#eef1f5; --fg2:#aeb6c2; --fg3:#7d8694; --go:#3fcf8e; --warn:#f0b34e; --stop:#ff7056; --blue:#62a8ff; --cyan:#46d1d8;
+    --bg:#090909; --bg2:#111111; --panel:#141414; --panel2:#1b1b1b; --line:#303030; --line2:#444444;
+    --fg:#fafafa; --fg2:#bcbcbc; --fg3:#999999; --go:#eeeeee; --warn:#dddddd; --stop:#fafafa; --blue:#f5f5f5; --cyan:#eeeeee;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: radial-gradient(1200px 500px at 70% -10%, #16202e 0%, var(--bg) 60%); color: var(--fg);
+  body { margin: 0; background: radial-gradient(1200px 500px at 70% -10%, #161616 0%, var(--bg) 60%); color: var(--fg);
     font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; min-height: 100vh; }
-  .top { display: flex; align-items: center; gap: 22px; padding: 12px 22px; border-bottom: 1px solid var(--line); background: rgba(11,14,19,.7); }
+  .top { display: flex; align-items: center; gap: 22px; padding: 12px 22px; border-bottom: 1px solid var(--line); background: #090909; }
   .brand { display: flex; align-items: center; gap: 9px; font-weight: 700; letter-spacing: .01em; }
   .brand svg { color: var(--cyan); }
   .nav { display: flex; gap: 4px; }
-  .nav a { color: var(--fg3); text-decoration: none; padding: 6px 10px; border-radius: 8px; font-size: 13px; }
+  .nav a { color: var(--fg3); text-decoration: none; padding: 6px 10px; border-radius: 4px; font-size: 13px; }
   .nav a.on { color: var(--fg); background: var(--panel2); }
-  .badge { margin-left: auto; font-size: 11.5px; color: var(--warn); border: 1px solid rgba(240,179,78,.35); border-radius: 999px; padding: 4px 10px; white-space: nowrap; }
+  .badge { margin-left: auto; font-size: 11.5px; color: var(--warn); border: 1px solid #444444; border-radius: 999px; padding: 4px 10px; white-space: nowrap; }
   .wrap { display: grid; grid-template-columns: 230px minmax(0,1fr) 300px; gap: 14px; padding: 16px 22px 10px; max-width: 1400px; margin: 0 auto; }
   @media (max-width: 1080px) { .wrap { grid-template-columns: 1fr; } }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; }
-  .hd { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--line); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--fg3); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; }
+  .hd { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--line); font-size: 11.5px; letter-spacing: 0; color: var(--fg3); }
   .fleet { list-style: none; margin: 0; padding: 6px; }
-  .fleet li { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 10px; border-radius: 10px; }
+  .fleet li { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 10px; border-radius: 4px; }
   .fleet li.sel { background: var(--panel2); outline: 1px solid var(--line2); }
   .fleet .id { font-weight: 650; } .fleet .sub { display: block; font-size: 12px; color: var(--fg3); }
-  .pill { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: #1c2430; }
+  .pill { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: #222222; }
   .s-Flying { color: var(--blue); } .s-Returning, .s-Landing { color: var(--warn); } .s-Landed, .s-Docked { color: var(--go); } .s-Stopped { color: var(--stop); }
-  .ico { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: #1a2230; color: var(--fg2); }
+  .ico { width: 28px; height: 28px; border-radius: 4px; display: grid; place-items: center; background: #202020; color: var(--fg2); }
   .mapcard { overflow: hidden; }
-  .map { position: relative; height: 460px; background: #0d131b; }
+  .map { position: relative; height: 460px; background: #101010; }
   .map > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
   .craft svg { display: block; filter: drop-shadow(0 0 8px currentColor); }
   .craft { position: absolute; transform: translate(-50%,-50%); transition: left 1.3s cubic-bezier(.4,0,.2,1), top 1.3s cubic-bezier(.4,0,.2,1); }
-  .craft .lab { position: absolute; left: 22px; top: -6px; font-size: 11px; font-weight: 650; background: rgba(13,19,27,.85); border: 1px solid var(--line2); padding: 2px 6px; border-radius: 6px; white-space: nowrap; }
+  .craft .lab { position: absolute; left: 22px; top: -6px; font-size: 11px; font-weight: 650; background: rgba(16,16,16,.85); border: 1px solid var(--line2); padding: 2px 6px; border-radius: 6px; white-space: nowrap; }
   .legend { display: flex; gap: 16px; padding: 10px 14px; border-top: 1px solid var(--line); font-size: 12px; color: var(--fg3); }
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px; }
-  .field { background: var(--bg2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  .field { background: var(--bg2); border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; }
   .field span { display: block; font-size: 11.5px; color: var(--fg3); }
   .field strong { font-size: 19px; font-weight: 650; letter-spacing: -.01em; }
   .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 14px 14px; }
-  button { font: 600 13.5px/1 inherit; border-radius: 10px; padding: 11px 12px; cursor: pointer; border: 1px solid var(--line2); background: var(--panel2); color: var(--fg); }
+  button { font: inherit; font-weight: 600; border-radius: 4px; padding: 11px 12px; cursor: pointer; border: 1px solid var(--line2); background: var(--panel2); color: var(--fg); }
   button:hover { border-color: var(--fg3); }
-  button.primary { background: var(--fg); color: #0b0e13; border-color: var(--fg); }
-  button.stop { color: var(--stop); border-color: rgba(255,112,86,.45); }
+  button.primary { background: var(--fg); color: #090909; border-color: var(--fg); }
+  button.stop { color: var(--stop); border-color: #888888; }
   .toast { margin: 0 14px 14px; min-height: 20px; font-size: 12.5px; color: var(--go); }
   .log { list-style: none; margin: 0; padding: 10px 14px 14px; font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--fg2); }
   .log li { padding: 5px 0; border-bottom: 1px dashed var(--line); } .log li:last-child { border-bottom: 0; }
@@ -94,21 +94,21 @@ export function droneConsoleHtml(mode: DroneMode): string {
     <div class="hd"><span id="map-h">Survey area, Field 3</span><span>Live map</span></div>
     <div class="map" id="map">
       <svg viewBox="0 0 800 380" preserveAspectRatio="none" aria-hidden="true">
-        <defs><pattern id="g" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#18222e" stroke-width="1"/></pattern></defs>
+        <defs><pattern id="g" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#222222" stroke-width="1"/></pattern></defs>
         <rect width="800" height="460" fill="url(#g)"/>
-        <g fill="none" stroke="#1e2c3b" stroke-width="1.4">
+        <g fill="none" stroke="#333333" stroke-width="1.4">
           <path d="M-20 300 C 120 250, 220 330, 380 280 S 640 200, 820 240"/><path d="M-20 250 C 140 200, 240 280, 400 230 S 650 150, 820 190"/>
           <path d="M-20 200 C 150 150, 260 230, 420 180 S 660 100, 820 140"/><path d="M-20 150 C 160 100, 280 180, 440 130 S 670 50, 820 90"/>
         </g>
-        <rect x="430" y="60" width="300" height="170" rx="10" fill="rgba(98,168,255,.05)" stroke="rgba(98,168,255,.35)" stroke-dasharray="6 6"/>
-        <text x="442" y="80" fill="#62a8ff" font-size="12" font-family="system-ui">Field 3</text>
-        <path d="M605 130 C 480 170, 260 250, 118 312" fill="none" stroke="rgba(70,209,216,.55)" stroke-width="2" stroke-dasharray="4 7"/>
-        <circle cx="110" cy="318" r="26" fill="rgba(63,207,142,.08)" stroke="rgba(63,207,142,.55)"/>
-        <text x="103" y="323" fill="#3fcf8e" font-size="14" font-weight="700" font-family="system-ui">H</text>
-        <text x="80" y="362" fill="#7d8694" font-size="12" font-family="system-ui">Pad A</text>
-        <circle cx="690" cy="318" r="22" fill="rgba(63,207,142,.06)" stroke="rgba(63,207,142,.35)"/>
-        <text x="683" y="323" fill="#3fcf8e" font-size="13" font-weight="700" font-family="system-ui">H</text>
-        <text x="664" y="362" fill="#7d8694" font-size="12" font-family="system-ui">Pad B</text>
+        <rect x="430" y="60" width="300" height="170" rx="10" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.35)" stroke-dasharray="6 6"/>
+        <text x="442" y="80" fill="#f5f5f5" font-size="12" font-family="system-ui">Field 3</text>
+        <path d="M605 130 C 480 170, 260 250, 118 312" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="2" stroke-dasharray="4 7"/>
+        <circle cx="110" cy="318" r="26" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.55)"/>
+        <text x="103" y="323" fill="#eeeeee" font-size="14" font-weight="700" font-family="system-ui">H</text>
+        <text x="80" y="362" fill="#999999" font-size="12" font-family="system-ui">Pad A</text>
+        <circle cx="690" cy="318" r="22" fill="rgba(255,255,255,.06)" stroke="rgba(255,255,255,.35)"/>
+        <text x="683" y="323" fill="#eeeeee" font-size="13" font-weight="700" font-family="system-ui">H</text>
+        <text x="664" y="362" fill="#999999" font-size="12" font-family="system-ui">Pad B</text>
       </svg>
       <div id="crafts"></div>
     </div>

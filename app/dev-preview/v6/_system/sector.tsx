@@ -106,8 +106,8 @@ function Problem({ page }: { page: SectorPage }) {
 
 /** The fixture's two modes, opened directly. Plain links: an API route is not a page to prefetch. */
 const FIXTURE_LINKS = [
-  { label: "Open the broken console", href: "/api/fixtures/drone?mode=broken" },
-  { label: "Open the fixed console", href: "/api/fixtures/drone?mode=fixed" },
+  { label: "Open the broken console", href: "/api/fixtures/drone?mode=broken&ui=monochrome-20261005" },
+  { label: "Open the fixed console", href: "/api/fixtures/drone?mode=fixed&ui=monochrome-20261005" },
 ];
 
 /** Below 900px, in place of the embedded fixture: a capture of the broken console (public/solutions, CREDITS.md
@@ -116,9 +116,9 @@ function FixtureNarrow() {
   return (
     <>
       <MediaPanel
-        src="/solutions/fieldline-broken.png" w={700} h={1138} sizes="(max-width: 460px) 100vw, 420px"
+        src="/solutions/fieldline-current-20261005.png" w={656} h={575} sizes="(max-width: 460px) 100vw, 420px"
         alt="Fieldline in its broken mode after pressing Return home for SKY-01: SKY-01 still shows Status Flying, the panel says Return home sent to SKY-01, and the command log shows SKY-10 returning, landing and landed at Pad B."
-        bar={{ left: "vraelis.com/api/fixtures/drone?mode=broken", right: "Captured 2026-10-02, not from the run." }}
+        bar={{ left: "Fieldline simulation", right: "Current console, captured October 4, 2026." }}
       />
       <div className="v6-ff__links">
         {FIXTURE_LINKS.map((l) => (
