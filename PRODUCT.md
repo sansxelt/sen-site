@@ -1,5 +1,33 @@
 # Product
 
+## Current direction, October 4, 2026
+
+Vraelis focuses on software behind physical systems in Defense, Infrastructure
+and Robotics. SDKs, APIs and developer operations support these areas; ordinary
+digital workflows remain available without being the main marketing position.
+The older browser-product descriptions below document that workflow and do not
+define the full current product.
+
+Two separate workflows are available: local evaluation of supported recorded
+task reports, and human-approved browser execution on reachable test panels.
+The recording beta accepts normalized JSON and a limited uncompressed MCAP JSON
+subset. It evaluates supplied task/asset identity, deadlines, reported states,
+declared capture coverage and changes to another asset. Missing evidence is
+inconclusive. Files stay in the browser; there are no live device connections or
+cloud recording history. Neither workflow establishes physical ground truth or
+certifies safety.
+
+Current visual direction: black and white, Manrope, cinematic real footage,
+centered “Know your systems work.” and a native-scroll opening. The product
+explanation is concrete: find where control software and device reports
+disagree. Mark examples as simulated; preserve original dated run evidence.
+Do not restore the retired emerald palette, Geist typography or web-app-only
+social description from older sections below.
+
+The competitive gap remains a hypothesis, not proof of an empty market. See
+[the market thesis](docs/strategy/market-and-company-thesis-2026-10-04.md) and
+[the website/workflow review](docs/strategy/website-and-workflow-review-2026-10-04.md).
+
 <!-- impeccable:product-schema 1 -->
 
 ## Platform

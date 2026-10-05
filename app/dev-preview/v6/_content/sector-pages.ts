@@ -52,7 +52,7 @@ export type SectorLink = { label: string; href: string };
 
 /** The page sections in the order the page shows them (plan T2; S2 orders a few pages differently on purpose).
  *  "stance" is defense only: Vraelis's position, directly after the record it rests on. */
-export type SectorSection = "facts" | "problem" | "fixture" | "record" | "stance" | "ci" | "examples" | "band" | "limits" | "faq" | "cross";
+export type SectorSection = "facts" | "problem" | "recorded" | "fixture" | "record" | "stance" | "ci" | "examples" | "band" | "limits" | "faq" | "cross";
 
 /** How the hero shows its picture. The registry (sectors.ts) says which kind and holds the file paths; this is the
  *  page copy for it: alt text, object-position, the panel's bar, and the credit for a capture made now. */
@@ -154,15 +154,15 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     meta: {
       title: "Defense and national security",
       description:
-        "An independent check of mission software before anyone relies on it: a real browser on an unclassified simulation or staging build, and a record of every step.",
+        "Find disagreements in mission software: inspect supplied task reports or exercise an unclassified simulation control panel, with evidence for each result.",
     },
     hero: {
       eyebrow: "Defense and national security",
       // The position, from the top (founder, 2026-10-02). The sub makes the page's one approval statement.
-      title: "Verify mission software before deployment",
-      sub: "Give mission consoles an independent check. Vraelis works your simulation or staging build in a real browser and records each action and result.",
+      title: "Find failures before the mission",
+      sub: "For defense software teams and system integrators. Compare supplied task reports, or exercise an unclassified simulation console. See where the reported result differs from what should happen.",
       primary: { label: "Talk to us", href: contact("defense") },
-      secondary: { label: "See the real check", href: "#record" },
+      secondary: { label: "Explore recorded reports", href: "#recorded-evidence" },
       art: {
         kind: "scene",
         alt: "Larkspur, a simulated mission console Vraelis built, after the operator confirmed T-1: the civilian bus T-3 also shows Cleared to engage.",
@@ -177,7 +177,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
         credit: "Larkspur demo fixture. Captured 2026-10-02, not from the run.",
       },
     },
-    sections: ["facts", "problem", "record", "stance", "examples", "band", "limits", "faq", "cross"],
+    sections: ["problem", "recorded", "record", "facts", "stance", "examples", "band", "limits", "faq", "cross"],
     facts: {
       items: [
         { label: "What it checked", value: "Confirming T-1 clears only T-1, and it holds after a reload" },
@@ -194,12 +194,12 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     },
     problem: {
       eyebrow: "The problem",
-      title: "Acceptance checks the demo, not the build",
+      title: "A success message is not the whole result",
       items: [
-        { title: "The build changed after the demo", body: "A walkthrough proves the version that was shown. Vraelis checks the address you name, when you ask, and records the address and the time." },
+        { title: "The sources disagree", body: "A mission panel can report completion while a service or device reports something else. Compare the supplied reports for the same task and asset." },
         // What a run keeps is said once, in the stance's third card.
-        { title: "A screenshot is not a record", body: "A passing screen says nothing about the step before it, or about what the page shows after a reload." },
-        { title: "The fix is never checked again", body: "After a fix, the same approved plan runs again. The re-check is its own record and points back at the run it repeats." },
+        { title: "The wrong asset changes", body: "The intended task can look successful while a second asset changes too. Review the expected behavior and the observations for both." },
+        { title: "The evidence ends too soon", body: "A recording that stops before the required result cannot establish that it happened. Vraelis identifies missing coverage rather than treating it as success." },
       ],
     },
     record: {
@@ -235,11 +235,11 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     band: {
       kind: "cards",
       eyebrow: "How it fits",
-      title: "Built for the simulation, not the aircraft",
+      title: "Start with reports or a simulation",
       // Two cards: the third, "The record stays in order", is the stance's third card now.
       cards: [
-        { title: "Simulation and staging", body: "Vraelis works only through a web page in a browser. Point it at a simulation or a staging build; it has no connection to hardware." },
-        { title: "Reachable over https", body: "The console needs a public https address, such as a staging build with a test sign-in. Private networks and localhost are refused before a run starts." },
+        { title: "Recorded reports", body: "The local beta compares supported JSON or MCAP task reports against criteria you review. Supplied files stay in your browser. It does not connect to live hardware." },
+        { title: "Simulation consoles", body: "The separate browser workflow exercises an approved test panel. It requires a public HTTPS address and test credentials; private-network execution is not available." },
       ],
     },
     limits: {
@@ -247,6 +247,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
       eyebrow: "Limits",
       title: "What it does, and what it does not",
       does: [
+        "Compare supplied task reports and identify missing evidence in the local beta.",
         "Checks what an operator can do in a web console, in a real browser.",
         "Writes a plan from your sentence before anything runs.",
         "Records every step and the screen, and writes a repair prompt.",
@@ -267,7 +268,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
       items: [
         {
           q: "How do we start?",
-          a: "Send a staging or simulation address and one sentence through the form or to sales@vraelis.com. You read the plan before anything runs.",
+          a: "Try the local recording example, or discuss an unclassified simulation or staging build with us. For browser execution, you review and approve the plan before anything runs.",
           link: { label: "Open the form", href: contact("defense") },
         },
         {
@@ -276,14 +277,12 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
           link: { label: "See pricing", href: `${BASE}/pricing` },
         },
         {
-          // The Department of War's FASCSA order (upheld by the D.C. Circuit on 2026-09-25) bars contractors from using
-          // Anthropic products in performing its contracts; Vraelis runs on Claude. Said plainly, before anyone asks.
-          q: "Can we use it for US Department of War contract work?",
-          a: "Not yet. That department has barred Anthropic products from its contract work, and Vraelis is built on Anthropic's models.",
+          q: "Can we use it in a restricted environment?",
+          a: "Vraelis does not offer a classified, air-gapped or government-authorized deployment. Do not send restricted material to the hosted workflow. Review your environment and supplier requirements before adopting it.",
         },
         {
           q: "Where does our data go?",
-          a: "Into your Vraelis workspace, through three services in the United States: Anthropic writes the plan from the address and the sentence, Browserbase runs the browser, and Supabase stores the record. The full list is on the subprocessors page.",
+          a: "The recording beta evaluates files locally in your browser. The separate hosted browser workflow uses Anthropic to write the plan, Browserbase to run the browser and Supabase to store the record. See the subprocessors page for hosted data handling.",
           link: { label: "Subprocessors", href: `${BASE}/subprocessors` },
         },
       ],
@@ -302,21 +301,21 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     meta: {
       title: "Robotics, drones and fleets",
       description:
-        "Check the web panel that runs your fleet: press the operator action in a real browser and read what the panel reports afterwards, including after a reload.",
+        "Find disagreements between robot task reports and control software. Inspect supplied recordings or exercise a simulation panel, with the source evidence alongside each result.",
     },
     hero: {
       eyebrow: "Robotics, drones and fleets",
-      title: "Verify the software behind your fleet",
-      sub: "Verify robot task reports and control-panel workflows. Review recorded evidence today; use the API and developer tools for supported cloud workflows. Live robot adapters are not built.",
+      title: "Find where the task and the reports disagree",
+      sub: "For robotics developers and fleet integrators. Compare control-panel, service and device reports for the same task. Inspect wrong-asset changes, missing completion reports and gaps in the supplied evidence.",
       primary: { label: "Talk to us", href: contact("fleets") },
-      secondary: { label: "Try the fixture", href: "#fixture" },
+      secondary: { label: "Explore recorded reports", href: "#recorded-evidence" },
       // Portrait 50% 75% (public/site/hero/CREDITS.md, "Using them"): at 50% the drone touches the eyebrow on short
       // phone frames. The light in the render is dusk; no sun is in the picture.
       art: { kind: "scene", alt: "Our drone over a field at dusk, a render made for Vraelis.", position: "50% 55%", portraitPosition: "50% 75%" },
     },
     // No FactRow: nothing on this page quotes a record of its own yet (plan E1: when the Fieldline check is run and
     // approved, its record replaces the Larkspur one below and a FactRow quoting it goes under the hero).
-    sections: ["problem", "fixture", "record", "examples", "band", "limits", "cross"],
+    sections: ["problem", "recorded", "fixture", "record", "examples", "band", "limits", "cross"],
     problem: {
       eyebrow: "The problem",
       title: "Acknowledged is not executed",
@@ -352,11 +351,11 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     band: {
       kind: "cards",
       eyebrow: "How it fits",
-      title: "Through the panel, today",
+      title: "Two ways to inspect the reported result",
       cards: [
-        { title: "What the panel shows", body: "Vraelis reads what the panel shows after the action: the status, the location and the log. Reading the device itself is not built yet." },
+        { title: "Compare supplied reports", body: "Import supported JSON or MCAP task reports and review the task, asset and completion window. The local beta compares reported states; it cannot establish physical ground truth." },
         { title: "Review the plan", body: "Nothing presses a button until someone on your team approves the exact plan. An API key cannot approve one." },
-        { title: "Simulation first", body: "Point it at a simulator or a staging panel first. The panel needs a public https address and a test sign-in." },
+        { title: "Exercise the simulation panel", body: "The separate browser workflow reads the panel after an approved action. It needs a public HTTPS test target. Live robot connections are not available." },
       ],
     },
     limits: {
@@ -364,6 +363,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
       eyebrow: "Limits",
       title: "What it does, and what it does not",
       does: [
+        "Compare supplied task reports, capture coverage and changes to another asset.",
         "Presses the operator action in the panel, in a real browser.",
         "Reads what the panel reports afterwards, including after a reload.",
         "Records every step and the screen, and writes a repair prompt.",
@@ -381,7 +381,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
       { title: "What it can reach", body: "Web apps, and devices through the panels that run them.", href: `${BASE}/platform#coverage`, image: "/site/photography/client.jpg" },
       LARKSPUR_RECORD,
     ],
-    closing: { title: "Point it at your fleet's panel", action: { label: "Talk to us", href: contact("fleets") } },
+    closing: { title: "Bring the task and the evidence", action: { label: "Talk to us", href: contact("fleets") } },
   },
 
   /* ──────────────────────────────────────────────────────────────────────────────────────── commerce (P1) ── */

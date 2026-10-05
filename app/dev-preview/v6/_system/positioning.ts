@@ -18,7 +18,7 @@ export const SUPPORT =
 /** The one line under the headline over the homepage film. Short on purpose (founder, 2026-10-01: the
  *  opening should read like Anduril, Palantir and axiom, a headline and a line, not a paragraph). SUPPORT
  *  stays the fuller sentence for the welcome email and anywhere there is room to explain. */
-export const HERO_LINE = "Independent verification for the software behind physical systems.";
+export const HERO_LINE = "Find where control software and device reports disagree. For defense, infrastructure and robotics.";
 
 /** Page title and meta description.
  *

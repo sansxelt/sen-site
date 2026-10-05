@@ -100,8 +100,8 @@ console.log("\n── ONE embed, for every surface, forever ──");
 const socialCardSrc = readFileSync("lib/social-card.ts", "utf8");
 const ogMeta = readFileSync("lib/og-meta.ts", "utf8");
 
-// Updated 2026-09-28 to the founder's locked sentence. It names what the product does, not who it is for.
-const OFFICIAL_DESC = "Checks your live app does what you say it does";
+// Updated 2026-10-04 for the physical-systems direction. Keep one shared description.
+const OFFICIAL_DESC = "Find failures in software behind physical systems";
 ok("the shared card states the official sentence", socialCardSrc.includes(OFFICIAL_DESC));
 ok("the official description fits the 50-character limit", OFFICIAL_DESC.length <= 50, `${OFFICIAL_DESC.length} chars`);
 

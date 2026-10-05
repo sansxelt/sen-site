@@ -11,12 +11,12 @@ export const metadata = v6meta({ title: "Infrastructure", description: "Software
 export default function Infrastructure() {
   return <>
     <FrameHero eyebrow="Infrastructure" title="An accepted command is not a completed task."
-      sub="For teams responsible for utilities, transport and industrial operations. Verify control software against explicit requirements and inspect what the available evidence actually supports."
+      sub="For teams responsible for utilities, transport and industrial operations. Compare supplied equipment task reports with control-panel and service reports. Find conflicting states, missing completion evidence and changes to the wrong asset."
       primary={{ label: "Review recorded evidence", href: "/verifications/recorded" }}
       secondary={{ label: "Talk to us", href: `${V6_BASE}/contact?topic=infrastructure` }}
       {...photographHero("mission")} />
     <Band>
-      <SectionHead eyebrow="Where to start" title="Verify the handoff." lead="These are candidate applications, not completed customer deployments. Start with recorded reports or an isolated test environment." />
+      <SectionHead eyebrow="Where to start" title="Find the disagreement in the handoff." lead="These are candidate applications, not completed customer deployments. Start with supported recordings or a simulation panel." />
       <FeatureGrid><FeatureCard title="Utilities" body="Compare requested and reported equipment states for the same asset and task." />
       <FeatureCard title="Transport" body="Inspect whether a dispatch request, service response and vehicle report agree." />
       <FeatureCard title="Industrial operations" body="Identify false completion reports, missing task evidence and unexpected changes to another asset." /></FeatureGrid>

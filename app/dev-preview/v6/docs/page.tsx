@@ -9,12 +9,12 @@ import { V6_BASE } from "@/lib/v6-routes";
 const BASE = V6_BASE;
 export const metadata: Metadata = v6meta({
   title: "Documentation",
-  description: "Use Vraelis: write one sentence about your deployed app, approve the plan, read the decision, and re-check after a fix, from the console, the CLI, the API or an AI assistant.",
+  description: "Review recorded task reports locally, or run an approved browser workflow on a reachable test panel. Setup, formats, source evidence and developer tools.",
   path: "/docs",
 });
 
 // A compact starting point: the guide itself explains the next step.
-const START = ["getting-started", "the-loop", "ai-assistants"];
+const START = ["recorded-reports", "getting-started", "ai-assistants"];
 
 // One line each, as a reader would type it. Machine text, never translated.
 const BY_INTERFACE: { name: string; slug: string; line: string }[] = [
@@ -36,7 +36,7 @@ export default function DocsIndex() {
     <DocShell crumb={["Documentation", "Overview"]}>
       <div className="v6-docs__article v6-docs__article--home v6-prose">
         <h1>Vraelis documentation</h1>
-        <p className="v6-docs__lead">Everything from your first check to re-checking a fix, in the console, the CLI, the API or an AI assistant. Each page has one outcome and says what it does not do.</p>
+        <p className="v6-docs__lead">Review supplied task reports in the local beta, or exercise an approved test panel through the hosted browser workflow. Start with the guide for your workflow.</p>
 
         <section className="v6-docs__home" aria-labelledby="start-here">
           <h2 id="start-here">Start here</h2>

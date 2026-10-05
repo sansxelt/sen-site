@@ -22,6 +22,7 @@
 // text nodes, and a link in the middle of a sentence splits it into fragments (plan 0.6). Inline code is
 // machine text the translator skips.
 import { V6_BASE, v6ShouldPrefetch } from "@/lib/v6-routes";
+import { exampleRecording } from "@/lib/recorded-verification/examples";
 
 export type Block =
   | { t: "p"; text: string }
@@ -306,6 +307,33 @@ const CLI_EXITS: string[][] = [
 ];
 
 export const DOCS: Doc[] = [
+  {
+    slug: "recorded-reports",
+    group: "Getting started",
+    title: "Review recorded task reports",
+    summary: "Compare supplied control-panel, service and device reports for one task. Inspect disagreements, missing evidence and changes to another asset.",
+    outcome: "You have evaluated a supplied recording against reviewed criteria and inspected the source events.",
+    limit: "This local beta evaluates reported states. It does not connect to a live device, establish physical ground truth or certify safety.",
+    blocks: [
+      { t: "p", text: "Use the recording workspace without signing in. Files stay in the browser tab: they are not uploaded and do not consume verification credits. This is separate from the hosted browser workflow." },
+      { t: "p", text: "[Open recorded evidence](/verifications/recorded)." },
+      { t: "h2", text: "Start with a simulated example" },
+      { t: "steps", items: ["Open Explore simulated examples and select Broken handoff, Corrected handoff or Missing device evidence.", "Review the asset, task, completion deadline and any assets that must stay unchanged.", "Read the declared recording coverage and confirm that you reviewed it. Select Verify recording.", "Inspect the findings and cited source events. Missing coverage produces an inconclusive result rather than a pass."] },
+      { t: "h2", text: "Supported input" },
+      { t: "table", label: "Recording formats", head: ["Format", "Current support"], rows: [["JSON", "Normalized version 1 recordings, up to 1 MB and 2,000 events. Each event names its source, asset, task, timestamp and supported state."], ["MCAP", "Uncompressed files up to 5 MB, with flat JSON task-event messages. Map each supported topic to control, service or device, then supply a capture manifest."], ["Not supported", "ROS CDR, LZ4 or Zstandard compression, arbitrary nested message schemas, sensor interpretation and live device streams."]] },
+      { t: "p", text: "For MCAP, event time comes from the payload’s timeMs field, not the container timestamp. Review run and build identity, topic mapping, clock and captured intervals before evaluation. Declared coverage describes the supplied recording; it is not proof that a device’s report is authentic." },
+      { t: "h2", text: "What the result means" },
+      { t: "ul", items: ["Passed: the supplied reports meet the reviewed criteria, within the declared capture window.", "Failed: a required event is absent from declared full coverage, arrives too late, reports a contradictory state or changes an asset that should remain unchanged.", "Inconclusive: the required identity, baseline, source event or capture coverage is insufficient to establish the result."] },
+      { t: "h2", text: "Compare a change" },
+      { t: "p", text: "Keep an evaluated result as the baseline, load the next recording and use the same reviewed criteria. The comparison shows changed findings. Changing a requirement changes the question; it does not demonstrate that a repair succeeded." },
+      { t: "h2", text: "Export and persistence" },
+      { t: "p", text: "Export the evidence to keep the criteria, evaluator version, findings and source references. Source hashes identify the supplied bytes; they do not authenticate a device. This beta does not save cloud history. Export before closing the tab." },
+      { t: "h2", text: "JSON format example" },
+      { t: "p", text: "This is simulated data from the corrected handoff example. Download format example in the workspace for the same supported shape." },
+      { t: "code", label: "Normalized task recording", text: JSON.stringify(exampleRecording("corrected"), null, 2) },
+    ],
+    related: ["getting-started", "the-loop"],
+  },
   {
     slug: "getting-started",
     group: "Getting started",

@@ -2,7 +2,7 @@
 
 // Licensed real footage in the original, centered homepage film frame.
 import { useEffect, useRef, useState } from "react";
-import { HEADLINE } from "./positioning";
+import { HEADLINE, HERO_LINE } from "./positioning";
 import "./hero.css";
 
 // The two cuts and the screens each is for (hero.css switches the layout at the same width).
@@ -70,6 +70,7 @@ export function Hero() {
         <h1 id="v6-h-h1" className="v6-h__h1">
           <span className="v6-mask"><span className="v6-mask__in">{HEADLINE}</span></span>
         </h1>
+        <p className="v6-h__line">{HERO_LINE}</p>
         <span id="v6-h-film-context" className="v6-h__context">Industrial robotics and public-domain military training footage illustrate systems whose software matters. Film sources: vraelis.com/home/systems-film-sources.txt.</span>
         <button type="button" className="v6-h__pause" onClick={toggle} aria-label={playing ? "Pause the film" : "Play the film"}>
           {playing

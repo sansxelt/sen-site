@@ -35,7 +35,7 @@
 export const LIVE: string[] = [
   "Local recorded-evidence beta: evaluate task-state reports from JSON or uncompressed MCAP JSON topics, compare recordings and export source hashes. No account or upload required.",
   "One sentence about a deployed web app, turned into a plan a person approves before anything runs",
-  "Connected devices such as drones, robots and fleets, checked through the web control panel that runs them",
+  "Approved browser workflows on simulation and staging control panels. The result describes what the panel showed, not what a physical device did.",
   "A real browser run on the live app, with steps, screenshots, console errors and failed requests",
   "An answer with evidence for every run, a repair prompt when it finds a problem, and every run kept",
   "A refusal to charge when no check could prove the claim, on every path that starts a run",

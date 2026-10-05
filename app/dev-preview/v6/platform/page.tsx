@@ -10,7 +10,7 @@ import { STRIKE, STRIKE_CHAPTERS, STRIKE_CAPTION } from "../_content/strike";
 import { LIVE, DIRECTION } from "../_content/scope";
 import { SURFACES, COVERAGE_RULE, type CoverageTier } from "../_content/coverage";
 import { sectorBySlug } from "../_content/sectors";
-import { V6_BASE, v6SignInPath } from "@/lib/v6-routes";
+import { V6_BASE } from "@/lib/v6-routes";
 import "../_system/coverage.css";
 import "../_system/product.css";
 
@@ -24,7 +24,6 @@ export const metadata = v6meta({
 
 const platformFont = localFont({ src: "../../../fonts/manrope/Manrope-Variable.ttf", display: "swap", variable: "--font-platform", weight: "200 800" });
 const BASE = V6_BASE;
-const SIGNUP = `${v6SignInPath()}&mode=signup`;
 const two = (n: number) => String(n).padStart(2, "0");
 
 const WORKFLOW = [
@@ -35,8 +34,9 @@ const WORKFLOW = [
 ];
 
 // Explain the scope of evidence. Do not imply that other test frameworks cannot exercise real deployments.
-const EVIDENCE_COLUMNS = ["Required behavior", "What the check can observe", "What that does not prove"];
+const EVIDENCE_COLUMNS = ["Required behavior", "Available evidence", "What that does not prove"];
 const EVIDENCE_ROWS: CompareRow[] = [
+  { label: "Task completion", cells: ["The correct asset reports completion within the reviewed window", "Task identity, reported states and declared coverage in the supplied recording", "That the physical task happened or the device report is authentic"] },
   { label: "State change", cells: ["The approved action changes the intended reported state", "The values and controls visible in the browser", "That a physical device received or executed the command"] },
   { label: "Persistence", cells: ["The required state remains after a reload or new session", "The result of the reload or sign-in steps in the plan", "Durability beyond the conditions and period exercised"] },
   { label: "Permissions", cells: ["The supplied test role can or cannot reach a workflow", "The pages and actions exercised with that test identity", "Every permission or role that was not exercised"] },
@@ -54,19 +54,20 @@ export default function Platform() {
     <div className={`${platformFont.variable} v6-platform`}>
       <FrameHero
         eyebrow="The platform"
-        title="Verify the software behind physical systems"
-        sub="For defense, infrastructure and robotics teams. Verify live control panels or evaluate recorded task reports against reviewed criteria, with evidence for each result."
-        primary={{ label: "Watch the check", href: "#how-a-check-works" }}
-        secondary={{ label: "Start a verification", href: SIGNUP }}
+        title="Find where control software and device reports disagree"
+        sub="For defense, infrastructure and robotics teams. Compare supplied task reports or exercise an approved simulation panel. Inspect what happened and what the evidence cannot establish."
+        primary={{ label: "Try recorded evidence", href: "/verifications/recorded" }}
+        secondary={{ label: "Watch the browser demo", href: "#how-a-check-works" }}
         {...photographHero("groundstation")}
       />
 
+      <RecordedEntry />
       <StrikeStory record={STRIKE} chapters={STRIKE_CHAPTERS} caption={STRIKE_CAPTION} />
 
       <section className="v6-sec v6-pp-sec" id="how">
         <div className="v6-wrap v6-pp-workflow">
           <div>
-            <SectionHead eyebrow="The workflow" title="From a requirement to a result you can inspect" lead="The same approved check, from the console, CLI, CI or an AI assistant." />
+            <SectionHead eyebrow="Browser workflow" title="Exercise the operator’s test panel" lead="This separate hosted workflow runs from the console, CLI, CI or an AI assistant. It observes the browser, without connecting to the device." />
           </div>
           <ol className="v6-pp-flow" role="list">
             {WORKFLOW.map((step, i) => (
@@ -83,7 +84,6 @@ export default function Platform() {
         </div>
       </section>
 
-      <RecordedEntry />
       <section className="v6-sec v6-pp-sec" id="evidence-scope">
         <div className="v6-wrap">
           <SectionHead eyebrow="Evidence and scope" title="Know what the record proves" lead="A reported state and a physical outcome are different evidence. Every check has a boundary." />

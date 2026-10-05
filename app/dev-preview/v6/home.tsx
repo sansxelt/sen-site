@@ -19,8 +19,8 @@ export default function Home() {
   return (
     <>
       <Opening />
-      <StrikeStory record={STRIKE} chapters={STRIKE_CHAPTERS} caption={STRIKE_CAPTION} />
       <RecordedEntry />
+      <StrikeStory record={STRIKE} chapters={STRIKE_CHAPTERS} caption={STRIKE_CAPTION} />
       <Orbit />
       <AgentsBand />
       <ChangelogRow />

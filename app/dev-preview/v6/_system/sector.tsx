@@ -29,6 +29,7 @@ import { photograph, SECTOR_PHOTOGRAPHS, USE_CASE_PHOTOGRAPHS } from "../_conten
 // record text and machine text in data-no-translate; record panels marked data-panel; no dots; colour only where
 // a record found a problem; every sentence whole in one element, a link after its sentence and never inside it.
 import Image from "next/image";
+import { RecordedEntry } from "./recorded-entry";
 import localFont from "next/font/local";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -335,6 +336,7 @@ function Related({ page }: { page: SectorPage }) {
 }
 
 const SECTIONS: Record<SectorPage["sections"][number], (p: { page: SectorPage }) => ReactNode> = {
+  recorded: () => <RecordedEntry />,
   facts: Facts,
   problem: Problem,
   fixture: Fixture,

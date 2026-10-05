@@ -46,7 +46,7 @@ export type Surface = {
 
 /** The one idea the section rests on. Stated once, here, so no page re-argues it. */
 export const COVERAGE_THESIS =
-  "Vraelis checks what a person can do through a web app, in a real browser, on the public address you name. That covers web apps themselves, and connected devices such as drones, robots and fleets through the control panel that runs them. It records what each step expected and what it observed, and answers from that.";
+  "Vraelis has two separate workflows: local evaluation of supplied task reports, and approved browser execution on reachable test panels. Each result describes the observations available to that workflow. Neither connects directly to live hardware or certifies physical safety.";
 
 /** What is real first, then what is next, then the edges a reader meets in their first week.
  *  2026-10-02 (site plan 0.3): device copy names what the panel shows, never "the drone" as the thing checked:
