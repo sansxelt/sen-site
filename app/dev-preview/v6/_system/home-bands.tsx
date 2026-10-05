@@ -42,7 +42,7 @@ function useEntryMotion() {
   return root;
 }
 
-const STATEMENT = "Software and its tests can share the same blind spots. Vraelis independently checks live apps and control panels across defense, robotics and finance before deployment.";
+const STATEMENT = "Internal checks can repeat an agent’s assumptions and miss steps. Vraelis provides external verification, checking live apps and control panels against your requirements and recording every step.";
 
 /* The words of a language that does not space them (Japanese), found by the browser's own word segmenter, with
    punctuation riding on the word before it. Cut by character instead, a phrase too long for a phone's line
