@@ -69,7 +69,7 @@ export function Orbit() {
     wake.current = start;
     const measure = () => {
       width = el.clientWidth; height = el.clientHeight;
-      tile = Math.min(160, Math.max(90, Math.min(width * .10, height * .21)));
+      tile = Math.min(200, Math.max(110, Math.min(width * .13, height * .25)));
       const rx = width / 2 - tile * .82 - 30, ry = height / 2 - tile * .7 - 24;
       points = [];
       perimeter = 0;

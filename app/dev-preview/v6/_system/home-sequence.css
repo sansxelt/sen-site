@@ -9,7 +9,7 @@
 .home-page .home-sequence[data-sequenced] .v6-story__heading { padding-top:0; border-top:0; gap:28px; }
 .home-page .home-sequence[data-sequenced] .v6-story__label { font-size:clamp(28px,2.6vw,38px); }
 .home-page .home-sequence[data-sequenced] .v6-story__intro { font-size:15px; }
-.home-sequence[data-sequenced] .v6-or__field[data-ready="true"] { height:min(640px,calc(100svh - var(--nav-h,66px) - 24px)); }
+.home-sequence[data-sequenced] .v6-or__field[data-ready="true"] { height:min(820px,calc(100svh - var(--nav-h,66px) - 24px)); }
 .home-page .home-sequence[data-sequenced] .v6-story:has(.is-exploring) > .v6-wrap { max-width:1600px; }
 .home-sequence[data-sequenced] .v6-mission-demo__screen.is-exploring { height:calc(100svh - var(--nav-h,66px) - 200px); min-height:0; }
 .home-sequence[data-sequenced] .v6-mission-demo__screen.is-exploring:fullscreen { height:100svh; }
