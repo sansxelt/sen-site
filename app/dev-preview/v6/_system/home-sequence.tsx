@@ -21,13 +21,18 @@ export function HomeSequence({ children }: { children: [ReactNode, ReactNode, Re
       const top = parseFloat(getComputedStyle(stage).top) || 0;
       const rect = el.getBoundingClientRect();
       const p = clamp((top - rect.top) / Math.max(1, rect.height - stage.clientHeight));
-      const first = clamp((p - .24) / .12), second = clamp((p - .64) / .12);
-      const weights = [1 - first, first * (1 - second), second];
+      // Finish the outgoing scene before exposing the incoming scene. A crossfade
+      // makes detailed app screens and the orbit text show through one another.
+      const firstOut = clamp((p - .24) / .06);
+      const secondIn = clamp((p - .30) / .06);
+      const secondOut = clamp((p - .64) / .06);
+      const thirdIn = clamp((p - .70) / .06);
+      const weights = [1 - firstOut, secondIn * (1 - secondOut), thirdIn];
       el.querySelectorAll<HTMLElement>('.home-sequence__scene').forEach((scene, i) => {
         scene.style.opacity = String(weights[i]);
         scene.style.translate = `0 ${(1 - weights[i]) * 24}px`;
       });
-      setActive(second >= .5 ? 2 : first >= .5 ? 1 : 0);
+      setActive(p >= .70 ? 2 : p >= .30 ? 1 : 0);
     };
     const request = () => { if (!raf) raf = requestAnimationFrame(paint); };
     const sync = () => {
