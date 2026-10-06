@@ -9,7 +9,7 @@ import "./homepage-sections.css";
 
 const AREAS = {
   defense: {
-    title: "An independent view of mission software.",
+    title: "An external view of mission software.",
     description: "For engineering teams reviewing mission consoles and supplied platform reports. Trace the requested task, the intended asset and the state each system recorded.",
     image: "/home/menu/editorial/aviation.jpg", width: 1600, height: 900,
     subjects: "Mission consoles, platform software and task reports",
