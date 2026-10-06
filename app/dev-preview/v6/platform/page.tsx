@@ -58,7 +58,7 @@ export default function Platform() {
         sub="For defense, infrastructure and robotics teams. Compare supplied task reports or exercise an approved simulation panel. Inspect what happened and what the evidence cannot establish."
         primary={{ label: "Try recorded evidence", href: "/verifications/recorded" }}
         secondary={{ label: "Watch the browser demo", href: "#how-a-check-works" }}
-        {...photographHero("groundstation")}
+        {...photographHero("robotCell")}
       />
 
       <RecordedEntry />

@@ -110,7 +110,7 @@ export default function DevelopersPage() {
         sub="Send a deployment address and one sentence about what should work. A person approves the plan, a real browser runs it, and your tools read the answer."
         primary={{ label: "Create an API key", href: API_KEYS }}
         secondary={{ label: "Read the API", href: `${BASE}/docs/api` }}
-        {...photographHero("agent")}
+        {...photographHero("electronicsBench")}
       />
 
       {/* ── The API: one request and what comes back. ── */}

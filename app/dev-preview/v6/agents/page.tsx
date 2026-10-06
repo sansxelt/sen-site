@@ -147,7 +147,7 @@ export default function Agents() {
         sub="Claude Code, Codex, Cursor, Copilot and any MCP client can request a check of the live app before they say done. Only a person can approve the plan."
         primary={{ label: "Set it up", href: "#setup" }}
         secondary={{ label: "Read the setup guide", href: `${BASE}/docs/ai-assistants` }}
-        {...photographHero("client")}
+        {...photographHero("hardwareInspection")}
       />
 
       {/* ── Setup: the showcase. The commands, with Copy, beside what they set up. ── */}

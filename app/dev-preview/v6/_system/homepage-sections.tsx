@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { photograph } from "../_content/photography";
 import { PRIMARY_SECTORS } from "../_content/sectors";
 import { V6_BASE } from "@/lib/v6-routes";
 import "./homepage-sections.css";
@@ -17,13 +18,13 @@ const AREAS = {
   "public-sector": {
     title: "Software behind essential infrastructure.",
     description: "For teams responsible for equipment control software. Compare what a panel reports with supplied service and device records, including the evidence that is missing.",
-    image: "/home/editorial/hoover-powerplant.jpg", width: 1200, height: 1500,
+    image: "/site/photography/power-grid.jpg", width: 2400, height: 1800,
     subjects: "Equipment controls, services and reported state",
   },
   fleets: {
     title: "The right task. The right robot.",
     description: "For robotics developers and integrators. Follow one task across control software and recorded device reports, then compare the same criteria after a change.",
-    image: "/home/menu/editorial/robotics.jpg", width: 1600, height: 900,
+    image: "/site/photography/robot-grinding.jpg", width: 2400, height: 1530,
     subjects: "Robotics software, task services and device reports",
   },
 } as const;
@@ -65,6 +66,8 @@ export function PhysicalSystems() {
 }
 
 export function EngineeringEntry() {
+  const documentation = photograph("hardwareInspection");
+  const platform = photograph("networkEngineer");
   return <section className="home-engineering" data-nav-theme="dark" aria-labelledby="home-engineering-title">
     <div className="v6-wrap">
       <div className="home-section-head home-section-head--split">
@@ -73,11 +76,11 @@ export function EngineeringEntry() {
       </div>
       <div className="home-engineering__links">
         <Link href={`${V6_BASE}/docs/recorded-reports`} className="home-resource">
-          <div className="home-resource__image"><Image src="/site/photography/firmware.jpg" alt="A microcontroller and tools on a work surface." width={2400} height={1600} sizes="(max-width: 760px) 100vw, 45vw" loading="lazy" /></div>
+          <div className="home-resource__image"><Image src={documentation.src} alt={documentation.alt} width={documentation.w} height={documentation.h} sizes="(max-width: 760px) 100vw, 45vw" loading="lazy" /></div>
           <div><p className="home-eyebrow">Documentation</p><h3>From recording to result.</h3><span>Formats, source mapping and the first review <UpRight /></span></div>
         </Link>
         <Link href={`${V6_BASE}/platform`} className="home-resource">
-          <div className="home-resource__image"><Image src="/site/photography/groundstation.jpg" alt="An engineer operating a flight simulator." width={2400} height={1600} sizes="(max-width: 760px) 100vw, 45vw" loading="lazy" /></div>
+          <div className="home-resource__image"><Image src={platform.src} alt={platform.alt} width={platform.w} height={platform.h} sizes="(max-width: 760px) 100vw, 45vw" loading="lazy" /></div>
           <div><p className="home-eyebrow">The platform</p><h3>Know what the result means.</h3><span>Available workflows, evidence and boundaries <UpRight /></span></div>
         </Link>
       </div>

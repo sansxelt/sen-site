@@ -141,7 +141,7 @@ export default function CompanyPage() {
         secondary={{ label: "Read the README", href: `${BASE}/readme` }}
         // Our own render (app/film/orbit, plan A7.5): the drone on its pad in the garage. Never the hand catch,
         // which is stock footage of someone else's drone.
-        {...photographHero("drone")}
+        {...photographHero("satelliteStation")}
       />
 
       <section className="v6-sec co-mission" id="mission">

@@ -70,7 +70,7 @@ export default function V6Enterprise() {
         sub="For governments, regulated institutions and established organizations. Bring your identity provider and reviewers, with access controls, audit exports and capacity agreed for your needs."
         primary={{ label: "Talk to sales", href: SALES }}
         secondary={{ label: "Security", href: `${BASE}/security` }}
-        {...photographHero("mission")}
+        {...photographHero("networkEngineer")}
 
       />
 

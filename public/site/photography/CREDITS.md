@@ -43,3 +43,22 @@ scenes. This release does not describe it as a new generated film.
 
 Old composed images and console captures remain in the asset archive for historical
 provenance. They are no longer referenced by the active marketing surfaces.
+
+## Physical-systems collection — October 5, 2026
+
+Downloaded from the linked Pexels photographs under the [Pexels License](https://www.pexels.com/license/). These illustrate subjects; they do not depict Vraelis customers, deployments or hardware. Sources are preserved, with browser cropping only. Dimensions below are delivered asset dimensions.
+
+| File | Photographer | Source | Dimensions |
+| --- | --- | --- | --- |
+| robot-arm.jpg | Freek Wolsink | [Pexels 34207359](https://www.pexels.com/photo/34207359/) | 2400 × 1600 |
+| robot-cell.jpg | Ludovic Delot | [Pexels 18471441](https://www.pexels.com/photo/18471441/) | 2400 × 1800 |
+| robot-detail.jpg | KJ Brix | [Pexels 16544056](https://www.pexels.com/photo/16544056/) | 2400 × 1800 |
+| robot-grinding.jpg | alex | [Pexels 11951215](https://www.pexels.com/photo/11951215/) | 2400 × 1530 |
+| power-grid.jpg | Kindel Media | [Pexels 9889066](https://www.pexels.com/photo/9889066/) | 2400 × 1800 |
+| wind-farm.jpg | Kindel Media | [Pexels 9800091](https://www.pexels.com/photo/9800091/) | 2400 × 1800 |
+| helicopter.jpg | Veronika Andrews | [Pexels 35608749](https://www.pexels.com/photo/35608749/) | 2400 × 1576 |
+| satellite-station.jpg | dabatepatfotos | [Pexels 7633266](https://www.pexels.com/photo/7633266/) | 2400 × 2400 |
+| hardware-inspection.jpg | Willquezada | [Pexels 11679113](https://www.pexels.com/photo/11679113/) | 2400 × 1600 |
+| electronics-bench.jpg | Bulat843 | [Pexels 32391505](https://www.pexels.com/photo/32391505/) | 2268 × 4032 |
+| server-rack.jpg | Sergei Starostin | [Pexels 6466141](https://www.pexels.com/photo/6466141/) | 2400 × 1600 |
+| network-engineer.jpg | panumas nikhomkhai | [Pexels 19226354](https://www.pexels.com/photo/19226354/) | 2400 × 1597 |

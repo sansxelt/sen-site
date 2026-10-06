@@ -14,7 +14,7 @@ export default function Infrastructure() {
       sub="For teams responsible for utilities, transport and industrial operations. Compare supplied equipment task reports with control-panel and service reports. Find conflicting states, missing completion evidence and changes to the wrong asset."
       primary={{ label: "Review recorded evidence", href: "/verifications/recorded" }}
       secondary={{ label: "Talk to us", href: `${V6_BASE}/contact?topic=infrastructure` }}
-      {...photographHero("mission")} />
+      {...photographHero("windFarm")} />
     <Band>
       <SectionHead eyebrow="Where to start" title="Find the disagreement in the handoff." lead="These are candidate applications, not completed customer deployments. Start with supported recordings or a simulation panel." />
       <FeatureGrid><FeatureCard title="Utilities" body="Compare requested and reported equipment states for the same asset and task." />

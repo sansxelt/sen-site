@@ -47,14 +47,14 @@ const MENUS: Menu[] = [
     label: "Product",
     groups: [
       { h: "Platform", links: [
-        { t: "Overview", d: "Requirements, execution and evidence", href: BASE + "/platform", pic: EDITORIAL + "robotics.jpg" },
-        { t: "Recorded evidence", d: "Review task reports from JSON or MCAP", href: "/verifications/recorded", pic: EDITORIAL + "robotics.jpg" },
-        { t: "Integrations", d: "What each connection actually supplies", href: BASE + "/integrations", pic: "/site/photography/firmware.jpg" },
-        { t: "AI assistants", d: "Use Vraelis through MCP", href: BASE + "/agents", pic: "/site/photography/agent.jpg" },
+        { t: "Overview", d: "Requirements, execution and evidence", href: BASE + "/platform", pic: "/site/photography/robot-cell.jpg" },
+        { t: "Recorded evidence", d: "Review task reports from JSON or MCAP", href: "/verifications/recorded", pic: "/site/photography/robot-detail.jpg" },
+        { t: "Integrations", d: "What each connection actually supplies", href: BASE + "/integrations", pic: "/site/photography/network-engineer.jpg" },
+        { t: "AI assistants", d: "Use Vraelis through MCP", href: BASE + "/agents", pic: "/site/photography/electronics-bench.jpg" },
       ] },
       { h: "Developers", links: [
-        { t: "Developer tools", d: "APIs, command line and webhooks", href: BASE + "/developers", pic: "/site/photography/agent.jpg" },
-        { t: "API", d: "Integrate checks into your software", href: BASE + "/docs/api", pic: "/site/photography/agent.jpg" },
+        { t: "Developer tools", d: "APIs, command line and webhooks", href: BASE + "/developers", pic: "/site/photography/hardware-inspection.jpg" },
+        { t: "API", d: "Integrate checks into your software", href: BASE + "/docs/api", pic: "/site/photography/server-rack.jpg" },
         { t: "CLI", d: "Run a check from your terminal", href: BASE + "/docs/cli", pic: "/site/photography/firmware.jpg" },
       ] },
     ],
@@ -62,8 +62,8 @@ const MENUS: Menu[] = [
   {
     label: "Solutions",
     groups: [
-      { h: "Physical systems", links: PRIMARY_SECTORS.map(s => ({ t:s.label,d:s.line,href:s.href,pic:s.slug === "defense" ? EDITORIAL + "aviation.jpg" : s.slug === "fleets" ? EDITORIAL + "robotics.jpg" : s.pics.menu })) },
-      { h: "Organizations", links: [{ t: "Enterprise", d: "Governments, institutions and teams", href: BASE + "/enterprise", pic: EDITORIAL + "robotics.jpg" }] },
+      { h: "Physical systems", links: PRIMARY_SECTORS.map(s => ({ t:s.label,d:s.line,href:s.href,pic:s.slug === "defense" ? EDITORIAL + "aviation.jpg" : s.slug === "fleets" ? "/site/photography/robot-arm.jpg" : s.pics.menu })) },
+      { h: "Organizations", links: [{ t: "Enterprise", d: "Governments, institutions and teams", href: BASE + "/enterprise", pic: "/site/photography/power-grid.jpg" }] },
     ],
     foot: { t: "Explore solutions", href: SOLUTIONS_HREF },
   },
@@ -71,13 +71,13 @@ const MENUS: Menu[] = [
     label: "Resources",
     groups: [
       { h: "Explore", links: [
-        { t: "Research", d: "Our method and open questions", href: BASE + "/research", pic: EDITORIAL + "research.jpg" },
-        { t: "Changelog", d: "What shipped and when", href: BASE + "/changelog", pic: EDITORIAL + "robotics.jpg" },
+        { t: "Research", d: "Our method and open questions", href: BASE + "/research", pic: "/site/photography/satellite-station.jpg" },
+        { t: "Changelog", d: "What shipped and when", href: BASE + "/changelog", pic: "/site/photography/robot-grinding.jpg" },
       ] },
       { h: "Company", links: [
-        { t: "About", d: "Who is building Vraelis", href: BASE + "/company", pic: EDITORIAL + "robotics.jpg" },
-        { t: "Contact", d: "Talk to the team", href: BASE + "/contact", pic: EDITORIAL + "aviation.jpg" },
-        { t: "Security", d: "How we protect your data", href: BASE + "/security", pic: "/site/photography/firmware.jpg" },
+        { t: "About", d: "Who is building Vraelis", href: BASE + "/company", pic: "/site/photography/hardware-inspection.jpg" },
+        { t: "Contact", d: "Talk to the team", href: BASE + "/contact", pic: "/site/photography/helicopter.jpg" },
+        { t: "Security", d: "How we protect your data", href: BASE + "/security", pic: "/site/photography/server-rack.jpg" },
       ] },
     ],
   },

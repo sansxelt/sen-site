@@ -131,7 +131,7 @@ export default function SecurityPage() {
         sub="How access, secrets and evidence are handled today, where a check's data goes, and what is not in place yet."
         primary={{ label: "Talk to us", href: `${BASE}/contact?topic=enterprise` }}
         secondary={{ label: "See what is in place", href: "#status" }}
-        {...photographHero("signup")}
+        {...photographHero("serverRack")}
 
       />
 
