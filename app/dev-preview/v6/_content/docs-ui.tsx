@@ -402,7 +402,7 @@ export function DocShell({ activeSlug = "", toc = [], crumb, markdown, children 
 
           <div className="v6-docs__railfoot">
             <LanguageSwitcher placement="up" className="v6-docs__lang" />
-            <Link href={`${BASE}/company#contact`} onClick={follow}>Contact support</Link>
+            <Link href={V6_HOME} onClick={follow}><span aria-hidden="true">← </span>Back to vraelis.com</Link>
           </div>
         </aside>
 
