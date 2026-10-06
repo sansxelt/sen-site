@@ -19,10 +19,10 @@ export const SOCIAL_TITLE = "Vraelis";
  *  It says what the product does and nothing about who it is for (founder, 2026-09-28): a developer, an
  *  agency, a founder and an AI coding agent all read the same card, so it names the function and leaves the
  *  audience open. scripts/email-embeds-verify.ts pins this exact wording and its length. */
-export const SOCIAL_DESCRIPTION = "Find failures in software behind physical systems.";
+export const SOCIAL_DESCRIPTION = "External software review for physical systems.";
 
-/** The square Vraelis mark, the same artwork the favicon is generated from. */
-export const SOCIAL_IMAGE = "https://vraelis.com/icon-original.png";
+/** Square wordmark for shared links; distinct from the browser favicon. */
+export const SOCIAL_IMAGE = "https://vraelis.com/social/vraelis-wordmark.png";
 
 // STATED, NOT INFERRED. The tags carried a bare image URL, so every scraper had to fetch the file and
 // decode it before it knew the shape — and a scraper on a short timeout that does not get there renders
@@ -33,7 +33,7 @@ export const SOCIAL_IMAGE_WIDTH = 1024;
 export const SOCIAL_IMAGE_HEIGHT = 1024;
 
 /** Alt text for the mark. A link preview is content; it gets described like any other image. */
-export const SOCIAL_IMAGE_ALT = "The Vraelis mark";
+export const SOCIAL_IMAGE_ALT = "The Vraelis wordmark";
 
 // A FEW EMBEDS, NOT NINETEEN AND NOT ONE.
 //

@@ -101,14 +101,14 @@ const socialCardSrc = readFileSync("lib/social-card.ts", "utf8");
 const ogMeta = readFileSync("lib/og-meta.ts", "utf8");
 
 // Updated 2026-10-04 for the physical-systems direction. Keep one shared description.
-const OFFICIAL_DESC = "Find failures in software behind physical systems";
+const OFFICIAL_DESC = "External software review for physical systems";
 ok("the shared card states the official sentence", socialCardSrc.includes(OFFICIAL_DESC));
 ok("the official description fits the 50-character limit", OFFICIAL_DESC.length <= 50, `${OFFICIAL_DESC.length} chars`);
 
 // The ONLY embed image is the square mark, which is the artwork the favicon is generated from. A rendered
 // headline card is the worst kind of stale: platforms cache the PNG far longer than the page, so the picture
 // keeps saying the old thing after the words around it have been fixed.
-ok("the only embed image is the Vraelis mark", /SOCIAL_IMAGE = "https:\/\/vraelis\.com\/icon-original\.png"/.test(socialCardSrc));
+ok("the only embed image is the Vraelis mark", /SOCIAL_IMAGE = "https:\/\/vraelis\.com\/social\/vraelis-wordmark\.png"/.test(socialCardSrc));
 ok("the card is a small summary, so the mark is never stretched across a banner",
   /card: "summary" as const/.test(socialCardSrc));
 
@@ -166,7 +166,7 @@ ok("the card is a small summary, so the mark is never stretched across a banner"
 // decoding the file; if they were wrong the tile would be laid out wrong everywhere, and nothing about the
 // page would look broken enough to notice.
 {
-  const png = readFileSync("public/icon-original.png");
+  const png = readFileSync("public/social/vraelis-wordmark.png");
   ok("the declared image width matches the actual PNG", png.readUInt32BE(16) === SOCIAL_IMAGE_WIDTH,
     `${png.readUInt32BE(16)} vs ${SOCIAL_IMAGE_WIDTH}`);
   ok("  and the height", png.readUInt32BE(20) === SOCIAL_IMAGE_HEIGHT, `${png.readUInt32BE(20)} vs ${SOCIAL_IMAGE_HEIGHT}`);

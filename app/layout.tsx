@@ -106,7 +106,7 @@ const brandMono = localFont({
 // force a non-hashed path and break that; leave it unset and let the file convention do its job.
 // The one shared link preview, resolved once. socialCard owns the sentence and the image; the only thing
 // this surface chooses is its title.
-const CARD = socialCard("Say what should work. Vraelis checks it on the live app.");
+const CARD = socialCard();
 
 const vraelisMetadata: Metadata = {
   metadataBase: new URL("https://vraelis.com"),

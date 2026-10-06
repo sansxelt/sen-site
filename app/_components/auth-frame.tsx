@@ -32,7 +32,7 @@ export function AuthFrame({ children }: { children: ReactNode }) {
           <img className="auth-split__scene" src="/home/systems-poster-opening.jpg" alt="" />
           <div className="auth-split__sidein">
             <p className="auth-split__title">Know your<br />systems work.</p>
-            <p className="auth-split__kicker">Software verification for the systems you rely on.</p>
+            <p className="auth-split__kicker">External software review for defense, infrastructure and robotics.</p>
             <a className="auth-split__demo-link" href="/#how-a-check-works">See a check in action <span aria-hidden>→</span></a>
           </div>
         </aside>

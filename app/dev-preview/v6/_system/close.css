@@ -149,3 +149,34 @@
   .v6-foot2__policies summary { min-height: 44px; padding-block: 12px; }
   .v6-foot2__policies > div { display: grid; grid-template-columns: 1fr 1fr; column-gap: 18px; }
 }
+
+/* A branded directory and a clear closing line, shared across public pages. */
+.v6-foot2 { background:#050505; color:#fafafa; }
+.v6-foot2__lower { max-width:1600px; padding-block:72px 56px; grid-template-columns:1.5fr repeat(5,minmax(0,1fr)); gap:32px; }
+.v6-foot2__brand { min-width:0; }
+.v6-foot2 .v6-foot2__wordmark { display:inline-block; color:#fff; font-size:30px; font-weight:700; letter-spacing:-.04em; line-height:1; text-decoration:none; margin-bottom:24px; }
+.v6-foot2__brand p { margin:0 0 8px; font-size:14px; color:#b8b8b8; line-height:1.5; }
+.v6-foot2__brand > span { color:#858585; font-size:12px; line-height:1.6; display:block; max-width:24ch; }
+.v6-foot2__h { color:#929292; font-size:11px; font-weight:500; text-transform:uppercase; letter-spacing:.06em; margin-bottom:20px; }
+.v6-foot2__col a { color:#ededed; font-size:16px; line-height:1.4; min-height:34px; }
+.v6-foot2__col a:hover { color:#fff; text-decoration:underline; text-underline-offset:4px; }
+.v6-foot2__policies summary { color:#a6a6a6; font-size:14px; }
+.v6-foot2__closing { max-width:1600px; margin:0 auto; padding:28px var(--gutter) 64px; font-size:clamp(40px,5.5vw,88px); line-height:1.06; letter-spacing:-.045em; font-weight:500; text-wrap:balance; }
+.v6-foot2__base { border-color:#242424; }
+.v6-foot2__base-in,.v6-foot2__say { max-width:1600px; }
+.v6-foot2__say { color:#999; font-size:13px; }
+@media(max-width:1199px) {
+ .v6-foot2__lower { grid-template-columns:repeat(5,minmax(0,1fr)); gap:32px 20px; }
+ .v6-foot2__brand { grid-column:1 / -1; }
+ .v6-foot2__brand > span { max-width:none; }
+ .v6-foot2 .v6-foot2__wordmark { margin-bottom:16px; }
+}
+@media(max-width:940px) { .v6-foot2__lower { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+@media(max-width:640px) {
+ .v6-foot2__lower { grid-template-columns:repeat(2,minmax(0,1fr)); padding-block:44px 32px; gap:32px 20px; }
+ .v6-foot2__col { display:flex; }
+ .v6-foot2__h { font-size:11px; margin-bottom:12px; }
+ .v6-foot2__col a { font-size:15px; min-height:44px; }
+ .v6-foot2__policies > div { display:flex; }
+ .v6-foot2__closing { padding-top:16px; padding-bottom:40px; font-size:clamp(32px,8.5vw,48px); }
+}

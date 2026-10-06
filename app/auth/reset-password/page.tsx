@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function ResetPasswordPage() {
   return (
-    <section style={{ maxWidth: 480, margin: "0 auto", padding: "clamp(24px, 4vw, 40px) clamp(16px, 4vw, 24px) 80px" }}>
+    <section className="auth-recovery">
       <p style={{ fontFamily: "var(--font-code)", fontSize: 12.5, fontWeight: 600, color: "var(--fg-4)", margin: 0 }}>
         Account access
       </p>

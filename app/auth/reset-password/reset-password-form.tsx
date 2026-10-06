@@ -15,7 +15,7 @@ const inputStyle: CSSProperties = {
   background: "var(--bg-1)",
   fontSize: 14.5,
   color: "var(--fg-1)",
-  outline: "none",
+
 };
 
 function statusStyle(tone: StatusTone): CSSProperties {
@@ -90,10 +90,12 @@ export function ResetPasswordForm() {
     <div className="card" style={{ padding: "clamp(22px, 4vw, 32px)" }}>
       <form onSubmit={handleSubmit} style={{ display: "grid", gap: 16 }}>
         <div>
-          <label style={{ display: "block", fontSize: 13.5, fontWeight: 600, color: "var(--fg-2)" }}>
+          <label htmlFor="reset-email" style={{ display: "block", fontSize: 13.5, fontWeight: 600, color: "var(--fg-2)" }}>
             Email address
           </label>
           <input
+            id="reset-email"
+            autoComplete="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -104,7 +106,7 @@ export function ResetPasswordForm() {
           />
         </div>
 
-        {status && <div style={statusStyle(status.tone)}>{status.message}</div>}
+        {status && <div role={status.tone === "error" ? "alert" : "status"} style={statusStyle(status.tone)}>{status.message}</div>}
 
         <button type="submit" disabled={loading} className="btn" style={{ width: "100%", opacity: loading ? 0.6 : 1 }}>
           {loading ? "Sending..." : "Send reset link"}

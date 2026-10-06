@@ -45,13 +45,13 @@ const ACTS: { label: string; tier?: boolean; title: string; body: string }[] = [
   {
     label: "Present",
     title: "The work outran the checking",
-    body: "Teams and AI agents ship faster than anyone can review by hand. Vraelis checks the live app instead.",
+    body: "Software can report success while another source tells a different story. Vraelis compares supported task recordings and makes the source events inspectable.",
   },
   {
     label: "Next",
     tier: true,
     title: "The check follows software onto what it controls",
-    body: "Vraelis checks the web panels that run drones, robots and fleets today. Reading the device itself is not built yet.",
+    body: "Expand report formats and repeatable reviews around real engineering needs. Live device connections are future work.",
   },
 ];
 
@@ -66,7 +66,7 @@ const FOR: string[] = [
 const NOT_YET: string[] = [
   "Watching people or agents at work. A check runs only when someone asks for one.",
   "Writing or maintaining your tests. Vraelis checks the deployed result against one sentence.",
-  "Native mobile and desktop apps, and reading a device's firmware, sensors and telemetry, are not built yet.",
+  "Native application execution and live device connections are not built yet. Supported device reports can be reviewed from recordings.",
 ];
 
 // How this is different: against categories a reader already pays for, never against a named product, and each
@@ -86,7 +86,7 @@ const DIFFERENT: [string, string][] = [
 const COMMITMENTS: [string, string][] = [
   ["We ship what is real",
     "What is built and what is not are labelled separately, on the site and in the product. We would rather show an honest gap than imply a finished one."],
-  ["The judge is independent of the builder",
+  ["Review the evidence externally",
     "Nothing is trusted because its author says so. Whether work is done is decided on evidence, by something other than the author."],
   ["History is kept",
     "Failures and fixes are kept, not overwritten. A later run never erases the one before it."],
@@ -135,8 +135,8 @@ export default function CompanyPage() {
       <FrameHero
         id="company-hero"
         eyebrow="Company"
-        title="Independent verification for physical-system software"
-        sub="Vraelis checks mission apps and web control panels against approved requirements, with recorded evidence for every result."
+        title="External software review for physical systems"
+        sub="Review control software and recorded task reports for defense, infrastructure and robotics. Follow the task, the intended asset and the evidence each source supplies."
         primary={{ label: "Talk to us", href: `${BASE}/contact` }}
         secondary={{ label: "Read the README", href: `${BASE}/readme` }}
         // Our own render (app/film/orbit, plan A7.5): the drone on its pad in the garage. Never the hand catch,

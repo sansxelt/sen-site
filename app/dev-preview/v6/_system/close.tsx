@@ -65,19 +65,22 @@ export function ClosingScene({
 // Main destinations stay visible. Detailed documentation and other solutions are
 // accessible through their indexes; secondary policies remain in a disclosure.
 const COLS: [string, [string, string][]][] = [
-  ["Product", [[`${BASE}/platform`, "Platform"], ["/verifications/recorded", "Recorded evidence"], [`${BASE}/integrations`, "Integrations"], [`${BASE}/agents`, "AI assistants"], [`${BASE}/pricing`, "Pricing"]]],
-  ["Solutions", [...PRIMARY_SECTORS.map((s): [string, string] => [s.href, s.label]), [`${BASE}/enterprise`, "Enterprise"], [SOLUTIONS_HREF, "Explore solutions"]]],
-  ["Resources", [[`${BASE}/docs`, "Documentation"], [`${BASE}/developers`, "Developer tools"], [`${BASE}/research`, "Research"], [`${BASE}/changelog`, "Changelog"]]],
-  ["Company", [[`${BASE}/company`, "About"], [`${BASE}/contact`, "Contact"], [`${BASE}/partnerships/reddit`, "Reddit partnership"], [`${BASE}/partnerships/bytedance`, "ByteDance partnership"]]],
+  ["Product", [[`${BASE}/platform`, "Platform"], [`${BASE}/docs/recorded-reports`, "Recorded reports"], [`${BASE}/beta`, "Recording beta"], [`${BASE}/integrations`, "Integrations"], [`${BASE}/agents`, "AI assistants"], [`${BASE}/pricing`, "Pricing"]]],
+  ["Solutions", [...PRIMARY_SECTORS.map((s): [string, string] => [s.href, s.label]), [`${BASE}/government`, "Government & institutions"], [`${BASE}/integrators`, "System integrators"], [`${BASE}/enterprise`, "Enterprise"], [SOLUTIONS_HREF, "Explore solutions"]]],
+  ["Resources", [[`${BASE}/docs`, "Documentation"], [`${BASE}/developers`, "Developer tools"], [`${BASE}/problems`, "The problems"], [`${BASE}/research`, "Research"], [`${BASE}/changelog`, "Changelog"]]],
+  ["Company", [[`${BASE}/goals`, "Our goals"], [`${BASE}/company`, "About"], [`${BASE}/contact`, "Contact"]]],
   ["Trust", [[`${BASE}/security`, "Security"], [`${BASE}/privacy`, "Privacy"], [`${BASE}/cookies`, "Cookies"], [`${BASE}/terms`, "Terms"], [`${BASE}/acceptable-use`, "Acceptable use"], [`${BASE}/limitations`, "Limitations"], [`${BASE}/refunds`, "Refunds"], [`${BASE}/data-rights`, "Data rights"], [`${BASE}/subprocessors`, "Subprocessors"], [`${BASE}/trademark`, "Trademark"]]],
 ];
 
 export function SiteFooter() {
   return (
     <footer className="v6-foot2" data-nav-theme="dark">
-      {/* No upper block. The closing scene above IS the ending; this footer is only the directory. Two giant
-          statements stacked at the bottom competed for the same job and the second one read as a repeat. */}
       <div className="v6-foot2__lower">
+        <div className="v6-foot2__brand">
+          <Link href={BASE || "/"} className="v6-foot2__wordmark" aria-label="Vraelis homepage">Vraelis</Link>
+          <p>External software review.</p>
+          <span>Defense. Infrastructure. Robotics.</span>
+        </div>
         {/* Each column is a named group of links (WCAG 1.3.1): the label looks like a heading, so a screen reader
             hears it as the group's name rather than as one more line in a run of about 45 links. A <p>, not a
             heading: the page's outline ends at the closing's h2. */}
@@ -95,14 +98,8 @@ export function SiteFooter() {
         ))}
       </div>
 
-      {/* THE ONE SENTENCE, PUT BACK ON A PAGE. FOOTER_STATEMENT was exported and imported by nothing for the
-          whole of the last design: the surface that carried it was removed and the export outlived it, so
-          the clearest sentence the company owns rendered nowhere a visitor could reach. It returns HERE,
-          quiet and at directory scale, rather than as the upper block the note above rightly refuses. That
-          note is about two giant competing statements. This is one line of small print that says what the
-          company does, which is the thing a footer is actually for.
-          LINKEDIN IS THE ONLY SOCIAL LINK, because it is the only profile confirmed to exist. The X address
-          returned 404 on 2026-09-28 and was removed from here and from lib/entity.ts the same day. */}
+      <div className="v6-foot2__closing" aria-label="Know your systems work.">Know your systems work.</div>
+
       <div className="v6-foot2__base">
         <p className="v6-foot2__say"><span>{FOOTER_STATEMENT}</span></p>
         <div className="v6-foot2__base-in">

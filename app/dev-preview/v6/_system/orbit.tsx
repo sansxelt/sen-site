@@ -96,7 +96,7 @@ export function Orbit() {
         const targetSpeed = stopped.current || h !== null ? 0 : 1;
         speed += (targetSpeed - speed) * (1 - Math.exp(-dt / 120));
         if (Math.abs(speed - targetSpeed) < .001) speed = targetSpeed;
-        if (visible && !document.hidden && !reduced.matches) phase += dt * .022 * speed;
+        if (visible && !document.hidden && !reduced.matches) phase += dt * .032 * speed;
         ORBIT.forEach((_, i) => {
           const node = tiles.current[i]; if (!node) return;
           const diff = h === null ? ORBIT.length : Math.min((i - h + ORBIT.length) % ORBIT.length, (h - i + ORBIT.length) % ORBIT.length);

@@ -346,3 +346,10 @@
 /* WHERE "SKIP TO CONTENT" LANDS ON THE DOCS (shell.tsx, skipToDocsArticle): the article column takes focus
    as a target, not as a control, so it draws no ring, as main does everywhere else (v6.css .v6 main:focus). */
 .v6 #docs-content:focus, .v6 .v6-docs__main:focus { outline: none; }
+
+/* Expanded navigation fits normal desktops; short windows scroll within the menu. */
+.v6-mega__panel{max-height:calc(100svh - var(--nav-h,66px));overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#555 #0a0a0b;scroll-padding:24px}
+.v6-mega__link{min-height:40px;display:flex;align-items:center}
+.v6-drawer__body{scroll-padding:24px;scrollbar-width:thin;scrollbar-color:#555 #0a0a0b}
+@media(prefers-reduced-motion:no-preference){.v6-mega__panel,.v6-drawer__body{scroll-behavior:smooth}}
+@media(max-height:700px) and (min-width:901px){.v6-mega__grid{padding-block:24px;min-height:0}.v6-mega__media{max-height:280px}}

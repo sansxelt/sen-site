@@ -78,6 +78,9 @@ export function strikeConsoleHtml(mode: StrikeMode): string {
 <style>
   :root { --bg:#171717; --p:#272727; --line:#3f3f3f; --fg:#eeeeee; --muted:#ababab; }
   * { box-sizing:border-box; }
+  html { color-scheme:dark; }
+  .card { overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:#555 #171717; scroll-padding:16px; }
+  @media(prefers-reduced-motion:no-preference) { .card { scroll-behavior:smooth; } }
   body { margin:0; background:var(--bg); color:var(--fg); font:14px/1.45 Arial,Helvetica,sans-serif; }
   button,input { font:inherit; }
   button { cursor:pointer; }
@@ -86,9 +89,9 @@ export function strikeConsoleHtml(mode: StrikeMode): string {
   .brand { font-size:20px; font-weight:600; letter-spacing:-.5px; }
   .meta { color:var(--muted); font-size:14px; }
   .sim { margin-left:auto; color:var(--muted); font-size:12px; }
-  .wrap { display:grid; grid-template-columns:minmax(0,1fr) 340px; grid-template-rows:375px minmax(360px,1fr); height:calc(100svh - 64px); min-height:700px; }
+  .wrap { display:grid; grid-template-columns:minmax(0,1fr) 340px; grid-template-rows:minmax(0, .9fr) minmax(0, 1fr); height:calc(100svh - 64px); min-height:0; }
   .card { min-width:0; min-height:0; }
-  .wrap>.card:first-child { grid-column:2; grid-row:1; border-left:1px solid var(--line); }
+  .wrap>.card:first-child { grid-column:2; grid-row:1; border-left:1px solid var(--line); overflow:auto; }
   .wrap>.card:nth-child(2) { grid-column:1; grid-row:1/3; display:flex; flex-direction:column; }
   .wrap>.card:nth-child(3) { grid-column:2; grid-row:2; border-left:1px solid var(--line); border-top:1px solid var(--line); overflow:auto; }
   .hd { display:flex; justify-content:space-between; padding:18px 20px 12px; color:var(--muted); font-size:13px; }
@@ -109,7 +112,7 @@ export function strikeConsoleHtml(mode: StrikeMode): string {
   .layer-panel label { display:flex; justify-content:space-between; align-items:center; gap:10px; margin:0 0 14px; font-size:13px; }.layer-panel label:last-child { margin-bottom:0; }.layer-panel input { accent-color:#cacaca; }
   .layer-panel .height-control { display:block; }.height-control input { width:100%; margin-top:12px; }
   .motion-control { border:0; padding:8px 0; background:transparent; color:var(--muted); font-size:12px; min-width:76px; }
-  .map { position:relative; flex:1; min-height:440px; background:#1c1c1c; overflow:hidden; }
+  .map { position:relative; flex:1; min-height:0; background:#1c1c1c; overflow:hidden; }
   /* The legacy 2D view is an explicit failure fallback, never a loading frame. */
   .map>svg { display:none; position:absolute; inset:0; width:100%; height:100%; background:#1e1e1e; }.map[data-ready=fallback]>svg { display:block; }
   .map canvas { display:block; touch-action:none; visibility:hidden; }.map[data-ready=true] canvas { visibility:visible; }
@@ -122,7 +125,7 @@ export function strikeConsoleHtml(mode: StrikeMode): string {
   .fields { display:grid; grid-template-columns:1fr 1fr; gap:20px; padding:16px 22px 22px; }.f.wide { grid-column:1/-1; }.f span { display:block; color:var(--muted); font-size:12px; margin-bottom:5px; }.f strong { font-size:16px; font-weight:500; }
   .actions { display:grid; gap:8px; padding:0 22px 16px; }.act { border:1px solid #525252; background:transparent; color:var(--fg); font-size:13px; padding:12px; border-radius:3px; }.act.primary { background:#e8e8e8; color:#1e1e1e; border-color:#e8e8e8; }.act:disabled { opacity:.4; cursor:default; }
   .toast { margin:0 22px 16px; min-height:16px; color:var(--muted); font-size:12px; }.history { margin:0 22px 22px; color:var(--muted); font-size:12px; }.log { list-style:none; padding:0; line-height:1.6; }.log li { margin:8px 0; }.log time { margin-right:10px; }
-  .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+  .sr-only { position:absolute; top:0; left:0; margin:0; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
   @media(max-width:900px) {
     .top { padding:0 16px; gap:16px; }.meta { display:none; }.brand { font-size:18px; }
     .wrap { height:auto; min-height:0; grid-template-columns:1fr; grid-template-rows:500px auto auto; }

@@ -469,3 +469,16 @@ html:has([data-surface="app"]) {
 [data-surface="app"] .connection-paths span { font-size:12px; line-height:1.6; color:var(--fg-3); }
 [data-surface="app"] .connection-paths a:hover { background:var(--bg-2); border-color:var(--line-3); }
 @media(max-width:760px){[data-surface="app"] .connection-paths{grid-template-columns:1fr}}
+
+/* Account entry: consistent sizing, visible keyboard focus and narrow-screen fit. */
+[data-surface="app"] .auth-form{width:min(420px,100%)}
+[data-surface="app"] .auth-form__head h1{font-size:30px;letter-spacing:-.035em}
+[data-surface="app"] .auth-form__field input{min-height:50px;font-size:16px}
+[data-surface="app"] .auth-form__submit,[data-surface="app"] .auth-form__provider{min-height:48px}
+[data-surface="app"] .auth-recovery{width:min(420px,100%);margin:0 auto;padding:24px 0}
+[data-surface="app"] .auth-recovery .card{border:0!important;background:transparent!important;padding:0!important;box-shadow:none}
+[data-surface="app"] .auth-recovery input{min-height:50px;font-size:16px!important}
+[data-surface="app"] .auth-recovery input:focus-visible{outline:2px solid #fafafa;outline-offset:3px;border-color:#888}
+[data-surface="app"] .auth-recovery .btn{min-height:48px}
+[data-surface="app"] .auth-split :is(a,button):focus-visible{outline:2px solid #fafafa;outline-offset:4px}
+@media(max-width:540px){[data-surface="app"] .auth-split__head{flex-wrap:wrap;gap:12px}[data-surface="app"] .auth-split__tools{gap:12px}[data-surface="app"] .auth-split__back{font-size:12px}[data-surface="app"] .auth-split__form{padding-inline:24px}[data-surface="app"] .auth-split__foot{gap:12px;font-size:11px}[data-surface="app"] .auth-split__main{padding-block:32px}}

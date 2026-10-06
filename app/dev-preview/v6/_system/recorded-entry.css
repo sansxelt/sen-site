@@ -34,3 +34,5 @@
 .recorded-entry--home .recorded-example__result { font-size:23px; line-height:1.25; letter-spacing:-.02em; }
 .recorded-entry--home .recorded-entry__boundary { border:0; padding-block:0 30px; max-width:85ch; font-size:12px; color:#a4a4a4; }
 @media(max-width:760px) { .recorded-entry--home .recorded-entry__inner { grid-template-columns:1fr; }.recorded-entry--home h2 { font-size:38px; }.recorded-entry--home .recorded-example__choices button { padding-inline:9px; } }
+
+.recorded-entry .recorded-example{border-radius:0;padding:clamp(24px,3vw,44px);background:#101010}.recorded-entry .recorded-example__choices{border-bottom:1px solid #444;gap:0}.recorded-entry .recorded-example__choices button{border:0;border-bottom:2px solid transparent;border-radius:0;padding:13px 12px;min-height:44px}.recorded-entry .recorded-example__choices button[aria-pressed=true]{background:none;color:white;border-color:white}.recorded-entry .recorded-example__result{font-size:23px;line-height:1.25;letter-spacing:-.02em}

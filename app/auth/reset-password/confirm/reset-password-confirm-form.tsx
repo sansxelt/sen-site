@@ -8,7 +8,7 @@ type Status = { message: string; tone: StatusTone };
 
 const inputStyle: CSSProperties = {
   width: "100%", marginTop: 8, padding: "12px 14px", borderRadius: "var(--r-sm)",
-  border: "1px solid var(--line-2)", background: "var(--bg-1)", fontSize: 14.5, color: "var(--fg-1)", outline: "none",
+  border: "1px solid var(--line-2)", background: "var(--bg-1)", fontSize: 14.5, color: "var(--fg-1)",
 };
 const backLink: CSSProperties = { marginTop: 20, display: "inline-block", fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none" };
 
@@ -93,10 +93,12 @@ export function ResetPasswordConfirmForm({ token }: { token: string }) {
     <div className="card" style={{ padding: "clamp(22px, 4vw, 32px)" }}>
       <form onSubmit={handleSubmit} style={{ display: "grid", gap: 16 }}>
         <div>
-          <label style={{ display: "block", fontSize: 13.5, fontWeight: 600, color: "var(--fg-2)" }}>
+          <label htmlFor="reset-new-password" style={{ display: "block", fontSize: 13.5, fontWeight: 600, color: "var(--fg-2)" }}>
             New password
           </label>
           <input
+            id="reset-new-password"
+            autoComplete="new-password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -108,7 +110,7 @@ export function ResetPasswordConfirmForm({ token }: { token: string }) {
           />
         </div>
 
-        {status && <div style={statusStyle(status.tone)}>{status.message}</div>}
+        {status && <div role={status.tone === "error" ? "alert" : "status"} style={statusStyle(status.tone)}>{status.message}</div>}
 
         <button type="submit" disabled={loading} className="btn" style={{ width: "100%", opacity: loading ? 0.6 : 1 }}>
           {loading ? "Saving..." : "Set new password"}
