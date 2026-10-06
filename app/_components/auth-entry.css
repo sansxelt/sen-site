@@ -1,4 +1,15 @@
 /* Account entry uses the public black-and-white palette, scoped away from the console. */
+/* Account steps grow with their content. Let the document scroll, including when
+   the keyboard or zoom leaves less room; an open privacy dialog still locks it. */
+html:has(.auth-entry) {
+  scroll-behavior:auto;
+  scrollbar-gutter:stable;
+  --scroll-track:#0a0a0b;
+  --scroll-thumb:#484848;
+  --scroll-thumb-hover:#71717a;
+  --scroll-thumb-active:#96969f;
+}
+html:has(.auth-entry):not(:has(.vr-pc__dialog[open])) { overflow-y:auto; }
 [data-surface="app"] .auth-entry.auth-split {
   --bg-0:#0a0a0b; --bg-1:#141414; --bg-2:#1b1b1b; --bg-3:#242424;
   --fg-1:#fafafa; --fg-2:#e4e4e7; --fg-3:#a1a1aa; --fg-4:#96969f; --fg-on-accent:#0a0a0b;
@@ -7,14 +18,14 @@
   --go-ink:#fafafa; --go-line:#484848; --go-wash:#1b1b1b;
   --wait-ink:#e4e4e7; --wait-line:#484848; --wait-wash:#1b1b1b;
   --stop-ink:#fca5a5; --stop-line:#653838; --stop-wash:#251616;
-  display:block; min-height:100svh; color:var(--fg-1); color-scheme:dark;
+  display:block; height:auto; min-height:100svh; overflow:visible; color:var(--fg-1); color-scheme:dark;
   background:#0a0a0b;
 }
-[data-surface="app"] .auth-entry .auth-split__form { min-height:100svh; width:min(1180px,100%); margin:auto; padding:0 32px; }
+[data-surface="app"] .auth-entry .auth-split__form { height:auto; min-height:100svh; overflow:visible; width:min(1180px,100%); margin:auto; padding:0 32px; }
 [data-surface="app"] .auth-entry .auth-split__head { padding:24px 0; flex-wrap:nowrap; }
 [data-surface="app"] .auth-entry .auth-split__brand { font-size:25px; color:var(--fg-1); }
 [data-surface="app"] .auth-entry .auth-split__tools { gap:22px; }
-[data-surface="app"] .auth-entry .auth-split__main { align-items:center; padding:24px 0 32px; }
+[data-surface="app"] .auth-entry .auth-split__main { flex:1 0 auto; min-height:auto; overflow:visible; align-items:center; padding:24px 0 32px; }
 [data-surface="app"] .auth-entry :is(.auth-form,.auth-recovery) { width:min(440px,100%); margin-inline:auto; padding:0; }
 [data-surface="app"] .auth-entry .auth-form__head { text-align:center; margin-bottom:30px; }
 [data-surface="app"] .auth-entry .auth-form__head h1 { font-size:28px; font-weight:500; line-height:1.3; letter-spacing:-.035em; overflow:clip; padding:.15em 0; margin:-.15em 0; }

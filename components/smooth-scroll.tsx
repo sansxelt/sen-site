@@ -5,10 +5,11 @@ import { usePathname } from "next/navigation";
 import Lenis from "lenis";
 import "lenis/dist/lenis.css";
 
-/** Shared wheel easing for the public site and app; nested panels retain their own scroll. */
+/** Shared wheel easing; account forms use native scrolling as their content changes. */
 export function SmoothScroll() {
   const pathname = usePathname();
   useEffect(() => {
+    if (pathname === "/signin" || pathname.startsWith("/auth/")) return;
     const reduced = matchMedia("(prefers-reduced-motion: reduce)");
     const pointer = matchMedia("(hover: hover) and (pointer: fine)");
     let smooth: Lenis | undefined;
