@@ -1,7 +1,7 @@
 /* Progressive enhancement: without JS, motion permission, or enough height,
    both slides remain in ordinary document flow. No wheel or touch interception. */
 .v6-opening { background: var(--paper); }
-.v6-opening[data-motion] { height: 240svh; padding-top: 8px; }
+.v6-opening[data-motion] { height: 210svh; padding-top: 8px; }
 .v6-opening[data-motion] .v6-h { height: 100%; }
 .v6-opening[data-motion] .v6-h__frame { height: calc(100% - 40px); }
 .v6-opening[data-motion] .v6-opening__pin { position: sticky; top: calc(var(--nav-h, 66px) + 8px); height: calc(100svh - var(--nav-h, 66px) - 8px); isolation: isolate; overflow: clip; }
@@ -9,8 +9,8 @@
 .v6-opening[data-motion] .v6-opening__statement { position: absolute; inset: 0; }
 /* Browser controls may reduce the visible screen without resizing the scroll track. */
 .v6-opening[data-motion] .v6-opening__statement { bottom:auto; height:calc(var(--opening-visible-h, 100dvh) - var(--nav-h, 66px) - 8px); }
-.v6-opening[data-motion] .v6-opening__film { opacity: clamp(0, calc(1 - (var(--p, 0) - .24) / .16), 1);  }
-.v6-opening[data-motion] .v6-opening__statement { opacity: clamp(0, calc((var(--p, 0) - .42) / .16), 1); transform: translateY(calc((1 - clamp(0, (var(--p, 0) - .42) / .16, 1)) * 24px)); pointer-events: none; }
+.v6-opening[data-motion] .v6-opening__film { transform:translateY(calc(var(--p,0) * -90px)) scale(calc(1 - var(--p,0) * .045)); transform-origin:50% 35%; opacity: clamp(0, calc(1 - (var(--p, 0) - .24) / .16), 1);  }
+.v6-opening[data-motion] .v6-opening__statement { opacity: clamp(0, calc((var(--p, 0) - .42) / .16), 1); transform: translateY(calc((1 - clamp(0, (var(--p, 0) - .42) / .16, 1)) * 96px)); pointer-events: none; }
 .v6-opening[data-motion] .v6-stm { height: 100%; padding: 0 var(--gutter); display: grid; align-items: center; }
 .v6-opening[data-motion] .v6-stm__card { width:100%; min-height:0; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:24px; border:0; background:none; border-radius:0; }
 .v6-opening .v6-stm__t { max-width: 28ch; text-align: center; margin-inline: auto; text-wrap: balance; }
@@ -18,7 +18,7 @@
 .v6-opening:not([data-motion]) .v6-stm__card { background:none; border:0; padding:64px 20px; display:flex; flex-direction:column; align-items:center; }
 @media (max-width: 560px) {
   .v6-opening[data-motion] .v6-h__frame { height:calc(100% - 26px); }
-  .v6-opening[data-motion] { height: 215svh; }
+  .v6-opening[data-motion] { height: 190svh; }
   .v6-opening[data-motion] .v6-stm__card { min-height:0; padding:24px 0; }
   .v6-opening .v6-stm__t { font-size:clamp(1.6rem,7vw,2.4rem); line-height:1.15; }
 }

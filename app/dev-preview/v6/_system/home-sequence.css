@@ -1,6 +1,6 @@
-.home-sequence[data-sequenced] { height:340svh; }
-.home-sequence[data-sequenced] .home-sequence__stage { position:sticky; top:calc(var(--nav-h,66px) + 12px); height:calc(100svh - var(--nav-h,66px) - 24px); isolation:isolate; }
-.home-sequence[data-sequenced] .home-sequence__scene { position:absolute; inset:0; display:grid; align-items:center; pointer-events:none; }
+.home-sequence[data-sequenced] { --chapter-height:calc(100svh - var(--nav-h,66px) - 24px); height:calc(var(--chapter-height) * 3); }
+.home-sequence[data-sequenced] .home-sequence__stage { position:sticky; top:calc(var(--nav-h,66px) + 12px); height:var(--chapter-height); isolation:isolate; overflow:clip; }
+.home-sequence[data-sequenced] .home-sequence__scene { position:absolute; inset:0; display:grid; align-items:center; pointer-events:none; background:var(--paper); will-change:translate; }
 .home-sequence[data-sequenced] .home-sequence__scene[data-active="true"] { pointer-events:auto; z-index:1; }
 .home-sequence[data-sequenced] .home-sequence__scene > section { width:100%; }
 .home-page .home-sequence[data-sequenced] .home-areas,

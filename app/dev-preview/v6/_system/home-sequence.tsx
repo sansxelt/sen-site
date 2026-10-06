@@ -36,18 +36,14 @@ export function HomeSequence({ children }: { children: [ReactNode, ReactNode, Re
       const top = parseFloat(getComputedStyle(stage).top) || 0;
       const rect = el.getBoundingClientRect();
       const p = clamp((top - rect.top) / Math.max(1, rect.height - stage.clientHeight));
-      // Finish the outgoing scene before exposing the incoming scene. A crossfade
-      // makes detailed app screens and the orbit text show through one another.
-      const firstOut = clamp((p - .24) / .06);
-      const secondIn = clamp((p - .30) / .06);
-      const secondOut = clamp((p - .64) / .06);
-      const thirdIn = clamp((p - .70) / .06);
-      const weights = [1 - firstOut, secondIn * (1 - secondOut), thirdIn];
+      // Each pixel of scroll advances the composition. Adjacent scenes travel
+      // edge-to-edge instead of fading through an empty screen or overlapping.
+      const position = p * 2;
       el.querySelectorAll<HTMLElement>('.home-sequence__scene').forEach((scene, i) => {
-        scene.style.opacity = String(weights[i]);
-        scene.style.translate = `0 ${(1 - weights[i]) * 24}px`;
+        scene.style.opacity = '1';
+        scene.style.translate = `0 ${(i - position) * stage.clientHeight}px`;
       });
-      setActive(p >= .70 ? 2 : p >= .30 ? 1 : 0);
+      setActive(Math.round(position));
     };
     const request = () => { if (!raf) raf = requestAnimationFrame(paint); };
     const sync = () => {
