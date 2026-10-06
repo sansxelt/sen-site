@@ -16,6 +16,21 @@ export function HomeSequence({ children }: { children: [ReactNode, ReactNode, Re
     let raf = 0;
     const paint = () => {
       raf = 0;
+      // Fullscreen stays interactive even if the underlying page position changes.
+      // Inert on an ancestor also disables the promoted fullscreen subtree.
+      const fullscreen = document.fullscreenElement;
+      if (fullscreen && el.contains(fullscreen)) {
+        const scenes = Array.from(el.querySelectorAll<HTMLElement>('.home-sequence__scene'));
+        const index = scenes.findIndex(scene => scene.contains(fullscreen));
+        if (index >= 0) {
+          scenes.forEach((scene, i) => {
+            scene.style.opacity = i === index ? '1' : '0';
+            scene.style.translate = '0 0';
+          });
+          setActive(index);
+          return;
+        }
+      }
       if (!gate.matches) return;
       const stage = el.querySelector<HTMLElement>('.home-sequence__stage')!;
       const top = parseFloat(getComputedStyle(stage).top) || 0;
@@ -41,8 +56,9 @@ export function HomeSequence({ children }: { children: [ReactNode, ReactNode, Re
       request();
     };
     sync(); gate.addEventListener('change', sync);
+    document.addEventListener('fullscreenchange', sync);
     window.addEventListener('scroll', request, { passive:true }); window.addEventListener('resize', request);
-    return () => { cancelAnimationFrame(raf); gate.removeEventListener('change', sync); window.removeEventListener('scroll', request); window.removeEventListener('resize', request); };
+    return () => { cancelAnimationFrame(raf); document.removeEventListener('fullscreenchange', sync); gate.removeEventListener('change', sync); window.removeEventListener('scroll', request); window.removeEventListener('resize', request); };
   }, []);
   return <div ref={root} className="home-sequence" data-sequenced={enabled || undefined}>
     <div className="home-sequence__stage">

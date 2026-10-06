@@ -1,6 +1,6 @@
 .v6-or__field { position: relative; background: var(--paper); padding: 72px 24px; isolation: isolate; }
 .v6-or__copy { text-align: center; max-width: 440px; margin: auto; }
-.v6-or__h { display: block; min-height: 2.24em; margin: 0; text-wrap: balance; font: 500 clamp(28px, 3vw, 44px)/1.12 var(--sans); letter-spacing: -.025em; }
+.v6-or__h { display: block; min-height: 0; margin: 0; text-wrap: balance; font: 500 clamp(28px, 3vw, 44px)/1.12 var(--sans); letter-spacing: -.025em; }
 .v6-or__h--translated { display: grid; align-items: center; }
 .v6-or__topic-slot { position: relative; display: inline-grid; max-width: 100%; overflow: hidden; vertical-align: bottom; }
 .v6-or__topic { grid-area: 1 / 1; display: block; }
@@ -31,3 +31,6 @@
 @media(max-width:700px) { .v6-or__item:last-child:nth-child(odd) { grid-column:1 / -1; width:calc(50% - 6px); justify-self:center; } }
 
 @media (min-width:1024px) and (hover:hover) and (pointer:fine) { .v6-or__field[data-ready="true"] .v6-or__copy { max-width:640px; } .v6-or__field[data-ready="true"] .v6-or__d { max-width:48ch; } }
+
+.v6-or__copy { display:flex; flex-direction:column; align-items:center; gap:22px; }
+.v6-or__d { margin:0 auto; }

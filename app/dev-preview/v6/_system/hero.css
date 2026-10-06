@@ -1,12 +1,14 @@
-.v6-h { height:calc(100svh - var(--nav-h,66px)); position:relative; background:var(--paper); color:#FAFAFA; padding:0 clamp(10px,1.9vw,36px);  }
-.v6-h__frame { position:relative; isolation:isolate; overflow:hidden; border-radius:4px; height:calc(100svh - var(--nav-h,66px) - 10px); display:grid; place-items:center; background:#070a0d; }
+.v6-h { height:calc(100svh - var(--nav-h,66px)); position:relative; background:var(--paper); color:#FAFAFA; padding:16px clamp(14px,1.9vw,36px) 24px;  }
+.v6-h__frame { position:relative; isolation:isolate; overflow:hidden; border-radius:14px; height:calc(100svh - var(--nav-h,66px) - 40px); display:grid; place-items:center; background:#070a0d; }
 .v6-h__poster { position:absolute; inset:0; z-index:-3; display:block; }
 .v6-h__poster img, .v6-h__video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center; display:block; }
 .v6-h__video { z-index:-2; }
-.v6-h__shade { position:absolute; inset:0; z-index:-1; background:linear-gradient(180deg,rgba(7,10,13,.18),rgba(7,10,13,.62) 40%,rgba(7,10,13,.62) 60%,rgba(7,10,13,.25)),linear-gradient(0deg,rgba(7,10,13,.35),transparent 25%); }
-.v6-h__h1 { grid-area:1/1; margin:0; padding:0 var(--gutter); max-width:100%; text-align:center; font-family:var(--sans); font-weight:600; font-synthesis-weight:none; font-size:clamp(2rem,5.1vw,5rem); line-height:1.12; letter-spacing:-.025em; color:#FAFAFA; text-wrap:balance; text-shadow:0 2px 30px rgba(0,0,0,.3); }
+.v6-h__shade { position:absolute; inset:0; z-index:-1; background:rgba(7,10,13,.32); }
+.v6-h__h1 { grid-area:1/1; margin:0; padding:0 var(--gutter); max-width:100%; text-align:center; font-family:var(--sans); font-weight:500; font-synthesis-weight:none; font-size:clamp(32px,4.4vw,76px); line-height:1.12; letter-spacing:-.025em; color:#FAFAFA; text-wrap:balance; text-shadow:0 2px 14px rgba(0,0,0,.2); }
 .v6-h__h1 .v6-mask { display:block; }
 @media(max-width:560px) {
+ .v6-h { padding:10px 12px 16px; }
+ .v6-h__frame { border-radius:10px; height:calc(100svh - var(--nav-h,66px) - 26px); }
  .v6-h__h1 { padding:0 14px; font-size:clamp(1.25rem,6.5vw,2.25rem); }
 }
 .v6-mask { display:block; overflow:hidden; padding:.2em 0 .14em; margin:-.2em 0 -.1em; }
