@@ -2,6 +2,8 @@
 
 // Homepage: cinematic opening, three focus areas,
 // the app replay, engineering resources.
+import { useRef } from "react";
+import { useHomeMotion } from "./_system/home-motion";
 import { Orbit } from "./_system/orbit";
 import { Opening } from "./_system/opening";
 import { StrikeStory } from "./_system/strike-story";
@@ -13,8 +15,10 @@ export default function Home() {
   // Gives scroll-driven parts entry motion on screens where they unpin. scripts/mobile-motion-verify.ts
   // requires it, and it is a no-op for parts that are not present.
   useMobileMotion();
+  const root = useRef<HTMLDivElement>(null);
+  useHomeMotion(root);
   return (
-    <div className="home-page">
+    <div ref={root} className="home-page">
       <Opening />
       <PhysicalSystems />
       <StrikeStory record={STRIKE} chapters={STRIKE_CHAPTERS} caption={STRIKE_CAPTION} />

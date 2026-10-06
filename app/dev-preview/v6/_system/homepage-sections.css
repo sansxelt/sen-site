@@ -63,3 +63,10 @@
  .home-page .v6-story__heading { grid-template-columns:1fr; gap:24px; }
 }
 @media(prefers-reduced-motion:reduce) { .home-page *, .home-page *::after { transition:none!important; } }
+
+/* Once-only, staggered arrivals after the opening; content stays visible without JS. */
+@media(prefers-reduced-motion:no-preference) {
+ .home-page .home-arrival { opacity:0; translate:0 24px; transition:opacity 650ms ease, translate 750ms cubic-bezier(.22,1,.36,1); transition-delay:var(--arrival-delay,60ms); }
+ .home-page .home-arrival.home-arrived { opacity:1; translate:0 0; }
+ .home-page .home-arrival:focus-within { opacity:1; translate:0 0; transition:none; }
+}
