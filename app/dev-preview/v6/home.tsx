@@ -23,8 +23,8 @@ export default function Home() {
       <PhysicalSystems />
       <StrikeStory record={STRIKE} chapters={STRIKE_CHAPTERS} caption={STRIKE_CAPTION} />
       <Orbit />
-      </HomeSequence>
       <EngineeringEntry />
+      </HomeSequence>
     </div>
   );
 }
