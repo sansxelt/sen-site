@@ -19,6 +19,16 @@ export function Opening() {
     sync();
     return () => queries.forEach(query => query.removeEventListener("change", sync));
   }, []);
+  useEffect(() => {
+    const el = root.current;
+    const viewport = window.visualViewport;
+    if (!el || !viewport) return;
+    // Keep the scroll track fixed; only the statement follows Safari's visible area.
+    const sync = () => el.style.setProperty("--opening-visible-h", `${viewport.height}px`);
+    sync();
+    viewport.addEventListener("resize", sync);
+    return () => viewport.removeEventListener("resize", sync);
+  }, []);
   useScrollProgress(root, { onFrame: value => setStatementVisible(value >= .48) });
   return (
     <section ref={root} className="v6-opening" data-motion={motion || undefined} data-nav-theme="dark" aria-label="Introducing Vraelis">

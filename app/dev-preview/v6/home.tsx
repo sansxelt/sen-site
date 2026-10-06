@@ -1,11 +1,11 @@
 "use client";
 
 // Homepage: cinematic opening, three focus areas,
-// the app replay, engineering resources and a direct product entry.
+// the app replay, engineering resources.
 import { Opening } from "./_system/opening";
 import { StrikeStory } from "./_system/strike-story";
 import { STRIKE, STRIKE_CHAPTERS, STRIKE_CAPTION } from "./_content/strike";
-import { PhysicalSystems, EngineeringEntry, HomepageClose } from "./_system/homepage-sections";
+import { PhysicalSystems, EngineeringEntry } from "./_system/homepage-sections";
 import { useMobileMotion } from "./_system/mobile-motion";
 
 export default function Home() {
@@ -18,7 +18,6 @@ export default function Home() {
       <PhysicalSystems />
       <StrikeStory record={STRIKE} chapters={STRIKE_CHAPTERS} caption={STRIKE_CAPTION} />
       <EngineeringEntry />
-      <HomepageClose />
     </div>
   );
 }

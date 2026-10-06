@@ -84,16 +84,3 @@ export function EngineeringEntry() {
     </div>
   </section>;
 }
-
-export function HomepageClose() {
-  return <section className="home-close" data-nav-theme="dark" aria-labelledby="home-close-title">
-    <div className="v6-wrap">
-      <p className="home-eyebrow">Bring your own evidence</p>
-      <h2 id="home-close-title">Find the mismatch.<br />Keep the record.</h2>
-      <div className="home-close__actions">
-        <Link href="/verifications/recorded" prefetch={false}>Open Vraelis <UpRight /></Link>
-        <Link href={`${V6_BASE}/contact`}>Talk to the team <span aria-hidden>→</span></Link>
-      </div>
-    </div>
-  </section>;
-}

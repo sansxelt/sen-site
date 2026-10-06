@@ -7,6 +7,8 @@
 .v6-opening[data-motion] .v6-opening__pin { position: sticky; top: calc(var(--nav-h, 66px) + 8px); height: calc(100svh - var(--nav-h, 66px) - 8px); isolation: isolate; overflow: clip; }
 .v6-opening[data-motion] .v6-opening__film,
 .v6-opening[data-motion] .v6-opening__statement { position: absolute; inset: 0; }
+/* Browser controls may reduce the visible screen without resizing the scroll track. */
+.v6-opening[data-motion] .v6-opening__statement { bottom:auto; height:calc(var(--opening-visible-h, 100dvh) - var(--nav-h, 66px) - 8px); }
 .v6-opening[data-motion] .v6-opening__film { opacity: clamp(0, calc(1 - (var(--p, 0) - .24) / .16), 1);  }
 .v6-opening[data-motion] .v6-opening__statement { opacity: clamp(0, calc((var(--p, 0) - .42) / .16), 1); transform: translateY(calc((1 - clamp(0, (var(--p, 0) - .42) / .16, 1)) * 24px)); pointer-events: none; }
 .v6-opening[data-motion] .v6-stm { height: 100%; padding: 0 var(--gutter); display: grid; align-items: center; }
