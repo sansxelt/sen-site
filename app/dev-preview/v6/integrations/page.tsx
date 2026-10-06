@@ -52,7 +52,7 @@ export default function IntegrationsPage() {
         sub="Start a check from the console, the CLI, a pipeline or an AI assistant. Each gets back the same answer, with the evidence."
         primary={{ label: "Start free", href: SIGNUP }}
         secondary={{ label: "Read the docs", href: `${BASE}/docs` }}
-        {...photographHero("robotDetail")}
+        {...photographHero("serverRack", "65% 50%")}
       />
 
       <section className="v6-sec" id="ways-in">

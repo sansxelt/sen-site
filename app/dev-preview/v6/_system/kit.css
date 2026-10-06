@@ -471,3 +471,22 @@ a.v6-xl__card:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
  .v6-fh__panel { right:var(--hero-inset); }
  .v6-fh[data-kind="panel"] .v6-fh__body { margin-right:calc(var(--hero-inset) + min(46%,640px) + 48px); }
 }
+
+/* Phone scenes reserve a short photo area, then let the copy determine its own
+   height. Long titles and Safari's browser chrome must not push the actions
+   beneath a full-screen photograph. The compact variant uses the same layout. */
+@media (max-width:560px) {
+ .v6-fh[data-kind="scene"] .v6-fh__frame { min-height:0; padding-top:0; }
+ .v6-fh[data-kind="scene"] .v6-fh__media {
+   position:relative; inset:auto; height:clamp(180px,30svh,260px); flex:none;
+   transform:none!important; will-change:auto;
+ }
+ .v6-fh[data-kind="scene"] .v6-fh__media::after {
+   content:""; position:absolute; inset:0; pointer-events:none;
+   background:linear-gradient(0deg,#08090B 0%,transparent 28%);
+ }
+ .v6-fh[data-kind="scene"] .v6-fh__shade { display:none; }
+ .v6-fh[data-kind="scene"] .v6-fh__body { margin:20px 20px 24px; }
+ .v6-fh[data-kind="scene"] .v6-fh__body::before { content:none; }
+ .v6-fh[data-kind="scene"] .v6-fh__credit { margin:8px 12px 0; }
+}
