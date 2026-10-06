@@ -125,7 +125,7 @@ export function ResetPasswordConfirmForm({ token }: { token: string }) {
         {status && <div role={status.tone === "error" ? "alert" : "status"} style={statusStyle(status.tone)}>{status.message}</div>}
 
         <button type="submit" disabled={loading} className="btn" style={{ width: "100%", opacity: loading ? 0.6 : 1 }}>
-          <ButtonLabel>{loading ? "Saving..." : "Set new password"}</ButtonLabel><span className="auth-motion-arrow" aria-hidden="true">→</span>
+          <ButtonLabel>{loading ? "Saving..." : "Set new password"}</ButtonLabel>
         </button>
       </form>
 

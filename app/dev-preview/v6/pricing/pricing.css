@@ -30,8 +30,6 @@
 .v6 .v6-pp__card .v6-pp__act .v6-btn { display:flex; width:100%; }
 /* Pricing labels remain steady, matching account controls. */
 .v6-pp .motion-label { padding:0; margin:0; line-height:1.4; }
-.v6-pp .motion-label > span:first-child { transform:none!important; }
-.v6-pp .motion-label > span + span { display:none; }
 .v6 .v6-pp__head { margin:24px 0 0; padding-top:20px; border-top:1px solid var(--line); font-size:14px; font-weight:500; line-height:1.5; color:var(--ink); text-wrap:pretty; }
 .v6 .v6-pp__list { margin:14px 0 0; padding:0; list-style:none; display:grid; gap:9px; align-content:start; }
 .v6 .v6-pp__list > li { position:relative; margin:0; padding-left:15px; font-size:13px; line-height:1.55; color:var(--ink-3); }

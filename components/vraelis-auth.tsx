@@ -165,7 +165,6 @@ export function VraelisSignIn({
               onClick={() => void handleOAuth(opt.provider)} disabled={providerBusy}>
               {opt.provider === "google" ? <GoogleIcon /> : <GitHubIcon />}
               <ButtonLabel>{providerBusy ? "Redirecting…" : `Continue with ${opt.label}`}</ButtonLabel>
-              <span className="auth-motion-arrow" aria-hidden="true">→</span>
             </button>
           );
         })}
@@ -208,7 +207,6 @@ export function VraelisSignIn({
             (console audit P1-22). Pressing one without agreeing says why, in the status line below. */}
         <button type="submit" className="auth-form__submit" disabled={emailBusy}>
           <ButtonLabel>{busy === "signup" ? "Creating account…" : busy === "signin" ? "Signing in…" : mode === "signup" ? "Create account" : "Sign in"}</ButtonLabel>
-          <span className="auth-motion-arrow" aria-hidden="true">→</span>
         </button>
         {mode === "signup" ? <p className="auth-form__note">We will email you a link to confirm your address before your first sign-in.</p> : null}
       </form>

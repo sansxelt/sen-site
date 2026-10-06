@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import "./button-motion.css";
 
-/** The second label is visual only; the control keeps one accessible name. */
+/** One stable label; the control itself provides hover and press feedback. */
 export function ButtonLabel({ children }: { children: ReactNode }) {
   if (typeof children !== "string") return <>{children}</>;
-  return <span className="motion-label"><span>{children}</span><span aria-hidden="true">{children}</span></span>;
+  return <span className="motion-label">{children}</span>;
 }

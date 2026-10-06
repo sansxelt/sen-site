@@ -109,7 +109,7 @@ export function ResetPasswordForm() {
         {status && <div role={status.tone === "error" ? "alert" : "status"} style={statusStyle(status.tone)}>{status.message}</div>}
 
         <button type="submit" disabled={loading} className="btn" style={{ width: "100%", opacity: loading ? 0.6 : 1 }}>
-          <ButtonLabel>{loading ? "Sending..." : "Send reset link"}</ButtonLabel><span className="auth-motion-arrow" aria-hidden="true">→</span>
+          <ButtonLabel>{loading ? "Sending..." : "Send reset link"}</ButtonLabel>
         </button>
       </form>
 

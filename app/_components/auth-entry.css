@@ -62,7 +62,7 @@ html:has(.auth-entry):not(:has(.vr-pc__dialog[open])) { overflow-y:auto; }
 [data-surface="app"] .auth-entry .btn--ghost:hover:not(:disabled) { background:var(--bg-3); color:var(--fg-1); border-color:var(--line-3); }
 [data-surface="app"] .auth-entry .auth-form__submit { margin-top:8px; }
 [data-surface="app"] .auth-entry .auth-form__switch { text-align:center; margin-top:24px; }
-[data-surface="app"] .auth-entry .auth-form__switch button { text-decoration:none; font-weight:600; }
+[data-surface="app"] .auth-entry .auth-form__switch button { display:inline; vertical-align:baseline; text-decoration:none; font-weight:600; }
 [data-surface="app"] .auth-entry .auth-form__consent { color:var(--fg-3); font-size:12px; line-height:1.6; }
 [data-surface="app"] .auth-entry .auth-form__consent input { accent-color:#fafafa; }
 [data-surface="app"] .auth-entry .auth-form__note { text-align:center; }
@@ -93,8 +93,8 @@ html:has(.auth-entry):not(:has(.vr-pc__dialog[open])) { overflow-y:auto; }
 [data-surface="app"] .auth-entry .auth-bridge input:not([type="checkbox"]) { min-height:54px; border-radius:12px; background:var(--bg-1); color:var(--fg-1); font-size:16px; }
 [data-surface="app"] .auth-entry .auth-bridge input:focus-visible { outline:2px solid #fafafa!important; outline-offset:3px; }
 .auth-entry .btn { position:relative; isolation:isolate; overflow:clip; }
-.auth-entry .btn::before { content:""; position:absolute; inset:0; z-index:-1; border-radius:inherit; pointer-events:none; background:#e4e4e7; transform:translateY(102%); transition:transform 420ms cubic-bezier(.22,1,.36,1); }
-.auth-entry .btn:hover:not(:disabled)::before,.auth-entry .btn:focus-visible::before { transform:translateY(0); }
+.auth-entry .btn::before { content:""; position:absolute; inset:0; z-index:-1; border-radius:inherit; pointer-events:none; background:#e4e4e7; opacity:0; transition:opacity 220ms; }
+.auth-entry .btn:hover:not(:disabled)::before,.auth-entry .btn:focus-visible::before { opacity:1; }
 .auth-entry .btn--ghost::before { background:var(--bg-3); }
 @media(prefers-reduced-motion:reduce) {
   .auth-entry__stage { animation:none; }
@@ -114,8 +114,3 @@ html:has(.auth-entry):not(:has(.vr-pc__dialog[open])) { overflow-y:auto; }
 [data-surface="app"] .auth-entry .auth-form--signup .auth-form__or { margin-block:16px; }
 [data-surface="app"] .auth-entry .auth-form--signup .auth-form__fields { gap:12px; }
 [data-surface="app"] .auth-entry .auth-form--signup .auth-form__switch { margin-top:18px; }
-
-/* Keep account labels steady; feedback comes from the fill, arrow and press. */
-.auth-entry .motion-label { display:inline-block; padding:0; margin:0; overflow:visible; line-height:1.4; }
-.auth-entry .motion-label > span:first-child { transform:none!important; }
-.auth-entry .motion-label > span + span { display:none; }
