@@ -1,6 +1,7 @@
 /* Full-page anchors intentionally cross the marketing and app host boundaries. */
 /* eslint-disable @next/next/no-html-link-for-pages */
 import type { ReactNode } from "react";
+import "@/components/button-motion.css";
 import { ProductSurface } from "@/app/_components/product-surface";
 import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
 import { LanguageSwitcher } from "@/components/language-switcher";

@@ -16,6 +16,7 @@
 // TRANSLATION. The topic is a radio group, not a <select>: the translator skips select elements (plan 0.6). Every
 // sentence the crawl cannot reach (validation, sending, success, the three failures, the routing line) is rendered
 // once in a hidden seed element, so the translation pass collects it.
+import { ButtonLabel } from "@/components/button-label";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { sectorBySlug } from "../_content/sectors";
 
@@ -231,7 +232,7 @@ export function ContactForm({ topicParam }: { topicParam?: string }) {
           while one is in flight. */}
       <div className="ct-actions">
         <button type="submit" className="v6-btn v6-btn--brand v6-btn--lg ct-submit" aria-disabled={sending || undefined}>
-          {sending ? MSG.sending : MSG.send}
+          <ButtonLabel>{sending ? MSG.sending : MSG.send}</ButtonLabel>
           <span className="v6-arw" aria-hidden><span>→</span><span>→</span></span>
         </button>
       </div>

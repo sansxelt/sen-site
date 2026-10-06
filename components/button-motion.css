@@ -1,0 +1,50 @@
+/* Shared interaction rhythm for public-site and account-entry controls. */
+.motion-label { min-width:0; display:inline-grid; overflow:clip; vertical-align:middle; padding:.12em 0; margin:-.12em 0; }
+.motion-label > span { grid-area:1 / 1; display:block; transition:transform 420ms cubic-bezier(.22,1,.36,1); }
+.motion-label > span + span { transform:translateY(115%); }
+:is(a,button):is(:hover,:focus-visible):not(:disabled):not([aria-disabled="true"]) .motion-label > span:first-child { transform:translateY(-115%); }
+:is(a,button):is(:hover,:focus-visible):not(:disabled):not([aria-disabled="true"]) .motion-label > span + span { transform:translateY(0); }
+
+.v6 .v6-btn { overflow:clip; transition:transform 260ms cubic-bezier(.22,1,.36,1),border-color 260ms,color 260ms,box-shadow 260ms; }
+.v6 .v6-btn::before { content:""; inset:0; background:linear-gradient(115deg,#d4d4d8,#f4f4f5); clip-path:none; transform:translateY(102%); transition:transform 420ms cubic-bezier(.22,1,.36,1); }
+.v6 .v6-btn:is(:hover,:focus-visible):not(:disabled):not([aria-disabled="true"])::before { transform:translateY(0); }
+.v6 .v6-btn--ghost::before { background:#fafafa; }
+.v6 .v6-btn--ghost:is(:hover,:focus-visible),.v6 .v6-fh .v6-fh__actions .v6-btn--ghost:is(:hover,:focus-visible) { color:#0a0a0b; border-color:#fafafa; }
+.v6 .v6-btn:active:not(:disabled) { transform:scale(.97); }
+.v6 .v6-btn .v6-arw > span { transition-duration:420ms; transition-timing-function:cubic-bezier(.22,1,.36,1); }
+.v6 .v6-btn:focus-visible .v6-arw > span:first-child { transform:translateX(100%); }
+.v6 .v6-btn:focus-visible .v6-arw > span + span { transform:translateX(0); }
+.v6 .v6-nav__item,.v6 .v6-nav__signin { transition:color 220ms,opacity 220ms; }
+.v6 :is(.v6-elink,.v6-close__link,.v6-or__link) { transition:gap 320ms cubic-bezier(.22,1,.36,1); }
+.v6 :is(.v6-elink,.v6-close__link,.v6-or__link):is(:hover,:focus-visible) { gap:14px; }
+.v6 button:not(.v6-btn):not(.v6-nav__item) { transition:background-color 220ms,border-color 220ms,color 220ms,transform 220ms; }
+.v6 button:not(.v6-btn):not(.v6-nav__item):active:not(:disabled) { transform:scale(.97); }
+.v6 button svg { transition:transform 320ms cubic-bezier(.22,1,.36,1); }
+.v6 button:is(:hover,:focus-visible):not(:disabled) svg { transform:scale(1.1); }
+
+.auth-split :is(.auth-form__provider,.auth-form__submit,.auth-recovery .btn) { position:relative; isolation:isolate; overflow:clip; padding-inline:44px; transition:background-color 260ms,border-color 260ms,box-shadow 260ms,transform 220ms; }
+.auth-split :is(.auth-form__provider,.auth-form__submit,.auth-recovery .btn)::before { content:""; position:absolute; inset:0; z-index:-1; border-radius:inherit; background:rgba(255,255,255,.09); transform:translateY(102%); transition:transform 420ms cubic-bezier(.22,1,.36,1); pointer-events:none; }
+.auth-split :is(.auth-form__submit,.auth-recovery .btn)::before { background:linear-gradient(115deg,#d4d4d8,#fafafa); }
+.auth-split :is(.auth-form__provider,.auth-form__submit,.auth-recovery .btn):is(:hover,:focus-visible):not(:disabled)::before { transform:translateY(0); }
+.auth-split :is(.auth-form__provider,.auth-form__submit,.auth-recovery .btn):active:not(:disabled) { transform:scale(.98); }
+.auth-split .auth-form__provider svg { transition:transform 420ms cubic-bezier(.22,1,.36,1); }
+.auth-split .auth-form__provider:is(:hover,:focus-visible):not(:disabled) svg { transform:translateX(-3px); }
+.auth-split .auth-motion-arrow { position:absolute; right:18px; opacity:0; transform:translateX(-8px); transition:opacity 260ms,transform 420ms cubic-bezier(.22,1,.36,1); }
+.auth-split :is(button,a):is(:hover,:focus-visible):not(:disabled) > .auth-motion-arrow { opacity:1; transform:translateX(0); }
+.auth-split :is(.auth-form__switch button,.auth-form__forgot,.auth-split__back) { text-underline-offset:4px; transition:color 220ms,text-decoration-color 220ms; }
+.auth-split .auth-split__back > span { display:inline-block; transition:transform 320ms cubic-bezier(.22,1,.36,1); }
+.auth-split .auth-split__back:hover > span { transform:translateX(-4px); }
+.auth-split .auth-split__demo-link > span { transition:transform 320ms cubic-bezier(.22,1,.36,1); }
+.auth-split .auth-split__demo-link:hover > span { transform:translateX(5px); }
+.auth-split :is(.auth-form__head,.auth-recovery > h1) { animation:authControlIn 600ms cubic-bezier(.22,1,.36,1) both; }
+.auth-split .auth-form__providers { animation:authControlIn 650ms 70ms cubic-bezier(.22,1,.36,1) both; }
+.auth-split :is(.auth-form__fields,.auth-recovery > div) { animation:authControlIn 650ms 130ms cubic-bezier(.22,1,.36,1) both; }
+@keyframes authControlIn { from { opacity:0;transform:translateY(14px); } to { opacity:1;transform:translateY(0); } }
+@media (prefers-reduced-motion:reduce) {
+  .motion-label > span,.v6 .v6-btn,.v6 .v6-btn::before,.v6 .v6-btn .v6-arw > span,.v6 button,.v6 button svg,.auth-split :is(button,a,svg),.auth-split :is(button,a)::before,.auth-split .auth-motion-arrow,.auth-split .auth-split__back > span,.auth-split .auth-split__demo-link > span { transition:none!important; }
+  .v6 .v6-btn--ghost:is(:hover,:focus-visible) { background:#fafafa; }
+  .v6 button:active,.v6 button:is(:hover,:focus-visible) svg,.auth-split button:active,.auth-split .auth-form__provider svg { transform:none!important; }
+  .motion-label > span:first-child,.motion-label > span + span { transform:none!important; }
+  .motion-label > span + span { visibility:hidden; }
+  .auth-split :is(.auth-form__head,.auth-recovery > h1,.auth-form__providers,.auth-form__fields,.auth-recovery > div) { animation:none; }
+}

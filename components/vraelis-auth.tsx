@@ -11,6 +11,7 @@
 // colour directly, because that is what pinned the previous version to a cream-and-emerald surface.
 
 import Link from "next/link";
+import { ButtonLabel } from "./button-label";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useState, type FormEvent } from "react";
@@ -165,7 +166,8 @@ export function VraelisSignIn({
             <button key={opt.provider} type="button" className="auth-form__provider"
               onClick={() => void handleOAuth(opt.provider)} disabled={providerBusy}>
               {opt.provider === "google" ? <GoogleIcon /> : <GitHubIcon />}
-              {providerBusy ? "Redirecting…" : `Continue with ${opt.label}`}
+              <ButtonLabel>{providerBusy ? "Redirecting…" : `Continue with ${opt.label}`}</ButtonLabel>
+              <span className="auth-motion-arrow" aria-hidden="true">→</span>
             </button>
           );
         })}
@@ -205,7 +207,8 @@ export function VraelisSignIn({
         {/* Enabled before the terms box is ticked: greyed-out buttons with no reason given read as broken
             (console audit P1-22). Pressing one without agreeing says why, in the status line below. */}
         <button type="submit" className="auth-form__submit" disabled={emailBusy}>
-          {busy === "signup" ? "Creating account…" : busy === "signin" ? "Signing in…" : mode === "signup" ? "Create account" : "Sign in"}
+          <ButtonLabel>{busy === "signup" ? "Creating account…" : busy === "signin" ? "Signing in…" : mode === "signup" ? "Create account" : "Sign in"}</ButtonLabel>
+          <span className="auth-motion-arrow" aria-hidden="true">→</span>
         </button>
         {mode === "signup" ? <p className="auth-form__note">We will email you a link to confirm your address before your first sign-in.</p> : null}
       </form>
@@ -214,8 +217,8 @@ export function VraelisSignIn({
 
       <p className="auth-form__switch">
         {mode === "signup"
-          ? <>Already have an account? <button type="button" onClick={() => switchTo("signin")}>Sign in</button></>
-          : <>New to Vraelis? <button type="button" onClick={() => switchTo("signup")}>Create an account</button></>}
+          ? <>Already have an account? <button type="button" onClick={() => switchTo("signin")}><ButtonLabel>Sign in</ButtonLabel></button></>
+          : <>New to Vraelis? <button type="button" onClick={() => switchTo("signup")}><ButtonLabel>Create an account</ButtonLabel></button></>}
       </p>
     </div>
   );

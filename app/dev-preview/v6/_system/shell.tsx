@@ -12,6 +12,7 @@ import { PRIMARY_SECTORS, SOLUTIONS_HREF } from "../_content/sectors";
 import { useGroundColor } from "@/components/use-ground-color";
 import { V6_BASE, V6_HOME, V6_APP, v6SignInPath, v6GroundAtTop, v6ShouldPrefetch, GROUND_CSS } from "@/lib/v6-routes";
 import { analyticsAllowed, onPrivacyChoiceChange } from "@/lib/privacy-choice";
+import { ButtonLabel } from "@/components/button-label";
 import { LanguageSwitcher } from "@/components/language-switcher";
 
 // FOLLOWS THE PROMOTION FLAG. These were hardcoded to "/dev-preview/v6", which is precisely the mistake
@@ -610,16 +611,16 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
               onPointerDown={(e) => { lastPointer.current = e.pointerType; }} onClick={onItemClick(i)}
               onPointerEnter={mouseOnly(() => openAt(i))}
               onKeyDown={onItemKey(i)} onFocus={() => { if (open !== null && open !== i) close(open); }}>
-              {m.label}
+              <ButtonLabel>{m.label}</ButtonLabel>
             </button>
           ))}
           <Link href={DOCUMENTATION.href} ref={(el) => { itemRefs.current[MENUS.length] = el; }} className="v6-nav__item"
             aria-current={pathname === DOCUMENTATION.href || pathname?.startsWith(DOCUMENTATION.href + "/") ? "page" : undefined} onPointerEnter={(event) => mouseOnly(leaveMenus)(event)} onFocus={leaveMenus}>
-            {DOCUMENTATION.label}
+            <ButtonLabel>{DOCUMENTATION.label}</ButtonLabel>
           </Link>
           <Link href={PRICING.href} ref={(el) => { itemRefs.current[MENUS.length + 1] = el; }} className="v6-nav__item"
             aria-current={pathname === PRICING.href ? "page" : undefined} onPointerEnter={mouseOnly(leaveMenus)} onFocus={leaveMenus}>
-            {PRICING.label}
+            <ButtonLabel>{PRICING.label}</ButtonLabel>
           </Link>
         </div>
         {/* A panel on its way out stays on screen for its exit, and is inert for it: nothing in it can take focus
@@ -644,10 +645,10 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
               Create account for a visitor, or Open Vraelis for someone already signed in. It used to carry
               one button, which left the bar looking unfinished on a wide screen. */}
           <LanguageSwitcher variant="pill" placement="down" className="v6-nav__lang" />
-          {authed ? null : <Link href={SIGNIN} className="v6-nav__signin">Sign in</Link>}
+          {authed ? null : <Link href={SIGNIN} className="v6-nav__signin"><ButtonLabel>Sign in</ButtonLabel></Link>}
           {authed
-            ? <Link href={V6_APP} prefetch={v6ShouldPrefetch(V6_APP) ? undefined : false} className="v6-btn v6-btn--brand">Open Vraelis</Link>
-            : <Link href={SIGNUP} className="v6-btn v6-btn--brand">Create account</Link>}
+            ? <Link href={V6_APP} prefetch={v6ShouldPrefetch(V6_APP) ? undefined : false} className="v6-btn v6-btn--brand"><ButtonLabel>Open Vraelis</ButtonLabel></Link>
+            : <Link href={SIGNUP} className="v6-btn v6-btn--brand"><ButtonLabel>Create account</ButtonLabel></Link>}
           <button ref={burgerRef} className="v6-nav__burger" aria-label="Open navigation" aria-haspopup="dialog" onClick={() => setDrawer(true)}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
           </button>
@@ -737,7 +738,7 @@ function MobileNav({ authed, onClose }: { authed: boolean; onClose: (returnFocus
                   requestAnimationFrame(() => el.scrollIntoView({ block: "nearest", behavior: "auto" }));
                 }
               }}>
-              {m.label}
+              <ButtonLabel>{m.label}</ButtonLabel>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M6 9l6 6 6-6" /></svg>
             </button>
             {openSec === i ? (
@@ -768,7 +769,7 @@ function MobileNav({ authed, onClose }: { authed: boolean; onClose: (returnFocus
           aria-current={pathname === DOCUMENTATION.href ? "page" : undefined}>{DOCUMENTATION.label}</Link>
         <Link href={PRICING.href} className="v6-drawer__row" onClick={follow}
           aria-current={pathname === PRICING.href ? "page" : undefined}>
-          {PRICING.label}
+          <ButtonLabel>{PRICING.label}</ButtonLabel>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
         </Link>
       </div>

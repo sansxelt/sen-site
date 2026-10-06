@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ButtonLabel } from "@/components/button-label";
 import { useState, type CSSProperties, type FormEvent } from "react";
 
 type StatusTone = "error" | "success";
@@ -113,7 +114,7 @@ export function ResetPasswordConfirmForm({ token }: { token: string }) {
         {status && <div role={status.tone === "error" ? "alert" : "status"} style={statusStyle(status.tone)}>{status.message}</div>}
 
         <button type="submit" disabled={loading} className="btn" style={{ width: "100%", opacity: loading ? 0.6 : 1 }}>
-          {loading ? "Saving..." : "Set new password"}
+          <ButtonLabel>{loading ? "Saving..." : "Set new password"}</ButtonLabel><span className="auth-motion-arrow" aria-hidden="true">→</span>
         </button>
       </form>
 

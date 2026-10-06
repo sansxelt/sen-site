@@ -2,6 +2,7 @@
 
 // THE COMPONENT KIT, INTERACTIVE HALF (plan A5). FrameMedia and Tabs: the two kit parts that need the browser.
 // Pages import them from "../_system/kit" (re-exported there) or from here; both resolve to the same module.
+import { ButtonLabel } from "@/components/button-label";
 // Styles are in kit.css, imported here too so a page that only uses Tabs still gets them.
 import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 import "./kit.css";
@@ -117,7 +118,7 @@ export function Tabs({ tabs, label, height = 520, initial }: {
               className="v6-tabs__tab"
               onClick={() => setActive(t.id)}
             >
-              {t.label}
+              <ButtonLabel>{t.label}</ButtonLabel>
             </button>
           );
         })}
