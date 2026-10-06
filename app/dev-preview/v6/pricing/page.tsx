@@ -7,6 +7,7 @@ import { V6_BASE, v6SignInPath } from "@/lib/v6-routes";
 import { PLAN_CATALOG_V1, FREE_TIER, PASS_INCLUDED_FLOWS, EXTRA_FLOW_CENTS, RERUN_PER_FLOW_CENTS, flowUnitsPerMonth, passPriceCents, type PlanV1 } from "@/lib/preflight/pass-pricing";
 import { usdFromCents, effectiveMonthlyUsd, planCapacity } from "@/lib/preflight/pass-pricing-format";
 import { PricingEstimate } from "./pricing-estimate";
+import { EvidenceModel } from "../_system/evidence-model";
 import "./pricing.css";
 
 export const metadata = v6meta({
@@ -114,14 +115,7 @@ export default function V6Pricing() {
       <section className="v6-sec v6-pp__beta" aria-labelledby="recording-h">
         <div className="v6-wrap v6-pp__beta-inner">
           <div><p className="v6-eyebrow">The recording beta</p><h2 id="recording-h">Already have the reports?</h2><p>Compare the requested task with control-panel, service and device reports. Find conflicting states, missing completion and changes to the wrong asset.</p><EditorialLink href={RECORDED}>Open recorded evidence</EditorialLink><div className="v6-pp__beta-docs"><EditorialLink href={`${BASE}/docs/recorded-reports`}>JSON and MCAP format docs</EditorialLink></div></div>
-          <div className="v6-pp__record-flow" role="figure" aria-label="Supported task reports are compared against a requirement, producing findings linked to source events.">
-            <div className="v6-pp__record-inputs"><span>Control panel</span><span>Task service</span><span>Device report</span></div>
-            <span className="v6-pp__record-arrow" aria-hidden="true">↓</span>
-            <div className="v6-pp__record-compare"><span>One task. One intended asset.</span><strong>Compare the recorded states</strong></div>
-            <span className="v6-pp__record-arrow" aria-hidden="true">↓</span>
-            <div className="v6-pp__record-result"><span>Finding</span><strong>Inspect the source events</strong></div>
-            <p>Files stay in your browser. Reports describe recorded state; they do not establish physical ground truth. Live device connections are not available.</p>
-          </div>
+          <EvidenceModel/>
         </div>
       </section>
 

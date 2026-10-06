@@ -4,10 +4,13 @@ import { SectionHead } from "./ui";
 import { ClosingScene } from "./close";
 import { photographHero, type PhotographKey } from "../_content/photography";
 import { V6_BASE } from "@/lib/v6-routes";
+import { EvidenceModel } from "./evidence-model";
+import type { Requirement } from "@/lib/recorded-verification/evaluate";
 import "./direction-page.css";
 export type DirectionContent = {
   eyebrow:string; title:string; intro:string; photo:PhotographKey;
   heading:string; lead:string; items:{title:string; body:string; label:string}[];
+  recordingExample?: Requirement;
   references?:{title:string;body:string;href:string}[];
   nextTitle:string; nextLead:string; next:{title:string;body:string;label:string}[];
 };
@@ -20,12 +23,8 @@ export function DirectionPage({content:c}:{content:DirectionContent}) {
       <FeatureGrid span={4}>{c.items.map(i=><FeatureCard key={i.title} {...i}/>)}</FeatureGrid>
     </Band>
     <section className="direction-flow v6-wrap" aria-labelledby="direction-flow-title">
-      <div><p className="direction-flow__eyebrow">Current recorded-report workflow</p><h2 id="direction-flow-title">One task. Every available report.</h2><p>Keep the task, asset and time together. Compare what each source recorded, then open the events behind the finding.</p></div>
-      <ol className="direction-flow__steps">
-        <li><span>01 / Input</span><h3>Bring the recording</h3><p>Supported JSON or MCAP reports from the control panel, task service and device.</p></li>
-        <li><span>02 / Compare</span><h3>Follow the intended task</h3><p>Look for conflicting states, missing completion and changes to another asset.</p></li>
-        <li><span>03 / Review</span><h3>Inspect the source events</h3><p>A finding points back to supplied evidence. Missing reports remain an explicit gap.</p></li>
-      </ol>
+      <div><p className="direction-flow__eyebrow">Current recorded-report workflow</p><h2 id="direction-flow-title">One task. Every available report.</h2><p>Define the intended asset, completion window and assets that must stay unchanged. Compare the captured reports against that requirement, then inspect the source events.</p></div>
+      <EvidenceModel requirement={c.recordingExample}/>
       <p className="direction-flow__boundary">Reports describe recorded state. They do not establish physical ground truth. Live device connections are not available.</p>
     </section>
     <Band><SectionHead eyebrow="What comes next" title={c.nextTitle} lead={c.nextLead}/>

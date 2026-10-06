@@ -48,15 +48,15 @@ const MENUS: Menu[] = [
     groups: [
       { h: "Platform", links: [
         { t: "Overview", d: "Requirements, execution and evidence", href: BASE + "/platform", pic: "/site/photography/robot-cell.jpg" },
-        { t: "Recorded evidence", d: "Review task reports from JSON or MCAP", href: BASE + "/platform#recorded-evidence", pic: "/site/photography/robot-detail.jpg" },
+        { t: "Recorded evidence", d: "Review task reports from JSON or MCAP", href: BASE + "/recorded-evidence", pic: "/site/photography/robot-detail.jpg" },
         { t: "Recording beta", d: "Capabilities, examples and next steps", href: BASE + "/beta", pic: "/site/photography/robot-detail.jpg" },
         { t: "Integrations", d: "What each connection actually supplies", href: BASE + "/integrations", pic: "/site/photography/network-engineer.jpg" },
         { t: "AI assistants", d: "Use Vraelis through MCP", href: BASE + "/agents", pic: "/site/photography/electronics-bench.jpg" },
       ] },
       { h: "Developers", links: [
         { t: "Developer tools", d: "APIs, command line and webhooks", href: BASE + "/developers", pic: "/site/photography/hardware-inspection.jpg" },
-        { t: "API", d: "Integrate checks into your software", href: BASE + "/developers#api", pic: "/site/photography/server-rack.jpg" },
-        { t: "CLI", d: "Run a check from your terminal", href: BASE + "/developers#cli", pic: "/site/photography/firmware.jpg" },
+        { t: "API", d: "Integrate checks into your software", href: BASE + "/developers/api", pic: "/site/photography/server-rack.jpg" },
+        { t: "CLI", d: "Run a check from your terminal", href: BASE + "/developers/cli", pic: "/site/photography/firmware.jpg" },
       ] },
     ],
   },
@@ -64,7 +64,7 @@ const MENUS: Menu[] = [
     label: "Solutions",
     groups: [
       { h: "Physical systems", links: PRIMARY_SECTORS.map(s => ({ t:s.label,d:s.line,href:s.href,pic:s.slug === "defense" ? EDITORIAL + "aviation.jpg" : s.slug === "fleets" ? "/site/photography/robot-arm.jpg" : s.pics.menu })) },
-      { h: "Organizations", links: [{ t: "Government & institutions", d: "Mission systems and public infrastructure", href: BASE + "/government", pic: "/site/photography/mission.jpg" }, { t: "System integrators", d: "Review tasks across suppliers", href: BASE + "/integrators", pic: "/site/photography/network-engineer.jpg" }, { t: "Enterprise", d: "Governments, institutions and teams", href: BASE + "/enterprise", pic: "/site/photography/power-grid.jpg" }] },
+      { h: "Organizations", links: [{ t: "Government & institutions", d: "Mission systems and public infrastructure", href: BASE + "/government", pic: "/site/photography/wind-farm.jpg" }, { t: "System integrators", d: "Review tasks across suppliers", href: BASE + "/integrators", pic: "/site/photography/network-engineer.jpg" }, { t: "Enterprise", d: "Governments, institutions and teams", href: BASE + "/enterprise", pic: "/site/photography/power-grid.jpg" }] },
     ],
     foot: { t: "Explore solutions", href: SOLUTIONS_HREF },
   },
@@ -88,6 +88,14 @@ const MENUS: Menu[] = [
 const DOCUMENTATION = {label:"Docs",href:BASE + "/docs"};
 const PRICING = { label: "Pricing", href: BASE + "/pricing" };
 const MEGA_ID = "v6-mega";
+
+function restartCurrentPage(event: ReactMouseEvent<HTMLAnchorElement>) {
+  if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+  const destination = new URL(event.currentTarget.href, window.location.href);
+  if (destination.origin !== location.origin || destination.pathname !== location.pathname || destination.hash) return;
+  // Wait until a mobile drawer has restored the document's scrolling element.
+  requestAnimationFrame(() => window.scrollTo({ top:0, left:0, behavior:"instant" }));
+}
 
 /** Every picture of a menu's links, first link first, each once. */
 function menuPics(menu: Menu): string[] {
@@ -136,7 +144,7 @@ function Brand() {
 // picture box keeps its size and place. Every picture of the open menu is mounted at once, so pointing at a
 // link swaps the picture with no wait: the incoming one fades in over 240ms and settles from 1.015 to 1 over
 // 480ms (plan A6), and the link it belongs to stays lit. The first link's picture shows on opening.
-function MegaShell({ index, state, onNavigate }: { index: number; state: "in" | "out"; onNavigate: () => void }) {
+function MegaShell({ index, state, onNavigate }: { index: number; state: "in" | "out"; onNavigate: (event: ReactMouseEvent<HTMLAnchorElement>) => void }) {
   const menu = MENUS[index];
   const pics = menuPics(menu);
   const [pic, setPic] = useState<string | null>(pics[0] ?? null);
@@ -613,11 +621,11 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
               {m.label}
             </button>
           ))}
-          <Link href={DOCUMENTATION.href} ref={(el) => { itemRefs.current[MENUS.length] = el; }} className="v6-nav__item"
+          <Link href={DOCUMENTATION.href} ref={(el) => { itemRefs.current[MENUS.length] = el; }} className="v6-nav__item" onClick={restartCurrentPage}
             aria-current={pathname === DOCUMENTATION.href || pathname?.startsWith(DOCUMENTATION.href + "/") ? "page" : undefined} onPointerEnter={(event) => mouseOnly(leaveMenus)(event)} onFocus={leaveMenus}>
             {DOCUMENTATION.label}
           </Link>
-          <Link href={PRICING.href} ref={(el) => { itemRefs.current[MENUS.length + 1] = el; }} className="v6-nav__item"
+          <Link href={PRICING.href} ref={(el) => { itemRefs.current[MENUS.length + 1] = el; }} className="v6-nav__item" onClick={restartCurrentPage}
             aria-current={pathname === PRICING.href ? "page" : undefined} onPointerEnter={mouseOnly(leaveMenus)} onFocus={leaveMenus}>
             {PRICING.label}
           </Link>
@@ -627,7 +635,7 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
         {shown !== null ? (
           <div ref={megaRef} id={MEGA_ID} inert={open === null}
             onPointerEnter={mouseOnly(() => openAt(shown))} onPointerLeave={mouseOnly(scheduleClose)} onKeyDown={onMegaKey}>
-            <MegaShell index={shown} state={open === null ? "out" : "in"} onNavigate={() => close(shown)} />
+            <MegaShell index={shown} state={open === null ? "out" : "in"} onNavigate={(event) => { restartCurrentPage(event); close(shown); }} />
           </div>
         ) : null}
         {warm ? (
@@ -709,6 +717,7 @@ function MobileNav({ authed, onClose }: { authed: boolean; onClose: (returnFocus
   // A link to another route closes the drawer on the way to a new page. One that keeps the reader here (this
   // page, a section of it, or a new tab) also sends focus back to the menu button.
   const follow = (e: ReactMouseEvent<HTMLAnchorElement>) => {
+    restartCurrentPage(e);
     const to = new URL(e.currentTarget.href, window.location.href);
     const newTab = e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0;
     onClose(newTab || (to.origin === window.location.origin && to.pathname === window.location.pathname));
@@ -805,51 +814,10 @@ const lastNavWasTraversal = { current: false };
 
 export function RouteTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  // THE HOMEPAGE always opens at the top. Every other v6 route keeps normal scroll restoration.
-  //
-  // The homepage is ~15600px of scroll-position-driven pinned chapters, so arriving part way down it is not
-  // a small blemish: it drops the reader into the middle of a chapter. On a client-side navigation the
-  // document never changes, so the route mounts at the offset carried over from the page before it, which
-  // measured y=9435 coming back from the foot of /platform.
-  //
-  // Two things this deliberately does NOT do:
-  //
-  //   It does not use window.scrollTo(0, 0). app/globals.css sets `html { scroll-behavior: smooth }` for
-  //   in-page anchors, which turns that call into an animation: 1488ms across 344 intermediate positions,
-  //   replaying the pinned chapters backwards. `behavior: "instant"` overrides the CSS for this one call
-  //   and leaves anchor links smooth.
-  //
-  //   It does not force the top on inner routes. Doing that clobbered Back on /docs, /method and /platform,
-  //   which should return the reader where they were.
-  //
-  //   It does not force the top on a traversal, which is the same argument one line up: pressing Back is a
-  //   request to return to a position, and the homepage is not exempt from that because it is long. The
-  //   browser has already restored the offset by the time this runs, so forcing the top threw away the one
-  //   thing the reader asked for.
-  //
-  // NOTHING HERE TOUCHES history.scrollRestoration, AND THAT IS THE FIX.
-  //
-  // This used to set "manual" while it forced the homepage to the top, and hand back "auto" in the effect's
-  // cleanup. scrollRestoration is stored ON THE HISTORY ENTRY that was current when it was written, and the
-  // cleanup does not run until the pathname has already changed, by which point the new entry is the current
-  // one. So "auto" was written to the entry being navigated TO and the homepage entry kept "manual" forever.
-  // An entry marked manual is one the browser declines to restore, so Back to the homepage landed at the top
-  // no matter what the traversal guard below decided. Writing "auto" again from popstate does not rescue it
-  // either: by the time popstate fires the browser has already decided not to restore.
-  //
-  // "manual" was never buying anything. It exists to stop the browser restoring a position while we move the
-  // reader ourselves, and a forward navigation pushes a fresh entry that has no stored position to restore.
-  // Leaving the default alone means the browser restores on a traversal, which is the whole point, and the
-  // explicit scrollTo below still owns the forward case.
-  //
-  // Measured on the deployed site: leaving the homepage at y=3963, soft-navigating to /platform, then Back
-  // returned y=0 with the manual write in place and the left position without it.
+  // Fresh page navigation starts at its opening. History traversal and explicit
+  // in-page links keep their requested positions.
   useBeforePaint(() => {
-    // Exact match, not a prefix: /dev-preview/v6/platform must not be treated as the homepage.
-    const isHome = pathname === BASE || pathname === BASE + "/";
-    // A hash names a position the reader asked for. Without this guard the anchor scroll started and was
-    // then pulled back to the top, so /dev-preview/v6#gap never landed. A traversal names one too.
-    if (!isHome || window.location.hash || lastNavWasTraversal.current) return;
+    if (window.location.hash || lastNavWasTraversal.current) return;
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, [pathname]);
   return <div key={pathname} className="v6-page">{children}</div>;

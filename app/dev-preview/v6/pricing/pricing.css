@@ -48,16 +48,6 @@
 .v6 .v6-pp__beta-inner > div > p:not(.v6-eyebrow) { margin:20px 0 26px; max-width:53ch; color:var(--ink-3); font-size:16px; line-height:1.7; }
 .v6-pp__beta-docs { margin-top:18px; }
 .v6 .v6-pp__beta-docs .v6-elink { font-size:13px; }
-.v6-pp__record-flow { padding:26px; border:1px solid var(--line); border-radius:16px; background:var(--surface); }
-.v6-pp__record-inputs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
-.v6-pp__record-inputs > span { padding:12px 6px; border:1px solid var(--line); border-radius:8px; text-align:center; color:var(--ink-2); font-size:12px; }
-.v6-pp__record-arrow { display:block; text-align:center; margin:12px 0; color:var(--ink-3); }
-.v6-pp__record-compare,.v6-pp__record-result { padding:16px; text-align:center; border:1px solid var(--line); border-radius:8px; }
-.v6-pp__record-compare span,.v6-pp__record-result span { display:block; color:var(--ink-3); font-size:12px; }
-.v6-pp__record-compare strong,.v6-pp__record-result strong { display:block; margin-top:5px; font-size:14px; font-weight:500; color:var(--ink); }
-.v6-pp__record-result { background:#fafafa; border-color:#fafafa; }
-.v6-pp__record-result :is(span,strong) { color:#0a0a0b; }
-.v6 .v6-pp__record-flow > p { margin:18px 0 0!important; color:var(--ink-3); font-size:12px!important; line-height:1.6!important; }
 .v6 .v6-pp__estimate-sec,.v6 .v6-pp__comparison { padding-block:72px; }
 .v6-estimate { display:grid; grid-template-columns:1fr 1fr; border:1px solid var(--line); border-radius:18px; overflow:hidden; background:var(--surface); }
 .v6-estimate__controls { padding:32px; }
@@ -107,7 +97,7 @@
  .v6 .v6-pp__hero .v6-phero__lead { font-size:16px; }
  .v6 .v6-pp__beta,.v6 .v6-pp__estimate-sec,.v6 .v6-pp__comparison { padding-block:48px; }
 }
-@media(max-width:640px) { .v6-pp__grid { grid-template-columns:minmax(0,1fr); } .v6-pp__card,.v6-pp__alt,.v6-pp__record-flow,.v6-estimate__controls,.v6-estimate__receipt { padding:24px; } }
+@media(max-width:640px) { .v6-pp__grid { grid-template-columns:minmax(0,1fr); } .v6-pp__card,.v6-pp__alt,.v6-estimate__controls,.v6-estimate__receipt { padding:24px; } }
 @media(max-width:400px) { .v6 .v6-cyc__opt { min-width:0; padding-inline:16px; } .v6-pp__record-inputs { gap:5px; } .v6-pp__record-inputs > span { font-size:10px; padding-inline:3px; } }
 @media(prefers-reduced-motion:reduce) { .v6-cyc__thumb,.v6 .v6-cyc__opt,.v6-pp__card,.v6-estimate__flowmap span { animation:none!important; transition:none!important; } .v6-pp__table-scroll { scroll-behavior:auto; } }
 

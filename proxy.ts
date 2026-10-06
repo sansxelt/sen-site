@@ -32,6 +32,9 @@ export const v6Public = () => process.env.NEXT_PUBLIC_VRAELIS_V6_PUBLIC === "1";
 export const V6_EXACT: Record<string, string> = {
   "/": "/dev-preview/v6",
   "/developers": "/dev-preview/v6/developers",
+  "/developers/api": "/dev-preview/v6/developers/api",
+  "/developers/cli": "/dev-preview/v6/developers/cli",
+  "/recorded-evidence": "/dev-preview/v6/recorded-evidence",
   "/research": "/dev-preview/v6/research",
   "/privacy": "/dev-preview/v6/privacy",
   "/terms": "/dev-preview/v6/terms",

@@ -24,8 +24,8 @@ export const ORBIT: readonly Tile[] = [
   { word: "military", label: "Mission systems", phrase: "mission systems", photos: [pic("satelliteStation", "50% 35%")] },
   { word: "drones", label: "Drones & aviation", phrase: "flight controls", photos: [pic("helicopter")] },
   { word: "robotics", label: "Robotics", phrase: "robot controls", photos: [pic("robotDetail")] },
-  { word: "logistics", label: "Transport & fleets", phrase: "fleet controls", photos: [pic("vehicle")] },
-  { word: "government", label: "Infrastructure", phrase: "infrastructure controls", photos: [pic("powerGrid")] },
+  { word: "logistics", label: "Transport & fleets", phrase: "fleet controls", photos: [pic("robotfleet", "50% 35%")] },
+  { word: "government", label: "Infrastructure", phrase: "infrastructure controls", photos: [pic("windFarm")] },
 ];
 
 
@@ -111,7 +111,7 @@ export function Orbit() {
           node.style.width = `${tile}px`;
           node.style.transform = `translate(${p.x - tile / 2}px, ${p.y - tile * .375}px) scale(${scale})`;
           node.style.filter = `blur(${lift < 0 ? -lift * 1.1 : 0}px)`;
-          node.style.opacity = `${lift < 0 ? 1 + lift * .18 : 1}`;
+          node.style.opacity = "1";
           node.style.zIndex = diff === 0 ? "3" : "1";
         });
         el.dataset.ready = "true";

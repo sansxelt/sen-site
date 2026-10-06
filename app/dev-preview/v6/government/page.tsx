@@ -5,7 +5,8 @@ const content: DirectionContent = {
   "eyebrow": "Government & institutions",
   "title": "Government & institutions.",
   "intro": "External software review for engineering teams working on mission systems, public infrastructure and robotics. Start with unclassified test recordings and a defined problem.",
-  "photo": "mission",
+  "photo": "windFarm",
+  recordingExample: { assetId:"Test asset A", taskId:"test-104", completionWithinMs:10000, untouchedAssetIds:["Test asset B"] },
   "heading": "Make the record useful to the people responsible.",
   "lead": "A console result is only one source. Review the task, the intended asset and the state each supplied report describes.",
   "items": [

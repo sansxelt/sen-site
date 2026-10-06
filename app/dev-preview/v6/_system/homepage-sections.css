@@ -16,8 +16,8 @@
 .home-area__media { position:absolute; inset:0; z-index:0; display:block; overflow:hidden; isolation:isolate; pointer-events:none; }
 /* Overscan covers the full scroll shift before hover, throughout zoom, and on pointer exit. */
 .home-area__media img { position:absolute; inset:-12px; display:block; width:calc(100% + 24px); max-width:none; height:calc(100% + 24px); object-fit:cover; transform:translateY(var(--media-y,0px)) scale(var(--media-zoom,1)); transition:transform 700ms ease; }
-.home-area__media::after { content:""; position:absolute; inset:0; z-index:1; background:linear-gradient(0deg,rgba(0,0,0,.85),rgba(0,0,0,.08) 66%); pointer-events:none; }
-.home-area__caption { position:absolute; bottom:0; left:0; right:0; z-index:2; padding:24px; display:flex; align-items:end; justify-content:space-between; gap:16px; }
+.home-area__media::after { content:""; position:absolute; inset:0; z-index:1; background:linear-gradient(0deg,rgba(0,0,0,.72) 0%,rgba(0,0,0,.36) 24%,transparent 58%); pointer-events:none; }
+.home-area__caption { position:absolute; bottom:0; left:0; right:0; z-index:2; padding:24px; text-shadow:0 1px 4px rgba(0,0,0,.7); display:flex; align-items:end; justify-content:space-between; gap:16px; }
 .home-area__caption h3 { font-size:28px; line-height:1.12; letter-spacing:-.025em; font-weight:500; margin:0 0 8px; }
 .home-area__caption p { font-size:14px; line-height:1.5; color:#e0e0e0; margin:0; max-width:34ch; }
 .home-area[data-lead] h3 { font-size:36px; }
@@ -33,7 +33,7 @@
 .home-engineering__links { display:grid; grid-template-columns:1fr 1fr; gap:28px; }
 .home-resource { display:block; color:inherit; text-decoration:none; min-width:0; }
 .home-resource__image { position:relative; aspect-ratio:1.7; overflow:hidden; background:#171717; }
-.home-resource__image img { width:100%; height:100%; object-fit:cover; filter:saturate(.65); transition:transform 600ms ease; }
+.home-resource__image img { width:100%; height:100%; object-fit:cover; transition:transform 600ms ease; }
 .home-resource:hover img { transform:scale(1.025); }
 .home-resource>div:last-child { padding:28px 0; border-bottom:1px solid #333; }
 .home-resource .home-eyebrow { margin-bottom:12px; }
