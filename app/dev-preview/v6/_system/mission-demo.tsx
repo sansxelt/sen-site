@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { MediaReadyFallback, useMediaReady } from "./media-ready";
 
 const CLEAR = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 const filmSource = () => matchMedia("(max-width: 560px)").matches
@@ -9,6 +10,7 @@ const filmSource = () => matchMedia("(max-width: 560px)").matches
 /** A browser reenactment of the recorded Larkspur check, not a new engine run. */
 export function MissionDemo() {
   const screen = useRef<HTMLDivElement>(null);
+  useMediaReady(screen);
   const video = useRef<HTMLVideoElement>(null);
   const [exploring, setExploring] = useState(false);
   const wanted = useRef(true);
@@ -93,6 +95,7 @@ export function MissionDemo() {
 
   return <figure className="v6-mission-demo">
     <div ref={screen} className={`v6-mission-demo__screen${exploring ? " is-exploring" : ""}`}>
+    <MediaReadyFallback />
     <picture>
       <source media="(max-width: 560px)" srcSet="/home/app-check-replay-poster-vertical.jpg?v=workspace-20261004" />
       <img src="/home/app-check-replay-poster.jpg?v=workspace-20261004" alt="" loading="lazy" />

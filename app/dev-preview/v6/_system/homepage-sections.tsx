@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRef } from "react";
+import { MediaReadyFallback, useMediaReady } from "./media-ready";
 import { photograph } from "../_content/photography";
 import { PRIMARY_SECTORS } from "../_content/sectors";
 import { V6_BASE } from "@/lib/v6-routes";
@@ -27,9 +29,12 @@ function UpRight() {
 }
 
 export function PhysicalSystems() {
-  return <section id="physical-systems" className="home-areas" data-nav-theme="dark" aria-labelledby="home-areas-title">
+  const root = useRef<HTMLElement>(null);
+  useMediaReady(root);
+  return <section ref={root} id="physical-systems" className="home-areas" data-nav-theme="dark" aria-labelledby="home-areas-title" data-media-ready="pending">
+    <MediaReadyFallback/>
     <div className="v6-wrap">
-      <div className="home-section-head">
+      <div className="home-section-head" data-media-copy="">
         <p className="home-eyebrow">External software review</p>
         <h2 id="home-areas-title">Built for the physical world.</h2>
       </div>
@@ -37,11 +42,11 @@ export function PhysicalSystems() {
         {PRIMARY_SECTORS.map((sector, index) => {
           const area = AREAS[sector.slug as keyof typeof AREAS];
           const titleId = `home-area-${sector.slug}`;
-          return <Link key={sector.slug} href={sector.href} className="home-area" data-lead={index === 0 || undefined} aria-labelledby={titleId}>
+          return <Link key={sector.slug} href={sector.href} className="home-area" data-lead={index === 0 || undefined} aria-labelledby={titleId} data-media-ready="pending">
             <span className="home-area__media" aria-hidden="true">
               <Image src={area.image} alt="" width={area.width} height={area.height} sizes="(max-width: 760px) 100vw, 60vw" loading="lazy" />
             </span>
-            <div className="home-area__caption">
+            <div className="home-area__caption" data-media-copy="">
               <div><h3 id={titleId}>{sector.label}</h3><p>{area.line}</p></div>
               <UpRight />
             </div>
@@ -54,22 +59,25 @@ export function PhysicalSystems() {
 }
 
 export function EngineeringEntry() {
+  const root = useRef<HTMLElement>(null);
+  useMediaReady(root);
   const documentation = photograph("hardwareInspection");
   const platform = photograph("networkEngineer");
-  return <section className="home-engineering" data-nav-theme="dark" aria-labelledby="home-engineering-title">
+  return <section ref={root} className="home-engineering" data-nav-theme="dark" aria-labelledby="home-engineering-title" data-media-ready="pending">
+    <MediaReadyFallback/>
     <div className="v6-wrap">
-      <div className="home-section-head home-section-head--split">
+      <div className="home-section-head home-section-head--split" data-media-copy="">
         <h2 id="home-engineering-title">Start with the evidence<br />you already have.</h2>
         <p>Supported task reports stay in your browser. Review what should happen, examine the result and follow it back to the source events.</p>
       </div>
       <div className="home-engineering__links">
-        <Link href={`${V6_BASE}/docs/recorded-reports`} className="home-resource">
+        <Link href={`${V6_BASE}/docs/recorded-reports`} className="home-resource" data-media-ready="pending">
           <div className="home-resource__image"><Image src={documentation.src} alt={documentation.alt} width={documentation.w} height={documentation.h} sizes="(max-width: 760px) 100vw, 45vw" loading="lazy" /></div>
-          <div><p className="home-eyebrow">Documentation</p><h3>From recording to result.</h3><span>Formats, source mapping and the first review <UpRight /></span></div>
+          <div data-media-copy=""><p className="home-eyebrow">Documentation</p><h3>From recording to result.</h3><span>Formats, source mapping and the first review <UpRight /></span></div>
         </Link>
-        <Link href={`${V6_BASE}/platform`} className="home-resource">
+        <Link href={`${V6_BASE}/platform`} className="home-resource" data-media-ready="pending">
           <div className="home-resource__image"><Image src={platform.src} alt={platform.alt} width={platform.w} height={platform.h} sizes="(max-width: 760px) 100vw, 45vw" loading="lazy" /></div>
-          <div><p className="home-eyebrow">The platform</p><h3>Know what the result means.</h3><span>Available workflows, evidence and boundaries <UpRight /></span></div>
+          <div data-media-copy=""><p className="home-eyebrow">The platform</p><h3>Know what the result means.</h3><span>Available workflows, evidence and boundaries <UpRight /></span></div>
         </Link>
       </div>
     </div>

@@ -1,0 +1,6 @@
+/* Preserve the frame's geometry while its chosen image loads. Desktop pacing is unchanged. */
+@media(max-width:900px) {
+  [data-media-ready="pending"] [data-media-copy] { visibility:hidden; }
+  [data-media-ready="pending"] [data-media-copy],
+  [data-media-ready="pending"] [data-media-copy] * { animation-play-state:paused!important; }
+}

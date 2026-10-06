@@ -12,6 +12,7 @@ import { V6_BASE } from "@/lib/v6-routes";
 import { orbitRoute, type OrbitWord } from "../_content/sectors";
 import "./orbit.css";
 import { photograph, type PhotographKey } from "../_content/photography";
+import { MediaReadyFallback, useMediaReady } from "./media-ready";
 
 // pos: where the 4:3 frame crops a photograph cut to another shape (CSS object-position), when the middle is wrong.
 type Photo = { readonly src: string; readonly alt: string; readonly pos?: string };
@@ -48,6 +49,7 @@ function TopicSwap({ text }: { text: string }) {
 export function Orbit() {
   const locale = useLocale();
   const root = useRef<HTMLElement>(null);
+  useMediaReady(root);
   const tiles = useRef<(HTMLLIElement | null)[]>([]);
   const held = useRef<number | null>(null);
   const stopped = useRef(false);
@@ -137,8 +139,9 @@ export function Orbit() {
     return () => { cancelAnimationFrame(raf); resize.disconnect(); observer.disconnect(); media.removeEventListener("change", measure); reduced.removeEventListener("change", start); document.removeEventListener("visibilitychange", start); wake.current = () => {}; };
   }, []);
 
-  return <section ref={root} className="v6-or__field v6-dark" aria-labelledby="v6-or-h" data-nav-dark data-nav-theme="dark">
-    <div className="v6-or__copy">
+  return <section ref={root} className="v6-or__field v6-dark" aria-labelledby="v6-or-h" data-nav-dark data-nav-theme="dark" data-media-ready="pending">
+    <MediaReadyFallback/>
+    <div className="v6-or__copy" data-media-copy="">
       {locale === "en" ? <h2 id="v6-or-h" className="v6-or__h" aria-label={selected === null ? HEADLINE : `Know your ${ORBIT[selected].phrase} work.`} data-no-translate>
         <span>Know your </span><TopicSwap text={selected === null ? "systems" : ORBIT[selected].phrase} /><span> work.</span>
       </h2> : <h2 id="v6-or-h" className="v6-or__h v6-or__h--translated" aria-label={selected === null ? HEADLINE : `Know your ${ORBIT[selected].phrase} work.`}>
@@ -149,9 +152,9 @@ export function Orbit() {
     </div>
     <ul className="v6-or__tiles">
       {ORBIT.map((t, i) => <li key={t.label} ref={node => { tiles.current[i] = node; }} className="v6-or__item" data-on={i === selected}>
-        <Link className="v6-or__tile" href={ROUTE[i].href} onPointerEnter={() => select(i)} onPointerLeave={release} onFocus={() => select(i)} onBlur={release}>
+        <Link className="v6-or__tile" href={ROUTE[i].href} onPointerEnter={() => select(i)} onPointerLeave={release} onFocus={() => select(i)} onBlur={release} data-media-ready="pending">
           <Image src={t.photos[0].src} alt={t.photos[0].alt} fill sizes="(max-width: 700px) 45vw, (max-width: 1023px) 30vw, 180px" style={{objectFit: "cover", objectPosition: t.photos[0].pos}} />
-          <span className="v6-or__name">{t.label}</span>
+          <span className="v6-or__name" data-media-copy="">{t.label}</span>
         </Link>
       </li>)}
     </ul>

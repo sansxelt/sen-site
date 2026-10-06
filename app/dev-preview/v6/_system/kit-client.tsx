@@ -6,6 +6,7 @@ import { ButtonLabel } from "@/components/button-label";
 // Styles are in kit.css, imported here too so a page that only uses Tabs still gets them.
 import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 import "./kit.css";
+import { MediaReadyFallback, useMediaReady } from "./media-ready";
 
 /** How far the page scrolls while the hero picture settles from 1.03 to 1 (plan A6). */
 const SETTLE_PX = 320;
@@ -21,6 +22,7 @@ const SETTLE_PX = 320;
  */
 export function FrameMedia({ children, className = "" }: { children: ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
+  useMediaReady(ref);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -49,7 +51,7 @@ export function FrameMedia({ children, className = "" }: { children: ReactNode; 
       if (raf) cancelAnimationFrame(raf);
     };
   }, []);
-  return <div ref={ref} className={`v6-fh__media ${className}`.trim()}>{children}</div>;
+  return <div ref={ref} className={`v6-fh__media ${className}`.trim()}><MediaReadyFallback/>{children}</div>;
 }
 
 /** One tab: a stable id (letters, digits and dashes), its visible label, and what its panel shows. */

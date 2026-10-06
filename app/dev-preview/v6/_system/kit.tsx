@@ -209,7 +209,7 @@ export function FrameHero(props: FrameHeroProps) {
   return (
     // The section paints the page ground (kit.css) and carries all three dark markers on ONE line, because
     // design01-inc5-verify reads the source one line at a time.
-    <section id={id} className="v6-fh v6-dark" data-nav-dark data-nav-theme="dark" data-kind={kind} data-compact={props.compact || undefined}>
+    <section id={id} className="v6-fh v6-dark" data-nav-dark data-nav-theme="dark" data-kind={kind} data-compact={props.compact || undefined} data-media-ready={kind === "scene" ? "pending" : undefined}>
       <div className="v6-fh__frame">
         {props.panel ? (
           <HeroPanel panel={props.panel} />
@@ -219,7 +219,7 @@ export function FrameHero(props: FrameHeroProps) {
             <div className="v6-fh__shade" aria-hidden />
           </>
         )}
-        <div className="v6-fh__body">
+        <div className="v6-fh__body" data-media-copy="">
           {eyebrow ? <p className="v6-fh__eyebrow">{eyebrow}</p> : null}
           <h1 className="v6-fh__h1">{sentenceLines(title)}</h1>
           {sub ? <p className="v6-fh__sub">{sub}</p> : null}
