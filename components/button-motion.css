@@ -14,7 +14,7 @@
 .v6 .v6-btn .v6-arw > span { transition-duration:420ms; transition-timing-function:cubic-bezier(.22,1,.36,1); }
 .v6 .v6-btn:focus-visible .v6-arw > span:first-child { transform:translateX(100%); }
 .v6 .v6-btn:focus-visible .v6-arw > span + span { transform:translateX(0); }
-.v6 .v6-nav__item,.v6 .v6-nav__signin { transition:color 220ms,opacity 220ms; }
+.v6-nav .v6-btn::before { display:none; }
 .v6 :is(.v6-elink,.v6-close__link,.v6-or__link) { transition:gap 320ms cubic-bezier(.22,1,.36,1); }
 .v6 :is(.v6-elink,.v6-close__link,.v6-or__link):is(:hover,:focus-visible) { gap:14px; }
 .v6 button:not(.v6-btn):not(.v6-nav__item) { transition:background-color 220ms,border-color 220ms,color 220ms,transform 220ms; }

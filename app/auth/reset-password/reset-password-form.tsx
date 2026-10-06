@@ -69,19 +69,14 @@ export function ResetPasswordForm() {
   if (sent) {
     return (
       <div className="card" style={{ padding: "clamp(22px, 4vw, 32px)" }}>
-        <p style={{ fontFamily: "var(--font-code)", fontSize: 12.5, fontWeight: 600, color: "var(--fg-4)", margin: 0 }}>
-          Check your inbox
-        </p>
-        <h2 style={{ marginTop: 10, fontSize: 20, fontWeight: 700, color: "var(--fg-1)" }}>
-          Reset link sent.
-        </h2>
-        <p style={{ marginTop: 12, fontSize: 14, lineHeight: 1.6, color: "var(--fg-3)" }}>
-          If an email-based account exists for{" "}
-          <span style={{ color: "var(--fg-1)", fontWeight: 600 }}>{email}</span>, you will receive a reset
-          link shortly. It expires in one hour.
-        </p>
-        <Link href="/signin" style={backLink}>
-          ← Back to sign in
+        <header className="auth-recovery__head" role="status">
+          <h1>Reset link sent.</h1>
+          <p>
+            If an email-based account exists for <strong>{email}</strong>, you will receive a reset link shortly. It expires in one hour.
+          </p>
+        </header>
+        <Link href="/signin" className="btn" style={{ width: "100%", display: "inline-flex" }}>
+          <ButtonLabel>Back to sign in</ButtonLabel>
         </Link>
       </div>
     );
@@ -89,6 +84,10 @@ export function ResetPasswordForm() {
 
   return (
     <div className="card" style={{ padding: "clamp(22px, 4vw, 32px)" }}>
+      <header className="auth-recovery__head">
+        <h1>Reset your password.</h1>
+        <p>Enter your account email and we will send you a reset link if an email-based account exists.</p>
+      </header>
       <form onSubmit={handleSubmit} style={{ display: "grid", gap: 16 }}>
         <div>
           <label htmlFor="reset-email" style={{ display: "block", fontSize: 13.5, fontWeight: 600, color: "var(--fg-2)" }}>

@@ -14,7 +14,7 @@ import Link from "next/link";
 import { ButtonLabel } from "./button-label";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import {
   getAuthErrorMessage,
   getSafeRedirectPath,
@@ -63,6 +63,8 @@ export function VraelisSignIn({
   legalBase?: string;
 }) {
   const router = useRouter();
+  const passwordId = useId();
+  const [showPassword, setShowPassword] = useState(false);
   const safeRedirect = getSafeRedirectPath(callbackUrl) || "/app";
   // Defaults to sign-in, but a signup-intent CTA (homepage "Start free")
   // opens straight in create-account mode so a brand-new user doesn't land
@@ -146,16 +148,12 @@ export function VraelisSignIn({
 
   const switchTo = (m: AuthMode) => { setMode(m); setStatus(null); };
 
-  // THE FORM, REBUILT (2026-09-30). A floating card with a segmented toggle, placeholder-only fields and a
-  // blue button is gone. Labels sit above the fields, the primary action is ink like every other primary
-  // action in the product, providers are plain outlined rows, and switching between signing in and creating
-  // an account is a sentence at the foot, the way people expect it.
   return (
-    <div className="auth-form">
+    <div className={`auth-form${mode === "signup" ? " auth-form--signup" : ""}`}>
       {showHeader ? (
         <div className="auth-form__head">
-          <h1>{mode === "signup" ? "Create your account" : "Sign in to Vraelis"}</h1>
-          <p>{mode === "signup" ? "Free to start, no card required. One account for the console, the CLI and the API." : "Welcome back. One account for the console, the CLI and the API."}</p>
+          <h1 key={mode}><span>{mode === "signup" ? "Create your account" : "Welcome back"}</span></h1>
+          <p>{mode === "signup" ? "Start with one account for Vraelis." : "Sign in to your Vraelis account."}</p>
         </div>
       ) : null}
 
@@ -163,7 +161,7 @@ export function VraelisSignIn({
         {oauthProviders.map((opt) => {
           const providerBusy = busy === opt.provider;
           return (
-            <button key={opt.provider} type="button" className="auth-form__provider"
+            <button key={opt.provider} type="button" className="auth-form__provider" data-provider={opt.provider}
               onClick={() => void handleOAuth(opt.provider)} disabled={providerBusy}>
               {opt.provider === "google" ? <GoogleIcon /> : <GitHubIcon />}
               <ButtonLabel>{providerBusy ? "Redirecting…" : `Continue with ${opt.label}`}</ButtonLabel>
@@ -184,17 +182,19 @@ export function VraelisSignIn({
         )}
         <label className="auth-form__field">
           <span>Email</span>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" disabled={emailBusy} required />
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" placeholder="you@example.com" disabled={emailBusy} required />
         </label>
-        <label className="auth-form__field">
-          <span className="auth-form__labelrow">
-            Password
-            {mode === "signin" ? <Link href="/auth/reset-password" className="auth-form__forgot">Forgot password?</Link> : null}
-          </span>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-            autoComplete={mode === "signup" ? "new-password" : "current-password"} disabled={emailBusy} required minLength={8} />
-          {mode === "signup" ? <span className="auth-form__hint">At least 8 characters.</span> : null}
-        </label>
+        <div className="auth-form__field">
+          <label htmlFor={passwordId}>Password</label>
+          <div className="auth-form__password">
+            <input id={passwordId} type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)}
+              autoComplete={mode === "signup" ? "new-password" : "current-password"} disabled={emailBusy} required minLength={8} />
+            <button type="button" className="auth-form__visibility" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} disabled={emailBusy}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>{showPassword ? <path d="m3 3 18 18"/> : null}</svg>
+            </button>
+          </div>
+          {mode === "signup" ? <span className="auth-form__hint">At least 8 characters.</span> : <div className="auth-form__forgot-row"><Link href="/auth/reset-password" className="auth-form__forgot">Forgot password?</Link></div>}
+        </div>
 
         {/* Clickwrap consent: it gates every way of creating an account, email and providers alike. */}
         {mode === "signup" && (

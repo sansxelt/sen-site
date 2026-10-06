@@ -22,6 +22,7 @@ function statusStyle(tone: StatusTone): CSSProperties {
 
 export function ResetPasswordConfirmForm({ token }: { token: string }) {
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<Status | null>(null);
   const [done, setDone] = useState(false);
@@ -29,11 +30,12 @@ export function ResetPasswordConfirmForm({ token }: { token: string }) {
   if (!token) {
     return (
       <div className="card" style={{ padding: "clamp(22px, 4vw, 32px)" }}>
-        <p style={{ fontSize: 14, lineHeight: 1.6, color: "var(--fg-3)", margin: 0 }}>
-          This reset link is invalid or missing. Request a new one below.
-        </p>
-        <Link href="/auth/reset-password" style={backLink}>
-          Request a new link
+        <header className="auth-recovery__head">
+          <h1>Request a fresh link.</h1>
+          <p>This reset link is invalid or missing. Request a new one to continue.</p>
+        </header>
+        <Link href="/auth/reset-password" className="btn" style={{ width: "100%", display: "inline-flex" }}>
+          <ButtonLabel>Request a new link</ButtonLabel>
         </Link>
       </div>
     );
@@ -42,17 +44,12 @@ export function ResetPasswordConfirmForm({ token }: { token: string }) {
   if (done) {
     return (
       <div className="card" style={{ padding: "clamp(22px, 4vw, 32px)" }}>
-        <p style={{ fontFamily: "var(--font-code)", fontSize: 12.5, fontWeight: 600, color: "var(--fg-4)", margin: 0 }}>
-          All done
-        </p>
-        <h2 style={{ marginTop: 10, fontSize: 20, fontWeight: 700, color: "var(--fg-1)" }}>
-          Password updated.
-        </h2>
-        <p style={{ marginTop: 12, fontSize: 14, lineHeight: 1.6, color: "var(--fg-3)" }}>
-          Your password has been changed. Sign in with your new credentials.
-        </p>
-        <Link href="/signin" className="btn" style={{ marginTop: 22, display: "inline-block" }}>
-          Sign in
+        <header className="auth-recovery__head" role="status">
+          <h1>Password updated.</h1>
+          <p>Your password has been changed. Sign in with your new credentials.</p>
+        </header>
+        <Link href="/signin" className="btn" style={{ width: "100%", display: "inline-flex" }}>
+          <ButtonLabel>Sign in</ButtonLabel>
         </Link>
       </div>
     );
@@ -76,6 +73,7 @@ export function ResetPasswordConfirmForm({ token }: { token: string }) {
         throw new Error(payload.error ?? "We couldn't reset your password.");
       }
 
+      setPassword("");
       setDone(true);
     } catch (error) {
       setStatus({
@@ -92,23 +90,36 @@ export function ResetPasswordConfirmForm({ token }: { token: string }) {
 
   return (
     <div className="card" style={{ padding: "clamp(22px, 4vw, 32px)" }}>
+      <header className="auth-recovery__head">
+        <h1>Choose a new password.</h1>
+        <p>Use at least 8 characters. After saving, sign in with your new password.</p>
+      </header>
       <form onSubmit={handleSubmit} style={{ display: "grid", gap: 16 }}>
         <div>
           <label htmlFor="reset-new-password" style={{ display: "block", fontSize: 13.5, fontWeight: 600, color: "var(--fg-2)" }}>
             New password
           </label>
-          <input
-            id="reset-new-password"
-            autoComplete="new-password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={8}
-            disabled={loading}
-            placeholder="At least 8 characters"
-            style={inputStyle}
-          />
+          <div className="auth-form__password">
+            <input
+              id="reset-new-password"
+              autoComplete="new-password"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={8}
+              disabled={loading}
+              placeholder="At least 8 characters"
+              style={{ ...inputStyle, marginTop: 0 }}
+            />
+            <button type="button" className="auth-form__visibility" disabled={loading} aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} onClick={() => setShowPassword((shown) => !shown)}>
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+                <circle cx="12" cy="12" r="3" />
+                {showPassword && <path d="m3 3 18 18" />}
+              </svg>
+            </button>
+          </div>
         </div>
 
         {status && <div role={status.tone === "error" ? "alert" : "status"} style={statusStyle(status.tone)}>{status.message}</div>}

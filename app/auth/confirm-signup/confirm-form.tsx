@@ -1,5 +1,6 @@
 "use client";
 
+import { ButtonLabel } from "@/components/button-label";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
@@ -51,15 +52,15 @@ export function ConfirmSignupForm({ email, provider, name, token }: Props) {
     <>
       <div style={{ marginTop: 22, display: "flex", gap: 12, flexWrap: "wrap" }}>
         <button type="button" onClick={handleCreate} disabled={busy} className="btn" style={{ flex: 1, minWidth: 140, opacity: busy ? 0.6 : 1 }}>
-          {busy ? "Creating…" : "Create account"}
+          <ButtonLabel>{busy ? "Creating…" : "Create account"}</ButtonLabel>
         </button>
         <button type="button" onClick={handleCancel} disabled={busy} className="btn btn--ghost" style={{ flex: 1, minWidth: 120, opacity: busy ? 0.6 : 1 }}>
-          Cancel
+          <ButtonLabel>Cancel</ButtonLabel>
         </button>
       </div>
 
       {error && (
-        <div style={{ marginTop: 16, borderRadius: "var(--r-sm)", border: "1px solid var(--stop-line)", background: "var(--stop-wash)", color: "var(--stop-ink)", padding: "10px 14px", fontSize: 12.5, lineHeight: 1.5 }}>
+        <div role="alert" style={{ marginTop: 16, borderRadius: "var(--r-sm)", border: "1px solid var(--stop-line)", background: "var(--stop-wash)", color: "var(--stop-ink)", padding: "10px 14px", fontSize: 12.5, lineHeight: 1.5 }}>
           {error}
         </div>
       )}

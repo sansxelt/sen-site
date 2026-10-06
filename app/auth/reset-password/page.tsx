@@ -9,18 +9,7 @@ export const metadata: Metadata = {
 export default function ResetPasswordPage() {
   return (
     <section className="auth-recovery">
-      <p style={{ fontFamily: "var(--font-code)", fontSize: 12.5, fontWeight: 600, color: "var(--fg-4)", margin: 0 }}>
-        Account access
-      </p>
-      <h1 style={{ marginTop: 10, fontSize: 28, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--fg-1)", lineHeight: 1.15 }}>
-        Reset your password.
-      </h1>
-      <p style={{ marginTop: 12, fontSize: 14.5, lineHeight: 1.6, color: "var(--fg-3)" }}>
-        Enter your account email and we will send you a reset link if an email-based account exists.
-      </p>
-      <div style={{ marginTop: 26 }}>
-        <ResetPasswordForm />
-      </div>
+      <ResetPasswordForm />
     </section>
   );
 }

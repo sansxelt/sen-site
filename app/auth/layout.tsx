@@ -13,5 +13,5 @@ export const metadata: Metadata = { robots: robotsMeta(false) };
 // the sign-in frame (app/_components/auth-frame.tsx), so signing up walks from sign-in to confirmation to the
 // product without the page changing around the form. They used to sit in their own sticky-veil shell.
 export default function AuthLayout({ children }: { children: ReactNode }) {
-  return <AuthFrame><div className="auth-form auth-form--wide">{children}</div></AuthFrame>;
+  return <AuthFrame><div className="auth-form auth-form--wide auth-bridge">{children}</div></AuthFrame>;
 }

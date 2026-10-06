@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, type CSSProperties, type FormEvent } from "react";
+import { ButtonLabel } from "./button-label";
+import { useId, useState, type CSSProperties, type FormEvent } from "react";
 
 const inputStyle: CSSProperties = {
   width: "100%",
@@ -14,6 +15,7 @@ const inputStyle: CSSProperties = {
 };
 
 export function ResendVerification({ defaultEmail = "" }: { defaultEmail?: string }) {
+  const inputId = useId();
   const [email,   setEmail]   = useState(defaultEmail);
   const [status,  setStatus]  = useState<"idle" | "loading" | "sent" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
@@ -47,10 +49,13 @@ export function ResendVerification({ defaultEmail = "" }: { defaultEmail?: strin
 
   return (
     <form onSubmit={handleSubmit} style={{ marginTop: 16, display: "grid", gap: 12 }}>
-      <label style={{ fontFamily: "var(--font-code)", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--fg-4)" }}>
+      <label htmlFor={inputId} style={{ fontFamily: "var(--font-code)", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--fg-4)" }}>
         Your email
       </label>
       <input
+        id={inputId}
+        autoComplete="email"
+        disabled={status === "loading"}
         type="email"
         required
         value={email}
@@ -60,7 +65,7 @@ export function ResendVerification({ defaultEmail = "" }: { defaultEmail?: strin
       />
 
       {message && (
-        <div style={{
+        <div role={status === "error" ? "alert" : "status"} style={{
           borderRadius: "var(--r-sm)", border: "1px solid", padding: "10px 12px", fontSize: 12.5, lineHeight: 1.5,
           ...(status === "error"
             ? { borderColor: "rgba(178,58,58,0.25)", background: "rgba(178,58,58,0.08)", color: "#9F2D2D" }
@@ -76,9 +81,9 @@ export function ResendVerification({ defaultEmail = "" }: { defaultEmail?: strin
         className="btn"
         style={{ width: "100%", opacity: status === "loading" || status === "sent" ? 0.6 : 1 }}
       >
-        {status === "loading" ? "Sending…"
+        <ButtonLabel>{status === "loading" ? "Sending…"
         : status === "sent"    ? "Sent, check your inbox"
-                               : "Send a new link"}
+                               : "Send a new link"}</ButtonLabel>
       </button>
     </form>
   );
