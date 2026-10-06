@@ -30,7 +30,7 @@
 .v6 .ag-name:hover { background: var(--surface); color: var(--ink); }
 .v6 .ag-name:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 2px; }
 .v6 .ag-name__t { min-width: 0; font-size: 17px; font-weight: 500; line-height: 1.4; color: var(--ink); }
-.v6 .ag-name__via { font-size: var(--t-small); line-height: 1.5; color: var(--ink-3); white-space: nowrap; }
+.v6 .ag-name__via { display:flex; flex-direction:column; align-items:flex-start; gap:2px; font-size: var(--t-small); line-height: 1.5; color: var(--ink-3); white-space: nowrap; }
 .v6 .ag-name__go { font-size: 16px; line-height: 1; color: var(--ink-3); transition: transform var(--dur-2) var(--ease-out), color var(--dur-1) var(--ease-out); }
 .v6 .ag-name:hover .ag-name__t { color: var(--ink); }
 .v6 .ag-name:hover .ag-name__go { color: var(--ink); transform: translateX(4px); }

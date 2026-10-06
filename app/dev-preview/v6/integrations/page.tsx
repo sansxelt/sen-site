@@ -62,7 +62,7 @@ export default function IntegrationsPage() {
             {WAYS_IN.map((way) => <div className="ig-two__item" key={way.key}>
               <h3 className="ig-two__t">{way.name}</h3>
               <p className="ig-two__d">{way.more}</p>
-              <div className="ig-two__link"><EditorialLink href={way.docs}>{way.who}</EditorialLink></div>
+              <div className="ig-two__link"><EditorialLink href={way.href}>{way.link}</EditorialLink></div>
             </div>)}
           </div>
         </div>
@@ -80,12 +80,12 @@ export default function IntegrationsPage() {
             <div className="ig-two__item">
               <h3 className="ig-two__t">GitHub Actions</h3>
               <p className="ig-two__d">Run the CLI in a workflow step. The job passes only on exit code 0.</p>
-              <div className="ig-two__link"><EditorialLink href={`${BASE}/docs/ci`}>Gate a release in CI</EditorialLink></div>
+              <div className="ig-two__link"><EditorialLink href={`${BASE}/docs/ci`}>Read the CI setup guide</EditorialLink></div>
             </div>
             <div className="ig-two__item">
               <h3 className="ig-two__t">Vercel</h3>
               <p className="ig-two__d">Point a check at a Vercel preview or production deployment URL.</p>
-              <div className="ig-two__link"><EditorialLink href={`${BASE}/docs/getting-started`}>Start a check</EditorialLink></div>
+              <div className="ig-two__link"><EditorialLink href={`${BASE}/docs/getting-started`}>Read the browser setup guide</EditorialLink></div>
             </div>
           </div>
         </div>

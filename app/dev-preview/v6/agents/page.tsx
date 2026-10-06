@@ -251,7 +251,7 @@ export default function Agents() {
               <li key={a.slug}>
                 <Link className="ag-name" href={`${BASE}/docs/ai-assistants#${a.slug}`}>
                   <span className="ag-name__t">{a.name}</span>
-                  <span className="ag-name__via">{a.via}</span>
+                  <span className="ag-name__via"><span>{a.via}</span><span>Setup docs</span></span>
                   <span className="ag-name__go" aria-hidden>→</span>
                 </Link>
               </li>

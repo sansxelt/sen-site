@@ -203,7 +203,7 @@ export const CHANGELOG: Entry[] = [
       "The homepage and the docs list everything Vraelis is for, each marked Live, Not built yet or Not covered, from the same list /platform uses. Five docs pages now carry annotated screenshots from real runs, every page says in one sentence what it does not do, and each can be copied as Markdown. /llms.txt indexes the docs for AI assistants.",
     ],
     href: "/docs/what-you-can-check",
-    hrefLabel: "What you can check",
+    hrefLabel: "Coverage documentation",
   },
   {
     date: "2026-09-28",

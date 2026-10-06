@@ -78,7 +78,7 @@ const STORE: { title: string; body: string; evidence: { label: string; href: str
   {
     title: "Signed webhooks",
     body: "Endpoints you add under Developers get their own signing secret, so your app can confirm the sender.",
-    evidence: { label: "Webhooks", href: `${BASE}/docs/webhooks` },
+    evidence: { label: "Webhook security docs", href: `${BASE}/docs/webhooks` },
   },
   {
     title: "Abuse signals are hashed",

@@ -82,7 +82,7 @@ x-vraelis-event: verification.completed
 x-vraelis-timestamp: 1790618651220
 x-vraelis-signature: sha256=<hex>`;
 
-/* The four cards: WAYS_IN gives the name and where each is documented; the one line of code and the sentence are
+/* The four cards: WAYS_IN gives the name and its product overview; the one line of code and the sentence are
    this page's. */
 const WAY: Record<(typeof WAYS_IN)[number]["key"], { code: string; body: string }> = {
   console: { code: "app.vraelis.com", body: "Write the sentence and read the answer in the browser." },
@@ -109,7 +109,7 @@ export default function DevelopersPage() {
         title="Start a check from your own tools"
         sub="Send a deployment address and one sentence about what should work. A person approves the plan, a real browser runs it, and your tools read the answer."
         primary={{ label: "Create an API key", href: API_KEYS }}
-        secondary={{ label: "Read the API", href: `${BASE}/docs/api` }}
+        secondary={{ label: "Read the API docs", href: `${BASE}/docs/api` }}
         {...photographHero("electronicsBench")}
       />
 
@@ -135,7 +135,7 @@ export default function DevelopersPage() {
         </div>
       </section>
 
-      {/* ── The four ways in, each with its line of code and its page in the docs. ── */}
+      {/* ── The four ways in, each with its line of code and its product overview. ── */}
       <section className="v6-sec dv-ways" id="ways">
         <div className="v6-wrap">
           <SectionHead eyebrow="Four ways in" title="The same check from every tool" />
@@ -146,7 +146,7 @@ export default function DevelopersPage() {
                 label={<CodeLine code={WAY[w.key].code} />}
                 title={w.name}
                 body={WAY[w.key].body}
-                href={w.docs}
+                href={w.href}
               />
             ))}
           </FeatureGrid>
@@ -174,7 +174,7 @@ export default function DevelopersPage() {
               <span>The transcript at the top of this page is the CLI&apos;s own output from a check of Larkspur, a simulated mission console Vraelis built itself.</span>
               <span className="dv-id" data-no-translate>{run.id.slice(0, 12)}</span>
             </p>
-            <div className="dv-col__link"><EditorialLink href={`${BASE}/docs/ci`}>Gate a release in CI</EditorialLink></div>
+            <div className="dv-col__link"><EditorialLink href={`${BASE}/docs/ci`}>Read the CI setup guide</EditorialLink></div>
           </div>
           <div className="dv-col" id="webhooks">
             <SectionHead
@@ -186,7 +186,7 @@ export default function DevelopersPage() {
             <p className="dv-note">
               <span>The signature is an HMAC over the timestamp and the raw body, so recompute it over the exact bytes you received. A Slack incoming webhook address gets the same event as a message.</span>
             </p>
-            <div className="dv-col__link"><EditorialLink href={`${BASE}/docs/webhooks`}>Verify a delivery</EditorialLink></div>
+            <div className="dv-col__link"><EditorialLink href={`${BASE}/docs/webhooks`}>Read the webhook verification guide</EditorialLink></div>
           </div>
         </div>
       </Band>

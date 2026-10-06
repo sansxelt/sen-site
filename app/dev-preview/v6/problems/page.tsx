@@ -3,7 +3,7 @@ import { v6meta } from "../_system/meta";
 export const metadata = v6meta({"title": "The problems", "description": "Software can report success while the surrounding system tells a different story. Vraelis focuses on the evidence engineers need to investigate that gap.", "path": "/problems", "type": "website"});
 const content: DirectionContent = {
   "references": [
-    {"title":"Palantir Ontology","body":"Palantir describes Ontology as connecting integrated data and models to real-world counterparts, including physical assets, with objects, links and actions. This is substantial overlap with any broad operational-data platform claim.","href":"https://www.palantir.com/docs/foundry/ontology/overview/"},
+    {"title":"Palantir Ontology","body":"Palantir describes Ontology as connecting integrated data and models to real-world counterparts, including physical assets, with objects, links and actions. This is substantial overlap with any broad operational-data platform claim.","href":"https://www.palantir.com/platforms/ontology/"},
     {"title":"Applied Intuition","body":"Applied Intuition offers physical-AI simulation, verification and validation products. Testing software for physical systems is an established market; our narrower recording workflow needs to demonstrate its own value.","href":"https://www.appliedintuition.com/products/simian"},
     {"title":"Scale AI","body":"Scale markets computer-vision and agentic AI programs for the U.S. public sector. Its site presents named use cases and clear customer audiences—a useful standard for how directly we should explain the work.","href":"https://scale.com/public-sector"}
   ],

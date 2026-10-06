@@ -15,7 +15,7 @@ export function DirectionPage({content:c}:{content:DirectionContent}) {
   return <>
     <FrameHero compact eyebrow={c.eyebrow} title={c.title} sub={c.intro}
       primary={{label:"Talk to the team",href:`${V6_BASE}/contact`}}
-      secondary={c.eyebrow === "The beta" ? {label:"Supported formats",href:`${V6_BASE}/docs/recorded-reports`} : {label:"Explore the beta",href:`${V6_BASE}/beta`}} {...photographHero(c.photo)} />
+      secondary={c.eyebrow === "The beta" ? {label:"Recording format docs",href:`${V6_BASE}/docs/recorded-reports`} : {label:"Explore the beta",href:`${V6_BASE}/beta`}} {...photographHero(c.photo)} />
     <Band><SectionHead eyebrow="The work" title={c.heading} lead={c.lead}/>
       <FeatureGrid span={4}>{c.items.map(i=><FeatureCard key={i.title} {...i}/>)}</FeatureGrid>
     </Band>
@@ -30,7 +30,7 @@ export function DirectionPage({content:c}:{content:DirectionContent}) {
     </section>
     <Band><SectionHead eyebrow="What comes next" title={c.nextTitle} lead={c.nextLead}/>
       <FeatureGrid span={4}>{c.next.map(i=><FeatureCard key={i.title} {...i}/>)}</FeatureGrid>
-      <div className="direction-links"><Link href={`${V6_BASE}/problems`}>The problems →</Link><Link href={`${V6_BASE}/goals`}>Our goals →</Link><Link href={`${V6_BASE}/docs/recorded-reports`}>Supported formats →</Link></div>
+      <div className="direction-links"><Link href={`${V6_BASE}/problems`}>The problems →</Link><Link href={`${V6_BASE}/goals`}>Our goals →</Link><Link href={`${V6_BASE}/docs/recorded-reports`}>Recording format docs →</Link></div>
     </Band>
     {c.references ? <Band><SectionHead eyebrow="Market context" title="The surrounding market already exists." lead="These companies cover adjacent work. Vraelis must prove that cross-source task review adds useful findings to an existing engineering process."/><div className="direction-references">{c.references.map(ref=><a key={ref.title} href={ref.href} target="_blank" rel="noopener noreferrer"><h3>{ref.title} ↗</h3><p>{ref.body}</p><span>Read the official product page</span></a>)}</div></Band> : null}
     <ClosingScene title="Bring a problem worth solving." action={{label:"Talk to the team",href:`${V6_BASE}/contact`}}/>

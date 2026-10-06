@@ -48,15 +48,15 @@ const MENUS: Menu[] = [
     groups: [
       { h: "Platform", links: [
         { t: "Overview", d: "Requirements, execution and evidence", href: BASE + "/platform", pic: "/site/photography/robot-cell.jpg" },
-        { t: "Recorded evidence", d: "Review task reports from JSON or MCAP", href: BASE + "/docs/recorded-reports", pic: "/site/photography/robot-detail.jpg" },
+        { t: "Recorded evidence", d: "Review task reports from JSON or MCAP", href: BASE + "/platform#recorded-evidence", pic: "/site/photography/robot-detail.jpg" },
         { t: "Recording beta", d: "Capabilities, examples and next steps", href: BASE + "/beta", pic: "/site/photography/robot-detail.jpg" },
         { t: "Integrations", d: "What each connection actually supplies", href: BASE + "/integrations", pic: "/site/photography/network-engineer.jpg" },
         { t: "AI assistants", d: "Use Vraelis through MCP", href: BASE + "/agents", pic: "/site/photography/electronics-bench.jpg" },
       ] },
       { h: "Developers", links: [
         { t: "Developer tools", d: "APIs, command line and webhooks", href: BASE + "/developers", pic: "/site/photography/hardware-inspection.jpg" },
-        { t: "API", d: "Integrate checks into your software", href: BASE + "/docs/api", pic: "/site/photography/server-rack.jpg" },
-        { t: "CLI", d: "Run a check from your terminal", href: BASE + "/docs/cli", pic: "/site/photography/firmware.jpg" },
+        { t: "API", d: "Integrate checks into your software", href: BASE + "/developers#api", pic: "/site/photography/server-rack.jpg" },
+        { t: "CLI", d: "Run a check from your terminal", href: BASE + "/developers#cli", pic: "/site/photography/firmware.jpg" },
       ] },
     ],
   },

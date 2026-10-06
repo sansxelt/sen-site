@@ -7,16 +7,16 @@ import "./hero-asides.css";
 export const WAYS_IN = [
   { key: "console", name: "Console", who: "When you want to see it",
     more: "Name the deployed app and write one sentence about what should work. Read the answer with its screenshots and every step.",
-    entry: "app.vraelis.com", docs: `${V6_BASE}/docs/getting-started` },
+    entry: "app.vraelis.com", href: `${V6_BASE}/platform#how`, link: "Explore the browser workflow", docs: `${V6_BASE}/docs/getting-started` },
   { key: "cli", name: "CLI", who: "From a terminal",
     more: "Prints the plan and the approval link, waits, then runs the check. Exits 0 only when the claim held.",
-    entry: "vraelis verify", docs: `${V6_BASE}/docs/cli` },
+    entry: "vraelis verify", href: `${V6_BASE}/developers#cli`, link: "Explore the CLI", docs: `${V6_BASE}/docs/cli` },
   { key: "api", name: "CI and the API", who: "From a pipeline",
     more: "Send a deployment and a claim from a pipeline, read the answer, and gate the release on it. Re-check the same plan after a fix.",
-    entry: "POST /api/v1/verifications", docs: `${V6_BASE}/docs/api` },
+    entry: "POST /api/v1/verifications", href: `${V6_BASE}/developers#api`, link: "Explore the API", docs: `${V6_BASE}/docs/api` },
   { key: "mcp", name: "AI assistants, over MCP", who: "From the assistant that made the change",
     more: "Coding assistants run the local server and ask for a check before they say a change is done. ChatGPT and Claude connect to the hosted one.",
-    entry: "vraelis_verify", docs: `${V6_BASE}/docs/ai-assistants` },
+    entry: "vraelis_verify", href: `${V6_BASE}/agents`, link: "Explore AI assistants", docs: `${V6_BASE}/docs/ai-assistants` },
 ] as const;
 
 export function ProductPanel({ left, right, caption, children }: {

@@ -65,7 +65,7 @@ export function ClosingScene({
 // Main destinations stay visible. Detailed documentation and other solutions are
 // accessible through their indexes; secondary policies remain in a disclosure.
 const COLS: [string, [string, string][]][] = [
-  ["Product", [[`${BASE}/platform`, "Platform"], [`${BASE}/docs/recorded-reports`, "Recorded reports"], [`${BASE}/beta`, "Recording beta"], [`${BASE}/integrations`, "Integrations"], [`${BASE}/agents`, "AI assistants"], [`${BASE}/pricing`, "Pricing"]]],
+  ["Product", [[`${BASE}/platform`, "Platform"], [`${BASE}/platform#recorded-evidence`, "Recorded evidence"], [`${BASE}/beta`, "Recording beta"], [`${BASE}/integrations`, "Integrations"], [`${BASE}/agents`, "AI assistants"], [`${BASE}/pricing`, "Pricing"]]],
   ["Solutions", [...PRIMARY_SECTORS.map((s): [string, string] => [s.href, s.label]), [`${BASE}/government`, "Government & institutions"], [`${BASE}/integrators`, "System integrators"], [`${BASE}/enterprise`, "Enterprise"], [SOLUTIONS_HREF, "Explore solutions"]]],
   ["Resources", [[`${BASE}/docs`, "Documentation"], [`${BASE}/developers`, "Developer tools"], [`${BASE}/problems`, "The problems"], [`${BASE}/research`, "Research"], [`${BASE}/changelog`, "Changelog"]]],
   ["Company", [[`${BASE}/goals`, "Our goals"], [`${BASE}/company`, "About"], [`${BASE}/contact`, "Contact"]]],

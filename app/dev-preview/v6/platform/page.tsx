@@ -27,10 +27,10 @@ const BASE = V6_BASE;
 const two = (n: number) => String(n).padStart(2, "0");
 
 const WORKFLOW = [
-  { title: "Define the requirement", body: "Name the expected result and any reported state that must stay unchanged. Start with an unclassified simulation or staging build.", href: `${BASE}/docs/getting-started`, link: "Write a requirement" },
-  { title: "Review the exact plan", body: "Inspect the proposed requirements and browser journeys. A person approves them before execution; an API key cannot.", href: `${BASE}/docs/review`, link: "Review and approval" },
-  { title: "Observe the running app", body: "A real browser exercises the approved steps on the address you name. The record keeps what each step expected and observed.", href: `${BASE}/docs/run-activity`, link: "Run activity" },
-  { title: "Inspect the failure and re-check", body: "Read the available screenshots and browser errors. After a repair, re-run the approved plan within its limits and keep both records.", href: `${BASE}/docs/recheck`, link: "Re-check a repair" },
+  { title: "Define the requirement", body: "Name the expected result and any reported state that must stay unchanged. Start with an unclassified simulation or staging build.", href: `${BASE}/docs/getting-started`, link: "Requirement setup docs" },
+  { title: "Review the exact plan", body: "Inspect the proposed requirements and browser journeys. A person approves them before execution; an API key cannot.", href: `${BASE}/docs/review`, link: "Review and approval docs" },
+  { title: "Observe the running app", body: "A real browser exercises the approved steps on the address you name. The record keeps what each step expected and observed.", href: `${BASE}/docs/run-activity`, link: "Run activity docs" },
+  { title: "Inspect the failure and re-check", body: "Read the available screenshots and browser errors. After a repair, re-run the approved plan within its limits and keep both records.", href: `${BASE}/docs/recheck`, link: "Re-check setup docs" },
 ];
 
 // Explain the scope of evidence. Do not imply that other test frameworks cannot exercise real deployments.

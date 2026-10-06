@@ -14,7 +14,7 @@ export function RecordedEntry({ homepage = false }: { homepage?: boolean }) {
           <h2 id="recorded-entry-title">{homepage ? <>The panel says done.<br />The reports tell another story.</> : <>Follow one task across the reports.</>}</h2>
           <p>{homepage ? "Follow one task across control-panel, service and device reports. Vraelis finds conflicting states, missing evidence and changes to the wrong asset." : "Import supported JSON or MCAP task reports. Compare control-panel, service and device states for the same task, and inspect the source events behind each finding."}</p>
           <Link href={getSignInPath("/verifications/recorded")} prefetch={false}>{homepage ? "Try a recording" : "Open recorded evidence"} <span aria-hidden>→</span></Link>
-          <Link className="recorded-entry__docs" href={`${V6_BASE}/docs/recorded-reports`}>Supported formats and setup <span aria-hidden>→</span></Link>
+          <Link className="recorded-entry__docs" href={`${V6_BASE}/docs/recorded-reports`}>Recording formats and setup docs <span aria-hidden>→</span></Link>
         </div>
         <RecordedExample />
       </div>

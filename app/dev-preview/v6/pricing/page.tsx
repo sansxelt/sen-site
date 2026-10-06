@@ -113,7 +113,7 @@ export default function V6Pricing() {
 
       <section className="v6-sec v6-pp__beta" aria-labelledby="recording-h">
         <div className="v6-wrap v6-pp__beta-inner">
-          <div><p className="v6-eyebrow">The recording beta</p><h2 id="recording-h">Already have the reports?</h2><p>Compare the requested task with control-panel, service and device reports. Find conflicting states, missing completion and changes to the wrong asset.</p><EditorialLink href={RECORDED}>Open recorded evidence</EditorialLink><div className="v6-pp__beta-docs"><EditorialLink href={`${BASE}/docs/recorded-reports`}>Supported JSON and MCAP formats</EditorialLink></div></div>
+          <div><p className="v6-eyebrow">The recording beta</p><h2 id="recording-h">Already have the reports?</h2><p>Compare the requested task with control-panel, service and device reports. Find conflicting states, missing completion and changes to the wrong asset.</p><EditorialLink href={RECORDED}>Open recorded evidence</EditorialLink><div className="v6-pp__beta-docs"><EditorialLink href={`${BASE}/docs/recorded-reports`}>JSON and MCAP format docs</EditorialLink></div></div>
           <div className="v6-pp__record-flow" role="figure" aria-label="Supported task reports are compared against a requirement, producing findings linked to source events.">
             <div className="v6-pp__record-inputs"><span>Control panel</span><span>Task service</span><span>Device report</span></div>
             <span className="v6-pp__record-arrow" aria-hidden="true">↓</span>
