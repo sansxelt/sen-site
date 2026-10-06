@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Opening } from "./opening";
 import "./home-sequence.css";
 
@@ -13,7 +13,7 @@ export function HomeSequence({ children }: { children: [ReactNode, ReactNode, Re
   const root = useRef<HTMLDivElement>(null);
   const [enabled, setEnabled] = useState(false);
   const [active, setActive] = useState(-1);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = root.current;
     if (!el) return;
     const gate = matchMedia('(min-width:901px) and (min-height:720px) and (prefers-reduced-motion:no-preference)');
@@ -100,10 +100,10 @@ export function HomeSequence({ children }: { children: [ReactNode, ReactNode, Re
         opening.inert = false;
         scenes.forEach(scene => { scene.removeAttribute('style'); scene.inert = false; });
       }
-      request();
+      paint();
     };
     sync(); gate.addEventListener('change', sync);
-    // The enhanced layout lands after mount. Re-measure it before painting a stale stacked geometry.
+    // CSS has already fitted the stage; keep its scroll mapping current when the viewport changes.
     const geometry = new ResizeObserver(request);
     geometry.observe(el); geometry.observe(stage);
     document.addEventListener('fullscreenchange', request);

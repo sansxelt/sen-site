@@ -56,7 +56,7 @@
    view 67px too high, under the drawer's own top bar, with 3px of it showing. The drawer is its own scroll box,
    and html's scroll padding never applies to it, so its controls take no margin at all. */
 .v6-nav .v6-drawer :is(a, button) { scroll-margin-top: 0; }
-.v6-nav__in { display: flex; align-items: center; gap: 8px;
+.v6-nav__in { display:flex; align-items:center; gap:8px; height:67px; box-sizing:border-box;
   /* the bar spans the viewport, its contents sit on the page column: the wordmark lines up with every
      headline below it and the button with the right edge of the content */
   padding: 13px max(var(--gutter), calc((100% - var(--max)) / 2 + var(--gutter)));

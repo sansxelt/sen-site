@@ -159,7 +159,7 @@
    IndexHero is PageHero (./ui, styled in pagekit.css) under the plan's prop names. The compact variant only
    takes room off the top (96 at desktop, scaling down with the normal one); the wrapper draws no box. */
 .v6-ih { display: contents; }
-.v6 .v6-ih--compact .v6-phero { padding-top: clamp(48px, 6.7vw, 96px); }
+.v6 .v6-ih--compact .v6-phero { padding-top:clamp(48px,min(6.7vw,10.7svh),96px); }
 
 /* ================================================================ FactRow ===
    Four facts under the hero, on hairlines. Four across from 900px, two by two below, one column under 400. */
@@ -458,4 +458,16 @@ a.v6-xl__card:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
  .v6-fh[data-compact] .v6-fh__h1 { font-size:36px; line-height:1.1; }
  .v6-fh[data-compact] .v6-fh__body { margin:auto 20px 28px; }
  .v6-fh[data-compact] .v6-fh__sub { font-size:16px; line-height:1.6; }
+}
+
+@media (min-width:901px) {
+ .v6-fh__body { margin-bottom:var(--hero-inset); margin-inline:var(--hero-inset); margin-left:max(var(--hero-inset),calc((100% - var(--max)) / 2 + var(--gutter))); }
+ .v6-fh[data-kind="scene"] .v6-fh__frame { padding-top:var(--hero-inset); }
+ .v6-fh[data-compact] .v6-fh__body { margin:auto var(--hero-inset) var(--hero-inset); }
+ .v6-fh[data-compact] .v6-fh__h1 { font-size:clamp(40px,min(4.6vw,7.6svh),68px); }
+}
+@media (min-width:1101px) {
+ .v6-fh[data-kind="panel"] .v6-fh__frame { padding-top:var(--hero-inset); }
+ .v6-fh__panel { right:var(--hero-inset); }
+ .v6-fh[data-kind="panel"] .v6-fh__body { margin-right:calc(var(--hero-inset) + min(46%,640px) + 48px); }
 }

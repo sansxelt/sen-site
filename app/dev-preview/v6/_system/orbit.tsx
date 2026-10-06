@@ -3,7 +3,7 @@
 // All subjects share one evenly spaced, visible track. Only adjacent tiles respond to focus.
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { EditorialLink } from "./ui";
 import { HEADLINE } from "./positioning";
@@ -57,7 +57,7 @@ export function Orbit() {
   const select = (i: number) => { held.current = i; setSelected(i); wake.current(); };
   const release = () => { held.current = null; setSelected(null); wake.current(); };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = root.current;
     if (!el) return;
     const media = matchMedia(RING), reduced = matchMedia("(prefers-reduced-motion: reduce)");
@@ -132,6 +132,8 @@ export function Orbit() {
     const resize = new ResizeObserver(measure); resize.observe(el);
     const observer = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; if (visible) start(); }, {rootMargin: "60px"}); observer.observe(el);
     media.addEventListener("change", measure); reduced.addEventListener("change", start); document.addEventListener("visibilitychange", start); measure();
+    // Place the tiles before paint, against the height CSS reserved from the first render.
+    cancelAnimationFrame(raf); frame(0);
     return () => { cancelAnimationFrame(raf); resize.disconnect(); observer.disconnect(); media.removeEventListener("change", measure); reduced.removeEventListener("change", start); document.removeEventListener("visibilitychange", start); wake.current = () => {}; };
   }, []);
 

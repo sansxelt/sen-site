@@ -5,7 +5,7 @@
    h1; h1 at --t-h1 (56 / 36), 20ch; lead at --t-lead (20 / 17), 60ch, 20 below the h1; actions 32 below. The
    text takes columns 1 to 7 of the twelve; an aside, when there is a real piece of the product to show,
    takes 8 to 12 and drops under the text below 1000px. */
-.v6-phero { padding-top: clamp(56px, 8.3vw, 120px); padding-bottom: clamp(40px, 4.4vw, 64px); }
+.v6-phero { padding-top:clamp(56px,min(8.3vw,12svh),120px); padding-bottom:clamp(40px,min(4.4vw,7.1svh),64px); }
 .v6-phero__k { color: var(--ink-3); }
 .v6-phero h1 { font-family: var(--display); font-weight: var(--display-w); font-size: var(--t-h1); line-height: 1.06; letter-spacing: -0.022em;
   color: var(--ink); margin: 16px 0 0; max-width: 20ch; text-wrap: balance; }
