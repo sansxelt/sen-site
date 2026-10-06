@@ -4,6 +4,7 @@
 // the app replay, engineering resources.
 import { useRef } from "react";
 import { useHomeMotion } from "./_system/home-motion";
+import { HomeSequence } from "./_system/home-sequence";
 import { Orbit } from "./_system/orbit";
 import { Opening } from "./_system/opening";
 import { StrikeStory } from "./_system/strike-story";
@@ -20,9 +21,11 @@ export default function Home() {
   return (
     <div ref={root} className="home-page">
       <Opening />
+      <HomeSequence>
       <PhysicalSystems />
       <StrikeStory record={STRIKE} chapters={STRIKE_CHAPTERS} caption={STRIKE_CAPTION} />
       <Orbit />
+      </HomeSequence>
       <EngineeringEntry />
     </div>
   );

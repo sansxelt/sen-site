@@ -70,3 +70,5 @@
  .home-page .home-arrival.home-arrived { opacity:1; translate:0 0; }
  .home-page .home-arrival:focus-within { opacity:1; translate:0 0; transition:none; }
 }
+/* Exploring gets the site's main width; the recorded preview remains compact. */
+.home-page .v6-story:has(.v6-mission-demo__screen.is-exploring) > .v6-wrap { max-width:1600px; }

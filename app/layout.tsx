@@ -12,6 +12,7 @@ import { GROUND_CSS, type Ground } from "../lib/v6-routes";
 import { GROUND_HEADER } from "../proxy";
 import { PrivacyChoices } from "./_components/privacy-choices";
 import { ConsentedMeasurement } from "./_components/consented-measurement";
+import { SmoothScroll } from "@/components/smooth-scroll";
 import { LanguageController } from "@/components/language-controller";
 import { DEFAULT_LOCALE, LOCALE_COOKIE, LOCALE_PARAM, READY_LOCALES } from "../lib/i18n/locales";
 import { OPTIONAL_CATEGORIES, PRIVACY_COOKIE, PRIVACY_COOKIE_VERSION } from "../lib/privacy-choice";
@@ -268,6 +269,7 @@ export default async function RootLayout({
           {/* ONE LANGUAGE, EVERYWHERE (2026-09-30): translates the page in the browser from
               public/locales/<code>.json when a language other than English is chosen, on every surface this
               branch renders. See components/language-controller.tsx and lib/i18n/locales.ts. */}
+          <SmoothScroll />
           <LanguageController />
         </body>
       </html>
