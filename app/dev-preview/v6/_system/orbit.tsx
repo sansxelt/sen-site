@@ -11,20 +11,21 @@ import { useLocale } from "@/lib/i18n/client";
 import { V6_BASE } from "@/lib/v6-routes";
 import { orbitRoute, type OrbitWord } from "../_content/sectors";
 import "./orbit.css";
+import { photograph, type PhotographKey } from "../_content/photography";
 
 // pos: where the 4:3 frame crops a photograph cut to another shape (CSS object-position), when the middle is wrong.
 type Photo = { readonly src: string; readonly alt: string; readonly pos?: string };
 type Tile = { word: OrbitWord; label: string; phrase: string; photos: readonly Photo[] };
 
-const pic = (name: string, alt: string, pos?: string): Photo => ({ src: `/home/orbit/photo-${name}.jpg`, alt, pos });
+const pic = (key: PhotographKey, pos?: string): Photo => { const p = photograph(key); return { src: p.src, alt: p.alt, pos }; };
 
 // Physical-system software is the focus; each subject links to its existing coverage.
 export const ORBIT: readonly Tile[] = [
-  { word: "military", label: "Mission consoles", phrase: "mission consoles", photos: [pic("targeting", "A radar scope and a track readout on a console", "50% 45%")] },
-  { word: "drones", label: "Drones and aviation", phrase: "flight controls", photos: [pic("drone", "A drone against an evening sky")] },
-  { word: "robotics", label: "Robotics", phrase: "robot controls", photos: [pic("robot", "A robot arm building a lattice", "50% 60%")] },
-  { word: "logistics", label: "Logistics and vehicles", phrase: "fleet controls", photos: [pic("vehicle", "A truck on a road at dusk")] },
-  { word: "government", label: "Infrastructure", phrase: "infrastructure controls", photos: [pic("public", "An arched hall inside a state capitol")] },
+  { word: "military", label: "Mission systems", phrase: "mission systems", photos: [pic("satelliteStation", "50% 35%")] },
+  { word: "drones", label: "Drones & aviation", phrase: "flight controls", photos: [pic("helicopter")] },
+  { word: "robotics", label: "Robotics", phrase: "robot controls", photos: [pic("robotDetail")] },
+  { word: "logistics", label: "Transport & fleets", phrase: "fleet controls", photos: [pic("vehicle")] },
+  { word: "government", label: "Infrastructure", phrase: "infrastructure controls", photos: [pic("powerGrid")] },
 ];
 
 
@@ -141,8 +142,8 @@ export function Orbit() {
       </h2> : <h2 id="v6-or-h" className="v6-or__h v6-or__h--translated" aria-label={selected === null ? HEADLINE : `Know your ${ORBIT[selected].phrase} work.`}>
         <TopicSwap text={selected === null ? HEADLINE : `Know your ${ORBIT[selected].phrase} work.`} />
       </h2>}
-      <p className="v6-or__d">Independent verification for physical-system software</p>
-      <EditorialLink href={selected === null ? `${V6_BASE}/platform#coverage` : ROUTE[selected].href}>{selected === null ? "Explore verification" : "Explore this subject"}</EditorialLink>
+      <p className="v6-or__d">External software review for defense, infrastructure and robotics</p>
+      <EditorialLink href={selected === null ? `${V6_BASE}/platform#coverage` : ROUTE[selected].href}>{selected === null ? "Explore the platform" : "Explore this subject"}</EditorialLink>
     </div>
     <ul className="v6-or__tiles">
       {ORBIT.map((t, i) => <li key={t.label} ref={node => { tiles.current[i] = node; }} className="v6-or__item" data-on={i === selected}>
