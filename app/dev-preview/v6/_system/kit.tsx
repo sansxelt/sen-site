@@ -113,7 +113,7 @@ export type FrameHeroPanel =
   | { kind: "node"; node: ReactNode; label: string; bar?: KitBar };
 
 type FrameHeroCommon = {
-  eyebrow?: string; title: string; sub?: string; primary: KitLink; secondary?: KitLink; credit?: string; id?: string;
+  eyebrow?: string; title: string; sub?: string; primary: KitLink; secondary?: KitLink; credit?: string; id?: string; compact?: boolean;
 };
 /** FrameHero's props: the common ones and exactly one of picture (the scene kind) or panel (the panel kind). */
 export type FrameHeroProps = FrameHeroCommon & (
@@ -203,7 +203,7 @@ export function FrameHero(props: FrameHeroProps) {
   return (
     // The section paints the page ground (kit.css) and carries all three dark markers on ONE line, because
     // design01-inc5-verify reads the source one line at a time.
-    <section id={id} className="v6-fh v6-dark" data-nav-dark data-nav-theme="dark" data-kind={kind}>
+    <section id={id} className="v6-fh v6-dark" data-nav-dark data-nav-theme="dark" data-kind={kind} data-compact={props.compact || undefined}>
       <div className="v6-fh__frame">
         {props.panel ? (
           <HeroPanel panel={props.panel} />

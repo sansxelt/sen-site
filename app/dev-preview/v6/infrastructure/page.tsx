@@ -10,8 +10,8 @@ export const metadata = v6meta({ title: "Infrastructure", description: "Software
 
 export default function Infrastructure() {
   return <>
-    <FrameHero eyebrow="Infrastructure" title="An accepted command is not a completed task."
-      sub="For teams responsible for utilities, transport and industrial operations. Compare supplied equipment task reports with control-panel and service reports. Find conflicting states, missing completion evidence and changes to the wrong asset."
+    <FrameHero compact eyebrow="External software review" title="Critical infrastructure"
+      sub="For utilities, transport and industrial operations teams. Compare equipment and service reports to find conflicting states and missing task evidence."
       primary={{ label: "Review recorded evidence", href: "/verifications/recorded" }}
       secondary={{ label: "Talk to us", href: `${V6_BASE}/contact?topic=infrastructure` }}
       {...photographHero("windFarm")} />

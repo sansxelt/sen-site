@@ -159,8 +159,8 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     hero: {
       eyebrow: "Defense and national security",
       // The position, from the top (founder, 2026-10-02). The sub makes the page's one approval statement.
-      title: "Find failures before the mission",
-      sub: "For defense software teams and system integrators. Compare supplied task reports, or exercise an unclassified simulation console. See where the reported result differs from what should happen.",
+      title: "Defense & national security",
+      sub: "For defense engineering teams and system integrators. Review recorded task evidence and exercise unclassified mission consoles before release.",
       primary: { label: "Talk to us", href: contact("defense") },
       secondary: { label: "Explore recorded reports", href: "#recorded-evidence" },
       art: {
@@ -177,7 +177,7 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
         credit: "Larkspur demo fixture. Captured 2026-10-02, not from the run.",
       },
     },
-    sections: ["problem", "recorded", "record", "facts", "stance", "examples", "band", "limits", "faq", "cross"],
+    sections: ["problem", "recorded", "record", "band", "limits", "faq", "cross"],
     facts: {
       items: [
         { label: "What it checked", value: "Confirming T-1 clears only T-1, and it holds after a reload" },
@@ -305,8 +305,8 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     },
     hero: {
       eyebrow: "Robotics, drones and fleets",
-      title: "Find where the task and the reports disagree",
-      sub: "For robotics developers and fleet integrators. Compare control-panel, service and device reports for the same task. Inspect wrong-asset changes, missing completion reports and gaps in the supplied evidence.",
+      title: "Robotics & fleets",
+      sub: "For robotics developers and fleet integrators. Compare task, service and device reports to find missing completion evidence and changes to the wrong robot.",
       primary: { label: "Talk to us", href: contact("fleets") },
       secondary: { label: "Explore recorded reports", href: "#recorded-evidence" },
       // Portrait 50% 75% (public/site/hero/CREDITS.md, "Using them"): at 50% the drone touches the eyebrow on short
@@ -315,14 +315,14 @@ export const SECTOR_PAGES: Record<SolutionSlug, SectorPage> = {
     },
     // No FactRow: nothing on this page quotes a record of its own yet (plan E1: when the Fieldline check is run and
     // approved, its record replaces the Larkspur one below and a FactRow quoting it goes under the hero).
-    sections: ["problem", "recorded", "fixture", "record", "examples", "band", "limits", "cross"],
+    sections: ["problem", "recorded", "band", "limits", "cross"],
     problem: {
       eyebrow: "The problem",
-      title: "Acknowledged is not executed",
+      title: "A command is only the beginning.",
       items: [
-        { title: "The panel confirms the wrong unit", body: "The panel says Return home sent to SKY-01. Afterwards SKY-01 still shows Flying and SKY-10 shows Landed. Fieldline's broken mode has exactly this bug." },
-        { title: "The state does not survive a reload", body: "A status that is right until the page reloads is a status the next operator never sees." },
-        { title: "One action changes more than it should", body: "On Larkspur, confirming one contact cleared every contact in its grid square." },
+        { title: "The panel confirms the wrong unit", body: "A task can be addressed to one robot while another reports the state change. Follow the task and asset identifiers across the supplied records." },
+        { title: "Completion is reported too early", body: "A service can report success before the device records the required result. Compare the timestamps and the expected completion window." },
+        { title: "The recording misses the result", body: "A gap in the supplied reports is missing evidence. It should remain visible rather than being counted as a successful task." },
       ],
     },
     fixture: {

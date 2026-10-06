@@ -1,6 +1,6 @@
 .recorded-entry__inner{display:grid;grid-template-columns:1.1fr 1fr;gap:clamp(40px,7vw,110px);align-items:center;padding-block:clamp(56px,7vw,110px) 36px}
 .recorded-entry__label{font-size:14px;color:#aaa;margin:0 0 24px}
-.recorded-entry h2{font-size:clamp(32px,3.8vw,60px);line-height:1.12;letter-spacing:-.04em;font-weight:500;margin:0 0 24px}
+.recorded-entry h2{font-size:clamp(30px,3.2vw,46px);line-height:1.12;letter-spacing:-.04em;font-weight:500;margin:0 0 24px}
 .recorded-entry p{color:#aaa;font-size:16px;line-height:1.65;max-width:520px}
 .recorded-entry a{display:inline-flex;gap:20px;margin-top:22px;font-size:16px;color:#fff;text-decoration:none}
 .recorded-entry a:hover{text-decoration:underline}
@@ -22,7 +22,7 @@
 .recorded-entry .recorded-example__other{font-size:13px;margin:8px 0 22px}
 .recorded-entry .recorded-example__result{border-top:1px solid #555;margin:0;padding-top:20px;font-size:18px;color:#fafafa}
 .recorded-entry .recorded-example__footnote{font-size:11px;margin:16px 0 0;color:#999}
-@media(max-width:760px){.recorded-entry__inner{grid-template-columns:1fr;gap:38px}.recorded-entry h2{font-size:34px}.recorded-example__reports>div{grid-template-columns:1fr 1.2fr}}
+@media(max-width:760px){.recorded-entry__inner{grid-template-columns:1fr;gap:38px}.recorded-entry h2{font-size:30px}.recorded-example__reports>div{grid-template-columns:1fr 1.2fr}}
 .recorded-entry{scroll-margin-top:16px}
 .recorded-entry--home { padding:0; }
 .recorded-entry--home .recorded-entry__inner { padding-block:clamp(64px,7vw,112px) 40px; border-top:1px solid #333; grid-template-columns:1fr 1fr; gap:clamp(36px,7vw,110px); }

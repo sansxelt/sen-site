@@ -52,10 +52,10 @@ const card = (slug: "defense" | "fleets"): CrossLink => {
 export default function Platform() {
   return (
     <div className={`${platformFont.variable} v6-platform`}>
-      <FrameHero
+      <FrameHero compact
         eyebrow="The platform"
-        title="Find where control software and device reports disagree"
-        sub="For defense, infrastructure and robotics teams. Compare supplied task reports or exercise an approved simulation panel. Inspect what happened and what the evidence cannot establish."
+        title="External software review"
+        sub="For defense, infrastructure and robotics teams. Follow one task across supplied control-panel, service and device reports. Find conflicting results and missing evidence."
         primary={{ label: "Try recorded evidence", href: "/verifications/recorded" }}
         secondary={{ label: "Watch the browser demo", href: "#how-a-check-works" }}
         {...photographHero("robotCell")}

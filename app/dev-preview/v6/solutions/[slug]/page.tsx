@@ -1,3 +1,4 @@
+import Infrastructure, { metadata as infrastructureMetadata } from "../../infrastructure/page";
 import type { Metadata } from "next";
 import { v6meta } from "../../_system/meta";
 import { SectorPageView } from "../../_system/sector";
@@ -18,6 +19,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
+  if (slug === "public-sector") return infrastructureMetadata;
   const page = sectorPage(slug);
   // An unknown slug never reaches here in a build (dynamicParams is false); in dev it must not invite indexing.
   if (!page) return { title: "Not found", robots: robotsMeta(false) };
@@ -26,5 +28,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function SectorRoute({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  if (slug === "public-sector") return <Infrastructure />;
   return <SectorPageView slug={slug} />;
 }

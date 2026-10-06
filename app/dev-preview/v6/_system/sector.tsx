@@ -1,4 +1,4 @@
-import { photograph, SECTOR_PHOTOGRAPHS, USE_CASE_PHOTOGRAPHS } from "../_content/photography";
+import { photograph, photographHero, SECTOR_PHOTOGRAPHS, USE_CASE_PHOTOGRAPHS } from "../_content/photography";
 // THE SECTOR PAGE (plan A9 T2) AND THE SOLUTIONS INDEX CARDS (T14). Revision 2, 2026-10-02. Owner: b5a.
 //
 //   import { SectorPageView, SolutionCards } from "../../_system/sector";
@@ -35,10 +35,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Fragment, type ReactNode } from "react";
 import {
-  Band, CrossLinks, DoesBox, FactRow, Faq, FeatureCard, FeatureGrid, MediaPanel,
+  FrameHero, Band, CrossLinks, DoesBox, FactRow, Faq, FeatureCard, FeatureGrid, MediaPanel,
   type CrossLink, type FaqItem,
 } from "./kit";
-import { CTA, EditorialLink, ProseLink, SectionHead } from "./ui";
+import { EditorialLink, ProseLink, SectionHead } from "./ui";
 import { ClosingScene } from "./close";
 import { Code, CopyScript } from "./code";
 import { RecordPanel } from "./record-panel";
@@ -54,23 +54,9 @@ const two = (n: number) => String(n).padStart(2, "0");
 const sectorFont = localFont({ src: "../../../fonts/manrope/Manrope-Variable.ttf", display: "swap", variable: "--font-sector", weight: "200 800" });
 
 function SectorHero({ page, sector }: { page: SectorPage; sector: Sector }) {
-  const photo = photograph(SECTOR_PHOTOGRAPHS[sector.slug]);
-  return (
-    <section className="v6-sx-hero" aria-labelledby="sector-title" data-nav-theme="dark">
-      <div className="v6-sx-hero__copy">
-        <p className="v6-sx-hero__eyebrow">{page.hero.eyebrow}</p>
-        <h1 id="sector-title">{page.hero.title}</h1>
-        <p className="v6-sx-hero__lead">{page.hero.sub}</p>
-        <div className="v6-sx-hero__actions">
-          <CTA href={page.hero.primary.href} brand lg>{page.hero.primary.label}</CTA>
-          <EditorialLink href={page.hero.secondary.href}>{page.hero.secondary.label}</EditorialLink>
-        </div>
-      </div>
-      <figure className="v6-sx-hero__image">
-        <Image src={photo.src} alt={photo.alt} fill sizes="(max-width: 900px) 100vw, 48vw" priority />
-      </figure>
-    </section>
-  );
+  return <FrameHero compact eyebrow="External software review" title={page.hero.title}
+    sub={page.hero.sub} primary={page.hero.primary} secondary={page.hero.secondary}
+    {...photographHero(SECTOR_PHOTOGRAPHS[sector.slug])} />;
 }
 
 /* ──────────────────────────────────────────────────────────────────────────────────────── sections ── */

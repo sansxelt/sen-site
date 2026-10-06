@@ -175,18 +175,11 @@ a.v6-si__card:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
 /* Solution pages: a single editorial surface, generous headlines and restrained
    evidence. Manrope is self-hosted under the SIL Open Font License. */
 .v6-sx { --sans: var(--font-sector), Arial, sans-serif; --display: var(--sans); font-family: var(--sans); }
-.v6-sx-hero { max-width: var(--max-wide); margin: 0 auto; padding: clamp(44px, 6vw, 100px) var(--gutter) 72px; display: grid; grid-template-columns: 1fr 1fr; gap: clamp(32px, 5vw, 88px); align-items: center; }
-.v6-sx-hero__eyebrow { margin: 0 0 26px; font-size: 14px; font-weight: 600; color: var(--ink-3); }
-.v6-sx-hero h1 { margin: 0; font-size: clamp(42px, 4.5vw, 76px); line-height: 1.06; font-weight: 500; letter-spacing: -.045em; max-width: 13ch; text-wrap: balance; }
-.v6-sx-hero__lead { font-size: clamp(17px, 1.35vw, 20px); line-height: 1.6; color: var(--ink-2); max-width: 43ch; margin: 28px 0 0; }
-.v6-sx-hero__actions { margin-top: 34px; display: flex; align-items: center; flex-wrap: wrap; gap: 20px 28px; }
-.v6-sx-hero__image { margin: 0; position: relative; aspect-ratio: 4 / 5; max-height: 640px; overflow: hidden; border-radius: 4px; }
-.v6-sx-hero__image img { object-fit: cover; }
 .v6-sx .v6-sec { padding-block: clamp(52px, 6vw, 96px); }
 .v6-sx .v6-wrap { max-width: 1280px; }
 .v6-sx .v6-head { max-width: 920px; gap: 18px; margin-bottom: 42px; }
 .v6-sx .v6-eyebrow { font-size: 13px; font-weight: 600; }
-.v6-sx .v6-dl { font-family: var(--sans); font-size: clamp(30px, 3.2vw, 52px); font-weight: 500; line-height: 1.13; letter-spacing: -.035em; max-width: 25ch; }
+.v6-sx .v6-dl { font-family: var(--sans); font-size: clamp(28px, 2.9vw, 44px); font-weight: 500; line-height: 1.13; letter-spacing: -.035em; max-width: 25ch; }
 .v6-sx .v6-lead { font-size: 17px; line-height: 1.65; max-width: 62ch; }
 .v6-sx :is(.v6-sx-problem,.v6-sx-fit,.v6-sx-stance) .v6-fg { gap: 32px; }
 .v6-sx :is(.v6-sx-problem,.v6-sx-fit,.v6-sx-stance) .v6-fc { background: transparent; border: 0; border-top: 1px solid var(--line-2); border-radius: 0; padding: 24px 0 0; }
@@ -216,16 +209,10 @@ a.v6-si__card:focus-visible { outline: 2px solid #FAFAFA; outline-offset: 3px; }
 .v6-sx .v6-end__h { font-family: var(--sans); font-size: clamp(36px, 4vw, 60px); max-width: 24ch; }
 .v6-sx :is(summary,a):focus-visible { outline: 2px solid #fafafa; outline-offset: 4px; }
 @media (max-width: 900px) {
- .v6-sx-hero { grid-template-columns: 1fr; padding-bottom: 32px; }
- .v6-sx-hero h1 { max-width: 20ch; font-size: clamp(38px, 7vw, 64px); }
- .v6-sx-hero__image { aspect-ratio: 16 / 10; max-height: none; }
  .v6-sx .v6-evidence-record { grid-template-columns: 1fr; gap: 28px; }
 }
 @media (max-width: 640px) {
  .v6-sx .v6-head { margin-bottom: 30px; }
- .v6-sx-hero { padding-top: 40px; gap: 36px; }
- .v6-sx-hero__eyebrow { margin-bottom: 20px; }
- .v6-sx-hero__lead { margin-top: 22px; }
  .v6-sx .v6-fg { display: grid; grid-template-columns: minmax(0,1fr); gap: 24px; }
  .v6-sx .v6-fg > * { grid-column: 1; }
  .v6-sx .v6-rp__facts { gap: 16px 20px; }
