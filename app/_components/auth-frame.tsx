@@ -12,7 +12,7 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 export function AuthFrame({ children }: { children: ReactNode }) {
   return (
     <ProductSurface>
-      <style>{"html:has(.auth-entry), body:has(.auth-entry) { background:#f8fafc!important; color-scheme:light!important; }"}</style>
+      <style>{"html:has(.auth-entry), body:has(.auth-entry) { background:#0a0a0b!important; color-scheme:dark!important; }"}</style>
       <div className="auth-split auth-entry">
         <div className="auth-split__form">
           <div className="auth-split__head">
