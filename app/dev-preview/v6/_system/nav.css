@@ -32,11 +32,14 @@
    is 40px tall, plus 13px of padding twice and a 1px border). Nothing in this file may make the bar taller:
    every top item is shorter than that cluster. If the bar's box model changes, measure it and change the seed.
 
-   THE BAR NEVER HIDES. It stays put and takes the colour of whatever is under it instead (the ground sampler
+   THE BAR HIDES on downward scroll and returns on upward scroll, top-edge pointer movement or focus. It takes the colour of whatever is under it (the ground sampler
    in shell.tsx writes it as --nav-bg; the rule that paints it, `.v6-nav[data-ground="1"] .v6-nav__in`, is in
    v6.css with the rest of the ground contract). There is deliberately no colour transition on the bar's
    background: the page's ground changes in one frame as a boundary passes under it, so the bar does too. */
-.v6-nav { position: sticky; top: 0; z-index: 60; overflow-anchor: none; }
+.v6-nav { position: sticky; top: 0; z-index: 60; overflow-anchor: none; transition: transform 260ms cubic-bezier(.22,1,.36,1); }
+.v6-nav[data-hidden="true"] { transform:translateY(-100%); }
+.v6-nav:has(:focus-visible), .v6-nav[data-open="true"] { transform:none; }
+@media (prefers-reduced-motion:reduce) { .v6-nav { transition:none; } }
 /* The first paint, and the commit after a navigation, must not animate. */
 .v6-nav[data-settled="false"] { transition: none; }
 .v6-nav[data-settled="false"] .v6-nav__in,

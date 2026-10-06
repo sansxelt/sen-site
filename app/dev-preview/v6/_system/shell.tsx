@@ -250,6 +250,39 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
   // whichever panel is on screen: the open one, or the one still animating out
   const shown = open ?? exiting;
 
+  // Direction-aware chrome leaves reading space without changing the page layout.
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    let anchor = window.scrollY;
+    let pointerAtTop = false;
+    const show = () => { nav.dataset.hidden = "false"; };
+    const onScroll = () => {
+      const y = window.scrollY;
+      const focused = nav.contains(document.activeElement) && document.activeElement?.matches(":focus-visible");
+      if (y < 80 || shown !== null || drawer || pointerAtTop || focused) {
+        show(); anchor = y; return;
+      }
+      if (Math.abs(y - anchor) < 8) return;
+      nav.dataset.hidden = y > anchor ? "true" : "false";
+      anchor = y;
+    };
+    const onPointer = (event: PointerEvent) => {
+      if (event.pointerType !== "mouse") return;
+      pointerAtTop = event.clientY <= nav.offsetHeight + 12;
+      if (pointerAtTop) show();
+    };
+    show();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("pointermove", onPointer, { passive: true });
+    nav.addEventListener("focusin", show);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("pointermove", onPointer);
+      nav.removeEventListener("focusin", show);
+    };
+  }, [pathname, shown, drawer]);
+
   // THE FIRST PICTURE OF EACH MENU IS FETCHED BEFORE ANYONE ASKS FOR IT. A panel mounts its pictures when it
   // opens, so the first menu a reader opened showed an empty box until its picture arrived. A desktop page
   // fetches the four first looks (WARM_PICS) once it has settled, or as soon as the pointer reaches the bar,

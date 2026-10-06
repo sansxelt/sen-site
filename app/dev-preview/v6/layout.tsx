@@ -8,6 +8,7 @@ import type { ReactNode } from "react";
 import "./_system/v6.css";
 import "./_system/nav.css";
 import "./_system/pagekit.css";
+import "./_system/page-entrance.css";
 import "./_system/docs.css";
 import "./_system/changelog.css";
 import "./_system/legal.css";

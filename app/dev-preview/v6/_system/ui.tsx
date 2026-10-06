@@ -16,6 +16,7 @@ import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
 import { v6AppEntry, v6ShouldPrefetch } from "@/lib/v6-routes";
 import { useMarketingHref } from "./entry-navigation";
+import { TitleEntrance } from "./title-entrance";
 
 // The session-aware link resolves product destinations before a visitor leaves marketing.
 const OPEN_APP = v6AppEntry();
@@ -125,7 +126,7 @@ export function PageHero({ kicker, title, lead, cta, dark = false, read = false,
       <div className={`${read ? "v6-wrap v6-wrap--read" : "v6-wrap"}${aside ? " v6-phero__split" : ""}`}>
         <div className="v6-phero__text">
           {kicker ? <p className="v6-eyebrow v6-phero__k">{kicker}</p> : null}
-          <h1>{title}</h1>
+          <h1><TitleEntrance>{title}</TitleEntrance></h1>
           {lead ? <p className="v6-phero__lead">{lead}</p> : null}
           {cta ? <div className="v6-phero__cta">{cta}</div> : null}
         </div>

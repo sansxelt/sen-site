@@ -1,0 +1,12 @@
+/* Each word rises through a mask; the surrounding copy follows within one second. */
+.v6-title-word { display:inline-block; overflow:clip; vertical-align:bottom; padding:.12em 0; margin:-.12em 0; }
+.v6-title-word > span { display:block; animation:v6TitleRise 680ms cubic-bezier(.22,1,.36,1) both; animation-delay:var(--word-delay,90ms); }
+.v6-title-line { display:block; animation:v6TitleRise 680ms cubic-bezier(.22,1,.36,1) both; }
+:is(.v6-fh__eyebrow,.v6-phero__k) { animation:v6CopyArrive 520ms cubic-bezier(.22,1,.36,1) both; }
+:is(.v6-fh__sub,.v6-phero__lead) { animation:v6CopyArrive 650ms 220ms cubic-bezier(.22,1,.36,1) both; }
+:is(.v6-fh__actions,.v6-phero__cta) { animation:v6CopyArrive 650ms 320ms cubic-bezier(.22,1,.36,1) both; }
+@keyframes v6TitleRise { from { transform:translateY(105%); } to { transform:translateY(0); } }
+@keyframes v6CopyArrive { from { opacity:0;transform:translateY(18px); } to { opacity:1;transform:translateY(0); } }
+@media (prefers-reduced-motion:reduce) {
+  .v6-title-word > span,.v6-title-line,:is(.v6-fh__eyebrow,.v6-phero__k,.v6-fh__sub,.v6-phero__lead,.v6-fh__actions,.v6-phero__cta) { animation:none; }
+}

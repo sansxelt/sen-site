@@ -35,6 +35,7 @@ import { MarketingLink as Link } from "./entry-navigation";
 import { Children, Fragment, type CSSProperties, type ReactNode } from "react";
 import { CTA, EditorialLink, PageHero, ProseLink, Reveal, Signal } from "./ui";
 import { FrameMedia } from "./kit-client";
+import { TitleEntrance } from "./title-entrance";
 import { V6_BASE, v6ShouldPrefetch } from "@/lib/v6-routes";
 import "./kit.css";
 
@@ -78,8 +79,13 @@ const two = (n: number) => String(n).padStart(2, "0");
  *  without a lookbehind, which older Safari cannot parse. */
 function sentenceLines(title: string): ReactNode {
   const parts = title.replace(/\.\s+(?=\S)/g, ".\n").split("\n");
-  if (parts.length < 2) return title;
-  return parts.map((p, i) => <Fragment key={i}>{i ? " " : null}<span className="v6-fh__line">{p}</span></Fragment>);
+  if (parts.length < 2) return <TitleEntrance>{title}</TitleEntrance>;
+  let offset = 0;
+  return parts.map((p, i) => {
+    const start = offset;
+    offset += p.split(/\s+/).length;
+    return <Fragment key={i}>{i ? " " : null}<span className="v6-fh__line"><TitleEntrance offset={start}>{p}</TitleEntrance></span></Fragment>;
+  });
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────────────────── FrameHero ── */
