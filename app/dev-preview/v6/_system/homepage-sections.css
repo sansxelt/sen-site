@@ -38,9 +38,10 @@
 .home-resource h3 { font-size:clamp(26px,2.5vw,38px); font-weight:500; line-height:1.15; letter-spacing:-.025em; margin:0 0 16px; }
 .home-resource>div>span { display:flex; justify-content:space-between; gap:20px; color:#b5b5b5; font-size:14px; }
 /* Homepage rhythm is owned here; shared inner-page sections retain their own layout. */
-.home-page .v6-story { padding-block:clamp(64px,7vw,112px); }
-.home-page .v6-story__heading { border-top:1px solid #333; padding-top:40px; grid-template-columns:1.3fr 1fr; }
-.home-page .v6-story__label { font-size:clamp(36px,4.8vw,72px); line-height:1.06; letter-spacing:-.045em; }
+.home-page .v6-story { padding-block:clamp(40px,4vw,64px); }
+.home-page .v6-story > .v6-wrap { max-width:1120px; }
+.home-page .v6-story__heading { border-top:1px solid #333; padding-top:28px; grid-template-columns:1.3fr 1fr; gap:40px; margin-bottom:28px; }
+.home-page .v6-story__label { font-size:clamp(28px,3vw,44px); line-height:1.06; letter-spacing:-.045em; }
 .home-page .v6-story__intro { color:#b5b5b5; }
 .home-page .v6-mission-demo { border:1px solid #292929; }
 @media(max-width:760px) {
