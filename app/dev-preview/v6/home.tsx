@@ -6,7 +6,6 @@ import { useRef } from "react";
 import { useHomeMotion } from "./_system/home-motion";
 import { HomeSequence } from "./_system/home-sequence";
 import { Orbit } from "./_system/orbit";
-import { Opening } from "./_system/opening";
 import { StrikeStory } from "./_system/strike-story";
 import { STRIKE, STRIKE_CHAPTERS, STRIKE_CAPTION } from "./_content/strike";
 import { PhysicalSystems, EngineeringEntry } from "./_system/homepage-sections";
@@ -20,7 +19,6 @@ export default function Home() {
   useHomeMotion(root);
   return (
     <div ref={root} className="home-page">
-      <Opening />
       <HomeSequence>
       <PhysicalSystems />
       <StrikeStory record={STRIKE} chapters={STRIKE_CHAPTERS} caption={STRIKE_CAPTION} />

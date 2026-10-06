@@ -1,8 +1,18 @@
-.home-sequence[data-sequenced] { --chapter-height:calc(100svh - var(--nav-h,66px) - 24px); height:calc(var(--chapter-height) * 3); }
+/* The opening and all three chapters share a single clipped viewport. */
+.home-sequence[data-sequenced] { --chapter-height:calc(100svh - var(--nav-h,66px) - 24px); height:calc(210svh + var(--chapter-height) * 2.1); }
 .home-sequence[data-sequenced] .home-sequence__stage { position:sticky; top:calc(var(--nav-h,66px) + 12px); height:var(--chapter-height); isolation:isolate; overflow:clip; }
-.home-sequence[data-sequenced] .home-sequence__scene { position:absolute; inset:0; display:grid; align-items:center; pointer-events:none; background:var(--paper); will-change:translate; }
-.home-sequence[data-sequenced] .home-sequence__scene[data-active="true"] { pointer-events:auto; z-index:1; }
-.home-sequence[data-sequenced] .home-sequence__scene > section { width:100%; }
+.home-sequence[data-sequenced] .home-sequence__opening { position:absolute; inset:0; }
+.home-sequence[data-sequenced] .v6-opening[data-motion] { height:100%; padding-top:0; }
+.home-sequence[data-sequenced] .v6-opening__pin { position:static; height:100%; }
+.home-sequence[data-sequenced] .v6-opening__statement { height:100%; }
+.home-sequence[data-sequenced] .home-sequence__scene { position:absolute; inset:0; display:grid; align-items:center; pointer-events:none; background:var(--paper); visibility:hidden; }
+.home-sequence[data-sequenced] .home-sequence__scene:nth-child(2) { z-index:1; }
+.home-sequence[data-sequenced] .home-sequence__scene:nth-child(3) { z-index:2; }
+.home-sequence[data-sequenced] .home-sequence__scene:nth-child(4) { z-index:3; }
+.home-sequence[data-sequenced] .home-sequence__scene[data-active="true"] { pointer-events:auto; }
+.home-sequence[data-sequenced] .home-sequence__scene > section { width:100%; transform:translateY(var(--scene-y,0px)); }
+/* Subtle image travel continues between handoffs, rather than leaving a static scroll runway. */
+.home-sequence[data-sequenced] .home-area img { scale:1.04; translate:0 calc(var(--scene-y,0px) * -.5); }
 .home-page .home-sequence[data-sequenced] .home-areas,
 .home-page .home-sequence[data-sequenced] .v6-story { padding-block:20px; }
 .home-page .home-sequence[data-sequenced] .v6-story > .v6-wrap { max-width:min(1600px,calc((100svh - var(--nav-h,66px) - 210px) * 1.6)); }

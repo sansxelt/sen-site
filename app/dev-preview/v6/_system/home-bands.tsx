@@ -70,6 +70,12 @@ export function Statement({ scrollRoot }: { scrollRoot?: RefObject<HTMLElement |
   useScrollProgress(scrollRoot ?? root, {
     property: "--statement-p",
     measure: (r, vh) => {
+      if (scrollRoot?.current?.dataset.sequenced) {
+        const stage = scrollRoot.current.querySelector<HTMLElement>('.home-sequence__stage')!;
+        const top = parseFloat(getComputedStyle(stage).top) || 0;
+        const progress = (top - r.top) / Math.max(1, vh * 2.1 - stage.clientHeight);
+        return Math.min(1, Math.max(0, (progress - .48) / .36));
+      }
       if (scrollRoot?.current?.dataset.motion) {
         const pin = scrollRoot.current.querySelector<HTMLElement>(".v6-opening__pin");
         const height = pin?.offsetHeight ?? vh;
