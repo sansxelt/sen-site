@@ -12,7 +12,7 @@
 .home-sequence[data-sequenced] .home-sequence__scene[data-active="true"] { pointer-events:auto; }
 .home-sequence[data-sequenced] .home-sequence__scene > section { width:100%; transform:translateY(var(--scene-y,0px)); }
 /* Subtle image travel continues between handoffs, rather than leaving a static scroll runway. */
-.home-sequence[data-sequenced] .home-area img { scale:1.04; translate:0 calc(var(--scene-y,0px) * -.5); }
+.home-sequence[data-sequenced] .home-area__media { --media-y:clamp(-6px,calc(var(--scene-y,0px) * -.5),6px); }
 .home-page .home-sequence[data-sequenced] .home-areas,
 .home-page .home-sequence[data-sequenced] .v6-story { padding-block:20px; }
 .home-page .home-sequence[data-sequenced] .v6-story > .v6-wrap { max-width:min(1600px,calc((100svh - var(--nav-h,66px) - 210px) * 1.6)); }

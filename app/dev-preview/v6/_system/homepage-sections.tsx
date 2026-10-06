@@ -38,7 +38,9 @@ export function PhysicalSystems() {
           const area = AREAS[sector.slug as keyof typeof AREAS];
           const titleId = `home-area-${sector.slug}`;
           return <Link key={sector.slug} href={sector.href} className="home-area" data-lead={index === 0 || undefined} aria-labelledby={titleId}>
-            <Image src={area.image} alt="" width={area.width} height={area.height} sizes="(max-width: 760px) 100vw, 60vw" loading="lazy" />
+            <span className="home-area__media" aria-hidden="true">
+              <Image src={area.image} alt="" width={area.width} height={area.height} sizes="(max-width: 760px) 100vw, 60vw" loading="lazy" />
+            </span>
             <div className="home-area__caption">
               <div><h3 id={titleId}>{sector.label}</h3><p>{area.line}</p></div>
               <UpRight />

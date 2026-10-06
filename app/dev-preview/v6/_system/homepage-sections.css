@@ -13,14 +13,16 @@
 .home-areas__grid { display:grid; grid-template-columns:1.4fr 1fr; grid-template-rows:repeat(2,200px); gap:20px; }
 .home-area { position:relative; display:block; isolation:isolate; overflow:hidden; background:#181818; color:#fff; text-decoration:none; }
 .home-area[data-lead] { grid-row:span 2; }
-.home-area img { width:100%; height:100%; object-fit:cover; transition:transform 700ms ease; }
-.home-area::after { content:""; position:absolute; inset:0; z-index:1; background:linear-gradient(0deg,rgba(0,0,0,.85),rgba(0,0,0,.08) 66%); pointer-events:none; }
+.home-area__media { position:absolute; inset:0; z-index:0; display:block; overflow:hidden; isolation:isolate; pointer-events:none; }
+/* Overscan covers the full scroll shift before hover, throughout zoom, and on pointer exit. */
+.home-area__media img { position:absolute; inset:-12px; display:block; width:calc(100% + 24px); max-width:none; height:calc(100% + 24px); object-fit:cover; transform:translateY(var(--media-y,0px)) scale(var(--media-zoom,1)); transition:transform 700ms ease; }
+.home-area__media::after { content:""; position:absolute; inset:0; z-index:1; background:linear-gradient(0deg,rgba(0,0,0,.85),rgba(0,0,0,.08) 66%); pointer-events:none; }
 .home-area__caption { position:absolute; bottom:0; left:0; right:0; z-index:2; padding:24px; display:flex; align-items:end; justify-content:space-between; gap:16px; }
 .home-area__caption h3 { font-size:28px; line-height:1.12; letter-spacing:-.025em; font-weight:500; margin:0 0 8px; }
 .home-area__caption p { font-size:14px; line-height:1.5; color:#e0e0e0; margin:0; max-width:34ch; }
 .home-area[data-lead] h3 { font-size:36px; }
 .home-area__caption svg { flex:none; margin-bottom:3px; transition:transform 200ms ease; }
-.home-area:hover img { transform:scale(1.035); }
+.home-area:is(:hover,:focus-visible) { --media-zoom:1.035; }
 .home-area:hover .home-area__caption svg { transform:translate(2px,-2px); }
 .home-area:hover { color:#fff; }
 .home-areas__sources { margin-top:14px; font-size:11px; color:#aaa; }
@@ -63,6 +65,7 @@
  .home-page .v6-story__heading { grid-template-columns:1fr; gap:24px; }
 }
 @media(prefers-reduced-motion:reduce) { .home-page *, .home-page *::after { transition:none!important; } }
+@media(prefers-reduced-motion:reduce) { .home-area__media img { transform:none; } }
 
 /* Once-only, staggered arrivals after the opening; content stays visible without JS. */
 @media(prefers-reduced-motion:no-preference) {
