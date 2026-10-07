@@ -18,3 +18,6 @@
 .direction-page .v6-end { min-height:0; padding-block:64px; }
 .direction-page .v6-end__h { max-width:24ch; font-size:clamp(32px,4vw,52px); }
 @media(max-width:700px) { .direction-topics article { grid-template-columns:1fr; gap:12px; padding-block:24px; } .direction-page .v6-sec,.direction-page .v6-band__in { padding-block:32px; } }
+
+.direction-page .v6-fh__h1 { font-weight:var(--display-w); }
+ .direction-page .v6-fh__actions .v6-arw { display:none; }

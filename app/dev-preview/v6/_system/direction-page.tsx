@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { Band } from "./kit";
+import { Band, FrameHero } from "./kit";
 import { SectionHead } from "./ui";
-import type { PhotographKey } from "../_content/photography";
+import { photographHero, type PhotographKey } from "../_content/photography";
 import { TitleEntrance } from "./title-entrance";
 import { V6_BASE } from "@/lib/v6-routes";
 import { SecurityStatus } from "./security-status";
@@ -12,7 +12,10 @@ export type DirectionContent = {
   showStatus?: boolean;
   nextTitle:string; nextLead:string; next:{title:string;body:string;label:string}[];
 };
-export function DirectionHero({eyebrow,title,intro}:{eyebrow:string;title:string;intro:string}) {
+export function DirectionHero({eyebrow,title,intro,photo}:{eyebrow:string;title:string;intro:string;photo?:PhotographKey}) {
+  if (photo) return <FrameHero compact eyebrow={eyebrow} title={title} sub={intro}
+    primary={{label:"Contact",href:`${V6_BASE}/contact`}}
+    secondary={{label:"Development status",href:`${V6_BASE}/beta`}} {...photographHero(photo)} />;
   return <header className="direction-hero v6-wrap">
     <p className="direction-hero__eyebrow">{eyebrow}</p>
     <h1><TitleEntrance>{title}</TitleEntrance></h1>
@@ -28,7 +31,7 @@ export function DirectionTopics({items}:{items:DirectionContent["items"]}) {
 }
 export function DirectionPage({content:c}:{content:DirectionContent}) {
   return <div className="direction-page">
-    <DirectionHero eyebrow={c.eyebrow} title={c.title} intro={c.intro}/>
+    <DirectionHero eyebrow={c.eyebrow} title={c.title} intro={c.intro} photo={c.photo}/>
     <Band><SectionHead eyebrow="The work" title={c.heading} lead={c.lead}/>
       <DirectionTopics items={c.items}/>
     </Band>
