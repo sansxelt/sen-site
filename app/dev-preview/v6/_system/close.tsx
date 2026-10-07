@@ -11,13 +11,14 @@ import { useScrollProgress, entryProgress } from "./progress";
 import { Spectral } from "./spectral";
 import "./close.css";
 import { V6_BASE } from "@/lib/v6-routes";
+import { SYSTEM_INQUIRY_LABEL, SYSTEM_INQUIRY_PATH } from "@/lib/app-availability";
 import { FOOTER_STATEMENT, HEADLINE } from "./positioning";
 import { PRIMARY_SECTORS, SOLUTIONS_HREF } from "../_content/sectors";
 import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
 import { LanguageSwitcher } from "@/components/language-switcher";
 
 const BASE = V6_BASE;
-const CONTACT = `${BASE}/contact`;
+const CONTACT = `${BASE}${SYSTEM_INQUIRY_PATH}`;
 
 /**
  * THE ENDING OF A PAGE (plan A5, 2026-10-02): one line, centred, at the display size (64 / 40, 16ch) with
@@ -33,7 +34,7 @@ const CONTACT = `${BASE}/contact`;
  */
 export function ClosingScene({
   title = CLOSE_TITLE,
-  action = { label: "Contact", href: CONTACT },
+  action = { label: SYSTEM_INQUIRY_LABEL, href: CONTACT },
   say = CLOSE_SAY,
 }: {
   title?: string; action?: { label: string; href: string }; say?: string;

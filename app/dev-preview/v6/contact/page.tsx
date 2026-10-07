@@ -20,7 +20,7 @@ export default async function Contact({ searchParams }: { searchParams: Query })
         <h1><TitleEntrance>Discuss AI security for your systems.</TitleEntrance></h1>
         <p>Tell us what you are building, where AI has access or influence, and the security problem you need to address.</p>
       </header>
-      <div className="ct__form"><ContactForm topicParam={typeof topic === "string" ? topic : undefined} /></div>
+      <div className="ct__form"><ContactForm key={typeof topic === "string" ? topic : ""} topicParam={typeof topic === "string" ? topic : undefined} /></div>
       <aside className="ct__aside" aria-label="Other contact options">
         <details className="ct__direct"><summary>Direct contact addresses</summary><ul className="ct__list">{ADDRESSES.map(([address, job]) => <li key={address}><a href={`mailto:${address}`} data-no-translate>{address}</a><span>{job}</span></li>)}</ul></details>
         <a className="ct__report" href={`${V6_BASE}/security#report`}>Report a security issue</a>

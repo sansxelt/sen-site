@@ -13,7 +13,7 @@ import { useGroundColor } from "@/components/use-ground-color";
 import { V6_BASE, V6_HOME, V6_APP, v6SignInPath, v6GroundAtTop, v6ShouldPrefetch, GROUND_CSS } from "@/lib/v6-routes";
 import { analyticsAllowed, onPrivacyChoiceChange } from "@/lib/privacy-choice";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { APP_ACCESS_OPEN } from "@/lib/app-availability";
+import { APP_ACCESS_OPEN, SYSTEM_INQUIRY_LABEL, SYSTEM_INQUIRY_PATH } from "@/lib/app-availability";
 
 // FOLLOWS THE PROMOTION FLAG. These were hardcoded to "/dev-preview/v6", which is precisely the mistake
 // lib/v6-routes.ts was written to prevent: it says every V6 destination lives there so promotion is one
@@ -652,7 +652,7 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
               Create account for a visitor, or Open Vraelis for someone already signed in. It used to carry
               one button, which left the bar looking unfinished on a wide screen. */}
           <LanguageSwitcher variant="pill" placement="down" className="v6-nav__lang" />
-          {!APP_ACCESS_OPEN ? <Link href={`${BASE}/contact`} className="v6-btn v6-btn--brand">Contact</Link> : <>
+          {!APP_ACCESS_OPEN ? <Link href={`${BASE}${SYSTEM_INQUIRY_PATH}`} className="v6-btn v6-btn--brand">{SYSTEM_INQUIRY_LABEL}</Link> : <>
           {authed ? null : <Link href={SIGNIN} className="v6-nav__signin">Sign in</Link>}
           {authed
             ? <Link href={V6_APP} prefetch={v6ShouldPrefetch(V6_APP) ? undefined : false} className="v6-btn v6-btn--brand">Open Vraelis</Link>
@@ -785,7 +785,7 @@ function MobileNav({ authed, onClose }: { authed: boolean; onClose: (returnFocus
       </div>
       <div className="v6-drawer__foot">
         <LanguageSwitcher placement="up" className="v6-drawer__lang" />
-        {!APP_ACCESS_OPEN ? <Link href={`${BASE}/contact`} className="v6-btn v6-btn--brand" onClick={follow}>Contact</Link> : <>
+        {!APP_ACCESS_OPEN ? <Link href={`${BASE}${SYSTEM_INQUIRY_PATH}`} className="v6-btn v6-btn--brand" onClick={follow}>{SYSTEM_INQUIRY_LABEL}</Link> : <>
         {authed ? null : <Link href={SIGNIN} className="v6-btn v6-btn--ghost" onClick={follow}>Sign in</Link>}
         {authed
           ? <Link href={V6_APP} prefetch={v6ShouldPrefetch(V6_APP) ? undefined : false} className="v6-btn v6-btn--brand" onClick={follow}>Open Vraelis <span className="v6-arw" aria-hidden>→</span></Link>

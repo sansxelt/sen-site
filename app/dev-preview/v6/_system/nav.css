@@ -360,3 +360,9 @@
 @media(max-height:700px) and (min-width:901px){.v6-mega__grid{padding-block:24px;min-height:0}.v6-mega__media{max-height:280px}}
 
 .v6:has(.home-page) .v6-nav[data-theme="dark"][data-scrolled="true"] .v6-nav__in { border-bottom-color:transparent; }
+
+/* The specific inquiry label can wrap on narrow screens and in longer translations. */
+@media(max-width:560px) {
+ .v6-nav__right { min-width:0; flex:1; justify-content:flex-end; }
+ .v6-nav__right>.v6-btn { min-width:0; white-space:normal; text-align:center; line-height:1.25; max-width:220px; }
+}

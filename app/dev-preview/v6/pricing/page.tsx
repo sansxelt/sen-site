@@ -4,6 +4,7 @@ import { DirectionHero, DirectionTopics } from "../_system/direction-page";
 import { SectionHead } from "../_system/ui";
 import { ClosingScene } from "../_system/close";
 import { V6_BASE } from "@/lib/v6-routes";
+import { SYSTEM_INQUIRY_LABEL, SYSTEM_INQUIRY_PATH } from "@/lib/app-availability";
 import { v6meta } from "../_system/meta";
 export const metadata=v6meta({title:"Pricing",description:"Vraelis is in private development. Pricing for AI-security integrations will follow a defined scope and demonstrated workflow.",path:"/pricing"});
 export default function Page(){return <div className="direction-page">
@@ -14,5 +15,5 @@ export default function Page(){return <div className="direction-page">
  {label:"Evaluation",title:"The outcome to establish",body:"Defined threat cases, authorization decisions and evidence the reviewers need to inspect."},
  ]}/></Band>
  <Band><SectionHead eyebrow="Availability" title="Product access remains closed." lead="The earlier browser-verification rates do not describe this AI-security direction. There is no self-service checkout or available deployment offer."/><Link href={`${V6_BASE}/platform`}>Read the product direction</Link></Band>
- <ClosingScene title="Discuss the system and its security boundary." action={{label:"Contact",href:`${V6_BASE}/contact?topic=sales`}}/>
+ <ClosingScene title="Discuss the system and its security boundary." action={{label:SYSTEM_INQUIRY_LABEL,href:`${V6_BASE}${SYSTEM_INQUIRY_PATH}`}}/>
  </div>}

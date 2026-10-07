@@ -4,7 +4,7 @@ import { createContext, useContext, type ComponentProps, type ReactNode } from "
 import Link from "next/link";
 import { isAppPath } from "@/lib/app-routes";
 import { V6_BASE, V6_APP, v6SignInPath } from "@/lib/v6-routes";
-import { isProductEntryHref } from "@/lib/app-availability";
+import { isProductEntryHref, SYSTEM_INQUIRY_LABEL, SYSTEM_INQUIRY_PATH } from "@/lib/app-availability";
 
 const MarketingSession = createContext(false);
 
@@ -19,7 +19,7 @@ export function useMarketingSession() {
 /** Signed-out product links open sign-in directly and keep their intended destination. */
 export function useMarketingHref(href: string) {
   const authed = useMarketingSession();
-  if (isProductEntryHref(href)) return `${V6_BASE}/contact`;
+  if (isProductEntryHref(href)) return `${V6_BASE}${SYSTEM_INQUIRY_PATH}`;
   if (authed) return href;
   if (href.startsWith("https://app.vraelis.com/")) {
     const url = new URL(href);
@@ -36,5 +36,5 @@ export function useAppEntry() {
 
 export function MarketingLink({ href, children, ...props }: Omit<ComponentProps<typeof Link>, "href"> & { href: string }) {
   const destination = useMarketingHref(href);
-  return <Link {...props} href={destination}>{isProductEntryHref(href) ? "Contact" : children}</Link>;
+  return <Link {...props} href={destination}>{isProductEntryHref(href) ? SYSTEM_INQUIRY_LABEL : children}</Link>;
 }

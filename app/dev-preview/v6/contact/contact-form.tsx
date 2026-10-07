@@ -30,7 +30,7 @@ export function ContactForm({ topicParam }: { topicParam?: string }) {
   const id = useId();
   const [audience, setAudience] = useState<ContactAudience | "">(topicParam === "privacy" ? "privacy" : topicParam === "government" ? "government" : "");
   const [topic, setTopic] = useState<TopicKey | "">(() => {
-    const key = ({ infrastructure: "public-sector", robotics: "fleets", government: "support", beta: "sales" } as Record<string,string>)[topicParam ?? ""] ?? topicParam;
+    const key = ({ "ai-security": "sales", infrastructure: "public-sector", robotics: "fleets", government: "support", beta: "sales" } as Record<string,string>)[topicParam ?? ""] ?? topicParam;
     return TOPICS.find(t => t.key === key)?.key ?? "";
   });
   const [errors, setErrors] = useState<Errors>({});

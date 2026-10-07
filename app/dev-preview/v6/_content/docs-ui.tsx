@@ -12,7 +12,7 @@ import { MARK_PATH, MARK_VIEWBOX } from "@/lib/brand-mark";
 import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useAppEntry, useMarketingHref, useMarketingSession } from "../_system/entry-navigation";
-import { APP_ACCESS_OPEN, isProductEntryHref } from "@/lib/app-availability";
+import { APP_ACCESS_OPEN, isProductEntryHref, SYSTEM_INQUIRY_LABEL, SYSTEM_INQUIRY_PATH } from "@/lib/app-availability";
 
 const BASE = V6_BASE;
 export const dslug = slugOf;
@@ -355,7 +355,7 @@ export function DocShell({ activeSlug = "", toc = [], crumb, markdown, children 
         ) : <span className="v6-dh__crumb" />}
         <div className="v6-dh__actions">
           {markdown ? <CopyMarkdown markdown={markdown} /> : null}
-          {!APP_ACCESS_OPEN ? <Link href={`${BASE}/contact`} className="v6-dh__open">Contact</Link> : <>
+          {!APP_ACCESS_OPEN ? <Link href={`${BASE}${SYSTEM_INQUIRY_PATH}`} className="v6-dh__open">{SYSTEM_INQUIRY_LABEL}</Link> : <>
             {!authed ? <Link href={V6_SIGNIN} className="v6-dh__signin">Sign in</Link> : null}
             <Link href={authed ? appEntry : `${v6SignInPath()}&mode=signup`} prefetch={authed ? docPrefetch(appEntry) : undefined} className="v6-dh__open">{authed ? "Open Vraelis" : "Create account"}</Link>
           </>}
