@@ -68,7 +68,7 @@ export const SECURITY_PAGES: Record<string, DirectionContent> = {
     ],
   },
   goals: {
-    eyebrow: "Our goals", title: "Build security teams can depend on.",
+    eyebrow: "Our goals", title: "Build security that teams can depend on.",
     intro: "Develop cybersecurity for AI-enabled defense, infrastructure and physical systems. Earn adoption through working controls, evidence and a clear understanding of each environment.",
     photo: "satelliteStation", heading: "Make the product useful before expanding it.",
     lead: "Start with a defined security boundary and a complete workflow that engineers and security reviewers can test.",

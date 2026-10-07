@@ -139,7 +139,9 @@
     "recorded:verify:test": "tsx scripts/recorded-verification-verify.ts",
     "recorded:mcap:test": "tsx scripts/recorded-mcap-verify.ts",
     "ai:security:test": "tsx scripts/ai-security-policy-verify.ts",
-    "contact:intake:test": "tsx scripts/contact-intake-verify.ts"
+    "contact:intake:test": "tsx scripts/contact-intake-verify.ts",
+    "i18n:coverage:test": "tsx scripts/i18n-coverage-verify.ts",
+    "i18n:version": "tsx scripts/i18n-version.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",

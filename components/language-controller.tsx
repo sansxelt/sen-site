@@ -18,14 +18,15 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { LOCALES, hrefWithLocale, isVraelisHost, localeFromHref, type Locale } from "@/lib/i18n/locales";
 import { currentLocale, useLocale } from "@/lib/i18n/client";
+import { CATALOGUE_VERSION } from "@/lib/i18n/catalogue-version";
 
 type Catalogue = Record<string, string>;
 type TextRecord = { source: string; lead: string; trail: string; applied: string };
 
 // Elements whose subtree (text and attributes) is never touched, and the extra form controls whose TEXT is
-// left alone (a typed value, an option list) while their placeholder and label are still translated.
+// left alone (a typed value) while their placeholder and label are still translated. Option labels are UI copy.
 const ELEMENT_SKIP = "[data-no-translate],script,style,noscript,code,pre,kbd,samp,[contenteditable='true']";
-const SKIP = `${ELEMENT_SKIP},input,textarea,select`;
+const SKIP = `${ELEMENT_SKIP},input,textarea`;
 // data-text: the closing heading's light sweep paints its sentence from this attribute (spectral.tsx), so it
 // must be translated with the heading, or the English sentence sweeps across the translation. alt: image text.
 const ATTRS = ["aria-label", "title", "placeholder", "alt", "data-text"] as const;
@@ -105,7 +106,7 @@ function load(locale: Locale): Promise<Catalogue> {
   if (!p) {
     // app/layout.tsx starts this fetch before the page has parsed, for the language it decided on; use it when it is this one.
     const early = (window as typeof window & { __vraelisI18n?: { locale: string; catalogue: Promise<Catalogue> } }).__vraelisI18n;
-    p = early?.locale === locale ? early.catalogue : fetch(`/locales/${locale}.json`, { cache: "force-cache" })
+    p = early?.locale === locale ? early.catalogue : fetch(`/locales/${locale}.json?v=${CATALOGUE_VERSION}`, { cache: "force-cache" })
       .then((r) => (r.ok ? (r.json() as Promise<Catalogue>) : {}))
       .catch(() => ({}));
     catalogues.set(locale, p);

@@ -109,7 +109,7 @@ export function ContactForm({ topicParam }: { topicParam?: string }) {
       <label className="ct-ack"><input name="acknowledgement" type="checkbox" required aria-invalid={!!errors.acknowledgement || undefined} aria-describedby={err("acknowledgement")} onChange={() => clear("acknowledgement")} /><span>{sender.acknowledgement}</span></label>{errorText("acknowledgement")}
     </div> : null}
     <div className="ct-hp" aria-hidden="true"><label htmlFor={`${id}-website`}>Website</label><input id={`${id}-website`} name="website" tabIndex={-1} autoComplete="off" defaultValue="" /></div>
-    <p className="ct-consent">The <a href={`${V6_BASE}/privacy`}>privacy policy</a> explains how we handle your inquiry. Please leave out credentials and sensitive operational data.</p>
+    <p className="ct-consent">The privacy policy explains how we handle your inquiry. Please leave out credentials and sensitive operational data. <a href={`${V6_BASE}/privacy`}>Read the privacy policy</a></p>
     <div className="ct-actions"><button type="submit" className="v6-btn v6-btn--brand v6-btn--lg ct-submit" aria-disabled={sending || undefined}>{sending ? MSG.sending : MSG.send}</button></div>
     {failure ? <p className="ct-err ct-err--form" role="alert">{failure}</p> : null}{seed}
   </form>;

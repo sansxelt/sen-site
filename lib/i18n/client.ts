@@ -33,12 +33,27 @@ let snapshot: Locale = typeof window === "undefined" ? DEFAULT_LOCALE : readLoca
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 
+function refreshLocale() {
+  const next = readLocale();
+  if (next !== snapshot) { snapshot = next; emit(); }
+}
+
 function subscribe(listener: () => void) {
   listeners.add(listener);
   // Allowing preference storage later can reveal a remembered language; refresh the snapshot then.
-  const onPrivacy = () => { const next = readLocale(); if (next !== snapshot) { snapshot = next; emit(); } };
-  if (listeners.size === 1) window.addEventListener(PRIVACY_CHANGE_EVENT, onPrivacy);
-  return () => { listeners.delete(listener); if (listeners.size === 0) window.removeEventListener(PRIVACY_CHANGE_EVENT, onPrivacy); };
+  if (listeners.size === 1) {
+    window.addEventListener(PRIVACY_CHANGE_EVENT, refreshLocale);
+    window.addEventListener("popstate", refreshLocale);
+    window.addEventListener("storage", refreshLocale);
+  }
+  return () => {
+    listeners.delete(listener);
+    if (listeners.size === 0) {
+      window.removeEventListener(PRIVACY_CHANGE_EVENT, refreshLocale);
+      window.removeEventListener("popstate", refreshLocale);
+      window.removeEventListener("storage", refreshLocale);
+    }
+  };
 }
 
 /** Remembers the language, but only where the person allowed preference storage. */

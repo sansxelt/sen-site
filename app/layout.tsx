@@ -15,6 +15,7 @@ import { ConsentedMeasurement } from "./_components/consented-measurement";
 import { SmoothScroll } from "@/components/smooth-scroll";
 import { LanguageController } from "@/components/language-controller";
 import { DEFAULT_LOCALE, LOCALE_COOKIE, LOCALE_PARAM, READY_LOCALES } from "../lib/i18n/locales";
+import { CATALOGUE_VERSION } from "../lib/i18n/catalogue-version";
 import { OPTIONAL_CATEGORIES, PRIVACY_COOKIE, PRIVACY_COOKIE_VERSION } from "../lib/privacy-choice";
 
 // A PAGE IN ANOTHER LANGUAGE IS PAINTED ONCE IT IS TRANSLATED (2026-10-02). Pages are rendered in English and
@@ -62,10 +63,11 @@ const LANGUAGE_FIRST_PAINT = `(function (c) { try {
   s.textContent = c.css;
   document.head.appendChild(s);
   setTimeout(function () { if (s.parentNode) s.parentNode.removeChild(s); }, c.ms);
-  window.__vraelisI18n = { locale: l, catalogue: fetch("/locales/" + l + ".json", { cache: "force-cache", priority: "low" })
+  window.__vraelisI18n = { locale: l, catalogue: fetch("/locales/" + l + ".json?v=" + c.catalogueVersion, { cache: "force-cache", priority: "low" })
     .then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; }) };
 } catch (e) {} })(${JSON.stringify({
   ready: READY_LOCALES, def: DEFAULT_LOCALE, param: LOCALE_PARAM, cookie: LOCALE_COOKIE, store: "vraelis-locale",
+  catalogueVersion: CATALOGUE_VERSION,
   privacy: PRIVACY_COOKIE, version: PRIVACY_COOKIE_VERSION, categories: OPTIONAL_CATEGORIES,
   // The id the controller removes (I18N_GUARD_ID there), the rule it lifts, and the longest the page stays hidden.
   id: "vraelis-i18n-pending", css: `${I18N_GUARDED.map((s) => `${s},${s} *`).join(",")}{visibility:hidden!important}`, ms: 2500,
@@ -283,4 +285,3 @@ export default async function RootLayout({
       </html>
   );
 }
-
