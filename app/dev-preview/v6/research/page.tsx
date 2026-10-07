@@ -24,6 +24,18 @@ const content: DirectionContent = {
       "body": "Performance drift can have operational causes. Use qualified baselines before attributing an anomaly to an attack."
     }
   ],
+  story: {
+    photo:"firmware", eyebrow:"Evaluation priorities", title:"Measure the boundary, not a broad security score.",
+    paragraphs:[
+      "A useful test establishes which action was requested, what authority existed and whether dispatch occurred. Changed targets, stale identity, revoked approvals and concurrent reuse need explicit cases.",
+      "We also need to measure allowed-task success, incorrect denials, latency and investigation effort. An attack test result applies to its tested conditions, not every model or physical environment.",
+    ],
+  },
+  references: [
+    {title:"NIST zero trust architecture",body:"Identity, resource-focused access and the distinction between policy decisions and enforcement.",href:"https://www.nist.gov/publications/zero-trust-architecture"},
+    {title:"Secure AI integration in operational technology",body:"Joint government guidance on AI suitability, oversight, operational data and existing safety controls.",href:"https://www.cyber.gov.au/publication/principles-for-the-secure-integration-of-artificial-intelligence-in-operational-technology"},
+    {title:"NIST adversarial machine learning taxonomy",body:"A framework for distinguishing AI attack surfaces, attacker goals and mitigation approaches.",href:"https://www.nist.gov/publications/adversarial-machine-learning-taxonomy-and-terminology-attacks-and-mitigations-0"},
+  ],
   "nextTitle": "Connect the foundation to a complete workflow.",
   "nextLead": "The next work is an authenticated, controlled test integration with a decision and outcome that reviewers can inspect.",
   "next": [

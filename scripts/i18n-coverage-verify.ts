@@ -41,7 +41,12 @@ async function main() {
       const privacy=page.getByRole("button",{name:"Essential only",exact:true});
       if(await privacy.isVisible())await privacy.click();
       await collect(page);
-      if(route==="contact")for(const audience of ["government","industry","integrator","research","individual","privacy"]) {await page.locator("[name=audience]").selectOption(audience);await collect(page);}
+      if(route==="contact") {
+        for(const audience of ["government","industry","integrator","research","individual","privacy"]) {await page.locator("[name=audience]").selectOption(audience);await collect(page);}
+        await page.goto(`${base}/contact?topic=ai-security`,{waitUntil:"networkidle"});
+        await page.locator("[name=audience]").selectOption("industry");
+        await collect(page);
+      }
       if(route==="")for(const trigger of await page.locator("button.v6-nav__item").all()) {await trigger.hover();await page.locator(".v6-mega").first().waitFor();await collect(page);}
     }
     for(const topic of ["physical systems","defense systems","mission systems","robotics","connected systems","infrastructure"])strings.add(`AI security for ${topic}.`);

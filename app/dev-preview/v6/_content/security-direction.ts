@@ -12,15 +12,22 @@ export const SECURITY_STATUS = [
 const item = (label: string, title: string, body: string) => ({ label, title, body });
 export const SECURITY_PAGES: Record<string, DirectionContent> = {
   platform: {
-    eyebrow: "AI security", title: "Security where AI meets the physical world.",
-    intro: "We are developing cybersecurity for AI-enabled defense, infrastructure and robotics. Explicit authority, controlled changes and evidence engineers can investigate.",
-    photo: "networkEngineer", heading: "Connect the security question to the system.",
-    lead: "An AI output becomes consequential when it reaches data, tools, software or equipment. Each boundary needs its own control.",
+    eyebrow: "The product direction", title: "Control AI access. Review what follows.",
+    intro: "For engineering and security teams connecting AI to operational systems. We are developing scoped action controls and evidence review, starting with a controlled test integration.",
+    photo: "networkEngineer", heading: "The permission belongs to the system owner.",
+    lead: "Reading telemetry, deploying a model and changing equipment are separate operations. A convincing AI output cannot authorize any of them.",
     items: [
-      item("Access", "Define what AI may reach", "Bind permissions to a workload, environment, resource and action. A model's confidence or network location does not grant authority."),
-      item("Change", "Control what may be deployed", "Connect proposed actions to the reviewed policy and model version. A changed target, payload or policy needs a new decision."),
-      item("Evidence", "Investigate what happened", "Link decisions to their source evidence and observed outcomes. Identify conflicting reports and uncertainty instead of assuming success."),
+      item("Access", "Separate observation from control", "Allow a specific workload to read the data it needs without inheriting permission to export it, deploy a model or command a device."),
+      item("Change", "Approve the exact proposed action", "Keep consequential approval independent of the AI workload. Bind it to the target, payload, model and policy; a changed proposal needs a new decision."),
+      item("Evidence", "Keep the decision and result connected", "Preserve why an action was permitted or denied, then connect it to the observations available. A service response alone does not establish a physical outcome."),
     ],
+    story: {
+      photo:"robotCell", eyebrow:"The first workflow", title:"One boundary, from request to review.",
+      paragraphs:[
+        "Our first integration target is an AI-assisted engineering workflow in a controlled test environment: scoped telemetry access, a proposed change and a separate approval before dispatch.",
+        "The engineering goal is to prove that a permitted action can execute once, changed or unauthorized proposals cannot dispatch, and a reviewer can inspect the decision and available outcome evidence.",
+      ],
+    },
     showStatus: true,
     nextTitle: "Build the boundary before broadening the claim.",
     nextLead: "The next integration must prove a complete security workflow in a controlled test environment.",
@@ -40,6 +47,13 @@ export const SECURITY_PAGES: Record<string, DirectionContent> = {
       item("Least privilege", "Bind the permission", "Use an explicit environment, resource, action and model version. Ambiguous grants and missing evidence must deny a new proposal."),
       item("Human control", "Bind consequential approvals", "Keep approval separate from the proposing workload. Tie it to the exact action and policy, with expiry and revocation."),
     ],
+    story: {
+      photo:"firmware", eyebrow:"The execution boundary", title:"A permit is only part of the control.",
+      paragraphs:[
+        "A policy engine can return a decision. The component holding access to the resource must enforce it against the exact request, current authority and any required approval.",
+        "We are building toward that connection. Trusted identity, artifact verification, revocation and one-time approval handling remain integration work; the private decision core alone does not secure equipment.",
+      ],
+    },
     showStatus: true,
     nextTitle: "A policy decision needs an enforcement boundary.",
     nextLead: "The private core is one component. A live security system also needs trusted context, controlled dispatch and operational testing.",
@@ -59,6 +73,13 @@ export const SECURITY_PAGES: Record<string, DirectionContent> = {
       item("Inputs", "Untrusted content influences an action", "Prompt injection and adversarial sensor inputs affect different model families. Test the input path and constrain the actions it can cause."),
       item("Integrity", "The approved system changes", "Model artifacts, dependencies or data may change without review. Bind provenance and versions to controlled deployment decisions."),
     ],
+    story: {
+      photo:"mission", eyebrow:"Threat boundaries", title:"Security depends on the path to the system.",
+      paragraphs:[
+        "Untrusted text can influence a tool-using assistant. A manipulated sensor can affect a perception model. A compromised model artifact can introduce a different failure path.",
+        "Each needs its own threat model and testing. Independent authorization limits what a workload may do; it does not establish that the model is accurate or that every attack has been detected.",
+      ],
+    },
     nextTitle: "Detection and investigation need evidence.",
     nextLead: "These are development and research areas. The private policy core does not claim universal attack detection.",
     next: [
@@ -94,6 +115,13 @@ export const SECURITY_PAGES: Record<string, DirectionContent> = {
       item("Evidence", "Review recorded behavior", "Compare supported task reports against reviewed criteria. Trace findings to source events and declared capture coverage."),
       item("Integration", "Connect controls to execution", "Build trusted identity adapters and a controlled action boundary. These are not yet a deployed enforcement service."),
     ],
+    story: {
+      photo:"electronicsBench", eyebrow:"Engineering milestone", title:"Connect the components. Test the whole path.",
+      paragraphs:[
+        "The current private components evaluate policy decisions and supported recordings. The next milestone connects trusted identity, separate approval, controlled dispatch and retained evidence in one test workflow.",
+        "Evaluation must cover denial, approval replay, revocation, outages and successful authorized work. Product access remains closed while this integration is developed.",
+      ],
+    },
     showStatus: true, nextTitle: "A complete private workflow is the milestone.",
     nextLead: "Public app access will follow a reviewed product decision, rather than a demo link or existing account session.",
     next: [
@@ -154,3 +182,47 @@ SECURITY_PAGES.enterprise = sector("Security for AI-enabled operations.", "serve
     item("Data", "Map the data boundaries", "Identify what the workload may read or export, where records may be retained and which identities may inspect them."),
     item("Integration", "Work with the existing environment", "Qualify identity, hosting and interface requirements before claiming deployment support."),
   ]);
+
+// Each application area explains a distinct operating constraint with licensed photography.
+SECURITY_PAGES.defense.story = {
+  photo:"mission", eyebrow:"Mission authority", title:"Keep authority tied to the mission.",
+  paragraphs:[
+    "An AI-enabled mission workflow may span operators, models and equipment from several suppliers. Authority must remain tied to the identity, environment and operation approved by the owner.",
+    "Test and operational credentials, model updates, connectivity limits and record access need separate treatment. Defense deployment and acquisition requirements must be established for the actual program.",
+  ],
+};
+SECURITY_PAGES.infrastructure.story = {
+  photo:"windFarm", eyebrow:"Operational continuity", title:"Protect the boundary without disrupting the process.",
+  paragraphs:[
+    "An AI maintenance workflow may need operational data without continuous access back into the control network. Proposed changes must respect the owner's existing access paths and change procedures.",
+    "Outage behavior belongs in the system's operating design. AI security controls must preserve independent safety mechanisms and established automation; a generic shutdown rule is not an operational strategy.",
+  ],
+};
+SECURITY_PAGES.robotics.story = {
+  photo:"robotfleet", eyebrow:"Device authority", title:"A permission must name the equipment.",
+  paragraphs:[
+    "The same model can serve multiple devices with different operating limits. Authority for one asset, software version or test environment must not transfer silently to another.",
+    "Start with one integration and distinguish a proposed command, authorized dispatch and reported device state. Physical safety and perception testing require additional system-specific evidence.",
+  ],
+};
+SECURITY_PAGES.government.story = {
+  photo:"public", eyebrow:"Program requirements", title:"The environment shapes the implementation.",
+  paragraphs:[
+    "Government systems bring program-specific data handling, identity, hosting and acquisition requirements. A public inquiry should establish that context before any deployment is proposed.",
+    "We are building privately. We do not claim an authorization to operate, government certification or access to classified environments.",
+  ],
+};
+SECURITY_PAGES.integrators.story = {
+  photo:"hardwareInspection", eyebrow:"Multiple suppliers", title:"Make ownership visible at every handoff.",
+  paragraphs:[
+    "One supplier may provide the model, another the tool interface and another the controller. The integration needs a clear owner for identity, policy, approval and actual execution.",
+    "Our direction is to connect those responsibilities to a reviewable decision record. Native protocol support must be qualified per integration rather than implied by a universal platform label.",
+  ],
+};
+SECURITY_PAGES.enterprise.story = {
+  photo:"networkEngineer", eyebrow:"Engineering and security", title:"Fit the controls to the existing system.",
+  paragraphs:[
+    "The teams operating the system already have identities, change procedures and security records. An additional AI control must have a defined role within those controls.",
+    "Assess integration effort, authorization gaps, incorrect denials and reviewer time against the existing workflow. Broad visibility alone is not enough to justify a new product.",
+  ],
+};

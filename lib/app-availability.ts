@@ -5,7 +5,7 @@ import { isAppPath } from "./app-routes";
 export const APP_ACCESS_OPEN: boolean = false;
 
 // A concrete public next step while the product is private.
-export const SYSTEM_INQUIRY_LABEL = "Discuss your system";
+export const SYSTEM_INQUIRY_LABEL = "Share your requirements";
 export const SYSTEM_INQUIRY_PATH = "/contact?topic=ai-security";
 
 const at = (path: string, root: string) => path === root || path.startsWith(`${root}/`);

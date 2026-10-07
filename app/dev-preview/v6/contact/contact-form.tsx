@@ -42,6 +42,7 @@ export function ContactForm({ topicParam }: { topicParam?: string }) {
   const sender = contactAudience(audience);
   const privacy = audience === "privacy";
   const chosen = TOPICS.find(t => t.key === (privacy ? "privacy" : topic));
+  const requirements = topicParam === "ai-security" && topic === "sales" && !privacy;
   const clear = (f: Field) => setErrors(e => e[f] ? { ...e, [f]: undefined } : e);
   const err = (f: Field) => errors[f] ? `${id}-${f}-err` : undefined;
   const errorText = (f: Field) => errors[f] ? <p className="ct-err" id={err(f)}>{errors[f]}</p> : null;
@@ -73,7 +74,7 @@ export function ContactForm({ topicParam }: { topicParam?: string }) {
     } catch { setFailure(MSG.failed); }
     finally { setSending(false); }
   }
-  const seed = <div hidden data-i18n-seed="">{[...Object.values(MSG), ...Object.values(INTAKE_ERRORS), ...CONTACT_AUDIENCES.flatMap(a => [a.messageLabel, a.acknowledgement])].filter(Boolean).map((s, i) => <span key={i}>{s}</span>)}</div>;
+  const seed = <div hidden data-i18n-seed="">{[...Object.values(MSG), "Send requirements", "System and security requirements", "Describe the system, intended AI access or changes, current controls and the evidence your reviewers need.", ...Object.values(INTAKE_ERRORS), ...CONTACT_AUDIENCES.flatMap(a => [a.messageLabel, a.acknowledgement])].filter(Boolean).map((s, i) => <span key={i}>{s}</span>)}</div>;
   if (sent) return <><div className="ct-sent" ref={done} tabIndex={-1} role="status"><p className="ct-sent__t">{MSG.sent}</p></div>{seed}</>;
 
   return <form className="ct-form" noValidate onSubmit={onSubmit} aria-busy={sending || undefined}>
@@ -104,13 +105,13 @@ export function ContactForm({ topicParam }: { topicParam?: string }) {
       </div>
       <p className="ct-help">These details help us review the inquiry and any applicable requirements. Submitting does not establish eligibility or grant product access.</p>
     </fieldset> : null}
-    <div className="ct-field"><label className="ct-label" htmlFor={`${id}-message`}>{sender?.messageLabel ?? "Your inquiry"}</label><textarea key={audience} className="ct-input ct-input--area" id={`${id}-message`} name="message" rows={5} required minLength={10} aria-invalid={!!errors.message || undefined} aria-describedby={err("message")} onInput={() => clear("message")} />{errorText("message")}</div>
+    <div className="ct-field"><label className="ct-label" htmlFor={`${id}-message`}>{requirements ? "System and security requirements" : sender?.messageLabel ?? "Your inquiry"}</label><textarea key={audience} className="ct-input ct-input--area" id={`${id}-message`} name="message" rows={5} required minLength={10} placeholder={requirements ? "Describe the system, intended AI access or changes, current controls and the evidence your reviewers need." : undefined} aria-invalid={!!errors.message || undefined} aria-describedby={err("message")} onInput={() => clear("message")} />{errorText("message")}</div>
     {sender?.acknowledgement ? <div className="ct-field" key={`${audience}-acknowledgement`}>
       <label className="ct-ack"><input name="acknowledgement" type="checkbox" required aria-invalid={!!errors.acknowledgement || undefined} aria-describedby={err("acknowledgement")} onChange={() => clear("acknowledgement")} /><span>{sender.acknowledgement}</span></label>{errorText("acknowledgement")}
     </div> : null}
     <div className="ct-hp" aria-hidden="true"><label htmlFor={`${id}-website`}>Website</label><input id={`${id}-website`} name="website" tabIndex={-1} autoComplete="off" defaultValue="" /></div>
     <p className="ct-consent">The privacy policy explains how we handle your inquiry. Please leave out credentials and sensitive operational data. <a href={`${V6_BASE}/privacy`}>Read the privacy policy</a></p>
-    <div className="ct-actions"><button type="submit" className="v6-btn v6-btn--brand v6-btn--lg ct-submit" aria-disabled={sending || undefined}>{sending ? MSG.sending : MSG.send}</button></div>
+    <div className="ct-actions"><button type="submit" className="v6-btn v6-btn--brand v6-btn--lg ct-submit" aria-disabled={sending || undefined}>{sending ? MSG.sending : requirements ? "Send requirements" : MSG.send}</button></div>
     {failure ? <p className="ct-err ct-err--form" role="alert">{failure}</p> : null}{seed}
   </form>;
 }

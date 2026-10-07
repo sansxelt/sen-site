@@ -7,10 +7,13 @@ import { V6_BASE } from "@/lib/v6-routes";
 import { SecurityStatus } from "./security-status";
 import "./direction-page.css";
 import { SYSTEM_INQUIRY_LABEL, SYSTEM_INQUIRY_PATH } from "@/lib/app-availability";
+import { PhotoStory, type PhotoStoryContent } from "./photo-story";
 export type DirectionContent = {
   eyebrow:string; title:string; intro:string; photo:PhotographKey;
   heading:string; lead:string; items:{title:string; body:string; label:string}[];
   showStatus?: boolean;
+  story?: PhotoStoryContent;
+  references?: {title:string; body:string; href:string}[];
   nextTitle:string; nextLead:string; next:{title:string;body:string;label:string}[];
 };
 export function DirectionHero({eyebrow,title,intro,photo}:{eyebrow:string;title:string;intro:string;photo?:PhotographKey}) {
@@ -36,10 +39,16 @@ export function DirectionPage({content:c}:{content:DirectionContent}) {
     <Band><SectionHead eyebrow="The work" title={c.heading} lead={c.lead}/>
       <DirectionTopics items={c.items}/>
     </Band>
+    {c.story ? <PhotoStory content={c.story} /> : null}
     {c.showStatus ? <Band><SecurityStatus /></Band> : null}
     <Band><SectionHead eyebrow="What comes next" title={c.nextTitle} lead={c.nextLead}/>
       <DirectionTopics items={c.next}/>
       <div className="direction-links"><Link href={`${V6_BASE}${SYSTEM_INQUIRY_PATH}`}>{SYSTEM_INQUIRY_LABEL}</Link><Link href={`${V6_BASE}/problems`}>Security problems</Link><Link href={`${V6_BASE}/zero-trust`}>Zero trust</Link></div>
     </Band>
+    {c.references ? <Band><SectionHead eyebrow="Research foundations" title="Read the underlying guidance." />
+      <div className="direction-references">{c.references.map(reference => <a key={reference.href} href={reference.href}>
+        <h3>{reference.title}</h3><p>{reference.body}</p><span>Read the source</span>
+      </a>)}</div>
+    </Band> : null}
   </div>;
 }

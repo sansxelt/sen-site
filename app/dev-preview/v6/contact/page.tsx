@@ -4,7 +4,7 @@ import { V6_BASE } from "@/lib/v6-routes";
 import { ContactForm } from "./contact-form";
 import "./contact.css";
 
-export const metadata = v6meta({ title: "Contact", description: "Discuss cybersecurity for your AI-enabled systems with Vraelis. Share the system, security problem and integration environment.", path: "/contact" });
+export const metadata = v6meta({ title: "Inquiries", description: "Share AI-security requirements with Vraelis: the system, intended access, operating environment and review needs.", path: "/contact" });
 const ADDRESSES: [string, string][] = [
   ["help@vraelis.com", "General and technical inquiries"],
   ["sales@vraelis.com", "AI security and organizational inquiries"],
@@ -13,12 +13,13 @@ const ADDRESSES: [string, string][] = [
 type Query = Promise<{ [key: string]: string | string[] | undefined }>;
 export default async function Contact({ searchParams }: { searchParams: Query }) {
   const { topic } = await searchParams;
+  const requirements = topic === "ai-security";
   return <section className="v6-sec ct">
     <div className="v6-wrap ct__grid">
       <header className="ct__intro">
-        <p className="ct__eyebrow">Contact</p>
-        <h1><TitleEntrance>Discuss AI security for your systems.</TitleEntrance></h1>
-        <p>Tell us what you are building, where AI has access or influence, and the security problem you need to address.</p>
+        <p className="ct__eyebrow">{requirements ? "AI security requirements" : "Inquiries"}</p>
+        <h1><TitleEntrance>{requirements ? "What do you need to secure?" : "Reach the right team."}</TitleEntrance></h1>
+        <p>{requirements ? "Tell us about the system, what AI should be allowed to do and how your team needs to review it. Vraelis is in private development; this starts an engineering inquiry." : "Send a technical, organizational or privacy inquiry. Choose your role and topic so it reaches the right team."}</p>
       </header>
       <div className="ct__form"><ContactForm key={typeof topic === "string" ? topic : ""} topicParam={typeof topic === "string" ? topic : undefined} /></div>
       <aside className="ct__aside" aria-label="Other contact options">

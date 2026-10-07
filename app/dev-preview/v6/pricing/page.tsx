@@ -14,6 +14,6 @@ export default function Page(){return <div className="direction-page">
  {label:"Integration",title:"The enforcement environment",body:"Identity, hosting, connectivity, approval and data-retention requirements."},
  {label:"Evaluation",title:"The outcome to establish",body:"Defined threat cases, authorization decisions and evidence the reviewers need to inspect."},
  ]}/></Band>
- <Band><SectionHead eyebrow="Availability" title="Product access remains closed." lead="The earlier browser-verification rates do not describe this AI-security direction. There is no self-service checkout or available deployment offer."/><Link href={`${V6_BASE}/platform`}>Read the product direction</Link></Band>
- <ClosingScene title="Discuss the system and its security boundary." action={{label:SYSTEM_INQUIRY_LABEL,href:`${V6_BASE}${SYSTEM_INQUIRY_PATH}`}}/>
+ <Band><SectionHead eyebrow="Availability" title="Product access remains closed." lead="Commercial terms need a working integration, a defined operating scope and evidence of its value. Published plans will follow that work."/><Link href={`${V6_BASE}/platform`}>Read the product direction</Link></Band>
+ <ClosingScene title="Define what your system needs to protect." action={{label:SYSTEM_INQUIRY_LABEL,href:`${V6_BASE}${SYSTEM_INQUIRY_PATH}`}}/>
  </div>}
