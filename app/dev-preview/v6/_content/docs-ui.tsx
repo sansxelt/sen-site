@@ -59,7 +59,7 @@ export function Blocks({ blocks }: { blocks: Block[] }) {
           case "code": return <DocCode key={i} label={b.label} code={b.text} />;
           case "table": return <DocTable key={i} block={b} />;
           case "figure": return APP_ACCESS_OPEN ? <DocFigure key={i} block={b} eager={i === eagerFigure} /> : null;
-          case "surfaces": return <DocSurfaces key={i} />;
+          case "surfaces": return APP_ACCESS_OPEN ? <DocSurfaces key={i} /> : <p key={i}>The earlier coverage catalog is retained as an implementation reference. See the <Link href={`${BASE}/platform`}>current product direction</Link> and <Link href={`${BASE}/beta`}>development status</Link> for the work being built now.</p>;
           default: return null;
         }
       })}
