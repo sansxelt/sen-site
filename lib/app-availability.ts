@@ -3,16 +3,21 @@ import { isAppPath } from "./app-routes";
 // Access is deliberately closed while the AI-security product is built.
 // Reopening requires a reviewed code change; an existing session grants no bypass.
 export const APP_ACCESS_OPEN: boolean = false;
+export const WORKSPACE_HOST = "data.vraelis.com";
+
+export function isWorkspaceHost(host: string): boolean {
+  return host === WORKSPACE_HOST || /^data\.localhost(?::\d+)?$/.test(host);
+}
 
 // A concrete public next step while the product is private.
-export const SYSTEM_INQUIRY_LABEL = "Share your requirements";
+export const SYSTEM_INQUIRY_LABEL = "Talk AI security";
 export const SYSTEM_INQUIRY_PATH = "/contact?topic=ai-security";
 
 const at = (path: string, root: string) => path === root || path.startsWith(`${root}/`);
 
 export function isClosedProductPage(path: string, host: string): boolean {
   if (APP_ACCESS_OPEN) return false;
-  const appHost = host === "app.vraelis.com" || host === "console.vraelis.com" || host.startsWith("app.localhost");
+  const appHost = isWorkspaceHost(host) || host === "app.vraelis.com" || host === "console.vraelis.com" || host.startsWith("app.localhost");
   return (appHost && !at(path, "/api")) || isAppPath(path)
     || ["/rank/app", "/dev-preview/v6/app", "/dev-preview/v6/signin", "/dev-preview/recorded-app", "/console", "/r", "/rank/r",
       "/signin", "/signup", "/auth/signin", "/auth/auto-signin"].some(root => at(path, root));
@@ -32,7 +37,7 @@ export function isClosedProductApi(path: string): boolean {
 export function isProductEntryHref(href: string): boolean {
   try {
     const url = new URL(href, "https://vraelis.com");
-    if (!["vraelis.com", "www.vraelis.com", "app.vraelis.com", "console.vraelis.com"].includes(url.hostname)) return false;
+    if (!["vraelis.com", "www.vraelis.com", "app.vraelis.com", "console.vraelis.com", WORKSPACE_HOST].includes(url.hostname)) return false;
     const path = url.pathname.startsWith("/dev-preview/v6/") ? url.pathname.slice("/dev-preview/v6".length) : url.pathname;
     return isClosedProductPage(path, url.host);
   } catch {

@@ -49,6 +49,7 @@ export function allowedOrigins(): string[] {
     "https://vraelis.com",
     "https://www.vraelis.com",
     "https://app.vraelis.com",
+    "https://data.vraelis.com",
     ...extra,
   ];
 }

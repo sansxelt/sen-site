@@ -103,6 +103,7 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
             <div><dt>Outcome</dt><dd>{doc.outcome}</dd></div>
             {doc.limit ? <div><dt>Does not do</dt><dd>{doc.limit}</dd></div> : null}
           </dl>
+          {!["ai-security", "recorded-reports"].includes(slug) ? <p className="v6-docs__lead">Earlier implementation reference. Public app access is closed; this guide does not describe the current AI-security product scope.</p> : null}
           <Blocks blocks={doc.blocks} />
           {EXAMPLES[slug] ? <DocCode label={EXAMPLES[slug][0]} code={EXAMPLES[slug][1]} /> : null}
           {doc.related?.length ? (

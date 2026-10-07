@@ -19,7 +19,7 @@ const AREAS = {
     image: "/site/photography/power-grid.jpg", width: 2400, height: 1800,
   },
   fleets: {
-    line: "Scope authority around models and equipment.",
+    line: "Model integrity and machine trust for robotics.",
     image: "/site/photography/robot-grinding.jpg", width: 2400, height: 1530,
   },
 } as const;
@@ -62,17 +62,17 @@ export function EngineeringEntry() {
     <MediaReadyFallback/>
     <div className="v6-wrap">
       <div className="home-section-head home-section-head--split" data-media-copy="">
-        <h2 id="home-engineering-title">Define the boundary.<br />Build the control.</h2>
-        <p>Understand the AI workload, the resources it can reach and the evidence needed to investigate its behavior.</p>
+        <h2 id="home-engineering-title">Independent software.<br />System-specific security.</h2>
+        <p>We are developing security around AI models, data and machine identities. The controls must fit the system, its threats and its operating constraints.</p>
       </div>
       <div className="home-engineering__links">
-        <Link href={`${V6_BASE}/zero-trust`} className="home-resource" data-media-ready="pending">
+        <Link href={`${V6_BASE}/research`} className="home-resource" data-media-ready="pending">
           <div className="home-resource__image"><Image src={documentation.src} alt={documentation.alt} width={documentation.w} height={documentation.h} sizes="(max-width: 760px) 100vw, 45vw" loading="lazy" /></div>
-          <div data-media-copy=""><p className="home-eyebrow">Zero trust</p><h3>Authority must be explicit.</h3><p>Zero trust informs how we are building AI security: verify identity, limit permissions and reassess authority at the boundary where an action occurs.</p></div>
+          <div data-media-copy=""><p className="home-eyebrow">Research</p><h3>Start with a threat you can test.</h3><p>Model tampering, manipulated inputs and unauthorized actions need distinct evaluations. Measure protection alongside missed attacks, false alarms and operating cost.</p></div>
         </Link>
         <Link href={`${V6_BASE}/platform`} className="home-resource" data-media-ready="pending">
           <div className="home-resource__image"><Image src={platform.src} alt={platform.alt} width={platform.w} height={platform.h} sizes="(max-width: 760px) 100vw, 45vw" loading="lazy" /></div>
-          <div data-media-copy=""><p className="home-eyebrow">The product direction</p><h3>The work behind the controls.</h3><p>We are developing cybersecurity for AI-enabled defense, infrastructure and robotics. Explicit authority, controlled changes and evidence engineers can investigate.</p></div>
+          <div data-media-copy=""><p className="home-eyebrow">The product direction</p><h3>Protect the intelligence inside.</h3><p>Model integrity, adversarial threats, machine trust and security evidence. Explore the scope of our private development and the foundations already being tested.</p></div>
         </Link>
       </div>
     </div>

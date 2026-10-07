@@ -8,7 +8,7 @@ export function useHomeMotion(root: RefObject<HTMLDivElement | null>) {
     const el = root.current;
     if (!el) return;
     const parts = Array.from(el.querySelectorAll<HTMLElement>(
-      ".home-engineering .home-section-head, .home-resource"
+      ".home-engineering .home-section-head, .home-resource, .security-fields .home-section-head, .security-fields__card"
     ));
     let disposed = false;
     const pending: (() => void)[] = [];

@@ -28,6 +28,25 @@ async function main() {
     }
   }
   assert.equal(proxy(new NextRequest("http://app.localhost:3100/", { headers: { host: "app.localhost:3100" } })).headers.get("location"), "http://localhost:3100/beta");
+  for (const host of ["data.vraelis.com", "data.localhost:3100"]) {
+    for (const path of ["/", "/signin"]) {
+      for (const headers of [new Headers({host}), new Headers({host,rsc:"1",cookie:"__Secure-authjs.session-token=existing-session"})]) {
+        const res = proxy(new NextRequest(`https://${host}${path}?callbackUrl=private&token=private`,{headers}));
+        assert.equal(new URL(res.headers.get("x-middleware-rewrite")!).pathname,"/workspace-entry");
+        assert.equal(res.headers.get("cache-control"),"no-store");
+        assert.equal(res.headers.get("x-robots-tag"),"noindex, nofollow");
+      }
+    }
+    for (const path of ["/records", "/app", "/platform", "/unknown"]) {
+      const res = proxy(new NextRequest(`https://${host}${path}`,{headers:{host}}));
+      assert.equal(new URL(res.headers.get("location")!).pathname,"/signin");
+    }
+    const res = proxy(new NextRequest(`https://${host}/api/contact`,{method:"POST",headers:{host}}));
+    assert.equal(res.status,503);
+    const recovery = proxy(new NextRequest(`https://${host}/auth/reset-password`,{headers:{host}}));
+    assert.equal(recovery.headers.get("location"),null);
+    assert.equal(recovery.headers.get("x-robots-tag"),"noindex, nofollow");
+  }
   const apis = ["/api/fixtures/strike", "/api/fixtures/drone", "/api/preflight/apps/x/runs", "/api/v/checkout", "/api/v/keys", "/api/v/workspace", "/api/v1/verifications",
     "/api/mcp", "/api/oauth/token", "/api/auth/register", "/api/auth/callback/google", "/api/auth/callback/credentials",
     "/api/v1/verifications/x.json", "/api/stripe/payment-intent", "/api/vraelis/checkout"];
@@ -48,7 +67,7 @@ async function main() {
     "/api/cron/lifecycle", "/api/v/account/delete", "/api/v/data-requests", "/api/auth/reset-password", "/api/auth/session", "/api/auth/signout"]) {
     assert(!isClosedProductApi(path), `${path} remains operational`);
   }
-  for (const href of ["/app", "/signin?mode=signup", "/checkout?plan=x", "/dev-preview/v6/app", "https://app.vraelis.com", "https://console.vraelis.com/"]) assert(isProductEntryHref(href));
+  for (const href of ["/app", "/signin?mode=signup", "/checkout?plan=x", "/dev-preview/v6/app", "https://app.vraelis.com", "https://console.vraelis.com/", "https://data.vraelis.com/", "https://data.vraelis.com/signin"]) assert(isProductEntryHref(href));
   for (const href of ["/docs", "/beta", "/developers/api", "https://example.com/signin", "mailto:sales@vraelis.com"]) assert(!isProductEntryHref(href));
   console.log("PASS app closure: direct routes, subdomains, RSC/session requests, product APIs, dotted paths and public/service exceptions");
 }

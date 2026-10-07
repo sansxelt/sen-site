@@ -21,3 +21,5 @@
 
 .direction-page .v6-fh__h1 { font-weight:var(--display-w); }
  .direction-page .v6-fh__actions .v6-arw { display:none; }
+.direction-topics__link { display:inline-block; color:var(--ink); font-size:13px; margin-top:18px; padding-block:5px; text-decoration:none; }
+.direction-topics__link:is(:hover,:focus-visible) { text-decoration:underline; text-underline-offset:5px; }

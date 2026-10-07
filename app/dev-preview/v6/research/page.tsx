@@ -27,8 +27,8 @@ const content: DirectionContent = {
   story: {
     photo:"firmware", eyebrow:"Evaluation priorities", title:"Measure the boundary, not a broad security score.",
     paragraphs:[
-      "A useful test establishes which action was requested, what authority existed and whether dispatch occurred. Changed targets, stale identity, revoked approvals and concurrent reuse need explicit cases.",
-      "We also need to measure allowed-task success, incorrect denials, latency and investigation effort. An attack test result applies to its tested conditions, not every model or physical environment.",
+      "A useful evaluation separates model tampering, data poisoning, manipulated inputs and unauthorized actions. Define attacker access, normal operating conditions and the evidence needed to reproduce each result.",
+      "Measure missed attacks, false alarms, latency, compute use and investigation effort. An attack test result applies to its tested conditions, not every model or physical environment.",
     ],
   },
   references: [

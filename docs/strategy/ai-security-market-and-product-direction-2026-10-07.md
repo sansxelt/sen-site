@@ -1,5 +1,10 @@
 # Vraelis AI security market and product direction
 
+## Accepted direction after the broader scope review
+
+Vraelis is an independent AI cybersecurity software company in private development, covering model integrity, adversarial threats, machine trust and security evidence for defense, critical infrastructure and robotics. The existing policy core and recording evaluator are foundations, not the complete company scope. The narrow initial workflow discussed below remains an implementation hypothesis. Vraelis Contour is a possible product name, not an announced deployment. `data.vraelis.com` is reserved for the private workspace and sign-in; public access remains closed. The public call to action is **Talk AI security**, leading to the role-specific engineering inquiry.
+
+
 Vraelis should pursue a focused product hypothesis: controlling AI access and proposed changes at an operational-system boundary, with evidence an engineering reviewer can inspect. Start with one controlled engineering workflow for a robotics manufacturer or system integrator. Defense and critical infrastructure remain intended application areas, with their own qualification requirements.
 
 The category is viable enough to investigate. Vraelis product demand, willingness to pay and differentiation are not validated. The next investment should produce an enforceable private integration and buyer evidence, rather than a broader public platform claim.

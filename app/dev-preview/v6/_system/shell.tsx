@@ -49,6 +49,8 @@ const MENUS: Menu[] = [
     groups: [
       { h: "Platform", links: [
         { t: "Overview", d: "AI security direction and development status", href: BASE + "/platform", pic: "/site/photography/robot-cell.jpg" },
+        { t: "Model integrity", d: "Model provenance and deployment verification", href: BASE + "/model-integrity", pic: "/site/photography/server-rack.jpg" },
+        { t: "Adversarial threats", d: "Manipulated inputs, poisoned data and evaluation", href: BASE + "/adversarial-security", pic: "/site/photography/robot-detail.jpg" },
         { t: "Zero trust", d: "Explicit identity, scope and approval", href: BASE + "/zero-trust", pic: "/site/photography/server-rack.jpg" },
         { t: "Recorded evidence", d: "Supporting evidence for security investigation", href: BASE + "/recorded-evidence", pic: "/site/photography/robot-detail.jpg" },
         { t: "Development status", d: "Private foundations and integration work", href: BASE + "/beta", pic: "/site/photography/robot-detail.jpg" },
@@ -603,7 +605,7 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
       data-open={shown !== null} data-menu={open !== null ? "open" : undefined} data-settled={settled}
       data-ground={navBg ? "1" : undefined}
       style={navBg ? ({ "--nav-bg": navBg } as CSSProperties) : undefined}
-      aria-label="Primary" onPointerLeave={mouseOnly(scheduleClose)} onBlur={onNavBlur} onPointerEnter={() => setWarm(true)}>
+      aria-label="Primary" onPointerLeave={(event) => mouseOnly(scheduleClose)(event)} onBlur={onNavBlur} onPointerEnter={() => setWarm(true)}>
       <div className="v6-nav__in">
         <Brand />
         <div className="v6-nav__items">
@@ -616,7 +618,7 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
             <button key={m.label} type="button" ref={(el) => { itemRefs.current[i] = el; }}
               className="v6-nav__item" aria-expanded={open === i} aria-controls={open === i ? MEGA_ID : undefined}
               onPointerDown={(e) => { lastPointer.current = e.pointerType; }} onClick={onItemClick(i)}
-              onPointerEnter={mouseOnly(() => openAt(i))}
+              onPointerEnter={(event) => mouseOnly(() => openAt(i))(event)}
               onKeyDown={onItemKey(i)} onFocus={() => { if (open !== null && open !== i) close(open); }}>
               {m.label}
             </button>
@@ -626,7 +628,7 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
             {DOCUMENTATION.label}
           </Link>
           <Link href={PRICING.href} ref={(el) => { itemRefs.current[MENUS.length + 1] = el; }} className="v6-nav__item" onClick={restartCurrentPage}
-            aria-current={pathname === PRICING.href ? "page" : undefined} onPointerEnter={mouseOnly(leaveMenus)} onFocus={leaveMenus}>
+            aria-current={pathname === PRICING.href ? "page" : undefined} onPointerEnter={(event) => mouseOnly(leaveMenus)(event)} onFocus={leaveMenus}>
             {PRICING.label}
           </Link>
         </div>
@@ -634,7 +636,7 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
             (a quick Tab from Pricing used to land in a panel about to unmount) or be read out while it fades. */}
         {shown !== null ? (
           <div ref={megaRef} id={MEGA_ID} inert={open === null}
-            onPointerEnter={mouseOnly(() => openAt(shown))} onPointerLeave={mouseOnly(scheduleClose)} onKeyDown={onMegaKey}>
+            onPointerEnter={(event) => mouseOnly(() => openAt(shown))(event)} onPointerLeave={(event) => mouseOnly(scheduleClose)(event)} onKeyDown={onMegaKey}>
             <MegaShell index={shown} state={open === null ? "out" : "in"} onNavigate={(event) => { restartCurrentPage(event); close(shown); }} />
           </div>
         ) : null}
@@ -647,7 +649,7 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
         ) : null}
         {/* Pointing at the right-hand controls leaves the menus, as pointing at Pricing does: the language list
             opening over a menu panel was two surfaces at once. */}
-        <div className="v6-nav__right" onPointerEnter={mouseOnly(leaveMenus)}>
+        <div className="v6-nav__right" onPointerEnter={(event) => mouseOnly(leaveMenus)(event)}>
           {/* THE RIGHT SIDE, LIKE OVERLYM'S (founder, 2026-10-01): the language as a flag pill, then Sign in and
               Create account for a visitor, or Open Vraelis for someone already signed in. It used to carry
               one button, which left the bar looking unfinished on a wide screen. */}

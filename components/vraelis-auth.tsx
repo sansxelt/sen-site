@@ -1,4 +1,3 @@
-/* eslint-disable */
 "use client";
 
 // The Vraelis sign-in surface. NextAuth mechanics only: credentials via signIn(.., {redirect:false}),
@@ -56,11 +55,13 @@ export function VraelisSignIn({
   // is right for the current site; V6 passes its own base so the links do not walk out of the preview into
   // the previous design.
   legalBase = "",
+  allowSignup = true,
 }: {
   callbackUrl?: string;
   initialMode?: AuthMode;
   showHeader?: boolean;
   legalBase?: string;
+  allowSignup?: boolean;
 }) {
   const router = useRouter();
   const passwordId = useId();
@@ -69,7 +70,7 @@ export function VraelisSignIn({
   // Defaults to sign-in, but a signup-intent CTA (homepage "Start free")
   // opens straight in create-account mode so a brand-new user doesn't land
   // on a "Welcome back" sign-in screen.
-  const [mode, setMode] = useState<AuthMode>(initialMode);
+  const [mode, setMode] = useState<AuthMode>(allowSignup ? initialMode : "signin");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -152,8 +153,8 @@ export function VraelisSignIn({
     <div className={`auth-form${mode === "signup" ? " auth-form--signup" : ""}`}>
       {showHeader ? (
         <div className="auth-form__head">
-          <h1 key={mode}><span>{mode === "signup" ? "Create your account" : "Welcome back"}</span></h1>
-          <p>{mode === "signup" ? "Start with one account for Vraelis." : "Sign in to your Vraelis account."}</p>
+          <h1 key={mode}><span>{mode === "signup" ? "Create your account" : "Sign in to Vraelis"}</span></h1>
+          <p>{mode === "signup" ? "Start with one account for Vraelis." : allowSignup ? "Sign in to your Vraelis account." : "Use your account to access the private workspace."}</p>
         </div>
       ) : null}
 
@@ -213,11 +214,11 @@ export function VraelisSignIn({
 
       {status ? <div className="auth-form__status" data-tone={status.tone} role={status.tone === "error" ? "alert" : "status"}>{status.message}</div> : null}
 
-      <p className="auth-form__switch">
+      {allowSignup ? <p className="auth-form__switch">
         {mode === "signup"
           ? <>Already have an account? <button type="button" onClick={() => switchTo("signin")}><ButtonLabel>Sign in</ButtonLabel></button></>
           : <>New to Vraelis? <button type="button" onClick={() => switchTo("signup")}><ButtonLabel>Create an account</ButtonLabel></button></>}
-      </p>
+      </p> : null}
     </div>
   );
 }

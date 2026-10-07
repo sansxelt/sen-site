@@ -3,15 +3,15 @@ import { v6meta } from "../_system/meta";
 const content: DirectionContent = {
   "eyebrow": "Company",
   "title": "Building security for AI-enabled systems.",
-  "intro": "Vraelis is being developed for cybersecurity of AI-enabled defense, infrastructure and physical systems. Our focus is explicit authority, integrity and evidence.",
+  "intro": "Vraelis is developing independent cybersecurity software for AI-enabled defense, critical infrastructure and robotics. Our work spans model integrity, adversarial threats, machine trust and security evidence.",
   "photo": "satelliteStation",
   "heading": "Build on a clear purpose.",
   "lead": "The product is being developed privately. Integration requirements must be established for the system being secured.",
   "items": [
     {
       "label": "Security",
-      "title": "Put controls at the boundary",
-      "body": "Check what a workload may access and change, then connect the policy decision to an independently controlled execution path."
+      "title": "Secure the AI within the system",
+      "body": "Investigate model changes, untrusted data and workload authority. Match each security control to a defined threat and operating environment."
     },
     {
       "label": "Engineering",

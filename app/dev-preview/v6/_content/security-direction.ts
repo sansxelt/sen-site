@@ -3,6 +3,8 @@ import type { DirectionContent } from "../_system/direction-page";
 // Public copy describes the development direction. No customer deployments,
 // certifications, production gateway or native attack detector are implied.
 export const SECURITY_STATUS = [
+  { title: "Model integrity", status: "Research and integration", body: "Artifact provenance, trusted model bindings and deployment verification are development priorities. A model scanner or attested runtime is not deployed." },
+  { title: "Adversarial threat evaluation", status: "Research", body: "Manipulated inputs, poisoned data and perception attacks require model-specific evaluation. No universal detector or measured edge-performance claim is offered." },
   { title: "Access and action policies", status: "Private development", body: "A tested policy core checks exact permissions, identity freshness, model bindings and separate human approval. Live enforcement is not connected yet." },
   { title: "Recorded evidence review", status: "Private development", body: "A local evaluator checks supported task reports against reviewed criteria. It identifies conflicting states and missing evidence within the supplied recording." },
   { title: "Trusted system integrations", status: "Integration work", body: "Identity providers, artifact verification, approval services and execution boundaries must be connected to the system being secured." },
@@ -12,29 +14,30 @@ export const SECURITY_STATUS = [
 const item = (label: string, title: string, body: string) => ({ label, title, body });
 export const SECURITY_PAGES: Record<string, DirectionContent> = {
   platform: {
-    eyebrow: "The product direction", title: "Control AI access. Review what follows.",
-    intro: "For engineering and security teams connecting AI to operational systems. We are developing scoped action controls and evidence review, starting with a controlled test integration.",
-    photo: "networkEngineer", heading: "The permission belongs to the system owner.",
-    lead: "Reading telemetry, deploying a model and changing equipment are separate operations. A convincing AI output cannot authorize any of them.",
+    eyebrow: "The product direction", title: "Protect the intelligence inside.",
+    intro: "Vraelis is developing cybersecurity software for AI-enabled defense, critical infrastructure and robotics. Our scope spans model integrity, adversarial threats, machine trust and security evidence.",
+    photo: "networkEngineer", heading: "Security across the AI system.",
+    lead: "The model, its inputs and the resources it can reach introduce different security problems. Each needs a defined threat model, appropriate controls and measurable evidence.",
     items: [
-      item("Access", "Separate observation from control", "Allow a specific workload to read the data it needs without inheriting permission to export it, deploy a model or command a device."),
-      item("Change", "Approve the exact proposed action", "Keep consequential approval independent of the AI workload. Bind it to the target, payload, model and policy; a changed proposal needs a new decision."),
-      item("Evidence", "Keep the decision and result connected", "Preserve why an action was permitted or denied, then connect it to the observations available. A service response alone does not establish a physical outcome."),
+      { ...item("Models", "Model integrity", "Investigate the origin, approved version and supporting dependencies of a workload. Unauthorized changes and malicious behavior require different checks."), href:"/model-integrity" },
+      { ...item("Threats", "Adversarial security", "Study input manipulation and data poisoning against the actual model and input path. Evaluate attacks and normal operating conditions together."), href:"/adversarial-security" },
+      { ...item("Trust", "Machine identity and authority", "Verify workload identity and limit access to specific resources and actions. Keep consequential approval independent of the proposing model."), href:"/zero-trust" },
+      { ...item("Evidence", "Security investigation", "Connect findings to policy decisions, source events and capture coverage. Keep contradictions and unobserved outcomes visible to reviewers."), href:"/recorded-evidence" },
     ],
     story: {
-      photo:"robotCell", eyebrow:"The first workflow", title:"One boundary, from request to review.",
+      photo:"robotCell", eyebrow:"Independent software", title:"Built around the system it protects.",
       paragraphs:[
-        "Our first integration target is an AI-assisted engineering workflow in a controlled test environment: scoped telemetry access, a proposed change and a separate approval before dispatch.",
-        "The engineering goal is to prove that a permitted action can execute once, changed or unauthorized proposals cannot dispatch, and a reviewer can inspect the decision and available outcome evidence.",
+        "AI-enabled equipment combines models, sensors, software and operational resources. Our direction is an independent security layer that works with those components and their existing owners.",
+        "Edge compute budgets, disconnected operation and supplier interfaces shape the integration. Hardware support, detection performance and deployment suitability must be demonstrated for each environment.",
       ],
     },
     showStatus: true,
-    nextTitle: "Build the boundary before broadening the claim.",
-    nextLead: "The next integration must prove a complete security workflow in a controlled test environment.",
+    nextTitle: "Turn the direction into working protections.",
+    nextLead: "The policy core and recorded-evidence evaluator are early foundations. Model integrity and adversarial evaluation broaden the development work.",
     next: [
-      item("Identity", "Establish the source of authority", "Connect trusted workload identity, revocation and artifact evidence. Request-supplied identity labels cannot establish trust."),
-      item("Enforcement", "Check immediately before execution", "Connect policy decisions to a non-bypassable tool boundary, with approval consumption and the exact approved action."),
-      item("Review", "Preserve a useful decision record", "Make policy, model and action bindings inspectable alongside the observed outcome. Build retention and access around the owner's environment."),
+      item("Foundation", "Connect trusted context to controls", "Establish identity and artifact evidence, then enforce the approved scope at the resource boundary. Request-supplied labels cannot establish trust."),
+      item("Research", "Evaluate a specific AI threat", "Select a model, input path and controlled test environment. Document the attack cases, normal behavior and limits of the proposed protection."),
+      item("Proof", "Measure the engineering tradeoffs", "Evaluate missed attacks, incorrect denials, latency, compute use and integration effort. Retain the evidence needed to reproduce the result."),
     ],
   },
   "zero-trust": {
@@ -107,9 +110,9 @@ export const SECURITY_PAGES: Record<string, DirectionContent> = {
   },
   beta: {
     eyebrow: "Private development", title: "The product is being built privately.",
-    intro: "The app and console are closed. We are developing AI-security controls and evidence review for defense, infrastructure and physical systems.",
+    intro: "The private workspace is closed while Vraelis develops cybersecurity for AI-enabled systems: model integrity, adversarial threats, machine trust and security evidence.",
     photo: "robotDetail", heading: "A foundation with a specific purpose.",
-    lead: "The private work connects what a workload is allowed to do with the evidence needed to inspect its behavior.",
+    lead: "Access policies and recorded-evidence review are early components. Model integrity and adversarial threat evaluation are additional development and research priorities.",
     items: [
       item("Policy", "Check explicit permissions", "Evaluate exact identity, resource, environment and model bindings, with separate approval for consequential actions."),
       item("Evidence", "Review recorded behavior", "Compare supported task reports against reviewed criteria. Trace findings to source events and declared capture coverage."),
@@ -147,19 +150,19 @@ function sector(title: string, photo: DirectionContent["photo"], intro: string, 
   };
 }
 SECURITY_PAGES.defense = sector("AI security for defense systems.", "helicopter",
-  "For engineering and security teams developing AI-enabled mission systems. Explicit authority, controlled model changes and traceable security decisions.", [
+  "For engineering and security teams developing AI-enabled mission systems. Our direction covers model integrity, adversarial threats, workload identity and traceable security evidence.", [
     item("Workloads", "Scope access to the mission environment", "Bind authority to the workload and resource. Test-environment access must not silently carry into operational systems."),
     item("Changes", "Review model and software changes", "Connect model versions and proposed actions to the approved policy. Preserve the distinction between a proposal and authorized execution."),
     item("Review", "Make security decisions inspectable", "Give engineering and program reviewers the policy basis, action scope and available evidence for each decision."),
   ]);
 SECURITY_PAGES.infrastructure = sector("AI security for critical infrastructure.", "powerGrid",
-  "For utilities, transport and industrial operations introducing AI into their systems. Define access, protect configuration boundaries and investigate reported behavior.", [
+  "For utilities, transport and industrial operations introducing AI into their systems. Investigate model changes, untrusted operational data and workload access while preserving existing safety controls.", [
     item("Access", "Keep authority specific", "Separate telemetry access from configuration changes, model deployment and equipment commands."),
     item("Operations", "Protect the change boundary", "Require review of consequential actions and version changes. Design outage behavior alongside the owner's operating controls."),
     item("Evidence", "Investigate the handoff", "Connect service and equipment reports to the relevant task. Contradictory or absent reports require investigation."),
   ]);
 SECURITY_PAGES.robotics = sector("AI security for robotics.", "robotArm",
-  "For teams building AI-enabled robots and autonomous equipment. Constrain model access and proposed actions while keeping the available device evidence inspectable.", [
+  "For teams building AI-enabled robots and autonomous equipment. Our work spans model integrity, adversarial perception research, machine identity and evidence from the system's operation.", [
     item("Authority", "Bind actions to the intended asset", "A workload's permissions must identify the resource and operation. Authority for one robot does not imply authority for another."),
     item("Integrity", "Track the approved model version", "Connect verified artifact evidence to deployment decisions. A supplied version string alone does not establish provenance."),
     item("Research", "Evaluate perception-specific threats", "Adversarial sensor inputs need model-specific testing and trustworthy observations. Native sensor attack detection is not built yet."),

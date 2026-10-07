@@ -14,7 +14,7 @@ export const metadata: Metadata = v6meta({
 });
 
 // A compact starting point: the guide itself explains the next step.
-const START = ["recorded-reports"];
+const START = ["ai-security", "recorded-reports"];
 
 // One line each, as a reader would type it. Machine text, never translated.
 const BY_INTERFACE: { name: string; slug: string; line: string }[] = [
@@ -36,7 +36,7 @@ export default function DocsIndex() {
     <DocShell crumb={["Documentation", "Overview"]}>
       <div className="v6-docs__article v6-docs__article--home v6-prose">
         <h1>Vraelis documentation</h1>
-        <p className="v6-docs__lead">These references document private recording evaluation and earlier browser-workflow implementation. For the current AI-security scope and integration status, read the product direction.</p>
+        <p className="v6-docs__lead">Start with the AI-security scope and current development status. Recording formats describe an existing private component; browser-workflow guides are earlier implementation references.</p>
 
         <section className="v6-docs__home" aria-labelledby="start-here">
           <h2 id="start-here">Start here</h2>

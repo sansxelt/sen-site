@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 import { isAppPath, legacyToNew, legacyRunsPath, legacySystemsPath } from "./lib/app-routes";
 import { v6GroundAtTop, type Ground } from "./lib/v6-routes";
 import { stealthConfigured, verifyStealthCookie, STEALTH_COOKIE } from "./lib/stealth";
-import { isClosedProductApi, isClosedProductPage } from "./lib/app-availability";
+import { APP_ACCESS_OPEN, isWorkspaceHost, isClosedProductApi, isClosedProductPage } from "./lib/app-availability";
 
 // vraelis.com: Vraelis Rank. Clean public paths map onto the internal /rank
 // route group; /rank/* bounce back to their clean alias so /rank never shows.
@@ -52,6 +52,8 @@ export const V6_EXACT: Record<string, string> = {
   "/partnerships/bytedance": "/dev-preview/v6/partnerships/bytedance",
   "/platform": "/dev-preview/v6/platform",
   "/zero-trust": "/dev-preview/v6/zero-trust",
+  "/model-integrity": "/dev-preview/v6/model-integrity",
+  "/adversarial-security": "/dev-preview/v6/adversarial-security",
   "/infrastructure": "/dev-preview/v6/infrastructure",
   "/method": "/dev-preview/v6/method",
   "/agents": "/dev-preview/v6/agents",
@@ -143,6 +145,7 @@ export const CURTAIN_PATH_HEADER = "x-vraelis-curtained-path";
 function groundFor(target: string): Ground {
   if (target.startsWith("/rank/app")) return "console";                  // the signed-in product
   if (target === "/signin" || target === "/signup" || target.startsWith("/auth/")) return "console";
+  if (target === "/workspace-entry" || target === "/dev-preview/auth-entry") return "console";
   if (target === "/dev-preview/v6" || target.startsWith("/dev-preview/v6/")) {
     return v6GroundAtTop(target.slice("/dev-preview/v6".length) || "/");
   }
@@ -213,6 +216,12 @@ export default function proxy(req: NextRequest) {
   const host = (req.headers.get("host") || "").toLowerCase();
   const isAppHost = host === "app.vraelis.com" || host.startsWith("app.localhost");
   const isProd = host.endsWith("vraelis.com");
+  const workspaceHost = isWorkspaceHost(host);
+
+  // The design review renders real account components locally, never on a deployment.
+  if (process.env.NODE_ENV !== "development" && (path === "/dev-preview/auth-entry" || path.startsWith("/dev-preview/auth-entry/"))) {
+    return new NextResponse("Not found", {status:404,headers:{"x-robots-tag":"noindex"}});
+  }
 
   // The public CLI distribution is an asset, not a console page. Its APIs remain closed below.
   if (path === "/cli/vraelis.mjs") return NextResponse.next();
@@ -222,6 +231,24 @@ export default function proxy(req: NextRequest) {
     return NextResponse.json({ error: "app_access_closed", message: "App and console access is closed while the private beta is in development." }, {
       status: 503, headers: { "cache-control": "no-store", "x-robots-tag": "noindex" },
     });
+  }
+  // The new workspace address has a focused closed-access entrance. It cannot
+  // expose marketing, old console pages or an existing-session bypass.
+  if (workspaceHost && !APP_ACCESS_OPEN) {
+    if (path.startsWith("/api/")) {
+      const accountServices = ["/api/auth/session", "/api/auth/csrf", "/api/auth/providers", "/api/auth/signout", "/api/auth/reset-password", "/api/auth/reset-password/confirm"];
+      if (!accountServices.includes(path)) return NextResponse.json({error:"app_access_closed"},{status:503,headers:{"cache-control":"no-store","x-robots-tag":"noindex"}});
+      // Existing account recovery still reaches the normal CSRF and abuse checks below.
+    } else {
+      const entrance = path === "/" || path === "/signin" || path === "/workspace-entry";
+      const recovery = path === "/auth/reset-password" || path === "/auth/reset-password/confirm";
+      const response = entrance ? go(req,"/workspace-entry","rewrite")
+        : recovery ? NextResponse.next(withGround(req,path))
+        : NextResponse.redirect(new URL("/signin",req.nextUrl.origin),307);
+      response.headers.set("cache-control","no-store");
+      response.headers.set("x-robots-tag","noindex, nofollow");
+      return response;
+    }
   }
   if (isClosedProductPage(path, host)) {
     const url = new URL("/beta", isProd ? "https://vraelis.com" : req.nextUrl.origin.replace("app.localhost", "localhost"));

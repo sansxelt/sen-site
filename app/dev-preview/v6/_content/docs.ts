@@ -22,7 +22,6 @@
 // text nodes, and a link in the middle of a sentence splits it into fragments (plan 0.6). Inline code is
 // machine text the translator skips.
 import { V6_BASE, v6ShouldPrefetch } from "@/lib/v6-routes";
-import { exampleRecording } from "@/lib/recorded-verification/examples";
 
 export type Block =
   | { t: "p"; text: string }
@@ -308,17 +307,40 @@ const CLI_EXITS: string[][] = [
 
 export const DOCS: Doc[] = [
   {
+    slug: "ai-security",
+    group: "Getting started",
+    title: "AI security at Vraelis",
+    summary: "Our development scope, the security problems we are investigating and the foundations that exist today.",
+    outcome: "Understand the current direction and distinguish research from implemented components.",
+    limit: "Public workspace access is closed. These references are not instructions for an available deployment.",
+    blocks: [
+      { t: "p", text: "Vraelis is developing independent cybersecurity software for AI-enabled defense, critical infrastructure and robotics. The company direction covers model integrity, adversarial threats, machine trust and security evidence." },
+      { t: "h2", text: "Model integrity" },
+      { t: "p", text: "Identify the model, dependencies and configuration a system is running, and compare them with reviewed artifacts. Authenticity helps establish provenance; it does not prove that a model is safe or free of backdoors. Runtime attestation and deployment integrations remain development work." },
+      { t: "h2", text: "Adversarial threats" },
+      { t: "p", text: "Investigate manipulated inputs, training-data poisoning and untrusted instructions reaching AI agents. Evaluation must name the model, attacker capabilities, conditions and limitations. We do not claim a universal attack detector or measured edge-inference performance." },
+      { t: "h2", text: "Machine trust" },
+      { t: "p", text: "Separate an AI proposal from permission to act. Identity, resource, action, workload integrity and policy must be established through trustworthy sources. Existing safety controls remain responsible for physical recovery and safe states." },
+      { t: "h2", text: "Security evidence" },
+      { t: "p", text: "Compare supplied reports against reviewed criteria and inspect the source events supporting a finding. Missing evidence remains unresolved. A recorded report is not authenticated telemetry or physical ground truth." },
+      { t: "h2", text: "Current foundations" },
+      { t: "p", text: "The repository includes a tested policy decision core and a recorded-evidence evaluator. These components are foundations for private integration work, rather than a complete operational security product. Trusted identity, artifact verification, adversarial evaluation and live enforcement require further development." },
+      { t: "p", text: "The private workspace address is data.vraelis.com. Sign-in and new account access are currently closed." },
+      { t: "note", label: "Earlier implementation references", text: "The browser verification, CLI, API and console guides describe earlier implementation work. They do not define the current company scope or establish availability of those services." },
+    ],
+    related: ["recorded-reports"],
+  },
+  {
     slug: "recorded-reports",
     group: "Getting started",
     title: "Review recorded task reports",
     summary: "Compare supplied control-panel, service and device reports for one task. Inspect disagreements, missing evidence and changes to another asset.",
     outcome: "You have evaluated a supplied recording against reviewed criteria and inspected the source events.",
-    limit: "This local beta evaluates reported states. It does not connect to a live device, establish physical ground truth or certify safety.",
+    limit: "The private evaluator evaluates reported states. It does not connect to a live device, establish physical ground truth or certify safety.",
     blocks: [
-      { t: "p", text: "Use the recording workspace without signing in. Files stay in the browser tab: they are not uploaded and do not consume verification credits. This is separate from the hosted browser workflow." },
-      { t: "p", text: "[Open recorded evidence](/verifications/recorded)." },
-      { t: "h2", text: "Start with a simulated example" },
-      { t: "steps", items: ["Open Explore simulated examples and select Broken handoff, Corrected handoff or Missing device evidence.", "Review the asset, task, completion deadline and any assets that must stay unchanged.", "Read the declared recording coverage and confirm that you reviewed it. Select Verify recording.", "Inspect the findings and cited source events. Missing coverage produces an inconclusive result rather than a pass."] },
+      { t: "p", text: "This reference describes the recorded-evidence component in private development. Public workspace access is closed. The component compares supplied events with reviewed criteria; it does not run a live investigation or protect a device." },
+      { t: "h2", text: "Evaluation sequence" },
+      { t: "steps", items: ["Supply a supported recording and review its asset, task and capture identity.", "Define the required events, deadline and any assets that must remain unchanged.", "Review declared coverage before evaluating the supplied reports.", "Inspect findings and their cited source events. Insufficient coverage remains inconclusive."] },
       { t: "h2", text: "Supported input" },
       { t: "table", label: "Recording formats", head: ["Format", "Current support"], rows: [["JSON", "Normalized version 1 recordings, up to 1 MB and 2,000 events. Each event names its source, asset, task, timestamp and supported state."], ["MCAP", "Uncompressed files up to 5 MB, with flat JSON task-event messages. Map each supported topic to control, service or device, then supply a capture manifest."], ["Not supported", "ROS CDR, LZ4 or Zstandard compression, arbitrary nested message schemas, sensor interpretation and live device streams."]] },
       { t: "p", text: "For MCAP, event time comes from the payload’s timeMs field, not the container timestamp. Review run and build identity, topic mapping, clock and captured intervals before evaluation. Declared coverage describes the supplied recording; it is not proof that a device’s report is authentic." },
@@ -327,12 +349,9 @@ export const DOCS: Doc[] = [
       { t: "h2", text: "Compare a change" },
       { t: "p", text: "Keep an evaluated result as the baseline, load the next recording and use the same reviewed criteria. The comparison shows changed findings. Changing a requirement changes the question; it does not demonstrate that a repair succeeded." },
       { t: "h2", text: "Export and persistence" },
-      { t: "p", text: "Export the evidence to keep the criteria, evaluator version, findings and source references. Source hashes identify the supplied bytes; they do not authenticate a device. This beta does not save cloud history. Export before closing the tab." },
-      { t: "h2", text: "JSON format example" },
-      { t: "p", text: "This is simulated data from the corrected handoff example. Download format example in the workspace for the same supported shape." },
-      { t: "code", label: "Normalized task recording", text: JSON.stringify(exampleRecording("corrected"), null, 2) },
+      { t: "p", text: "Export the evidence to keep the criteria, evaluator version, findings and source references. Source hashes identify the supplied bytes; they do not authenticate a device. The component does not save cloud history. Export before closing the tab." },
     ],
-    related: ["getting-started", "the-loop"],
+    related: ["ai-security"],
   },
   {
     slug: "getting-started",

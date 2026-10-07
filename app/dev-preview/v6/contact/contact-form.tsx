@@ -74,10 +74,11 @@ export function ContactForm({ topicParam }: { topicParam?: string }) {
     } catch { setFailure(MSG.failed); }
     finally { setSending(false); }
   }
-  const seed = <div hidden data-i18n-seed="">{[...Object.values(MSG), "Send requirements", "System and security requirements", "Describe the system, intended AI access or changes, current controls and the evidence your reviewers need.", ...Object.values(INTAKE_ERRORS), ...CONTACT_AUDIENCES.flatMap(a => [a.messageLabel, a.acknowledgement])].filter(Boolean).map((s, i) => <span key={i}>{s}</span>)}</div>;
+  const seed = <div hidden data-i18n-seed="">{[...Object.values(MSG), "Send requirements", "System and security requirements", "Describe the AI system, models or inputs involved, the threats you need to address and any deployment constraints.", ...Object.values(INTAKE_ERRORS), ...CONTACT_AUDIENCES.flatMap(a => [a.messageLabel, a.acknowledgement])].filter(Boolean).map((s, i) => <span key={i}>{s}</span>)}</div>;
   if (sent) return <><div className="ct-sent" ref={done} tabIndex={-1} role="status"><p className="ct-sent__t">{MSG.sent}</p></div>{seed}</>;
 
   return <form className="ct-form" noValidate onSubmit={onSubmit} aria-busy={sending || undefined}>
+    <div className="ct-pair ct-pair--context">
     <div className="ct-field">
       <label className="ct-label" htmlFor={`${id}-audience`}>I am reaching out as</label>
       <select className="ct-input ct-select" id={`${id}-audience`} name="audience" value={audience} required aria-invalid={!!errors.audience || undefined} aria-describedby={err("audience")}
@@ -92,6 +93,7 @@ export function ContactForm({ topicParam }: { topicParam?: string }) {
         <option value="" disabled>Select a topic</option>{TOPICS.filter(t => t.key !== "privacy").map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
       </select>{errorText("topic")}
     </div> : <p className="ct-help">Your request goes to the privacy team. Organization details and commercial acknowledgements are not required.</p>}
+    </div>
     <div className="ct-pair">
       <div className="ct-field"><label className="ct-label" htmlFor={`${id}-name`}>Name <span className="ct-opt">Optional</span></label><input className="ct-input" id={`${id}-name`} name="name" autoComplete="name" maxLength={160} /></div>
       <div className="ct-field"><label className="ct-label" htmlFor={`${id}-email`}>{privacy || audience === "individual" ? "Email" : "Work email"}</label><input className="ct-input" id={`${id}-email`} name="email" type="email" autoComplete="email" required aria-invalid={!!errors.email || undefined} aria-describedby={err("email")} onInput={() => clear("email")} />{errorText("email")}</div>
@@ -105,7 +107,7 @@ export function ContactForm({ topicParam }: { topicParam?: string }) {
       </div>
       <p className="ct-help">These details help us review the inquiry and any applicable requirements. Submitting does not establish eligibility or grant product access.</p>
     </fieldset> : null}
-    <div className="ct-field"><label className="ct-label" htmlFor={`${id}-message`}>{requirements ? "System and security requirements" : sender?.messageLabel ?? "Your inquiry"}</label><textarea key={audience} className="ct-input ct-input--area" id={`${id}-message`} name="message" rows={5} required minLength={10} placeholder={requirements ? "Describe the system, intended AI access or changes, current controls and the evidence your reviewers need." : undefined} aria-invalid={!!errors.message || undefined} aria-describedby={err("message")} onInput={() => clear("message")} />{errorText("message")}</div>
+    <div className="ct-field"><label className="ct-label" htmlFor={`${id}-message`}>{requirements ? "System and security requirements" : sender?.messageLabel ?? "Your inquiry"}</label><textarea key={audience} className="ct-input ct-input--area" id={`${id}-message`} name="message" rows={5} required minLength={10} placeholder={requirements ? "Describe the AI system, models or inputs involved, the threats you need to address and any deployment constraints." : undefined} aria-invalid={!!errors.message || undefined} aria-describedby={err("message")} onInput={() => clear("message")} />{errorText("message")}</div>
     {sender?.acknowledgement ? <div className="ct-field" key={`${audience}-acknowledgement`}>
       <label className="ct-ack"><input name="acknowledgement" type="checkbox" required aria-invalid={!!errors.acknowledgement || undefined} aria-describedby={err("acknowledgement")} onChange={() => clear("acknowledgement")} /><span>{sender.acknowledgement}</span></label>{errorText("acknowledgement")}
     </div> : null}

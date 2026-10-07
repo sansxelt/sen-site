@@ -10,7 +10,7 @@ import { SYSTEM_INQUIRY_LABEL, SYSTEM_INQUIRY_PATH } from "@/lib/app-availabilit
 import { PhotoStory, type PhotoStoryContent } from "./photo-story";
 export type DirectionContent = {
   eyebrow:string; title:string; intro:string; photo:PhotographKey;
-  heading:string; lead:string; items:{title:string; body:string; label:string}[];
+  heading:string; lead:string; items:{title:string; body:string; label:string; href?:string}[];
   showStatus?: boolean;
   story?: PhotoStoryContent;
   references?: {title:string; body:string; href:string}[];
@@ -30,7 +30,7 @@ export function DirectionHero({eyebrow,title,intro,photo}:{eyebrow:string;title:
 export function DirectionTopics({items}:{items:DirectionContent["items"]}) {
   return <div className="direction-topics">{items.map(i=><article key={i.title}>
     <p className="direction-topics__label">{i.label}</p>
-    <div><h3>{i.title}</h3><p>{i.body}</p></div>
+    <div><h3>{i.title}</h3><p>{i.body}</p>{i.href ? <Link className="direction-topics__link" href={`${V6_BASE}${i.href}`}>Explore this area</Link> : null}</div>
   </article>)}</div>;
 }
 export function DirectionPage({content:c}:{content:DirectionContent}) {
