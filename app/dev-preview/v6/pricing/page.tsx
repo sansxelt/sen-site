@@ -9,6 +9,7 @@ import { usdFromCents, effectiveMonthlyUsd, planCapacity } from "@/lib/preflight
 import { PricingEstimate } from "./pricing-estimate";
 import { EvidenceModel } from "../_system/evidence-model";
 import "./pricing.css";
+import { APP_ACCESS_OPEN } from "@/lib/app-availability";
 
 export const metadata = v6meta({
   title: "Pricing",
@@ -43,7 +44,7 @@ const FAQ: FaqItem[] = [
   { q: "How does monthly usage work?", a: "Each plan's monthly allowance is its listed verifications multiplied by flows per verification. A check uses the flows it runs; a targeted rerun uses only the selected failed flows. Smaller checks can use the same allowance across more runs. Unused monthly allowance does not roll over." },
   { q: "What does a rerun cost?", a: <><p>A fresh full check is billed as a new verification. A targeted rerun selects only failed flows from an existing check.</p><p>{`On pay as you go, a targeted rerun costs ${money(RERUN_PER_FLOW_CENTS)} per selected failed flow, capped at the price of a comparable full check. On a subscription, only those selected flows use the monthly allowance.`}</p><p>The estimator above shows the full-check and targeted-rerun amounts separately.</p></> },
   { q: "What changes with yearly billing?", a: "The displayed yearly price is charged up front and equals ten monthly payments for twelve months of access. Capacity resets monthly; the whole year's allowance is not released at once. Cancelling renewal keeps your paid-for access through the end of the term." },
-  { q: "Can I start without a card?", a: `Yes. Free includes ${FREE_TIER.lifetimePasses} lifetime browser verification with up to ${FREE_TIER.flowsPerPass} flows, for ${FREE_TIER.maxApplications} connected system. The free allowance is not a monthly refill.` },
+  { q: "Can I start without a card?", a: APP_ACCESS_OPEN ? `Yes. Free includes ${FREE_TIER.lifetimePasses} lifetime browser verification with up to ${FREE_TIER.flowsPerPass} flows, for ${FREE_TIER.maxApplications} connected system. The free allowance is not a monthly refill.` : "App access and self-service checkout are closed for now. Talk to the team about a future evaluation; no purchase is needed to start that conversation." },
   { q: "Do I need a paid seat for every reviewer?", a: "No. These prices are based on verification capacity, not a per-seat charge. Team access and organizational controls are described separately on the Enterprise page." },
   { q: "What if Vraelis cannot build the check?", a: "If no check can be built for the requested requirement, there is no verification charge. A completed check that finds a problem is still a completed verification." },
   { q: "How do government and enterprise evaluations work?", a: <><p>Start with a conversation about your systems, a representative software workflow, and the evidence your reviewers need. Capacity, contract terms and organizational controls are scoped in a written quote. Bring your procurement and security requirements so the evaluation can be scoped before a purchase.</p><EditorialLink href={`${BASE}/government`}>Government and institutions</EditorialLink></> },
@@ -54,7 +55,7 @@ export default function V6Pricing() {
     <>
       <PricingToggle className="v6-pp">
         <div className="v6-pp__hero">
-          <IndexHero compact eyebrow="Pricing" title="Evidence first. Capacity when you need it." lead="Start with a free browser check. Add review capacity as your systems grow, with no per-seat pricing." actions={<><PricingSwitch /><p className="v6-pp__note">Yearly: twelve months of access for ten monthly payments.</p></>} />
+          <IndexHero compact eyebrow="Pricing" title="Evidence first. Capacity when you need it." lead={APP_ACCESS_OPEN ? "Start with a free browser check. Add review capacity as your systems grow, with no per-seat pricing." : "App and console access is closed while the private beta is in development. Browser-verification pricing below is a reference; self-service plans and checkout are not open."} actions={<><PricingSwitch /><p className="v6-pp__note">Yearly: twelve months of access for ten monthly payments.</p></>} />
         </div>
         <section className="v6-sec v6-pp__plans" id="plans" aria-labelledby="plans-h">
           <div className="v6-wrap">
@@ -141,7 +142,7 @@ export default function V6Pricing() {
       </div></section>
 
       <section className="v6-sec v6-pp-faq" id="questions"><div className="v6-wrap"><Faq items={FAQ} /></div></section>
-      <ClosingScene title="Start with evidence you can inspect." action={{ label: "Start free", href: SIGNUP }} say="Your first browser verification is free. Bring a clear software requirement and review the recorded result." />
+      <ClosingScene title="Start with evidence you can inspect." action={{ label: "Talk to the team", href: `${BASE}/contact` }} say="Bring a clear software requirement and discuss the evidence your reviewers need." />
     </>
   );
 }

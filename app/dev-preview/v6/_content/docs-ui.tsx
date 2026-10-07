@@ -12,6 +12,7 @@ import { MARK_PATH, MARK_VIEWBOX } from "@/lib/brand-mark";
 import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useAppEntry, useMarketingHref, useMarketingSession } from "../_system/entry-navigation";
+import { APP_ACCESS_OPEN, isProductEntryHref } from "@/lib/app-availability";
 
 const BASE = V6_BASE;
 export const dslug = slugOf;
@@ -19,9 +20,10 @@ export const dslug = slugOf;
 /** A link inside docs text. A site path gets the base and the console prefetch rule (docPrefetch); anything
  *  else (another host, mailto:, an anchor on this page) is a plain anchor. */
 function DocLink({ href, children }: { href: string; children: React.ReactNode }) {
-  const destination = useMarketingHref(href.startsWith("/") ? `${BASE}${href}` : href);
+  const source = href.startsWith("/") ? `${BASE}${href}` : href;
+  const destination = useMarketingHref(source);
   if (!destination.startsWith("/")) return <a href={destination}>{children}</a>;
-  return <Link href={destination} prefetch={docPrefetch(destination)}>{children}</Link>;
+  return <Link href={destination} prefetch={docPrefetch(destination)}>{isProductEntryHref(source) ? "talk to the team" : children}</Link>;
 }
 
 /** Docs text with its inline markup (`code` and [label](href), see _content/docs.ts). Plain text stays one
@@ -353,8 +355,10 @@ export function DocShell({ activeSlug = "", toc = [], crumb, markdown, children 
         ) : <span className="v6-dh__crumb" />}
         <div className="v6-dh__actions">
           {markdown ? <CopyMarkdown markdown={markdown} /> : null}
-          {!authed ? <Link href={V6_SIGNIN} className="v6-dh__signin">Sign in</Link> : null}
-          <Link href={authed ? appEntry : `${v6SignInPath()}&mode=signup`} prefetch={authed ? docPrefetch(appEntry) : undefined} className="v6-dh__open">{authed ? "Open Vraelis" : "Create account"}</Link>
+          {!APP_ACCESS_OPEN ? <Link href={`${BASE}/contact`} className="v6-dh__open">Talk to the team</Link> : <>
+            {!authed ? <Link href={V6_SIGNIN} className="v6-dh__signin">Sign in</Link> : null}
+            <Link href={authed ? appEntry : `${v6SignInPath()}&mode=signup`} prefetch={authed ? docPrefetch(appEntry) : undefined} className="v6-dh__open">{authed ? "Open Vraelis" : "Create account"}</Link>
+          </>}
         </div>
       </header>
 

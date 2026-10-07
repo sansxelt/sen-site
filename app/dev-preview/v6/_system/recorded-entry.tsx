@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { MarketingLink as Link } from "./entry-navigation";
 import { getSignInPath } from "@/lib/auth-ui";
 import { RecordedExample } from "./recorded-example";
 import { V6_BASE } from "@/lib/v6-routes";

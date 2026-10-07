@@ -4,6 +4,7 @@ import type { NextRequest } from "next/server";
 import { isAppPath, legacyToNew, legacyRunsPath, legacySystemsPath } from "./lib/app-routes";
 import { v6GroundAtTop, type Ground } from "./lib/v6-routes";
 import { stealthConfigured, verifyStealthCookie, STEALTH_COOKIE } from "./lib/stealth";
+import { isClosedProductApi, isClosedProductPage } from "./lib/app-availability";
 
 // vraelis.com: Vraelis Rank. Clean public paths map onto the internal /rank
 // route group; /rank/* bounce back to their clean alias so /rank never shows.
@@ -211,6 +212,23 @@ export default function proxy(req: NextRequest) {
   const host = (req.headers.get("host") || "").toLowerCase();
   const isAppHost = host === "app.vraelis.com" || host.startsWith("app.localhost");
   const isProd = host.endsWith("vraelis.com");
+
+  // The public CLI distribution is an asset, not a console page. Its APIs remain closed below.
+  if (path === "/cli/vraelis.mjs") return NextResponse.next();
+
+  // Stop before route rendering, including RSC requests and callers with existing sessions.
+  if (isClosedProductApi(path)) {
+    return NextResponse.json({ error: "app_access_closed", message: "App and console access is closed while the private beta is in development." }, {
+      status: 503, headers: { "cache-control": "no-store", "x-robots-tag": "noindex" },
+    });
+  }
+  if (isClosedProductPage(path, host)) {
+    const url = new URL("/beta", isProd ? "https://vraelis.com" : req.nextUrl.origin.replace("app.localhost", "localhost"));
+    const response = NextResponse.redirect(url, 307);
+    response.headers.set("cache-control", "no-store");
+    response.headers.set("x-robots-tag", "noindex");
+    return response;
+  }
 
   // THE FILM RENDERERS ARE A DEVELOPMENT TOOL (app/film). Their pages call notFound() outside development,
   // but the root layout has already streamed by then, so the answer was the 404 page with status 200 and the
@@ -561,5 +579,7 @@ export const config = {
   // asset extensions (not "anything with a dot") is deliberate: the old `.*\.[a-zA-Z0-9]+$` pattern let any
   // dotted path (e.g. /learn/a.b) BYPASS every retirement redirect and render a retired route. A real page
   // path can contain a dot, so we must not skip the proxy for it.
-  matcher: ["/((?!_next/|[^?]*\\.(?:ico|png|jpg|jpeg|gif|svg|webp|avif|css|js|mjs|map|txt|xml|json|woff2?|ttf|otf|eot|pdf|mp4|webm|wasm)(?:$|\\?)).*)"],
+  matcher: ["/((?!_next/|[^?]*\\.(?:ico|png|jpg|jpeg|gif|svg|webp|avif|css|js|mjs|map|txt|xml|json|woff2?|ttf|otf|eot|pdf|mp4|webm|wasm)(?:$|\\?)).*)",
+    "/api/:path*", "/rank/app/:path*", "/dev-preview/v6/app/:path*", "/dev-preview/recorded-app/:path*",
+    "/:product(app|console|systems|verifications|guarantees|review|records|usage|applications|passes|issues|repairs|deployments|activity|team|organization|connections|plans|credits|billing|account|checkout|limits|cli|admin|new|r)/:path*"],
 };

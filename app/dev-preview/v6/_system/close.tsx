@@ -10,23 +10,21 @@ import { CLOSE_TITLE, CLOSE_SAY } from "./positioning";
 import { useScrollProgress, entryProgress } from "./progress";
 import { Spectral } from "./spectral";
 import "./close.css";
-import { V6_BASE, v6SignInPath } from "@/lib/v6-routes";
+import { V6_BASE } from "@/lib/v6-routes";
 import { FOOTER_STATEMENT } from "./positioning";
 import { PRIMARY_SECTORS, SOLUTIONS_HREF } from "../_content/sectors";
 import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
 import { LanguageSwitcher } from "@/components/language-switcher";
 
 const BASE = V6_BASE;
-// Account creation is the sign-in screen in its sign-up mode, landing in the console afterwards: the same
-// destination as the bar's "Create account" (shell.tsx).
-const SIGNUP = `${v6SignInPath()}&mode=signup`;
+const CONTACT = `${BASE}/contact`;
 
 /**
  * THE ENDING OF A PAGE (plan A5, 2026-10-02): one line, centred, at the display size (64 / 40, 16ch) with
  * the Spectral reveal, and exactly one white lg button under it.
  *
  *   title   the line. Default CLOSE_TITLE (positioning.ts).
- *   action  the one button, { label, href }. Default { label: "Start free", href: the sign-up screen }.
+ *   action  the one button, { label, href }. Defaults to a conversation with the team.
  *           A page whose next step is a conversation passes its own, e.g. { label: "Talk to sales",
  *           href: `${V6_BASE}/contact?topic=enterprise` }.
  *   say     an optional short line under the title, for a page that needs one. Not shown by default.
@@ -35,7 +33,7 @@ const SIGNUP = `${v6SignInPath()}&mode=signup`;
  */
 export function ClosingScene({
   title = CLOSE_TITLE,
-  action = { label: "Start free", href: SIGNUP },
+  action = { label: "Talk to the team", href: CONTACT },
   say = CLOSE_SAY,
 }: {
   title?: string; action?: { label: string; href: string }; say?: string;

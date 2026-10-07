@@ -1,23 +1,23 @@
 import { DirectionPage, type DirectionContent } from "../_system/direction-page";
 import { v6meta } from "../_system/meta";
-export const metadata = v6meta({"title": "The beta", "description": "Start with supported task recordings. Compare control-panel, service and device reports, inspect the source events, and see where the supplied evidence falls short.", "path": "/beta", "type": "website"});
+export const metadata = v6meta({"title": "Private beta", "description": "The Vraelis app and console are closed while the private beta is in development. Discuss a future recording-review pilot with the team.", "path": "/beta", "type": "website"});
 const content: DirectionContent = {
   "eyebrow": "The beta",
-  "title": "The beta.",
-  "intro": "Start with supported task recordings. Compare control-panel, service and device reports, inspect the source events, and see where the supplied evidence falls short.",
+  "title": "Private beta. In development.",
+  "intro": "App and console access is closed for now. We\u2019re building a private workflow to review task recordings against requirements and inspect findings. Talk to the team about a future pilot.",
   "photo": "robotDetail",
-  "heading": "What you can work with today.",
-  "lead": "The recording beta is a local report-review workflow. The website\u2019s mission-console example is a separate simulation, not an operational defense system.",
+  "heading": "What we\u2019re building.",
+  "lead": "The first private beta will focus on reviewing supported recordings against approved requirements and inspecting the evidence behind findings. Access is not open. The website\u2019s mission-console example remains a separate simulation.",
   "items": [
     {
       "label": "Input",
       "title": "Supported JSON and MCAP",
-      "body": "Import recordings that match the documented formats. Files remain in your browser; the recording workflow does not upload them to a cloud evidence store."
+      "body": "The current internal evaluator supports documented JSON and MCAP task reports. The private beta will start with recordings that match those formats."
     },
     {
       "label": "Review",
       "title": "Task and asset comparisons",
-      "body": "Look for conflicting state, missing completion and unexpected changes to assets required to stay unchanged. Findings refer back to supplied events."
+      "body": "Review conflicting state, missing completion and unexpected changes to assets required to stay unchanged. Findings should refer back to the supplied events."
     },
     {
       "label": "Example",
