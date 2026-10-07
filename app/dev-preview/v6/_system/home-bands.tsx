@@ -28,7 +28,7 @@ function useEntryMotion() {
   return root;
 }
 
-const STATEMENT = "External software review for defense, infrastructure and robotics. Find conflicting task and device reports before release.";
+const STATEMENT = "Cybersecurity for AI-enabled defense, infrastructure and robotics. Explicit authority. Controlled changes. Evidence you can investigate.";
 
 /* The words of a language that does not space them (Japanese), found by the browser's own word segmenter, with
    punctuation riding on the word before it. Cut by character instead, a phrase too long for a phone's line

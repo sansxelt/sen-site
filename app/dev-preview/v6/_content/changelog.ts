@@ -38,7 +38,7 @@ export type Entry = {
 /** An entry's anchor on /changelog: its date and title, so two entries on one day still differ. */
 export const entryId = (e: Entry) => `${e.date}-${e.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48)}`;
 
-export const CHANGELOG: Entry[] = [
+const HISTORICAL_CHANGELOG: Entry[] = [
   {
     date: "2026-10-05", tag: "go", tagLabel: "Shipped",
     title: "Recorded task evidence, now in the app",
@@ -442,3 +442,12 @@ export const CHANGELOG: Entry[] = [
     note: "Not shipped. Live activity ingestion and autonomy decisions are not yet available.",
   },
 ];
+
+// Retain dated history, but retire generated models and old demo images from the public feed.
+export const CHANGELOG: Entry[] = [{
+ date: "2026-10-07", tag: "wait", tagLabel: "Private development",
+ title: "AI security direction and private foundations",
+ body: ["The site now describes cybersecurity for AI-enabled defense, infrastructure and physical systems. Zero trust, explicit workload authority and model integrity build on the existing evidence-review work.",
+ "A private policy core checks exact grants, identity freshness, artifact bindings and separate human approval. Identity verification and live enforcement still need integration. The app, console and product APIs remain closed."],
+ href: "/beta", hrefLabel: "Development status",
+}, ...HISTORICAL_CHANGELOG.map(entry => ({...entry,media:undefined}))];

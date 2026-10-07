@@ -19,7 +19,7 @@ export function useMarketingSession() {
 /** Signed-out product links open sign-in directly and keep their intended destination. */
 export function useMarketingHref(href: string) {
   const authed = useMarketingSession();
-  if (isProductEntryHref(href)) return `${V6_BASE}/contact?topic=beta`;
+  if (isProductEntryHref(href)) return `${V6_BASE}/contact`;
   if (authed) return href;
   if (href.startsWith("https://app.vraelis.com/")) {
     const url = new URL(href);
@@ -36,5 +36,5 @@ export function useAppEntry() {
 
 export function MarketingLink({ href, children, ...props }: Omit<ComponentProps<typeof Link>, "href"> & { href: string }) {
   const destination = useMarketingHref(href);
-  return <Link {...props} href={destination}>{isProductEntryHref(href) ? "Talk to the team" : children}</Link>;
+  return <Link {...props} href={destination}>{isProductEntryHref(href) ? "Contact" : children}</Link>;
 }

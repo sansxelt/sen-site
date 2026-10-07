@@ -9,7 +9,7 @@ const BASE = V6_BASE;
 
 export const metadata: Metadata = v6meta({
   title: "Changelog",
-  description: "What Vraelis has shipped, dated and newest first. Each entry is written from the code that shipped it, and direction is labelled as direction.",
+  description: "Development milestones and earlier implementation history. The current AI-security product remains in private development.",
   path: "/changelog",
   ogTitle: "Vraelis changelog",
 });
@@ -49,8 +49,8 @@ export default function Changelog() {
       <IndexHero
         compact
         eyebrow="Changelog"
-        title="What Vraelis has shipped"
-        lead="Dated milestones from the product, newest first. Each entry says what shipped, and where one points at the future, it says so."
+        title="Development history"
+        lead="Current development and earlier implementation milestones, newest first. Historical entries describe the work at their date; they do not imply current product availability."
       />
       <section className="v6-clog-sec">
         <div className="v6-wrap">

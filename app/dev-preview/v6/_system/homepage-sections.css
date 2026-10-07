@@ -3,7 +3,7 @@
 .home-page :is(a,button):focus-visible { outline:2px solid #fff; outline-offset:5px; }
 .home-eyebrow { font-size:13px; font-weight:500; color:#b5b5b5; margin:0 0 22px; }
 .home-section-head { margin-bottom:clamp(36px,4.2vw,64px); }
-.home-section-head h2 { font-size:clamp(36px,4.8vw,72px); line-height:1.06; letter-spacing:-.045em; font-weight:500; margin:0; text-wrap:balance; }
+.home-section-head h2 { font-family:var(--display); font-size:clamp(36px,4.8vw,72px); line-height:1.06; letter-spacing:-.045em; font-weight:var(--display-w); margin:0; text-wrap:balance; }
 .home-section-head--split { display:grid; grid-template-columns:1.3fr 1fr; gap:80px; align-items:end; }
 .home-section-head--split>p { margin:0; max-width:43ch; color:#b5b5b5; font-size:17px; line-height:1.65; }
 .home-areas { padding-block:clamp(40px,4vw,64px); scroll-margin-top:20px; }

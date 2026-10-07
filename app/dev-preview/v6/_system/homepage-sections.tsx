@@ -11,15 +11,15 @@ import "./homepage-sections.css";
 
 const AREAS = {
   defense: {
-    line: "External review of mission software.",
+    line: "AI security for mission systems.",
     image: "/home/menu/editorial/aviation.jpg", width: 1600, height: 900,
   },
   "public-sector": {
-    line: "Trace equipment tasks across systems.",
+    line: "Protect AI-enabled operational boundaries.",
     image: "/site/photography/power-grid.jpg", width: 2400, height: 1800,
   },
   fleets: {
-    line: "Follow the task to the intended robot.",
+    line: "Scope authority around models and equipment.",
     image: "/site/photography/robot-grinding.jpg", width: 2400, height: 1530,
   },
 } as const;
@@ -35,8 +35,8 @@ export function PhysicalSystems() {
     <MediaReadyFallback/>
     <div className="v6-wrap">
       <div className="home-section-head" data-media-copy="">
-        <p className="home-eyebrow">External software review</p>
-        <h2 id="home-areas-title">Built for the physical world.</h2>
+        <p className="home-eyebrow">Our application areas</p>
+        <h2 id="home-areas-title">AI security in the physical world.</h2>
       </div>
       <div className="home-areas__grid">
         {PRIMARY_SECTORS.map((sector, index) => {
@@ -67,17 +67,17 @@ export function EngineeringEntry() {
     <MediaReadyFallback/>
     <div className="v6-wrap">
       <div className="home-section-head home-section-head--split" data-media-copy="">
-        <h2 id="home-engineering-title">Start with the evidence<br />you already have.</h2>
-        <p>Supported task reports stay in your browser. Review what should happen, examine the result and follow it back to the source events.</p>
+        <h2 id="home-engineering-title">Define the boundary.<br />Build the control.</h2>
+        <p>Understand the AI workload, the resources it can reach and the evidence needed to investigate its behavior.</p>
       </div>
       <div className="home-engineering__links">
-        <Link href={`${V6_BASE}/docs/recorded-reports`} className="home-resource" data-media-ready="pending">
+        <Link href={`${V6_BASE}/zero-trust`} className="home-resource" data-media-ready="pending">
           <div className="home-resource__image"><Image src={documentation.src} alt={documentation.alt} width={documentation.w} height={documentation.h} sizes="(max-width: 760px) 100vw, 45vw" loading="lazy" /></div>
-          <div data-media-copy=""><p className="home-eyebrow">Documentation</p><h3>From recording to result.</h3><span>Formats, source mapping and the first review <UpRight /></span></div>
+          <div data-media-copy=""><p className="home-eyebrow">Zero trust</p><h3>Authority must be explicit.</h3><span>Identity, permissions and separate approval <UpRight /></span></div>
         </Link>
         <Link href={`${V6_BASE}/platform`} className="home-resource" data-media-ready="pending">
           <div className="home-resource__image"><Image src={platform.src} alt={platform.alt} width={platform.w} height={platform.h} sizes="(max-width: 760px) 100vw, 45vw" loading="lazy" /></div>
-          <div data-media-copy=""><p className="home-eyebrow">The platform</p><h3>Know what the result means.</h3><span>Available workflows, evidence and boundaries <UpRight /></span></div>
+          <div data-media-copy=""><p className="home-eyebrow">The product direction</p><h3>The work behind the controls.</h3><span>Private foundations and the next integrations <UpRight /></span></div>
         </Link>
       </div>
     </div>

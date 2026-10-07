@@ -85,6 +85,14 @@ const brandSans = localFont({
   variable: "--font-brand-sans",
   display: "swap",
 });
+// Display typography is loaded locally and preloaded with the document. Body copy stays Plex Sans.
+const brandDisplay = localFont({
+  src: "./fonts/manrope/Manrope-Variable.ttf",
+  weight: "200 800",
+  style: "normal",
+  variable: "--font-brand-display",
+  display: "swap",
+});
 const brandMono = localFont({
   src: [
     { path: "./fonts/ibm-plex-mono-latin-400.woff2", weight: "400", style: "normal" },
@@ -183,7 +191,7 @@ export default async function RootLayout({
     return (
       // The curtain is black, like the rest of the product since 2026-10-01, so the canvas is painted black
       // too; the overscroll gutter and the strip below a short viewport match the screen.
-      <html lang="en" data-theme="dark" style={{ colorScheme: "dark", background: "#0A0A0B" }} className={`${brandSans.variable} ${brandMono.variable} h-full`}>
+      <html lang="en" data-theme="dark" style={{ colorScheme: "dark", background: "#0A0A0B" }} className={`${brandSans.variable} ${brandMono.variable} ${brandDisplay.variable} h-full`}>
         <body className="min-h-full" style={{ background: "#0A0A0B" }}>
           <link rel="stylesheet" href="/vraelis/tokens.css?v=23" />
           <link rel="stylesheet" href="/vraelis/styles.css?v=57" />
@@ -232,7 +240,7 @@ export default async function RootLayout({
         // half that actually caused the flash: it is what the browser uses for its own canvas, the
         // overscroll region and native controls, all before the page exists.
         style={{ colorScheme: GROUND_CSS[ground].scheme, background: GROUND_CSS[ground].bg }}
-        className={`${brandSans.variable} ${brandMono.variable} h-full`}
+        className={`${brandSans.variable} ${brandMono.variable} ${brandDisplay.variable} h-full`}
       >
         <body className="min-h-full" style={{ background: GROUND_CSS[ground].bg }}>
           {/* First in the body, so it has run before any of the page is parsed (LANGUAGE_FIRST_PAINT, above). */}

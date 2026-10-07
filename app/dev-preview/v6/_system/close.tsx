@@ -11,7 +11,7 @@ import { useScrollProgress, entryProgress } from "./progress";
 import { Spectral } from "./spectral";
 import "./close.css";
 import { V6_BASE } from "@/lib/v6-routes";
-import { FOOTER_STATEMENT } from "./positioning";
+import { FOOTER_STATEMENT, HEADLINE } from "./positioning";
 import { PRIMARY_SECTORS, SOLUTIONS_HREF } from "../_content/sectors";
 import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -33,7 +33,7 @@ const CONTACT = `${BASE}/contact`;
  */
 export function ClosingScene({
   title = CLOSE_TITLE,
-  action = { label: "Talk to the team", href: CONTACT },
+  action = { label: "Contact", href: CONTACT },
   say = CLOSE_SAY,
 }: {
   title?: string; action?: { label: string; href: string }; say?: string;
@@ -63,7 +63,7 @@ export function ClosingScene({
 // Main destinations stay visible. Detailed documentation and other solutions are
 // accessible through their indexes; secondary policies remain in a disclosure.
 const COLS: [string, [string, string][]][] = [
-  ["Product", [[`${BASE}/platform`, "Platform"], [`${BASE}/platform#recorded-evidence`, "Recorded evidence"], [`${BASE}/beta`, "Recording beta"], [`${BASE}/integrations`, "Integrations"], [`${BASE}/agents`, "AI assistants"], [`${BASE}/pricing`, "Pricing"]]],
+  ["Product", [[`${BASE}/platform`, "Platform"], [`${BASE}/zero-trust`, "Zero trust"], [`${BASE}/recorded-evidence`, "Recorded evidence"], [`${BASE}/beta`, "Development status"], [`${BASE}/integrations`, "Integrations"], [`${BASE}/agents`, "AI workloads"], [`${BASE}/pricing`, "Pricing"]]],
   ["Solutions", [...PRIMARY_SECTORS.map((s): [string, string] => [s.href, s.label]), [`${BASE}/government`, "Government & institutions"], [`${BASE}/integrators`, "System integrators"], [`${BASE}/enterprise`, "Enterprise"], [SOLUTIONS_HREF, "Explore solutions"]]],
   ["Resources", [[`${BASE}/docs`, "Documentation"], [`${BASE}/developers`, "Developer tools"], [`${BASE}/problems`, "The problems"], [`${BASE}/research`, "Research"], [`${BASE}/changelog`, "Changelog"]]],
   ["Company", [[`${BASE}/goals`, "Our goals"], [`${BASE}/company`, "About"], [`${BASE}/contact`, "Contact"]]],
@@ -76,7 +76,7 @@ export function SiteFooter() {
       <div className="v6-foot2__lower">
         <div className="v6-foot2__brand">
           <Link href={BASE || "/"} className="v6-foot2__wordmark" aria-label="Vraelis homepage">Vraelis</Link>
-          <p>External software review.</p>
+          <p>AI security. In development.</p>
           <span>Defense. Infrastructure. Robotics.</span>
         </div>
         {/* Each column is a named group of links (WCAG 1.3.1): the label looks like a heading, so a screen reader
@@ -96,7 +96,7 @@ export function SiteFooter() {
         ))}
       </div>
 
-      <div className="v6-foot2__closing" aria-label="Know your systems work.">Know your systems work.</div>
+      <div className="v6-foot2__closing">{HEADLINE}</div>
 
       <div className="v6-foot2__base">
         <p className="v6-foot2__say"><span>{FOOTER_STATEMENT}</span></p>

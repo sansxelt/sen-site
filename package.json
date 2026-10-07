@@ -137,7 +137,8 @@
     "launch:gate:audit": "tsx ops/launch-gate-audit.ts",
     "signal:test": "tsx scripts/console-signal-verify.ts",
     "recorded:verify:test": "tsx scripts/recorded-verification-verify.ts",
-    "recorded:mcap:test": "tsx scripts/recorded-mcap-verify.ts"
+    "recorded:mcap:test": "tsx scripts/recorded-mcap-verify.ts",
+    "ai:security:test": "tsx scripts/ai-security-policy-verify.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",

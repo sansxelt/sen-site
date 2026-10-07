@@ -161,7 +161,7 @@
 .v6-foot2__col a { color:#ededed; font-size:16px; line-height:1.4; min-height:34px; }
 .v6-foot2__col a:hover { color:#fff; text-decoration:underline; text-underline-offset:4px; }
 .v6-foot2__policies summary { color:#a6a6a6; font-size:14px; }
-.v6-foot2__closing { max-width:1600px; margin:0 auto; padding:28px var(--gutter) 64px; font-size:clamp(40px,5.5vw,88px); line-height:1.06; letter-spacing:-.045em; font-weight:500; text-wrap:balance; }
+.v6-foot2__closing { font-family:var(--display); max-width:1600px; margin:0 auto; padding:28px var(--gutter) 64px; font-size:clamp(40px,5.5vw,88px); line-height:1.06; letter-spacing:-.045em; font-weight:var(--display-w); text-wrap:balance; }
 .v6-foot2__base { border-color:#242424; }
 .v6-foot2__base-in,.v6-foot2__say { max-width:1600px; }
 .v6-foot2__say { color:#999; font-size:13px; }

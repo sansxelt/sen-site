@@ -1,6 +1,6 @@
 import { isAppPath } from "./app-routes";
 
-// Access is deliberately closed while the private recording-review product is built.
+// Access is deliberately closed while the AI-security product is built.
 // Reopening requires a reviewed code change; an existing session grants no bypass.
 export const APP_ACCESS_OPEN: boolean = false;
 
@@ -18,7 +18,7 @@ export function isClosedProductApi(path: string): boolean {
   if (APP_ACCESS_OPEN) return false;
   // Keep existing payment notifications and account/data-rights requests operational.
   if (["/api/v/paypal/webhook", "/api/v/account/delete", "/api/v/data-requests"].some(root => at(path, root))) return false;
-  return ["/api/preflight", "/api/v", "/api/v1", "/api/mcp", "/api/oauth",
+  return ["/api/fixtures", "/api/preflight", "/api/v", "/api/v1", "/api/mcp", "/api/oauth",
     "/api/auth/signin", "/api/auth/callback", "/api/auth/register", "/api/auth/two-step",
     "/api/stripe/payment-intent", "/api/vraelis/checkout", "/api/vraelis/pay/create", "/api/vraelis/billing/portal"
   ].some(root => at(path, root));

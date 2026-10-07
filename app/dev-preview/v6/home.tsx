@@ -5,9 +5,7 @@
 import { useRef } from "react";
 import { useHomeMotion } from "./_system/home-motion";
 import { HomeSequence } from "./_system/home-sequence";
-import { Orbit } from "./_system/orbit";
-import { StrikeStory } from "./_system/strike-story";
-import { STRIKE, STRIKE_CHAPTERS, STRIKE_CAPTION } from "./_content/strike";
+import { SecurityFocus, SecurityDevelopment } from "./_system/security-home";
 import { PhysicalSystems, EngineeringEntry } from "./_system/homepage-sections";
 import { useMobileMotion } from "./_system/mobile-motion";
 
@@ -21,8 +19,8 @@ export default function Home() {
     <div ref={root} className="home-page">
       <HomeSequence>
       <PhysicalSystems />
-      <StrikeStory record={STRIKE} chapters={STRIKE_CHAPTERS} caption={STRIKE_CAPTION} />
-      <Orbit />
+      <SecurityFocus />
+      <SecurityDevelopment />
       <EngineeringEntry />
       </HomeSequence>
     </div>

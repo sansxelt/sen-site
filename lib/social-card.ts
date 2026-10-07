@@ -19,7 +19,7 @@ export const SOCIAL_TITLE = "Vraelis";
  *  It says what the product does and nothing about who it is for (founder, 2026-09-28): a developer, an
  *  agency, a founder and an AI coding agent all read the same card, so it names the function and leaves the
  *  audience open. scripts/email-embeds-verify.ts pins this exact wording and its length. */
-export const SOCIAL_DESCRIPTION = "External software review for physical systems.";
+export const SOCIAL_DESCRIPTION = "Developing AI security for defense, infrastructure and physical systems.";
 
 /** Square wordmark for shared links; distinct from the browser favicon. */
 export const SOCIAL_IMAGE = "https://vraelis.com/social/vraelis-wordmark.png";

@@ -147,8 +147,10 @@
 .v6-mega__panel { transform-origin: 50% 0; background: #0A0A0B; border-bottom: 1px solid rgba(255,255,255,0.12); }
 .v6-mega[data-state="in"] .v6-mega__panel { animation: v6MegaIn 260ms var(--ease) both; }
 .v6-mega[data-state="out"] .v6-mega__panel { animation: v6MegaOut 190ms cubic-bezier(0.4,0,1,1) both; pointer-events: none; }
-@keyframes v6MegaIn  { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
-@keyframes v6MegaOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-6px); } }
+/* Keep the surface opaque while it opens and closes: a whole-panel fade lets the
+   page's headings and form fields show through the navigation text. */
+@keyframes v6MegaIn  { from { clip-path: inset(0 0 100%); transform: translateY(-10px); } to { clip-path: inset(0); transform: none; } }
+@keyframes v6MegaOut { from { clip-path: inset(0); transform: none; } to { clip-path: inset(0 0 100%); transform: translateY(-6px); } }
 /* switching menus: the contents fade in where they stand */
 @keyframes v6MegaSwap { from { opacity: 0; } to { opacity: 1; } }
 .v6-mega__grid { display: grid; grid-template-columns: max-content max-content minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto;

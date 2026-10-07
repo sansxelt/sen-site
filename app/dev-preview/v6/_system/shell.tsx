@@ -48,16 +48,15 @@ const MENUS: Menu[] = [
     label: "Product",
     groups: [
       { h: "Platform", links: [
-        { t: "Overview", d: "Requirements, execution and evidence", href: BASE + "/platform", pic: "/site/photography/robot-cell.jpg" },
-        { t: "Recorded evidence", d: "Review task reports from JSON or MCAP", href: BASE + "/recorded-evidence", pic: "/site/photography/robot-detail.jpg" },
-        { t: "Recording beta", d: "Capabilities, examples and next steps", href: BASE + "/beta", pic: "/site/photography/robot-detail.jpg" },
-        { t: "Integrations", d: "What each connection actually supplies", href: BASE + "/integrations", pic: "/site/photography/network-engineer.jpg" },
-        { t: "AI assistants", d: "Use Vraelis through MCP", href: BASE + "/agents", pic: "/site/photography/electronics-bench.jpg" },
+        { t: "Overview", d: "AI security direction and development status", href: BASE + "/platform", pic: "/site/photography/robot-cell.jpg" },
+        { t: "Zero trust", d: "Explicit identity, scope and approval", href: BASE + "/zero-trust", pic: "/site/photography/server-rack.jpg" },
+        { t: "Recorded evidence", d: "Supporting evidence for security investigation", href: BASE + "/recorded-evidence", pic: "/site/photography/robot-detail.jpg" },
+        { t: "Development status", d: "Private foundations and integration work", href: BASE + "/beta", pic: "/site/photography/robot-detail.jpg" },
+        { t: "Integrations", d: "Integration boundaries and trusted context", href: BASE + "/integrations", pic: "/site/photography/network-engineer.jpg" },
+        { t: "AI workloads", d: "Authority at the tool and action boundary", href: BASE + "/agents", pic: "/site/photography/electronics-bench.jpg" },
       ] },
       { h: "Developers", links: [
-        { t: "Developer tools", d: "APIs, command line and webhooks", href: BASE + "/developers", pic: "/site/photography/hardware-inspection.jpg" },
-        { t: "API", d: "Integrate checks into your software", href: BASE + "/developers/api", pic: "/site/photography/server-rack.jpg" },
-        { t: "CLI", d: "Run a check from your terminal", href: BASE + "/developers/cli", pic: "/site/photography/firmware.jpg" },
+        { t: "Developer tools", d: "Implementation references and integration work", href: BASE + "/developers", pic: "/site/photography/hardware-inspection.jpg" },
       ] },
     ],
   },
@@ -65,7 +64,7 @@ const MENUS: Menu[] = [
     label: "Solutions",
     groups: [
       { h: "Physical systems", links: PRIMARY_SECTORS.map(s => ({ t:s.label,d:s.line,href:s.href,pic:s.slug === "defense" ? EDITORIAL + "aviation.jpg" : s.slug === "fleets" ? "/site/photography/robot-arm.jpg" : s.pics.menu })) },
-      { h: "Organizations", links: [{ t: "Government & institutions", d: "Mission systems and public infrastructure", href: BASE + "/government", pic: "/site/photography/wind-farm.jpg" }, { t: "System integrators", d: "Review tasks across suppliers", href: BASE + "/integrators", pic: "/site/photography/network-engineer.jpg" }, { t: "Enterprise", d: "Governments, institutions and teams", href: BASE + "/enterprise", pic: "/site/photography/power-grid.jpg" }] },
+      { h: "Organizations", links: [{ t: "Government & institutions", d: "Mission systems and public infrastructure", href: BASE + "/government", pic: "/site/photography/wind-farm.jpg" }, { t: "System integrators", d: "Security boundaries across suppliers", href: BASE + "/integrators", pic: "/site/photography/network-engineer.jpg" }, { t: "Enterprise", d: "AI security across engineering teams", href: BASE + "/enterprise", pic: "/site/photography/power-grid.jpg" }] },
     ],
     foot: { t: "Explore solutions", href: SOLUTIONS_HREF },
   },
@@ -73,14 +72,14 @@ const MENUS: Menu[] = [
     label: "Resources",
     groups: [
       { h: "Explore", links: [
-        { t: "The problems", d: "Conflicting state, wrong assets and missing evidence", href: BASE + "/problems", pic: "/site/photography/hardware-inspection.jpg" },
+        { t: "The problems", d: "Unauthorized actions, untrusted inputs and integrity", href: BASE + "/problems", pic: "/site/photography/hardware-inspection.jpg" },
         { t: "Research", d: "Our method and open questions", href: BASE + "/research", pic: "/site/photography/satellite-station.jpg" },
         { t: "Changelog", d: "What shipped and when", href: BASE + "/changelog", pic: "/site/photography/robot-grinding.jpg" },
       ] },
       { h: "Company", links: [
         { t: "Our goals", d: "The company we are building", href: BASE + "/goals", pic: "/site/photography/satellite-station.jpg" },
         { t: "About", d: "Who is building Vraelis", href: BASE + "/company", pic: "/site/photography/hardware-inspection.jpg" },
-        { t: "Contact", d: "Talk to the team", href: BASE + "/contact", pic: "/site/photography/helicopter.jpg" },
+        { t: "Contact", d: "Contact", href: BASE + "/contact", pic: "/site/photography/helicopter.jpg" },
         { t: "Security", d: "How we protect your data", href: BASE + "/security", pic: "/site/photography/server-rack.jpg" },
       ] },
     ],
@@ -653,7 +652,7 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
               Create account for a visitor, or Open Vraelis for someone already signed in. It used to carry
               one button, which left the bar looking unfinished on a wide screen. */}
           <LanguageSwitcher variant="pill" placement="down" className="v6-nav__lang" />
-          {!APP_ACCESS_OPEN ? <Link href={`${BASE}/contact`} className="v6-btn v6-btn--brand">Talk to the team</Link> : <>
+          {!APP_ACCESS_OPEN ? <Link href={`${BASE}/contact`} className="v6-btn v6-btn--brand">Contact</Link> : <>
           {authed ? null : <Link href={SIGNIN} className="v6-nav__signin">Sign in</Link>}
           {authed
             ? <Link href={V6_APP} prefetch={v6ShouldPrefetch(V6_APP) ? undefined : false} className="v6-btn v6-btn--brand">Open Vraelis</Link>
@@ -786,7 +785,7 @@ function MobileNav({ authed, onClose }: { authed: boolean; onClose: (returnFocus
       </div>
       <div className="v6-drawer__foot">
         <LanguageSwitcher placement="up" className="v6-drawer__lang" />
-        {!APP_ACCESS_OPEN ? <Link href={`${BASE}/contact`} className="v6-btn v6-btn--brand" onClick={follow}>Talk to the team</Link> : <>
+        {!APP_ACCESS_OPEN ? <Link href={`${BASE}/contact`} className="v6-btn v6-btn--brand" onClick={follow}>Contact</Link> : <>
         {authed ? null : <Link href={SIGNIN} className="v6-btn v6-btn--ghost" onClick={follow}>Sign in</Link>}
         {authed
           ? <Link href={V6_APP} prefetch={v6ShouldPrefetch(V6_APP) ? undefined : false} className="v6-btn v6-btn--brand" onClick={follow}>Open Vraelis <span className="v6-arw" aria-hidden>→</span></Link>

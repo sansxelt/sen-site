@@ -9,12 +9,12 @@ import { V6_BASE } from "@/lib/v6-routes";
 const BASE = V6_BASE;
 export const metadata: Metadata = v6meta({
   title: "Documentation",
-  description: "Review recorded task reports locally, or run an approved browser workflow on a reachable test panel. Setup, formats, source evidence and developer tools.",
+  description: "Implementation references for private development: recording formats, source evidence and earlier browser workflows. Public product access is closed.",
   path: "/docs",
 });
 
 // A compact starting point: the guide itself explains the next step.
-const START = ["recorded-reports", "getting-started", "ai-assistants"];
+const START = ["recorded-reports"];
 
 // One line each, as a reader would type it. Machine text, never translated.
 const BY_INTERFACE: { name: string; slug: string; line: string }[] = [
@@ -28,7 +28,7 @@ const BY_INTERFACE: { name: string; slug: string; line: string }[] = [
 const ASK: { label: string; href: string; mono?: string }[] = [
   { label: "Email support", href: "mailto:help@vraelis.com", mono: "help@vraelis.com" },
   { label: "Report a security issue", href: `${BASE}/security#report` },
-  { label: "What is built today", href: `${BASE}/platform#current` },
+  { label: "Current product direction", href: `${BASE}/platform` },
 ];
 
 export default function DocsIndex() {
@@ -36,7 +36,7 @@ export default function DocsIndex() {
     <DocShell crumb={["Documentation", "Overview"]}>
       <div className="v6-docs__article v6-docs__article--home v6-prose">
         <h1>Vraelis documentation</h1>
-        <p className="v6-docs__lead">Review supplied task reports in the local beta, or exercise an approved test panel through the hosted browser workflow. Start with the guide for your workflow.</p>
+        <p className="v6-docs__lead">These references document private recording evaluation and earlier browser-workflow implementation. For the current AI-security scope and integration status, read the product direction.</p>
 
         <section className="v6-docs__home" aria-labelledby="start-here">
           <h2 id="start-here">Start here</h2>
@@ -55,7 +55,7 @@ export default function DocsIndex() {
         </section>
 
         <section className="v6-docs__home" aria-labelledby="by-interface">
-          <h2 id="by-interface">By interface</h2>
+          <h2 id="by-interface">Earlier implementation interfaces</h2>
           <div className="v6-docs__ways">
             {BY_INTERFACE.map((w) => (
               <Link key={w.name} href={`${BASE}/docs/${w.slug}`} className="v6-docs__way">

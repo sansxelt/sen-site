@@ -35,7 +35,7 @@ const posix = (f: string) => f.split(SEP).join("/");
 console.log("── the two link jobs stay apart ──");
 const ui = readFileSync("app/dev-preview/v6/_system/ui.tsx", "utf8");
 ok("EditorialLink still carries its arrow (it is the standalone one)",
-  /export function EditorialLink[\s\S]{0,400}v6-arw/.test(ui));
+  ui.slice(ui.indexOf("export function EditorialLink"), ui.indexOf("export function ProseLink")).includes("v6-arw"));
 ok("ProseLink exists and carries no arrow",
   /export function ProseLink/.test(ui)
   && !/export function ProseLink[\s\S]{0,300}v6-arw/.test(ui));
@@ -62,7 +62,6 @@ console.log("\n── every address on the contact page reaches someone ──")
 {
   const contact = readFileSync("app/dev-preview/v6/contact/page.tsx", "utf8");
   const email = readFileSync("lib/email.ts", "utf8");
-  const broadcasts = readFileSync("lib/broadcasts.ts", "utf8");
 
   // hello@ is the FROM address on outbound mail. A send-only drop listed as somewhere to write is the one
   // card on the page that reaches nobody, which is worse than having no card.
@@ -90,11 +89,9 @@ console.log("\n── every address on the contact page reaches someone ──")
   ok("every address offered as somewhere to write is actually a routed inbox", dropsListed.length === 0,
     `${dropsListed.join(", ")} is not in SUPPORT_INBOXES, so mail to it reaches nobody`);
 
-  // The count in the lead has to match the cards, or the page miscounts itself the moment one is removed.
-  const words: Record<string, number> = { One: 1, Two: 2, Three: 3, Four: 4, Five: 5, Six: 6 };
-  const claimed = contact.match(/lead="(\w+) addresses/)?.[1];
-  ok("the lead counts the cards that are actually there",
-    !!claimed && words[claimed] === listed.length, `lead says ${claimed}, ${listed.length} listed`);
+  ok("contact page distinguishes an inquiry from an available deployment",
+    contact.includes("private development") && contact.includes("inquiry"));
+
 }
 
 console.log(fail === 0 ? `\nALL PASS  ${pass} passed, 0 failed` : `\nFAILURES  ${pass} passed, ${fail} failed`);

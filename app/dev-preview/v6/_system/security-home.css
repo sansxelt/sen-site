@@ -1,0 +1,28 @@
+.security-home { padding-block:clamp(48px,6vw,96px); }
+.security-home__controls { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:36px; }
+.security-home__controls>a { padding:28px 0 20px; border-top:1px solid #525252; color:#fafafa; text-decoration:none; min-width:0; transition:border-color 200ms ease; }
+.security-home__controls>a:hover { border-color:#fff; }
+.security-home__controls>a>span { font-size:12px; color:#aaa; }
+.security-home h3 { font-size:clamp(26px,3vw,44px); font-weight:500; letter-spacing:-.03em; margin:24px 0 18px; }
+.security-home p { font-size:17px; line-height:1.65; color:#bdbdbd; max-width:48ch; }
+.security-home__split { display:grid; grid-template-columns:1.1fr 1fr; align-items:center; gap:clamp(40px,6vw,96px); }
+.security-home__photo { aspect-ratio:1.2; overflow:hidden; background:#191919; }
+.security-home__photo img { display:block; width:100%; height:100%; object-fit:cover; }
+.security-home--development h2 { font-family:var(--display); font-size:clamp(36px,4vw,64px); font-weight:var(--display-w); letter-spacing:-.04em; line-height:1.1; margin:0 0 24px; }
+.security-home--development a { display:inline-block; margin-top:18px; padding-block:10px; color:#fff; text-underline-offset:6px; }
+.security-home .home-eyebrow { font-size:13px; margin-bottom:20px; }
+@media(min-width:901px) and (min-height:620px) and (prefers-reduced-motion:no-preference) {
+ .home-sequence .security-home { padding-block:24px; }
+ .home-sequence .security-home .home-section-head { margin-bottom:36px; }
+ .home-sequence .security-home h2 { font-size:clamp(34px,min(4.5vw,7svh),64px); }
+ .home-sequence .security-home__photo { aspect-ratio:auto; height:min(480px,calc(var(--chapter-height) * .72)); }
+ .home-sequence .security-home__controls p { font-size:16px; }
+}
+@media(max-width:760px) {
+ .security-home__controls { grid-template-columns:1fr; gap:20px; }
+ .security-home__controls>a { padding-block:20px; }
+ .security-home h3 { margin:14px 0 12px; }
+ .security-home__split { grid-template-columns:1fr; gap:32px; }
+ .security-home__photo { aspect-ratio:1.35; }
+}
+@media(prefers-reduced-motion:reduce) { .security-home__controls>a { transition:none; } }

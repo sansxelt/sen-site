@@ -28,7 +28,7 @@ async function main() {
     }
   }
   assert.equal(proxy(new NextRequest("http://app.localhost:3100/", { headers: { host: "app.localhost:3100" } })).headers.get("location"), "http://localhost:3100/beta");
-  const apis = ["/api/preflight/apps/x/runs", "/api/v/checkout", "/api/v/keys", "/api/v/workspace", "/api/v1/verifications",
+  const apis = ["/api/fixtures/strike", "/api/fixtures/drone", "/api/preflight/apps/x/runs", "/api/v/checkout", "/api/v/keys", "/api/v/workspace", "/api/v1/verifications",
     "/api/mcp", "/api/oauth/token", "/api/auth/register", "/api/auth/callback/google", "/api/auth/callback/credentials",
     "/api/v1/verifications/x.json", "/api/stripe/payment-intent", "/api/vraelis/checkout"];
   for (const path of apis) {

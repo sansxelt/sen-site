@@ -76,7 +76,7 @@ export function CTA({ href = OPEN_APP, children, brand = false, ghost = false, l
   const cls = ["v6-btn", brand ? "v6-btn--brand" : "", ghost ? "v6-btn--ghost" : "", lg ? "v6-btn--lg" : sm ? "v6-btn--sm" : ""].filter(Boolean).join(" ");
   return (
     <Link href={destination} prefetch={v6ShouldPrefetch(destination) ? undefined : false} className={cls}>
-      <ButtonLabel>{isProductEntryHref(href) ? "Talk to the team" : children}</ButtonLabel>{!ghost && <span className="v6-arw" aria-hidden><span>→</span><span>→</span></span>}
+      <ButtonLabel>{isProductEntryHref(href) ? "Contact" : children}</ButtonLabel>{!ghost && <span className="v6-arw" aria-hidden><span>→</span><span>→</span></span>}
     </Link>
   );
 }
@@ -86,7 +86,7 @@ export function CTA({ href = OPEN_APP, children, brand = false, ghost = false, l
 export function EditorialLink({ href, children }: { href: string; children: ReactNode }) {
   const destination = useMarketingHref(href);
   // The same prefetch guard as CTA: /app and /checkout are another origin in production (v6ShouldPrefetch).
-  return <Link href={destination} prefetch={v6ShouldPrefetch(destination) ? undefined : false} className="v6-elink"><span className="v6-elink__t"><ButtonLabel>{isProductEntryHref(href) ? "Talk to the team" : children}</ButtonLabel></span><span className="v6-arw" aria-hidden>→</span></Link>;
+  return <Link href={destination} prefetch={v6ShouldPrefetch(destination) ? undefined : false} className="v6-elink"><span className="v6-elink__t"><ButtonLabel>{isProductEntryHref(href) ? "Contact" : children}</ButtonLabel></span><span className="v6-arw" aria-hidden>→</span></Link>;
 }
 
 // A link INSIDE a sentence. Same underline, no arrow, and it inherits the surrounding type rather than
@@ -99,7 +99,7 @@ export function EditorialLink({ href, children }: { href: string; children: Reac
 // exactly why people reached for the CTA one.
 export function ProseLink({ href, children }: { href: string; children: ReactNode }) {
   const destination = useMarketingHref(href);
-  return <Link href={destination} prefetch={v6ShouldPrefetch(destination) ? undefined : false} className="v6-plink">{isProductEntryHref(href) ? "talk to the team" : children}</Link>;
+  return <Link href={destination} prefetch={v6ShouldPrefetch(destination) ? undefined : false} className="v6-plink">{isProductEntryHref(href) ? "contact us" : children}</Link>;
 }
 
 // A state as a word (plan A5): Plex Mono, no pill, no border and no dot. go and wait read in ink-3; stop

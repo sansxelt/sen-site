@@ -13,11 +13,9 @@
 // map to three fixed sentences, client validation comes first, and success replaces the form with one sentence
 // that promises nothing about a confirmation email, because that email is best effort (once per mailbox per hour).
 //
-// TRANSLATION. The topic is a radio group, not a <select>: the translator skips select elements (plan 0.6). Every
-// sentence the crawl cannot reach (validation, sending, success, the three failures, the routing line) is rendered
-// once in a hidden seed element, so the translation pass collects it.
-import { ButtonLabel } from "@/components/button-label";
+// Topics use stable English keys for routing. Dynamic status/error sentences are seeded for translation.
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
+import { V6_BASE } from "@/lib/v6-routes";
 import { sectorBySlug } from "../_content/sectors";
 
 type TopicKey = "support" | "sales" | "defense" | "fleets" | "public-sector" | "enterprise" | "partnerships" | "privacy";
@@ -30,13 +28,13 @@ const sectorLabel = (slug: "fleets" | "public-sector" | "enterprise") => sectorB
 
 /** The topics in display order, keyed by the ?topic= value each one answers to. */
 const TOPICS: readonly Topic[] = [
-  { key: "support", label: "Support", to: "help@vraelis.com" },
-  { key: "sales", label: "Sales", to: "sales@vraelis.com" },
+  { key: "support", label: "General inquiry", to: "help@vraelis.com" },
+  { key: "sales", label: "AI security", to: "sales@vraelis.com" },
   { key: "defense", label: "Defense and national security", to: "sales@vraelis.com" },
   { key: "fleets", label: sectorLabel("fleets"), to: "sales@vraelis.com" },
   { key: "public-sector", label: sectorLabel("public-sector"), to: "sales@vraelis.com" },
   { key: "enterprise", label: sectorLabel("enterprise"), to: "sales@vraelis.com" },
-  { key: "partnerships", label: "Partnerships", to: "sales@vraelis.com" },
+  { key: "partnerships", label: "Technical collaboration", to: "sales@vraelis.com" },
   { key: "privacy", label: "Privacy", to: "privacy@vraelis.com" },
 ];
 
@@ -45,7 +43,7 @@ const MSG = {
   topic: "Choose a topic.",
   email: "Enter a valid email address.",
   message: "Write a message of at least 10 characters.",
-  send: "Send message",
+  send: "Send inquiry",
   sending: "Sending",
   sent: "Sent. A person at Vraelis reads every message.",
   bad: "Check the fields above and try again.",
@@ -63,12 +61,12 @@ type Errors = Partial<Record<Field, string>>;
 
 export function ContactForm({ topicParam }: { topicParam?: string }) {
   const id = useId();
-  const [topic, setTopic] = useState<TopicKey | null>(() => TOPICS.find((t) => t.key === topicParam)?.key ?? null);
+  const [topic, setTopic] = useState<TopicKey | null>(() => TOPICS.find((t) => t.key === ({ infrastructure: "public-sector", robotics: "fleets", government: "enterprise", beta: "sales" } as Record<string, string>)[topicParam ?? ""] || t.key === topicParam)?.key ?? null);
   const [errors, setErrors] = useState<Errors>({});
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
-  const firstTopic = useRef<HTMLInputElement>(null);
+  const firstTopic = useRef<HTMLSelectElement>(null);
   const email = useRef<HTMLInputElement>(null);
   const message = useRef<HTMLTextAreaElement>(null);
   const done = useRef<HTMLDivElement>(null);
@@ -146,34 +144,16 @@ export function ContactForm({ topicParam }: { topicParam?: string }) {
 
   return (
     <form className="ct-form" noValidate onSubmit={onSubmit} aria-busy={sending || undefined}>
-      <fieldset className="ct-topics" aria-describedby={err("topic")}>
-        <legend className="ct-label">Topic</legend>
-        <div className="ct-topics__grid">
-          {TOPICS.map((t, i) => (
-            <label key={t.key} className="ct-topic" data-on={topic === t.key ? "" : undefined}>
-              <input
-                ref={i === 0 ? firstTopic : undefined}
-                className="ct-vh"
-                type="radio"
-                name="topic"
-                value={t.key}
-                // Announces the group as required. The form is noValidate, so the browser never blocks the send:
-                // the form's own check says "Choose a topic." instead.
-                required
-                checked={topic === t.key}
-                onChange={() => { setTopic(t.key); clear("topic"); }}
-                aria-invalid={errors.topic ? true : undefined}
-              />
-              <span>{t.label}</span>
-            </label>
-          ))}
-        </div>
-        {/* Where the message goes. The line always holds its height, so choosing a topic moves nothing. */}
-        <p className="ct-route" aria-live="polite">
-          {chosen ? <>{MSG.goesTo} <span className="ct-route__to" data-no-translate>{chosen.to}</span></> : null}
-        </p>
+      <div className="ct-field">
+        <label className="ct-label" htmlFor={`${id}-topic`}>What would you like to discuss?</label>
+        <select ref={firstTopic} className="ct-input ct-select" id={`${id}-topic`} name="topic" value={topic ?? ""} required
+          aria-invalid={errors.topic ? true : undefined} aria-describedby={err("topic")}
+          onChange={e => { setTopic(e.target.value as TopicKey); clear("topic"); }}>
+          <option value="" disabled>Select a topic</option>
+          {TOPICS.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
+        </select>
         {errors.topic ? <p className="ct-err" id={err("topic")}>{errors.topic}</p> : null}
-      </fieldset>
+      </div>
 
       <div className="ct-pair">
         <div className="ct-field">
@@ -199,18 +179,18 @@ export function ContactForm({ topicParam }: { topicParam?: string }) {
       </div>
 
       <div className="ct-field">
-        <label className="ct-label" htmlFor={`${id}-company`}>Company <span className="ct-opt">Optional</span></label>
+        <label className="ct-label" htmlFor={`${id}-company`}>Organization <span className="ct-opt">Optional</span></label>
         <input className="ct-input" id={`${id}-company`} name="company" type="text" autoComplete="organization" />
       </div>
 
       <div className="ct-field">
-        <label className="ct-label" htmlFor={`${id}-message`}>Message</label>
+        <label className="ct-label" htmlFor={`${id}-message`}>Your security problem</label>
         <textarea
           ref={message}
           className="ct-input ct-input--area"
           id={`${id}-message`}
           name="message"
-          rows={6}
+          rows={5}
           required
           minLength={10}
           aria-invalid={errors.message ? true : undefined}
@@ -230,10 +210,10 @@ export function ContactForm({ topicParam }: { topicParam?: string }) {
       {/* aria-disabled, not disabled, while sending: a disabled button loses focus to the page, and when a send
           fails a keyboard or screen-reader user would be dropped out of the form. onSubmit ignores a second press
           while one is in flight. */}
+      <p className="ct-consent">By submitting, you agree to the <a href={`${V6_BASE}/privacy`}>privacy policy</a>. Please leave out sensitive operational data and credentials.</p>
       <div className="ct-actions">
         <button type="submit" className="v6-btn v6-btn--brand v6-btn--lg ct-submit" aria-disabled={sending || undefined}>
-          <ButtonLabel>{sending ? MSG.sending : MSG.send}</ButtonLabel>
-          <span className="v6-arw" aria-hidden><span>→</span><span>→</span></span>
+          {sending ? MSG.sending : MSG.send}
         </button>
       </div>
       {failure ? <p className="ct-err ct-err--form" role="alert">{failure}</p> : null}

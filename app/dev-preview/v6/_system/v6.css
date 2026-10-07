@@ -55,15 +55,9 @@
   /* type */
   --sans: var(--font-brand-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   --mono: var(--sans);
-  /* ── ONE FAMILY, NO SERIF ──────────────────────────────────────────────────────────────────────────
-     Until 2026-09-30 the headlines were Instrument Serif over a Geist interface. The founder read that pair
-     as "made by AI", and it is: Geist for the UI plus Instrument Serif for the headline is the default recipe
-     of a generated landing page in 2026. A company that sells trust in what it checks cannot look like a
-     template, so display type is now the same IBM Plex Sans as the interface, set at --display-w with only
-     slight negative tracking. Hierarchy comes from size and weight, not from a second face. Labels, metadata and technical references use the same sans face. The rules below still read var(--display) so the tier stays
-     addressable in one place. */
-  --display: var(--font-brand-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-  --display-w: 500;
+  /* Geometric, regular-weight display type; Plex Sans remains the reading and UI face. */
+  --display: var(--font-brand-display), var(--sans);
+  --display-w: 400;
 
   /* layout + motion */
   --gutter: clamp(20px, 4vw, 64px);
@@ -631,3 +625,6 @@
     --hero-inset:clamp(28px,min(4.45vw,7.1svh),64px);
   }
 }
+
+/* Share the display face across page titles and section headings. */
+.v6 h1, .v6 h2 { font-family:var(--display); font-weight:var(--display-w); }

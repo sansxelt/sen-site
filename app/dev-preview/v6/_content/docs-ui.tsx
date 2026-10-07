@@ -23,7 +23,7 @@ function DocLink({ href, children }: { href: string; children: React.ReactNode }
   const source = href.startsWith("/") ? `${BASE}${href}` : href;
   const destination = useMarketingHref(source);
   if (!destination.startsWith("/")) return <a href={destination}>{children}</a>;
-  return <Link href={destination} prefetch={docPrefetch(destination)}>{isProductEntryHref(source) ? "talk to the team" : children}</Link>;
+  return <Link href={destination} prefetch={docPrefetch(destination)}>{isProductEntryHref(source) ? "contact us" : children}</Link>;
 }
 
 /** Docs text with its inline markup (`code` and [label](href), see _content/docs.ts). Plain text stays one
@@ -58,7 +58,7 @@ export function Blocks({ blocks }: { blocks: Block[] }) {
           case "note": return <div className="v6-note" key={i}><b>{b.label}</b><Rich text={b.text} /></div>;
           case "code": return <DocCode key={i} label={b.label} code={b.text} />;
           case "table": return <DocTable key={i} block={b} />;
-          case "figure": return <DocFigure key={i} block={b} eager={i === eagerFigure} />;
+          case "figure": return APP_ACCESS_OPEN ? <DocFigure key={i} block={b} eager={i === eagerFigure} /> : null;
           case "surfaces": return <DocSurfaces key={i} />;
           default: return null;
         }
@@ -355,7 +355,7 @@ export function DocShell({ activeSlug = "", toc = [], crumb, markdown, children 
         ) : <span className="v6-dh__crumb" />}
         <div className="v6-dh__actions">
           {markdown ? <CopyMarkdown markdown={markdown} /> : null}
-          {!APP_ACCESS_OPEN ? <Link href={`${BASE}/contact`} className="v6-dh__open">Talk to the team</Link> : <>
+          {!APP_ACCESS_OPEN ? <Link href={`${BASE}/contact`} className="v6-dh__open">Contact</Link> : <>
             {!authed ? <Link href={V6_SIGNIN} className="v6-dh__signin">Sign in</Link> : null}
             <Link href={authed ? appEntry : `${v6SignInPath()}&mode=signup`} prefetch={authed ? docPrefetch(appEntry) : undefined} className="v6-dh__open">{authed ? "Open Vraelis" : "Create account"}</Link>
           </>}
@@ -412,6 +412,10 @@ export function DocShell({ activeSlug = "", toc = [], crumb, markdown, children 
 
         {/* inert while the drawer covers it: nothing behind the drawer can take focus or be read out. */}
         <div className="v6-docs__main" inert={drawer}>
+          {!APP_ACCESS_OPEN ? <aside className="v6-docs__availability" aria-label="Documentation availability">
+            <strong>Implementation references</strong>
+            <p>The product is in private development. Earlier browser-workflow examples describe previous implementation work. Console access, hosted APIs and execution services are closed.</p>
+          </aside> : null}
           {children}
           <footer className="v6-docs__foot">
             <span>© 2026 Vraelis</span>

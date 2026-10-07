@@ -10,19 +10,19 @@
   max-width: calc(var(--max) - 2 * var(--gutter)); margin: 0 auto; border-radius: 28px; padding: clamp(40px, 7vw, 120px) clamp(28px, 6vw, 110px);
   background: radial-gradient(120% 140% at 0% 0%, #17171A 0%, #0F0F11 60%); border: 1px solid rgba(255,255,255,0.08);
 }
-.v6-stm__t { margin: 0; max-width: 24ch; font-family: var(--display); font-weight: 500; font-size: clamp(2rem, 4.4vw, 4.4rem); line-height: 1.08; letter-spacing: -0.035em; }
-.v6-stm__t span { color: #3A3B40; transition: color 280ms var(--ease); }
-.v6-stm__t span[data-on="true"] { color: #FAFAFA; }
+.v6-stm__t { margin: 0; max-width: 24ch; font-family: var(--display); font-weight: var(--display-w); font-size: clamp(2rem, 4.4vw, 4.4rem); line-height: 1.08; letter-spacing: -0.035em; }
+.v6-stm__t span { font-family:var(--display); color: #3A3B40; transition: color 280ms var(--ease); }
+.v6-stm__t span[data-on="true"] { font-family:var(--display); color: #FAFAFA; }
 /* a whole word in a language that does not space its words (home-bands.tsx, data-keep) */
-.v6-stm__t span[data-keep] { white-space: nowrap; }
+.v6-stm__t span[data-keep] { font-family:var(--display); white-space: nowrap; }
 .v6-stm__src { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.v6-stm__t { position: relative; }
+.v6-stm__t { font-family:var(--display); position: relative; }
 
 /* ── the agents band ── */
 .v6-ag { background: var(--paper); padding: 0; }
 .v6-ag__in { max-width: var(--max); margin: 0 auto; padding: clamp(48px, 5vw, 72px) var(--gutter); display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(36px, 6vw, 110px); align-items: center; }
 /* The section-head size (plan C "/": --t-h2, 40 at 1440, 28 on a phone). */
-.v6-ag__h { margin: 0; font-family: var(--display); font-weight: 500; font-size: var(--t-h2); line-height: 1.12; letter-spacing: -0.016em; color: var(--ink); max-width: 22ch; text-wrap: balance; }
+.v6-ag__h { margin: 0; font-family: var(--display); font-weight: var(--display-w); font-size: var(--t-h2); line-height: 1.12; letter-spacing: -0.016em; color: var(--ink); max-width: 22ch; text-wrap: balance; }
 .v6-ag__d { margin: 16px 0 0; max-width: 44ch; font-size: var(--t-lead-s); line-height: 1.55; color: var(--ink-2); }
 .v6-ag__cta { margin-top: 32px; }
 .v6-ag__term { border-radius: 16px; overflow: hidden; background: #0E0E10; border: 1px solid rgba(255,255,255,0.10);
@@ -58,7 +58,7 @@
 .v6-pf { background: var(--paper); padding: clamp(72px, 9vw, 140px) 0 clamp(40px, 5vw, 72px); }
 .v6-pf__in { max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); }
 .v6-pf__head { display: flex; align-items: baseline; justify-content: space-between; gap: 24px; flex-wrap: wrap; margin-bottom: clamp(28px, 3.5vw, 48px); }
-.v6-pf__h { margin: 0; font-family: var(--display); font-weight: 500; font-size: clamp(2rem, 3.6vw, 3.4rem); line-height: 1.06; letter-spacing: -0.033em; color: var(--ink); }
+.v6-pf__h { margin: 0; font-family: var(--display); font-weight: var(--display-w); font-size: clamp(2rem, 3.6vw, 3.4rem); line-height: 1.06; letter-spacing: -0.033em; color: var(--ink); }
 .v6-pf__d { margin: 0; max-width: 40ch; font-size: clamp(1rem, 1.2vw, 1.1rem); line-height: 1.55; color: var(--ink-3); }
 
 /* ── the changelog row (ChangelogRow), after the one near the bottom of cursor.com: a quiet heading, four dated
@@ -66,7 +66,7 @@
    in mono 12 ink-4, the title 15/500; hover changes the border) ── */
 .v6-cl { background: var(--paper); padding: 0; }
 .v6-cl__in { max-width: calc(var(--max) - 2 * var(--gutter)); margin: 0 auto; padding: clamp(40px, 4.4vw, 64px) var(--gutter) 0; box-sizing: content-box; }
-.v6-cl__h { margin: 0 0 20px; font-family: var(--display); font-weight: 500; font-size: var(--t-h3); line-height: 1.2; letter-spacing: -0.012em; color: var(--ink); }
+.v6-cl__h { margin: 0 0 20px; font-family: var(--display); font-weight: var(--display-w); font-size: var(--t-h3); line-height: 1.2; letter-spacing: -0.012em; color: var(--ink); }
 .v6-cl__list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .v6-cl__item { display: grid; gap: 10px; align-content: start; height: 100%; padding: 20px 20px 22px; border-radius: var(--r-card, 16px); background: var(--surface);
   border: 1px solid var(--line-soft); text-decoration: none; transition: border-color var(--dur-1, 160ms) var(--ease-out); }

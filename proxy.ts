@@ -51,6 +51,7 @@ export const V6_EXACT: Record<string, string> = {
   "/partnerships/reddit": "/dev-preview/v6/partnerships/reddit",
   "/partnerships/bytedance": "/dev-preview/v6/partnerships/bytedance",
   "/platform": "/dev-preview/v6/platform",
+  "/zero-trust": "/dev-preview/v6/zero-trust",
   "/infrastructure": "/dev-preview/v6/infrastructure",
   "/method": "/dev-preview/v6/method",
   "/agents": "/dev-preview/v6/agents",

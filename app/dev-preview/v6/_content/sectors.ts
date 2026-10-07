@@ -114,7 +114,7 @@ export const SECTORS: readonly Sector[] = [
     short: "Defense",
     group: "Sectors",
     href: `${V6_BASE}/solutions/defense`,
-    line: "Mission consoles, checked on a simulation or staging build.",
+    line: "AI security for mission software and operational systems.",
     // Scene: the Larkspur demo fixture in broken mode after Confirm target on T-1 (a fresh capture, credited
     // "Captured <date>, not from the run" on the page).
     pics: { hero: photograph(SECTOR_PHOTOGRAPHS["defense"]).src, heroPortrait: photograph(SECTOR_PHOTOGRAPHS["defense"]).src, ...listPics("defense") },
@@ -126,7 +126,7 @@ export const SECTORS: readonly Sector[] = [
     short: "Robotics",
     group: "Sectors",
     href: `${V6_BASE}/solutions/fleets`,
-    line: "Task-state evidence and control software for robots and fleets.",
+    line: "AI access, model integrity and evidence for robotics.",
     // Scene: our own render, the drone over the field at sunset (app/film/orbit).
     pics: { hero: photograph(SECTOR_PHOTOGRAPHS["fleets"]).src, heroPortrait: photograph(SECTOR_PHOTOGRAPHS["fleets"]).src, ...listPics("fleets") },
     priority: "P0",
@@ -148,7 +148,7 @@ export const SECTORS: readonly Sector[] = [
     short: "Infrastructure",
     group: "Sectors",
     href: `${V6_BASE}/infrastructure`,
-    line: "Verification for software behind utilities, transport and industrial operations.",
+    line: "AI security for utilities, transport and industrial operations.",
     // Coded panel: Notewell journey 2's recorded steps (_content/demos.ts), drawn by the page.
     pics: { hero: photograph(SECTOR_PHOTOGRAPHS["public-sector"]).src, heroPortrait: photograph(SECTOR_PHOTOGRAPHS["public-sector"]).src, ...listPics("public-sector") },
     priority: "P2",
@@ -192,7 +192,7 @@ export const SECTORS: readonly Sector[] = [
     short: "Enterprise",
     group: "Teams",
     href: `${V6_BASE}/enterprise`,
-    line: "Access controls, audit exports and capacity for institutions and teams.",
+    line: "Security requirements for AI-enabled operational systems.",
     // Panel: a console capture of the organization single sign-on settings (QA account).
     pics: { hero: photograph(SECTOR_PHOTOGRAPHS["enterprise"]).src, heroPortrait: photograph(SECTOR_PHOTOGRAPHS["enterprise"]).src, ...listPics("enterprise") },
     priority: "existing",

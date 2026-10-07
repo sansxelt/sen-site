@@ -1,5 +1,50 @@
 # Product
 
+## Current direction, October 6, 2026
+
+Vraelis is being developed for cybersecurity of AI-enabled defense,
+infrastructure and physical systems. Build on the existing three application
+areas and evidence workflow. Ordinary websites and application QA are no longer
+the company definition. The app and console remain closed while the product is
+developed privately.
+
+Zero trust is a security architecture within this direction: independently
+established workload identity, exact least-privilege access, fresh posture,
+bounded permissions, controlled changes and traceable decisions. Neither being
+inside a network nor an AI model's confidence grants authority. Useful evidence
+review remains part of the product; it is not its entire cybersecurity scope.
+
+The user-supplied market/problem analysis and recurrent-system architecture are
+research inputs, not an approved shipped feature list. Preserve the broader
+problem map: adversarial inputs and prompt injection, model/data/software
+integrity, unauthorized access or actions, behavioral monitoring and incident
+investigation. Evaluate each separately. Performance drift is not automatically
+a cyberattack, and explainability is not automatically a security control.
+Numerical market estimates and regulatory assertions in those research notes
+require primary-source validation before public use.
+
+The first new implemented foundation is `lib/ai-security/policy.ts`, a private
+policy-decision core. It checks supplied trusted-adapter context against exact
+principal, session, environment, resource, action and model bindings. Missing,
+expired, revoked, ambiguous or unapproved inputs deny access. Export,
+deployment and device-command rules require a separate human approval bound to
+the full proposal and policy digests. These decisions are not live enforcement:
+identity/attestation adapters, atomic approval consumption and a non-bypassable
+execution boundary have not been integrated. The synthetic regression suite is
+`scripts/ai-security-policy-verify.ts`.
+
+Existing recording evaluation and browser-run evidence can support investigation
+and regression checks within their documented scope. They do not establish
+authenticated model provenance, native sensor attack detection or physical
+safety. Build real integrations and reusable workflows before expanding public
+capability claims. Do not advertise government deployment approvals, customers,
+contracts or certifications without evidence.
+
+Use the architecture and implementation boundaries in
+[the AI security foundation](docs/ai-security-foundation.md). The October 4
+direction and the older browser-product sections below are historical context;
+this section controls when they conflict.
+
 ## Current direction, October 4, 2026
 
 Vraelis focuses on software behind physical systems in Defense, Infrastructure
@@ -27,6 +72,21 @@ social description from older sections below.
 The competitive gap remains a hypothesis, not proof of an empty market. See
 [the market thesis](docs/strategy/market-and-company-thesis-2026-10-04.md) and
 [the website/workflow review](docs/strategy/website-and-workflow-review-2026-10-04.md).
+
+The [mission-assurance claim review](docs/strategy/mission-assurance-claim-review-2026-10-05.md)
+assesses the broader military-AI proposal. Deterministic report evaluation is not
+a guarantee of physical safety or legal compliance. The next product milestone
+is a repeatable customer-recording workflow benchmarked against the customer's
+existing tools, before selecting a live adapter or expanding into runtime control.
+
+The [buyer and recording review](docs/strategy/robotics-buyer-and-capture-review-2026-10-05.md)
+adds Roboto as a direct comparator for deterministic analysis and automated QA.
+The next native adapter must qualify capture contents, source origin, task IDs and
+clock assumptions before claiming a task outcome. ROS action capture can require
+explicit introspection; MCAP decoding alone is insufficient.
+The [pilot protocol](docs/strategy/robotics-pilot-protocol-2026-10-05.md) defines
+the proposed incumbent comparison and repeat-use decision gates. These are research
+decisions, not shipped native ROS support or validated customer demand.
 
 <!-- impeccable:product-schema 1 -->
 
