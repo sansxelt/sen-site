@@ -41,3 +41,12 @@
 @media(max-width:900px) { .ct__grid { grid-template-columns:1fr; gap:56px; } .ct__intro { margin-bottom:36px; } .ct__aside { max-width:700px; } }
 @media(max-width:480px) { .ct-pair { grid-template-columns:1fr; gap:22px; } .ct__context>div { grid-template-columns:1fr; gap:8px; } .ct__intro>p:last-child { font-size:16px; } .ct-submit { width:100%; } }
 @media(prefers-reduced-motion:reduce) { .v6 .ct-input { transition:none; } }
+
+.ct-context-fields { border:0; padding:0; margin:0; min-width:0; display:flex; flex-direction:column; gap:20px; }
+.ct-context-fields legend { padding:0; margin-bottom:18px; color:var(--ink); }
+.ct-help { margin:0; color:var(--ink-3); font-size:12px; line-height:1.7; }
+.ct-ack { display:flex; align-items:flex-start; gap:12px; color:var(--ink-2); font-size:13px; line-height:1.6; cursor:pointer; }
+.ct-ack input { flex:none; width:18px; height:18px; margin:2px 0 0; accent-color:#fafafa; }
+.ct-ack input:focus-visible { outline:2px solid white; outline-offset:4px; }
+.ct-consent a { text-decoration:underline; }
+.ct__report:is(:hover,:focus-visible) { text-decoration:underline; }

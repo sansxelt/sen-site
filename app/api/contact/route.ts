@@ -1,4 +1,5 @@
 ﻿import { NextResponse } from "next/server";
+import { formatContactIntake, validateContactIntake } from "@/lib/contact-intake";
 import { isSafeRecipient } from "@/lib/email-address";
 import {
   resolveSupportInbox,
@@ -10,6 +11,7 @@ import { canonicalizeEmail } from "../../../lib/user-credentials";
 import type { NextRequest } from "next/server";
 
 type ContactPayload = {
+  intake?: unknown;
   email?: string;
   name?: string;
   subject?: string;
@@ -46,6 +48,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+  if (["email", "name", "subject", "message", "to", "channel", "website"].some(key => key in payload && typeof payload[key as keyof ContactPayload] !== "string")) return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+
   // ── Honeypot, if filled, silently drop (bot) ─────────────────────────────
   if (payload.website) {
     return NextResponse.json({ ok: true });
@@ -77,17 +82,23 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // New structured inquiries are validated here as well as in the form. Legacy contact clients remain supported.
+  const intake = payload.intake === undefined ? null : validateContactIntake(payload.intake);
+  if (intake && !intake.ok) return NextResponse.json({ error: intake.error }, { status: 400 });
+  const details = intake?.ok ? intake.value : null;
+  const routedMessage = details ? `${message}\n\n---\n${formatContactIntake(details)}` : message;
+
   // Validate + normalize the destination inbox (help@/sales@/privacy@ only).
-  const to = resolveSupportInbox(payload.to);
+  const to = details?.audience === "privacy" ? "privacy@vraelis.com" : resolveSupportInbox(payload.to);
   // Channel label, free-form from the client, we just strip to 64 chars.
-  const channel = (payload.channel ?? "").trim().slice(0, 64) || null;
+  const channel = details?.audience === "privacy" ? "Privacy" : (payload.channel ?? "").trim().slice(0, 64) || null;
 
   try {
     // sendSupportEmail is the one that actually ships to the routed inbox;
     // we await it and surface real failures.  The confirmation email to
     // the user is best-effort, if it fails (e.g. their inbox bounces),
     // we don't want to lose the actual support request.
-    await sendSupportEmail({ email, name, subject, message, to, channel });
+    await sendSupportEmail({ email, name, subject, message: routedMessage, to, channel });
     // The confirmation goes to an address the CALLER named — the relay surface. Its own per-mailbox
     // budget, canonicalised so gmail dot/+tag aliases share one bucket, and allowStrict so a limiter
     // outage denies the send rather than reopening the relay. Suppression is silent: the support email

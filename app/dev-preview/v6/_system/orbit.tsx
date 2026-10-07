@@ -5,32 +5,27 @@ import Image from "next/image";
 import Link from "next/link";
 import { useLayoutEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { EditorialLink } from "./ui";
-import { HEADLINE } from "./positioning";
 import { useLocale } from "@/lib/i18n/client";
 import { V6_BASE } from "@/lib/v6-routes";
-import { orbitRoute, type OrbitWord } from "../_content/sectors";
 import "./orbit.css";
 import { photograph, type PhotographKey } from "../_content/photography";
 import { MediaReadyFallback, useMediaReady } from "./media-ready";
 
 // pos: where the 4:3 frame crops a photograph cut to another shape (CSS object-position), when the middle is wrong.
 type Photo = { readonly src: string; readonly alt: string; readonly pos?: string };
-type Tile = { word: OrbitWord; label: string; phrase: string; photos: readonly Photo[] };
+type Tile = { label: string; phrase: string; href: string; photos: readonly Photo[] };
 
 const pic = (key: PhotographKey, pos?: string): Photo => { const p = photograph(key); return { src: p.src, alt: p.alt, pos }; };
 
-// Physical-system software is the focus; each subject links to its existing coverage.
+// Application photography, not a diagram of implemented capabilities.
 export const ORBIT: readonly Tile[] = [
-  { word: "military", label: "Mission systems", phrase: "mission systems", photos: [pic("satelliteStation", "50% 35%")] },
-  { word: "drones", label: "Drones & aviation", phrase: "flight controls", photos: [pic("helicopter")] },
-  { word: "robotics", label: "Robotics", phrase: "robot controls", photos: [pic("robotDetail")] },
-  { word: "logistics", label: "Transport & fleets", phrase: "fleet controls", photos: [pic("robotfleet", "50% 35%")] },
-  { word: "government", label: "Infrastructure", phrase: "infrastructure controls", photos: [pic("windFarm")] },
+  { label: "Defense", phrase: "defense systems", href: `${V6_BASE}/solutions/defense`, photos: [pic("helicopter")] },
+  { label: "Government and institutions", phrase: "mission systems", href: `${V6_BASE}/government`, photos: [pic("satelliteStation", "50% 35%")] },
+  { label: "Robotics", phrase: "robotics", href: `${V6_BASE}/solutions/fleets`, photos: [pic("robotDetail")] },
+  { label: "System integrators", phrase: "connected systems", href: `${V6_BASE}/integrators`, photos: [pic("networkEngineer")] },
+  { label: "Infrastructure", phrase: "infrastructure", href: `${V6_BASE}/infrastructure`, photos: [pic("windFarm")] },
 ];
 
-
-const ROUTE = ORBIT.map(t => orbitRoute(t.word) ?? { href: `${V6_BASE}/platform#coverage`, to: "What it can check today" });
 const RING = "(min-width: 1024px) and (hover: hover) and (pointer: fine)";
 
 function TopicSwap({ text }: { text: string }) {
@@ -139,26 +134,29 @@ export function Orbit() {
     return () => { cancelAnimationFrame(raf); resize.disconnect(); observer.disconnect(); media.removeEventListener("change", measure); reduced.removeEventListener("change", start); document.removeEventListener("visibilitychange", start); wake.current = () => {}; };
   }, []);
 
+  const topic = selected === null ? "physical systems" : ORBIT[selected].phrase;
+  const heading = `AI security for ${topic}.`;
+
   return <section ref={root} className="v6-or__field v6-dark" aria-labelledby="v6-or-h" data-nav-dark data-nav-theme="dark" data-media-ready="pending">
     <MediaReadyFallback/>
     <div className="v6-or__copy" data-media-copy="">
-      {locale === "en" ? <h2 id="v6-or-h" className="v6-or__h" aria-label={selected === null ? HEADLINE : `Know your ${ORBIT[selected].phrase} work.`} data-no-translate>
-        <span>Know your </span><TopicSwap text={selected === null ? "systems" : ORBIT[selected].phrase} /><span> work.</span>
-      </h2> : <h2 id="v6-or-h" className="v6-or__h v6-or__h--translated" aria-label={selected === null ? HEADLINE : `Know your ${ORBIT[selected].phrase} work.`}>
-        <TopicSwap text={selected === null ? HEADLINE : `Know your ${ORBIT[selected].phrase} work.`} />
+      {locale === "en" ? <h2 id="v6-or-h" className="v6-or__h" aria-label={heading} data-no-translate>
+        <span>AI security for </span><TopicSwap text={topic} /><span>.</span>
+      </h2> : <h2 id="v6-or-h" className="v6-or__h v6-or__h--translated" aria-label={heading}>
+        <TopicSwap text={heading} />
       </h2>}
-      <p className="v6-or__d">External software review for defense, infrastructure and robotics</p>
-      <EditorialLink href={selected === null ? `${V6_BASE}/platform#coverage` : ROUTE[selected].href}>{selected === null ? "Explore the platform" : "Explore this subject"}</EditorialLink>
+      <p className="v6-or__d">Developing cybersecurity for AI-enabled defense, infrastructure and robotics.</p>
+      <Link className="v6-or__link" href={selected === null ? `${V6_BASE}/beta` : ORBIT[selected].href}>{selected === null ? "Development status" : ORBIT[selected].label}</Link>
     </div>
     <ul className="v6-or__tiles">
       {ORBIT.map((t, i) => <li key={t.label} ref={node => { tiles.current[i] = node; }} className="v6-or__item" data-on={i === selected}>
-        <Link className="v6-or__tile" href={ROUTE[i].href} onPointerEnter={() => select(i)} onPointerLeave={release} onFocus={() => select(i)} onBlur={release} data-media-ready="pending">
+        <Link className="v6-or__tile" href={t.href} aria-label={t.label} onPointerEnter={() => select(i)} onPointerLeave={release} onFocus={() => select(i)} onBlur={release} data-media-ready="pending">
           <Image src={t.photos[0].src} alt={t.photos[0].alt} fill sizes="(max-width: 700px) 45vw, (max-width: 1023px) 30vw, 180px" style={{objectFit: "cover", objectPosition: t.photos[0].pos}} />
           <span className="v6-or__name" data-media-copy="">{t.label}</span>
         </Link>
       </li>)}
     </ul>
-    <button className="v6-or__pause" type="button" onClick={() => { stopped.current = !paused; setPaused(!paused); wake.current(); }} aria-label={paused ? "Play the orbit" : "Pause the orbit"}>
+    <button className="v6-or__pause" type="button" onClick={() => { stopped.current = !paused; setPaused(!paused); wake.current(); }} aria-pressed={paused} aria-label={paused ? "Play the orbit" : "Pause the orbit"}>
       {paused ? <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden><path d="M5 3v10l8-5z" fill="currentColor" /></svg> : <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden><path d="M5 3v10M11 3v10" stroke="currentColor" strokeWidth="2" /></svg>}
     </button>
   </section>;

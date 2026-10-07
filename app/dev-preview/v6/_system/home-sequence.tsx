@@ -5,11 +5,11 @@ import { Opening } from "./opening";
 import "./home-sequence.css";
 
 const clamp = (n: number) => Math.max(0, Math.min(1, n));
-const arrivals = [0, .76, 1.5, 2.24];
+const arrivals = [0, .76, 1.5];
 const handoff = .24;
 
 /** One viewport for the whole narrative. Incoming chapters are masked until their handoff. */
-export function HomeSequence({ children }: { children: [ReactNode, ReactNode, ReactNode, ReactNode] }) {
+export function HomeSequence({ children }: { children: [ReactNode, ReactNode, ReactNode] }) {
   const root = useRef<HTMLDivElement>(null);
   const [enabled, setEnabled] = useState(false);
   const [stacked, setStacked] = useState(false);

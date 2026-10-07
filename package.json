@@ -138,7 +138,8 @@
     "signal:test": "tsx scripts/console-signal-verify.ts",
     "recorded:verify:test": "tsx scripts/recorded-verification-verify.ts",
     "recorded:mcap:test": "tsx scripts/recorded-mcap-verify.ts",
-    "ai:security:test": "tsx scripts/ai-security-policy-verify.ts"
+    "ai:security:test": "tsx scripts/ai-security-policy-verify.ts",
+    "contact:intake:test": "tsx scripts/contact-intake-verify.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",

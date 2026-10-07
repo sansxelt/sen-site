@@ -1,11 +1,10 @@
 "use client";
 
-// Homepage: cinematic opening, three focus areas,
-// the app replay, engineering resources.
+// Homepage: cinematic opening, application areas, photographic orbit and engineering resources.
 import { useRef } from "react";
 import { useHomeMotion } from "./_system/home-motion";
 import { HomeSequence } from "./_system/home-sequence";
-import { SecurityFocus, SecurityDevelopment } from "./_system/security-home";
+import { Orbit } from "./_system/orbit";
 import { PhysicalSystems, EngineeringEntry } from "./_system/homepage-sections";
 import { useMobileMotion } from "./_system/mobile-motion";
 
@@ -19,8 +18,7 @@ export default function Home() {
     <div ref={root} className="home-page">
       <HomeSequence>
       <PhysicalSystems />
-      <SecurityFocus />
-      <SecurityDevelopment />
+      <Orbit />
       <EngineeringEntry />
       </HomeSequence>
     </div>
