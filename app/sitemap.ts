@@ -28,7 +28,7 @@ const WEIGHT: Record<string, { p: number; f: Freq }> = {
   "/": { p: 1, f: "weekly" },
   "/pricing": { p: 0.9, f: "weekly" },
   "/platform": { p: 0.9, f: "monthly" },
-  "/method": { p: 0.9, f: "monthly" },
+  "/zero-trust": { p: 0.9, f: "monthly" },
   "/developers": { p: 0.8, f: "monthly" },
   "/docs": { p: 0.8, f: "weekly" },
   "/agents": { p: 0.8, f: "monthly" },
@@ -38,8 +38,6 @@ const WEIGHT: Record<string, { p: number; f: Freq }> = {
   "/integrations": { p: 0.6, f: "monthly" },
   "/changelog": { p: 0.6, f: "weekly" },
   "/company": { p: 0.6, f: "monthly" },
-  "/partnerships/reddit": { p: 0.5, f: "yearly" },
-  "/partnerships/bytedance": { p: 0.5, f: "yearly" },
   "/security": { p: 0.6, f: "monthly" },
   "/contact": { p: 0.5, f: "monthly" },
   "/readme": { p: 0.4, f: "monthly" },
@@ -70,6 +68,13 @@ const WEIGHT: Record<string, { p: number; f: Freq }> = {
 // Never advertised, in either generation: a sign-in form and a checkout have nothing to index. /signin was
 // previously listed, which is how a form ended up in the index.
 const NEVER_INDEXED = new Set(["/signin", "/checkout"]);
+
+// Retired presentation routes remain redirectable, but do not belong in the current sitemap.
+const RETIRED_PRESENTATION = new Set([
+  "/method", "/readme", "/developers/api", "/developers/cli",
+  "/partnerships/reddit", "/partnerships/bytedance",
+  "/solutions/commerce", "/solutions/ai-built-apps", "/solutions/saas", "/solutions/agencies",
+]);
 
 // Advertised ONLY while design 06 is not serving.
 //
@@ -113,7 +118,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     : Object.keys(CLEAN_EXACT);
 
   const pages = serving
-    .filter((p) => !NEVER_INDEXED.has(p) && !(promoted && SUPERSEDED_BY_V6.has(p)))
+    .filter((p) => !NEVER_INDEXED.has(p) && !(promoted && (SUPERSEDED_BY_V6.has(p) || RETIRED_PRESENTATION.has(p) || p === "/use-cases" || p.startsWith("/use-cases/"))))
     .sort((a, b) => (WEIGHT[b]?.p ?? 0.5) - (WEIGHT[a]?.p ?? 0.5) || a.localeCompare(b))
     .map(entry);
 
@@ -124,7 +129,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Research articles still render from the previous site (design 06's /research is a thesis page with
   // anchors, not an index of these), and nothing on the new site links to them, so they are listed only
   // while they remain the real published writing. Unpublished ones are filtered out and 404.
-  const articles = publishedArticles().map((a) => ({
+  const articles = promoted ? [] : publishedArticles().map((a) => ({
     url: `${BASE}/research/${a.slug}`,
     lastModified: now,
     changeFrequency: "monthly" as Freq,
