@@ -361,5 +361,28 @@ html:has(.v6-docsenv) { scroll-padding-top: 76px; }
 :lang(hi) .v6-docsenv .v6-docs__article :is(h1, h2, h3) { line-height: 1.35; }
 
 .v6-docs__availability { margin:24px clamp(20px,3vw,48px) 0; padding:18px 20px; border:1px solid var(--line); border-radius:8px; font-size:13px; line-height:1.65; color:var(--ink-2); }
-.v6-docs__availability strong { color:var(--ink); font-weight:500; }
+.v6-docs__availability strong { color:var(--ink); font:500 13px/1.5 var(--sans); }
 .v6-docs__availability p { margin:6px 0 0; }
+
+/* The index leads with current references, then offers the earlier material on demand. */
+.v6-docsenv .v6-docs__article--home { max-width:1000px; }
+.v6-docsenv .v6-docs__article--home h1 { font-size:clamp(32px,3.3vw,46px); font-weight:400; letter-spacing:-.03em; }
+.v6-docsenv .v6-docs__article--home .v6-docs__lead { max-width:65ch; font-size:18px; line-height:1.65; margin-top:20px; }
+.v6-docsenv .v6-docs__article--home .v6-docs__scope { margin:24px 0 0; padding-left:16px; border-left:2px solid #444; font-size:13px; line-height:1.65; color:#999; max-width:75ch; }
+.v6-docs__article--home .v6-docs__start { grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
+.v6-docsenv .v6-docs__article--home .v6-docs__card { display:flex; padding:26px; min-height:190px; border-radius:12px; }
+.v6-docs__article--home .v6-docs__card .t { font-size:20px; font-weight:500; }
+.v6-docs__article--home .v6-docs__card .s { font-size:15px; line-height:1.65; margin:16px 0 0; max-width:46ch; }
+.v6-docsenv .v6-docs__article--home .v6-docs__archive { margin:36px 0 0; padding-block:22px; border-block:1px solid #292929; }
+.v6-docs__archive>summary { font:500 17px/1.5 var(--sans); color:#ccc; cursor:pointer; }
+.v6-docs__archive>summary:hover { color:#fff; }
+.v6-docs__archive>summary:focus-visible { outline:2px solid #fff; outline-offset:6px; }
+.v6-docs__archive-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:28px; }
+.v6-docsenv .v6-docs__archive .v6-docs__home { margin-top:28px; }
+.v6-docsenv .v6-docs__archive .v6-docs__index h3 { margin-top:0; }
+.v6-docs__main:has(.v6-docs__article--home) .v6-docs__foot { max-width:1000px; }
+@media(max-width:640px) {
+  .v6-docs__article--home .v6-docs__start,.v6-docs__archive-grid { grid-template-columns:1fr; }
+  .v6-docsenv .v6-docs__article--home .v6-docs__card { padding:22px; min-height:0; }
+  .v6-docsenv .v6-docs__article--home .v6-docs__lead { font-size:17px; }
+}

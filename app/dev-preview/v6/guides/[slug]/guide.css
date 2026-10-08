@@ -1,0 +1,8 @@
+.security-guide__body { max-width:780px; margin-inline:auto; padding:56px var(--gutter) 80px; }
+.security-guide__body section { margin-bottom:44px; }
+.security-guide__body h2 { font:var(--display-w) clamp(26px,3vw,36px)/1.2 var(--display); letter-spacing:-.025em; margin:0 0 20px; }
+.security-guide__body p { color:var(--ink-2); font-size:17px; line-height:1.8; margin:0 0 18px; }
+.security-guide__body a { color:var(--ink); text-decoration:none; }
+.security-guide__body a:hover { color:var(--ink-2); }
+.security-guide__body a:focus-visible { outline:2px solid var(--ink); outline-offset:5px; }
+@media(max-width:560px) { .security-guide__body { padding-block:36px 48px; } .security-guide__body p { font-size:16px; } }

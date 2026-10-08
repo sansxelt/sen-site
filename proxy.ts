@@ -31,6 +31,9 @@ export const v6Public = () => process.env.NEXT_PUBLIC_VRAELIS_V6_PUBLIC === "1";
 // that no longer serves, which is exactly what happened at promotion: it listed /how-it-works and
 // /free-report (both still the previous site) and none of the nine routes design 06 added.
 export const V6_EXACT: Record<string, string> = {
+  "/guides/model-release-security": "/dev-preview/v6/guides/model-release-security",
+  "/guides/operating-constraints": "/dev-preview/v6/guides/operating-constraints",
+  "/guides/ai-security-evaluation": "/dev-preview/v6/guides/ai-security-evaluation",
   "/": "/dev-preview/v6",
   "/developers": "/dev-preview/v6/developers",
   "/developers/api": "/dev-preview/v6/developers/api",
@@ -534,7 +537,7 @@ export default function proxy(req: NextRequest) {
   // 2a) Retired "AI output QA" guides — an SEO content section for the retired AI-output-checker product
   // (not the current production-verification product, and orphaned from the live nav). Redirect the index
   // and every guide slug to the current product story so no retired positioning is reachable or indexed.
-  if (path === "/guides" || path.startsWith("/guides/")) {
+  if (!(v6Public() && path in V6_EXACT) && (path === "/guides" || path.startsWith("/guides/"))) {
     return go(req, "/how-it-works", "redirect");
   }
 

@@ -213,6 +213,10 @@
 .v6-mega__intro p { margin:0; font:400 clamp(22px,2vw,30px)/1.2 var(--display); letter-spacing:-.025em; color:#fafafa; }
 .v6-mega__intro>span { font-size:12px; color:#999; }
 .v6-mega__cards { grid-column:4; width:100%; max-width:none; height:clamp(220px,24vw,360px); }
+.v6-drawer__feature { display:flex; align-items:center; gap:18px; padding-block:20px; border-top:1px solid var(--line); color:var(--ink); text-decoration:none; font-size:18px; line-height:1.3; }
+.v6-drawer__feature img { flex:none; width:120px; height:90px; object-fit:cover; border-radius:8px; }
+.v6-drawer__feature:hover { color:var(--ink-2); }
+.v6-drawer__feature:focus-visible { outline:2px solid var(--ink); outline-offset:3px; }
 .v6-mega__grid { grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.7fr); column-gap:clamp(22px,3vw,48px); min-height:0; padding-top:30px; padding-bottom:32px; padding-left:var(--gutter)!important; }
 .v6-mega__col-h { margin-bottom:18px; color:#999; font-size:12px; }
 .v6-mega__link { padding:8px 0 12px; font-size:16px; line-height:1.35; }

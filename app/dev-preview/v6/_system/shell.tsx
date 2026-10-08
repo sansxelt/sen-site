@@ -33,7 +33,7 @@ const SIGNUP = `${SIGNIN}&mode=signup`;
 type MLink = { t: string; d?: string; href: string; pic?: string };
 type Group = { h: string; links: MLink[] };
 type Card = { title: string; href: string; pic: string };
-type Menu = { label: string; intro: string; groups: Group[]; cards?: Card[]; foot?: MLink };
+type Menu = { label: string; intro: string; groups: Group[]; feature?: Card & { description: string }; cards?: Card[]; foot?: MLink };
 
 const picSrc = (p: string) => (p.startsWith("/") ? p : `/home/menu/pics/${p}.jpg`);
 // The box is min(705px, 49vw) wide (nav.css); the two cards share it.
@@ -48,6 +48,7 @@ const MENUS: Menu[] = [
   {
     label: "Product",
     intro: "Protect the intelligence inside.",
+    feature: { title: "A model release is a security decision.", description: "Model release security for robotics engineering teams", href: BASE + "/guides/model-release-security", pic: "/site/photography/hardware-inspection.jpg" },
     groups: [
       { h: "Product direction", links: [
         { t: "Overview", d: "AI security direction and development status", href: BASE + "/platform", pic: "/site/photography/robot-cell.jpg" },
@@ -70,6 +71,7 @@ const MENUS: Menu[] = [
   {
     label: "Solutions",
     intro: "Security for AI in the physical world.",
+    feature: { title: "Different systems. Different security boundaries.", description: "The control has to fit the environment, not just the model.", href: BASE + "/guides/operating-constraints", pic: "/site/photography/wind-farm.jpg" },
     groups: [
       { h: "Physical systems", links: PRIMARY_SECTORS.map(s => ({ t:s.label,d:s.line,href:s.href,pic:s.slug === "defense" ? EDITORIAL + "aviation.jpg" : s.slug === "fleets" ? "/site/photography/robot-arm.jpg" : s.pics.menu })) },
       { h: "Organizations", links: [{ t: "Government & institutions", d: "Mission systems and public infrastructure", href: BASE + "/government", pic: "/site/photography/satellite-station.jpg" }, { t: "System integrators", d: "Security boundaries across suppliers", href: BASE + "/integrators", pic: "/site/photography/network-engineer.jpg" }] },
@@ -80,6 +82,7 @@ const MENUS: Menu[] = [
   {
     label: "Research",
     intro: "Match the threat to a measurable test.",
+    feature: { title: "Measure the boundary, not a broad security score.", description: "Match the threat to a measurable test.", href: BASE + "/guides/ai-security-evaluation", pic: "/site/photography/electronics-bench.jpg" },
     groups: [
       { h: "Research", links: [
         { t: "Overview", d: "Our method and open questions", href: BASE + "/research", pic: "/site/photography/hardware-inspection.jpg" },
@@ -113,8 +116,8 @@ const MENUS: Menu[] = [
       ] },
     ],
     cards: [
-      { title: "Documentation", href: BASE + "/docs", pic: "/site/photography/network-engineer.jpg" },
-      { title: "Development status", href: BASE + "/beta", pic: "/site/photography/electronics-bench.jpg" },
+      { title: "AI security at Vraelis", href: BASE + "/docs/ai-security", pic: "/site/photography/network-engineer.jpg" },
+      { title: "Review recorded task reports", href: BASE + "/docs/recorded-reports", pic: "/site/photography/electronics-bench.jpg" },
     ],
   },
 ];
@@ -128,17 +131,12 @@ function restartCurrentPage(event: ReactMouseEvent<HTMLAnchorElement>) {
   requestAnimationFrame(() => window.scrollTo({ top:0, left:0, behavior:"instant" }));
 }
 
-/** Every picture of a menu's links, first link first, each once. */
-function menuPics(menu: Menu): string[] {
-  return [...new Set(menu.groups.flatMap((g) => g.links).flatMap((l) => (l.pic ? [l.pic] : [])))];
-}
-
-// What the first look at each menu needs: its first link's picture, or the two cards. Fetched once the page has
+// What the first look at each menu needs: its featured guide picture, or the two cards. Fetched once the page has
 // settled on a desktop, so the first menu a reader opens shows its picture instead of an empty box.
 const WARM_PICS: { src: string; sizes: string }[] = [...new Map(MENUS.flatMap((m) =>
   m.cards
     ? m.cards.map((c) => ({ src: picSrc(c.pic), sizes: CARD_SIZES }))
-    : menuPics(m).slice(0, 1).map((p) => ({ src: picSrc(p), sizes: PIC_SIZES })),
+    : m.feature ? [{ src: picSrc(m.feature.pic), sizes: PIC_SIZES }] : [],
 ).map(p => [p.src, p])).values()];
 
 function Brand() {
@@ -171,21 +169,12 @@ function Brand() {
   );
 }
 
-// ONE PERSISTENT PANEL. Switching top-level items keeps the panel open and fades in only its contents; the
-// picture box keeps its size and place. Every picture of the open menu is mounted at once, so pointing at a
-// link swaps the picture with no wait: the incoming one fades in over 240ms and settles from 1.015 to 1 over
-// 480ms (plan A6), and the link it belongs to stays lit. The first link's picture shows on opening.
+// Featured reading is independent of the navigation list; pointing at a menu link never replaces it.
 function MegaShell({ index, state, onNavigate }: { index: number; state: "in" | "out"; onNavigate: (event: ReactMouseEvent<HTMLAnchorElement>) => void }) {
   const menu = MENUS[index];
-  const pics = menuPics(menu);
-  const [featuredHref, setFeaturedHref] = useState(menu.groups[0].links[0].href);
-  const [shownMenu, setShownMenu] = useState(index);
   // Pictures that failed to load, shown as PIC_FALLBACK instead.
   const [lost, setLost] = useState<readonly string[]>([]);
-  if (shownMenu !== index) { setShownMenu(index); setFeaturedHref(menu.groups[0].links[0].href); }
-  const point = (l: MLink) => setFeaturedHref(l.href);
-  const featured = menu.groups.flatMap(g => g.links).find(l => l.href === featuredHref) ?? menu.groups[0].links[0];
-  const pic = featured.pic;
+  const featured = menu.feature;
   const srcOf = (p: string) => picSrc(lost.includes(p) ? PIC_FALLBACK : p);
   const onLost = (p: string) => () => setLost((cur) => (p === PIC_FALLBACK || cur.includes(p) ? cur : [...cur, p]));
   return (
@@ -199,8 +188,7 @@ function MegaShell({ index, state, onNavigate }: { index: number; state: "in" | 
               <ul className="v6-mega__list" aria-labelledby={`${MEGA_ID}-${index}-${gi}`}>
                 {g.links.map((l) => (
                   <li key={l.t}>
-                    <Link href={l.href} className="v6-mega__link" data-on={l.href === featured.href ? "true" : undefined}
-                      onClick={onNavigate} onMouseEnter={() => point(l)} onFocus={() => point(l)}>
+                    <Link href={l.href} className="v6-mega__link" onClick={onNavigate}>
                       <span>{l.t}</span>{l.d ? <span className="v6-mega__description">{l.d}</span> : null}
                     </Link>
                   </li>
@@ -222,15 +210,13 @@ function MegaShell({ index, state, onNavigate }: { index: number; state: "in" | 
                 </Link>
               ))}
             </div>
-          ) : (
+          ) : featured ? (
             <Link href={featured.href} className="v6-mega__media" onClick={onNavigate}>
-              {pics.map((p) => (
-                <Image key={p} src={srcOf(p)} alt="" fill sizes={PIC_SIZES} className="v6-mega__pic" data-on={p === pic}
-                  loading="eager" onError={onLost(p)} />
-              ))}
-              <span className="v6-mega__feature-copy"><span>{featured.t}</span><span>{featured.d}</span><span className="v6-mega__feature-action">Explore this area</span></span>
+              <Image src={srcOf(featured.pic)} alt="" fill sizes={PIC_SIZES} className="v6-mega__pic" data-on="true"
+                loading="eager" onError={onLost(featured.pic)} />
+              <span className="v6-mega__feature-copy"><span>{featured.title}</span><span>{featured.description}</span><span className="v6-mega__feature-action">Read the guide</span></span>
             </Link>
-          )}
+          ) : null}
         </div>
       </div>
     </div>
@@ -774,6 +760,10 @@ function MobileNav({ authed, onClose }: { authed: boolean; onClose: (returnFocus
                     {m.foot.t}<span className="v6-arw" aria-hidden="true">→</span>
                   </Link>
                 ) : null}
+                {(m.cards ?? (m.feature ? [m.feature] : [])).map(feature => <Link key={feature.href} href={feature.href} className="v6-drawer__feature" onClick={follow}>
+                  <Image src={picSrc(feature.pic)} alt="" width={120} height={90} sizes="120px" />
+                  <span>{feature.title}</span>
+                </Link>)}
               </div>
             ) : null}
           </section>

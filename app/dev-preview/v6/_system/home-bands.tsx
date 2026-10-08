@@ -66,7 +66,7 @@ export function Statement({ scrollRoot }: { scrollRoot?: RefObject<HTMLElement |
   const [lit, setLit] = useState(0);
   const count = useRef(words.length);
   useEffect(() => { count.current = words.length; }, [words.length]);
-  // Progress runs while the card travels from the bottom of the screen to a little above the middle.
+  // The opening surface settles at .50; reveal words only after its paragraph has appeared.
   useScrollProgress(scrollRoot ?? root, {
     smooth: false,
     property: "--statement-p",
@@ -75,13 +75,13 @@ export function Statement({ scrollRoot }: { scrollRoot?: RefObject<HTMLElement |
         const stage = scrollRoot.current.querySelector<HTMLElement>('.home-sequence__stage')!;
         const top = parseFloat(getComputedStyle(stage).top) || 0;
         const progress = (top - r.top) / Math.max(1, vh * 2.1 - stage.clientHeight);
-        return Math.min(1, Math.max(0, (progress - .48) / .36));
+        return Math.min(1, Math.max(0, (progress - .60) / .30));
       }
       if (scrollRoot?.current?.dataset.motion) {
         const pin = scrollRoot.current.querySelector<HTMLElement>(".v6-opening__pin");
         const height = pin?.offsetHeight ?? vh;
         const progress = -r.top / Math.max(1, r.height - height);
-        return Math.min(1, Math.max(0, (progress - .48) / .36));
+        return Math.min(1, Math.max(0, (progress - .60) / .30));
       }
       return Math.min(1, Math.max(0, (vh * .92 - r.top) / (vh * .62)));
     },

@@ -30,9 +30,9 @@ async function main() {
       await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
 
       // Inspect the opening in both directions, including the middle of its handoff.
-      // Visible statement letters must have their own opaque surface behind them.
+      // No letters may appear before the incoming surface reaches its resting position.
       if (viewport.height >= (viewport.width > 900 ? 620 : 660)) {
-        for (const progress of [.36, .42, .48, .56, .48, .42, .36]) {
+        for (const progress of [.36, .42, .49, .54, .58, .60, .72, .92, .72, .54, .49, .36]) {
           await page.evaluate(progress => {
             const root = document.querySelector('.home-sequence');
             const opening = root.querySelector('.v6-opening');
@@ -46,11 +46,23 @@ async function main() {
           await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
           const surface = await page.locator('.v6-opening__statement').evaluate(el => {
             const style = getComputedStyle(el);
-            return { opacity: style.opacity, background: style.backgroundColor, clip: style.clipPath };
+            const pin = el.parentElement.getBoundingClientRect();
+            const text = el.querySelector('.v6-stm__t');
+            return { opacity: style.opacity, background: style.backgroundColor, clip: style.clipPath,
+              y: el.getBoundingClientRect().top - pin.top, textOpacity: Number(getComputedStyle(text).opacity),
+              lit: text.querySelectorAll('[data-on="true"]').length,
+              words: text.querySelectorAll('[data-on]').length };
           });
           assert.equal(surface.opacity, '1', 'The statement must stay opaque throughout the handoff');
           assert.match(surface.background, /^rgb\(\d+, \d+, \d+\)$/, 'Visible text needs an opaque background, not the film');
-          assert.notEqual(surface.clip, 'none', 'The statement surface must reveal together with its text');
+          assert.equal(surface.clip, 'none', 'The handoff must not cut through the paragraph');
+          if (progress < .50) {
+            assert.ok(surface.y > 0, 'The background must still be entering');
+            assert.equal(surface.textOpacity, 0, 'No text may appear while the background is entering');
+          }
+          if (surface.textOpacity > 0) assert.ok(Math.abs(surface.y) < 1, 'Visible text must be on the settled section');
+          if (progress <= .60) assert.equal(surface.lit, 0, 'Word highlighting must wait until the section and paragraph settle');
+          if (progress > .90) assert.equal(surface.lit, surface.words, 'The complete sentence must become readable before the next chapter');
         }
         await page.keyboard.press('Control+Home');
         await page.waitForFunction(() => scrollY < 2);

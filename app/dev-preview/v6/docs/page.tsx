@@ -5,6 +5,7 @@ import { v6meta } from "../_system/meta";
 import { DocShell } from "../_content/docs-ui";
 import { docsByGroup, getDoc, docPrefetch } from "../_content/docs";
 import { V6_BASE } from "@/lib/v6-routes";
+import { APP_ACCESS_OPEN } from "@/lib/app-availability";
 
 const BASE = V6_BASE;
 export const metadata: Metadata = v6meta({
@@ -35,8 +36,12 @@ export default function DocsIndex() {
   return (
     <DocShell crumb={["Documentation", "Overview"]}>
       <div className="v6-docs__article v6-docs__article--home v6-prose">
-        <h1>Vraelis documentation</h1>
-        <p className="v6-docs__lead">Start with the AI-security scope and current development status. Recording formats describe an existing private component; browser-workflow guides are earlier implementation references.</p>
+        <header className="v6-docs__intro">
+          <p className="v6-docs__section">Documentation</p>
+          <h1>Vraelis documentation</h1>
+          <p className="v6-docs__lead">Understand the current direction and distinguish research from implemented components.</p>
+          {!APP_ACCESS_OPEN ? <p className="v6-docs__scope">Public workspace access is closed. These references are not instructions for an available deployment.</p> : null}
+        </header>
 
         <section className="v6-docs__home" aria-labelledby="start-here">
           <h2 id="start-here">Start here</h2>
@@ -47,14 +52,15 @@ export default function DocsIndex() {
                 <Link key={slug} href={`${BASE}/docs/${d.slug}`} className="v6-docs__card">
                   <span className="t">{slug === "the-loop" ? "How a check works" : d.title}</span>
                   <span className="s">{d.summary}</span>
-                  <span className="v6-docs__card-arrow" aria-hidden>→</span>
                 </Link>
               );
             })}
           </div>
         </section>
 
-        <section className="v6-docs__home" aria-labelledby="by-interface">
+        <details className="v6-docs__archive">
+          <summary>Earlier implementation references</summary>
+          <section className="v6-docs__home" aria-labelledby="by-interface">
           <h2 id="by-interface">Earlier implementation interfaces</h2>
           <div className="v6-docs__ways">
             {BY_INTERFACE.map((w) => (
@@ -72,14 +78,14 @@ export default function DocsIndex() {
 
         <section className="v6-docs__home" aria-labelledby="every-page">
           <h2 id="every-page">Every page</h2>
-          {docsByGroup().map((g) => (
+          <div className="v6-docs__archive-grid">{docsByGroup().map((g) => (
             <div key={g.group} className="v6-docs__index">
               <h3 id={g.group.toLowerCase().replace(/[^a-z0-9]+/g, "-")}>{g.group}</h3>
               {/* Each row is a link inside its own list item. role="listitem" on the link itself replaced its link
                   role, so a screen reader announced 17 list items and no links, and its links list left them out.
                   Not a <ul>: the article's `li > a { display: inline }` would undo the row layout. */}
               <div role="list">
-                {g.docs.map((d) => (
+                {g.docs.filter(d => !START.includes(d.slug)).map((d) => (
                   <div key={d.slug} role="listitem">
                     <Link href={`${BASE}/docs/${d.slug}`} className="v6-docs__row">
                       <span className="t">{d.title}</span>
@@ -89,8 +95,9 @@ export default function DocsIndex() {
                 ))}
               </div>
             </div>
-          ))}
+          ))}</div>
         </section>
+        </details>
 
         <section className="v6-docs__home" aria-labelledby="ask-a-person">
           <h2 id="ask-a-person">Ask a person</h2>

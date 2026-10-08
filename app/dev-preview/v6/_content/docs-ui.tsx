@@ -412,7 +412,7 @@ export function DocShell({ activeSlug = "", toc = [], crumb, markdown, children 
 
         {/* inert while the drawer covers it: nothing behind the drawer can take focus or be read out. */}
         <div className="v6-docs__main" inert={drawer}>
-          {!APP_ACCESS_OPEN ? <aside className="v6-docs__availability" aria-label="Documentation availability">
+          {!APP_ACCESS_OPEN && activeSlug ? <aside className="v6-docs__availability" aria-label="Documentation availability">
             <strong>Implementation references</strong>
             <p>The product is in private development. Earlier browser-workflow examples describe previous implementation work. Console access, hosted APIs and execution services are closed.</p>
           </aside> : null}

@@ -41,7 +41,7 @@ export function Opening({ sequenceRoot }: { sequenceRoot?: RefObject<HTMLElement
       const height = root.current?.querySelector<HTMLElement>('.v6-opening__pin')?.offsetHeight ?? vh;
       return Math.max(0, Math.min(1, -rect.top / Math.max(1, rect.height - height)));
     },
-    onFrame: value => setStatementVisible(value >= .48),
+    onFrame: value => setStatementVisible(value >= .50),
   });
   return (
     <section ref={root} className="v6-opening" style={sequenceRoot ? { '--p': 'var(--opening-p,0)' } as React.CSSProperties : undefined} data-motion={motion || undefined} data-nav-theme="dark" aria-label="Introducing Vraelis">
