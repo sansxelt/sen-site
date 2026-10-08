@@ -1,13 +1,12 @@
 "use client";
 
-// Homepage: cinematic opening, application areas, photographic orbit and engineering resources.
+// Company scope, audiences and the first product each have a distinct chapter.
 import { useRef } from "react";
 import { useHomeMotion } from "./_system/home-motion";
 import { HomeSequence } from "./_system/home-sequence";
-import { Orbit } from "./_system/orbit";
-import { PhysicalSystems, EngineeringEntry } from "./_system/homepage-sections";
+import { PhysicalSystems } from "./_system/homepage-sections";
+import { CompanyStory, ContourSpotlight } from "./_system/company-story";
 import { useMobileMotion } from "./_system/mobile-motion";
-import { SecurityFields } from "./_system/security-fields";
 import { ResourceCollection } from "./_system/resource-collection";
 
 export default function Home() {
@@ -19,11 +18,10 @@ export default function Home() {
   return (
     <div ref={root} className="home-page">
       <HomeSequence>
-      <PhysicalSystems />
-      <Orbit />
-      <EngineeringEntry />
+        <CompanyStory />
+        <PhysicalSystems />
+        <ContourSpotlight />
       </HomeSequence>
-      <SecurityFields />
       <ResourceCollection />
     </div>
   );

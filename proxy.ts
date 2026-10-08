@@ -539,6 +539,16 @@ export default function proxy(req: NextRequest) {
   // (not the current production-verification product, and orphaned from the live nav). Redirect the index
   // and every guide slug to the current product story so no retired positioning is reachable or indexed.
   if (!(v6Public() && path in V6_EXACT) && (path === "/guides" || path.startsWith("/guides/"))) {
+    // Missing current guides belong to the current handler's noindex/not-found response.
+    // Redirecting them through the retired product teaches crawlers the wrong company story.
+    if (v6Public()) {
+      if (path === "/guides") {
+        const url = req.nextUrl.clone();
+        url.pathname = "/research";
+        return NextResponse.redirect(url, 308);
+      }
+      return go(req, `/dev-preview/v6${path}`, "rewrite");
+    }
     return go(req, "/how-it-works", "redirect");
   }
 

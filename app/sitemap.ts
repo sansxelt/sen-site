@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { publishedArticles } from "@/app/rank/research/_articles";
 import { V6_EXACT, CLEAN_EXACT, v6Public } from "@/proxy";
-import { DOCS } from "@/app/dev-preview/v6/_content/docs";
+import { CURRENT_DOC_SLUGS } from "@/app/dev-preview/v6/_content/docs";
 import { stealthConfigured } from "@/lib/stealth";
 
 // The sitemap is DERIVED FROM THE ROUTING, not written alongside it.
@@ -137,8 +137,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Only current documentation belongs in search. Archived browser-workflow references remain
   // accessible with noindex, follow, and are intentionally absent here.
   const docs = promoted
-    ? DOCS.filter((d) => ["ai-security", "recorded-reports"].includes(d.slug)).map((d) => ({
-        url: `${BASE}/docs/${d.slug}`,
+    ? CURRENT_DOC_SLUGS.map((slug) => ({
+        url: `${BASE}/docs/${slug}`,
         changeFrequency: "monthly" as Freq,
         priority: 0.6,
       }))

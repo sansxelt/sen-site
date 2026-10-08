@@ -23,6 +23,9 @@
 // machine text the translator skips.
 import { V6_BASE, v6ShouldPrefetch } from "@/lib/v6-routes";
 
+/** Current guides advertised by the docs index, sitemap and machine-readable exports. */
+export const CURRENT_DOC_SLUGS: readonly string[] = ["ai-security", "recorded-reports"];
+
 export type Block =
   | { t: "p"; text: string }
   | { t: "h2"; text: string }

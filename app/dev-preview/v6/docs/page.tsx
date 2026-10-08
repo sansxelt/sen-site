@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { v6meta } from "../_system/meta";
 import { DocShell } from "../_content/docs-ui";
-import { docsByGroup, getDoc, docPrefetch } from "../_content/docs";
+import { CURRENT_DOC_SLUGS, docsByGroup, getDoc, docPrefetch } from "../_content/docs";
 import { V6_BASE } from "@/lib/v6-routes";
 import { APP_ACCESS_OPEN } from "@/lib/app-availability";
 import { photograph } from "../_content/photography";
@@ -18,7 +18,7 @@ export const metadata: Metadata = v6meta({
 });
 
 // A compact starting point: the guide itself explains the next step.
-const START = ["ai-security", "recorded-reports"];
+const START = CURRENT_DOC_SLUGS;
 
 // One line each, as a reader would type it. Machine text, never translated.
 const BY_INTERFACE: { name: string; slug: string; line: string }[] = [

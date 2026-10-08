@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { v6meta } from "../../_system/meta";
 import { DocShell, Blocks, DocCode, DocPager } from "../../_content/docs-ui";
-import { DOCS, getDoc, adjacentDocs, docOutline, docToMarkdown } from "../../_content/docs";
+import { CURRENT_DOC_SLUGS, DOCS, getDoc, adjacentDocs, docOutline, docToMarkdown } from "../../_content/docs";
 import { SURFACES } from "../../_content/coverage";
 import { V6_BASE } from "@/lib/v6-routes";
 import { robotsMeta } from "@/lib/stealth";
@@ -81,7 +81,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   // reached these: /docs/<anything> and /research/<anything> answered 200 with index, follow and a
   // not-found body. That is an unbounded indexable surface under two prefixes.
   if (!doc) return { title: "Not found", robots: robotsMeta(false) };
-  const current = ["ai-security", "recorded-reports"].includes(slug);
+  const current = CURRENT_DOC_SLUGS.includes(slug);
   return v6meta({ title: doc.title, description: current ? doc.summary : `Archived implementation reference. ${doc.summary}`, path: `/docs/${doc.slug}`, type: "article", index: current });
 }
 
@@ -105,7 +105,7 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
             <div><dt>Outcome</dt><dd>{doc.outcome}</dd></div>
             {doc.limit ? <div><dt>Does not do</dt><dd>{doc.limit}</dd></div> : null}
           </dl>
-          {!["ai-security", "recorded-reports"].includes(slug) ? <p className="v6-docs__lead">Earlier implementation reference. Public app access is closed; this guide does not describe the current AI-security product scope.</p> : null}
+          {!CURRENT_DOC_SLUGS.includes(slug) ? <p className="v6-docs__lead">Earlier implementation reference. Public app access is closed; this guide does not describe the current AI-security product scope.</p> : null}
           <DocumentationImages slug={slug} />
           <Blocks blocks={doc.blocks} />
           {EXAMPLES[slug] ? <DocCode label={EXAMPLES[slug][0]} code={EXAMPLES[slug][1]} /> : null}

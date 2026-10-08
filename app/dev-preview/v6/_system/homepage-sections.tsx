@@ -8,6 +8,7 @@ import { photograph } from "../_content/photography";
 import { PRIMARY_SECTORS } from "../_content/sectors";
 import { V6_BASE } from "@/lib/v6-routes";
 import "./homepage-sections.css";
+import { StoryArrow } from "./company-story";
 
 const AREAS = {
   defense: {
@@ -32,7 +33,7 @@ export function PhysicalSystems() {
     <div className="v6-wrap">
       <div className="home-section-head" data-media-copy="">
         <p className="home-eyebrow">Our application areas</p>
-        <h2 id="home-areas-title">AI security in the physical world.</h2>
+        <h2 id="home-areas-title">For the teams building and operating AI.</h2>
       </div>
       <div className="home-areas__grid">
         {PRIMARY_SECTORS.map((sector, index) => {
@@ -43,10 +44,15 @@ export function PhysicalSystems() {
               <Image src={area.image} alt="" width={area.width} height={area.height} sizes="(max-width: 760px) 100vw, 60vw" loading="lazy" />
             </span>
             <div className="home-area__caption" data-media-copy="">
-              <div><h3 id={titleId}>{sector.label}</h3><p>{area.line}</p></div>
+              <div><h3 id={titleId}>{sector.label}</h3><p>{area.line}</p></div><StoryArrow />
             </div>
           </Link>;
         })}
+      </div>
+      <div className="home-audiences">
+        <Link className="story-link" href={`${V6_BASE}/government`}>Government and institutions <span><StoryArrow /></span></Link>
+        <Link className="story-link" href={`${V6_BASE}/integrators`}>System integrators <span><StoryArrow /></span></Link>
+        <Link className="story-link" href={`${V6_BASE}/enterprise`}>Enterprise <span><StoryArrow /></span></Link>
       </div>
     </div>
   </section>;
