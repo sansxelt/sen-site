@@ -35,7 +35,7 @@
 .application-area-card { position:relative; isolation:isolate; overflow:hidden; }
 .application-area-card .home-resource__image { aspect-ratio:3/4; }
 .application-area-card::after { content:""; position:absolute; inset:0; background:linear-gradient(transparent 35%,rgba(0,0,0,.8)); pointer-events:none; }
-.application-area-card .application-area-card__caption { position:absolute; z-index:1; inset:auto 0 0; padding:28px; border:0; color:white; }
+.application-area-card.home-resource .application-area-card__caption { position:absolute; z-index:1; inset:auto 0 0; padding:28px; border:0; color:white; }
 .application-area-card__caption p { margin:16px 0 0; color:#eee; font-size:15px; line-height:1.5; }
 @media(max-width:760px) { .application-area-cards { grid-template-columns:1fr; gap:20px; } .application-area-card .home-resource__image { aspect-ratio:4/3; } }
 .home-resource { display:block; color:inherit; text-decoration:none; min-width:0; }
