@@ -68,6 +68,7 @@ export function Statement({ scrollRoot }: { scrollRoot?: RefObject<HTMLElement |
   useEffect(() => { count.current = words.length; }, [words.length]);
   // Progress runs while the card travels from the bottom of the screen to a little above the middle.
   useScrollProgress(scrollRoot ?? root, {
+    smooth: false,
     property: "--statement-p",
     measure: (r, vh) => {
       if (scrollRoot?.current?.dataset.sequenced) {

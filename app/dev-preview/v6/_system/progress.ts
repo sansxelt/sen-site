@@ -28,6 +28,8 @@ import { SHORT } from "./mobile-motion";
 import { registerEngine } from "./geometry";
 
 type Options = {
+  /** Follow native scroll directly when the composition shares a chapter handoff clock. */
+  smooth?: boolean;
   /** Written on the element as this custom property. Defaults to "--p". */
   property?: string;
   /** Called with the rendered value on every engine frame; for derived discrete state (an act index). */
@@ -48,6 +50,7 @@ const pinned = (rect: DOMRect, vh: number) => {
 
 export function useScrollProgress(ref: RefObject<HTMLElement | null>, options?: Options) {
   const property = options?.property ?? "--p";
+  const smooth = options?.smooth ?? true;
   const onFrame = options?.onFrame;
   const usesPinnedMapping = !options?.measure;
   const measure = options?.measure ?? pinned;
@@ -141,7 +144,7 @@ export function useScrollProgress(ref: RefObject<HTMLElement | null>, options?: 
         raf = 0;
         const dt = lastTime ? Math.min(64, now - lastTime) : 16.7;
         lastTime = now;
-        if (rendered < 0) {
+        if (rendered < 0 || !smooth) {
           rendered = target;
         } else {
           // exponential approach: frame-rate independent, always moving toward the absolute target
@@ -219,7 +222,7 @@ export function useScrollProgress(ref: RefObject<HTMLElement | null>, options?: 
       stop?.();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- options are stable per call site
-  }, [ref, property]);
+  }, [ref, property, smooth]);
 }
 
 /**

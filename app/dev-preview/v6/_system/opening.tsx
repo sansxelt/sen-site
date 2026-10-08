@@ -30,6 +30,7 @@ export function Opening({ sequenceRoot }: { sequenceRoot?: RefObject<HTMLElement
     return () => viewport.removeEventListener("resize", sync);
   }, []);
   useScrollProgress(sequenceRoot ?? root, {
+    smooth: false,
     property: sequenceRoot ? '--opening-p' : '--p',
     measure: (rect, vh) => {
       if (sequenceRoot?.current?.dataset.sequenced) {

@@ -2,14 +2,18 @@
 .motion-label { min-width:0; display:inline-block; vertical-align:baseline; padding:0; margin:0; line-height:inherit; }
 
 .v6 .v6-btn { overflow:clip; transition:transform 260ms cubic-bezier(.22,1,.36,1),border-color 260ms,color 260ms,box-shadow 260ms; }
-.v6 .v6-btn::before { content:""; inset:0; background:rgba(10,10,11,.1); clip-path:none; opacity:0; transition:opacity 220ms; }
-.v6 .v6-btn:is(:hover,:focus-visible):not(:disabled):not([aria-disabled="true"])::before { opacity:1; }
+.v6 .v6-btn::before { content:""; inset:0; background:rgba(10,10,11,.16); clip-path:none; opacity:1; transform:translateY(101%); transition:transform 300ms cubic-bezier(0,0,.2,1); }
 .v6 .v6-btn--ghost::before { display:none; }
 .v6 .v6-btn:active:not(:disabled) { transform:scale(.97); }
 .v6 .v6-btn .v6-arw > span { transition-duration:420ms; transition-timing-function:cubic-bezier(.22,1,.36,1); }
 .v6 .v6-btn:focus-visible .v6-arw > span:first-child { transform:translateX(100%); }
 .v6 .v6-btn:focus-visible .v6-arw > span + span { transform:translateX(0); }
-.v6-nav .v6-btn::before { display:none; }
+/* A rising surface and restrained label movement, without changing the hit area. */
+@media (hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference) {
+  .v6 .v6-btn:is(:hover,:focus-visible):not(:disabled):not([aria-disabled="true"])::before { transform:translateY(0); }
+  .v6 .v6-btn .motion-label { transition:transform 300ms cubic-bezier(0,0,.2,1); }
+  .v6 .v6-btn:is(:hover,:focus-visible):not(:disabled):not([aria-disabled="true"]) .motion-label { transform:scale(.94); }
+}
 .v6 button:not(.v6-btn):not(.v6-nav__item) { transition:background-color 220ms,border-color 220ms,color 220ms,transform 220ms; }
 .v6 button:not(.v6-btn):not(.v6-nav__item):active:not(:disabled) { transform:scale(.97); }
 .v6 button svg { transition:transform 320ms cubic-bezier(.22,1,.36,1); }
@@ -33,7 +37,7 @@
 .auth-split :is(.auth-form__fields,.auth-recovery > div) { animation:authControlIn 650ms 130ms cubic-bezier(.22,1,.36,1) both; }
 @keyframes authControlIn { from { opacity:0;transform:translateY(14px); } to { opacity:1;transform:translateY(0); } }
 @media (prefers-reduced-motion:reduce) {
-  .v6 .v6-btn,.v6 .v6-btn::before,.v6 .v6-btn .v6-arw > span,.v6 button,.v6 button svg,.auth-split :is(button,a,svg),.auth-split :is(button,a)::before,.auth-split .auth-split__back > span,.auth-split .auth-split__demo-link > span { transition:none!important; }
+  .v6 .v6-btn,.v6 .v6-btn::before,.v6 .v6-btn .motion-label,.v6 .v6-btn .v6-arw > span,.v6 button,.v6 button svg,.auth-split :is(button,a,svg),.auth-split :is(button,a)::before,.auth-split .auth-split__back > span,.auth-split .auth-split__demo-link > span { transition:none!important; }
   .v6 button:active,.v6 button:is(:hover,:focus-visible) svg,.auth-split button:active,.auth-split .auth-form__provider svg { transform:none!important; }
   .auth-split :is(.auth-form__head,.auth-recovery > h1,.auth-form__providers,.auth-form__fields,.auth-recovery > div) { animation:none; }
 }
