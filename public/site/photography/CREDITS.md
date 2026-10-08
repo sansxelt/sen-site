@@ -63,7 +63,7 @@ Downloaded from the linked Pexels photographs under the [Pexels License](https:/
 | server-rack.jpg | Sergei Starostin | [Pexels 6466141](https://www.pexels.com/photo/6466141/) | 2400 × 1600 |
 | network-engineer.jpg | panumas nikhomkhai | [Pexels 19226354](https://www.pexels.com/photo/19226354/) | 2400 × 1597 |
 
-## October 7, 2026: documentation and public-page expansion
+## October 8, 2026: documentation and public-page expansion
 
 60 additional photographs, sourced from Pexels search results with published Pexels-license metadata. 40 are used in documentation (38 article images and two index thumbnails); 20 are used across public pages. These are editorial stock photographs of engineering contexts, not Vraelis equipment, customers, facilities or product evidence. All images were checked visually before selection.
 

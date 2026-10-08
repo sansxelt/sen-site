@@ -1,6 +1,6 @@
 # Documentation image sources
 
-## Current editorial photography — October 7, 2026
+## Current editorial photography — October 8, 2026
 
 The documentation uses 40 licensed stock photographs: two index thumbnails and
 two compact context images for each of the 19 articles. Source photographs,
