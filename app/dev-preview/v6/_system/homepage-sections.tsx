@@ -48,7 +48,6 @@ export function PhysicalSystems() {
           </Link>;
         })}
       </div>
-      <div className="home-areas__sources"><a href="/home/editorial/CREDITS.md">Illustrative photography · Sources</a></div>
     </div>
   </section>;
 }
@@ -70,9 +69,9 @@ export function EngineeringEntry() {
           <div className="home-resource__image"><Image src={documentation.src} alt={documentation.alt} width={documentation.w} height={documentation.h} sizes="(max-width: 760px) 100vw, 45vw" loading="lazy" /></div>
           <div data-media-copy=""><p className="home-eyebrow">Research</p><h3>Start with a threat you can test.</h3><p>Model tampering, manipulated inputs and unauthorized actions need distinct evaluations. Measure protection alongside missed attacks, false alarms and operating cost.</p></div>
         </Link>
-        <Link href={`${V6_BASE}/platform`} className="home-resource" data-media-ready="pending">
+        <Link href={`${V6_BASE}/contour`} className="home-resource" data-media-ready="pending">
           <div className="home-resource__image"><Image src={platform.src} alt={platform.alt} width={platform.w} height={platform.h} sizes="(max-width: 760px) 100vw, 45vw" loading="lazy" /></div>
-          <div data-media-copy=""><p className="home-eyebrow">The product direction</p><h3>Protect the intelligence inside.</h3><p>Model integrity, adversarial threats, machine trust and security evidence. Explore the scope of our private development and the foundations already being tested.</p></div>
+          <div data-media-copy=""><p className="home-eyebrow">Vraelis Contour</p><h3>Know what you are releasing.</h3><p>Model release security for robotics suppliers and system integrators. Explore our first product direction and its private engineering foundation.</p></div>
         </Link>
       </div>
     </div>
@@ -82,11 +81,11 @@ export function EngineeringEntry() {
 export function ApplicationAreaLinks() {
   const root = useRef<HTMLDivElement>(null);
   useMediaReady(root);
-  return <div ref={root} className="home-engineering__links">
+  return <div ref={root} className="application-area-cards">
     <MediaReadyFallback/>
-    {PRIMARY_SECTORS.map(sector => <Link key={sector.slug} href={sector.href} className="home-resource" data-media-ready="pending">
+    {PRIMARY_SECTORS.map(sector => <Link key={sector.slug} href={sector.href} className="home-resource application-area-card" data-media-ready="pending">
       <div className="home-resource__image"><Image src={sector.pics.card1610} alt="" width={2400} height={1800} sizes="(max-width:760px) 100vw,45vw"/></div>
-      <div data-media-copy=""><h2>{sector.label}</h2><p>{sector.line}</p></div>
+      <div className="application-area-card__caption" data-media-copy=""><h2>{sector.label}</h2><p>{sector.line}</p></div>
     </Link>)}
   </div>;
 }

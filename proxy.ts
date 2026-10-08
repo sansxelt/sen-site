@@ -51,6 +51,7 @@ export const V6_EXACT: Record<string, string> = {
   "/partnerships/reddit": "/dev-preview/v6/partnerships/reddit",
   "/partnerships/bytedance": "/dev-preview/v6/partnerships/bytedance",
   "/platform": "/dev-preview/v6/platform",
+  "/contour": "/dev-preview/v6/contour",
   "/zero-trust": "/dev-preview/v6/zero-trust",
   "/model-integrity": "/dev-preview/v6/model-integrity",
   "/adversarial-security": "/dev-preview/v6/adversarial-security",
@@ -221,6 +222,11 @@ export default function proxy(req: NextRequest) {
   // The design review renders real account components locally, never on a deployment.
   if (process.env.NODE_ENV !== "development" && (path === "/dev-preview/auth-entry" || path.startsWith("/dev-preview/auth-entry/"))) {
     return new NextResponse("Not found", {status:404,headers:{"x-robots-tag":"noindex"}});
+  }
+
+  // Commercial terms stay private while product scope is being established.
+  if (path === "/pricing" || path === "/pricing/" || path.startsWith("/pricing/")) {
+    return new NextResponse("Not found", { status:404, headers:{"x-robots-tag":"noindex", "cache-control":"no-store"} });
   }
 
   // The public CLI distribution is an asset, not a console page. Its APIs remain closed below.
@@ -501,7 +507,7 @@ export default function proxy(req: NextRequest) {
     const RETIRED: Record<string, string> = {
       "/how-it-works": "/method",       // superseded by /method and /platform
       "/sso": "/enterprise",            // SSO folded into the enterprise page
-      "/free-report": "/pricing",       // an offer page for a lead loop that no longer runs
+      "/free-report": "/platform",       // an offer page for a lead loop that no longer runs
       "/demo": "/contact",              // booking a demo is a conversation, and /contact is where it lives
     };
     const successor = RETIRED[path];

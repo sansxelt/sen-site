@@ -1,6 +1,6 @@
 "use client";
 
-// Shared public shell for design 06: one bar (three menus, Docs and Pricing), one phone drawer, one footer,
+// Shared public shell: Product, Solutions and Resources; one phone drawer, one footer,
 // one route transition, used by every v6 route. The bar stays put and takes the colour of whatever is under it.
 // Client-side navigation with prefetch (next/link).
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FocusEvent as ReactFocusEvent, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
@@ -32,11 +32,11 @@ const SIGNUP = `${SIGNIN}&mode=signup`;
 type MLink = { t: string; d?: string; href: string; pic?: string };
 type Group = { h: string; links: MLink[] };
 type Card = { label: string; title: string; href: string; pic: string };
-type Menu = { label: string; groups: Group[]; cards?: Card[]; foot?: MLink };
+type Menu = { label: string; intro: string; groups: Group[]; cards?: Card[]; foot?: MLink };
 
 const picSrc = (p: string) => (p.startsWith("/") ? p : `/home/menu/pics/${p}.jpg`);
 // The box is min(705px, 49vw) wide (nav.css); the two cards share it.
-const PIC_SIZES = "(max-width: 1440px) 49vw, 705px";
+const PIC_SIZES = "(max-width: 1100px) 28vw, 32vw";
 const CARD_SIZES = "(max-width: 1440px) 23vw, 330px";
 // A picture that does not load (a file not delivered yet, a deploy that lost one) shows this one instead of an
 // empty box: a licensed editorial photograph of industrial robotics.
@@ -46,49 +46,57 @@ const EDITORIAL = "/home/menu/editorial/";
 const MENUS: Menu[] = [
   {
     label: "Product",
+    intro: "Protect the intelligence inside.",
     groups: [
-      { h: "Platform", links: [
+      { h: "Product direction", links: [
         { t: "Overview", d: "AI security direction and development status", href: BASE + "/platform", pic: "/site/photography/robot-cell.jpg" },
+        { t: "Vraelis Contour", d: "Model release security for robotics engineering teams", href: BASE + "/contour", pic: "/site/photography/hardware-inspection.jpg" },
+        { t: "Development status", d: "Private foundations and integration work", href: BASE + "/beta", pic: "/site/photography/robot-detail.jpg" },
+      ] },
+      { h: "Security areas", links: [
         { t: "Model integrity", d: "Model provenance and deployment verification", href: BASE + "/model-integrity", pic: "/site/photography/server-rack.jpg" },
         { t: "Adversarial threats", d: "Manipulated inputs, poisoned data and evaluation", href: BASE + "/adversarial-security", pic: "/site/photography/robot-detail.jpg" },
         { t: "Zero trust", d: "Explicit identity, scope and approval", href: BASE + "/zero-trust", pic: "/site/photography/server-rack.jpg" },
         { t: "Recorded evidence", d: "Supporting evidence for security investigation", href: BASE + "/recorded-evidence", pic: "/site/photography/robot-detail.jpg" },
-        { t: "Development status", d: "Private foundations and integration work", href: BASE + "/beta", pic: "/site/photography/robot-detail.jpg" },
+      ] },
+      { h: "Engineering", links: [
         { t: "Integrations", d: "Integration boundaries and trusted context", href: BASE + "/integrations", pic: "/site/photography/network-engineer.jpg" },
         { t: "AI workloads", d: "Authority at the tool and action boundary", href: BASE + "/agents", pic: "/site/photography/electronics-bench.jpg" },
-      ] },
-      { h: "Developers", links: [
         { t: "Developer tools", d: "Implementation references and integration work", href: BASE + "/developers", pic: "/site/photography/hardware-inspection.jpg" },
       ] },
     ],
   },
   {
     label: "Solutions",
+    intro: "Security for AI in the physical world.",
     groups: [
       { h: "Physical systems", links: PRIMARY_SECTORS.map(s => ({ t:s.label,d:s.line,href:s.href,pic:s.slug === "defense" ? EDITORIAL + "aviation.jpg" : s.slug === "fleets" ? "/site/photography/robot-arm.jpg" : s.pics.menu })) },
-      { h: "Organizations", links: [{ t: "Government & institutions", d: "Mission systems and public infrastructure", href: BASE + "/government", pic: "/site/photography/wind-farm.jpg" }, { t: "System integrators", d: "Security boundaries across suppliers", href: BASE + "/integrators", pic: "/site/photography/network-engineer.jpg" }, { t: "Enterprise", d: "AI security across engineering teams", href: BASE + "/enterprise", pic: "/site/photography/power-grid.jpg" }] },
+      { h: "Organizations", links: [{ t: "Government & institutions", d: "Mission systems and public infrastructure", href: BASE + "/government", pic: "/site/photography/satellite-station.jpg" }, { t: "System integrators", d: "Security boundaries across suppliers", href: BASE + "/integrators", pic: "/site/photography/network-engineer.jpg" }] },
+      { h: "Engineering teams", links: [{ t: "Enterprise", d: "AI security across engineering teams", href: BASE + "/enterprise", pic: "/site/photography/server-rack.jpg" }, { t: "Integrations", d: "Integration boundaries and trusted context", href: BASE + "/integrations", pic: "/site/photography/network-engineer.jpg" }] },
     ],
     foot: { t: "Explore solutions", href: SOLUTIONS_HREF },
   },
   {
     label: "Resources",
+    intro: "Understand the threats. Examine the work.",
     groups: [
       { h: "Explore", links: [
+        { t: "Documentation", d: "Implementation references and integration work", href: BASE + "/docs", pic: "/site/photography/network-engineer.jpg" },
         { t: "The problems", d: "Unauthorized actions, untrusted inputs and integrity", href: BASE + "/problems", pic: "/site/photography/hardware-inspection.jpg" },
         { t: "Research", d: "Our method and open questions", href: BASE + "/research", pic: "/site/photography/satellite-station.jpg" },
-        { t: "Changelog", d: "What shipped and when", href: BASE + "/changelog", pic: "/site/photography/robot-grinding.jpg" },
       ] },
       { h: "Company", links: [
         { t: "Our goals", d: "The company we are building", href: BASE + "/goals", pic: "/site/photography/satellite-station.jpg" },
         { t: "About", d: "Who is building Vraelis", href: BASE + "/company", pic: "/site/photography/hardware-inspection.jpg" },
-        { t: "Contact", d: "Contact", href: BASE + "/contact", pic: "/site/photography/helicopter.jpg" },
+        { t: SYSTEM_INQUIRY_LABEL, d: "Tell us about your system and security problem", href: BASE + SYSTEM_INQUIRY_PATH, pic: "/site/photography/helicopter.jpg" },
+      ] },
+      { h: "Updates and trust", links: [
+        { t: "Changelog", d: "What shipped and when", href: BASE + "/changelog", pic: "/site/photography/robot-grinding.jpg" },
         { t: "Security", d: "How we protect your data", href: BASE + "/security", pic: "/site/photography/server-rack.jpg" },
       ] },
     ],
   },
 ];
-const DOCUMENTATION = {label:"Docs",href:BASE + "/docs"};
-const PRICING = { label: "Pricing", href: BASE + "/pricing" };
 const MEGA_ID = "v6-mega";
 
 function restartCurrentPage(event: ReactMouseEvent<HTMLAnchorElement>) {
@@ -149,48 +157,30 @@ function Brand() {
 function MegaShell({ index, state, onNavigate }: { index: number; state: "in" | "out"; onNavigate: (event: ReactMouseEvent<HTMLAnchorElement>) => void }) {
   const menu = MENUS[index];
   const pics = menuPics(menu);
-  const [pic, setPic] = useState<string | null>(pics[0] ?? null);
+  const [featuredHref, setFeaturedHref] = useState(menu.groups[0].links[0].href);
   const [shownMenu, setShownMenu] = useState(index);
   // Pictures that failed to load, shown as PIC_FALLBACK instead.
   const [lost, setLost] = useState<readonly string[]>([]);
-  if (shownMenu !== index) { setShownMenu(index); setPic(pics[0] ?? null); }
-  const point = (l: MLink) => { if (l.pic) setPic(l.pic); };
+  if (shownMenu !== index) { setShownMenu(index); setFeaturedHref(menu.groups[0].links[0].href); }
+  const point = (l: MLink) => setFeaturedHref(l.href);
+  const featured = menu.groups.flatMap(g => g.links).find(l => l.href === featuredHref) ?? menu.groups[0].links[0];
+  const pic = featured.pic;
   const srcOf = (p: string) => picSrc(lost.includes(p) ? PIC_FALLBACK : p);
   const onLost = (p: string) => () => setLost((cur) => (p === PIC_FALLBACK || cur.includes(p) ? cur : [...cur, p]));
-  // The links start under the first item of the bar, as scale.com's do, not under the wordmark. Under 1200px that
-  // indent would squeeze the picture box in the menus with longer link names, so there every menu starts its
-  // links at the page gutter instead: the same in every menu, so nothing jumps between them. If a menu's links
-  // are still too wide for the box (a long translation), they give back what the box needs, down to the gutter.
-  const grid = useRef<HTMLDivElement>(null);
-  useLayoutEffect(() => {
-    const g = grid.current, first = document.querySelector<HTMLElement>(".v6-nav__item");
-    if (!g || !first) return;
-    const set = () => {
-      g.style.paddingLeft = "";
-      const gutter = parseFloat(getComputedStyle(g).paddingLeft) || 0;
-      const indent = window.innerWidth < 1200 ? gutter : Math.max(gutter, first.getBoundingClientRect().left - g.getBoundingClientRect().left);
-      g.style.paddingLeft = `${indent}px`;
-      const box = g.querySelector<HTMLElement>(".v6-mega__media, .v6-mega__cards");
-      const short = box ? Math.min(705, window.innerWidth * 0.49) - box.getBoundingClientRect().width : 0;
-      if (short > 0.5) g.style.paddingLeft = `${Math.max(gutter, indent - short)}px`;
-    };
-    set();
-    window.addEventListener("resize", set);
-    return () => window.removeEventListener("resize", set);
-  }, [index]);
   return (
     <div className="v6-mega" data-state={state}>
       <div className="v6-mega__panel">
-        <div ref={grid} className="v6-mega__grid" key={menu.label} data-cards={menu.cards ? "true" : undefined}>
+        <div className="v6-mega__intro"><p>{menu.intro}</p><span>Vraelis is in private development.</span></div>
+        <div className="v6-mega__grid" key={menu.label} data-cards={menu.cards ? "true" : undefined}>
           {menu.groups.map((g, gi) => (
             <div key={g.h} className="v6-mega__col">
               <p className="v6-mega__col-h" id={`${MEGA_ID}-${index}-${gi}`}>{g.h}</p>
               <ul className="v6-mega__list" aria-labelledby={`${MEGA_ID}-${index}-${gi}`}>
                 {g.links.map((l) => (
                   <li key={l.t}>
-                    <Link href={l.href} className="v6-mega__link" data-on={l.pic !== undefined && l.pic === pic ? "true" : undefined}
+                    <Link href={l.href} className="v6-mega__link" data-on={l.href === featured.href ? "true" : undefined}
                       onClick={onNavigate} onMouseEnter={() => point(l)} onFocus={() => point(l)}>
-                      {l.t}
+                      <span>{l.t}</span>{l.d ? <span className="v6-mega__description">{l.d}</span> : null}
                     </Link>
                   </li>
                 ))}
@@ -213,12 +203,13 @@ function MegaShell({ index, state, onNavigate }: { index: number; state: "in" | 
               ))}
             </div>
           ) : (
-            <div className="v6-mega__media" aria-hidden="true">
+            <Link href={featured.href} className="v6-mega__media" onClick={onNavigate}>
               {pics.map((p) => (
                 <Image key={p} src={srcOf(p)} alt="" fill sizes={PIC_SIZES} className="v6-mega__pic" data-on={p === pic}
                   loading="eager" onError={onLost(p)} />
               ))}
-            </div>
+              <span className="v6-mega__feature-copy"><span>{featured.t}</span><span>{featured.d}</span><span className="v6-mega__feature-action">Explore this area</span></span>
+            </Link>
           )}
         </div>
       </div>
@@ -244,7 +235,7 @@ function themeAtTop(pathname: string): boolean {
 export function V6Nav({ authed = false }: { authed?: boolean }) {
   const pathname = usePathname() || "";
   const navRef = useRef<HTMLElement>(null);
-  // The bar's top items in order: the three menu buttons, then the Pricing link.
+  // The three disclosure buttons in their visual and keyboard order.
   const itemRefs = useRef<(HTMLElement | null)[]>([]);
   const megaRef = useRef<HTMLDivElement>(null);
   const burgerRef = useRef<HTMLButtonElement>(null);
@@ -623,14 +614,7 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
               {m.label}
             </button>
           ))}
-          <Link href={DOCUMENTATION.href} ref={(el) => { itemRefs.current[MENUS.length] = el; }} className="v6-nav__item" onClick={restartCurrentPage}
-            aria-current={pathname === DOCUMENTATION.href || pathname?.startsWith(DOCUMENTATION.href + "/") ? "page" : undefined} onPointerEnter={(event) => mouseOnly(leaveMenus)(event)} onFocus={leaveMenus}>
-            {DOCUMENTATION.label}
-          </Link>
-          <Link href={PRICING.href} ref={(el) => { itemRefs.current[MENUS.length + 1] = el; }} className="v6-nav__item" onClick={restartCurrentPage}
-            aria-current={pathname === PRICING.href ? "page" : undefined} onPointerEnter={(event) => mouseOnly(leaveMenus)(event)} onFocus={leaveMenus}>
-            {PRICING.label}
-          </Link>
+
         </div>
         {/* A panel on its way out stays on screen for its exit, and is inert for it: nothing in it can take focus
             (a quick Tab from Pricing used to land in a panel about to unmount) or be read out while it fades. */}
@@ -672,11 +656,10 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
 
 function MobileNav({ authed, onClose }: { authed: boolean; onClose: (returnFocus: boolean) => void }) {
   const panel = useRef<HTMLDivElement>(null);
-  const pathname = usePathname() || "";
   // One section open at a time, Product first: the drawer used to flatten every desktop group into one long
   // list under headings like "Platform, Understand", which read as an index dump next to the desktop menus.
   // Each menu is an accordion carrying the same groups and titles the desktop panel shows, each link with its
-  // one-line description, on the same black surface; Pricing follows as a plain row.
+  // one-line description, on the same black surface.
   const [openSec, setOpenSec] = useState<number | null>(0);
   useEffect(() => {
     // THE PAGE BEHIND MUST NOT SCROLL (founder, from an iPhone, 2026-10-01: "they can scroll the page and
@@ -775,15 +758,7 @@ function MobileNav({ authed, onClose }: { authed: boolean; onClose: (returnFocus
             ) : null}
           </section>
         ))}
-        {/* Pricing has no menu on a desktop, so it has no accordion here: one plain row at the size of the
-            section heads, with an arrow where they have a chevron (plan S3). */}
-        <Link href={DOCUMENTATION.href} className="v6-drawer__row" onClick={follow}
-          aria-current={pathname === DOCUMENTATION.href ? "page" : undefined}>{DOCUMENTATION.label}</Link>
-        <Link href={PRICING.href} className="v6-drawer__row" onClick={follow}
-          aria-current={pathname === PRICING.href ? "page" : undefined}>
-          {PRICING.label}
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-        </Link>
+
       </div>
       <div className="v6-drawer__foot">
         <LanguageSwitcher placement="up" className="v6-drawer__lang" />

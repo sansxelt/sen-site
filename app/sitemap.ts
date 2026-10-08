@@ -26,7 +26,6 @@ type Freq = NonNullable<Entry["changeFrequency"]>;
 // someone to remember this file.
 const WEIGHT: Record<string, { p: number; f: Freq }> = {
   "/": { p: 1, f: "weekly" },
-  "/pricing": { p: 0.9, f: "weekly" },
   "/platform": { p: 0.9, f: "monthly" },
   "/zero-trust": { p: 0.9, f: "monthly" },
   "/developers": { p: 0.8, f: "monthly" },
@@ -67,7 +66,7 @@ const WEIGHT: Record<string, { p: number; f: Freq }> = {
 
 // Never advertised, in either generation: a sign-in form and a checkout have nothing to index. /signin was
 // previously listed, which is how a form ended up in the index.
-const NEVER_INDEXED = new Set(["/signin", "/checkout"]);
+const NEVER_INDEXED = new Set(["/signin", "/checkout", "/pricing"]);
 
 // Retired presentation routes remain redirectable, but do not belong in the current sitemap.
 const RETIRED_PRESENTATION = new Set([

@@ -59,7 +59,7 @@ console.log("\n── every public page is actually reachable ──");
 
   // Every directory directly under app/rank/ that has a page is a public route.
   const pages = readdirSync("app/rank", { withFileTypes: true })
-    .filter((d) => d.isDirectory() && !d.name.startsWith("_") && d.name !== "app")
+    .filter((d) => d.isDirectory() && !d.name.startsWith("_") && d.name !== "app" && d.name !== "pricing")
     .filter((d) => existsSync(`app/rank/${d.name}/page.tsx`))
     .map((d) => `/${d.name}`);
 
@@ -81,10 +81,11 @@ console.log("\n── every public page is actually reachable ──");
     /path\.startsWith\("\/research\/"\)\) target = \(v6Public\(\) \? "\/dev-preview\/v6" : "\/rank"\)/.test(proxy));
   ok("design 06 has a renderer for them", existsSync("app/dev-preview/v6/research/[slug]/page.tsx"));
   // One registry. A re-skin that forked the prose would give two versions of an authoritative document.
-  ok("that renderer reads the SAME article registry, it does not copy the writing",
-    /from "@\/app\/rank\/research\/_articles"/.test(readFileSync("app/dev-preview/v6/research/[slug]/page.tsx", "utf8")));
-  ok("design 06 links its articles, so they are reachable and not only addressable",
-    /publishedArticles\(\)/.test(readFileSync("app/dev-preview/v6/research/page.tsx", "utf8")));
+  // Legacy verification essays were retired during the AI-security reframe.
+  ok("retired research articles lead to the current research page",
+    /redirect\(`\$\{V6_BASE\}\/research`\)/.test(readFileSync("app/dev-preview/v6/research/[slug]/page.tsx", "utf8")));
+  ok("current research publishes security topics and underlying references",
+    /references:/.test(readFileSync("app/dev-preview/v6/research/page.tsx", "utf8")));
 }
 
 console.log("\n── cross-host redirects preserve the query string ──");
@@ -331,7 +332,7 @@ console.log("\n── retired product surfaces are not reachable or indexable �
   // newer site to be superseded by. Before promotion they are the live site and belong in the sitemap.
   ok("superseded pages are dropped from the sitemap only once design 06 is serving",
     /SUPERSEDED_BY_V6[\s\S]{0,200}"\/how-it-works"/.test(sitemap)
-    && /promoted && SUPERSEDED_BY_V6\.has\(p\)/.test(sitemap));
+    && /promoted && \(?SUPERSEDED_BY_V6\.has\(p\)/.test(sitemap));
   const paypal = readFileSync("app/api/paypal/create-subscription/route.ts", "utf8");
   ok("PayPal subscription returns to the live /billing/success (not the dead /checkout/success)",
     /returnUrl:[\s\S]{0,60}\/billing\/success/.test(paypal) && !/returnUrl:[\s\S]{0,60}\/checkout\/success/.test(paypal));

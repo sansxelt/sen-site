@@ -12,7 +12,7 @@ import { Spectral } from "./spectral";
 import "./close.css";
 import { V6_BASE } from "@/lib/v6-routes";
 import { SYSTEM_INQUIRY_LABEL, SYSTEM_INQUIRY_PATH } from "@/lib/app-availability";
-import { FOOTER_STATEMENT, HEADLINE } from "./positioning";
+import { HEADLINE } from "./positioning";
 import { PRIMARY_SECTORS, SOLUTIONS_HREF } from "../_content/sectors";
 import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -64,7 +64,7 @@ export function ClosingScene({
 // Main destinations stay visible. Detailed documentation and other solutions are
 // accessible through their indexes; secondary policies remain in a disclosure.
 const COLS: [string, [string, string][]][] = [
-  ["Product", [[`${BASE}/platform`, "Platform"], [`${BASE}/zero-trust`, "Zero trust"], [`${BASE}/recorded-evidence`, "Recorded evidence"], [`${BASE}/beta`, "Development status"], [`${BASE}/integrations`, "Integrations"], [`${BASE}/agents`, "AI workloads"], [`${BASE}/pricing`, "Pricing"]]],
+  ["Product", [[`${BASE}/platform`, "Overview"], [`${BASE}/contour`, "Vraelis Contour"], [`${BASE}/zero-trust`, "Zero trust"], [`${BASE}/recorded-evidence`, "Recorded evidence"], [`${BASE}/beta`, "Development status"], [`${BASE}/integrations`, "Integrations"], [`${BASE}/agents`, "AI workloads"]]],
   ["Solutions", [...PRIMARY_SECTORS.map((s): [string, string] => [s.href, s.label]), [`${BASE}/government`, "Government & institutions"], [`${BASE}/integrators`, "System integrators"], [`${BASE}/enterprise`, "Enterprise"], [SOLUTIONS_HREF, "Explore solutions"]]],
   ["Resources", [[`${BASE}/docs`, "Documentation"], [`${BASE}/developers`, "Developer tools"], [`${BASE}/problems`, "The problems"], [`${BASE}/research`, "Research"], [`${BASE}/changelog`, "Changelog"]]],
   ["Company", [[`${BASE}/goals`, "Our goals"], [`${BASE}/company`, "About"], [`${BASE}/contact`, "Contact"]]],
@@ -77,8 +77,6 @@ export function SiteFooter() {
       <div className="v6-foot2__lower">
         <div className="v6-foot2__brand">
           <Link href={BASE || "/"} className="v6-foot2__wordmark" aria-label="Vraelis homepage">Vraelis</Link>
-          <p>AI security. In development.</p>
-          <span>Defense. Infrastructure. Robotics.</span>
         </div>
         {/* Each column is a named group of links (WCAG 1.3.1): the label looks like a heading, so a screen reader
             hears it as the group's name rather than as one more line in a run of about 45 links. A <p>, not a
@@ -100,7 +98,6 @@ export function SiteFooter() {
       <div className="v6-foot2__closing">{HEADLINE}</div>
 
       <div className="v6-foot2__base">
-        <p className="v6-foot2__say"><span>{FOOTER_STATEMENT}</span></p>
         <div className="v6-foot2__base-in">
           {/* The language switch: the same one the docs, sign-in and the console carry. */}
           <span className="v6-foot2__lang"><LanguageSwitcher placement="up" toTop /><span>© 2026 Vraelis</span></span>

@@ -4,8 +4,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useLayoutEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useLocale } from "@/lib/i18n/client";
 import { V6_BASE } from "@/lib/v6-routes";
 import "./orbit.css";
 import { photograph, type PhotographKey } from "../_content/photography";
@@ -28,21 +26,7 @@ export const ORBIT: readonly Tile[] = [
 
 const RING = "(min-width: 1024px) and (hover: hover) and (pointer: fine)";
 
-function TopicSwap({ text }: { text: string }) {
-  const reduced = useReducedMotion();
-  return <span className="v6-or__topic-slot" aria-hidden="true">
-    <AnimatePresence initial={false} mode="popLayout">
-      <motion.span key={text} className="v6-or__topic"
-        initial={{ y: reduced ? 0 : "100%" }} animate={{ y: 0 }} exit={{ y: reduced ? 0 : "-100%" }}
-        transition={{ duration: reduced ? 0 : .32, ease: [.22, 1, .36, 1] }}>
-        {text}
-      </motion.span>
-    </AnimatePresence>
-  </span>;
-}
-
 export function Orbit() {
-  const locale = useLocale();
   const root = useRef<HTMLElement>(null);
   useMediaReady(root);
   const tiles = useRef<(HTMLLIElement | null)[]>([]);
@@ -134,19 +118,11 @@ export function Orbit() {
     return () => { cancelAnimationFrame(raf); resize.disconnect(); observer.disconnect(); media.removeEventListener("change", measure); reduced.removeEventListener("change", start); document.removeEventListener("visibilitychange", start); wake.current = () => {}; };
   }, []);
 
-  const topic = selected === null ? "physical systems" : ORBIT[selected].phrase;
-  const heading = `AI security for ${topic}.`;
-
   return <section ref={root} className="v6-or__field v6-dark" aria-labelledby="v6-or-h" data-nav-dark data-nav-theme="dark" data-media-ready="pending">
     <MediaReadyFallback/>
     <div className="v6-or__copy" data-media-copy="">
-      {locale === "en" ? <h2 id="v6-or-h" className="v6-or__h" aria-label={heading} data-no-translate>
-        <span>AI security for </span><TopicSwap text={topic} /><span>.</span>
-      </h2> : <h2 id="v6-or-h" className="v6-or__h v6-or__h--translated" aria-label={heading}>
-        <TopicSwap text={heading} />
-      </h2>}
+      <h2 id="v6-or-h" className="v6-or__h">Security for AI in the physical world.</h2>
       <p className="v6-or__d">Developing cybersecurity for AI-enabled defense, infrastructure and robotics.</p>
-      <Link className="v6-or__link" href={selected === null ? `${V6_BASE}/beta` : ORBIT[selected].href}>{selected === null ? "Development status" : ORBIT[selected].label}</Link>
     </div>
     <ul className="v6-or__tiles">
       {ORBIT.map((t, i) => <li key={t.label} ref={node => { tiles.current[i] = node; }} className="v6-or__item" data-on={i === selected}>

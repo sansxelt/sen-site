@@ -13,7 +13,7 @@ const base = process.env.I18N_TEST_BASE_URL ?? "http://localhost:3100/dev-previe
 const codes = LOCALE_KEYS.filter(l => l !== "en");
 const catalogues = codes.map(locale => ({locale, copy:JSON.parse(readFileSync(`public/locales/${locale}.json`, "utf8")) as Record<string,string>}));
 const protectedText = new Set(["Vraelis", "Reddit", "ByteDance", "TikTok", "GitHub", "Google", "Vercel", "Stripe", "Supabase", "Sentry", "Slack", "MCP", "CLI", "API", "CLI:", "API:", "MCAP", "vraelis.com"]);
-const routes = ["", "platform", "model-integrity", "adversarial-security", "zero-trust", "recorded-evidence", "solutions", "solutions/defense", "solutions/fleets", "infrastructure", "government", "integrators", "enterprise", "contact", "beta", "integrations", "agents", "problems", "goals", "company", "pricing", "security", "developers", "docs", "research", "changelog", "limitations", "data-rights", "privacy", "cookies", "terms", "acceptable-use", "subprocessors", "refunds", "trademark", ...DOCS.map(d => `docs/${d.slug}`)];
+const routes = ["", "platform", "contour", "model-integrity", "adversarial-security", "zero-trust", "recorded-evidence", "solutions", "solutions/defense", "solutions/fleets", "infrastructure", "government", "integrators", "enterprise", "contact", "beta", "integrations", "agents", "problems", "goals", "company", "security", "developers", "docs", "research", "changelog", "limitations", "data-rights", "privacy", "cookies", "terms", "acceptable-use", "subprocessors", "refunds", "trademark", ...DOCS.map(d => `docs/${d.slug}`)];
 const strings = new Set<string>();
 async function collect(page:Page) {
   const copy = await page.evaluate<string[]>(String.raw`(() => {

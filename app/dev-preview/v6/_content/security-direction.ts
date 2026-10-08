@@ -13,6 +13,31 @@ export const SECURITY_STATUS = [
 
 const item = (label: string, title: string, body: string) => ({ label, title, body });
 export const SECURITY_PAGES: Record<string, DirectionContent> = {
+  contour: {
+    eyebrow: "Vraelis Contour / Private development", title: "Know what you are releasing.",
+    intro: "Model updates change how an AI system behaves. Vraelis Contour is our first product direction: model release security for robotics suppliers and system integrators.",
+    photo: "hardwareInspection", heading: "A model release is a security decision.",
+    lead: "For the release, platform and security engineers responsible for moving an approved model into an operational system.",
+    items: [
+      item("Integrity", "Identify the exact release", "Bind the model artifact and configuration to a reviewed version. A familiar filename or an unchanged label cannot establish integrity."),
+      item("Authority", "Separate proposing from approving", "Tie approval to the release, destination and deployment identity. Keep approval independent of the person or workload proposing the change."),
+      item("Evidence", "Keep a reviewable release history", "Record what was approved and activated so reviewers can investigate changes. Account for failed updates, expired approvals and recovery."),
+    ],
+    story: {
+      photo: "serverRack", eyebrow: "The engineering foundation", title: "Start at the release boundary.",
+      paragraphs: [
+        "Our private reference experiment checks signed model releases, scoped approvals and recorded activation history. It exercises a small reference workload, not a deployed perception model or a customer system.",
+        "Identity integration, production runtimes and independent runtime verification remain integration work. The experiment does not establish resistance to a compromised host or prove that a model's behavior is safe.",
+      ],
+    },
+    nextTitle: "Build around the team's actual environment.",
+    nextLead: "Vraelis Contour is in private development. There is no public application, available deployment or published price.",
+    next: [
+      item("Release teams", "The update workflow", "Understand how models are packaged, reviewed, promoted and rolled back across the equipment fleet."),
+      item("Platform teams", "The runtime boundary", "Identify where a release can be checked and where existing deployment tooling must enforce that decision."),
+      item("Security teams", "The threat and the evidence", "Define who could alter a model release, which controls already exist and what evidence would demonstrate a useful improvement."),
+    ],
+  },
   platform: {
     eyebrow: "The product direction", title: "Protect the intelligence inside.",
     intro: "Vraelis is developing cybersecurity software for AI-enabled defense, critical infrastructure and robotics. Our scope spans model integrity, adversarial threats, machine trust and security evidence.",

@@ -208,6 +208,25 @@
 /* The first picture of each menu, fetched ahead (shell.tsx, WARM_PICS): in the page, never seen. */
 .v6-mega__warm { position: absolute; top: 0; left: 0; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
 .v6-mega__warm-i { position: relative; display: block; width: 1px; height: 1px; }
+
+/* Each menu has an introduction, three topic groups and a linked photographic feature. */
+.v6-mega__intro { max-width:var(--max-wide); margin:auto; padding:28px var(--gutter) 0; display:flex; align-items:baseline; justify-content:space-between; gap:24px; }
+.v6-mega__intro p { margin:0; font:400 clamp(22px,2vw,30px)/1.2 var(--display); letter-spacing:-.025em; color:#fafafa; }
+.v6-mega__intro>span { font-size:12px; color:#999; }
+.v6-mega__grid { grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.7fr); column-gap:clamp(22px,3vw,48px); min-height:0; padding-top:30px; padding-bottom:32px; padding-left:var(--gutter)!important; }
+.v6-mega__col-h { margin-bottom:18px; color:#999; font-size:12px; }
+.v6-mega__link { padding:8px 0 12px; font-size:16px; line-height:1.35; }
+.v6-mega__description { display:block; color:#999; font-size:12px; line-height:1.5; margin-top:5px; letter-spacing:0; max-width:27ch; }
+.v6-mega__link:is(:hover,:focus-visible) .v6-mega__description { color:#ccc; }
+.v6-mega__media { grid-column:4; width:100%; height:auto; min-height:310px; align-self:stretch; color:#fff; text-decoration:none; background:#181818; }
+.v6-mega__media::after { content:""; position:absolute; inset:0; background:linear-gradient(transparent 25%,rgba(0,0,0,.55) 64%,rgba(0,0,0,.88)); pointer-events:none; }
+.v6-mega__feature-copy { position:relative; z-index:1; display:flex; flex-direction:column; justify-content:end; min-height:310px; height:100%; padding:28px; gap:10px; }
+.v6-mega__feature-copy>span:first-child { font:400 clamp(24px,2.1vw,34px)/1.1 var(--display); letter-spacing:-.025em; }
+.v6-mega__feature-copy>span:nth-child(2) { font-size:14px; line-height:1.5; color:#eee; max-width:34ch; }
+.v6-mega__feature-action { margin-top:12px; font-size:12px; color:#ddd; }
+.v6-mega__media:is(:hover,:focus-visible) { color:#fff; outline:1px solid #fff; outline-offset:4px; }
+.v6-mega__foot { grid-column:1 / 4; margin-top:20px; }
+@media(max-width:1100px) { .v6-mega__grid { grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.3fr); gap:20px; } .v6-mega__description { font-size:11px; } .v6-mega__feature-copy { padding:20px; } }
 @media (prefers-reduced-motion: reduce) {
   /* No movement: the panel appears and goes at once (it stays mounted for its exit, so it is hidden then). */
   .v6-mega__panel, .v6-mega__grid { animation: none !important; }
@@ -354,10 +373,10 @@
 
 /* Expanded navigation fits normal desktops; short windows scroll within the menu. */
 .v6-mega__panel{max-height:calc(100svh - var(--nav-h,66px));overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#555 #0a0a0b;scroll-padding:24px}
-.v6-mega__link{min-height:40px;display:flex;align-items:center}
+.v6-mega__link{min-height:40px;display:block}
 .v6-drawer__body{scroll-padding:24px;scrollbar-width:thin;scrollbar-color:#555 #0a0a0b}
 @media(prefers-reduced-motion:no-preference){.v6-mega__panel,.v6-drawer__body{scroll-behavior:smooth}}
-@media(max-height:700px) and (min-width:901px){.v6-mega__grid{padding-block:24px;min-height:0}.v6-mega__media{max-height:280px}}
+@media(max-height:700px) and (min-width:901px){.v6-mega__grid{padding-block:24px;min-height:0}}
 
 .v6:has(.home-page) .v6-nav[data-theme="dark"][data-scrolled="true"] .v6-nav__in { border-bottom-color:transparent; }
 
