@@ -1,9 +1,9 @@
 "use client";
 
-// Shared public shell: Product, Solutions and Resources; one phone drawer, one footer,
+// Shared public shell: Product, Solutions, Research and Resources; one phone drawer, one footer,
 // one route transition, used by every v6 route. The bar stays put and takes the colour of whatever is under it.
 // Client-side navigation with prefetch (next/link).
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FocusEvent as ReactFocusEvent, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FocusEvent as ReactFocusEvent, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -83,7 +83,6 @@ const MENUS: Menu[] = [
       { h: "Explore", links: [
         { t: "Documentation", d: "Implementation references and integration work", href: BASE + "/docs", pic: "/site/photography/network-engineer.jpg" },
         { t: "The problems", d: "Unauthorized actions, untrusted inputs and integrity", href: BASE + "/problems", pic: "/site/photography/hardware-inspection.jpg" },
-        { t: "Research", d: "Our method and open questions", href: BASE + "/research", pic: "/site/photography/satellite-station.jpg" },
       ] },
       { h: "Company", links: [
         { t: "Our goals", d: "The company we are building", href: BASE + "/goals", pic: "/site/photography/satellite-station.jpg" },
@@ -526,7 +525,7 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
       e.preventDefault();
       const i = shown;
       close(i);
-      const next = itemRefs.current[i + 1] ?? navRef.current?.querySelector<HTMLElement>(".v6-nav__right a[href], .v6-nav__right button");
+      const next = (i === 1 ? navRef.current?.querySelector<HTMLElement>(".v6-nav__research") : itemRefs.current[i + 1]) ?? navRef.current?.querySelector<HTMLElement>(".v6-nav__right a[href], .v6-nav__right button");
       next?.focus();
     }
   };
@@ -606,13 +605,16 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
               while its panel exists), not an ARIA menu: the panel is a set of links, reached with Tab. While one
               is open the other items dim (nav.css). */}
           {MENUS.map((m, i) => (
-            <button key={m.label} type="button" ref={(el) => { itemRefs.current[i] = el; }}
+            <Fragment key={m.label}>
+            {m.label === "Resources" ? <Link href={`${BASE}/research`} className="v6-nav__item v6-nav__research" aria-current={pathname === `${BASE}/research` ? "page" : undefined} onPointerEnter={(event)=>mouseOnly(leaveMenus)(event)} onFocus={leaveMenus} onClick={restartCurrentPage}>Research</Link> : null}
+            <button type="button" ref={(el) => { itemRefs.current[i] = el; }}
               className="v6-nav__item" aria-expanded={open === i} aria-controls={open === i ? MEGA_ID : undefined}
               onPointerDown={(e) => { lastPointer.current = e.pointerType; }} onClick={onItemClick(i)}
               onPointerEnter={(event) => mouseOnly(() => openAt(i))(event)}
               onKeyDown={onItemKey(i)} onFocus={() => { if (open !== null && open !== i) close(open); }}>
               {m.label}
             </button>
+            </Fragment>
           ))}
 
         </div>
@@ -720,7 +722,9 @@ function MobileNav({ authed, onClose }: { authed: boolean; onClose: (returnFocus
       </div>
       <div className="v6-drawer__body">
         {MENUS.map((m, i) => (
-          <section key={m.label} className="v6-drawer__sec" data-open={openSec === i}>
+          <Fragment key={m.label}>
+          {m.label === "Resources" ? <Link href={`${BASE}/research`} className="v6-drawer__standalone" onClick={follow}>Research</Link> : null}
+          <section className="v6-drawer__sec" data-open={openSec === i}>
             <button type="button" className="v6-drawer__sec-h" aria-expanded={openSec === i}
               aria-controls={`v6-dsec-${i}`}
               onClick={(e) => {
@@ -757,6 +761,7 @@ function MobileNav({ authed, onClose }: { authed: boolean; onClose: (returnFocus
               </div>
             ) : null}
           </section>
+          </Fragment>
         ))}
 
       </div>

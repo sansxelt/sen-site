@@ -11,17 +11,20 @@ const content: DirectionContent = {
     {
       "label": "Adversarial inputs",
       "title": "Study the path to an action",
-      "body": "Prompt injection and adversarial perception inputs require different test cases and controls. Constrain authority separately from detection."
+      "body": "Prompt injection and adversarial perception inputs require different test cases and controls. Constrain authority separately from detection.",
+      "href": "/adversarial-security"
     },
     {
       "label": "Supply chain",
       "title": "Establish artifact provenance",
-      "body": "Study poisoned data, compromised dependencies and unauthorized model changes. Evaluate what the source evidence can authenticate."
+      "body": "Study poisoned data, compromised dependencies and unauthorized model changes. Evaluate what the source evidence can authenticate.",
+      "href": "/model-integrity"
     },
     {
       "label": "Behavior",
       "title": "Investigate changes over time",
-      "body": "Performance drift can have operational causes. Use qualified baselines before attributing an anomaly to an attack."
+      "body": "Performance drift can have operational causes. Use qualified baselines before attributing an anomaly to an attack.",
+      "href": "/recorded-evidence"
     }
   ],
   story: {

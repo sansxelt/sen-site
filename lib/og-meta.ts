@@ -11,8 +11,8 @@ import { robotsMeta } from "./stealth";
 // around it had been corrected. That is the exact failure lib/social-card.ts was written to end, and it was
 // only ever applied to the root layout and to V6. These nineteen pages were missed.
 //
-// So the embed now comes from ONE place for every surface: one sentence, and the square Vraelis mark as the
-// only image, in a small summary card. There is no per-page override and there is no headline artwork.
+// The embed comes from ONE place for every surface: one sentence and a versioned landscape photograph
+// card. There is no per-page image override.
 //
 // What stays per-page is everything that is NOT an embed: the browser title, the HTML meta description that
 // a search result shows, the canonical URL, and whether the page is indexable.

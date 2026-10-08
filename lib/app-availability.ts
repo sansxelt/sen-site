@@ -10,7 +10,7 @@ export function isWorkspaceHost(host: string): boolean {
 }
 
 // A concrete public next step while the product is private.
-export const SYSTEM_INQUIRY_LABEL = "Talk AI security";
+export const SYSTEM_INQUIRY_LABEL = "Join us";
 export const SYSTEM_INQUIRY_PATH = "/contact?topic=ai-security";
 
 const at = (path: string, root: string) => path === root || path.startsWith(`${root}/`);

@@ -8,9 +8,8 @@
 // So there is one sentence and one image, here, and every surface imports them. A new route that wants a
 // social card gets the same card as everything else or it does not get one.
 //
-// The image is the MARK, not artwork with copy baked into it. A rendered headline card is the worst kind of
-// stale: platforms cache the PNG far longer than the page, so the picture keeps saying the old thing after
-// the words around it have been fixed. A logo says the same thing in every positioning we will ever have.
+// The public preview uses licensed photography and the homepage headline. Keep a versioned asset URL:
+// changing the design or copy requires a new filename so platforms can fetch the new image.
 
 export const SOCIAL_TITLE = "Vraelis";
 
@@ -21,19 +20,19 @@ export const SOCIAL_TITLE = "Vraelis";
  *  audience open. scripts/email-embeds-verify.ts pins this exact wording and its length. */
 export const SOCIAL_DESCRIPTION = "Developing AI security for defense, infrastructure and physical systems.";
 
-/** Square wordmark for shared links; distinct from the browser favicon. */
-export const SOCIAL_IMAGE = "https://vraelis.com/social/vraelis-wordmark.png";
+/** Wide editorial card for shared links; distinct from the browser favicon. */
+export const SOCIAL_IMAGE = "https://vraelis.com/social/vraelis-physical-ai-v1.png";
 
 // STATED, NOT INFERRED. The tags carried a bare image URL, so every scraper had to fetch the file and
 // decode it before it knew the shape — and a scraper on a short timeout that does not get there renders
 // the card with no picture at all, which is what an empty box on a shared link actually is. LinkedIn in
 // particular sizes its tile from these. They are the real dimensions of the PNG in public/, and
 // scripts/email-embeds-verify.ts reads the file header to prove they still are.
-export const SOCIAL_IMAGE_WIDTH = 1024;
-export const SOCIAL_IMAGE_HEIGHT = 1024;
+export const SOCIAL_IMAGE_WIDTH = 1200;
+export const SOCIAL_IMAGE_HEIGHT = 630;
 
-/** Alt text for the mark. A link preview is content; it gets described like any other image. */
-export const SOCIAL_IMAGE_ALT = "The Vraelis wordmark";
+/** Alt text for the photographic card. A link preview is content; it gets described like any other image. */
+export const SOCIAL_IMAGE_ALT = "Vraelis — Security for AI in the physical world. Industrial robotics photography.";
 
 // A FEW EMBEDS, NOT NINETEEN AND NOT ONE.
 //
@@ -45,9 +44,8 @@ export const SOCIAL_IMAGE_ALT = "The Vraelis wordmark";
 // and sees every embed the company has — while a page can still say what it actually is. What is NOT
 // offered is a free-form per-page description, because that is exactly how the five drifted apart.
 //
-// Every variant uses the same mark and the same small summary card, so all of them render identically
-// everywhere: a square logo tile beside a title and a sentence. That is the "universal" half. Discord, X,
-// LinkedIn, Slack and iMessage all lay that out correctly without per-platform special cases.
+// Every variant uses the same landscape image and card type. Platforms decide the surrounding layout;
+// no page forks the image or supplies its own unreviewed product artwork.
 //
 // Each sentence describes the WHOLE product or the specific artifact being shared. None of them elevates a
 // single feature into the definition of the company.
@@ -70,14 +68,13 @@ export type SocialEmbed = keyof typeof SOCIAL_EMBEDS;
 
 /**
  * The complete Open Graph + Twitter block. ONE builder, so every embed is identical in shape and only the
- * two sentences differ. `card: "summary"` is deliberate: it renders the small square thumbnail a logo is
- * meant for, where "summary_large_image" would stretch the mark across a 2:1 banner.
+ * two sentences differ. The wide card gives the photograph and headline room to read in shared links.
  */
 function build(title: string, description: string) {
   const image = { url: SOCIAL_IMAGE, width: SOCIAL_IMAGE_WIDTH, height: SOCIAL_IMAGE_HEIGHT, alt: SOCIAL_IMAGE_ALT };
   return {
     openGraph: { title, description, siteName: SOCIAL_TITLE, images: [image] },
-    twitter: { card: "summary" as const, title, description, images: [image] },
+    twitter: { card: "summary_large_image" as const, title, description, images: [image] },
   };
 }
 

@@ -6,9 +6,7 @@ const v6Public = process.env.NEXT_PUBLIC_VRAELIS_V6_PUBLIC === "1";
 
 // One metadata system for design 06. Preview routes stay noindex, but every value is real and inspectable.
 //
-// NO OPEN GRAPH IMAGE, ANYWHERE. Every link preview is text only, carrying the single sentence in
-// positioning.ts. A generated card bakes its copy into a PNG that platforms cache far longer than the page,
-// which is how LinkedIn and X each ended up pinned to a different retired positioning at the same time.
+// The shared social-card builder owns the description, versioned image and platform card type.
 export const V6_ORIGIN = "https://vraelis.com";
 
 export function v6meta(o: {

@@ -88,6 +88,8 @@
    are stated with .v6-nav in front because the site-wide `a:hover { color: var(--acc) }` (tokens.css, near
    black) would otherwise reach the Pricing link. */
 .v6-nav__items { display: flex; align-items: center; gap: 2px; min-width: 0; }
+.v6-drawer__standalone { display:block; padding:22px 0; border-bottom:1px solid var(--line); color:var(--ink); text-decoration:none; font-size:22px; }
+.v6-drawer__standalone:hover { color:var(--ink-2); }
 .v6-nav__item { font-size: 14px; font-weight: 500; line-height: 1.5; color: var(--ink-3); text-decoration: none; white-space: nowrap;
   background: none; border: 0; cursor: pointer; font-family: var(--sans); padding: 8px 14px; display: inline-flex;
   align-items: center; transition: color 120ms var(--ease-out); }

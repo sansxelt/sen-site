@@ -96,21 +96,18 @@ console.log("\n── ONE embed, for every surface, forever ──");
 // validation for AI-built systems", a positioning two pivots old.
 //
 // So the check is now structural: there is exactly one embed, it is defined in exactly one file, and no
-// surface may fork it. The standing rule from the founder is one sentence and no artwork beyond the mark.
+// surface may fork it. The shared landscape artwork uses licensed photography and the public headline.
 const socialCardSrc = readFileSync("lib/social-card.ts", "utf8");
 const ogMeta = readFileSync("lib/og-meta.ts", "utf8");
 
 // Updated 2026-10-04 for the physical-systems direction. Keep one shared description.
-const OFFICIAL_DESC = "External software review for physical systems";
+const OFFICIAL_DESC = "Developing AI security for defense, infrastructure and physical systems.";
 ok("the shared card states the official sentence", socialCardSrc.includes(OFFICIAL_DESC));
-ok("the official description fits the 50-character limit", OFFICIAL_DESC.length <= 50, `${OFFICIAL_DESC.length} chars`);
+ok("the official description fits a shared preview", OFFICIAL_DESC.length <= 120, `${OFFICIAL_DESC.length} chars`);
 
-// The ONLY embed image is the square mark, which is the artwork the favicon is generated from. A rendered
-// headline card is the worst kind of stale: platforms cache the PNG far longer than the page, so the picture
-// keeps saying the old thing after the words around it have been fixed.
-ok("the only embed image is the Vraelis mark", /SOCIAL_IMAGE = "https:\/\/vraelis\.com\/social\/vraelis-wordmark\.png"/.test(socialCardSrc));
-ok("the card is a small summary, so the mark is never stretched across a banner",
-  /card: "summary" as const/.test(socialCardSrc));
+// Shared previews use a versioned landscape asset, separate from the favicon.
+ok("the embed image has a versioned public asset URL", /SOCIAL_IMAGE = "https:\/\/vraelis\.com\/social\/vraelis-physical-ai-v\d+\.png"/.test(socialCardSrc));
+ok("the card requests the full landscape image", /card: "summary_large_image" as const/.test(socialCardSrc));
 
 // ── the few embeds, and what makes them universal ────────────────────────────────────────────────────
 {
@@ -140,11 +137,9 @@ ok("the card is a small summary, so the mark is never stretched across a banner"
   }
   for (const k of kinds as (keyof typeof SOCIAL_EMBEDS)[]) {
     const c = socialCardFor(k);
-    // UNIVERSAL means every variant renders the same way everywhere: a square mark beside a title and a
-    // sentence. A variant that differed in card type or image would need per-platform handling, which is
-    // the thing this file exists to avoid.
-    ok(`  "${k}" is the same small card as the others`, c.twitter.card === "summary");
-    ok(`  "${k}" carries the one mark, sized`, c.openGraph.images[0].url === SOCIAL_IMAGE
+    // Every variant shares the same image and requested card type.
+    ok(`  "${k}" is the same landscape card as the others`, c.twitter.card === "summary_large_image");
+    ok(`  "${k}" carries the shared image, sized`, c.openGraph.images[0].url === SOCIAL_IMAGE
       && c.openGraph.images[0].width === SOCIAL_IMAGE_WIDTH && c.openGraph.images[0].height === SOCIAL_IMAGE_HEIGHT);
     ok(`  "${k}" says the same thing to both platforms`,
       c.openGraph.title === c.twitter.title && c.openGraph.description === c.twitter.description);
@@ -166,19 +161,18 @@ ok("the card is a small summary, so the mark is never stretched across a banner"
 // decoding the file; if they were wrong the tile would be laid out wrong everywhere, and nothing about the
 // page would look broken enough to notice.
 {
-  const png = readFileSync("public/social/vraelis-wordmark.png");
+  const png = readFileSync(`public${new URL(SOCIAL_IMAGE).pathname}`);
   ok("the declared image width matches the actual PNG", png.readUInt32BE(16) === SOCIAL_IMAGE_WIDTH,
     `${png.readUInt32BE(16)} vs ${SOCIAL_IMAGE_WIDTH}`);
   ok("  and the height", png.readUInt32BE(20) === SOCIAL_IMAGE_HEIGHT, `${png.readUInt32BE(20)} vs ${SOCIAL_IMAGE_HEIGHT}`);
-  // Square, because a summary card crops to a square tile. A non-square mark would be cut off.
-  ok("  and the mark is square, which is what a summary tile shows", SOCIAL_IMAGE_WIDTH === SOCIAL_IMAGE_HEIGHT);
+  // Standard landscape dimensions give the photograph and headline room to read.
+  ok("  and the artwork has the standard landscape preview size", SOCIAL_IMAGE_WIDTH === 1200 && SOCIAL_IMAGE_HEIGHT === 630);
   // X refuses images over 5MB and under 144x144.
   ok("  within the size every platform accepts", png.length < 5_000_000 && SOCIAL_IMAGE_WIDTH >= 144);
   ok("the image is described, not just linked", SOCIAL_IMAGE_ALT.length > 0);
 }
 
-// A census across every route: nothing but social-card.ts may name an embed image, and nothing may ask for
-// the wide card. This is the assertion that would have caught all three forks above.
+// Only social-card.ts chooses the embed image and card type.
 {
   const walk = (dir: string, out: string[] = []): string[] => {
     for (const e of readdirSync(dir)) {
@@ -203,7 +197,7 @@ ok("the card is a small summary, so the mark is never stretched across a banner"
   ok("no route declares its own embed image", forkedImage.length === 0, forkedImage.join(", "));
 
   const wideCard = routes.filter((f) => code(f).includes("summary_large_image"));
-  ok("no route asks for summary_large_image", wideCard.length === 0, wideCard.join(", "));
+  ok("only the shared builder chooses the wide card", wideCard.length === 1 && wideCard[0] === "lib/social-card.ts", wideCard.join(", "));
 
   const referencesRendered = routes.filter((f) => /["'`](https:\/\/vraelis\.com)?\/og(\?|\/|["'`])/.test(code(f)));
   ok("nothing references the legacy rendered cards", referencesRendered.length === 0, referencesRendered.join(", "));
