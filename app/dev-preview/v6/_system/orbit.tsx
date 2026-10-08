@@ -127,7 +127,7 @@ export function Orbit() {
     <ul className="v6-or__tiles">
       {ORBIT.map((t, i) => <li key={t.label} ref={node => { tiles.current[i] = node; }} className="v6-or__item" data-on={i === selected}>
         <Link className="v6-or__tile" href={t.href} aria-label={t.label} onPointerEnter={() => select(i)} onPointerLeave={release} onFocus={() => select(i)} onBlur={release} data-media-ready="pending">
-          <Image src={t.photos[0].src} alt={t.photos[0].alt} fill sizes="(max-width: 700px) 45vw, (max-width: 1023px) 30vw, 180px" style={{objectFit: "cover", objectPosition: t.photos[0].pos}} />
+          <Image src={t.photos[0].src} alt={t.photos[0].alt} fill sizes="(max-width: 700px) min(78vw, 300px), (max-width: 1023px) 30vw, 180px" style={{objectFit: "cover", objectPosition: t.photos[0].pos}} />
           <span className="v6-or__name" data-media-copy="">{t.label}</span>
         </Link>
       </li>)}
