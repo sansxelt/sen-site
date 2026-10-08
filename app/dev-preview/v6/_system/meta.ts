@@ -18,13 +18,13 @@ export function v6meta(o: {
   type?: "website" | "article";
   published?: string;
   modified?: string;
+  index?: boolean;
 }): Metadata {
   const url = `${V6_ORIGIN}${o.path}`;
-  // The shared card decides the description and the image. A page may name itself in the card title; it may
-  // not describe itself differently, because a per-page sentence is how five surfaces drifted apart before.
-  const card = socialCard(o.ogTitle ?? o.title);
+  // Search and social previews describe the same page. The shared builder still owns imagery and shape.
+  const card = socialCard(o.ogTitle ?? o.title, o.ogDescription ?? o.description);
   return {
-    title: o.title,
+    title: o.title.startsWith("Vraelis") ? { absolute: o.title } : o.title,
     description: o.description,
     alternates: { canonical: url },
     // INDEXABLE ONLY WHEN PROMOTED, AND NEVER WHILE THE CURTAIN IS DOWN. While V6 serves from
@@ -33,7 +33,7 @@ export function v6meta(o: {
     // the company from search the moment the flag flipped. Same variable as the routing, so the two can
     // never disagree about which site is public. The stealth veto is NOT applied here; robotsMeta owns it,
     // because this helper is the deepest metadata on twenty-six pages and therefore the one that wins.
-    robots: robotsMeta(v6Public),
+    robots: robotsMeta(v6Public && o.index !== false),
     openGraph: {
       ...card.openGraph,
       type: o.type ?? "website",

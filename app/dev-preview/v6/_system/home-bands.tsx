@@ -11,6 +11,7 @@ import { V6_BASE, V6_DOCS } from "@/lib/v6-routes";
 import { CHANGELOG, entryId } from "../_content/changelog";
 import "./home-bands.css";
 import { Photograph } from "./picture-plate";
+import { openingProgress, sequenceOpeningTrack } from "./opening-timing";
 
 // Entry motion is enabled only after its observer exists; no-JS and reduced-motion stay visible.
 function useEntryMotion() {
@@ -74,13 +75,15 @@ export function Statement({ scrollRoot }: { scrollRoot?: RefObject<HTMLElement |
       if (scrollRoot?.current?.dataset.sequenced) {
         const stage = scrollRoot.current.querySelector<HTMLElement>('.home-sequence__stage')!;
         const top = parseFloat(getComputedStyle(stage).top) || 0;
-        const progress = (top - r.top) / Math.max(1, vh * 2.1 - stage.clientHeight);
+        const track = sequenceOpeningTrack(r.height, stage.clientHeight);
+        const progress = openingProgress(top - r.top, track.travel, track.readingTravel);
         return Math.min(1, Math.max(0, (progress - .60) / .30));
       }
       if (scrollRoot?.current?.dataset.motion) {
         const pin = scrollRoot.current.querySelector<HTMLElement>(".v6-opening__pin");
         const height = pin?.offsetHeight ?? vh;
-        const progress = -r.top / Math.max(1, r.height - height);
+        const viewports = Number(getComputedStyle(scrollRoot.current).getPropertyValue("--opening-viewports"));
+        const progress = openingProgress(-r.top, Math.max(1, r.height - height), r.height / viewports);
         return Math.min(1, Math.max(0, (progress - .60) / .30));
       }
       return Math.min(1, Math.max(0, (vh * .92 - r.top) / (vh * .62)));

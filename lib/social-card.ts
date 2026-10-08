@@ -13,11 +13,7 @@
 
 export const SOCIAL_TITLE = "Vraelis";
 
-/** One sentence. Every embed. Do not fork this per page.
- *
- *  It says what the product does and nothing about who it is for (founder, 2026-09-28): a developer, an
- *  agency, a founder and an AI coding agent all read the same card, so it names the function and leaves the
- *  audience open. scripts/email-embeds-verify.ts pins this exact wording and its length. */
+/** Company-level description. Page previews use their own reviewed page description. */
 export const SOCIAL_DESCRIPTION = "Developing AI security for defense, infrastructure and physical systems.";
 
 /** Wide editorial card for shared links; distinct from the browser favicon. */
@@ -54,8 +50,8 @@ export const SOCIAL_EMBEDS = {
   site: { title: SOCIAL_TITLE, description: SOCIAL_DESCRIPTION },
   /** The developer surfaces: the same product, named by how you reach it. */
   developers: {
-    title: "Vraelis for developers",
-    description: "Verify a deployed app from the CLI, CI, the API, or an AI assistant over MCP.",
+    title: "Vraelis engineering references",
+    description: "AI-security development scope and engineering references. Vraelis is in private development; public workspace access is closed.",
   },
 } as const;
 
@@ -85,9 +81,9 @@ export function socialCardFor(kind: SocialEmbed) {
 }
 
 /**
- * The default embed. `title` may be overridden for a specific page; the description and image never are.
- * A page that needs a different SENTENCE takes one of the named embeds above rather than inventing one.
+ * Page metadata supplies its own description; the default remains the company sentence.
+ * The shared photographic image and card shape remain centralized.
  */
-export function socialCard(title: string = SOCIAL_TITLE) {
-  return build(title, SOCIAL_DESCRIPTION);
+export function socialCard(title: string = SOCIAL_TITLE, description: string = SOCIAL_DESCRIPTION) {
+  return build(title, description);
 }

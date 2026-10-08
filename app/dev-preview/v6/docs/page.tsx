@@ -13,7 +13,7 @@ import { DOCUMENTATION_INDEX_PHOTOGRAPHS } from "../_content/documentation-photo
 const BASE = V6_BASE;
 export const metadata: Metadata = v6meta({
   title: "Documentation",
-  description: "Implementation references for private development: recording formats, source evidence and earlier browser workflows. Public product access is closed.",
+  description: "Read Vraelis AI-security development scope, recorded-evidence references and archived implementation guides. Public workspace access is closed.",
   path: "/docs",
 });
 

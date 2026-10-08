@@ -5,6 +5,7 @@ import { Hero } from "./hero";
 import { Statement } from "./home-bands";
 import { useScrollProgress } from "./progress";
 import { SHORT } from "./mobile-motion";
+import { openingProgress, sequenceOpeningTrack } from "./opening-timing";
 import "./opening.css";
 
 /** One native-scroll opening, finishing on the company statement. */
@@ -36,10 +37,12 @@ export function Opening({ sequenceRoot }: { sequenceRoot?: RefObject<HTMLElement
       if (sequenceRoot?.current?.dataset.sequenced) {
         const stage = sequenceRoot.current.querySelector<HTMLElement>('.home-sequence__stage')!;
         const top = parseFloat(getComputedStyle(stage).top) || 0;
-        return Math.max(0, Math.min(1, (top - rect.top) / (vh * 2.1 - stage.clientHeight)));
+        const track = sequenceOpeningTrack(rect.height, stage.clientHeight);
+        return openingProgress(top - rect.top, track.travel, track.readingTravel);
       }
       const height = root.current?.querySelector<HTMLElement>('.v6-opening__pin')?.offsetHeight ?? vh;
-      return Math.max(0, Math.min(1, -rect.top / Math.max(1, rect.height - height)));
+      const viewports = Number(getComputedStyle(root.current!).getPropertyValue("--opening-viewports"));
+      return openingProgress(-rect.top, Math.max(1, rect.height - height), rect.height / viewports);
     },
     onFrame: value => setStatementVisible(value >= .50),
   });

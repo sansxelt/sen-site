@@ -11,7 +11,7 @@ export function generateStaticParams() { return GUIDES.map(guide => ({ slug: gui
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const guide = GUIDES.find(guide => guide.slug === slug);
-  return guide ? v6meta({ title: guide.title, description: guide.intro, path: `/guides/${slug}`, type: "article" }) : {};
+  return guide ? v6meta({ title: guide.title, description: guide.intro, path: `/guides/${slug}`, type: "article" }) : v6meta({ title: "Not found", description: "This guide does not exist.", path: `/guides/${slug}`, index: false });
 }
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

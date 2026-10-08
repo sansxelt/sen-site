@@ -2,6 +2,7 @@
 
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Opening } from "./opening";
+import { sequenceOpeningTrack } from "./opening-timing";
 import "./home-sequence.css";
 
 const clamp = (n: number) => Math.max(0, Math.min(1, n));
@@ -33,7 +34,8 @@ export function HomeSequence({ children }: { children: [ReactNode, ReactNode, Re
       if (index < 0) return false;
       const height = stage.clientHeight;
       const top = parseFloat(getComputedStyle(stage).top) || 0;
-      const y = el.getBoundingClientRect().top + scrollY + window.innerHeight * 2.1 - height + (arrivals[index] + handoff + .05) * height - top;
+      const track = sequenceOpeningTrack(el.getBoundingClientRect().height, height);
+      const y = el.getBoundingClientRect().top + scrollY + track.travel + (arrivals[index] + handoff + .05) * height - top;
       window.scrollTo({ top:y, behavior:'instant' });
       return true;
     };
@@ -85,8 +87,8 @@ export function HomeSequence({ children }: { children: [ReactNode, ReactNode, Re
       const height = stage.clientHeight;
       const top = parseFloat(getComputedStyle(stage).top) || 0;
       const distance = top - el.getBoundingClientRect().top;
-      // The first two scenes retain their existing opening pace and word-by-word reveal.
-      const openingTravel = window.innerHeight * 2.1 - height;
+      // The statement gets its own reading distance before the next chapter arrives.
+      const openingTravel = sequenceOpeningTrack(el.getBoundingClientRect().height, height).travel;
       const chapter = (distance - openingTravel) / height;
       let index = -1;
       scenes.forEach((scene, i) => {

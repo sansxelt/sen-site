@@ -1,4 +1,4 @@
-import { SOCIAL_DESCRIPTION, SOCIAL_IMAGE, SOCIAL_TITLE } from "./social-card";
+import { SOCIAL_DESCRIPTION, SOCIAL_TITLE } from "./social-card";
 
 // WHO THIS COMPANY IS, STATED IN A FORM MACHINES READ.
 //
@@ -35,7 +35,7 @@ import { SOCIAL_DESCRIPTION, SOCIAL_IMAGE, SOCIAL_TITLE } from "./social-card";
 export const ORGANIZATION = {
   name: SOCIAL_TITLE,
   url: "https://vraelis.com",
-  logo: SOCIAL_IMAGE,
+  logo: "https://vraelis.com/social/vraelis-wordmark.png",
   description: SOCIAL_DESCRIPTION,
   sameAs: [
     "https://www.linkedin.com/company/vraelis",

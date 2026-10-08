@@ -1,7 +1,7 @@
 /* Reserve the fitted narrative before hydration, using the same gate as the controller. */
 @media (min-width:901px) and (min-height:620px) and (prefers-reduced-motion:no-preference) {
 /* The opening and all three chapters share a single clipped viewport. */
-.home-sequence { --chapter-height:calc(100svh - var(--nav-h,66px) - 24px); height:calc(210svh + var(--chapter-height) * 2.1); }
+.home-sequence { --chapter-height:calc(100svh - var(--nav-h,66px) - 24px); height:calc(310svh + var(--chapter-height) * 2.1); }
 .home-sequence .home-sequence__stage { position:sticky; top:calc(var(--nav-h,66px) + 12px); height:var(--chapter-height); isolation:isolate; overflow:clip; }
 .home-sequence .home-sequence__opening { position:absolute; inset:0; }
 .home-sequence .v6-opening { height:100%; padding-top:0; }

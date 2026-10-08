@@ -26,6 +26,7 @@ type Freq = NonNullable<Entry["changeFrequency"]>;
 // someone to remember this file.
 const WEIGHT: Record<string, { p: number; f: Freq }> = {
   "/": { p: 1, f: "weekly" },
+  "/contour": { p: 0.9, f: "monthly" },
   "/platform": { p: 0.9, f: "monthly" },
   "/zero-trust": { p: 0.9, f: "monthly" },
   "/developers": { p: 0.8, f: "monthly" },
@@ -70,7 +71,7 @@ const NEVER_INDEXED = new Set(["/signin", "/checkout", "/pricing"]);
 
 // Retired presentation routes remain redirectable, but do not belong in the current sitemap.
 const RETIRED_PRESENTATION = new Set([
-  "/method", "/readme", "/developers/api", "/developers/cli",
+  "/method", "/readme", "/developers/api", "/developers/cli", "/solutions/public-sector",
   "/partnerships/reddit", "/partnerships/bytedance",
   "/solutions/commerce", "/solutions/ai-built-apps", "/solutions/saas", "/solutions/agencies",
 ]);
@@ -86,7 +87,6 @@ const RETIRED_PRESENTATION = new Set([
 const SUPERSEDED_BY_V6 = new Set(["/how-it-works", "/free-report", "/demo", "/sso"]);
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const now = new Date();
 
   // ── WHILE THE CURTAIN IS DOWN, ADVERTISE ONLY WHAT IS ACTUALLY INDEXABLE ────────────────────────────
   //
@@ -102,11 +102,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // The moment stealth is lifted this reverts to the full derived list on its own. Nothing here needs
   // remembering at launch.
   if (stealthConfigured()) {
-    return [{ url: `${BASE}/`, lastModified: now, changeFrequency: "weekly" as Freq, priority: 1 }];
+    return [{ url: `${BASE}/`, changeFrequency: "weekly" as Freq, priority: 1 }];
   }
   const entry = (path: string): Entry => {
     const w = WEIGHT[path] ?? { p: 0.5, f: "monthly" as Freq };
-    return { url: `${BASE}${path}`, lastModified: now, changeFrequency: w.f, priority: w.p };
+    return { url: `${BASE}${path}`, changeFrequency: w.f, priority: w.p };
   };
 
   // Whichever generation is actually serving is the one described. Promoted, that is the design 06 map
@@ -130,18 +130,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // while they remain the real published writing. Unpublished ones are filtered out and 404.
   const articles = promoted ? [] : publishedArticles().map((a) => ({
     url: `${BASE}/research/${a.slug}`,
-    lastModified: now,
     changeFrequency: "monthly" as Freq,
     priority: 0.6,
   }));
 
-  // Docs articles are design 06's own, routed at /docs/<slug> by the prefix rule in proxy.ts. They return
-  // 200 with index,follow and are linked from /docs, so they would be crawled eventually; being absent from
-  // the sitemap only made that slower and less reliable. They exist as public pages just once promoted.
+  // Only current documentation belongs in search. Archived browser-workflow references remain
+  // accessible with noindex, follow, and are intentionally absent here.
   const docs = promoted
-    ? DOCS.map((d) => ({
+    ? DOCS.filter((d) => ["ai-security", "recorded-reports"].includes(d.slug)).map((d) => ({
         url: `${BASE}/docs/${d.slug}`,
-        lastModified: now,
         changeFrequency: "monthly" as Freq,
         priority: 0.6,
       }))

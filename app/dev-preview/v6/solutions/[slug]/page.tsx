@@ -10,7 +10,7 @@ export const dynamicParams = false;
 export function generateStaticParams() { return SOLUTION_SLUGS.map(slug => ({slug})); }
 export async function generateMetadata({params}:{params:Promise<{slug:string}>}):Promise<Metadata> {
  const {slug}=await params; const c=SECURITY_PAGES[keys[slug]];
- return c ? v6meta({title:c.eyebrow + " / " + c.title,description:c.intro,path:`/solutions/${slug}`}) : {robots:{index:false,follow:false}};
+ return c ? v6meta({title:c.title.replace(/\.$/, ""),description:c.intro,path:`/solutions/${slug}`}) : {robots:{index:false,follow:false}};
 }
 export default async function Page({params}:{params:Promise<{slug:string}>}) {
  const {slug}=await params;

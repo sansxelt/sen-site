@@ -39,9 +39,13 @@ async function main() {
             const stage = root.querySelector('.home-sequence__stage');
             const sequenced = root.hasAttribute('data-sequenced');
             const pin = opening.querySelector('.v6-opening__pin');
-            const track = sequenced ? innerHeight * 2.1 - stage.clientHeight : opening.offsetHeight - pin.offsetHeight;
+            const track = sequenced ? root.offsetHeight - stage.clientHeight * 3.1 : opening.offsetHeight - pin.offsetHeight;
+            const readingTravel = sequenced ? (root.offsetHeight - stage.clientHeight * 2.1) / 3.1 : opening.offsetHeight / (innerWidth <= 560 ? 2.9 : 3.1);
+            const originalTravel = track - readingTravel;
+            const readingStart = originalTravel * .60;
+            const distance = progress <= .60 ? progress * originalTravel : readingStart + (progress - .60) / .40 * (track - readingStart);
             const start = sequenced ? root.getBoundingClientRect().top + scrollY - parseFloat(getComputedStyle(stage).top) : opening.getBoundingClientRect().top + scrollY;
-            scrollTo(0, start + track * progress);
+            scrollTo(0, start + distance);
           }, progress);
           await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
           const surface = await page.locator('.v6-opening__statement').evaluate(el => {
@@ -64,6 +68,25 @@ async function main() {
           if (progress <= .60) assert.equal(surface.lit, 0, 'Word highlighting must wait until the section and paragraph settle');
           if (progress > .90) assert.equal(surface.lit, surface.words, 'The complete sentence must become readable before the next chapter');
         }
+        // One ordinary wheel gesture must reveal a few words rather than the whole sentence.
+        const reveal = await page.evaluate(() => {
+          const root = document.querySelector('.home-sequence'), opening = root.querySelector('.v6-opening');
+          const stage = root.querySelector('.home-sequence__stage'), pin = opening.querySelector('.v6-opening__pin');
+          const sequenced = root.hasAttribute('data-sequenced');
+          const track = sequenced ? root.offsetHeight - stage.clientHeight * 3.1 : opening.offsetHeight - pin.offsetHeight;
+          const extra = sequenced ? (root.offsetHeight - stage.clientHeight * 2.1) / 3.1 : opening.offsetHeight / (innerWidth <= 560 ? 2.9 : 3.1);
+          const start = sequenced ? root.getBoundingClientRect().top + scrollY - parseFloat(getComputedStyle(stage).top) : opening.getBoundingClientRect().top + scrollY;
+          const readingStart = (track - extra) * .60;
+          scrollTo(0, start + readingStart);
+          return { revealDistance:(track - readingStart) * .75, viewport:innerHeight };
+        });
+        assert.ok(reveal.revealDistance >= reveal.viewport * .85, 'The statement needs almost a full viewport of reading travel');
+        await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+        await page.mouse.wheel(0, 240);
+        await page.waitForTimeout(350);
+        const words = await page.locator('.v6-stm__t').evaluate(el => ({lit:el.querySelectorAll('[data-on="true"]').length,total:el.querySelectorAll('[data-on]').length}));
+        assert.ok(words.lit > 0 && words.lit <= Math.ceil(words.total * .4), 'A wheel gesture should reveal only part of the statement');
+        console.log(`PASS reading pace: ${Math.round(reveal.revealDistance)}px; one gesture reveals ${words.lit}/${words.total} words`);
         await page.keyboard.press('Control+Home');
         await page.waitForFunction(() => scrollY < 2);
       }
@@ -121,6 +144,25 @@ async function main() {
         await page.waitForTimeout(300);
         await page.mouse.wheel(0, 600);
         await page.waitForFunction(() => scrollY > 2);
+        // One ordinary wheel gesture must reveal a few words rather than the whole sentence.
+        const reveal = await page.evaluate(() => {
+          const root = document.querySelector('.home-sequence'), opening = root.querySelector('.v6-opening');
+          const stage = root.querySelector('.home-sequence__stage'), pin = opening.querySelector('.v6-opening__pin');
+          const sequenced = root.hasAttribute('data-sequenced');
+          const track = sequenced ? root.offsetHeight - stage.clientHeight * 3.1 : opening.offsetHeight - pin.offsetHeight;
+          const extra = sequenced ? (root.offsetHeight - stage.clientHeight * 2.1) / 3.1 : opening.offsetHeight / (innerWidth <= 560 ? 2.9 : 3.1);
+          const start = sequenced ? root.getBoundingClientRect().top + scrollY - parseFloat(getComputedStyle(stage).top) : opening.getBoundingClientRect().top + scrollY;
+          const readingStart = (track - extra) * .60;
+          scrollTo(0, start + readingStart);
+          return { revealDistance:(track - readingStart) * .75, viewport:innerHeight };
+        });
+        assert.ok(reveal.revealDistance >= reveal.viewport * .85, 'The statement needs almost a full viewport of reading travel');
+        await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+        await page.mouse.wheel(0, 240);
+        await page.waitForTimeout(350);
+        const words = await page.locator('.v6-stm__t').evaluate(el => ({lit:el.querySelectorAll('[data-on="true"]').length,total:el.querySelectorAll('[data-on]').length}));
+        assert.ok(words.lit > 0 && words.lit <= Math.ceil(words.total * .4), 'A wheel gesture should reveal only part of the statement');
+        console.log(`PASS reading pace: ${Math.round(reveal.revealDistance)}px; one gesture reveals ${words.lit}/${words.total} words`);
         await page.keyboard.press('Control+Home');
         await page.waitForFunction(() => scrollY < 2);
       }

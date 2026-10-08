@@ -81,7 +81,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   // reached these: /docs/<anything> and /research/<anything> answered 200 with index, follow and a
   // not-found body. That is an unbounded indexable surface under two prefixes.
   if (!doc) return { title: "Not found", robots: robotsMeta(false) };
-  return v6meta({ title: doc.title, description: doc.summary, path: `/docs/${doc.slug}`, type: "article" });
+  const current = ["ai-security", "recorded-reports"].includes(slug);
+  return v6meta({ title: doc.title, description: current ? doc.summary : `Archived implementation reference. ${doc.summary}`, path: `/docs/${doc.slug}`, type: "article", index: current });
 }
 
 export default async function DocPage({ params }: { params: Promise<{ slug: string }> }) {

@@ -508,6 +508,7 @@ export default function proxy(req: NextRequest) {
   // Only while V6 is promoted. Unpromoted, these are the live site and must keep working.
   if (v6Public()) {
     const RETIRED: Record<string, string> = {
+      "/solutions/public-sector": "/infrastructure",
       "/how-it-works": "/method",       // superseded by /method and /platform
       "/sso": "/enterprise",            // SSO folded into the enterprise page
       "/free-report": "/platform",       // an offer page for a lead loop that no longer runs
