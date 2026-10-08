@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { Fragment } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { v6meta } from "../_system/meta";
 import { DocShell } from "../_content/docs-ui";
 import { docsByGroup, getDoc, docPrefetch } from "../_content/docs";
 import { V6_BASE } from "@/lib/v6-routes";
 import { APP_ACCESS_OPEN } from "@/lib/app-availability";
+import { photograph } from "../_content/photography";
+import { DOCUMENTATION_INDEX_PHOTOGRAPHS } from "../_content/documentation-photography";
 
 const BASE = V6_BASE;
 export const metadata: Metadata = v6meta({
@@ -48,8 +51,10 @@ export default function DocsIndex() {
           <div className="v6-docs__start">
             {START.map((slug) => {
               const d = getDoc(slug)!;
+              const photo = photograph(DOCUMENTATION_INDEX_PHOTOGRAPHS[slug]);
               return (
                 <Link key={slug} href={`${BASE}/docs/${d.slug}`} className="v6-docs__card">
+                  <span className="v6-docs__card-photo" aria-hidden="true"><Image src={photo.src} alt="" width={photo.w} height={photo.h} sizes="(max-width:640px) 90vw, 450px" loading="lazy" /></span>
                   <span className="t">{slug === "the-loop" ? "How a check works" : d.title}</span>
                   <span className="s">{d.summary}</span>
                 </Link>

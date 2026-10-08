@@ -1,7 +1,10 @@
+import { EDITORIAL_PHOTOGRAPHS } from "./editorial-photography";
+
 // Licensed photographs, independently of product evidence. Full sources and usage are in
 // public/site/photography/CREDITS.md. These pictures never represent a Vraelis run or customer.
 const ROOT = "/site/photography";
 export const PHOTOGRAPHS = {
+  ...EDITORIAL_PHOTOGRAPHS,
   robotArm: { file: "robot-arm", w: 2400, h: 1600, alt: "An industrial robot arm inside a manufacturing cell.", author: "Freek Wolsink", id: "34207359" },
   robotCell: { file: "robot-cell", w: 2400, h: 1800, alt: "Industrial robotic arms and machinery in a factory.", author: "Ludovic Delot", id: "18471441" },
   robotDetail: { file: "robot-detail", w: 2400, h: 1800, alt: "A close-up of an industrial robotic arm and its tool.", author: "KJ Brix", id: "16544056" },

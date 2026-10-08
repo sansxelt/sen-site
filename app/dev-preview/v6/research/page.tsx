@@ -4,7 +4,7 @@ const content: DirectionContent = {
   "eyebrow": "Research",
   "title": "Research guides the security controls.",
   "intro": "We are investigating AI-specific threats across defense, infrastructure and physical systems. Research topics are not claims of deployed protection.",
-  "photo": "hardwareInspection",
+  "photo": "microscopeInspection",
   "heading": "Match the threat to a measurable test.",
   "lead": "The product is being developed privately. Integration requirements must be established for the system being secured.",
   "items": [
@@ -28,7 +28,7 @@ const content: DirectionContent = {
     }
   ],
   story: {
-    photo:"firmware", eyebrow:"Evaluation priorities", title:"Measure the boundary, not a broad security score.",
+    photo:"electronicsResearch", eyebrow:"Evaluation priorities", title:"Measure the boundary, not a broad security score.",
     paragraphs:[
       "A useful evaluation separates model tampering, data poisoning, manipulated inputs and unauthorized actions. Define attacker access, normal operating conditions and the evidence needed to reproduce each result.",
       "Measure missed attacks, false alarms, latency, compute use and investigation effort. An attack test result applies to its tested conditions, not every model or physical environment.",

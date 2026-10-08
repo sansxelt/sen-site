@@ -426,6 +426,7 @@ export function DocShell({ activeSlug = "", toc = [], crumb, markdown, children 
             <Link href={`${BASE}/terms`}>Terms</Link>
             <Link href={`${BASE}/acceptable-use`}>Acceptable use</Link>
             <PrivacyChoicesButton />
+            <a href="/site/IMAGE-SOURCES.md">Image sources</a>
           </footer>
         </div>
 

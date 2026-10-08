@@ -7,6 +7,7 @@ import { DOCS, getDoc, adjacentDocs, docOutline, docToMarkdown } from "../../_co
 import { SURFACES } from "../../_content/coverage";
 import { V6_BASE } from "@/lib/v6-routes";
 import { robotsMeta } from "@/lib/stealth";
+import { DocumentationImages } from "../../_system/documentation-images";
 
 const BASE = V6_BASE;
 // Real, runnable examples against the shipped API surface. Only pages where an example is genuinely truthful
@@ -104,6 +105,7 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
             {doc.limit ? <div><dt>Does not do</dt><dd>{doc.limit}</dd></div> : null}
           </dl>
           {!["ai-security", "recorded-reports"].includes(slug) ? <p className="v6-docs__lead">Earlier implementation reference. Public app access is closed; this guide does not describe the current AI-security product scope.</p> : null}
+          <DocumentationImages slug={slug} />
           <Blocks blocks={doc.blocks} />
           {EXAMPLES[slug] ? <DocCode label={EXAMPLES[slug][0]} code={EXAMPLES[slug][1]} /> : null}
           {doc.related?.length ? (

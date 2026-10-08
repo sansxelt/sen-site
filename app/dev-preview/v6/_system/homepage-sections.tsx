@@ -55,8 +55,8 @@ export function PhysicalSystems() {
 export function EngineeringEntry() {
   const root = useRef<HTMLElement>(null);
   useMediaReady(root);
-  const documentation = photograph("hardwareInspection");
-  const platform = photograph("networkEngineer");
+  const documentation = photograph("microscopeInspection");
+  const platform = photograph("releaseReview");
   return <section ref={root} className="home-engineering" data-nav-theme="dark" aria-labelledby="home-engineering-title" data-media-ready="pending">
     <MediaReadyFallback/>
     <div className="v6-wrap">

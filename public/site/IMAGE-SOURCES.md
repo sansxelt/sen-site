@@ -3,7 +3,8 @@
 Editorial photographs and field footage illustrate the systems whose software matters. They do not depict Vraelis hardware or imply customers, deployments or endorsements. Product recordings and screenshots are identified separately.
 
 - [Navigation photographs](/home/menu/editorial/CREDITS.md)
-- [Site photography](/site/photography/CREDITS.md)
+- [Site and documentation stock photography](/site/photography/CREDITS.md)
+- [Expanded photography source manifest](/site/photography/editorial-sources.json)
 - [Homepage field film](/home/scenes/FILM-CREDITS.md)
 - [Other homepage scenes](/home/scenes/CREDITS.md)
 - [Homepage sector imagery](/home/orbit/CREDITS.md)

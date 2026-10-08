@@ -48,7 +48,7 @@ const MENUS: Menu[] = [
   {
     label: "Product",
     intro: "Protect the intelligence inside.",
-    feature: { title: "A model release is a security decision.", description: "Model release security for robotics engineering teams", href: BASE + "/guides/model-release-security", pic: "/site/photography/hardware-inspection.jpg" },
+    feature: { title: "A model release is a security decision.", description: "Model release security for robotics engineering teams", href: BASE + "/guides/model-release-security", pic: "/site/photography/editorial-releaseInspection.jpg" },
     groups: [
       { h: "Product direction", links: [
         { t: "Overview", d: "AI security direction and development status", href: BASE + "/platform", pic: "/site/photography/robot-cell.jpg" },
@@ -71,7 +71,7 @@ const MENUS: Menu[] = [
   {
     label: "Solutions",
     intro: "Security for AI in the physical world.",
-    feature: { title: "Different systems. Different security boundaries.", description: "The control has to fit the environment, not just the model.", href: BASE + "/guides/operating-constraints", pic: "/site/photography/wind-farm.jpg" },
+    feature: { title: "Different systems. Different security boundaries.", description: "The control has to fit the environment, not just the model.", href: BASE + "/guides/operating-constraints", pic: "/site/photography/editorial-windOperations.jpg" },
     groups: [
       { h: "Physical systems", links: PRIMARY_SECTORS.map(s => ({ t:s.label,d:s.line,href:s.href,pic:s.slug === "defense" ? EDITORIAL + "aviation.jpg" : s.slug === "fleets" ? "/site/photography/robot-arm.jpg" : s.pics.menu })) },
       { h: "Organizations", links: [{ t: "Government & institutions", d: "Mission systems and public infrastructure", href: BASE + "/government", pic: "/site/photography/satellite-station.jpg" }, { t: "System integrators", d: "Security boundaries across suppliers", href: BASE + "/integrators", pic: "/site/photography/network-engineer.jpg" }] },
@@ -82,7 +82,7 @@ const MENUS: Menu[] = [
   {
     label: "Research",
     intro: "Match the threat to a measurable test.",
-    feature: { title: "Measure the boundary, not a broad security score.", description: "Match the threat to a measurable test.", href: BASE + "/guides/ai-security-evaluation", pic: "/site/photography/electronics-bench.jpg" },
+    feature: { title: "Measure the boundary, not a broad security score.", description: "Match the threat to a measurable test.", href: BASE + "/guides/ai-security-evaluation", pic: "/site/photography/editorial-electronicsResearch.jpg" },
     groups: [
       { h: "Research", links: [
         { t: "Overview", d: "Our method and open questions", href: BASE + "/research", pic: "/site/photography/hardware-inspection.jpg" },
@@ -116,8 +116,8 @@ const MENUS: Menu[] = [
       ] },
     ],
     cards: [
-      { title: "AI security at Vraelis", href: BASE + "/docs/ai-security", pic: "/site/photography/network-engineer.jpg" },
-      { title: "Review recorded task reports", href: BASE + "/docs/recorded-reports", pic: "/site/photography/electronics-bench.jpg" },
+      { title: "AI security at Vraelis", href: BASE + "/docs/ai-security", pic: "/site/photography/editorial-electronicsWorkbench.jpg" },
+      { title: "Review recorded task reports", href: BASE + "/docs/recorded-reports", pic: "/site/photography/editorial-engineeringTeam.jpg" },
     ],
   },
 ];

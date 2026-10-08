@@ -1,4 +1,20 @@
-# Docs pictures: sources (Batch 7a)
+# Documentation image sources
+
+## Current editorial photography — October 7, 2026
+
+The documentation uses 40 licensed stock photographs: two index thumbnails and
+two compact context images for each of the 19 articles. Source photographs,
+authors and licenses are listed in [the site photography credits](/site/photography/CREDITS.md)
+and [the source manifest](/site/photography/editorial-sources.json).
+These images illustrate engineering contexts; they are not Vraelis product
+screenshots, facilities, customers or evidence of a deployment.
+
+## Earlier console captures (archive)
+
+The files documented below are historical captures. They are not shown in the
+current public documentation while product access remains closed.
+
+### Batch 7a
 
 Every picture in this folder is a capture of the Vraelis console itself, the black console (design 08), taken on
 2026-10-02 from the QA account's own records with a local signed-in session, headless Chrome at 1100 CSS px wide and
