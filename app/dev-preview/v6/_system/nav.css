@@ -88,8 +88,6 @@
    are stated with .v6-nav in front because the site-wide `a:hover { color: var(--acc) }` (tokens.css, near
    black) would otherwise reach the Pricing link. */
 .v6-nav__items { display: flex; align-items: center; gap: 2px; min-width: 0; }
-.v6-drawer__standalone { display:block; padding:22px 0; border-bottom:1px solid var(--line); color:var(--ink); text-decoration:none; font-size:22px; }
-.v6-drawer__standalone:hover { color:var(--ink-2); }
 .v6-nav__item { font-size: 14px; font-weight: 500; line-height: 1.5; color: var(--ink-3); text-decoration: none; white-space: nowrap;
   background: none; border: 0; cursor: pointer; font-family: var(--sans); padding: 8px 14px; display: inline-flex;
   align-items: center; transition: color 120ms var(--ease-out); }
@@ -192,8 +190,8 @@
 /* Resources: two link cards side by side in the same box. The picture takes whatever height the words leave, and
    the two cards share their rows (subgrid), so a three-line title beside a two-line one leaves both pictures the
    same height and both labels on one line. */
-.v6-mega__cards { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr) auto auto; column-gap: 12px; row-gap: 0; }
-.v6-mega__card { display: grid; grid-row: 1 / span 3; grid-template-rows: subgrid; min-width: 0; min-height: 0; padding: 12px 12px 16px; border-radius: var(--r-card);
+.v6-mega__cards { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr) auto; column-gap: 12px; row-gap: 0; }
+.v6-mega__card { display: grid; grid-row: 1 / span 2; grid-template-rows: subgrid; min-width: 0; min-height: 0; padding: 12px 12px 16px; border-radius: var(--r-card);
   background: var(--surface); border: 1px solid var(--line-soft); color: #FAFAFA; text-decoration: none;
   transition: border-color 160ms var(--ease-out); }
 .v6-mega__card:hover { border-color: var(--line-strong); color: #FAFAFA; }
@@ -201,8 +199,7 @@
 .v6-mega__cpic { position: relative; display: block; min-height: 0; overflow: hidden; border-radius: var(--r-media); background: var(--paper); }
 .v6-mega__cpic img { object-fit: cover; transition: transform var(--dur-4) var(--ease-out); }
 .v6-mega__card:hover .v6-mega__cpic img { transform: scale(1.03); }
-.v6-mega__clabel { margin: 14px 4px 0; font-family: var(--sans); font-size: 12px; line-height: 1.45; color: var(--ink-4); }
-.v6-mega__ct { margin: 4px 4px 0; font-family: var(--sans); font-size: 15px; line-height: 1.45; color: #FAFAFA;
+.v6-mega__ct { margin: 14px 4px 0; font-family: var(--sans); font-size: 15px; line-height: 1.45; color: #FAFAFA;
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
 /* Under 1100px the box is narrow enough that a whole sentence needs a fourth line before it would be cut; the
    picture above gives the room. */
@@ -215,6 +212,7 @@
 .v6-mega__intro { max-width:var(--max-wide); margin:auto; padding:28px var(--gutter) 0; display:flex; align-items:baseline; justify-content:space-between; gap:24px; }
 .v6-mega__intro p { margin:0; font:400 clamp(22px,2vw,30px)/1.2 var(--display); letter-spacing:-.025em; color:#fafafa; }
 .v6-mega__intro>span { font-size:12px; color:#999; }
+.v6-mega__cards { grid-column:4; width:100%; max-width:none; height:clamp(220px,24vw,360px); }
 .v6-mega__grid { grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.7fr); column-gap:clamp(22px,3vw,48px); min-height:0; padding-top:30px; padding-bottom:32px; padding-left:var(--gutter)!important; }
 .v6-mega__col-h { margin-bottom:18px; color:#999; font-size:12px; }
 .v6-mega__link { padding:8px 0 12px; font-size:16px; line-height:1.35; }

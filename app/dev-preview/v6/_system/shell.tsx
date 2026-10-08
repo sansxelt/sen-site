@@ -3,7 +3,7 @@
 // Shared public shell: Product, Solutions, Research and Resources; one phone drawer, one footer,
 // one route transition, used by every v6 route. The bar stays put and takes the colour of whatever is under it.
 // Client-side navigation with prefetch (next/link).
-import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FocusEvent as ReactFocusEvent, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FocusEvent as ReactFocusEvent, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -32,7 +32,7 @@ const SIGNUP = `${SIGNIN}&mode=signup`;
 // and documentation. Menus use the licensed editorial images credited alongside the assets.
 type MLink = { t: string; d?: string; href: string; pic?: string };
 type Group = { h: string; links: MLink[] };
-type Card = { label: string; title: string; href: string; pic: string };
+type Card = { title: string; href: string; pic: string };
 type Menu = { label: string; intro: string; groups: Group[]; cards?: Card[]; foot?: MLink };
 
 const picSrc = (p: string) => (p.startsWith("/") ? p : `/home/menu/pics/${p}.jpg`);
@@ -78,6 +78,23 @@ const MENUS: Menu[] = [
     foot: { t: "Explore solutions", href: SOLUTIONS_HREF },
   },
   {
+    label: "Research",
+    intro: "Match the threat to a measurable test.",
+    groups: [
+      { h: "Research", links: [
+        { t: "Overview", d: "Our method and open questions", href: BASE + "/research", pic: "/site/photography/hardware-inspection.jpg" },
+      ] },
+      { h: "Security areas", links: [
+        { t: "Adversarial threats", d: "Manipulated inputs, poisoned data and evaluation", href: BASE + "/adversarial-security", pic: "/site/photography/robot-detail.jpg" },
+        { t: "Model integrity", d: "Model provenance and deployment verification", href: BASE + "/model-integrity", pic: "/site/photography/server-rack.jpg" },
+      ] },
+      { h: "Evaluation", links: [
+        { t: "Recorded evidence", d: "Supporting evidence for security investigation", href: BASE + "/recorded-evidence", pic: "/site/photography/robot-detail.jpg" },
+        { t: "Zero trust", d: "Explicit identity, scope and approval", href: BASE + "/zero-trust", pic: "/site/photography/server-rack.jpg" },
+      ] },
+    ],
+  },
+  {
     label: "Resources",
     intro: "Understand the threats. Examine the work.",
     groups: [
@@ -94,6 +111,10 @@ const MENUS: Menu[] = [
         { t: "Changelog", d: "What shipped and when", href: BASE + "/changelog", pic: "/site/photography/robot-grinding.jpg" },
         { t: "Security", d: "How we protect your data", href: BASE + "/security", pic: "/site/photography/server-rack.jpg" },
       ] },
+    ],
+    cards: [
+      { title: "Documentation", href: BASE + "/docs", pic: "/site/photography/network-engineer.jpg" },
+      { title: "Development status", href: BASE + "/beta", pic: "/site/photography/electronics-bench.jpg" },
     ],
   },
 ];
@@ -197,7 +218,6 @@ function MegaShell({ index, state, onNavigate }: { index: number; state: "in" | 
               {menu.cards.map((c) => (
                 <Link key={c.href} href={c.href} className="v6-mega__card" onClick={onNavigate}>
                   <span className="v6-mega__cpic"><Image src={picSrc(c.pic)} alt="" fill sizes={CARD_SIZES} /></span>
-                  <span className="v6-mega__clabel">{c.label}</span>
                   <span className="v6-mega__ct">{c.title}</span>
                 </Link>
               ))}
@@ -235,7 +255,7 @@ function themeAtTop(pathname: string): boolean {
 export function V6Nav({ authed = false }: { authed?: boolean }) {
   const pathname = usePathname() || "";
   const navRef = useRef<HTMLElement>(null);
-  // The three disclosure buttons in their visual and keyboard order.
+  // Disclosure buttons in their visual and keyboard order.
   const itemRefs = useRef<(HTMLElement | null)[]>([]);
   const megaRef = useRef<HTMLDivElement>(null);
   const burgerRef = useRef<HTMLButtonElement>(null);
@@ -526,7 +546,7 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
       e.preventDefault();
       const i = shown;
       close(i);
-      const next = (i === 1 ? navRef.current?.querySelector<HTMLElement>(".v6-nav__research") : itemRefs.current[i + 1]) ?? navRef.current?.querySelector<HTMLElement>(".v6-nav__right a[href], .v6-nav__right button");
+      const next = itemRefs.current[i + 1] ?? navRef.current?.querySelector<HTMLElement>(".v6-nav__right a[href], .v6-nav__right button");
       next?.focus();
     }
   };
@@ -606,16 +626,13 @@ export function V6Nav({ authed = false }: { authed?: boolean }) {
               while its panel exists), not an ARIA menu: the panel is a set of links, reached with Tab. While one
               is open the other items dim (nav.css). */}
           {MENUS.map((m, i) => (
-            <Fragment key={m.label}>
-            {m.label === "Resources" ? <Link href={`${BASE}/research`} className="v6-nav__item v6-nav__research" aria-current={pathname === `${BASE}/research` ? "page" : undefined} onPointerEnter={(event)=>mouseOnly(leaveMenus)(event)} onFocus={leaveMenus} onClick={restartCurrentPage}>Research</Link> : null}
-            <button type="button" ref={(el) => { itemRefs.current[i] = el; }}
+            <button key={m.label} type="button" ref={(el) => { itemRefs.current[i] = el; }}
               className="v6-nav__item" aria-expanded={open === i} aria-controls={open === i ? MEGA_ID : undefined}
               onPointerDown={(e) => { lastPointer.current = e.pointerType; }} onClick={onItemClick(i)}
               onPointerEnter={(event) => mouseOnly(() => openAt(i))(event)}
               onKeyDown={onItemKey(i)} onFocus={() => { if (open !== null && open !== i) close(open); }}>
               {m.label}
             </button>
-            </Fragment>
           ))}
 
         </div>
@@ -723,9 +740,7 @@ function MobileNav({ authed, onClose }: { authed: boolean; onClose: (returnFocus
       </div>
       <div className="v6-drawer__body">
         {MENUS.map((m, i) => (
-          <Fragment key={m.label}>
-          {m.label === "Resources" ? <Link href={`${BASE}/research`} className="v6-drawer__standalone" onClick={follow}>Research</Link> : null}
-          <section className="v6-drawer__sec" data-open={openSec === i}>
+          <section key={m.label} className="v6-drawer__sec" data-open={openSec === i}>
             <button type="button" className="v6-drawer__sec-h" aria-expanded={openSec === i}
               aria-controls={`v6-dsec-${i}`}
               onClick={(e) => {
@@ -762,7 +777,6 @@ function MobileNav({ authed, onClose }: { authed: boolean; onClose: (returnFocus
               </div>
             ) : null}
           </section>
-          </Fragment>
         ))}
 
       </div>

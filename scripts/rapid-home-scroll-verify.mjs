@@ -29,6 +29,33 @@ async function main() {
       const cdp = await page.context().newCDPSession(page);
       await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
 
+      // Inspect the opening in both directions, including the middle of its handoff.
+      // Visible statement letters must have their own opaque surface behind them.
+      if (viewport.height >= (viewport.width > 900 ? 620 : 660)) {
+        for (const progress of [.36, .42, .48, .56, .48, .42, .36]) {
+          await page.evaluate(progress => {
+            const root = document.querySelector('.home-sequence');
+            const opening = root.querySelector('.v6-opening');
+            const stage = root.querySelector('.home-sequence__stage');
+            const sequenced = root.hasAttribute('data-sequenced');
+            const pin = opening.querySelector('.v6-opening__pin');
+            const track = sequenced ? innerHeight * 2.1 - stage.clientHeight : opening.offsetHeight - pin.offsetHeight;
+            const start = sequenced ? root.getBoundingClientRect().top + scrollY - parseFloat(getComputedStyle(stage).top) : opening.getBoundingClientRect().top + scrollY;
+            scrollTo(0, start + track * progress);
+          }, progress);
+          await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+          const surface = await page.locator('.v6-opening__statement').evaluate(el => {
+            const style = getComputedStyle(el);
+            return { opacity: style.opacity, background: style.backgroundColor, clip: style.clipPath };
+          });
+          assert.equal(surface.opacity, '1', 'The statement must stay opaque throughout the handoff');
+          assert.match(surface.background, /^rgb\(\d+, \d+, \d+\)$/, 'Visible text needs an opaque background, not the film');
+          assert.notEqual(surface.clip, 'none', 'The statement surface must reveal together with its text');
+        }
+        await page.keyboard.press('Control+Home');
+        await page.waitForFunction(() => scrollY < 2);
+      }
+
       await page.evaluate(() => {
         window.homeScrollAudit = { blankFrames: [], running: true };
         const sample = () => {
