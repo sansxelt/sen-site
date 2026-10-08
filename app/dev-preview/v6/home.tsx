@@ -8,6 +8,7 @@ import { Orbit } from "./_system/orbit";
 import { PhysicalSystems, EngineeringEntry } from "./_system/homepage-sections";
 import { useMobileMotion } from "./_system/mobile-motion";
 import { SecurityFields } from "./_system/security-fields";
+import { ResourceCollection } from "./_system/resource-collection";
 
 export default function Home() {
   // Gives scroll-driven parts entry motion on screens where they unpin. scripts/mobile-motion-verify.ts
@@ -23,6 +24,7 @@ export default function Home() {
       <EngineeringEntry />
       </HomeSequence>
       <SecurityFields />
+      <ResourceCollection />
     </div>
   );
 }

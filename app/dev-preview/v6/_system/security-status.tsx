@@ -8,7 +8,7 @@ export function SecurityStatus() {
     <dl className="security-status__list">
       {SECURITY_STATUS.map(row => <div key={row.title}>
         <dt><span>{row.status}</span><strong>{row.title}</strong></dt>
-        <dd>{row.body}</dd>
+        <dd><details><summary>Scope and limitations</summary><p>{row.body}</p></details></dd>
       </div>)}
     </dl>
   </div>;

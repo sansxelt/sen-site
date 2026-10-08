@@ -31,7 +31,7 @@ export function SecurityFields() {
       {fields.map(field => {
         const photo = photograph(field.photo);
         return <Link key={field.href} href={`${V6_BASE}${field.href}`} className="security-fields__card" data-media-ready="pending">
-          <div className="security-fields__image"><Image src={photo.src} alt={photo.alt} width={photo.w} height={photo.h} sizes="(max-width:700px) 100vw, (max-width:1100px) 45vw, 23vw" loading="lazy" /><h3 data-media-copy="">{field.title}</h3></div>
+          <div className="security-fields__image"><Image src={photo.src} alt={photo.alt} width={photo.w} height={photo.h} sizes="(max-width:700px) 100vw, 50vw" loading="lazy" /><h3 data-media-copy="">{field.title}</h3></div>
           <div className="security-fields__copy" data-media-copy=""><p>{field.body}</p><span>Explore this area</span></div>
         </Link>;
       })}

@@ -5,3 +5,12 @@
 .security-status dt strong { font-size:clamp(20px,2vw,28px); font-weight:500; line-height:1.3; }
 .security-status dd { margin:0; color:var(--ink-2); font-size:16px; line-height:1.7; max-width:65ch; }
 @media(max-width:680px) { .security-status__list>div { grid-template-columns:1fr; gap:16px; padding:24px 0; } }
+.security-status__list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 48px; }
+.security-status__list>div { display:block; padding:28px 0; }
+.security-status dt { min-height:94px; gap:12px; }
+.security-status dd { margin-top:20px; }
+.security-status summary { cursor:pointer; display:list-item; margin-left:17px; color:var(--ink-2); font-size:13px; padding-block:8px; }
+.security-status summary::marker { color:var(--ink-3); }
+.security-status summary:focus-visible { outline:2px solid white; outline-offset:5px; }
+.security-status details p { margin:16px 0 0; font-size:15px; }
+@media(max-width:680px) { .security-status__list { grid-template-columns:1fr; } .security-status dt { min-height:0; } }

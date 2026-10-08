@@ -22,4 +22,45 @@
 .direction-page .v6-fh__h1 { font-weight:var(--display-w); }
  .direction-page .v6-fh__actions .v6-arw { display:none; }
 .direction-topics__link { display:inline-block; color:var(--ink); font-size:13px; margin-top:18px; padding-block:5px; text-decoration:none; }
-.direction-topics__link:is(:hover,:focus-visible) { text-decoration:underline; text-underline-offset:5px; }
+.direction-topics__link:hover { color:var(--ink-2); }
+.direction-topics__link:focus-visible { outline:2px solid white; outline-offset:5px; }
+
+/* Each page moves from a quick overview, to photographic context, to a deeper discussion. */
+.direction-section-head .v6-head { display:grid; grid-template-columns:1.1fr 1fr; gap:22px 72px; align-items:end; }
+.direction-section-head .v6-eyebrow { grid-column:1/-1; margin:0; }
+.direction-section-head h2 { margin:0; max-width:24ch; }
+.direction-section-head .v6-lead { margin:0; max-width:55ch; font-size:17px; }
+.direction-topics article { display:block; }
+.direction-topics article>.v6-reveal { display:grid; grid-template-columns:minmax(120px,.45fr) minmax(0,1.55fr); gap:32px; }
+.direction-topics article>.v6-reveal>div>p { max-width:72ch; margin:0; color:var(--ink-2); font-size:16px; line-height:1.8; }
+.direction-topics--cards { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:40px; border:0; }
+.direction-topics--cards:has(article:nth-child(4)) { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.direction-topics--cards article { border-top:1px solid var(--line); border-bottom:0; padding:28px 0 12px; }
+.direction-topics--cards article>.v6-reveal { display:block; }
+.direction-topics--cards .direction-topics__label { margin:0 0 32px; font-size:12px; color:var(--ink-3); }
+.direction-topics--cards h3 { font-size:clamp(25px,2.8vw,38px); max-width:22ch; margin-bottom:20px; }
+.direction-topics--cards article>.v6-reveal>div>p { font-size:16px; line-height:1.7; }
+.direction-next { display:grid; grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr); gap:clamp(40px,6vw,96px); align-items:start; }
+.direction-next>.v6-head { margin:0; }
+.direction-next h2 { font-size:clamp(32px,3.4vw,48px); }
+.direction-next .v6-lead { font-size:17px; }
+.direction-next .direction-links { margin-top:24px; }
+.direction-links a.direction-inquiry { padding:16px 24px; color:#0a0a0b; background:#fff; border-radius:8px; font-weight:500; text-decoration:none; }
+.direction-links a:hover { text-decoration:none; color:var(--ink-2); }
+.direction-links a.direction-inquiry:hover { color:#0a0a0b; background:#ddd; }
+.direction-next__topics { border-top:1px solid var(--line); }
+.direction-next details { border-bottom:1px solid var(--line); }
+.direction-next summary { position:relative; cursor:pointer; display:grid; gap:12px; list-style:none; padding:26px 52px 26px 0; }
+.direction-next summary::-webkit-details-marker { display:none; }
+.direction-next__label { font-size:12px; color:var(--ink-3); }
+.direction-next__title { font:var(--display-w) clamp(24px,2.5vw,32px)/1.2 var(--display); letter-spacing:-.025em; }
+.direction-next__toggle { position:absolute; right:6px; top:50%; width:18px; height:18px; transform:translateY(-50%); }
+.direction-next__toggle::before,.direction-next__toggle::after { content:""; position:absolute; background:var(--ink-2); top:8px; left:0; width:18px; height:1px; }
+.direction-next__toggle::after { transform:rotate(90deg); transition:transform 180ms ease; }
+.direction-next details[open] .direction-next__toggle::after { transform:rotate(0); }
+.direction-next summary:focus-visible { outline:2px solid white; outline-offset:4px; }
+.direction-next summary:hover .direction-next__title { color:var(--ink-2); }
+.direction-next details>p { margin:0; padding:0 46px 28px 0; color:var(--ink-2); font-size:16px; line-height:1.75; }
+@media(max-width:900px) { .direction-section-head .v6-head { grid-template-columns:1fr; gap:18px; } .direction-topics--cards { gap:28px; } .direction-next { grid-template-columns:1fr; gap:32px; } }
+@media(max-width:700px) { .direction-topics article>.v6-reveal { grid-template-columns:1fr; gap:12px; } .direction-topics--cards,.direction-topics--cards:has(article:nth-child(4)) { grid-template-columns:1fr; gap:16px; } .direction-topics--cards .direction-topics__label { margin-bottom:20px; } .direction-topics--cards h3 { max-width:none; } }
+@media(prefers-reduced-motion:reduce) { .direction-next__toggle::after { transition:none; } }
