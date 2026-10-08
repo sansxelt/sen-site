@@ -41,7 +41,7 @@ export const SECURITY_PAGES: Record<string, DirectionContent> = {
   },
   platform: {
     eyebrow: "AI cybersecurity", title: "Protect the intelligence inside.",
-    intro: "Vraelis is developing cybersecurity software for AI-enabled defense, critical infrastructure and robotics. Our scope spans model integrity, adversarial threats, machine trust and security evidence.",
+    intro: "Vraelis is developing cybersecurity software for AI systems used in defense, critical infrastructure and robotics. Our scope spans model integrity, adversarial threats, machine trust and security evidence.",
     photo: "dataCenterAisle", heading: "Security across the AI system.",
     lead: "The model, its inputs and the resources it can reach introduce different security problems. Each needs a defined threat model, appropriate controls and measurable evidence.",
     items: [
@@ -51,14 +51,14 @@ export const SECURITY_PAGES: Record<string, DirectionContent> = {
       { ...item("Evidence", "Security investigation", "Connect findings to policy decisions, source events and capture coverage. Keep contradictions and unobserved outcomes visible to reviewers."), href:"/recorded-evidence" },
     ],
     story: {
-      photo:"robotProduction", eyebrow:"Independent software", title:"Built around the system it protects.",
+      photo:"robotProduction", eyebrow:"Software for physical systems", title:"Built around the system it protects.",
       paragraphs:[
-        "AI-enabled equipment combines models, sensors, software and operational resources. Our direction is an independent security layer that works with those components and their existing owners.",
+        "AI-enabled equipment combines models, sensors, software and operational resources. We are developing security software around those components and the teams responsible for them.",
         "Edge compute budgets, disconnected operation and supplier interfaces shape the integration. Hardware support, detection performance and deployment suitability must be demonstrated for each environment.",
       ],
     },
     nextTitle: "Build around the people responsible for the system.",
-    nextLead: "For engineering teams supplying, integrating and operating AI-enabled systems. Vraelis Contour is our first product direction.",
+    nextLead: "For engineering teams supplying, integrating and operating AI systems in defense, critical infrastructure and robotics. Vraelis Contour is our first product direction.",
     next: [
       item("Suppliers", "The release workflow", "Establish what is delivered, which checks accompany it and how the receiving team accepts an update."),
       item("Integrators", "The system boundary", "Connect the model, runtime, identity and operating requirements across the existing stack."),
@@ -205,7 +205,7 @@ SECURITY_PAGES.integrators = sector("System integrators.", "integrationWorkshop"
     item("Evidence", "Preserve source relationships", "Identify where observations originate. Two reports copied from one controller are not independent evidence."),
   ]);
 SECURITY_PAGES.enterprise = sector("Security for AI-enabled operations.", "operationalCompute",
-  "For engineering and security teams responsible for AI-enabled operational systems. Define access, model-change controls and investigation requirements.", [
+  "For engineering and security teams responsible for AI systems in defense, critical infrastructure and robotics. Define access, model-change controls and investigation requirements.", [
     item("Ownership", "Define who grants authority", "Keep administrator policy and human review separate from the workload proposing an action."),
     item("Data", "Map the data boundaries", "Identify what the workload may read or export, where records may be retained and which identities may inspect them."),
     item("Integration", "Work with the existing environment", "Qualify identity, hosting and interface requirements before claiming deployment support."),

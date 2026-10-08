@@ -67,7 +67,7 @@ export function EngineeringEntry() {
     <MediaReadyFallback/>
     <div className="v6-wrap">
       <div className="home-section-head home-section-head--split" data-media-copy="">
-        <h2 id="home-engineering-title">Independent software.<br />System-specific security.</h2>
+        <h2 id="home-engineering-title">Focused on defense,<br />infrastructure and robotics.</h2>
         <p>We are developing security around AI models, data and machine identities. The controls must fit the system, its threats and its operating constraints.</p>
       </div>
       <div className="home-engineering__links">

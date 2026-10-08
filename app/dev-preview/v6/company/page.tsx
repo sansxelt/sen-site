@@ -4,11 +4,11 @@ import { SUPPORT } from "../_system/positioning";
 import { COMPANY_SECURITY_AREAS } from "../_content/company-direction";
 const content: DirectionContent = {
   eyebrow: "Company",
-  title: "Independent software. System-specific security.",
+  title: "Focused on defense, infrastructure and robotics.",
   intro: SUPPORT,
   photo: "satelliteStation",
   heading: "From release to operation and investigation.",
-  lead: "Our company scope follows the models, inputs and authority within AI-enabled systems. These are research and development areas; each product addresses a specific customer job.",
+  lead: "Within these sectors, our research follows the models, inputs and authority across a system's lifecycle. Each product addresses a specific customer job.",
   items: COMPANY_SECURITY_AREAS.map(area => ({ label: area.phase, title: area.title, body: area.body, href: area.href })),
   nextTitle: "One company. Products for distinct jobs.",
   nextLead: "Our intended customers supply, integrate and operate AI in defense, critical infrastructure and robotics. Vraelis Contour is our first product direction, focused on model release security.",
@@ -18,5 +18,5 @@ const content: DirectionContent = {
     { label: "Product development", title: "The customer job defines the product", body: "Additional products follow distinct customer needs and operating requirements. Application areas and deployment modes do not automatically become separate products." },
   ],
 };
-export const metadata = v6meta({ title: "Vraelis | Independent AI cybersecurity", description: SUPPORT, path: "/company" });
+export const metadata = v6meta({ title: "Vraelis | Company and AI security scope", description: SUPPORT, path: "/company" });
 export default function Page() { return <DirectionPage content={content} />; }

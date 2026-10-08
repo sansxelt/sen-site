@@ -317,9 +317,9 @@ export const DOCS: Doc[] = [
     outcome: "Understand the current direction and distinguish research from implemented components.",
     limit: "Public workspace access is closed. These references are not instructions for an available deployment.",
     blocks: [
-      { t: "p", text: "Vraelis is developing independent cybersecurity software for AI-enabled defense, critical infrastructure and robotics. The company direction covers model integrity, adversarial threats, machine trust and security evidence." },
+      { t: "p", text: "Vraelis is developing cybersecurity software for AI systems used in defense, critical infrastructure and robotics. The company direction covers model integrity, adversarial threats, machine trust and security evidence." },
       { t: "h2", text: "Company scope and products" },
-      { t: "p", text: "The company scope follows AI from release through operation and investigation. These workstreams organize research and development; they are not four available products. Vraelis Contour is our first product direction, focused on model release security for robotics suppliers and system integrators." },
+      { t: "p", text: "Within these sectors, our research follows AI systems from release through operation and investigation. These workstreams organize research and development; they are not four available products. Vraelis Contour is our first product direction, focused on model release security for robotics suppliers and system integrators." },
       { t: "h2", text: "Model integrity" },
       { t: "p", text: "Identify the model, dependencies and configuration a system is running, and compare them with reviewed artifacts. Authenticity helps establish provenance; it does not prove that a model is safe or free of backdoors. Runtime attestation and deployment integrations remain development work." },
       { t: "h2", text: "Adversarial threats" },

@@ -1,10 +1,10 @@
 // Public direction reflects private development, not deployed capability.
 export const CATEGORY = "Cybersecurity for AI-enabled physical systems";
 export const HEADLINE = "Security for AI in the physical world.";
-export const SUPPORT = "Vraelis is developing cybersecurity software for AI-enabled defense, critical infrastructure and robotics. Our work focuses on model integrity, adversarial threats, machine trust and security evidence.";
+export const SUPPORT = "Vraelis is developing cybersecurity software for AI systems used in defense, critical infrastructure and robotics. Our work focuses on model integrity, adversarial threats, machine trust and security evidence.";
 export const HERO_LINE = "AI security for defense, infrastructure and robotics. In private development.";
 export const META_TITLE = "Vraelis | AI security for physical systems";
-export const META_DESCRIPTION = "Vraelis is developing AI cybersecurity software for defense, critical infrastructure and robotics. Explore our security scope and first product, Vraelis Contour.";
+export const META_DESCRIPTION = "Cybersecurity software for AI systems used in defense, critical infrastructure and robotics. In private development, starting with Vraelis Contour.";
 export { SOCIAL_TITLE as OG_TITLE, SOCIAL_DESCRIPTION as OG_DESCRIPTION } from "@/lib/social-card";
 export const OG_BEATS: [string, string, string] = ["Models", "Trust", "Evidence"];
 export const CLOSE_TITLE = "What does your system need to protect?";

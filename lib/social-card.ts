@@ -14,7 +14,7 @@
 export const SOCIAL_TITLE = "Vraelis";
 
 /** Company-level description. Page previews use their own reviewed page description. */
-export const SOCIAL_DESCRIPTION = "Vraelis is developing AI cybersecurity software for defense, critical infrastructure and robotics.";
+export const SOCIAL_DESCRIPTION = "Vraelis is developing cybersecurity software for AI systems used in defense, critical infrastructure and robotics.";
 
 /** Wide editorial card for shared links; distinct from the browser favicon. */
 export const SOCIAL_IMAGE = "https://vraelis.com/social/vraelis-physical-ai-v1.png";

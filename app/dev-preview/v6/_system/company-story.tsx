@@ -33,7 +33,7 @@ export function CompanyStory() {
       @layer base { .company-story__panels>[role=tabpanel] { display:block!important; margin-bottom:28px; } }
     `}</style></noscript>
     <header className="company-story__head">
-      <div><p className="home-eyebrow">Vraelis</p><h2 id="company-story-title">Independent software.<br />System-specific security.</h2></div>
+      <div><p className="home-eyebrow">Vraelis</p><h2 id="company-story-title">Focused on defense,<br />infrastructure and robotics.</h2></div>
       <div><p>{SUPPORT}</p><Link className="story-link" href={`${V6_BASE}/company`}>About <span><StoryArrow /></span></Link></div>
     </header>
     <div className="company-story__scope">
