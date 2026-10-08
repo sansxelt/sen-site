@@ -14,22 +14,22 @@ const menus = [
   { label: "Products", items: [
     { title: "Vraelis Contour", text: "Model release security for robotics teams", href: `${PREVIEW}/contour` },
     { title: "Our approach", text: "The company behind the first product", href: `${PREVIEW}/company` },
-    { title: "Development status", text: "Current foundations and what's ahead", href: "/beta" },
-  ], feature: { title: "What makes a model release secure?", href: "/guides/model-release-security", image: `${MEDIA}/optics.png` } },
+    { title: "Development status", text: "Current foundations and what's ahead", href: `${PREVIEW}/beta` },
+  ], feature: { title: "What makes a model release secure?", href: `${PREVIEW}/guides/model-release-security`, image: `${MEDIA}/optics.png` } },
   { label: "Solutions", items: [
-    { title: "Defense", text: "Mission software and operational systems", href: "/solutions/defense" },
-    { title: "Critical infrastructure", text: "Utilities, transport and industrial operations", href: "/infrastructure" },
-    { title: "Robotics", text: "Suppliers, integrators and operating teams", href: "/solutions/fleets" },
-  ], feature: { title: "Security shaped by the environment", href: "/guides/operating-constraints", image: `${MEDIA}/infrastructure.png` } },
+    { title: "Defense", text: "Mission software and operational systems", href: `${PREVIEW}/defense` },
+    { title: "Critical infrastructure", text: "Utilities, transport and industrial operations", href: `${PREVIEW}/infrastructure` },
+    { title: "Robotics", text: "Suppliers, integrators and operating teams", href: `${PREVIEW}/robotics` },
+  ], feature: { title: "Security shaped by the environment", href: `${PREVIEW}/guides/operating-constraints`, image: `${MEDIA}/infrastructure.png` } },
   { label: "Research", items: [
     { title: "Research at Vraelis", text: "Threats, controls and their limits", href: `${PREVIEW}/research` },
-    { title: "Model integrity", text: "Provenance and unauthorized changes", href: "/model-integrity" },
-    { title: "Adversarial threats", text: "Manipulated inputs and poisoned data", href: "/adversarial-security" },
-  ], feature: { title: "How to evaluate an AI security control", href: "/guides/ai-security-evaluation", image: `${MEDIA}/optics.png` } },
+    { title: "Model integrity", text: "Provenance and unauthorized changes", href: `${PREVIEW}/model-integrity` },
+    { title: "Adversarial threats", text: "Manipulated inputs and poisoned data", href: `${PREVIEW}/adversarial-security` },
+  ], feature: { title: "How to evaluate an AI security control", href: `${PREVIEW}/guides/ai-security-evaluation`, image: `${MEDIA}/optics.png` } },
   { label: "Resources", items: [
     { title: "Documentation", text: "Scope, concepts and engineering references", href: `${PREVIEW}/docs` },
     { title: "Company", text: "Who we are and what we're building", href: `${PREVIEW}/company` },
-    { title: "Security", text: "Policies and responsible disclosure", href: "/security" },
+    { title: "Security", text: "Policies and responsible disclosure", href: "https://vraelis.com/security" },
   ], feature: { title: "The technology behind our work", href: `${PREVIEW}/technology`, image: `${MEDIA}/robotics-hall.png` } },
 ] as const;
 
@@ -81,7 +81,7 @@ export function PreviewShell({ children }: { children: ReactNode }) {
         <nav className="v7-desktop-nav" aria-label="Main navigation">
           {menus.map((menu, index) => <div className="v7-nav-item" key={menu.label}
             onPointerEnter={e => { if (e.pointerType !== "mouse") return; if (closeTimer.current) clearTimeout(closeTimer.current); setOpen(index); }}
-            onPointerLeave={e => { if (e.pointerType === "mouse") closeTimer.current = setTimeout(() => setOpen(null), 140); }}
+            onPointerLeave={e => { if (e.pointerType === "mouse") { if (closeTimer.current) clearTimeout(closeTimer.current); closeTimer.current = setTimeout(() => setOpen(null), 180); } }}
             onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) close(); }}>
             <button ref={el => { triggers.current[index] = el; }} className="v7-nav-trigger" aria-expanded={open === index} aria-controls={`v7-menu-${index}`} onClick={() => setOpen(open === index ? null : index)}>{menu.label}<svg aria-hidden="true" width="10" height="10" viewBox="0 0 12 12"><path d="m3 4 3 3 3-3" fill="none" stroke="currentColor" strokeWidth="1.2" /></svg></button>
             <div id={`v7-menu-${index}`} className="v7-dropdown" hidden={open !== index}>
@@ -92,7 +92,7 @@ export function PreviewShell({ children }: { children: ReactNode }) {
         </nav>
         <div className="v7-header__actions">
           <button className="v7-palette" aria-label={light ? "Use dark appearance" : "Use light appearance"} aria-pressed={light} onClick={() => setLight(!light)}>{light ? <svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17"><path d="M19 15a8 8 0 0 1-10-10A8 8 0 1 0 19 15Z" fill="none" stroke="currentColor" strokeWidth="1.5" /></svg> : <svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="1.5" /><path d="M12 1v3m0 16v3M1 12h3m16 0h3M4 4l2 2m12 12 2 2M4 20l2-2M18 6l2-2" stroke="currentColor" strokeWidth="1.5" /></svg>}</button>
-          <Link href="/contact" className="v7-button v7-button--primary v7-header-join">Join us<Arrow /></Link>
+          <Link href={`${PREVIEW}/contact`} className="v7-button v7-button--primary v7-header-join">Join us<Arrow /></Link>
           <button ref={mobileTrigger} className="v7-mobile-trigger" aria-label={mobile ? "Close navigation" : "Open navigation"} aria-expanded={mobile} aria-controls="v7-mobile-nav" onClick={() => { setMobile(!mobile); close(); }}><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5"><path d={mobile ? "m6 6 12 12M6 18 18 6" : "M4 8h16M4 16h16"} /></svg></button>
         </div>
       </div>
@@ -100,8 +100,8 @@ export function PreviewShell({ children }: { children: ReactNode }) {
     </header>
     <main id="v7-main" tabIndex={-1} inert={mobile} key={pathname}>{children}</main>
     <footer className="v7-footer v7-wrap" inert={mobile}>
-      <div className="v7-footer__top"><Link className="v7-brand" href={PREVIEW}>Vraelis</Link><p>Cybersecurity for AI in defense,<br />critical infrastructure and robotics.</p><Link className="v7-text-link" href="/contact">Join us<Arrow diagonal /></Link></div>
-      <div className="v7-footer__links"><div><span>Company</span><Link href={`${PREVIEW}/company`}>About Vraelis</Link><Link href={`${PREVIEW}/contour`}>Vraelis Contour</Link><Link href={`${PREVIEW}/research`}>Research</Link><Link href={`${PREVIEW}/landscape`}>Industry landscape</Link></div><div><span>Resources</span><Link href={`${PREVIEW}/docs`}>Documentation</Link><Link href={`${PREVIEW}/technology`}>Technology in use</Link><Link href="/beta">Development status</Link></div><div><span>Trust</span><Link href="/security">Security</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link></div></div>
+      <div className="v7-footer__top"><Link className="v7-brand" href={PREVIEW}>Vraelis</Link><p>Cybersecurity for AI in defense,<br />critical infrastructure and robotics.</p><Link className="v7-text-link" href={`${PREVIEW}/contact`}>Join us<Arrow diagonal /></Link></div>
+      <div className="v7-footer__links"><div><span>Company</span><Link href={`${PREVIEW}/company`}>About Vraelis</Link><Link href={`${PREVIEW}/contour`}>Vraelis Contour</Link><Link href={`${PREVIEW}/research`}>Research</Link><Link href={`${PREVIEW}/landscape`}>Industry landscape</Link></div><div><span>Resources</span><Link href={`${PREVIEW}/docs`}>Documentation</Link><Link href={`${PREVIEW}/technology`}>Technology in use</Link><Link href={`${PREVIEW}/beta`}>Development status</Link></div><div><span>Trust</span><Link href="https://vraelis.com/security">Security</Link><Link href="https://vraelis.com/privacy">Privacy</Link><Link href="https://vraelis.com/terms">Terms</Link></div></div>
       <div className="v7-footer__bottom"><span>© 2026 Vraelis</span><span>Design preview · English · In private development</span><a href={`${MEDIA}/CREDITS.md`}>Image & film sources</a></div>
     </footer>
   </div>;
