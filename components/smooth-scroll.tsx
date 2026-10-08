@@ -11,7 +11,7 @@ export function SmoothScroll() {
   useEffect(() => {
     // The homepage already derives its animation from scroll position. A second
     // easing loop keeps an old wheel target alive after a reversal or Home key.
-    if (pathname === "/" || pathname === "/dev-preview/v6" || pathname === "/signin" || pathname.startsWith("/auth/")) return;
+    if (pathname.startsWith("/dev-preview/v7") || pathname === "/" || pathname === "/dev-preview/v6" || pathname === "/signin" || pathname.startsWith("/auth/")) return;
     const reduced = matchMedia("(prefers-reduced-motion: reduce)");
     const pointer = matchMedia("(hover: hover) and (pointer: fine)");
     let smooth: Lenis | undefined;
