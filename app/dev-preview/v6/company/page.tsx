@@ -1,24 +1,21 @@
 import { DirectionPage, type DirectionContent } from "../_system/direction-page";
 import { v6meta } from "../_system/meta";
 import { SUPPORT } from "../_system/positioning";
+import { COMPANY_SECURITY_AREAS } from "../_content/company-direction";
 const content: DirectionContent = {
   eyebrow: "Company",
   title: "Independent software. System-specific security.",
   intro: SUPPORT,
   photo: "satelliteStation",
-  heading: "Security for the AI within the system.",
-  lead: "An independent software company in private development, working with the boundaries and owners of AI-enabled systems.",
-  items: [
-    { label: "Purpose", title: "Protect the intelligence inside.", body: "Models, untrusted inputs and machine authority introduce different security problems. Match each control to a defined threat.", href: "/platform" },
-    { label: "People", title: "Engineering teams and system owners", body: "Our intended customers supply, integrate and operate AI in defense, critical infrastructure and robotics.", href: "/solutions" },
-    { label: "First product", title: "Vraelis Contour", body: "Model release security for robotics suppliers and system integrators. In private development.", href: "/contour" },
-  ],
-  nextTitle: "Build on evidence.",
-  nextLead: "Useful security must fit the actual workflow and stand up to a reproducible test.",
+  heading: "From release to operation and investigation.",
+  lead: "Our company scope follows the models, inputs and authority within AI-enabled systems. These are research and development areas; each product addresses a specific customer job.",
+  items: COMPANY_SECURITY_AREAS.map(area => ({ label: area.phase, title: area.title, body: area.body, href: area.href })),
+  nextTitle: "One company. Products for distinct jobs.",
+  nextLead: "Our intended customers supply, integrate and operate AI in defense, critical infrastructure and robotics. Vraelis Contour is our first product direction, focused on model release security.",
   next: [
-    { label: "Research", title: "Start with a threat you can test.", body: "Select a model, input path and controlled test environment. Document the attack cases, normal behavior and limits of the proposed protection." },
-    { label: "Engineering", title: "Connect the foundation to a complete workflow.", body: "Document the identity source, model version, allowed operations and environment." },
-    { label: "Evidence", title: "Review the decision and outcome", body: "Retain the exact policy and action bindings alongside the observations available to the reviewer." },
+    { label: "First product", title: "Vraelis Contour", body: "For release, platform and security engineers at robotics suppliers and system integrators. Connect the approved release to its destination and the version the managed runtime reports loading. In private development.", href: "/contour", linkLabel: "Explore Vraelis Contour" },
+    { label: "Research", title: "Defined threats and measurable controls", body: "Model integrity, adversarial assessment and machine authority have different proof requirements. Research must establish where a proposed control works and where it stops." },
+    { label: "Product development", title: "The customer job defines the product", body: "Additional products follow distinct customer needs and operating requirements. Application areas and deployment modes do not automatically become separate products." },
   ],
 };
 export const metadata = v6meta({ title: "Vraelis | Independent AI cybersecurity", description: SUPPORT, path: "/company" });

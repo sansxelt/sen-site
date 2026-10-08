@@ -5,7 +5,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { docsByGroup, inline, docPrefetch, dslug as slugOf, type Block, type TocItem } from "./docs";
+import { CURRENT_DOC_SLUGS, DOCS, inline, docPrefetch, dslug as slugOf, type Block, type TocItem } from "./docs";
 import { SURFACES } from "./coverage";
 import { V6_BASE, V6_HOME, V6_SIGNIN, v6SignInPath } from "@/lib/v6-routes";
 import { MARK_PATH, MARK_VIEWBOX } from "@/lib/brand-mark";
@@ -15,6 +15,10 @@ import { useAppEntry, useMarketingHref, useMarketingSession } from "../_system/e
 import { APP_ACCESS_OPEN, isProductEntryHref, SYSTEM_INQUIRY_LABEL, SYSTEM_INQUIRY_PATH } from "@/lib/app-availability";
 
 const BASE = V6_BASE;
+const DOC_NAV_GROUPS = [
+  { group: "Getting started", docs: DOCS.filter(doc => CURRENT_DOC_SLUGS.includes(doc.slug)) },
+  { group: "Earlier implementation references", docs: DOCS.filter(doc => !CURRENT_DOC_SLUGS.includes(doc.slug)) },
+];
 export const dslug = slugOf;
 
 /** A link inside docs text. A site path gets the base and the console prefetch rule (docPrefetch); anything
@@ -217,18 +221,16 @@ export function DocShell({ activeSlug = "", toc = [], crumb, markdown, children 
   markdown?: string;
   children: React.ReactNode;
 }) {
-  const groups = docsByGroup();
+  const groups = DOC_NAV_GROUPS;
   const authed = useMarketingSession();
   const appEntry = useAppEntry();
   const [drawer, setDrawer] = useState(false);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState<string>(toc[0]?.id ?? "");
-  // SECTIONS ARE DROPDOWNS. The section holding the page being read starts open and the rest start closed;
-  // on the docs index, where nothing is being read, all start open. A search opens every section it
-  // matches in, so a result is never hidden inside a closed one.
+  // Current references lead; the archive opens when reading an archived page or searching its content.
   const activeGroup = groups.find((g) => g.docs.some((d) => d.slug === activeSlug))?.group ?? null;
   const [open, setOpen] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(groups.map((g) => [g.group, activeGroup === null || g.group === activeGroup])));
+    Object.fromEntries(groups.map((g) => [g.group, activeGroup === null ? g.group === "Getting started" : g.group === activeGroup])));
   const toggle = (g: string) => setOpen((o) => ({ ...o, [g]: !o[g] }));
 
   // THE DRAWER IS A MODAL (880px and below, where the rail is a full-screen sheet under the header). It used to
@@ -394,7 +396,7 @@ export function DocShell({ activeSlug = "", toc = [], crumb, markdown, children 
                   <div id={id} className="v6-docs__group-list" hidden={!isOpen}>
                     {g.docs.map((d) => (
                       <Link key={d.slug} href={`${BASE}/docs/${d.slug}`} className="v6-docs__link"
-                        onClick={() => { follow(); setQuery(""); }}
+                        onClick={() => { follow(); setOpen(current => ({ ...current, [g.group]: true })); setQuery(""); }}
                         aria-current={d.slug === activeSlug ? "page" : undefined}>{d.title}</Link>
                     ))}
                   </div>

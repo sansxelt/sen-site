@@ -24,7 +24,7 @@
 import { V6_BASE, v6ShouldPrefetch } from "@/lib/v6-routes";
 
 /** Current guides advertised by the docs index, sitemap and machine-readable exports. */
-export const CURRENT_DOC_SLUGS: readonly string[] = ["ai-security", "recorded-reports"];
+export const CURRENT_DOC_SLUGS: readonly string[] = ["ai-security", "contour-release-security", "recorded-reports"];
 
 export type Block =
   | { t: "p"; text: string }
@@ -318,6 +318,8 @@ export const DOCS: Doc[] = [
     limit: "Public workspace access is closed. These references are not instructions for an available deployment.",
     blocks: [
       { t: "p", text: "Vraelis is developing independent cybersecurity software for AI-enabled defense, critical infrastructure and robotics. The company direction covers model integrity, adversarial threats, machine trust and security evidence." },
+      { t: "h2", text: "Company scope and products" },
+      { t: "p", text: "The company scope follows AI from release through operation and investigation. These workstreams organize research and development; they are not four available products. Vraelis Contour is our first product direction, focused on model release security for robotics suppliers and system integrators." },
       { t: "h2", text: "Model integrity" },
       { t: "p", text: "Identify the model, dependencies and configuration a system is running, and compare them with reviewed artifacts. Authenticity helps establish provenance; it does not prove that a model is safe or free of backdoors. Runtime attestation and deployment integrations remain development work." },
       { t: "h2", text: "Adversarial threats" },
@@ -327,11 +329,35 @@ export const DOCS: Doc[] = [
       { t: "h2", text: "Security evidence" },
       { t: "p", text: "Compare supplied reports against reviewed criteria and inspect the source events supporting a finding. Missing evidence remains unresolved. A recorded report is not authenticated telemetry or physical ground truth." },
       { t: "h2", text: "Current foundations" },
-      { t: "p", text: "The repository includes a tested policy decision core and a recorded-evidence evaluator. These components are foundations for private integration work, rather than a complete operational security product. Trusted identity, artifact verification, adversarial evaluation and live enforcement require further development." },
+      { t: "p", text: "Private foundations include a policy decision core, a recorded-evidence evaluator and a small model-release experiment with real ONNX CPU loading. The experiment separates authorized release metadata from the session a managed service reports loading. Production identity, runtime integrations and independently trustworthy observation remain development work." },
       { t: "p", text: "The private workspace address is data.vraelis.com. Sign-in and new account access are currently closed." },
       { t: "note", label: "Earlier implementation references", text: "The browser verification, CLI, API and console guides describe earlier implementation work. They do not define the current company scope or establish availability of those services." },
     ],
-    related: ["recorded-reports"],
+    related: ["contour-release-security", "recorded-reports"],
+  },
+  {
+    slug: "contour-release-security",
+    group: "Getting started",
+    title: "Vraelis Contour release security",
+    summary: "Understand the intended release workflow, recipient responsibilities and limits of the private reference experiment.",
+    outcome: "Distinguish release identity, approval, readiness, managed loading and acceptance evidence.",
+    limit: "Vraelis Contour is in private development. Release evidence does not establish model safety or protection against a compromised host.",
+    blocks: [
+      { t: "p", text: "Vraelis Contour is our first product direction within a wider AI cybersecurity company. Its intended users are release, platform and security engineers at robotics suppliers and system integrators. The candidate job is connecting an approved model-bearing release to its receiving environment and an explicit acceptance outcome." },
+      { t: "h2", text: "The release unit" },
+      { t: "p", text: "Define the complete unit the recipient accepts. It may include the model, preprocessing, configuration, calibration and runtime dependencies, or form part of an application, container or firmware release. Checking a model alone cannot establish compatibility of the whole system." },
+      { t: "h2", text: "The intended workflow" },
+      { t: "steps", items: ["Identify the exact release and the assessments that apply to those artifacts.", "Establish the recipient authority and bind approval to the release and its destination.", "Check candidate compatibility before accepted rollout under the agreed operating policy.", "Record what the managed runtime reports loading and preserve failed or uncertain activation.", "Let the recipient decide acceptance, continued operation, withdrawal and recovery."] },
+      { t: "h2", text: "Supplier and recipient responsibilities" },
+      { t: "p", text: "The supplier identifies and delivers the release. The recipient owns destination authorization and acceptance. The runtime operator controls installation and recovery. These responsibilities may belong to different organizations; a supplier signature does not grant permission to change a customer's system." },
+      { t: "h2", text: "Current reference experiment" },
+      { t: "p", text: "A small private ONNX CPU experiment exercises signed model/configuration bindings, destination-bound approval, real synthetic model execution and desired-versus-loaded session reports. It also exposes interrupted activation and an authorized release that fails to load. It is a reference experiment rather than an available robotics integration." },
+      { t: "h2", text: "What the evidence establishes" },
+      { t: "ul", items: ["A signature authenticates an endorsement of particular bytes; it does not establish benign behavior or absence of backdoors.", "Loaded-session evidence is a managed-service self-report. The host and worker are trusted; this is not independent attestation.", "A missing or inconsistent observation remains unresolved. Authorization and successful activation are separate events.", "Signer revocation and withdrawal of an already running release are separate policy decisions."] },
+      { t: "h2", text: "Evaluation before integration" },
+      { t: "p", text: "A useful evaluation starts with a recurring recipient problem and compares existing signing, deployment, scanning and logging tools. Define the threat, required evidence, availability, recovery and total integration effort before testing a new control. Public workspace access remains closed." },
+    ],
+    related: ["ai-security", "recorded-reports"],
   },
   {
     slug: "recorded-reports",

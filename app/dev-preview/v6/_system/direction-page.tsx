@@ -15,7 +15,7 @@ export type DirectionContent = {
   showStatus?: boolean;
   story?: PhotoStoryContent;
   references?: {title:string; body:string; href:string}[];
-  nextTitle:string; nextLead:string; next:{title:string;body:string;label:string}[];
+  nextTitle:string; nextLead:string; next:{title:string;body:string;label:string;href?:string;linkLabel?:string}[];
 };
 export function DirectionHero({eyebrow,title,intro,photo}:{eyebrow:string;title:string;intro:string;photo?:PhotographKey}) {
   if (photo) return <FrameHero compact eyebrow={eyebrow} title={title} sub={intro}
@@ -51,6 +51,7 @@ export function DirectionPage({content:c}:{content:DirectionContent}) {
       <div className="direction-next__topics">{c.next.map((item,index)=><details key={item.title} name="direction-next" open={index===0}>
         <summary><span className="direction-next__label">{item.label}</span><span className="direction-next__title">{item.title}</span><span className="direction-next__toggle" aria-hidden="true"/></summary>
         <p>{item.body}</p>
+        {item.href ? <Link className="direction-topics__link" href={`${V6_BASE}${item.href}`}>{item.linkLabel ?? "Explore this area"}</Link> : null}
       </details>)}</div>
     </div>
     </Band>

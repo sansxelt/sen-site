@@ -4,18 +4,12 @@ import { useRef, useState, type KeyboardEvent } from "react";
 import Link from "next/link";
 import { V6_BASE } from "@/lib/v6-routes";
 import { SUPPORT } from "./positioning";
+import { COMPANY_SECURITY_AREAS as scope, COMPANY_SCOPE_STATUS } from "../_content/company-direction";
 import "./company-story.css";
 
 export function StoryArrow() {
   return <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 19 19 5M5 5h14v14" /></svg>;
 }
-
-const scope = [
-  { phase: "Before release", title: "Model integrity", body: "Investigate model provenance, unauthorized changes and the software supporting a deployed workload.", href: "/model-integrity" },
-  { phase: "Before deployment", title: "Adversarial threats", body: "Study manipulated inputs and poisoned data against the model, sensor and conditions involved.", href: "/adversarial-security" },
-  { phase: "During operation", title: "Machine trust", body: "Establish workload identity and explicit permissions at the resource and action boundary.", href: "/zero-trust" },
-  { phase: "After an event", title: "Security evidence", body: "Connect findings to source observations, reviewed criteria and the limits of the available recording.", href: "/recorded-evidence" },
-] as const;
 
 /** Editorial scope navigation, not a product interface or a claim of deployed coverage. */
 export function CompanyStory() {
@@ -55,7 +49,7 @@ export function CompanyStory() {
         </div>)}
       </div>
     </div>
-    <p className="company-story__status">Four connected areas of private development and research. Each has a distinct threat, a control to investigate and a result to test.</p>
+    <p className="company-story__status">{COMPANY_SCOPE_STATUS}</p>
   </section>;
 }
 

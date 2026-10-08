@@ -22,7 +22,7 @@ export const SECURITY_PAGES: Record<string, DirectionContent> = {
       item("Release", "The exact release", "Bind the model artifact, preprocessing and configuration to a reviewed version."),
       item("Approval", "The right authority", "Tie approval to the exact release and destination, independently of the proposing workload."),
       item("Runtime", "The receiving runtime", "Check compatibility and distinguish the desired release from the version the managed service reports loading."),
-      item("Acceptance", "The acceptance record", "Retain accepted, failed or uncertain activation and the evidence available during recovery."),
+      { ...item("Acceptance", "The acceptance record", "Retain accepted, failed or uncertain activation and the evidence available during recovery."), href: "/docs/contour-release-security" },
     ],
     story: {
       photo: "circuitLayers", eyebrow: "The engineering foundation", title: "Start at the release boundary.",
