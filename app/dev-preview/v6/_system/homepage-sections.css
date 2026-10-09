@@ -10,20 +10,20 @@
 .home-areas .home-section-head { margin-bottom:28px; }
 .home-areas .home-section-head h2 { font-size:clamp(28px,2.8vw,40px); }
 .home-areas .home-eyebrow { margin-bottom:14px; }
-.home-areas__grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:clamp(240px,30vw,360px); gap:16px; }
-.home-area { position:relative; display:block; isolation:isolate; overflow:hidden; border-radius:16px; background:#181818; color:#fff; text-decoration:none; }
-.home-area[data-lead] { grid-row:auto; }
+.home-areas__grid { display:grid; grid-template-columns:1.4fr 1fr; grid-template-rows:repeat(2,200px); gap:20px; }
+.home-area { position:relative; display:block; isolation:isolate; overflow:hidden; background:#181818; color:#fff; text-decoration:none; }
+.home-area[data-lead] { grid-row:span 2; }
 .home-area__media { position:absolute; inset:0; z-index:0; display:block; overflow:hidden; isolation:isolate; pointer-events:none; }
 /* Overscan covers the full scroll shift before hover, throughout zoom, and on pointer exit. */
 .home-area__media img { position:absolute; inset:-12px; display:block; width:calc(100% + 24px); max-width:none; height:calc(100% + 24px); object-fit:cover; transform:translateY(var(--media-y,0px)) scale(var(--media-zoom,1)); transition:transform 700ms ease; }
 .home-area__media::after { content:""; position:absolute; inset:0; z-index:1; background:linear-gradient(0deg,rgba(0,0,0,.72) 0%,rgba(0,0,0,.36) 24%,transparent 58%); pointer-events:none; }
-.home-area__caption { position:absolute; bottom:0; left:0; right:0; z-index:2; min-height:132px; padding:24px; display:grid; grid-template-columns:minmax(0,1fr) 18px; align-items:start; gap:16px; }
+.home-area__caption { position:absolute; bottom:0; left:0; right:0; z-index:2; padding:24px; text-shadow:0 1px 4px rgba(0,0,0,.7); display:flex; align-items:end; justify-content:space-between; gap:16px; }
 .home-area__caption h3 { font-size:28px; line-height:1.12; letter-spacing:-.025em; font-weight:500; margin:0 0 8px; }
 .home-area__caption p { font-size:14px; line-height:1.5; color:#e0e0e0; margin:0; max-width:34ch; }
-.home-area[data-lead] h3 { font-size:28px; }
-.home-area__caption svg { flex:none; align-self:start; margin-top:7px; transition:transform 180ms ease; }
+.home-area[data-lead] h3 { font-size:36px; }
+.home-area__caption svg { flex:none; margin-bottom:3px; transition:transform 200ms ease; }
 .home-area:is(:hover,:focus-visible) { --media-zoom:1.035; }
-.home-area:is(:hover,:focus-visible) .home-area__caption svg { transform:translateX(3px); }
+.home-area:hover .home-area__caption svg { transform:translate(2px,-2px); }
 .home-area:hover { color:#fff; }
 .home-areas__sources { margin-top:14px; font-size:11px; color:#aaa; }
 .home-areas__sources a { color:inherit; text-decoration:none; display:inline-flex; gap:10px; align-items:center; }
@@ -49,13 +49,15 @@
 @media(max-width:760px) {
  .home-section-head--split { grid-template-columns:1fr; gap:24px; }
  .home-section-head h2 { font-size:clamp(34px,8vw,52px); }
- .home-areas__grid { grid-template-columns:1fr; grid-template-rows:none; grid-auto-rows:280px; gap:14px; }
- .home-area[data-lead] { grid-column:auto; grid-row:auto; }
+ .home-areas__grid { grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:260px 220px; gap:12px; }
+ .home-area[data-lead] { grid-column:1 / -1; grid-row:auto; }
  .home-area__caption { padding:18px; gap:8px; }
- .home-area__caption h3 { font-size:28px; }
- .home-area[data-lead] h3 { font-size:28px; }
- .home-area__caption p { font-size:14px; line-height:1.45; }
+ .home-area__caption h3 { font-size:clamp(15px,4.3vw,22px); }
+ .home-area[data-lead] h3 { font-size:30px; }
+ .home-area__caption p { font-size:12px; line-height:1.45; }
  .home-area__caption svg { width:14px; height:14px; }
+ .home-area:not([data-lead]) .home-area__caption { display:block; }
+ .home-area:not([data-lead]) .home-area__caption svg { display:none; }
  .home-area[data-lead] img { object-position:60% 50%; }
  .home-area:not([data-lead]) img { object-position:60% 50%; }
  .home-engineering__links { grid-template-columns:1fr; gap:36px; }

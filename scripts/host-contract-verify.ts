@@ -299,7 +299,7 @@ console.log("\n── retired product surfaces are not reachable or indexable �
   // robots disallows the retired crawl surfaces.
   const robots = readFileSync("app/robots.ts", "utf8");
   ok("robots.ts disallows /vote", /disallow:[\s\S]{0,160}"\/vote"/.test(robots));
-  ok("robots.ts disallows /guides", /disallow:[\s\S]{0,160}"\/guides"/.test(robots));
+  ok("robots.ts allows current security guides", !/"\/guides"/.test(robots) && /allow: "\/"/.test(robots));
 
   // The retired sansxel (site) group (AR lens, voice, workshop, learn) is removed from the build entirely.
   ok("the retired sansxel (site) route group is removed", !existsSync("app/(site)"));

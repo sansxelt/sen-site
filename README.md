@@ -16,7 +16,7 @@ Industry landscape stories are editorial references to public technology. They d
 
 ## Website development
 
-This repository contains the Next.js website and earlier implementation references. The current public design is in `app/dev-preview/v7`, served at canonical URLs by `proxy.ts`. `lib/public-site.ts` owns the public route manifest, redirects and sitemap inputs. Direct promoted preview URLs redirect to the corresponding public page.
+This repository contains the Next.js website and earlier implementation references. The public layout has been restored to `app/dev-preview/v6`, served at canonical URLs by `proxy.ts`. The sitemap derives from those routes. The newer layout remains available under `/dev-preview/v7` for review, excluded from search.
 
 ```sh
 npm ci
@@ -24,7 +24,7 @@ npm run dev
 npm run build
 ```
 
-The deployed V6 compatibility pages use `NEXT_PUBLIC_VRAELIS_V6_PUBLIC=1`. Current site pages use native scrolling, keyboard-accessible navigation, reduced-motion controls and illustrative product records. Product examples do not connect to a live runtime.
+The public layout uses `NEXT_PUBLIC_VRAELIS_V6_PUBLIC=1`. Preserve its navigation, scrolling and reduced-motion behavior. Illustrative product examples do not connect to a live runtime.
 
 Metadata uses a shared social card, page-specific descriptions, canonical URLs, organization and breadcrumb structured data. Private workspace and retired implementation routes remain excluded from search. Current Markdown documentation is available at `/llms.txt` and `/llms-full.txt`.
 

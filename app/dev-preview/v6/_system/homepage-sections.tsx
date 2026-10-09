@@ -12,15 +12,15 @@ import { StoryArrow } from "./company-story";
 
 const AREAS = {
   defense: {
-    line: "Mission software and autonomous systems.",
+    line: "AI security for mission systems.",
     image: "/home/menu/editorial/aviation.jpg", width: 1600, height: 900,
   },
   "public-sector": {
-    line: "Utilities, transport and industrial operations.",
+    line: "Protect AI-enabled operational boundaries.",
     image: "/site/photography/power-grid.jpg", width: 2400, height: 1800,
   },
   fleets: {
-    line: "The models inside equipment that moves.",
+    line: "Model integrity and machine trust for robotics.",
     image: "/site/photography/robot-grinding.jpg", width: 2400, height: 1530,
   },
 } as const;
@@ -32,8 +32,8 @@ export function PhysicalSystems() {
     <MediaReadyFallback/>
     <div className="v6-wrap">
       <div className="home-section-head" data-media-copy="">
-        <p className="home-eyebrow">Who and where</p>
-        <h2 id="home-areas-title">For governments, builders and operators.</h2>
+        <p className="home-eyebrow">Our application areas</p>
+        <h2 id="home-areas-title">For the teams building and operating AI.</h2>
       </div>
       <div className="home-areas__grid">
         {PRIMARY_SECTORS.map((sector, index) => {
@@ -41,7 +41,7 @@ export function PhysicalSystems() {
           const titleId = `home-area-${sector.slug}`;
           return <Link key={sector.slug} href={sector.href} className="home-area" data-lead={index === 0 || undefined} aria-labelledby={titleId} data-media-ready="pending">
             <span className="home-area__media" aria-hidden="true">
-              <Image src={area.image} alt="" width={area.width} height={area.height} sizes="(max-width: 760px) 100vw, 33vw" loading="lazy" />
+              <Image src={area.image} alt="" width={area.width} height={area.height} sizes="(max-width: 760px) 100vw, 60vw" loading="lazy" />
             </span>
             <div className="home-area__caption" data-media-copy="">
               <div><h3 id={titleId}>{sector.label}</h3><p>{area.line}</p></div><StoryArrow />
@@ -50,9 +50,9 @@ export function PhysicalSystems() {
         })}
       </div>
       <div className="home-audiences">
-        <Link className="story-link" href={`${V6_BASE}/government`}>Governments &amp; contractors <StoryArrow /></Link>
-        <Link className="story-link" href={`${V6_BASE}/integrators`}>Robotics suppliers &amp; system integrators <StoryArrow /></Link>
-        <Link className="story-link" href={`${V6_BASE}/enterprise`}>Infrastructure operators <StoryArrow /></Link>
+        <Link className="story-link" href={`${V6_BASE}/government`}>Government and institutions <span><StoryArrow /></span></Link>
+        <Link className="story-link" href={`${V6_BASE}/integrators`}>System integrators <span><StoryArrow /></span></Link>
+        <Link className="story-link" href={`${V6_BASE}/enterprise`}>Enterprise <span><StoryArrow /></span></Link>
       </div>
     </div>
   </section>;
