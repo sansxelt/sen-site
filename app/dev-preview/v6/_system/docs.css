@@ -101,9 +101,9 @@ html:has(.v6-docsenv) { scroll-padding-top: 76px; }
 /* The docs home, first in the rail, sits where a group header would. */
 .v6-docs__overview { margin-top: 6px; }
 .v6-docs__empty { font-size: 13px; color: #8E9095; padding: 6px 10px; margin: 0; }
-.v6-docs__railfoot { display: grid; gap: 1px; padding: 10px 10px 14px; }
-.v6-docs__railfoot a { font-size: 13px; color: #A1A3A9; text-decoration: none; padding: 6px 10px; border-radius: 6px; }
-.v6-docs__railfoot a:hover { color: #EDEDEF; background: rgba(255,255,255,0.055); }
+.v6-docs__railfoot { display: grid; gap: 10px; padding: 12px 14px 16px; border-top: 1px solid rgba(255,255,255,0.12); }
+.v6-docs__railfoot > a { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 15px; font-weight: 500; line-height: 1.4; color: #FAFAFA; background: rgba(255,255,255,0.065); border: 1px solid rgba(255,255,255,0.2); text-decoration: none; padding: 10px 12px; border-radius: 8px; }
+.v6-docs__railfoot > a:hover { color: #FFFFFF; background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.4); }
 
 /* ---- reading column ---- */
 .v6-docs__main { min-width: 0; padding: 44px clamp(24px, 5vw, 80px) 28px; }
