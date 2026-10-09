@@ -11,7 +11,7 @@
 .home-areas .home-section-head h2 { font-size:clamp(28px,2.8vw,40px); }
 .home-areas .home-eyebrow { margin-bottom:14px; }
 .home-areas__grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:clamp(240px,30vw,360px); gap:16px; }
-.home-area { position:relative; display:block; isolation:isolate; overflow:hidden; background:#181818; color:#fff; text-decoration:none; }
+.home-area { position:relative; display:block; isolation:isolate; overflow:hidden; border-radius:16px; background:#181818; color:#fff; text-decoration:none; }
 .home-area[data-lead] { grid-row:auto; }
 .home-area__media { position:absolute; inset:0; z-index:0; display:block; overflow:hidden; isolation:isolate; pointer-events:none; }
 /* Overscan covers the full scroll shift before hover, throughout zoom, and on pointer exit. */

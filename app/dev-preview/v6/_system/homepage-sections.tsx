@@ -12,15 +12,15 @@ import { StoryArrow } from "./company-story";
 
 const AREAS = {
   defense: {
-    line: "AI security for mission systems.",
+    line: "Mission software and autonomous systems.",
     image: "/home/menu/editorial/aviation.jpg", width: 1600, height: 900,
   },
   "public-sector": {
-    line: "Protect AI-enabled operational boundaries.",
+    line: "Utilities, transport and industrial operations.",
     image: "/site/photography/power-grid.jpg", width: 2400, height: 1800,
   },
   fleets: {
-    line: "Model integrity and machine trust for robotics.",
+    line: "The models inside equipment that moves.",
     image: "/site/photography/robot-grinding.jpg", width: 2400, height: 1530,
   },
 } as const;
@@ -41,7 +41,7 @@ export function PhysicalSystems() {
           const titleId = `home-area-${sector.slug}`;
           return <Link key={sector.slug} href={sector.href} className="home-area" data-lead={index === 0 || undefined} aria-labelledby={titleId} data-media-ready="pending">
             <span className="home-area__media" aria-hidden="true">
-              <Image src={area.image} alt="" width={area.width} height={area.height} sizes="(max-width: 760px) 100vw, 60vw" loading="lazy" />
+              <Image src={area.image} alt="" width={area.width} height={area.height} sizes="(max-width: 760px) 100vw, 33vw" loading="lazy" />
             </span>
             <div className="home-area__caption" data-media-copy="">
               <div><h3 id={titleId}>{sector.label}</h3><p>{area.line}</p></div><StoryArrow />

@@ -10,7 +10,7 @@ const scenarios = [
 
 /** Fictional records. No API call, runtime connection or security decision. */
 export function ContourComparison() {
-  const [selected, setSelected] = useState(0);
+  const [selected, setSelected] = useState(1);
   const id = useId();
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
   const scenario = scenarios[selected];
@@ -19,20 +19,21 @@ export function ContourComparison() {
     if (next === null) return;
     event.preventDefault(); setSelected(next); tabs.current[next]?.focus();
   }
-  return <div className="contour-comparison" aria-label="Illustrative Contour release comparison">
+  return <div className="contour-comparison" data-result={scenario.state.toLowerCase()} aria-label="Illustrative Contour release comparison">
     <header><span>Contour / Release review</span><span>Illustrative example</span></header>
     <div className="contour-comparison__tabs" role="tablist" aria-label="Release scenarios">
       {scenarios.map((item, index) => <button key={item.label} type="button" role="tab" ref={el => { tabs.current[index] = el; }} id={`${id}-tab-${index}`} aria-selected={selected === index} aria-controls={`${id}-panel`} tabIndex={selected === index ? 0 : -1} onClick={() => setSelected(index)} onKeyDown={event => navigate(event, index)}>{item.label}</button>)}
     </div>
     <div className="contour-comparison__panel" role="tabpanel" tabIndex={0} id={`${id}-panel`} aria-labelledby={`${id}-tab-${selected}`}>
       <div className="contour-comparison__destination"><span>Destination</span><strong>test-cell-17</strong></div>
-      <dl>
-        <div><dt><span aria-hidden="true">01</span>Release manifest</dt><dd>R42</dd></div>
-        <div><dt><span aria-hidden="true">02</span>Destination approval</dt><dd>R42</dd></div>
-        <div><dt><span aria-hidden="true">03</span>Service reports loading</dt><dd>{scenario.report}</dd></div>
-      </dl>
-      <div className="contour-comparison__result"><span className="contour-comparison__state"><i aria-hidden="true" />{scenario.state}</span><p>{scenario.detail}</p></div>
+      <div className="contour-comparison__versions">
+        <div className="contour-comparison__version"><p>Approved release</p><strong>R42</strong><span>Release manifest + approval</span></div>
+        <span className="contour-comparison__relation" aria-hidden="true">{selected === 0 ? "=" : selected === 1 ? "≠" : "?"}</span>
+        <div className="contour-comparison__version contour-comparison__runtime"><p>Service reports loading</p><strong className="contour-comparison__runtime-version" data-missing={selected === 2 || undefined}>{scenario.report}</strong><span>Managed runtime report</span></div>
+      </div>
+      <div className="contour-comparison__package"><span>Release package</span><span>Model · Preprocessing · Configuration</span></div>
+      <div className="contour-comparison__result"><span className="contour-comparison__state"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><path d={selected === 0 ? "m3 8 3 3 7-7" : selected === 1 ? "M3 6h10M3 10h10M11 3 5 13" : "M6 5a2 2 0 1 1 3 2c-1 1-1 1-1 3M8 13v.1"} /></svg>{scenario.state}</span><p>{scenario.detail}</p></div>
     </div>
-    <p className="contour-comparison__note">Fictional records. Consistency does not prove safe model behavior or the state of a compromised host.</p>
+    <p className="contour-comparison__note">Fictional records. Consistency does not establish safe behavior or a trustworthy host.</p>
   </div>;
 }
