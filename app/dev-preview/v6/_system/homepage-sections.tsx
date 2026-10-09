@@ -32,8 +32,8 @@ export function PhysicalSystems() {
     <MediaReadyFallback/>
     <div className="v6-wrap">
       <div className="home-section-head" data-media-copy="">
-        <p className="home-eyebrow">Our application areas</p>
-        <h2 id="home-areas-title">For the teams building and operating AI.</h2>
+        <p className="home-eyebrow">Who and where</p>
+        <h2 id="home-areas-title">For governments, builders and operators.</h2>
       </div>
       <div className="home-areas__grid">
         {PRIMARY_SECTORS.map((sector, index) => {
@@ -50,9 +50,9 @@ export function PhysicalSystems() {
         })}
       </div>
       <div className="home-audiences">
-        <Link className="story-link" href={`${V6_BASE}/government`}>Government and institutions <span><StoryArrow /></span></Link>
-        <Link className="story-link" href={`${V6_BASE}/integrators`}>System integrators <span><StoryArrow /></span></Link>
-        <Link className="story-link" href={`${V6_BASE}/enterprise`}>Enterprise <span><StoryArrow /></span></Link>
+        <Link className="story-link" href={`${V6_BASE}/government`}>Governments &amp; contractors <StoryArrow /></Link>
+        <Link className="story-link" href={`${V6_BASE}/integrators`}>Robotics suppliers &amp; system integrators <StoryArrow /></Link>
+        <Link className="story-link" href={`${V6_BASE}/enterprise`}>Infrastructure operators <StoryArrow /></Link>
       </div>
     </div>
   </section>;

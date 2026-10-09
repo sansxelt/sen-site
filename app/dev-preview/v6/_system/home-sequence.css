@@ -18,7 +18,12 @@
 .home-sequence .home-area__media { --media-y:clamp(-6px,calc(var(--scene-y,0px) * -.5),6px); }
 .home-page .home-sequence .home-areas,
 .home-page .home-sequence .v6-story { padding-block:20px; }
-.home-sequence .home-areas__grid { grid-template-rows:repeat(2,min(200px,calc((var(--chapter-height) - 210px) / 2))); }
+.home-sequence .home-areas__grid { grid-template-rows:min(360px,calc(var(--chapter-height) - 210px)); }
+@media(max-width:1100px) and (max-height:760px) {
+ .home-sequence .home-areas__grid { grid-template-rows:calc(var(--chapter-height) - 250px); }
+ .home-sequence .home-area__caption { padding:18px; }
+ .home-sequence .home-area__caption h3 { font-size:24px; }
+}
 .home-page .home-sequence .v6-story > .v6-wrap { max-width:min(1600px,calc((100svh - var(--nav-h,66px) - 210px) * 1.6)); }
 .home-page .home-sequence .v6-story__heading { padding-top:0; border-top:0; gap:28px; }
 .home-page .home-sequence .v6-story__label { font-size:clamp(28px,2.6vw,38px); }
