@@ -51,7 +51,7 @@ export function entityJsonLd(): string {
   return JSON.stringify({
     "@context": "https://schema.org",
     "@graph": [
-      { "@type": "Person", "@id": "https://vraelis.com/company#nishanth-dasari", name: "Nishanth Dasari", jobTitle: "Founder", url: "https://vraelis.com/company#nishanth-dasari", sameAs: ["https://www.linkedin.com/in/beamed/"], worksFor: { "@id": `${ORGANIZATION.url}/#organization` } },
+      { "@type": "Person", "@id": "https://vraelis.com/company#nishanth-dasari", name: "Nishanth Dasari", jobTitle: "Founder", url: "https://vraelis.com/company#nishanth-dasari", sameAs: ["https://www.linkedin.com/in/beamed/", "https://foremake.com/nishanth"], worksFor: { "@id": `${ORGANIZATION.url}/#organization` } },
       {
         "@type": "Organization",
         "@id": `${ORGANIZATION.url}/#organization`,
