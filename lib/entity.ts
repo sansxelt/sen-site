@@ -59,6 +59,7 @@ export function entityJsonLd(): string {
         logo: { "@type": "ImageObject", url: ORGANIZATION.logo },
         description: ORGANIZATION.description,
         sameAs: [...ORGANIZATION.sameAs],
+        parentOrganization: { "@type": "Organization", "@id": "https://foremake.com/#organization", name: "Foremake", url: "https://foremake.com/" },
       },
       {
         "@type": "WebSite",

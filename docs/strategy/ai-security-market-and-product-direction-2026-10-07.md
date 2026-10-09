@@ -1,8 +1,12 @@
 # Vraelis AI security market and product direction
 
+## Current first product research
+
+The [October 8 market assessment](contour-market-need-and-focus-2026-10-08.md) and [neutral discovery plan](contour-customer-discovery-2026-10-08.md) update the first-product priorities below. Vraelis Contour release acceptance remains a leading hypothesis; current code fit does not establish the best purchasing opportunity. Research actual owner workflows and compare existing controls before adding runtime adapters. The broader Vraelis company scope remains unchanged.
+
 ## Accepted direction after the broader scope review
 
-Vraelis is an independent AI cybersecurity software company in private development, covering model integrity, adversarial threats, machine trust and security evidence for defense, critical infrastructure and robotics. The existing policy core and recording evaluator are foundations, not the complete company scope. The narrow initial workflow discussed below remains an implementation hypothesis. Vraelis Contour is a possible product name, not an announced deployment. `data.vraelis.com` is reserved for the private workspace and sign-in; public access remains closed. The public call to action is **Talk AI security**, leading to the role-specific engineering inquiry.
+Vraelis is an independent AI cybersecurity software company in private development, covering model integrity, adversarial threats, machine trust and security evidence for defense, critical infrastructure and robotics. The company and display name is Vraelis. The existing policy core and recording evaluator are foundations, not the complete company scope. The narrow initial workflow discussed below remains an implementation hypothesis. Vraelis Contour is the working first product direction for release/platform and security engineers at robotics suppliers and integrators, not an announced deployment. See the [company and product naming decision](company-and-product-naming.md). `data.vraelis.com` is reserved for the private workspace and sign-in; public access remains closed. The public call to action is **Talk AI security**, leading to the role-specific engineering inquiry.
 
 
 Vraelis should pursue a focused product hypothesis: controlling AI access and proposed changes at an operational-system boundary, with evidence an engineering reviewer can inspect. Start with one controlled engineering workflow for a robotics manufacturer or system integrator. Defense and critical infrastructure remain intended application areas, with their own qualification requirements.
@@ -59,6 +63,8 @@ Policy checks use synthetic trusted contexts. The core does not authenticate ide
 
 Relevant implementation: `lib/ai-security/policy.ts`, `lib/recorded-verification/evaluate.ts` and `lib/recorded-verification/mcap.ts`. Existing boundary descriptions remain in `docs/ai-security-foundation.md` and `docs/recorded-verification-v1.md`.
 
+After the independent review, the private model-release experiment implements a narrower local control with authenticated signing identities, signed model/configuration manifests, separate approvals and transactional activation of a numeric reference model. This is additional engineering evidence, not a production identity/attestation adapter, protection against adversarial sensor input or commercial validation.
+
 ## Build the first integration well
 
 Prefer established security primitives. [NIST SP 800-207](https://www.nist.gov/publications/zero-trust-architecture) distinguishes policy decisions from enforcement. [SPIFFE](https://spiffe.io/docs/latest/spiffe-about/overview/) provides workload-identity standards; [Cedar](https://docs.cedarpolicy.com/auth/authorization.html) provides authorization semantics; [Sigstore](https://docs.sigstore.dev/cosign/verifying/verify/) documents artifact signature verification. These are candidates to evaluate against the owner's environment, not integrations Vraelis already supports.
@@ -92,10 +98,12 @@ These gates need an implemented boundary and reproducible integration tests. Pas
 
 Use bright, licensed editorial photography to establish the physical setting. Pair it with concrete security boundaries and audience-specific constraints. Preserve the photographic homepage sequence and mobile image readiness. Remove synthetic models and app demonstrations rather than removing useful page imagery.
 
-The main action is **Share your requirements**. It opens an AI-security inquiry with the topic selected, a requirements-focused message prompt and **Send requirements** as the submission action. It communicates a next step available today and does not offer product access, a demonstration or a deployment program. General and privacy inquiries remain available through normal contact navigation.
+The main action is **Talk AI security**. It opens the role-specific engineering inquiry, with prompts suited to the selected audience. It communicates a next step available today and does not offer product access, a demonstration or a deployment program. General and privacy inquiries remain available through normal contact navigation.
 
 Public copy should distinguish the private components, next integration and wider research. The uploaded architecture's modularity and observability are useful starting principles, but autonomous changes to security policy or model authority should not be treated as approved design. The uploaded market percentages remain research leads; they are not used as verified market evidence.
 
 ## Next decisions
+
+The [independent product review](vraelis-independent-product-review-2026-10-07.md) sharpens the first investment into a bounded model-release enforcement experiment, with artifact integrity as an input, comparison against existing controls and buyer evidence before expansion. It preserves dissent on discovery-first timing and bounded adversarial evaluation rather than treating AI agreement as market validation.
 
 Choose the test resource and identity environment. Obtain buyer evidence before committing to broader integrations. Complete the boundary and acceptance gates before opening the console. Then decide whether action enforcement, evidence review or a smaller integration product creates enough repeatable value to support a business.

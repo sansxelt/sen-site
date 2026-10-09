@@ -8,7 +8,7 @@ import { PREVIEW } from "./config";
 import { ScopeVisual } from "./product-illustrations";
 import { Arrow } from "./shell";
 
-export const DIRECTION_ROUTES = ["defense", "infrastructure", "robotics", "model-integrity", "adversarial-security", "zero-trust", "recorded-evidence"];
+export const DIRECTION_ROUTES = ["defense", "infrastructure", "robotics", "model-integrity", "adversarial-security", "zero-trust", "recorded-evidence", "government", "integrators", "enterprise", "platform", "problems", "goals"];
 export const GUIDE_ROUTES = GUIDES.map(g => g.slug);
 
 export function ReadingPreview({ slug, guide = false }: { slug: string; guide?: boolean }) {
@@ -40,6 +40,6 @@ export function DevelopmentPreview() {
   </>;
 }
 
-export function ContactPreview() {
-  return <section className="v7-contact v7-wrap"><div className="v7-contact__intro"><p className="v7-eyebrow">Join us</p><h1>Bring your system<br />into the conversation.</h1><p>Building, integrating or operating AI in defense, infrastructure or robotics? Tell us what you are working on.</p><Status /><Link className="v7-text-link" href={`${PREVIEW}/contour`}>Explore Contour<Arrow diagonal /></Link></div><div className="v7-contact__form"><ContactForm privacyHref="https://vraelis.com/privacy" /><p className="v7-contact__direct">Prefer email? <a href="mailto:help@vraelis.com">help@vraelis.com</a></p></div></section>;
+export function ContactPreview({ topicParam }: { topicParam?: string }) {
+  return <section className="v7-contact v7-wrap"><div className="v7-contact__intro"><p className="v7-eyebrow">Join us</p><h1>Bring your system<br />into the conversation.</h1><p>Building, integrating or operating AI in defense, infrastructure or robotics? Tell us what you are working on.</p><Status /><Link className="v7-text-link" href={`${PREVIEW}/contour`}>Explore Contour<Arrow diagonal /></Link></div><div className="v7-contact__form"><ContactForm topicParam={topicParam} privacyHref="/privacy" /><p className="v7-contact__direct">Prefer email? <a href="mailto:help@vraelis.com">help@vraelis.com</a></p></div></section>;
 }

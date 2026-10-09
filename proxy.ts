@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { PUBLIC_SITE_ROUTES, PUBLIC_SITE_REDIRECTS } from "./lib/public-site";
 import { csrfVerdict } from "@/lib/csrf";
 import type { NextRequest } from "next/server";
 import { isAppPath, legacyToNew, legacyRunsPath, legacySystemsPath } from "./lib/app-routes";
@@ -147,6 +148,7 @@ export const GROUND_HEADER = "x-vraelis-ground";
 export const CURTAIN_PATH_HEADER = "x-vraelis-curtained-path";
 
 function groundFor(target: string): Ground {
+  if (target.startsWith("/dev-preview/v7")) return "graphite";
   if (target.startsWith("/rank/app")) return "console";                  // the signed-in product
   if (target === "/signin" || target === "/signup" || target.startsWith("/auth/")) return "console";
   if (target === "/workspace-entry" || target === "/dev-preview/auth-entry") return "console";
@@ -414,6 +416,25 @@ export default function proxy(req: NextRequest) {
   //     CRITICAL: "/api/<anything>" is the real API namespace (NextAuth, preflight routes) and must never
   //     be redirected or rewritten — only the EXACT "/api" path is the product's API & Webhooks page.
   if (path.startsWith("/api/")) return NextResponse.next(); // CSRF already enforced at the top
+
+  // Publish the reviewed site at canonical URLs after all product, CSRF and host gates.
+  const currentTarget = PUBLIC_SITE_ROUTES[path];
+  if (currentTarget) return go(req, currentTarget, "rewrite");
+  const currentRedirect = PUBLIC_SITE_REDIRECTS[path];
+  if (currentRedirect) {
+    const url = req.nextUrl.clone(); url.pathname = currentRedirect;
+    return NextResponse.redirect(url, 308);
+  }
+  if (path === "/dev-preview/v7" || path.startsWith("/dev-preview/v7/")) {
+    const clean = path.slice("/dev-preview/v7".length) || "/";
+    if (PUBLIC_SITE_ROUTES[clean]) {
+      const url = req.nextUrl.clone(); url.pathname = clean;
+      return NextResponse.redirect(url, 308);
+    }
+    const response = NextResponse.next(withGround(req, path));
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+    return response;
+  }
 
   // ONCE PROMOTED, THE PREVIEW NAMESPACE IS NOT A SECOND ADDRESS FOR THE SITE.
   //

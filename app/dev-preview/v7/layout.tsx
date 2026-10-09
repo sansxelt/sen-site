@@ -4,9 +4,8 @@ import { PreviewShell } from "./shell";
 import "./preview.css";
 
 export const metadata: Metadata = {
-  title: "Vraelis design preview",
-  description: "A Vraelis website design preview for review.",
-  robots: { index: false, follow: false },
+  metadataBase: new URL("https://vraelis.com"),
+  applicationName: "Vraelis", creator: "Vraelis", publisher: "Vraelis",
 };
 export const viewport: Viewport = { colorScheme: "dark", themeColor: "#0b0b0b" };
 export default function Layout({ children }: { children: ReactNode }) {

@@ -1,10 +1,10 @@
-# Vraelis design preview imagery
+# Vraelis website imagery
 
-The preview illustrates engineering and operating environments. It does not show Vraelis hardware, customer deployments or measured product performance.
+The website illustrates engineering and operating environments. It does not show Vraelis hardware, customer deployments or measured product performance.
 
 ## Original illustrations
 
-`robotics-hall.png`, `optics.png` and `infrastructure.png` are original AI-generated editorial illustrations created for this design preview on October 8, 2026. They depict fictional equipment and settings. No third-party website assets or logos are embedded in them.
+`robotics-hall.png`, `optics.png` and `infrastructure.png` are original AI-generated editorial illustrations created for this website on October 8, 2026. They depict fictional equipment and settings. No third-party website assets or logos are embedded in them.
 
 ## Industrial robotics film
 

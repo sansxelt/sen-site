@@ -1,6 +1,6 @@
 # AI security foundation
 
-Internal development scope, October 6, 2026. The app and console remain closed.
+Internal development scope, updated October 7, 2026. The app and console remain closed.
 This builds on Vraelis's existing defense, infrastructure and robotics direction.
 
 ## Product purpose
@@ -21,11 +21,11 @@ clearly separate development areas.
 | Problem | Relevant control | Current implementation |
 | --- | --- | --- |
 | A workload reaches a resource outside its authority | Exact identity, environment, resource and action grants; deny by default | Private policy core; no live credential or enforcement adapter |
-| An AI changes an action after approval | Exact proposal/policy digests, expiry, separate human approval | Private policy core; no approval UI, signature validation or atomic execution store |
-| A model artifact changes without review | Trusted artifact verification and pinned model digest | Private policy core checks adapter-supplied evidence; no artifact verifier |
+| An AI changes an action after approval | Exact proposal/policy digests, expiry, separate human approval | Private policy core plus a separate signed-approval/transactional reference experiment; no human approval UI or production dispatch adapter |
+| A model artifact changes without review | Trusted artifact verification and pinned model digest | Core checks supplied evidence; separate lab verifies signed numeric model/configuration bundles, not production model formats |
 | An injected instruction triggers an unauthorized tool call | Independent policy checks after proposal generation and before execution | Policy core can reject an out-of-scope proposal; injection detection and live interception are not built |
 | Reports conflict or evidence is absent | Deterministic source-event review and capture qualifications | Existing normalized JSON and narrow MCAP recording evaluator |
-| Model, dataset or dependency supply chain is compromised | Reviewed artifact provenance, signatures, inventories and controlled deployment | Research/integration work; a supplied digest alone does not authenticate an artifact |
+| Model, dataset or dependency supply chain is compromised | Reviewed artifact provenance, signatures, inventories and controlled deployment | Signed model/configuration reference experiment; training provenance, inventories and production integrations remain work |
 | Adversarial sensor inputs mislead a perception model | Model-specific evaluation, representative test data and separate trusted observations | Research; no native perception/sensor testing |
 | Behavior changes over time | Version-bound monitoring, qualified baselines and incident investigation | Recorded comparisons exist; continuous collection and security analytics are not integrated |
 
@@ -33,6 +33,12 @@ The pasted research is not verification of market figures, competitive gaps or
 legal requirements. Review authoritative sources before publishing those claims.
 
 ## Implemented policy core
+
+A separate private model-release experiment
+now authenticates signatures, consumes approvals transactionally and activates a
+small numeric reference model. Its trust and observation scope are deliberately
+narrower than the broader architecture below. It is not a live robot adapter or
+an integration of this policy core, and supplies no invented healthy posture.
 
 `lib/ai-security/policy.ts` accepts three separate inputs:
 
@@ -70,8 +76,9 @@ flowchart LR
     E --> L
 ```
 
-Only the policy core is newly implemented here. The diagram describes the
-integration to build. It is not a claim that a deployed security gateway exists.
+This diagram describes the broader integration to build around the policy core.
+The separate model-release experiment exercises a narrower local boundary; no
+deployed security gateway or production model adapter is claimed here.
 
 Choose an owned test environment for the first live adapter. The adapter must
 derive identity and attestation from trusted verifiers, compute the payload digest
@@ -112,7 +119,13 @@ revocation, model changes, approval substitution, reuse, policy/payload mutation
 injected privileges and invalid inputs. It validates these policy rules; it does
 not measure attack-detection accuracy or prove production security.
 
-The next milestone is one test-only tool boundary with authenticated context,
+The model-release experiment exercises a narrower private boundary with real
+signatures, a read-only inference plane and transactional activation. Run
+`npm run ai:release:test` on Node 24/Linux for its signature, substitution,
+replay, concurrency, corruption and process-crash checks. It does not complete
+the production runtime observation or customer-integration gates.
+
+The next live integration milestone is one owned tool boundary with authenticated context,
 administrator-owned policy, atomic approval consumption and a retained execution
 record. Acceptance: an allowed action succeeds once; a malicious or changed
 proposal is denied before dispatch; a reviewer can trace the exact decision and

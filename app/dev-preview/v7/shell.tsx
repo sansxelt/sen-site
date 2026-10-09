@@ -77,7 +77,7 @@ export function PreviewShell({ children }: { children: ReactNode }) {
     <a className="v7-skip" href="#v7-main">Skip to content</a>
     <header className="v7-header" ref={nav}>
       <div className="v7-header__inner">
-        <Link href={PREVIEW} className="v7-brand" onClick={navigate} aria-label="Vraelis home"><svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none"><path d="M3 4h5l5 11-3 6L3 4Zm10 0h8l-6 13-3-6 1-7Z" fill="currentColor" /></svg><span>Vraelis</span></Link>
+        <Link href={PREVIEW || "/"} className="v7-brand" onClick={navigate} aria-label="Vraelis home"><svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none"><path d="M3 4h5l5 11-3 6L3 4Zm10 0h8l-6 13-3-6 1-7Z" fill="currentColor" /></svg><span>Vraelis</span></Link>
         <nav className="v7-desktop-nav" aria-label="Main navigation">
           {menus.map((menu, index) => <div className="v7-nav-item" key={menu.label}
             onPointerEnter={e => { if (e.pointerType !== "mouse") return; if (closeTimer.current) clearTimeout(closeTimer.current); setOpen(index); }}
@@ -85,8 +85,8 @@ export function PreviewShell({ children }: { children: ReactNode }) {
             onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) close(); }}>
             <button ref={el => { triggers.current[index] = el; }} className="v7-nav-trigger" aria-expanded={open === index} aria-controls={`v7-menu-${index}`} onClick={() => setOpen(open === index ? null : index)}>{menu.label}<svg aria-hidden="true" width="10" height="10" viewBox="0 0 12 12"><path d="m3 4 3 3 3-3" fill="none" stroke="currentColor" strokeWidth="1.2" /></svg></button>
             <div id={`v7-menu-${index}`} className="v7-dropdown" hidden={open !== index}>
-              <div className="v7-dropdown__links">{menu.items.map(item => <Link key={item.title} href={item.href} onClick={navigate}><strong>{item.title}</strong><span>{item.text}</span><Arrow diagonal /></Link>)}</div>
-              <Link className="v7-dropdown__feature" href={menu.feature.href} onClick={navigate}><Image src={menu.feature.image} alt="" width={640} height={420} sizes="320px" /><span>{menu.feature.title}<Arrow diagonal /></span></Link>
+              <div className="v7-dropdown__links">{menu.items.map(item => <Link key={item.title} href={item.href} onClick={navigate}><strong>{item.title}</strong><span>{item.text}</span><Arrow /></Link>)}</div>
+              <Link className="v7-dropdown__feature" href={menu.feature.href} onClick={navigate}><Image src={menu.feature.image} alt="" width={640} height={420} sizes="320px" /><span>{menu.feature.title}<Arrow /></span></Link>
             </div>
           </div>)}
         </nav>
@@ -96,13 +96,13 @@ export function PreviewShell({ children }: { children: ReactNode }) {
           <button ref={mobileTrigger} className="v7-mobile-trigger" aria-label={mobile ? "Close navigation" : "Open navigation"} aria-expanded={mobile} aria-controls="v7-mobile-nav" onClick={() => { setMobile(!mobile); close(); }}><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5"><path d={mobile ? "m6 6 12 12M6 18 18 6" : "M4 8h16M4 16h16"} /></svg></button>
         </div>
       </div>
-      {mobile && <nav className="v7-mobile-nav" id="v7-mobile-nav" aria-label="Mobile navigation">{menus.map(menu => <section key={menu.label}><h2>{menu.label}</h2>{menu.items.map(item => <Link key={item.title} href={item.href} onClick={navigate}>{item.title}<Arrow diagonal /></Link>)}</section>)}</nav>}
+      {mobile && <nav className="v7-mobile-nav" id="v7-mobile-nav" aria-label="Mobile navigation">{menus.map(menu => <section key={menu.label}><h2>{menu.label}</h2>{menu.items.map(item => <Link key={item.title} href={item.href} onClick={navigate}>{item.title}<Arrow /></Link>)}</section>)}</nav>}
     </header>
     <main id="v7-main" tabIndex={-1} inert={mobile} key={pathname}>{children}</main>
     <footer className="v7-footer v7-wrap" inert={mobile}>
-      <div className="v7-footer__top"><Link className="v7-brand" href={PREVIEW}>Vraelis</Link><p>Cybersecurity for AI in defense,<br />critical infrastructure and robotics.</p><Link className="v7-text-link" href={`${PREVIEW}/contact`}>Join us<Arrow diagonal /></Link></div>
-      <div className="v7-footer__links"><div><span>Company</span><Link href={`${PREVIEW}/company`}>About Vraelis</Link><Link href={`${PREVIEW}/contour`}>Vraelis Contour</Link><Link href={`${PREVIEW}/research`}>Research</Link><Link href={`${PREVIEW}/landscape`}>Industry landscape</Link></div><div><span>Resources</span><Link href={`${PREVIEW}/docs`}>Documentation</Link><Link href={`${PREVIEW}/technology`}>Technology in use</Link><Link href={`${PREVIEW}/beta`}>Development status</Link></div><div><span>Trust</span><Link href="https://vraelis.com/security">Security</Link><Link href="https://vraelis.com/privacy">Privacy</Link><Link href="https://vraelis.com/terms">Terms</Link></div></div>
-      <div className="v7-footer__bottom"><span>© 2026 Vraelis</span><span>Design preview · English · In private development</span><a href={`${MEDIA}/CREDITS.md`}>Image & film sources</a></div>
+      <div className="v7-footer__top"><Link className="v7-brand" href={PREVIEW || "/"}>Vraelis</Link><p>Cybersecurity for AI in defense,<br />critical infrastructure and robotics.</p><Link className="v7-text-link" href={`${PREVIEW}/contact`}>Join us<Arrow /></Link></div>
+      <div className="v7-footer__links"><div><span>Company</span><Link href={`${PREVIEW}/company`}>About Vraelis</Link><Link href={`${PREVIEW}/contour`}>Vraelis Contour</Link><Link href={`${PREVIEW}/research`}>Research</Link><Link href={`${PREVIEW}/landscape`}>Industry landscape</Link></div><div><span>Resources</span><Link href={`${PREVIEW}/docs`}>Documentation</Link><Link href={`${PREVIEW}/technology`}>Technology in use</Link><Link href={`${PREVIEW}/beta`}>Development status</Link><Link href="/changelog">Changelog</Link></div><div><span>Trust</span><Link href="/security">Security</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/cookies">Cookies</Link><Link href="/data-rights">Data rights</Link><Link href="/subprocessors">Subprocessors</Link></div></div>
+      <div className="v7-footer__bottom"><span>© 2026 Vraelis</span><span>English · In private development</span><Link href="/image-sources">Image sources</Link><a href={`${MEDIA}/CREDITS.md`}>Film & artwork credits</a></div>
     </footer>
   </div>;
 }
