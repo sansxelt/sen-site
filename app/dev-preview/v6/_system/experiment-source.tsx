@@ -13,7 +13,7 @@ options = ort.SessionOptions()
 options.intra_op_num_threads = 1
 options.inter_op_num_threads = 1
 session = ort.InferenceSession(raw, sess_options=options, providers=['CPUExecutionProvider'])`}</code></pre>
-    <nav aria-label="Experiment files"><a href="/research/onnx-release-runtime/worker.py">Full loader source ↗</a><a href="/research/onnx-release-runtime/measurements.json">Recorded measurements ↗</a><a href="/research/onnx-release-runtime/README.md">Method and limitations ↗</a></nav>
+    <nav aria-label="Experiment files"><a href="/research/onnx-release-runtime/worker.py.txt">Full loader source ↗</a><a href="/research/onnx-release-runtime/measurements.json">Recorded measurements ↗</a><a href="/research/onnx-release-runtime/README.md.txt">Method and limitations ↗</a></nav>
     <small>Local synthetic experiment recorded October 7, 2026. These files are not a live service, customer validation or hardware attestation.</small>
   </aside>;
 }
