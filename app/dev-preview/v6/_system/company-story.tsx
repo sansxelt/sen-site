@@ -6,7 +6,7 @@ import { V6_BASE } from "@/lib/v6-routes";
 import { SUPPORT } from "./positioning";
 import { COMPANY_SECURITY_AREAS as scope, COMPANY_SCOPE_STATUS } from "../_content/company-direction";
 import "./company-story.css";
-import { ReleaseScenarios, ScopeDiagram } from "./release-scenarios";
+import { ExperimentSource } from "./experiment-source";
 
 export function StoryArrow() {
   return <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 19 19 5M5 5h14v14" /></svg>;
@@ -35,7 +35,7 @@ export function CompanyStory() {
     `}</style></noscript>
     <header className="company-story__head">
       <div><p className="home-eyebrow">Vraelis</p><h2 id="company-story-title">Focused on defense,<br />infrastructure and autonomous systems.</h2></div>
-      <div><p>{SUPPORT}</p><Link className="story-link" href={`${V6_BASE}/company`}>About <span><StoryArrow /></span></Link></div>
+      <div><p>{SUPPORT}</p><Link className="story-link" href={`${V6_BASE}/company`}>About Vraelis · Founded by Nishanth Dasari <span><StoryArrow /></span></Link></div>
     </header>
     <div className="company-story__scope">
       <div className="company-story__tabs" role="tablist" aria-label="Security areas">
@@ -45,7 +45,7 @@ export function CompanyStory() {
       </div>
       <div className="company-story__panels">
         {scope.map((item, index) => <div key={item.title} role="tabpanel" id={`scope-panel-${index}`} aria-labelledby={`scope-tab-${index}`} hidden={selected !== index} tabIndex={0}>
-          <p className="home-eyebrow">{item.phase}</p><ScopeDiagram index={index}/><p className="company-story__detail">{item.body}</p>
+          <p className="home-eyebrow">{item.phase}</p><p className="company-story__detail">{item.body}</p>
           <Link className="story-link" href={`${V6_BASE}${item.href}`}>Explore this area <span><StoryArrow /></span></Link>
         </div>)}
       </div>
@@ -70,6 +70,6 @@ export function ContourSpotlight() {
       <p className="contour-spotlight__audience">For release, platform and security engineers at autonomous-system suppliers and system integrators.</p>
       <Link className="story-link story-link--button" href={`${V6_BASE}/contour`}>Explore Vraelis Contour <span><StoryArrow /></span></Link>
     </div>
-    <ReleaseScenarios />
+    <ExperimentSource />
   </section>;
 }

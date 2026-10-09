@@ -1,0 +1,113 @@
+{
+  "date": "2026-10-07",
+  "userTimezone": "America/Los_Angeles",
+  "runtime": "ONNX Runtime 1.23.2 / CPUExecutionProvider / one thread",
+  "fixture": "Trained four-input synthetic regressor; not a perception or security efficacy benchmark.",
+  "environment": {
+    "node": "v24.19.0",
+    "platform": "linux",
+    "arch": "x64",
+    "cpu": "AMD EPYC 9V74 80-Core Processor"
+  },
+  "histories": [
+    {
+      "historyLength": 1,
+      "modes": {
+        "approved-session": {
+          "coldStartupMs": 149.08781699999997,
+          "warmInference": {
+            "medianMs": 0.22009600000001228,
+            "p95Ms": 0.2687890000000266,
+            "samples": 150
+          },
+          "metrics": {
+            "verifiedSnapshots": 1,
+            "preparedSessions": 1,
+            "inferences": 161
+          }
+        },
+        "reconcile": {
+          "coldStartupMs": 170.618719,
+          "warmInference": {
+            "medianMs": 0.9588319999999158,
+            "p95Ms": 1.648561000000086,
+            "samples": 150
+          },
+          "metrics": {
+            "verifiedSnapshots": 161,
+            "preparedSessions": 1,
+            "inferences": 161
+          }
+        }
+      },
+      "reconcileReloadMs": 3.7956010000000333,
+      "explicitBaselineReloadMs": 3.9510210000000825
+    },
+    {
+      "historyLength": 10,
+      "modes": {
+        "approved-session": {
+          "coldStartupMs": 171.31257800000003,
+          "warmInference": {
+            "medianMs": 0.1389759999999569,
+            "p95Ms": 0.2740670000000591,
+            "samples": 150
+          },
+          "metrics": {
+            "verifiedSnapshots": 1,
+            "preparedSessions": 1,
+            "inferences": 161
+          }
+        },
+        "reconcile": {
+          "coldStartupMs": 165.146841,
+          "warmInference": {
+            "medianMs": 6.091256999999814,
+            "p95Ms": 7.956454000000122,
+            "samples": 150
+          },
+          "metrics": {
+            "verifiedSnapshots": 161,
+            "preparedSessions": 1,
+            "inferences": 161
+          }
+        }
+      },
+      "reconcileReloadMs": 10.308161999999811,
+      "explicitBaselineReloadMs": 8.16956399999981
+    },
+    {
+      "historyLength": 100,
+      "modes": {
+        "approved-session": {
+          "coldStartupMs": 212.9319599999999,
+          "warmInference": {
+            "medianMs": 0.17567000000053667,
+            "p95Ms": 0.24674599999980273,
+            "samples": 150
+          },
+          "metrics": {
+            "verifiedSnapshots": 1,
+            "preparedSessions": 1,
+            "inferences": 161
+          }
+        },
+        "reconcile": {
+          "coldStartupMs": 194.469153,
+          "warmInference": {
+            "medianMs": 58.44096399999944,
+            "p95Ms": 66.5284929999998,
+            "samples": 150
+          },
+          "metrics": {
+            "verifiedSnapshots": 161,
+            "preparedSessions": 1,
+            "inferences": 161
+          }
+        }
+      },
+      "reconcileReloadMs": 60.428688999998485,
+      "explicitBaselineReloadMs": 59.01419999999962
+    }
+  ]
+}

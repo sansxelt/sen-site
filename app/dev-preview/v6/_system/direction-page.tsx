@@ -8,6 +8,7 @@ import { SecurityStatus } from "./security-status";
 import "./direction-page.css";
 import { SYSTEM_INQUIRY_LABEL, SYSTEM_INQUIRY_PATH } from "@/lib/app-availability";
 import { PhotoStory, type PhotoStoryContent } from "./photo-story";
+import { ExperimentSource } from "./experiment-source";
 import { ResourceCollection } from "./resource-collection";
 export type DirectionContent = {
   eyebrow:string; title:string; intro:string; photo:PhotographKey;
@@ -39,6 +40,7 @@ export function DirectionTopics({items,layout="rows"}:{items:DirectionContent["i
 export function DirectionPage({content:c}:{content:DirectionContent}) {
   return <div className="direction-page">
     <DirectionHero eyebrow={c.eyebrow} title={c.title} intro={c.intro} photo={c.photo}/>
+    {c.eyebrow.startsWith("Vraelis Contour") ? <Band><ExperimentSource /></Band> : null}
     <Band><div className="direction-section-head"><SectionHead eyebrow="The work" title={c.heading} lead={c.lead}/></div>
       <DirectionTopics items={c.items} layout="cards"/>
     </Band>

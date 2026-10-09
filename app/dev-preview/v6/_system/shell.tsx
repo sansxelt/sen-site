@@ -165,7 +165,7 @@ function Brand() {
     }, 170);
   };
   return (
-    <Link href={V6_HOME} className="v6-brand" aria-label="Vraelis home" onClick={restart}>Vraelis</Link>
+    <Link href={V6_HOME} className="v6-brand" aria-label="Vraelis home" onClick={restart}><img src="/mark.svg" width="28" height="28" alt="" /><span>Vraelis</span></Link>
   );
 }
 

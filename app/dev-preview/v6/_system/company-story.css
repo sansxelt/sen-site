@@ -55,3 +55,5 @@
 
 .company-story__detail{font-size:18px;line-height:1.6;max-width:52ch}.company-story__head h2{font-size:clamp(30px,3.2vw,48px)}.contour-spotlight{grid-template-columns:1fr 1.12fr;align-items:center;gap:clamp(28px,4vw,64px)}
 @media(max-width:900px){.contour-spotlight{grid-template-columns:1fr}.company-story__detail{font-size:18px}}
+
+.founder-profile{padding-top:clamp(50px,9vw,110px);padding-bottom:60px}.founder-profile h1{font-size:clamp(40px,6vw,80px);letter-spacing:-.04em;margin:20px 0}.founder-profile>p:not(.home-eyebrow){max-width:760px;font-size:20px;line-height:1.6;margin-bottom:24px}.v6-brand{display:inline-flex;align-items:center;gap:10px}.v6-brand img{flex:none}
