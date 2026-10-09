@@ -52,3 +52,6 @@
 @media(prefers-reduced-motion:reduce) {
  .company-story *, .contour-spotlight * { transition:none!important; }
 }
+
+.company-story__detail{font-size:18px;line-height:1.6;max-width:52ch}.company-story__head h2{font-size:clamp(30px,3.2vw,48px)}.contour-spotlight{grid-template-columns:1fr 1.12fr;align-items:center;gap:clamp(28px,4vw,64px)}
+@media(max-width:900px){.contour-spotlight{grid-template-columns:1fr}.company-story__detail{font-size:18px}}
