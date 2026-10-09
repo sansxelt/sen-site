@@ -4,7 +4,6 @@
 import { useEffect, useRef } from "react";
 import { HEADLINE } from "./positioning";
 import { MediaReadyFallback, useMediaReady } from "./media-ready";
-import { AudienceBar } from "./audience-bar";
 import "./hero.css";
 
 // The two cuts and the screens each is for (hero.css switches the layout at the same width).
@@ -62,7 +61,6 @@ export function Hero() {
           <span className="v6-mask"><span className="v6-mask__in">{HEADLINE}</span></span>
         </h1>
         <span id="v6-h-film-context" className="v6-h__context">Industrial robotics and public-domain military training footage illustrate systems whose software matters. Film sources: vraelis.com/home/systems-film-sources.txt.</span>
-        <AudienceBar />
       </div>
     </section>
   );
