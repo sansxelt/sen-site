@@ -102,6 +102,13 @@ Leave `data.vraelis.com` on `vraelis` and every other domain unchanged.
 Rollback: remove www from `sen-site`, add it back to `vraelis` (same two calls reversed).
 This can run before or after the v8 promotion; before is fine (www then redirects to today's vraelis.com).
 
+Mechanism verified 2026-10-11 on the review project (a throwaway `vraelis-v8-review-www.vercel.app` domain configured
+the same way, then removed): `/` -> 308 to the target root, `/contour?x=1` -> 308 to `/contour?x=1` (path and query
+kept), and the project's other domains kept answering 200. Baseline before the move (2026-10-11): vraelis.com 200,
+www.vraelis.com 200 (retired Rank pages), app.vraelis.com 307 to /beta, data.vraelis.com 200, docs.vraelis.com 404,
+platform.vraelis.com 404, chat.vraelis.com 404, vraelis.ai and www.vraelis.ai no response. After the move only the www
+line should change (to 308 vraelis.com); re-run the same probe to confirm.
+
 ## Contact-form rate-limit data (measured 2026-10-11, read-only)
 
 Table `vraelis_rate_limits` (Supabase): `key` (route + IP or route + email, stored in clear), `count`, `window_start`.
