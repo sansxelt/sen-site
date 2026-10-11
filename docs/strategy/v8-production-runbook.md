@@ -1,23 +1,74 @@
 # v8 production runbook (vraelis.com and docs.vraelis.com)
 
-Prepared 2026-10-11. Nothing in this file has been executed against production. Promotion and every DNS or domain
-change below wait for the founder's go.
+Prepared 2026-10-11, updated the same day after the operational cleanup shipped. The v8 promotion has not been
+executed; it and every DNS or domain change below wait for the founder's go.
 
-## What exists today
+## What exists today (production `bd3759e0`)
+
+Production is deployment `sen-site-relfvvghm-sansxel.vercel.app` (`dpl_J8p2pC3bbioLmpgHDaHWAm1cpSBC`), commit
+`bd3759e0` on `main`, live since 2026-10-11 11:12 UTC. It carries, on top of the v6 site:
+
+- b68c5540, the contact fix (API routes are never closed pages, so the contact form and data-rights requests arrive);
+- 52b80277, the first cleanup (legacy PayPal subscription start closed, the daily lifecycle cron removed, `/install`
+  and `/install.ps1` answer 410);
+- c7afa436 and bd3759e0, the redesigned emails (the contact confirmation carries no sender-written text).
+
+Also done on 2026-10-11, outside the code: www.vraelis.com moved to `sen-site` as a 308 redirect to vraelis.com, and
+the unused Grok webhook endpoint was removed from Stripe.
 
 | Host | Served by | What it shows today |
 | --- | --- | --- |
-| vraelis.com | Vercel project `sen-site`, branch `main`, through Cloudflare (proxied) | The v6 site (`NEXT_PUBLIC_VRAELIS_V6_PUBLIC=1`). Contact fix b68c5540 is live. |
+| vraelis.com | Vercel project `sen-site`, branch `main`, through Cloudflare (proxied) | The v6 site (`NEXT_PUBLIC_VRAELIS_V6_PUBLIC=1`) at `bd3759e0` |
+| www.vraelis.com | `sen-site` (domain redirect) | 308 to vraelis.com, path and query kept |
 | docs.vraelis.com | Cloudflare record already points at Vercel, but no Vercel project claims the domain | `DEPLOYMENT_NOT_FOUND` (404) |
-| www.vraelis.com | Vercel project `vraelis` (older) | The retired Rank site (matched path `/rank`) |
 | app.vraelis.com | `sen-site` | Redirects to vraelis.com/beta (product access closed) |
-| data.vraelis.com | Vercel project `vraelis` (older) | Workspace entrance from an earlier build |
+| data.vraelis.com | Vercel project `vraelis` (older), unchanged on purpose | Sign-in page from the same `main` build, with no environment variables (see below) |
+| chat.vraelis.ai, platform.vraelis.ai | `sen-site` (aliases of the production deployment) | Same deployment as vraelis.com |
 | vraelis.ai, www.vraelis.ai, platform.vraelis.com, chat.vraelis.com | Vercel project `sen-site-main` (older) | Earlier products |
 | Review copy | Vercel project `vraelis-v8-review` | https://vraelis-v8-review.vercel.app and https://vraelis-v8-review-docs.vercel.app, built from `site-v8` with production's flags, noindex, robots disallow |
 
 Production environment on `sen-site` today: `NEXT_PUBLIC_VRAELIS_V6_PUBLIC=1`, `NEXT_PUBLIC_VRAELIS_PREFLIGHT=1`,
-`VRAELIS_BASE_URL=https://vraelis.com`, no `STEALTH_MODE`. Rollback target: production deployment
-`sen-site-osbku11iw-sansxel.vercel.app` (commit b68c5540).
+`VRAELIS_BASE_URL=https://vraelis.com`, no `STEALTH_MODE`.
+
+### Staged, not deployed
+
+| Branch | Commit | What it does | Preview |
+| --- | --- | --- | --- |
+| `ops/retired-cleanup-2` | cccc73ff | `/api/waitlist` and `/api/paypal/setup-plans` answer 503, `/invite/<token>` redirects to /beta, `/cli/vraelis.mjs` answers 410. Account recovery, data-rights requests, payment webhooks and balances untouched. | `sen-site-iw6x4vix4-sansxel.vercel.app` |
+| `ops/email-footer` | e5752a6e | Light email layout that switches to dark where the mail client supports it, fuller footer. Colours are not guaranteed to match across mail clients. | `sen-site-mm3pbwkb8-sansxel.vercel.app` |
+| `site-v8` | (this branch) | The v8 site and docs, inert until the flag is set | the review project |
+
+`site-v8` merges cleanly into `main` at `bd3759e0`, with `ops/retired-cleanup-2` and with `ops/email-footer` (checked
+2026-10-11 with `git merge-tree`); the merged tree keeps every cleanup-2 closure.
+
+## Rollback targets (two separate cases)
+
+- **Rolling back the cleanup-2 deploy** (if it ships and something it closed turns out to be needed): instant rollback
+  to `sen-site-relfvvghm-sansxel.vercel.app` (bd3759e0). That reopens only the four cleanup-2 paths; everything else is
+  identical.
+- **Rolling back a future v8 promotion:** the target is `sen-site-relfvvghm-sansxel.vercel.app` (bd3759e0), the v6
+  production as it stands today. Dependency: if cleanup-2 (or the email footer) is deployed before v8 is promoted, the
+  v6 build that includes it becomes the better v8 rollback target, because rolling back to relfvvghm would also reopen
+  the cleanup-2 paths (or bring back the earlier email layout). Record the new deployment's URL here when that happens.
+  Until then, relfvvghm is the v8 rollback target.
+
+## data.vraelis.com and the older `vraelis` project (read-only check, 2026-10-11, nothing changed)
+
+- The project is linked to GitHub `sansxelt/sen-site`, production branch `main`, with Git deployments enabled
+  (`gitProviderOptions.createDeployments: enabled`), no ignored build step, no deploy hooks, and custom domains
+  assigned automatically. So every push to ANY branch builds a preview there as well as on `sen-site` (the
+  `ops/retired-cleanup-2` push built `vraelis-n422oww58`), and every push to `main` replaces its production deployment
+  (now `vraelis-1wp3rbsnr`, bd3759e0).
+- It has no environment variables at all (production, preview or development). That is why data.vraelis.com shows a
+  sign-in page that cannot sign anyone in: no database, no auth secret, `APP_ACCESS_OPEN` false.
+- Its three crons (`/api/cron/reverify-domains`, `/api/cron/webhook-retries`, `/api/vraelis/cron/subscriptions`)
+  are enabled and fire daily against its production deployment. Each route requires `CRON_SECRET` and fails closed
+  when it is unset (`lib/cron-auth.ts`), so with no environment they answer 401 and do nothing. This is safe only while
+  the project stays empty: copying `sen-site`'s environment into it would make the subscription job run twice a day.
+- Removing data.vraelis.com from the project would NOT stop any of this. The settings that would, when the founder
+  decides: Settings > Git > disconnect the repository, or Settings > Git > Ignored Build Step `exit 0`, or
+  `gitProviderOptions.createDeployments: disabled` via the API; and Settings > Cron Jobs > disable. Not done: the
+  instruction is to keep data.vraelis.com unchanged for now.
 
 ## Target
 
@@ -38,7 +89,7 @@ Production environment on `sen-site` today: `NEXT_PUBLIC_VRAELIS_V6_PUBLIC=1`, `
 ## Steps, in order
 
 1. **Founder sign-off** on the open decisions at the end of this file (legal entity and policy text first).
-2. **Merge.** Open a PR `site-v8` -> `main` (merges cleanly as of 4c7d8819) and merge it. This is safe on its own:
+2. **Merge.** Open a PR `site-v8` -> `main` (merges cleanly into `bd3759e0`, checked 2026-10-11) and merge it. This is safe on its own:
    the push deploys production as usual, but with the flag off the v8 code is inert and vraelis.com keeps serving v6.
    Check vraelis.com once after the merge deploy (home, contact error path) to confirm nothing changed. One visible
    side effect: vraelis.com/dev-preview/v8 becomes reachable (noindex, nofollow), as /dev-preview/v7 already is.
@@ -60,36 +111,47 @@ Production environment on `sen-site` today: `NEXT_PUBLIC_VRAELIS_V6_PUBLIC=1`, `
 8. **Verify live** (within 10 minutes): run the two-host crawl
    (`ORIGINS=https://docs.vraelis.com node review-crawl2.mjs https://vraelis.com`), send one labelled test inquiry and
    confirm both emails in Resend, open the cookie banner on a fresh browser, check app.vraelis.com still closes.
-9. **After a stable day:** submit the sitemap in Google Search Console (and IndexNow), then decide www.vraelis.com and the
+9. **After a stable day:** submit the sitemap in Google Search Console (and IndexNow), then decide the
    older projects (see decisions).
 
 ## Rollback
 
-- **Fast (seconds):** `vercel rollback sen-site-osbku11iw-sansxel.vercel.app --scope sansxel` (or "Instant Rollback" in the
-  dashboard). The flag is baked into each build, so the previous deployment serves v6 exactly as today. Vercel then
+- **Fast (seconds):** `vercel rollback sen-site-relfvvghm-sansxel.vercel.app --scope sansxel` (or "Instant Rollback" in the
+  dashboard); see "Rollback targets" above if cleanup-2 or the email footer shipped first. The flag is baked into each
+  build, so the previous deployment serves v6 exactly as today. Vercel then
   stops auto-promoting new `main` deploys until one is promoted by hand.
 - **Make it stick:** remove `NEXT_PUBLIC_VRAELIS_V8_PUBLIC` from Production, and either revert the merge on `main`
   (`git revert -m 1 <merge>`) or leave the code (it is inert without the flag).
-- **Docs host:** a rollback to b68c5540 has no docs-host routing, so docs.vraelis.com would show the v6 homepage. Remove
+- **Docs host:** a rollback to bd3759e0 has no docs-host routing, so docs.vraelis.com would show the v6 homepage. Remove
   `docs.vraelis.com` from `sen-site` Domains (it returns to `DEPLOYMENT_NOT_FOUND`); the Cloudflare record can stay.
-- **Contact form:** unaffected by rollback (the fix b68c5540 is in both builds).
+- **Contact form and www:** unaffected by rollback (the fix b68c5540 is in both builds; the www redirect is a domain
+  setting, not part of a deployment).
 
 ## Open decisions (founder, or founder and lawyer)
 
 1. Legal entity, address and governing law named in the policies; whether the earlier product's terms remain in force.
 2. Retention period for contact-form rate-limit keys (IP and email in Supabase) and a purge job.
-3. Whether old subscriptions are still billing (the `/api/vraelis/cron/subscriptions` cron still runs daily).
-4. www.vraelis.com: move it to `sen-site` and redirect to vraelis.com (recommended), or leave it on the retired site.
-5. The older projects and domains (`vraelis`, `sen-site-main`: data.vraelis.com, vraelis.ai, platform/chat.vraelis.com).
-6. Partner logos (no written permission on record), partnership wording and dates, Overlym mentions.
-7. DVIDS military footage on the homepage and a DoD non-endorsement line.
-8. Earlier-product docs ("Earlier references"): keep public with banners, or unpublish.
-9. Whether "QA" should read "internal QA".
+3. Whether old subscriptions are still billing (the `/api/vraelis/cron/subscriptions` cron still runs daily on
+   `sen-site`; the lifecycle cron was removed in 52b80277).
+4. Deploying the staged branches: `ops/retired-cleanup-2` and `ops/email-footer` (see "Staged, not deployed").
+5. The older projects and domains: `vraelis` (data.vraelis.com, plus Git-triggered builds of every branch, see above)
+   and `sen-site-main` (vraelis.ai, platform/chat.vraelis.com).
+6. Purchased credits: honour or refund. Until decided they stay under the existing non-expiry promise and no balance
+   changes. One 50-credit top-up (2026-07-26 23:50 UTC) has no matching payment in the live Stripe account and is
+   recorded as "payment unverified" by an append-only `v_events` row (`credit_payment_unverified`, id 1a4d022d,
+   2026-10-11 21:24 UTC) that points at ledger row 3aaea4ba; the ledger and the balance are untouched. It is not to be
+   called a test payment without evidence.
+7. Written permission before any partner logo returns (names stay as text meanwhile); partnership wording and dates.
+8. Footage: v8 uses a civilian Pexels edit; the earlier footage findings are research, to be confirmed, not legal advice.
+9. Earlier-product docs ("Earlier references"): runnable commands are removed; keep public with banners, or unpublish.
 
-## www.vraelis.com migration (prepared, not executed)
+## www.vraelis.com migration (DONE 2026-10-11)
 
-Today www.vraelis.com is attached to the older Vercel project `vraelis`. That project builds the same repository and
-branch as production (`sen-site`, `main`) but without `NEXT_PUBLIC_VRAELIS_V6_PUBLIC`, so www shows the retired Rank pages
+Executed with the founder's approval on 2026-10-11: www.vraelis.com now answers 308 to vraelis.com from `sen-site`, and
+`vraelis` keeps only data.vraelis.com. The plan as it was prepared is kept below for the record and for the rollback.
+
+Before the move, www.vraelis.com was attached to the older Vercel project `vraelis`. That project builds the same repository and
+branch as production (`sen-site`, `main`) but without `NEXT_PUBLIC_VRAELIS_V6_PUBLIC`, so www showed the retired Rank pages
 (matched path `/rank`), and every push to `main` redeploys it. Both vraelis.com and www.vraelis.com are verified at Vercel
 through Cloudflare (`configuredBy: http`), so moving www between projects in the same team needs no DNS change.
 
