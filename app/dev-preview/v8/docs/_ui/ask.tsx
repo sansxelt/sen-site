@@ -5,7 +5,7 @@ import { Fragment, useCallback, useEffect, useRef, useState, type FormEvent, typ
 import { CopyButton } from "./client";
 import { AskIcon } from "./ask-button";
 import { ASK_EVENT, openSearch } from "./events";
-import { useDocsLink } from "./host";
+import { useDocsEndpoint, useDocsLink } from "./host";
 import type { AssistantMode } from "../_data/assistant-mode";
 
 // ASK AI, the docs assistant. After x.ai's "Ask Grok" (an entry at the top of the Ctrl K search and a chat that opens
@@ -132,6 +132,7 @@ const phone = () => typeof window !== "undefined" && window.matchMedia("(max-wid
 
 export function AskPanel({ mode }: { mode: AssistantMode }) {
   const link = useDocsLink();
+  const endpoint = useDocsEndpoint();
   const [open, setOpen] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [input, setInput] = useState("");
@@ -158,7 +159,7 @@ export function AskPanel({ mode }: { mode: AssistantMode }) {
     const ctrl = new AbortController();
     abort.current = ctrl;
     try {
-      const res = await fetch(link("/docs/ask"), {
+      const res = await fetch(endpoint("/docs/ask"), {
         method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ question: q, history }), signal: ctrl.signal,
       });
       if (!res.ok || !(res.headers.get("content-type") ?? "").includes("ndjson") || !res.body) {
@@ -195,7 +196,7 @@ export function AskPanel({ mode }: { mode: AssistantMode }) {
     } finally {
       if (abort.current === ctrl) abort.current = null;
     }
-  }, [turns, link, update, mode]);
+  }, [turns, endpoint, update, mode]);
 
   // Opened from the docs bar, from search (with the typed question), or anywhere else that dispatches ASK_EVENT.
   const askRef = useRef(ask);

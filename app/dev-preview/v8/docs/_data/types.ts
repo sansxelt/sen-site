@@ -8,7 +8,8 @@ import type { Kind } from "../../_kit/site";
 // [label](href) links, and nothing else. A site path ("/docs/overview") goes through href(); a link to the
 // closed console (app.vraelis.com) is dropped, because product access is closed.
 
-export type TabId = "contour" | "research" | "earlier";
+/** The docs tabs, in header order: Vraelis (get started), Products, Research, Earlier references. */
+export type TabId = "vraelis" | "products" | "research" | "earlier";
 
 /** The id of the JSON script tag that holds a page's Markdown once, for both Copy for LLM buttons. */
 export const MARKDOWN_ID = "v8-docs-markdown";
@@ -39,10 +40,12 @@ export type Block =
 
 export type Page = {
   tab: TabId;
-  /** Sidebar group heading. Groups never collapse. */
+  /** A product heading in the sidebar above this page's group (Products > Vraelis Contour). */
+  section?: string;
+  /** Sidebar group heading. Groups never collapse. Empty: the page sits directly under its section heading. */
   group: string;
-  /** The one-word section name above the h1. */
-  eyebrow: string;
+  /** A small accent badge on the sidebar item (x.ai's "Latest" and "New"). Only where it is true. */
+  badge?: "New" | "Latest";
   slug: string;
   /** The h1 and the page title. */
   title: string;
@@ -58,7 +61,18 @@ export type Page = {
   updated?: string;
 };
 
-export type Tab = { id: TabId; label: string; line: string };
+export type Tab = {
+  id: TabId;
+  label: string;
+  line: string;
+  /** Where the tab goes: a docs path ("/docs" is the docs home). */
+  to: string;
+};
+
+/** The sidebar and the phone menu, as plain data for the client header (pages.ts navModel). */
+export type NavItem = { to: string; label: string; badge?: Page["badge"] };
+export type NavGroup = { section?: string; group: string; items: NavItem[] };
+export type NavTab = { id: TabId; label: string; to: string; groups: NavGroup[]; menu?: { to: string; label: string; line: string }[] };
 
 export type TocItem = { id: string; text: string; level: 2 | 3 };
 

@@ -1,39 +1,43 @@
 import type { ReactNode } from "react";
-import { SLUG_TAB, TABS, tabPages } from "./_data/pages";
+import { SLUG_TAB, TABS, navModel } from "./_data/pages";
 import { assistantMode } from "./_data/assistant-mode";
 import { loadDocsHost } from "./_data/host";
 import { AskPanel } from "./_ui/ask";
-import { DocsBar } from "./_ui/client";
-import { DocsHostFooter, DocsHostHeader, DocsHostProvider } from "./_ui/host";
+import { DocsFooter } from "./_ui/footer";
+import { DocsHeader, DocsSidebar } from "./_ui/header";
+import { DocsHostProvider } from "./_ui/host";
+import { DocsReveal } from "./_ui/reveal";
 import { SearchModal } from "./_ui/search";
 import "./docs.css";
 import "./assistant.css";
 
-// The docs, on two hosts (lib/docs-host.ts). On the main host they live inside the v8 site layout (its header and
-// footer stay) at /dev-preview/v8/docs. On docs.vraelis.com the v8 layout steps aside and the docs draw their own
-// header, with the way back to the main site, and a short footer. Below the header on both: the docs bar with the
-// three sections, search and Ask AI, then each page. The search modal and the Ask AI panel are mounted once here,
-// so Ctrl K and Cmd K work on every docs page and a conversation survives moving between pages.
+// THE DOCS, ON TWO HOSTS (lib/docs-host.ts), drawn after x.ai's docs. One docs header on both: the main site's header
+// and footer step aside on docs paths (_kit/shell.tsx useOnDocs), and on docs.vraelis.com the v8 layout renders only
+// the theme script. Then the sidebar (it stays mounted between pages), the page, and the docs footer. Search
+// (Ctrl K / Cmd K) and the Ask AI panel are mounted once here, so the shortcut works on every page and a
+// conversation survives moving between pages. On the main host this sits inside the v8 layout's <main>; on the docs
+// host it draws its own.
+//
+// data-no-reveal keeps the site's RevealOnRoute off the docs; the docs have their own layered entrance (DocsReveal).
 export default async function DocsLayout({ children }: { children: ReactNode }) {
   const main = await loadDocsHost();
-  const tabs = TABS.map((t) => ({ id: t.id, label: t.label, to: `/docs/${tabPages(t.id)[0].slug}` }));
+  const nav = navModel();
   const docs = (
-    <div className="v8-docs">
-      <DocsBar tabs={tabs} slugTab={SLUG_TAB} />
-      {children}
+    <div className="v8-docs" data-no-reveal>
+      <div className="v8-docs-shell">
+        <aside className="v8-docs-side" aria-label="Documentation navigation"><DocsSidebar nav={nav} slugTab={SLUG_TAB} /></aside>
+        <div id="v8-docs-content" className="v8-docs-main" tabIndex={-1}>{children}</div>
+      </div>
+      <DocsFooter />
       <SearchModal tabs={TABS.map((t) => ({ id: t.id, label: t.label }))} />
       <AskPanel mode={assistantMode()} />
+      <DocsReveal />
     </div>
   );
   return (
     <DocsHostProvider main={main}>
-      {main ? (
-        <>
-          <DocsHostHeader main={main} />
-          <main id="v8-main" className="v8-main" tabIndex={-1}>{docs}</main>
-          <DocsHostFooter main={main} />
-        </>
-      ) : docs}
+      <DocsHeader nav={nav} slugTab={SLUG_TAB} />
+      {main ? <main id="v8-main" className="v8-main" tabIndex={-1}>{docs}</main> : docs}
     </DocsHostProvider>
   );
 }

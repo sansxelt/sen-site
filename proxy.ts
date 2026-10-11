@@ -221,7 +221,7 @@ function go(req: NextRequest, pathname: string, kind: "redirect" | "rewrite") {
 //   /dev-preview/v8/docs/x and /docs/x  308 to /x on this host (an old address keeps its place)
 //   /yc                                 the reviewer entrance, as on the main host (the curtain needs its cookie)
 //   /api/*, /icon, /apple-icon, /og/*   pass through (machine endpoints and the root icons)
-//   /, /<slug>, /md/<file>              the docs: home, a page, a Markdown twin; also /search-index and /ask
+//   /, /<slug>, /md/<file>              the docs: home, a page, a Markdown twin; also /search-index, /ask, /llms.txt
 //   anything deeper                     308 to the same path on the main site (a stray site link still lands)
 // Every docs response carries the main site's origin in DOCS_MAIN_HEADER, which is how the pages know to point
 // "back to Vraelis" and non-docs links at the main site, and to link docs pages as /<slug>. While v8 is a
@@ -241,7 +241,9 @@ function docsHost(req: NextRequest, path: string, main: string) {
   }
   if (path === "/yc") return docsNoindex(go(req, "/api/yc", "rewrite"));
   const parts = path.split("/").filter(Boolean);
-  if (["api", "icon", "apple-icon", "og"].includes(parts[0] ?? "")) return NextResponse.next(withGround(req, path));
+  // Machine endpoints pass through. A bare /api is a docs page (the earlier references' "api"), not an endpoint.
+  const endpoint = parts[0] === "api" || parts[0] === "og" ? parts.length > 1 : ["icon", "apple-icon"].includes(parts[0] ?? "");
+  if (endpoint) return NextResponse.next(withGround(req, path));
   const isDocs = parts.length <= 1 || (parts.length === 2 && parts[0] === "md");
   if (!isDocs) {
     const to = `${main}${path}${req.nextUrl.search}`;
@@ -274,6 +276,8 @@ export default function proxy(req: NextRequest) {
   const isProd = host.endsWith("vraelis.com");
   const workspaceHost = isWorkspaceHost(host);
   const docsMain = docsMainOrigin(host); // the main site's origin when this is docs.vraelis.com (or docs.localhost)
+  // /llms.txt is in the matcher only so the docs host can serve its own (docs/llms.txt); the main host's is untouched.
+  if (path === "/llms.txt" && !docsMain) return NextResponse.next();
 
   // The design review renders real account components locally, never on a deployment.
   if (process.env.NODE_ENV !== "development" && (path === "/dev-preview/auth-entry" || path.startsWith("/dev-preview/auth-entry/"))) {
@@ -702,6 +706,7 @@ export const config = {
   // dotted path (e.g. /learn/a.b) BYPASS every retirement redirect and render a retired route. A real page
   // path can contain a dot, so we must not skip the proxy for it.
   matcher: ["/((?!_next/|[^?]*\\.(?:ico|png|jpg|jpeg|gif|svg|webp|avif|css|js|mjs|map|txt|xml|json|woff2?|ttf|otf|eot|pdf|mp4|webm|wasm)(?:$|\\?)).*)",
+    "/llms.txt", // only for the docs host's own llms.txt; the main host's passes straight through (see proxy())
     "/api/:path*", "/rank/app/:path*", "/dev-preview/v6/app/:path*", "/dev-preview/recorded-app/:path*",
     "/:product(app|console|systems|verifications|guarantees|review|records|usage|applications|passes|issues|repairs|deployments|activity|team|organization|connections|plans|credits|billing|account|checkout|limits|cli|admin|new|r)/:path*"],
 };

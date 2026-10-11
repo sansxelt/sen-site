@@ -7,13 +7,20 @@ import { headingIds } from "../_data/pages";
 import { inline, isClosedProduct } from "../_data/text";
 import type { Block } from "../_data/types";
 import { CopyButton } from "./client";
+import { Highlight } from "../../_kit/highlight";
+import { isDocsFile } from "../_data/links";
 
 // The docs block renderer (server). x.ai's article parts in v8's materials: headings that link to themselves,
-// code blocks with a label and a copy button and no window dots, callouts as one filled card whose label is the
+// code blocks with a label, the language and a copy button and no window dots, callouts as one filled card whose label is the
 // only difference, tables with no outer frame, and real app captures with their caption.
 
 function DocLink({ to, children }: { to: string; children: ReactNode }) {
-  if (to.startsWith("/")) return <Link href={dl(to)}>{children}</Link>;
+  if (to.startsWith("/")) {
+    const at = dl(to);
+    // Files (Markdown twins, llms.txt) and the main site seen from the docs host open as documents.
+    if (isDocsFile(at) || /^https?:/.test(at)) return <a href={at}>{children}</a>;
+    return <Link href={at}>{children}</Link>;
+  }
   if (to.startsWith("#")) return <a href={to}>{children}</a>;
   return <a href={to} rel="noopener noreferrer" target="_blank">{children}</a>;
 }
@@ -31,44 +38,36 @@ export function Rich({ text }: { text: string }) {
   );
 }
 
-/** JSON keys, strings and numbers; comment lines dimmed elsewhere. The copy button copies the source text. */
-function highlight(code: string, lang?: string): ReactNode {
-  const json = lang === "json" || (!lang && /^\s*[{[]/.test(code));
-  if (json) {
-    const out: ReactNode[] = [];
-    const re = /("(?:\\.|[^"\\])*")(\s*:)?|\b(-?\d+(?:\.\d+)?)\b|\b(true|false|null)\b/g;
-    let last = 0, k = 0;
-    for (const m of code.matchAll(re)) {
-      const at = m.index ?? 0;
-      if (at > last) out.push(code.slice(last, at));
-      if (m[1] !== undefined) {
-        out.push(<span key={k++} className={m[2] ? "k" : "s"}>{m[1]}</span>);
-        if (m[2]) out.push(m[2]);
-      } else out.push(<span key={k++} className="n">{m[0]}</span>);
-      last = at + m[0].length;
-    }
-    if (last < code.length) out.push(code.slice(last));
-    return out;
-  }
-  const lines = code.split("\n");
-  return lines.map((line, i) => {
-    const nl = i < lines.length - 1 ? "\n" : "";
-    if (/^\s*(#|\/\/)/.test(line)) return <Fragment key={i}><span className="c">{line}</span>{nl}</Fragment>;
-    const m = /^(.*?\S)(\s+)((?:#|\/\/)\s.*)$/.exec(line);
-    if (m) return <Fragment key={i}>{m[1]}{m[2]}<span className="c">{m[3]}</span>{nl}</Fragment>;
-    return <Fragment key={i}>{line}{nl}</Fragment>;
-  });
+const LANG: Record<string, string> = { json: "JSON", bash: "Bash", text: "Text" };
+
+/** Code in the GitHub dark colours of the kit's Highlight (.hl-*). Text output keeps its prompt line coloured and
+ *  the rest plain; JSON and shell go through Highlight. */
+export function CodeText({ code, lang }: { code: string; lang?: string }) {
+  if (lang !== "text") return <Highlight code={code} />;
+  return (
+    <>
+      {code.split("\n").map((line, i) => (
+        <Fragment key={i}>
+          {i ? "\n" : null}
+          {line.startsWith("$ ") ? <><span className="hl-p">$</span> <span className="hl-cmd">{line.slice(2)}</span></> : line}
+        </Fragment>
+      ))}
+    </>
+  );
 }
 
+/** x.ai's code block: a header with what the code is and its language, an icon copy button, then the code. Always
+ *  dark, in both themes, like a terminal. */
 export function CodeBlock({ label, code, lang, className }: { label: string; code: string; lang?: string; className?: string }) {
   return (
     <div className={className ? `v8-docs-code ${className}` : "v8-docs-code"}>
       <div className="v8-docs-code__bar">
-        <span>{label}</span>
-        <CopyButton text={code} />
+        <span className="v8-docs-code__label">{label}</span>
+        {lang && LANG[lang] ? <span className="v8-docs-code__lang">{LANG[lang]}</span> : null}
+        <CopyButton text={code} icon label="Copy code" />
       </div>
       {/* tabIndex: a long line scrolls sideways, and keyboard readers can only scroll what takes focus. */}
-      <pre tabIndex={0}>{highlight(code, lang)}</pre>
+      <pre tabIndex={0}><code><CodeText code={code} lang={lang} /></code></pre>
     </div>
   );
 }
@@ -140,7 +139,7 @@ export function Blocks({ blocks }: { blocks: Block[] }) {
             <div key={i} className="v8-docs-cards">
               {b.items.map((c) => (
                 <Link key={c.to} href={dl(c.to)} className="v8-docs-card">
-                  <b>{c.title}</b><span>{c.line}</span><i className="v8-arrow" aria-hidden="true" />
+                  <b>{c.title}</b><span>{c.line}</span><span className="v8-docs-card__go">Read<i className="v8-arrow" aria-hidden="true" /></span>
                 </Link>
               ))}
             </div>

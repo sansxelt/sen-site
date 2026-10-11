@@ -1,13 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { docsBase } from "../_data/links";
-import { MARKDOWN_ID, type TabId, type TocItem } from "../_data/types";
-import { AskButton } from "./ask-button";
-import { useDocsLink, useDocsMain } from "./host";
-import { SearchPill } from "./search";
+import { useEffect, useRef, useState } from "react";
+import { MARKDOWN_ID, type TocItem } from "../_data/types";
 
 // The docs' interactive parts. Everything else in the docs is server-rendered.
 
@@ -33,13 +27,15 @@ function CopyIcon({ done }: { done: boolean }) {
   );
 }
 
-/** A code block's copy button. Copies the source string, not the highlighted DOM. */
-export function CopyButton({ text }: { text: string }) {
+/** A copy button. Copies the source string, not the highlighted DOM. `icon`: x.ai's code-block button, an icon
+ *  whose label is read out (and shown as a tooltip) rather than printed. */
+export function CopyButton({ text, icon, label = "Copy" }: { text: string; icon?: boolean; label?: string }) {
   const [state, copy] = useCopy();
+  const said = state === "copied" ? "Copied" : state === "failed" ? "Copy failed" : label;
   return (
-    <button type="button" className="v8-docs-copy" onClick={() => copy(text)}>
+    <button type="button" className={icon ? "v8-docs-copy v8-docs-copy--icon" : "v8-docs-copy"} onClick={() => copy(text)} title={icon ? said : undefined} data-state={state}>
       <CopyIcon done={state === "copied"} />
-      <span aria-live="polite">{state === "copied" ? "Copied" : state === "failed" ? "Copy failed" : "Copy"}</span>
+      <span className={icon ? "v8-sr" : undefined} aria-live="polite">{said}</span>
     </button>
   );
 }
@@ -62,7 +58,7 @@ export function CopyForLLM({ className }: { className?: string }) {
   );
 }
 
-/** "On this page": the heading that last passed under the docs bar is the active one. At the foot of the page
+/** "On this page": the heading that last passed under the docs header is the active one. At the foot of the page
  *  the lowest heading on screen wins, so the list ends on the section being read. */
 export function Toc({ items }: { items: TocItem[] }) {
   const [active, setActive] = useState(items[0]?.id ?? "");
@@ -74,8 +70,8 @@ export function Toc({ items }: { items: TocItem[] }) {
     const measure = () => {
       raf = 0;
       const atFoot = window.scrollY > 0 && window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
-      // Headings land about 136px down (under the header and the docs bar); anything above 200px has been reached.
-      const line = atFoot ? window.innerHeight * 0.85 : 200;
+      // Headings land about 84px down (under the docs header); anything above 150px has been reached.
+      const line = atFoot ? window.innerHeight * 0.85 : 150;
       let current = ids[0];
       for (const id of ids) {
         const el = document.getElementById(id);
@@ -100,58 +96,5 @@ export function Toc({ items }: { items: TocItem[] }) {
         ))}
       </ul>
     </nav>
-  );
-}
-
-/** The sidebar. On a phone it folds into one button that opens the list; on wider screens the list is always
- *  shown and the button is not rendered visible. A route change closes it. */
-export function SideNav({ current, children }: { current: string; children: ReactNode }) {
-  const [open, setOpen] = useState(false);
-  const pathname = usePathname();
-  const [seen, setSeen] = useState(pathname);
-  if (seen !== pathname) { setSeen(pathname); setOpen(false); }
-  return (
-    <div className="v8-docs-side__in" data-open={open}>
-      <button type="button" className="v8-docs-side__toggle" aria-expanded={open} aria-controls="v8-docs-sidenav" onClick={() => setOpen((o) => !o)}>
-        <span className="l">Browse docs</span>
-        <span className="c">{current}</span>
-        <span className="v8-caret" aria-hidden="true" />
-      </button>
-      <div id="v8-docs-sidenav" className="v8-docs-side__list">{children}</div>
-    </div>
-  );
-}
-
-/** The docs bar under the header: product tabs, the search pill and Ask AI. The active tab comes from the path,
- *  which is /dev-preview/v8/docs/<slug> on the main host and /<slug> on docs.vraelis.com. */
-export function DocsBar({ tabs, slugTab }: { tabs: { id: TabId; label: string; to: string }[]; slugTab: Record<string, TabId> }) {
-  const pathname = usePathname();
-  const main = useDocsMain();
-  const link = useDocsLink();
-  const base = docsBase(main);
-  const home = base || "/";
-  const slug = pathname.startsWith(`${base}/`) ? pathname.slice(base.length + 1).split("/")[0] : "";
-  const activeTab = slugTab[slug];
-  // On a phone the tabs scroll sideways; keep the active one in view (without moving the page).
-  const strip = useRef<HTMLElement>(null);
-  useEffect(() => {
-    const nav = strip.current;
-    const a = nav?.querySelector<HTMLElement>("[aria-current]");
-    if (!nav || !a || nav.scrollWidth <= nav.clientWidth) return;
-    const left = a.offsetLeft - nav.offsetLeft, right = left + a.offsetWidth;
-    if (left < nav.scrollLeft || right > nav.scrollLeft + nav.clientWidth) nav.scrollLeft = Math.max(0, right - nav.clientWidth + 16);
-  }, [activeTab]);
-  return (
-    <div className="v8-docs-bar">
-      <div className="v8-wrap v8-wrap--frame v8-docs-bar__in">
-        <Link href={home} className="v8-docs-bar__home" aria-current={pathname === home ? "page" : undefined}>Documentation</Link>
-        <nav ref={strip} className="v8-docs-bar__tabs" aria-label="Documentation sections">
-          {tabs.map((t) => (
-            <Link key={t.id} href={link(t.to)} aria-current={activeTab === t.id ? "true" : undefined}>{t.label}</Link>
-          ))}
-        </nav>
-        <div className="v8-docs-bar__end"><SearchPill /><AskButton /></div>
-      </div>
-    </div>
   );
 }

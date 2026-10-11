@@ -1,6 +1,12 @@
-import type { Page } from "./types";
+import { RESEARCH_PAGES as AREAS, type ResearchSlug } from "../../research/content";
+import { CONTOUR, RESEARCH, WORK_LINE } from "../../_kit/site";
+import type { Block, Page } from "./types";
 
-// THE RESEARCH TAB: the three v6 guides (app/dev-preview/v6/_content/guides.ts, which assembled them from
+// THE RESEARCH TAB (2026-10-10): an overview, the four research areas, then the guides. The four area pages are built
+// from the site's own research copy (research/content.ts), so the docs and /research/<area> cannot disagree; every
+// one says it is a research area, not a product.
+//
+// The guides: the three v6 guides (app/dev-preview/v6/_content/guides.ts, which assembled them from
 // security-direction.ts), reconciled with the founder brief of 2026-10-10:
 // - "robotics suppliers" became suppliers and system integrators, and "the robot's compute budget" the
 //   system's;
@@ -13,9 +19,71 @@ import type { Page } from "./types";
 const UPDATED = "2026-10-10";
 const GUIDANCE = { t: "note" as const, label: "Research guidance", text: "This guide describes how we think about the problem. It is not a description of a product capability. Where it mentions Vraelis Contour, it says what exists in the experiment and what is proposed." };
 
-export const RESEARCH_PAGES: Page[] = [
+/** How each area feeds Vraelis Contour, as the /research page draws it. */
+const CONNECTS: Record<ResearchSlug, { rel: string; text: string }> = {
+  "model-integrity": { rel: "Draws on directly", text: "Release identity, bound approval, approved against reported" },
+  "security-evidence": { rel: "Draws on directly", text: "Ordered observations, including unavailable evidence" },
+  "machine-trust": { rel: "Informs", text: "Separate approval roles, a policy checked where it serves" },
+  "adversarial-threats": { rel: "Informs", text: "Which supply paths a release check covers" },
+};
+
+const AREA_NOTE: Block = { t: "note", label: "Research area", text: "This is a research area, not a product. Where it mentions Vraelis Contour, it says what exists in the experiment and what is proposed." };
+
+function areaPage(slug: ResearchSlug): Page {
+  const a = AREAS[slug];
+  const ex = a.exists;
+  const exists: Block[] = ex.kind === "experiment"
+    ? [...(ex.lead ? [{ t: "p", text: ex.lead } as Block] : []), { t: "kinds", items: ex.items }, { t: "capture", name: ex.capture }]
+    : ex.paragraphs.map((text): Block => ({ t: "p", text }));
+  return {
+    tab: "research", group: "Research areas", slug,
+    title: a.metaTitle,
+    description: a.description,
+    lead: a.lead,
+    updated: UPDATED,
+    blocks: [
+      AREA_NOTE,
+      { t: "h2", text: "What we study" },
+      { t: "p", text: a.studyTitle },
+      { t: "facts", rows: a.study.map((p): [string, string] => [p.title, p.body]) },
+      { t: "h2", text: "What exists today" },
+      { t: "p", text: ex.title },
+      ...exists,
+      { t: "h2", text: "What is still open" },
+      { t: "facts", rows: a.open.map((p): [string, string] => [p.title, p.body]) },
+      { t: "h2", text: `How it connects to ${CONTOUR.name}` },
+      { t: "p", text: `${CONNECTS[slug].rel}: ${CONNECTS[slug].text}.` },
+      { t: "p", text: `On vraelis.com: [${a.metaTitle}](/research/${slug}), ${a.links.map((l) => `[${l.label}](${l.to})`).join(", ")}.` },
+      { t: "cards", items: a.related.map((r) => ({ to: `/docs/${r}`, title: AREAS[r].metaTitle, line: RESEARCH.find((x) => x.slug === r)!.line })) },
+    ],
+  };
+}
+
+const OVERVIEW: Page = {
+  tab: "research", group: "Research", slug: "research",
+  title: "Research", nav: "Overview",
+  description: `${WORK_LINE} Four research workstreams, not products, and how they connect to ${CONTOUR.name}.`,
+  lead: `${WORK_LINE} These are workstreams, not products.`,
+  updated: UPDATED,
+  blocks: [
+    { t: "h2", text: "Four research areas" },
+    { t: "table", label: "The four research areas", head: ["Area", "What it studies", `With ${CONTOUR.name}`], rows: RESEARCH.map((r) => [
+      `[${r.title}](/docs/${r.slug})`, r.line, `${CONNECTS[r.slug].rel}. ${CONNECTS[r.slug].text}.`,
+    ]) },
+    { t: "p", text: `${CONTOUR.name} is the first product direction, and it draws on model integrity and security evidence directly. The research areas are not products and have no product claims of their own.` },
+    { t: "h2", text: "Guides" },
+    { t: "p", text: "Three guides describe how we think about model releases, operating constraints and AI security evaluation. They are research guidance, not product capability." },
+    { t: "cards", items: [
+      { to: "/docs/model-release-security", title: "Model release security", line: "For the engineers who move an approved model into an operational system." },
+      { to: "/docs/operating-constraints", title: "Operating constraints", line: "The control has to fit the environment, not just the model." },
+      { to: "/docs/ai-security-evaluation", title: "AI security evaluation", line: "Match the threat to a measurable test." },
+    ] },
+  ],
+};
+
+const GUIDES: Page[] = [
   {
-    tab: "research", group: "Guides", eyebrow: "Research", slug: "model-release-security",
+    tab: "research", group: "Guides", slug: "model-release-security",
     title: "A model release is a security decision.", nav: "Model release security",
     description: "For the release, platform and security engineers responsible for moving an approved model into an operational system.",
     updated: UPDATED,
@@ -42,13 +110,13 @@ export const RESEARCH_PAGES: Page[] = [
       { t: "p", text: "Loaded state evidence is a worker self-report. The experiment does not establish protection against a compromised host or show how a model behaves." },
       { t: "p", text: "Vraelis Contour is in private development. There is no public application or available deployment." },
       { t: "cards", items: [
-        { to: "/docs/overview", title: "Vraelis Contour overview", line: "The five-step workflow and where it stands." },
+        { to: "/docs/contour", title: "Vraelis Contour overview", line: "The five-step workflow and where it stands." },
         { to: "/docs/limits", title: "Limits and what is not built", line: "What the experiment does not establish." },
       ] },
     ],
   },
   {
-    tab: "research", group: "Guides", eyebrow: "Research", slug: "operating-constraints",
+    tab: "research", group: "Guides", slug: "operating-constraints",
     title: "Different systems. Different security boundaries.", nav: "Operating constraints",
     description: "The control has to fit the environment, not just the model.",
     updated: UPDATED,
@@ -70,7 +138,7 @@ export const RESEARCH_PAGES: Page[] = [
     ],
   },
   {
-    tab: "research", group: "Guides", eyebrow: "Research", slug: "ai-security-evaluation",
+    tab: "research", group: "Guides", slug: "ai-security-evaluation",
     title: "Measure the boundary, not a broad security score.", nav: "AI security evaluation",
     description: "Match the threat to a measurable test.",
     updated: UPDATED,
@@ -91,3 +159,5 @@ export const RESEARCH_PAGES: Page[] = [
     ],
   },
 ];
+
+export const RESEARCH_PAGES: Page[] = [OVERVIEW, ...RESEARCH.map((r) => areaPage(r.slug)), ...GUIDES];

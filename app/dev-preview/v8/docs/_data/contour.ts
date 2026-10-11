@@ -2,7 +2,8 @@ import { OBSERVATION_2, POLICY, TRACE_TESTS } from "../../_content/evidence";
 import { COMPANY_LINE, WORK_LINE } from "../../_kit/site";
 import type { Page } from "./types";
 
-// THE VRAELIS CONTOUR TAB. Rewritten on 2026-10-10 from the v6 docs "contour-release-security" and
+// VRAELIS CONTOUR, under Products in the docs (pages.ts). Its overview moved from /overview to /contour on
+// 2026-10-10 (the docs home is now Vraelis-first; /overview redirects). Originally: Rewritten on 2026-10-10 from the v6 docs "contour-release-security" and
 // "ai-security" and the v6 guides, against the founder brief (scratchpad impl/RULES.md). What changed:
 // - the five-step workflow is the brief's, word for word in its step names;
 // - every sentence says which kind of statement it is: working in the experiment, measured, proposed,
@@ -15,7 +16,7 @@ import type { Page } from "./types";
 const UPDATED = "2026-10-10";
 
 /** Observation 2's approved identity, unchanged from the trace. */
-const DESIRED_2 = `"desired": {
+export const DESIRED_2 = `"desired": {
   "generation": 2,
   "releaseSha256": "375de916f3f9128dd8284a9dae474c1fe5edcf253c8a7ab69a1c5f720f31ea12",
   "releaseId": "cpu-2",
@@ -25,7 +26,7 @@ const DESIRED_2 = `"desired": {
 }`;
 
 /** Observation 4, unchanged from the trace: the worker stopped, so there is no loaded report. */
-const OBSERVATION_4 = `{
+export const OBSERVATION_4 = `{
   "id": 4,
   "title": "Runtime report unavailable",
   "action": "Stopped the local worker. The desired release remains available; loaded evidence does not.",
@@ -70,7 +71,7 @@ const TRACE_SHAPE = `{
 
 export const CONTOUR_PAGES: Page[] = [
   {
-    tab: "contour", group: "Get started", eyebrow: "Introduction", slug: "overview",
+    tab: "products", section: "Vraelis Contour", group: "", slug: "contour",
     title: "Vraelis Contour overview", nav: "Overview",
     description: "What Vraelis Contour is, where it stands today, and the five-step release workflow it is built around.",
     lead: "Vraelis Contour is model release security, from approval to reported runtime state. It is not for public use: it is built for release, platform and security engineers at suppliers and system integrators.",
@@ -102,17 +103,9 @@ export const CONTOUR_PAGES: Page[] = [
       ] },
       { t: "capture", name: "app-destination-pending" },
       { t: "h2", text: "Where Vraelis Contour sits in Vraelis" },
-      { t: "p", text: `${COMPANY_LINE} ${WORK_LINE} Those four are research areas, not products. Vraelis Contour is the first product.` },
+      { t: "p", text: `${COMPANY_LINE} ${WORK_LINE} Those four are research areas, not products. Vraelis Contour is the first product, and today the only one. [Products](/docs/products)` },
       { t: "p", text: "Defense, critical infrastructure and autonomous systems are intended application areas. Vraelis has no deployments in them." },
-      { t: "h2", text: "How to read these docs" },
-      { t: "p", text: "Every claim in these docs is one of five kinds, and we keep them apart." },
-      { t: "table", label: "Kinds of statement", head: ["Label", "What it means"], rows: [
-        ["Working in the experiment", "Built and exercised inside the controlled synthetic ONNX CPU experiment."],
-        ["Measured", "A number we recorded, with where it came from."],
-        ["Proposed", "Specified or planned, and not built."],
-        ["Hypothesis", "Something we believe and are testing."],
-        ["Not claimed", "Something Vraelis does not claim, such as customers, certification or pricing."],
-      ] },
+      { t: "p", text: "Every claim in these docs is labelled as working in the experiment, measured, proposed, hypothesis or not claimed. [How to read these docs](/docs/reading-the-docs)" },
       { t: "p", text: "Product pictures are captures of the read-only evidence app reading the recorded trace. They are not mockups and they do not show a customer deployment." },
       { t: "cards", items: [
         { to: "/docs/release-identity", title: "Release identity", line: "How a release is named as one exact thing." },
@@ -123,7 +116,7 @@ export const CONTOUR_PAGES: Page[] = [
     ],
   },
   {
-    tab: "contour", group: "Concepts", eyebrow: "Concepts", slug: "release-identity",
+    tab: "products", section: "Vraelis Contour", group: "Concepts", slug: "release-identity",
     title: "Release identity",
     description: "How a release is named as one exact thing: the model, configuration, release and receipt digests, and the preprocessing identity that is still proposed.",
     lead: "A release has to be one exact thing before anyone can approve it. Vraelis Contour names it by digest.",
@@ -157,7 +150,7 @@ export const CONTOUR_PAGES: Page[] = [
     ],
   },
   {
-    tab: "contour", group: "Concepts", eyebrow: "Concepts", slug: "approval-binding",
+    tab: "products", section: "Vraelis Contour", group: "Concepts", slug: "approval-binding",
     title: "Approval binding",
     description: "How an approval names the exact release, its destination and the runtime policy, and what the recorded trace keeps of it.",
     lead: "An approval names the exact release and where it may run, under a runtime policy with an age limit. Approving a model in general is not enough.",
@@ -184,7 +177,7 @@ export const CONTOUR_PAGES: Page[] = [
     ],
   },
   {
-    tab: "contour", group: "Concepts", eyebrow: "Concepts", slug: "runtime-integration",
+    tab: "products", section: "Vraelis Contour", group: "Concepts", slug: "runtime-integration",
     title: "Runtime integration and policy", nav: "Runtime integration",
     description: "The one runtime the experiment supports, the signed runtime policy it enforces, and what is recorded but not bound by that policy.",
     lead: "The receiving runtime checks the policy before it serves. In the experiment there is one supported runtime: ONNX Runtime 1.23.2 with exactly one execution provider, CPUExecutionProvider.",
@@ -224,7 +217,7 @@ export const CONTOUR_PAGES: Page[] = [
     ],
   },
   {
-    tab: "contour", group: "Concepts", eyebrow: "Concepts", slug: "comparing-approved-and-reported",
+    tab: "products", section: "Vraelis Contour", group: "Concepts", slug: "comparing-approved-and-reported",
     title: "Comparing approved and reported", nav: "Comparing approved and reported",
     description: "How Vraelis Contour puts the approved release beside the identity the runtime reports loading, field by field, and how to read the result.",
     lead: "The core comparison puts the approved release beside the identity the runtime reports loading, one field at a time. The evidence app states the conclusion first, then shows both identities side by side.",
@@ -255,7 +248,7 @@ export const CONTOUR_PAGES: Page[] = [
     ],
   },
   {
-    tab: "contour", group: "Evidence", eyebrow: "Evidence", slug: "evidence-and-observations",
+    tab: "products", section: "Vraelis Contour", group: "Evidence", slug: "evidence-and-observations",
     title: "Evidence and observations",
     description: "What an observation records, the three statuses and their reason codes, the four recorded observations, and the scope of a worker self-report.",
     lead: "Every observation keeps the approved identity, the identity the runtime reports, and whether the runtime satisfied its policy. Observations that cannot confirm anything are kept too.",
@@ -300,7 +293,7 @@ export const CONTOUR_PAGES: Page[] = [
     ],
   },
   {
-    tab: "contour", group: "Evidence", eyebrow: "Evidence", slug: "evidence-app",
+    tab: "products", section: "Vraelis Contour", group: "Evidence", slug: "evidence-app", badge: "Latest",
     title: "The evidence app",
     description: "The read-only app over the recorded trace: its six screens, what opening a trace checks, and why opened files are labelled Imported, not verified.",
     lead: "The evidence app reads one recorded trace and shows it on six screens. It is read-only: it has no deploy, approval, reload, recovery or fleet controls, and it never contacts a runtime.",
@@ -356,7 +349,7 @@ export const CONTOUR_PAGES: Page[] = [
     ],
   },
   {
-    tab: "contour", group: "Scope", eyebrow: "Scope", slug: "limits",
+    tab: "products", section: "Vraelis Contour", group: "Scope", slug: "limits",
     title: "Limits and what is not built", nav: "Limits",
     description: "What works in the experiment, what is being built, what Vraelis does not claim, and what the evidence does not establish.",
     lead: "Where Vraelis Contour stops today. This is the same status the rest of the site uses.",

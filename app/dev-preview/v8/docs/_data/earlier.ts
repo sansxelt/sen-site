@@ -15,11 +15,11 @@ const ORDER = [
   "recorded-reports",
 ] as const;
 
-const GROUPS: Record<string, { group: string; eyebrow: string }> = {
-  "Getting started": { group: "Getting started", eyebrow: "Basics" },
-  "Ways to run": { group: "Ways to run", eyebrow: "Interfaces" },
-  "The check": { group: "The check", eyebrow: "Checks" },
-  "The record": { group: "The record", eyebrow: "Records" },
+const GROUPS: Record<string, string> = {
+  "Getting started": "Getting started",
+  "Ways to run": "Ways to run",
+  "The check": "The check",
+  "The record": "The record",
 };
 
 const BROWSER_BANNER = { label: "Earlier implementation reference.", text: "This page describes the earlier browser-testing product. It is kept as history and is not current." };
@@ -44,10 +44,10 @@ function convert(b: V6Block): Block | null {
 
 function toPage(doc: Doc): Page {
   const recorded = doc.slug === "recorded-reports";
-  const g = recorded ? { group: "Recorded evidence", eyebrow: "Reports" } : GROUPS[doc.group] ?? { group: doc.group, eyebrow: "Archive" };
+  const group = recorded ? "Recorded evidence" : GROUPS[doc.group] ?? doc.group;
   const facts: Block = { t: "facts", rows: [["Outcome", doc.outcome], ...(doc.limit ? [["Does not do", doc.limit] as [string, string]] : [])] };
   return {
-    tab: "earlier", group: g.group, eyebrow: g.eyebrow, slug: doc.slug,
+    tab: "earlier", group, slug: doc.slug,
     title: doc.title,
     description: `Earlier implementation reference. ${doc.summary}`,
     lead: doc.summary,

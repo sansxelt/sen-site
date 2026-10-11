@@ -1,12 +1,8 @@
-/* VRAELIS V8 DOCS: ASK AI AND THE DOCS HOST (2026-10-10). The assistant panel, its entries in the docs bar and the
-   search modal, and the header and footer docs.vraelis.com draws for itself. Monochrome only: every colour is a v8
+/* VRAELIS V8 DOCS: ASK AI (2026-10-10). The assistant panel and its entry in the search modal. Monochrome only: every colour is a v8
    token, so the light theme's style element restyles all of it. No status dots; states are words. Controls are not
    selectable; the question and answer text are. */
 
-/* ── Ask AI in the docs bar ─────────────────────────────────────────────────────────────────────────── */
-.v8 .v8-docs-bar__end { gap: 8px; align-items: center; }
-.v8 .v8-docs-askbtn { display: inline-flex; align-items: center; gap: 7px; flex: none; height: 36px; padding: 0 14px 0 12px; border: 0; border-radius: 999px; background: var(--ink); color: var(--ground); font: 500 13.5px/1 var(--sans); cursor: pointer; transition: background .15s; }
-.v8 .v8-docs-askbtn:hover { background: var(--solid-hover); }
+/* The Ask AI buttons (header, "On this page") are styled with the header in docs.css. */
 
 /* ── Ask AI in the search modal ─────────────────────────────────────────────────────────────────────── */
 .v8 .v8-docs-sr__ask .t { display: flex; align-items: center; gap: 8px; min-width: 0; }
@@ -14,7 +10,7 @@
 .v8 .v8-docs-sr__ask q { overflow: hidden; color: var(--ink-2); font-weight: 400; text-overflow: ellipsis; white-space: nowrap; quotes: "\201C" "\201D"; }
 
 /* ── The panel ──────────────────────────────────────────────────────────────────────────────────────── */
-.v8 .v8-ask { position: fixed; z-index: 45; top: calc(var(--docs-top) + 12px); right: 12px; bottom: 12px; width: min(440px, calc(100vw - 24px)); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; overflow: hidden; border-radius: 18px; background: var(--panel); box-shadow: 0 0 0 1px var(--line-2), 0 32px 80px -32px rgba(0,0,0,.55); animation: v8-ask-in .22s var(--ease-menu) both; }
+.v8 .v8-ask { position: fixed; z-index: 45; top: calc(var(--dh) + 12px); right: 12px; bottom: 12px; width: min(440px, calc(100vw - 24px)); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; overflow: hidden; border-radius: 18px; background: var(--panel); box-shadow: 0 0 0 1px var(--line-2), 0 32px 80px -32px rgba(0,0,0,.55); animation: v8-ask-in .22s var(--ease-menu) both; }
 @keyframes v8-ask-in { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: none; } }
 .v8 .v8-ask__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 10px 12px 18px; border-bottom: 1px solid var(--line); }
 .v8 .v8-ask__title { display: flex; align-items: center; gap: 8px; min-width: 0; color: var(--ink); }
@@ -85,8 +81,8 @@
 
 /* Wide screens: the page makes room for the panel, so the article stays readable beside the answer. */
 @media (min-width: 1100px) {
-  .v8 .v8-docs:has(> .v8-ask) > .v8-wrap { padding-right: calc(var(--gutter) + 452px); }
-  .v8 .v8-docs:has(> .v8-ask) .v8-docs-frame { grid-template-columns: 220px minmax(0, 1fr); }
+  .v8 .v8-docs:has(> .v8-ask) .v8-docs-main { padding-right: 476px; }
+  .v8 .v8-docs:has(> .v8-ask) .v8-docs-page { grid-template-columns: minmax(0, 1fr); }
   .v8 .v8-docs:has(> .v8-ask) .v8-docs-toc { display: none; }
 }
 /* Phones: full screen, over the header. */
@@ -96,8 +92,6 @@
   .v8 .v8-ask__title span { display: none; }
   .v8 .v8-ask__form { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
   .v8 .v8-ask__field textarea { font-size: 16px; } /* iOS zooms into anything smaller */
-  .v8 .v8-docs-askbtn { width: 36px; padding: 0; justify-content: center; }
-  .v8 .v8-docs-askbtn span { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .v8 .v8-ask, .v8 .v8-ask__status { animation: none; }
@@ -105,26 +99,3 @@
 
 /* ── Selection: controls are not selectable (v8.css), the conversation is ──────────────────────────── */
 .v8 .v8-ask__q, .v8 .v8-docs-answer, .v8 .v8-ask__lead, .v8 .v8-ask__notice p { -webkit-user-select: text; user-select: text; }
-
-/* ── docs.vraelis.com: the header and footer the docs host draws for itself ─────────────────────────── */
-.v8 .v8-dh .v8-header__bar { justify-content: space-between; }
-.v8 .v8-dh__brand { display: inline-flex; align-items: center; gap: 9px; height: 44px; margin-left: -4px; padding: 0 4px; border-radius: 10px; color: var(--ink); }
-.v8 .v8-dh__mark { display: block; width: 24px; height: 24px; }
-.v8 .v8-dh__mark svg { display: block; width: 100%; height: 100%; }
-.v8 .v8-dh__brand > svg { margin-top: 2px; }
-.v8 .v8-dh__docs { margin-left: 4px; padding-left: 12px; border-left: 1px solid var(--line-3); color: var(--ink-2); font: 500 16px/1 var(--display); letter-spacing: -.01em; }
-.v8 .v8-dh__end { display: flex; align-items: center; gap: 6px; }
-.v8 .v8-dh .v8-theme { display: inline-grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 999px; background: none; color: var(--ink-3); cursor: pointer; transition: color .15s, background .15s; }
-.v8 .v8-dh .v8-theme:hover { color: var(--ink); background: var(--s2); }
-.v8 .v8-dh__plain { display: inline-flex; align-items: center; height: 36px; padding: 0 12px; border-radius: 999px; color: var(--ink-3); font: 500 14px/1 var(--sans); transition: color .15s; }
-.v8 .v8-dh__plain:hover { color: var(--ink); }
-.v8 .v8-dh__home svg { color: var(--ink-3); }
-.v8 .v8-dh-foot { border-top: 1px solid var(--line); padding-block: 28px 32px; }
-.v8 .v8-dh-foot__in { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px 28px; color: var(--ink-4); font-size: 13px; }
-.v8 .v8-dh-foot nav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; }
-.v8 .v8-dh-foot nav a, .v8 .v8-dh-foot nav button { color: var(--ink-3); font-size: 13px; transition: color .15s; }
-.v8 .v8-dh-foot nav a:hover, .v8 .v8-dh-foot nav button:hover { color: var(--ink); }
-@media (max-width: 520px) {
-  .v8 .v8-dh__plain { display: none; }
-  .v8 .v8-dh__docs { padding-left: 10px; font-size: 15px; }
-}

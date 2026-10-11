@@ -1,6 +1,10 @@
 "use client";
 
 import { Fragment, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import { Highlight } from "./highlight";
+
+// Highlight lives in ./highlight (no "use client") so the docs' server-rendered code blocks share it.
+export { Highlight };
 
 /** The tagline, rising in word by word; each area and its joining word stay together on one line. */
 export function AreasLine({ before, areas, joiners, after }: { before: string; areas: readonly string[]; joiners: string[]; after: string }) {
@@ -151,30 +155,6 @@ export function TypeLoop({ queries, idle }: { queries: { q: string; hits: DocsHi
         ))}
       </ul>
     </div>
-  );
-}
-
-/** Monochrome highlighting for the code windows: a shell prompt line reads like a terminal ("$" dim, the command
- *  bright), JSON keys are bright and values a step down, punctuation dim. No colour (founder 2026-10-10). */
-export function Highlight({ code }: { code: string }) {
-  return (
-    <>
-      {code.split("\n").map((line, i) => {
-        const nl = i === 0 ? null : "\n";
-        if (line.startsWith("$ ")) return <Fragment key={i}>{nl}<span className="hl-p">$</span> <span className="hl-cmd">{line.slice(2)}</span></Fragment>;
-        const out: ReactNode[] = []; let last = 0;
-        const re = /("(?:[^"\\]|\\.)*")(\s*:)?|\b(true|false|null)\b|-?\b\d+(?:\.\d+)?\b|[{}[\],]/g;
-        for (let m = re.exec(line); m; m = re.exec(line)) {
-          if (m.index > last) out.push(line.slice(last, m.index));
-          const cls = m[1] ? (m[2] ? "hl-k" : "hl-s") : m[3] || /^-?\d/.test(m[0]) ? "hl-n" : "hl-d";
-          out.push(<span key={m.index} className={cls}>{m[1] && m[2] ? m[1] : m[0]}</span>);
-          if (m[1] && m[2]) out.push(<span key={`${m.index}c`} className="hl-d">{m[2]}</span>);
-          last = m.index + m[0].length;
-        }
-        if (last < line.length) out.push(line.slice(last));
-        return <Fragment key={i}>{nl}{out}</Fragment>;
-      })}
-    </>
   );
 }
 

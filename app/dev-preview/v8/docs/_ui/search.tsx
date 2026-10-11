@@ -4,7 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { AskIcon } from "./ask-button";
 import { SEARCH_EVENT, openAsk, openSearch } from "./events";
-import { useDocsLink } from "./host";
+import { useDocsEndpoint, useDocsLink } from "./host";
 import type { SearchEntry, TabId } from "../_data/types";
 
 // DOCS SEARCH (x.ai's Cmd/Ctrl K modal). Its first row hands the query to Ask AI (ask.tsx), as x.ai's does to Grok. The index is section level, one entry for each
@@ -43,16 +43,16 @@ function SearchIcon() {
   );
 }
 
-/** The search pill: in the docs bar, and larger on the docs home. */
-export function SearchPill({ size }: { size?: "lg" }) {
+/** The search field in the docs header (x.ai's outlined pill with the shortcut). On narrow screens, an icon. */
+export function SearchPill() {
   const key = useModKey();
-  const link = useDocsLink();
-  const warm = () => { loadIndex(link("/docs/search-index")).catch(() => {}); };
+  const endpoint = useDocsEndpoint();
+  const warm = () => { loadIndex(endpoint("/docs/search-index")).catch(() => {}); };
   return (
-    <button type="button" className={size === "lg" ? "v8-docs-pill v8-docs-pill--lg" : "v8-docs-pill"} aria-label="Search docs" aria-keyshortcuts="Control+K Meta+K"
+    <button type="button" className="v8-docs-pill" aria-label="Search docs" aria-keyshortcuts="Control+K Meta+K"
       onClick={openSearch} onPointerEnter={warm} onFocus={warm}>
       <SearchIcon />
-      <span className="v8-docs-pill__label">Search docs</span>
+      <span className="v8-docs-pill__label">Search</span>
       <kbd>{key}</kbd>
     </button>
   );
@@ -161,6 +161,7 @@ type Filter = "all" | TabId;
 export function SearchModal({ tabs }: { tabs: { id: TabId; label: string }[] }) {
   const router = useRouter();
   const link = useDocsLink();
+  const endpoint = useDocsEndpoint();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
@@ -202,9 +203,9 @@ export function SearchModal({ tabs }: { tabs: { id: TabId; label: string }[] }) 
   useEffect(() => {
     if (!open || data) return;
     let live = true;
-    loadIndex(link("/docs/search-index")).then((d) => { if (live) { setData(d); setFailed(false); } }, () => { if (live) setFailed(true); });
+    loadIndex(endpoint("/docs/search-index")).then((d) => { if (live) { setData(d); setFailed(false); } }, () => { if (live) setFailed(true); });
     return () => { live = false; };
-  }, [open, data, link]);
+  }, [open, data, endpoint]);
 
   // While open: the page behind does not scroll, and the field has focus.
   useEffect(() => {
@@ -231,10 +232,11 @@ export function SearchModal({ tabs }: { tabs: { id: TabId; label: string }[] }) 
     return out.map((x) => x.e);
   }, [data, terms, res]);
   const counts = useMemo(() => {
-    const c: Record<Filter, number> = { all: scored.length, contour: 0, research: 0, earlier: 0 };
-    for (const e of scored) c[e.tab]++;
+    const c = { all: scored.length } as Record<Filter, number>;
+    for (const t of tabs) c[t.id] = 0;
+    for (const e of scored) c[e.tab] = (c[e.tab] ?? 0) + 1;
     return c;
-  }, [scored]);
+  }, [scored, tabs]);
   const visible = useMemo(() => (filter === "all" ? scored : scored.filter((e) => e.tab === filter)).slice(0, 60), [scored, filter]);
   // Row 0 is Ask AI; results follow. With nothing chosen yet, a query selects its best result, and Ask AI when
   // nothing matches, so Enter does the useful thing either way.

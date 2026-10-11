@@ -6,7 +6,15 @@ import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 
 import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
 import { Brand, Mark, Wordmark, glideToTop } from "./logo";
 import { ThemeToggle } from "./theme";
-import { FOOTER, JOIN, MENUS, href, type Menu } from "./site";
+import { FOOTER, JOIN, MENUS, href, localHref, type Menu } from "./site";
+
+/** The docs draw their own header and footer (docs/layout.tsx), on this host as on docs.vraelis.com, so the site's
+ *  step aside there. Decided from the path, so it also holds after a client-side navigation into or out of the docs. */
+export function useOnDocs() {
+  const pathname = usePathname();
+  const base = localHref("/docs");
+  return pathname === base || pathname.startsWith(`${base}/`);
+}
 
 // THE V8 HEADER. x.ai's shape: a 64px frosted bar whose bottom rule fades in over the first 72px of scroll, menus
 // that open on hover with a short intent delay or on click, and a mega panel whose preview pane swaps to the
@@ -19,7 +27,9 @@ const CLOSE_DELAY = 180;
 
 function MegaPanel({ menu, open, id, onNavigate }: { menu: Menu; open: boolean; id: string; onNavigate: () => void }) {
   const [active, setActive] = useState(0);
-  useEffect(() => { if (!open) setActive(0); }, [open]);
+  // Closing resets the preview to the first link (state adjusted during render, not in an effect).
+  const [wasOpen, setWasOpen] = useState(open);
+  if (wasOpen !== open) { setWasOpen(open); if (!open) setActive(0); }
   return (
     <div id={id} className="v8-panel" data-open={open} role="region" aria-label={`${menu.label} menu`}>
       <div className="v8-mega">
@@ -87,8 +97,9 @@ export function V8Header() {
     try { history.scrollRestoration = "manual"; } catch { /* old browsers */ }
     if (!location.hash) window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
   }, [pathname]);
-  // A route change closes everything.
-  useEffect(() => { setOpen(null); setDrawer(false); }, [pathname]);
+  // A route change closes everything (state adjusted during render, not in an effect).
+  const [seenPath, setSeenPath] = useState(pathname);
+  if (seenPath !== pathname) { setSeenPath(pathname); setOpen(null); setDrawer(false); }
   // Escape closes the open menu and returns focus to its trigger.
   useEffect(() => {
     if (!open && !drawer) return;
@@ -109,6 +120,7 @@ export function V8Header() {
     return () => { s.position = prev.position; s.top = prev.top; s.width = prev.width; window.scrollTo({ top: y, behavior: "instant" as ScrollBehavior }); };
   }, [drawer]);
 
+  const onDocs = useOnDocs();
   const isCurrent = (to: string) => pathname === href(to) || pathname.startsWith(`${href(to)}/`);
   const item = (id: string, label: string, panel: ReactNode, current: boolean) => (
     <div key={id} style={{ position: "relative" }}
@@ -123,6 +135,7 @@ export function V8Header() {
     </div>
   );
 
+  if (onDocs) return null;
   return (
     <>
       <a className="v8-skip" href="#v8-main">Skip to content</a>
@@ -165,6 +178,7 @@ export function V8Header() {
 }
 
 export function V8Footer() {
+  if (useOnDocs()) return null;
   return (
     <footer className="v8-footer">
       <div className="v8-wrap v8-wrap--frame">

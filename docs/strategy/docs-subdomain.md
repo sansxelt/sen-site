@@ -1,7 +1,7 @@
 # docs.vraelis.com: what the owner has to do
 
 The code is ready (2026-10-10): `proxy.ts` serves the v8 docs at the root of `docs.vraelis.com`
-(`/` the docs home, `/<slug>` a page, `/md/<slug>.md` the Markdown twins, `/search-index`, `/ask`).
+(`/` the docs home, `/<slug>` a page, `/md/<slug>.md` the Markdown twins, `/llms.txt`, `/search-index`, `/ask`).
 The existing `/dev-preview/v8/docs/...` addresses keep working. Nothing below has been done; it needs
 the owner's DNS and Vercel access.
 
@@ -38,11 +38,22 @@ it on. The endpoint limits each IP to 8 questions a minute and 60 an hour (per s
 
 ## 4. Checks after it is live
 
-- `https://docs.vraelis.com/` shows the docs home with the docs header (link back to vraelis.com).
-- `https://docs.vraelis.com/overview` renders; `https://docs.vraelis.com/dev-preview/v8/docs/overview`
-  308s to `/overview`.
+- `https://docs.vraelis.com/` shows the docs home ("Get started with Vraelis") under the docs header; the logo goes
+  to `https://vraelis.com/`.
+- `https://docs.vraelis.com/contour` renders; `https://docs.vraelis.com/overview` (the page's old slug) and
+  `https://docs.vraelis.com/dev-preview/v8/docs/contour` both 308 to `/contour`.
+- `https://docs.vraelis.com/llms.txt` is the docs index (vraelis.com/llms.txt stays the main site's).
 - While v8 is a preview, every docs-host response carries `X-Robots-Tag: noindex, nofollow`.
 - Ask AI answers with numbered sources (quoted passages by default).
+
+## Links from the main site
+
+The site's "Docs" nav item, its footer "Documentation" link and every other site link to `/docs` go through
+`href()` in `app/dev-preview/v8/_kit/site.ts`. They point at `https://docs.vraelis.com` only when both
+`NEXT_PUBLIC_VRAELIS_V8_PUBLIC=1` and the build is Vercel production (`NEXT_PUBLIC_VERCEL_ENV=production`); anywhere
+else (local, previews, the `/dev-preview/v8` review) they stay on this deployment's docs path. Do steps 1 and 2 before
+promoting v8 in production, or those links lead nowhere. `NEXT_PUBLIC_VRAELIS_DOCS_ORIGIN` overrides the rule (a
+preview docs domain, or `""` to keep the links local).
 
 ## Later, when v8 is promoted
 

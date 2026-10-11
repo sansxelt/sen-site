@@ -2,8 +2,8 @@
 
 import { openAsk } from "./events";
 
-// The Ask AI entry (the docs bar on both hosts) and its icon, apart from the panel so the docs bar can import it
-// without importing the panel.
+// The Ask AI entries: the header button (both hosts) and the row at the foot of "On this page". Apart from the panel,
+// so the header can import them without importing the panel. Search's first row is the third entry.
 
 export function AskIcon() {
   return (
@@ -16,6 +16,14 @@ export function AskIcon() {
 export function AskButton() {
   return (
     <button type="button" className="v8-docs-askbtn" onClick={() => openAsk()} aria-haspopup="dialog" aria-label="Ask AI about these docs">
+      <AskIcon /><span>Ask AI</span>
+    </button>
+  );
+}
+
+export function AskInline() {
+  return (
+    <button type="button" className="v8-docs-util" onClick={() => openAsk()} aria-haspopup="dialog">
       <AskIcon /><span>Ask AI</span>
     </button>
   );
