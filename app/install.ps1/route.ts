@@ -1,36 +1,16 @@
-// GET /install.ps1 — the Windows installer.
+// GET /install.ps1 — RETIRED 2026-10-11.
 //
-//   irm https://vraelis.com/install.ps1 | iex
-//
-// /install serves a POSIX sh script, and `sh` does not exist in cmd.exe or PowerShell. So the documented
-// install line failed with "sh is not recognized" for every Windows developer who followed it, on the one
-// platform where the failure looks like the product is broken rather than like a missing shell.
-//
-// Same shape as the other two file routes: served from its source in cli/install.ps1 so there is no second
-// copy to drift, traced into the bundle by next.config.ts because nothing imports it, and public because a
-// CI runner is the caller that most needs it and has no session.
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+// This used to serve cli/install.ps1 for `irm https://vraelis.com/install.ps1 | iex`. The Vraelis CLI belonged
+// to an earlier product that is retired, so the installer now answers 410 Gone with a plain-text notice.
+// Invoke-RestMethod throws on a 4xx, so a piped `| iex` executes nothing.
+// Dynamic and no-store so no CDN or browser keeps serving the old script. cli/install.ps1 stays in the repo.
 
 export const runtime = "nodejs";
-// Prerendered at build from the same checkout as the rest of the deploy, revalidated hourly, exactly as
-// /install and /cli/vraelis.mjs are. The served script and the repo's script cannot be from different
-// commits.
-export const dynamic = "force-static";
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
-export async function GET() {
-  try {
-    const src = await readFile(join(process.cwd(), "cli", "install.ps1"), "utf8");
-    return new Response(src, {
-      headers: {
-        // text/plain so a browser shows it rather than downloading it. Someone who wants to read a script
-        // before piping it into their shell should not have to fish it out of a downloads folder.
-        "Content-Type": "text/plain; charset=utf-8",
-        "Cache-Control": "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400",
-      },
-    });
-  } catch {
-    return new Response("Not found.\n", { status: 404, headers: { "Content-Type": "text/plain; charset=utf-8" } });
-  }
+export function GET() {
+  return new Response(
+    "The Vraelis CLI was part of an earlier product that is retired. This installer is no longer available. https://vraelis.com\n",
+    { status: 410, headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store", "X-Robots-Tag": "noindex" } },
+  );
 }

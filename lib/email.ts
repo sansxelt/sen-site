@@ -151,20 +151,56 @@ export function passwordResetHtml(resetUrl: string) {
   });
 }
 
-export function contactConfirmHtml(name: string, subject: string) {
-  const safeName    = escapeHtml(name);
-  const safeSubject = escapeHtml(subject);
-  const greeting    = safeName ? `Hi ${safeName},` : "Hi,";
+// The contact confirmation (redone 2026-10-11). It goes to whatever address was typed into a public form, so
+// it carries NO text the sender wrote: no message, no subject, only a first name cut short. Echoing the message
+// would let anyone use this form to send their own words and links from our domain to a stranger (security
+// review 2026-10-11). The sender already knows what they wrote.
+const confirmName = (name: string) => name.trim().split(/\s+/)[0]?.slice(0, 40) ?? "";
+
+export function contactConfirmHtml(name: string) {
+  const first = escapeHtml(confirmName(name));
   return shell(`
     ${h1("We received your message")}
-    ${p(`${greeting} thanks for writing to us about ${strong(safeSubject)}. Someone on the team will reply to this email address, usually within one business day.`)}
-    ${p("To add anything, reply to this email. Your reply goes to the same team.")}
-    ${small(`Our other addresses are listed at ${link("https://vraelis.com/contact", "vraelis.com/contact")}.`)}
-    ${small("If you did not send this message, you can ignore this email. We will not contact you again unless you write to us.")}
+    ${p(`${first ? `Hi ${first},` : "Hi,"} thanks for contacting Vraelis. A person on the team reads every message and replies to this address, usually within one business day.`)}
+    ${p("To add anything, reply to this email.")}
+    ${small("If you did not send this, you can ignore this email. We will not write to you unless you contact us.")}
   `, {
-    preheader: `We received your message about ${subject} and will reply by email, usually within one business day.`,
-    reason: "You are receiving this because this email address was entered in the contact form on vraelis.com.",
+    preheader: "Thanks for contacting Vraelis. We reply to this address, usually within one business day.",
+    reason: "You are receiving this because this address was entered in the contact form on vraelis.com.",
   });
+}
+
+/** The plain-text twin of the confirmation, so text-only clients get a letter, not stripped markup. */
+export function contactConfirmText(name: string) {
+  const first = confirmName(name);
+  return [
+    "We received your message",
+    "",
+    `${first ? `Hi ${first},` : "Hi,"} thanks for contacting Vraelis. A person on the team reads every message and replies to this address, usually within one business day.`,
+    "",
+    "To add anything, reply to this email.",
+    "",
+    "If you did not send this, you can ignore this email. We will not write to you unless you contact us.",
+    "",
+    "--",
+    "Vraelis · https://vraelis.com · Privacy https://vraelis.com/privacy",
+  ].join("\n");
+}
+
+/** The plain-text twin of the support-inbox email. */
+export function supportText(opts: { email: string; name: string; subject: string; message: string; channel?: string | null }) {
+  return [
+    opts.subject,
+    "",
+    ...(opts.channel ? [`Channel: ${opts.channel}`] : []),
+    `From: ${opts.name || "(no name)"}`,
+    `Email: ${opts.email}`,
+    "",
+    opts.message,
+    "",
+    "--",
+    `Sent from the contact form on vraelis.com. Replying goes to ${opts.email}.`,
+  ].join("\n");
 }
 
 export function supportHtml(opts: {
@@ -458,6 +494,7 @@ export async function sendContactConfirmEmail(
   /** Inbox the message was routed to, controls the `from` so the
       confirmation comes from the same department the user contacted. */
   inbox:   SupportInbox = "help@vraelis.com",
+  // The signature stays (subject, inbox): the confirmation no longer prints the subject (see contactConfirmHtml).
 ) {
   const resend = getResend();
   if (!resend) return;
@@ -466,8 +503,10 @@ export async function sendContactConfirmEmail(
     await resend.emails.send({
       from: fromForInbox(inbox),
       to: email,
-      subject: `We received your message: ${subject}`,
-      html: contactConfirmHtml(name, subject),
+      replyTo: inbox,
+      subject: "We received your message",
+      html: contactConfirmHtml(name),
+      text: contactConfirmText(name),
     });
   } catch (error) {
     console.error("sendContactConfirmEmail failed:", error);
@@ -525,6 +564,7 @@ export async function sendSupportEmail(opts: {
     replyTo: opts.email,
     subject: opts.subject,
     html: supportHtml(opts),
+    text: supportText(opts),
   });
 
   // Resend returns { data, error } instead of throwing on 4xx, turn it

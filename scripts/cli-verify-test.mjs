@@ -286,14 +286,30 @@ async function main() {
     // first, then assert, every time.
     const code = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
     const install = code(readFileSync("app/rank/app/api/cli-section.tsx", "utf8"));
-    const hasRoute = existsSync("app/cli/vraelis.mjs/route.ts");
-    ok("the CLI is served from the site", hasRoute);
-    ok("from its SOURCE file, so there is no second copy to go stale",
-      hasRoute && /readFile\(join\(process\.cwd\(\), "cli", "vraelis\.mjs"\)/.test(
-        readFileSync("app/cli/vraelis.mjs/route.ts", "utf8")));
-    // Nothing imports cli/vraelis.mjs, so without tracing the download 404s in production and works locally.
-    ok("and traced into the route bundle, or it 404s only in production",
-      /outputFileTracingIncludes[\s\S]{0,240}cli\/vraelis\.mjs/.test(readFileSync("next.config.ts", "utf8")));
+    // ── RETIRED 2026-10-11: THE SITE NO LONGER HANDS OUT THE CLI ────────────────────────────────────
+    //
+    // The CLI belonged to an earlier product that is retired. Its download (/cli/vraelis.mjs) and both
+    // installers (/install, /install.ps1) now answer 410 Gone with a plain-text notice, so `curl -f` exits
+    // non-zero and a piped `| sh` or `| iex` runs nothing. These checks used to prove the files were served
+    // from source; they now prove the three addresses stay closed. The source files stay in the repo, and
+    // the checks below on the CLI and the installer scripts themselves still run against them.
+    const retired = [
+      ["/cli/vraelis.mjs", "app/cli/vraelis.mjs/route.ts", "vraelis.mjs"],
+      ["/install", "app/install/route.ts", "install.sh"],
+      ["/install.ps1", "app/install.ps1/route.ts", "install.ps1"],
+    ];
+    for (const [url, file, source] of retired) {
+      const route = existsSync(file) ? code(readFileSync(file, "utf8")) : "";
+      ok(`${url} still has a route, so it answers rather than falling through to a page`, route.length > 0);
+      ok(`${url} answers 410 Gone`, /status:\s*410/.test(route) && !/status:\s*200/.test(route));
+      ok(`  and no longer reads ${source} to serve it`, !/readFile/.test(route) && !route.includes(`"${source}"`));
+      ok("  with a plain-text notice that says the product is retired",
+        /text\/plain/.test(route) && /earlier product that is retired/.test(route));
+      // The old download was cached publicly for an hour plus a day of stale-while-revalidate.
+      ok("  never cached, never indexed", /"Cache-Control":\s*"no-store"/.test(route) && /"X-Robots-Tag":\s*"noindex"/.test(route));
+      ok("  and decided per request, not prerendered once", /dynamic\s*=\s*"force-dynamic"/.test(route)
+        && !/force-static|revalidate\s*=/.test(route));
+    }
 
     ok("the install line does not point at a path inside this repository",
       !/node \.?\/?cli\/vraelis\.mjs/.test(install), "customers do not have this repo");
@@ -331,11 +347,8 @@ async function main() {
     // ── The installer itself ────────────────────────────────────────────────────────────────────────
     const sh = readFileSync("cli/install.sh", "utf8");
     const shCode = sh.replace(/^\s*#.*$/gm, "");
-    ok("the installer is served from the site", existsSync("app/install/route.ts"));
-    ok("from its source file, so there is no second copy to go stale",
-      /readFile\(join\(process\.cwd\(\), "cli", "install\.sh"\)/.test(readFileSync("app/install/route.ts", "utf8")));
-    ok("and traced into the bundle, or it 404s only in production",
-      /outputFileTracingIncludes[\s\S]{0,320}cli\/install\.sh/.test(readFileSync("next.config.ts", "utf8")));
+    // (Whether /install is served is checked above: it is retired and answers 410. The script stays in the
+    // repo, so the checks on its content below still hold it to the standard it shipped with.)
 
     // NO SUDO. An installer that wants root to place one text file is asking for far more trust than the
     // job needs, and a CI runner usually cannot grant it anyway.
@@ -362,11 +375,7 @@ async function main() {
     // to carry a line that works there, and a line that works there has to exist.
     const ps = readFileSync("cli/install.ps1", "utf8");
     const psCode = ps.replace(/^\s*#.*$/gm, "");
-    ok("a Windows installer exists and is served", existsSync("app/install.ps1/route.ts"));
-    ok("from its source file, so there is no second copy to go stale",
-      /readFile\(join\(process\.cwd\(\), "cli", "install\.ps1"\)/.test(readFileSync("app/install.ps1/route.ts", "utf8")));
-    ok("and traced into the bundle, or it 404s only in production",
-      /outputFileTracingIncludes[\s\S]{0,400}cli\/install\.ps1/.test(readFileSync("next.config.ts", "utf8")));
+    // (/install.ps1 is retired and answers 410, checked above.)
     ok("the console docs give Windows a line that can actually run",
       /irm https:\/\/vraelis\.com\/install\.ps1 \| iex/.test(installBlock));
 
