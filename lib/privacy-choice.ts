@@ -135,11 +135,13 @@ export const LEGAL_PATHS = [
   "/subprocessors", "/data-rights", "/security", "/limitations",
 ] as const;
 const V6_TREE = "/dev-preview/v6";
+const V8_TREE = "/dev-preview/v8"; // the v8 preview's legal pages, read the same way
 
 export function isLegalPath(pathname: string | null | undefined): boolean {
   let p = (pathname || "/").split(/[?#]/)[0];
   if (p.length > 1) p = p.replace(/\/+$/, "") || "/";
   if (p.startsWith(V6_TREE + "/")) p = p.slice(V6_TREE.length);
+  else if (p.startsWith(V8_TREE + "/")) p = p.slice(V8_TREE.length);
   return (LEGAL_PATHS as readonly string[]).includes(p);
 }
 

@@ -1,0 +1,36 @@
+/* /security (v8). A disclosure page on x.ai's security layout: a centred opening, sections with the heading on
+   the left and the substance on the right, and the report section last. Scoped under .v8 .v8-sec; kit tokens only.
+   No status dots: a topic's label is a word. */
+
+.v8 .v8-sec__hero { max-width: 780px; gap: 16px; }
+.v8 .v8-sec__hero .v8-body { color: var(--ink-3); font-size: 15.5px; }
+
+/* Heading left, rows right (x.ai's "In depth" block, without the accordion: every line here is short). */
+.v8 .v8-sec__split { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: clamp(28px, 5vw, 80px); align-items: start; }
+@media (max-width: 900px) { .v8 .v8-sec__split { grid-template-columns: minmax(0, 1fr); } }
+.v8 .v8-sec__rows { list-style: none; margin: 0; padding: 0; border-bottom: 1px solid var(--line); }
+.v8 .v8-sec__rows > li { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 8px 24px; padding: 24px 0; border-top: 1px solid var(--line); }
+.v8 .v8-sec__rows h3 { margin-bottom: 8px; }
+.v8 .v8-sec__rows p { color: var(--ink-3); font-size: 15px; line-height: 1.65; max-width: 60ch; text-wrap: pretty; }
+.v8 .v8-sec__label { padding-top: 4px; color: var(--ink-3); font: 500 13px/1.4 var(--sans); }
+@media (max-width: 560px) { .v8 .v8-sec__rows > li { grid-template-columns: minmax(0, 1fr); } .v8 .v8-sec__label { padding-top: 0; } }
+.v8 .v8-sec__links { display: flex; flex-wrap: wrap; gap: 12px 28px; margin-top: 24px; }
+
+/* #report: the rules and actions on the left, the security.txt fields beside them. */
+.v8 .v8-sec__report { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(28px, 5vw, 80px); align-items: start; }
+@media (max-width: 960px) { .v8 .v8-sec__report { grid-template-columns: minmax(0, 1fr); } }
+.v8 .v8-sec__report .v8-head { max-width: 680px; }
+.v8 .v8-sec__rules { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 10px; }
+.v8 .v8-sec__rules > li { position: relative; padding-left: 22px; color: var(--ink-2); font-size: 16px; line-height: 1.65; text-wrap: pretty; }
+.v8 .v8-sec__rules > li::before { content: ""; position: absolute; left: 3px; top: .85em; width: 8px; height: 1px; background: var(--ink-4); }
+.v8 .v8-sec__path { font-family: var(--mono); font-size: 13.5px; }
+
+.v8 .v8-sec__txt { min-width: 0; padding: clamp(20px, 2.4vw, 30px); border-radius: var(--r-lg); background: var(--s1); box-shadow: inset 0 0 0 1px var(--line), inset 0 1px 0 rgba(255,255,255,.035); }
+.v8 .v8-sec__txthead { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--line-2); color: var(--ink-3); font-size: 12.5px; }
+.v8 .v8-sec__txthead .v8-mono { color: var(--ink); font-size: 13.5px; }
+.v8 .v8-sec__txt dl { margin: 0; }
+.v8 .v8-sec__txt dl > div { display: grid; grid-template-columns: 172px minmax(0, 1fr); gap: 4px 16px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.v8 .v8-sec__txt dl > div:last-child { border-bottom: 0; padding-bottom: 0; }
+.v8 .v8-sec__txt dt { color: var(--ink-3); font: 400 12.5px/1.6 var(--mono); white-space: nowrap; }
+.v8 .v8-sec__txt dd { margin: 0; min-width: 0; color: var(--ink); font: 400 12.5px/1.6 var(--mono); overflow-wrap: anywhere; }
+@media (max-width: 560px) { .v8 .v8-sec__txt dl > div { grid-template-columns: minmax(0, 1fr); } }

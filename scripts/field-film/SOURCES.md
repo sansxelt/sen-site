@@ -2,7 +2,7 @@
 
 This 25-second silent loop opens with an Apache live-fire training launch, then moves through an Apache flyby, an MQ-9 training flight, a military research robot, industrial robotics and software. The launch begins within the first second; the loading poster shows its ignition frame. It is an original edit; no Scale, Anduril or Palantir assets are used.
 
-The field shots illustrate the systems whose software matters. They do not depict Vraelis hardware, customers, deployed military capability or a relationship with the U.S. government. Vraelis currently checks live web apps and control panels in a real browser.
+The field shots illustrate the systems whose software matters. They do not depict Vraelis hardware, customers, deployed military capability or a relationship with the U.S. government. Vraelis develops cybersecurity software for AI in defense, critical infrastructure and autonomous systems; its first product, Vraelis Contour, is in private development.
 
 | Shot | Source and rights |
 |---|---|

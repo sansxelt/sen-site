@@ -153,6 +153,7 @@ function groundFor(target: string): Ground {
   if (target === "/dev-preview/v6" || target.startsWith("/dev-preview/v6/")) {
     return v6GroundAtTop(target.slice("/dev-preview/v6".length) || "/");
   }
+  if (target === "/dev-preview/v8" || target.startsWith("/dev-preview/v8/")) return "graphite"; // v8 is black throughout
   // Anything the maps did not claim renders the 404, which follows the site onto white (2026-09-30). Left as
   // cream, the browser painted a pale first frame behind a near-black page: the same flash that was fixed
   // everywhere else, on the one surface the router cannot describe in advance because its path matched
@@ -417,6 +418,12 @@ export default function proxy(req: NextRequest) {
 
   // The newer presentation remains an unindexed review preview after the layout rollback.
   if (path === "/dev-preview/v7" || path.startsWith("/dev-preview/v7/")) {
+    const response = NextResponse.next(withGround(req, path));
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+    return response;
+  }
+  // The x.ai-structured rebuild (2026-10-10), reviewed here before any public route moves onto it.
+  if (path === "/dev-preview/v8" || path.startsWith("/dev-preview/v8/")) {
     const response = NextResponse.next(withGround(req, path));
     response.headers.set("X-Robots-Tag", "noindex, nofollow");
     return response;

@@ -1,0 +1,121 @@
+/* Research and application pages (v8, 2026-10-10). Shared pieces from research/parts.tsx. Every rule is scoped
+   under .v8 .v8-rx so nothing reaches another page; kit tokens only. No decorative dots: markers are hairlines. */
+
+/* A framed editorial photograph for a hero aside. The hairline sits on top of the image. */
+.v8 .v8-rx .rx-photo { margin: 0; display: grid; gap: 12px; }
+.v8 .v8-rx .rx-photo__frame { position: relative; overflow: hidden; aspect-ratio: 4 / 3; border-radius: var(--r-xl); background: var(--s1); }
+.v8 .v8-rx .rx-photo__frame::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px var(--line-2); pointer-events: none; }
+.v8 .v8-rx .rx-photo__frame img { width: 100%; height: 100%; object-fit: cover; }
+.v8 .v8-rx .rx-photo figcaption { color: var(--ink-3); font-size: 13px; line-height: 1.5; }
+
+/* Photo cards on these pages: a slow zoom on hover, like the bento tiles. */
+.v8 .v8-rx .v8-photo { display: block; isolation: isolate; }
+.v8 .v8-rx .v8-photo img { transition: transform .7s var(--ease); }
+.v8 .v8-rx .v8-photo:hover img { transform: scale(1.03); }
+
+.v8 .v8-rx .rx-areas-sec { padding-bottom: var(--section); }
+.v8 .v8-rx .rx-areas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.v8 .v8-rx .rx-areas > a { aspect-ratio: 16 / 10; }
+@media (max-width: 720px) { .v8 .v8-rx .rx-areas { grid-template-columns: minmax(0, 1fr); } .v8 .v8-rx .rx-areas > a { aspect-ratio: 4 / 3; } }
+
+/* Head on the left, content on the right. The head stays in view on wide screens. */
+.v8 .v8-rx .rx-split { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: clamp(24px, 5vw, 80px); align-items: start; }
+.v8 .v8-rx .rx-split__head { position: sticky; top: calc(var(--header-h) + 32px); }
+@media (max-width: 900px) { .v8 .v8-rx .rx-split { grid-template-columns: minmax(0, 1fr); } .v8 .v8-rx .rx-split__head { position: static; } }
+
+.v8 .v8-rx .rx-n { color: var(--ink-4); font: 500 12.5px/1.6 var(--mono); letter-spacing: .02em; }
+
+/* Numbered questions. */
+.v8 .v8-rx .rx-qs { list-style: none; margin: 0; padding: 0; display: grid; }
+.v8 .v8-rx .rx-qs li { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 6px 12px; padding: 24px 0; border-top: 1px solid var(--line); }
+.v8 .v8-rx .rx-qs li:last-child { border-bottom: 1px solid var(--line); }
+.v8 .v8-rx .rx-qs .rx-n { padding-top: 4px; }
+.v8 .v8-rx .rx-qs h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -.014em; }
+.v8 .v8-rx .rx-qs p { grid-column: 2; color: var(--ink-3); max-width: 62ch; text-wrap: pretty; }
+
+/* Boundaries as a diagram: four steps a request meets in order, joined by hairline connectors. */
+.v8 .v8-rx .rx-flowfig { margin: 0; display: grid; gap: 14px; }
+.v8 .v8-rx .rx-flowfig figcaption { color: var(--ink-3); font-size: 13px; line-height: 1.5; }
+.v8 .v8-rx .rx-flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+.v8 .v8-rx .rx-flow li { position: relative; display: grid; gap: 12px; align-content: start; padding: clamp(20px, 2vw, 26px); border-radius: var(--r-lg); background: var(--s1); box-shadow: inset 0 0 0 1px var(--line), inset 0 1px 0 rgba(255,255,255,.035); }
+.v8 .v8-rx .rx-flow li + li::before { content: ""; position: absolute; left: -18px; top: 38px; width: 18px; border-top: 1px solid var(--line-3); }
+.v8 .v8-rx .rx-flow li + li::after { content: ""; position: absolute; left: -7px; top: 35px; width: 6px; height: 6px; border-top: 1px solid var(--line-3); border-right: 1px solid var(--line-3); transform: rotate(45deg); }
+.v8 .v8-rx .rx-flow h3 { font-size: clamp(18px, 1.4vw, 21px); line-height: 1.3; }
+.v8 .v8-rx .rx-flow p { color: var(--ink-3); font-size: 14.5px; text-wrap: pretty; }
+@media (max-width: 1024px) {
+  .v8 .v8-rx .rx-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .v8 .v8-rx .rx-flow li:nth-child(odd)::before, .v8 .v8-rx .rx-flow li:nth-child(odd)::after { display: none; }
+}
+@media (max-width: 620px) {
+  .v8 .v8-rx .rx-flow { grid-template-columns: minmax(0, 1fr); }
+  .v8 .v8-rx .rx-flow li + li::before { display: block; left: 38px; top: -18px; width: 0; height: 18px; border-top: 0; border-left: 1px solid var(--line-3); }
+  .v8 .v8-rx .rx-flow li + li::after { display: block; left: 35px; top: -7px; transform: rotate(135deg); }
+}
+
+/* Statements with their kind. */
+.v8 .v8-rx .rx-kinds { list-style: none; margin: 0; padding: 0; display: grid; }
+.v8 .v8-rx .rx-kinds li { display: grid; grid-template-columns: 13.5rem minmax(0, 1fr); gap: 8px 16px; align-items: baseline; padding: 14px 0; border-top: 1px solid var(--line); color: var(--ink-2); font-size: 15px; line-height: 1.55; }
+.v8 .v8-rx .rx-kinds li:last-child { border-bottom: 1px solid var(--line); }
+.v8 .v8-rx .rx-kinds li > .v8-tag { justify-self: start; }
+.v8 .v8-rx .rx-kinds li > span:last-child { overflow-wrap: anywhere; }
+@media (max-width: 560px) { .v8 .v8-rx .rx-kinds li { grid-template-columns: minmax(0, 1fr); } }
+
+/* What exists today: the list beside a real capture. A strip-shaped capture goes underneath instead. */
+.v8 .v8-rx .rx-exists { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(28px, 5vw, 72px); align-items: start; }
+.v8 .v8-rx .rx-exists__media { position: sticky; top: calc(var(--header-h) + 32px); }
+.v8 .v8-rx .rx-exists--wide { grid-template-columns: minmax(0, 1fr); }
+.v8 .v8-rx .rx-exists--wide .rx-exists__media { position: static; }
+.v8 .v8-rx .rx-exists--wide > .v8-stack--lg { max-width: 920px; }
+@media (max-width: 960px) { .v8 .v8-rx .rx-exists { grid-template-columns: minmax(0, 1fr); } .v8 .v8-rx .rx-exists__media { position: static; } }
+
+.v8 .v8-rx .rx-prose { display: grid; gap: 16px; max-width: 64ch; color: var(--ink-2); font-size: 16px; line-height: 1.7; }
+.v8 .v8-rx .rx-prose p { text-wrap: pretty; }
+.v8 .v8-rx .rx-prose > p:first-child { color: var(--ink); font-size: clamp(17px, 1.35vw, 19px); line-height: 1.55; }
+.v8 .v8-rx .rx-prose .v8-actions { margin-top: 6px; }
+
+/* Open questions. */
+.v8 .v8-rx .rx-open { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.v8 .v8-rx .rx-open .v8-box { display: grid; gap: 10px; align-content: start; }
+@media (max-width: 720px) { .v8 .v8-rx .rx-open { grid-template-columns: minmax(0, 1fr); } }
+
+/* Things we do not claim: a hairline marker, never a dot or a tick. */
+.v8 .v8-rx .rx-not { list-style: none; margin: 0; padding: 0; display: grid; }
+.v8 .v8-rx .rx-not li { position: relative; padding: 16px 0 16px 26px; border-top: 1px solid var(--line); color: var(--ink-2); font-size: 15.5px; line-height: 1.55; }
+.v8 .v8-rx .rx-not li:last-child { border-bottom: 1px solid var(--line); }
+.v8 .v8-rx .rx-not li::before { content: ""; position: absolute; left: 2px; top: calc(16px + .78em); width: 10px; height: 1px; background: var(--ink-3); }
+
+/* Related research cards and links. */
+.v8 .v8-rx .rx-related { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.v8 .v8-rx .rx-related > a { aspect-ratio: 16 / 11; }
+@media (max-width: 900px) { .v8 .v8-rx .rx-related { grid-template-columns: minmax(0, 1fr); } .v8 .v8-rx .rx-related > a { aspect-ratio: 16 / 9; } }
+.v8 .v8-rx .rx-links { display: flex; flex-wrap: wrap; gap: 10px 22px; }
+
+/* Research overview: how the areas connect to Vraelis Contour (a labelled diagram). */
+.v8 .v8-rx .rx-connect { align-items: start; }
+.v8 .v8-rx .rx-map { margin: 0; display: grid; gap: 12px; }
+.v8 .v8-rx .rx-map figcaption { color: var(--ink-3); font-size: 13px; line-height: 1.5; }
+.v8 .v8-rx .rx-map__box { padding: clamp(20px, 2.4vw, 32px); border-radius: var(--r-lg); background: var(--s1); box-shadow: inset 0 0 0 1px var(--line), inset 0 1px 0 rgba(255,255,255,.035); }
+.v8 .v8-rx .rx-map__root { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 14px; padding: 0 0 18px; color: var(--ink); font: 500 clamp(19px, 1.6vw, 22px)/1.2 var(--display); letter-spacing: -.014em; }
+.v8 .v8-rx .rx-map__root small { color: var(--ink-3); font: 400 13px/1.3 var(--sans); letter-spacing: 0; }
+.v8 .v8-rx .rx-map ul { position: relative; list-style: none; margin: 0 0 0 10px; padding: 0 0 0 26px; display: grid; }
+.v8 .v8-rx .rx-map li { position: relative; display: grid; grid-template-columns: minmax(0, 11.5rem) minmax(0, 1fr); gap: 6px 20px; padding: 18px 0; border-top: 1px solid var(--line); }
+.v8 .v8-rx .rx-map li::before { content: ""; position: absolute; left: -26px; top: 0; bottom: 0; border-left: 1px solid var(--line-3); }
+.v8 .v8-rx .rx-map li:first-child::before { top: -14px; }
+.v8 .v8-rx .rx-map li:last-child::before { bottom: auto; height: 31px; }
+.v8 .v8-rx .rx-map li::after { content: ""; position: absolute; left: -26px; top: 30px; width: 18px; border-top: 1px solid var(--ink-3); }
+.v8 .v8-rx .rx-map li[data-rel="informs"]::after { border-top: 1px dashed var(--ink-4); }
+.v8 .v8-rx .rx-map li > div { display: grid; gap: 4px; align-content: start; }
+.v8 .v8-rx .rx-map b { color: var(--ink); font: 500 16px/1.35 var(--sans); }
+.v8 .v8-rx .rx-map small { color: var(--ink-3); font-size: 12.5px; }
+.v8 .v8-rx .rx-map li[data-rel="informs"] b { color: var(--ink-2); }
+.v8 .v8-rx .rx-map p { color: var(--ink-3); font-size: 14.5px; line-height: 1.55; text-wrap: pretty; }
+@media (max-width: 560px) { .v8 .v8-rx .rx-map li { grid-template-columns: minmax(0, 1fr); } }
+
+/* Research overview: the labels every research page uses. */
+.v8 .v8-rx .rx-legend { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
+.v8 .v8-rx .rx-legend > div { display: grid; gap: 14px; align-content: start; padding: 20px; border-radius: var(--r-lg); background: var(--s1); box-shadow: inset 0 0 0 1px var(--line); }
+.v8 .v8-rx .rx-legend > div > .v8-tag { justify-self: start; }
+.v8 .v8-rx .rx-legend p { color: var(--ink-3); font-size: 14px; line-height: 1.55; text-wrap: pretty; }
+@media (max-width: 1180px) { .v8 .v8-rx .rx-legend { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 760px) { .v8 .v8-rx .rx-legend { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .v8 .v8-rx .rx-legend { grid-template-columns: minmax(0, 1fr); } }
