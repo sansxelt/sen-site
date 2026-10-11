@@ -8,10 +8,13 @@
 // active/quiet boundary and by the balance, which is one standard pass on both sides.
 // CRON_SECRET-gated (Vercel Cron sends Authorization: Bearer <secret>). Bounded, fail-soft,
 // never blocks. Returns safe summary counts only (no emails or PII).
+//
+// DISABLED 2026-10-11: these are marketing emails for the retired product. The schedule is removed from
+// vercel.json and the handler is a no-op, so even an authorised manual call sends nothing. lib/v-lifecycle.ts
+// and its data are kept; restoring the three run*Nudges calls and the cron entry turns it back on.
 import { NextResponse } from "next/server";
 import { cronAuthorized } from "@/lib/cron-auth";
 import type { NextRequest } from "next/server";
-import { runActivationNudges, runLowCreditNudges, runWinbackNudges } from "@/lib/v-lifecycle";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -21,8 +24,5 @@ export async function GET(req: NextRequest) {
   if (!cronAuthorized(req)) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
-  const activation = await runActivationNudges(100);
-  const lowCredits = await runLowCreditNudges(100);
-  const winback = await runWinbackNudges(100);
-  return NextResponse.json({ ok: true, activation, lowCredits, winback });
+  return NextResponse.json({ ok: true, disabled: true });
 }

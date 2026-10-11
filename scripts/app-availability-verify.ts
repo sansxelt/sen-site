@@ -49,7 +49,7 @@ async function main() {
   }
   const apis = ["/api/fixtures/strike", "/api/fixtures/drone", "/api/preflight/apps/x/runs", "/api/v/checkout", "/api/v/keys", "/api/v/workspace", "/api/v1/verifications",
     "/api/mcp", "/api/oauth/token", "/api/auth/register", "/api/auth/callback/google", "/api/auth/callback/credentials",
-    "/api/v1/verifications/x.json", "/api/stripe/payment-intent", "/api/vraelis/checkout"];
+    "/api/v1/verifications/x.json", "/api/stripe/payment-intent", "/api/vraelis/checkout", "/api/paypal/create-subscription"];
   for (const path of apis) {
     assert(isClosedProductApi(path));
     assert(unstable_doesProxyMatch({ config, nextConfig: {}, url: `https://vraelis.com${path}` }));

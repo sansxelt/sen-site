@@ -34,7 +34,10 @@ export function isClosedProductApi(path: string): boolean {
   if (["/api/v/paypal/webhook", "/api/v/account/delete", "/api/v/data-requests"].some(root => at(path, root))) return false;
   return ["/api/fixtures", "/api/preflight", "/api/v", "/api/v1", "/api/mcp", "/api/oauth",
     "/api/auth/signin", "/api/auth/callback", "/api/auth/register", "/api/auth/two-step",
-    "/api/stripe/payment-intent", "/api/vraelis/checkout", "/api/vraelis/pay/create", "/api/vraelis/billing/portal"
+    "/api/stripe/payment-intent", "/api/vraelis/checkout", "/api/vraelis/pay/create", "/api/vraelis/billing/portal",
+    // 2026-10-11: the retired product's PayPal subscription start. Its /api/v twin was already closed; this
+    // legacy path still let a signed-in caller open a new PayPal subscription. Webhooks stay open (above).
+    "/api/paypal/create-subscription",
   ].some(root => at(path, root));
 }
 
