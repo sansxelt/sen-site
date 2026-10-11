@@ -18,9 +18,9 @@ function spec(t: number) {
 const ease = (t: number) => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 type P = { x: number; y: number; a: number; r: number; j: number };
 
-const HOLD = 2600, OUT = 820, IN = 900;
+const HOLD = 2000, OUT = 820, IN = 900;
 
-export function KeywordMorph({ words, delay = 2200 }: { words: string[]; delay?: number }) {
+export function KeywordMorph({ words, delay = 1300 }: { words: string[]; delay?: number }) {
   const [i, setI] = useState(0);
   const line = useRef<HTMLSpanElement>(null);
   const word = useRef<HTMLSpanElement>(null);

@@ -1,6 +1,8 @@
 ﻿import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // The "N" dev badge sat over the v8 footer controls during local review; production never shows it.
+  devIndicators: false,
   experimental: {
     // Tree-shake heavy packages so only used exports are bundled
     optimizePackageImports: ["resend", "@supabase/supabase-js", "stripe"],

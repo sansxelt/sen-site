@@ -426,16 +426,26 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
   --ink: #FAFAFA; --ink-2: rgba(250,250,250,.8); --ink-3: rgba(250,250,250,.62); --ink-4: rgba(250,250,250,.4);
   --line: rgba(255,255,255,.07); --line-2: rgba(255,255,255,.12); --line-3: rgba(255,255,255,.2); --s1: #111113; --s2: #18181B;
 }
-.v8-theme { display: inline-grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 999px; background: none; color: var(--ink-3); cursor: pointer; transition: color .15s, background .15s; }
-.v8-theme:hover { color: var(--ink); background: var(--s2); }
+.v8 .v8-footer__bottom .v8-theme { display: inline-grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 999px; background: none; color: var(--ink-3); cursor: pointer; transition: color .15s, background .15s; }
+.v8 .v8-footer__bottom .v8-theme:hover { color: var(--ink); background: var(--s2); }
 .v8-theme svg { width: 17px; height: 17px; }
-.v8-affil { display: inline-flex; align-items: center; gap: 9px; padding: 5px 12px 5px 5px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--line-2); color: var(--ink-3); font-size: 12.5px; transition: color .15s, box-shadow .15s; }
-.v8-affil:hover { color: var(--ink); box-shadow: inset 0 0 0 1px var(--line-3); }
+.v8 .v8-footer__bottom .v8-affil { flex: none; white-space: nowrap; display: inline-flex; align-items: center; gap: 9px; padding: 5px 14px 5px 5px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--line-2); color: var(--ink-3); font-size: 12.5px; transition: color .15s, box-shadow .15s; }
+.v8 .v8-footer__bottom .v8-affil:hover { color: var(--ink); box-shadow: inset 0 0 0 1px var(--line-3); }
 .v8-affil img { width: 22px; height: 22px; border-radius: 6px; }
-.v8-footer__legal { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.v8-footer__legal { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; flex: 0 1 auto; min-width: 0; }
 
 .v8-legal-list { list-style: none; margin: 0; padding: 0; max-width: 760px; border-top: 1px solid var(--line); }
 .v8-legal-list a { display: flex; justify-content: space-between; align-items: center; padding: 18px 2px; border-bottom: 1px solid var(--line); color: var(--ink); font-size: 17px; transition: color .15s, padding .25s var(--ease); }
 .v8-legal-list a:hover { padding-left: 8px; }
 .v8-footer li button { padding: 0; border: 0; background: none; color: var(--ink-3); font: inherit; font-size: 13.5px; cursor: pointer; }
 .v8-footer li button:hover { color: var(--ink); }
+
+/* The homepage entrance continues into the bento: tiles rise in one after another once the buttons have landed
+   (x.ai: .45s, 60ms apart). Visible at rest without script; off under reduced motion like every animation here. */
+.v8-hero + section .v8-bento > .v8-tile { animation: v8-tile-in .7s var(--ease) both; }
+.v8-hero + section .v8-bento > .v8-tile:nth-child(1) { animation-delay: .85s; }
+.v8-hero + section .v8-bento > .v8-tile:nth-child(2) { animation-delay: .93s; }
+.v8-hero + section .v8-bento > .v8-tile:nth-child(3) { animation-delay: 1.01s; }
+.v8-hero + section .v8-bento > .v8-tile:nth-child(4) { animation-delay: 1.09s; }
+.v8-hero + section .v8-bento > .v8-tile:nth-child(5) { animation-delay: 1.17s; }
+@keyframes v8-tile-in { from { opacity: 0; transform: translateY(28px) scale(.985); } to { opacity: 1; transform: none; } }
