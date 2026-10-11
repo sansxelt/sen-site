@@ -19,6 +19,17 @@ export type LegalPrims = {
   S: (p: { children: ReactNode }) => ReactNode;
 };
 
+/** Opt-in switches a surface may pass alongside its primitives. Nothing passes them by default, so a surface
+ *  that does not (v6, rank) renders exactly the text it always has. v8 passes them (2026-10-11 audit).
+ *  closedConsole: the earlier product's console is closed, so the self-service routes it names (account settings,
+ *  billing settings, "from the app") become an email address instead of a link to a page that no longer works. */
+export type LegalOpts = { closedConsole?: boolean };
+
+/** The line a closed-console surface shows wherever the text sent a reader to a console page. */
+function EmailUs({ A }: Pick<LegalPrims, "A">) {
+  return <>Email <A href="mailto:help@vraelis.com">help@vraelis.com</A> (<A href="mailto:privacy@vraelis.com">privacy@vraelis.com</A> for deletion requests).</>;
+}
+
 export const PRIVACY_UPDATED = "Updated September 2026";
 export const SUBPROCESSORS_UPDATED = "Updated July 2026";
 export const SUBPROCESSORS_INTRO = "The third-party services Vraelis relies on to run the product. Verification runs against your connected application use our hosting and browser-execution infrastructure, and any AI assessment is sent to the AI model provider.";
@@ -40,7 +51,9 @@ export const TERMS_UPDATED = "Updated October 2026";
 export const REFUNDS_UPDATED = "Updated July 2026";
 export const REFUNDS_INTRO = "Plain terms for how your balance, subscriptions, and cancellations work. This policy is part of the Terms.";
 
-export function PrivacyBody({ H, P, Ul, A }: LegalPrims) {
+/** abuseSignals: a surface may replace the "hashed IP and device signals" line with its own, when what it runs
+ *  keeps something different (v8: the contact form's rate-limit keys). */
+export function PrivacyBody({ H, P, Ul, A, closedConsole, abuseSignals }: LegalPrims & LegalOpts & { abuseSignals?: string }) {
   return (
     <>
       <H>Overview</H>
@@ -57,7 +70,7 @@ export function PrivacyBody({ H, P, Ul, A }: LegalPrims) {
         "Plan, balance, billing, and subscription records, and checkout and payment status.",
         "Support and contact messages you send us.",
         "Usage, security, and abuse-prevention logs.",
-        "Hashed IP and device signals used to detect automated abuse. We do not show raw IP or device data in reports.",
+        abuseSignals ?? "Hashed IP and device signals used to detect automated abuse. We do not show raw IP or device data in reports.",
       ]} />
 
       <H>How we use data</H>
@@ -113,7 +126,9 @@ export function PrivacyBody({ H, P, Ul, A }: LegalPrims) {
         "Rights that may apply: to know or access the personal information we hold, to request deletion, to request correction, to opt out where applicable, to limit the use of sensitive information where applicable, and to not be discriminated against for exercising these rights.",
       ]} />
       <P>Vraelis does not sell personal information. It shares personal information for cross-context behavioral advertising only if you turn on Advertising measurement, and then only this: when you create an account, a hashed copy of your email address goes to Meta with a note that a sign-up happened. It is off unless you turn it on, you can turn it off at any time from Privacy choices, and a Global Privacy Control signal turns it off automatically.</P>
-      <P>If California privacy rights apply to you, you can submit a request from your <A href="/account">account settings</A> or contact us at <A href="mailto:privacy@vraelis.com">privacy@vraelis.com</A> to request access, deletion, correction, or other available rights. Requests are reviewed manually.</P>
+      {closedConsole
+        ? <P>If California privacy rights apply to you, contact us at <A href="mailto:privacy@vraelis.com">privacy@vraelis.com</A> to request access, deletion, correction, or other available rights. Requests are reviewed manually.</P>
+        : <P>If California privacy rights apply to you, you can submit a request from your <A href="/account">account settings</A> or contact us at <A href="mailto:privacy@vraelis.com">privacy@vraelis.com</A> to request access, deletion, correction, or other available rights. Requests are reviewed manually.</P>}
 
       <H>EU, EEA, and UK privacy rights</H>
       <P>If you are in the EU, EEA, or UK, this section describes your privacy rights. It is a plain explanation of how we handle your data and how to reach us, not a claim of full regulatory compliance.</P>
@@ -141,7 +156,7 @@ export function PrivacyBody({ H, P, Ul, A }: LegalPrims) {
   );
 }
 
-export function TermsBody({ H, P, Ul, A, S }: LegalPrims) {
+export function TermsBody({ H, P, Ul, A, S, closedConsole }: LegalPrims & LegalOpts) {
   return (
     <>
       <P>These terms cover your use of Vraelis at vraelis.com. By creating an account or using the product, you agree to them. If you do not agree, do not use the service.</P>
@@ -162,7 +177,7 @@ export function TermsBody({ H, P, Ul, A, S }: LegalPrims) {
 
       <H>Balance and payments</H>
       <P>Your account balance funds verifications, which are charged when they execute. New accounts start with a free promotional verification allowance, which has no cash value. Payments are processed by Stripe. If a verification cannot start, or no flow executes, the hold is returned to your account automatically.</P>
-      <P>Subscriptions renew automatically until cancelled, and you can cancel anytime from the app; access continues until the end of the current billing period. Prices, packs, plans, and limits may change over time. Our <A href="/refunds">Refund and Cancellation policy</A> explains what is and is not refundable.</P>
+      <P>Subscriptions renew automatically until cancelled, and you can cancel anytime {closedConsole ? <>by emailing <A href="mailto:help@vraelis.com">help@vraelis.com</A></> : "from the app"}; access continues until the end of the current billing period. Prices, packs, plans, and limits may change over time. Our <A href="/refunds">Refund and Cancellation policy</A> explains what is and is not refundable.</P>
 
       <H>How to read a verification result</H>
       <P><S>A Vraelis result is evidence from a verification run. It is informational and directional, not a guarantee, a certification, or professional, legal, or financial advice.</S> A verification decision reflects how your exact build behaved against the requirements you defined, under the scenarios that were run; it does not certify that a system is bug-free, safe, or universally production-ready. You are solely responsible for the decisions you make and for anything you choose to ship. Do not rely on a Vraelis result as the sole basis for a decision, and do not present it as a guarantee of quality, safety, performance, or any business outcome.</P>
@@ -192,7 +207,9 @@ export function TermsBody({ H, P, Ul, A, S }: LegalPrims) {
       <P>You will defend, indemnify, and hold Vraelis harmless from claims, damages, and costs arising out of the content you submit, your use of any output, or your violation of these terms or of applicable law.</P>
 
       <H>Account deletion</H>
-      <P>You can request account deletion from your <A href="/account">account settings</A> (a confirm-gated request) or by emailing <A href="mailto:privacy@vraelis.com">privacy@vraelis.com</A>. Requests are reviewed manually, so deletion is not instant. Some records may be retained where required for billing, fraud prevention, security, or legal reasons.</P>
+      <P>{closedConsole
+        ? <EmailUs A={A} />
+        : <>You can request account deletion from your <A href="/account">account settings</A> (a confirm-gated request) or by emailing <A href="mailto:privacy@vraelis.com">privacy@vraelis.com</A>.</>} Requests are reviewed manually, so deletion is not instant. Some records may be retained where required for billing, fraud prevention, security, or legal reasons.</P>
 
       <H>Availability and changes</H>
       <P>The service may change over time. Features may be added, removed, or updated, and we do not guarantee uninterrupted availability. We may update these terms and will keep this page current; material changes take effect when posted, and continued use means you accept them.</P>
@@ -221,7 +238,7 @@ export function SubprocessorsTail({ H, P, A }: LegalPrims) {
   );
 }
 
-export function RefundsBody({ H, P, Ul, A, S }: LegalPrims) {
+export function RefundsBody({ H, P, Ul, A, S, closedConsole }: LegalPrims & LegalOpts) {
   return (
     <>
       <H>Account balance</H>
@@ -229,7 +246,9 @@ export function RefundsBody({ H, P, Ul, A, S }: LegalPrims) {
       <P>You are not charged for work you do not get. If a verification cannot start, or no flow executes, the hold is returned to your account automatically. Failures on our infrastructure are never billed to you.</P>
 
       <H>Subscriptions</H>
-      <P>Paid plans renew automatically until you cancel. <S>You can cancel anytime</S> from your <A href="/billing">billing settings</A>; your plan stays active until the end of the current billing period, and you are not charged again after that. We do not provide partial or prorated refunds for the current period, and a plan&apos;s monthly included allowance that expires at the end of a cycle is not refundable.</P>
+      <P>Paid plans renew automatically until you cancel. {closedConsole
+        ? <><S>You can cancel anytime.</S> <EmailUs A={A} /> Your plan stays active</>
+        : <><S>You can cancel anytime</S> from your <A href="/billing">billing settings</A>; your plan stays active</>} until the end of the current billing period, and you are not charged again after that. We do not provide partial or prorated refunds for the current period, and a plan&apos;s monthly included allowance that expires at the end of a cycle is not refundable.</P>
 
       <H>Promotional balance</H>
       <P>Promotional or signup balance is provided at our discretion, has no cash value, and is not refundable or redeemable for money.</P>
@@ -244,7 +263,9 @@ export function RefundsBody({ H, P, Ul, A, S }: LegalPrims) {
       <P>Please contact us before opening a chargeback with your bank, so we can resolve it directly and faster.</P>
 
       <H>How to cancel</H>
-      <P>Cancel or change a plan from your <A href="/billing">billing settings</A> in the app, in a couple of clicks, with no email or phone call required. You can manage cards and view invoices through the Stripe billing portal linked there.</P>
+      {closedConsole
+        ? <P>To cancel or change a plan: <EmailUs A={A} /></P>
+        : <P>Cancel or change a plan from your <A href="/billing">billing settings</A> in the app, in a couple of clicks, with no email or phone call required. You can manage cards and view invoices through the Stripe billing portal linked there.</P>}
 
       <H>Contact</H>
       <P>Questions about a charge or this policy? Email <A href="mailto:help@vraelis.com">help@vraelis.com</A>. See also our <A href="/terms">Terms</A> and <A href="/privacy">Privacy Policy</A>.</P>

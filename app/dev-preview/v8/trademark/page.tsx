@@ -3,27 +3,26 @@ import { LegalPage, V8_LEGAL_PRIMS } from "../_legal/legal";
 
 export const metadata = v8meta({
   title: "Trademark",
-  description: "How the Vraelis name and mark may be used, and the one use that is never permitted: implying that Vraelis verified something it did not.",
+  description: "How the names Vraelis and Vraelis Contour may be used, and the one use that is never permitted: suggesting that Vraelis has checked, endorsed or partnered with you or your product.",
   path: "/trademark",
 });
 
 const { H, P, A } = V8_LEGAL_PRIMS;
 
-// Ported word for word from app/dev-preview/v6/trademark/page.tsx. It names no accounts, billing or API keys, so
-// it carries no review note. The contact address is a mailto link of its own (see A in _legal/legal.tsx).
+// Ported from app/dev-preview/v6/trademark/page.tsx. The 2026-10-11 audit replaced v6's two sections about saying
+// "verified with Vraelis" with one plain rule about the names, since nothing is verified for anyone today. The
+// section about a verification record concerns the earlier product, so the page carries the review note like the
+// other legal pages. The contact address is a mailto link of its own (see A in _legal/legal.tsx).
 export default function V8TrademarkPage() {
   return (
-    <LegalPage title="Trademark" updated="Updated July 2026">
+    <LegalPage title="Trademark" updated="Updated October 2026" review>
       <P>Vraelis and the Vraelis mark are trademarks of Vraelis. The usage rules are short, because only one of them is really load bearing.</P>
 
-      <H>You may say you use Vraelis</H>
-      <P>Reference the name in plain text to describe that your system is verified with Vraelis. No permission needed, no logo licence required.</P>
+      <H>Using the names</H>
+      <P>You may refer to Vraelis and Vraelis Contour by name in plain text. Do not use the names, or our logo, to suggest that Vraelis has checked, endorsed or partnered with you or your product.</P>
 
       <H>You may link to a verification you own</H>
       <P>A verification record you own may be shared or linked. It carries its own decision, evidence and date, so it speaks for itself.</P>
-
-      <H>You may not imply a verification that did not happen</H>
-      <P>This is the one that matters. Do not present the Vraelis name, mark, or any verified-style badge in a way that suggests Vraelis checked something it did not, or that a decision was stronger than the record says. A verification claim that is not backed by a record is exactly the failure this company exists to prevent.</P>
 
       <H>Contact</H>
       <P>Questions about a specific use, including press and partner materials: <A href="mailto:help@vraelis.com">help@vraelis.com</A>.</P>

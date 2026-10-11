@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Suspense, isValidElement, type ReactElement, type ReactNode } from "react";
 import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
 import {
-  AcceptableUseBody, CookiesBody, PrivacyBody, RefundsBody, SubprocessorsTail, TermsBody, type LegalPrims,
+  AcceptableUseBody, CookiesBody, PrivacyBody, RefundsBody, SubprocessorsTail, TermsBody, type LegalOpts, type LegalPrims,
 } from "@/app/_content/legal";
 import { href } from "../_kit/site";
 import { LegalNotice, LegalToc, type LegalHeading } from "./legal-toc";
@@ -49,24 +49,24 @@ function Ul({ items }: { items: ReactNode[] }) {
   );
 }
 
-/* The shared text names the earlier product's console pages (/account, /billing). That console is closed: on
-   vraelis.com both addresses redirect to the development status page, so here they go straight to v8's
-   development status page instead of to an address that would 404 inside the preview. Every other internal path
-   goes through href(), which keeps it inside v8 while v8 is a preview and leaves it clean once promoted. */
-const CLOSED_CONSOLE: Record<string, string> = { "/account": "/contour/status", "/billing": "/contour/status" };
-
+/* Every internal path goes through href(), which keeps it inside v8 while v8 is a preview and leaves it clean once
+   promoted. The shared text's links to the earlier product's console pages (/account, /billing) are not drawn on
+   v8 at all: every v8 page passes closedConsole (V8_LEGAL_OPTS below), and the shared text then says to email
+   instead (2026-10-11 audit; the old remap to /contour/status sent a reader looking for account settings to a
+   page that has none). */
 // An address is always the whole text of its own element (the mailto link's only child): Cloudflare's email
 // obfuscation on vraelis.com splits an address out of a shared text node and React then fails to hydrate it.
 function A({ href: to, children }: { href: string; children: ReactNode }) {
   if (!to.startsWith("/")) return <a className="v8-legal__a" href={to}>{children}</a>;
-  return <Link className="v8-legal__a" href={href(CLOSED_CONSOLE[to] ?? to)}>{children}</Link>;
+  return <Link className="v8-legal__a" href={href(to)}>{children}</Link>;
 }
 
 function S({ children }: { children: ReactNode }) {
   return <strong className="v8-legal__s">{children}</strong>;
 }
 
-export const V8_LEGAL_PRIMS = { H, P, Ul, A, S } satisfies LegalPrims;
+/** The primitives, and the shared text's opt-in switches v8 always passes (see LegalOpts in app/_content/legal.tsx). */
+export const V8_LEGAL_PRIMS = { H, P, Ul, A, S, closedConsole: true } satisfies LegalPrims & LegalOpts;
 
 /* THE CONTENTS LIST, READ FROM THE PAGE ITSELF, on the server. The shared bodies are plain functions of the
    primitives with no hooks, so they can be called here to see their headings before anything renders; only the
@@ -121,8 +121,9 @@ export function LegalTable({ label, cols, rows, wide = false }: {
   );
 }
 
-/** The one note every page about the earlier product carries. The clauses below it are unchanged. */
-export const REVIEW_NOTE = "Vraelis Contour is in private development and nothing is on sale. Sections about accounts, billing and API keys describe the earlier product and remain in force for anyone who used it. This page is under review.";
+/** The one note every legal page carries (2026-10-11 audit wording). It says what the clauses below are about,
+ *  and leaves whether the earlier terms still bind anyone to the founder and counsel. */
+export const REVIEW_NOTE = "Vraelis Contour is in private development and nothing is on sale. This page was written for the earlier browser-testing product. Its sections about verification runs, accounts, plans, billing, API keys and the console apply only to people who used that product. Under review.";
 export function ReviewNote() {
   return <p role="note" className="v8-legal__review">{REVIEW_NOTE}</p>;
 }

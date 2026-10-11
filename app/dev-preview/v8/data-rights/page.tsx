@@ -10,8 +10,9 @@ export const metadata = v8meta({
 
 const { H, P, A } = V8_LEGAL_PRIMS;
 
-// Ported word for word from app/dev-preview/v6/data-rights/page.tsx (its sections live in that page file, not in
-// the shared legal text). It describes accounts and account deletion of the earlier product, so the page carries
+// Ported from app/dev-preview/v6/data-rights/page.tsx (its sections live in that page file, not in the shared legal
+// text), word for word except Deletion, which says to email instead of naming the closed console's account settings
+// (2026-10-11 audit). It describes accounts and account deletion of the earlier product, so the page carries
 // the review note above it. Every address is the only text of its own mailto link (see A in _legal/legal.tsx).
 export default function V8DataRightsPage() {
   return (
@@ -25,7 +26,7 @@ export default function V8DataRightsPage() {
       <P>Anything wrong in your account details can be corrected. A verification record cannot be edited, because a record that can be rewritten after the fact is not evidence. It can be superseded by a new verification, and both remain readable.</P>
 
       <H>Deletion</H>
-      <P>You can request account deletion from your <A href="/account">account settings</A> (a confirm-gated request) or by emailing <A href="mailto:privacy@vraelis.com">privacy@vraelis.com</A>. Requests are reviewed manually, so deletion is not instant. Some records may be retained where required for billing, fraud prevention, security, or legal reasons.</P>
+      <P>Email <A href="mailto:help@vraelis.com">help@vraelis.com</A> (<A href="mailto:privacy@vraelis.com">privacy@vraelis.com</A> for deletion requests). Requests are reviewed manually, so deletion is not instant. Some records may be retained where required for billing, fraud prevention, security, or legal reasons.</P>
 
       <H>Evidence is private by default</H>
       <P>Screenshots and traces live in a private bucket. No public URL is ever produced for them. Reads go through short-lived signed URLs that only an authorized owner can mint.</P>
