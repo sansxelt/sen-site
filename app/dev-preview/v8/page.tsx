@@ -25,7 +25,7 @@ export default function Home() {
         <Wrap>
           <div className="v8-hero__inner">
             <Link href={href("/contour")} className="v8-pill v8-fade" style={{ ["--d" as string]: ".05s" }}>
-              <span><b>{CONTOUR.name}</b> <span style={{ color: "var(--ink-3)" }}>in private development</span></span>
+              <em>New</em><span><b>Meet {CONTOUR.name}</b><span className="v8-pill__more"><span className="v8-pill__sep" aria-hidden="true">·</span>Our first product direction</span></span>
               <i aria-hidden="true"><span className="v8-arrow" /></i>
             </Link>
             <h1 className="v8-hero-title" style={{ width: "100%" }}>
@@ -35,7 +35,7 @@ export default function Home() {
             </h1>
             <div className="v8-actions v8-fade" style={{ ["--d" as string]: ".7s", marginTop: 46 }}>
               <Button to="/contact?topic=contour" size="lg" arrow>Join us</Button>
-              <Button to="/contour" kind="soft" size="lg">Explore Vraelis Contour</Button>
+              <Button to="/docs" kind="soft" size="lg">Read the documentation</Button>
             </div>
           </div>
         </Wrap>

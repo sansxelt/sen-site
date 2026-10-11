@@ -41,7 +41,7 @@ export const FOREMAKE = "Vraelis is part of Foremake, the holding company behind
 export const FOUNDER = "Nishanth Dasari";
 
 /** The caption every Contour screen carries. Captures come from the read-only app reading the recorded trace. */
-export const CAPTURE_CAPTION = "Inside the controlled ONNX reference experiment. Read-only evidence app, private development.";
+export const CAPTURE_CAPTION = "Read-only evidence app, inside the controlled ONNX reference experiment.";
 export const CAPTURE_SCOPE = "Recorded worker self-reports from a synthetic ONNX CPU experiment. Not hardware attestation, not a customer deployment.";
 
 export type Kind = "impl" | "meas" | "prop" | "hyp" | "not";
@@ -124,7 +124,7 @@ const crop = (name: string) => `/v8/contour/${name}.webp`;
 
 export const MENUS: Menu[] = [
   {
-    id: "contour", label: "Contour", kind: "mega", foot: "Vraelis Contour is in private development.",
+    id: "contour", label: "Contour", kind: "mega",
     links: [
       { label: "Overview", to: "/contour", line: "Model release security, from approval to reported runtime state.", preview: crop("crop-approved-cpu2"), previewAlt: "Approved release cpu-2 with its identity digests." },
       { label: "How it works", to: "/contour#how", line: "Five steps from release identity to preserved evidence.", preview: crop("crop-release-approval"), previewAlt: "The approval for cpu-2: destination, policy and age limit." },

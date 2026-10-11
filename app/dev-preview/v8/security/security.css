@@ -31,6 +31,6 @@
 .v8 .v8-sec__txt dl { margin: 0; }
 .v8 .v8-sec__txt dl > div { display: grid; grid-template-columns: 172px minmax(0, 1fr); gap: 4px 16px; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .v8 .v8-sec__txt dl > div:last-child { border-bottom: 0; padding-bottom: 0; }
-.v8 .v8-sec__txt dt { color: var(--ink-3); font: 400 12.5px/1.6 var(--mono); white-space: nowrap; }
+.v8 .v8-sec__txt dt { color: var(--ink-3); font: 400 13px/1.6 var(--sans); white-space: nowrap; }
 .v8 .v8-sec__txt dd { margin: 0; min-width: 0; color: var(--ink); font: 400 12.5px/1.6 var(--mono); overflow-wrap: anywhere; }
 @media (max-width: 560px) { .v8 .v8-sec__txt dl > div { grid-template-columns: minmax(0, 1fr); } }

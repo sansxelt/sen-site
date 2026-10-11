@@ -46,7 +46,7 @@
 .v8 .cmp-rules { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line); }
 .v8 .cmp-rules li { display: grid; gap: 12px; align-content: start; padding: 26px 28px 8px 0; }
 .v8 .cmp-rules li + li { padding-left: 28px; border-left: 1px solid var(--line); }
-.v8 .cmp-rules__n { color: var(--ink-4); font: 500 13px/1 var(--mono); }
+.v8 .cmp-rules__n { color: var(--ink-4); font: 500 13px/1 var(--sans); font-variant-numeric: tabular-nums; }
 .v8 .cmp-rules .cmp-tags { margin-top: 4px; }
 @media (max-width: 900px) {
   .v8 .cmp-rules { grid-template-columns: minmax(0, 1fr); }

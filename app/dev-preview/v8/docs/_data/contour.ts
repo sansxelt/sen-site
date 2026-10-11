@@ -306,7 +306,7 @@ export const CONTOUR_PAGES: Page[] = [
     lead: "The evidence app reads one recorded trace and shows it on six screens. It is read-only: it has no deploy, approval, reload, recovery or fleet controls, and it never contacts a runtime.",
     updated: UPDATED,
     blocks: [
-      { t: "p", text: "It runs locally in private development. It is not a hosted service, and there is no account to sign in to." },
+      { t: "p", text: "It runs locally. It is not a hosted service, and there is no account to sign in to." },
       { t: "h2", text: "The six screens" },
       { t: "table", label: "The six screens", head: ["Screen", "Question it answers", "Where the answer comes from"], rows: [
         ["Overview", "What is the latest state?", "The last observation in the trace."],

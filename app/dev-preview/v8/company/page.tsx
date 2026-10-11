@@ -63,7 +63,7 @@ export default function Company() {
       <PageHero
         eyebrow="Company"
         title={<RiseWords text={COMPANY_LINE} />}
-        lead={<>Our first product, {CONTOUR.name}, is in private development.</>}
+        lead={<>Our first product direction is {CONTOUR.name}.</>}
         actions={<><Button to="/contact?topic=contour" arrow>Join us</Button><Button to="/contact" kind="soft">Contact</Button></>}
       />
 

@@ -77,8 +77,11 @@ export function Brand({ home, navId }: { home: string; navId: string }) {
     const start = async () => {
       try { await Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 700))]); } catch { /* fonts API missing */ }
       if (cancelled) return;
+      // The link is padded past the diamond for a larger click area; the shift and the collapse target use the
+      // diamond itself.
       const br = b.getBoundingClientRect(), wr = w.getBoundingClientRect();
-      const shift = Math.round(wr.right - br.right + 4);
+      const mr = b.querySelector(".v8-brand__mark")?.getBoundingClientRect() ?? br;
+      const shift = Math.round(wr.right - mr.right + 4);
       nav.style.setProperty("--v8-shift", `${shift}px`);
       // Rasterise the wordmark once, then draw it as fragments.
       const dpr = Math.max(1, Math.min(2, Math.round(window.devicePixelRatio || 1)));
@@ -101,7 +104,7 @@ export function Brand({ home, navId }: { home: string; navId: string }) {
       const c = cv.getContext("2d"); if (!c) return finish();
       c.scale(dpr, dpr);
       w.style.opacity = "0";
-      const HOLD = 1500, SWEEP = 900, COLLAPSE = 700, COOL = 900, target = br.width / 2 - ox, t0 = performance.now();
+      const HOLD = 1500, SWEEP = 900, COLLAPSE = 700, COOL = 900, target = mr.left - br.left + mr.width / 2 - ox, t0 = performance.now();
       let collapsed = false;
       const frame = (now: number) => {
         const t = now - t0, st = (t - HOLD) / SWEEP;

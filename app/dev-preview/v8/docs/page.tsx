@@ -31,7 +31,7 @@ export default function DocsHome() {
           </div>
           <figure className="v8-docs-hero__code">
             <CodeBlock label="observation 02, reload pending" code={OBSERVATION_2} lang="json" className="v8-docs-code--hero" />
-            <figcaption>Recorded in the controlled ONNX reference experiment, unchanged. Private development.</figcaption>
+            <figcaption>Recorded in the controlled ONNX reference experiment, unchanged.</figcaption>
           </figure>
         </section>
 

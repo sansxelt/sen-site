@@ -83,7 +83,7 @@ export default function ContourStatusPage() {
       <PageHero
         eyebrow="Development status"
         title={`Where ${CONTOUR.name} stands.`}
-        lead={<>{CONTOUR.name} is in private development. Every line names its source.</>}
+        lead="Every line names its source."
         actions={<>
           <Button to="/contact?topic=contour" arrow>Join us</Button>
           <Button to="/contour" kind="soft">{CONTOUR.name} overview</Button>

@@ -48,7 +48,7 @@ export default function ResearchOverview() {
             </div>
             <figure className="rx-map">
               <div className="rx-map__box">
-                <div className="rx-map__root"><span>{CONTOUR.name}</span><small>In private development</small></div>
+                <div className="rx-map__root"><span>{CONTOUR.name}</span><small>First product direction</small></div>
                 <ul>
                   {MAP.map((m) => {
                     const r = RESEARCH.find((x) => x.slug === m.slug)!;
