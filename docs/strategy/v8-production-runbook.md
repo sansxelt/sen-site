@@ -118,11 +118,17 @@ Most rows come from other routes (CSP reports, funnel, the closed v1 API, sign-i
 limiter uses is one day (`two-step-verify-day`, `two-step-recovery-used`). Limiter errors also log the key (an IP or an
 email) to the server logs through `captureError`.
 
-Proposal: keep rows 7 days after their window starts (seven times the longest window), then delete them. Cleanup, in
-Supabase SQL (pg_cron), daily at 04:30 UTC:
+Proposal (scoped, checked against every consumer on 2026-10-11): 41 key prefixes use the table; an expired row
+behaves exactly like a missing row (vraelis_rate_check resets it, peekAllowed treats it as allowed), and no consumer
+relies on a row outliving its window (TOTP and email-code replay markers, recovery codes and invites are all
+enforced elsewhere or within the window). So: an hourly purge that deletes rows 2 hours after the window start for
+every prefix with a window of 1 hour or less, 25 hours for `two-step-verify-day` and `two-step-recovery-used`
+(1-day windows), and 7 days for any unknown prefix. The function `vraelis_rate_limits_purge()` and its pg_cron
+schedule are written out in the inventory report (needs `create extension if not exists pg_cron;` first). Not
+executed. Privacy text to publish only after the job runs: keys hold a count and a start time, not the message,
+and are deleted within three hours of last use (26 hours for the two two-step keys); plus a server-logs note
+(Vercel request logs, and limiter errors can log the key), with the retention period checked in the Vercel
+dashboard (1 day on Pro, 30 days with Observability Plus).
 
-    select cron.schedule('vraelis-rate-limit-retention', '30 4 * * *',
-      $$delete from vraelis_rate_limits where window_start < now() - interval '7 days'$$);
-
-Then the privacy page can say: "These keys are deleted 7 days after the window they belong to." Optional hardening: store
+Optional hardening: store
 an HMAC of the IP or email instead of the value (no lookup ever needs the raw value back).
