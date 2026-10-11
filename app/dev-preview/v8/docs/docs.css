@@ -61,7 +61,7 @@
 .v8 .v8-dhd__card { position: absolute; z-index: 60; top: calc(100% + 10px); min-width: 216px; display: grid; gap: 2px; padding: 8px; border-radius: 14px; background: var(--panel); box-shadow: 0 0 0 1px var(--line-2), 0 18px 48px -12px rgba(0,0,0,.45); color: var(--ink); animation: v8-dhd-pop .16s var(--ease-menu) both; }
 @keyframes v8-dhd-pop { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 .v8 .v8-dhd__card--end { right: 0; }
-.v8 .v8-dhd__card--tab { left: -4px; min-width: 248px; }
+.v8 .v8-dhd__card--tab { min-width: 248px; } /* placed by Tabs (header.tsx), drawn in the header */
 .v8 .v8-dhd__card a { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 9px; color: var(--ink); font: 500 14px/1.25 var(--sans); white-space: nowrap; transition: background .12s; }
 .v8 .v8-dhd__card a:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); }
 .v8 .v8-dhd__card--tab a { display: grid; gap: 3px; }
@@ -413,7 +413,6 @@
   .v8 .v8-dhd__tabs::-webkit-scrollbar { display: none; }
   .v8 .v8-dhd__tab { flex: none; height: 32px; padding: 0 10px; }
   .v8 .v8-dhd__tabsplit { flex: none; position: static; }
-  .v8 .v8-dhd__card--tab { top: calc(100% + 6px); left: 12px; }
   .v8 .v8-dhd__menu { display: inline-grid; }
   .v8 .v8-docs-shell { grid-template-columns: minmax(0, 1fr); }
   .v8 .v8-docs-side { display: none; }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { Mark, Wordmark } from "../../_kit/logo";
 import { localHref } from "../../_kit/site";
 import { ThemeToggle } from "../../_kit/theme";
@@ -33,15 +34,16 @@ function useMenu() {
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
+  const card = useRef<HTMLDivElement>(null); // a card drawn elsewhere (a portal) still counts as inside the menu
   useEffect(() => {
     if (!open) return;
-    const onDown = (e: PointerEvent) => { if (!box.current?.contains(e.target as Node)) setOpen(false); };
+    const onDown = (e: PointerEvent) => { const t = e.target as Node; if (!box.current?.contains(t) && !card.current?.contains(t)) setOpen(false); };
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setOpen(false); button.current?.focus(); } };
     document.addEventListener("pointerdown", onDown);
     document.addEventListener("keydown", onKey);
     return () => { document.removeEventListener("pointerdown", onDown); document.removeEventListener("keydown", onKey); };
   }, [open]);
-  return { open, setOpen, box, button };
+  return { open, setOpen, box, button, card };
 }
 
 /** The sidebar tree of one tab: product headings, group headings, items with their badges, the current page filled. */
@@ -112,7 +114,7 @@ function JoinMenu() {
 
 function Tabs({ nav, active }: { nav: NavTab[]; active?: TabId }) {
   const link = useDocsLink();
-  const { open, setOpen, box, button } = useMenu();
+  const { open, setOpen, box, button, card } = useMenu();
   const id = useId();
   const strip = useRef<HTMLElement>(null);
   // In the scrolling row (narrow screens) keep the current tab in view without moving the page.
@@ -123,6 +125,23 @@ function Tabs({ nav, active }: { nav: NavTab[]; active?: TabId }) {
     const left = a.offsetLeft - nav.offsetLeft, right = left + a.offsetWidth;
     if (left < nav.scrollLeft || right > nav.scrollLeft + nav.clientWidth) nav.scrollLeft = Math.max(0, right - nav.clientWidth + 16);
   }, [active]);
+  // The menu card is drawn in the header itself, under the tab: below 900px the tabs row scrolls sideways and fades
+  // at its edge, and both clip anything drawn inside it (the menu opened invisibly on phones). Scrolling the row or
+  // resizing closes it rather than leaving it pointing at nothing.
+  const [at, setAt] = useState<{ host: HTMLElement; top: number; left: number } | null>(null);
+  useEffect(() => {
+    if (!open) return;
+    const host = button.current?.closest<HTMLElement>(".v8-dhd");
+    const r = button.current?.getBoundingClientRect(), h = host?.getBoundingClientRect();
+    if (!host || !r || !h) return;
+    const place = () => setAt({ host, top: r.bottom - h.top + 8, left: Math.max(12, Math.min(r.left - h.left - 4, h.width - 260)) });
+    place();
+    const close = () => setOpen(false);
+    const row = strip.current;
+    row?.addEventListener("scroll", close, { passive: true });
+    window.addEventListener("resize", close);
+    return () => { row?.removeEventListener("scroll", close); window.removeEventListener("resize", close); };
+  }, [open, setOpen, button]);
   return (
     <nav ref={strip} className="v8-dhd__tabs" aria-label="Documentation sections">
       {nav.map((t) => {
@@ -134,13 +153,12 @@ function Tabs({ nav, active }: { nav: NavTab[]; active?: TabId }) {
                 menu looked missing). Its overview page is the menu's first entry. */}
             <button ref={button} type="button" className="v8-dhd__tab v8-dhd__tab--menu" aria-haspopup="true" aria-expanded={open} aria-controls={id}
               data-current={!!cur} onClick={() => setOpen((o) => !o)}>{t.label}<Chevron /></button>
-            {open ? (
-              <div id={id} className="v8-dhd__card v8-dhd__card--tab">
+            {open && at ? createPortal(
+              <div ref={card} id={id} className="v8-dhd__card v8-dhd__card--tab" style={{ top: at.top, left: at.left }}>
                 {t.menu.map((l) => (
                   <Go key={l.to} to={link(l.to)} onClick={() => setOpen(false)}><b>{l.label}</b><small>{l.line}</small></Go>
                 ))}
-              </div>
-            ) : null}
+              </div>, at.host) : null}
           </div>
         );
       })}
