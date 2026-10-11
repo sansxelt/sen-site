@@ -82,7 +82,7 @@ export default function Home() {
         <Wrap>
           <div className="v8-bento">
             <Link href={href("/contour")} className="v8-tile">
-              <div className="v8-tile__media" style={{ background: "radial-gradient(70% 80% at 90% 0%, rgba(255,255,255,.06), transparent 70%), #0C0C0E" }}>
+              <div className="v8-tile__media" style={{ background: "radial-gradient(70% 80% at 90% 0%, rgba(255,106,43,.16), transparent 70%), #0C0C0E" }}>
                 <div className="v8-tile__inset">
                   <AutoVideo src="/v8/contour/contour-compare-tile.mp4" poster="/v8/contour/contour-compare-tile-poster.webp" label="The Vraelis Contour app stepping through four recorded observations." rate={1.6} />
                 </div>
@@ -90,7 +90,7 @@ export default function Home() {
               <div className="v8-tile__foot"><span>{CONTOUR.name}</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>
             </Link>
             <Link href={href("/contour#observations")} className="v8-tile">
-              <div className="v8-tile__media" style={{ background: "radial-gradient(70% 80% at 10% 0%, rgba(255,255,255,.05), transparent 70%), #0C0C0E" }}>
+              <div className="v8-tile__media" style={{ background: "radial-gradient(70% 80% at 10% 0%, rgba(255,176,103,.10), transparent 70%), #0C0C0E" }}>
                 <div className="v8-tile__inset">
                   <CaptureCycle images={EVIDENCE_TILE} />
                 </div>

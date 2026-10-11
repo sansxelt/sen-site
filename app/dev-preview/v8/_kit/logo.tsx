@@ -56,7 +56,7 @@ export function Mark({ title, gradientId }: { title?: string; gradientId?: strin
         <>
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stopColor="#FFFFFF" /><stop offset=".5" stopColor="#C9C9CF" /><stop offset="1" stopColor="#8E8E96" />
+              <stop offset="0" stopColor="#FFB067" /><stop offset=".5" stopColor="#FF6A2B" /><stop offset="1" stopColor="#C9381A" />
             </linearGradient>
           </defs>
           <path className="v8-brand__tint" d={OUTLINE} fill={`url(#${gradientId})`} style={{ opacity: 0 }} />
@@ -66,8 +66,8 @@ export function Mark({ title, gradientId }: { title?: string; gradientId?: strin
   );
 }
 
-// Monochrome (founder 2026-10-10: no rainbow): bright white through to mid grey.
-const SPEC: [number, number, number][] = [[255, 255, 255], [200, 200, 206], [142, 142, 150]];
+// Ember (founder 2026-10-10: colour, but not the vibe-coded green/purple/pink): amber, orange, ember red.
+const SPEC: [number, number, number][] = [[255, 176, 103], [255, 106, 43], [201, 56, 26]];
 function spec(t: number) {
   const c = Math.max(0, Math.min(1, t)), s = c * 2, i = Math.min(1, Math.floor(s)), f = s - i, a = SPEC[i], b = SPEC[i + 1];
   return `rgb(${(a[0] + (b[0] - a[0]) * f) | 0},${(a[1] + (b[1] - a[1]) * f) | 0},${(a[2] + (b[2] - a[2]) * f) | 0})`;
