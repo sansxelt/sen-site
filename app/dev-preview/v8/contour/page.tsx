@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Chapters, RiseWords } from "../_kit/client";
-import { Button, CAPTURES, Faq, JoinBand, Ledger, PageHero, Section, Tag, TextLink, Wrap, captureSrc, type CaptureName } from "../_kit/blocks";
+import { Button, CAPTURES, Faq, Terms, JoinBand, Ledger, PageHero, Section, Tag, TextLink, Wrap, captureSrc, type CaptureName } from "../_kit/blocks";
 import { v8meta } from "../_kit/meta";
 import { CAPTURE_CAPTION, CONTOUR, KIND_LABEL, OBSERVATIONS, WORKFLOW, href, type Kind } from "../_kit/site";
 import { HeroStage, ObservationTabs, type Lift, type ObservationView } from "./contour-client";
@@ -112,6 +112,15 @@ export default function ContourPage() {
                 };
               })}
             />
+          </div>
+        </Wrap>
+      </Section>
+
+      <Section rule label="Terms">
+        <Wrap>
+          <div className="v8-stack--lg">
+            <div className="v8-head"><span className="v8-eyebrow">Terms</span><h2 className="v8-h2">What each check means, and where it stands.</h2></div>
+            <Terms />
           </div>
         </Wrap>
       </Section>

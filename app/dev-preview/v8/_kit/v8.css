@@ -445,3 +445,9 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 
 /* Controls are not text: no selection highlight when they are clicked or dragged across. */
 .v8 :where(.v8-btn, .v8-affil, .v8-theme, .v8-nav__item, .v8-pill, .v8-tile__foot, .v8-split, .v8-burger, .v8-tabs button, .v8-mega__link, .v8-menu a, .v8-brand, .v8-lockup) { -webkit-user-select: none; user-select: none; }
+
+.v8-terms { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0; margin: 0; border-top: 1px solid var(--line); }
+.v8-terms > div { display: grid; gap: 6px; align-content: start; padding: 18px 18px 20px 0; border-bottom: 1px solid var(--line); }
+.v8-terms dt { color: var(--ink); font: 500 15.5px/1.3 var(--sans); }
+.v8-terms dd { margin: 0; color: var(--ink-3); font-size: 13.5px; line-height: 1.5; }
+.v8-terms dd:last-child { margin-top: 4px; }

@@ -10,6 +10,24 @@ export const href = (path: string) => (path === "/" ? V8_BASE || "/" : `${V8_BAS
 
 export const TAGLINE = "AI security for defense, critical infrastructure and autonomous systems.";
 export const AREAS = ["defense", "critical infrastructure", "autonomous systems"] as const;
+/** The hero rotation: the three core areas first, then intended applications (not products, not deployments). */
+export const HERO_KEYWORDS = ["defense.", "critical infrastructure.", "autonomous systems.", "deployed AI models.", "model updates.", "edge AI.", "industrial automation.", "field-deployed systems."];
+
+/** The precise vocabulary, each term tied to where it stands (founder, 2026-10-10). */
+export const TERMS: { term: string; line: string; kind: Kind; status: string }[] = [
+  { term: "Artifact integrity", line: "The model bytes are checked against the approved digest before a session loads them.", kind: "impl", status: "In the experiment" },
+  { term: "Configuration integrity", line: "The configuration digest is part of the release and compared on every report.", kind: "impl", status: "In the experiment" },
+  { term: "Release authorization", line: "A release is signed and approved before it can be loaded.", kind: "impl", status: "In the experiment" },
+  { term: "Destination-bound approval", line: "An approval names the environment and resource it applies to.", kind: "impl", status: "In the experiment" },
+  { term: "Runtime identity", line: "The runtime reports which release it loaded, under which runtime policy.", kind: "impl", status: "Worker self-report" },
+  { term: "Version mismatch", line: "Approved and reported identities differ, shown as reload pending.", kind: "impl", status: "In the experiment" },
+  { term: "Deployment evidence", line: "Every observation is kept, including ones that confirm nothing.", kind: "impl", status: "Recorded trace" },
+  { term: "Recovery verification", line: "After an explicit reload the reported identity is compared again.", kind: "impl", status: "One recorded reload" },
+  { term: "Unauthorized changes", line: "Wrong destinations and changed components as scripted fault tests.", kind: "prop", status: "Specified, not run" },
+  { term: "Evidence freshness", line: "Heartbeats that show a report is current, not stale.", kind: "prop", status: "Not built" },
+  { term: "Model provenance", line: "Where a model and its training inputs came from, beyond its digest.", kind: "hyp", status: "Research" },
+];
+
 export const COMPANY_LINE = "Vraelis develops cybersecurity software for AI in defense, critical infrastructure and autonomous systems.";
 export const WORK_LINE = "Our work spans model integrity, adversarial threats, machine trust and security evidence.";
 export const CONTOUR = {

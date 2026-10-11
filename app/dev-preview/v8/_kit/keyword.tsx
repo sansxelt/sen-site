@@ -26,6 +26,24 @@ export function KeywordMorph({ words, delay = 1300 }: { words: string[]; delay?:
   const word = useRef<HTMLSpanElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
 
+  // Every phrase must fit the line on any screen: size the keyword line so the longest phrase fits its width.
+  useEffect(() => {
+    const l = line.current, w = word.current; if (!l || !w) return;
+    const fit = () => {
+      l.style.fontSize = "";
+      const cs = getComputedStyle(w), base = parseFloat(cs.fontSize);
+      const c = document.createElement("canvas").getContext("2d"); if (!c) return;
+      c.font = `${cs.fontWeight} ${base}px ${cs.fontFamily}`;
+      const widest = Math.max(...words.map((t) => c.measureText(t).width)) * 1.02;
+      const room = l.clientWidth;
+      if (widest > room) l.style.fontSize = `${Math.floor(base * room / widest)}px`;
+    };
+    fit();
+    document.fonts?.ready.then(fit).catch(() => {});
+    const ro = new ResizeObserver(fit); ro.observe(l);
+    return () => ro.disconnect();
+  }, [words]);
+
   useEffect(() => {
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     let raf = 0, timer: ReturnType<typeof setTimeout>, stopped = false, idx = 0;

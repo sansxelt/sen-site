@@ -1,4 +1,4 @@
-import { Head, PageHero, PhotoCard, Section, TextLink, Wrap, Button } from "../_kit/blocks";
+import { Head, PageHero, PhotoCard, Section, Terms, TextLink, Wrap, Button } from "../_kit/blocks";
 import { v8meta } from "../_kit/meta";
 import { CONTOUR, RESEARCH, WORK_LINE } from "../_kit/site";
 import { ResearchBand } from "./parts";
@@ -66,6 +66,15 @@ export default function ResearchOverview() {
               </div>
               <figcaption>Diagram, not a product architecture.</figcaption>
             </figure>
+          </div>
+        </Wrap>
+      </Section>
+
+      <Section rule label="Terms">
+        <Wrap>
+          <div className="v8-stack--lg">
+            <div className="v8-head"><span className="v8-eyebrow">Terms</span><h2 className="v8-h2">What each check means, and where it stands.</h2></div>
+            <Terms />
           </div>
         </Wrap>
       </Section>

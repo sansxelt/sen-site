@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 import { EDITORIAL_PHOTOGRAPHS } from "../../v6/_content/editorial-photography";
-import { CAPTURE_CAPTION, KIND_LABEL, STATUS, href, type Kind } from "./site";
+import { CAPTURE_CAPTION, KIND_LABEL, STATUS, TERMS, href, type Kind } from "./site";
 
 // The v8 building blocks. Server components only; the moving parts live in client.tsx.
 // Rules every block follows: one h1 per page (only PageHero and the home hero render one), sentence case labels,
@@ -192,4 +192,19 @@ export function Band({ title, lead, actions }: { title: ReactNode; lead?: ReactN
 }
 export function JoinBand({ title = "Talk to us about model release security.", lead = "Tell us how you release models today.", secondary = { to: "/contour/status", label: "Development status" }, topic = "contour" }: { title?: ReactNode; lead?: ReactNode; secondary?: { to: string; label: string } | null; topic?: string }) {
   return <Band title={title} lead={lead} actions={<><Button to={`/contact?topic=${topic}`} arrow>Join us</Button>{secondary ? <Button to={secondary.to} kind="soft">{secondary.label}</Button> : null}</>} />;
+}
+
+/** The precise vocabulary as a compact grid: term, one line, and where it actually stands. */
+export function Terms() {
+  return (
+    <dl className="v8-terms">
+      {TERMS.map((t) => (
+        <div key={t.term}>
+          <dt>{t.term}</dt>
+          <dd>{t.line}</dd>
+          <dd><Tag kind={t.kind}>{t.status}</Tag></dd>
+        </div>
+      ))}
+    </dl>
+  );
 }

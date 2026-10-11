@@ -3,7 +3,7 @@ import { AutoVideo, CodeTabs, RiseWords } from "./_kit/client";
 import { KeywordMorph } from "./_kit/keyword";
 import { Button, Ledger, Section, TextLink, Wrap, captureSrc } from "./_kit/blocks";
 import { v8meta } from "./_kit/meta";
-import { CONTOUR, FACTS, RESEARCH, TAGLINE, WORK_LINE, href } from "./_kit/site";
+import { CONTOUR, FACTS, HERO_KEYWORDS, RESEARCH, TAGLINE, WORK_LINE, href } from "./_kit/site";
 import { OBSERVATION_2, POLICY, TRACE_TESTS } from "./_content/evidence";
 import { NEWS, formatDay } from "./_content/news";
 import { PARTNERS } from "./_content/partners";
@@ -28,10 +28,10 @@ export default function Home() {
               <span><b>{CONTOUR.name}</b> <span style={{ color: "var(--ink-3)" }}>in private development</span></span>
               <i aria-hidden="true"><span className="v8-arrow" /></i>
             </Link>
-            <h1 className="v8-hero-title">
+            <h1 className="v8-hero-title" style={{ width: "100%" }}>
               <span className="v8-sr">{TAGLINE}</span>
               <span aria-hidden="true" style={{ display: "block" }}><RiseWords text="AI security for" /></span>
-              <span aria-hidden="true" className="v8-fade" style={{ display: "block", ["--d" as string]: ".3s" }}><KeywordMorph words={["defense.", "critical infrastructure.", "autonomous systems."]} /></span>
+              <span aria-hidden="true" className="v8-fade" style={{ display: "block", ["--d" as string]: ".3s" }}><KeywordMorph words={HERO_KEYWORDS} /></span>
             </h1>
             <div className="v8-actions v8-fade" style={{ ["--d" as string]: ".7s", marginTop: 46 }}>
               <Button to="/contact?topic=contour" size="lg" arrow>Join us</Button>
