@@ -2,7 +2,8 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import "./_kit/v8.css";
 import { V8Footer, V8Header } from "./_kit/shell";
-import { INTRO_SCRIPT, THEME_SCRIPT } from "./_kit/scripts";
+import { RevealOnRoute } from "./_kit/reveal";
+import { INTRO_SCRIPT, THEME_SCRIPT, REVEAL_SCRIPT } from "./_kit/scripts";
 import { socialCard } from "@/lib/social-card";
 import { robotsMeta } from "@/lib/stealth";
 import { TAGLINE, COMPANY_LINE } from "./_kit/site";
@@ -40,9 +41,11 @@ export default async function V8Layout({ children }: { children: ReactNode }) {
   return (
     <div className="v8">
       {/* Sets the logo intro's starting state before the header paints (see _kit/logo.tsx). */}
-      <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT + INTRO_SCRIPT }} />
+      {/* ...and hides the sections until their layered entrance is set up (see _kit/reveal.tsx). */}
+      <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT + INTRO_SCRIPT + REVEAL_SCRIPT }} />
       <V8Header />
       <main id="v8-main" className="v8-main" tabIndex={-1}>{children}</main>
+      <RevealOnRoute />
       <V8Footer />
     </div>
   );

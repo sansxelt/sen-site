@@ -6,7 +6,26 @@
 //
 // While v8 is a preview it lives under /dev-preview/v8. Promoting it is this one constant plus the proxy table.
 export const V8_BASE = process.env.NEXT_PUBLIC_VRAELIS_V8_PUBLIC === "1" ? "" : "/dev-preview/v8";
-export const href = (path: string) => (path === "/" ? V8_BASE || "/" : `${V8_BASE}${path}`);
+/** A path on this deployment, never rewritten to another host. */
+export const localHref = (path: string) => (path === "/" ? V8_BASE || "/" : `${V8_BASE}${path}`);
+
+/** THE DOCS' PUBLIC ADDRESS. The docs are their own host, docs.vraelis.com (lib/docs-host.ts). Once v8 is public on
+ *  the production deployment, every site link to /docs goes there; anywhere else (local, Vercel previews, the
+ *  /dev-preview/v8 review) it stays on the docs' path on this deployment, so it works without the subdomain.
+ *  NEXT_PUBLIC_VRAELIS_DOCS_ORIGIN overrides both (e.g. a preview docs domain); set it to "" to keep links local. */
+const DOCS_PUBLIC_ORIGIN = (process.env.NEXT_PUBLIC_VRAELIS_DOCS_ORIGIN ?? (
+  process.env.NEXT_PUBLIC_VRAELIS_V8_PUBLIC === "1" && process.env.NEXT_PUBLIC_VERCEL_ENV === "production" ? "https://docs.vraelis.com" : ""
+)).replace(/\/$/, "");
+const isDocsPath = (path: string) => path === "/docs" || /^\/docs[/?#]/.test(path);
+
+/** A site path as a link. /docs paths go to the docs' public address when there is one (see above). */
+export const href = (path: string) => {
+  if (DOCS_PUBLIC_ORIGIN && isDocsPath(path)) {
+    const rest = path.slice("/docs".length);
+    return DOCS_PUBLIC_ORIGIN + (rest.startsWith("/") ? rest : `/${rest}`);
+  }
+  return localHref(path);
+};
 
 export const TAGLINE = "AI security for defense, critical infrastructure and autonomous systems.";
 export const AREAS = ["defense", "critical infrastructure", "autonomous systems"] as const;
@@ -140,11 +159,11 @@ export const MENUS: Menu[] = [
   },
   {
     id: "research", label: "Research", kind: "list",
-    links: [{ label: "Overview", to: "/research" }, ...RESEARCH.map((r) => ({ label: r.title, to: `/research/${r.slug}` }))],
+    links: [{ label: "All research", to: "/research" }, ...RESEARCH.map((r) => ({ label: r.title, to: `/research/${r.slug}` }))],
   },
   {
     id: "applications", label: "Applications", kind: "list",
-    links: [{ label: "Overview", to: "/applications" }, ...APPLICATIONS.map((a) => ({ label: a.title, to: `/applications/${a.slug}` }))],
+    links: [{ label: "All applications", to: "/applications" }, ...APPLICATIONS.map((a) => ({ label: a.title, to: `/applications/${a.slug}` }))],
   },
   {
     id: "company", label: "Company", kind: "list",
@@ -160,7 +179,7 @@ export const MENUS: Menu[] = [
 
 export const FOOTER: { title: string; links: { label: string; to: string }[] }[] = [
   { title: "Vraelis Contour", links: [{ label: "Overview", to: "/contour" }, { label: "How it works", to: "/contour#how" }, { label: "Development status", to: "/contour/status" }, { label: "Documentation", to: "/docs" }] },
-  { title: "Research", links: [{ label: "Overview", to: "/research" }, ...RESEARCH.map((r) => ({ label: r.title, to: `/research/${r.slug}` }))] },
+  { title: "Research", links: [{ label: "All research", to: "/research" }, ...RESEARCH.map((r) => ({ label: r.title, to: `/research/${r.slug}` }))] },
   { title: "Applications", links: APPLICATIONS.map((a) => ({ label: a.title, to: `/applications/${a.slug}` })) },
   { title: "Company", links: [{ label: "About", to: "/company" }, { label: "Partners", to: "/partners" }, { label: "Changelog", to: "/changelog" }, { label: "Contact", to: "/contact" }, { label: "Join us", to: "/contact?topic=contour" }] },
   { title: "Trust", links: [{ label: "Security", to: "/security" }, { label: "Subprocessors", to: "/subprocessors" }, { label: "Data rights", to: "/data-rights" }, { label: "Image sources", to: "/image-sources" }] },

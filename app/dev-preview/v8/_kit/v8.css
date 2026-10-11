@@ -112,6 +112,12 @@ html:has(.v8) { --nav-h: 76px; }
 .v8-rise > span { display: inline-block; transform-origin: 50% 100%; animation: v8-rise .65s var(--ease) both; animation-delay: calc(.1s + var(--i, 0) * .055s); }
 @keyframes v8-rise { from { opacity: 0; transform: translateY(45%) rotateX(-40deg); } to { opacity: 1; transform: none; } }
 .v8-fade { animation: v8-fade .6s var(--ease) both; animation-delay: var(--d, .35s); }
+/* Layered entrances on every page (see _kit/reveal.tsx). */
+/* A keyframe animation, not a transition: page styles that set their own transition would otherwise cancel it and the
+   layer would pop in (founder 2026-10-10: "just pops in"). */
+.v8-rv { opacity: 0; }
+.v8-rv.v8-rv--in { opacity: 1; animation: v8-rv .8s var(--ease) var(--rv-d, 0ms) both; }
+@keyframes v8-rv { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 @keyframes v8-fade { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 
 .v8-area { position: relative; }
