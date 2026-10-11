@@ -86,7 +86,8 @@ export const CONTOUR_PAGES: Page[] = [
       { t: "kinds", items: [
         { kind: "impl", text: "Signed release and approval bindings, runtime policy enforcement for ONNX Runtime 1.23.2 with exactly CPUExecutionProvider, real CPU inference, and desired against reported loaded observations in baseline and reconcile modes." },
         { kind: "impl", text: "A read-only evidence app over the recorded trace." },
-        { kind: "meas", text: "131 of 131 internal tests pass offline on the runtime-policy revision, and Startup QA reproduced this on its own pinned Docker build on October 10, 2026. This measures automated behaviour inside the experiment. It is not production readiness or customer demand." },
+        { kind: "meas", text: "At the runtime rejection-diagnostics revision, 133 of 133 internal experiment tests passed in the pinned, network-disabled harness. Startup QA reproduced that suite on a separate build on October 10, 2026 (Pacific), and Codex checked the retained log and its SHA-256. This is automated reference-experiment evidence, not Stage 1, independent human review, production validation or customer demand. The earlier runtime-policy revision passed 131 of 131; 133 supersedes that count and is not 133 additional tests." },
+        { kind: "meas", text: "A runtime-version mismatch was checked by a separate QA probe with a real ONNX Runtime 1.22.1 worker. Receipt integrity is covered by signature tests in the suite, not by external signature verification." },
         { kind: "prop", text: "A Kubernetes collector, in specification v1.3. The proposal has not been applied." },
         { kind: "not", label: "Not built yet", text: "Heartbeat freshness, live fault runs, a latency study and adapters for customer runtimes." },
         { kind: "not", text: "Hardware attestation. Worker reports are self-reports, not independent attestation." },
@@ -343,7 +344,7 @@ export const CONTOUR_PAGES: Page[] = [
       { t: "h2", text: "The app's tests" },
       { t: "p", text: "The trace checks have their own tests. This is their output." },
       { t: "code", lang: "text", label: "contour-app 7ecb6d0, tests", text: TRACE_TESTS },
-      { t: "p", text: "These 34 tests cover the evidence app at revision 7ecb6d0: 14 trace checks and 20 import-safety checks. An imported file can never put a trusted label on screen, a timestamp must be a real date with an explicit zone, and a refused import leaves the open trace exactly as it was. The suite is separate from the experiment's 131 internal tests (runtime-policy revision); the two counts are never added together." },
+      { t: "p", text: "These 34 tests cover the evidence app at revision 7ecb6d0: 14 trace checks and 20 import-safety checks. An imported file can never put a trusted label on screen, a timestamp must be a real date with an explicit zone, and a refused import leaves the open trace exactly as it was. The suite is separate from the experiment's internal tests (133 of 133 at the runtime rejection-diagnostics revision); no counts are added together." },
       { t: "h2", text: "Export" },
       { t: "p", text: "Export trace downloads the open trace as JSON, unchanged. An exported trace that is opened again is labelled Imported, not verified, like any other file." },
     ],
@@ -369,7 +370,7 @@ export const CONTOUR_PAGES: Page[] = [
       { t: "ul", items: [
         "How a model behaves, or that it has no backdoor. A signature endorses bytes; it does not describe behaviour.",
         "What a compromised host is running. The host and worker are trusted in the experiment, and the loaded identity is a self-report.",
-        "Production readiness. The 131 passing tests (runtime-policy revision) measure automated behaviour inside the experiment.",
+        "Production readiness. The 133 passing tests (runtime rejection-diagnostics revision) measure automated behaviour inside the experiment.",
         "Customer demand. No customer has used Vraelis Contour.",
         "Anything about machines in the field. The model is synthetic, and the runtime is a CPU session in a lab environment named `non-actuating-lab`.",
       ] },

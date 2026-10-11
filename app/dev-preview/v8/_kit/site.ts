@@ -99,7 +99,9 @@ export const STATUS = {
 } as const;
 
 export const FACTS = {
-  tests: { value: "131 of 131", label: "experiment tests, runtime-policy revision, reproduced offline by QA on October 10, 2026", kind: "meas" as Kind },
+  tests: { value: "133 of 133", label: "experiment tests at the runtime rejection-diagnostics revision, in the pinned network-disabled harness, reproduced by QA on October 10, 2026 (Pacific)", kind: "meas" as Kind },
+  /** History: the earlier suite. 133 supersedes its count; they are never added together. */
+  testsEarlier: { value: "131 of 131", label: "experiment tests at the earlier runtime-policy revision, reproduced by QA", kind: "meas" as Kind },
   runtime: { value: "ONNX Runtime 1.23.2", label: "on CPU, the one supported runtime", kind: "impl" as Kind },
   observations: { value: "4 recorded", label: "observations in the captured run", kind: "impl" as Kind },
 } as const;

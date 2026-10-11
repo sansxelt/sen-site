@@ -14,7 +14,8 @@ export const metadata = v8meta({
 
 const SOURCES = {
   brief: { label: "Founder brief, 10 October 2026", line: "What is implemented, unfinished and never claimed." },
-  qaTests: { label: "Startup QA reply d9815366", line: "The 131 tests, reproduced offline on QA's own pinned Docker build. Runtime policy enforcement checked." },
+  qaTests: { label: "Startup QA reply d9815366", line: "The 131 tests of the earlier runtime-policy revision, reproduced offline on QA's own pinned Docker build. Runtime policy enforcement checked." },
+  qaRejection: { label: "Startup QA reply c3e28cf", line: "133 of 133 at source revision contour-runtime-status-rejection-v1, run with networking disabled (NetworkMode none before and after, exit 0). Codex checked the retained test log against its SHA-256 (441d44b4…08c5)." },
   qaApp: { label: "Startup QA reply 8a2173c7", line: "Evidence app review: five findings, each addressed in the current version." },
   spec: { label: "Specification v1.3", line: "Internal proposal, including the Kubernetes collector. Not applied, not frozen." },
 } as const;
@@ -45,7 +46,10 @@ const NOT_CLAIMED: Record<(typeof STATUS.notClaimed)[number], Row> = {
 };
 const GROUPS: { title: string; rows: [string, Row][] }[] = [
   { title: "Working in the experiment", rows: Object.entries(WORKING) },
-  { title: "Measured", rows: [[`${FACTS.tests.value} ${FACTS.tests.label}`, { status: { kind: FACTS.tests.kind }, sources: ["qaTests"] }]] },
+  { title: "Measured", rows: [
+    [`${FACTS.tests.value} ${FACTS.tests.label}`, { status: { kind: FACTS.tests.kind }, sources: ["qaRejection"] }],
+    [`Earlier: ${FACTS.testsEarlier.value} ${FACTS.testsEarlier.label}`, { status: { kind: FACTS.testsEarlier.kind }, sources: ["qaTests"] }],
+  ] },
   { title: "Being built", rows: Object.entries(BUILDING) },
   { title: "Not claimed", rows: Object.entries(NOT_CLAIMED) },
 ];
@@ -66,7 +70,9 @@ const LIMITS = [
 ];
 
 const DOES_NOT = [
-  "Production readiness",
+  "Production readiness, Stage 1 or independent human review",
+  "External signature verification: receipt integrity is covered by signature tests inside the suite",
+  "Heartbeat freshness: the policy's age limit bounds how old an approval may be, not how fresh a report is",
   "Customer need or demand",
   "Behaviour with real models, other runtimes or other hardware",
   "Behaviour under live faults, or speed",
@@ -180,7 +186,7 @@ export default function ContourStatusPage() {
             <div className="v8-head">
               <span className="v8-eyebrow">Tests</span>
               <h2 className="v8-h2">What the tests do not show</h2>
-              <p className="v8-lead">131 of 131 is the experiment&apos;s runtime-policy revision, reproduced by QA on October 10, 2026. The evidence app&apos;s own tests are a separate suite; the two are never added together.</p>
+              <p className="v8-lead">133 of 133 is the experiment&apos;s runtime rejection-diagnostics revision, run in a pinned, network-disabled harness and reproduced by QA on October 10, 2026 (Pacific). It supersedes the earlier 131 of 131 at the runtime-policy revision; it is not 133 additional tests. The evidence app&apos;s own tests are a separate suite, and no counts are added together.</p>
             </div>
             <ul className="ct-list ct-list--plain ct-notshown">{DOES_NOT.map((s) => <li key={s}>{s}</li>)}</ul>
           </div>

@@ -55,7 +55,7 @@ export const POLICY = `{
 }`;
 
 /** The evidence app's own suite at revision 7ecb6d0 (contour-app branch of the private repo), captured 2026-10-10:
- *  trace checks and import safety. Separate from the experiment's 131 (runtime-policy revision); never added to it. */
+ *  trace checks and import safety. Separate from the experiment's suites (133 at the runtime rejection-diagnostics revision, 131 before it); never added to them. */
 export const TRACE_TESTS = `$ node --test trace.test.mjs import-safety.test.mjs
 ✔ the captured run has no unvalidated fields and its checked trace is the file, unchanged
 ✔ top-level trust flags are listed as extras and left out of the checked trace
