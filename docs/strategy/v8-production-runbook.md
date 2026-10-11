@@ -101,7 +101,11 @@ the cleanup-2 closures and the email footer.
   because the review project has no Stripe secrets), two-host crawl 122 pages, 0 broken links.
 - docs.vraelis.com resolves through Cloudflare to Vercel and answers `DEPLOYMENT_NOT_FOUND`: attaching it to
   `sen-site` is all it needs. Rollback target for the promotion: `sen-site-lt64iii0o` (5dc06187).
-- Waiting only on the founder's legal entity and policy answers (open decision 1).
+- Founder answers (2026-10-11), applied in b1eac4da: the earlier product's terms stay in force for its users while
+  its retirement is resolved (balances do not expire, refund and billing-error commitments apply); retention text
+  states current practice only, with no deletion period promised. Still missing, and blocking the promotion: the
+  legal entity (registered name, type, state or country), the notice address, governing law and courts (the terms
+  say California today), and the data controller. The founder's reply had placeholders for these four.
 
 ## Code switch (already on site-v8, inert until the flag is set)
 
