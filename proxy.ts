@@ -227,6 +227,50 @@ function go(req: NextRequest, pathname: string, kind: "redirect" | "rewrite") {
 // "back to Vraelis" and non-docs links at the main site, and to link docs pages as /<slug>. While v8 is a
 // preview the whole host is noindex, as /dev-preview/v8 is.
 const v8Public = () => process.env.NEXT_PUBLIC_VRAELIS_V8_PUBLIC === "1";
+
+// ── V8 PROMOTED (NEXT_PUBLIC_VRAELIS_V8_PUBLIC=1) ──────────────────────────────────────────────────────
+//
+// With the flag on, the v8 tree (app/dev-preview/v8) IS the site: its top-level routes are served at clean paths,
+// /dev-preview/v8/* redirects to them, the previous generation's addresses redirect to their v8 successors, and any
+// other page path lands on v8's own 404 rather than on an older site. Machine endpoints are untouched. With the flag
+// off (today's production) none of this runs. First used for the review deployment the founder asked for
+// (2026-10-10): a separate *.vercel.app project, never vraelis.com.
+const V8_ROOTS = new Set(["acceptable-use", "applications", "changelog", "company", "contact", "contour", "cookies",
+  "data-rights", "docs", "image-sources", "legal", "partners", "partnerships", "privacy", "refunds", "research",
+  "security", "subprocessors", "terms", "trademark"]);
+const v8Owns = (path: string) => v8Public() && (path === "/" || V8_ROOTS.has(path.split("/")[1] ?? ""));
+/** The previous site's public addresses and where each now lives in v8 (308, permanent). */
+const V8_SUCCESSORS: Record<string, string> = {
+  "/platform": "/contour", "/method": "/contour", "/how-it-works": "/contour", "/product": "/contour",
+  "/beta": "/contact", "/enterprise": "/contact", "/demo": "/contact", "/sso": "/contact", "/free-report": "/contour",
+  "/infrastructure": "/applications/critical-infrastructure", "/solutions": "/applications", "/use-cases": "/applications",
+  "/developers": "/docs", "/guides": "/docs", "/learn": "/docs", "/about": "/company", "/careers": "/company",
+  "/news": "/changelog", "/blog": "/changelog", "/policies": "/legal", "/status": "/contour/status",
+};
+const V8_SUCCESSOR_PREFIXES: [string, string][] = [["/guides/", "/docs"], ["/solutions/", "/applications"], ["/use-cases/", "/applications"], ["/developers/", "/docs"], ["/learn/", "/docs"], ["/blog/", "/changelog"], ["/news/", "/changelog"]];
+/** Paths that are not pages and keep their own handling under the flag. */
+const v8Machine = (path: string) => path.startsWith("/api/") || path === "/yc" || path === "/og" || path.startsWith("/og/")
+  || path === "/icon" || path === "/apple-icon" || path.startsWith("/icon/") || path.startsWith("/apple-icon/")
+  || path === "/v1" || path.startsWith("/v1/") || path === "/mcp" || path.startsWith("/.well-known/")
+  || path === "/curtain" || path === "/robots.txt" || path === "/sitemap.xml" || path === "/llms.txt" || path === "/llms-full.txt";
+function v8Promoted(req: NextRequest, path: string, host: string): NextResponse | null {
+  if (path === "/dev-preview/v8" || path.startsWith("/dev-preview/v8/")) {
+    const url = req.nextUrl.clone();
+    url.pathname = path.slice("/dev-preview/v8".length) || "/";
+    return NextResponse.redirect(url, 308);
+  }
+  if (v8Machine(path)) return null;
+  const successor = V8_SUCCESSORS[path] ?? V8_SUCCESSOR_PREFIXES.find(([p]) => path.startsWith(p))?.[1];
+  if (successor) {
+    const url = req.nextUrl.clone();
+    url.pathname = successor;
+    return NextResponse.redirect(url, 308);
+  }
+  const res = go(req, "/dev-preview/v8" + (path === "/" ? "" : path), "rewrite");
+  // A review deployment on *.vercel.app is never indexed.
+  if (host.endsWith(".vercel.app") || !v8Public()) res.headers.set("X-Robots-Tag", "noindex, nofollow");
+  return res;
+}
 function docsNoindex(res: NextResponse) {
   if (!v8Public() || stealthConfigured()) res.headers.set("X-Robots-Tag", "noindex, nofollow");
   return res;
@@ -317,7 +361,7 @@ export default function proxy(req: NextRequest) {
     }
   }
   // Docs slugs share words with closed console roots (/limits, /api, /cli, /review), so the docs host skips this.
-  if (!docsMain && isClosedProductPage(path, host)) {
+  if (!docsMain && !v8Owns(path) && isClosedProductPage(path, host)) {
     const url = new URL("/beta", isProd ? "https://vraelis.com" : req.nextUrl.origin.replace("app.localhost", "localhost"));
     const response = NextResponse.redirect(url, 307);
     response.headers.set("cache-control", "no-store");
@@ -479,6 +523,11 @@ export default function proxy(req: NextRequest) {
   //     CRITICAL: "/api/<anything>" is the real API namespace (NextAuth, preflight routes) and must never
   //     be redirected or rewritten — only the EXACT "/api" path is the product's API & Webhooks page.
   if (path.startsWith("/api/")) return NextResponse.next(); // CSRF already enforced at the top
+
+  if (v8Public()) {
+    const promoted = v8Promoted(req, path, host);
+    if (promoted) return promoted;
+  }
 
   // The newer presentation remains an unindexed review preview after the layout rollback.
   if (path === "/dev-preview/v7" || path.startsWith("/dev-preview/v7/")) {
