@@ -123,7 +123,7 @@ export function LegalTable({ label, cols, rows, wide = false }: {
 
 /** The one note every legal page carries (2026-10-11 audit wording). It says what the clauses below are about,
  *  and leaves whether the earlier terms still bind anyone to the founder and counsel. */
-export const REVIEW_NOTE = "Vraelis Contour is in private development and nothing is on sale. This page was written for the earlier browser-testing product. Its sections about verification runs, accounts, plans, billing, API keys and the console apply only to people who used that product. Under review.";
+export const REVIEW_NOTE = "Vraelis Contour is in private development and nothing is on sale. This page was written for the earlier browser-testing product. Its sections about verification runs, accounts, plans, billing, API keys and the console apply only to people who used that product, and stay in force for them while that product's retirement is resolved: purchased balance does not expire, and the refund and billing-error commitments still apply.";
 export function ReviewNote() {
   return <p role="note" className="v8-legal__review">{REVIEW_NOTE}</p>;
 }

@@ -4,7 +4,7 @@ import { TermsBody, TERMS_UPDATED } from "@/app/_content/legal";
 
 export const metadata = v8meta({
   title: "Terms",
-  description: "The terms written for the earlier Vraelis browser-testing product, now under review. Vraelis Contour is in private development and nothing is on sale.",
+  description: "The terms written for the earlier Vraelis browser-testing product, still in force for its users while its retirement is resolved. Vraelis Contour is in private development and nothing is on sale.",
   path: "/terms",
 });
 

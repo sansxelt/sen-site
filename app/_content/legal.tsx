@@ -147,7 +147,8 @@ export function PrivacyBody({ H, P, Ul, A, closedConsole, abuseSignals }: LegalP
         "Account, verification, and report data is kept while your account is active, unless you delete it or ask support to handle a request.",
         "API keys can be deleted, and webhook endpoints can be removed.",
         "Billing records may be kept where required for accounting, fraud prevention, or legal reasons.",
-        "Security and abuse logs may be kept for a limited period to protect the service.",
+        "Rate-limit records, which hold an IP address or an email address with a count and a start time, are kept in our database to limit abuse. Nothing deletes them automatically at present; a record is reset when the same address is used again after its time window.",
+        "Our hosting provider (Vercel) keeps request logs for the period its logging plan sets. If the rate limiter fails, the error it logs can include the IP address or email address it was checking.",
       ]} />
 
       <H>Contact</H>

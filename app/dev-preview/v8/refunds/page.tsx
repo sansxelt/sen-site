@@ -4,7 +4,7 @@ import { RefundsBody, REFUNDS_INTRO, REFUNDS_UPDATED } from "@/app/_content/lega
 
 export const metadata = v8meta({
   title: "Refunds and cancellation",
-  description: "Refund and cancellation terms written for the earlier paid browser-testing product, now under review. Nothing is on sale today.",
+  description: "Refund and cancellation terms written for the earlier paid browser-testing product, still in force for its users while its retirement is resolved. Nothing is on sale today.",
   path: "/refunds",
 });
 
