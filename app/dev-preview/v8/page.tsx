@@ -55,6 +55,32 @@ const DOCS_QUERIES = (() => {
   });
 })();
 
+/* THE PARTNER BAND (founder, 2026-10-11, after deccan.ai: "the homepage has the unclickable scroll ... we should
+   have that"). A band of names drifting sideways at the foot of the hero, nothing in it clickable. Deccan's says
+   "trusted by"; ours names what is true, the two official partnerships, set in type because neither company has given
+   written permission for its logo (partners.ts). The partnership records stay one click away in the Partners section.
+   One group is repeated enough to overfill a wide screen, then the whole group twice, so moving by half loops
+   without a seam. Screen readers get one sentence; reduced motion holds it still. */
+function PartnerBand() {
+  const names = PARTNERS.map((p) => p.name);
+  const group = Array.from({ length: 6 }, () => names).flat();
+  return (
+    <div className="hm-band v8-fade" style={{ ["--d" as string]: ".9s" }}>
+      <Wrap><p className="hm-band__label">Official partnerships</p></Wrap>
+      <p className="v8-sr">Official partnerships: {names.join(" and ")}.</p>
+      <div className="hm-band__view" aria-hidden="true">
+        <div className="hm-band__track">
+          {[0, 1].map((half) => (
+            <div key={half} className="hm-band__group">
+              {group.map((n, i) => <span key={i} className="hm-band__name">{n}</span>)}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   return (
     <>
@@ -76,6 +102,7 @@ export default function Home() {
             </div>
           </div>
         </Wrap>
+        <PartnerBand />
       </section>
 
       <section aria-label="What Vraelis works on" style={{ paddingBottom: "var(--section)" }}>

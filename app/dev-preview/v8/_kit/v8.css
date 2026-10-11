@@ -528,3 +528,13 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 .v8-terms dt { color: var(--ink); font: 500 15.5px/1.3 var(--sans); }
 .v8-terms dd { margin: 0; color: var(--ink-3); font-size: 13.5px; line-height: 1.5; }
 .v8-terms dd:last-child { margin-top: 4px; }
+
+/* Home: the partner band at the foot of the hero (page.tsx, PartnerBand). Not interactive, edges fade out. */
+.hm-band { margin-top: clamp(56px, 7vw, 96px); display: grid; gap: 18px; }
+.hm-band__label { margin: 0; color: var(--ink-3); font: 500 12px/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; text-align: left; }
+.hm-band__view { overflow: hidden; pointer-events: none; user-select: none; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.hm-band__track { display: flex; width: max-content; animation: hm-band 48s linear infinite; }
+.hm-band__group { display: flex; flex: none; }
+.hm-band__name { flex: none; padding-inline: clamp(36px, 4.5vw, 72px); color: var(--ink-3); font: 500 clamp(20px, 2vw, 28px)/1.4 var(--display); letter-spacing: -.01em; white-space: nowrap; }
+@keyframes hm-band { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .hm-band__track { animation: none; } }
