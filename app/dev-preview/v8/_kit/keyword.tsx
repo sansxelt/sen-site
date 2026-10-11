@@ -18,7 +18,8 @@ function spec(t: number) {
 const ease = (t: number) => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 type P = { x: number; y: number; a: number; r: number; j: number };
 
-const HOLD = 2000, OUT = 820, IN = 900;
+// Fifteen phrases: a shorter hold keeps the list moving, long enough to read each one.
+const HOLD = 1600, OUT = 820, IN = 900;
 
 export function KeywordMorph({ words, delay = 1300 }: { words: string[]; delay?: number }) {
   const [i, setI] = useState(0);

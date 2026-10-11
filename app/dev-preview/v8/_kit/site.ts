@@ -10,8 +10,14 @@ export const href = (path: string) => (path === "/" ? V8_BASE || "/" : `${V8_BAS
 
 export const TAGLINE = "AI security for defense, critical infrastructure and autonomous systems.";
 export const AREAS = ["defense", "critical infrastructure", "autonomous systems"] as const;
-/** The hero rotation: the three core areas first, then intended applications (not products, not deployments). */
-export const HERO_KEYWORDS = ["defense.", "critical infrastructure.", "autonomous systems.", "deployed AI models.", "model updates.", "edge AI.", "industrial automation.", "field-deployed systems."];
+/** The hero rotation: the three core areas first, then intended applications (not products, not deployments), in the
+ *  founder's order. It loops straight back to the start, so it reads as an ongoing list. */
+export const HERO_KEYWORDS = [
+  "defense.", "critical infrastructure.", "autonomous systems.",
+  "deployed AI models.", "model updates.", "edge AI.", "machine vision.", "perception systems.", "industrial automation.",
+  "autonomous fleets.", "distributed inference.", "field-deployed systems.", "inspection systems.", "AI supply chains.",
+  "mission-critical workloads.",
+];
 
 /** The precise vocabulary, each term tied to where it stands (founder, 2026-10-10). */
 export const TERMS: { term: string; line: string; kind: Kind; status: string }[] = [

@@ -109,7 +109,9 @@ html:has(.v8) { --nav-h: 76px; }
 .v8-area { position: relative; }
 /* The hero keyword line: the word is ordinary text; the canvas over it draws the fragments while it changes. */
 .v8-kw { position: relative; display: block; white-space: nowrap; }
-.v8-kw__word { display: inline-block; }
+/* Padded past the 1.05 line box (and pulled back by the margin) so the reveal mask and the fragment sampling cover
+   descenders and accents; a mask stops at the element box, which cut p, g and y until the reveal ended. */
+.v8-kw__word { display: inline-block; padding-block: .24em; margin-block: -.24em; }
 .v8-kw__canvas { position: absolute; left: -80px; top: -40px; pointer-events: none; }
 .v8-hero__inner h1 { overflow: visible; }
 .v8-glue { white-space: nowrap; }
