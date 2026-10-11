@@ -10,7 +10,7 @@ import "./company.css";
 
 export const metadata = v8meta({
   title: "Vraelis | Company and founder Nishanth Dasari",
-  description: `${COMPANY_LINE} Founded by ${FOUNDER}. Part of Foremake, the holding company behind Vraelis and Overlym, a separate company in development.`,
+  description: `${COMPANY_LINE} Founded by ${FOUNDER}. Foremake, Inc is the umbrella brand behind Vraelis and Overlym, a separate fintech venture in development.`,
   path: "/company",
 });
 
@@ -131,8 +131,8 @@ export default function Company() {
         <Wrap>
           <div className="v8-stack--lg">
             <div className="v8-head">
-              <span className="v8-eyebrow">People and ownership</span>
-              <h2 className="v8-h2">Founded by {FOUNDER}. Part of Foremake.</h2>
+              <span className="v8-eyebrow">People and brands</span>
+              <h2 className="v8-h2">Founded by {FOUNDER}. Part of Foremake, Inc.</h2>
             </div>
             <div className="cmp-people">
               <div id="nishanth-dasari" className="v8-box cmp-person">
@@ -144,11 +144,11 @@ export default function Company() {
                 </ul>
               </div>
               <div id="foremake" className="v8-box cmp-person">
-                <span className="v8-eyebrow">Holding company</span>
-                <h3 className="v8-h3 cmp-person__name">Foremake</h3>
+                <span className="v8-eyebrow">Umbrella brand</span>
+                <h3 className="v8-h3 cmp-person__name">Foremake, Inc</h3>
                 <ul className="cmp-links cmp-links--plain">
-                  <li><span>Vraelis</span><small>This company</small></li>
-                  <li><span>Overlym</span><small>A separate Foremake company, in development</small></li>
+                  <li><span>Vraelis</span><small>AI cybersecurity software; Vraelis Contour, its first product, is in private development</small></li>
+                  <li><span>Overlym</span><small>A separate fintech venture, in development</small></li>
                 </ul>
               </div>
             </div>

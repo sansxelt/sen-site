@@ -1,5 +1,5 @@
 import { v8meta } from "../_kit/meta";
-import { LegalPage, V8_LEGAL_PRIMS } from "../_legal/legal";
+import { LegalPage, OperatorSection, V8_LEGAL_PRIMS } from "../_legal/legal";
 import { TermsBody, TERMS_UPDATED } from "@/app/_content/legal";
 
 export const metadata = v8meta({
@@ -13,6 +13,7 @@ export const metadata = v8meta({
 export default function V8TermsPage() {
   return (
     <LegalPage title="Terms" updated={TERMS_UPDATED} review>
+      <OperatorSection />
       <TermsBody {...V8_LEGAL_PRIMS} />
     </LegalPage>
   );

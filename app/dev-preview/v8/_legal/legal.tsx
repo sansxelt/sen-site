@@ -6,6 +6,7 @@ import {
 } from "@/app/_content/legal";
 import { href } from "../_kit/site";
 import { LegalNotice, LegalToc, type LegalHeading } from "./legal-toc";
+import { OPERATOR, assertOperatorPublishable } from "./operator";
 import "./legal.css";
 
 /* THE V8 LEGAL PAGES (2026-10-10). The same API as v6's _system/legal.tsx (LegalPage, LegalTable, and the H, P,
@@ -71,7 +72,22 @@ export const V8_LEGAL_PRIMS = { H, P, Ul, A, S, closedConsole: true } satisfies 
 /* THE CONTENTS LIST, READ FROM THE PAGE ITSELF, on the server. The shared bodies are plain functions of the
    primitives with no hooks, so they can be called here to see their headings before anything renders; only the
    bodies named in BODIES are called, any other component is only looked inside. */
-const BODIES = new Set<unknown>([PrivacyBody, TermsBody, CookiesBody, AcceptableUseBody, RefundsBody, SubprocessorsTail]);
+const TBC = "[to be confirmed]";
+/** Opens the Terms and the Privacy policy. `controller` adds the privacy sentence naming the operator as controller. */
+export function OperatorSection({ controller = false }: { controller?: boolean }) {
+  assertOperatorPublishable();
+  return (
+    <>
+      <H>Who operates Vraelis</H>
+      <P>Vraelis, Foremake, Inc and Overlym are brands. None of them is incorporated: &ldquo;Inc&rdquo; is part of the Foremake, Inc brand name and does not mean that a corporation has been formed. Foremake, Inc is the umbrella brand behind Vraelis and Overlym. Vraelis develops AI cybersecurity software, and Vraelis Contour, its first product, is in private development. Overlym is a separate fintech venture in development.</P>
+      <P>This site and the services described on these pages are operated by {OPERATOR.name ?? TBC}, who is responsible for them. On these pages, &ldquo;Vraelis&rdquo;, &ldquo;we&rdquo; and &ldquo;us&rdquo; mean that operator.{controller ? " The operator is the controller of the personal data this policy describes." : ""}</P>
+      <P>Legal notices and privacy requests: {OPERATOR.noticeAddress ?? TBC}, or by email to <A href="mailto:privacy@vraelis.com">privacy@vraelis.com</A>.</P>
+      {controller ? null : <P>Governing law and courts: {OPERATOR.governingLaw ?? TBC}.</P>}
+    </>
+  );
+}
+
+const BODIES = new Set<unknown>([OperatorSection, PrivacyBody, TermsBody, CookiesBody, AcceptableUseBody, RefundsBody, SubprocessorsTail]);
 
 function headingsIn(node: ReactNode, out: LegalHeading[]) {
   if (Array.isArray(node)) { for (const n of node) headingsIn(n, out); return; }

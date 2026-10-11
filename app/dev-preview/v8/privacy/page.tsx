@@ -1,5 +1,5 @@
 import { v8meta } from "../_kit/meta";
-import { LegalPage, V8_LEGAL_PRIMS } from "../_legal/legal";
+import { LegalPage, OperatorSection, V8_LEGAL_PRIMS } from "../_legal/legal";
 import { PrivacyBody } from "@/app/_content/legal";
 
 const { H, P, A } = V8_LEGAL_PRIMS;
@@ -24,6 +24,7 @@ const ABUSE_SIGNALS = "IP addresses used to limit abuse. The contact form keeps 
 export default function V8PrivacyPage() {
   return (
     <LegalPage title="Privacy" updated="Updated October 2026" review>
+      <OperatorSection controller />
       <PrivacyBody {...V8_LEGAL_PRIMS} abuseSignals={ABUSE_SIGNALS} />
       <H>Contact form</H>
       <P>The contact form collects your email address, your name if you give it, the topic you pick and your message. If you write for an organization, it also collects the organization, its country and your role. Resend delivers the message to our inbox and sends you one confirmation email. To limit abuse, your IP address and your email address are kept as rate-limit keys in our database (Supabase), each with a count and a start time. These keys are not deleted automatically at present; a key is reset when the same address is used again after its time window. Your message is kept in our support inbox, and Resend keeps its own record of the delivery.</P>

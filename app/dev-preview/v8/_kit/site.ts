@@ -64,7 +64,9 @@ export const CONTOUR = {
   status: "In private development.",
   audience: "Release, platform and security engineers at suppliers and system integrators.",
 } as const;
-export const FOREMAKE = "Vraelis is part of Foremake, the holding company behind Vraelis and Overlym, a separate company in development.";
+// Founder, 2026-10-11: Foremake, Inc, Vraelis and Overlym are unincorporated brands. "Foremake, Inc" is the brand name as
+// written (keep the "Inc"), but nothing may call it a registered corporation, a holding company or a parent company.
+export const FOREMAKE = "Foremake, Inc is the umbrella brand behind Vraelis and Overlym. Vraelis develops AI cybersecurity software, and Vraelis Contour, its first product, is in private development. Overlym is a separate fintech venture in development.";
 export const FOUNDER = "Nishanth Dasari";
 
 /** The caption every Contour screen carries. Captures come from the read-only app reading the recorded trace. */
